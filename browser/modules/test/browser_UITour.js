@@ -265,6 +265,31 @@ let tests = [
 
     gContentAPI.showInfo("urlbar", "urlbar title", "urlbar text");
   },
+  function test_addToolbarButton(done) {
+    let placement = CustomizableUI.getPlacementOfWidget("panic-button");
+    is(placement, null, "default UI has panic button in the palette");
+
+    gContentAPI.getConfiguration("availableTargets", (data) => {
+      let available = (data.targets.indexOf("forget") != -1);
+      ok(!available, "Forget button should not be available by default");
+
+      gContentAPI.addNavBarWidget("forget", () => {
+        info("addNavBarWidget callback successfully called");
+
+        let placement = CustomizableUI.getPlacementOfWidget("panic-button");
+        is(placement.area, CustomizableUI.AREA_NAVBAR);
+
+        gContentAPI.getConfiguration("availableTargets", (data) => {
+          let available = (data.targets.indexOf("forget") != -1);
+          ok(available, "Forget button should now be available");
+
+          // Cleanup
+          CustomizableUI.removeWidgetFromArea("panic-button");
+          done();
+        });
+      });
+    });
+  },
 
   // Make sure this test is last in the file so the appMenu gets left open and done will confirm it got tore down.
   function cleanupMenus(done) {
