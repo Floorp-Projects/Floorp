@@ -8,6 +8,9 @@
 
 #include "mozilla/dom/SpeechGrammarListBinding.h"
 #include "mozilla/ErrorResult.h"
+#include "nsCOMPtr.h"
+#include "nsXPCOMStrings.h"
+#include "SpeechRecognition.h"
 
 namespace mozilla {
 namespace dom {
@@ -20,9 +23,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechGrammarList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-SpeechGrammarList::SpeechGrammarList(nsISupports* aParent)
+SpeechGrammarList::SpeechGrammarList(nsISupports* aParent, nsISpeechRecognitionService* aRecognitionService)
   : mParent(aParent)
 {
+  this->mRecognitionService = aRecognitionService;
   SetIsDOMBinding();
 }
 
@@ -30,11 +34,20 @@ SpeechGrammarList::~SpeechGrammarList()
 {
 }
 
-SpeechGrammarList*
+already_AddRefed<SpeechGrammarList>
 SpeechGrammarList::Constructor(const GlobalObject& aGlobal,
                                ErrorResult& aRv)
 {
-  return new SpeechGrammarList(aGlobal.GetAsSupports());
+  nsCOMPtr<nsISpeechRecognitionService> recognitionService;
+  recognitionService = GetSpeechRecognitionService();
+  if (!recognitionService) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  } else {
+    nsRefPtr<SpeechGrammarList> speechGrammarList =
+      new SpeechGrammarList(aGlobal.GetAsSupports(), recognitionService);
+    return speechGrammarList.forget();
+  }
 }
 
 JSObject*
@@ -76,7 +89,7 @@ SpeechGrammarList::AddFromString(const nsAString& aString,
                                  const Optional<float>& aWeight,
                                  ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  mRecognitionService->ValidateAndSetGrammarList(this, nullptr);
   return;
 }
 

@@ -101,6 +101,8 @@ browser.jar:
   skin/classic/browser/Secure-Glyph.png
   skin/classic/browser/Secure-Glyph@2x.png
   skin/classic/browser/slowStartup-16.png
+  skin/classic/browser/theme-switcher-icon.png
+  skin/classic/browser/theme-switcher-icon@2x.png
   skin/classic/browser/Toolbar.png
   skin/classic/browser/Toolbar@2x.png
   skin/classic/browser/Toolbar-inverted.png

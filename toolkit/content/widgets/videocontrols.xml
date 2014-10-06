@@ -1513,6 +1513,10 @@
                     addListener(this.video.ownerDocument, "mozfullscreenchange", this.onFullscreenChange);
                     addListener(this.video, "keypress", this.keyHandler);
 
+                    addListener(this.videocontrols, "dragstart", function(event) {
+                        event.preventDefault(); //prevent dragging of controls image (bug 517114)
+                    });
+
                     this.log("--- videocontrols initialized ---");
                 }
             };
