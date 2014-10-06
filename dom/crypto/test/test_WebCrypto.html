@@ -1308,6 +1308,32 @@ TestArray.addTest(
     doCheckRSASSA().then(error(that), complete(that));
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test that we reject generating keys without any usage",
+  function() {
+    var that = this;
+    var alg = {
+      name: "RSA-OAEP",
+      hash: "SHA-256",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+    };
+
+    function generateKey(usages) {
+      return crypto.subtle.generateKey(alg, false, usages);
+    }
+
+    generateKey(["encrypt", "decrypt"]).then(function () {
+      return generateKey(["encrypt"]);
+    }).then(function () {
+      return generateKey(["decrypt"]);
+    }).then(function () {
+      return generateKey(["sign"])
+    }, error(that)).then(error(that), complete(that));
+  }
+);
 /*]]>*/</script>
 </head>
 
