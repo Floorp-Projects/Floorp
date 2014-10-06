@@ -60,6 +60,9 @@ fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,
 == dynamic-attr-removal-2.svg pass.svg
 == dynamic-attr-change-1.svg pass.svg
 == dynamic-class-01.svg pass.svg
+fuzzy-if(Android,4,87) == dynamic-clipPath-01.svg pass.svg
+== dynamic-clipPath-02.svg pass.svg
+== dynamic-clipPath-clip-rule-01.svg pass.svg
 == dynamic-conditions-01.svg pass.svg
 == dynamic-conditions-02.svg about:blank
 == dynamic-conditions-03.svg pass.svg
@@ -73,8 +76,6 @@ fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,
 == dynamic-conditions-11.svg pass.svg
 == dynamic-conditions-12.svg pass.svg
 == dynamic-conditions-13.svg about:blank
-fuzzy-if(Android,4,87) == dynamic-clipPath-01.svg pass.svg
-== dynamic-clipPath-02.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
 asserts(0-1) == dynamic-feImage-01.svg pass.svg # intermittent assertions (bug 886080)
 == dynamic-fill-01.svg dynamic-fill-01-ref.svg
