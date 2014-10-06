@@ -14,6 +14,12 @@ else
 fi
 ac_add_options --with-google-api-keyfile=${_gapi_keyfile}
 
+if [ -f /c/builds/google-oauth-api.key ]; then
+  _google_oauth_api_keyfile=/c/builds/google-oauth-api.key
+else
+  _google_oauth_api_keyfile=/e/builds/google-oauth-api.key
+fi
+ac_add_options --with-google-api-keyfile=${_google_oauth_api_keyfile}
 
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
