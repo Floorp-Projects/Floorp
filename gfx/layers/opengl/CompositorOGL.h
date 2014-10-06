@@ -209,7 +209,6 @@ public:
 
   virtual void EndFrame() MOZ_OVERRIDE;
   virtual void SetFBAcquireFence(Layer* aLayer) MOZ_OVERRIDE;
-  virtual FenceHandle GetReleaseFence() MOZ_OVERRIDE;
   virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) MOZ_OVERRIDE;
   virtual void AbortFrame() MOZ_OVERRIDE;
 
@@ -394,8 +393,6 @@ private:
    * FlipY for the y-flipping calculation.
    */
   GLint mHeight;
-
-  FenceHandle mReleaseFenceHandle;
 };
 
 }

@@ -162,7 +162,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       MOZ_ASSERT(tex.get());
       compositable->RemoveTextureHost(tex);
       // send FenceHandle if present.
-      SendFenceHandleIfPresent(op.textureParent(), compositable);
+      TextureHost::SendFenceHandleIfPresent(op.textureParent());
       break;
     }
     case CompositableOperation::TOpRemoveTextureAsync: {
@@ -179,8 +179,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
                              GetChildProcessId(),
                              op.holderId(),
                              op.transactionId(),
-                             op.textureParent(),
-                             compositable);
+                             op.textureParent());
 
         // If the message is recievied via PLayerTransaction,
         // Send message back via PImageBridge.
@@ -191,7 +190,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
                                                   op.transactionId()));
       } else {
         // send FenceHandle if present.
-        SendFenceHandleIfPresent(op.textureParent(), compositable);
+        TextureHost::SendFenceHandleIfPresent(op.textureParent());
 
         ReplyRemoveTexture(OpReplyRemoveTexture(false, // isMain
                                                 op.holderId(),
@@ -257,42 +256,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
   }
 
   return true;
-}
-
-void
-CompositableParentManager::SendPendingAsyncMessges()
-{
-  if (mPendingAsyncMessage.empty()) {
-    return;
-  }
-
-  // Some type of AsyncParentMessageData message could have
-  // one file descriptor (e.g. OpDeliverFence).
-  // A number of file descriptors per gecko ipc message have a limitation
-  // on OS_POSIX (MACOSX or LINUX).
-#if defined(OS_POSIX)
-  static const uint32_t kMaxMessageNumber = FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE;
-#else
-  // default number that works everywhere else
-  static const uint32_t kMaxMessageNumber = 250;
-#endif
-
-  InfallibleTArray<AsyncParentMessageData> messages;
-  messages.SetCapacity(mPendingAsyncMessage.size());
-  for (size_t i = 0; i < mPendingAsyncMessage.size(); i++) {
-    messages.AppendElement(mPendingAsyncMessage[i]);
-    // Limit maximum number of messages.
-    if (messages.Length() >= kMaxMessageNumber) {
-      SendAsyncMessage(messages);
-      // Initialize Messages.
-      messages.Clear();
-    }
-  }
-
-  if (messages.Length() > 0) {
-    SendAsyncMessage(messages);
-  }
-  mPendingAsyncMessage.clear();
 }
 
 } // namespace

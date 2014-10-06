@@ -23,9 +23,9 @@ struct FenceHandle {
 
   FenceHandle()
   { }
-  explicit FenceHandle(const android::sp<Fence>& aFence);
+  FenceHandle(const android::sp<Fence>& aFence);
 
-  explicit FenceHandle(const FenceHandleFromChild& aFenceHandle);
+  FenceHandle(const FenceHandleFromChild& aFenceHandle);
 
   bool operator==(const FenceHandle& aOther) const {
     return mFence.get() == aOther.mFence.get();
@@ -36,8 +36,6 @@ struct FenceHandle {
     return mFence.get() && mFence->isValid();
   }
 
-  void Merge(const FenceHandle& aFenceHandle);
-
   android::sp<Fence> mFence;
 };
 
@@ -46,9 +44,9 @@ struct FenceHandleFromChild {
 
   FenceHandleFromChild()
   { }
-  explicit FenceHandleFromChild(const android::sp<Fence>& aFence);
+  FenceHandleFromChild(const android::sp<Fence>& aFence);
 
-  explicit FenceHandleFromChild(const FenceHandle& aFence) {
+  FenceHandleFromChild(const FenceHandle& aFence) {
     mFence = aFence.mFence;
   }
 

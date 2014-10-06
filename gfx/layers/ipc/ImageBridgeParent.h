@@ -56,9 +56,6 @@ public:
   Create(Transport* aTransport, ProcessId aChildProcessId);
 
   // CompositableParentManager
-  virtual void SendFenceHandleIfPresent(PTextureParent* aTexture,
-                                        CompositableHost* aCompositableHost) MOZ_OVERRIDE;
-
   virtual void SendFenceHandle(AsyncTransactionTracker* aTracker,
                                PTextureParent* aTexture,
                                const FenceHandle& aFence) MOZ_OVERRIDE;
@@ -125,17 +122,12 @@ public:
 
   void SendFenceHandleToTrackerIfPresent(uint64_t aDestHolderId,
                                          uint64_t aTransactionId,
-                                         PTextureParent* aTexture,
-                                         CompositableHost* aCompositableHost);
+                                         PTextureParent* aTexture);
 
   static void SendFenceHandleToTrackerIfPresent(base::ProcessId aChildProcessId,
                                                 uint64_t aDestHolderId,
                                                 uint64_t aTransactionId,
-                                                PTextureParent* aTexture,
-                                                CompositableHost* aCompositableHost);
-
-  using CompositableParentManager::SendPendingAsyncMessges;
-  static void SendPendingAsyncMessges(base::ProcessId aChildProcessId);
+                                                PTextureParent* aTexture);
 
   static ImageBridgeParent* GetInstance(ProcessId aId);
 
