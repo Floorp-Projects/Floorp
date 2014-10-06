@@ -61,42 +61,39 @@ public class SearchWidget extends AppWidgetProvider {
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
-        // This will hold the intent to redispatch
+        // This will hold the intent to redispatch.
         final Intent redirect;
-        if (intent.getAction().equals(ACTION_LAUNCH_BROWSER)) {
-            redirect = buildRedirectIntent(Intent.ACTION_MAIN,
-                    AppConstants.ANDROID_PACKAGE_NAME,
-                    AppConstants.BROWSER_INTENT_CLASS_NAME,
-                    intent);
-            Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH,
-                    TelemetryContract.Method.WIDGET, "browser");
-        } else if (intent.getAction().equals(ACTION_LAUNCH_NEW_TAB)) {
+        switch (intent.getAction()) {
+            case ACTION_LAUNCH_BROWSER:
+                redirect = buildRedirectIntent(Intent.ACTION_MAIN,
+                                               AppConstants.ANDROID_PACKAGE_NAME,
+                                               AppConstants.BROWSER_INTENT_CLASS_NAME,
+                                               intent);
+                Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH,
+                                      TelemetryContract.Method.WIDGET, "browser");
+                break;
+            case ACTION_LAUNCH_NEW_TAB:
                 redirect = buildRedirectIntent(Intent.ACTION_VIEW,
-                        AppConstants.ANDROID_PACKAGE_NAME,
-                        AppConstants.BROWSER_INTENT_CLASS_NAME,
-                        intent);
-            Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH,
-                    TelemetryContract.Method.WIDGET, "new-tab");
-        } else if (intent.getAction().equals(ACTION_LAUNCH_SEARCH)) {
-            redirect = buildRedirectIntent(Intent.ACTION_VIEW,
-                    AppConstants.SEARCH_PACKAGE_NAME,
-                    AppConstants.SEARCH_INTENT_CLASS_NAME,
-                    intent);
-            Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH,
-                    TelemetryContract.Method.WIDGET, "search");
-        } else {
-            redirect = null;
+                                               AppConstants.ANDROID_PACKAGE_NAME,
+                                               AppConstants.BROWSER_INTENT_CLASS_NAME,
+                                               intent);
+                Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH,
+                                      TelemetryContract.Method.WIDGET, "new-tab");
+                break;
+            case ACTION_LAUNCH_SEARCH:
+                redirect = buildRedirectIntent(Intent.ACTION_VIEW,
+                                               AppConstants.ANDROID_PACKAGE_NAME,
+                                               AppConstants.SEARCH_INTENT_CLASS_NAME,
+                                               intent);
+                Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH,
+                                      TelemetryContract.Method.WIDGET, "search");
+                break;
+            default:
+                redirect = null;
         }
 
         if (redirect != null) {
-            try {
-                context.startActivity(redirect);
-            } catch(Exception ex) {
-                // When this is built stand alone, its hardcoded to try and launch nightly.
-                // If that fails, just fire a generic VIEW intent.
-                Intent redirect2 = buildRedirectIntent(Intent.ACTION_VIEW, null, null, intent);
-                context.startActivity(redirect2);
-            }
+            context.startActivity(redirect);
         }
 
         super.onReceive(context, intent);
