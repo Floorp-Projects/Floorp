@@ -9,6 +9,7 @@
 
 #include "nsFrameMessageManager.h"
 #include "nsISupports.h"
+#include "mozilla/dom/CPOWManagerGetter.h"
 
 #define NS_ICONTENTPARENT_IID                                   \
   { 0xeeec9ebf, 0x8ecf, 0x4e38,                                 \
@@ -25,7 +26,6 @@ namespace mozilla {
 
 namespace jsipc {
 class PJavaScriptParent;
-class JavaScriptParent;
 class CpowEntry;
 } // namespace jsipc
 
@@ -40,6 +40,7 @@ class PBrowserParent;
 
 class nsIContentParent : public nsISupports
                        , public mozilla::dom::ipc::MessageManagerCallback
+                       , public CPOWManagerGetter
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTPARENT_IID)
@@ -63,8 +64,6 @@ public:
     const uint64_t& aId,
     const bool& aIsForApp,
     const bool& aIsForBrowser) NS_WARN_UNUSED_RESULT = 0;
-
-  virtual jsipc::JavaScriptParent *GetCPOWManager() = 0;
 
   virtual bool IsContentParent() { return false; }
   ContentParent* AsContentParent();
