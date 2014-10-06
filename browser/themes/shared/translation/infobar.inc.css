@@ -64,3 +64,28 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 .translation-attribution > image {
   width: 70px;
 }
+
+.translation-welcome-panel {
+  width: 305px;
+}
+
+.translation-welcome-logo {
+  height: 32px;
+  width: 32px;
+  list-style-image: url(chrome://browser/skin/translation-16@2x.png);
+  -moz-image-region: rect(0, 64px, 32px, 32px);
+}
+
+.translation-welcome-content {
+  -moz-margin-start: 16px;
+}
+
+.translation-welcome-headline {
+  font-size: larger;
+  font-weight: bold;
+}
+
+.translation-welcome-body {
+  padding: 1em 0;
+  margin: 0 0;
+}
