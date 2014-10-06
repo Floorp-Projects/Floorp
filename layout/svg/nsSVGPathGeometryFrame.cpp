@@ -171,10 +171,19 @@ nsSVGPathGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
         // decides whether or not to insert little lines into the path for zero
         // length subpaths base on that property.
         element->ClearAnyCachedPath();
-      } else if (StyleSVG()->mFillRule !=
-                   aOldStyleContext->PeekStyleSVG()->mFillRule) {
-        // Moz2D Path objects are fill-rule specific.
-        element->ClearAnyCachedPath();
+      } else if (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) {
+        if (StyleSVG()->mClipRule !=
+              aOldStyleContext->PeekStyleSVG()->mClipRule) {
+          // Moz2D Path objects are fill-rule specific.
+          // For clipPath we use clip-rule as the path's fill-rule.
+          element->ClearAnyCachedPath();
+        }
+      } else {
+        if (StyleSVG()->mFillRule !=
+              aOldStyleContext->PeekStyleSVG()->mFillRule) {
+          // Moz2D Path objects are fill-rule specific.
+          element->ClearAnyCachedPath();
+        }
       }
     }
   }

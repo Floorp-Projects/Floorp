@@ -8,11 +8,13 @@ DIRS += ['interfaces']
 
 EXPORTS.mozilla.dom += [
     'Icc.h',
+    'IccInfo.h',
     'IccManager.h',
 ]
 
 UNIFIED_SOURCES += [
     'Icc.cpp',
+    "IccInfo.cpp",
     'IccListener.cpp',
     'IccManager.cpp',
 ]
