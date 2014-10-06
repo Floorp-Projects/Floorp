@@ -17,7 +17,7 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
   var SourceMapConsumer = require('source-map/source-map-consumer').SourceMapConsumer;
   var SourceMapGenerator = require('source-map/source-map-generator').SourceMapGenerator;
 
-  exports['test that we can instantiate with a string or an objects'] = function (assert, util) {
+  exports['test that we can instantiate with a string or an object'] = function (assert, util) {
     assert.doesNotThrow(function () {
       var map = new SourceMapConsumer(util.testMap);
     });
@@ -27,17 +27,33 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
   };
 
   exports['test that the `sources` field has the original sources'] = function (assert, util) {
-    var map = new SourceMapConsumer(util.testMap);
-    var sources = map.sources;
+    var map;
+    var sources;
 
+    map = new SourceMapConsumer(util.testMap);
+    sources = map.sources;
     assert.equal(sources[0], '/the/root/one.js');
     assert.equal(sources[1], '/the/root/two.js');
+    assert.equal(sources.length, 2);
+
+    map = new SourceMapConsumer(util.testMapNoSourceRoot);
+    sources = map.sources;
+    assert.equal(sources[0], 'one.js');
+    assert.equal(sources[1], 'two.js');
+    assert.equal(sources.length, 2);
+
+    map = new SourceMapConsumer(util.testMapEmptySourceRoot);
+    sources = map.sources;
+    assert.equal(sources[0], 'one.js');
+    assert.equal(sources[1], 'two.js');
     assert.equal(sources.length, 2);
   };
 
   exports['test that the source root is reflected in a mapping\'s source field'] = function (assert, util) {
-    var map = new SourceMapConsumer(util.testMap);
+    var map;
     var mapping;
+
+    map = new SourceMapConsumer(util.testMap);
 
     mapping = map.originalPositionFor({
       line: 2,
@@ -50,6 +66,36 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
       column: 1
     });
     assert.equal(mapping.source, '/the/root/one.js');
+
+
+    map = new SourceMapConsumer(util.testMapNoSourceRoot);
+
+    mapping = map.originalPositionFor({
+      line: 2,
+      column: 1
+    });
+    assert.equal(mapping.source, 'two.js');
+
+    mapping = map.originalPositionFor({
+      line: 1,
+      column: 1
+    });
+    assert.equal(mapping.source, 'one.js');
+
+
+    map = new SourceMapConsumer(util.testMapEmptySourceRoot);
+
+    mapping = map.originalPositionFor({
+      line: 2,
+      column: 1
+    });
+    assert.equal(mapping.source, 'two.js');
+
+    mapping = map.originalPositionFor({
+      line: 1,
+      column: 1
+    });
+    assert.equal(mapping.source, 'one.js');
   };
 
   exports['test mapping tokens back exactly'] = function (assert, util) {
@@ -85,6 +131,30 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
     util.assertMapping(2, 9, '/the/root/two.js', 1, 16, null, map, assert, null, true);
   };
 
+  exports['test mappings and end of lines'] = function (assert, util) {
+    var smg = new SourceMapGenerator({
+      file: 'foo.js'
+    });
+    smg.addMapping({
+      original: { line: 1, column: 1 },
+      generated: { line: 1, column: 1 },
+      source: 'bar.js'
+    });
+    smg.addMapping({
+      original: { line: 2, column: 2 },
+      generated: { line: 2, column: 2 },
+      source: 'bar.js'
+    });
+
+    var map = SourceMapConsumer.fromSourceMap(smg);
+
+    // When finding original positions, mappings end at the end of the line.
+    util.assertMapping(2, 1, null, null, null, null, map, assert, true)
+
+    // When finding generated positions, mappings do not end at the end of the line.
+    util.assertMapping(1, 1, 'bar.js', 2, 1, null, map, assert, null, true);
+  };
+
   exports['test creating source map consumers with )]}\' prefix'] = function (assert, util) {
     assert.doesNotThrow(function () {
       var map = new SourceMapConsumer(")]}'" + JSON.stringify(util.testMap));
@@ -92,15 +162,15 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
   };
 
   exports['test eachMapping'] = function (assert, util) {
-    var map = new SourceMapConsumer(util.testMap);
+    var map;
+
+    map = new SourceMapConsumer(util.testMap);
     var previousLine = -Infinity;
     var previousColumn = -Infinity;
     map.eachMapping(function (mapping) {
       assert.ok(mapping.generatedLine >= previousLine);
 
-      if (mapping.source) {
-        assert.equal(mapping.source.indexOf(util.testMap.sourceRoot), 0);
-      }
+      assert.ok(mapping.source === '/the/root/one.js' || mapping.source === '/the/root/two.js');
 
       if (mapping.generatedLine === previousLine) {
         assert.ok(mapping.generatedColumn >= previousColumn);
@@ -110,6 +180,16 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
         previousLine = mapping.generatedLine;
         previousColumn = -Infinity;
       }
+    });
+
+    map = new SourceMapConsumer(util.testMapNoSourceRoot);
+    map.eachMapping(function (mapping) {
+      assert.ok(mapping.source === 'one.js' || mapping.source === 'two.js');
+    });
+
+    map = new SourceMapConsumer(util.testMapEmptySourceRoot);
+    map.eachMapping(function (mapping) {
+      assert.ok(mapping.source === 'one.js' || mapping.source === 'two.js');
     });
   };
 

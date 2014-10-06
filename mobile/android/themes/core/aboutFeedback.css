@@ -7,22 +7,38 @@ body {
   font-family: sans-serif;
   font-size: 12px;
   color: #222;
-  background-color: #ced7de;
-  padding: 10px;
+  background-color: #f5f5f5;
+  margin: 0;
 }
 
 a {
-  color: #004b98;
+  color: #0092DB;
 }
 
 section {
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
+  overflow: auto;
+  height: -moz-calc(100% - 80px);
+  margin: 20px;
+  padding: 5px;
 }
 
 section:not([active]) {
   display: none;
+}
+
+footer {
+  display: none;
+  width: 100%;
+  position: fixed;
+  bottom: 0px;
+  font-size: 16px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #ebe9f0;
+  border-top: 2px solid #D4D3D8;
 }
 
 .header {
@@ -33,21 +49,19 @@ section:not([active]) {
 }
 
 .message-box,
-.message-box-bottom,
 .link-box,
 .link-box-bottom {
-  background-color: #e4e9ee;
+  background-color: #ffffff;
   padding: 15px;
 }
 
 .message-box,
 .link-box {
-  border-bottom: 1px solid #c8cdd4;
+  border-bottom: 1px solid #ebebf0;
 }
 
-.message-box-bottom,
 .link-box-bottom {
-  border-bottom: 2px solid #c8cdd4;
+  border-bottom: 2px solid #ebebf0;
   margin-bottom: 10px;   
 }
 
@@ -63,11 +77,15 @@ section:not([active]) {
 
 .message {
   margin-bottom: 10px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.fine-print {
-  font-size: 10px;
-  color: #666;
+.privacy {
+  color: #bebebe;
+  text-align: center;
+  margin-top: 10px;
+  padding: 0px 20px;
 }
 
 .stars {
@@ -78,35 +96,27 @@ section:not([active]) {
   background-size: 64px 10px;
   background-position: center;
   background-repeat: no-repeat;
-  background-color: #e4e9ee;
 }
 
 .link-box-bottom:active > .stars {
   background-color: transparent;
 }
 
-@media screen and (max-height: 400px) {
-  .bottom-links,
-  #sumo-message {
-    margin-top: 20px;
-  }
+#sumo-icon {
+  position: relative;
+  float: left;
+  margin-right: 20px;
+  width: 41px;
+  height: 41px;
 }
 
-@media not screen and (max-height: 400px) {
-  body {
-    padding-top: 40px;
-  }
-
-  .bottom-links {
-    position: absolute;
-    left: 0;
-    bottom: 40px;
-  }
-
-  #sumo-message {
-    position: absolute;
-    bottom: 20px;
-  }
+#sad-thanks-icon {
+  position: relative;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 10px;
+  width: 60px;
 }
 
 .bottom-links {
@@ -119,31 +129,93 @@ section:not([active]) {
   text-decoration: underline;
 }
 
-#sumo-message {
-  color: #444;
-  -moz-padding-end: 30px;
-}
-
-.description,
-#last-url {
+.description {
   font-family: "Clear Sans",sans-serif;
   font-size: 14px;
+  color: #666;
   margin-bottom: 10px;
   padding: 5px;
   width: -moz-calc(100% - 10px);
+  border-radius: 4px;
+  border-width: 1px;
+}
+
+#last-url-div {
+  display: none;
+}
+
+#last-url {
+  color: #bebebe;
+  width: -moz-calc(100% - 10px);
+  border: none;
+  background: transparent;
+  /*padding: 0px;*/
+  display: block;
+}
+
+#last-checkbox {
+  position: relative;
+  float: right;
+  margin: 0px;
+  background-image: url("chrome://browser/skin/images/checkbox_unchecked.png");
+}
+
+#last-checkbox:checked {
+  background-image: url("chrome://browser/skin/images/checkbox_checked.png");
+  border: 1px solid #379DE7;
+}
+
+#last-checkbox:not(:checked) ~ #last-url {
+  visibility: hidden;
+}
+
+#help-section {
+  max-width: 500px;
+  margin: 14px 20px 15px;
+  padding: 5px;
+  overflow: hidden;
+}
+
+#thanks-sad-message {
+  margin: 20px 0px;
 }
 
 .send-feedback {
-  margin-top: 10px;
-  padding: 10px;
+  padding: 15px;
   font-size: 16px;
   width: 100%;
-  background-image: linear-gradient(rgb(87,94,102), rgb(71,77,83) 90%, rgb(45,49,53));
+  background-color: #0092DB;
   border-radius: 4px;
   border-width: 0;
   color: #fff;
 }
 
-.send-feedback:active {
-  background-image: linear-gradient(rgb(138,143,148), rgb(127,130,135) 90%, rgb(108,111,114));
+#sumo-link {
+  color: #222;
+}
+
+@media screen and (max-height: 400px) {
+  body {
+    padding-top: 40px;
+  }
+
+  .bottom-links {
+    margin-top: 20px;
+  }
+}
+
+@media not screen and (max-height: 400px) {
+  .bottom-links {
+    position: absolute;
+    left: 0;
+    bottom: 40px;
+  }
+
+  #sad[active="true"] ~ footer {
+    display: block;
+  }
+
+  #thanks-sad[active="true"] ~ footer {
+    display: block;
+  }
 }
