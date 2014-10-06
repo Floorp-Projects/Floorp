@@ -43,7 +43,7 @@
     <h1 class="header">&happy.header;</h1>
     <div class="message-box">
       <div class="message">&happy.message;</div>
-      <div class="fine-print">&happy.finePrint;</div>
+      <div>&happy.finePrint;</div>
     </div>
     <div id="open-play-store" class="link-box-bottom">
       <div class="stars"/>
@@ -56,25 +56,35 @@
   </section>
 
   <section id="sad">
+    <h1 class="header">&sad.header;</h1>
     <form>
       <div class="message">&sad.message;</div>
-      <textarea class="description" placeholder="&sad.placeholder;" rows="8" required="true"/>
-      <div class="message">&sad.lastSite;</div>
-      <input id="last-url" type="url" placeholder="&sad.urlPlaceholder;"/>
-      <div class="fine-print">&feedback.privacy;</div>
+      <textarea class="description" placeholder="&sad.placeholder;" rows="4" required="true"/>
+      <div class="message" id="last-url-div">
+        <span>&sad.lastSite2;</span>
+        <input id="last-checkbox" type="checkbox" checked="checked"/>
+        <input id="last-url" type="url" placeholder="&sad.urlPlaceholder;" readonly="readonly"/>
+      </div>
       <input class="send-feedback" type="submit" value="&feedback.send;"/>
+      <div class="privacy">&feedback.privacy2;</div>
     </form>
-    <div id="sumo-message" class="fine-print">&support.pre2;<a id="sumo-link">&support.link;</a>&support.post2;</div>
   </section>
 
   <section id="thanks-sad">
-    <h1 class="header">&sad.thanksHeader;</h1>
-    <div class="message-box-bottom">
+    <h1 class="header">&sad.thanksHeader2;</h1>
+    <img id="sad-thanks-icon" />
+    <div id="thanks-sad-message">
       <div class="message">&sad.thanksMessageTop;</div>
       <div class="message">&sad.thanksMessageBottom;</div>
     </div>
   </section>
 
+  <footer>
+    <div id="help-section">
+      <img id="sumo-icon" />
+      <span>&support.pre3;<a id="sumo-link">&support.link2;</a>&support.post3;</span>
+    </div>
+  </footer>
   <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutFeedback.js"></script>
 </body>
 </html>
