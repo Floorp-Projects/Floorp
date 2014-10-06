@@ -1246,7 +1246,7 @@ ContentChild::DeallocPTestShellChild(PTestShellChild* shell)
     return true;
 }
 
-jsipc::JavaScriptChild *
+jsipc::JavaScriptShared*
 ContentChild::GetCPOWManager()
 {
     if (ManagedPJavaScriptChild().Length()) {

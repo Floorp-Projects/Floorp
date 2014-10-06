@@ -34,7 +34,7 @@ class URIParams;
 }// namespace ipc
 
 namespace jsipc {
-class JavaScriptChild;
+class JavaScriptShared;
 }
 
 namespace layers {
@@ -194,7 +194,7 @@ public:
     virtual PTestShellChild* AllocPTestShellChild() MOZ_OVERRIDE;
     virtual bool DeallocPTestShellChild(PTestShellChild*) MOZ_OVERRIDE;
     virtual bool RecvPTestShellConstructor(PTestShellChild*) MOZ_OVERRIDE;
-    jsipc::JavaScriptChild *GetCPOWManager();
+    jsipc::JavaScriptShared* GetCPOWManager() MOZ_OVERRIDE;
 
     PMobileConnectionChild*
     SendPMobileConnectionConstructor(PMobileConnectionChild* aActor,

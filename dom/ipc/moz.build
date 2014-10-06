@@ -20,6 +20,7 @@ EXPORTS.mozilla.dom += [
     'ContentChild.h',
     'ContentParent.h',
     'ContentProcess.h',
+    'CPOWManagerGetter.h',
     'CrashReporterChild.h',
     'CrashReporterParent.h',
     'FilePickerParent.h',
