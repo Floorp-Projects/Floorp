@@ -1062,13 +1062,6 @@ void HTMLMediaElement::UpdatePreloadAction()
     }
   }
 
-  if ((mBegun || mIsRunningSelectResource) && nextAction < mPreloadAction) {
-    // We've started a load or are already downloading, and the preload was
-    // changed to a state where we buffer less. We don't support this case,
-    // so don't change the preload behaviour.
-    return;
-  }
-
   mPreloadAction = nextAction;
   if (nextAction == HTMLMediaElement::PRELOAD_ENOUGH) {
     if (mSuspendedForPreloadNone) {

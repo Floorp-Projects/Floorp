@@ -59,14 +59,16 @@ static uint32_t sStackTraceDepth = 0;
 
 // NS_WalkStackCallback to write a formatted stack frame to an ostringstream.
 static void
-StackFrameToOStringStream(void* aPC, void* aSP, void* aClosure)
+StackFrameToOStringStream(uint32_t aFrameNumber, void* aPC, void* aSP,
+                          void* aClosure)
 {
   std::ostringstream* stream = static_cast<std::ostringstream*>(aClosure);
   nsCodeAddressDetails details;
   char buf[1024];
   NS_DescribeCodeAddress(aPC, &details);
-  NS_FormatCodeAddressDetails(aPC, &details, buf, sizeof(buf));
-  *stream << "--" << buf;
+  NS_FormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
+  *stream << "--" << buf << '\n';
+  stream->flush();
 }
 #endif
 

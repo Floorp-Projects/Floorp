@@ -41,37 +41,58 @@ const contents = {
     "  color: #f06; }",
     "",
     "/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiIiwic291cmNlcyI6WyJzYXNzL2NvbnRhaW5lZC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUVBO0VBQ0UsT0FISyIsInNvdXJjZXNDb250ZW50IjpbIiRwaW5rOiAjZjA2O1xuXG4jaGVhZGVyIHtcbiAgY29sb3I6ICRwaW5rO1xufSJdfQ==*/"
+  ].join("\n"),
+  "test-stylus.styl": [
+   "paulrougetpink = #f06;",
+   "",
+   "div",
+   "  color: paulrougetpink",
+   "",
+  "span",
+  "  background-color: #EEE",
+  ""
+  ].join("\n"),
+  "test-stylus.css": [
+    "div {",
+    "  color: #f06;",
+    "}",
+    "span {",
+    "  background-color: #eee;",
+    "}",
+    "/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInRlc3Qtc3R5bHVzLnN0eWwiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBRUE7RUFDRSxPQUFPLEtBQVA7O0FBRUY7RUFDRSxrQkFBa0IsS0FBbEIiLCJmaWxlIjoidGVzdC1zdHlsdXMuY3NzIiwic291cmNlc0NvbnRlbnQiOlsicGF1bHJvdWdldHBpbmsgPSAjZjA2O1xuXG5kaXZcbiAgY29sb3I6IHBhdWxyb3VnZXRwaW5rXG5cbnNwYW5cbiAgYmFja2dyb3VuZC1jb2xvcjogI0VFRVxuIl19 */"
   ].join("\n")
 }
 
-const cssNames = ["sourcemaps.css", "contained.css"];
-const scssNames = ["sourcemaps.scss", "contained.scss"];
+const cssNames = ["sourcemaps.css", "contained.css", "test-stylus.css"];
+const origNames = ["sourcemaps.scss", "contained.scss", "test-stylus.styl"];
 
 waitForExplicitFinish();
 
 let test = asyncTest(function*() {
   Services.prefs.setBoolPref(PREF, true);
 
-  let {UI} = yield addTabAndOpenStyleEditors(5, null, TESTCASE_URI);
+  let {UI} = yield addTabAndOpenStyleEditors(7, null, TESTCASE_URI);
 
-  is(UI.editors.length, 3,
+  is(UI.editors.length, 4,
     "correct number of editors with source maps enabled");
 
   // Test first plain css editor
   testFirstEditor(UI.editors[0]);
 
   // Test Scss editors
-  yield testEditor(UI.editors[1], scssNames);
-  yield testEditor(UI.editors[2], scssNames);
+  yield testEditor(UI.editors[1], origNames);
+  yield testEditor(UI.editors[2], origNames);
+  yield testEditor(UI.editors[3], origNames);
 
   // Test disabling original sources
   yield togglePref(UI);
 
-  is(UI.editors.length, 3, "correct number of editors after pref toggled");
+  is(UI.editors.length, 4, "correct number of editors after pref toggled");
 
   // Test CSS editors
   yield testEditor(UI.editors[1], cssNames);
   yield testEditor(UI.editors[2], cssNames);
+  yield testEditor(UI.editors[3], cssNames);
 
   Services.prefs.clearUserPref(PREF);
 });
@@ -89,6 +110,7 @@ function testEditor(editor, possibleNames) {
     let expectedText = contents[name];
 
     let text = editor.sourceEditor.getText();
+
     is(text, expectedText, name + " editor contains expected text");
   });
 }
