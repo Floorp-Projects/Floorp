@@ -189,8 +189,8 @@ gc::GCRuntime::startVerifyPreBarriers()
     if (!IsIncrementalGCSafe(rt))
         return;
 
-    for (GCChunkSet::Range r(chunkSet.all()); !r.empty(); r.popFront())
-        r.front()->bitmap.clear();
+    for (auto chunk = rt->gc.allNonEmptyChunks(); !chunk.done(); chunk.next())
+        chunk->bitmap.clear();
 
     number++;
 
