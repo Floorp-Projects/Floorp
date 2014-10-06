@@ -96,25 +96,9 @@ ImageBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
     NewRunnableMethod(this, &ImageBridgeParent::DeferredDestroy));
 }
 
-class MOZ_STACK_CLASS AutoImageBridgeParentAsyncMessageSender
-{
-public:
-  explicit AutoImageBridgeParentAsyncMessageSender(ImageBridgeParent* aImageBridge)
-    : mImageBridge(aImageBridge) {}
-
-  ~AutoImageBridgeParentAsyncMessageSender()
-  {
-    mImageBridge->SendPendingAsyncMessges();
-  }
-private:
-  ImageBridgeParent* mImageBridge;
-};
-
 bool
 ImageBridgeParent::RecvUpdate(const EditArray& aEdits, EditReplyArray* aReply)
 {
-  AutoImageBridgeParentAsyncMessageSender autoAsyncMessageSender(this);
-
   // If we don't actually have a compositor, then don't bother
   // creating any textures.
   if (Compositor::GetBackend() == LayersBackend::LAYERS_NONE) {
@@ -352,7 +336,9 @@ bool ImageBridgeParent::IsSameProcess() const
 void
 ImageBridgeParent::ReplyRemoveTexture(const OpReplyRemoveTexture& aReply)
 {
-  mPendingAsyncMessage.push_back(aReply);
+  InfallibleTArray<AsyncParentMessageData> messages;
+  messages.AppendElement(aReply);
+  mozilla::unused << SendParentAsyncMessages(messages);
 }
 
 /*static*/ void
@@ -366,80 +352,35 @@ ImageBridgeParent::ReplyRemoveTexture(base::ProcessId aChildProcessId,
   imageBridge->ReplyRemoveTexture(aReply);
 }
 
-void
-ImageBridgeParent::SendFenceHandleIfPresent(PTextureParent* aTexture,
-                                            CompositableHost* aCompositableHost)
-{
-  RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
-  if (!texture) {
-    return;
-  }
-
-  // Send a ReleaseFence of CompositorOGL.
-  if (aCompositableHost && aCompositableHost->GetCompositor()) {
-    FenceHandle fence = aCompositableHost->GetCompositor()->GetReleaseFence();
-    if (fence.IsValid()) {
-      RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
-      HoldUntilComplete(tracker);
-      mPendingAsyncMessage.push_back(OpDeliverFence(tracker->GetId(),
-                                                    aTexture, nullptr,
-                                                    fence));
-    }
-  }
-
-  // Send a ReleaseFence that is set by HwcComposer2D.
-  FenceHandle fence = texture->GetAndResetReleaseFenceHandle();
-  if (fence.IsValid()) {
-    RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
-    HoldUntilComplete(tracker);
-    mPendingAsyncMessage.push_back(OpDeliverFence(tracker->GetId(),
-                                                  aTexture, nullptr,
-                                                  fence));
-  }
-}
-
-void
+/*static*/ void
 ImageBridgeParent::SendFenceHandleToTrackerIfPresent(uint64_t aDestHolderId,
                                                      uint64_t aTransactionId,
-                                                     PTextureParent* aTexture,
-                                                     CompositableHost* aCompositableHost)
+                                                     PTextureParent* aTexture)
 {
   RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
   if (!texture) {
     return;
   }
-
-  // Send a ReleaseFence of CompositorOGL.
-  if (aCompositableHost && aCompositableHost->GetCompositor()) {
-    FenceHandle fence = aCompositableHost->GetCompositor()->GetReleaseFence();
-    if (fence.IsValid()) {
-      RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
-      HoldUntilComplete(tracker);
-      mPendingAsyncMessage.push_back(OpDeliverFenceToTracker(tracker->GetId(),
-                                                             aDestHolderId,
-                                                             aTransactionId,
-                                                             fence));
-    }
-  }
-
-  // Send a ReleaseFence that is set by HwcComposer2D.
   FenceHandle fence = texture->GetAndResetReleaseFenceHandle();
-  if (fence.IsValid()) {
-    RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
-    HoldUntilComplete(tracker);
-    mPendingAsyncMessage.push_back(OpDeliverFenceToTracker(tracker->GetId(),
-                                                           aDestHolderId,
-                                                           aTransactionId,
-                                                           fence));
+  if (!fence.IsValid()) {
+    return;
   }
+
+  RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
+  HoldUntilComplete(tracker);
+  InfallibleTArray<AsyncParentMessageData> messages;
+  messages.AppendElement(OpDeliverFenceToTracker(tracker->GetId(),
+                                                 aDestHolderId,
+                                                 aTransactionId,
+                                                 fence));
+  mozilla::unused << SendParentAsyncMessages(messages);
 }
 
 /*static*/ void
 ImageBridgeParent::SendFenceHandleToTrackerIfPresent(base::ProcessId aChildProcessId,
                                                      uint64_t aDestHolderId,
                                                      uint64_t aTransactionId,
-                                                     PTextureParent* aTexture,
-                                                     CompositableHost* aCompositableHost)
+                                                     PTextureParent* aTexture)
 {
   ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(aChildProcessId);
   if (!imageBridge) {
@@ -447,19 +388,9 @@ ImageBridgeParent::SendFenceHandleToTrackerIfPresent(base::ProcessId aChildProce
   }
   imageBridge->SendFenceHandleToTrackerIfPresent(aDestHolderId,
                                                  aTransactionId,
-                                                 aTexture,
-                                                 aCompositableHost);
+                                                 aTexture);
 }
 
-/*static*/ void
-ImageBridgeParent::SendPendingAsyncMessges(base::ProcessId aChildProcessId)
-{
-  ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(aChildProcessId);
-  if (!imageBridge) {
-    return;
-  }
-  imageBridge->SendPendingAsyncMessges();
-}
 
 } // layers
 } // mozilla

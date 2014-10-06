@@ -30,16 +30,11 @@ class CompositableParentManager : public ISurfaceAllocator
                                 , public AsyncTransactionTrackersHolder
 {
 public:
-  virtual void SendFenceHandleIfPresent(PTextureParent* aTexture,
-                                        CompositableHost* aCompositableHost) = 0;
-
   virtual void SendFenceHandle(AsyncTransactionTracker* aTracker,
                                PTextureParent* aTexture,
                                const FenceHandle& aFence) = 0;
 
   virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) = 0;
-
-  void SendPendingAsyncMessges();
 
   /**
    * Get child side's process Id.
@@ -62,7 +57,6 @@ protected:
 
   virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) {}
 
-  std::vector<AsyncParentMessageData> mPendingAsyncMessage;
 };
 
 } // namespace

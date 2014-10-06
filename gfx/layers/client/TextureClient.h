@@ -358,7 +358,7 @@ public:
 
   virtual void SetReleaseFenceHandle(FenceHandle aReleaseFenceHandle)
   {
-    mReleaseFenceHandle.Merge(aReleaseFenceHandle);
+    mReleaseFenceHandle = aReleaseFenceHandle;
   }
 
   const FenceHandle& GetReleaseFenceHandle() const
