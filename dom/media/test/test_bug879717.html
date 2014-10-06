@@ -1,0 +1,119 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 879717, check that a video element can be drawn into a canvas at various states of playback</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+var canvas = document.createElement('canvas');
+document.body.appendChild(canvas);
+
+var checkDrawImage = function(eventName, videoElement) {
+  var exception = null;
+  var exceptionName = "nothing";
+  try {
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+  } catch (e) {
+    exception = e;
+    exceptionName = e.name;
+  }
+  ok(exception === null,
+    "drawImage shouldn't throw an exception on " + eventName +
+    " of " + videoElement.testName + ", got " + exceptionName);
+};
+
+var checkDrawImageEventHandler = function(ev) {
+  checkDrawImage(ev.type, ev.target);
+};
+var startTest = function(media, token) {
+  manager.started(token);
+
+  // File playback
+  var v1 = document.createElement("video");
+  v1.autoplay = true;
+
+  // Captured file playback
+  var v2 = document.createElement("video");
+  v2.autoplay = true;
+
+  // Stream playback
+  var v3 = document.createElement("video");
+  v3.autoplay = true;
+
+  v1.gotLoadeddata = false;
+  v2.gotLoadeddata = false;
+  v3.gotLoadeddata = false;
+
+  v1.testName = "v1 (" + media.name + ")";
+  v2.testName = "v2 (Captured " + media.name + ")";
+  v3.testName = "v3 (Stream of " + media.name + ")";
+
+  checkDrawImage("beforeplay", v1);
+  checkDrawImage("beforeplay", v2);
+  checkDrawImage("beforeplay", v3);
+
+  v1.onloadedmetadata = checkDrawImageEventHandler;
+  v2.onloadedmetadata = checkDrawImageEventHandler;
+  v3.onloadedmetadata = checkDrawImageEventHandler;
+
+  v1.onplay = checkDrawImageEventHandler;
+  v2.onplay = checkDrawImageEventHandler;
+  v3.onplay = checkDrawImageEventHandler;
+
+  v1.onplaying = checkDrawImageEventHandler;
+  v2.onplaying = checkDrawImageEventHandler;
+  v3.onplaying = checkDrawImageEventHandler;
+
+  var onloadeddata = function(ev) {
+    ev.target.gotLoadeddata = true;
+    checkDrawImageEventHandler(ev);
+  };
+
+  v1.onloadeddata = onloadeddata;
+  v2.onloadeddata = onloadeddata;
+  v3.onloadeddata = onloadeddata;
+
+  var checkFinished = function() {
+    if (!v1.testFinished || !v2.testFinished || !v3.testFinished) {
+      return;
+    }
+
+    ok(v1.gotLoadeddata, v1.testName + " should have gotten the 'loadeddata' event callback");
+    ok(v2.gotLoadeddata, v2.testName + " should have gotten the 'loadeddata' event callback");
+    ok(v3.gotLoadeddata, v3.testName + " should have gotten the 'loadeddata' event callback");
+
+    manager.finished(token);
+  };
+
+  var onended = function(ev) {
+    checkDrawImageEventHandler(ev);
+    removeNodeAndSource(ev.target);
+    ev.target.testFinished = true;
+    checkFinished();
+  };
+
+  v1.onended = onended;
+  v2.onended = onended;
+  v3.onended = onended;
+
+  document.body.appendChild(v1);
+  document.body.appendChild(v2);
+  document.body.appendChild(v3);
+
+  v1.src = media.name;
+  v2.src = media.name;
+  v3.mozSrcObject = v2.mozCaptureStreamUntilEnded();
+}
+
+manager.runTests(getPlayableVideos(gSmallTests), startTest);
+</script>
+</pre>
+</body>
+</html>
