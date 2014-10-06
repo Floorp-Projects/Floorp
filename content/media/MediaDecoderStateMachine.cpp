@@ -1421,11 +1421,21 @@ void MediaDecoderStateMachine::StartWaitForResources()
 void MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged()
 {
   AssertCurrentThreadInMonitor();
-  if (mState != DECODER_STATE_WAIT_FOR_RESOURCES ||
-      mReader->IsWaitingMediaResources()) {
+  DECODER_LOG("NotifyWaitingForResourcesStatusChanged");
+  RefPtr<nsIRunnable> task(
+    NS_NewRunnableMethod(this,
+      &MediaDecoderStateMachine::DoNotifyWaitingForResourcesStatusChanged));
+  mDecodeTaskQueue->Dispatch(task);
+}
+
+void MediaDecoderStateMachine::DoNotifyWaitingForResourcesStatusChanged()
+{
+  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  if (mState != DECODER_STATE_WAIT_FOR_RESOURCES) {
     return;
   }
-  DECODER_LOG("NotifyWaitingForResourcesStatusChanged");
+  DECODER_LOG("DoNotifyWaitingForResourcesStatusChanged");
   // The reader is no longer waiting for resources (say a hardware decoder),
   // we can now proceed to decode metadata.
   SetState(DECODER_STATE_DECODING_NONE);
@@ -1909,6 +1919,8 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
   MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
   DECODER_LOG("Decoding Media Headers");
+
+  mReader->PreReadMetadata();
 
   if (mReader->IsWaitingMediaResources()) {
     StartWaitForResources();

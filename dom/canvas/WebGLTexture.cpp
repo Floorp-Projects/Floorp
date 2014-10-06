@@ -32,6 +32,7 @@ WebGLTexture::WebGLTexture(WebGLContext *context)
     , mFacesCount(0)
     , mMaxLevelWithCustomImages(0)
     , mHaveGeneratedMipmap(false)
+    , mImmutable(false)
     , mFakeBlackStatus(WebGLTextureFakeBlackStatus::IncompleteTexture)
 {
     SetIsDOMBinding();
@@ -227,19 +228,12 @@ WebGLTexture::IsCubeComplete() const {
     return AreAllLevel0ImageInfosEqual();
 }
 
-static TexImageTarget
-GLCubeMapFaceById(int id)
-{
-    // Correctness is checked by the constructor for TexImageTarget
-    return TexImageTarget(LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + id);
-}
-
 bool
 WebGLTexture::IsMipmapCubeComplete() const {
     if (!IsCubeComplete()) // in particular, this checks that this is a cube map
         return false;
     for (int i = 0; i < 6; i++) {
-        const TexImageTarget face = GLCubeMapFaceById(i);
+        const TexImageTarget face = TexImageTargetForTargetAndFace(LOCAL_GL_TEXTURE_CUBE_MAP, i);
         if (!DoesTexture2DMipmapHaveAllLevelsConsistentlyDefined(face))
             return false;
     }
@@ -409,9 +403,7 @@ WebGLTexture::ResolvedFakeBlackStatus() {
             // glTexImage2D is able to upload data to images.
             for (size_t level = 0; level <= mMaxLevelWithCustomImages; ++level) {
                 for (size_t face = 0; face < mFacesCount; ++face) {
-                    TexImageTarget imageTarget = mTarget == LOCAL_GL_TEXTURE_2D
-                                                 ? LOCAL_GL_TEXTURE_2D
-                                                 : LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + face;
+                    TexImageTarget imageTarget = TexImageTargetForTargetAndFace(mTarget, face);
                     const ImageInfo& imageInfo = ImageInfoAt(imageTarget, level);
                     if (imageInfo.mImageDataStatus == WebGLImageDataStatus::UninitializedImageData) {
                         DoDeferredImageInitialization(imageTarget, level);

@@ -327,9 +327,9 @@ public:
   // be held.
   bool IsPlaying();
 
+  // Dispatch DoNotifyWaitingForResourcesStatusChanged task to mDecodeTaskQueue.
   // Called when the reader may have acquired the hardware resources required
-  // to begin decoding. The state machine may move into DECODING_METADATA if
-  // appropriate. The decoder monitor must be held while calling this.
+  // to begin decoding. The decoder monitor must be held while calling this.
   void NotifyWaitingForResourcesStatusChanged();
 
   // Notifies the state machine that should minimize the number of samples
@@ -638,6 +638,10 @@ protected:
 
   // Called by the AudioSink to signal errors.
   void OnAudioSinkError();
+
+  // The state machine may move into DECODING_METADATA if we are in
+  // DECODER_STATE_WAIT_FOR_RESOURCES.
+  void DoNotifyWaitingForResourcesStatusChanged();
 
   // The decoder object that created this state machine. The state machine
   // holds a strong reference to the decoder to ensure that the decoder stays
