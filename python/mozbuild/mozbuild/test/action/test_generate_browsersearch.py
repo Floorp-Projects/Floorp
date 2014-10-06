@@ -32,7 +32,7 @@ class TestGenerateBrowserSearch(unittest.TestCase):
 
     def _test_one(self, name):
         with TemporaryDirectory() as tmpdir:
-            with NamedTemporaryFile(mode='rw') as temp:
+            with NamedTemporaryFile(mode='r+') as temp:
                 srcdir = os.path.join(test_data_path, name)
 
                 generate_browsersearch.main([
