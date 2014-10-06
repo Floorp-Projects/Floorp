@@ -12,6 +12,7 @@
 #include "nsStringGlue.h"
 #include "prio.h"
 #include "mozilla/net/DNS.h"
+#include "TimingStruct.h"
 
 namespace IPC {
 
@@ -143,6 +144,39 @@ struct ParamTraits<mozilla::net::NetAddr>
 
     /* We've been tricked by some socket family we don't know about! */
     return false;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::net::ResourceTimingStruct>
+{
+  static void Write(Message* aMsg, const mozilla::net::ResourceTimingStruct& aParam)
+  {
+    WriteParam(aMsg, aParam.domainLookupStart);
+    WriteParam(aMsg, aParam.domainLookupEnd);
+    WriteParam(aMsg, aParam.connectStart);
+    WriteParam(aMsg, aParam.connectEnd);
+    WriteParam(aMsg, aParam.requestStart);
+    WriteParam(aMsg, aParam.responseStart);
+    WriteParam(aMsg, aParam.responseEnd);
+
+    WriteParam(aMsg, aParam.fetchStart);
+    WriteParam(aMsg, aParam.redirectStart);
+    WriteParam(aMsg, aParam.redirectEnd);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, mozilla::net::ResourceTimingStruct* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->domainLookupStart) &&
+           ReadParam(aMsg, aIter, &aResult->domainLookupEnd) &&
+           ReadParam(aMsg, aIter, &aResult->connectStart) &&
+           ReadParam(aMsg, aIter, &aResult->connectEnd) &&
+           ReadParam(aMsg, aIter, &aResult->requestStart) &&
+           ReadParam(aMsg, aIter, &aResult->responseStart) &&
+           ReadParam(aMsg, aIter, &aResult->responseEnd) &&
+           ReadParam(aMsg, aIter, &aResult->fetchStart) &&
+           ReadParam(aMsg, aIter, &aResult->redirectStart) &&
+           ReadParam(aMsg, aIter, &aResult->redirectEnd);
   }
 };
 
