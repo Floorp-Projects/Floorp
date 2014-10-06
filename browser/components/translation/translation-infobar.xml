@@ -23,6 +23,21 @@
         <xul:hbox anonid="details" align="center" flex="1">
           <xul:image class="translate-infobar-element messageImage"
                      anonid="messageImage"/>
+          <xul:panel anonid="welcomePanel" class="translation-welcome-panel"
+                     type="arrow" align="start">
+            <xul:image class="translation-welcome-logo"/>
+            <xul:vbox flex="1" class="translation-welcome-content">
+              <xul:description class="translation-welcome-headline"
+                               anonid="welcomeHeadline"/>
+              <xul:description class="translation-welcome-body" anonid="welcomeBody"/>
+              <xul:hbox align="center">
+                <xul:label anonid="learnMore" class="plain text-link"/>
+                <xul:spacer flex="1"/>
+                <xul:button class="translate-infobar-element" anonid="thanksButton"
+                            onclick="this.parentNode.parentNode.parentNode.hidePopup();"/>
+              </xul:hbox>
+            </xul:vbox>
+          </xul:panel>
           <xul:deck anonid="translationStates" selectedIndex="0">
 
             <!-- offer to translate -->
@@ -198,6 +213,41 @@
 
             if (aTranslation.state)
               this.state = aTranslation.state;
+
+            const kWelcomePref = "browser.translation.ui.welcomeMessageShown";
+            if (Services.prefs.prefHasUserValue(kWelcomePref))
+              return;
+
+            this.addEventListener("transitionend", function onShown() {
+              this.removeEventListener("transitionend", onShown);
+
+              // These strings are hardcoded because they need to reach beta
+              // without riding the trains.
+              let localizedStrings = {
+                en: ["Hey look! It's something new!",
+                     "Now the Web is even more accessible with our new in-page translation feature. Click the translate button to try it!",
+                     "Learn more.",
+                     "Thanks"]
+              };
+
+              let locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                             .getService(Ci.nsIXULChromeRegistry)
+                             .getSelectedLocale("browser");
+              if (!(locale in localizedStrings))
+                locale = "en";
+              let strings = localizedStrings[locale];
+
+              this._getAnonElt("welcomeHeadline").setAttribute("value", strings[0]);
+              this._getAnonElt("welcomeBody").textContent = strings[1];
+              this._getAnonElt("learnMore").setAttribute("value", strings[2]);
+              this._getAnonElt("thanksButton").setAttribute("label", strings[3]);
+
+              let panel = this._getAnonElt("welcomePanel");
+              panel.openPopup(this._getAnonElt("messageImage"),
+                              "bottomcenter topleft");
+
+              Services.prefs.setBoolPref(kWelcomePref, true);
+            });
           ]]>
         </body>
       </method>
