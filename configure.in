@@ -6911,6 +6911,7 @@ if test "$NS_DISABLE_LOGGING"; then
     AC_DEFINE(NS_DISABLE_LOGGING)
 else
     AC_DEFINE(MOZ_LOGGING)
+    AC_DEFINE(FORCE_PR_LOG)
 fi
 
 dnl ========================================================
