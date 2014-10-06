@@ -20,9 +20,6 @@
 #include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
 
-#ifdef MOZ_LOGGING
-#define FORCE_PR_LOG /* Allow logging in the release build */
-#endif // MOZ_LOGGING
 #include "prlog.h"
 
 #include "nsString.h"
