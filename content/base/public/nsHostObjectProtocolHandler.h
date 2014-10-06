@@ -23,6 +23,7 @@ class nsIPrincipal;
 namespace mozilla {
 class DOMMediaStream;
 namespace dom {
+class FileImpl;
 class MediaSource;
 }
 }
@@ -117,6 +118,9 @@ inline bool IsFontTableURI(nsIURI* aUri)
   bool isFont;
   return NS_SUCCEEDED(aUri->SchemeIs(FONTTABLEURI_SCHEME, &isFont)) && isFont;
 }
+
+extern nsresult
+NS_GetBlobForBlobURI(nsIURI* aURI, mozilla::dom::FileImpl** aBlob);
 
 extern nsresult
 NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream);
