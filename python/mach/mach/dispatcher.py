@@ -135,19 +135,27 @@ class CommandAction(argparse.Action):
         parser_args = {
             'add_help': False,
             'usage': '%(prog)s [global arguments] ' + command +
-                ' command arguments]',
+                ' [command arguments]',
         }
-
-        if handler.allow_all_arguments:
-            parser_args['prefix_chars'] = '+'
 
         if handler.parser:
             subparser = handler.parser
         else:
             subparser = argparse.ArgumentParser(**parser_args)
 
+        remainder = None
+
         for arg in handler.arguments:
-            subparser.add_argument(*arg[0], **arg[1])
+            if arg[1].get('nargs') == argparse.REMAINDER:
+                # parse_known_args expects all argparse.REMAINDER ('...')
+                # arguments to be all stuck together. Instead, we want them to
+                # pick any extra argument, wherever they are.
+                # Assume a limited CommandArgument for those arguments.
+                assert len(arg[0]) == 1
+                assert all(k in ('default', 'nargs', 'help') for k in arg[1])
+                remainder = arg
+            else:
+                subparser.add_argument(*arg[0], **arg[1])
 
         # We define the command information on the main parser result so as to
         # not interfere with arguments passed to the command.
@@ -156,7 +164,32 @@ class CommandAction(argparse.Action):
 
         command_namespace, extra = subparser.parse_known_args(args)
         setattr(namespace, 'command_args', command_namespace)
-        if extra:
+        if remainder:
+            (name,), options = remainder
+            # parse_known_args usefully puts all arguments after '--' in
+            # extra, but also puts '--' there. We don't want to pass it down
+            # to the command handler. Note that if multiple '--' are on the
+            # command line, only the first one is removed, so that subsequent
+            # ones are passed down.
+            if '--' in extra:
+                extra.remove('--')
+
+            # Commands with argparse.REMAINDER arguments used to force the
+            # other arguments to be '+' prefixed. If a user now passes such
+            # an argument, if will silently end up in extra. So, check if any
+            # of the allowed arguments appear in a '+' prefixed form, and error
+            # out if that's the case.
+            for args, _ in handler.arguments:
+                for arg in args:
+                    arg = arg.replace('-', '+', 1)
+                    if arg in extra:
+                        raise UnrecognizedArgumentError(command, [arg])
+
+            if extra:
+                setattr(command_namespace, name, extra)
+            else:
+                setattr(command_namespace, name, options.get('default', []))
+        elif extra:
             raise UnrecognizedArgumentError(command, extra)
 
     def _handle_main_help(self, parser, verbose):
@@ -233,9 +266,6 @@ class CommandAction(argparse.Action):
             'formatter_class': CommandFormatter,
             'add_help': False,
         }
-
-        if handler.allow_all_arguments:
-            parser_args['prefix_chars'] = '+'
 
         if handler.parser:
             c_parser = handler.parser
