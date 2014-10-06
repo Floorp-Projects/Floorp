@@ -140,7 +140,8 @@ describe("loop.panel", function() {
 
       view = TestUtils.renderIntoDocument(loop.panel.PanelView({
         notifications: notifications,
-        client: fakeClient
+        client: fakeClient,
+        showTabButtons: true,
       }));
 
       [callTab, contactsTab] =

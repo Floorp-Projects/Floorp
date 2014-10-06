@@ -441,6 +441,7 @@ loop.panel = (function(_, mozL10n) {
       // Mostly used for UI components showcase and unit tests
       callUrl: React.PropTypes.string,
       userProfile: React.PropTypes.object,
+      showTabButtons: React.PropTypes.bool,
     },
 
     getInitialState: function() {
@@ -515,7 +516,7 @@ loop.panel = (function(_, mozL10n) {
         React.DOM.div(null, 
           NotificationListView({notifications: this.props.notifications, 
                                 clearOnDocumentHidden: true}), 
-          TabView({ref: "tabView", buttonsHidden: !this.state.userProfile}, 
+          TabView({ref: "tabView", buttonsHidden: !this.state.userProfile && !this.props.showTabButtons}, 
             Tab({name: "call"}, 
               React.DOM.div({className: "content-area"}, 
                 CallUrlResult({client: this.props.client, 
