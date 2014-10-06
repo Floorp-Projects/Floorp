@@ -98,7 +98,10 @@ this.UITour = {
     }],
     ["help",        {query: "#PanelUI-help"}],
     ["home",        {query: "#home-button"}],
-    ["forget",      {query: "#panic-button"}],
+    ["forget", {
+      query: "#panic-button",
+      widgetName: "panic-button",
+      allowAdd: true }],
     ["privateWindow",  {query: "#privatebrowsing-button"}],
     ["quit",        {query: "#PanelUI-quit"}],
     ["search",      {
@@ -428,6 +431,15 @@ this.UITour = {
         contentDocument.location.href = "about:accounts?action=signup";
         break;
       }
+
+      case "addNavBarWidget": {
+        // Add a widget to the toolbar
+        let targetPromise = this.getTarget(window, data.name);
+        targetPromise.then(target => {
+          this.addNavBarWidget(target, contentDocument, data.callbackID);
+        }).then(null, Cu.reportError);
+        break;
+      }
     }
 
     if (!this.originTabs.has(window))
@@ -701,6 +713,7 @@ this.UITour = {
         removeTargetListener: targetObject.removeTargetListener,
         targetName: aTargetName,
         widgetName: targetObject.widgetName,
+        allowAdd: targetObject.allowAdd,
       });
     }).then(null, Cu.reportError);
     return deferred.promise;
@@ -1172,6 +1185,24 @@ this.UITour = {
         targets: [],
       });
     });
+  },
+
+  addNavBarWidget: function (aTarget, aContentDocument, aCallbackID) {
+    if (aTarget.node) {
+      Cu.reportError("UITour: can't add a widget already present: " + data.target);
+      return;
+    }
+    if (!aTarget.allowAdd) {
+      Cu.reportError("UITour: not allowed to add this widget: " + data.target);
+      return;
+    }
+    if (!aTarget.widgetName) {
+      Cu.reportError("UITour: can't add a widget without a widgetName property: " + data.target);
+      return;
+    }
+
+    CustomizableUI.addWidgetToArea(aTarget.widgetName, CustomizableUI.AREA_NAVBAR);
+    this.sendPageCallback(aContentDocument, aCallbackID);
   },
 
   _addAnnotationPanelMutationObserver: function(aPanelEl) {
