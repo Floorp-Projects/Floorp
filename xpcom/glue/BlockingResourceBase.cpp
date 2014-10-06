@@ -48,7 +48,8 @@ BlockingResourceBase::DDT* BlockingResourceBase::sDeadlockDetector;
 
 
 void
-BlockingResourceBase::StackWalkCallback(void* aPc, void* aSp, void* aClosure)
+BlockingResourceBase::StackWalkCallback(uint32_t aFrameNumber, void* aPc,
+                                        void* aSp, void* aClosure)
 {
 #ifndef MOZ_CALLSTACK_DISABLED
   AcquisitionState* state = (AcquisitionState*)aClosure;
@@ -67,8 +68,7 @@ BlockingResourceBase::GetStackTrace(AcquisitionState& aState)
 
   // NB: Ignore the return value, there's nothing useful we can do if this
   //     this fails.
-  NS_StackWalk(StackWalkCallback, kSkipFrames,
-               24, &aState, 0, nullptr);
+  NS_StackWalk(StackWalkCallback, kSkipFrames, 24, &aState, 0, nullptr);
 #endif
 }
 
@@ -185,7 +185,7 @@ BlockingResourceBase::Print(nsACString& aOut) const
   WalkTheStackCodeAddressService addressService;
 
   for (uint32_t i = 0; i < state.Length(); i++) {
-    const size_t kMaxLength = 4096;
+    const size_t kMaxLength = 1024;
     char buffer[kMaxLength];
     addressService.GetLocation(state[i], buffer, kMaxLength);
     const char* fmt = "    %s\n";

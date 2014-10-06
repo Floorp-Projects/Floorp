@@ -59,12 +59,21 @@ interface nsIMemoryInfoDumper : nsISupports
    *
    * @param aAnonymize Should the reports be anonymized?
    *
-   * Sample output:
+   * Sample output, annotated with comments for explanatory purposes.
    *
    * {
+   *   // The version number of the format, which will be incremented each time
+   *   // backwards-incompatible changes are made. A mandatory integer.
    *   "version": 1
+   *
+   *   // Equal to nsIMemoryReporterManager::hasMozMallocUsableSize. A
+   *   // mandatory boolean.
    *   "hasMozMallocUsableSize": true,
+   *
+   *   // The memory reports. A mandatory array.
    *   "reports": [
+   *     // The properties correspond to the arguments of
+   *     // nsIHandleReportCallback::callback. Every one is mandatory.
    *     {"process":"Main Process (pid 12345)", "path":"explicit/foo/bar",
    *      "kind":1, "units":0, "amount":2000000, "description":"Foo bar."},
    *     {"process":"Main Process (pid 12345)", "path":"heap-allocated",
@@ -72,65 +81,6 @@ interface nsIMemoryInfoDumper : nsISupports
    *     {"process":"Main Process (pid 12345)", "path":"vsize",
    *      "kind":1, "units":0, "amount":10000000, "description":"Vsize."}
    *   ]
-   * }
-   *
-   * JSON schema for the output.
-   *
-   * {
-   *   "properties": {
-   *     "version": {
-   *       "type": "integer",
-   *       "description": "Version number of this schema.",
-   *       "required": true
-   *     },
-   *     "hasMozMallocUsableSize": {
-   *       "type": "boolean",
-   *       "description": "nsIMemoryReporterManager::hasMozMallocUsableSize",
-   *       "required": true
-   *     },
-   *     "reports": {
-   *       "type": "array",
-   *       "description": "The memory reports.",
-   *       "required": true
-   *       "minItems": 1,
-   *       "items": {
-   *         "type": "object",
-   *         "properties": {
-   *           "process": {
-   *             "type": "string",
-   *             "description": "nsIMemoryReporter::process",
-   *             "required": true
-   *           },
-   *           "path": {
-   *             "type": "string",
-   *             "description": "nsIMemoryReporter::path",
-   *             "required": true,
-   *             "minLength": 1
-   *           },
-   *           "kind": {
-   *             "type": "integer",
-   *             "description": "nsIMemoryReporter::kind",
-   *             "required": true
-   *           },
-   *           "units": {
-   *             "type": "integer",
-   *             "description": "nsIMemoryReporter::units",
-   *             "required": true
-   *           },
-   *           "amount": {
-   *             "type": "integer",
-   *             "description": "nsIMemoryReporter::amount",
-   *             "required": true
-   *           },
-   *           "description": {
-   *             "type": "string",
-   *             "description": "nsIMemoryReporter::description",
-   *             "required": true
-   *           }
-   *         }
-   *       }
-   *     }
-   *   }
    * }
    */
   void dumpMemoryReportsToNamedFile(in AString aFilename,
