@@ -26,7 +26,6 @@ struct FenceHandle {
   explicit FenceHandle(const FenceHandleFromChild& aFenceHandle) {}
   bool operator==(const FenceHandle&) const { return false; }
   bool IsValid() const { return false; }
-  void Merge(const FenceHandle& aFenceHandle) {}
 };
 
 struct FenceHandleFromChild {
