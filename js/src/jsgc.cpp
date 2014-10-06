@@ -2198,16 +2198,15 @@ RelocateCell(Zone *zone, TenuredCell *src, AllocKind thingKind, size_t thingSize
         JSObject *dstObj = static_cast<JSObject *>(static_cast<Cell *>(dst));
 
         // Fixup the pointer to inline object elements if necessary.
-        if (srcObj->isNative() && srcObj->as<NativeObject>().hasFixedElements())
-            dstObj->as<NativeObject>().setFixedElements();
+        if (srcObj->hasFixedElements())
+            dstObj->setFixedElements();
 
         // Call object moved hook if present.
         if (JSObjectMovedOp op = srcObj->getClass()->ext.objectMovedOp)
             op(dstObj, srcObj);
 
         MOZ_ASSERT_IF(dstObj->isNative(),
-                      !PtrIsInRange((const Value*)dstObj->as<NativeObject>().getDenseElements(),
-                                    src, thingSize));
+                      !PtrIsInRange((const Value*)dstObj->getDenseElements(), src, thingSize));
     }
 
     // Copy the mark bits.
