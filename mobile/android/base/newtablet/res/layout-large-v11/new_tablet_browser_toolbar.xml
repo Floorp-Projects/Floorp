@@ -32,7 +32,7 @@
                                           android:layout_alignParentLeft="true"
                                           android:src="@drawable/new_tablet_ic_menu_back"
                                           android:contentDescription="@string/back"
-                                          android:background="@drawable/url_bar_nav_button"/>
+                                          android:background="@drawable/new_tablet_url_bar_nav_button"/>
 
     <org.mozilla.gecko.toolbar.ToolbarEditLayout android:id="@+id/edit_layout"
                   style="@style/UrlBar.Button"
