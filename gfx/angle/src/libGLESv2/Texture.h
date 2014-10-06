@@ -14,7 +14,7 @@
 #include "common/debug.h"
 #include "common/RefCountObject.h"
 #include "libGLESv2/angletypes.h"
-#include "libGLESv2/constants.h"
+#include "libGLESv2/Constants.h"
 #include "libGLESv2/renderer/TextureImpl.h"
 #include "libGLESv2/Caps.h"
 
