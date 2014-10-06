@@ -10,6 +10,14 @@ loop.shared.utils = (function() {
   "use strict";
 
   /**
+   * Call types used for determining if a call is audio/video or audio-only.
+   */
+  var CALL_TYPES = {
+    AUDIO_VIDEO: "audio-video",
+    AUDIO_ONLY: "audio"
+  };
+
+  /**
    * Used for adding different styles to the panel
    * @returns {String} Corresponds to the client platform
    * */
@@ -77,6 +85,7 @@ loop.shared.utils = (function() {
   };
 
   return {
+    CALL_TYPES: CALL_TYPES,
     Helper: Helper,
     getTargetPlatform: getTargetPlatform,
     getBoolPreference: getBoolPreference

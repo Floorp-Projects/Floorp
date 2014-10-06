@@ -2,12 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+.content-area input.contact-filter {
+  margin-top: 14px;
+  border-radius: 10000px;
+}
+
 .contact-list {
   border-top: 1px solid #ccc;
   overflow-x: hidden;
   overflow-y: auto;
-  /* Show six contacts and scroll for the rest */
-  max-height: 305px;
+  /* Space for six contacts, not affected by filtering.  This is enough space
+     to show the dropdown menu when there is only one contact. */
+  height: 306px;
 }
 
 .contact,
@@ -44,7 +50,21 @@
 
 .contact:hover > .icons {
   display: block;
-  z-index: 1000;
+  z-index: 1;
+}
+
+.contact > .details {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contact:hover > .details {
+  /* Hovering the contact shows the icons/ buttons, which takes up horizontal
+   * space. This causes the fixed-size avatar to resize horizontally, so we assign
+   * a flex value equivalent to the maximum pixel value to avoid the resizing
+   * to happen. Consider this a hack. */
+  flex: 190;
 }
 
 .contact > .avatar {
@@ -144,6 +164,52 @@
   background-size: 10px 10px;
   width: 10px;
   height: 16px;
+}
+
+.contact > .dropdown-menu {
+  z-index: 2;
+  top: 10px;
+  bottom: auto;
+  right: 3em;
+  left: auto;
+}
+
+.contact > .dropdown-menu-up {
+  bottom: 10px;
+  top: auto;
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon {
+  display: inline-block;
+  width: 20px;
+  height: 10px;
+  background-position: center left;
+  background-size: 10px 10px;
+  background-repeat: no-repeat;
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-audio-call {
+  background-image: url("../img/icons-16x16.svg#audio");
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-video-call {
+  background-image: url("../img/icons-16x16.svg#video");
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-edit {
+  background-image: url("../img/icons-16x16.svg#contacts");
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-block {
+  background-image: url("../img/icons-16x16.svg#block");
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-unblock {
+  background-image: url("../img/icons-16x16.svg#unblock");
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-remove {
+  background-image: url("../img/icons-16x16.svg#delete");
 }
 
 .contact-form > .button-group {

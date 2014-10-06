@@ -7,9 +7,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Http.jsm");
 Cu.import("resource://testing-common/httpd.js");
-
-XPCOMUtils.defineLazyModuleGetter(this, "MozLoopService",
-                                  "resource:///modules/loop/MozLoopService.jsm");
+Cu.import("resource:///modules/loop/MozLoopService.jsm");
+const { MozLoopServiceInternal } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "MozLoopPushHandler",
                                   "resource:///modules/loop/MozLoopPushHandler.jsm");
@@ -60,6 +59,10 @@ function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
   let tries = 0;
   tryAgain();
   return deferred.promise;
+}
+
+function getLoopString(stringID) {
+  return MozLoopServiceInternal.localizedStrings[stringID].textContent;
 }
 
 /**

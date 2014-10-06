@@ -99,10 +99,13 @@ loop.CallConnectionWebSocket = (function() {
      * Internal function called to resolve the connection promise.
      *
      * It will log an error if no promise is found.
+     *
+     * @param {String} progressState The current state of progress of the
+     *                               websocket.
      */
-    _completeConnection: function() {
+    _completeConnection: function(progressState) {
       if (this.connectDetails && this.connectDetails.resolve) {
-        this.connectDetails.resolve();
+        this.connectDetails.resolve(progressState);
         this._clearConnectionFlags();
         return;
       }
@@ -172,6 +175,17 @@ loop.CallConnectionWebSocket = (function() {
     },
 
     /**
+     * Notifies the server that something failed during setup.
+     */
+    mediaFail: function() {
+      this._send({
+        messageType: "action",
+        event: "terminate",
+        reason: "media-fail"
+      });
+    },
+
+    /**
      * Sends data on the websocket.
      *
      * @param {Object} data The data to send.
@@ -227,7 +241,7 @@ loop.CallConnectionWebSocket = (function() {
 
       switch(msg.messageType) {
         case "hello":
-          this._completeConnection();
+          this._completeConnection(msg.state);
           break;
         case "progress":
           this.trigger("progress:" + msg.state);
