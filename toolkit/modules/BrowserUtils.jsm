@@ -179,4 +179,29 @@ this.BrowserUtils = {
 
     return "_blank";
   },
+
+  /**
+   * Map the plugin's name to a filtered version more suitable for UI.
+   *
+   * @param aName The full-length name string of the plugin.
+   * @return the simplified name string.
+   */
+  makeNicePluginName: function (aName) {
+    if (aName == "Shockwave Flash")
+      return "Adobe Flash";
+    // Regex checks if aName begins with "Java" + non-letter char
+    if (/^Java\W/.exec(aName))
+      return "Java";
+
+    // Clean up the plugin name by stripping off parenthetical clauses,
+    // trailing version numbers or "plugin".
+    // EG, "Foo Bar (Linux) Plugin 1.23_02" --> "Foo Bar"
+    // Do this by first stripping the numbers, etc. off the end, and then
+    // removing "Plugin" (and then trimming to get rid of any whitespace).
+    // (Otherwise, something like "Java(TM) Plug-in 1.7.0_07" gets mangled)
+    let newName = aName.replace(/\(.*?\)/g, "").
+                        replace(/[\s\d\.\-\_\(\)]+$/, "").
+                        replace(/\bplug-?in\b/i, "").trim();
+    return newName;
+  },
 };
