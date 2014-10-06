@@ -4,3 +4,4 @@
 
 component {7ba407ce-21fd-11e4-a836-1bfdee377e5c} CellBroadcastService.js
 contract @mozilla.org/cellbroadcast/gonkservice;1 {7ba407ce-21fd-11e4-a836-1bfdee377e5c}
+category profile-after-change CellBroadcastService @mozilla.org/cellbroadcast/gonkservice;1
