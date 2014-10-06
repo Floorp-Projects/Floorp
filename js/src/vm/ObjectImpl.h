@@ -1319,13 +1319,41 @@ SetAttributes(JSContext *cx, HandleNativeObject obj, HandleId id, unsigned *attr
 extern bool
 DeleteGeneric(JSContext *cx, HandleNativeObject obj, HandleId id, bool *succeeded);
 
-extern bool
-Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable);
-
-extern bool
-Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
-
 } /* namespace js::baseops */
+
+/*
+ * Return successfully added or changed shape or nullptr on error.
+ */
+extern bool
+DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id, HandleValue value,
+                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+
+extern bool
+LookupNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
+                     js::MutableHandleObject objp, js::MutableHandleShape propp);
+
+bool
+NativeGet(JSContext *cx, HandleObject obj, HandleNativeObject pobj,
+          HandleShape shape, MutableHandle<Value> vp);
+
+template <ExecutionMode mode>
+bool
+NativeSet(typename ExecutionModeTraits<mode>::ContextType cx,
+          HandleNativeObject obj, HandleObject receiver,
+          HandleShape shape, bool strict, MutableHandleValue vp);
+
+/*
+ * If obj has an already-resolved data property for id, return true and
+ * store the property value in *vp.
+ */
+extern bool
+HasDataProperty(JSContext *cx, NativeObject *obj, jsid id, Value *vp);
+
+inline bool
+HasDataProperty(JSContext *cx, NativeObject *obj, PropertyName *name, Value *vp)
+{
+    return HasDataProperty(cx, obj, NameToId(name), vp);
+}
 
 } /* namespace js */
 
