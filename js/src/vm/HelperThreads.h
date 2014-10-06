@@ -47,6 +47,7 @@ class GlobalHelperThreadState
     typedef Vector<ParseTask*, 0, SystemAllocPolicy> ParseTaskVector;
     typedef Vector<SourceCompressionTask*, 0, SystemAllocPolicy> SourceCompressionTaskVector;
     typedef Vector<GCHelperState *, 0, SystemAllocPolicy> GCHelperStateVector;
+    typedef Vector<GCParallelTask *, 0, SystemAllocPolicy> GCParallelTaskVector;
     typedef mozilla::LinkedList<jit::IonBuilder> IonBuilderList;
 
     // List of available threads, or null if the thread state has not been initialized.
@@ -86,6 +87,9 @@ class GlobalHelperThreadState
 
     // Runtimes which have sweeping / allocating work to do.
     GCHelperStateVector gcHelperWorklist_;
+
+    // GC tasks needing to be done in parallel.
+    GCParallelTaskVector gcParallelWorklist_;
 
   public:
     size_t maxIonCompilationThreads() const {
@@ -178,11 +182,17 @@ class GlobalHelperThreadState
         return gcHelperWorklist_;
     }
 
+    GCParallelTaskVector &gcParallelWorklist() {
+        MOZ_ASSERT(isLocked());
+        return gcParallelWorklist_;
+    }
+
     bool canStartAsmJSCompile();
     bool canStartIonCompile();
     bool canStartParseTask();
     bool canStartCompressionTask();
     bool canStartGCHelperTask();
+    bool canStartGCParallelTask();
 
     // Unlike the methods above, the value returned by this method can change
     // over time, even if the helper thread state lock is held throughout.
@@ -299,8 +309,16 @@ struct HelperThread
     /* Any GC state for background sweeping or allocating being performed. */
     GCHelperState *gcHelperState;
 
+    /* State required to perform a GC parallel task. */
+    GCParallelTask *gcParallelTask;
+
     bool idle() const {
-        return !ionBuilder && !asmData && !parseTask && !compressionTask && !gcHelperState;
+        return !ionBuilder &&
+               !asmData &&
+               !parseTask &&
+               !compressionTask &&
+               !gcHelperState &&
+               !gcParallelTask;
     }
 
     void destroy();
@@ -310,6 +328,7 @@ struct HelperThread
     void handleParseWorkload();
     void handleCompressionWorkload();
     void handleGCHelperWorkload();
+    void handleGCParallelWorkload();
 
     static void ThreadMain(void *arg);
     void threadLoop();

@@ -32,6 +32,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIObserverService.h"
 #include "nsProxyRelease.h"
+#include "nsPIDOMWindow.h"
+#include "nsPerformance.h"
 
 #include <algorithm>
 
@@ -2370,6 +2372,45 @@ IMPL_TIMING_ATTR(RedirectEnd)
 
 #undef IMPL_TIMING_ATTR
 
+nsPerformance*
+HttpBaseChannel::GetPerformance()
+{
+    // If performance timing is disabled, there is no need for the nsPerformance
+    // object anymore.
+    if (!mTimingEnabled) {
+        return nullptr;
+    }
+    nsCOMPtr<nsILoadContext> loadContext;
+    NS_QueryNotificationCallbacks(this, loadContext);
+    if (!loadContext) {
+        return nullptr;
+    }
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    loadContext->GetAssociatedWindow(getter_AddRefs(domWindow));
+    if (!domWindow) {
+        return nullptr;
+    }
+    nsCOMPtr<nsPIDOMWindow> pDomWindow = do_QueryInterface(domWindow);
+    if (!pDomWindow) {
+        return nullptr;
+    }
+    if (!pDomWindow->IsInnerWindow()) {
+        pDomWindow = pDomWindow->GetCurrentInnerWindow();
+        if (!pDomWindow) {
+            return nullptr;
+        }
+    }
+
+    nsPerformance* docPerformance = pDomWindow->GetPerformance();
+    if (!docPerformance) {
+      return nullptr;
+    }
+    // iframes should be added to the parent's entries list.
+    if (mLoadFlags & LOAD_DOCUMENT_URI) {
+      return docPerformance->GetParentPerformance();
+    }
+    return docPerformance;
+}
 
 //------------------------------------------------------------------------------
 
