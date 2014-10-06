@@ -659,58 +659,95 @@ FreeChunk(JSRuntime *rt, Chunk *p)
     UnmapPages(static_cast<void *>(p), ChunkSize);
 }
 
+#ifdef DEBUG
+static bool
+ChunkPoolContainsChunk(ChunkPool &pool, Chunk *chunk)
+{
+    for (ChunkPool::Enum e(pool); !e.empty(); e.popFront()) {
+        if (e.front() == chunk)
+            return true;
+    }
+    return false;
+}
+#endif
+
 /* Must be called with the GC lock taken. */
 inline Chunk *
-ChunkPool::get(JSRuntime *rt)
+ChunkPool::pop()
 {
-    Chunk *chunk = head_;
-    if (!chunk) {
-        MOZ_ASSERT(!count_);
-        return nullptr;
-    }
+    MOZ_ASSERT(bool(count_) == bool(head_));
 
-    MOZ_ASSERT(count_);
-    head_ = chunk->info.next;
-    --count_;
+    Chunk *chunk = head_;
+    if (!chunk)
+        return nullptr;
+
+    remove(chunk);
     return chunk;
 }
 
 /* Must be called either during the GC or with the GC lock taken. */
 inline void
-ChunkPool::put(Chunk *chunk)
+ChunkPool::push(Chunk *chunk)
 {
+    MOZ_ASSERT(!chunk->info.belongsToAnyPool());
     chunk->info.age = 0;
     chunk->info.next = head_;
+    if (head_)
+        head_->info.prev = chunk;
     head_ = chunk;
-    count_++;
+    if (!tail_)
+        tail_ = chunk;
+    ++count_;
 }
 
-inline Chunk *
-ChunkPool::Enum::front()
+inline void
+ChunkPool::remove(Chunk *chunk)
 {
-    Chunk *chunk = *chunkp;
-    MOZ_ASSERT_IF(chunk, pool.count() != 0);
-    return chunk;
+    MOZ_ASSERT(ChunkPoolContainsChunk(*this, chunk));
+    if (head_ == chunk)
+        head_ = chunk->info.next;
+    if (tail_ == chunk)
+        tail_ = chunk->info.prev;
+    if (chunk->info.prev)
+        chunk->info.prev->info.next = chunk->info.next;
+    if (chunk->info.next)
+        chunk->info.next->info.prev = chunk->info.prev;
+    chunk->info.next = chunk->info.prev = nullptr;
+    MOZ_ASSERT(!chunk->info.belongsToAnyPool());
+    --count_;
 }
 
 inline void
 ChunkPool::Enum::popFront()
 {
     MOZ_ASSERT(!empty());
-    chunkp = &front()->info.next;
+    current_ = current_->info.next;
 }
 
 inline void
 ChunkPool::Enum::removeAndPopFront()
 {
     MOZ_ASSERT(!empty());
-    *chunkp = front()->info.next;
-    --pool.count_;
+    Chunk *next = current_->info.next;
+    pool_.remove(current_);
+    current_ = next;
+}
+
+inline void
+ChunkPool::ReverseIter::prev()
+{
+    current_ = current_->info.prev;
+}
+
+inline void
+ChunkPool::ReverseIter::reset()
+{
+    current_ = pool_.tail_;
 }
 
 /* Must be called either during the GC or with the GC lock taken. */
-Chunk *
-GCRuntime::expireChunkPool(bool shrinkBuffers, bool releaseAll)
+ChunkPool
+GCRuntime::expireEmptyChunks(bool shrinkBuffers, bool releaseAll)
 {
     /*
      * Return old empty chunks to the system while preserving the order of
@@ -718,9 +755,10 @@ GCRuntime::expireChunkPool(bool shrinkBuffers, bool releaseAll)
      * without emptying the list, the older chunks will stay at the tail
      * and are more likely to reach the max age.
      */
-    Chunk *freeList = nullptr;
+    ChunkPool expired;
+
     unsigned freeChunkCount = 0;
-    for (ChunkPool::Enum e(emptyChunks); !e.empty(); ) {
+    for (ChunkPool::Enum e(emptyChunks_); !e.empty(); ) {
         Chunk *chunk = e.front();
         MOZ_ASSERT(chunk->unused());
         MOZ_ASSERT(!chunkSet.has(chunk));
@@ -730,8 +768,7 @@ GCRuntime::expireChunkPool(bool shrinkBuffers, bool releaseAll)
         {
             e.removeAndPopFront();
             prepareToFreeChunk(chunk->info);
-            chunk->info.next = freeList;
-            freeList = chunk;
+            expired.push(chunk);
         } else {
             /* Keep the chunk but increase its age. */
             ++freeChunkCount;
@@ -739,26 +776,28 @@ GCRuntime::expireChunkPool(bool shrinkBuffers, bool releaseAll)
             e.popFront();
         }
     }
-    MOZ_ASSERT(emptyChunks.count() <= tunables.maxEmptyChunkCount());
-    MOZ_ASSERT_IF(shrinkBuffers, emptyChunks.count() <= tunables.minEmptyChunkCount());
-    MOZ_ASSERT_IF(releaseAll, emptyChunks.count() == 0);
-    return freeList;
+    MOZ_ASSERT(emptyChunks_.count() <= tunables.maxEmptyChunkCount());
+    MOZ_ASSERT_IF(shrinkBuffers, emptyChunks_.count() <= tunables.minEmptyChunkCount());
+    MOZ_ASSERT_IF(releaseAll, emptyChunks_.count() == 0);
+    return expired;
 }
 
 void
-GCRuntime::freeChunkList(Chunk *chunkListHead)
+GCRuntime::freeChunks(ChunkPool pool)
 {
-    while (Chunk *chunk = chunkListHead) {
-        MOZ_ASSERT(!chunk->info.numArenasFreeCommitted);
-        chunkListHead = chunk->info.next;
+    for (ChunkPool::Enum e(pool); !e.empty();) {
+        Chunk *chunk = e.front();
+        e.removeAndPopFront();
+        MOZ_ASSERT(!chunk->info.belongsToAnyPool());
         FreeChunk(rt, chunk);
     }
+    MOZ_ASSERT(pool.count() == 0);
 }
 
 void
-GCRuntime::expireAndFreeChunkPool(bool releaseAll)
+GCRuntime::expireAndFreeEmptyChunks(bool releaseAll)
 {
-    freeChunkList(expireChunkPool(true, releaseAll));
+    freeChunks(expireEmptyChunks(true, releaseAll));
 }
 
 /* static */ Chunk *
@@ -825,56 +864,12 @@ Chunk::init(JSRuntime *rt)
     decommitAllArenas(rt);
 
     /* Initialize the chunk info. */
-    info.age = 0;
+    info.init();
     info.trailer.storeBuffer = nullptr;
     info.trailer.location = ChunkLocationBitTenuredHeap;
     info.trailer.runtime = rt;
 
     /* The rest of info fields are initialized in pickChunk. */
-}
-
-inline Chunk **
-GCRuntime::getAvailableChunkList(Zone *zone)
-{
-    return zone->isSystem
-           ? &systemAvailableChunkListHead
-           : &userAvailableChunkListHead;
-}
-
-inline void
-Chunk::addToAvailableList(Zone *zone)
-{
-    JSRuntime *rt = zone->runtimeFromAnyThread();
-    insertToAvailableList(rt->gc.getAvailableChunkList(zone));
-}
-
-inline void
-Chunk::insertToAvailableList(Chunk **insertPoint)
-{
-    MOZ_ASSERT(hasAvailableArenas());
-    MOZ_ASSERT(!info.prevp);
-    MOZ_ASSERT(!info.next);
-    info.prevp = insertPoint;
-    Chunk *insertBefore = *insertPoint;
-    if (insertBefore) {
-        MOZ_ASSERT(insertBefore->info.prevp == insertPoint);
-        insertBefore->info.prevp = &info.next;
-    }
-    info.next = insertBefore;
-    *insertPoint = this;
-}
-
-inline void
-Chunk::removeFromAvailableList()
-{
-    MOZ_ASSERT(info.prevp);
-    *info.prevp = info.next;
-    if (info.next) {
-        MOZ_ASSERT(info.next->info.prevp == &info.next);
-        info.next->info.prevp = info.prevp;
-    }
-    info.prevp = nullptr;
-    info.next = nullptr;
 }
 
 /*
@@ -962,7 +957,7 @@ Chunk::allocateArena(Zone *zone, AllocKind thingKind)
                            : fetchNextDecommittedArena();
     aheader->init(zone, thingKind);
     if (MOZ_UNLIKELY(!hasAvailableArenas()))
-        removeFromAvailableList();
+        rt->gc.availableChunks().remove(this);
 
     zone->usage.addGCArena();
 
@@ -1046,16 +1041,15 @@ Chunk::releaseArena(ArenaHeader *aheader)
     addArenaToFreeList(rt, aheader);
 
     if (info.numArenasFree == 1) {
-        MOZ_ASSERT(!info.prevp);
-        MOZ_ASSERT(!info.next);
-        addToAvailableList(zone);
-    } else if (!unused()) {
-        MOZ_ASSERT(info.prevp);
-    } else {
-        MOZ_ASSERT(unused());
-        removeFromAvailableList();
+        MOZ_ASSERT(!info.belongsToAnyPool());
+        rt->gc.availableChunks().push(this);
+    } else if (unused()) {
+        rt->gc.availableChunks().remove(this);
         decommitAllArenas(rt);
         rt->gc.moveChunkToFreePool(this);
+    } else {
+        MOZ_ASSERT(!unused());
+        MOZ_ASSERT(ChunkPoolContainsChunk(rt->gc.availableChunks(), this));
     }
 }
 
@@ -1065,7 +1059,7 @@ GCRuntime::moveChunkToFreePool(Chunk *chunk)
     MOZ_ASSERT(chunk->unused());
     MOZ_ASSERT(chunkSet.has(chunk));
     chunkSet.remove(chunk);
-    emptyChunks.put(chunk);
+    emptyChunks_.push(chunk);
 }
 
 inline bool
@@ -1077,7 +1071,7 @@ GCRuntime::wantBackgroundAllocation() const
      * of them.
      */
     return helperState.canBackgroundAllocate() &&
-           emptyChunks.count() < tunables.minEmptyChunkCount() &&
+           emptyChunks_.count() < tunables.minEmptyChunkCount() &&
            chunkSet.count() >= 4;
 }
 
@@ -1109,14 +1103,13 @@ class js::gc::AutoMaybeStartBackgroundAllocation
 
 /* The caller must hold the GC lock. */
 Chunk *
-GCRuntime::pickChunk(Zone *zone, AutoMaybeStartBackgroundAllocation &maybeStartBackgroundAllocation)
+GCRuntime::pickChunk(AutoMaybeStartBackgroundAllocation &maybeStartBackgroundAllocation)
 {
-    Chunk **listHeadp = getAvailableChunkList(zone);
-    Chunk *chunk = *listHeadp;
+    Chunk *chunk = availableChunks_.head();
     if (chunk)
         return chunk;
 
-    chunk = emptyChunks.get(rt);
+    chunk = emptyChunks_.pop();
     if (!chunk) {
         chunk = Chunk::allocate(rt);
         if (!chunk)
@@ -1143,10 +1136,7 @@ GCRuntime::pickChunk(Zone *zone, AutoMaybeStartBackgroundAllocation &maybeStartB
         return nullptr;
     }
 
-    chunk->info.prevp = nullptr;
-    chunk->info.next = nullptr;
-    chunk->addToAvailableList(zone);
-
+    availableChunks_.push(chunk);
     return chunk;
 }
 
@@ -1160,8 +1150,6 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     stats(rt),
     marker(rt),
     usage(nullptr),
-    systemAvailableChunkListHead(nullptr),
-    userAvailableChunkListHead(nullptr),
     maxMallocBytes(0),
     numArenasFreeCommitted(0),
     verifyPreData(nullptr),
@@ -1398,15 +1386,14 @@ GCRuntime::finish()
 
     zones.clear();
 
-    systemAvailableChunkListHead = nullptr;
-    userAvailableChunkListHead = nullptr;
+    availableChunks_.clear();
     if (chunkSet.initialized()) {
         for (GCChunkSet::Range r(chunkSet.all()); !r.empty(); r.popFront())
             releaseChunk(r.front());
         chunkSet.clear();
     }
 
-    expireAndFreeChunkPool(true);
+    expireAndFreeEmptyChunks(true);
 
     if (rootsHash.initialized())
         rootsHash.clear();
@@ -1534,9 +1521,9 @@ GCRuntime::getParameter(JSGCParamKey key)
       case JSGC_MODE:
         return uint32_t(mode);
       case JSGC_UNUSED_CHUNKS:
-        return uint32_t(emptyChunks.count());
+        return uint32_t(emptyChunks_.count());
       case JSGC_TOTAL_CHUNKS:
-        return uint32_t(chunkSet.count() + emptyChunks.count());
+        return uint32_t(chunkSet.count() + emptyChunks_.count());
       case JSGC_SLICE_TIME_BUDGET:
         return uint32_t(sliceBudget > 0 ? sliceBudget / PRMJ_USEC_PER_MSEC : 0);
       case JSGC_MARK_STACK_LIMIT:
@@ -1970,7 +1957,7 @@ ArenaLists::allocateFromArena(JS::Zone *zone, AllocKind thingKind,
     if (maybeLock.isNothing())
         maybeLock.emplace(rt);
 
-    Chunk *chunk = rt->gc.pickChunk(zone, maybeStartBGAlloc);
+    Chunk *chunk = rt->gc.pickChunk(maybeStartBGAlloc);
     if (!chunk)
         return nullptr;
 
@@ -3021,119 +3008,53 @@ GCRuntime::maybePeriodicFullGC()
 }
 
 void
-GCRuntime::decommitArenasFromAvailableList(Chunk **availableListHeadp)
+GCRuntime::decommitArenas()
 {
-    Chunk *chunk = *availableListHeadp;
-    if (!chunk)
-        return;
-
-    /*
-     * Decommit is expensive so we avoid holding the GC lock while calling it.
-     *
-     * We decommit from the tail of the list to minimize interference with the
-     * main thread that may start to allocate things at this point.
-     *
-     * The arena that is been decommitted outside the GC lock must not be
-     * available for allocations either via the free list or via the
-     * decommittedArenas bitmap. For that we just fetch the arena from the
-     * free list before the decommit pretending as it was allocated. If this
-     * arena also is the single free arena in the chunk, then we must remove
-     * from the available list before we release the lock so the allocation
-     * thread would not see chunks with no free arenas on the available list.
-     *
-     * After we retake the lock, we mark the arena as free and decommitted if
-     * the decommit was successful. We must also add the chunk back to the
-     * available list if we removed it previously or when the main thread
-     * have allocated all remaining free arenas in the chunk.
-     *
-     * We also must make sure that the aheader is not accessed again after we
-     * decommit the arena.
-     */
-    MOZ_ASSERT(chunk->info.prevp == availableListHeadp);
-    while (Chunk *next = chunk->info.next) {
-        MOZ_ASSERT(next->info.prevp == &chunk->info.next);
-        chunk = next;
-    }
-
-    for (;;) {
+    // Start from the list tail to avoid contending with the mutator.
+    for (ChunkPool::ReverseIter chunk(availableChunks_); !chunk.done(); chunk.prev()) {
         while (chunk->info.numArenasFreeCommitted != 0) {
+            // Ensure the arena we are going to decommit is not available for
+            // allocation by allocating it for ourself.
             ArenaHeader *aheader = chunk->fetchNextFreeArena(rt);
-
-            Chunk **savedPrevp = chunk->info.prevp;
             if (!chunk->hasAvailableArenas())
-                chunk->removeFromAvailableList();
+                availableChunks_.remove(chunk);
 
-            size_t arenaIndex = Chunk::arenaIndex(aheader->arenaAddress());
             bool ok;
             {
-                /*
-                 * If the main thread waits for the decommit to finish, skip
-                 * potentially expensive unlock/lock pair on the contested
-                 * lock.
-                 */
+                // Decommit may be expensive in some cases, on some platforms,
+                // so we avoid holding the GC lock while calling it, with the
+                // following exception: If the main thread has entered the GC,
+                // it will wait for this thread to complete. In this case,
+                // releasing the lock will add unnecessary contention.
                 Maybe<AutoUnlockGC> maybeUnlock;
                 if (!isHeapBusy())
                     maybeUnlock.emplace(rt);
+
                 ok = MarkPagesUnused(aheader->getArena(), ArenaSize);
             }
 
             if (ok) {
                 ++chunk->info.numArenasFree;
-                chunk->decommittedArenas.set(arenaIndex);
+                chunk->decommittedArenas.set(Chunk::arenaIndex(aheader->arenaAddress()));
             } else {
                 chunk->addArenaToFreeList(rt, aheader);
             }
             MOZ_ASSERT(chunk->hasAvailableArenas());
             MOZ_ASSERT(!chunk->unused());
-            if (chunk->info.numArenasFree == 1) {
-                /*
-                 * Put the chunk back to the available list either at the
-                 * point where it was before to preserve the available list
-                 * that we enumerate, or, when the allocation thread has fully
-                 * used all the previous chunks, at the beginning of the
-                 * available list.
-                 */
-                Chunk **insertPoint = savedPrevp;
-                if (savedPrevp != availableListHeadp) {
-                    Chunk *prev = Chunk::fromPointerToNext(savedPrevp);
-                    if (!prev->hasAvailableArenas())
-                        insertPoint = availableListHeadp;
-                }
-                chunk->insertToAvailableList(insertPoint);
-            } else {
-                MOZ_ASSERT(chunk->info.prevp);
-            }
 
-            if (chunkAllocationSinceLastGC || !ok) {
-                /*
-                 * The allocator thread has started to get new chunks. We should stop
-                 * to avoid decommitting arenas in just allocated chunks.
-                 */
-                return;
+            // While the lock was released, the mutator may have allocated all
+            // remaining chunks, moving this chunk out of the available list.
+            if (chunk->info.numArenasFree == 1) {
+                // Re-insert into the available list.
+                MOZ_ASSERT(!ChunkPoolContainsChunk(availableChunks_, chunk.get()));
+                availableChunks_.push(chunk);
+
+                // Start the iteration over again. Already-decommitted chunks
+                // will get skipped over quickly at the loop head.
+                chunk.reset();
             }
         }
-
-        /*
-         * chunk->info.prevp becomes null when the allocator thread consumed
-         * all chunks from the available list.
-         */
-        MOZ_ASSERT_IF(chunk->info.prevp, *chunk->info.prevp == chunk);
-        if (chunk->info.prevp == availableListHeadp || !chunk->info.prevp)
-            break;
-
-        /*
-         * prevp exists and is not the list head. It must point to the next
-         * field of the previous chunk.
-         */
-        chunk = chunk->getPrevious();
     }
-}
-
-void
-GCRuntime::decommitArenas()
-{
-    decommitArenasFromAvailableList(&systemAvailableChunkListHead);
-    decommitArenasFromAvailableList(&userAvailableChunkListHead);
 }
 
 /* Must be called with the GC lock taken. */
@@ -3144,9 +3065,10 @@ GCRuntime::expireChunksAndArenas(bool shouldShrink)
     rt->threadPool.pruneChunkCache();
 #endif
 
-    if (Chunk *toFree = expireChunkPool(shouldShrink, false)) {
+    ChunkPool chunksToFree = expireEmptyChunks(shouldShrink, false);
+    if (chunksToFree.count()) {
         AutoUnlockGC unlock(rt);
-        freeChunkList(toFree);
+        freeChunks(chunksToFree);
     }
 
     if (shouldShrink)
@@ -3314,7 +3236,7 @@ GCHelperState::work()
             if (!chunk)
                 break;
             MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
-            rt->gc.emptyChunks.put(chunk);
+            rt->gc.emptyChunks().push(chunk);
         } while (state() == ALLOCATING && rt->gc.wantBackgroundAllocation());
 
         MOZ_ASSERT(state() == ALLOCATING || state() == CANCEL_ALLOCATION);

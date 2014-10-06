@@ -35,35 +35,6 @@ class MarkingValidator;
 struct AutoPrepareForTracing;
 class AutoTraceSession;
 
-class ChunkPool
-{
-    Chunk *head_;
-    size_t count_;
-
-  public:
-    ChunkPool() : head_(nullptr), count_(0) {}
-
-    size_t count() const { return count_; }
-
-    /* Must be called with the GC lock taken. */
-    inline Chunk *get(JSRuntime *rt);
-
-    /* Must be called either during the GC or with the GC lock taken. */
-    inline void put(Chunk *chunk);
-
-    class Enum {
-      public:
-        explicit Enum(ChunkPool &pool) : pool(pool), chunkp(&pool.head_) {}
-        bool empty() { return !*chunkp; }
-        Chunk *front();
-        inline void popFront();
-        inline void removeAndPopFront();
-      private:
-        ChunkPool &pool;
-        Chunk **chunkp;
-    };
-};
-
 /*
  * Encapsulates all of the GC tunables. These are effectively constant and
  * should only be modified by setParameter.
@@ -429,7 +400,8 @@ class GCRuntime
     inline void updateOnArenaFree(const ChunkInfo &info);
 
     GCChunkSet::Range allChunks() { return chunkSet.all(); }
-    inline Chunk **getAvailableChunkList(Zone *zone);
+    ChunkPool &availableChunks() { return availableChunks_; }
+    ChunkPool &emptyChunks() { return emptyChunks_; }
     void moveChunkToFreePool(Chunk *chunk);
     bool hasChunk(Chunk *chunk) { return chunkSet.has(chunk); }
 
@@ -451,7 +423,7 @@ class GCRuntime
   private:
     // For ArenaLists::allocateFromArena()
     friend class ArenaLists;
-    Chunk *pickChunk(Zone *zone, AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc);
+    Chunk *pickChunk(AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc);
     inline void arenaAllocatedDuringGC(JS::Zone *zone, ArenaHeader *arena);
 
     template <AllowGC allowGC>
@@ -463,9 +435,9 @@ class GCRuntime
      * Return the list of chunks that can be released outside the GC lock.
      * Must be called either during the GC or with the GC lock taken.
      */
-    Chunk *expireChunkPool(bool shrinkBuffers, bool releaseAll);
-    void expireAndFreeChunkPool(bool releaseAll);
-    void freeChunkList(Chunk *chunkListHead);
+    ChunkPool expireEmptyChunks(bool shrinkBuffers, bool releaseAll);
+    void expireAndFreeEmptyChunks(bool releaseAll);
+    void freeChunks(ChunkPool pool);
     void prepareToFreeChunk(ChunkInfo &info);
     void releaseChunk(Chunk *chunk);
 
@@ -505,7 +477,6 @@ class GCRuntime
     bool sweepPhase(SliceBudget &sliceBudget);
     void endSweepPhase(bool lastGC);
     void sweepZones(FreeOp *fop, bool lastGC);
-    void decommitArenasFromAvailableList(Chunk **availableListHeadp);
     void decommitArenas();
     void expireChunksAndArenas(bool shouldShrink);
     void sweepBackgroundThings();
@@ -559,6 +530,8 @@ class GCRuntime
     GCSchedulingState     schedulingState;
 
   private:
+    // Chunks may be empty, available (partially allocated), or fully utilized.
+
     /*
      * Set of all GC chunks with at least one allocated thing. The
      * conservative GC uses it to quickly check if a possible GC thing points
@@ -566,16 +539,19 @@ class GCRuntime
      */
     js::GCChunkSet        chunkSet;
 
-    /*
-     * Doubly-linked lists of chunks from user and system compartments. The GC
-     * allocates its arenas from the corresponding list and when all arenas
-     * in the list head are taken, then the chunk is removed from the list.
-     * During the GC when all arenas in a chunk become free, that chunk is
-     * removed from the list and scheduled for release.
-     */
-    js::gc::Chunk         *systemAvailableChunkListHead;
-    js::gc::Chunk         *userAvailableChunkListHead;
-    js::gc::ChunkPool     emptyChunks;
+    // When empty, chunks reside in the emptyChunks pool and are re-used as
+    // needed or eventually expired if not re-used. The emptyChunks pool gets
+    // refilled from the background allocation task heuristically so that empty
+    // chunks should always available for immediate allocation without syscalls.
+    ChunkPool             emptyChunks_;
+
+    // Chunks which have had some, but not all, of their arenas allocated live
+    // in the available chunk lists. When all available arenas in a chunk have
+    // been allocated, the chunk is removed from the available list and is only
+    // referenced through the chunkSet. During a GC, if all arenas are free,
+    // the chunk is moved back to the emptyChunks pool and scheduled for
+    // eventual release.
+    ChunkPool             availableChunks_;
 
     js::RootedValueMap    rootsHash;
 
