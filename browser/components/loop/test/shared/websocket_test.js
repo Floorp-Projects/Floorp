@@ -128,8 +128,11 @@ describe("loop.CallConnectionWebSocket", function() {
             data: '{"messageType":"hello", "state":"init"}'
           });
 
-          promise.then(function() {
+          promise.then(function(state) {
+            expect(state).eql("init");
             done();
+          }, function() {
+            done(new Error("shouldn't have rejected the promise"));
           });
         });
     });
@@ -199,6 +202,22 @@ describe("loop.CallConnectionWebSocket", function() {
             messageType: "action",
             event: "terminate",
             reason: "cancel"
+          }));
+        });
+    });
+
+    describe("#mediaFail", function() {
+      it("should send a terminate message to the server with a reason of media-fail",
+        function() {
+          callWebSocket.promiseConnect();
+
+          callWebSocket.mediaFail();
+
+          sinon.assert.calledOnce(dummySocket.send);
+          sinon.assert.calledWithExactly(dummySocket.send, JSON.stringify({
+            messageType: "action",
+            event: "terminate",
+            reason: "media-fail"
           }));
         });
     });

@@ -312,10 +312,12 @@ loop.panel = (function(_, mozL10n) {
     },
 
     _onCallUrlReceived: function(err, callUrlData) {
-      this.props.notifications.reset();
-
       if (err) {
-        this.props.notifications.errorL10n("unable_retrieve_url");
+        if (err.code != 401) {
+          // 401 errors are already handled in hawkRequest and show an error
+          // message about the session.
+          this.props.notifications.errorL10n("unable_retrieve_url");
+        }
         this.setState(this.getInitialState());
       } else {
         try {
@@ -445,8 +447,36 @@ loop.panel = (function(_, mozL10n) {
       };
     },
 
-    _onAuthStatusChange: function() {
+    _serviceErrorToShow: function() {
+      if (!navigator.mozLoop.errors || !Object.keys(navigator.mozLoop.errors).length) {
+        return null;
+      }
+      // Just get the first error for now since more than one should be rare.
+      var firstErrorKey = Object.keys(navigator.mozLoop.errors)[0];
+      return {
+        type: firstErrorKey,
+        error: navigator.mozLoop.errors[firstErrorKey],
+      };
+    },
+
+    updateServiceErrors: function() {
+      var serviceError = this._serviceErrorToShow();
+      if (serviceError) {
+        this.props.notifications.set({
+          id: "service-error",
+          level: "error",
+          message: serviceError.error.friendlyMessage,
+          details: serviceError.error.friendlyDetails,
+          detailsButtonLabel: serviceError.error.friendlyDetailsButtonLabel,
+        });
+      } else {
+        this.props.notifications.remove(this.props.notifications.get("service-error"));
+      }
+    },
+
+    _onStatusChanged: function() {
       this.setState({userProfile: navigator.mozLoop.userProfile});
+      this.updateServiceErrors();
     },
 
     startForm: function(name, contact) {
@@ -458,12 +488,16 @@ loop.panel = (function(_, mozL10n) {
       this.refs.tabView.setState({ selectedTab: name });
     },
 
+    componentWillMount: function() {
+      this.updateServiceErrors();
+    },
+
     componentDidMount: function() {
-      window.addEventListener("LoopStatusChanged", this._onAuthStatusChange);
+      window.addEventListener("LoopStatusChanged", this._onStatusChanged);
     },
 
     componentWillUnmount: function() {
-      window.removeEventListener("LoopStatusChanged", this._onAuthStatusChange);
+      window.removeEventListener("LoopStatusChanged", this._onStatusChanged);
     },
 
     render: function() {
