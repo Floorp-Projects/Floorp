@@ -46,7 +46,7 @@ window.onload = function () {
             });
             ok(scripts.length > 0, "Should be able to find script");
 
-            is(scripts[0].sourceMapURL, "foo.js.map");
+            is(scripts[0].source.sourceMapURL, "foo.js.map");
             SimpleTest.finish();
         }
 
