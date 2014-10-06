@@ -74,7 +74,10 @@ const WorkerSandbox = Class({
    *     Mainly used by context-menu in order to avoid breaking it.
    */
   emitSync: function emitSync(...args) {
-    return emitToContent(this, args);
+    // because the arguments could be also non JSONable values,
+    // we need to ensure the array instance is created from
+    // the content's sandbox
+    return emitToContent(this, new modelFor(this).sandbox.Array(...args));
   },
 
   /**
