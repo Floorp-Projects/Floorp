@@ -1662,7 +1662,6 @@ private:
   void DoUnblockOnload();
 
   nsresult CheckFrameOptions();
-  bool IsLoopDocument(nsIChannel* aChannel);
   nsresult InitCSP(nsIChannel* aChannel);
 
   void FlushCSPWebConsoleErrorQueue()
