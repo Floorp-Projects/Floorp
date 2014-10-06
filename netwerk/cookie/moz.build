@@ -28,7 +28,7 @@ if CONFIG['NECKO_COOKIES']:
         'CookieServiceParent.cpp',
         'nsCookie.cpp',
     ]
-    # nsCookieService.cpp can't be unified because of symbol conflicts
+    # nsCookieService.cpp can't be unified because it forces NSPR logging.
     SOURCES += [
         'nsCookieService.cpp',
     ]

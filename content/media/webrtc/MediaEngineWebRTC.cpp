@@ -2,6 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#endif
+
+#if defined(PR_LOG)
+#error "This file must be #included before any IPDL-generated files or other files that #include prlog.h"
+#endif
+
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 

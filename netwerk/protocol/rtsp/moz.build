@@ -14,7 +14,8 @@ EXPORTS.mozilla.net += [
     'RtspHandler.h',
 ]
 
-UNIFIED_SOURCES += [
+# These files cannot be built in unified mode because they force NSPR logging.
+SOURCES += [
     'controller/RtspController.cpp',
     'controller/RtspControllerChild.cpp',
     'controller/RtspControllerParent.cpp',

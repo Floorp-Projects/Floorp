@@ -15,6 +15,7 @@
 #include "TestCommon.h"
 #include <algorithm>
 
+#define FORCE_PR_LOG
 #include <stdio.h>
 #ifdef WIN32 
 #include <windows.h>
