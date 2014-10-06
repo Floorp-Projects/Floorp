@@ -74,6 +74,17 @@ from its prototype:
     `url` accessor on `Debugger.Source` instances for such sources should
     return `undefined`.)
 
+`sourceMapURL`
+:   If this source was produced by a minimizer or translated from some other
+    language, and we know the URL of a <b>source map</b> document relating
+    the source positions in this source to the corresponding source
+    positions in the original source, then this property's value is that
+    URL. Otherwise, this is `null`.
+
+    (On the web, the translator may provide the source map URL in a
+    specially formatted comment in the JavaScript source code, or via a
+    header in the HTTP reply that carried the generated JavaScript.)
+
 `element`
 :   The [`Debugger.Object`][object] instance referring to the DOM element to which
     this source code belongs, if any, or `undefined` if it belongs to no DOM
