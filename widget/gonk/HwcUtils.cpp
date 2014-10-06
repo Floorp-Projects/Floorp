@@ -146,10 +146,4 @@ HwcUtils::CalculateClipRect(const gfx::Matrix& transform,
     return true;
 }
 
-nsIntRect
-HwcUtils::HwcToIntRect(hwc_rect_t aRect) {
-    return nsIntRect(aRect.left, aRect.top, aRect.right - aRect.left,
-                aRect.bottom - aRect.top);
-}
-
 } // namespace mozilla
