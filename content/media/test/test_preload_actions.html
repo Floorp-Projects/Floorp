@@ -386,34 +386,6 @@ var tests = [
 
     name: "test11",
   },
-  /*{
-    // 12. Change preload value from auto to metadata after load started,
-    // should still do full load, should not halt after metadata only.
-    // disable this test since the spec is no longer found in the document
-    // http://dev.w3.org/html5/spec-preview/media-elements.html
-    canplaythrough:
-    function(e) {
-      var v = e.target;
-      is(v._gotLoadedMetaData, true, "(12) Must get loadedmetadata.");
-      is(v._gotLoadStart, true, "(12) Must get loadstart.");
-      maybeFinish(v, 12);
-    },
-
-    setup:
-    function(v) {
-      v._gotLoadStart = false;
-      v._gotLoadedMetaData = false;
-      v.preload = "auto";
-      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
-      v.addEventListener("canplaythrough", this.canplaythrough, false);
-      v.src = test.name; // Causes implicit load.
-      document.body.appendChild(v);
-      v.preload = "metadata";
-    },
-
-    name: "test12",
-  },*/
   {
     // 13. Change preload value from auto to none after specifying a src
     // should load according to preload none, no buffering should have taken place
@@ -568,28 +540,36 @@ var tests = [
   {
     // 19. Set preload='auto' on first video source then switching preload='none' and swapping the video source to another.
     // The second video should not start playing as it's preload state has been changed to 'none' from 'auto'
-    loadedmetadata: function(e) {
-      var v = e.target;
-      is(v.preload === "auto", true, "(19) preload is initially auto");
-      setTimeout(function() {
-        // set preload state to none and switch video sources
-        v.preload="none";
-        v.src = test.name + "?asdf";
-        setTimeout(function() {
-          is(v.readyState === 0, true, "(19) no buffering has taken place");
-          maybeFinish(v, 19);
-        }, 2000);
-      }, 2000);
-
-    },
-
     setup:
     function(v) {
-      var that = this;
       v.preload = "auto";
       v.src = test.name;
       // add a listener for when the video has loaded, so we know preload auto has worked
-      v.addEventListener( "loadedmetadata", this.loadedmetadata, false);
+      v.onloadedmetadata = function() {
+        is(v.preload, "auto", "(19) preload is initially auto");
+        // set preload state to none and switch video sources
+        v.preload="none";
+        v.src = test.name + "?asdf";
+
+        v.onloadedmetadata = function() {
+          ok(false, "(19) 'loadedmetadata' shouldn't fire when preload is none");
+        }
+
+        var ontimeout = function() {
+          v.removeEventListener("suspend", onsuspend, false);
+          ok(false, "(19) 'suspend' should've fired");
+          maybeFinish(v, 19);
+        }
+        var cancel = setTimeout(ontimeout, 10000);
+
+        var onsuspend = function() {
+          v.removeEventListener("suspend", onsuspend, false);
+          clearTimeout(cancel);
+          is(v.readyState, 0, "(19) no buffering has taken place");
+          maybeFinish(v, 19);
+        }
+        v.addEventListener("suspend", onsuspend, false);
+      }
       document.body.appendChild(v);
     },
 
