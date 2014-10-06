@@ -47,7 +47,7 @@ include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 ifdef MOZ_EXTERNAL_SIGNING_FORMAT
 # We can't use signcode on mar files
-MOZ_EXTERNAL_SIGNING_FORMAT := $(filter-out signcode,$(MOZ_EXTERNAL_SIGNING_FORMAT))
+MOZ_EXTERNAL_SIGNING_FORMAT := $(filter-out osslsigncode signcode,$(MOZ_EXTERNAL_SIGNING_FORMAT))
 MOZ_EXTERNAL_SIGNING_FORMAT := mar $(MOZ_EXTERNAL_SIGNING_FORMAT)
 endif
 
