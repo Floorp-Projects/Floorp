@@ -14,16 +14,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=343444
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=343444">Mozilla Bug 343444</a>
 <p id="display"></p>
 <form>
-  <input type="radio" name="testradio" id="start"></input>
-  <input type="text"  name="testradio"></input>
-  <input type="text"  name="testradio"></input>
-  <input type="radio" name="testradio"></input>
-  <input type="text"  name="testradio"></input>
-  <input type="radio" name="testradio"></input>
-  <input type="text"  name="testradio"></input>
-  <input type="radio" name="testradio"></input>
-  <input type="radio" name="testradio"></input>
-  <input type="text"  name="testradio"></input>
+  <fieldset id="testradio">
+    <input type="radio" name="testradio" id="start"></input>
+    <input type="text"  name="testradio"></input>
+    <input type="text"  name="testradio"></input>
+    <input type="radio" name="testradio"></input>
+    <input type="text"  name="testradio"></input>
+    <input type="radio" name="testradio"></input>
+    <input type="text"  name="testradio"></input>
+    <input type="radio" name="testradio"></input>
+    <input type="radio" name="testradio"></input>
+    <input type="text"  name="testradio"></input>
+  </fieldset>
+
+  <fieldset>
+    <input type="radio" name="testtwo" id="start2"></input>
+    <input type="radio" name="testtwo"></input>
+    <input type="radio" name="error" id="testtwo"></input>
+    <input type="radio" name="testtwo" id="end"></input>
+  </fieldset>
+
+  <fieldset>
+    <input type="radio" name="testthree" id="start3"></input>
+    <input type="radio" name="errorthree" id="testthree"></input>
+  </fieldset>
 </form>
 <script class="testbody" type="text/javascript">
 /** Test for Bug 343444 **/
@@ -31,11 +45,24 @@ document.getElementById("start").focus();
 var count=0;
 while (count < 2) {
   sendKey("DOWN");
-  ok(document.activeElement.type == "radio", "radioGroup should ignore non-radio input fields");
+  is(document.activeElement.type, "radio", "radioGroup should ignore non-radio input fields");
   if (document.activeElement.id == "start") {
     count++;
   }
 }
+
+document.getElementById("start2").focus();
+count = 0;
+while (count < 3) {
+  is(document.activeElement.name, "testtwo",
+     "radioGroup should only contain elements with the same @name")
+  sendKey("DOWN");
+  count++;
+}
+
+document.getElementById("start3").focus();
+sendKey("DOWN");
+is(document.activeElement.name, "testthree", "we don't have an infinite-loop");
 </script>
 </pre>
 </body>
