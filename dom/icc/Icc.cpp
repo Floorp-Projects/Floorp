@@ -29,7 +29,6 @@ Icc::Icc(nsPIDOMWindow* aWindow, long aClientId, nsIIccInfo* aIccInfo)
   : mLive(true)
   , mClientId(aClientId)
 {
-  SetIsDOMBinding();
   BindToOwner(aWindow);
 
   mProvider = do_GetService(NS_RILCONTENTHELPER_CONTRACTID);

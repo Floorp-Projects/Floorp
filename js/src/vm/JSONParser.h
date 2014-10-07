@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsonparser_h
-#define jsonparser_h
+#ifndef vm_JSONParser_h
+#define vm_JSONParser_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Range.h"
@@ -237,4 +237,4 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase
 
 } /* namespace js */
 
-#endif /* jsonparser_h */
+#endif /* vm_JSONParser_h */

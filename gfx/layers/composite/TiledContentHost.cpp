@@ -486,8 +486,8 @@ TiledContentHost::RenderTile(const TileHost& aTile,
     NS_WARNING("Failed to lock tile");
     return;
   }
-  RefPtr<NewTextureSource> source = aTile.mTextureHost->GetTextureSources();
-  RefPtr<NewTextureSource> sourceOnWhite =
+  RefPtr<TextureSource> source = aTile.mTextureHost->GetTextureSources();
+  RefPtr<TextureSource> sourceOnWhite =
     aTile.mTextureHostOnWhite ? aTile.mTextureHostOnWhite->GetTextureSources() : nullptr;
   if (!source || (aTile.mTextureHostOnWhite && !sourceOnWhite)) {
     return;

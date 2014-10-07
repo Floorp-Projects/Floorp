@@ -245,7 +245,7 @@
       var searchStr = "text";
 
       synthesizeComposition({ type: "compositionstart" });
-      synthesizeText(
+      synthesizeCompositionChange(
         { "composition":
           { "string": searchStr,
             "clauses":
@@ -259,7 +259,7 @@
       ok(gBrowser.contentWindow.getSelection().toString().toLowerCase() != searchStr,
          "testNormalFindWithComposition: text shouldn't be found during composition");
 
-      synthesizeText(
+      synthesizeCompositionChange(
         { "composition":
           { "string": searchStr,
             "clauses":

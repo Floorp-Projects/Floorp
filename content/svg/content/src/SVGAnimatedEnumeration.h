@@ -37,7 +37,6 @@ protected:
   explicit SVGAnimatedEnumeration(nsSVGElement* aSVGElement)
     : mSVGElement(aSVGElement)
   {
-    SetIsDOMBinding();
   }
   virtual ~SVGAnimatedEnumeration() {};
 

@@ -12,7 +12,6 @@ WebGLExtensionBase::WebGLExtensionBase(WebGLContext* context)
     : WebGLContextBoundObject(context)
     , mIsLost(false)
 {
-    SetIsDOMBinding();
 }
 
 WebGLExtensionBase::~WebGLExtensionBase()

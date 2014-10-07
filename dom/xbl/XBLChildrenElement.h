@@ -152,7 +152,6 @@ public:
     : mParent(aParent)
   {
     MOZ_COUNT_CTOR(nsAnonymousContentList);
-    SetIsDOMBinding();
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

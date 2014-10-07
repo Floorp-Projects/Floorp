@@ -33,7 +33,6 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeTypeArray,
 nsMimeTypeArray::nsMimeTypeArray(nsPIDOMWindow* aWindow)
   : mWindow(aWindow)
 {
-  SetIsDOMBinding();
 }
 
 nsMimeTypeArray::~nsMimeTypeArray()
@@ -233,7 +232,6 @@ nsMimeType::nsMimeType(nsPIDOMWindow* aWindow, nsPluginElement* aPluginElement,
     mPluginTagMimeIndex(aPluginTagMimeIndex),
     mType(aType)
 {
-  SetIsDOMBinding();
 }
 
 nsMimeType::nsMimeType(nsPIDOMWindow* aWindow, const nsAString& aType)
@@ -242,7 +240,6 @@ nsMimeType::nsMimeType(nsPIDOMWindow* aWindow, const nsAString& aType)
     mPluginTagMimeIndex(0),
     mType(aType)
 {
-  SetIsDOMBinding();
 }
 
 nsMimeType::~nsMimeType()

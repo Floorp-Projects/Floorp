@@ -17,7 +17,7 @@ class BasicCompositor;
 // TextureSource for Xlib-backed surfaces.
 class X11TextureSourceBasic
   : public TextureSourceBasic
-  , public NewTextureSource
+  , public TextureSource
 {
 public:
   X11TextureSourceBasic(BasicCompositor* aCompositor, gfxXlibSurface* aSurface);

@@ -57,7 +57,6 @@ CameraCapabilities::CameraCapabilities(nsPIDOMWindow* aWindow)
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   MOZ_COUNT_CTOR(CameraCapabilities);
   mozilla::HoldJSObjects(this);
-  SetIsDOMBinding();
 }
 
 CameraCapabilities::~CameraCapabilities()

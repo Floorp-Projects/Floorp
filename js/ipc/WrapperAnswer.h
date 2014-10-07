@@ -19,28 +19,28 @@ class WrapperAnswer : public virtual JavaScriptShared
     explicit WrapperAnswer(JSRuntime *rt) : JavaScriptShared(rt) {}
 
     bool AnswerPreventExtensions(const ObjectId &objId, ReturnStatus *rs);
-    bool AnswerGetPropertyDescriptor(const ObjectId &objId, const nsString &id,
+    bool AnswerGetPropertyDescriptor(const ObjectId &objId, const JSIDVariant &id,
                                      ReturnStatus *rs,
                                      PPropertyDescriptor *out);
     bool AnswerGetOwnPropertyDescriptor(const ObjectId &objId,
-                                        const nsString &id,
+                                        const JSIDVariant &id,
                                         ReturnStatus *rs,
                                         PPropertyDescriptor *out);
-    bool AnswerDefineProperty(const ObjectId &objId, const nsString &id,
+    bool AnswerDefineProperty(const ObjectId &objId, const JSIDVariant &id,
                               const PPropertyDescriptor &flags,
                               ReturnStatus *rs);
-    bool AnswerDelete(const ObjectId &objId, const nsString &id,
+    bool AnswerDelete(const ObjectId &objId, const JSIDVariant &id,
                       ReturnStatus *rs, bool *success);
 
-    bool AnswerHas(const ObjectId &objId, const nsString &id,
+    bool AnswerHas(const ObjectId &objId, const JSIDVariant &id,
                        ReturnStatus *rs, bool *bp);
-    bool AnswerHasOwn(const ObjectId &objId, const nsString &id,
+    bool AnswerHasOwn(const ObjectId &objId, const JSIDVariant &id,
                           ReturnStatus *rs, bool *bp);
     bool AnswerGet(const ObjectId &objId, const ObjectVariant &receiverVar,
-                       const nsString &id,
+                       const JSIDVariant &id,
                        ReturnStatus *rs, JSVariant *result);
     bool AnswerSet(const ObjectId &objId, const ObjectVariant &receiverVar,
-                   const nsString &id, const bool &strict,
+                   const JSIDVariant &id, const bool &strict,
                    const JSVariant &value, ReturnStatus *rs, JSVariant *result);
 
     bool AnswerIsExtensible(const ObjectId &objId, ReturnStatus *rs,

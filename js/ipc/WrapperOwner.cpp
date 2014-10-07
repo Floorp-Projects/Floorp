@@ -145,13 +145,13 @@ WrapperOwner::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId 
 {
     ObjectId objId = idOf(proxy);
 
-    nsString idstr;
-    if (!convertIdToGeckoString(cx, id, &idstr))
+    JSIDVariant idVar;
+    if (!toJSIDVariant(cx, id, &idVar))
         return false;
 
     ReturnStatus status;
     PPropertyDescriptor result;
-    if (!CallGetPropertyDescriptor(objId, idstr, &status, &result))
+    if (!CallGetPropertyDescriptor(objId, idVar, &status, &result))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -175,13 +175,13 @@ WrapperOwner::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, Handle
 {
     ObjectId objId = idOf(proxy);
 
-    nsString idstr;
-    if (!convertIdToGeckoString(cx, id, &idstr))
+    JSIDVariant idVar;
+    if (!toJSIDVariant(cx, id, &idVar))
         return false;
 
     ReturnStatus status;
     PPropertyDescriptor result;
-    if (!CallGetOwnPropertyDescriptor(objId, idstr, &status, &result))
+    if (!CallGetOwnPropertyDescriptor(objId, idVar, &status, &result))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -205,8 +205,8 @@ WrapperOwner::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
 {
     ObjectId objId = idOf(proxy);
 
-    nsString idstr;
-    if (!convertIdToGeckoString(cx, id, &idstr))
+    JSIDVariant idVar;
+    if (!toJSIDVariant(cx, id, &idVar))
         return false;
 
     PPropertyDescriptor descriptor;
@@ -214,7 +214,7 @@ WrapperOwner::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
         return false;
 
     ReturnStatus status;
-    if (!CallDefineProperty(objId, idstr, descriptor, &status))
+    if (!CallDefineProperty(objId, idVar, descriptor, &status))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -246,12 +246,12 @@ WrapperOwner::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
     ObjectId objId = idOf(proxy);
 
-    nsString idstr;
-    if (!convertIdToGeckoString(cx, id, &idstr))
+    JSIDVariant idVar;
+    if (!toJSIDVariant(cx, id, &idVar))
         return false;
 
     ReturnStatus status;
-    if (!CallDelete(objId, idstr, &status, bp))
+    if (!CallDelete(objId, idVar, &status, bp))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -282,12 +282,12 @@ WrapperOwner::has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
     ObjectId objId = idOf(proxy);
 
-    nsString idstr;
-    if (!convertIdToGeckoString(cx, id, &idstr))
+    JSIDVariant idVar;
+    if (!toJSIDVariant(cx, id, &idVar))
         return false;
 
     ReturnStatus status;
-    if (!CallHas(objId, idstr, &status, bp))
+    if (!CallHas(objId, idVar, &status, bp))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -306,12 +306,12 @@ WrapperOwner::hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
     ObjectId objId = idOf(proxy);
 
-    nsString idstr;
-    if (!convertIdToGeckoString(cx, id, &idstr))
+    JSIDVariant idVar;
+    if (!toJSIDVariant(cx, id, &idVar))
         return false;
 
     ReturnStatus status;
-    if (!CallHasOwn(objId, idstr, &status, bp))
+    if (!CallHasOwn(objId, idVar, &status, bp))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -382,7 +382,7 @@ WrapperOwner::toString(JSContext *cx, HandleObject cpow, JS::CallArgs &args)
 
 bool
 WrapperOwner::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
-		  HandleId id, MutableHandleValue vp)
+                  HandleId id, MutableHandleValue vp)
 {
     ObjectId objId = idOf(proxy);
 
@@ -390,13 +390,13 @@ WrapperOwner::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
     if (!toObjectVariant(cx, receiver, &receiverVar))
         return false;
 
-    nsString idstr;
-    if (!convertIdToGeckoString(cx, id, &idstr))
+    JSIDVariant idVar;
+    if (!toJSIDVariant(cx, id, &idVar))
         return false;
 
     JSVariant val;
     ReturnStatus status;
-    if (!CallGet(objId, receiverVar, idstr, &status, &val))
+    if (!CallGet(objId, receiverVar, idVar, &status, &val))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -407,7 +407,8 @@ WrapperOwner::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
     if (!fromVariant(cx, val, vp))
         return false;
 
-    if (idstr.EqualsLiteral("toString")) {
+    if (idVar.type() == JSIDVariant::TnsString &&
+        idVar.get_nsString().EqualsLiteral("toString")) {
         RootedFunction toString(cx, JS_NewFunction(cx, CPOWToString, 0, 0, proxy, "toString"));
         if (!toString)
             return false;
@@ -432,7 +433,7 @@ CPOWProxyHandler::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject re
 
 bool
 WrapperOwner::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
-		  JS::HandleId id, bool strict, JS::MutableHandleValue vp)
+                  JS::HandleId id, bool strict, JS::MutableHandleValue vp)
 {
     ObjectId objId = idOf(proxy);
 
@@ -440,8 +441,8 @@ WrapperOwner::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiv
     if (!toObjectVariant(cx, receiver, &receiverVar))
         return false;
 
-    nsString idstr;
-    if (!convertIdToGeckoString(cx, id, &idstr))
+    JSIDVariant idVar;
+    if (!toJSIDVariant(cx, id, &idVar))
         return false;
 
     JSVariant val;
@@ -450,7 +451,7 @@ WrapperOwner::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiv
 
     ReturnStatus status;
     JSVariant result;
-    if (!CallSet(objId, receiverVar, idstr, strict, val, &status, &result))
+    if (!CallSet(objId, receiverVar, idVar, strict, val, &status, &result))
         return ipcfail(cx);
 
     LOG_STACK();

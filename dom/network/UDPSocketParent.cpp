@@ -15,14 +15,64 @@
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/PNeckoParent.h"
+#include "nsNetUtil.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/TabParent.h"
 
 namespace mozilla {
 namespace dom {
 
 NS_IMPL_ISUPPORTS(UDPSocketParent, nsIUDPSocketListener)
 
+UDPSocketParent::UDPSocketParent()
+  : mIPCOpen(true)
+{
+  mObserver = new mozilla::net::OfflineObserver(this);
+}
+
 UDPSocketParent::~UDPSocketParent()
 {
+  if (mObserver) {
+    mObserver->RemoveObserver();
+  }
+}
+
+nsresult
+UDPSocketParent::OfflineNotification(nsISupports *aSubject)
+{
+  nsCOMPtr<nsIAppOfflineInfo> info(do_QueryInterface(aSubject));
+  if (!info) {
+    return NS_OK;
+  }
+
+  uint32_t targetAppId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
+  info->GetAppId(&targetAppId);
+
+  // Obtain App ID
+  uint32_t appId = GetAppId();
+  if (appId != targetAppId) {
+    return NS_OK;
+  }
+
+  // If the app is offline, close the socket
+  if (mSocket && NS_IsAppOffline(appId)) {
+    mSocket->Close();
+  }
+
+  return NS_OK;
+}
+
+uint32_t
+UDPSocketParent::GetAppId()
+{
+  uint32_t appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
+  const PContentParent *content = Manager()->Manager();
+  const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
+  if (browsers.Length() > 0) {
+    TabParent *tab = static_cast<TabParent*>(browsers[0]);
+    appId = tab->OwnAppId();
+  }
+  return appId;
 }
 
 bool

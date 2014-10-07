@@ -1303,6 +1303,8 @@ BluetoothServiceBluedroid::AdapterPropertiesNotification(
 
       BT_APPEND_NAMED_VALUE(propertiesArray, "PairedDevices", pairedDeviceAddresses);
 
+    } else if (p.mType == PROPERTY_UNKNOWN) {
+      /* Bug 1065999: working around unknown properties */
     } else {
       BT_LOGD("Unhandled adapter property type: %d", p.mType);
       continue;
@@ -1370,6 +1372,8 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
       BT_APPEND_NAMED_VALUE(propertiesArray, "Type",
                             static_cast<uint32_t>(p.mTypeOfDevice));
 
+    } else if (p.mType == PROPERTY_UNKNOWN) {
+      /* Bug 1065999: working around unknown properties */
     } else {
       BT_LOGD("Other non-handled device properties. Type: %d", p.mType);
     }
@@ -1467,6 +1471,8 @@ BluetoothServiceBluedroid::DeviceFoundNotification(
       BT_APPEND_NAMED_VALUE(propertiesArray, "Type",
                             static_cast<uint32_t>(p.mTypeOfDevice));
 
+    } else if (p.mType == PROPERTY_UNKNOWN) {
+      /* Bug 1065999: working around unknown properties */
     } else {
       BT_LOGD("Not handled remote device property: %d", p.mType);
     }
