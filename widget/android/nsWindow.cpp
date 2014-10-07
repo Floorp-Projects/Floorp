@@ -685,7 +685,7 @@ nsWindow::DispatchEvent(WidgetGUIEvent* aEvent)
             break;
         case NS_COMPOSITION_CHANGE:
             MOZ_ASSERT(mIMEComposing);
-            mIMEComposingText = aEvent->AsTextEvent()->mData;
+            mIMEComposingText = aEvent->AsCompositionEvent()->mData;
             break;
         }
         return status;
@@ -1707,7 +1707,7 @@ nsWindow::RemoveIMEComposition()
     AutoIMEMask selMask(mIMEMaskSelectionUpdate);
     AutoIMEMask textMask(mIMEMaskTextUpdate);
 
-    WidgetTextEvent textEvent(true, NS_COMPOSITION_CHANGE, this);
+    WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE, this);
     InitEvent(textEvent, nullptr);
     textEvent.mData = mIMEComposingText;
     DispatchEvent(&textEvent);
@@ -1845,7 +1845,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             }
 
             {
-                WidgetTextEvent event(true, NS_COMPOSITION_CHANGE, this);
+                WidgetCompositionEvent event(true, NS_COMPOSITION_CHANGE, this);
                 InitEvent(event, nullptr);
                 event.mData = ae->Characters();
 
@@ -1955,7 +1955,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             AutoIMEMask selMask(mIMEMaskSelectionUpdate);
             AutoIMEMask textMask(mIMEMaskTextUpdate);
 
-            WidgetTextEvent event(true, NS_COMPOSITION_CHANGE, this);
+            WidgetCompositionEvent event(true, NS_COMPOSITION_CHANGE, this);
             InitEvent(event, nullptr);
 
             event.mRanges = new TextRangeArray();
@@ -2086,7 +2086,7 @@ nsWindow::NotifyIME(const IMENotification& aIMENotification)
             if (mIMEComposing) {
                 nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
-                WidgetTextEvent textEvent(true, NS_COMPOSITION_CHANGE, this);
+                WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE, this);
                 InitEvent(textEvent, nullptr);
                 DispatchEvent(&textEvent);
 

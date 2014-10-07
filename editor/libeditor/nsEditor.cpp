@@ -5109,15 +5109,10 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
       // If events are not created with proper event interface, their message
       // are initialized with NS_USER_DEFINED_EVENT.  Let's ignore such event.
       return false;
-    case NS_COMPOSITION_CHANGE:
-      // Don't allow compositionchange events whose internal event are not
-      // WidgetTextEvent.
-      widgetGUIEvent = aEvent->GetInternalNSEvent()->AsTextEvent();
-      needsWidget = true;
-      break;
     case NS_COMPOSITION_START:
     case NS_COMPOSITION_END:
     case NS_COMPOSITION_UPDATE:
+    case NS_COMPOSITION_CHANGE:
       // Don't allow composition events whose internal event are not
       // WidgetCompositionEvent.
       widgetGUIEvent = aEvent->GetInternalNSEvent()->AsCompositionEvent();

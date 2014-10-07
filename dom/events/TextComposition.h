@@ -132,7 +132,7 @@ public:
   {
   public:
     TextEventHandlingMarker(TextComposition* aComposition,
-                            const WidgetTextEvent* aTextEvent)
+                            const WidgetCompositionEvent* aTextEvent)
       : mComposition(aComposition)
     {
       mComposition->EditorWillHandleTextEvent(aTextEvent);
@@ -235,7 +235,7 @@ private:
    * EditorWillHandleTextEvent() must be called before the focused editor
    * handles the compositionchange event.
    */
-  void EditorWillHandleTextEvent(const WidgetTextEvent* aTextEvent);
+  void EditorWillHandleTextEvent(const WidgetCompositionEvent* aTextEvent);
 
   /**
    * EditorDidHandleTextEvent() must be called after the focused editor handles
@@ -258,7 +258,7 @@ private:
    * @return Returns false if dispatching the compositionupdate event caused
    *         destroying this composition.
    */
-  bool MaybeDispatchCompositionUpdate(const WidgetTextEvent* aEvent);
+  bool MaybeDispatchCompositionUpdate(const WidgetCompositionEvent* aEvent);
 
   /**
    * If IME has already dispatched compositionend event but it was discarded

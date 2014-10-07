@@ -2716,7 +2716,7 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  WidgetTextEvent textEvent(true, NS_COMPOSITION_CHANGE, mWidget);
+  WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE, mWidget);
   textEvent.time = PR_IntervalNow();
   textEvent.mData = aText;
   if (!aDoCommit) {

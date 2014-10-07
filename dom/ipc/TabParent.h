@@ -318,7 +318,7 @@ public:
     static TabParent *GetIMETabParent() { return mIMETabParent; }
     bool HandleQueryContentEvent(mozilla::WidgetQueryContentEvent& aEvent);
     bool SendCompositionEvent(mozilla::WidgetCompositionEvent& event);
-    bool SendTextEvent(mozilla::WidgetTextEvent& event);
+    bool SendTextEvent(mozilla::WidgetCompositionEvent& event);
     bool SendSelectionEvent(mozilla::WidgetSelectionEvent& event);
 
     static TabParent* GetFrom(nsFrameLoader* aFrameLoader);
