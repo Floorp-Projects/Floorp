@@ -56,16 +56,17 @@ let runCheck = function(expectError) {
 }
 
 add_task(function* test_mozLoop_softStart() {
+  let orig_throttled = Services.prefs.getBoolPref("loop.throttled");
+
   // Set associated variables to proper values
   Services.prefs.setBoolPref("loop.throttled", true);
   Services.prefs.setCharPref("loop.soft_start_hostname", SOFT_START_HOSTNAME);
   Services.prefs.setIntPref("loop.soft_start_ticket_number", -1);
 
   registerCleanupFunction(function () {
-    Services.prefs.clearUserPref("loop.throttled");
-    Services.prefs.clearUserPref("loop.soft_start");
-    Services.prefs.clearUserPref("loop.soft_start_hostname");
+    Services.prefs.setBoolPref("loop.throttled", orig_throttled);
     Services.prefs.clearUserPref("loop.soft_start_ticket_number");
+    Services.prefs.clearUserPref("loop.soft_start_hostname");
   });
 
   let throttled;
@@ -84,7 +85,6 @@ add_task(function* test_mozLoop_softStart() {
   for (ticket of [1, 256, 65535, 10000000, 16777214]) {
     MockButton.hidden = true;
     Services.prefs.setBoolPref("loop.throttled", true);
-    Services.prefs.setBoolPref("loop.soft_start", true);
     Services.prefs.setIntPref("loop.soft_start_ticket_number", ticket);
 
     info("Ensure that we don't activate when the now serving " +
@@ -116,7 +116,6 @@ add_task(function* test_mozLoop_softStart() {
   MockDNSService.nowServing = 0;
   MockDNSService.resultCode = 0x80000000;
   Services.prefs.setBoolPref("loop.throttled", true);
-  Services.prefs.setBoolPref("loop.soft_start", true);
   MockButton.hidden = true;
   yield runCheck(true);
   throttled = Services.prefs.getBoolPref("loop.throttled");
@@ -128,7 +127,6 @@ add_task(function* test_mozLoop_softStart() {
   MockDNSService.resultCode = 0;
   MockDNSService.ipFirstOctet = 6;
   Services.prefs.setBoolPref("loop.throttled", true);
-  Services.prefs.setBoolPref("loop.soft_start", true);
   MockButton.hidden = true;
   yield runCheck(true);
   throttled = Services.prefs.getBoolPref("loop.throttled");
