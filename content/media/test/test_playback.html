@@ -36,34 +36,65 @@ function startTest(test, token) {
     ok(false, test.name + " should not fire 'load' event");
   }}(test, v);
 
+  // Used to cancel timer callback.
+  var timer = null;
+
+  var cancelTimer = function() {
+    if (timer) {
+      clearTimeout(timer);
+    }
+  }
+
+  var finish = function() {
+    cancelTimer();
+    v.finished = true;
+    v.removeEventListener("timeupdate", timeUpdate, false);
+    removeNodeAndSource(v);
+    manager.finished(v.token);
+  }
+
+  // We should get "ended" and "suspend" events to finish the test.
+  var mayFinish = function() {
+    if (v.seenEnded && v.seenSuspend) {
+      finish();
+    }
+  }
+
+  var onTimeout = function() {
+    ok(v.seenEnded, v.name + " timed out, should get 'ended'");
+    ok(v.seenSuspend, v.name + " timed out, should get 'suspend'");
+    finish();
+  }
+
+  // Check if we time out in waiting for some events.
+  var registerTimer = function() {
+    cancelTimer();
+    timer = setTimeout(onTimeout, 30000);
+  }
+
   var checkEnded = function(test, v) { return function() {
-    checkMetadata(test.name, v, test);
     is(test.name, v.name, test.name + ": Name should match #2");
+    checkMetadata(test.name, v, test);
     is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
     ok(v.readyState != v.NETWORK_LOADED, test.name + " shouldn't report NETWORK_LOADED");
     ok(v.ended, test.name + " checking playback has ended");
-    if (v.ended && v.seenSuspend && !v.finished) {
-      v.finished = true;
-      v.removeEventListener("timeupdate", timeUpdate, false);
-      removeNodeAndSource(v);
-      manager.finished(v.token);
-    }
+    ok(!v.finished, test.name + " shouldn't be finished");
+    ok(!v.seenEnded, test.name + " shouldn't be ended");
+
+    v.seenEnded = true;
+    registerTimer();
+    mayFinish();
   }}(test, v);
 
   var checkSuspended = function(test, v) { return function() {
-    is(test.name, v.name, test.name + ": Name should match #3");
     if (v.seenSuspend) {
       return;
     }
+    is(test.name, v.name, test.name + ": Name should match #3");
 
     v.seenSuspend = true;
-    ok(true, test.name + " got suspend");
-    if (v.ended && !v.finished) {
-      v.finished = true;
-      v.removeEventListener("timeupdate", timeUpdate, false);
-      removeNodeAndSource(v);
-      manager.finished(v.token);
-    }
+    registerTimer();
+    mayFinish();
   }}(test, v);
 
   var timeUpdate = function(test, v) { return function() {
@@ -72,6 +103,7 @@ function startTest(test, token) {
                 v.prevTime + " c=" + v.currentTime);
     }
     v.prevTime = v.currentTime;
+    registerTimer();
   }}(test, v);
 
   v.addEventListener("load", noLoad, false);
