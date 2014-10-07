@@ -3451,9 +3451,6 @@ void
 nsObjectLoadingContent::SetupProtoChain(JSContext* aCx,
                                         JS::Handle<JSObject*> aObject)
 {
-  MOZ_ASSERT(nsCOMPtr<nsIContent>(do_QueryInterface(
-    static_cast<nsIObjectLoadingContent*>(this)))->IsDOMBinding());
-
   if (mType != eType_Plugin) {
     return;
   }
