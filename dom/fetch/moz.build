@@ -5,13 +5,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    'Fetch.h',
     'Headers.h',
+    'InternalRequest.h',
     'Request.h',
     'Response.h',
 ]
 
 UNIFIED_SOURCES += [
+    'Fetch.cpp',
     'Headers.cpp',
+    'InternalRequest.cpp',
     'Request.cpp',
     'Response.cpp',
 ]
