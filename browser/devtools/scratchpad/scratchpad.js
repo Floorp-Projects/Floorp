@@ -45,6 +45,7 @@ const require   = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).de
 const Telemetry = require("devtools/shared/telemetry");
 const Editor    = require("devtools/sourceeditor/editor");
 const TargetFactory = require("devtools/framework/target").TargetFactory;
+const EventEmitter = require("devtools/toolkit/event-emitter");
 
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -2169,6 +2170,10 @@ ScratchpadTarget.prototype = Heritage.extend(ScratchpadTab.prototype, {
  */
 function ScratchpadSidebar(aScratchpad)
 {
+  // Make sure to decorate this object. ToolSidebar requires the parent
+  // panel to support event (emit) API.
+  EventEmitter.decorate(this);
+
   let ToolSidebar = require("devtools/framework/sidebar").ToolSidebar;
   let tabbox = document.querySelector("#scratchpad-sidebar");
   this._sidebar = new ToolSidebar(tabbox, this, "scratchpad");
