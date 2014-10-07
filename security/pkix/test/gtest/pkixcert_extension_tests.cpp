@@ -43,13 +43,13 @@ CreateCert(const char* subjectCN,
   EXPECT_FALSE(ENCODING_FAILED(issuerDER));
   ByteString subjectDER(CNToDERName(subjectCN));
   EXPECT_FALSE(ENCODING_FAILED(subjectDER));
-  subjectKey = CloneReusedKeyPair();
   return CreateEncodedCertificate(v3, sha256WithRSAEncryption,
                                   serialNumber, issuerDER,
                                   oneDayBeforeNow, oneDayAfterNow,
-                                  subjectDER, *subjectKey, extensions,
-                                  *subjectKey,
-                                  SignatureAlgorithm::rsa_pkcs1_with_sha256);
+                                  subjectDER, extensions,
+                                  nullptr,
+                                  SignatureAlgorithm::rsa_pkcs1_with_sha256,
+                                  subjectKey);
 }
 
 // Creates a self-signed certificate with the given extension.
