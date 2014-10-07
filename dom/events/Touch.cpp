@@ -28,7 +28,6 @@ Touch::Touch(EventTarget* aTarget,
              float aRotationAngle,
              float aForce)
 {
-  SetIsDOMBinding();
   mTarget = aTarget;
   mIdentifier = aIdentifier;
   mPagePoint = CSSIntPoint(aPageX, aPageY);
@@ -52,7 +51,6 @@ Touch::Touch(int32_t aIdentifier,
              float aRotationAngle,
              float aForce)
 {
-  SetIsDOMBinding();
   mIdentifier = aIdentifier;
   mPagePoint = CSSIntPoint(0, 0);
   mScreenPoint = nsIntPoint(0, 0);

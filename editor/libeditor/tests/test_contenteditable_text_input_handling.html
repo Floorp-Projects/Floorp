@@ -222,7 +222,7 @@ function runTests()
     // start composition
     synthesizeComposition({ type: "compositionstart" });
     // input first character
-    synthesizeText(
+    synthesizeCompositionChange(
       { "composition":
         { "string": "\u3089",
           "clauses":
@@ -257,7 +257,7 @@ function runTests()
     is(querySelectedText.text, "",
        "query selected text event returns wrong selected text" + when);
     // commit composition
-    synthesizeText(
+    synthesizeCompositionChange(
       { "composition":
         { "string": "\u3089",
           "clauses":

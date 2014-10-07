@@ -31,8 +31,6 @@ VoicemailStatus::VoicemailStatus(nsISupports* aParent,
 {
   MOZ_ASSERT(mParent);
   MOZ_ASSERT(mProvider);
-
-  SetIsDOMBinding();
 }
 
 JSObject*

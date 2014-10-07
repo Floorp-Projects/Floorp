@@ -32,7 +32,6 @@ public:
     : mOwner(aOwner)
     , mPorts(aPorts)
   {
-    SetIsDOMBinding();
   }
 
   nsISupports*

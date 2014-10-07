@@ -24,7 +24,6 @@ WebGLShader::WebGLShader(WebGLContext *context, GLenum stype)
     , mAttribMaxNameLength(0)
     , mCompileStatus(false)
 {
-    SetIsDOMBinding();
     mContext->MakeContextCurrent();
     mGLName = mContext->gl->fCreateShader(mType);
     mContext->mShaders.insertBack(this);

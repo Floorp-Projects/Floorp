@@ -27,7 +27,6 @@ SpeechGrammarList::SpeechGrammarList(nsISupports* aParent, nsISpeechRecognitionS
   : mParent(aParent)
 {
   this->mRecognitionService = aRecognitionService;
-  SetIsDOMBinding();
 }
 
 SpeechGrammarList::~SpeechGrammarList()

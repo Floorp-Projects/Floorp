@@ -490,7 +490,6 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsMediaList)
 nsMediaList::nsMediaList()
   : mStyleSheet(nullptr)
 {
-  SetIsDOMBinding();
 }
 
 nsMediaList::~nsMediaList()
@@ -984,8 +983,6 @@ CSSStyleSheet::CSSStyleSheet(CORSMode aCORSMode)
     mRuleProcessors(nullptr)
 {
   mInner = new CSSStyleSheetInner(this, aCORSMode);
-
-  SetIsDOMBinding();
 }
 
 CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
@@ -1018,8 +1015,6 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
     // sheets in sync!
     mMedia = aCopy.mMedia->Clone();
   }
-
-  SetIsDOMBinding();
 }
 
 CSSStyleSheet::~CSSStyleSheet()

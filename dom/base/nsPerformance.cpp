@@ -40,7 +40,6 @@ nsPerformanceTiming::nsPerformanceTiming(nsPerformance* aPerformance,
     mReportCrossOriginRedirect(true)
 {
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
-  SetIsDOMBinding();
 
   if (!nsContentUtils::IsPerformanceTimingEnabled()) {
     mZeroTime = 0;
@@ -368,7 +367,6 @@ nsPerformanceNavigation::nsPerformanceNavigation(nsPerformance* aPerformance)
   : mPerformance(aPerformance)
 {
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
-  SetIsDOMBinding();
 }
 
 nsPerformanceNavigation::~nsPerformanceNavigation()
@@ -401,7 +399,6 @@ nsPerformance::nsPerformance(nsPIDOMWindow* aWindow,
     mPrimaryBufferSize(kDefaultBufferSize)
 {
   MOZ_ASSERT(aWindow, "Parent window object should be provided");
-  SetIsDOMBinding();
 }
 
 nsPerformance::~nsPerformance()

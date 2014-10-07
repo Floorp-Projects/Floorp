@@ -83,6 +83,26 @@ VibrancyManager::ClearVibrantRegion(const VibrantRegion& aVibrantRegion) const
   }
 }
 
+@interface NSView(CurrentFillColor)
+- (NSColor*)_currentFillColor;
+@end
+
+NSColor*
+VibrancyManager::VibrancyFillColorForType(VibrancyType aType)
+{
+  const nsTArray<NSView*>& views =
+    mVibrantRegions.LookupOrAdd(uint32_t(aType))->effectViews;
+
+  if (!views.IsEmpty() &&
+      [views[0] respondsToSelector:@selector(_currentFillColor)]) {
+    // -[NSVisualEffectView _currentFillColor] is the color that our view
+    // would draw during its drawRect implementation, if we hadn't
+    // disabled that.
+    return [views[0] _currentFillColor];
+  }
+  return [NSColor whiteColor];
+}
+
 static void
 DrawRectNothing(id self, SEL _cmd, NSRect aRect)
 {

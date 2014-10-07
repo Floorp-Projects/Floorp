@@ -2118,7 +2118,7 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
     msg = NS_COMPOSITION_END;
   } else if (aType.EqualsLiteral("compositionupdate")) {
     // Now we don't support manually dispatching composition update with this
-    // API.  compositionupdate is dispatched when text event modifies
+    // API.  A compositionupdate is dispatched when a DOM text event modifies
     // composition string automatically.  For backward compatibility, this
     // shouldn't return error in this case.
     NS_WARNING("Don't call nsIDOMWindowUtils.sendCompositionEvent() for "
@@ -2132,7 +2132,7 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
   WidgetCompositionEvent compositionEvent(true, msg, widget);
   InitEvent(compositionEvent);
   if (msg != NS_COMPOSITION_START) {
-    compositionEvent.data = aData;
+    compositionEvent.mData = aData;
   }
 
   compositionEvent.mFlags.mIsSynthesizedForTests = true;

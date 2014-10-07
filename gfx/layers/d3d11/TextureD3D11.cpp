@@ -485,7 +485,7 @@ DXGITextureHostD3D11::Unlock()
   mIsLocked = false;
 }
 
-NewTextureSource*
+TextureSource*
 DXGITextureHostD3D11::GetTextureSources()
 {
   MOZ_ASSERT(mIsLocked);

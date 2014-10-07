@@ -79,7 +79,6 @@ DOMSVGPathSeg::DOMSVGPathSeg(DOMSVGPathSegList *aList,
   , mListIndex(aListIndex)
   , mIsAnimValItem(aIsAnimValItem)
 {
-  SetIsDOMBinding();
   // These shifts are in sync with the members in the header.
   NS_ABORT_IF_FALSE(aList &&
                     aListIndex <= MaxListIndex(), "bad arg");
@@ -92,7 +91,6 @@ DOMSVGPathSeg::DOMSVGPathSeg()
   , mListIndex(0)
   , mIsAnimValItem(false)
 {
-  SetIsDOMBinding();
 }
 
 void

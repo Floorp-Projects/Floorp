@@ -40,7 +40,7 @@ class TextComposition MOZ_FINAL
 public:
   TextComposition(nsPresContext* aPresContext,
                   nsINode* aNode,
-                  WidgetGUIEvent* aEvent);
+                  WidgetCompositionEvent* aCompositionEvent);
 
   bool Destroyed() const { return !mPresContext; }
   nsPresContext* GetPresContext() const { return mPresContext; }
@@ -50,12 +50,13 @@ public:
   const nsString& LastData() const { return mLastData; }
   // The composition string which is already handled by the focused editor.
   // I.e., this value must be same as the composition string on the focused
-  // editor.  This value is modified at a call of EditorDidHandleTextEvent().
+  // editor.  This value is modified at a call of
+  // EditorDidHandleCompositionChangeEvent().
   // Note that mString and mLastData are different between dispatcing
-  // compositionupdate and text event handled by focused editor.
+  // compositionupdate and compositionchange event handled by focused editor.
   const nsString& String() const { return mString; }
   // Returns the clauses and/or caret range of the composition string.
-  // This is modified at a call of EditorWillHandleTextEvent().
+  // This is modified at a call of EditorWillHandleCompositionChangeEvent().
   // This may return null if there is no clauses and caret.
   // XXX We should return |const TextRangeArray*| here, but it causes compile
   //     error due to inaccessible Release() method.
@@ -124,29 +125,33 @@ public:
   void EndHandlingComposition(nsIEditor* aEditor);
 
   /**
-   * TextEventHandlingMarker class should be created at starting to handle text
-   * event in focused editor.  This calls EditorWillHandleTextEvent() and
-   * EditorDidHandleTextEvent() automatically.
+   * CompositionChangeEventHandlingMarker class should be created at starting
+   * to handle text event in focused editor.  This calls
+   * EditorWillHandleCompositionChangeEvent() and
+   * EditorDidHandleCompositionChangeEvent() automatically.
    */
-  class MOZ_STACK_CLASS TextEventHandlingMarker
+  class MOZ_STACK_CLASS CompositionChangeEventHandlingMarker
   {
   public:
-    TextEventHandlingMarker(TextComposition* aComposition,
-                            const WidgetTextEvent* aTextEvent)
+    CompositionChangeEventHandlingMarker(
+      TextComposition* aComposition,
+      const WidgetCompositionEvent* aCompositionChangeEvent)
       : mComposition(aComposition)
     {
-      mComposition->EditorWillHandleTextEvent(aTextEvent);
+      mComposition->EditorWillHandleCompositionChangeEvent(
+                      aCompositionChangeEvent);
     }
 
-    ~TextEventHandlingMarker()
+    ~CompositionChangeEventHandlingMarker()
     {
-      mComposition->EditorDidHandleTextEvent();
+      mComposition->EditorDidHandleCompositionChangeEvent();
     }
 
   private:
     nsRefPtr<TextComposition> mComposition;
-    TextEventHandlingMarker();
-    TextEventHandlingMarker(const TextEventHandlingMarker& aOther);
+    CompositionChangeEventHandlingMarker();
+    CompositionChangeEventHandlingMarker(
+      const CompositionChangeEventHandlingMarker& aOther);
   };
 
 private:
@@ -232,33 +237,35 @@ private:
   bool HasEditor() const;
 
   /**
-   * EditorWillHandleTextEvent() must be called before the focused editor
-   * handles the text event.
+   * EditorWillHandleCompositionChangeEvent() must be called before the focused
+   * editor handles the compositionchange event.
    */
-  void EditorWillHandleTextEvent(const WidgetTextEvent* aTextEvent);
+  void EditorWillHandleCompositionChangeEvent(
+         const WidgetCompositionEvent* aCompositionChangeEvent);
 
   /**
-   * EditorDidHandleTextEvent() must be called after the focused editor handles
-   * a text event.
+   * EditorDidHandleCompositionChangeEvent() must be called after the focused
+   * editor handles a compositionchange event.
    */
-  void EditorDidHandleTextEvent();
+  void EditorDidHandleCompositionChangeEvent();
 
   /**
-   * DispatchEvent() dispatches the aEvent to the mContent synchronously.
-   * The caller must ensure that it's safe to dispatch the event.
+   * DispatchCompositionEvent() dispatches the aCompositionEvent to the mContent
+   * synchronously. The caller must ensure that it's safe to dispatch the event.
    */
-  void DispatchEvent(WidgetGUIEvent* aEvent,
-                     nsEventStatus* aStatus,
-                     EventDispatchingCallback* aCallBack,
-                     bool aIsSynthesized);
+  void DispatchCompositionEvent(WidgetCompositionEvent* aCompositionEvent,
+                                nsEventStatus* aStatus,
+                                EventDispatchingCallback* aCallBack,
+                                bool aIsSynthesized);
 
   /**
    * MaybeDispatchCompositionUpdate() may dispatch a compositionupdate event
-   * if aEvent changes composition string.
+   * if aCompositionEvent changes composition string.
    * @return Returns false if dispatching the compositionupdate event caused
    *         destroying this composition.
    */
-  bool MaybeDispatchCompositionUpdate(const WidgetTextEvent* aEvent);
+  bool MaybeDispatchCompositionUpdate(
+         const WidgetCompositionEvent* aCompositionEvent);
 
   /**
    * If IME has already dispatched compositionend event but it was discarded
@@ -271,15 +278,16 @@ private:
 
   /**
    * OnCompositionEventDiscarded() is called when PresShell discards
-   * compositionupdate, compositionend or text event due to not safe to
-   * dispatch event.
+   * compositionupdate, compositionend or compositionchange event due to not
+   * safe to dispatch event.
    */
-  void OnCompositionEventDiscarded(const WidgetGUIEvent* aEvent);
+  void OnCompositionEventDiscarded(
+         const WidgetCompositionEvent* aCompositionEvent);
 
   /**
    * Calculate composition offset then notify composition update to widget
    */
-  void NotityUpdateComposition(WidgetGUIEvent* aEvent);
+  void NotityUpdateComposition(const WidgetCompositionEvent* aCompositionEvent);
 
   /**
    * CompositionEventDispatcher dispatches the specified composition (or text)
@@ -306,17 +314,14 @@ private:
   };
 
   /**
-   * DispatchCompositionEventRunnable() dispatches a composition or text event
-   * to the content.  Be aware, if you use this method, nsPresShellEventCB
-   * isn't used.  That means that nsIFrame::HandleEvent() is never called.
+   * DispatchCompositionEventRunnable() dispatches a composition event to the
+   * content.  Be aware, if you use this method, nsPresShellEventCB isn't used.
+   * That means that nsIFrame::HandleEvent() is never called.
    * WARNING: The instance which is managed by IMEStateManager may be
    *          destroyed by this method call.
    *
-   * @param aEventMessage       Must be one of composition event or text event.
-   * @param aData               Used for data value if aEventMessage is
-   *                            NS_COMPOSITION_END.
-   *                            Used for theText value if aEventMessage is
-   *                            NS_TEXT_TEXT.
+   * @param aEventMessage       Must be one of composition events.
+   * @param aData               Used for mData value.
    * @param aIsSynthesizingCommit   true if this is called for synthesizing
    *                                commit or cancel composition.  Otherwise,
    *                                false.

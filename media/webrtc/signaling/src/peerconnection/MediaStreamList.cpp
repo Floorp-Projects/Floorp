@@ -20,7 +20,6 @@ MediaStreamList::MediaStreamList(sipcc::PeerConnectionImpl* peerConnection,
   : mPeerConnection(peerConnection),
     mType(type)
 {
-  SetIsDOMBinding();
 }
 
 MediaStreamList::~MediaStreamList()
