@@ -55,7 +55,7 @@ config = {
     "xpcshell_options": [
         "--deviceIP=%(device_ip)s",
         "--xre-path=../hostutils/xre",
-        "--manifest=xpcshell/tests/xpcshell_android.ini",
+        "--manifest=xpcshell/tests/xpcshell.ini",
         "--build-info-json=xpcshell/mozinfo.json",
         "--testing-modules-dir=modules",
         "--local-lib-dir=../fennec",
