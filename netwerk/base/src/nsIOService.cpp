@@ -1506,6 +1506,22 @@ nsIOService::SetAppOfflineInternal(uint32_t aAppId, int32_t aState)
 }
 
 NS_IMETHODIMP
+nsIOService::GetAppOfflineState(uint32_t aAppId, int32_t *aResult)
+{
+    NS_ENSURE_ARG(aResult);
+
+    if (aAppId == NECKO_NO_APP_ID ||
+        aAppId == NECKO_UNKNOWN_APP_ID) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    *aResult = nsIAppOfflineInfo::ONLINE;
+    mAppsOfflineStatus.Get(aAppId, aResult);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsIOService::IsAppOffline(uint32_t aAppId, bool* aResult)
 {
     NS_ENSURE_ARG(aResult);
