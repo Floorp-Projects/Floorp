@@ -495,7 +495,7 @@ nsIMM32Handler::OnIMEEndComposition(nsWindow* aWindow,
   mCompositionString.Truncate();
 
   nsIMEContext IMEContext(aWindow->GetWindowHandle());
-  DispatchTextEvent(aWindow, IMEContext, false);
+  DispatchCompositionChangeEvent(aWindow, IMEContext, false);
 
   HandleEndComposition(aWindow);
 
@@ -1020,7 +1020,7 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleComposition, GCS_RESULTSTR\n"));
 
-    DispatchTextEvent(aWindow, aIMEContext, false);
+    DispatchCompositionChangeEvent(aWindow, aIMEContext, false);
     HandleEndComposition(aWindow);
 
     if (!IS_COMPOSING_LPARAM(lParam)) {
@@ -1062,7 +1062,7 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
     // If composition string is empty, we should dispatch a compositionchange
     // event with empty string.
     if (mCompositionString.IsEmpty()) {
-      DispatchTextEvent(aWindow, aIMEContext, false);
+      DispatchCompositionChangeEvent(aWindow, aIMEContext, false);
       return ShouldDrawCompositionStringOurselves();
     }
 
@@ -1202,7 +1202,7 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
   //--------------------------------------------------------
   // 5. Send the compositionchange event
   //--------------------------------------------------------
-  DispatchTextEvent(aWindow, aIMEContext);
+  DispatchCompositionChangeEvent(aWindow, aIMEContext);
 
   return ShouldDrawCompositionStringOurselves();
 }
@@ -1516,7 +1516,7 @@ nsIMM32Handler::CommitCompositionOnPreviousWindow(nsWindow* aWindow)
     nsIMEContext IMEContext(mComposingWindow->GetWindowHandle());
     NS_ASSERTION(IMEContext.IsValid(), "IME context must be valid");
 
-    DispatchTextEvent(mComposingWindow, IMEContext, false);
+    DispatchCompositionChangeEvent(mComposingWindow, IMEContext, false);
     HandleEndComposition(mComposingWindow);
     return true;
   }
@@ -1569,13 +1569,13 @@ GetRangeTypeName(uint32_t aRangeType)
 #endif
 
 void
-nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
-                                  const nsIMEContext &aIMEContext,
-                                  bool aCheckAttr)
+nsIMM32Handler::DispatchCompositionChangeEvent(nsWindow* aWindow,
+                                               const nsIMEContext &aIMEContext,
+                                               bool aCheckAttr)
 {
   NS_ASSERTION(mIsComposing, "conflict state");
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-    ("IMM32: DispatchTextEvent, aCheckAttr=%s\n",
+    ("IMM32: DispatchCompositionChangeEvent, aCheckAttr=%s\n",
      aCheckAttr ? "TRUE": "FALSE"));
 
   // If we don't need to draw composition string ourselves and this is not

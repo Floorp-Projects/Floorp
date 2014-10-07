@@ -251,12 +251,13 @@ protected:
   void     DidLockGranted();
 
   bool     GetScreenExtInternal(RECT &aScreenExt);
-  // If aDispatchTextEvent is true, this method will dispatch compositionchange
-  // event if this is called during IME composing.  aDispatchTextEvent should
-  // be true only when this is called from SetSelection.  Because otherwise,
-  // the compositionchange event should not be sent from here.
+  // If aDispatchCompositionChangeEvent is true, this method will dispatch
+  // compositionchange event if this is called during IME composing.
+  // aDispatchCompositionChangeEvent should be true only when this is called
+  // from SetSelection.  Because otherwise, the compositionchange event should
+  // not be sent from here.
   HRESULT  SetSelectionInternal(const TS_SELECTION_ACP*,
-                                bool aDispatchTextEvent = false);
+                                bool aDispatchCompositionChangeEvent = false);
   bool     InsertTextAtSelectionInternal(const nsAString &aInsertStr,
                                          TS_TEXTCHANGE* aTextChange);
   void     CommitCompositionInternal(bool);

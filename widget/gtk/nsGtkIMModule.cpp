@@ -775,7 +775,7 @@ nsGtkIMModule::OnChangeCompositionNative(GtkIMContext *aContext)
     }
 
     // Be aware, widget can be gone
-    DispatchTextEvent(compositionString, false);
+    DispatchCompositionChangeEvent(compositionString, false);
 }
 
 /* static */
@@ -921,7 +921,7 @@ nsGtkIMModule::CommitCompositionBy(const nsAString& aString)
          this, NS_ConvertUTF16toUTF8(aString).get(),
          NS_ConvertUTF16toUTF8(mDispatchedCompositionString).get()));
 
-    if (!DispatchTextEvent(aString, true)) {
+    if (!DispatchCompositionChangeEvent(aString, true)) {
         return false;
     }
     // We should dispatch the compositionend event here because some IMEs
@@ -1067,11 +1067,12 @@ nsGtkIMModule::DispatchCompositionEnd()
 }
 
 bool
-nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
-                                 bool aIsCommit)
+nsGtkIMModule::DispatchCompositionChangeEvent(
+                   const nsAString &aCompositionString,
+                   bool aIsCommit)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): DispatchTextEvent, aIsCommit=%s",
+        ("GtkIMModule(%p): DispatchCompositionChangeEvent, aIsCommit=%s",
          this, aIsCommit ? "TRUE" : "FALSE"));
 
     if (!mLastFocusedWindow) {
@@ -1124,8 +1125,8 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
     }
 
     mCompositionState = aIsCommit ?
-        eCompositionState_CommitTextEventDispatched :
-        eCompositionState_TextEventDispatched;
+        eCompositionState_CommitCompositionChangeEventDispatched :
+        eCompositionState_CompositionChangeEventDispatched;
 
     mLastFocusedWindow->DispatchEvent(&compositionChangeEvent, status);
     if (lastFocusedWindow->IsDestroyed() ||
@@ -1448,7 +1449,7 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
     if (wasComposing) {
         selOffset = mCompositionStart;
         if (editorHadCompositionString &&
-            !DispatchTextEvent(mSelectedString, false)) {
+            !DispatchCompositionChangeEvent(mSelectedString, false)) {
             PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
                 ("    FAILED, quitting from DeletText"));
             return NS_ERROR_FAILURE;
@@ -1575,7 +1576,7 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
 
     nsAutoString compositionString;
     GetCompositionString(compositionString);
-    if (!DispatchTextEvent(compositionString, true)) {
+    if (!DispatchCompositionChangeEvent(compositionString, true)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, restoring composition string"));
         return NS_ERROR_FAILURE;
