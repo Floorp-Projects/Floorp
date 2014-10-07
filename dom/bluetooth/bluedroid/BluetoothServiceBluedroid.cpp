@@ -809,7 +809,7 @@ public:
   }
 
 private:
-  BluetoothReplyRunnable* mRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mRunnable;
 };
 
 nsresult
@@ -843,7 +843,7 @@ public:
   }
 
 private:
-  BluetoothReplyRunnable* mRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mRunnable;
 };
 
 nsresult
@@ -1323,6 +1323,9 @@ BluetoothServiceBluedroid::AdapterPropertiesNotification(
     } else if (p.mType == PROPERTY_UUIDS) {
       //FIXME: This will be implemented in the later patchset
       continue;
+    } else if (p.mType == PROPERTY_UNKNOWN) {
+      /* Bug 1065999: working around unknown properties */
+      continue;
     } else {
       BT_LOGD("Unhandled adapter property type: %d", p.mType);
       continue;
@@ -1415,6 +1418,8 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
         BT_APPEND_NAMED_VALUE(props, "Icon", NS_LITERAL_STRING("audio-card"));
       }
       BT_APPEND_NAMED_VALUE(props, "UUIDS", uuidsArray);
+    } else if (p.mType == PROPERTY_UNKNOWN) {
+      /* Bug 1065999: working around unknown properties */
     } else {
       BT_LOGD("Other non-handled device properties. Type: %d", p.mType);
     }
@@ -1475,6 +1480,8 @@ BluetoothServiceBluedroid::DeviceFoundNotification(
       ClassToIcon(cod, icon);
       propertyValue = icon;
       BT_APPEND_NAMED_VALUE(propertiesArray, "Icon", propertyValue);
+    } else if (p.mType == PROPERTY_UNKNOWN) {
+      /* Bug 1065999: working around unknown properties */
     } else {
       BT_LOGD("Not handled remote device property: %d", p.mType);
     }
