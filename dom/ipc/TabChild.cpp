@@ -2389,15 +2389,6 @@ TabChild::RecvCompositionEvent(const WidgetCompositionEvent& event)
 }
 
 bool
-TabChild::RecvTextEvent(const WidgetCompositionEvent& event)
-{
-  WidgetCompositionEvent localEvent(event);
-  localEvent.widget = mWidget;
-  DispatchWidgetEvent(localEvent);
-  return true;
-}
-
-bool
 TabChild::RecvSelectionEvent(const WidgetSelectionEvent& event)
 {
   WidgetSelectionEvent localEvent(event);
