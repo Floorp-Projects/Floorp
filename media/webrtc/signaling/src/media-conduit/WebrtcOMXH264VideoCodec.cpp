@@ -788,7 +788,9 @@ WebrtcOMXH264VideoEncoder::WebrtcOMXH264VideoEncoder()
   , mHeight(0)
   , mFrameRate(0)
   , mBitRateKbps(0)
+#ifdef OMX_IDR_NEEDED_FOR_BITRATE
   , mBitRateAtLastIDR(0)
+#endif
   , mOMXConfigured(false)
   , mOMXReconfigure(false)
 {
@@ -903,13 +905,16 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
     mOMXConfigured = true;
+#ifdef OMX_IDR_NEEDED_FOR_BITRATE
     mLastIDRTime = TimeStamp::Now();
     mBitRateAtLastIDR = mBitRateKbps;
+#endif
   }
 
   if (aFrameTypes && aFrameTypes->size() &&
       ((*aFrameTypes)[0] == webrtc::kKeyFrame)) {
     mOMX->RequestIDRFrame();
+#ifdef OMX_IDR_NEEDED_FOR_BITRATE
     mLastIDRTime = TimeStamp::Now();
     mBitRateAtLastIDR = mBitRateKbps;
   } else if (mBitRateKbps != mBitRateAtLastIDR) {
@@ -942,6 +947,7 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
       mLastIDRTime = now;
       mBitRateAtLastIDR = mBitRateKbps;
     }
+#endif
   }
 
   // Wrap I420VideoFrame input with PlanarYCbCrImage for OMXVideoEncoder.
