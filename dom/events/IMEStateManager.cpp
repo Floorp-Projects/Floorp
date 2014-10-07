@@ -131,19 +131,6 @@ GetIMEStateSetOpenName(IMEState::Open aOpen)
 }
 
 static const char*
-GetEventClassIDName(EventClassID aEventClassID)
-{
-  switch (aEventClassID) {
-    case eCompositionEventClass:
-      return "eCompositionEventClass";
-    case eTextEventClass:
-      return "eTextEventClass";
-    default:
-      return "unacceptable event struct type";
-  }
-}
-
-static const char*
 GetEventMessageName(uint32_t aMessage)
 {
   switch (aMessage) {
@@ -892,18 +879,16 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
 {
   PR_LOG(sISMLog, PR_LOG_ALWAYS,
     ("ISM: IMEStateManager::DispatchCompositionEvent(aNode=0x%p, "
-     "aPresContext=0x%p, aEvent={ mClass=%s, message=%s, "
+     "aPresContext=0x%p, aEvent={ message=%s, "
      "mFlags={ mIsTrusted=%s, mPropagationStopped=%s } }, "
      "aIsSynthesized=%s)",
      aEventTargetNode, aPresContext,
-     GetEventClassIDName(aEvent->mClass),
      GetEventMessageName(aEvent->message),
      GetBoolName(aEvent->mFlags.mIsTrusted),
      GetBoolName(aEvent->mFlags.mPropagationStopped),
      GetBoolName(aIsSynthesized)));
 
-  MOZ_ASSERT(aEvent->mClass == eCompositionEventClass ||
-             aEvent->mClass == eTextEventClass);
+  MOZ_ASSERT(aEvent->mClass == eCompositionEventClass);
   if (!aEvent->mFlags.mIsTrusted || aEvent->mFlags.mPropagationStopped) {
     return;
   }
@@ -975,14 +960,12 @@ IMEStateManager::OnCompositionEventDiscarded(WidgetEvent* aEvent)
   // commit or cancel composition.
 
   PR_LOG(sISMLog, PR_LOG_ALWAYS,
-    ("ISM: IMEStateManager::OnCompositionEventDiscarded(aEvent={ mClass=%s, "
+    ("ISM: IMEStateManager::OnCompositionEventDiscarded(aEvent={ "
      "message=%s, mFlags={ mIsTrusted=%s } })",
-     GetEventClassIDName(aEvent->mClass),
      GetEventMessageName(aEvent->message),
      GetBoolName(aEvent->mFlags.mIsTrusted)));
 
-  MOZ_ASSERT(aEvent->mClass == eCompositionEventClass ||
-             aEvent->mClass == eTextEventClass);
+  MOZ_ASSERT(aEvent->mClass == eCompositionEventClass);
   if (!aEvent->mFlags.mIsTrusted) {
     return;
   }
@@ -1233,10 +1216,8 @@ IMEStateManager::GetTextCompositionFor(nsIWidget* aWidget)
 already_AddRefed<TextComposition>
 IMEStateManager::GetTextCompositionFor(WidgetGUIEvent* aEvent)
 {
-  MOZ_ASSERT(aEvent->AsCompositionEvent() || aEvent->AsTextEvent() ||
-             aEvent->AsKeyboardEvent(),
-             "aEvent has to be WidgetCompositionEvent, WidgetTextEvent or "
-             "WidgetKeyboardEvent");
+  MOZ_ASSERT(aEvent->AsCompositionEvent() || aEvent->AsKeyboardEvent(),
+             "aEvent has to be WidgetCompositionEvent or WidgetKeyboardEvent");
   return GetTextCompositionFor(aEvent->widget);
 }
 

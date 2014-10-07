@@ -658,7 +658,7 @@ NON_IDL_EVENT(speakerforcedchange,
 NON_IDL_EVENT(text,
               NS_COMPOSITION_CHANGE,
               EventNameType_XUL,
-              eTextEventClass)
+              eCompositionEventClass)
 NON_IDL_EVENT(compositionstart,
               NS_COMPOSITION_START,
               EventNameType_XUL,

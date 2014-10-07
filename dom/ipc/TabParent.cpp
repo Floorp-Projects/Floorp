@@ -1582,7 +1582,7 @@ TabParent::SendCompositionEvent(WidgetCompositionEvent& event)
  * here and pass the text as the EndIMEComposition return value
  */
 bool
-TabParent::SendTextEvent(WidgetTextEvent& event)
+TabParent::SendTextEvent(WidgetCompositionEvent& event)
 {
   if (mIsDestroyed) {
     return false;
