@@ -26,6 +26,7 @@ class OMXOutputDrain;
 
 // XXX see if we can reduce this
 #define WEBRTC_OMX_H264_MIN_DECODE_BUFFERS 10
+#define OMX_IDR_NEEDED_FOR_BITRATE 0
 
 class WebrtcOMXH264VideoEncoder : public WebrtcVideoEncoder
 {
@@ -64,8 +65,10 @@ private:
   uint32_t mHeight;
   uint32_t mFrameRate;
   uint32_t mBitRateKbps;
+#ifdef OMX_IDR_NEEDED_FOR_BITRATE
   uint32_t mBitRateAtLastIDR;
   TimeStamp mLastIDRTime;
+#endif
   bool mOMXConfigured;
   bool mOMXReconfigure;
   webrtc::EncodedImage mEncodedImage;
