@@ -10,9 +10,9 @@ interface nsIFile;
              ScalarValueString fileName, optional FilePropertyBag options),
 
  // These constructors are just for chrome callers:
- Constructor(Blob fileBits, optional FilePropertyBag options),
- Constructor(nsIFile fileBits, optional FilePropertyBag options),
- Constructor(ScalarValueString fileBits, optional FilePropertyBag options),
+ Constructor(Blob fileBits, optional ChromeFilePropertyBag options),
+ Constructor(nsIFile fileBits, optional ChromeFilePropertyBag options),
+ Constructor(ScalarValueString fileBits, optional ChromeFilePropertyBag options),
 
  Exposed=(Window,Worker)]
 interface File : Blob {
@@ -28,8 +28,13 @@ interface File : Blob {
 dictionary FilePropertyBag {
 
       DOMString type = "";
-      DOMString name = ""; // TODO: to remove!
       long long lastModified;
+
+};
+
+dictionary ChromeFilePropertyBag : FilePropertyBag {
+
+      DOMString name = "";
 
 };
 
