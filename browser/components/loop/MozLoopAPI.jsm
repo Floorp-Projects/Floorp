@@ -592,11 +592,26 @@ function injectLoopAPI(targetWindow) {
         return MozLoopService.generateUUID();
       }
     },
+
+    /**
+     * Starts a direct call to the contact addresses.
+     *
+     * @param {Object} contact The contact to call
+     * @param {String} callType The type of call, e.g. "audio-video" or "audio-only"
+     * @return true if the call is opened, false if it is not opened (i.e. busy)
+     */
+    startDirectCall: {
+      enumerable: true,
+      writable: true,
+      value: function(contact, callType) {
+        MozLoopService.startDirectCall(contact, callType);
+      }
+    },
   };
 
   function onStatusChanged(aSubject, aTopic, aData) {
     let event = new targetWindow.CustomEvent("LoopStatusChanged");
-    targetWindow.dispatchEvent(event)
+    targetWindow.dispatchEvent(event);
   };
 
   function onDOMWindowDestroyed(aSubject, aTopic, aData) {
