@@ -16,7 +16,7 @@ namespace layers {
 
 class GrallocTextureHostOGL;
 
-class GrallocTextureSourceOGL : public NewTextureSource
+class GrallocTextureSourceOGL : public TextureSource
                               , public TextureSourceOGL
 {
 public:
@@ -116,7 +116,7 @@ public:
 
   virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
 
-  virtual NewTextureSource* GetTextureSources() MOZ_OVERRIDE
+  virtual TextureSource* GetTextureSources() MOZ_OVERRIDE
   {
     return mTextureSource;
   }

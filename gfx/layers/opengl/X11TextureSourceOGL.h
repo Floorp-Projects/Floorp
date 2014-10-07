@@ -17,7 +17,7 @@ namespace layers {
 // TextureSource for Xlib-backed surfaces.
 class X11TextureSourceOGL
   : public TextureSourceOGL
-  , public NewTextureSource
+  , public TextureSource
 {
 public:
   X11TextureSourceOGL(CompositorOGL* aCompositor, gfxXlibSurface* aSurface);

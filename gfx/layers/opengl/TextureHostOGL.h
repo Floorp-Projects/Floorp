@@ -368,7 +368,7 @@ protected:
  *
  * The shared texture handle is owned by the TextureHost.
  */
-class GLTextureSource : public NewTextureSource
+class GLTextureSource : public TextureSource
                       , public TextureSourceOGL
 {
 public:
@@ -411,7 +411,7 @@ protected:
 
 #ifdef MOZ_WIDGET_ANDROID
 
-class SurfaceTextureSource : public NewTextureSource
+class SurfaceTextureSource : public TextureSource
                            , public TextureSourceOGL
 {
 public:
@@ -474,7 +474,7 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
 
-  virtual NewTextureSource* GetTextureSources() MOZ_OVERRIDE
+  virtual TextureSource* GetTextureSources() MOZ_OVERRIDE
   {
     return mTextureSource;
   }
@@ -502,7 +502,7 @@ protected:
 ////////////////////////////////////////////////////////////////////////
 // EGLImage
 
-class EGLImageTextureSource : public NewTextureSource
+class EGLImageTextureSource : public TextureSource
                             , public TextureSourceOGL
 {
 public:
@@ -565,7 +565,7 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
 
-  virtual NewTextureSource* GetTextureSources() MOZ_OVERRIDE
+  virtual TextureSource* GetTextureSources() MOZ_OVERRIDE
   {
     return mTextureSource;
   }
