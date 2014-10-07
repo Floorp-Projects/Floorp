@@ -10,10 +10,10 @@
 #include "mozilla/Range.h"
 
 #include "jscntxt.h"
-#include "jsonparser.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSONParser.h"
 
 #include "vm/Interpreter-inl.h"
 
