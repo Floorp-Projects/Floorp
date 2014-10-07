@@ -52,7 +52,7 @@ public:
   // I.e., this value must be same as the composition string on the focused
   // editor.  This value is modified at a call of EditorDidHandleTextEvent().
   // Note that mString and mLastData are different between dispatcing
-  // compositionupdate and text event handled by focused editor.
+  // compositionupdate and compositionchange event handled by focused editor.
   const nsString& String() const { return mString; }
   // Returns the clauses and/or caret range of the composition string.
   // This is modified at a call of EditorWillHandleTextEvent().
@@ -233,13 +233,13 @@ private:
 
   /**
    * EditorWillHandleTextEvent() must be called before the focused editor
-   * handles the text event.
+   * handles the compositionchange event.
    */
   void EditorWillHandleTextEvent(const WidgetTextEvent* aTextEvent);
 
   /**
    * EditorDidHandleTextEvent() must be called after the focused editor handles
-   * a text event.
+   * a compositionchange event.
    */
   void EditorDidHandleTextEvent();
 
@@ -271,8 +271,8 @@ private:
 
   /**
    * OnCompositionEventDiscarded() is called when PresShell discards
-   * compositionupdate, compositionend or text event due to not safe to
-   * dispatch event.
+   * compositionupdate, compositionend or compositionchange event due to not
+   * safe to dispatch event.
    */
   void OnCompositionEventDiscarded(const WidgetGUIEvent* aEvent);
 
@@ -306,17 +306,14 @@ private:
   };
 
   /**
-   * DispatchCompositionEventRunnable() dispatches a composition or text event
-   * to the content.  Be aware, if you use this method, nsPresShellEventCB
-   * isn't used.  That means that nsIFrame::HandleEvent() is never called.
+   * DispatchCompositionEventRunnable() dispatches a composition event to the
+   * content.  Be aware, if you use this method, nsPresShellEventCB isn't used.
+   * That means that nsIFrame::HandleEvent() is never called.
    * WARNING: The instance which is managed by IMEStateManager may be
    *          destroyed by this method call.
    *
-   * @param aEventMessage       Must be one of composition event or text event.
-   * @param aData               Used for data value if aEventMessage is
-   *                            NS_COMPOSITION_END.
-   *                            Used for theText value if aEventMessage is
-   *                            NS_TEXT_TEXT.
+   * @param aEventMessage       Must be one of composition events.
+   * @param aData               Used for mData value.
    * @param aIsSynthesizingCommit   true if this is called for synthesizing
    *                                commit or cancel composition.  Otherwise,
    *                                false.

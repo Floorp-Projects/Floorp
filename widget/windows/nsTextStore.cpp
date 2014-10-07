@@ -1649,8 +1649,8 @@ nsTextStore::FlushPendingActions()
 
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
-                "dispatching text event...", this));
-        WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
+                "dispatching compositionchange event...", this));
+        WidgetTextEvent textEvent(true, NS_COMPOSITION_CHANGE, mWidget);
         mWidget->InitEvent(textEvent);
         textEvent.mData = action.mData;
         if (action.mRanges->IsEmpty()) {
@@ -1676,8 +1676,8 @@ nsTextStore::FlushPendingActions()
 
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
-                "dispatching text event...", this));
-        WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
+                "dispatching compositionchange event...", this));
+        WidgetTextEvent textEvent(true, NS_COMPOSITION_CHANGE, mWidget);
         mWidget->InitEvent(textEvent);
         textEvent.mData = action.mData;
         mWidget->DispatchWindowEvent(&textEvent);
@@ -2269,7 +2269,7 @@ nsTextStore::RecordCompositionUpdateAction()
   // the attribute, we have to find out all the ranges that have distinct
   // attribute values. Then we query for what the value represents through
   // the display attribute manager and translate that to TextRange to be
-  // sent in NS_TEXT_TEXT
+  // sent in NS_COMPOSITION_CHANGE
 
   nsRefPtr<ITfProperty> attrPropetry;
   HRESULT hr = mContext->GetProperty(GUID_PROP_ATTRIBUTE,
@@ -2318,7 +2318,7 @@ nsTextStore::RecordCompositionUpdateAction()
 
   TextRange newRange;
   // No matter if we have display attribute info or not,
-  // we always pass in at least one range to NS_TEXT_TEXT
+  // we always pass in at least one range to NS_COMPOSITION_CHANGE
   newRange.mStartOffset = 0;
   newRange.mEndOffset = action->mData.Length();
   newRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
@@ -4875,9 +4875,9 @@ nsTextStore::Content::ReplaceTextWith(LONG aStart, LONG aLength,
     if (mComposition.IsComposing()) {
       // Emulate text insertion during compositions, because during a
       // composition, editor expects the whole composition string to
-      // be sent in NS_TEXT_TEXT, not just the inserted part.
-      // The actual NS_TEXT_TEXT will be sent in SetSelection or
-      // OnUpdateComposition.
+      // be sent in NS_COMPOSITION_CHANGE, not just the inserted part.
+      // The actual NS_COMPOSITION_CHANGE will be sent in SetSelection
+      // or OnUpdateComposition.
       MOZ_ASSERT(aStart >= mComposition.mStart);
       MOZ_ASSERT(aStart + aLength <= mComposition.EndOffset());
       mComposition.mString.Replace(

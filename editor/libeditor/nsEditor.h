@@ -417,9 +417,8 @@ protected:
   }
 
   /**
-   * EnsureComposition() should be composition event handlers or text event
-   * handler.  This tries to get the composition for the event and set it to
-   * mComposition.
+   * EnsureComposition() should be called by composition event handlers.  This
+   * tries to get the composition for the event and set it to mComposition.
    */
   void EnsureComposition(mozilla::WidgetGUIEvent* aEvent);
 
