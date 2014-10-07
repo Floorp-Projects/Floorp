@@ -30,7 +30,7 @@ protected:
 public:
   nsresult GetFilename(nsString& aFilename) MOZ_OVERRIDE;
 
-  // From zipItem to File:
+  // From zipItem to DOMFile:
   virtual nsIDOMFile* File(ArchiveReader* aArchiveReader) MOZ_OVERRIDE;
 
 public: // for the event

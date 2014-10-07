@@ -5,9 +5,7 @@
 
 #include "MessagePort.h"
 #include "MessageEvent.h"
-#include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/MessagePortList.h"
@@ -18,6 +16,7 @@
 #include "ScriptSettings.h"
 
 #include "nsIDocument.h"
+#include "nsIDOMFile.h"
 #include "nsIDOMFileList.h"
 #include "nsIPresShell.h"
 
@@ -104,37 +103,7 @@ PostMessageReadStructuredClone(JSContext* cx,
                                uint32_t data,
                                void* closure)
 {
-  StructuredCloneInfo* scInfo = static_cast<StructuredCloneInfo*>(closure);
-  NS_ASSERTION(scInfo, "Must have scInfo!");
-
-  if (tag == SCTAG_DOM_BLOB) {
-    NS_ASSERTION(!data, "Data should be empty");
-
-    // What we get back from the reader is a FileImpl.
-    // From that we create a new File.
-    FileImpl* blobImpl;
-    if (JS_ReadBytes(reader, &blobImpl, sizeof(blobImpl))) {
-      MOZ_ASSERT(blobImpl);
-
-      // nsRefPtr<File> needs to go out of scope before toObjectOrNull() is
-      // called because the static analysis thinks dereferencing XPCOM objects
-      // can GC (because in some cases it can!), and a return statement with a
-      // JSObject* type means that JSObject* is on the stack as a raw pointer
-      // while destructors are running.
-      JS::Rooted<JS::Value> val(cx);
-      {
-        nsRefPtr<File> blob = new File(scInfo->mPort->GetParentObject(),
-                                             blobImpl);
-        if (!WrapNewBindingObject(cx, blob, &val)) {
-          return nullptr;
-        }
-      }
-
-      return &val.toObject();
-    }
-  }
-
-  if (tag == SCTAG_DOM_FILELIST) {
+  if (tag == SCTAG_DOM_BLOB || tag == SCTAG_DOM_FILELIST) {
     NS_ASSERTION(!data, "Data should be empty");
 
     nsISupports* supports;
@@ -165,25 +134,17 @@ PostMessageWriteStructuredClone(JSContext* cx,
   StructuredCloneInfo* scInfo = static_cast<StructuredCloneInfo*>(closure);
   NS_ASSERTION(scInfo, "Must have scInfo!");
 
-  // See if this is a File/Blob object.
-  {
-    File* blob = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, obj, blob))) {
-      FileImpl* blobImpl = blob->Impl();
-      if (JS_WriteUint32Pair(writer, SCTAG_DOM_BLOB, 0) &&
-          JS_WriteBytes(writer, &blobImpl, sizeof(blobImpl))) {
-        scInfo->mEvent->StoreISupports(blobImpl);
-        return true;
-      }
-    }
-  }
-
   nsCOMPtr<nsIXPConnectWrappedNative> wrappedNative;
   nsContentUtils::XPConnect()->
     GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrappedNative));
   if (wrappedNative) {
     uint32_t scTag = 0;
     nsISupports* supports = wrappedNative->Native();
+
+    nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(supports);
+    if (blob) {
+      scTag = SCTAG_DOM_BLOB;
+    }
 
     nsCOMPtr<nsIDOMFileList> list = do_QueryInterface(supports);
     if (list) {

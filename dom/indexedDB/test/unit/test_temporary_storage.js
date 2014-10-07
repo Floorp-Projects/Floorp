@@ -3,8 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Components.utils.importGlobalProperties(['Blob']);
-
 var testGenerator = testSteps();
 
 function testSteps()

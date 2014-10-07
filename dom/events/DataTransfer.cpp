@@ -269,7 +269,7 @@ DataTransfer::GetMozUserCancelled(bool* aUserCancelled)
   return NS_OK;
 }
 
-FileList*
+nsDOMFileList*
 DataTransfer::GetFiles(ErrorResult& aRv)
 {
   if (mEventType != NS_DRAGDROP_DROP && mEventType != NS_DRAGDROP_DRAGDROP &&
@@ -278,7 +278,7 @@ DataTransfer::GetFiles(ErrorResult& aRv)
   }
 
   if (!mFiles) {
-    mFiles = new FileList(static_cast<nsIDOMDataTransfer*>(this));
+    mFiles = new nsDOMFileList(static_cast<nsIDOMDataTransfer*>(this));
 
     uint32_t count = mItems.Length();
 
@@ -303,7 +303,7 @@ DataTransfer::GetFiles(ErrorResult& aRv)
       if (!file)
         continue;
 
-      nsRefPtr<File> domFile = File::CreateFromFile(GetParentObject(), file);
+      nsRefPtr<DOMFile> domFile = DOMFile::CreateFromFile(file);
 
       if (!mFiles->Append(domFile)) {
         aRv.Throw(NS_ERROR_FAILURE);

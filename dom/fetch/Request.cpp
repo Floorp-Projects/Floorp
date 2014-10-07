@@ -8,6 +8,7 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsIURI.h"
 
+#include "nsDOMFile.h"
 #include "nsDOMString.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
@@ -16,7 +17,6 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/Promise.h"
@@ -24,6 +24,7 @@
 #include "mozilla/dom/workers/bindings/URL.h"
 
 // dom/workers
+#include "File.h"
 #include "WorkerPrivate.h"
 
 namespace mozilla {
@@ -357,17 +358,26 @@ Request::ConsumeBody(ConsumeType aType, ErrorResult& aRv)
       // with worker wrapping.
       uint32_t blobLen = buffer.Length();
       void* blobData = moz_malloc(blobLen);
-      nsRefPtr<File> blob;
+      nsCOMPtr<nsIDOMBlob> blob;
       if (blobData) {
         memcpy(blobData, buffer.BeginReading(), blobLen);
-        blob = File::CreateMemoryFile(GetParentObject(), blobData, blobLen,
-                                      NS_ConvertUTF8toUTF16(mMimeType));
+        blob = DOMFile::CreateMemoryFile(blobData, blobLen,
+                                         NS_ConvertUTF8toUTF16(mMimeType));
       } else {
         aRv = NS_ERROR_OUT_OF_MEMORY;
         return nullptr;
       }
 
-      promise->MaybeResolve(blob);
+      JS::Rooted<JS::Value> jsBlob(cx);
+      if (NS_IsMainThread()) {
+        aRv = nsContentUtils::WrapNative(cx, blob, &jsBlob);
+        if (aRv.Failed()) {
+          return nullptr;
+        }
+      } else {
+        jsBlob.setObject(*workers::file::CreateBlob(cx, blob));
+      }
+      promise->MaybeResolve(cx, jsBlob);
       return promise.forget();
     }
     case CONSUME_JSON: {

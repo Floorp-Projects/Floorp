@@ -148,8 +148,9 @@
     'hello world',
     [1, 2, 3],
     { a: 1, b: 2 },
+    { blob: new Blob([]), file: new File(new Blob([])) },
     new Date(),
-    { a: 1, b: {}, c: [1, 2, 3, {} ], e: 'hello world' },
+    { a: 1, b: {}, c: [1, 2, 3, { d: new Blob([]) } ], e: 'hello world' },
   ];
 
   for (var i = 0; i < tests.length; ++i) {

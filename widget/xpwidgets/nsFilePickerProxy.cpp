@@ -8,7 +8,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsNetUtil.h"
 #include "nsIFile.h"
-#include "mozilla/dom/File.h"
+#include "nsDOMFile.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 
@@ -33,7 +33,6 @@ nsFilePickerProxy::Init(nsIDOMWindow* aParent, const nsAString& aTitle,
     return NS_ERROR_FAILURE;
   }
 
-  mParent = do_QueryInterface(aParent);
   mMode = aMode;
 
   NS_ADDREF_THIS();
@@ -146,13 +145,9 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputFiles& aFiles,
     const InfallibleTArray<PBlobChild*>& files = aFiles.get_InputFiles().filesChild();
     for (uint32_t i = 0; i < files.Length(); ++i) {
       BlobChild* actor = static_cast<BlobChild*>(files[i]);
-      nsRefPtr<FileImpl> blobImpl = actor->GetBlobImpl();
-      NS_ENSURE_TRUE(blobImpl, true);
-
-      nsCOMPtr<nsIDOMBlob> blob = new File(mParent, blobImpl);
+      nsCOMPtr<nsIDOMBlob> blob = actor->GetBlob();
       nsCOMPtr<nsIDOMFile> file(do_QueryInterface(blob));
       NS_ENSURE_TRUE(file, true);
-
       mDomfiles.AppendObject(file);
     }
   }

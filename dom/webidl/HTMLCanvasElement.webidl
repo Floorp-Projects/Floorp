@@ -10,6 +10,7 @@
  * and create derivative works of this document.
  */
 
+interface Blob;
 interface nsIInputStreamCallback;
 interface nsISupports;
 interface Variant;

@@ -5,6 +5,7 @@
 
 #include "WorkerPrivate.h"
 #include "ChromeWorkerScope.h"
+#include "File.h"
 #include "RuntimeService.h"
 
 #include "jsapi.h"
@@ -28,6 +29,11 @@ WorkerPrivate::RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
         !DefineOSFileConstants(aCx, aGlobal)) {
       return false;
     }
+  }
+
+  // Init other classes we care about.
+  if (!file::InitClasses(aCx, aGlobal)) {
+    return false;
   }
 
   if (!JS_DefineProfilingFunctions(aCx, aGlobal)) {

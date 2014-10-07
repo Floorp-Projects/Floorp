@@ -32,7 +32,6 @@ PRLogModuleInfo* GetICLog();
 
 namespace dom {
 
-class File;
 class VideoStreamTrack;
 
 /**
@@ -80,7 +79,7 @@ public:
   ImageCapture(VideoStreamTrack* aVideoStreamTrack, nsPIDOMWindow* aOwnerWindow);
 
   // Post a Blob event to script.
-  nsresult PostBlobEvent(File* aBlob);
+  nsresult PostBlobEvent(nsIDOMBlob* aBlob);
 
   // Post an error event to script.
   // aErrorCode should be one of error codes defined in ImageCaptureError.h.

@@ -15,7 +15,7 @@
 namespace mozilla {
 
 namespace dom {
-class File;
+class DOMFile;
 }
 
 struct VideoTrackConstraintsN;
@@ -150,7 +150,7 @@ public:
 
     // aBlob is the image captured by MediaEngineSource. It is
     // called on main thread.
-    virtual nsresult PhotoComplete(already_AddRefed<dom::File> aBlob) = 0;
+    virtual nsresult PhotoComplete(already_AddRefed<dom::DOMFile> aBlob) = 0;
 
     // It is called on main thread. aRv is the error code.
     virtual nsresult PhotoError(nsresult aRv) = 0;

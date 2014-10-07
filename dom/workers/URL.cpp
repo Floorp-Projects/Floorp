@@ -5,11 +5,11 @@
 
 #include "URL.h"
 
+#include "nsDOMFile.h"
 #include "nsIDocument.h"
 #include "nsIIOService.h"
 #include "nsPIDOMWindow.h"
 
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/URL.h"
 #include "mozilla/dom/URLBinding.h"
 #include "mozilla/dom/URLSearchParams.h"
@@ -19,6 +19,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
+#include "File.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 
@@ -66,11 +67,11 @@ private:
 class CreateURLRunnable : public WorkerMainThreadRunnable
 {
 private:
-  FileImpl* mBlobImpl;
+  DOMFileImpl* mBlobImpl;
   nsString& mURL;
 
 public:
-  CreateURLRunnable(WorkerPrivate* aWorkerPrivate, FileImpl* aBlobImpl,
+  CreateURLRunnable(WorkerPrivate* aWorkerPrivate, DOMFileImpl* aBlobImpl,
                     const mozilla::dom::objectURLOptions& aOptions,
                     nsString& aURL)
   : WorkerMainThreadRunnable(aWorkerPrivate),
@@ -847,28 +848,36 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, JSObject* aBlob,
                      const mozilla::dom::objectURLOptions& aOptions,
                      nsString& aResult, mozilla::ErrorResult& aRv)
 {
-  SetDOMStringToNull(aResult);
-
-  NS_NAMED_LITERAL_STRING(argStr, "Argument 1 of URL.createObjectURL");
-  NS_NAMED_LITERAL_STRING(blobStr, "MediaStream");
-  aRv.ThrowTypeError(MSG_DOES_NOT_IMPLEMENT_INTERFACE, &argStr, &blobStr);
-}
-
-// static
-void
-URL::CreateObjectURL(const GlobalObject& aGlobal, File& aBlob,
-                     const mozilla::dom::objectURLOptions& aOptions,
-                     nsString& aResult, mozilla::ErrorResult& aRv)
-{
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
+  nsCOMPtr<nsIDOMBlob> blob = file::GetDOMBlobFromJSObject(aBlob);
+  if (!blob) {
+    SetDOMStringToNull(aResult);
+
+    NS_NAMED_LITERAL_STRING(argStr, "Argument 1 of URL.createObjectURL");
+    NS_NAMED_LITERAL_STRING(blobStr, "Blob");
+    aRv.ThrowTypeError(MSG_DOES_NOT_IMPLEMENT_INTERFACE, &argStr, &blobStr);
+    return;
+  }
+
+  DOMFile* domBlob = static_cast<DOMFile*>(blob.get());
+
   nsRefPtr<CreateURLRunnable> runnable =
-    new CreateURLRunnable(workerPrivate, aBlob.Impl(), aOptions, aResult);
+    new CreateURLRunnable(workerPrivate, domBlob->Impl(), aOptions, aResult);
 
   if (!runnable->Dispatch(cx)) {
     JS_ReportPendingException(cx);
   }
+}
+
+// static
+void
+URL::CreateObjectURL(const GlobalObject& aGlobal, JSObject& aBlob,
+                     const mozilla::dom::objectURLOptions& aOptions,
+                     nsString& aResult, mozilla::ErrorResult& aRv)
+{
+  return CreateObjectURL(aGlobal, &aBlob, aOptions, aResult, aRv);
 }
 
 // static

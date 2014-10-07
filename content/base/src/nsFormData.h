@@ -6,6 +6,7 @@
 #define nsFormData_h__
 
 #include "mozilla/Attributes.h"
+#include "nsIDOMFile.h"
 #include "nsIDOMFormData.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsFormSubmission.h"
@@ -14,11 +15,12 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 
+class nsIDOMFile;
+
 namespace mozilla {
 class ErrorResult;
 
 namespace dom {
-class File;
 class HTMLFormElement;
 class GlobalObject;
 } // namespace dom
@@ -55,7 +57,7 @@ public:
               const mozilla::dom::Optional<mozilla::dom::NonNull<mozilla::dom::HTMLFormElement> >& aFormElement,
               mozilla::ErrorResult& aRv);
   void Append(const nsAString& aName, const nsAString& aValue);
-  void Append(const nsAString& aName, mozilla::dom::File& aBlob,
+  void Append(const nsAString& aName, nsIDOMBlob* aBlob,
               const mozilla::dom::Optional<nsAString>& aFilename);
 
   // nsFormSubmission

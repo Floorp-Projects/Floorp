@@ -74,7 +74,7 @@ ArchiveZipItem::GetFilename(nsString& aFilename)
   return NS_OK;
 }
 
-// From zipItem to File:
+// From zipItem to DOMFile:
 nsIDOMFile*
 ArchiveZipItem::File(ArchiveReader* aArchiveReader)
 {
@@ -84,7 +84,7 @@ ArchiveZipItem::File(ArchiveReader* aArchiveReader)
     return nullptr;
   }
 
-  return new dom::File(aArchiveReader,
+  return new DOMFile(
     new ArchiveZipFileImpl(filename,
                            NS_ConvertUTF8toUTF16(GetType()),
                            StrToInt32(mCentralStruct.orglen),

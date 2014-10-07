@@ -15,6 +15,7 @@
   { 0x4eed2e73, 0x94ba, 0x48a8,                                 \
     { 0xa2, 0xd1, 0xa5, 0xed, 0x86, 0xd7, 0xbb, 0xe4 } }
 
+class nsIDOMBlob;
 class nsString;
 
 namespace IPC {
@@ -33,7 +34,6 @@ namespace dom {
 class BlobChild;
 class BlobConstructorParams;
 class ClonedMessageData;
-class File;
 class IPCTabContext;
 class PBlobChild;
 class PBrowserChild;
@@ -44,7 +44,7 @@ class nsIContentChild : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTCHILD_IID)
 
-  BlobChild* GetOrCreateActorForBlob(File* aBlob);
+  BlobChild* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
 
   virtual PBlobChild* SendPBlobConstructor(
     PBlobChild* aActor,

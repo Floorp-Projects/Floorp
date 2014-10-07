@@ -10,27 +10,22 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor,
- Constructor(sequence<(ArrayBuffer or ArrayBufferView or Blob or DOMString)> blobParts, optional BlobPropertyBag options),
- Exposed=(Window,Worker)]
+/*
+[Constructor, Constructor((ArrayBuffer or ArrayBufferView or Blob or DOMString)[] blobParts, optional BlobPropertyBag options)] 
 interface Blob {
 
-  [GetterThrows]
   readonly attribute unsigned long long size;
-
   readonly attribute DOMString type;
-
-  // readonly attribute boolean isClosed; TODO bug 1048321
 
   //slice Blob into byte-ranged chunks
 
-  [Throws]
-  Blob slice([Clamp] optional long long start,
-             [Clamp] optional long long end,
-             optional DOMString contentType = "");
+  Blob slice(optional long long start,
+             optional long long end,
+             optional DOMString contentType);
+  void close(); 
 
-  // void close(); TODO bug 1048325
 };
+*/
 
 enum EndingTypes{"transparent", "native"};
 

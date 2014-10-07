@@ -50,11 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 
     a.port1.onmessage = function(evt) {
       ok(tests.length, "We are waiting for a message");
-      if (typeof(tests[0]) == 'object') {
-        is(typeof(tests[0]), typeof(evt.data), "Value ok: " + tests[0]);
-      } else {
-        is(tests[0], evt.data, "Value ok: " + tests[0]);
-      }
+      is(tests[0], evt.data, "Value ok: " + tests[0]);
       tests.shift();
       runTest();
     }

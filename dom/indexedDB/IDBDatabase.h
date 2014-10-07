@@ -19,6 +19,7 @@
 #include "nsTHashtable.h"
 
 class nsIDocument;
+class nsIDOMBlob;
 class nsIWeakReference;
 class nsPIDOMWindow;
 
@@ -29,7 +30,6 @@ class EventChainPostVisitor;
 
 namespace dom {
 
-class File;
 class DOMStringList;
 struct IDBObjectStoreParameters;
 template <typename> class Sequence;
@@ -174,13 +174,13 @@ public:
   AbortTransactions();
 
   PBackgroundIDBDatabaseFileChild*
-  GetOrCreateFileActorForBlob(File* aBlob);
+  GetOrCreateFileActorForBlob(nsIDOMBlob* aBlob);
 
   void
   NoteFinishedFileActor(PBackgroundIDBDatabaseFileChild* aFileActor);
 
   void
-  NoteReceivedBlob(File* aBlob);
+  NoteReceivedBlob(nsIDOMBlob* aBlob);
 
   void
   DelayedMaybeExpireFileActors();

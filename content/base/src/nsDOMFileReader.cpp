@@ -8,6 +8,7 @@
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
+#include "nsDOMFile.h"
 #include "nsError.h"
 #include "nsIFile.h"
 #include "nsNetCID.h"
@@ -19,7 +20,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/FileReaderBinding.h"
 #include "xpcpublic.h"
 #include "nsDOMJSUtils.h"
@@ -186,8 +186,7 @@ nsDOMFileReader::ReadAsArrayBuffer(nsIDOMBlob* aFile, JSContext* aCx)
 {
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  nsRefPtr<File> file = static_cast<File*>(aFile);
-  ReadAsArrayBuffer(aCx, *file, rv);
+  ReadAsArrayBuffer(aCx, aFile, rv);
   return rv.ErrorCode();
 }
 
@@ -196,8 +195,7 @@ nsDOMFileReader::ReadAsBinaryString(nsIDOMBlob* aFile)
 {
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  nsRefPtr<File> file = static_cast<File*>(aFile);
-  ReadAsBinaryString(*file, rv);
+  ReadAsBinaryString(aFile, rv);
   return rv.ErrorCode();
 }
 
@@ -207,8 +205,7 @@ nsDOMFileReader::ReadAsText(nsIDOMBlob* aFile,
 {
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  nsRefPtr<File> file = static_cast<File*>(aFile);
-  ReadAsText(*file, aCharset, rv);
+  ReadAsText(aFile, aCharset, rv);
   return rv.ErrorCode();
 }
 
@@ -217,8 +214,7 @@ nsDOMFileReader::ReadAsDataURL(nsIDOMBlob* aFile)
 {
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  nsRefPtr<File> file = static_cast<File*>(aFile);
-  ReadAsDataURL(*file, rv);
+  ReadAsDataURL(aFile, rv);
   return rv.ErrorCode();
 }
 
@@ -370,11 +366,13 @@ nsDOMFileReader::DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount)
 
 void
 nsDOMFileReader::ReadFileContent(JSContext* aCx,
-                                 File& aFile,
+                                 nsIDOMBlob* aFile,
                                  const nsAString &aCharset,
                                  eDataFormat aDataFormat,
                                  ErrorResult& aRv)
 {
+  MOZ_ASSERT(aFile);
+
   //Implicit abort to clear any other activity going on
   Abort();
   mError = nullptr;
@@ -384,7 +382,7 @@ nsDOMFileReader::ReadFileContent(JSContext* aCx,
   mReadyState = nsIDOMFileReader::EMPTY;
   FreeFileData();
 
-  mFile = &aFile;
+  mFile = aFile;
   mDataFormat = aDataFormat;
   CopyUTF16toUTF8(aCharset, mCharset);
 
