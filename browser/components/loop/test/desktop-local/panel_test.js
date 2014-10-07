@@ -37,6 +37,7 @@ describe("loop.panel", function() {
       copyString: sandbox.stub(),
       noteCallUrlExpiry: sinon.spy(),
       composeEmail: sinon.spy(),
+      telemetryAdd: sinon.spy(),
       contacts: {
         getAll: function(callback) {
           callback(null, []);
@@ -427,6 +428,27 @@ describe("loop.panel", function() {
             6000);
         });
 
+      it("should call mozLoop.telemetryAdd when the url is copied via button",
+        function() {
+          var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
+            notifications: notifications,
+            client: fakeClient
+          }));
+          view.setState({
+            pending: false,
+            copied: false,
+            callUrl: "http://example.com",
+            callUrlExpiry: 6000
+          });
+
+          TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-copy"));
+
+          sinon.assert.calledOnce(navigator.mozLoop.telemetryAdd);
+          sinon.assert.calledWith(navigator.mozLoop.telemetryAdd,
+                                  "LOOP_CLIENT_CALL_URL_SHARED",
+                                  true);
+        });
+
       it("should note the call url expiry when the url is emailed",
         function() {
           var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
@@ -445,6 +467,27 @@ describe("loop.panel", function() {
           sinon.assert.calledOnce(navigator.mozLoop.noteCallUrlExpiry);
           sinon.assert.calledWithExactly(navigator.mozLoop.noteCallUrlExpiry,
             6000);
+        });
+
+      it("should call mozLoop.telemetryAdd when the url is emailed",
+        function() {
+          var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
+            notifications: notifications,
+            client: fakeClient
+          }));
+          view.setState({
+            pending: false,
+            copied: false,
+            callUrl: "http://example.com",
+            callUrlExpiry: 6000
+          });
+
+          TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-email"));
+
+          sinon.assert.calledOnce(navigator.mozLoop.telemetryAdd);
+          sinon.assert.calledWith(navigator.mozLoop.telemetryAdd,
+                                  "LOOP_CLIENT_CALL_URL_SHARED",
+                                  true);
         });
 
       it("should note the call url expiry when the url is copied manually",
@@ -466,6 +509,28 @@ describe("loop.panel", function() {
           sinon.assert.calledOnce(navigator.mozLoop.noteCallUrlExpiry);
           sinon.assert.calledWithExactly(navigator.mozLoop.noteCallUrlExpiry,
             6000);
+        });
+
+      it("should call mozLoop.telemetryAdd when the url is copied manually",
+        function() {
+          var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
+            notifications: notifications,
+            client: fakeClient
+          }));
+          view.setState({
+            pending: false,
+            copied: false,
+            callUrl: "http://example.com",
+            callUrlExpiry: 6000
+          });
+
+          var urlField = view.getDOMNode().querySelector("input[type='url']");
+          TestUtils.Simulate.copy(urlField);
+
+          sinon.assert.calledOnce(navigator.mozLoop.telemetryAdd);
+          sinon.assert.calledWith(navigator.mozLoop.telemetryAdd,
+                                  "LOOP_CLIENT_CALL_URL_SHARED",
+                                  true);
         });
 
       it("should notify the user when the operation failed", function() {
