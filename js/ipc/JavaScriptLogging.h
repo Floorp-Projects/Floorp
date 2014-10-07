@@ -49,6 +49,12 @@ struct OutVariant
     explicit OutVariant(const JSVariant &variant) : variant(variant) {}
 };
 
+struct Identifier
+{
+    JSIDVariant variant;
+    explicit Identifier(const JSIDVariant &variant) : variant(variant) {}
+};
+
 class Logging
 {
   public:
@@ -182,6 +188,25 @@ class Logging
               break;
           }
         }
+    }
+
+    void format(const Identifier &id, nsCString &out) {
+        switch (id.variant.type()) {
+          case JSIDVariant::TnsString: {
+              nsAutoCString tmp;
+              format(id.variant.get_nsString(), tmp);
+              out = nsPrintfCString("\"%s\"", tmp.get());
+              break;
+          }
+          case JSIDVariant::Tint32_t: {
+              out = nsPrintfCString("%d", id.variant.get_int32_t());
+              break;
+          }
+          default: {
+              out = "Unknown";
+              break;
+          }
+      }
     }
 
   private:

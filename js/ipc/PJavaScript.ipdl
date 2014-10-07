@@ -25,15 +25,15 @@ both:
 
     // These roughly map to the ProxyHandler hooks that CPOWs need.
     rpc PreventExtensions(uint64_t objId) returns (ReturnStatus rs);
-    rpc GetPropertyDescriptor(uint64_t objId, nsString id) returns (ReturnStatus rs, PPropertyDescriptor result);
-    rpc GetOwnPropertyDescriptor(uint64_t objId, nsString id) returns (ReturnStatus rs, PPropertyDescriptor result);
-    rpc DefineProperty(uint64_t objId, nsString id, PPropertyDescriptor descriptor) returns (ReturnStatus rs);
-    rpc Delete(uint64_t objId, nsString id) returns (ReturnStatus rs, bool successful);
+    rpc GetPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
+    rpc GetOwnPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
+    rpc DefineProperty(uint64_t objId, JSIDVariant id, PPropertyDescriptor descriptor) returns (ReturnStatus rs);
+    rpc Delete(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool successful);
 
-    rpc Has(uint64_t objId, nsString id) returns (ReturnStatus rs, bool has);
-    rpc HasOwn(uint64_t objId, nsString id) returns (ReturnStatus rs, bool has);
-    rpc Get(uint64_t objId, ObjectVariant receiver, nsString id) returns (ReturnStatus rs, JSVariant result);
-    rpc Set(uint64_t objId, ObjectVariant receiver, nsString id, bool strict, JSVariant value) returns (ReturnStatus rs, JSVariant result);
+    rpc Has(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);
+    rpc HasOwn(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);
+    rpc Get(uint64_t objId, ObjectVariant receiver, JSIDVariant id) returns (ReturnStatus rs, JSVariant result);
+    rpc Set(uint64_t objId, ObjectVariant receiver, JSIDVariant id, bool strict, JSVariant value) returns (ReturnStatus rs, JSVariant result);
 
     rpc IsExtensible(uint64_t objId) returns (ReturnStatus rs, bool result);
     rpc CallOrConstruct(uint64_t objId, JSParam[] argv, bool construct) returns (ReturnStatus rs, JSVariant result, JSParam[] outparams);
