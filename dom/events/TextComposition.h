@@ -40,7 +40,7 @@ class TextComposition MOZ_FINAL
 public:
   TextComposition(nsPresContext* aPresContext,
                   nsINode* aNode,
-                  WidgetGUIEvent* aEvent);
+                  WidgetCompositionEvent* aCompositionEvent);
 
   bool Destroyed() const { return !mPresContext; }
   nsPresContext* GetPresContext() const { return mPresContext; }
@@ -250,21 +250,22 @@ private:
   void EditorDidHandleCompositionChangeEvent();
 
   /**
-   * DispatchEvent() dispatches the aEvent to the mContent synchronously.
-   * The caller must ensure that it's safe to dispatch the event.
+   * DispatchCompositionEvent() dispatches the aCompositionEvent to the mContent
+   * synchronously. The caller must ensure that it's safe to dispatch the event.
    */
-  void DispatchEvent(WidgetGUIEvent* aEvent,
-                     nsEventStatus* aStatus,
-                     EventDispatchingCallback* aCallBack,
-                     bool aIsSynthesized);
+  void DispatchCompositionEvent(WidgetCompositionEvent* aCompositionEvent,
+                                nsEventStatus* aStatus,
+                                EventDispatchingCallback* aCallBack,
+                                bool aIsSynthesized);
 
   /**
    * MaybeDispatchCompositionUpdate() may dispatch a compositionupdate event
-   * if aEvent changes composition string.
+   * if aCompositionEvent changes composition string.
    * @return Returns false if dispatching the compositionupdate event caused
    *         destroying this composition.
    */
-  bool MaybeDispatchCompositionUpdate(const WidgetCompositionEvent* aEvent);
+  bool MaybeDispatchCompositionUpdate(
+         const WidgetCompositionEvent* aCompositionEvent);
 
   /**
    * If IME has already dispatched compositionend event but it was discarded
@@ -280,12 +281,13 @@ private:
    * compositionupdate, compositionend or compositionchange event due to not
    * safe to dispatch event.
    */
-  void OnCompositionEventDiscarded(const WidgetGUIEvent* aEvent);
+  void OnCompositionEventDiscarded(
+         const WidgetCompositionEvent* aCompositionEvent);
 
   /**
    * Calculate composition offset then notify composition update to widget
    */
-  void NotityUpdateComposition(WidgetGUIEvent* aEvent);
+  void NotityUpdateComposition(const WidgetCompositionEvent* aCompositionEvent);
 
   /**
    * CompositionEventDispatcher dispatches the specified composition (or text)
