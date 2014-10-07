@@ -58,7 +58,7 @@ body {
   list-style-image: none;
   margin: 0px;
   padding: 0px;
-  min-height: -moz-calc(var(--icon-size) + var(--icon-margin) * 2);
+  min-height: calc(var(--icon-size) + var(--icon-margin) * 2);
 }
 
 .list-item:active {
@@ -70,7 +70,7 @@ body {
 }
 
 .inner {
-  -moz-margin-start: -moz-calc(var(--icon-size) + var(--icon-margin) * 2 - 1em);
+  -moz-margin-start: calc(var(--icon-size) + var(--icon-margin) * 2 - 1em);
   padding: 1em;
 }
 
