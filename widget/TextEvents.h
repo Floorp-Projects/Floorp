@@ -213,7 +213,6 @@ private:
 
   WidgetTextEvent()
     : mSeqno(kLatestSeqno)
-    , isChar(false)
   {
   }
 
@@ -226,7 +225,6 @@ public:
   WidgetTextEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eTextEventClass)
     , mSeqno(kLatestSeqno)
-    , isChar(false)
   {
   }
 
@@ -243,18 +241,12 @@ public:
 
   // The composition string or the commit string.
   nsString mData;
-  // Indicates whether the event signifies printable text.
-  // XXX This is not a standard, and most platforms don't set this properly.
-  //     So, perhaps, we can get rid of this.
-  bool isChar;
 
   nsRefPtr<TextRangeArray> mRanges;
 
   void AssignTextEventData(const WidgetTextEvent& aEvent, bool aCopyTargets)
   {
     AssignGUIEventData(aEvent, aCopyTargets);
-
-    isChar = aEvent.isChar;
 
     // Currently, we don't need to copy the other members because they are
     // for internal use only (not available from JS).
