@@ -16,17 +16,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
   <script type="application/javascript">
     var target = undefined;
     var listener = undefined;
-    var test_down_got = false;
+    var test_down_target = false;
+    var test_got_listener = false;
+    var test_lost_listener = false;
     var test_listener = false;
 
     function TargetDownHandler(event) {
       logger("Target receive event: " + event.type);
       logger("Send setPointerCapture to listener");
       listener.setPointerCapture(event.pointerId);
-      logger("Send releasePointerCapture from listener");
+      logger("setPointerCapture was executed");
+      test_down_target = true;
+    }
+    function ListenerGotPCHandler(event) {
+      logger("Receive event on Listener: " + event.type);
       listener.releasePointerCapture(event.pointerId);
-      logger("set/release was executed");
-      test_down_got = true;
+      test_got_listener = true;
+    }
+    function ListenerLostPCHandler(event) {
+      logger("Receive event on Listener: " + event.type);
+      test_lost_listener = true;
     }
     function ListenerHandler(event) {
       logger("Receive event on Listener: " + event.type);
@@ -46,18 +55,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
       logger("executeTest");
       target = document.getElementById("target");
       listener = document.getElementById("listener");
-      target.addEventListener("pointerdown",          TargetDownHandler, false);
-      listener.addEventListener("gotpointercapture",  ListenerHandler,   false);
-      listener.addEventListener("lostpointercapture", ListenerHandler,   false);
+      target.addEventListener("pointerdown",          TargetDownHandler,      false);
+      listener.addEventListener("gotpointercapture",  ListenerGotPCHandler,   false);
+      listener.addEventListener("lostpointercapture", ListenerLostPCHandler,  false);
+      listener.addEventListener("pointerover",        ListenerHandler,        false);
+      listener.addEventListener("pointermove",        ListenerHandler,        false);
+      listener.addEventListener("pointerup",          ListenerHandler,        false);
+      listener.addEventListener("pointerout",         ListenerHandler,        false);
       var rect = target.getBoundingClientRect();
       synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerdown"});
+      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointermove"});
       synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerup"});
       finishTest();
     }
     function finishTest() {
       setTimeout(function() {
-        parent.is(test_down_got,  true,  "Part 2: pointerdown event should be received by target");
-        parent.is(test_listener,  false, "Part 2: listener shouldn't receive any events");
+        parent.is(test_down_target,   true,   "Part 5: pointerdown event should be received by target");
+        parent.is(test_got_listener,  true,   "Part 5: listener should receive gotpointercapture event");
+        parent.is(test_lost_listener, true,   "Part 5: listener should receive lostpointercapture event");
+        parent.is(test_listener,      false,  "Part 5: listener shouldn't receive any other events");
         logger("finishTest");
         parent.finishTest();
       }, 1000);
@@ -65,7 +81,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
   </script>
 </head>
 <body onload="prepareTest()">
-  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=977003">Mozilla Bug 977003 Test 2</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=977003">Mozilla Bug 977003 Test 5</a>
   <p id="display"></p>
   <div id="content" style="display: none">
   </div>
