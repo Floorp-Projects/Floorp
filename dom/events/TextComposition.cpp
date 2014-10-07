@@ -285,11 +285,11 @@ TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard)
       nsAutoString commitData(aDiscard ? EmptyString() : lastData);
       bool changingData = lastData != commitData;
 
-      WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE, widget);
-      textEvent.mData = commitData;
-      textEvent.mFlags.mIsSynthesizedForTests = true;
+      WidgetCompositionEvent changeEvent(true, NS_COMPOSITION_CHANGE, widget);
+      changeEvent.mData = commitData;
+      changeEvent.mFlags.mIsSynthesizedForTests = true;
 
-      MaybeDispatchCompositionUpdate(&textEvent);
+      MaybeDispatchCompositionUpdate(&changeEvent);
 
       // If changing the data or committing string isn't empty, we need to
       // dispatch compositionchange event for setting the composition string
@@ -297,7 +297,7 @@ TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard)
       if (!Destroyed() && !widget->Destroyed() &&
           (changingData || !commitData.IsEmpty())) {
         nsEventStatus status = nsEventStatus_eIgnore;
-        widget->DispatchEvent(&textEvent, status);
+        widget->DispatchEvent(&changeEvent, status);
       }
 
       if (!Destroyed() && !widget->Destroyed()) {
@@ -340,13 +340,13 @@ TextComposition::NotifyIME(IMEMessage aMessage)
 
 void
 TextComposition::EditorWillHandleTextEvent(
-                   const WidgetCompositionEvent* aTextEvent)
+                   const WidgetCompositionEvent* aCompositionChangeEvent)
 {
-  mIsComposing = aTextEvent->IsComposing();
-  mRanges = aTextEvent->mRanges;
+  mIsComposing = aCompositionChangeEvent->IsComposing();
+  mRanges = aCompositionChangeEvent->mRanges;
   mIsEditorHandlingEvent = true;
 
-  MOZ_ASSERT(mLastData == aTextEvent->mData,
+  MOZ_ASSERT(mLastData == aCompositionChangeEvent->mData,
     "The text of a compositionchange event must be same as previous data "
     "attribute value of the latest compositionupdate event");
 }
@@ -443,23 +443,14 @@ TextComposition::CompositionEventDispatcher::Run()
                                                 mIsSynthesizedEvent);
       break;
     }
-    case NS_COMPOSITION_END: {
+    case NS_COMPOSITION_END:
+    case NS_COMPOSITION_CHANGE: {
       WidgetCompositionEvent compEvent(true, mEventMessage, widget);
       compEvent.mData = mData;
       compEvent.mFlags.mIsSynthesizedForTests =
         mTextComposition->IsSynthesizedForTests();
       IMEStateManager::DispatchCompositionEvent(mEventTarget, presContext,
                                                 &compEvent, &status, nullptr,
-                                                mIsSynthesizedEvent);
-      break;
-    }
-    case NS_COMPOSITION_CHANGE: {
-      WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE, widget);
-      textEvent.mData = mData;
-      textEvent.mFlags.mIsSynthesizedForTests =
-        mTextComposition->IsSynthesizedForTests();
-      IMEStateManager::DispatchCompositionEvent(mEventTarget, presContext,
-                                                &textEvent, &status, nullptr,
                                                 mIsSynthesizedEvent);
       break;
     }

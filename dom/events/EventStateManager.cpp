@@ -798,10 +798,10 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_COMPOSITION_CHANGE:
     {
-      WidgetCompositionEvent* textEvent = aEvent->AsCompositionEvent();
-      if (IsTargetCrossProcess(textEvent)) {
+      WidgetCompositionEvent* compositionEvent = aEvent->AsCompositionEvent();
+      if (IsTargetCrossProcess(compositionEvent)) {
         // Will not be handled locally, remote the event
-        if (GetCrossProcessTarget()->SendTextEvent(*textEvent)) {
+        if (GetCrossProcessTarget()->SendTextEvent(*compositionEvent)) {
           // Cancel local dispatching
           aEvent->mFlags.mPropagationStopped = true;
         }

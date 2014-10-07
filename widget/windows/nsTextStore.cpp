@@ -1650,18 +1650,19 @@ nsTextStore::FlushPendingActions()
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
                 "dispatching compositionchange event...", this));
-        WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE, mWidget);
-        mWidget->InitEvent(textEvent);
-        textEvent.mData = action.mData;
+        WidgetCompositionEvent compositionChange(true, NS_COMPOSITION_CHANGE,
+                                                 mWidget);
+        mWidget->InitEvent(compositionChange);
+        compositionChange.mData = action.mData;
         if (action.mRanges->IsEmpty()) {
           TextRange wholeRange;
           wholeRange.mStartOffset = 0;
-          wholeRange.mEndOffset = textEvent.mData.Length();
+          wholeRange.mEndOffset = compositionChange.mData.Length();
           wholeRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
           action.mRanges->AppendElement(wholeRange);
         }
-        textEvent.mRanges = action.mRanges;
-        mWidget->DispatchWindowEvent(&textEvent);
+        compositionChange.mRanges = action.mRanges;
+        mWidget->DispatchWindowEvent(&compositionChange);
         // Be aware, the mWidget might already have been destroyed.
         break;
       }
@@ -1677,10 +1678,11 @@ nsTextStore::FlushPendingActions()
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
                 "dispatching compositionchange event...", this));
-        WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE, mWidget);
-        mWidget->InitEvent(textEvent);
-        textEvent.mData = action.mData;
-        mWidget->DispatchWindowEvent(&textEvent);
+        WidgetCompositionEvent compositionChange(true, NS_COMPOSITION_CHANGE,
+                                                 mWidget);
+        mWidget->InitEvent(compositionChange);
+        compositionChange.mData = action.mData;
+        mWidget->DispatchWindowEvent(&compositionChange);
         if (!mWidget || mWidget->Destroyed()) {
           break;
         }
@@ -1690,7 +1692,7 @@ nsTextStore::FlushPendingActions()
                 "dispatching compositionend event...", this));
         WidgetCompositionEvent compositionEnd(true, NS_COMPOSITION_END,
                                               mWidget);
-        compositionEnd.mData = textEvent.mData;
+        compositionEnd.mData = compositionChange.mData;
         mWidget->InitEvent(compositionEnd);
         mWidget->DispatchWindowEvent(&compositionEnd);
         if (!mWidget || mWidget->Destroyed()) {

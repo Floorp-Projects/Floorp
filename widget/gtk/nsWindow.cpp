@@ -3046,14 +3046,15 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
             DispatchEvent(&event, status);
         }
         else {
-            WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE, this);
+            WidgetCompositionEvent compositionChangeEvent(
+                                     true, NS_COMPOSITION_CHANGE, this);
             char16_t textString[3];
             textString[0] = H_SURROGATE(event.charCode);
             textString[1] = L_SURROGATE(event.charCode);
             textString[2] = 0;
-            textEvent.mData = textString;
-            textEvent.time = event.time;
-            DispatchEvent(&textEvent, status);
+            compositionChangeEvent.mData = textString;
+            compositionChangeEvent.time = event.time;
+            DispatchEvent(&compositionChangeEvent, status);
         }
     }
 
