@@ -33,6 +33,7 @@
         <item name="android:layout_marginTop">11.5dp</item>
         <item name="android:layout_marginBottom">11.5dp</item>
         <item name="android:src">@drawable/new_tablet_ic_menu_forward</item>
+        <item name="android:background">@drawable/new_tablet_url_bar_nav_button</item>
     </style>
 
     <style name="UrlBar.ImageButton.TabCount.NewTablet">
