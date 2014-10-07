@@ -182,6 +182,20 @@ private:
   size_t numItems;
 };
 
+// Ensures that we do not call the TrustDomain's VerifySignedData function if
+// the algorithm is unsupported.
+inline Result
+WrappedVerifySignedData(TrustDomain& trustDomain,
+                        const SignedDataWithSignature& signedData,
+                        const SECItem& subjectPublicKeyInfo)
+{
+  if (signedData.algorithm == SignatureAlgorithm::unsupported_algorithm) {
+    return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+  }
+
+  return trustDomain.VerifySignedData(signedData, subjectPublicKeyInfo);
+}
+
 } } // namespace mozilla::pkix
 
 #endif // mozilla_pkix__pkixutil_h
