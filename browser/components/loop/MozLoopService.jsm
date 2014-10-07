@@ -85,6 +85,7 @@ let gPushHandler = null;
 let gHawkClient = null;
 let gLocalizedStrings =  null;
 let gInitializeTimer = null;
+let gFxAEnabled = true;
 let gFxAOAuthClientPromise = null;
 let gFxAOAuthClient = null;
 let gFxAOAuthTokenData = null;
@@ -1073,6 +1074,13 @@ this.MozLoopService = {
       return;
     }
 
+    if (Services.prefs.getPrefType("loop.fxa.enabled") == Services.prefs.PREF_BOOL) {
+      gFxAEnabled = Services.prefs.getBoolPref("loop.fxa.enabled");
+      if (!gFxAEnabled) {
+        this.logOutFromFxA();
+      }
+    }
+
     // If expiresTime is in the future then kick-off registration.
     if (MozLoopServiceInternal.urlExpiryTimeIsInFuture()) {
       gInitializeTimerFunc();
@@ -1258,6 +1266,10 @@ this.MozLoopService = {
    */
   set doNotDisturb(aFlag) {
     MozLoopServiceInternal.doNotDisturb = aFlag;
+  },
+
+  get fxAEnabled() {
+    return gFxAEnabled;
   },
 
   get userProfile() {

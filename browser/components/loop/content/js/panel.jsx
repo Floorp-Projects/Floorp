@@ -230,6 +230,12 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       var cx = React.addons.classSet;
+
+      // For now all of the menu entries require FxA so hide the whole gear if FxA is disabled.
+      if (!navigator.mozLoop.fxAEnabled) {
+        return null;
+      }
+
       return (
         <div className="settings-menu dropdown">
           <a className="button-settings" onClick={this.showDropdownMenu}
@@ -248,6 +254,7 @@ loop.panel = (function(_, mozL10n) {
                                           __("settings_menu_item_signout") :
                                           __("settings_menu_item_signin")}
                                    onClick={this.handleClickAuthEntry}
+                                   displayed={navigator.mozLoop.fxAEnabled}
                                    icon={this._isSignedIn() ? "signout" : "signin"} />
           </ul>
         </div>
@@ -405,7 +412,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      if (navigator.mozLoop.userProfile) {
+      if (!navigator.mozLoop.fxAEnabled || navigator.mozLoop.userProfile) {
         return null;
       }
       return (
@@ -582,6 +589,7 @@ loop.panel = (function(_, mozL10n) {
   return {
     init: init,
     UserIdentity: UserIdentity,
+    AuthLink: AuthLink,
     AvailabilityDropdown: AvailabilityDropdown,
     CallUrlResult: CallUrlResult,
     PanelView: PanelView,
