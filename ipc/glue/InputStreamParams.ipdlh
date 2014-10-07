@@ -7,6 +7,9 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 include protocol PBlob;
 include protocol PFileDescriptorSet;
 
+using struct nsID
+  from "nsID.h";
+
 namespace mozilla {
 namespace ipc {
 
@@ -39,7 +42,7 @@ struct MultiplexInputStreamParams
 
 struct RemoteInputStreamParams
 {
-  PBlob remoteBlob;
+  nsID id;
 };
 
 // XXX This may only be used for same-process inter-thread communication! The
