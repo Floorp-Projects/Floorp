@@ -388,7 +388,7 @@ PuppetWidget::IMEEndComposition(bool aCancel)
   // SendEndIMEComposition is always called since ResetInputState
   // should always be called even if we aren't composing something.
   if (!mTabChild ||
-      !mTabChild->SendEndIMEComposition(aCancel, &textEvent.theText)) {
+      !mTabChild->SendEndIMEComposition(aCancel, &textEvent.mData)) {
     return NS_ERROR_FAILURE;
   }
 

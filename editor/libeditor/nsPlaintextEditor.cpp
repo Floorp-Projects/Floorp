@@ -879,7 +879,7 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   {
     nsAutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
 
-    rv = InsertText(widgetTextEvent->theText);
+    rv = InsertText(widgetTextEvent->mData);
 
     if (caretP) {
       caretP->SetSelection(selection);

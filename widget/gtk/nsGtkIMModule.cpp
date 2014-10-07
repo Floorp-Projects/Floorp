@@ -1111,7 +1111,7 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
 
     uint32_t targetOffset = mCompositionStart;
 
-    textEvent.theText = mDispatchedCompositionString = aCompositionString;
+    textEvent.mData = mDispatchedCompositionString = aCompositionString;
 
     if (!aIsCommit) {
         // NOTE: SetTextRangeList() assumes that mDispatchedCompositionString

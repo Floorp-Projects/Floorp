@@ -67,7 +67,7 @@ TextComposition::MaybeDispatchCompositionUpdate(const WidgetTextEvent* aEvent)
     return false;
   }
 
-  if (mLastData == aEvent->theText) {
+  if (mLastData == aEvent->mData) {
     return true;
   }
 
@@ -76,7 +76,7 @@ TextComposition::MaybeDispatchCompositionUpdate(const WidgetTextEvent* aEvent)
                                            aEvent->widget);
   compositionUpdate.time = aEvent->time;
   compositionUpdate.timeStamp = aEvent->timeStamp;
-  compositionUpdate.data = aEvent->theText;
+  compositionUpdate.data = aEvent->mData;
   compositionUpdate.mFlags.mIsSynthesizedForTests =
     aEvent->mFlags.mIsSynthesizedForTests;
 
@@ -149,7 +149,7 @@ TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
         committingData = &aEvent->AsCompositionEvent()->data;
         break;
       case NS_TEXT_TEXT:
-        committingData = &aEvent->AsTextEvent()->theText;
+        committingData = &aEvent->AsTextEvent()->mData;
         break;
       default:
         NS_WARNING("Unexpected event comes during committing or "
@@ -287,7 +287,7 @@ TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard)
       bool changingData = lastData != commitData;
 
       WidgetTextEvent textEvent(true, NS_TEXT_TEXT, widget);
-      textEvent.theText = commitData;
+      textEvent.mData = commitData;
       textEvent.mFlags.mIsSynthesizedForTests = true;
 
       MaybeDispatchCompositionUpdate(&textEvent);
@@ -346,7 +346,7 @@ TextComposition::EditorWillHandleTextEvent(const WidgetTextEvent* aTextEvent)
   mRanges = aTextEvent->mRanges;
   mIsEditorHandlingEvent = true;
 
-  MOZ_ASSERT(mLastData == aTextEvent->theText,
+  MOZ_ASSERT(mLastData == aTextEvent->mData,
     "The text of a text event must be same as previous data attribute value "
     "of the latest compositionupdate event");
 }
@@ -455,7 +455,7 @@ TextComposition::CompositionEventDispatcher::Run()
     }
     case NS_TEXT_TEXT: {
       WidgetTextEvent textEvent(true, NS_TEXT_TEXT, widget);
-      textEvent.theText = mData;
+      textEvent.mData = mData;
       textEvent.mFlags.mIsSynthesizedForTests =
         mTextComposition->IsSynthesizedForTests();
       IMEStateManager::DispatchCompositionEvent(mEventTarget, presContext,
