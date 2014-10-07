@@ -23,6 +23,12 @@ CaptureTask::TaskComplete(already_AddRefed<dom::DOMFile> aBlob, nsresult aRv)
 
   nsresult rv;
   nsRefPtr<dom::DOMFile> blob(aBlob);
+
+  // We have to set the parent because the blob has been generated with a valid one.
+  if (blob) {
+    blob = new dom::DOMFile(mImageCapture->GetParentObject(), blob->Impl());
+  }
+
   if (mPrincipalChanged) {
     aRv = NS_ERROR_DOM_SECURITY_ERR;
     IC_LOG("MediaStream principal should not change during TakePhoto().");

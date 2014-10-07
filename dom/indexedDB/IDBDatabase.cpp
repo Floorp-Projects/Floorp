@@ -803,7 +803,7 @@ IDBDatabase::AbortTransactions()
 }
 
 PBackgroundIDBDatabaseFileChild*
-IDBDatabase::GetOrCreateFileActorForBlob(nsIDOMBlob* aBlob)
+IDBDatabase::GetOrCreateFileActorForBlob(DOMFile* aBlob)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aBlob);
@@ -813,13 +813,14 @@ IDBDatabase::GetOrCreateFileActorForBlob(nsIDOMBlob* aBlob)
   // a) it is unique per blob, b) it is reference-counted so that we can
   // guarantee that it stays alive, and c) it doesn't hold the actual DOMFile
   // alive.
-  nsCOMPtr<nsIWeakReference> weakRef = do_GetWeakReference(aBlob);
+  nsCOMPtr<nsIDOMBlob> blob = aBlob;
+  nsCOMPtr<nsIWeakReference> weakRef = do_GetWeakReference(blob);
   MOZ_ASSERT(weakRef);
 
   PBackgroundIDBDatabaseFileChild* actor = nullptr;
 
   if (!mFileActors.Get(weakRef, &actor)) {
-    DOMFileImpl* blobImpl = static_cast<DOMFile*>(aBlob)->Impl();
+    DOMFileImpl* blobImpl = aBlob->Impl();
     MOZ_ASSERT(blobImpl);
 
     if (mReceivedBlobs.GetEntry(weakRef)) {
@@ -911,7 +912,7 @@ IDBDatabase::NoteFinishedFileActor(PBackgroundIDBDatabaseFileChild* aFileActor)
 }
 
 void
-IDBDatabase::NoteReceivedBlob(nsIDOMBlob* aBlob)
+IDBDatabase::NoteReceivedBlob(DOMFile* aBlob)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aBlob);
@@ -919,7 +920,7 @@ IDBDatabase::NoteReceivedBlob(nsIDOMBlob* aBlob)
 
 #ifdef DEBUG
   {
-    nsRefPtr<DOMFileImpl> blobImpl = static_cast<DOMFile*>(aBlob)->Impl();
+    nsRefPtr<DOMFileImpl> blobImpl = aBlob->Impl();
     MOZ_ASSERT(blobImpl);
 
     nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryObject(blobImpl);
@@ -938,7 +939,8 @@ IDBDatabase::NoteReceivedBlob(nsIDOMBlob* aBlob)
   }
 #endif
 
-  nsCOMPtr<nsIWeakReference> weakRef = do_GetWeakReference(aBlob);
+  nsCOMPtr<nsIDOMBlob> blob = aBlob;
+  nsCOMPtr<nsIWeakReference> weakRef = do_GetWeakReference(blob);
   MOZ_ASSERT(weakRef);
 
   // It's ok if this entry already exists in the table.

@@ -186,7 +186,8 @@ nsDOMFileReader::ReadAsArrayBuffer(nsIDOMBlob* aFile, JSContext* aCx)
 {
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  ReadAsArrayBuffer(aCx, aFile, rv);
+  nsRefPtr<DOMFile> file = static_cast<DOMFile*>(aFile);
+  ReadAsArrayBuffer(aCx, *file, rv);
   return rv.ErrorCode();
 }
 
@@ -195,7 +196,8 @@ nsDOMFileReader::ReadAsBinaryString(nsIDOMBlob* aFile)
 {
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  ReadAsBinaryString(aFile, rv);
+  nsRefPtr<DOMFile> file = static_cast<DOMFile*>(aFile);
+  ReadAsBinaryString(*file, rv);
   return rv.ErrorCode();
 }
 
@@ -205,7 +207,8 @@ nsDOMFileReader::ReadAsText(nsIDOMBlob* aFile,
 {
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  ReadAsText(aFile, aCharset, rv);
+  nsRefPtr<DOMFile> file = static_cast<DOMFile*>(aFile);
+  ReadAsText(*file, aCharset, rv);
   return rv.ErrorCode();
 }
 
@@ -214,7 +217,8 @@ nsDOMFileReader::ReadAsDataURL(nsIDOMBlob* aFile)
 {
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  ReadAsDataURL(aFile, rv);
+  nsRefPtr<DOMFile> file = static_cast<DOMFile*>(aFile);
+  ReadAsDataURL(*file, rv);
   return rv.ErrorCode();
 }
 
@@ -366,13 +370,11 @@ nsDOMFileReader::DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount)
 
 void
 nsDOMFileReader::ReadFileContent(JSContext* aCx,
-                                 nsIDOMBlob* aFile,
+                                 DOMFile& aFile,
                                  const nsAString &aCharset,
                                  eDataFormat aDataFormat,
                                  ErrorResult& aRv)
 {
-  MOZ_ASSERT(aFile);
-
   //Implicit abort to clear any other activity going on
   Abort();
   mError = nullptr;
@@ -382,7 +384,7 @@ nsDOMFileReader::ReadFileContent(JSContext* aCx,
   mReadyState = nsIDOMFileReader::EMPTY;
   FreeFileData();
 
-  mFile = aFile;
+  mFile = &aFile;
   mDataFormat = aDataFormat;
   CopyUTF16toUTF8(aCharset, mCharset);
 

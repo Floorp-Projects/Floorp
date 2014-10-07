@@ -27,7 +27,7 @@ uint32_t CreateFileTask::sOutputBufferSize = 0;
 
 CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
                                const nsAString& aPath,
-                               nsIDOMBlob* aBlobData,
+                               DOMFile* aBlobData,
                                InfallibleTArray<uint8_t>& aArrayData,
                                bool replace,
                                ErrorResult& aRv)
@@ -79,9 +79,10 @@ CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
   }
 
   BlobParent* bp = static_cast<BlobParent*>(static_cast<PBlobParent*>(data));
-  nsCOMPtr<nsIDOMBlob> blobData = bp->GetBlob();
-  MOZ_ASSERT(blobData, "blobData should not be null.");
-  nsresult rv = blobData->GetInternalStream(getter_AddRefs(mBlobStream));
+  nsRefPtr<DOMFileImpl> blobImpl = bp->GetBlobImpl();
+  MOZ_ASSERT(blobImpl, "blobData should not be null.");
+
+  nsresult rv = blobImpl->GetInternalStream(getter_AddRefs(mBlobStream));
   NS_WARN_IF(NS_FAILED(rv));
 }
 
@@ -126,7 +127,8 @@ FileSystemResponseValue
 CreateFileTask::GetSuccessRequestResult() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  nsRefPtr<DOMFile> file = new DOMFile(mTargetFileImpl);
+  nsRefPtr<DOMFile> file = new DOMFile(mFileSystem->GetWindow(),
+                                       mTargetFileImpl);
   BlobParent* actor = GetBlobParent(file);
   if (!actor) {
     return FileSystemErrorResponse(NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR);
@@ -142,8 +144,7 @@ CreateFileTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue)
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   FileSystemFileResponse r = aValue;
   BlobChild* actor = static_cast<BlobChild*>(r.blobChild());
-  nsCOMPtr<nsIDOMBlob> blob = actor->GetBlob();
-  mTargetFileImpl = static_cast<DOMFile*>(blob.get())->Impl();
+  mTargetFileImpl = actor->GetBlobImpl();
 }
 
 nsresult
@@ -302,7 +303,8 @@ CreateFileTask::HandlerCallback()
     return;
   }
 
-  nsCOMPtr<nsIDOMFile> file = new DOMFile(mTargetFileImpl);
+  nsCOMPtr<nsIDOMFile> file = new DOMFile(mFileSystem->GetWindow(),
+                                          mTargetFileImpl);
   mPromise->MaybeResolve(file);
   mPromise = nullptr;
   mBlobData = nullptr;

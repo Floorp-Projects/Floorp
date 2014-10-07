@@ -21,11 +21,11 @@
 #include "nsTArray.h"
 
 class nsAString;
-class nsIDOMBlob;
 
 namespace mozilla {
 namespace dom {
 
+class DOMFile;
 class FileHelper;
 class FileRequestBase;
 class FileService;
@@ -240,7 +240,8 @@ protected:
                  ErrorResult& aRv);
 
   static already_AddRefed<nsIInputStream>
-  GetInputStream(nsIDOMBlob* aValue, uint64_t* aInputLength, ErrorResult& aRv);
+  GetInputStream(const DOMFile& aValue, uint64_t* aInputLength,
+                 ErrorResult& aRv);
 
   static already_AddRefed<nsIInputStream>
   GetInputStream(const nsAString& aValue, uint64_t* aInputLength,
