@@ -9,8 +9,6 @@
  */
 
 
-#include "vp8.h"
-
 /*!\defgroup vp8_decoder WebM VP8 Decoder
  * \ingroup vp8
  *
@@ -20,12 +18,15 @@
  * \brief Provides definitions for using the VP8 algorithm within the vpx Decoder
  *        interface.
  */
-#ifndef VP8DX_H
-#define VP8DX_H
+#ifndef VPX_VP8DX_H_
+#define VPX_VP8DX_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* Include controls common to both the encoder and decoder */
+#include "./vp8.h"
 
 /*!\name Algorithm interface for VP8
  *
@@ -40,9 +41,6 @@ extern vpx_codec_iface_t *vpx_codec_vp8_dx(void);
 extern vpx_codec_iface_t  vpx_codec_vp9_dx_algo;
 extern vpx_codec_iface_t *vpx_codec_vp9_dx(void);
 /*!@} - end algorithm interface member group*/
-
-/* Include controls common to both the encoder and decoder */
-#include "vp8.h"
 
 
 /*!\enum vp8_dec_control_id
@@ -68,10 +66,17 @@ enum vp8_dec_control_id {
   VP8D_GET_LAST_REF_USED,
 
   /** decryption function to decrypt encoded buffer data immediately
-   * before decoding. Takes a vp8_decrypt_init, which contains
+   * before decoding. Takes a vpx_decrypt_init, which contains
    * a callback function and opaque context pointer.
    */
-  VP8D_SET_DECRYPTOR,
+  VPXD_SET_DECRYPTOR,
+  VP8D_SET_DECRYPTOR = VPXD_SET_DECRYPTOR,
+
+  /** control function to get the display dimensions for the current frame. */
+  VP9D_GET_DISPLAY_SIZE,
+
+  /** control function to get the bit depth of the stream. */
+  VP9D_GET_BIT_DEPTH,
 
   /** For testing. */
   VP9_INVERT_TILE_DECODE_ORDER,
@@ -79,19 +84,28 @@ enum vp8_dec_control_id {
   VP8_DECODER_CTRL_ID_MAX
 };
 
+/** Decrypt n bytes of data from input -> output, using the decrypt_state
+ *  passed in VPXD_SET_DECRYPTOR.
+ */
+typedef void (*vpx_decrypt_cb)(void *decrypt_state, const unsigned char *input,
+                               unsigned char *output, int count);
+
 /*!\brief Structure to hold decryption state
  *
  * Defines a structure to hold the decryption state and access function.
  */
-typedef struct vp8_decrypt_init {
-    /** Decrypt n bytes of data from input -> output, using the decrypt_state
-     *  passed in VP8D_SET_DECRYPTOR.
-     */
-    void (*decrypt_cb)(void *decrypt_state, const unsigned char *input,
-                       unsigned char *output, int count);
+typedef struct vpx_decrypt_init {
+    /*! Decrypt callback. */
+    vpx_decrypt_cb decrypt_cb;
+
     /*! Decryption state. */
     void *decrypt_state;
-} vp8_decrypt_init;
+} vpx_decrypt_init;
+
+/*!\brief A deprecated alias for vpx_decrypt_init.
+ */
+typedef vpx_decrypt_init vp8_decrypt_init;
+
 
 /*!\brief VP8 decoder control function parameter type
  *
@@ -101,10 +115,13 @@ typedef struct vp8_decrypt_init {
  */
 
 
-VPX_CTRL_USE_TYPE(VP8D_GET_LAST_REF_UPDATES,   int *)
-VPX_CTRL_USE_TYPE(VP8D_GET_FRAME_CORRUPTED,    int *)
-VPX_CTRL_USE_TYPE(VP8D_GET_LAST_REF_USED,      int *)
-VPX_CTRL_USE_TYPE(VP8D_SET_DECRYPTOR,          vp8_decrypt_init *)
+VPX_CTRL_USE_TYPE(VP8D_GET_LAST_REF_UPDATES,    int *)
+VPX_CTRL_USE_TYPE(VP8D_GET_FRAME_CORRUPTED,     int *)
+VPX_CTRL_USE_TYPE(VP8D_GET_LAST_REF_USED,       int *)
+VPX_CTRL_USE_TYPE(VPXD_SET_DECRYPTOR,           vpx_decrypt_init *)
+VPX_CTRL_USE_TYPE(VP8D_SET_DECRYPTOR,           vpx_decrypt_init *)
+VPX_CTRL_USE_TYPE(VP9D_GET_DISPLAY_SIZE,        int *)
+VPX_CTRL_USE_TYPE(VP9D_GET_BIT_DEPTH,           unsigned int *)
 VPX_CTRL_USE_TYPE(VP9_INVERT_TILE_DECODE_ORDER, int)
 
 /*! @} - end defgroup vp8_decoder */
@@ -113,4 +130,4 @@ VPX_CTRL_USE_TYPE(VP9_INVERT_TILE_DECODE_ORDER, int)
 }  // extern "C"
 #endif
 
-#endif
+#endif  // VPX_VP8DX_H_

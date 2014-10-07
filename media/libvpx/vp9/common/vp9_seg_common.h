@@ -11,7 +11,11 @@
 #ifndef VP9_COMMON_VP9_SEG_COMMON_H_
 #define VP9_COMMON_VP9_SEG_COMMON_H_
 
-#include "vp9/common/vp9_treecoder.h"
+#include "vp9/common/vp9_prob.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define SEGMENT_DELTADATA   0
 #define SEGMENT_ABSDATA     1
@@ -55,17 +59,9 @@ void vp9_enable_segfeature(struct segmentation *seg,
                            int segment_id,
                            SEG_LVL_FEATURES feature_id);
 
-void vp9_disable_segfeature(struct segmentation *seg,
-                            int segment_id,
-                            SEG_LVL_FEATURES feature_id);
-
 int vp9_seg_feature_data_max(SEG_LVL_FEATURES feature_id);
 
 int vp9_is_segfeature_signed(SEG_LVL_FEATURES feature_id);
-
-void vp9_clear_segdata(struct segmentation *seg,
-                       int segment_id,
-                       SEG_LVL_FEATURES feature_id);
 
 void vp9_set_segdata(struct segmentation *seg,
                      int segment_id,
@@ -77,6 +73,10 @@ int vp9_get_segdata(const struct segmentation *seg,
                     SEG_LVL_FEATURES feature_id);
 
 extern const vp9_tree_index vp9_segment_tree[TREE_SIZE(MAX_SEGMENTS)];
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // VP9_COMMON_VP9_SEG_COMMON_H_
 

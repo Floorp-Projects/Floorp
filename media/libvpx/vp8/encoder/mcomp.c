@@ -17,6 +17,7 @@
 #include <limits.h>
 #include <math.h>
 #include "vp8/common/findnearmv.h"
+#include "vp8/common/common.h"
 
 #ifdef VP8_ENTROPY_STATS
 static int mv_ref_ct [31] [4] [2];

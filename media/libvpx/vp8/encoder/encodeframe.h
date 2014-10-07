@@ -7,8 +7,12 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef ENCODEFRAME_H
-#define ENCODEFRAME_H
+#ifndef VP8_ENCODER_ENCODEFRAME_H_
+#define VP8_ENCODER_ENCODEFRAME_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern void vp8_activity_masking(VP8_COMP *cpi, MACROBLOCK *x);
 
 extern void vp8_build_block_offsets(MACROBLOCK *x);
@@ -24,4 +28,8 @@ extern int vp8cx_encode_inter_macroblock(VP8_COMP *cpi, MACROBLOCK *x,
 
 extern int vp8cx_encode_intra_macroblock(VP8_COMP *cpi, MACROBLOCK *x,
         TOKENEXTRA **t);
+#ifdef __cplusplus
+}  // extern "C"
 #endif
+
+#endif  // VP8_ENCODER_ENCODEFRAME_H_

@@ -9,8 +9,8 @@
  */
 
 
-#ifndef __VPX_MEM_INTRNL_H__
-#define __VPX_MEM_INTRNL_H__
+#ifndef VPX_MEM_INCLUDE_VPX_MEM_INTRNL_H_
+#define VPX_MEM_INCLUDE_VPX_MEM_INTRNL_H_
 #include "./vpx_config.h"
 
 #ifndef CONFIG_MEM_MANAGER
@@ -92,4 +92,4 @@ this should be a multiple of 4*/
 /*returns an addr aligned to the byte boundary specified by align*/
 #define align_addr(addr,align) (void*)(((size_t)(addr) + ((align) - 1)) & (size_t)-(align))
 
-#endif /*__VPX_MEM_INTRNL_H__*/
+#endif  // VPX_MEM_INCLUDE_VPX_MEM_INTRNL_H_

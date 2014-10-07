@@ -70,7 +70,7 @@ static INLINE int8_t hev_mask(uint8_t thresh, uint8_t p1, uint8_t p0,
   return hev;
 }
 
-static INLINE void filter4(int8_t mask, uint8_t hev, uint8_t *op1,
+static INLINE void filter4(int8_t mask, uint8_t thresh, uint8_t *op1,
                            uint8_t *op0, uint8_t *oq0, uint8_t *oq1) {
   int8_t filter1, filter2;
 
@@ -78,6 +78,7 @@ static INLINE void filter4(int8_t mask, uint8_t hev, uint8_t *op1,
   const int8_t ps0 = (int8_t) *op0 ^ 0x80;
   const int8_t qs0 = (int8_t) *oq0 ^ 0x80;
   const int8_t qs1 = (int8_t) *oq1 ^ 0x80;
+  const uint8_t hev = hev_mask(thresh, *op1, *op0, *oq0, *oq1);
 
   // add outer taps if we have high edge variance
   int8_t filter = signed_char_clamp(ps1 - qs1) & hev;
@@ -101,11 +102,9 @@ static INLINE void filter4(int8_t mask, uint8_t hev, uint8_t *op1,
   *op1 = signed_char_clamp(ps1 + filter) ^ 0x80;
 }
 
-void vp9_loop_filter_horizontal_edge_c(uint8_t *s, int p /* pitch */,
-                                       const uint8_t *blimit,
-                                       const uint8_t *limit,
-                                       const uint8_t *thresh,
-                                       int count) {
+void vp9_lpf_horizontal_4_c(uint8_t *s, int p /* pitch */,
+                            const uint8_t *blimit, const uint8_t *limit,
+                            const uint8_t *thresh, int count) {
   int i;
 
   // loop filter designed to work using chars so that we can make maximum use
@@ -115,17 +114,22 @@ void vp9_loop_filter_horizontal_edge_c(uint8_t *s, int p /* pitch */,
     const uint8_t q0 = s[0 * p],  q1 = s[1 * p],  q2 = s[2 * p],  q3 = s[3 * p];
     const int8_t mask = filter_mask(*limit, *blimit,
                                     p3, p2, p1, p0, q0, q1, q2, q3);
-    const int8_t hev = hev_mask(*thresh, p1, p0, q0, q1);
-    filter4(mask, hev, s - 2 * p, s - 1 * p, s, s + 1 * p);
+    filter4(mask, *thresh, s - 2 * p, s - 1 * p, s, s + 1 * p);
     ++s;
   }
 }
 
-void vp9_loop_filter_vertical_edge_c(uint8_t *s, int pitch,
-                                     const uint8_t *blimit,
-                                     const uint8_t *limit,
-                                     const uint8_t *thresh,
-                                     int count) {
+void vp9_lpf_horizontal_4_dual_c(uint8_t *s, int p, const uint8_t *blimit0,
+                                 const uint8_t *limit0, const uint8_t *thresh0,
+                                 const uint8_t *blimit1, const uint8_t *limit1,
+                                 const uint8_t *thresh1) {
+  vp9_lpf_horizontal_4_c(s, p, blimit0, limit0, thresh0, 1);
+  vp9_lpf_horizontal_4_c(s + 8, p, blimit1, limit1, thresh1, 1);
+}
+
+void vp9_lpf_vertical_4_c(uint8_t *s, int pitch, const uint8_t *blimit,
+                          const uint8_t *limit, const uint8_t *thresh,
+                          int count) {
   int i;
 
   // loop filter designed to work using chars so that we can make maximum use
@@ -135,13 +139,21 @@ void vp9_loop_filter_vertical_edge_c(uint8_t *s, int pitch,
     const uint8_t q0 = s[0],  q1 = s[1],  q2 = s[2],  q3 = s[3];
     const int8_t mask = filter_mask(*limit, *blimit,
                                     p3, p2, p1, p0, q0, q1, q2, q3);
-    const int8_t hev = hev_mask(*thresh, p1, p0, q0, q1);
-    filter4(mask, hev, s - 2, s - 1, s, s + 1);
+    filter4(mask, *thresh, s - 2, s - 1, s, s + 1);
     s += pitch;
   }
 }
 
-static INLINE void filter8(int8_t mask, uint8_t hev, uint8_t flat,
+void vp9_lpf_vertical_4_dual_c(uint8_t *s, int pitch, const uint8_t *blimit0,
+                               const uint8_t *limit0, const uint8_t *thresh0,
+                               const uint8_t *blimit1, const uint8_t *limit1,
+                               const uint8_t *thresh1) {
+  vp9_lpf_vertical_4_c(s, pitch, blimit0, limit0, thresh0, 1);
+  vp9_lpf_vertical_4_c(s + 8 * pitch, pitch, blimit1, limit1,
+                                  thresh1, 1);
+}
+
+static INLINE void filter8(int8_t mask, uint8_t thresh, uint8_t flat,
                            uint8_t *op3, uint8_t *op2,
                            uint8_t *op1, uint8_t *op0,
                            uint8_t *oq0, uint8_t *oq1,
@@ -158,15 +170,13 @@ static INLINE void filter8(int8_t mask, uint8_t hev, uint8_t flat,
     *oq1 = ROUND_POWER_OF_TWO(p1 + p0 + q0 + 2 * q1 + q2 + q3 + q3, 3);
     *oq2 = ROUND_POWER_OF_TWO(p0 + q0 + q1 + 2 * q2 + q3 + q3 + q3, 3);
   } else {
-    filter4(mask, hev, op1,  op0, oq0, oq1);
+    filter4(mask, thresh, op1,  op0, oq0, oq1);
   }
 }
 
-void vp9_mbloop_filter_horizontal_edge_c(uint8_t *s, int p,
-                                         const uint8_t *blimit,
-                                         const uint8_t *limit,
-                                         const uint8_t *thresh,
-                                         int count) {
+void vp9_lpf_horizontal_8_c(uint8_t *s, int p, const uint8_t *blimit,
+                            const uint8_t *limit, const uint8_t *thresh,
+                            int count) {
   int i;
 
   // loop filter designed to work using chars so that we can make maximum use
@@ -177,19 +187,24 @@ void vp9_mbloop_filter_horizontal_edge_c(uint8_t *s, int p,
 
     const int8_t mask = filter_mask(*limit, *blimit,
                                     p3, p2, p1, p0, q0, q1, q2, q3);
-    const int8_t hev = hev_mask(*thresh, p1, p0, q0, q1);
     const int8_t flat = flat_mask4(1, p3, p2, p1, p0, q0, q1, q2, q3);
-    filter8(mask, hev, flat, s - 4 * p, s - 3 * p, s - 2 * p, s - 1 * p,
-                             s,         s + 1 * p, s + 2 * p, s + 3 * p);
+    filter8(mask, *thresh, flat, s - 4 * p, s - 3 * p, s - 2 * p, s - 1 * p,
+                                 s,         s + 1 * p, s + 2 * p, s + 3 * p);
     ++s;
   }
 }
 
-void vp9_mbloop_filter_vertical_edge_c(uint8_t *s, int pitch,
-                                       const uint8_t *blimit,
-                                       const uint8_t *limit,
-                                       const uint8_t *thresh,
-                                       int count) {
+void vp9_lpf_horizontal_8_dual_c(uint8_t *s, int p, const uint8_t *blimit0,
+                                 const uint8_t *limit0, const uint8_t *thresh0,
+                                 const uint8_t *blimit1, const uint8_t *limit1,
+                                 const uint8_t *thresh1) {
+  vp9_lpf_horizontal_8_c(s, p, blimit0, limit0, thresh0, 1);
+  vp9_lpf_horizontal_8_c(s + 8, p, blimit1, limit1, thresh1, 1);
+}
+
+void vp9_lpf_vertical_8_c(uint8_t *s, int pitch, const uint8_t *blimit,
+                          const uint8_t *limit, const uint8_t *thresh,
+                          int count) {
   int i;
 
   for (i = 0; i < 8 * count; ++i) {
@@ -197,15 +212,23 @@ void vp9_mbloop_filter_vertical_edge_c(uint8_t *s, int pitch,
     const uint8_t q0 = s[0], q1 = s[1], q2 = s[2], q3 = s[3];
     const int8_t mask = filter_mask(*limit, *blimit,
                                     p3, p2, p1, p0, q0, q1, q2, q3);
-    const int8_t hev = hev_mask(thresh[0], p1, p0, q0, q1);
     const int8_t flat = flat_mask4(1, p3, p2, p1, p0, q0, q1, q2, q3);
-    filter8(mask, hev, flat, s - 4, s - 3, s - 2, s - 1,
-                             s,     s + 1, s + 2, s + 3);
+    filter8(mask, *thresh, flat, s - 4, s - 3, s - 2, s - 1,
+                                 s,     s + 1, s + 2, s + 3);
     s += pitch;
   }
 }
 
-static INLINE void filter16(int8_t mask, uint8_t hev,
+void vp9_lpf_vertical_8_dual_c(uint8_t *s, int pitch, const uint8_t *blimit0,
+                               const uint8_t *limit0, const uint8_t *thresh0,
+                               const uint8_t *blimit1, const uint8_t *limit1,
+                               const uint8_t *thresh1) {
+  vp9_lpf_vertical_8_c(s, pitch, blimit0, limit0, thresh0, 1);
+  vp9_lpf_vertical_8_c(s + 8 * pitch, pitch, blimit1, limit1,
+                                    thresh1, 1);
+}
+
+static INLINE void filter16(int8_t mask, uint8_t thresh,
                             uint8_t flat, uint8_t flat2,
                             uint8_t *op7, uint8_t *op6,
                             uint8_t *op5, uint8_t *op4,
@@ -252,15 +275,13 @@ static INLINE void filter16(int8_t mask, uint8_t hev,
     *oq6 = ROUND_POWER_OF_TWO(p0 +
                               q0 + q1 + q2 + q3 + q4 + q5 + q6 * 2 + q7 * 7, 4);
   } else {
-    filter8(mask, hev, flat, op3, op2, op1, op0, oq0, oq1, oq2, oq3);
+    filter8(mask, thresh, flat, op3, op2, op1, op0, oq0, oq1, oq2, oq3);
   }
 }
 
-void vp9_mb_lpf_horizontal_edge_w_c(uint8_t *s, int p,
-                                    const uint8_t *blimit,
-                                    const uint8_t *limit,
-                                    const uint8_t *thresh,
-                                    int count) {
+void vp9_lpf_horizontal_16_c(uint8_t *s, int p, const uint8_t *blimit,
+                             const uint8_t *limit, const uint8_t *thresh,
+                             int count) {
   int i;
 
   // loop filter designed to work using chars so that we can make maximum use
@@ -270,13 +291,12 @@ void vp9_mb_lpf_horizontal_edge_w_c(uint8_t *s, int p,
     const uint8_t q0 = s[0 * p], q1 = s[1 * p], q2 = s[2 * p], q3 = s[3 * p];
     const int8_t mask = filter_mask(*limit, *blimit,
                                     p3, p2, p1, p0, q0, q1, q2, q3);
-    const int8_t hev = hev_mask(*thresh, p1, p0, q0, q1);
     const int8_t flat = flat_mask4(1, p3, p2, p1, p0, q0, q1, q2, q3);
     const int8_t flat2 = flat_mask5(1,
                              s[-8 * p], s[-7 * p], s[-6 * p], s[-5 * p], p0,
                              q0, s[4 * p], s[5 * p], s[6 * p], s[7 * p]);
 
-    filter16(mask, hev, flat, flat2,
+    filter16(mask, *thresh, flat, flat2,
              s - 8 * p, s - 7 * p, s - 6 * p, s - 5 * p,
              s - 4 * p, s - 3 * p, s - 2 * p, s - 1 * p,
              s,         s + 1 * p, s + 2 * p, s + 3 * p,
@@ -285,25 +305,35 @@ void vp9_mb_lpf_horizontal_edge_w_c(uint8_t *s, int p,
   }
 }
 
-void vp9_mb_lpf_vertical_edge_w_c(uint8_t *s, int p,
-                                  const uint8_t *blimit,
-                                  const uint8_t *limit,
-                                  const uint8_t *thresh) {
+static void mb_lpf_vertical_edge_w(uint8_t *s, int p,
+                                   const uint8_t *blimit,
+                                   const uint8_t *limit,
+                                   const uint8_t *thresh,
+                                   int count) {
   int i;
 
-  for (i = 0; i < 8; ++i) {
+  for (i = 0; i < count; ++i) {
     const uint8_t p3 = s[-4], p2 = s[-3], p1 = s[-2], p0 = s[-1];
     const uint8_t q0 = s[0], q1 = s[1],  q2 = s[2], q3 = s[3];
     const int8_t mask = filter_mask(*limit, *blimit,
                                     p3, p2, p1, p0, q0, q1, q2, q3);
-    const int8_t hev = hev_mask(*thresh, p1, p0, q0, q1);
     const int8_t flat = flat_mask4(1, p3, p2, p1, p0, q0, q1, q2, q3);
     const int8_t flat2 = flat_mask5(1, s[-8], s[-7], s[-6], s[-5], p0,
                                     q0, s[4], s[5], s[6], s[7]);
 
-    filter16(mask, hev, flat, flat2,
+    filter16(mask, *thresh, flat, flat2,
              s - 8, s - 7, s - 6, s - 5, s - 4, s - 3, s - 2, s - 1,
              s,     s + 1, s + 2, s + 3, s + 4, s + 5, s + 6, s + 7);
     s += p;
   }
+}
+
+void vp9_lpf_vertical_16_c(uint8_t *s, int p, const uint8_t *blimit,
+                           const uint8_t *limit, const uint8_t *thresh) {
+  mb_lpf_vertical_edge_w(s, p, blimit, limit, thresh, 8);
+}
+
+void vp9_lpf_vertical_16_dual_c(uint8_t *s, int p, const uint8_t *blimit,
+                                const uint8_t *limit, const uint8_t *thresh) {
+  mb_lpf_vertical_edge_w(s, p, blimit, limit, thresh, 16);
 }

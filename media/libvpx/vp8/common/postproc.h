@@ -9,8 +9,8 @@
  */
 
 
-#ifndef POSTPROC_H
-#define POSTPROC_H
+#ifndef VP8_COMMON_POSTPROC_H_
+#define VP8_COMMON_POSTPROC_H_
 
 #include "vpx_ports/mem.h"
 struct postproc_state
@@ -26,6 +26,10 @@ struct postproc_state
 };
 #include "onyxc_int.h"
 #include "ppflags.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 int vp8_post_proc_frame(struct VP8Common *oci, YV12_BUFFER_CONFIG *dest,
                         vp8_ppflags_t *flags);
 
@@ -47,4 +51,8 @@ void vp8_deblock(struct VP8Common           *oci,
 #define MFQE_PRECISION 4
 
 void vp8_multiframe_quality_enhance(struct VP8Common *cm);
+#ifdef __cplusplus
+}  // extern "C"
 #endif
+
+#endif  // VP8_COMMON_POSTPROC_H_

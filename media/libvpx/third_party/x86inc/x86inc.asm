@@ -234,10 +234,10 @@ ALIGNMODE k7
         %define r%1mp %2
     %elif ARCH_X86_64 ; memory
         %define r%1m [rsp + stack_offset + %6]
-        %define r%1mp qword r %+ %1m
+        %define r%1mp qword r %+ %1 %+ m
     %else
         %define r%1m [esp + stack_offset + %6]
-        %define r%1mp dword r %+ %1m
+        %define r%1mp dword r %+ %1 %+ m
     %endif
     %define r%1  %2
 %endmacro
@@ -394,6 +394,23 @@ DECLARE_REG_TMP_SIZE 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
     %xdefine stack_offset %%stack_offset
     %assign n_arg_names %0
 %endmacro
+
+%if ARCH_X86_64
+%macro ALLOC_STACK 2  ; stack_size, num_regs
+  %assign %%stack_aligment ((mmsize + 15) & ~15)
+  %assign stack_size_padded %1
+
+  %assign %%reg_num (%2 - 1)
+  %xdefine rsp_tmp r %+ %%reg_num
+  mov  rsp_tmp, rsp
+  sub  rsp, stack_size_padded
+  and  rsp, ~(%%stack_aligment - 1)
+%endmacro
+
+%macro RESTORE_STACK 0  ; reset rsp register
+  mov  rsp, rsp_tmp
+%endmacro
+%endif
 
 %if WIN64 ; Windows x64 ;=================================================
 
@@ -592,16 +609,20 @@ DECLARE_ARG 7, 8, 9, 10, 11, 12, 13, 14
         CAT_XDEFINE cglobaled_, %1, 1
     %endif
     %xdefine current_function %1
-    %ifidn __OUTPUT_FORMAT__,elf
-        global %1:function hidden
-    %elifidn __OUTPUT_FORMAT__,elf32
-        global %1:function hidden
-    %elifidn __OUTPUT_FORMAT__,elf64
-        global %1:function hidden
-    %elifidn __OUTPUT_FORMAT__,macho32
-        global %1:private_extern
-    %elifidn __OUTPUT_FORMAT__,macho64
-        global %1:private_extern
+    %ifdef CHROMIUM
+        %ifidn __OUTPUT_FORMAT__,elf
+            global %1:function hidden
+        %elifidn __OUTPUT_FORMAT__,elf32
+            global %1:function hidden
+        %elifidn __OUTPUT_FORMAT__,elf64
+            global %1:function hidden
+        %elifidn __OUTPUT_FORMAT__,macho32
+            global %1:private_extern
+        %elifidn __OUTPUT_FORMAT__,macho64
+            global %1:private_extern
+        %else
+            global %1
+        %endif
     %else
         global %1
     %endif

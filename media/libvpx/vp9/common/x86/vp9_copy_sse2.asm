@@ -133,10 +133,14 @@ INIT_MMX sse
   movh                    m3, [srcq+r5q]
   lea                   srcq, [srcq+src_strideq*4]
 %ifidn %1, avg
-  pavgb                   m0, [dstq]
-  pavgb                   m1, [dstq+dst_strideq]
-  pavgb                   m2, [dstq+dst_strideq*2]
-  pavgb                   m3, [dstq+r6q]
+  movh                    m4, [dstq]
+  movh                    m5, [dstq+dst_strideq]
+  movh                    m6, [dstq+dst_strideq*2]
+  movh                    m7, [dstq+r6q]
+  pavgb                   m0, m4
+  pavgb                   m1, m5
+  pavgb                   m2, m6
+  pavgb                   m3, m7
 %endif
   movh  [dstq              ], m0
   movh  [dstq+dst_strideq  ], m1

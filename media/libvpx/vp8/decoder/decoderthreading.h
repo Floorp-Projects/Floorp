@@ -8,8 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef DECODERTHREADING_H_
-#define DECODERTHREADING_H_
+#ifndef VP8_DECODER_DECODERTHREADING_H_
+#define VP8_DECODER_DECODERTHREADING_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if CONFIG_MULTITHREAD
 void vp8mt_decode_mb_rows(VP8D_COMP *pbi, MACROBLOCKD *xd);
@@ -19,4 +23,8 @@ void vp8mt_alloc_temp_buffers(VP8D_COMP *pbi, int width, int prev_mb_rows);
 void vp8mt_de_alloc_temp_buffers(VP8D_COMP *pbi, int mb_rows);
 #endif
 
-#endif  // DECODERTHREADING_H_
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
+#endif  // VP8_DECODER_DECODERTHREADING_H_
