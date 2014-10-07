@@ -829,6 +829,13 @@ var BrowserApp = {
       Services.prefs.setIntPref("plugin.default.state", Ci.nsIPluginTag.STATE_ENABLED);
       Services.prefs.clearUserPref("plugins.click_to_play");
     }
+
+    // Set the search activity default pref on app upgrade if it has not been set already.
+    if (this._startupStatus === "upgrade" &&
+        !Services.prefs.prefHasUserValue("searchActivity.default.migrated")) {
+      Services.prefs.setBoolPref("searchActivity.default.migrated", true);
+      SearchEngines.migrateSearchActivityDefaultPref();
+    }
   },
 
   shutdown: function shutdown() {
@@ -6907,6 +6914,10 @@ var SearchEngines = {
         dump("Unexpected message type observed: " + aTopic);
         break;
     }
+  },
+
+  migrateSearchActivityDefaultPref: function migrateSearchActivityDefaultPref() {
+    Services.search.init(() => this._setSearchActivityDefaultPref(Services.search.defaultEngine));
   },
 
   // Updates the search activity pref when the default engine changes.
