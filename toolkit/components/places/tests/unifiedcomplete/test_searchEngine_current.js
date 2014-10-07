@@ -31,5 +31,17 @@ add_task(function*() {
     matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "mozzarella cheese", searchQuery: "mozzarella cheese"}), title: "MozSearch" }, ]
   });
 
+  do_log_info("search engine, after current engine has changed");
+  Services.search.addEngineWithDetails("MozSearch2", "", "", "", "GET",
+                                       "http://s.example.com/search2");
+  engine = Services.search.getEngineByName("MozSearch2");
+  notEqual(Services.search.currentEngine, engine, "New engine shouldn't be the current engine yet");
+  Services.search.currentEngine = engine;
+  yield check_autocomplete({
+    search: "mozilla",
+    searchParam: "enable-actions",
+    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch2", input: "mozilla", searchQuery: "mozilla"}), title: "MozSearch2" }, ]
+  });
+
   yield cleanup();
 });
