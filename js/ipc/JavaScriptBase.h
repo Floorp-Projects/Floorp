@@ -38,42 +38,42 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     bool AnswerPreventExtensions(const uint64_t &objId, ReturnStatus *rs) {
         return Answer::AnswerPreventExtensions(ObjectId::deserialize(objId), rs);
     }
-    bool AnswerGetPropertyDescriptor(const uint64_t &objId, const nsString &id,
+    bool AnswerGetPropertyDescriptor(const uint64_t &objId, const JSIDVariant &id,
                                      ReturnStatus *rs,
                                      PPropertyDescriptor *out) {
         return Answer::AnswerGetPropertyDescriptor(ObjectId::deserialize(objId), id, rs, out);
     }
     bool AnswerGetOwnPropertyDescriptor(const uint64_t &objId,
-                                        const nsString &id,
+                                        const JSIDVariant &id,
                                         ReturnStatus *rs,
                                         PPropertyDescriptor *out) {
         return Answer::AnswerGetOwnPropertyDescriptor(ObjectId::deserialize(objId), id, rs, out);
     }
-    bool AnswerDefineProperty(const uint64_t &objId, const nsString &id,
+    bool AnswerDefineProperty(const uint64_t &objId, const JSIDVariant &id,
                               const PPropertyDescriptor &flags,
                               ReturnStatus *rs) {
         return Answer::AnswerDefineProperty(ObjectId::deserialize(objId), id, flags, rs);
     }
-    bool AnswerDelete(const uint64_t &objId, const nsString &id,
+    bool AnswerDelete(const uint64_t &objId, const JSIDVariant &id,
                       ReturnStatus *rs, bool *success) {
         return Answer::AnswerDelete(ObjectId::deserialize(objId), id, rs, success);
     }
 
-    bool AnswerHas(const uint64_t &objId, const nsString &id,
+    bool AnswerHas(const uint64_t &objId, const JSIDVariant &id,
                    ReturnStatus *rs, bool *bp) {
         return Answer::AnswerHas(ObjectId::deserialize(objId), id, rs, bp);
     }
-    bool AnswerHasOwn(const uint64_t &objId, const nsString &id,
+    bool AnswerHasOwn(const uint64_t &objId, const JSIDVariant &id,
                       ReturnStatus *rs, bool *bp) {
         return Answer::AnswerHasOwn(ObjectId::deserialize(objId), id, rs, bp);
     }
     bool AnswerGet(const uint64_t &objId, const ObjectVariant &receiverVar,
-                   const nsString &id,
+                   const JSIDVariant &id,
                    ReturnStatus *rs, JSVariant *result) {
         return Answer::AnswerGet(ObjectId::deserialize(objId), receiverVar, id, rs, result);
     }
     bool AnswerSet(const uint64_t &objId, const ObjectVariant &receiverVar,
-                   const nsString &id, const bool &strict,
+                   const JSIDVariant &id, const bool &strict,
                    const JSVariant &value, ReturnStatus *rs, JSVariant *result) {
         return Answer::AnswerSet(ObjectId::deserialize(objId), receiverVar, id, strict, value, rs, result);
     }
@@ -134,42 +134,42 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     bool CallPreventExtensions(const ObjectId &objId, ReturnStatus *rs) {
         return Base::CallPreventExtensions(objId.serialize(), rs);
     }
-    bool CallGetPropertyDescriptor(const ObjectId &objId, const nsString &id,
+    bool CallGetPropertyDescriptor(const ObjectId &objId, const JSIDVariant &id,
                                      ReturnStatus *rs,
                                      PPropertyDescriptor *out) {
         return Base::CallGetPropertyDescriptor(objId.serialize(), id, rs, out);
     }
     bool CallGetOwnPropertyDescriptor(const ObjectId &objId,
-                                      const nsString &id,
+                                      const JSIDVariant &id,
                                       ReturnStatus *rs,
                                       PPropertyDescriptor *out) {
         return Base::CallGetOwnPropertyDescriptor(objId.serialize(), id, rs, out);
     }
-    bool CallDefineProperty(const ObjectId &objId, const nsString &id,
+    bool CallDefineProperty(const ObjectId &objId, const JSIDVariant &id,
                             const PPropertyDescriptor &flags,
                               ReturnStatus *rs) {
         return Base::CallDefineProperty(objId.serialize(), id, flags, rs);
     }
-    bool CallDelete(const ObjectId &objId, const nsString &id,
+    bool CallDelete(const ObjectId &objId, const JSIDVariant &id,
                     ReturnStatus *rs, bool *success) {
         return Base::CallDelete(objId.serialize(), id, rs, success);
     }
 
-    bool CallHas(const ObjectId &objId, const nsString &id,
+    bool CallHas(const ObjectId &objId, const JSIDVariant &id,
                    ReturnStatus *rs, bool *bp) {
         return Base::CallHas(objId.serialize(), id, rs, bp);
     }
-    bool CallHasOwn(const ObjectId &objId, const nsString &id,
+    bool CallHasOwn(const ObjectId &objId, const JSIDVariant &id,
                     ReturnStatus *rs, bool *bp) {
         return Base::CallHasOwn(objId.serialize(), id, rs, bp);
     }
     bool CallGet(const ObjectId &objId, const ObjectVariant &receiverVar,
-                 const nsString &id,
+                 const JSIDVariant &id,
                  ReturnStatus *rs, JSVariant *result) {
         return Base::CallGet(objId.serialize(), receiverVar, id, rs, result);
     }
     bool CallSet(const ObjectId &objId, const ObjectVariant &receiverVar,
-                 const nsString &id, const bool &strict,
+                 const JSIDVariant &id, const bool &strict,
                  const JSVariant &value, ReturnStatus *rs, JSVariant *result) {
         return Base::CallSet(objId.serialize(), receiverVar, id, strict, value, rs, result);
     }

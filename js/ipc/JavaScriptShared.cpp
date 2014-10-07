@@ -348,7 +348,42 @@ JavaScriptShared::fromVariant(JSContext *cx, const JSVariant &from, MutableHandl
         }
 
         default:
+          MOZ_CRASH("NYI");
           return false;
+    }
+}
+
+bool
+JavaScriptShared::toJSIDVariant(JSContext *cx, HandleId from, JSIDVariant *to)
+{
+    if (JSID_IS_STRING(from)) {
+        nsAutoJSString autoStr;
+        if (!autoStr.init(cx, JSID_TO_STRING(from)))
+            return false;
+        *to = autoStr;
+        return true;
+    }
+    if (JSID_IS_INT(from)) {
+        *to = JSID_TO_INT(from);
+        return true;
+    }
+    MOZ_CRASH("NYI");
+    return false;
+}
+
+bool
+JavaScriptShared::fromJSIDVariant(JSContext *cx, const JSIDVariant &from, MutableHandleId to)
+{
+    switch (from.type()) {
+      case JSIDVariant::TnsString:
+        return convertGeckoStringToId(cx, from.get_nsString(), to);
+
+      case JSIDVariant::Tint32_t:
+        to.set(INT_TO_JSID(from.get_int32_t()));
+        return true;
+
+      default:
+        return false;
     }
 }
 
