@@ -7773,6 +7773,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     JS_STATIC_ASSERT(MaybeSavedGlobalReg > 0);
     unsigned savedGlobalOffset = framePushed - MaybeSavedGlobalReg;
+    masm.storePtr(GlobalReg, Address(StackPointer, savedGlobalOffset));
 #else
     JS_STATIC_ASSERT(MaybeSavedGlobalReg == 0);
 #endif
