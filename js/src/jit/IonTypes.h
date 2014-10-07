@@ -284,11 +284,6 @@ class SimdConstant {
         cst.fillInt32x4(array[0], array[1], array[2], array[3]);
         return cst;
     }
-    static SimdConstant SplatX4(int32_t v) {
-        SimdConstant cst;
-        cst.fillInt32x4(v, v, v, v);
-        return cst;
-    }
     static SimdConstant CreateX4(float x, float y, float z, float w) {
         SimdConstant cst;
         cst.fillFloat32x4(x, y, z, w);
@@ -297,11 +292,6 @@ class SimdConstant {
     static SimdConstant CreateX4(float *array) {
         SimdConstant cst;
         cst.fillFloat32x4(array[0], array[1], array[2], array[3]);
-        return cst;
-    }
-    static SimdConstant SplatX4(float v) {
-        SimdConstant cst;
-        cst.fillFloat32x4(v, v, v, v);
         return cst;
     }
 
