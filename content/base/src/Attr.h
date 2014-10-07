@@ -82,7 +82,7 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // WebIDL
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
   // XPCOM GetName() is OK
   // XPCOM GetValue() is OK

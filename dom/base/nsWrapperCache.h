@@ -150,11 +150,7 @@ public:
    * Wrap the object corresponding to this wrapper cache. If non-null is
    * returned, the object has already been stored in the wrapper cache.
    */
-  virtual JSObject* WrapObject(JSContext* cx)
-  {
-    MOZ_ASSERT(!IsDOMBinding(), "Someone forgot to override WrapObject");
-    return nullptr;
-  }
+  virtual JSObject* WrapObject(JSContext* cx) = 0;
 
   /**
    * Returns true if the object has a non-gray wrapper.

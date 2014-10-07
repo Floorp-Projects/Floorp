@@ -49,6 +49,11 @@ public:
         ClearWrapper();
     }
 
+    virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE
+    {
+        MOZ_CRASH("SandboxPrivate doesn't use DOM bindings!");
+    }
+
 private:
     virtual ~SandboxPrivate() { }
 
