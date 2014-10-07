@@ -115,6 +115,21 @@ function xray_test()
   sendSyncMessage("cpows:xray_test", {}, {element: element});
 }
 
+function symbol_test()
+{
+  let iterator = Symbol.iterator;
+  let named = Symbol.for("cpow-test");
+  // let unique = Symbol();
+
+  let object = {
+    [iterator]: iterator,
+    [named]: named,
+    // [unique]: unique,
+    // "unique": unique
+  };
+  sendSyncMessage("cpows:symbol_test", {}, object);
+}
+
 // Parent->Child references should go X->parent.privilegedJunkScope->child.privilegedJunkScope->Y
 // Child->Parent references should go X->child.privilegedJunkScope->parent.unprivilegedJunkScope->Y
 function compartment_test()
