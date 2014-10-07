@@ -1066,11 +1066,11 @@ static bool
 CacheEntry_setBytecode(JSContext *cx, HandleObject cache, uint8_t *buffer, uint32_t length)
 {
     MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
+
     ArrayBufferObject::BufferContents contents =
         ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN_BUFFER>(buffer);
     Rooted<ArrayBufferObject*> arrayBuffer(cx, ArrayBufferObject::create(cx, length, contents));
-
-    if (!arrayBuffer || !ArrayBufferObject::ensureNonInline(cx, arrayBuffer))
+    if (!arrayBuffer)
         return false;
 
     SetReservedSlot(cache, CacheEntry_BYTECODE, OBJECT_TO_JSVAL(arrayBuffer));

@@ -139,7 +139,7 @@ private:
 
 template<typename T,
          JSObject* UnwrapArray(JSObject*),
-         T* GetData(JSObject*),
+         T* GetData(JSObject*, const JS::AutoCheckCannotGC&),
          void GetLengthAndData(JSObject*, uint32_t*, T**),
          JSObject* CreateNew(JSContext*, uint32_t)>
 struct TypedArray : public TypedArray_base<T, UnwrapArray, GetLengthAndData> {
@@ -181,7 +181,8 @@ private:
       return nullptr;
     }
     if (data) {
-      T* buf = static_cast<T*>(GetData(obj));
+      JS::AutoCheckCannotGC nogc;
+      T* buf = static_cast<T*>(GetData(obj, nogc));
       memcpy(buf, data, length*sizeof(T));
     }
     return obj;

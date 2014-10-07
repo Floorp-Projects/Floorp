@@ -5,6 +5,7 @@
 #include <algorithm>
 #include "TCPSocketChild.h"
 #include "mozilla/unused.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/TabChild.h"
@@ -27,14 +28,17 @@ DeserializeArrayBuffer(JS::Handle<JSObject*> aObj,
   mozilla::AutoSafeJSContext cx;
   JSAutoCompartment ac(cx, aObj);
 
-  JS::Rooted<JSObject*> obj(cx, JS_NewArrayBuffer(cx, aBuffer.Length()));
-  if (!obj)
-    return false;
-  uint8_t* data = JS_GetArrayBufferData(obj);
+  mozilla::UniquePtr<uint8_t[], JS::FreePolicy> data(js_pod_malloc<uint8_t>(aBuffer.Length()));
   if (!data)
-    return false;
-  memcpy(data, aBuffer.Elements(), aBuffer.Length());
-  aVal.set(OBJECT_TO_JSVAL(obj));
+      return false;
+  memcpy(data.get(), aBuffer.Elements(), aBuffer.Length());
+
+  JSObject* obj = JS_NewArrayBufferWithContents(cx, aBuffer.Length(), data.get());
+  if (!obj)
+      return false;
+  data.release();
+
+  aVal.setObject(*obj);
   return true;
 }
 
@@ -224,13 +228,16 @@ TCPSocketChild::SendSend(JS::Handle<JS::Value> aData,
     uint32_t buflen = JS_GetArrayBufferByteLength(obj);
     aByteOffset = std::min(buflen, aByteOffset);
     uint32_t nbytes = std::min(buflen - aByteOffset, aByteLength);
-    uint8_t* data = JS_GetArrayBufferData(obj);
-    if (!data) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     FallibleTArray<uint8_t> fallibleArr;
-    if (!fallibleArr.InsertElementsAt(0, data + aByteOffset, nbytes)) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    {
+        JS::AutoCheckCannotGC nogc;
+        uint8_t* data = JS_GetArrayBufferData(obj, nogc);
+        if (!data) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        if (!fallibleArr.InsertElementsAt(0, data + aByteOffset, nbytes)) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
     }
     InfallibleTArray<uint8_t> arr;
     arr.SwapElements(fallibleArr);

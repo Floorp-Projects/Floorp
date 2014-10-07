@@ -343,7 +343,8 @@ FMRadio::GetRdsgroup(JSContext* cx, JS::MutableHandle<JSObject*> retval)
   }
 
   JSObject *rdsgroup = Uint16Array::Create(cx, this, 4);
-  uint16_t *data = JS_GetUint16ArrayData(rdsgroup);
+  JS::AutoCheckCannotGC nogc;
+  uint16_t *data = JS_GetUint16ArrayData(rdsgroup, nogc);
   data[3] = group & 0xFFFF;
   group >>= 16;
   data[2] = group & 0xFFFF;
