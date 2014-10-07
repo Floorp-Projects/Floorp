@@ -192,6 +192,10 @@ class Logging
 
     void format(const Identifier &id, nsCString &out) {
         switch (id.variant.type()) {
+          case JSIDVariant::TSymbolVariant: {
+              out = "<Symbol>";
+              break;
+          }
           case JSIDVariant::TnsString: {
               nsAutoCString tmp;
               format(id.variant.get_nsString(), tmp);

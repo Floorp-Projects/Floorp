@@ -43,6 +43,22 @@ union ObjectVariant
     RemoteObject;
 };
 
+struct WellKnownSymbol
+{
+    uint32_t which;
+};
+
+struct RegisteredSymbol
+{
+    nsString key;
+};
+
+union SymbolVariant
+{
+    WellKnownSymbol;
+    RegisteredSymbol;
+};
+
 struct UndefinedVariant {};
 struct NullVariant {};
 
@@ -59,6 +75,7 @@ union JSVariant
 
 union JSIDVariant
 {
+    SymbolVariant;
     nsString;
     int32_t;
 };

@@ -367,7 +367,14 @@ JavaScriptShared::toJSIDVariant(JSContext *cx, HandleId from, JSIDVariant *to)
         *to = JSID_TO_INT(from);
         return true;
     }
-    MOZ_CRASH("NYI");
+    if (JSID_IS_SYMBOL(from)) {
+        SymbolVariant symVar;
+        if (!toSymbolVariant(cx, JSID_TO_SYMBOL(from), &symVar))
+            return false;
+        *to = symVar;
+        return true;
+    }
+    MOZ_ASSERT(false);
     return false;
 }
 
@@ -375,6 +382,14 @@ bool
 JavaScriptShared::fromJSIDVariant(JSContext *cx, const JSIDVariant &from, MutableHandleId to)
 {
     switch (from.type()) {
+      case JSIDVariant::TSymbolVariant: {
+        Symbol *sym = fromSymbolVariant(cx, from.get_SymbolVariant());
+        if (!sym)
+            return false;
+        to.set(SYMBOL_TO_JSID(sym));
+        return true;
+      }
+
       case JSIDVariant::TnsString:
         return convertGeckoStringToId(cx, from.get_nsString(), to);
 
@@ -384,6 +399,53 @@ JavaScriptShared::fromJSIDVariant(JSContext *cx, const JSIDVariant &from, Mutabl
 
       default:
         return false;
+    }
+}
+
+bool
+JavaScriptShared::toSymbolVariant(JSContext *cx, JS::Symbol *symArg, SymbolVariant *symVarp)
+{
+    RootedSymbol sym(cx, symArg);
+    MOZ_ASSERT(sym);
+
+    SymbolCode code = GetSymbolCode(sym);
+    if (static_cast<uint32_t>(code) < WellKnownSymbolLimit) {
+        *symVarp = WellKnownSymbol(static_cast<uint32_t>(code));
+        return true;
+    }
+    if (code == SymbolCode::InSymbolRegistry) {
+        nsAutoJSString autoStr;
+        if (!autoStr.init(cx, GetSymbolDescription(sym)))
+            return false;
+        *symVarp = RegisteredSymbol(autoStr);
+        return true;
+    }
+    MOZ_CRASH("unique symbols not yet implemented");
+    return false;
+}
+
+JS::Symbol *
+JavaScriptShared::fromSymbolVariant(JSContext *cx, SymbolVariant symVar)
+{
+    switch (symVar.type()) {
+      case SymbolVariant::TWellKnownSymbol: {
+        uint32_t which = symVar.get_WellKnownSymbol().which();
+        if (which < WellKnownSymbolLimit)
+            return GetWellKnownSymbol(cx, static_cast<SymbolCode>(which));
+        MOZ_ASSERT(false, "bad child data");
+        return nullptr;
+      }
+
+      case SymbolVariant::TRegisteredSymbol: {
+        nsString key = symVar.get_RegisteredSymbol().key();
+        RootedString str(cx, JS_NewUCStringCopyN(cx, key.get(), key.Length()));
+        if (!str)
+            return nullptr;
+        return GetSymbolFor(cx, str);
+      }
+
+      default:
+        return nullptr;
     }
 }
 
