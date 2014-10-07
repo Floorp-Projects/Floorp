@@ -30,6 +30,7 @@
 #include "nsView.h"
 #include "nsDOMTokenList.h"
 #include "nsCaret.h"
+#include "mozilla/dom/CustomEvent.h"
 
 using namespace mozilla;
 
@@ -58,7 +59,8 @@ TouchCaret::TouchCaret(nsIPresShell* aPresShell)
   : mState(TOUCHCARET_NONE),
     mActiveTouchId(-1),
     mCaretCenterToDownPointOffsetY(0),
-    mVisible(false)
+    mVisible(false),
+    mIsValidTap(false)
 {
   TOUCHCARET_LOG("Constructor, PresShell=%p", aPresShell);
   MOZ_ASSERT(NS_IsMainThread());
@@ -601,6 +603,7 @@ TouchCaret::HandleMouseMoveEvent(WidgetMouseEvent* aEvent)
         movePoint = contentBoundary.ClampPoint(movePoint);
 
         MoveCaret(movePoint);
+        mIsValidTap = false;
         status = nsEventStatus_eConsumeNoDefault;
       }
       break;
@@ -638,6 +641,7 @@ TouchCaret::HandleTouchMoveEvent(WidgetTouchEvent* aEvent)
         movePoint = contentBoundary.ClampPoint(movePoint);
 
         MoveCaret(movePoint);
+        mIsValidTap = false;
         status = nsEventStatus_eConsumeNoDefault;
       }
       break;
@@ -849,6 +853,35 @@ TouchCaret::HandleTouchDownEvent(WidgetTouchEvent* aEvent)
 }
 
 void
+TouchCaret::DispatchTapEvent()
+{
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (!presShell) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> doc = presShell->GetDocument();
+  if (!doc) {
+    return;
+  }
+
+  ErrorResult res;
+  nsRefPtr<Event> domEvent =
+    doc->CreateEvent(NS_LITERAL_STRING("CustomEvent"), res);
+  if (res.Failed()) {
+    return;
+  }
+
+  CustomEvent* customEvent = static_cast<CustomEvent*>(domEvent.get());
+  customEvent->InitCustomEvent(NS_LITERAL_STRING("touchcarettap"),
+                               true, false, nullptr);
+  customEvent->SetTrusted(true);
+  customEvent->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+  bool ret;
+  doc->DispatchEvent(domEvent, &ret);
+}
+
+void
 TouchCaret::SetState(TouchCaretState aState)
 {
   TOUCHCARET_LOG("state changed from %d to %d", mState, aState);
@@ -879,5 +912,12 @@ TouchCaret::SetState(TouchCaretState aState)
   if (mState == TOUCHCARET_NONE) {
     mActiveTouchId = -1;
     mCaretCenterToDownPointOffsetY = 0;
+    if (mIsValidTap) {
+      DispatchTapEvent();
+      mIsValidTap = false;
+    }
+  } else if (mState == TOUCHCARET_TOUCHDRAG_ACTIVE ||
+             mState == TOUCHCARET_MOUSEDRAG_ACTIVE) {
+    mIsValidTap = true;
   }
 }
