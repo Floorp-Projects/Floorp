@@ -15,6 +15,7 @@
 #include "nsILoadContext.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "OfflineObserver.h"
 
 class nsIAuthPromptProvider;
 
@@ -23,10 +24,10 @@ namespace net {
 
 class WebSocketChannelParent : public PWebSocketParent,
                                public nsIWebSocketListener,
+                               public DisconnectableParent,
                                public nsIInterfaceRequestor
 {
-  ~WebSocketChannelParent() {}
-
+  ~WebSocketChannelParent();
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWEBSOCKETLISTENER
@@ -53,6 +54,10 @@ class WebSocketChannelParent : public PWebSocketParent,
   bool RecvDeleteSelf() MOZ_OVERRIDE;
 
   void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+
+  void OfflineDisconnect() MOZ_OVERRIDE;
+  uint32_t GetAppId() MOZ_OVERRIDE;
+  nsRefPtr<OfflineObserver> mObserver;
 
   nsCOMPtr<nsIAuthPromptProvider> mAuthProvider;
   nsCOMPtr<nsIWebSocketChannel> mChannel;

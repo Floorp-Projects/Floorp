@@ -795,18 +795,16 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
   RenderTraceScope trace("BasicLayerManager::PaintLayer", "707070");
 
   const nsIntRect* clipRect = aLayer->GetEffectiveClipRect();
-  // aLayer might not be a container layer, but if so we take care not to use
-  // the container variable
-  BasicContainerLayer* container = static_cast<BasicContainerLayer*>(aLayer);
-  bool needsGroup = aLayer->GetFirstChild() &&
-                    container->UseIntermediateSurface();
+  BasicContainerLayer* container =
+    static_cast<BasicContainerLayer*>(aLayer->AsContainerLayer());
+  bool needsGroup = container && container->UseIntermediateSurface();
   BasicImplData* data = ToData(aLayer);
   bool needsClipToVisibleRegion =
     data->GetClipToVisibleRegion() && !aLayer->AsPaintedLayer();
-  NS_ASSERTION(needsGroup || !aLayer->GetFirstChild() ||
+  NS_ASSERTION(needsGroup || !container ||
                container->GetOperator() == CompositionOp::OP_OVER,
                "non-OVER operator should have forced UseIntermediateSurface");
-  NS_ASSERTION(!aLayer->GetFirstChild() || !aLayer->GetMaskLayer() ||
+  NS_ASSERTION(!container || !aLayer->GetMaskLayer() ||
                container->UseIntermediateSurface(),
                "ContainerLayer with mask layer should force UseIntermediateSurface");
 
@@ -814,7 +812,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
   gfxMatrix transform;
   // Will return an identity matrix for 3d transforms, and is handled separately below.
   bool is2D = paintLayerContext.Setup2DTransform();
-  NS_ABORT_IF_FALSE(is2D || needsGroup || !aLayer->GetFirstChild(), "Must PushGroup for 3d transforms!");
+  NS_ABORT_IF_FALSE(is2D || needsGroup || !container, "Must PushGroup for 3d transforms!");
 
   bool needsSaveRestore =
     needsGroup || clipRect || needsClipToVisibleRegion || !is2D;

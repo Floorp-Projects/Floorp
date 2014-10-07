@@ -50,7 +50,6 @@ public:
     , mCORSUsed(CORSUsed)
     , mRepeat(aRepeat)
   {
-    SetIsDOMBinding();
   }
 
   JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE

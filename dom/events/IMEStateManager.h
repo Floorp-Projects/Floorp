@@ -92,24 +92,25 @@ public:
                               nsIContent* aContent);
 
   /**
-   * All DOM composition events and DOM text events must be dispatched via
-   * DispatchCompositionEvent() for storing the composition target
-   * and ensuring a set of composition events must be fired the stored target.
-   * If the stored composition event target is destroying, this removes the
-   * stored composition automatically.
+   * All composition events must be dispatched via DispatchCompositionEvent()
+   * for storing the composition target and ensuring a set of composition
+   * events must be fired the stored target.  If the stored composition event
+   * target is destroying, this removes the stored composition automatically.
    */
-  static void DispatchCompositionEvent(nsINode* aEventTargetNode,
-                                       nsPresContext* aPresContext,
-                                       WidgetEvent* aEvent,
-                                       nsEventStatus* aStatus,
-                                       EventDispatchingCallback* aCallBack,
-                                       bool aIsSynthesized = false);
+  static void DispatchCompositionEvent(
+                nsINode* aEventTargetNode,
+                nsPresContext* aPresContext,
+                WidgetCompositionEvent* aCompositionEvent,
+                nsEventStatus* aStatus,
+                EventDispatchingCallback* aCallBack,
+                bool aIsSynthesized = false);
 
   /**
-   * This is called when PresShell ignores composition event or text event due
-   * to not safe to dispatch events.
+   * This is called when PresShell ignores a composition event due to not safe
+   * to dispatch events.
    */
-  static void OnCompositionEventDiscarded(WidgetEvent* aEvent);
+  static void OnCompositionEventDiscarded(
+                const WidgetCompositionEvent* aCompositionEvent);
 
   /**
    * Get TextComposition from widget.
@@ -120,11 +121,10 @@ public:
   /**
    * Returns TextComposition instance for the event.
    *
-   * @param aEvent      Should be a composition event or a text event which is
-   *                    being dispatched.
+   * @param aGUIEvent Should be a composition event which is being dispatched.
    */
   static already_AddRefed<TextComposition>
-    GetTextCompositionFor(WidgetGUIEvent* aEvent);
+    GetTextCompositionFor(WidgetGUIEvent* aGUIEvent);
 
   /**
    * Send a notification to IME.  It depends on the IME or platform spec what

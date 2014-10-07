@@ -34,7 +34,6 @@ WebGLFramebuffer::WebGLFramebuffer(WebGLContext* context)
     , mStencilAttachment(LOCAL_GL_STENCIL_ATTACHMENT)
     , mDepthStencilAttachment(LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
 {
-    SetIsDOMBinding();
     mContext->MakeContextCurrent();
     mContext->gl->fGenFramebuffers(1, &mGLName);
     mContext->mFramebuffers.insertBack(this);

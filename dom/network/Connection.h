@@ -32,9 +32,8 @@ public:
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
-  Connection();
+  Connection(nsPIDOMWindow *aWindow);
 
-  void Init(nsPIDOMWindow *aWindow);
   void Shutdown();
 
   // For IObserver

@@ -22,7 +22,6 @@ class SVGAnimatedBoolean MOZ_FINAL : public nsWrapperCache
   SVGAnimatedBoolean(nsSVGBoolean* aVal, nsSVGElement *aSVGElement)
     : mVal(aVal), mSVGElement(aSVGElement)
   {
-    SetIsDOMBinding();
   }
 
   // WebIDL

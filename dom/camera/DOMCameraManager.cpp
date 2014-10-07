@@ -61,7 +61,6 @@ nsDOMCameraManager::nsDOMCameraManager(nsPIDOMWindow* aWindow)
   /* member initializers and constructor code */
   DOM_CAMERA_LOGT("%s:%d : this=%p, windowId=%llx\n", __func__, __LINE__, this, mWindowId);
   MOZ_COUNT_CTOR(nsDOMCameraManager);
-  SetIsDOMBinding();
 }
 
 nsDOMCameraManager::~nsDOMCameraManager()
