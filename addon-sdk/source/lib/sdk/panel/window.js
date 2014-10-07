@@ -35,10 +35,14 @@ function getWindow(anchor) {
       }
 
       // Check if the anchor is in a browser tab in this browser window.
-      let browser = enumWindow.gBrowser.getBrowserForDocument(anchorDocument);
-      if (browser) {
-        window = enumWindow;
-        break;
+      try {
+        let browser = enumWindow.gBrowser.getBrowserForDocument(anchorDocument);
+        if (browser) {
+          window = enumWindow;
+          break;
+        }
+      }
+      catch (e) {
       }
 
       // Look in other subdocuments (sidebar, etc.)?
