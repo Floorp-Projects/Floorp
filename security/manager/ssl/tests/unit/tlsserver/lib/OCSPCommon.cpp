@@ -199,7 +199,7 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
   }
 
   ByteString response(CreateEncodedOCSPResponse(context));
-  if (ENCODING_FAILED(response)) {
+  if (response == ENCODING_FAILED) {
     PrintPRError("CreateEncodedOCSPResponse failed");
     return nullptr;
   }
