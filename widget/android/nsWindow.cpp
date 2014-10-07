@@ -685,7 +685,7 @@ nsWindow::DispatchEvent(WidgetGUIEvent* aEvent)
             break;
         case NS_TEXT_TEXT:
             MOZ_ASSERT(mIMEComposing);
-            mIMEComposingText = aEvent->AsTextEvent()->theText;
+            mIMEComposingText = aEvent->AsTextEvent()->mData;
             break;
         }
         return status;
@@ -1709,7 +1709,7 @@ nsWindow::RemoveIMEComposition()
 
     WidgetTextEvent textEvent(true, NS_TEXT_TEXT, this);
     InitEvent(textEvent, nullptr);
-    textEvent.theText = mIMEComposingText;
+    textEvent.mData = mIMEComposingText;
     DispatchEvent(&textEvent);
 
     WidgetCompositionEvent event(true, NS_COMPOSITION_END, this);
@@ -1847,14 +1847,14 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             {
                 WidgetTextEvent event(true, NS_TEXT_TEXT, this);
                 InitEvent(event, nullptr);
-                event.theText = ae->Characters();
+                event.mData = ae->Characters();
 
                 if (ae->Action() == AndroidGeckoEvent::IME_COMPOSE_TEXT) {
                     // Because we're leaving the composition open, we need to
                     // include proper text ranges to make the editor happy.
                     TextRange range;
                     range.mStartOffset = 0;
-                    range.mEndOffset = event.theText.Length();
+                    range.mEndOffset = event.mData.Length();
                     range.mRangeType = NS_TEXTRANGE_RAWINPUT;
                     event.mRanges = new TextRangeArray();
                     event.mRanges->AppendElement(range);
@@ -1986,7 +1986,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                     InitEvent(queryEvent, nullptr);
                     DispatchEvent(&queryEvent);
                     MOZ_ASSERT(queryEvent.mSucceeded && !queryEvent.mWasAsync);
-                    event.theText = queryEvent.mReply.mString;
+                    event.mData = queryEvent.mReply.mString;
 
                     mIMEComposingStart = queryEvent.mReply.mOffset;
                 }
@@ -2001,14 +2001,14 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             } else {
                 // If the new composition matches the existing composition,
                 // reuse the old composition.
-                event.theText = mIMEComposingText;
+                event.mData = mIMEComposingText;
             }
 
 #ifdef DEBUG_ANDROID_IME
-            const NS_ConvertUTF16toUTF8 theText8(event.theText);
-            const char* text = theText8.get();
+            const NS_ConvertUTF16toUTF8 data(event.mData);
+            const char* text = data.get();
             ALOGIME("IME: IME_SET_TEXT: text=\"%s\", length=%u, range=%u",
-                    text, event.theText.Length(), event.mRanges->Length());
+                    text, event.mData.Length(), event.mRanges->Length());
 #endif // DEBUG_ANDROID_IME
 
             DispatchEvent(&event);

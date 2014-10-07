@@ -1652,11 +1652,11 @@ nsTextStore::FlushPendingActions()
                 "dispatching text event...", this));
         WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
         mWidget->InitEvent(textEvent);
-        textEvent.theText = action.mData;
+        textEvent.mData = action.mData;
         if (action.mRanges->IsEmpty()) {
           TextRange wholeRange;
           wholeRange.mStartOffset = 0;
-          wholeRange.mEndOffset = textEvent.theText.Length();
+          wholeRange.mEndOffset = textEvent.mData.Length();
           wholeRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
           action.mRanges->AppendElement(wholeRange);
         }
@@ -1679,7 +1679,7 @@ nsTextStore::FlushPendingActions()
                 "dispatching text event...", this));
         WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
         mWidget->InitEvent(textEvent);
-        textEvent.theText = action.mData;
+        textEvent.mData = action.mData;
         mWidget->DispatchWindowEvent(&textEvent);
         if (!mWidget || mWidget->Destroyed()) {
           break;
@@ -1690,7 +1690,7 @@ nsTextStore::FlushPendingActions()
                 "dispatching compositionend event...", this));
         WidgetCompositionEvent compositionEnd(true, NS_COMPOSITION_END,
                                               mWidget);
-        compositionEnd.data = textEvent.theText;
+        compositionEnd.data = textEvent.mData;
         mWidget->InitEvent(compositionEnd);
         mWidget->DispatchWindowEvent(&compositionEnd);
         if (!mWidget || mWidget->Destroyed()) {

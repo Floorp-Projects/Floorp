@@ -3050,7 +3050,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
             textString[0] = H_SURROGATE(event.charCode);
             textString[1] = L_SURROGATE(event.charCode);
             textString[2] = 0;
-            textEvent.theText = textString;
+            textEvent.mData = textString;
             textEvent.time = event.time;
             DispatchEvent(&textEvent, status);
         }
