@@ -130,8 +130,8 @@ CheckOCSPResponseSignerCert(TrustDomain& trustDomain,
   }
 
   // TODO(bug 926260): check name constraints
-  rv = trustDomain.VerifySignedData(potentialSigner.GetSignedData(),
-                                    issuerSubjectPublicKeyInfo);
+  rv = WrappedVerifySignedData(trustDomain, potentialSigner.GetSignedData(),
+                               issuerSubjectPublicKeyInfo);
 
   // TODO: check for revocation of the OCSP responder certificate unless no-check
   // or the caller forcing no-check. To properly support the no-check policy, we'd
@@ -207,7 +207,7 @@ VerifyOCSPSignedData(TrustDomain& trustDomain,
                      const SignedDataWithSignature& signedResponseData,
                      Input spki)
 {
-  Result rv = trustDomain.VerifySignedData(signedResponseData, spki);
+  Result rv = WrappedVerifySignedData(trustDomain, signedResponseData, spki);
   if (rv == Result::ERROR_BAD_SIGNATURE) {
     rv = Result::ERROR_OCSP_BAD_SIGNATURE;
   }
