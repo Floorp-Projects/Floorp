@@ -397,7 +397,6 @@
             var menuitem = document.createElementNS(kXULNS, "menuitem");
             var name = engines[i].name;
             menuitem.setAttribute("label", name);
-            menuitem.setAttribute("id", name);
             menuitem.setAttribute("class", "menuitem-iconic searchbar-engine-menuitem menuitem-with-favicon");
             // Since this menu is rebuilt by the observer method whenever a new
             // engine is selected, the "selected" attribute does not need to be
