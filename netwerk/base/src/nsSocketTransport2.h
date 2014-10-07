@@ -305,6 +305,8 @@ private:
     mozilla::net::NetAddr   mNetAddr;
     bool                    mNetAddrIsSet;
 
+    nsAutoPtr<mozilla::net::NetAddr> mBindAddr;
+
     // socket methods (these can only be called on the socket thread):
 
     void     SendStatus(nsresult status);
