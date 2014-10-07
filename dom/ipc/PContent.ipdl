@@ -71,6 +71,7 @@ union ChromeRegistryItem
 {
     ChromePackage;
     OverrideMapping;
+    ResourceMapping;
 };
 
 namespace mozilla {
