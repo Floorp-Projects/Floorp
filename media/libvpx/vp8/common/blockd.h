@@ -9,8 +9,8 @@
  */
 
 
-#ifndef __INC_BLOCKD_H
-#define __INC_BLOCKD_H
+#ifndef VP8_COMMON_BLOCKD_H_
+#define VP8_COMMON_BLOCKD_H_
 
 void vpx_log(const char *format, ...);
 
@@ -19,6 +19,10 @@ void vpx_log(const char *format, ...);
 #include "mv.h"
 #include "treecoder.h"
 #include "vpx_ports/mem.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*#define DCPRED 1*/
 #define DCPREDSIMTHRESH 0
@@ -297,4 +301,8 @@ typedef struct macroblockd
 extern void vp8_build_block_doffsets(MACROBLOCKD *x);
 extern void vp8_setup_block_dptrs(MACROBLOCKD *x);
 
-#endif  /* __INC_BLOCKD_H */
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
+#endif  // VP8_COMMON_BLOCKD_H_

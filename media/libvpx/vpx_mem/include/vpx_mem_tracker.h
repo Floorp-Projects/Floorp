@@ -9,8 +9,8 @@
  */
 
 
-#ifndef __VPX_MEM_TRACKER_H__
-#define __VPX_MEM_TRACKER_H__
+#ifndef VPX_MEM_INCLUDE_VPX_MEM_TRACKER_H_
+#define VPX_MEM_INCLUDE_VPX_MEM_TRACKER_H_
 
 /* vpx_mem_tracker version info */
 #define vpx_mem_tracker_version "2.5.1.1"
@@ -176,4 +176,4 @@ extern "C" {
 }
 #endif
 
-#endif // __VPX_MEM_TRACKER_H__
+#endif  // VPX_MEM_INCLUDE_VPX_MEM_TRACKER_H_

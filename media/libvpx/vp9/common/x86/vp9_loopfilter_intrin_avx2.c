@@ -933,7 +933,7 @@ static void mb_lpf_horizontal_edge_w_avx2_16(unsigned char *s, int p,
     }
 }
 
-void vp9_mb_lpf_horizontal_edge_w_avx2(unsigned char *s, int p,
+void vp9_lpf_horizontal_16_avx2(unsigned char *s, int p,
         const unsigned char *_blimit, const unsigned char *_limit,
         const unsigned char *_thresh, int count) {
     if (count == 1)
