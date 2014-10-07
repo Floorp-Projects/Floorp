@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import argparse
 import collections
 import inspect
 import types
@@ -56,8 +57,8 @@ def CommandProvider(cls):
         if not isinstance(value, types.FunctionType):
             continue
 
-        command_name, category, description, allow_all, conditions, parser = getattr(
-            value, '_mach_command', (None, None, None, None, None, None))
+        command_name, category, description, conditions, parser = getattr(
+            value, '_mach_command', (None, None, None, None, None))
 
         if command_name is None:
             continue
@@ -82,9 +83,8 @@ def CommandProvider(cls):
         arguments = getattr(value, '_mach_command_args', None)
 
         handler = MethodHandler(cls, attr, command_name, category=category,
-            description=description, allow_all_arguments=allow_all,
-            conditions=conditions, parser=parser, arguments=arguments,
-            pass_context=pass_context)
+            description=description, conditions=conditions, parser=parser,
+            arguments=arguments, pass_context=pass_context)
 
         Registrar.register_command_handler(handler)
 
@@ -102,9 +102,6 @@ class Command(object):
 
          description -- A brief description of what the command does.
 
-         allow_all_args -- Bool indicating whether to allow unknown arguments
-             through to the command.
-
          parser -- an optional argparse.ArgumentParser instance to use as
              the basis for the command arguments.
 
@@ -114,18 +111,17 @@ class Command(object):
         def foo(self):
             pass
     """
-    def __init__(self, name, category=None, description=None,
-                 allow_all_args=False, conditions=None, parser=None):
+    def __init__(self, name, category=None, description=None, conditions=None,
+                 parser=None):
         self._name = name
         self._category = category
         self._description = description
-        self._allow_all_args = allow_all_args
         self._conditions = conditions
         self._parser = parser
 
     def __call__(self, func):
         func._mach_command = (self._name, self._category, self._description,
-                              self._allow_all_args, self._conditions, self._parser)
+                              self._conditions, self._parser)
 
         return func
 
@@ -145,6 +141,11 @@ class CommandArgument(object):
             pass
     """
     def __init__(self, *args, **kwargs):
+        if kwargs.get('nargs') == argparse.REMAINDER:
+            # These are the assertions we make in dispatcher.py about
+            # those types of CommandArguments.
+            assert len(args) == 1
+            assert all(k in ('default', 'nargs', 'help') for k in kwargs)
         self._command_args = (args, kwargs)
 
     def __call__(self, func):

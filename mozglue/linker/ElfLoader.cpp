@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <fcntl.h>
 #include "ElfLoader.h"
+#include "BaseElf.h"
 #include "CustomElf.h"
 #include "Mappable.h"
 #include "Logging.h"
@@ -37,6 +38,10 @@ inline int sigaltstack(const stack_t *ss, stack_t *oss) {
 extern "C" MOZ_EXPORT const void *
 __gnu_Unwind_Find_exidx(void *pc, int *pcount) __attribute__((weak));
 #endif
+
+/* Pointer to the PT_DYNAMIC section of the executable or library
+ * containing this code. */
+extern "C" Elf::Dyn _DYNAMIC[];
 
 using namespace mozilla;
 
@@ -331,6 +336,10 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
   /* Ensure logging is initialized or refresh if environment changed. */
   Logging::Init();
 
+  /* Ensure self_elf initialization. */
+  if (!self_elf)
+    Init();
+
   RefPtr<LibHandle> handle;
 
   /* Handle dlopen(nullptr) directly. */
@@ -466,6 +475,54 @@ ElfLoader::Forget(LibHandle *handle)
   }
 }
 
+void
+ElfLoader::Init()
+{
+  Dl_info info;
+  /* On Android < 4.1 can't reenter dl* functions. So when the library
+   * containing this code is dlopen()ed, it can't call dladdr from a
+   * static initializer. */
+  if (dladdr(_DYNAMIC, &info) != 0) {
+    /* Ideally, we wouldn't be initializing self_elf this way, but until
+     * SystemElf actually inherits from BaseElf, we'll just do it this
+     * (gross) way. */
+    UniquePtr<BaseElf> elf = mozilla::MakeUnique<BaseElf>(info.dli_fname);
+    elf->base.Assign(info.dli_fbase, -1);
+    size_t symnum = 0;
+    for (const Elf::Dyn *dyn = _DYNAMIC; dyn->d_tag; dyn++) {
+      switch (dyn->d_tag) {
+        case DT_HASH:
+          {
+            DEBUG_LOG("%s 0x%08" PRIxAddr, "DT_HASH", dyn->d_un.d_val);
+            const Elf::Word *hash_table_header = \
+              elf->GetPtr<Elf::Word>(dyn->d_un.d_ptr);
+            symnum = hash_table_header[1];
+            elf->buckets.Init(&hash_table_header[2], hash_table_header[0]);
+            elf->chains.Init(&*elf->buckets.end());
+          }
+          break;
+        case DT_STRTAB:
+          DEBUG_LOG("%s 0x%08" PRIxAddr, "DT_STRTAB", dyn->d_un.d_val);
+          elf->strtab.Init(elf->GetPtr(dyn->d_un.d_ptr));
+          break;
+        case DT_SYMTAB:
+          DEBUG_LOG("%s 0x%08" PRIxAddr, "DT_SYMTAB", dyn->d_un.d_val);
+          elf->symtab.Init(elf->GetPtr(dyn->d_un.d_ptr));
+          break;
+      }
+    }
+    if (!elf->buckets || !symnum) {
+      ERROR("%s: Missing or broken DT_HASH", info.dli_fname);
+    } else if (!elf->strtab) {
+      ERROR("%s: Missing DT_STRTAB", info.dli_fname);
+    } else if (!elf->symtab) {
+      ERROR("%s: Missing DT_SYMTAB", info.dli_fname);
+    } else {
+      self_elf = Move(elf);
+    }
+  }
+}
+
 ElfLoader::~ElfLoader()
 {
   LibHandleList list;
@@ -507,6 +564,10 @@ ElfLoader::~ElfLoader()
       }
     }
   }
+  /* Avoid self_elf->base destructor unmapping something that doesn't actually
+   * belong to it. */
+  if (self_elf)
+    self_elf->base.release();
 }
 
 void
