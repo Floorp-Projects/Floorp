@@ -1707,14 +1707,15 @@ nsWindow::RemoveIMEComposition()
     AutoIMEMask selMask(mIMEMaskSelectionUpdate);
     AutoIMEMask textMask(mIMEMaskTextUpdate);
 
-    WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE, this);
-    InitEvent(textEvent, nullptr);
-    textEvent.mData = mIMEComposingText;
-    DispatchEvent(&textEvent);
+    WidgetCompositionEvent compositionChangeEvent(true, NS_COMPOSITION_CHANGE,
+                                                  this);
+    InitEvent(compositionChangeEvent, nullptr);
+    compositionChangeEvent.mData = mIMEComposingText;
+    DispatchEvent(&compositionChangeEvent);
 
-    WidgetCompositionEvent event(true, NS_COMPOSITION_END, this);
-    InitEvent(event, nullptr);
-    DispatchEvent(&event);
+    WidgetCompositionEvent compEndEvent(true, NS_COMPOSITION_END, this);
+    InitEvent(compEndEvent, nullptr);
+    DispatchEvent(&compEndEvent);
 }
 
 void
@@ -2086,14 +2087,15 @@ nsWindow::NotifyIME(const IMENotification& aIMENotification)
             if (mIMEComposing) {
                 nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
-                WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE, this);
-                InitEvent(textEvent, nullptr);
-                DispatchEvent(&textEvent);
+                WidgetCompositionEvent compositionChangeEvent(
+                                         true, NS_COMPOSITION_CHANGE, this);
+                InitEvent(compositionChangeEvent, nullptr);
+                DispatchEvent(&compositionChangeEvent);
 
-                WidgetCompositionEvent compEvent(true, NS_COMPOSITION_END,
-                                                 this);
-                InitEvent(compEvent, nullptr);
-                DispatchEvent(&compEvent);
+                WidgetCompositionEvent compositionEndEvent(
+                                         true, NS_COMPOSITION_END, this);
+                InitEvent(compositionEndEvent, nullptr);
+                DispatchEvent(&compositionEndEvent);
             }
 
             mozilla::widget::android::GeckoAppShell::NotifyIME(REQUEST_TO_CANCEL_COMPOSITION);

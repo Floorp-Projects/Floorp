@@ -131,11 +131,12 @@ public:
   class MOZ_STACK_CLASS TextEventHandlingMarker
   {
   public:
-    TextEventHandlingMarker(TextComposition* aComposition,
-                            const WidgetCompositionEvent* aTextEvent)
+    TextEventHandlingMarker(
+      TextComposition* aComposition,
+      const WidgetCompositionEvent* aCompositionChangeEvent)
       : mComposition(aComposition)
     {
-      mComposition->EditorWillHandleTextEvent(aTextEvent);
+      mComposition->EditorWillHandleTextEvent(aCompositionChangeEvent);
     }
 
     ~TextEventHandlingMarker()
@@ -235,7 +236,8 @@ private:
    * EditorWillHandleTextEvent() must be called before the focused editor
    * handles the compositionchange event.
    */
-  void EditorWillHandleTextEvent(const WidgetCompositionEvent* aTextEvent);
+  void EditorWillHandleTextEvent(
+         const WidgetCompositionEvent* aCompositionChangeEvent);
 
   /**
    * EditorDidHandleTextEvent() must be called after the focused editor handles

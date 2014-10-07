@@ -1107,26 +1107,27 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
         }
     }
 
-    WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE,
-                                     mLastFocusedWindow);
-    InitEvent(textEvent);
+    WidgetCompositionEvent compositionChangeEvent(true, NS_COMPOSITION_CHANGE,
+                                                  mLastFocusedWindow);
+    InitEvent(compositionChangeEvent);
 
     uint32_t targetOffset = mCompositionStart;
 
-    textEvent.mData = mDispatchedCompositionString = aCompositionString;
+    compositionChangeEvent.mData =
+      mDispatchedCompositionString = aCompositionString;
 
     if (!aIsCommit) {
         // NOTE: SetTextRangeList() assumes that mDispatchedCompositionString
         //       has been updated already.
-        textEvent.mRanges = CreateTextRangeArray();
-        targetOffset += textEvent.mRanges->TargetClauseOffset();
+        compositionChangeEvent.mRanges = CreateTextRangeArray();
+        targetOffset += compositionChangeEvent.mRanges->TargetClauseOffset();
     }
 
     mCompositionState = aIsCommit ?
         eCompositionState_CommitTextEventDispatched :
         eCompositionState_TextEventDispatched;
 
-    mLastFocusedWindow->DispatchEvent(&textEvent, status);
+    mLastFocusedWindow->DispatchEvent(&compositionChangeEvent, status);
     if (lastFocusedWindow->IsDestroyed() ||
         lastFocusedWindow != mLastFocusedWindow) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,

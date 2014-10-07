@@ -846,13 +846,13 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
 {
   NS_ABORT_IF_FALSE(aDOMTextEvent, "aDOMTextEvent must not be nullptr");
 
-  WidgetCompositionEvent* widgetTextEvent =
+  WidgetCompositionEvent* compositionChangeEvent =
     aDOMTextEvent->GetInternalNSEvent()->AsCompositionEvent();
-  NS_ENSURE_TRUE(widgetTextEvent, NS_ERROR_INVALID_ARG);
-  MOZ_ASSERT(compChangeEvent->message == NS_COMPOSITION_CHANGE,
+  NS_ENSURE_TRUE(compositionChangeEvent, NS_ERROR_INVALID_ARG);
+  MOZ_ASSERT(compositionChangeEvent->message == NS_COMPOSITION_CHANGE,
              "The internal event should be NS_COMPOSITION_CHANGE");
 
-  EnsureComposition(widgetTextEvent);
+  EnsureComposition(compositionChangeEvent);
 
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
@@ -872,7 +872,7 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   MOZ_ASSERT(!mPlaceHolderBatch,
     "UpdateIMEComposition() must be called without place holder batch");
   TextComposition::TextEventHandlingMarker
-    textEventHandlingMarker(mComposition, widgetTextEvent);
+    textEventHandlingMarker(mComposition, compositionChangeEvent);
 
   NotifyEditorObservers(eNotifyEditorObserversOfBefore);
 
@@ -881,7 +881,7 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   {
     nsAutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
 
-    rv = InsertText(widgetTextEvent->mData);
+    rv = InsertText(compositionChangeEvent->mData);
 
     if (caretP) {
       caretP->SetSelection(selection);
