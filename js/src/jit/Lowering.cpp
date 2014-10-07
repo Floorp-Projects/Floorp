@@ -3802,28 +3802,6 @@ LIRGenerator::visitSimdSignMask(MSimdSignMask *ins)
 }
 
 bool
-LIRGenerator::visitSimdUnaryArith(MSimdUnaryArith *ins)
-{
-    MOZ_ASSERT(IsSimdType(ins->type()));
-
-    // Cannot be at start, as the ouput is used as a temporary to store values.
-    LUse in = use(ins->input());
-
-    if (ins->type() == MIRType_Int32x4) {
-        LSimdUnaryArithIx4 *lir = new(alloc()) LSimdUnaryArithIx4(in);
-        return define(lir, ins);
-    }
-
-    if (ins->type() == MIRType_Float32x4) {
-        LSimdUnaryArithFx4 *lir = new(alloc()) LSimdUnaryArithFx4(in);
-        return define(lir, ins);
-    }
-
-    MOZ_CRASH("Unknown SIMD kind for unary operation");
-    return false;
-}
-
-bool
 LIRGenerator::visitSimdBinaryComp(MSimdBinaryComp *ins)
 {
     MOZ_ASSERT(ins->type() == MIRType_Int32x4);

@@ -310,34 +310,6 @@ class LSimdBinaryArithFx4 : public LSimdBinaryArith
     LSimdBinaryArithFx4() : LSimdBinaryArith() {}
 };
 
-// Unary SIMD arithmetic operation on a SIMD operand
-class LSimdUnaryArith : public LInstructionHelper<1, 1, 0>
-{
-  public:
-    explicit LSimdUnaryArith(const LAllocation &in) {
-        setOperand(0, in);
-    }
-    MSimdUnaryArith::Operation operation() const {
-        return mir_->toSimdUnaryArith()->operation();
-    }
-};
-
-// Unary SIMD arithmetic operation on a Int32x4 operand
-class LSimdUnaryArithIx4 : public LSimdUnaryArith
-{
-  public:
-    LIR_HEADER(SimdUnaryArithIx4);
-    explicit LSimdUnaryArithIx4(const LAllocation &in) : LSimdUnaryArith(in) {}
-};
-
-// Unary SIMD arithmetic operation on a Float32x4 operand
-class LSimdUnaryArithFx4 : public LSimdUnaryArith
-{
-  public:
-    LIR_HEADER(SimdUnaryArithFx4);
-    explicit LSimdUnaryArithFx4(const LAllocation &in) : LSimdUnaryArith(in) {}
-};
-
 // Binary SIMD bitwise operation between two int32x4 or float32x4 operands
 class LSimdBinaryBitwiseX4 : public LInstructionHelper<1, 2, 0>
 {
