@@ -120,6 +120,10 @@
     _(shiftRight)                    \
     _(shiftRightLogical)
 #define FOREACH_FLOAT32X4_SIMD_OP(_) \
+    _(abs)                           \
+    _(sqrt)                          \
+    _(reciprocal)                    \
+    _(reciprocalSqrt)                \
     _(fromInt32x4)                   \
     _(fromInt32x4Bits)               \
     _(mul)                           \
@@ -143,7 +147,9 @@
     _(withX)                         \
     _(withY)                         \
     _(withZ)                         \
-    _(withW)
+    _(withW)                         \
+    _(not)                           \
+    _(neg)
 #define FORALL_SIMD_OP(_)            \
     FOREACH_INT32X4_SIMD_OP(_)       \
     FOREACH_FLOAT32X4_SIMD_OP(_)     \
