@@ -13,6 +13,7 @@ loop.contacts = (function(_, mozL10n) {
 
   const Button = loop.shared.views.Button;
   const ButtonGroup = loop.shared.views.ButtonGroup;
+  const CALL_TYPES = loop.shared.utils.CALL_TYPES;
 
   // Number of contacts to add to the list at the same time.
   const CONTACTS_CHUNK_SIZE = 100;
@@ -85,14 +86,12 @@ loop.contacts = (function(_, mozL10n) {
       return (
         <ul className={cx({ "dropdown-menu": true,
                             "dropdown-menu-up": this.state.openDirUp })}>
-          <li className={cx({ "dropdown-menu-item": true,
-                              "disabled": true })}
+          <li className={cx({ "dropdown-menu-item": true })}
               onClick={this.onItemClick} data-action="video-call">
             <i className="icon icon-video-call" />
             {mozL10n.get("video_call_menu_button")}
           </li>
-          <li className={cx({ "dropdown-menu-item": true,
-                              "disabled": true })}
+          <li className={cx({ "dropdown-menu-item": true })}
               onClick={this.onItemClick} data-action="audio-call">
             <i className="icon icon-audio-call" />
             {mozL10n.get("audio_call_menu_button")}
@@ -160,7 +159,8 @@ loop.contacts = (function(_, mozL10n) {
       return (
         currContact.name[0] !== nextContact.name[0] ||
         currContact.blocked !== nextContact.blocked ||
-        getPreferredEmail(currContact).value !== getPreferredEmail(nextContact).value
+        getPreferredEmail(currContact).value !==
+          getPreferredEmail(nextContact).value
       );
     },
 
@@ -315,6 +315,12 @@ loop.contacts = (function(_, mozL10n) {
               throw err;
             }
           });
+          break;
+        case "video-call":
+          navigator.mozLoop.startDirectCall(contact, CALL_TYPES.AUDIO_VIDEO);
+          break;
+        case "audio-call":
+          navigator.mozLoop.startDirectCall(contact, CALL_TYPES.AUDIO_ONLY);
           break;
         default:
           console.error("Unrecognized action: " + actionName);
