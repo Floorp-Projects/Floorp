@@ -219,10 +219,12 @@ ValidateFFI(JSContext *cx, AsmJSModule::Global &global, HandleValue importVal,
 }
 
 static bool
-ValidateArrayView(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal,
-                  HandleValue bufferVal)
+ValidateArrayView(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal)
 {
-    RootedPropertyName field(cx, global.viewName());
+    RootedPropertyName field(cx, global.maybeViewName());
+    if (!field)
+        return true;
+
     RootedValue v(cx);
     if (!GetDataProperty(cx, globalVal, field, &v))
         return false;
@@ -508,7 +510,8 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
                 return false;
             break;
           case AsmJSModule::Global::ArrayView:
-            if (!ValidateArrayView(cx, global, globalVal, bufferVal))
+          case AsmJSModule::Global::ArrayViewCtor:
+            if (!ValidateArrayView(cx, global, globalVal))
                 return false;
             break;
           case AsmJSModule::Global::MathBuiltinFunction:
