@@ -4,9 +4,10 @@
 
 package org.mozilla.gecko.tabs;
 
+import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.home.HomeConfig;
+import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.tabs.TabsPanel.PanelView;
 
 import android.content.Context;
@@ -33,7 +34,15 @@ class RemoteTabsPanel extends FrameLayout implements PanelView {
         link.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                // For now, we don't do anything.
+                // It is possible that this will fail: if the user has removed
+                // the Remote Tabs panel, it won't exist. (The new tab will open
+                // to the default panel, which is confusing but not
+                // catastrophic.) Querying the current configuration to
+                // determine if the panel is present is not worth the effort; we
+                // expect very few configurations to not include the Remote Tabs
+                // panel.
+                Tabs.getInstance().loadUrl(AboutPages.getURLForBuiltinPanelType(PanelType.REMOTE_TABS),
+                        Tabs.LOADURL_NEW_TAB);
                 if (tabsPanel != null) {
                     tabsPanel.autoHidePanel();
                 }

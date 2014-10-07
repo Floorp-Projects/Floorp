@@ -5,20 +5,6 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.home.RemoteTabsPanel;
-import org.mozilla.gecko.util.ThreadUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.content.Context;
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.text.TextUtils;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -27,6 +13,19 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ThreadUtils;
+
+import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.text.TextUtils;
 
 public final class HomeConfig {
     /**
@@ -832,7 +831,6 @@ public final class HomeConfig {
             mImageUrl = json.optString(JSON_KEY_IMAGE_URL, null);
         }
 
-        @SuppressWarnings("unchecked")
         public EmptyViewConfig(Parcel in) {
             mText = in.readString();
             mImageUrl = in.readString();
@@ -904,7 +902,6 @@ public final class HomeConfig {
             mImageUrl = json.optString(JSON_KEY_IMAGE_URL, null);
         }
 
-        @SuppressWarnings("unchecked")
         public AuthConfig(Parcel in) {
             mMessageText = in.readString();
             mButtonText = in.readString();
@@ -1495,7 +1492,12 @@ public final class HomeConfig {
         public void setOnReloadListener(OnReloadListener listener);
     }
 
-    // UUIDs used to create PanelConfigs for default built-in panels
+    // UUIDs used to create PanelConfigs for default built-in panels. These are
+    // public because they can be used in "about:home?panel=UUID" query strings
+    // to open specific panels without querying the active Home Panel
+    // configuration. Because they don't consider the active configuration, it
+    // is only sensible to do this for built-in panels (and not for dynamic
+    // panels).
     private static final String TOP_SITES_PANEL_ID = "4becc86b-41eb-429a-a042-88fe8b5a094e";
     private static final String BOOKMARKS_PANEL_ID = "7f6d419a-cd6c-4e34-b26f-f68b1b551907";
     private static final String READING_LIST_PANEL_ID = "20f4549a-64ad-4c32-93e4-1dcef792733b";
@@ -1532,44 +1534,59 @@ public final class HomeConfig {
         return createBuiltinPanelConfig(context, panelType, EnumSet.noneOf(PanelConfig.Flags.class));
     }
 
-    public static PanelConfig createBuiltinPanelConfig(Context context, PanelType panelType, EnumSet<PanelConfig.Flags> flags) {
-        int titleId = 0;
-        String id = null;
-
+    public static int getTitleResourceIdForBuiltinPanelType(PanelType panelType) {
         switch(panelType) {
-            case TOP_SITES:
-                titleId = R.string.home_top_sites_title;
-                id = TOP_SITES_PANEL_ID;
-                break;
+        case TOP_SITES:
+            return R.string.home_top_sites_title;
 
-            case BOOKMARKS:
-                titleId = R.string.bookmarks_title;
-                id = BOOKMARKS_PANEL_ID;
-                break;
+        case BOOKMARKS:
+            return R.string.bookmarks_title;
 
-            case HISTORY:
-                titleId = R.string.home_history_title;
-                id = HISTORY_PANEL_ID;
-                break;
+        case HISTORY:
+            return R.string.home_history_title;
 
-            case REMOTE_TABS:
-                titleId = R.string.home_remote_tabs_title;
-                id = REMOTE_TABS_PANEL_ID;
-                break;
+        case REMOTE_TABS:
+            return R.string.home_remote_tabs_title;
 
-            case READING_LIST:
-                titleId = R.string.reading_list_title;
-                id = READING_LIST_PANEL_ID;
-                break;
+        case READING_LIST:
+            return R.string.reading_list_title;
 
-            case RECENT_TABS:
-                titleId = R.string.recent_tabs_title;
-                id = RECENT_TABS_PANEL_ID;
-                break;
+        case RECENT_TABS:
+            return R.string.recent_tabs_title;
 
-            case DYNAMIC:
-                throw new IllegalArgumentException("createBuiltinPanelConfig() is only for built-in panels");
+        default:
+            throw new IllegalArgumentException("Only for built-in panel types: " + panelType);
         }
+    }
+
+    public static String getIdForBuiltinPanelType(PanelType panelType) {
+        switch(panelType) {
+        case TOP_SITES:
+            return TOP_SITES_PANEL_ID;
+
+        case BOOKMARKS:
+            return BOOKMARKS_PANEL_ID;
+
+        case HISTORY:
+            return HISTORY_PANEL_ID;
+
+        case REMOTE_TABS:
+            return REMOTE_TABS_PANEL_ID;
+
+        case READING_LIST:
+            return READING_LIST_PANEL_ID;
+
+        case RECENT_TABS:
+            return RECENT_TABS_PANEL_ID;
+
+        default:
+            throw new IllegalArgumentException("Only for built-in panel types: " + panelType);
+        }
+    }
+
+    public static PanelConfig createBuiltinPanelConfig(Context context, PanelType panelType, EnumSet<PanelConfig.Flags> flags) {
+        final int titleId = getTitleResourceIdForBuiltinPanelType(panelType);
+        final String id = getIdForBuiltinPanelType(panelType);
 
         return new PanelConfig(panelType, context.getString(titleId), id, flags);
     }
