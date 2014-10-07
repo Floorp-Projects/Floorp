@@ -5,7 +5,7 @@
 #include "MediaEngineDefault.h"
 
 #include "nsCOMPtr.h"
-#include "mozilla/dom/File.h"
+#include "nsDOMFile.h"
 #include "nsILocalFile.h"
 #include "Layers.h"
 #include "ImageContainer.h"
@@ -208,7 +208,7 @@ MediaEngineDefaultVideoSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMFile> domFile = dom::File::CreateFromFile(nullptr, localFile);
+  nsCOMPtr<nsIDOMFile> domFile = dom::DOMFile::CreateFromFile(localFile);
   domFile.forget(aFile);
   return NS_OK;
 #endif

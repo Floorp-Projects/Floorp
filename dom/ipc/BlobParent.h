@@ -33,7 +33,7 @@ class PBackgroundParent;
 namespace dom {
 
 class ContentParent;
-class FileImpl;
+class DOMFileImpl;
 class nsIContentParent;
 class PBlobStreamParent;
 
@@ -57,7 +57,7 @@ class BlobParent MOZ_FINAL
   static StaticAutoPtr<IDTable> sIDTable;
   static StaticAutoPtr<Mutex> sIDTableMutex;
 
-  FileImpl* mBlobImpl;
+  DOMFileImpl* mBlobImpl;
   RemoteBlobImplBase* mRemoteBlobImpl;
 
   // One of these will be null and the other non-null.
@@ -87,10 +87,10 @@ public:
 
   // These create functions are called on the sending side.
   static BlobParent*
-  GetOrCreate(nsIContentParent* aManager, FileImpl* aBlobImpl);
+  GetOrCreate(nsIContentParent* aManager, DOMFileImpl* aBlobImpl);
 
   static BlobParent*
-  GetOrCreate(PBackgroundParent* aManager, FileImpl* aBlobImpl);
+  GetOrCreate(PBackgroundParent* aManager, DOMFileImpl* aBlobImpl);
 
   // These create functions are called on the receiving side.
   static BlobParent*
@@ -125,9 +125,14 @@ public:
     return mContentManager;
   }
 
-  // Get the FileImpl associated with this actor.
-  already_AddRefed<FileImpl>
+  // Get the DOMFileImpl associated with this actor.
+  already_AddRefed<DOMFileImpl>
   GetBlobImpl();
+
+  // XXX This method will be removed soon. It may never be called on a non-DOM
+  //     thread.
+  already_AddRefed<nsIDOMBlob>
+  GetBlob();
 
   void
   AssertIsOnOwningThread() const
@@ -165,7 +170,7 @@ private:
   template <class ParentManagerType>
   static BlobParent*
   GetOrCreateFromImpl(ParentManagerType* aManager,
-                      FileImpl* aBlobImpl);
+                      DOMFileImpl* aBlobImpl);
 
   template <class ParentManagerType>
   static BlobParent*

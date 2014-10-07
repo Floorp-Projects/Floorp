@@ -26,10 +26,10 @@ FileImplSnapshot::FileImplSnapshot(const nsAString& aName,
                                    nsIFile* aFile,
                                    IDBFileHandle* aFileHandle,
                                    FileInfo* aFileInfo)
-  : FileImplBase(aName,
-                 aContentType,
-                 aMetadataParams->Size(),
-                 aMetadataParams->LastModified())
+  : DOMFileImplBase(aName,
+                    aContentType,
+                    aMetadataParams->Size(),
+                    aMetadataParams->LastModified())
   , mFile(aFile)
   , mFileHandle(aFileHandle)
   , mWholeFile(true)
@@ -50,7 +50,7 @@ FileImplSnapshot::FileImplSnapshot(const FileImplSnapshot* aOther,
                                    uint64_t aStart,
                                    uint64_t aLength,
                                    const nsAString& aContentType)
-  : FileImplBase(aContentType, aOther->mStart + aStart, aLength)
+  : DOMFileImplBase(aContentType, aOther->mStart + aStart, aLength)
   , mFile(aOther->mFile)
   , mFileHandle(aOther->mFileHandle)
   , mWholeFile(false)
@@ -86,7 +86,7 @@ FileImplSnapshot::AssertSanity()
 
 #endif // DEBUG
 
-NS_IMPL_ISUPPORTS_INHERITED0(FileImplSnapshot, FileImpl)
+NS_IMPL_ISUPPORTS_INHERITED0(FileImplSnapshot, DOMFileImpl)
 
 void
 FileImplSnapshot::Unlink()
@@ -128,28 +128,26 @@ FileImplSnapshot::GetInternalStream(nsIInputStream** aStream)
   return NS_OK;
 }
 
-already_AddRefed<FileImpl>
+already_AddRefed<DOMFileImpl>
 FileImplSnapshot::CreateSlice(uint64_t aStart,
                               uint64_t aLength,
-                              const nsAString& aContentType,
-                              ErrorResult& aRv)
+                              const nsAString& aContentType)
 {
   AssertSanity();
 
-  nsRefPtr<FileImpl> impl =
+  nsRefPtr<DOMFileImpl> impl =
     new FileImplSnapshot(this, aStart, aLength, aContentType);
 
   return impl.forget();
 }
 
-void
-FileImplSnapshot::GetMozFullPathInternal(nsAString& aFilename,
-                                         ErrorResult& aRv)
+nsresult
+FileImplSnapshot::GetMozFullPathInternal(nsAString& aFilename)
 {
   AssertSanity();
   MOZ_ASSERT(mIsFile);
 
-  aRv = mFile->GetPath(aFilename);
+  return mFile->GetPath(aFilename);
 }
 
 bool

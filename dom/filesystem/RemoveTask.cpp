@@ -7,12 +7,12 @@
 #include "RemoveTask.h"
 
 #include "DOMError.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/BlobParent.h"
+#include "nsDOMFile.h"
 #include "nsIFile.h"
 #include "nsStringGlue.h"
 
@@ -21,7 +21,7 @@ namespace dom {
 
 RemoveTask::RemoveTask(FileSystemBase* aFileSystem,
                        const nsAString& aDirPath,
-                       FileImpl* aTargetFile,
+                       DOMFileImpl* aTargetFile,
                        const nsAString& aTargetPath,
                        bool aRecursive,
                        ErrorResult& aRv)
@@ -66,8 +66,9 @@ RemoveTask::RemoveTask(FileSystemBase* aFileSystem,
   }
 
   BlobParent* bp = static_cast<BlobParent*>(static_cast<PBlobParent*>(target));
-  mTargetFileImpl = bp->GetBlobImpl();
-  MOZ_ASSERT(mTargetFileImpl);
+  nsCOMPtr<nsIDOMBlob> blob = bp->GetBlob();
+  MOZ_ASSERT(blob);
+  mTargetFileImpl = static_cast<DOMFile*>(blob.get())->Impl();
 }
 
 RemoveTask::~RemoveTask()
@@ -92,7 +93,7 @@ RemoveTask::GetRequestParams(const nsString& aFileSystem) const
   param.directory() = mDirRealPath;
   param.recursive() = mRecursive;
   if (mTargetFileImpl) {
-    nsRefPtr<File> file = new File(mFileSystem->GetWindow(), mTargetFileImpl);
+    nsRefPtr<DOMFile> file = new DOMFile(mTargetFileImpl);
     BlobChild* actor
       = ContentChild::GetSingleton()->GetOrCreateActorForBlob(file);
     if (actor) {
@@ -130,7 +131,7 @@ RemoveTask::Work()
     return NS_ERROR_FAILURE;
   }
 
-  // Get the DOM path if a File is passed as the target.
+  // Get the DOM path if a DOMFile is passed as the target.
   if (mTargetFileImpl) {
     if (!mFileSystem->GetRealPath(mTargetFileImpl, mTargetRealPath)) {
       return NS_ERROR_DOM_SECURITY_ERR;

@@ -16,6 +16,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
+class nsIDOMBlob;
 class nsPIDOMWindow;
 
 namespace mozilla {

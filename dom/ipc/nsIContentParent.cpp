@@ -8,7 +8,6 @@
 
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PTabContext.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
@@ -18,6 +17,7 @@
 #include "mozilla/unused.h"
 
 #include "JavaScriptParent.h"
+#include "nsDOMFile.h"
 #include "nsFrameMessageManager.h"
 #include "nsIJSRuntimeService.h"
 #include "nsPrintfCString.h"
@@ -151,12 +151,12 @@ nsIContentParent::DeallocPBlobParent(PBlobParent* aActor)
 }
 
 BlobParent*
-nsIContentParent::GetOrCreateActorForBlob(File* aBlob)
+nsIContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBlob);
 
-  nsRefPtr<FileImpl> blobImpl = aBlob->Impl();
+  nsRefPtr<DOMFileImpl> blobImpl = static_cast<DOMFile*>(aBlob)->Impl();
   MOZ_ASSERT(blobImpl);
 
   BlobParent* actor = BlobParent::GetOrCreate(this, blobImpl);

@@ -7,12 +7,13 @@
 #include "nsIIPCSerializableInputStream.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
+#include "nsDOMFile.h"
 #include "nsID.h"
+#include "nsIDOMFile.h"
 #include "nsIXULRuntime.h"
 #include "nsMIMEInputStream.h"
 #include "nsMultiplexInputStream.h"
@@ -109,7 +110,7 @@ DeserializeInputStream(const InputStreamParams& aParams,
       const RemoteInputStreamParams& params =
           aParams.get_RemoteInputStreamParams();
 
-      nsRefPtr<FileImpl> blobImpl;
+      nsRefPtr<DOMFileImpl> blobImpl;
       if (params.remoteBlobParent()) {
         blobImpl =
           static_cast<BlobParent*>(params.remoteBlobParent())->GetBlobImpl();

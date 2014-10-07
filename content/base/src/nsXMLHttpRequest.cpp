@@ -10,13 +10,12 @@
 #include <unistd.h>
 #endif
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/dom/BlobSet.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/MemoryReporting.h"
+#include "nsDOMBlobBuilder.h"
 #include "nsIDOMDocument.h"
 #include "mozilla/dom/ProgressEvent.h"
 #include "nsIJARChannel.h"
@@ -57,6 +56,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsStringBuffer.h"
+#include "nsDOMFile.h"
 #include "nsIFileChannel.h"
 #include "mozilla/Telemetry.h"
 #include "jsfriendapi.h"
@@ -784,9 +784,8 @@ nsXMLHttpRequest::CreatePartialBlob()
     if (mLoadTotal == mLoadTransferred) {
       mResponseBlob = mDOMFile;
     } else {
-      ErrorResult rv;
-      mResponseBlob = mDOMFile->CreateSlice(0, mDataAvailable,
-                                            EmptyString(), rv);
+      mResponseBlob =
+        mDOMFile->CreateSlice(0, mDataAvailable, EmptyString());
     }
     return;
   }
@@ -801,7 +800,7 @@ nsXMLHttpRequest::CreatePartialBlob()
     mChannel->GetContentType(contentType);
   }
 
-  mResponseBlob = mBlobSet->GetBlobInternal(GetOwner(), contentType);
+  mResponseBlob = mBlobSet->GetBlobInternal(contentType);
 }
 
 /* attribute AString responseType; */
@@ -1008,7 +1007,7 @@ nsXMLHttpRequest::GetResponse(JSContext* aCx,
       return;
     }
 
-    WrapNewBindingObject(aCx, mResponseBlob, aResponse);
+    aRv = nsContentUtils::WrapNative(aCx, mResponseBlob, aResponse);
     return;
   }
   case XML_HTTP_RESPONSE_TYPE_DOCUMENT:
@@ -1898,8 +1897,9 @@ bool nsXMLHttpRequest::CreateDOMFile(nsIRequest *request)
   nsAutoCString contentType;
   mChannel->GetContentType(contentType);
 
-  mDOMFile = File::CreateFromFile(GetOwner(), file, EmptyString(),
-                                  NS_ConvertASCIItoUTF16(contentType));
+  mDOMFile =
+    DOMFile::CreateFromFile(file, EmptyString(),
+                            NS_ConvertASCIItoUTF16(contentType));
 
   mBlobSet = nullptr;
   NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
@@ -2243,7 +2243,7 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
       // Also, no-store response cannot be written in persistent cache.
       nsAutoCString contentType;
       mChannel->GetContentType(contentType);
-      mResponseBlob = mBlobSet->GetBlobInternal(GetOwner(), contentType);
+      mResponseBlob = mBlobSet->GetBlobInternal(contentType);
       mBlobSet = nullptr;
     }
     NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
@@ -2618,8 +2618,7 @@ nsXMLHttpRequest::GetRequestBody(nsIVariant* aVariant,
     case nsXMLHttpRequest::RequestBody::Blob:
     {
       nsresult rv;
-      nsCOMPtr<nsIDOMBlob> blob = value.mBlob;
-      nsCOMPtr<nsIXHRSendable> sendable = do_QueryInterface(blob, &rv);
+      nsCOMPtr<nsIXHRSendable> sendable = do_QueryInterface(value.mBlob, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
       return ::GetRequestBody(sendable, aResult, aContentLength, aContentType, aCharset);

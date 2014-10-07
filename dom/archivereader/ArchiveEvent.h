@@ -9,9 +9,9 @@
 
 #include "ArchiveReader.h"
 
-#include "mozilla/dom/File.h"
 #include "nsISeekableStream.h"
 #include "nsIMIMEService.h"
+#include "nsDOMFile.h"
 
 #include "ArchiveReaderCommon.h"
 
@@ -35,7 +35,7 @@ public:
   // Getter for the filename
   virtual nsresult GetFilename(nsString& aFilename) = 0;
 
-  // Generate a File
+  // Generate a DOMFile
   virtual nsIDOMFile* File(ArchiveReader* aArchiveReader) = 0;
 
 protected:

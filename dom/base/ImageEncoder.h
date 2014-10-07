@@ -7,8 +7,8 @@
 #define ImageEncoder_h
 
 #include "imgIEncoder.h"
+#include "nsDOMFile.h"
 #include "nsError.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
 #include "nsLayoutUtils.h"
 #include "nsNetUtil.h"
@@ -51,8 +51,6 @@ public:
   // successful dispatching of the extraction step to the encoding thread.
   // aEncodeCallback will be called on main thread when encoding process is
   // success.
-  // Note: The callback has to set a valid parent for content for the generated
-  // Blob object.
   static nsresult ExtractDataAsync(nsAString& aType,
                                    const nsAString& aOptions,
                                    bool aUsingCustomOptions,
@@ -64,8 +62,6 @@ public:
   // Extract an Image asynchronously. Its function is same as ExtractDataAsync
   // except for the parameters. aImage is the uncompressed data. aEncodeCallback
   // will be called on main thread when encoding process is success.
-  // Note: The callback has to set a valid parent for content for the generated
-  // Blob object.
   static nsresult ExtractDataFromLayersImageAsync(nsAString& aType,
                                                   const nsAString& aOptions,
                                                   bool aUsingCustomOptions,
@@ -115,7 +111,7 @@ class EncodeCompleteCallback
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(EncodeCompleteCallback)
 
-  virtual nsresult ReceiveBlob(already_AddRefed<File> aBlob) = 0;
+  virtual nsresult ReceiveBlob(already_AddRefed<DOMFile> aBlob) = 0;
 
 protected:
   virtual ~EncodeCompleteCallback() {}

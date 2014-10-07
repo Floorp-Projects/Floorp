@@ -16,12 +16,6 @@
 #include "js/StructuredClone.h"
 #include "nsXMLHttpRequest.h"
 
-namespace mozilla {
-namespace dom {
-class File;
-}
-}
-
 BEGIN_WORKERS_NAMESPACE
 
 class Proxy;
@@ -168,9 +162,6 @@ public:
 
   void
   Send(JS::Handle<JSObject*> aBody, ErrorResult& aRv);
-
-  void
-  Send(File& aBody, ErrorResult& aRv);
 
   void
   Send(const ArrayBuffer& aBody, ErrorResult& aRv);

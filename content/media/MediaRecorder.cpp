@@ -15,11 +15,11 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/BlobEvent.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/RecordErrorEvent.h"
 #include "mozilla/dom/VideoStreamTrack.h"
 #include "nsError.h"
 #include "nsIDocument.h"
+#include "nsIDOMFile.h"
 #include "nsIPrincipal.h"
 #include "nsMimeTypes.h"
 #include "nsProxyRelease.h"
@@ -389,8 +389,7 @@ public:
   already_AddRefed<nsIDOMBlob> GetEncodedData()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    return mEncodedBufferCache->ExtractBlob(mRecorder->GetParentObject(),
-                                            mMimeType);
+    return mEncodedBufferCache->ExtractBlob(mMimeType);
   }
 
   bool IsEncoderError()
@@ -921,10 +920,7 @@ MediaRecorder::CreateAndDispatchBlobEvent(already_AddRefed<nsIDOMBlob>&& aBlob)
   BlobEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
-
-  nsCOMPtr<nsIDOMBlob> blob = aBlob;
-  init.mData = static_cast<File*>(blob.get());
-
+  init.mData = aBlob;
   nsRefPtr<BlobEvent> event =
     BlobEvent::Constructor(this,
                            NS_LITERAL_STRING("dataavailable"),

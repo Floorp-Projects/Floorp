@@ -17,10 +17,6 @@
 
 
 namespace mozilla {
-namespace dom {
-class File;
-}
-
 class DataChannel;
 };
 
@@ -70,7 +66,7 @@ public:
       static_cast<int>(aType));
   }
   void Send(const nsAString& aData, mozilla::ErrorResult& aRv);
-  void Send(mozilla::dom::File& aData, mozilla::ErrorResult& aRv);
+  void Send(nsIDOMBlob* aData, mozilla::ErrorResult& aRv);
   void Send(const mozilla::dom::ArrayBuffer& aData, mozilla::ErrorResult& aRv);
   void Send(const mozilla::dom::ArrayBufferView& aData,
             mozilla::ErrorResult& aRv);

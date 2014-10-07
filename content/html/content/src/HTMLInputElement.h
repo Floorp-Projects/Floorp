@@ -24,6 +24,7 @@
 #include "nsContentUtils.h"
 #include "nsTextEditorState.h"
 
+class nsDOMFileList;
 class nsIRadioGroupContainer;
 class nsIRadioGroupVisitor;
 class nsIRadioVisitor;
@@ -37,8 +38,6 @@ namespace dom {
 
 class Date;
 class DirPickerFileListBuilderTask;
-class File;
-class FileList;
 
 class UploadLastDir MOZ_FINAL : public nsIObserver, public nsSupportsWeakReference {
 
@@ -211,12 +210,12 @@ public:
 
   void GetDisplayFileName(nsAString& aFileName) const;
 
-  const nsTArray<nsRefPtr<File>>& GetFilesInternal() const
+  const nsTArray<nsCOMPtr<nsIDOMFile> >& GetFilesInternal() const
   {
     return mFiles;
   }
 
-  void SetFiles(const nsTArray<nsRefPtr<File>>& aFiles, bool aSetValueChanged);
+  void SetFiles(const nsTArray<nsCOMPtr<nsIDOMFile> >& aFiles, bool aSetValueChanged);
   void SetFiles(nsIDOMFileList* aFiles, bool aSetValueChanged);
 
   // Called when a nsIFilePicker or a nsIColorPicker terminate.
@@ -433,7 +432,7 @@ public:
 
   // XPCOM GetForm() is OK
 
-  FileList* GetFiles();
+  nsDOMFileList* GetFiles();
 
   void OpenDirectoryPicker(ErrorResult& aRv);
   void CancelDirectoryPickerScanIfRunning();
@@ -1252,9 +1251,9 @@ protected:
    * the frame. Whenever the frame wants to change the filename it has to call
    * SetFileNames to update this member.
    */
-  nsTArray<nsRefPtr<File>> mFiles;
+  nsTArray<nsCOMPtr<nsIDOMFile> >   mFiles;
 
-  nsRefPtr<FileList>  mFileList;
+  nsRefPtr<nsDOMFileList>  mFileList;
 
   nsRefPtr<DirPickerFileListBuilderTask> mDirPickerFileListBuilderTask;
 

@@ -567,6 +567,84 @@ Btoa(JSContext *cx, unsigned argc, Value *vp)
   return xpc::Base64Encode(cx, args[0], args.rval());
 }
 
+static bool
+Blob(JSContext *cx, unsigned argc, Value *vp)
+{
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+
+  nsCOMPtr<nsISupports> native =
+    do_CreateInstance("@mozilla.org/dom/multipart-blob;1");
+  if (!native) {
+    JS_ReportError(cx, "Could not create native object!");
+    return false;
+  }
+
+  nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
+  MOZ_ASSERT(initializer);
+
+  nsresult rv = initializer->Initialize(nullptr, cx, nullptr, args);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not initialize native object!");
+    return false;
+  }
+
+  nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID, &rv);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not get XPConnent service!");
+    return false;
+  }
+
+  JSObject *global = JS::CurrentGlobalOrNull(cx);
+  rv = xpc->WrapNativeToJSVal(cx, global, native, nullptr,
+                              &NS_GET_IID(nsISupports), true,
+                              args.rval());
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not wrap native object!");
+    return false;
+  }
+
+  return true;
+}
+
+static bool
+File(JSContext *cx, unsigned argc, Value *vp)
+{
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+
+  nsCOMPtr<nsISupports> native =
+    do_CreateInstance("@mozilla.org/dom/multipart-file;1");
+  if (!native) {
+    JS_ReportError(cx, "Could not create native object!");
+    return false;
+  }
+
+  nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
+  MOZ_ASSERT(initializer);
+
+  nsresult rv = initializer->Initialize(nullptr, cx, nullptr, args);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not initialize native object!");
+    return false;
+  }
+
+  nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID, &rv);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not get XPConnent service!");
+    return false;
+  }
+
+  JSObject *global = JS::CurrentGlobalOrNull(cx);
+  rv = xpc->WrapNativeToJSVal(cx, global, native, nullptr,
+                              &NS_GET_IID(nsISupports), true,
+                              args.rval());
+  if (NS_FAILED(rv)) {
+    JS_ReportError(cx, "Could not wrap native object!");
+    return false;
+  }
+
+  return true;
+}
+
 static Maybe<PersistentRootedValue> sScriptedInterruptCallback;
 
 static bool
@@ -653,6 +731,8 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FS("sendCommand",     SendCommand,    1,0),
     JS_FS("atob",            Atob,           1,0),
     JS_FS("btoa",            Btoa,           1,0),
+    JS_FS("Blob",            Blob,           2,JSFUN_CONSTRUCTOR),
+    JS_FS("File",            File,           2,JSFUN_CONSTRUCTOR),
     JS_FS("setInterruptCallback", SetInterruptCallback, 1,0),
     JS_FS("simulateActivityCallback", SimulateActivityCallback, 1,0),
     JS_FS_END
