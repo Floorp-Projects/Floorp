@@ -9,6 +9,11 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+//longer timeout for sometimes B2G emulator runs very slowly
+if (SpecialPowers.Services.appinfo.name == "B2G") {
+  SimpleTest.requestLongerTimeout(3);
+}
+
 var manager = new MediaTestManager;
 
 function maketest(attach_media, name, type, check_metadata) {
