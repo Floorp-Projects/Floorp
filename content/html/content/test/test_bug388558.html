@@ -42,7 +42,7 @@ function testUserInput() {
      "Change event dispatched when setting the value of the input element (2).");
 
   SpecialPowers.wrap(input).setUserInput("foo");
-  is(inputChange, 1,
+  is(inputChange, 2,
      "Change event dispatched when input element doesn't have focus.");
 
   textarea.focus();
