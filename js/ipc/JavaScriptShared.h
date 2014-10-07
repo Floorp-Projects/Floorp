@@ -161,6 +161,9 @@ class JavaScriptShared
     bool toJSIDVariant(JSContext *cx, JS::HandleId from, JSIDVariant *to);
     bool fromJSIDVariant(JSContext *cx, const JSIDVariant &from, JS::MutableHandleId to);
 
+    bool toSymbolVariant(JSContext *cx, JS::Symbol *sym, SymbolVariant *symVarp);
+    JS::Symbol *fromSymbolVariant(JSContext *cx, SymbolVariant symVar);
+
     bool fromDescriptor(JSContext *cx, JS::Handle<JSPropertyDescriptor> desc,
                         PPropertyDescriptor *out);
     bool toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
