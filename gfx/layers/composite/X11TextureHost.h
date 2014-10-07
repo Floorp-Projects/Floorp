@@ -30,7 +30,7 @@ public:
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
 
-  virtual NewTextureSource* GetTextureSources() MOZ_OVERRIDE
+  virtual TextureSource* GetTextureSources() MOZ_OVERRIDE
   {
     return mTextureSource;
   }
@@ -46,7 +46,7 @@ public:
 
 protected:
   Compositor* mCompositor;
-  RefPtr<NewTextureSource> mTextureSource;
+  RefPtr<TextureSource> mTextureSource;
   RefPtr<gfxXlibSurface> mSurface;
 };
 

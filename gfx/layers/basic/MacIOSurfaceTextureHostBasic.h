@@ -23,7 +23,7 @@ class BasicCompositor;
  */
 class MacIOSurfaceTextureSourceBasic
   : public TextureSourceBasic,
-    public NewTextureSource
+    public TextureSource
 {
 public:
   MacIOSurfaceTextureSourceBasic(BasicCompositor* aCompositor,
@@ -63,7 +63,7 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
 
-  virtual NewTextureSource* GetTextureSources() MOZ_OVERRIDE
+  virtual TextureSource* GetTextureSources() MOZ_OVERRIDE
   {
     return mTextureSource;
   }

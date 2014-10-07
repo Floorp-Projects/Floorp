@@ -104,7 +104,7 @@ ImageHost::Composite(EffectChain& aEffectChain,
     NS_WARNING("failed to lock front buffer");
     return;
   }
-  RefPtr<NewTextureSource> source = GetTextureSource();
+  RefPtr<TextureSource> source = GetTextureSource();
   if (!source) {
     return;
   }
@@ -273,7 +273,7 @@ ImageHost::Unlock()
   mLocked = false;
 }
 
-TemporaryRef<NewTextureSource>
+TemporaryRef<TextureSource>
 ImageHost::GetTextureSource()
 {
   MOZ_ASSERT(mLocked);
@@ -283,7 +283,7 @@ ImageHost::GetTextureSource()
 TemporaryRef<TexturedEffect>
 ImageHost::GenEffect(const gfx::Filter& aFilter)
 {
-  RefPtr<NewTextureSource> source = GetTextureSource();
+  RefPtr<TextureSource> source = GetTextureSource();
   if (!source) {
     return nullptr;
   }
