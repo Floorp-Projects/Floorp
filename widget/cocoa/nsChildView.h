@@ -331,6 +331,8 @@ typedef NSInteger NSEventGestureAxis;
 
 - (BOOL)isCoveringTitlebar;
 
+- (NSColor*)vibrancyFillColorForWidgetType:(uint8_t)aWidgetType;
+
 // Simple gestures support
 //
 // XXX - The swipeWithEvent, beginGestureWithEvent, magnifyWithEvent,
@@ -572,6 +574,7 @@ public:
 
   void              NotifyDirtyRegion(const nsIntRegion& aDirtyRegion);
   void              ClearVibrantAreas();
+  NSColor*          VibrancyFillColorForWidgetType(uint8_t aWidgetType);
 
   // unit conversion convenience functions
   int32_t           CocoaPointsToDevPixels(CGFloat aPts) const {
