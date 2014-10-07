@@ -128,7 +128,7 @@ function starttest() {
 
       check = false;
       window.addEventListener("text", function() { check = true; }, false);
-      synthesizeText(
+      synthesizeCompositionChange(
         { "composition":
           { "string": "a",
             "clauses":
@@ -139,9 +139,9 @@ function starttest() {
           "caret": { "start": 1, "length": 0 }
         }
       );
-      is(check, true, "synthesizeText should dispatch text event");
+      is(check, true, "synthesizeCompositionChange should cause dispatching a DOM text event");
 
-      synthesizeText(
+      synthesizeCompositionChange(
         { "composition":
           { "string": "a",
             "clauses":
