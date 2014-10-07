@@ -24,14 +24,11 @@ const INT32_MIN = INT32_MAX + 1 | 0;
 
 const assertEqFFI = {assertEq:assertEq};
 
-function assertEqX4(real, expected, assertFunc) {
-    if (typeof assertFunc === 'undefined')
-        assertFunc = assertEq;
-
-    assertFunc(real.x, expected[0]);
-    assertFunc(real.y, expected[1]);
-    assertFunc(real.z, expected[2]);
-    assertFunc(real.w, expected[3]);
+function assertEqX4(real, expected) {
+    assertEq(real.x, expected[0]);
+    assertEq(real.y, expected[1]);
+    assertEq(real.z, expected[2]);
+    assertEq(real.w, expected[3]);
 }
 
 function CheckI4(header, code, expected) {
@@ -446,68 +443,6 @@ CheckF4(F32M, 'var x=f4(1,2,3,4); x=f4m(x,x)', [1,4,9,16]);
 CheckF4(F32M, 'var x=f4(1,2,3,4); var y=f4(4,3,5,2); x=f4m(x,y)', [4,6,15,8]);
 CheckF4(F32M, 'var x=f4(13.37,2,3,4); var y=f4(4,3,5,2); x=f4m(x,y)', [Math.fround(13.37) * 4,6,15,8]);
 CheckF4(F32M, 'var x=f4(13.37,2,3,4); var y=f4(4,3,5,2); x=f4(f4m(x,y))', [Math.fround(13.37) * 4,6,15,8]);
-
-// Unary arithmetic operators
-function CheckUnaryF4(op, checkFunc, assertFunc) {
-    var _ = asmLink(asmCompile('glob', USE_ASM + F32 + 'var op=f4.' + op + '; function f(x){x=f4(x); return f4(op(x)); } return f'), this);
-    return function(input) {
-        var simd = SIMD.float32x4(input[0], input[1], input[2], input[3]);
-
-        var exp = input.map(Math.fround).map(checkFunc).map(Math.fround);
-        var obs = _(simd);
-        assertEqX4(obs, exp, assertFunc);
-    }
-}
-
-function CheckUnaryI4(op, checkFunc) {
-    var _ = asmLink(asmCompile('glob', USE_ASM + I32 + 'var op=i4.' + op + '; function f(x){x=i4(x); return i4(op(x)); } return f'), this);
-    return function(input) {
-        var simd = SIMD.int32x4(input[0], input[1], input[2], input[3]);
-        assertEqX4(_(simd), input.map(checkFunc).map(function(x) { return x | 0}));
-    }
-}
-
-CheckUnaryI4('neg', function(x) { return -x })([1, -2, INT32_MIN, INT32_MAX]);
-CheckUnaryI4('not', function(x) { return ~x })([1, -2, INT32_MIN, INT32_MAX]);
-
-var CheckAbs = CheckUnaryF4('abs', Math.abs);
-CheckAbs([1, 42.42, 0.63, 13.37]);
-CheckAbs([NaN, -Infinity, Infinity, 0]);
-
-var CheckNegF = CheckUnaryF4('neg', function(x) { return -x });
-CheckNegF([1, 42.42, 0.63, 13.37]);
-CheckNegF([NaN, -Infinity, Infinity, 0]);
-
-var CheckNotF = CheckUnaryF4('not', (function() {
-    var f32 = new Float32Array(1);
-    var i32 = new Int32Array(f32.buffer);
-    return function(x) {
-        f32[0] = x;
-        i32[0] = ~i32[0];
-        return f32[0];
-    }
-})());
-CheckNotF([1, 42.42, 0.63, 13.37]);
-CheckNotF([NaN, -Infinity, Infinity, 0]);
-
-var CheckSqrt = CheckUnaryF4('sqrt', function(x) { return Math.sqrt(x); });
-CheckSqrt([1, 42.42, 0.63, 13.37]);
-CheckSqrt([NaN, -Infinity, Infinity, 0]);
-
-// Reciprocal and reciprocalSqrt give approximate results
-function assertNear(a, b) {
-    if (a !== a && b === b)
-        throw 'Observed NaN, expected ' + b;
-    if (Math.abs(a - b) > 1e-3)
-        throw 'More than 1e-3 between ' + a + ' and ' + b;
-}
-var CheckRecp = CheckUnaryF4('reciprocal', function(x) { return 1 / x; }, assertNear);
-CheckRecp([1, 42.42, 0.63, 13.37]);
-CheckRecp([NaN, -Infinity, Infinity, 0]);
-
-var CheckRecp = CheckUnaryF4('reciprocalSqrt', function(x) { return 1 / Math.sqrt(x); }, assertNear);
-CheckRecp([1, 42.42, 0.63, 13.37]);
-CheckRecp([NaN, -Infinity, Infinity, 0]);
 
 // Min/Max
 assertAsmTypeFail('glob', USE_ASM + I32 + "var f4m=i4.min; function f() {} return f");
