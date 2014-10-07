@@ -38,7 +38,7 @@ namespace dom {
 class Date;
 class DirPickerFileListBuilderTask;
 class DOMFile;
-class nsDOMFileList;
+class FileList;
 
 class UploadLastDir MOZ_FINAL : public nsIObserver, public nsSupportsWeakReference {
 
@@ -433,7 +433,7 @@ public:
 
   // XPCOM GetForm() is OK
 
-  nsDOMFileList* GetFiles();
+  FileList* GetFiles();
 
   void OpenDirectoryPicker(ErrorResult& aRv);
   void CancelDirectoryPickerScanIfRunning();
@@ -1254,7 +1254,7 @@ protected:
    */
   nsTArray<nsRefPtr<DOMFile>> mFiles;
 
-  nsRefPtr<nsDOMFileList>  mFileList;
+  nsRefPtr<FileList>  mFileList;
 
   nsRefPtr<DirPickerFileListBuilderTask> mDirPickerFileListBuilderTask;
 

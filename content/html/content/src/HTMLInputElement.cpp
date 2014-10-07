@@ -2587,7 +2587,7 @@ void
 HTMLInputElement::SetFiles(nsIDOMFileList* aFiles,
                            bool aSetValueChanged)
 {
-  nsRefPtr<nsDOMFileList> files = static_cast<nsDOMFileList*>(aFiles);
+  nsRefPtr<FileList> files = static_cast<FileList*>(aFiles);
   mFiles.Clear();
 
   if (aFiles) {
@@ -2642,7 +2642,7 @@ HTMLInputElement::FireChangeEventIfNeeded()
                                        false);
 }
 
-nsDOMFileList*
+FileList*
 HTMLInputElement::GetFiles()
 {
   if (mType != NS_FORM_INPUT_FILE) {
@@ -2650,7 +2650,7 @@ HTMLInputElement::GetFiles()
   }
 
   if (!mFileList) {
-    mFileList = new nsDOMFileList(static_cast<nsIContent*>(this));
+    mFileList = new FileList(static_cast<nsIContent*>(this));
     UpdateFileList();
   }
 
@@ -5377,7 +5377,7 @@ HTMLInputElement::SetSelectionEnd(int32_t aSelectionEnd)
 NS_IMETHODIMP
 HTMLInputElement::GetFiles(nsIDOMFileList** aFileList)
 {
-  nsRefPtr<nsDOMFileList> list = GetFiles();
+  nsRefPtr<FileList> list = GetFiles();
   list.forget(aFileList);
   return NS_OK;
 }
