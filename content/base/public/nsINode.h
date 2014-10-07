@@ -320,7 +320,6 @@ public:
     mSubtreeRoot(MOZ_THIS_IN_INITIALIZER_LIST()),
     mSlots(nullptr)
   {
-    SetIsDOMBinding();
   }
 #endif
 

@@ -19,7 +19,6 @@ TimeEvent::TimeEvent(EventTarget* aOwner,
           aEvent ? aEvent : new InternalSMILTimeEvent(false, 0))
   , mDetail(mEvent->AsSMILTimeEvent()->detail)
 {
-  SetIsDOMBinding();
   if (aEvent) {
     mEventIsInternal = false;
   } else {

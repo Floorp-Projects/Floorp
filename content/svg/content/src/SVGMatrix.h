@@ -59,21 +59,15 @@ public:
   /**
    * Ctor for SVGMatrix objects that belong to a SVGTransform.
    */
-  explicit SVGMatrix(SVGTransform& aTransform) : mTransform(&aTransform) {
-    SetIsDOMBinding();
-  }
+  explicit SVGMatrix(SVGTransform& aTransform) : mTransform(&aTransform) {}
 
   /**
    * Ctors for SVGMatrix objects created independently of a SVGTransform.
    */
   // Default ctor for gfxMatrix will produce identity mx
-  SVGMatrix() {
-    SetIsDOMBinding();
-  }
+  SVGMatrix() {}
 
-  explicit SVGMatrix(const gfxMatrix &aMatrix) : mMatrix(aMatrix) {
-    SetIsDOMBinding();
-  }
+  explicit SVGMatrix(const gfxMatrix &aMatrix) : mMatrix(aMatrix) {}
 
   const gfxMatrix& GetMatrix() const {
     return mTransform ? mTransform->Matrixgfx() : mMatrix;

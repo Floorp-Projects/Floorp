@@ -142,13 +142,6 @@ public:
     return HasWrapperFlag(WRAPPER_BIT_PRESERVED);
   }
 
-  void SetIsDOMBinding()
-  {
-    MOZ_ASSERT(!mWrapper && !(GetWrapperFlags() & ~WRAPPER_IS_NOT_DOM_BINDING),
-               "This flag should be set before creating any wrappers.");
-    UnsetWrapperFlags(WRAPPER_IS_NOT_DOM_BINDING);
-  }
-
   bool IsDOMBinding() const
   {
     return !HasWrapperFlag(WRAPPER_IS_NOT_DOM_BINDING);

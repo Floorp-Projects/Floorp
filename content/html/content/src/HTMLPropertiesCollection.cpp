@@ -46,7 +46,6 @@ HTMLPropertiesCollection::HTMLPropertiesCollection(nsGenericHTMLElement* aRoot)
   , mDoc(aRoot->GetUncomposedDoc())
   , mIsDirty(true)
 {
-  SetIsDOMBinding();
   mNames = new PropertyStringList(this);
   if (mDoc) {
     mDoc->AddMutationObserver(this);
@@ -311,7 +310,6 @@ PropertyNodeList::PropertyNodeList(HTMLPropertiesCollection* aCollection,
     mParent(aParent),
     mIsDirty(true)
 {
-  SetIsDOMBinding();
   if (mDoc) {
     mDoc->AddMutationObserver(this);
   }

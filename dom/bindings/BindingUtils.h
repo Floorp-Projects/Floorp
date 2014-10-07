@@ -2868,7 +2868,6 @@ CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
     js::SetReservedSlot(aGlobal, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aNative));
     NS_ADDREF(aNative);
 
-    aCache->SetIsDOMBinding();
     aCache->SetWrapper(aGlobal);
 
     dom::AllocateProtoAndIfaceCache(aGlobal,

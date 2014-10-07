@@ -25,7 +25,6 @@ public:
     : mParent(aParent)
   {
     mRequest.mFlags = 0;
-    SetIsDOMBinding();
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -61,7 +60,6 @@ class PaintRequestList MOZ_FINAL : public nsISupports,
 public:
   explicit PaintRequestList(nsIDOMEvent *aParent) : mParent(aParent)
   {
-    SetIsDOMBinding();
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

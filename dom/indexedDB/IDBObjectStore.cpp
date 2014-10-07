@@ -869,8 +869,6 @@ IDBObjectStore::IDBObjectStore(IDBTransaction* aTransaction,
   MOZ_ASSERT(aTransaction);
   aTransaction->AssertIsOnOwningThread();
   MOZ_ASSERT(aSpec);
-
-  SetIsDOMBinding();
 }
 
 IDBObjectStore::~IDBObjectStore()

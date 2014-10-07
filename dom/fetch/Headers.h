@@ -53,7 +53,6 @@ public:
     : mOwner(aOwner)
     , mGuard(aGuard)
   {
-    SetIsDOMBinding();
   }
 
   explicit Headers(const Headers& aOther);

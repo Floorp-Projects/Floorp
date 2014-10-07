@@ -19,7 +19,6 @@ TelephonyCallId::TelephonyCallId(nsPIDOMWindow* aWindow,
 : mWindow(aWindow), mNumber(aNumber), mNumberPresentation(aNumberPresentation),
   mName(aName), mNamePresentation(aNamePresentation)
 {
-  SetIsDOMBinding();
 }
 
 TelephonyCallId::~TelephonyCallId()

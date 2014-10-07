@@ -61,8 +61,6 @@ public:
                    const SVGNumberList &aInternalList)
     : mAList(aAList)
   {
-    SetIsDOMBinding();
-
     // aInternalList must be passed in explicitly because we can't use
     // InternalList() here. (Because it depends on IsAnimValList, which depends
     // on this object having been assigned to aAList's mBaseVal or mAnimVal,

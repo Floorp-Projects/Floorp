@@ -107,8 +107,6 @@ NS_IMPL_RELEASE_INHERITED(MobileConnection, DOMEventTargetHelper)
 MobileConnection::MobileConnection(nsPIDOMWindow* aWindow, uint32_t aClientId)
   : DOMEventTargetHelper(aWindow)
 {
-  SetIsDOMBinding();
-
   nsCOMPtr<nsIMobileConnectionService> service =
     do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
 

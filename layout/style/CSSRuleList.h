@@ -24,11 +24,6 @@ class CSSRuleList : public nsIDOMCSSRuleList
                   , public nsWrapperCache
 {
 public:
-  CSSRuleList()
-  {
-    SetIsDOMBinding();
-  }
-
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSSRULELIST_IID)
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

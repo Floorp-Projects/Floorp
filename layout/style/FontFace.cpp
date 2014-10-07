@@ -224,8 +224,6 @@ FontFace::FontFace(nsISupports* aParent, nsPresContext* aPresContext)
 {
   MOZ_COUNT_CTOR(FontFace);
 
-  SetIsDOMBinding();
-
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aParent);
 
   if (global) {

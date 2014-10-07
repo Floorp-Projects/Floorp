@@ -841,7 +841,6 @@ NS_INTERFACE_MAP_END
 UndoManager::UndoManager(nsIContent* aNode)
   : mHostNode(aNode), mInTransaction(false), mIsDisconnected(false)
 {
-  SetIsDOMBinding();
   mTxnManager = new nsTransactionManager();
 }
 

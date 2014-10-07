@@ -55,7 +55,6 @@ CryptoKey::CryptoKey(nsIGlobalObject* aGlobal)
   , mPrivateKey(nullptr)
   , mPublicKey(nullptr)
 {
-  SetIsDOMBinding();
 }
 
 CryptoKey::~CryptoKey()

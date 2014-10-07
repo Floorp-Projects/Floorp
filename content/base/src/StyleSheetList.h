@@ -20,11 +20,6 @@ class StyleSheetList : public nsIDOMStyleSheetList
                      , public nsWrapperCache
 {
 public:
-  StyleSheetList()
-  {
-    SetIsDOMBinding();
-  }
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StyleSheetList)
   NS_DECL_NSIDOMSTYLESHEETLIST

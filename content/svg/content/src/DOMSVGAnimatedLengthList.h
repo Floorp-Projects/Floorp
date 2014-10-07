@@ -177,7 +177,6 @@ private:
     , mAttrEnum(aAttrEnum)
     , mAxis(aAxis)
   {
-    SetIsDOMBinding();
   }
 
   ~DOMSVGAnimatedLengthList();
