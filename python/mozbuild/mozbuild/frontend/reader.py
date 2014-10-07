@@ -18,6 +18,7 @@ It does this by examining specific variables populated during execution.
 
 from __future__ import print_function, unicode_literals
 
+import ast
 import inspect
 import logging
 import os
@@ -736,14 +737,11 @@ class BuildReader(object):
         path = mozpath.join(self.config.topsrcdir, 'moz.build')
         return self.read_mozbuild(path, self.config, read_tiers=True)
 
-    def walk_topsrcdir(self):
-        """Read all moz.build files in the source tree.
+    def all_mozbuild_paths(self):
+        """Iterator over all available moz.build files.
 
-        This is different from read_topsrcdir() in that this version performs a
-        filesystem walk to discover every moz.build file rather than relying on
-        data from executed moz.build files to drive traversal.
-
-        This is a generator of Context instances.
+        This method has little to do with the reader. It should arguably belong
+        elsewhere.
         """
         # In the future, we may traverse moz.build files by looking
         # for DIRS references in the AST, even if a directory is added behind
@@ -759,11 +757,119 @@ class BuildReader(object):
         finder = FileFinder(self.config.topsrcdir, find_executables=False,
             ignore=ignore)
 
+        # The root doesn't get picked up by FileFinder.
+        yield 'moz.build'
+
         for path, f in finder.find('**/moz.build'):
-            path = os.path.join(self.config.topsrcdir, path)
-            for s in self.read_mozbuild(path, self.config, descend=False,
-                read_tiers=True):
-                yield s
+            yield path
+
+    def find_sphinx_variables(self):
+        """This function finds all assignments of Sphinx documentation variables.
+
+        This is a generator of tuples of (moz.build path, var, key, value). For
+        variables that assign to keys in objects, key will be defined.
+
+        With a little work, this function could be made more generic. But if we
+        end up writing a lot of ast code, it might be best to import a
+        high-level AST manipulation library into the tree.
+        """
+        # This function looks for assignments to SPHINX_TREES and
+        # SPHINX_PYTHON_PACKAGE_DIRS variables.
+        #
+        # SPHINX_TREES is a dict. Keys and values should both be strings. The
+        # target of the assignment should be a Subscript node. The value
+        # assigned should be a Str node. e.g.
+        #
+        #  SPHINX_TREES['foo'] = 'bar'
+        #
+        # This is an Assign node with a Subscript target. The Subscript's value
+        # is a Name node with id "SPHINX_TREES." The slice of this target
+        # is an Index node and its value is a Str with value "foo."
+        #
+        # SPHINX_PYTHON_PACKAGE_DIRS is a simple list. The target of the
+        # assignment should be a Name node. Values should be a List node, whose
+        # elements are Str nodes. e.g.
+        #
+        #  SPHINX_PYTHON_PACKAGE_DIRS += ['foo']
+        #
+        # This is an AugAssign node with a Name target with id
+        # "SPHINX_PYTHON_PACKAGE_DIRS." The value is a List node containing 1
+        # Str elt whose value is "foo."
+        relevant = [
+            'SPHINX_TREES',
+            'SPHINX_PYTHON_PACKAGE_DIRS',
+        ]
+
+        def assigned_variable(node):
+            # This is not correct, but we don't care yet.
+            if hasattr(node, 'targets'):
+                # Nothing in moz.build does multi-assignment (yet). So error if
+                # we see it.
+                assert len(node.targets) == 1
+
+                target = node.targets[0]
+            else:
+                target = node.target
+
+            if isinstance(target, ast.Subscript):
+                if not isinstance(target.value, ast.Name):
+                    return None, None
+                name = target.value.id
+            elif isinstance(target, ast.Name):
+                name = target.id
+            else:
+                return None, None
+
+            if name not in relevant:
+                return None, None
+
+            key = None
+            if isinstance(target, ast.Subscript):
+                assert isinstance(target.slice, ast.Index)
+                assert isinstance(target.slice.value, ast.Str)
+                key = target.slice.value.s
+
+            return name, key
+
+        def assigned_values(node):
+            value = node.value
+            if isinstance(value, ast.List):
+                for v in value.elts:
+                    assert isinstance(v, ast.Str)
+                    yield v.s
+            else:
+                assert isinstance(value, ast.Str)
+                yield value.s
+
+        assignments = []
+
+        class Visitor(ast.NodeVisitor):
+            def helper(self, node):
+                name, key = assigned_variable(node)
+                if not name:
+                    return
+
+                for v in assigned_values(node):
+                    assignments.append((name, key, v))
+
+            def visit_Assign(self, node):
+                self.helper(node)
+
+            def visit_AugAssign(self, node):
+                self.helper(node)
+
+        for p in self.all_mozbuild_paths():
+            assignments[:] = []
+            full = os.path.join(self.config.topsrcdir, p)
+
+            with open(full, 'rb') as fh:
+                source = fh.read()
+
+            tree = ast.parse(source, full)
+            Visitor().visit(tree)
+
+            for name, key, value in assignments:
+                yield p, name, key, value
 
     def read_mozbuild(self, path, config, read_tiers=False, descend=True,
             metadata={}):
