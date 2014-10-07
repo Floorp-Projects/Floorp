@@ -180,7 +180,6 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
   mInput = new CameraPreviewMediaStream(this);
 
   BindToOwner(aWindow);
-  SetIsDOMBinding();
 
   nsRefPtr<DOMCameraConfiguration> initialConfig =
     new DOMCameraConfiguration(aInitialConfig);

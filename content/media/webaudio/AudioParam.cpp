@@ -51,7 +51,6 @@ AudioParam::AudioParam(AudioNode* aNode,
   , mCallback(aCallback)
   , mDefaultValue(aDefaultValue)
 {
-  SetIsDOMBinding();
 }
 
 AudioParam::~AudioParam()

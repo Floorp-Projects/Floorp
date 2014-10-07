@@ -56,8 +56,6 @@ IDBIndex::IDBIndex(IDBObjectStore* aObjectStore, const IndexMetadata* aMetadata)
   MOZ_ASSERT(aObjectStore);
   aObjectStore->AssertIsOnOwningThread();
   MOZ_ASSERT(aMetadata);
-
-  SetIsDOMBinding();
 }
 
 IDBIndex::~IDBIndex()

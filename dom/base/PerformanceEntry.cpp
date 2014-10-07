@@ -23,7 +23,6 @@ PerformanceEntry::PerformanceEntry(nsPerformance* aPerformance)
 : mPerformance(aPerformance)
 {
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
-  SetIsDOMBinding();
 }
 
 PerformanceEntry::~PerformanceEntry()

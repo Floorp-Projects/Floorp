@@ -43,8 +43,6 @@ BluetoothPairingHandle::BluetoothPairingHandle(nsPIDOMWindow* aOwner,
   } else {
     MOZ_ASSERT(aPasskey.IsEmpty());
   }
-
-  SetIsDOMBinding();
 }
 
 BluetoothPairingHandle::~BluetoothPairingHandle()

@@ -23,7 +23,6 @@ NS_INTERFACE_MAP_END
 SpeechGrammar::SpeechGrammar(nsISupports* aParent)
   : mParent(aParent)
 {
-  SetIsDOMBinding();
 }
 
 SpeechGrammar::~SpeechGrammar()

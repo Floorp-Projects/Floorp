@@ -30,7 +30,6 @@ MobileCellInfo::MobileCellInfo(nsPIDOMWindow* aWindow)
   , mCdmaSystemId(-1)
   , mCdmaNetworkId(-1)
 {
-  SetIsDOMBinding();
 }
 
 MobileCellInfo::MobileCellInfo(int32_t aGsmLocationAreaCode,

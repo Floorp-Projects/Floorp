@@ -148,10 +148,6 @@ protected:
 
 protected:
   virtual ~nsDOMCSSDeclaration();
-  nsDOMCSSDeclaration()
-  {
-    SetIsDOMBinding();
-  }
 };
 
 bool IsCSSPropertyExposedToJS(nsCSSProperty aProperty, JSContext* cx, JSObject* obj);

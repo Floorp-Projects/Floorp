@@ -13023,20 +13023,16 @@ class CGExampleClass(CGBindingImplClass):
 
     def define(self):
         # Just override CGClass and do our own thing
-        if self.descriptor.wrapperCache:
-            setDOMBinding = "  SetIsDOMBinding();\n"
-        else:
-            setDOMBinding = ""
         if self.refcounted:
             ctordtor = dedent("""
                 ${nativeType}::${nativeType}()
                 {
-                %s}
+                }
 
                 ${nativeType}::~${nativeType}()
                 {
                 }
-                """) % setDOMBinding
+                """)
         else:
             ctordtor = dedent("""
                 ${nativeType}::${nativeType}()
@@ -13341,7 +13337,7 @@ class CGJSImplClass(CGBindingImplClass):
             constructorBody = dedent("""
                 // Make sure we're an nsWrapperCache already
                 MOZ_ASSERT(static_cast<nsWrapperCache*>(this));
-                // And that our ancestor has called SetIsDOMBinding()
+                // And that our ancestor has not called SetIsNotDOMBinding()
                 MOZ_ASSERT(IsDOMBinding());
                 """)
             extradefinitions = fill(
@@ -13360,7 +13356,6 @@ class CGJSImplClass(CGBindingImplClass):
             isupportsDecl = "NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
             ccDecl = ("NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)\n" %
                       descriptor.name)
-            constructorBody = "SetIsDOMBinding();\n"
             extradefinitions = fill(
                 """
                 NS_IMPL_CYCLE_COLLECTION_CLASS(${ifaceName})
@@ -13429,8 +13424,7 @@ class CGJSImplClass(CGBindingImplClass):
             [Argument("JS::Handle<JSObject*>", "aJSImplObject"),
              Argument("nsPIDOMWindow*", "aParent")],
             visibility="public",
-            baseConstructors=baseConstructors,
-            body=constructorBody)
+            baseConstructors=baseConstructors)
 
         self.methodDecls.append(
             ClassMethod("_Create",

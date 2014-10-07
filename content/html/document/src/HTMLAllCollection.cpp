@@ -18,7 +18,6 @@ HTMLAllCollection::HTMLAllCollection(nsHTMLDocument* aDocument)
   : mDocument(aDocument)
 {
   MOZ_ASSERT(mDocument);
-  SetIsDOMBinding();
 }
 
 HTMLAllCollection::~HTMLAllCollection()

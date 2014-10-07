@@ -27,7 +27,6 @@ using namespace mozilla::dom;
 nsPluginArray::nsPluginArray(nsPIDOMWindow* aWindow)
   : mWindow(aWindow)
 {
-  SetIsDOMBinding();
 }
 
 void
@@ -386,7 +385,6 @@ nsPluginElement::nsPluginElement(nsPIDOMWindow* aWindow,
   : mWindow(aWindow),
     mPluginTag(aPluginTag)
 {
-  SetIsDOMBinding();
 }
 
 nsPluginElement::~nsPluginElement()

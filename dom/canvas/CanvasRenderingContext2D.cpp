@@ -832,7 +832,6 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
   , mInvalidateCount(0)
 {
   sNumLivingContexts++;
-  SetIsDOMBinding();
 
   // The default is to use OpenGL mode
   if (!gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas()) {
@@ -4950,16 +4949,12 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CanvasPath, mParent)
 CanvasPath::CanvasPath(nsISupports* aParent)
   : mParent(aParent)
 {
-  SetIsDOMBinding();
-
   mPathBuilder = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()->CreatePathBuilder();
 }
 
 CanvasPath::CanvasPath(nsISupports* aParent, TemporaryRef<PathBuilder> aPathBuilder)
   : mParent(aParent), mPathBuilder(aPathBuilder)
 {
-  SetIsDOMBinding();
-
   if (!mPathBuilder) {
     mPathBuilder = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()->CreatePathBuilder();
   }

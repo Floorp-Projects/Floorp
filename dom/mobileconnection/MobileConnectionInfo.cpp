@@ -58,7 +58,6 @@ MobileConnectionInfo::MobileConnectionInfo(nsPIDOMWindow* aWindow)
   , mRoaming(false)
   , mWindow(aWindow)
 {
-  SetIsDOMBinding();
 }
 
 MobileConnectionInfo::MobileConnectionInfo(const nsAString& aState,
