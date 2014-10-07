@@ -2427,17 +2427,6 @@ class FunctionCompiler
         return ins;
     }
 
-    MDefinition *unarySimd(MDefinition *input, MSimdUnaryArith::Operation op, MIRType type)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(IsSimdType(input->type()) && input->type() == type);
-        MInstruction *ins = MSimdUnaryArith::NewAsmJS(alloc(), input, op, type);
-        curBlock_->add(ins);
-        return ins;
-    }
-
     MDefinition *binarySimd(MDefinition *lhs, MDefinition *rhs, MSimdBinaryArith::Operation op,
                             MIRType type)
     {
@@ -4864,18 +4853,6 @@ class CheckSimdVectorScalarArgs
 
 } // anonymous namespace
 
-static inline bool
-CheckSimdUnary(FunctionCompiler &f, ParseNode *call, Type retType, MSimdUnaryArith::Operation op,
-               MDefinition **def, Type *type)
-{
-    DefinitionVector defs;
-    if (!CheckSimdCallArgs(f, call, 1, CheckArgIsSubtypeOf(retType), &defs))
-        return false;
-    *def = f.unarySimd(defs[0], op, retType.toMIRType());
-    *type = retType;
-    return true;
-}
-
 template<class OpEnum>
 static inline bool
 CheckSimdBinary(FunctionCompiler &f, ParseNode *call, Type retType, OpEnum op, MDefinition **def,
@@ -5007,19 +4984,6 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
         return CheckSimdBinary(f, call, Type::Int32x4, MSimdShift::rsh, def, type);
       case AsmJSSimdOperation_shiftRightLogical:
         return CheckSimdBinary(f, call, Type::Int32x4, MSimdShift::ursh, def, type);
-
-      case AsmJSSimdOperation_abs:
-        return CheckSimdUnary(f, call, retType, MSimdUnaryArith::abs, def, type);
-      case AsmJSSimdOperation_neg:
-        return CheckSimdUnary(f, call, retType, MSimdUnaryArith::neg, def, type);
-      case AsmJSSimdOperation_not:
-        return CheckSimdUnary(f, call, retType, MSimdUnaryArith::not_, def, type);
-      case AsmJSSimdOperation_sqrt:
-        return CheckSimdUnary(f, call, retType, MSimdUnaryArith::sqrt, def, type);
-      case AsmJSSimdOperation_reciprocal:
-        return CheckSimdUnary(f, call, retType, MSimdUnaryArith::reciprocal, def, type);
-      case AsmJSSimdOperation_reciprocalSqrt:
-        return CheckSimdUnary(f, call, retType, MSimdUnaryArith::reciprocalSqrt, def, type);
 
       case AsmJSSimdOperation_splat: {
         DefinitionVector defs;
