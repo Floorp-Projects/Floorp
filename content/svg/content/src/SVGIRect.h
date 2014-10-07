@@ -22,11 +22,6 @@ class SVGIRect : public nsISupports,
                  public nsWrapperCache
 {
 public:
-  SVGIRect()
-  {
-    SetIsDOMBinding();
-  }
-
   virtual ~SVGIRect()
   {
   }

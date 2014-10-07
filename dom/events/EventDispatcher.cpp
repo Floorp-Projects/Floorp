@@ -722,9 +722,6 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case eDragEventClass:
       return NS_NewDOMDragEvent(aDOMEvent, aOwner, aPresContext,
                                 aEvent->AsDragEvent());
-    case eTextEventClass:
-      return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext,
-                              aEvent->AsTextEvent());
     case eClipboardEventClass:
       return NS_NewDOMClipboardEvent(aDOMEvent, aOwner, aPresContext,
                                      aEvent->AsClipboardEvent());
@@ -772,14 +769,14 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
   if (aEventType.LowerCaseEqualsLiteral("keyboardevent") ||
       aEventType.LowerCaseEqualsLiteral("keyevents"))
     return NS_NewDOMKeyboardEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("compositionevent"))
+  if (aEventType.LowerCaseEqualsLiteral("compositionevent") ||
+      aEventType.LowerCaseEqualsLiteral("textevent") ||
+      aEventType.LowerCaseEqualsLiteral("textevents")) {
     return NS_NewDOMCompositionEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+  }
   if (aEventType.LowerCaseEqualsLiteral("mutationevent") ||
         aEventType.LowerCaseEqualsLiteral("mutationevents"))
     return NS_NewDOMMutationEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("textevent") ||
-      aEventType.LowerCaseEqualsLiteral("textevents"))
-    return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("deviceorientationevent")) {
     DeviceOrientationEventInit init;
     nsRefPtr<DeviceOrientationEvent> event =

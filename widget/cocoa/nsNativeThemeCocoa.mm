@@ -2798,33 +2798,25 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       
       CGContextFillRect(cgContext, macRect);
 
-      CGContextSetLineWidth(cgContext, 1.0);
-      CGContextSetShouldAntialias(cgContext, false);
-
-      // stroke everything but the top line of the text area
-      CGContextSetRGBStrokeColor(cgContext, 0.6, 0.6, 0.6, 1.0);
-      CGContextBeginPath(cgContext);
-      CGContextMoveToPoint(cgContext, macRect.origin.x, macRect.origin.y + 1);
-      CGContextAddLineToPoint(cgContext, macRect.origin.x, macRect.origin.y + macRect.size.height);
-      CGContextAddLineToPoint(cgContext, macRect.origin.x + macRect.size.width - 1, macRect.origin.y + macRect.size.height);
-      CGContextAddLineToPoint(cgContext, macRect.origin.x + macRect.size.width - 1, macRect.origin.y + 1);
-      CGContextStrokePath(cgContext);
-
-      // stroke the line across the top of the text area
-      CGContextSetRGBStrokeColor(cgContext, 0.4510, 0.4510, 0.4510, 1.0);
-      CGContextBeginPath(cgContext);
-      CGContextMoveToPoint(cgContext, macRect.origin.x, macRect.origin.y + 1);
-      CGContextAddLineToPoint(cgContext, macRect.origin.x + macRect.size.width - 1, macRect.origin.y + 1);
-      CGContextStrokePath(cgContext);
+      // #737373 for the top border, #999999 for the rest.
+      float x = macRect.origin.x, y = macRect.origin.y;
+      float w = macRect.size.width, h = macRect.size.height;
+      CGContextSetRGBFillColor(cgContext, 0.4510, 0.4510, 0.4510, 1.0);
+      CGContextFillRect(cgContext, CGRectMake(x, y, w, 1));
+      CGContextSetRGBFillColor(cgContext, 0.6, 0.6, 0.6, 1.0);
+      CGContextFillRect(cgContext, CGRectMake(x, y + 1, 1, h - 1));
+      CGContextFillRect(cgContext, CGRectMake(x + w - 1, y + 1, 1, h - 1));
+      CGContextFillRect(cgContext, CGRectMake(x + 1, y + h - 1, w - 2, 1));
 
       // draw a focus ring
       if (eventState.HasState(NS_EVENT_STATE_FOCUS)) {
-        // We need to bring the rectangle in by 1 pixel on each side.
-        CGRect cgr = CGRectMake(macRect.origin.x + 1,
-                                macRect.origin.y + 1,
-                                macRect.size.width - 2,
-                                macRect.size.height - 2);
-        HIThemeDrawFocusRect(&cgr, true, cgContext, kHIThemeOrientationNormal);
+        NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
+        [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
+        CGContextSaveGState(cgContext);
+        NSSetFocusRingStyle(NSFocusRingOnly);
+        NSRectFill(NSRectFromCGRect(macRect));
+        CGContextRestoreGState(cgContext);
+        [NSGraphicsContext setCurrentContext:savedContext];
       }
     }
       break;
@@ -2858,6 +2850,23 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     case NS_THEME_RESIZER:
       DrawResizer(cgContext, macRect, aFrame);
       break;
+
+    case NS_THEME_MAC_VIBRANCY_LIGHT:
+    case NS_THEME_MAC_VIBRANCY_DARK:
+    {
+      NSWindow* win = NativeWindowForFrame(aFrame);
+      if ([win isKindOfClass:[ToolbarWindow class]]) {
+        NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
+        [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
+
+        ChildView* childView = [(ToolbarWindow*)win mainChildView];
+        [[childView vibrancyFillColorForWidgetType:aWidgetType] set];
+        NSRectFill(NSRectFromCGRect(macRect));
+
+        [NSGraphicsContext setCurrentContext:savedContext];
+      }
+      break;
+    }
   }
 
   if (hidpi) {

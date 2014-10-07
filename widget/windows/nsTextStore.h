@@ -251,12 +251,13 @@ protected:
   void     DidLockGranted();
 
   bool     GetScreenExtInternal(RECT &aScreenExt);
-  // If aDispatchTextEvent is true, this method will dispatch text event if
-  // this is called during IME composing.  aDispatchTextEvent should be true
-  // only when this is called from SetSelection.  Because otherwise, the text
-  // event should not be sent from here.
+  // If aDispatchCompositionChangeEvent is true, this method will dispatch
+  // compositionchange event if this is called during IME composing.
+  // aDispatchCompositionChangeEvent should be true only when this is called
+  // from SetSelection.  Because otherwise, the compositionchange event should
+  // not be sent from here.
   HRESULT  SetSelectionInternal(const TS_SELECTION_ACP*,
-                                bool aDispatchTextEvent = false);
+                                bool aDispatchCompositionChangeEvent = false);
   bool     InsertTextAtSelectionInternal(const nsAString &aInsertStr,
                                          TS_TEXTCHANGE* aTextChange);
   void     CommitCompositionInternal(bool);
@@ -322,8 +323,8 @@ protected:
     // Current copy of the active composition string. Only mString is
     // changed during a InsertTextAtSelection call if we have a composition.
     // mString acts as a buffer until OnUpdateComposition is called
-    // and mString is flushed to editor through NS_TEXT_TEXT. This
-    // way all changes are updated in batches to avoid
+    // and mString is flushed to editor through NS_COMPOSITION_CHANGE.
+    // This way all changes are updated in batches to avoid
     // inconsistencies/artifacts.
     nsString mString;
 

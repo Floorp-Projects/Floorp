@@ -30,7 +30,6 @@ MobileCellInfo::MobileCellInfo(nsPIDOMWindow* aWindow)
   , mCdmaSystemId(-1)
   , mCdmaNetworkId(-1)
 {
-  SetIsDOMBinding();
 }
 
 MobileCellInfo::MobileCellInfo(int32_t aGsmLocationAreaCode,
@@ -49,9 +48,8 @@ MobileCellInfo::MobileCellInfo(int32_t aGsmLocationAreaCode,
   , mCdmaNetworkId(aCdmaNetworkId)
 {
   // The instance created by this way is only used for IPC stuff. It won't be
-  // expose to JS directly, we will clone this instance to the one that is
-  // maintained in MobileConnectionChild. So we don't need SetIsDOMBinding()
-  // here.
+  // exposed to JS directly, we will clone this instance to the one that is
+  // maintained in MobileConnectionChild.
 }
 
 void
@@ -73,7 +71,6 @@ MobileCellInfo::Update(nsIMobileCellInfo* aInfo)
 JSObject*
 MobileCellInfo::WrapObject(JSContext* aCx)
 {
-  MOZ_ASSERT(IsDOMBinding());
   return MozMobileCellInfoBinding::Wrap(aCx, this);
 }
 
