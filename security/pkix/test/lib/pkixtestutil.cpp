@@ -341,13 +341,16 @@ YMDHMS(int16_t year, int16_t month, int16_t day,
 
 static ByteString
 SignedData(const ByteString& tbsData,
-           const TestKeyPair& keyPair,
+           /*optional*/ TestKeyPair* keyPair,
            SignatureAlgorithm signatureAlgorithm,
            bool corrupt, /*optional*/ const ByteString* certs)
 {
   ByteString signature;
-  if (keyPair.SignData(tbsData, signatureAlgorithm, signature) != Success) {
-    return ByteString();
+  if (keyPair) {
+    if (keyPair->SignData(tbsData, signatureAlgorithm, signature)
+          != Success) {
+       return ByteString();
+     }
   }
 
   ByteString signatureAlgorithmDER;
@@ -462,27 +465,39 @@ CreateEncodedCertificate(long version, Input signature,
                          const ByteString& issuerNameDER,
                          time_t notBefore, time_t notAfter,
                          const ByteString& subjectNameDER,
-                         const TestKeyPair& subjectKeyPair,
                          /*optional*/ const ByteString* extensions,
-                         const TestKeyPair& issuerKeyPair,
-                         SignatureAlgorithm signatureAlgorithm)
+                         /*optional*/ TestKeyPair* issuerKeyPair,
+                         SignatureAlgorithm signatureAlgorithm,
+                         /*out*/ ScopedTestKeyPair& keyPairResult)
 {
+  // It may be the case that privateKeyResult references the same TestKeyPair
+  // as issuerKeyPair. Thus, we can't set keyPairResult until after we're done
+  // with issuerKeyPair.
+  ScopedTestKeyPair subjectKeyPair(GenerateKeyPair());
+  if (!subjectKeyPair) {
+    return ByteString();
+  }
+
   ByteString tbsCertificate(TBSCertificate(version, serialNumber,
                                            signature, issuerNameDER, notBefore,
                                            notAfter, subjectNameDER,
-                                           subjectKeyPair.subjectPublicKeyInfo,
+                                           subjectKeyPair->subjectPublicKeyInfo,
                                            extensions));
   if (ENCODING_FAILED(tbsCertificate)) {
     return ByteString();
   }
 
-  ByteString result(SignedData(tbsCertificate, issuerKeyPair,
+  ByteString result(SignedData(tbsCertificate,
+                               issuerKeyPair ? issuerKeyPair
+                                             : subjectKeyPair.get(),
                                signatureAlgorithm, false, nullptr));
   if (ENCODING_FAILED(result)) {
     return ByteString();
   }
 
   MaybeLogOutput(result, "cert");
+
+  keyPairResult = subjectKeyPair.release();
 
   return result;
 }
@@ -749,7 +764,8 @@ BasicOCSPResponse(OCSPResponseContext& context)
     return ByteString();
   }
 
-  return SignedData(tbsResponseData, *context.signerKeyPair,
+  // TODO(bug 980538): certs
+  return SignedData(tbsResponseData, context.signerKeyPair.get(),
                     SignatureAlgorithm::rsa_pkcs1_with_sha256,
                     context.badSignature, context.certs);
 }
