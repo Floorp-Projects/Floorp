@@ -109,7 +109,6 @@ Headers::Headers(const Headers& aOther)
   : mOwner(aOther.mOwner)
   , mGuard(aOther.mGuard)
 {
-  SetIsDOMBinding();
   ErrorResult result;
   Fill(aOther, result);
   MOZ_ASSERT(!result.Failed());

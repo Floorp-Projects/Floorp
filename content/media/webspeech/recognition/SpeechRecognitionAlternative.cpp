@@ -26,7 +26,6 @@ SpeechRecognitionAlternative::SpeechRecognitionAlternative(SpeechRecognition* aP
   , mConfidence(0)
   , mParent(aParent)
 {
-  SetIsDOMBinding();
 }
 
 SpeechRecognitionAlternative::~SpeechRecognitionAlternative()

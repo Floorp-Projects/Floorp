@@ -124,7 +124,6 @@ class DOMSVGAnimatedPreserveAspectRatio MOZ_FINAL : public nsISupports,
                                     nsSVGElement *aSVGElement)
     : mVal(aVal), mSVGElement(aSVGElement)
   {
-    SetIsDOMBinding();
   }
 
   // WebIDL

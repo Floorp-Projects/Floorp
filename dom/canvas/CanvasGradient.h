@@ -66,7 +66,6 @@ protected:
     : mContext(aContext)
     , mType(aType)
   {
-    SetIsDOMBinding();
   }
 
   nsRefPtr<CanvasRenderingContext2D> mContext;

@@ -21,7 +21,6 @@ nsROCSSPrimitiveValue::nsROCSSPrimitiveValue()
   : CSSValue(), mType(CSS_PX)
 {
   mValue.mAppUnits = 0;
-  SetIsDOMBinding();
 }
 
 

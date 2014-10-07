@@ -2135,8 +2135,6 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mWorkerType(aWorkerType),
   mCreationTimeStamp(TimeStamp::Now())
 {
-  SetIsDOMBinding();
-
   MOZ_ASSERT_IF(!IsDedicatedWorker(),
                 !aSharedWorkerName.IsVoid() && NS_IsMainThread());
   MOZ_ASSERT_IF(IsDedicatedWorker(), aSharedWorkerName.IsEmpty());

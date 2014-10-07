@@ -52,6 +52,4 @@ DOMCameraDetectedFace::DOMCameraDetectedFace(nsISupports* aParent,
   if (aFace.hasMouth) {
     mMouth = new DOMPoint(this, aFace.mouth.x, aFace.mouth.y);
   }
-
-  SetIsDOMBinding();
 }

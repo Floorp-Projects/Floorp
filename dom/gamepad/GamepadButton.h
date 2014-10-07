@@ -20,7 +20,6 @@ public:
                                                  mPressed(false),
                                                  mValue(0)
   {
-    SetIsDOMBinding();
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

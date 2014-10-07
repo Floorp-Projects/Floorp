@@ -56,8 +56,6 @@ ArchiveReader::ArchiveReader(nsIDOMBlob* aBlob, nsPIDOMWindow* aWindow,
 {
   MOZ_ASSERT(aBlob);
   MOZ_ASSERT(aWindow);
-
-  SetIsDOMBinding();
 }
 
 ArchiveReader::~ArchiveReader()

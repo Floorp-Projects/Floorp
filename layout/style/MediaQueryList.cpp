@@ -22,8 +22,6 @@ MediaQueryList::MediaQueryList(nsPresContext *aPresContext,
 {
   PR_INIT_CLIST(this);
 
-  SetIsDOMBinding();
-
   nsCSSParser parser;
   parser.ParseMediaList(aMediaQueryList, nullptr, 0, mMediaList, false);
 }

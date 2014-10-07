@@ -59,7 +59,6 @@ private:
   explicit nsDOMSerializer(nsISupports* aOwner) : mOwner(aOwner)
   {
     MOZ_ASSERT(aOwner);
-    SetIsDOMBinding();
   }
 
   nsCOMPtr<nsISupports> mOwner;

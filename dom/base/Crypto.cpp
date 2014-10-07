@@ -32,7 +32,6 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Crypto, mWindow, mSubtle)
 Crypto::Crypto()
 {
   MOZ_COUNT_CTOR(Crypto);
-  SetIsDOMBinding();
 }
 
 Crypto::~Crypto()

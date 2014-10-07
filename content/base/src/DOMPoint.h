@@ -31,7 +31,6 @@ public:
     , mZ(aZ)
     , mW(aW)
   {
-    SetIsDOMBinding();
   }
 
   double X() const { return mX; }

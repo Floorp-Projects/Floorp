@@ -24,7 +24,6 @@ SpeechSynthesisVoice::SpeechSynthesisVoice(nsISupports* aParent,
   : mParent(aParent)
   , mUri(aUri)
 {
-  SetIsDOMBinding();
 }
 
 SpeechSynthesisVoice::~SpeechSynthesisVoice()

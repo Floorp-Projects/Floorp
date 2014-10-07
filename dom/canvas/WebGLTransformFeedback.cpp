@@ -15,7 +15,6 @@ using namespace mozilla;
 WebGLTransformFeedback::WebGLTransformFeedback(WebGLContext* context)
     : WebGLContextBoundObject(context)
 {
-    SetIsDOMBinding();
     MOZ_CRASH("Not Implemented.");
 }
 

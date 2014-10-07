@@ -44,7 +44,6 @@ BluetoothClassOfDevice::BluetoothClassOfDevice(nsPIDOMWindow* aOwner)
   : mOwnerWindow(aOwner)
 {
   MOZ_ASSERT(aOwner);
-  SetIsDOMBinding();
 
   Reset();
 }
