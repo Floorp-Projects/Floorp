@@ -16,9 +16,28 @@ namespace mozilla {
 bool IsGLDepthFormat(TexInternalFormat webGLFormat);
 bool IsGLDepthStencilFormat(TexInternalFormat webGLFormat);
 bool FormatHasAlpha(TexInternalFormat webGLFormat);
-void DriverFormatsFromFormatAndType(gl::GLContext* gl, TexInternalFormat webGLFormat, TexType webGLType,
-                                    GLenum* out_driverInternalFormat, GLenum* out_driverFormat);
-GLenum DriverTypeFromType(gl::GLContext* gl, TexType webGLType);
+void
+DriverFormatsFromEffectiveInternalFormat(gl::GLContext* gl,
+                                         TexInternalFormat internalformat,
+                                         GLenum* out_driverInternalFormat,
+                                         GLenum* out_driverFormat,
+                                         GLenum* out_driverType);
+TexInternalFormat
+EffectiveInternalFormatFromInternalFormatAndType(TexInternalFormat internalformat,
+                                                 TexType type);
+TexInternalFormat
+EffectiveInternalFormatFromUnsizedInternalFormatAndType(TexInternalFormat internalformat,
+                                                        TexType type);
+void
+UnsizedInternalFormatAndTypeFromEffectiveInternalFormat(TexInternalFormat effectiveinternalformat,
+                                                        TexInternalFormat* out_internalformat,
+                                                        TexType* out_type);
+TexType
+TypeFromInternalFormat(TexInternalFormat internalformat);
+TexInternalFormat
+UnsizedInternalFormatFromInternalFormat(TexInternalFormat internalformat);
+size_t
+GetBitsPerTexel(TexInternalFormat effectiveinternalformat);
 
 // For use with the different texture calls, i.e.
 //   TexImage2D, CopyTex[Sub]Image2D, ...

@@ -31,29 +31,28 @@ namespace mozilla {
 using namespace gl;
 
 bool
-IsGLDepthFormat(TexInternalFormat webGLFormat)
+IsGLDepthFormat(TexInternalFormat internalformat)
 {
-    return (webGLFormat == LOCAL_GL_DEPTH_COMPONENT ||
-            webGLFormat == LOCAL_GL_DEPTH_COMPONENT16 ||
-            webGLFormat == LOCAL_GL_DEPTH_COMPONENT32);
+    TexInternalFormat unsizedformat = UnsizedInternalFormatFromInternalFormat(internalformat);
+    return unsizedformat == LOCAL_GL_DEPTH_COMPONENT;
 }
 
 bool
-IsGLDepthStencilFormat(TexInternalFormat webGLFormat)
+IsGLDepthStencilFormat(TexInternalFormat internalformat)
 {
-    return (webGLFormat == LOCAL_GL_DEPTH_STENCIL ||
-            webGLFormat == LOCAL_GL_DEPTH24_STENCIL8);
+    TexInternalFormat unsizedformat = UnsizedInternalFormatFromInternalFormat(internalformat);
+    return unsizedformat == LOCAL_GL_DEPTH_STENCIL;
 }
 
 bool
-FormatHasAlpha(TexInternalFormat webGLFormat)
+FormatHasAlpha(TexInternalFormat internalformat)
 {
-    return webGLFormat == LOCAL_GL_RGBA ||
-           webGLFormat == LOCAL_GL_LUMINANCE_ALPHA ||
-           webGLFormat == LOCAL_GL_ALPHA ||
-           webGLFormat == LOCAL_GL_RGBA4 ||
-           webGLFormat == LOCAL_GL_RGB5_A1 ||
-           webGLFormat == LOCAL_GL_SRGB_ALPHA;
+    TexInternalFormat unsizedformat = UnsizedInternalFormatFromInternalFormat(internalformat);
+    return unsizedformat == LOCAL_GL_RGBA ||
+           unsizedformat == LOCAL_GL_LUMINANCE_ALPHA ||
+           unsizedformat == LOCAL_GL_ALPHA ||
+           unsizedformat == LOCAL_GL_SRGB_ALPHA ||
+           unsizedformat == LOCAL_GL_RGBA_INTEGER;
 }
 
 TexTarget
@@ -76,11 +75,12 @@ TexImageTargetToTexTarget(TexImageTarget texImageTarget)
     }
 }
 
-GLComponents::GLComponents(TexInternalFormat format)
+GLComponents::GLComponents(TexInternalFormat internalformat)
 {
+    TexInternalFormat unsizedformat = UnsizedInternalFormatFromInternalFormat(internalformat);
     mComponents = 0;
 
-    switch (format.get()) {
+    switch (unsizedformat.get()) {
         case LOCAL_GL_RGBA:
         case LOCAL_GL_RGBA4:
         case LOCAL_GL_RGBA8:
@@ -117,152 +117,277 @@ GLComponents::IsSubsetOf(const GLComponents& other) const
     return (mComponents | other.mComponents) == other.mComponents;
 }
 
+TexType
+TypeFromInternalFormat(TexInternalFormat internalformat)
+{
+#define HANDLE_WEBGL_INTERNAL_FORMAT(table_effectiveinternalformat, table_internalformat, table_type) \
+    if (internalformat == table_effectiveinternalformat) { \
+        return table_type; \
+    }
+
+#include "WebGLInternalFormatsTable.h"
+
+    // if we're here, then internalformat is not an effective internalformat i.e. is an unsized internalformat.
+    return LOCAL_GL_NONE; // no size, no type
+}
+
+TexInternalFormat
+UnsizedInternalFormatFromInternalFormat(TexInternalFormat internalformat)
+{
+#define HANDLE_WEBGL_INTERNAL_FORMAT(table_effectiveinternalformat, table_internalformat, table_type) \
+    if (internalformat == table_effectiveinternalformat) { \
+        return table_internalformat; \
+    }
+
+#include "WebGLInternalFormatsTable.h"
+
+    // if we're here, then internalformat is not an effective internalformat i.e. is an unsized internalformat.
+    // so we can just return it.
+    return internalformat;
+}
+
+/*
+ * Note that the following two functions are inverse of each other:
+ * EffectiveInternalFormatFromInternalFormatAndType and
+ * InternalFormatAndTypeFromEffectiveInternalFormat both implement OpenGL ES 3.0.3 Table 3.2
+ * but in opposite directions.
+ */
+TexInternalFormat
+EffectiveInternalFormatFromUnsizedInternalFormatAndType(TexInternalFormat internalformat,
+                                                        TexType type)
+{
+    MOZ_ASSERT(TypeFromInternalFormat(internalformat) == LOCAL_GL_NONE);
+
+#define HANDLE_WEBGL_INTERNAL_FORMAT(table_effectiveinternalformat, table_internalformat, table_type) \
+    if (internalformat == table_internalformat && type == table_type) { \
+        return table_effectiveinternalformat; \
+    }
+
+#include "WebGLInternalFormatsTable.h"
+
+    // If we're here, that means that type was incompatible with the given internalformat.
+    return LOCAL_GL_NONE;
+}
+
+void
+UnsizedInternalFormatAndTypeFromEffectiveInternalFormat(TexInternalFormat effectiveinternalformat,
+                                                        TexInternalFormat* out_internalformat,
+                                                        TexType* out_type)
+{
+    MOZ_ASSERT(TypeFromInternalFormat(effectiveinternalformat) != LOCAL_GL_NONE);
+
+    MOZ_ASSERT(out_internalformat);
+    MOZ_ASSERT(out_type);
+
+    GLenum internalformat = LOCAL_GL_NONE;
+    GLenum type = LOCAL_GL_NONE;
+
+    switch (effectiveinternalformat.get()) {
+
+#define HANDLE_WEBGL_INTERNAL_FORMAT(table_effectiveinternalformat, table_internalformat, table_type) \
+    case table_effectiveinternalformat: \
+        internalformat = table_internalformat; \
+        type = table_type; \
+        break;
+
+#include "WebGLInternalFormatsTable.h"
+
+        default:
+            MOZ_CRASH(); // impossible to get here
+    }
+
+    *out_internalformat = internalformat;
+    *out_type = type;
+}
+
+TexInternalFormat
+EffectiveInternalFormatFromInternalFormatAndType(TexInternalFormat internalformat,
+                                                 TexType type)
+{
+    TexType typeOfInternalFormat = TypeFromInternalFormat(internalformat);
+    if (typeOfInternalFormat == LOCAL_GL_NONE) {
+        return EffectiveInternalFormatFromUnsizedInternalFormatAndType(internalformat, type);
+    } else if (typeOfInternalFormat == type) {
+        return internalformat;
+    } else {
+        return LOCAL_GL_NONE;
+    }
+}
+
 /**
- * Convert WebGL/ES format and type into GL internal
- * format valid for underlying driver.
+ * Convert effective internalformat into GL function parameters
+ * valid for underlying driver.
  */
 void
-DriverFormatsFromFormatAndType(GLContext* gl, TexInternalFormat webGLInternalFormat, TexType webGLType,
-                               GLenum* out_driverInternalFormat, GLenum* out_driverFormat)
+DriverFormatsFromEffectiveInternalFormat(gl::GLContext* gl,
+                                         TexInternalFormat effectiveinternalformat,
+                                         GLenum* out_driverInternalFormat,
+                                         GLenum* out_driverFormat,
+                                         GLenum* out_driverType)
 {
     MOZ_ASSERT(out_driverInternalFormat);
     MOZ_ASSERT(out_driverFormat);
+    MOZ_ASSERT(out_driverType);
 
-    // ES2 requires that format == internalformat; floating-point is
-    // indicated purely by the type that's loaded.  For desktop GL, we
-    // have to specify a floating point internal format.
-    if (gl->IsGLES()) {
-        *out_driverFormat = *out_driverInternalFormat = webGLInternalFormat.get();
-        return;
+    TexInternalFormat unsizedinternalformat = LOCAL_GL_NONE;
+    TexType type = LOCAL_GL_NONE;
+
+    UnsizedInternalFormatAndTypeFromEffectiveInternalFormat(effectiveinternalformat,
+                                                            &unsizedinternalformat, &type);
+
+    // driverType: almost always the generic type that we just got, except on ES
+    // we must replace HALF_FLOAT by HALF_FLOAT_OES
+    GLenum driverType = type.get();
+    if (gl->IsGLES() && type == LOCAL_GL_HALF_FLOAT) {
+        driverType = LOCAL_GL_HALF_FLOAT_OES;
     }
 
-    GLenum internalFormat = LOCAL_GL_NONE;
-    GLenum format = LOCAL_GL_NONE;
+    // driverFormat: always just the unsized internalformat that we just got
+    GLenum driverFormat = unsizedinternalformat.get();
 
-    if (webGLInternalFormat == LOCAL_GL_DEPTH_COMPONENT) {
-        format = LOCAL_GL_DEPTH_COMPONENT;
-        if (webGLType == LOCAL_GL_UNSIGNED_SHORT)
-            internalFormat = LOCAL_GL_DEPTH_COMPONENT16;
-        else if (webGLType == LOCAL_GL_UNSIGNED_INT)
-            internalFormat = LOCAL_GL_DEPTH_COMPONENT32;
-    } else if (webGLInternalFormat == LOCAL_GL_DEPTH_STENCIL) {
-        format = LOCAL_GL_DEPTH_STENCIL;
-        if (webGLType == LOCAL_GL_UNSIGNED_INT_24_8_EXT)
-            internalFormat = LOCAL_GL_DEPTH24_STENCIL8;
-    } else {
-        switch (webGLType.get()) {
-        case LOCAL_GL_UNSIGNED_BYTE:
-        case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
-        case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
-        case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-            format = internalFormat = webGLInternalFormat.get();
-            break;
-
-        case LOCAL_GL_FLOAT:
-            switch (webGLInternalFormat.get()) {
-            case LOCAL_GL_RGBA:
-                format = LOCAL_GL_RGBA;
-                internalFormat = LOCAL_GL_RGBA32F;
-                break;
-
-            case LOCAL_GL_RGB:
-                format = LOCAL_GL_RGB;
-                internalFormat = LOCAL_GL_RGB32F;
-                break;
-
-            case LOCAL_GL_ALPHA:
-                format = LOCAL_GL_ALPHA;
-                internalFormat = LOCAL_GL_ALPHA32F_ARB;
-                break;
-
-            case LOCAL_GL_LUMINANCE:
-                format = LOCAL_GL_LUMINANCE;
-                internalFormat = LOCAL_GL_LUMINANCE32F_ARB;
-                break;
-
-            case LOCAL_GL_LUMINANCE_ALPHA:
-                format = LOCAL_GL_LUMINANCE_ALPHA;
-                internalFormat = LOCAL_GL_LUMINANCE_ALPHA32F_ARB;
-                break;
-            }
-            break;
-
-        case LOCAL_GL_HALF_FLOAT_OES:
-            switch (webGLInternalFormat.get()) {
-            case LOCAL_GL_RGBA:
-                format = LOCAL_GL_RGBA;
-                internalFormat = LOCAL_GL_RGBA16F;
-                break;
-
-            case LOCAL_GL_RGB:
-                format = LOCAL_GL_RGB;
-                internalFormat = LOCAL_GL_RGB16F;
-                break;
-
-            case LOCAL_GL_ALPHA:
-                format = LOCAL_GL_ALPHA;
-                internalFormat = LOCAL_GL_ALPHA16F_ARB;
-                break;
-
-            case LOCAL_GL_LUMINANCE:
-                format = LOCAL_GL_LUMINANCE;
-                internalFormat = LOCAL_GL_LUMINANCE16F_ARB;
-                break;
-
-            case LOCAL_GL_LUMINANCE_ALPHA:
-                format = LOCAL_GL_LUMINANCE_ALPHA;
-                internalFormat = LOCAL_GL_LUMINANCE_ALPHA16F_ARB;
-                break;
-            }
-            break;
-
-        default:
-            break;
+    // driverInternalFormat: almost always the same as driverFormat, but on desktop GL,
+    // in some cases we must pass a different value. On ES, they are equal by definition
+    // as it is an error to pass internalformat!=format.
+    GLenum driverInternalFormat = driverFormat;
+    if (!gl->IsGLES()) {
+        // Cases where desktop OpenGL requires a tweak to 'format'
+        if (driverFormat == LOCAL_GL_SRGB) {
+            driverFormat = LOCAL_GL_RGB;
+        } else if (driverFormat == LOCAL_GL_SRGB_ALPHA) {
+            driverFormat = LOCAL_GL_RGBA;
         }
 
-        // Handle ES2 and GL differences when supporting sRGB internal formats. GL ES
-        // requires that format == internalformat, but GL will fail in this case.
-        // GL requires:
-        //      format  ->  internalformat
-        //      GL_RGB      GL_SRGB_EXT
-        //      GL_RGBA     GL_SRGB_ALPHA_EXT
-        switch (webGLInternalFormat.get()) {
-        case LOCAL_GL_SRGB:
-            format = LOCAL_GL_RGB;
-            internalFormat = LOCAL_GL_SRGB;
-            break;
-        case LOCAL_GL_SRGB_ALPHA:
-            format = LOCAL_GL_RGBA;
-            internalFormat = LOCAL_GL_SRGB_ALPHA;
-            break;
+        // Cases where desktop OpenGL requires a sized internalformat,
+        // as opposed to the unsized internalformat that had the same
+        // GLenum value as 'format', in order to get the precise
+        // semantics that we want. For example, for floating-point formats,
+        // we seem to need a sized internalformat to get non-clamped floating
+        // point texture sampling. Can't find the spec reference for that,
+        // but that's at least the case on my NVIDIA driver version 331.
+        if (unsizedinternalformat == LOCAL_GL_DEPTH_COMPONENT ||
+            unsizedinternalformat == LOCAL_GL_DEPTH_STENCIL ||
+            type == LOCAL_GL_FLOAT ||
+            type == LOCAL_GL_HALF_FLOAT)
+        {
+            driverInternalFormat = effectiveinternalformat.get();
         }
     }
 
-    MOZ_ASSERT(webGLInternalFormat != LOCAL_GL_NONE && internalFormat != LOCAL_GL_NONE,
-               "Coding mistake -- bad format/type passed?");
-
-    *out_driverInternalFormat = internalFormat;
-    *out_driverFormat = format;
+    *out_driverInternalFormat = driverInternalFormat;
+    *out_driverFormat = driverFormat;
+    *out_driverType = driverType;
 }
 
-GLenum
-DriverTypeFromType(GLContext* gl, TexType webGLType)
+/**
+ * Return the bits per texel for format & type combination.
+ * Assumes that format & type are a valid combination as checked with
+ * ValidateTexImageFormatAndType().
+ */
+size_t
+GetBitsPerTexel(TexInternalFormat effectiveinternalformat)
 {
-    GLenum type = webGLType.get();
+    switch (effectiveinternalformat.get()) {
+    case LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1:
+    case LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1:
+        return 2;
 
-    if (gl->IsGLES())
-        return type;
+    case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+    case LOCAL_GL_ATC_RGB:
+    case LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1:
+    case LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1:
+    case LOCAL_GL_ETC1_RGB8_OES:
+        return 4;
 
-    // convert type for half float if not on GLES2
-    if (type == LOCAL_GL_HALF_FLOAT_OES) {
-        if (gl->IsSupported(gl::GLFeature::texture_half_float)) {
-            return LOCAL_GL_HALF_FLOAT;
-        } else {
-            MOZ_ASSERT(gl->IsExtensionSupported(gl::GLContext::OES_texture_half_float));
-        }
+    case LOCAL_GL_ALPHA8:
+    case LOCAL_GL_LUMINANCE8:
+    case LOCAL_GL_R8:
+    case LOCAL_GL_R8I:
+    case LOCAL_GL_R8UI:
+    case LOCAL_GL_R8_SNORM:
+    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+    case LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA:
+    case LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA:
+        return 8;
+
+    case LOCAL_GL_LUMINANCE8_ALPHA8:
+    case LOCAL_GL_RGBA4:
+    case LOCAL_GL_RGB5_A1:
+    case LOCAL_GL_DEPTH_COMPONENT16:
+    case LOCAL_GL_RG8:
+    case LOCAL_GL_R16I:
+    case LOCAL_GL_R16UI:
+    case LOCAL_GL_RGB565:
+    case LOCAL_GL_R16F:
+    case LOCAL_GL_RG8I:
+    case LOCAL_GL_RG8UI:
+    case LOCAL_GL_RG8_SNORM:
+    case LOCAL_GL_ALPHA16F_EXT:
+    case LOCAL_GL_LUMINANCE16F_EXT:
+        return 16;
+
+    case LOCAL_GL_RGB8:
+    case LOCAL_GL_DEPTH_COMPONENT24:
+    case LOCAL_GL_SRGB8:
+    case LOCAL_GL_RGB8UI:
+    case LOCAL_GL_RGB8I:
+    case LOCAL_GL_RGB8_SNORM:
+        return 24;
+
+    case LOCAL_GL_RGBA8:
+    case LOCAL_GL_RGB10_A2:
+    case LOCAL_GL_R32F:
+    case LOCAL_GL_RG16F:
+    case LOCAL_GL_R32I:
+    case LOCAL_GL_R32UI:
+    case LOCAL_GL_RG16I:
+    case LOCAL_GL_RG16UI:
+    case LOCAL_GL_DEPTH24_STENCIL8:
+    case LOCAL_GL_R11F_G11F_B10F:
+    case LOCAL_GL_RGB9_E5:
+    case LOCAL_GL_SRGB8_ALPHA8:
+    case LOCAL_GL_DEPTH_COMPONENT32F:
+    case LOCAL_GL_RGBA8UI:
+    case LOCAL_GL_RGBA8I:
+    case LOCAL_GL_RGBA8_SNORM:
+    case LOCAL_GL_RGB10_A2UI:
+    case LOCAL_GL_LUMINANCE_ALPHA16F_EXT:
+    case LOCAL_GL_ALPHA32F_EXT:
+    case LOCAL_GL_LUMINANCE32F_EXT:
+        return 32;
+
+    case LOCAL_GL_DEPTH32F_STENCIL8:
+        return 40;
+
+    case LOCAL_GL_RGB16F:
+    case LOCAL_GL_RGB16UI:
+    case LOCAL_GL_RGB16I:
+        return 48;
+
+    case LOCAL_GL_RG32F:
+    case LOCAL_GL_RG32I:
+    case LOCAL_GL_RG32UI:
+    case LOCAL_GL_RGBA16F:
+    case LOCAL_GL_RGBA16UI:
+    case LOCAL_GL_RGBA16I:
+    case LOCAL_GL_LUMINANCE_ALPHA32F_EXT:
+        return 64;
+
+    case LOCAL_GL_RGB32F:
+    case LOCAL_GL_RGB32UI:
+    case LOCAL_GL_RGB32I:
+        return 96;
+
+    case LOCAL_GL_RGBA32F:
+    case LOCAL_GL_RGBA32UI:
+    case LOCAL_GL_RGBA32I:
+        return 128;
+
+    default:
+        MOZ_ASSERT(false, "Unhandled format");
+        return 0;
     }
-
-    return type;
 }
 
 void
