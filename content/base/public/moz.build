@@ -66,6 +66,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'BlobSet.h',
     'DirectionalityUtils.h',
     'Element.h',
     'ElementInlines.h',
