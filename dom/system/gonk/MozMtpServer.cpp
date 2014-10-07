@@ -108,8 +108,9 @@ public:
     }
 
     NS_ConvertUTF16toUTF8 eventType(aData);
-    if (!eventType.EqualsLiteral("created") && !eventType.EqualsLiteral("deleted")) {
-      // MTP doesn't have a modified notification.
+    if (!eventType.EqualsLiteral("modified") && !eventType.EqualsLiteral("deleted")) {
+      // Bug 1074604: Needn't handle "created" event, once file operation
+      // finished, it would trigger "modified" event.
       return NS_OK;
     }
 
