@@ -142,9 +142,10 @@ class XPCShellRunner(MozbuildObject):
         modules_dir = os.path.join(self.topobjdir, '_tests', 'modules')
         # We want output from the test to be written immediately if we are only
         # running a single test.
-        verbose_output = (test_path is not None or
-                          (manifest and len(manifest.test_paths())==1) or
-                          verbose)
+        single_test = (test_path is not None or
+                       (manifest and len(manifest.test_paths())==1))
+        verbose_output = verbose or single_test
+        sequential = sequential or single_test
 
         args = {
             'manifest': manifest,
