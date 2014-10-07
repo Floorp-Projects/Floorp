@@ -23,6 +23,7 @@ PYTHON_UNIT_TESTS += [
     'mozbuild/dumbmake/test/test_dumbmake.py',
     'mozbuild/mozbuild/test/__init__.py',
     'mozbuild/mozbuild/test/action/test_buildlist.py',
+    'mozbuild/mozbuild/test/action/test_generate_browsersearch.py',
     'mozbuild/mozbuild/test/backend/__init__.py',
     'mozbuild/mozbuild/test/backend/common.py',
     'mozbuild/mozbuild/test/backend/test_android_eclipse.py',
