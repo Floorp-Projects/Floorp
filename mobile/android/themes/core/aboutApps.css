@@ -6,13 +6,6 @@
   background-color: #febc2b;
 }
 
-#header-button {
-  background-image: url("chrome://browser/skin/images/marketplace-logo.png"), url("chrome://browser/skin/images/chevron.png");
-  background-size: 32px 32px, 8px 20px;
-  background-position: left, right 0.5em center;
-  -moz-padding-start: 2.5em;
-}
-
 #main-container {
   padding: 2em;
   background-color: #EEF2F5;
