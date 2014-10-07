@@ -2674,8 +2674,6 @@ nsINode::GetElementById(const nsAString& aId)
 JSObject*
 nsINode::WrapObject(JSContext *aCx)
 {
-  MOZ_ASSERT(IsDOMBinding());
-
   // Make sure one of these is true
   // (1) our owner document has a script handling object,
   // (2) Our owner document has had a script handling object, or has been marked

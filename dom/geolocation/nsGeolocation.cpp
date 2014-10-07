@@ -243,7 +243,6 @@ PositionError::PositionError(Geolocation* aParent, int16_t aCode)
   : mCode(aCode)
   , mParent(aParent)
 {
-  SetIsDOMBinding();
 }
 
 PositionError::~PositionError(){}
@@ -1019,7 +1018,6 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Geolocation,
 Geolocation::Geolocation()
 : mLastWatchId(0)
 {
-  SetIsDOMBinding();
 }
 
 Geolocation::~Geolocation()

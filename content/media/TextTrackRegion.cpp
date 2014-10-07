@@ -46,7 +46,6 @@ TextTrackRegion::TextTrackRegion(nsISupports* aGlobal)
   , mViewportAnchorX(0)
   , mViewportAnchorY(100)
 {
-  SetIsDOMBinding();
 }
 
 void

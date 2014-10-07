@@ -21,7 +21,6 @@ NS_INTERFACE_MAP_END
 
 URLSearchParams::URLSearchParams()
 {
-  SetIsDOMBinding();
 }
 
 URLSearchParams::~URLSearchParams()

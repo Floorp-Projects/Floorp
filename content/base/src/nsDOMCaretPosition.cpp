@@ -13,7 +13,6 @@ using namespace mozilla::dom;
 nsDOMCaretPosition::nsDOMCaretPosition(nsINode* aNode, uint32_t aOffset)
   : mOffset(aOffset), mOffsetNode(aNode), mAnonymousContentNode(nullptr)
 {
-  SetIsDOMBinding();
 }
 
 nsDOMCaretPosition::~nsDOMCaretPosition()

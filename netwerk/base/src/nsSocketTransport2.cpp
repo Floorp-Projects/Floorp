@@ -1355,6 +1355,18 @@ nsSocketTransport::InitiateSocket()
     // Initiate the connect() to the host...
     //
     PRNetAddr prAddr;
+    {
+        if (mBindAddr) {
+            MutexAutoLock lock(mLock);
+            NetAddrToPRNetAddr(mBindAddr.get(), &prAddr);
+            status = PR_Bind(fd, &prAddr);
+            if (status != PR_SUCCESS) {
+                return NS_ERROR_FAILURE;
+            }
+            mBindAddr = nullptr;
+        }
+    }
+
     NetAddrToPRNetAddr(&mNetAddr, &prAddr);
 
     MOZ_EVENT_TRACER_EXEC(this, "net::tcp::connect");
@@ -2219,6 +2231,22 @@ nsSocketTransport::GetSelfAddr(NetAddr *addr)
     PRNetAddrToNetAddr(&prAddr, addr);
 
     return rv;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::Bind(NetAddr *aLocalAddr)
+{
+    NS_ENSURE_ARG(aLocalAddr);
+
+    MutexAutoLock lock(mLock);
+    if (mAttached) {
+        return NS_ERROR_FAILURE;
+    }
+
+    mBindAddr = new NetAddr();
+    memcpy(mBindAddr.get(), aLocalAddr, sizeof(NetAddr));
+
+    return NS_OK;
 }
 
 /* nsINetAddr getScriptablePeerAddr (); */
