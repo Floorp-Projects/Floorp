@@ -4834,7 +4834,8 @@
                   class="tab-content" align="center">
           <xul:image xbl:inherits="fadein,pinned,busy,progress,selected"
                      class="tab-throbber"
-                     role="presentation"/>
+                     role="presentation"
+                     layer="true" />
           <xul:image xbl:inherits="src=image,fadein,pinned,selected"
                      anonid="tab-icon-image"
                      class="tab-icon-image"
