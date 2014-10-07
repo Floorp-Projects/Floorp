@@ -21,7 +21,6 @@ WebGLQuery::WebGLQuery(WebGLContext* context)
     , mGLName(0)
     , mType(0)
 {
-    SetIsDOMBinding();
     mContext->mQueries.insertBack(this);
 
     mContext->MakeContextCurrent();

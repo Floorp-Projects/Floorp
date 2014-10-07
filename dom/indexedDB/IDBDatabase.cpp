@@ -205,8 +205,6 @@ IDBDatabase::IDBDatabase(IDBWrapperCache* aOwnerCache,
   aFactory->AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aSpec);
-
-  SetIsDOMBinding();
 }
 
 IDBDatabase::~IDBDatabase()

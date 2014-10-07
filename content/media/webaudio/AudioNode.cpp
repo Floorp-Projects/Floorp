@@ -72,7 +72,6 @@ AudioNode::AudioNode(AudioContext* aContext,
 {
   MOZ_ASSERT(aContext);
   DOMEventTargetHelper::BindToOwner(aContext->GetParentObject());
-  SetIsDOMBinding();
   aContext->UpdateNodeCount(1);
 }
 

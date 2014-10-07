@@ -118,8 +118,6 @@ IDBFactory::IDBFactory()
   mOwningThread = PR_GetCurrentThread();
 #endif
   AssertIsOnOwningThread();
-
-  SetIsDOMBinding();
 }
 
 IDBFactory::~IDBFactory()

@@ -122,7 +122,7 @@ function doCompositionTest(aElement, aElementDescription, aCallback)
               "\u30d7\u30ea\u30b1\u30fc\u30b7\u30e7\u30f3\u3092\u3088\u308a" +
               "\u77ed\u6642\u9593\u3067\u7c21\u5358\u306b\u4f5c\u6210\u3067" +
               "\u304d\u307e\u3059\u3002";
-    synthesizeText({
+    synthesizeCompositionChange({
         composition: {
           string: str,
           clauses: [
@@ -134,7 +134,7 @@ function doCompositionTest(aElement, aElementDescription, aCallback)
     hitEventLoop(function () {
       isnot(aElement.scrollTop, 0,
             aElementDescription + " was not scrolled by composition");
-      synthesizeText({
+      synthesizeCompositionChange({
         composition: { string: "", clauses: [ { length: 0, attr: 0 } ] },
         caret: { start: 0, length: 0 }
       });

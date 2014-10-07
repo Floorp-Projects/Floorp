@@ -21,7 +21,6 @@ BarProp::BarProp(nsGlobalWindow* aWindow)
   : mDOMWindow(aWindow)
 {
   MOZ_ASSERT(aWindow->IsInnerWindow());
-  SetIsDOMBinding();
 }
 
 BarProp::~BarProp()
