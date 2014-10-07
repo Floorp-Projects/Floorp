@@ -70,17 +70,17 @@ public:
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
   void ReadAsArrayBuffer(JSContext* aCx, File& aBlob, ErrorResult& aRv)
   {
-    ReadFileContent(aCx, aBlob, EmptyString(), FILE_AS_ARRAYBUFFER, aRv);
+    ReadFileContent(aBlob, EmptyString(), FILE_AS_ARRAYBUFFER, aRv);
   }
 
   void ReadAsText(File& aBlob, const nsAString& aLabel, ErrorResult& aRv)
   {
-    ReadFileContent(nullptr, aBlob, aLabel, FILE_AS_TEXT, aRv);
+    ReadFileContent(aBlob, aLabel, FILE_AS_TEXT, aRv);
   }
 
   void ReadAsDataURL(File& aBlob, ErrorResult& aRv)
   {
-    ReadFileContent(nullptr, aBlob, EmptyString(), FILE_AS_DATAURL, aRv);
+    ReadFileContent(aBlob, EmptyString(), FILE_AS_DATAURL, aRv);
   }
 
   using FileIOObject::Abort;
@@ -104,7 +104,7 @@ public:
 
   void ReadAsBinaryString(File& aBlob, ErrorResult& aRv)
   {
-    ReadFileContent(nullptr, aBlob, EmptyString(), FILE_AS_BINARY, aRv);
+    ReadFileContent(aBlob, EmptyString(), FILE_AS_BINARY, aRv);
   }
 
 
@@ -124,7 +124,7 @@ protected:
     FILE_AS_DATAURL
   };
 
-  void ReadFileContent(JSContext* aCx, File& aBlob,
+  void ReadFileContent(File& aBlob,
                        const nsAString &aCharset, eDataFormat aDataFormat,
                        ErrorResult& aRv);
   nsresult GetAsText(nsIDOMBlob *aFile, const nsACString &aCharset,

@@ -377,8 +377,13 @@ ArrayBufferObject::prepareForAsmJSNoSignals(JSContext *cx, Handle<ArrayBufferObj
     if (buffer->isAsmJSArrayBuffer())
         return true;
 
-    if (!ensureNonInline(cx, buffer))
-        return false;
+    if (!buffer->ownsData()) {
+        BufferContents contents = AllocateArrayBufferContents(cx, buffer->byteLength());
+        if (!contents)
+            return false;
+        memcpy(contents.data(), buffer->dataPointer(), buffer->byteLength());
+        buffer->changeContents(cx, contents);
+    }
 
     buffer->setIsAsmJSArrayBuffer();
     return true;
@@ -695,20 +700,6 @@ ArrayBufferObject::createDataViewForThis(JSContext *cx, unsigned argc, Value *vp
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsArrayBuffer, createDataViewForThisImpl>(cx, args);
-}
-
-/* static */ bool
-ArrayBufferObject::ensureNonInline(JSContext *cx, Handle<ArrayBufferObject*> buffer)
-{
-    if (!buffer->ownsData()) {
-        BufferContents contents = AllocateArrayBufferContents(cx, buffer->byteLength());
-        if (!contents)
-            return false;
-        memcpy(contents.data(), buffer->dataPointer(), buffer->byteLength());
-        buffer->changeContents(cx, contents);
-    }
-
-    return true;
 }
 
 /* static */ ArrayBufferObject::BufferContents
@@ -1057,26 +1048,12 @@ JS_GetArrayBufferByteLength(JSObject *obj)
 }
 
 JS_FRIEND_API(uint8_t *)
-JS_GetArrayBufferData(JSObject *obj)
+JS_GetArrayBufferData(JSObject *obj, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
     return AsArrayBuffer(obj).dataPointer();
-}
-
-JS_FRIEND_API(uint8_t *)
-JS_GetStableArrayBufferData(JSContext *cx, HandleObject objArg)
-{
-    JSObject *obj = CheckedUnwrap(objArg);
-    if (!obj)
-        return nullptr;
-
-    Rooted<ArrayBufferObject*> buffer(cx, &AsArrayBuffer(obj));
-    if (!ArrayBufferObject::ensureNonInline(cx, buffer))
-        return nullptr;
-
-    return buffer->dataPointer();
 }
 
 JS_FRIEND_API(bool)
@@ -1219,7 +1196,7 @@ JS_IsMappedArrayBufferObject(JSObject *obj)
 }
 
 JS_FRIEND_API(void *)
-JS_GetArrayBufferViewData(JSObject *obj)
+JS_GetArrayBufferViewData(JSObject *obj, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)

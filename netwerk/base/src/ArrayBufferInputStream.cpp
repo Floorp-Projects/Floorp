@@ -12,8 +12,7 @@
 NS_IMPL_ISUPPORTS(ArrayBufferInputStream, nsIArrayBufferInputStream, nsIInputStream);
 
 ArrayBufferInputStream::ArrayBufferInputStream()
-: mBuffer(nullptr)
-, mBufferLength(0)
+: mBufferLength(0)
 , mOffset(0)
 , mPos(0)
 , mClosed(false)
@@ -34,15 +33,11 @@ ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
     return NS_ERROR_FAILURE;
   }
 
-  mArrayBuffer.emplace(aCx, aBuffer);
+  mArrayBuffer.emplace(aCx, arrayBuffer);
 
   uint32_t buflen = JS_GetArrayBufferByteLength(arrayBuffer);
   mOffset = std::min(buflen, aByteOffset);
   mBufferLength = std::min(buflen - mOffset, aLength);
-  mBuffer = JS_GetStableArrayBufferData(aCx, arrayBuffer);
-  if (!mBuffer) {
-      return NS_ERROR_FAILURE;
-  }
   return NS_OK;
 }
 
@@ -59,7 +54,8 @@ ArrayBufferInputStream::Available(uint64_t* aCount)
   if (mClosed) {
     return NS_BASE_STREAM_CLOSED;
   }
-  *aCount = mBufferLength - mPos;
+  uint32_t buflen = JS_GetArrayBufferByteLength(mArrayBuffer->get());
+  *aCount = buflen ? buflen - mPos : 0;
   return NS_OK;
 }
 
@@ -80,32 +76,46 @@ ArrayBufferInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
     return NS_BASE_STREAM_CLOSED;
   }
 
-  uint32_t remaining = mBufferLength - mPos;
-  if (mArrayBuffer) {
-    JSObject* buf = &mArrayBuffer->get().toObject();
-    uint32_t byteLength = JS_GetArrayBufferByteLength(buf);
-    if (byteLength == 0 && remaining != 0) {
+  MOZ_ASSERT(mArrayBuffer || (mPos == mBufferLength), "stream inited incorrectly");
+
+  *result = 0;
+  while (mPos < mBufferLength) {
+    uint32_t remaining = mBufferLength - mPos;
+    MOZ_ASSERT(mArrayBuffer);
+    uint32_t byteLength = JS_GetArrayBufferByteLength(mArrayBuffer->get());
+    if (byteLength == 0) {
       mClosed = true;
       return NS_BASE_STREAM_CLOSED;
     }
-  } else {
-    MOZ_ASSERT(remaining == 0, "stream inited incorrectly");
-  }
 
-  if (!remaining) {
-    *result = 0;
-    return NS_OK;
-  }
+    char buffer[8192];
+    uint32_t count = std::min(std::min(aCount, remaining), uint32_t(mozilla::ArrayLength(buffer)));
+    if (count == 0) {
+      break;
+    }
 
-  if (aCount > remaining) {
-    aCount = remaining;
-  }
-  nsresult rv = writer(this, closure, (char*)(mBuffer + mOffset) + mPos,
-                       0, aCount, result);
-  if (NS_SUCCEEDED(rv)) {
-    NS_ASSERTION(*result <= aCount,
+    // It is just barely possible that writer() will detach the ArrayBuffer's
+    // data, setting its length to zero. Or move the data to a different memory
+    // area. (This would only happen in a subclass that passed something other
+    // than NS_CopySegmentToBuffer as 'writer'). So copy the data out into a
+    // holding area before passing it to writer().
+    {
+      JS::AutoCheckCannotGC nogc;
+      char* src = (char*) JS_GetArrayBufferData(mArrayBuffer->get(), nogc) + mOffset + mPos;
+      memcpy(buffer, src, count);
+    }
+    uint32_t written;
+    nsresult rv = writer(this, closure, buffer, 0, count, &written);
+    if (NS_FAILED(rv)) {
+      // InputStreams do not propagate errors to caller.
+      return NS_OK;
+    }
+
+    NS_ASSERTION(written <= count,
                  "writer should not write more than we asked it to write");
-    mPos += *result;
+    mPos += written;
+    *result += written;
+    aCount -= written;
   }
 
   return NS_OK;
