@@ -291,9 +291,6 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
   case eCompositionEventClass:
     seqno = event->AsCompositionEvent()->mSeqno;
     break;
-  case eTextEventClass:
-    seqno = event->AsTextEvent()->mSeqno;
-    break;
   case eSelectionEventClass:
     seqno = event->AsSelectionEvent()->mSeqno;
     break;
