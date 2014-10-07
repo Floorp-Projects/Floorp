@@ -813,16 +813,23 @@ js::obj_create(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+// ES6 draft rev27 (2014/08/24) 19.1.2.6 Object.getOwnPropertyDescriptor(O, P)
 bool
 js::obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx);
-    if (!GetFirstArgumentAsObject(cx, args, "Object.getOwnPropertyDescriptor", &obj))
+
+    // Steps 1-2.
+    RootedObject obj(cx, ToObject(cx, args.get(0)));
+    if (!obj)
         return false;
+
+    // Steps 3-4.
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, args.get(1), &id))
         return false;
+
+    // Steps 5-7.
     return GetOwnPropertyDescriptor(cx, obj, id, args.rval());
 }
 
