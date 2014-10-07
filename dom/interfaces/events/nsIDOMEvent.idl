@@ -288,11 +288,6 @@ NS_NewDOMDeviceMotionEvent(nsIDOMEvent** aResult,
                            nsPresContext* aPresContext,
                            mozilla::WidgetEvent* aEvent);
 nsresult
-NS_NewDOMTextEvent(nsIDOMEvent** aResult,
-                   mozilla::dom::EventTarget* aOwner,
-                   nsPresContext* aPresContext,
-                   mozilla::WidgetTextEvent* aEvent);
-nsresult
 NS_NewDOMBeforeUnloadEvent(nsIDOMEvent** aResult,
                            mozilla::dom::EventTarget* aOwner,
                            nsPresContext* aPresContext,

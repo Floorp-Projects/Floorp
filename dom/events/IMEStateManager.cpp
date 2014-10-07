@@ -131,19 +131,6 @@ GetIMEStateSetOpenName(IMEState::Open aOpen)
 }
 
 static const char*
-GetEventClassIDName(EventClassID aEventClassID)
-{
-  switch (aEventClassID) {
-    case eCompositionEventClass:
-      return "eCompositionEventClass";
-    case eTextEventClass:
-      return "eTextEventClass";
-    default:
-      return "unacceptable event struct type";
-  }
-}
-
-static const char*
 GetEventMessageName(uint32_t aMessage)
 {
   switch (aMessage) {
@@ -153,8 +140,8 @@ GetEventMessageName(uint32_t aMessage)
       return "NS_COMPOSITION_END";
     case NS_COMPOSITION_UPDATE:
       return "NS_COMPOSITION_UPDATE";
-    case NS_TEXT_TEXT:
-      return "NS_TEXT_TEXT";
+    case NS_COMPOSITION_CHANGE:
+      return "NS_COMPOSITION_CHANGE";
     default:
       return "unacceptable event message";
   }
@@ -883,40 +870,37 @@ IMEStateManager::EnsureTextCompositionArray()
 
 // static
 void
-IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
-                                          nsPresContext* aPresContext,
-                                          WidgetEvent* aEvent,
-                                          nsEventStatus* aStatus,
-                                          EventDispatchingCallback* aCallBack,
-                                          bool aIsSynthesized)
+IMEStateManager::DispatchCompositionEvent(
+                   nsINode* aEventTargetNode,
+                   nsPresContext* aPresContext,
+                   WidgetCompositionEvent* aCompositionEvent,
+                   nsEventStatus* aStatus,
+                   EventDispatchingCallback* aCallBack,
+                   bool aIsSynthesized)
 {
   PR_LOG(sISMLog, PR_LOG_ALWAYS,
     ("ISM: IMEStateManager::DispatchCompositionEvent(aNode=0x%p, "
-     "aPresContext=0x%p, aEvent={ mClass=%s, message=%s, "
+     "aPresContext=0x%p, aCompositionEvent={ message=%s, "
      "mFlags={ mIsTrusted=%s, mPropagationStopped=%s } }, "
      "aIsSynthesized=%s)",
      aEventTargetNode, aPresContext,
-     GetEventClassIDName(aEvent->mClass),
-     GetEventMessageName(aEvent->message),
-     GetBoolName(aEvent->mFlags.mIsTrusted),
-     GetBoolName(aEvent->mFlags.mPropagationStopped),
+     GetEventMessageName(aCompositionEvent->message),
+     GetBoolName(aCompositionEvent->mFlags.mIsTrusted),
+     GetBoolName(aCompositionEvent->mFlags.mPropagationStopped),
      GetBoolName(aIsSynthesized)));
 
-  MOZ_ASSERT(aEvent->mClass == eCompositionEventClass ||
-             aEvent->mClass == eTextEventClass);
-  if (!aEvent->mFlags.mIsTrusted || aEvent->mFlags.mPropagationStopped) {
+  if (!aCompositionEvent->mFlags.mIsTrusted ||
+      aCompositionEvent->mFlags.mPropagationStopped) {
     return;
   }
 
-  MOZ_ASSERT(aEvent->message != NS_COMPOSITION_UPDATE,
+  MOZ_ASSERT(aCompositionEvent->message != NS_COMPOSITION_UPDATE,
              "compositionupdate event shouldn't be dispatched manually");
 
   EnsureTextCompositionArray();
 
-  WidgetGUIEvent* GUIEvent = aEvent->AsGUIEvent();
-
   nsRefPtr<TextComposition> composition =
-    sTextCompositions->GetCompositionFor(GUIEvent->widget);
+    sTextCompositions->GetCompositionFor(aCompositionEvent->widget);
   if (!composition) {
     // If synthesized event comes after delayed native composition events
     // for request of commit or cancel, we should ignore it.
@@ -926,18 +910,20 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
     PR_LOG(sISMLog, PR_LOG_DEBUG,
       ("ISM:   IMEStateManager::DispatchCompositionEvent(), "
        "adding new TextComposition to the array"));
-    MOZ_ASSERT(GUIEvent->message == NS_COMPOSITION_START);
-    composition = new TextComposition(aPresContext, aEventTargetNode, GUIEvent);
+    MOZ_ASSERT(aCompositionEvent->message == NS_COMPOSITION_START);
+    composition =
+      new TextComposition(aPresContext, aEventTargetNode, aCompositionEvent);
     sTextCompositions->AppendElement(composition);
   }
 #ifdef DEBUG
   else {
-    MOZ_ASSERT(GUIEvent->message != NS_COMPOSITION_START);
+    MOZ_ASSERT(aCompositionEvent->message != NS_COMPOSITION_START);
   }
 #endif // #ifdef DEBUG
 
   // Dispatch the event on composing target.
-  composition->DispatchEvent(GUIEvent, aStatus, aCallBack, aIsSynthesized);
+  composition->DispatchCompositionEvent(aCompositionEvent, aStatus, aCallBack,
+                                        aIsSynthesized);
 
   // WARNING: the |composition| might have been destroyed already.
 
@@ -953,9 +939,9 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
   //       destroy the TextComposition with synthesized compositionend event.
   if ((!aIsSynthesized ||
        composition->WasNativeCompositionEndEventDiscarded()) &&
-      aEvent->message == NS_COMPOSITION_END) {
+      aCompositionEvent->message == NS_COMPOSITION_END) {
     TextCompositionArray::index_type i =
-      sTextCompositions->IndexOf(GUIEvent->widget);
+      sTextCompositions->IndexOf(aCompositionEvent->widget);
     if (i != TextCompositionArray::NoIndex) {
       PR_LOG(sISMLog, PR_LOG_DEBUG,
         ("ISM:   IMEStateManager::DispatchCompositionEvent(), "
@@ -969,34 +955,31 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
 
 // static
 void
-IMEStateManager::OnCompositionEventDiscarded(WidgetEvent* aEvent)
+IMEStateManager::OnCompositionEventDiscarded(
+                   const WidgetCompositionEvent* aCompositionEvent)
 {
   // Note that this method is never called for synthesized events for emulating
   // commit or cancel composition.
 
   PR_LOG(sISMLog, PR_LOG_ALWAYS,
-    ("ISM: IMEStateManager::OnCompositionEventDiscarded(aEvent={ mClass=%s, "
+    ("ISM: IMEStateManager::OnCompositionEventDiscarded(aCompositionEvent={ "
      "message=%s, mFlags={ mIsTrusted=%s } })",
-     GetEventClassIDName(aEvent->mClass),
-     GetEventMessageName(aEvent->message),
-     GetBoolName(aEvent->mFlags.mIsTrusted)));
+     GetEventMessageName(aCompositionEvent->message),
+     GetBoolName(aCompositionEvent->mFlags.mIsTrusted)));
 
-  MOZ_ASSERT(aEvent->mClass == eCompositionEventClass ||
-             aEvent->mClass == eTextEventClass);
-  if (!aEvent->mFlags.mIsTrusted) {
+  if (!aCompositionEvent->mFlags.mIsTrusted) {
     return;
   }
 
   // Ignore compositionstart for now because sTextCompositions may not have
   // been created yet.
-  if (aEvent->message == NS_COMPOSITION_START) {
+  if (aCompositionEvent->message == NS_COMPOSITION_START) {
     return;
   }
 
-  WidgetGUIEvent* GUIEvent = aEvent->AsGUIEvent();
   nsRefPtr<TextComposition> composition =
-    sTextCompositions->GetCompositionFor(GUIEvent->widget);
-  composition->OnCompositionEventDiscarded(GUIEvent);
+    sTextCompositions->GetCompositionFor(aCompositionEvent->widget);
+  composition->OnCompositionEventDiscarded(aCompositionEvent);
 }
 
 // static
@@ -1231,13 +1214,11 @@ IMEStateManager::GetTextCompositionFor(nsIWidget* aWidget)
 
 // static
 already_AddRefed<TextComposition>
-IMEStateManager::GetTextCompositionFor(WidgetGUIEvent* aEvent)
+IMEStateManager::GetTextCompositionFor(WidgetGUIEvent* aGUIEvent)
 {
-  MOZ_ASSERT(aEvent->AsCompositionEvent() || aEvent->AsTextEvent() ||
-             aEvent->AsKeyboardEvent(),
-             "aEvent has to be WidgetCompositionEvent, WidgetTextEvent or "
-             "WidgetKeyboardEvent");
-  return GetTextCompositionFor(aEvent->widget);
+  MOZ_ASSERT(aGUIEvent->AsCompositionEvent() || aGUIEvent->AsKeyboardEvent(),
+    "aGUIEvent has to be WidgetCompositionEvent or WidgetKeyboardEvent");
+  return GetTextCompositionFor(aGUIEvent->widget);
 }
 
 } // namespace mozilla

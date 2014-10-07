@@ -13,7 +13,6 @@ using namespace mozilla;
 nsDOMCSSValueList::nsDOMCSSValueList(bool aCommaDelimited, bool aReadonly)
   : CSSValue(), mCommaDelimited(aCommaDelimited), mReadonly(aReadonly)
 {
-  SetIsDOMBinding();
 }
 
 nsDOMCSSValueList::~nsDOMCSSValueList()

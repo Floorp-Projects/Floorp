@@ -23,7 +23,6 @@ GetUserMediaRequest::GetUserMediaRequest(
   , mConstraints(new MediaStreamConstraints(aConstraints))
   , mIsSecure(aIsSecure)
 {
-  SetIsDOMBinding();
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(GetUserMediaRequest)

@@ -172,8 +172,6 @@ private:
     : mElement(aElement)
     , mIsAnimValList(aIsAnimValList)
   {
-    SetIsDOMBinding();
-
     InternalListWillChangeTo(InternalList()); // Sync mItems
   }
 

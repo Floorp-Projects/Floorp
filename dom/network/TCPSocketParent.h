@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMTCPSocket.h"
 #include "js/TypeDecls.h"
+#include "mozilla/net/OfflineObserver.h"
 
 #define TCPSOCKETPARENT_CID \
   { 0x4e7246c6, 0xa8b3, 0x426d, { 0x9c, 0x17, 0x76, 0xda, 0xb1, 0xe1, 0xe1, 0x4a } }
@@ -21,6 +22,7 @@ namespace dom {
 class PBrowserParent;
 
 class TCPSocketParentBase : public nsITCPSocketParent
+                          , public mozilla::net::DisconnectableParent
 {
 public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TCPSocketParentBase)
@@ -36,6 +38,7 @@ protected:
   JS::Heap<JSObject*> mIntermediaryObj;
   nsCOMPtr<nsITCPSocketIntermediary> mIntermediary;
   nsCOMPtr<nsIDOMTCPSocket> mSocket;
+  nsRefPtr<mozilla::net::OfflineObserver> mObserver;
   bool mIPCOpen;
 };
 
@@ -58,6 +61,8 @@ public:
   virtual bool RecvData(const SendableData& aData,
                         const uint32_t& aTrackingNumber) MOZ_OVERRIDE;
   virtual bool RecvRequestDelete() MOZ_OVERRIDE;
+  virtual nsresult OfflineNotification(nsISupports *) MOZ_OVERRIDE;
+  virtual uint32_t GetAppId() MOZ_OVERRIDE;
 
 private:
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;

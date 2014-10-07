@@ -108,28 +108,28 @@ class WrapperOwner : public virtual JavaScriptShared
   public:
     virtual bool SendDropObject(const ObjectId &objId) = 0;
     virtual bool CallPreventExtensions(const ObjectId &objId, ReturnStatus *rs) = 0;
-    virtual bool CallGetPropertyDescriptor(const ObjectId &objId, const nsString &id,
+    virtual bool CallGetPropertyDescriptor(const ObjectId &objId, const JSIDVariant &id,
                                            ReturnStatus *rs,
                                            PPropertyDescriptor *out) = 0;
     virtual bool CallGetOwnPropertyDescriptor(const ObjectId &objId,
-                                              const nsString &id,
+                                              const JSIDVariant &id,
                                               ReturnStatus *rs,
                                               PPropertyDescriptor *out) = 0;
-    virtual bool CallDefineProperty(const ObjectId &objId, const nsString &id,
+    virtual bool CallDefineProperty(const ObjectId &objId, const JSIDVariant &id,
                                     const PPropertyDescriptor &flags,
                                     ReturnStatus *rs) = 0;
-    virtual bool CallDelete(const ObjectId &objId, const nsString &id,
+    virtual bool CallDelete(const ObjectId &objId, const JSIDVariant &id,
                             ReturnStatus *rs, bool *success) = 0;
 
-    virtual bool CallHas(const ObjectId &objId, const nsString &id,
+    virtual bool CallHas(const ObjectId &objId, const JSIDVariant &id,
                          ReturnStatus *rs, bool *bp) = 0;
-    virtual bool CallHasOwn(const ObjectId &objId, const nsString &id,
+    virtual bool CallHasOwn(const ObjectId &objId, const JSIDVariant &id,
                             ReturnStatus *rs, bool *bp) = 0;
     virtual bool CallGet(const ObjectId &objId, const ObjectVariant &receiverVar,
-                         const nsString &id,
+                         const JSIDVariant &id,
                          ReturnStatus *rs, JSVariant *result) = 0;
     virtual bool CallSet(const ObjectId &objId, const ObjectVariant &receiverVar,
-                         const nsString &id, const bool &strict,
+                         const JSIDVariant &id, const bool &strict,
                          const JSVariant &value, ReturnStatus *rs, JSVariant *result) = 0;
 
     virtual bool CallIsExtensible(const ObjectId &objId, ReturnStatus *rs,

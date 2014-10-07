@@ -36,7 +36,6 @@ class WorkerNavigator MOZ_FINAL : public nsWrapperCache
     , mOnline(aOnline)
   {
     MOZ_COUNT_CTOR(WorkerNavigator);
-    SetIsDOMBinding();
   }
 
   ~WorkerNavigator()

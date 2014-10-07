@@ -84,7 +84,7 @@ public:
 
   virtual void Unlock() MOZ_OVERRIDE;
 
-  virtual TemporaryRef<NewTextureSource> GetTextureSource();
+  virtual TemporaryRef<TextureSource> GetTextureSource();
 
   virtual TemporaryRef<TexturedEffect> GenEffect(const gfx::Filter& aFilter) MOZ_OVERRIDE;
 

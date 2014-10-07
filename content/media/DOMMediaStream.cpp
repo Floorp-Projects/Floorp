@@ -127,7 +127,6 @@ DOMMediaStream::DOMMediaStream()
     mStream(nullptr), mHintContents(0), mTrackTypesAvailable(0),
     mNotifiedOfMediaStreamGraphShutdown(false)
 {
-  SetIsDOMBinding();
 }
 
 DOMMediaStream::~DOMMediaStream()

@@ -169,7 +169,6 @@ BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aWindow,
   , mIsRooted(false)
 {
   MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(IsDOMBinding());
 
   const InfallibleTArray<BluetoothNamedValue>& values =
     aValue.get_ArrayOfBluetoothNamedValue();
