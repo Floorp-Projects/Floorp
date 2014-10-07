@@ -1952,39 +1952,32 @@ JS_GetArrayBufferViewByteLength(JSObject *obj);
  */
 
 extern JS_FRIEND_API(uint8_t *)
-JS_GetArrayBufferData(JSObject *obj);
+JS_GetArrayBufferData(JSObject *obj, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(int8_t *)
-JS_GetInt8ArrayData(JSObject *obj);
+JS_GetInt8ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(uint8_t *)
-JS_GetUint8ArrayData(JSObject *obj);
+JS_GetUint8ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(uint8_t *)
-JS_GetUint8ClampedArrayData(JSObject *obj);
+JS_GetUint8ClampedArrayData(JSObject *obj, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(int16_t *)
-JS_GetInt16ArrayData(JSObject *obj);
+JS_GetInt16ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(uint16_t *)
-JS_GetUint16ArrayData(JSObject *obj);
+JS_GetUint16ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(int32_t *)
-JS_GetInt32ArrayData(JSObject *obj);
+JS_GetInt32ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(uint32_t *)
-JS_GetUint32ArrayData(JSObject *obj);
+JS_GetUint32ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(float *)
-JS_GetFloat32ArrayData(JSObject *obj);
+JS_GetFloat32ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(double *)
-JS_GetFloat64ArrayData(JSObject *obj);
-
-/*
- * Stable versions of the above functions where the buffer remains valid as long
- * as the object is live.
- */
-extern JS_FRIEND_API(uint8_t *)
-JS_GetStableArrayBufferData(JSContext *cx, JS::HandleObject obj);
+JS_GetFloat64ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&);
 
 /*
  * Same as above, but for any kind of ArrayBufferView. Prefer the type-specific
  * versions when possible.
  */
 extern JS_FRIEND_API(void *)
-JS_GetArrayBufferViewData(JSObject *obj);
+JS_GetArrayBufferViewData(JSObject *obj, const JS::AutoCheckCannotGC&);
 
 /*
  * Return the ArrayBuffer underlying an ArrayBufferView. If the buffer has been
@@ -2057,7 +2050,7 @@ JS_GetDataViewByteLength(JSObject *obj);
  * unable to assert when unwrapping should be disallowed.
  */
 JS_FRIEND_API(void *)
-JS_GetDataViewData(JSObject *obj);
+JS_GetDataViewData(JSObject *obj, const JS::AutoCheckCannotGC&);
 
 namespace js {
 

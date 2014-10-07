@@ -4515,16 +4515,22 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
     return NS_OK;
   }
 
-  uint8_t* data = JS_GetUint8ClampedArrayData(darray);
-
   IntRect dstWriteRect = srcReadRect;
   dstWriteRect.MoveBy(-aX, -aY);
 
-  uint8_t* src = data;
-  uint32_t srcStride = aWidth * 4;
+  uint8_t* src;
+  uint32_t srcStride;
+
   if (readback) {
     srcStride = readback->Stride();
     src = readback->GetData() + srcReadRect.y * srcStride + srcReadRect.x * 4;
+  }
+
+  JS::AutoCheckCannotGC nogc;
+  uint8_t* data = JS_GetUint8ClampedArrayData(darray, nogc);
+  if (!readback) {
+    src = data;
+    srcStride = aWidth * 4;
   }
 
   // NOTE! dst is the same as src, and this relies on reading
