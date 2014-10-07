@@ -135,7 +135,7 @@
   <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="52c909e821d107d414f851e267dedcd7aae2cebf"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="1072f7d31dc0bf3a2adc64177b1104da9f4ce4b6"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="fda40423ffa573dc6cafd3780515010cb2a086be"/>
-  <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="082a1f98422e6a6b56f61218d6fcf465e85d4c58"/>
+  <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="30b96dfca99cb384bf520a16b81f3aba56f09907"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="5b71e40213f650459e95d35b6f14af7e88d8ab62"/>
   <project name="platform_external_libnfc-nci" path="external/libnfc-nci" remote="t2m" revision="4186bdecb4dae911b39a8202252cc2310d91b0be"/>
   <project name="platform/frameworks/av" path="frameworks/av" revision="9e88d2eb335f00d9d9af18f663f9d3e55b019bf8"/>
