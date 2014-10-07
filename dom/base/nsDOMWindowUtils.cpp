@@ -48,11 +48,11 @@
 #include "nsComputedDOMStyle.h"
 #include "nsIPresShell.h"
 #include "nsCSSProps.h"
+#include "nsDOMFile.h"
 #include "nsTArrayHelpers.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/DOMRect.h"
 #include <algorithm>
 
@@ -74,6 +74,7 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
+#include "nsDOMBlobBuilder.h"
 #include "nsPrintfCString.h"
 #include "nsViewportInfo.h"
 #include "nsIFormControl.h"
@@ -2852,15 +2853,7 @@ nsDOMWindowUtils::WrapDOMFile(nsIFile *aFile,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsPIDOMWindow* innerWindow = window->GetCurrentInnerWindow();
-  if (!innerWindow) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRefPtr<File> file = File::CreateFromFile(innerWindow, aFile);
+  nsRefPtr<DOMFile> file = DOMFile::CreateFromFile(aFile);
   file.forget(aDOMFile);
   return NS_OK;
 }

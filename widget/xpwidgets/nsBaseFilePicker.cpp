@@ -16,8 +16,8 @@
 #include "nsIServiceManager.h"
 #include "nsCOMArray.h"
 #include "nsIFile.h"
+#include "nsDOMFile.h"
 #include "nsEnumeratorUtils.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/Services.h"
 #include "WidgetUtils.h"
 #include "nsThreadUtils.h"
@@ -74,10 +74,8 @@ class nsBaseFilePickerEnumerator : public nsISimpleEnumerator
 public:
   NS_DECL_ISUPPORTS
 
-  explicit nsBaseFilePickerEnumerator(nsPIDOMWindow* aParent,
-                                      nsISimpleEnumerator* iterator)
+  explicit nsBaseFilePickerEnumerator(nsISimpleEnumerator* iterator)
     : mIterator(iterator)
-    , mParent(aParent)
   {}
 
   NS_IMETHOD
@@ -96,7 +94,7 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDOMFile> domFile = File::CreateFromFile(mParent, localFile);
+    nsCOMPtr<nsIDOMFile> domFile = DOMFile::CreateFromFile(localFile);
     domFile.forget(aResult);
     return NS_OK;
   }
@@ -113,7 +111,6 @@ protected:
 
 private:
   nsCOMPtr<nsISimpleEnumerator> mIterator;
-  nsCOMPtr<nsPIDOMWindow> mParent;
 };
 
 NS_IMPL_ISUPPORTS(nsBaseFilePickerEnumerator, nsISimpleEnumerator)
@@ -139,7 +136,6 @@ NS_IMETHODIMP nsBaseFilePicker::Init(nsIDOMWindow *aParent,
   nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(aParent);
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
-  mParent = do_QueryInterface(aParent);
   mMode = aMode;
   InitNative(widget, aTitle);
 
@@ -318,7 +314,7 @@ nsBaseFilePicker::GetDomfile(nsIDOMFile** aDomfile)
     return NS_OK;
   }
 
-  nsRefPtr<File> domFile = File::CreateFromFile(mParent, localFile);
+  nsRefPtr<DOMFile> domFile = DOMFile::CreateFromFile(localFile);
   domFile.forget(aDomfile);
   return NS_OK;
 }
@@ -331,7 +327,7 @@ nsBaseFilePicker::GetDomfiles(nsISimpleEnumerator** aDomfiles)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<nsBaseFilePickerEnumerator> retIter =
-    new nsBaseFilePickerEnumerator(mParent, iter);
+    new nsBaseFilePickerEnumerator(iter);
 
   retIter.forget(aDomfiles);
   return NS_OK;

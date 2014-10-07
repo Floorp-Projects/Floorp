@@ -6,7 +6,6 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.importGlobalProperties(['Blob']);
 Cu.import("resource://gre/modules/wap_consts.js", this);
 
 let DEBUG; // set to true to see debug messages

@@ -13,7 +13,6 @@
 #include "nsMimeTypeArray.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/DesktopNotification.h"
-#include "mozilla/dom/File.h"
 #include "nsGeolocation.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIContentPolicy.h"
@@ -1156,14 +1155,14 @@ Navigator::SendBeacon(const nsAString& aUrl,
       in = strStream;
 
     } else if (aData.Value().IsBlob()) {
-      File& blob = aData.Value().GetAsBlob();
-      rv = blob.GetInternalStream(getter_AddRefs(in));
+      nsCOMPtr<nsIDOMBlob> blob = aData.Value().GetAsBlob();
+      rv = blob->GetInternalStream(getter_AddRefs(in));
       if (NS_FAILED(rv)) {
         aRv.Throw(NS_ERROR_FAILURE);
         return false;
       }
       nsAutoString type;
-      rv = blob.GetType(type);
+      rv = blob->GetType(type);
       if (NS_FAILED(rv)) {
         aRv.Throw(NS_ERROR_FAILURE);
         return false;

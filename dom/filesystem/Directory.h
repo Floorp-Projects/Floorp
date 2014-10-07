@@ -10,9 +10,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/File.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsDOMFile.h"
 #include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
 

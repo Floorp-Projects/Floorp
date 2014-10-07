@@ -14,9 +14,8 @@
 
 #include "mozilla/dom/ArchiveReaderBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/File.h"
-#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/EncodingUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -24,10 +23,12 @@ USING_ARCHIVEREADER_NAMESPACE
 
 /* static */ already_AddRefed<ArchiveReader>
 ArchiveReader::Constructor(const GlobalObject& aGlobal,
-                           File& aBlob,
+                           nsIDOMBlob* aBlob,
                            const ArchiveReaderOptions& aOptions,
                            ErrorResult& aError)
 {
+  MOZ_ASSERT(aBlob);
+
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aError.Throw(NS_ERROR_UNEXPECTED);
@@ -46,13 +47,14 @@ ArchiveReader::Constructor(const GlobalObject& aGlobal,
   return reader.forget();
 }
 
-ArchiveReader::ArchiveReader(File& aBlob, nsPIDOMWindow* aWindow,
+ArchiveReader::ArchiveReader(nsIDOMBlob* aBlob, nsPIDOMWindow* aWindow,
                              const nsACString& aEncoding)
-  : mBlob(&aBlob)
+  : mBlob(aBlob)
   , mWindow(aWindow)
   , mStatus(NOT_STARTED)
   , mEncoding(aEncoding)
 {
+  MOZ_ASSERT(aBlob);
   MOZ_ASSERT(aWindow);
 }
 

@@ -8,9 +8,9 @@
 #define mozilla_dom_indexeddb_filesnapshot_h__
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/File.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsDOMFile.h"
 
 namespace mozilla {
 namespace dom {
@@ -22,7 +22,7 @@ namespace indexedDB {
 class IDBFileHandle;
 
 class FileImplSnapshot MOZ_FINAL
-  : public FileImplBase
+  : public DOMFileImplBase
 {
   typedef mozilla::dom::MetadataParameters MetadataParameters;
 
@@ -59,8 +59,8 @@ private:
   { }
 #endif
 
-  virtual void
-  GetMozFullPathInternal(nsAString& aFullPath, ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual nsresult
+  GetMozFullPathInternal(nsAString& aFullPath) MOZ_OVERRIDE;
 
   virtual nsresult
   GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
@@ -74,11 +74,10 @@ private:
   virtual bool
   IsCCed() const MOZ_OVERRIDE;
 
-  virtual already_AddRefed<FileImpl>
+  virtual already_AddRefed<DOMFileImpl>
   CreateSlice(uint64_t aStart,
               uint64_t aLength,
-              const nsAString& aContentType,
-              ErrorResult& aRv) MOZ_OVERRIDE;
+              const nsAString& aContentType) MOZ_OVERRIDE;
 
   virtual bool
   IsStoredFile() const MOZ_OVERRIDE;

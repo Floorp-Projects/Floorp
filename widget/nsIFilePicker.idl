@@ -145,7 +145,7 @@ interface nsIFilePicker : nsISupports
  /**
   * Get the nsIDOMFile for the file.
   *
-  * @return Returns the file currently selected as File
+  * @return Returns the file currently selected as DOMFile
   */
   readonly attribute nsIDOMFile domfile;
 
@@ -153,7 +153,7 @@ interface nsIFilePicker : nsISupports
   * Get the enumerator for the selected files
   * only works in the modeOpenMultiple mode
   *
-  * @return Returns the files currently selected as Files
+  * @return Returns the files currently selected as DOMFiles
   */
   readonly attribute nsISimpleEnumerator domfiles;
 

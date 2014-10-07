@@ -13,6 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=403852
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=403852">Mozilla Bug 403852</a>
 <p id="display">
   <input id="fileList" type="file"></input>
+  <canvas id="canvas"></canvas>
 </p>
 <div id="content" style="display: none">
 </div>
@@ -36,14 +37,10 @@ ok("lastModifiedDate" in domFile, "lastModifiedDate must be present");
 var d = new Date(testFile.lastModifiedTime);
 ok(d.getTime() == domFile.lastModifiedDate.getTime(), "lastModifiedDate should be the same.");
 
+var cf = document.getElementById("canvas").mozGetAsFile("canvFile");
+
 var x = new Date();
-
-// In our implementation of File object, lastModifiedDate is unknown only for new objects.
-// Using canvas or input[type=file] elements, we 'often' have a valid lastModifiedDate values.
-// For canvas we use memory files and the lastModifiedDate is now().
-var f = new File([new Blob(['test'], {type: 'text/plain'})], "test-name");
-
-var y = f.lastModifiedDate;
+var y = cf.lastModifiedDate;
 var z = new Date();
 
 ok((x.getTime() <= y.getTime()) && (y.getTime() <= z.getTime()), "lastModifiedDate of file which does not have last modified date should be current time");

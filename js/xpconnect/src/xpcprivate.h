@@ -3389,8 +3389,6 @@ struct GlobalProperties {
     bool URLSearchParams : 1;
     bool atob : 1;
     bool btoa : 1;
-    bool Blob : 1;
-    bool File : 1;
 };
 
 // Infallible.

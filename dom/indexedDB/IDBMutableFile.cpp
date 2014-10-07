@@ -343,7 +343,7 @@ already_AddRefed<nsIDOMFile>
 IDBMutableFile::CreateFileObject(IDBFileHandle* aFileHandle,
                                  MetadataParameters* aMetadataParams)
 {
-  nsRefPtr<FileImpl> impl =
+  nsRefPtr<DOMFileImpl> impl =
     new FileImplSnapshot(mName,
                          mType,
                          aMetadataParams,
@@ -351,7 +351,7 @@ IDBMutableFile::CreateFileObject(IDBFileHandle* aFileHandle,
                          aFileHandle,
                          mFileInfo);
 
-  nsCOMPtr<nsIDOMFile> fileSnapshot = new File(GetOwner(), impl);
+  nsCOMPtr<nsIDOMFile> fileSnapshot = new DOMFile(impl);
   return fileSnapshot.forget();
 }
 

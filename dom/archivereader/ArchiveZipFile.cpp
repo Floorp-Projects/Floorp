@@ -10,9 +10,7 @@
 #include "nsIInputStream.h"
 #include "zlib.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/File.h"
 
-using namespace mozilla::dom;
 USING_ARCHIVEREADER_NAMESPACE
 
 #define ZIP_CHUNK 16384
@@ -398,16 +396,15 @@ ArchiveZipFileImpl::Traverse(nsCycleCollectionTraversalCallback &cb)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mArchiveReader);
 }
 
-already_AddRefed<mozilla::dom::FileImpl>
+already_AddRefed<mozilla::dom::DOMFileImpl>
 ArchiveZipFileImpl::CreateSlice(uint64_t aStart,
                                 uint64_t aLength,
-                                const nsAString& aContentType,
-                                ErrorResult& aRv)
+                                const nsAString& aContentType)
 {
-  nsRefPtr<FileImpl> impl =
+  nsRefPtr<DOMFileImpl> impl =
     new ArchiveZipFileImpl(mFilename, mContentType, aStart, mLength, mCentral,
                            mArchiveReader);
   return impl.forget();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(ArchiveZipFileImpl, FileImpl)
+NS_IMPL_ISUPPORTS_INHERITED0(ArchiveZipFileImpl, DOMFileImpl)

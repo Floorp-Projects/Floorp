@@ -8,7 +8,6 @@
 
 #include "nsNetUtil.h" // Stream transport service.
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/FileSystemUtils.h"
@@ -16,6 +15,7 @@
 #include "mozilla/dom/PContent.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/unused.h"
+#include "nsDOMFile.h"
 
 namespace mozilla {
 namespace dom {
@@ -170,7 +170,7 @@ FileSystemTaskBase::GetBlobParent(nsIDOMFile* aFile) const
   aFile->GetMozLastModifiedDate(&lastModifiedDate);
 
   ContentParent* cp = static_cast<ContentParent*>(mRequestParent->Manager());
-  return cp->GetOrCreateActorForBlob(static_cast<File*>(aFile));
+  return cp->GetOrCreateActorForBlob(aFile);
 }
 
 void

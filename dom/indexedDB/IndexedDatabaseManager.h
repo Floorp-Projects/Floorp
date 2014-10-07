@@ -156,7 +156,7 @@ private:
   // protected by any mutex but it is only ever touched on the IO thread.
   nsClassHashtable<nsCStringHashKey, FileManagerInfo> mFileManagerInfos;
 
-  // Lock protecting FileManager.mFileInfos and FileImplBase.mFileInfos
+  // Lock protecting FileManager.mFileInfos and nsDOMFileBase.mFileInfos
   // It's s also used to atomically update FileInfo.mRefCnt, FileInfo.mDBRefCnt
   // and FileInfo.mSliceRefCnt
   mozilla::Mutex mFileMutex;

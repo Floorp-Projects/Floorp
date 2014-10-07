@@ -15,20 +15,14 @@
 namespace mozilla {
 
 nsresult
-CaptureTask::TaskComplete(already_AddRefed<dom::File> aBlob, nsresult aRv)
+CaptureTask::TaskComplete(already_AddRefed<dom::DOMFile> aBlob, nsresult aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   DetachStream();
 
   nsresult rv;
-  nsRefPtr<dom::File> blob(aBlob);
-
-  // We have to set the parent because the blob has been generated with a valid one.
-  if (blob) {
-    blob = new dom::File(mImageCapture->GetParentObject(), blob->Impl());
-  }
-
+  nsRefPtr<dom::DOMFile> blob(aBlob);
   if (mPrincipalChanged) {
     aRv = NS_ERROR_DOM_SECURITY_ERR;
     IC_LOG("MediaStream principal should not change during TakePhoto().");
@@ -104,9 +98,9 @@ CaptureTask::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
   public:
     explicit EncodeComplete(CaptureTask* aTask) : mTask(aTask) {}
 
-    nsresult ReceiveBlob(already_AddRefed<dom::File> aBlob) MOZ_OVERRIDE
+    nsresult ReceiveBlob(already_AddRefed<dom::DOMFile> aBlob) MOZ_OVERRIDE
     {
-      nsRefPtr<dom::File> blob(aBlob);
+      nsRefPtr<dom::DOMFile> blob(aBlob);
       mTask->TaskComplete(blob.forget(), NS_OK);
       mTask = nullptr;
       return NS_OK;

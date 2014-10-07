@@ -6,7 +6,6 @@
 
 #include "UDPSocket.h"
 #include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/UDPMessageEvent.h"
 #include "mozilla/dom/UDPSocketBinding.h"
@@ -14,6 +13,7 @@
 #include "mozilla/net/DNS.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
+#include "nsIDOMFile.h"
 #include "nsINetAddr.h"
 #include "nsStringStream.h"
 
@@ -328,9 +328,9 @@ UDPSocket::Send(const StringOrBlobOrArrayBufferOrArrayBufferView& aData,
 
   nsCOMPtr<nsIInputStream> stream;
   if (aData.IsBlob()) {
-    File& blob = aData.GetAsBlob();
+    nsCOMPtr<nsIDOMBlob> blob = aData.GetAsBlob();
 
-    aRv = blob.GetInternalStream(getter_AddRefs(stream));
+    aRv = blob->GetInternalStream(getter_AddRefs(stream));
     if (NS_WARN_IF(aRv.Failed())) {
       return false;
     }
