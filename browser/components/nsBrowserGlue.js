@@ -507,7 +507,6 @@ BrowserGlue.prototype = {
     NewTabUtils.init();
     DirectoryLinksProvider.init();
     NewTabUtils.links.addProvider(DirectoryLinksProvider);
-    BrowserNewTabPreloader.init();
 #ifdef NIGHTLY_BUILD
     if (Services.prefs.getBoolPref("dom.identity.enabled")) {
       SignInToWebsiteUX.init();
