@@ -43,9 +43,6 @@ DOMCI_CLASS(XSLTProcessor)
 // DOM Level 3 XPath objects
 DOMCI_CLASS(XPathNSResolver)
 
-DOMCI_CLASS(Blob)
-DOMCI_CLASS(File)
-
 DOMCI_CLASS(MozSmsMessage)
 DOMCI_CLASS(MozMmsMessage)
 DOMCI_CLASS(MozMobileMessageThread)

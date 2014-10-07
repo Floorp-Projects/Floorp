@@ -19,6 +19,7 @@
 namespace mozilla {
 namespace dom {
 struct ArchiveReaderOptions;
+class DOMFile;
 class GlobalObject;
 } // namespace dom
 } // namespace mozilla
@@ -38,10 +39,10 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ArchiveReader)
 
   static already_AddRefed<ArchiveReader>
-  Constructor(const GlobalObject& aGlobal, nsIDOMBlob* aBlob,
+  Constructor(const GlobalObject& aGlobal, DOMFile& aBlob,
               const ArchiveReaderOptions& aOptions, ErrorResult& aError);
 
-  ArchiveReader(nsIDOMBlob* aBlob, nsPIDOMWindow* aWindow,
+  ArchiveReader(DOMFile& aBlob, nsPIDOMWindow* aWindow,
                 const nsACString& aEncoding);
 
   nsIDOMWindow* GetParentObject() const
@@ -75,7 +76,7 @@ private:
 
 protected:
   // The archive blob/file
-  nsCOMPtr<nsIDOMBlob> mBlob;
+  nsRefPtr<DOMFile> mBlob;
 
   // The window is needed by the requests
   nsCOMPtr<nsPIDOMWindow> mWindow;

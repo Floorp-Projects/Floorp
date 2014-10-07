@@ -19,7 +19,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
-#include "File.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 
@@ -848,36 +847,28 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, JSObject* aBlob,
                      const mozilla::dom::objectURLOptions& aOptions,
                      nsString& aResult, mozilla::ErrorResult& aRv)
 {
-  JSContext* cx = aGlobal.Context();
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
+  SetDOMStringToNull(aResult);
 
-  nsCOMPtr<nsIDOMBlob> blob = file::GetDOMBlobFromJSObject(aBlob);
-  if (!blob) {
-    SetDOMStringToNull(aResult);
-
-    NS_NAMED_LITERAL_STRING(argStr, "Argument 1 of URL.createObjectURL");
-    NS_NAMED_LITERAL_STRING(blobStr, "Blob");
-    aRv.ThrowTypeError(MSG_DOES_NOT_IMPLEMENT_INTERFACE, &argStr, &blobStr);
-    return;
-  }
-
-  DOMFile* domBlob = static_cast<DOMFile*>(blob.get());
-
-  nsRefPtr<CreateURLRunnable> runnable =
-    new CreateURLRunnable(workerPrivate, domBlob->Impl(), aOptions, aResult);
-
-  if (!runnable->Dispatch(cx)) {
-    JS_ReportPendingException(cx);
-  }
+  NS_NAMED_LITERAL_STRING(argStr, "Argument 1 of URL.createObjectURL");
+  NS_NAMED_LITERAL_STRING(blobStr, "MediaStream");
+  aRv.ThrowTypeError(MSG_DOES_NOT_IMPLEMENT_INTERFACE, &argStr, &blobStr);
 }
 
 // static
 void
-URL::CreateObjectURL(const GlobalObject& aGlobal, JSObject& aBlob,
+URL::CreateObjectURL(const GlobalObject& aGlobal, DOMFile& aBlob,
                      const mozilla::dom::objectURLOptions& aOptions,
                      nsString& aResult, mozilla::ErrorResult& aRv)
 {
-  return CreateObjectURL(aGlobal, &aBlob, aOptions, aResult, aRv);
+  JSContext* cx = aGlobal.Context();
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
+
+  nsRefPtr<CreateURLRunnable> runnable =
+    new CreateURLRunnable(workerPrivate, aBlob.Impl(), aOptions, aResult);
+
+  if (!runnable->Dispatch(cx)) {
+    JS_ReportPendingException(cx);
+  }
 }
 
 // static

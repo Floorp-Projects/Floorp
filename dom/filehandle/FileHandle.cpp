@@ -17,7 +17,7 @@
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsIDOMFile.h"
+#include "nsDOMFile.h"
 #include "nsIEventTarget.h"
 #include "nsISeekableStream.h"
 #include "nsNetUtil.h"
@@ -622,17 +622,17 @@ FileHandleBase::GetInputStream(const ArrayBuffer& aValue,
 
 // static
 already_AddRefed<nsIInputStream>
-FileHandleBase::GetInputStream(nsIDOMBlob* aValue, uint64_t* aInputLength,
+FileHandleBase::GetInputStream(const DOMFile& aValue, uint64_t* aInputLength,
                                ErrorResult& aRv)
 {
-  uint64_t length;
-  aRv = aValue->GetSize(&length);
+  DOMFile& file = const_cast<DOMFile&>(aValue);
+  uint64_t length = file.GetSize(aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  aRv = aValue->GetInternalStream(getter_AddRefs(stream));
+  aRv = file.GetInternalStream(getter_AddRefs(stream));
   if (aRv.Failed()) {
     return nullptr;
   }

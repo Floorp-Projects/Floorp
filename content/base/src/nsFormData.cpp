@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsDOMFile.h"
 #include "nsFormData.h"
 #include "nsIVariant.h"
 #include "nsIInputStream.h"
-#include "nsIDOMFile.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/FormDataBinding.h"
 
@@ -21,9 +21,34 @@ nsFormData::nsFormData(nsISupports* aOwner)
 // -------------------------------------------------------------------------
 // nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsFormData, mOwner)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsFormData)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFormData)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
+
+  for (uint32_t i = 0, len = tmp->mFormData.Length(); i < len; ++i) {
+    ImplCycleCollectionUnlink(tmp->mFormData[i].fileValue);
+  }
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFormData)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
+
+  for (uint32_t i = 0, len = tmp->mFormData.Length(); i < len; ++i) {
+   ImplCycleCollectionTraverse(cb,tmp->mFormData[i].fileValue,
+                               "mFormData[i].fileValue", 0);
+  }
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsFormData)
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFormData)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFormData)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormData)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMFormData)
@@ -48,7 +73,7 @@ nsFormData::Append(const nsAString& aName, const nsAString& aValue)
 }
 
 void
-nsFormData::Append(const nsAString& aName, nsIDOMBlob* aBlob,
+nsFormData::Append(const nsAString& aName, DOMFile& aBlob,
                    const Optional<nsAString>& aFilename)
 {
   nsString filename;
@@ -57,7 +82,7 @@ nsFormData::Append(const nsAString& aName, nsIDOMBlob* aBlob,
   } else {
     filename.SetIsVoid(true);
   }
-  AddNameFilePair(aName, aBlob, filename);
+  AddNameFilePair(aName, &aBlob, filename);
 }
 
 // -------------------------------------------------------------------------
@@ -80,9 +105,10 @@ nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
     nsMemory::Free(iid);
 
     nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(supports);
+    nsRefPtr<DOMFile> blob = static_cast<DOMFile*>(domBlob.get());
     if (domBlob) {
       Optional<nsAString> temp;
-      Append(aName, domBlob, temp);
+      Append(aName, *blob, temp);
       return NS_OK;
     }
   }

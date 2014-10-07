@@ -90,6 +90,7 @@
 #include "nsICategoryManager.h"
 #include "nsIChannelEventSink.h"
 #include "nsIChannelPolicy.h"
+#include "nsICharsetDetectionObserver.h"
 #include "nsIChromeRegistry.h"
 #include "nsIConsoleService.h"
 #include "nsIContent.h"
@@ -5992,20 +5993,26 @@ nsContentUtils::CreateArrayBuffer(JSContext *aCx, const nsACString& aData,
 // TODO: bug 704447: large file support
 nsresult
 nsContentUtils::CreateBlobBuffer(JSContext* aCx,
+                                 nsISupports* aParent,
                                  const nsACString& aData,
                                  JS::MutableHandle<JS::Value> aBlob)
 {
   uint32_t blobLen = aData.Length();
   void* blobData = moz_malloc(blobLen);
-  nsCOMPtr<nsIDOMBlob> blob;
+  nsRefPtr<DOMFile> blob;
   if (blobData) {
     memcpy(blobData, aData.BeginReading(), blobLen);
-    blob = mozilla::dom::DOMFile::CreateMemoryFile(blobData, blobLen,
+    blob = mozilla::dom::DOMFile::CreateMemoryFile(aParent, blobData, blobLen,
                                                    EmptyString());
   } else {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return nsContentUtils::WrapNative(aCx, blob, aBlob);
+
+  if (!WrapNewBindingObject(aCx, blob, aBlob)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 void

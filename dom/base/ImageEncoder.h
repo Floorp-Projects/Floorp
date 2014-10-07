@@ -51,6 +51,8 @@ public:
   // successful dispatching of the extraction step to the encoding thread.
   // aEncodeCallback will be called on main thread when encoding process is
   // success.
+  // Note: The callback has to set a valid parent for content for the generated
+  // Blob object.
   static nsresult ExtractDataAsync(nsAString& aType,
                                    const nsAString& aOptions,
                                    bool aUsingCustomOptions,
@@ -62,6 +64,8 @@ public:
   // Extract an Image asynchronously. Its function is same as ExtractDataAsync
   // except for the parameters. aImage is the uncompressed data. aEncodeCallback
   // will be called on main thread when encoding process is success.
+  // Note: The callback has to set a valid parent for content for the generated
+  // Blob object.
   static nsresult ExtractDataFromLayersImageAsync(nsAString& aType,
                                                   const nsAString& aOptions,
                                                   bool aUsingCustomOptions,

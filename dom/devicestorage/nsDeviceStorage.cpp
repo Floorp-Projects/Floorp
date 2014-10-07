@@ -1805,7 +1805,7 @@ nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile)
   MOZ_ASSERT(aFile->mLength != UINT64_MAX);
   MOZ_ASSERT(aFile->mLastModifiedDate != UINT64_MAX);
 
-  nsCOMPtr<nsIDOMBlob> blob = new DOMFile(
+  nsCOMPtr<nsIDOMBlob> blob = new DOMFile(aWindow,
     new DOMFileImplFile(fullPath, aFile->mMimeType,
                         aFile->mLength, aFile->mFile,
                         aFile->mLastModifiedDate));
@@ -2914,7 +2914,8 @@ public:
 
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
           BlobChild* actor
-            = ContentChild::GetSingleton()->GetOrCreateActorForBlob(mBlob);
+            = ContentChild::GetSingleton()->GetOrCreateActorForBlob(
+              static_cast<DOMFile*>(mBlob.get()));
           if (!actor) {
             return NS_ERROR_FAILURE;
           }
@@ -2959,7 +2960,8 @@ public:
 
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
           BlobChild* actor
-            = ContentChild::GetSingleton()->GetOrCreateActorForBlob(mBlob);
+            = ContentChild::GetSingleton()->GetOrCreateActorForBlob(
+              static_cast<DOMFile*>(mBlob.get()));
           if (!actor) {
             return NS_ERROR_FAILURE;
           }
