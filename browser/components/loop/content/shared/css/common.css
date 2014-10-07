@@ -13,7 +13,7 @@
 }
 
 body {
-  font-family: "Lucida Grande", sans-serif;
+  font: message-box;
   font-size: 12px;
   background: #fbfbfb;
 }
@@ -363,23 +363,6 @@ p {
 .windows p,
 .linux p {
   line-height: 16px;
-}
-
-/* Using star selector to override
- * the specificity of other selectors
- * if performance is an issue we could
- * explicitely list all the elements */
-.windows * {
-  font-family: 'Segoe';
-}
-
-.mac * {
-  font-family: 'Lucida Grande';
-}
-
-.linux * {
-  /* XXX requires fallbacks */
-  font-family: 'Ubuntu', sans-serif;
 }
 
 /* Web panel */
