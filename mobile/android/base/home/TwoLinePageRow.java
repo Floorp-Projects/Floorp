@@ -7,7 +7,9 @@ package org.mozilla.gecko.home;
 
 import java.lang.ref.WeakReference;
 
+import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Combined;
@@ -248,7 +250,12 @@ public class TwoLinePageRow extends LinearLayout
         // Blank the Favicon, so we don't show the wrong Favicon if we scroll and miss DB.
         mFavicon.clearImage();
         Favicons.cancelFaviconLoad(mLoadFaviconJobId);
-        mLoadFaviconJobId = Favicons.getSizedFaviconForPageFromLocal(getContext(), url, mFaviconListener);
+
+        // Displayed RecentTabsPanel urls may refer to pages openned in readermode, so we
+        // remove the about:reader prefix to ensure the Favicon loads properly.
+        final String pageURL = AboutPages.isAboutReader(url) ?
+            ReaderModeUtils.getUrlFromAboutReader(url) : url;
+        mLoadFaviconJobId = Favicons.getSizedFaviconForPageFromLocal(getContext(), pageURL, mFaviconListener);
 
         updateDisplayedUrl(url);
     }
