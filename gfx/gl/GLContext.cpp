@@ -191,6 +191,8 @@ ParseGLVersion(GLContext* gl, unsigned int* version)
 
         // If it's not an OpenGL (ES) 3.0 context, we will have an error
         error = gl->fGetError();
+        while (gl->fGetError() != LOCAL_GL_NO_ERROR);
+
         if (error == LOCAL_GL_NO_ERROR &&
             majorVersion > 0 &&
             minorVersion >= 0)
