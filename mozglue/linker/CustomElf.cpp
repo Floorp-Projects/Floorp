@@ -7,7 +7,9 @@
 #include <vector>
 #include <dlfcn.h>
 #include <signal.h>
+#include <string.h>
 #include "CustomElf.h"
+#include "BaseElf.h"
 #include "Mappable.h"
 #include "Logging.h"
 
@@ -279,43 +281,10 @@ CustomElf::~CustomElf()
   ElfLoader::Singleton.Forget(this);
 }
 
-namespace {
-
-/**
- * Hash function for symbol lookup, as defined in ELF standard for System V
- */
-unsigned long
-ElfHash(const char *symbol)
-{
-  const unsigned char *sym = reinterpret_cast<const unsigned char *>(symbol);
-  unsigned long h = 0, g;
-  while (*sym) {
-    h = (h << 4) + *sym++;
-    if ((g = h & 0xf0000000))
-      h ^= g >> 24;
-    h &= ~g;
-  }
-  return h;
-}
-
-} /* anonymous namespace */
-
 void *
 CustomElf::GetSymbolPtr(const char *symbol) const
 {
-  return GetSymbolPtr(symbol, ElfHash(symbol));
-}
-
-void *
-CustomElf::GetSymbolPtr(const char *symbol, unsigned long hash) const
-{
-  const Sym *sym = GetSymbol(symbol, hash);
-  void *ptr = nullptr;
-  if (sym && sym->st_shndx != SHN_UNDEF)
-    ptr = GetPtr(sym->st_value);
-  DEBUG_LOG("CustomElf::GetSymbolPtr(%p [\"%s\"], \"%s\") = %p",
-            reinterpret_cast<const void *>(this), GetPath(), symbol, ptr);
-  return ptr;
+  return BaseElf::GetSymbolPtr(symbol, Hash(symbol));
 }
 
 void *
@@ -372,16 +341,17 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
   }
 
   void *sym;
-  /* Search the symbol in the main program. Note this also tries all libraries
-   * the system linker will have loaded RTLD_GLOBAL. Unfortunately, that doesn't
-   * work with bionic, but its linker doesn't normally search the main binary
-   * anyways. Moreover, on android, the main binary is dalvik. */
-#ifdef __GLIBC__
-  sym = dlsym(RTLD_DEFAULT, symbol);
-  DEBUG_LOG("dlsym(RTLD_DEFAULT, \"%s\") = %p", symbol, sym);
-  if (sym)
-    return sym;
-#endif
+
+  unsigned long hash = Hash(symbol);
+
+  /* self_elf should never be NULL, but better safe than sorry. */
+  if (ElfLoader::Singleton.self_elf) {
+    /* We consider the library containing this code a permanent LD_PRELOAD,
+     * so, check if the symbol exists here first. */
+    sym = ElfLoader::Singleton.self_elf->GetSymbolPtr(symbol, hash);
+    if (sym)
+      return sym;
+  }
 
   /* Then search the symbol in our dependencies. Since we already searched in
    * libraries the system linker loaded, skip those (on glibc systems). We
@@ -389,38 +359,16 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
    * directly, not in their own dependent libraries. Building libraries with
    * --no-allow-shlib-undefined ensures such indirect symbol dependency don't
    * happen. */
-  unsigned long hash = ElfHash(symbol);
   for (std::vector<RefPtr<LibHandle> >::const_iterator it = dependencies.begin();
        it < dependencies.end(); ++it) {
     if (!(*it)->IsSystemElf()) {
-      sym = reinterpret_cast<CustomElf *>((*it).get())->GetSymbolPtr(symbol, hash);
-#ifndef __GLIBC__
+      sym = static_cast<BaseElf *>(
+        static_cast<CustomElf *>((*it).get()))->GetSymbolPtr(symbol, hash);
     } else {
       sym = (*it)->GetSymbolPtr(symbol);
-#endif
     }
     if (sym)
       return sym;
-  }
-  return nullptr;
-}
-
-const Sym *
-CustomElf::GetSymbol(const char *symbol, unsigned long hash) const
-{
-  /* Search symbol with the buckets and chains tables.
-   * The hash computed from the symbol name gives an index in the buckets
-   * table. The corresponding value in the bucket table is an index in the
-   * symbols table and in the chains table.
-   * If the corresponding symbol in the symbols table matches, we're done.
-   * Otherwise, the corresponding value in the chains table is a new index
-   * in both tables, which corresponding symbol is tested and so on and so
-   * forth */
-  size_t bucket = hash % buckets.numElements();
-  for (size_t y = buckets[bucket]; y != STN_UNDEF; y = chains[y]) {
-    if (strcmp(symbol, strtab.GetStringAt(symtab[y].st_name)))
-      continue;
-    return &symtab[y];
   }
   return nullptr;
 }

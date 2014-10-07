@@ -162,10 +162,6 @@ class RemoteOptions(ReftestOptions):
         if not options.httpdPath:
             options.httpdPath = os.path.join(options.utilityPath, "components")
 
-        # Android does not run leak tests, but set some reasonable defaults to avoid errors.
-        options.leakThresholds = {}
-        options.ignoreMissingLeaks = []
-
         # TODO: Copied from main, but I think these are no longer used in a post xulrunner world
         #options.xrePath = options.remoteTestRoot + self.automation._product + '/xulrunner'
         #options.utilityPath = options.testRoot + self.automation._product + '/bin'
