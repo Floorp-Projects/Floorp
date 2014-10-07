@@ -861,8 +861,8 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
 
   // NOTE: TextComposition should receive selection change notification before
   //       TextEventHandlingMarker notifies TextComposition of the end of
-  //       handling TextEvent because TextComposition may need to ignore
-  //       selection changes caused by composition.  Therefore,
+  //       handling compositionchange event because TextComposition may need to
+  //       ignore selection changes caused by composition.  Therefore,
   //       TextEventHandlingMarker must be destroyed after a call of
   //       NotifiyEditorObservers(eNotifyEditorObserversOfEnd) or
   //       NotifiyEditorObservers(eNotifyEditorObserversOfCancel) which notifies

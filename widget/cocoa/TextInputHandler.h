@@ -846,7 +846,7 @@ public:
   void OnSelectionChange() { mSelectedRange.location = NSNotFound; }
 
   /**
-   * DispatchTextEvent() dispatches a text event on mWidget.
+   * DispatchTextEvent() dispatches a compositionchange event on mWidget.
    *
    * @param aText                 User text input.
    * @param aAttrString           An NSAttributedString instance which indicates

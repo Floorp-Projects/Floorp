@@ -796,7 +796,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       DoContentCommandScrollEvent(aEvent->AsContentCommandEvent());
     }
     break;
-  case NS_TEXT_TEXT:
+  case NS_COMPOSITION_CHANGE:
     {
       WidgetTextEvent *textEvent = aEvent->AsTextEvent();
       if (IsTargetCrossProcess(textEvent)) {

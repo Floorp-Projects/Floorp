@@ -135,7 +135,7 @@ CompositionStringSynthesizer::DispatchEvent(bool* aDefaultPrevented)
     mClauses->AppendElement(mCaret);
   }
 
-  WidgetTextEvent textEvent(true, NS_TEXT_TEXT, widget);
+  WidgetTextEvent textEvent(true, NS_COMPOSITION_CHANGE, widget);
   textEvent.time = PR_IntervalNow();
   textEvent.mData = mString;
   if (!mClauses->IsEmpty()) {

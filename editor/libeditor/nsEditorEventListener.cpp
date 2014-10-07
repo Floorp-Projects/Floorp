@@ -456,7 +456,7 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
     case NS_BLUR_CONTENT:
       return Blur(aEvent);
     // text
-    case NS_TEXT_TEXT:
+    case NS_COMPOSITION_CHANGE:
       return HandleText(aEvent);
     // compositionstart
     case NS_COMPOSITION_START:

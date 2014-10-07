@@ -1575,8 +1575,8 @@ TabParent::SendCompositionEvent(WidgetCompositionEvent& event)
 
 /**
  * During REQUEST_TO_COMMIT_COMPOSITION or REQUEST_TO_CANCEL_COMPOSITION,
- * widget usually sends a NS_TEXT_TEXT event to finalize or clear the
- * composition, respectively
+ * widget usually sends a NS_COMPOSITION_CHANGE event to finalize or
+ * clear the composition, respectively
  *
  * Because the event will not reach content in time, we intercept it
  * here and pass the text as the EndIMEComposition return value

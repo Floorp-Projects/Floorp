@@ -2716,7 +2716,7 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
+  WidgetTextEvent textEvent(true, NS_COMPOSITION_CHANGE, mWidget);
   textEvent.time = PR_IntervalNow();
   textEvent.mData = aText;
   if (!aDoCommit) {
@@ -2812,7 +2812,7 @@ IMEInputHandler::InsertTextAsCommittingComposition(
   if (Destroyed()) {
     PR_LOG(gLog, PR_LOG_ALWAYS,
       ("%p IMEInputHandler::InsertTextAsCommittingComposition, "
-       "destroyed by text event", this));
+       "destroyed by compositionchange event", this));
     return;
   }
 
@@ -2922,7 +2922,7 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
     if (Destroyed()) {
       PR_LOG(gLog, PR_LOG_ALWAYS,
         ("%p IMEInputHandler::SetMarkedText, "
-         "destroyed by text event", this));
+         "destroyed by compositionchange event", this));
       return;
     }
 
