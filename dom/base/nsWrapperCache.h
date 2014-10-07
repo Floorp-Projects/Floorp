@@ -14,6 +14,14 @@
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
 
+namespace mozilla {
+namespace dom {
+class TabChildGlobal;
+} // namespace dom
+} // namespace mozilla
+class SandboxPrivate;
+class nsInProcessTabChildGlobal;
+class nsWindowRoot;
 class XPCWrappedNativeScope;
 
 #define NS_WRAPPERCACHE_IID \
@@ -37,10 +45,10 @@ class XPCWrappedNativeScope;
  *
  * The cache can store 2 types of objects:
  *
- *  If WRAPPER_IS_DOM_BINDING is not set (IsDOMBinding() returns false):
- *    - a slim wrapper or the JSObject of an XPCWrappedNative wrapper
+ *  If WRAPPER_IS_NOT_DOM_BINDING is set (IsDOMBinding() returns false):
+ *    - the JSObject of an XPCWrappedNative wrapper
  *
- *  If WRAPPER_IS_DOM_BINDING is set (IsDOMBinding() returns true):
+ *  If WRAPPER_IS_NOT_DOM_BINDING is not set (IsDOMBinding() returns true):
  *    - a DOM binding object (regular JS object or proxy)
  *
  * The finalizer for the wrapper clears the cache.
@@ -136,14 +144,14 @@ public:
 
   void SetIsDOMBinding()
   {
-    MOZ_ASSERT(!mWrapper && !(GetWrapperFlags() & ~WRAPPER_IS_DOM_BINDING),
+    MOZ_ASSERT(!mWrapper && !(GetWrapperFlags() & ~WRAPPER_IS_NOT_DOM_BINDING),
                "This flag should be set before creating any wrappers.");
-    SetWrapperFlags(WRAPPER_IS_DOM_BINDING);
+    UnsetWrapperFlags(WRAPPER_IS_NOT_DOM_BINDING);
   }
 
   bool IsDOMBinding() const
   {
-    return HasWrapperFlag(WRAPPER_IS_DOM_BINDING);
+    return !HasWrapperFlag(WRAPPER_IS_NOT_DOM_BINDING);
   }
 
   /**
@@ -261,6 +269,17 @@ protected:
   }
 
 private:
+  friend class mozilla::dom::TabChildGlobal;
+  friend class SandboxPrivate;
+  friend class nsInProcessTabChildGlobal;
+  friend class nsWindowRoot;
+  void SetIsNotDOMBinding()
+  {
+    MOZ_ASSERT(!mWrapper && !(GetWrapperFlags() & ~WRAPPER_IS_NOT_DOM_BINDING),
+               "This flag should be set before creating any wrappers.");
+    SetWrapperFlags(WRAPPER_IS_NOT_DOM_BINDING);
+  }
+
   JSObject *GetWrapperJSObject() const
   {
     return mWrapper;
@@ -269,7 +288,7 @@ private:
   void SetWrapperJSObject(JSObject* aWrapper)
   {
     mWrapper = aWrapper;
-    UnsetWrapperFlags(kWrapperFlagsMask & ~WRAPPER_IS_DOM_BINDING);
+    UnsetWrapperFlags(kWrapperFlagsMask & ~WRAPPER_IS_NOT_DOM_BINDING);
   }
 
   void TraceWrapperJSObject(JSTracer* aTrc, const char* aName);
@@ -319,12 +338,12 @@ private:
   enum { WRAPPER_BIT_PRESERVED = 1 << 0 };
 
   /**
-   * If this bit is set then the wrapper for the native object is a DOM binding
-   * (regular JS object or proxy).
+   * If this bit is set then the wrapper for the native object is not a DOM
+   * binding.
    */
-  enum { WRAPPER_IS_DOM_BINDING = 1 << 1 };
+  enum { WRAPPER_IS_NOT_DOM_BINDING = 1 << 1 };
 
-  enum { kWrapperFlagsMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_DOM_BINDING) };
+  enum { kWrapperFlagsMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_NOT_DOM_BINDING) };
 
   JS::Heap<JSObject*> mWrapper;
   FlagsType           mFlags;
