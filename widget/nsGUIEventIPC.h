@@ -451,7 +451,6 @@ struct ParamTraits<mozilla::WidgetTextEvent>
     WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
     WriteParam(aMsg, aParam.mSeqno);
     WriteParam(aMsg, aParam.mData);
-    WriteParam(aMsg, aParam.isChar);
     bool hasRanges = !!aParam.mRanges;
     WriteParam(aMsg, hasRanges);
     if (hasRanges) {
@@ -466,7 +465,6 @@ struct ParamTraits<mozilla::WidgetTextEvent>
                    static_cast<mozilla::WidgetGUIEvent*>(aResult)) ||
         !ReadParam(aMsg, aIter, &aResult->mSeqno) ||
         !ReadParam(aMsg, aIter, &aResult->mData) ||
-        !ReadParam(aMsg, aIter, &aResult->isChar) ||
         !ReadParam(aMsg, aIter, &hasRanges)) {
       return false;
     }
