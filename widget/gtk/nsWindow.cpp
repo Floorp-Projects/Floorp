@@ -3040,12 +3040,13 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
     }
     else {
         // If the character code is in the BMP, send the key press event.
-        // Otherwise, send a text event with the equivalent UTF-16 string.
+        // Otherwise, send a compositionchange event with the equivalent UTF-16
+        // string.
         if (IS_IN_BMP(event.charCode)) {
             DispatchEvent(&event, status);
         }
         else {
-            WidgetTextEvent textEvent(true, NS_TEXT_TEXT, this);
+            WidgetTextEvent textEvent(true, NS_COMPOSITION_CHANGE, this);
             char16_t textString[3];
             textString[0] = H_SURROGATE(event.charCode);
             textString[1] = L_SURROGATE(event.charCode);
@@ -5997,7 +5998,7 @@ nsWindow::GetIMEUpdatePreference()
         nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE);
     // We shouldn't notify IME of selection change caused by changes of
     // composition string.  Therefore, we don't need to be notified selection
-    // changes which are caused by text events handled.
+    // changes which are caused by compositionchange events handled.
     updatePreference.DontNotifyChangesCausedByComposition();
     return updatePreference;
 }

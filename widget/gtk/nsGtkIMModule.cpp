@@ -439,7 +439,7 @@ nsGtkIMModule::EndIMEComposition(nsWindow* aCaller)
     // forcibly.  Therefore, TextComposition will recompute commit string for
     // the request even if native IME will cause unexpected commit string.
     // So, we don't need to emulate commit or cancel composition with
-    // proper composition events and a text event.
+    // proper composition events.
     // XXX ResetIME() might not enough for finishing compositoin on some
     //     environments.  We should emulate focus change too because some IMEs
     //     may commit or cancel composition at blur.
@@ -1092,10 +1092,11 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
     nsEventStatus status;
     nsRefPtr<nsWindow> lastFocusedWindow = mLastFocusedWindow;
 
-    // Store the selected string which will be removed by following text event.
+    // Store the selected string which will be removed by following
+    // compositionchange event.
     if (mCompositionState == eCompositionState_CompositionStartDispatched) {
         // XXX We should assume, for now, any web applications don't change
-        //     selection at handling this text event.
+        //     selection at handling this compositionchange event.
         WidgetQueryContentEvent querySelectedTextEvent(true,
                                                        NS_QUERY_SELECTED_TEXT,
                                                        mLastFocusedWindow);
@@ -1106,7 +1107,7 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
         }
     }
 
-    WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mLastFocusedWindow);
+    WidgetTextEvent textEvent(true, NS_COMPOSITION_CHANGE, mLastFocusedWindow);
     InitEvent(textEvent);
 
     uint32_t targetOffset = mCompositionStart;
@@ -1128,7 +1129,8 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
     if (lastFocusedWindow->IsDestroyed() ||
         lastFocusedWindow != mLastFocusedWindow) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("    NOTE, the focused widget was destroyed/changed by text event"));
+            ("    NOTE, the focused widget was destroyed/changed by "
+             "compositionchange event"));
         return false;
     }
 

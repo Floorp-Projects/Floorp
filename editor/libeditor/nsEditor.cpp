@@ -973,7 +973,7 @@ nsEditor::EndPlaceHolderTransaction()
         // For now just removing the assert.
       }
       // notify editor observers of action but if composing, it's done by
-      // text event handler.
+      // compositionchange event handler.
       if (!mComposition) {
         NotifyEditorObservers(eNotifyEditorObserversOfEnd);
       }
@@ -5097,9 +5097,9 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
     }
   }
 
-  // If composition event or text event isn't dispatched via widget,
-  // we need to ignore them since they cannot be managed by TextComposition.
-  // E.g., the event was created by chrome JS.
+  // If a composition event isn't dispatched via widget, we need to ignore them
+  // since they cannot be managed by TextComposition. E.g., the event was
+  // created by chrome JS.
   // Note that if we allow to handle such events, editor may be confused by
   // strange event order.
   bool needsWidget = false;
@@ -5109,8 +5109,8 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
       // If events are not created with proper event interface, their message
       // are initialized with NS_USER_DEFINED_EVENT.  Let's ignore such event.
       return false;
-    case NS_TEXT_TEXT:
-      // Don't allow text events whose internal event are not
+    case NS_COMPOSITION_CHANGE:
+      // Don't allow compositionchange events whose internal event are not
       // WidgetTextEvent.
       widgetGUIEvent = aEvent->GetInternalNSEvent()->AsTextEvent();
       needsWidget = true;

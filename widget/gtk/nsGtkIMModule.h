@@ -134,7 +134,7 @@ protected:
     nsString mDispatchedCompositionString;
 
     // mSelectedString is the selected string which was removed by first
-    // text event.
+    // compositionchange event.
     nsString mSelectedString;
 
     // OnKeyEvent() temporarily sets mProcessingKeyEvent to the given native
@@ -304,8 +304,9 @@ protected:
     bool DispatchCompositionStart();
     bool DispatchCompositionEnd();
 
-    // Dispatches a text event.  If aIsCommit is TRUE, dispatches a committed
-    // text event.  Otherwise, dispatches a composing text event.
+    // Dispatches a compositionchange event.  If aIsCommit is TRUE, dispatches
+    // a committed compositionchange event.  Otherwise, dispatches a composing
+    // compositionchange event.
     bool DispatchTextEvent(const nsAString& aCompositionString,
                            bool aIsCommit);
 
