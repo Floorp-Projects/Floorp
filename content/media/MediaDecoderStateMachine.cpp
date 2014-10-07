@@ -2478,8 +2478,8 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // will take care of calling MediaDecoder::PlaybackEnded.
       if (mDecoder->GetState() == MediaDecoder::PLAY_STATE_PLAYING &&
           !mDecoder->GetDecodedStream()) {
-        int64_t videoTime = HasVideo() ? mVideoFrameEndTime : 0;
-        int64_t clockTime = std::max(mEndTime, videoTime);
+        int64_t clockTime = std::max(mAudioEndTime, mVideoFrameEndTime);
+        clockTime = std::max(int64_t(0), std::max(clockTime, mEndTime));
         UpdatePlaybackPosition(clockTime);
 
         {
