@@ -1048,7 +1048,7 @@ nsGtkIMModule::DispatchCompositionEnd()
     WidgetCompositionEvent compEvent(true, NS_COMPOSITION_END,
                                      mLastFocusedWindow);
     InitEvent(compEvent);
-    compEvent.data = mDispatchedCompositionString;
+    compEvent.mData = mDispatchedCompositionString;
     nsEventStatus status;
     nsCOMPtr<nsIWidget> kungFuDeathGrip = mLastFocusedWindow;
     mLastFocusedWindow->DispatchEvent(&compEvent, status);

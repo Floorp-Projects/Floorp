@@ -326,14 +326,14 @@ public:
   // The composition string or the commit string.  If the instance is a
   // compositionstart event, this is initialized with selected text by
   // TextComposition automatically.
-  nsString data;
+  nsString mData;
 
   void AssignCompositionEventData(const WidgetCompositionEvent& aEvent,
                                   bool aCopyTargets)
   {
     AssignGUIEventData(aEvent, aCopyTargets);
 
-    data = aEvent.data;
+    mData = aEvent.mData;
   }
 };
 

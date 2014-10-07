@@ -817,7 +817,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
                                            compositionEvent->widget);
       DoQuerySelectedText(&selectedText);
       NS_ASSERTION(selectedText.mSucceeded, "Failed to get selected text");
-      compositionEvent->data = selectedText.mReply.mString;
+      compositionEvent->mData = selectedText.mReply.mString;
     }
     // through to compositionend handling
   case NS_COMPOSITION_END:

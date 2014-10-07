@@ -1227,7 +1227,7 @@ nsIMM32Handler::HandleEndComposition(nsWindow* aWindow)
 
   aWindow->InitEvent(event, &point);
   // The last dispatched composition string must be the committed string.
-  event.data = mLastDispatchedCompositionString;
+  event.mData = mLastDispatchedCompositionString;
   aWindow->DispatchWindowEvent(&event);
   mIsComposing = false;
   mComposingWindow = nullptr;

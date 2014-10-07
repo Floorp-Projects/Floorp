@@ -2132,7 +2132,7 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
   WidgetCompositionEvent compositionEvent(true, msg, widget);
   InitEvent(compositionEvent);
   if (msg != NS_COMPOSITION_START) {
-    compositionEvent.data = aData;
+    compositionEvent.mData = aData;
   }
 
   compositionEvent.mFlags.mIsSynthesizedForTests = true;
