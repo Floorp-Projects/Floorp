@@ -76,12 +76,12 @@ TextComposition::MaybeDispatchCompositionUpdate(const WidgetTextEvent* aEvent)
                                            aEvent->widget);
   compositionUpdate.time = aEvent->time;
   compositionUpdate.timeStamp = aEvent->timeStamp;
-  compositionUpdate.data = aEvent->mData;
+  compositionUpdate.mData = aEvent->mData;
   compositionUpdate.mFlags.mIsSynthesizedForTests =
     aEvent->mFlags.mIsSynthesizedForTests;
 
   nsEventStatus status = nsEventStatus_eConsumeNoDefault;
-  mLastData = compositionUpdate.data;
+  mLastData = compositionUpdate.mData;
   EventDispatcher::Dispatch(mNode, mPresContext,
                             &compositionUpdate, nullptr, &status, nullptr);
   return !Destroyed();
@@ -146,7 +146,7 @@ TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
     nsString* committingData = nullptr;
     switch (aEvent->message) {
       case NS_COMPOSITION_END:
-        committingData = &aEvent->AsCompositionEvent()->data;
+        committingData = &aEvent->AsCompositionEvent()->mData;
         break;
       case NS_TEXT_TEXT:
         committingData = &aEvent->AsTextEvent()->mData;
@@ -304,7 +304,7 @@ TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard)
       if (!Destroyed() && !widget->Destroyed()) {
         nsEventStatus status = nsEventStatus_eIgnore;
         WidgetCompositionEvent endEvent(true, NS_COMPOSITION_END, widget);
-        endEvent.data = commitData;
+        endEvent.mData = commitData;
         endEvent.mFlags.mIsSynthesizedForTests = true;
         widget->DispatchEvent(&endEvent, status);
       }
@@ -435,7 +435,7 @@ TextComposition::CompositionEventDispatcher::Run()
       ContentEventHandler handler(presContext);
       handler.OnQuerySelectedText(&selectedText);
       NS_ASSERTION(selectedText.mSucceeded, "Failed to get selected text");
-      compStart.data = selectedText.mReply.mString;
+      compStart.mData = selectedText.mReply.mString;
       compStart.mFlags.mIsSynthesizedForTests =
         mTextComposition->IsSynthesizedForTests();
       IMEStateManager::DispatchCompositionEvent(mEventTarget, presContext,
@@ -445,7 +445,7 @@ TextComposition::CompositionEventDispatcher::Run()
     }
     case NS_COMPOSITION_END: {
       WidgetCompositionEvent compEvent(true, mEventMessage, widget);
-      compEvent.data = mData;
+      compEvent.mData = mData;
       compEvent.mFlags.mIsSynthesizedForTests =
         mTextComposition->IsSynthesizedForTests();
       IMEStateManager::DispatchCompositionEvent(mEventTarget, presContext,

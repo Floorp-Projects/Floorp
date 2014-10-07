@@ -1690,7 +1690,7 @@ nsTextStore::FlushPendingActions()
                 "dispatching compositionend event...", this));
         WidgetCompositionEvent compositionEnd(true, NS_COMPOSITION_END,
                                               mWidget);
-        compositionEnd.data = textEvent.mData;
+        compositionEnd.mData = textEvent.mData;
         mWidget->InitEvent(compositionEnd);
         mWidget->DispatchWindowEvent(&compositionEnd);
         if (!mWidget || mWidget->Destroyed()) {

@@ -2820,7 +2820,7 @@ IMEInputHandler::InsertTextAsCommittingComposition(
 
   WidgetCompositionEvent compEnd(true, NS_COMPOSITION_END, mWidget);
   InitCompositionEvent(compEnd);
-  compEnd.data = mLastDispatchedCompositionString;
+  compEnd.mData = mLastDispatchedCompositionString;
   DispatchEvent(compEnd);
   if (Destroyed()) {
     PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -2929,7 +2929,7 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
     if (doCommit) {
       WidgetCompositionEvent compEnd(true, NS_COMPOSITION_END, mWidget);
       InitCompositionEvent(compEnd);
-      compEnd.data = mLastDispatchedCompositionString;
+      compEnd.mData = mLastDispatchedCompositionString;
       DispatchEvent(compEnd);
       if (Destroyed()) {
         PR_LOG(gLog, PR_LOG_ALWAYS,

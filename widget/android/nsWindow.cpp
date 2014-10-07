@@ -1868,7 +1868,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             {
                 WidgetCompositionEvent event(true, NS_COMPOSITION_END, this);
                 InitEvent(event, nullptr);
-                event.data = ae->Characters();
+                event.mData = ae->Characters();
                 DispatchEvent(&event);
             }
 
