@@ -62,9 +62,12 @@ public:
       snapped = mat.TransformBounds(snapped);
     }
 
+    // Clip drawing in case we're using (unbounded) operator source.
+    aDT->PushClipRect(snapped);
     FillRectWithMask(aDT, aDeviceOffset, snapped, ToColor(mColor),
                      DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
                      aMaskLayer);
+    aDT->PopClip();
   }
 
 protected:
