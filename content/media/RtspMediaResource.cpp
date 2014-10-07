@@ -53,6 +53,14 @@ struct BufferSlotData {
   int32_t  mFrameType;
 };
 
+// This constant is used to determine if the buffer usage is over a threshold.
+const float kBufferThresholdPerc = 0.8f;
+// The default value of playout delay duration.
+const uint32_t kPlayoutDelayMs = 3000;
+
+//-----------------------------------------------------------------------------
+// RtspTrackBuffer
+//-----------------------------------------------------------------------------
 class RtspTrackBuffer
 {
 public:
@@ -61,11 +69,12 @@ public:
   , mSlotSize(aSlotSize)
   , mTotalBufferSize(BUFFER_SLOT_NUM * mSlotSize)
   , mFrameType(0)
-  , mIsStarted(false) {
+  , mIsStarted(false)
+  , mDuringPlayoutDelay(false)
+  , mPlayoutDelayMs(kPlayoutDelayMs)
+  , mPlayoutDelayTimer(nullptr) {
     MOZ_COUNT_CTOR(RtspTrackBuffer);
-#ifdef PR_LOGGING
     mTrackIdx = aTrackIdx;
-#endif
     MOZ_ASSERT(mSlotSize < UINT32_MAX / BUFFER_SLOT_NUM);
     mRingBuffer = new uint8_t[mTotalBufferSize];
     Reset();
@@ -93,6 +102,7 @@ public:
   void Stop() {
     MonitorAutoLock monitor(mMonitor);
     mIsStarted = false;
+    StopPlayoutDelay();
   }
 
   // Read the data from mRingBuffer[mConsumerIdx*mSlotSize] into aToBuffer.
@@ -118,6 +128,34 @@ public:
     Reset();
   }
 
+  // When RtspTrackBuffer is in playout delay duration, it should suspend
+  // reading data from the buffer until the playout-delay-ended event occurs,
+  // which wil be trigger by mPlayoutDelayTimer.
+  void StartPlayoutDelay() {
+    mDuringPlayoutDelay = true;
+  }
+  void LockStartPlayoutDelay() {
+    MonitorAutoLock monitor(mMonitor);
+    StartPlayoutDelay();
+  }
+
+  // If the playout delay is stopped, mPlayoutDelayTimer should be canceled.
+  void StopPlayoutDelay() {
+    if (mPlayoutDelayTimer) {
+      mPlayoutDelayTimer->Cancel();
+      mPlayoutDelayTimer = nullptr;
+    }
+    mDuringPlayoutDelay = false;
+  }
+  void LockStopPlayoutDelay() {
+    MonitorAutoLock monitor(mMonitor);
+    StopPlayoutDelay();
+  }
+
+  bool IsBufferOverThreshold();
+  void CreatePlayoutDelayTimer(unsigned long delayMs);
+  static void PlayoutDelayTimerCallback(nsITimer *aTimer, void *aClosure);
+
 private:
   // The FrameType is sync to nsIStreamingProtocolController.h
   void SetFrameType(uint32_t aFrameType) {
@@ -127,10 +165,8 @@ private:
 
   // A monitor lock to prevent racing condition.
   Monitor mMonitor;
-#ifdef PR_LOGGING
   // Indicate the track number for Rtsp.
   int32_t mTrackIdx;
-#endif
   // mProducerIdx: A slot index that we store data from
   // nsIStreamingProtocolController.
   // mConsumerIdx: A slot index that we read when decoder need(from OMX decoder).
@@ -159,6 +195,13 @@ private:
 
   // Set true/false when |Start()/Stop()| is called.
   bool mIsStarted;
+
+  // Indicate the buffer is in playout delay duration or not.
+  bool mDuringPlayoutDelay;
+  // Playout delay duration defined in milliseconds.
+  uint32_t mPlayoutDelayMs;
+  // Timer used to fire playout-delay-ended event.
+  nsCOMPtr<nsITimer> mPlayoutDelayTimer;
 };
 
 nsresult RtspTrackBuffer::ReadBuffer(uint8_t* aToBuffer, uint32_t aToBufferSize,
@@ -177,9 +220,16 @@ nsresult RtspTrackBuffer::ReadBuffer(uint8_t* aToBuffer, uint32_t aToBufferSize,
   // 3. No data in this buffer
   // 4. mIsStarted is not set
   while (1) {
+    // Do not read from buffer if we are still in the playout delay duration.
+    if (mDuringPlayoutDelay) {
+      monitor.Wait();
+      continue;
+    }
+
     if (mBufferSlotData[mConsumerIdx].mFrameType & MEDIASTREAM_FRAMETYPE_END_OF_STREAM) {
       return NS_BASE_STREAM_CLOSED;
     }
+
     if (mBufferSlotData[mConsumerIdx].mLength > 0) {
       // Check the aToBuffer space is enough for data copy.
       if ((int32_t)aToBufferSize < mBufferSlotData[mConsumerIdx].mLength) {
@@ -271,6 +321,12 @@ void RtspTrackBuffer::WriteBuffer(const char *aFromBuffer, uint32_t aWriteCount,
     RTSPMLOG("Return because the mFrameType is set");
     return;
   }
+
+  // Create a timer to delay ReadBuffer() for a duration.
+  if (mDuringPlayoutDelay && !mPlayoutDelayTimer) {
+    CreatePlayoutDelayTimer(mPlayoutDelayMs);
+  }
+
   // The flag is true if the incoming data is larger than one slot size.
   bool isMultipleSlots = false;
   // The flag is true if the incoming data is larger than remainder free slots
@@ -314,6 +370,12 @@ void RtspTrackBuffer::WriteBuffer(const char *aFromBuffer, uint32_t aWriteCount,
     memcpy(&(mRingBuffer[mSlotSize * mProducerIdx]), aFromBuffer, aWriteCount);
   }
 
+  // If the buffer is almost full, stop the playout delay to let ReadBuffer()
+  // consume data in the buffer.
+  if (mDuringPlayoutDelay && IsBufferOverThreshold()) {
+    StopPlayoutDelay();
+  }
+
   if (mProducerIdx <= mConsumerIdx && mConsumerIdx < mProducerIdx + slots
       && mBufferSlotData[mConsumerIdx].mLength > 0) {
     // Wrote one or more slots that the decode thread has not yet read.
@@ -322,6 +384,7 @@ void RtspTrackBuffer::WriteBuffer(const char *aFromBuffer, uint32_t aWriteCount,
     if (aFrameType & MEDIASTREAM_FRAMETYPE_END_OF_STREAM) {
       mBufferSlotData[mProducerIdx].mLength = 0;
       mBufferSlotData[mProducerIdx].mTime = 0;
+      StopPlayoutDelay();
     } else {
       mBufferSlotData[mProducerIdx].mLength = aWriteCount;
       mBufferSlotData[mProducerIdx].mTime = aFrameTime;
@@ -342,6 +405,7 @@ void RtspTrackBuffer::WriteBuffer(const char *aFromBuffer, uint32_t aWriteCount,
     if (aFrameType & MEDIASTREAM_FRAMETYPE_END_OF_STREAM) {
       mBufferSlotData[mProducerIdx].mLength = 0;
       mBufferSlotData[mProducerIdx].mTime = 0;
+      StopPlayoutDelay();
     } else {
       mBufferSlotData[mProducerIdx].mLength = aWriteCount;
       mBufferSlotData[mProducerIdx].mTime = aFrameTime;
@@ -368,9 +432,58 @@ void RtspTrackBuffer::Reset() {
     mBufferSlotData[i].mTime = BUFFER_SLOT_EMPTY;
     mBufferSlotData[i].mFrameType = MEDIASTREAM_FRAMETYPE_NORMAL;
   }
+  StopPlayoutDelay();
   mMonitor.NotifyAll();
 }
 
+bool
+RtspTrackBuffer::IsBufferOverThreshold()
+{
+  static int32_t numSlotsThreshold =
+    BUFFER_SLOT_NUM * kBufferThresholdPerc;
+
+  int32_t numSlotsUsed = mProducerIdx - mConsumerIdx;
+  if (numSlotsUsed < 0) {  // wrap-around
+    numSlotsUsed = (BUFFER_SLOT_NUM - mConsumerIdx) + mProducerIdx;
+  }
+  if (numSlotsUsed > numSlotsThreshold) {
+    return true;
+  }
+
+  return false;
+}
+
+void
+RtspTrackBuffer::CreatePlayoutDelayTimer(unsigned long delayMs)
+{
+  if (delayMs <= 0) {
+    return;
+  }
+  mPlayoutDelayTimer = do_CreateInstance("@mozilla.org/timer;1");
+  if (mPlayoutDelayTimer) {
+    mPlayoutDelayTimer->InitWithFuncCallback(PlayoutDelayTimerCallback,
+                                             this, delayMs,
+                                             nsITimer::TYPE_ONE_SHOT);
+  }
+}
+
+// static
+void
+RtspTrackBuffer::PlayoutDelayTimerCallback(nsITimer *aTimer,
+                                           void *aClosure)
+{
+  MOZ_ASSERT(aTimer);
+  MOZ_ASSERT(aClosure);
+
+  RtspTrackBuffer *self = static_cast<RtspTrackBuffer*>(aClosure);
+  MonitorAutoLock lock(self->mMonitor);
+  self->StopPlayoutDelay();
+  lock.NotifyAll();
+}
+
+//-----------------------------------------------------------------------------
+// RtspMediaResource
+//-----------------------------------------------------------------------------
 RtspMediaResource::RtspMediaResource(MediaDecoder* aDecoder,
     nsIChannel* aChannel, nsIURI* aURI, const nsACString& aContentType)
   : BaseMediaResource(aDecoder, aChannel, aURI, aContentType)
@@ -756,6 +869,22 @@ nsresult RtspMediaResource::SeekTime(int64_t aOffset)
   }
 
   return mMediaStreamController->Seek(aOffset);
+}
+
+void
+RtspMediaResource::EnablePlayoutDelay()
+{
+  for (uint32_t i = 0; i < mTrackBuffer.Length(); ++i) {
+    mTrackBuffer[i]->LockStartPlayoutDelay();
+  }
+}
+
+void
+RtspMediaResource::DisablePlayoutDelay()
+{
+  for (uint32_t i = 0; i < mTrackBuffer.Length(); ++i) {
+    mTrackBuffer[i]->LockStopPlayoutDelay();
+  }
 }
 
 } // namespace mozilla
