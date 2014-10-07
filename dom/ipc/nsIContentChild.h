@@ -33,7 +33,7 @@ namespace dom {
 class BlobChild;
 class BlobConstructorParams;
 class ClonedMessageData;
-class DOMFile;
+class File;
 class IPCTabContext;
 class PBlobChild;
 class PBrowserChild;
@@ -44,7 +44,7 @@ class nsIContentChild : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTCHILD_IID)
 
-  BlobChild* GetOrCreateActorForBlob(DOMFile* aBlob);
+  BlobChild* GetOrCreateActorForBlob(File* aBlob);
 
   virtual PBlobChild* SendPBlobConstructor(
     PBlobChild* aActor,

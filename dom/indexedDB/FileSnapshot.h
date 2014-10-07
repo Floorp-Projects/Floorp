@@ -8,9 +8,9 @@
 #define mozilla_dom_indexeddb_filesnapshot_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/File.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsDOMFile.h"
 
 namespace mozilla {
 namespace dom {
@@ -22,7 +22,7 @@ namespace indexedDB {
 class IDBFileHandle;
 
 class FileImplSnapshot MOZ_FINAL
-  : public DOMFileImplBase
+  : public FileImplBase
 {
   typedef mozilla::dom::MetadataParameters MetadataParameters;
 
@@ -74,7 +74,7 @@ private:
   virtual bool
   IsCCed() const MOZ_OVERRIDE;
 
-  virtual already_AddRefed<DOMFileImpl>
+  virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart,
               uint64_t aLength,
               const nsAString& aContentType,

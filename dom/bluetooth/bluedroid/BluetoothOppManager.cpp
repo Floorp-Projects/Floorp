@@ -15,12 +15,12 @@
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
 #include "nsCExternalHandlerService.h"
-#include "nsDOMFile.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIFile.h"
@@ -350,8 +350,8 @@ BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<DOMFileImpl> impl = aActor->GetBlobImpl();
-  nsCOMPtr<nsIDOMBlob> blob = new DOMFile(nullptr, impl);
+  nsRefPtr<FileImpl> impl = aActor->GetBlobImpl();
+  nsCOMPtr<nsIDOMBlob> blob = new File(nullptr, impl);
 
   return SendFile(aDeviceAddress, blob.get());
 }

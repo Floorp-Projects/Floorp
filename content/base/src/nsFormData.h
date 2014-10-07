@@ -18,7 +18,7 @@ namespace mozilla {
 class ErrorResult;
 
 namespace dom {
-class DOMFile;
+class File;
 class HTMLFormElement;
 class GlobalObject;
 } // namespace dom
@@ -55,7 +55,7 @@ public:
               const mozilla::dom::Optional<mozilla::dom::NonNull<mozilla::dom::HTMLFormElement> >& aFormElement,
               mozilla::ErrorResult& aRv);
   void Append(const nsAString& aName, const nsAString& aValue);
-  void Append(const nsAString& aName, mozilla::dom::DOMFile& aBlob,
+  void Append(const nsAString& aName, mozilla::dom::File& aBlob,
               const mozilla::dom::Optional<nsAString>& aFilename);
 
   // nsFormSubmission

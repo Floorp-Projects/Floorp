@@ -13,11 +13,11 @@
 #include "FileStreamWrappers.h"
 #include "MemoryStreams.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/File.h"
 #include "MutableFile.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsDOMFile.h"
 #include "nsIEventTarget.h"
 #include "nsISeekableStream.h"
 #include "nsNetUtil.h"
@@ -622,10 +622,10 @@ FileHandleBase::GetInputStream(const ArrayBuffer& aValue,
 
 // static
 already_AddRefed<nsIInputStream>
-FileHandleBase::GetInputStream(const DOMFile& aValue, uint64_t* aInputLength,
+FileHandleBase::GetInputStream(const File& aValue, uint64_t* aInputLength,
                                ErrorResult& aRv)
 {
-  DOMFile& file = const_cast<DOMFile&>(aValue);
+  File& file = const_cast<File&>(aValue);
   uint64_t length = file.GetSize(aRv);
   if (aRv.Failed()) {
     return nullptr;

@@ -12,7 +12,6 @@
 #include "nsIConsoleService.h"
 #include "nsIDOMDOMException.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMFile.h"
 #include "nsIDOMMessageEvent.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
@@ -303,7 +302,7 @@ struct WorkerStructuredCloneCallbacks
     if (aTag == DOMWORKER_SCTAG_BLOB) {
       MOZ_ASSERT(!aData);
 
-      DOMFileImpl* blobImpl;
+      FileImpl* blobImpl;
       if (JS_ReadBytes(aReader, &blobImpl, sizeof(blobImpl))) {
         MOZ_ASSERT(blobImpl);
 
@@ -319,7 +318,7 @@ struct WorkerStructuredCloneCallbacks
 
         {
           // New scope to protect |result| from a moving GC during ~nsRefPtr.
-          nsRefPtr<DOMFile> blob = new DOMFile(nullptr, blobImpl);
+          nsRefPtr<File> blob = new File(nullptr, blobImpl);
           JS::Rooted<JS::Value> val(aCx);
           if (WrapNewBindingObject(aCx, blob, &val)) {
             result = val.toObjectOrNull();
@@ -351,9 +350,9 @@ struct WorkerStructuredCloneCallbacks
 
     // See if this is a Blob/File object.
     {
-      DOMFile* blob = nullptr;
+      File* blob = nullptr;
       if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
-        DOMFileImpl* blobImpl = blob->Impl();
+        FileImpl* blobImpl = blob->Impl();
         if (blobImpl && NS_SUCCEEDED(blobImpl->SetMutable(false)) &&
             JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_BLOB, 0) &&
             JS_WriteBytes(aWriter, &blobImpl, sizeof(blobImpl))) {
@@ -403,7 +402,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
     if (aTag == DOMWORKER_SCTAG_BLOB) {
       MOZ_ASSERT(!aData);
 
-      DOMFileImpl* blobImpl;
+      FileImpl* blobImpl;
       if (JS_ReadBytes(aReader, &blobImpl, sizeof(blobImpl))) {
         MOZ_ASSERT(blobImpl);
 
@@ -417,14 +416,14 @@ struct MainThreadWorkerStructuredCloneCallbacks
         }
 #endif
 
-        // nsRefPtr<DOMFile> needs to go out of scope before toObjectOrNull() is
+        // nsRefPtr<File> needs to go out of scope before toObjectOrNull() is
         // called because the static analysis thinks dereferencing XPCOM objects
         // can GC (because in some cases it can!), and a return statement with a
         // JSObject* type means that JSObject* is on the stack as a raw pointer
         // while destructors are running.
         JS::Rooted<JS::Value> val(aCx);
         {
-          nsRefPtr<DOMFile> blob = new DOMFile(nullptr, blobImpl);
+          nsRefPtr<File> blob = new File(nullptr, blobImpl);
           if (!WrapNewBindingObject(aCx, blob, &val)) {
             return nullptr;
           }
@@ -452,9 +451,9 @@ struct MainThreadWorkerStructuredCloneCallbacks
 
     // See if this is a Blob/File object.
     {
-      DOMFile* blob = nullptr;
+      File* blob = nullptr;
       if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
-        DOMFileImpl* blobImpl = blob->Impl();
+        FileImpl* blobImpl = blob->Impl();
         if (blobImpl->IsCCed()) {
           NS_WARNING("Cycle collected blob objects are not supported!");
         } else if (NS_SUCCEEDED(blobImpl->SetMutable(false)) &&

@@ -15,10 +15,10 @@
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/Exceptions.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/ProgressEvent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
-#include "nsDOMFile.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 
@@ -2159,7 +2159,7 @@ XMLHttpRequest::Send(JS::Handle<JSObject*> aBody, ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::Send(DOMFile& aBody, ErrorResult& aRv)
+XMLHttpRequest::Send(File& aBody, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   JSContext* cx = mWorkerPrivate->GetJSContext();

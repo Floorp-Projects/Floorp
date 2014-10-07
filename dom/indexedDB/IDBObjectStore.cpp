@@ -29,6 +29,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMStringList.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/IDBMutableFileBinding.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
@@ -40,8 +41,6 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsCOMPtr.h"
-#include "nsDOMFile.h"
-#include "nsIDOMFile.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
 
@@ -59,7 +58,7 @@ struct IDBObjectStore::StructuredCloneWriteInfo
 {
   struct BlobOrFileInfo
   {
-    nsRefPtr<DOMFile> mBlob;
+    nsRefPtr<File> mBlob;
     nsRefPtr<FileInfo> mFileInfo;
 
     bool
@@ -299,7 +298,7 @@ StructuredCloneWriteCallback(JSContext* aCx,
   MOZ_ASSERT(NS_IsMainThread(), "This can't work off the main thread!");
 
   {
-    DOMFile* blob = nullptr;
+    File* blob = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
       uint64_t size;
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blob->GetSize(&size)));
@@ -401,7 +400,7 @@ GetAddInfoCallback(JSContext* aCx, void* aClosure)
 }
 
 BlobChild*
-ActorFromRemoteBlob(DOMFile* aBlob)
+ActorFromRemoteBlob(File* aBlob)
 {
   MOZ_ASSERT(aBlob);
 
@@ -427,7 +426,7 @@ ActorFromRemoteBlob(DOMFile* aBlob)
 }
 
 bool
-ResolveMysteryFile(DOMFile* aBlob,
+ResolveMysteryFile(File* aBlob,
                    const nsString& aName,
                    const nsString& aContentType,
                    uint64_t aSize,
@@ -442,7 +441,7 @@ ResolveMysteryFile(DOMFile* aBlob,
 }
 
 bool
-ResolveMysteryBlob(DOMFile* aBlob,
+ResolveMysteryBlob(File* aBlob,
                    const nsString& aContentType,
                    uint64_t aSize)
 {
@@ -610,7 +609,7 @@ public:
                "This wrapping currently only works on the main thread!");
 
     // It can happen that this IDB is chrome code, so there is no parent, but
-    // still we want to set a correct parent for the new DOMFile object.
+    // still we want to set a correct parent for the new File object.
     nsCOMPtr<nsISupports> parent;
     if (aDatabase && aDatabase->GetParentObject()) {
       parent = aDatabase->GetParentObject();
@@ -619,7 +618,7 @@ public:
     }
 
     MOZ_ASSERT(parent);
-    nsRefPtr<DOMFile> file = new DOMFile(parent, aFile.mFile->Impl());
+    nsRefPtr<File> file = new File(parent, aFile.mFile->Impl());
 
     if (aData.tag == SCTAG_DOM_BLOB) {
       if (NS_WARN_IF(!ResolveMysteryBlob(aFile.mFile,

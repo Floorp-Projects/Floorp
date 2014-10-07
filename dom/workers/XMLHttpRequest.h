@@ -18,7 +18,7 @@
 
 namespace mozilla {
 namespace dom {
-class DOMFile;
+class File;
 }
 }
 
@@ -170,7 +170,7 @@ public:
   Send(JS::Handle<JSObject*> aBody, ErrorResult& aRv);
 
   void
-  Send(DOMFile& aBody, ErrorResult& aRv);
+  Send(File& aBody, ErrorResult& aRv);
 
   void
   Send(const ArrayBuffer& aBody, ErrorResult& aRv);

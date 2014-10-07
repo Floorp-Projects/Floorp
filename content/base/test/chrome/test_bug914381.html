@@ -33,7 +33,7 @@ function createFileWithData(fileData) {
   return testFile;
 }
 
-/** Test for Bug 914381. DOMFile's created in JS using an nsIFile should allow mozGetFullPathInternal calls to succeed **/
+/** Test for Bug 914381. File's created in JS using an nsIFile should allow mozGetFullPathInternal calls to succeed **/
 var file = createFileWithData("Test bug 914381");
 var f = new File(file);
 is(f.mozFullPathInternal, undefined, "mozFullPathInternal is undefined from js");
