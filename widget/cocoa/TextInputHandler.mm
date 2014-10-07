@@ -2140,7 +2140,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     NS_ENSURE_TRUE_VOID(SetSelection(*aReplacementRange));
   }
 
-  // Dispatch keypress event with char instead of textEvent
+  // Dispatch keypress event with char instead of compositionchange event
   WidgetKeyboardEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
   keypressEvent.isChar = IsPrintableChar(str.CharAt(0));
 
@@ -2716,14 +2716,16 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE, mWidget);
-  textEvent.time = PR_IntervalNow();
-  textEvent.mData = aText;
+  WidgetCompositionEvent compositionChangeEvent(true, NS_COMPOSITION_CHANGE,
+                                                mWidget);
+  compositionChangeEvent.time = PR_IntervalNow();
+  compositionChangeEvent.mData = aText;
   if (!aDoCommit) {
-    textEvent.mRanges = CreateTextRangeArray(aAttrString, aSelectedRange);
+    compositionChangeEvent.mRanges =
+      CreateTextRangeArray(aAttrString, aSelectedRange);
   }
-  mLastDispatchedCompositionString = textEvent.mData;
-  return DispatchEvent(textEvent);
+  mLastDispatchedCompositionString = compositionChangeEvent.mData;
+  return DispatchEvent(compositionChangeEvent);
 }
 
 void
