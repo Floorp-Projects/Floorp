@@ -65,6 +65,9 @@ public:
 
   virtual void SetIdle() MOZ_OVERRIDE;
 
+  virtual nsresult ReadMetadata(MediaInfo *aInfo, MetadataTags **aTags)
+    MOZ_FINAL MOZ_OVERRIDE;
+
 private:
   // A pointer to RtspMediaResource for calling the Rtsp specific function.
   // The lifetime of mRtspResource is controlled by MediaDecoder. MediaDecoder
