@@ -13970,7 +13970,6 @@ void
 nsGlobalWindow::ClearDocumentDependentSlots(JSContext* aCx)
 {
   MOZ_ASSERT(IsInnerWindow());
-  MOZ_ASSERT(IsDOMBinding());
   WindowBinding::ClearCachedDocumentValue(aCx, this);
   WindowBinding::ClearCachedPerformanceValue(aCx, this);
 }

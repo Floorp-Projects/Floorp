@@ -85,6 +85,5 @@ Activity::~Activity()
 Activity::Activity(nsPIDOMWindow* aWindow)
   : DOMRequest(aWindow)
 {
-  MOZ_ASSERT(IsDOMBinding());
 }
 
