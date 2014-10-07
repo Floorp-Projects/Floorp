@@ -495,7 +495,7 @@ struct ParamTraits<mozilla::WidgetCompositionEvent>
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
     WriteParam(aMsg, aParam.mSeqno);
-    WriteParam(aMsg, aParam.data);
+    WriteParam(aMsg, aParam.mData);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -503,7 +503,7 @@ struct ParamTraits<mozilla::WidgetCompositionEvent>
     return ReadParam(aMsg, aIter,
                      static_cast<mozilla::WidgetGUIEvent*>(aResult)) &&
            ReadParam(aMsg, aIter, &aResult->mSeqno) &&
-           ReadParam(aMsg, aIter, &aResult->data);
+           ReadParam(aMsg, aIter, &aResult->mData);
   }
 };
 
