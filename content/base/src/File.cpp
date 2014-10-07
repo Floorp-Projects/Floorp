@@ -281,7 +281,6 @@ File::File(nsISupports* aParent, FileImpl* aImpl)
   , mParent(aParent)
 {
   MOZ_ASSERT(mImpl);
-  SetIsDOMBinding();
 
 #ifdef DEBUG
   {
