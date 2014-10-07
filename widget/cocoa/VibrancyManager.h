@@ -15,6 +15,7 @@
 
 #import <Foundation/NSGeometry.h>
 
+@class NSColor;
 @class NSView;
 class nsChildView;
 class nsIntRegion;
