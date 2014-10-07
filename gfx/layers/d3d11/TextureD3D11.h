@@ -176,7 +176,7 @@ public:
   DXGITextureHostD3D11(TextureFlags aFlags,
                        const SurfaceDescriptorD3D10& aDescriptor);
 
-  virtual NewTextureSource* GetTextureSources() MOZ_OVERRIDE;
+  virtual TextureSource* GetTextureSources() MOZ_OVERRIDE;
 
   virtual void DeallocateDeviceData() MOZ_OVERRIDE {}
 

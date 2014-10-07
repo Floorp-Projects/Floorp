@@ -19,7 +19,6 @@ nsDOMCSSRGBColor::nsDOMCSSRGBColor(nsROCSSPrimitiveValue* aRed,
   : mRed(aRed), mGreen(aGreen), mBlue(aBlue), mAlpha(aAlpha)
   , mHasAlpha(aHasAlpha)
 {
-  SetIsDOMBinding();
 }
 
 nsDOMCSSRGBColor::~nsDOMCSSRGBColor(void)

@@ -26,7 +26,6 @@ NS_INTERFACE_MAP_END
 SubtleCrypto::SubtleCrypto(nsPIDOMWindow* aWindow)
   : mWindow(aWindow)
 {
-  SetIsDOMBinding();
 }
 
 JSObject*

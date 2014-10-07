@@ -38,7 +38,6 @@ protected:
   explicit SVGAnimatedNumber(nsSVGElement* aSVGElement)
     : mSVGElement(aSVGElement)
   {
-    SetIsDOMBinding();
   }
   virtual ~SVGAnimatedNumber() {};
 

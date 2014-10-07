@@ -667,10 +667,6 @@ class MochitestUtilsMixin(object):
         continue
       paths.append(test)
 
-    # suite_start message
-    flat_paths = [p['path'] for p in paths]
-    self.message_logger.logger.suite_start(flat_paths)
-
     # Bug 883865 - add this functionality into manifestparser
     with open(os.path.join(SCRIPT_DIR, 'tests.json'), 'w') as manifestFile:
       manifestFile.write(json.dumps({'tests': paths}))
@@ -1621,15 +1617,25 @@ class Mochitest(MochitestUtilsMixin):
 
     return paths
 
+  def logPreamble(self, tests):
+    """Logs a suite_start message and test_start/test_end at the beginning of a run.
+    """
+    self.log.suite_start([t['path'] for t in tests])
+    for test in tests:
+      if 'disabled' in test:
+        self.log.test_start(test['path'])
+        self.log.test_end(test['path'], 'SKIP', message=test['disabled'])
+
   def getTestsToRun(self, options):
     """
       This method makes a list of tests that are to be run. Required mainly for --bisect-chunk.
     """
     tests = self.getActiveTests(options)
+    self.logPreamble(tests)
+
     testsToRun = []
     for test in tests:
       if test.has_key('disabled'):
-        self.log.info('TEST-SKIPPED | %s | %s' % (test['path'], test['disabled']))
         continue
       testsToRun.append(test['path'])
 

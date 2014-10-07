@@ -23,7 +23,6 @@ NS_INTERFACE_MAP_END
 SpeechRecognitionResult::SpeechRecognitionResult(SpeechRecognition* aParent)
   : mParent(aParent)
 {
-  SetIsDOMBinding();
 }
 
 SpeechRecognitionResult::~SpeechRecognitionResult()

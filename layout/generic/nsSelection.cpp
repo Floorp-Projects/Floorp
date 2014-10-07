@@ -3110,7 +3110,6 @@ Selection::Selection()
   , mType(nsISelectionController::SELECTION_NORMAL)
   , mApplyUserSelectStyle(false)
 {
-  SetIsDOMBinding();
 }
 
 Selection::Selection(nsFrameSelection* aList)
@@ -3120,7 +3119,6 @@ Selection::Selection(nsFrameSelection* aList)
   , mType(nsISelectionController::SELECTION_NORMAL)
   , mApplyUserSelectStyle(false)
 {
-  SetIsDOMBinding();
 }
 
 Selection::~Selection()

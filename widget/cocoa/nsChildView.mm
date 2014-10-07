@@ -2656,6 +2656,17 @@ nsChildView::ClearVibrantAreas()
   }
 }
 
+NSColor*
+nsChildView::VibrancyFillColorForWidgetType(uint8_t aWidgetType)
+{
+  if (VibrancyManager::SystemSupportsVibrancy()) {
+    return EnsureVibrancyManager().VibrancyFillColorForType(
+      aWidgetType == NS_THEME_MAC_VIBRANCY_LIGHT
+        ? VibrancyType::LIGHT : VibrancyType::DARK);
+  }
+  return [NSColor whiteColor];
+}
+
 mozilla::VibrancyManager&
 nsChildView::EnsureVibrancyManager()
 {
@@ -3637,6 +3648,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return [[self window] isKindOfClass:[BaseWindow class]] &&
          [(BaseWindow*)[self window] mainChildView] == self &&
          [(BaseWindow*)[self window] drawsContentsIntoWindowFrame];
+}
+
+- (NSColor*)vibrancyFillColorForWidgetType:(uint8_t)aWidgetType
+{
+  if (!mGeckoChild) {
+    return [NSColor whiteColor];
+  }
+  return mGeckoChild->VibrancyFillColorForWidgetType(aWidgetType);
 }
 
 - (nsIntRegion)nativeDirtyRegionWithBoundingRect:(NSRect)aRect

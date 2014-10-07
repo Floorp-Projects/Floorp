@@ -439,7 +439,7 @@ nsGtkIMModule::EndIMEComposition(nsWindow* aCaller)
     // forcibly.  Therefore, TextComposition will recompute commit string for
     // the request even if native IME will cause unexpected commit string.
     // So, we don't need to emulate commit or cancel composition with
-    // proper composition events and a text event.
+    // proper composition events.
     // XXX ResetIME() might not enough for finishing compositoin on some
     //     environments.  We should emulate focus change too because some IMEs
     //     may commit or cancel composition at blur.
@@ -775,7 +775,7 @@ nsGtkIMModule::OnChangeCompositionNative(GtkIMContext *aContext)
     }
 
     // Be aware, widget can be gone
-    DispatchTextEvent(compositionString, false);
+    DispatchCompositionChangeEvent(compositionString, false);
 }
 
 /* static */
@@ -921,7 +921,7 @@ nsGtkIMModule::CommitCompositionBy(const nsAString& aString)
          this, NS_ConvertUTF16toUTF8(aString).get(),
          NS_ConvertUTF16toUTF8(mDispatchedCompositionString).get()));
 
-    if (!DispatchTextEvent(aString, true)) {
+    if (!DispatchCompositionChangeEvent(aString, true)) {
         return false;
     }
     // We should dispatch the compositionend event here because some IMEs
@@ -1048,7 +1048,7 @@ nsGtkIMModule::DispatchCompositionEnd()
     WidgetCompositionEvent compEvent(true, NS_COMPOSITION_END,
                                      mLastFocusedWindow);
     InitEvent(compEvent);
-    compEvent.data = mDispatchedCompositionString;
+    compEvent.mData = mDispatchedCompositionString;
     nsEventStatus status;
     nsCOMPtr<nsIWidget> kungFuDeathGrip = mLastFocusedWindow;
     mLastFocusedWindow->DispatchEvent(&compEvent, status);
@@ -1067,11 +1067,12 @@ nsGtkIMModule::DispatchCompositionEnd()
 }
 
 bool
-nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
-                                 bool aIsCommit)
+nsGtkIMModule::DispatchCompositionChangeEvent(
+                   const nsAString &aCompositionString,
+                   bool aIsCommit)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): DispatchTextEvent, aIsCommit=%s",
+        ("GtkIMModule(%p): DispatchCompositionChangeEvent, aIsCommit=%s",
          this, aIsCommit ? "TRUE" : "FALSE"));
 
     if (!mLastFocusedWindow) {
@@ -1092,10 +1093,11 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
     nsEventStatus status;
     nsRefPtr<nsWindow> lastFocusedWindow = mLastFocusedWindow;
 
-    // Store the selected string which will be removed by following text event.
+    // Store the selected string which will be removed by following
+    // compositionchange event.
     if (mCompositionState == eCompositionState_CompositionStartDispatched) {
         // XXX We should assume, for now, any web applications don't change
-        //     selection at handling this text event.
+        //     selection at handling this compositionchange event.
         WidgetQueryContentEvent querySelectedTextEvent(true,
                                                        NS_QUERY_SELECTED_TEXT,
                                                        mLastFocusedWindow);
@@ -1106,29 +1108,32 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
         }
     }
 
-    WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mLastFocusedWindow);
-    InitEvent(textEvent);
+    WidgetCompositionEvent compositionChangeEvent(true, NS_COMPOSITION_CHANGE,
+                                                  mLastFocusedWindow);
+    InitEvent(compositionChangeEvent);
 
     uint32_t targetOffset = mCompositionStart;
 
-    textEvent.theText = mDispatchedCompositionString = aCompositionString;
+    compositionChangeEvent.mData =
+      mDispatchedCompositionString = aCompositionString;
 
     if (!aIsCommit) {
         // NOTE: SetTextRangeList() assumes that mDispatchedCompositionString
         //       has been updated already.
-        textEvent.mRanges = CreateTextRangeArray();
-        targetOffset += textEvent.mRanges->TargetClauseOffset();
+        compositionChangeEvent.mRanges = CreateTextRangeArray();
+        targetOffset += compositionChangeEvent.mRanges->TargetClauseOffset();
     }
 
     mCompositionState = aIsCommit ?
-        eCompositionState_CommitTextEventDispatched :
-        eCompositionState_TextEventDispatched;
+        eCompositionState_CommitCompositionChangeEventDispatched :
+        eCompositionState_CompositionChangeEventDispatched;
 
-    mLastFocusedWindow->DispatchEvent(&textEvent, status);
+    mLastFocusedWindow->DispatchEvent(&compositionChangeEvent, status);
     if (lastFocusedWindow->IsDestroyed() ||
         lastFocusedWindow != mLastFocusedWindow) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("    NOTE, the focused widget was destroyed/changed by text event"));
+            ("    NOTE, the focused widget was destroyed/changed by "
+             "compositionchange event"));
         return false;
     }
 
@@ -1444,7 +1449,7 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
     if (wasComposing) {
         selOffset = mCompositionStart;
         if (editorHadCompositionString &&
-            !DispatchTextEvent(mSelectedString, false)) {
+            !DispatchCompositionChangeEvent(mSelectedString, false)) {
             PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
                 ("    FAILED, quitting from DeletText"));
             return NS_ERROR_FAILURE;
@@ -1571,7 +1576,7 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
 
     nsAutoString compositionString;
     GetCompositionString(compositionString);
-    if (!DispatchTextEvent(compositionString, true)) {
+    if (!DispatchCompositionChangeEvent(compositionString, true)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, restoring composition string"));
         return NS_ERROR_FAILURE;
