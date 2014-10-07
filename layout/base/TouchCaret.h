@@ -77,6 +77,11 @@ private:
   void SetVisibility(bool aVisible);
 
   /**
+   * Helper function to get caret's focus frame and caret's bounding rect.
+   */
+  nsIFrame* GetCaretFocusFrame(nsRect* aOutRect = nullptr);
+
+  /**
    * Find the nsCanvasFrame which holds the touch caret.
    */
   nsIFrame* GetCanvasFrame();
