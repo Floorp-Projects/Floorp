@@ -48,7 +48,6 @@ AudioBuffer::AudioBuffer(AudioContext* aContext, uint32_t aNumberOfChannels,
     mSampleRate(aSampleRate)
 {
   mJSChannels.SetCapacity(aNumberOfChannels);
-  SetIsDOMBinding();
   mozilla::HoldJSObjects(this);
 }
 

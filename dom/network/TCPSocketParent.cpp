@@ -68,13 +68,59 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(TCPSocketParentBase)
 TCPSocketParentBase::TCPSocketParentBase()
 : mIPCOpen(false)
 {
+  mObserver = new mozilla::net::OfflineObserver(this);
   mozilla::HoldJSObjects(this);
 }
 
 TCPSocketParentBase::~TCPSocketParentBase()
 {
+  if (mObserver) {
+    mObserver->RemoveObserver();
+  }
   mozilla::DropJSObjects(this);
 }
+
+uint32_t
+TCPSocketParent::GetAppId()
+{
+  uint32_t appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
+  const PContentParent *content = Manager()->Manager();
+  const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
+  if (browsers.Length() > 0) {
+    TabParent *tab = static_cast<TabParent*>(browsers[0]);
+    appId = tab->OwnAppId();
+  }
+  return appId;
+};
+
+nsresult
+TCPSocketParent::OfflineNotification(nsISupports *aSubject)
+{
+  nsCOMPtr<nsIAppOfflineInfo> info(do_QueryInterface(aSubject));
+  if (!info) {
+    return NS_OK;
+  }
+
+  uint32_t targetAppId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
+  info->GetAppId(&targetAppId);
+
+  // Obtain App ID
+  uint32_t appId = GetAppId();
+  if (appId != targetAppId) {
+    return NS_OK;
+  }
+
+  // If the app is offline, close the socket
+  if (mSocket && NS_IsAppOffline(appId)) {
+    mSocket->Close();
+    mSocket = nullptr;
+    mIntermediaryObj = nullptr;
+    mIntermediary = nullptr;
+  }
+
+  return NS_OK;
+}
+
 
 void
 TCPSocketParentBase::ReleaseIPDLReference()
@@ -115,12 +161,12 @@ TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bo
   }
 
   // Obtain App ID
-  uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
-  const PContentParent *content = Manager()->Manager();
-  const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
-  if (browsers.Length() > 0) {
-    TabParent *tab = static_cast<TabParent*>(browsers[0]);
-    appId = tab->OwnAppId();
+  uint32_t appId = GetAppId();
+
+  if (NS_IsAppOffline(appId)) {
+    NS_ERROR("Can't open socket because app is offline");
+    FireInteralError(this, __LINE__);
+    return true;
   }
 
   nsresult rv;

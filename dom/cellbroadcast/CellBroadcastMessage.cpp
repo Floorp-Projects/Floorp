@@ -97,8 +97,6 @@ CellBroadcastMessage::CellBroadcastMessage(nsPIDOMWindow* aWindow,
   if (aCdmaServiceCategory <= 0xFFFFU) {
     mCdmaServiceCategory.SetValue(static_cast<uint16_t>(aCdmaServiceCategory));
   }
-
-  SetIsDOMBinding();
 }
 
 JSObject*
@@ -140,8 +138,6 @@ CellBroadcastEtwsInfo::CellBroadcastEtwsInfo(nsPIDOMWindow* aWindow,
     mWarningType.SetValue(
       ToWebidlEnum<CellBroadcastEtwsWarningType>(aWarningType));
   }
-
-  SetIsDOMBinding();
 }
 
 JSObject*

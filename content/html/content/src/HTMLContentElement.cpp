@@ -24,7 +24,6 @@ using namespace mozilla::dom;
 HTMLContentElement::HTMLContentElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo), mValidSelector(true), mIsInsertionPoint(false)
 {
-  SetIsDOMBinding();
 }
 
 HTMLContentElement::~HTMLContentElement()
@@ -312,7 +311,6 @@ DistributedContentList::DistributedContentList(HTMLContentElement* aHostElement)
   : mParent(aHostElement)
 {
   MOZ_COUNT_CTOR(DistributedContentList);
-  SetIsDOMBinding();
 
   if (aHostElement->IsInsertionPoint()) {
     if (aHostElement->MatchedNodes().IsEmpty()) {

@@ -43,6 +43,22 @@ union ObjectVariant
     RemoteObject;
 };
 
+struct WellKnownSymbol
+{
+    uint32_t which;
+};
+
+struct RegisteredSymbol
+{
+    nsString key;
+};
+
+union SymbolVariant
+{
+    WellKnownSymbol;
+    RegisteredSymbol;
+};
+
 struct UndefinedVariant {};
 struct NullVariant {};
 
@@ -51,10 +67,18 @@ union JSVariant
     UndefinedVariant;
     NullVariant;
     ObjectVariant;
+    SymbolVariant;
     nsString;   /* StringValue(x) */
     double;     /* NumberValue(x) */
     bool;       /* BooleanValue(x) */
     JSIID;      /* XPC nsIID */
+};
+
+union JSIDVariant
+{
+    SymbolVariant;
+    nsString;
+    int32_t;
 };
 
 struct ReturnSuccess

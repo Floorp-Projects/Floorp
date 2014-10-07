@@ -106,7 +106,6 @@ private:
     , mAnimVal(nullptr)
     , mElement(aElement)
   {
-    SetIsDOMBinding();
   }
 
   ~SVGAnimatedTransformList();

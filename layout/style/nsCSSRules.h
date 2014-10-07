@@ -210,11 +210,6 @@ public:
     MOZ_OVERRIDE;
   using nsICSSDeclaration::GetPropertyCSSValue;
 
-  nsCSSFontFaceStyleDecl()
-  {
-    SetIsDOMBinding();
-  }
-
   virtual nsINode *GetParentObject() MOZ_OVERRIDE;
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) MOZ_OVERRIDE;
 

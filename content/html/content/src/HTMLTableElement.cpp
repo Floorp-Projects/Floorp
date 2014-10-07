@@ -73,7 +73,6 @@ TableRowsCollection::TableRowsCollection(HTMLTableElement *aParent)
                                   nsGkAtoms::tr,
                                   false))
 {
-  SetIsDOMBinding();
 }
 
 TableRowsCollection::~TableRowsCollection()

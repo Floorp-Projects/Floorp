@@ -267,6 +267,17 @@ JavaScriptShared::toVariant(JSContext *cx, JS::HandleValue from, JSVariant *to)
         return true;
       }
 
+      case JSTYPE_SYMBOL:
+      {
+        RootedSymbol sym(cx, from.toSymbol());
+
+        SymbolVariant symVar;
+        if (!toSymbolVariant(cx, sym, &symVar))
+            return false;
+        *to = symVar;
+        return true;
+      }
+
       case JSTYPE_STRING:
       {
         nsAutoJSString autoStr;
@@ -314,6 +325,15 @@ JavaScriptShared::fromVariant(JSContext *cx, const JSVariant &from, MutableHandl
           return true;
         }
 
+        case JSVariant::TSymbolVariant:
+        {
+          Symbol *sym = fromSymbolVariant(cx, from.get_SymbolVariant());
+          if (!sym)
+              return false;
+          to.setSymbol(sym);
+          return true;
+        }
+
         case JSVariant::Tdouble:
           to.set(JS_NumberValue(from.get_double()));
           return true;
@@ -348,7 +368,104 @@ JavaScriptShared::fromVariant(JSContext *cx, const JSVariant &from, MutableHandl
         }
 
         default:
+          MOZ_CRASH("NYI");
           return false;
+    }
+}
+
+bool
+JavaScriptShared::toJSIDVariant(JSContext *cx, HandleId from, JSIDVariant *to)
+{
+    if (JSID_IS_STRING(from)) {
+        nsAutoJSString autoStr;
+        if (!autoStr.init(cx, JSID_TO_STRING(from)))
+            return false;
+        *to = autoStr;
+        return true;
+    }
+    if (JSID_IS_INT(from)) {
+        *to = JSID_TO_INT(from);
+        return true;
+    }
+    if (JSID_IS_SYMBOL(from)) {
+        SymbolVariant symVar;
+        if (!toSymbolVariant(cx, JSID_TO_SYMBOL(from), &symVar))
+            return false;
+        *to = symVar;
+        return true;
+    }
+    MOZ_ASSERT(false);
+    return false;
+}
+
+bool
+JavaScriptShared::fromJSIDVariant(JSContext *cx, const JSIDVariant &from, MutableHandleId to)
+{
+    switch (from.type()) {
+      case JSIDVariant::TSymbolVariant: {
+        Symbol *sym = fromSymbolVariant(cx, from.get_SymbolVariant());
+        if (!sym)
+            return false;
+        to.set(SYMBOL_TO_JSID(sym));
+        return true;
+      }
+
+      case JSIDVariant::TnsString:
+        return convertGeckoStringToId(cx, from.get_nsString(), to);
+
+      case JSIDVariant::Tint32_t:
+        to.set(INT_TO_JSID(from.get_int32_t()));
+        return true;
+
+      default:
+        return false;
+    }
+}
+
+bool
+JavaScriptShared::toSymbolVariant(JSContext *cx, JS::Symbol *symArg, SymbolVariant *symVarp)
+{
+    RootedSymbol sym(cx, symArg);
+    MOZ_ASSERT(sym);
+
+    SymbolCode code = GetSymbolCode(sym);
+    if (static_cast<uint32_t>(code) < WellKnownSymbolLimit) {
+        *symVarp = WellKnownSymbol(static_cast<uint32_t>(code));
+        return true;
+    }
+    if (code == SymbolCode::InSymbolRegistry) {
+        nsAutoJSString autoStr;
+        if (!autoStr.init(cx, GetSymbolDescription(sym)))
+            return false;
+        *symVarp = RegisteredSymbol(autoStr);
+        return true;
+    }
+    MOZ_CRASH("unique symbols not yet implemented");
+    return false;
+}
+
+JS::Symbol *
+JavaScriptShared::fromSymbolVariant(JSContext *cx, SymbolVariant symVar)
+{
+    switch (symVar.type()) {
+      case SymbolVariant::TWellKnownSymbol: {
+        uint32_t which = symVar.get_WellKnownSymbol().which();
+        if (which < WellKnownSymbolLimit)
+            return GetWellKnownSymbol(cx, static_cast<SymbolCode>(which));
+        MOZ_ASSERT(false, "bad child data");
+        return nullptr;
+      }
+
+      case SymbolVariant::TRegisteredSymbol: {
+        nsString key = symVar.get_RegisteredSymbol().key();
+        RootedString str(cx, JS_NewUCStringCopyN(cx, key.get(), key.Length()));
+        if (!str)
+            return nullptr;
+        return GetSymbolFor(cx, str);
+      }
+
+      default:
+        return nullptr;
     }
 }
 
