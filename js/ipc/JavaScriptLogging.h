@@ -171,6 +171,10 @@ class Logging
                   formatObject(incoming, false, ObjectId::deserialize(ovar.get_RemoteObject().serializedId()), out);
               break;
           }
+          case JSVariant::TSymbolVariant: {
+              out = "<Symbol>";
+              break;
+          }
           case JSVariant::Tdouble: {
               out = nsPrintfCString("%.0f", value.get_double());
               break;

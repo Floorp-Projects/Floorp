@@ -67,6 +67,7 @@ union JSVariant
     UndefinedVariant;
     NullVariant;
     ObjectVariant;
+    SymbolVariant;
     nsString;   /* StringValue(x) */
     double;     /* NumberValue(x) */
     bool;       /* BooleanValue(x) */
