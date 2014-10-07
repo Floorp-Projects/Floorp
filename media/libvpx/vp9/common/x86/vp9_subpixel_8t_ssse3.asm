@@ -272,11 +272,9 @@
     punpcklbw   xmm2, xmm3                  ;C D
     punpcklbw   xmm4, xmm5                  ;E F
 
-
     movq        xmm6, [rsi + rbx + 8]       ;G
     movq        xmm7, [rax + rbx + 8]       ;H
     punpcklbw   xmm6, xmm7                  ;G H
-
 
     pmaddubsw   xmm0, k0k1
     pmaddubsw   xmm2, k2k3
@@ -284,10 +282,13 @@
     pmaddubsw   xmm6, k6k7
 
     paddsw      xmm0, xmm6
-    paddsw      xmm0, xmm2
+    movdqa      xmm1, xmm2
+    pmaxsw      xmm2, xmm4
+    pminsw      xmm4, xmm1
     paddsw      xmm0, xmm4
-    paddsw      xmm0, krd
+    paddsw      xmm0, xmm2
 
+    paddsw      xmm0, krd
     psraw       xmm0, 7
     packuswb    xmm0, xmm0
 

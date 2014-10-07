@@ -11,8 +11,6 @@
 #include <limits.h>
 
 #include "vpx_mem/vpx_mem.h"
-#include "vp9/encoder/vp9_encodeintra.h"
-#include "vp9/encoder/vp9_rdopt.h"
 #include "vp9/encoder/vp9_segmentation.h"
 #include "vp9/encoder/vp9_mcomp.h"
 #include "vp9/common/vp9_blockd.h"
@@ -21,57 +19,54 @@
 #include "vp9/common/vp9_systemdependent.h"
 
 
-
 static unsigned int do_16x16_motion_iteration(VP9_COMP *cpi,
-                                              int_mv *ref_mv,
-                                              int_mv *dst_mv,
+                                              const MV *ref_mv,
+                                              MV *dst_mv,
                                               int mb_row,
                                               int mb_col) {
-  MACROBLOCK   *const x  = &cpi->mb;
+  MACROBLOCK *const x = &cpi->mb;
   MACROBLOCKD *const xd = &x->e_mbd;
-  vp9_variance_fn_ptr_t v_fn_ptr = cpi->fn_ptr[BLOCK_16X16];
-  unsigned int best_err;
+  const MV_SPEED_FEATURES *const mv_sf = &cpi->sf.mv;
+  const vp9_variance_fn_ptr_t v_fn_ptr = cpi->fn_ptr[BLOCK_16X16];
 
   const int tmp_col_min = x->mv_col_min;
   const int tmp_col_max = x->mv_col_max;
   const int tmp_row_min = x->mv_row_min;
   const int tmp_row_max = x->mv_row_max;
-  int_mv ref_full;
+  MV ref_full;
+  int sad_list[5];
 
   // Further step/diamond searches as necessary
-  int step_param = cpi->sf.reduce_first_step_size +
-      (cpi->speed < 8 ? (cpi->speed > 5 ? 1 : 0) : 2);
-  step_param = MIN(step_param, (cpi->sf.max_step_search_steps - 2));
+  int step_param = mv_sf->reduce_first_step_size;
+  step_param = MIN(step_param, MAX_MVSEARCH_STEPS - 2);
 
-  vp9_clamp_mv_min_max(x, &ref_mv->as_mv);
+  vp9_set_mv_search_range(x, ref_mv);
 
-  ref_full.as_mv.col = ref_mv->as_mv.col >> 3;
-  ref_full.as_mv.row = ref_mv->as_mv.row >> 3;
+  ref_full.col = ref_mv->col >> 3;
+  ref_full.row = ref_mv->row >> 3;
 
   /*cpi->sf.search_method == HEX*/
-  best_err = vp9_hex_search(x, &ref_full.as_mv, step_param, x->errorperbit,
-                            0, &v_fn_ptr,
-                            0, &ref_mv->as_mv, &dst_mv->as_mv);
+  vp9_hex_search(x, &ref_full, step_param, x->errorperbit, 0,
+                 cond_sad_list(cpi, sad_list),
+                 &v_fn_ptr, 0, ref_mv, dst_mv);
 
   // Try sub-pixel MC
   // if (bestsme > error_thresh && bestsme < INT_MAX)
   {
     int distortion;
     unsigned int sse;
-    best_err = cpi->find_fractional_mv_step(
-        x,
-        &dst_mv->as_mv, &ref_mv->as_mv,
-        cpi->common.allow_high_precision_mv,
-        x->errorperbit, &v_fn_ptr,
-        0, cpi->sf.subpel_iters_per_step, NULL, NULL,
-        & distortion, &sse);
+    cpi->find_fractional_mv_step(
+        x, dst_mv, ref_mv, cpi->common.allow_high_precision_mv, x->errorperbit,
+        &v_fn_ptr, 0, mv_sf->subpel_iters_per_step,
+        cond_sad_list(cpi, sad_list),
+        NULL, NULL,
+        &distortion, &sse, NULL, 0, 0);
   }
 
-  vp9_set_mbmode_and_mvs(x, NEWMV, dst_mv);
+  xd->mi[0]->mbmi.mode = NEWMV;
+  xd->mi[0]->mbmi.mv[0].as_mv = *dst_mv;
+
   vp9_build_inter_predictors_sby(xd, mb_row, mb_col, BLOCK_16X16);
-  best_err = vp9_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
-                          xd->plane[0].dst.buf, xd->plane[0].dst.stride,
-                          INT_MAX);
 
   /* restore UMV window */
   x->mv_col_min = tmp_col_min;
@@ -79,21 +74,21 @@ static unsigned int do_16x16_motion_iteration(VP9_COMP *cpi,
   x->mv_row_min = tmp_row_min;
   x->mv_row_max = tmp_row_max;
 
-  return best_err;
+  return vp9_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
+          xd->plane[0].dst.buf, xd->plane[0].dst.stride);
 }
 
-static int do_16x16_motion_search(VP9_COMP *cpi, int_mv *ref_mv, int_mv *dst_mv,
-                                  int mb_row, int mb_col) {
+static int do_16x16_motion_search(VP9_COMP *cpi, const MV *ref_mv,
+                                  int_mv *dst_mv, int mb_row, int mb_col) {
   MACROBLOCK *const x = &cpi->mb;
   MACROBLOCKD *const xd = &x->e_mbd;
   unsigned int err, tmp_err;
-  int_mv tmp_mv;
+  MV tmp_mv;
 
   // Try zero MV first
   // FIXME should really use something like near/nearest MV and/or MV prediction
   err = vp9_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
-                     xd->plane[0].pre[0].buf, xd->plane[0].pre[0].stride,
-                     INT_MAX);
+                     xd->plane[0].pre[0].buf, xd->plane[0].pre[0].stride);
   dst_mv->as_int = 0;
 
   // Test last reference frame using the previous best mv as the
@@ -101,20 +96,19 @@ static int do_16x16_motion_search(VP9_COMP *cpi, int_mv *ref_mv, int_mv *dst_mv,
   tmp_err = do_16x16_motion_iteration(cpi, ref_mv, &tmp_mv, mb_row, mb_col);
   if (tmp_err < err) {
     err = tmp_err;
-    dst_mv->as_int = tmp_mv.as_int;
+    dst_mv->as_mv = tmp_mv;
   }
 
   // If the current best reference mv is not centered on 0,0 then do a 0,0
   // based search as well.
-  if (ref_mv->as_int) {
+  if (ref_mv->row != 0 || ref_mv->col != 0) {
     unsigned int tmp_err;
-    int_mv zero_ref_mv, tmp_mv;
+    MV zero_ref_mv = {0, 0}, tmp_mv;
 
-    zero_ref_mv.as_int = 0;
     tmp_err = do_16x16_motion_iteration(cpi, &zero_ref_mv, &tmp_mv,
                                         mb_row, mb_col);
     if (tmp_err < err) {
-      dst_mv->as_int = tmp_mv.as_int;
+      dst_mv->as_mv = tmp_mv;
       err = tmp_err;
     }
   }
@@ -130,19 +124,16 @@ static int do_16x16_zerozero_search(VP9_COMP *cpi, int_mv *dst_mv) {
   // Try zero MV first
   // FIXME should really use something like near/nearest MV and/or MV prediction
   err = vp9_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
-                     xd->plane[0].pre[0].buf, xd->plane[0].pre[0].stride,
-                     INT_MAX);
+                     xd->plane[0].pre[0].buf, xd->plane[0].pre[0].stride);
 
   dst_mv->as_int = 0;
 
   return err;
 }
-static int find_best_16x16_intra(VP9_COMP *cpi,
-                                 int mb_y_offset,
-                                 MB_PREDICTION_MODE *pbest_mode) {
+static int find_best_16x16_intra(VP9_COMP *cpi, PREDICTION_MODE *pbest_mode) {
   MACROBLOCK   *const x  = &cpi->mb;
   MACROBLOCKD *const xd = &x->e_mbd;
-  MB_PREDICTION_MODE best_mode = -1, mode;
+  PREDICTION_MODE best_mode = -1, mode;
   unsigned int best_err = INT_MAX;
 
   // calculate SATD for each intra prediction mode;
@@ -150,12 +141,13 @@ static int find_best_16x16_intra(VP9_COMP *cpi,
   for (mode = DC_PRED; mode <= TM_PRED; mode++) {
     unsigned int err;
 
-    xd->mi_8x8[0]->mbmi.mode = mode;
+    xd->mi[0]->mbmi.mode = mode;
     vp9_predict_intra_block(xd, 0, 2, TX_16X16, mode,
                             x->plane[0].src.buf, x->plane[0].src.stride,
-                            xd->plane[0].dst.buf, xd->plane[0].dst.stride);
+                            xd->plane[0].dst.buf, xd->plane[0].dst.stride,
+                            0, 0, 0);
     err = vp9_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
-                       xd->plane[0].dst.buf, xd->plane[0].dst.stride, best_err);
+                       xd->plane[0].dst.buf, xd->plane[0].dst.stride);
 
     // find best
     if (err < best_err) {
@@ -177,11 +169,8 @@ static void update_mbgraph_mb_stats
   YV12_BUFFER_CONFIG *buf,
   int mb_y_offset,
   YV12_BUFFER_CONFIG *golden_ref,
-  int_mv *prev_golden_ref_mv,
-  int gld_y_offset,
+  const MV *prev_golden_ref_mv,
   YV12_BUFFER_CONFIG *alt_ref,
-  int_mv *prev_alt_ref_mv,
-  int arf_y_offset,
   int mb_row,
   int mb_col
 ) {
@@ -198,7 +187,7 @@ static void update_mbgraph_mb_stats
   xd->plane[0].dst.stride = get_frame_new_buffer(cm)->y_stride;
 
   // do intra 16x16 prediction
-  intra_error = find_best_16x16_intra(cpi, mb_y_offset,
+  intra_error = find_best_16x16_intra(cpi,
                                       &stats->ref[INTRA_FRAME].m.mode);
   if (intra_error <= 0)
     intra_error = 1;
@@ -246,34 +235,31 @@ static void update_mbgraph_frame_stats(VP9_COMP *cpi,
 
   int mb_col, mb_row, offset = 0;
   int mb_y_offset = 0, arf_y_offset = 0, gld_y_offset = 0;
-  int_mv arf_top_mv, gld_top_mv;
-  MODE_INFO mi_local = { { 0 } };
+  MV gld_top_mv = {0, 0};
+  MODE_INFO mi_local;
 
+  vp9_zero(mi_local);
   // Set up limit values for motion vectors to prevent them extending outside
   // the UMV borders.
-  arf_top_mv.as_int = 0;
-  gld_top_mv.as_int = 0;
   x->mv_row_min     = -BORDER_MV_PIXELS_B16;
   x->mv_row_max     = (cm->mb_rows - 1) * 8 + BORDER_MV_PIXELS_B16;
   xd->up_available  = 0;
   xd->plane[0].dst.stride  = buf->y_stride;
   xd->plane[0].pre[0].stride  = buf->y_stride;
   xd->plane[1].dst.stride = buf->uv_stride;
-  xd->mi_8x8[0] = &mi_local;
+  xd->mi[0] = &mi_local;
   mi_local.mbmi.sb_type = BLOCK_16X16;
   mi_local.mbmi.ref_frame[0] = LAST_FRAME;
   mi_local.mbmi.ref_frame[1] = NONE;
 
   for (mb_row = 0; mb_row < cm->mb_rows; mb_row++) {
-    int_mv arf_left_mv, gld_left_mv;
+    MV gld_left_mv = gld_top_mv;
     int mb_y_in_offset  = mb_y_offset;
     int arf_y_in_offset = arf_y_offset;
     int gld_y_in_offset = gld_y_offset;
 
     // Set up limit values for motion vectors to prevent them extending outside
     // the UMV borders.
-    arf_left_mv.as_int = arf_top_mv.as_int;
-    gld_left_mv.as_int = gld_top_mv.as_int;
     x->mv_col_min      = -BORDER_MV_PIXELS_B16;
     x->mv_col_max      = (cm->mb_cols - 1) * 8 + BORDER_MV_PIXELS_B16;
     xd->left_available = 0;
@@ -282,14 +268,11 @@ static void update_mbgraph_frame_stats(VP9_COMP *cpi,
       MBGRAPH_MB_STATS *mb_stats = &stats->mb_stats[offset + mb_col];
 
       update_mbgraph_mb_stats(cpi, mb_stats, buf, mb_y_in_offset,
-                              golden_ref, &gld_left_mv, gld_y_in_offset,
-                              alt_ref,    &arf_left_mv, arf_y_in_offset,
+                              golden_ref, &gld_left_mv, alt_ref,
                               mb_row, mb_col);
-      arf_left_mv.as_int = mb_stats->ref[ALTREF_FRAME].m.mv.as_int;
-      gld_left_mv.as_int = mb_stats->ref[GOLDEN_FRAME].m.mv.as_int;
+      gld_left_mv = mb_stats->ref[GOLDEN_FRAME].m.mv.as_mv;
       if (mb_col == 0) {
-        arf_top_mv.as_int = arf_left_mv.as_int;
-        gld_top_mv.as_int = gld_left_mv.as_int;
+        gld_top_mv = gld_left_mv;
       }
       xd->left_available = 1;
       mb_y_in_offset    += 16;
@@ -324,8 +307,8 @@ static void separate_arf_mbs(VP9_COMP *cpi) {
                              1));
 
   // We are not interested in results beyond the alt ref itself.
-  if (n_frames > cpi->frames_till_gf_update_due)
-    n_frames = cpi->frames_till_gf_update_due;
+  if (n_frames > cpi->rc.frames_till_gf_update_due)
+    n_frames = cpi->rc.frames_till_gf_update_due;
 
   // defer cost to reference frames
   for (i = n_frames - 1; i >= 0; i--) {
@@ -356,7 +339,7 @@ static void separate_arf_mbs(VP9_COMP *cpi) {
     for (mi_col = 0; mi_col < cm->mi_cols; mi_col++) {
       // If any of the blocks in the sequence failed then the MB
       // goes in segment 0
-      if (arf_not_zz[mi_row/2*cm->mb_cols + mi_col/2]) {
+      if (arf_not_zz[mi_row / 2 * cm->mb_cols + mi_col / 2]) {
         ncnt[0]++;
         cpi->segmentation_map[mi_row * cm->mi_cols + mi_col] = 0;
       } else {
@@ -378,11 +361,10 @@ static void separate_arf_mbs(VP9_COMP *cpi) {
     else
       cpi->static_mb_pct = 0;
 
-    cpi->seg0_cnt = ncnt[0];
-    vp9_enable_segmentation((VP9_PTR)cpi);
+    vp9_enable_segmentation(&cm->seg);
   } else {
     cpi->static_mb_pct = 0;
-    vp9_disable_segmentation((VP9_PTR)cpi);
+    vp9_disable_segmentation(&cm->seg);
   }
 
   // Free localy allocated storage
@@ -392,15 +374,13 @@ static void separate_arf_mbs(VP9_COMP *cpi) {
 void vp9_update_mbgraph_stats(VP9_COMP *cpi) {
   VP9_COMMON *const cm = &cpi->common;
   int i, n_frames = vp9_lookahead_depth(cpi->lookahead);
-  YV12_BUFFER_CONFIG *golden_ref =
-      &cm->yv12_fb[cm->ref_frame_map[cpi->gld_fb_idx]];
+  YV12_BUFFER_CONFIG *golden_ref = get_ref_frame_buffer(cpi, GOLDEN_FRAME);
 
   // we need to look ahead beyond where the ARF transitions into
   // being a GF - so exit if we don't look ahead beyond that
-  if (n_frames <= cpi->frames_till_gf_update_due)
+  if (n_frames <= cpi->rc.frames_till_gf_update_due)
     return;
-  if (n_frames > (int)cpi->frames_till_alt_ref_frame)
-    n_frames = cpi->frames_till_alt_ref_frame;
+
   if (n_frames > MAX_LAG_BUFFERS)
     n_frames = MAX_LAG_BUFFERS;
 
@@ -426,7 +406,7 @@ void vp9_update_mbgraph_stats(VP9_COMP *cpi) {
                                golden_ref, cpi->Source);
   }
 
-  vp9_clear_system_state();  // __asm emms;
+  vp9_clear_system_state();
 
   separate_arf_mbs(cpi);
 }

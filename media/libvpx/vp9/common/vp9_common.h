@@ -18,6 +18,11 @@
 #include "./vpx_config.h"
 #include "vpx_mem/vpx_mem.h"
 #include "vpx/vpx_integer.h"
+#include "vp9/common/vp9_systemdependent.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
@@ -40,11 +45,11 @@
     vpx_memcpy(dest, src, n * sizeof(*src)); \
   }
 
-#define vp9_zero(dest) vpx_memset(&dest, 0, sizeof(dest))
+#define vp9_zero(dest) vpx_memset(&(dest), 0, sizeof(dest))
 #define vp9_zero_array(dest, n) vpx_memset(dest, 0, n * sizeof(*dest))
 
 static INLINE uint8_t clip_pixel(int val) {
-  return (val > 255) ? 255u : (val < 0) ? 0u : val;
+  return (val > 255) ? 255 : (val < 0) ? 0 : val;
 }
 
 static INLINE int clamp(int value, int low, int high) {
@@ -55,17 +60,14 @@ static INLINE double fclamp(double value, double low, double high) {
   return value < low ? low : (value > high ? high : value);
 }
 
-static int get_unsigned_bits(unsigned int num_values) {
-  int cat = 0;
-  if (num_values <= 1)
-    return 0;
-  num_values--;
-  while (num_values > 0) {
-    cat++;
-    num_values >>= 1;
-  }
-  return cat;
+static INLINE int get_unsigned_bits(unsigned int num_values) {
+  return num_values > 0 ? get_msb(num_values) + 1 : 0;
 }
+
+#if CONFIG_VP9_HIGHBITDEPTH
+#define CONVERT_TO_SHORTPTR(x) ((uint16_t*)(((uintptr_t)x) << 1))
+#define CONVERT_TO_BYTEPTR(x) ((uint8_t*)(((uintptr_t)x) >> 1 ))
+#endif  // CONFIG_VP9_HIGHBITDEPTH
 
 #if CONFIG_DEBUG
 #define CHECK_MEM_ERROR(cm, lval, expr) do { \
@@ -90,5 +92,9 @@ static int get_unsigned_bits(unsigned int num_values) {
 
 #define VP9_FRAME_MARKER 0x2
 
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // VP9_COMMON_VP9_COMMON_H_

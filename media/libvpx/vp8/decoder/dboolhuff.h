@@ -9,15 +9,20 @@
  */
 
 
-#ifndef DBOOLHUFF_H_
-#define DBOOLHUFF_H_
+#ifndef VP8_DECODER_DBOOLHUFF_H_
+#define VP8_DECODER_DBOOLHUFF_H_
 
 #include <stddef.h>
 #include <limits.h>
 
 #include "vpx_config.h"
 #include "vpx_ports/mem.h"
+#include "vpx/vp8dx.h"
 #include "vpx/vpx_integer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef size_t VP8_BD_VALUE;
 
@@ -28,12 +33,6 @@ typedef size_t VP8_BD_VALUE;
   Even relatively modest values like 100 would work fine.*/
 #define VP8_LOTS_OF_BITS (0x40000000)
 
-/*Decrypt n bytes of data from input -> output, using the decrypt_state
-   passed in VP8D_SET_DECRYPTOR.
-*/
-typedef void (vp8_decrypt_cb)(void *decrypt_state, const unsigned char *input,
-                              unsigned char *output, int count);
-
 typedef struct
 {
     const unsigned char *user_buffer_end;
@@ -41,7 +40,7 @@ typedef struct
     VP8_BD_VALUE         value;
     int                  count;
     unsigned int         range;
-    vp8_decrypt_cb      *decrypt_cb;
+    vpx_decrypt_cb       decrypt_cb;
     void                *decrypt_state;
 } BOOL_DECODER;
 
@@ -50,7 +49,7 @@ DECLARE_ALIGNED(16, extern const unsigned char, vp8_norm[256]);
 int vp8dx_start_decode(BOOL_DECODER *br,
                        const unsigned char *source,
                        unsigned int source_sz,
-                       vp8_decrypt_cb *decrypt_cb,
+                       vpx_decrypt_cb decrypt_cb,
                        void *decrypt_state);
 
 void vp8dx_bool_decoder_fill(BOOL_DECODER *br);
@@ -135,4 +134,8 @@ static int vp8dx_bool_error(BOOL_DECODER *br)
     return 0;
 }
 
-#endif  // DBOOLHUFF_H_
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
+#endif  // VP8_DECODER_DBOOLHUFF_H_

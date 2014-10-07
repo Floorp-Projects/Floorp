@@ -17,6 +17,10 @@
 #include "vp9/common/vp9_blockd.h"
 #include "vp9/common/vp9_seg_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MAX_LOOP_FILTER 63
 #define MAX_SHARPNESS 7
 
@@ -54,12 +58,44 @@ typedef struct {
 typedef struct {
   loop_filter_thresh lfthr[MAX_LOOP_FILTER + 1];
   uint8_t lvl[MAX_SEGMENTS][MAX_REF_FRAMES][MAX_MODE_LF_DELTAS];
-  uint8_t mode_lf_lut[MB_MODE_COUNT];
 } loop_filter_info_n;
+
+// This structure holds bit masks for all 8x8 blocks in a 64x64 region.
+// Each 1 bit represents a position in which we want to apply the loop filter.
+// Left_ entries refer to whether we apply a filter on the border to the
+// left of the block.   Above_ entries refer to whether or not to apply a
+// filter on the above border.   Int_ entries refer to whether or not to
+// apply borders on the 4x4 edges within the 8x8 block that each bit
+// represents.
+// Since each transform is accompanied by a potentially different type of
+// loop filter there is a different entry in the array for each transform size.
+typedef struct {
+  uint64_t left_y[TX_SIZES];
+  uint64_t above_y[TX_SIZES];
+  uint64_t int_4x4_y;
+  uint16_t left_uv[TX_SIZES];
+  uint16_t above_uv[TX_SIZES];
+  uint16_t int_4x4_uv;
+  uint8_t lfl_y[64];
+  uint8_t lfl_uv[16];
+} LOOP_FILTER_MASK;
 
 /* assorted loopfilter functions which get used elsewhere */
 struct VP9Common;
 struct macroblockd;
+struct VP9LfSyncData;
+
+// This function sets up the bit masks for the entire 64x64 region represented
+// by mi_row, mi_col.
+void vp9_setup_mask(struct VP9Common *const cm,
+                    const int mi_row, const int mi_col,
+                    MODE_INFO **mi_8x8, const int mode_info_stride,
+                    LOOP_FILTER_MASK *lfm);
+
+void vp9_filter_block_plane(struct VP9Common *const cm,
+                            struct macroblockd_plane *const plane,
+                            int mi_row,
+                            LOOP_FILTER_MASK *lfm);
 
 void vp9_loop_filter_init(struct VP9Common *cm);
 
@@ -68,27 +104,35 @@ void vp9_loop_filter_init(struct VP9Common *cm);
 // calls this function directly.
 void vp9_loop_filter_frame_init(struct VP9Common *cm, int default_filt_lvl);
 
-void vp9_loop_filter_frame(struct VP9Common *cm,
+void vp9_loop_filter_frame(YV12_BUFFER_CONFIG *frame,
+                           struct VP9Common *cm,
                            struct macroblockd *mbd,
                            int filter_level,
-                           int y_only, int partial);
+                           int y_only, int partial_frame);
 
 // Apply the loop filter to [start, stop) macro block rows in frame_buffer.
 void vp9_loop_filter_rows(const YV12_BUFFER_CONFIG *frame_buffer,
-                          struct VP9Common *cm, struct macroblockd *xd,
+                          struct VP9Common *cm,
+                          struct macroblockd_plane planes[MAX_MB_PLANE],
                           int start, int stop, int y_only);
 
 typedef struct LoopFilterWorkerData {
   const YV12_BUFFER_CONFIG *frame_buffer;
   struct VP9Common *cm;
-  struct macroblockd xd;  // TODO(jzern): most of this is unnecessary to the
-                          // loopfilter. the planes are necessary as their state
-                          // is changed during decode.
+  struct macroblockd_plane planes[MAX_MB_PLANE];
+
   int start;
   int stop;
   int y_only;
+
+  struct VP9LfSyncData *lf_sync;
+  int num_lf_workers;
 } LFWorkerData;
 
 // Operates on the rows described by LFWorkerData passed as 'arg1'.
 int vp9_loop_filter_worker(void *arg1, void *arg2);
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
 #endif  // VP9_COMMON_VP9_LOOPFILTER_H_

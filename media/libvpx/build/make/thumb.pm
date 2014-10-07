@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 ##
 ##  Copyright (c) 2013 The WebM project authors. All Rights Reserved.
 ##
@@ -24,7 +24,7 @@ sub FixThumbInstructions($$)
     # with left shift, addition and a right shift (to restore the
     # register to the original value). Currently the right shift
     # isn't necessary in the code base since the values in these
-    # registers aren't used, but doing the shift for consitency.
+    # registers aren't used, but doing the shift for consistency.
     # This converts instructions such as "add r12, r12, r5, lsl r4"
     # into the sequence "lsl r5, r4", "add r12, r12, r5", "lsr r5, r4".
     s/^(\s*)(add)(\s+)(r\d+),\s*(r\d+),\s*(r\d+),\s*lsl (r\d+)/$1lsl$3$6, $7\n$1$2$3$4, $5, $6\n$1lsr$3$6, $7/g;
@@ -51,7 +51,7 @@ sub FixThumbInstructions($$)
 
     # Convert register post indexing to a separate add instruction.
     # This converts "ldrneb r9, [r0], r2" into "ldrneb r9, [r0]",
-    # "add r0, r2".
+    # "addne r0, r0, r2".
     s/^(\s*)((ldr|str)(ne)?[bhd]?)(\s+)(\w+),(\s*\w+,)?\s*\[(\w+)\],\s*(\w+)/$1$2$5$6,$7 [$8]\n$1add$4$5$8, $8, $9/g;
 
     # Convert a conditional addition to the pc register into a series of

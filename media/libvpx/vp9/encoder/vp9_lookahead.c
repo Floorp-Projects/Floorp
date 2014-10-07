@@ -11,22 +11,16 @@
 #include <stdlib.h>
 
 #include "./vpx_config.h"
+
 #include "vp9/common/vp9_common.h"
+
+#include "vp9/encoder/vp9_encoder.h"
+#include "vp9/encoder/vp9_extend.h"
 #include "vp9/encoder/vp9_lookahead.h"
-#include "vp9/common/vp9_extend.h"
-
-struct lookahead_ctx {
-  unsigned int max_sz;         /* Absolute size of the queue */
-  unsigned int sz;             /* Number of buffers currently in the queue */
-  unsigned int read_idx;       /* Read index */
-  unsigned int write_idx;      /* Write index */
-  struct lookahead_entry *buf; /* Buffer list */
-};
-
 
 /* Return the buffer at the given absolute index and increment the index */
-static struct lookahead_entry * pop(struct lookahead_ctx *ctx,
-                                    unsigned int *idx) {
+static struct lookahead_entry *pop(struct lookahead_ctx *ctx,
+                                   unsigned int *idx) {
   unsigned int index = *idx;
   struct lookahead_entry *buf = ctx->buf + index;
 
@@ -52,15 +46,21 @@ void vp9_lookahead_destroy(struct lookahead_ctx *ctx) {
 }
 
 
-struct lookahead_ctx * vp9_lookahead_init(unsigned int width,
-                                          unsigned int height,
-                                          unsigned int subsampling_x,
-                                          unsigned int subsampling_y,
-                                          unsigned int depth) {
+struct lookahead_ctx *vp9_lookahead_init(unsigned int width,
+                                         unsigned int height,
+                                         unsigned int subsampling_x,
+                                         unsigned int subsampling_y,
+#if CONFIG_VP9_HIGHBITDEPTH
+                                         int use_highbitdepth,
+#endif
+                                         unsigned int depth) {
   struct lookahead_ctx *ctx = NULL;
 
   // Clamp the lookahead queue depth
   depth = clamp(depth, 1, MAX_LAG_BUFFERS);
+
+  // Allocate memory to keep previous source frames available.
+  depth += MAX_PRE_FRAMES;
 
   // Allocate the lookahead structures
   ctx = calloc(1, sizeof(*ctx));
@@ -73,7 +73,10 @@ struct lookahead_ctx * vp9_lookahead_init(unsigned int width,
     for (i = 0; i < depth; i++)
       if (vp9_alloc_frame_buffer(&ctx->buf[i].img,
                                  width, height, subsampling_x, subsampling_y,
-                                 VP9BORDERINPIXELS))
+#if CONFIG_VP9_HIGHBITDEPTH
+                                 use_highbitdepth,
+#endif
+                                 VP9_ENC_BORDER_IN_PIXELS))
         goto bail;
   }
   return ctx;
@@ -85,8 +88,7 @@ struct lookahead_ctx * vp9_lookahead_init(unsigned int width,
 #define USE_PARTIAL_COPY 0
 
 int vp9_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG   *src,
-                       int64_t ts_start, int64_t ts_end, unsigned int flags,
-                       unsigned char *active_map) {
+                       int64_t ts_start, int64_t ts_end, unsigned int flags) {
   struct lookahead_entry *buf;
 #if USE_PARTIAL_COPY
   int row, col, active_end;
@@ -94,7 +96,7 @@ int vp9_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG   *src,
   int mb_cols = (src->y_width + 15) >> 4;
 #endif
 
-  if (ctx->sz + 1 > ctx->max_sz)
+  if (ctx->sz + 1  + MAX_PRE_FRAMES > ctx->max_sz)
     return 1;
   ctx->sz++;
   buf = pop(ctx, &ctx->write_idx);
@@ -157,11 +159,11 @@ int vp9_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG   *src,
 }
 
 
-struct lookahead_entry * vp9_lookahead_pop(struct lookahead_ctx *ctx,
-                                           int drain) {
+struct lookahead_entry *vp9_lookahead_pop(struct lookahead_ctx *ctx,
+                                          int drain) {
   struct lookahead_entry *buf = NULL;
 
-  if (ctx->sz && (drain || ctx->sz == ctx->max_sz)) {
+  if (ctx->sz && (drain || ctx->sz == ctx->max_sz - MAX_PRE_FRAMES)) {
     buf = pop(ctx, &ctx->read_idx);
     ctx->sz--;
   }
@@ -169,17 +171,28 @@ struct lookahead_entry * vp9_lookahead_pop(struct lookahead_ctx *ctx,
 }
 
 
-struct lookahead_entry * vp9_lookahead_peek(struct lookahead_ctx *ctx,
-                                            int index) {
+struct lookahead_entry *vp9_lookahead_peek(struct lookahead_ctx *ctx,
+                                           int index) {
   struct lookahead_entry *buf = NULL;
 
-  assert(index < (int)ctx->max_sz);
-  if (index < (int)ctx->sz) {
-    index += ctx->read_idx;
-    if (index >= (int)ctx->max_sz)
-      index -= ctx->max_sz;
-    buf = ctx->buf + index;
+  if (index >= 0) {
+    // Forward peek
+    if (index < (int)ctx->sz) {
+      index += ctx->read_idx;
+      if (index >= (int)ctx->max_sz)
+        index -= ctx->max_sz;
+      buf = ctx->buf + index;
+    }
+  } else if (index < 0) {
+    // Backward peek
+    if (-index <= MAX_PRE_FRAMES) {
+      index += ctx->read_idx;
+      if (index < 0)
+        index += ctx->max_sz;
+      buf = ctx->buf + index;
+    }
   }
+
   return buf;
 }
 

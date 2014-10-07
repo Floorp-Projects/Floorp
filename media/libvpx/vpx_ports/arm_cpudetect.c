@@ -12,6 +12,13 @@
 #include <string.h>
 #include "arm.h"
 
+#ifdef WINAPI_FAMILY
+#include <winapifamily.h>
+#if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+#define getenv(x) NULL
+#endif
+#endif
+
 static int arm_cpu_env_flags(int *flags) {
   char *env;
   env = getenv("VPX_SIMD_CAPS");

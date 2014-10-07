@@ -9,9 +9,17 @@
  */
 
 
-#ifndef __INC_MODECOSTS_H
-#define __INC_MODECOSTS_H
+#ifndef VP8_ENCODER_MODECOSTS_H_
+#define VP8_ENCODER_MODECOSTS_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void vp8_init_mode_costs(VP8_COMP *x);
 
+#ifdef __cplusplus
+}  // extern "C"
 #endif
+
+#endif  // VP8_ENCODER_MODECOSTS_H_

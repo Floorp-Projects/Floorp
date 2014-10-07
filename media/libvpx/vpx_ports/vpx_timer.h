@@ -9,8 +9,11 @@
  */
 
 
-#ifndef VPX_TIMER_H
-#define VPX_TIMER_H
+#ifndef VPX_PORTS_VPX_TIMER_H_
+#define VPX_PORTS_VPX_TIMER_H_
+
+#include "./vpx_config.h"
+
 #include "vpx/vpx_integer.h"
 
 #if CONFIG_OS_SUPPORT
@@ -53,7 +56,7 @@ struct vpx_usec_timer {
 };
 
 
-static void
+static INLINE void
 vpx_usec_timer_start(struct vpx_usec_timer *t) {
 #if defined(_WIN32)
   QueryPerformanceCounter(&t->begin);
@@ -63,7 +66,7 @@ vpx_usec_timer_start(struct vpx_usec_timer *t) {
 }
 
 
-static void
+static INLINE void
 vpx_usec_timer_mark(struct vpx_usec_timer *t) {
 #if defined(_WIN32)
   QueryPerformanceCounter(&t->end);
@@ -73,7 +76,7 @@ vpx_usec_timer_mark(struct vpx_usec_timer *t) {
 }
 
 
-static int64_t
+static INLINE int64_t
 vpx_usec_timer_elapsed(struct vpx_usec_timer *t) {
 #if defined(_WIN32)
   LARGE_INTEGER freq, diff;
@@ -101,17 +104,17 @@ struct vpx_usec_timer {
   void *dummy;
 };
 
-static void
+static INLINE void
 vpx_usec_timer_start(struct vpx_usec_timer *t) { }
 
-static void
+static INLINE void
 vpx_usec_timer_mark(struct vpx_usec_timer *t) { }
 
-static long
+static INLINE int
 vpx_usec_timer_elapsed(struct vpx_usec_timer *t) {
   return 0;
 }
 
 #endif /* CONFIG_OS_SUPPORT */
 
-#endif
+#endif  // VPX_PORTS_VPX_TIMER_H_

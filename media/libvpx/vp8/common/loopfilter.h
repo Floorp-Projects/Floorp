@@ -9,12 +9,16 @@
  */
 
 
-#ifndef loopfilter_h
-#define loopfilter_h
+#ifndef VP8_COMMON_LOOPFILTER_H_
+#define VP8_COMMON_LOOPFILTER_H_
 
 #include "vpx_ports/mem.h"
 #include "vpx_config.h"
 #include "vp8_rtcd.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define MAX_LOOP_FILTER             63
 /* fraction of total macroblock rows to be used in fast filter level picking */
@@ -102,4 +106,8 @@ void vp8_loop_filter_row_simple(struct VP8Common *cm,
                                 int mb_row, int post_ystride, int post_uvstride,
                                 unsigned char *y_ptr, unsigned char *u_ptr,
                                 unsigned char *v_ptr);
+#ifdef __cplusplus
+}  // extern "C"
 #endif
+
+#endif  // VP8_COMMON_LOOPFILTER_H_

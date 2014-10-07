@@ -393,3 +393,14 @@ section .note.GNU-stack noalloc noexec nowrite progbits
 section .text
 %endif
 
+; On Android platforms use lrand48 when building postproc routines. Prior to L
+; rand() was not available.
+%if CONFIG_POSTPROC=1
+%ifdef __ANDROID__
+extern sym(lrand48)
+%define LIBVPX_RAND lrand48
+%else
+extern sym(rand)
+%define LIBVPX_RAND rand
+%endif
+%endif ; CONFIG_POSTPROC

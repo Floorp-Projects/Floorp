@@ -12,9 +12,17 @@
 #define VP9_ENCODER_VP9_TOKENIZE_H_
 
 #include "vp9/common/vp9_entropy.h"
+
 #include "vp9/encoder/vp9_block.h"
+#include "vp9/encoder/vp9_treewriter.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void vp9_tokenize_initialize();
+
+#define EOSB_TOKEN 127     // Not signalled, encoder only
 
 typedef struct {
   int16_t token;
@@ -28,19 +36,26 @@ typedef struct {
   uint8_t         skip_eob_node;
 } TOKENEXTRA;
 
-int vp9_sb_is_skippable(MACROBLOCKD *xd, BLOCK_SIZE bsize);
-int vp9_is_skippable_in_plane(MACROBLOCKD *xd, BLOCK_SIZE bsize,
-                              int plane);
+extern const vp9_tree_index vp9_coef_tree[];
+extern const vp9_tree_index vp9_coef_con_tree[];
+extern struct vp9_token vp9_coef_encodings[];
+
+int vp9_is_skippable_in_plane(MACROBLOCK *x, BLOCK_SIZE bsize, int plane);
+
 struct VP9_COMP;
 
 void vp9_tokenize_sb(struct VP9_COMP *cpi, TOKENEXTRA **t, int dry_run,
                      BLOCK_SIZE bsize);
 
-extern const int *vp9_dct_value_cost_ptr;
+extern const int16_t *vp9_dct_value_cost_ptr;
 /* TODO: The Token field should be broken out into a separate char array to
  *  improve cache locality, since it's needed for costing when the rest of the
  *  fields are not.
  */
 extern const TOKENVALUE *vp9_dct_value_tokens_ptr;
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // VP9_ENCODER_VP9_TOKENIZE_H_
