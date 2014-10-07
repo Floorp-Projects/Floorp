@@ -3143,7 +3143,13 @@ void MediaDecoderStateMachine::OnAudioSinkError()
 
   mAudioCompleted = true;
 
-  // Notify media decoder/element about this error.
+  // Make the best effort to continue playback when there is video.
+  if (HasVideo()) {
+    return;
+  }
+
+  // Otherwise notify media decoder/element about this error for it makes
+  // no sense to play an audio-only file without sound output.
   RefPtr<nsIRunnable> task(
     NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnDecodeError));
   nsresult rv = mDecodeTaskQueue->Dispatch(task);
