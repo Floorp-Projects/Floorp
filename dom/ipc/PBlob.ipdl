@@ -27,7 +27,7 @@ both:
   __delete__();
 
 parent:
-  PBlobStream();
+  PBlobStream(uint64_t begin, uint64_t length);
 
   ResolveMystery(ResolveMysteryParams params);
 
