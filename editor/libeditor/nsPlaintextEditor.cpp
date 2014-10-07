@@ -846,9 +846,11 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
 {
   NS_ABORT_IF_FALSE(aDOMTextEvent, "aDOMTextEvent must not be nullptr");
 
-  WidgetTextEvent* widgetTextEvent =
-    aDOMTextEvent->GetInternalNSEvent()->AsTextEvent();
+  WidgetCompositionEvent* widgetTextEvent =
+    aDOMTextEvent->GetInternalNSEvent()->AsCompositionEvent();
   NS_ENSURE_TRUE(widgetTextEvent, NS_ERROR_INVALID_ARG);
+  MOZ_ASSERT(compChangeEvent->message == NS_COMPOSITION_CHANGE,
+             "The internal event should be NS_COMPOSITION_CHANGE");
 
   EnsureComposition(widgetTextEvent);
 

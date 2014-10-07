@@ -382,7 +382,7 @@ PuppetWidget::IMEEndComposition(bool aCancel)
 #endif
 
   nsEventStatus status;
-  WidgetTextEvent textEvent(true, NS_COMPOSITION_CHANGE, this);
+  WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE, this);
   InitEvent(textEvent, nullptr);
   textEvent.mSeqno = mIMELastReceivedSeqno;
   // SendEndIMEComposition is always called since ResetInputState

@@ -1107,7 +1107,8 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
         }
     }
 
-    WidgetTextEvent textEvent(true, NS_COMPOSITION_CHANGE, mLastFocusedWindow);
+    WidgetCompositionEvent textEvent(true, NS_COMPOSITION_CHANGE,
+                                     mLastFocusedWindow);
     InitEvent(textEvent);
 
     uint32_t targetOffset = mCompositionStart;

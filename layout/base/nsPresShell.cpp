@@ -6942,8 +6942,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 
   if (!nsContentUtils::IsSafeToRunScript() &&
       aEvent->IsAllowedToDispatchDOMEvent()) {
-    if (aEvent->mClass == eCompositionEventClass ||
-        aEvent->mClass == eTextEventClass) {
+    if (aEvent->mClass == eCompositionEventClass) {
       IMEStateManager::OnCompositionEventDiscarded(aEvent);
     }
 #ifdef DEBUG
@@ -7859,8 +7858,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
             }
           }
           if (eventTarget) {
-            if (aEvent->mClass == eCompositionEventClass ||
-                aEvent->mClass == eTextEventClass) {
+            if (aEvent->mClass == eCompositionEventClass) {
               IMEStateManager::DispatchCompositionEvent(eventTarget,
                 mPresContext, aEvent, aStatus, eventCBPtr);
             } else {
