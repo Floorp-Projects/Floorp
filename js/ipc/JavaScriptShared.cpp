@@ -7,6 +7,7 @@
 
 #include "JavaScriptShared.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/CPOWManagerGetter.h"
 #include "mozilla/dom/TabChild.h"
 #include "jsfriendapi.h"
 #include "xpcprivate.h"
@@ -515,9 +516,21 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
     return true;
 }
 
+CpowIdHolder::CpowIdHolder(dom::CPOWManagerGetter *managerGetter, const InfallibleTArray<CpowEntry> &cpows)
+  : js_(nullptr),
+    cpows_(cpows)
+{
+    // Only instantiate the CPOW manager if we might need it later.
+    if (cpows.Length())
+        js_ = managerGetter->GetCPOWManager();
+}
+
 bool
 CpowIdHolder::ToObject(JSContext *cx, JS::MutableHandleObject objp)
 {
+    if (!cpows_.Length())
+        return true;
+
     return js_->Unwrap(cx, cpows_, objp);
 }
 

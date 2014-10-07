@@ -309,7 +309,7 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold, ignoreMis
     log.info("%s | leakcheck | %s %d bytes leaked (%s)"
              % (prefix, processString, totalBytesLeaked, leakedObjectSummary))
 
-def processLeakLog(leakLogFile, leakThresholds, ignoreMissingLeaks):
+def processLeakLog(leakLogFile, options):
   """Process the leak log, including separate leak logs created
   by child processes.
 
@@ -325,14 +325,24 @@ def processLeakLog(leakLogFile, leakThresholds, ignoreMissingLeaks):
 
   All other file names are treated as being for default processes.
 
+  The options argument is checked for two optional attributes,
+  leakThresholds and ignoreMissingLeaks.
+
   leakThresholds should be a dict mapping process types to leak thresholds,
   in bytes. If a process type is not present in the dict the threshold
   will be 0.
+
+  ignoreMissingLeaks should be a list of process types. If a process
+  creates a leak log without a TOTAL, then we report an error if it isn't
+  in the list ignoreMissingLeaks.
   """
 
   if not os.path.exists(leakLogFile):
     log.info("WARNING | leakcheck | refcount logging is off, so leaks can't be detected!")
     return
+
+  leakThresholds = getattr(options, 'leakThresholds', {})
+  ignoreMissingLeaks = getattr(options, 'ignoreMissingLeaks', [])
 
   # This list is based on kGeckoProcessTypeString. ipdlunittest processes likely
   # are not going to produce leak logs we will ever see.
