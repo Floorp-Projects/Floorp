@@ -34,11 +34,12 @@ public class AboutHomeComponent extends BaseComponent {
     // Hopefully the work in bug 940565 will alleviate the need for these enums.
     // Explicit ordering of HomePager panels on a phone.
     private static final PanelType[] PANEL_ORDERING_PHONE = {
+            PanelType.REMOTE_TABS,
             PanelType.RECENT_TABS,
             PanelType.HISTORY,
             PanelType.TOP_SITES,
             PanelType.BOOKMARKS,
-            PanelType.READING_LIST
+            PanelType.READING_LIST,
     };
 
     private static final PanelType[] PANEL_ORDERING_TABLET = {
@@ -46,7 +47,8 @@ public class AboutHomeComponent extends BaseComponent {
             PanelType.BOOKMARKS,
             PanelType.READING_LIST,
             PanelType.HISTORY,
-            PanelType.RECENT_TABS
+            PanelType.RECENT_TABS,
+            PanelType.REMOTE_TABS,
     };
 
     // The percentage of the panel to swipe between 0 and 1. This value was set through
@@ -189,5 +191,20 @@ public class AboutHomeComponent extends BaseComponent {
      */
     public static PanelType[] getPanelOrderingForDevice() {
         return HardwareUtils.isTablet() ? PANEL_ORDERING_TABLET : PANEL_ORDERING_PHONE;
+    }
+
+    /**
+     * Navigate directly to a built-in panel by its panel type.
+     * <p>
+     * If the panel type is not part of the active Home Panel configuration, the
+     * default about:home panel is displayed. If the panel type is not a
+     * built-in panel, an IllegalArgumentException is thrown.
+     *
+     * @param panelType to navigate to.
+     * @return self, for chaining.
+     */
+    public AboutHomeComponent navigateToBuiltinPanelType(PanelType panelType) throws IllegalArgumentException {
+        Tabs.getInstance().loadUrl(AboutPages.getURLForBuiltinPanelType(panelType));
+        return this;
     }
 }
