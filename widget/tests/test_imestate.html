@@ -1236,7 +1236,7 @@ function runEditorFlagChangeTests()
   synthesizeComposition({ type: "compositionstart" });
 
   // input characters
-  synthesizeText(
+  synthesizeCompositionChange(
     { "composition":
       { "string": "\u3078\u3093\u3057\u3093",
         "clauses":
@@ -1266,7 +1266,7 @@ function runEditorFlagChangeTests()
      description + "#3 IME isn't enabled on HTML editor");
 
   // cancel the composition
-  synthesizeText(
+  synthesizeCompositionChange(
     { "composition":
       { "string": "",
         "clauses":
