@@ -61,7 +61,6 @@ class DOMFileImpl;
 /* FOLLOWUP TODO:
 1. remove nsDOMBlobBuilder.h
 2. rename nsDOMFile.h/cpp to DOMFile.h/cpp
-3. rename nsDOMFileList to DOMFileList
 */
 class DOMFile MOZ_FINAL : public nsIDOMFile
                         , public nsIXHRSendable
@@ -802,18 +801,18 @@ private:
   bool mStoredFile;
 };
 
-class nsDOMFileList MOZ_FINAL : public nsIDOMFileList,
-                                public nsWrapperCache
+class FileList MOZ_FINAL : public nsIDOMFileList,
+                           public nsWrapperCache
 {
-  ~nsDOMFileList() {}
+  ~FileList() {}
 
 public:
-  explicit nsDOMFileList(nsISupports *aParent) : mParent(aParent)
+  explicit FileList(nsISupports *aParent) : mParent(aParent)
   {
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMFileList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileList)
 
   NS_DECL_NSIDOMFILELIST
 
@@ -842,7 +841,7 @@ public:
 
   void Clear() { return mFiles.Clear(); }
 
-  static nsDOMFileList* FromSupports(nsISupports* aSupports)
+  static FileList* FromSupports(nsISupports* aSupports)
   {
 #ifdef DEBUG
     {
@@ -856,7 +855,7 @@ public:
     }
 #endif
 
-    return static_cast<nsDOMFileList*>(aSupports);
+    return static_cast<FileList*>(aSupports);
   }
 
   DOMFile* Item(uint32_t aIndex)
