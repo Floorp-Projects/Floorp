@@ -242,7 +242,7 @@ public:
   }
 
   // The composition string or the commit string.
-  nsString theText;
+  nsString mData;
   // Indicates whether the event signifies printable text.
   // XXX This is not a standard, and most platforms don't set this properly.
   //     So, perhaps, we can get rid of this.

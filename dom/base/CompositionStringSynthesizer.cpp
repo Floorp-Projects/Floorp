@@ -137,7 +137,7 @@ CompositionStringSynthesizer::DispatchEvent(bool* aDefaultPrevented)
 
   WidgetTextEvent textEvent(true, NS_TEXT_TEXT, widget);
   textEvent.time = PR_IntervalNow();
-  textEvent.theText = mString;
+  textEvent.mData = mString;
   if (!mClauses->IsEmpty()) {
     textEvent.mRanges = mClauses;
   }

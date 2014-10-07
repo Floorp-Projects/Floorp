@@ -2718,11 +2718,11 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
 
   WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
   textEvent.time = PR_IntervalNow();
-  textEvent.theText = aText;
+  textEvent.mData = aText;
   if (!aDoCommit) {
     textEvent.mRanges = CreateTextRangeArray(aAttrString, aSelectedRange);
   }
-  mLastDispatchedCompositionString = textEvent.theText;
+  mLastDispatchedCompositionString = textEvent.mData;
   return DispatchEvent(textEvent);
 }
 

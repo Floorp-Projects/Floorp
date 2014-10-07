@@ -1588,7 +1588,7 @@ TabParent::SendTextEvent(WidgetTextEvent& event)
     return false;
   }
   if (mIMECompositionEnding) {
-    mIMECompositionText = event.theText;
+    mIMECompositionText = event.mData;
     return true;
   }
 
@@ -1598,7 +1598,7 @@ TabParent::SendTextEvent(WidgetTextEvent& event)
     mIMECompositionStart = std::min(mIMESelectionAnchor, mIMESelectionFocus);
   }
   mIMESelectionAnchor = mIMESelectionFocus =
-      mIMECompositionStart + event.theText.Length();
+      mIMECompositionStart + event.mData.Length();
 
   event.mSeqno = ++mIMESeqno;
   return PBrowserParent::SendTextEvent(event);

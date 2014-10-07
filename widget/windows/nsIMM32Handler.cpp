@@ -1598,7 +1598,7 @@ nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
     event.mRanges = CreateTextRangeArray();
   }
 
-  event.theText = mLastDispatchedCompositionString = mCompositionString;
+  event.mData = mLastDispatchedCompositionString = mCompositionString;
 
   aWindow->DispatchWindowEvent(&event);
 
