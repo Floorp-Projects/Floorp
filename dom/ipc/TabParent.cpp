@@ -1565,6 +1565,11 @@ TabParent::SendCompositionEvent(WidgetCompositionEvent& event)
   if (mIsDestroyed) {
     return false;
   }
+
+  if (event.message == NS_COMPOSITION_CHANGE) {
+    return SendCompositionChangeEvent(event);
+  }
+
   mIMEComposing = event.message != NS_COMPOSITION_END;
   mIMECompositionStart = std::min(mIMESelectionAnchor, mIMESelectionFocus);
   if (mIMECompositionEnding)
@@ -1582,11 +1587,8 @@ TabParent::SendCompositionEvent(WidgetCompositionEvent& event)
  * here and pass the text as the EndIMEComposition return value
  */
 bool
-TabParent::SendTextEvent(WidgetCompositionEvent& event)
+TabParent::SendCompositionChangeEvent(WidgetCompositionEvent& event)
 {
-  if (mIsDestroyed) {
-    return false;
-  }
   if (mIMECompositionEnding) {
     mIMECompositionText = event.mData;
     return true;
@@ -1601,7 +1603,7 @@ TabParent::SendTextEvent(WidgetCompositionEvent& event)
       mIMECompositionStart + event.mData.Length();
 
   event.mSeqno = ++mIMESeqno;
-  return PBrowserParent::SendTextEvent(event);
+  return PBrowserParent::SendCompositionEvent(event);
 }
 
 bool

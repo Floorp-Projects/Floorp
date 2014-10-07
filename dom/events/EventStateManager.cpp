@@ -796,18 +796,6 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       DoContentCommandScrollEvent(aEvent->AsContentCommandEvent());
     }
     break;
-  case NS_COMPOSITION_CHANGE:
-    {
-      WidgetCompositionEvent* compositionEvent = aEvent->AsCompositionEvent();
-      if (IsTargetCrossProcess(compositionEvent)) {
-        // Will not be handled locally, remote the event
-        if (GetCrossProcessTarget()->SendTextEvent(*compositionEvent)) {
-          // Cancel local dispatching
-          aEvent->mFlags.mPropagationStopped = true;
-        }
-      }
-    }
-    break;
   case NS_COMPOSITION_START:
     if (aEvent->mFlags.mIsTrusted) {
       // If the event is trusted event, set the selected text to data of
@@ -821,6 +809,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     // through to compositionend handling
   case NS_COMPOSITION_END:
+  case NS_COMPOSITION_CHANGE:
     {
       WidgetCompositionEvent* compositionEvent = aEvent->AsCompositionEvent();
       if (IsTargetCrossProcess(compositionEvent)) {
