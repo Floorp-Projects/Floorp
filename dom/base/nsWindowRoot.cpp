@@ -33,6 +33,7 @@ using namespace mozilla::dom;
 nsWindowRoot::nsWindowRoot(nsPIDOMWindow* aWindow)
 {
   mWindow = aWindow;
+  SetIsNotDOMBinding();
 }
 
 nsWindowRoot::~nsWindowRoot()

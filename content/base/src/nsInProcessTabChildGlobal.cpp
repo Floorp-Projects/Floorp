@@ -103,6 +103,7 @@ nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,
 : mDocShell(aShell), mInitialized(false), mLoadingScript(false),
   mOwner(aOwner), mChromeMessageManager(aChrome)
 {
+  SetIsNotDOMBinding();
   mozilla::HoldJSObjects(this);
 
   // If owner corresponds to an <iframe mozbrowser> or <iframe mozapp>, we'll
