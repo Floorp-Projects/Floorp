@@ -267,6 +267,17 @@ JavaScriptShared::toVariant(JSContext *cx, JS::HandleValue from, JSVariant *to)
         return true;
       }
 
+      case JSTYPE_SYMBOL:
+      {
+        RootedSymbol sym(cx, from.toSymbol());
+
+        SymbolVariant symVar;
+        if (!toSymbolVariant(cx, sym, &symVar))
+            return false;
+        *to = symVar;
+        return true;
+      }
+
       case JSTYPE_STRING:
       {
         nsAutoJSString autoStr;
@@ -311,6 +322,15 @@ JavaScriptShared::fromVariant(JSContext *cx, const JSVariant &from, MutableHandl
           if (!obj)
               return false;
           to.set(ObjectValue(*obj));
+          return true;
+        }
+
+        case JSVariant::TSymbolVariant:
+        {
+          Symbol *sym = fromSymbolVariant(cx, from.get_SymbolVariant());
+          if (!sym)
+              return false;
+          to.setSymbol(sym);
           return true;
         }
 
