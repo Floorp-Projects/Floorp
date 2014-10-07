@@ -207,9 +207,9 @@ FilePicker.prototype = {
       }
     }
 
-    let file = new this.mParent.File(data.result.blob,
-                                     { name: name,
-                                       type: data.result.blob.type });
+    let file = new this.mParent.File([data.result.blob],
+                                     name,
+                                     { type: data.result.blob.type });
 
     if (file) {
       this.fireSuccess(file);

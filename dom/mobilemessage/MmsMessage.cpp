@@ -91,10 +91,15 @@ MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
     const MmsAttachmentData &element = aData.attachments()[i];
     att.mId = element.id();
     att.mLocation = element.location();
+
+    // mContent is not going to be exposed to JS directly so we can use
+    // nullptr as parent.
     if (element.contentParent()) {
-      att.mContent = static_cast<BlobParent*>(element.contentParent())->GetBlob();
+      nsRefPtr<DOMFileImpl> impl = static_cast<BlobParent*>(element.contentParent())->GetBlobImpl();
+      att.mContent = new DOMFile(nullptr, impl);
     } else if (element.contentChild()) {
-      att.mContent = static_cast<BlobChild*>(element.contentChild())->GetBlob();
+      nsRefPtr<DOMFileImpl> impl = static_cast<BlobChild*>(element.contentChild())->GetBlobImpl();
+      att.mContent = new DOMFile(nullptr, impl);
     } else {
       NS_WARNING("MmsMessage: Unable to get attachment content.");
     }
@@ -387,10 +392,9 @@ MmsMessage::GetData(ContentParent* aParent,
     // doesn't have a valid last modified date, making the ContentParent
     // send a "Mystery Blob" to the ContentChild. Attempting to get the
     // last modified date of blob can force that value to be initialized.
-    DOMFile* file = static_cast<DOMFile*>(element.content.get());
-    if (file->IsDateUnknown()) {
+    if (element.content->IsDateUnknown()) {
       uint64_t date;
-      if (NS_FAILED(file->GetMozLastModifiedDate(&date))) {
+      if (NS_FAILED(element.content->GetMozLastModifiedDate(&date))) {
         NS_WARNING("Failed to get last modified date!");
       }
     }
@@ -572,14 +576,18 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::MutableHandle<JS::Value> aAttachm
     }
 
     // Get |attachment.mContent|.
-    JS::Rooted<JS::Value> tmpJsVal(aCx);
-    nsresult rv = nsContentUtils::WrapNative(aCx,
-                                             attachment.content,
-                                             &NS_GET_IID(nsIDOMBlob),
-                                             &tmpJsVal);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!JS_DefineProperty(aCx, attachmentObj, "content", tmpJsVal, JSPROP_ENUMERATE)) {
+    // Duplicating the DOMFile with the correct parent object.
+    nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+    MOZ_ASSERT(global);
+    nsRefPtr<DOMFile> newBlob = new DOMFile(global, attachment.content->Impl());
+
+    JS::Rooted<JS::Value> val(aCx);
+    if (!WrapNewBindingObject(aCx, newBlob, &val)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!JS_DefineProperty(aCx, attachmentObj, "content", val, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
 

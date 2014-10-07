@@ -351,7 +351,7 @@ IDBMutableFile::CreateFileObject(IDBFileHandle* aFileHandle,
                          aFileHandle,
                          mFileInfo);
 
-  nsCOMPtr<nsIDOMFile> fileSnapshot = new DOMFile(impl);
+  nsCOMPtr<nsIDOMFile> fileSnapshot = new DOMFile(GetOwner(), impl);
   return fileSnapshot.forget();
 }
 

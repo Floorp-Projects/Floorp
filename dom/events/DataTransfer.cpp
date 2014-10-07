@@ -303,7 +303,8 @@ DataTransfer::GetFiles(ErrorResult& aRv)
       if (!file)
         continue;
 
-      nsRefPtr<DOMFile> domFile = DOMFile::CreateFromFile(file);
+      nsRefPtr<DOMFile> domFile =
+        DOMFile::CreateFromFile(GetParentObject(), file);
 
       if (!mFiles->Append(domFile)) {
         aRv.Throw(NS_ERROR_FAILURE);

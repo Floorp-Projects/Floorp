@@ -44,10 +44,10 @@ DeviceStorageRequestParent::Dispatch()
         new DeviceStorageFile(p.type(), p.storageName(), p.relpath());
 
       BlobParent* bp = static_cast<BlobParent*>(p.blobParent());
-      nsCOMPtr<nsIDOMBlob> blob = bp->GetBlob();
+      nsRefPtr<DOMFileImpl> blobImpl = bp->GetBlobImpl();
 
       nsCOMPtr<nsIInputStream> stream;
-      blob->GetInternalStream(getter_AddRefs(stream));
+      blobImpl->GetInternalStream(getter_AddRefs(stream));
 
       nsRefPtr<CancelableRunnable> r = new WriteFileEvent(this, dsf, stream,
                                                           DEVICE_STORAGE_REQUEST_CREATE);
@@ -67,10 +67,10 @@ DeviceStorageRequestParent::Dispatch()
         new DeviceStorageFile(p.type(), p.storageName(), p.relpath());
 
       BlobParent* bp = static_cast<BlobParent*>(p.blobParent());
-      nsCOMPtr<nsIDOMBlob> blob = bp->GetBlob();
+      nsRefPtr<DOMFileImpl> blobImpl = bp->GetBlobImpl();
 
       nsCOMPtr<nsIInputStream> stream;
-      blob->GetInternalStream(getter_AddRefs(stream));
+      blobImpl->GetInternalStream(getter_AddRefs(stream));
 
       nsRefPtr<CancelableRunnable> r = new WriteFileEvent(this, dsf, stream,
                                                           DEVICE_STORAGE_REQUEST_APPEND);
@@ -522,7 +522,7 @@ DeviceStorageRequestParent::PostBlobSuccessEvent::CancelableRun() {
 
   nsString fullPath;
   mFile->GetFullPath(fullPath);
-  nsCOMPtr<nsIDOMBlob> blob = new DOMFile(
+  nsRefPtr<DOMFile> blob = new DOMFile(nullptr,
     new DOMFileImplFile(fullPath, mime, mLength, mFile->mFile,
                         mLastModificationDate));
 

@@ -19,12 +19,17 @@
 #include "nsITimer.h"
 #include "nsIAsyncInputStream.h"
 
-#include "nsIDOMFile.h"
 #include "nsIDOMFileReader.h"
 #include "nsIDOMFileList.h"
 #include "nsCOMPtr.h"
 
 #include "FileIOObject.h"
+
+namespace mozilla {
+namespace dom {
+class DOMFile;
+}
+}
 
 class nsDOMFileReader : public mozilla::dom::FileIOObject,
                         public nsIDOMFileReader,
@@ -33,6 +38,7 @@ class nsDOMFileReader : public mozilla::dom::FileIOObject,
 {
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::GlobalObject GlobalObject;
+  typedef mozilla::dom::DOMFile DOMFile;
 public:
   nsDOMFileReader();
 
@@ -62,21 +68,18 @@ public:
   // WebIDL
   static already_AddRefed<nsDOMFileReader>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
-  void ReadAsArrayBuffer(JSContext* aCx, nsIDOMBlob* aBlob, ErrorResult& aRv)
+  void ReadAsArrayBuffer(JSContext* aCx, DOMFile& aBlob, ErrorResult& aRv)
   {
-    MOZ_ASSERT(aBlob);
     ReadFileContent(aCx, aBlob, EmptyString(), FILE_AS_ARRAYBUFFER, aRv);
   }
 
-  void ReadAsText(nsIDOMBlob* aBlob, const nsAString& aLabel, ErrorResult& aRv)
+  void ReadAsText(DOMFile& aBlob, const nsAString& aLabel, ErrorResult& aRv)
   {
-    MOZ_ASSERT(aBlob);
     ReadFileContent(nullptr, aBlob, aLabel, FILE_AS_TEXT, aRv);
   }
 
-  void ReadAsDataURL(nsIDOMBlob* aBlob, ErrorResult& aRv)
+  void ReadAsDataURL(DOMFile& aBlob, ErrorResult& aRv)
   {
-    MOZ_ASSERT(aBlob);
     ReadFileContent(nullptr, aBlob, EmptyString(), FILE_AS_DATAURL, aRv);
   }
 
@@ -99,9 +102,8 @@ public:
   using FileIOObject::SetOnerror;
   IMPL_EVENT_HANDLER(loadend)
 
-  void ReadAsBinaryString(nsIDOMBlob* aBlob, ErrorResult& aRv)
+  void ReadAsBinaryString(DOMFile& aBlob, ErrorResult& aRv)
   {
-    MOZ_ASSERT(aBlob);
     ReadFileContent(nullptr, aBlob, EmptyString(), FILE_AS_BINARY, aRv);
   }
 
@@ -122,7 +124,7 @@ protected:
     FILE_AS_DATAURL
   };
 
-  void ReadFileContent(JSContext* aCx, nsIDOMBlob* aBlob,
+  void ReadFileContent(JSContext* aCx, DOMFile& aBlob,
                        const nsAString &aCharset, eDataFormat aDataFormat,
                        ErrorResult& aRv);
   nsresult GetAsText(nsIDOMBlob *aFile, const nsACString &aCharset,

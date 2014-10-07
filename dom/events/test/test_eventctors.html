@@ -203,7 +203,7 @@ ok(!e.cancelable, "Event shouldn't be cancelable!");
 document.dispatchEvent(e);
 is(receivedEvent, e, "Wrong event!");
 
-var blob = Blob();
+var blob = new Blob();
 e = new BlobEvent("hello", { bubbles: true, cancelable: true, data: blob });
 is(e.type, "hello", "Wrong event type!");
 ok(!e.isTrusted, "Event shouldn't be trusted!");

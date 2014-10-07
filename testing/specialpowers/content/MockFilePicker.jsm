@@ -95,7 +95,7 @@ this.MockFilePicker = {
 
   useBlobFile: function() {
     var blob = new this.window.Blob([]);
-    var file = new this.window.File(blob, { name: 'helloworld.txt', type: 'plain/text' });
+    var file = new this.window.File([blob], 'helloworld.txt', { type: 'plain/text' });
     this.returnFiles = [file];
   },
 

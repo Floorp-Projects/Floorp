@@ -9,6 +9,7 @@
 #include "ArchiveEvent.h"
 #include "ArchiveZipEvent.h"
 
+#include "nsDOMFile.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
@@ -23,12 +24,10 @@ USING_ARCHIVEREADER_NAMESPACE
 
 /* static */ already_AddRefed<ArchiveReader>
 ArchiveReader::Constructor(const GlobalObject& aGlobal,
-                           nsIDOMBlob* aBlob,
+                           DOMFile& aBlob,
                            const ArchiveReaderOptions& aOptions,
                            ErrorResult& aError)
 {
-  MOZ_ASSERT(aBlob);
-
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aError.Throw(NS_ERROR_UNEXPECTED);
@@ -47,14 +46,13 @@ ArchiveReader::Constructor(const GlobalObject& aGlobal,
   return reader.forget();
 }
 
-ArchiveReader::ArchiveReader(nsIDOMBlob* aBlob, nsPIDOMWindow* aWindow,
+ArchiveReader::ArchiveReader(DOMFile& aBlob, nsPIDOMWindow* aWindow,
                              const nsACString& aEncoding)
-  : mBlob(aBlob)
+  : mBlob(&aBlob)
   , mWindow(aWindow)
   , mStatus(NOT_STARTED)
   , mEncoding(aEncoding)
 {
-  MOZ_ASSERT(aBlob);
   MOZ_ASSERT(aWindow);
 }
 

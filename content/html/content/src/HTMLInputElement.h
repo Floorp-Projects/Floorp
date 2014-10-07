@@ -24,7 +24,6 @@
 #include "nsContentUtils.h"
 #include "nsTextEditorState.h"
 
-class nsDOMFileList;
 class nsIRadioGroupContainer;
 class nsIRadioGroupVisitor;
 class nsIRadioVisitor;
@@ -38,6 +37,8 @@ namespace dom {
 
 class Date;
 class DirPickerFileListBuilderTask;
+class DOMFile;
+class nsDOMFileList;
 
 class UploadLastDir MOZ_FINAL : public nsIObserver, public nsSupportsWeakReference {
 
@@ -210,12 +211,12 @@ public:
 
   void GetDisplayFileName(nsAString& aFileName) const;
 
-  const nsTArray<nsCOMPtr<nsIDOMFile> >& GetFilesInternal() const
+  const nsTArray<nsRefPtr<DOMFile>>& GetFilesInternal() const
   {
     return mFiles;
   }
 
-  void SetFiles(const nsTArray<nsCOMPtr<nsIDOMFile> >& aFiles, bool aSetValueChanged);
+  void SetFiles(const nsTArray<nsRefPtr<DOMFile>>& aFiles, bool aSetValueChanged);
   void SetFiles(nsIDOMFileList* aFiles, bool aSetValueChanged);
 
   // Called when a nsIFilePicker or a nsIColorPicker terminate.
@@ -1251,7 +1252,7 @@ protected:
    * the frame. Whenever the frame wants to change the filename it has to call
    * SetFileNames to update this member.
    */
-  nsTArray<nsCOMPtr<nsIDOMFile> >   mFiles;
+  nsTArray<nsRefPtr<DOMFile>> mFiles;
 
   nsRefPtr<nsDOMFileList>  mFileList;
 

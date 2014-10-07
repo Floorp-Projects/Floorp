@@ -208,7 +208,7 @@ MediaEngineDefaultVideoSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMFile> domFile = dom::DOMFile::CreateFromFile(localFile);
+  nsCOMPtr<nsIDOMFile> domFile = dom::DOMFile::CreateFromFile(nullptr, localFile);
   domFile.forget(aFile);
   return NS_OK;
 #endif
