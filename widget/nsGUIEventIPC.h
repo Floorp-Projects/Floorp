@@ -442,49 +442,6 @@ struct ParamTraits<mozilla::TextRangeArray>
 };
 
 template<>
-struct ParamTraits<mozilla::WidgetTextEvent>
-{
-  typedef mozilla::WidgetTextEvent paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
-    WriteParam(aMsg, aParam.mSeqno);
-    WriteParam(aMsg, aParam.mData);
-    bool hasRanges = !!aParam.mRanges;
-    WriteParam(aMsg, hasRanges);
-    if (hasRanges) {
-      WriteParam(aMsg, *aParam.mRanges.get());
-    }
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    bool hasRanges;
-    if (!ReadParam(aMsg, aIter,
-                   static_cast<mozilla::WidgetGUIEvent*>(aResult)) ||
-        !ReadParam(aMsg, aIter, &aResult->mSeqno) ||
-        !ReadParam(aMsg, aIter, &aResult->mData) ||
-        !ReadParam(aMsg, aIter, &hasRanges)) {
-      return false;
-    }
-
-    if (!hasRanges) {
-      aResult->mRanges = nullptr;
-    } else {
-      aResult->mRanges = new mozilla::TextRangeArray();
-      if (!aResult->mRanges) {
-        return false;
-      }
-      if (!ReadParam(aMsg, aIter, aResult->mRanges.get())) {
-        return false;
-      }
-    }
-    return true;
-  }
-};
-
-template<>
 struct ParamTraits<mozilla::WidgetCompositionEvent>
 {
   typedef mozilla::WidgetCompositionEvent paramType;
