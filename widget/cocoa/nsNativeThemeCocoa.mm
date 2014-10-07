@@ -2858,6 +2858,23 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     case NS_THEME_RESIZER:
       DrawResizer(cgContext, macRect, aFrame);
       break;
+
+    case NS_THEME_MAC_VIBRANCY_LIGHT:
+    case NS_THEME_MAC_VIBRANCY_DARK:
+    {
+      NSWindow* win = NativeWindowForFrame(aFrame);
+      if ([win isKindOfClass:[ToolbarWindow class]]) {
+        NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
+        [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
+
+        ChildView* childView = [(ToolbarWindow*)win mainChildView];
+        [[childView vibrancyFillColorForWidgetType:aWidgetType] set];
+        NSRectFill(NSRectFromCGRect(macRect));
+
+        [NSGraphicsContext setCurrentContext:savedContext];
+      }
+      break;
+    }
   }
 
   if (hidpi) {

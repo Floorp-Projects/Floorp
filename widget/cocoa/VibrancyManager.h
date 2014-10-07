@@ -76,6 +76,14 @@ public:
   void ClearVibrantAreas() const;
 
   /**
+   * Return the fill color that should be drawn on top of the cleared window
+   * parts. Usually this would be drawn by -[NSVisualEffectView drawRect:].
+   * The returned color is opaque if the system-wide "Reduce transparency"
+   * preference is set.
+   */
+  NSColor* VibrancyFillColorForType(VibrancyType aType);
+
+  /**
    * Check whether the operating system supports vibrancy at all.
    * You may only create a VibrancyManager instance if this returns true.
    * @return Whether VibrancyManager can be used on this OS.
