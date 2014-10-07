@@ -27,6 +27,7 @@ public:
     SandboxPrivate(nsIPrincipal *principal, JSObject *global)
         : mPrincipal(principal)
     {
+        SetIsNotDOMBinding();
         SetWrapper(global);
     }
 
