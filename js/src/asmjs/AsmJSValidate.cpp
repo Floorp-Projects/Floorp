@@ -1086,6 +1086,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             FuncPtrTable,
             FFI,
             ArrayView,
+            ArrayViewCtor,
             MathBuiltinFunction,
             SimdCtor,
             SimdOperation
@@ -1148,7 +1149,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             return u.ffiIndex_;
         }
         Scalar::Type viewType() const {
-            MOZ_ASSERT(which_ == ArrayView);
+            MOZ_ASSERT(which_ == ArrayView || which_ == ArrayViewCtor);
             return u.viewType_;
         }
         bool isMathFunction() const {
@@ -1623,11 +1624,20 @@ class MOZ_STACK_CLASS ModuleCompiler
         global->u.ffiIndex_ = index;
         return globals_.putNew(varName, global);
     }
-    bool addArrayView(PropertyName *varName, Scalar::Type vt, PropertyName *fieldName) {
+    bool addArrayView(PropertyName *varName, Scalar::Type vt, PropertyName *maybeField) {
         Global *global = moduleLifo_.new_<Global>(Global::ArrayView);
         if (!global)
             return false;
-        if (!module_->addArrayView(vt, fieldName))
+        if (!module_->addArrayView(vt, maybeField))
+            return false;
+        global->u.viewType_ = vt;
+        return globals_.putNew(varName, global);
+    }
+    bool addArrayViewCtor(PropertyName *varName, Scalar::Type vt, PropertyName *fieldName) {
+        Global *global = moduleLifo_.new_<Global>(Global::ArrayViewCtor);
+        if (!global)
+            return false;
+        if (!module_->addArrayViewCtor(vt, fieldName))
             return false;
         global->u.viewType_ = vt;
         return globals_.putNew(varName, global);
@@ -3500,51 +3510,76 @@ CheckGlobalVariableInitImport(ModuleCompiler &m, PropertyName *varName, ParseNod
 }
 
 static bool
+IsArrayViewCtorName(ModuleCompiler &m, PropertyName *name, Scalar::Type *type)
+{
+    JSAtomState &names = m.cx()->names();
+    if (name == names.Int8Array || name == names.SharedInt8Array)
+        *type = Scalar::Int8;
+    else if (name == names.Uint8Array || name == names.SharedUint8Array)
+        *type = Scalar::Uint8;
+    else if (name == names.Int16Array || name == names.SharedInt16Array)
+        *type = Scalar::Int16;
+    else if (name == names.Uint16Array || name == names.SharedUint16Array)
+        *type = Scalar::Uint16;
+    else if (name == names.Int32Array || name == names.SharedInt32Array)
+        *type = Scalar::Int32;
+    else if (name == names.Uint32Array || name == names.SharedUint32Array)
+        *type = Scalar::Uint32;
+    else if (name == names.Float32Array || name == names.SharedFloat32Array)
+        *type = Scalar::Float32;
+    else if (name == names.Float64Array || name == names.SharedFloat64Array)
+        *type = Scalar::Float64;
+    else
+        return false;
+    return true;
+}
+
+static bool
 CheckNewArrayView(ModuleCompiler &m, PropertyName *varName, ParseNode *newExpr)
 {
-    ParseNode *ctorExpr = ListHead(newExpr);
-    if (!ctorExpr->isKind(PNK_DOT))
-        return m.fail(ctorExpr, "only valid 'new' import is 'new global.*Array(buf)'");
-
-    ParseNode *base = DotBase(ctorExpr);
-    PropertyName *field = DotMember(ctorExpr);
-
     PropertyName *globalName = m.module().globalArgumentName();
     if (!globalName)
-        return m.fail(base, "cannot create array view without an asm.js global parameter");
-    if (!IsUseOfName(base, globalName))
-        return m.failName(base, "expecting '%s.*Array", globalName);
+        return m.fail(newExpr, "cannot create array view without an asm.js global parameter");
+
+    PropertyName *bufferName = m.module().bufferArgumentName();
+    if (!bufferName)
+        return m.fail(newExpr, "cannot create array view without an asm.js heap parameter");
+
+    ParseNode *ctorExpr = ListHead(newExpr);
+
+    PropertyName *field;
+    Scalar::Type type;
+    if (ctorExpr->isKind(PNK_DOT)) {
+        ParseNode *base = DotBase(ctorExpr);
+
+        if (!IsUseOfName(base, globalName))
+            return m.failName(base, "expecting '%s.*Array", globalName);
+
+        field = DotMember(ctorExpr);
+        if (!IsArrayViewCtorName(m, field, &type))
+            return m.fail(ctorExpr, "could not match typed array name");
+    } else {
+        if (!ctorExpr->isKind(PNK_NAME))
+            return m.fail(ctorExpr, "expecting name of imported array view constructor");
+
+        PropertyName *globalName = ctorExpr->name();
+        const ModuleCompiler::Global *global = m.lookupGlobal(globalName);
+        if (!global)
+            return m.failName(ctorExpr, "%s not found in module global scope", globalName);
+
+        if (global->which() != ModuleCompiler::Global::ArrayViewCtor)
+            return m.failName(ctorExpr, "%s must be an imported array view constructor", globalName);
+
+        field = nullptr;
+        type = global->viewType();
+    }
 
     ParseNode *bufArg = NextNode(ctorExpr);
     if (!bufArg || NextNode(bufArg) != nullptr)
         return m.fail(ctorExpr, "array view constructor takes exactly one argument");
 
-    PropertyName *bufferName = m.module().bufferArgumentName();
-    if (!bufferName)
-        return m.fail(bufArg, "cannot create array view without an asm.js heap parameter");
     if (!IsUseOfName(bufArg, bufferName))
         return m.failName(bufArg, "argument to array view constructor must be '%s'", bufferName);
-
-    JSAtomState &names = m.cx()->names();
-    Scalar::Type type;
-    if (field == names.Int8Array || field == names.SharedInt8Array)
-        type = Scalar::Int8;
-    else if (field == names.Uint8Array || field == names.SharedUint8Array)
-        type = Scalar::Uint8;
-    else if (field == names.Int16Array || field == names.SharedInt16Array)
-        type = Scalar::Int16;
-    else if (field == names.Uint16Array || field == names.SharedUint16Array)
-        type = Scalar::Uint16;
-    else if (field == names.Int32Array || field == names.SharedInt32Array)
-        type = Scalar::Int32;
-    else if (field == names.Uint32Array || field == names.SharedUint32Array)
-        type = Scalar::Uint32;
-    else if (field == names.Float32Array || field == names.SharedFloat32Array)
-        type = Scalar::Float32;
-    else if (field == names.Float64Array || field == names.SharedFloat64Array)
-        type = Scalar::Float64;
-    else
-        return m.fail(ctorExpr, "could not match typed array name");
 
     return m.addArrayView(varName, type, field);
 }
@@ -3664,7 +3699,12 @@ CheckGlobalDotImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNo
             return m.addGlobalConstant(varName, GenericNaN(), field);
         if (field == m.cx()->names().Infinity)
             return m.addGlobalConstant(varName, PositiveInfinity<double>(), field);
-        return m.failName(initNode, "'%s' is not a standard global constant", field);
+
+        Scalar::Type type;
+        if (IsArrayViewCtorName(m, field, &type))
+            return m.addArrayViewCtor(varName, type, field);
+
+        return m.failName(initNode, "'%s' is not a standard constant or typed array name", field);
     }
 
     if (base->name() == m.module().importArgumentName())
@@ -3930,6 +3970,7 @@ CheckVarRef(FunctionCompiler &f, ParseNode *varRef, MDefinition **def, Type *typ
           case ModuleCompiler::Global::MathBuiltinFunction:
           case ModuleCompiler::Global::FuncPtrTable:
           case ModuleCompiler::Global::ArrayView:
+          case ModuleCompiler::Global::ArrayViewCtor:
           case ModuleCompiler::Global::SimdCtor:
           case ModuleCompiler::Global::SimdOperation:
             return f.failName(varRef, "'%s' may not be accessed by ordinary expressions", name);
@@ -5186,6 +5227,7 @@ CheckCoercedCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinit
           case ModuleCompiler::Global::Variable:
           case ModuleCompiler::Global::FuncPtrTable:
           case ModuleCompiler::Global::ArrayView:
+          case ModuleCompiler::Global::ArrayViewCtor:
             return f.failName(callee, "'%s' is not callable function", callee->name());
           case ModuleCompiler::Global::SimdCtor:
           case ModuleCompiler::Global::SimdOperation:

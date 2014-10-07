@@ -200,7 +200,7 @@ class AsmJSModule
     class Global
     {
       public:
-        enum Which { Variable, FFI, ArrayView, MathBuiltinFunction, Constant,
+        enum Which { Variable, FFI, ArrayView, ArrayViewCtor, MathBuiltinFunction, Constant,
                      SimdCtor, SimdOperation};
         enum VarInitKind { InitConstant, InitImport };
         enum ConstantKind { GlobalConstant, MathConstant };
@@ -284,12 +284,16 @@ class AsmJSModule
             MOZ_ASSERT(pod.which_ == FFI);
             return pod.u.ffiIndex_;
         }
-        PropertyName *viewName() const {
-            MOZ_ASSERT(pod.which_ == ArrayView);
+        // When a view is created from an imported constructor:
+        //   var I32 = stdlib.Int32Array;
+        //   var i32 = new I32(buffer);
+        // the second import has nothing to validate and thus has a null field.
+        PropertyName *maybeViewName() const {
+            MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == ArrayViewCtor);
             return name_;
         }
         Scalar::Type viewType() const {
-            MOZ_ASSERT(pod.which_ == ArrayView);
+            MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == ArrayViewCtor);
             return pod.u.viewType_;
         }
         PropertyName *mathName() const {
@@ -943,10 +947,17 @@ class AsmJSModule
         g.pod.u.ffiIndex_ = *ffiIndex = pod.numFFIs_++;
         return globals_.append(g);
     }
-    bool addArrayView(Scalar::Type vt, PropertyName *field) {
+    bool addArrayView(Scalar::Type vt, PropertyName *maybeField) {
         MOZ_ASSERT(!isFinishedWithModulePrologue());
         pod.hasArrayView_ = true;
-        Global g(Global::ArrayView, field);
+        Global g(Global::ArrayView, maybeField);
+        g.pod.u.viewType_ = vt;
+        return globals_.append(g);
+    }
+    bool addArrayViewCtor(Scalar::Type vt, PropertyName *field) {
+        MOZ_ASSERT(!isFinishedWithModulePrologue());
+        MOZ_ASSERT(field);
+        Global g(Global::ArrayViewCtor, field);
         g.pod.u.viewType_ = vt;
         return globals_.append(g);
     }
