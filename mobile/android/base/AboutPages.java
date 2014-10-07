@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.home.HomeConfig;
+import org.mozilla.gecko.home.HomeConfig.PanelType;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.StringUtils;
 
 public class AboutPages {
@@ -89,5 +92,16 @@ public class AboutPages {
         }
         return false;
     }
-}
 
+    /**
+     * Get a URL that navigates to the specified built-in Home Panel.
+     *
+     * @param panelType to navigate to.
+     * @return URL.
+     * @throws IllegalArgumentException if the built-in panel type is not a built-in panel.
+     */
+    @RobocopTarget
+    public static String getURLForBuiltinPanelType(PanelType panelType) throws IllegalArgumentException {
+        return HOME + "?panel=" + HomeConfig.getIdForBuiltinPanelType(panelType);
+    }
+}
