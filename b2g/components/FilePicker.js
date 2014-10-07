@@ -181,7 +181,7 @@ FilePicker.prototype = {
     }
 
     // The name to be shown can be part of the message, or can be taken from
-    // the DOMFile (if the blob is a DOMFile).
+    // the File (if the blob is a File).
     let name = data.result.name;
     if (!name &&
         (data.result.blob instanceof this.mParent.File) &&

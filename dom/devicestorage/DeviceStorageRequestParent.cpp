@@ -4,10 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DeviceStorageRequestParent.h"
-#include "nsDOMFile.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "mozilla/unused.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "ContentParent.h"
 #include "nsProxyRelease.h"
@@ -44,7 +44,7 @@ DeviceStorageRequestParent::Dispatch()
         new DeviceStorageFile(p.type(), p.storageName(), p.relpath());
 
       BlobParent* bp = static_cast<BlobParent*>(p.blobParent());
-      nsRefPtr<DOMFileImpl> blobImpl = bp->GetBlobImpl();
+      nsRefPtr<FileImpl> blobImpl = bp->GetBlobImpl();
 
       nsCOMPtr<nsIInputStream> stream;
       blobImpl->GetInternalStream(getter_AddRefs(stream));
@@ -67,7 +67,7 @@ DeviceStorageRequestParent::Dispatch()
         new DeviceStorageFile(p.type(), p.storageName(), p.relpath());
 
       BlobParent* bp = static_cast<BlobParent*>(p.blobParent());
-      nsRefPtr<DOMFileImpl> blobImpl = bp->GetBlobImpl();
+      nsRefPtr<FileImpl> blobImpl = bp->GetBlobImpl();
 
       nsCOMPtr<nsIInputStream> stream;
       blobImpl->GetInternalStream(getter_AddRefs(stream));
@@ -522,9 +522,9 @@ DeviceStorageRequestParent::PostBlobSuccessEvent::CancelableRun() {
 
   nsString fullPath;
   mFile->GetFullPath(fullPath);
-  nsRefPtr<DOMFile> blob = new DOMFile(nullptr,
-    new DOMFileImplFile(fullPath, mime, mLength, mFile->mFile,
-                        mLastModificationDate));
+  nsRefPtr<File> blob = new File(nullptr,
+    new FileImplFile(fullPath, mime, mLength, mFile->mFile,
+                     mLastModificationDate));
 
   ContentParent* cp = static_cast<ContentParent*>(mParent->Manager());
   BlobParent* actor = cp->GetOrCreateActorForBlob(blob);

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMFile.h"
+#include "mozilla/dom/File.h"
 
 #include "nsCExternalHandlerService.h"
 #include "nsContentCID.h"
@@ -45,8 +45,8 @@
 namespace mozilla {
 namespace dom {
 
-// XXXkhuey the input stream that we pass out of a DOMFile
-// can outlive the actual DOMFile object.  Thus, we must
+// XXXkhuey the input stream that we pass out of a File
+// can outlive the actual File object.  Thus, we must
 // ensure that the buffer underlying the stream we get
 // from NS_NewByteInputStream is held alive as long as the
 // stream is.  We do that by passing back this class instead.
@@ -54,7 +54,7 @@ class DataOwnerAdapter MOZ_FINAL : public nsIInputStream,
                                    public nsISeekableStream,
                                    public nsIIPCSerializableInputStream
 {
-  typedef DOMFileImplMemory::DataOwner DataOwner;
+  typedef FileImplMemory::DataOwner DataOwner;
 public:
   static nsresult Create(DataOwner* aDataOwner,
                          uint32_t aStart,
@@ -123,29 +123,29 @@ nsresult DataOwnerAdapter::Create(DataOwner* aDataOwner,
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// mozilla::dom::DOMFile implementation
+// mozilla::dom::File implementation
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(DOMFile)
+NS_IMPL_CYCLE_COLLECTION_CLASS(File)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMFile)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(File)
   MOZ_ASSERT(tmp->mImpl);
   tmp->mImpl->Unlink();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMFile)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(File)
   MOZ_ASSERT(tmp->mImpl);
   tmp->mImpl->Traverse(cb);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMFile)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(File)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMFile)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(File)
   // This class should not receive any nsIRemoteBlob QI!
   MOZ_ASSERT(!aIID.Equals(NS_GET_IID(nsIRemoteBlob)));
 
@@ -158,124 +158,124 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMFile)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMFile)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMFile)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(File)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(File)
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::Create(nsISupports* aParent, const nsAString& aName,
-                const nsAString& aContentType, uint64_t aLength,
-                uint64_t aLastModifiedDate)
+/* static */ already_AddRefed<File>
+File::Create(nsISupports* aParent, const nsAString& aName,
+             const nsAString& aContentType, uint64_t aLength,
+             uint64_t aLastModifiedDate)
 {
-  nsRefPtr<DOMFile> file = new DOMFile(aParent,
-    new DOMFileImplBase(aName, aContentType, aLength, aLastModifiedDate));
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplBase(aName, aContentType, aLength, aLastModifiedDate));
   return file.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::Create(nsISupports* aParent, const nsAString& aName,
-                const nsAString& aContentType, uint64_t aLength)
+/* static */ already_AddRefed<File>
+File::Create(nsISupports* aParent, const nsAString& aName,
+             const nsAString& aContentType, uint64_t aLength)
 {
-  nsRefPtr<DOMFile> file = new DOMFile(aParent,
-    new DOMFileImplBase(aName, aContentType, aLength));
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplBase(aName, aContentType, aLength));
   return file.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::Create(nsISupports* aParent, const nsAString& aContentType,
-                uint64_t aLength)
+/* static */ already_AddRefed<File>
+File::Create(nsISupports* aParent, const nsAString& aContentType,
+             uint64_t aLength)
 {
-  nsRefPtr<DOMFile> file = new DOMFile(aParent,
-    new DOMFileImplBase(aContentType, aLength));
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplBase(aContentType, aLength));
   return file.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::Create(nsISupports* aParent, const nsAString& aContentType,
-                uint64_t aStart, uint64_t aLength)
+/* static */ already_AddRefed<File>
+File::Create(nsISupports* aParent, const nsAString& aContentType,
+             uint64_t aStart, uint64_t aLength)
 {
-  nsRefPtr<DOMFile> file = new DOMFile(aParent,
-    new DOMFileImplBase(aContentType, aStart, aLength));
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplBase(aContentType, aStart, aLength));
   return file.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer,
-                          uint64_t aLength, const nsAString& aName,
-                          const nsAString& aContentType,
-                          uint64_t aLastModifiedDate)
+/* static */ already_AddRefed<File>
+File::CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer,
+                       uint64_t aLength, const nsAString& aName,
+                       const nsAString& aContentType,
+                       uint64_t aLastModifiedDate)
 {
-  nsRefPtr<DOMFile> file = new DOMFile(aParent,
-    new DOMFileImplMemory(aMemoryBuffer, aLength, aName,
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplMemory(aMemoryBuffer, aLength, aName,
                           aContentType, aLastModifiedDate));
   return file.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer,
-                          uint64_t aLength, const nsAString& aContentType)
+/* static */ already_AddRefed<File>
+File::CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer,
+                       uint64_t aLength, const nsAString& aContentType)
 {
-  nsRefPtr<DOMFile> file = new DOMFile(aParent,
-    new DOMFileImplMemory(aMemoryBuffer, aLength, aContentType));
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplMemory(aMemoryBuffer, aLength, aContentType));
   return file.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::CreateTemporaryFileBlob(nsISupports* aParent, PRFileDesc* aFD,
-                                 uint64_t aStartPos, uint64_t aLength,
-                                 const nsAString& aContentType)
+/* static */ already_AddRefed<File>
+File::CreateTemporaryFileBlob(nsISupports* aParent, PRFileDesc* aFD,
+                              uint64_t aStartPos, uint64_t aLength,
+                              const nsAString& aContentType)
 {
-  nsRefPtr<DOMFile> file = new DOMFile(aParent,
-    new DOMFileImplTemporaryFileBlob(aFD, aStartPos, aLength, aContentType));
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplTemporaryFileBlob(aFD, aStartPos, aLength, aContentType));
   return file.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::CreateFromFile(nsISupports* aParent, nsIFile* aFile)
+/* static */ already_AddRefed<File>
+File::CreateFromFile(nsISupports* aParent, nsIFile* aFile)
 {
-  nsRefPtr<DOMFile> file = new DOMFile(aParent, new DOMFileImplFile(aFile));
+  nsRefPtr<File> file = new File(aParent, new FileImplFile(aFile));
   return file.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::CreateFromFile(nsISupports* aParent, const nsAString& aContentType,
-                        uint64_t aLength, nsIFile* aFile,
+/* static */ already_AddRefed<File>
+File::CreateFromFile(nsISupports* aParent, const nsAString& aContentType,
+                     uint64_t aLength, nsIFile* aFile,
+                     indexedDB::FileInfo* aFileInfo)
+{
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplFile(aContentType, aLength, aFile, aFileInfo));
+  return file.forget();
+}
+
+/* static */ already_AddRefed<File>
+File::CreateFromFile(nsISupports* aParent, const nsAString& aName,
+                     const nsAString& aContentType,
+                     uint64_t aLength, nsIFile* aFile,
+                     indexedDB::FileInfo* aFileInfo)
+{
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplFile(aName, aContentType, aLength, aFile, aFileInfo));
+  return file.forget();
+}
+
+/* static */ already_AddRefed<File>
+File::CreateFromFile(nsISupports* aParent, nsIFile* aFile,
                         indexedDB::FileInfo* aFileInfo)
 {
-  nsRefPtr<DOMFile> file = new DOMFile(aParent,
-    new DOMFileImplFile(aContentType, aLength, aFile, aFileInfo));
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplFile(aFile, aFileInfo));
   return file.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::CreateFromFile(nsISupports* aParent, const nsAString& aName,
-                        const nsAString& aContentType,
-                        uint64_t aLength, nsIFile* aFile,
-                        indexedDB::FileInfo* aFileInfo)
+/* static */ already_AddRefed<File>
+File::CreateFromFile(nsISupports* aParent, nsIFile* aFile,
+                     const nsAString& aName, const nsAString& aContentType)
 {
-  nsRefPtr<DOMFile> file = new DOMFile(aParent,
-    new DOMFileImplFile(aName, aContentType, aLength, aFile, aFileInfo));
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplFile(aFile, aName, aContentType));
   return file.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::CreateFromFile(nsISupports* aParent, nsIFile* aFile,
-                        indexedDB::FileInfo* aFileInfo)
-{
-  nsRefPtr<DOMFile> file = new DOMFile(aParent,
-    new DOMFileImplFile(aFile, aFileInfo));
-  return file.forget();
-}
-
-/* static */ already_AddRefed<DOMFile>
-DOMFile::CreateFromFile(nsISupports* aParent, nsIFile* aFile,
-                        const nsAString& aName, const nsAString& aContentType)
-{
-  nsRefPtr<DOMFile> file = new DOMFile(aParent,
-    new DOMFileImplFile(aFile, aName, aContentType));
-  return file.forget();
-}
-
-DOMFile::DOMFile(nsISupports* aParent, DOMFileImpl* aImpl)
+File::File(nsISupports* aParent, FileImpl* aImpl)
   : mImpl(aImpl)
   , mParent(aParent)
 {
@@ -292,67 +292,67 @@ DOMFile::DOMFile(nsISupports* aParent, DOMFileImpl* aImpl)
 #endif
 }
 
-const nsTArray<nsRefPtr<DOMFileImpl>>*
-DOMFile::GetSubBlobImpls() const
+const nsTArray<nsRefPtr<FileImpl>>*
+File::GetSubBlobImpls() const
 {
   return mImpl->GetSubBlobImpls();
 }
 
 bool
-DOMFile::IsSizeUnknown() const
+File::IsSizeUnknown() const
 {
   return mImpl->IsSizeUnknown();
 }
 
 bool
-DOMFile::IsDateUnknown() const
+File::IsDateUnknown() const
 {
   return mImpl->IsDateUnknown();
 }
 
 bool
-DOMFile::IsFile() const
+File::IsFile() const
 {
   return mImpl->IsFile();
 }
 
 void
-DOMFile::SetLazyData(const nsAString& aName, const nsAString& aContentType,
-                     uint64_t aLength, uint64_t aLastModifiedDate)
+File::SetLazyData(const nsAString& aName, const nsAString& aContentType,
+                  uint64_t aLength, uint64_t aLastModifiedDate)
 {
   return mImpl->SetLazyData(aName, aContentType, aLength, aLastModifiedDate);
 }
 
-already_AddRefed<DOMFile>
-DOMFile::CreateSlice(uint64_t aStart, uint64_t aLength,
-                     const nsAString& aContentType,
-                     ErrorResult& aRv)
+already_AddRefed<File>
+File::CreateSlice(uint64_t aStart, uint64_t aLength,
+                  const nsAString& aContentType,
+                  ErrorResult& aRv)
 {
-  nsRefPtr<DOMFileImpl> impl = mImpl->CreateSlice(aStart, aLength,
-                                                  aContentType, aRv);
+  nsRefPtr<FileImpl> impl = mImpl->CreateSlice(aStart, aLength,
+                                               aContentType, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  nsRefPtr<DOMFile> file = new DOMFile(mParent, impl);
+  nsRefPtr<File> file = new File(mParent, impl);
   return file.forget();
 }
 
 NS_IMETHODIMP
-DOMFile::GetName(nsAString& aFileName)
+File::GetName(nsAString& aFileName)
 {
   mImpl->GetName(aFileName);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMFile::GetPath(nsAString& aPath)
+File::GetPath(nsAString& aPath)
 {
   return mImpl->GetPath(aPath);
 }
 
 NS_IMETHODIMP
-DOMFile::GetLastModifiedDate(JSContext* aCx,
+File::GetLastModifiedDate(JSContext* aCx,
                              JS::MutableHandle<JS::Value> aDate)
 {
   ErrorResult rv;
@@ -369,7 +369,7 @@ DOMFile::GetLastModifiedDate(JSContext* aCx,
 }
 
 Date
-DOMFile::GetLastModifiedDate(ErrorResult& aRv)
+File::GetLastModifiedDate(ErrorResult& aRv)
 {
   int64_t value = GetLastModified(aRv);
   if (aRv.Failed()) {
@@ -380,13 +380,13 @@ DOMFile::GetLastModifiedDate(ErrorResult& aRv)
 }
 
 int64_t
-DOMFile::GetLastModified(ErrorResult& aRv)
+File::GetLastModified(ErrorResult& aRv)
 {
   return mImpl->GetLastModified(aRv);
 }
 
 NS_IMETHODIMP
-DOMFile::GetMozFullPath(nsAString& aFileName)
+File::GetMozFullPath(nsAString& aFileName)
 {
   ErrorResult rv;
   GetMozFullPath(aFileName, rv);
@@ -394,13 +394,13 @@ DOMFile::GetMozFullPath(nsAString& aFileName)
 }
 
 void
-DOMFile::GetMozFullPath(nsAString& aFilename, ErrorResult& aRv)
+File::GetMozFullPath(nsAString& aFilename, ErrorResult& aRv)
 {
   mImpl->GetMozFullPath(aFilename, aRv);
 }
 
 NS_IMETHODIMP
-DOMFile::GetMozFullPathInternal(nsAString& aFileName)
+File::GetMozFullPathInternal(nsAString& aFileName)
 {
   ErrorResult rv;
   mImpl->GetMozFullPathInternal(aFileName, rv);
@@ -408,7 +408,7 @@ DOMFile::GetMozFullPathInternal(nsAString& aFileName)
 }
 
 NS_IMETHODIMP
-DOMFile::GetSize(uint64_t* aSize)
+File::GetSize(uint64_t* aSize)
 {
   MOZ_ASSERT(aSize);
 
@@ -418,20 +418,20 @@ DOMFile::GetSize(uint64_t* aSize)
 }
 
 uint64_t
-DOMFile::GetSize(ErrorResult& aRv)
+File::GetSize(ErrorResult& aRv)
 {
   return mImpl->GetSize(aRv);
 }
 
 NS_IMETHODIMP
-DOMFile::GetType(nsAString &aType)
+File::GetType(nsAString &aType)
 {
   mImpl->GetType(aType);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMFile::GetMozLastModifiedDate(uint64_t* aDate)
+File::GetMozLastModifiedDate(uint64_t* aDate)
 {
   MOZ_ASSERT(aDate);
 
@@ -478,9 +478,9 @@ ParseSize(int64_t aSize, int64_t& aStart, int64_t& aEnd)
 }
 
 NS_IMETHODIMP
-DOMFile::Slice(int64_t aStart, int64_t aEnd,
-               const nsAString& aContentType, uint8_t aArgc,
-               nsIDOMBlob **aBlob)
+File::Slice(int64_t aStart, int64_t aEnd,
+            const nsAString& aContentType, uint8_t aArgc,
+            nsIDOMBlob **aBlob)
 {
   Optional<int64_t> start;
   if (aArgc > 0) {
@@ -493,7 +493,7 @@ DOMFile::Slice(int64_t aStart, int64_t aEnd,
   }
 
   ErrorResult rv;
-  nsRefPtr<DOMFile> file = Slice(start, end, aContentType, rv);
+  nsRefPtr<File> file = Slice(start, end, aContentType, rv);
   if (rv.Failed()) {
     return rv.ErrorCode();
   }
@@ -502,100 +502,100 @@ DOMFile::Slice(int64_t aStart, int64_t aEnd,
   return NS_OK;
 }
 
-already_AddRefed<DOMFile>
-DOMFile::Slice(const Optional<int64_t>& aStart,
-               const Optional<int64_t>& aEnd,
-               const nsAString& aContentType,
-               ErrorResult& aRv)
+already_AddRefed<File>
+File::Slice(const Optional<int64_t>& aStart,
+            const Optional<int64_t>& aEnd,
+            const nsAString& aContentType,
+            ErrorResult& aRv)
 {
-  nsRefPtr<DOMFileImpl> impl =
+  nsRefPtr<FileImpl> impl =
     mImpl->Slice(aStart, aEnd, aContentType, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  nsRefPtr<DOMFile> file = new DOMFile(mParent, impl);
+  nsRefPtr<File> file = new File(mParent, impl);
   return file.forget();
 }
 
 NS_IMETHODIMP
-DOMFile::GetInternalStream(nsIInputStream** aStream)
+File::GetInternalStream(nsIInputStream** aStream)
 {
- return mImpl->GetInternalStream(aStream);
+  return mImpl->GetInternalStream(aStream);
 }
 
 NS_IMETHODIMP_(int64_t)
-DOMFile::GetFileId()
+File::GetFileId()
 {
   return mImpl->GetFileId();
 }
 
 NS_IMETHODIMP_(void)
-DOMFile::AddFileInfo(indexedDB::FileInfo* aFileInfo)
+File::AddFileInfo(indexedDB::FileInfo* aFileInfo)
 {
   mImpl->AddFileInfo(aFileInfo);
 }
 
 indexedDB::FileInfo*
-DOMFile::GetFileInfo(indexedDB::FileManager* aFileManager)
+File::GetFileInfo(indexedDB::FileManager* aFileManager)
 {
   return mImpl->GetFileInfo(aFileManager);
 }
 
 NS_IMETHODIMP
-DOMFile::GetSendInfo(nsIInputStream** aBody,
-                     uint64_t* aContentLength,
-                     nsACString& aContentType,
-                     nsACString& aCharset)
+File::GetSendInfo(nsIInputStream** aBody,
+                  uint64_t* aContentLength,
+                  nsACString& aContentType,
+                  nsACString& aCharset)
 {
   return mImpl->GetSendInfo(aBody, aContentLength, aContentType, aCharset);
 }
 
 NS_IMETHODIMP
-DOMFile::GetMutable(bool* aMutable)
+File::GetMutable(bool* aMutable)
 {
   return mImpl->GetMutable(aMutable);
 }
 
 NS_IMETHODIMP
-DOMFile::SetMutable(bool aMutable)
+File::SetMutable(bool aMutable)
 {
   return mImpl->SetMutable(aMutable);
 }
 
 NS_IMETHODIMP_(bool)
-DOMFile::IsMemoryFile()
+File::IsMemoryFile()
 {
   return mImpl->IsMemoryFile();
 }
 
 JSObject*
-DOMFile::WrapObject(JSContext* aCx)
+File::WrapObject(JSContext* aCx)
 {
   return IsFile() ? FileBinding::Wrap(aCx, this)
                   : BlobBinding::Wrap(aCx, this);
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
+/* static */ already_AddRefed<File>
+File::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  nsRefPtr<DOMMultipartFileImpl> impl = new DOMMultipartFileImpl();
+  nsRefPtr<MultipartFileImpl> impl = new MultipartFileImpl();
 
   impl->InitializeBlob();
   MOZ_ASSERT(!impl->IsFile());
 
-  nsRefPtr<DOMFile> file = new DOMFile(aGlobal.GetAsSupports(), impl);
+  nsRefPtr<File> file = new File(aGlobal.GetAsSupports(), impl);
   return file.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::Constructor(
+/* static */ already_AddRefed<File>
+File::Constructor(
         const GlobalObject& aGlobal,
         const Sequence<OwningArrayBufferOrArrayBufferViewOrBlobOrString>& aData,
         const BlobPropertyBag& aBag,
         ErrorResult& aRv)
 {
-  nsRefPtr<DOMMultipartFileImpl> impl = new DOMMultipartFileImpl();
+  nsRefPtr<MultipartFileImpl> impl = new MultipartFileImpl();
 
   impl->InitializeBlob(aGlobal.Context(), aData, aBag.mType,
                        aBag.mEndings == EndingTypes::Native, aRv);
@@ -604,19 +604,19 @@ DOMFile::Constructor(
   }
   MOZ_ASSERT(!impl->IsFile());
 
-  nsRefPtr<DOMFile> file = new DOMFile(aGlobal.GetAsSupports(), impl);
+  nsRefPtr<File> file = new File(aGlobal.GetAsSupports(), impl);
   return file.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::Constructor(
+/* static */ already_AddRefed<File>
+File::Constructor(
         const GlobalObject& aGlobal,
         const Sequence<OwningArrayBufferOrArrayBufferViewOrBlobOrString>& aData,
         const nsAString& aName,
         const FilePropertyBag& aBag,
         ErrorResult& aRv)
 {
-  nsRefPtr<DOMMultipartFileImpl> impl = new DOMMultipartFileImpl(aName);
+  nsRefPtr<MultipartFileImpl> impl = new MultipartFileImpl(aName);
 
   impl->InitializeBlob(aGlobal.Context(), aData, aBag.mType, false, aRv);
   if (aRv.Failed()) {
@@ -624,37 +624,37 @@ DOMFile::Constructor(
   }
   MOZ_ASSERT(impl->IsFile());
 
-  nsRefPtr<DOMFile> file = new DOMFile(aGlobal.GetAsSupports(), impl);
+  nsRefPtr<File> file = new File(aGlobal.GetAsSupports(), impl);
   return file.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::Constructor(const GlobalObject& aGlobal,
-                     DOMFile& aData,
-                     const FilePropertyBag& aBag,
-                     ErrorResult& aRv)
+/* static */ already_AddRefed<File>
+File::Constructor(const GlobalObject& aGlobal,
+                  File& aData,
+                  const FilePropertyBag& aBag,
+                  ErrorResult& aRv)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  nsRefPtr<DOMMultipartFileImpl> impl = new DOMMultipartFileImpl(EmptyString());
+  nsRefPtr<MultipartFileImpl> impl = new MultipartFileImpl(EmptyString());
   impl->InitializeChromeFile(aData, aBag, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
   MOZ_ASSERT(impl->IsFile());
 
-  nsRefPtr<DOMFile> domFile = new DOMFile(aGlobal.GetAsSupports(), impl);
+  nsRefPtr<File> domFile = new File(aGlobal.GetAsSupports(), impl);
   return domFile.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::Constructor(const GlobalObject& aGlobal,
-                     nsIFile* aData,
-                     const FilePropertyBag& aBag,
-                     ErrorResult& aRv)
+/* static */ already_AddRefed<File>
+File::Constructor(const GlobalObject& aGlobal,
+                  nsIFile* aData,
+                  const FilePropertyBag& aBag,
+                  ErrorResult& aRv)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -663,22 +663,22 @@ DOMFile::Constructor(const GlobalObject& aGlobal,
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
 
-  nsRefPtr<DOMMultipartFileImpl> impl = new DOMMultipartFileImpl(EmptyString());
+  nsRefPtr<MultipartFileImpl> impl = new MultipartFileImpl(EmptyString());
   impl->InitializeChromeFile(window, aData, aBag, true, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
   MOZ_ASSERT(impl->IsFile());
 
-  nsRefPtr<DOMFile> domFile = new DOMFile(aGlobal.GetAsSupports(), impl);
+  nsRefPtr<File> domFile = new File(aGlobal.GetAsSupports(), impl);
   return domFile.forget();
 }
 
-/* static */ already_AddRefed<DOMFile>
-DOMFile::Constructor(const GlobalObject& aGlobal,
-                     const nsAString& aData,
-                     const FilePropertyBag& aBag,
-                     ErrorResult& aRv)
+/* static */ already_AddRefed<File>
+File::Constructor(const GlobalObject& aGlobal,
+                  const nsAString& aData,
+                  const FilePropertyBag& aBag,
+                  ErrorResult& aRv)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -687,25 +687,25 @@ DOMFile::Constructor(const GlobalObject& aGlobal,
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
 
-  nsRefPtr<DOMMultipartFileImpl> impl = new DOMMultipartFileImpl(EmptyString());
+  nsRefPtr<MultipartFileImpl> impl = new MultipartFileImpl(EmptyString());
   impl->InitializeChromeFile(window, aData, aBag, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
   MOZ_ASSERT(impl->IsFile());
 
-  nsRefPtr<DOMFile> domFile = new DOMFile(aGlobal.GetAsSupports(), impl);
+  nsRefPtr<File> domFile = new File(aGlobal.GetAsSupports(), impl);
   return domFile.forget();
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// mozilla::dom::DOMFileImpl implementation
+// mozilla::dom::FileImpl implementation
 
-already_AddRefed<DOMFileImpl>
-DOMFileImpl::Slice(const Optional<int64_t>& aStart,
-                   const Optional<int64_t>& aEnd,
-                   const nsAString& aContentType,
-                   ErrorResult& aRv)
+already_AddRefed<FileImpl>
+FileImpl::Slice(const Optional<int64_t>& aStart,
+                const Optional<int64_t>& aEnd,
+                const nsAString& aContentType,
+                ErrorResult& aRv)
 {
   // Truncate aStart and aEnd so that we stay within this file.
   uint64_t thisLength = GetSize(aRv);
@@ -723,24 +723,24 @@ DOMFileImpl::Slice(const Optional<int64_t>& aStart,
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// DOMFileImpl implementation
+// FileImpl implementation
 
-NS_IMPL_ISUPPORTS(DOMFileImpl, PIDOMFileImpl)
+NS_IMPL_ISUPPORTS(FileImpl, PIFileImpl)
 
 ////////////////////////////////////////////////////////////////////////////
-// DOMFileImplFile implementation
+// FileImplFile implementation
 
-NS_IMPL_ISUPPORTS_INHERITED0(DOMFileImplFile, DOMFileImpl)
+NS_IMPL_ISUPPORTS_INHERITED0(FileImplFile, FileImpl)
 
 void
-DOMFileImplBase::GetName(nsAString& aName)
+FileImplBase::GetName(nsAString& aName)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
   aName = mName;
 }
 
 nsresult
-DOMFileImplBase::GetPath(nsAString& aPath)
+FileImplBase::GetPath(nsAString& aPath)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
   aPath = mPath;
@@ -748,7 +748,7 @@ DOMFileImplBase::GetPath(nsAString& aPath)
 }
 
 void
-DOMFileImplBase::GetMozFullPath(nsAString& aFileName, ErrorResult& aRv)
+FileImplBase::GetMozFullPath(nsAString& aFileName, ErrorResult& aRv)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
 
@@ -772,7 +772,7 @@ DOMFileImplBase::GetMozFullPath(nsAString& aFileName, ErrorResult& aRv)
 }
 
 void
-DOMFileImplBase::GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv)
+FileImplBase::GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv)
 {
   if (!mIsFile) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -783,13 +783,13 @@ DOMFileImplBase::GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv)
 }
 
 void
-DOMFileImplBase::GetType(nsAString& aType)
+FileImplBase::GetType(nsAString& aType)
 {
   aType = mContentType;
 }
 
 int64_t
-DOMFileImplBase::GetLastModified(ErrorResult& aRv)
+FileImplBase::GetLastModified(ErrorResult& aRv)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
   if (IsDateUnknown()) {
@@ -800,7 +800,7 @@ DOMFileImplBase::GetLastModified(ErrorResult& aRv)
 }
 
 int64_t
-DOMFileImplBase::GetFileId()
+FileImplBase::GetFileId()
 {
   int64_t id = -1;
 
@@ -826,7 +826,7 @@ DOMFileImplBase::GetFileId()
 }
 
 void
-DOMFileImplBase::AddFileInfo(indexedDB::FileInfo* aFileInfo)
+FileImplBase::AddFileInfo(indexedDB::FileInfo* aFileInfo)
 {
   if (indexedDB::IndexedDatabaseManager::IsClosed()) {
     NS_ERROR("Shouldn't be called after shutdown!");
@@ -845,7 +845,7 @@ DOMFileImplBase::AddFileInfo(indexedDB::FileInfo* aFileInfo)
 }
 
 indexedDB::FileInfo*
-DOMFileImplBase::GetFileInfo(indexedDB::FileManager* aFileManager)
+FileImplBase::GetFileInfo(indexedDB::FileManager* aFileManager)
 {
   if (indexedDB::IndexedDatabaseManager::IsClosed()) {
     NS_ERROR("Shouldn't be called after shutdown!");
@@ -877,10 +877,8 @@ DOMFileImplBase::GetFileInfo(indexedDB::FileManager* aFileManager)
 }
 
 nsresult
-DOMFileImplBase::GetSendInfo(nsIInputStream** aBody,
-                             uint64_t* aContentLength,
-                             nsACString& aContentType,
-                             nsACString& aCharset)
+FileImplBase::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
+                          nsACString& aContentType, nsACString& aCharset)
 {
   MOZ_ASSERT(aContentLength);
 
@@ -908,14 +906,14 @@ DOMFileImplBase::GetSendInfo(nsIInputStream** aBody,
 }
 
 nsresult
-DOMFileImplBase::GetMutable(bool* aMutable) const
+FileImplBase::GetMutable(bool* aMutable) const
 {
   *aMutable = !mImmutable;
   return NS_OK;
 }
 
 nsresult
-DOMFileImplBase::SetMutable(bool aMutable)
+FileImplBase::SetMutable(bool aMutable)
 {
   nsresult rv = NS_OK;
 
@@ -938,27 +936,27 @@ DOMFileImplBase::SetMutable(bool aMutable)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// DOMFileImplFile implementation
+// FileImplFile implementation
 
-already_AddRefed<DOMFileImpl>
-DOMFileImplFile::CreateSlice(uint64_t aStart, uint64_t aLength,
-                             const nsAString& aContentType,
-                             ErrorResult& aRv)
+already_AddRefed<FileImpl>
+FileImplFile::CreateSlice(uint64_t aStart, uint64_t aLength,
+                          const nsAString& aContentType,
+                          ErrorResult& aRv)
 {
-  nsRefPtr<DOMFileImpl> impl =
-    new DOMFileImplFile(this, aStart, aLength, aContentType);
+  nsRefPtr<FileImpl> impl =
+    new FileImplFile(this, aStart, aLength, aContentType);
   return impl.forget();
 }
 
 void
-DOMFileImplFile::GetMozFullPathInternal(nsAString& aFilename, ErrorResult& aRv)
+FileImplFile::GetMozFullPathInternal(nsAString& aFilename, ErrorResult& aRv)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
   aRv = mFile->GetPath(aFilename);
 }
 
 uint64_t
-DOMFileImplFile::GetSize(ErrorResult& aRv)
+FileImplFile::GetSize(ErrorResult& aRv)
 {
   if (IsSizeUnknown()) {
     NS_ASSERTION(mWholeFile,
@@ -981,7 +979,7 @@ DOMFileImplFile::GetSize(ErrorResult& aRv)
 }
 
 void
-DOMFileImplFile::GetType(nsAString& aType)
+FileImplFile::GetType(nsAString& aType)
 {
   if (mContentType.IsVoid()) {
     NS_ASSERTION(mWholeFile,
@@ -1008,7 +1006,7 @@ DOMFileImplFile::GetType(nsAString& aType)
 }
 
 int64_t
-DOMFileImplFile::GetLastModified(ErrorResult& aRv)
+FileImplFile::GetLastModified(ErrorResult& aRv)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
   if (IsDateUnknown()) {
@@ -1031,7 +1029,7 @@ const uint32_t sFileStreamFlags =
   nsIFileInputStream::SHARE_DELETE;
 
 nsresult
-DOMFileImplFile::GetInternalStream(nsIInputStream** aStream)
+FileImplFile::GetInternalStream(nsIInputStream** aStream)
 {
   return mWholeFile ?
     NS_NewLocalFileInputStream(aStream, mFile, -1, -1, sFileStreamFlags) :
@@ -1040,7 +1038,7 @@ DOMFileImplFile::GetInternalStream(nsIInputStream** aStream)
 }
 
 void
-DOMFileImplFile::SetPath(const nsAString& aPath)
+FileImplFile::SetPath(const nsAString& aPath)
 {
   MOZ_ASSERT(aPath.IsEmpty() ||
              aPath[aPath.Length() - 1] == char16_t('/'),
@@ -1049,22 +1047,22 @@ DOMFileImplFile::SetPath(const nsAString& aPath)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// DOMFileImplMemory implementation
+// FileImplMemory implementation
 
-NS_IMPL_ISUPPORTS_INHERITED0(DOMFileImplMemory, DOMFileImpl)
+NS_IMPL_ISUPPORTS_INHERITED0(FileImplMemory, FileImpl)
 
-already_AddRefed<DOMFileImpl>
-DOMFileImplMemory::CreateSlice(uint64_t aStart, uint64_t aLength,
-                               const nsAString& aContentType,
-                               ErrorResult& aRv)
+already_AddRefed<FileImpl>
+FileImplMemory::CreateSlice(uint64_t aStart, uint64_t aLength,
+                            const nsAString& aContentType,
+                            ErrorResult& aRv)
 {
-  nsRefPtr<DOMFileImpl> impl =
-    new DOMFileImplMemory(this, aStart, aLength, aContentType);
+  nsRefPtr<FileImpl> impl =
+    new FileImplMemory(this, aStart, aLength, aContentType);
   return impl.forget();
 }
 
 nsresult
-DOMFileImplMemory::GetInternalStream(nsIInputStream** aStream)
+FileImplMemory::GetInternalStream(nsIInputStream** aStream)
 {
   if (mLength > INT32_MAX)
     return NS_ERROR_FAILURE;
@@ -1073,20 +1071,20 @@ DOMFileImplMemory::GetInternalStream(nsIInputStream** aStream)
 }
 
 /* static */ StaticMutex
-DOMFileImplMemory::DataOwner::sDataOwnerMutex;
+FileImplMemory::DataOwner::sDataOwnerMutex;
 
-/* static */ StaticAutoPtr<LinkedList<DOMFileImplMemory::DataOwner>>
-DOMFileImplMemory::DataOwner::sDataOwners;
+/* static */ StaticAutoPtr<LinkedList<FileImplMemory::DataOwner>>
+FileImplMemory::DataOwner::sDataOwners;
 
 /* static */ bool
-DOMFileImplMemory::DataOwner::sMemoryReporterRegistered = false;
+FileImplMemory::DataOwner::sMemoryReporterRegistered = false;
 
-MOZ_DEFINE_MALLOC_SIZE_OF(DOMMemoryFileDataOwnerMallocSizeOf)
+MOZ_DEFINE_MALLOC_SIZE_OF(MemoryFileDataOwnerMallocSizeOf)
 
-class DOMFileImplMemoryDataOwnerMemoryReporter MOZ_FINAL
+class FileImplMemoryDataOwnerMemoryReporter MOZ_FINAL
   : public nsIMemoryReporter
 {
-  ~DOMFileImplMemoryDataOwnerMemoryReporter() {}
+  ~FileImplMemoryDataOwnerMemoryReporter() {}
 
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -1094,7 +1092,7 @@ public:
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCallback,
                             nsISupports *aClosure, bool aAnonymize)
   {
-    typedef DOMFileImplMemory::DataOwner DataOwner;
+    typedef FileImplMemory::DataOwner DataOwner;
 
     StaticMutexAutoLock lock(DataOwner::sDataOwnerMutex);
 
@@ -1108,7 +1106,7 @@ public:
     for (DataOwner *owner = DataOwner::sDataOwners->getFirst();
          owner; owner = owner->getNext()) {
 
-      size_t size = DOMMemoryFileDataOwnerMallocSizeOf(owner->mData);
+      size_t size = MemoryFileDataOwnerMallocSizeOf(owner->mData);
 
       if (size < LARGE_OBJECT_MIN_SIZE) {
         smallObjectsTotal += size;
@@ -1159,44 +1157,44 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS(DOMFileImplMemoryDataOwnerMemoryReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(FileImplMemoryDataOwnerMemoryReporter, nsIMemoryReporter)
 
 /* static */ void
-DOMFileImplMemory::DataOwner::EnsureMemoryReporterRegistered()
+FileImplMemory::DataOwner::EnsureMemoryReporterRegistered()
 {
   sDataOwnerMutex.AssertCurrentThreadOwns();
   if (sMemoryReporterRegistered) {
     return;
   }
 
-  RegisterStrongMemoryReporter(new DOMFileImplMemoryDataOwnerMemoryReporter());
+  RegisterStrongMemoryReporter(new FileImplMemoryDataOwnerMemoryReporter());
 
   sMemoryReporterRegistered = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// DOMFileImplTemporaryFileBlob implementation
+// FileImplTemporaryFileBlob implementation
 
-NS_IMPL_ISUPPORTS_INHERITED0(DOMFileImplTemporaryFileBlob, DOMFileImpl)
+NS_IMPL_ISUPPORTS_INHERITED0(FileImplTemporaryFileBlob, FileImpl)
 
-already_AddRefed<DOMFileImpl>
-DOMFileImplTemporaryFileBlob::CreateSlice(uint64_t aStart, uint64_t aLength,
-                                          const nsAString& aContentType,
-                                          ErrorResult& aRv)
+already_AddRefed<FileImpl>
+FileImplTemporaryFileBlob::CreateSlice(uint64_t aStart, uint64_t aLength,
+                                       const nsAString& aContentType,
+                                       ErrorResult& aRv)
 {
   if (aStart + aLength > mLength) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
-  nsRefPtr<DOMFileImpl> impl =
-    new DOMFileImplTemporaryFileBlob(this, aStart + mStartPos,
-                                     aLength, aContentType);
+  nsRefPtr<FileImpl> impl =
+    new FileImplTemporaryFileBlob(this, aStart + mStartPos,
+                                  aLength, aContentType);
   return impl.forget();
 }
 
 nsresult
-DOMFileImplTemporaryFileBlob::GetInternalStream(nsIInputStream** aStream)
+FileImplTemporaryFileBlob::GetInternalStream(nsIInputStream** aStream)
 {
   nsCOMPtr<nsIInputStream> stream =
     new nsTemporaryFileInputStream(mFileDescOwner, mStartPos, mStartPos + mLength);
@@ -1235,7 +1233,7 @@ FileList::GetLength(uint32_t* aLength)
 NS_IMETHODIMP
 FileList::Item(uint32_t aIndex, nsIDOMFile **aFile)
 {
-  nsRefPtr<DOMFile> file = Item(aIndex);
+  nsRefPtr<File> file = Item(aIndex);
   file.forget(aFile);
   return NS_OK;
 }

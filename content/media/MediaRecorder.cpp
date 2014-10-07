@@ -15,11 +15,11 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/BlobEvent.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/RecordErrorEvent.h"
 #include "mozilla/dom/VideoStreamTrack.h"
 #include "nsError.h"
 #include "nsIDocument.h"
-#include "nsIDOMFile.h"
 #include "nsIPrincipal.h"
 #include "nsMimeTypes.h"
 #include "nsProxyRelease.h"
@@ -923,7 +923,7 @@ MediaRecorder::CreateAndDispatchBlobEvent(already_AddRefed<nsIDOMBlob>&& aBlob)
   init.mCancelable = false;
 
   nsCOMPtr<nsIDOMBlob> blob = aBlob;
-  init.mData = static_cast<DOMFile*>(blob.get());
+  init.mData = static_cast<File*>(blob.get());
 
   nsRefPtr<BlobEvent> event =
     BlobEvent::Constructor(this,

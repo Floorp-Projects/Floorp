@@ -7,7 +7,7 @@
 #include "DeviceStorageRequestChild.h"
 #include "DeviceStorageFileDescriptor.h"
 #include "nsDeviceStorage.h"
-#include "nsDOMFile.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 
 namespace mozilla {
@@ -103,8 +103,8 @@ DeviceStorageRequestChild::
     {
       BlobResponse r = aValue;
       BlobChild* actor = static_cast<BlobChild*>(r.blobChild());
-      nsRefPtr<DOMFileImpl> bloblImpl = actor->GetBlobImpl();
-      nsRefPtr<DOMFile> blob = new DOMFile(mRequest->GetParentObject(), bloblImpl);
+      nsRefPtr<FileImpl> bloblImpl = actor->GetBlobImpl();
+      nsRefPtr<File> blob = new File(mRequest->GetParentObject(), bloblImpl);
 
       AutoJSContext cx;
 

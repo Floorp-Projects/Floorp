@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMFile.h"
 #include "nsFormData.h"
 #include "nsIVariant.h"
 #include "nsIInputStream.h"
+#include "mozilla/dom/File.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/FormDataBinding.h"
 
@@ -73,7 +74,7 @@ nsFormData::Append(const nsAString& aName, const nsAString& aValue)
 }
 
 void
-nsFormData::Append(const nsAString& aName, DOMFile& aBlob,
+nsFormData::Append(const nsAString& aName, File& aBlob,
                    const Optional<nsAString>& aFilename)
 {
   nsString filename;
@@ -105,7 +106,7 @@ nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
     nsMemory::Free(iid);
 
     nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(supports);
-    nsRefPtr<DOMFile> blob = static_cast<DOMFile*>(domBlob.get());
+    nsRefPtr<File> blob = static_cast<File*>(domBlob.get());
     if (domBlob) {
       Optional<nsAString> temp;
       Append(aName, *blob, temp);

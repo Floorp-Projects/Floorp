@@ -30,7 +30,7 @@ class SourceSurface;
 
 namespace dom {
 
-class DOMFile;
+class File;
 class FileCallback;
 class HTMLCanvasPrintState;
 class PrintCallback;
@@ -102,9 +102,9 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::moz_opaque, aValue, aRv);
   }
-  already_AddRefed<DOMFile> MozGetAsFile(const nsAString& aName,
-                                         const nsAString& aType,
-                                         ErrorResult& aRv);
+  already_AddRefed<File> MozGetAsFile(const nsAString& aName,
+                                      const nsAString& aType,
+                                      ErrorResult& aRv);
   already_AddRefed<nsISupports> MozGetIPCContext(const nsAString& aContextId,
                                                  ErrorResult& aRv)
   {
