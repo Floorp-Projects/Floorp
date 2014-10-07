@@ -278,6 +278,33 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
+     * Displays a confirmation dialog using the specified strings.
+     *
+     * Callback parameters:
+     * - err null on success, non-null on unexpected failure to show the prompt.
+     * - {Boolean} True if the user chose the OK button.
+     */
+    confirm: {
+      enumerable: true,
+      writable: true,
+      value: function(bodyMessage, okButtonMessage, cancelButtonMessage, callback) {
+        try {
+          let buttonFlags =
+            (Ci.nsIPrompt.BUTTON_POS_0 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING) +
+            (Ci.nsIPrompt.BUTTON_POS_1 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING);
+
+          let chosenButton = Services.prompt.confirmEx(null, "",
+            bodyMessage, buttonFlags, okButtonMessage, cancelButtonMessage,
+            null, null, {});
+
+          callback(null, chosenButton == 0);
+        } catch (ex) {
+          callback(cloneValueInto(ex, targetWindow));
+        }
+      }
+    },
+
+    /**
      * Call to ensure that any necessary registrations for the Loop Service
      * have taken place.
      *

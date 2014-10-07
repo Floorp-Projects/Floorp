@@ -307,6 +307,26 @@ loop.contacts = (function(_, mozL10n) {
           this.props.startForm("contacts_edit", contact);
           break;
         case "remove":
+          navigator.mozLoop.confirm(
+            mozL10n.get("confirm_delete_contact_alert"),
+            mozL10n.get("confirm_delete_contact_remove_button"),
+            mozL10n.get("confirm_delete_contact_cancel_button"),
+            (err, result) => {
+              if (err) {
+                throw err;
+              }
+
+              if (!result) {
+                return;
+              }
+
+              navigator.mozLoop.contacts.remove(contact._guid, err => {
+                if (err) {
+                  throw err;
+                }
+              });
+            });
+          break;
         case "block":
         case "unblock":
           // Invoke the API named like the action.
