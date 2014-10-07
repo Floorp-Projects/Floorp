@@ -41,7 +41,6 @@
 #endif
 
 class AsyncVerifyRedirectCallbackForwarder;
-class BlobSet;
 class nsFormData;
 class nsIJARChannel;
 class nsILoadGroup;
@@ -51,6 +50,7 @@ class nsIJSID;
 namespace mozilla {
 
 namespace dom {
+class BlobSet;
 class File;
 }
 
@@ -676,7 +676,7 @@ protected:
   nsRefPtr<mozilla::dom::File> mDOMFile;
   // We stream data to mBlobSet when response type is "blob" or "moz-blob"
   // and mDOMFile is null.
-  nsAutoPtr<BlobSet> mBlobSet;
+  nsAutoPtr<mozilla::dom::BlobSet> mBlobSet;
 
   nsString mOverrideMimeType;
 

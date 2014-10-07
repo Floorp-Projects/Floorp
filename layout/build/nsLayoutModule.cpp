@@ -67,7 +67,6 @@
 #include "nsContentCreatorFunctions.h"
 
 // DOM includes
-#include "nsDOMBlobBuilder.h"
 #include "nsDOMFileReader.h"
 
 #include "nsFormData.h"
