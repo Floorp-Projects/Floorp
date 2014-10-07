@@ -181,8 +181,8 @@ PathBuildingStep::Check(const SECItem& potentialIssuerDER,
     return RecordResult(rv, keepGoing);
   }
 
-  rv = trustDomain.VerifySignedData(subject.GetSignedData(),
-                                    potentialIssuer.GetSubjectPublicKeyInfo());
+  rv = WrappedVerifySignedData(trustDomain, subject.GetSignedData(),
+                               potentialIssuer.GetSubjectPublicKeyInfo());
   if (rv != Success) {
     return RecordResult(rv, keepGoing);
   }
