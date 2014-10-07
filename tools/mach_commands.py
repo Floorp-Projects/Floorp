@@ -294,7 +294,7 @@ class PastebinProvider(object):
 
 @CommandProvider
 class ReviewboardToolsProvider(MachCommandBase):
-    @Command('rbt', category='devenv', allow_all_args=True,
+    @Command('rbt', category='devenv',
         description='Run Reviewboard Tools')
     @CommandArgument('args', nargs='...', help='Arguments to rbt tool')
     def rbt(self, args):
