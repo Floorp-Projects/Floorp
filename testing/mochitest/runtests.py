@@ -1845,7 +1845,7 @@ class Mochitest(MochitestUtilsMixin):
         self.stopVMwareRecording();
       self.stopServers()
 
-    processLeakLog(self.leak_report_file, options.leakThresholds, options.ignoreMissingLeaks)
+    processLeakLog(self.leak_report_file, options)
 
     if self.nsprLogs:
       with zipfile.ZipFile("%s/nsprlog.zip" % browserEnv["MOZ_UPLOAD_DIR"], "w", zipfile.ZIP_DEFLATED) as logzip:

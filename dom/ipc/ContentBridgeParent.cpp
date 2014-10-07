@@ -148,7 +148,7 @@ ContentBridgeParent::DeallocPBrowserParent(PBrowserParent* aParent)
 // This implementation is identical to ContentParent::GetCPOWManager but we can't
 // move it to nsIContentParent because it calls ManagedPJavaScriptParent() which
 // only exists in PContentParent and PContentBridgeParent.
-jsipc::JavaScriptParent*
+jsipc::JavaScriptShared*
 ContentBridgeParent::GetCPOWManager()
 {
   if (ManagedPJavaScriptParent().Length()) {
