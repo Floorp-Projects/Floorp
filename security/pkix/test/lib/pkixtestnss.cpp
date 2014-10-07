@@ -191,14 +191,14 @@ ByteString
 SHA1(const ByteString& toHash)
 {
   if (InitNSSIfNeeded() != Success) {
-    return ByteString();
+    return ENCODING_FAILED;
   }
 
   uint8_t digestBuf[SHA1_LENGTH];
   SECStatus srv = PK11_HashBuf(SEC_OID_SHA1, digestBuf, toHash.data(),
                                static_cast<int32_t>(toHash.length()));
   if (srv != SECSuccess) {
-    return ByteString();
+    return ENCODING_FAILED;
   }
   return ByteString(digestBuf, sizeof(digestBuf));
 }
