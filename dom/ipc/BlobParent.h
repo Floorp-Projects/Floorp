@@ -107,6 +107,9 @@ public:
     delete static_cast<BlobParent*>(aActor);
   }
 
+  static already_AddRefed<DOMFileImpl>
+  GetBlobImplForID(const nsID& aID);
+
   bool
   HasManager() const
   {
