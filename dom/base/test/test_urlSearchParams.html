@@ -6,7 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
 -->
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug 887836</title>
+  <title>Test for URLSearchParams</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     var u = new URLSearchParams();
     ok(u, "URLSearchParams created");
     is(u.has('foo'), false, 'URLSearchParams.has(foo)');
-    is(u.get('foo'), '', 'URLSearchParams.get(foo)');
+    is(u.get('foo'), null, 'URLSearchParams.get(foo)');
     is(u.getAll('foo').length, 0, 'URLSearchParams.getAll(foo)');
 
     u.append('foo', 'bar');
@@ -275,6 +275,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     runTest();
   }
 
+  function testGetNULL() {
+      
+    var u = new URLSearchParams();
+    is(typeof u.get(''), "object", "typeof URL.searchParams.get('')");
+    is(u.get(''), null, "URL.searchParams.get('') should be null");
+
+    var url = new URL('http://www.example.net?a=b');
+    is(url.searchParams.get('b'), null, "URL.searchParams.get('b') should be null");
+    is(url.searchParams.get('a'), 'b', "URL.searchParams.get('a')");
+
+    runTest();
+  }
+
   var tests = [
     testSimpleURLSearchParams,
     testCopyURLSearchParams,
@@ -285,7 +298,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     testEncoding,
     testMultiURL,
     testOrdering,
-    testDelete
+    testDelete,
+    testGetNULL
   ];
 
   function runTest() {
