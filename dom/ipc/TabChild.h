@@ -138,6 +138,11 @@ public:
   virtual nsIPrincipal* GetPrincipal() MOZ_OVERRIDE;
   virtual JSObject* GetGlobalJSObject() MOZ_OVERRIDE;
 
+  virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE
+  {
+    MOZ_CRASH("TabChildGlobal doesn't use DOM bindings!");
+  }
+
   nsCOMPtr<nsIContentFrameMessageManager> mMessageManager;
   nsRefPtr<TabChildBase> mTabChild;
 
