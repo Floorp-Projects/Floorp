@@ -360,7 +360,6 @@ public:
                               const int32_t&  aModifiers,
                               const bool&     aPreventDefault) MOZ_OVERRIDE;
     virtual bool RecvCompositionEvent(const mozilla::WidgetCompositionEvent& event) MOZ_OVERRIDE;
-    virtual bool RecvTextEvent(const mozilla::WidgetCompositionEvent& event) MOZ_OVERRIDE;
     virtual bool RecvSelectionEvent(const mozilla::WidgetSelectionEvent& event) MOZ_OVERRIDE;
     virtual bool RecvActivateFrameEvent(const nsString& aType, const bool& capture) MOZ_OVERRIDE;
     virtual bool RecvLoadRemoteScript(const nsString& aURL,
