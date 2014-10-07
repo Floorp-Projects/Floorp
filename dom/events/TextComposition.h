@@ -50,12 +50,13 @@ public:
   const nsString& LastData() const { return mLastData; }
   // The composition string which is already handled by the focused editor.
   // I.e., this value must be same as the composition string on the focused
-  // editor.  This value is modified at a call of EditorDidHandleTextEvent().
+  // editor.  This value is modified at a call of
+  // EditorDidHandleCompositionChangeEvent().
   // Note that mString and mLastData are different between dispatcing
   // compositionupdate and compositionchange event handled by focused editor.
   const nsString& String() const { return mString; }
   // Returns the clauses and/or caret range of the composition string.
-  // This is modified at a call of EditorWillHandleTextEvent().
+  // This is modified at a call of EditorWillHandleCompositionChangeEvent().
   // This may return null if there is no clauses and caret.
   // XXX We should return |const TextRangeArray*| here, but it causes compile
   //     error due to inaccessible Release() method.
@@ -124,30 +125,33 @@ public:
   void EndHandlingComposition(nsIEditor* aEditor);
 
   /**
-   * TextEventHandlingMarker class should be created at starting to handle text
-   * event in focused editor.  This calls EditorWillHandleTextEvent() and
-   * EditorDidHandleTextEvent() automatically.
+   * CompositionChangeEventHandlingMarker class should be created at starting
+   * to handle text event in focused editor.  This calls
+   * EditorWillHandleCompositionChangeEvent() and
+   * EditorDidHandleCompositionChangeEvent() automatically.
    */
-  class MOZ_STACK_CLASS TextEventHandlingMarker
+  class MOZ_STACK_CLASS CompositionChangeEventHandlingMarker
   {
   public:
-    TextEventHandlingMarker(
+    CompositionChangeEventHandlingMarker(
       TextComposition* aComposition,
       const WidgetCompositionEvent* aCompositionChangeEvent)
       : mComposition(aComposition)
     {
-      mComposition->EditorWillHandleTextEvent(aCompositionChangeEvent);
+      mComposition->EditorWillHandleCompositionChangeEvent(
+                      aCompositionChangeEvent);
     }
 
-    ~TextEventHandlingMarker()
+    ~CompositionChangeEventHandlingMarker()
     {
-      mComposition->EditorDidHandleTextEvent();
+      mComposition->EditorDidHandleCompositionChangeEvent();
     }
 
   private:
     nsRefPtr<TextComposition> mComposition;
-    TextEventHandlingMarker();
-    TextEventHandlingMarker(const TextEventHandlingMarker& aOther);
+    CompositionChangeEventHandlingMarker();
+    CompositionChangeEventHandlingMarker(
+      const CompositionChangeEventHandlingMarker& aOther);
   };
 
 private:
@@ -233,17 +237,17 @@ private:
   bool HasEditor() const;
 
   /**
-   * EditorWillHandleTextEvent() must be called before the focused editor
-   * handles the compositionchange event.
+   * EditorWillHandleCompositionChangeEvent() must be called before the focused
+   * editor handles the compositionchange event.
    */
-  void EditorWillHandleTextEvent(
+  void EditorWillHandleCompositionChangeEvent(
          const WidgetCompositionEvent* aCompositionChangeEvent);
 
   /**
-   * EditorDidHandleTextEvent() must be called after the focused editor handles
-   * a compositionchange event.
+   * EditorDidHandleCompositionChangeEvent() must be called after the focused
+   * editor handles a compositionchange event.
    */
-  void EditorDidHandleTextEvent();
+  void EditorDidHandleCompositionChangeEvent();
 
   /**
    * DispatchEvent() dispatches the aEvent to the mContent synchronously.

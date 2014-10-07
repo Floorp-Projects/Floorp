@@ -180,8 +180,8 @@ TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
   // Emulate editor behavior of compositionchange event (DOM text event) handler
   // if no editor handles composition events.
   if (aEvent->message == NS_COMPOSITION_CHANGE && !HasEditor()) {
-    EditorWillHandleTextEvent(aEvent->AsCompositionEvent());
-    EditorDidHandleTextEvent();
+    EditorWillHandleCompositionChangeEvent(aEvent->AsCompositionEvent());
+    EditorDidHandleCompositionChangeEvent();
   }
 
 #ifdef DEBUG
@@ -264,9 +264,8 @@ TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard)
       mIsRequestingCommit = true;
     }
     if (!mIsSynthesizedForTests) {
-      // FYI: CompositionEvent and TextEvent caused by a call of NotifyIME()
-      //      may be discarded by PresShell if it's not safe to dispatch the
-      //      event.
+      // FYI: CompositionEvents caused by a call of NotifyIME() may be
+      //      discarded by PresShell if it's not safe to dispatch the event.
       nsresult rv =
         aWidget->NotifyIME(IMENotification(aDiscard ?
                                              REQUEST_TO_CANCEL_COMPOSITION :
@@ -339,7 +338,7 @@ TextComposition::NotifyIME(IMEMessage aMessage)
 }
 
 void
-TextComposition::EditorWillHandleTextEvent(
+TextComposition::EditorWillHandleCompositionChangeEvent(
                    const WidgetCompositionEvent* aCompositionChangeEvent)
 {
   mIsComposing = aCompositionChangeEvent->IsComposing();
@@ -352,7 +351,7 @@ TextComposition::EditorWillHandleTextEvent(
 }
 
 void
-TextComposition::EditorDidHandleTextEvent()
+TextComposition::EditorDidHandleCompositionChangeEvent()
 {
   mString = mLastData;
   mIsEditorHandlingEvent = false;

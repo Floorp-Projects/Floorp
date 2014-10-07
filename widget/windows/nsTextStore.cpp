@@ -2441,16 +2441,16 @@ nsTextStore::RecordCompositionUpdateAction()
 
 HRESULT
 nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
-                                  bool aDispatchTextEvent)
+                                  bool aDispatchCompositionChangeEvent)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::SetSelectionInternal(pSelection={ "
           "acpStart=%ld, acpEnd=%ld, style={ ase=%s, fInterimChar=%s} }, "
-          "aDispatchTextEvent=%s), mComposition.IsComposing()=%s",
+          "aDispatchCompositionChangeEvent=%s), mComposition.IsComposing()=%s",
           this, pSelection->acpStart, pSelection->acpEnd,
           GetActiveSelEndName(pSelection->style.ase),
           GetBoolName(pSelection->style.fInterimChar),
-          GetBoolName(aDispatchTextEvent),
+          GetBoolName(aDispatchCompositionChangeEvent),
           GetBoolName(mComposition.IsComposing())));
 
   MOZ_ASSERT(IsReadWriteLocked());
@@ -2464,7 +2464,7 @@ nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
   }
 
   if (mComposition.IsComposing()) {
-    if (aDispatchTextEvent) {
+    if (aDispatchCompositionChangeEvent) {
       HRESULT hr = RestartCompositionIfNecessary();
       if (FAILED(hr)) {
         PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -2482,7 +2482,7 @@ nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
     }
     // Emulate selection during compositions
     currentSel.SetSelection(*pSelection);
-    if (aDispatchTextEvent) {
+    if (aDispatchCompositionChangeEvent) {
       HRESULT hr = RecordCompositionUpdateAction();
       if (FAILED(hr)) {
         PR_LOG(sTextStoreLog, PR_LOG_ERROR,

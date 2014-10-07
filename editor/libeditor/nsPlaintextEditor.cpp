@@ -862,17 +862,17 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // NOTE: TextComposition should receive selection change notification before
-  //       TextEventHandlingMarker notifies TextComposition of the end of
-  //       handling compositionchange event because TextComposition may need to
-  //       ignore selection changes caused by composition.  Therefore,
-  //       TextEventHandlingMarker must be destroyed after a call of
-  //       NotifiyEditorObservers(eNotifyEditorObserversOfEnd) or
+  //       CompositionChangeEventHandlingMarker notifies TextComposition of the
+  //       end of handling compositionchange event because TextComposition may
+  //       need to ignore selection changes caused by composition.  Therefore,
+  //       CompositionChangeEventHandlingMarker must be destroyed after a call
+  //       of NotifiyEditorObservers(eNotifyEditorObserversOfEnd) or
   //       NotifiyEditorObservers(eNotifyEditorObserversOfCancel) which notifies
   //       TextComposition of a selection change.
   MOZ_ASSERT(!mPlaceHolderBatch,
     "UpdateIMEComposition() must be called without place holder batch");
-  TextComposition::TextEventHandlingMarker
-    textEventHandlingMarker(mComposition, compositionChangeEvent);
+  TextComposition::CompositionChangeEventHandlingMarker
+    compositionChangeEventHandlingMarker(mComposition, compositionChangeEvent);
 
   NotifyEditorObservers(eNotifyEditorObserversOfBefore);
 
