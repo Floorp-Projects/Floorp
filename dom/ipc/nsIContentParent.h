@@ -33,7 +33,7 @@ namespace dom {
 class BlobConstructorParams;
 class BlobParent;
 class ContentParent;
-class DOMFile;
+class File;
 class IPCTabContext;
 class PBlobParent;
 class PBrowserParent;
@@ -47,7 +47,7 @@ public:
 
   nsIContentParent();
 
-  BlobParent* GetOrCreateActorForBlob(DOMFile* aBlob);
+  BlobParent* GetOrCreateActorForBlob(File* aBlob);
 
   virtual uint64_t ChildID() = 0;
   virtual bool IsForApp() = 0;

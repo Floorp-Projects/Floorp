@@ -6,8 +6,8 @@
 #include "URL.h"
 
 #include "nsGlobalWindow.h"
-#include "nsDOMFile.h"
 #include "DOMMediaStream.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/MediaSource.h"
 #include "mozilla/dom/URLBinding.h"
 #include "nsHostObjectProtocolHandler.h"
@@ -111,7 +111,7 @@ URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
 
 void
 URL::CreateObjectURL(const GlobalObject& aGlobal,
-                     DOMFile& aBlob,
+                     File& aBlob,
                      const objectURLOptions& aOptions,
                      nsString& aResult,
                      ErrorResult& aError)

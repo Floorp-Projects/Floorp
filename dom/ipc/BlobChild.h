@@ -25,7 +25,7 @@ class PBackgroundChild;
 namespace dom {
 
 class ContentChild;
-class DOMFileImpl;
+class FileImpl;
 class nsIContentChild;
 class PBlobStreamChild;
 
@@ -37,7 +37,7 @@ class BlobChild MOZ_FINAL
   class RemoteBlobImpl;
   friend class RemoteBlobImpl;
 
-  DOMFileImpl* mBlobImpl;
+  FileImpl* mBlobImpl;
   RemoteBlobImpl* mRemoteBlobImpl;
 
   // One of these will be null and the other non-null.
@@ -58,10 +58,10 @@ public:
 
   // These create functions are called on the sending side.
   static BlobChild*
-  GetOrCreate(nsIContentChild* aManager, DOMFileImpl* aBlobImpl);
+  GetOrCreate(nsIContentChild* aManager, FileImpl* aBlobImpl);
 
   static BlobChild*
-  GetOrCreate(PBackgroundChild* aManager, DOMFileImpl* aBlobImpl);
+  GetOrCreate(PBackgroundChild* aManager, FileImpl* aBlobImpl);
 
   // These create functions are called on the receiving side.
   static BlobChild*
@@ -98,11 +98,11 @@ public:
   const nsID&
   ParentID() const;
 
-  // Get the DOMFileImpl associated with this actor. This may always be called
+  // Get the FileImpl associated with this actor. This may always be called
   // on the sending side. It may also be called on the receiving side unless
   // this is a "mystery" blob that has not yet received a SetMysteryBlobInfo()
   // call.
-  already_AddRefed<DOMFileImpl>
+  already_AddRefed<FileImpl>
   GetBlobImpl();
 
   // Use this for files.
@@ -126,9 +126,9 @@ public:
 
 private:
   // These constructors are called on the sending side.
-  BlobChild(nsIContentChild* aManager, DOMFileImpl* aBlobImpl);
+  BlobChild(nsIContentChild* aManager, FileImpl* aBlobImpl);
 
-  BlobChild(PBackgroundChild* aManager, DOMFileImpl* aBlobImpl);
+  BlobChild(PBackgroundChild* aManager, FileImpl* aBlobImpl);
 
   BlobChild(nsIContentChild* aManager, BlobChild* aOther);
 
@@ -145,7 +145,7 @@ private:
   ~BlobChild();
 
   void
-  CommonInit(DOMFileImpl* aBlobImpl);
+  CommonInit(FileImpl* aBlobImpl);
 
   void
   CommonInit(BlobChild* aOther);
@@ -155,7 +155,7 @@ private:
 
   template <class ChildManagerType>
   static BlobChild*
-  GetOrCreateFromImpl(ChildManagerType* aManager, DOMFileImpl* aBlobImpl);
+  GetOrCreateFromImpl(ChildManagerType* aManager, FileImpl* aBlobImpl);
 
   template <class ChildManagerType>
   static BlobChild*

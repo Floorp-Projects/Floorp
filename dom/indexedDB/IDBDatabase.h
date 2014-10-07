@@ -29,7 +29,7 @@ class EventChainPostVisitor;
 
 namespace dom {
 
-class DOMFile;
+class File;
 class DOMStringList;
 struct IDBObjectStoreParameters;
 template <typename> class Sequence;
@@ -174,13 +174,13 @@ public:
   AbortTransactions();
 
   PBackgroundIDBDatabaseFileChild*
-  GetOrCreateFileActorForBlob(DOMFile* aBlob);
+  GetOrCreateFileActorForBlob(File* aBlob);
 
   void
   NoteFinishedFileActor(PBackgroundIDBDatabaseFileChild* aFileActor);
 
   void
-  NoteReceivedBlob(DOMFile* aBlob);
+  NoteReceivedBlob(File* aBlob);
 
   void
   DelayedMaybeExpireFileActors();

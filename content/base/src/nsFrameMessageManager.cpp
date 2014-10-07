@@ -27,10 +27,10 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIDOMClassInfo.h"
-#include "nsIDOMFile.h"
 #include "xpcpublic.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -204,7 +204,7 @@ BuildClonedMessageData(typename BlobTraits<Flavor>::ConcreteContentManagerType* 
   SerializedStructuredCloneBuffer& buffer = aClonedData.data();
   buffer.data = aData.mData;
   buffer.dataLength = aData.mDataLength;
-  const nsTArray<nsRefPtr<DOMFile>>& blobs = aData.mClosure.mBlobs;
+  const nsTArray<nsRefPtr<File>>& blobs = aData.mClosure.mBlobs;
   if (!blobs.IsEmpty()) {
     typedef typename BlobTraits<Flavor>::ProtocolType ProtocolType;
     InfallibleTArray<ProtocolType*>& blobList = DataBlobs<Flavor>::Blobs(aClonedData);
@@ -256,12 +256,12 @@ UnpackClonedMessageData(const ClonedMessageData& aData)
         static_cast<typename BlobTraits<Flavor>::BlobType*>(blobs[i]);
       MOZ_ASSERT(blob);
 
-      nsRefPtr<DOMFileImpl> blobImpl = blob->GetBlobImpl();
+      nsRefPtr<FileImpl> blobImpl = blob->GetBlobImpl();
       MOZ_ASSERT(blobImpl);
 
       // This object will be duplicated with a correct parent before being
       // exposed to JS.
-      nsRefPtr<DOMFile> domBlob = new DOMFile(nullptr, blobImpl);
+      nsRefPtr<File> domBlob = new File(nullptr, blobImpl);
       cloneData.mClosure.mBlobs.AppendElement(domBlob);
     }
   }

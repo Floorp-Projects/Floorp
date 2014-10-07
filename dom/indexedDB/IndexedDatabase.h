@@ -19,7 +19,7 @@ class nsIInputStream;
 namespace mozilla {
 namespace dom {
 
-class DOMFile;
+class File;
 
 namespace indexedDB {
 
@@ -31,7 +31,7 @@ class SerializedStructuredCloneWriteInfo;
 
 struct StructuredCloneFile
 {
-  nsRefPtr<DOMFile> mFile;
+  nsRefPtr<File> mFile;
   nsRefPtr<FileInfo> mFileInfo;
 
   // In IndexedDatabaseInlines.h

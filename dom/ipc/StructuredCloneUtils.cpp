@@ -11,7 +11,7 @@
 #include "nsIXPConnect.h"
 
 #include "mozilla/dom/BlobBinding.h"
-#include "nsDOMFile.h"
+#include "mozilla/dom/File.h"
 #include "nsContentUtils.h"
 #include "nsJSEnvironment.h"
 #include "MainThreadUtils.h"
@@ -40,7 +40,7 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
     static_cast<StructuredCloneClosure*>(aClosure);
 
   if (aTag == SCTAG_DOM_BLOB) {
-    // nsRefPtr<DOMFile> needs to go out of scope before toObjectOrNull() is
+    // nsRefPtr<File> needs to go out of scope before toObjectOrNull() is
     // called because the static analysis thinks dereferencing XPCOM objects
     // can GC (because in some cases it can!), and a return statement with a
     // JSObject* type means that JSObject* is on the stack as a raw pointer
@@ -48,7 +48,7 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
     JS::Rooted<JS::Value> val(aCx);
     {
       MOZ_ASSERT(aData < closure->mBlobs.Length());
-      nsRefPtr<DOMFile> blob = closure->mBlobs[aData];
+      nsRefPtr<File> blob = closure->mBlobs[aData];
 
 #ifdef DEBUG
       {
@@ -63,7 +63,7 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
       nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
       MOZ_ASSERT(global);
 
-      nsRefPtr<DOMFile> newBlob = new DOMFile(global, blob->Impl());
+      nsRefPtr<File> newBlob = new File(global, blob->Impl());
       if (!WrapNewBindingObject(aCx, newBlob, &val)) {
         return nullptr;
       }
@@ -85,9 +85,9 @@ Write(JSContext* aCx, JSStructuredCloneWriter* aWriter,
   StructuredCloneClosure* closure =
     static_cast<StructuredCloneClosure*>(aClosure);
 
-  // See if the wrapped native is a DOMFile/Blob.
+  // See if the wrapped native is a File/Blob.
   {
-    DOMFile* blob = nullptr;
+    File* blob = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob)) &&
         NS_SUCCEEDED(blob->SetMutable(false)) &&
         JS_WriteUint32Pair(aWriter, SCTAG_DOM_BLOB,

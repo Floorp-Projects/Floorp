@@ -33,7 +33,7 @@ class PBackgroundParent;
 namespace dom {
 
 class ContentParent;
-class DOMFileImpl;
+class FileImpl;
 class nsIContentParent;
 class PBlobStreamParent;
 
@@ -57,7 +57,7 @@ class BlobParent MOZ_FINAL
   static StaticAutoPtr<IDTable> sIDTable;
   static StaticAutoPtr<Mutex> sIDTableMutex;
 
-  DOMFileImpl* mBlobImpl;
+  FileImpl* mBlobImpl;
   RemoteBlobImplBase* mRemoteBlobImpl;
 
   // One of these will be null and the other non-null.
@@ -87,10 +87,10 @@ public:
 
   // These create functions are called on the sending side.
   static BlobParent*
-  GetOrCreate(nsIContentParent* aManager, DOMFileImpl* aBlobImpl);
+  GetOrCreate(nsIContentParent* aManager, FileImpl* aBlobImpl);
 
   static BlobParent*
-  GetOrCreate(PBackgroundParent* aManager, DOMFileImpl* aBlobImpl);
+  GetOrCreate(PBackgroundParent* aManager, FileImpl* aBlobImpl);
 
   // These create functions are called on the receiving side.
   static BlobParent*
@@ -125,8 +125,8 @@ public:
     return mContentManager;
   }
 
-  // Get the DOMFileImpl associated with this actor.
-  already_AddRefed<DOMFileImpl>
+  // Get the FileImpl associated with this actor.
+  already_AddRefed<FileImpl>
   GetBlobImpl();
 
   void
@@ -165,7 +165,7 @@ private:
   template <class ParentManagerType>
   static BlobParent*
   GetOrCreateFromImpl(ParentManagerType* aManager,
-                      DOMFileImpl* aBlobImpl);
+                      FileImpl* aBlobImpl);
 
   template <class ParentManagerType>
   static BlobParent*
