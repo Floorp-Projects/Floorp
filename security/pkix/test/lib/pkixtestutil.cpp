@@ -37,6 +37,13 @@ using namespace std;
 
 namespace mozilla { namespace pkix { namespace test {
 
+// python DottedOIDToCode.py --alg sha256WithRSAEncryption 1.2.840.113549.1.1.11
+static const uint8_t alg_sha256WithRSAEncryption[] = {
+  0x30, 0x0b, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b
+};
+const ByteString sha256WithRSAEncryption(alg_sha256WithRSAEncryption,
+  MOZILLA_PKIX_ARRAY_LENGTH(alg_sha256WithRSAEncryption));
+
 namespace {
 
 inline void
@@ -69,19 +76,6 @@ OpenFile(const string& dir, const string& filename, const string& mode)
 }
 
 } // unnamed namespace
-
-bool
-InputEqualsByteString(Input input, const ByteString& bs)
-{
-  Input bsInput;
-  if (bsInput.Init(bs.data(), bs.length()) != Success) {
-    // Init can only fail if it is given a bad pointer or if the input is too
-    // long, which won't ever happen. Plus, if it does, it is ok to call abort
-    // since this is only test code.
-    abort();
-  }
-  return InputsAreEqual(input, bsInput);
-}
 
 Result
 TamperOnce(/*in/out*/ ByteString& item, const ByteString& from,
@@ -136,7 +130,6 @@ OCSPResponseContext::OCSPResponseContext(const CertID& certID, time_t time)
   , producedAt(time)
   , extensions(nullptr)
   , includeEmptyExtensions(false)
-  , signatureAlgorithm(sha256WithRSAEncryption)
   , badSignature(false)
   , certs(nullptr)
 
@@ -765,7 +758,7 @@ BasicOCSPResponse(OCSPResponseContext& context)
 
   // TODO(bug 980538): certs
   return SignedData(tbsResponseData, context.signerKeyPair.get(),
-                    context.signatureAlgorithm,
+                    sha256WithRSAEncryption,
                     context.badSignature, context.certs);
 }
 
