@@ -797,8 +797,8 @@ TextureParent::ClearTextureHost()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static RefPtr<NewTextureSource>
-ShSurfToTexSource(gl::SharedSurface* abstractSurf, Compositor* compositor)
+static RefPtr<TextureSource>
+SharedSurfaceToTexSource(gl::SharedSurface* abstractSurf, Compositor* compositor)
 {
   MOZ_ASSERT(abstractSurf);
   MOZ_ASSERT(abstractSurf->mType != gl::SharedSurfaceType::Basic);
@@ -811,7 +811,7 @@ ShSurfToTexSource(gl::SharedSurface* abstractSurf, Compositor* compositor)
   gfx::SurfaceFormat format = abstractSurf->mHasAlpha ? gfx::SurfaceFormat::R8G8B8A8
                                                       : gfx::SurfaceFormat::R8G8B8X8;
 
-  RefPtr<NewTextureSource> texSource;
+  RefPtr<TextureSource> texSource;
   switch (abstractSurf->mType) {
 #ifdef XP_WIN
     case gl::SharedSurfaceType::EGLSurfaceANGLE: {
@@ -919,7 +919,7 @@ SharedSurfaceTextureHost::EnsureTexSource()
     return;
 
   mSurf->WaitSync();
-  mTexSource = ShSurfToTexSource(mSurf, mCompositor);
+  mTexSource = SharedSurfaceToTexSource(mSurf, mCompositor);
   MOZ_ASSERT(mTexSource);
 }
 
