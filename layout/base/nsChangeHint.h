@@ -290,6 +290,9 @@ enum nsRestyleHint {
   eRestyle_Self = (1<<0),
 
   // Rerun selector matching on the element and all of its descendants.
+  // (Implies eRestyle_ForceDescendants, which ensures that we continue
+  // the restyling process for all descendants, but doesn't cause
+  // selector matching.)
   eRestyle_Subtree = (1<<1),
 
   // Rerun selector matching on all later siblings of the element and
@@ -342,7 +345,9 @@ enum nsRestyleHint {
 
   // Continue the restyling process to all of the current frame's
   // descendants, even if any frame's restyling resulted in no style
-  // changes.  (Implies eRestyle_Force.)
+  // changes.  (Implies eRestyle_Force.)  Note that this is weaker than
+  // eRestyle_Subtree, which makes us rerun selector matching on all
+  // descendants rather than just continuing the restyling process.
   eRestyle_ForceDescendants = (1<<9),
 };
 
