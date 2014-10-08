@@ -8,6 +8,7 @@
 #define mozilla_dom_archivereader_domarchivefile_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/File.h"
 
 #include "ArchiveReader.h"
