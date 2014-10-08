@@ -642,10 +642,10 @@ function runTest(testNum) {
         // Context menu for selected text in input[type="password"]
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
-                          "context-cut",         true,
-                          "context-copy",        true,
+                          "context-cut",         false,
+                          "context-copy",        false,
                           "context-paste",       null, // ignore clipboard state
-                          "context-delete",      true,
+                          "context-delete",      false,
                           "---",                 null,
                           "context-selectall",   true,
                           "---",                 null,
