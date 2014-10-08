@@ -28,6 +28,7 @@
 #include "nsFocusManager.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "nsAttrValueOrString.h"
+#include "imgLoader.h"
 
 // Responsive images!
 #include "mozilla/dom/HTMLSourceElement.h"
@@ -1095,8 +1096,15 @@ HTMLImageElement::TryCreateResponsiveSelector(nsIContent *aSourceNode,
     MOZ_ASSERT(IsPreviousSibling(aSourceNode, this));
     MOZ_ASSERT(pictureEnabled);
 
+    // Check media and type
     HTMLSourceElement *src = static_cast<HTMLSourceElement*>(aSourceNode);
     if (!src->MatchesCurrentMedia()) {
+      return false;
+    }
+
+    nsAutoString type;
+    if (aSourceNode->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
+        !imgLoader::SupportImageWithMimeType(NS_ConvertUTF16toUTF8(type).get())) {
       return false;
     }
   } else if (aSourceNode->Tag() == nsGkAtoms::img) {
