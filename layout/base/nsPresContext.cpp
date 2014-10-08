@@ -945,6 +945,8 @@ nsPresContext::UpdateAfterPreferencesChanged()
     NS_UpdateHint(hint, NS_STYLE_HINT_REFLOW);
   }
 
+  // Preferences require rerunning selector matching because we rebuild
+  // the pref style sheet for some preference changes.
   RebuildAllStyleData(hint, eRestyle_Subtree);
 }
 
