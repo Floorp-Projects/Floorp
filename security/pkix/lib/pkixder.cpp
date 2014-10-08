@@ -234,7 +234,8 @@ SignatureAlgorithmOIDValue(Reader& algorithmID,
     // XXX(bug 1042479): recognize this old OID for compatibility.
     algorithm = SignatureAlgorithm::rsa_pkcs1_with_sha1;
   } else {
-    algorithm = SignatureAlgorithm::unsupported_algorithm;
+    // Any MD5-based signature algorithm, or any unknown signature algorithm.
+    return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
   }
 
   return Success;

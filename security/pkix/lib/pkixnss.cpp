@@ -134,7 +134,6 @@ VerifySignedData(const SignedDataWithSignature& sd,
       pubKeyAlg = SEC_OID_ANSIX9_DSA_SIGNATURE;
       digestAlg = SEC_OID_SHA1;
       break;
-    case SignatureAlgorithm::unsupported_algorithm:
     default:
       PR_NOT_REACHED("unknown signature algorithm");
       return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
