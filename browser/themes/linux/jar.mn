@@ -22,6 +22,7 @@ browser.jar:
   skin/classic/browser/aboutTabCrashed.css
   skin/classic/browser/actionicon-tab.png
 * skin/classic/browser/browser.css
+* skin/classic/browser/devedition.css
 * skin/classic/browser/browser-lightweightTheme.css
   skin/classic/browser/click-to-play-warning-stripes.png
 * skin/classic/browser/content-contextmenu.svg
