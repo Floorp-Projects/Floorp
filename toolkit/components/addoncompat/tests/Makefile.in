@@ -1,0 +1,15 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include $(topsrcdir)/config/rules.mk
+
+# This is so hacky. Waiting on bug 988938.
+addondir = $(srcdir)/addon
+TESTROOT = $(CURDIR)/$(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+testdir = $(TESTROOT)/browser
+
+libs::
+	$(EXIT_ON_ERROR) \
+	$(NSINSTALL) -D $(testdir); \
+	(cd $(addondir) && zip -qr $(testdir)/addon.xpi *)

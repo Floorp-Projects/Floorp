@@ -858,6 +858,8 @@ LayerTransactionParent::DeallocPTextureParent(PTextureParent* actor)
 bool
 LayerTransactionParent::RecvChildAsyncMessages(const InfallibleTArray<AsyncChildMessageData>& aMessages)
 {
+  AutoLayerTransactionParentAsyncMessageSender autoAsyncMessageSender(this);
+
   for (AsyncChildMessageArray::index_type i = 0; i < aMessages.Length(); ++i) {
     const AsyncChildMessageData& message = aMessages[i];
 
@@ -886,6 +888,30 @@ LayerTransactionParent::RecvChildAsyncMessages(const InfallibleTArray<AsyncChild
       case AsyncChildMessageData::TOpReplyDeliverFence: {
         const OpReplyDeliverFence& op = message.get_OpReplyDeliverFence();
         TransactionCompleteted(op.transactionId());
+        break;
+      }
+      case AsyncChildMessageData::TOpRemoveTextureAsync: {
+        const OpRemoveTextureAsync& op = message.get_OpRemoveTextureAsync();
+        CompositableHost* compositable = CompositableHost::FromIPDLActor(op.compositableParent());
+        RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
+
+        MOZ_ASSERT(tex.get());
+        compositable->RemoveTextureHost(tex);
+
+        // send FenceHandle if present via ImageBridge.
+        ImageBridgeParent::SendFenceHandleToTrackerIfPresent(
+                             GetChildProcessId(),
+                             op.holderId(),
+                             op.transactionId(),
+                             op.textureParent(),
+                             compositable);
+
+        // Send message back via PImageBridge.
+        ImageBridgeParent::ReplyRemoveTexture(
+                             GetChildProcessId(),
+                             OpReplyRemoveTexture(true, // isMain
+                                                  op.holderId(),
+                                                  op.transactionId()));
         break;
       }
       default:

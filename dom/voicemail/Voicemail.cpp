@@ -33,7 +33,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_FORWARD_SAFE_NSIVOICEMAILLISTENER(mVoicemail)
 
-  Listener(Voicemail* aVoicemail)
+  explicit Listener(Voicemail* aVoicemail)
     : mVoicemail(aVoicemail)
   {
     MOZ_ASSERT(mVoicemail);

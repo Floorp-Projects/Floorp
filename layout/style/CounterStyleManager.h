@@ -107,7 +107,7 @@ protected:
 class AnonymousCounterStyle MOZ_FINAL : public CounterStyle
 {
 public:
-  AnonymousCounterStyle(const nsCSSValue::Array* aValue);
+  explicit AnonymousCounterStyle(const nsCSSValue::Array* aValue);
 
   virtual void GetPrefix(nsAString& aResult) MOZ_OVERRIDE;
   virtual void GetSuffix(nsAString& aResult) MOZ_OVERRIDE;

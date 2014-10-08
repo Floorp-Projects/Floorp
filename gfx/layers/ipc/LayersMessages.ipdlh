@@ -492,6 +492,7 @@ union AsyncParentMessageData {
 union AsyncChildMessageData {
   OpDeliverFenceFromChild;
   OpReplyDeliverFence;
+  OpRemoveTextureAsync;
 };
 
 } // namespace

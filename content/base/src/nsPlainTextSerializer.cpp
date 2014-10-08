@@ -1873,7 +1873,7 @@ struct interval
 struct CombiningComparator
 {
   const char16_t mUcs;
-  CombiningComparator(char16_t ucs) : mUcs(ucs) {}
+  explicit CombiningComparator(char16_t aUcs) : mUcs(aUcs) {}
   int operator()(const interval& combining) const {
     if (mUcs > combining.last)
       return 1;

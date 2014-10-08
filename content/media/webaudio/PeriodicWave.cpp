@@ -38,9 +38,9 @@ PeriodicWave::PeriodicWave(AudioContext* aContext,
     return;
   }
   PodCopy(buffer, aRealData, aLength);
-  mCoefficients->SetData(0, buffer, buffer);
+  mCoefficients->SetData(0, buffer, free, buffer);
   PodCopy(buffer+aLength, aImagData, aLength);
-  mCoefficients->SetData(1, nullptr, buffer+aLength);
+  mCoefficients->SetData(1, nullptr, free, buffer+aLength);
 }
 
 size_t

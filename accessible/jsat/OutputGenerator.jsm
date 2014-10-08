@@ -385,6 +385,14 @@ let OutputGenerator = {
         this._addLandmark(output, aAccessible);
         return output;
       }
+    },
+
+    gridcell: function gridcell(aAccessible, aRoleStr, aState, aFlags) {
+      let output = [];
+      this._addState(output, aState);
+      this._addName(output, aAccessible, aFlags);
+      this._addLandmark(output, aAccessible);
+      return output;
     }
   }
 };

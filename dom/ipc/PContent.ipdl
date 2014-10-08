@@ -319,7 +319,7 @@ union MaybeFileDesc {
     void_t;
 };
 
-intr protocol PContent
+prio(normal upto high) intr protocol PContent
 {
     parent opens PCompositor;
     parent opens PSharedBufferManager;
@@ -537,7 +537,7 @@ parent:
 
     PNecko();
 
-    rpc PScreenManager()
+    prio(high) sync PScreenManager()
         returns (uint32_t numberOfScreens,
                  float systemDefaultScale,
                  bool success);
@@ -577,8 +577,8 @@ parent:
                      CpowEntry[] aCpows, Principal aPrincipal)
       returns (nsString[] retval);
 
-    rpc RpcMessage(nsString aMessage, ClonedMessageData aData,
-                   CpowEntry[] aCpows, Principal aPrincipal)
+    prio(high) sync RpcMessage(nsString aMessage, ClonedMessageData aData,
+                               CpowEntry[] aCpows, Principal aPrincipal)
       returns (nsString[] retval);
 
     ShowAlertNotification(nsString imageUrl,

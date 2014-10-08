@@ -11,12 +11,10 @@ import subprocess
 import sys
 
 # determine the platform-specific invocation of `ps`
-if mozinfo.isMac:
-    psarg = '-Acj'
-elif mozinfo.isLinux:
-    psarg = 'axwww'
+if mozinfo.isWin:
+    psarg='ax'
 else:
-    psarg = 'ax'
+    psarg = 'axwww'
 
 def ps(arg=psarg):
     """

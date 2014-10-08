@@ -29,7 +29,7 @@
 
 #include "jit/CompileInfo-inl.h"
 #include "jit/ExecutionMode-inl.h"
-#include "vm/ObjectImpl-inl.h"
+#include "vm/NativeObject-inl.h"
 
 using namespace js;
 using namespace js::jit;

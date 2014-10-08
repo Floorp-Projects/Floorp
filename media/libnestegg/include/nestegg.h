@@ -171,8 +171,8 @@ void nestegg_destroy(nestegg * context);
 int nestegg_duration(nestegg * context, uint64_t * duration);
 
 /** Query the tstamp scale of the media stream in nanoseconds.
-    Timecodes presented by nestegg have been scaled by this value
-    before presentation to the caller.
+    @note Timecodes presented by nestegg have been scaled by this value
+          before presentation to the caller.
     @param context Stream context initialized by #nestegg_init.
     @param scale   Storage for the queried scale factor.
     @retval  0 Success.
@@ -201,8 +201,8 @@ int nestegg_get_cue_point(nestegg * context, unsigned int cluster_num,
                           int64_t * end_pos, uint64_t * tstamp);
 
 /** Seek to @a offset.  Stream will seek directly to offset.
-    Should be used to seek to the start of a resync point, i.e. cluster; the
-    parser will not be able to understand other offsets.
+    Must be used to seek to the start of a cluster; the parser will not be
+    able to understand other offsets.
     @param context Stream context initialized by #nestegg_init.
     @param offset  Absolute offset in bytes.
     @retval  0 Success.
@@ -368,23 +368,18 @@ int nestegg_packet_discard_padding(nestegg_packet * packet,
     @retval 1 The media has cues. */
 int nestegg_has_cues(nestegg * context);
 
-/**
- * Try to determine if the buffer looks like the beginning of a WebM file.
- *
- * @param buffer A buffer containing the beginning of a media file.
- * @param length The size of the buffer.
- * @retval 0 The file is not a WebM file.
- * @retval 1 The file is a WebM file. */
+/** Try to determine if the buffer looks like the beginning of a WebM file.
+    @param buffer A buffer containing the beginning of a media file.
+    @param length The size of the buffer.
+    @retval 0 The file is not a WebM file.
+    @retval 1 The file is a WebM file. */
 int nestegg_sniff(unsigned char const * buffer, size_t length);
 
-/**
- * Set the underlying allocation function for library allocations.
- *
- * @param realloc_func The desired function.
- * @retval 0 realloc_func(p, 0) does not act as free()
- * @retval 1 realloc_func(p, 0) acts as free()
- * @retval -1 malloc failed during realloc_func test
- */
+/** Set the underlying allocation function for library allocations.
+    @param realloc_func The desired function.
+    @retval 1 Success.  realloc_func(p, 0) acts as free()
+    @retval 0 Failure. realloc_func(p, 0) does not act as free()
+    @retval -1 Failure. realloc_func(NULL, 1) failed. */
 int nestegg_set_halloc_func(void * (* realloc_func)(void *, size_t));
 
 #if defined(__cplusplus)

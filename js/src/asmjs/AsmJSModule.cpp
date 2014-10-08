@@ -337,8 +337,10 @@ AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembl
         AsmJSHeapAccess &a = heapAccesses_[i];
         a.setOffset(masm.actualOffset(a.offset()));
     }
-    for (unsigned i = 0; i < numExportedFunctions(); i++)
-        exportedFunction(i).updateCodeOffset(masm);
+    for (unsigned i = 0; i < numExportedFunctions(); i++) {
+        if (!exportedFunction(i).isChangeHeap())
+            exportedFunction(i).updateCodeOffset(masm);
+    }
     for (unsigned i = 0; i < numExits(); i++)
         exit(i).updateOffsets(masm);
     for (size_t i = 0; i < callSites_.length(); i++) {
@@ -765,13 +767,13 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
         X86Assembler::setPointer(addr, (void *)(heapOffset + disp));
     }
 #elif defined(JS_CODEGEN_X64)
-    int32_t heapLength = int32_t(intptr_t(heap->byteLength()));
     if (usesSignalHandlersForOOB())
         return;
     // If we cannot use the signal handlers, we need to patch the heap length
     // checks at the right places. All accesses that have been recorded are the
     // only ones that need bound checks (see also
     // CodeGeneratorX64::visitAsmJS{Load,Store}Heap)
+    int32_t heapLength = int32_t(intptr_t(heap->byteLength()));
     for (size_t i = 0; i < heapAccesses_.length(); i++) {
         const jit::AsmJSHeapAccess &access = heapAccesses_[i];
         if (access.hasLengthCheck())
@@ -787,8 +789,29 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
 }
 
 void
-AsmJSModule::restoreToInitialState(uint8_t *prevCode,
-                                   ArrayBufferObjectMaybeShared *maybePrevBuffer,
+AsmJSModule::restoreHeapToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer)
+{
+#if defined(JS_CODEGEN_X86)
+    if (maybePrevBuffer) {
+        // Subtract out the base-pointer added by AsmJSModule::initHeap.
+        uint8_t *ptrBase = maybePrevBuffer->dataPointer();
+        for (unsigned i = 0; i < heapAccesses_.length(); i++) {
+            const jit::AsmJSHeapAccess &access = heapAccesses_[i];
+            void *addr = access.patchOffsetAt(code_);
+            uint8_t *ptr = reinterpret_cast<uint8_t*>(X86Assembler::getPointer(addr));
+            MOZ_ASSERT(ptr >= ptrBase);
+            X86Assembler::setPointer(addr, (void *)(ptr - ptrBase));
+        }
+    }
+#endif
+
+    maybeHeap_ = nullptr;
+    heapDatum() = nullptr;
+}
+
+void
+AsmJSModule::restoreToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer,
+                                   uint8_t *prevCode,
                                    ExclusiveContext *cx)
 {
 #ifdef DEBUG
@@ -817,19 +840,7 @@ AsmJSModule::restoreToInitialState(uint8_t *prevCode,
     }
 #endif
 
-    if (maybePrevBuffer) {
-#if defined(JS_CODEGEN_X86)
-        // Subtract out the base-pointer added by AsmJSModule::initHeap.
-        uint8_t *ptrBase = maybePrevBuffer->dataPointer();
-        for (unsigned i = 0; i < heapAccesses_.length(); i++) {
-            const jit::AsmJSHeapAccess &access = heapAccesses_[i];
-            void *addr = access.patchOffsetAt(code_);
-            uint8_t *ptr = reinterpret_cast<uint8_t*>(X86Assembler::getPointer(addr));
-            MOZ_ASSERT(ptr >= ptrBase);
-            X86Assembler::setPointer(addr, (void *)(ptr - ptrBase));
-        }
-#endif
-    }
+    restoreHeapToInitialState(maybePrevBuffer);
 }
 
 static void
@@ -1550,7 +1561,22 @@ AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) con
     // flush all of them at once.
     out.setAutoFlushICacheRange();
 
-    out.restoreToInitialState(code_, maybeHeap_, cx);
+    out.restoreToInitialState(maybeHeap_, code_, cx);
+    return true;
+}
+
+bool
+AsmJSModule::changeHeap(Handle<ArrayBufferObject*> newBuffer, JSContext *cx)
+{
+    uint32_t heapLength = newBuffer->byteLength();
+    if (heapLength & pod.heapLengthMask_ || heapLength < pod.minHeapLength_)
+        return false;
+
+    MOZ_ASSERT(IsValidAsmJSHeapLength(heapLength));
+    MOZ_ASSERT(!IsDeprecatedAsmJSHeapLength(heapLength));
+
+    restoreHeapToInitialState(maybeHeap_);
+    initHeap(newBuffer, cx);
     return true;
 }
 

@@ -126,7 +126,7 @@ namespace {
 struct TabwidthAdaptor
 {
   const nsTArray<TabWidth>& mWidths;
-  TabwidthAdaptor(const nsTArray<TabWidth>& aWidths)
+  explicit TabwidthAdaptor(const nsTArray<TabWidth>& aWidths)
     : mWidths(aWidths) {}
   uint32_t operator[](size_t aIdx) const {
     return mWidths[aIdx].mOffset;
