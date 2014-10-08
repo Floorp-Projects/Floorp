@@ -18,10 +18,8 @@ import android.appwidget.AppWidgetProviderInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.widget.RemoteViews;
-import android.util.Log;
 
 /* Provides a really simple widget with two buttons, one to launch Fennec
  * and one to launch the search activity. All intents are actually sent back
