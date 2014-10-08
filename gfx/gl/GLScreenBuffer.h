@@ -28,6 +28,8 @@ namespace gl {
 
 class GLContext;
 class SharedSurface;
+class ShSurfHandle;
+class SurfaceFactory;
 class SurfaceStream;
 
 class DrawBuffer
@@ -173,8 +175,8 @@ public:
         return mFactory.get();
     }
 
-    SharedSurface* Front() const {
-        return mFront->Surf();
+    ShSurfHandle* Front() const {
+        return mFront;
     }
 
     SharedSurface* SharedSurf() const {

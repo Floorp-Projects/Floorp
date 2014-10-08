@@ -47,9 +47,6 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     mNeedsYFlip = true;
 
     GLScreenBuffer* screen = mGLContext->Screen();
-    SurfaceStreamType streamType =
-        SurfaceStream::ChooseGLStreamType(SurfaceStream::MainThread,
-                                          screen->PreserveBuffer());
 
     UniquePtr<SurfaceFactory> factory = nullptr;
     if (!gfxPrefs::WebGLForceLayersReadback()) {
@@ -60,7 +57,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     }
 
     if (factory) {
-      screen->Morph(Move(factory), streamType);
+      screen->Morph(Move(factory));
     }
   } else if (aData.mDrawTarget) {
     mDrawTarget = aData.mDrawTarget;

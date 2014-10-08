@@ -70,9 +70,6 @@ ClientCanvasLayer::Initialize(const Data& aData)
     }
     MOZ_ASSERT(caps.alpha == aData.mHasAlpha);
 
-    SurfaceStreamType streamType =
-        SurfaceStream::ChooseGLStreamType(SurfaceStream::OffMainThread,
-                                          screen->PreserveBuffer());
     UniquePtr<SurfaceFactory> factory;
 
     if (!gfxPrefs::WebGLForceLayersReadback()) {
@@ -139,7 +136,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
         MOZ_ASSERT(producer, "Failed to create initial canvas surface with basic factory");
       }
     } else if (factory) {
-      screen->Morph(Move(factory), streamType);
+      screen->Morph(Move(factory));
     }
   }
 }
@@ -167,10 +164,6 @@ ClientCanvasLayer::RenderLayer()
     if (!mGLContext) {
       // We don't support locking for buffer surfaces currently
       flags |= TextureFlags::IMMEDIATE_UPLOAD;
-    } else {
-      // GLContext's SurfaceStream handles ownership itself,
-      // and doesn't require layers to do any deallocation.
-      flags |= TextureFlags::DEALLOCATE_CLIENT;
     }
 
     if (!mIsAlphaPremultiplied) {
@@ -197,6 +190,18 @@ ClientCanvasLayer::RenderLayer()
   ClientManager()->Hold(this);
   mCanvasClient->Updated();
   mCanvasClient->OnTransaction();
+}
+
+CanvasClient::CanvasClientType
+ClientCanvasLayer::GetCanvasClientType()
+{
+  if (mGLContext) {
+    if (mGLContext->Screen()) {
+      return CanvasClient::CanvasClientTypeShSurf;
+    }
+    return CanvasClient::CanvasClientGLContext;
+  }
+  return CanvasClient::CanvasClientSurface;
 }
 
 already_AddRefed<CanvasLayer>
