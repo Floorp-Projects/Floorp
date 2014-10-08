@@ -34,7 +34,7 @@
 // the writing modes.)
 
 #define CHECK_WRITING_MODE(param) \
-   NS_ASSERTION(param == mWritingMode, "writing-mode mismatch")
+   NS_ASSERTION(param == GetWritingMode(), "writing-mode mismatch")
 
 namespace mozilla {
 // Logical side constants for use in various places.
@@ -563,7 +563,9 @@ private:
     return mPoint.y;
   }
 
+#ifdef DEBUG
   WritingMode mWritingMode;
+#endif
 
   // We use an nsPoint to hold the coordinates, but reinterpret its .x and .y
   // fields as the inline and block directions. Hence, this is not exposed
@@ -683,21 +685,35 @@ public:
       *this : LogicalSize(aToMode, GetPhysicalSize(aFromMode));
   }
 
+  /**
+   * Test if a size is (0, 0).
+   */
+  bool IsAllZero() const
+  {
+    return ISize() == 0 && BSize() == 0;
+  }
+
+  /**
+   * Various binary operators on LogicalSize. These are valid ONLY for operands
+   * that share the same writing mode.
+   */
   bool operator==(const LogicalSize& aOther) const
   {
-    return mWritingMode == aOther.mWritingMode && mSize == aOther.mSize;
+    CHECK_WRITING_MODE(aOther.GetWritingMode());
+    return mSize == aOther.mSize;
   }
 
   bool operator!=(const LogicalSize& aOther) const
   {
-    return mWritingMode != aOther.mWritingMode || mSize != aOther.mSize;
+    CHECK_WRITING_MODE(aOther.GetWritingMode());
+    return mSize != aOther.mSize;
   }
 
   LogicalSize operator+(const LogicalSize& aOther) const
   {
     CHECK_WRITING_MODE(aOther.GetWritingMode());
-    return LogicalSize(mWritingMode, ISize() + aOther.ISize(),
-                                     BSize() + aOther.BSize());
+    return LogicalSize(GetWritingMode(), ISize() + aOther.ISize(),
+                                         BSize() + aOther.BSize());
   }
   LogicalSize& operator+=(const LogicalSize& aOther)
   {
@@ -710,8 +726,8 @@ public:
   LogicalSize operator-(const LogicalSize& aOther) const
   {
     CHECK_WRITING_MODE(aOther.GetWritingMode());
-    return LogicalSize(mWritingMode, ISize() - aOther.ISize(),
-                                     BSize() - aOther.BSize());
+    return LogicalSize(GetWritingMode(), ISize() - aOther.ISize(),
+                                         BSize() - aOther.BSize());
   }
   LogicalSize& operator-=(const LogicalSize& aOther)
   {
@@ -750,7 +766,9 @@ private:
     return mSize.height;
   }
 
+#ifdef DEBUG
   WritingMode mWritingMode;
+#endif
   nsSize      mSize;
 };
 
@@ -1046,7 +1064,9 @@ private:
     return mMargin.TopBottom();
   }
 
+#ifdef DEBUG
   WritingMode mWritingMode;
+#endif
   nsMargin    mMargin;
 };
 
@@ -1476,7 +1496,9 @@ private:
     return mRect.height;
   }
 
+#ifdef DEBUG
   WritingMode mWritingMode;
+#endif
   nsRect      mRect;
 };
 
