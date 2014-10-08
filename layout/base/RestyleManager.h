@@ -305,7 +305,17 @@ public:
   // Rebuilds all style data by throwing out the old rule tree and
   // building a new one, and additionally applying aExtraHint (which
   // must not contain nsChangeHint_ReconstructFrame) to the root frame.
-  void RebuildAllStyleData(nsChangeHint aExtraHint);
+  //
+  // aRestyleHint says which restyle hint to use for the computation;
+  // the only sensible values to use are eRestyle_Subtree (which says
+  // that the rebuild must run selector matching) and nsRestyleHint(0)
+  // (which says that rerunning selector matching is not required.  (The
+  // method adds eRestyle_ForceDescendants internally, and including it
+  // in the restyle hint is harmless; some callers (e.g.,
+  // nsPresContext::MediaFeatureValuesChanged) might do this for their
+  // own reasons.)
+  void RebuildAllStyleData(nsChangeHint aExtraHint,
+                           nsRestyleHint aRestyleHint);
 
   // Helper that does part of the work of RebuildAllStyleData, shared by
   // RestyleElement for 'rem' handling.
@@ -462,6 +472,7 @@ private:
 
   uint32_t mHoverGeneration;
   nsChangeHint mRebuildAllExtraHint;
+  nsRestyleHint mRebuildAllRestyleHint;
 
   mozilla::TimeStamp mLastUpdateForThrottledAnimations;
 
