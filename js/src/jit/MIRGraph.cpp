@@ -892,7 +892,7 @@ MBasicBlock::discardAllPhiOperands()
         iter->removeAllOperands();
 
     for (MBasicBlock **pred = predecessors_.begin(); pred != predecessors_.end(); pred++)
-        (*pred)->setSuccessorWithPhis(nullptr, 0);
+        (*pred)->clearSuccessorWithPhis();
 }
 
 void
@@ -992,7 +992,7 @@ MBasicBlock::discardPhiAt(MPhiIterator &at)
 
     if (phis_.empty()) {
         for (MBasicBlock **pred = predecessors_.begin(); pred != predecessors_.end(); pred++)
-            (*pred)->setSuccessorWithPhis(nullptr, 0);
+            (*pred)->clearSuccessorWithPhis();
     }
     return result;
 }
@@ -1360,7 +1360,7 @@ MBasicBlock::removePredecessorWithoutPhiOperands(MBasicBlock *pred, size_t predI
     // information yet.
     if (pred->successorWithPhis()) {
         MOZ_ASSERT(pred->positionInPhiSuccessor() == predIndex);
-        pred->setSuccessorWithPhis(nullptr, 0);
+        pred->clearSuccessorWithPhis();
         for (size_t j = predIndex+1; j < numPredecessors(); j++)
             getPredecessor(j)->setSuccessorWithPhis(this, j - 1);
     }
