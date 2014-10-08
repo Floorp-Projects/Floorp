@@ -65,7 +65,7 @@ CreateCert(const char* issuerCN,
                        serialNumber, issuerDER,
                        oneDayBeforeNow, oneDayAfterNow,
                        subjectDER, extensions, issuerKey,
-                       sha256WithRSAEncryption,
+                       SignatureAlgorithm::rsa_pkcs1_with_sha256,
                        subjectKey));
   EXPECT_FALSE(ENCODING_FAILED(certDER));
   if (subjectCert) {
@@ -400,7 +400,7 @@ TEST_F(pkixbuild, NoRevocationCheckingForExpiredCert)
                        oneDayBeforeNow - Time::ONE_DAY_IN_SECONDS,
                        oneDayBeforeNow,
                        subjectDER, nullptr, rootKey.get(),
-                       sha256WithRSAEncryption,
+                       SignatureAlgorithm::rsa_pkcs1_with_sha256,
                        unusedSubjectKey));
   EXPECT_FALSE(ENCODING_FAILED(certDER));
 
