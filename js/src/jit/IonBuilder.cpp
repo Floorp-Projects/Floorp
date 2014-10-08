@@ -9025,10 +9025,6 @@ IonBuilder::jsop_getprop(PropertyName *name)
     MDefinition *obj = current->pop();
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
 
-    // Try to optimize to a specific constant.
-    if (!getPropTryInferredConstant(&emitted, obj, name, types) || emitted)
-        return emitted;
-
     // Try to optimize arguments.length.
     if (!getPropTryArgumentsLength(&emitted, obj) || emitted)
         return emitted;
@@ -9039,6 +9035,12 @@ IonBuilder::jsop_getprop(PropertyName *name)
 
     BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
                                                        obj, name, types);
+
+    // Try to optimize to a specific constant.
+    if (barrier == BarrierKind::NoBarrier) {
+        if (!getPropTryInferredConstant(&emitted, obj, name, types) || emitted)
+            return emitted;
+    }
 
     // Always use a call if we are performing analysis and
     // not actually emitting code, to simplify later analysis. Also skip deeper
