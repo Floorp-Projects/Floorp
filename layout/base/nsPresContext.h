@@ -262,7 +262,8 @@ public:
    * Just like RebuildAllStyleData, except (1) asynchronous and (2) it
    * doesn't rebuild the user font set.
    */
-  void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint);
+  void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
+                                    nsRestyleHint aRestyleHint);
 
   void MediaFeatureValuesChanged(StyleRebuildType aShouldRebuild,
                                  nsChangeHint aChangeHint = nsChangeHint(0));
