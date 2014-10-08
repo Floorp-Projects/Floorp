@@ -78,6 +78,7 @@ static int sMaxStreamVolumeTbl[AUDIO_STREAM_CNT] = {
 };
 // A bitwise variable for recording what kind of headset is attached.
 static int sHeadsetState;
+static bool sBluetoothA2dpEnabled;
 static const int kBtSampleRate = 8000;
 static bool sSwitchDone = true;
 static bool sA2dpSwitchDone = true;
@@ -290,7 +291,13 @@ AudioManager::HandleBluetoothStatusChanged(nsISupports* aSubject,
       cmd.setTo("A2dpSuspended=false");
       AudioSystem::setParameters(0, cmd);
       sA2dpSwitchDone = true;
+#if ANDROID_VERSION >= 17
+      if (AudioSystem::getForceUse(AUDIO_POLICY_FORCE_FOR_MEDIA) == AUDIO_POLICY_FORCE_NO_BT_A2DP) {
+        SetForceForUse(AUDIO_POLICY_FORCE_FOR_MEDIA, AUDIO_POLICY_FORCE_NONE);
+      }
+#endif
     }
+    sBluetoothA2dpEnabled = audioState == AUDIO_POLICY_DEVICE_STATE_AVAILABLE;
   } else if (!strcmp(aTopic, BLUETOOTH_HFP_STATUS_CHANGED_ID)) {
     AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET,
                                           audioState, aAddress.get());
@@ -396,6 +403,8 @@ NotifyHeadphonesStatus(SwitchState aState)
 class HeadphoneSwitchObserver : public SwitchObserver
 {
 public:
+  HeadphoneSwitchObserver(AudioManager* aAudioManager)
+  : mAudioManager(aAudioManager) { }
   void Notify(const SwitchEvent& aEvent) {
     NotifyHeadphonesStatus(aEvent.status());
     // When user pulled out the headset, a delay of routing here can avoid the leakage of audio from speaker.
@@ -407,12 +416,24 @@ public:
       InternalSetAudioRoutes(aEvent.status());
       sSwitchDone = true;
     }
+    // Handle the coexistence of a2dp / headset device, latest one wins.
+#if ANDROID_VERSION >= 17
+    int32_t forceUse = 0;
+    mAudioManager->GetForceForUse(AUDIO_POLICY_FORCE_FOR_MEDIA, &forceUse);
+    if (aEvent.status() != SWITCH_STATE_OFF && sBluetoothA2dpEnabled) {
+      mAudioManager->SetForceForUse(AUDIO_POLICY_FORCE_FOR_MEDIA, AUDIO_POLICY_FORCE_NO_BT_A2DP);
+    } else if (forceUse == AUDIO_POLICY_FORCE_NO_BT_A2DP) {
+      mAudioManager->SetForceForUse(AUDIO_POLICY_FORCE_FOR_MEDIA, AUDIO_POLICY_FORCE_NONE);
+    }
+#endif
   }
+private:
+  AudioManager* mAudioManager;
 };
 
 AudioManager::AudioManager()
   : mPhoneState(PHONE_STATE_CURRENT)
-  , mObserver(new HeadphoneSwitchObserver())
+  , mObserver(new HeadphoneSwitchObserver(this))
 #ifdef MOZ_B2G_RIL
   , mMuteCallToRIL(false)
 #endif
