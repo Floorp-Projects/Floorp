@@ -77,8 +77,14 @@ ClientCanvasLayer::Initialize(const Data& aData)
         case mozilla::layers::LayersBackend::LAYERS_OPENGL: {
           if (mGLContext->GetContextType() == GLContextType::EGL) {
 #ifdef MOZ_WIDGET_GONK
+            TextureFlags flags = TextureFlags::DEALLOCATE_CLIENT |
+                                 TextureFlags::NEEDS_Y_FLIP;
+            if (!aData.mIsGLAlphaPremult) {
+              flags |= TextureFlags::NON_PREMULTIPLIED;
+            }
             factory = MakeUnique<SurfaceFactory_Gralloc>(mGLContext,
                                                          caps,
+                                                         flags,
                                                          ClientManager()->AsShadowForwarder());
 #else
             bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);

@@ -3529,9 +3529,6 @@ public:
         return mScreen.get();
     }
 
-    bool PublishFrame();
-    SharedSurface* RequestFrame();
-
     /* Clear to transparent black, with 0 depth and stencil,
      * while preserving current ClearColor etc. values.
      * Useful for resizing offscreen buffers.

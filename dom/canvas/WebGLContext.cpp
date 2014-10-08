@@ -661,6 +661,7 @@ CreateOffscreen(GLContext* gl,
     baseCaps.alpha = options.alpha;
     baseCaps.antialias = options.antialias;
     baseCaps.depth = options.depth;
+    baseCaps.premultAlpha = options.premultipliedAlpha;
     baseCaps.preserve = options.preserveDrawingBuffer;
     baseCaps.stencil = options.stencil;
 
@@ -1421,10 +1422,15 @@ WebGLContext::PresentScreenBuffer()
     if (!mShouldPresent) {
         return false;
     }
+    MOZ_ASSERT(!mBackbufferNeedsClear);
 
     gl->MakeCurrent();
-    MOZ_ASSERT(!mBackbufferNeedsClear);
-    if (!gl->PublishFrame()) {
+
+    auto screen = gl->Screen();
+    MOZ_ASSERT(screen);
+
+    auto size = screen->Size();
+    if (!screen->PublishFrame(size)) {
         ForceLoseContext();
         return false;
     }

@@ -80,9 +80,13 @@ CanvasLayerD3D9::UpdateSurface()
   RefPtr<SourceSurface> surface;
 
   if (mGLContext) {
-    SharedSurface* surf = mGLContext->RequestFrame();
+    auto screen = mGLContext->Screen();
+    MOZ_ASSERT(screen);
+
+    SharedSurface* surf = screen->Front()->Surf();
     if (!surf)
-        return;
+      return;
+    surf->WaitSync();
 
     SharedSurface_Basic* shareSurf = SharedSurface_Basic::Cast(surf);
     surface = shareSurf->GetData();
