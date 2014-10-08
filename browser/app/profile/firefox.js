@@ -1292,6 +1292,9 @@ pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 #endif
 
+// Developer edition preferences
+pref("browser.devedition.theme.enabled", false);
+
 // Disable the error console
 pref("devtools.errorconsole.enabled", false);
 
