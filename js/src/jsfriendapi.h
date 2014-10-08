@@ -2666,6 +2666,34 @@ extern JS_FRIEND_API(bool)
 ExecuteInGlobalAndReturnScope(JSContext *cx, JS::HandleObject obj, JS::HandleScript script,
                               JS::MutableHandleObject scope);
 
+#if defined(XP_WIN) && defined(_WIN64)
+// Parameters use void* types to avoid #including windows.h. The return value of
+// this function is returned from the exception handler.
+typedef long
+(*JitExceptionHandler)(void *exceptionRecord,  // PEXECTION_RECORD
+                       void *context);         // PCONTEXT
+
+// Windows uses "structured exception handling" to handle faults. When a fault
+// occurs, the stack is searched for a handler (similar to C++ exception
+// handling). If the search does not find a handler, the "unhandled exception
+// filter" is called. Breakpad uses the unhandled exception filter to do crash
+// reporting. Unfortunately, on Win64, JIT code on the stack completely throws
+// off this unwinding process and prevents the unhandled exception filter from
+// being called. The reason is that Win64 requires unwind information be
+// registered for all code regions and JIT code has none. While it is possible
+// to register full unwind information for JIT code, this is a lot of work (one
+// has to be able to recover the frame pointer at any PC) so instead we register
+// a handler for all JIT code that simply calls breakpad's unhandled exception
+// filter (which will perform crash reporting and then terminate the process).
+// This would be wrong if there was an outer __try block that expected to handle
+// the fault, but this is not generally allowed.
+//
+// Gecko must call SetJitExceptionFilter before any JIT code is compiled and
+// only once per process.
+extern JS_FRIEND_API(void)
+SetJitExceptionHandler(JitExceptionHandler handler);
+#endif
+
 } /* namespace js */
 
 extern JS_FRIEND_API(bool)
