@@ -58,6 +58,13 @@
 
   // Local mocks
 
+  var mockContact = {
+    name: ["Mr Smith"],
+    email: [{
+      value: "smith@invalid.com"
+    }]
+  };
+
   var mockClient = {
     requestCallUrl: noop,
     requestCallUrlInfo: noop
@@ -254,7 +261,8 @@
             <Example summary="Connecting" dashed="true"
                      style={{width: "260px", height: "265px"}}>
               <div className="fx-embedded">
-                <DesktopPendingConversationView callState={"gather"} calleeId="Mr Smith" />
+                <DesktopPendingConversationView callState={"gather"}
+                                                contact={mockContact} />
               </div>
             </Example>
           </Section>
