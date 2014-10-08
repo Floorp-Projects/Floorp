@@ -28,9 +28,13 @@ BasicCanvasLayer::Paint(DrawTarget* aDT,
   if (IsHidden())
     return;
 
-  FirePreTransactionCallback();
-  UpdateTarget();
-  FireDidTransactionCallback();
+  if (IsDirty()) {
+    Painted();
+
+    FirePreTransactionCallback();
+    UpdateTarget();
+    FireDidTransactionCallback();
+  }
 
   if (!mSurface) {
     return;
