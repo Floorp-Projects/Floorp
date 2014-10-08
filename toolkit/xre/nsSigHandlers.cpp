@@ -334,13 +334,6 @@ void InstallSignalHandlers(const char *ProgramName)
 #define X87SW(ctx) (ctx)->FloatSave.StatusWord
 #endif
 
-/*
- * SSE traps raise these exception codes, which are defined in internal NT headers
- * but not winbase.h
- */
-#define STATUS_FLOAT_MULTIPLE_FAULTS 0xC00002B4
-#define STATUS_FLOAT_MULTIPLE_TRAPS  0xC00002B5
-
 static LPTOP_LEVEL_EXCEPTION_FILTER gFPEPreviousFilter;
 
 LONG __stdcall FpeHandler(PEXCEPTION_POINTERS pe)
