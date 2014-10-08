@@ -1222,8 +1222,30 @@ MPhi::foldsTernary()
     if (!pred || !pred->lastIns()->isTest())
         return nullptr;
 
-    // We found a ternary construct.
     MTest *test = pred->lastIns()->toTest();
+
+    // True branch may only dominate one edge of MPhi.
+    if (test->ifTrue()->dominates(block()->getPredecessor(0)) &&
+        test->ifTrue()->dominates(block()->getPredecessor(1)))
+    {
+        return nullptr;
+    }
+
+    // False branch may only dominate one edge of MPhi.
+    if (test->ifFalse()->dominates(block()->getPredecessor(0)) &&
+        test->ifFalse()->dominates(block()->getPredecessor(1)))
+    {
+        return nullptr;
+    }
+
+    // True and false branch must dominate different edges of MPhi.
+    if (test->ifTrue()->dominates(block()->getPredecessor(0)) ==
+        test->ifFalse()->dominates(block()->getPredecessor(0)))
+    {
+        return nullptr;
+    }
+
+    // We found a ternary construct.
     bool firstIsTrueBranch = test->ifTrue()->dominates(block()->getPredecessor(0));
     MDefinition *trueDef = firstIsTrueBranch ? getOperand(0) : getOperand(1);
     MDefinition *falseDef = firstIsTrueBranch ? getOperand(1) : getOperand(0);
