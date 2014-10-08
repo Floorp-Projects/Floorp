@@ -337,6 +337,18 @@ class InlineList : protected InlineListNode<T>
         t->next = nullptr;
         t->prev = nullptr;
     }
+    // Remove |old| from the list and insert |now| in its place.
+    void replace(Node *old, Node *now) {
+        MOZ_ASSERT(now->next == nullptr && now->prev == nullptr);
+        Node *listNext = static_cast<Node *>(old->next);
+        Node *listPrev = old->prev;
+        listPrev->next = now;
+        listNext->prev = now;
+        now->next = listNext;
+        now->prev = listPrev;
+        old->next = nullptr;
+        old->prev = nullptr;
+    }
     void clear() {
         this->next = this->prev = this;
     }
