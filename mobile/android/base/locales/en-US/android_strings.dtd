@@ -438,6 +438,10 @@ size. -->
 <!ENTITY private_tabs_panel_empty_desc "Your private tabs will show up here. While we don\'t keep any of your browsing history or cookies, bookmarks and files that you download will still be saved on your device.">
 <!ENTITY private_tabs_panel_learn_more "Want to learn more?">
 
+<!ENTITY remote_tabs_panel_moved_title "Where did my tabs go?">
+<!ENTITY remote_tabs_panel_moved_desc "We\'ve moved your tabs from other devices into a panel on your home page that can be easily accessed every time you open a new tab.">
+<!ENTITY remote_tabs_panel_moved_link "Take me to my new panel.">
+
 <!ENTITY pin_site_dialog_hint "Enter a search keyword">
 
 <!ENTITY filepicker_title "Choose File">
