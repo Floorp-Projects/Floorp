@@ -236,7 +236,7 @@ MultipartFileImpl::GetMozFullPathInternal(nsAString& aFilename,
 
 void
 MultipartFileImpl::InitializeChromeFile(File& aBlob,
-                                        const FilePropertyBag& aBag,
+                                        const ChromeFilePropertyBag& aBag,
                                         ErrorResult& aRv)
 {
   NS_ASSERTION(!mImmutable, "Something went wrong ...");
@@ -268,7 +268,7 @@ MultipartFileImpl::InitializeChromeFile(File& aBlob,
 void
 MultipartFileImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
                                         nsIFile* aFile,
-                                        const FilePropertyBag& aBag,
+                                        const ChromeFilePropertyBag& aBag,
                                         bool aIsFromNsIFile,
                                         ErrorResult& aRv)
 {
@@ -340,7 +340,7 @@ MultipartFileImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
 void
 MultipartFileImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
                                         const nsAString& aData,
-                                        const FilePropertyBag& aBag,
+                                        const ChromeFilePropertyBag& aBag,
                                         ErrorResult& aRv)
 {
   nsCOMPtr<nsIFile> file;
