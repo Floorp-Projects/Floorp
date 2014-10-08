@@ -112,6 +112,7 @@ class MInstruction;
 class MBasicBlock;
 class MNode;
 class MUse;
+class MPhi;
 class MIRGraph;
 class MResumePoint;
 class MControlInstruction;
@@ -119,7 +120,9 @@ class MControlInstruction;
 // Represents a use of a node.
 class MUse : public TempObject, public InlineListNode<MUse>
 {
+    // Grant access to setProducerUnchecked.
     friend class MDefinition;
+    friend class MPhi;
 
     MDefinition *producer_; // MDefinition that is being used.
     MNode *consumer_;       // The node that is using this operand.
@@ -129,8 +132,9 @@ class MUse : public TempObject, public InlineListNode<MUse>
         consumer_(consumer)
     { }
 
-    // Low-level unchecked edit method for replaceAllUsesWith. This doesn't
-    // update use lists! replaceAllUsesWith does that manually.
+    // Low-level unchecked edit method for replaceAllUsesWith and
+    // MPhi::removeOperand. This doesn't update use lists!
+    // replaceAllUsesWith and MPhi::removeOperand do that manually.
     void setProducerUnchecked(MDefinition *producer) {
         MOZ_ASSERT(consumer_);
         MOZ_ASSERT(producer_);
@@ -663,10 +667,16 @@ class MDefinition : public MNode
     }
 
     void addUse(MUse *use) {
+        MOZ_ASSERT(use->producer() == this);
         uses_.pushFront(use);
     }
     void addUseUnchecked(MUse *use) {
+        MOZ_ASSERT(use->producer() == this);
         uses_.pushFrontUnchecked(use);
+    }
+    void replaceUse(MUse *old, MUse *now) {
+        MOZ_ASSERT(now->producer() == this);
+        uses_.replace(old, now);
     }
     void replaceAllUsesWith(MDefinition *dom);
 
