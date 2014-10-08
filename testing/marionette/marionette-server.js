@@ -141,6 +141,7 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
   this.currentFrameElement = null;
   this.testName = null;
   this.mozBrowserClose = null;
+  this.oopFrameId = null; // frame ID of current remote frame, used for mozbrowserclose events
 }
 
 MarionetteServerConnection.prototype = {
@@ -378,10 +379,12 @@ MarionetteServerConnection.prototype = {
   addFrameCloseListener: function MDA_addFrameCloseListener(action) {
     let curWindow = this.getCurrentWindow();
     let self = this;
-    this.mozBrowserClose = function() {
-      curWindow.removeEventListener('mozbrowserclose', self.mozBrowserClose, true);
-      self.switchToGlobalMessageManager();
-      self.sendError("The frame closed during the " + action +  ", recovering to allow further communications", 500, null, self.command_id);
+    this.mozBrowserClose = function(e) {
+      if (e.target.id == self.oopFrameId) {
+        curWindow.removeEventListener('mozbrowserclose', self.mozBrowserClose, true);
+        self.switchToGlobalMessageManager();
+        self.sendError("The frame closed during the " + action +  ", recovering to allow further communications", 500, null, self.command_id);
+      }
     };
     curWindow.addEventListener('mozbrowserclose', this.mozBrowserClose, true);
   },
@@ -2602,7 +2605,7 @@ MarionetteServerConnection.prototype = {
         this.sendToClient(message.json, -1);
         break;
       case "Marionette:switchToFrame":
-        this.curBrowser.frameManager.switchToFrame(message);
+        this.oopFrameId = this.curBrowser.frameManager.switchToFrame(message);
         this.messageManager = this.curBrowser.frameManager.currentRemoteFrame.messageManager.get();
         break;
       case "Marionette:switchToModalOrigin":
