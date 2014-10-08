@@ -25,8 +25,8 @@ const MOBILENETWORKINFO_CID =
   Components.ID("{a6c8416c-09b4-46d1-bf29-6520d677d085}");
 const MOBILECELLINFO_CID =
   Components.ID("{0635d9ab-997e-4cdf-84e7-c1883752dff3}");
-const TELEPHONYCALLBACK_CID =
-  Components.ID("{6e1af17e-37f3-11e4-aed3-60a44c237d2b}");
+const TELEPHONYDIALCALLBACK_CID =
+  Components.ID("{c2af1a5d-3649-44ef-a1ff-18e9ac1dec51}");
 
 const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID  = "nsPref:changed";
@@ -141,14 +141,14 @@ MMIResult.prototype = {
 };
 
 /**
- * Wrap a MobileConnectionCallback to a TelephonyCallback.
+ * Wrap a MobileConnectionCallback to a TelephonyDialCallback.
  */
-function TelephonyCallback(aCallback) {
+function TelephonyDialCallback(aCallback) {
   this.callback = aCallback;
 }
-TelephonyCallback.prototype = {
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsITelephonyCallback]),
-  classID:          TELEPHONYCALLBACK_CID,
+TelephonyDialCallback.prototype = {
+  QueryInterface:   XPCOMUtils.generateQI([Ci.nsITelephonyDialCallback]),
+  classID:          TELEPHONYDIALCALLBACK_CID,
 
   notifyDialMMI: function(mmiServiceCode) {
     this.serviceCode = mmiServiceCode;
@@ -725,8 +725,8 @@ MobileConnectionProvider.prototype = {
   },
 
   sendMMI: function(aMmi, aCallback) {
-    let telephonyCallback = new TelephonyCallback(aCallback);
-    gGonkTelephonyService.dialMMI(this._clientId, aMmi, telephonyCallback);
+    let callback = new TelephonyDialCallback(aCallback);
+    gGonkTelephonyService.dialMMI(this._clientId, aMmi, callback);
   },
 
   cancelMMI: function(aCallback) {

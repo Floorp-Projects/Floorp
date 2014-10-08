@@ -177,10 +177,20 @@ interface nsITelephonyListener : nsISupports
 };
 
 /**
- * A callback interface for handling asynchronous response of Telephony.dial().
+ * A callback interface for handling asynchronous response.
  */
-[scriptable, uuid(67533db3-cd38-475c-a774-8d0bbf9169fb)]
+[scriptable, uuid(cffc3f9d-2c88-4a14-8ebc-f216caf0cc1d)]
 interface nsITelephonyCallback : nsISupports
+{
+  void notifySuccess();
+  void notifyError(in AString error);
+};
+
+/**
+ * A callback interface for handling asynchronous response for telephony.dial.
+ */
+[scriptable, uuid(4481212f-72e9-4aef-97e1-5397af782113)]
+interface nsITelephonyDialCallback : nsITelephonyCallback
 {
   /**
    * Called when a dial request is treated as an MMI code and it is about to
@@ -190,14 +200,6 @@ interface nsITelephonyCallback : nsISupports
    *        MMI service code key string that defined in MMI_KS_SC_*
    */
   void notifyDialMMI(in AString serviceCode);
-
-  /**
-   * Called when a dial request fails.
-   *
-   * @param error
-   *        Error from RIL.
-   */
-  void notifyDialError(in AString error);
 
   /**
    * Called when a dial request is treated as a call setup and the result
@@ -238,7 +240,7 @@ interface nsITelephonyCallback : nsISupports
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(4ff3ecb7-b024-4752-9dd6-c3623c6e6b8a)]
+[scriptable, uuid(600929fb-269c-4ae2-a61f-3c8a62cf5456)]
 interface nsITelephonyService : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -281,7 +283,7 @@ interface nsITelephonyService : nsISupports
    * Functionality for making and managing phone calls.
    */
   void dial(in unsigned long clientId, in DOMString number,
-            in boolean isEmergency, in nsITelephonyCallback callback);
+            in boolean isEmergency, in nsITelephonyDialCallback callback);
   void hangUp(in unsigned long clientId, in unsigned long callIndex);
 
   void startTone(in unsigned long clientId, in DOMString dtmfChar);

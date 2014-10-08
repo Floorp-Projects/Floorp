@@ -10,7 +10,7 @@
         "@mozilla.org/telephony/gonktelephonyservice;1"
 %}
 
-[scriptable, uuid(8790e2cc-2c68-4ce9-90dc-f68e1b6e4886)]
+[scriptable, uuid(518165dc-2d55-4db3-9549-60dc4062d1c5)]
 interface nsIGonkTelephonyService : nsITelephonyService
 {
   void notifyCallDisconnected(in unsigned long clientId, in jsval call);
@@ -28,5 +28,5 @@ interface nsIGonkTelephonyService : nsITelephonyService
   void notifyConferenceCallStateChanged(in short state);
 
   void dialMMI(in unsigned long clientId, in AString mmiString,
-               in nsITelephonyCallback callback);
+               in nsITelephonyDialCallback callback);
 };

@@ -162,7 +162,8 @@ TelephonyIPCService::EnumerateCalls(nsITelephonyListener *aListener)
 
 NS_IMETHODIMP
 TelephonyIPCService::Dial(uint32_t aClientId, const nsAString& aNumber,
-                           bool aIsEmergency, nsITelephonyCallback *aCallback)
+                           bool aIsEmergency,
+                           nsITelephonyDialCallback *aCallback)
 {
   return SendRequest(nullptr, aCallback,
                      DialRequest(aClientId, nsString(aNumber), aIsEmergency));
