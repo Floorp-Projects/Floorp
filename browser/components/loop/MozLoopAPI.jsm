@@ -278,6 +278,33 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
+     * Displays a confirmation dialog using the specified strings.
+     *
+     * Callback parameters:
+     * - err null on success, non-null on unexpected failure to show the prompt.
+     * - {Boolean} True if the user chose the OK button.
+     */
+    confirm: {
+      enumerable: true,
+      writable: true,
+      value: function(bodyMessage, okButtonMessage, cancelButtonMessage, callback) {
+        try {
+          let buttonFlags =
+            (Ci.nsIPrompt.BUTTON_POS_0 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING) +
+            (Ci.nsIPrompt.BUTTON_POS_1 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING);
+
+          let chosenButton = Services.prompt.confirmEx(null, "",
+            bodyMessage, buttonFlags, okButtonMessage, cancelButtonMessage,
+            null, null, {});
+
+          callback(null, chosenButton == 0);
+        } catch (ex) {
+          callback(cloneValueInto(ex, targetWindow));
+        }
+      }
+    },
+
+    /**
      * Call to ensure that any necessary registrations for the Loop Service
      * have taken place.
      *
@@ -592,11 +619,26 @@ function injectLoopAPI(targetWindow) {
         return MozLoopService.generateUUID();
       }
     },
+
+    /**
+     * Starts a direct call to the contact addresses.
+     *
+     * @param {Object} contact The contact to call
+     * @param {String} callType The type of call, e.g. "audio-video" or "audio-only"
+     * @return true if the call is opened, false if it is not opened (i.e. busy)
+     */
+    startDirectCall: {
+      enumerable: true,
+      writable: true,
+      value: function(contact, callType) {
+        MozLoopService.startDirectCall(contact, callType);
+      }
+    },
   };
 
   function onStatusChanged(aSubject, aTopic, aData) {
     let event = new targetWindow.CustomEvent("LoopStatusChanged");
-    targetWindow.dispatchEvent(event)
+    targetWindow.dispatchEvent(event);
   };
 
   function onDOMWindowDestroyed(aSubject, aTopic, aData) {
