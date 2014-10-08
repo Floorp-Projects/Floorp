@@ -34,6 +34,7 @@ namespace gl {
 
 class GLContext;
 class SurfaceFactory;
+class ShSurfHandle;
 
 class SharedSurface
 {
@@ -159,9 +160,13 @@ public:
     }
 };
 
-class SurfaceFactory
+class SurfaceFactory : public SupportsWeakPtr<SurfaceFactory>
 {
 public:
+    // Should use the VIRTUAL version, but it's currently incompatible
+    // with SupportsWeakPtr. (bug 1049278)
+    MOZ_DECLARE_REFCOUNTED_TYPENAME(SurfaceFactory)
+
     GLContext* const mGL;
     const SurfaceCaps mCaps;
     const SharedSurfaceType mType;
@@ -193,9 +198,40 @@ protected:
 
 public:
     UniquePtr<SharedSurface> NewSharedSurface(const gfx::IntSize& size);
+    TemporaryRef<ShSurfHandle> NewShSurfHandle(const gfx::IntSize& size);
 
     // Auto-deletes surfs of the wrong type.
     void Recycle(UniquePtr<SharedSurface> surf);
+};
+
+class ShSurfHandle : public RefCounted<ShSurfHandle>
+{
+public:
+    MOZ_DECLARE_REFCOUNTED_TYPENAME(ShSurfHandle)
+
+private:
+    const WeakPtr<SurfaceFactory> mFactory;
+    UniquePtr<SharedSurface> mSurf;
+
+public:
+    ShSurfHandle(SurfaceFactory* factory, UniquePtr<SharedSurface> surf)
+        : mFactory(factory)
+        , mSurf(Move(surf))
+    {
+        MOZ_ASSERT(mFactory);
+        MOZ_ASSERT(mSurf);
+    }
+
+    ~ShSurfHandle() {
+        if (mFactory) {
+            mFactory->Recycle(Move(mSurf));
+        }
+    }
+
+    SharedSurface* Surf() const {
+        MOZ_ASSERT(mSurf);
+        return mSurf.get();
+    }
 };
 
 } // namespace gl
