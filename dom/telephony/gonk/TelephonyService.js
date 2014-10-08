@@ -564,7 +564,7 @@ TelephonyService.prototype = {
     // Note: isPlainPhoneNumber also accepts USSD and SS numbers
     if (!gPhoneNumberUtils.isPlainPhoneNumber(aNumber)) {
       if (DEBUG) debug("Error: Number '" + aNumber + "' is not viable. Drop.");
-      aCallback.notifyDialError(DIAL_ERROR_BAD_NUMBER);
+      aCallback.notifyError(DIAL_ERROR_BAD_NUMBER);
       return;
     }
 
@@ -581,7 +581,7 @@ TelephonyService.prototype = {
     } else {
       // Reject MMI code from dialEmergency api.
       if (aIsDialEmergency) {
-        aCallback.notifyDialError(DIAL_ERROR_BAD_NUMBER);
+        aCallback.notifyError(DIAL_ERROR_BAD_NUMBER);
         return;
       }
 
@@ -597,14 +597,14 @@ TelephonyService.prototype = {
   _dialCall: function(aClientId, aOptions, aCallback) {
     if (this._isDialing) {
       if (DEBUG) debug("Error: Already has a dialing call.");
-      aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+      aCallback.notifyError(DIAL_ERROR_INVALID_STATE_ERROR);
       return;
     }
 
     // We can only have at most two calls on the same line (client).
     if (this._numCallsOnLine(aClientId) >= 2) {
       if (DEBUG) debug("Error: Already has more than 2 calls on line.");
-      aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+      aCallback.notifyError(DIAL_ERROR_INVALID_STATE_ERROR);
       return;
     }
 
@@ -612,7 +612,7 @@ TelephonyService.prototype = {
     // any new call on other SIM.
     if (this._hasCallsOnOtherClient(aClientId)) {
       if (DEBUG) debug("Error: Already has a call on other sim.");
-      aCallback.notifyDialError(DIAL_ERROR_OTHER_CONNECTION_IN_USE);
+      aCallback.notifyError(DIAL_ERROR_OTHER_CONNECTION_IN_USE);
       return;
     }
 
@@ -622,7 +622,7 @@ TelephonyService.prototype = {
       aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
       if (aClientId === -1) {
         if (DEBUG) debug("Error: No client is avaialble for emergency call.");
-        aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+        aCallback.notifyError(DIAL_ERROR_INVALID_STATE_ERROR);
         return;
       }
     }
@@ -655,7 +655,7 @@ TelephonyService.prototype = {
       this._isDialing = false;
 
       if (!response.success) {
-        aCallback.notifyDialError(response.errorMsg);
+        aCallback.notifyError(response.errorMsg);
         return;
       }
 
