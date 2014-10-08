@@ -233,9 +233,7 @@
           expectEvents(1, 0, function() {
             // And a valid type...
             source1.type = "image/png";
-            // TODO Will not trigger a load event until bug 1045532 lands.
-            // expectEvents(1, 0, function() {
-            expectEvents(0, 0, function() {
+            expectEvents(1, 0, function() {
               // Finally restore srcset, should trigger load and re-consider source1 which is valid again
               source1.srcset = testPNG50;
               expectEvents(1, 0, function() {
