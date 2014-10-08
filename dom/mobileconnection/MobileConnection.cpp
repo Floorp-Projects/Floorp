@@ -21,6 +21,9 @@
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 
+#define MOBILECONN_ERROR_INVALID_PARAMETER NS_LITERAL_STRING("InvalidParameter")
+#define MOBILECONN_ERROR_INVALID_PASSWORD  NS_LITERAL_STRING("InvalidPassword")
+
 #ifdef CONVERT_STRING_TO_NULLABLE_ENUM
 #undef CONVERT_STRING_TO_NULLABLE_ENUM
 #endif
@@ -204,6 +207,84 @@ MobileConnection::UpdateData()
   nsCOMPtr<nsIMobileConnectionInfo> info;
   mMobileConnection->GetData(getter_AddRefs(info));
   mData->Update(info);
+}
+
+nsresult
+MobileConnection::NotifyError(nsIDOMDOMRequest* aRequest, const nsAString& aMessage)
+{
+  nsCOMPtr<nsIDOMRequestService> rs = do_GetService(DOMREQUEST_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(rs, NS_ERROR_FAILURE);
+
+  return rs->FireErrorAsync(aRequest, aMessage);
+}
+
+bool
+MobileConnection::IsValidPassword(const nsAString& aPassword)
+{
+  // Check valid PIN for supplementary services. See TS.22.004 clause 5.2.
+  if (aPassword.IsEmpty() || aPassword.Length() != 4) {
+    return false;
+  }
+
+  nsresult rv;
+  int32_t password = nsString(aPassword).ToInteger(&rv);
+  return NS_SUCCEEDED(rv) && password >= 0 && password <= 9999;
+}
+
+bool
+MobileConnection::IsValidCallForwardingReason(int32_t aReason)
+{
+  return aReason >= nsIMobileConnection::CALL_FORWARD_REASON_UNCONDITIONAL &&
+         aReason <= nsIMobileConnection::CALL_FORWARD_REASON_ALL_CONDITIONAL_CALL_FORWARDING;
+}
+
+bool
+MobileConnection::IsValidCallForwardingAction(int32_t aAction)
+{
+  return aAction >= nsIMobileConnection::CALL_FORWARD_ACTION_DISABLE &&
+         aAction <= nsIMobileConnection::CALL_FORWARD_ACTION_ERASURE &&
+         // Set operation doesn't allow "query" action.
+         aAction != nsIMobileConnection::CALL_FORWARD_ACTION_QUERY_STATUS;
+}
+
+bool
+MobileConnection::IsValidCallBarringProgram(int32_t aProgram)
+{
+  return aProgram >= nsIMobileConnection::CALL_BARRING_PROGRAM_ALL_OUTGOING &&
+         aProgram <= nsIMobileConnection::CALL_BARRING_PROGRAM_INCOMING_ROAMING;
+}
+
+bool
+MobileConnection::IsValidCallBarringOptions(const MozCallBarringOptions& aOptions,
+                                           bool isSetting)
+{
+  if (!aOptions.mServiceClass.WasPassed() || aOptions.mServiceClass.Value().IsNull() ||
+      !aOptions.mProgram.WasPassed() || aOptions.mProgram.Value().IsNull() ||
+      !IsValidCallBarringProgram(aOptions.mProgram.Value().Value())) {
+    return false;
+  }
+
+  // For setting callbarring options, |enabled| and |password| are required.
+  if (isSetting &&
+      (!aOptions.mEnabled.WasPassed() || aOptions.mEnabled.Value().IsNull() ||
+       !aOptions.mPassword.WasPassed() || aOptions.mPassword.Value().IsVoid())) {
+    return false;
+  }
+
+  return true;
+}
+
+bool
+MobileConnection::IsValidCallForwardingOptions(const MozCallForwardingOptions& aOptions)
+{
+  if (!aOptions.mReason.WasPassed() || aOptions.mReason.Value().IsNull() ||
+      !aOptions.mAction.WasPassed() || aOptions.mAction.Value().IsNull() ||
+      !IsValidCallForwardingReason(aOptions.mReason.Value().Value()) ||
+      !IsValidCallForwardingAction(aOptions.mAction.Value().Value())) {
+    return false;
+  }
+
+  return true;
 }
 
 // WebIDL interface
@@ -568,6 +649,16 @@ MobileConnection::GetCallForwardingOption(uint16_t aReason, ErrorResult& aRv)
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+
+  if (!IsValidCallForwardingReason(aReason)) {
+    nsresult rv = NotifyError(request, MOBILECONN_ERROR_INVALID_PARAMETER);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return nullptr;
+    }
+    return request.forget();
+  }
+
   nsRefPtr<MobileConnectionCallback> requestCallback =
     new MobileConnectionCallback(GetOwner(), request);
 
@@ -589,24 +680,42 @@ MobileConnection::SetCallForwardingOption(const MozCallForwardingOptions& aOptio
     return nullptr;
   }
 
-  AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(GetOwner()))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  JSContext *cx = jsapi.cx();
-  JS::Rooted<JS::Value> options(cx);
-  if (!ToJSValue(cx, aOptions, &options)) {
-    aRv.Throw(NS_ERROR_TYPE_ERR);
-    return nullptr;
-  }
-
   nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+
+  if (!IsValidCallForwardingOptions(aOptions)) {
+    nsresult rv = NotifyError(request, MOBILECONN_ERROR_INVALID_PARAMETER);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return nullptr;
+    }
+    return request.forget();
+  }
+
+  // Fill in optional attributes.
+  uint16_t timeSeconds = 0;
+  if (aOptions.mTimeSeconds.WasPassed() && !aOptions.mTimeSeconds.Value().IsNull()) {
+    timeSeconds = aOptions.mTimeSeconds.Value().Value();
+  }
+  uint16_t serviceClass = nsIMobileConnection::ICC_SERVICE_CLASS_NONE;
+  if (aOptions.mServiceClass.WasPassed() && !aOptions.mServiceClass.Value().IsNull()) {
+    serviceClass = aOptions.mServiceClass.Value().Value();
+  }
+  nsAutoString number;
+  if (aOptions.mNumber.WasPassed()) {
+    number = aOptions.mNumber.Value();
+  } else {
+    number.SetIsVoid(true);
+  }
+
   nsRefPtr<MobileConnectionCallback> requestCallback =
     new MobileConnectionCallback(GetOwner(), request);
 
-  nsresult rv = mMobileConnection->SetCallForwarding(options, requestCallback);
+  nsresult rv = mMobileConnection->SetCallForwarding(aOptions.mAction.Value().Value(),
+                                                     aOptions.mReason.Value().Value(),
+                                                     number,
+                                                     timeSeconds,
+                                                     serviceClass,
+                                                     requestCallback);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
@@ -624,24 +733,32 @@ MobileConnection::GetCallBarringOption(const MozCallBarringOptions& aOptions,
     return nullptr;
   }
 
-  AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(GetOwner()))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  JSContext *cx = jsapi.cx();
-  JS::Rooted<JS::Value> options(cx);
-  if (!ToJSValue(cx, aOptions, &options)) {
-    aRv.Throw(NS_ERROR_TYPE_ERR);
-    return nullptr;
-  }
-
   nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+
+  if (!IsValidCallBarringOptions(aOptions, false)) {
+    nsresult rv = NotifyError(request, MOBILECONN_ERROR_INVALID_PARAMETER);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return nullptr;
+    }
+    return request.forget();
+  }
+
+  // Fill in optional attributes.
+  nsAutoString password;
+  if (aOptions.mPassword.WasPassed()) {
+    password = aOptions.mPassword.Value();
+  } else {
+    password.SetIsVoid(true);
+  }
+
   nsRefPtr<MobileConnectionCallback> requestCallback =
     new MobileConnectionCallback(GetOwner(), request);
 
-  nsresult rv = mMobileConnection->GetCallBarring(options, requestCallback);
+  nsresult rv = mMobileConnection->GetCallBarring(aOptions.mProgram.Value().Value(),
+                                                  password,
+                                                  aOptions.mServiceClass.Value().Value(),
+                                                  requestCallback);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
@@ -659,24 +776,25 @@ MobileConnection::SetCallBarringOption(const MozCallBarringOptions& aOptions,
     return nullptr;
   }
 
-  AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(GetOwner()))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  JSContext *cx = jsapi.cx();
-  JS::Rooted<JS::Value> options(cx);
-  if (!ToJSValue(cx, aOptions, &options)) {
-    aRv.Throw(NS_ERROR_TYPE_ERR);
-    return nullptr;
-  }
-
   nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+
+  if (!IsValidCallBarringOptions(aOptions, true)) {
+    nsresult rv = NotifyError(request, MOBILECONN_ERROR_INVALID_PARAMETER);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return nullptr;
+    }
+    return request.forget();
+  }
+
   nsRefPtr<MobileConnectionCallback> requestCallback =
     new MobileConnectionCallback(GetOwner(), request);
 
-  nsresult rv = mMobileConnection->SetCallBarring(options, requestCallback);
+  nsresult rv = mMobileConnection->SetCallBarring(aOptions.mProgram.Value().Value(),
+                                                  aOptions.mEnabled.Value().Value(),
+                                                  aOptions.mPassword.Value(),
+                                                  aOptions.mServiceClass.Value().Value(),
+                                                  requestCallback);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
@@ -694,25 +812,27 @@ MobileConnection::ChangeCallBarringPassword(const MozCallBarringOptions& aOption
     return nullptr;
   }
 
-  AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(GetOwner()))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  JSContext *cx = jsapi.cx();
-  JS::Rooted<JS::Value> options(cx);
-  if (!ToJSValue(cx, aOptions, &options)) {
-    aRv.Throw(NS_ERROR_TYPE_ERR);
-    return nullptr;
-  }
-
   nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+
+  if (!aOptions.mPin.WasPassed() || aOptions.mPin.Value().IsVoid() ||
+      !aOptions.mNewPin.WasPassed() || aOptions.mNewPin.Value().IsVoid() ||
+      !IsValidPassword(aOptions.mPin.Value()) ||
+      !IsValidPassword(aOptions.mNewPin.Value())) {
+    nsresult rv = NotifyError(request, MOBILECONN_ERROR_INVALID_PASSWORD);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return nullptr;
+    }
+    return request.forget();
+  }
+
   nsRefPtr<MobileConnectionCallback> requestCallback =
     new MobileConnectionCallback(GetOwner(), request);
 
   nsresult rv =
-    mMobileConnection->ChangeCallBarringPassword(options, requestCallback);
+    mMobileConnection->ChangeCallBarringPassword(aOptions.mPin.Value(),
+                                                 aOptions.mNewPin.Value(),
+                                                 requestCallback);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;

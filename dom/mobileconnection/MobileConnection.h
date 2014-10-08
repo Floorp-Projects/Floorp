@@ -176,6 +176,27 @@ private:
 
   void
   UpdateData();
+
+  nsresult
+  NotifyError(nsIDOMDOMRequest* aRequest, const nsAString& aMessage);
+
+  bool
+  IsValidPassword(const nsAString& aPassword);
+
+  bool
+  IsValidCallBarringOptions(const MozCallBarringOptions& aOptions, bool isSetting);
+
+  bool
+  IsValidCallForwardingOptions(const MozCallForwardingOptions& aOptions);
+
+  bool
+  IsValidCallForwardingReason(int32_t aReason);
+
+  bool
+  IsValidCallForwardingAction(int32_t aAction);
+
+  bool
+  IsValidCallBarringProgram(int32_t aProgram);
 };
 
 } // namespace dom
