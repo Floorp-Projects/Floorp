@@ -310,7 +310,9 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
       mIndexReady = true;
     }
 
-    mInfo.mVideo.mHasVideo = mVideo.mActive = mDemuxer->HasValidVideo();
+    // To decode, we need valid video and a place to put it.
+    mInfo.mVideo.mHasVideo = mVideo.mActive = mDemuxer->HasValidVideo() &&
+                                              mDecoder->GetImageContainer();
     const VideoDecoderConfig& video = mDemuxer->VideoConfig();
     // If we have video, we *only* allow H.264 to be decoded.
     if (mInfo.mVideo.mHasVideo && strcmp(video.mime_type, "video/avc")) {
