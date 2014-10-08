@@ -520,11 +520,12 @@ public class BrowserApp extends GeckoApp
         mAboutHomeStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_ABOUTHOME");
 
         final Intent intent = getIntent();
-        final String args = intent.getStringExtra("args");
-
-        if (GuestSession.shouldUse(this, args)) {
-            mProfile = GeckoProfile.createGuestProfile(this);
-        } else {
+        final GeckoProfile p = GeckoProfile.get(this);
+        if (p != null && !p.inGuestMode()) {
+            // This is *only* valid because we never want to use the guest mode
+            // profile concurrently with a normal profile -- no syncing to it,
+            // no dual-profile usage, nothing. BrowserApp startup with a conventional
+            // GeckoProfile will cause the guest profile to be deleted.
             GeckoProfile.maybeCleanupGuestProfile(this);
         }
 
