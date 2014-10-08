@@ -131,12 +131,12 @@ class Test1BrowserCall(MarionetteTestCase):
         self.marionette.set_context("chrome")
         button = self.marionette.find_element(By.CLASS_NAME, "btn-hangup")
 
-        # XXX For whatever reason, the click doesn't take effect unless we
-        # wait for a bit (even if we wait for the element to actually be
-        # displayed first, which we're not currently bothering with).  It's
-        # not entirely clear whether the click is being delivered in this case,
-        # or whether there's a Marionette bug here.
-        sleep(2)
+        # XXX bug 1080095 For whatever reason, the click doesn't take effect
+        # unless we wait for a bit (even if we wait for the element to
+        # actually be displayed first, which we're not currently bothering
+        # with).  It's not entirely clear whether the click is being
+        # delivered in this case, or whether there's a Marionette bug here.
+        sleep(5)
         button.click()
 
         # check that the feedback form is displayed

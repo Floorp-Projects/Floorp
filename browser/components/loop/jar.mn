@@ -55,6 +55,7 @@ browser.jar:
   # Shared scripts
   content/browser/loop/shared/js/actions.js           (content/shared/js/actions.js)
   content/browser/loop/shared/js/conversationStore.js (content/shared/js/conversationStore.js)
+  content/browser/loop/shared/js/roomListStore.js     (content/shared/js/roomListStore.js)
   content/browser/loop/shared/js/dispatcher.js        (content/shared/js/dispatcher.js)
   content/browser/loop/shared/js/feedbackApiClient.js (content/shared/js/feedbackApiClient.js)
   content/browser/loop/shared/js/models.js            (content/shared/js/models.js)
