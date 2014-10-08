@@ -4,12 +4,13 @@
 
 #include "nsISupports.idl"
 
+interface nsIMobileCallForwardingOptions;
 interface nsIMobileConnection;
 interface nsIMobileConnectionInfo;
 interface nsIMobileNetworkInfo;
 interface nsIVariant;
 
-[scriptable, uuid(bc0d4d76-fd3a-4593-818f-cb6ff87fbb55)]
+[scriptable, uuid(823d935e-8262-47ed-8429-8203096b2ff4)]
 interface nsIMobileConnectionListener : nsISupports
 {
   /**
@@ -47,15 +48,15 @@ interface nsIMobileConnectionListener : nsISupports
    * @param success
    *        Indicates whether the set call forwarding request is success.
    * @param action
-   *        One of the nsIMobileConnectionService.CALL_FORWARD_ACTION_* values.
+   *        One of the nsIMobileConnection.CALL_FORWARD_ACTION_* values.
    * @param reason
-   *        One of the nsIMobileConnectionService.CALL_FORWARD_REASON_* values.
+   *        One of the nsIMobileConnection.CALL_FORWARD_REASON_* values.
    * @param number
    *        Phone number of forwarding address.
    * @param timeSeconds
    *        The time in seconds should wait before call is forwarded.
    * @param serviceClass
-   *        One of the nsIMobileConnectionService.ICC_SERVICE_CLASS_* values.
+   *        One of the nsIMobileConnection.ICC_SERVICE_CLASS_* values.
    */
   void notifyCFStateChanged(in boolean success,
                             in unsigned short action,
@@ -100,7 +101,7 @@ interface nsIMobileConnectionListener : nsISupports
    * Notify when clir mode is changed.
    *
    * @param mode
-   *        One of the nsIMobileConnectionService.CLIR_* values.
+   *        One of the nsIMobileConnection.CLIR_* values.
    */
   void notifyClirModeChanged(in unsigned long mode);
 
@@ -124,7 +125,7 @@ interface nsIMobileConnectionListener : nsISupports
 #define NO_ADDITIONAL_INFORMATION 0
 %}
 
-[scriptable, builtinclass, uuid(7f2dbbe0-42f2-11e4-916c-0800200c9a66)]
+[scriptable, builtinclass, uuid(05568ae9-9873-46c6-9acd-0f6994cde756)]
 interface nsIMobileConnectionCallback : nsISupports
 {
   /**
@@ -139,11 +140,26 @@ interface nsIMobileConnectionCallback : nsISupports
   void notifyGetNetworksSuccess(in uint32_t count,
                                 [array, size_is(count)] in nsIMobileNetworkInfo networks);
 
-  [implicit_jscontext]
-  void notifySendCancelMmiSuccess(in jsval result /* MozMMIResult */);
+  void notifySendCancelMmiSuccess(in DOMString aServiceCode,
+                                  in DOMString aStatusMessage);
 
-  [implicit_jscontext]
-  void notifyGetCallForwardingSuccess(in jsval results /* Array of MozCallForwardingOptions */);
+  void notifySendCancelMmiSuccessWithInteger(in DOMString aServiceCode,
+                                             in DOMString aStatusMessage,
+                                             in unsigned short aAdditionalInformation);
+
+  void notifySendCancelMmiSuccessWithStrings(in DOMString aServiceCode,
+                                             in DOMString aStatusMessage,
+                                             in unsigned long aLength,
+                                             [array, size_is(aLength)] in wstring aAdditionalInformation);
+
+  void notifySendCancelMmiSuccessWithCallForwardingOptions(in DOMString aServiceCode,
+                                                           in DOMString aStatusMessage,
+                                                           in unsigned long aLength,
+                                                           [array, size_is(aLength)] in nsIMobileCallForwardingOptions aAdditionalInformation);
+
+  void notifyGetCallForwardingSuccess(in uint32_t count,
+                                      [array, size_is(count)] in nsIMobileCallForwardingOptions results);
+
 
   void notifyGetCallBarringSuccess(in unsigned short program,
                                    in boolean enabled,
@@ -218,9 +234,13 @@ already_AddRefed<nsIMobileConnectionService>
 NS_CreateMobileConnectionService();
 %}
 
-[scriptable, uuid(04db7331-54fe-4cf7-9347-b9481350f4c2)]
+[scriptable, uuid(1b76ccbf-dbc2-4b74-a62a-73ea91599afa)]
 interface nsIMobileConnection : nsISupports
 {
+  /*
+   * ICC service class.
+   */
+  const long ICC_SERVICE_CLASS_NONE       = 0; // not available
   const long ICC_SERVICE_CLASS_VOICE      = (1 << 0);
   const long ICC_SERVICE_CLASS_DATA       = (1 << 1);
   const long ICC_SERVICE_CLASS_FAX        = (1 << 2);
@@ -236,6 +256,7 @@ interface nsIMobileConnection : nsISupports
    *
    * @see 3GPP TS 27.007 7.11 "mode".
    */
+  const long CALL_FORWARD_ACTION_UNKNOWN      = -1; // not available
   const long CALL_FORWARD_ACTION_DISABLE      = 0;
   const long CALL_FORWARD_ACTION_ENABLE       = 1;
   const long CALL_FORWARD_ACTION_QUERY_STATUS = 2;
@@ -247,6 +268,7 @@ interface nsIMobileConnection : nsISupports
    *
    * @see 3GPP TS 27.007 7.11 "reason".
    */
+  const long CALL_FORWARD_REASON_UNKNOWN                         = -1; // not available
   const long CALL_FORWARD_REASON_UNCONDITIONAL                   = 0;
   const long CALL_FORWARD_REASON_MOBILE_BUSY                     = 1;
   const long CALL_FORWARD_REASON_NO_REPLY                        = 2;
@@ -257,6 +279,7 @@ interface nsIMobileConnection : nsISupports
   /**
    * Call barring program.
    */
+  const long CALL_BARRING_PROGRAM_UNKNOWN                            = -1; // not available
   const long CALL_BARRING_PROGRAM_ALL_OUTGOING                       = 0;
   const long CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL             = 1;
   const long CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL_EXCEPT_HOME = 2;
@@ -492,7 +515,7 @@ interface nsIMobileConnection : nsISupports
    * @param requestCallback
    *        Called when request is finished.
    *
-   * If successful, the notifySendCancelMmiSuccess() will be called. And the
+   * If successful, the notifySendCancelMmiSuccess*() will be called. And the
    * result will contain the information about the mmi operation.
    *
    * Otherwise, the notifyError() will be called.
@@ -506,7 +529,7 @@ interface nsIMobileConnection : nsISupports
    * @param requestCallback
    *        Called when request is finished.
    *
-   * If successful, the notifySendCancelMmiSuccess() will be called. And the
+   * If successful, the notifySendCancelMmiSuccess*() will be called. And the
    * result will contain the information about the mmi operation.
    *
    * Otherwise, the notifyError() will be called.
@@ -523,8 +546,8 @@ interface nsIMobileConnection : nsISupports
    *        Called when request is finished.
    *
    * If successful, the notifyGetCallForwardingSuccess() will be called. And the
-   * result will be an array of MozCallForwardingOptions.
-   * @see MozCallForwardingOptions for the detail of result.
+   * result will be an array of nsIMobileCallForwardingOptions.
+   * @see nsIMobileCallForwardingOptions for the detail of result.
    *
    * Otherwise, the notifyError() will be called, and the error will be either
    * 'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter',
@@ -536,9 +559,17 @@ interface nsIMobileConnection : nsISupports
   /**
    * Configures call forwarding options.
    *
-   * @param options
-   *        An object containing the call forward rule to set.
-   * @see MozCallForwardingOptions for the detail of options.
+   * @param action
+   *        One of the nsIMobileConnection.CALL_FORWARD_ACTION_* values.
+   * @param reason
+   *        One of the nsIMobileConnection.CALL_FORWARD_REASON_* values.
+   * @param number
+   *        Phone number of forwarding address.
+   * @param timeSeconds
+   *        When "no reply" is enabled or queried, this gives the time in
+   *        seconds to wait before call is forwarded.
+   * @param serviceClass
+   *        One of the nsIMobileConnection.ICC_SERVICE_CLASS_* values.
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -548,16 +579,22 @@ interface nsIMobileConnection : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void setCallForwarding(in jsval options,
+  void setCallForwarding(in unsigned short action,
+                         in unsigned short reason,
+                         in DOMString number,
+                         in unsigned short timeSeconds,
+                         in unsigned short serviceClass,
                          in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Queries current call barring status.
    *
-   * @param options
-   *        An object containing the call barring rule to query. No need to
-   *        specify 'enabled' property.
-   * @see MozCallBarringOptions for the detail of options.
+   * @param program
+   *        One of the nsIMobileConnection.CALL_BARRING_PROGRAM_* values.
+   * @param password
+   *        Call barring password. Use "" if no password specified.
+   * @param serviceClass
+   *        One of the nsIMobileConnection.ICC_SERVICE_CLASS_* values.
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -569,15 +606,22 @@ interface nsIMobileConnection : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void getCallBarring(in jsval options,
+  void getCallBarring(in unsigned short program,
+                      in DOMString password,
+                      in unsigned short serviceClass,
                       in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Configures call barring option.
    *
-   * @param options
-   *        An object containing the call barring rule to set.
-   * @see MozCallBarringOptions for the detail of options.
+   * @param program
+   *        One of the nsIMobileConnection.CALL_BARRING_PROGRAM_* values.
+   * @param enabled
+   *        Enable or disable the call barring program.
+   * @param password
+   *        Call barring password. Use "" if no password specified.
+   * @param serviceClass
+   *        One of the nsIMobileConnection.ICC_SERVICE_CLASS_* values.
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -587,17 +631,19 @@ interface nsIMobileConnection : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void setCallBarring(in jsval options,
+  void setCallBarring(in unsigned short program,
+                      in bool enabled,
+                      in DOMString password,
+                      in unsigned short serviceClass,
                       in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Change call barring facility password.
    *
-   * @param options
-   *        An object containing information about pin and newPin, and,
-   *        this object must have both "pin" and "newPin" attributes
-   *        to change the call barring facility password.
-   * @see MozCallBarringOptions for the detail of options.
+   * @param pin
+   *        Old call barring password.
+   * @param newPin
+   *        New call barring password.
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -607,7 +653,8 @@ interface nsIMobileConnection : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void changeCallBarringPassword(in jsval options,
+  void changeCallBarringPassword(in DOMString pin,
+                                 in DOMString newPin,
                                  in nsIMobileConnectionCallback requestCallback);
 
   /**
@@ -647,7 +694,7 @@ interface nsIMobileConnection : nsISupports
    * the called party when originating a call.
    *
    * @param clirMode
-   *        One of the nsIMobileConnectionService.CLIR_* values.
+   *        One of the nsIMobileConnection.CLIR_* values.
    * @param requestCallback
    *        Called when request is finished.
    *
