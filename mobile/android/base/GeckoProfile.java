@@ -203,6 +203,7 @@ public final class GeckoProfile {
     }
 
     // Only public for access from tests.
+    @RobocopTarget
     public static GeckoProfile createGuestProfile(Context context) {
         try {
             // We need to force the creation of a new guest profile if we want it outside of the normal profile path,
