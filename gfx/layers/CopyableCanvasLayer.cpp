@@ -106,8 +106,8 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
   if (mGLFrontbuffer) {
     frontbuffer = mGLFrontbuffer.get();
   } else {
-    auto screen = mGLContext->Screen();
-    auto front = screen->Front();
+    GLScreenBuffer* screen = mGLContext->Screen();
+    ShSurfHandle* front = screen->Front();
     if (front) {
       frontbuffer = front->Surf();
     }

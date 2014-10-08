@@ -1429,11 +1429,10 @@ WebGLContext::PresentScreenBuffer()
 
     gl->MakeCurrent();
 
-    auto screen = gl->Screen();
+    GLScreenBuffer* screen = gl->Screen();
     MOZ_ASSERT(screen);
 
-    auto size = screen->Size();
-    if (!screen->PublishFrame(size)) {
+    if (!screen->PublishFrame(screen->Size())) {
         ForceLoseContext();
         return false;
     }

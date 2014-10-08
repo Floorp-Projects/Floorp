@@ -705,18 +705,18 @@ DrawTargetSkia::CopySurface(SourceSurface *aSurface,
 
   // This is a fast path that is disabled for now to mimimize risk
   if (false && !bitmap.mBitmap.getTexture() && mCanvas->imageInfo() == bitmap.mBitmap.info()) {
-  SkBitmap bm(bitmap.mBitmap);
-  bm.lockPixels();
-  if (bm.getPixels()) {
-    SkImageInfo info = bm.info();
-    info.fWidth = aSourceRect.width;
-    info.fHeight = aSourceRect.height;
-    uint8_t* pixels = static_cast<uint8_t*>(bm.getPixels());
-    // adjust pixels for the source offset
-    pixels += aSourceRect.x + aSourceRect.y*bm.rowBytes();
-    mCanvas->writePixels(info, pixels, bm.rowBytes(), aDestination.x, aDestination.y);
-    return;
-  }
+    SkBitmap bm(bitmap.mBitmap);
+    bm.lockPixels();
+    if (bm.getPixels()) {
+      SkImageInfo info = bm.info();
+      info.fWidth = aSourceRect.width;
+      info.fHeight = aSourceRect.height;
+      uint8_t* pixels = static_cast<uint8_t*>(bm.getPixels());
+      // adjust pixels for the source offset
+      pixels += aSourceRect.x + aSourceRect.y*bm.rowBytes();
+      mCanvas->writePixels(info, pixels, bm.rowBytes(), aDestination.x, aDestination.y);
+      return;
+    }
   }
 
   mCanvas->save();
