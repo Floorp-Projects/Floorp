@@ -268,13 +268,13 @@ RangeAnalysis::removeBetaNodes()
     for (PostorderIterator i(graph_.poBegin()); i != graph_.poEnd(); i++) {
         MBasicBlock *block = *i;
         for (MDefinitionIterator iter(*i); iter; ) {
-            MDefinition *def = *iter;
+            MDefinition *def = *iter++;
             if (def->isBeta()) {
                 MDefinition *op = def->getOperand(0);
                 JitSpew(JitSpew_Range, "Removing beta node %d for %d",
                         def->id(), op->id());
                 def->justReplaceAllUsesWith(op);
-                iter = block->discardDefAt(iter);
+                block->discardDef(def);
             } else {
                 // We only place Beta nodes at the beginning of basic
                 // blocks, so if we see something else, we can move on

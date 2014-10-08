@@ -371,8 +371,7 @@ ValueNumberer::discardDef(MDefinition *def)
         MPhi *phi = def->toPhi();
         if (!releaseAndRemovePhiOperands(phi))
              return false;
-        MPhiIterator at(block->phisBegin(phi));
-        block->discardPhiAt(at);
+        block->discardPhi(phi);
     } else {
         MInstruction *ins = def->toInstruction();
         if (MResumePoint *resume = ins->resumePoint()) {
