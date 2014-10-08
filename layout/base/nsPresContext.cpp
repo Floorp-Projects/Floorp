@@ -1864,7 +1864,8 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
   RebuildUserFontSet();
   RebuildCounterStyles();
 
-  RestyleManager()->RebuildAllStyleData(aExtraHint);
+  // FIXME: Pass through from callers
+  RestyleManager()->RebuildAllStyleData(aExtraHint, eRestyle_Subtree);
 }
 
 void
