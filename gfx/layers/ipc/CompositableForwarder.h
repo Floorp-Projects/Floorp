@@ -194,6 +194,8 @@ public:
                                PTextureChild* aTexture,
                                const FenceHandle& aFence) = 0;
 
+  virtual void SendPendingAsyncMessges() = 0;
+
   void IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier);
 
   virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE

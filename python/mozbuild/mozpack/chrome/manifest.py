@@ -35,6 +35,7 @@ class ManifestEntry(object):
         'abi',
         'xpcnativewrappers',
         'tablet',
+        'process',
     ]
 
     def __init__(self, base, *flags):

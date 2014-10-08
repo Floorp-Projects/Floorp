@@ -349,3 +349,7 @@ let PopupBlocking = {
   },
 };
 PopupBlocking.init();
+
+// Set up console.* for frame scripts.
+let Console = Components.utils.import("resource://gre/modules/devtools/Console.jsm", {});
+this.console = new Console.ConsoleAPI();

@@ -31,9 +31,6 @@ function TestSetPrototypeOf(object, proto) {
 // check if Object.setPrototypeOf works with coercible values
 for(var value of coercibleValues) {
     assertEq(Object.setPrototypeOf(value, {}), value);
-
-    assertThrowsInstanceOf(() => Object.getPrototypeOf(value),
-        TypeError, "Coercible values should not have a prototype");
 }
 
 // check if Object.setPrototypeOf fails on non-coercible values

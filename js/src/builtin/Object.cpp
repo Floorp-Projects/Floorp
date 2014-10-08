@@ -15,7 +15,7 @@
 
 #include "jsobjinlines.h"
 
-#include "vm/ObjectImpl-inl.h"
+#include "vm/NativeObject-inl.h"
 
 using namespace js;
 using namespace js::types;
@@ -531,33 +531,20 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif /* JS_OLD_GETTER_SETTER_METHODS */
 
-/* ES5 15.2.3.2. */
+// ES6 draft rev27 (2014/08/24) 19.1.2.9 Object.getPrototypeOf(O)
 bool
 js::obj_getPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    /* Step 1. */
-    if (args.length() == 0) {
-        js_ReportMissingArg(cx, args.calleev(), 0);
+    /* Steps 1-2. */
+    RootedObject obj(cx, ToObject(cx, args.get(0)));
+    if (!obj)
         return false;
-    }
 
-    if (args[0].isPrimitive()) {
-        RootedValue val(cx, args[0]);
-        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, NullPtr());
-        if (!bytes)
-            return false;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                             JSMSG_UNEXPECTED_TYPE, bytes, "not an object");
-        js_free(bytes);
-        return false;
-    }
-
-    /* Step 2. */
-    RootedObject thisObj(cx, &args[0].toObject());
+    /* Step 3. */
     RootedObject proto(cx);
-    if (!JSObject::getProto(cx, thisObj, &proto))
+    if (!JSObject::getProto(cx, obj, &proto))
         return false;
     args.rval().setObjectOrNull(proto);
     return true;
@@ -826,16 +813,23 @@ js::obj_create(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+// ES6 draft rev27 (2014/08/24) 19.1.2.6 Object.getOwnPropertyDescriptor(O, P)
 bool
 js::obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx);
-    if (!GetFirstArgumentAsObject(cx, args, "Object.getOwnPropertyDescriptor", &obj))
+
+    // Steps 1-2.
+    RootedObject obj(cx, ToObject(cx, args.get(0)));
+    if (!obj)
         return false;
+
+    // Steps 3-4.
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, args.get(1), &id))
         return false;
+
+    // Steps 5-7.
     return GetOwnPropertyDescriptor(cx, obj, id, args.rval());
 }
 

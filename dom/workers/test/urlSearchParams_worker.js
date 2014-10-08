@@ -22,7 +22,7 @@ onmessage = function() {
     var u = new URLSearchParams();
     ok(u, "URLSearchParams created");
     is(u.has('foo'), false, 'URLSearchParams.has(foo)');
-    is(u.get('foo'), '', 'URLSearchParams.get(foo)');
+    is(u.get('foo'), null, 'URLSearchParams.get(foo)');
     is(u.getAll('foo').length, 0, 'URLSearchParams.getAll(foo)');
 
     u.append('foo', 'bar');

@@ -55,8 +55,9 @@ public:
   virtual Layer* AsLayer() { return this; }
   virtual void InvalidateRegion(const nsIntRegion& aRegion) {
     mInvalidRegion.Or(mInvalidRegion, aRegion);
-    mValidRegion.Sub(mValidRegion, aRegion);
-    mLowPrecisionValidRegion.Sub(mLowPrecisionValidRegion, aRegion);
+    mInvalidRegion.SimplifyOutward(20);
+    mValidRegion.Sub(mValidRegion, mInvalidRegion);
+    mLowPrecisionValidRegion.Sub(mLowPrecisionValidRegion, mInvalidRegion);
   }
 
   // Shadow methods

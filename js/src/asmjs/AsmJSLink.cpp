@@ -44,7 +44,7 @@
 #include "jsobjinlines.h"
 
 #include "vm/ArrayBufferObject-inl.h"
-#include "vm/ObjectImpl-inl.h"
+#include "vm/NativeObject-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -219,10 +219,12 @@ ValidateFFI(JSContext *cx, AsmJSModule::Global &global, HandleValue importVal,
 }
 
 static bool
-ValidateArrayView(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal,
-                  HandleValue bufferVal)
+ValidateArrayView(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal)
 {
-    RootedPropertyName field(cx, global.viewName());
+    RootedPropertyName field(cx, global.maybeViewName());
+    if (!field)
+        return true;
+
     RootedValue v(cx);
     if (!GetDataProperty(cx, globalVal, field, &v))
         return false;
@@ -232,6 +234,30 @@ ValidateArrayView(JSContext *cx, AsmJSModule::Global &global, HandleValue global
     {
         return LinkFail(cx, "bad typed array constructor");
     }
+
+    return true;
+}
+
+static bool
+ValidateByteLength(JSContext *cx, HandleValue globalVal)
+{
+    RootedPropertyName field(cx, cx->names().byteLength);
+    RootedValue v(cx);
+    if (!GetDataProperty(cx, globalVal, field, &v))
+        return false;
+
+    if (!v.isObject() || !v.toObject().isBoundFunction())
+        return LinkFail(cx, "byteLength must be a bound function object");
+
+    RootedFunction fun(cx, &v.toObject().as<JSFunction>());
+
+    RootedValue boundTarget(cx, ObjectValue(*fun->getBoundFunctionTarget()));
+    if (!IsNativeFunction(boundTarget, js_fun_call))
+        return LinkFail(cx, "bound target of byteLength must be Function.prototype.call");
+
+    RootedValue boundThis(cx, fun->getBoundFunctionThis());
+    if (!IsNativeFunction(boundThis, ArrayBufferObject::byteLengthGetter))
+        return LinkFail(cx, "bound this value must be ArrayBuffer.protototype.byteLength accessor");
 
     return true;
 }
@@ -439,9 +465,8 @@ LinkModuleToHeap(JSContext *cx, AsmJSModule &module, Handle<ArrayBufferObjectMay
     MOZ_ASSERT((module.minHeapLength() - 1) <= INT32_MAX);
     if (heapLength < module.minHeapLength()) {
         ScopedJSFreePtr<char> msg(
-            JS_smprintf("ArrayBuffer byteLength of 0x%x is less than 0x%x (which is the "
-                        "largest constant heap access offset rounded up to the next valid "
-                        "heap size).",
+            JS_smprintf("ArrayBuffer byteLength of 0x%x is less than 0x%x (the size implied "
+                        "by const heap accesses and/or change-heap minimum-length requirements).",
                         heapLength,
                         module.minHeapLength()));
         return LinkFail(cx, msg.get());
@@ -470,17 +495,9 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
 {
     module.setIsDynamicallyLinked();
 
-    RootedValue globalVal(cx);
-    if (args.length() > 0)
-        globalVal = args[0];
-
-    RootedValue importVal(cx);
-    if (args.length() > 1)
-        importVal = args[1];
-
-    RootedValue bufferVal(cx);
-    if (args.length() > 2)
-        bufferVal = args[2];
+    HandleValue globalVal = args.get(0);
+    HandleValue importVal = args.get(1);
+    HandleValue bufferVal = args.get(2);
 
     Rooted<ArrayBufferObjectMaybeShared *> heap(cx);
     if (module.hasArrayView()) {
@@ -508,7 +525,12 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
                 return false;
             break;
           case AsmJSModule::Global::ArrayView:
-            if (!ValidateArrayView(cx, global, globalVal, bufferVal))
+          case AsmJSModule::Global::ArrayViewCtor:
+            if (!ValidateArrayView(cx, global, globalVal))
+                return false;
+            break;
+          case AsmJSModule::Global::ByteLength:
+            if (!ValidateByteLength(cx, globalVal))
                 return false;
             break;
           case AsmJSModule::Global::MathBuiltinFunction:
@@ -538,12 +560,32 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
     return true;
 }
 
+static bool
+ChangeHeap(JSContext *cx, AsmJSModule &module, CallArgs args)
+{
+    HandleValue bufferArg = args.get(0);
+    if (!IsArrayBuffer(bufferArg)) {
+        ReportIncompatible(cx, args);
+        return false;
+    }
+
+    Rooted<ArrayBufferObject*> newBuffer(cx, &bufferArg.toObject().as<ArrayBufferObject>());
+    bool rval = module.changeHeap(newBuffer, cx);
+
+    args.rval().set(BooleanValue(rval));
+    return true;
+}
+
+// An asm.js function stores, in its extended slots:
+//  - a pointer to the module from which it was returned
+//  - its index in the ordered list of exported functions
 static const unsigned ASM_MODULE_SLOT = 0;
 static const unsigned ASM_EXPORT_INDEX_SLOT = 1;
 
 static unsigned
 FunctionToExportedFunctionIndex(HandleFunction fun)
 {
+    MOZ_ASSERT(IsAsmJSFunction(fun));
     Value v = fun->getExtendedSlot(ASM_EXPORT_INDEX_SLOT);
     return v.toInt32();
 }
@@ -561,18 +603,18 @@ FunctionToEnclosingModule(HandleFunction fun)
     return fun->getExtendedSlot(ASM_MODULE_SLOT).toObject().as<AsmJSModuleObject>().module();
 }
 
-// The JSNative for the functions nested in an asm.js module. Calling this
-// native will trampoline into generated code.
+// This is the js::Native for functions exported by an asm.js module.
 static bool
 CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs callArgs = CallArgsFromVp(argc, vp);
     RootedFunction callee(cx, &callArgs.callee().as<JSFunction>());
-
-    // An asm.js function stores, in its extended slots:
-    //  - a pointer to the module from which it was returned
-    //  - its index in the ordered list of exported functions
     AsmJSModule &module = FunctionToEnclosingModule(callee);
+    const AsmJSModule::ExportedFunction &func = FunctionToExportedFunction(callee, module);
+
+    // The heap-changing function is a special-case and is implemented by C++.
+    if (func.isChangeHeap())
+        return ChangeHeap(cx, module, callArgs);
 
     // Enable/disable profiling in the asm.js module to match the current global
     // profiling state. Don't do this if the module is already active on the
@@ -580,11 +622,6 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
     // enabled but the stack isn't unwindable.
     if (module.profilingEnabled() != cx->runtime()->spsProfiler.enabled() && !module.active())
         module.setProfilingEnabled(cx->runtime()->spsProfiler.enabled(), cx);
-
-    // An exported function points to the code as well as the exported
-    // function's signature, which implies the dynamic coercions performed on
-    // the arguments.
-    const AsmJSModule::ExportedFunction &func = FunctionToExportedFunction(callee, module);
 
     // The calling convention for an external call into asm.js is to pass an
     // array of 16-byte values where each value contains either a coerced int32
@@ -701,9 +738,9 @@ NewExportedFunction(JSContext *cx, const AsmJSModule::ExportedFunction &func,
                     HandleObject moduleObj, unsigned exportIndex)
 {
     RootedPropertyName name(cx, func.name());
-    JSFunction *fun = NewFunction(cx, NullPtr(), CallAsmJS, func.numArgs(),
-                                  JSFunction::ASMJS_CTOR, cx->global(), name,
-                                  JSFunction::ExtendedFinalizeKind);
+    unsigned numArgs = func.isChangeHeap() ? 1 : func.numArgs();
+    JSFunction *fun = NewFunction(cx, NullPtr(), CallAsmJS, numArgs, JSFunction::ASMJS_CTOR,
+                                  cx->global(), name, JSFunction::ExtendedFinalizeKind);
     if (!fun)
         return nullptr;
 

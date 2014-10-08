@@ -493,9 +493,13 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
   NS_NAMED_LITERAL_STRING(kOs, "os");
   NS_NAMED_LITERAL_STRING(kOsVersion, "osversion");
   NS_NAMED_LITERAL_STRING(kABI, "abi");
+  NS_NAMED_LITERAL_STRING(kProcess, "process");
 #if defined(MOZ_WIDGET_ANDROID)
   NS_NAMED_LITERAL_STRING(kTablet, "tablet");
 #endif
+
+  NS_NAMED_LITERAL_STRING(kMain, "main");
+  NS_NAMED_LITERAL_STRING(kContent, "content");
 
   // Obsolete
   NS_NAMED_LITERAL_STRING(kXPCNativeWrappers, "xpcnativewrappers");
@@ -505,6 +509,7 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
   nsAutoString geckoVersion;
   nsAutoString osTarget;
   nsAutoString abi;
+  nsAutoString process;
 
   nsCOMPtr<nsIXULAppInfo> xapp;
   if (!aXPTOnly) {
@@ -577,6 +582,12 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
     isTablet = mozilla::widget::android::GeckoAppShell::IsTablet();
   }
 #endif
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    process = kContent;
+  } else {
+    process = kMain;
+  }
 
   // Because contracts must be registered after CIDs, we save and process them
   // at the end.
@@ -669,6 +680,7 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
     TriState stOsVersion = eUnspecified;
     TriState stOs = eUnspecified;
     TriState stABI = eUnspecified;
+    TriState stProcess = eUnspecified;
 #if defined(MOZ_WIDGET_ANDROID)
     TriState stTablet = eUnspecified;
 #endif
@@ -683,6 +695,7 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
       if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
           CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
           CheckStringFlag(kABI, wtoken, abi, stABI) ||
+          CheckStringFlag(kProcess, wtoken, process, stProcess) ||
           CheckVersionFlag(kOsVersion, wtoken, osVersion, stOsVersion) ||
           CheckVersionFlag(kAppVersion, wtoken, appVersion, stAppVersion) ||
           CheckVersionFlag(kGeckoVersion, wtoken, geckoVersion, stGeckoVersion)) {
@@ -726,7 +739,8 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
 #ifdef MOZ_WIDGET_ANDROID
         stTablet == eBad ||
 #endif
-        stABI == eBad) {
+        stABI == eBad ||
+        stProcess == eBad) {
       continue;
     }
 

@@ -22,7 +22,7 @@
 #include "gc/Rooting.h"
 #include "jit/IonCode.h"
 #include "js/UbiNode.h"
-#include "vm/ObjectImpl.h"
+#include "vm/NativeObject.h"
 #include "vm/Shape.h"
 
 namespace JS {

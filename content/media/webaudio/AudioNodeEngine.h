@@ -38,12 +38,16 @@ public:
   }
 
   struct Storage {
-    Storage()
-    {
-      mDataToFree = nullptr;
-      mSampleData = nullptr;
+    Storage() :
+      mDataToFree(nullptr),
+      mFree(nullptr),
+      mSampleData(nullptr)
+    {}
+    ~Storage() {
+      if (mFree) {
+        mFree(mDataToFree);
+      } else { MOZ_ASSERT(!mDataToFree); }
     }
-    ~Storage() { free(mDataToFree); }
     size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
     {
       // NB: mSampleData might not be owned, if it is it just points to
@@ -51,6 +55,7 @@ public:
       return aMallocSizeOf(mDataToFree);
     }
     void* mDataToFree;
+    void (*mFree)(void*);
     const float* mSampleData;
   };
 
@@ -67,11 +72,17 @@ public:
    * Call this only during initialization, before the object is handed to
    * any other thread.
    */
-  void SetData(uint32_t aIndex, void* aDataToFree, const float* aData)
+  void SetData(uint32_t aIndex, void* aDataToFree, void (*aFreeFunc)(void*), const float* aData)
   {
     Storage* s = &mContents[aIndex];
-    free(s->mDataToFree);
+    if (s->mFree) {
+      s->mFree(s->mDataToFree);
+    } else {
+      MOZ_ASSERT(!s->mDataToFree);
+    }
+
     s->mDataToFree = aDataToFree;
+    s->mFree = aFreeFunc;
     s->mSampleData = aData;
   }
 
