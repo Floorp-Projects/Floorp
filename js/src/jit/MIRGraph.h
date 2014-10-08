@@ -566,6 +566,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         successorWithPhis_ = successor;
         positionInPhiSuccessor_ = id;
     }
+    void clearSuccessorWithPhis() {
+        successorWithPhis_ = nullptr;
+    }
     size_t numSuccessors() const;
     MBasicBlock *getSuccessor(size_t index) const;
     size_t getSuccessorIndex(MBasicBlock *) const;
