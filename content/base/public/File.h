@@ -55,6 +55,7 @@ class FileInfo;
 };
 
 struct BlobPropertyBag;
+struct ChromeFilePropertyBag;
 struct FilePropertyBag;
 class FileImpl;
 
@@ -176,21 +177,21 @@ public:
   static already_AddRefed<File>
   Constructor(const GlobalObject& aGlobal,
               File& aData,
-              const FilePropertyBag& aBag,
+              const ChromeFilePropertyBag& aBag,
               ErrorResult& aRv);
 
   // File constructor - ChromeOnly
   static already_AddRefed<File>
   Constructor(const GlobalObject& aGlobal,
               const nsAString& aData,
-              const FilePropertyBag& aBag,
+              const ChromeFilePropertyBag& aBag,
               ErrorResult& aRv);
 
   // File constructor - ChromeOnly
   static already_AddRefed<File>
   Constructor(const GlobalObject& aGlobal,
               nsIFile* aData,
-              const FilePropertyBag& aBag,
+              const ChromeFilePropertyBag& aBag,
               ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
