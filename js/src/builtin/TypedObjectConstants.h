@@ -87,33 +87,4 @@
 #define JS_SIMDTYPEREPR_INT32         0
 #define JS_SIMDTYPEREPR_FLOAT32       1
 
-///////////////////////////////////////////////////////////////////////////
-// Slots for typed objects
-
-
-// Common to data view, typed arrays, and typed objects:
-#define JS_BUFVIEW_SLOT_BYTEOFFSET       0
-#define JS_BUFVIEW_SLOT_LENGTH           1 // see (*) below
-#define JS_BUFVIEW_SLOT_OWNER            2
-
-// Specific to data view:
-#define JS_DATAVIEW_SLOT_DATA            3 // see (**) below
-#define JS_DATAVIEW_SLOTS                3 // Number of slots for data views
-
-// Specific to typed arrays:
-#define JS_TYPEDARR_SLOT_DATA            3 // see (**) below
-#define JS_TYPEDARR_SLOTS                3 // Number of slots for typed arrays
-
-// (*) The interpretation of the JS_BUFVIEW_SLOT_LENGTH slot depends on
-// the kind of view:
-// - DataView: stores the length in bytes
-// - TypedArray: stores the array length
-// - TypedObject: for arrays, stores the array length, else 0
-
-// (**) This is the index of the slot that will be used for private data.
-// It is hardcoded here based on the GC Kind that will be assigned. It is
-// a function of the total number of slots, but it is non-trivial to encode
-// that function at compile-time, so we instead use a hardcoded constant
-// coupled with some handy assertions.
-
 #endif

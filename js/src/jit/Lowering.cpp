@@ -2501,7 +2501,7 @@ LIRGenerator::visitSetTypedObjectOffset(MSetTypedObjectOffset *ins)
     return add(new(alloc()) LSetTypedObjectOffset(
                    useRegister(ins->object()),
                    useRegister(ins->offset()),
-                   temp()),
+                   temp(), temp()),
                ins);
 }
 

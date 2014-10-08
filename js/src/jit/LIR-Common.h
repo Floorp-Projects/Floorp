@@ -4143,18 +4143,20 @@ class LTypedObjectElements : public LInstructionHelper<1, 1, 0>
 };
 
 // Load a typed array's elements vector.
-class LSetTypedObjectOffset : public LInstructionHelper<0, 2, 1>
+class LSetTypedObjectOffset : public LInstructionHelper<0, 2, 2>
 {
   public:
     LIR_HEADER(SetTypedObjectOffset)
 
     LSetTypedObjectOffset(const LAllocation &object,
                           const LAllocation &offset,
-                          const LDefinition &temp0)
+                          const LDefinition &temp0,
+                          const LDefinition &temp1)
     {
         setOperand(0, object);
         setOperand(1, offset);
         setTemp(0, temp0);
+        setTemp(1, temp1);
     }
     const LAllocation *object() {
         return getOperand(0);
@@ -4164,6 +4166,9 @@ class LSetTypedObjectOffset : public LInstructionHelper<0, 2, 1>
     }
     const LDefinition *temp0() {
         return getTemp(0);
+    }
+    const LDefinition *temp1() {
+        return getTemp(1);
     }
 };
 
