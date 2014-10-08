@@ -52,8 +52,10 @@ public:
     virtual ~TestUrgencyChild();
 
     bool RecvStart();
-    bool RecvReply1(uint32_t *reply);
-    bool RecvReply2(uint32_t *reply);
+    bool AnswerReply1(uint32_t *reply);
+    bool AnswerReply2(uint32_t *reply);
+    bool AnswerTest4_Reenter();
+    bool AnswerFinalTest_Hang();
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {

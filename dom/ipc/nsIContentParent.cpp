@@ -193,11 +193,11 @@ nsIContentParent::RecvSyncMessage(const nsString& aMsg,
 }
 
 bool
-nsIContentParent::RecvRpcMessage(const nsString& aMsg,
-                                 const ClonedMessageData& aData,
-                                 const InfallibleTArray<CpowEntry>& aCpows,
-                                 const IPC::Principal& aPrincipal,
-                                 InfallibleTArray<nsString>* aRetvals)
+nsIContentParent::AnswerRpcMessage(const nsString& aMsg,
+                                   const ClonedMessageData& aData,
+                                   const InfallibleTArray<CpowEntry>& aCpows,
+                                   const IPC::Principal& aPrincipal,
+                                   InfallibleTArray<nsString>* aRetvals)
 {
   // FIXME Permission check in Content process
   nsIPrincipal* principal = aPrincipal;

@@ -107,53 +107,53 @@ class WrapperOwner : public virtual JavaScriptShared
     /*** Dummy call handlers ***/
   public:
     virtual bool SendDropObject(const ObjectId &objId) = 0;
-    virtual bool SendPreventExtensions(const ObjectId &objId, ReturnStatus *rs) = 0;
-    virtual bool SendGetPropertyDescriptor(const ObjectId &objId, const JSIDVariant &id,
+    virtual bool CallPreventExtensions(const ObjectId &objId, ReturnStatus *rs) = 0;
+    virtual bool CallGetPropertyDescriptor(const ObjectId &objId, const JSIDVariant &id,
                                            ReturnStatus *rs,
                                            PPropertyDescriptor *out) = 0;
-    virtual bool SendGetOwnPropertyDescriptor(const ObjectId &objId,
+    virtual bool CallGetOwnPropertyDescriptor(const ObjectId &objId,
                                               const JSIDVariant &id,
                                               ReturnStatus *rs,
                                               PPropertyDescriptor *out) = 0;
-    virtual bool SendDefineProperty(const ObjectId &objId, const JSIDVariant &id,
+    virtual bool CallDefineProperty(const ObjectId &objId, const JSIDVariant &id,
                                     const PPropertyDescriptor &flags,
                                     ReturnStatus *rs) = 0;
-    virtual bool SendDelete(const ObjectId &objId, const JSIDVariant &id,
+    virtual bool CallDelete(const ObjectId &objId, const JSIDVariant &id,
                             ReturnStatus *rs, bool *success) = 0;
 
-    virtual bool SendHas(const ObjectId &objId, const JSIDVariant &id,
+    virtual bool CallHas(const ObjectId &objId, const JSIDVariant &id,
                          ReturnStatus *rs, bool *bp) = 0;
-    virtual bool SendHasOwn(const ObjectId &objId, const JSIDVariant &id,
+    virtual bool CallHasOwn(const ObjectId &objId, const JSIDVariant &id,
                             ReturnStatus *rs, bool *bp) = 0;
-    virtual bool SendGet(const ObjectId &objId, const ObjectVariant &receiverVar,
+    virtual bool CallGet(const ObjectId &objId, const ObjectVariant &receiverVar,
                          const JSIDVariant &id,
                          ReturnStatus *rs, JSVariant *result) = 0;
-    virtual bool SendSet(const ObjectId &objId, const ObjectVariant &receiverVar,
+    virtual bool CallSet(const ObjectId &objId, const ObjectVariant &receiverVar,
                          const JSIDVariant &id, const bool &strict,
                          const JSVariant &value, ReturnStatus *rs, JSVariant *result) = 0;
 
-    virtual bool SendIsExtensible(const ObjectId &objId, ReturnStatus *rs,
+    virtual bool CallIsExtensible(const ObjectId &objId, ReturnStatus *rs,
                                   bool *result) = 0;
-    virtual bool SendCallOrConstruct(const ObjectId &objId, const nsTArray<JSParam> &argv,
+    virtual bool CallCallOrConstruct(const ObjectId &objId, const nsTArray<JSParam> &argv,
                                      const bool &construct, ReturnStatus *rs, JSVariant *result,
                                      nsTArray<JSParam> *outparams) = 0;
-    virtual bool SendHasInstance(const ObjectId &objId, const JSVariant &v,
+    virtual bool CallHasInstance(const ObjectId &objId, const JSVariant &v,
                                  ReturnStatus *rs, bool *bp) = 0;
-    virtual bool SendObjectClassIs(const ObjectId &objId, const uint32_t &classValue,
+    virtual bool CallObjectClassIs(const ObjectId &objId, const uint32_t &classValue,
                                    bool *result) = 0;
-    virtual bool SendClassName(const ObjectId &objId, nsString *result) = 0;
-    virtual bool SendRegExpToShared(const ObjectId &objId, ReturnStatus *rs, nsString *source,
+    virtual bool CallClassName(const ObjectId &objId, nsString *result) = 0;
+    virtual bool CallRegExpToShared(const ObjectId &objId, ReturnStatus *rs, nsString *source,
                                     uint32_t *flags) = 0;
 
-    virtual bool SendGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
+    virtual bool CallGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
                                       ReturnStatus *rs, nsTArray<nsString> *names) = 0;
-    virtual bool SendInstanceOf(const ObjectId &objId, const JSIID &iid,
+    virtual bool CallInstanceOf(const ObjectId &objId, const JSIID &iid,
                                 ReturnStatus *rs, bool *instanceof) = 0;
-    virtual bool SendDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
+    virtual bool CallDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
                                    ReturnStatus *rs, bool *instanceof) = 0;
 
-    virtual bool SendIsCallable(const ObjectId &objId, bool *result) = 0;
-    virtual bool SendIsConstructor(const ObjectId &objId, bool *result) = 0;
+    virtual bool CallIsCallable(const ObjectId &objId, bool *result) = 0;
+    virtual bool CallIsConstructor(const ObjectId &objId, bool *result) = 0;
 };
 
 bool

@@ -147,11 +147,11 @@ public:
                                  const InfallibleTArray<CpowEntry>& aCpows,
                                  const IPC::Principal& aPrincipal,
                                  InfallibleTArray<nsString>* aJSONRetVal) MOZ_OVERRIDE;
-    virtual bool RecvRpcMessage(const nsString& aMessage,
-                                const ClonedMessageData& aData,
-                                const InfallibleTArray<CpowEntry>& aCpows,
-                                const IPC::Principal& aPrincipal,
-                                InfallibleTArray<nsString>* aJSONRetVal) MOZ_OVERRIDE;
+    virtual bool AnswerRpcMessage(const nsString& aMessage,
+                                  const ClonedMessageData& aData,
+                                  const InfallibleTArray<CpowEntry>& aCpows,
+                                  const IPC::Principal& aPrincipal,
+                                  InfallibleTArray<nsString>* aJSONRetVal) MOZ_OVERRIDE;
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const ClonedMessageData& aData,
                                   const InfallibleTArray<CpowEntry>& aCpows,

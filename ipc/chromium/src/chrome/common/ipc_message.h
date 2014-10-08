@@ -53,9 +53,9 @@ class Message : public Pickle {
   };
 
   enum PriorityValue {
-    PRIORITY_NORMAL = 1,
-    PRIORITY_HIGH = 2,
-    PRIORITY_URGENT = 3
+    PRIORITY_LOW = 1,
+    PRIORITY_NORMAL,
+    PRIORITY_HIGH
   };
 
   enum MessageCompression {
@@ -85,11 +85,6 @@ class Message : public Pickle {
     return static_cast<PriorityValue>(header()->flags & PRIORITY_MASK);
   }
 
-  void set_priority(int prio) {
-    DCHECK((prio & ~PRIORITY_MASK) == 0);
-    header()->flags = (header()->flags & ~PRIORITY_MASK) | prio;
-  }
-
   // True if this is a synchronous message.
   bool is_sync() const {
     return (header()->flags & SYNC_BIT) != 0;
@@ -98,6 +93,16 @@ class Message : public Pickle {
   // True if this is a synchronous message.
   bool is_interrupt() const {
     return (header()->flags & INTERRUPT_BIT) != 0;
+  }
+
+  // True if this is an urgent message.
+  bool is_urgent() const {
+    return (header()->flags & URGENT_BIT) != 0;
+  }
+
+  // True if this is an RPC message.
+  bool is_rpc() const {
+    return (header()->flags & RPC_BIT) != 0;
   }
 
   // True if compression is enabled for this message.
@@ -291,6 +296,14 @@ class Message : public Pickle {
     header()->flags |= INTERRUPT_BIT;
   }
 
+  void set_urgent() {
+    header()->flags |= URGENT_BIT;
+  }
+
+  void set_rpc() {
+    header()->flags |= RPC_BIT;
+  }
+
 #if !defined(OS_MACOSX)
  protected:
 #endif
@@ -306,6 +319,8 @@ class Message : public Pickle {
     HAS_SENT_TIME_BIT = 0x0080,
     INTERRUPT_BIT   = 0x0100,
     COMPRESS_BIT    = 0x0200,
+    URGENT_BIT      = 0x0400,
+    RPC_BIT         = 0x0800
   };
 
   struct Header : Pickle::Header {

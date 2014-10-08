@@ -15,7 +15,7 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 namespace mozilla {
 namespace jsipc {
 
-prio(normal upto high) sync protocol PJavaScript
+intr protocol PJavaScript
 {
     manager PContent or PContentBridge;
 
@@ -24,30 +24,30 @@ both:
     async DropObject(uint64_t objId);
 
     // These roughly map to the ProxyHandler hooks that CPOWs need.
-    prio(high) sync PreventExtensions(uint64_t objId) returns (ReturnStatus rs);
-    prio(high) sync GetPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
-    prio(high) sync GetOwnPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
-    prio(high) sync DefineProperty(uint64_t objId, JSIDVariant id, PPropertyDescriptor descriptor) returns (ReturnStatus rs);
-    prio(high) sync Delete(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool successful);
+    rpc PreventExtensions(uint64_t objId) returns (ReturnStatus rs);
+    rpc GetPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
+    rpc GetOwnPropertyDescriptor(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, PPropertyDescriptor result);
+    rpc DefineProperty(uint64_t objId, JSIDVariant id, PPropertyDescriptor descriptor) returns (ReturnStatus rs);
+    rpc Delete(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool successful);
 
-    prio(high) sync Has(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);
-    prio(high) sync HasOwn(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);
-    prio(high) sync Get(uint64_t objId, ObjectVariant receiver, JSIDVariant id) returns (ReturnStatus rs, JSVariant result);
-    prio(high) sync Set(uint64_t objId, ObjectVariant receiver, JSIDVariant id, bool strict, JSVariant value) returns (ReturnStatus rs, JSVariant result);
+    rpc Has(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);
+    rpc HasOwn(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);
+    rpc Get(uint64_t objId, ObjectVariant receiver, JSIDVariant id) returns (ReturnStatus rs, JSVariant result);
+    rpc Set(uint64_t objId, ObjectVariant receiver, JSIDVariant id, bool strict, JSVariant value) returns (ReturnStatus rs, JSVariant result);
 
-    prio(high) sync IsExtensible(uint64_t objId) returns (ReturnStatus rs, bool result);
-    prio(high) sync CallOrConstruct(uint64_t objId, JSParam[] argv, bool construct) returns (ReturnStatus rs, JSVariant result, JSParam[] outparams);
-    prio(high) sync HasInstance(uint64_t objId, JSVariant v) returns (ReturnStatus rs, bool has);
-    prio(high) sync ObjectClassIs(uint64_t objId, uint32_t classValue) returns (bool result);
-    prio(high) sync ClassName(uint64_t objId) returns (nsString name);
-    prio(high) sync RegExpToShared(uint64_t objId) returns (ReturnStatus rs, nsString source, uint32_t flags);
+    rpc IsExtensible(uint64_t objId) returns (ReturnStatus rs, bool result);
+    rpc CallOrConstruct(uint64_t objId, JSParam[] argv, bool construct) returns (ReturnStatus rs, JSVariant result, JSParam[] outparams);
+    rpc HasInstance(uint64_t objId, JSVariant v) returns (ReturnStatus rs, bool has);
+    rpc ObjectClassIs(uint64_t objId, uint32_t classValue) returns (bool result);
+    rpc ClassName(uint64_t objId) returns (nsString name);
+    rpc RegExpToShared(uint64_t objId) returns (ReturnStatus rs, nsString source, uint32_t flags);
 
-    prio(high) sync GetPropertyNames(uint64_t objId, uint32_t flags) returns (ReturnStatus rs, nsString[] names);
-    prio(high) sync InstanceOf(uint64_t objId, JSIID iid) returns (ReturnStatus rs, bool instanceof);
-    prio(high) sync DOMInstanceOf(uint64_t objId, int prototypeID, int depth) returns (ReturnStatus rs, bool instanceof);
+    rpc GetPropertyNames(uint64_t objId, uint32_t flags) returns (ReturnStatus rs, nsString[] names);
+    rpc InstanceOf(uint64_t objId, JSIID iid) returns (ReturnStatus rs, bool instanceof);
+    rpc DOMInstanceOf(uint64_t objId, int prototypeID, int depth) returns (ReturnStatus rs, bool instanceof);
 
-    prio(high) sync IsCallable(uint64_t objId) returns (bool result);
-    prio(high) sync IsConstructor(uint64_t objId) returns (bool result);
+    rpc IsCallable(uint64_t objId) returns (bool result);
+    rpc IsConstructor(uint64_t objId) returns (bool result);
 
 parent:
     async __delete__();
