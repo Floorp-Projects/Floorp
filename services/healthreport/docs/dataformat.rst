@@ -293,6 +293,11 @@ Abnormal terminations will be missing a duration and will feature these keys:
 "stopped"
     was the session stopped gently?
 
+Version 3.2
+-----------
+
+As of Firefox 35, the search counts measurement is now bumped to v6, including the *activity* location for the search activity.
+
 Version 3.1
 -----------
 
@@ -1384,6 +1389,11 @@ org.mozilla.searches.counts
 
 This measurement contains information about searches performed in the
 application.
+
+Version 6 (mobile)
+^^^^^^^^^^^^^^^^^^
+
+This adds two new search locations: *widget* and *activity*, corresponding to the search widget and search activity respectively.
 
 Version 2
 ^^^^^^^^^

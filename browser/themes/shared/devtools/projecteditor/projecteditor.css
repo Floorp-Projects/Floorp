@@ -78,49 +78,6 @@
   align-items: center;
 }
 
-.entry .file-icon {
-  display: inline-block;
-  background: url(file-icons-sheet@2x.png);
-  background-size: 140px 15px;
-  background-repeat: no-repeat;
-  width: 20px;
-  height: 15px;
-  background-position: -40px 0;
-  flex-shrink: 0;
-}
-
-.entry .file-icon.icon-none {
-  display: none;
-}
-
-.entry .icon-css {
-  background-position: 0 0;
-}
-
-.entry .icon-js {
-  background-position: -20px 0;
-}
-
-.entry .icon-html {
-  background-position: -40px 0;
-}
-
-.entry .icon-file {
-  background-position: -60px 0;
-}
-
-.entry .icon-folder {
-  background-position: -80px 0;
-}
-
-.entry .icon-img {
-  background-position: -100px 0;
-}
-
-.entry .icon-manifest {
-  background-position: -120px 0;
-}
-
 .entry {
   border: none;
   box-shadow: none;

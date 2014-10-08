@@ -18,7 +18,9 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const XUL_PAGE = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window%20id='win'/>";
 const NEWTAB_URL = "about:newtab";
-const PREF_BRANCH = "browser.newtab.";
+
+const PREF_NEWTAB_URL = "browser.newtab.url";
+const PREF_NEWTAB_PRELOAD = "browser.newtab.preload";
 
 // The interval between swapping in a preload docShell and kicking off the
 // next preload in the background.
@@ -34,6 +36,11 @@ const TOPIC_XUL_WINDOW_CLOSED = "xul-window-destroyed";
 
 const BROWSER_CONTENT_SCRIPT = "chrome://browser/content/content.js";
 
+function isPreloadingEnabled() {
+  return Services.prefs.getBoolPref(PREF_NEWTAB_PRELOAD) &&
+         !Services.prefs.prefHasUserValue(PREF_NEWTAB_URL);
+}
+
 function createTimer(obj, delay) {
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.init(obj, delay, Ci.nsITimer.TYPE_ONE_SHOT);
@@ -48,18 +55,13 @@ function clearTimer(timer) {
 }
 
 this.BrowserNewTabPreloader = {
-  init: function Preloader_init() {
-    Preferences.init();
-  },
-
   uninit: function Preloader_uninit() {
     HostFrame.destroy();
-    Preferences.uninit();
     HiddenBrowsers.uninit();
   },
 
   newTab: function Preloader_newTab(aTab) {
-    if (!Preferences.enabled) {
+    if (!isPreloadingEnabled()) {
       return false;
     }
 
@@ -80,41 +82,6 @@ this.BrowserNewTabPreloader = {
 };
 
 Object.freeze(BrowserNewTabPreloader);
-
-let Preferences = {
-  _enabled: null,
-  _branch: null,
-
-  get enabled() {
-    if (this._enabled === null) {
-      this._enabled = this._branch.getBoolPref("preload") &&
-                      !this._branch.prefHasUserValue("url");
-    }
-
-    return this._enabled;
-  },
-
-  init: function Preferences_init() {
-    this._branch = Services.prefs.getBranch(PREF_BRANCH);
-    this._branch.addObserver("", this, false);
-  },
-
-  uninit: function Preferences_uninit() {
-    if (this._branch) {
-      this._branch.removeObserver("", this);
-      this._branch = null;
-    }
-  },
-
-  observe: function Preferences_observe() {
-    let prevEnabled = this._enabled;
-    this._enabled = null;
-
-    if (prevEnabled && !this.enabled) {
-      HiddenBrowsers.uninit();
-    }
-  },
-};
 
 let HiddenBrowsers = {
   _browsers: null,
