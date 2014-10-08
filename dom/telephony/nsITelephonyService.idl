@@ -240,7 +240,7 @@ interface nsITelephonyDialCallback : nsITelephonyCallback
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(600929fb-269c-4ae2-a61f-3c8a62cf5456)]
+[scriptable, uuid(79188caa-046a-48e1-b9c5-2e891504dc7a)]
 interface nsITelephonyService : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -298,6 +298,16 @@ interface nsITelephonyService : nsISupports
   void separateCall(in unsigned long clientId, in unsigned long callIndex);
   void holdConference(in unsigned long clientId);
   void resumeConference(in unsigned long clientId);
+
+  /**
+   * Send an USSD on existing session. It results in error if the session is
+   * not existed.
+   *
+   * If successful, callback.notifySuccess() will be called.
+   * Otherwise, callback.notifyError() will be called.
+   */
+  void sendUSSD(in unsigned long clientId, in DOMString ussd,
+                in nsITelephonyCallback callback);
 
   attribute bool microphoneMuted;
   attribute bool speakerEnabled;
