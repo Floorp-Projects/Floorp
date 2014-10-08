@@ -591,12 +591,6 @@ public:
     mozilla::TemporaryRef<mozilla::gfx::SourceSurface>
     PopGroupToSurface(mozilla::gfx::Matrix* aMatrix);
 
-    /**
-     ** Hit Testing - check if given point is in the current path
-     **/
-    bool PointInFill(const gfxPoint& pt);
-    bool PointInStroke(const gfxPoint& pt);
-
     mozilla::gfx::Point GetDeviceOffset() const;
 
     /**

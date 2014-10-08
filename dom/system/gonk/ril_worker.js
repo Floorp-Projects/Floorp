@@ -6748,7 +6748,14 @@ RilObject.prototype[UNSOLICITED_ON_USSD] = function UNSOLICITED_ON_USSD() {
     this.context.debug("On USSD. Type Code: " + typeCode + " Message: " + message);
   }
 
-  this._ussdSession = (typeCode != "0" && typeCode != "2");
+  let oldSession = this._ussdSession;
+
+  // Per ril.h the USSD session is assumed to persist if the type code is "1".
+  this._ussdSession = typeCode == "1";
+
+  if (!oldSession && !this._ussdSession && !message) {
+    return;
+  }
 
   this.sendChromeMessage({rilMessageType: "ussdreceived",
                           message: message,

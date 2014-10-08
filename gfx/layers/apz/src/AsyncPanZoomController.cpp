@@ -2498,7 +2498,7 @@ Matrix4x4 AsyncPanZoomController::GetOverscrollTransform() const {
   }
 
   // Combine the transformations into a matrix.
-  return Matrix4x4().Scale(scaleX, scaleY, 1)
+  return Matrix4x4::Scaling(scaleX, scaleY, 1)
                     .PostTranslate(translation.x, translation.y, 0);
 }
 
@@ -2623,9 +2623,9 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() const {
 
 Matrix4x4 AsyncPanZoomController::GetNontransientAsyncTransform() const {
   ReentrantMonitorAutoEnter lock(mMonitor);
-  return Matrix4x4().Scale(mLastContentPaintMetrics.mResolution.scale,
-                           mLastContentPaintMetrics.mResolution.scale,
-                           1.0f);
+  return Matrix4x4::Scaling(mLastContentPaintMetrics.mResolution.scale,
+                            mLastContentPaintMetrics.mResolution.scale,
+                            1.0f);
 }
 
 Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
@@ -2644,8 +2644,8 @@ Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
 
   float zoomChange = mLastContentPaintMetrics.GetZoom().scale / mLastDispatchedPaintMetrics.GetZoom().scale;
 
-  return Matrix4x4().Translate(scrollChange.x, scrollChange.y, 0) *
-         Matrix4x4().Scale(zoomChange, zoomChange, 1);
+  return Matrix4x4::Translation(scrollChange.x, scrollChange.y, 0).
+           PostScale(zoomChange, zoomChange, 1);
 }
 
 bool AsyncPanZoomController::IsCurrentlyCheckerboarding() const {

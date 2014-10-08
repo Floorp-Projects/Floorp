@@ -9,7 +9,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
-#include "vm/ObjectImpl.h"
+#include "vm/NativeObject.h"
 #include "vm/Shape.h"
 
 struct JSExnPrivate;

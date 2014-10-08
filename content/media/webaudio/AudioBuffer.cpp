@@ -226,7 +226,7 @@ StealJSArrayDataIntoThreadSharedFloatArrayBufferList(JSContext* aJSContext,
                           ? (uint8_t*) JS_StealArrayBufferContents(aJSContext, arrayBuffer)
                           : nullptr;
     if (stolenData) {
-      result->SetData(i, stolenData, reinterpret_cast<float*>(stolenData));
+      result->SetData(i, stolenData, js_free, reinterpret_cast<float*>(stolenData));
     } else {
       return nullptr;
     }

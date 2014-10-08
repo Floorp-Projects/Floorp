@@ -23,7 +23,7 @@
 #include "vm/SavedStacks.h"
 
 #include "vm/Debugger-inl.h"
-#include "vm/ObjectImpl-inl.h"
+#include "vm/NativeObject-inl.h"
 
 using namespace js;
 
