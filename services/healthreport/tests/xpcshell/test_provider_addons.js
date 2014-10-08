@@ -129,7 +129,7 @@ add_task(function test_collect() {
       type: "plugin",
       userDisabled: false,
       version: "7.2",
-      gmPlugin: true,
+      isGMPlugin: true,
     },
   ];
 
