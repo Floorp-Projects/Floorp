@@ -4,12 +4,24 @@
 
 package org.mozilla.search;
 
+import org.mozilla.gecko.LocaleAware;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.db.BrowserContract.SearchHistory;
+import org.mozilla.gecko.health.BrowserHealthRecorder;
+import org.mozilla.search.autocomplete.SearchBar;
+import org.mozilla.search.autocomplete.SuggestionsFragment;
+import org.mozilla.search.providers.SearchEngine;
+import org.mozilla.search.providers.SearchEngineManager;
+import org.mozilla.search.providers.SearchEngineManager.SearchEngineCallback;
+
 import android.content.AsyncQueryHandler;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
@@ -17,16 +29,6 @@ import android.view.animation.Interpolator;
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorSet;
 import com.nineoldandroids.animation.ObjectAnimator;
-
-import org.mozilla.gecko.LocaleAware;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.db.BrowserContract.SearchHistory;
-import org.mozilla.search.autocomplete.SearchBar;
-import org.mozilla.search.autocomplete.SuggestionsFragment;
-import org.mozilla.search.providers.SearchEngine;
-import org.mozilla.search.providers.SearchEngineManager;
-import org.mozilla.search.providers.SearchEngineManager.SearchEngineCallback;
 
 /**
  * The main entrance for the Android search intent.
@@ -36,6 +38,8 @@ import org.mozilla.search.providers.SearchEngineManager.SearchEngineCallback;
  */
 public class SearchActivity extends LocaleAware.LocaleAwareFragmentActivity
         implements AcceptsSearchQuery, SearchEngineCallback {
+
+    private static final String LOGTAG = "GeckoSearchActivity";
 
     private static final String KEY_SEARCH_STATE = "search_state";
     private static final String KEY_EDIT_STATE = "edit_state";
@@ -233,6 +237,14 @@ public class SearchActivity extends LocaleAware.LocaleAwareFragmentActivity
     @Override
     public void onSearch(String query, SuggestionAnimation suggestionAnimation) {
         storeQuery(query);
+
+        try {
+            BrowserHealthRecorder.recordSearchDelayed("activity", engine.getIdentifier());
+        } catch (Exception e) {
+            // This should never happen: it'll only throw if the
+            // search location is wrong. But let's not tempt fate.
+            Log.w(LOGTAG, "Unable to record search.");
+        }
 
         startSearch(query);
 
