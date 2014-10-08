@@ -134,7 +134,11 @@ var WifiManager = (function() {
       if (manager.ifname === iface && handleEvent(event)) {
         waitForEvent(iface);
       } else if (p2pSupported) {
-        if (WifiP2pManager.INTERFACE_NAME === iface) {
+        // Please refer to
+        // http://androidxref.com/4.4.2_r1/xref/frameworks/base/wifi/java/android/net/wifi/WifiMonitor.java#519
+        // for interface event mux/demux rules. In short words, both
+        // 'p2p0' and 'p2p-' should go to Wifi P2P state machine.
+        if (WifiP2pManager.INTERFACE_NAME === iface || -1 !== iface.indexOf('p2p-')) {
           // If the connection is closed, wifi.c::wifi_wait_for_event()
           // will still return 'CTRL-EVENT-TERMINATING  - connection closed'
           // rather than blocking. So when we see this special event string,
