@@ -69,7 +69,14 @@
   font-weight: bold;
   border-bottom: 1px dashed #aaa;
   margin: 1em 0;
+  margin-top: -14em;
+  padding-top: 14em;
   text-align: left;
+}
+
+.showcase > section .example > h3 a {
+  text-decoration: none;
+  color: #555;
 }
 
 .showcase p.note {

@@ -123,6 +123,70 @@ body {
   box-shadow: 0 0 4px #c43c3e;
 }
 
+/* Rooms */
+.room-list {
+  background: #f5f5f5;
+}
+
+.room-list > h1 {
+  font-weight: bold;
+  color: #999;
+  padding: .5rem 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.room-list > .room-entry {
+  padding: 1rem 1rem 0 .5rem;
+}
+
+.room-list > .room-entry > h2 {
+  font-size: .85rem;
+  color: #777;
+}
+
+.room-list > .room-entry.room-active > h2 {
+  font-weight: bold;
+  color: #000;
+}
+
+.room-list > .room-entry > h2 > .room-notification {
+  display: inline-block;
+  background: transparent;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: .3rem;
+}
+
+.room-list > .room-entry.room-active > h2 > .room-notification {
+  background-color: #00a0ec;
+}
+
+.room-list > .room-entry:hover {
+  background: #f1f1f1;
+}
+
+.room-list > .room-entry:not(:last-child) {
+  border-bottom: 1px solid #ddd;
+}
+
+.room-list > .room-entry > p {
+  margin: 0;
+  padding: .2em 0 1rem .8rem;
+}
+
+.room-list > .room-entry > p > a {
+  color: #777;
+  opacity: .5;
+  transition: opacity .1s ease-in-out 0s;
+  text-decoration: none;
+}
+
+.room-list > .room-entry > p > a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
 /* Buttons */
 
 .button-group {
