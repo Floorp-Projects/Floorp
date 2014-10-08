@@ -107,7 +107,7 @@ public:
     delete static_cast<BlobParent*>(aActor);
   }
 
-  static already_AddRefed<DOMFileImpl>
+  static already_AddRefed<FileImpl>
   GetBlobImplForID(const nsID& aID);
 
   bool
