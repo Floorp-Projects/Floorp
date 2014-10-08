@@ -839,31 +839,13 @@ MBasicBlock::discardIgnoreOperands(MInstruction *ins)
     instructions_.remove(ins);
 }
 
-MInstructionIterator
-MBasicBlock::discardAt(MInstructionIterator &iter)
+void
+MBasicBlock::discardDef(MDefinition *at)
 {
-    prepareForDiscard(*iter);
-    return instructions_.removeAt(iter);
-}
-
-MInstructionReverseIterator
-MBasicBlock::discardAt(MInstructionReverseIterator &iter)
-{
-    prepareForDiscard(*iter);
-    return instructions_.removeAt(iter);
-}
-
-MDefinitionIterator
-MBasicBlock::discardDefAt(MDefinitionIterator &old)
-{
-    MDefinitionIterator iter(old);
-
-    if (iter.atPhi())
-        iter.phiIter_ = iter.block_->discardPhiAt(iter.phiIter_);
+    if (at->isPhi())
+        at->block_->discardPhi(at->toPhi());
     else
-        iter.iter_ = iter.block_->discardAt(iter.iter_);
-
-    return iter;
+        at->block_->discard(at->toInstruction());
 }
 
 void
@@ -874,14 +856,15 @@ MBasicBlock::discardAllInstructions()
 }
 
 void
-MBasicBlock::discardAllInstructionsStartingAt(MInstructionIterator &iter)
+MBasicBlock::discardAllInstructionsStartingAt(MInstructionIterator iter)
 {
     while (iter != end()) {
         // Discard operands and resume point operands and flag the instruction
         // as discarded.  Also we do not assert that we have no uses as blocks
         // might be removed in reverse post order.
-        prepareForDiscard(*iter, RefType_DefaultNoAssert);
-        iter = instructions_.removeAt(iter);
+        MInstruction *ins = *iter++;
+        prepareForDiscard(ins, RefType_DefaultNoAssert);
+        instructions_.remove(ins);
     }
 }
 
@@ -980,21 +963,20 @@ MBasicBlock::addPhi(MPhi *phi)
     graph().allocDefinitionId(phi);
 }
 
-MPhiIterator
-MBasicBlock::discardPhiAt(MPhiIterator &at)
+void
+MBasicBlock::discardPhi(MPhi *phi)
 {
     MOZ_ASSERT(!phis_.empty());
 
-    at->removeAllOperands();
-    at->setDiscarded();
+    phi->removeAllOperands();
+    phi->setDiscarded();
 
-    MPhiIterator result = phis_.removeAt(at);
+    phis_.remove(phi);
 
     if (phis_.empty()) {
         for (MBasicBlock **pred = predecessors_.begin(); pred != predecessors_.end(); pred++)
             (*pred)->clearSuccessorWithPhis();
     }
-    return result;
 }
 
 void
