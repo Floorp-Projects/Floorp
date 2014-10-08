@@ -3817,11 +3817,13 @@ nsCSSRendering::DrawTableBorderSegment(nsRenderingContext&     aContext,
 // End table border-collapsing section
 
 gfxRect
-nsCSSRendering::ExpandPaintingRectForDecorationLine(nsIFrame* aFrame,
-                                                    const uint8_t aStyle,
-                                                    const gfxRect& aClippedRect,
-                                                    const gfxFloat aXInFrame,
-                                                    const gfxFloat aCycleLength)
+nsCSSRendering::ExpandPaintingRectForDecorationLine(
+                  nsIFrame* aFrame,
+                  const uint8_t aStyle,
+                  const gfxRect& aClippedRect,
+                  const gfxFloat aICoordInFrame,
+                  const gfxFloat aCycleLength,
+                  bool aVertical)
 {
   switch (aStyle) {
     case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED:
@@ -3836,25 +3838,32 @@ nsCSSRendering::ExpandPaintingRectForDecorationLine(nsIFrame* aFrame,
   nsBlockFrame* block = nullptr;
   // Note that when we paint the decoration lines in relative positioned
   // box, we should paint them like all of the boxes are positioned as static.
-  nscoord frameXInBlockAppUnits = 0;
+  nscoord framePosInBlockAppUnits = 0;
   for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
     block = do_QueryFrame(f);
     if (block) {
       break;
     }
-    frameXInBlockAppUnits += f->GetNormalPosition().x;
+    framePosInBlockAppUnits += aVertical ?
+      f->GetNormalPosition().y : f->GetNormalPosition().x;
   }
 
   NS_ENSURE_TRUE(block, aClippedRect);
 
   nsPresContext *pc = aFrame->PresContext();
-  gfxFloat frameXInBlock = pc->AppUnitsToGfxUnits(frameXInBlockAppUnits);
-  int32_t rectXInBlock = int32_t(NS_round(frameXInBlock + aXInFrame));
-  int32_t extraLeft =
-    rectXInBlock - (rectXInBlock / int32_t(aCycleLength) * aCycleLength);
+  gfxFloat framePosInBlock = pc->AppUnitsToGfxUnits(framePosInBlockAppUnits);
+  int32_t rectPosInBlock =
+    int32_t(NS_round(framePosInBlock + aICoordInFrame));
+  int32_t extraStartEdge =
+    rectPosInBlock - (rectPosInBlock / int32_t(aCycleLength) * aCycleLength);
   gfxRect rect(aClippedRect);
-  rect.x -= extraLeft;
-  rect.width += extraLeft;
+  if (aVertical) {
+    rect.y -= extraStartEdge;
+    rect.height += extraStartEdge;
+  } else {
+    rect.x -= extraStartEdge;
+    rect.width += extraStartEdge;
+  }
   return rect;
 }
 
@@ -3864,19 +3873,21 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
                                     const gfxRect& aDirtyRect,
                                     const nscolor aColor,
                                     const gfxPoint& aPt,
-                                    const gfxFloat aXInFrame,
+                                    const gfxFloat aICoordInFrame,
                                     const gfxSize& aLineSize,
                                     const gfxFloat aAscent,
                                     const gfxFloat aOffset,
                                     const uint8_t aDecoration,
                                     const uint8_t aStyle,
+                                    bool aVertical,
                                     const gfxFloat aDescentLimit)
 {
   NS_ASSERTION(aStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE, "aStyle is none");
 
   gfxRect rect =
     GetTextDecorationRectInternal(aPt, aLineSize, aAscent, aOffset,
-                                  aDecoration, aStyle, aDescentLimit);
+                                  aDecoration, aStyle, aVertical,
+                                  aDescentLimit);
   if (rect.IsEmpty() || !rect.Intersects(aDirtyRect)) {
     return;
   }
@@ -3888,7 +3899,7 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
     return;
   }
 
-  gfxFloat lineHeight = std::max(NS_round(aLineSize.height), 1.0);
+  gfxFloat lineThickness = std::max(NS_round(aLineSize.height), 1.0);
   bool contextIsSaved = false;
 
   gfxFloat oldLineWidth;
@@ -3904,12 +3915,14 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
       aGfxContext->Save();
       contextIsSaved = true;
       aGfxContext->Clip(rect);
-      gfxFloat dashWidth = lineHeight * DOT_LENGTH * DASH_LENGTH;
+      gfxFloat dashWidth = lineThickness * DOT_LENGTH * DASH_LENGTH;
       gfxFloat dash[2] = { dashWidth, dashWidth };
       aGfxContext->SetLineCap(gfxContext::LINE_CAP_BUTT);
       aGfxContext->SetDash(dash, 2, 0.0);
       rect = ExpandPaintingRectForDecorationLine(aFrame, aStyle, rect,
-                                                 aXInFrame, dashWidth * 2);
+                                                 aICoordInFrame,
+                                                 dashWidth * 2,
+                                                 aVertical);
       // We should continue to draw the last dash even if it is not in the rect.
       rect.width += dashWidth;
       break;
@@ -3918,9 +3931,9 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
       aGfxContext->Save();
       contextIsSaved = true;
       aGfxContext->Clip(rect);
-      gfxFloat dashWidth = lineHeight * DOT_LENGTH;
+      gfxFloat dashWidth = lineThickness * DOT_LENGTH;
       gfxFloat dash[2];
-      if (lineHeight > 2.0) {
+      if (lineThickness > 2.0) {
         dash[0] = 0.0;
         dash[1] = dashWidth * 2.0;
         aGfxContext->SetLineCap(gfxContext::LINE_CAP_ROUND);
@@ -3930,7 +3943,9 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
       }
       aGfxContext->SetDash(dash, 2, 0.0);
       rect = ExpandPaintingRectForDecorationLine(aFrame, aStyle, rect,
-                                                 aXInFrame, dashWidth * 2);
+                                                 aICoordInFrame,
+                                                 dashWidth * 2,
+                                                 aVertical);
       // We should continue to draw the last dot even if it is not in the rect.
       rect.width += dashWidth;
       break;
@@ -3939,7 +3954,7 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
       aGfxContext->Save();
       contextIsSaved = true;
       aGfxContext->Clip(rect);
-      if (lineHeight > 2.0) {
+      if (lineThickness > 2.0) {
         aGfxContext->SetAntialiasMode(AntialiasMode::SUBPIXEL);
       } else {
         // Don't use anti-aliasing here.  Because looks like lighter color wavy
@@ -3954,15 +3969,22 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
   }
 
   // The y position should be set to the middle of the line.
-  rect.y += lineHeight / 2;
+  rect.y += lineThickness / 2;
 
   aGfxContext->SetColor(gfxRGBA(aColor));
-  aGfxContext->SetLineWidth(lineHeight);
+  aGfxContext->SetLineWidth(lineThickness);
   switch (aStyle) {
     case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
+    case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED:
+    case NS_STYLE_TEXT_DECORATION_STYLE_DASHED:
       aGfxContext->NewPath();
-      aGfxContext->MoveTo(rect.TopLeft());
-      aGfxContext->LineTo(rect.TopRight());
+      if (aVertical) {
+        aGfxContext->MoveTo(rect.TopLeft());
+        aGfxContext->LineTo(rect.BottomLeft());
+      } else {
+        aGfxContext->MoveTo(rect.TopLeft());
+        aGfxContext->LineTo(rect.TopRight());
+      }
       aGfxContext->Stroke();
       break;
     case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE:
@@ -3971,28 +3993,29 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
        *
        * +-------------------------------------------+
        * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| ^
-       * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| | lineHeight
+       * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| | lineThickness
        * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| v
        * |                                           |
        * |                                           |
        * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| ^
-       * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| | lineHeight
+       * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| | lineThickness
        * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| v
        * +-------------------------------------------+
        */
       aGfxContext->NewPath();
-      aGfxContext->MoveTo(rect.TopLeft());
-      aGfxContext->LineTo(rect.TopRight());
-      rect.height -= lineHeight;
-      aGfxContext->MoveTo(rect.BottomLeft());
-      aGfxContext->LineTo(rect.BottomRight());
-      aGfxContext->Stroke();
-      break;
-    case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED:
-    case NS_STYLE_TEXT_DECORATION_STYLE_DASHED:
-      aGfxContext->NewPath();
-      aGfxContext->MoveTo(rect.TopLeft());
-      aGfxContext->LineTo(rect.TopRight());
+      if (aVertical) {
+        aGfxContext->MoveTo(rect.TopLeft());
+        aGfxContext->LineTo(rect.BottomLeft());
+        rect.width -= lineThickness;
+        aGfxContext->MoveTo(rect.TopRight());
+        aGfxContext->LineTo(rect.BottomRight());
+      } else {
+        aGfxContext->MoveTo(rect.TopLeft());
+        aGfxContext->LineTo(rect.TopRight());
+        rect.height -= lineThickness;
+        aGfxContext->MoveTo(rect.BottomLeft());
+        aGfxContext->LineTo(rect.BottomRight());
+      }
       aGfxContext->Stroke();
       break;
     case NS_STYLE_TEXT_DECORATION_STYLE_WAVY: {
@@ -4023,44 +4046,64 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
        *  5. Goes up to top of the area at 45 degrees.
        *  6. Slides to right horizontaly.
        *  7. Repeat from 2 until reached to right-most edge of the area.
+       *
+       * In the vertical case, swap horizontal and vertical coordinates and
+       * directions in the above description.
        */
 
-      gfxFloat adv = rect.Height() - lineHeight;
-      gfxFloat flatLengthAtVertex = std::max((lineHeight - 1.0) * 2.0, 1.0);
+      gfxFloat& rectICoord = aVertical ? rect.y : rect.x;
+      gfxFloat& rectISize = aVertical ? rect.height : rect.width;
+      const gfxFloat rectBSize = aVertical ? rect.width : rect.height;
+
+      const gfxFloat adv = rectBSize - lineThickness;
+      const gfxFloat flatLengthAtVertex =
+        std::max((lineThickness - 1.0) * 2.0, 1.0);
 
       // Align the start of wavy lines to the nearest ancestor block.
-      gfxFloat cycleLength = 2 * (adv + flatLengthAtVertex);
+      const gfxFloat cycleLength = 2 * (adv + flatLengthAtVertex);
       rect = ExpandPaintingRectForDecorationLine(aFrame, aStyle, rect,
-                                                 aXInFrame, cycleLength);
+                                                 aICoordInFrame, cycleLength,
+                                                 aVertical);
       // figure out if we can trim whole cycles from the left and right edges
       // of the line, to try and avoid creating an unnecessarily long and
       // complex path
-      int32_t skipCycles = floor((aDirtyRect.x - rect.x) / cycleLength);
+      const gfxFloat dirtyRectICoord = aVertical ? aDirtyRect.y : aDirtyRect.x;
+      int32_t skipCycles = floor((dirtyRectICoord - rectICoord) / cycleLength);
       if (skipCycles > 0) {
-        rect.x += skipCycles * cycleLength;
-        rect.width -= skipCycles * cycleLength;
+        rectICoord += skipCycles * cycleLength;
+        rectISize -= skipCycles * cycleLength;
       }
 
-      rect.x += lineHeight / 2.0;
+      rectICoord += lineThickness / 2.0;
       gfxPoint pt(rect.TopLeft());
-      gfxFloat rightMost = pt.x + rect.Width() + lineHeight;
+      gfxFloat& ptICoord = aVertical ? pt.y : pt.x;
+      gfxFloat& ptBCoord = aVertical ? pt.x : pt.y;
+      if (aVertical) {
+        ptBCoord += adv + lineThickness / 2.0;
+      }
+      gfxFloat iCoordLimit = ptICoord + rectISize + lineThickness;
 
-      skipCycles = floor((rightMost - aDirtyRect.XMost()) / cycleLength);
+      const gfxFloat dirtyRectIMost = aVertical ?
+        aDirtyRect.YMost() : aDirtyRect.XMost();
+      skipCycles = floor((iCoordLimit - dirtyRectIMost) / cycleLength);
       if (skipCycles > 0) {
-        rightMost -= skipCycles * cycleLength;
+        iCoordLimit -= skipCycles * cycleLength;
       }
 
       aGfxContext->NewPath();
 
-      pt.x -= lineHeight;
+      ptICoord -= lineThickness;
       aGfxContext->MoveTo(pt); // 1
 
-      pt.x = rect.X();
+      ptICoord = rectICoord;
       aGfxContext->LineTo(pt); // 2
 
-      bool goDown = true;
+      // In vertical mode, to go "down" relative to the text we need to
+      // decrease the block coordinate, whereas in horizontal we increase
+      // it. So the sense of this flag is effectively inverted.
+      bool goDown = aVertical ? false : true;
       uint32_t iter = 0;
-      while (pt.x < rightMost) {
+      while (ptICoord < iCoordLimit) {
         if (++iter > 1000) {
           // stroke the current path and start again, to avoid pathological
           // behavior in cairo with huge numbers of path segments
@@ -4069,12 +4112,12 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
           aGfxContext->MoveTo(pt);
           iter = 0;
         }
-        pt.x += adv;
-        pt.y += goDown ? adv : -adv;
+        ptICoord += adv;
+        ptBCoord += goDown ? adv : -adv;
 
         aGfxContext->LineTo(pt); // 3 and 5
 
-        pt.x += flatLengthAtVertex;
+        ptICoord += flatLengthAtVertex;
         aGfxContext->LineTo(pt); // 4 and 6
 
         goDown = !goDown;
@@ -4101,12 +4144,13 @@ nsCSSRendering::DecorationLineToPath(nsIFrame* aFrame,
                                      const gfxRect& aDirtyRect,
                                      const nscolor aColor,
                                      const gfxPoint& aPt,
-                                     const gfxFloat aXInFrame,
+                                     const gfxFloat aICoordInFrame,
                                      const gfxSize& aLineSize,
                                      const gfxFloat aAscent,
                                      const gfxFloat aOffset,
                                      const uint8_t aDecoration,
                                      const uint8_t aStyle,
+                                     bool aVertical,
                                      const gfxFloat aDescentLimit)
 {
   NS_ASSERTION(aStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE, "aStyle is none");
@@ -4115,7 +4159,8 @@ nsCSSRendering::DecorationLineToPath(nsIFrame* aFrame,
 
   gfxRect rect =
     GetTextDecorationRectInternal(aPt, aLineSize, aAscent, aOffset,
-                                  aDecoration, aStyle, aDescentLimit);
+                                  aDecoration, aStyle, aVertical,
+                                  aDescentLimit);
   if (rect.IsEmpty() || !rect.Intersects(aDirtyRect)) {
     return;
   }
@@ -4132,14 +4177,14 @@ nsCSSRendering::DecorationLineToPath(nsIFrame* aFrame,
     return;
   }
 
-  gfxFloat lineHeight = std::max(NS_round(aLineSize.height), 1.0);
+  gfxFloat lineThickness = std::max(NS_round(aLineSize.height), 1.0);
 
   // The y position should be set to the middle of the line.
-  rect.y += lineHeight / 2;
+  rect.y += lineThickness / 2;
 
   aGfxContext->Rectangle
-    (gfxRect(gfxPoint(rect.TopLeft() - gfxPoint(0.0, lineHeight / 2)),
-             gfxSize(rect.Width(), lineHeight)));
+    (gfxRect(gfxPoint(rect.TopLeft() - gfxPoint(0.0, lineThickness / 2)),
+             gfxSize(rect.Width(), lineThickness)));
 }
 
 nsRect
@@ -4149,6 +4194,7 @@ nsCSSRendering::GetTextDecorationRect(nsPresContext* aPresContext,
                                       const gfxFloat aOffset,
                                       const uint8_t aDecoration,
                                       const uint8_t aStyle,
+                                      bool aVertical,
                                       const gfxFloat aDescentLimit)
 {
   NS_ASSERTION(aPresContext, "aPresContext is null");
@@ -4156,7 +4202,8 @@ nsCSSRendering::GetTextDecorationRect(nsPresContext* aPresContext,
 
   gfxRect rect =
     GetTextDecorationRectInternal(gfxPoint(0, 0), aLineSize, aAscent, aOffset,
-                                  aDecoration, aStyle, aDescentLimit);
+                                  aDecoration, aStyle, aVertical,
+                                  aDescentLimit);
   // The rect values are already rounded to nearest device pixels.
   nsRect r;
   r.x = aPresContext->GfxUnitsToAppUnits(rect.X());
@@ -4173,6 +4220,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
                                               const gfxFloat aOffset,
                                               const uint8_t aDecoration,
                                               const uint8_t aStyle,
+                                              bool aVertical,
                                               const gfxFloat aDescentLimit)
 {
   NS_ASSERTION(aStyle <= NS_STYLE_TEXT_DECORATION_STYLE_WAVY,
@@ -4183,42 +4231,52 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
 
   bool canLiftUnderline = aDescentLimit >= 0.0;
 
-  const gfxFloat left  = floor(aPt.x + 0.5),
-                 right = floor(aPt.x + aLineSize.width + 0.5);
+  gfxFloat iCoord = aVertical ? aPt.y : aPt.x;
+  gfxFloat bCoord = aVertical ? aPt.x : aPt.y;
+
+  // 'left' and 'right' are relative to the line, so for vertical writing modes
+  // they will actually become top and bottom of the rendered line.
+  // Similarly, aLineSize.width and .height are actually length and thickness
+  // of the line, which runs horizontally or vertically according to aVertical.
+  const gfxFloat left  = floor(iCoord + 0.5),
+                 right = floor(iCoord + aLineSize.width + 0.5);
+
+  // We compute |r| as if for a horizontal text run, and then swap vertical
+  // and horizontal coordinates at the end if vertical was requested.
   gfxRect r(left, 0, right - left, 0);
 
-  gfxFloat lineHeight = NS_round(aLineSize.height);
-  lineHeight = std::max(lineHeight, 1.0);
+  gfxFloat lineThickness = NS_round(aLineSize.height);
+  lineThickness = std::max(lineThickness, 1.0);
 
   gfxFloat ascent = NS_round(aAscent);
   gfxFloat descentLimit = floor(aDescentLimit);
 
   gfxFloat suggestedMaxRectHeight = std::max(std::min(ascent, descentLimit), 1.0);
-  r.height = lineHeight;
+  r.height = lineThickness;
   if (aStyle == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE) {
     /**
      *  We will draw double line as:
      *
      * +-------------------------------------------+
      * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| ^
-     * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| | lineHeight
+     * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| | lineThickness
      * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| v
      * |                                           | ^
      * |                                           | | gap
      * |                                           | v
      * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| ^
-     * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| | lineHeight
+     * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| | lineThickness
      * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| v
      * +-------------------------------------------+
      */
-    gfxFloat gap = NS_round(lineHeight / 2.0);
+    gfxFloat gap = NS_round(lineThickness / 2.0);
     gap = std::max(gap, 1.0);
-    r.height = lineHeight * 2.0 + gap;
+    r.height = lineThickness * 2.0 + gap;
     if (canLiftUnderline) {
       if (r.Height() > suggestedMaxRectHeight) {
         // Don't shrink the line height, because the thickness has some meaning.
         // We can just shrink the gap at this time.
-        r.height = std::max(suggestedMaxRectHeight, lineHeight * 2.0 + 1.0);
+        r.height = std::max(suggestedMaxRectHeight, lineThickness * 2.0 + 1.0);
       }
     }
   } else if (aStyle == NS_STYLE_TEXT_DECORATION_STYLE_WAVY) {
@@ -4227,7 +4285,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
      *
      * +-------------------------------------------+
      * |XXXXX            XXXXXX            XXXXXX  | ^
-     * |XXXXXX          XXXXXXXX          XXXXXXXX | | lineHeight
+     * |XXXXXX          XXXXXXXX          XXXXXXXX | | lineThickness
      * |XXXXXXX        XXXXXXXXXX        XXXXXXXXXX| v
      * |     XXX      XXX      XXX      XXX      XX|
      * |      XXXXXXXXXX        XXXXXXXXXX        X|
@@ -4235,19 +4293,19 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
      * |        XXXXXX            XXXXXX           |
      * +-------------------------------------------+
      */
-    r.height = lineHeight > 2.0 ? lineHeight * 4.0 : lineHeight * 3.0;
+    r.height = lineThickness > 2.0 ? lineThickness * 4.0 : lineThickness * 3.0;
     if (canLiftUnderline) {
       if (r.Height() > suggestedMaxRectHeight) {
         // Don't shrink the line height even if there is not enough space,
         // because the thickness has some meaning.  E.g., the 1px wavy line and
         // 2px wavy line can be used for different meaning in IME selections
         // at same time.
-        r.height = std::max(suggestedMaxRectHeight, lineHeight * 2.0);
+        r.height = std::max(suggestedMaxRectHeight, lineThickness * 2.0);
       }
     }
   }
 
-  gfxFloat baseline = floor(aPt.y + aAscent + 0.5);
+  gfxFloat baseline = floor(bCoord + aAscent + 0.5);
   gfxFloat offset = 0.0;
   switch (aDecoration) {
     case NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE:
@@ -4265,18 +4323,27 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
       }
       break;
     case NS_STYLE_TEXT_DECORATION_LINE_OVERLINE:
-      offset = aOffset - lineHeight + r.Height();
+      offset = aOffset - lineThickness + r.Height();
       break;
     case NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH: {
       gfxFloat extra = floor(r.Height() / 2.0 + 0.5);
-      extra = std::max(extra, lineHeight);
-      offset = aOffset - lineHeight + extra;
+      extra = std::max(extra, lineThickness);
+      offset = aOffset - lineThickness + extra;
       break;
     }
     default:
       NS_ERROR("Invalid decoration value!");
   }
-  r.y = baseline - floor(offset + 0.5);
+
+  if (aVertical) {
+    r.y = baseline + floor(aOffset + 0.5); // this will need updating when we
+                                           // support sideways-left orientation
+    Swap(r.x, r.y);
+    Swap(r.width, r.height);
+  } else {
+    r.y = baseline - floor(aOffset + 0.5);
+  }
+
   return r;
 }
 
