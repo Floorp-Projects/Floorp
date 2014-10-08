@@ -4,7 +4,7 @@
 var expect = chai.expect;
 
 describe("loop.conversationViews", function () {
-  var sandbox, oldTitle, view, dispatcher;
+  var sandbox, oldTitle, view, dispatcher, contact;
 
   var CALL_STATES = loop.store.CALL_STATES;
 
@@ -18,6 +18,15 @@ describe("loop.conversationViews", function () {
 
     dispatcher = new loop.Dispatcher();
     sandbox.stub(dispatcher, "dispatch");
+
+    contact = {
+      name: [ "mrsmith" ],
+      email: [{
+        type: "home",
+        value: "fakeEmail",
+        pref: true
+      }]
+    };
   });
 
   afterEach(function() {
@@ -33,17 +42,28 @@ describe("loop.conversationViews", function () {
     }
 
     it("should set the document title to the calledId", function() {
-      mountTestComponent({calleeId: "mrsmith"});
+      mountTestComponent({contact: contact});
 
       expect(document.title).eql("mrsmith");
     });
 
     it("should set display the calledId", function() {
-      view = mountTestComponent({calleeId: "mrsmith"});
+      view = mountTestComponent({contact: contact});
 
       expect(TestUtils.findRenderedDOMComponentWithTag(
         view, "h2").props.children).eql("mrsmith");
     });
+
+    it("should fallback to the email if the contact name is not defined",
+      function() {
+        delete contact.name;
+
+        view = mountTestComponent({contact: contact});
+
+        expect(TestUtils.findRenderedDOMComponentWithTag(
+          view, "h2").props.children).eql("fakeEmail");
+      }
+    );
   });
 
   describe("PendingConversationView", function() {
@@ -56,7 +76,7 @@ describe("loop.conversationViews", function () {
       function() {
         view = mountTestComponent({
           callState: CALL_STATES.CONNECTING,
-          calleeId: "mrsmith",
+          contact: contact,
           dispatcher: dispatcher
         });
 
@@ -70,7 +90,7 @@ describe("loop.conversationViews", function () {
       function() {
         view = mountTestComponent({
           callState: CALL_STATES.ALERTING,
-          calleeId: "mrsmith",
+          contact: contact,
           dispatcher: dispatcher
         });
 
@@ -84,7 +104,7 @@ describe("loop.conversationViews", function () {
       function() {
         view = mountTestComponent({
           callState: CALL_STATES.CONNECTING,
-          calleeId: "mrsmith",
+          contact: contact,
           dispatcher: dispatcher,
           enableCancelButton: false
         });
@@ -98,7 +118,7 @@ describe("loop.conversationViews", function () {
       function() {
         view = mountTestComponent({
           callState: CALL_STATES.CONNECTING,
-          calleeId: "mrsmith",
+          contact: contact,
           dispatcher: dispatcher,
           enableCancelButton: true
         });
@@ -112,7 +132,7 @@ describe("loop.conversationViews", function () {
       function() {
         view = mountTestComponent({
           callState: CALL_STATES.CONNECTING,
-          calleeId: "mrsmith",
+          contact: contact,
           dispatcher: dispatcher
         });
 
@@ -293,7 +313,10 @@ describe("loop.conversationViews", function () {
 
     it("should render the PendingConversationView when the call state is 'init'",
       function() {
-        store.set({callState: CALL_STATES.INIT});
+        store.set({
+          callState: CALL_STATES.INIT,
+          contact: contact
+        });
 
         view = mountTestComponent();
 
@@ -323,7 +346,10 @@ describe("loop.conversationViews", function () {
 
     it("should update the rendered views when the state is changed.",
       function() {
-        store.set({callState: CALL_STATES.INIT});
+        store.set({
+          callState: CALL_STATES.INIT,
+          contact: contact
+        });
 
         view = mountTestComponent();
 
