@@ -715,10 +715,10 @@ const Matrix4x4
 Layer::GetTransform() const
 {
   Matrix4x4 transform = mTransform;
+  transform.PostScale(mPostXScale, mPostYScale, 1.0f);
   if (const ContainerLayer* c = AsContainerLayer()) {
     transform.Scale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
   }
-  transform = transform * Matrix4x4().Scale(mPostXScale, mPostYScale, 1.0f);
   return transform;
 }
 
@@ -730,10 +730,11 @@ Layer::GetLocalTransform()
     transform = shadow->GetShadowTransform();
   else
     transform = mTransform;
+
+  transform.PostScale(mPostXScale, mPostYScale, 1.0f);
   if (ContainerLayer* c = AsContainerLayer()) {
     transform.Scale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
   }
-  transform = transform * Matrix4x4().Scale(mPostXScale, mPostYScale, 1.0f);
 
   return transform;
 }
