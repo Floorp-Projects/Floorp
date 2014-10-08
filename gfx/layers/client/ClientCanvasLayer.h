@@ -102,7 +102,7 @@ protected:
   friend class CanvasClient2D;
   friend class DeprecatedCanvasClientSurfaceStream;
   friend class CanvasClientSurfaceStream;
-  friend class CanvasClientShSurf;
+  friend class CanvasClientSharedSurface;
 };
 }
 }

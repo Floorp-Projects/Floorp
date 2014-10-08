@@ -37,16 +37,13 @@ using namespace android;
 
 SurfaceFactory_Gralloc::SurfaceFactory_Gralloc(GLContext* prodGL,
                                                const SurfaceCaps& caps,
+                                               layers::TextureFlags flags,
                                                layers::ISurfaceAllocator* allocator)
     : SurfaceFactory(prodGL, SharedSurfaceType::Gralloc, caps)
+    , mFlags(flags)
+    , mAllocator(allocator)
 {
-    if (caps.surfaceAllocator) {
-        allocator = caps.surfaceAllocator;
-    }
-
-    MOZ_ASSERT(allocator);
-
-    mAllocator = allocator;
+    MOZ_ASSERT(mAllocator);
 }
 
 /*static*/ UniquePtr<SharedSurface_Gralloc>
@@ -54,6 +51,7 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
                               const GLFormats& formats,
                               const gfx::IntSize& size,
                               bool hasAlpha,
+                              layers::TextureFlags flags,
                               ISurfaceAllocator* allocator)
 {
     GLLibraryEGL* egl = &sEGLLibrary;
@@ -77,7 +75,7 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
           allocator,
           gfx::ImageFormatToSurfaceFormat(format),
           gfx::BackendType::NONE, // we don't need to use it with a DrawTarget
-          layers::TextureFlags::DEFAULT);
+          flags);
 
     if (!grallocTC->AllocateForGLRendering(size)) {
       return Move(ret);

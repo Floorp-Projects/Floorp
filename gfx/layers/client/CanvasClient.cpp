@@ -48,7 +48,7 @@ CanvasClient::CreateCanvasClient(CanvasClientType aType,
 
   switch (aType) {
   case CanvasClientTypeShSurf:
-    return new CanvasClientShSurf(aForwarder, aFlags);
+    return new CanvasClientSharedSurface(aForwarder, aFlags);
 
   case CanvasClientGLContext:
     aFlags |= TextureFlags::DEALLOCATE_CLIENT;
@@ -240,8 +240,8 @@ CanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 
 ////////////////////////////////////////////////////////////////////////
 
-CanvasClientShSurf::CanvasClientShSurf(CompositableForwarder* aLayerForwarder,
-                                       TextureFlags aFlags)
+CanvasClientSharedSurface::CanvasClientSharedSurface(CompositableForwarder* aLayerForwarder,
+                                                     TextureFlags aFlags)
   : CanvasClient(aLayerForwarder, aFlags)
 {
 }
@@ -250,10 +250,8 @@ CanvasClientShSurf::CanvasClientShSurf(CompositableForwarder* aLayerForwarder,
 // Accelerated backends
 
 static TemporaryRef<TextureClient>
-TexClientFromShSurf(SharedSurface* surf, TextureFlags baseFlags)
+TexClientFromShSurf(SharedSurface* surf, TextureFlags flags)
 {
-  TextureFlags flags = baseFlags | TextureFlags::DEALLOCATE_CLIENT;
-
   switch (surf->mType) {
     case SharedSurfaceType::Basic:
       return nullptr;
@@ -264,7 +262,7 @@ TexClientFromShSurf(SharedSurface* surf, TextureFlags baseFlags)
 #endif
 
     default:
-      return new ShSurfTexClient(flags, surf);
+      return new SharedSurfaceTextureClient(flags, surf);
   }
 }
 
@@ -284,16 +282,18 @@ class TexClientFactory
   const gfx::IntSize mSize;
   const gfx::BackendType mBackendType;
   const TextureFlags mBaseTexFlags;
+  const LayersBackend mLayersBackend;
 
 public:
   TexClientFactory(ISurfaceAllocator* allocator, bool hasAlpha,
                    const gfx::IntSize& size, gfx::BackendType backendType,
-                   TextureFlags baseTexFlags)
+                   TextureFlags baseTexFlags, LayersBackend layersBackend)
     : mAllocator(allocator)
     , mHasAlpha(hasAlpha)
     , mSize(size)
     , mBackendType(backendType)
     , mBaseTexFlags(baseTexFlags)
+    , mLayersBackend(layersBackend)
   {
   }
 
@@ -312,11 +312,20 @@ public:
   }
 
   TemporaryRef<BufferTextureClient> CreateR8G8B8AX8() {
-    // For now, assume that all RGBA formats are broken.
-    RefPtr<BufferTextureClient> ret = CreateB8G8R8AX8();
+    RefPtr<BufferTextureClient> ret;
 
-    if (ret) {
-      ret->AddFlags(TextureFlags::RB_SWAPPED);
+    bool areRGBAFormatsBroken = mLayersBackend == LayersBackend::LAYERS_BASIC;
+    if (!areRGBAFormatsBroken) {
+      gfx::SurfaceFormat format = mHasAlpha ? gfx::SurfaceFormat::R8G8B8A8
+                                            : gfx::SurfaceFormat::R8G8B8X8;
+      ret = Create(format);
+    }
+
+    if (!ret) {
+      ret = CreateB8G8R8AX8();
+      if (ret) {
+        ret->AddFlags(TextureFlags::RB_SWAPPED);
+      }
     }
 
     return ret.forget();
@@ -329,7 +338,7 @@ TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
 {
   auto backendType = gfx::BackendType::CAIRO;
   TexClientFactory factory(allocator, src->mHasAlpha, src->mSize, backendType,
-                           baseFlags);
+                           baseFlags, layersBackend);
 
   RefPtr<BufferTextureClient> texClient;
 
@@ -389,8 +398,10 @@ TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
 
     // RB_SWAPPED doesn't work with D3D11. (bug 1051010)
     // RB_SWAPPED doesn't work with Basic. (bug ???????)
-    bool layersNeedsManualSwap = layersBackend == LayersBackend::LAYERS_D3D11 ||
-                                 layersBackend == LayersBackend::LAYERS_BASIC;
+    // RB_SWAPPED doesn't work with D3D9. (bug ???????)
+    bool layersNeedsManualSwap = layersBackend == LayersBackend::LAYERS_BASIC ||
+                                 layersBackend == LayersBackend::LAYERS_D3D9 ||
+                                 layersBackend == LayersBackend::LAYERS_D3D11;
     if (texClient->HasFlags(TextureFlags::RB_SWAPPED) &&
         layersNeedsManualSwap)
     {
@@ -413,7 +424,7 @@ TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
 ////////////////////////////////////////
 
 void
-CanvasClientShSurf::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
+CanvasClientSharedSurface::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
   aLayer->mGLContext->MakeCurrent();
   GLScreenBuffer* screen = aLayer->mGLContext->Screen();
@@ -424,7 +435,6 @@ CanvasClientShSurf::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   }
 
   mFront = screen->Front();
-
   if (!mFront)
     return;
 

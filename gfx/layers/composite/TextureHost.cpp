@@ -203,8 +203,8 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
     case SurfaceDescriptor::TSurfaceStreamDescriptor:
       return new StreamTextureHost(aFlags, aDesc.get_SurfaceStreamDescriptor());
 
-    case SurfaceDescriptor::TShSurfDescriptor:
-      return new ShSurfTexHost(aFlags, aDesc.get_ShSurfDescriptor());
+    case SurfaceDescriptor::TSharedSurfaceDescriptor:
+      return new SharedSurfaceTextureHost(aFlags, aDesc.get_SharedSurfaceDescriptor());
 
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface:
       if (Compositor::GetBackend() == LayersBackend::LAYERS_OPENGL) {
@@ -1089,9 +1089,10 @@ ShSurfToTexSource(gl::SharedSurface* abstractSurf, Compositor* compositor)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// ShSurfTexHost
+// SharedSurfaceTextureHost
 
-ShSurfTexHost::ShSurfTexHost(TextureFlags aFlags, const ShSurfDescriptor& aDesc)
+SharedSurfaceTextureHost::SharedSurfaceTextureHost(TextureFlags aFlags,
+                                                   const SharedSurfaceDescriptor& aDesc)
   : TextureHost(aFlags)
   , mIsLocked(false)
   , mSurf((gl::SharedSurface*)aDesc.surf())
@@ -1101,21 +1102,21 @@ ShSurfTexHost::ShSurfTexHost(TextureFlags aFlags, const ShSurfDescriptor& aDesc)
 }
 
 gfx::SurfaceFormat
-ShSurfTexHost::GetFormat() const
+SharedSurfaceTextureHost::GetFormat() const
 {
   MOZ_ASSERT(mTexSource);
   return mTexSource->GetFormat();
 }
 
 gfx::IntSize
-ShSurfTexHost::GetSize() const
+SharedSurfaceTextureHost::GetSize() const
 {
   MOZ_ASSERT(mTexSource);
   return mTexSource->GetSize();
 }
 
 void
-ShSurfTexHost::EnsureTexSource()
+SharedSurfaceTextureHost::EnsureTexSource()
 {
   MOZ_ASSERT(mIsLocked);
 

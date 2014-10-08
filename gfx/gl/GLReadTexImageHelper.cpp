@@ -192,8 +192,11 @@ GetActualReadFormats(GLContext* gl,
                 break;
             }
             case LOCAL_GL_BGRA: {
-                if (destType == LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV)
+                if (destType == LOCAL_GL_UNSIGNED_BYTE ||
+                    destType == LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV)
+                {
                     fallback = false;
+                }
                 break;
             }
         }

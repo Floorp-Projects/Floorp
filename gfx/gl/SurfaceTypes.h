@@ -25,6 +25,7 @@ struct SurfaceCaps MOZ_FINAL
     bool bpp16;
     bool depth, stencil;
     bool antialias;
+    bool premultAlpha;
     bool preserve;
 
     // The surface allocator that we want to create this

@@ -118,6 +118,9 @@ public:
   CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const MOZ_OVERRIDE;
 
+  static TemporaryRef<TextureClient> FromShSurf(gl::SharedSurface* surf,
+                                                TextureFlags flags);
+
 protected:
   /**
    * Unfortunately, until bug 879681 is fixed we need to use a GrallocBufferActor.

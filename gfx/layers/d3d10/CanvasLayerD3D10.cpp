@@ -118,10 +118,13 @@ CanvasLayerD3D10::UpdateSurface()
   }
 
   if (mGLContext) {
-    SharedSurface* surf = mGLContext->RequestFrame();
-    if (!surf) {
+    auto screen = mGLContext->Screen();
+    MOZ_ASSERT(screen);
+
+    SharedSurface* surf = screen->Front()->Surf();
+    if (!surf)
       return;
-    }
+    surf->WaitSync();
 
     switch (surf->mType) {
       case SharedSurfaceType::EGLSurfaceANGLE: {

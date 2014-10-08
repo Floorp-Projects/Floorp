@@ -6,6 +6,7 @@
 #include "GLScreenBuffer.h"
 
 #include <cstring>
+#include "CompositorTypes.h"
 #include "GLContext.h"
 #include "GLBlitHelper.h"
 #include "GLReadTexImageHelper.h"
@@ -43,11 +44,19 @@ GLScreenBuffer::Create(GLContext* gl,
 
 #ifdef MOZ_WIDGET_GONK
     /* On B2G, we want a Gralloc factory, and we want one right at the start */
+    auto allocator = caps.surfaceAllocator;
     if (!factory &&
-        caps.surfaceAllocator &&
+        allocator &&
         XRE_GetProcessType() != GeckoProcessType_Default)
     {
-        factory = MakeUnique<SurfaceFactory_Gralloc>(gl, caps);
+        layers::TextureFlags flags = TextureFlags::DEALLOCATE_CLIENT |
+                                     TextureFlags::NEEDS_Y_FLIP;
+        if (!caps.premultAlpha) {
+            flags |= TextureFlags::NON_PREMULTIPLIED;
+        }
+
+        factory = MakeUnique<SurfaceFactory_Gralloc>(gl, caps, flags,
+                                                     allocator);
     }
 #endif
 #ifdef XP_MACOSX
