@@ -69,7 +69,7 @@ union MaybeNativeKeyBinding
   void_t;
 };
 
-intr protocol PBrowser
+prio(normal upto high) intr protocol PBrowser
 {
     manager PContent or PContentBridge;
 
@@ -108,8 +108,8 @@ parent:
                      CpowEntry[] aCpows, Principal aPrincipal)
       returns (nsString[] retval);
 
-    rpc RpcMessage(nsString aMessage, ClonedMessageData aData,
-                   CpowEntry[] aCpows, Principal aPrincipal)
+    prio(high) sync RpcMessage(nsString aMessage, ClonedMessageData aData,
+                               CpowEntry[] aCpows, Principal aPrincipal)
       returns (nsString[] retval);
 
     /**

@@ -9,7 +9,7 @@ include protocol PTestShellCommand;
 namespace mozilla {
 namespace ipc {
 
-intr protocol PTestShell
+async protocol PTestShell
 {
   manager PContent;
 
