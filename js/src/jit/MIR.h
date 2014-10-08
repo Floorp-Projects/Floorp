@@ -347,9 +347,9 @@ class MDefinition : public MNode
     MIRType resultType_;           // Representation of result type.
     types::TemporaryTypeSet *resultTypeSet_; // Optional refinement of the result type.
     union {
-        MDefinition *dependency_;  // Implicit dependency (store, call, etc.) of this instruction.
+        MInstruction *dependency_; // Implicit dependency (store, call, etc.) of this instruction.
                                    // Used by alias analysis, GVN and LICM.
-        uint32_t virtualRegister_;   // Used by lowering to map definitions to virtual registers.
+        uint32_t virtualRegister_; // Used by lowering to map definitions to virtual registers.
     };
 
     // Track bailouts by storing the current pc in MIR instruction. Also used
@@ -746,10 +746,10 @@ class MDefinition : public MNode
         resultTypeSet_ = types;
     }
 
-    MDefinition *dependency() const {
+    MInstruction *dependency() const {
         return dependency_;
     }
-    void setDependency(MDefinition *dependency) {
+    void setDependency(MInstruction *dependency) {
         dependency_ = dependency;
     }
     virtual AliasSet getAliasSet() const {
@@ -825,6 +825,7 @@ class MUseDefIterator
 };
 
 typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;
+typedef Vector<MInstruction *, 6, IonAllocPolicy> MInstructionVector;
 
 // An instruction is an SSA name that is inserted into a basic block's IR
 // stream.
