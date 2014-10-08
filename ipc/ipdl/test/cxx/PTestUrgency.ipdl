@@ -1,7 +1,7 @@
 namespace mozilla {
 namespace _ipdltest {
 
-prio(normal upto high) sync protocol PTestUrgency
+intr protocol PTestUrgency
 {
 parent:
     sync Test1() returns (uint32_t result);
@@ -11,8 +11,8 @@ parent:
 
 child:
     async Start();
-    prio(high) sync Reply1() returns (uint32_t result);
-    prio(high) sync Reply2() returns (uint32_t result);
+    rpc Reply1() returns (uint32_t result);
+    rpc Reply2() returns (uint32_t result);
 };
 
 } // namespace _ipdltest

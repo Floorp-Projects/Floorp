@@ -48,7 +48,7 @@ TestUrgencyParent::Main()
 bool
 TestUrgencyParent::RecvTest1(uint32_t *value)
 {
-  if (!SendReply1(value))
+  if (!CallReply1(value))
     fail("sending Reply1");
   if (*value != 99)
     fail("bad value");
@@ -60,7 +60,7 @@ TestUrgencyParent::RecvTest2()
 {
   uint32_t value;
   inreply_ = true;
-  if (!SendReply2(&value))
+  if (!CallReply2(&value))
     fail("sending Reply2");
   inreply_ = false;
   if (value != 500)
@@ -130,10 +130,10 @@ TestUrgencyChild::RecvStart()
 }
 
 bool
-TestUrgencyChild::RecvReply1(uint32_t *reply)
+TestUrgencyChild::AnswerReply1(uint32_t *reply)
 {
   if (test_ != kFirstTestBegin)
-    fail("wrong test # in RecvReply1");
+    fail("wrong test # in AnswerReply1");
 
   *reply = 99;
   test_ = kFirstTestGotReply;
@@ -141,10 +141,10 @@ TestUrgencyChild::RecvReply1(uint32_t *reply)
 }
 
 bool
-TestUrgencyChild::RecvReply2(uint32_t *reply)
+TestUrgencyChild::AnswerReply2(uint32_t *reply)
 {
   if (test_ != kSecondTestBegin)
-    fail("wrong test # in RecvReply2");
+    fail("wrong test # in AnswerReply2");
 
   // sleep for 5 seconds so the parent process tries to deliver more messages.
   Sleep(5000);
