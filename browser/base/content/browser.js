@@ -199,6 +199,7 @@ let gInitialPages = [
 
 #include browser-addons.js
 #include browser-customization.js
+#include browser-devedition.js
 #include browser-feeds.js
 #include browser-fullScreen.js
 #include browser-fullZoom.js
@@ -834,6 +835,7 @@ var gBrowserInit = {
     gPageStyleMenu.init();
     LanguageDetectionListener.init();
     BrowserOnClick.init();
+    DevEdition.init();
 
     let mm = window.getGroupMessageManager("browsers");
     mm.loadFrameScript("chrome://browser/content/content.js", true);
@@ -1390,6 +1392,8 @@ var gBrowserInit = {
     ToolbarIconColor.uninit();
 
     BrowserOnClick.uninit();
+
+    DevEdition.uninit();
 
     var enumerator = Services.wm.getEnumerator(null);
     enumerator.getNext();
