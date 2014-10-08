@@ -985,9 +985,8 @@ HTMLImageElement::PictureSourceSizesChanged(nsIContent *aSourceNode,
 }
 
 void
-HTMLImageElement::PictureSourceMediaChanged(nsIContent *aSourceNode,
-                                            const nsAString& aNewValue,
-                                            bool aNotify)
+HTMLImageElement::PictureSourceMediaOrTypeChanged(nsIContent *aSourceNode,
+                                                  bool aNotify)
 {
   if (!HTMLPictureElement::IsPictureEnabled()) {
     return;
