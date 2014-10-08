@@ -145,10 +145,12 @@ def fixStackTraces(args):
     # script is installed as a symlink.
     sys.path.append(os.path.dirname(__file__))
 
-    # XXX: should incorporate fix_stack_using_bpsyms.py here as well, like in
-    #      testing/mochitests/runtests.py
+    bpsyms = os.environ.get('BREAKPAD_SYMBOLS_PATH', None)
     sysname = platform.system()
-    if sysname == 'Linux':
+    if bpsyms and os.path.exists(bpsyms):
+        import fix_stack_using_bpsyms as fixModule
+        fix = lambda line: fixModule.fixSymbols(line, bpsyms)
+    elif sysname == 'Linux':
         import fix_linux_stack as fixModule
         fix = lambda line: fixModule.fixSymbols(line)
     elif sysname == 'Darwin':
