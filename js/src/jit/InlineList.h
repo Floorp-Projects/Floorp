@@ -211,7 +211,26 @@ class InlineListNode : public InlineForwardListNode<T>
         prev(p)
     { }
 
+    // Move constructor. Nodes may be moved without being removed from their
+    // containing lists. For example, this allows list nodes to be safely
+    // stored in a resizable Vector -- when the Vector resizes, the new storage
+    // is initialized by this move constructor. |other| is a reference to the
+    // old node which the |this| node here is replacing.
+    InlineListNode(InlineListNode<T> &&other)
+      : InlineForwardListNode<T>(other.next)
+    {
+        InlineListNode<T> *newNext = static_cast<InlineListNode<T> *>(other.next);
+        InlineListNode<T> *newPrev = other.prev;
+        prev = newPrev;
+
+        // Update the pointers in the adjacent nodes to point to this node's new
+        // location.
+        newNext->prev = this;
+        newPrev->next = this;
+    }
+
     InlineListNode(const InlineListNode<T> &) MOZ_DELETE;
+    void operator=(const InlineListNode<T> &) MOZ_DELETE;
 
   protected:
     friend class InlineList<T>;
