@@ -465,7 +465,7 @@ var BrowserApp = {
     if (this._startupStatus)
       this.onAppUpdated();
 
-    if (!ParentalControls.isAllowed(ParentalControls.INSTALL_EXTENSIONS)) {
+    if (!ParentalControls.isAllowed(ParentalControls.INSTALL_EXTENSION)) {
       // Disable extension installs
       Services.prefs.setIntPref("extensions.enabledScopes", 1);
       Services.prefs.setIntPref("extensions.autoDisableScopes", 1);
