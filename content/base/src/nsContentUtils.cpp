@@ -5999,11 +5999,11 @@ nsContentUtils::CreateBlobBuffer(JSContext* aCx,
 {
   uint32_t blobLen = aData.Length();
   void* blobData = moz_malloc(blobLen);
-  nsRefPtr<DOMFile> blob;
+  nsRefPtr<File> blob;
   if (blobData) {
     memcpy(blobData, aData.BeginReading(), blobLen);
-    blob = mozilla::dom::DOMFile::CreateMemoryFile(aParent, blobData, blobLen,
-                                                   EmptyString());
+    blob = mozilla::dom::File::CreateMemoryFile(aParent, blobData, blobLen,
+                                                EmptyString());
   } else {
     return NS_ERROR_OUT_OF_MEMORY;
   }

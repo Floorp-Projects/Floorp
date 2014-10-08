@@ -10,14 +10,14 @@
 #include "nsClassHashtable.h"
 #include "nsNetUtil.h"
 #include "nsIPrincipal.h"
-#include "nsDOMFile.h"
 #include "DOMMediaStream.h"
 #include "mozilla/dom/MediaSource.h"
 #include "nsIMemoryReporter.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LoadInfo.h"
 
-using mozilla::dom::DOMFileImpl;
+using mozilla::dom::FileImpl;
 using mozilla::ErrorResult;
 using mozilla::LoadInfo;
 
@@ -497,7 +497,7 @@ nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     return NS_ERROR_DOM_BAD_URI;
   }
 
-  nsCOMPtr<PIDOMFileImpl> blobImpl = do_QueryInterface(info->mObject);
+  nsCOMPtr<PIFileImpl> blobImpl = do_QueryInterface(info->mObject);
   if (!blobImpl) {
     return NS_ERROR_DOM_BAD_URI;
   }
@@ -511,7 +511,7 @@ nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
   }
 #endif
 
-  DOMFileImpl* blob = static_cast<DOMFileImpl*>(blobImpl.get());
+  FileImpl* blob = static_cast<FileImpl*>(blobImpl.get());
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = blob->GetInternalStream(getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -596,12 +596,12 @@ NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
 
   *aStream = nullptr;
 
-  nsCOMPtr<PIDOMFileImpl> blobImpl = do_QueryInterface(GetDataObject(aURI));
+  nsCOMPtr<PIFileImpl> blobImpl = do_QueryInterface(GetDataObject(aURI));
   if (!blobImpl) {
     return NS_ERROR_DOM_BAD_URI;
   }
 
-  DOMFileImpl* blob = static_cast<DOMFileImpl*>(blobImpl.get());
+  FileImpl* blob = static_cast<FileImpl*>(blobImpl.get());
   return blob->GetInternalStream(aStream);
 }
 

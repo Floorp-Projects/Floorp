@@ -22,10 +22,10 @@ extern PRLogModuleInfo* GetDataChannelLog();
 
 #include "nsDOMDataChannelDeclarations.h"
 #include "nsDOMDataChannel.h"
-#include "nsDOMFile.h"
 #include "nsIDOMDataChannel.h"
 #include "nsIDOMMessageEvent.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "nsError.h"
@@ -34,7 +34,6 @@ extern PRLogModuleInfo* GetDataChannelLog();
 #include "nsCycleCollectionParticipant.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsNetUtil.h"
-#include "nsDOMFile.h"
 
 #include "DataChannel.h"
 
@@ -272,7 +271,7 @@ nsDOMDataChannel::Send(const nsAString& aData, ErrorResult& aRv)
 }
 
 void
-nsDOMDataChannel::Send(DOMFile& aData, ErrorResult& aRv)
+nsDOMDataChannel::Send(File& aData, ErrorResult& aRv)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
 

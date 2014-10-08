@@ -73,9 +73,9 @@
 #include "nsIRadioGroupContainer.h"
 
 // input type=file
+#include "mozilla/dom/File.h"
 #include "nsIFile.h"
 #include "nsNetUtil.h"
-#include "nsDOMFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIContentPrefService.h"
 #include "nsIMIMEService.h"
@@ -236,11 +236,11 @@ class HTMLInputElementState MOZ_FINAL : public nsISupports
       mValue = aValue;
     }
 
-    const nsTArray<nsRefPtr<DOMFile>>& GetFiles() {
+    const nsTArray<nsRefPtr<File>>& GetFiles() {
       return mFiles;
     }
 
-    void SetFiles(const nsTArray<nsRefPtr<DOMFile>>& aFiles) {
+    void SetFiles(const nsTArray<nsRefPtr<File>>& aFiles) {
       mFiles.Clear();
       mFiles.AppendElements(aFiles);
     }
@@ -255,7 +255,7 @@ class HTMLInputElementState MOZ_FINAL : public nsISupports
     ~HTMLInputElementState() {}
 
     nsString mValue;
-    nsTArray<nsRefPtr<DOMFile>> mFiles;
+    nsTArray<nsRefPtr<File>> mFiles;
     bool mChecked;
     bool mCheckedSet;
 };
@@ -316,7 +316,7 @@ UploadLastDir::ContentPrefCallback::HandleError(nsresult error)
 namespace {
 
 /**
- * This enumerator returns DOMFile objects after wrapping a single
+ * This enumerator returns File objects after wrapping a single
  * nsIFile representing a directory. It enumerates the files under that
  * directory and its subdirectories as a flat list of files, ignoring/skipping
  * over symbolic links.
@@ -376,7 +376,7 @@ public:
     }
 
     // The parent for this object will be set on the main thread.
-    nsRefPtr<DOMFile> domFile = DOMFile::CreateFromFile(nullptr, mNextFile);
+    nsRefPtr<File> domFile = File::CreateFromFile(nullptr, mNextFile);
     nsCString relDescriptor;
     nsresult rv =
       mNextFile->GetRelativeDescriptor(mTopDirsParent, relDescriptor);
@@ -389,8 +389,7 @@ public:
     MOZ_ASSERT(length >= 0);
     if (length > 0) {
       // Note that we leave the trailing "/" on the path.
-      DOMFileImplFile* fileImpl =
-        static_cast<DOMFileImplFile*>(domFile->Impl());
+      FileImplFile* fileImpl = static_cast<FileImplFile*>(domFile->Impl());
       MOZ_ASSERT(fileImpl);
       fileImpl->SetPath(Substring(path, 0, uint32_t(length)));
     }
@@ -514,7 +513,7 @@ public:
 
   NS_IMETHOD Run() {
     if (!NS_IsMainThread()) {
-      // Build up list of DOMFile objects on this dedicated thread:
+      // Build up list of File objects on this dedicated thread:
       nsCOMPtr<nsISimpleEnumerator> iter =
         new DirPickerRecursiveFileEnumerator(mTopDir);
       bool hasMore = true;
@@ -523,7 +522,7 @@ public:
         iter->GetNext(getter_AddRefs(tmp));
         nsCOMPtr<nsIDOMFile> domFile = do_QueryInterface(tmp);
         MOZ_ASSERT(domFile);
-        mFileList.AppendElement(static_cast<DOMFile*>(domFile.get()));
+        mFileList.AppendElement(static_cast<File*>(domFile.get()));
         mFileListLength = mFileList.Length();
         if (mCanceled) {
           MOZ_ASSERT(!mInput, "This is bad - how did this happen?");
@@ -553,11 +552,11 @@ public:
       return NS_OK;
     }
 
-    // Recreate DOMFile with the correct parent object.
+    // Recreate File with the correct parent object.
     nsCOMPtr<nsIGlobalObject> global = mInput->OwnerDoc()->GetScopeObject();
     for (uint32_t i = 0; i < mFileList.Length(); ++i) {
       MOZ_ASSERT(!mFileList[i]->GetParentObject());
-      mFileList[i] = new DOMFile(global, mFileList[i]->Impl());
+      mFileList[i] = new File(global, mFileList[i]->Impl());
     }
 
     // The text control frame (if there is one) isn't going to send a change
@@ -603,7 +602,7 @@ public:
 private:
   nsRefPtr<HTMLInputElement> mInput;
   nsCOMPtr<nsIFile> mTopDir;
-  nsTArray<nsRefPtr<DOMFile>> mFileList;
+  nsTArray<nsRefPtr<File>> mFileList;
 
   // We access the list length on both threads, so we need the indirection of
   // this atomic member to make the access thread safe:
@@ -629,7 +628,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
 
   if (mode == static_cast<int16_t>(nsIFilePicker::modeGetFolder)) {
     // Directory picking is different, since we still need to do more I/O to
-    // build up the list of DOMFile objects. Since this may block for a
+    // build up the list of File objects. Since this may block for a
     // long time, we need to build the list off on another dedicated thread to
     // avoid blocking any other activities that the browser is carrying out.
 
@@ -664,7 +663,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
   }
 
   // Collect new selected filenames
-  nsTArray<nsRefPtr<DOMFile>> newFiles;
+  nsTArray<nsRefPtr<File>> newFiles;
   if (mode == static_cast<int16_t>(nsIFilePicker::modeOpenMultiple)) {
     nsCOMPtr<nsISimpleEnumerator> iter;
     nsresult rv = mFilePicker->GetDomfiles(getter_AddRefs(iter));
@@ -681,7 +680,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
       iter->GetNext(getter_AddRefs(tmp));
       nsCOMPtr<nsIDOMFile> domFile = do_QueryInterface(tmp);
       MOZ_ASSERT(domFile);
-      newFiles.AppendElement(static_cast<DOMFile*>(domFile.get()));
+      newFiles.AppendElement(static_cast<File*>(domFile.get()));
     }
   } else {
     MOZ_ASSERT(mode == static_cast<int16_t>(nsIFilePicker::modeOpen));
@@ -689,7 +688,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
     nsresult rv = mFilePicker->GetDomfile(getter_AddRefs(domFile));
     NS_ENSURE_SUCCESS(rv, rv);
     if (domFile) {
-      newFiles.AppendElement(static_cast<DOMFile*>(domFile.get()));
+      newFiles.AppendElement(static_cast<File*>(domFile.get()));
     }
   }
 
@@ -945,7 +944,7 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
   // Set default directry and filename
   nsAutoString defaultName;
 
-  const nsTArray<nsRefPtr<DOMFile>>& oldFiles = GetFilesInternal();
+  const nsTArray<nsRefPtr<File>>& oldFiles = GetFilesInternal();
 
   nsCOMPtr<nsIFilePickerShownCallback> callback =
     new HTMLInputElement::nsFilePickerShownCallback(this, filePicker);
@@ -1725,7 +1724,7 @@ HTMLInputElement::IsValueEmpty() const
 void
 HTMLInputElement::ClearFiles(bool aSetValueChanged)
 {
-  nsTArray<nsRefPtr<DOMFile>> files;
+  nsTArray<nsRefPtr<File>> files;
   SetFiles(files, aSetValueChanged);
 }
 
@@ -2319,7 +2318,7 @@ HTMLInputElement::MozGetFileNameArray(uint32_t* aLength, char16_t*** aFileNames)
 void
 HTMLInputElement::MozSetFileNameArray(const Sequence< nsString >& aFileNames)
 {
-  nsTArray<nsRefPtr<DOMFile>> files;
+  nsTArray<nsRefPtr<File>> files;
   for (uint32_t i = 0; i < aFileNames.Length(); ++i) {
     nsCOMPtr<nsIFile> file;
 
@@ -2338,7 +2337,7 @@ HTMLInputElement::MozSetFileNameArray(const Sequence< nsString >& aFileNames)
 
     if (file) {
       nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
-      nsRefPtr<DOMFile> domFile = DOMFile::CreateFromFile(global, file);
+      nsRefPtr<File> domFile = File::CreateFromFile(global, file);
       files.AppendElement(domFile);
     } else {
       continue; // Not much we can do if the file doesn't exist
@@ -2574,7 +2573,7 @@ HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
 }
 
 void
-HTMLInputElement::SetFiles(const nsTArray<nsRefPtr<DOMFile>>& aFiles,
+HTMLInputElement::SetFiles(const nsTArray<nsRefPtr<File>>& aFiles,
                            bool aSetValueChanged)
 {
   mFiles.Clear();
@@ -2594,7 +2593,7 @@ HTMLInputElement::SetFiles(nsIDOMFileList* aFiles,
     uint32_t listLength;
     aFiles->GetLength(&listLength);
     for (uint32_t i = 0; i < listLength; i++) {
-      nsRefPtr<DOMFile> file = files->Item(i);
+      nsRefPtr<File> file = files->Item(i);
       mFiles.AppendElement(file);
     }
   }
@@ -2794,7 +2793,7 @@ HTMLInputElement::UpdateFileList()
   if (mFileList) {
     mFileList->Clear();
 
-    const nsTArray<nsRefPtr<DOMFile>>& files = GetFilesInternal();
+    const nsTArray<nsRefPtr<File>>& files = GetFilesInternal();
     for (uint32_t i = 0; i < files.Length(); ++i) {
       if (!mFileList->Append(files[i])) {
         return NS_ERROR_FAILURE;
@@ -5644,7 +5643,7 @@ HTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
   if (mType == NS_FORM_INPUT_FILE) {
     // Submit files
 
-    const nsTArray<nsRefPtr<DOMFile>>& files = GetFilesInternal();
+    const nsTArray<nsRefPtr<File>>& files = GetFilesInternal();
 
     for (uint32_t i = 0; i < files.Length(); ++i) {
       aFormSubmission->AddNameFilePair(name, files[i], NullString());
@@ -5892,7 +5891,7 @@ HTMLInputElement::RestoreState(nsPresState* aState)
         break;
       case VALUE_MODE_FILENAME:
         {
-          const nsTArray<nsRefPtr<DOMFile>>& files = inputState->GetFiles();
+          const nsTArray<nsRefPtr<File>>& files = inputState->GetFiles();
           SetFiles(files, true);
         }
         break;
@@ -6402,7 +6401,7 @@ HTMLInputElement::IsValueMissing() const
       return IsValueEmpty();
     case VALUE_MODE_FILENAME:
     {
-      const nsTArray<nsRefPtr<DOMFile>>& files = GetFilesInternal();
+      const nsTArray<nsRefPtr<File>>& files = GetFilesInternal();
       return files.IsEmpty();
     }
     case VALUE_MODE_DEFAULT_ON:

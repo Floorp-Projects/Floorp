@@ -16,8 +16,8 @@
 #include "nsCycleCollectionParticipant.h"
 
 #include "nsAutoPtr.h"
-#include "nsDOMFile.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/File.h"
 
 class nsINode;
 class nsITransferable;

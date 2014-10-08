@@ -5,11 +5,11 @@
 
 #include "URL.h"
 
-#include "nsDOMFile.h"
 #include "nsIDocument.h"
 #include "nsIIOService.h"
 #include "nsPIDOMWindow.h"
 
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/URL.h"
 #include "mozilla/dom/URLBinding.h"
 #include "mozilla/dom/URLSearchParams.h"
@@ -66,11 +66,11 @@ private:
 class CreateURLRunnable : public WorkerMainThreadRunnable
 {
 private:
-  DOMFileImpl* mBlobImpl;
+  FileImpl* mBlobImpl;
   nsString& mURL;
 
 public:
-  CreateURLRunnable(WorkerPrivate* aWorkerPrivate, DOMFileImpl* aBlobImpl,
+  CreateURLRunnable(WorkerPrivate* aWorkerPrivate, FileImpl* aBlobImpl,
                     const mozilla::dom::objectURLOptions& aOptions,
                     nsString& aURL)
   : WorkerMainThreadRunnable(aWorkerPrivate),
@@ -856,7 +856,7 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, JSObject* aBlob,
 
 // static
 void
-URL::CreateObjectURL(const GlobalObject& aGlobal, DOMFile& aBlob,
+URL::CreateObjectURL(const GlobalObject& aGlobal, File& aBlob,
                      const mozilla::dom::objectURLOptions& aOptions,
                      nsString& aResult, mozilla::ErrorResult& aRv)
 {
