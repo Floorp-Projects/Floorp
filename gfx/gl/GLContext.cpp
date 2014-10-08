@@ -24,7 +24,6 @@
 #include "prlink.h"
 #include "ScopedGLHelpers.h"
 #include "SharedSurfaceGL.h"
-#include "SurfaceStream.h"
 #include "GfxTexturesReporter.h"
 #include "TextureGarbageBin.h"
 #include "gfx2DGlue.h"

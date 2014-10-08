@@ -47,7 +47,7 @@ SurfaceCaps::Clear()
     depth = false;
     stencil = false;
     antialias = false;
-    premultAlpha = false;
+    premultAlpha = true;
     preserve = false;
     surfaceAllocator = nullptr;
 }

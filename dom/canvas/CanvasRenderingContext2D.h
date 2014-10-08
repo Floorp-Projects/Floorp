@@ -34,7 +34,6 @@ class nsXULElement;
 namespace mozilla {
 namespace gl {
 class SourceSurface;
-class SurfaceStream;
 }
 
 namespace dom {
@@ -764,8 +763,6 @@ protected:
   // accessing it. In the event of an error it will be equal to
   // sErrorTarget.
   mozilla::RefPtr<mozilla::gfx::DrawTarget> mTarget;
-
-  RefPtr<gl::SurfaceStream> mStream;
 
   /**
     * Flag to avoid duplicate calls to InvalidateFrame. Set to true whenever

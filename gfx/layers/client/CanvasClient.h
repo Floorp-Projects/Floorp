@@ -114,34 +114,6 @@ private:
 
 // Used for GL canvases where we don't need to do any readback, i.e., with a
 // GL backend.
-class CanvasClientSurfaceStream : public CanvasClient
-{
-public:
-  CanvasClientSurfaceStream(CompositableForwarder* aLayerForwarder, TextureFlags aFlags);
-
-  TextureInfo GetTextureInfo() const
-  {
-    return TextureInfo(CompositableType::IMAGE);
-  }
-
-  virtual void Clear() MOZ_OVERRIDE
-  {
-    mBuffer = nullptr;
-  }
-
-  virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) MOZ_OVERRIDE;
-
-  virtual void OnDetach() MOZ_OVERRIDE
-  {
-    mBuffer = nullptr;
-  }
-
-private:
-  RefPtr<TextureClient> mBuffer;
-};
-
-// Used for GL canvases where we don't need to do any readback, i.e., with a
-// GL backend.
 class CanvasClientSharedSurface : public CanvasClient
 {
 private:

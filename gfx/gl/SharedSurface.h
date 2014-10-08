@@ -234,7 +234,7 @@ public:
     }
 
     SharedSurface* Surf() const {
-        MOZ_ASSERT(mSurf);
+        MOZ_ASSERT(mSurf.get());
         return mSurf.get();
     }
 };

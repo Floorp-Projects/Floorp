@@ -15,13 +15,13 @@
 #ifndef SCREEN_BUFFER_H_
 #define SCREEN_BUFFER_H_
 
-#include "SurfaceTypes.h"
-#include "SurfaceStream.h"
 #include "GLContextTypes.h"
 #include "GLDefs.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/UniquePtr.h"
+#include "SharedSurface.h"
+#include "SurfaceTypes.h"
 
 namespace mozilla {
 namespace gl {
@@ -30,7 +30,6 @@ class GLContext;
 class SharedSurface;
 class ShSurfHandle;
 class SurfaceFactory;
-class SurfaceStream;
 
 class DrawBuffer
 {
@@ -89,7 +88,7 @@ protected:
     const GLuint mDepthRB;
     const GLuint mStencilRB;
     // note no mColorRB here: this is provided by mSurf.
-    SharedSurface* mSurf; // Owned by GLScreenBuffer's SurfaceStream.
+    SharedSurface* mSurf;
 
     ReadBuffer(GLContext* gl,
                GLuint fb,
