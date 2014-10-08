@@ -1172,7 +1172,7 @@ nsPresContext::DoChangeCharSet(const nsCString& aCharSet)
 {
   UpdateCharSet(aCharSet);
   mDeviceContext->FlushFontCache();
-  RebuildAllStyleData(NS_STYLE_HINT_REFLOW, eRestyle_Subtree);
+  RebuildAllStyleData(NS_STYLE_HINT_REFLOW, nsRestyleHint(0));
 }
 
 void
@@ -1742,7 +1742,7 @@ nsPresContext::SysColorChangedInternal()
 
   // The system color values are computed to colors in the style data,
   // so normal style data comparison is sufficient here.
-  RebuildAllStyleData(nsChangeHint(0), eRestyle_Subtree);
+  RebuildAllStyleData(nsChangeHint(0), nsRestyleHint(0));
 }
 
 void
