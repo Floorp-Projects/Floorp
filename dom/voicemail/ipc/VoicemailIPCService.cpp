@@ -23,7 +23,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIVOICEMAILPROVIDER
 
-  VoicemailIPCProvider(uint32_t aServiceId);
+  explicit VoicemailIPCProvider(uint32_t aServiceId);
 
 private:
   // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor

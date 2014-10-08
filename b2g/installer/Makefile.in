@@ -57,7 +57,9 @@ include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 # including that file. MOZ_PACKAGER_MINIFY_JS is used in packager.mk, but since
 # recipe evaluation is deferred, we can set it here after the inclusion.
 ifneq (,$(JS_BINARY))
+ifndef MOZ_DEBUG
 MOZ_PACKAGER_MINIFY_JS=1
+endif
 endif
 
 ifeq (bundle, $(MOZ_FS_LAYOUT))

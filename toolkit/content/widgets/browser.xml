@@ -790,7 +790,6 @@
             this.messageManager.addMessageListener("PopupBlocking:UpdateBlockedPopups", this);
             this.messageManager.addMessageListener("Autoscroll:Start", this);
             this.messageManager.addMessageListener("Autoscroll:Cancel", this);
-            this.messageManager.loadFrameScript("chrome://global/content/browser-content.js", true);
           }
         ]]>
       </constructor>

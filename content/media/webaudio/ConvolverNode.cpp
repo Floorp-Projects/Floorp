@@ -258,7 +258,7 @@ ConvolverNode::SetBuffer(JSContext* aCx, AudioBuffer* aBuffer, ErrorResult& aRv)
       for (uint32_t i = 0; i < data->GetChannels(); ++i) {
         PodCopy(channelData + length * i, data->GetData(i), mBuffer->Length());
         PodZero(channelData + length * i + mBuffer->Length(), WEBAUDIO_BLOCK_SIZE - mBuffer->Length());
-        paddedBuffer->SetData(i, (i == 0) ? channelData : nullptr, channelData);
+        paddedBuffer->SetData(i, (i == 0) ? channelData : nullptr, free, channelData);
       }
       data = paddedBuffer;
     }

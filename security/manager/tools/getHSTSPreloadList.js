@@ -114,15 +114,18 @@ function getHosts(rawdata) {
 var gSSService = Cc["@mozilla.org/ssservice;1"]
                    .getService(Ci.nsISiteSecurityService);
 
-function processStsHeader(host, header, status) {
+function processStsHeader(host, header, status, securityInfo) {
   var maxAge = { value: 0 };
   var includeSubdomains = { value: false };
   var error = ERROR_NONE;
-  if (header != null) {
+  if (header != null && securityInfo != null) {
     try {
       var uri = Services.io.newURI("https://" + host.name, null, null);
+      var sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
+                                  .SSLStatus;
       gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS,
-                               uri, header, 0, maxAge, includeSubdomains);
+                               uri, header, sslStatus, 0, maxAge,
+                               includeSubdomains);
     }
     catch (e) {
       dump("ERROR: could not process header '" + header + "' from " +
@@ -180,7 +183,8 @@ function getHSTSStatus(host, resultList) {
     if (!inResultList && req.readyState == 4) {
       inResultList = true;
       var header = req.getResponseHeader("strict-transport-security");
-      resultList.push(processStsHeader(host, header, req.status));
+      resultList.push(processStsHeader(host, header, req.status,
+                                       req.channel.securityInfo));
     }
   };
 

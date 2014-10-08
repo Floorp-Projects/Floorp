@@ -9,7 +9,7 @@ include protocol PSpeechSynthesis;
 namespace mozilla {
 namespace dom {
 
-intr protocol PSpeechSynthesisRequest
+async protocol PSpeechSynthesisRequest
 {
   manager PSpeechSynthesis;
 

@@ -11,7 +11,6 @@
 #include "jsdate.h"
 #include "jsfriendapi.h"
 #include "jshashutil.h"
-#include "jsobj.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
 #include "selfhosted.out.h"
@@ -32,8 +31,8 @@
 #include "jsscriptinlines.h"
 
 #include "vm/BooleanObject-inl.h"
+#include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
-#include "vm/ObjectImpl-inl.h"
 #include "vm/StringObject-inl.h"
 
 using namespace js;

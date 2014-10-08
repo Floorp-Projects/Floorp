@@ -7,7 +7,7 @@
 #ifndef vm_ArrayObject_h
 #define vm_ArrayObject_h
 
-#include "vm/ObjectImpl.h"
+#include "vm/NativeObject.h"
 
 namespace js {
 

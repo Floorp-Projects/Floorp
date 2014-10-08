@@ -17,7 +17,7 @@
 
 #include "jsscriptinlines.h"
 
-#include "vm/ObjectImpl-inl.h"
+#include "vm/NativeObject-inl.h"
 #include "vm/StringObject-inl.h"
 
 using mozilla::ArrayLength;

@@ -6,8 +6,10 @@
 import os, sys
 
 from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, State, StructDecl, TransitionStmt
-from ipdl.ast import TypeSpec, UnionDecl, UsingStmt, Visitor, ASYNC, SYNC, INTR
-from ipdl.ast import IN, OUT, INOUT, ANSWER, CALL, RECV, SEND, RPC
+from ipdl.ast import TypeSpec, UnionDecl, UsingStmt, Visitor
+from ipdl.ast import ASYNC, SYNC, INTR
+from ipdl.ast import IN, OUT, INOUT, ANSWER, CALL, RECV, SEND
+from ipdl.ast import NORMAL_PRIORITY, HIGH_PRIORITY, URGENT_PRIORITY
 import ipdl.builtin as builtin
 
 _DELETE_MSG = '__delete__'
@@ -204,24 +206,29 @@ class IPDLType(Type):
     def isChmod(self): return False
     def isFD(self): return False
 
-    def isAsync(self): return self.sendSemantics is ASYNC
-    def isSync(self): return self.sendSemantics is SYNC
+    def isAsync(self): return self.sendSemantics == ASYNC
+    def isSync(self): return self.sendSemantics == SYNC
     def isInterrupt(self): return self.sendSemantics is INTR
-    def isRpc(self): return self.sendSemantics is RPC
 
-    def talksAsync(self): return True
-    def talksSync(self): return self.isSync() or self.isRpc() or self.isInterrupt()
-    def talksRpc(self): return self.isRpc() or self.isInterrupt()
-    def talksInterrupt(self): return self.isInterrupt()
+    def hasReply(self):  return (self.isSync() or self.isInterrupt())
 
-    def hasReply(self):  return (self.isSync()
-                                 or self.isInterrupt()
-                                 or self.isRpc())
+    @classmethod
+    def convertsTo(cls, lesser, greater):
+        if (lesser.priorityRange[0] < greater.priorityRange[0] or
+            lesser.priorityRange[1] > greater.priorityRange[1]):
+            return False
+
+        if lesser.isAsync():
+            return True
+        elif lesser.isSync() and not greater.isAsync():
+            return True
+        elif greater.isInterrupt():
+            return True
+
+        return False
 
     def needsMoreJuiceThan(self, o):
-        return (o.isAsync() and not self.isAsync()
-                or o.isSync() and self.isRpc()
-                or o.isRpc() and self.isInterrupt())
+        return not IPDLType.convertsTo(self, o)
 
 class StateType(IPDLType):
     def __init__(self, protocol, name, start=False):
@@ -235,11 +242,13 @@ class StateType(IPDLType):
         return self.name()
 
 class MessageType(IPDLType):
-    def __init__(self, sendSemantics, direction,
+    def __init__(self, priority, sendSemantics, direction,
                  ctor=False, dtor=False, cdtype=None, compress=False):
         assert not (ctor and dtor)
         assert not (ctor or dtor) or type is not None
 
+        self.priority = priority
+        self.priorityRange = (priority, priority)
         self.sendSemantics = sendSemantics
         self.direction = direction
         self.params = [ ]
@@ -275,8 +284,9 @@ class Bridge:
         return hash(self.parent) + hash(self.child)
 
 class ProtocolType(IPDLType):
-    def __init__(self, qname, sendSemantics, stateless=False):
+    def __init__(self, qname, priorityRange, sendSemantics, stateless=False):
         self.qname = qname
+        self.priorityRange = priorityRange
         self.sendSemantics = sendSemantics
         self.spawns = set()             # ProtocolType
         self.opens = set()              # ProtocolType
@@ -684,7 +694,7 @@ class GatherDecls(TcheckVisitor):
                 fullname = str(qname)
             p.decl = self.declare(
                 loc=p.loc,
-                type=ProtocolType(qname, p.sendSemantics,
+                type=ProtocolType(qname, p.priorityRange, p.sendSemantics,
                                   stateless=(0 == len(p.transitionStmts))),
                 shortname=p.name,
                 fullname=fullname)
@@ -1083,7 +1093,7 @@ class GatherDecls(TcheckVisitor):
         # enter message scope
         self.symtab.enterScope(md)
 
-        msgtype = MessageType(md.sendSemantics, md.direction,
+        msgtype = MessageType(md.priority, md.sendSemantics, md.direction,
                               ctor=isctor, dtor=isdtor, cdtype=cdtype,
                               compress=(md.compress == 'compress'))
 
@@ -1457,7 +1467,22 @@ class CheckTypes(TcheckVisitor):
 
         loc = md.decl.loc
 
-        if mtype.isSync() and (mtype.isOut() or mtype.isInout()):
+        if mtype.priority == HIGH_PRIORITY and not mtype.isSync():
+            self.error(
+                loc,
+                "high priority messages must be sync (here, message `%s' in protocol `%s')",
+                mname, pname)
+
+        if mtype.priority == URGENT_PRIORITY and (mtype.isOut() or mtype.isInout()):
+            self.error(
+                loc,
+                "urgent parent-to-child messages are verboten (here, message `%s' in protocol `%s')",
+                mname, pname)
+
+        # We allow high priority sync messages to be sent from the
+        # parent. Normal and urgent sync messages can only come from
+        # the child.
+        if mtype.isSync() and mtype.priority == NORMAL_PRIORITY and (mtype.isOut() or mtype.isInout()):
             self.error(
                 loc,
                 "sync parent-to-child messages are verboten (here, message `%s' in protocol `%s')",
