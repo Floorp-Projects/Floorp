@@ -1204,27 +1204,27 @@ DOMFileImplTemporaryFileBlob::GetInternalStream(nsIInputStream** aStream)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// nsDOMFileList implementation
+// FileList implementation
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMFileList, mFiles)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileList, mFiles)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMFileList)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFileList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFileList)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMFileList)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMFileList)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(FileList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(FileList)
 
 JSObject*
-nsDOMFileList::WrapObject(JSContext *cx)
+FileList::WrapObject(JSContext *cx)
 {
   return mozilla::dom::FileListBinding::Wrap(cx, this);
 }
 
 NS_IMETHODIMP
-nsDOMFileList::GetLength(uint32_t* aLength)
+FileList::GetLength(uint32_t* aLength)
 {
   *aLength = Length();
 
@@ -1232,7 +1232,7 @@ nsDOMFileList::GetLength(uint32_t* aLength)
 }
 
 NS_IMETHODIMP
-nsDOMFileList::Item(uint32_t aIndex, nsIDOMFile **aFile)
+FileList::Item(uint32_t aIndex, nsIDOMFile **aFile)
 {
   nsRefPtr<DOMFile> file = Item(aIndex);
   file.forget(aFile);
