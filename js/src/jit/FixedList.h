@@ -78,6 +78,13 @@ class FixedList
         MOZ_ASSERT(index < length_);
         return list_[index];
     }
+
+    T *begin() {
+        return list_;
+    }
+    T *end() {
+        return list_ + length_;
+    }
 };
 
 } // namespace jit
