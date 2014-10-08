@@ -25,6 +25,8 @@ const MOBILENETWORKINFO_CID =
   Components.ID("{a6c8416c-09b4-46d1-bf29-6520d677d085}");
 const MOBILECELLINFO_CID =
   Components.ID("{0635d9ab-997e-4cdf-84e7-c1883752dff3}");
+const MOBILECALLFORWARDINGOPTIONS_CID =
+  Components.ID("{e0cf4463-ee63-4b05-ab2e-d94bf764836c}");
 const TELEPHONYCALLBACK_CID =
   Components.ID("{6e1af17e-37f3-11e4-aed3-60a44c237d2b}");
 
@@ -112,33 +114,29 @@ MobileConnectionInfo.prototype = {
   relSignalStrength: null
 };
 
-function CallForwardingOptions(aOptions) {
-  this.active = aOptions.active;
-  this.action = aOptions.action;
-  this.reason = aOptions.reason;
-  this.number = aOptions.number;
-  this.timeSeconds = aOptions.timeSeconds;
-  this.serviceClass = aOptions.serviceClass;
+function MobileCallForwardingOptions(aOptions) {
+  for (let key in aOptions) {
+    this[key] = aOptions[key];
+  }
 }
-CallForwardingOptions.prototype = {
-  __exposedProps__ : {active: 'r',
-                      action: 'r',
-                      reason: 'r',
-                      number: 'r',
-                      timeSeconds: 'r',
-                      serviceClass: 'r'},
-};
+MobileCallForwardingOptions.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileCallForwardingOptions]),
+  classID: MOBILECALLFORWARDINGOPTIONS_CID,
+  classInfo: XPCOMUtils.generateCI({
+    classID:          MOBILECALLFORWARDINGOPTIONS_CID,
+    classDescription: "MobileCallForwardingOptions",
+    interfaces:       [Ci.nsIMobileCallForwardingOptions]
+  }),
 
-function MMIResult(aOptions) {
-  this.serviceCode = aOptions.serviceCode;
-  this.statusMessage = aOptions.statusMessage;
-  this.additionalInformation = aOptions.additionalInformation;
+  // nsIMobileForwardingOptions
+
+  active: false,
+  action: Ci.nsIMobileConnection.CALL_FORWARD_ACTION_UNKNOWN,
+  reason: Ci.nsIMobileConnection.CALL_FORWARD_REASON_UNKNOWN,
+  number: null,
+  timeSeconds: -1,
+  serviceClass: Ci.nsIMobileConnection.ICC_SERVICE_CLASS_NONE
 }
-MMIResult.prototype = {
-  __exposedProps__ : {serviceCode: 'r',
-                      statusMessage: 'r',
-                      additionalInformation: 'r'},
-};
 
 /**
  * Wrap a MobileConnectionCallback to a TelephonyCallback.
@@ -150,12 +148,47 @@ TelephonyCallback.prototype = {
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsITelephonyCallback]),
   classID:          TELEPHONYCALLBACK_CID,
 
+  _notifySendCancelMmiSuccess: function(aResult) {
+    // No additional information.
+    if (aResult.additionalInformation === undefined) {
+      this.callback.notifySendCancelMmiSuccess(aResult.serviceCode,
+                                               aResult.statusMessage);
+      return;
+    }
+
+    // Additional information is an integer.
+    if (!isNaN(parseInt(aResult.additionalInformation, 10))) {
+      this.callback.notifySendCancelMmiSuccessWithInteger(
+        aResult.serviceCode, aResult.statusMessage, aResult.additionalInformation);
+      return;
+    }
+
+    // Additional information should be an array.
+    let array = aResult.additionalInformation;
+    if (Array.isArray(array) && array.length > 0) {
+      let item = array[0];
+      if (typeof item === "string" || item instanceof String) {
+        this.callback.notifySendCancelMmiSuccessWithStrings(
+          aResult.serviceCode, aResult.statusMessage,
+          aResult.additionalInformation.length, aResult.additionalInformation);
+        return;
+      }
+
+      this.callback.notifySendCancelMmiSuccessWithCallForwardingOptions(
+        aResult.serviceCode, aResult.statusMessage,
+        aResult.additionalInformation.length, aResult.additionalInformation);
+      return;
+    }
+
+    throw Cr.NS_ERROR_UNEXPECTED;
+  },
+
   notifyDialMMI: function(mmiServiceCode) {
     this.serviceCode = mmiServiceCode;
   },
 
   notifyDialMMISuccess: function(result) {
-    this.callback.notifySendCancelMmiSuccess(result);
+    this._notifySendCancelMmiSuccess(result);
   },
 
   notifyDialMMIError: function(error) {
@@ -253,72 +286,6 @@ MobileConnectionProvider.prototype = {
       this._debug("Supported Network Types: " + supportedNetworkTypes);
     }
     return supportedNetworkTypes;
-  },
-
-  /**
-   * Helper for guarding us against invalid reason values for call forwarding.
-   */
-  _isValidCallForwardingReason: function(aReason) {
-    switch (aReason) {
-      case Ci.nsIMobileConnection.CALL_FORWARD_REASON_UNCONDITIONAL:
-      case Ci.nsIMobileConnection.CALL_FORWARD_REASON_MOBILE_BUSY:
-      case Ci.nsIMobileConnection.CALL_FORWARD_REASON_NO_REPLY:
-      case Ci.nsIMobileConnection.CALL_FORWARD_REASON_NOT_REACHABLE:
-      case Ci.nsIMobileConnection.CALL_FORWARD_REASON_ALL_CALL_FORWARDING:
-      case Ci.nsIMobileConnection.CALL_FORWARD_REASON_ALL_CONDITIONAL_CALL_FORWARDING:
-        return true;
-      default:
-        return false;
-    }
-  },
-
-  /**
-   * Helper for guarding us against invalid action values for call forwarding.
-   */
-  _isValidCallForwardingAction: function(aAction) {
-    switch (aAction) {
-      case Ci.nsIMobileConnection.CALL_FORWARD_ACTION_DISABLE:
-      case Ci.nsIMobileConnection.CALL_FORWARD_ACTION_ENABLE:
-      case Ci.nsIMobileConnection.CALL_FORWARD_ACTION_REGISTRATION:
-      case Ci.nsIMobileConnection.CALL_FORWARD_ACTION_ERASURE:
-        return true;
-      default:
-        return false;
-    }
-  },
-
-  /**
-   * Helper for guarding us against invalid program values for call barring.
-   */
-  _isValidCallBarringProgram: function(aProgram) {
-    switch (aProgram) {
-      case Ci.nsIMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING:
-      case Ci.nsIMobileConnection.CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL:
-      case Ci.nsIMobileConnection.CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL_EXCEPT_HOME:
-      case Ci.nsIMobileConnection.CALL_BARRING_PROGRAM_ALL_INCOMING:
-      case Ci.nsIMobileConnection.CALL_BARRING_PROGRAM_INCOMING_ROAMING:
-        return true;
-      default:
-        return false;
-    }
-  },
-
-  /**
-   * Helper for guarding us against invalid options for call barring.
-   */
-  _isValidCallBarringOptions: function(aOptions, aUsedForSetting) {
-    if (!aOptions || aOptions.serviceClass == null ||
-        !this._isValidCallBarringProgram(aOptions.program)) {
-      return false;
-    }
-
-    // For setting callbarring options, |enabled| and |password| are required.
-    if (aUsedForSetting &&
-        (aOptions.enabled == null || aOptions.password == null)) {
-      return false;
-    }
-
-    return true;
   },
 
   /**
@@ -423,7 +390,7 @@ MobileConnectionProvider.prototype = {
   },
 
   _rulesToCallForwardingOptions: function(aRules) {
-    return aRules.map(rule => new CallForwardingOptions(rule));
+    return aRules.map(rule => new MobileCallForwardingOptions(rule));
   },
 
   _dispatchNotifyError: function(aCallback, aErrorMsg) {
@@ -742,20 +709,13 @@ MobileConnectionProvider.prototype = {
     }).bind(this));
   },
 
-  setCallForwarding: function(aOptions, aCallback) {
-    if (!aOptions ||
-        !this._isValidCallForwardingReason(aOptions.reason) ||
-        !this._isValidCallForwardingAction(aOptions.action)){
-      this._dispatchNotifyError(aCallback, RIL.GECKO_ERROR_INVALID_PARAMETER);
-      return;
-    }
-
+  setCallForwarding: function(aAction, aReason, aNumber, aTimeSeconds,
+                              aServiceClass, aCallback) {
     let options = {
-      active: aOptions.active,
-      action: aOptions.action,
-      reason: aOptions.reason,
-      number: aOptions.number,
-      timeSeconds: aOptions.timeSeconds,
+      action: aAction,
+      reason: aReason,
+      number: aNumber,
+      timeSeconds: aTimeSeconds,
       serviceClass: RIL.ICC_SERVICE_CLASS_VOICE
     };
 
@@ -775,11 +735,6 @@ MobileConnectionProvider.prototype = {
   },
 
   getCallForwarding: function(aReason, aCallback) {
-    if (!this._isValidCallForwardingReason(aReason)){
-      this._dispatchNotifyError(aCallback, RIL.GECKO_ERROR_INVALID_PARAMETER);
-      return;
-    }
-
     this._radioInterface.sendWorkerMessage("queryCallForwardStatus",
                                            {reason: aReason},
                                            (function(aResponse) {
@@ -788,23 +743,19 @@ MobileConnectionProvider.prototype = {
         return false;
       }
 
-      aCallback.notifyGetCallForwardingSuccess(
-        this._rulesToCallForwardingOptions(aResponse.rules));
+      let infos = this._rulesToCallForwardingOptions(aResponse.rules);
+      aCallback.notifyGetCallForwardingSuccess(infos.length, infos);
       return false;
     }).bind(this));
   },
 
-  setCallBarring: function(aOptions, aCallback) {
-    if (!this._isValidCallBarringOptions(aOptions, true)) {
-      this._dispatchNotifyError(aCallback, RIL.GECKO_ERROR_INVALID_PARAMETER);
-      return;
-    }
-
+  setCallBarring: function(aProgram, aEnabled, aPassword, aServiceClass,
+                           aCallback) {
     let options = {
-      program: aOptions.program,
-      enabled: aOptions.enabled,
-      password: aOptions.password,
-      serviceClass: aOptions.serviceClass
+      program: aProgram,
+      enabled: aEnabled,
+      password: aPassword,
+      serviceClass: aServiceClass
     };
 
     this._radioInterface.sendWorkerMessage("setCallBarring", options,
@@ -819,16 +770,11 @@ MobileConnectionProvider.prototype = {
     }).bind(this));
   },
 
-  getCallBarring: function(aOptions, aCallback) {
-    if (!this._isValidCallBarringOptions(aOptions)) {
-      this._dispatchNotifyError(aCallback, RIL.GECKO_ERROR_INVALID_PARAMETER);
-      return;
-    }
-
+  getCallBarring: function(aProgram, aPassword, aServiceClass, aCallback) {
     let options = {
-      program: aOptions.program,
-      password: aOptions.password,
-      serviceClass: aOptions.serviceClass
+      program: aProgram,
+      password: aPassword,
+      serviceClass: aServiceClass
     };
 
     this._radioInterface.sendWorkerMessage("queryCallBarringStatus", options,
@@ -845,17 +791,10 @@ MobileConnectionProvider.prototype = {
     }).bind(this));
   },
 
-  changeCallBarringPassword: function(aOptions, aCallback) {
-    // Checking valid PIN for supplementary services. See TS.22.004 clause 5.2.
-    if (aOptions.pin == null || !aOptions.pin.match(/^\d{4}$/) ||
-        aOptions.newPin == null || !aOptions.newPin.match(/^\d{4}$/)) {
-      this._dispatchNotifyError(aCallback, "InvalidPassword");
-      return;
-    }
-
+  changeCallBarringPassword: function(aPin, aNewPin, aCallback) {
     let options = {
-      pin: aOptions.pin,
-      newPin: aOptions.newPin
+      pin: aPin,
+      newPin: aNewPin
     };
 
     this._radioInterface.sendWorkerMessage("changeCallBarringPassword", options,
