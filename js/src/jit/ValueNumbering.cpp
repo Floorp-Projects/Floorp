@@ -56,7 +56,13 @@ ValueNumberer::VisibleValues::ValueHasher::match(Key k, Lookup l)
         return false;
 
     bool congruent = k->congruentTo(l); // Ask the values themselves what they think.
-    MOZ_ASSERT(congruent == l->congruentTo(k), "congruentTo relation is not symmetric");
+#ifdef DEBUG
+    if (congruent != l->congruentTo(k)) {
+       JitSpew(JitSpew_GVN, "      congruentTo relation is not symmetric between %s%u and %s%u!!",
+               k->opName(), k->id(),
+               l->opName(), l->id());
+    }
+#endif
     return congruent;
 }
 
