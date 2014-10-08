@@ -26,6 +26,7 @@ include ../../dom/mathml/crashtests/crashtests.list
 include ../../dom/offline/crashtests/crashtests.list
 include ../../dom/plugins/test/crashtests/crashtests.list
 include ../../dom/smil/crashtests/crashtests.list
+include ../../dom/workers/test/crashtests.list
 include ../../dom/xbl/crashtests/crashtests.list
 include ../../dom/xml/crashtests/crashtests.list
 include ../../dom/xslt/crashtests/crashtests.list
