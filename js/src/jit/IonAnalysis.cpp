@@ -249,8 +249,7 @@ MaybeFoldConditionBlock(MIRGraph &graph, MBasicBlock *initialBlock)
     // OK, we found the desired pattern, now transform the graph.
 
     // Remove the phi and its inputs from testBlock.
-    MPhiIterator phis = testBlock->phisBegin();
-    testBlock->discardPhiAt(phis);
+    testBlock->discardPhi(*testBlock->phisBegin());
     trueBranch->pop();
     falseBranch->pop();
 
@@ -363,8 +362,7 @@ MaybeFoldAndOrBlock(MIRGraph &graph, MBasicBlock *initialBlock)
     // OK, we found the desired pattern, now transform the graph.
 
     // Remove the phi and its inputs from testBlock.
-    MPhiIterator phis = testBlock->phisBegin();
-    testBlock->discardPhiAt(phis);
+    testBlock->discardPhi(*testBlock->phisBegin());
     branchBlock->pop();
     initialBlock->pop();
 
@@ -551,19 +549,17 @@ jit::EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph)
             return false;
 
         // Remove unused instructions.
-        for (MInstructionReverseIterator inst = block->rbegin(); inst != block->rend(); ) {
+        for (MInstructionReverseIterator iter = block->rbegin(); iter != block->rend(); ) {
+            MInstruction *inst = *iter++;
             if (!inst->isEffectful() && !inst->resumePoint() &&
                 !inst->hasUses() && !inst->isGuard() &&
                 !inst->isControlInstruction())
             {
-                inst = block->discardAt(inst);
+                block->discard(inst);
             } else if (!inst->isRecoveredOnBailout() && !inst->isGuard() &&
                        !inst->hasLiveDefUses() && inst->canRecoverOnBailout())
             {
                 inst->setRecoveredOnBailout();
-                inst++;
-            } else {
-                inst++;
             }
         }
     }
@@ -659,24 +655,25 @@ jit::EliminatePhis(MIRGenerator *mir, MIRGraph &graph,
 
         MPhiIterator iter = block->phisBegin();
         while (iter != block->phisEnd()) {
+            MPhi *phi = *iter++;
+
             // Flag all as unused, only observable phis would be marked as used
             // when processed by the work list.
-            iter->setUnused();
+            phi->setUnused();
 
             // If the phi is redundant, remove it here.
-            if (MDefinition *redundant = IsPhiRedundant(*iter)) {
-                iter->justReplaceAllUsesWith(redundant);
-                iter = block->discardPhiAt(iter);
+            if (MDefinition *redundant = IsPhiRedundant(phi)) {
+                phi->justReplaceAllUsesWith(redundant);
+                block->discardPhi(phi);
                 continue;
             }
 
             // Enqueue observable Phis.
-            if (IsPhiObservable(*iter, observe)) {
-                iter->setInWorklist();
-                if (!worklist.append(*iter))
+            if (IsPhiObservable(phi, observe)) {
+                phi->setInWorklist();
+                if (!worklist.append(phi))
                     return false;
             }
-            iter++;
         }
     }
 
@@ -724,10 +721,9 @@ jit::EliminatePhis(MIRGenerator *mir, MIRGraph &graph,
     for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
         MPhiIterator iter = block->phisBegin();
         while (iter != block->phisEnd()) {
-            if (iter->isUnused())
-                iter = block->discardPhiAt(iter);
-            else
-                iter++;
+            MPhi *phi = *iter++;
+            if (phi->isUnused())
+                block->discardPhi(phi);
         }
     }
 
@@ -1122,18 +1118,18 @@ TypeAnalyzer::insertConversions()
         if (mir->shouldCancel("Insert Conversions"))
             return false;
 
-        for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd();) {
+        for (MPhiIterator iter(block->phisBegin()), end(block->phisEnd()); iter != end; ) {
+            MPhi *phi = *iter++;
             if (phi->type() == MIRType_Undefined ||
                 phi->type() == MIRType_Null ||
                 phi->type() == MIRType_MagicOptimizedArguments ||
                 phi->type() == MIRType_MagicOptimizedOut ||
                 phi->type() == MIRType_MagicUninitializedLexical)
             {
-                replaceRedundantPhi(*phi);
-                phi = block->discardPhiAt(phi);
+                replaceRedundantPhi(phi);
+                block->discardPhi(phi);
             } else {
-                adjustPhiInputs(*phi);
-                phi++;
+                adjustPhiInputs(phi);
             }
         }
         for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++) {
@@ -2437,26 +2433,26 @@ jit::EliminateRedundantChecks(MIRGraph &graph)
         }
 
         for (MDefinitionIterator iter(block); iter; ) {
+            MDefinition *def = *iter++;
+
             bool eliminated = false;
 
-            if (iter->isBoundsCheck()) {
-                if (!TryEliminateBoundsCheck(checks, index, iter->toBoundsCheck(), &eliminated))
+            if (def->isBoundsCheck()) {
+                if (!TryEliminateBoundsCheck(checks, index, def->toBoundsCheck(), &eliminated))
                     return false;
-            } else if (iter->isTypeBarrier()) {
-                if (!TryEliminateTypeBarrier(iter->toTypeBarrier(), &eliminated))
+            } else if (def->isTypeBarrier()) {
+                if (!TryEliminateTypeBarrier(def->toTypeBarrier(), &eliminated))
                     return false;
             } else {
                 // Now that code motion passes have finished, replace
                 // instructions which pass through one of their operands
                 // (and perform additional checks) with that operand.
-                if (MDefinition *passthrough = PassthroughOperand(*iter))
-                    iter->replaceAllUsesWith(passthrough);
+                if (MDefinition *passthrough = PassthroughOperand(def))
+                    def->replaceAllUsesWith(passthrough);
             }
 
             if (eliminated)
-                iter = block->discardDefAt(iter);
-            else
-                iter++;
+                block->discardDef(def);
         }
         index++;
     }
