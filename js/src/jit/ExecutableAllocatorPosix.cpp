@@ -26,6 +26,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/TaggedAnonymousMemory.h"
 
+#include <errno.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -39,19 +40,34 @@ size_t ExecutableAllocator::determinePageSize()
     return getpagesize();
 }
 
+void *
+js::jit::AllocateExecutableMemory(void *addr, size_t bytes, unsigned permissions, const char *tag,
+                                  size_t pageSize)
+{
+    MOZ_ASSERT(bytes % pageSize == 0);
+    void *p = MozTaggedAnonymousMmap(addr, bytes, permissions, MAP_PRIVATE | MAP_ANON, -1, 0, tag);
+    return p == MAP_FAILED ? nullptr : p;
+}
+
+void
+js::jit::DeallocateExecutableMemory(void *addr, size_t bytes, size_t pageSize)
+{
+    MOZ_ASSERT(bytes % pageSize == 0);
+    mozilla::DebugOnly<int> result = munmap(addr, bytes);
+    MOZ_ASSERT(!result || errno == ENOMEM);
+}
+
 ExecutablePool::Allocation ExecutableAllocator::systemAlloc(size_t n)
 {
-    void *allocation = MozTaggedAnonymousMmap(NULL, n, INITIAL_PROTECTION_FLAGS, MAP_PRIVATE | MAP_ANON, -1, 0, "js-jit-code");
-    if (allocation == MAP_FAILED)
-        allocation = NULL;
+    void *allocation = AllocateExecutableMemory(nullptr, n, INITIAL_PROTECTION_FLAGS,
+                                                "js-jit-code", pageSize);
     ExecutablePool::Allocation alloc = { reinterpret_cast<char*>(allocation), n };
     return alloc;
 }
 
 void ExecutableAllocator::systemRelease(const ExecutablePool::Allocation& alloc)
 {
-    mozilla::DebugOnly<int> result = munmap(alloc.pages, alloc.size);
-    MOZ_ASSERT(!result);
+    DeallocateExecutableMemory(alloc.pages, alloc.size, pageSize);
 }
 
 #if WTF_ENABLE_ASSEMBLER_WX_EXCLUSIVE
