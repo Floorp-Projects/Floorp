@@ -58,9 +58,6 @@ struct BlobPropertyBag;
 struct FilePropertyBag;
 class FileImpl;
 
-/* FOLLOWUP TODO:
-1. remove nsDOMBlobBuilder.h
-*/
 class File MOZ_FINAL : public nsIDOMFile
                      , public nsIXHRSendable
                      , public nsIMutable
