@@ -974,7 +974,7 @@ MBasicBlock::discardPhi(MPhi *phi)
     phis_.remove(phi);
 
     if (phis_.empty()) {
-        for (MBasicBlock **pred = predecessors_.begin(); pred != predecessors_.end(); pred++)
+        for (MBasicBlock **pred = predecessors_.begin(), **end = predecessors_.end(); pred < end; ++pred)
             (*pred)->clearSuccessorWithPhis();
     }
 }
