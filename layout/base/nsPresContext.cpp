@@ -847,7 +847,7 @@ nsPresContext::AppUnitsPerDevPixelChanged()
 
   if (HasCachedStyleData()) {
     // All cached style data must be recomputed.
-    MediaFeatureValuesChanged(eAlwaysRebuildStyle, NS_STYLE_HINT_REFLOW);
+    MediaFeatureValuesChanged(eRestyle_Subtree, NS_STYLE_HINT_REFLOW);
   }
 
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
@@ -1711,7 +1711,7 @@ nsPresContext::ThemeChangedInternal()
   // properly reflected in computed style data), system fonts (whose
   // changes are not), and -moz-appearance (whose changes likewise are
   // not), so we need to reflow.
-  MediaFeatureValuesChanged(eAlwaysRebuildStyle, NS_STYLE_HINT_REFLOW);
+  MediaFeatureValuesChanged(eRestyle_Subtree, NS_STYLE_HINT_REFLOW);
 }
 
 void
@@ -1840,7 +1840,7 @@ nsPresContext::EmulateMedium(const nsAString& aMediaType)
 
   mMediaEmulated = do_GetAtom(mediaType);
   if (mMediaEmulated != previousMedium && mShell) {
-    MediaFeatureValuesChanged(eRebuildStyleIfNeeded, nsChangeHint(0));
+    MediaFeatureValuesChanged(nsRestyleHint(0), nsChangeHint(0));
   }
 }
 
@@ -1849,7 +1849,7 @@ void nsPresContext::StopEmulatingMedium()
   nsIAtom* previousMedium = Medium();
   mIsEmulatingMedia = false;
   if (Medium() != previousMedium) {
-    MediaFeatureValuesChanged(eRebuildStyleIfNeeded, nsChangeHint(0));
+    MediaFeatureValuesChanged(nsRestyleHint(0), nsChangeHint(0));
   }
 }
 
@@ -1882,17 +1882,10 @@ nsPresContext::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
 }
 
 void
-nsPresContext::MediaFeatureValuesChanged(StyleRebuildType aShouldRebuild,
+nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
                                          nsChangeHint aChangeHint)
 {
   mPendingMediaFeatureValuesChanged = false;
-
-  nsRestyleHint aRestyleHint = nsRestyleHint(0);
-
-  if (aShouldRebuild == eAlwaysRebuildStyle) {
-    // FIXME: Pass restyle hint from caller.
-    aRestyleHint |= eRestyle_Subtree;
-  }
 
   // MediumFeaturesChanged updates the applied rules, so it always gets called.
   if (mShell && mShell->StyleSet()->MediumFeaturesChanged(this)) {
@@ -1979,7 +1972,7 @@ nsPresContext::HandleMediaFeatureValuesChangedEvent()
   // Null-check mShell in case the shell has been destroyed (and the
   // event is the only thing holding the pres context alive).
   if (mPendingMediaFeatureValuesChanged && mShell) {
-    MediaFeatureValuesChanged(eRebuildStyleIfNeeded);
+    MediaFeatureValuesChanged(nsRestyleHint(0));
   }
 }
 
