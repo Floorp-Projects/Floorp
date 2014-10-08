@@ -19,6 +19,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/TextureClientOGL.h"
 #include "mozilla/layers/PTextureChild.h"
+#include "SharedSurface.h"
 #include "SurfaceStream.h"
 #include "GLContext.h"
 
@@ -792,6 +793,17 @@ BufferTextureClient::AllocateForYCbCr(gfx::IntSize aYSize,
   return true;
 }
 
+uint8_t*
+BufferTextureClient::GetLockedData() const
+{
+  MOZ_ASSERT(IsLocked());
+
+  ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
+  MOZ_ASSERT(serializer.IsValid());
+
+  return serializer.GetData();
+}
+
 ////////////////////////////////////////////////////////////////////////
 // StreamTextureClient
 StreamTextureClient::StreamTextureClient(TextureFlags aFlags)
@@ -848,6 +860,29 @@ StreamTextureClient::IsAllocated() const
   return mStream != 0;
 }
 
+////////////////////////////////////////////////////////////////////////
+// ShSurfTexClient
+
+ShSurfTexClient::ShSurfTexClient(TextureFlags aFlags, gl::SharedSurface* surf)
+  : TextureClient(aFlags)
+  , mIsLocked(false)
+  , mSurf(surf)
+  , mGL(mSurf->mGL)
+{
+  mSurf->Fence();
+}
+
+ShSurfTexClient::~ShSurfTexClient()
+{
+  // the data is owned externally.
+}
+
+bool
+ShSurfTexClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
+{
+  aOutDescriptor = ShSurfDescriptor((uintptr_t)mSurf);
+  return true;
+}
 
 }
 }

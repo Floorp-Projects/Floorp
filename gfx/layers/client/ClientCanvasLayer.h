@@ -91,13 +91,7 @@ protected:
     return static_cast<ClientLayerManager*>(mManager);
   }
 
-  CanvasClientType GetCanvasClientType()
-  {
-    if (mGLContext) {
-      return CanvasClient::CanvasClientGLContext;
-    }
-    return CanvasClient::CanvasClientSurface;
-  }
+  CanvasClientType GetCanvasClientType();
 
   RefPtr<CanvasClient> mCanvasClient;
 
@@ -108,6 +102,7 @@ protected:
   friend class CanvasClient2D;
   friend class DeprecatedCanvasClientSurfaceStream;
   friend class CanvasClientSurfaceStream;
+  friend class CanvasClientShSurf;
 };
 }
 }

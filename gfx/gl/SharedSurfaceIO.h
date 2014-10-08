@@ -56,6 +56,10 @@ public:
         return mIOSurf;
     }
 
+    virtual bool NeedsIndirectReads() const MOZ_OVERRIDE {
+        return true;
+    }
+
 private:
     SharedSurface_IOSurface(const RefPtr<MacIOSurface>& ioSurf,
                             GLContext* gl, const gfx::IntSize& size,

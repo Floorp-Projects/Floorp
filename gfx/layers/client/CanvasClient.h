@@ -21,6 +21,7 @@
 namespace mozilla {
 namespace gl {
 class SharedSurface;
+class ShSurfHandle;
 }
 }
 
@@ -44,6 +45,7 @@ public:
   enum CanvasClientType {
     CanvasClientSurface,
     CanvasClientGLContext,
+    CanvasClientTypeShSurf,
   };
   static TemporaryRef<CanvasClient> CreateCanvasClient(CanvasClientType aType,
                                                        CompositableForwarder* aFwd,
@@ -136,6 +138,38 @@ public:
 
 private:
   RefPtr<TextureClient> mBuffer;
+};
+
+// Used for GL canvases where we don't need to do any readback, i.e., with a
+// GL backend.
+class CanvasClientShSurf : public CanvasClient
+{
+private:
+  RefPtr<gl::ShSurfHandle> mFront;
+  RefPtr<gl::ShSurfHandle> mPrevFront;
+
+  RefPtr<TextureClient> mFrontTex;
+
+public:
+  CanvasClientShSurf(CompositableForwarder* aLayerForwarder,
+                     TextureFlags aFlags);
+
+  virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE {
+    return TextureInfo(CompositableType::IMAGE);
+  }
+
+  virtual void Clear() MOZ_OVERRIDE {
+    mFront = nullptr;
+    mPrevFront = nullptr;
+    mFrontTex = nullptr;
+  }
+
+  virtual void Update(gfx::IntSize aSize,
+                      ClientCanvasLayer* aLayer) MOZ_OVERRIDE;
+
+  virtual void OnDetach() MOZ_OVERRIDE {
+    CanvasClientShSurf::Clear();
+  }
 };
 
 }
