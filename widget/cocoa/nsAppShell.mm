@@ -54,50 +54,39 @@ private:
   IOPMAssertionID mAssertionID = kIOPMNullAssertionID;
 
   NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) {
-    bool isLocked = mLockedTopics.Contains(aTopic);
-    bool shouldLock = aState.EqualsLiteral("locked-foreground");
-    if (isLocked == shouldLock) {
+    if (!aTopic.EqualsASCII("screen")) {
       return NS_OK;
     }
-    if (shouldLock) {
-      if (!mLockedTopics.Count()) {
-        // This is the first topic to request the screen saver be disabled.
-        // Prevent screen saver.
-        CFStringRef cf_topic =
-          ::CFStringCreateWithCharacters(kCFAllocatorDefault,
-                                         reinterpret_cast<const UniChar*>
-                                           (aTopic.Data()),
-                                         aTopic.Length());
-        IOReturn success =
-          ::IOPMAssertionCreateWithName(kIOPMAssertionTypeNoDisplaySleep,
-                                        kIOPMAssertionLevelOn,
-                                        cf_topic,
-                                        &mAssertionID);
-        CFRelease(cf_topic);
-        if (success != kIOReturnSuccess) {
-          NS_WARNING("fail to disable screensaver");
-        }
+    // Note the wake lock code ensures that we're not sent duplicate
+    // "locked-foreground" notifications when multiple wake locks are held.
+    if (aState.EqualsASCII("locked-foreground")) {
+      // Prevent screen saver.
+      CFStringRef cf_topic =
+        ::CFStringCreateWithCharacters(kCFAllocatorDefault,
+                                       reinterpret_cast<const UniChar*>
+                                         (aTopic.Data()),
+                                       aTopic.Length());
+      IOReturn success =
+        ::IOPMAssertionCreateWithName(kIOPMAssertionTypeNoDisplaySleep,
+                                      kIOPMAssertionLevelOn,
+                                      cf_topic,
+                                      &mAssertionID);
+      CFRelease(cf_topic);
+      if (success != kIOReturnSuccess) {
+        NS_WARNING("failed to disable screensaver");
       }
-      mLockedTopics.PutEntry(aTopic);
     } else {
-      mLockedTopics.RemoveEntry(aTopic);
-      if (!mLockedTopics.Count()) {
-        // No other outstanding topics have requested screen saver be disabled.
-        // Re-enable screen saver.
-        if (mAssertionID != kIOPMNullAssertionID) {
-          IOReturn result = ::IOPMAssertionRelease(mAssertionID);
-          if (result != kIOReturnSuccess) {
-            NS_WARNING("fail to release screensaver");
-          }
+      // Re-enable screen saver.
+      NS_WARNING("Releasing screensaver");
+      if (mAssertionID != kIOPMNullAssertionID) {
+        IOReturn result = ::IOPMAssertionRelease(mAssertionID);
+        if (result != kIOReturnSuccess) {
+          NS_WARNING("failed to release screensaver");
         }
       }
     }
     return NS_OK;
   }
-  // Keep track of all the topics that have requested a wake lock. When the
-  // number of topics in the hashtable reaches zero, we can uninhibit the
-  // screensaver again.
-  nsTHashtable<nsStringHashKey> mLockedTopics;
 };
 
 // defined in nsCocoaWindow.mm

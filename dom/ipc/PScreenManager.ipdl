@@ -22,32 +22,32 @@ struct ScreenDetails {
   double contentsScaleFactor;
 };
 
-rpc protocol PScreenManager
+prio(normal upto high) sync protocol PScreenManager
 {
   manager PContent;
 
 parent:
-    rpc Refresh()
+    prio(high) sync Refresh()
       returns (uint32_t numberOfScreens,
                float systemDefaultScale,
                bool success);
 
-    rpc ScreenRefresh(uint32_t aId)
+    prio(high) sync ScreenRefresh(uint32_t aId)
       returns (ScreenDetails screen,
                bool success);
 
-    rpc GetPrimaryScreen()
+    prio(high) sync GetPrimaryScreen()
       returns (ScreenDetails screen,
                bool success);
 
-    rpc ScreenForRect(int32_t aLeft,
+    prio(high) sync ScreenForRect(int32_t aLeft,
                        int32_t aTop,
                        int32_t aWidth,
                        int32_t aHeight)
       returns (ScreenDetails screen,
                bool success);
 
-    rpc ScreenForBrowser(PBrowser aBrowser)
+    prio(high) sync ScreenForBrowser(PBrowser aBrowser)
       returns (ScreenDetails screen,
                bool success);
 

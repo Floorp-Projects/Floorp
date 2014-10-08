@@ -444,6 +444,9 @@
 @BINPATH@/components/addoncompat.manifest
 @BINPATH@/components/multiprocessShims.js
 @BINPATH@/components/pluginGlue.manifest
+@BINPATH@/components/ProcessSingleton.manifest
+@BINPATH@/components/MainProcessSingleton.js
+@BINPATH@/components/ContentProcessSingleton.js
 @BINPATH@/browser/components/nsSessionStore.manifest
 @BINPATH@/browser/components/nsSessionStartup.js
 @BINPATH@/browser/components/nsSessionStore.js

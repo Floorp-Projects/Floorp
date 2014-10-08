@@ -16,7 +16,7 @@ interface nsIAudioManager : nsISupports
    * Are we playing audio from the FM radio?
    */
   attribute boolean fmRadioAudioEnabled;
- 
+
   /**
    * Set the phone's audio mode.
    */
@@ -41,7 +41,9 @@ interface nsIAudioManager : nsISupports
   const long FORCE_WIRED_ACCESSORY = 5;
   const long FORCE_BT_CAR_DOCK     = 6;
   const long FORCE_BT_DESK_DOCK    = 7;
-
+  const long FORCE_ANALOG_DOCK     = 8;
+  const long FORCE_DIGITAL_DOCK    = 9;
+  const long FORCE_NO_BT_A2DP      = 10;
   const long USE_COMMUNICATION     = 0;
   const long USE_MEDIA             = 1;
   const long USE_RECORD            = 2;

@@ -129,6 +129,13 @@ protected:
                       const nsHTMLReflowState& aReflowState,
                       nscoord aWidth, nscoord aHeight);
 
+  // Helper function to compute the offset needed to center a child
+  // page-frame's margin-box inside our content-box.
+  nscoord ComputeCenteringMargin(nscoord aContainerContentBoxWidth,
+                                 nscoord aChildPaddingBoxWidth,
+                                 const nsMargin& aChildPhysicalMargin);
+
+
   void DetermineWhetherToPrintPage();
   nsIFrame* GetCurrentPageFrame();
 

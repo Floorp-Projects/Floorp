@@ -34,8 +34,6 @@ TEST_HARNESS_COMPONENTS := \
 PKG_STAGE = $(DIST)/test-stage
 
 libs::
-	$(INSTALL) $(srcdir)/xpcshell_b2g.ini $(DEPTH)/_tests/xpcshell
-	$(INSTALL) $(srcdir)/xpcshell_android.ini $(DEPTH)/_tests/xpcshell
 	cp $(DEPTH)/_tests/xpcshell/xpcshell.ini $(DEPTH)/_tests/xpcshell/all-test-dirs.list
 
 stage-package:

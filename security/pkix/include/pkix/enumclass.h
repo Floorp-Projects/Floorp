@@ -22,10 +22,6 @@
  * limitations under the License.
  */
 
-// Work around missing std::bind, std::ref, std::cref in older compilers. This
-// implementation isn't intended to be complete; rather, it is the minimal
-// implementation needed to make our use of std::bind work.
-
 #ifndef mozilla_pkix__enumclass_h
 #define mozilla_pkix__enumclass_h
 
@@ -35,8 +31,14 @@
 // enums results in C4480: nonstandard extension used: specifying underlying
 // type for enum.
 #define MOZILLA_PKIX_ENUM_CLASS  __pragma(warning(suppress: 4480)) enum
+#elif defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ < 407)
+// GCC before version 4.7 may crash when compiling code that static_casts a
+// value of scoped typed enum type. See
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=48106.
+#define MOZILLA_PKIX_ENUM_CLASS enum
 #else
 #define MOZILLA_PKIX_ENUM_CLASS enum class
+#define MOZILLA_PKIX_ENUM_CLASS_REALLY_IS_ENUM_CLASS
 #endif
 
 #endif // mozilla_pkix__enumclass_h

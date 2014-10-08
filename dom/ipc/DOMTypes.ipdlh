@@ -7,9 +7,6 @@
 include protocol PBlob;
 include InputStreamParams;
 
-using struct nsID
-  from "nsID.h";
-
 using struct mozilla::void_t
   from "ipc/IPCMessageUtils.h";
 
