@@ -1547,9 +1547,10 @@ js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
                     parentArg = parent;
                     protoArg = proto;
                 }
+            } else {
+                gcNumber = rt->gc.gcNumber();
             }
         }
-        gcNumber = rt->gc.gcNumber();
     }
 
     Rooted<TaggedProto> proto(cxArg, protoArg);
