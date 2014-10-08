@@ -348,7 +348,8 @@ DOMCameraControlListener::OnTakePictureComplete(uint8_t* aData, uint32_t aLength
     RunCallback(nsDOMCameraControl* aDOMCameraControl) MOZ_OVERRIDE
     {
       nsCOMPtr<nsIDOMBlob> picture =
-        DOMFile::CreateMemoryFile(static_cast<void*>(mData),
+        DOMFile::CreateMemoryFile(mDOMCameraControl,
+                                  static_cast<void*>(mData),
                                   static_cast<uint64_t>(mLength),
                                   mMimeType);
       aDOMCameraControl->OnTakePictureComplete(picture);

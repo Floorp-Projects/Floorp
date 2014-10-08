@@ -24,7 +24,6 @@
 #include "mozilla/dom/workers/bindings/URL.h"
 
 // dom/workers
-#include "File.h"
 #include "WorkerPrivate.h"
 
 namespace mozilla {
@@ -358,26 +357,17 @@ Request::ConsumeBody(ConsumeType aType, ErrorResult& aRv)
       // with worker wrapping.
       uint32_t blobLen = buffer.Length();
       void* blobData = moz_malloc(blobLen);
-      nsCOMPtr<nsIDOMBlob> blob;
+      nsRefPtr<DOMFile> blob;
       if (blobData) {
         memcpy(blobData, buffer.BeginReading(), blobLen);
-        blob = DOMFile::CreateMemoryFile(blobData, blobLen,
+        blob = DOMFile::CreateMemoryFile(GetParentObject(), blobData, blobLen,
                                          NS_ConvertUTF8toUTF16(mMimeType));
       } else {
         aRv = NS_ERROR_OUT_OF_MEMORY;
         return nullptr;
       }
 
-      JS::Rooted<JS::Value> jsBlob(cx);
-      if (NS_IsMainThread()) {
-        aRv = nsContentUtils::WrapNative(cx, blob, &jsBlob);
-        if (aRv.Failed()) {
-          return nullptr;
-        }
-      } else {
-        jsBlob.setObject(*workers::file::CreateBlob(cx, blob));
-      }
-      promise->MaybeResolve(cx, jsBlob);
+      promise->MaybeResolve(blob);
       return promise.forget();
     }
     case CONSUME_JSON: {

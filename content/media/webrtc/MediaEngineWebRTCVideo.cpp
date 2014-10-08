@@ -944,7 +944,7 @@ MediaEngineWebRTCVideoSource::OnTakePictureComplete(uint8_t* aData, uint32_t aLe
     NS_IMETHOD Run()
     {
       nsRefPtr<dom::DOMFile> blob =
-        dom::DOMFile::CreateMemoryFile(mPhoto.Elements(), mPhoto.Length(), mMimeType);
+        dom::DOMFile::CreateMemoryFile(nullptr, mPhoto.Elements(), mPhoto.Length(), mMimeType);
       uint32_t callbackCounts = mCallbacks.Length();
       for (uint8_t i = 0; i < callbackCounts; i++) {
         nsRefPtr<dom::DOMFile> tempBlob = blob;

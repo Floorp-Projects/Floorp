@@ -560,8 +560,10 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
         JS_updateMallocCounter(jsapi.cx(), size);
       }
 
+      nsRefPtr<DOMFile> newBlob = new DOMFile(mGlobal, blob->Impl());
+
       mozilla::ErrorResult error;
-      mFileCallback->Call(blob, error);
+      mFileCallback->Call(*newBlob, error);
 
       mGlobal = nullptr;
       mFileCallback = nullptr;
@@ -585,14 +587,15 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
                                        callback);
 }
 
-already_AddRefed<nsIDOMFile>
+already_AddRefed<DOMFile>
 HTMLCanvasElement::MozGetAsFile(const nsAString& aName,
                                 const nsAString& aType,
                                 ErrorResult& aRv)
 {
   nsCOMPtr<nsIDOMFile> file;
   aRv = MozGetAsFile(aName, aType, getter_AddRefs(file));
-  return file.forget();
+  nsRefPtr<DOMFile> tmp = static_cast<DOMFile*>(file.get());
+  return tmp.forget();
 }
 
 NS_IMETHODIMP
@@ -635,9 +638,11 @@ HTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
     JS_updateMallocCounter(cx, imgSize);
   }
 
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(OwnerDoc()->GetScopeObject());
+
   // The DOMFile takes ownership of the buffer
   nsRefPtr<DOMFile> file =
-    DOMFile::CreateMemoryFile(imgData, (uint32_t)imgSize, aName, type,
+    DOMFile::CreateMemoryFile(win, imgData, (uint32_t)imgSize, aName, type,
                               PR_Now());
 
   file.forget(aResult);

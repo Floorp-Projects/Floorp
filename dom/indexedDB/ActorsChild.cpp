@@ -524,8 +524,10 @@ ConvertActorsToBlobs(IDBDatabase* aDatabase,
     for (uint32_t index = 0; index < count; index++) {
       BlobChild* actor = static_cast<BlobChild*>(blobs[index]);
 
-      nsCOMPtr<nsIDOMBlob> blob = actor->GetBlob();
-      MOZ_ASSERT(blob);
+      nsRefPtr<DOMFileImpl> blobImpl = actor->GetBlobImpl();
+      MOZ_ASSERT(blobImpl);
+
+      nsRefPtr<DOMFile> blob = new DOMFile(aDatabase->GetOwner(), blobImpl);
 
       nsRefPtr<FileInfo> fileInfo;
       if (!fileInfos.IsEmpty()) {

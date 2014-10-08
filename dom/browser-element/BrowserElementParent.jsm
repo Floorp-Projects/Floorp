@@ -580,7 +580,8 @@ BrowserElementParent.prototype = {
     }
     else {
       debug("Got error in gotDOMRequestResult.");
-      Services.DOMRequest.fireErrorAsync(req, data.json.errorMsg);
+      Services.DOMRequest.fireErrorAsync(req,
+        Cu.cloneInto(data.json.errorMsg, this._window));
     }
   },
 

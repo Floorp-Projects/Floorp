@@ -35,11 +35,11 @@ function createFileWithData(fileData) {
 
 /** Test for Bug 914381. DOMFile's created in JS using an nsIFile should allow mozGetFullPathInternal calls to succeed **/
 var file = createFileWithData("Test bug 914381");
-var f = File(file);
+var f = new File(file);
 is(f.mozFullPathInternal, undefined, "mozFullPathInternal is undefined from js");
 is(f.mozFullPath, file.path, "mozFullPath returns path if created with nsIFile");
 
-f = File(file.path);
+f = new File(file.path);
 is(f.mozFullPathInternal, undefined, "mozFullPathInternal is undefined from js");
 is(f.mozFullPath, "", "mozFullPath returns blank if created with a string");
 </script>

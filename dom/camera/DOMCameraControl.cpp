@@ -1437,7 +1437,7 @@ void
 nsDOMCameraControl::OnTakePictureComplete(nsIDOMBlob* aPicture)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPicture != nullptr);
+  MOZ_ASSERT(aPicture);
 
   nsRefPtr<Promise> promise = mTakePicturePromise.forget();
   if (promise) {
@@ -1445,15 +1445,17 @@ nsDOMCameraControl::OnTakePictureComplete(nsIDOMBlob* aPicture)
     promise->MaybeResolve(picture);
   }
 
+  nsRefPtr<DOMFile> blob = static_cast<DOMFile*>(aPicture);
+
   nsRefPtr<CameraTakePictureCallback> cb = mTakePictureOnSuccessCb.forget();
   mTakePictureOnErrorCb = nullptr;
   if (cb) {
     ErrorResult ignored;
-    cb->Call(aPicture, ignored);
+    cb->Call(*blob, ignored);
   }
 
   BlobEventInit eventInit;
-  eventInit.mData = aPicture;
+  eventInit.mData = blob;
 
   nsRefPtr<BlobEvent> event = BlobEvent::Constructor(this,
                                                      NS_LITERAL_STRING("picture"),

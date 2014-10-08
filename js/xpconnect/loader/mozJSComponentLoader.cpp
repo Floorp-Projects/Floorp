@@ -144,88 +144,11 @@ Debug(JSContext *cx, unsigned argc, jsval *vp)
 #endif
 }
 
-static bool
-File(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
-        XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
-        return false;
-    }
-
-    nsCOMPtr<nsISupports> native;
-    nsresult rv = DOMMultipartFileImpl::NewFile(getter_AddRefs(native));
-    if (NS_FAILED(rv)) {
-        XPCThrower::Throw(rv, cx);
-        return false;
-    }
-
-    nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
-    MOZ_ASSERT(initializer);
-
-    rv = initializer->Initialize(nullptr, cx, nullptr, args);
-    if (NS_FAILED(rv)) {
-        XPCThrower::Throw(rv, cx);
-        return false;
-    }
-
-    nsXPConnect *xpc = nsXPConnect::XPConnect();
-    JSObject *glob = CurrentGlobalOrNull(cx);
-
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
-                                &NS_GET_IID(nsISupports),
-                                true, args.rval());
-    if (NS_FAILED(rv)) {
-        XPCThrower::Throw(rv, cx);
-        return false;
-    }
-    return true;
-}
-
-static bool
-Blob(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    nsCOMPtr<nsISupports> native;
-    nsresult rv = DOMMultipartFileImpl::NewBlob(getter_AddRefs(native));
-    if (NS_FAILED(rv)) {
-        XPCThrower::Throw(rv, cx);
-        return false;
-    }
-
-    nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
-    MOZ_ASSERT(initializer);
-
-    rv = initializer->Initialize(nullptr, cx, nullptr, args);
-    if (NS_FAILED(rv)) {
-        XPCThrower::Throw(rv, cx);
-        return false;
-    }
-
-    nsXPConnect *xpc = nsXPConnect::XPConnect();
-    JSObject *glob = CurrentGlobalOrNull(cx);
-
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
-                                &NS_GET_IID(nsISupports),
-                                true, args.rval());
-    if (NS_FAILED(rv)) {
-        XPCThrower::Throw(rv, cx);
-        return false;
-    }
-    return true;
-}
-
 static const JSFunctionSpec gGlobalFun[] = {
     JS_FS("dump",    Dump,   1,0),
     JS_FS("debug",   Debug,  1,0),
     JS_FS("atob",    Atob,   1,0),
     JS_FS("btoa",    Btoa,   1,0),
-    JS_FS("File",    File,   1,JSFUN_CONSTRUCTOR),
-    JS_FS("Blob",    Blob,   2,JSFUN_CONSTRUCTOR),
     JS_FS_END
 };
 

@@ -20,9 +20,9 @@
 #include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
 #include "nsCExternalHandlerService.h"
+#include "nsDOMFile.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIDOMFile.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
 #include "nsIMIMEService.h"
@@ -35,6 +35,7 @@
 
 USING_BLUETOOTH_NAMESPACE
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::ipc;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
@@ -371,7 +372,8 @@ BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIDOMBlob> blob = aActor->GetBlob();
+  nsRefPtr<DOMFileImpl> impl = aActor->GetBlobImpl();
+  nsCOMPtr<nsIDOMBlob> blob = new DOMFile(nullptr, impl);
 
   return SendFile(aDeviceAddress, blob.get());
 }

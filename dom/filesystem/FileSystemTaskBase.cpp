@@ -170,7 +170,7 @@ FileSystemTaskBase::GetBlobParent(nsIDOMFile* aFile) const
   aFile->GetMozLastModifiedDate(&lastModifiedDate);
 
   ContentParent* cp = static_cast<ContentParent*>(mRequestParent->Manager());
-  return cp->GetOrCreateActorForBlob(aFile);
+  return cp->GetOrCreateActorForBlob(static_cast<DOMFile*>(aFile));
 }
 
 void

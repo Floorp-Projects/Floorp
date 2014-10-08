@@ -4,8 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-interface File;
-
 /*
  * All functions on Directory that accept DOMString arguments for file or
  * directory names only allow relative path to current directory itself. The

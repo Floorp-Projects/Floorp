@@ -131,7 +131,8 @@ FileImplSnapshot::GetInternalStream(nsIInputStream** aStream)
 already_AddRefed<DOMFileImpl>
 FileImplSnapshot::CreateSlice(uint64_t aStart,
                               uint64_t aLength,
-                              const nsAString& aContentType)
+                              const nsAString& aContentType,
+                              ErrorResult& aRv)
 {
   AssertSanity();
 
@@ -141,13 +142,14 @@ FileImplSnapshot::CreateSlice(uint64_t aStart,
   return impl.forget();
 }
 
-nsresult
-FileImplSnapshot::GetMozFullPathInternal(nsAString& aFilename)
+void
+FileImplSnapshot::GetMozFullPathInternal(nsAString& aFilename,
+                                         ErrorResult& aRv)
 {
   AssertSanity();
   MOZ_ASSERT(mIsFile);
 
-  return mFile->GetPath(aFilename);
+  aRv = mFile->GetPath(aFilename);
 }
 
 bool

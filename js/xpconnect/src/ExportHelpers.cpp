@@ -12,12 +12,14 @@
 #include "jswrapper.h"
 #include "js/StructuredClone.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/BlobBinding.h"
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
-#include "nsIDOMFile.h"
+#include "nsDOMFile.h"
 #include "nsIDOMFileList.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace JS;
 using namespace js;
 
@@ -35,6 +37,7 @@ IsReflector(JSObject *obj)
 enum StackScopedCloneTags {
     SCTAG_BASE = JS_SCTAG_USER_MIN,
     SCTAG_REFLECTOR,
+    SCTAG_BLOB,
     SCTAG_FUNCTION
 };
 
@@ -49,6 +52,7 @@ public:
     StackScopedCloneOptions *mOptions;
     AutoObjectVector mReflectors;
     AutoObjectVector mFunctions;
+    nsTArray<nsRefPtr<DOMFileImpl>> mBlobImpls;
 };
 
 static JSObject *
@@ -93,29 +97,49 @@ StackScopedCloneRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t ta
       return &functionValue.toObject();
     }
 
+    if (tag == SCTAG_BLOB) {
+        MOZ_ASSERT(!data);
+
+        size_t idx;
+        if (!JS_ReadBytes(reader, &idx, sizeof(size_t))) {
+            return nullptr;
+        }
+
+        nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(cx));
+        MOZ_ASSERT(global);
+
+        // nsRefPtr<DOMFile> needs to go out of scope before toObjectOrNull() is called because
+        // otherwise the static analysis thinks it can gc the JSObject via the stack.
+        JS::Rooted<JS::Value> val(cx);
+        {
+            nsRefPtr<DOMFile> blob = new DOMFile(global, cloneData->mBlobImpls[idx]);
+            if (!WrapNewBindingObject(cx, blob, &val)) {
+                return nullptr;
+            }
+        }
+
+        return val.toObjectOrNull();
+    }
+
     MOZ_ASSERT_UNREACHABLE("Encountered garbage in the clone stream!");
     return nullptr;
 }
 
 // The HTML5 structured cloning algorithm includes a few DOM objects, notably
-// Blob and FileList. That wouldn't in itself be a reason to support them here,
+// FileList. That wouldn't in itself be a reason to support them here,
 // but we've historically supported them for Cu.cloneInto (where we didn't support
 // other reflectors), so we need to continue to do so in the wrapReflectors == false
 // case to maintain compatibility.
 //
-// Blob and FileList clones are supposed to give brand new objects, rather than
+// FileList clones are supposed to give brand new objects, rather than
 // cross-compartment wrappers. For this, our current implementation relies on the
 // fact that these objects are implemented with XPConnect and have one reflector
-// per scope. This will need to be fixed when Blob and File move to WebIDL. See
-// bug 827823 comment 6.
-bool IsBlobOrFileList(JSObject *obj)
+// per scope.
+bool IsFileList(JSObject *obj)
 {
     nsISupports *supports = UnwrapReflectorToISupports(obj);
     if (!supports)
         return false;
-    nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(supports);
-    if (blob)
-        return true;
     nsCOMPtr<nsIDOMFileList> fileList = do_QueryInterface(supports);
     if (fileList)
         return true;
@@ -129,8 +153,23 @@ StackScopedCloneWrite(JSContext *cx, JSStructuredCloneWriter *writer,
     MOZ_ASSERT(closure, "Null pointer!");
     StackScopedCloneData *cloneData = static_cast<StackScopedCloneData *>(closure);
 
+    {
+        DOMFile* blob = nullptr;
+        if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, obj, blob))) {
+            DOMFileImpl* blobImpl = blob->Impl();
+            MOZ_ASSERT(blobImpl);
+
+            if (!cloneData->mBlobImpls.AppendElement(blobImpl))
+                return false;
+
+            size_t idx = cloneData->mBlobImpls.Length() - 1;
+            return JS_WriteUint32Pair(writer, SCTAG_BLOB, 0) &&
+                   JS_WriteBytes(writer, &idx, sizeof(size_t));
+        }
+    }
+
     if ((cloneData->mOptions->wrapReflectors && IsReflector(obj)) ||
-        IsBlobOrFileList(obj))
+        IsFileList(obj))
     {
         if (!cloneData->mReflectors.append(obj))
             return false;
