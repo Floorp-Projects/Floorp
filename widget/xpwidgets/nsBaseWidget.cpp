@@ -888,6 +888,9 @@ CheckForBasicBackends(nsTArray<LayersBackend>& aHints)
 
 void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 {
+  // This makes sure that gfxPlatforms gets initialized if it hasn't by now.
+  gfxPlatform::GetPlatform();
+
   MOZ_ASSERT(gfxPlatform::UsesOffMainThreadCompositing(),
              "This function assumes OMTC");
 
