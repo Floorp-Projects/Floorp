@@ -74,7 +74,7 @@ protected:
 
   virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
-              ErrorResult& aRv) MOZ_OVERRIDE;
+              mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
 
 private: // Data
   ZipCentral mCentral;
