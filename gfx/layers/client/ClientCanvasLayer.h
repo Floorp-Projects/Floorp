@@ -46,33 +46,33 @@ protected:
   virtual ~ClientCanvasLayer();
 
 public:
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion)
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     CanvasLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Initialize(const Data& aData);
+  virtual void Initialize(const Data& aData) MOZ_OVERRIDE;
 
-  virtual void RenderLayer();
+  virtual void RenderLayer() MOZ_OVERRIDE;
 
-  virtual void ClearCachedResources()
+  virtual void ClearCachedResources() MOZ_OVERRIDE
   {
     if (mCanvasClient) {
       mCanvasClient->Clear();
     }
   }
 
-  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) MOZ_OVERRIDE
   {
     aAttrs = CanvasLayerAttributes(mFilter, mBounds);
   }
 
-  virtual Layer* AsLayer() { return this; }
-  virtual ShadowableLayer* AsShadowableLayer() { return this; }
+  virtual Layer* AsLayer()  MOZ_OVERRIDE { return this; }
+  virtual ShadowableLayer* AsShadowableLayer()  MOZ_OVERRIDE { return this; }
 
-  virtual void Disconnect()
+  virtual void Disconnect() MOZ_OVERRIDE
   {
     mCanvasClient = nullptr;
     ClientLayer::Disconnect();

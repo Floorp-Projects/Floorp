@@ -148,6 +148,7 @@ ClientCanvasLayer::RenderLayer()
   if (!IsDirty()) {
     return;
   }
+  Painted();
 
   if (!mCanvasClient) {
     TextureFlags flags = TextureFlags::IMMEDIATE_UPLOAD;

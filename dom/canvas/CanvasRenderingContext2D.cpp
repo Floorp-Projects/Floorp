@@ -4853,9 +4853,12 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
         aOldLayer->GetUserData(&g2DContextLayerUserData));
 
     CanvasLayer::Data data;
+
     SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
-    if (glue) {
+    GLuint skiaGLTex = (GLuint)(uintptr_t)mTarget->GetNativeSurface(NativeSurfaceType::OPENGL_TEXTURE);
+    if (glue && skiaGLTex) {
       data.mGLContext = glue->GetGLContext();
+      data.mFrontbufferGLTex = skiaGLTex;
     } else {
       data.mDrawTarget = mTarget;
     }

@@ -80,10 +80,6 @@ CopyableCanvasLayer::IsDataValid(const Data& aData)
 void
 CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
 {
-  if (!IsDirty())
-    return;
-  Painted();
-
   if (mDrawTarget) {
     mDrawTarget->Flush();
     mSurface = mDrawTarget->Snapshot();
@@ -100,8 +96,9 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
     return;
   }
 
-  if (mDrawTarget)
+  if (mDrawTarget) {
     return;
+  }
 
   MOZ_ASSERT(mGLContext);
 
