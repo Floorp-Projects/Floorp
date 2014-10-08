@@ -85,6 +85,21 @@ RandomizeIsBroken()
     return !!result;
 }
 
+void *
+js::jit::AllocateExecutableMemory(void *addr, size_t bytes, unsigned permissions, const char *tag,
+                                  size_t pageSize)
+{
+    MOZ_ASSERT(bytes % pageSize == 0);
+    return VirtualAlloc(addr, bytes, MEM_COMMIT | MEM_RESERVE, permissions);
+}
+
+void
+js::jit::DeallocateExecutableMemory(void *addr, size_t bytes, size_t pageSize)
+{
+    MOZ_ASSERT(bytes % pageSize == 0);
+    VirtualFree(addr, 0, MEM_RELEASE);
+}
+
 ExecutablePool::Allocation ExecutableAllocator::systemAlloc(size_t n)
 {
     void *allocation = NULL;
@@ -93,19 +108,21 @@ ExecutablePool::Allocation ExecutableAllocator::systemAlloc(size_t n)
 #ifndef JS_CPU_X64
     if (!RandomizeIsBroken()) {
         void *randomAddress = computeRandomAllocationAddress();
-        allocation = VirtualAlloc(randomAddress, n, MEM_COMMIT | MEM_RESERVE,
-                                  PAGE_EXECUTE_READWRITE);
+        allocation = AllocateExecutableMemory(randomAddress, n, PAGE_EXECUTE_READWRITE,
+                                              "js-jit-code", pageSize);
     }
 #endif
-    if (!allocation)
-        allocation = VirtualAlloc(0, n, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    if (!allocation) {
+        allocation = AllocateExecutableMemory(nullptr, n, PAGE_EXECUTE_READWRITE,
+                                              "js-jit-code", pageSize);
+    }
     ExecutablePool::Allocation alloc = { reinterpret_cast<char*>(allocation), n };
     return alloc;
 }
 
 void ExecutableAllocator::systemRelease(const ExecutablePool::Allocation& alloc)
 {
-    VirtualFree(alloc.pages, 0, MEM_RELEASE);
+    DeallocateExecutableMemory(alloc.pages, alloc.size, pageSize);
 }
 
 void
