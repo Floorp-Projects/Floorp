@@ -291,8 +291,7 @@ class Options
 
   enum Mode {
     Normal,   // run normally
-    Test,     // do some basic correctness tests
-    Stress    // do some performance stress tests
+    Test      // do some basic correctness tests
   };
 
   char* mDMDEnvVar;   // a saved copy, for later printing
@@ -320,7 +319,6 @@ public:
   void SetSampleBelowSize(size_t aN) { mSampleBelowSize.mActual = aN; }
 
   bool IsTestMode()   const { return mMode == Test; }
-  bool IsStressMode() const { return mMode == Stress; }
 };
 
 static Options *gOptions;
@@ -1320,8 +1318,6 @@ Options::Options(const char* aDMDEnvVar)
         mMode = Options::Normal;
       } else if (strcmp(arg, "--mode=test")   == 0) {
         mMode = Options::Test;
-      } else if (strcmp(arg, "--mode=stress") == 0) {
-        mMode = Options::Stress;
 
       } else if (strcmp(arg, "") == 0) {
         // This can only happen if there is trailing whitespace.  Ignore.
@@ -1358,7 +1354,7 @@ Options::BadArg(const char* aArg)
             int(mMaxFrames.mMax),
             int(mMaxFrames.mDefault));
   StatusMsg("  --show-dump-stats=<yes|no>   Show stats about dumps? [no]\n");
-  StatusMsg("  --mode=<normal|test|stress>  Mode of operation [normal]\n");
+  StatusMsg("  --mode=<normal|test>         Mode of operation [normal]\n");
   StatusMsg("\n");
   exit(1);
 }
@@ -1389,7 +1385,6 @@ OpenOutputFile(const char* aFilename)
 
 static void RunTestMode(UniquePtr<FpWriteFunc> aF1, UniquePtr<FpWriteFunc> aF2,
                         UniquePtr<FpWriteFunc> aF3, UniquePtr<FpWriteFunc> aF4);
-static void RunStressMode(UniquePtr<FpWriteFunc> aF);
 
 // WARNING: this function runs *very* early -- before all static initializers
 // have run.  For this reason, non-scalar globals such as gStateLock and
@@ -1459,16 +1454,6 @@ Init(const malloc_table_t* aMallocTable)
     StatusMsg("running test mode...\n");
     RunTestMode(Move(f1), Move(f2), Move(f3), Move(f4));
     StatusMsg("finished test mode\n");
-    exit(0);
-  }
-
-  if (gOptions->IsStressMode()) {
-    auto f = MakeUnique<FpWriteFunc>(OpenOutputFile("stress.json"));
-    gIsDMDRunning = true;
-
-    StatusMsg("running stress mode...\n");
-    RunStressMode(Move(f));
-    StatusMsg("finished stress mode\n");
     exit(0);
   }
 
@@ -2086,82 +2071,6 @@ RunTestMode(UniquePtr<FpWriteFunc> aF1, UniquePtr<FpWriteFunc> aF2,
   // AnalyzeReports 4.
   JSONWriter writer4(Move(aF4));
   AnalyzeReports(writer4);
-}
-
-//---------------------------------------------------------------------------
-// Stress testing microbenchmark
-//---------------------------------------------------------------------------
-
-// This stops otherwise-unused variables from being optimized away.
-static void
-UseItOrLoseIt2(void* a)
-{
-  if (a == (void*)0x42) {
-    printf("UseItOrLoseIt2\n");
-  }
-}
-
-MOZ_NEVER_INLINE static void
-stress5()
-{
-  for (int i = 0; i < 10; i++) {
-    void* x = malloc(64);
-    UseItOrLoseIt2(x);
-    if (i & 1) {
-      free(x);
-    }
-  }
-}
-
-MOZ_NEVER_INLINE static void
-stress4()
-{
-  stress5(); stress5(); stress5(); stress5(); stress5();
-  stress5(); stress5(); stress5(); stress5(); stress5();
-}
-
-MOZ_NEVER_INLINE static void
-stress3()
-{
-  for (int i = 0; i < 10; i++) {
-    stress4();
-  }
-}
-
-MOZ_NEVER_INLINE static void
-stress2()
-{
-  stress3(); stress3(); stress3(); stress3(); stress3();
-  stress3(); stress3(); stress3(); stress3(); stress3();
-}
-
-MOZ_NEVER_INLINE static void
-stress1()
-{
-  for (int i = 0; i < 10; i++) {
-    stress2();
-  }
-}
-
-// This stress test does lots of allocations and frees, which is where most of
-// DMD's overhead occurs.  It allocates 1,000,000 64-byte blocks, spread evenly
-// across 1,000 distinct stack traces.  It frees every second one immediately
-// after allocating it.
-//
-// It's highly artificial, but it's deterministic and easy to run.  It can be
-// timed under different conditions to glean performance data.
-static void
-RunStressMode(UniquePtr<FpWriteFunc> aF)
-{
-  JSONWriter writer(Move(aF));
-
-  // Disable sampling for maximum stress.
-  gOptions->SetSampleBelowSize(1);
-
-  stress1(); stress1(); stress1(); stress1(); stress1();
-  stress1(); stress1(); stress1(); stress1(); stress1();
-
-  AnalyzeReports(writer);
 }
 
 }   // namespace dmd
