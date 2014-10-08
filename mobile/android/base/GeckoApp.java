@@ -1910,6 +1910,7 @@ public abstract class GeckoApp
                 final HealthRecorder rec = mHealthRecorder;
                 if (rec != null) {
                     rec.setCurrentSession(currentSession);
+                    rec.processDelayed();
                 } else {
                     Log.w(LOGTAG, "Can't record session: rec is null.");
                 }
