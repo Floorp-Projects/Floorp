@@ -9,7 +9,7 @@
 
 #include "jsbool.h"
 
-#include "vm/ObjectImpl.h"
+#include "vm/NativeObject.h"
 
 namespace js {
 

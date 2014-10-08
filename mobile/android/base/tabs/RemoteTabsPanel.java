@@ -4,10 +4,10 @@
 
 package org.mozilla.gecko.tabs;
 
+import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.fxa.FirefoxAccounts;
-import org.mozilla.gecko.fxa.login.State;
-import org.mozilla.gecko.sync.setup.SyncAccounts;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.tabs.TabsPanel.PanelView;
 
 import android.content.Context;
@@ -15,109 +15,59 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 /**
- * This panel, which is a {@link TabsPanel.PanelView}, chooses which underlying
- * PanelView to show based on the current account state, and forwards the appropriate
- * calls to the currently visible panel.
+ * A tabs tray panel that displays a static view that informs users that the
+ * Synced Tabs/Remote Tabs list is now accessed as a home panel. The view
+ * provides a single link that opens the new home panel.
  */
 class RemoteTabsPanel extends FrameLayout implements PanelView {
-    private enum RemotePanelType {
-        SETUP,
-        VERIFICATION,
-        CONTAINER
-    }
-
-    private PanelView currentPanel;
-    private RemotePanelType currentPanelType;
-
     private TabsPanel tabsPanel;
 
     public RemoteTabsPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
-        updateCurrentPanel();
+
+        LayoutInflater.from(context).inflate(R.layout.remote_tabs_panel, this);
+
+        final View link = findViewById(R.id.go_to_panel);
+        link.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // It is possible that this will fail: if the user has removed
+                // the Remote Tabs panel, it won't exist. (The new tab will open
+                // to the default panel, which is confusing but not
+                // catastrophic.) Querying the current configuration to
+                // determine if the panel is present is not worth the effort; we
+                // expect very few configurations to not include the Remote Tabs
+                // panel.
+                Tabs.getInstance().loadUrl(AboutPages.getURLForBuiltinPanelType(PanelType.REMOTE_TABS),
+                        Tabs.LOADURL_NEW_TAB);
+                if (tabsPanel != null) {
+                    tabsPanel.autoHidePanel();
+                }
+            }
+        });
     }
 
     @Override
     public void setTabsPanel(TabsPanel panel) {
         tabsPanel = panel;
-        currentPanel.setTabsPanel(panel);
     }
 
     @Override
     public void show() {
-        updateCurrentPanel();
-        currentPanel.show();
         setVisibility(View.VISIBLE);
     }
 
     @Override
     public void hide() {
         setVisibility(View.GONE);
-        currentPanel.hide();
     }
 
     @Override
     public boolean shouldExpand() {
-        return currentPanel.shouldExpand();
-    }
-
-    private void updateCurrentPanel() {
-        final RemotePanelType newPanelType = getPanelTypeFromAccountState();
-        if (newPanelType != currentPanelType) {
-            // The current panel should be null the first time this is called.
-            if (currentPanel != null) {
-                currentPanel.hide();
-            }
-            removeAllViews();
-
-            currentPanelType = newPanelType;
-            currentPanel = inflatePanel(currentPanelType);
-            currentPanel.setTabsPanel(tabsPanel);
-            addView((View) currentPanel);
-        }
-    }
-
-    private RemotePanelType getPanelTypeFromAccountState() {
-        final Context context = getContext();
-        final State accountState = FirefoxAccounts.getFirefoxAccountState(context);
-        if (accountState == null) {
-            // If old Sync exists, we want to show their synced tabs,
-            // rather than the new Sync setup screen.
-            if (SyncAccounts.syncAccountsExist(context)) {
-                return RemotePanelType.CONTAINER;
-            } else {
-                return RemotePanelType.SETUP;
-            }
-        }
-
-        if (accountState.getNeededAction() == State.Action.NeedsVerification) {
-            return RemotePanelType.VERIFICATION;
-        }
-
-        return RemotePanelType.CONTAINER;
-    }
-
-    private PanelView inflatePanel(final RemotePanelType panelType) {
-        final PanelView view;
-        switch (panelType) {
-            case SETUP:
-                view = new RemoteTabsSetupPanel(getContext());
-                break;
-
-            case VERIFICATION:
-                view = new RemoteTabsVerificationPanel(getContext());
-                break;
-
-            case CONTAINER:
-                final LayoutInflater inflater = LayoutInflater.from(getContext());
-                view = (PanelView) inflater.inflate(R.layout.remote_tabs_container_panel, null);
-                break;
-
-            default:
-                throw new IllegalArgumentException("Unknown panelType, " + panelType);
-        }
-
-        return view;
+        final LinearLayout container = (LinearLayout) findViewById(R.id.container);
+        return container.getOrientation() == LinearLayout.VERTICAL;
     }
 }

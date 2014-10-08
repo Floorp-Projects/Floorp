@@ -32,4 +32,7 @@ public class StubbedHealthRecorder implements HealthRecorder {
     public void onEnvironmentChanged(final boolean startNewSession, final String sessionEndReason) { }
 
     public void close() { }
+
+    @Override
+    public void processDelayed() { }
 }

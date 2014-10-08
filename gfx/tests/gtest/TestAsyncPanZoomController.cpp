@@ -1701,7 +1701,7 @@ protected:
     Matrix4x4 transforms[] = {
       Matrix4x4(),
       Matrix4x4(),
-      Matrix4x4().Scale(2, 1, 1),
+      Matrix4x4::Scaling(2, 1, 1),
       Matrix4x4(),
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, lm, layers);

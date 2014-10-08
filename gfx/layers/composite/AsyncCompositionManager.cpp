@@ -178,17 +178,16 @@ TranslateShadowLayer2D(Layer* aLayer,
                            1.0f/c->GetPreYScale(),
                            1);
   }
-  layerTransform3D = layerTransform3D *
-    Matrix4x4().Scale(1.0f/aLayer->GetPostXScale(),
-                      1.0f/aLayer->GetPostYScale(),
-                      1);
+  layerTransform3D.PostScale(1.0f/aLayer->GetPostXScale(),
+                             1.0f/aLayer->GetPostYScale(),
+                             1);
 
   LayerComposite* layerComposite = aLayer->AsLayerComposite();
   layerComposite->SetShadowTransform(layerTransform3D);
   layerComposite->SetShadowTransformSetByAnimation(false);
 
   if (aAdjustClipRect) {
-    TransformClipRect(aLayer, Matrix4x4().Translate(aTranslation.x, aTranslation.y, 0));
+    TransformClipRect(aLayer, Matrix4x4::Translation(aTranslation.x, aTranslation.y, 0));
   }
 }
 
@@ -500,9 +499,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     {
       Matrix4x4 matrix = interpolatedValue.get_ArrayOfTransformFunction()[0].get_TransformMatrix().value();
       if (ContainerLayer* c = aLayer->AsContainerLayer()) {
-        matrix = matrix * Matrix4x4().Scale(c->GetInheritedXScale(),
-                                            c->GetInheritedYScale(),
-                                            1);
+        matrix.PostScale(c->GetInheritedXScale(), c->GetInheritedYScale(), 1);
       }
       layerComposite->SetShadowTransform(matrix);
       layerComposite->SetShadowTransformSetByAnimation(true);
@@ -627,9 +624,9 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
                       1.0f/container->GetPreYScale(),
                       1);
     }
-    transform = transform * Matrix4x4().Scale(1.0f/aLayer->GetPostXScale(),
-                                              1.0f/aLayer->GetPostYScale(),
-                                              1);
+    transform.PostScale(1.0f/aLayer->GetPostXScale(),
+                        1.0f/aLayer->GetPostYScale(),
+                        1);
     layerComposite->SetShadowTransform(transform);
     NS_ASSERTION(!layerComposite->GetShadowTransformSetByAnimation(),
                  "overwriting animated transform!");
@@ -715,13 +712,13 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
   Matrix4x4 scrollbarTransform;
   if (aScrollbar->GetScrollbarDirection() == Layer::VERTICAL) {
     float scale = metrics.CalculateCompositedSizeInCssPixels().height / metrics.mScrollableRect.height;
-    scrollbarTransform = scrollbarTransform * Matrix4x4().Scale(1.f, 1.f / transientTransform._22, 1.f);
-    scrollbarTransform = scrollbarTransform * Matrix4x4().Translate(0, -transientTransform._42 * scale, 0);
+    scrollbarTransform.PostScale(1.f, 1.f / transientTransform._22, 1.f);
+    scrollbarTransform.PostTranslate(0, -transientTransform._42 * scale, 0);
   }
   if (aScrollbar->GetScrollbarDirection() == Layer::HORIZONTAL) {
     float scale = metrics.CalculateCompositedSizeInCssPixels().width / metrics.mScrollableRect.width;
-    scrollbarTransform = scrollbarTransform * Matrix4x4().Scale(1.f / transientTransform._11, 1.f, 1.f);
-    scrollbarTransform = scrollbarTransform * Matrix4x4().Translate(-transientTransform._41 * scale, 0, 0);
+    scrollbarTransform.PostScale(1.f / transientTransform._11, 1.f, 1.f);
+    scrollbarTransform.PostTranslate(-transientTransform._41 * scale, 0, 0);
   }
 
   Matrix4x4 transform = scrollbarTransform * aScrollbar->GetTransform();
@@ -760,9 +757,9 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
                     1.0f/container->GetPreYScale(),
                     1);
   }
-  transform = transform * Matrix4x4().Scale(1.0f/aScrollbar->GetPostXScale(),
-                                            1.0f/aScrollbar->GetPostYScale(),
-                                            1);
+  transform.PostScale(1.0f/aScrollbar->GetPostXScale(),
+                      1.0f/aScrollbar->GetPostYScale(),
+                      1);
   aScrollbar->AsLayerComposite()->SetShadowTransform(transform);
 }
 

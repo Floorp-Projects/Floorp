@@ -232,14 +232,27 @@ BasicTextureImage::Resize(const gfx::IntSize& aSize)
 
     mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
 
+    // This matches the logic in UploadImageDataToTexture so that
+    // we avoid mixing formats.
+    GLenum format;
+    GLenum type;
+    if (mGLContext->GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
+        MOZ_ASSERT(!mGLContext->IsGLES());
+        format = LOCAL_GL_BGRA;
+        type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
+    } else {
+        format = LOCAL_GL_RGBA;
+        type = LOCAL_GL_UNSIGNED_BYTE;
+    }
+
     mGLContext->fTexImage2D(LOCAL_GL_TEXTURE_2D,
                             0,
                             LOCAL_GL_RGBA,
                             aSize.width,
                             aSize.height,
                             0,
-                            LOCAL_GL_RGBA,
-                            LOCAL_GL_UNSIGNED_BYTE,
+                            format,
+                            type,
                             nullptr);
 
     mTextureState = Allocated;

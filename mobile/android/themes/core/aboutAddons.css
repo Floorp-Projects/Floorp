@@ -26,9 +26,7 @@
 }
 
 .status {
-  background-color: @color_about_item_inner@;
-  border-top: 2px solid;
-  -moz-border-top-colors: #bac2ac #ffffff;
+  border-top: 1px solid @color_about_item_border@;
   font-weight: bold;
   padding: 0.5em;
   width: 100%;
@@ -47,6 +45,10 @@
 .addon-item:not([optionsURL]) .options-box,
 .addon-item[optionsURL=""] .options-box {
   display: none;
+}
+
+#addons-details > .list-item:active {
+  background-color: #fff;
 }
 
 /* Settings */
@@ -137,7 +139,7 @@ textbox {
 
 /* Button */
 
-button {
+setting button {
   margin: 2px 0;
   background: #fff;
   border: 1px solid #ccc;

@@ -37,7 +37,7 @@ struct ViewTransform {
   operator gfx::Matrix4x4() const
   {
     return
-      gfx::Matrix4x4().Scale(mScale.scale, mScale.scale, 1)
+      gfx::Matrix4x4::Scaling(mScale.scale, mScale.scale, 1)
                       .PostTranslate(mTranslation.x, mTranslation.y, 0);
   }
 

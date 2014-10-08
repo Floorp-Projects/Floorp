@@ -149,10 +149,10 @@ const char* MapResultToName(Result result);
 // those comparisons clearer, especially because the shortened name often
 // results in less line wrapping.
 //
-// Visual Studio before VS2013 does not support "enum class," so
-// Result::Success will already be visible in this scope, and compilation will
-// fail if we try to define a variable with that name here.
-#if !defined(_MSC_VER) || (_MSC_VER >= 1700)
+// If MOZILLA_PKIX_ENUM_CLASS doesn't expand to "enum class" then
+// Result::Success will already be in scope, and compilation would fail if we
+// were to try to define a variable named "Success" here.
+#ifdef MOZILLA_PKIX_ENUM_CLASS_REALLY_IS_ENUM_CLASS
 static const Result Success = Result::Success;
 #endif
 

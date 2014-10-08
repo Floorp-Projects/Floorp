@@ -60,8 +60,8 @@
 #include "vm/ArrayObject-inl.h"
 #include "vm/BooleanObject-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
-#include "vm/ObjectImpl-inl.h"
 #include "vm/Runtime-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/StringObject-inl.h"
@@ -1505,9 +1505,10 @@ js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
                     parentArg = parent;
                     protoArg = proto;
                 }
+            } else {
+                gcNumber = rt->gc.gcNumber();
             }
         }
-        gcNumber = rt->gc.gcNumber();
     }
 
     Rooted<TaggedProto> proto(cxArg, protoArg);

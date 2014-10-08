@@ -443,15 +443,13 @@ var Addons = {
   },
 
   uninstall: function uninstall(aAddon) {
-    let list = document.getElementById("addons-list");
-
     if (!aAddon) {
-        return;
+      return;
     }
 
     let listItem = this._getElementForAddon(aAddon.id);
-
     aAddon.uninstall();
+
     if (aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL) {
       this.showRestart();
 
@@ -463,9 +461,6 @@ var Addons = {
 
       detailItem.setAttribute("opType", opType);
       listItem.setAttribute("opType", opType);
-    } else {
-      list.removeChild(listItem);
-      history.back();
     }
   },
 
@@ -539,6 +534,12 @@ var Addons = {
     let list = document.getElementById("addons-list");
     let element = this._getElementForAddon(aAddon.id);
     list.removeChild(element);
+
+    // Go back if we're in the detail view of the add-on that was uninstalled.
+    let detailItem = document.querySelector("#addons-details > .addon-item");
+    if (detailItem.addon == aAddon) {
+      history.back();
+    }
   },
 
   onInstallFailed: function(aInstall) {
