@@ -1423,7 +1423,6 @@ if test "$GNU_CC"; then
     # -Wendif-labels - catches `#else FOO` and `#endif FOO` not in comment
     # -Wenum-compare - catches comparison of different enum types
     # -Wignored-qualifiers - catches returns types with qualifiers like const
-    # -Wimplicit-int - catches C variable declaration without a type
     # -Wint-to-pointer-cast - catches cast to pointer from integer of different size
     # -Wmultichar - catches multicharacter integer constants like 'THIS'
     # -Wnonnull - catches NULL used with functions arguments marked as non-null
@@ -1450,7 +1449,6 @@ if test "$GNU_CC"; then
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=endif-labels"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=enum-compare"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=ignored-qualifiers"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=implicit-int"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=int-to-pointer-cast"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=multichar"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=nonnull"
