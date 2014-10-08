@@ -460,6 +460,8 @@ UploadImageDataToTexture(GLContext* gl,
             break;
         case SurfaceFormat::R8G8B8A8:
             if (gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
+              // Upload our RGBA as BGRA, but store that the uploaded format is
+              // BGRA. (sample from R to get B)
               format = LOCAL_GL_BGRA;
               type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
               surfaceFormat = SurfaceFormat::B8G8R8A8;

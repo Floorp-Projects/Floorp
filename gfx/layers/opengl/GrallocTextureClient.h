@@ -118,8 +118,8 @@ public:
   CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const MOZ_OVERRIDE;
 
-  static TemporaryRef<TextureClient> FromShSurf(gl::SharedSurface* surf,
-                                                TextureFlags flags);
+  static TemporaryRef<TextureClient> FromSharedSurface(gl::SharedSurface* surf,
+                                                       TextureFlags flags);
 
 protected:
   /**

@@ -141,91 +141,6 @@ CanvasClient2D::CreateTextureClientForCanvas(gfx::SurfaceFormat aFormat,
                                                  mTextureInfo.mTextureFlags | aFlags);
 #endif
 }
-/*
-void
-CanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
-{
-  aLayer->mGLContext->MakeCurrent();
-
-  SurfaceStream* stream = aLayer->mStream;
-  MOZ_ASSERT(stream);
-
-  // Copy our current surface to the current producer surface in our stream, then
-  // call SwapProducer to make a new buffer ready.
-  stream->CopySurfaceToProducer(aLayer->mTextureSurface.get(),
-                                aLayer->mFactory.get());
-  stream->SwapProducer(aLayer->mFactory.get(),
-                       gfx::IntSize(aSize.width, aSize.height));
-
-#ifdef MOZ_WIDGET_GONK
-  SharedSurface* surf = stream->SwapConsumer();
-  if (!surf) {
-    printf_stderr("surf is null post-SwapConsumer!\n");
-    return;
-  }
-
-  if (surf->mType != SharedSurfaceType::Gralloc) {
-    printf_stderr("Unexpected non-Gralloc SharedSurface in IPC path!");
-    MOZ_ASSERT(false);
-    return;
-  }
-
-  SharedSurface_Gralloc* grallocSurf = SharedSurface_Gralloc::Cast(surf);
-
-  RefPtr<GrallocTextureClientOGL> grallocTextureClient =
-    static_cast<GrallocTextureClientOGL*>(grallocSurf->GetTextureClient());
-
-  // If IPDLActor is null means this TextureClient didn't AddTextureClient yet
-  if (!grallocTextureClient->GetIPDLActor()) {
-    grallocTextureClient->SetTextureFlags(mTextureInfo.mTextureFlags);
-    AddTextureClient(grallocTextureClient);
-  }
-
-  if (grallocTextureClient->GetIPDLActor()) {
-    UseTexture(grallocTextureClient);
-  }
-
-  if (mBuffer) {
-    // remove old buffer from CompositableHost
-    RefPtr<AsyncTransactionTracker> tracker = new RemoveTextureFromCompositableTracker();
-    // Hold TextureClient until transaction complete.
-    tracker->SetTextureClient(mBuffer);
-    mBuffer->SetRemoveFromCompositableTracker(tracker);
-    // RemoveTextureFromCompositableAsync() expects CompositorChild's presence.
-    GetForwarder()->RemoveTextureFromCompositableAsync(tracker, this, mBuffer);
-  }
-  mBuffer = grallocTextureClient;
-#else
-  bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
-  if (isCrossProcess) {
-    printf_stderr("isCrossProcess, but not MOZ_WIDGET_GONK! Someone needs to write some code!");
-    MOZ_ASSERT(false);
-  } else {
-    bool bufferCreated = false;
-    if (!mBuffer) {
-      // We need to dealloc in the client.
-      TextureFlags flags = GetTextureFlags() |
-                           TextureFlags::DEALLOCATE_CLIENT;
-      StreamTextureClient* texClient = new StreamTextureClient(flags);
-      texClient->InitWith(stream);
-      mBuffer = texClient;
-      bufferCreated = true;
-    }
-
-    if (bufferCreated && !AddTextureClient(mBuffer)) {
-      mBuffer = nullptr;
-    }
-
-    if (mBuffer) {
-      GetForwarder()->UpdatedTexture(this, mBuffer, nullptr);
-      GetForwarder()->UseTexture(this, mBuffer);
-    }
-  }
-#endif
-
-  aLayer->Painted();
-}
-*/
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -247,7 +162,7 @@ TexClientFromShSurf(SharedSurface* surf, TextureFlags flags)
 
 #ifdef MOZ_WIDGET_GONK
     case SharedSurfaceType::Gralloc:
-      return GrallocTextureClientOGL::FromShSurf(surf, flags);
+      return GrallocTextureClientOGL::FromSharedSurface(surf, flags);
 #endif
 
     default:

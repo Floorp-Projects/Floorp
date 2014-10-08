@@ -577,7 +577,8 @@ protected:
 class SharedSurfaceTextureHost : public TextureHost
 {
 public:
-  SharedSurfaceTextureHost(TextureFlags aFlags, const ShSurfDescriptor& aDesc);
+  SharedSurfaceTextureHost(TextureFlags aFlags,
+                           const SharedSurfaceDescriptor& aDesc);
 
   virtual ~SharedSurfaceTextureHost() {};
 
@@ -610,7 +611,7 @@ public:
     mIsLocked = false;
   }
 
-  virtual NewTextureSource* GetTextureSources() MOZ_OVERRIDE {
+  virtual TextureSource* GetTextureSources() MOZ_OVERRIDE {
     MOZ_ASSERT(mIsLocked);
     MOZ_ASSERT(mTexSource);
     return mTexSource;
@@ -630,7 +631,7 @@ protected:
   bool mIsLocked;
   gl::SharedSurface* const mSurf;
   Compositor* mCompositor;
-  RefPtr<NewTextureSource> mTexSource;
+  RefPtr<TextureSource> mTexSource;
 };
 
 class MOZ_STACK_CLASS AutoLockTextureHost

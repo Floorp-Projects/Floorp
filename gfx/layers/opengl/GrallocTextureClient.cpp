@@ -112,8 +112,8 @@ GrallocTextureClientOGL::WaitForBufferOwnership()
      android::sp<Fence> fence = mReleaseFenceHandle.mFence;
 #if ANDROID_VERSION == 17
      fence->waitForever(1000, "GrallocTextureClientOGL::Lock");
-     // 1000 is what Android uses. It is warning timeout ms.
-     // This timeous is removed since ANDROID_VERSION 18.
+     // 1000 is what Android uses. It is a warning timeout in ms.
+     // This timeout was removed in ANDROID_VERSION 18.
 #else
      fence->waitForever("GrallocTextureClientOGL::Lock");
 #endif
@@ -348,8 +348,8 @@ GrallocTextureClientOGL::GetBufferSize() const
 }
 
 /*static*/ TemporaryRef<TextureClient>
-GrallocTextureClientOGL::FromShSurf(gl::SharedSurface* abstractSurf,
-                                    TextureFlags flags)
+GrallocTextureClientOGL::FromSharedSurface(gl::SharedSurface* abstractSurf,
+                                           TextureFlags flags)
 {
   auto surf = gl::SharedSurface_Gralloc::Cast(abstractSurf);
 

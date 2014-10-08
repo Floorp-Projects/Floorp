@@ -43,7 +43,7 @@ GLScreenBuffer::Create(GLContext* gl,
 
 #ifdef MOZ_WIDGET_GONK
     /* On B2G, we want a Gralloc factory, and we want one right at the start */
-    auto allocator = caps.surfaceAllocator;
+    layers::ISurfaceAllocator* allocator = caps.surfaceAllocator;
     if (!factory &&
         allocator &&
         XRE_GetProcessType() != GeckoProcessType_Default)
