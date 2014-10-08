@@ -1828,6 +1828,10 @@ this.DOMApplicationRegistry = {
       aApp.redirects = this.sanitizeRedirects(aNewManifest.redirects);
     }
 
+    let manifest =
+      new ManifestHelper(aNewManifest, aApp.origin, aApp.manifestURL);
+    this._saveWidgetsFullPath(manifest, aApp);
+
     if (supportSystemMessages()) {
       if (aOldManifest) {
         this._unregisterActivities(aOldManifest, aApp);
@@ -2171,7 +2175,6 @@ this.DOMApplicationRegistry = {
 
       aApp.name = aNewManifest.name;
       aApp.csp = manifest.csp || "";
-      this._saveWidgetsFullPath(manifest, aApp);
       aApp.updateTime = Date.now();
     }
 
