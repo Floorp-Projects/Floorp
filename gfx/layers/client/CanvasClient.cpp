@@ -480,8 +480,6 @@ CanvasClientSharedSurface::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 
   forwarder->UpdatedTexture(this, mFrontTex, nullptr);
   forwarder->UseTexture(this, mFrontTex);
-
-  aLayer->Painted();
 }
 
 }
