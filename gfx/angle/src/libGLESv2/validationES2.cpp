@@ -591,7 +591,8 @@ bool ValidateES2CopyTexImageParameters(Context* context, GLenum target, GLint le
           case GL_RGBA:
             if (colorbufferFormat != GL_RGBA4 &&
                 colorbufferFormat != GL_RGB5_A1 &&
-                colorbufferFormat != GL_RGBA8_OES)
+                colorbufferFormat != GL_RGBA8_OES &&
+                colorbufferFormat != GL_BGRA8_EXT)
             {
                 context->recordError(Error(GL_INVALID_OPERATION));
                 return false;
