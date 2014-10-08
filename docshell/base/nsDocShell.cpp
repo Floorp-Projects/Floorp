@@ -4382,7 +4382,7 @@ nsDocShell::SetDeviceSizeIsPageSize(bool aValue)
     nsRefPtr<nsPresContext> presContext;
     GetPresContext(getter_AddRefs(presContext));
     if (presContext) {
-      presContext->MediaFeatureValuesChanged(eRestyle_Subtree);
+      presContext->MediaFeatureValuesChanged(nsRestyleHint(0));
     }
   }
   return NS_OK;
