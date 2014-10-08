@@ -67,17 +67,17 @@ public:
        ErrorResult& aRv);
 
   void InitializeChromeFile(File& aData,
-                            const FilePropertyBag& aBag,
+                            const ChromeFilePropertyBag& aBag,
                             ErrorResult& aRv);
 
   void InitializeChromeFile(nsPIDOMWindow* aWindow,
                             const nsAString& aData,
-                            const FilePropertyBag& aBag,
+                            const ChromeFilePropertyBag& aBag,
                             ErrorResult& aRv);
 
   void InitializeChromeFile(nsPIDOMWindow* aWindow,
                             nsIFile* aData,
-                            const FilePropertyBag& aBag,
+                            const ChromeFilePropertyBag& aBag,
                             bool aIsFromNsIFile,
                             ErrorResult& aRv);
 
