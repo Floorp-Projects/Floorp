@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDOMBlobBuilder_h
-#define nsDOMBlobBuilder_h
+#ifndef mozilla_dom_MultipartFileImpl_h
+#define mozilla_dom_MultipartFileImpl_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
@@ -120,79 +120,4 @@ protected:
   bool mIsFromNsIFile;
 };
 
-class BlobSet {
-public:
-  BlobSet()
-    : mData(nullptr), mDataLen(0), mDataBufferLen(0)
-  {}
-
-  ~BlobSet()
-  {
-    moz_free(mData);
-  }
-
-  nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
-  nsresult AppendString(const nsAString& aString, bool nativeEOL, JSContext* aCx);
-  nsresult AppendBlobImpl(FileImpl* aBlobImpl);
-  nsresult AppendBlobImpls(const nsTArray<nsRefPtr<FileImpl>>& aBlobImpls);
-
-  nsTArray<nsRefPtr<FileImpl>>& GetBlobImpls() { Flush(); return mBlobImpls; }
-
-  already_AddRefed<File>
-  GetBlobInternal(nsISupports* aParent, const nsACString& aContentType)
-  {
-    nsRefPtr<File> blob = new File(aParent,
-      new MultipartFileImpl(GetBlobImpls(), NS_ConvertASCIItoUTF16(aContentType)));
-    return blob.forget();
-  }
-
-protected:
-  bool ExpandBufferSize(uint64_t aSize)
-  {
-    using mozilla::CheckedUint32;
-
-    if (mDataBufferLen >= mDataLen + aSize) {
-      mDataLen += aSize;
-      return true;
-    }
-
-    // Start at 1 or we'll loop forever.
-    CheckedUint32 bufferLen =
-      std::max<uint32_t>(static_cast<uint32_t>(mDataBufferLen), 1);
-    while (bufferLen.isValid() && bufferLen.value() < mDataLen + aSize)
-      bufferLen *= 2;
-
-    if (!bufferLen.isValid())
-      return false;
-
-    void* data = moz_realloc(mData, bufferLen.value());
-    if (!data)
-      return false;
-
-    mData = data;
-    mDataBufferLen = bufferLen.value();
-    mDataLen += aSize;
-    return true;
-  }
-
-  void Flush() {
-    if (mData) {
-      // If we have some data, create a blob for it
-      // and put it on the stack
-
-      nsRefPtr<FileImpl> blobImpl =
-        new FileImplMemory(mData, mDataLen, EmptyString());
-      mBlobImpls.AppendElement(blobImpl);
-      mData = nullptr; // The FileImplMemory takes ownership of the buffer
-      mDataLen = 0;
-      mDataBufferLen = 0;
-    }
-  }
-
-  nsTArray<nsRefPtr<FileImpl>> mBlobImpls;
-  void* mData;
-  uint64_t mDataLen;
-  uint64_t mDataBufferLen;
-};
-
-#endif
+#endif // mozilla_dom_MultipartFileImpl_h
