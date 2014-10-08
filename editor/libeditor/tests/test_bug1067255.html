@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1067255
+-->
+
+<head>
+  <title>Test for Bug 1067255</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+
+<body onload="doTest();">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1067255">Mozilla Bug 1067255</a>
+
+  <pre id="test">
+    <script type="application/javascript">
+      /** Test for Bug 1067255 **/
+      SimpleTest.waitForExplicitFinish();
+
+      function doTest() {
+        var text = $("text-field");
+        var password = $("password-field");
+
+        var editor1 = SpecialPowers.wrap(text).editor;
+        var editor2 = SpecialPowers.wrap(password).editor;
+
+        text.focus();
+        text.select();
+
+        ok(editor1.canCopy(), "can copy, text");
+        ok(editor1.canCut(), "can cut, text");
+
+        password.focus();
+        password.select();
+
+        ok(!editor2.canCopy(), "can copy, password");
+        ok(!editor2.canCut(), "can cut, password");
+
+        SimpleTest.finish();
+      }
+   </script>
+  </pre>
+
+  <input type="text" value="Gonzo says hi" id="text-field" />
+  <input type="password" value="Jan also" id="password-field" />
+</body>
+</html>
