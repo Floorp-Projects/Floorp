@@ -226,14 +226,9 @@ class MessageChannel : HasResultCodes
     // up to process urgent calls from the parent.
     bool SendAndWait(Message* aMsg, Message* aReply);
 
-    bool RPCCall(Message* aMsg, Message* aReply);
-    bool InterruptCall(Message* aMsg, Message* aReply);
-    bool UrgentCall(Message* aMsg, Message* aReply);
-
     bool InterruptEventOccurred();
 
-    bool ProcessPendingUrgentRequest();
-    bool ProcessPendingRPCCall();
+    bool ProcessPendingRequest(Message aUrgent);
 
     void MaybeUndeferIncall();
     void EnqueuePendingMessages();
@@ -327,15 +322,11 @@ class MessageChannel : HasResultCodes
     // Returns true if we're blocking waiting for a reply.
     bool AwaitingSyncReply() const {
         mMonitor->AssertCurrentThreadOwns();
-        return mPendingSyncReplies > 0;
+        return mAwaitingSyncReply;
     }
-    bool AwaitingUrgentReply() const {
+    int AwaitingSyncReplyPriority() const {
         mMonitor->AssertCurrentThreadOwns();
-        return mPendingUrgentReplies > 0;
-    }
-    bool AwaitingRPCReply() const {
-        mMonitor->AssertCurrentThreadOwns();
-        return mPendingRPCReplies > 0;
+        return mAwaitingSyncReplyPriority;
     }
     bool AwaitingInterruptReply() const {
         mMonitor->AssertCurrentThreadOwns();
@@ -344,12 +335,13 @@ class MessageChannel : HasResultCodes
 
     // Returns true if we're dispatching a sync message's callback.
     bool DispatchingSyncMessage() const {
+        AssertWorkerThread();
         return mDispatchingSyncMessage;
     }
 
-    // Returns true if we're dispatching an urgent message's callback.
-    bool DispatchingUrgentMessage() const {
-        return mDispatchingUrgentMessageCount > 0;
+    int DispatchingSyncMessagePriority() const {
+        AssertWorkerThread();
+        return mDispatchingSyncMessagePriority;
     }
 
     bool Connected() const;
@@ -367,6 +359,7 @@ class MessageChannel : HasResultCodes
     // Tell the IO thread to close the channel and wait for it to ACK.
     void SynchronouslyClose();
 
+    bool ShouldDeferMessage(const Message& aMsg);
     void OnMessageReceivedFromLink(const Message& aMsg);
     void OnChannelErrorFromLink();
 
@@ -460,29 +453,30 @@ class MessageChannel : HasResultCodes
 
     static bool sIsPumpingMessages;
 
-    class AutoEnterPendingReply {
+    template<class T>
+    class AutoSetValue {
       public:
-        explicit AutoEnterPendingReply(size_t &replyVar)
-          : mReplyVar(replyVar)
+        explicit AutoSetValue(T &var, const T &newValue)
+          : mVar(var), mPrev(var)
         {
-            mReplyVar++;
+            mVar = newValue;
         }
-        ~AutoEnterPendingReply() {
-            mReplyVar--;
+        ~AutoSetValue() {
+            mVar = mPrev;
         }
       private:
-        size_t& mReplyVar;
+        T& mVar;
+        T mPrev;
     };
 
-    // Worker-thread only; type we're expecting for the reply to a sync
-    // out-message. This will never be greater than 1.
-    size_t mPendingSyncReplies;
+    // Worker thread only.
+    bool mAwaitingSyncReply;
+    int mAwaitingSyncReplyPriority;
 
-    // Worker-thread only; Number of urgent and rpc replies we're waiting on.
-    // These are mutually exclusive since one channel cannot have outcalls of
-    // both kinds.
-    size_t mPendingUrgentReplies;
-    size_t mPendingRPCReplies;
+    // Set while we are dispatching a synchronous message. Only for use on the
+    // worker thread.
+    bool mDispatchingSyncMessage;
+    int mDispatchingSyncMessagePriority;
 
     // When we send an urgent request from the parent process, we could race
     // with an RPC message that was issued by the child beforehand. In this
@@ -498,40 +492,40 @@ class MessageChannel : HasResultCodes
     // messages the parent receives, not apart of this transaction, are
     // deferred. When issuing RPC/urgent requests on top of a started
     // transaction, the initiating transaction ID is used.
-    // 
+    //
     // To ensure IDs are unique, we use sequence numbers for transaction IDs,
     // which grow in opposite directions from child to parent.
 
     // The current transaction ID.
-    int32_t mCurrentRPCTransaction;
+    int32_t mCurrentTransaction;
 
-    class AutoEnterRPCTransaction
+    class AutoEnterTransaction
     {
       public:
-       explicit AutoEnterRPCTransaction(MessageChannel *aChan)
+       explicit AutoEnterTransaction(MessageChannel *aChan)
         : mChan(aChan),
-          mOldTransaction(mChan->mCurrentRPCTransaction)
+          mOldTransaction(mChan->mCurrentTransaction)
        {
            mChan->mMonitor->AssertCurrentThreadOwns();
-           if (mChan->mCurrentRPCTransaction == 0)
-               mChan->mCurrentRPCTransaction = mChan->NextSeqno();
+           if (mChan->mCurrentTransaction == 0)
+               mChan->mCurrentTransaction = mChan->NextSeqno();
        }
-       AutoEnterRPCTransaction(MessageChannel *aChan, Message *message)
+       explicit AutoEnterTransaction(MessageChannel *aChan, Message *message)
         : mChan(aChan),
-          mOldTransaction(mChan->mCurrentRPCTransaction)
+          mOldTransaction(mChan->mCurrentTransaction)
        {
            mChan->mMonitor->AssertCurrentThreadOwns();
 
-           if (!message->is_rpc() && !message->is_urgent())
+           if (!message->is_sync())
                return;
 
-           MOZ_ASSERT_IF(mChan->mSide == ParentSide,
-                         !mOldTransaction || mOldTransaction == message->transaction_id());
-           mChan->mCurrentRPCTransaction = message->transaction_id();
+           MOZ_ASSERT_IF(mChan->mSide == ParentSide && mOldTransaction != message->transaction_id(),
+                         !mOldTransaction || message->priority() > mChan->AwaitingSyncReplyPriority());
+           mChan->mCurrentTransaction = message->transaction_id();
        }
-       ~AutoEnterRPCTransaction() {
+       ~AutoEnterTransaction() {
            mChan->mMonitor->AssertCurrentThreadOwns();
-           mChan->mCurrentRPCTransaction = mOldTransaction;
+           mChan->mCurrentTransaction = mOldTransaction;
        }
 
       private:
@@ -542,12 +536,6 @@ class MessageChannel : HasResultCodes
     // If waiting for the reply to a sync out-message, it will be saved here
     // on the I/O thread and then read and cleared by the worker thread.
     nsAutoPtr<Message> mRecvd;
-
-    // Set while we are dispatching a synchronous message.
-    bool mDispatchingSyncMessage;
-
-    // Count of the recursion depth of dispatching urgent messages.
-    size_t mDispatchingUrgentMessageCount;
 
     // Queue of all incoming messages, except for replies to sync and urgent
     // messages, which are delivered directly to mRecvd, and any pending urgent
@@ -586,18 +574,6 @@ class MessageChannel : HasResultCodes
     // another blocking message, because it's blocked on a reply from us.
     //
     MessageQueue mPending;
-
-    // Note that these two pointers are mutually exclusive. One channel cannot
-    // send both urgent requests (parent -> child) and RPC calls (child->parent).
-    // Also note that since initiating either requires blocking, they cannot
-    // queue up on the other side. One message slot is enough.
-    //
-    // Normally, all other message types are deferred into into mPending, and
-    // only these two types have special treatment (since they wake up blocked
-    // requests). However, when an RPC in-call races with an urgent out-call,
-    // the RPC message will be put into mPending instead of its slot below.
-    nsAutoPtr<Message> mPendingUrgentRequest;
-    nsAutoPtr<Message> mPendingRPCCall;
 
     // Stack of all the out-calls on which this channel is awaiting responses.
     // Each stack refers to a different protocol and the stacks are mutually
@@ -676,7 +652,7 @@ class MessageChannel : HasResultCodes
 };
 
 bool
-ProcessingUrgentMessages();
+ParentProcessIsBlocked();
 
 } // namespace ipc
 } // namespace mozilla
