@@ -23,6 +23,7 @@ EXPORTS.mozilla.dom.mobileconnection += [
 
 XPIDL_SOURCES += [
     'interfaces/nsICellInfo.idl',
+    'interfaces/nsIMobileCallForwardingOptions.idl',
     'interfaces/nsIMobileCellInfo.idl',
     'interfaces/nsIMobileConnectionInfo.idl',
     'interfaces/nsIMobileConnectionService.idl',
