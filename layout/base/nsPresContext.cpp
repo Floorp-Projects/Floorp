@@ -1877,7 +1877,8 @@ nsPresContext::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
     // We must have been torn down. Nothing to do here.
     return;
   }
-  RestyleManager()->PostRebuildAllStyleDataEvent(aExtraHint);
+  // FIXME: Pass through from callers.
+  RestyleManager()->PostRebuildAllStyleDataEvent(aExtraHint, eRestyle_Subtree);
 }
 
 void

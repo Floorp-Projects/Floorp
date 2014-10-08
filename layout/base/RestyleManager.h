@@ -389,8 +389,11 @@ public:
    * in a system font size, or to fix things up when an optimization in the
    * style data has become invalid. We assume that the root frame will not
    * need to be reframed.
+   *
+   * For parameters, see RebuildAllStyleData.
    */
-  void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint);
+  void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
+                                    nsRestyleHint aRestyleHint);
 
 #ifdef RESTYLE_LOGGING
   /**
