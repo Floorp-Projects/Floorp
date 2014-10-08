@@ -20,7 +20,6 @@
 #include "mozilla/layers/TextureClientOGL.h"
 #include "mozilla/layers/PTextureChild.h"
 #include "SharedSurface.h"
-#include "SurfaceStream.h"
 #include "GLContext.h"
 
 #ifdef XP_WIN
@@ -802,62 +801,6 @@ BufferTextureClient::GetLockedData() const
   MOZ_ASSERT(serializer.IsValid());
 
   return serializer.GetData();
-}
-
-////////////////////////////////////////////////////////////////////////
-// StreamTextureClient
-StreamTextureClient::StreamTextureClient(TextureFlags aFlags)
-  : TextureClient(aFlags)
-  , mIsLocked(false)
-{
-}
-
-StreamTextureClient::~StreamTextureClient()
-{
-  // the data is owned externally.
-}
-
-bool
-StreamTextureClient::Lock(OpenMode mode)
-{
-  MOZ_ASSERT(!mIsLocked);
-  if (!IsValid() || !IsAllocated()) {
-    return false;
-  }
-  mIsLocked = true;
-  return true;
-}
-
-void
-StreamTextureClient::Unlock()
-{
-  MOZ_ASSERT(mIsLocked);
-  mIsLocked = false;
-}
-
-bool
-StreamTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
-{
-  if (!IsAllocated()) {
-    return false;
-  }
-
-  aOutDescriptor = SurfaceStreamDescriptor((uintptr_t)mStream.get(), false);
-  return true;
-}
-
-void
-StreamTextureClient::InitWith(gl::SurfaceStream* aStream)
-{
-  MOZ_ASSERT(!IsAllocated());
-  mStream = aStream;
-  mGL = mStream->GLContext();
-}
-
-bool
-StreamTextureClient::IsAllocated() const
-{
-  return mStream != 0;
 }
 
 ////////////////////////////////////////////////////////////////////////

@@ -9,8 +9,6 @@
 #include "GeckoProfiler.h"              // for PROFILER_LABEL
 #include "SharedSurfaceEGL.h"           // for SurfaceFactory_EGLImage
 #include "SharedSurfaceGL.h"            // for SurfaceFactory_GLTexture, etc
-#include "SurfaceStream.h"              // for SurfaceStream, etc
-#include "SurfaceTypes.h"               // for SurfaceStreamType
 #include "ClientLayerManager.h"         // for ClientLayerManager, etc
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/layers/CompositorTypes.h"
@@ -46,9 +44,6 @@ ClientCanvasLayer::~ClientCanvasLayer()
     mCanvasClient->OnDetach();
     mCanvasClient = nullptr;
   }
-  if (mTextureSurface) {
-    mTextureSurface = nullptr;
-  }
 }
 
 void
@@ -58,92 +53,85 @@ ClientCanvasLayer::Initialize(const Data& aData)
 
   mCanvasClient = nullptr;
 
-  if (mGLContext) {
-    GLScreenBuffer* screen = mGLContext->Screen();
+  if (!mGLContext)
+    return;
 
-    SurfaceCaps caps;
-    if (mStream) {
-      // The screen caps are irrelevant if we're using a separate stream
-      caps = aData.mHasAlpha ? SurfaceCaps::ForRGBA() : SurfaceCaps::ForRGB();
-    } else {
-      caps = screen->mCaps;
-    }
-    MOZ_ASSERT(caps.alpha == aData.mHasAlpha);
+  GLScreenBuffer* screen = mGLContext->Screen();
 
-    UniquePtr<SurfaceFactory> factory;
+  SurfaceCaps caps;
+  if (mGLFrontbuffer) {
+    // The screen caps are irrelevant if we're using a separate frontbuffer.
+    caps = mGLFrontbuffer->mHasAlpha ? SurfaceCaps::ForRGBA()
+                                     : SurfaceCaps::ForRGB();
+  } else {
+    MOZ_ASSERT(screen);
+    caps = screen->mCaps;
+  }
+  MOZ_ASSERT(caps.alpha == aData.mHasAlpha);
 
-    if (!gfxPrefs::WebGLForceLayersReadback()) {
-      switch (ClientManager()->AsShadowForwarder()->GetCompositorBackendType()) {
-        case mozilla::layers::LayersBackend::LAYERS_OPENGL: {
-          if (mGLContext->GetContextType() == GLContextType::EGL) {
+  UniquePtr<SurfaceFactory> factory;
+
+  if (!gfxPrefs::WebGLForceLayersReadback()) {
+    switch (ClientManager()->AsShadowForwarder()->GetCompositorBackendType()) {
+      case mozilla::layers::LayersBackend::LAYERS_OPENGL: {
+        if (mGLContext->GetContextType() == GLContextType::EGL) {
 #ifdef MOZ_WIDGET_GONK
-            TextureFlags flags = TextureFlags::DEALLOCATE_CLIENT |
-                                 TextureFlags::NEEDS_Y_FLIP;
-            if (!aData.mIsGLAlphaPremult) {
-              flags |= TextureFlags::NON_PREMULTIPLIED;
-            }
-            factory = MakeUnique<SurfaceFactory_Gralloc>(mGLContext,
-                                                         caps,
-                                                         flags,
-                                                         ClientManager()->AsShadowForwarder());
+          TextureFlags flags = TextureFlags::DEALLOCATE_CLIENT |
+                               TextureFlags::NEEDS_Y_FLIP;
+          if (!aData.mIsGLAlphaPremult) {
+            flags |= TextureFlags::NON_PREMULTIPLIED;
+          }
+          factory = MakeUnique<SurfaceFactory_Gralloc>(mGLContext,
+                                                       caps,
+                                                       flags,
+                                                       ClientManager()->AsShadowForwarder());
 #else
-            bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
-            if (!isCrossProcess) {
-              // [Basic/OGL Layers, OMTC] WebGL layer init.
-              factory = SurfaceFactory_EGLImage::Create(mGLContext, caps);
-            } else {
-              // we could do readback here maybe
-              NS_NOTREACHED("isCrossProcess but not on native B2G!");
-            }
-#endif
+          bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
+          if (!isCrossProcess) {
+            // [Basic/OGL Layers, OMTC] WebGL layer init.
+            factory = SurfaceFactory_EGLImage::Create(mGLContext, caps);
           } else {
-            // [Basic Layers, OMTC] WebGL layer init.
-            // Well, this *should* work...
+            // we could do readback here maybe
+            NS_NOTREACHED("isCrossProcess but not on native B2G!");
+          }
+#endif
+        } else {
+          // [Basic Layers, OMTC] WebGL layer init.
+          // Well, this *should* work...
 #ifdef XP_MACOSX
-            factory = SurfaceFactory_IOSurface::Create(mGLContext, caps);
+          factory = SurfaceFactory_IOSurface::Create(mGLContext, caps);
 #else
-            GLContext* nullConsGL = nullptr; // Bug 1050044.
-            factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, nullConsGL, caps);
+          GLContext* nullConsGL = nullptr; // Bug 1050044.
+          factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, nullConsGL, caps);
 #endif
-          }
-          break;
         }
-        case mozilla::layers::LayersBackend::LAYERS_D3D10:
-        case mozilla::layers::LayersBackend::LAYERS_D3D11: {
+        break;
+      }
+      case mozilla::layers::LayersBackend::LAYERS_D3D10:
+      case mozilla::layers::LayersBackend::LAYERS_D3D11: {
 #ifdef XP_WIN
-          if (mGLContext->IsANGLE()) {
-            factory = SurfaceFactory_ANGLEShareHandle::Create(mGLContext, caps);
-          }
-#endif
-          break;
+        if (mGLContext->IsANGLE()) {
+          factory = SurfaceFactory_ANGLEShareHandle::Create(mGLContext, caps);
         }
-        default:
-          break;
+#endif
+        break;
       }
+      default:
+        break;
     }
+  }
 
-    if (mStream) {
-      // We're using a stream other than the one in the default screen
-      mFactory = Move(factory);
-      if (!mFactory) {
-        // Absolutely must have a factory here, so create a basic one
-        mFactory = MakeUnique<SurfaceFactory_Basic>(mGLContext, caps);
-      }
-
-      gfx::IntSize size = gfx::IntSize(aData.mSize.width, aData.mSize.height);
-      mTextureSurface = SharedSurface_GLTexture::Create(mGLContext, mGLContext,
-                                                        mGLContext->GetGLFormats(),
-                                                        size, caps.alpha, aData.mTexID);
-      SharedSurface* producer = mStream->SwapProducer(mFactory.get(), size);
-      if (!producer) {
-        // Fallback to basic factory
-        mFactory = MakeUnique<SurfaceFactory_Basic>(mGLContext, caps);
-        producer = mStream->SwapProducer(mFactory.get(), size);
-        MOZ_ASSERT(producer, "Failed to create initial canvas surface with basic factory");
-      }
-    } else if (factory) {
+  if (mGLFrontbuffer) {
+    // We're using a source other than the one in the default screen.
+    // (SkiaGL)
+    mFactory = Move(factory);
+    if (!mFactory) {
+      // Absolutely must have a factory here, so create a basic one
+      mFactory = MakeUnique<SurfaceFactory_Basic>(mGLContext, caps);
+    }
+  } else {
+    if (factory)
       screen->Morph(Move(factory));
-    }
   }
 }
 
@@ -202,10 +190,7 @@ CanvasClient::CanvasClientType
 ClientCanvasLayer::GetCanvasClientType()
 {
   if (mGLContext) {
-    if (mGLContext->Screen()) {
-      return CanvasClient::CanvasClientTypeShSurf;
-    }
-    return CanvasClient::CanvasClientGLContext;
+    return CanvasClient::CanvasClientTypeShSurf;
   }
   return CanvasClient::CanvasClientSurface;
 }

@@ -8,7 +8,6 @@
 
 #include "gfxWindowsSurface.h"
 #include "gfxWindowsPlatform.h"
-#include "SurfaceStream.h"
 #include "SharedSurface.h"
 #include "SharedSurfaceGL.h"
 #include "GLContext.h"

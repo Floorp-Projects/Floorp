@@ -21,7 +21,6 @@
 
 namespace mozilla {
 namespace gl {
-class SurfaceStream;
 class SharedSurface;
 class SurfaceFactory;
 }
@@ -39,8 +38,6 @@ public:
   explicit ClientCanvasLayer(ClientLayerManager* aLayerManager) :
     CopyableCanvasLayer(aLayerManager,
                         static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
-    , mTextureSurface(nullptr)
-    , mFactory(nullptr)
   {
     MOZ_COUNT_CTOR(ClientCanvasLayer);
   }
@@ -95,13 +92,10 @@ protected:
 
   RefPtr<CanvasClient> mCanvasClient;
 
-  UniquePtr<gl::SharedSurface> mTextureSurface;
   UniquePtr<gl::SurfaceFactory> mFactory;
 
   friend class DeprecatedCanvasClient2D;
   friend class CanvasClient2D;
-  friend class DeprecatedCanvasClientSurfaceStream;
-  friend class CanvasClientSurfaceStream;
   friend class CanvasClientSharedSurface;
 };
 }
