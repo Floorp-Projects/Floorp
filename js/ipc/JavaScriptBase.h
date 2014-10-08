@@ -35,91 +35,91 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
 
     /*** IPC handlers ***/
 
-    bool RecvPreventExtensions(const uint64_t &objId, ReturnStatus *rs) {
-        return Answer::RecvPreventExtensions(ObjectId::deserialize(objId), rs);
+    bool AnswerPreventExtensions(const uint64_t &objId, ReturnStatus *rs) {
+        return Answer::AnswerPreventExtensions(ObjectId::deserialize(objId), rs);
     }
-    bool RecvGetPropertyDescriptor(const uint64_t &objId, const JSIDVariant &id,
+    bool AnswerGetPropertyDescriptor(const uint64_t &objId, const JSIDVariant &id,
                                      ReturnStatus *rs,
                                      PPropertyDescriptor *out) {
-        return Answer::RecvGetPropertyDescriptor(ObjectId::deserialize(objId), id, rs, out);
+        return Answer::AnswerGetPropertyDescriptor(ObjectId::deserialize(objId), id, rs, out);
     }
-    bool RecvGetOwnPropertyDescriptor(const uint64_t &objId,
+    bool AnswerGetOwnPropertyDescriptor(const uint64_t &objId,
                                         const JSIDVariant &id,
                                         ReturnStatus *rs,
                                         PPropertyDescriptor *out) {
-        return Answer::RecvGetOwnPropertyDescriptor(ObjectId::deserialize(objId), id, rs, out);
+        return Answer::AnswerGetOwnPropertyDescriptor(ObjectId::deserialize(objId), id, rs, out);
     }
-    bool RecvDefineProperty(const uint64_t &objId, const JSIDVariant &id,
+    bool AnswerDefineProperty(const uint64_t &objId, const JSIDVariant &id,
                               const PPropertyDescriptor &flags,
                               ReturnStatus *rs) {
-        return Answer::RecvDefineProperty(ObjectId::deserialize(objId), id, flags, rs);
+        return Answer::AnswerDefineProperty(ObjectId::deserialize(objId), id, flags, rs);
     }
-    bool RecvDelete(const uint64_t &objId, const JSIDVariant &id,
+    bool AnswerDelete(const uint64_t &objId, const JSIDVariant &id,
                       ReturnStatus *rs, bool *success) {
-        return Answer::RecvDelete(ObjectId::deserialize(objId), id, rs, success);
+        return Answer::AnswerDelete(ObjectId::deserialize(objId), id, rs, success);
     }
 
-    bool RecvHas(const uint64_t &objId, const JSIDVariant &id,
+    bool AnswerHas(const uint64_t &objId, const JSIDVariant &id,
                    ReturnStatus *rs, bool *bp) {
-        return Answer::RecvHas(ObjectId::deserialize(objId), id, rs, bp);
+        return Answer::AnswerHas(ObjectId::deserialize(objId), id, rs, bp);
     }
-    bool RecvHasOwn(const uint64_t &objId, const JSIDVariant &id,
+    bool AnswerHasOwn(const uint64_t &objId, const JSIDVariant &id,
                       ReturnStatus *rs, bool *bp) {
-        return Answer::RecvHasOwn(ObjectId::deserialize(objId), id, rs, bp);
+        return Answer::AnswerHasOwn(ObjectId::deserialize(objId), id, rs, bp);
     }
-    bool RecvGet(const uint64_t &objId, const ObjectVariant &receiverVar,
+    bool AnswerGet(const uint64_t &objId, const ObjectVariant &receiverVar,
                    const JSIDVariant &id,
                    ReturnStatus *rs, JSVariant *result) {
-        return Answer::RecvGet(ObjectId::deserialize(objId), receiverVar, id, rs, result);
+        return Answer::AnswerGet(ObjectId::deserialize(objId), receiverVar, id, rs, result);
     }
-    bool RecvSet(const uint64_t &objId, const ObjectVariant &receiverVar,
+    bool AnswerSet(const uint64_t &objId, const ObjectVariant &receiverVar,
                    const JSIDVariant &id, const bool &strict,
                    const JSVariant &value, ReturnStatus *rs, JSVariant *result) {
-        return Answer::RecvSet(ObjectId::deserialize(objId), receiverVar, id, strict, value, rs, result);
+        return Answer::AnswerSet(ObjectId::deserialize(objId), receiverVar, id, strict, value, rs, result);
     }
 
-    bool RecvIsExtensible(const uint64_t &objId, ReturnStatus *rs,
+    bool AnswerIsExtensible(const uint64_t &objId, ReturnStatus *rs,
                             bool *result) {
-        return Answer::RecvIsExtensible(ObjectId::deserialize(objId), rs, result);
+        return Answer::AnswerIsExtensible(ObjectId::deserialize(objId), rs, result);
     }
-    bool RecvCallOrConstruct(const uint64_t &objId, const nsTArray<JSParam> &argv,
+    bool AnswerCallOrConstruct(const uint64_t &objId, const nsTArray<JSParam> &argv,
                                const bool &construct, ReturnStatus *rs, JSVariant *result,
                                nsTArray<JSParam> *outparams) {
-        return Answer::RecvCallOrConstruct(ObjectId::deserialize(objId), argv, construct, rs, result, outparams);
+        return Answer::AnswerCallOrConstruct(ObjectId::deserialize(objId), argv, construct, rs, result, outparams);
     }
-    bool RecvHasInstance(const uint64_t &objId, const JSVariant &v, ReturnStatus *rs, bool *bp) {
-        return Answer::RecvHasInstance(ObjectId::deserialize(objId), v, rs, bp);
+    bool AnswerHasInstance(const uint64_t &objId, const JSVariant &v, ReturnStatus *rs, bool *bp) {
+        return Answer::AnswerHasInstance(ObjectId::deserialize(objId), v, rs, bp);
     }
-    bool RecvObjectClassIs(const uint64_t &objId, const uint32_t &classValue,
+    bool AnswerObjectClassIs(const uint64_t &objId, const uint32_t &classValue,
                              bool *result) {
-        return Answer::RecvObjectClassIs(ObjectId::deserialize(objId), classValue, result);
+        return Answer::AnswerObjectClassIs(ObjectId::deserialize(objId), classValue, result);
     }
-    bool RecvClassName(const uint64_t &objId, nsString *result) {
-        return Answer::RecvClassName(ObjectId::deserialize(objId), result);
+    bool AnswerClassName(const uint64_t &objId, nsString *result) {
+        return Answer::AnswerClassName(ObjectId::deserialize(objId), result);
     }
-    bool RecvRegExpToShared(const uint64_t &objId, ReturnStatus *rs, nsString *source, uint32_t *flags) {
-        return Answer::RecvRegExpToShared(ObjectId::deserialize(objId), rs, source, flags);
+    bool AnswerRegExpToShared(const uint64_t &objId, ReturnStatus *rs, nsString *source, uint32_t *flags) {
+        return Answer::AnswerRegExpToShared(ObjectId::deserialize(objId), rs, source, flags);
     }
 
-    bool RecvGetPropertyNames(const uint64_t &objId, const uint32_t &flags,
+    bool AnswerGetPropertyNames(const uint64_t &objId, const uint32_t &flags,
                                 ReturnStatus *rs, nsTArray<nsString> *names) {
-        return Answer::RecvGetPropertyNames(ObjectId::deserialize(objId), flags, rs, names);
+        return Answer::AnswerGetPropertyNames(ObjectId::deserialize(objId), flags, rs, names);
     }
-    bool RecvInstanceOf(const uint64_t &objId, const JSIID &iid,
+    bool AnswerInstanceOf(const uint64_t &objId, const JSIID &iid,
                           ReturnStatus *rs, bool *instanceof) {
-        return Answer::RecvInstanceOf(ObjectId::deserialize(objId), iid, rs, instanceof);
+        return Answer::AnswerInstanceOf(ObjectId::deserialize(objId), iid, rs, instanceof);
     }
-    bool RecvDOMInstanceOf(const uint64_t &objId, const int &prototypeID, const int &depth,
+    bool AnswerDOMInstanceOf(const uint64_t &objId, const int &prototypeID, const int &depth,
                              ReturnStatus *rs, bool *instanceof) {
-        return Answer::RecvDOMInstanceOf(ObjectId::deserialize(objId), prototypeID, depth, rs, instanceof);
+        return Answer::AnswerDOMInstanceOf(ObjectId::deserialize(objId), prototypeID, depth, rs, instanceof);
     }
 
-    bool RecvIsCallable(const uint64_t &objId, bool *result) {
-        return Answer::RecvIsCallable(ObjectId::deserialize(objId), result);
+    bool AnswerIsCallable(const uint64_t &objId, bool *result) {
+        return Answer::AnswerIsCallable(ObjectId::deserialize(objId), result);
     }
 
-    bool RecvIsConstructor(const uint64_t &objId, bool *result) {
-        return Answer::RecvIsConstructor(ObjectId::deserialize(objId), result);
+    bool AnswerIsConstructor(const uint64_t &objId, bool *result) {
+        return Answer::AnswerIsConstructor(ObjectId::deserialize(objId), result);
     }
 
     bool RecvDropObject(const uint64_t &objId) {
@@ -131,93 +131,93 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     bool SendDropObject(const ObjectId &objId) {
         return Base::SendDropObject(objId.serialize());
     }
-    bool SendPreventExtensions(const ObjectId &objId, ReturnStatus *rs) {
-        return Base::SendPreventExtensions(objId.serialize(), rs);
+    bool CallPreventExtensions(const ObjectId &objId, ReturnStatus *rs) {
+        return Base::CallPreventExtensions(objId.serialize(), rs);
     }
-    bool SendGetPropertyDescriptor(const ObjectId &objId, const JSIDVariant &id,
+    bool CallGetPropertyDescriptor(const ObjectId &objId, const JSIDVariant &id,
                                      ReturnStatus *rs,
                                      PPropertyDescriptor *out) {
-        return Base::SendGetPropertyDescriptor(objId.serialize(), id, rs, out);
+        return Base::CallGetPropertyDescriptor(objId.serialize(), id, rs, out);
     }
-    bool SendGetOwnPropertyDescriptor(const ObjectId &objId,
+    bool CallGetOwnPropertyDescriptor(const ObjectId &objId,
                                       const JSIDVariant &id,
                                       ReturnStatus *rs,
                                       PPropertyDescriptor *out) {
-        return Base::SendGetOwnPropertyDescriptor(objId.serialize(), id, rs, out);
+        return Base::CallGetOwnPropertyDescriptor(objId.serialize(), id, rs, out);
     }
-    bool SendDefineProperty(const ObjectId &objId, const JSIDVariant &id,
+    bool CallDefineProperty(const ObjectId &objId, const JSIDVariant &id,
                             const PPropertyDescriptor &flags,
                               ReturnStatus *rs) {
-        return Base::SendDefineProperty(objId.serialize(), id, flags, rs);
+        return Base::CallDefineProperty(objId.serialize(), id, flags, rs);
     }
-    bool SendDelete(const ObjectId &objId, const JSIDVariant &id,
+    bool CallDelete(const ObjectId &objId, const JSIDVariant &id,
                     ReturnStatus *rs, bool *success) {
-        return Base::SendDelete(objId.serialize(), id, rs, success);
+        return Base::CallDelete(objId.serialize(), id, rs, success);
     }
 
-    bool SendHas(const ObjectId &objId, const JSIDVariant &id,
+    bool CallHas(const ObjectId &objId, const JSIDVariant &id,
                    ReturnStatus *rs, bool *bp) {
-        return Base::SendHas(objId.serialize(), id, rs, bp);
+        return Base::CallHas(objId.serialize(), id, rs, bp);
     }
-    bool SendHasOwn(const ObjectId &objId, const JSIDVariant &id,
+    bool CallHasOwn(const ObjectId &objId, const JSIDVariant &id,
                     ReturnStatus *rs, bool *bp) {
-        return Base::SendHasOwn(objId.serialize(), id, rs, bp);
+        return Base::CallHasOwn(objId.serialize(), id, rs, bp);
     }
-    bool SendGet(const ObjectId &objId, const ObjectVariant &receiverVar,
+    bool CallGet(const ObjectId &objId, const ObjectVariant &receiverVar,
                  const JSIDVariant &id,
                  ReturnStatus *rs, JSVariant *result) {
-        return Base::SendGet(objId.serialize(), receiverVar, id, rs, result);
+        return Base::CallGet(objId.serialize(), receiverVar, id, rs, result);
     }
-    bool SendSet(const ObjectId &objId, const ObjectVariant &receiverVar,
+    bool CallSet(const ObjectId &objId, const ObjectVariant &receiverVar,
                  const JSIDVariant &id, const bool &strict,
                  const JSVariant &value, ReturnStatus *rs, JSVariant *result) {
-        return Base::SendSet(objId.serialize(), receiverVar, id, strict, value, rs, result);
+        return Base::CallSet(objId.serialize(), receiverVar, id, strict, value, rs, result);
     }
 
-    bool SendIsExtensible(const ObjectId &objId, ReturnStatus *rs,
+    bool CallIsExtensible(const ObjectId &objId, ReturnStatus *rs,
                           bool *result) {
-        return Base::SendIsExtensible(objId.serialize(), rs, result);
+        return Base::CallIsExtensible(objId.serialize(), rs, result);
     }
-    bool SendCallOrConstruct(const ObjectId &objId, const nsTArray<JSParam> &argv,
+    bool CallCallOrConstruct(const ObjectId &objId, const nsTArray<JSParam> &argv,
                              const bool &construct, ReturnStatus *rs, JSVariant *result,
                              nsTArray<JSParam> *outparams) {
-        return Base::SendCallOrConstruct(objId.serialize(), argv, construct, rs, result, outparams);
+        return Base::CallCallOrConstruct(objId.serialize(), argv, construct, rs, result, outparams);
     }
-    bool SendHasInstance(const ObjectId &objId, const JSVariant &v, ReturnStatus *rs, bool *bp) {
-        return Base::SendHasInstance(objId.serialize(), v, rs, bp);
+    bool CallHasInstance(const ObjectId &objId, const JSVariant &v, ReturnStatus *rs, bool *bp) {
+        return Base::CallHasInstance(objId.serialize(), v, rs, bp);
     }
-    bool SendObjectClassIs(const ObjectId &objId, const uint32_t &classValue,
+    bool CallObjectClassIs(const ObjectId &objId, const uint32_t &classValue,
                            bool *result) {
-        return Base::SendObjectClassIs(objId.serialize(), classValue, result);
+        return Base::CallObjectClassIs(objId.serialize(), classValue, result);
     }
-    bool SendClassName(const ObjectId &objId, nsString *result) {
-        return Base::SendClassName(objId.serialize(), result);
+    bool CallClassName(const ObjectId &objId, nsString *result) {
+        return Base::CallClassName(objId.serialize(), result);
     }
 
-    bool SendRegExpToShared(const ObjectId &objId, ReturnStatus *rs,
+    bool CallRegExpToShared(const ObjectId &objId, ReturnStatus *rs,
                             nsString *source, uint32_t *flags) {
-        return Base::SendRegExpToShared(objId.serialize(), rs, source, flags);
+        return Base::CallRegExpToShared(objId.serialize(), rs, source, flags);
     }
 
-    bool SendGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
+    bool CallGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
                               ReturnStatus *rs, nsTArray<nsString> *names) {
-        return Base::SendGetPropertyNames(objId.serialize(), flags, rs, names);
+        return Base::CallGetPropertyNames(objId.serialize(), flags, rs, names);
     }
-    bool SendInstanceOf(const ObjectId &objId, const JSIID &iid,
+    bool CallInstanceOf(const ObjectId &objId, const JSIID &iid,
                         ReturnStatus *rs, bool *instanceof) {
-        return Base::SendInstanceOf(objId.serialize(), iid, rs, instanceof);
+        return Base::CallInstanceOf(objId.serialize(), iid, rs, instanceof);
     }
-    bool SendDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
+    bool CallDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
                            ReturnStatus *rs, bool *instanceof) {
-        return Base::SendDOMInstanceOf(objId.serialize(), prototypeID, depth, rs, instanceof);
+        return Base::CallDOMInstanceOf(objId.serialize(), prototypeID, depth, rs, instanceof);
     }
 
-    bool SendIsCallable(const ObjectId &objId, bool *result) {
-        return Base::SendIsCallable(objId.serialize(), result);
+    bool CallIsCallable(const ObjectId &objId, bool *result) {
+        return Base::CallIsCallable(objId.serialize(), result);
     }
 
-    bool SendIsConstructor(const ObjectId &objId, bool *result) {
-        return Base::SendIsConstructor(objId.serialize(), result);
+    bool CallIsConstructor(const ObjectId &objId, bool *result) {
+        return Base::CallIsConstructor(objId.serialize(), result);
     }
 
     /* The following code is needed to suppress a bogus MSVC warning (C4250). */

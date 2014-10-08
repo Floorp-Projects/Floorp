@@ -277,13 +277,13 @@ def _putInNamespaces(cxxthing, namespaces):
 
 def _sendPrefix(msgtype):
     """Prefix of the name of the C++ method that sends |msgtype|."""
-    if msgtype.isInterrupt():
+    if msgtype.isInterrupt() or msgtype.isRpc():
         return 'Call'
     return 'Send'
 
 def _recvPrefix(msgtype):
     """Prefix of the name of the C++ method that handles |msgtype|."""
-    if msgtype.isInterrupt():
+    if msgtype.isInterrupt() or msgtype.isRpc():
         return 'Answer'
     return 'Recv'
 
@@ -2984,7 +2984,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprCall(ExprSelect(p.channelVar(), '.', 'Close'))))
             self.cls.addstmts([ closemeth, Whitespace.NL ])
 
-            if ptype.isSync() or ptype.isInterrupt():
+            if ptype.talksSync() or ptype.talksInterrupt():
                 # SetReplyTimeoutMs()
                 timeoutvar = ExprVar('aTimeoutMs')
                 settimeout = MethodDefn(MethodDecl(
@@ -3053,11 +3053,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         msgtype = ExprCall(ExprSelect(msgvar, '.', 'type'), [ ])
         self.asyncSwitch = StmtSwitch(msgtype)
-        self.syncSwitch = None
-        self.interruptSwitch = None
-        if toplevel.isSync() or toplevel.isInterrupt():
+        if toplevel.talksSync():
             self.syncSwitch = StmtSwitch(msgtype)
-            if toplevel.isInterrupt():
+            if toplevel.talksRpc():
                 self.interruptSwitch = StmtSwitch(msgtype)
 
         # implement Send*() methods and add dispatcher cases to
@@ -3074,9 +3072,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         default = StmtBlock()
         default.addstmt(StmtReturn(_Result.NotKnown))
         self.asyncSwitch.addcase(DefaultLabel(), default)
-        if toplevel.isSync() or toplevel.isInterrupt():
+        if toplevel.talksSync():
             self.syncSwitch.addcase(DefaultLabel(), default)
-            if toplevel.isInterrupt():
+            if toplevel.talksRpc():
                 self.interruptSwitch.addcase(DefaultLabel(), default)
 
         # FIXME/bug 535053: only manager protocols and non-manager
@@ -3153,6 +3151,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                               hasReply=0, dispatches=dispatches),
             Whitespace.NL
         ])
+        if not toplevel.talksRpc():
+          self.interruptSwitch = None
+          if not toplevel.talksSync():
+            self.syncSwitch = None
         self.cls.addstmts([
             makeHandlerMethod('OnMessageReceived', self.syncSwitch,
                               hasReply=1, dispatches=dispatches),
@@ -3188,7 +3190,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.cls.addstmts([ gettypetag, Whitespace.NL ])
 
         # OnReplyTimeout()
-        if toplevel.isSync() or toplevel.isInterrupt():
+        if toplevel.talksSync() or toplevel.talksInterrupt():
             ontimeout = MethodDefn(
                 MethodDecl('OnReplyTimeout', ret=Type.BOOL))
 
@@ -3276,7 +3278,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # User-facing shmem methods
         self.cls.addstmts(self.makeShmemIface())
 
-        if (ptype.isToplevel() and ptype.isInterrupt()):
+        if (ptype.isToplevel() and ptype.talksInterrupt()):
 
             processnative = MethodDefn(
                 MethodDecl('ProcessNativeEventsInInterruptCall', ret=Type.VOID))
@@ -4778,22 +4780,22 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def visitMessageDecl(self, md):
         isctor = md.decl.type.isCtor()
         isdtor = md.decl.type.isDtor()
-        decltype = md.decl.type
+        sems = md.decl.type.sendSemantics
         sendmethod = None
         helpermethod = None
         recvlbl, recvcase = None, None
 
         def addRecvCase(lbl, case):
-            if decltype.isAsync():
+            if sems is ipdl.ast.ASYNC:
                 self.asyncSwitch.addcase(lbl, case)
-            elif decltype.isSync():
+            elif sems is ipdl.ast.SYNC:
                 self.syncSwitch.addcase(lbl, case)
-            elif decltype.isInterrupt():
+            elif sems is ipdl.ast.INTR or sems is ipdl.ast.RPC:
                 self.interruptSwitch.addcase(lbl, case)
             else: assert 0
 
         if self.sendsMessage(md):
-            isasync = decltype.isAsync()
+            isasync = (sems is ipdl.ast.ASYNC)
 
             if isctor:
                 self.cls.addstmts([ self.genHelperCtor(md), Whitespace.NL ])
@@ -5183,13 +5185,20 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if md.decl.type.isSync():
             stmts.append(StmtExpr(ExprCall(
                 ExprSelect(var, '->', 'set_sync'))))
+        elif md.decl.type.isRpc():
+            # We use urgent messages from the parent to the child and
+            # RPC messages from the child to the parent. However,
+            # replies should always be sent using the same semantics
+            # as the original message, so we need to flip.
+            if (self.side == 'parent') ^ reply:
+                stmts.append(StmtExpr(ExprCall(
+                    ExprSelect(var, '->', 'set_urgent'))))
+            else:
+                stmts.append(StmtExpr(ExprCall(
+                    ExprSelect(var, '->', 'set_rpc'))))
         elif md.decl.type.isInterrupt():
             stmts.append(StmtExpr(ExprCall(
                 ExprSelect(var, '->', 'set_interrupt'))))
-
-        stmts.append(StmtExpr(ExprCall(
-            ExprSelect(var, '->', 'set_priority'),
-            args=[ ExprLiteral.Int(md.decl.type.priority) ])))
 
         if reply:
             stmts.append(StmtExpr(ExprCall(

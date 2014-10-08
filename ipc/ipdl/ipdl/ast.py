@@ -4,10 +4,6 @@
 
 import sys
 
-NORMAL_PRIORITY = 1
-HIGH_PRIORITY = 2
-URGENT_PRIORITY = 3
-
 class Visitor:
     def defaultVisit(self, node):
         raise Exception, "INTERNAL ERROR: no visitor for node type `%s'"% (
@@ -218,6 +214,8 @@ class INTR(PrettyPrinted):
     pretty = 'intr'
 class SYNC(PrettyPrinted):
     pretty = 'sync'
+class RPC(PrettyPrinted):
+    pretty = 'rpc'
 
 class INOUT(PrettyPrinted):
     pretty = 'inout'
@@ -236,7 +234,6 @@ class Protocol(NamespacedNode):
     def __init__(self, loc):
         NamespacedNode.__init__(self, loc)
         self.sendSemantics = ASYNC
-        self.priority = NORMAL_PRIORITY
         self.spawnsStmts = [ ]
         self.bridgesStmts = [ ]
         self.opensStmts = [ ]
@@ -296,7 +293,6 @@ class MessageDecl(Node):
         Node.__init__(self, loc)
         self.name = None
         self.sendSemantics = ASYNC
-        self.priority = NORMAL_PRIORITY
         self.direction = None
         self.inParams = [ ]
         self.outParams = [ ]
@@ -307,6 +303,9 @@ class MessageDecl(Node):
 
     def addOutParams(self, outParamsList):
         self.outParams += outParamsList
+
+    def hasReply(self):
+        return self.sendSemantics is SYNC or self.sendSemantics is INTR
 
 class Transition(Node):
     def __init__(self, loc, trigger, msg, toStates):

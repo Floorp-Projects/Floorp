@@ -3517,14 +3517,14 @@ ContentParent::RecvSyncMessage(const nsString& aMsg,
 }
 
 bool
-ContentParent::RecvRpcMessage(const nsString& aMsg,
-                              const ClonedMessageData& aData,
-                              const InfallibleTArray<CpowEntry>& aCpows,
-                              const IPC::Principal& aPrincipal,
-                              InfallibleTArray<nsString>* aRetvals)
+ContentParent::AnswerRpcMessage(const nsString& aMsg,
+                                const ClonedMessageData& aData,
+                                const InfallibleTArray<CpowEntry>& aCpows,
+                                const IPC::Principal& aPrincipal,
+                                InfallibleTArray<nsString>* aRetvals)
 {
-    return nsIContentParent::RecvRpcMessage(aMsg, aData, aCpows, aPrincipal,
-                                            aRetvals);
+    return nsIContentParent::AnswerRpcMessage(aMsg, aData, aCpows, aPrincipal,
+                                              aRetvals);
 }
 
 bool
