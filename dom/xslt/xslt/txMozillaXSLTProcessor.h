@@ -17,7 +17,6 @@
 #include "mozilla/Attributes.h"
 
 class nsIDOMNode;
-class nsIPrincipal;
 class nsIURI;
 class nsIXMLContentSink;
 class txStylesheet;
@@ -60,8 +59,7 @@ public:
 
     // nsIDocumentTransformer interface
     NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) MOZ_OVERRIDE;
-    NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
-                              nsIPrincipal* aPrincipal);
+    NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsIDocument* aLoaderDocument) MOZ_OVERRIDE;
     NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource) MOZ_OVERRIDE;
     NS_IMETHOD CancelLoads() MOZ_OVERRIDE {return NS_OK;}
     NS_IMETHOD AddXSLTParamNamespace(const nsString& aPrefix,
@@ -127,8 +125,7 @@ private:
 };
 
 extern nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
-                             nsILoadGroup* aLoadGroup,
-                             nsIPrincipal* aCallerPrincipal);
+                             nsIDocument* aLoaderDocument);
 
 extern nsresult TX_CompileStylesheet(nsINode* aNode,
                                      txMozillaXSLTProcessor* aProcessor,

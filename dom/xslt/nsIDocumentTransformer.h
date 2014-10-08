@@ -7,10 +7,9 @@
 
 #include "nsISupports.h"
 
+class nsIDocument;
 class nsIDOMNode;
-class nsILoadGroup;
 class nsIURI;
-class nsIPrincipal;
 class nsString;
 
 #define NS_ITRANSFORMOBSERVER_IID \
@@ -33,8 +32,8 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITransformObserver, NS_ITRANSFORMOBSERVER_IID)
 
 #define NS_IDOCUMENTTRANSFORMER_IID \
-{ 0xc75613ee, 0xcb6e, 0x4bf7, \
- { 0x9e, 0x5b, 0x36, 0x50, 0x69, 0xc1, 0xe3, 0x55 } }
+{ 0xf45e1ff8, 0x50f3, 0x4496, \
+ { 0xb3, 0xa2, 0x0e, 0x03, 0xe8, 0x4a, 0x57, 0x11 } }
 
 class nsIDocumentTransformer : public nsISupports
 {
@@ -43,8 +42,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENTTRANSFORMER_IID)
 
   NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) = 0;
-  NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
-                            nsIPrincipal* aPrincipal) = 0;
+  NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsIDocument* aLoaderDocument) = 0;
   NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource) = 0;
   NS_IMETHOD CancelLoads() = 0;
 
