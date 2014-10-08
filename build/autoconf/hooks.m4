@@ -47,7 +47,7 @@ define([AC_OUTPUT_SUBDIRS],
     dnl from msys (this script) to python (below), we have to resort to hacks,
     dnl storing the environment and command line arguments from a msys process
     dnl (perl), and reading it from python.
-    dumpenv="$PERL $srcdir/build/win32/dumpenv4python.pl $ac_configure_args | "
+    dumpenv="$PERL $_topsrcdir/build/win32/dumpenv4python.pl $ac_configure_args | "
     ;;
   esac
 
