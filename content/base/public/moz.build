@@ -43,7 +43,6 @@ EXPORTS += [
     'nsCopySupport.h',
     'nsDeprecatedOperationList.h',
     'nsDocElementCreatedNotificationRunner.h',
-    'nsDOMFile.h',
     'nsHostObjectProtocolHandler.h',
     'nsIAttribute.h',
     'nsIContent.h',
@@ -70,6 +69,7 @@ EXPORTS.mozilla.dom += [
     'DirectionalityUtils.h',
     'Element.h',
     'ElementInlines.h',
+    'File.h',
     'FragmentOrElement.h',
     'FromParser.h',
 ]

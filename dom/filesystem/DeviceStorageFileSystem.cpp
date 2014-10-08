@@ -9,11 +9,11 @@
 #include "DeviceStorage.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Directory.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsDeviceStorage.h"
-#include "nsDOMFile.h"
 #include "nsIFile.h"
 #include "nsPIDOMWindow.h"
 
@@ -114,7 +114,7 @@ DeviceStorageFileSystem::GetLocalFile(const nsAString& aRealPath) const
 }
 
 bool
-DeviceStorageFileSystem::GetRealPath(DOMFileImpl* aFile, nsAString& aRealPath) const
+DeviceStorageFileSystem::GetRealPath(FileImpl* aFile, nsAString& aRealPath) const
 {
   MOZ_ASSERT(FileSystemUtils::IsParentProcess(),
              "Should be on parent process!");

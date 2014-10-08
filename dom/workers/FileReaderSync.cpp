@@ -9,13 +9,13 @@
 #include "jsfriendapi.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/File.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/FileReaderSyncBinding.h"
 #include "nsCExternalHandlerService.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDOMClassInfoID.h"
-#include "nsDOMFile.h"
 #include "nsError.h"
 #include "nsIConverterInputStream.h"
 #include "nsIInputStream.h"
@@ -50,7 +50,7 @@ FileReaderSync::WrapObject(JSContext* aCx)
 void
 FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
                                   JS::Handle<JSObject*> aScopeObj,
-                                  DOMFile& aBlob,
+                                  File& aBlob,
                                   JS::MutableHandle<JSObject*> aRetval,
                                   ErrorResult& aRv)
 {
@@ -95,7 +95,7 @@ FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
 }
 
 void
-FileReaderSync::ReadAsBinaryString(DOMFile& aBlob,
+FileReaderSync::ReadAsBinaryString(File& aBlob,
                                    nsAString& aResult,
                                    ErrorResult& aRv)
 {
@@ -125,7 +125,7 @@ FileReaderSync::ReadAsBinaryString(DOMFile& aBlob,
 }
 
 void
-FileReaderSync::ReadAsText(DOMFile& aBlob,
+FileReaderSync::ReadAsText(File& aBlob,
                            const Optional<nsAString>& aEncoding,
                            nsAString& aResult,
                            ErrorResult& aRv)
@@ -195,7 +195,7 @@ FileReaderSync::ReadAsText(DOMFile& aBlob,
 }
 
 void
-FileReaderSync::ReadAsDataURL(DOMFile& aBlob, nsAString& aResult,
+FileReaderSync::ReadAsDataURL(File& aBlob, nsAString& aResult,
                               ErrorResult& aRv)
 {
   nsAutoString scratchResult;

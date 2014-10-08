@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DOMTypes.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "mozilla/dom/TabChild.h"
@@ -15,7 +16,6 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 
 #include "JavaScriptChild.h"
-#include "nsDOMFile.h"
 #include "nsIJSRuntimeService.h"
 #include "nsPrintfCString.h"
 
@@ -97,12 +97,12 @@ nsIContentChild::DeallocPBlobChild(PBlobChild* aActor)
 }
 
 BlobChild*
-nsIContentChild::GetOrCreateActorForBlob(DOMFile* aBlob)
+nsIContentChild::GetOrCreateActorForBlob(File* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBlob);
 
-  nsRefPtr<DOMFileImpl> blobImpl = aBlob->Impl();
+  nsRefPtr<FileImpl> blobImpl = aBlob->Impl();
   MOZ_ASSERT(blobImpl);
 
   BlobChild* actor = BlobChild::GetOrCreate(this, blobImpl);

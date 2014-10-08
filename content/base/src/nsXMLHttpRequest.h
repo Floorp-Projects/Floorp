@@ -42,7 +42,6 @@
 
 class AsyncVerifyRedirectCallbackForwarder;
 class BlobSet;
-class nsDOMFile;
 class nsFormData;
 class nsIJARChannel;
 class nsILoadGroup;
@@ -52,7 +51,7 @@ class nsIJSID;
 namespace mozilla {
 
 namespace dom {
-class DOMFile;
+class File;
 }
 
 // A helper for building up an ArrayBuffer object's data
@@ -350,7 +349,7 @@ private:
     {
       mValue.mArrayBufferView = aArrayBufferView;
     }
-    explicit RequestBody(mozilla::dom::DOMFile& aBlob) : mType(Blob)
+    explicit RequestBody(mozilla::dom::File& aBlob) : mType(Blob)
     {
       mValue.mBlob = &aBlob;
     }
@@ -384,7 +383,7 @@ private:
     union Value {
       const mozilla::dom::ArrayBuffer* mArrayBuffer;
       const mozilla::dom::ArrayBufferView* mArrayBufferView;
-      mozilla::dom::DOMFile* mBlob;
+      mozilla::dom::File* mBlob;
       nsIDocument* mDocument;
       const nsAString* mString;
       nsFormData* mFormData;
@@ -440,7 +439,7 @@ public:
   {
     aRv = Send(RequestBody(&aArrayBufferView));
   }
-  void Send(mozilla::dom::DOMFile& aBlob, ErrorResult& aRv)
+  void Send(mozilla::dom::File& aBlob, ErrorResult& aRv)
   {
     aRv = Send(RequestBody(aBlob));
   }
@@ -671,10 +670,10 @@ protected:
 
   // It is either a cached blob-response from the last call to GetResponse,
   // but is also explicitly set in OnStopRequest.
-  nsRefPtr<mozilla::dom::DOMFile> mResponseBlob;
+  nsRefPtr<mozilla::dom::File> mResponseBlob;
   // Non-null only when we are able to get a os-file representation of the
   // response, i.e. when loading from a file.
-  nsRefPtr<mozilla::dom::DOMFile> mDOMFile;
+  nsRefPtr<mozilla::dom::File> mDOMFile;
   // We stream data to mBlobSet when response type is "blob" or "moz-blob"
   // and mDOMFile is null.
   nsAutoPtr<BlobSet> mBlobSet;

@@ -15,9 +15,9 @@
 #include "MmsMessage.h"
 #include "nsIMobileMessageDatabaseService.h"
 #include "MobileMessageThread.h"
-#include "nsIDOMFile.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 #include "nsContentUtils.h"
 #include "nsTArrayHelpers.h"
@@ -53,9 +53,9 @@ MmsAttachmentDataToJSObject(JSContext* aContext,
     return nullptr;
   }
 
-  nsRefPtr<DOMFileImpl> blobImpl = static_cast<BlobParent*>(aAttachment.contentParent())->GetBlobImpl();
+  nsRefPtr<FileImpl> blobImpl = static_cast<BlobParent*>(aAttachment.contentParent())->GetBlobImpl();
 
-  // nsRefPtr<DOMFile> needs to go out of scope before toObjectOrNull() is
+  // nsRefPtr<File> needs to go out of scope before toObjectOrNull() is
   // called because the static analysis thinks dereferencing XPCOM objects
   // can GC (because in some cases it can!), and a return statement with a
   // JSObject* type means that JSObject* is on the stack as a raw pointer
@@ -65,7 +65,7 @@ MmsAttachmentDataToJSObject(JSContext* aContext,
     nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aContext));
     MOZ_ASSERT(global);
 
-    nsRefPtr<DOMFile> blob = new DOMFile(global, blobImpl);
+    nsRefPtr<File> blob = new File(global, blobImpl);
     if (!WrapNewBindingObject(aContext, blob, &content)) {
       return nullptr;
     }

@@ -27,7 +27,7 @@
 
 namespace mozilla {
 namespace dom {
-class DOMFile;
+class File;
 }
 }
 
@@ -38,7 +38,7 @@ class nsDOMFileReader : public mozilla::dom::FileIOObject,
 {
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::GlobalObject GlobalObject;
-  typedef mozilla::dom::DOMFile DOMFile;
+  typedef mozilla::dom::File File;
 public:
   nsDOMFileReader();
 
@@ -68,17 +68,17 @@ public:
   // WebIDL
   static already_AddRefed<nsDOMFileReader>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
-  void ReadAsArrayBuffer(JSContext* aCx, DOMFile& aBlob, ErrorResult& aRv)
+  void ReadAsArrayBuffer(JSContext* aCx, File& aBlob, ErrorResult& aRv)
   {
     ReadFileContent(aCx, aBlob, EmptyString(), FILE_AS_ARRAYBUFFER, aRv);
   }
 
-  void ReadAsText(DOMFile& aBlob, const nsAString& aLabel, ErrorResult& aRv)
+  void ReadAsText(File& aBlob, const nsAString& aLabel, ErrorResult& aRv)
   {
     ReadFileContent(nullptr, aBlob, aLabel, FILE_AS_TEXT, aRv);
   }
 
-  void ReadAsDataURL(DOMFile& aBlob, ErrorResult& aRv)
+  void ReadAsDataURL(File& aBlob, ErrorResult& aRv)
   {
     ReadFileContent(nullptr, aBlob, EmptyString(), FILE_AS_DATAURL, aRv);
   }
@@ -102,7 +102,7 @@ public:
   using FileIOObject::SetOnerror;
   IMPL_EVENT_HANDLER(loadend)
 
-  void ReadAsBinaryString(DOMFile& aBlob, ErrorResult& aRv)
+  void ReadAsBinaryString(File& aBlob, ErrorResult& aRv)
   {
     ReadFileContent(nullptr, aBlob, EmptyString(), FILE_AS_BINARY, aRv);
   }
@@ -124,7 +124,7 @@ protected:
     FILE_AS_DATAURL
   };
 
-  void ReadFileContent(JSContext* aCx, DOMFile& aBlob,
+  void ReadFileContent(JSContext* aCx, File& aBlob,
                        const nsAString &aCharset, eDataFormat aDataFormat,
                        ErrorResult& aRv);
   nsresult GetAsText(nsIDOMBlob *aFile, const nsACString &aCharset,

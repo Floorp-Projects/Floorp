@@ -7,12 +7,12 @@
 #include "MessageEvent.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/MessagePortList.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "nsContentUtils.h"
-#include "nsDOMFile.h"
 #include "nsGlobalWindow.h"
 #include "nsPresContext.h"
 #include "ScriptSettings.h"
@@ -110,20 +110,20 @@ PostMessageReadStructuredClone(JSContext* cx,
   if (tag == SCTAG_DOM_BLOB) {
     NS_ASSERTION(!data, "Data should be empty");
 
-    // What we get back from the reader is a DOMFileImpl.
-    // From that we create a new DOMFile.
-    DOMFileImpl* blobImpl;
+    // What we get back from the reader is a FileImpl.
+    // From that we create a new File.
+    FileImpl* blobImpl;
     if (JS_ReadBytes(reader, &blobImpl, sizeof(blobImpl))) {
       MOZ_ASSERT(blobImpl);
 
-      // nsRefPtr<DOMFile> needs to go out of scope before toObjectOrNull() is
+      // nsRefPtr<File> needs to go out of scope before toObjectOrNull() is
       // called because the static analysis thinks dereferencing XPCOM objects
       // can GC (because in some cases it can!), and a return statement with a
       // JSObject* type means that JSObject* is on the stack as a raw pointer
       // while destructors are running.
       JS::Rooted<JS::Value> val(cx);
       {
-        nsRefPtr<DOMFile> blob = new DOMFile(scInfo->mPort->GetParentObject(),
+        nsRefPtr<File> blob = new File(scInfo->mPort->GetParentObject(),
                                              blobImpl);
         if (!WrapNewBindingObject(cx, blob, &val)) {
           return nullptr;
@@ -167,9 +167,9 @@ PostMessageWriteStructuredClone(JSContext* cx,
 
   // See if this is a File/Blob object.
   {
-    DOMFile* blob = nullptr;
+    File* blob = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, obj, blob))) {
-      DOMFileImpl* blobImpl = blob->Impl();
+      FileImpl* blobImpl = blob->Impl();
       if (JS_WriteUint32Pair(writer, SCTAG_DOM_BLOB, 0) &&
           JS_WriteBytes(writer, &blobImpl, sizeof(blobImpl))) {
         scInfo->mEvent->StoreISupports(blobImpl);

@@ -15,7 +15,7 @@
 
 namespace mozilla {
 namespace dom {
-class DOMFile;
+class File;
 class DOMRequest;
 struct MediaMetaData;
 struct MediaPlayStatus;
@@ -134,7 +134,7 @@ public:
     GetConnectedDevices(uint16_t aServiceUuid, ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-    SendFile(const nsAString& aDeviceAddress, DOMFile& aBlob,
+    SendFile(const nsAString& aDeviceAddress, File& aBlob,
              ErrorResult& aRv);
   already_AddRefed<DOMRequest>
     StopSendingFile(const nsAString& aDeviceAddress, ErrorResult& aRv);

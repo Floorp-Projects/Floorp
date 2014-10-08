@@ -13,9 +13,9 @@
 #include "js/StructuredClone.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/File.h"
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
-#include "nsDOMFile.h"
 #include "nsIDOMFileList.h"
 
 using namespace mozilla;
@@ -52,7 +52,7 @@ public:
     StackScopedCloneOptions *mOptions;
     AutoObjectVector mReflectors;
     AutoObjectVector mFunctions;
-    nsTArray<nsRefPtr<DOMFileImpl>> mBlobImpls;
+    nsTArray<nsRefPtr<FileImpl>> mBlobImpls;
 };
 
 static JSObject *
@@ -108,11 +108,11 @@ StackScopedCloneRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t ta
         nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(cx));
         MOZ_ASSERT(global);
 
-        // nsRefPtr<DOMFile> needs to go out of scope before toObjectOrNull() is called because
+        // nsRefPtr<File> needs to go out of scope before toObjectOrNull() is called because
         // otherwise the static analysis thinks it can gc the JSObject via the stack.
         JS::Rooted<JS::Value> val(cx);
         {
-            nsRefPtr<DOMFile> blob = new DOMFile(global, cloneData->mBlobImpls[idx]);
+            nsRefPtr<File> blob = new File(global, cloneData->mBlobImpls[idx]);
             if (!WrapNewBindingObject(cx, blob, &val)) {
                 return nullptr;
             }
@@ -154,9 +154,9 @@ StackScopedCloneWrite(JSContext *cx, JSStructuredCloneWriter *writer,
     StackScopedCloneData *cloneData = static_cast<StackScopedCloneData *>(closure);
 
     {
-        DOMFile* blob = nullptr;
+        File* blob = nullptr;
         if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, obj, blob))) {
-            DOMFileImpl* blobImpl = blob->Impl();
+            FileImpl* blobImpl = blob->Impl();
             MOZ_ASSERT(blobImpl);
 
             if (!cloneData->mBlobImpls.AppendElement(blobImpl))

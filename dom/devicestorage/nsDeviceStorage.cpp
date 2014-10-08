@@ -36,7 +36,6 @@
 #include "nsIDirectoryEnumerator.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsIDOMFile.h"
 #include "nsDOMBlobBuilder.h"
 #include "nsNetUtil.h"
 #include "nsCycleCollectionParticipant.h"
@@ -1805,10 +1804,10 @@ nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile)
   MOZ_ASSERT(aFile->mLength != UINT64_MAX);
   MOZ_ASSERT(aFile->mLastModifiedDate != UINT64_MAX);
 
-  nsCOMPtr<nsIDOMBlob> blob = new DOMFile(aWindow,
-    new DOMFileImplFile(fullPath, aFile->mMimeType,
-                        aFile->mLength, aFile->mFile,
-                        aFile->mLastModifiedDate));
+  nsCOMPtr<nsIDOMBlob> blob = new File(aWindow,
+    new FileImplFile(fullPath, aFile->mMimeType,
+                     aFile->mLength, aFile->mFile,
+                     aFile->mLastModifiedDate));
   return InterfaceToJsval(aWindow, blob, &NS_GET_IID(nsIDOMBlob));
 }
 
@@ -2480,7 +2479,7 @@ private:
 class WriteFileEvent : public nsRunnable
 {
 public:
-  WriteFileEvent(DOMFileImpl* aBlobImpl,
+  WriteFileEvent(FileImpl* aBlobImpl,
                  DeviceStorageFile *aFile,
                  already_AddRefed<DOMRequest> aRequest,
                  int32_t aRequestType)
@@ -2546,7 +2545,7 @@ public:
   }
 
 private:
-  nsRefPtr<DOMFileImpl> mBlobImpl;
+  nsRefPtr<FileImpl> mBlobImpl;
   nsRefPtr<DeviceStorageFile> mFile;
   nsRefPtr<DOMRequest> mRequest;
   int32_t mRequestType;
@@ -2915,7 +2914,7 @@ public:
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
           BlobChild* actor
             = ContentChild::GetSingleton()->GetOrCreateActorForBlob(
-              static_cast<DOMFile*>(mBlob.get()));
+              static_cast<File*>(mBlob.get()));
           if (!actor) {
             return NS_ERROR_FAILURE;
           }
@@ -2933,7 +2932,7 @@ public:
           return NS_OK;
         }
 
-        DOMFile* blob = static_cast<DOMFile*>(mBlob.get());
+        File* blob = static_cast<File*>(mBlob.get());
         r = new WriteFileEvent(blob->Impl(), mFile, mRequest.forget(),
                                mRequestType);
         break;
@@ -2961,7 +2960,7 @@ public:
         if (XRE_GetProcessType() != GeckoProcessType_Default) {
           BlobChild* actor
             = ContentChild::GetSingleton()->GetOrCreateActorForBlob(
-              static_cast<DOMFile*>(mBlob.get()));
+              static_cast<File*>(mBlob.get()));
           if (!actor) {
             return NS_ERROR_FAILURE;
           }
@@ -2979,7 +2978,7 @@ public:
           return NS_OK;
         }
 
-        DOMFile* blob = static_cast<DOMFile*>(mBlob.get());
+        File* blob = static_cast<File*>(mBlob.get());
         r = new WriteFileEvent(blob->Impl(), mFile, mRequest.forget(),
                                mRequestType);
         break;
