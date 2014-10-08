@@ -1844,6 +1844,7 @@ jit::AssertBasicGraphCoherency(MIRGraph &graph)
             MOZ_ASSERT(phi->numOperands() == block->numPredecessors());
             MOZ_ASSERT(!phi->isRecoveredOnBailout());
             MOZ_ASSERT(phi->type() != MIRType_None);
+            MOZ_ASSERT(phi->dependency() == nullptr);
         }
         for (MDefinitionIterator iter(*block); iter; iter++) {
             MOZ_ASSERT(iter->block() == *block);

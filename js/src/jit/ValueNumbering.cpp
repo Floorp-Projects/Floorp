@@ -703,7 +703,7 @@ ValueNumberer::visitDefinition(MDefinition *def)
 {
     // If this instruction has a dependency() into an unreachable block, we'll
     // need to update AliasAnalysis.
-    MDefinition *dep = def->dependency();
+    MInstruction *dep = def->dependency();
     if (dep != nullptr && (dep->isDiscarded() || dep->block()->isDead())) {
         JitSpew(JitSpew_GVN, "      AliasAnalysis invalidated");
         if (updateAliasAnalysis_ && !dependenciesBroken_) {
