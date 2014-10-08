@@ -306,7 +306,7 @@ public:
            const JS::Value& aResult)
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    ThreadsafeAutoSafeJSContext cx;
+    mozilla::ThreadsafeAutoSafeJSContext cx;
     nsRefPtr<FireSuccessAsyncTask> asyncTask = new FireSuccessAsyncTask(cx, aRequest, aResult);
     if (NS_FAILED(NS_DispatchToMainThread(asyncTask))) {
       NS_WARNING("Failed to dispatch to main thread!");
