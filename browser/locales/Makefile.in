@@ -74,7 +74,10 @@ else
 SEARCHPLUGINS_NAMES = $(shell cat $(call MERGE_FILE,/searchplugins/list.txt))
 endif
 SEARCHPLUGINS_PATH := $(FINAL_TARGET)/searchplugins
-SEARCHPLUGINS := $(addsuffix .xml,$(SEARCHPLUGINS_NAMES))
+# metro build call a searchplugins target for search engine plugins
+.PHONY: searchplugins
+SEARCHPLUGINS_TARGET := libs searchplugins
+SEARCHPLUGINS := $(foreach plugin,$(addsuffix .xml,$(SEARCHPLUGINS_NAMES)),$(or $(wildcard $(call MERGE_FILE,searchplugins/$(plugin))),$(info Missing searchplugin: $(plugin))))
 PP_TARGETS += SEARCHPLUGINS
 
 # Required for l10n.mk - defines a list of app sub dirs that should
@@ -118,10 +121,6 @@ libs:: $(addprefix generic/profile/,$(PROFILE_FILES))
 
 libs:: $(call MERGE_FILES,$(addprefix profile/chrome/,$(PROFILE_CHROME)))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile/chrome
-
-# metro build calls back here for search engine plugins
-searchplugins: $(addprefix $(FINAL_TARGET)/searchplugins/,$(SEARCHPLUGINS))
-.PHONY: searchplugins
 
 libs-%:
 	$(NSINSTALL) -D $(DIST)/install
