@@ -55,7 +55,7 @@ class TabsGridLayout extends GridView
             @Override
             public void onMovedToScrapHeap(View view) {
                 TabsLayoutItemView item = (TabsLayoutItemView) view;
-                item.thumbnail.setImageDrawable(null);
+                item.setThumbnail(null);
             }
         });
     }
@@ -72,7 +72,7 @@ class TabsGridLayout extends GridView
                 @Override
                 public void onClick(View v) {
                     TabsLayoutItemView itemView = (TabsLayoutItemView) v.getTag();
-                    Tab tab = Tabs.getInstance().getTab(itemView.id);
+                    Tab tab = Tabs.getInstance().getTab(itemView.getTabId());
                     Tabs.getInstance().closeTab(tab);
                 }
             };
@@ -81,7 +81,7 @@ class TabsGridLayout extends GridView
                 @Override
                 public void onClick(View v) {
                     TabsLayoutItemView tab = (TabsLayoutItemView) v;
-                    Tabs.getInstance().selectTab(tab.id);
+                    Tabs.getInstance().selectTab(tab.getTabId());
                     autoHidePanel();
                 }
             };

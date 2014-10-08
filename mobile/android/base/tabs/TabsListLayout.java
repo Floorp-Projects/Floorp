@@ -80,8 +80,8 @@ class TabsListLayout extends TwoWayView
             @Override
             public void onMovedToScrapHeap(View view) {
                 TabsLayoutItemView item = (TabsLayoutItemView) view;
-                item.thumbnail.setImageDrawable(null);
-                item.close.setVisibility(View.VISIBLE);
+                item.setThumbnail(null);
+                item.setCloseVisibile(true);
             }
         });
     }
@@ -360,7 +360,7 @@ class TabsListLayout extends TwoWayView
         else
             animator.attach(view, Property.WIDTH, 1);
 
-        final int tabId = ((TabsLayoutItemView) view).id;
+        final int tabId = ((TabsLayoutItemView) view).getTabId();
 
         // Caching this assumes that all rows are the same height
         if (mOriginalSize == 0) {
@@ -397,7 +397,7 @@ class TabsListLayout extends TwoWayView
             @Override
             public void onPropertyAnimationEnd() {
                 TabsLayoutItemView tab = (TabsLayoutItemView) view;
-                tab.close.setVisibility(View.VISIBLE);
+                tab.setCloseVisibile(true);
             }
         });
 
@@ -495,7 +495,7 @@ class TabsListLayout extends TwoWayView
 
                     if (!mSwiping) {
                         TabsLayoutItemView item = (TabsLayoutItemView) mSwipeView;
-                        Tabs.getInstance().selectTab(item.id);
+                        Tabs.getInstance().selectTab(item.getTabId());
                         autoHidePanel();
 
                         mVelocityTracker.recycle();
@@ -582,7 +582,7 @@ class TabsListLayout extends TwoWayView
                         mSwiping = true;
                         TabsListLayout.this.requestDisallowInterceptTouchEvent(true);
 
-                        ((TabsLayoutItemView) mSwipeView).close.setVisibility(View.INVISIBLE);
+                        ((TabsLayoutItemView) mSwipeView).setCloseVisibile(false);
 
                         // Stops listview from highlighting the touched item
                         // in the list when swiping.
