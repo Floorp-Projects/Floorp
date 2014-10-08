@@ -472,6 +472,13 @@ private:
     static size_t determinePageSize();
 };
 
+extern void *
+AllocateExecutableMemory(void *addr, size_t bytes, unsigned permissions, const char *tag,
+                         size_t pageSize);
+
+extern void
+DeallocateExecutableMemory(void *addr, size_t bytes, size_t pageSize);
+
 } // namespace jit
 } // namespace js
 
