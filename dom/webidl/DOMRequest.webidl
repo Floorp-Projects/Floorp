@@ -5,7 +5,8 @@
 
 enum DOMRequestReadyState { "pending", "done" };
 
-interface DOMRequest : EventTarget {
+[NoInterfaceObject]
+interface DOMRequestShared {
   readonly attribute DOMRequestReadyState readyState;
 
   readonly attribute any result;
@@ -14,3 +15,13 @@ interface DOMRequest : EventTarget {
   attribute EventHandler onsuccess;
   attribute EventHandler onerror;
 };
+
+interface DOMRequest : EventTarget {
+  // The [TreatNonCallableAsNull] annotation is required since then() should do
+  // nothing instead of throwing errors when non-callable arguments are passed.
+  [NewObject, Throws]
+  Promise<any> then([TreatNonCallableAsNull] optional AnyCallback? fulfillCallback = null,
+                    [TreatNonCallableAsNull] optional AnyCallback? rejectCallback = null);
+};
+
+DOMRequest implements DOMRequestShared;
