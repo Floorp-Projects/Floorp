@@ -507,7 +507,6 @@ BrowserGlue.prototype = {
     NewTabUtils.init();
     DirectoryLinksProvider.init();
     NewTabUtils.links.addProvider(DirectoryLinksProvider);
-    BrowserNewTabPreloader.init();
 #ifdef NIGHTLY_BUILD
     if (Services.prefs.getBoolPref("dom.identity.enabled")) {
       SignInToWebsiteUX.init();
@@ -2243,7 +2242,7 @@ let DefaultBrowserCheck = {
 
     let iconPixels = win.devicePixelRatio > 1 ? "32" : "16";
     let iconURL = "chrome://branding/content/icon" + iconPixels + ".png";
-    const priority = notificationBox.PRIORITY_INFO_HIGH;
+    const priority = notificationBox.PRIORITY_WARNING_HIGH;
     let callback = this._onNotificationEvent.bind(this);
     this._notification = notificationBox.appendNotification(promptMessage, "default-browser",
                                                             iconURL, priority, buttons,

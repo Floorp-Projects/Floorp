@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto" >
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <LinearLayout
+            android:id="@+id/container"
+            style="@style/TabsPanelFrame.PrivateTabs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <LinearLayout
+                style="@style/TabsPanelSection.PrivateTabs.Header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" >
+
+                <TextView
+                    style="@style/TabsPanelItem.TextAppearance.Header.PrivateTabs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/remote_tabs_panel_moved_title" />
+
+                <TextView
+                    style="@style/TabsPanelItem.TextAppearance"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/remote_tabs_panel_moved_desc" />
+            </LinearLayout>
+
+            <LinearLayout
+                style="@style/TabsPanelSection.PrivateTabs"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+
+                <TextView
+                    android:id="@+id/go_to_panel"
+                    style="@style/TabsPanelItem.TextAppearance.Linkified.LearnMore"
+                    android:layout_width="match_parent"
+                    android:text="@string/remote_tabs_panel_moved_link" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+</merge>

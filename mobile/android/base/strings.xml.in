@@ -378,6 +378,10 @@
   <string name="private_tabs_panel_learn_more_link">https://support.mozilla.org/&formatS1;/kb/mobile-private-browsing-browse-web-without-saving-syncing-info</string>
   <string name="pin_site_dialog_hint">&pin_site_dialog_hint;</string>
 
+  <string name="remote_tabs_panel_moved_title">&remote_tabs_panel_moved_title;</string>
+  <string name="remote_tabs_panel_moved_desc">&remote_tabs_panel_moved_desc;</string>
+  <string name="remote_tabs_panel_moved_link">&remote_tabs_panel_moved_link;</string>
+
   <string name="filepicker_title">&filepicker_title;</string>
   <string name="filepicker_audio_title">&filepicker_audio_title;</string>
   <string name="filepicker_image_title">&filepicker_image_title;</string>
