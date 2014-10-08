@@ -1156,7 +1156,7 @@ FilterNodeTransformSoftware::Render(const IntRect& aRect)
   IntRect srcRect = SourceRectForOutputRect(aRect);
 
   RefPtr<DataSourceSurface> input =
-    GetInputDataSourceSurface(IN_TRANSFORM_IN, srcRect);
+    GetInputDataSourceSurface(IN_TRANSFORM_IN, srcRect, NEED_COLOR_CHANNELS);
 
   if (!input) {
     return nullptr;
@@ -1168,18 +1168,8 @@ FilterNodeTransformSoftware::Render(const IntRect& aRect)
     return input.forget();
   }
 
-  RefPtr<DataSourceSurface> surf =
-    Factory::CreateDataSourceSurface(aRect.Size(), input->GetFormat());
-
-  DataSourceSurface::MappedSurface mapping;
-  surf->Map(DataSourceSurface::MapType::WRITE, &mapping);
-
   RefPtr<DrawTarget> dt =
-    Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                     mapping.mData,
-                                     surf->GetSize(),
-                                     mapping.mStride,
-                                     surf->GetFormat());
+    Factory::CreateDrawTarget(BackendType::CAIRO, aRect.Size(), input->GetFormat());
   if (!dt) {
     return nullptr;
   }
@@ -1188,9 +1178,9 @@ FilterNodeTransformSoftware::Render(const IntRect& aRect)
   dt->SetTransform(transform);
   dt->DrawSurface(input, r, r, DrawSurfaceOptions(mFilter));
 
-  dt->Flush();
-  surf->Unmap();
-  return surf.forget();
+  RefPtr<SourceSurface> result = dt->Snapshot();
+  RefPtr<DataSourceSurface> resultData = result->GetDataSurface();
+  return resultData.forget();
 }
 
 void
