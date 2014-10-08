@@ -11,7 +11,6 @@
 #include "GLBlitHelper.h"
 #include "GLReadTexImageHelper.h"
 #include "SharedSurfaceGL.h"
-#include "SurfaceStream.h"
 #ifdef MOZ_WIDGET_GONK
 #include "SharedSurfaceGralloc.h"
 #include "nsXULAppAPI.h"

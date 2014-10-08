@@ -8,7 +8,6 @@
 #include "../d3d9/Nv3DVUtils.h"
 #include "gfxWindowsSurface.h"
 #include "gfxWindowsPlatform.h"
-#include "SurfaceStream.h"
 #include "SharedSurfaceANGLE.h"
 #include "SharedSurfaceGL.h"
 #include "gfxContext.h"

@@ -10,8 +10,6 @@
 #include "GLContext.h"                  // for GLContext
 #include "GLScreenBuffer.h"             // for GLScreenBuffer
 #include "ScopedGLHelpers.h"
-#include "SurfaceStream.h"              // for SurfaceStream
-#include "SurfaceTypes.h"               // for SurfaceStreamHandle
 #include "gfx2DGlue.h"                  // for ImageFormatToSurfaceFormat
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "GLReadTexImageHelper.h"
@@ -49,10 +47,6 @@ CanvasClient::CreateCanvasClient(CanvasClientType aType,
   switch (aType) {
   case CanvasClientTypeShSurf:
     return new CanvasClientSharedSurface(aForwarder, aFlags);
-
-  case CanvasClientGLContext:
-    aFlags |= TextureFlags::DEALLOCATE_CLIENT;
-    return new CanvasClientSurfaceStream(aForwarder, aFlags);
 
   default:
     return new CanvasClient2D(aForwarder, aFlags);
@@ -147,13 +141,7 @@ CanvasClient2D::CreateTextureClientForCanvas(gfx::SurfaceFormat aFormat,
                                                  mTextureInfo.mTextureFlags | aFlags);
 #endif
 }
-
-CanvasClientSurfaceStream::CanvasClientSurfaceStream(CompositableForwarder* aLayerForwarder,
-                                                     TextureFlags aFlags)
-  : CanvasClient(aLayerForwarder, aFlags)
-{
-}
-
+/*
 void
 CanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
@@ -237,6 +225,7 @@ CanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 
   aLayer->Painted();
 }
+*/
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -423,20 +412,35 @@ TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
 
 ////////////////////////////////////////
 
+static TemporaryRef<gl::ShSurfHandle>
+CloneSurface(gl::SharedSurface* src, gl::SurfaceFactory* factory)
+{
+    RefPtr<gl::ShSurfHandle> dest = factory->NewShSurfHandle(src->mSize);
+    SharedSurface::ProdCopy(src, dest->Surf(), factory);
+    return dest.forget();
+}
+
 void
 CanvasClientSharedSurface::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
-  aLayer->mGLContext->MakeCurrent();
-  GLScreenBuffer* screen = aLayer->mGLContext->Screen();
-
   if (mFront) {
     mPrevFront = mFront;
     mFront = nullptr;
   }
 
-  mFront = screen->Front();
-  if (!mFront)
-    return;
+  auto gl = aLayer->mGLContext;
+  gl->MakeCurrent();
+
+  if (aLayer->mGLFrontbuffer) {
+    mFront = CloneSurface(aLayer->mGLFrontbuffer.get(), aLayer->mFactory.get());
+    if (mFront)
+      mFront->Surf()->Fence();
+  } else {
+    mFront = gl->Screen()->Front();
+    if (!mFront)
+      return;
+  }
+  MOZ_ASSERT(mFront);
 
   // Alright, now sort out the IPC goop.
   SharedSurface* surf = mFront->Surf();
