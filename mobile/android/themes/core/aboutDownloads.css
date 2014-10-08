@@ -10,40 +10,19 @@
   text-decoration: none;
 }
 
-.list-item {
-  height: 4.8em;
-  font-size: 1em !important;
-}
-
 #private-downloads-list .list-item {
-  background-image: none;
-  background-color: #080a0b;
+  background-color: #393e43;
   color: #ddd;
 }
 
-div.details {
-  background-color: #eef2f5;
-}
-
-#private-downloads-list div.details {
-  background-image: none;
-  background-color: #393e43;
-}
-
-li:active div.details,
-#private-downloads-list li:active div.details {
-  background-image: none;
-  background-color: transparent;
-}
-
 .details {
-  margin-left: 4.8em;
-  padding: .5em;
-  min-height: 3.7em;
+  -moz-margin-start: calc(var(--icon-size) + var(--icon-margin) * 2 - 1em);
+  padding: 1em;
 }
 
 .date {
   color: gray;
+  -moz-margin-start: 0.5em;
 }
 
 .domain,

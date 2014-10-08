@@ -34,4 +34,6 @@ public interface HealthRecorder {
     public void onEnvironmentChanged(final boolean startNewSession, final String sessionEndReason);
 
     public void close();
+
+    public void processDelayed();
 }
