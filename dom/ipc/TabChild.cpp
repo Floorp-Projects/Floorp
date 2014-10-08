@@ -2922,7 +2922,7 @@ TabChild::DoSendBlockingMessage(JSContext* aCx,
                            Principal(aPrincipal), aJSONRetVal);
   }
 
-  return CallRpcMessage(PromiseFlatString(aMessage), data, cpows,
+  return SendRpcMessage(PromiseFlatString(aMessage), data, cpows,
                         Principal(aPrincipal), aJSONRetVal);
 }
 
