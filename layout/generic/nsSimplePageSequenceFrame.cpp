@@ -824,7 +824,7 @@ inline gfx::Matrix4x4
 ComputePageSequenceTransform(nsIFrame* aFrame, float aAppUnitsPerPixel)
 {
   float scale = aFrame->PresContext()->GetPrintPreviewScale();
-  return gfx::Matrix4x4().Scale(scale, scale, 1);
+  return gfx::Matrix4x4::Scaling(scale, scale, 1);
 }
 
 void
