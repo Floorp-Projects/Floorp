@@ -11,10 +11,6 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-// We also need a valid nsIXulAppInfo
-Cu.import("resource://testing-common/AppInfo.jsm");
-updateAppInfo();
-
 Cu.import("resource://testing-common/httpd.js");
 
 do_get_profile();

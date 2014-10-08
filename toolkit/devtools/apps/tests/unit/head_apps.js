@@ -7,25 +7,12 @@ const Cu = Components.utils;
 const Cr = Components.results;
 const CC = Components.Constructor;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
-
-// We have to setup a profile, otherwise indexed db used by webapps
-// will throw random exception when trying to get profile folder
-do_get_profile();
-
-// The webapps dir isn't registered on b2g xpcshell tests,
-// we have to manually set it to the directory service.
-do_get_webappsdir();
-
-// We also need a valid nsIXulAppInfo
-Cu.import("resource://testing-common/AppInfo.jsm");
-updateAppInfo();
-
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {require} = devtools;
 const {AppActorFront} = require("devtools/app-actor-front");
@@ -83,9 +70,21 @@ function installTestApp(zipName, appId, onDone) {
 };
 
 function setup() {
+  // We have to setup a profile, otherwise indexed db used by webapps
+  // will throw random exception when trying to get profile folder
+  do_get_profile();
+
+  // The webapps dir isn't registered on b2g xpcshell tests,
+  // we have to manually set it to the directory service.
+  do_get_webappsdir();
+
+  // We also need a valid nsIXulAppInfo service as Webapps.jsm is querying it
+  Components.utils.import("resource://testing-common/AppInfo.jsm");
+  updateAppInfo();
+
   // We have to toggle this flag in order to have apps being listed in getAll
   // as only launchable apps are returned
-  Cu.import('resource://gre/modules/Webapps.jsm');
+  Components.utils.import('resource://gre/modules/Webapps.jsm');
   DOMApplicationRegistry.allAppsLaunchable = true;
 
   // Mock WebappOSUtils
