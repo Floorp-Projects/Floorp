@@ -127,19 +127,21 @@ reserved = set((
         'delete',                       # reserve 'delete' to prevent its use
         'from',
         'goto',
+        'high',
         'include',
         'intr',
         'manager',
         'manages',
         'namespace',
+        'normal',
         'nullable',
         'opens',
         'or',
         'parent',
+        'prio',
         'protocol',
         'recv',
         'returns',
-        'rpc',
         'send',
         'spawns',
         'start',
@@ -147,9 +149,11 @@ reserved = set((
         'struct',
         'sync',
         'union',
+        'upto',
+        'urgent',
         'using'))
 tokens = [
-    'COLONCOLON', 'ID', 'STRING'
+    'COLONCOLON', 'ID', 'STRING',
 ] + [ r.upper() for r in reserved ]
 
 t_COLONCOLON = '::'
@@ -349,11 +353,12 @@ def p_ComponentTypes(p):
         p[0] = p[1]
 
 def p_ProtocolDefn(p):
-    """ProtocolDefn : OptionalSendSemanticsQual PROTOCOL ID '{' ProtocolBody '}' ';'"""
+    """ProtocolDefn : OptionalProtocolSendSemanticsQual PROTOCOL ID '{' ProtocolBody '}' ';'"""
     protocol = p[5]
     protocol.loc = locFromTok(p, 2)
     protocol.name = p[3]
-    protocol.sendSemantics = p[1]
+    protocol.priorityRange = p[1][0]
+    protocol.sendSemantics = p[1][1]
     p[0] = protocol
 
     if Parser.current.type == 'header':
@@ -495,7 +500,8 @@ def p_MessageDirectionLabel(p):
 def p_MessageDecl(p):
     """MessageDecl : OptionalSendSemanticsQual MessageBody"""
     msg = p[2]
-    msg.sendSemantics = p[1]
+    msg.priority = p[1][0]
+    msg.sendSemantics = p[1][1]
 
     if Parser.current.direction is None:
         _error(msg.loc, 'missing message direction')
@@ -615,24 +621,67 @@ def p_State(p):
 
 ##--------------------
 ## Minor stuff
+def p_Priority(p):
+    """Priority : NORMAL
+                | HIGH
+                | URGENT"""
+    prios = {'normal': 1,
+             'high': 2,
+             'urgent': 3}
+    p[0] = prios[p[1]]
+
 def p_OptionalSendSemanticsQual(p):
     """OptionalSendSemanticsQual : SendSemanticsQual
                                  | """
     if 2 == len(p): p[0] = p[1]
-    else:           p[0] = ASYNC
+    else:           p[0] = [ NORMAL_PRIORITY, ASYNC ]
 
 def p_SendSemanticsQual(p):
     """SendSemanticsQual : ASYNC
-                         | INTR
-                         | RPC
-                         | SYNC"""
-    s = p[1]
-    if 'async' == s: p[0] =    ASYNC
-    elif 'intr' == s: p[0] =   INTR
-    elif 'sync' == s: p[0] =   SYNC
-    elif 'rpc' == s: p[0] =    RPC
+                         | SYNC
+                         | PRIO '(' Priority ')' ASYNC
+                         | PRIO '(' Priority ')' SYNC
+                         | INTR"""
+    if p[1] == 'prio':
+        mtype = p[5]
+        prio = p[3]
     else:
-        assert 0
+        mtype = p[1]
+        prio = NORMAL_PRIORITY
+
+    if mtype == 'async': mtype = ASYNC
+    elif mtype == 'sync': mtype = SYNC
+    elif mtype == 'intr': mtype = INTR
+    else: assert 0
+
+    p[0] = [ prio, mtype ]
+
+def p_OptionalProtocolSendSemanticsQual(p):
+    """OptionalProtocolSendSemanticsQual : ProtocolSendSemanticsQual
+                                         | """
+    if 2 == len(p): p[0] = p[1]
+    else:           p[0] = [ (NORMAL_PRIORITY, NORMAL_PRIORITY), ASYNC ]
+
+def p_ProtocolSendSemanticsQual(p):
+    """ProtocolSendSemanticsQual : ASYNC
+                                 | SYNC
+                                 | PRIO '(' Priority UPTO Priority ')' ASYNC
+                                 | PRIO '(' Priority UPTO Priority ')' SYNC
+                                 | PRIO '(' Priority UPTO Priority ')' INTR
+                                 | INTR"""
+    if p[1] == 'prio':
+        mtype = p[7]
+        prio = (p[3], p[5])
+    else:
+        mtype = p[1]
+        prio = (NORMAL_PRIORITY, NORMAL_PRIORITY)
+
+    if mtype == 'async': mtype = ASYNC
+    elif mtype == 'sync': mtype = SYNC
+    elif mtype == 'intr': mtype = INTR
+    else: assert 0
+
+    p[0] = [ prio, mtype ]
 
 def p_ParamList(p):
     """ParamList : ParamList ',' Param

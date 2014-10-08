@@ -117,6 +117,43 @@ nsSimplePageSequenceFrame::SetDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
                                  nscoord(aHeight * PresContext()->GetPrintPreviewScale()));
 }
 
+// Helper function to compute the offset needed to center a child
+// page-frame's margin-box inside our content-box.
+nscoord
+nsSimplePageSequenceFrame::ComputeCenteringMargin(
+  nscoord aContainerContentBoxWidth,
+  nscoord aChildPaddingBoxWidth,
+  const nsMargin& aChildPhysicalMargin)
+{
+  // We'll be centering our child's margin-box, so get the size of that:
+  nscoord childMarginBoxWidth =
+    aChildPaddingBoxWidth + aChildPhysicalMargin.LeftRight();
+
+  // When rendered, our child's rect will actually be scaled up by the
+  // print-preview scale factor, via ComputePageSequenceTransform().
+  // We really want to center *that scaled-up rendering* inside of
+  // aContainerContentBoxWidth.  So, we scale up its margin-box here...
+  auto ppScale = PresContext()->GetPrintPreviewScale();
+  nscoord scaledChildMarginBoxWidth =
+    NSToCoordRound(childMarginBoxWidth * ppScale);
+
+  // ...and see we how much space is left over, when we subtract that scaled-up
+  // size from the container width:
+  nscoord scaledExtraSpace =
+    aContainerContentBoxWidth - scaledChildMarginBoxWidth;
+
+  if (scaledExtraSpace <= 0) {
+    // (Don't bother centering if there's zero/negative space.)
+    return 0;
+  }
+
+  // To center the child, we want to give it an additional left-margin of half
+  // of the extra space.  And then, we have to scale that space back down, so
+  // that it'll produce the correct scaled-up amount when we render (because
+  // rendering will scale it back up):
+  return NSToCoordRound(scaledExtraSpace * 0.5 / ppScale);
+}
+
 void
 nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
@@ -138,6 +175,22 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     SetDesiredSize(aDesiredSize, aReflowState, mSize.width, mSize.height);
     aDesiredSize.SetOverflowAreasToDesiredBounds();
     FinishAndStoreOverflow(&aDesiredSize);
+
+    if (GetRect().Width() != aDesiredSize.Width()) {
+      // Our width is changing; we need to re-center our children (our pages).
+      for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
+        nsIFrame* child = e.get();
+        nsMargin pageCSSMargin = child->GetUsedMargin();
+        nscoord centeringMargin =
+          ComputeCenteringMargin(aReflowState.ComputedWidth(),
+                                 child->GetRect().width,
+                                 pageCSSMargin);
+        nscoord newX = pageCSSMargin.left + centeringMargin;
+
+        // Adjust the child's x-position:
+        child->MovePositionBy(nsPoint(newX - child->GetNormalPosition().x, 0));
+      }
+    }
     return;
   }
 
@@ -219,11 +272,15 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
     nsMargin pageCSSMargin = kidReflowState.ComputedPhysicalMargin();
     y += pageCSSMargin.top;
-    const nscoord x = pageCSSMargin.left;
 
-    // Place and size the page. If the page is narrower than our
-    // max width then center it horizontally
+    nscoord x = pageCSSMargin.left;
+
+    // Place and size the page.
     ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, x, y, 0, status);
+
+    // If the page is narrower than our width, then center it horizontally:
+    x += ComputeCenteringMargin(aReflowState.ComputedWidth(),
+                                kidSize.Width(), pageCSSMargin);
 
     FinishReflowChild(kidFrame, aPresContext, kidSize, nullptr, x, y, 0);
     y += kidSize.Height();
@@ -763,11 +820,11 @@ nsSimplePageSequenceFrame::DoPageEnd()
   return rv;
 }
 
-static gfx::Matrix4x4
+inline gfx::Matrix4x4
 ComputePageSequenceTransform(nsIFrame* aFrame, float aAppUnitsPerPixel)
 {
   float scale = aFrame->PresContext()->GetPrintPreviewScale();
-  return gfx::Matrix4x4().Scale(scale, scale, 1);
+  return gfx::Matrix4x4::Scaling(scale, scale, 1);
 }
 
 void

@@ -7,7 +7,7 @@
 #ifndef builtin_SymbolObject_h
 #define builtin_SymbolObject_h
 
-#include "vm/ObjectImpl.h"
+#include "vm/NativeObject.h"
 #include "vm/Symbol.h"
 
 namespace js {

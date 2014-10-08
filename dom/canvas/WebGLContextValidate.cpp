@@ -673,7 +673,7 @@ WebGLContext::ValidateTexImageType(GLenum type,
     }
 
     /* OES_texture_half_float add types */
-    if (type == LOCAL_GL_HALF_FLOAT_OES) {
+    if (type == LOCAL_GL_HALF_FLOAT) {
         bool validType = IsExtensionEnabled(WebGLExtensionID::OES_texture_half_float);
         if (!validType)
             ErrorInvalidEnum("%s: invalid type %s: need OES_texture_half_float enabled",
@@ -1026,95 +1026,6 @@ WebGLContext::ValidateTexSubImageSize(GLint xoffset, GLint yoffset, GLint /*zoff
 }
 
 /**
- * Return the bits per texel for format & type combination.
- * Assumes that format & type are a valid combination as checked with
- * ValidateTexImageFormatAndType().
- */
-uint32_t
-WebGLContext::GetBitsPerTexel(TexInternalFormat format, TexType type)
-{
-    /* Known fixed-sized types */
-    if (type == LOCAL_GL_UNSIGNED_SHORT_4_4_4_4 ||
-        type == LOCAL_GL_UNSIGNED_SHORT_5_5_5_1 ||
-        type == LOCAL_GL_UNSIGNED_SHORT_5_6_5)
-    {
-        return 16;
-    }
-
-    if (type == LOCAL_GL_UNSIGNED_INT_24_8)
-        return 32;
-
-    int bitsPerComponent = 0;
-    switch (type.get()) {
-    case LOCAL_GL_UNSIGNED_BYTE:
-        bitsPerComponent = 8;
-        break;
-
-    case LOCAL_GL_HALF_FLOAT:
-    case LOCAL_GL_HALF_FLOAT_OES:
-    case LOCAL_GL_UNSIGNED_SHORT:
-        bitsPerComponent = 16;
-        break;
-
-    case LOCAL_GL_FLOAT:
-    case LOCAL_GL_UNSIGNED_INT:
-        bitsPerComponent = 32;
-        break;
-
-    default:
-        MOZ_ASSERT(false, "Unhandled type.");
-        break;
-    }
-
-    switch (format.get()) {
-        // Uncompressed formats
-    case LOCAL_GL_ALPHA:
-    case LOCAL_GL_LUMINANCE:
-    case LOCAL_GL_DEPTH_COMPONENT:
-    case LOCAL_GL_DEPTH_STENCIL:
-        return 1 * bitsPerComponent;
-
-    case LOCAL_GL_LUMINANCE_ALPHA:
-        return 2 * bitsPerComponent;
-
-    case LOCAL_GL_RGB:
-    case LOCAL_GL_RGB32F:
-    case LOCAL_GL_SRGB_EXT:
-        return 3 * bitsPerComponent;
-
-    case LOCAL_GL_RGBA:
-    case LOCAL_GL_RGBA32F:
-    case LOCAL_GL_SRGB_ALPHA_EXT:
-        return 4 * bitsPerComponent;
-
-        // Compressed formats
-    case LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1:
-    case LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1:
-        return 2;
-
-    case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-    case LOCAL_GL_ATC_RGB:
-    case LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1:
-    case LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1:
-    case LOCAL_GL_ETC1_RGB8_OES:
-        return 4;
-
-    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-    case LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA:
-    case LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA:
-        return 8;
-
-    default:
-        break;
-    }
-
-    MOZ_ASSERT(false, "Unhandled format+type combo.");
-    return 0;
-}
-
-/**
  * Perform validation of format/type combinations for TexImage variants.
  * Returns true if the format/type is a valid combination, false otherwise.
  */
@@ -1141,7 +1052,6 @@ WebGLContext::ValidateTexImageFormatAndType(GLenum format,
     case LOCAL_GL_LUMINANCE_ALPHA:
         validCombo = (type == LOCAL_GL_UNSIGNED_BYTE ||
                       type == LOCAL_GL_HALF_FLOAT ||
-                      type == LOCAL_GL_HALF_FLOAT_OES ||
                       type == LOCAL_GL_FLOAT);
         break;
 
@@ -1150,7 +1060,6 @@ WebGLContext::ValidateTexImageFormatAndType(GLenum format,
         validCombo = (type == LOCAL_GL_UNSIGNED_BYTE ||
                       type == LOCAL_GL_UNSIGNED_SHORT_5_6_5 ||
                       type == LOCAL_GL_HALF_FLOAT ||
-                      type == LOCAL_GL_HALF_FLOAT_OES ||
                       type == LOCAL_GL_FLOAT);
         break;
 
@@ -1160,7 +1069,6 @@ WebGLContext::ValidateTexImageFormatAndType(GLenum format,
                       type == LOCAL_GL_UNSIGNED_SHORT_4_4_4_4 ||
                       type == LOCAL_GL_UNSIGNED_SHORT_5_5_5_1 ||
                       type == LOCAL_GL_HALF_FLOAT ||
-                      type == LOCAL_GL_HALF_FLOAT_OES ||
                       type == LOCAL_GL_FLOAT);
         break;
 
@@ -1291,7 +1199,6 @@ WebGLContext::ValidateTexInputData(GLenum type, int jsArrayType, WebGLTexImageFu
         break;
 
     case LOCAL_GL_HALF_FLOAT:
-    case LOCAL_GL_HALF_FLOAT_OES:
     case LOCAL_GL_UNSIGNED_SHORT:
     case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
     case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
@@ -1449,6 +1356,7 @@ WebGLContext::ValidateTexImage(GLuint dims, TexImageTarget texImageTarget,
         }
 
         const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(texImageTarget, level);
+
         if (!ValidateTexSubImageSize(xoffset, yoffset, zoffset,
                                      width, height, depth,
                                      imageInfo.Width(), imageInfo.Height(), 0,

@@ -1304,6 +1304,10 @@ public:
     void loadAsmJSActivation(Register dest) {
         loadPtr(Address(GlobalReg, AsmJSActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);
     }
+    void loadAsmJSHeapRegisterFromGlobalData() {
+        MOZ_ASSERT(Imm16::IsInSignedRange(AsmJSHeapGlobalDataOffset - AsmJSGlobalRegBias));
+        loadPtr(Address(GlobalReg, AsmJSHeapGlobalDataOffset - AsmJSGlobalRegBias), HeapReg);
+    }
 };
 
 typedef MacroAssemblerMIPSCompat MacroAssemblerSpecific;

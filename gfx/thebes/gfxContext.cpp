@@ -1143,22 +1143,6 @@ gfxContext::PopGroupToSource()
   CurrentState().surfTransform = mat;
 }
 
-bool
-gfxContext::PointInFill(const gfxPoint& pt)
-{
-  EnsurePath();
-  return mPath->ContainsPoint(ToPoint(pt), Matrix());
-}
-
-bool
-gfxContext::PointInStroke(const gfxPoint& pt)
-{
-  EnsurePath();
-  return mPath->StrokeContainsPoint(CurrentState().strokeOptions,
-                                    ToPoint(pt),
-                                    Matrix());
-}
-
 void
 gfxContext::RoundedRectangle(const gfxRect& rect,
                              const gfxCornerSizes& corners,

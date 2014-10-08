@@ -326,6 +326,34 @@ if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$DEVELOPER_OPTIONS"; then
         DSO_LDOPTS="$DSO_LDOPTS -Wl,--gc-sections"
     fi
 fi
+
+# bionic in Android < 4.1 doesn't support PIE
+# On OSX, the linker defaults to building PIE programs when targetting OSX 10.7+,
+# but not when targetting OSX < 10.7. OSX < 10.7 doesn't support running PIE
+# programs, so as long as support for OSX 10.6 is kept, we can't build PIE.
+# Even after dropping 10.6 support, MOZ_PIE would not be useful since it's the
+# default (and clang says the -pie option is not used).
+# On other Unix systems, some file managers (Nautilus) can't start PIE programs
+MOZ_PIE=
+
+MOZ_ARG_ENABLE_BOOL(pie,
+[  --enable-pie           Enable Position Independent Executables],
+    MOZ_PIE=1,
+    MOZ_PIE= )
+
+if test "$GNU_CC" -a -n "$MOZ_PIE"; then
+    AC_MSG_CHECKING([for PIE support])
+    _SAVE_LDFLAGS=$LDFLAGS
+    LDFLAGS="$LDFLAGS -pie"
+    AC_TRY_LINK(,,AC_MSG_RESULT([yes])
+                  [MOZ_PROGRAM_LDFLAGS="$MOZ_PROGRAM_LDFLAGS -pie"],
+                  AC_MSG_RESULT([no])
+                  AC_MSG_ERROR([--enable-pie requires PIE support from the linker.]))
+    LDFLAGS=$_SAVE_LDFLAGS
+fi
+
+AC_SUBST(MOZ_PROGRAM_LDFLAGS)
+
 ])
 
 dnl GCC and clang will fail if given an unknown warning option like -Wfoobar. 

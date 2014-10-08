@@ -1,6 +1,7 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.tests.components.AboutHomeComponent.PanelType;
+import org.mozilla.gecko.home.HomeConfig;
+import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.tests.helpers.GeckoHelper;
 import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
@@ -40,6 +41,14 @@ public class testAboutHomeVisibility extends UITest {
         mToolbar.assertTitle(StringHelper.ABOUT_HOME_TITLE);
         mAboutHome.assertVisible()
                   .assertCurrentPanel(PanelType.TOP_SITES);
+
+        // We can navigate to about:home panels by panel UUID.
+        mAboutHome.navigateToBuiltinPanelType(PanelType.BOOKMARKS)
+                  .assertVisible()
+                  .assertCurrentPanel(PanelType.BOOKMARKS);
+        mAboutHome.navigateToBuiltinPanelType(PanelType.HISTORY)
+                  .assertVisible()
+                  .assertCurrentPanel(PanelType.HISTORY);
 
         // TODO: Type in a url and assert the go button is visible.
     }

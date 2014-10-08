@@ -91,7 +91,7 @@
 #include "jsscriptinlines.h"
 
 #include "vm/Interpreter-inl.h"
-#include "vm/ObjectImpl-inl.h"
+#include "vm/NativeObject-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;
@@ -3691,7 +3691,8 @@ JS_NewPropertyIterator(JSContext *cx, HandleObject obj)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    NativeObject *iterobj = NewNativeObjectWithClassProto(cx, &prop_iter_class, nullptr, obj);
+    RootedNativeObject iterobj(cx, NewNativeObjectWithClassProto(cx, &prop_iter_class,
+                                                                 nullptr, obj));
     if (!iterobj)
         return nullptr;
 
