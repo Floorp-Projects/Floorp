@@ -1812,6 +1812,15 @@ GLContext::ChooseGLFormats(const SurfaceCaps& caps) const
         }
     }
 
+    if (WorkAroundDriverBugs() &&
+        IsANGLE() &&
+        formats.color_rbFormat == LOCAL_GL_RGBA8)
+    {
+        formats.color_texInternalFormat = LOCAL_GL_BGRA;
+        formats.color_texFormat = LOCAL_GL_BGRA;
+        formats.color_rbFormat = LOCAL_GL_BGRA8_EXT;
+    }
+
     uint32_t msaaLevel = gfxPrefs::MSAALevel();
     GLsizei samples = msaaLevel * msaaLevel;
     samples = std::min(samples, mMaxSamples);
