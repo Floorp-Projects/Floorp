@@ -551,10 +551,6 @@ loop.conversation = (function(mozL10n) {
       sdkDriver: sdkDriver
     });
 
-    // XXX For now key this on the pref, but this should really be
-    // set by the information from the mozLoop API when we can get it (bug 1072323).
-    var outgoingEmail = navigator.mozLoop.getLoopCharPref("outgoingemail");
-
     // XXX Old class creation for the incoming conversation view, whilst
     // we transition across (bug 1072323).
     var conversation = new sharedModels.ConversationModel(
@@ -566,14 +562,25 @@ loop.conversation = (function(mozL10n) {
     var helper = new loop.shared.utils.Helper();
     var locationHash = helper.locationHash();
     var callId;
-    if (locationHash) {
-      callId = locationHash.match(/\#incoming\/(.*)/)[1]
-      conversation.set("callId", callId);
+    var outgoing;
+
+    var hash = locationHash.match(/\#incoming\/(.*)/);
+    if (hash) {
+      callId = hash[1];
+      outgoing = false;
+    } else {
+      hash = locationHash.match(/\#outgoing\/(.*)/);
+      if (hash) {
+        callId = hash[1];
+        outgoing = true;
+      }
     }
+
+    conversation.set({callId: callId});
 
     window.addEventListener("unload", function(event) {
       // Handle direct close of dialog box via [x] control.
-      navigator.mozLoop.releaseCallData(conversation.get("callId"));
+      navigator.mozLoop.releaseCallData(callId);
     });
 
     document.body.classList.add(loop.shared.utils.getTargetPlatform());
@@ -588,7 +595,7 @@ loop.conversation = (function(mozL10n) {
 
     dispatcher.dispatch(new loop.shared.actions.GatherCallData({
       callId: callId,
-      calleeId: outgoingEmail
+      outgoing: outgoing
     }));
   }
 
