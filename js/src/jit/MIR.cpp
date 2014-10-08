@@ -189,7 +189,7 @@ MDefinition::valueHash() const
     HashNumber out = op();
     for (size_t i = 0, e = numOperands(); i < e; i++)
         out = addU32ToHash(out, getOperand(i)->id());
-    if (MDefinition *dep = dependency())
+    if (MInstruction *dep = dependency())
         out = addU32ToHash(out, dep->id());
     return out;
 }
