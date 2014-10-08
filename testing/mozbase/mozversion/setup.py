@@ -4,11 +4,11 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.8'
+PACKAGE_VERSION = '0.9'
 
 dependencies = ['mozdevice >= 0.29',
                 'mozfile >= 1.0',
-                'mozlog >= 1.5']
+                'mozlog >= 2.0']
 
 setup(name='mozversion',
       version=PACKAGE_VERSION,
