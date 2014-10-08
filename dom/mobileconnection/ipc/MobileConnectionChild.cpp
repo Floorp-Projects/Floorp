@@ -239,21 +239,15 @@ MobileConnectionChild::CancelMMI(nsIMobileConnectionCallback* aCallback)
 }
 
 NS_IMETHODIMP
-MobileConnectionChild::SetCallForwarding(JS::Handle<JS::Value> aOptions,
+MobileConnectionChild::SetCallForwarding(uint16_t aAction, uint16_t aReason,
+                                         const nsAString& aNumber,
+                                         uint16_t aTimeSeconds, uint16_t aServiceClass,
                                          nsIMobileConnectionCallback* aCallback)
 {
-  AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(&aOptions.toObject()))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JSContext* cx = jsapi.cx();
-  IPC::MozCallForwardingOptions options;
-  if(!options.Init(cx, aOptions)) {
-    return NS_ERROR_TYPE_ERR;
-  }
-
-  return SendRequest(SetCallForwardingRequest(options), aCallback)
+  return SendRequest(SetCallForwardingRequest(aAction, aReason,
+                                              nsString(aNumber),
+                                              aTimeSeconds, aServiceClass),
+                     aCallback)
     ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -266,59 +260,38 @@ MobileConnectionChild::GetCallForwarding(uint16_t aReason,
 }
 
 NS_IMETHODIMP
-MobileConnectionChild::SetCallBarring(JS::Handle<JS::Value> aOptions,
+MobileConnectionChild::SetCallBarring(uint16_t aProgram, bool aEnabled,
+                                      const nsAString& aPassword,
+                                      uint16_t aServiceClass,
                                       nsIMobileConnectionCallback* aCallback)
 {
-  AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(&aOptions.toObject()))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JSContext* cx = jsapi.cx();
-  IPC::MozCallBarringOptions options;
-  if(!options.Init(cx, aOptions)) {
-    return NS_ERROR_TYPE_ERR;
-  }
-
-  return SendRequest(SetCallBarringRequest(options), aCallback)
+  return SendRequest(SetCallBarringRequest(aProgram, aEnabled,
+                                           nsString(aPassword),
+                                           aServiceClass),
+                     aCallback)
     ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-MobileConnectionChild::GetCallBarring(JS::Handle<JS::Value> aOptions,
+MobileConnectionChild::GetCallBarring(uint16_t aProgram,
+                                      const nsAString& aPassword,
+                                      uint16_t aServiceClass,
                                       nsIMobileConnectionCallback* aCallback)
 {
-  AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(&aOptions.toObject()))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JSContext* cx = jsapi.cx();
-  IPC::MozCallBarringOptions options;
-  if(!options.Init(cx, aOptions)) {
-    return NS_ERROR_TYPE_ERR;
-  }
-
-  return SendRequest(GetCallBarringRequest(options), aCallback)
+  return SendRequest(GetCallBarringRequest(aProgram, nsString(aPassword),
+                                           aServiceClass),
+                     aCallback)
     ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-MobileConnectionChild::ChangeCallBarringPassword(JS::Handle<JS::Value> aOptions,
+MobileConnectionChild::ChangeCallBarringPassword(const nsAString& aPin,
+                                                 const nsAString& aNewPin,
                                                  nsIMobileConnectionCallback* aCallback)
 {
-  AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(&aOptions.toObject()))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JSContext* cx = jsapi.cx();
-  IPC::MozCallBarringOptions options;
-  if(!options.Init(cx, aOptions)) {
-    return NS_ERROR_TYPE_ERR;
-  }
-
-  return SendRequest(ChangeCallBarringPasswordRequest(options), aCallback)
+  return SendRequest(ChangeCallBarringPasswordRequest(nsString(aPin),
+                                                      nsString(aNewPin)),
+                     aCallback)
     ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -597,26 +570,45 @@ MobileConnectionRequestChild::DoReply(const MobileConnectionReplySuccessMmi& aRe
   nsAutoString statusMessage(aReply.statusMessage());
   AdditionalInformation info(aReply.additionalInformation());
 
-  nsRefPtr<MobileConnectionCallback> callback = static_cast<MobileConnectionCallback*>(mRequestCallback.get());
-
-
   // Handle union types
   switch (info.type()) {
     case AdditionalInformation::Tvoid_t:
-      return NS_SUCCEEDED(callback->NotifySendCancelMmiSuccess(serviceCode,
-                                                               statusMessage));
+      return NS_SUCCEEDED(mRequestCallback->NotifySendCancelMmiSuccess(serviceCode,
+                                                                       statusMessage));
+
     case AdditionalInformation::Tuint16_t:
-      return NS_SUCCEEDED(callback->NotifySendCancelMmiSuccess(serviceCode,
-                                                               statusMessage,
-                                                               info.get_uint16_t()));
-    case AdditionalInformation::TArrayOfnsString:
-      return NS_SUCCEEDED(callback->NotifySendCancelMmiSuccess(serviceCode,
-                                                               statusMessage,
-                                                               info.get_ArrayOfnsString()));
-    case AdditionalInformation::TArrayOfMozCallForwardingOptions:
-      return NS_SUCCEEDED(callback->NotifySendCancelMmiSuccess(serviceCode,
-                                                               statusMessage,
-                                                               info.get_ArrayOfMozCallForwardingOptions()));
+      return NS_SUCCEEDED(mRequestCallback->NotifySendCancelMmiSuccessWithInteger(
+        serviceCode, statusMessage, info.get_uint16_t()));
+
+    case AdditionalInformation::TArrayOfnsString: {
+      uint32_t count = info.get_ArrayOfnsString().Length();
+      const nsTArray<nsString>& additionalInformation = info.get_ArrayOfnsString();
+
+      nsAutoArrayPtr<const char16_t*> additionalInfoPtrs(new const char16_t*[count]);
+      for (size_t i = 0; i < count; ++i) {
+        additionalInfoPtrs[i] = additionalInformation[i].get();
+      }
+
+      return NS_SUCCEEDED(mRequestCallback->NotifySendCancelMmiSuccessWithStrings(
+        serviceCode, statusMessage, count, additionalInfoPtrs));
+    }
+
+    case AdditionalInformation::TArrayOfnsMobileCallForwardingOptions: {
+      uint32_t count = info.get_ArrayOfnsMobileCallForwardingOptions().Length();
+
+      nsTArray<nsCOMPtr<nsIMobileCallForwardingOptions>> results;
+      for (uint32_t i = 0; i < count; i++) {
+        // Use dont_AddRef here because these instances are already AddRef-ed in
+        // MobileConnectionIPCSerializer.h
+        nsCOMPtr<nsIMobileCallForwardingOptions> item = dont_AddRef(
+          info.get_ArrayOfnsMobileCallForwardingOptions()[i]);
+        results.AppendElement(item);
+      }
+
+      return NS_SUCCEEDED(mRequestCallback->NotifySendCancelMmiSuccessWithCallForwardingOptions(
+        serviceCode, statusMessage, count,
+        const_cast<nsIMobileCallForwardingOptions**>(info.get_ArrayOfnsMobileCallForwardingOptions().Elements())));
+    }
 
     default:
       MOZ_CRASH("Received invalid type!");
@@ -628,8 +620,17 @@ MobileConnectionRequestChild::DoReply(const MobileConnectionReplySuccessMmi& aRe
 bool
 MobileConnectionRequestChild::DoReply(const MobileConnectionReplySuccessCallForwarding& aReply)
 {
-  nsRefPtr<MobileConnectionCallback> callback = static_cast<MobileConnectionCallback*>(mRequestCallback.get());
-  return NS_SUCCEEDED(callback->NotifyGetCallForwardingSuccess(aReply.results()));
+  uint32_t count = aReply.results().Length();
+  nsTArray<nsCOMPtr<nsIMobileCallForwardingOptions>> results;
+  for (uint32_t i = 0; i < count; i++) {
+    // Use dont_AddRef here because these instances are already AddRef-ed in
+    // MobileConnectionIPCSerializer.h
+    nsCOMPtr<nsIMobileCallForwardingOptions> item = dont_AddRef(aReply.results()[i]);
+    results.AppendElement(item);
+  }
+
+  return NS_SUCCEEDED(mRequestCallback->NotifyGetCallForwardingSuccess(
+    count, const_cast<nsIMobileCallForwardingOptions**>(aReply.results().Elements())));
 }
 
 bool
