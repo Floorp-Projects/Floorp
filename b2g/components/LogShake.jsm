@@ -9,6 +9,8 @@
  * 'capture-logs-success' event with detail.logFilenames representing each log
  * file's filename in the directory. If an error occurs it will instead produce
  * a 'capture-logs-error' event.
+ * We send a capture-logs-start events to notify the system app and the user,
+ * since dumping can be a bit long sometimes.
  */
 
 /* enable Mozilla javascript extensions and global strictness declaration,
@@ -54,6 +56,7 @@ function debug(msg) {
 const EXCITEMENT_THRESHOLD = 500;
 const DEVICE_MOTION_EVENT = 'devicemotion';
 const SCREEN_CHANGE_EVENT = 'screenchange';
+const CAPTURE_LOGS_START_EVENT = 'capture-logs-start';
 const CAPTURE_LOGS_ERROR_EVENT = 'capture-logs-error';
 const CAPTURE_LOGS_SUCCESS_EVENT = 'capture-logs-success';
 
@@ -165,6 +168,7 @@ let LogShake = {
     if (excitement > EXCITEMENT_THRESHOLD) {
       if (!this.captureRequested) {
         this.captureRequested = true;
+        SystemAppProxy._sendCustomEvent(CAPTURE_LOGS_START_EVENT, {});
         captureLogs().then(logResults => {
           // On resolution send the success event to the requester
           SystemAppProxy._sendCustomEvent(CAPTURE_LOGS_SUCCESS_EVENT, {
