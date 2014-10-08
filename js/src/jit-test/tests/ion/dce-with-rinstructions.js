@@ -929,8 +929,12 @@ function rregexp_m_literal_replace(i) {
 
 var uceFault_typeof = eval(uneval(uceFault).replace('uceFault', 'uceFault_typeof'))
 function rtypeof(i) {
-    var inputs = [ {}, [], 1, true, Symbol(), undefined, function(){}, null ];
-    var types = [ "object", "object", "number", "boolean", "symbol", "undefined", "function", "object"];
+    var inputs = [ {}, [], 1, true, undefined, function(){}, null ];
+    var types = [ "object", "object", "number", "boolean", "undefined", "function", "object"];
+    if (typeof Symbol === "function") {
+      inputs.push(Symbol());
+      types.push("symbol");
+    }
     var x = typeof (inputs[i % inputs.length]);
     var y = types[i % types.length];
 
