@@ -1963,7 +1963,7 @@ private:
     msg.msg_iovlen = 1;
 
     ssize_t res = TEMP_FAILURE_RETRY(recvmsg(mFd, &msg, MSG_NOSIGNAL));
-    if (res < 0) {
+    if (res <= 0) {
       return STATUS_FAIL;
     }
 
@@ -1988,7 +1988,7 @@ private:
     msg.msg_controllen = sizeof(cmsgbuf);
 
     ssize_t res = TEMP_FAILURE_RETRY(recvmsg(mFd, &msg, MSG_NOSIGNAL));
-    if (res < 0) {
+    if (res <= 0) {
       return STATUS_FAIL;
     }
 
