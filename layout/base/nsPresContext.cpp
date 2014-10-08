@@ -945,7 +945,7 @@ nsPresContext::UpdateAfterPreferencesChanged()
     NS_UpdateHint(hint, NS_STYLE_HINT_REFLOW);
   }
 
-  RebuildAllStyleData(hint);
+  RebuildAllStyleData(hint, eRestyle_Subtree);
 }
 
 nsresult
@@ -1172,7 +1172,7 @@ nsPresContext::DoChangeCharSet(const nsCString& aCharSet)
 {
   UpdateCharSet(aCharSet);
   mDeviceContext->FlushFontCache();
-  RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+  RebuildAllStyleData(NS_STYLE_HINT_REFLOW, eRestyle_Subtree);
 }
 
 void
@@ -1742,7 +1742,7 @@ nsPresContext::SysColorChangedInternal()
 
   // The system color values are computed to colors in the style data,
   // so normal style data comparison is sufficient here.
-  RebuildAllStyleData(nsChangeHint(0));
+  RebuildAllStyleData(nsChangeHint(0), eRestyle_Subtree);
 }
 
 void
@@ -1852,7 +1852,8 @@ void nsPresContext::StopEmulatingMedium()
 }
 
 void
-nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
+nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
+                                   nsRestyleHint aRestyleHint)
 {
   if (!mShell) {
     // We must have been torn down. Nothing to do here.
@@ -1864,8 +1865,7 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
   RebuildUserFontSet();
   RebuildCounterStyles();
 
-  // FIXME: Pass through from callers
-  RestyleManager()->RebuildAllStyleData(aExtraHint, eRestyle_Subtree);
+  RestyleManager()->RebuildAllStyleData(aExtraHint, aRestyleHint);
 }
 
 void
@@ -1894,7 +1894,7 @@ nsPresContext::MediaFeatureValuesChanged(StyleRebuildType aShouldRebuild,
   if (aShouldRebuild == eAlwaysRebuildStyle ||
       mediaFeaturesDidChange ||
       (mUsesViewportUnits && mPendingViewportChange)) {
-    RebuildAllStyleData(aChangeHint);
+    RebuildAllStyleData(aChangeHint, eRestyle_Subtree);
   }
 
   mPendingViewportChange = false;
@@ -2243,7 +2243,7 @@ nsPresContext::EnsureSafeToHandOutCSSRules()
   }
 
   MOZ_ASSERT(res == CSSStyleSheet::eUniqueInner_ClonedInner);
-  RebuildAllStyleData(nsChangeHint(0));
+  RebuildAllStyleData(nsChangeHint(0), eRestyle_Subtree);
 }
 
 void
