@@ -16,8 +16,8 @@
 #include "nsIServiceManager.h"
 #include "nsCOMArray.h"
 #include "nsIFile.h"
-#include "nsDOMFile.h"
 #include "nsEnumeratorUtils.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/Services.h"
 #include "WidgetUtils.h"
 #include "nsThreadUtils.h"
@@ -96,7 +96,7 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDOMFile> domFile = DOMFile::CreateFromFile(mParent, localFile);
+    nsCOMPtr<nsIDOMFile> domFile = File::CreateFromFile(mParent, localFile);
     domFile.forget(aResult);
     return NS_OK;
   }
@@ -318,7 +318,7 @@ nsBaseFilePicker::GetDomfile(nsIDOMFile** aDomfile)
     return NS_OK;
   }
 
-  nsRefPtr<DOMFile> domFile = DOMFile::CreateFromFile(mParent, localFile);
+  nsRefPtr<File> domFile = File::CreateFromFile(mParent, localFile);
   domFile.forget(aDomfile);
   return NS_OK;
 }

@@ -10,6 +10,7 @@
 #include <unistd.h>
 #endif
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
@@ -56,7 +57,6 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsStringBuffer.h"
-#include "nsDOMFile.h"
 #include "nsIFileChannel.h"
 #include "mozilla/Telemetry.h"
 #include "jsfriendapi.h"
@@ -1898,9 +1898,8 @@ bool nsXMLHttpRequest::CreateDOMFile(nsIRequest *request)
   nsAutoCString contentType;
   mChannel->GetContentType(contentType);
 
-  mDOMFile =
-    DOMFile::CreateFromFile(GetOwner(), file, EmptyString(),
-                            NS_ConvertASCIItoUTF16(contentType));
+  mDOMFile = File::CreateFromFile(GetOwner(), file, EmptyString(),
+                                  NS_ConvertASCIItoUTF16(contentType));
 
   mBlobSet = nullptr;
   NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");

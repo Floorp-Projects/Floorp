@@ -11,6 +11,7 @@
 #include "jsfriendapi.h"
 #include "js/OldDebugAPI.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
@@ -38,7 +39,6 @@
 #include "mozilla/Preferences.h"
 #include "xpcpublic.h"
 #include "nsContentPolicyUtils.h"
-#include "nsDOMFile.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsIObserverService.h"
 #include "nsIWebSocketChannel.h"
@@ -1194,8 +1194,7 @@ WebSocket::Send(const nsAString& aData,
 }
 
 void
-WebSocket::Send(DOMFile& aData,
-                ErrorResult& aRv)
+WebSocket::Send(File& aData, ErrorResult& aRv)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
 

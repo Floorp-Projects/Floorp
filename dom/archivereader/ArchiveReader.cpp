@@ -9,14 +9,14 @@
 #include "ArchiveEvent.h"
 #include "ArchiveZipEvent.h"
 
-#include "nsDOMFile.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
 #include "mozilla/dom/ArchiveReaderBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/Preferences.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -24,7 +24,7 @@ USING_ARCHIVEREADER_NAMESPACE
 
 /* static */ already_AddRefed<ArchiveReader>
 ArchiveReader::Constructor(const GlobalObject& aGlobal,
-                           DOMFile& aBlob,
+                           File& aBlob,
                            const ArchiveReaderOptions& aOptions,
                            ErrorResult& aError)
 {
@@ -46,7 +46,7 @@ ArchiveReader::Constructor(const GlobalObject& aGlobal,
   return reader.forget();
 }
 
-ArchiveReader::ArchiveReader(DOMFile& aBlob, nsPIDOMWindow* aWindow,
+ArchiveReader::ArchiveReader(File& aBlob, nsPIDOMWindow* aWindow,
                              const nsACString& aEncoding)
   : mBlob(&aBlob)
   , mWindow(aWindow)

@@ -8,7 +8,6 @@
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
-#include "nsDOMFile.h"
 #include "nsError.h"
 #include "nsIFile.h"
 #include "nsNetCID.h"
@@ -20,6 +19,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/FileReaderBinding.h"
 #include "xpcpublic.h"
 #include "nsDOMJSUtils.h"
@@ -186,7 +186,7 @@ nsDOMFileReader::ReadAsArrayBuffer(nsIDOMBlob* aFile, JSContext* aCx)
 {
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  nsRefPtr<DOMFile> file = static_cast<DOMFile*>(aFile);
+  nsRefPtr<File> file = static_cast<File*>(aFile);
   ReadAsArrayBuffer(aCx, *file, rv);
   return rv.ErrorCode();
 }
@@ -196,7 +196,7 @@ nsDOMFileReader::ReadAsBinaryString(nsIDOMBlob* aFile)
 {
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  nsRefPtr<DOMFile> file = static_cast<DOMFile*>(aFile);
+  nsRefPtr<File> file = static_cast<File*>(aFile);
   ReadAsBinaryString(*file, rv);
   return rv.ErrorCode();
 }
@@ -207,7 +207,7 @@ nsDOMFileReader::ReadAsText(nsIDOMBlob* aFile,
 {
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  nsRefPtr<DOMFile> file = static_cast<DOMFile*>(aFile);
+  nsRefPtr<File> file = static_cast<File*>(aFile);
   ReadAsText(*file, aCharset, rv);
   return rv.ErrorCode();
 }
@@ -217,7 +217,7 @@ nsDOMFileReader::ReadAsDataURL(nsIDOMBlob* aFile)
 {
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  nsRefPtr<DOMFile> file = static_cast<DOMFile*>(aFile);
+  nsRefPtr<File> file = static_cast<File*>(aFile);
   ReadAsDataURL(*file, rv);
   return rv.ErrorCode();
 }
@@ -370,7 +370,7 @@ nsDOMFileReader::DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount)
 
 void
 nsDOMFileReader::ReadFileContent(JSContext* aCx,
-                                 DOMFile& aFile,
+                                 File& aFile,
                                  const nsAString &aCharset,
                                  eDataFormat aDataFormat,
                                  ErrorResult& aRv)

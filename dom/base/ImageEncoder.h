@@ -7,8 +7,8 @@
 #define ImageEncoder_h
 
 #include "imgIEncoder.h"
-#include "nsDOMFile.h"
 #include "nsError.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
 #include "nsLayoutUtils.h"
 #include "nsNetUtil.h"
@@ -115,7 +115,7 @@ class EncodeCompleteCallback
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(EncodeCompleteCallback)
 
-  virtual nsresult ReceiveBlob(already_AddRefed<DOMFile> aBlob) = 0;
+  virtual nsresult ReceiveBlob(already_AddRefed<File> aBlob) = 0;
 
 protected:
   virtual ~EncodeCompleteCallback() {}

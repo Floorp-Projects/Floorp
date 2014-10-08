@@ -25,6 +25,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/DOMStringListBinding.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/IDBDatabaseBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseFileChild.h"
@@ -38,9 +39,7 @@
 #include "mozilla/ipc/InputStreamParams.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "nsCOMPtr.h"
-#include "nsDOMFile.h"
 #include "nsIDocument.h"
-#include "nsIDOMFile.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
@@ -803,15 +802,15 @@ IDBDatabase::AbortTransactions()
 }
 
 PBackgroundIDBDatabaseFileChild*
-IDBDatabase::GetOrCreateFileActorForBlob(DOMFile* aBlob)
+IDBDatabase::GetOrCreateFileActorForBlob(File* aBlob)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aBlob);
   MOZ_ASSERT(mBackgroundActor);
 
-  // We use the DOMFile's nsIWeakReference as the key to the table because
+  // We use the File's nsIWeakReference as the key to the table because
   // a) it is unique per blob, b) it is reference-counted so that we can
-  // guarantee that it stays alive, and c) it doesn't hold the actual DOMFile
+  // guarantee that it stays alive, and c) it doesn't hold the actual File
   // alive.
   nsCOMPtr<nsIDOMBlob> blob = aBlob;
   nsCOMPtr<nsIWeakReference> weakRef = do_GetWeakReference(blob);
@@ -820,7 +819,7 @@ IDBDatabase::GetOrCreateFileActorForBlob(DOMFile* aBlob)
   PBackgroundIDBDatabaseFileChild* actor = nullptr;
 
   if (!mFileActors.Get(weakRef, &actor)) {
-    DOMFileImpl* blobImpl = aBlob->Impl();
+    FileImpl* blobImpl = aBlob->Impl();
     MOZ_ASSERT(blobImpl);
 
     if (mReceivedBlobs.GetEntry(weakRef)) {
@@ -912,7 +911,7 @@ IDBDatabase::NoteFinishedFileActor(PBackgroundIDBDatabaseFileChild* aFileActor)
 }
 
 void
-IDBDatabase::NoteReceivedBlob(DOMFile* aBlob)
+IDBDatabase::NoteReceivedBlob(File* aBlob)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aBlob);
@@ -920,7 +919,7 @@ IDBDatabase::NoteReceivedBlob(DOMFile* aBlob)
 
 #ifdef DEBUG
   {
-    nsRefPtr<DOMFileImpl> blobImpl = aBlob->Impl();
+    nsRefPtr<FileImpl> blobImpl = aBlob->Impl();
     MOZ_ASSERT(blobImpl);
 
     nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryObject(blobImpl);

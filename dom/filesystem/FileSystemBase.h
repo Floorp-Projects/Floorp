@@ -16,7 +16,7 @@ namespace mozilla {
 namespace dom {
 
 class Directory;
-class DOMFileImpl;
+class FileImpl;
 
 class FileSystemBase
 {
@@ -73,7 +73,7 @@ public:
    * empty string.
    */
   virtual bool
-  GetRealPath(DOMFileImpl* aFile, nsAString& aRealPath) const = 0;
+  GetRealPath(FileImpl* aFile, nsAString& aRealPath) const = 0;
 
   /*
    * Get the permission name required to access this file system.

@@ -37,7 +37,7 @@ namespace dom {
 
 class Date;
 class DirPickerFileListBuilderTask;
-class DOMFile;
+class File;
 class FileList;
 
 class UploadLastDir MOZ_FINAL : public nsIObserver, public nsSupportsWeakReference {
@@ -211,12 +211,12 @@ public:
 
   void GetDisplayFileName(nsAString& aFileName) const;
 
-  const nsTArray<nsRefPtr<DOMFile>>& GetFilesInternal() const
+  const nsTArray<nsRefPtr<File>>& GetFilesInternal() const
   {
     return mFiles;
   }
 
-  void SetFiles(const nsTArray<nsRefPtr<DOMFile>>& aFiles, bool aSetValueChanged);
+  void SetFiles(const nsTArray<nsRefPtr<File>>& aFiles, bool aSetValueChanged);
   void SetFiles(nsIDOMFileList* aFiles, bool aSetValueChanged);
 
   // Called when a nsIFilePicker or a nsIColorPicker terminate.
@@ -1252,7 +1252,7 @@ protected:
    * the frame. Whenever the frame wants to change the filename it has to call
    * SetFileNames to update this member.
    */
-  nsTArray<nsRefPtr<DOMFile>> mFiles;
+  nsTArray<nsRefPtr<File>> mFiles;
 
   nsRefPtr<FileList>  mFileList;
 

@@ -8,7 +8,6 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsIURI.h"
 
-#include "nsDOMFile.h"
 #include "nsDOMString.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
@@ -17,6 +16,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/Promise.h"
@@ -357,11 +357,11 @@ Request::ConsumeBody(ConsumeType aType, ErrorResult& aRv)
       // with worker wrapping.
       uint32_t blobLen = buffer.Length();
       void* blobData = moz_malloc(blobLen);
-      nsRefPtr<DOMFile> blob;
+      nsRefPtr<File> blob;
       if (blobData) {
         memcpy(blobData, buffer.BeginReading(), blobLen);
-        blob = DOMFile::CreateMemoryFile(GetParentObject(), blobData, blobLen,
-                                         NS_ConvertUTF8toUTF16(mMimeType));
+        blob = File::CreateMemoryFile(GetParentObject(), blobData, blobLen,
+                                      NS_ConvertUTF8toUTF16(mMimeType));
       } else {
         aRv = NS_ERROR_OUT_OF_MEMORY;
         return nullptr;
