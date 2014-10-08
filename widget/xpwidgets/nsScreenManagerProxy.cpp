@@ -28,7 +28,7 @@ nsScreenManagerProxy::nsScreenManagerProxy()
   , mCacheWillInvalidate(false)
 {
   bool success = false;
-  unused << ContentChild::GetSingleton()->CallPScreenManagerConstructor(
+  unused << ContentChild::GetSingleton()->SendPScreenManagerConstructor(
                                             this,
                                             &mNumberOfScreens,
                                             &mSystemDefaultScale,
@@ -64,7 +64,7 @@ nsScreenManagerProxy::GetPrimaryScreen(nsIScreen** outScreen)
   if (!mPrimaryScreen) {
     ScreenDetails details;
     bool success = false;
-    unused << CallGetPrimaryScreen(&details, &success);
+    unused << SendGetPrimaryScreen(&details, &success);
     if (!success) {
       return NS_ERROR_FAILURE;
     }
@@ -92,7 +92,7 @@ nsScreenManagerProxy::ScreenForRect(int32_t inLeft,
 {
   bool success = false;
   ScreenDetails details;
-  unused << CallScreenForRect(inLeft, inTop, inWidth, inHeight, &details, &success);
+  unused << SendScreenForRect(inLeft, inTop, inWidth, inHeight, &details, &success);
   if (!success) {
     return NS_ERROR_FAILURE;
   }
@@ -126,7 +126,7 @@ nsScreenManagerProxy::ScreenForNativeWidget(void* aWidget,
   // for it.
   bool success = false;
   ScreenDetails details;
-  unused << CallScreenForBrowser(tabChild, &details, &success);
+  unused << SendScreenForBrowser(tabChild, &details, &success);
   if (!success) {
     return NS_ERROR_FAILURE;
   }
@@ -177,7 +177,7 @@ nsScreenManagerProxy::EnsureCacheIsValid()
   bool success = false;
   // Kick off a synchronous IPC call to the parent to get the
   // most up-to-date information.
-  unused << CallRefresh(&mNumberOfScreens, &mSystemDefaultScale, &success);
+  unused << SendRefresh(&mNumberOfScreens, &mSystemDefaultScale, &success);
   if (!success) {
     NS_WARNING("Refreshing nsScreenManagerProxy failed in the parent process.");
     return false;

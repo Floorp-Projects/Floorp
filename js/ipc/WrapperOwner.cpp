@@ -124,7 +124,7 @@ WrapperOwner::preventExtensions(JSContext *cx, HandleObject proxy)
     ObjectId objId = idOf(proxy);
 
     ReturnStatus status;
-    if (!CallPreventExtensions(objId, &status))
+    if (!SendPreventExtensions(objId, &status))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -151,7 +151,7 @@ WrapperOwner::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId 
 
     ReturnStatus status;
     PPropertyDescriptor result;
-    if (!CallGetPropertyDescriptor(objId, idVar, &status, &result))
+    if (!SendGetPropertyDescriptor(objId, idVar, &status, &result))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -181,7 +181,7 @@ WrapperOwner::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, Handle
 
     ReturnStatus status;
     PPropertyDescriptor result;
-    if (!CallGetOwnPropertyDescriptor(objId, idVar, &status, &result))
+    if (!SendGetOwnPropertyDescriptor(objId, idVar, &status, &result))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -214,7 +214,7 @@ WrapperOwner::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
         return false;
 
     ReturnStatus status;
-    if (!CallDefineProperty(objId, idVar, descriptor, &status))
+    if (!SendDefineProperty(objId, idVar, descriptor, &status))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -251,7 +251,7 @@ WrapperOwner::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
         return false;
 
     ReturnStatus status;
-    if (!CallDelete(objId, idVar, &status, bp))
+    if (!SendDelete(objId, idVar, &status, bp))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -287,7 +287,7 @@ WrapperOwner::has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
         return false;
 
     ReturnStatus status;
-    if (!CallHas(objId, idVar, &status, bp))
+    if (!SendHas(objId, idVar, &status, bp))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -311,7 +311,7 @@ WrapperOwner::hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
         return false;
 
     ReturnStatus status;
-    if (!CallHasOwn(objId, idVar, &status, bp))
+    if (!SendHasOwn(objId, idVar, &status, bp))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -396,7 +396,7 @@ WrapperOwner::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
 
     JSVariant val;
     ReturnStatus status;
-    if (!CallGet(objId, receiverVar, idVar, &status, &val))
+    if (!SendGet(objId, receiverVar, idVar, &status, &val))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -451,7 +451,7 @@ WrapperOwner::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiv
 
     ReturnStatus status;
     JSVariant result;
-    if (!CallSet(objId, receiverVar, idVar, strict, val, &status, &result))
+    if (!SendSet(objId, receiverVar, idVar, strict, val, &status, &result))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -486,7 +486,7 @@ WrapperOwner::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
     ObjectId objId = idOf(proxy);
 
     ReturnStatus status;
-    if (!CallIsExtensible(objId, &status, extensible))
+    if (!SendIsExtensible(objId, &status, extensible))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -550,7 +550,7 @@ WrapperOwner::callOrConstruct(JSContext *cx, HandleObject proxy, const CallArgs 
     JSVariant result;
     ReturnStatus status;
     InfallibleTArray<JSParam> outparams;
-    if (!CallCallOrConstruct(objId, vals, construct, &status, &result, &outparams))
+    if (!SendCallOrConstruct(objId, vals, construct, &status, &result, &outparams))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -600,7 +600,7 @@ WrapperOwner::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue 
 
     ReturnStatus status;
     JSVariant result;
-    if (!CallHasInstance(objId, vVar, &status, bp))
+    if (!SendHasInstance(objId, vVar, &status, bp))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -622,7 +622,7 @@ WrapperOwner::objectClassIs(JSContext *cx, HandleObject proxy, js::ESClassValue 
     // This function is assumed infallible, so we just return false if the IPC
     // channel fails.
     bool result;
-    if (!CallObjectClassIs(objId, classValue, &result))
+    if (!SendObjectClassIs(objId, classValue, &result))
         return false;
 
     LOG_STACK();
@@ -645,7 +645,7 @@ WrapperOwner::className(JSContext *cx, HandleObject proxy)
     ObjectId objId = idOf(proxy);
 
     nsString name;
-    if (!CallClassName(objId, &name))
+    if (!SendClassName(objId, &name))
         return "<error>";
 
     LOG_STACK();
@@ -667,7 +667,7 @@ WrapperOwner::regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g)
     ReturnStatus status;
     nsString source;
     unsigned flags = 0;
-    if (!CallRegExpToShared(objId, &status, &source, &flags))
+    if (!SendRegExpToShared(objId, &status, &source, &flags))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -711,7 +711,7 @@ WrapperOwner::isCallable(JSObject *obj)
     ObjectId objId = idOf(obj);
 
     bool callable = false;
-    if (!CallIsCallable(objId, &callable)) {
+    if (!SendIsCallable(objId, &callable)) {
         NS_WARNING("IPC isCallable() failed");
         return false;
     }
@@ -734,7 +734,7 @@ WrapperOwner::isConstructor(JSObject *obj)
     ObjectId objId = idOf(obj);
 
     bool constructor = false;
-    if (!CallIsConstructor(objId, &constructor)) {
+    if (!SendIsConstructor(objId, &constructor)) {
         NS_WARNING("IPC isConstructor() failed");
         return false;
     }
@@ -777,7 +777,7 @@ WrapperOwner::getPropertyNames(JSContext *cx, HandleObject proxy, uint32_t flags
 
     ReturnStatus status;
     InfallibleTArray<nsString> names;
-    if (!CallGetPropertyNames(objId, flags, &status, &names))
+    if (!SendGetPropertyNames(objId, flags, &status, &names))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -841,7 +841,7 @@ WrapperOwner::instanceOf(JSObject *obj, const nsID *id, bool *bp)
     ConvertID(*id, &iid);
 
     ReturnStatus status;
-    if (!CallInstanceOf(objId, iid, &status, bp))
+    if (!SendInstanceOf(objId, iid, &status, bp))
         return NS_ERROR_UNEXPECTED;
 
     if (status.type() != ReturnStatus::TReturnSuccess)
@@ -856,7 +856,7 @@ WrapperOwner::domInstanceOf(JSContext *cx, JSObject *obj, int prototypeID, int d
     ObjectId objId = idOf(obj);
 
     ReturnStatus status;
-    if (!CallDOMInstanceOf(objId, prototypeID, depth, &status, bp))
+    if (!SendDOMInstanceOf(objId, prototypeID, depth, &status, bp))
         return ipcfail(cx);
 
     LOG_STACK();
