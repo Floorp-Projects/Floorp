@@ -6,10 +6,10 @@
 
 #include "mozilla/dom/File.h"
 
+#include "MultipartFileImpl.h"
 #include "nsCExternalHandlerService.h"
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
-#include "nsDOMBlobBuilder.h"
 #include "nsError.h"
 #include "nsICharsetDetector.h"
 #include "nsIConverterInputStream.h"
@@ -35,6 +35,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/BlobSet.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -1234,6 +1235,71 @@ FileList::Item(uint32_t aIndex, nsIDOMFile **aFile)
 {
   nsRefPtr<File> file = Item(aIndex);
   file.forget(aFile);
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////
+// BlobSet implementation
+
+already_AddRefed<File>
+BlobSet::GetBlobInternal(nsISupports* aParent, const nsACString& aContentType)
+{
+  nsRefPtr<File> blob = new File(aParent,
+    new MultipartFileImpl(GetBlobImpls(),
+                          NS_ConvertASCIItoUTF16(aContentType)));
+  return blob.forget();
+}
+
+nsresult
+BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength)
+{
+  NS_ENSURE_ARG_POINTER(aData);
+
+  uint64_t offset = mDataLen;
+
+  if (!ExpandBufferSize(aLength))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  memcpy((char*)mData + offset, aData, aLength);
+  return NS_OK;
+}
+
+nsresult
+BlobSet::AppendString(const nsAString& aString, bool nativeEOL, JSContext* aCx)
+{
+  nsCString utf8Str = NS_ConvertUTF16toUTF8(aString);
+
+  if (nativeEOL) {
+    if (utf8Str.FindChar('\r') != kNotFound) {
+      utf8Str.ReplaceSubstring("\r\n", "\n");
+      utf8Str.ReplaceSubstring("\r", "\n");
+    }
+#ifdef XP_WIN
+    utf8Str.ReplaceSubstring("\n", "\r\n");
+#endif
+  }
+
+  return AppendVoidPtr((void*)utf8Str.Data(),
+                       utf8Str.Length());
+}
+
+nsresult
+BlobSet::AppendBlobImpl(FileImpl* aBlobImpl)
+{
+  NS_ENSURE_ARG_POINTER(aBlobImpl);
+
+  Flush();
+  mBlobImpls.AppendElement(aBlobImpl);
+
+  return NS_OK;
+}
+
+nsresult
+BlobSet::AppendBlobImpls(const nsTArray<nsRefPtr<FileImpl>>& aBlobImpls)
+{
+  Flush();
+  mBlobImpls.AppendElements(aBlobImpls);
+
   return NS_OK;
 }
 
