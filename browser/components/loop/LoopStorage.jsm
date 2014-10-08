@@ -25,7 +25,9 @@ XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
 
 this.EXPORTED_SYMBOLS = ["LoopStorage"];
 
-const kDatabaseName = "loop";
+const kDatabasePrefix = "loop-";
+const kDefaultDatabaseName = "default";
+let gDatabaseName = kDatabasePrefix + kDefaultDatabaseName;
 const kDatabaseVersion = 1;
 
 let gWaitForOpenCallbacks = new Set();
@@ -83,7 +85,7 @@ const ensureDatabaseOpen = function(onOpen) {
     gWaitForOpenCallbacks.clear();
   };
 
-  let openRequest = indexedDB.open(kDatabaseName, kDatabaseVersion);
+  let openRequest = indexedDB.open(gDatabaseName, kDatabaseVersion);
 
   openRequest.onblocked = function(event) {
     invokeCallbacks(new Error("Database cannot be upgraded cause in use: " + event.target.error));
@@ -92,7 +94,7 @@ const ensureDatabaseOpen = function(onOpen) {
   openRequest.onerror = function(event) {
     // Try to delete the old database so that we can start this process over
     // next time.
-    indexedDB.deleteDatabase(kDatabaseName);
+    indexedDB.deleteDatabase(gDatabaseName);
     invokeCallbacks(new Error("Error while opening database: " + event.target.errorCode));
   };
 
@@ -107,6 +109,29 @@ const ensureDatabaseOpen = function(onOpen) {
     // Close the database instance properly on application shutdown.
     Services.obs.addObserver(closeDatabase, "quit-application", false);
   };
+};
+
+/**
+ * Switch to a database with a different name by closing the current connection
+ * and making sure that the next connection attempt will be made using the updated
+ * name.
+ *
+ * @param {String} name New name of the database to switch to.
+ */
+const switchDatabase = function(name) {
+  if (name == gDatabaseName) {
+    // This is already the current database, so there's no need to switch.
+    return;
+  }
+
+  gDatabaseName = name;
+  if (gDatabase) {
+    try {
+      gDatabase.close();
+    } finally {
+      gDatabase = null;
+    }
+  }
 };
 
 /**
@@ -180,6 +205,13 @@ const getStore = function(store, callback, mode) {
  */
 this.LoopStorage = Object.freeze({
   /**
+   * @var {String} databaseName The name of the database that is currently active.
+   */
+  get databaseName() {
+    return gDatabaseName;
+  },
+
+  /**
    * Open a connection to the IndexedDB database and return the database object.
    *
    * @param {Function} callback Callback to be invoked once a database connection
@@ -189,6 +221,16 @@ this.LoopStorage = Object.freeze({
    */
   getSingleton: function(callback) {
     ensureDatabaseOpen(callback);
+  },
+
+  /**
+   * Switch to a database with a different name.
+   *
+   * @param {String} name New name of the database to switch to. Defaults to
+   *                      `kDefaultDatabaseName`
+   */
+  switchDatabase: function(name = kDefaultDatabaseName) {
+    switchDatabase(name);
   },
 
   /**
