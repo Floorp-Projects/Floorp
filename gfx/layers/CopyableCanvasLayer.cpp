@@ -101,7 +101,8 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
     if (mStream) {
       sharedSurf = mStream->SwapConsumer();
     } else {
-      sharedSurf = mGLContext->RequestFrame();
+      auto screen = mGLContext->Screen();
+      sharedSurf = screen->Front()->Surf();
     }
 
     if (!sharedSurf) {

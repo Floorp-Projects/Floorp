@@ -353,5 +353,99 @@ SurfaceFactory::Recycle(UniquePtr<SharedSurface> surf)
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// ScopedReadbackFB
+
+ScopedReadbackFB::ScopedReadbackFB(SharedSurface* src)
+    : mGL(src->mGL)
+    , mAutoFB(mGL)
+    , mTempFB(0)
+    , mTempTex(0)
+    , mSurfToUnlock(nullptr)
+    , mSurfToLock(nullptr)
+{
+    switch (src->mAttachType) {
+    case AttachmentType::GLRenderbuffer:
+        {
+            mGL->fGenFramebuffers(1, &mTempFB);
+            mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mTempFB);
+
+            GLuint rb = src->ProdRenderbuffer();
+            mGL->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
+                                          LOCAL_GL_COLOR_ATTACHMENT0,
+                                          LOCAL_GL_RENDERBUFFER, rb);
+            break;
+        }
+    case AttachmentType::GLTexture:
+        {
+            mGL->fGenFramebuffers(1, &mTempFB);
+            mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mTempFB);
+
+            GLuint tex = src->ProdTexture();
+            GLenum texImageTarget = src->ProdTextureTarget();
+            mGL->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                                       LOCAL_GL_COLOR_ATTACHMENT0,
+                                       texImageTarget, tex, 0);
+            break;
+        }
+    case AttachmentType::Screen:
+        {
+            SharedSurface* origLocked = mGL->GetLockedSurface();
+            if (origLocked != src) {
+                if (origLocked) {
+                    mSurfToLock = origLocked;
+                    mSurfToLock->UnlockProd();
+                }
+
+                mSurfToUnlock = src;
+                mSurfToUnlock->LockProd();
+            }
+
+            // TODO: This should just be BindFB, but we don't have
+            // the patch for this yet. (bug 1045955)
+            MOZ_ASSERT(mGL->Screen());
+            mGL->Screen()->BindReadFB_Internal(0);
+            break;
+        }
+    default:
+        MOZ_CRASH("Unhandled `mAttachType`.");
+    }
+
+    if (src->NeedsIndirectReads()) {
+        mGL->fGenTextures(1, &mTempTex);
+
+        {
+            ScopedBindTexture autoTex(mGL, mTempTex);
+
+            GLenum format = src->mHasAlpha ? LOCAL_GL_RGBA
+                                           : LOCAL_GL_RGB;
+            auto width = src->mSize.width;
+            auto height = src->mSize.height;
+            mGL->fCopyTexImage2D(LOCAL_GL_TEXTURE_2D, 0, format, 0, 0, width,
+                                 height, 0);
+        }
+
+        mGL->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                                   LOCAL_GL_COLOR_ATTACHMENT0,
+                                   LOCAL_GL_TEXTURE_2D, mTempTex, 0);
+    }
+}
+
+ScopedReadbackFB::~ScopedReadbackFB()
+{
+    if (mTempFB) {
+        mGL->fDeleteFramebuffers(1, &mTempFB);
+    }
+    if (mTempTex) {
+        mGL->fDeleteTextures(1, &mTempTex);
+    }
+    if (mSurfToUnlock) {
+        mSurfToUnlock->UnlockProd();
+    }
+    if (mSurfToLock) {
+        mSurfToLock->LockProd();
+    }
+}
+
 } /* namespace gfx */
 } /* namespace mozilla */

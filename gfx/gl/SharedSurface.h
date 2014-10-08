@@ -25,6 +25,7 @@
 #include "mozilla/gfx/Point.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
+#include "ScopedGLHelpers.h"
 #include "SurfaceTypes.h"
 
 class nsIThread;
@@ -125,6 +126,10 @@ public:
                             GLenum format, GLenum type,
                             GLvoid* pixels)
     {
+        return false;
+    }
+
+    virtual bool NeedsIndirectReads() const {
         return false;
     }
 };
@@ -232,6 +237,20 @@ public:
         MOZ_ASSERT(mSurf);
         return mSurf.get();
     }
+};
+
+class ScopedReadbackFB
+{
+    GLContext* const mGL;
+    ScopedBindFramebuffer mAutoFB;
+    GLuint mTempFB;
+    GLuint mTempTex;
+    SharedSurface* mSurfToUnlock;
+    SharedSurface* mSurfToLock;
+
+public:
+    ScopedReadbackFB(SharedSurface* src);
+    ~ScopedReadbackFB();
 };
 
 } // namespace gl

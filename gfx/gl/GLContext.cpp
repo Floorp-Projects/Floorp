@@ -2005,8 +2005,9 @@ SharedSurface*
 GLContext::RequestFrame()
 {
     MOZ_ASSERT(mScreen);
+    MOZ_CRASH("Not anymore!");
 
-    return mScreen->Stream()->SwapConsumer();
+    return nullptr;
 }
 
 
