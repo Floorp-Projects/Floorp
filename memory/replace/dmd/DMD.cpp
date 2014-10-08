@@ -1845,7 +1845,7 @@ void Foo(int aSeven)
 {
   char* a[6];
   for (int i = 0; i < aSeven - 1; i++) {
-    a[i] = (char*) malloc(128 - 16*i);
+    a[i] = (char*) replace_malloc(128 - 16*i);
   }
 
   for (int i = 0; i < aSeven - 5; i++) {
@@ -1873,9 +1873,9 @@ RunTestMode(UniquePtr<FpWriteFunc> aF1, UniquePtr<FpWriteFunc> aF2,
             UniquePtr<FpWriteFunc> aF3, UniquePtr<FpWriteFunc> aF4)
 {
   // This test relies on the compiler not doing various optimizations, such as
-  // eliding unused malloc() calls or unrolling loops with fixed iteration
-  // counts. So we want a constant value that the compiler can't determine
-  // statically, and we use that in various ways to prevent the above
+  // eliding unused replace_malloc() calls or unrolling loops with fixed
+  // iteration counts. So we want a constant value that the compiler can't
+  // determine statically, and we use that in various ways to prevent the above
   // optimizations from happening.
   //
   // This code always sets |seven| to the value 7. It works because we know
@@ -1903,34 +1903,33 @@ RunTestMode(UniquePtr<FpWriteFunc> aF1, UniquePtr<FpWriteFunc> aF2,
   int i;
   char* a = nullptr;
   for (i = 0; i < seven + 3; i++) {
-      a = (char*) malloc(100);
+      a = (char*) replace_malloc(100);
       UseItOrLoseIt(a, seven);
   }
-  free(a);
+  replace_free(a);
 
   // Note: 8 bytes is the smallest requested size that gives consistent
   // behaviour across all platforms with jemalloc.
   // AnalyzeReports 2: reported.
   // AnalyzeReports 3: thrice-reported.
-  char* a2 = (char*) malloc(8);
+  char* a2 = (char*) replace_malloc(8);
   Report(a2);
 
-  // Operator new[].
   // AnalyzeReports 2: reported.
   // AnalyzeReports 3: reportedness carries over, due to ReportOnAlloc.
-  char* b = new char[10];
+  char* b = (char*) replace_malloc(10);
   ReportOnAlloc(b);
 
   // ReportOnAlloc, then freed.
   // AnalyzeReports 2: freed, irrelevant.
   // AnalyzeReports 3: freed, irrelevant.
-  char* b2 = new char;
+  char* b2 = (char*) replace_malloc(1);
   ReportOnAlloc(b2);
-  free(b2);
+  replace_free(b2);
 
   // AnalyzeReports 2: reported 4 times.
   // AnalyzeReports 3: freed, irrelevant.
-  char* c = (char*) calloc(10, 3);
+  char* c = (char*) replace_calloc(10, 3);
   Report(c);
   for (int i = 0; i < seven - 4; i++) {
     Report(c);
@@ -1943,30 +1942,30 @@ RunTestMode(UniquePtr<FpWriteFunc> aF1, UniquePtr<FpWriteFunc> aF2,
   // jemalloc rounds this up to 8192.
   // AnalyzeReports 2: reported.
   // AnalyzeReports 3: freed.
-  char* e = (char*) malloc(4096);
-  e = (char*) realloc(e, 4097);
+  char* e = (char*) replace_malloc(4096);
+  e = (char*) replace_realloc(e, 4097);
   Report(e);
 
   // First realloc is like malloc;  second realloc is shrinking.
   // AnalyzeReports 2: reported.
   // AnalyzeReports 3: re-reported.
-  char* e2 = (char*) realloc(nullptr, 1024);
-  e2 = (char*) realloc(e2, 512);
+  char* e2 = (char*) replace_realloc(nullptr, 1024);
+  e2 = (char*) replace_realloc(e2, 512);
   Report(e2);
 
   // First realloc is like malloc;  second realloc creates a min-sized block.
   // XXX: on Windows, second realloc frees the block.
   // AnalyzeReports 2: reported.
   // AnalyzeReports 3: freed, irrelevant.
-  char* e3 = (char*) realloc(nullptr, 1023);
-//e3 = (char*) realloc(e3, 0);
+  char* e3 = (char*) replace_realloc(nullptr, 1023);
+//e3 = (char*) replace_realloc(e3, 0);
   MOZ_ASSERT(e3);
   Report(e3);
 
   // AnalyzeReports 2: freed, irrelevant.
   // AnalyzeReports 3: freed, irrelevant.
-  char* f = (char*) malloc(64);
-  free(f);
+  char* f = (char*) replace_malloc(64);
+  replace_free(f);
 
   // AnalyzeReports 2: ignored.
   // AnalyzeReports 3: irrelevant.
@@ -1979,19 +1978,19 @@ RunTestMode(UniquePtr<FpWriteFunc> aF1, UniquePtr<FpWriteFunc> aF2,
 
   // AnalyzeReports 2: twice-reported.
   // AnalyzeReports 3: twice-reported.
-  char* g1 = (char*) malloc(77);
+  char* g1 = (char*) replace_malloc(77);
   ReportOnAlloc(g1);
   ReportOnAlloc(g1);
 
   // AnalyzeReports 2: twice-reported.
   // AnalyzeReports 3: once-reported.
-  char* g2 = (char*) malloc(78);
+  char* g2 = (char*) replace_malloc(78);
   Report(g2);
   ReportOnAlloc(g2);
 
   // AnalyzeReports 2: twice-reported.
   // AnalyzeReports 3: once-reported.
-  char* g3 = (char*) malloc(79);
+  char* g3 = (char*) replace_malloc(79);
   ReportOnAlloc(g3);
   Report(g3);
 
@@ -2018,13 +2017,13 @@ RunTestMode(UniquePtr<FpWriteFunc> aF1, UniquePtr<FpWriteFunc> aF2,
 
   Report(a2);
   Report(a2);
-  free(c);
-  free(e);
+  replace_free(c);
+  replace_free(e);
   Report(e2);
-  free(e3);
-//free(x);
-//free(y);
-//free(z);
+  replace_free(e3);
+//replace_free(x);
+//replace_free(y);
+//replace_free(z);
 
   // AnalyzeReports 3.
   JSONWriter writer3(Move(aF3));
@@ -2041,40 +2040,40 @@ RunTestMode(UniquePtr<FpWriteFunc> aF1, UniquePtr<FpWriteFunc> aF2,
 
   // This equals the sample size, and so is reported exactly.  It should be
   // listed before records of the same size that are sampled.
-  s = (char*) malloc(128);
+  s = (char*) replace_malloc(128);
   UseItOrLoseIt(s, seven);
 
   // This exceeds the sample size, and so is reported exactly.
-  s = (char*) malloc(144);
+  s = (char*) replace_malloc(144);
   UseItOrLoseIt(s, seven);
 
   // These together constitute exactly one sample.
   for (int i = 0; i < seven + 9; i++) {
-    s = (char*) malloc(8);
+    s = (char*) replace_malloc(8);
     UseItOrLoseIt(s, seven);
   }
   MOZ_ASSERT(gSmallBlockActualSizeCounter == 0);
 
   // These fall 8 bytes short of a full sample.
   for (int i = 0; i < seven + 8; i++) {
-    s = (char*) malloc(8);
+    s = (char*) replace_malloc(8);
     UseItOrLoseIt(s, seven);
   }
   MOZ_ASSERT(gSmallBlockActualSizeCounter == 120);
 
   // This exceeds the sample size, and so is recorded exactly.
-  s = (char*) malloc(256);
+  s = (char*) replace_malloc(256);
   UseItOrLoseIt(s, seven);
   MOZ_ASSERT(gSmallBlockActualSizeCounter == 120);
 
   // This gets more than to a full sample from the |i < 15| loop above.
-  s = (char*) malloc(96);
+  s = (char*) replace_malloc(96);
   UseItOrLoseIt(s, seven);
   MOZ_ASSERT(gSmallBlockActualSizeCounter == 88);
 
   // This gets to another full sample.
   for (int i = 0; i < seven - 2; i++) {
-    s = (char*) malloc(8);
+    s = (char*) replace_malloc(8);
     UseItOrLoseIt(s, seven);
   }
   MOZ_ASSERT(gSmallBlockActualSizeCounter == 0);
@@ -2083,7 +2082,7 @@ RunTestMode(UniquePtr<FpWriteFunc> aF1, UniquePtr<FpWriteFunc> aF2,
   // record that contains a mix of sample and non-sampled blocks, and so should
   // be printed with '~' signs.
   for (int i = 1; i <= seven + 1; i++) {
-    s = (char*) malloc(i * 16);
+    s = (char*) replace_malloc(i * 16);
     UseItOrLoseIt(s, seven);
   }
   MOZ_ASSERT(gSmallBlockActualSizeCounter == 64);
