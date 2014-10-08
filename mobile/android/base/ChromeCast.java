@@ -37,7 +37,7 @@ import android.util.Log;
 class ChromeCast implements GeckoMediaPlayer {
     private static final boolean SHOW_DEBUG = false;
 
-    static final String MIRROR_RECIEVER_APP_ID = "D40D28D6";
+    static final String MIRROR_RECIEVER_APP_ID = "5F72F863";
 
     private final Context context;
     private final RouteInfo route;
