@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 'use strict';
 
 let {
@@ -10,10 +11,9 @@ let { readURI } = require('sdk/net/url');
 
 let root = module.uri.substr(0, module.uri.lastIndexOf('/'))
 
+
 // The following adds Debugger constructor to the global namespace.
 const { Cu } = require('chrome');
-const app = require('sdk/system/xul-app');
-
 const { addDebuggerToGlobal } = Cu.import('resource://gre/modules/jsdebugger.jsm', {});
 addDebuggerToGlobal(this);
 
@@ -331,7 +331,7 @@ exports['test console global by default'] = function (assert) {
   let uri = root + '/fixtures/loader/globals/';
   let loader = Loader({ paths: { '': uri }});
   let program = main(loader, 'main');
-
+ 
   assert.ok(typeof program.console === 'object', 'global `console` exists');
   assert.ok(typeof program.console.log === 'function', 'global `console.log` exists');
 
@@ -374,20 +374,4 @@ exports["test require#resolve"] = function(assert) {
   assert.equal(foundRoot + "toolkit/loader.js", require.resolve("toolkit/loader"), "correct resolution of sdk module");
 };
 
-exports['test loader on unsupported modules'] = function(assert) {
-  let loader = Loader({});
-  let err = "";
-
-  assert.throws(() => {
-    if (!app.is('Firefox')) {
-      require('./fixtures/loader/unsupported/firefox');
-    }
-    else {
-      require('./fixtures/loader/unsupported/fennec');
-    }
-  }, /^Unsupported Application/, "throws Unsupported Application");
-
-  unload(loader);
-};
-
-require('sdk/test').run(exports);
+require('test').run(exports);
