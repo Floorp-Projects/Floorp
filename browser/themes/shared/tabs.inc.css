@@ -76,30 +76,12 @@
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
-@keyframes throbber-loading {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes throbber-connecting {
-  from {
-    transform: rotate(360deg);
-  }
-}
-
 .tab-throbber[busy] {
   list-style-image: url("chrome://browser/skin/tabbrowser/connecting.png");
-  animation-duration: 960ms;
-  animation-iteration-count: infinite;
-  animation-name: throbber-connecting;
-  animation-timing-function: linear;
 }
 
 .tab-throbber[progress] {
   list-style-image: url("chrome://browser/skin/tabbrowser/loading.png");
-  animation-duration: 800ms;
-  animation-name: throbber-loading;
 }
 
 .tab-throbber:not([pinned]),
