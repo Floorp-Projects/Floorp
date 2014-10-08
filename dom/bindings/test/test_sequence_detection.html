@@ -15,10 +15,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1066432
   SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, function() {
     var testInterfaceJS = new TestInterfaceJS();
     ok(testInterfaceJS, "got a TestInterfaceJS object");
+
+    var nonIterableObject = { "@@iterator": 5 };
+    if (typeof Symbol === "function") {
+      // Make this test fail if Symbol.iterator is correctly implemented.
+      // This is here to make sure this test is updated when bug 918828 lands,
+      // at which point the correct code will be:
+      //   var JS_HAS_SYMBOLS = typeof Symbol === "function";
+      //   var std_iterator = JS_HAS_SYMBOLS ? Symbol.iterator : "@@iterator";
+      //   var nonIterableObject = { [std_iterator]: 5};
+      // Otherwise, fixing bug 918828 would cause this test to silently stop
+      // testing what it's supposed to be testing.
+      nonIterableObject[Symbol.iterator] = Array.prototype[Symbol.iterator];
+    }
+
     try {
-      testInterfaceJS.testSequenceOverload(
-        { "@@iterator": 5, [Symbol.iterator]: Array.prototype[Symbol.iterator] });
-      ok(false, "Should have thrown in the overload case");
+      testInterfaceJS.testSequenceOverload(nonIterableObject);
+      ok(false, "Should have thrown in the overload case");  // see long comment above!
     } catch (e) {
       ise(e.name, "TypeError", "Should get a TypeError for the overload case");
       ok(e.message.contains("not iterable"),
@@ -26,8 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1066432
     }
 
     try {
-      testInterfaceJS.testSequenceUnion(
-        { "@@iterator": 5, [Symbol.iterator]: Array.prototype[Symbol.iterator] });
+      testInterfaceJS.testSequenceUnion(nonIterableObject);
       ok(false, "Should have thrown in the union case");
     } catch (e) {
       ise(e.name, "TypeError", "Should get a TypeError for the union case");
