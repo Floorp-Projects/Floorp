@@ -538,7 +538,7 @@ MDefinition::justReplaceAllUsesWith(MDefinition *dom)
     MOZ_ASSERT(dom != nullptr);
     MOZ_ASSERT(dom != this);
 
-    for (MUseIterator i(usesBegin()); i != usesEnd(); i++)
+    for (MUseIterator i(usesBegin()), e(usesEnd()); i != e; ++i)
         i->setProducerUnchecked(dom);
     dom->uses_.takeElements(uses_);
 }
