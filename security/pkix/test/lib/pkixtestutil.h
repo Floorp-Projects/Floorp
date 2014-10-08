@@ -134,6 +134,7 @@ protected:
   void operator=(const TestKeyPair&) /*= delete*/;
 };
 
+TestKeyPair* CloneReusedKeyPair();
 TestKeyPair* GenerateKeyPair();
 inline void DeleteTestKeyPair(TestKeyPair* keyPair) { delete keyPair; }
 typedef ScopedPtr<TestKeyPair, DeleteTestKeyPair> ScopedTestKeyPair;
@@ -172,19 +173,15 @@ enum Version { v1 = 0, v2 = 1, v3 = 2 };
 // extensions must point to an array of ByteStrings, terminated with an empty
 // ByteString. (If the first item of the array is empty then an empty
 // Extensions sequence will be encoded.)
-//
-// If issuerPrivateKey is null, then the certificate will be self-signed.
-// Parameter order is based on the order of the attributes of the certificate
-// in RFC 5280.
 ByteString CreateEncodedCertificate(long version, const ByteString& signature,
                                     const ByteString& serialNumber,
                                     const ByteString& issuerNameDER,
                                     time_t notBefore, time_t notAfter,
                                     const ByteString& subjectNameDER,
+                                    const TestKeyPair& subjectKeyPair,
                                     /*optional*/ const ByteString* extensions,
-                                    /*optional*/ TestKeyPair* issuerKeyPair,
-                                    const ByteString& signatureAlgorithm,
-                                    /*out*/ ScopedTestKeyPair& keyPairResult);
+                                    const TestKeyPair& issuerKeyPair,
+                                    const ByteString& signatureAlgorithm);
 
 ByteString CreateEncodedSerialNumber(long value);
 
