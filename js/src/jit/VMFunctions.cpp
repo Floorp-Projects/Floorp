@@ -24,7 +24,7 @@
 #include "jit/IonFrames-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/Interpreter-inl.h"
-#include "vm/ObjectImpl-inl.h"
+#include "vm/NativeObject-inl.h"
 #include "vm/StringObject-inl.h"
 
 using namespace js;

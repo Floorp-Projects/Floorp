@@ -20,7 +20,7 @@
 #include "js/SliceBudget.h"
 #include "js/Vector.h"
 
-#include "vm/ObjectImpl.h"
+#include "vm/NativeObject.h"
 
 namespace js {
 

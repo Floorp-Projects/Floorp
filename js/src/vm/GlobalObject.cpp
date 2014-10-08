@@ -37,7 +37,7 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
-#include "vm/ObjectImpl-inl.h"
+#include "vm/NativeObject-inl.h"
 
 using namespace js;
 
