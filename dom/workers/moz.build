@@ -40,7 +40,6 @@ UNIFIED_SOURCES += [
     'ChromeWorkerScope.cpp',
     'DataStore.cpp',
     'DataStoreCursor.cpp',
-    'File.cpp',
     'FileReaderSync.cpp',
     'Location.cpp',
     'MessagePort.cpp',

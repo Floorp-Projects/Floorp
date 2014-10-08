@@ -71,9 +71,9 @@ protected:
     MOZ_COUNT_DTOR(ArchiveZipFileImpl);
   }
 
-  virtual already_AddRefed<DOMFileImpl> CreateSlice(uint64_t aStart,
-                                                    uint64_t aLength,
-                                                    const nsAString& aContentType) MOZ_OVERRIDE;
+  virtual already_AddRefed<DOMFileImpl>
+  CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
+              ErrorResult& aRv) MOZ_OVERRIDE;
 
 private: // Data
   ZipCentral mCentral;

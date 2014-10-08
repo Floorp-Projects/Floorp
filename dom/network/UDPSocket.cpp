@@ -13,7 +13,7 @@
 #include "mozilla/net/DNS.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
-#include "nsIDOMFile.h"
+#include "nsDOMFile.h"
 #include "nsINetAddr.h"
 #include "nsStringStream.h"
 
@@ -328,9 +328,9 @@ UDPSocket::Send(const StringOrBlobOrArrayBufferOrArrayBufferView& aData,
 
   nsCOMPtr<nsIInputStream> stream;
   if (aData.IsBlob()) {
-    nsCOMPtr<nsIDOMBlob> blob = aData.GetAsBlob();
+    DOMFile& blob = aData.GetAsBlob();
 
-    aRv = blob->GetInternalStream(getter_AddRefs(stream));
+    aRv = blob.GetInternalStream(getter_AddRefs(stream));
     if (NS_WARN_IF(aRv.Failed())) {
       return false;
     }

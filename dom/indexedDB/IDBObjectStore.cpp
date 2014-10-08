@@ -30,6 +30,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/IDBMutableFileBinding.h"
+#include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
@@ -58,7 +59,7 @@ struct IDBObjectStore::StructuredCloneWriteInfo
 {
   struct BlobOrFileInfo
   {
-    nsCOMPtr<nsIDOMBlob> mBlob;
+    nsRefPtr<DOMFile> mBlob;
     nsRefPtr<FileInfo> mFileInfo;
 
     bool
@@ -297,15 +298,9 @@ StructuredCloneWriteCallback(JSContext* aCx,
 
   MOZ_ASSERT(NS_IsMainThread(), "This can't work off the main thread!");
 
-  nsCOMPtr<nsIXPConnectWrappedNative> wrappedNative;
-  nsContentUtils::XPConnect()->
-    GetWrappedNativeOfJSObject(aCx, aObj, getter_AddRefs(wrappedNative));
-
-  if (wrappedNative) {
-    nsISupports* supports = wrappedNative->Native();
-
-    nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(supports);
-    if (blob) {
+  {
+    DOMFile* blob = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
       uint64_t size;
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blob->GetSize(&size)));
 
@@ -318,8 +313,6 @@ StructuredCloneWriteCallback(JSContext* aCx,
       uint32_t convTypeLength =
         NativeEndian::swapToLittleEndian(convType.Length());
 
-      nsCOMPtr<nsIDOMFile> file = do_QueryInterface(blob);
-
       if (cloneWriteInfo->mBlobOrFileInfos.Length() > size_t(UINT32_MAX)) {
         MOZ_ASSERT(false,
                    "Fix the structured clone data to use a bigger type!");
@@ -330,7 +323,7 @@ StructuredCloneWriteCallback(JSContext* aCx,
         uint32_t(cloneWriteInfo->mBlobOrFileInfos.Length());
 
       if (!JS_WriteUint32Pair(aWriter,
-                              file ? SCTAG_DOM_FILE : SCTAG_DOM_BLOB,
+                              blob->IsFile() ? SCTAG_DOM_FILE : SCTAG_DOM_BLOB,
                               index) ||
           !JS_WriteBytes(aWriter, &size, sizeof(size)) ||
           !JS_WriteBytes(aWriter, &convTypeLength, sizeof(convTypeLength)) ||
@@ -338,15 +331,15 @@ StructuredCloneWriteCallback(JSContext* aCx,
         return false;
       }
 
-      if (file) {
+      if (blob->IsFile()) {
         uint64_t lastModifiedDate;
         MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-          file->GetMozLastModifiedDate(&lastModifiedDate)));
+          blob->GetMozLastModifiedDate(&lastModifiedDate)));
 
         lastModifiedDate = NativeEndian::swapToLittleEndian(lastModifiedDate);
 
         nsString name;
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(file->GetName(name)));
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blob->GetName(name)));
 
         NS_ConvertUTF16toUTF8 convName(name);
         uint32_t convNameLength =
@@ -362,7 +355,7 @@ StructuredCloneWriteCallback(JSContext* aCx,
       IDBObjectStore::StructuredCloneWriteInfo::BlobOrFileInfo*
         newBlobOrFileInfo =
           cloneWriteInfo->mBlobOrFileInfos.AppendElement();
-      newBlobOrFileInfo->mBlob.swap(blob);
+      newBlobOrFileInfo->mBlob = blob;
 
       return true;
     }
@@ -408,12 +401,11 @@ GetAddInfoCallback(JSContext* aCx, void* aClosure)
 }
 
 BlobChild*
-ActorFromRemoteBlob(nsIDOMBlob* aBlob)
+ActorFromRemoteBlob(DOMFile* aBlob)
 {
   MOZ_ASSERT(aBlob);
 
-  nsRefPtr<DOMFile> blob = static_cast<DOMFile*>(aBlob);
-  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(blob->Impl());
+  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob->Impl());
   if (remoteBlob) {
     BlobChild* actor = remoteBlob->GetBlobChild();
     MOZ_ASSERT(actor);
@@ -435,7 +427,7 @@ ActorFromRemoteBlob(nsIDOMBlob* aBlob)
 }
 
 bool
-ResolveMysteryFile(nsIDOMBlob* aBlob,
+ResolveMysteryFile(DOMFile* aBlob,
                    const nsString& aName,
                    const nsString& aContentType,
                    uint64_t aSize,
@@ -450,7 +442,7 @@ ResolveMysteryFile(nsIDOMBlob* aBlob,
 }
 
 bool
-ResolveMysteryBlob(nsIDOMBlob* aBlob,
+ResolveMysteryBlob(DOMFile* aBlob,
                    const nsString& aContentType,
                    uint64_t aSize)
 {
@@ -604,6 +596,7 @@ public:
 
   static bool
   CreateAndWrapBlobOrFile(JSContext* aCx,
+                          IDBDatabase* aDatabase,
                           StructuredCloneFile& aFile,
                           const BlobOrFileData& aData,
                           JS::MutableHandle<JSObject*> aResult)
@@ -616,6 +609,18 @@ public:
     MOZ_ASSERT(NS_IsMainThread(),
                "This wrapping currently only works on the main thread!");
 
+    // It can happen that this IDB is chrome code, so there is no parent, but
+    // still we want to set a correct parent for the new DOMFile object.
+    nsCOMPtr<nsISupports> parent;
+    if (aDatabase && aDatabase->GetParentObject()) {
+      parent = aDatabase->GetParentObject();
+    } else {
+      parent  = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+    }
+
+    MOZ_ASSERT(parent);
+    nsRefPtr<DOMFile> file = new DOMFile(parent, aFile.mFile->Impl());
+
     if (aData.tag == SCTAG_DOM_BLOB) {
       if (NS_WARN_IF(!ResolveMysteryBlob(aFile.mFile,
                                          aData.type,
@@ -624,12 +629,7 @@ public:
       }
 
       JS::Rooted<JS::Value> wrappedBlob(aCx);
-      nsresult rv =
-        nsContentUtils::WrapNative(aCx,
-                                   aFile.mFile,
-                                   &NS_GET_IID(nsIDOMBlob),
-                                   &wrappedBlob);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      if (!WrapNewBindingObject(aCx, aFile.mFile, &wrappedBlob)) {
         return false;
       }
 
@@ -637,10 +637,9 @@ public:
       return true;
     }
 
-    nsCOMPtr<nsIDOMFile> domFile = do_QueryInterface(aFile.mFile);
-    MOZ_ASSERT(domFile);
+    MOZ_ASSERT(aFile.mFile->IsFile());
 
-    if (NS_WARN_IF(!ResolveMysteryFile(domFile,
+    if (NS_WARN_IF(!ResolveMysteryFile(aFile.mFile,
                                        aData.name,
                                        aData.type,
                                        aData.size,
@@ -649,12 +648,7 @@ public:
     }
 
     JS::Rooted<JS::Value> wrappedFile(aCx);
-    nsresult rv =
-      nsContentUtils::WrapNative(aCx,
-                                 aFile.mFile,
-                                 &NS_GET_IID(nsIDOMFile),
-                                 &wrappedFile);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (!WrapNewBindingObject(aCx, aFile.mFile, &wrappedFile)) {
       return false;
     }
 
@@ -689,6 +683,7 @@ public:
 
   static bool
   CreateAndWrapBlobOrFile(JSContext* aCx,
+                          IDBDatabase* aDatabase,
                           StructuredCloneFile& aFile,
                           const BlobOrFileData& aData,
                           JS::MutableHandle<JSObject*> aResult)
@@ -815,6 +810,7 @@ CommonStructuredCloneReadCallback(JSContext* aCx,
     }
 
     if (NS_WARN_IF(!Traits::CreateAndWrapBlobOrFile(aCx,
+                                                    cloneReadInfo->mDatabase,
                                                     file,
                                                     data,
                                                     &result))) {

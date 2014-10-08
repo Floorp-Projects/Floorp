@@ -20,65 +20,65 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=721569
 <script class="testbody" type="text/javascript;version=1.7">
 "use strict";
 /** Test for Bug 721569 **/
-var blob = Blob();
+var blob = new Blob();
 ok(blob, "Blob should exist");
 
 ok(blob.size !== undefined, "Blob should have a size property");
 ok(blob.type !== undefined, "Blob should have a type property");
 ok(blob.slice, "Blob should have a slice method");
 
-blob = Blob([], {type: null});
+blob = new Blob([], {type: null});
 ok(blob, "Blob should exist");
 is(blob.type, "null", "Blob type should be stringified");
 
-blob = Blob([], {type: undefined});
+blob = new Blob([], {type: undefined});
 ok(blob, "Blob should exist");
 is(blob.type, "", "Blob type should be treated as missing");
 
 try {
-blob = Blob([]);
+blob = new Blob([]);
 ok(true, "an empty blobParts argument should not throw");
 } catch(e) {
 ok(false, "NOT REACHED");
 }
 
 try {
-blob = Blob(null);
+blob = new Blob(null);
 ok(false, "NOT REACHED");
 } catch(e) {
 ok(true, "a null blobParts member should throw");
 }
 
 try {
-blob = Blob([], null);
+blob = new Blob([], null);
 ok(true, "a null options member should not throw");
 } catch(e) {
 ok(false, "NOT REACHED");
 }
 
 try {
-blob = Blob([], undefined);
+blob = new Blob([], undefined);
 ok(true, "an undefined options member should not throw");
 } catch(e) {
 ok(false, "NOT REACHED");
 }
 
 try {
-blob = Blob([], false);
+blob = new Blob([], false);
 ok(false, "NOT REACHED");
 } catch(e) {
 ok(true, "a boolean options member should throw");
 }
 
 try {
-blob = Blob([], 0);
+blob = new Blob([], 0);
 ok(false, "NOT REACHED");
 } catch(e) {
 ok(true, "a numeric options member should throw");
 }
 
 try {
-blob = Blob([], "");
+blob = new Blob([], "");
 ok(false, "NOT REACHED");
 } catch(e) {
 ok(true, "a string options member should throw");
@@ -100,13 +100,13 @@ ok(true, "a string options member should throw");
   is(JSON.stringify(called), JSON.stringify(["endings", "type"]), "dictionary members should be get in lexicographical order");
 })();
 
-let blob1 = Blob(["squiggle"]);
+let blob1 = new Blob(["squiggle"]);
 ok(blob1 instanceof Blob, "Blob constructor should produce Blobs");
 ok(!(blob1 instanceof File), "Blob constructor should not produce Files");
 is(blob1.type, "", "Blob constructor with no options should return Blob with empty type");
 is(blob1.size, 8, "Blob constructor should return Blob with correct size");
 
-let blob2 = Blob(["steak"], {type: "content/type"});
+let blob2 = new Blob(["steak"], {type: "content/type"});
 ok(blob2 instanceof Blob, "Blob constructor should produce Blobs");
 ok(!(blob2 instanceof File), "Blob constructor should not produce Files");
 is(blob2.type, "content/type", "Blob constructor with a type option should return Blob with the type");

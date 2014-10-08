@@ -13,6 +13,7 @@
 #include "nsArrayEnumerator.h"
 #include "nsCOMPtr.h"
 
+class nsPIDOMWindow;
 class nsIWidget;
 
 class nsBaseFilePicker : public nsIFilePicker
@@ -45,6 +46,7 @@ protected:
 
   bool mAddToRecentDocs;
   nsCOMPtr<nsIFile> mDisplayDirectory;
+  nsCOMPtr<nsPIDOMWindow> mParent;
   int16_t mMode;
 };
 

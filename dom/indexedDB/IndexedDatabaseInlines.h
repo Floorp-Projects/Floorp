@@ -13,7 +13,7 @@
 
 #include "FileInfo.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
-#include "nsIDOMFile.h"
+#include "nsDOMFile.h"
 #include "nsIInputStream.h"
 
 namespace mozilla {

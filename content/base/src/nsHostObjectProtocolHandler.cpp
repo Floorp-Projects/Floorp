@@ -18,6 +18,7 @@
 #include "mozilla/LoadInfo.h"
 
 using mozilla::dom::DOMFileImpl;
+using mozilla::ErrorResult;
 using mozilla::LoadInfo;
 
 // -----------------------------------------------------------------------
@@ -522,19 +523,19 @@ nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsString type;
-  rv = blob->GetType(type);
-  NS_ENSURE_SUCCESS(rv, rv);
+  blob->GetType(type);
 
   if (blob->IsFile()) {
     nsString filename;
-    rv = blob->GetName(filename);
-    NS_ENSURE_SUCCESS(rv, rv);
+    blob->GetName(filename);
     channel->SetContentDispositionFilename(filename);
   }
 
-  uint64_t size;
-  rv = blob->GetSize(&size);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult error;
+  uint64_t size = blob->GetSize(error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.ErrorCode();
+  }
 
   nsCOMPtr<nsILoadInfo> loadInfo =
     new mozilla::LoadInfo(info->mPrincipal,

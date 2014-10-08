@@ -52,11 +52,11 @@ function runTest() {
     fd.append("empty", blob);
     fd.append("explicit", blob, "explicit-file-name");
     fd.append("explicit-empty", blob, "");
-    file = SpecialPowers.unwrap(SpecialPowers.wrap(window).File(blob, {name: 'testname'}));
+    file = new File([blob], 'testname',  {type: 'text/plain'});
     fd.append("file-name", file);
-    file = SpecialPowers.unwrap(SpecialPowers.wrap(window).File(blob, {name: ''}));
+    file = new File([blob], '',  {type: 'text/plain'});
     fd.append("empty-file-name", file);
-    file = SpecialPowers.unwrap(SpecialPowers.wrap(window).File(blob, {name: 'testname'}));
+    file = new File([blob], 'testname',  {type: 'text/plain'});
     fd.append("file-name-overwrite", file, "overwrite");
     xhr.responseType = 'json';
     xhr.send(fd);

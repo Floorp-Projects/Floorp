@@ -59,8 +59,8 @@ private:
   { }
 #endif
 
-  virtual nsresult
-  GetMozFullPathInternal(nsAString& aFullPath) MOZ_OVERRIDE;
+  virtual void
+  GetMozFullPathInternal(nsAString& aFullPath, ErrorResult& aRv) MOZ_OVERRIDE;
 
   virtual nsresult
   GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
@@ -77,7 +77,8 @@ private:
   virtual already_AddRefed<DOMFileImpl>
   CreateSlice(uint64_t aStart,
               uint64_t aLength,
-              const nsAString& aContentType) MOZ_OVERRIDE;
+              const nsAString& aContentType,
+              ErrorResult& aRv) MOZ_OVERRIDE;
 
   virtual bool
   IsStoredFile() const MOZ_OVERRIDE;

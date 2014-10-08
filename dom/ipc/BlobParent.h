@@ -132,11 +132,6 @@ public:
   already_AddRefed<DOMFileImpl>
   GetBlobImpl();
 
-  // XXX This method will be removed soon. It may never be called on a non-DOM
-  //     thread.
-  already_AddRefed<nsIDOMBlob>
-  GetBlob();
-
   void
   AssertIsOnOwningThread() const
 #ifdef DEBUG
