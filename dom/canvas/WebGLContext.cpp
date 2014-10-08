@@ -665,6 +665,9 @@ CreateOffscreen(GLContext* gl,
     baseCaps.preserve = options.preserveDrawingBuffer;
     baseCaps.stencil = options.stencil;
 
+    if (!baseCaps.alpha)
+        baseCaps.premultAlpha = true;
+
     // we should really have this behind a
     // |gfxPlatform::GetPlatform()->GetScreenDepth() == 16| check, but
     // for now it's just behind a pref for testing/evaluation.

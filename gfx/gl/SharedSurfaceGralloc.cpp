@@ -67,18 +67,17 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
     gfxContentType type = hasAlpha ? gfxContentType::COLOR_ALPHA
                                    : gfxContentType::COLOR;
 
-    gfxImageFormat format
-      = gfxPlatform::GetPlatform()->OptimalFormatForContent(type);
+    auto platform = gfxPlatform::GetPlatform();
+    gfxImageFormat format = platform->OptimalFormatForContent(type);
 
-    RefPtr<GrallocTextureClientOGL> grallocTC =
-      new GrallocTextureClientOGL(
-          allocator,
-          gfx::ImageFormatToSurfaceFormat(format),
-          gfx::BackendType::NONE, // we don't need to use it with a DrawTarget
-          flags);
+    typedef GrallocTextureClientOGL ptrT;
+    RefPtr<ptrT> grallocTC = new ptrT(allocator,
+                                      gfx::ImageFormatToSurfaceFormat(format),
+                                      gfx::BackendType::NONE, // we don't need to use it with a DrawTarget
+                                      flags);
 
     if (!grallocTC->AllocateForGLRendering(size)) {
-      return Move(ret);
+        return Move(ret);
     }
 
     sp<GraphicBuffer> buffer = grallocTC->GetGraphicBuffer();
