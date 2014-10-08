@@ -283,8 +283,11 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     static BufferContents createMappedContents(int fd, size_t offset, size_t length);
 
-    static size_t flagsOffset() {
+    static size_t offsetOfFlagsSlot() {
         return getFixedSlotOffset(FLAGS_SLOT);
+    }
+    static size_t offsetOfDataSlot() {
+        return getFixedSlotOffset(DATA_SLOT);
     }
 
     static uint32_t neuteredFlag() { return NEUTERED_BUFFER; }
