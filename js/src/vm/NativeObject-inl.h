@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_ObjectImpl_inl_h
-#define vm_ObjectImpl_inl_h
+#ifndef vm_NativeObject_inl_h
+#define vm_NativeObject_inl_h
 
-#include "vm/ObjectImpl.h"
+#include "vm/NativeObject.h"
 
 #include "jscntxt.h"
 
@@ -688,4 +688,4 @@ JSObject::fakeNativeFixedData(size_t nslots) const
     return static_cast<const js::NativeObject*>(this)->fixedData(nslots);
 }
 
-#endif /* vm_ObjectImpl_inl_h */
+#endif /* vm_NativeObject_inl_h */

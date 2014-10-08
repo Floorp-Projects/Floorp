@@ -32,7 +32,7 @@ config = {
                 "--xre-path=%(xre_path)s", "--testing-modules-dir=%(modules_dir)s",
                 "--apk=%(installer_path)s", "--no-logfiles",
                 "--symbols-path=%(symbols_path)s",
-                "--manifest=tests/xpcshell_android.ini",
+                "--manifest=tests/xpcshell.ini",
             ],
         },
     }, # end suite_definitions

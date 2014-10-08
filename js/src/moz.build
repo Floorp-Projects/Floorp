@@ -251,7 +251,7 @@ UNIFIED_SOURCES += [
     'vm/JSONParser.cpp',
     'vm/MemoryMetrics.cpp',
     'vm/Monitor.cpp',
-    'vm/ObjectImpl.cpp',
+    'vm/NativeObject.cpp',
     'vm/OldDebugAPI.cpp',
     'vm/PIC.cpp',
     'vm/Probes.cpp',

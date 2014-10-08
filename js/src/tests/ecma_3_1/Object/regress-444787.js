@@ -101,22 +101,5 @@ function test()
     reportCompare(expect, actual, summary + ' instance: ' + instance + ', type: ' + type.name);
   }
 
-  var non_objects = [ true, false, 1.0, Infinity, NaN, Math.PI, "bar" ];
-
-  for (i = 0; i < non_objects.length; i++)
-  {
-    instance = non_objects[i];
-    expect = 'TypeError: instance is not an object';
-    try
-    {
-      actual = Object.getPrototypeOf(instance);
-    }
-    catch(ex)
-    {
-      actual = ex + '';
-    }
-    reportCompare(expect, actual, summary + ' non-object: ' + actual);
-  }
-
   exitFunc ('test');
 }

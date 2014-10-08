@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_ObjectImpl_h
-#define vm_ObjectImpl_h
+#ifndef vm_NativeObject_h
+#define vm_NativeObject_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -1636,4 +1636,4 @@ MaybeNativeObject(JSObject *obj)
 
 } // namespace js
 
-#endif /* vm_ObjectImpl_h */
+#endif /* vm_NativeObject_h */
