@@ -335,7 +335,6 @@ MBasicBlock::NewAsmJS(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred, Kin
                 MOZ_ASSERT(predSlot->type() != MIRType_Value);
                 MPhi *phi = new(phis + i) MPhi(alloc, predSlot->type());
 
-                JS_ALWAYS_TRUE(phi->reserveLength(2));
                 phi->addInput(predSlot);
 
                 // Add append Phis in the block.
@@ -407,8 +406,10 @@ MBasicBlock::copySlots(MBasicBlock *from)
 {
     MOZ_ASSERT(stackPosition_ <= from->stackPosition_);
 
-    for (uint32_t i = 0; i < stackPosition_; i++)
-        slots_[i] = from->slots_[i];
+    MDefinition **thisSlots = slots_.begin();
+    MDefinition **fromSlots = from->slots_.begin();
+    for (size_t i = 0, e = stackPosition_; i < e; ++i)
+        thisSlots[i] = fromSlots[i];
 }
 
 bool
@@ -447,8 +448,7 @@ MBasicBlock::inherit(TempAllocator &alloc, BytecodeAnalysis *analysis, MBasicBlo
             size_t i = 0;
             for (i = 0; i < info().firstStackSlot(); i++) {
                 MPhi *phi = MPhi::New(alloc);
-                if (!phi->addInputSlow(pred->getSlot(i)))
-                    return false;
+                phi->addInput(pred->getSlot(i));
                 addPhi(phi);
                 setSlot(i, phi);
                 entryResumePoint()->initOperand(i, phi);
@@ -468,8 +468,7 @@ MBasicBlock::inherit(TempAllocator &alloc, BytecodeAnalysis *analysis, MBasicBlo
 
             for (; i < stackDepth(); i++) {
                 MPhi *phi = MPhi::New(alloc);
-                if (!phi->addInputSlow(pred->getSlot(i)))
-                    return false;
+                phi->addInput(pred->getSlot(i));
                 addPhi(phi);
                 setSlot(i, phi);
                 entryResumePoint()->initOperand(i, phi);
@@ -1025,7 +1024,7 @@ MBasicBlock::addPredecessorPopN(TempAllocator &alloc, MBasicBlock *pred, uint32_
     MOZ_ASSERT(pred->hasLastIns());
     MOZ_ASSERT(pred->stackPosition_ == stackPosition_ + popped);
 
-    for (uint32_t i = 0; i < stackPosition_; i++) {
+    for (uint32_t i = 0, e = stackPosition_; i < e; ++i) {
         MDefinition *mine = getSlot(i);
         MDefinition *other = pred->getSlot(i);
 
@@ -1051,7 +1050,7 @@ MBasicBlock::addPredecessorPopN(TempAllocator &alloc, MBasicBlock *pred, uint32_
                 if (!phi->reserveLength(predecessors_.length() + 1))
                     return false;
 
-                for (size_t j = 0; j < predecessors_.length(); j++) {
+                for (size_t j = 0, numPreds = predecessors_.length(); j < numPreds; ++j) {
                     MOZ_ASSERT(predecessors_[j]->getSlot(i) == mine);
                     phi->addInput(mine);
                 }
@@ -1197,7 +1196,7 @@ MBasicBlock::setBackedgeAsmJS(MBasicBlock *pred)
             exitDef = entryDef->getOperand(0);
         }
 
-        // MBasicBlock::NewAsmJS calls reserveLength(2) for loop header phis.
+        // Phis always have room for 2 operands, so we can use addInput.
         entryDef->addInput(exitDef);
 
         MOZ_ASSERT(slot < pred->stackDepth());
@@ -1436,9 +1435,10 @@ MBasicBlock::inheritPhisFromBackedge(MBasicBlock *backedge, bool *hadTypeChange)
 
         bool typeChange = false;
 
-        if (!entryDef->addInputSlow(exitDef, &typeChange))
+        if (!entryDef->addInputSlow(exitDef))
             return false;
-
+        if (!entryDef->checkForTypeChange(exitDef, &typeChange))
+            return false;
         *hadTypeChange |= typeChange;
         setSlot(slot, entryDef);
     }
