@@ -461,8 +461,11 @@ public:
     NS_WARNING("Available() called before real stream has been delivered, "
                "guessing the amount of data available!");
 
-    rv = mBlobImpl->GetSize(aAvailable);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult error;
+    *aAvailable = mBlobImpl->GetSize(error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.ErrorCode();
+    }
 
     return NS_OK;
   }
