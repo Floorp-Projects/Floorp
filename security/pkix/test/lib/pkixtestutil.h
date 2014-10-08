@@ -74,36 +74,13 @@ static const uint8_t tlv_id_kp_serverAuth[] = {
   0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x01
 };
 
-// python DottedOIDToCode.py --alg sha256WithRSAEncryption 1.2.840.113549.1.1.11
-const uint8_t alg_sha256WithRSAEncryption[] = {
-  0x30, 0x0b, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b
-};
-
-const ByteString sha256WithRSAEncryption(alg_sha256WithRSAEncryption,
-  MOZILLA_PKIX_ARRAY_LENGTH(alg_sha256WithRSAEncryption));
-
-// python DottedOIDToCode.py --alg md5WithRSAEncryption 1.2.840.113549.1.1.4
-const uint8_t alg_md5WithRSAEncryption[] = {
-  0x30, 0x0b, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x04
-};
-
-const ByteString md5WithRSAEncryption(alg_md5WithRSAEncryption,
-  MOZILLA_PKIX_ARRAY_LENGTH(alg_md5WithRSAEncryption));
-
-// python DottedOIDToCode.py --alg md2WithRSAEncryption 1.2.840.113549.1.1.2
-const uint8_t alg_md2WithRSAEncryption[] = {
-  0x30, 0x0b, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x02
-};
-
-const ByteString md2WithRSAEncryption(alg_md2WithRSAEncryption,
-  MOZILLA_PKIX_ARRAY_LENGTH(alg_md2WithRSAEncryption));
+extern const ByteString sha256WithRSAEncryption;
 
 // e.g. YMDHMS(2016, 12, 31, 1, 23, 45) => 2016-12-31:01:23:45 (GMT)
 mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
                            int16_t hour, int16_t minutes, int16_t seconds);
 
 ByteString CNToDERName(const char* cn);
-bool InputEqualsByteString(Input input, const ByteString& bs);
 
 class TestKeyPair
 {
@@ -244,7 +221,6 @@ public:
                                // regardless of if there are any actual
                                // extensions.
   ScopedTestKeyPair signerKeyPair;
-  ByteString signatureAlgorithm; // DER encoding of signature algorithm to use.
   bool badSignature; // If true, alter the signature to fail verification
   const ByteString* certs; // optional; array terminated by an empty string
 
