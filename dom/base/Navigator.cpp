@@ -369,6 +369,8 @@ Navigator::GetAppName(nsAString& aAppName)
 void
 Navigator::GetAcceptLanguages(nsTArray<nsString>& aLanguages)
 {
+  aLanguages.Clear();
+
   // E.g. "de-de, en-us,en".
   const nsAdoptingString& acceptLang =
     Preferences::GetLocalizedString("intl.accept_languages");
