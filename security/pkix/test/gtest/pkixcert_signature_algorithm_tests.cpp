@@ -1,0 +1,266 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+#include "pkix/pkix.h"
+#include "pkix/pkixnss.h"
+#include "pkixgtest.h"
+#include "pkixtestutil.h"
+
+using namespace mozilla::pkix;
+using namespace mozilla::pkix::test;
+
+static ByteString
+CreateCert(const char* issuerCN,
+           const char* subjectCN,
+           EndEntityOrCA endEntityOrCA,
+           const ByteString& signatureAlgorithm,
+           /*optional*/ TestKeyPair* issuerKey,
+           /*out*/ ScopedTestKeyPair& subjectKey,
+           /*out*/ ByteString& subjectDER)
+{
+  static long serialNumberValue = 0;
+  ++serialNumberValue;
+  ByteString serialNumber(CreateEncodedSerialNumber(serialNumberValue));
+  EXPECT_FALSE(ENCODING_FAILED(serialNumber));
+
+  ByteString issuerDER(CNToDERName(issuerCN));
+  EXPECT_FALSE(ENCODING_FAILED(issuerDER));
+  subjectDER = CNToDERName(subjectCN);
+  EXPECT_FALSE(ENCODING_FAILED(subjectDER));
+
+  ByteString extensions[2];
+  if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
+    extensions[0] =
+      CreateEncodedBasicConstraints(true, nullptr,
+                                    ExtensionCriticality::Critical);
+    EXPECT_FALSE(ENCODING_FAILED(extensions[0]));
+  }
+
+  ByteString certDER(CreateEncodedCertificate(v3, signatureAlgorithm,
+                                              serialNumber,
+                                              issuerDER, oneDayBeforeNow,
+                                              oneDayAfterNow, subjectDER,
+                                              extensions, issuerKey,
+                                              signatureAlgorithm, subjectKey));
+  EXPECT_FALSE(ENCODING_FAILED(certDER));
+  return certDER;
+}
+
+class AlgorithmTestsTrustDomain : public TrustDomain
+{
+public:
+  AlgorithmTestsTrustDomain(const ByteString& rootDER,
+                            const ByteString& rootSubjectDER,
+               /*optional*/ const ByteString& intDER,
+               /*optional*/ const ByteString& intSubjectDER)
+    : rootDER(rootDER)
+    , rootSubjectDER(rootSubjectDER)
+    , intDER(intDER)
+    , intSubjectDER(intSubjectDER)
+  {
+  }
+
+private:
+  virtual Result GetCertTrust(EndEntityOrCA, const CertPolicyId&,
+                              Input candidateCert,
+                              /*out*/ TrustLevel& trustLevel)
+  {
+    if (InputEqualsByteString(candidateCert, rootDER)) {
+      trustLevel = TrustLevel::TrustAnchor;
+    } else {
+      trustLevel = TrustLevel::InheritsTrust;
+    }
+    return Success;
+  }
+
+  virtual Result FindIssuer(Input encodedIssuerName, IssuerChecker& checker,
+                            Time)
+  {
+    ByteString* issuerDER = nullptr;
+    if (InputEqualsByteString(encodedIssuerName, rootSubjectDER)) {
+      issuerDER = &rootDER;
+    } else if (InputEqualsByteString(encodedIssuerName, intSubjectDER)) {
+      issuerDER = &intDER;
+    } else {
+      // FindIssuer just returns success if it can't find a potential issuer.
+      return Success;
+    }
+    Input issuerCert;
+    Result rv = issuerCert.Init(issuerDER->data(), issuerDER->length());
+    if (rv != Success) {
+      return rv;
+    }
+    bool keepGoing;
+    return checker.Check(issuerCert, nullptr, keepGoing);
+  }
+
+  virtual Result CheckRevocation(EndEntityOrCA, const CertID&, Time,
+                                 const Input*, const Input*)
+  {
+    return Success;
+  }
+
+  virtual Result IsChainValid(const DERArray&, Time)
+  {
+    return Success;
+  }
+
+  virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
+                                  Input subjectPublicKeyInfo)
+  {
+    EXPECT_NE(SignatureAlgorithm::unsupported_algorithm, signedData.algorithm);
+    return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
+                                             nullptr);
+  }
+
+  virtual Result DigestBuf(Input, uint8_t*, size_t)
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  virtual Result CheckPublicKey(Input subjectPublicKeyInfo)
+  {
+    return TestCheckPublicKey(subjectPublicKeyInfo);
+  }
+
+  ByteString rootDER;
+  ByteString rootSubjectDER;
+  ByteString intDER;
+  ByteString intSubjectDER;
+};
+
+static const ByteString NO_INTERMEDIATE; // empty
+
+struct ChainValidity
+{
+  // In general, a certificate is generated for each of these.  However, if
+  // optionalIntermediateSignatureAlgorithm is NO_INTERMEDIATE, then only 2
+  // certificates are generated.
+  // The certificate generated for the given rootSignatureAlgorithm is the
+  // trust anchor.
+  ByteString endEntitySignatureAlgorithm;
+  ByteString optionalIntermediateSignatureAlgorithm;
+  ByteString rootSignatureAlgorithm;
+  bool isValid;
+};
+
+static const ChainValidity CHAIN_VALIDITY[] =
+{
+  // The trust anchor may have a signature with an unsupported signature
+  // algorithm.
+  { sha256WithRSAEncryption,
+    NO_INTERMEDIATE,
+    md5WithRSAEncryption,
+    true
+  },
+  { sha256WithRSAEncryption,
+    NO_INTERMEDIATE,
+    md2WithRSAEncryption,
+    true
+  },
+
+  // Certificates that are not trust anchors must not have a signature with an
+  // unsupported signature algorithm.
+  { md5WithRSAEncryption,
+    NO_INTERMEDIATE,
+    sha256WithRSAEncryption,
+    false
+  },
+  { md2WithRSAEncryption,
+    NO_INTERMEDIATE,
+    sha256WithRSAEncryption,
+    false
+  },
+  { md2WithRSAEncryption,
+    NO_INTERMEDIATE,
+    md5WithRSAEncryption,
+    false
+  },
+  { sha256WithRSAEncryption,
+    md5WithRSAEncryption,
+    sha256WithRSAEncryption,
+    false
+  },
+  { sha256WithRSAEncryption,
+    md2WithRSAEncryption,
+    sha256WithRSAEncryption,
+    false
+  },
+  { sha256WithRSAEncryption,
+    md2WithRSAEncryption,
+    md5WithRSAEncryption,
+    false
+  },
+};
+
+class pkixcert_IsValidChainForAlgorithm
+  : public ::testing::Test
+  , public ::testing::WithParamInterface<ChainValidity>
+{
+};
+
+TEST_P(pkixcert_IsValidChainForAlgorithm, IsValidChainForAlgorithm)
+{
+  const ChainValidity& chainValidity(GetParam());
+  const char* rootCN = "CN=Root";
+  ScopedTestKeyPair rootKey;
+  ByteString rootSubjectDER;
+  ByteString rootEncoded(
+    CreateCert(rootCN, rootCN, EndEntityOrCA::MustBeCA,
+               chainValidity.rootSignatureAlgorithm,
+               nullptr, rootKey, rootSubjectDER));
+  EXPECT_FALSE(ENCODING_FAILED(rootEncoded));
+  EXPECT_FALSE(ENCODING_FAILED(rootSubjectDER));
+
+  const char* issuerCN = rootCN;
+  TestKeyPair* issuerKey = rootKey.get();
+
+  const char* intermediateCN = "CN=Intermediate";
+  ScopedTestKeyPair intermediateKey;
+  ByteString intermediateSubjectDER;
+  ByteString intermediateEncoded;
+  if (chainValidity.optionalIntermediateSignatureAlgorithm != NO_INTERMEDIATE) {
+    intermediateEncoded =
+      CreateCert(rootCN, intermediateCN, EndEntityOrCA::MustBeCA,
+                 chainValidity.optionalIntermediateSignatureAlgorithm,
+                 rootKey.get(), intermediateKey, intermediateSubjectDER);
+    EXPECT_FALSE(ENCODING_FAILED(intermediateEncoded));
+    EXPECT_FALSE(ENCODING_FAILED(intermediateSubjectDER));
+    issuerCN = intermediateCN;
+    issuerKey = intermediateKey.get();
+  }
+
+  AlgorithmTestsTrustDomain trustDomain(rootEncoded, rootSubjectDER,
+                                        intermediateEncoded,
+                                        intermediateSubjectDER);
+
+  const char* endEntityCN = "CN=End Entity";
+  ScopedTestKeyPair endEntityKey;
+  ByteString endEntitySubjectDER;
+  ByteString endEntityEncoded(
+    CreateCert(issuerCN, endEntityCN, EndEntityOrCA::MustBeEndEntity,
+               chainValidity.endEntitySignatureAlgorithm,
+               issuerKey, endEntityKey, endEntitySubjectDER));
+  EXPECT_FALSE(ENCODING_FAILED(endEntityEncoded));
+  EXPECT_FALSE(ENCODING_FAILED(endEntitySubjectDER));
+
+  Input endEntity;
+  ASSERT_EQ(Success, endEntity.Init(endEntityEncoded.data(),
+                                    endEntityEncoded.length()));
+  Result expectedResult = chainValidity.isValid
+                        ? Success
+                        : Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+  ASSERT_EQ(expectedResult,
+            BuildCertChain(trustDomain, endEntity, Now(),
+                           EndEntityOrCA::MustBeEndEntity,
+                           KeyUsage::noParticularKeyUsageRequired,
+                           KeyPurposeId::id_kp_serverAuth,
+                           CertPolicyId::anyPolicy, nullptr));
+}
+
+INSTANTIATE_TEST_CASE_P(pkixcert_IsValidChainForAlgorithm,
+                        pkixcert_IsValidChainForAlgorithm,
+                        testing::ValuesIn(CHAIN_VALIDITY));
