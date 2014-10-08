@@ -11,6 +11,7 @@
 #include "DOMCursor.h"
 #include "nsIDOMEvent.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 using mozilla::dom::AnyCallback;
 using mozilla::dom::DOMError;
