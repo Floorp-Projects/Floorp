@@ -6,9 +6,6 @@
 
 /* code for loading in @font-face defined font data */
 
-#ifdef MOZ_LOGGING
-#define FORCE_PR_LOG /* Allow logging in the release build */
-#endif /* MOZ_LOGGING */
 #include "prlog.h"
 
 #include "nsFontFaceLoader.h"

@@ -174,10 +174,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsXPCOMCID.h"
 #include "mozIThirdPartyUtil.h"
-#ifdef MOZ_LOGGING
-// so we can get logging even in release builds
-#define FORCE_PR_LOG 1
-#endif
 #include "prlog.h"
 #include "prenv.h"
 #include "prprf.h"
