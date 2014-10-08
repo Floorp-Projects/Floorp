@@ -1192,20 +1192,24 @@ MPhi::removeOperand(size_t index)
     // If we have phi(..., a, b, c, d, ..., z) and we plan
     // on removing a, then first shift downward so that we have
     // phi(..., b, c, d, ..., z, z):
-    size_t length = inputs_.length();
-    for (size_t i = index; i < length - 1; i++)
-        inputs_[i].replaceProducer(inputs_[i + 1].producer());
+    MUse *p = inputs_.begin() + index;
+    MUse *e = inputs_.end();
+    p->producer()->removeUse(p);
+    for (; p < e - 1; ++p) {
+        MDefinition *producer = (p + 1)->producer();
+        p->setProducerUnchecked(producer);
+        producer->replaceUse(p + 1, p);
+    }
 
     // truncate the inputs_ list:
-    inputs_[length - 1].releaseProducer();
-    inputs_.shrinkBy(1);
+    inputs_.popBack();
 }
 
 void
 MPhi::removeAllOperands()
 {
-    for (size_t i = 0; i < inputs_.length(); i++)
-        inputs_[i].releaseProducer();
+    for (MUse *p = inputs_.begin(), *e = inputs_.end(); p < e; ++p)
+        p->producer()->removeUse(p);
     inputs_.clear();
 }
 
