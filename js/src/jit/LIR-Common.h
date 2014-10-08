@@ -194,7 +194,7 @@ class LSimdInsertElementBase : public LInstructionHelper<1, 2, 0>
     const LAllocation *value() {
         return getOperand(1);
     }
-    const SimdLane lane() const {
+    SimdLane lane() const {
         return mir_->toSimdInsertElement()->lane();
     }
 };

@@ -341,7 +341,8 @@ class SimdConstant {
     // SimdConstant is a HashPolicy
     typedef SimdConstant Lookup;
     static HashNumber hash(const SimdConstant &val) {
-        return mozilla::HashBytes(&val.u, sizeof(SimdConstant));
+        uint32_t hash = mozilla::HashBytes(&val.u, sizeof(val.u));
+        return mozilla::AddToHash(hash, val.type_);
     }
     static bool match(const SimdConstant &lhs, const SimdConstant &rhs) {
         return lhs == rhs;
