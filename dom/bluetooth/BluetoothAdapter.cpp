@@ -8,6 +8,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsTArrayHelpers.h"
 #include "DOMRequest.h"
+#include "nsDOMFile.h"
 #include "nsThreadUtils.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
@@ -770,7 +771,7 @@ BluetoothAdapter::IsConnected(const uint16_t aServiceUuid, ErrorResult& aRv)
 
 already_AddRefed<DOMRequest>
 BluetoothAdapter::SendFile(const nsAString& aDeviceAddress,
-                           nsIDOMBlob* aBlob, ErrorResult& aRv)
+                           DOMFile& aBlob, ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
@@ -790,7 +791,7 @@ BluetoothAdapter::SendFile(const nsAString& aDeviceAddress,
 
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
     // In-process transfer
-    bs->SendFile(aDeviceAddress, aBlob, results);
+    bs->SendFile(aDeviceAddress, &aBlob, results);
   } else {
     ContentChild *cc = ContentChild::GetSingleton();
     if (!cc) {
@@ -798,7 +799,7 @@ BluetoothAdapter::SendFile(const nsAString& aDeviceAddress,
       return nullptr;
     }
 
-    BlobChild* actor = cc->GetOrCreateActorForBlob(aBlob);
+    BlobChild* actor = cc->GetOrCreateActorForBlob(&aBlob);
     if (!actor) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;

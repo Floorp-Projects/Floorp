@@ -13,7 +13,6 @@
 #include "nsDebug.h"
 #include "nsDOMFile.h"
 #include "nsID.h"
-#include "nsIDOMFile.h"
 #include "nsIXULRuntime.h"
 #include "nsMIMEInputStream.h"
 #include "nsMultiplexInputStream.h"

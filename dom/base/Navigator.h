@@ -25,7 +25,6 @@ class nsPIDOMWindow;
 class nsIDOMNavigatorSystemMessages;
 class nsDOMCameraManager;
 class nsDOMDeviceStorage;
-class nsIDOMBlob;
 class nsIPrincipal;
 class nsIURI;
 

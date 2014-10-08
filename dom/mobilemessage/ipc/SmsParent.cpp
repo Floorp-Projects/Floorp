@@ -53,13 +53,24 @@ MmsAttachmentDataToJSObject(JSContext* aContext,
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMBlob> blob = static_cast<BlobParent*>(aAttachment.contentParent())->GetBlob();
+  nsRefPtr<DOMFileImpl> blobImpl = static_cast<BlobParent*>(aAttachment.contentParent())->GetBlobImpl();
+
+  // nsRefPtr<DOMFile> needs to go out of scope before toObjectOrNull() is
+  // called because the static analysis thinks dereferencing XPCOM objects
+  // can GC (because in some cases it can!), and a return statement with a
+  // JSObject* type means that JSObject* is on the stack as a raw pointer
+  // while destructors are running.
   JS::Rooted<JS::Value> content(aContext);
-  nsresult rv = nsContentUtils::WrapNative(aContext,
-                                           blob,
-                                           &NS_GET_IID(nsIDOMBlob),
-                                           &content);
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  {
+    nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aContext));
+    MOZ_ASSERT(global);
+
+    nsRefPtr<DOMFile> blob = new DOMFile(global, blobImpl);
+    if (!WrapNewBindingObject(aContext, blob, &content)) {
+      return nullptr;
+    }
+  }
+
   if (!JS_DefineProperty(aContext, obj, "content", content, 0)) {
     return nullptr;
   }

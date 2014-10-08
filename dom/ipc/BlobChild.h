@@ -105,10 +105,6 @@ public:
   already_AddRefed<DOMFileImpl>
   GetBlobImpl();
 
-  // XXX This method will be removed soon.
-  already_AddRefed<nsIDOMBlob>
-  GetBlob();
-
   // Use this for files.
   bool
   SetMysteryBlobInfo(const nsString& aName,

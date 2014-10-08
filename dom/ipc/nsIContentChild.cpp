@@ -97,12 +97,12 @@ nsIContentChild::DeallocPBlobChild(PBlobChild* aActor)
 }
 
 BlobChild*
-nsIContentChild::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
+nsIContentChild::GetOrCreateActorForBlob(DOMFile* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBlob);
 
-  nsRefPtr<DOMFileImpl> blobImpl = static_cast<DOMFile*>(aBlob)->Impl();
+  nsRefPtr<DOMFileImpl> blobImpl = aBlob->Impl();
   MOZ_ASSERT(blobImpl);
 
   BlobChild* actor = BlobChild::GetOrCreate(this, blobImpl);

@@ -66,9 +66,8 @@ RemoveTask::RemoveTask(FileSystemBase* aFileSystem,
   }
 
   BlobParent* bp = static_cast<BlobParent*>(static_cast<PBlobParent*>(target));
-  nsCOMPtr<nsIDOMBlob> blob = bp->GetBlob();
-  MOZ_ASSERT(blob);
-  mTargetFileImpl = static_cast<DOMFile*>(blob.get())->Impl();
+  mTargetFileImpl = bp->GetBlobImpl();
+  MOZ_ASSERT(mTargetFileImpl);
 }
 
 RemoveTask::~RemoveTask()
@@ -93,7 +92,8 @@ RemoveTask::GetRequestParams(const nsString& aFileSystem) const
   param.directory() = mDirRealPath;
   param.recursive() = mRecursive;
   if (mTargetFileImpl) {
-    nsRefPtr<DOMFile> file = new DOMFile(mTargetFileImpl);
+    nsRefPtr<DOMFile> file = new DOMFile(mFileSystem->GetWindow(),
+                                         mTargetFileImpl);
     BlobChild* actor
       = ContentChild::GetSingleton()->GetOrCreateActorForBlob(file);
     if (actor) {

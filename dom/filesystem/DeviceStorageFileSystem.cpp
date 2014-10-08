@@ -123,7 +123,9 @@ DeviceStorageFileSystem::GetRealPath(DOMFileImpl* aFile, nsAString& aRealPath) c
   aRealPath.Truncate();
 
   nsAutoString filePath;
-  if (NS_FAILED(aFile->GetMozFullPathInternal(filePath))) {
+  ErrorResult rv;
+  aFile->GetMozFullPathInternal(filePath, rv);
+  if (NS_WARN_IF(rv.Failed())) {
     return false;
   }
 

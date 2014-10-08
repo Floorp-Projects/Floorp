@@ -5,7 +5,6 @@
 
 #include "nsDOMBlobBuilder.h"
 #include "jsfriendapi.h"
-#include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/FileBinding.h"
 #include "nsAutoPtr.h"
 #include "nsDOMClassInfoID.h"
@@ -22,13 +21,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS_INHERITED0(DOMMultipartFileImpl, DOMFileImpl)
-
-nsresult
-DOMMultipartFileImpl::GetSize(uint64_t* aLength)
-{
-  *aLength = mLength;
-  return NS_OK;
-}
 
 nsresult
 DOMMultipartFileImpl::GetInternalStream(nsIInputStream** aStream)
@@ -57,7 +49,8 @@ DOMMultipartFileImpl::GetInternalStream(nsIInputStream** aStream)
 
 already_AddRefed<DOMFileImpl>
 DOMMultipartFileImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
-                                  const nsAString& aContentType)
+                                  const nsAString& aContentType,
+                                  ErrorResult& aRv)
 {
   // If we clamped to nothing we create an empty blob
   nsTArray<nsRefPtr<DOMFileImpl>> blobImpls;
@@ -70,24 +63,27 @@ DOMMultipartFileImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
   for (i = 0; length && skipStart && i < mBlobImpls.Length(); i++) {
     DOMFileImpl* blobImpl = mBlobImpls[i].get();
 
-    uint64_t l;
-    nsresult rv = blobImpl->GetSize(&l);
-    NS_ENSURE_SUCCESS(rv, nullptr);
+    uint64_t l = blobImpl->GetSize(aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
 
     if (skipStart < l) {
       uint64_t upperBound = std::min<uint64_t>(l - skipStart, length);
 
-      nsRefPtr<DOMFileImpl> firstImpl;
-      rv = blobImpl->Slice(skipStart, skipStart + upperBound, aContentType, 3,
-                           getter_AddRefs(firstImpl));
-      NS_ENSURE_SUCCESS(rv, nullptr);
+      nsRefPtr<DOMFileImpl> firstBlobImpl =
+        blobImpl->CreateSlice(skipStart, upperBound,
+                              aContentType, aRv);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return nullptr;
+      }
 
       // Avoid wrapping a single blob inside an DOMMultipartFileImpl
       if (length == upperBound) {
-        return firstImpl.forget();
+        return firstBlobImpl.forget();
       }
 
-      blobImpls.AppendElement(firstImpl);
+      blobImpls.AppendElement(firstBlobImpl);
       length -= upperBound;
       i++;
       break;
@@ -99,17 +95,19 @@ DOMMultipartFileImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
   for (; length && i < mBlobImpls.Length(); i++) {
     DOMFileImpl* blobImpl = mBlobImpls[i].get();
 
-    uint64_t l;
-    nsresult rv = blobImpl->GetSize(&l);
-    NS_ENSURE_SUCCESS(rv, nullptr);
+    uint64_t l = blobImpl->GetSize(aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
 
     if (length < l) {
-      nsRefPtr<DOMFileImpl> lastBlob;
-      rv = blobImpl->Slice(0, length, aContentType, 3,
-                           getter_AddRefs(lastBlob));
-      NS_ENSURE_SUCCESS(rv, nullptr);
+      nsRefPtr<DOMFileImpl> lastBlobImpl =
+        blobImpl->CreateSlice(0, length, aContentType, aRv);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return nullptr;
+      }
 
-      blobImpls.AppendElement(lastBlob);
+      blobImpls.AppendElement(lastBlobImpl);
     } else {
       blobImpls.AppendElement(blobImpl);
     }
@@ -122,150 +120,64 @@ DOMMultipartFileImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
   return impl.forget();
 }
 
-/* static */ nsresult
-DOMMultipartFileImpl::NewFile(const nsAString& aName, nsISupports** aNewObject)
+void
+DOMMultipartFileImpl::InitializeBlob()
 {
-  nsCOMPtr<nsISupports> file =
-    do_QueryObject(new DOMFile(new DOMMultipartFileImpl(aName)));
-  file.forget(aNewObject);
-  return NS_OK;
-}
-
-/* static */ nsresult
-DOMMultipartFileImpl::NewBlob(nsISupports** aNewObject)
-{
-  nsCOMPtr<nsISupports> file =
-    do_QueryObject(new DOMFile(new DOMMultipartFileImpl()));
-  file.forget(aNewObject);
-  return NS_OK;
-}
-
-static nsIDOMBlob*
-GetXPConnectNative(JSContext* aCx, JSObject* aObj) {
-  nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(
-    nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, aObj));
-  return blob;
-}
-
-nsresult
-DOMMultipartFileImpl::Initialize(nsISupports* aOwner,
-                                 JSContext* aCx,
-                                 JSObject* aObj,
-                                 const JS::CallArgs& aArgs)
-{
-  if (!mIsFile) {
-    return InitBlob(aCx, aArgs.length(), aArgs.array(), GetXPConnectNative);
-  }
-
-  if (!nsContentUtils::IsCallerChrome()) {
-    return InitFile(aCx, aArgs.length(), aArgs.array());
-  }
-
-  if (aArgs.length() > 0) {
-    JS::Value* argv = aArgs.array();
-    if (argv[0].isObject()) {
-      JS::Rooted<JSObject*> obj(aCx, &argv[0].toObject());
-      if (JS_IsArrayObject(aCx, obj)) {
-        return InitFile(aCx, aArgs.length(), aArgs.array());
-      }
-    }
-  }
-
-  return InitChromeFile(aCx, aArgs.length(), aArgs.array());
-}
-
-nsresult
-DOMMultipartFileImpl::InitBlob(JSContext* aCx,
-                               uint32_t aArgc,
-                               JS::Value* aArgv,
-                               UnwrapFuncPtr aUnwrapFunc)
-{
-  bool nativeEOL = false;
-  if (aArgc > 1) {
-    BlobPropertyBag d;
-    if (!d.Init(aCx, JS::Handle<JS::Value>::fromMarkedLocation(&aArgv[1]))) {
-      return NS_ERROR_TYPE_ERR;
-    }
-    mContentType = d.mType;
-    nativeEOL = d.mEndings == EndingTypes::Native;
-  }
-
-  if (aArgc > 0) {
-    return ParseBlobArrayArgument(aCx, aArgv[0], nativeEOL, aUnwrapFunc);
-  }
-
   SetLengthAndModifiedDate();
-
-  return NS_OK;
 }
 
-nsresult
-DOMMultipartFileImpl::ParseBlobArrayArgument(JSContext* aCx, JS::Value& aValue,
-                                             bool aNativeEOL,
-                                             UnwrapFuncPtr aUnwrapFunc)
+void
+DOMMultipartFileImpl::InitializeBlob(
+       JSContext* aCx,
+       const Sequence<OwningArrayBufferOrArrayBufferViewOrBlobOrString>& aData,
+       const nsAString& aContentType,
+       bool aNativeEOL,
+       ErrorResult& aRv)
 {
-  if (!aValue.isObject()) {
-    return NS_ERROR_TYPE_ERR; // We're not interested
-  }
-
-  JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
-  if (!JS_IsArrayObject(aCx, obj)) {
-    return NS_ERROR_TYPE_ERR; // We're not interested
-  }
-
+  mContentType = aContentType;
   BlobSet blobSet;
 
-  uint32_t length;
-  MOZ_ALWAYS_TRUE(JS_GetArrayLength(aCx, obj, &length));
-  for (uint32_t i = 0; i < length; ++i) {
-    JS::Rooted<JS::Value> element(aCx);
-    if (!JS_GetElement(aCx, obj, i, &element))
-      return NS_ERROR_TYPE_ERR;
+  for (uint32_t i = 0, len = aData.Length(); i < len; ++i) {
+    const OwningArrayBufferOrArrayBufferViewOrBlobOrString& data = aData[i];
 
-    if (element.isObject()) {
-      JS::Rooted<JSObject*> obj(aCx, &element.toObject());
-      nsCOMPtr<nsIDOMBlob> blob = aUnwrapFunc(aCx, obj);
-      if (blob) {
-        nsRefPtr<DOMFileImpl> blobImpl =
-          static_cast<DOMFile*>(blob.get())->Impl();
+    if (data.IsBlob()) {
+      nsRefPtr<DOMFile> file = data.GetAsBlob().get();
+      blobSet.AppendBlobImpl(file->Impl());
+    }
 
-        // Flatten so that multipart blobs will never nest
-        const nsTArray<nsRefPtr<DOMFileImpl>>* subBlobImpls =
-          blobImpl->GetSubBlobImpls();
-        if (subBlobImpls) {
-          blobSet.AppendBlobImpls(*subBlobImpls);
-        } else {
-          blobSet.AppendBlobImpl(blobImpl);
-        }
-        continue;
-      }
-      if (JS_IsArrayBufferViewObject(obj)) {
-        nsresult rv = blobSet.AppendVoidPtr(
-                                          JS_GetArrayBufferViewData(obj),
-                                          JS_GetArrayBufferViewByteLength(obj));
-        NS_ENSURE_SUCCESS(rv, rv);
-        continue;
-      }
-      if (JS_IsArrayBufferObject(obj)) {
-        nsresult rv = blobSet.AppendArrayBuffer(obj);
-        NS_ENSURE_SUCCESS(rv, rv);
-        continue;
+    else if (data.IsString()) {
+      aRv = blobSet.AppendString(data.GetAsString(), aNativeEOL, aCx);
+      if (aRv.Failed()) {
+        return;
       }
     }
 
-    // coerce it to a string
-    JSString* str = JS::ToString(aCx, element);
-    NS_ENSURE_TRUE(str, NS_ERROR_TYPE_ERR);
+    else if (data.IsArrayBuffer()) {
+      const ArrayBuffer& buffer = data.GetAsArrayBuffer();
+      buffer.ComputeLengthAndData();
+      aRv = blobSet.AppendVoidPtr(buffer.Data(), buffer.Length());
+      if (aRv.Failed()) {
+        return;
+      }
+    }
 
-    nsresult rv = blobSet.AppendString(str, aNativeEOL, aCx);
-    NS_ENSURE_SUCCESS(rv, rv);
+    else if (data.IsArrayBufferView()) {
+      const ArrayBufferView& buffer = data.GetAsArrayBufferView();
+      buffer.ComputeLengthAndData();
+      aRv = blobSet.AppendVoidPtr(buffer.Data(), buffer.Length());
+      if (aRv.Failed()) {
+        return;
+      }
+    }
+
+    else {
+      MOZ_CRASH("Impossible blob data type.");
+    }
   }
 
+
   mBlobImpls = blobSet.GetBlobImpls();
-
   SetLengthAndModifiedDate();
-
-  return NS_OK;
 }
 
 void
@@ -284,8 +196,9 @@ DOMMultipartFileImpl::SetLengthAndModifiedDate()
     MOZ_ASSERT(!blob->IsDateUnknown());
 #endif
 
-    uint64_t subBlobLength;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blob->GetSize(&subBlobLength)));
+    ErrorResult error;
+    uint64_t subBlobLength = blob->GetSize(error);
+    MOZ_ALWAYS_TRUE(!error.Failed());
 
     MOZ_ASSERT(UINT64_MAX - subBlobLength >= totalLength);
     totalLength += subBlobLength;
@@ -294,113 +207,121 @@ DOMMultipartFileImpl::SetLengthAndModifiedDate()
   mLength = totalLength;
 
   if (mIsFile) {
-    mLastModificationDate = PR_Now();
+    // We cannot use PR_Now() because bug 493756 and, for this reason:
+    //   var x = new Date(); var f = new File(...);
+    //   x.getTime() < f.dateModified.getTime()
+    // could fail.
+    mLastModificationDate = JS_Now();
   }
 }
 
-nsresult
-DOMMultipartFileImpl::GetMozFullPathInternal(nsAString& aFilename)
+void
+DOMMultipartFileImpl::GetMozFullPathInternal(nsAString& aFilename,
+                                             ErrorResult& aRv)
 {
-  if (!mIsFromNsiFile || mBlobImpls.Length() == 0) {
-    return DOMFileImplBase::GetMozFullPathInternal(aFilename);
+  if (!mIsFromNsIFile || mBlobImpls.Length() == 0) {
+    DOMFileImplBase::GetMozFullPathInternal(aFilename, aRv);
+    return;
   }
 
   DOMFileImpl* blobImpl = mBlobImpls.ElementAt(0).get();
   if (!blobImpl) {
-    return DOMFileImplBase::GetMozFullPathInternal(aFilename);
+    DOMFileImplBase::GetMozFullPathInternal(aFilename, aRv);
+    return;
   }
 
-  return blobImpl->GetMozFullPathInternal(aFilename);
+  blobImpl->GetMozFullPathInternal(aFilename, aRv);
 }
 
-nsresult
-DOMMultipartFileImpl::InitChromeFile(JSContext* aCx,
-                                     uint32_t aArgc,
-                                     JS::Value* aArgv)
+void
+DOMMultipartFileImpl::InitializeChromeFile(DOMFile& aBlob,
+                                           const FilePropertyBag& aBag,
+                                           ErrorResult& aRv)
 {
-  nsresult rv;
-
   NS_ASSERTION(!mImmutable, "Something went wrong ...");
-  NS_ENSURE_TRUE(!mImmutable, NS_ERROR_UNEXPECTED);
+
+  if (mImmutable) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());
-  NS_ENSURE_TRUE(aArgc > 0, NS_ERROR_UNEXPECTED);
 
-  if (aArgc > 1) {
-    FilePropertyBag d;
-    if (!d.Init(aCx, JS::Handle<JS::Value>::fromMarkedLocation(&aArgv[1]))) {
-      return NS_ERROR_TYPE_ERR;
-    }
-    mName = d.mName;
-    mContentType = d.mType;
+  mName = aBag.mName;
+  mContentType = aBag.mType;
+  mIsFromNsIFile = true;
+
+  // XXXkhuey this is terrible
+  if (mContentType.IsEmpty()) {
+    aBlob.GetType(mContentType);
   }
 
 
-  // We expect to get a path to represent as a File object or
-  // Blob object, an nsIFile, or an nsIDOMFile.
-  nsCOMPtr<nsIFile> file;
-  nsCOMPtr<nsIDOMBlob> blob;
-  if (!aArgv[0].isString()) {
-    // Lets see if it's an nsIFile
-    if (!aArgv[0].isObject()) {
-      return NS_ERROR_UNEXPECTED; // We're not interested
-    }
+  BlobSet blobSet;
+  blobSet.AppendBlobImpl(aBlob.Impl());
+  mBlobImpls = blobSet.GetBlobImpls();
 
-    JSObject* obj = &aArgv[0].toObject();
+  SetLengthAndModifiedDate();
+}
 
-    nsISupports* supports =
-      nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, obj);
-    if (!supports) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    blob = do_QueryInterface(supports);
-    file = do_QueryInterface(supports);
-    if (!blob && !file) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    mIsFromNsiFile = true;
-  } else {
-    // It's a string
-    JSString* str = JS::ToString(aCx, JS::Handle<JS::Value>::fromMarkedLocation(&aArgv[0]));
-    NS_ENSURE_TRUE(str, NS_ERROR_XPC_BAD_CONVERT_JS);
-
-    nsAutoJSString xpcomStr;
-    if (!xpcomStr.init(aCx, str)) {
-      return NS_ERROR_XPC_BAD_CONVERT_JS;
-    }
-
-    rv = NS_NewLocalFile(xpcomStr, false, getter_AddRefs(file));
-    NS_ENSURE_SUCCESS(rv, rv);
+void
+DOMMultipartFileImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
+                                           nsIFile* aFile,
+                                           const FilePropertyBag& aBag,
+                                           bool aIsFromNsIFile,
+                                           ErrorResult& aRv)
+{
+  NS_ASSERTION(!mImmutable, "Something went wrong ...");
+  if (mImmutable) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
   }
 
-  if (file) {
-    bool exists;
-    rv = file->Exists(&exists);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(exists, NS_ERROR_FILE_NOT_FOUND);
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
-    bool isDir;
-    rv = file->IsDirectory(&isDir);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_FALSE(isDir, NS_ERROR_FILE_IS_DIRECTORY);
+  mName = aBag.mName;
+  mContentType = aBag.mType;
+  mIsFromNsIFile = aIsFromNsIFile;
 
-    if (mName.IsEmpty()) {
-      file->GetLeafName(mName);
-    }
+  bool exists;
+  aRv = aFile->Exists(&exists);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
 
-    nsRefPtr<DOMFile> domFile = DOMFile::CreateFromFile(file);
+  if (!exists) {
+    aRv.Throw(NS_ERROR_FILE_NOT_FOUND);
+    return;
+  }
 
-    // Pre-cache size.
-    uint64_t unused;
-    rv = domFile->GetSize(&unused);
-    NS_ENSURE_SUCCESS(rv, rv);
+  bool isDir;
+  aRv = aFile->IsDirectory(&isDir);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
 
-    // Pre-cache modified date.
-    rv = domFile->GetMozLastModifiedDate(&unused);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (isDir) {
+    aRv.Throw(NS_ERROR_FILE_IS_DIRECTORY);
+    return;
+  }
 
-    blob = domFile.forget();
+  if (mName.IsEmpty()) {
+    aFile->GetLeafName(mName);
+  }
+
+  nsRefPtr<DOMFile> blob = DOMFile::CreateFromFile(aWindow, aFile);
+
+  // Pre-cache size.
+  uint64_t unused;
+  aRv = blob->GetSize(&unused);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  // Pre-cache modified date.
+  aRv = blob->GetMozLastModifiedDate(&unused);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
   }
 
   // XXXkhuey this is terrible
@@ -413,45 +334,21 @@ DOMMultipartFileImpl::InitChromeFile(JSContext* aCx,
   mBlobImpls = blobSet.GetBlobImpls();
 
   SetLengthAndModifiedDate();
-
-  return NS_OK;
 }
 
-nsresult
-DOMMultipartFileImpl::InitFile(JSContext* aCx,
-                               uint32_t aArgc,
-                               JS::Value* aArgv)
+void
+DOMMultipartFileImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
+                                           const nsAString& aData,
+                                           const FilePropertyBag& aBag,
+                                           ErrorResult& aRv)
 {
-  NS_ASSERTION(!mImmutable, "Something went wrong ...");
-  NS_ENSURE_TRUE(!mImmutable, NS_ERROR_UNEXPECTED);
-
-  if (aArgc < 2) {
-    return NS_ERROR_TYPE_ERR;
+  nsCOMPtr<nsIFile> file;
+  aRv = NS_NewLocalFile(aData, false, getter_AddRefs(file));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
   }
 
-  // File name
-  JSString* str = JS::ToString(aCx, JS::Handle<JS::Value>::fromMarkedLocation(&aArgv[1]));
-  NS_ENSURE_TRUE(str, NS_ERROR_XPC_BAD_CONVERT_JS);
-
-  nsAutoJSString xpcomStr;
-  if (!xpcomStr.init(aCx, str)) {
-    return NS_ERROR_XPC_BAD_CONVERT_JS;
-  }
-
-  mName = xpcomStr;
-
-  // Optional params
-  bool nativeEOL = false;
-  if (aArgc > 2) {
-    BlobPropertyBag d;
-    if (!d.Init(aCx, JS::Handle<JS::Value>::fromMarkedLocation(&aArgv[2]))) {
-      return NS_ERROR_TYPE_ERR;
-    }
-    mContentType = d.mType;
-    nativeEOL = d.mEndings == EndingTypes::Native;
-  }
-
-  return ParseBlobArrayArgument(aCx, aArgv[0], nativeEOL, GetXPConnectNative);
+  InitializeChromeFile(aWindow, file, aBag, false, aRv);
 }
 
 nsresult
@@ -469,16 +366,11 @@ BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength)
 }
 
 nsresult
-BlobSet::AppendString(JSString* aString, bool nativeEOL, JSContext* aCx)
+BlobSet::AppendString(const nsAString& aString, bool aNativeEOL, JSContext* aCx)
 {
-  nsAutoJSString xpcomStr;
-  if (!xpcomStr.init(aCx, aString)) {
-    return NS_ERROR_XPC_BAD_CONVERT_JS;
-  }
+  NS_ConvertUTF16toUTF8 utf8Str(aString);
 
-  nsCString utf8Str = NS_ConvertUTF16toUTF8(xpcomStr);
-
-  if (nativeEOL) {
+  if (aNativeEOL) {
     if (utf8Str.FindChar('\r') != kNotFound) {
       utf8Str.ReplaceSubstring("\r\n", "\n");
       utf8Str.ReplaceSubstring("\r", "\n");
@@ -510,11 +402,4 @@ BlobSet::AppendBlobImpls(const nsTArray<nsRefPtr<DOMFileImpl>>& aBlobImpls)
   mBlobImpls.AppendElements(aBlobImpls);
 
   return NS_OK;
-}
-
-nsresult
-BlobSet::AppendArrayBuffer(JSObject* aBuffer)
-{
-  return AppendVoidPtr(JS_GetArrayBufferData(aBuffer),
-                       JS_GetArrayBufferByteLength(aBuffer));
 }
