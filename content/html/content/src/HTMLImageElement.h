@@ -230,8 +230,9 @@ protected:
                                   const nsAString& aNewValue, bool aNotify);
   void PictureSourceSizesChanged(nsIContent *aSourceNode,
                                  const nsAString& aNewValue, bool aNotify);
-  void PictureSourceMediaChanged(nsIContent *aSourceNode,
-                                 const nsAString& aNewValue, bool aNotify);
+  // As we re-run the source selection on these mutations regardless,
+  // we don't actually care which changed or to what
+  void PictureSourceMediaOrTypeChanged(nsIContent *aSourceNode, bool aNotify);
 
   void PictureSourceAdded(nsIContent *aSourceNode);
   // This should be called prior to the unbind, such that nextsibling works

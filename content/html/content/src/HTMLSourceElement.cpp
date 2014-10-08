@@ -65,7 +65,8 @@ HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   if (aNameSpaceID == kNameSpaceID_None &&
       (aName == nsGkAtoms::srcset ||
        aName == nsGkAtoms::sizes ||
-       aName == nsGkAtoms::media) &&
+       aName == nsGkAtoms::media ||
+       aName == nsGkAtoms::type) &&
       parent && parent->Tag() == nsGkAtoms::picture) {
     nsString strVal = aValue ? aValue->GetStringValue() : EmptyString();
     // Find all img siblings after this <source> and notify them of the change
@@ -77,8 +78,9 @@ HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
           img->PictureSourceSrcsetChanged(AsContent(), strVal, aNotify);
         } else if (aName == nsGkAtoms::sizes) {
           img->PictureSourceSizesChanged(AsContent(), strVal, aNotify);
-        } else if (aName == nsGkAtoms::media) {
-          img->PictureSourceMediaChanged(AsContent(), strVal, aNotify);
+        } else if (aName == nsGkAtoms::media ||
+                   aName == nsGkAtoms::type) {
+          img->PictureSourceMediaOrTypeChanged(AsContent(), aNotify);
         }
       }
     }
