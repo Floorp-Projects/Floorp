@@ -74,7 +74,7 @@ static const uint8_t tlv_id_kp_serverAuth[] = {
   0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x01
 };
 
-extern const ByteString sha256WithRSAEncryption;
+extern const Input sha256WithRSAEncryption;
 
 // e.g. YMDHMS(2016, 12, 31, 1, 23, 45) => 2016-12-31:01:23:45 (GMT)
 mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
@@ -96,7 +96,7 @@ public:
   const ByteString subjectPublicKey;
 
   virtual Result SignData(const ByteString& tbs,
-                          const ByteString& signatureAlgorithm,
+                          SignatureAlgorithm signatureAlgorithm,
                           /*out*/ ByteString& signature) const = 0;
 
   virtual TestKeyPair* Clone() const = 0;
@@ -139,10 +139,7 @@ Result TamperOnce(/*in/out*/ ByteString& item, const ByteString& from,
 
 enum Version { v1 = 0, v2 = 1, v3 = 2 };
 
-// signature is assumed to be the DER encoding of an AlgorithmIdentifer. It is
-// put into the signature field of the TBSCertificate. In most cases, it will
-// be the same as signatureAlgorithm, which is the algorithm actually used
-// to sign the certificate.
+// signature is assumed to be the DER encoding of an AlgorithmIdentifer.
 // serialNumber is assumed to be the DER encoding of an INTEGER.
 //
 // If extensions is null, then no extensions will be encoded. Otherwise,
@@ -153,14 +150,14 @@ enum Version { v1 = 0, v2 = 1, v3 = 2 };
 // If issuerPrivateKey is null, then the certificate will be self-signed.
 // Parameter order is based on the order of the attributes of the certificate
 // in RFC 5280.
-ByteString CreateEncodedCertificate(long version, const ByteString& signature,
+ByteString CreateEncodedCertificate(long version, Input signature,
                                     const ByteString& serialNumber,
                                     const ByteString& issuerNameDER,
                                     time_t notBefore, time_t notAfter,
                                     const ByteString& subjectNameDER,
                                     /*optional*/ const ByteString* extensions,
                                     /*optional*/ TestKeyPair* issuerKeyPair,
-                                    const ByteString& signatureAlgorithm,
+                                    SignatureAlgorithm signatureAlgorithm,
                                     /*out*/ ScopedTestKeyPair& keyPairResult);
 
 ByteString CreateEncodedSerialNumber(long value);

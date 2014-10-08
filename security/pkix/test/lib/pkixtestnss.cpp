@@ -73,14 +73,16 @@ public:
   }
 
   virtual Result SignData(const ByteString& tbs,
-                          const ByteString& signatureAlgorithm,
+                          SignatureAlgorithm signatureAlgorithm,
                           /*out*/ ByteString& signature) const
   {
     SECOidTag signatureAlgorithmOidTag;
-    if (signatureAlgorithm == sha256WithRSAEncryption) {
-      signatureAlgorithmOidTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
-    } else {
-      return Result::FATAL_ERROR_INVALID_ARGS;
+    switch (signatureAlgorithm) {
+      case SignatureAlgorithm::rsa_pkcs1_with_sha256:
+        signatureAlgorithmOidTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
+        break;
+      default:
+        return Result::FATAL_ERROR_INVALID_ARGS;
     }
 
     SECItem signatureItem;
