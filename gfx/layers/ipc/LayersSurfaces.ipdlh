@@ -81,7 +81,7 @@ struct SurfaceStreamDescriptor {
   bool yflip;
 };
 
-struct ShSurfDescriptor {
+struct SharedSurfaceDescriptor {
   uintptr_t surf;
 };
 
@@ -113,7 +113,7 @@ union SurfaceDescriptor {
   SurfaceStreamDescriptor;
   SurfaceDescriptorMacIOSurface;
   NewSurfaceDescriptorGralloc;
-  ShSurfDescriptor;
+  SharedSurfaceDescriptor;
   null_t;
 };
 

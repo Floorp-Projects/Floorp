@@ -861,9 +861,10 @@ StreamTextureClient::IsAllocated() const
 }
 
 ////////////////////////////////////////////////////////////////////////
-// ShSurfTexClient
+// SharedSurfaceTextureClient
 
-ShSurfTexClient::ShSurfTexClient(TextureFlags aFlags, gl::SharedSurface* surf)
+SharedSurfaceTextureClient::SharedSurfaceTextureClient(TextureFlags aFlags,
+                                                       gl::SharedSurface* surf)
   : TextureClient(aFlags)
   , mIsLocked(false)
   , mSurf(surf)
@@ -872,15 +873,15 @@ ShSurfTexClient::ShSurfTexClient(TextureFlags aFlags, gl::SharedSurface* surf)
   mSurf->Fence();
 }
 
-ShSurfTexClient::~ShSurfTexClient()
+SharedSurfaceTextureClient::~SharedSurfaceTextureClient()
 {
   // the data is owned externally.
 }
 
 bool
-ShSurfTexClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
+SharedSurfaceTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
 {
-  aOutDescriptor = ShSurfDescriptor((uintptr_t)mSurf);
+  aOutDescriptor = SharedSurfaceDescriptor((uintptr_t)mSurf);
   return true;
 }
 

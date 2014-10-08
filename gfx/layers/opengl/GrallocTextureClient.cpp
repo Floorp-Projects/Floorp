@@ -12,6 +12,7 @@
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
 #include "gfx2DGlue.h"
+#include "SharedSurfaceGralloc.h"
 
 namespace mozilla {
 namespace layers {
@@ -112,7 +113,7 @@ GrallocTextureClientOGL::WaitForBufferOwnership()
 #if ANDROID_VERSION == 17
      fence->waitForever(1000, "GrallocTextureClientOGL::Lock");
      // 1000 is what Android uses. It is warning timeout ms.
-     // This timeous is removed since ANDROID_VERSION 18. 
+     // This timeous is removed since ANDROID_VERSION 18.
 #else
      fence->waitForever("GrallocTextureClientOGL::Lock");
 #endif
@@ -344,6 +345,29 @@ GrallocTextureClientOGL::GetBufferSize() const
   // see Bug 908196
   MOZ_CRASH("This method should never be called.");
   return 0;
+}
+
+/*static*/ TemporaryRef<TextureClient>
+GrallocTextureClientOGL::FromShSurf(gl::SharedSurface* abstractSurf,
+                                    TextureFlags flags)
+{
+  auto surf = gl::SharedSurface_Gralloc::Cast(abstractSurf);
+
+  RefPtr<TextureClient> ret = surf->GetTextureClient();
+
+  TextureFlags mask = TextureFlags::NEEDS_Y_FLIP |
+                      TextureFlags::RB_SWAPPED |
+                      TextureFlags::NON_PREMULTIPLIED;
+  TextureFlags required = flags & mask;
+  TextureFlags present = ret->GetFlags() & mask;
+
+  if (present != required) {
+    printf_stderr("Present flags: 0x%x. Required: 0x%x.\n",
+                  (uint32_t)present,
+                  (uint32_t)required);
+    MOZ_CRASH("Flag requirement mismatch.");
+  }
+  return ret.forget();
 }
 
 } // namesapace layers

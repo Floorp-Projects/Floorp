@@ -50,7 +50,7 @@ class CompositableBackendSpecificData;
 class CompositableParentManager;
 class SurfaceDescriptor;
 class SurfaceStreamDescriptor;
-class ShSurfDescriptor;
+class SharedSurfaceDescriptor;
 class ISurfaceAllocator;
 class TextureHostOGL;
 class TextureSourceOGL;
@@ -620,12 +620,12 @@ protected:
 /**
  * A TextureHost for SharedSurfaces
  */
-class ShSurfTexHost : public TextureHost
+class SharedSurfaceTextureHost : public TextureHost
 {
 public:
-  ShSurfTexHost(TextureFlags aFlags, const ShSurfDescriptor& aDesc);
+  SharedSurfaceTextureHost(TextureFlags aFlags, const ShSurfDescriptor& aDesc);
 
-  virtual ~ShSurfTexHost() {};
+  virtual ~SharedSurfaceTextureHost() {};
 
   virtual void DeallocateDeviceData() MOZ_OVERRIDE {};
 
@@ -667,7 +667,7 @@ public:
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() { return "ShSurfTexHost"; }
+  virtual const char* Name() { return "SharedSurfaceTextureHost"; }
 #endif
 
 protected:
