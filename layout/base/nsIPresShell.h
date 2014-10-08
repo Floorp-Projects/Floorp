@@ -1257,7 +1257,10 @@ public:
   static void SetPointerCapturingContent(uint32_t aPointerId, nsIContent* aContent);
   static void ReleasePointerCapturingContent(uint32_t aPointerId, nsIContent* aContent);
   static nsIContent* GetPointerCapturingContent(uint32_t aPointerId);
-  static void CheckPointerCaptureState(uint32_t aPointerId);
+  
+  // CheckPointerCaptureState checks cases, when got/lostpointercapture events should be fired.
+  // Function returns true, if any of events was fired; false, if no one event was fired.
+  static bool CheckPointerCaptureState(uint32_t aPointerId);
 
   // GetPointerInfo returns true if pointer with aPointerId is situated in device, false otherwise.
   // aActiveState is additional information, which shows state of pointer like button state for mouse.
