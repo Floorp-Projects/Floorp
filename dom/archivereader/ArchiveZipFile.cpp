@@ -402,7 +402,7 @@ already_AddRefed<mozilla::dom::FileImpl>
 ArchiveZipFileImpl::CreateSlice(uint64_t aStart,
                                 uint64_t aLength,
                                 const nsAString& aContentType,
-                                ErrorResult& aRv)
+                                mozilla::ErrorResult& aRv)
 {
   nsRefPtr<FileImpl> impl =
     new ArchiveZipFileImpl(mFilename, mContentType, aStart, mLength, mCentral,
