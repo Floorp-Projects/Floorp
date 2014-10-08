@@ -222,7 +222,7 @@ function getLogDirectory() {
   d = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
   let timestamp = d.toISOString().slice(0, -5).replace(/[:T]/g, '-');
   // return directory name of format 'logs/timestamp/'
-  return OS.Path.join('logs', timestamp, '');
+  return OS.Path.join('logs', timestamp);
 }
 
 /**
@@ -285,7 +285,7 @@ function saveLogs(logArrays) {
       // The filename represents the relative path within the SD card, not the
       // absolute path because Gaia will refer to it using the DeviceStorage
       // API
-      let filename = dirName + getLogFilename(logLocation);
+      let filename = OS.Path.join(dirName, getLogFilename(logLocation));
       logFilenames.push(filename);
       let saveRequest = OS.File.writeAtomic(OS.Path.join(sdcardPrefix, filename), logArray);
       saveRequests.push(saveRequest);
