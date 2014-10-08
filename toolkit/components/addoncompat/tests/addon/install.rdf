@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>test-addon-shim-1@tests.mozilla.org</em:id>
+    <em:version>1</em:version>
+    <em:type>2</em:type>
+    <em:bootstrap>true</em:bootstrap>
+
+    <!-- Front End MetaData -->
+    <em:name>Test addon shim 1</em:name>
+    <em:description>Test an add-on that needs multiprocess shims.</em:description>
+    <em:multiprocessCompatible>false</em:multiprocessCompatible>
+
+    <em:iconURL>chrome://foo/skin/icon.png</em:iconURL>
+    <em:aboutURL>chrome://foo/content/about.xul</em:aboutURL>
+    <em:optionsURL>chrome://foo/content/options.xul</em:optionsURL>
+
+    <em:targetApplication>
+      <Description>
+        <em:id>toolkit@mozilla.org</em:id>
+        <em:minVersion>10.0</em:minVersion>
+        <em:maxVersion>*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+  </Description>
+</RDF>

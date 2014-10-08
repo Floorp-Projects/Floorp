@@ -2478,8 +2478,8 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // will take care of calling MediaDecoder::PlaybackEnded.
       if (mDecoder->GetState() == MediaDecoder::PLAY_STATE_PLAYING &&
           !mDecoder->GetDecodedStream()) {
-        int64_t videoTime = HasVideo() ? mVideoFrameEndTime : 0;
-        int64_t clockTime = std::max(mEndTime, videoTime);
+        int64_t clockTime = std::max(mAudioEndTime, mVideoFrameEndTime);
+        clockTime = std::max(int64_t(0), std::max(clockTime, mEndTime));
         UpdatePlaybackPosition(clockTime);
 
         {
@@ -3143,7 +3143,13 @@ void MediaDecoderStateMachine::OnAudioSinkError()
 
   mAudioCompleted = true;
 
-  // Notify media decoder/element about this error.
+  // Make the best effort to continue playback when there is video.
+  if (HasVideo()) {
+    return;
+  }
+
+  // Otherwise notify media decoder/element about this error for it makes
+  // no sense to play an audio-only file without sound output.
   RefPtr<nsIRunnable> task(
     NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnDecodeError));
   nsresult rv = mDecodeTaskQueue->Dispatch(task);

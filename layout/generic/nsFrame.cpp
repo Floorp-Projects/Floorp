@@ -4785,10 +4785,9 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
     // XXXjwatt: seems like this will double count offsets in the face of preserve-3d:
     nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
     /* Combine the raw transform with a translation to our parent. */
-    result = result * Matrix4x4().Translate
-      (NSAppUnitsToFloatPixels(delta.x, scaleFactor),
-       NSAppUnitsToFloatPixels(delta.y, scaleFactor),
-       0.0f);
+    result.PostTranslate(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
+                         NSAppUnitsToFloatPixels(delta.y, scaleFactor),
+                         0.0f);
     return result;
   }
 
@@ -4864,10 +4863,9 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
    */
   nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
   int32_t scaleFactor = PresContext()->AppUnitsPerDevPixel();
-  return Matrix4x4().Translate
-    (NSAppUnitsToFloatPixels(delta.x, scaleFactor),
-     NSAppUnitsToFloatPixels(delta.y, scaleFactor),
-     0.0f);
+  return Matrix4x4::Translation(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
+                                NSAppUnitsToFloatPixels(delta.y, scaleFactor),
+                                0.0f);
 }
 
 static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = true)

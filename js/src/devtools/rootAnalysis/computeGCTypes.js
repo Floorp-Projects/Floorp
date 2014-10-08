@@ -124,7 +124,7 @@ function addGCPointer(name, child, why)
     }
 }
 
-addGCType('js::ObjectImpl');
+addGCType('JSObject');
 addGCType('JSString');
 addGCType('js::Shape');
 addGCType('js::BaseShape');

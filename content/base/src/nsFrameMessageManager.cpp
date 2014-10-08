@@ -1735,7 +1735,7 @@ public:
       return cc->SendSyncMessage(PromiseFlatString(aMessage), data, cpows,
                                  IPC::Principal(aPrincipal), aJSONRetVal);
     }
-    return cc->CallRpcMessage(PromiseFlatString(aMessage), data, cpows,
+    return cc->SendRpcMessage(PromiseFlatString(aMessage), data, cpows,
                               IPC::Principal(aPrincipal), aJSONRetVal);
   }
 

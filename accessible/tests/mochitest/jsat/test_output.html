@@ -440,6 +440,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           oldAccOrElmOrID: "grid",
           expectedUtterance: [["4", "7"], ["4", "7"]],
           expectedBraille: [["4", "7"], ["4", "7"]]
+        }, {
+          accOrElmOrID: "gridcell3",
+          oldAccOrElmOrID: "grid",
+          expectedUtterance: [[{"string": "stateSelected"}, "5"],
+                              ["5", {"string": "stateSelected"}]],
+          expectedBraille: [["5"], ["5"]],
         }];
 
         // Test all possible utterance order preference values.
@@ -581,7 +587,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
         </ol>
         <ol role="row">
           <li role="rowheader">2</li>
-          <li role="gridcell">5</li>
+          <li id="gridcell3" aria-selected="true" role="gridcell">5</li>
           <li role="gridcell">6</li>
         </ol>
       </section>

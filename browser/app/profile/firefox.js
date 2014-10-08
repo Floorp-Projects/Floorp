@@ -1616,6 +1616,11 @@ pref("loop.debug.loglevel", "Error");
 pref("loop.debug.dispatcher", false);
 pref("loop.debug.websocket", false);
 pref("loop.debug.sdk", false);
+#ifdef DEBUG
+pref("loop.CSP", "default-src 'self' about: file: chrome: http://localhost:*; img-src 'self' data: http://www.gravatar.com/ about: file: chrome:; font-src 'none'; connect-src wss://*.tokbox.com https://*.opentok.com https://*.tokbox.com wss://*.mozilla.com https://*.mozilla.org wss://*.mozaws.net http://localhost:* ws://localhost:*");
+#else
+pref("loop.CSP", "default-src 'self' about: file: chrome:; img-src 'self' data: http://www.gravatar.com/ about: file: chrome:; font-src 'none'; connect-src wss://*.tokbox.com https://*.opentok.com https://*.tokbox.com wss://*.mozilla.com https://*.mozilla.org wss://*.mozaws.net");
+#endif
 pref("loop.oauth.google.redirect_uri", "urn:ietf:wg:oauth:2.0:oob:auto");
 pref("loop.oauth.google.scope", "https://www.google.com/m8/feeds");
 

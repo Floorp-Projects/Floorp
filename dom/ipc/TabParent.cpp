@@ -1128,11 +1128,11 @@ TabParent::RecvSyncMessage(const nsString& aMessage,
 }
 
 bool
-TabParent::AnswerRpcMessage(const nsString& aMessage,
-                            const ClonedMessageData& aData,
-                            const InfallibleTArray<CpowEntry>& aCpows,
-                            const IPC::Principal& aPrincipal,
-                            InfallibleTArray<nsString>* aJSONRetVal)
+TabParent::RecvRpcMessage(const nsString& aMessage,
+                          const ClonedMessageData& aData,
+                          const InfallibleTArray<CpowEntry>& aCpows,
+                          const IPC::Principal& aPrincipal,
+                          InfallibleTArray<nsString>* aJSONRetVal)
 {
   // FIXME Permission check for TabParent in Content process
   nsIPrincipal* principal = aPrincipal;

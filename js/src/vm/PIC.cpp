@@ -10,10 +10,10 @@
 #include "gc/Marking.h"
 
 #include "vm/GlobalObject.h"
-#include "vm/ObjectImpl.h"
 #include "vm/SelfHosting.h"
+
 #include "jsobjinlines.h"
-#include "vm/ObjectImpl-inl.h"
+#include "vm/NativeObject-inl.h"
 
 using namespace js;
 using namespace js::gc;

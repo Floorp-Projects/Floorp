@@ -7,10 +7,15 @@ package org.mozilla.gecko.tests.components;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertEquals;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
+import java.util.Arrays;
+
+import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.tests.UITestContext;
-import org.mozilla.gecko.tests.helpers.DeviceHelper;
 import org.mozilla.gecko.tests.helpers.WaitHelper;
+import org.mozilla.gecko.util.HardwareUtils;
 
 import android.support.v4.view.ViewPager;
 import android.view.View;
@@ -18,10 +23,6 @@ import android.widget.TextView;
 
 import com.jayway.android.robotium.solo.Condition;
 import com.jayway.android.robotium.solo.Solo;
-import org.mozilla.gecko.util.HardwareUtils;
-
-import java.util.Arrays;
-import java.util.Enumeration;
 
 /**
  * A class representing any interactions that take place on the Awesomescreen.
@@ -29,24 +30,16 @@ import java.util.Enumeration;
 public class AboutHomeComponent extends BaseComponent {
     private static final String LOGTAG = AboutHomeComponent.class.getSimpleName();
 
-    // The different types of panels that can be present on about:home
-    public enum PanelType {
-        HISTORY,
-        TOP_SITES,
-        BOOKMARKS,
-        READING_LIST,
-        RECENT_TABS
-    }
-
     // TODO: Having a specific ordering of panels is prone to fail and thus temporary.
     // Hopefully the work in bug 940565 will alleviate the need for these enums.
     // Explicit ordering of HomePager panels on a phone.
     private static final PanelType[] PANEL_ORDERING_PHONE = {
+            PanelType.REMOTE_TABS,
             PanelType.RECENT_TABS,
             PanelType.HISTORY,
             PanelType.TOP_SITES,
             PanelType.BOOKMARKS,
-            PanelType.READING_LIST
+            PanelType.READING_LIST,
     };
 
     private static final PanelType[] PANEL_ORDERING_TABLET = {
@@ -54,7 +47,8 @@ public class AboutHomeComponent extends BaseComponent {
             PanelType.BOOKMARKS,
             PanelType.READING_LIST,
             PanelType.HISTORY,
-            PanelType.RECENT_TABS
+            PanelType.RECENT_TABS,
+            PanelType.REMOTE_TABS,
     };
 
     // The percentage of the panel to swipe between 0 and 1. This value was set through
@@ -197,5 +191,20 @@ public class AboutHomeComponent extends BaseComponent {
      */
     public static PanelType[] getPanelOrderingForDevice() {
         return HardwareUtils.isTablet() ? PANEL_ORDERING_TABLET : PANEL_ORDERING_PHONE;
+    }
+
+    /**
+     * Navigate directly to a built-in panel by its panel type.
+     * <p>
+     * If the panel type is not part of the active Home Panel configuration, the
+     * default about:home panel is displayed. If the panel type is not a
+     * built-in panel, an IllegalArgumentException is thrown.
+     *
+     * @param panelType to navigate to.
+     * @return self, for chaining.
+     */
+    public AboutHomeComponent navigateToBuiltinPanelType(PanelType panelType) throws IllegalArgumentException {
+        Tabs.getInstance().loadUrl(AboutPages.getURLForBuiltinPanelType(panelType));
+        return this;
     }
 }

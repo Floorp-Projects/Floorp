@@ -21,7 +21,7 @@
 
 #include "jsgcinlines.h"
 #include "gc/Nursery-inl.h"
-#include "vm/ObjectImpl-inl.h"
+#include "vm/NativeObject-inl.h"
 
 // The ForkJoinNursery provides an object nursery for movable object
 // types for one ForkJoin worker thread.  There is a one-to-one

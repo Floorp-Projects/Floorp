@@ -23,7 +23,7 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
-#include "vm/ObjectImpl-inl.h"
+#include "vm/NativeObject-inl.h"
 
 using namespace js;
 using namespace js::gc;

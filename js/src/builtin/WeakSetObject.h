@@ -7,7 +7,7 @@
 #ifndef builtin_WeakSetObject_h
 #define builtin_WeakSetObject_h
 
-#include "vm/ObjectImpl.h"
+#include "vm/NativeObject.h"
 
 namespace js {
 
