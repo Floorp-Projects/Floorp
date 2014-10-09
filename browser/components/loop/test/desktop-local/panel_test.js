@@ -394,9 +394,9 @@ describe("loop.panel", function() {
           getStrings: function(key) {
             var text;
 
-            if (key === "share_email_subject3")
+            if (key === "share_email_subject4")
               text = "email-subject";
-            else if (key === "share_email_body3")
+            else if (key === "share_email_body4")
               text = "{{callUrl}}";
 
             return JSON.stringify({textContent: text});

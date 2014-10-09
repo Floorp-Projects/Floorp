@@ -1353,7 +1353,7 @@ this.MozLoopService = {
   getStrings: function(key) {
       var stringData = MozLoopServiceInternal.localizedStrings;
       if (!(key in stringData)) {
-        Cu.reportError('No string for key: ' + key + 'found');
+        log.error("No string found for key: ", key);
         return "";
       }
 
