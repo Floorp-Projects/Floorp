@@ -16,6 +16,10 @@
 #include "gmp-video-encode.h"
 #include "GMPPlatform.h"
 #include "mozilla/dom/CrashReporterChild.h"
+#ifdef XP_WIN
+#include <fstream>
+#include "nsCRT.h"
+#endif
 
 using mozilla::dom::CrashReporterChild;
 
@@ -51,28 +55,29 @@ GMPChild::~GMPChild()
 }
 
 static bool
-GetPluginFile(const std::string& aPluginPath,
+GetFileBase(const std::string& aPluginPath,
 #if defined(XP_MACOSX)
-              nsCOMPtr<nsIFile>& aLibDirectory,
+            nsCOMPtr<nsIFile>& aLibDirectory,
 #endif
-              nsCOMPtr<nsIFile>& aLibFile)
+            nsCOMPtr<nsIFile>& aFileBase,
+            nsAutoString& aBaseName)
 {
   nsDependentCString pluginPath(aPluginPath.c_str());
 
   nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(pluginPath),
-                                true, getter_AddRefs(aLibFile));
+                                true, getter_AddRefs(aFileBase));
   if (NS_FAILED(rv)) {
     return false;
   }
 
 #if defined(XP_MACOSX)
-  if (NS_FAILED(aLibFile->Clone(getter_AddRefs(aLibDirectory)))) {
+  if (NS_FAILED(aFileBase->Clone(getter_AddRefs(aLibDirectory)))) {
     return false;
   }
 #endif
 
   nsCOMPtr<nsIFile> parent;
-  rv = aLibFile->GetParent(getter_AddRefs(parent));
+  rv = aFileBase->GetParent(getter_AddRefs(parent));
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -83,7 +88,25 @@ GetPluginFile(const std::string& aPluginPath,
     return false;
   }
 
-  nsAutoString baseName(Substring(parentLeafName, 4, parentLeafName.Length() - 1));
+  aBaseName = Substring(parentLeafName,
+                        4,
+                        parentLeafName.Length() - 1);
+  return true;
+}
+
+static bool
+GetPluginFile(const std::string& aPluginPath,
+#if defined(XP_MACOSX)
+              nsCOMPtr<nsIFile>& aLibDirectory,
+#endif
+              nsCOMPtr<nsIFile>& aLibFile)
+{
+  nsAutoString baseName;
+#ifdef XP_MACOSX
+  GetFileBase(aPluginPath, aLibDirectory, aLibFile, baseName);
+#else
+  GetFileBase(aPluginPath, aLibFile, baseName);
+#endif
 
 #if defined(XP_MACOSX)
   nsAutoString binaryName = NS_LITERAL_STRING("lib") + baseName + NS_LITERAL_STRING(".dylib");
@@ -97,6 +120,19 @@ GetPluginFile(const std::string& aPluginPath,
   aLibFile->AppendRelativePath(binaryName);
   return true;
 }
+
+#ifdef XP_WIN
+static bool
+GetInfoFile(const std::string& aPluginPath,
+            nsCOMPtr<nsIFile>& aInfoFile)
+{
+  nsAutoString baseName;
+  GetFileBase(aPluginPath, aInfoFile, baseName);
+  nsAutoString infoFileName = baseName + NS_LITERAL_STRING(".info");
+  aInfoFile->AppendRelativePath(infoFileName);
+  return true;
+}
+#endif
 
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
 static bool
@@ -237,12 +273,76 @@ GMPChild::Init(const std::string& aPluginPath,
   return true;
 #endif
 
+#ifdef XP_WIN
+  PreLoadLibraries(aPluginPath);
+#endif
+
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
   mozilla::SandboxTarget::Instance()->StartSandbox();
 #endif
 
   return LoadPluginLibrary(aPluginPath);
 }
+
+#ifdef XP_WIN
+// Pre-load DLLs that need to be used by the EME plugin but that can't be
+// loaded after the sandbox has started
+bool
+GMPChild::PreLoadLibraries(const std::string& aPluginPath)
+{
+  // This must be in sorted order and lowercase!
+  static const char* whitelist[] =
+    {
+       "d3d9.dll", // Create an `IDirect3D9` to get adapter information
+       "dxva2.dll", // Get monitor information
+       "msauddecmft.dll", // H.264 decoder
+       "msmpeg2adec.dll", // AAC decoder (on Windows 7)
+       "msmpeg2vdec.dll", // AAC decoder (on Windows 8)
+    };
+  static const int whitelistLen = sizeof(whitelist) / sizeof(whitelist[0]);
+
+  nsCOMPtr<nsIFile> infoFile;
+  GetInfoFile(aPluginPath, infoFile);
+
+  nsString path;
+  infoFile->GetPath(path);
+
+  std::ifstream stream;
+  stream.open(path.get());
+  if (!stream.good()) {
+    NS_WARNING("Failure opening info file for required DLLs");
+    return false;
+  }
+
+  do {
+    std::string line;
+    getline(stream, line);
+    if (stream.fail()) {
+      NS_WARNING("Failure reading info file for required DLLs");
+      return false;
+    }
+    std::transform(line.begin(), line.end(), line.begin(), tolower);
+    static const char* prefix = "libraries:";
+    static const int prefixLen = strlen(prefix);
+    if (0 == line.compare(0, prefixLen, prefix)) {
+      char* lineCopy = strdup(line.c_str() + prefixLen);
+      char* start = lineCopy;
+      while (char* tok = nsCRT::strtok(start, ", ", &start)) {
+        for (int i = 0; i < whitelistLen; i++) {
+          if (0 == strcmp(whitelist[i], tok)) {
+            LoadLibraryA(tok);
+            break;
+          }
+        }
+      }
+      free(lineCopy);
+      break;
+    }
+  } while (!stream.eof());
+
+  return true;
+}
+#endif
 
 bool
 GMPChild::LoadPluginLibrary(const std::string& aPluginPath)
