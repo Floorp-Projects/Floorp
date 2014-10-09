@@ -222,7 +222,7 @@ this.GoogleImporter.prototype = {
         throw new Error("Popup window was closed before authentication succeeded");
       }
 
-      let matches = gAuthWindow.document.title.match(/(error|code)=(.*)$/);
+      let matches = gAuthWindow.document.title.match(/(error|code)=([^\s]+)/);
       if (matches && matches.length) {
         let [, type, message] = matches;
         gAuthWindow.close();
