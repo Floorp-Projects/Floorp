@@ -11,7 +11,7 @@
     <dimen name="browser_toolbar_height">48dp</dimen>
     <dimen name="browser_toolbar_button_padding">12dp</dimen>
     <dimen name="browser_toolbar_icon_width">48dp</dimen>
-    <dimen name="browser_toolbar_lock_width">20dp</dimen>
+    <dimen name="browser_toolbar_lock_width">12dp</dimen>
     <!-- favicon_size includes 4dp of right padding. We can't use margin (which would allow us to
          specify the actual size) because that would decrease the size of our hit target. -->
     <dimen name="browser_toolbar_favicon_size">21.33dip</dimen>

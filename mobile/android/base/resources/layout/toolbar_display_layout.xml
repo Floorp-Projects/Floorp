@@ -13,11 +13,13 @@
                  android:paddingRight="4dip"
                  android:layout_gravity="center_vertical"/>
 
+    <!-- The toolbar elements are not the same height so we add a bottom margin here to align its bottom. -->
     <ImageButton android:id="@+id/site_security"
                  style="@style/UrlBar.ImageButton"
                  android:layout_width="@dimen/browser_toolbar_lock_width"
                  android:scaleType="fitCenter"
-                 android:layout_marginLeft="-4dip"
+                 android:layout_marginRight="4dip"
+                 android:layout_marginBottom="1dp"
                  android:src="@drawable/site_security_level"
                  android:contentDescription="@string/site_security"
                  android:visibility="gone"/>
