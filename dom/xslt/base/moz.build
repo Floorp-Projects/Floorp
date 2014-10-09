@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     'txDouble.cpp',
+    'txExpandedName.cpp',
     'txExpandedNameMap.cpp',
     'txList.cpp',
     'txNamespaceMap.cpp',
