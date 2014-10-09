@@ -1447,10 +1447,10 @@ Init(const malloc_table_t* aMallocTable)
     // These files are written to $CWD. It would probably be better to write
     // them to "TmpD" using the directory service, but that would require
     // linking DMD with XPCOM.
-    auto f1 = MakeUnique<FpWriteFunc>(OpenOutputFile("full1.json"));
-    auto f2 = MakeUnique<FpWriteFunc>(OpenOutputFile("full2.json"));
-    auto f3 = MakeUnique<FpWriteFunc>(OpenOutputFile("full3.json"));
-    auto f4 = MakeUnique<FpWriteFunc>(OpenOutputFile("full4.json"));
+    auto f1 = MakeUnique<FpWriteFunc>(OpenOutputFile("full-empty.json"));
+    auto f2 = MakeUnique<FpWriteFunc>(OpenOutputFile("full-unsampled1.json"));
+    auto f3 = MakeUnique<FpWriteFunc>(OpenOutputFile("full-unsampled2.json"));
+    auto f4 = MakeUnique<FpWriteFunc>(OpenOutputFile("full-sampled.json"));
     gIsDMDRunning = true;
 
     StatusMsg("running test mode...\n");

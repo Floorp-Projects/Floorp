@@ -1,0 +1,35 @@
+{
+ "version": 1,
+ "invocation": {
+  "dmdEnvVar": "1",
+  "sampleBelowSize": 1
+ },
+ "blockList": [
+  {"req": 4096, "alloc": "A"},
+  {"req": 4096, "alloc": "A"},
+  {"req": 4096, "alloc": "A"},
+  {"req": 4096, "alloc": "A"},
+  {"req": 8,    "alloc": "A"},
+
+  {"req": 3000, "slop": 1096, "alloc": "B"},
+  {"req": 3000, "slop": 1096, "alloc": "B"},
+  {"req": 3000, "slop": 1096, "alloc": "B"},
+  {"req": 3000, "slop": 1096, "alloc": "B"},
+  {"req": 16,                 "alloc": "B"},
+
+  {"req": 2049, "slop": 2047, "alloc": "C"},
+  {"req": 2049, "slop": 2047, "alloc": "C"},
+  {"req": 2049, "slop": 2047, "alloc": "C"},
+  {"req": 2049, "slop": 2047, "alloc": "C"}
+ ],
+ "traceTable": {
+  "A": ["AA"],
+  "B": ["BB"],
+  "C": ["CC"]
+ },
+ "frameTable": {
+  "AA": "#00: A (A.cpp:99)",
+  "BB": "#00: B (B.cpp:99)",
+  "CC": "#00: C (C.cpp:99)"
+ }
+}

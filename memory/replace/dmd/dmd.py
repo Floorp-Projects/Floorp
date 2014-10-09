@@ -22,7 +22,9 @@ import tempfile
 outputVersion = 1
 
 # If --ignore-alloc-fns is specified, stack frames containing functions that
-# match these strings will be removed.
+# match these strings will be removed from the *start* of stack traces. (Once
+# we hit a non-matching frame, any subsequent frames won't be removed even if
+# they do match.)
 allocatorFns = [
     'replace_malloc',
     'replace_calloc',
@@ -48,6 +50,10 @@ allocatorFns = [
     'pod_malloc',
     'pod_calloc',
     'pod_realloc',
+    # This one necessary to fully filter some sequences of allocation functions
+    # that happen in practice. Note that ??? entries that follow non-allocation
+    # functions won't be stripped, as explained above.
+    '???',
 ]
 
 class Record(object):
