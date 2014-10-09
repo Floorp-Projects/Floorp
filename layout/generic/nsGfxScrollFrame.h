@@ -310,6 +310,8 @@ public:
 
   bool IsIgnoringViewportClipping() const;
 
+  void MarkScrollbarsDirtyForReflow() const;
+
   bool ShouldClampScrollPosition() const;
 
   bool IsAlwaysActive() const;
@@ -726,6 +728,9 @@ public:
     mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame,
                                 aParameters, aClipRect, aOutput);
   }
+  virtual void MarkScrollbarsDirtyForReflow() const MOZ_OVERRIDE {
+    mHelper.MarkScrollbarsDirtyForReflow();
+  }
 
   // nsIStatefulFrame
   NS_IMETHOD SaveState(nsPresState** aState) MOZ_OVERRIDE {
@@ -1071,6 +1076,9 @@ public:
                                    nsTArray<FrameMetrics>* aOutput) const MOZ_OVERRIDE {
     mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame,
                                 aParameters, aClipRect, aOutput);
+  }
+  virtual void MarkScrollbarsDirtyForReflow() const MOZ_OVERRIDE {
+    mHelper.MarkScrollbarsDirtyForReflow();
   }
 
   // nsIStatefulFrame
