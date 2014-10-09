@@ -191,7 +191,7 @@ public class BrowserApp extends GeckoApp
         public boolean added;   // So we can re-add after a locale change.
     }
 
-    // The types of guest mdoe dialogs we show
+    // The types of guest mode dialogs we show.
     public static enum GuestModeDialog {
         ENTERING,
         LEAVING
@@ -520,11 +520,12 @@ public class BrowserApp extends GeckoApp
         mAboutHomeStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_ABOUTHOME");
 
         final Intent intent = getIntent();
-        final String args = intent.getStringExtra("args");
-
-        if (GuestSession.shouldUse(this, args)) {
-            mProfile = GeckoProfile.createGuestProfile(this);
-        } else {
+        final GeckoProfile p = GeckoProfile.get(this);
+        if (p != null && !p.inGuestMode()) {
+            // This is *only* valid because we never want to use the guest mode
+            // profile concurrently with a normal profile -- no syncing to it,
+            // no dual-profile usage, nothing. BrowserApp startup with a conventional
+            // GeckoProfile will cause the guest profile to be deleted.
             GeckoProfile.maybeCleanupGuestProfile(this);
         }
 
@@ -673,13 +674,6 @@ public class BrowserApp extends GeckoApp
                 Log.e(LOGTAG, "Error initializing media manager", ex);
             }
         }
-
-        if (getProfile().inGuestMode()) {
-            GuestSession.showNotification(this);
-        } else {
-            // If we're restarting, we won't destroy the activity. Make sure we remove any guest notifications that might have been shown.
-            GuestSession.hideNotification(this);
-        }
     }
 
     private void setupSystemUITinting() {
@@ -788,6 +782,35 @@ public class BrowserApp extends GeckoApp
 
         final LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
         lbm.unregisterReceiver(mOnboardingReceiver);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // Queue this work so that the first launch of the activity doesn't
+        // trigger profile init too early.
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                if (getProfile().inGuestMode()) {
+                    GuestSession.showNotification(BrowserApp.this);
+                } else {
+                    // If we're restarting, we won't destroy the activity.
+                    // Make sure we remove any guest notifications that might
+                    // have been shown.
+                    GuestSession.hideNotification(BrowserApp.this);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // We only show the guest mode notification when our activity is in the foreground.
+        GuestSession.hideNotification(this);
     }
 
     @Override
@@ -1086,8 +1109,6 @@ public class BrowserApp extends GeckoApp
             mBrowserHealthReporter.uninit();
             mBrowserHealthReporter = null;
         }
-
-        GuestSession.onDestroy(this);
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
             "Menu:Update",
@@ -2939,6 +2960,9 @@ public class BrowserApp extends GeckoApp
                             args = GUEST_BROWSING_ARG;
                         } else {
                             GeckoProfile.leaveGuestSession(BrowserApp.this);
+
+                            // Now's a good time to make sure we're not displaying the Guest Browsing notification.
+                            GuestSession.hideNotification(BrowserApp.this);
                         }
 
                         if (!GuestSession.isSecureKeyguardLocked(BrowserApp.this)) {

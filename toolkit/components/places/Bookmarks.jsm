@@ -7,8 +7,8 @@
 /**
  * This module provides an asynchronous API for managing bookmarks.
  *
- * Bookmarks are organized in a tree structure, and can be bookmarked URIs,
- * folders or separators.  Multiple bookmarks for the same URI are allowed.
+ * Bookmarks are organized in a tree structure, and can be bookmarked URLs,
+ * folders or separators.  Multiple bookmarks for the same URL are allowed.
  *
  * Note that if you are handling bookmarks operations in the UI, you should
  * not use this API directly, but rather use PlacesTransactions.jsm, so that
@@ -24,10 +24,10 @@
  *      This will be an empty string for the Places root folder.
  *  - index (number)
  *      The 0-based position of the item in the parent folder.
- *  - dateAdded (number, microseconds from the epoch)
- *      The time at which the item was added.  This is a PRTime (microseconds).
- *  - lastModified (number, microseconds from the epoch)
- *      The time at which the item was last modified. This is a PRTime (microseconds).
+ *  - dateAdded (Date)
+ *      The time at which the item was added.
+ *  - lastModified (Date)
+ *      The time at which the item was last modified.
  *  - type (number)
  *      The item's type, either TYPE_BOOKMARK, TYPE_FOLDER or TYPE_SEPARATOR.
  *
@@ -36,11 +36,16 @@
  *  - title (string)
  *      The item's title, if any.  Empty titles and null titles are considered
  *      the same and the property is unset on retrieval in such a case.
+ *      Title cannot be longer than TITLE_LENGTH_MAX, or it will be truncated.
  *
  *  The following properties are only valid for bookmarks:
  *
- *  - uri (nsIURI)
- *      The item's URI.
+ *  - url (URL, href or nsIURI)
+ *      The item's URL.  Note that while input objects can contains either
+ *      an URL object, an href string, or an nsIURI, output objects will always
+ *      contain an URL object.
+ *      URL cannot be longer than URL_LENGTH_MAX, methods will throw if a
+ *      longer value is provided
  *  - keyword (string)
  *      The associated keyword, if any.
  *
@@ -53,9 +58,6 @@
  * property) won't fire an onItemChanged notification for the lastModified
  * property.
  * @see nsINavBookmarkObserver
- *
- * @note livemarks are implemented as empty folders.
- *       @see mozIAsyncLivemarks.idl
  */
 
 this.EXPORTED_SYMBOLS = [ "Bookmarks" ];
@@ -74,7 +76,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
 
-const URI_LENGTH_MAX = 65536;
+const URL_LENGTH_MAX = 65536;
 const TITLE_LENGTH_MAX = 4096;
 
 let Bookmarks = Object.freeze({
@@ -87,6 +89,12 @@ let Bookmarks = Object.freeze({
   TYPE_SEPARATOR: 3,
 
   /**
+   * Default index used to append a bookmarked item at the end of a container. 
+   * This should stay consistent with nsINavBookmarksService.idl
+   */
+  DEFAULT_INDEX: -1,
+
+  /**
    * Creates or updates a bookmarked item.
    *
    * If the given guid is found the corresponding item is updated, otherwise,
@@ -96,7 +104,7 @@ let Bookmarks = Object.freeze({
    * In the creation case, a minimum set of properties must be provided:
    *  - type
    *  - parentGuid
-   *  - URI, only for bookmarks
+   *  - url, only for bookmarks
    * If an index is not specified, it defaults to appending.
    * It's also possible to pass a non-existent guid to force creation of an
    * item with the given guid, but unless you have a very sound reason, such as
@@ -111,17 +119,19 @@ let Bookmarks = Object.freeze({
    * associated with this bookmark.
    *
    * Note that any known property that doesn't apply to the specific item type
-   * causes rejection.
+   * throws an exception.
    *
    * @param info
    *        object representing a bookmarked item, as defined above.
+   * @param onResult [optional]
+   *        Callback invoked for each created or updated bookmark.  It gets
+   *        the bookmark object as argument.
    *
    * @return {Promise} resolved when the update is complete.
-   * @resolves to the input object, updated with relevant information.
-   * @rejects JavaScript exception.
-   *
-   * @note title is truncated to TITLE_LENGTH_MAX and URI is rejected if
-   *       greater than URI_LENGTH_MAX.
+   * @resolves to a boolean indicating whether any new bookmark has been created.
+   * @rejects JavaScript exception if it's not possible to update or create the
+   *          requested bookmark.
+   * @throws if input is invalid.
    */
   // XXX WIP XXX Will replace functionality from these methods:
   // long long insertBookmark(in long long aParentId, in nsIURI aURI, in long aIndex, in AUTF8String aTitle, [optional] in ACString aGUID);
@@ -133,9 +143,9 @@ let Bookmarks = Object.freeze({
   // void setItemLastModified(in long long aItemId, in PRTime aLastModified);
   // void changeBookmarkURI(in long long aItemId, in nsIURI aNewURI);
   // void setKeywordForBookmark(in long long aItemId, in AString aKeyword);
-  update: Task.async(function* (info) {
+  update: function (info, onResult=null) {
     throw new Error("Not yet implemented");
-  }),
+  },
 
   /**
    * Removes a bookmarked item.
@@ -145,25 +155,30 @@ let Bookmarks = Object.freeze({
    *  - guid: if set, only the corresponding item is removed.
    *  - parentGuid: if it's set and is a folder, any children of that folder is
    *                removed, but not the folder itself.
-   *  - URI: if set, any bookmark for that URI is removed.
-   * If multiple of these properties are set, the method rejects.
+   *  - url: if set, any bookmark for that URL is removed.
+   * If multiple of these properties are set, the method throws.
    *
    * Any other property is ignored, known properties may be overwritten.
    *
    * @param guidOrInfo
    *        The globally unique identifier of the item to remove, or an
    *        object representing it, as defined above.
+   * @param onResult [optional]
+   *        Callback invoked for each removed bookmark.  It gets the bookmark
+   *        object as argument.
    *
    * @return {Promise} resolved when the removal is complete.
-   * @resolves to the removed object or an array of them.
-   * @rejects JavaScript exception.
+   * @resolves to a boolean indicating whether any object has been removed.
+   * @rejects JavaScript exception if the provided guid or parentGuid don't
+   *          match any existing bookmark.
+   * @throws if input is invalid.
    */
   // XXX WIP XXX Will replace functionality from these methods:
   // removeItem(in long long aItemId);
   // removeFolderChildren(in long long aItemId);
-  remove: Task.async(function* (guidOrInfo) {
+  remove: function (guidOrInfo, onResult=null) {
     throw new Error("Not yet implemented");
-  }),
+  },
 
   /**
    * Fetches information about a bookmarked item.
@@ -174,10 +189,10 @@ let Bookmarks = Object.freeze({
    *      retrieves the item with the specified guid
    *  - parentGuid and index
    *      retrieves the item by its position
-   *  - URI
-   *      retrieves all items having the given URI.
+   *  - url
+   *      retrieves an array of items having the given URL.
    *  - keyword
-   *      retrieves all items having the given keyword.
+   *      retrieves an array of items having the given keyword.
    *
    * Any other property is ignored.  Known properties may be overwritten.
    *
@@ -190,6 +205,7 @@ let Bookmarks = Object.freeze({
    *           an array of such objects.  if no item is found, the returned
    *           promise is resolved to null.
    * @rejects JavaScript exception.
+   * @throws if input is invalid.
    */
   // XXX WIP XXX Will replace functionality from these methods:
   // long long getIdForItemAt(in long long aParentId, in long aIndex);
@@ -205,16 +221,16 @@ let Bookmarks = Object.freeze({
   // AString getKeywordForURI(in nsIURI aURI);
   // AString getKeywordForBookmark(in long long aItemId);
   // nsIURI getURIForKeyword(in AString keyword);
-  fetch: Task.async(function* (guidOrInfo) {
+  fetch: function (guidOrInfo) {
     throw new Error("Not yet implemented");
-  }),
+  },
 
   /**
    * Retrieves an object representation of a bookmarked item, along with all of
    * its descendants, if any.
    *
-   * Each node in the tree is an object that extends
-   * the item representation described above with some additional properties:
+   * Each node in the tree is an object that extends the item representation
+   * described above with some additional properties:
    *
    *  - [deprecated] id (number)
    *      the item's id.  Defined only if aOptions.includeItemIds is set.
@@ -227,12 +243,12 @@ let Bookmarks = Object.freeze({
    *      the number of items, including the root item itself, which are
    *      represented in the resolved object.
    *
-   * Bookmarked URIs may also have the following properties:
+   * Bookmarked URLs may also have the following properties:
    *  - tags (string)
    *      csv string of the bookmark's tags, if any.
    *  - charset (string)
    *      the last known charset of the bookmark, if any.
-   *  - iconuri (string)
+   *  - iconurl (URL)
    *      the bookmark's favicon URL, if any.
    *
    * Folders may also have the following properties:
@@ -266,12 +282,13 @@ let Bookmarks = Object.freeze({
    *           bookmarks tree.  if guid points to a non-existent item, the
    *           returned promise is resolved to null.
    * @rejects JavaScript exception.
+   * @throws if input is invalid.
    */
   // XXX WIP XXX: will replace functionality for these methods:
   // PlacesUtils.promiseBookmarksTree()
-  fetchTree: Task.async(function* (guid = "", options = {}) {
+  fetchTree: function (guid = "", options = {}) {
     throw new Error("Not yet implemented");
-  }),
+  },
 
   /**
    * Reorders contents of a folder based on a provided array of GUIDs.
@@ -286,10 +303,11 @@ let Bookmarks = Object.freeze({
    *
    * @return {Promise} resolved when reordering is complete.
    * @rejects JavaScript exception.
+   * @throws if input is invalid.
    */
   // XXX WIP XXX Will replace functionality from these methods:
   // void setItemIndex(in long long aItemId, in long aNewIndex);
-  reorder: Task.async(function* (parentGuid, orderedChildrenGuids) {
+  reorder: function (parentGuid, orderedChildrenGuids) {
     throw new Error("Not yet implemented");
-  })
+  }
 });

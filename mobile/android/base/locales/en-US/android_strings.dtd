@@ -182,7 +182,7 @@
 <!ENTITY pref_char_encoding_off "Don\'t show menu">
 <!ENTITY pref_clear_private_data2 "Clear now">
 <!ENTITY pref_clear_private_data_category "Clear private data">
-<!ENTITY pref_clear_on_exit_title "Always clear when quitting">
+<!ENTITY pref_clear_on_exit_title2 "Clear on exit">
 <!ENTITY pref_clear_on_exit_summary2 "&brandShortName; will automatically clear your data whenever you select \u0022Quit\u0022 from the main menu">
 <!ENTITY pref_clear_on_exit_dialog_title "Select which data to clear">
 <!ENTITY pref_plugins "Plugins">

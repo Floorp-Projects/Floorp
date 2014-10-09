@@ -47,14 +47,22 @@ extern PRLogModuleInfo* gRtspLog;
 #undef LOG
 #define LOG(args) PR_LOG(gRtspLog, PR_LOG_DEBUG, args)
 
+const unsigned long kCommandDelayMs = 200;
+
 namespace mozilla {
 namespace net {
 
+//-----------------------------------------------------------------------------
+// RtspController
+//-----------------------------------------------------------------------------
 NS_IMPL_ISUPPORTS(RtspController,
                   nsIStreamingProtocolController)
 
 RtspController::RtspController(nsIChannel *channel)
-  : mState(INIT)
+  : mState(INIT),
+    mTimerLock("RtspController.mTimerLock"),
+    mPlayTimer(nullptr),
+    mPauseTimer(nullptr)
 {
   LOG(("RtspController::RtspController()"));
 }
@@ -67,6 +75,9 @@ RtspController::~RtspController()
   }
 }
 
+//-----------------------------------------------------------------------------
+// nsIStreamingProtocolController
+//-----------------------------------------------------------------------------
 NS_IMETHODIMP
 RtspController::GetTrackMetaData(uint8_t index,
                                  nsIStreamingProtocolMetaData * *_retval)
@@ -88,7 +99,26 @@ RtspController::Play(void)
     return NS_ERROR_NOT_CONNECTED;
   }
 
-  mRtspSource->play();
+  MutexAutoLock lock(mTimerLock);
+  // Cancel the pause timer if it is active because successive pause-play in a
+  // short duration is unnecessary but could impair playback smoothing.
+  if (mPauseTimer) {
+    mPauseTimer->Cancel();
+    mPauseTimer = nullptr;
+  }
+
+  // Start a timer to delay the play operation for a short duration.
+  if (!mPlayTimer) {
+    mPlayTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (!mPlayTimer) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+    mPlayTimer->InitWithFuncCallback(
+                  RtspController::PlayTimerCallback,
+                  this, kCommandDelayMs,
+                  nsITimer::TYPE_ONE_SHOT);
+  }
+
   return NS_OK;
 }
 
@@ -105,42 +135,39 @@ RtspController::Pause(void)
     return NS_ERROR_NOT_CONNECTED;
   }
 
-  mRtspSource->pause();
+  MutexAutoLock lock(mTimerLock);
+  // Cancel the play timer if it is active because successive play-pause in a
+  // short duration is unnecessary but could impair playback smoothing.
+  if (mPlayTimer) {
+    mPlayTimer->Cancel();
+    mPlayTimer = nullptr;
+  }
+
+  // Start a timer to delay the pause operation for a short duration.
+  if (!mPauseTimer) {
+    mPauseTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (!mPauseTimer) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+    mPauseTimer->InitWithFuncCallback(
+                   RtspController::PauseTimerCallback,
+                   this, kCommandDelayMs,
+                   nsITimer::TYPE_ONE_SHOT);
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 RtspController::Resume(void)
 {
-  LOG(("RtspController::Resume()"));
-  if (!mRtspSource.get()) {
-    MOZ_ASSERT(mRtspSource.get(), "mRtspSource should not be null!");
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  if (mState != CONNECTED) {
-    return NS_ERROR_NOT_CONNECTED;
-  }
-
-  mRtspSource->play();
-  return NS_OK;
+  return Play();
 }
 
 NS_IMETHODIMP
 RtspController::Suspend(void)
 {
-  LOG(("RtspController::Suspend()"));
-  if (!mRtspSource.get()) {
-    MOZ_ASSERT(mRtspSource.get(), "mRtspSource should not be null!");
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  if (mState != CONNECTED) {
-    return NS_ERROR_NOT_CONNECTED;
-  }
-
-  mRtspSource->pause();
-  return NS_OK;
+  return Pause();
 }
 
 NS_IMETHODIMP
@@ -210,6 +237,9 @@ RtspController::AsyncOpen(nsIStreamingProtocolListener *aListener)
   return NS_OK;
 }
 
+//-----------------------------------------------------------------------------
+// nsIStreamingProtocolListener
+//-----------------------------------------------------------------------------
 class SendMediaDataTask : public nsRunnable
 {
 public:
@@ -329,6 +359,20 @@ RtspController::OnDisconnected(uint8_t index,
 {
   LOG(("RtspController::OnDisconnected() for track %d reason = 0x%x", index, reason));
   mState = DISCONNECTED;
+
+  // Ensure play and pause timer are stopped.
+  {
+    MutexAutoLock lock(mTimerLock);
+    if (mPlayTimer) {
+      mPlayTimer->Cancel();
+      mPlayTimer = nullptr;
+    }
+    if (mPauseTimer) {
+      mPauseTimer->Cancel();
+      mPauseTimer = nullptr;
+    }
+  }
+
   if (mListener) {
     nsRefPtr<SendOnDisconnectedTask> task =
       new SendOnDisconnectedTask(mListener, index, reason);
@@ -390,6 +434,41 @@ RtspController::PlaybackEnded()
 
   mRtspSource->playbackEnded();
   return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// RtspController static member methods
+//-----------------------------------------------------------------------------
+//static
+void RtspController::PlayTimerCallback(nsITimer *aTimer, void *aClosure)
+{
+  MOZ_ASSERT(aTimer);
+  MOZ_ASSERT(aClosure);
+
+  RtspController *self = static_cast<RtspController*>(aClosure);
+  MOZ_ASSERT(self->mRtspSource.get());
+
+  MutexAutoLock lock(self->mTimerLock);
+  if (self->mPlayTimer) {
+    self->mRtspSource->play();
+    self->mPlayTimer = nullptr;
+  }
+}
+
+//static
+void RtspController::PauseTimerCallback(nsITimer *aTimer, void *aClosure)
+{
+  MOZ_ASSERT(aTimer);
+  MOZ_ASSERT(aClosure);
+
+  RtspController *self = static_cast<RtspController*>(aClosure);
+  MOZ_ASSERT(self->mRtspSource.get());
+
+  MutexAutoLock lock(self->mTimerLock);
+  if (self->mPauseTimer) {
+    self->mRtspSource->pause();
+    self->mPauseTimer = nullptr;
+  }
 }
 
 } // namespace mozilla::net
