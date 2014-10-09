@@ -26,7 +26,7 @@ class GMPVideoHost;
 [ptr] native GMPDecryptorProxy(GMPDecryptorProxy);
 [ptr] native GMPAudioDecoderProxy(GMPAudioDecoderProxy);
 
-[scriptable, uuid(e5cde76d-f926-4b3f-84ff-62864c7a750a)]
+[scriptable, uuid(b350d3b6-00c9-4602-bdfe-84c2be8d1e7a)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
 
@@ -97,6 +97,13 @@ interface mozIGeckoMediaPluginService : nsISupports
   ACString getNodeId(in AString origin,
                      in AString topLevelOrigin,
                      in bool inPrivateBrowsingMode);
+
+  /**
+   * Returns true if the given node id is allowed to store things
+   * persistently on disk. Private Browsing and local content are not
+   * allowed to store persistent data.
+   */
+  bool isPersistentStorageAllowed(in ACString nodeId);
 
   /**
    * Returns the directory to use as the base for storing data about GMPs.
