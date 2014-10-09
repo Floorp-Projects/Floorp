@@ -148,11 +148,14 @@ bool ots_post_serialise(OTSStream *out, OpenTypeFile *file) {
     return true;  // v1.0 and v3.0 does not have glyph names.
   }
 
-  if (!out->WriteU16(post->glyph_name_index.size())) {
+  const uint16_t num_indexes =
+      static_cast<uint16_t>(post->glyph_name_index.size());
+  if (num_indexes != post->glyph_name_index.size() ||
+      !out->WriteU16(num_indexes)) {
     return OTS_FAILURE_MSG("Failed to write number of indices");
   }
 
-  for (unsigned i = 0; i < post->glyph_name_index.size(); ++i) {
+  for (uint16_t i = 0; i < num_indexes; ++i) {
     if (!out->WriteU16(post->glyph_name_index[i])) {
       return OTS_FAILURE_MSG("Failed to write name index %d", i);
     }
@@ -161,8 +164,9 @@ bool ots_post_serialise(OTSStream *out, OpenTypeFile *file) {
   // Now we just have to write out the strings in the correct order
   for (unsigned i = 0; i < post->names.size(); ++i) {
     const std::string& s = post->names[i];
-    const uint8_t string_length = s.size();
-    if (!out->Write(&string_length, 1)) {
+    const uint8_t string_length = static_cast<uint8_t>(s.size());
+    if (string_length != s.size() ||
+        !out->Write(&string_length, 1)) {
       return OTS_FAILURE_MSG("Failed to write string %d", i);
     }
     // Some ttf fonts (e.g., frank.ttf on Windows Vista) have zero-length name.
