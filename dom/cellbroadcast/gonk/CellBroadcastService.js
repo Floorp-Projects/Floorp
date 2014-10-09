@@ -16,9 +16,21 @@ XPCOMUtils.defineLazyGetter(this, "RIL", function () {
   return obj;
 });
 
+const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
+const kSettingsCellBroadcastDisabled = "ril.cellbroadcast.disabled";
+const kSettingsCellBroadcastSearchList = "ril.cellbroadcast.searchlist";
+
 XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
                                    "@mozilla.org/system-message-internal;1",
                                    "nsISystemMessagesInternal");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
+                                   "@mozilla.org/settingsService;1",
+                                   "nsISettingsService");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gRadioInterfaceLayer",
+                                   "@mozilla.org/ril;1",
+                                   "nsIRadioInterfaceLayer");
 
 const GONK_CELLBROADCAST_SERVICE_CONTRACTID =
   "@mozilla.org/cellbroadcast/gonkservice;1";
@@ -41,7 +53,36 @@ function CellBroadcastService() {
 
   this._updateDebugFlag();
 
+  let lock = gSettingsService.createLock();
+
+  /**
+  * Read the settings of the toggle of Cellbroadcast Service:
+  *
+  * Simple Format: Boolean
+  *   true if CBS is disabled. The value is applied to all RadioInterfaces.
+  * Enhanced Format: Array of Boolean
+  *   Each element represents the toggle of CBS per RadioInterface.
+  */
+  lock.get(kSettingsCellBroadcastDisabled, this);
+
+  /**
+   * Read the Cell Broadcast Search List setting to set listening channels:
+   *
+   * Simple Format:
+   *   String of integers or integer ranges separated by comma.
+   *   For example, "1, 2, 4-6"
+   * Enhanced Format:
+   *   Array of Objects with search lists specified in gsm/cdma network.
+   *   For example, [{'gsm' : "1, 2, 4-6", 'cdma' : "1, 50, 99"},
+   *                 {'cdma' : "3, 6, 8-9"}]
+   *   This provides the possibility to
+   *   1. set gsm/cdma search list individually for CDMA+LTE device.
+   *   2. set search list per RadioInterface.
+   */
+  lock.get(kSettingsCellBroadcastSearchList, this);
+
   Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
 }
 CellBroadcastService.prototype = {
   classID: GONK_CELLBROADCAST_SERVICE_CID,
@@ -55,10 +96,14 @@ CellBroadcastService.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICellBroadcastService,
                                          Ci.nsIGonkCellBroadcastService,
+                                         Ci.nsISettingsServiceCallback,
                                          Ci.nsIObserver]),
 
   // An array of nsICellBroadcastListener instances.
   _listeners: null,
+
+  // Setting values of Cell Broadcast SearchList.
+  _cellBroadcastSearchList: null,
 
   _updateDebugFlag: function() {
     try {
@@ -83,6 +128,74 @@ CellBroadcastService.prototype = {
     return (aWarningType >= Ci.nsICellBroadcastService.GSM_ETWS_WARNING_INVALID)
       ? null
       : RIL.CB_ETWS_WARNING_TYPE_NAMES[aWarningType];
+  },
+
+  _retrieveSettingValueByClient: function(aClientId, aSettings) {
+    return Array.isArray(aSettings) ? aSettings[aClientId] : aSettings;
+  },
+
+  /**
+   * Helper function to set CellBroadcastDisabled to each RadioInterface.
+   */
+  setCellBroadcastDisabled: function(aSettings) {
+    let numOfRilClients = gRadioInterfaceLayer.numRadioInterfaces;
+    let responses = [];
+    for (let clientId = 0; clientId < numOfRilClients; clientId++) {
+      gRadioInterfaceLayer
+        .getRadioInterface(clientId)
+        .sendWorkerMessage("setCellBroadcastDisabled",
+                           { disabled: this._retrieveSettingValueByClient(clientId, aSettings) });
+    }
+  },
+
+  /**
+   * Helper function to set CellBroadcastSearchList to each RadioInterface.
+   */
+  setCellBroadcastSearchList: function(aSettings) {
+    let numOfRilClients = gRadioInterfaceLayer.numRadioInterfaces;
+    let responses = [];
+    for (let clientId = 0; clientId < numOfRilClients; clientId++) {
+      let newSearchList = this._retrieveSettingValueByClient(clientId, aSettings);
+      let oldSearchList = this._retrieveSettingValueByClient(clientId,
+                                                          this._cellBroadcastSearchList);
+
+      if ((newSearchList == oldSearchList) ||
+          (newSearchList && oldSearchList &&
+           newSearchList.gsm == oldSearchList.gsm &&
+           newSearchList.cdma == oldSearchList.cdma)) {
+        return;
+      }
+
+      gRadioInterfaceLayer
+        .getRadioInterface(clientId).sendWorkerMessage("setCellBroadcastSearchList",
+                                                       { searchList: newSearchList },
+                                                       (function callback(aResponse) {
+        if (DEBUG && !aResponse.success) {
+          debug("Failed to set new search list: " + newSearchList +
+                " to client id: " + clientId);
+        }
+
+        responses.push(aResponse);
+        if (responses.length == numOfRilClients) {
+          let successCount = 0;
+          for (let i = 0; i < responses.length; i++) {
+            if (responses[i].success) {
+              successCount++;
+            }
+          }
+          if (successCount == numOfRilClients) {
+            this._cellBroadcastSearchList = aSettings;
+          } else {
+            // Rollback the change when failure.
+            let lock = gSettingsService.createLock();
+            lock.set(kSettingsCellBroadcastSearchList,
+                     this._cellBroadcastSearchList, null);
+          }
+        }
+
+        return false;
+      }).bind(this));
+    }
   },
 
   /**
@@ -179,12 +292,43 @@ CellBroadcastService.prototype = {
   },
 
   /**
+   * nsISettingsServiceCallback interface.
+   */
+  handle: function(aName, aResult) {
+    switch (aName) {
+      case kSettingsCellBroadcastSearchList:
+        if (DEBUG) {
+          debug("'" + kSettingsCellBroadcastSearchList +
+                "' is now " + JSON.stringify(aResult));
+        }
+
+        this.setCellBroadcastSearchList(aResult);
+        break;
+      case kSettingsCellBroadcastDisabled:
+        if (DEBUG) {
+          debug("'" + kSettingsCellBroadcastDisabled +
+                "' is now " + JSON.stringify(aResult));
+        }
+
+        this.setCellBroadcastDisabled(aResult);
+        break;
+    }
+  },
+
+  /**
    * nsIObserver interface.
    */
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case kMozSettingsChangedObserverTopic:
+        if ("wrappedJSObject" in aSubject) {
+          aSubject = aSubject.wrappedJSObject;
+        }
+        this.handle(aSubject.key, aSubject.value);
+        break;
       case NS_XPCOM_SHUTDOWN_OBSERVER_ID:
         Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+        Services.obs.removeObserver(this, kMozSettingsChangedObserverTopic);
 
         // Remove all listeners.
         this._listeners = [];
