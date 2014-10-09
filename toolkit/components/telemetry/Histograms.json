@@ -2609,6 +2609,42 @@
     "kind": "flag",
     "description": "A plugin object was successfully invoked as a function"
   },
+  "FLASH_PLUGIN_STATES": {
+    "expires_in_version": "50",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "A flash object's initialization state"
+  },
+  "FLASH_PLUGIN_AREA": {
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "low": "256",
+    "high": "16777216",
+    "n_buckets": 50,
+    "description": "Flash object area (width * height)"
+  },
+  "FLASH_PLUGIN_WIDTH": {
+    "expires_in_version": "50",
+    "kind": "linear",
+    "low": "1",
+    "high": "2000",
+    "n_buckets": 50,
+    "description": "Flash object width"
+  },
+  "FLASH_PLUGIN_HEIGHT": {
+    "expires_in_version": "50",
+    "kind": "linear",
+    "low": "1",
+    "high": "2000",
+    "n_buckets": 50,
+    "description": "Flash object height"
+  },
+  "FLASH_PLUGIN_INSTANCES_ON_PAGE": {
+    "expires_in_version": "50",
+    "kind": "enumerated",
+    "n_values": 30,
+    "description": "Flash object instances count on page"
+  },
   "MOZ_SQLITE_OPEN_MS": {
     "expires_in_version": "default",
     "kind": "exponential",
