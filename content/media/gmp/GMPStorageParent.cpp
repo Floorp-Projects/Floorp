@@ -78,12 +78,7 @@ GetGMPStorageDir(nsIFile** aTempDir, const nsCString& aNodeId)
     return rv;
   }
 
-  // TODO: When aOrigin is the same node-id as the GMP sees in the child
-  // process (a UUID or somesuch), we can just append it un-hashed here.
-  // This should reduce the chance of hash collsions exposing data.
-  nsAutoString nodeIdHash;
-  nodeIdHash.AppendInt(HashString(aNodeId));
-  rv = tmpFile->Append(nodeIdHash);
+  rv = tmpFile->AppendNative(aNodeId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
