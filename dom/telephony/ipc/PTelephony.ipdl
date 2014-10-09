@@ -24,17 +24,10 @@ struct DialRequest
   bool isEmergency;
 };
 
-struct USSDRequest
-{
-  uint32_t clientId;
-  nsString ussd;
-};
-
 union IPCTelephonyRequest
 {
   EnumerateCallsRequest;
   DialRequest;
-  USSDRequest;
 };
 
 sync protocol PTelephony {
