@@ -44,10 +44,13 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
         return BaseProxyHandler::hasOwn(cx, proxy, id, bp);
     }
 
-    // Kick keys out to getOwnPropertyName and then filter. [[GetOwnProperty]] could potentially
-    // change the enumerability of the target's properties.
-    virtual bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props) const MOZ_OVERRIDE {
-        return BaseProxyHandler::keys(cx, proxy, props);
+
+    // Kick getOwnEnumerablePropertyKeys out to ownPropertyKeys and then
+    // filter. [[GetOwnProperty]] could potentially change the enumerability of
+    // the target's properties.
+    virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
+                                              AutoIdVector &props) const MOZ_OVERRIDE {
+        return BaseProxyHandler::getOwnEnumerablePropertyKeys(cx, proxy, props);
     }
     virtual bool iterate(JSContext *cx, HandleObject proxy, unsigned flags,
                          MutableHandleValue vp) const MOZ_OVERRIDE;

@@ -436,8 +436,8 @@ class XrayWrapper : public Base {
                                        JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
     virtual bool hasOwn(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                         bool *bp) const MOZ_OVERRIDE;
-    virtual bool keys(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                      JS::AutoIdVector &props) const MOZ_OVERRIDE;
+    virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                              JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned flags,
                          JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
 
@@ -507,8 +507,8 @@ public:
                                        JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
     virtual bool hasOwn(JSContext *cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                         bool *bp) const MOZ_OVERRIDE;
-    virtual bool keys(JSContext *cx, JS::Handle<JSObject*> proxy,
-                      JS::AutoIdVector &props) const MOZ_OVERRIDE;
+    virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> proxy,
+                                              JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> proxy, unsigned flags,
                          JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
 };
