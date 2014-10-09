@@ -13,13 +13,14 @@
                  android:paddingRight="4dip"
                  android:layout_gravity="center_vertical"/>
 
-    <!-- The toolbar elements are not the same height so we add a bottom margin here to align its bottom. -->
+    <!-- The site security icon is misaligned with the page title so
+         we add a bottom margin to align their bottoms. -->
     <ImageButton android:id="@+id/site_security"
                  style="@style/UrlBar.ImageButton"
-                 android:layout_width="@dimen/browser_toolbar_lock_width"
+                 android:layout_width="@dimen/browser_toolbar_site_security_width"
                  android:scaleType="fitCenter"
                  android:layout_marginRight="4dip"
-                 android:layout_marginBottom="1dp"
+                 android:layout_marginBottom="@dimen/site_security_bottom_margin"
                  android:src="@drawable/site_security_level"
                  android:contentDescription="@string/site_security"
                  android:visibility="gone"/>

@@ -11,7 +11,7 @@
     <dimen name="browser_toolbar_height">48dp</dimen>
     <dimen name="browser_toolbar_button_padding">12dp</dimen>
     <dimen name="browser_toolbar_icon_width">48dp</dimen>
-    <dimen name="browser_toolbar_lock_width">12dp</dimen>
+    <dimen name="browser_toolbar_site_security_width">12dp</dimen>
     <!-- favicon_size includes 4dp of right padding. We can't use margin (which would allow us to
          specify the actual size) because that would decrease the size of our hit target. -->
     <dimen name="browser_toolbar_favicon_size">21.33dip</dimen>
@@ -22,6 +22,9 @@
     <dimen name="new_tablet_tab_strip_item_margin">-30dp</dimen>
     <dimen name="new_tablet_tab_strip_favicon_size">16dp</dimen>
     <dimen name="new_tablet_forward_default_offset">-6dp</dimen>
+    <dimen name="new_tablet_site_security_height">60dp</dimen>
+    <dimen name="new_tablet_site_security_width">18dp</dimen>
+    <dimen name="new_tablet_site_security_padding_vertical">21dp</dimen>
     <dimen name="new_tablet_browser_toolbar_height">60dp</dimen>
     <dimen name="new_tablet_browser_toolbar_menu_item_width">56dp</dimen>
     <!-- Padding combines with an 18dp image to form the menu item width and height. -->
@@ -44,6 +47,12 @@
          database. The largest available size is always stored in the database, regardless of this
          value.-->
     <dimen name="favicon_largest_interesting_size">32dp</dimen>
+
+    <!-- Site security icon -->
+    <!-- If one of these values changes, they all should. -->
+    <dimen name="site_security_bottom_margin">.5dp</dimen>
+    <dimen name="new_tablet_site_security_unknown_inset_top">1dp</dimen>
+    <dimen name="new_tablet_site_security_unknown_inset_bottom">-1dp</dimen>
 
     <!-- Page Row height -->
     <dimen name="page_row_height">64dp</dimen>
