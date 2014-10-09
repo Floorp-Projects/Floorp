@@ -65,7 +65,7 @@ nsresult RawReader::ReadMetadata(MediaInfo* aInfo,
     return NS_ERROR_FAILURE; // Invalid data
 
   // Determine and verify frame display size.
-  float pixelAspectRatio = static_cast<float>(mMetadata.aspectNumerator) / 
+  float pixelAspectRatio = static_cast<float>(mMetadata.aspectNumerator) /
                             mMetadata.aspectDenominator;
   nsIntSize display(mMetadata.frameWidth, mMetadata.frameHeight);
   ScaleDisplayByAspectRatio(display, pixelAspectRatio);
@@ -126,7 +126,7 @@ RawReader::IsMediaSeekable()
   return false;
 }
 
-// Helper method that either reads until it gets aLength bytes 
+// Helper method that either reads until it gets aLength bytes
 // or returns false
 bool RawReader::ReadFromResource(MediaResource *aResource, uint8_t* aBuf,
                                    uint32_t aLength)
