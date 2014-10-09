@@ -3423,7 +3423,7 @@ Tab.prototype = {
       this.browser.focus();
       this.browser.docShellIsActive = true;
       Reader.updatePageAction(this);
-      ExternalApps.updatePageAction(this.browser.currentURI);
+      ExternalApps.updatePageAction(this.browser.currentURI, this.browser.contentDocument);
     } else {
       this.browser.setAttribute("type", "content-targetable");
       this.browser.docShellIsActive = false;
@@ -4088,7 +4088,7 @@ Tab.prototype = {
         let uri = this.browser.currentURI;
         if (BrowserApp.selectedTab == this) {
           if (ExternalApps.shouldCheckUri(uri)) {
-            ExternalApps.updatePageAction(uri);
+            ExternalApps.updatePageAction(uri, this.browser.contentDocument);
           } else {
             ExternalApps.clearPageAction();
           }
@@ -7861,6 +7861,9 @@ var ExternalApps = {
   },
 
   openExternal: function(aElement) {
+    if (aElement.pause) {
+      aElement.pause();
+    }
     let uri = ExternalApps._getMediaLink(aElement);
     HelperApps.launchUri(uri);
   },
@@ -7873,11 +7876,11 @@ var ExternalApps = {
     return true;
   },
 
-  updatePageAction: function updatePageAction(uri) {
+  updatePageAction: function updatePageAction(uri, contentDocument) {
     HelperApps.getAppsForUri(uri, { filterHttp: true }, (apps) => {
       this.clearPageAction();
       if (apps.length > 0)
-        this._setUriForPageAction(uri, apps);
+        this._setUriForPageAction(uri, apps, contentDocument);
     });
   },
 
@@ -7885,12 +7888,33 @@ var ExternalApps = {
     this._pageActionUri = uri;
   },
 
-  _setUriForPageAction: function setUriForPageAction(uri, apps) {
+  _getMediaContentElement(contentDocument) {
+    if (!contentDocument.contentType.startsWith("video/") &&
+        !contentDocument.contentType.startsWith("audio/")) {
+      return null;
+    }
+
+    let element = contentDocument.activeElement;
+
+    if (element instanceof HTMLBodyElement) {
+      element = element.firstChild;
+    }
+
+    if (element instanceof HTMLMediaElement) {
+      return element;
+    }
+
+    return null;
+  },
+
+  _setUriForPageAction: function setUriForPageAction(uri, apps, contentDocument) {
     this.updatePageActionUri(uri);
 
     // If the pageaction is already added, simply update the URI to be launched when 'onclick' is triggered.
     if (this._pageActionId != undefined)
       return;
+
+    let mediaElement = this._getMediaContentElement(contentDocument);
 
     this._pageActionId = PageActions.add({
       title: Strings.browser.GetStringFromName("openInApp.pageAction"),
@@ -7898,6 +7922,11 @@ var ExternalApps = {
 
       clickCallback: () => {
         UITelemetry.addEvent("launch.1", "pageaction", null, "helper");
+
+        let wasPlaying = mediaElement && !mediaElement.paused && !mediaElement.ended;
+        if (wasPlaying) {
+          mediaElement.pause();
+        }
 
         if (apps.length > 1) {
           // Use the HelperApps prompt here to filter out any Http handlers
@@ -7909,6 +7938,10 @@ var ExternalApps = {
             ]
           }, (result) => {
             if (result.button != 0) {
+              if (wasPlaying) {
+                mediaElement.play();
+              }
+
               return;
             }
             apps[result.icongrid0].launch(this._pageActionUri);
