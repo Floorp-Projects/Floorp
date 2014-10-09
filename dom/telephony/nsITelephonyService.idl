@@ -177,20 +177,10 @@ interface nsITelephonyListener : nsISupports
 };
 
 /**
- * A callback interface for handling asynchronous response.
+ * A callback interface for handling asynchronous response of Telephony.dial().
  */
-[scriptable, uuid(cffc3f9d-2c88-4a14-8ebc-f216caf0cc1d)]
+[scriptable, uuid(67533db3-cd38-475c-a774-8d0bbf9169fb)]
 interface nsITelephonyCallback : nsISupports
-{
-  void notifySuccess();
-  void notifyError(in AString error);
-};
-
-/**
- * A callback interface for handling asynchronous response for telephony.dial.
- */
-[scriptable, uuid(4481212f-72e9-4aef-97e1-5397af782113)]
-interface nsITelephonyDialCallback : nsITelephonyCallback
 {
   /**
    * Called when a dial request is treated as an MMI code and it is about to
@@ -200,6 +190,14 @@ interface nsITelephonyDialCallback : nsITelephonyCallback
    *        MMI service code key string that defined in MMI_KS_SC_*
    */
   void notifyDialMMI(in AString serviceCode);
+
+  /**
+   * Called when a dial request fails.
+   *
+   * @param error
+   *        Error from RIL.
+   */
+  void notifyDialError(in AString error);
 
   /**
    * Called when a dial request is treated as a call setup and the result
@@ -240,7 +238,7 @@ interface nsITelephonyDialCallback : nsITelephonyCallback
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(79188caa-046a-48e1-b9c5-2e891504dc7a)]
+[scriptable, uuid(4ff3ecb7-b024-4752-9dd6-c3623c6e6b8a)]
 interface nsITelephonyService : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -283,7 +281,7 @@ interface nsITelephonyService : nsISupports
    * Functionality for making and managing phone calls.
    */
   void dial(in unsigned long clientId, in DOMString number,
-            in boolean isEmergency, in nsITelephonyDialCallback callback);
+            in boolean isEmergency, in nsITelephonyCallback callback);
   void hangUp(in unsigned long clientId, in unsigned long callIndex);
 
   void startTone(in unsigned long clientId, in DOMString dtmfChar);
@@ -298,16 +296,6 @@ interface nsITelephonyService : nsISupports
   void separateCall(in unsigned long clientId, in unsigned long callIndex);
   void holdConference(in unsigned long clientId);
   void resumeConference(in unsigned long clientId);
-
-  /**
-   * Send an USSD on existing session. It results in error if the session is
-   * not existed.
-   *
-   * If successful, callback.notifySuccess() will be called.
-   * Otherwise, callback.notifyError() will be called.
-   */
-  void sendUSSD(in unsigned long clientId, in DOMString ussd,
-                in nsITelephonyCallback callback);
 
   attribute bool microphoneMuted;
   attribute bool speakerEnabled;

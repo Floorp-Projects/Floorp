@@ -4,22 +4,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="dom.telephony.enabled",
- CheckPermissions="telephony mobileconnection",
- AvailableIn="CertifiedApps",
+[Pref="dom.mobileconnection.enabled",
  Constructor(DOMString type, optional USSDReceivedEventInit eventInitDict)]
 interface USSDReceivedEvent : Event
 {
-  readonly attribute unsigned long serviceId;
   readonly attribute DOMString? message;
-  readonly attribute USSDSession? session;  // null if session is ended.
-  readonly attribute boolean sessionEnded;  // deprecated. Bug 1070831
+  readonly attribute boolean sessionEnded;
 };
 
 dictionary USSDReceivedEventInit : EventInit
 {
-  unsigned long serviceId = 0;
   DOMString? message = null;
-  USSDSession? session = null;
   boolean sessionEnded = false;
 };

@@ -1976,17 +1976,12 @@ RadioInterface.prototype = {
         gTelephonyService.notifyConferenceCallStateChanged(message.state);
         break;
       case "cdmaCallWaiting":
-        gTelephonyService.notifyCdmaCallWaiting(this.clientId,
-                                                message.waitingCall);
+        gTelephonyService.notifyCdmaCallWaiting(this.clientId, message.waitingCall);
         break;
       case "suppSvcNotification":
         gTelephonyService.notifySupplementaryService(this.clientId,
                                                      message.callIndex,
                                                      message.notification);
-        break;
-      case "ussdreceived":
-        gTelephonyService.notifyUssdReceived(this.clientId, message.message,
-                                             message.sessionEnded);
         break;
       case "datacallerror":
         connHandler.handleDataCallError(message);
@@ -2040,6 +2035,11 @@ RadioInterface.prototype = {
         // so notify gRadioEnabledController here.
         gRadioEnabledController.notifyRadioStateChanged(this.clientId,
                                                         message.radioState);
+        break;
+      case "ussdreceived":
+        gMobileConnectionService.notifyUssdReceived(this.clientId,
+                                                    message.message,
+                                                    message.sessionEnded);
         break;
       case "cardstatechange":
         this.rilContext.cardState = message.cardState;

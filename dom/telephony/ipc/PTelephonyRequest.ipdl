@@ -16,12 +16,7 @@ struct EnumerateCallsResponse
   // empty.
 };
 
-struct SuccessResponse
-{
-  // empty.
-};
-
-struct ErrorResponse
+struct DialResponseError
 {
   nsString name;
 };
@@ -47,12 +42,8 @@ struct DialResponseMMIError
 union IPCTelephonyResponse
 {
   EnumerateCallsResponse;
-
-  // General.
-  SuccessResponse;
-  ErrorResponse;
-
   // dial
+  DialResponseError;
   DialResponseCallSuccess;
   DialResponseMMISuccess;
   DialResponseMMIError;
