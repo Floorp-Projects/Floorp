@@ -570,10 +570,17 @@ WebGLTexture::DoDeferredImageInitialization(TexImageTarget imageTarget, GLint le
                                              &driverInternalFormat, &driverFormat, &driverType);
 
     mContext->GetAndFlushUnderlyingGLErrors();
-    gl->fTexImage2D(imageTarget.get(), level, driverInternalFormat,
-                    imageInfo.mWidth, imageInfo.mHeight,
-                    0, driverFormat, driverType,
-                    zeros);
+    if (mImmutable) {
+        gl->fTexSubImage2D(imageTarget.get(), level, 0, 0,
+                           imageInfo.mWidth, imageInfo.mHeight,
+                           driverFormat, driverType,
+                           zeros);
+    } else {
+        gl->fTexImage2D(imageTarget.get(), level, driverInternalFormat,
+                        imageInfo.mWidth, imageInfo.mHeight,
+                        0, driverFormat, driverType,
+                        zeros);
+    }
     GLenum error = mContext->GetAndFlushUnderlyingGLErrors();
     if (error) {
         // Should only be OUT_OF_MEMORY. Anyway, there's no good way to recover from this here.
