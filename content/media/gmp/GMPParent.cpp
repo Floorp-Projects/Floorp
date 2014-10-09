@@ -711,8 +711,12 @@ GMPParent::DeallocPGMPStorageParent(PGMPStorageParent* aActor)
 }
 
 bool
-GMPParent::RecvPGMPStorageConstructor(PGMPStorageParent* actor)
+GMPParent::RecvPGMPStorageConstructor(PGMPStorageParent* aActor)
 {
+  GMPStorageParent* p  = (GMPStorageParent*)aActor;
+  if (NS_WARN_IF(NS_FAILED(p->Init()))) {
+    return false;
+  }
   return true;
 }
 
