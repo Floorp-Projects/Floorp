@@ -162,8 +162,7 @@ TelephonyIPCService::EnumerateCalls(nsITelephonyListener *aListener)
 
 NS_IMETHODIMP
 TelephonyIPCService::Dial(uint32_t aClientId, const nsAString& aNumber,
-                           bool aIsEmergency,
-                           nsITelephonyDialCallback *aCallback)
+                           bool aIsEmergency, nsITelephonyCallback *aCallback)
 {
   return SendRequest(nullptr, aCallback,
                      DialRequest(aClientId, nsString(aNumber), aIsEmergency));
@@ -299,14 +298,6 @@ TelephonyIPCService::StopTone(uint32_t aClientId)
 
   mPTelephonyChild->SendStopTone(aClientId);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-TelephonyIPCService::SendUSSD(uint32_t aClientId, const nsAString& aUssd,
-                              nsITelephonyCallback *aCallback)
-{
-  return SendRequest(nullptr, aCallback,
-                     USSDRequest(aClientId, nsString(aUssd)));
 }
 
 NS_IMETHODIMP

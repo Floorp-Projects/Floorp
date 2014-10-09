@@ -23,7 +23,7 @@ namespace mozilla {
 namespace dom {
 namespace telephony {
 
-class TelephonyDialCallback;
+class TelephonyCallback;
 
 } // namespace telephony
 
@@ -43,7 +43,7 @@ class Telephony MOZ_FINAL : public DOMEventTargetHelper,
   class EnumerationAck;
 
   friend class EnumerationAck;
-  friend class telephony::TelephonyDialCallback;
+  friend class telephony::TelephonyCallback;
 
   nsCOMPtr<nsITelephonyService> mService;
   nsRefPtr<Listener> mListener;

@@ -5,7 +5,7 @@
 
 #include "TelephonyChild.h"
 
-#include "mozilla/dom/telephony/TelephonyDialCallback.h"
+#include "mozilla/dom/telephony/TelephonyCallback.h"
 #include "TelephonyIPCService.h"
 
 USING_TELEPHONY_NAMESPACE
@@ -147,10 +147,8 @@ TelephonyRequestChild::Recv__delete__(const IPCTelephonyResponse& aResponse)
     case IPCTelephonyResponse::TEnumerateCallsResponse:
       mListener->EnumerateCallStateComplete();
       break;
-    case IPCTelephonyResponse::TSuccessResponse:
-      return DoResponse(aResponse.get_SuccessResponse());
-    case IPCTelephonyResponse::TErrorResponse:
-      return DoResponse(aResponse.get_ErrorResponse());
+    case IPCTelephonyResponse::TDialResponseError:
+      return DoResponse(aResponse.get_DialResponseError());
     case IPCTelephonyResponse::TDialResponseCallSuccess:
       return DoResponse(aResponse.get_DialResponseCallSuccess());
     case IPCTelephonyResponse::TDialResponseMMISuccess:
@@ -189,24 +187,16 @@ bool
 TelephonyRequestChild::RecvNotifyDialMMI(const nsString& aServiceCode)
 {
   MOZ_ASSERT(mCallback);
-  nsCOMPtr<nsITelephonyDialCallback> callback = do_QueryInterface(mCallback);
-  callback->NotifyDialMMI(aServiceCode);
+
+  mCallback->NotifyDialMMI(aServiceCode);
   return true;
 }
 
 bool
-TelephonyRequestChild::DoResponse(const SuccessResponse& aResponse)
+TelephonyRequestChild::DoResponse(const DialResponseError& aResponse)
 {
   MOZ_ASSERT(mCallback);
-  mCallback->NotifySuccess();
-  return true;
-}
-
-bool
-TelephonyRequestChild::DoResponse(const ErrorResponse& aResponse)
-{
-  MOZ_ASSERT(mCallback);
-  mCallback->NotifyError(aResponse.name());
+  mCallback->NotifyDialError(aResponse.name());
   return true;
 }
 
@@ -214,8 +204,7 @@ bool
 TelephonyRequestChild::DoResponse(const DialResponseCallSuccess& aResponse)
 {
   MOZ_ASSERT(mCallback);
-  nsCOMPtr<nsITelephonyDialCallback> callback = do_QueryInterface(mCallback);
-  callback->NotifyDialCallSuccess(aResponse.callIndex(), aResponse.number());
+  mCallback->NotifyDialCallSuccess(aResponse.callIndex(), aResponse.number());
   return true;
 }
 
@@ -226,8 +215,7 @@ TelephonyRequestChild::DoResponse(const DialResponseMMISuccess& aResponse)
 
   // FIXME: Need to overload NotifyDialMMISuccess in the IDL. mCallback is not
   // necessarily an instance of TelephonyCallback.
-  nsCOMPtr<nsITelephonyDialCallback> dialCallback = do_QueryInterface(mCallback);
-  nsRefPtr<TelephonyDialCallback> callback = static_cast<TelephonyDialCallback*>(dialCallback.get());
+  nsRefPtr<TelephonyCallback> callback = static_cast<TelephonyCallback*>(mCallback.get());
 
   nsAutoString statusMessage(aResponse.statusMessage());
   AdditionalInformation info(aResponse.additionalInformation());
@@ -254,17 +242,16 @@ bool
 TelephonyRequestChild::DoResponse(const DialResponseMMIError& aResponse)
 {
   MOZ_ASSERT(mCallback);
-  nsCOMPtr<nsITelephonyDialCallback> callback = do_QueryInterface(mCallback);
 
   nsAutoString name(aResponse.name());
   AdditionalInformation info(aResponse.additionalInformation());
 
   switch (info.type()) {
     case AdditionalInformation::Tvoid_t:
-      callback->NotifyDialMMIError(name);
+      mCallback->NotifyDialMMIError(name);
       break;
     case AdditionalInformation::Tuint16_t:
-      callback->NotifyDialMMIErrorWithInfo(name, info.get_uint16_t());
+      mCallback->NotifyDialMMIErrorWithInfo(name, info.get_uint16_t());
       break;
     default:
       MOZ_CRASH("Received invalid type!");

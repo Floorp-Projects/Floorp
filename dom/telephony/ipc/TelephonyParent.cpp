@@ -43,8 +43,6 @@ TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActo
       return actor->DoRequest(aRequest.get_EnumerateCallsRequest());
     case IPCTelephonyRequest::TDialRequest:
       return actor->DoRequest(aRequest.get_DialRequest());
-    case IPCTelephonyRequest::TUSSDRequest:
-      return actor->DoRequest(aRequest.get_USSDRequest());
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -387,8 +385,7 @@ TelephonyParent::SupplementaryServiceNotification(uint32_t aClientId,
 
 NS_IMPL_ISUPPORTS(TelephonyRequestParent,
                   nsITelephonyListener,
-                  nsITelephonyCallback,
-                  nsITelephonyDialCallback)
+                  nsITelephonyCallback)
 
 TelephonyRequestParent::TelephonyRequestParent()
   : mActorDestroyed(false)
@@ -429,23 +426,9 @@ TelephonyRequestParent::DoRequest(const DialRequest& aRequest)
     do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   if (service) {
     service->Dial(aRequest.clientId(), aRequest.number(),
-                  aRequest.isEmergency(), this);
+                   aRequest.isEmergency(), this);
   } else {
-    return NS_SUCCEEDED(NotifyError(NS_LITERAL_STRING("InvalidStateError")));
-  }
-
-  return true;
-}
-
-bool
-TelephonyRequestParent::DoRequest(const USSDRequest& aRequest)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  if (service) {
-    service->SendUSSD(aRequest.clientId(), aRequest.ussd(), this);
-  } else {
-    return NS_SUCCEEDED(NotifyError(NS_LITERAL_STRING("InvalidStateError")));
+    return NS_SUCCEEDED(NotifyDialError(NS_LITERAL_STRING("InvalidStateError")));
   }
 
   return true;
@@ -549,7 +532,7 @@ TelephonyRequestParent::SupplementaryServiceNotification(uint32_t aClientId,
   MOZ_CRASH("Not a TelephonyParent!");
 }
 
-// nsITelephonyDialCallback
+// nsITelephonyCallback
 
 NS_IMETHODIMP
 TelephonyRequestParent::NotifyDialMMI(const nsAString& aServiceCode)
@@ -560,15 +543,9 @@ TelephonyRequestParent::NotifyDialMMI(const nsAString& aServiceCode)
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::NotifySuccess()
+TelephonyRequestParent::NotifyDialError(const nsAString& aError)
 {
-  return SendResponse(SuccessResponse());
-}
-
-NS_IMETHODIMP
-TelephonyRequestParent::NotifyError(const nsAString& aError)
-{
-  return SendResponse(ErrorResponse(nsAutoString(aError)));
+  return SendResponse(DialResponseError(nsAutoString(aError)));
 }
 
 NS_IMETHODIMP
