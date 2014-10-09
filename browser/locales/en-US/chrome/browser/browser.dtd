@@ -140,6 +140,10 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY editThisBookmarkCmd.label "Edit This Bookmark">
 <!ENTITY bookmarkThisPageCmd.commandkey "d">
 <!ENTITY markPageCmd.commandkey "l">
+<!-- LOCALIZATION NOTE (findShareServices.label):
+  -  Use the unicode ellipsis char, \u2026,
+  -  or use "..." if \u2026 doesn't suit traditions in your locale. -->
+<!ENTITY findShareServices.label "Find more Share services…">
 <!ENTITY sharePageCmd.label "Share This Page">
 <!ENTITY sharePageCmd.commandkey "S">
 <!ENTITY sharePageCmd.accesskey "s">
@@ -692,7 +696,11 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY social.learnMore.accesskey "l">
 <!ENTITY social.closeNotificationItem.label "Not Now">
 
-
+<!ENTITY social.directory.label "Activations Directory">
+<!ENTITY social.directory.text "You can activate Share services from the directory.">
+<!ENTITY social.directory.button "Take me there!">
+<!ENTITY social.directory.introText "Click on a service to add it to &brandShortName;.">
+<!ENTITY social.directory.viewmore.text "View More">
 
 <!ENTITY customizeMode.tabTitle "Customize &brandShortName;">
 <!ENTITY customizeMode.menuAndToolbars.header2 "Additional Tools and Features">

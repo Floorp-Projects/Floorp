@@ -14,7 +14,8 @@ browser.jar:
   skin/classic/browser/aboutCertError_sectionCollapsed.png
   skin/classic/browser/aboutCertError_sectionCollapsed-rtl.png
   skin/classic/browser/aboutCertError_sectionExpanded.png
-  skin/classic/browser/aboutSocialError.css
+  skin/classic/browser/aboutSocialError.css                 (../shared/aboutSocialError.css)
+* skin/classic/browser/aboutProviderDirectory.css           (../shared/aboutProviderDirectory.css)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/aboutSyncTabs.css
 #endif

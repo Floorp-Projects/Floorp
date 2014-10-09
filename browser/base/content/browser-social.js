@@ -48,6 +48,12 @@ XPCOMUtils.defineLazyGetter(this, "CreateSocialMarkWidget", function() {
   return tmp.CreateSocialMarkWidget;
 });
 
+XPCOMUtils.defineLazyGetter(this, "hookWindowCloseForPanelClose", function() {
+  let tmp = {};
+  Cu.import("resource://gre/modules/MozSocialAPI.jsm", tmp);
+  return tmp.hookWindowCloseForPanelClose;
+});
+
 SocialUI = {
   _initialized: false,
 
@@ -433,6 +439,12 @@ SocialFlyout = {
 }
 
 SocialShare = {
+  get _dynamicResizer() {
+    delete this._dynamicResizer;
+    this._dynamicResizer = new DynamicResizeWatcher();
+    return this._dynamicResizer;
+  },
+
   // Share panel may be attached to the overflow or menu button depending on
   // customization, we need to manage open state of the anchor.
   get anchor() {
@@ -459,7 +471,7 @@ SocialShare = {
 
   _createFrame: function() {
     let panel = this.panel;
-    if (!SocialUI.enabled || this.iframe)
+    if (this.iframe)
       return;
     this.panel.hidden = false;
     // create and initialize the panel for this window
@@ -480,15 +492,6 @@ SocialShare = {
     if (lastProviderOrigin) {
       provider = Social._getProviderFromOrigin(lastProviderOrigin);
     }
-    // if they have a provider selected in the sidebar use that for the initial
-    // default in share
-    if (!provider)
-      provider = SocialSidebar.provider;
-    // if our provider has no shareURL, select the first one that does
-    if (!provider || !provider.shareURL) {
-      let providers = [p for (p of Social.providers) if (p.shareURL)];
-      provider = providers.length > 0  && providers[0];
-    }
     return provider;
   },
 
@@ -497,16 +500,11 @@ SocialShare = {
       return;
     let providers = [p for (p of Social.providers) if (p.shareURL)];
     let hbox = document.getElementById("social-share-provider-buttons");
-    // selectable providers are inserted before the provider-menu seperator,
-    // remove any menuitems in that area
-    while (hbox.firstChild) {
+    // remove everything before the add-share-provider button (which should also
+    // be lastChild if any share providers were added)
+    let addButton = document.getElementById("add-share-provider");
+    while (hbox.firstChild != addButton) {
       hbox.removeChild(hbox.firstChild);
-    }
-    // reset our share toolbar
-    // only show a selection if there is more than one
-    if (!SocialUI.enabled || providers.length < 2) {
-      this.panel.firstChild.hidden = true;
-      return;
     }
     let selectedProvider = this.getSelectedProvider();
     for (let provider of providers) {
@@ -517,17 +515,16 @@ SocialShare = {
       button.setAttribute("image", provider.iconURL);
       button.setAttribute("tooltiptext", provider.name);
       button.setAttribute("origin", provider.origin);
-      button.setAttribute("oncommand", "SocialShare.sharePage(this.getAttribute('origin')); this.checked=true;");
+      button.setAttribute("oncommand", "SocialShare.sharePage(this.getAttribute('origin'));");
       if (provider == selectedProvider) {
         this.defaultButton = button;
       }
-      hbox.appendChild(button);
+      hbox.insertBefore(button, addButton);
     }
     if (!this.defaultButton) {
-      this.defaultButton = hbox.firstChild
+      this.defaultButton = addButton;
     }
     this.defaultButton.setAttribute("checked", "true");
-    this.panel.firstChild.hidden = false;
   },
 
   get shareButton() {
@@ -620,13 +617,6 @@ SocialShare = {
     // will call sharePage with an origin for us to switch to.
     this._createFrame();
     let iframe = this.iframe;
-    let provider;
-    if (providerOrigin)
-      provider = Social._getProviderFromOrigin(providerOrigin);
-    else
-      provider = this.getSelectedProvider();
-    if (!provider || !provider.shareURL)
-      return;
 
     // graphData is an optional param that either defines the full set of data
     // to be shared, or partial data about the current page. It is set by a call
@@ -658,20 +648,26 @@ SocialShare = {
     }
     this.currentShare = pageData;
 
+    let provider;
+    if (providerOrigin)
+      provider = Social._getProviderFromOrigin(providerOrigin);
+    else
+      provider = this.getSelectedProvider();
+    if (!provider || !provider.shareURL) {
+      this.showDirectory();
+      return;
+    }
+    // check the menu button
+    let hbox = document.getElementById("social-share-provider-buttons");
+    let btn = hbox.querySelector("[origin='" + provider.origin + "']");
+    if (btn)
+      btn.checked = true;
+
     let shareEndpoint = OpenGraphBuilder.generateEndpointURL(provider.shareURL, pageData);
 
     let size = provider.getPageSize("share");
     if (size) {
-      if (this._dynamicResizer) {
-        this._dynamicResizer.stop();
-        this._dynamicResizer = null;
-      }
-      let {width, height} = size;
-      width += this.panel.boxObject.width - iframe.boxObject.width;
-      height += this.panel.boxObject.height - iframe.boxObject.height;
-      this.panel.sizeTo(width, height);
-    } else {
-      this._dynamicResizer = new DynamicResizeWatcher();
+      this._dynamicResizer.stop();
     }
 
     // if we've already loaded this provider/page share endpoint, we don't want
@@ -683,7 +679,7 @@ SocialShare = {
       reload = shareEndpoint != iframe.contentDocument.location.spec;
     }
     if (!reload) {
-      if (this._dynamicResizer)
+      if (!size)
         this._dynamicResizer.start(this.panel, iframe);
       iframe.docShell.isActive = true;
       iframe.docShell.isAppTab = true;
@@ -701,7 +697,13 @@ SocialShare = {
         // should close the window when done.
         iframe.contentWindow.opener = iframe.contentWindow;
         setTimeout(function() {
-          if (SocialShare._dynamicResizer) { // may go null if hidden quickly
+          if (size) {
+            let panel = SocialShare.panel;
+            let {width, height} = size;
+            width += panel.boxObject.width - iframe.boxObject.width;
+            height += panel.boxObject.height - iframe.boxObject.height;
+            panel.sizeTo(width, height);
+          } else {
             SocialShare._dynamicResizer.start(iframe.parentNode, iframe);
           }
         }, 0);
@@ -722,10 +724,31 @@ SocialShare = {
     let uri = Services.io.newURI(shareEndpoint, null, null);
     iframe.setAttribute("origin", provider.origin);
     iframe.setAttribute("src", shareEndpoint);
+    this._openPanel();
+  },
 
+  showDirectory: function() {
+    this._createFrame();
+    let iframe = this.iframe;
+    iframe.removeAttribute("origin");
+    iframe.addEventListener("load", function panelBrowserOnload(e) {
+      iframe.removeEventListener("load", panelBrowserOnload, true);
+      hookWindowCloseForPanelClose(iframe.contentWindow);
+      SocialShare._dynamicResizer.start(iframe.parentNode, iframe);
+
+      iframe.addEventListener("unload", function panelBrowserOnload(e) {
+        iframe.removeEventListener("unload", panelBrowserOnload, true);
+        SocialShare._dynamicResizer.stop();
+      }, true);
+    }, true);
+    iframe.setAttribute("src", "about:providerdirectory");
+    this._openPanel();
+  },
+
+  _openPanel: function() {
     let anchor = document.getAnonymousElementByAttribute(this.anchor, "class", "toolbarbutton-icon");
     this.panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
-    Social.setErrorListener(iframe, this.setErrorMessage.bind(this));
+    Social.setErrorListener(this.iframe, this.setErrorMessage.bind(this));
     Services.telemetry.getHistogramById("SOCIAL_TOOLBAR_BUTTONS").add(0);
   }
 };
