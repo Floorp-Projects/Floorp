@@ -6,6 +6,8 @@ load(libdir + "asm.js");
 if (!isAsmJSCompilationAvailable())
     quit(6);
 
+setJitCompilerOption("signals.enable", 0);
+
 var byteLength =
   Function.prototype.call.bind(Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, 'byteLength').get);
 
