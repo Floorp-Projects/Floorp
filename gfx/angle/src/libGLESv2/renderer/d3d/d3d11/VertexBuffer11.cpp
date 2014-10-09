@@ -28,7 +28,7 @@ VertexBuffer11::~VertexBuffer11()
     SafeRelease(mBuffer);
 }
 
-bool VertexBuffer11::initialize(unsigned int size, bool dynamicUsage)
+gl::Error VertexBuffer11::initialize(unsigned int size, bool dynamicUsage)
 {
     SafeRelease(mBuffer);
 
@@ -49,13 +49,14 @@ bool VertexBuffer11::initialize(unsigned int size, bool dynamicUsage)
         HRESULT result = dxDevice->CreateBuffer(&bufferDesc, NULL, &mBuffer);
         if (FAILED(result))
         {
-            return false;
+            return gl::Error(GL_OUT_OF_MEMORY, "Failed to allocate internal vertex buffer of size, %lu.", size);
         }
     }
 
     mBufferSize = size;
     mDynamicUsage = dynamicUsage;
-    return true;
+
+    return gl::Error(GL_NO_ERROR);
 }
 
 VertexBuffer11 *VertexBuffer11::makeVertexBuffer11(VertexBuffer *vetexBuffer)
@@ -64,66 +65,62 @@ VertexBuffer11 *VertexBuffer11::makeVertexBuffer11(VertexBuffer *vetexBuffer)
     return static_cast<VertexBuffer11*>(vetexBuffer);
 }
 
-bool VertexBuffer11::storeVertexAttributes(const gl::VertexAttribute &attrib, const gl::VertexAttribCurrentValueData &currentValue,
-                                           GLint start, GLsizei count, GLsizei instances, unsigned int offset)
+gl::Error VertexBuffer11::storeVertexAttributes(const gl::VertexAttribute &attrib, const gl::VertexAttribCurrentValueData &currentValue,
+                                                GLint start, GLsizei count, GLsizei instances, unsigned int offset)
 {
-    if (mBuffer)
+    if (!mBuffer)
     {
-        gl::Buffer *buffer = attrib.buffer.get();
-        int inputStride = ComputeVertexAttributeStride(attrib);
-        ID3D11DeviceContext *dxContext = mRenderer->getDeviceContext();
+        return gl::Error(GL_OUT_OF_MEMORY, "Internal vertex buffer is not initialized.");
+    }
 
-        D3D11_MAPPED_SUBRESOURCE mappedResource;
-        HRESULT result = dxContext->Map(mBuffer, 0, D3D11_MAP_WRITE_NO_OVERWRITE, 0, &mappedResource);
-        if (FAILED(result))
+    gl::Buffer *buffer = attrib.buffer.get();
+    int inputStride = ComputeVertexAttributeStride(attrib);
+    ID3D11DeviceContext *dxContext = mRenderer->getDeviceContext();
+
+    D3D11_MAPPED_SUBRESOURCE mappedResource;
+    HRESULT result = dxContext->Map(mBuffer, 0, D3D11_MAP_WRITE_NO_OVERWRITE, 0, &mappedResource);
+    if (FAILED(result))
+    {
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to map internal vertex buffer, HRESULT: 0x%08x.", result);
+    }
+
+    uint8_t *output = reinterpret_cast<uint8_t*>(mappedResource.pData) + offset;
+
+    const uint8_t *input = NULL;
+    if (attrib.enabled)
+    {
+        if (buffer)
         {
-            ERR("Vertex buffer map failed with error 0x%08x", result);
-            return false;
-        }
-
-        uint8_t* output = reinterpret_cast<uint8_t*>(mappedResource.pData) + offset;
-
-        const uint8_t *input = NULL;
-        if (attrib.enabled)
-        {
-            if (buffer)
-            {
-                Buffer11 *storage = Buffer11::makeBuffer11(buffer->getImplementation());
-                input = static_cast<const uint8_t*>(storage->getData()) + static_cast<int>(attrib.offset);
-            }
-            else
-            {
-                input = static_cast<const uint8_t*>(attrib.pointer);
-            }
+            Buffer11 *storage = Buffer11::makeBuffer11(buffer->getImplementation());
+            input = static_cast<const uint8_t*>(storage->getData()) + static_cast<int>(attrib.offset);
         }
         else
         {
-            input = reinterpret_cast<const uint8_t*>(currentValue.FloatValues);
+            input = static_cast<const uint8_t*>(attrib.pointer);
         }
-
-        if (instances == 0 || attrib.divisor == 0)
-        {
-            input += inputStride * start;
-        }
-
-        gl::VertexFormat vertexFormat(attrib, currentValue.Type);
-        const d3d11::VertexFormat &vertexFormatInfo = d3d11::GetVertexFormatInfo(vertexFormat);
-        ASSERT(vertexFormatInfo.copyFunction != NULL);
-        vertexFormatInfo.copyFunction(input, inputStride, count, output);
-
-        dxContext->Unmap(mBuffer, 0);
-
-        return true;
     }
     else
     {
-        ERR("Vertex buffer not initialized.");
-        return false;
+        input = reinterpret_cast<const uint8_t*>(currentValue.FloatValues);
     }
+
+    if (instances == 0 || attrib.divisor == 0)
+    {
+        input += inputStride * start;
+    }
+
+    gl::VertexFormat vertexFormat(attrib, currentValue.Type);
+    const d3d11::VertexFormat &vertexFormatInfo = d3d11::GetVertexFormatInfo(vertexFormat);
+    ASSERT(vertexFormatInfo.copyFunction != NULL);
+    vertexFormatInfo.copyFunction(input, inputStride, count, output);
+
+    dxContext->Unmap(mBuffer, 0);
+
+    return gl::Error(GL_NO_ERROR);
 }
 
-bool VertexBuffer11::getSpaceRequired(const gl::VertexAttribute &attrib, GLsizei count,
-                                      GLsizei instances, unsigned int *outSpaceRequired) const
+gl::Error VertexBuffer11::getSpaceRequired(const gl::VertexAttribute &attrib, GLsizei count,
+                                           GLsizei instances, unsigned int *outSpaceRequired) const
 {
     unsigned int elementCount = 0;
     if (attrib.enabled)
@@ -148,11 +145,11 @@ bool VertexBuffer11::getSpaceRequired(const gl::VertexAttribute &attrib, GLsizei
             {
                 *outSpaceRequired = elementSize * elementCount;
             }
-            return true;
+            return gl::Error(GL_NO_ERROR);
         }
         else
         {
-            return false;
+            return gl::Error(GL_OUT_OF_MEMORY, "New vertex buffer size would result in an overflow.");
         }
     }
     else
@@ -162,7 +159,7 @@ bool VertexBuffer11::getSpaceRequired(const gl::VertexAttribute &attrib, GLsizei
         {
             *outSpaceRequired = elementSize * 4;
         }
-        return true;
+        return gl::Error(GL_NO_ERROR);
     }
 }
 
@@ -171,7 +168,7 @@ unsigned int VertexBuffer11::getBufferSize() const
     return mBufferSize;
 }
 
-bool VertexBuffer11::setBufferSize(unsigned int size)
+gl::Error VertexBuffer11::setBufferSize(unsigned int size)
 {
     if (size > mBufferSize)
     {
@@ -179,33 +176,29 @@ bool VertexBuffer11::setBufferSize(unsigned int size)
     }
     else
     {
-        return true;
+        return gl::Error(GL_NO_ERROR);
     }
 }
 
-bool VertexBuffer11::discard()
+gl::Error VertexBuffer11::discard()
 {
-    if (mBuffer)
+    if (!mBuffer)
     {
-        ID3D11DeviceContext *dxContext = mRenderer->getDeviceContext();
-
-        D3D11_MAPPED_SUBRESOURCE mappedResource;
-        HRESULT result = dxContext->Map(mBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-        if (FAILED(result))
-        {
-            ERR("Vertex buffer map failed with error 0x%08x", result);
-            return false;
-        }
-
-        dxContext->Unmap(mBuffer, 0);
-
-        return true;
+        return gl::Error(GL_OUT_OF_MEMORY, "Internal vertex buffer is not initialized.");
     }
-    else
+
+    ID3D11DeviceContext *dxContext = mRenderer->getDeviceContext();
+
+    D3D11_MAPPED_SUBRESOURCE mappedResource;
+    HRESULT result = dxContext->Map(mBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if (FAILED(result))
     {
-        ERR("Vertex buffer not initialized.");
-        return false;
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to map internal buffer for discarding, HRESULT: 0x%08x", result);
     }
+
+    dxContext->Unmap(mBuffer, 0);
+
+    return gl::Error(GL_NO_ERROR);
 }
 
 ID3D11Buffer *VertexBuffer11::getBuffer() const

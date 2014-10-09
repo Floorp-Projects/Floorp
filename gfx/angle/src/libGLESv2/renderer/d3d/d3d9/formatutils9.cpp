@@ -222,8 +222,17 @@ static D3D9FormatMap BuildD3D9FormatMap()
     //                       | Internal format                     | Texture format      | Render format        | Load function                           |
     InsertD3D9FormatInfo(&map, GL_NONE,                             D3DFMT_NULL,          D3DFMT_NULL,           UnreachableLoad                          );
 
+    // We choose to downsample the GL_DEPTH_COMPONENT32_OES format to a 24-bit format because D3DFMT_D32 is not widely
+    // supported.  We're allowed to do this because:
+    //  - The ES spec 2.0.25 sec 3.7.1 states that we're allowed to store texture formats with internal format
+    //    resolutions of our own choosing.
+    //  - OES_depth_texture states that downsampling of the depth formats is allowed.
+    //  - ANGLE_depth_texture does not state minimum required resolutions of the depth texture formats it
+    //    introduces.
+    // In ES3 however, there are minimum resolutions for the texture formats and this would not be allowed.
+
     InsertD3D9FormatInfo(&map, GL_DEPTH_COMPONENT16,                D3DFMT_INTZ,          D3DFMT_D24S8,          UnreachableLoad                          );
-    InsertD3D9FormatInfo(&map, GL_DEPTH_COMPONENT32_OES,            D3DFMT_INTZ,          D3DFMT_D32,            UnreachableLoad                          );
+    InsertD3D9FormatInfo(&map, GL_DEPTH_COMPONENT32_OES,            D3DFMT_INTZ,          D3DFMT_D24X8,          UnreachableLoad                          );
     InsertD3D9FormatInfo(&map, GL_DEPTH24_STENCIL8_OES,             D3DFMT_INTZ,          D3DFMT_D24S8,          UnreachableLoad                          );
     InsertD3D9FormatInfo(&map, GL_STENCIL_INDEX8,                   D3DFMT_UNKNOWN,       D3DFMT_D24S8,          UnreachableLoad                          ); // TODO: What's the texture format?
 

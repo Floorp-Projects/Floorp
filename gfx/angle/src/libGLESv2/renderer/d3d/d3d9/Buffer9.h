@@ -31,12 +31,12 @@ class Buffer9 : public BufferD3D
     virtual Renderer* getRenderer();
 
     // BufferImpl implementation
-    virtual void setData(const void* data, size_t size, GLenum usage);
+    virtual gl::Error setData(const void* data, size_t size, GLenum usage);
     virtual void *getData();
-    virtual void setSubData(const void* data, size_t size, size_t offset);
-    virtual void copySubData(BufferImpl* source, GLintptr sourceOffset, GLintptr destOffset, GLsizeiptr size);
-    virtual GLvoid* map(size_t offset, size_t length, GLbitfield access);
-    virtual void unmap();
+    virtual gl::Error setSubData(const void* data, size_t size, size_t offset);
+    virtual gl::Error copySubData(BufferImpl* source, GLintptr sourceOffset, GLintptr destOffset, GLsizeiptr size);
+    virtual gl::Error map(size_t offset, size_t length, GLbitfield access, GLvoid **mapPtr);
+    virtual gl::Error unmap();
     virtual void markTransformFeedbackUsage();
 
   private:
