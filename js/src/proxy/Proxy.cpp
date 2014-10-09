@@ -216,7 +216,7 @@ Proxy::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
         return policy.returnValue();
     if (!handler->hasPrototype())
         return proxy->as<ProxyObject>().handler()->enumerate(cx, proxy, props);
-    if (!handler->keys(cx, proxy, props))
+    if (!handler->getOwnEnumerablePropertyKeys(cx, proxy, props))
         return false;
     AutoIdVector protoProps(cx);
     INVOKE_ON_PROTOTYPE(cx, handler, proxy,
@@ -341,14 +341,14 @@ Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
 }
 
 bool
-Proxy::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
+Proxy::getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
     const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::ENUMERATE, true);
     if (!policy.allowed())
         return policy.returnValue();
-    return handler->keys(cx, proxy, props);
+    return handler->getOwnEnumerablePropertyKeys(cx, proxy, props);
 }
 
 bool
@@ -372,7 +372,7 @@ Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleV
     AutoIdVector props(cx);
     // The other Proxy::foo methods do the prototype-aware work for us here.
     if ((flags & JSITER_OWNONLY)
-        ? !Proxy::keys(cx, proxy, props)
+        ? !Proxy::getOwnEnumerablePropertyKeys(cx, proxy, props)
         : !Proxy::enumerate(cx, proxy, props)) {
         return false;
     }
