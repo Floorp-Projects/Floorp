@@ -91,7 +91,7 @@ public class ToolbarComponent extends BaseComponent {
         return (ImageButton) getToolbarView().findViewById(R.id.edit_cancel);
     }
 
-    private CharSequence getTitle() {
+    private String getTitle() {
         return getTitleHelper(true);
     }
 
@@ -100,16 +100,16 @@ public class ToolbarComponent extends BaseComponent {
      * may return a value that may never be visible to the user. Callers likely want to use
      * {@link assertTitle} instead.
      */
-    public CharSequence getPotentiallyInconsistentTitle() {
+    public String getPotentiallyInconsistentTitle() {
         return getTitleHelper(false);
     }
 
-    private CharSequence getTitleHelper(final boolean shouldAssertNotEditing) {
+    private String getTitleHelper(final boolean shouldAssertNotEditing) {
         if (shouldAssertNotEditing) {
             assertIsNotEditing();
         }
 
-        return getUrlTitleText().getText();
+        return getUrlTitleText().getText().toString();
     }
 
     private boolean isEditing() {
