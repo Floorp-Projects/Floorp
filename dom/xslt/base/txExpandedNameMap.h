@@ -6,8 +6,9 @@
 #ifndef TRANSFRMX_EXPANDEDNAMEMAP_H
 #define TRANSFRMX_EXPANDEDNAMEMAP_H
 
+#include "nsAutoPtr.h"
 #include "nsError.h"
-#include "txXMLUtils.h"
+#include "txExpandedName.h"
 #include "nsTArray.h"
 
 class txExpandedNameMap_base {
