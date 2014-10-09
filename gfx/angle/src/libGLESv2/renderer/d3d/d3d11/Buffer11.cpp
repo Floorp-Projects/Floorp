@@ -140,7 +140,7 @@ class Buffer11::PackStorage11 : public Buffer11::BufferStorage11
     virtual void *map(size_t offset, size_t length, GLbitfield access);
     virtual void unmap();
 
-    void packPixels(ID3D11Texture2D *srcTexure, UINT srcSubresource, const PackPixelsParams &params);
+    gl::Error packPixels(ID3D11Texture2D *srcTexure, UINT srcSubresource, const PackPixelsParams &params);
 
   private:
 
@@ -162,9 +162,7 @@ Buffer11::Buffer11(Renderer11 *renderer)
       mSize(0),
       mMappedStorage(NULL),
       mResolvedDataRevision(0),
-      mReadUsageCount(0),
-      mDynamicUsage(0),
-      mDynamicDirtyRange(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::min())
+      mReadUsageCount(0)
 {}
 
 Buffer11::~Buffer11()
@@ -181,24 +179,20 @@ Buffer11 *Buffer11::makeBuffer11(BufferImpl *buffer)
     return static_cast<Buffer11*>(buffer);
 }
 
-void Buffer11::setData(const void *data, size_t size, GLenum usage)
+gl::Error Buffer11::setData(const void *data, size_t size, GLenum usage)
 {
-    mDynamicUsage = (usage == GL_DYNAMIC_DRAW);
-
-    if (mDynamicUsage)
+    gl::Error error = setSubData(data, size, 0);
+    if (error.isError())
     {
-        if (!mDynamicData.resize(size))
-        {
-            return gl::error(GL_OUT_OF_MEMORY);
-        }
+        return error;
     }
-
-    setSubData(data, size, 0);
 
     if (usage == GL_STATIC_DRAW)
     {
         initializeStaticData();
     }
+
+    return error;
 }
 
 void *Buffer11::getData()
@@ -239,32 +233,31 @@ void *Buffer11::getData()
 
     mReadUsageCount = 0;
 
+    // Only happens if we initialized the buffer with no data (NULL)
+    if (mResolvedData.empty())
+    {
+        if (!mResolvedData.resize(mSize))
+        {
+            return gl::error(GL_OUT_OF_MEMORY, (void*)NULL);
+        }
+    }
+
+    ASSERT(mResolvedData.size() >= mSize);
+
     return mResolvedData.data();
 }
 
-void Buffer11::setSubData(const void *data, size_t size, size_t offset)
+gl::Error Buffer11::setSubData(const void *data, size_t size, size_t offset)
 {
     size_t requiredSize = size + offset;
-    mSize = std::max(mSize, requiredSize);
-
-    invalidateStaticData();
 
     if (data && size > 0)
     {
-        if (mDynamicUsage)
-        {
-            mDynamicDirtyRange.start = std::min(mDynamicDirtyRange.start, offset);
-            mDynamicDirtyRange.end = std::max(mDynamicDirtyRange.end, size + offset);
-            memcpy(mDynamicData.data() + offset, data, size);
-            return;
-        }
-
         NativeBuffer11 *stagingBuffer = getStagingBuffer();
 
         if (!stagingBuffer)
         {
-            // Out-of-memory
-            return;
+            return gl::Error(GL_OUT_OF_MEMORY, "Failed to allocate internal staging buffer.");
         }
 
         // Explicitly resize the staging buffer, preserving data if the new data will not
@@ -274,67 +267,78 @@ void Buffer11::setSubData(const void *data, size_t size, size_t offset)
             bool preserveData = (offset > 0);
             if (!stagingBuffer->resize(requiredSize, preserveData))
             {
-                // Out-of-memory
-                return;
+                return gl::Error(GL_OUT_OF_MEMORY, "Failed to resize internal staging buffer.");
             }
         }
 
-        stagingBuffer->setData(D3D11_MAP_WRITE, reinterpret_cast<const uint8_t *>(data), size, offset);
+        if (!stagingBuffer->setData(D3D11_MAP_WRITE, reinterpret_cast<const uint8_t *>(data), size, offset))
+        {
+            return gl::Error(GL_OUT_OF_MEMORY, "Failed to set data on internal staging buffer.");
+        }
+
         stagingBuffer->setDataRevision(stagingBuffer->getDataRevision() + 1);
     }
+
+    mSize = std::max(mSize, requiredSize);
+    invalidateStaticData();
+
+    return gl::Error(GL_NO_ERROR);
 }
 
-void Buffer11::copySubData(BufferImpl* source, GLintptr sourceOffset, GLintptr destOffset, GLsizeiptr size)
+gl::Error Buffer11::copySubData(BufferImpl* source, GLintptr sourceOffset, GLintptr destOffset, GLsizeiptr size)
 {
     Buffer11 *sourceBuffer = makeBuffer11(source);
-    if (sourceBuffer)
+    ASSERT(sourceBuffer != NULL);
+
+    BufferStorage11 *copyDest = getLatestBufferStorage();
+    if (!copyDest)
     {
-        BufferStorage11 *dest = getLatestBufferStorage();
-        if (!dest)
-        {
-            dest = getStagingBuffer();
-        }
-
-        BufferStorage11 *source = sourceBuffer->getLatestBufferStorage();
-        if (source && dest)
-        {
-            // If copying to/from a pixel pack buffer, we must have a staging or
-            // pack buffer partner, because other native buffers can't be mapped
-            if (dest->getUsage() == BUFFER_USAGE_PIXEL_PACK && !source->isMappable())
-            {
-                source = sourceBuffer->getStagingBuffer();
-            }
-            else if (source->getUsage() == BUFFER_USAGE_PIXEL_PACK && !dest->isMappable())
-            {
-                dest = getStagingBuffer();
-            }
-
-            // D3D11 does not allow overlapped copies until 11.1, and only if the
-            // device supports D3D11_FEATURE_DATA_D3D11_OPTIONS::CopyWithOverlap
-            // Get around this via a different source buffer
-            if (source == dest)
-            {
-                if (source->getUsage() == BUFFER_USAGE_STAGING)
-                {
-                    source = getBufferStorage(BUFFER_USAGE_VERTEX);
-                }
-                else
-                {
-                    source = getStagingBuffer();
-                }
-            }
-
-            dest->copyFromStorage(source, sourceOffset, size, destOffset);
-            dest->setDataRevision(dest->getDataRevision() + 1);
-        }
-
-        mSize = std::max<size_t>(mSize, destOffset + size);
+        copyDest = getStagingBuffer();
     }
 
+    BufferStorage11 *copySource = sourceBuffer->getLatestBufferStorage();
+
+    if (!copySource || !copyDest)
+    {
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to allocate internal staging buffer.");
+    }
+
+    // If copying to/from a pixel pack buffer, we must have a staging or
+    // pack buffer partner, because other native buffers can't be mapped
+    if (copyDest->getUsage() == BUFFER_USAGE_PIXEL_PACK && !copySource->isMappable())
+    {
+        copySource = sourceBuffer->getStagingBuffer();
+    }
+    else if (copySource->getUsage() == BUFFER_USAGE_PIXEL_PACK && !copyDest->isMappable())
+    {
+        copyDest = getStagingBuffer();
+    }
+
+    // D3D11 does not allow overlapped copies until 11.1, and only if the
+    // device supports D3D11_FEATURE_DATA_D3D11_OPTIONS::CopyWithOverlap
+    // Get around this via a different source buffer
+    if (copySource == copyDest)
+    {
+        if (copySource->getUsage() == BUFFER_USAGE_STAGING)
+        {
+            copySource = getBufferStorage(BUFFER_USAGE_VERTEX_OR_TRANSFORM_FEEDBACK);
+        }
+        else
+        {
+            copySource = getStagingBuffer();
+        }
+    }
+
+    copyDest->copyFromStorage(copySource, sourceOffset, size, destOffset);
+    copyDest->setDataRevision(copyDest->getDataRevision() + 1);
+
+    mSize = std::max<size_t>(mSize, destOffset + size);
     invalidateStaticData();
+
+    return gl::Error(GL_NO_ERROR);
 }
 
-GLvoid *Buffer11::map(size_t offset, size_t length, GLbitfield access)
+gl::Error Buffer11::map(size_t offset, size_t length, GLbitfield access, GLvoid **mapPtr)
 {
     ASSERT(!mMappedStorage);
 
@@ -355,8 +359,7 @@ GLvoid *Buffer11::map(size_t offset, size_t length, GLbitfield access)
 
     if (!mMappedStorage)
     {
-        // Out-of-memory
-        return NULL;
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to allocate mappable internal buffer.");
     }
 
     if ((access & GL_MAP_WRITE_BIT) > 0)
@@ -365,19 +368,27 @@ GLvoid *Buffer11::map(size_t offset, size_t length, GLbitfield access)
         mMappedStorage->setDataRevision(mMappedStorage->getDataRevision() + 1);
     }
 
-    return mMappedStorage->map(offset, length, access);
+    void *mappedBuffer = mMappedStorage->map(offset, length, access);
+    if (!mappedBuffer)
+    {
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to map internal buffer.");
+    }
+
+    *mapPtr = mappedBuffer;
+    return gl::Error(GL_NO_ERROR);
 }
 
-void Buffer11::unmap()
+gl::Error Buffer11::unmap()
 {
     ASSERT(mMappedStorage);
     mMappedStorage->unmap();
     mMappedStorage = NULL;
+    return gl::Error(GL_NO_ERROR);
 }
 
 void Buffer11::markTransformFeedbackUsage()
 {
-    BufferStorage11 *transformFeedbackStorage = getBufferStorage(BUFFER_USAGE_TRANSFORM_FEEDBACK);
+    BufferStorage11 *transformFeedbackStorage = getBufferStorage(BUFFER_USAGE_VERTEX_OR_TRANSFORM_FEEDBACK);
 
     if (transformFeedbackStorage)
     {
@@ -470,7 +481,7 @@ ID3D11ShaderResourceView *Buffer11::getSRV(DXGI_FORMAT srvFormat)
     return bufferSRV;
 }
 
-void Buffer11::packPixels(ID3D11Texture2D *srcTexture, UINT srcSubresource, const PackPixelsParams &params)
+gl::Error Buffer11::packPixels(ID3D11Texture2D *srcTexture, UINT srcSubresource, const PackPixelsParams &params)
 {
     PackStorage11 *packStorage = getPackStorage();
 
@@ -478,43 +489,21 @@ void Buffer11::packPixels(ID3D11Texture2D *srcTexture, UINT srcSubresource, cons
 
     if (packStorage)
     {
-        packStorage->packPixels(srcTexture, srcSubresource, params);
+        gl::Error error = packStorage->packPixels(srcTexture, srcSubresource, params);
+        if (error.isError())
+        {
+            return error;
+        }
         packStorage->setDataRevision(latestStorage ? latestStorage->getDataRevision() + 1 : 1);
     }
+
+    return gl::Error(GL_NO_ERROR);
 }
 
-Buffer11::BufferStorage11 *Buffer11::getBufferStorage(BufferUsage requestedUsage)
+Buffer11::BufferStorage11 *Buffer11::getBufferStorage(BufferUsage usage)
 {
-    ASSERT(requestedUsage != BUFFER_USAGE_VERTEX_DYNAMIC);
-    ASSERT(requestedUsage != BUFFER_USAGE_INDEX_DYNAMIC);
-
-    BufferUsage internalUsage = requestedUsage;
-
-    if (mDynamicUsage)
-    {
-        if (requestedUsage == BUFFER_USAGE_VERTEX)
-        {
-            internalUsage = BUFFER_USAGE_VERTEX_DYNAMIC;
-        }
-        else if (requestedUsage == BUFFER_USAGE_INDEX)
-        {
-            internalUsage = BUFFER_USAGE_INDEX_DYNAMIC;
-        }
-        else
-        {
-            // Convert out of dynamic usage
-            setData(mDynamicData.data(), mDynamicData.size(), GL_STATIC_DRAW);
-        }
-    }
-
-    // Internally we share the same NativeBuffer11 for stream out and vertex data
-    if (requestedUsage == BUFFER_USAGE_TRANSFORM_FEEDBACK)
-    {
-        internalUsage = BUFFER_USAGE_VERTEX;
-    }
-
     BufferStorage11 *directBuffer = NULL;
-    auto directBufferIt = mBufferStorages.find(internalUsage);
+    auto directBufferIt = mBufferStorages.find(usage);
     if (directBufferIt != mBufferStorages.end())
     {
         directBuffer = directBufferIt->second;
@@ -522,17 +511,17 @@ Buffer11::BufferStorage11 *Buffer11::getBufferStorage(BufferUsage requestedUsage
 
     if (!directBuffer)
     {
-        if (internalUsage == BUFFER_USAGE_PIXEL_PACK)
+        if (usage == BUFFER_USAGE_PIXEL_PACK)
         {
             directBuffer = new PackStorage11(mRenderer);
         }
         else
         {
             // buffer is not allocated, create it
-            directBuffer = new NativeBuffer11(mRenderer, internalUsage);
+            directBuffer = new NativeBuffer11(mRenderer, usage);
         }
 
-        mBufferStorages.insert(std::make_pair(internalUsage, directBuffer));
+        mBufferStorages.insert(std::make_pair(usage, directBuffer));
     }
 
     // resize buffer
@@ -543,18 +532,6 @@ Buffer11::BufferStorage11 *Buffer11::getBufferStorage(BufferUsage requestedUsage
             // Out of memory error
             return NULL;
         }
-    }
-
-    if (mDynamicUsage)
-    {
-        if (!mDynamicData.empty() && mDynamicDirtyRange.length() > 0)
-        {
-            ASSERT(HAS_DYNAMIC_TYPE(NativeBuffer11*, directBuffer));
-            NativeBuffer11 *dynamicBuffer = static_cast<NativeBuffer11*>(directBuffer);
-            dynamicBuffer->setData(D3D11_MAP_WRITE_NO_OVERWRITE, mDynamicData.data(), mDynamicDirtyRange.length(), mDynamicDirtyRange.start);
-        }
-
-        return directBuffer;
     }
 
     BufferStorage11 *latestBuffer = getLatestBufferStorage();
@@ -629,6 +606,14 @@ Buffer11::PackStorage11 *Buffer11::getPackStorage()
 
     ASSERT(HAS_DYNAMIC_TYPE(PackStorage11*, packStorage));
     return static_cast<PackStorage11*>(packStorage);
+}
+
+bool Buffer11::supportsDirectBinding() const
+{
+    // Do not support direct buffers for dynamic data. The streaming buffer
+    // offers better performance for data which changes every frame.
+    // Check for absence of static buffer interfaces to detect dynamic data.
+    return (mStaticVertexBuffer && mStaticIndexBuffer);
 }
 
 Buffer11::BufferStorage11::BufferStorage11(Renderer11 *renderer, BufferUsage usage)
@@ -760,8 +745,7 @@ void Buffer11::NativeBuffer11::fillBufferDesc(D3D11_BUFFER_DESC* bufferDesc, Ren
         bufferDesc->CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
         break;
 
-      case BUFFER_USAGE_VERTEX:
-      case BUFFER_USAGE_TRANSFORM_FEEDBACK:
+      case BUFFER_USAGE_VERTEX_OR_TRANSFORM_FEEDBACK:
         bufferDesc->Usage = D3D11_USAGE_DEFAULT;
         bufferDesc->BindFlags = D3D11_BIND_VERTEX_BUFFER | D3D11_BIND_STREAM_OUTPUT;
         bufferDesc->CPUAccessFlags = 0;
@@ -788,18 +772,6 @@ void Buffer11::NativeBuffer11::fillBufferDesc(D3D11_BUFFER_DESC* bufferDesc, Ren
         // For our purposes we ignore any buffer data past the maximum constant buffer size
         bufferDesc->ByteWidth = roundUp(bufferDesc->ByteWidth, 16u);
         bufferDesc->ByteWidth = std::min<UINT>(bufferDesc->ByteWidth, renderer->getRendererCaps().maxUniformBlockSize);
-        break;
-
-      case BUFFER_USAGE_VERTEX_DYNAMIC:
-        bufferDesc->Usage = D3D11_USAGE_DYNAMIC;
-        bufferDesc->BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        bufferDesc->CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        break;
-
-      case BUFFER_USAGE_INDEX_DYNAMIC:
-        bufferDesc->Usage = D3D11_USAGE_DYNAMIC;
-        bufferDesc->BindFlags = D3D11_BIND_INDEX_BUFFER;
-        bufferDesc->CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         break;
 
     default:
@@ -906,7 +878,7 @@ void Buffer11::PackStorage11::unmap()
     // No-op
 }
 
-void Buffer11::PackStorage11::packPixels(ID3D11Texture2D *srcTexure, UINT srcSubresource, const PackPixelsParams &params)
+gl::Error Buffer11::PackStorage11::packPixels(ID3D11Texture2D *srcTexure, UINT srcSubresource, const PackPixelsParams &params)
 {
     flushQueuedPackCommand();
     mQueuedPackCommand = new PackPixelsParams(params);
@@ -948,7 +920,11 @@ void Buffer11::PackStorage11::packPixels(ID3D11Texture2D *srcTexure, UINT srcSub
         stagingDesc.MiscFlags = 0;
 
         hr = device->CreateTexture2D(&stagingDesc, NULL, &mStagingTexture);
-        ASSERT(SUCCEEDED(hr));
+        if (FAILED(hr))
+        {
+            ASSERT(hr == E_OUTOFMEMORY);
+            return gl::Error(GL_OUT_OF_MEMORY, "Failed to allocate internal staging texture.");
+        }
     }
 
     // ReadPixels from multisampled FBOs isn't supported in current GL
@@ -965,6 +941,8 @@ void Buffer11::PackStorage11::packPixels(ID3D11Texture2D *srcTexure, UINT srcSub
 
     // Asynchronous copy
     immediateContext->CopySubresourceRegion(mStagingTexture, 0, 0, 0, 0, srcTexure, srcSubresource, &srcBox);
+
+    return gl::Error(GL_NO_ERROR);
 }
 
 void Buffer11::PackStorage11::flushQueuedPackCommand()

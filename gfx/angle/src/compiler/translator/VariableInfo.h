@@ -11,15 +11,18 @@
 
 #include "compiler/translator/IntermNode.h"
 
+namespace sh
+{
+
 // Traverses intermediate tree to collect all attributes, uniforms, varyings.
 class CollectVariables : public TIntermTraverser
 {
   public:
-    CollectVariables(std::vector<sh::Attribute> *attribs,
-                     std::vector<sh::Attribute> *outputVariables,
-                     std::vector<sh::Uniform> *uniforms,
-                     std::vector<sh::Varying> *varyings,
-                     std::vector<sh::InterfaceBlock> *interfaceBlocks,
+    CollectVariables(std::vector<Attribute> *attribs,
+                     std::vector<Attribute> *outputVariables,
+                     std::vector<Uniform> *uniforms,
+                     std::vector<Varying> *varyings,
+                     std::vector<InterfaceBlock> *interfaceBlocks,
                      ShHashFunction64 hashFunction);
 
     virtual void visitSymbol(TIntermSymbol *symbol);
@@ -33,13 +36,13 @@ class CollectVariables : public TIntermTraverser
     template <typename VarT>
     void visitInfoList(const TIntermSequence &sequence, std::vector<VarT> *infoList) const;
 
-    std::vector<sh::Attribute> *mAttribs;
-    std::vector<sh::Attribute> *mOutputVariables;
-    std::vector<sh::Uniform> *mUniforms;
-    std::vector<sh::Varying> *mVaryings;
-    std::vector<sh::InterfaceBlock> *mInterfaceBlocks;
+    std::vector<Attribute> *mAttribs;
+    std::vector<Attribute> *mOutputVariables;
+    std::vector<Uniform> *mUniforms;
+    std::vector<Varying> *mVaryings;
+    std::vector<InterfaceBlock> *mInterfaceBlocks;
 
-    std::map<std::string, sh::InterfaceBlockField *> mInterfaceBlockFields;
+    std::map<std::string, InterfaceBlockField *> mInterfaceBlockFields;
 
     bool mPointCoordAdded;
     bool mFrontFacingAdded;
@@ -51,6 +54,8 @@ class CollectVariables : public TIntermTraverser
 // Expand struct variables to flattened lists of split variables
 template <typename VarT>
 void ExpandVariables(const std::vector<VarT> &compact,
-                     std::vector<sh::ShaderVariable> *expanded);
+                     std::vector<ShaderVariable> *expanded);
+
+}
 
 #endif  // COMPILER_VARIABLE_INFO_H_

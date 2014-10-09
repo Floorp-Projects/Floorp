@@ -15,12 +15,15 @@
 #include "libGLESv2/renderer/d3d/d3d11/shaders/compiled/passthrough2d11vs.h"
 #include "libGLESv2/renderer/d3d/d3d11/shaders/compiled/passthroughrgba2d11ps.h"
 
+#include "common/NativeWindow.h"
+
 namespace rx
 {
 
-SwapChain11::SwapChain11(Renderer11 *renderer, HWND window, HANDLE shareHandle,
+SwapChain11::SwapChain11(Renderer11 *renderer, rx::NativeWindow nativeWindow, HANDLE shareHandle,
                          GLenum backBufferFormat, GLenum depthBufferFormat)
-    : mRenderer(renderer), SwapChain(window, shareHandle, backBufferFormat, depthBufferFormat)
+    : mRenderer(renderer),
+      SwapChain(nativeWindow, shareHandle, backBufferFormat, depthBufferFormat)
 {
     mSwapChain = NULL;
     mBackBufferTexture = NULL;
@@ -145,7 +148,7 @@ EGLint SwapChain11::resetOffscreenTexture(int backbufferWidth, int backbufferHei
     }
     else
     {
-        const bool useSharedResource = !mWindow && mRenderer->getShareHandleSupport();
+        const bool useSharedResource = !mNativeWindow.getNativeWindow() && mRenderer->getShareHandleSupport();
 
         D3D11_TEXTURE2D_DESC offscreenTextureDesc = {0};
         offscreenTextureDesc.Width = backbufferWidth;
@@ -393,30 +396,13 @@ EGLint SwapChain11::reset(int backbufferWidth, int backbufferHeight, EGLint swap
         return EGL_SUCCESS;
     }
 
-    if (mWindow)
+    if (mNativeWindow.getNativeWindow())
     {
         const d3d11::TextureFormat &backbufferFormatInfo = d3d11::GetTextureFormatInfo(mBackBufferFormat);
 
-        IDXGIFactory *factory = mRenderer->getDxgiFactory();
-
-        DXGI_SWAP_CHAIN_DESC swapChainDesc = {0};
-        swapChainDesc.BufferDesc.Width = backbufferWidth;
-        swapChainDesc.BufferDesc.Height = backbufferHeight;
-        swapChainDesc.BufferDesc.RefreshRate.Numerator = 0;
-        swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
-        swapChainDesc.BufferDesc.Format = backbufferFormatInfo.texFormat;
-        swapChainDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-        swapChainDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-        swapChainDesc.SampleDesc.Count = 1;
-        swapChainDesc.SampleDesc.Quality = 0;
-        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapChainDesc.BufferCount = 1;
-        swapChainDesc.OutputWindow = mWindow;
-        swapChainDesc.Windowed = TRUE;
-        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-        swapChainDesc.Flags = 0;
-
-        HRESULT result = factory->CreateSwapChain(device, &swapChainDesc, &mSwapChain);
+        HRESULT result = mNativeWindow.createSwapChain(device, mRenderer->getDxgiFactory(),
+                                               backbufferFormatInfo.texFormat,
+                                               backbufferWidth, backbufferHeight, &mSwapChain);
 
         if (FAILED(result))
         {

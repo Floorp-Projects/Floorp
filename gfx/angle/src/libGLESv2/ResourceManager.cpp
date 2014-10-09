@@ -366,25 +366,25 @@ void ResourceManager::checkBufferAllocation(unsigned int buffer)
     }
 }
 
-void ResourceManager::checkTextureAllocation(GLuint texture, TextureType type)
+void ResourceManager::checkTextureAllocation(GLuint texture, GLenum type)
 {
     if (!getTexture(texture) && texture != 0)
     {
         Texture *textureObject;
 
-        if (type == TEXTURE_2D)
+        if (type == GL_TEXTURE_2D)
         {
             textureObject = new Texture2D(mRenderer->createTexture(GL_TEXTURE_2D), texture);
         }
-        else if (type == TEXTURE_CUBE)
+        else if (type == GL_TEXTURE_CUBE_MAP)
         {
             textureObject = new TextureCubeMap(mRenderer->createTexture(GL_TEXTURE_CUBE_MAP), texture);
         }
-        else if (type == TEXTURE_3D)
+        else if (type == GL_TEXTURE_3D)
         {
             textureObject = new Texture3D(mRenderer->createTexture(GL_TEXTURE_3D), texture);
         }
-        else if (type == TEXTURE_2D_ARRAY)
+        else if (type == GL_TEXTURE_2D_ARRAY)
         {
             textureObject = new Texture2DArray(mRenderer->createTexture(GL_TEXTURE_2D_ARRAY), texture);
         }
