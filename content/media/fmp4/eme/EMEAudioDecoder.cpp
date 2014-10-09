@@ -242,7 +242,7 @@ EMEAudioDecoder::GmpInit()
   tags.AppendElement(NS_LITERAL_CSTRING("aac"));
   tags.AppendElement(NS_ConvertUTF16toUTF8(mProxy->KeySystem()));
   nsresult rv = mMPS->GetGMPAudioDecoder(&tags,
-                                         mProxy->GetOrigin(),
+                                         mProxy->GetNodeId(),
                                          &mGMP);
   NS_ENSURE_SUCCESS(rv, rv);
   MOZ_ASSERT(mGMP);
