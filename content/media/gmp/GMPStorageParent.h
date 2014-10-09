@@ -8,33 +8,20 @@
 
 #include "mozilla/gmp/PGMPStorageParent.h"
 #include "gmp-storage.h"
-#include "mozilla/UniquePtr.h"
+#include "nsTHashtable.h"
+#include "nsDataHashtable.h"
+#include "prio.h"
 
 namespace mozilla {
 namespace gmp {
 
 class GMPParent;
 
-class GMPStorage {
-public:
-  virtual ~GMPStorage() {}
-
-  virtual GMPErr Open(const nsCString& aRecordName) = 0;
-  virtual bool IsOpen(const nsCString& aRecordName) = 0;
-  virtual GMPErr Read(const nsCString& aRecordName,
-                      nsTArray<uint8_t>& aOutBytes) = 0;
-  virtual GMPErr Write(const nsCString& aRecordName,
-                       const nsTArray<uint8_t>& aBytes) = 0;
-  virtual void Close(const nsCString& aRecordName) = 0;
-};
-
 class GMPStorageParent : public PGMPStorageParent {
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPStorageParent)
-  GMPStorageParent(const nsCString& aNodeId,
-                   GMPParent* aPlugin);
+  GMPStorageParent(const nsCString& aNodeId, GMPParent* aPlugin);
 
-  nsresult Init();
   void Shutdown();
 
 protected:
@@ -48,9 +35,8 @@ protected:
 private:
   ~GMPStorageParent() {}
 
-  UniquePtr<GMPStorage> mStorage;
-
-  const nsCString mNodeId;
+  nsDataHashtable<nsCStringHashKey, PRFileDesc*> mFiles;
+  const nsAutoCString mNodeId;
   nsRefPtr<GMPParent> mPlugin;
   bool mShutdown;
 };
