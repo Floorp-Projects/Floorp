@@ -273,8 +273,7 @@ LoadStateToStatus(gfxUserFontEntry::UserFontLoadState aLoadState)
 already_AddRefed<FontFace>
 FontFace::CreateForRule(nsISupports* aGlobal,
                         nsPresContext* aPresContext,
-                        nsCSSFontFaceRule* aRule,
-                        gfxUserFontEntry* aUserFontEntry)
+                        nsCSSFontFaceRule* aRule)
 {
   nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(aGlobal);
 
@@ -283,7 +282,6 @@ FontFace::CreateForRule(nsISupports* aGlobal,
   obj->mRule = aRule;
   obj->mSourceType = eSourceType_FontFaceRule;
   obj->mInFontFaceSet = true;
-  obj->SetUserFontEntry(aUserFontEntry);
   return obj.forget();
 }
 
@@ -827,8 +825,6 @@ FontFace::DisconnectFromRule()
   // Make a copy of the descriptors.
   mDescriptors = new CSSFontFaceDescriptors;
   mRule->GetDescriptors(*mDescriptors);
-
-  mRule->SetFontFace(nullptr);
   mRule = nullptr;
   mInFontFaceSet = false;
 }

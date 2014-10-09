@@ -73,11 +73,9 @@ public:
   nsISupports* GetParentObject() const { return mParent; }
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-  static already_AddRefed<FontFace> CreateForRule(
-                                              nsISupports* aGlobal,
-                                              nsPresContext* aPresContext,
-                                              nsCSSFontFaceRule* aRule,
-                                              gfxUserFontEntry* aUserFontEntry);
+  static already_AddRefed<FontFace>
+  CreateForRule(nsISupports* aGlobal, nsPresContext* aPresContext,
+                nsCSSFontFaceRule* aRule);
 
   nsCSSFontFaceRule* GetRule() { return mRule; }
 
