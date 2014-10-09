@@ -55,14 +55,14 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
 {
   ErrorResult result;
   ResponseInit init;
-  Optional<ArrayBufferOrArrayBufferViewOrScalarValueStringOrURLSearchParams> body;
+  Optional<ArrayBufferOrArrayBufferViewOrBlobOrScalarValueStringOrURLSearchParams> body;
   nsRefPtr<Response> r = Response::Constructor(aGlobal, body, init, result);
   return r.forget();
 }
 
 /*static*/ already_AddRefed<Response>
 Response::Constructor(const GlobalObject& aGlobal,
-                      const Optional<ArrayBufferOrArrayBufferViewOrScalarValueStringOrURLSearchParams>& aBody,
+                      const Optional<ArrayBufferOrArrayBufferViewOrBlobOrScalarValueStringOrURLSearchParams>& aBody,
                       const ResponseInit& aInit, ErrorResult& aRv)
 {
   if (aInit.mStatus < 200 || aInit.mStatus > 599) {
