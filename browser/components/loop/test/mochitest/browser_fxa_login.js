@@ -7,11 +7,6 @@
 
 "use strict";
 
-const {
-  gFxAOAuthTokenData,
-  gFxAOAuthProfile,
-} = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
-
 const BASE_URL = "http://mochi.test:8888/browser/browser/components/loop/test/mochitest/loop_fxa.sjs?";
 
 function* checkFxA401() {
@@ -211,6 +206,8 @@ add_task(function* registrationWithInvalidState() {
   },
   error => {
     is(error.code, 400, "Check error code");
+    checkFxAOAuthTokenData(null);
+    is(MozLoopService.userProfile, null, "Profile should be empty after invalid login");
   });
 });
 
@@ -232,6 +229,8 @@ add_task(function* registrationWith401() {
   },
   error => {
     is(error.code, 401, "Check error code");
+    checkFxAOAuthTokenData(null);
+    is(MozLoopService.userProfile, null, "Profile should be empty after invalid login");
   });
 
   yield checkFxA401();
@@ -321,7 +320,7 @@ add_task(function* loginWithParams401() {
   },
   error => {
     ise(error.code, 401, "Check error code");
-    ise(gFxAOAuthTokenData, null, "Check there is no saved token data");
+    checkFxAOAuthTokenData(null);
   });
 
   yield checkFxA401();
@@ -387,7 +386,7 @@ add_task(function* loginWithRegistration401() {
   },
   error => {
     ise(error.code, 401, "Check error code");
-    ise(gFxAOAuthTokenData, null, "Check there is no saved token data");
+    checkFxAOAuthTokenData(null);
   });
 
   yield checkFxA401();
