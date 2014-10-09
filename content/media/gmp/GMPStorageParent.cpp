@@ -8,7 +8,6 @@
 #include "plhash.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsAppDirectoryServiceDefs.h"
 #include "GMPParent.h"
 #include "gmp-storage.h"
 #include "mozilla/unused.h"
@@ -36,8 +35,26 @@ extern PRLogModuleInfo* GetGMPLog();
 
 namespace gmp {
 
-// We store the records in files in the profile dir.
-// $profileDir/gmp/storage/$nodeId/
+class GetTempDirTask : public nsRunnable
+{
+public:
+  NS_IMETHOD Run() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsCOMPtr<nsIFile> tmpFile;
+    nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpFile));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    tmpFile->GetPath(mPath);
+    return NS_OK;
+  }
+
+  nsString mPath;
+};
+
+// We store the records in files in the system temp dir.
 static nsresult
 GetGMPStorageDir(nsIFile** aTempDir, const nsCString& aNodeId)
 {
@@ -45,25 +62,19 @@ GetGMPStorageDir(nsIFile** aTempDir, const nsCString& aNodeId)
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<mozIGeckoMediaPluginService> mps =
-    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-  if (NS_WARN_IF(!mps)) {
-    return NS_ERROR_FAILURE;
-  }
+  // Directory service is main thread only...
+  nsRefPtr<GetTempDirTask> task = new GetTempDirTask();
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  mozilla::SyncRunnable::DispatchToThread(mainThread, task);
 
   nsCOMPtr<nsIFile> tmpFile;
-  nsresult rv = mps->GetStorageDir(getter_AddRefs(tmpFile));
+  nsresult rv = NS_NewLocalFile(task->mPath, false, getter_AddRefs(tmpFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = tmpFile->AppendNative(NS_LITERAL_CSTRING("storage"));
+  rv = tmpFile->AppendNative(nsDependentCString("mozilla-gmp-storage"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = tmpFile->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
