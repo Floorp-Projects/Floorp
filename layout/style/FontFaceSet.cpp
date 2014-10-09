@@ -508,6 +508,16 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
   bool modified = mNonRuleFacesDirty;
   mNonRuleFacesDirty = false;
 
+  // reuse existing FontFace objects mapped to rules already
+  nsDataHashtable<nsPtrHashKey<nsCSSFontFaceRule>, FontFace*> ruleFaceMap;
+  for (size_t i = 0, i_end = mRuleFaces.Length(); i < i_end; ++i) {
+    FontFace* f = mRuleFaces[i].mFontFace;
+    if (!f) {
+      continue;
+    }
+    ruleFaceMap.Put(f->GetRule(), f);
+  }
+
   // The @font-face rules that make up the user font set have changed,
   // so we need to update the set. However, we want to preserve existing
   // font entries wherever possible, so that we don't discard and then
@@ -538,9 +548,12 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
     if (handledRules.Contains(aRules[i].mRule)) {
       continue;
     }
-    InsertRuleFontFace(FontFaceForRule(aRules[i].mRule),
-                       aRules[i].mSheetType, oldRecords,
-                       modified);
+    nsCSSFontFaceRule* rule = aRules[i].mRule;
+    nsRefPtr<FontFace> f = ruleFaceMap.Get(rule);
+    if (!f.get()) {
+      f = FontFace::CreateForRule(GetParentObject(), mPresContext, rule);
+    }
+    InsertRuleFontFace(f, aRules[i].mSheetType, oldRecords, modified);
     handledRules.PutEntry(aRules[i].mRule);
   }
 
@@ -977,16 +990,6 @@ FontFaceSet::FindRuleForUserFontEntry(gfxUserFontEntry* aUserFontEntry)
   return nullptr;
 }
 
-gfxUserFontEntry*
-FontFaceSet::FindUserFontEntryForRule(nsCSSFontFaceRule* aRule)
-{
-  FontFace* f = aRule->GetFontFace();
-  if (f) {
-    return f->GetUserFontEntry();
-  }
-  return nullptr;
-}
-
 nsresult
 FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
                         const char* aMessage,
@@ -1260,23 +1263,6 @@ FontFaceSet::DoRebuildUserFontSet()
   }
 
   mPresContext->RebuildUserFontSet();
-}
-
-FontFace*
-FontFaceSet::FontFaceForRule(nsCSSFontFaceRule* aRule)
-{
-  FontFace* f = aRule->GetFontFace();
-  if (f) {
-    return f;
-  }
-
-  // We might be creating a FontFace object for an @font-face rule that we are
-  // just about to create a user font entry for, so entry might be null.
-  gfxUserFontEntry* entry = FindUserFontEntryForRule(aRule);
-  nsRefPtr<FontFace> newFontFace =
-    FontFace::CreateForRule(GetParentObject(), mPresContext, aRule, entry);
-  aRule->SetFontFace(newFontFace);
-  return newFontFace;
 }
 
 void
