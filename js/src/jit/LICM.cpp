@@ -247,7 +247,12 @@ jit::LICM(MIRGenerator *mir, MIRGraph &graph)
             continue;
 
         bool canOsr;
-        MarkLoopBlocks(graph, header, &canOsr);
+        size_t numBlocks = MarkLoopBlocks(graph, header, &canOsr);
+
+        if (numBlocks == 0) {
+            JitSpew(JitSpew_LICM, "  Loop with header block%u isn't actually a loop", header->id());
+            continue;
+        }
 
         // Hoisting out of a loop that has an entry from the OSR block in
         // addition to its normal entry is tricky. In theory we could clone
