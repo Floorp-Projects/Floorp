@@ -43,11 +43,6 @@ protected:
 
 private:
   DOMCursor() MOZ_DELETE;
-  // Calling Then() on DOMCursor is a mistake, since the DOMCursor object
-  // should not have a .then() method from JS' point of view.
-  already_AddRefed<mozilla::dom::Promise>
-  Then(JSContext* aCx, AnyCallback* aResolveCallback,
-       AnyCallback* aRejectCallback, ErrorResult& aRv) MOZ_DELETE;
 
   nsCOMPtr<nsICursorContinueCallback> mCallback;
   bool mFinished;

@@ -3,10 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-interface DOMCursor : EventTarget {
+interface DOMCursor : DOMRequest {
   readonly attribute boolean done;
   [Throws]
   void continue();
 };
-
-DOMCursor implements DOMRequestShared;
