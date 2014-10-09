@@ -152,7 +152,7 @@ function testRuleViewLinkLabel(view) {
 
   is(value, EXTERNAL_STYLESHEET_FILE_NAME + ":1",
     "rule view stylesheet display value matches filename and line number");
-  is(tooltipText, EXTERNAL_STYLESHEET_URL,
+  is(tooltipText, EXTERNAL_STYLESHEET_URL + ":1",
     "rule view stylesheet tooltip text matches the full URI path");
 }
 
