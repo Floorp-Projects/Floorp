@@ -352,6 +352,9 @@ loop.panel = (function(_, mozL10n) {
           var token = callUrlData.callToken ||
                       callUrl.pathname.split('/').pop();
 
+          // Now that a new URL is available, indicate it has not been shared.
+          this.linkExfiltrated = false;
+
           this.setState({pending: false, copied: false,
                          callUrl: callUrl.href,
                          callUrlExpiry: callUrlData.expiresAt});
@@ -381,12 +384,20 @@ loop.panel = (function(_, mozL10n) {
       this.setState({copied: true});
     },
 
+    linkExfiltrated: false,
+
     handleLinkExfiltration: function(event) {
-      try {
-        navigator.mozLoop.telemetryAdd("LOOP_CLIENT_CALL_URL_SHARED", true);
-      } catch (err) {
-        console.error("Error recording telemetry", err);
+      // Update the count of shared URLs only once per generated URL.
+      if (!this.linkExfiltrated) {
+        this.linkExfiltrated = true;
+        try {
+          navigator.mozLoop.telemetryAdd("LOOP_CLIENT_CALL_URL_SHARED", true);
+        } catch (err) {
+          console.error("Error recording telemetry", err);
+        }
       }
+
+      // Note URL expiration every time it is shared.
       if (this.state.callUrlExpiry) {
         navigator.mozLoop.noteCallUrlExpiry(this.state.callUrlExpiry);
       }
