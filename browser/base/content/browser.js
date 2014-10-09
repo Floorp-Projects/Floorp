@@ -788,7 +788,7 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
 // Called when a docshell has attempted to load a page in an incorrect process.
 // This function is responsible for loading the page in the correct process.
 function RedirectLoad({ target: browser, data }) {
-  let tab = gBrowser._getTabForBrowser(browser);
+  let tab = gBrowser.getTabForBrowser(browser);
   // Flush the tab state before getting it
   TabState.flush(browser);
   let tabState = JSON.parse(SessionStore.getTabState(tab));
