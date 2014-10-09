@@ -680,7 +680,7 @@ GMPParent::DeallocPGMPAudioDecoderParent(PGMPAudioDecoderParent* aActor)
 PGMPStorageParent*
 GMPParent::AllocPGMPStorageParent()
 {
-  GMPStorageParent* p = new GMPStorageParent(mNodeId, this);
+  GMPStorageParent* p = new GMPStorageParent(mOrigin, this);
   mStorage.AppendElement(p); // Addrefs, released in DeallocPGMPStorageParent.
   return p;
 }
@@ -877,24 +877,24 @@ GMPParent::ReadGMPMetaData()
 }
 
 bool
-GMPParent::CanBeSharedCrossNodeIds() const
+GMPParent::CanBeSharedCrossOrigin() const
 {
-  return mNodeId.IsEmpty();
+  return mOrigin.IsEmpty();
 }
 
 bool
-GMPParent::CanBeUsedFrom(const nsACString& aNodeId) const
+GMPParent::CanBeUsedFrom(const nsAString& aOrigin) const
 {
-  return (mNodeId.IsEmpty() && State() == GMPStateNotLoaded) ||
-         mNodeId == aNodeId;
+  return (mOrigin.IsEmpty() && State() == GMPStateNotLoaded) ||
+         mOrigin.Equals(aOrigin);
 }
 
 void
-GMPParent::SetNodeId(const nsACString& aNodeId)
+GMPParent::SetOrigin(const nsAString& aOrigin)
 {
-  MOZ_ASSERT(!aNodeId.IsEmpty());
-  MOZ_ASSERT(CanBeUsedFrom(aNodeId));
-  mNodeId = aNodeId;
+  MOZ_ASSERT(!aOrigin.IsEmpty());
+  MOZ_ASSERT(CanBeUsedFrom(aOrigin));
+  mOrigin = aOrigin;
 }
 
 bool

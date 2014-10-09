@@ -324,7 +324,7 @@ GeckoMediaPluginService::GetThread(nsIThread** aThread)
 
 NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPAudioDecoder(nsTArray<nsCString>* aTags,
-                                            const nsACString& aNodeId,
+                                            const nsAString& aOrigin,
                                             GMPAudioDecoderProxy** aGMPAD)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
@@ -335,7 +335,7 @@ GeckoMediaPluginService::GetGMPAudioDecoder(nsTArray<nsCString>* aTags,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId,
+  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aOrigin,
                                                NS_LITERAL_CSTRING("decode-audio"),
                                                *aTags);
   if (!gmp) {
@@ -355,7 +355,7 @@ GeckoMediaPluginService::GetGMPAudioDecoder(nsTArray<nsCString>* aTags,
 
 NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
-                                            const nsACString& aNodeId,
+                                            const nsAString& aOrigin,
                                             GMPVideoHost** aOutVideoHost,
                                             GMPVideoDecoderProxy** aGMPVD)
 {
@@ -368,7 +368,7 @@ GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId,
+  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aOrigin,
                                                NS_LITERAL_CSTRING("decode-video"),
                                                *aTags);
 #ifdef PR_LOGGING
@@ -394,7 +394,7 @@ GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
 
 NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
-                                            const nsACString& aNodeId,
+                                            const nsAString& aOrigin,
                                             GMPVideoHost** aOutVideoHost,
                                             GMPVideoEncoderProxy** aGMPVE)
 {
@@ -407,7 +407,7 @@ GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId,
+  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aOrigin,
                                                NS_LITERAL_CSTRING("encode-video"),
                                                *aTags);
 #ifdef PR_LOGGING
@@ -432,7 +432,7 @@ GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
 
 NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
-                                         const nsACString& aNodeId,
+                                         const nsAString& aOrigin,
                                          GMPDecryptorProxy** aDecryptor)
 {
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
@@ -451,7 +451,7 @@ GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId,
+  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aOrigin,
                                                NS_LITERAL_CSTRING("eme-decrypt"),
                                                *aTags);
   if (!gmp) {
@@ -658,7 +658,7 @@ GeckoMediaPluginService::RemovePluginDirectory(const nsAString& aDirectory)
 }
 
 NS_IMETHODIMP
-GeckoMediaPluginService::HasPluginForAPI(const nsACString& aNodeId,
+GeckoMediaPluginService::HasPluginForAPI(const nsAString& aOrigin,
                                          const nsACString& aAPI,
                                          nsTArray<nsCString>* aTags,
                                          bool* aResult)
@@ -667,19 +667,19 @@ GeckoMediaPluginService::HasPluginForAPI(const nsACString& aNodeId,
   NS_ENSURE_ARG(aResult);
 
   nsCString temp(aAPI);
-  GMPParent *parent = SelectPluginForAPI(aNodeId, temp, *aTags, false);
+  GMPParent *parent = SelectPluginForAPI(aOrigin, temp, *aTags, false);
   *aResult = !!parent;
 
   return NS_OK;
 }
 
 GMPParent*
-GeckoMediaPluginService::SelectPluginForAPI(const nsACString& aNodeId,
+GeckoMediaPluginService::SelectPluginForAPI(const nsAString& aOrigin,
                                             const nsCString& aAPI,
                                             const nsTArray<nsCString>& aTags,
-                                            bool aCloneCrossNodeIds)
+                                            bool aCloneCrossOrigin)
 {
-  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread || !aCloneCrossNodeIds,
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread || !aCloneCrossOrigin,
              "Can't clone GMP plugins on non-GMP threads.");
 
   GMPParent* gmpToClone = nullptr;
@@ -698,13 +698,14 @@ GeckoMediaPluginService::SelectPluginForAPI(const nsACString& aNodeId,
       if (!supportsAllTags) {
         continue;
       }
-      if (aNodeId.IsEmpty()) {
-        if (gmp->CanBeSharedCrossNodeIds()) {
+      if (aOrigin.IsEmpty()) {
+        if (gmp->CanBeSharedCrossOrigin()) {
           return gmp;
         }
-      } else if (gmp->CanBeUsedFrom(aNodeId)) {
-        MOZ_ASSERT(!aNodeId.IsEmpty());
-        gmp->SetNodeId(aNodeId);
+      } else if (gmp->CanBeUsedFrom(aOrigin)) {
+        if (!aOrigin.IsEmpty()) {
+          gmp->SetOrigin(aOrigin);
+        }
         return gmp;
       }
 
@@ -716,10 +717,10 @@ GeckoMediaPluginService::SelectPluginForAPI(const nsACString& aNodeId,
 
   // Plugin exists, but we can't use it due to cross-origin separation. Create a
   // new one.
-  if (aCloneCrossNodeIds && gmpToClone) {
+  if (aCloneCrossOrigin && gmpToClone) {
     GMPParent* clone = ClonePlugin(gmpToClone);
-    if (!aNodeId.IsEmpty()) {
-      clone->SetNodeId(aNodeId);
+    if (!aOrigin.IsEmpty()) {
+      clone->SetOrigin(aOrigin);
     }
     return clone;
   }
