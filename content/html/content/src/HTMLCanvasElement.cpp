@@ -12,6 +12,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/MouseEvent.h"
@@ -23,7 +24,6 @@
 #include "nsAttrValueInlines.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
-#include "nsDOMFile.h"
 #include "nsDOMJSUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsITimer.h"
@@ -549,9 +549,9 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
       , mFileCallback(aCallback) {}
 
     // This is called on main thread.
-    nsresult ReceiveBlob(already_AddRefed<DOMFile> aBlob)
+    nsresult ReceiveBlob(already_AddRefed<File> aBlob)
     {
-      nsRefPtr<DOMFile> blob = aBlob;
+      nsRefPtr<File> blob = aBlob;
       uint64_t size;
       nsresult rv = blob->GetSize(&size);
       if (NS_SUCCEEDED(rv)) {
@@ -560,8 +560,10 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
         JS_updateMallocCounter(jsapi.cx(), size);
       }
 
+      nsRefPtr<File> newBlob = new File(mGlobal, blob->Impl());
+
       mozilla::ErrorResult error;
-      mFileCallback->Call(blob, error);
+      mFileCallback->Call(*newBlob, error);
 
       mGlobal = nullptr;
       mFileCallback = nullptr;
@@ -585,14 +587,15 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
                                        callback);
 }
 
-already_AddRefed<nsIDOMFile>
+already_AddRefed<File>
 HTMLCanvasElement::MozGetAsFile(const nsAString& aName,
                                 const nsAString& aType,
                                 ErrorResult& aRv)
 {
   nsCOMPtr<nsIDOMFile> file;
   aRv = MozGetAsFile(aName, aType, getter_AddRefs(file));
-  return file.forget();
+  nsRefPtr<File> tmp = static_cast<File*>(file.get());
+  return tmp.forget();
 }
 
 NS_IMETHODIMP
@@ -635,10 +638,12 @@ HTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
     JS_updateMallocCounter(cx, imgSize);
   }
 
-  // The DOMFile takes ownership of the buffer
-  nsRefPtr<DOMFile> file =
-    DOMFile::CreateMemoryFile(imgData, (uint32_t)imgSize, aName, type,
-                              PR_Now());
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(OwnerDoc()->GetScopeObject());
+
+  // The File takes ownership of the buffer
+  nsRefPtr<File> file =
+    File::CreateMemoryFile(win, imgData, (uint32_t)imgSize, aName, type,
+                           PR_Now());
 
   file.forget(aResult);
   return NS_OK;

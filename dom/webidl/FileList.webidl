@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface File;
-
 interface FileList {
   getter File? item(unsigned long index);
   readonly attribute unsigned long length;

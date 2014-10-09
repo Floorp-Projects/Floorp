@@ -39,10 +39,13 @@ EXPORTS.mozilla.net += [
 
 # ASpdySession.cpp and nsHttpAuthCache cannot be built in unified mode because
 # they use plarena.h.
-# The rest of these files cannot be built in unified mode because they want to
-# force NSPR logging.
 SOURCES += [
     'ASpdySession.cpp',
+    'nsHttpAuthCache.cpp',
+    'nsHttpChannelAuthProvider.cpp', # redefines GetAuthType
+]
+
+UNIFIED_SOURCES += [
     'ConnectionDiagnostics.cpp',
     'Http2Compression.cpp',
     'Http2Push.cpp',
@@ -55,11 +58,9 @@ SOURCES += [
     'HttpInfo.cpp',
     'nsHttp.cpp',
     'nsHttpActivityDistributor.cpp',
-    'nsHttpAuthCache.cpp',
     'nsHttpAuthManager.cpp',
     'nsHttpBasicAuth.cpp',
     'nsHttpChannel.cpp',
-    'nsHttpChannelAuthProvider.cpp',
     'nsHttpChunkedDecoder.cpp',
     'nsHttpConnection.cpp',
     'nsHttpConnectionInfo.cpp',

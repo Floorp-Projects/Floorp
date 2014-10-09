@@ -88,8 +88,10 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     if (!mFailed) {
-      nsRefPtr<DOMFile> blob =
-        DOMFile::CreateMemoryFile(mImgData, mImgSize, mType);
+      // The correct parentObject has to be set by the mEncodeCompleteCallback.
+      nsRefPtr<File> blob =
+        File::CreateMemoryFile(nullptr, mImgData, mImgSize, mType);
+      MOZ_ASSERT(blob);
 
       rv = mEncodeCompleteCallback->ReceiveBlob(blob.forget());
     }

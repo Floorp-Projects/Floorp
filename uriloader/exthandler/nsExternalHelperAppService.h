@@ -6,9 +6,6 @@
 #ifndef nsExternalHelperAppService_h__
 #define nsExternalHelperAppService_h__
 
-#ifdef MOZ_LOGGING
-#define FORCE_PR_LOG
-#endif
 #include "prlog.h"
 #include "prtime.h"
 

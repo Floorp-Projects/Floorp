@@ -9,7 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "nsIDOMFile.h"
+#include "mozilla/dom/File.h"
 
 #include "js/StructuredClone.h"
 
@@ -22,7 +22,7 @@ namespace dom {
 struct
 StructuredCloneClosure
 {
-  nsTArray<nsCOMPtr<nsIDOMBlob> > mBlobs;
+  nsTArray<nsRefPtr<File>> mBlobs;
 };
 
 struct

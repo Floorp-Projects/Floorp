@@ -331,7 +331,7 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
     } else {
         MOZ_ASSERT_IF(scx->replacer, scx->propertyList.length() == 0);
         ids.emplace(cx);
-        if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, ids.ptr()))
+        if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, ids.ptr()))
             return false;
         props = ids.ptr();
     }
@@ -733,7 +733,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
         } else {
             /* Step 2b(i). */
             AutoIdVector keys(cx);
-            if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &keys))
+            if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &keys))
                 return false;
 
             /* Step 2b(ii). */

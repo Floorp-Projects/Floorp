@@ -117,6 +117,7 @@ UNIFIED_SOURCES += [
     'nsDOMCSSRect.cpp',
     'nsDOMCSSRGBColor.cpp',
     'nsDOMCSSValueList.cpp',
+    'nsFontFaceLoader.cpp',
     'nsHTMLCSSStyleSheet.cpp',
     'nsHTMLStyleSheet.cpp',
     'nsLayoutStylesheetCache.cpp',
@@ -137,13 +138,11 @@ UNIFIED_SOURCES += [
     'SVGAttrAnimationRuleProcessor.cpp',
 ]
 
+# FontFaceSet.cpp needs to be built separately because it redefines LOG.
 # nsCSSRuleProcessor.cpp needs to be built separately because it uses plarena.h.
-# FontFaceSet.cpp and nsFontFaceLoader.cpp need to be built separately because
-# they force NSPR logging.
 SOURCES += [
     'FontFaceSet.cpp',
     'nsCSSRuleProcessor.cpp',
-    'nsFontFaceLoader.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

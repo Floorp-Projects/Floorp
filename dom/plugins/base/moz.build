@@ -43,20 +43,19 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'nsJSNPRuntime.cpp',
+    'nsNPAPIPluginInstance.cpp',
+    'nsNPAPIPluginStreamListener.cpp',
     'nsPluginInstanceOwner.cpp',
     'nsPluginModule.cpp',
     'nsPluginPlayPreviewInfo.cpp',
+    'nsPluginStreamListenerPeer.cpp',
+    'nsPluginTags.cpp',
     'PluginPRLibrary.cpp',
 ]
 
-# These files cannot be built in unified mode because they force NSPR logging.
 SOURCES += [
-    'nsNPAPIPlugin.cpp',
-    'nsNPAPIPluginInstance.cpp',
-    'nsNPAPIPluginStreamListener.cpp',
-    'nsPluginHost.cpp',
-    'nsPluginStreamListenerPeer.cpp',
-    'nsPluginTags.cpp',
+    'nsNPAPIPlugin.cpp', # Conflict with X11 headers
+    'nsPluginHost.cpp',  # Conflict with NS_NPAPIPLUGIN_CALLBACK
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

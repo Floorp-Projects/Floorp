@@ -175,9 +175,6 @@ uint32_t gMaxWorkersPerDomain = MAX_WORKERS_PER_DOMAIN;
 // Does not hold an owning reference.
 RuntimeService* gRuntimeService = nullptr;
 
-// Only non-null during the call to Init.
-RuntimeService* gRuntimeServiceDuringInit = nullptr;
-
 #ifdef ENABLE_TESTS
 bool gTestPBackground = false;
 #endif // ENABLE_TESTS
@@ -327,7 +324,7 @@ LoadRuntimeOptions(const char* aPrefName, void* /* aClosure */)
   AssertIsOnMainThread();
 
   RuntimeService* rts = RuntimeService::GetService();
-  if (!rts && !gRuntimeServiceDuringInit) {
+  if (!rts) {
     // May be shutting down, just bail.
     return;
   }
@@ -388,7 +385,7 @@ LoadGCZealOptions(const char* /* aPrefName */, void* /* aClosure */)
   AssertIsOnMainThread();
 
   RuntimeService* rts = RuntimeService::GetService();
-  if (!rts && !gRuntimeServiceDuringInit) {
+  if (!rts) {
     // May be shutting down, just bail.
     return;
   }
@@ -451,7 +448,7 @@ LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */)
 
   RuntimeService* rts = RuntimeService::GetService();
 
-  if (!rts && !gRuntimeServiceDuringInit) {
+  if (!rts) {
     // May be shutting down, just bail.
     return;
   }
@@ -1398,19 +1395,18 @@ RuntimeService::GetOrCreateService()
   AssertIsOnMainThread();
 
   if (!gRuntimeService) {
-    nsRefPtr<RuntimeService> service = new RuntimeService();
-    if (NS_FAILED(service->Init())) {
+    // The observer service now owns us until shutdown.
+    gRuntimeService = new RuntimeService();
+    if (NS_FAILED(gRuntimeService->Init())) {
       NS_WARNING("Failed to initialize!");
-      service->Cleanup();
+      gRuntimeService->Cleanup();
+      gRuntimeService = nullptr;
       return nullptr;
     }
 
 #ifdef ENABLE_TESTS
     gTestPBackground = mozilla::Preferences::GetBool("pbackground.testing", false);
 #endif // ENABLE_TESTS
-
-    // The observer service now owns us until shutdown.
-    gRuntimeService = service;
   }
 
   return gRuntimeService;
@@ -1825,9 +1821,6 @@ RuntimeService::Init()
     NS_WARNING("Failed to register for offline notification event!");
   }
 
-  NS_ASSERTION(!gRuntimeServiceDuringInit, "This should be null!");
-  gRuntimeServiceDuringInit = this;
-
   if (NS_FAILED(Preferences::RegisterCallback(
                                  LoadJSGCMemoryOptions,
                                  PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX,
@@ -1884,9 +1877,6 @@ RuntimeService::Init()
                                                  nullptr))) {
     NS_WARNING("Failed to register pref callbacks!");
   }
-
-  NS_ASSERTION(gRuntimeServiceDuringInit == this, "Should be 'this'!");
-  gRuntimeServiceDuringInit = nullptr;
 
   // We assume atomic 32bit reads/writes. If this assumption doesn't hold on
   // some wacky platform then the worst that could happen is that the close

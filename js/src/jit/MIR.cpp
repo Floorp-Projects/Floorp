@@ -224,6 +224,18 @@ MDefinition::foldsTo(TempAllocator &alloc)
     return this;
 }
 
+bool
+MDefinition::mightBeMagicType() const
+{
+    if (IsMagicType(type()))
+        return true;
+
+    if (MIRType_Value != type())
+        return false;
+
+    return !resultTypeSet() || resultTypeSet()->hasType(types::Type::MagicArgType());
+}
+
 MDefinition *
 MInstruction::foldsToStoredValue(TempAllocator &alloc, MDefinition *loaded)
 {

@@ -284,6 +284,11 @@ class SimdConstant {
         cst.fillInt32x4(array[0], array[1], array[2], array[3]);
         return cst;
     }
+    static SimdConstant SplatX4(int32_t v) {
+        SimdConstant cst;
+        cst.fillInt32x4(v, v, v, v);
+        return cst;
+    }
     static SimdConstant CreateX4(float x, float y, float z, float w) {
         SimdConstant cst;
         cst.fillFloat32x4(x, y, z, w);
@@ -292,6 +297,11 @@ class SimdConstant {
     static SimdConstant CreateX4(float *array) {
         SimdConstant cst;
         cst.fillFloat32x4(array[0], array[1], array[2], array[3]);
+        return cst;
+    }
+    static SimdConstant SplatX4(float v) {
+        SimdConstant cst;
+        cst.fillFloat32x4(v, v, v, v);
         return cst;
     }
 
@@ -331,7 +341,8 @@ class SimdConstant {
     // SimdConstant is a HashPolicy
     typedef SimdConstant Lookup;
     static HashNumber hash(const SimdConstant &val) {
-        return mozilla::HashBytes(&val.u, sizeof(SimdConstant));
+        uint32_t hash = mozilla::HashBytes(&val.u, sizeof(val.u));
+        return mozilla::AddToHash(hash, val.type_);
     }
     static bool match(const SimdConstant &lhs, const SimdConstant &rhs) {
         return lhs == rhs;

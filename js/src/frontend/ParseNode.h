@@ -773,8 +773,8 @@ class ParseNode
         MOZ_ASSERT(isKind(PNK_GENEXP));
         ParseNode *callee = this->pn_head;
         ParseNode *body = callee->pn_body;
-        MOZ_ASSERT(body->isKind(PNK_LEXICALSCOPE));
-        return body->pn_expr;
+        MOZ_ASSERT(body->isKind(PNK_LEXICALSCOPE) || body->isKind(PNK_FOR));
+        return body;
     }
 #endif
 

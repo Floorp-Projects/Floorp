@@ -44,12 +44,12 @@ DirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId i
 }
 
 bool
-DirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject proxy,
-                                        AutoIdVector &props) const
+DirectProxyHandler::ownPropertyKeys(JSContext *cx, HandleObject proxy,
+                                    AutoIdVector &props) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return GetPropertyNames(cx, target, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &props);
+    return GetPropertyKeys(cx, target, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &props);
 }
 
 bool
@@ -67,7 +67,7 @@ DirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy,
     assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
     MOZ_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return GetPropertyNames(cx, target, 0, &props);
+    return GetPropertyKeys(cx, target, 0, &props);
 }
 
 bool
@@ -222,7 +222,7 @@ DirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return GetPropertyNames(cx, target, JSITER_OWNONLY, &props);
+    return GetPropertyKeys(cx, target, JSITER_OWNONLY, &props);
 }
 
 bool

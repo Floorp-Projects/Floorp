@@ -4905,7 +4905,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
     if (evalWithBindings) {
         RootedObject bindingsobj(cx, NonNullObject(cx, bindings));
         if (!bindingsobj ||
-            !GetPropertyNames(cx, bindingsobj, JSITER_OWNONLY, &keys) ||
+            !GetPropertyKeys(cx, bindingsobj, JSITER_OWNONLY, &keys) ||
             !values.growBy(keys.length()))
         {
             return false;
@@ -5499,7 +5499,7 @@ DebuggerObject_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
         Maybe<AutoCompartment> ac;
         ac.emplace(cx, obj);
         ErrorCopier ec(ac);
-        if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &keys))
+        if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &keys))
             return false;
     }
 
@@ -5517,7 +5517,7 @@ DebuggerObject_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
          } else if (JSID_IS_ATOM(id)) {
              vals[i].setString(JSID_TO_STRING(id));
          } else {
-             MOZ_ASSERT_UNREACHABLE("GetPropertyNames must return only string and int jsids");
+             MOZ_ASSERT_UNREACHABLE("GetPropertyKeys must return only string and int jsids");
          }
     }
 
@@ -6186,7 +6186,7 @@ DebuggerEnv_names(JSContext *cx, unsigned argc, Value *vp)
         Maybe<AutoCompartment> ac;
         ac.emplace(cx, env);
         ErrorCopier ec(ac);
-        if (!GetPropertyNames(cx, env, JSITER_HIDDEN, &keys))
+        if (!GetPropertyKeys(cx, env, JSITER_HIDDEN, &keys))
             return false;
     }
 

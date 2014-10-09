@@ -596,15 +596,7 @@ class MDefinition : public MNode
         return !resultTypeSet() || resultTypeSet()->mightBeMIRType(type);
     }
 
-    bool mightBeMagicType() const {
-        if (IsMagicType(type()))
-            return true;
-
-        if (MIRType_Value != type())
-            return false;
-
-        return !resultTypeSet() || resultTypeSet()->hasType(types::Type::MagicArgType());
-    }
+    bool mightBeMagicType() const;
 
     // Float32 specialization operations (see big comment in IonAnalysis before the Float32
     // specialization algorithm).
@@ -1561,6 +1553,52 @@ class MSimdSignMask : public MUnaryInstruction
     }
 
     ALLOW_CLONE(MSimdSignMask)
+};
+
+class MSimdUnaryArith : public MUnaryInstruction
+{
+  public:
+    enum Operation {
+        abs,
+        neg,
+        not_,
+        reciprocal,
+        reciprocalSqrt,
+        sqrt
+    };
+
+  private:
+    Operation operation_;
+
+    MSimdUnaryArith(MDefinition *def, Operation op, MIRType type)
+      : MUnaryInstruction(def), operation_(op)
+    {
+        MOZ_ASSERT(IsSimdType(type));
+        MOZ_ASSERT(def->type() == type);
+        MOZ_ASSERT_IF(type == MIRType_Int32x4, op == neg || op == not_);
+        setResultType(type);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdUnaryArith);
+    static MSimdUnaryArith *NewAsmJS(TempAllocator &alloc, MDefinition *def,
+                                     Operation op, MIRType t)
+    {
+        return new(alloc) MSimdUnaryArith(def, op, t);
+    }
+
+    Operation operation() const { return operation_; }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins) && ins->toSimdUnaryArith()->operation() == operation();
+    }
+
+    ALLOW_CLONE(MSimdUnaryArith);
 };
 
 // Compares each value of a SIMD vector to each corresponding lane's value of

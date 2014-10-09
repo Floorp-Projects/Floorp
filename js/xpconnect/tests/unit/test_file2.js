@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Components.utils.importGlobalProperties(['File']);
+
 const Ci = Components.interfaces;
 
 function run_test() {
@@ -14,28 +16,19 @@ function run_test() {
   file.append("xpcshell.ini");
 
   // should be able to construct a file
-  var f1 = File(file.path);
-  // with either constructor syntax
-  var f2 = new File(file.path);
+  var f1 = new File(file.path);
   // and with nsIFiles
-  var f3 = File(file);
-  var f4 = new File(file);
+  var f2 = new File(file);
 
   // do some tests
   do_check_true(f1 instanceof Ci.nsIDOMFile, "Should be a DOM File");
   do_check_true(f2 instanceof Ci.nsIDOMFile, "Should be a DOM File");
-  do_check_true(f3 instanceof Ci.nsIDOMFile, "Should be a DOM File");
-  do_check_true(f4 instanceof Ci.nsIDOMFile, "Should be a DOM File");
 
   do_check_true(f1.name == "xpcshell.ini", "Should be the right file");
   do_check_true(f2.name == "xpcshell.ini", "Should be the right file");
-  do_check_true(f3.name == "xpcshell.ini", "Should be the right file");
-  do_check_true(f4.name == "xpcshell.ini", "Should be the right file");
 
   do_check_true(f1.type == "", "Should be the right type");
   do_check_true(f2.type == "", "Should be the right type");
-  do_check_true(f3.type == "", "Should be the right type");
-  do_check_true(f4.type == "", "Should be the right type");
 
   var threw = false;
   try {
