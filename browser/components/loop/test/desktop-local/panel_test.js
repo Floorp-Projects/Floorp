@@ -513,6 +513,8 @@ describe("loop.panel", function() {
             callUrlExpiry: 6000
           });
 
+          // Multiple clicks should result in the URL being counted only once.
+          TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-copy"));
           TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-copy"));
 
           sinon.assert.calledOnce(navigator.mozLoop.telemetryAdd);
@@ -554,6 +556,8 @@ describe("loop.panel", function() {
             callUrlExpiry: 6000
           });
 
+          // Multiple clicks should result in the URL being counted only once.
+          TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-email"));
           TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-email"));
 
           sinon.assert.calledOnce(navigator.mozLoop.telemetryAdd);
@@ -596,7 +600,9 @@ describe("loop.panel", function() {
             callUrlExpiry: 6000
           });
 
+          // Multiple copies should result in the URL being counted only once.
           var urlField = view.getDOMNode().querySelector("input[type='url']");
+          TestUtils.Simulate.copy(urlField);
           TestUtils.Simulate.copy(urlField);
 
           sinon.assert.calledOnce(navigator.mozLoop.telemetryAdd);
