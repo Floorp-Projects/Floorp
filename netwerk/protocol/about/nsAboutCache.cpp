@@ -185,13 +185,17 @@ nsAboutCache::FireVisitStorage()
     rv = VisitStorage(mStorageName);
     if (NS_FAILED(rv)) {
         if (mLoadInfo) {
+            char* escaped = nsEscapeHTML(mStorageName.get());
             mBuffer.Append(
                 nsPrintfCString("<p>Unrecognized storage name '%s' in about:cache URL</p>",
-                                mStorageName.get()));
+                                escaped));
+            nsMemory::Free(escaped);
         } else {
+            char* escaped = nsEscapeHTML(mContextString.get());
             mBuffer.Append(
                 nsPrintfCString("<p>Unrecognized context key '%s' in about:cache URL</p>",
-                                mContextString.get()));
+                                escaped));
+            nsMemory::Free(escaped);
         }
 
         FlushBuffer();

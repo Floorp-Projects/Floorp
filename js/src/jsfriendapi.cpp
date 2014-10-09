@@ -876,7 +876,7 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
         RootedObject obj(cx, &thisVal.toObject());
 
         AutoIdVector keys(cx);
-        if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &keys)) {
+        if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &keys)) {
             cx->clearPendingException();
             return buf;
         }

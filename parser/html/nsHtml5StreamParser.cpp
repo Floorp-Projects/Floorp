@@ -181,7 +181,7 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
     mTreeBuilder->EnableViewSource(highlighter); // doesn't own
   }
 
-  // Chardet instantiation adapted from nsDOMFile.
+  // Chardet instantiation adapted from File.
   // Chardet is initialized here even if it turns out to be useless
   // to make the chardet refcount its observer (nsHtml5StreamParser)
   // on the main thread.

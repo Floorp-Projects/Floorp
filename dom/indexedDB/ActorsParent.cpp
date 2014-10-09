@@ -29,6 +29,7 @@
 #include "mozilla/storage.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBCursorParent.h"
@@ -56,12 +57,10 @@
 #include "nsClassHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
-#include "nsDOMFile.h"
 #include "nsEscape.h"
 #include "nsHashKeys.h"
 #include "nsNetUtil.h"
 #include "nsIAppsService.h"
-#include "nsIDOMFile.h"
 #include "nsIEventTarget.h"
 #include "nsIFile.h"
 #include "nsIFileURL.h"
@@ -3028,7 +3027,7 @@ class DatabaseFile MOZ_FINAL
 {
   friend class Database;
 
-  nsRefPtr<DOMFileImpl> mBlobImpl;
+  nsRefPtr<FileImpl> mBlobImpl;
   nsRefPtr<FileInfo> mFileInfo;
 
 public:
@@ -3075,7 +3074,7 @@ private:
   }
 
   // Called when receiving from the child.
-  DatabaseFile(DOMFileImpl* aBlobImpl, FileInfo* aFileInfo)
+  DatabaseFile(FileImpl* aBlobImpl, FileInfo* aFileInfo)
     : mBlobImpl(aBlobImpl)
     , mFileInfo(aFileInfo)
   {
@@ -5013,11 +5012,11 @@ private:
 };
 
 class NonMainThreadHackBlobImpl MOZ_FINAL
-  : public DOMFileImplFile
+  : public FileImplFile
 {
 public:
   NonMainThreadHackBlobImpl(nsIFile* aFile, FileInfo* aFileInfo)
-    : DOMFileImplFile(aFile, aFileInfo)
+    : FileImplFile(aFile, aFileInfo)
   {
     // Getting the content type is not currently supported off the main thread.
     // This isn't a problem here because:
@@ -5500,7 +5499,7 @@ ConvertBlobsToActors(PBackgroundParent* aBackgroundActor,
     MOZ_ASSERT(NS_SUCCEEDED(nativeFile->IsFile(&isFile)));
     MOZ_ASSERT(isFile);
 
-    nsRefPtr<DOMFileImpl> impl =
+    nsRefPtr<FileImpl> impl =
       new NonMainThreadHackBlobImpl(nativeFile, file.mFileInfo);
 
     PBlobParent* actor =
@@ -6240,7 +6239,7 @@ Database::AllocPBackgroundIDBDatabaseFileParent(PBlobParent* aBlobParent)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aBlobParent);
 
-  nsRefPtr<DOMFileImpl> blobImpl =
+  nsRefPtr<FileImpl> blobImpl =
     static_cast<BlobParent*>(aBlobParent)->GetBlobImpl();
   MOZ_ASSERT(blobImpl);
 

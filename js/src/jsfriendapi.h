@@ -971,7 +971,7 @@ CopyFlatStringChars(char16_t *dest, JSFlatString *s, size_t len)
 }
 
 JS_FRIEND_API(bool)
-GetPropertyNames(JSContext *cx, JSObject *obj, unsigned flags, JS::AutoIdVector *props);
+GetPropertyKeys(JSContext *cx, JSObject *obj, unsigned flags, JS::AutoIdVector *props);
 
 JS_FRIEND_API(bool)
 AppendUnique(JSContext *cx, JS::AutoIdVector &base, JS::AutoIdVector &others);

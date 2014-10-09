@@ -7,8 +7,6 @@
 #ifndef nsTimerImpl_h___
 #define nsTimerImpl_h___
 
-//#define FORCE_PR_LOG /* Allow logging in the release build */
-
 #include "nsITimer.h"
 #include "nsIEventTarget.h"
 #include "nsIObserver.h"

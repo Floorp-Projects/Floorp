@@ -130,7 +130,7 @@ ArchiveReaderEvent::ShareMainThread()
         }
       }
 
-      // This is a nsDOMFile:
+      // This is a File:
       nsRefPtr<nsIDOMFile> file = item->File(mArchiveReader);
       if (file) {
         fileList.AppendElement(file);

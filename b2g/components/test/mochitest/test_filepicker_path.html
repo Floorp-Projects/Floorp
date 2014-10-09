@@ -67,7 +67,7 @@ var testCases = [
                 },
     fileName: 'test5.txt'},
   // case 6: returns file without name. This case may fail because we
-  //         need to make sure the DOMFile can be sent through
+  //         need to make sure the File can be sent through
   //         sendAsyncMessage API.
   { pickedResult: { success: true,
                     result: {
@@ -96,7 +96,7 @@ function handleMessage(data) {
       break;
     case 'file-picked-posted':
       is(fileInput.value, activeTestCase.fileName,
-         'DOMFile should be able to send through message.');
+         'File should be able to send through message.');
       processTestCase();
       break;
   }

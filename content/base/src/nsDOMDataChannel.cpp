@@ -6,10 +6,6 @@
 
 #include "nsDOMDataChannel.h"
 
-#ifdef MOZ_LOGGING
-#define FORCE_PR_LOG
-#endif
-
 #include "base/basictypes.h"
 #include "prlog.h"
 
@@ -22,10 +18,10 @@ extern PRLogModuleInfo* GetDataChannelLog();
 
 #include "nsDOMDataChannelDeclarations.h"
 #include "nsDOMDataChannel.h"
-#include "nsIDOMFile.h"
 #include "nsIDOMDataChannel.h"
 #include "nsIDOMMessageEvent.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "nsError.h"
@@ -34,7 +30,6 @@ extern PRLogModuleInfo* GetDataChannelLog();
 #include "nsCycleCollectionParticipant.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsNetUtil.h"
-#include "nsDOMFile.h"
 
 #include "DataChannel.h"
 
@@ -272,19 +267,19 @@ nsDOMDataChannel::Send(const nsAString& aData, ErrorResult& aRv)
 }
 
 void
-nsDOMDataChannel::Send(nsIDOMBlob* aData, ErrorResult& aRv)
+nsDOMDataChannel::Send(File& aData, ErrorResult& aRv)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
 
   nsCOMPtr<nsIInputStream> msgStream;
-  nsresult rv = aData->GetInternalStream(getter_AddRefs(msgStream));
+  nsresult rv = aData.GetInternalStream(getter_AddRefs(msgStream));
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
   }
 
   uint64_t msgLength;
-  rv = aData->GetSize(&msgLength);
+  rv = aData.GetSize(&msgLength);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -393,7 +388,7 @@ nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
 
   if (aBinary) {
     if (mBinaryType == DC_BINARY_TYPE_BLOB) {
-      rv = nsContentUtils::CreateBlobBuffer(cx, aData, &jsData);
+      rv = nsContentUtils::CreateBlobBuffer(cx, GetOwner(), aData, &jsData);
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (mBinaryType == DC_BINARY_TYPE_ARRAYBUFFER) {
       JS::Rooted<JSObject*> arrayBuf(cx);

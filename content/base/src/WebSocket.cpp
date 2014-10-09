@@ -11,6 +11,7 @@
 #include "jsfriendapi.h"
 #include "js/OldDebugAPI.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
@@ -38,7 +39,6 @@
 #include "mozilla/Preferences.h"
 #include "xpcpublic.h"
 #include "nsContentPolicyUtils.h"
-#include "nsDOMFile.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsIObserverService.h"
 #include "nsIWebSocketChannel.h"
@@ -898,7 +898,7 @@ WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
   JS::Rooted<JS::Value> jsData(cx);
   if (isBinary) {
     if (mBinaryType == dom::BinaryType::Blob) {
-      rv = nsContentUtils::CreateBlobBuffer(cx, aData, &jsData);
+      rv = nsContentUtils::CreateBlobBuffer(cx, GetOwner(), aData, &jsData);
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (mBinaryType == dom::BinaryType::Arraybuffer) {
       JS::Rooted<JSObject*> arrayBuf(cx);
@@ -1194,20 +1194,19 @@ WebSocket::Send(const nsAString& aData,
 }
 
 void
-WebSocket::Send(nsIDOMBlob* aData,
-                ErrorResult& aRv)
+WebSocket::Send(File& aData, ErrorResult& aRv)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
 
   nsCOMPtr<nsIInputStream> msgStream;
-  nsresult rv = aData->GetInternalStream(getter_AddRefs(msgStream));
+  nsresult rv = aData.GetInternalStream(getter_AddRefs(msgStream));
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
   }
 
   uint64_t msgLength;
-  rv = aData->GetSize(&msgLength);
+  rv = aData.GetSize(&msgLength);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;

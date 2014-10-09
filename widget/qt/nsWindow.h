@@ -23,9 +23,6 @@
 
 #ifdef MOZ_LOGGING
 
-// make sure that logging is enabled before including prlog.h
-#define FORCE_PR_LOG
-
 #include "prlog.h"
 #include "nsTArray.h"
 
