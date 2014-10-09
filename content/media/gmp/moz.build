@@ -90,11 +90,6 @@ UNIFIED_SOURCES += [
     'GMPVideoPlaneImpl.cpp',
 ]
 
-if CONFIG['OS_TARGET'] == 'WINNT':
-  DIRS += [
-      'rlz',
-  ]
-
 IPDL_SOURCES += [
   'GMPTypes.ipdlh',
   'PGMP.ipdl',
