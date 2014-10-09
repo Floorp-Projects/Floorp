@@ -4577,16 +4577,18 @@ mozilla::BrowserTabsRemoteAutostart()
   gBrowserTabsRemoteAutostartInitialized = true;
   bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", false);
   bool trialPref = Preferences::GetBool("browser.tabs.remote.autostart.1", false);
+  bool prefEnabled = optInPref || trialPref;
 #if !defined(NIGHTLY_BUILD)
-  // When running tests with 'layers.offmainthreadcomposition.testing.enabled' and autostart
-  // set to true, return enabled.  These tests must be allowed to run remotely.
+  // When running tests with 'layers.offmainthreadcomposition.testing.enabled' and
+  // autostart set to true, return enabled.  These tests must be allowed to run
+  // remotely. Otherwise remote isn't allowed in non-nightly builds.
   bool testPref = Preferences::GetBool("layers.offmainthreadcomposition.testing.enabled", false);
   if (testPref && optInPref) {
     gBrowserTabsRemoteAutostart = true;
   }
 #else
-  bool prefEnabled = optInPref || trialPref;
-
+  // Nightly builds, update gBrowserTabsRemoteAutostart based on all the
+  // e10s remote relayed prefs we watch.
   bool disabledForA11y = Preferences::GetBool("browser.tabs.remote.autostart.disabled-because-using-a11y", false);
   // Only disable for IME for the automatic pref, not the opt-in one.
   bool disabledForIME = trialPref && KeyboardMayHaveIME();
