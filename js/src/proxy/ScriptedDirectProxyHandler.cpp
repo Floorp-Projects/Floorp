@@ -172,7 +172,7 @@ ReportInvalidTrapResult(JSContext *cx, JSObject *proxy, JSAtom *atom)
                          js::NullPtr(), bytes.ptr());
 }
 
-// This function is shared between getOwnPropertyNames, enumerate, and keys
+// This function is shared between ownPropertyKeys, enumerate, and keys
 static bool
 ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleValue v,
                 AutoIdVector &props, unsigned flags, JSAtom *trapName_)
@@ -227,7 +227,7 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
 
     // step l
     AutoIdVector ownProps(cx);
-    if (!GetPropertyNames(cx, target, flags, &ownProps))
+    if (!GetPropertyKeys(cx, target, flags, &ownProps))
         return false;
 
     // step m
@@ -558,11 +558,10 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
     return true;
 }
 
-// This is secretly [[OwnPropertyKeys]]. SM uses the old wiki name, internally.
 // ES6 (5 April 2014) 9.5.12 Proxy.[[OwnPropertyKeys]]()
 bool
-ScriptedDirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject proxy,
-                                                AutoIdVector &props) const
+ScriptedDirectProxyHandler::ownPropertyKeys(JSContext *cx, HandleObject proxy,
+                                            AutoIdVector &props) const
 {
     // step 1
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
@@ -583,7 +582,7 @@ ScriptedDirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject prox
 
     // step 6
     if (trap.isUndefined())
-        return DirectProxyHandler::getOwnPropertyNames(cx, proxy, props);
+        return DirectProxyHandler::ownPropertyKeys(cx, proxy, props);
 
     // step 7-8
     Value argv[] = {

@@ -13,13 +13,9 @@ function is(actual, expected, message) {
  * Tries to write to property.
  */
 function writeProperty(file, property) {
-  try {
-    var oldValue = file[property];
-    file[property] = -1;
-    is(false, true, "Should have thrown an exception setting a read only property.");
-  } catch (ex) {
-    is(true, true, "Should have thrown an exception setting a read only property.");
-  }
+  var oldValue = file[property];
+  file[property] = -1;
+  is(file[property], oldValue, "Property " + property + " should be readonly.");
 }
 
 /**

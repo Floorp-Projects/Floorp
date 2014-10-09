@@ -23,10 +23,13 @@ interface nsIRilNetworkInterface : nsINetworkInterface
   readonly attribute long      mmsPort;  // -1 if not set.
 };
 
-[scriptable, uuid(08a69c70-34b1-11e4-8c21-0800200c9a66)]
+[scriptable, uuid(4441e660-4ad0-11e4-916c-0800200c9a66)]
 interface nsIRilContext : nsISupports
 {
-  readonly attribute DOMString cardState;
+  /**
+   * One of the nsIIccProvider.CARD_STATE_* values.
+   */
+  readonly attribute unsigned long cardState;
 
   readonly attribute DOMString imsi;
 

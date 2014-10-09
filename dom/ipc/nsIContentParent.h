@@ -16,7 +16,6 @@
     { 0x81, 0xda, 0xb7, 0x34, 0x13, 0x7e, 0xac, 0xf3 } }
 
 class nsFrameMessageManager;
-class nsIDOMBlob;
 
 namespace IPC {
 class Principal;
@@ -34,6 +33,7 @@ namespace dom {
 class BlobConstructorParams;
 class BlobParent;
 class ContentParent;
+class File;
 class IPCTabContext;
 class PBlobParent;
 class PBrowserParent;
@@ -47,7 +47,7 @@ public:
 
   nsIContentParent();
 
-  BlobParent* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
+  BlobParent* GetOrCreateActorForBlob(File* aBlob);
 
   virtual uint64_t ChildID() = 0;
   virtual bool IsForApp() = 0;

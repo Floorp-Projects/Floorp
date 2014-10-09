@@ -32,6 +32,8 @@
 namespace mozilla {
 namespace dom {
 
+class File;
+
 class WebSocket MOZ_FINAL : public DOMEventTargetHelper,
                             public nsIInterfaceRequestor,
                             public nsIWebSocketListener,
@@ -131,7 +133,7 @@ public: // WebIDL interface:
   // webIDL: void send(DOMString|Blob|ArrayBufferView data);
   void Send(const nsAString& aData,
             ErrorResult& aRv);
-  void Send(nsIDOMBlob* aData,
+  void Send(File& aData,
             ErrorResult& aRv);
   void Send(const ArrayBuffer& aData,
             ErrorResult& aRv);

@@ -6,7 +6,6 @@
 
 #include "FilePickerParent.h"
 #include "nsComponentManagerUtils.h"
-#include "nsDOMFile.h"
 #include "nsNetCID.h"
 #include "nsIDocument.h"
 #include "nsIDOMFile.h"
@@ -14,6 +13,7 @@
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "mozilla/unused.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
@@ -117,7 +117,8 @@ FilePickerParent::SendFiles(const nsCOMArray<nsIDOMFile>& aDomfiles)
   InfallibleTArray<PBlobParent*> files;
 
   for (unsigned i = 0; i < aDomfiles.Length(); i++) {
-    BlobParent* blob = parent->GetOrCreateActorForBlob(aDomfiles[i]);
+    BlobParent* blob = parent->GetOrCreateActorForBlob(
+      static_cast<File*>(aDomfiles[i]));
     if (blob) {
       files.AppendElement(blob);
     }
@@ -149,7 +150,10 @@ FilePickerParent::Done(int16_t aResult)
       iter->GetNext(getter_AddRefs(supports));
       if (supports) {
         nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
-        nsCOMPtr<nsIDOMFile> domfile = DOMFile::CreateFromFile(file);
+
+        // A null parent is fine because File are not used in this process
+        // but only in the child.
+        nsCOMPtr<nsIDOMFile> domfile = File::CreateFromFile(nullptr, file);
         domfiles.AppendElement(domfile);
       }
     }
@@ -157,7 +161,9 @@ FilePickerParent::Done(int16_t aResult)
     nsCOMPtr<nsIFile> file;
     mFilePicker->GetFile(getter_AddRefs(file));
     if (file) {
-      nsCOMPtr<nsIDOMFile> domfile = DOMFile::CreateFromFile(file);
+      // A null parent is fine because File are not used in this process
+      // but only in the child.
+      nsCOMPtr<nsIDOMFile> domfile = File::CreateFromFile(nullptr, file);
       domfiles.AppendElement(domfile);
     }
   }

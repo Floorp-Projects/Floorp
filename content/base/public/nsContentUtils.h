@@ -1669,6 +1669,7 @@ public:
                                     JSObject** aResult);
 
   static nsresult CreateBlobBuffer(JSContext* aCx,
+                                   nsISupports* aParent,
                                    const nsACString& aData,
                                    JS::MutableHandle<JS::Value> aBlob);
 

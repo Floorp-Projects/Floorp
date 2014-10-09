@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EncodedBufferCache.h"
+#include "mozilla/dom/File.h"
 #include "nsAnonymousTemporaryFile.h"
-#include "nsDOMFile.h"
 #include "prio.h"
 
 namespace mozilla {
@@ -39,15 +39,16 @@ EncodedBufferCache::AppendBuffer(nsTArray<uint8_t> & aBuf)
 
 }
 
-already_AddRefed<nsIDOMBlob>
-EncodedBufferCache::ExtractBlob(const nsAString &aContentType)
+already_AddRefed<dom::File>
+EncodedBufferCache::ExtractBlob(nsISupports* aParent,
+                                const nsAString &aContentType)
 {
   MutexAutoLock lock(mMutex);
-  nsCOMPtr<nsIDOMBlob> blob;
+  nsRefPtr<dom::File> blob;
   if (mTempFileEnabled) {
     // generate new temporary file to write
-    blob = dom::DOMFile::CreateTemporaryFileBlob(mFD, 0, mDataSize,
-                                                 aContentType);
+    blob = dom::File::CreateTemporaryFileBlob(aParent, mFD, 0, mDataSize,
+                                              aContentType);
     // fallback to memory blob
     mTempFileEnabled = false;
     mDataSize = 0;
@@ -62,7 +63,8 @@ EncodedBufferCache::ExtractBlob(const nsAString &aContentType)
                mEncodedBuffers.ElementAt(i).Length());
         offset += mEncodedBuffers.ElementAt(i).Length();
       }
-      blob = dom::DOMFile::CreateMemoryFile(blobData, mDataSize, aContentType);
+      blob = dom::File::CreateMemoryFile(aParent, blobData, mDataSize,
+                                         aContentType);
       mEncodedBuffers.Clear();
     } else
       return nullptr;

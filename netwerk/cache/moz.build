@@ -21,8 +21,7 @@ EXPORTS += [
     'nsDeleteDir.h'
 ]
 
-# These files cannot be built in unified mode because they force NSPR logging.
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsApplicationCacheService.cpp',
     'nsCache.cpp',
     'nsCacheEntry.cpp',

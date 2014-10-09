@@ -31,8 +31,8 @@ class FilteringWrapper : public Base {
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                           JS::Handle<jsid> id,
                                           JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
-    virtual bool getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                     JS::AutoIdVector &props) const MOZ_OVERRIDE;
+    virtual bool ownPropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                 JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper,
                            JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool keys(JSContext *cx, JS::Handle<JSObject*> wrapper,
@@ -67,8 +67,8 @@ class CrossOriginXrayWrapper : public SecurityXrayDOM {
                                           JS::Handle<jsid> id,
                                           JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
 
-    virtual bool getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                     JS::AutoIdVector &props) const MOZ_OVERRIDE;
+    virtual bool ownPropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                 JS::AutoIdVector &props) const MOZ_OVERRIDE;
 
     virtual bool defineProperty(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                 JS::Handle<jsid> id,
