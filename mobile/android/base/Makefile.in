@@ -92,9 +92,7 @@ ALL_JARS += webrtc.jar
 endif
 
 ifdef MOZ_ANDROID_SEARCH_ACTIVITY
-extra_packages += org.mozilla.search
 ALL_JARS += search-activity.jar
-generated/org/mozilla/search/R.java: .aapt.deps ;
 endif
 
 ifdef MOZ_ANDROID_MLS_STUMBLER
