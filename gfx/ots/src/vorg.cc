@@ -75,15 +75,17 @@ bool ots_vorg_should_serialise(OpenTypeFile *file) {
 
 bool ots_vorg_serialise(OTSStream *out, OpenTypeFile *file) {
   OpenTypeVORG * const vorg = file->vorg;
-
-  if (!out->WriteU16(vorg->major_version) ||
+  
+  const uint16_t num_metrics = static_cast<uint16_t>(vorg->metrics.size());
+  if (num_metrics != vorg->metrics.size() ||
+      !out->WriteU16(vorg->major_version) ||
       !out->WriteU16(vorg->minor_version) ||
       !out->WriteS16(vorg->default_vert_origin_y) ||
-      !out->WriteU16(vorg->metrics.size())) {
+      !out->WriteU16(num_metrics)) {
     return OTS_FAILURE_MSG("Failed to write table header");
   }
 
-  for (unsigned i = 0; i < vorg->metrics.size(); ++i) {
+  for (uint16_t i = 0; i < num_metrics; ++i) {
     const OpenTypeVORGMetrics& rec = vorg->metrics[i];
     if (!out->WriteU16(rec.glyph_index) ||
         !out->WriteS16(rec.vert_origin_y)) {
