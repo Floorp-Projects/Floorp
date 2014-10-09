@@ -150,6 +150,22 @@ GMPParent::LoadProcess()
       return NS_ERROR_FAILURE;
     }
     LOGD(("%s::%s: Created new process %p", __CLASS__, __FUNCTION__, (void *)mProcess));
+
+    bool ok = SendSetNodeId(mNodeId);
+    if (!ok) {
+      mProcess->Delete();
+      mProcess = nullptr;
+      return NS_ERROR_FAILURE;
+    }
+    LOGD(("%s::%s: Failed to send node id %p", __CLASS__, __FUNCTION__, (void *)mProcess));
+
+    ok = SendStartPlugin();
+    if (!ok) {
+      mProcess->Delete();
+      mProcess = nullptr;
+      return NS_ERROR_FAILURE;
+    }
+    LOGD(("%s::%s: Failed to send start %p", __CLASS__, __FUNCTION__, (void *)mProcess));
   }
 
   mState = GMPStateLoaded;
