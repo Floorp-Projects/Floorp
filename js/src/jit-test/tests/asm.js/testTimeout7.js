@@ -1,4 +1,3 @@
-// |jit-test| exitstatus: 6;
 load(libdir + "asm.js");
 
 // This test may iloop for valid reasons if not compiled with asm.js (namely,
@@ -23,5 +22,20 @@ var m = asmCompile('glob', 'ffis', 'b', USE_ASM +
                     function loop(i) { i=i|0; while((i32[i>>2]|0) == 13) { f() } }
                     return {loop:loop, changeHeap:changeHeap}`);
 var { loop, changeHeap } = asmLink(m, this, null, buf1);
-timeout(1, function() { assertEq(changeHeap(buf2), false); return false });
+timeout(1, function() { changeHeap(buf2); return true });
 loop(0);
+timeout(-1);
+
+// Try again, but this time with signals disabled
+setJitCompilerOption("signals.enable", 0);
+var m = asmCompile('glob', 'ffis', 'b', USE_ASM +
+                   `var I32=glob.Int32Array; var i32=new I32(b);
+                    var len=glob.byteLength;
+                    function changeHeap(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i32=new I32(b2); b=b2; return true }
+                    function f() {}
+                    function loop(i) { i=i|0; while((i32[i>>2]|0) == 13) { f() } }
+                    return {loop:loop, changeHeap:changeHeap}`);
+var { loop, changeHeap } = asmLink(m, this, null, buf1);
+timeout(1, function() { changeHeap(buf2); return true });
+loop(0);
+timeout(-1);
