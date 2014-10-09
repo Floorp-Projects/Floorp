@@ -18,7 +18,6 @@ using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using class nsHttpResponseHead from "nsHttpResponseHead.h";
 using struct nsHttpAtom from "nsHttp.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
-using struct mozilla::net::ResourceTimingStruct from "mozilla/net/TimingStruct.h";
 
 namespace mozilla {
 namespace net {
@@ -104,7 +103,7 @@ child:
                      uint64_t  offset,
                      uint32_t  count);
 
-  OnStopRequest(nsresult channelStatus, ResourceTimingStruct timing);
+  OnStopRequest(nsresult channelStatus);
 
   OnProgress(uint64_t progress, uint64_t progressMax);
 
