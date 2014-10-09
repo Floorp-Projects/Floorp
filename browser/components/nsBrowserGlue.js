@@ -107,11 +107,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "SignInToWebsiteUX",
 XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
                                   "resource:///modules/ContentSearch.jsm");
 
-#ifdef E10S_TESTING_ONLY
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
-                                  "resource://gre/modules/UpdateChannel.jsm");
-#endif
-
 XPCOMUtils.defineLazyGetter(this, "ShellService", function() {
   try {
     return Cc["@mozilla.org/browser/shell-service;1"].
@@ -2270,15 +2265,12 @@ let DefaultBrowserCheck = {
 let E10SUINotification = {
   // Increase this number each time we want to roll out an
   // e10s testing period to Nightly users.
-  CURRENT_NOTICE_COUNT: 1,
-  CURRENT_PROMPT_PREF: "browser.displayedE10SPrompt.1",
-  PREVIOUS_PROMPT_PREF: "browser.displayedE10SPrompt",
+  CURRENT_NOTICE_COUNT: 0,
 
   checkStatus: function() {
     let skipE10sChecks = false;
     try {
-      skipE10sChecks = (UpdateChannel.get() != "nightly") ||
-                       Services.prefs.getBoolPref("browser.tabs.remote.autostart.disabled-because-using-a11y");
+      skipE10sChecks = Services.prefs.getBoolPref("browser.tabs.remote.autostart.disabled-because-using-a11y");
     } catch(e) {}
 
     if (skipE10sChecks) {
@@ -2324,26 +2316,17 @@ let E10SUINotification = {
 
       let e10sPromptShownCount = 0;
       try {
-        e10sPromptShownCount = Services.prefs.getIntPref(this.CURRENT_PROMPT_PREF);
+        e10sPromptShownCount = Services.prefs.getIntPref("browser.displayedE10SPrompt");
       } catch(e) {}
-
-      let isHardwareAccelerated = true;
-      try {
-        let win = RecentWindow.getMostRecentBrowserWindow();
-        let winutils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        isHardwareAccelerated = winutils.layerManagerType != "Basic";
-      } catch (e) {}
 
       if (!Services.appinfo.inSafeMode &&
           !Services.appinfo.accessibilityEnabled &&
           !Services.appinfo.keyboardMayHaveIME &&
-          isHardwareAccelerated &&
           e10sPromptShownCount < 5) {
         Services.tm.mainThread.dispatch(() => {
           try {
             this._showE10SPrompt();
-            Services.prefs.setIntPref(this.CURRENT_PROMPT_PREF, e10sPromptShownCount + 1);
-            Services.prefs.clearUserPref(this.PREVIOUS_PROMPT_PREF);
+            Services.prefs.setIntPref("browser.displayedE10SPrompt", e10sPromptShownCount + 1);
           } catch (ex) {
             Cu.reportError("Failed to show e10s prompt: " + ex);
           }
@@ -2390,7 +2373,7 @@ let E10SUINotification = {
 
     let browser = win.gBrowser.selectedBrowser;
 
-    let promptMessage = "Would you like to help us test multiprocess Nightly (e10s)? You can also enable e10s in Nightly preferences. Notable fixes:";
+    let promptMessage = "Would you like to help us test multiprocess Nightly (e10s)? You can also enable e10s in Nightly preferences.";
     let mainAction = {
       label: "Enable and Restart",
       accessKey: "E",
@@ -2410,7 +2393,7 @@ let E10SUINotification = {
         label: "No thanks",
         accessKey: "N",
         callback: function () {
-          Services.prefs.setIntPref(E10SUINotification.CURRENT_PROMPT_PREF, 5);
+          Services.prefs.setIntPref("browser.displayedE10SPrompt", 5);
         }
       }
     ];
@@ -2420,21 +2403,7 @@ let E10SUINotification = {
       persistWhileVisible: true
     };
 
-    win.PopupNotifications.show(browser, "enable-e10s", promptMessage, null, mainAction, secondaryActions, options);
-
-    let highlights = [
-      "Less crashing!",
-      "Improved add-on compatibility and DevTools",
-      "PDF.js, Web Console, Spellchecking, WebRTC now work"
-    ];
-
-    let doorhangerExtraContent = win.document.getElementById("enable-e10s-notification")
-                                             .querySelector("popupnotificationcontent");
-    for (let highlight of highlights) {
-      let highlightLabel = win.document.createElement("label");
-      highlightLabel.setAttribute("value", highlight);
-      doorhangerExtraContent.appendChild(highlightLabel);
-    }
+    win.PopupNotifications.show(browser, "enable_e10s", promptMessage, null, mainAction, secondaryActions, options);
   },
 
   _warnedAboutAccessibility: false,
