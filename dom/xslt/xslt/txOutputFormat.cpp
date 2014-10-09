@@ -5,7 +5,6 @@
 
 #include "txOutputFormat.h"
 #include "txXMLUtils.h"
-#include "txExpandedName.h"
 
 txOutputFormat::txOutputFormat() : mMethod(eMethodNotSet),
                                    mOmitXMLDeclaration(eNotSet),

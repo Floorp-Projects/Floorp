@@ -10,7 +10,6 @@
 #include "txCore.h"
 #include "nsString.h"
 #include "txXMLUtils.h"
-#include "txExpandedName.h"
 #include "txNamespaceMap.h"
 #include "nsAutoPtr.h"
 #include "txXSLTNumber.h"
