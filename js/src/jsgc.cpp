@@ -1922,109 +1922,79 @@ GCRuntime::arenaAllocatedDuringGC(JS::Zone *zone, ArenaHeader *arena)
 }
 
 TenuredCell *
-ArenaLists::allocateFromArena(Zone *zone, AllocKind thingKind,
-                              AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc)
-{
-    /*
-     * Parallel JS Note:
-     *
-     * This function can be called from parallel threads all of which
-     * are associated with the same compartment. In that case, each
-     * thread will have a distinct ArenaLists.  Therefore, whenever we
-     * fall through to pickChunk() we must be sure that we are holding
-     * a lock.
-     */
-
-    AutoLockGC maybeLock;
-
-    bool backgroundFinalizationIsRunning = false;
-    ArenaLists::BackgroundFinalizeState *bfs = &backgroundFinalizeState[thingKind];
-    if (*bfs != BFS_DONE) {
-        /*
-         * We cannot search the arena list for free things while background
-         * finalization runs and can modify it at any moment. So we always
-         * allocate a new arena in that case.
-         */
-        JSRuntime *rt = zone->runtimeFromAnyThread();
-        maybeLock.lock(rt);
-        if (*bfs == BFS_RUN) {
-            backgroundFinalizationIsRunning = true;
-        } else if (*bfs == BFS_JUST_FINISHED) {
-            /* See comments before BackgroundFinalizeState definition. */
-            *bfs = BFS_DONE;
-        } else {
-            MOZ_ASSERT(*bfs == BFS_DONE);
-        }
-    }
-
-    ArenaHeader *aheader;
-    ArenaList *al = &arenaLists[thingKind];
-    if (!backgroundFinalizationIsRunning && (aheader = al->arenaAfterCursor())) {
-        /*
-         * Normally, the empty arenas are returned to the chunk
-         * and should not be present on the list. In parallel
-         * execution, however, we keep empty arenas in the arena
-         * list to avoid synchronizing on the chunk.
-         */
-        MOZ_ASSERT(!aheader->isEmpty() || InParallelSection());
-
-        al->moveCursorPast(aheader);
-
-        /*
-         * Move the free span stored in the arena to the free list and
-         * allocate from it.
-         */
-        FreeSpan firstFreeSpan = aheader->getFirstFreeSpan();
-        freeLists[thingKind].setHead(&firstFreeSpan);
-        aheader->setAsFullyUsed();
-        if (MOZ_UNLIKELY(zone->wasGCStarted()))
-            zone->runtimeFromMainThread()->gc.arenaAllocatedDuringGC(zone, aheader);
-        TenuredCell *thing = freeLists[thingKind].allocate(Arena::thingSize(thingKind));
-        MOZ_ASSERT(thing);   // This allocation is infallible.
-        return thing;
-    }
-
-    /* Make sure we hold the GC lock before we call pickChunk. */
-    JSRuntime *rt = zone->runtimeFromAnyThread();
-    if (!maybeLock.locked())
-        maybeLock.lock(rt);
-    Chunk *chunk = rt->gc.pickChunk(zone, maybeStartBGAlloc);
-    if (!chunk)
-        return nullptr;
-
-    /*
-     * While we still hold the GC lock get an arena from some chunk, mark it
-     * as full as its single free span is moved to the free lists, and insert
-     * it to the list as a fully allocated arena.
-     */
-    MOZ_ASSERT(al->isCursorAtEnd());
-    aheader = chunk->allocateArena(zone, thingKind);
-    if (!aheader)
-        return nullptr;
-
-    if (MOZ_UNLIKELY(zone->wasGCStarted()))
-        rt->gc.arenaAllocatedDuringGC(zone, aheader);
-    al->insertAtCursor(aheader);
-
-    /*
-     * Allocate from a newly allocated arena. The arena will have been set up
-     * as fully used during the initialization so we have to re-mark it as
-     * empty before allocating.
-     */
-    MOZ_ASSERT(!aheader->hasFreeThings());
-    Arena *arena = aheader->getArena();
-    size_t thingSize = Arena::thingSize(thingKind);
-    FreeSpan fullSpan;
-    fullSpan.initFinal(arena->thingsStart(thingKind), arena->thingsEnd() - thingSize, thingSize);
-    freeLists[thingKind].setHead(&fullSpan);
-    return freeLists[thingKind].allocate(thingSize);
-}
-
-TenuredCell *
 ArenaLists::allocateFromArena(JS::Zone *zone, AllocKind thingKind)
 {
     AutoMaybeStartBackgroundAllocation maybeStartBackgroundAllocation;
     return allocateFromArena(zone, thingKind, maybeStartBackgroundAllocation);
+}
+
+TenuredCell *
+ArenaLists::allocateFromArena(JS::Zone *zone, AllocKind thingKind,
+                              AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc)
+{
+    JSRuntime *rt = zone->runtimeFromAnyThread();
+    AutoLockGC maybeLock;
+
+    // See if we can proceed without taking the GC lock.
+    if (backgroundFinalizeState[thingKind] != BFS_DONE) {
+        maybeLock.lock(rt);
+        if (backgroundFinalizeState[thingKind] == BFS_JUST_FINISHED)
+            backgroundFinalizeState[thingKind] = BFS_DONE;
+    }
+
+    ArenaList &al = arenaLists[thingKind];
+    ArenaHeader *aheader = al.takeNextArena();
+    if (aheader) {
+        // Empty arenas should be immediately freed except in Parallel JS.
+        MOZ_ASSERT_IF(aheader->isEmpty(), InParallelSection());
+
+        return allocateFromArenaInner<HasFreeThings>(zone, aheader, thingKind);
+    }
+
+    // Parallel threads have their own ArenaLists, but chunks are shared;
+    // if we haven't already, take the GC lock now to avoid racing.
+    if (!maybeLock.locked())
+        maybeLock.lock(rt);
+
+    Chunk *chunk = rt->gc.pickChunk(zone, maybeStartBGAlloc);
+    if (!chunk)
+        return nullptr;
+
+    // Although our chunk should definitely have enough space for another arena,
+    // there are other valid reasons why Chunk::allocateArena() may fail.
+    aheader = chunk->allocateArena(zone, thingKind);
+    if (!aheader)
+        return nullptr;
+
+    MOZ_ASSERT(al.isCursorAtEnd());
+    al.insertAtCursor(aheader);
+
+    return allocateFromArenaInner<IsEmpty>(zone, aheader, thingKind);
+}
+
+template <ArenaLists::ArenaAllocMode hasFreeThings>
+inline TenuredCell *
+ArenaLists::allocateFromArenaInner(JS::Zone *zone, ArenaHeader *aheader, AllocKind thingKind)
+{
+    size_t thingSize = Arena::thingSize(thingKind);
+
+    FreeSpan span;
+    if (hasFreeThings) {
+        MOZ_ASSERT(aheader->hasFreeThings());
+        span = aheader->getFirstFreeSpan();
+        aheader->setAsFullyUsed();
+    } else {
+        MOZ_ASSERT(!aheader->hasFreeThings());
+        Arena *arena = aheader->getArena();
+        span.initFinal(arena->thingsStart(thingKind), arena->thingsEnd() - thingSize, thingSize);
+    }
+    freeLists[thingKind].setHead(&span);
+
+    if (MOZ_UNLIKELY(zone->wasGCStarted()))
+        zone->runtimeFromAnyThread()->gc.arenaAllocatedDuringGC(zone, aheader);
+    TenuredCell *thing = freeLists[thingKind].allocate(thingSize);
+    MOZ_ASSERT(thing); // This allocation is infallible.
+    return thing;
 }
 
 void

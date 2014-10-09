@@ -446,11 +446,15 @@ class ArenaList {
         return *cursorp_;
     }
 
-    // This moves the cursor past |aheader|. |aheader| must be an arena within
-    // this list.
-    void moveCursorPast(ArenaHeader *aheader) {
+    // This returns the arena after the cursor and moves the cursor past it.
+    ArenaHeader *takeNextArena() {
+        check();
+        ArenaHeader *aheader = *cursorp_;
+        if (!aheader)
+            return nullptr;
         cursorp_ = &aheader->next;
         check();
+        return aheader;
     }
 
     // This does two things.
@@ -806,6 +810,11 @@ class ArenaLists
         return freeLists[thingKind].allocate(thingSize);
     }
 
+    // Returns false on Out-Of-Memory. This method makes no attempt to
+    // synchronize with background finalization, so may miss available memory
+    // that is waiting to be finalized.
+    TenuredCell *allocateFromArena(JS::Zone *zone, AllocKind thingKind);
+
     /*
      * Moves all arenas from |fromArenaLists| into |this|.  In
      * parallel blocks, we temporarily create one ArenaLists per
@@ -851,18 +860,17 @@ class ArenaLists
     inline void queueForForegroundSweep(FreeOp *fop, AllocKind thingKind);
     inline void queueForBackgroundSweep(FreeOp *fop, AllocKind thingKind);
 
-    // Returns false on Out-Of-Memory. This method makes no attempt to
-    // synchronize with background finalization, so may miss available memory
-    // that is waiting to be finalized.
-    TenuredCell *allocateFromArena(JS::Zone *zone, AllocKind thingKind);
     TenuredCell *allocateFromArena(JS::Zone *zone, AllocKind thingKind,
                                    AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc);
+
+    enum ArenaAllocMode { HasFreeThings = true, IsEmpty = false };
+    template <ArenaAllocMode hasFreeThings>
+    inline TenuredCell *allocateFromArenaInner(JS::Zone *zone, ArenaHeader *aheader,
+                                               AllocKind thingKind);
 
     inline void normalizeBackgroundFinalizeState(AllocKind thingKind);
 
     friend class GCRuntime;
-    friend class js::Nursery;
-    friend class ForkJoinNursery;
 };
 
 /*
