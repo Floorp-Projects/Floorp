@@ -394,6 +394,24 @@ const CustomizableWidgets = [
       clearSubview(doc.getElementById("PanelUI-sidebarItems"));
     }
   }, {
+    id: "social-share-button",
+    tooltiptext: "social-share-button.label",
+    label: "social-share-button.tooltiptext",
+    // custom build our button so we can attach to the share command
+    type: "custom",
+    onBuild: function(aDocument) {
+      let node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+      node.setAttribute("id", this.id);
+      node.classList.add("toolbarbutton-1");
+      node.classList.add("chromeclass-toolbar-additional");
+      node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
+      node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
+      node.setAttribute("removable", "true");
+      node.setAttribute("observes", "Social:PageShareOrMark");
+      node.setAttribute("command", "Social:SharePage");
+      return node;
+    }
+  }, {
     id: "add-ons-button",
     shortcutId: "key_openAddons",
     tooltiptext: "add-ons-button.tooltiptext3",
