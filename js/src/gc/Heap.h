@@ -473,7 +473,7 @@ class FreeList
     }
 #endif
 
-    MOZ_ALWAYS_INLINE void *allocate(size_t thingSize) {
+    MOZ_ALWAYS_INLINE TenuredCell *allocate(size_t thingSize) {
         MOZ_ASSERT(thingSize % CellSize == 0);
         head.checkSpan(thingSize);
         uintptr_t thing = head.first;
@@ -492,7 +492,7 @@ class FreeList
         }
         head.checkSpan(thingSize);
         JS_EXTRA_POISON(reinterpret_cast<void *>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
-        return reinterpret_cast<void *>(thing);
+        return reinterpret_cast<TenuredCell *>(thing);
     }
 };
 
