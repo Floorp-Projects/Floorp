@@ -6,6 +6,7 @@
 #include "nsISupports.idl"
 #include "nsIThread.idl"
 #include "nsIPrincipal.idl"
+#include "nsIFile.idl"
 
 %{C++
 #include "nsTArray.h"
@@ -25,7 +26,7 @@ class GMPVideoHost;
 [ptr] native GMPDecryptorProxy(GMPDecryptorProxy);
 [ptr] native GMPAudioDecoderProxy(GMPAudioDecoderProxy);
 
-[scriptable, uuid(3d811f9f-e1f8-48a5-a385-3657a641ee76)]
+[scriptable, uuid(e5cde76d-f926-4b3f-84ff-62864c7a750a)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
 
@@ -96,4 +97,10 @@ interface mozIGeckoMediaPluginService : nsISupports
   ACString getNodeId(in AString origin,
                      in AString topLevelOrigin,
                      in bool inPrivateBrowsingMode);
+
+  /**
+   * Returns the directory to use as the base for storing data about GMPs.
+   */
+  nsIFile getStorageDir();
+
 };
