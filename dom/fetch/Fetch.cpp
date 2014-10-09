@@ -50,6 +50,22 @@ ExtractFromArrayBufferView(const ArrayBufferView& aBuffer,
 }
 
 nsresult
+ExtractFromBlob(const File& aFile, nsIInputStream** aStream,
+                nsCString& aContentType)
+{
+  nsRefPtr<FileImpl> impl = aFile.Impl();
+  nsresult rv = impl->GetInternalStream(aStream);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsString type;
+  impl->GetType(type);
+  aContentType = NS_ConvertUTF16toUTF8(type);
+  return NS_OK;
+}
+
+nsresult
 ExtractFromScalarValueString(const nsString& aStr,
                              nsIInputStream** aStream,
                              nsCString& aContentType)
@@ -99,7 +115,7 @@ ExtractFromURLSearchParams(const URLSearchParams& aParams,
 }
 
 nsresult
-ExtractByteStreamFromBody(const OwningArrayBufferOrArrayBufferViewOrScalarValueStringOrURLSearchParams& aBodyInit,
+ExtractByteStreamFromBody(const OwningArrayBufferOrArrayBufferViewOrBlobOrScalarValueStringOrURLSearchParams& aBodyInit,
                           nsIInputStream** aStream,
                           nsCString& aContentType)
 {
@@ -111,6 +127,9 @@ ExtractByteStreamFromBody(const OwningArrayBufferOrArrayBufferViewOrScalarValueS
   } else if (aBodyInit.IsArrayBufferView()) {
     const ArrayBufferView& buf = aBodyInit.GetAsArrayBufferView();
     return ExtractFromArrayBufferView(buf, aStream);
+  } else if (aBodyInit.IsBlob()) {
+    const File& blob = aBodyInit.GetAsBlob();
+    return ExtractFromBlob(blob, aStream, aContentType);
   } else if (aBodyInit.IsScalarValueString()) {
     nsAutoString str;
     str.Assign(aBodyInit.GetAsScalarValueString());
@@ -125,7 +144,7 @@ ExtractByteStreamFromBody(const OwningArrayBufferOrArrayBufferViewOrScalarValueS
 }
 
 nsresult
-ExtractByteStreamFromBody(const ArrayBufferOrArrayBufferViewOrScalarValueStringOrURLSearchParams& aBodyInit,
+ExtractByteStreamFromBody(const ArrayBufferOrArrayBufferViewOrBlobOrScalarValueStringOrURLSearchParams& aBodyInit,
                           nsIInputStream** aStream,
                           nsCString& aContentType)
 {
@@ -137,6 +156,9 @@ ExtractByteStreamFromBody(const ArrayBufferOrArrayBufferViewOrScalarValueStringO
   } else if (aBodyInit.IsArrayBufferView()) {
     const ArrayBufferView& buf = aBodyInit.GetAsArrayBufferView();
     return ExtractFromArrayBufferView(buf, aStream);
+  } else if (aBodyInit.IsBlob()) {
+    const File& blob = aBodyInit.GetAsBlob();
+    return ExtractFromBlob(blob, aStream, aContentType);
   } else if (aBodyInit.IsScalarValueString()) {
     nsAutoString str;
     str.Assign(aBodyInit.GetAsScalarValueString());
