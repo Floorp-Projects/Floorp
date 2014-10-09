@@ -229,6 +229,8 @@ public class BrowserApp extends GeckoApp
 
     private BrowserHealthReporter mBrowserHealthReporter;
 
+    private SystemBarTintManager mTintManager;
+
     // The tab to be selected on editing mode exit.
     private Integer mTargetTabForEditingMode;
 
@@ -681,9 +683,9 @@ public class BrowserApp extends GeckoApp
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 
-        SystemBarTintManager tintManager = new SystemBarTintManager(this);
-        tintManager.setTintColor(getResources().getColor(R.color.background_tabs));
-        tintManager.setStatusBarTintEnabled(true);
+        mTintManager = new SystemBarTintManager(this);
+        mTintManager.setTintColor(getResources().getColor(R.color.background_tabs));
+        mTintManager.setStatusBarTintEnabled(true);
     }
 
     /**
@@ -2648,6 +2650,10 @@ public class BrowserApp extends GeckoApp
                         mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
                         mLayerView.getLayerMarginsAnimator().setMaxMargins(0, mToolbarHeight, 0, 0);
                     }
+                }
+
+                if (mTintManager != null) {
+                    mTintManager.setStatusBarTintEnabled(!fullscreen);
                 }
             }
         });
