@@ -130,6 +130,7 @@
 #include "ipc/Nuwa.h"
 #endif
 
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/cellbroadcast/CellBroadcastIPCService.h"
 #include "mozilla/dom/mobileconnection/MobileConnectionChild.h"
 #include "mozilla/dom/mobilemessage/SmsChild.h"
@@ -144,7 +145,6 @@
 #include "mozilla/dom/PSpeechSynthesisChild.h"
 #endif
 
-#include "nsDOMFile.h"
 #include "ProcessUtils.h"
 #include "StructuredCloneUtils.h"
 #include "URIUtils.h"

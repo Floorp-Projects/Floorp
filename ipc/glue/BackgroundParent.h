@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class ContentParent;
-class DOMFileImpl;
+class FileImpl;
 class PBlobParent;
 
 } // namespace dom
@@ -32,7 +32,7 @@ class BackgroundParent MOZ_FINAL
 
   typedef base::ProcessId ProcessId;
   typedef mozilla::dom::ContentParent ContentParent;
-  typedef mozilla::dom::DOMFileImpl DOMFileImpl;
+  typedef mozilla::dom::FileImpl FileImpl;
   typedef mozilla::ipc::Transport Transport;
 
 public:
@@ -56,7 +56,7 @@ public:
 
   static mozilla::dom::PBlobParent*
   GetOrCreateActorForBlobImpl(PBackgroundParent* aBackgroundActor,
-                              DOMFileImpl* aBlobImpl);
+                              FileImpl* aBlobImpl);
 
   // Get a value that represents the ContentParent associated with the parent
   // actor for comparison. The value is not guaranteed to uniquely identify the

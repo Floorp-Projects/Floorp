@@ -40,7 +40,7 @@ class WrapperOwner : public virtual JavaScriptShared
                                   JS::MutableHandle<JSPropertyDescriptor> desc);
     bool defineProperty(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                         JS::MutableHandle<JSPropertyDescriptor> desc);
-    bool getOwnPropertyNames(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
+    bool ownPropertyKeys(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
     bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
     bool enumerate(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
 
@@ -93,8 +93,8 @@ class WrapperOwner : public virtual JavaScriptShared
   private:
     ObjectId idOfUnchecked(JSObject *obj);
 
-    bool getPropertyNames(JSContext *cx, JS::HandleObject proxy, uint32_t flags,
-                          JS::AutoIdVector &props);
+    bool getPropertyKeys(JSContext *cx, JS::HandleObject proxy, uint32_t flags,
+                         JS::AutoIdVector &props);
 
     // Catastrophic IPC failure.
     bool ipcfail(JSContext *cx);
@@ -145,8 +145,8 @@ class WrapperOwner : public virtual JavaScriptShared
     virtual bool SendRegExpToShared(const ObjectId &objId, ReturnStatus *rs, nsString *source,
                                     uint32_t *flags) = 0;
 
-    virtual bool SendGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
-                                      ReturnStatus *rs, nsTArray<nsString> *names) = 0;
+    virtual bool SendGetPropertyKeys(const ObjectId &objId, const uint32_t &flags,
+                                     ReturnStatus *rs, nsTArray<nsString> *names) = 0;
     virtual bool SendInstanceOf(const ObjectId &objId, const JSIID &iid,
                                 ReturnStatus *rs, bool *instanceof) = 0;
     virtual bool SendDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,

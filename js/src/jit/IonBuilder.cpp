@@ -7224,8 +7224,8 @@ IonBuilder::checkTypedObjectIndexInBounds(int32_t elemSize,
         // If we are not loading the length from the object itself,
         // then we still need to check if the object was neutered.
         *canBeNeutered = true;
-    } else {
-        MInstruction *lengthValue = MLoadFixedSlot::New(alloc(), obj, JS_BUFVIEW_SLOT_LENGTH);
+    } else if (objPrediction.kind() == type::UnsizedArray) {
+        MInstruction *lengthValue = MLoadFixedSlot::New(alloc(), obj, OutlineTypedObject::LENGTH_SLOT);
         current->add(lengthValue);
 
         MInstruction *length32 = MTruncateToInt32::New(alloc(), lengthValue);
@@ -7237,6 +7237,8 @@ IonBuilder::checkTypedObjectIndexInBounds(int32_t elemSize,
         // then we do not need an extra neuter check, because the length
         // will have been set to 0 when the object was neutered.
         *canBeNeutered = false;
+    } else {
+        return false;
     }
 
     index = addBoundsCheck(idInt32, length);
@@ -7270,7 +7272,7 @@ IonBuilder::getElemTryScalarElemOfTypedObject(bool *emitted,
     if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction,
                                        &indexAsByteOffset, &canBeNeutered))
     {
-        return false;
+        return true;
     }
 
     return pushScalarLoadFromTypedObject(emitted, obj, indexAsByteOffset, elemType, canBeNeutered);
@@ -7335,7 +7337,7 @@ IonBuilder::getElemTryComplexElemOfTypedObject(bool *emitted,
     if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction,
                                        &indexAsByteOffset, &canBeNeutered))
     {
-        return false;
+        return true;
     }
 
     return pushDerivedTypedObject(emitted, obj, indexAsByteOffset,
@@ -8125,7 +8127,7 @@ IonBuilder::setElemTryScalarElemOfTypedObject(bool *emitted,
     if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction,
                                        &indexAsByteOffset, &canBeNeutered))
     {
-        return false;
+        return true;
     }
 
     // Store the element
@@ -9025,10 +9027,6 @@ IonBuilder::jsop_getprop(PropertyName *name)
     MDefinition *obj = current->pop();
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
 
-    // Try to optimize to a specific constant.
-    if (!getPropTryInferredConstant(&emitted, obj, name, types) || emitted)
-        return emitted;
-
     // Try to optimize arguments.length.
     if (!getPropTryArgumentsLength(&emitted, obj) || emitted)
         return emitted;
@@ -9039,6 +9037,12 @@ IonBuilder::jsop_getprop(PropertyName *name)
 
     BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
                                                        obj, name, types);
+
+    // Try to optimize to a specific constant.
+    if (barrier == BarrierKind::NoBarrier) {
+        if (!getPropTryInferredConstant(&emitted, obj, name, types) || emitted)
+            return emitted;
+    }
 
     // Always use a call if we are performing analysis and
     // not actually emitting code, to simplify later analysis. Also skip deeper

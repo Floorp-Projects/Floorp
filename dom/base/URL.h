@@ -23,6 +23,7 @@ class DOMMediaStream;
 
 namespace dom {
 
+class File;
 class MediaSource;
 class GlobalObject;
 struct objectURLOptions;
@@ -53,7 +54,7 @@ public:
               const nsAString& aBase, ErrorResult& aRv);
 
   static void CreateObjectURL(const GlobalObject& aGlobal,
-                              nsIDOMBlob* aBlob,
+                              File& aBlob,
                               const objectURLOptions& aOptions,
                               nsString& aResult,
                               ErrorResult& aError);

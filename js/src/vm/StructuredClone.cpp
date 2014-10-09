@@ -947,7 +947,7 @@ JSStructuredCloneWriter::traverseObject(HandleObject obj)
      * will come off the stack in forward order.
      */
     AutoIdVector properties(context());
-    if (!GetPropertyNames(context(), obj, JSITER_OWNONLY, &properties))
+    if (!GetPropertyKeys(context(), obj, JSITER_OWNONLY, &properties))
         return false;
 
     for (size_t i = properties.length(); i > 0; --i) {

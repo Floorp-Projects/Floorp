@@ -398,8 +398,7 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
   visibility: visible;
 }
 
-#urlbar:not([actiontype]) > #urlbar-display-box,
-#urlbar:not([actiontype="switchtab"]) > #urlbar-display-box > .urlbar-display-switchtab {
+#urlbar:not([actiontype="switchtab"]) > #urlbar-display-box {
   display: none;
 }
 
