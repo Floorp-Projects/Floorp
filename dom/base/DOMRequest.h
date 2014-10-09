@@ -18,16 +18,12 @@
 namespace mozilla {
 namespace dom {
 
-class AnyCallback;
-class Promise;
-
 class DOMRequest : public DOMEventTargetHelper,
                    public nsIDOMDOMRequest
 {
 protected:
   JS::Heap<JS::Value> mResult;
   nsRefPtr<DOMError> mError;
-  nsRefPtr<Promise> mPromise;
   bool mDone;
 
 public:
@@ -71,9 +67,6 @@ public:
   IMPL_EVENT_HANDLER(success)
   IMPL_EVENT_HANDLER(error)
 
-  already_AddRefed<mozilla::dom::Promise>
-  Then(JSContext* aCx, AnyCallback* aResolveCallback,
-       AnyCallback* aRejectCallback, ErrorResult& aRv);
 
   void FireSuccess(JS::Handle<JS::Value> aResult);
   void FireError(const nsAString& aError);
@@ -83,7 +76,11 @@ public:
   explicit DOMRequest(nsPIDOMWindow* aWindow);
 
 protected:
-  virtual ~DOMRequest();
+  virtual ~DOMRequest()
+  {
+    mResult = JSVAL_VOID;
+    mozilla::DropJSObjects(this);
+  }
 
   void FireEvent(const nsAString& aType, bool aBubble, bool aCancelable);
 
