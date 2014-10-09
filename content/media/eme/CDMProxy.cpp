@@ -41,13 +41,12 @@ CDMProxy::Init(PromiseId aPromiseId)
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
 
-  nsresult rv = mKeys->GetOrigin(mOrigin);
-  if (NS_FAILED(rv)) {
+  mNodeId = mKeys->GetNodeId();
+  if (mNodeId.IsEmpty()) {
     RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  EME_LOG("Creating CDMProxy for origin='%s'",
-          NS_ConvertUTF16toUTF8(GetOrigin()).get());
+  EME_LOG("Creating CDMProxy for origin='%s'", GetNodeId().get());
 
   if (!mGMPThread) {
     nsCOMPtr<mozIGeckoMediaPluginService> mps =
@@ -89,7 +88,7 @@ CDMProxy::gmp_Init(uint32_t aPromiseId)
 
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_ConvertUTF16toUTF8(mKeySystem));
-  nsresult rv = mps->GetGMPDecryptor(&tags, GetOrigin(), &mCDM);
+  nsresult rv = mps->GetGMPDecryptor(&tags, GetNodeId(), &mCDM);
   if (NS_FAILED(rv) || !mCDM) {
     RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
   } else {
@@ -304,7 +303,9 @@ CDMProxy::Shutdown()
   mKeys.Clear();
   // Note: This may end up being the last owning reference to the CDMProxy.
   nsRefPtr<nsIRunnable> task(NS_NewRunnableMethod(this, &CDMProxy::gmp_Shutdown));
-  mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  if (mGMPThread) {
+    mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  }
 }
 
 void
@@ -356,10 +357,10 @@ CDMProxy::ResolvePromise(PromiseId aId)
   }
 }
 
-const nsAString&
-CDMProxy::GetOrigin() const
+const nsCString&
+CDMProxy::GetNodeId() const
 {
-  return mOrigin;
+  return mNodeId;
 }
 
 void

@@ -107,7 +107,7 @@ public:
   // Resolves promise with "undefined".
   void ResolvePromise(PromiseId aId);
 
-  nsresult GetOrigin(nsString& aOutOrigin);
+  const nsCString& GetNodeId();
 
   void Shutdown();
 
@@ -122,6 +122,7 @@ private:
 
   nsCOMPtr<nsPIDOMWindow> mParent;
   nsString mKeySystem;
+  nsCString mNodeId;
   KeySessionHashMap mKeySessions;
   PromiseHashMap mPromises;
   PendingKeySessionsHashMap mPendingSessions;
