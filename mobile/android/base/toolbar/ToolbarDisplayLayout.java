@@ -161,10 +161,15 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
                     (LinearLayout.LayoutParams) mSiteSecurity.getLayoutParams();
             lp.height = res.getDimensionPixelSize(R.dimen.new_tablet_site_security_height);
             lp.width = res.getDimensionPixelSize(R.dimen.new_tablet_site_security_width);
+            // TODO: Override a common static value when new tablet is standard.
+            lp.rightMargin = res.getDimensionPixelSize(R.dimen.new_tablet_site_security_right_margin);
             mSiteSecurity.setLayoutParams(lp);
             final int siteSecurityVerticalPadding =
                     res.getDimensionPixelSize(R.dimen.new_tablet_site_security_padding_vertical);
-            mSiteSecurity.setPadding(0, siteSecurityVerticalPadding, 0, siteSecurityVerticalPadding);
+            final int siteSecurityHorizontalPadding =
+                    res.getDimensionPixelSize(R.dimen.new_tablet_site_security_padding_horizontal);
+            mSiteSecurity.setPadding(siteSecurityHorizontalPadding, siteSecurityVerticalPadding,
+                    siteSecurityHorizontalPadding, siteSecurityVerticalPadding);
 
             // We don't show favicons in the toolbar on new tablet. Note that while we could
             // null the favicon reference, we don't do so to avoid excessive null-checking.
