@@ -210,6 +210,8 @@ SharedSurface::SharedSurface(SharedSurfaceType type,
     , mSize(size)
     , mHasAlpha(hasAlpha)
     , mIsLocked(false)
+    , mIsProducerAcquired(false)
+    , mIsConsumerAcquired(false)
 #ifdef DEBUG
     , mOwningThread(NS_GetCurrentThread())
 #endif
