@@ -368,6 +368,11 @@ public:
       return;
     }
 
+    if (aConnectionStatus != 0) {
+      mImpl->mConsumer->NotifyError();
+      return;
+    }
+
     mImpl->mConsumer->SetAddress(aBdAddress);
     XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new AcceptTask(mImpl, aFd));
   }
@@ -376,6 +381,14 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
     BT_LOGR("BluetoothSocketInterface::Accept failed: %d", (int)aStatus);
+
+    if (!mImpl->IsShutdownOnMainThread()) {
+      // Instead of NotifyError(), call NotifyDisconnect() to trigger
+      // BluetoothOppManager::OnSocketDisconnect() as
+      // DroidSocketImpl::OnFileCanReadWithoutBlocking() in Firefox OS 2.0 in
+      // order to keep the same behavior and reduce regression risk.
+      mImpl->mConsumer->NotifyDisconnect();
+    }
   }
 
 private:
@@ -504,9 +517,17 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (!mImpl->IsShutdownOnMainThread()) {
-      mImpl->mConsumer->SetAddress(aBdAddress);
+    if (mImpl->IsShutdownOnMainThread()) {
+      BT_LOGD("mConsumer is null, aborting send!");
+      return;
     }
+
+    if (aConnectionStatus != 0) {
+      mImpl->mConsumer->NotifyError();
+      return;
+    }
+
+    mImpl->mConsumer->SetAddress(aBdAddress);
     XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                      new SocketConnectTask(mImpl, aFd));
   }
@@ -515,6 +536,14 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
     BT_WARNING("Connect failed: %d", (int)aStatus);
+
+    if (!mImpl->IsShutdownOnMainThread()) {
+      // Instead of NotifyError(), call NotifyDisconnect() to trigger
+      // BluetoothOppManager::OnSocketDisconnect() as
+      // DroidSocketImpl::OnFileCanReadWithoutBlocking() in Firefox OS 2.0 in
+      // order to keep the same behavior and reduce regression risk.
+      mImpl->mConsumer->NotifyDisconnect();
+    }
   }
 
 private:
