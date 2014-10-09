@@ -366,16 +366,11 @@ MediaKeys::GetSession(const nsAString& aSessionId)
   return session.forget();
 }
 
-const nsCString&
-MediaKeys::GetNodeId()
+nsresult
+MediaKeys::GetOrigin(nsString& aOutOrigin)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
   // TODO: Bug 1035637, return a combination of origin and URL bar origin.
-
-  if (!mNodeId.IsEmpty()) {
-    return mNodeId;
-  }
 
   nsIPrincipal* principal = nullptr;
   nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(GetParentObject());
@@ -384,13 +379,13 @@ MediaKeys::GetNodeId()
   if (scriptPrincipal) {
     principal = scriptPrincipal->GetPrincipal();
   }
-  nsAutoString id;
-  if (principal && NS_SUCCEEDED(nsContentUtils::GetUTFOrigin(principal, id))) {
-    CopyUTF16toUTF8(id, mNodeId);
-    EME_LOG("EME Origin = '%s'", mNodeId.get());
-  }
+  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 
-  return mNodeId;
+  nsresult res = nsContentUtils::GetUTFOrigin(principal, aOutOrigin);
+
+  EME_LOG("EME Origin = '%s'", NS_ConvertUTF16toUTF8(aOutOrigin).get());
+
+  return res;
 }
 
 bool

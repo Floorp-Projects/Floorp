@@ -56,7 +56,7 @@ public:
 
 // We store the records in files in the system temp dir.
 static nsresult
-GetGMPStorageDir(nsIFile** aTempDir, const nsCString& aNodeId)
+GetGMPStorageDir(nsIFile** aTempDir, const nsString& aOrigin)
 {
   if (NS_WARN_IF(!aTempDir)) {
     return NS_ERROR_INVALID_ARG;
@@ -82,7 +82,7 @@ GetGMPStorageDir(nsIFile** aTempDir, const nsCString& aNodeId)
   // process (a UUID or somesuch), we can just append it un-hashed here.
   // This should reduce the chance of hash collsions exposing data.
   nsAutoString nodeIdHash;
-  nodeIdHash.AppendInt(HashString(aNodeId));
+  nodeIdHash.AppendInt(HashString(static_cast<const char16_t*>(aOrigin.get())));
   rv = tmpFile->Append(nodeIdHash);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -98,9 +98,9 @@ GetGMPStorageDir(nsIFile** aTempDir, const nsCString& aNodeId)
   return NS_OK;
 }
 
-GMPStorageParent::GMPStorageParent(const nsCString& aNodeId,
+GMPStorageParent::GMPStorageParent(const nsString& aOrigin,
                                    GMPParent* aPlugin)
-  : mNodeId(aNodeId)
+  : mOrigin(aOrigin)
   , mPlugin(aPlugin)
   , mShutdown(false)
 {
@@ -110,7 +110,7 @@ enum OpenFileMode  { ReadWrite, Truncate };
 
 nsresult
 OpenStorageFile(const nsCString& aRecordName,
-                const nsCString& aNodeId,
+                const nsString& aNodeId,
                 const OpenFileMode aMode,
                 PRFileDesc** aOutFD)
 {
@@ -141,10 +141,10 @@ GMPStorageParent::RecvOpen(const nsCString& aRecordName)
     return true;
   }
 
-  if (mNodeId.EqualsLiteral("null")) {
-    // Refuse to open storage if the page is opened from local disk,
-    // or shared across origin.
-    NS_WARNING("Refusing to open storage for null NodeId");
+  if (mOrigin.EqualsASCII("null")) {
+    // Refuse to open storage if the page is the "null" origin; if the page
+    // is opened from disk.
+    NS_WARNING("Refusing to open storage for null origin");
     unused << SendOpenComplete(aRecordName, GMPGenericErr);
     return true;
   }
@@ -155,7 +155,7 @@ GMPStorageParent::RecvOpen(const nsCString& aRecordName)
   }
 
   PRFileDesc* fd = nullptr;
-  nsresult rv = OpenStorageFile(aRecordName, mNodeId, ReadWrite, &fd);
+  nsresult rv = OpenStorageFile(aRecordName, mOrigin, ReadWrite, &fd);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to open storage file.");
     unused << SendOpenComplete(aRecordName, GMPGenericErr);
@@ -224,7 +224,7 @@ GMPStorageParent::RecvWrite(const nsCString& aRecordName,
   // in truncate mode, to clear its contents.
   PR_Close(fd);
   mFiles.Remove(aRecordName);
-  if (NS_FAILED(OpenStorageFile(aRecordName, mNodeId, Truncate, &fd))) {
+  if (NS_FAILED(OpenStorageFile(aRecordName, mOrigin, Truncate, &fd))) {
     unused << SendWriteComplete(aRecordName, GMPGenericErr);
     return true;
   }

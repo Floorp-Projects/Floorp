@@ -233,7 +233,7 @@ EMEH264Decoder::GmpInit()
   tags.AppendElement(NS_LITERAL_CSTRING("h264"));
   tags.AppendElement(NS_ConvertUTF16toUTF8(mProxy->KeySystem()));
   nsresult rv = mMPS->GetGMPVideoDecoder(&tags,
-                                         mProxy->GetNodeId(),
+                                         mProxy->GetOrigin(),
                                          &mHost,
                                          &mGMP);
   NS_ENSURE_SUCCESS(rv, rv);
