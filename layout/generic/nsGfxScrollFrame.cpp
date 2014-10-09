@@ -2516,6 +2516,7 @@ void
 ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists,
+                                           bool                    aUsingDisplayPort,
                                            bool                    aCreateLayer,
                                            bool                    aPositioned)
 {
@@ -2564,11 +2565,18 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
       flags |= nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR;
     }
 
+    // The display port doesn't necessarily include the scrollbars, so just
+    // include all of the scrollbars if we have a display port.
+    nsRect dirty = aUsingDisplayPort ?
+      scrollParts[i]->GetVisualOverflowRectRelativeToParent() : aDirtyRect;
+    nsDisplayListBuilder::AutoBuildingDisplayList
+      buildingForChild(aBuilder, scrollParts[i],
+                       dirty + mOuter->GetOffsetTo(scrollParts[i]), true);
     nsDisplayListBuilder::AutoCurrentScrollbarInfoSetter
       infoSetter(aBuilder, scrollTargetId, flags);
     nsDisplayListCollection partList;
     mOuter->BuildDisplayListForChild(
-      aBuilder, scrollParts[i], aDirtyRect, partList,
+      aBuilder, scrollParts[i], dirty, partList,
       nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
 
     // Always create layers for overlay scrollbars so that we don't create a
@@ -2783,16 +2791,10 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     bool usingDisplayPort = nsLayoutUtils::GetDisplayPort(mOuter->GetContent());
     bool addScrollBars = mIsRoot && usingDisplayPort && !aBuilder->IsForEventDelivery();
 
-    nsRect scrollbarDirty = aDirtyRect;
-    if (usingDisplayPort) {
-      // Make sure we include the scrollbars.
-      scrollbarDirty.Inflate(GetActualScrollbarSizes());
-    }
-
     if (addScrollBars) {
       // Add classic scrollbars.
-      AppendScrollPartsTo(aBuilder, scrollbarDirty, aLists, createLayersForScrollbars,
-                          false);
+      AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, usingDisplayPort,
+                          createLayersForScrollbars, false);
     }
 
     // Don't clip the scrolled child, and don't paint scrollbars/scrollcorner.
@@ -2803,7 +2805,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     if (addScrollBars) {
       // Add overlay scrollbars.
-      AppendScrollPartsTo(aBuilder, scrollbarDirty, aLists,
+      AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, usingDisplayPort,
                           createLayersForScrollbars, true);
     }
 
@@ -2850,12 +2852,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
-  nsRect scrollbarDirty = aDirtyRect;
-  if (usingDisplayport) {
-    // Make sure we include the scrollbars.
-    scrollbarDirty.Inflate(GetActualScrollbarSizes());
-  }
-
   // Now display the scrollbars and scrollcorner. These parts are drawn
   // in the border-background layer, on top of our own background and
   // borders and underneath borders and backgrounds of later elements
@@ -2863,8 +2859,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Note that this does not apply for overlay scrollbars; those are drawn
   // in the positioned-elements layer on top of everything else by the call
   // to AppendScrollPartsTo(..., true) further down.
-  AppendScrollPartsTo(aBuilder, scrollbarDirty, aLists, createLayersForScrollbars,
-                      false);
+  AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, usingDisplayport,
+                      createLayersForScrollbars, false);
 
   if (aBuilder->IsForImageVisibility()) {
     // We expand the dirty rect to catch images just outside of the scroll port.
@@ -3004,7 +3000,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
   // Now display overlay scrollbars and the resizer, if we have one.
-  AppendScrollPartsTo(aBuilder, scrollbarDirty, scrolledContent,
+  AppendScrollPartsTo(aBuilder, aDirtyRect, scrolledContent, usingDisplayport,
                       createLayersForScrollbars, true);
   scrolledContent.MoveTo(aLists);
 }
