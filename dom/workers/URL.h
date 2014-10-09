@@ -17,6 +17,7 @@ class nsIPrincipal;
 
 namespace mozilla {
 namespace dom {
+class File;
 struct objectURLOptions;
 }
 }
@@ -63,7 +64,7 @@ public:
 
   static void
   CreateObjectURL(const GlobalObject& aGlobal,
-                  JSObject& aArg, const objectURLOptions& aOptions,
+                  File& aArg, const objectURLOptions& aOptions,
                   nsString& aResult, ErrorResult& aRv);
 
   static void

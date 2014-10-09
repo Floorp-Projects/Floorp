@@ -10,10 +10,10 @@
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 
+#include "mozilla/dom/File.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
 #include "nsCOMPtr.h"
-#include "nsDOMFile.h"
 #include "nsThreadUtils.h"
 #include "DOMMediaStream.h"
 #include "nsDirectoryServiceDefs.h"

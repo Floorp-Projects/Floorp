@@ -181,7 +181,7 @@ FilePicker.prototype = {
     }
 
     // The name to be shown can be part of the message, or can be taken from
-    // the DOMFile (if the blob is a DOMFile).
+    // the File (if the blob is a File).
     let name = data.result.name;
     if (!name &&
         (data.result.blob instanceof this.mParent.File) &&
@@ -207,9 +207,9 @@ FilePicker.prototype = {
       }
     }
 
-    let file = new this.mParent.File(data.result.blob,
-                                     { name: name,
-                                       type: data.result.blob.type });
+    let file = new this.mParent.File([data.result.blob],
+                                     name,
+                                     { type: data.result.blob.type });
 
     if (file) {
       this.fireSuccess(file);

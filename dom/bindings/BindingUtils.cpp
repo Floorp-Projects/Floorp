@@ -1395,11 +1395,11 @@ XrayDefineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 
 template<typename SpecType>
 bool
-XrayEnumerateAttributesOrMethods(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                                 JS::Handle<JSObject*> obj,
-                                 const Prefable<const SpecType>* list,
-                                 jsid* ids, const SpecType* specList,
-                                 unsigned flags, JS::AutoIdVector& props)
+XrayAttributeOrMethodKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                          JS::Handle<JSObject*> obj,
+                          const Prefable<const SpecType>* list,
+                          jsid* ids, const SpecType* specList,
+                          unsigned flags, JS::AutoIdVector& props)
 {
   for (; list->specs; ++list) {
     if (list->isEnabled(cx, obj)) {
@@ -1418,41 +1418,41 @@ XrayEnumerateAttributesOrMethods(JSContext* cx, JS::Handle<JSObject*> wrapper,
   return true;
 }
 
-#define ENUMERATE_IF_DEFINED(fieldName) {                                     \
+#define ADD_KEYS_IF_DEFINED(fieldName) {                                      \
   if (nativeProperties->fieldName##s &&                                       \
-      !XrayEnumerateAttributesOrMethods(cx, wrapper, obj,                     \
-                                        nativeProperties->fieldName##s,       \
-                                        nativeProperties->fieldName##Ids,     \
-                                        nativeProperties->fieldName##Specs,   \
-                                        flags, props)) {                      \
+      !XrayAttributeOrMethodKeys(cx, wrapper, obj,                            \
+                                 nativeProperties->fieldName##s,              \
+                                 nativeProperties->fieldName##Ids,            \
+                                 nativeProperties->fieldName##Specs,          \
+                                 flags, props)) {                             \
     return false;                                                             \
   }                                                                           \
 }
 
 
 bool
-XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                        JS::Handle<JSObject*> obj,
-                        unsigned flags, JS::AutoIdVector& props,
-                        DOMObjectType type,
-                        const NativeProperties* nativeProperties)
+XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                    JS::Handle<JSObject*> obj,
+                    unsigned flags, JS::AutoIdVector& props,
+                    DOMObjectType type,
+                    const NativeProperties* nativeProperties)
 {
   MOZ_ASSERT(type != eNamedPropertiesObject);
 
   if (IsInstance(type)) {
-    ENUMERATE_IF_DEFINED(unforgeableMethod);
-    ENUMERATE_IF_DEFINED(unforgeableAttribute);
+    ADD_KEYS_IF_DEFINED(unforgeableMethod);
+    ADD_KEYS_IF_DEFINED(unforgeableAttribute);
     if (type == eGlobalInstance && GlobalPropertiesAreOwn()) {
-      ENUMERATE_IF_DEFINED(method);
-      ENUMERATE_IF_DEFINED(attribute);
+      ADD_KEYS_IF_DEFINED(method);
+      ADD_KEYS_IF_DEFINED(attribute);
     }
   } else if (type == eInterface) {
-    ENUMERATE_IF_DEFINED(staticMethod);
-    ENUMERATE_IF_DEFINED(staticAttribute);
+    ADD_KEYS_IF_DEFINED(staticMethod);
+    ADD_KEYS_IF_DEFINED(staticAttribute);
   } else if (type != eGlobalInterfacePrototype || !GlobalPropertiesAreOwn()) {
     MOZ_ASSERT(IsInterfacePrototype(type));
-    ENUMERATE_IF_DEFINED(method);
-    ENUMERATE_IF_DEFINED(attribute);
+    ADD_KEYS_IF_DEFINED(method);
+    ADD_KEYS_IF_DEFINED(attribute);
   }
 
   if (nativeProperties->constants) {
@@ -1474,14 +1474,13 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
   return true;
 }
 
-#undef ENUMERATE_IF_DEFINED
+#undef ADD_KEYS_IF_DEFINED
 
 bool
-XrayEnumerateNativeProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                              const NativePropertyHooks* nativePropertyHooks,
-                              DOMObjectType type,
-                              JS::Handle<JSObject*> obj, unsigned flags,
-                              JS::AutoIdVector& props)
+XrayOwnNativePropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                          const NativePropertyHooks* nativePropertyHooks,
+                          DOMObjectType type, JS::Handle<JSObject*> obj,
+                          unsigned flags, JS::AutoIdVector& props)
 {
   MOZ_ASSERT(type != eNamedPropertiesObject);
 
@@ -1502,15 +1501,15 @@ XrayEnumerateNativeProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
     nativePropertyHooks->mNativeProperties;
 
   if (nativeProperties.regular &&
-      !XrayEnumerateProperties(cx, wrapper, obj, flags, props, type,
-                               nativeProperties.regular)) {
+      !XrayOwnPropertyKeys(cx, wrapper, obj, flags, props, type,
+                           nativeProperties.regular)) {
     return false;
   }
 
   if (nativeProperties.chromeOnly &&
       xpc::AccessCheck::isChrome(js::GetObjectCompartment(wrapper)) &&
-      !XrayEnumerateProperties(cx, wrapper, obj, flags, props, type,
-                               nativeProperties.chromeOnly)) {
+      !XrayOwnPropertyKeys(cx, wrapper, obj, flags, props, type,
+                           nativeProperties.chromeOnly)) {
     return false;
   }
 
@@ -1518,9 +1517,9 @@ XrayEnumerateNativeProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
 }
 
 bool
-XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                        JS::Handle<JSObject*> obj,
-                        unsigned flags, JS::AutoIdVector& props)
+XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                    JS::Handle<JSObject*> obj,
+                    unsigned flags, JS::AutoIdVector& props)
 {
   DOMObjectType type;
   const NativePropertyHooks* nativePropertyHooks =
@@ -1542,8 +1541,8 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
   }
 
   return (type == eGlobalInterfacePrototype && GlobalPropertiesAreOwn()) ||
-         XrayEnumerateNativeProperties(cx, wrapper, nativePropertyHooks, type,
-                                       obj, flags, props);
+         XrayOwnNativePropertyKeys(cx, wrapper, nativePropertyHooks, type,
+                                   obj, flags, props);
 }
 
 NativePropertyHooks sWorkerNativePropertyHooks = {

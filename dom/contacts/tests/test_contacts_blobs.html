@@ -88,14 +88,14 @@ var findResult1;
 
 function verifyBlob(blob1, blob2, isLast)
 {
-  is(blob1 instanceof SpecialPowers.Ci.nsIDOMBlob, true,
-     "blob1 is an instance of nsIDOMBlob");
-  is(blob2 instanceof SpecialPowers.Ci.nsIDOMBlob, true,
-     "blob2 is an instance of nsIDOMBlob");
-  isnot(blob1 instanceof SpecialPowers.Ci.nsIDOMFile, true,
-     "blob1 is an instance of nsIDOMFile");
-  isnot(blob2 instanceof SpecialPowers.Ci.nsIDOMFile, true,
-     "blob2 is an instance of nsIDOMFile");
+  is(blob1 instanceof Blob, true,
+     "blob1 is an instance of DOMBlob");
+  is(blob2 instanceof Blob, true,
+     "blob2 is an instance of DOMBlob");
+  isnot(blob1 instanceof File, true,
+     "blob1 is an instance of File");
+  isnot(blob2 instanceof File, true,
+     "blob2 is an instance of File");
   ise(blob1.size, blob2.size, "Same size");
   ise(blob1.type, blob2.type, "Same type");
 

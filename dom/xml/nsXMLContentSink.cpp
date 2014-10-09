@@ -663,15 +663,9 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
     return NS_OK;
   }
 
-  processor->Init(mDocument->NodePrincipal());
   processor->SetTransformObserver(this);
 
-  nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
-  if (!loadGroup) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (NS_SUCCEEDED(processor->LoadStyleSheet(aUrl, loadGroup))) {
+  if (NS_SUCCEEDED(processor->LoadStyleSheet(aUrl, mDocument))) {
     mXSLTProcessor.swap(processor);
   }
 

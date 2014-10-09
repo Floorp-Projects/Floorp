@@ -3616,7 +3616,7 @@ JS_Enumerate(JSContext *cx, HandleObject obj)
 
     AutoIdVector props(cx);
     JSIdArray *ida;
-    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &props) || !VectorToIdArray(cx, props, &ida))
+    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &props) || !VectorToIdArray(cx, props, &ida))
         return nullptr;
     return ida;
 }

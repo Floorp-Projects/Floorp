@@ -16,6 +16,8 @@
 namespace mozilla {
 namespace dom {
 
+class File;
+
 namespace mobilemessage {
 class MmsMessageData;
 } // namespace mobilemessage
@@ -31,7 +33,7 @@ public:
   // If this is changed, change the WebIDL dictionary as well.
   struct Attachment MOZ_FINAL
   {
-    nsCOMPtr<nsIDOMBlob> content;
+    nsRefPtr<File> content;
     nsString id;
     nsString location;
 

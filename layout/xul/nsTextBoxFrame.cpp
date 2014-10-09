@@ -399,6 +399,8 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
     // A mask of all possible decorations.
     uint8_t decorMask = NS_STYLE_TEXT_DECORATION_LINE_LINES_MASK;
 
+    bool vertical = GetWritingMode().IsVertical();
+
     nsIFrame* f = this;
     do {  // find decoration colors
       nsStyleContext* context = f->StyleContext();
@@ -477,14 +479,16 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
         nsCSSRendering::PaintDecorationLine(this, ctx, dirtyRect, underColor,
                           pt, xInFrame, gfxSize(width, sizePixel),
                           ascentPixel, offsetPixel,
-                          NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, underStyle);
+                          NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, underStyle,
+                          vertical);
       }
       if ((decorations & NS_FONT_DECORATION_OVERLINE) &&
           overStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
         nsCSSRendering::PaintDecorationLine(this, ctx, dirtyRect, overColor,
                           pt, xInFrame, gfxSize(width, sizePixel),
                           ascentPixel, ascentPixel,
-                          NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, overStyle);
+                          NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, overStyle,
+                          vertical);
       }
     }
 
@@ -562,7 +566,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
       nsCSSRendering::PaintDecorationLine(this, ctx, dirtyRect, strikeColor,
                         pt, xInFrame, gfxSize(width, sizePixel), ascentPixel,
                         offsetPixel, NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
-                        strikeStyle);
+                        strikeStyle, vertical);
     }
 }
 

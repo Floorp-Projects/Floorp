@@ -2,6 +2,53 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+enum IccCardState {
+  "unknown", // ICC card state is either not yet reported from modem or in an
+             // unknown state.
+  "ready",
+  "pinRequired",
+  "pukRequired",
+  "permanentBlocked",
+
+  /**
+   * Personalization States
+   */
+  "personalizationInProgress",
+  "personalizationReady",
+
+  // SIM Personalization States.
+  "networkLocked",
+  "networkSubsetLocked",
+  "corporateLocked",
+  "serviceProviderLocked",
+  "simPersonalizationLocked",
+  "networkPukRequired",
+  "networkSubsetPukRequired",
+  "corporatePukRequired",
+  "serviceProviderPukRequired",
+  "simPersonalizationPukRequired",
+
+  // RUIM Personalization States.
+  "network1Locked",
+  "network2Locked",
+  "hrpdNetworkLocked",
+  "ruimCorporateLocked",
+  "ruimServiceProviderLocked",
+  "ruimPersonalizationLocked",
+  "network1PukRequired",
+  "network2PukRequired",
+  "hrpdNetworkPukRequired",
+  "ruimCorporatePukRequired",
+  "ruimServiceProviderPukRequired",
+  "ruimPersonalizationPukRequired",
+
+  /**
+   * Additional States.
+   */
+  "illegal" // See Bug 916000. An owed pay card will be rejected by the network
+            // and fall in this state.
+};
+
 [Pref="dom.icc.enabled"]
 interface MozIcc : EventTarget
 {
@@ -27,21 +74,11 @@ interface MozIcc : EventTarget
   /**
    * Indicates the state of the device's ICC.
    *
-   * Possible values: 'illegal', 'unknown', 'pinRequired', 'pukRequired',
-   * 'personalizationInProgress', 'networkLocked', 'network1Locked',
-   * 'network2Locked', 'hrpdNetworkLocked', 'corporateLocked',
-   * 'serviceProviderLocked', 'ruimCorporateLocked', 'ruimServiceProviderLocked',
-   * 'networkPukRequired', 'network1PukRequired', 'network2PukRequired',
-   * 'hrpdNetworkPukRequired', 'corporatePukRequired',
-   * 'serviceProviderPukRequired', 'ruimCorporatePukRequired',
-   * 'ruimServiceProviderPukRequired', 'personalizationReady', 'ready',
-   * 'permanentBlocked'.
-   *
    * Once the ICC becomes undetectable, cardstatechange event will be notified.
    * Also, the attribute is set to null and this MozIcc object becomes invalid.
    * Calling asynchronous functions raises exception then.
    */
-  readonly attribute DOMString? cardState;
+  readonly attribute IccCardState? cardState;
 
   /**
    * The 'cardstatechange' event is notified when the 'cardState' attribute

@@ -21,16 +21,12 @@ EXPORTS.mozilla.docshell += [
 ]
 
 UNIFIED_SOURCES += [
+    'nsOfflineCacheUpdate.cpp',
+    'nsOfflineCacheUpdateService.cpp',
     'nsPrefetchService.cpp',
     'OfflineCacheUpdateChild.cpp',
     'OfflineCacheUpdateGlue.cpp',
     'OfflineCacheUpdateParent.cpp',
-]
-
-# These files can't be built in unified mode because they force NSPR logging.
-SOURCES += [
-    'nsOfflineCacheUpdate.cpp',
-    'nsOfflineCacheUpdateService.cpp',
 ]
 
 IPDL_SOURCES += [

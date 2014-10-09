@@ -3,36 +3,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDOMFile_h__
-#define nsDOMFile_h__
+#ifndef mozilla_dom_File_h
+#define mozilla_dom_File_h
 
 #include "mozilla/Attributes.h"
-#include "nsICharsetDetectionObserver.h"
-#include "nsIFile.h"
-#include "nsIDOMFile.h"
-#include "nsIDOMFileList.h"
-#include "nsIInputStream.h"
-#include "nsIJSNativeInitializer.h"
-#include "nsIMutable.h"
-#include "nsCOMArray.h"
-#include "nsCOMPtr.h"
-#include "nsString.h"
-#include "nsIXMLHttpRequest.h"
-#include "nsAutoPtr.h"
-#include "nsFileStreams.h"
-#include "nsTemporaryFileInputStream.h"
 
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
-#include <stdint.h>
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/Date.h"
 #include "mozilla/dom/indexedDB/FileInfo.h"
 #include "mozilla/dom/indexedDB/FileManager.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
-#include "nsWrapperCache.h"
+#include "mozilla/dom/UnionTypes.h"
+#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsCOMPtr.h"
+#include "nsIDOMFile.h"
+#include "nsIDOMFileList.h"
+#include "nsIFile.h"
+#include "nsIMutable.h"
+#include "nsIXMLHttpRequest.h"
+#include "nsString.h"
+#include "nsTemporaryFileInputStream.h"
+#include "nsWrapperCache.h"
 #include "nsWeakReference.h"
 
 class nsDOMMultipartFile;
@@ -40,17 +35,17 @@ class nsIFile;
 class nsIInputStream;
 class nsIClassInfo;
 
-#define PIDOMFILEIMPL_IID \
+#define PIFILEIMPL_IID \
   { 0x218ee173, 0xf44f, 0x4d30, \
     { 0xab, 0x0c, 0xd6, 0x66, 0xea, 0xc2, 0x84, 0x47 } }
 
-class PIDOMFileImpl : public nsISupports
+class PIFileImpl : public nsISupports
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(PIDOMFILEIMPL_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(PIFILEIMPL_IID)
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(PIDOMFileImpl, PIDOMFILEIMPL_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(PIFileImpl, PIFILEIMPL_IID)
 
 namespace mozilla {
 namespace dom {
@@ -59,13 +54,16 @@ namespace indexedDB {
 class FileInfo;
 };
 
-class DOMFileImpl;
+struct BlobPropertyBag;
+struct ChromeFilePropertyBag;
+struct FilePropertyBag;
+class FileImpl;
 
-class DOMFile MOZ_FINAL : public nsIDOMFile
-                        , public nsIXHRSendable
-                        , public nsIMutable
-                        , public nsIJSNativeInitializer
-                        , public nsSupportsWeakReference
+class File MOZ_FINAL : public nsIDOMFile
+                     , public nsIXHRSendable
+                     , public nsIMutable
+                     , public nsSupportsWeakReference
+                     , public nsWrapperCache
 {
 public:
   NS_DECL_NSIDOMBLOB
@@ -74,68 +72,68 @@ public:
   NS_DECL_NSIMUTABLE
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(DOMFile, nsIDOMFile)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(File, nsIDOMFile)
 
-  static already_AddRefed<DOMFile>
-  Create(const nsAString& aName, const nsAString& aContentType,
-         uint64_t aLength, uint64_t aLastModifiedDate);
+  static already_AddRefed<File>
+  Create(nsISupports* aParent, const nsAString& aName,
+         const nsAString& aContentType, uint64_t aLength,
+         uint64_t aLastModifiedDate);
 
-  static already_AddRefed<DOMFile>
-  Create(const nsAString& aName, const nsAString& aContentType,
+  static already_AddRefed<File>
+  Create(nsISupports* aParent, const nsAString& aName,
+         const nsAString& aContentType, uint64_t aLength);
+
+  static already_AddRefed<File>
+  Create(nsISupports* aParent, const nsAString& aContentType,
          uint64_t aLength);
 
-  static already_AddRefed<DOMFile>
-  Create(const nsAString& aContentType, uint64_t aLength);
-
-  static already_AddRefed<DOMFile>
-  Create(const nsAString& aContentType, uint64_t aStart,
+  static already_AddRefed<File>
+  Create(nsISupports* aParent, const nsAString& aContentType, uint64_t aStart,
          uint64_t aLength);
 
-  static already_AddRefed<DOMFile>
-  CreateMemoryFile(void* aMemoryBuffer, uint64_t aLength,
+  static already_AddRefed<File>
+  CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer, uint64_t aLength,
                    const nsAString& aName, const nsAString& aContentType,
                    uint64_t aLastModifiedDate);
 
-  static already_AddRefed<DOMFile>
-  CreateMemoryFile(void* aMemoryBuffer, uint64_t aLength,
+  static already_AddRefed<File>
+  CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer, uint64_t aLength,
                    const nsAString& aContentType);
 
-  static already_AddRefed<DOMFile>
-  CreateTemporaryFileBlob(PRFileDesc* aFD, uint64_t aStartPos,
-                          uint64_t aLength,
+  static already_AddRefed<File>
+  CreateTemporaryFileBlob(nsISupports* aParent, PRFileDesc* aFD,
+                          uint64_t aStartPos, uint64_t aLength,
                           const nsAString& aContentType);
 
-  static already_AddRefed<DOMFile>
-  CreateFromFile(nsIFile* aFile);
+  static already_AddRefed<File>
+  CreateFromFile(nsISupports* aParent, nsIFile* aFile);
 
-  static already_AddRefed<DOMFile>
-  CreateFromFile(const nsAString& aContentType, uint64_t aLength,
+  static already_AddRefed<File>
+  CreateFromFile(nsISupports* aParent, const nsAString& aContentType,
+                 uint64_t aLength, nsIFile* aFile,
+                 indexedDB::FileInfo* aFileInfo);
+
+  static already_AddRefed<File>
+  CreateFromFile(nsISupports* aParent, const nsAString& aName,
+                 const nsAString& aContentType, uint64_t aLength,
                  nsIFile* aFile, indexedDB::FileInfo* aFileInfo);
 
-  static already_AddRefed<DOMFile>
-  CreateFromFile(const nsAString& aName, const nsAString& aContentType,
-                 uint64_t aLength, nsIFile* aFile,
-                    indexedDB::FileInfo* aFileInfo);
+  static already_AddRefed<File>
+  CreateFromFile(nsISupports* aParent, nsIFile* aFile,
+                 indexedDB::FileInfo* aFileInfo);
 
-  static already_AddRefed<DOMFile>
-  CreateFromFile(nsIFile* aFile, indexedDB::FileInfo* aFileInfo);
-
-  static already_AddRefed<DOMFile>
-  CreateFromFile(nsIFile* aFile, const nsAString& aName,
+  static already_AddRefed<File>
+  CreateFromFile(nsISupports* aParent, nsIFile* aFile, const nsAString& aName,
                  const nsAString& aContentType);
 
-  explicit DOMFile(DOMFileImpl* aImpl)
-    : mImpl(aImpl)
-  {
-    MOZ_ASSERT(mImpl);
-  }
+  File(nsISupports* aParent, FileImpl* aImpl);
 
-  DOMFileImpl* Impl() const
+  FileImpl* Impl() const
   {
     return mImpl;
   }
 
-  const nsTArray<nsRefPtr<DOMFileImpl>>* GetSubBlobImpls() const;
+  const nsTArray<nsRefPtr<FileImpl>>* GetSubBlobImpls() const;
 
   bool IsSizeUnknown() const;
 
@@ -146,59 +144,119 @@ public:
   void SetLazyData(const nsAString& aName, const nsAString& aContentType,
                    uint64_t aLength, uint64_t aLastModifiedDate);
 
-  already_AddRefed<nsIDOMBlob>
-  CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType);
+  already_AddRefed<File>
+  CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
+              ErrorResult& aRv);
 
-  // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
-                        const JS::CallArgs& aArgs) MOZ_OVERRIDE;
+  // WebIDL methods
+  nsISupports* GetParentObject() const
+  {
+    return mParent;
+  }
+
+  // Blob constructor
+  static already_AddRefed<File>
+  Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
+
+  // Blob constructor
+  static already_AddRefed<File>
+  Constructor(const GlobalObject& aGlobal,
+              const Sequence<OwningArrayBufferOrArrayBufferViewOrBlobOrString>& aData,
+              const BlobPropertyBag& aBag,
+              ErrorResult& aRv);
+
+  // File constructor
+  static already_AddRefed<File>
+  Constructor(const GlobalObject& aGlobal,
+              const Sequence<OwningArrayBufferOrArrayBufferViewOrBlobOrString>& aData,
+              const nsAString& aName,
+              const FilePropertyBag& aBag,
+              ErrorResult& aRv);
+
+  // File constructor - ChromeOnly
+  static already_AddRefed<File>
+  Constructor(const GlobalObject& aGlobal,
+              File& aData,
+              const ChromeFilePropertyBag& aBag,
+              ErrorResult& aRv);
+
+  // File constructor - ChromeOnly
+  static already_AddRefed<File>
+  Constructor(const GlobalObject& aGlobal,
+              const nsAString& aData,
+              const ChromeFilePropertyBag& aBag,
+              ErrorResult& aRv);
+
+  // File constructor - ChromeOnly
+  static already_AddRefed<File>
+  Constructor(const GlobalObject& aGlobal,
+              nsIFile* aData,
+              const ChromeFilePropertyBag& aBag,
+              ErrorResult& aRv);
+
+  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+
+  uint64_t GetSize(ErrorResult& aRv);
+
+  // XPCOM GetType is OK
+
+  // XPCOM GetName is OK
+
+  int64_t GetLastModified(ErrorResult& aRv);
+
+  Date GetLastModifiedDate(ErrorResult& aRv);
+
+  void GetMozFullPath(nsAString& aFilename, ErrorResult& aRv);
+
+  already_AddRefed<File> Slice(const Optional<int64_t>& aStart,
+                               const Optional<int64_t>& aEnd,
+                               const nsAString& aContentType,
+                               ErrorResult& aRv);
 
 private:
-  ~DOMFile() {};
+  ~File() {};
 
-  // The member is the real backend implementation of this DOMFile/DOMBlob.
+  // The member is the real backend implementation of this File/Blob.
   // It's thread-safe and not CC-able and it's the only element that is moved
   // between threads.
   // Note: we should not store any other state in this class!
-  const nsRefPtr<DOMFileImpl> mImpl;
+  const nsRefPtr<FileImpl> mImpl;
+
+  nsCOMPtr<nsISupports> mParent;
 };
 
-// This is the abstract class for any DOMFile backend. It must be nsISupports
+// This is the abstract class for any File backend. It must be nsISupports
 // because this class must be ref-counted and it has to work with IPC.
-class DOMFileImpl : public PIDOMFileImpl
+class FileImpl : public PIFileImpl
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  DOMFileImpl() {}
+  FileImpl() {}
 
-  virtual nsresult GetName(nsAString& aName) = 0;
+  virtual void GetName(nsAString& aName) = 0;
 
   virtual nsresult GetPath(nsAString& aName) = 0;
 
-  virtual nsresult
-  GetLastModifiedDate(JSContext* aCx,
-                      JS::MutableHandle<JS::Value> aDate) = 0;
+  virtual int64_t GetLastModified(ErrorResult& aRv) = 0;
 
-  virtual nsresult GetMozFullPath(nsAString& aName) = 0;
+  virtual void GetMozFullPath(nsAString& aName, ErrorResult& aRv) = 0;
 
-  virtual nsresult GetMozFullPathInternal(nsAString &aFileName) = 0;
+  virtual void GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv) = 0;
 
-  virtual nsresult GetSize(uint64_t* aSize) = 0;
+  virtual uint64_t GetSize(ErrorResult& aRv) = 0;
 
-  virtual nsresult GetType(nsAString& aType) = 0;
+  virtual void GetType(nsAString& aType) = 0;
 
-  virtual nsresult GetMozLastModifiedDate(uint64_t* aDate) = 0;
+  already_AddRefed<FileImpl>
+  Slice(const Optional<int64_t>& aStart, const Optional<int64_t>& aEnd,
+        const nsAString& aContentType, ErrorResult& aRv);
 
-  nsresult Slice(int64_t aStart, int64_t aEnd, const nsAString& aContentType,
-                 uint8_t aArgc, DOMFileImpl** aBlobImpl);
-
-  virtual already_AddRefed<DOMFileImpl>
+  virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType) = 0;
+              const nsAString& aContentType, ErrorResult& aRv) = 0;
 
-  virtual const nsTArray<nsRefPtr<DOMFileImpl>>*
+  virtual const nsTArray<nsRefPtr<FileImpl>>*
   GetSubBlobImpls() const = 0;
 
   virtual nsresult GetInternalStream(nsIInputStream** aStream) = 0;
@@ -232,9 +290,6 @@ public:
 
   virtual bool IsFile() const = 0;
 
-  virtual nsresult Initialize(nsISupports* aOwner, JSContext* aCx,
-                              JSObject* aObj, const JS::CallArgs& aArgs) = 0;
-
   // These 2 methods are used when the implementation has to CC something.
   virtual void Unlink() = 0;
   virtual void Traverse(nsCycleCollectionTraversalCallback &aCb) = 0;
@@ -245,14 +300,14 @@ public:
   }
 
 protected:
-  virtual ~DOMFileImpl() {}
+  virtual ~FileImpl() {}
 };
 
-class DOMFileImplBase : public DOMFileImpl
+class FileImplBase : public FileImpl
 {
 public:
-  DOMFileImplBase(const nsAString& aName, const nsAString& aContentType,
-                  uint64_t aLength, uint64_t aLastModifiedDate)
+  FileImplBase(const nsAString& aName, const nsAString& aContentType,
+               uint64_t aLength, uint64_t aLastModifiedDate)
     : mIsFile(true)
     , mImmutable(false)
     , mContentType(aContentType)
@@ -265,8 +320,8 @@ public:
     mContentType.SetIsVoid(false);
   }
 
-  DOMFileImplBase(const nsAString& aName, const nsAString& aContentType,
-                  uint64_t aLength)
+  FileImplBase(const nsAString& aName, const nsAString& aContentType,
+               uint64_t aLength)
     : mIsFile(true)
     , mImmutable(false)
     , mContentType(aContentType)
@@ -279,7 +334,7 @@ public:
     mContentType.SetIsVoid(false);
   }
 
-  DOMFileImplBase(const nsAString& aContentType, uint64_t aLength)
+  FileImplBase(const nsAString& aContentType, uint64_t aLength)
     : mIsFile(false)
     , mImmutable(false)
     , mContentType(aContentType)
@@ -291,8 +346,8 @@ public:
     mContentType.SetIsVoid(false);
   }
 
-  DOMFileImplBase(const nsAString& aContentType, uint64_t aStart,
-                  uint64_t aLength)
+  FileImplBase(const nsAString& aContentType, uint64_t aStart,
+               uint64_t aLength)
     : mIsFile(false)
     , mImmutable(false)
     , mContentType(aContentType)
@@ -306,34 +361,41 @@ public:
     mContentType.SetIsVoid(false);
   }
 
-  virtual nsresult GetName(nsAString& aName) MOZ_OVERRIDE;
+  virtual void GetName(nsAString& aName) MOZ_OVERRIDE;
 
   virtual nsresult GetPath(nsAString& aName) MOZ_OVERRIDE;
 
-  virtual nsresult GetLastModifiedDate(JSContext* aCx,
-                               JS::MutableHandle<JS::Value> aDate) MOZ_OVERRIDE;
+  virtual int64_t GetLastModified(ErrorResult& aRv) MOZ_OVERRIDE;
 
-  virtual nsresult GetMozFullPath(nsAString& aName) MOZ_OVERRIDE;
+  virtual void GetMozFullPath(nsAString& aName, ErrorResult& aRv) MOZ_OVERRIDE;
 
-  virtual nsresult GetMozFullPathInternal(nsAString& aFileName) MOZ_OVERRIDE;
+  virtual void GetMozFullPathInternal(nsAString& aFileName,
+                                      ErrorResult& aRv) MOZ_OVERRIDE;
 
-  virtual nsresult GetSize(uint64_t* aSize) MOZ_OVERRIDE;
+  virtual uint64_t GetSize(ErrorResult& aRv) MOZ_OVERRIDE
+  {
+    return mLength;
+  }
 
-  virtual nsresult GetType(nsAString& aType) MOZ_OVERRIDE;
+  virtual void GetType(nsAString& aType) MOZ_OVERRIDE;
 
-  virtual nsresult GetMozLastModifiedDate(uint64_t* aDate) MOZ_OVERRIDE;
-
-  virtual already_AddRefed<DOMFileImpl>
+  virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType) MOZ_OVERRIDE;
+              const nsAString& aContentType, ErrorResult& aRv) MOZ_OVERRIDE
+  {
+    return nullptr;
+  }
 
-  virtual const nsTArray<nsRefPtr<DOMFileImpl>>*
+  virtual const nsTArray<nsRefPtr<FileImpl>>*
   GetSubBlobImpls() const MOZ_OVERRIDE
   {
     return nullptr;
   }
 
-  virtual nsresult GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
+  virtual nsresult GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
   virtual int64_t GetFileId() MOZ_OVERRIDE;
 
@@ -400,17 +462,11 @@ public:
     return mLength == UINT64_MAX;
   }
 
-  virtual nsresult Initialize(nsISupports* aOwner, JSContext* aCx,
-                              JSObject* aObj, const JS::CallArgs& aArgs)
-  {
-    return NS_OK;
-  }
-
   virtual void Unlink() {}
   virtual void Traverse(nsCycleCollectionTraversalCallback &aCb) {}
 
 protected:
-  virtual ~DOMFileImplBase() {}
+  virtual ~FileImplBase() {}
 
   indexedDB::FileInfo* GetFileInfo() const
   {
@@ -440,25 +496,22 @@ protected:
  * This class may be used off the main thread, and in particular, its
  * constructor and destructor may not run on the same thread.  Be careful!
  */
-class DOMFileImplMemory MOZ_FINAL : public DOMFileImplBase
+class FileImplMemory MOZ_FINAL : public FileImplBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  DOMFileImplMemory(void* aMemoryBuffer, uint64_t aLength,
-                    const nsAString& aName,
-                    const nsAString& aContentType,
-                    uint64_t aLastModifiedDate)
-    : DOMFileImplBase(aName, aContentType, aLength, aLastModifiedDate)
+  FileImplMemory(void* aMemoryBuffer, uint64_t aLength, const nsAString& aName,
+                 const nsAString& aContentType, uint64_t aLastModifiedDate)
+    : FileImplBase(aName, aContentType, aLength, aLastModifiedDate)
     , mDataOwner(new DataOwner(aMemoryBuffer, aLength))
   {
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
   }
 
-  DOMFileImplMemory(void* aMemoryBuffer,
-                    uint64_t aLength,
-                    const nsAString& aContentType)
-    : DOMFileImplBase(aContentType, aLength)
+  FileImplMemory(void* aMemoryBuffer, uint64_t aLength,
+                 const nsAString& aContentType)
+    : FileImplBase(aContentType, aLength)
     , mDataOwner(new DataOwner(aMemoryBuffer, aLength))
   {
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
@@ -466,9 +519,9 @@ public:
 
   virtual nsresult GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<DOMFileImpl>
+  virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType) MOZ_OVERRIDE;
+              const nsAString& aContentType, ErrorResult& aRv) MOZ_OVERRIDE;
 
   virtual bool IsMemoryFile() const MOZ_OVERRIDE
   {
@@ -521,29 +574,29 @@ public:
 
 private:
   // Create slice
-  DOMFileImplMemory(const DOMFileImplMemory* aOther, uint64_t aStart,
-                    uint64_t aLength, const nsAString& aContentType)
-    : DOMFileImplBase(aContentType, aOther->mStart + aStart, aLength)
+  FileImplMemory(const FileImplMemory* aOther, uint64_t aStart,
+                 uint64_t aLength, const nsAString& aContentType)
+    : FileImplBase(aContentType, aOther->mStart + aStart, aLength)
     , mDataOwner(aOther->mDataOwner)
   {
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
     mImmutable = aOther->mImmutable;
   }
 
-  ~DOMFileImplMemory() {}
+  ~FileImplMemory() {}
 
   // Used when backed by a memory store
   nsRefPtr<DataOwner> mDataOwner;
 };
 
-class DOMFileImplTemporaryFileBlob MOZ_FINAL : public DOMFileImplBase
+class FileImplTemporaryFileBlob MOZ_FINAL : public FileImplBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  DOMFileImplTemporaryFileBlob(PRFileDesc* aFD, uint64_t aStartPos,
-                               uint64_t aLength, const nsAString& aContentType)
-    : DOMFileImplBase(aContentType, aLength)
+  FileImplTemporaryFileBlob(PRFileDesc* aFD, uint64_t aStartPos,
+                            uint64_t aLength, const nsAString& aContentType)
+    : FileImplBase(aContentType, aLength)
     , mLength(aLength)
     , mStartPos(aStartPos)
     , mContentType(aContentType)
@@ -553,21 +606,21 @@ public:
 
   virtual nsresult GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<DOMFileImpl>
+  virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType) MOZ_OVERRIDE;
+              const nsAString& aContentType, ErrorResult& aRv) MOZ_OVERRIDE;
 
 private:
-  DOMFileImplTemporaryFileBlob(const DOMFileImplTemporaryFileBlob* aOther,
-                               uint64_t aStart, uint64_t aLength,
-                               const nsAString& aContentType)
-    : DOMFileImplBase(aContentType, aLength)
+  FileImplTemporaryFileBlob(const FileImplTemporaryFileBlob* aOther,
+                            uint64_t aStart, uint64_t aLength,
+                            const nsAString& aContentType)
+    : FileImplBase(aContentType, aLength)
     , mLength(aLength)
     , mStartPos(aStart)
     , mFileDescOwner(aOther->mFileDescOwner)
     , mContentType(aContentType) {}
 
-  ~DOMFileImplTemporaryFileBlob() {}
+  ~FileImplTemporaryFileBlob() {}
 
   uint64_t mLength;
   uint64_t mStartPos;
@@ -575,14 +628,14 @@ private:
   nsString mContentType;
 };
 
-class DOMFileImplFile : public DOMFileImplBase
+class FileImplFile : public FileImplBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Create as a file
-  explicit DOMFileImplFile(nsIFile* aFile)
-    : DOMFileImplBase(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX)
+  explicit FileImplFile(nsIFile* aFile)
+    : FileImplBase(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(false)
@@ -593,8 +646,8 @@ public:
     mFile->GetLeafName(mName);
   }
 
-  DOMFileImplFile(nsIFile* aFile, indexedDB::FileInfo* aFileInfo)
-    : DOMFileImplBase(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX)
+  FileImplFile(nsIFile* aFile, indexedDB::FileInfo* aFileInfo)
+    : FileImplBase(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(true)
@@ -609,9 +662,9 @@ public:
   }
 
   // Create as a file
-  DOMFileImplFile(const nsAString& aName, const nsAString& aContentType,
-                  uint64_t aLength, nsIFile* aFile)
-    : DOMFileImplBase(aName, aContentType, aLength, UINT64_MAX)
+  FileImplFile(const nsAString& aName, const nsAString& aContentType,
+               uint64_t aLength, nsIFile* aFile)
+    : FileImplBase(aName, aContentType, aLength, UINT64_MAX)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(false)
@@ -619,10 +672,10 @@ public:
     NS_ASSERTION(mFile, "must have file");
   }
 
-  DOMFileImplFile(const nsAString& aName, const nsAString& aContentType,
-                  uint64_t aLength, nsIFile* aFile,
-                  uint64_t aLastModificationDate)
-    : DOMFileImplBase(aName, aContentType, aLength, aLastModificationDate)
+  FileImplFile(const nsAString& aName, const nsAString& aContentType,
+               uint64_t aLength, nsIFile* aFile,
+               uint64_t aLastModificationDate)
+    : FileImplBase(aName, aContentType, aLength, aLastModificationDate)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(false)
@@ -631,9 +684,9 @@ public:
   }
 
   // Create as a file with custom name
-  DOMFileImplFile(nsIFile* aFile, const nsAString& aName,
-                  const nsAString& aContentType)
-    : DOMFileImplBase(aName, aContentType, UINT64_MAX, UINT64_MAX)
+  FileImplFile(nsIFile* aFile, const nsAString& aName,
+               const nsAString& aContentType)
+    : FileImplBase(aName, aContentType, UINT64_MAX, UINT64_MAX)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(false)
@@ -646,10 +699,10 @@ public:
   }
 
   // Create as a stored file
-  DOMFileImplFile(const nsAString& aName, const nsAString& aContentType,
-                  uint64_t aLength, nsIFile* aFile,
-                  indexedDB::FileInfo* aFileInfo)
-    : DOMFileImplBase(aName, aContentType, aLength, UINT64_MAX)
+  FileImplFile(const nsAString& aName, const nsAString& aContentType,
+               uint64_t aLength, nsIFile* aFile,
+               indexedDB::FileInfo* aFileInfo)
+    : FileImplBase(aName, aContentType, aLength, UINT64_MAX)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(true)
@@ -659,9 +712,9 @@ public:
   }
 
   // Create as a stored blob
-  DOMFileImplFile(const nsAString& aContentType, uint64_t aLength,
-                  nsIFile* aFile, indexedDB::FileInfo* aFileInfo)
-    : DOMFileImplBase(aContentType, aLength)
+  FileImplFile(const nsAString& aContentType, uint64_t aLength,
+               nsIFile* aFile, indexedDB::FileInfo* aFileInfo)
+    : FileImplBase(aContentType, aLength)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(true)
@@ -671,8 +724,8 @@ public:
   }
 
   // Create as a file to be later initialized
-  DOMFileImplFile()
-    : DOMFileImplBase(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX)
+  FileImplFile()
+    : FileImplBase(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX)
     , mWholeFile(true)
     , mStoredFile(false)
   {
@@ -682,24 +735,23 @@ public:
   }
 
   // Overrides
-  virtual nsresult GetSize(uint64_t* aSize) MOZ_OVERRIDE;
-  virtual nsresult GetType(nsAString& aType) MOZ_OVERRIDE;
-  virtual nsresult GetLastModifiedDate(JSContext* aCx,
-                               JS::MutableHandle<JS::Value> aLastModifiedDate) MOZ_OVERRIDE;
-  virtual nsresult GetMozLastModifiedDate(uint64_t* aLastModifiedDate) MOZ_OVERRIDE;
-  virtual nsresult GetMozFullPathInternal(nsAString& aFullPath) MOZ_OVERRIDE;
+  virtual uint64_t GetSize(ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual void GetType(nsAString& aType) MOZ_OVERRIDE;
+  virtual int64_t GetLastModified(ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual void GetMozFullPathInternal(nsAString& aFullPath,
+                                      ErrorResult& aRv) MOZ_OVERRIDE;
   virtual nsresult GetInternalStream(nsIInputStream**) MOZ_OVERRIDE;
 
   void SetPath(const nsAString& aFullPath);
 
 protected:
-  virtual ~DOMFileImplFile() {}
+  virtual ~FileImplFile() {}
 
 private:
   // Create slice
-  DOMFileImplFile(const DOMFileImplFile* aOther, uint64_t aStart,
-                  uint64_t aLength, const nsAString& aContentType)
-    : DOMFileImplBase(aContentType, aOther->mStart + aStart, aLength)
+  FileImplFile(const FileImplFile* aOther, uint64_t aStart,
+               uint64_t aLength, const nsAString& aContentType)
+    : FileImplBase(aContentType, aOther->mStart + aStart, aLength)
     , mFile(aOther->mFile)
     , mWholeFile(false)
     , mStoredFile(aOther->mStoredFile)
@@ -724,9 +776,9 @@ private:
     }
   }
 
-  virtual already_AddRefed<DOMFileImpl>
+  virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
-              const nsAString& aContentType) MOZ_OVERRIDE;
+              const nsAString& aContentType, ErrorResult& aRv) MOZ_OVERRIDE;
 
   virtual bool IsStoredFile() const MOZ_OVERRIDE
   {
@@ -743,21 +795,18 @@ private:
   bool mStoredFile;
 };
 
-} // dom namespace
-} // file namespace
-
-class nsDOMFileList MOZ_FINAL : public nsIDOMFileList,
-                                public nsWrapperCache
+class FileList MOZ_FINAL : public nsIDOMFileList,
+                           public nsWrapperCache
 {
-  ~nsDOMFileList() {}
+  ~FileList() {}
 
 public:
-  explicit nsDOMFileList(nsISupports *aParent) : mParent(aParent)
+  explicit FileList(nsISupports *aParent) : mParent(aParent)
   {
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMFileList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileList)
 
   NS_DECL_NSIDOMFILELIST
 
@@ -773,12 +822,20 @@ public:
     mParent = nullptr;
   }
 
-  bool Append(nsIDOMFile *aFile) { return mFiles.AppendObject(aFile); }
+  bool Append(File *aFile) { return mFiles.AppendElement(aFile); }
 
-  bool Remove(uint32_t aIndex) { return mFiles.RemoveObjectAt(aIndex); }
+  bool Remove(uint32_t aIndex) {
+    if (aIndex < mFiles.Length()) {
+      mFiles.RemoveElementAt(aIndex);
+      return true;
+    }
+
+    return false;
+  }
+
   void Clear() { return mFiles.Clear(); }
 
-  static nsDOMFileList* FromSupports(nsISupports* aSupports)
+  static FileList* FromSupports(nsISupports* aSupports)
   {
 #ifdef DEBUG
     {
@@ -792,26 +849,29 @@ public:
     }
 #endif
 
-    return static_cast<nsDOMFileList*>(aSupports);
+    return static_cast<FileList*>(aSupports);
   }
 
-  nsIDOMFile* Item(uint32_t aIndex)
+  File* Item(uint32_t aIndex)
   {
-    return mFiles.SafeObjectAt(aIndex);
+    return mFiles.SafeElementAt(aIndex);
   }
-  nsIDOMFile* IndexedGetter(uint32_t aIndex, bool& aFound)
+  File* IndexedGetter(uint32_t aIndex, bool& aFound)
   {
-    aFound = aIndex < static_cast<uint32_t>(mFiles.Count());
-    return aFound ? mFiles.ObjectAt(aIndex) : nullptr;
+    aFound = aIndex < mFiles.Length();
+    return aFound ? mFiles.ElementAt(aIndex) : nullptr;
   }
   uint32_t Length()
   {
-    return mFiles.Count();
+    return mFiles.Length();
   }
 
 private:
-  nsCOMArray<nsIDOMFile> mFiles;
+  nsTArray<nsRefPtr<File>> mFiles;
   nsISupports *mParent;
 };
 
-#endif
+} // dom namespace
+} // file namespace
+
+#endif // mozilla_dom_File_h
