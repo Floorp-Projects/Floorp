@@ -20,7 +20,7 @@ class GMPParent;
 class GMPStorageParent : public PGMPStorageParent {
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPStorageParent)
-  GMPStorageParent(const nsCString& aNodeId, GMPParent* aPlugin);
+  GMPStorageParent(const nsString& aOrigin, GMPParent* aPlugin);
 
   void Shutdown();
 
@@ -36,7 +36,7 @@ private:
   ~GMPStorageParent() {}
 
   nsDataHashtable<nsCStringHashKey, PRFileDesc*> mFiles;
-  const nsAutoCString mNodeId;
+  const nsString mOrigin;
   nsRefPtr<GMPParent> mPlugin;
   bool mShutdown;
 };
