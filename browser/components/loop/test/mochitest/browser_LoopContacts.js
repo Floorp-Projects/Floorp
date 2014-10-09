@@ -2,11 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const {LoopContacts} = Cu.import("resource:///modules/loop/LoopContacts.jsm", {});
-const {LoopStorage} = Cu.import("resource:///modules/loop/LoopStorage.jsm", {});
-
-XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
-                                   "@mozilla.org/uuid-generator;1",
-                                   "nsIUUIDGenerator");
 
 const kContacts = [{
   id: 1,
@@ -404,32 +399,4 @@ add_task(function* () {
   Assert.strictEqual(gExpectedAdds.length, 0, "No contact additions should be expected anymore");
   Assert.strictEqual(gExpectedRemovals.length, 0, "No contact removals should be expected anymore");
   Assert.strictEqual(gExpectedUpdates.length, 0, "No contact updates should be expected anymore");
-});
-
-// Test switching between different databases.
-add_task(function* () {
-  Assert.equal(LoopStorage.databaseName, "loop-default", "First active partition should be the default");
-  yield promiseLoadContacts();
-
-  let uuid = uuidgen.generateUUID().toString().replace(/[{}]+/g, "");
-  LoopStorage.switchDatabase(uuid);
-  Assert.equal(LoopStorage.databaseName, uuid, "The active partition should have changed");
-
-  yield promiseLoadContacts();
-
-  let contacts = yield promiseLoadContacts();
-  for (let i = 0, l = contacts.length; i < l; ++i) {
-    compareContacts(contacts[i], kContacts[i]);
-  }
-
-  LoopStorage.switchDatabase();
-  Assert.equal(LoopStorage.databaseName, "loop-default", "The active partition should have changed");
-
-  LoopContacts.getAll(function(err, contacts) {
-    Assert.equal(err, null, "There shouldn't be an error");
-
-    for (let i = 0, l = contacts.length; i < l; ++i) {
-      compareContacts(contacts[i], kContacts[i]);
-    }
-  });
 });
