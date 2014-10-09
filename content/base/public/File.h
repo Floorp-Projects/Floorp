@@ -141,9 +141,6 @@ public:
 
   bool IsFile() const;
 
-  void SetLazyData(const nsAString& aName, const nsAString& aContentType,
-                   uint64_t aLength, uint64_t aLastModifiedDate);
-
   already_AddRefed<File>
   CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
               ErrorResult& aRv);
