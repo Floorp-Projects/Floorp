@@ -9,7 +9,7 @@
 
 registerCleanupFunction(function*() {
   MozLoopService.doNotDisturb = false;
-  setInternalLoopGlobal("gFxAOAuthProfile", null);
+  MozLoopServiceInternal.fxAOAuthProfile = null;
   yield MozLoopServiceInternal.clearError("testing");
 });
 
@@ -25,7 +25,8 @@ add_task(function* test_doNotDisturb_with_login() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
   yield MozLoopService.doNotDisturb = true;
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "disabled", "Check button is in disabled state");
-  setInternalLoopGlobal("gFxAOAuthProfile", {email: "test@example.com", uid: "abcd1234"});
+  MozLoopServiceInternal.fxAOAuthTokenData = {token_type:"bearer",access_token:"1bad3e44b12f77a88fe09f016f6a37c42e40f974bc7a8b432bb0d2f0e37e1752",scope:"profile"};
+  MozLoopServiceInternal.fxAOAuthProfile = {email: "test@example.com", uid: "abcd1234"};
   yield MozLoopServiceInternal.notifyStatusChanged("login");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "active", "Check button is in active state");
   yield loadLoopPanel();
@@ -34,7 +35,7 @@ add_task(function* test_doNotDisturb_with_login() {
   loopPanel.hidePopup();
   yield MozLoopService.doNotDisturb = false;
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  setInternalLoopGlobal("gFxAOAuthProfile", null);
+  MozLoopServiceInternal.fxAOAuthTokenData = null;
   yield MozLoopServiceInternal.notifyStatusChanged();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
 });
@@ -51,26 +52,27 @@ add_task(function* test_error_with_login() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
   yield MozLoopServiceInternal.setError("testing", {});
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "error", "Check button is in error state");
-  setInternalLoopGlobal("gFxAOAuthProfile", {email: "test@example.com", uid: "abcd1234"});
+  MozLoopServiceInternal.fxAOAuthProfile = {email: "test@example.com", uid: "abcd1234"};
   MozLoopServiceInternal.notifyStatusChanged("login");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "error", "Check button is in error state");
   yield MozLoopServiceInternal.clearError("testing");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  setInternalLoopGlobal("gFxAOAuthProfile", null);
+  MozLoopServiceInternal.fxAOAuthProfile = null;
   MozLoopServiceInternal.notifyStatusChanged();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
 });
 
 add_task(function* test_active() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  setInternalLoopGlobal("gFxAOAuthProfile", {email: "test@example.com", uid: "abcd1234"});
+  MozLoopServiceInternal.fxAOAuthTokenData = {token_type:"bearer",access_token:"1bad3e44b12f77a88fe09f016f6a37c42e40f974bc7a8b432bb0d2f0e37e1752",scope:"profile"};
+  MozLoopServiceInternal.fxAOAuthProfile = {email: "test@example.com", uid: "abcd1234"};
   yield MozLoopServiceInternal.notifyStatusChanged("login");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "active", "Check button is in active state");
   yield loadLoopPanel();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state after opening panel");
   let loopPanel = document.getElementById("loop-notification-panel");
   loopPanel.hidePopup();
-  setInternalLoopGlobal("gFxAOAuthProfile", null);
+  MozLoopServiceInternal.fxAOAuthTokenData = null;
   MozLoopServiceInternal.notifyStatusChanged();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
 });
