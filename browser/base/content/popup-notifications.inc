@@ -59,9 +59,3 @@
         <label id="pointerLock-cancel" value="&pointerLock.notification.message;"/>
       </popupnotificationcontent>
     </popupnotification>
-
-#ifdef E10S_TESTING_ONLY
-    <popupnotification id="enable-e10s-notification" hidden="true">
-      <popupnotificationcontent orient="vertical"/>
-    </popupnotification>
-#endif
