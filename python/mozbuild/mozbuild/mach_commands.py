@@ -824,7 +824,7 @@ class RunProgram(MachCommandBase):
         help='The maximum depth of stack traces. The default and maximum is 24.')
     @CommandArgument('--show-dump-stats', action='store_true', group='DMD',
         help='Show stats when doing dumps.')
-    @CommandArgument('--mode', choices=['normal', 'test', 'stress'], group='DMD',
+    @CommandArgument('--mode', choices=['normal', 'test'], group='DMD',
         help='Mode of operation. The default is normal.')
     def run(self, params, remote, background, noprofile, debug, debugger,
         debugparams, slowscript, dmd, sample_below, max_frames,
