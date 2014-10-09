@@ -1,0 +1,24 @@
+#-----------------------------------------------------------------
+
+Invocation {
+  $DMD = '1'
+  Sample-below size = 1
+}
+
+#-----------------------------------------------------------------
+
+Live {
+  4 blocks in heap block record 1 of 1
+  4,416 bytes (4,404 requested / 12 slop)
+  100.00% of the heap (100.00% cumulative)
+  Allocated at {
+    #01: E (E.cpp:99)
+  }
+}
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total: 4,416 bytes in 4 blocks
+}
+
