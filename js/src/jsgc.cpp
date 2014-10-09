@@ -1921,9 +1921,9 @@ GCRuntime::arenaAllocatedDuringGC(JS::Zone *zone, ArenaHeader *arena)
     }
 }
 
-inline void *
-ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind,
-                                    AutoMaybeStartBackgroundAllocation &maybeStartBackgroundAllocation)
+TenuredCell *
+ArenaLists::allocateFromArena(Zone *zone, AllocKind thingKind,
+                              AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc)
 {
     /*
      * Parallel JS Note:
@@ -1979,7 +1979,7 @@ ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind,
         aheader->setAsFullyUsed();
         if (MOZ_UNLIKELY(zone->wasGCStarted()))
             zone->runtimeFromMainThread()->gc.arenaAllocatedDuringGC(zone, aheader);
-        void *thing = freeLists[thingKind].allocate(Arena::thingSize(thingKind));
+        TenuredCell *thing = freeLists[thingKind].allocate(Arena::thingSize(thingKind));
         MOZ_ASSERT(thing);   // This allocation is infallible.
         return thing;
     }
@@ -1988,7 +1988,7 @@ ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind,
     JSRuntime *rt = zone->runtimeFromAnyThread();
     if (!maybeLock.locked())
         maybeLock.lock(rt);
-    Chunk *chunk = rt->gc.pickChunk(zone, maybeStartBackgroundAllocation);
+    Chunk *chunk = rt->gc.pickChunk(zone, maybeStartBGAlloc);
     if (!chunk)
         return nullptr;
 
@@ -2020,11 +2020,11 @@ ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind,
     return freeLists[thingKind].allocate(thingSize);
 }
 
-void *
+TenuredCell *
 ArenaLists::allocateFromArena(JS::Zone *zone, AllocKind thingKind)
 {
     AutoMaybeStartBackgroundAllocation maybeStartBackgroundAllocation;
-    return allocateFromArenaInline(zone, thingKind, maybeStartBackgroundAllocation);
+    return allocateFromArena(zone, thingKind, maybeStartBackgroundAllocation);
 }
 
 void
@@ -2722,7 +2722,7 @@ RunLastDitchGC(JSContext *cx, JS::Zone *zone, AllocKind thingKind)
 
 template <AllowGC allowGC>
 /* static */ void *
-ArenaLists::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
+GCRuntime::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
 {
     MOZ_ASSERT(!cx->runtime()->isHeapBusy(), "allocating while under GC");
     MOZ_ASSERT_IF(allowGC, !cx->runtime()->currentThreadHasExclusiveAccess());
@@ -2754,17 +2754,17 @@ ArenaLists::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
         }
 
         AutoMaybeStartBackgroundAllocation maybeStartBGAlloc;
-        void *thing = allocator->arenas.allocateFromArenaInline(zone, thingKind, maybeStartBGAlloc);
+        void *thing = allocator->arenas.allocateFromArena(zone, thingKind, maybeStartBGAlloc);
         if (MOZ_LIKELY(thing))
             return thing;
 
-        // Even if allocateFromArenaInline failed due to OOM, a background
+        // Even if allocateFromArena failed due to OOM, a background
         // finalization task may be running (freeing more memory); wait for it
         // to finish, then try to allocate again in case it freed up the memory
         // we need.
         cx->runtime()->gc.waitBackgroundSweepEnd();
 
-        thing = allocator->arenas.allocateFromArenaInline(zone, thingKind, maybeStartBGAlloc);
+        thing = allocator->arenas.allocateFromArena(zone, thingKind, maybeStartBGAlloc);
         if (MOZ_LIKELY(thing))
             return thing;
 
@@ -2778,7 +2778,7 @@ ArenaLists::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
 }
 
 /* static */ void *
-ArenaLists::refillFreeListOffMainThread(ExclusiveContext *cx, AllocKind thingKind)
+GCRuntime::refillFreeListOffMainThread(ExclusiveContext *cx, AllocKind thingKind)
 {
     Allocator *allocator = cx->allocator();
     Zone *zone = allocator->zone_;
@@ -2793,22 +2793,22 @@ ArenaLists::refillFreeListOffMainThread(ExclusiveContext *cx, AllocKind thingKin
     while (rt->isHeapBusy())
         HelperThreadState().wait(GlobalHelperThreadState::PRODUCER);
 
-    return allocator->arenas.allocateFromArenaInline(zone, thingKind, maybeStartBGAlloc);
+    return allocator->arenas.allocateFromArena(zone, thingKind, maybeStartBGAlloc);
 }
 
 /* static */ void *
-ArenaLists::refillFreeListPJS(ForkJoinContext *cx, AllocKind thingKind)
+GCRuntime::refillFreeListPJS(ForkJoinContext *cx, AllocKind thingKind)
 {
     Allocator *allocator = cx->allocator();
     Zone *zone = allocator->zone_;
 
     AutoMaybeStartBackgroundAllocation maybeStartBGAlloc;
-    return allocator->arenas.allocateFromArenaInline(zone, thingKind, maybeStartBGAlloc);
+    return allocator->arenas.allocateFromArena(zone, thingKind, maybeStartBGAlloc);
 }
 
 template <AllowGC allowGC>
 /* static */ void *
-ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
+GCRuntime::refillFreeListFromAnyThread(ThreadSafeContext *cx, AllocKind thingKind)
 {
     MOZ_ASSERT(cx->allocator()->arenas.freeLists[thingKind].isEmpty());
 
@@ -2822,13 +2822,13 @@ ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
 }
 
 template void *
-ArenaLists::refillFreeList<NoGC>(ThreadSafeContext *cx, AllocKind thingKind);
+GCRuntime::refillFreeListFromAnyThread<NoGC>(ThreadSafeContext *cx, AllocKind thingKind);
 
 template void *
-ArenaLists::refillFreeList<CanGC>(ThreadSafeContext *cx, AllocKind thingKind);
+GCRuntime::refillFreeListFromAnyThread<CanGC>(ThreadSafeContext *cx, AllocKind thingKind);
 
 /* static */ void *
-ArenaLists::refillFreeListInGC(Zone *zone, AllocKind thingKind)
+GCRuntime::refillFreeListInGC(Zone *zone, AllocKind thingKind)
 {
     /*
      * Called by compacting GC to refill a free list while we are in a GC.

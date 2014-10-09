@@ -601,9 +601,10 @@ AllocateObject(ThreadSafeContext *cx, AllocKind kind, size_t nDynamicSlots, Init
         js::Debug_SetSlotRangeToCrashOnTouch(slots, nDynamicSlots);
     }
 
-    JSObject *obj = static_cast<JSObject *>(cx->allocator()->arenas.allocateFromFreeList(kind, thingSize));
+    JSObject *obj = reinterpret_cast<JSObject *>(
+            cx->allocator()->arenas.allocateFromFreeList(kind, thingSize));
     if (!obj)
-        obj = static_cast<JSObject *>(js::gc::ArenaLists::refillFreeList<allowGC>(cx, kind));
+        obj = reinterpret_cast<JSObject *>(GCRuntime::refillFreeListFromAnyThread<allowGC>(cx, kind));
 
     if (obj)
         obj->fakeNativeSetInitialSlots(slots);
@@ -631,7 +632,7 @@ AllocateNonObject(ThreadSafeContext *cx)
 
     T *t = static_cast<T *>(cx->allocator()->arenas.allocateFromFreeList(kind, thingSize));
     if (!t)
-        t = static_cast<T *>(js::gc::ArenaLists::refillFreeList<allowGC>(cx, kind));
+        t = static_cast<T *>(GCRuntime::refillFreeListFromAnyThread<allowGC>(cx, kind));
 
     CheckIncrementalZoneState(cx, t);
     js::gc::TraceTenuredAlloc(t, kind);
