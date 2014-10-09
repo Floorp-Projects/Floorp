@@ -36,17 +36,18 @@ CDMProxy::~CDMProxy()
 }
 
 void
-CDMProxy::Init(PromiseId aPromiseId)
+CDMProxy::Init(PromiseId aPromiseId,
+               const nsAString& aOrigin,
+               const nsAString& aTopLevelOrigin,
+               bool aInPrivateBrowsing)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
 
-  mNodeId = mKeys->GetNodeId();
-  if (mNodeId.IsEmpty()) {
-    RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-  EME_LOG("Creating CDMProxy for origin='%s'", GetNodeId().get());
+  EME_LOG("CDMProxy::Init (%s, %s) %s",
+          NS_ConvertUTF16toUTF8(aOrigin).get(),
+          NS_ConvertUTF16toUTF8(aTopLevelOrigin).get(),
+          (aInPrivateBrowsing ? "PrivateBrowsing" : "NonPrivateBrowsing"));
 
   if (!mGMPThread) {
     nsCOMPtr<mozIGeckoMediaPluginService> mps =
@@ -61,8 +62,15 @@ CDMProxy::Init(PromiseId aPromiseId)
       return;
     }
   }
-
-  nsRefPtr<nsIRunnable> task(NS_NewRunnableMethodWithArg<uint32_t>(this, &CDMProxy::gmp_Init, aPromiseId));
+  nsAutoPtr<InitData> data(new InitData());
+  data->mPromiseId = aPromiseId;
+  data->mOrigin = aOrigin;
+  data->mTopLevelOrigin = aTopLevelOrigin;
+  data->mInPrivateBrowsing = aInPrivateBrowsing;
+  nsRefPtr<nsIRunnable> task(
+    NS_NewRunnableMethodWithArg<nsAutoPtr<InitData>>(this,
+                                                     &CDMProxy::gmp_Init,
+                                                     data));
   mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
 }
 
@@ -75,26 +83,45 @@ CDMProxy::IsOnGMPThread()
 #endif
 
 void
-CDMProxy::gmp_Init(uint32_t aPromiseId)
+CDMProxy::gmp_Init(nsAutoPtr<InitData> aData)
 {
   MOZ_ASSERT(IsOnGMPThread());
 
   nsCOMPtr<mozIGeckoMediaPluginService> mps =
     do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   if (!mps) {
-    RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
+  nsresult rv = mps->GetNodeId(aData->mOrigin,
+                               aData->mTopLevelOrigin,
+                               aData->mInPrivateBrowsing,
+                               mNodeId);
+  MOZ_ASSERT(!GetNodeId().IsEmpty());
+  if (NS_FAILED(rv)) {
+    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  EME_LOG("CDMProxy::gmp_Init (%s, %s) %s NodeId=%s",
+          NS_ConvertUTF16toUTF8(aData->mOrigin).get(),
+          NS_ConvertUTF16toUTF8(aData->mTopLevelOrigin).get(),
+          (aData->mInPrivateBrowsing ? "PrivateBrowsing" : "NonPrivateBrowsing"),
+          GetNodeId().get());
+
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_ConvertUTF16toUTF8(mKeySystem));
-  nsresult rv = mps->GetGMPDecryptor(&tags, GetNodeId(), &mCDM);
+  rv = mps->GetGMPDecryptor(&tags, GetNodeId(), &mCDM);
   if (NS_FAILED(rv) || !mCDM) {
-    RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
   } else {
     mCallback = new CDMCallbackProxy(this);
     mCDM->Init(mCallback);
-    nsRefPtr<nsIRunnable> task(NS_NewRunnableMethodWithArg<uint32_t>(this, &CDMProxy::OnCDMCreated, aPromiseId));
+    nsRefPtr<nsIRunnable> task(
+      NS_NewRunnableMethodWithArg<uint32_t>(this,
+                                            &CDMProxy::OnCDMCreated,
+                                            aData->mPromiseId));
     NS_DispatchToMainThread(task);
   }
 }
@@ -106,7 +133,8 @@ CDMProxy::OnCDMCreated(uint32_t aPromiseId)
   if (mKeys.IsNull()) {
     return;
   }
-  mKeys->OnCDMCreated(aPromiseId);
+  MOZ_ASSERT(!GetNodeId().IsEmpty());
+  mKeys->OnCDMCreated(aPromiseId, GetNodeId());
 }
 
 void
@@ -303,9 +331,7 @@ CDMProxy::Shutdown()
   mKeys.Clear();
   // Note: This may end up being the last owning reference to the CDMProxy.
   nsRefPtr<nsIRunnable> task(NS_NewRunnableMethod(this, &CDMProxy::gmp_Shutdown));
-  if (mGMPThread) {
-    mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
-  }
+  mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
 }
 
 void

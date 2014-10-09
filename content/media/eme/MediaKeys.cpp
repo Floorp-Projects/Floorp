@@ -25,6 +25,7 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaKeys,
+                                      mElement,
                                       mParent,
                                       mKeySessions,
                                       mPromises,
@@ -224,23 +225,85 @@ MediaKeys::Create(const GlobalObject& aGlobal,
   // CDMProxy keeps MediaKeys alive until it resolves the promise and thus
   // returns the MediaKeys object to JS.
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!window) {
+  if (!window || !window->GetExtantDoc()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
   nsRefPtr<MediaKeys> keys = new MediaKeys(window, aKeySystem);
-  nsRefPtr<Promise> promise(keys->MakePromise(aRv));
+  return keys->Init(aRv);
+}
+
+already_AddRefed<Promise>
+MediaKeys::Init(ErrorResult& aRv)
+{
+  nsRefPtr<Promise> promise(MakePromise(aRv));
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  if (!IsSupportedKeySystem(aKeySystem)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
+  if (!IsSupportedKeySystem(mKeySystem)) {
+    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return promise.forget();
   }
 
-  keys->mProxy = new CDMProxy(keys, aKeySystem);
+  mProxy = new CDMProxy(this, mKeySystem);
+
+  // Determine principal (at creation time) of the MediaKeys object.
+  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(GetParentObject());
+  if (!sop) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+  mPrincipal = sop->GetPrincipal();
+
+  // Determine principal of the "top-level" window; the principal of the
+  // page that will display in the URL bar.
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetParentObject());
+  if (!window) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+  nsCOMPtr<nsIDOMWindow> topWindow;
+  window->GetTop(getter_AddRefs(topWindow));
+  nsCOMPtr<nsPIDOMWindow> top = do_QueryInterface(topWindow);
+  if (!top || !top->GetExtantDoc()) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+  
+  mTopLevelPrincipal = top->GetExtantDoc()->NodePrincipal();
+
+  if (!mPrincipal || !mTopLevelPrincipal) {
+    NS_WARNING("Failed to get principals when creating MediaKeys");
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+
+  nsAutoString origin;
+  nsresult rv = nsContentUtils::GetUTFOrigin(mPrincipal, origin);
+  if (NS_FAILED(rv)) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+  nsAutoString topLevelOrigin;
+  rv = nsContentUtils::GetUTFOrigin(mTopLevelPrincipal, topLevelOrigin);
+  if (NS_FAILED(rv)) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+
+  if (!window) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+  nsIDocument* doc = window->GetExtantDoc();
+  const bool inPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(doc);
+
+  EME_LOG("MediaKeys::Create() (%s, %s), %s",
+          NS_ConvertUTF16toUTF8(origin).get(),
+          NS_ConvertUTF16toUTF8(topLevelOrigin).get(),
+          (inPrivateBrowsing ? "PrivateBrowsing" : "NonPrivateBrowsing"));
 
   // The CDMProxy's initialization is asynchronous. The MediaKeys is
   // refcounted, and its instance is returned to JS by promise once
@@ -250,22 +313,26 @@ MediaKeys::Create(const GlobalObject& aGlobal,
   // or its creation has failed. Store the id of the promise returned
   // here, and hold a self-reference until that promise is resolved or
   // rejected.
-  MOZ_ASSERT(!keys->mCreatePromiseId, "Should only be created once!");
-  keys->mCreatePromiseId = keys->StorePromise(promise);
-  keys->AddRef();
-  keys->mProxy->Init(keys->mCreatePromiseId);
+  MOZ_ASSERT(!mCreatePromiseId, "Should only be created once!");
+  mCreatePromiseId = StorePromise(promise);
+  AddRef();
+  mProxy->Init(mCreatePromiseId,
+               origin,
+               topLevelOrigin,
+               inPrivateBrowsing);
 
   return promise.forget();
 }
 
 void
-MediaKeys::OnCDMCreated(PromiseId aId)
+MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId)
 {
   nsRefPtr<Promise> promise(RetrievePromise(aId));
   if (!promise) {
     NS_WARNING("MediaKeys tried to resolve a non-existent promise");
     return;
   }
+  mNodeId = aNodeId;
   nsRefPtr<MediaKeys> keys(this);
   promise->MaybeResolve(keys);
   if (mCreatePromiseId == aId) {
@@ -367,30 +434,57 @@ MediaKeys::GetSession(const nsAString& aSessionId)
 }
 
 const nsCString&
-MediaKeys::GetNodeId()
+MediaKeys::GetNodeId() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  // TODO: Bug 1035637, return a combination of origin and URL bar origin.
-
-  if (!mNodeId.IsEmpty()) {
-    return mNodeId;
-  }
-
-  nsIPrincipal* principal = nullptr;
-  nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(GetParentObject());
-  nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal =
-    do_QueryInterface(pWindow);
-  if (scriptPrincipal) {
-    principal = scriptPrincipal->GetPrincipal();
-  }
-  nsAutoString id;
-  if (principal && NS_SUCCEEDED(nsContentUtils::GetUTFOrigin(principal, id))) {
-    CopyUTF16toUTF8(id, mNodeId);
-    EME_LOG("EME Origin = '%s'", mNodeId.get());
-  }
-
   return mNodeId;
+}
+
+bool
+MediaKeys::IsBoundToMediaElement() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mElement != nullptr;
+}
+
+nsresult
+MediaKeys::Bind(HTMLMediaElement* aElement)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (IsBoundToMediaElement()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mElement = aElement;
+  nsresult rv = CheckPrincipals();
+  if (NS_FAILED(rv)) {
+    mElement = nullptr;
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+MediaKeys::CheckPrincipals()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!IsBoundToMediaElement()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<nsIPrincipal> elementPrincipal(mElement->GetCurrentPrincipal());
+  nsRefPtr<nsIPrincipal> elementTopLevelPrincipal(mElement->GetTopLevelPrincipal());
+  if (!elementPrincipal ||
+      !mPrincipal ||
+      !elementPrincipal->Equals(mPrincipal) ||
+      !elementTopLevelPrincipal ||
+      !mTopLevelPrincipal ||
+      !elementTopLevelPrincipal->Equals(mTopLevelPrincipal)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 bool
