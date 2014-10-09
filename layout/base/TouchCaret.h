@@ -210,11 +210,6 @@ private:
   void SetState(TouchCaretState aState);
 
   /**
-   * Dispatch touch caret tap event to chrome.
-   */
-  void DispatchTapEvent();
-
-  /**
    * Current state we're dealing with.
    */
   TouchCaretState mState;
@@ -254,8 +249,6 @@ private:
 
   // Touch caret visibility
   bool mVisible;
-  // Use for detecting single tap on touch caret.
-  bool mIsValidTap;
   // Touch caret timer
   nsCOMPtr<nsITimer> mTouchCaretExpirationTimer;
 
