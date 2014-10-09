@@ -73,6 +73,7 @@ add_task(function* test_revive_windows_order() {
 
   let tab = gBrowser.addTab(URL_MAIN_WINDOW);
   yield promiseBrowserLoaded(tab.linkedBrowser);
+  TabState.flush(tab.linkedBrowser);
   registerCleanupFunction(() => gBrowser.removeTab(tab));
 
   let win0 = yield promiseNewWindow();
