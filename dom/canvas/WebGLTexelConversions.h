@@ -232,15 +232,12 @@ GLFormatForTexelFormat(WebGLTexelFormat format) {
         case WebGLTexelFormat::RGBA5551:    return LOCAL_GL_RGBA;
         case WebGLTexelFormat::RGBA4444:    return LOCAL_GL_RGBA;
         case WebGLTexelFormat::RGB565:      return LOCAL_GL_RGB;
-        case WebGLTexelFormat::D16:         return LOCAL_GL_DEPTH_COMPONENT;
         case WebGLTexelFormat::RGB8:        return LOCAL_GL_RGB;
         case WebGLTexelFormat::RGBA8:       return LOCAL_GL_RGBA;
         case WebGLTexelFormat::BGRA8:       return LOCAL_GL_BGRA;
         case WebGLTexelFormat::BGRX8:       return LOCAL_GL_BGR;
         case WebGLTexelFormat::R32F:        return LOCAL_GL_LUMINANCE;
         case WebGLTexelFormat::A32F:        return LOCAL_GL_ALPHA;
-        case WebGLTexelFormat::D32:         return LOCAL_GL_DEPTH_COMPONENT;
-        case WebGLTexelFormat::D24S8:       return LOCAL_GL_DEPTH_STENCIL;
         case WebGLTexelFormat::RA32F:       return LOCAL_GL_LUMINANCE_ALPHA;
         case WebGLTexelFormat::RGB32F:      return LOCAL_GL_RGB;
         case WebGLTexelFormat::RGBA32F:     return LOCAL_GL_RGBA;
@@ -266,7 +263,6 @@ inline size_t TexelBytesForFormat(WebGLTexelFormat format) {
         case WebGLTexelFormat::RGB565:
         case WebGLTexelFormat::R16F:
         case WebGLTexelFormat::A16F:
-        case WebGLTexelFormat::D16:
             return 2;
         case WebGLTexelFormat::RGB8:
             return 3;
@@ -275,8 +271,6 @@ inline size_t TexelBytesForFormat(WebGLTexelFormat format) {
         case WebGLTexelFormat::BGRX8:
         case WebGLTexelFormat::R32F:
         case WebGLTexelFormat::A32F:
-        case WebGLTexelFormat::D32:
-        case WebGLTexelFormat::D24S8:
         case WebGLTexelFormat::RA16F:
             return 4;
         case WebGLTexelFormat::RGB16F:
