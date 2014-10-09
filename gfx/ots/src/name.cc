@@ -200,7 +200,7 @@ bool ots_name_parse(OpenTypeFile* file, const uint8_t* data, size_t length) {
   //   4 - full name
   //   5 - version
   //   6 - postscript name
-  static const unsigned kStdNameCount = 7;
+  static const uint16_t kStdNameCount = 7;
   static const char* kStdNames[kStdNameCount] = {
     NULL,
     "OTS derived font",
@@ -237,7 +237,7 @@ bool ots_name_parse(OpenTypeFile* file, const uint8_t* data, size_t length) {
     }
   }
 
-  for (unsigned i = 0; i < kStdNameCount; ++i) {
+  for (uint16_t i = 0; i < kStdNameCount; ++i) {
     if (kStdNames[i] == NULL) {
       continue;
     }
@@ -271,8 +271,8 @@ bool ots_name_should_serialise(OpenTypeFile* file) {
 bool ots_name_serialise(OTSStream* out, OpenTypeFile* file) {
   const OpenTypeNAME* name = file->name;
 
-  uint16_t name_count = name->names.size();
-  uint16_t lang_tag_count = name->lang_tags.size();
+  uint16_t name_count = static_cast<uint16_t>(name->names.size());
+  uint16_t lang_tag_count = static_cast<uint16_t>(name->lang_tags.size());
   uint16_t format = 0;
   size_t string_offset = 6 + name_count * 12;
 
@@ -286,7 +286,7 @@ bool ots_name_serialise(OTSStream* out, OpenTypeFile* file) {
   }
   if (!out->WriteU16(format) ||
       !out->WriteU16(name_count) ||
-      !out->WriteU16(string_offset)) {
+      !out->WriteU16(static_cast<uint16_t>(string_offset))) {
     return OTS_FAILURE_MSG("Failed to write name header");
   }
 
@@ -294,12 +294,14 @@ bool ots_name_serialise(OTSStream* out, OpenTypeFile* file) {
   for (std::vector<NameRecord>::const_iterator name_iter = name->names.begin();
        name_iter != name->names.end(); name_iter++) {
     const NameRecord& rec = *name_iter;
-    if (!out->WriteU16(rec.platform_id) ||
+    if (string_data.size() + rec.text.size() >
+            std::numeric_limits<uint16_t>::max() ||
+        !out->WriteU16(rec.platform_id) ||
         !out->WriteU16(rec.encoding_id) ||
         !out->WriteU16(rec.language_id) ||
         !out->WriteU16(rec.name_id) ||
-        !out->WriteU16(rec.text.size()) ||
-        !out->WriteU16(string_data.size()) ) {
+        !out->WriteU16(static_cast<uint16_t>(rec.text.size())) ||
+        !out->WriteU16(static_cast<uint16_t>(string_data.size())) ) {
       return OTS_FAILURE_MSG("Faile to write name entry");
     }
     string_data.append(rec.text);
@@ -312,8 +314,10 @@ bool ots_name_serialise(OTSStream* out, OpenTypeFile* file) {
     for (std::vector<std::string>::const_iterator tag_iter =
              name->lang_tags.begin();
          tag_iter != name->lang_tags.end(); tag_iter++) {
-      if (!out->WriteU16(tag_iter->size()) ||
-          !out->WriteU16(string_data.size())) {
+      if (string_data.size() + tag_iter->size() >
+              std::numeric_limits<uint16_t>::max() ||
+          !out->WriteU16(static_cast<uint16_t>(tag_iter->size())) ||
+          !out->WriteU16(static_cast<uint16_t>(string_data.size()))) {
         return OTS_FAILURE_MSG("Failed to write string");
       }
       string_data.append(*tag_iter);

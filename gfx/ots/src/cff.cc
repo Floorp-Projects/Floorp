@@ -462,7 +462,7 @@ bool ParsePrivateDictData(
 }
 
 bool ParseDictData(const uint8_t *data, size_t table_length,
-                   const ots::CFFIndex &index, size_t glyphs,
+                   const ots::CFFIndex &index, uint16_t glyphs,
                    size_t sid_max, DICT_DATA_TYPE type,
                    ots::OpenTypeCFF *out_cff) {
   for (unsigned i = 1; i < index.offsets.size(); ++i) {
@@ -476,7 +476,7 @@ bool ParseDictData(const uint8_t *data, size_t table_length,
 
     FONT_FORMAT font_format = FORMAT_UNKNOWN;
     bool have_ros = false;
-    size_t charstring_glyphs = 0;
+    uint16_t charstring_glyphs = 0;
     size_t charset_offset = 0;
 
     while (table.offset() < dict_length) {
@@ -700,7 +700,7 @@ bool ParseDictData(const uint8_t *data, size_t table_length,
             return OTS_FAILURE();
           }
           if (format == 0) {
-            for (size_t j = 0; j < glyphs; ++j) {
+            for (uint16_t j = 0; j < glyphs; ++j) {
               uint8_t fd_index = 0;
               if (!cff_table.ReadU8(&fd_index)) {
                 return OTS_FAILURE();
@@ -844,7 +844,7 @@ bool ParseDictData(const uint8_t *data, size_t table_length,
       }
       switch (format) {
         case 0:
-          for (unsigned j = 1 /* .notdef is omitted */; j < glyphs; ++j) {
+          for (uint16_t j = 1 /* .notdef is omitted */; j < glyphs; ++j) {
             uint16_t sid = 0;
             if (!cff_table.ReadU16(&sid)) {
               return OTS_FAILURE();
@@ -967,7 +967,7 @@ bool ots_cff_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     return OTS_FAILURE();
   }
 
-  const size_t num_glyphs = file->maxp->num_glyphs;
+  const uint16_t num_glyphs = file->maxp->num_glyphs;
   const size_t sid_max = string_index.count + kNStdString;
   // string_index.count == 0 is allowed.
 
@@ -996,7 +996,8 @@ bool ots_cff_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
   // Check if all charstrings (font hinting code for each glyph) are valid.
   for (size_t i = 0; i < file->cff->char_strings_array.size(); ++i) {
-    if (!ValidateType2CharStringIndex(*(file->cff->char_strings_array.at(i)),
+    if (!ValidateType2CharStringIndex(file,
+                                      *(file->cff->char_strings_array.at(i)),
                                       global_subrs_index,
                                       file->cff->fd_select,
                                       file->cff->local_subrs_per_font,

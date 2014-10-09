@@ -34,28 +34,31 @@ bool Failure(const char *f, int l, const char *fn);
 // its result (indicating a failure).
 
 #if defined(_MSC_VER) || !defined(OTS_DEBUG)
-#define OTS_MESSAGE_(otf_,...) \
-  (otf_)->context->Message(__VA_ARGS__)
+#define OTS_MESSAGE_(level,otf_,...) \
+  (otf_)->context->Message(level,__VA_ARGS__)
 #else
-#define OTS_MESSAGE_(otf_,...) \
+#define OTS_MESSAGE_(level,otf_,...) \
   OTS_FAILURE(), \
-  (otf_)->context->Message(__VA_ARGS__)
+  (otf_)->context->Message(level,__VA_ARGS__)
 #endif
 
 // Generate a simple message
 #define OTS_FAILURE_MSG_(otf_,...) \
-  (OTS_MESSAGE_(otf_,__VA_ARGS__), false)
+  (OTS_MESSAGE_(0,otf_,__VA_ARGS__), false)
+
+#define OTS_WARNING_MSG_(otf_,...) \
+  OTS_MESSAGE_(1,otf_,__VA_ARGS__)
 
 // Generate a message with an associated table tag
 #define OTS_FAILURE_MSG_TAG_(otf_,msg_,tag_) \
-  (OTS_MESSAGE_(otf_,"%4.4s: %s", tag_, msg_), false)
+  (OTS_MESSAGE_(0,otf_,"%4.4s: %s", tag_, msg_), false)
 
-// Convenience macro for use in files that only handle a single table tag,
+// Convenience macros for use in files that only handle a single table tag,
 // defined as TABLE_NAME at the top of the file; the 'file' variable is
 // expected to be the current OpenTypeFile pointer.
 #define OTS_FAILURE_MSG(...) OTS_FAILURE_MSG_(file, TABLE_NAME ": " __VA_ARGS__)
 
-#define OTS_WARNING OTS_FAILURE_MSG
+#define OTS_WARNING(...) OTS_WARNING_MSG_(file, TABLE_NAME ": " __VA_ARGS__)
 
 // -----------------------------------------------------------------------------
 // Buffer helper class
