@@ -604,10 +604,15 @@ SocialShare = {
     if (!iframe)
       return;
 
-    iframe.removeAttribute("src");
-    iframe.webNavigation.loadURI("about:socialerror?mode=compactInfo&origin=" +
-                                 encodeURIComponent(iframe.getAttribute("origin")),
-                                 null, null, null, null);
+    let url;
+    let origin = iframe.getAttribute("origin");
+    if (!origin) {
+      // directory site is down
+      url = "about:socialerror?mode=tryAgainOnly&directory=1&url=" + encodeURIComponent(iframe.getAttribute("src"));
+    } else {
+      url = "about:socialerror?mode=compactInfo&origin=" + encodeURIComponent(origin);
+    }
+    iframe.webNavigation.loadURI(url, null, null, null, null);
     sizeSocialPanelToContent(this.panel, iframe);
   },
 
