@@ -159,8 +159,8 @@ function RILContentHelper() {
   this.rilContexts = [];
   for (let clientId = 0; clientId < this.numClients; clientId++) {
     this.rilContexts[clientId] = {
-      cardState:            RIL.GECKO_CARDSTATE_UNKNOWN,
-      iccInfo:              null
+      cardState: Ci.nsIIccProvider.CARD_STATE_UNKNOWN,
+      iccInfo: null
     };
   }
 
