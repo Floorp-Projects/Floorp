@@ -1,0 +1,42 @@
+#-----------------------------------------------------------------
+
+Invocation {
+  $DMD = '1'
+  Sample-below size = 1
+}
+
+#-----------------------------------------------------------------
+
+Live {
+  4 blocks in heap block record 1 of 3
+  16,384 bytes (8,196 requested / 8,188 slop)
+  33.32% of the heap (33.32% cumulative)
+  Allocated at {
+    #01: C (C.cpp:99)
+  }
+}
+
+Live {
+  5 blocks in heap block record 2 of 3
+  16,400 bytes (12,016 requested / 4,384 slop)
+  33.35% of the heap (66.67% cumulative)
+  Allocated at {
+    #01: B (B.cpp:99)
+  }
+}
+
+Live {
+  5 blocks in heap block record 3 of 3
+  16,392 bytes (16,392 requested / 0 slop)
+  33.33% of the heap (100.00% cumulative)
+  Allocated at {
+    #01: A (A.cpp:99)
+  }
+}
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total: 49,176 bytes in 14 blocks
+}
+

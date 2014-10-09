@@ -1,0 +1,43 @@
+{
+ "version": 1,
+ "invocation": {
+  "dmdEnvVar": "1",
+  "sampleBelowSize": 1
+ },
+ "blockList": [
+  {"req": 4096, "alloc": "A"},
+  {"req": 128, "alloc": "B"},
+  {"req": 100, "slop":12, "alloc": "C"},
+  {"req": 80, "alloc": "D"}
+ ],
+ "traceTable": {
+  "A": ["E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"],
+  "B": ["E", "F", "G", "R", "S", "T", "U", "V"],
+  "C": ["E", "X", "Y", "Z"],
+  "D": ["E"]
+ },
+ "frameTable": {
+  "E": "#00: E (E.cpp:99)",
+  "F": "#00: F (F.cpp:99)",
+  "G": "#00: G (G.cpp:99)",
+  "H": "#00: H (H.cpp:99)",
+  "I": "#00: I (I.cpp:99)",
+  "J": "#00: J (J.cpp:99)",
+  "K": "#00: K (K.cpp:99)",
+  "L": "#00: L (L.cpp:99)",
+  "M": "#00: M (M.cpp:99)",
+  "N": "#00: N (N.cpp:99)",
+  "O": "#00: O (O.cpp:99)",
+  "P": "#00: P (P.cpp:99)",
+  "Q": "#00: Q (Q.cpp:99)",
+  "R": "#00: R (R.cpp:99)",
+  "S": "#00: S (S.cpp:99)",
+  "T": "#00: T (T.cpp:99)",
+  "U": "#00: U (U.cpp:99)",
+  "V": "#00: V (V.cpp:99)",
+  "W": "#00: W (W.cpp:99)",
+  "X": "#00: X (X.cpp:99)",
+  "Y": "#00: Y (Y.cpp:99)",
+  "Z": "#00: Z (Z.cpp:99)"
+ }
+}
