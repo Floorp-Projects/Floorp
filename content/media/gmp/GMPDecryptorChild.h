@@ -10,6 +10,7 @@
 #include "gmp-decryption.h"
 #include "mozilla/gmp/GMPTypes.h"
 #include "GMPEncryptedBufferDataImpl.h"
+#include <string>
 
 namespace mozilla {
 namespace gmp {
@@ -23,7 +24,7 @@ class GMPDecryptorChild : public GMPDecryptorCallback
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPDecryptorChild);
 
-  explicit GMPDecryptorChild(GMPChild* aPlugin);
+  explicit GMPDecryptorChild(GMPChild* aPlugin, const std::string& aNodeId);
 
   void Init(GMPDecryptor* aSession);
 
@@ -122,6 +123,8 @@ private:
   // Only call into this on the (GMP process) main thread.
   GMPDecryptor* mSession;
   GMPChild* mPlugin;
+
+  const std::string mNodeId;
 };
 
 } // namespace gmp
