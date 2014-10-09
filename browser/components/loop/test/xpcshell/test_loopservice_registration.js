@@ -40,7 +40,7 @@ add_test(function test_register_websocket_success_loop_server_fail() {
   }, err => {
     // 404 is an expected failure indicated by the lack of route being set
     // up on the Loop server mock. This is added in the next test.
-    Assert.equal(err, 404, "Expected no errors in websocket registration");
+    Assert.equal(err.errno, 404, "Expected no errors in websocket registration");
 
     run_next_test();
   });
