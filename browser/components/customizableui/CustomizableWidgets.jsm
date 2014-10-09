@@ -905,9 +905,8 @@ const CustomizableWidgets = [
   }, {
     id: "loop-call-button",
     type: "custom",
-    // XXX Bug 1013989 will provide a label for the button
-    label: "loop-call-button.label",
-    tooltiptext: "loop-call-button.tooltiptext",
+    label: "loop-call-button2.label",
+    tooltiptext: "loop-call-button2.tooltiptext",
     defaultArea: CustomizableUI.AREA_NAVBAR,
     introducedInVersion: 1,
     onBuild: function(aDocument) {
