@@ -22,8 +22,6 @@ namespace rx
 {
 class Renderer;
 class Renderer9;
-class TextureStorageInterface2D;
-class TextureStorageInterfaceCube;
 
 class Image9 : public ImageD3D
 {
@@ -44,17 +42,17 @@ class Image9 : public ImageD3D
     virtual bool isDirty() const;
     IDirect3DSurface9 *getSurface();
 
-    virtual void setManagedSurface(TextureStorageInterface2D *storage, int level);
-    virtual void setManagedSurface(TextureStorageInterfaceCube *storage, int face, int level);
-    virtual bool copyToStorage(TextureStorageInterface2D *storage, int level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
-    virtual bool copyToStorage(TextureStorageInterfaceCube *storage, int face, int level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
-    virtual bool copyToStorage(TextureStorageInterface3D *storage, int level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth);
-    virtual bool copyToStorage(TextureStorageInterface2DArray *storage, int level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height);
+    virtual void setManagedSurface2D(TextureStorage *storage, int level);
+    virtual void setManagedSurfaceCube(TextureStorage *storage, int face, int level);
+    virtual gl::Error copyToStorage2D(TextureStorage *storage, int level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
+    virtual gl::Error copyToStorageCube(TextureStorage *storage, int face, int level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
+    virtual gl::Error copyToStorage3D(TextureStorage *storage, int level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth);
+    virtual gl::Error copyToStorage2DArray(TextureStorage *storage, int level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height);
 
-    virtual void loadData(GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
-                          GLint unpackAlignment, GLenum type, const void *input);
-    virtual void loadCompressedData(GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
-                                    const void *input);
+    virtual gl::Error loadData(GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
+                               GLint unpackAlignment, GLenum type, const void *input);
+    virtual gl::Error loadCompressedData(GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
+                                         const void *input);
 
     virtual void copy(GLint xoffset, GLint yoffset, GLint zoffset,GLint x, GLint y, GLsizei width, GLsizei height, gl::Framebuffer *source);
 
@@ -63,11 +61,11 @@ class Image9 : public ImageD3D
 
     void createSurface();
     void setManagedSurface(IDirect3DSurface9 *surface);
-    bool copyToSurface(IDirect3DSurface9 *dest, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
+    gl::Error copyToSurface(IDirect3DSurface9 *dest, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
 
     HRESULT lock(D3DLOCKED_RECT *lockedRect, const RECT *rect);
     void unlock();
-    
+
     Renderer9 *mRenderer;
 
     D3DPOOL mD3DPool;   // can only be D3DPOOL_SYSTEMMEM or D3DPOOL_MANAGED since it needs to be lockable.

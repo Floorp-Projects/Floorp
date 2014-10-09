@@ -32,6 +32,7 @@ Shader::Shader(ResourceManager *manager, rx::ShaderImpl *impl, GLenum type, GLui
       mDeleteStatus(false),
       mCompiled(false)
 {
+    ASSERT(impl);
 }
 
 Shader::~Shader()
@@ -149,6 +150,56 @@ bool Shader::isFlaggedForDeletion() const
 void Shader::flagForDeletion()
 {
     mDeleteStatus = true;
+}
+
+const std::vector<gl::PackedVarying> &Shader::getVaryings() const
+{
+    return mShader->getVaryings();
+}
+
+const std::vector<sh::Uniform> &Shader::getUniforms() const
+{
+    return mShader->getUniforms();
+}
+
+const std::vector<sh::InterfaceBlock> &Shader::getInterfaceBlocks() const
+{
+    return mShader->getInterfaceBlocks();
+}
+
+const std::vector<sh::Attribute> &Shader::getActiveAttributes() const
+{
+    return mShader->getActiveAttributes();
+}
+
+const std::vector<sh::Attribute> &Shader::getActiveOutputVariables() const
+{
+    return mShader->getActiveOutputVariables();
+}
+
+std::vector<gl::PackedVarying> &Shader::getVaryings()
+{
+    return mShader->getVaryings();
+}
+
+std::vector<sh::Uniform> &Shader::getUniforms()
+{
+    return mShader->getUniforms();
+}
+
+std::vector<sh::InterfaceBlock> &Shader::getInterfaceBlocks()
+{
+    return mShader->getInterfaceBlocks();
+}
+
+std::vector<sh::Attribute> &Shader::getActiveAttributes()
+{
+    return mShader->getActiveAttributes();
+}
+
+std::vector<sh::Attribute> &Shader::getActiveOutputVariables()
+{
+    return mShader->getActiveOutputVariables();
 }
 
 }

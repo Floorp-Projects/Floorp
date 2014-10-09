@@ -320,44 +320,4 @@ template void GetVariableTraverser::traverse(const TType &, const TString &, std
 template void GetVariableTraverser::traverse(const TType &, const TString &, std::vector<Varying> *);
 template void GetVariableTraverser::traverse(const TType &, const TString &, std::vector<InterfaceBlockField> *);
 
-BlockLayoutType GetBlockLayoutType(TLayoutBlockStorage blockStorage)
-{
-    switch (blockStorage)
-    {
-      case EbsPacked:         return BLOCKLAYOUT_PACKED;
-      case EbsShared:         return BLOCKLAYOUT_SHARED;
-      case EbsStd140:         return BLOCKLAYOUT_STANDARD;
-      default: UNREACHABLE(); return BLOCKLAYOUT_SHARED;
-    }
-}
-
-static TString InterfaceBlockFieldName(const TInterfaceBlock &interfaceBlock, const TField &field)
-{
-    if (interfaceBlock.hasInstanceName())
-    {
-        return interfaceBlock.name() + "." + field.name();
-    }
-    else
-    {
-        return field.name();
-    }
-}
-
-void GetInterfaceBlockFields(const TInterfaceBlock &interfaceBlock, std::vector<InterfaceBlockField> *fieldsOut)
-{
-    const TFieldList &fieldList = interfaceBlock.fields();
-
-    for (size_t fieldIndex = 0; fieldIndex < fieldList.size(); ++fieldIndex)
-    {
-        const TField &field = *fieldList[fieldIndex];
-        const TString &fullFieldName = InterfaceBlockFieldName(interfaceBlock, field);
-        const TType &fieldType = *field.type();
-
-        GetVariableTraverser traverser;
-        traverser.traverse(fieldType, fullFieldName, fieldsOut);
-
-        fieldsOut->back().isRowMajorLayout = (fieldType.getLayoutQualifier().matrixPacking == EmpRowMajor);
-    }
-}
-
 }

@@ -4,7 +4,7 @@
 // found in the LICENSE file.
 //
 
-// Image.h: Implements the rx::Image class, an abstract base class for the 
+// Image.h: Implements the rx::Image class, an abstract base class for the
 // renderer-specific classes which will define the interface to the underlying
 // surfaces or resources.
 
@@ -15,7 +15,7 @@ namespace rx
 
 Image::Image()
 {
-    mWidth = 0; 
+    mWidth = 0;
     mHeight = 0;
     mDepth = 0;
     mInternalFormat = GL_NONE;
