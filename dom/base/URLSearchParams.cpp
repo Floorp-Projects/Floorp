@@ -257,11 +257,19 @@ void
 URLSearchParams::Set(const nsAString& aName, const nsAString& aValue)
 {
   Param* param = nullptr;
-  for (uint32_t i = 0, len = mSearchParams.Length(); i < len; ++i) {
-    if (mSearchParams[i].mKey.Equals(aName)) {
-      param = &mSearchParams[i];
-      break;
+  for (uint32_t i = 0, len = mSearchParams.Length(); i < len;) {
+    if (!mSearchParams[i].mKey.Equals(aName)) {
+      ++i;
+      continue;
     }
+    if (!param) {
+      param = &mSearchParams[i];
+      ++i;
+      continue;
+    }
+    // Remove duplicates.
+    mSearchParams.RemoveElementAt(i);
+    --len;
   }
 
   if (!param) {
