@@ -12,15 +12,7 @@ let manifest = { // normal provider
 };
 let activationPage = "https://example.com/browser/browser/base/content/test/social/share_activate.html";
 
-function waitForProviderEnabled(cb) {
-  Services.obs.addObserver(function providerSet(subject, topic, data) {
-    Services.obs.removeObserver(providerSet, "social:provider-enabled");
-    info("social:provider-enabled observer was notified");
-    cb();
-  }, "social:provider-enabled", false);
-}
-
-function sendActivationEvent(subframe, callback) {
+function sendActivationEvent(subframe) {
   // hack Social.lastEventReceived so we don't hit the "too many events" check.
   Social.lastEventReceived = 0;
   let doc = subframe.contentDocument;
@@ -28,18 +20,18 @@ function sendActivationEvent(subframe, callback) {
   let button = doc.getElementById("activation");
   ok(!!button, "got the activation button");
   EventUtils.synthesizeMouseAtCenter(button, {}, doc.defaultView);
-  if (callback)
-    executeSoon(callback);
 }
 
-function waitForEvent(iframe, eventName, callback) {
+function promiseShareFrameEvent(iframe, eventName) {
+  let deferred = Promise.defer();
   iframe.addEventListener(eventName, function load() {
     info("page load is " + iframe.contentDocument.location.href);
     if (iframe.contentDocument.location.href != "data:text/plain;charset=utf8,") {
       iframe.removeEventListener(eventName, load, true);
-      executeSoon(callback);
+      deferred.resolve();
     }
   }, true);
+  return deferred.promise;
 }
 
 function test() {
@@ -116,15 +108,6 @@ let corpus = [
   }
 ];
 
-function loadURLInTab(url, callback) {
-  info("Loading tab with "+url);
-  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
-  waitForEvent(tab.linkedBrowser, "load", () => {
-    is(tab.linkedBrowser.currentURI.spec, url, "tab loaded")
-    callback(tab)
-  });
-}
-
 function hasoptions(testOptions, options) {
   let msg;
   for (let option in testOptions) {
@@ -175,7 +158,7 @@ var tests = {
     SocialUI.onCustomizeEnd(window);
 
     let testData = corpus[0];
-    loadURLInTab(testData.url, function(tab) {
+    addTab(testData.url, function(tab) {
       SocialService.addProvider(manifest, function(provider) {
         is(SocialUI.enabled, true, "SocialUI is enabled");
         checkSocialUI();
@@ -199,7 +182,7 @@ var tests = {
     let testData = corpus[testIndex++];
 
     function runOneTest() {
-      loadURLInTab(testData.url, function(tab) {
+      addTab(testData.url, function(tab) {
         testTab = tab;
         SocialShare.sharePage(manifest.origin);
       });
@@ -303,7 +286,7 @@ var tests = {
     SocialShare._createFrame();
     let iframe = SocialShare.iframe;
 
-    waitForEvent(iframe, "load", () => {
+    promiseShareFrameEvent(iframe, "load").then(() => {
       let subframe = iframe.contentDocument.getElementById("activation-frame");
       waitForCondition(() => {
           // sometimes the iframe is ready before the panel is open, we need to
@@ -313,7 +296,7 @@ var tests = {
                  && subframe.contentDocument.readyState == "complete";
         }, () => {
         is(subframe.contentDocument.location.href, activationPage, "activation page loaded");
-        waitForProviderEnabled(() => {
+        promiseObserverNotified("social:provider-enabled").then(() => {
           let provider = Social._getProviderFromOrigin(manifest.origin);
           let port = provider.getWorkerPort();
           ok(!!port, "got port");
@@ -332,7 +315,7 @@ var tests = {
         sendActivationEvent(subframe);
       }, "share panel did not open and load share page");
     });
-    loadURLInTab(activationPage, function(tab) {
+    addTab(activationPage, function(tab) {
       testTab = tab;
       SocialShare.sharePage();
     });
