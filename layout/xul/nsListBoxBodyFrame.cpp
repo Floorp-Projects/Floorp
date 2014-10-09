@@ -7,6 +7,7 @@
 
 #include "nsListBoxLayout.h"
 
+#include "mozilla/MathAlgorithms.h"
 #include "nsCOMPtr.h"
 #include "nsGridRowGroupLayout.h"
 #include "nsIServiceManager.h"
@@ -40,6 +41,7 @@
 #include "nsAccessibilityService.h"
 #endif
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 /////////////// nsListScrollSmoother //////////////////
@@ -328,39 +330,56 @@ void
 nsListBoxBodyFrame::ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection)
 {
   MOZ_ASSERT(aScrollbar != nullptr);
-  UpdateIndex(aDirection);
   aScrollbar->SetIncrementToPage(aDirection);
-  aScrollbar->MoveToNewPosition();
+  nsWeakFrame weakFrame(this);
+  int32_t newPos = aScrollbar->MoveToNewPosition();
+  if (!weakFrame.IsAlive()) {
+    return;
+  }
+  UpdateIndex(newPos);
 }
 
 void
 nsListBoxBodyFrame::ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection)
 {
-  MOZ_ASSERT(aScrollbar != nullptr); 
-  UpdateIndex(aDirection);
+  MOZ_ASSERT(aScrollbar != nullptr);
   aScrollbar->SetIncrementToWhole(aDirection);
-  aScrollbar->MoveToNewPosition();
+  nsWeakFrame weakFrame(this);
+  int32_t newPos = aScrollbar->MoveToNewPosition();
+  if (!weakFrame.IsAlive()) {
+    return;
+  }
+  UpdateIndex(newPos);
 }
 
 void
 nsListBoxBodyFrame::ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection)
 {
-  MOZ_ASSERT(aScrollbar != nullptr); 
-  UpdateIndex(aDirection);
+  MOZ_ASSERT(aScrollbar != nullptr);
   aScrollbar->SetIncrementToLine(aDirection);
-  aScrollbar->MoveToNewPosition();
+  nsWeakFrame weakFrame(this);
+  int32_t newPos = aScrollbar->MoveToNewPosition();
+  if (!weakFrame.IsAlive()) {
+    return;
+  }
+  UpdateIndex(newPos);
 }
 
 void
 nsListBoxBodyFrame::RepeatButtonScroll(nsScrollbarFrame* aScrollbar)
 {
-  int32_t increment = aScrollbar->GetIncrement();
-  if (increment < 0) {
-    UpdateIndex(-1);
-  } else if (increment > 0) {
-    UpdateIndex(1);
+  nsWeakFrame weakFrame(this);
+  int32_t newPos = aScrollbar->MoveToNewPosition();
+  if (!weakFrame.IsAlive()) {
+    return;
   }
-  aScrollbar->MoveToNewPosition();
+  UpdateIndex(newPos);
+}
+
+int32_t
+nsListBoxBodyFrame::ToRowIndex(nscoord aPos) const
+{
+  return NS_roundf(float(std::max(aPos, 0)) / mRowHeight);
 }
 
 void
@@ -371,32 +390,21 @@ nsListBoxBodyFrame::ThumbMoved(nsScrollbarFrame* aScrollbar,
   if (mScrolling || mRowHeight == 0)
     return;
 
-  nscoord oldTwipIndex;
-  oldTwipIndex = mCurrentIndex*mRowHeight;
-  int32_t twipDelta = aNewPos > oldTwipIndex ? aNewPos - oldTwipIndex : oldTwipIndex - aNewPos;
-
-  int32_t rowDelta = twipDelta / mRowHeight;
-  int32_t remainder = twipDelta % mRowHeight;
-  if (remainder > (mRowHeight/2))
-    rowDelta++;
-
-  if (rowDelta == 0)
+  int32_t newIndex = ToRowIndex(aNewPos);
+  if (newIndex == mCurrentIndex) {
     return;
-
-  // update the position to be row based.
-
-  int32_t newIndex = aNewPos > oldTwipIndex ? mCurrentIndex + rowDelta : mCurrentIndex - rowDelta;
-  //aNewIndex = newIndex*mRowHeight/mOnePixel;
+  }
+  int32_t rowDelta = newIndex - mCurrentIndex;
 
   nsListScrollSmoother* smoother = GetSmoother();
 
   // if we can't scroll the rows in time then start a timer. We will eat
   // events until the user stops moving and the timer stops.
-  if (smoother->IsRunning() || rowDelta*mTimePerRow > USER_TIME_THRESHOLD) {
+  if (smoother->IsRunning() || Abs(rowDelta)*mTimePerRow > USER_TIME_THRESHOLD) {
 
      smoother->Stop();
 
-     smoother->mDelta = aNewPos > oldTwipIndex ? rowDelta : -rowDelta;
+     smoother->mDelta = rowDelta;
 
      smoother->Start();
 
@@ -412,7 +420,7 @@ nsListBoxBodyFrame::ThumbMoved(nsScrollbarFrame* aScrollbar,
     mCurrentIndex = 0;
     return;
   }
-  InternalPositionChanged(aNewPos < oldTwipIndex, rowDelta);
+  InternalPositionChanged(rowDelta < 0, Abs(rowDelta));
 }
 
 void
@@ -439,18 +447,16 @@ nsListBoxBodyFrame::GetScrollbarBox(bool aVertical)
 }
 
 void
-nsListBoxBodyFrame::UpdateIndex(int32_t aDirection)
+nsListBoxBodyFrame::UpdateIndex(int32_t aNewPos)
 {
-  if (aDirection == 0)
-    return;
-  if (aDirection < 0)
-    mCurrentIndex--;
-  else mCurrentIndex++;
-  if (mCurrentIndex < 0) {
-    mCurrentIndex = 0;
+  int32_t newIndex = ToRowIndex(nsPresContext::CSSPixelsToAppUnits(aNewPos));
+  if (newIndex == mCurrentIndex) {
     return;
   }
-  InternalPositionChanged(aDirection < 0, 1);
+  bool up = newIndex < mCurrentIndex;
+  int32_t indexDelta = Abs(newIndex - mCurrentIndex);
+  mCurrentIndex = newIndex;
+  InternalPositionChanged(up, indexDelta);
 }
  
 ///////////// nsIReflowCallback ///////////////
