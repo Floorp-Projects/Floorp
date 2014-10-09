@@ -1,0 +1,22 @@
+diff --git a/gfx/ots/src/woff2.cc b/gfx/ots/src/woff2.cc
+--- a/gfx/ots/src/woff2.cc
++++ b/gfx/ots/src/woff2.cc
+@@ -6,17 +6,17 @@
+ // Condensed file format.
+ 
+ #include <cassert>
+ #include <cstdlib>
+ #include <vector>
+ 
+ #include <zlib.h>
+ 
+-#include "third_party/brotli/src/brotli/dec/decode.h"
++#include "decode.h"
+ 
+ #include "opentype-sanitiser.h"
+ #include "ots-memory-stream.h"
+ #include "ots.h"
+ #include "woff2.h"
+ 
+ namespace {
+ 
