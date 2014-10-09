@@ -194,7 +194,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     static void objectMoved(JSObject *obj, const JSObject *old);
 
-    static BufferContents stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer);
+    static BufferContents stealContents(JSContext *cx,
+                                        Handle<ArrayBufferObject*> buffer,
+                                        bool hasStealableContents);
 
     bool hasStealableContents() const {
         // Inline elements strictly adhere to the corresponding buffer.
