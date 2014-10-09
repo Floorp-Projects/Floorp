@@ -586,31 +586,12 @@ class ArenaLists
 
     ArenaList      arenaLists[FINALIZE_LIMIT];
 
-    /*
-     * The background finalization adds the finalized arenas to the list at
-     * the cursor position. backgroundFinalizeState controls the interaction
-     * between the GC lock and the access to the list from the allocation
-     * thread.
-     *
-     * BFS_DONE indicates that the finalizations is not running or cannot
-     * affect this arena list. The allocation thread can access the list
-     * outside the GC lock.
-     *
-     * In BFS_RUN and BFS_JUST_FINISHED the allocation thread must take the
-     * lock. The former indicates that the finalization still runs. The latter
-     * signals that finalization just added to the list finalized arenas. In
-     * that case the lock effectively serves as a read barrier to ensure that
-     * the allocation thread sees all the writes done during finalization.
-     */
-    enum BackgroundFinalizeStateEnum {
-        BFS_DONE,
-        BFS_RUN,
-        BFS_JUST_FINISHED
-    };
+    enum BackgroundFinalizeStateEnum { BFS_DONE, BFS_RUN };
 
     typedef mozilla::Atomic<BackgroundFinalizeStateEnum, mozilla::ReleaseAcquire>
         BackgroundFinalizeState;
 
+    /* The current background finalization state, accessed atomically. */
     BackgroundFinalizeState backgroundFinalizeState[FINALIZE_LIMIT];
 
   public:
@@ -704,16 +685,14 @@ class ArenaLists
     void unmarkAll() {
         for (size_t i = 0; i != FINALIZE_LIMIT; ++i) {
             /* The background finalization must have stopped at this point. */
-            MOZ_ASSERT(backgroundFinalizeState[i] == BFS_DONE ||
-                       backgroundFinalizeState[i] == BFS_JUST_FINISHED);
+            MOZ_ASSERT(backgroundFinalizeState[i] == BFS_DONE);
             for (ArenaHeader *aheader = arenaLists[i].head(); aheader; aheader = aheader->next)
                 aheader->unmarkAll();
         }
     }
 
     bool doneBackgroundFinalize(AllocKind kind) const {
-        return backgroundFinalizeState[kind] == BFS_DONE ||
-               backgroundFinalizeState[kind] == BFS_JUST_FINISHED;
+        return backgroundFinalizeState[kind] == BFS_DONE;
     }
 
     bool needBackgroundFinalizeWait(AllocKind kind) const {
@@ -850,7 +829,7 @@ class ArenaLists
 
     bool foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sliceBudget,
                             SortedArenaList &sweepList);
-    static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgroundThread);
+    static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead);
 
     void wipeDuringParallelExecution(JSRuntime *rt);
 
