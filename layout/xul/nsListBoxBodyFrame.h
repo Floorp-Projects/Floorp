@@ -98,7 +98,8 @@ public:
   nsresult DoInternalPositionChanged(bool aUp, int32_t aDelta);
   nsListScrollSmoother* GetSmoother();
   void VerticalScroll(int32_t aDelta);
-  void UpdateIndex(int32_t aDirection);
+  // Update the scroll index given a position, in CSS pixels
+  void UpdateIndex(int32_t aNewPos);
 
   // frames
   nsIFrame* GetFirstFrame();
@@ -166,6 +167,7 @@ protected:
   };
 
   void ComputeTotalRowCount();
+  int32_t ToRowIndex(nscoord aPos) const;
   void RemoveChildFrame(nsBoxLayoutState &aState, nsIFrame *aChild);
 
   nsTArray< nsRefPtr<nsPositionChangedEvent> > mPendingPositionChangeEvents;
