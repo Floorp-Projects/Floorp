@@ -625,9 +625,7 @@ loop.panel = (function(_, mozL10n) {
 
     _onStatusChanged: function() {
       var profile = navigator.mozLoop.userProfile;
-      var currUid = this.state.userProfile ? this.state.userProfile.uid : null;
-      var newUid = profile ? profile.uid : null;
-      if (currUid != newUid) {
+      if (profile != this.state.userProfile) {
         // On profile change (login, logout), switch back to the default tab.
         this.selectTab("call");
       }
