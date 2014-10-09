@@ -3,8 +3,6 @@
 [DEFAULT]
 %%DEFAULT_ERRATA%%
 
-support-files = webgl-conformance/mochi-single.html
-                webgl-conformance/mochi-wrapper.css
-                %%SUPPORT_FILES%%
+support-files = %%SUPPORT_FILES%%
 
 %%MANIFEST_TESTS%%
