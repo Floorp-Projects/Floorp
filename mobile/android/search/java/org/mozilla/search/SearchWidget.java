@@ -7,6 +7,7 @@ package org.mozilla.search;
 
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 

@@ -4,9 +4,16 @@
 
 package org.mozilla.search;
 
+import java.net.URISyntaxException;
+
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.search.providers.SearchEngine;
+
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.Fragment;
@@ -22,13 +29,6 @@ import android.webkit.WebViewClient;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.search.providers.SearchEngine;
-
-import java.net.URISyntaxException;
 
 public class PostSearchFragment extends Fragment {
 
