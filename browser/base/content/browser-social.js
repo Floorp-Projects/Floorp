@@ -179,7 +179,7 @@ SocialUI = {
   // about:home or the share panel, we bypass the enable prompt. Any website
   // activation, such as from the activations directory or a providers website
   // will still get the prompt.
-  _activationEventHandler: function SocialUI_activationHandler(e, aBypassUserEnable=false) {
+  _activationEventHandler: function SocialUI_activationHandler(e, options={}) {
     let targetDoc;
     let node;
     if (e.target instanceof HTMLDocument) {
@@ -193,7 +193,9 @@ SocialUI = {
     if (!(targetDoc instanceof HTMLDocument))
       return;
 
-    if (!aBypassUserEnable && targetDoc.defaultView != content)
+    // The share panel iframe will not match "content" so it passes a bypass
+    // flag
+    if (!options.bypassContentCheck && targetDoc.defaultView != content)
       return;
 
     // If we are in PB mode, we silently do nothing (bug 829404 exists to
@@ -240,12 +242,25 @@ SocialUI = {
             // ensure correct state
             SocialUI.onCustomizeEnd(window);
           }
+
+          // make this new provider the selected provider. If the panel hasn't
+          // been opened, we need to make the frame first.
+          SocialShare._createFrame();
+          SocialShare.iframe.setAttribute('src', 'data:text/plain;charset=utf8,');
+          SocialShare.iframe.setAttribute('origin', provider.origin);
+          // get the right button selected
+          SocialShare.populateProviderMenu();
+          if (SocialShare.panel.state == "open") {
+            SocialShare.sharePage(provider.origin);
+          }
         }
         if (provider.postActivationURL) {
-          openUILinkIn(provider.postActivationURL, "tab");
+          // if activated from an open share panel, we load the landing page in
+          // a background tab
+          gBrowser.loadOneTab(provider.postActivationURL, {inBackground: SocialShare.panel.state == "open"});
         }
       });
-    }, aBypassUserEnable);
+    }, options);
   },
 
   showLearnMore: function() {
@@ -502,8 +517,15 @@ SocialShare = {
       return this.panel.lastChild;
   },
 
+  _activationHandler: function(event) {
+    if (!Services.prefs.getBoolPref("social.share.activationPanelEnabled"))
+      return;
+    SocialUI._activationEventHandler(event, { bypassContentCheck: true, bypassInstallPanel: true });
+  },
+
   uninit: function () {
     if (this.iframe) {
+      this.iframe.removeEventListener("ActivateSocialFeature", this._activationHandler, true, true);
       this.iframe.remove();
     }
   },
@@ -522,6 +544,7 @@ SocialShare = {
     iframe.setAttribute("disableglobalhistory", "true");
     iframe.setAttribute("flex", "1");
     panel.appendChild(iframe);
+    this.iframe.addEventListener("ActivateSocialFeature", this._activationHandler, true, true);
     this.populateProviderMenu();
   },
 
