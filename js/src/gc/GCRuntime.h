@@ -534,7 +534,7 @@ class GCRuntime
     void decommitArenasFromAvailableList(Chunk **availableListHeadp);
     void decommitArenas();
     void expireChunksAndArenas(bool shouldShrink);
-    void sweepBackgroundThings(bool onBackgroundThread);
+    void sweepBackgroundThings();
     void assertBackgroundSweepingFinished();
     bool shouldCompact();
 #ifdef JSGC_COMPACTING

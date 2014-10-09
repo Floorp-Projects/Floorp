@@ -1936,11 +1936,8 @@ ArenaLists::allocateFromArena(JS::Zone *zone, AllocKind thingKind,
     AutoLockGC maybeLock;
 
     // See if we can proceed without taking the GC lock.
-    if (backgroundFinalizeState[thingKind] != BFS_DONE) {
+    if (backgroundFinalizeState[thingKind] != BFS_DONE)
         maybeLock.lock(rt);
-        if (backgroundFinalizeState[thingKind] == BFS_JUST_FINISHED)
-            backgroundFinalizeState[thingKind] = BFS_DONE;
-    }
 
     ArenaList &al = arenaLists[thingKind];
     ArenaHeader *aheader = al.takeNextArena();
@@ -2544,12 +2541,7 @@ ArenaLists::queueForBackgroundSweep(FreeOp *fop, AllocKind thingKind)
         return;
     }
 
-    /*
-     * The state can be done, or just-finished if we have not allocated any GC
-     * things from the arena list after the previous background finalization.
-     */
-    MOZ_ASSERT(backgroundFinalizeState[thingKind] == BFS_DONE ||
-               backgroundFinalizeState[thingKind] == BFS_JUST_FINISHED);
+    MOZ_ASSERT(backgroundFinalizeState[thingKind] == BFS_DONE);
 
     arenaListsToSweep[thingKind] = al->head();
     al->clear();
@@ -2557,7 +2549,7 @@ ArenaLists::queueForBackgroundSweep(FreeOp *fop, AllocKind thingKind)
 }
 
 /*static*/ void
-ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgroundThread)
+ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead)
 {
     MOZ_ASSERT(listHead);
     AllocKind thingKind = listHead->getAllocKind();
@@ -2580,29 +2572,13 @@ ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgr
     // Flatten |finalizedSorted| into a regular ArenaList.
     ArenaList finalized = finalizedSorted.toArenaList();
 
-    // Store this for later, since merging may change the state of |finalized|.
-    bool allClear = finalized.isEmpty();
-
     AutoLockGC lock(fop->runtime());
     MOZ_ASSERT(lists->backgroundFinalizeState[thingKind] == BFS_RUN);
 
     // Join |al| and |finalized| into a single list.
     *al = finalized.insertListWithCursorAtEnd(*al);
 
-    /*
-     * We must set the state to BFS_JUST_FINISHED if we are running on the
-     * background thread and we have touched arenaList list, even if we add to
-     * the list only fully allocated arenas without any free things. It ensures
-     * that the allocation thread takes the GC lock and all writes to the free
-     * list elements are propagated. As we always take the GC lock when
-     * allocating new arenas from the chunks we can set the state to BFS_DONE if
-     * we have released all finalized arenas back to their chunks.
-     */
-    if (onBackgroundThread && !allClear)
-        lists->backgroundFinalizeState[thingKind] = BFS_JUST_FINISHED;
-    else
-        lists->backgroundFinalizeState[thingKind] = BFS_DONE;
-
+    lists->backgroundFinalizeState[thingKind] = BFS_DONE;
     lists->arenaListsToSweep[thingKind] = nullptr;
 }
 
@@ -3134,7 +3110,7 @@ GCRuntime::expireChunksAndArenas(bool shouldShrink)
 }
 
 void
-GCRuntime::sweepBackgroundThings(bool onBackgroundThread)
+GCRuntime::sweepBackgroundThings()
 {
     /*
      * We must finalize in the correct order, see comments in
@@ -3147,7 +3123,7 @@ GCRuntime::sweepBackgroundThings(bool onBackgroundThread)
                 AllocKind kind = BackgroundPhases[phase][index];
                 ArenaHeader *arenas = zone->allocator.arenas.arenaListsToSweep[kind];
                 if (arenas)
-                    ArenaLists::backgroundFinalize(&fop, arenas, onBackgroundThread);
+                    ArenaLists::backgroundFinalize(&fop, arenas);
             }
         }
     }
@@ -3387,7 +3363,7 @@ GCHelperState::doSweep()
         sweepFlag = false;
         AutoUnlockGC unlock(rt);
 
-        rt->gc.sweepBackgroundThings(true);
+        rt->gc.sweepBackgroundThings();
 
         rt->freeLifoAlloc.freeAll();
     }
@@ -5138,7 +5114,7 @@ GCRuntime::endSweepPhase(bool lastGC)
     if (!sweepOnBackgroundThread) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_DESTROY);
 
-        sweepBackgroundThings(false);
+        sweepBackgroundThings();
 
         rt->freeLifoAlloc.freeAll();
 
@@ -6342,11 +6318,6 @@ ArenaLists::normalizeBackgroundFinalizeState(AllocKind thingKind)
     ArenaLists::BackgroundFinalizeState *bfs = &backgroundFinalizeState[thingKind];
     switch (*bfs) {
       case BFS_DONE:
-        break;
-      case BFS_JUST_FINISHED:
-        // No allocations between end of last sweep and now.
-        // Transfering over arenas is a kind of allocation.
-        *bfs = BFS_DONE;
         break;
       default:
         MOZ_ASSERT(!"Background finalization in progress, but it should not be.");
