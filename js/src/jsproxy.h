@@ -167,8 +167,9 @@ class JS_FRIEND_API(BaseProxyHandler)
      *   - When mHasPrototype is true, the engine never calls these methods:
      *     getPropertyDescriptor, has, set, enumerate, iterate.  Instead, for
      *     these operations, it calls the "own" methods like
-     *     getOwnPropertyDescriptor, hasOwn, defineProperty, keys, etc., and
-     *     consults the prototype chain if needed.
+     *     getOwnPropertyDescriptor, hasOwn, defineProperty,
+     *     getOwnEnumerablePropertyKeys, etc., and consults the prototype chain
+     *     if needed.
      *
      *   - When mHasPrototype is true, the engine calls handler->get() only if
      *     handler->hasOwn() says an own property exists on the proxy. If not,
@@ -299,7 +300,8 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                        MutableHandle<JSPropertyDescriptor> desc) const = 0;
     virtual bool hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const;
-    virtual bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props) const;
+    virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
+                                              AutoIdVector &props) const;
     virtual bool iterate(JSContext *cx, HandleObject proxy, unsigned flags,
                          MutableHandleValue vp) const;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args) const;
@@ -383,8 +385,8 @@ class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
                                        MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
     virtual bool hasOwn(JSContext *cx, HandleObject proxy, HandleId id,
                         bool *bp) const MOZ_OVERRIDE;
-    virtual bool keys(JSContext *cx, HandleObject proxy,
-                      AutoIdVector &props) const MOZ_OVERRIDE;
+    virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
+                                              AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, HandleObject proxy, unsigned flags,
                          MutableHandleValue vp) const MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,

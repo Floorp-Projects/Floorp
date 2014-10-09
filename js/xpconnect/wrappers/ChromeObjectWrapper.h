@@ -52,13 +52,14 @@ class ChromeObjectWrapper : public ChromeObjectWrapperBase
     virtual bool objectClassIs(JS::Handle<JSObject*> obj, js::ESClassValue classValue,
                                JSContext *cx) const MOZ_OVERRIDE;
 
-    // NB: One might think we'd need to implement enumerate(), keys(), iterate(),
-    // and getPropertyKeys() here. However, ES5 built-in properties aren't
-    // enumerable (and SpiderMonkey's implementation seems to match the spec
-    // modulo Error.prototype.fileName and Error.prototype.lineNumber). Since
-    // we're only remapping the prototypes of standard objects, there would
-    // never be anything more to enumerate up the prototype chain. So we can
-    // actually skip these.
+    // NB: One might think we'd need to implement enumerate(),
+    // getOwnEnumerablePropertyKeys(), iterate(), and ownPropertyKeys()
+    // here. However, ES5 built-in properties aren't enumerable (and
+    // SpiderMonkey's implementation seems to match the spec modulo
+    // Error.prototype.fileName and Error.prototype.lineNumber). Since we're
+    // only remapping the prototypes of standard objects, there would never be
+    // anything more to enumerate up the prototype chain. So we can actually
+    // skip these.
 
     static const ChromeObjectWrapper singleton;
 };

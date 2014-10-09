@@ -53,7 +53,8 @@ class Proxy
     static bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                       MutableHandleValue vp);
     static bool hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp);
-    static bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props);
+    static bool getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
+                                             AutoIdVector &props);
     static bool iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleValue vp);
     static bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
     static bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp);

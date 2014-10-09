@@ -64,12 +64,13 @@ public:
                              JS::Handle<jsid> id,
                              JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
 
-  // We override keys() and implement it directly instead of using the
-  // default implementation, which would getOwnPropertyNames and then
-  // filter out the non-enumerable ones.  This avoids doing
+
+  // We override getOwnEnumerablePropertyKeys() and implement it directly
+  // instead of using the default implementation, which would call
+  // ownPropertyKeys and then filter out the non-enumerable ones. This avoids
   // unnecessary work during enumeration.
-  virtual bool keys(JSContext* cx, JS::Handle<JSObject*> proxy,
-                    JS::AutoIdVector &props) const MOZ_OVERRIDE;
+  virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
+                                            JS::AutoIdVector &props) const MOZ_OVERRIDE;
 
   bool watch(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
              JS::Handle<JSObject*> callable) const MOZ_OVERRIDE;
