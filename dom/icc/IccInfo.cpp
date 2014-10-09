@@ -153,7 +153,10 @@ GsmIccInfo::GsmIccInfo(nsPIDOMWindow* aWindow)
 void
 GsmIccInfo::Update(nsIGsmIccInfo* aInfo)
 {
-  IccInfo::Update(aInfo);
+  nsCOMPtr<nsIIccInfo> iccInfo = do_QueryInterface(aInfo);
+  MOZ_ASSERT(iccInfo);
+
+  IccInfo::Update(iccInfo);
   mGsmIccInfo = aInfo;
 }
 
@@ -192,7 +195,10 @@ CdmaIccInfo::CdmaIccInfo(nsPIDOMWindow* aWindow)
 void
 CdmaIccInfo::Update(nsICdmaIccInfo* aInfo)
 {
-  IccInfo::Update(aInfo);
+  nsCOMPtr<nsIIccInfo> iccInfo = do_QueryInterface(aInfo);
+  MOZ_ASSERT(iccInfo);
+
+  IccInfo::Update(iccInfo);
   mCdmaIccInfo = aInfo;
 }
 
