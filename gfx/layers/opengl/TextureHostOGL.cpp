@@ -151,7 +151,7 @@ void
 CompositableDataGonkOGL::DeleteTextureIfPresent()
 {
   if (mTexture) {
-    MOZ_ASSERT(gl());
+    MOZ_ASSERT(mCompositor);
     if (gl() && gl()->MakeCurrent()) {
       gl()->fDeleteTextures(1, &mTexture);
     }
