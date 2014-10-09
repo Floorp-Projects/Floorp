@@ -13,12 +13,10 @@
 #include "nsIXSLTProcessorPrivate.h"
 #include "txExpandedNameMap.h"
 #include "txNamespaceMap.h"
-#include "nsIJSNativeInitializer.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 
 class nsIDOMNode;
-class nsIPrincipal;
 class nsIURI;
 class nsIXMLContentSink;
 class txStylesheet;
@@ -40,8 +38,7 @@ class txIGlobalParameter;
 class txMozillaXSLTProcessor MOZ_FINAL : public nsIXSLTProcessor,
                                          public nsIXSLTProcessorPrivate,
                                          public nsIDocumentTransformer,
-                                         public nsStubMutationObserver,
-                                         public nsIJSNativeInitializer
+                                         public nsStubMutationObserver
 {
 public:
     /**
@@ -61,9 +58,8 @@ public:
     NS_DECL_NSIXSLTPROCESSORPRIVATE
 
     // nsIDocumentTransformer interface
-    NS_IMETHOD Init(nsIPrincipal* aPrincipal) MOZ_OVERRIDE;
     NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) MOZ_OVERRIDE;
-    NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup) MOZ_OVERRIDE;
+    NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsIDocument* aLoaderDocument) MOZ_OVERRIDE;
     NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource) MOZ_OVERRIDE;
     NS_IMETHOD CancelLoads() MOZ_OVERRIDE {return NS_OK;}
     NS_IMETHOD AddXSLTParamNamespace(const nsString& aPrefix,
@@ -99,10 +95,6 @@ public:
         return (mFlags & DISABLE_ALL_LOADS) != 0;
     }
 
-    // nsIJSNativeInitializer
-    NS_IMETHODIMP Initialize(nsISupports* aOwner, JSContext *cx, JSObject *obj,
-                             const JS::CallArgs& aArgs);
-
     static nsresult Startup();
     static void Shutdown();
 
@@ -124,7 +116,6 @@ private:
     nsresult mTransformResult;
     nsresult mCompileResult;
     nsString mErrorText, mSourceText;
-    nsCOMPtr<nsIPrincipal> mPrincipal;
     nsCOMPtr<nsITransformObserver> mObserver;
     txOwningExpandedNameMap<txIGlobalParameter> mVariables;
     txNamespaceMap mParamNamespaceMap;
@@ -134,12 +125,10 @@ private:
 };
 
 extern nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
-                             nsILoadGroup* aLoadGroup,
-                             nsIPrincipal* aCallerPrincipal);
+                             nsIDocument* aLoaderDocument);
 
 extern nsresult TX_CompileStylesheet(nsINode* aNode,
                                      txMozillaXSLTProcessor* aProcessor,
-                                     nsIPrincipal* aCallerPrincipal,
                                      txStylesheet** aStylesheet);
 
 #endif

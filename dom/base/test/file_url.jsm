@@ -1,7 +1,7 @@
 this.EXPORTED_SYMBOLS = ['checkFromJSM'];
 
 this.checkFromJSM = function checkFromJSM(ok, is) {
-  Components.utils.importGlobalProperties(['URL']);
+  Components.utils.importGlobalProperties(['URL', 'Blob']);
 
   var url = new URL('http://www.example.com');
   is(url.href, "http://www.example.com/", "JSM should have URL");

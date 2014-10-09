@@ -579,8 +579,8 @@ WrapperAnswer::RecvRegExpToShared(const ObjectId &objId, ReturnStatus *rs,
 }
 
 bool
-WrapperAnswer::RecvGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
-                                    ReturnStatus *rs, nsTArray<nsString> *names)
+WrapperAnswer::RecvGetPropertyKeys(const ObjectId &objId, const uint32_t &flags,
+                                   ReturnStatus *rs, nsTArray<nsString> *names)
 {
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
@@ -591,10 +591,10 @@ WrapperAnswer::RecvGetPropertyNames(const ObjectId &objId, const uint32_t &flags
 
     JSAutoCompartment comp(cx, obj);
 
-    LOG("%s.getPropertyNames()", ReceiverObj(objId));
+    LOG("%s.getPropertyKeys()", ReceiverObj(objId));
 
     AutoIdVector props(cx);
-    if (!js::GetPropertyNames(cx, obj, flags, &props))
+    if (!js::GetPropertyKeys(cx, obj, flags, &props))
         return fail(cx, rs);
 
     for (size_t i = 0; i < props.length(); i++) {

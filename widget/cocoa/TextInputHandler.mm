@@ -8,9 +8,6 @@
 
 #include "TextInputHandler.h"
 
-#ifdef MOZ_LOGGING
-#define FORCE_PR_LOG /* Allow logging in the release build */
-#endif // MOZ_LOGGING
 #include "prlog.h"
 
 #include "mozilla/MiscEvents.h"
@@ -29,11 +26,6 @@
 #include "ComplexTextInputPanel.h"
 #include <objc/runtime.h>
 #endif // __LP64__
-
-#ifdef MOZ_LOGGING
-#define FORCE_PR_LOG
-#endif
-#include "prlog.h"
 
 #ifndef __LP64__
 enum {

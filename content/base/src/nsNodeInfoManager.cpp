@@ -32,10 +32,6 @@
 using namespace mozilla;
 using mozilla::dom::NodeInfo;
 
-#ifdef MOZ_LOGGING
-// so we can get logging even in release builds
-#define FORCE_PR_LOG 1
-#endif
 #include "prlog.h"
 
 #ifdef PR_LOGGING

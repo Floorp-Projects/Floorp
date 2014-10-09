@@ -14,11 +14,13 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 
-class nsIDOMBlob;
 class nsIInputStream;
 
 namespace mozilla {
 namespace dom {
+
+class File;
+
 namespace indexedDB {
 
 class FileInfo;
@@ -29,7 +31,7 @@ class SerializedStructuredCloneWriteInfo;
 
 struct StructuredCloneFile
 {
-  nsCOMPtr<nsIDOMBlob> mFile;
+  nsRefPtr<File> mFile;
   nsRefPtr<FileInfo> mFileInfo;
 
   // In IndexedDatabaseInlines.h

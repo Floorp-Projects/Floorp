@@ -101,7 +101,7 @@ Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions,
 {
   nsresult error = NS_OK;
   nsString realPath;
-  nsRefPtr<nsIDOMBlob> blobData;
+  nsRefPtr<File> blobData;
   InfallibleTArray<uint8_t> arrayData;
   bool replace = (aOptions.mIfExists == CreateIfExistsMode::Replace);
 
@@ -129,8 +129,8 @@ Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions,
     error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
   }
 
-  nsRefPtr<CreateFileTask> task = new CreateFileTask(mFileSystem, realPath,
-    blobData, arrayData, replace, aRv);
+  nsRefPtr<CreateFileTask> task =
+    new CreateFileTask(mFileSystem, realPath, blobData, arrayData, replace, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -193,12 +193,12 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
 {
   nsresult error = NS_OK;
   nsString realPath;
-  nsRefPtr<DOMFileImpl> file;
+  nsRefPtr<FileImpl> file;
 
   // Check and get the target path.
 
   if (aPath.IsFile()) {
-    file = static_cast<DOMFile*>(aPath.GetAsFile())->Impl();
+    file = aPath.GetAsFile().Impl();
     goto parameters_check_done;
   }
 

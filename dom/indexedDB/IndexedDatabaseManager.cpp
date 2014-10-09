@@ -17,6 +17,7 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/PBlobChild.h"
 #include "mozilla/dom/quota/OriginOrPatternString.h"

@@ -12,7 +12,7 @@ namespace {
 struct PropertyComparator
 {
   const nsCString& mKey;
-  PropertyComparator(const nsCString& aKey) : mKey(aKey) {}
+  explicit PropertyComparator(const nsCString& aKey) : mKey(aKey) {}
   int operator()(const char* (&aProperty)[3]) const {
     return mKey.Compare(aProperty[0]);
   }

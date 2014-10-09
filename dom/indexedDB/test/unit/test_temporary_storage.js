@@ -3,6 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+Components.utils.importGlobalProperties(['Blob']);
+
 var testGenerator = testSteps();
 
 function testSteps()
@@ -209,7 +211,7 @@ function testSteps()
 
   let trans = db.transaction(["foo"], "readwrite");
 
-  let blob = Blob(["bar"]);
+  let blob = new Blob(["bar"]);
   request = trans.objectStore("foo").add(blob, 42);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;

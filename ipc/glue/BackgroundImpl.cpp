@@ -20,14 +20,13 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/ipc/nsIRemoteBlob.h"
 #include "mozilla/ipc/ProtocolTypes.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsDOMFile.h"
-#include "nsIDOMFile.h"
 #include "nsIEventTarget.h"
 #include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsIMutable.h"
@@ -847,7 +846,7 @@ BackgroundParent::GetContentParent(PBackgroundParent* aBackgroundActor)
 PBlobParent*
 BackgroundParent::GetOrCreateActorForBlobImpl(
                                             PBackgroundParent* aBackgroundActor,
-                                            DOMFileImpl* aBlobImpl)
+                                            FileImpl* aBlobImpl)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aBackgroundActor);
@@ -923,7 +922,7 @@ BackgroundChild::GetOrCreateActorForBlob(PBackgroundChild* aBackgroundActor,
   MOZ_ASSERT(aBackgroundActor == GetForCurrentThread(),
              "BackgroundChild is bound to a different thread!");
 
-  nsRefPtr<DOMFileImpl> blobImpl = static_cast<DOMFile*>(aBlob)->Impl();
+  nsRefPtr<FileImpl> blobImpl = static_cast<File*>(aBlob)->Impl();
   MOZ_ASSERT(blobImpl);
 
   BlobChild* actor = BlobChild::GetOrCreate(aBackgroundActor, blobImpl);

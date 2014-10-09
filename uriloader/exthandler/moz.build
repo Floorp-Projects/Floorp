@@ -51,29 +51,22 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    'ExternalHelperAppParent.cpp',
-    'nsLocalHandlerApp.cpp',
-    'nsMIMEInfoImpl.cpp',
-]
-
-# These files can't be built in unified mode because they force NSPR logging.
-SOURCES += [
     'ExternalHelperAppChild.cpp',
+    'ExternalHelperAppParent.cpp',
     'nsExternalHelperAppService.cpp',
     'nsExternalProtocolHandler.cpp',
+    'nsLocalHandlerApp.cpp',
+    'nsMIMEInfoImpl.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
         'mac/nsLocalHandlerAppMac.mm',
         'mac/nsMIMEInfoMac.mm',
-    ]
-    # These files can't be built in unified mode because they force NSPR logging.
-    SOURCES += [
         'mac/nsOSHelperAppService.mm',
     ]
 else:
-    # These files can't be built in unified mode because they force NSPR logging.
+    # These files can't be built in unified mode because they redefine LOG.
     SOURCES += [
         osdir + '/nsOSHelperAppService.cpp',
     ]
@@ -96,8 +89,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
         'unix/nsMIMEInfoUnix.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    # These files can't be built in unified mode because they force NSPR logging.
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'win/nsMIMEInfoWin.cpp',
     ]
 

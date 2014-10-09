@@ -6,6 +6,8 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+Cu.importGlobalProperties(['Blob']);
+
 Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -133,7 +135,7 @@ const backgroundPageThumbsContent = {
     capture.canvasDrawTime = new Date() - canvasDrawDate;
 
     canvas.toBlob(blob => {
-      capture.imageBlob = blob;
+      capture.imageBlob = new Blob([blob]);
       // Load about:blank to finish the capture and wait for onStateChange.
       this._loadAboutBlank();
     });

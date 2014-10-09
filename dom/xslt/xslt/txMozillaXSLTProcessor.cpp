@@ -281,6 +281,11 @@ public:
         mTxValue = aValue;
     }
 
+    friend void ImplCycleCollectionUnlink(txVariable& aVariable);
+    friend void ImplCycleCollectionTraverse(
+        nsCycleCollectionTraversalCallback& aCallback, txVariable& aVariable,
+        const char* aName, uint32_t aFlags);
+
 private:
     static nsresult Convert(nsIVariant *aValue, txAExprResult** aResult);
 
@@ -288,27 +293,41 @@ private:
     nsRefPtr<txAExprResult> mTxValue;
 };
 
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            txVariable& aVariable, const char* aName,
+                            uint32_t aFlags)
+{
+    ImplCycleCollectionTraverse(aCallback, aVariable.mValue, aName, aFlags);
+}
+
+inline void
+ImplCycleCollectionUnlink(txOwningExpandedNameMap<txIGlobalParameter>& aMap)
+{
+    aMap.clear();
+}
+
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            txOwningExpandedNameMap<txIGlobalParameter>& aMap,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+    aFlags |= CycleCollectionEdgeNameArrayFlag;
+    txOwningExpandedNameMap<txIGlobalParameter>::iterator iter(aMap);
+    while (iter.next()) {
+        ImplCycleCollectionTraverse(aCallback,
+                                    *static_cast<txVariable*>(iter.value()),
+                                    aName, aFlags);
+    }
+}
+
 /**
  * txMozillaXSLTProcessor
  */
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(txMozillaXSLTProcessor)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(txMozillaXSLTProcessor)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mEmbeddedStylesheetRoot)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mSource)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mPrincipal)
-    tmp->mVariables.clear();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(txMozillaXSLTProcessor)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEmbeddedStylesheetRoot)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSource)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrincipal)
-    txOwningExpandedNameMap<txIGlobalParameter>::iterator iter(tmp->mVariables);
-    while (iter.next()) {
-        cb.NoteXPCOMChild(static_cast<txVariable*>(iter.value())->getValue());
-    }
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION(txMozillaXSLTProcessor, mEmbeddedStylesheetRoot,
+                         mSource, mVariables)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(txMozillaXSLTProcessor)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(txMozillaXSLTProcessor)
@@ -320,7 +339,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(txMozillaXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessorPrivate)
     NS_INTERFACE_MAP_ENTRY(nsIDocumentTransformer)
     NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-    NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXSLTProcessor)
     NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XSLTProcessor)
 NS_INTERFACE_MAP_END
@@ -580,7 +598,7 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
                     styleNode->IsNodeOfType(nsINode::eDOCUMENT)),
                    NS_ERROR_INVALID_ARG);
 
-    nsresult rv = TX_CompileStylesheet(styleNode, this, mPrincipal,
+    nsresult rv = TX_CompileStylesheet(styleNode, this,
                                        getter_AddRefs(mStylesheet));
     // XXX set up exception context, bug 204658
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1008,9 +1026,10 @@ txMozillaXSLTProcessor::GetFlags(uint32_t* aFlags)
 }
 
 NS_IMETHODIMP
-txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup)
+txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri,
+                                       nsIDocument* aLoaderDocument)
 {
-    nsresult rv = TX_LoadSheet(aUri, this, aLoadGroup, mPrincipal);
+    nsresult rv = TX_LoadSheet(aUri, this, aLoaderDocument);
     if (NS_FAILED(rv) && mObserver) {
         // This is most likely a network or security error, just
         // use the uri as context.
@@ -1181,8 +1200,7 @@ txMozillaXSLTProcessor::ensureStylesheet()
         style = mStylesheetDocument;
     }
 
-    return TX_CompileStylesheet(style, this, mPrincipal,
-                                getter_AddRefs(mStylesheet));
+    return TX_CompileStylesheet(style, this, getter_AddRefs(mStylesheet));
 }
 
 void
@@ -1242,23 +1260,6 @@ txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
                                        nsIContent* aPreviousSibling)
 {
     mStylesheet = nullptr;
-}
-
-NS_IMETHODIMP
-txMozillaXSLTProcessor::Initialize(nsISupports* aOwner, JSContext* cx,
-                                   JSObject* obj, const JS::CallArgs& args)
-{
-    MOZ_ASSERT(nsContentUtils::GetCurrentJSContext());
-    return Init(nsContentUtils::SubjectPrincipal());
-}
-
-NS_IMETHODIMP
-txMozillaXSLTProcessor::Init(nsIPrincipal* aPrincipal)
-{
-    NS_ENSURE_ARG_POINTER(aPrincipal);
-    mPrincipal = aPrincipal;
-
-    return NS_OK;
 }
 
 /* static*/

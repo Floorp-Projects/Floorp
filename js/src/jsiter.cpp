@@ -297,7 +297,7 @@ Snapshot(JSContext *cx, JSObject *pobj_, unsigned flags, AutoIdVector *props)
                         // This gets all property keys, both strings and
                         // symbols.  The call to Enumerate in the loop below
                         // will filter out unwanted keys, per the flags.
-                        if (!Proxy::getOwnPropertyNames(cx, pobj, proxyProps))
+                        if (!Proxy::ownPropertyKeys(cx, pobj, proxyProps))
                             return false;
                     } else {
                         if (!Proxy::keys(cx, pobj, proxyProps))
@@ -396,7 +396,7 @@ js::VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
 }
 
 JS_FRIEND_API(bool)
-js::GetPropertyNames(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector *props)
+js::GetPropertyKeys(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector *props)
 {
     return Snapshot(cx, obj,
                     flags & (JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS | JSITER_SYMBOLSONLY),

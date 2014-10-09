@@ -8,12 +8,13 @@
 
 #include "js/Value.h"
 #include "mozilla/dom/Directory.h"
+#include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/BlobParent.h"
-#include "nsDOMFile.h"
 #include "nsIFile.h"
 #include "nsStringGlue.h"
 
@@ -81,7 +82,7 @@ GetFileOrDirectoryTask::GetSuccessRequestResult() const
     return FileSystemDirectoryResponse(mTargetRealPath);
   }
 
-  nsRefPtr<DOMFile> file = new DOMFile(mTargetFileImpl);
+  nsRefPtr<File> file = new File(mFileSystem->GetWindow(), mTargetFileImpl);
   BlobParent* actor = GetBlobParent(file);
   if (!actor) {
     return FileSystemErrorResponse(NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR);
@@ -99,8 +100,7 @@ GetFileOrDirectoryTask::SetSuccessRequestResult(const FileSystemResponseValue& a
     case FileSystemResponseValue::TFileSystemFileResponse: {
       FileSystemFileResponse r = aValue;
       BlobChild* actor = static_cast<BlobChild*>(r.blobChild());
-      nsCOMPtr<nsIDOMBlob> blob = actor->GetBlob();
-      mTargetFileImpl = static_cast<DOMFile*>(blob.get())->Impl();
+      mTargetFileImpl = actor->GetBlobImpl();
       mIsDirectory = false;
       break;
     }
@@ -185,7 +185,7 @@ GetFileOrDirectoryTask::Work()
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  mTargetFileImpl = new DOMFileImplFile(file);
+  mTargetFileImpl = new FileImplFile(file);
 
   return NS_OK;
 }
@@ -214,7 +214,7 @@ GetFileOrDirectoryTask::HandlerCallback()
     return;
   }
 
-  nsCOMPtr<nsIDOMFile> file = new DOMFile(mTargetFileImpl);
+  nsRefPtr<File> file = new File(mFileSystem->GetWindow(), mTargetFileImpl);
   mPromise->MaybeResolve(file);
   mPromise = nullptr;
 }

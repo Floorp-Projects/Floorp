@@ -7,11 +7,11 @@
 #include "ImageCapture.h"
 #include "mozilla/dom/BlobEvent.h"
 #include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/ImageCaptureError.h"
 #include "mozilla/dom/ImageCaptureErrorEvent.h"
 #include "mozilla/dom/ImageCaptureErrorEventBinding.h"
 #include "mozilla/dom/VideoStreamTrack.h"
-#include "nsDOMFile.h"
 #include "nsIDocument.h"
 #include "CaptureTask.h"
 #include "MediaEngine.h"
@@ -102,9 +102,9 @@ ImageCapture::TakePhotoByMediaEngine()
       mPrincipalChanged = true;
     }
 
-    nsresult PhotoComplete(already_AddRefed<DOMFile> aBlob) MOZ_OVERRIDE
+    nsresult PhotoComplete(already_AddRefed<File> aBlob) MOZ_OVERRIDE
     {
-      nsRefPtr<DOMFile> blob = aBlob;
+      nsRefPtr<File> blob = aBlob;
 
       if (mPrincipalChanged) {
         return PhotoError(NS_ERROR_DOM_SECURITY_ERR);
@@ -172,7 +172,7 @@ ImageCapture::TakePhoto(ErrorResult& aResult)
 }
 
 nsresult
-ImageCapture::PostBlobEvent(nsIDOMBlob* aBlob)
+ImageCapture::PostBlobEvent(File* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!CheckPrincipal()) {

@@ -4,29 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.gecko;
 
-import android.app.NotificationManager;
 import android.app.KeyguardManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.net.Uri;
-import android.util.Log;
+import android.support.v4.app.NotificationCompat;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.ListView;
-import android.support.v4.app.NotificationCompat;
-
-import org.mozilla.gecko.prompts.Prompt;
-import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
-import org.mozilla.gecko.util.ThreadUtils;
-
-import java.io.File;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 // Utility methods for entering/exiting guest mode.
 public class GuestSession {
@@ -103,12 +89,6 @@ public class GuestSession {
     public static void hideNotification(Context context) {
         final NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         manager.cancel(R.id.guestNotification);
-    }
-
-    public static void onDestroy(Context context) {
-        if (GeckoProfile.get(context).inGuestMode()) {
-            hideNotification(context);
-        }
     }
 
     public static void handleIntent(BrowserApp context, Intent intent) {
