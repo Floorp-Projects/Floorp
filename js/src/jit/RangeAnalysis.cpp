@@ -1602,7 +1602,11 @@ RangeAnalysis::analyzeLoop(MBasicBlock *header)
         return true;
 
     bool canOsr;
-    MarkLoopBlocks(graph_, header, &canOsr);
+    size_t numBlocks = MarkLoopBlocks(graph_, header, &canOsr);
+
+    // Ignore broken loops.
+    if (numBlocks == 0)
+        return true;
 
     LoopIterationBound *iterationBound = nullptr;
 

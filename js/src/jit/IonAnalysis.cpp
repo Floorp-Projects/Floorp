@@ -3214,12 +3214,12 @@ jit::MarkLoopBlocks(MIRGraph &graph, MBasicBlock *header, bool *canOsr)
         MOZ_ASSERT(i != graph.poEnd(),
                    "Reached the end of the graph while searching for the loop header");
         MBasicBlock *block = *i;
-        // A block not marked by the time we reach it is not in the loop.
-        if (!block->isMarked())
-            continue;
         // If we've reached the loop header, we're done.
         if (block == header)
             break;
+        // A block not marked by the time we reach it is not in the loop.
+        if (!block->isMarked())
+            continue;
         // This block is in the loop; trace to its predecessors.
         for (size_t p = 0, e = block->numPredecessors(); p != e; ++p) {
             MBasicBlock *pred = block->getPredecessor(p);
@@ -3262,7 +3262,15 @@ jit::MarkLoopBlocks(MIRGraph &graph, MBasicBlock *header, bool *canOsr)
             }
         }
     }
-    MOZ_ASSERT(header->isMarked(), "Loop header should be part of the loop");
+
+    // If there's no path connecting the header to the backedge, then this isn't
+    // actually a loop. This can happen when the code starts with a loop but GVN
+    // folds some branches away.
+    if (!header->isMarked()) {
+        jit::UnmarkLoopBlocks(graph, header);
+        return 0;
+    }
+
     return numMarked;
 }
 
@@ -3346,6 +3354,10 @@ jit::MakeLoopsContiguous(MIRGraph &graph)
         // Mark all blocks that are actually part of the loop.
         bool canOsr;
         size_t numMarked = MarkLoopBlocks(graph, header, &canOsr);
+
+        // If the loop isn't a loop, don't try to optimize it.
+        if (numMarked == 0)
+            continue;
 
         // Move all blocks between header and backedge that aren't marked to
         // the end of the loop, making the loop itself contiguous.
