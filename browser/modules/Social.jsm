@@ -314,6 +314,7 @@ function CreateSocialMarkWidget(aId, aProvider) {
       let menuLabel = window.gNavigatorBundle.getFormattedString("social.markpageMenu.label", [aProvider.name]);
       node.setAttribute("label", menuLabel);
       node.setAttribute("tooltiptext", menuLabel);
+      node.setAttribute("observes", "Social:PageShareOrMark");
 
       return node;
     }

@@ -74,7 +74,7 @@ SocialUI = {
     Services.prefs.addObserver("social.toast-notifications.enabled", this, false);
 
     gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler.bind(this), true, true);
-    PanelUI.panel.addEventListener("popupshown", SocialUI.updatePanelState, true);
+    CustomizableUI.addListener(this);
 
     // menupopups that list social providers. we only populate them when shown,
     // and if it has not been done already.
@@ -107,8 +107,8 @@ SocialUI = {
     Services.obs.removeObserver(this, "social:provider-disabled");
 
     Services.prefs.removeObserver("social.toast-notifications.enabled", this);
+    CustomizableUI.removeListener(this);
 
-    PanelUI.panel.removeEventListener("popupshown", SocialUI.updatePanelState, true);
     document.getElementById("viewSidebarMenu").removeEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
     document.getElementById("social-statusarea-popup").removeEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
 
@@ -172,7 +172,6 @@ SocialUI = {
     SocialShare.populateProviderMenu();
     SocialStatus.populateToolbarPalette();
     SocialMarks.populateToolbarPalette();
-    SocialShare.update();
   },
 
   // This handles "ActivateSocialFeature" events fired against content documents
@@ -230,6 +229,18 @@ SocialUI = {
         if (provider.sidebarURL) {
           SocialSidebar.show(provider.origin);
         }
+        if (provider.shareURL) {
+          // Ensure that the share button is somewhere usable.
+          // SocialShare.shareButton may return null if it is in the menu-panel
+          // and has never been visible, so we check the widget directly. If
+          // there is no area for the widget we move it into the toolbar.
+          let widget = CustomizableUI.getWidget("social-share-button");
+          if (!widget.areaType) {
+            CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);
+            // ensure correct state
+            SocialUI.onCustomizeEnd(window);
+          }
+        }
         if (provider.postActivationURL) {
           openUILinkIn(provider.postActivationURL, "tab");
         }
@@ -284,21 +295,49 @@ SocialUI = {
     return Social.providers.length > 0;
   },
 
-  updatePanelState :function(event) {
-    // we only want to update when the panel is initially opened, not during
-    // multiview changes
-    if (event.target != PanelUI.panel)
+  canShareOrMarkPage: function(aURI) {
+    // Bug 898706 we do not enable social in private sessions since frameworker
+    // would be shared between private and non-private windows
+    if (PrivateBrowsingUtils.isWindowPrivate(window))
+      return false;
+
+    return (aURI && (aURI.schemeIs('http') || aURI.schemeIs('https')));
+  },
+
+  onCustomizeEnd: function(aWindow) {
+    if (aWindow != window)
       return;
-    SocialUI.updateState();
+    // customization mode gets buttons out of sync with command updating, fix
+    // the disabled state
+    let canShare = this.canShareOrMarkPage(gBrowser.currentURI);
+    let shareButton = SocialShare.shareButton;
+    if (shareButton) {
+      if (canShare) {
+        shareButton.removeAttribute("disabled")
+      } else {
+        shareButton.setAttribute("disabled", "true")
+      }
+    }
+    // update the disabled state of the button based on the command
+    for (let node of SocialMarks.nodes) {
+      if (canShare) {
+        node.removeAttribute("disabled")
+      } else {
+        node.setAttribute("disabled", "true")
+      }
+    }
   },
 
   // called on tab/urlbar/location changes and after customization. Update
   // anything that is tab specific.
   updateState: function() {
+    if (location == "about:customizing")
+      return;
+    goSetCommandEnabled("Social:PageShareOrMark", this.canShareOrMarkPage(gBrowser.currentURI));
     if (!SocialUI.enabled)
       return;
+    // larger update that may change button icons
     SocialMarks.update();
-    SocialShare.update();
   }
 }
 
@@ -495,6 +534,13 @@ SocialShare = {
     return provider;
   },
 
+  createTooltip: function(event) {
+    let tt = event.target;
+    let provider = Social._getProviderFromOrigin(tt.triggerNode.getAttribute("origin"));
+    tt.firstChild.setAttribute("value", provider.name);
+    tt.lastChild.setAttribute("value", provider.origin);
+  },
+
   populateProviderMenu: function() {
     if (!this.iframe)
       return;
@@ -513,7 +559,7 @@ SocialShare = {
       button.setAttribute("type", "radio");
       button.setAttribute("group", "share-providers");
       button.setAttribute("image", provider.iconURL);
-      button.setAttribute("tooltiptext", provider.name);
+      button.setAttribute("tooltip", "share-button-tooltip");
       button.setAttribute("origin", provider.origin);
       button.setAttribute("oncommand", "SocialShare.sharePage(this.getAttribute('origin'));");
       if (provider == selectedProvider) {
@@ -537,42 +583,6 @@ SocialShare = {
     if (!widget || !widget.areaType)
       return null;
     return widget.forWindow(window).node;
-  },
-
-  canSharePage: function(aURI) {
-    // we do not enable sharing from private sessions
-    if (PrivateBrowsingUtils.isWindowPrivate(window))
-      return false;
-
-    if (!aURI || !(aURI.schemeIs('http') || aURI.schemeIs('https')))
-      return false;
-    return true;
-  },
-
-  update: function() {
-    let widget = CustomizableUI.getWidget("social-share-button");
-    if (!widget)
-      return;
-    let shareButton = widget.forWindow(window).node;
-    // hidden state is based on available share providers and location of
-    // button. It's always visible and disabled in the customization palette.
-    shareButton.hidden = !SocialUI.enabled || (widget.areaType &&
-                         [p for (p of Social.providers) if (p.shareURL)].length == 0);
-    let disabled = !widget.areaType || shareButton.hidden || !this.canSharePage(gBrowser.currentURI);
-
-    // 1. update the relevent command's disabled state so the keyboard
-    // shortcut only works when available.
-    // 2. If the button has been relocated to a place that is not visible by
-    // default (e.g. menu panel) then the disabled attribute will not update
-    // correctly based on the command, so we update the attribute directly as.
-    let cmd = document.getElementById("Social:SharePage");
-    if (disabled) {
-      cmd.setAttribute("disabled", "true");
-      shareButton.setAttribute("disabled", "true");
-    } else {
-      cmd.removeAttribute("disabled");
-      shareButton.removeAttribute("disabled");
-    }
   },
 
   _onclick: function() {
@@ -631,7 +641,7 @@ SocialShare = {
     let pageData = graphData ? graphData : this.currentShare;
     let sharedURI = pageData ? Services.io.newURI(pageData.url, null, null) :
                                 gBrowser.currentURI;
-    if (!this.canSharePage(sharedURI))
+    if (!SocialUI.canShareOrMarkPage(sharedURI))
       return;
 
     // the point of this action type is that we can use existing share
@@ -1334,20 +1344,27 @@ SocialStatus = {
  * Handles updates to toolbox and signals all buttons to update when necessary.
  */
 SocialMarks = {
-  update: function() {
-    // querySelectorAll does not work on the menu panel the panel, so we have to
-    // do this the hard way.
-    let providers = SocialMarks.getProviders();
+  get nodes() {
+    let providers = [p for (p of Social.providers) if (p.markURL)];
     for (let p of providers) {
       let widgetId = SocialMarks._toolbarHelper.idFromOrigin(p.origin);
       let widget = CustomizableUI.getWidget(widgetId);
       if (!widget)
         continue;
       let node = widget.forWindow(window).node;
+      if (node)
+        yield node;
+    }
+  },
+  update: function() {
+    // querySelectorAll does not work on the menu panel, so we have to do this
+    // the hard way.
+    for (let node of this.nodes) {
       // xbl binding is not complete on startup when buttons are not in toolbar,
       // verify update is available
-      if (node && node.update)
+      if (node.update) {
         node.update();
+      }
     }
   },
 
