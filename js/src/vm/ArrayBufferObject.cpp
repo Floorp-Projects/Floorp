@@ -712,8 +712,11 @@ ArrayBufferObject::ensureNonInline(JSContext *cx, Handle<ArrayBufferObject*> buf
 }
 
 /* static */ ArrayBufferObject::BufferContents
-ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer)
+ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer,
+                                 bool hasStealableContents)
 {
+    MOZ_ASSERT_IF(hasStealableContents, buffer->hasStealableContents());
+
     if (!buffer->canNeuter(cx)) {
         js_ReportOverRecursed(cx);
         return BufferContents::createUnowned(nullptr);
@@ -724,7 +727,7 @@ ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffe
     if (!newContents)
         return BufferContents::createUnowned(nullptr);
 
-    if (buffer->hasStealableContents()) {
+    if (hasStealableContents) {
         // Return the old contents and give the neutered buffer a pointer to
         // freshly allocated memory that we will never write to and should
         // never get committed.
@@ -1167,7 +1170,19 @@ JS_StealArrayBufferContents(JSContext *cx, HandleObject objArg)
     }
 
     Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
-    return ArrayBufferObject::stealContents(cx, buffer).data();
+    if (buffer->isNeutered()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        return nullptr;
+    }
+
+    // The caller assumes that a plain malloc'd buffer is returned.
+    // hasStealableContents is true for mapped buffers, so we must additionally
+    // require that the buffer is plain. In the future, we could consider
+    // returning something that handles releasing the memory.
+    bool hasStealableContents = buffer->hasStealableContents() &&
+                                buffer->bufferKind() == ArrayBufferObject::PLAIN_BUFFER;
+
+    return ArrayBufferObject::stealContents(cx, buffer, hasStealableContents).data();
 }
 
 JS_PUBLIC_API(JSObject *)
