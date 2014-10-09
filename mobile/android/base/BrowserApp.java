@@ -2376,6 +2376,11 @@ public class BrowserApp extends GeckoApp
                 view.getHitRect(mTempRect);
                 mTempRect.offset(-view.getScrollX(), -view.getScrollY());
 
+                if (mTintManager != null) {
+                    SystemBarTintManager.SystemBarConfig config = mTintManager.getConfig();
+                    mTempRect.offset(0, -config.getPixelInsetTop(false));
+                }
+
                 int[] viewCoords = new int[2];
                 view.getLocationOnScreen(viewCoords);
 
