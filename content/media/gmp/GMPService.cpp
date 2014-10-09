@@ -5,6 +5,7 @@
 
 #include "GMPService.h"
 #include "prlog.h"
+#include "prio.h"
 #include "GMPParent.h"
 #include "GMPVideoDecoderParent.h"
 #include "nsIObserverService.h"
