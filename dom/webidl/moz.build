@@ -528,7 +528,6 @@ WEBIDL_FILES = [
     'XPathEvaluator.webidl',
     'XPathExpression.webidl',
     'XPathResult.webidl',
-    'XSLTProcessor.webidl',
     'XULCommandEvent.webidl',
     'XULDocument.webidl',
     'XULElement.webidl',

@@ -8,7 +8,6 @@
 #include "nsError.h"
 #include "txXMLUtils.h"
 #include "txXSLTFunctions.h"
-#include "txExpandedName.h"
 #include "txNamespaceMap.h"
 
 nsresult

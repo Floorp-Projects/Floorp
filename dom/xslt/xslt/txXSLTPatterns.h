@@ -7,7 +7,6 @@
 #define TX_XSLT_PATTERNS_H
 
 #include "mozilla/Attributes.h"
-#include "txExpandedName.h"
 #include "txExpr.h"
 #include "txXMLUtils.h"
 
