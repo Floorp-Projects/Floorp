@@ -359,6 +359,10 @@ public:
                                    const ContainerLayerParameters& aParameters,
                                    nsRect* aOutClipRect,
                                    nsTArray<FrameMetrics>* aOutput) const = 0;
+  /**
+   * Mark the scrollbar frames for reflow.
+   */
+  virtual void MarkScrollbarsDirtyForReflow() const = 0;
 };
 
 #endif
