@@ -21,7 +21,7 @@ namespace mozilla {
 // Manages file I/O for the media cache. Data comes in over the network
 // via callbacks on the main thread, however we don't want to write the
 // incoming data to the media cache on the main thread, as this could block
-// causing UI jank. 
+// causing UI jank.
 //
 // So FileBlockCache provides an abstraction for a temporary file accessible
 // as an array of blocks, which supports a block move operation, and
