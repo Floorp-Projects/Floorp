@@ -232,25 +232,16 @@ GMPChild::Init(const std::string& aPluginPath,
   SendPCrashReporterConstructor(CrashReporter::CurrentThreadId());
 #endif
 
+#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   mPluginPath = aPluginPath;
   return true;
-}
+#endif
 
-bool
-GMPChild::RecvSetNodeId(const nsCString& aNodeId)
-{
-  // TODO: hash mNodeId with machine specific data.
-  mNodeId = std::string(aNodeId.BeginReading(), aNodeId.EndReading());
-  return true;
-}
-
-bool
-GMPChild::RecvStartPlugin()
-{
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
   mozilla::SandboxTarget::Instance()->StartSandbox();
 #endif
-  return LoadPluginLibrary(mPluginPath);
+
+  return LoadPluginLibrary(aPluginPath);
 }
 
 bool
@@ -408,7 +399,7 @@ GMPChild::DeallocPGMPVideoDecoderChild(PGMPVideoDecoderChild* aActor)
 PGMPDecryptorChild*
 GMPChild::AllocPGMPDecryptorChild()
 {
-  GMPDecryptorChild* actor = new GMPDecryptorChild(this, mNodeId);
+  GMPDecryptorChild* actor = new GMPDecryptorChild(this);
   actor->AddRef();
   return actor;
 }

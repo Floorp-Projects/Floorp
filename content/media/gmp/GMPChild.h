@@ -47,10 +47,6 @@ public:
   void ShutdownComplete() MOZ_OVERRIDE;
 
 private:
-
-  virtual bool RecvSetNodeId(const nsCString& aNodeId) MOZ_OVERRIDE;
-  virtual bool RecvStartPlugin() MOZ_OVERRIDE;
-
   virtual PCrashReporterChild* AllocPCrashReporterChild(const NativeThreadId& aThread) MOZ_OVERRIDE;
   virtual bool DeallocPCrashReporterChild(PCrashReporterChild*) MOZ_OVERRIDE;
 
@@ -89,11 +85,10 @@ private:
   PRLibrary* mLib;
   GMPGetAPIFunc mGetAPIFunc;
   MessageLoop* mGMPMessageLoop;
-  std::string mPluginPath;
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
+  std::string mPluginPath;
   nsCString mPluginBinaryPath;
 #endif
-  std::string mNodeId;
 };
 
 } // namespace gmp
