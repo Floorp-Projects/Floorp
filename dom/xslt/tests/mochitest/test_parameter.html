@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for setParameter/getParameter</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script>
+  var processor = new XSLTProcessor();
+
+  processor.setParameter(null, "test", "hello");
+  is(processor.getParameter(null, "test"), "hello", "null namespace works");
+
+  processor.setParameter("foo", "bar", "foobar");
+  is(processor.getParameter("foo", "bar"), "foobar", "non-null namespace works");
+
+  processor.setParameter(null, "test", 123);
+  is(processor.getParameter(null, "test"), 123, "number value works");
+
+  processor.removeParameter(null, "test");
+  is(processor.getParameter(null, "test"), null, "removeParameter works");
+
+  is(processor.getParameter(null, "not-here"), null, "nonexistant parameter");
+</script>
+</pre>
+</body>
+</html>
