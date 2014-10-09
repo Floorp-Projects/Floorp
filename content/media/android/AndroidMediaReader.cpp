@@ -242,7 +242,7 @@ bool AndroidMediaReader::DecodeVideoFrame(bool &aKeyframeSkip,
                             -1,
                             picture);
     }
- 
+
     if (!v) {
       return false;
     }
