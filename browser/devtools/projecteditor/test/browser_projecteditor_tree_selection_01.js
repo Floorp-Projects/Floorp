@@ -39,10 +39,16 @@ function selectFileFirstLoad(projecteditor, resource) {
 
   if (resource.isRoot) {
     ok (container.expanded, "The root directory is expanded by default.");
+    container.line.click();
+    ok (container.expanded, "Clicking on the line does not toggles expansion.");
     return;
   }
   if (resource.isDir) {
     ok (!container.expanded, "A directory is not expanded by default.");
+    container.line.click();
+    ok (container.expanded, "Clicking on the line toggles expansion.");
+    container.line.click();
+    ok (!container.expanded, "Clicking on the line toggles expansion.");
     return;
   }
 

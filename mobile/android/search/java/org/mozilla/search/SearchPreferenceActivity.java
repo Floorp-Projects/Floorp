@@ -4,6 +4,13 @@
 
 package org.mozilla.search;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.LocaleAware;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.db.BrowserContract;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
@@ -13,12 +20,6 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.util.Log;
 import android.widget.Toast;
-
-import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.LocaleAware;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.db.BrowserContract;
 
 /**
  * This activity allows users to modify the settings for the search activity.
