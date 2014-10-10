@@ -45,6 +45,7 @@ public class testFindInPage extends PixelTest {
         selectMenuItem(StringHelper.FIND_IN_PAGE_LABEL);
         close = mDriver.findElement(getActivity(), R.id.find_close);
         boolean success = waitForTest ( new BooleanTest() {
+            @Override
             public boolean test() {
                 next = mDriver.findElement(getActivity(), R.id.find_next);
                 if (next != null) {
@@ -66,6 +67,7 @@ public class testFindInPage extends PixelTest {
         // Advance a few matches to scroll the page
         for (int i=1;i < nrOfMatches;i++) {
             success = waitForTest ( new BooleanTest() {
+                @Override
                 public boolean test() {
                     if (next.click()) {
                         return true;

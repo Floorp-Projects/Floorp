@@ -62,6 +62,7 @@ public class PromptInput {
             mAutofocus = object.optBoolean("autofocus");
         }
 
+        @Override
         public View getView(final Context context) throws UnsupportedOperationException {
             EditText input = new FloatingHintEditText(context);
             input.setInputType(InputType.TYPE_CLASS_TEXT);
@@ -100,6 +101,7 @@ public class PromptInput {
             super(obj);
         }
 
+        @Override
         public View getView(final Context context) throws UnsupportedOperationException {
             EditText input = (EditText) super.getView(context);
             input.setRawInputType(Configuration.KEYBOARD_12KEY);
@@ -115,6 +117,7 @@ public class PromptInput {
             super(obj);
         }
 
+        @Override
         public View getView(Context context) throws UnsupportedOperationException {
             EditText input = (EditText) super.getView(context);
             input.setInputType(InputType.TYPE_CLASS_TEXT |
@@ -139,6 +142,7 @@ public class PromptInput {
             mChecked = obj.optBoolean("checked");
         }
 
+        @Override
         public View getView(Context context) throws UnsupportedOperationException {
             CheckBox checkbox = new CheckBox(context);
             checkbox.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
@@ -169,6 +173,7 @@ public class PromptInput {
             super(obj);
         }
 
+        @Override
         public View getView(Context context) throws UnsupportedOperationException {
             if (mType.equals("date")) {
                 try {
@@ -277,6 +282,7 @@ public class PromptInput {
             mSelected = obj.optInt("selected");
         }
 
+        @Override
         public View getView(final Context context) throws UnsupportedOperationException {
             if (Versions.preHC) {
                 spinner = new Spinner(context);
@@ -321,6 +327,7 @@ public class PromptInput {
             super(obj);
         }
 
+        @Override
         public View getView(Context context) throws UnsupportedOperationException {
             // not really an input, but a way to add labels and such to the dialog
             TextView view = new TextView(context);

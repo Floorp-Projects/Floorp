@@ -159,6 +159,7 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
             selected = obj.optBoolean("selected");
 
             BitmapUtils.getDrawable(context, iconUrl, new BitmapUtils.BitmapLoader() {
+                @Override
                 public void onBitmapFound(Drawable d) {
                     icon = d;
                     if (mAdapter != null) {

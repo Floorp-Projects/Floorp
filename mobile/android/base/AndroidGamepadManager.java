@@ -332,6 +332,7 @@ public class AndroidGamepadManager {
             // Poll known gamepads to see if they've disappeared.
             sPollTimer = new Timer();
             sPollTimer.scheduleAtFixedRate(new TimerTask() {
+                    @Override
                     public void run() {
                         for (Integer deviceId : sGamepads.keySet()) {
                             if (InputDevice.getDevice(deviceId) == null) {
@@ -343,6 +344,7 @@ public class AndroidGamepadManager {
             return;
         }
         sListener = new InputManager.InputDeviceListener() {
+                @Override
                 public void onInputDeviceAdded(int deviceId) {
                     InputDevice device = InputDevice.getDevice(deviceId);
                     if (device == null) {
@@ -353,6 +355,7 @@ public class AndroidGamepadManager {
                     }
                 }
 
+                @Override
                 public void onInputDeviceRemoved(int deviceId) {
                     if (sPendingGamepads.containsKey(deviceId)) {
                         // Got removed before Gecko's ack reached us.
@@ -365,6 +368,7 @@ public class AndroidGamepadManager {
                     }
                 }
 
+                @Override
                 public void onInputDeviceChanged(int deviceId) {
                 }
             };

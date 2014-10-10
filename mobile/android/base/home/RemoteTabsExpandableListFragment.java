@@ -358,6 +358,7 @@ public class RemoteTabsExpandableListFragment extends HomeFragment implements Re
         }
     }
 
+    @Override
     public void onClients(List<RemoteClient> clients) {
         // The clients listed were hidden and have been checked by the user. We
         // interpret that as "show these clients now".
@@ -443,9 +444,11 @@ public class RemoteTabsExpandableListFragment extends HomeFragment implements Re
             return FirefoxAccounts.getFirefoxAccount(getContext());
         }
 
+        @Override
         public void onSyncStarted() {
         }
 
+        @Override
         public void onSyncFinished() {
             mRefreshLayout.setRefreshing(false);
         }

@@ -81,6 +81,7 @@ public class GPSScanner implements LocationListener {
 
         reportLocationLost();
         mGPSListener = new GpsStatus.Listener() {
+                @Override
                 public void onGpsStatusChanged(int event) {
                 if (event == GpsStatus.GPS_EVENT_SATELLITE_STATUS) {
                     GpsStatus status = getLocationManager().getGpsStatus(null);
