@@ -351,6 +351,7 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
     ComputeInsideBorderSize(aState, desiredInsideBorderSize);
   nsSize scrollPortSize = nsSize(std::max(0, aState->mInsideBorderSize.width - vScrollbarDesiredWidth),
                                  std::max(0, aState->mInsideBorderSize.height - hScrollbarDesiredHeight));
+  nsSize visualScrollPortSize = mHelper.GetScrollPositionClampingScrollPortSize();
 
   if (!aForce) {
     nsRect scrolledRect =
@@ -362,7 +363,7 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
     if (aState->mStyles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN) {
       bool wantHScrollbar =
         aState->mStyles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL ||
-        scrolledRect.XMost() >= scrollPortSize.width + oneDevPixel ||
+        scrolledRect.XMost() >= visualScrollPortSize.width + oneDevPixel ||
         scrolledRect.x <= -oneDevPixel;
       if (scrollPortSize.width < hScrollbarMinSize.width)
         wantHScrollbar = false;
@@ -374,7 +375,7 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
     if (aState->mStyles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
       bool wantVScrollbar =
         aState->mStyles.mVertical == NS_STYLE_OVERFLOW_SCROLL ||
-        scrolledRect.YMost() >= scrollPortSize.height + oneDevPixel ||
+        scrolledRect.YMost() >= visualScrollPortSize.height + oneDevPixel ||
         scrolledRect.y <= -oneDevPixel;
       if (scrollPortSize.height < vScrollbarMinSize.height)
         wantVScrollbar = false;
