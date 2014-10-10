@@ -326,7 +326,7 @@
             if (!this.docShell) {
               return null;
             }
-            this._webNavigation = this.docShell.QueryInterface(Ci.nsIWebNavigation);
+            this._webNavigation = this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
           }
           return this._webNavigation;
         ]]>
