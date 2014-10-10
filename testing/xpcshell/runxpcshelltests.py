@@ -7,6 +7,7 @@
 import copy
 import json
 import math
+import mozdebug
 import os
 import os.path
 import random
@@ -397,7 +398,7 @@ class XPCShellTestThread(Thread):
         self.xpcsCmd.extend(['-f', os.path.join(self.testharnessdir, 'head.js')])
 
         if self.debuggerInfo:
-            self.xpcsCmd = [self.debuggerInfo["path"]] + self.debuggerInfo["args"] + self.xpcsCmd
+            self.xpcsCmd = [self.debuggerInfo.path] + self.debuggerInfo.args + self.xpcsCmd
 
         # Automation doesn't specify a pluginsPath and xpcshell defaults to
         # $APPDIR/plugins. We do the same here so we can carry on with
@@ -757,7 +758,6 @@ class XPCShellTestThread(Thread):
 class XPCShellTests(object):
 
     log = getGlobalLog()
-    oldcwd = os.getcwd()
 
     def __init__(self, log=None):
         """ Init logging and node status """
@@ -904,7 +904,7 @@ class XPCShellTests(object):
             pStdout = None
             pStderr = None
         else:
-            if (self.debuggerInfo and self.debuggerInfo["interactive"]):
+            if (self.debuggerInfo and self.debuggerInfo.interactive):
                 pStdout = None
                 pStderr = None
             else:
@@ -1190,8 +1190,11 @@ class XPCShellTests(object):
           be printed always
         |logfiles|, if set to False, indicates not to save output to log files.
           Non-interactive only option.
-        |debuggerInfo|, if set, specifies the debugger and debugger arguments
-          that will be used to launch xpcshell.
+        |debugger|, if set, specifies the name of the debugger that will be used
+          to launch xpcshell.
+        |debuggerArgs|, if set, specifies arguments to use with the debugger.
+        |debuggerInteractive|, if set, allows the debugger to be run in interactive
+          mode.
         |profileName|, if set, specifies the name of the application for the profile
           directory if running only a subset of tests.
         |mozInfo|, if set, specifies specifies build configuration information, either as a filename containing JSON, or a dict.
@@ -1247,6 +1250,16 @@ class XPCShellTests(object):
             if not testingModulesDir.endswith(os.path.sep):
                 testingModulesDir += os.path.sep
 
+        self.debuggerInfo = None
+
+        if debugger:
+            # We need a list of arguments, not a string, to feed into
+            # the debugger
+            if debuggerArgs:
+                debuggerArgs = debuggerArgs.split();
+
+            self.debuggerInfo = mozdebug.get_debugger_info(debugger, debuggerArgs, debuggerInteractive)
+
         self.xpcshell = xpcshell
         self.xrePath = xrePath
         self.appPath = appPath
@@ -1261,7 +1274,6 @@ class XPCShellTests(object):
         self.on_message = on_message
         self.totalChunks = totalChunks
         self.thisChunk = thisChunk
-        self.debuggerInfo = getDebuggerInfo(self.oldcwd, debugger, debuggerArgs, debuggerInteractive)
         self.profileName = profileName or "xpcshell"
         self.mozInfo = mozInfo
         self.testingModulesDir = testingModulesDir
@@ -1362,7 +1374,7 @@ class XPCShellTests(object):
             self.sequential = True
 
             # If we have an interactive debugger, disable SIGINT entirely.
-            if self.debuggerInfo["interactive"]:
+            if self.debuggerInfo.interactive:
                 signal.signal(signal.SIGINT, lambda signum, frame: None)
 
         # create a queue of all tests that will run
