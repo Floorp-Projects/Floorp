@@ -136,7 +136,7 @@ function _getLibraryFunctionWithNoArguments(functionName, libraryName) {
   } catch(e) {
     // In case opening the library without a full path fails,
     // try again with a full path.
-    let file = Services.dirsvc.get("GreD", Ci.nsILocalFile);
+    let file = Services.dirsvc.get("GreBinD", Ci.nsILocalFile);
     file.append(path);
     nsslib = ctypes.open(file.path);
   }
@@ -360,11 +360,9 @@ function _setupTLSServerTest(serverBinName)
                            .getService(Ci.nsIProperties);
   let envSvc = Cc["@mozilla.org/process/environment;1"]
                  .getService(Ci.nsIEnvironment);
-  let greDir = directoryService.get("GreD", Ci.nsIFile);
-  let macOSDir = greDir.parent;
-  macOSDir.append("MacOS");
-  envSvc.set("DYLD_LIBRARY_PATH", macOSDir.path);
-  envSvc.set("LD_LIBRARY_PATH", greDir.path);
+  let greBinDir = directoryService.get("GreBinD", Ci.nsIFile);
+  envSvc.set("DYLD_LIBRARY_PATH", greBinDir.path);
+  envSvc.set("LD_LIBRARY_PATH", greBinDir.path);
   envSvc.set("MOZ_TLS_SERVER_DEBUG_LEVEL", "3");
   envSvc.set("MOZ_TLS_SERVER_CALLBACK_PORT", CALLBACK_PORT);
 
