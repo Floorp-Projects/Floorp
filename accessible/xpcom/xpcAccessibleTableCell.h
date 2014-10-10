@@ -21,7 +21,8 @@ class xpcAccessibleTableCell : public xpcAccessibleHyperText,
                                public nsIAccessibleTableCell
 {
 public:
-  xpcAccessibleTableCell(Accessible* aIntl) : xpcAccessibleHyperText(aIntl) { }
+  explicit xpcAccessibleTableCell(Accessible* aIntl) :
+    xpcAccessibleHyperText(aIntl) { }
 
   NS_DECL_ISUPPORTS_INHERITED
 
