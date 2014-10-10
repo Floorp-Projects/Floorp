@@ -617,9 +617,19 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       var notification = this.props.notification;
       return (
-        <div key={this.props.key}
-             className={"alert alert-" + notification.get("level")}>
-          <span className="message">{notification.get("message")}</span>
+        <div className="notificationContainer">
+          <div key={this.props.key}
+               className={"alert alert-" + notification.get("level")}>
+            <span className="message">{notification.get("message")}</span>
+          </div>
+          <div className={"detailsBar details-" + notification.get("level")}
+               hidden={!notification.get("details")}>
+            <button className="detailsButton btn-info"
+                    hidden={true || !notification.get("detailsButtonLabel")}>
+              {notification.get("detailsButtonLabel")}
+            </button>
+            <span className="details">{notification.get("details")}</span>
+          </div>
         </div>
       );
     }

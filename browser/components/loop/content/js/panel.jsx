@@ -55,7 +55,9 @@ loop.panel = (function(_, mozL10n) {
       }, this);
       return (
         <div className="tab-view-container">
-          <ul className="tab-view">{tabButtons}</ul>
+          {!this.props.buttonsHidden
+            ? <ul className="tab-view">{tabButtons}</ul>
+            : null}
           {tabs}
         </div>
       );
@@ -228,6 +230,12 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       var cx = React.addons.classSet;
+
+      // For now all of the menu entries require FxA so hide the whole gear if FxA is disabled.
+      if (!navigator.mozLoop.fxAEnabled) {
+        return null;
+      }
+
       return (
         <div className="settings-menu dropdown">
           <a className="button-settings" onClick={this.showDropdownMenu}
@@ -246,6 +254,7 @@ loop.panel = (function(_, mozL10n) {
                                           __("settings_menu_item_signout") :
                                           __("settings_menu_item_signin")}
                                    onClick={this.handleClickAuthEntry}
+                                   displayed={navigator.mozLoop.fxAEnabled}
                                    icon={this._isSignedIn() ? "signout" : "signin"} />
           </ul>
         </div>
@@ -312,10 +321,12 @@ loop.panel = (function(_, mozL10n) {
     },
 
     _onCallUrlReceived: function(err, callUrlData) {
-      this.props.notifications.reset();
-
       if (err) {
-        this.props.notifications.errorL10n("unable_retrieve_url");
+        if (err.code != 401) {
+          // 401 errors are already handled in hawkRequest and show an error
+          // message about the session.
+          this.props.notifications.errorL10n("unable_retrieve_url");
+        }
         this.setState(this.getInitialState());
       } else {
         try {
@@ -352,7 +363,11 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleLinkExfiltration: function(event) {
-      // TODO Bug 1015988 -- Increase link exfiltration telemetry count
+      try {
+        navigator.mozLoop.telemetryAdd("LOOP_CLIENT_CALL_URL_SHARED", true);
+      } catch (err) {
+        console.error("Error recording telemetry", err);
+      }
       if (this.state.callUrlExpiry) {
         navigator.mozLoop.noteCallUrlExpiry(this.state.callUrlExpiry);
       }
@@ -401,7 +416,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      if (navigator.mozLoop.userProfile) {
+      if (!navigator.mozLoop.fxAEnabled || navigator.mozLoop.userProfile) {
         return null;
       }
       return (
@@ -437,6 +452,7 @@ loop.panel = (function(_, mozL10n) {
       // Mostly used for UI components showcase and unit tests
       callUrl: React.PropTypes.string,
       userProfile: React.PropTypes.object,
+      showTabButtons: React.PropTypes.bool,
     },
 
     getInitialState: function() {
@@ -445,8 +461,41 @@ loop.panel = (function(_, mozL10n) {
       };
     },
 
-    _onAuthStatusChange: function() {
-      this.setState({userProfile: navigator.mozLoop.userProfile});
+    _serviceErrorToShow: function() {
+      if (!navigator.mozLoop.errors || !Object.keys(navigator.mozLoop.errors).length) {
+        return null;
+      }
+      // Just get the first error for now since more than one should be rare.
+      var firstErrorKey = Object.keys(navigator.mozLoop.errors)[0];
+      return {
+        type: firstErrorKey,
+        error: navigator.mozLoop.errors[firstErrorKey],
+      };
+    },
+
+    updateServiceErrors: function() {
+      var serviceError = this._serviceErrorToShow();
+      if (serviceError) {
+        this.props.notifications.set({
+          id: "service-error",
+          level: "error",
+          message: serviceError.error.friendlyMessage,
+          details: serviceError.error.friendlyDetails,
+          detailsButtonLabel: serviceError.error.friendlyDetailsButtonLabel,
+        });
+      } else {
+        this.props.notifications.remove(this.props.notifications.get("service-error"));
+      }
+    },
+
+    _onStatusChanged: function() {
+      var profile = navigator.mozLoop.userProfile;
+      if (profile != this.state.userProfile) {
+        // On profile change (login, logout), switch back to the default tab.
+        this.selectTab("call");
+      }
+      this.setState({userProfile: profile});
+      this.updateServiceErrors();
     },
 
     startForm: function(name, contact) {
@@ -458,12 +507,16 @@ loop.panel = (function(_, mozL10n) {
       this.refs.tabView.setState({ selectedTab: name });
     },
 
+    componentWillMount: function() {
+      this.updateServiceErrors();
+    },
+
     componentDidMount: function() {
-      window.addEventListener("LoopStatusChanged", this._onAuthStatusChange);
+      window.addEventListener("LoopStatusChanged", this._onStatusChanged);
     },
 
     componentWillUnmount: function() {
-      window.removeEventListener("LoopStatusChanged", this._onAuthStatusChange);
+      window.removeEventListener("LoopStatusChanged", this._onStatusChanged);
     },
 
     render: function() {
@@ -474,7 +527,7 @@ loop.panel = (function(_, mozL10n) {
         <div>
           <NotificationListView notifications={this.props.notifications}
                                 clearOnDocumentHidden={true} />
-          <TabView ref="tabView">
+          <TabView ref="tabView" buttonsHidden={!this.state.userProfile && !this.props.showTabButtons}>
             <Tab name="call">
               <div className="content-area">
                 <CallUrlResult client={this.props.client}
@@ -540,6 +593,7 @@ loop.panel = (function(_, mozL10n) {
   return {
     init: init,
     UserIdentity: UserIdentity,
+    AuthLink: AuthLink,
     AvailabilityDropdown: AvailabilityDropdown,
     CallUrlResult: CallUrlResult,
     PanelView: PanelView,
