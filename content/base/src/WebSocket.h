@@ -26,6 +26,10 @@
 namespace mozilla {
 namespace dom {
 
+namespace workers {
+class WorkerPrivate;
+}
+
 class File;
 
 class WebSocketImpl;
@@ -56,7 +60,7 @@ public:
   // nsWrapperCache
   nsPIDOMWindow* GetParentObject() { return GetOwner(); }
 
-  virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE;
 
 public: // static helpers:
 
@@ -133,7 +137,10 @@ private: // constructor && distructor
   // These methods actually do the dispatch for various events.
   nsresult CreateAndDispatchSimpleEvent(const nsAString& aName);
   nsresult CreateAndDispatchMessageEvent(const nsACString& aData,
-                                         bool isBinary);
+                                         bool aIsBinary);
+  nsresult CreateAndDispatchMessageEvent(JSContext* aCx,
+                                         const nsACString& aData,
+                                         bool aIsBinary);
   nsresult CreateAndDispatchCloseEvent(bool aWasClean,
                                        uint16_t aCode,
                                        const nsAString& aReason);
@@ -150,9 +157,13 @@ private:
   WebSocket(const WebSocket& x) MOZ_DELETE;   // prevent bad usage
   WebSocket& operator=(const WebSocket& x) MOZ_DELETE;
 
-  // Raw pointer because this WebSocketImpl is created, managed an destroyed by
+  // Raw pointer because this WebSocketImpl is created, managed and destroyed by
   // WebSocket.
   WebSocketImpl* mImpl;
+
+  // This is used just to check in which thread this object is used when mImpl
+  // is null.
+  workers::WorkerPrivate* mWorkerPrivate;
 
   bool mKeepingAlive;
   bool mCheckMustKeepAlive;
