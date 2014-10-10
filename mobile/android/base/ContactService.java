@@ -1823,7 +1823,7 @@ public class ContactService implements GeckoEventListener {
         }
     }
 
-    private static String getKeyFromMapValue(final HashMap<String, Integer> map, Integer value) {
+    private static String getKeyFromMapValue(final HashMap<String, Integer> map, int value) {
         for (Entry<String, Integer> entry : map.entrySet()) {
             if (value == entry.getValue()) {
                 return entry.getKey();
