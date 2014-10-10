@@ -7,9 +7,6 @@ var gNextRunFunc;
 var gExpectedStatusResult;
 
 function run_test() {
-  // This test needs access to omni.ja to read the update.locale file so don't
-  // use a custom directory for the application directory.
-  gUseTestAppDir = false;
   setupTestCommon();
 
   logTestInfo("testing mar download and mar hash verification");

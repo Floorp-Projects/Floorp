@@ -15,7 +15,7 @@ function run_test() {
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false, false);
+  setupUpdaterTest(FILE_COMPLETE_MAR);
 
   let fileInUseBin = getApplyDirFile(gTestDirs[4].relPathDir +
                                      gTestDirs[4].subDirs[0] +
@@ -30,7 +30,7 @@ function run_test() {
   helperBin.copyTo(fileInUseDir, gTestDirs[4].subDirFiles[0]);
 
   // Launch an existing file so it is in use during the update.
-  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s",
+  let args = [getApplyDirPath() + DIR_RESOURCES, "input", "output", "-s",
               HELPER_SLEEP_TIMEOUT];
   let fileInUseProcess = AUS_Cc["@mozilla.org/process/util;1"].
                          createInstance(AUS_Ci.nsIProcess);
@@ -60,7 +60,7 @@ function checkUpdateApplied() {
 }
 
 function checkUpdate() {
-  checkFilesAfterUpdateFailure(getApplyDirFile);
+  checkFilesAfterUpdateFailure(getApplyDirFile, false, false);
   checkUpdateLogContains(ERR_RENAME_FILE);
   checkCallbackAppLog();
 }

@@ -42,7 +42,9 @@
 #endif
 
 [xpcom]
+#ifndef XP_MACOSX
 @BINPATH@/dependentlibs.list
+#endif
 #ifdef GKMEDIAS_SHARED_LIBRARY
 @BINPATH@/@DLL_PREFIX@gkmedias@DLL_SUFFIX@
 #endif

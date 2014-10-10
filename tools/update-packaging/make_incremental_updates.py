@@ -22,7 +22,7 @@ class PatchInfo:
         archive_files = list of files to include in this patch
         manifestv2 = set of manifest version 2 patch instructions
         manifestv3 = set of manifest version 3 patch instructions
-        file_exclusion_list = 
+        file_exclusion_list =
         files to exclude from this patch. names without slashes will be
         excluded anywhere in the directory hiearchy.   names with slashes
         will only be excluded at that exact path
@@ -154,7 +154,7 @@ class PatchInfo:
                         dirname_set.add(dirname)
 
         return mar_entry_hash, filename_set, dirname_set
- 
+
 
 class MarFileEntry:
     """Represents a file inside a Mozilla Archive Format (MAR)
@@ -163,7 +163,7 @@ class MarFileEntry:
           foo.mar/dir/bar.txt extracted into /tmp/foo:
             abs_path=/tmp/foo/dir/bar.txt
             name = dir/bar.txt
-    """ 
+    """
     def __init__(self, root, name):
         """root = path the the top of the mar
            name = relative path within the mar"""
@@ -211,10 +211,10 @@ def bunzip_file(filename):
     if not filename.endswith(".bz2"):
         os.rename(filename, filename+".bz2")
         filename=filename+".bz2"
-    exec_shell_cmd('bzip2 -d "' + filename+'"') 
+    exec_shell_cmd('bzip2 -d "' + filename+'"')
 
 
-def extract_mar(filename, work_dir): 
+def extract_mar(filename, work_dir):
     """ Extracts the marfile intot he work_dir
         assumes work_dir already exists otherwise will throw osError"""
     print "Extracting "+filename+" to "+work_dir
@@ -280,7 +280,7 @@ def create_partial_patch_for_file(from_marfile_entry, to_marfile_entry, shas, pa
         # Copy the pre-calculated file into our new patch work aread
         copy_file(src_file_abs_path, os.path.join(patch_info.work_dir, file_in_manifest_name))
         patch_info.archive_files.append('"'+file_in_manifest_name+'"')
- 
+
 def create_add_patch_for_file(to_marfile_entry, patch_info):
     """  Copy the file to the working dir, add the add instruction, and add it to the list of archive files """
     copy_file(to_marfile_entry.abs_path, os.path.join(patch_info.work_dir, to_marfile_entry.name))
@@ -293,18 +293,15 @@ def create_add_if_not_patch_for_file(to_marfile_entry, patch_info):
     patch_info.append_add_if_not_instruction(to_marfile_entry.name)
     patch_info.archive_files.append('"'+to_marfile_entry.name+'"')
 
-def process_explicit_remove_files(dir_path, patch_info): 
+def process_explicit_remove_files(dir_path, patch_info):
     """ Looks for a 'removed-files' file in the dir_path.  If the removed-files does not exist
     this will throw.  If found adds the removed-files
     found in that file to the patch_info"""
 
     # Windows and linux have this file at the root of the dir
     list_file_path = os.path.join(dir_path, "removed-files")
-    prefix=""
     if not os.path.exists(list_file_path):
-        # On Mac removed-files contains relative paths from Contents/MacOS/
-        prefix= "Contents/MacOS"
-        list_file_path = os.path.join(dir_path, prefix+"/removed-files")
+        list_file_path = os.path.join(dir_path, "Contents/Resources/removed-files")
 
     if (os.path.exists(list_file_path)):
         list_file = bz2.BZ2File(list_file_path,"r") # throws if doesn't exist
@@ -312,17 +309,12 @@ def process_explicit_remove_files(dir_path, patch_info):
         lines = []
         for line in list_file:
             lines.append(line.strip())
+        list_file.close()
 
         lines.sort(reverse=True)
         for line in lines:
             # Exclude any blank and comment lines.
             if line and not line.startswith("#"):
-                if prefix != "":
-                    if line.startswith("../"):
-                        line = line.replace("../../", "")
-                        line = line.replace("../", "Contents/")
-                    else:
-                        line = os.path.join(prefix,line)
                 # Python on windows uses \ for path separators and the update
                 # manifests expects / for path separators on all platforms.
                 line = line.replace("\\", "/")
@@ -336,12 +328,28 @@ def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch
     # Create a hashtable of the from  and to directories
     from_dir_hash,from_file_set,from_dir_set = patch_info.build_marfile_entry_hash(from_dir_path)
     to_dir_hash,to_file_set,to_dir_set = patch_info.build_marfile_entry_hash(to_dir_path)
-    # Require that the precomplete file is included in the complete update
-    if "precomplete" not in to_file_set:
-        raise Exception, "missing precomplete file in: "+to_dir_path
-    # Create a list of the forced updates 
+    # Create a list of the forced updates
     forced_list = forced_updates.strip().split('|')
-    forced_list.append("precomplete")
+    # Require that the precomplete file is included in the complete update
+    if "precomplete" in to_file_set:
+        forced_list.append("precomplete")
+    elif "Contents/Resources/precomplete" in to_file_set:
+        forced_list.append("Contents/Resources/precomplete")
+    # The check with \ file separators allows tests for Mac to run on Windows
+    elif "Contents\Resources\precomplete" in to_file_set:
+        forced_list.append("Contents\Resources\precomplete")
+    else:
+        raise Exception, "missing precomplete file in: "+to_dir_path
+
+    if "removed-files" in to_file_set:
+        forced_list.append("removed-files")
+    elif "Contents/Resources/removed-files" in to_file_set:
+        forced_list.append("Contents/Resources/removed-files")
+    # The check with \ file separators allows tests for Mac to run on Windows
+    elif "Contents\Resources\\removed-files" in to_file_set:
+        forced_list.append("Contents\Resources\\removed-files")
+    else:
+        raise Exception, "missing removed-files file in: "+to_dir_path
 
     # Files which exist in both sets need to be patched
     patch_filenames = list(from_file_set.intersection(to_file_set))
@@ -356,7 +364,7 @@ def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch
             print 'Forcing "'+filename+'"'
             # This filename is in the forced list, explicitly add
             create_add_patch_for_file(to_dir_hash[filename], patch_info)
-        else: 
+        else:
           if from_marfile_entry.sha() != to_marfile_entry.sha():
               # Not the same - calculate a patch
               create_partial_patch_for_file(from_marfile_entry, to_marfile_entry, shas, patch_info)
@@ -396,27 +404,27 @@ def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch
     if not os.path.exists(patch_file_dir):
         os.makedirs(patch_file_dir)
     shutil.copy2(os.path.join(patch_info.work_dir,"output.mar"), patch_filename)
+
     return patch_filename
 
 def usage():
     print "-h for help"
     print "-f for patchlist_file"
 
-def get_buildid(work_dir, platform):
+def get_buildid(work_dir):
     """ extracts buildid from MAR
-        TODO: this should handle 1.8 branch too
     """
-    if platform == 'mac':
-      ini = '%s/Contents/MacOS/application.ini' % work_dir
-    else:
-      ini = '%s/application.ini' % work_dir
+    ini = '%s/application.ini' % work_dir
     if not os.path.exists(ini):
-        print 'WARNING: application.ini not found, cannot find build ID'
-        return ''
+        ini = '%s/Contents/Resources/application.ini' % work_dir
+        if not os.path.exists(ini):
+            print 'WARNING: application.ini not found, cannot find build ID'
+            return ''
+
     file = bz2.BZ2File(ini)
     for line in file:
-      if line.find('BuildID') == 0:
-        return line.strip().split('=')[1]
+        if line.find('BuildID') == 0:
+            return line.strip().split('=')[1]
     print 'WARNING: cannot find build ID in application.ini'
     return ''
 
@@ -449,7 +457,7 @@ def create_partial_patches(patches):
     try:
         work_dir_root = tempfile.mkdtemp('-fastmode', 'tmp', os.getcwd())
         print "Building patches using work dir: %s" % (work_dir_root)
- 
+
         # Iterate through every patch set in the patch file
         patch_num = 1
         for patch in patches:
@@ -467,7 +475,7 @@ def create_partial_patches(patches):
             os.mkdir(work_dir_from)
             extract_mar(from_filename,work_dir_from)
             from_decoded = decode_filename(from_filename)
-            from_buildid = get_buildid(work_dir_from, from_decoded['platform'])
+            from_buildid = get_buildid(work_dir_from)
             from_shasum = sha.sha(open(from_filename).read()).hexdigest()
             from_size = str(os.path.getsize(to_filename))
 
@@ -476,13 +484,13 @@ def create_partial_patches(patches):
             os.mkdir(work_dir_to)
             extract_mar(to_filename, work_dir_to)
             to_decoded = decode_filename(from_filename)
-            to_buildid = get_buildid(work_dir_to, to_decoded['platform'])
+            to_buildid = get_buildid(work_dir_to)
             to_shasum = sha.sha(open(to_filename).read()).hexdigest()
             to_size = str(os.path.getsize(to_filename))
 
             mar_extract_time = time.time()
 
-            partial_filename = create_partial_patch(work_dir_from, work_dir_to, patch_filename, shas, PatchInfo(work_dir, ['update.manifest','updatev2.manifest','updatev3.manifest','removed-files'],['/readme.txt']),forced_updates,['channel-prefs.js','update-settings.ini'])
+            partial_filename = create_partial_patch(work_dir_from, work_dir_to, patch_filename, shas, PatchInfo(work_dir, ['update.manifest','updatev2.manifest','updatev3.manifest'],[]),forced_updates,['channel-prefs.js','update-settings.ini'])
             partial_buildid = to_buildid
             partial_shasum = sha.sha(open(partial_filename).read()).hexdigest()
             partial_size = str(os.path.getsize(partial_filename))
@@ -491,11 +499,11 @@ def create_partial_patches(patches):
              'to_filename': os.path.basename(to_filename),
              'from_filename': os.path.basename(from_filename),
              'partial_filename': os.path.basename(partial_filename),
-             'to_buildid':to_buildid, 
-             'from_buildid':from_buildid, 
-             'to_sha1sum':to_shasum, 
-             'from_sha1sum':from_shasum, 
-             'partial_sha1sum':partial_shasum, 
+             'to_buildid':to_buildid,
+             'from_buildid':from_buildid,
+             'to_sha1sum':to_shasum,
+             'from_sha1sum':from_shasum,
+             'partial_sha1sum':partial_shasum,
              'to_size':to_size,
              'from_size':from_size,
              'partial_size':partial_size,

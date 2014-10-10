@@ -20,8 +20,13 @@ from runxpcshelltests import XPCShellTests
 mozinfo.find_and_update_from_json()
 
 objdir = build_obj.topobjdir.encode("utf-8")
-xpcshellBin = os.path.join(objdir, "dist", "bin", "xpcshell")
-if sys.platform == "win32":
+
+if mozinfo.isMac:
+  from buildconfig import substs
+  xpcshellBin = os.path.join(objdir, "dist", substs['MOZ_MACBUNDLE_NAME'], "Contents", "MacOS", "xpcshell")
+else:
+  xpcshellBin = os.path.join(objdir, "dist", "bin", "xpcshell")
+  if sys.platform == "win32":
     xpcshellBin += ".exe"
 
 SIMPLE_PASSING_TEST = "function run_test() { do_check_true(true); }"

@@ -83,7 +83,7 @@ LaunchMacPostProcess(const char* aAppBundle)
 
   NSString* iniPath = [NSString stringWithUTF8String:aAppBundle];
   iniPath =
-    [iniPath stringByAppendingPathComponent:@"Contents/MacOS/updater.ini"];
+    [iniPath stringByAppendingPathComponent:@"Contents/Resources/updater.ini"];
 
   NSFileManager* fileManager = [NSFileManager defaultManager];
   if (![fileManager fileExistsAtPath:iniPath]) {

@@ -11,7 +11,7 @@ function run_test() {
   gTestFiles[11].originalFile = "partial.png";
   gTestDirs = gTestDirsPartialSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_PARTIAL_MAR, false, false);
+  setupUpdaterTest(FILE_PARTIAL_MAR);
 
   createUpdaterINI();
 
@@ -34,7 +34,7 @@ function run_test() {
  * the test.
  */
 function checkUpdateApplied() {
-  if (IS_MACOSX || IS_WIN) {
+  if (IS_WIN || IS_MACOSX) {
     // Check that the post update process was not launched.
     do_check_false(getPostUpdateFile(".running").exists());
   }
@@ -48,11 +48,7 @@ function checkUpdateApplied() {
     do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
   }
 
-  checkFilesAfterUpdateFailure();
-  // Sorting on Linux is different so skip this check for now.
-  if (!IS_UNIX) {
-    checkUpdateLogContents(LOG_PARTIAL_FAILURE);
-  }
-
+  checkFilesAfterUpdateFailure(getApplyDirFile, false, false);
+  checkUpdateLogContents(LOG_PARTIAL_FAILURE);
   checkCallbackAppLog();
 }

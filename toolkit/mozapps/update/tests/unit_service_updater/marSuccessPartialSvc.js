@@ -19,7 +19,7 @@ function run_test() {
   gTestFiles[gTestFiles.length - 2].compareContents = "FromPartial\n";
   gTestFiles[gTestFiles.length - 2].comparePerms = 0o644;
   gTestDirs = gTestDirsPartialSuccess;
-  setupUpdaterTest(FILE_PARTIAL_MAR, false, false);
+  setupUpdaterTest(FILE_PARTIAL_MAR);
 
   createUpdaterINI(true);
 
@@ -45,7 +45,7 @@ function setupAppFilesFinished() {
  * support launching post update process.
  */
 function checkUpdateFinished() {
-  if (IS_MACOSX || IS_WIN) {
+  if (IS_WIN || IS_MACOSX) {
     gCheckFunc = finishCheckUpdateFinished;
     checkPostUpdateAppLog();
   } else {
@@ -67,11 +67,7 @@ function finishCheckUpdateFinished() {
     do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
   }
 
-  checkFilesAfterUpdateSuccess();
-  // Sorting on Linux is different so skip this check for now.
-  if (!IS_UNIX) {
-    checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
-  }
-
+  checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+  checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
   checkCallbackServiceLog();
 }

@@ -90,6 +90,11 @@ ScopedXREEmbed::Start()
 
     localFile = do_QueryInterface(parent);
     NS_ENSURE_TRUE_VOID(localFile);
+
+    rv = localFile->SetNativeLeafName(NS_LITERAL_CSTRING("Resources"));
+    if (NS_FAILED(rv)) {
+      return;
+    }
   }
 #endif
 
