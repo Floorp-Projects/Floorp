@@ -27,7 +27,7 @@ class LoopAliasInfo : public TempObject
   private:
     LoopAliasInfo *outer_;
     MBasicBlock *loopHeader_;
-    MDefinitionVector invariantLoads_;
+    MInstructionVector invariantLoads_;
 
   public:
     LoopAliasInfo(TempAllocator &alloc, LoopAliasInfo *outer, MBasicBlock *loopHeader)
@@ -40,13 +40,13 @@ class LoopAliasInfo : public TempObject
     LoopAliasInfo *outer() const {
         return outer_;
     }
-    bool addInvariantLoad(MDefinition *ins) {
+    bool addInvariantLoad(MInstruction *ins) {
         return invariantLoads_.append(ins);
     }
-    const MDefinitionVector& invariantLoads() const {
+    const MInstructionVector& invariantLoads() const {
         return invariantLoads_;
     }
-    MDefinition *firstInstruction() const {
+    MInstruction *firstInstruction() const {
         return *loopHeader_->begin();
     }
 };
@@ -123,7 +123,7 @@ BlockMightReach(MBasicBlock *src, MBasicBlock *dest)
 }
 
 static void
-IonSpewDependency(MDefinition *load, MDefinition *store, const char *verb, const char *reason)
+IonSpewDependency(MInstruction *load, MInstruction *store, const char *verb, const char *reason)
 {
     if (!JitSpewEnabled(JitSpew_Alias))
         return;
@@ -136,7 +136,7 @@ IonSpewDependency(MDefinition *load, MDefinition *store, const char *verb, const
 }
 
 static void
-IonSpewAliasInfo(const char *pre, MDefinition *ins, const char *post)
+IonSpewAliasInfo(const char *pre, MInstruction *ins, const char *post)
 {
     if (!JitSpewEnabled(JitSpew_Alias))
         return;
@@ -163,12 +163,12 @@ IonSpewAliasInfo(const char *pre, MDefinition *ins, const char *post)
 bool
 AliasAnalysis::analyze()
 {
-    Vector<MDefinitionVector, AliasSet::NumCategories, IonAllocPolicy> stores(alloc());
+    Vector<MInstructionVector, AliasSet::NumCategories, IonAllocPolicy> stores(alloc());
 
     // Initialize to the first instruction.
-    MDefinition *firstIns = *graph_.entryBlock()->begin();
+    MInstruction *firstIns = *graph_.entryBlock()->begin();
     for (unsigned i = 0; i < AliasSet::NumCategories; i++) {
-        MDefinitionVector defs(alloc());
+        MInstructionVector defs(alloc());
         if (!defs.append(firstIns))
             return false;
         if (!stores.append(Move(defs)))
@@ -188,7 +188,13 @@ AliasAnalysis::analyze()
             loop_ = new(alloc()) LoopAliasInfo(alloc(), loop_, *block);
         }
 
-        for (MDefinitionIterator def(*block); def; def++) {
+        for (MPhiIterator def(block->phisBegin()), end(block->phisEnd()); def != end; ++def)
+            def->setId(newId++);
+
+        for (MInstructionIterator def(block->begin()), end(block->begin(block->lastIns()));
+             def != end;
+             ++def)
+        {
             def->setId(newId++);
 
             AliasSet set = def->getAliasSet();
@@ -208,12 +214,12 @@ AliasAnalysis::analyze()
                 }
             } else {
                 // Find the most recent store on which this instruction depends.
-                MDefinition *lastStore = firstIns;
+                MInstruction *lastStore = firstIns;
 
                 for (AliasSetIterator iter(set); iter; iter++) {
-                    MDefinitionVector &aliasedStores = stores[*iter];
+                    MInstructionVector &aliasedStores = stores[*iter];
                     for (int i = aliasedStores.length() - 1; i >= 0; i--) {
-                        MDefinition *store = aliasedStores[i];
+                        MInstruction *store = aliasedStores[i];
                         if (def->mightAlias(store) && BlockMightReach(store->block(), *block)) {
                             if (lastStore->id() < store->id())
                                 lastStore = store;
@@ -245,18 +251,18 @@ AliasAnalysis::analyze()
             LoopAliasInfo *outerLoop = loop_->outer();
             MInstruction *firstLoopIns = *loop_->loopHeader()->begin();
 
-            const MDefinitionVector &invariant = loop_->invariantLoads();
+            const MInstructionVector &invariant = loop_->invariantLoads();
 
             for (unsigned i = 0; i < invariant.length(); i++) {
-                MDefinition *ins = invariant[i];
+                MInstruction *ins = invariant[i];
                 AliasSet set = ins->getAliasSet();
                 MOZ_ASSERT(set.isLoad());
 
                 bool hasAlias = false;
                 for (AliasSetIterator iter(set); iter; iter++) {
-                    MDefinitionVector &aliasedStores = stores[*iter];
+                    MInstructionVector &aliasedStores = stores[*iter];
                     for (int i = aliasedStores.length() - 1;; i--) {
-                        MDefinition *store = aliasedStores[i];
+                        MInstruction *store = aliasedStores[i];
                         if (store->id() < firstLoopIns->id())
                             break;
                         if (ins->mightAlias(store)) {

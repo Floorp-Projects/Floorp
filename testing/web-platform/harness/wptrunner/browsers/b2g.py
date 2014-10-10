@@ -233,7 +233,7 @@ class B2GExecutorBrowser(ExecutorBrowser):
     def wait_for_homescreen(self, timeout):
         self.executor.logger.info("Waiting for homescreen")
         self.marionette.execute_async_script("""
-let manager = window.wrappedJSObject.AppWindowManager || window.wrappedJSObject.WindowManager;
+let manager = window.wrappedJSObject.appWindowManager || window.wrappedJSObject.AppWindowManager;
 let app = null;
 if (manager) {
   app = ('getActiveApp' in manager) ? manager.getActiveApp() : manager.getCurrentDisplayedApp();

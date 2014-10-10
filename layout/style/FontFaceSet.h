@@ -197,12 +197,6 @@ private:
   void Disconnect();
 
   /**
-   * Calls DisconnectFromRule on the given FontFace and removes its entry from
-   * mRuleFaceMap.
-   */
-  void DisconnectFromRule(FontFace* aFontFace);
-
-  /**
    * Returns whether there might be any pending font loads, which should cause
    * the mReady Promise not to be resolved yet.
    */
@@ -235,8 +229,6 @@ private:
     uint8_t mSheetType;
   };
 
-  FontFace* FontFaceForRule(nsCSSFontFaceRule* aRule);
-
   already_AddRefed<gfxUserFontEntry> FindOrCreateUserFontEntryFromFontFace(
                                                    const nsAString& aFamilyName,
                                                    FontFace* aFontFace,
@@ -244,9 +236,6 @@ private:
 
   // search for @font-face rule that matches a userfont font entry
   nsCSSFontFaceRule* FindRuleForUserFontEntry(gfxUserFontEntry* aUserFontEntry);
-
-  // search for user font entry for the given @font-face rule
-  gfxUserFontEntry* FindUserFontEntryForRule(nsCSSFontFaceRule* aRule);
 
   nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,
                      const gfxFontFaceSrc* aFontFaceSrc);
@@ -310,13 +299,6 @@ private:
   // The non rule backed FontFace objects that have not been added to
   // this FontFaceSet.
   nsTArray<FontFace*> mUnavailableFaces;
-
-  // Map of nsCSSFontFaceRule objects to FontFace objects.  We hold a weak
-  // reference to both; for actively used FontFaces, mRuleFaces will hold
-  // a strong reference to the FontFace and the FontFace will hold on to
-  // the nsCSSFontFaceRule.  FontFaceSet::DisconnectFromRule will ensure its
-  // entry in this array will be removed.
-  nsDataHashtable<nsPtrHashKey<nsCSSFontFaceRule>, FontFace*> mRuleFaceMap;
 
   // The overall status of the loading or loaded fonts in the FontFaceSet.
   mozilla::dom::FontFaceSetLoadStatus mStatus;

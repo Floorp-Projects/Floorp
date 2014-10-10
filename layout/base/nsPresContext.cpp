@@ -847,7 +847,7 @@ nsPresContext::AppUnitsPerDevPixelChanged()
 
   if (HasCachedStyleData()) {
     // All cached style data must be recomputed.
-    MediaFeatureValuesChanged(eAlwaysRebuildStyle, NS_STYLE_HINT_REFLOW);
+    MediaFeatureValuesChanged(eRestyle_ForceDescendants, NS_STYLE_HINT_REFLOW);
   }
 
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
@@ -945,7 +945,9 @@ nsPresContext::UpdateAfterPreferencesChanged()
     NS_UpdateHint(hint, NS_STYLE_HINT_REFLOW);
   }
 
-  RebuildAllStyleData(hint);
+  // Preferences require rerunning selector matching because we rebuild
+  // the pref style sheet for some preference changes.
+  RebuildAllStyleData(hint, eRestyle_Subtree);
 }
 
 nsresult
@@ -1172,7 +1174,7 @@ nsPresContext::DoChangeCharSet(const nsCString& aCharSet)
 {
   UpdateCharSet(aCharSet);
   mDeviceContext->FlushFontCache();
-  RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+  RebuildAllStyleData(NS_STYLE_HINT_REFLOW, nsRestyleHint(0));
 }
 
 void
@@ -1704,12 +1706,13 @@ nsPresContext::ThemeChangedInternal()
   // This will force the system metrics to be generated the next time they're used
   nsCSSRuleProcessor::FreeSystemMetrics();
 
-  // Changes to system metrics can change media queries on them.
+  // Changes to system metrics can change media queries on them, or
+  // :-moz-system-metric selectors (which requires eRestyle_Subtree).
   // Changes in theme can change system colors (whose changes are
   // properly reflected in computed style data), system fonts (whose
   // changes are not), and -moz-appearance (whose changes likewise are
   // not), so we need to reflow.
-  MediaFeatureValuesChanged(eAlwaysRebuildStyle, NS_STYLE_HINT_REFLOW);
+  MediaFeatureValuesChanged(eRestyle_Subtree, NS_STYLE_HINT_REFLOW);
 }
 
 void
@@ -1742,7 +1745,7 @@ nsPresContext::SysColorChangedInternal()
 
   // The system color values are computed to colors in the style data,
   // so normal style data comparison is sufficient here.
-  RebuildAllStyleData(nsChangeHint(0));
+  RebuildAllStyleData(nsChangeHint(0), nsRestyleHint(0));
 }
 
 void
@@ -1838,7 +1841,7 @@ nsPresContext::EmulateMedium(const nsAString& aMediaType)
 
   mMediaEmulated = do_GetAtom(mediaType);
   if (mMediaEmulated != previousMedium && mShell) {
-    MediaFeatureValuesChanged(eRebuildStyleIfNeeded, nsChangeHint(0));
+    MediaFeatureValuesChanged(nsRestyleHint(0), nsChangeHint(0));
   }
 }
 
@@ -1847,12 +1850,13 @@ void nsPresContext::StopEmulatingMedium()
   nsIAtom* previousMedium = Medium();
   mIsEmulatingMedia = false;
   if (Medium() != previousMedium) {
-    MediaFeatureValuesChanged(eRebuildStyleIfNeeded, nsChangeHint(0));
+    MediaFeatureValuesChanged(nsRestyleHint(0), nsChangeHint(0));
   }
 }
 
 void
-nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
+nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
+                                   nsRestyleHint aRestyleHint)
 {
   if (!mShell) {
     // We must have been torn down. Nothing to do here.
@@ -1864,36 +1868,38 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
   RebuildUserFontSet();
   RebuildCounterStyles();
 
-  RestyleManager()->RebuildAllStyleData(aExtraHint);
+  RestyleManager()->RebuildAllStyleData(aExtraHint, aRestyleHint);
 }
 
 void
-nsPresContext::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
+nsPresContext::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
+                                            nsRestyleHint aRestyleHint)
 {
   if (!mShell) {
     // We must have been torn down. Nothing to do here.
     return;
   }
-  RestyleManager()->PostRebuildAllStyleDataEvent(aExtraHint);
+  RestyleManager()->PostRebuildAllStyleDataEvent(aExtraHint, aRestyleHint);
 }
 
 void
-nsPresContext::MediaFeatureValuesChanged(StyleRebuildType aShouldRebuild,
+nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
                                          nsChangeHint aChangeHint)
 {
-  NS_ASSERTION(aShouldRebuild == eAlwaysRebuildStyle || aChangeHint == 0,
-               "If you don't know if we need a rebuild, how can you provide a hint?");
-
   mPendingMediaFeatureValuesChanged = false;
 
   // MediumFeaturesChanged updates the applied rules, so it always gets called.
-  bool mediaFeaturesDidChange = mShell ? mShell->StyleSet()->MediumFeaturesChanged(this)
-                                       : false;
+  if (mShell && mShell->StyleSet()->MediumFeaturesChanged(this)) {
+    aRestyleHint |= eRestyle_Subtree;
+  }
 
-  if (aShouldRebuild == eAlwaysRebuildStyle ||
-      mediaFeaturesDidChange ||
-      (mUsesViewportUnits && mPendingViewportChange)) {
-    RebuildAllStyleData(aChangeHint);
+  if (mUsesViewportUnits && mPendingViewportChange) {
+    // Rebuild all style data without rerunning selector matching.
+    aRestyleHint |= eRestyle_ForceDescendants;
+  }
+
+  if (aRestyleHint || aChangeHint) {
+    RebuildAllStyleData(aChangeHint, aRestyleHint);
   }
 
   mPendingViewportChange = false;
@@ -1967,7 +1973,7 @@ nsPresContext::HandleMediaFeatureValuesChangedEvent()
   // Null-check mShell in case the shell has been destroyed (and the
   // event is the only thing holding the pres context alive).
   if (mPendingMediaFeatureValuesChanged && mShell) {
-    MediaFeatureValuesChanged(eRebuildStyleIfNeeded);
+    MediaFeatureValuesChanged(nsRestyleHint(0));
   }
 }
 
@@ -2178,7 +2184,7 @@ nsPresContext::UserFontSetUpdated()
   //      requires rebuilding the rule tree from the top, avoiding the
   //      reuse of cached data even when no style rules have changed.
 
-  PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW);
+  PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW, eRestyle_ForceDescendants);
 }
 
 FontFaceSet*
@@ -2206,7 +2212,8 @@ nsPresContext::FlushCounterStyles()
     bool changed = mCounterStyleManager->NotifyRuleChanged();
     if (changed) {
       PresShell()->NotifyCounterStylesAreDirty();
-      PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW);
+      PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW,
+                                   eRestyle_ForceDescendants);
     }
     mCounterStylesDirty = false;
   }
@@ -2242,7 +2249,7 @@ nsPresContext::EnsureSafeToHandOutCSSRules()
   }
 
   MOZ_ASSERT(res == CSSStyleSheet::eUniqueInner_ClonedInner);
-  RebuildAllStyleData(nsChangeHint(0));
+  RebuildAllStyleData(nsChangeHint(0), eRestyle_Subtree);
 }
 
 void

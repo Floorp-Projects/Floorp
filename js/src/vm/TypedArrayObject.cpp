@@ -2151,7 +2151,7 @@ JS_GetArrayBufferViewType(JSObject *obj)
 }
 
 JS_FRIEND_API(int8_t *)
-JS_GetInt8ArrayData(JSObject *obj)
+JS_GetInt8ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
@@ -2162,7 +2162,7 @@ JS_GetInt8ArrayData(JSObject *obj)
 }
 
 JS_FRIEND_API(uint8_t *)
-JS_GetUint8ArrayData(JSObject *obj)
+JS_GetUint8ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
@@ -2173,7 +2173,7 @@ JS_GetUint8ArrayData(JSObject *obj)
 }
 
 JS_FRIEND_API(uint8_t *)
-JS_GetUint8ClampedArrayData(JSObject *obj)
+JS_GetUint8ClampedArrayData(JSObject *obj, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
@@ -2184,7 +2184,7 @@ JS_GetUint8ClampedArrayData(JSObject *obj)
 }
 
 JS_FRIEND_API(int16_t *)
-JS_GetInt16ArrayData(JSObject *obj)
+JS_GetInt16ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
@@ -2195,7 +2195,7 @@ JS_GetInt16ArrayData(JSObject *obj)
 }
 
 JS_FRIEND_API(uint16_t *)
-JS_GetUint16ArrayData(JSObject *obj)
+JS_GetUint16ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
@@ -2206,7 +2206,7 @@ JS_GetUint16ArrayData(JSObject *obj)
 }
 
 JS_FRIEND_API(int32_t *)
-JS_GetInt32ArrayData(JSObject *obj)
+JS_GetInt32ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
@@ -2217,7 +2217,7 @@ JS_GetInt32ArrayData(JSObject *obj)
 }
 
 JS_FRIEND_API(uint32_t *)
-JS_GetUint32ArrayData(JSObject *obj)
+JS_GetUint32ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
@@ -2228,7 +2228,7 @@ JS_GetUint32ArrayData(JSObject *obj)
 }
 
 JS_FRIEND_API(float *)
-JS_GetFloat32ArrayData(JSObject *obj)
+JS_GetFloat32ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
@@ -2239,7 +2239,7 @@ JS_GetFloat32ArrayData(JSObject *obj)
 }
 
 JS_FRIEND_API(double *)
-JS_GetFloat64ArrayData(JSObject *obj)
+JS_GetFloat64ArrayData(JSObject *obj, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
@@ -2266,7 +2266,7 @@ JS_GetDataViewByteOffset(JSObject *obj)
 }
 
 JS_FRIEND_API(void *)
-JS_GetDataViewData(JSObject *obj)
+JS_GetDataViewData(JSObject *obj, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)

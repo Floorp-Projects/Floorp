@@ -74,6 +74,8 @@ JSObject *CreateNewObject(const int offset, const int length)
 
 bool VerifyObject(JS::HandleObject obj, uint32_t offset, uint32_t length, const bool mapped)
 {
+    JS::AutoCheckCannotGC nogc;
+
     CHECK(obj);
     CHECK(JS_IsArrayBufferObject(obj));
     CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), length);
@@ -81,7 +83,7 @@ bool VerifyObject(JS::HandleObject obj, uint32_t offset, uint32_t length, const 
         CHECK(JS_IsMappedArrayBufferObject(obj));
     else
         CHECK(!JS_IsMappedArrayBufferObject(obj));
-    const char *data = reinterpret_cast<const char *>(JS_GetArrayBufferData(obj));
+    const char *data = reinterpret_cast<const char *>(JS_GetArrayBufferData(obj, nogc));
     CHECK(data);
     CHECK(memcmp(data, test_data + offset, length) == 0);
 

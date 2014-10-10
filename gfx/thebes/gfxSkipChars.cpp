@@ -9,7 +9,7 @@
 struct SkippedRangeStartComparator
 {
     const uint32_t mOffset;
-    SkippedRangeStartComparator(const uint32_t aOffset) : mOffset(aOffset) {}
+    explicit SkippedRangeStartComparator(const uint32_t aOffset) : mOffset(aOffset) {}
     int operator()(const gfxSkipChars::SkippedRange& aRange) const {
         return (mOffset < aRange.Start()) ? -1 : 1;
     }
@@ -69,7 +69,7 @@ gfxSkipCharsIterator::SetOriginalOffset(int32_t aOffset)
 struct SkippedRangeOffsetComparator
 {
     const uint32_t mOffset;
-    SkippedRangeOffsetComparator(const uint32_t aOffset) : mOffset(aOffset) {}
+    explicit SkippedRangeOffsetComparator(const uint32_t aOffset) : mOffset(aOffset) {}
     int operator()(const gfxSkipChars::SkippedRange& aRange) const {
         return (mOffset < aRange.SkippedOffset()) ? -1 : 1;
     }

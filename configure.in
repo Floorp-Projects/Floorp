@@ -1530,7 +1530,6 @@ if test "$GNU_CXX"; then
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wempty-body"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Woverloaded-virtual"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wpointer-arith"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wsign-compare"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wwrite-strings"
 
@@ -1539,6 +1538,7 @@ if test "$GNU_CXX"; then
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=int-to-pointer-cast"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=missing-braces"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=parentheses"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=pointer-arith"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=return-type"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=sequence-point"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=unused-label"

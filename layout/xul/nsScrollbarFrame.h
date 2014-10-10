@@ -93,6 +93,7 @@ public:
   /**
    * MoveToNewPosition() adds mIncrement to the current position and
    * updates the curpos attribute.
+   * @returns The new position after clamping, in CSS Pixels
    * @note This method might destroy the frame, pres shell, and other objects.
    */
   int32_t MoveToNewPosition();

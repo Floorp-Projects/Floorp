@@ -706,7 +706,7 @@ namespace {
 struct Format14CmapWrapper
 {
     const Format14Cmap& mCmap14;
-    Format14CmapWrapper(const Format14Cmap& cmap14) : mCmap14(cmap14) {}
+    explicit Format14CmapWrapper(const Format14Cmap& cmap14) : mCmap14(cmap14) {}
     uint32_t operator[](size_t index) const {
         return mCmap14.varSelectorRecords[index].varSelector;
     }
@@ -715,7 +715,7 @@ struct Format14CmapWrapper
 struct NonDefUVSTableWrapper
 {
     const NonDefUVSTable& mTable;
-    NonDefUVSTableWrapper(const NonDefUVSTable& table) : mTable(table) {}
+    explicit NonDefUVSTableWrapper(const NonDefUVSTable& table) : mTable(table) {}
     uint32_t operator[](size_t index) const {
         return mTable.uvsMappings[index].unicodeValue;
     }
@@ -1337,7 +1337,7 @@ struct MacCharsetMappingComparator
 {
     typedef gfxFontUtils::MacFontNameCharsetMapping MacFontNameCharsetMapping;
     const MacFontNameCharsetMapping& mSearchValue;
-    MacCharsetMappingComparator(const MacFontNameCharsetMapping& aSearchValue)
+    explicit MacCharsetMappingComparator(const MacFontNameCharsetMapping& aSearchValue)
       : mSearchValue(aSearchValue) {}
     int operator()(const MacFontNameCharsetMapping& aEntry) const {
         if (mSearchValue < aEntry) {
