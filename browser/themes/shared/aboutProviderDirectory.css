@@ -1,0 +1,30 @@
+%include aboutSocialError.css
+
+body {
+  width: 310px;
+  margin: 1em auto;
+}
+
+#message-box {
+  margin-top: 2em;
+  background: url('chrome://global/skin/icons/information-24.png') no-repeat left 4px;
+  -moz-padding-start: 30px;
+}
+
+#activation-frame {
+  border: none;
+  margin: 0;
+  width: 310px;
+  height: 200px;
+}
+#activation > p {
+  width: 100%;
+  text-align: center;
+  margin: 0;
+  line-height: 2em;
+}
+.link {
+  text-decoration: none;
+  color: -moz-nativehyperlinktext;
+  cursor: pointer;
+}

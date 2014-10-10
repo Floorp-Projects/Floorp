@@ -10,6 +10,7 @@
 #define LIBGLESV2_BLIT9_H_
 
 #include "common/angleutils.h"
+#include "libGLESv2/Error.h"
 
 #include <GLES2/gl2.h>
 
@@ -21,8 +22,7 @@ class Framebuffer;
 namespace rx
 {
 class Renderer9;
-class TextureStorageInterface2D;
-class TextureStorageInterfaceCube;
+class TextureStorage;
 
 class Blit9
 {
@@ -32,17 +32,17 @@ class Blit9
 
     // Copy from source surface to dest surface.
     // sourceRect, xoffset, yoffset are in D3D coordinates (0,0 in upper-left)
-    bool copy(gl::Framebuffer *framebuffer, const RECT &sourceRect, GLenum destFormat, GLint xoffset, GLint yoffset, TextureStorageInterface2D *storage, GLint level);
-    bool copy(gl::Framebuffer *framebuffer, const RECT &sourceRect, GLenum destFormat, GLint xoffset, GLint yoffset, TextureStorageInterfaceCube *storage, GLenum target, GLint level);
+    gl::Error copy2D(gl::Framebuffer *framebuffer, const RECT &sourceRect, GLenum destFormat, GLint xoffset, GLint yoffset, TextureStorage *storage, GLint level);
+    gl::Error copyCube(gl::Framebuffer *framebuffer, const RECT &sourceRect, GLenum destFormat, GLint xoffset, GLint yoffset, TextureStorage *storage, GLenum target, GLint level);
 
     // Copy from source surface to dest surface.
     // sourceRect, xoffset, yoffset are in D3D coordinates (0,0 in upper-left)
     // source is interpreted as RGBA and destFormat specifies the desired result format. For example, if destFormat = GL_RGB, the alpha channel will be forced to 0.
-    bool formatConvert(IDirect3DSurface9 *source, const RECT &sourceRect, GLenum destFormat, GLint xoffset, GLint yoffset, IDirect3DSurface9 *dest);
+    gl::Error formatConvert(IDirect3DSurface9 *source, const RECT &sourceRect, GLenum destFormat, GLint xoffset, GLint yoffset, IDirect3DSurface9 *dest);
 
     // 2x2 box filter sample from source to dest.
     // Requires that source is RGB(A) and dest has the same format as source.
-    bool boxFilter(IDirect3DSurface9 *source, IDirect3DSurface9 *dest);
+    gl::Error boxFilter(IDirect3DSurface9 *source, IDirect3DSurface9 *dest);
 
   private:
     rx::Renderer9 *mRenderer;
@@ -52,10 +52,10 @@ class Blit9
 
     void initGeometry();
 
-    bool setFormatConvertShaders(GLenum destFormat);
+    gl::Error setFormatConvertShaders(GLenum destFormat);
 
-    bool copy(IDirect3DSurface9 *source, const RECT &sourceRect, GLenum destFormat, GLint xoffset, GLint yoffset, IDirect3DSurface9 *dest);
-    IDirect3DTexture9 *copySurfaceToTexture(IDirect3DSurface9 *surface, const RECT &sourceRect);
+    gl::Error copy(IDirect3DSurface9 *source, const RECT &sourceRect, GLenum destFormat, GLint xoffset, GLint yoffset, IDirect3DSurface9 *dest);
+    gl::Error copySurfaceToTexture(IDirect3DSurface9 *surface, const RECT &sourceRect, IDirect3DTexture9 **outTexture);
     void setViewport(const RECT &sourceRect, GLint xoffset, GLint yoffset);
     void setCommonBlitState();
     RECT getSurfaceRect(IDirect3DSurface9 *surface) const;
@@ -75,12 +75,12 @@ class Blit9
     IUnknown *mCompiledShaders[SHADER_COUNT];
 
     template <class D3DShaderType>
-    bool setShader(ShaderId source, const char *profile,
-                   D3DShaderType *(Renderer9::*createShader)(const DWORD *, size_t length),
-                   HRESULT (WINAPI IDirect3DDevice9::*setShader)(D3DShaderType*));
+    gl::Error setShader(ShaderId source, const char *profile,
+                        D3DShaderType *(Renderer9::*createShader)(const DWORD *, size_t length),
+                        HRESULT (WINAPI IDirect3DDevice9::*setShader)(D3DShaderType*));
 
-    bool setVertexShader(ShaderId shader);
-    bool setPixelShader(ShaderId shader);
+    gl::Error setVertexShader(ShaderId shader);
+    gl::Error setPixelShader(ShaderId shader);
     void render();
 
     void saveState();

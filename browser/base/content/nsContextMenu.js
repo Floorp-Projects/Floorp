@@ -345,7 +345,7 @@ nsContextMenu.prototype = {
     let shareEnabled = shareButton && !shareButton.disabled && !this.onSocial;
     let pageShare = shareEnabled && !(this.isContentSelected ||
                             this.onTextInput || this.onLink || this.onImage ||
-                            this.onVideo || this.onAudio);
+                            this.onVideo || this.onAudio || this.onCanvas);
     this.showItem("context-sharepage", pageShare);
     this.showItem("context-shareselect", shareEnabled && this.isContentSelected);
     this.showItem("context-sharelink", shareEnabled && (this.onLink || this.onPlainTextLink) && !this.onMailtoLink);

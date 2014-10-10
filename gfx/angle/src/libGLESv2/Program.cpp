@@ -10,6 +10,7 @@
 #include "libGLESv2/Program.h"
 #include "libGLESv2/ProgramBinary.h"
 #include "libGLESv2/ResourceManager.h"
+#include "libGLESv2/renderer/Renderer.h"
 
 namespace gl
 {
@@ -250,7 +251,7 @@ bool Program::link(const Caps &caps)
     mInfoLog.reset();
     resetUniformBlockBindings();
 
-    mProgramBinary.set(new ProgramBinary(mRenderer));
+    mProgramBinary.set(new ProgramBinary(mRenderer->createProgram()));
     mLinked = mProgramBinary->link(mInfoLog, mAttributeBindings, mFragmentShader, mVertexShader,
                                    mTransformFeedbackVaryings, mTransformFeedbackBufferMode, caps);
 
@@ -308,8 +309,9 @@ bool Program::setProgramBinary(GLenum binaryFormat, const void *binary, GLsizei 
 
     mInfoLog.reset();
 
-    mProgramBinary.set(new ProgramBinary(mRenderer));
+    mProgramBinary.set(new ProgramBinary(mRenderer->createProgram()));
     mLinked = mProgramBinary->load(mInfoLog, binaryFormat, binary, length);
+
     if (!mLinked)
     {
         mProgramBinary.set(NULL);

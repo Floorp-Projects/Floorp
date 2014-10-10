@@ -110,7 +110,12 @@ void __stdcall glBeginQueryEXT(GLenum target, GLuint id)
             return;
         }
 
-        context->beginQuery(target, id);
+        gl::Error error = context->beginQuery(target, id);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -260,35 +265,24 @@ void __stdcall glBindTexture(GLenum target, GLuint texture)
         switch (target)
         {
           case GL_TEXTURE_2D:
-            context->bindTexture2D(texture);
-            return;
-
           case GL_TEXTURE_CUBE_MAP:
-            context->bindTextureCubeMap(texture);
-            return;
+            break;
 
           case GL_TEXTURE_3D:
-            if (context->getClientVersion() < 3)
-            {
-                context->recordError(gl::Error(GL_INVALID_ENUM));
-                return;
-            }
-            context->bindTexture3D(texture);
-            return;
-
           case GL_TEXTURE_2D_ARRAY:
             if (context->getClientVersion() < 3)
             {
                 context->recordError(gl::Error(GL_INVALID_ENUM));
                 return;
             }
-            context->bindTexture2DArray(texture);
-            return;
+            break;
 
           default:
             context->recordError(gl::Error(GL_INVALID_ENUM));
             return;
         }
+
+        context->bindTexture(target, texture);
     }
 }
 
@@ -542,7 +536,12 @@ void __stdcall glBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, 
             return;
         }
 
-        buffer->bufferData(data, size, usage);
+        gl::Error error = buffer->bufferData(data, size, usage);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -598,7 +597,12 @@ void __stdcall glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, 
             return;
         }
 
-        buffer->bufferSubData(data, size, offset);
+        gl::Error error = buffer->bufferSubData(data, size, offset);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -644,7 +648,12 @@ void __stdcall glClear(GLbitfield mask)
             return;
         }
 
-        context->clear(mask);
+        gl::Error error = context->clear(mask);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -757,7 +766,12 @@ void __stdcall glCompressedTexImage2D(GLenum target, GLint level, GLenum interna
           case GL_TEXTURE_2D:
             {
                 gl::Texture2D *texture = context->getTexture2D();
-                texture->setCompressedImage(level, internalformat, width, height, imageSize, data);
+                gl::Error error = texture->setCompressedImage(level, internalformat, width, height, imageSize, data);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
@@ -769,7 +783,12 @@ void __stdcall glCompressedTexImage2D(GLenum target, GLint level, GLenum interna
           case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
             {
                 gl::TextureCubeMap *texture = context->getTextureCubeMap();
-                texture->setCompressedImage(target, level, internalformat, width, height, imageSize, data);
+                gl::Error error = texture->setCompressedImage(target, level, internalformat, width, height, imageSize, data);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
@@ -817,7 +836,12 @@ void __stdcall glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffs
           case GL_TEXTURE_2D:
             {
                 gl::Texture2D *texture = context->getTexture2D();
-                texture->subImageCompressed(level, xoffset, yoffset, width, height, format, imageSize, data);
+                gl::Error error = texture->subImageCompressed(level, xoffset, yoffset, width, height, format, imageSize, data);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
@@ -829,7 +853,12 @@ void __stdcall glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffs
           case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
             {
                 gl::TextureCubeMap *texture = context->getTextureCubeMap();
-                texture->subImageCompressed(target, level, xoffset, yoffset, width, height, format, imageSize, data);
+                gl::Error error = texture->subImageCompressed(target, level, xoffset, yoffset, width, height, format, imageSize, data);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
@@ -1334,7 +1363,12 @@ void __stdcall glDrawArrays(GLenum mode, GLint first, GLsizei count)
             return;
         }
 
-        context->drawArrays(mode, first, count, 0);
+        gl::Error error = context->drawArrays(mode, first, count, 0);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -1345,12 +1379,17 @@ void __stdcall glDrawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei coun
     gl::Context *context = gl::getNonLostContext();
     if (context)
     {
-        if (!ValidateDrawArraysInstanced(context, mode, first, count, primcount))
+        if (!ValidateDrawArraysInstancedANGLE(context, mode, first, count, primcount))
         {
             return;
         }
 
-        context->drawArrays(mode, first, count, primcount);
+        gl::Error error = context->drawArrays(mode, first, count, primcount);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -1368,7 +1407,12 @@ void __stdcall glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLv
             return;
         }
 
-        context->drawElements(mode, count, type, indices, 0, indexRange);
+        gl::Error error = context->drawElements(mode, count, type, indices, 0, indexRange);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -1381,12 +1425,17 @@ void __stdcall glDrawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum t
     if (context)
     {
         rx::RangeUI indexRange;
-        if (!ValidateDrawElementsInstanced(context, mode, count, type, indices, primcount, &indexRange))
+        if (!ValidateDrawElementsInstancedANGLE(context, mode, count, type, indices, primcount, &indexRange))
         {
             return;
         }
 
-        context->drawElements(mode, count, type, indices, primcount, indexRange);
+        gl::Error error = context->drawElements(mode, count, type, indices, primcount, indexRange);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -1436,7 +1485,12 @@ void __stdcall glEndQueryEXT(GLenum target)
             return;
         }
 
-        context->endQuery(target);
+        gl::Error error = context->endQuery(target);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -2360,7 +2414,7 @@ void __stdcall glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attac
                 break;
 
               case GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
-                if (attachment == GL_DEPTH_STENCIL)
+                if (attachment == GL_DEPTH_STENCIL_ATTACHMENT)
                 {
                     context->recordError(gl::Error(GL_INVALID_OPERATION));
                     return;
@@ -2589,11 +2643,27 @@ void __stdcall glGetQueryObjectuivEXT(GLuint id, GLenum pname, GLuint *params)
         switch(pname)
         {
           case GL_QUERY_RESULT_EXT:
-            params[0] = queryObject->getResult();
+            {
+                gl::Error error = queryObject->getResult(params);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
+            }
             break;
+
           case GL_QUERY_RESULT_AVAILABLE_EXT:
-            params[0] = queryObject->isResultAvailable();
+            {
+                gl::Error error = queryObject->isResultAvailable(params);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
+            }
             break;
+
           default:
             context->recordError(gl::Error(GL_INVALID_ENUM));
             return;
@@ -3678,7 +3748,12 @@ void __stdcall glReadnPixelsEXT(GLint x, GLint y, GLsizei width, GLsizei height,
             return;
         }
 
-        context->readPixels(x, y, width, height, format, type, &bufSize, data);
+        gl::Error error = context->readPixels(x, y, width, height, format, type, &bufSize, data);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -3704,7 +3779,12 @@ void __stdcall glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
             return;
         }
 
-        context->readPixels(x, y, width, height, format, type, NULL, pixels);
+        gl::Error error = context->readPixels(x, y, width, height, format, type, NULL, pixels);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -4085,45 +4165,32 @@ void __stdcall glTexImage2D(GLenum target, GLint level, GLint internalformat, GL
           case GL_TEXTURE_2D:
             {
                 gl::Texture2D *texture = context->getTexture2D();
-                texture->setImage(level, width, height, internalformat, format, type, context->getState().getUnpackState(), pixels);
+                gl::Error error = texture->setImage(level, width, height, internalformat, format, type, context->getState().getUnpackState(), pixels);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
+
           case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-            {
-                gl::TextureCubeMap *texture = context->getTextureCubeMap();
-                texture->setImagePosX(level, width, height, internalformat, format, type, context->getState().getUnpackState(), pixels);
-            }
-            break;
           case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-            {
-                gl::TextureCubeMap *texture = context->getTextureCubeMap();
-                texture->setImageNegX(level, width, height, internalformat, format, type, context->getState().getUnpackState(), pixels);
-            }
-            break;
           case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-            {
-                gl::TextureCubeMap *texture = context->getTextureCubeMap();
-                texture->setImagePosY(level, width, height, internalformat, format, type, context->getState().getUnpackState(), pixels);
-            }
-            break;
           case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-            {
-                gl::TextureCubeMap *texture = context->getTextureCubeMap();
-                texture->setImageNegY(level, width, height, internalformat, format, type, context->getState().getUnpackState(), pixels);
-            }
-            break;
           case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-            {
-                gl::TextureCubeMap *texture = context->getTextureCubeMap();
-                texture->setImagePosZ(level, width, height, internalformat, format, type, context->getState().getUnpackState(), pixels);
-            }
-            break;
           case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
             {
                 gl::TextureCubeMap *texture = context->getTextureCubeMap();
-                texture->setImageNegZ(level, width, height, internalformat, format, type, context->getState().getUnpackState(), pixels);
+                gl::Error error = texture->setImage(target, level, width, height, internalformat, format, type, context->getState().getUnpackState(), pixels);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
+
           default: UNREACHABLE();
         }
     }
@@ -4312,7 +4379,12 @@ void __stdcall glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint 
           case GL_TEXTURE_2D:
             {
                 gl::Texture2D *texture = context->getTexture2D();
-                texture->subImage(level, xoffset, yoffset, width, height, format, type, context->getState().getUnpackState(), pixels);
+                gl::Error error = texture->subImage(level, xoffset, yoffset, width, height, format, type, context->getState().getUnpackState(), pixels);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
@@ -4324,7 +4396,12 @@ void __stdcall glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint 
           case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
             {
                 gl::TextureCubeMap *texture = context->getTextureCubeMap();
-                texture->subImage(target, level, xoffset, yoffset, width, height, format, type, context->getState().getUnpackState(), pixels);
+                gl::Error error = texture->subImage(target, level, xoffset, yoffset, width, height, format, type, context->getState().getUnpackState(), pixels);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
@@ -4955,14 +5032,24 @@ void __stdcall glTexImage3D(GLenum target, GLint level, GLint internalformat, GL
           case GL_TEXTURE_3D:
             {
                 gl::Texture3D *texture = context->getTexture3D();
-                texture->setImage(level, width, height, depth, internalformat, format, type, context->getState().getUnpackState(), pixels);
+                gl::Error error = texture->setImage(level, width, height, depth, internalformat, format, type, context->getState().getUnpackState(), pixels);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
           case GL_TEXTURE_2D_ARRAY:
             {
                 gl::Texture2DArray *texture = context->getTexture2DArray();
-                texture->setImage(level, width, height, depth, internalformat, format, type, context->getState().getUnpackState(), pixels);
+                gl::Error error = texture->setImage(level, width, height, depth, internalformat, format, type, context->getState().getUnpackState(), pixels);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
@@ -5008,14 +5095,24 @@ void __stdcall glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint 
           case GL_TEXTURE_3D:
             {
                 gl::Texture3D *texture = context->getTexture3D();
-                texture->subImage(level, xoffset, yoffset, zoffset, width, height, depth, format, type, context->getState().getUnpackState(), pixels);
+                gl::Error error = texture->subImage(level, xoffset, yoffset, zoffset, width, height, depth, format, type, context->getState().getUnpackState(), pixels);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
           case GL_TEXTURE_2D_ARRAY:
             {
                 gl::Texture2DArray *texture = context->getTexture2DArray();
-                texture->subImage(level, xoffset, yoffset, zoffset, width, height, depth, format, type, context->getState().getUnpackState(), pixels);
+                gl::Error error = texture->subImage(level, xoffset, yoffset, zoffset, width, height, depth, format, type, context->getState().getUnpackState(), pixels);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
@@ -5103,14 +5200,24 @@ void __stdcall glCompressedTexImage3D(GLenum target, GLint level, GLenum interna
           case GL_TEXTURE_3D:
             {
                 gl::Texture3D *texture = context->getTexture3D();
-                texture->setCompressedImage(level, internalformat, width, height, depth, imageSize, data);
+                gl::Error error = texture->setCompressedImage(level, internalformat, width, height, depth, imageSize, data);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
           case GL_TEXTURE_2D_ARRAY:
             {
                 gl::Texture2DArray *texture = context->getTexture2DArray();
-                texture->setCompressedImage(level, internalformat, width, height, depth, imageSize, data);
+                gl::Error error = texture->setCompressedImage(level, internalformat, width, height, depth, imageSize, data);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
@@ -5168,16 +5275,26 @@ void __stdcall glCompressedTexSubImage3D(GLenum target, GLint level, GLint xoffs
           case GL_TEXTURE_3D:
             {
                 gl::Texture3D *texture = context->getTexture3D();
-                texture->subImageCompressed(level, xoffset, yoffset, zoffset, width, height, depth,
-                                            format, imageSize, data);
+                gl::Error error = texture->subImageCompressed(level, xoffset, yoffset, zoffset, width, height, depth,
+                                                              format, imageSize, data);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
           case GL_TEXTURE_2D_ARRAY:
             {
                 gl::Texture2DArray *texture = context->getTexture2DArray();
-                texture->subImageCompressed(level, xoffset, yoffset, zoffset, width, height, depth,
-                                            format, imageSize, data);
+                gl::Error error = texture->subImageCompressed(level, xoffset, yoffset, zoffset, width, height, depth,
+                                                              format, imageSize, data);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
             }
             break;
 
@@ -5276,7 +5393,13 @@ void __stdcall glBeginQuery(GLenum target, GLuint id)
         {
             return;
         }
-        context->beginQuery(target, id);
+
+        gl::Error error = context->beginQuery(target, id);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -5298,7 +5421,12 @@ void __stdcall glEndQuery(GLenum target)
             return;
         }
 
-        context->endQuery(target);
+        gl::Error error = context->endQuery(target);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -5363,12 +5491,26 @@ void __stdcall glGetQueryObjectuiv(GLuint id, GLenum pname, GLuint* params)
 
         switch(pname)
         {
-          case GL_QUERY_RESULT:
-            params[0] = queryObject->getResult();
+          case GL_QUERY_RESULT_EXT:
+            {
+                gl::Error error = queryObject->getResult(params);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
+            }
             break;
 
-          case GL_QUERY_RESULT_AVAILABLE:
-            params[0] = queryObject->isResultAvailable();
+          case GL_QUERY_RESULT_AVAILABLE_EXT:
+            {
+                gl::Error error = queryObject->isResultAvailable(params);
+                if (error.isError())
+                {
+                    context->recordError(error);
+                    return;
+                }
+            }
             break;
 
           default:
@@ -5559,8 +5701,13 @@ void __stdcall glBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint sr
             return;
         }
 
-        context->blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1,
-                                 mask, filter);
+        gl::Error error = context->blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1,
+                                                   mask, filter);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -6588,7 +6735,12 @@ void __stdcall glClearBufferiv(GLenum buffer, GLint drawbuffer, const GLint* val
             return;
         }
 
-        context->clearBufferiv(buffer, drawbuffer, value);
+        gl::Error error = context->clearBufferiv(buffer, drawbuffer, value);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -6620,7 +6772,12 @@ void __stdcall glClearBufferuiv(GLenum buffer, GLint drawbuffer, const GLuint* v
             return;
         }
 
-        context->clearBufferuiv(buffer, drawbuffer, value);
+        gl::Error error = context->clearBufferuiv(buffer, drawbuffer, value);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -6660,7 +6817,12 @@ void __stdcall glClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat* v
             return;
         }
 
-        context->clearBufferfv(buffer, drawbuffer, value);
+        gl::Error error = context->clearBufferfv(buffer, drawbuffer, value);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -6692,7 +6854,12 @@ void __stdcall glClearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, G
             return;
         }
 
-        context->clearBufferfi(buffer, drawbuffer, depth, stencil);
+        gl::Error error = context->clearBufferfi(buffer, drawbuffer, depth, stencil);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -6780,7 +6947,12 @@ void __stdcall glCopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintp
         // if size is zero, the copy is a successful no-op
         if (size > 0)
         {
-            writeBuffer->copyBufferSubData(readBuffer, readOffset, writeOffset, size);
+            gl::Error error = writeBuffer->copyBufferSubData(readBuffer, readOffset, writeOffset, size);
+            if (error.isError())
+            {
+                context->recordError(error);
+                return;
+            }
         }
     }
 }
@@ -8184,8 +8356,13 @@ void __stdcall glBlitFramebufferANGLE(GLint srcX0, GLint srcY0, GLint srcX1, GLi
             return;
         }
 
-        context->blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1,
-                                 mask, filter);
+        gl::Error error = context->blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1,
+                                                   mask, filter);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -8379,7 +8556,14 @@ void * __stdcall glMapBufferOES(GLenum target, GLenum access)
             return NULL;
         }
 
-        return buffer->mapRange(0, buffer->getSize(), GL_MAP_WRITE_BIT);
+        gl::Error error = buffer->mapRange(0, buffer->getSize(), GL_MAP_WRITE_BIT);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return NULL;
+        }
+
+        return buffer->getMapPointer();
     }
 
     return NULL;
@@ -8408,7 +8592,12 @@ GLboolean __stdcall glUnmapBufferOES(GLenum target)
 
         // TODO: detect if we had corruption. if so, throw an error and return false.
 
-        buffer->unmap();
+        gl::Error error = buffer->unmap();
+        if (error.isError())
+        {
+            context->recordError(error);
+            return GL_FALSE;
+        }
 
         return GL_TRUE;
     }
@@ -8498,7 +8687,14 @@ void* __stdcall glMapBufferRangeEXT (GLenum target, GLintptr offset, GLsizeiptr 
             return NULL;
         }
 
-        return buffer->mapRange(offset, length, access);
+        gl::Error error = buffer->mapRange(offset, length, access);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return NULL;
+        }
+
+        return buffer->getMapPointer();
     }
 
     return NULL;

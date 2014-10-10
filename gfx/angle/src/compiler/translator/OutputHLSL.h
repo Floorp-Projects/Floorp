@@ -27,17 +27,12 @@ typedef std::map<TString, TIntermSymbol*> ReferencedSymbols;
 class OutputHLSL : public TIntermTraverser
 {
   public:
-    OutputHLSL(TParseContext &context, const ShBuiltInResources& resources, ShShaderOutput outputType);
+    OutputHLSL(TParseContext &context, TranslatorHLSL *parentTranslator);
     ~OutputHLSL();
 
     void output();
 
     TInfoSinkBase &getBodyStream();
-    const std::vector<sh::Uniform> &getUniforms();
-    const std::vector<sh::InterfaceBlock> &getInterfaceBlocks() const;
-    const std::vector<sh::Attribute> &getOutputVariables() const;
-    const std::vector<sh::Attribute> &getAttributes() const;
-    const std::vector<sh::Varying> &getVaryings() const;
 
     const std::map<std::string, unsigned int> &getInterfaceBlockRegisterMap() const;
     const std::map<std::string, unsigned int> &getUniformRegisterMap() const;
@@ -155,13 +150,8 @@ class OutputHLSL : public TIntermTraverser
 
     TIntermSymbol *mExcessiveLoopIndex;
 
-    void declareVaryingToList(const TType &type, TQualifier baseTypeQualifier, const TString &name, std::vector<sh::Varying>& fieldsOut);
-
     TString structInitializerString(int indent, const TStructure &structure, const TString &rhsStructName);
 
-    std::vector<sh::Attribute> mActiveOutputVariables;
-    std::vector<sh::Attribute> mActiveAttributes;
-    std::vector<sh::Varying> mActiveVaryings;
     std::map<TIntermTyped*, TString> mFlaggedStructMappedNames;
     std::map<TIntermTyped*, TString> mFlaggedStructOriginalNames;
 

@@ -11,6 +11,7 @@
 #define LIBGLESV2_RENDERER_RENDERSTATECACHE_H_
 
 #include "libGLESv2/angletypes.h"
+#include "libGLESv2/Error.h"
 #include "common/angleutils.h"
 
 #include <unordered_map>
@@ -33,10 +34,10 @@ class RenderStateCache
     void initialize(ID3D11Device *device);
     void clear();
 
-    ID3D11BlendState *getBlendState(const gl::Framebuffer *framebuffer, const gl::BlendState &blendState);
-    ID3D11RasterizerState *getRasterizerState(const gl::RasterizerState &rasterState, bool scissorEnabled);
-    ID3D11DepthStencilState *getDepthStencilState(const gl::DepthStencilState &dsState);
-    ID3D11SamplerState *getSamplerState(const gl::SamplerState &samplerState);
+    gl::Error getBlendState(const gl::Framebuffer *framebuffer, const gl::BlendState &blendState, ID3D11BlendState **outBlendState);
+    gl::Error getRasterizerState(const gl::RasterizerState &rasterState, bool scissorEnabled, ID3D11RasterizerState **outRasterizerState);
+    gl::Error getDepthStencilState(const gl::DepthStencilState &dsState, ID3D11DepthStencilState **outDSState);
+    gl::Error getSamplerState(const gl::SamplerState &samplerState, ID3D11SamplerState **outSamplerState);
 
   private:
     DISALLOW_COPY_AND_ASSIGN(RenderStateCache);

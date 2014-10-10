@@ -9,6 +9,7 @@
 #ifndef LIBGLESV2_RENDERER_VERTEXDECLARATIONCACHE_H_
 #define LIBGLESV2_RENDERER_VERTEXDECLARATIONCACHE_H_
 
+#include "libGLESv2/Error.h"
 #include "libGLESv2/renderer/d3d/VertexDataManager.h"
 
 namespace gl
@@ -25,7 +26,7 @@ class VertexDeclarationCache
     VertexDeclarationCache();
     ~VertexDeclarationCache();
 
-    GLenum applyDeclaration(IDirect3DDevice9 *device, TranslatedAttribute attributes[], gl::ProgramBinary *programBinary, GLsizei instances, GLsizei *repeatDraw);
+    gl::Error applyDeclaration(IDirect3DDevice9 *device, TranslatedAttribute attributes[], gl::ProgramBinary *programBinary, GLsizei instances, GLsizei *repeatDraw);
 
     void markStateDirty();
 
