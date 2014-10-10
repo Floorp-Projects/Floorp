@@ -5055,6 +5055,10 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
     gfxSize(NSAppUnitsToIntPixels(appUnitScaledDest.width, aAppUnitsPerDevPixel),
             NSAppUnitsToIntPixels(appUnitScaledDest.height, aAppUnitsPerDevPixel));
 
+  if (scaledDest.IsEmpty() || snappedScaledDest.IsEmpty()) {
+    return SnappedImageDrawingParameters();
+  }
+
   nsIntSize intImageSize =
     aImage->OptimalImageSizeForDest(snappedScaledDest,
                                     imgIContainer::FRAME_CURRENT,
