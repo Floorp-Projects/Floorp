@@ -67,3 +67,4 @@ toolkit.jar:
    skin/classic/global/in-content/sorter.png                   (../../shared/in-content/sorter.png)
    skin/classic/global/in-content/sorter@2x.png                (../../shared/in-content/sorter@2x.png)
 +  skin/classic/global/toolbar/spring.png                      (toolbar/spring.png)
+   skin/classic/global/spinner.png                             (../../shared/spinner.png)
