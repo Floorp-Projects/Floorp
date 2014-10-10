@@ -35,11 +35,11 @@ public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
     }
 
     public Themed@VIEW_NAME_SUFFIX@(Context context, AttributeSet attrs, int defStyle) {
-#ifdef STYLE_CONSTRUCTOR
+//#ifdef STYLE_CONSTRUCTOR
         super(context, attrs, defStyle);
-#else
+//#else
         super(context, attrs);
-#endif
+//#endif
 
         mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
