@@ -140,6 +140,10 @@ NS_IMETHODIMP nsBaseFilePicker::Init(nsIDOMWindow *aParent,
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
   mParent = do_QueryInterface(aParent);
+  if (!mParent->IsInnerWindow()) {
+    mParent = mParent->GetCurrentInnerWindow();
+  }
+
   mMode = aMode;
   InitNative(widget, aTitle);
 
