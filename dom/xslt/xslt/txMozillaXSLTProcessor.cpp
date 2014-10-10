@@ -11,7 +11,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
-#include "nsDOMClassInfoID.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMNodeList.h"
@@ -36,6 +35,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsJSUtils.h"
 #include "nsIXPConnect.h"
+#include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/XSLTProcessorBinding.h"
 
 using namespace mozilla::dom;
 
@@ -326,27 +327,37 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
  * txMozillaXSLTProcessor
  */
 
-NS_IMPL_CYCLE_COLLECTION(txMozillaXSLTProcessor, mEmbeddedStylesheetRoot,
-                         mSource, mVariables)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(txMozillaXSLTProcessor,
+                                      mOwner, mEmbeddedStylesheetRoot,
+                                      mSource, mVariables)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(txMozillaXSLTProcessor)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(txMozillaXSLTProcessor)
 
-DOMCI_DATA(XSLTProcessor, txMozillaXSLTProcessor)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(txMozillaXSLTProcessor)
+    NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessorPrivate)
     NS_INTERFACE_MAP_ENTRY(nsIDocumentTransformer)
     NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXSLTProcessor)
-    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XSLTProcessor)
 NS_INTERFACE_MAP_END
 
-txMozillaXSLTProcessor::txMozillaXSLTProcessor() : mStylesheetDocument(nullptr),
-                                                   mTransformResult(NS_OK),
-                                                   mCompileResult(NS_OK),
-                                                   mFlags(0)
+txMozillaXSLTProcessor::txMozillaXSLTProcessor()
+  : mOwner(nullptr),
+    mStylesheetDocument(nullptr),
+    mTransformResult(NS_OK),
+    mCompileResult(NS_OK),
+    mFlags(0)
+{
+}
+
+txMozillaXSLTProcessor::txMozillaXSLTProcessor(nsISupports* aOwner)
+  : mOwner(aOwner),
+    mStylesheetDocument(nullptr),
+    mTransformResult(NS_OK),
+    mCompileResult(NS_OK),
+    mFlags(0)
 {
 }
 
@@ -1260,6 +1271,80 @@ txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
                                        nsIContent* aPreviousSibling)
 {
     mStylesheet = nullptr;
+}
+
+/* virtual */ JSObject*
+txMozillaXSLTProcessor::WrapObject(JSContext* aCx)
+{
+    return XSLTProcessorBinding::Wrap(aCx, this);
+}
+
+
+/* static */ already_AddRefed<txMozillaXSLTProcessor>
+txMozillaXSLTProcessor::Constructor(const GlobalObject& aGlobal,
+                                    mozilla::ErrorResult& aRv)
+{
+    nsRefPtr<txMozillaXSLTProcessor> processor =
+        new txMozillaXSLTProcessor(aGlobal.GetAsSupports());
+    return processor.forget();
+}
+
+void
+txMozillaXSLTProcessor::ImportStylesheet(nsINode& stylesheet,
+                                         mozilla::ErrorResult& aRv)
+{
+    aRv = ImportStylesheet(stylesheet.AsDOMNode());
+}
+
+already_AddRefed<DocumentFragment>
+txMozillaXSLTProcessor::TransformToFragment(nsINode& source,
+                                            nsIDocument& docVal,
+                                            mozilla::ErrorResult& aRv)
+{
+    nsCOMPtr<nsIDOMDocumentFragment> fragment;
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(&docVal);
+    if (!domDoc) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return nullptr;
+    }
+    aRv = TransformToFragment(source.AsDOMNode(), domDoc, getter_AddRefs(fragment));
+    return fragment.forget().downcast<DocumentFragment>();
+}
+
+already_AddRefed<nsIDocument>
+txMozillaXSLTProcessor::TransformToDocument(nsINode& source,
+                                            mozilla::ErrorResult& aRv)
+{
+    nsCOMPtr<nsIDOMDocument> document;
+    aRv = TransformToDocument(source.AsDOMNode(), getter_AddRefs(document));
+    nsCOMPtr<nsIDocument> domDoc = do_QueryInterface(document);
+    return domDoc.forget();
+}
+
+void
+txMozillaXSLTProcessor::SetParameter(JSContext* aCx,
+                                     const nsAString& aNamespaceURI,
+                                     const nsAString& aLocalName,
+                                     JS::Handle<JS::Value> aValue,
+                                     mozilla::ErrorResult& aRv)
+{
+    nsCOMPtr<nsIVariant> val;
+    aRv = nsContentUtils::XPConnect()->JSToVariant(aCx, aValue,
+                                                   getter_AddRefs(val));
+    if (aRv.Failed()) {
+        return;
+    }
+    aRv = SetParameter(aNamespaceURI, aLocalName, val);
+}
+
+nsIVariant*
+txMozillaXSLTProcessor::GetParameter(const nsAString& aNamespaceURI,
+                                     const nsAString& aLocalName,
+                                     mozilla::ErrorResult& aRv)
+{
+    nsCOMPtr<nsIVariant> val;
+    aRv = GetParameter(aNamespaceURI, aLocalName, getter_AddRefs(val));
+    return val;
 }
 
 /* static*/
