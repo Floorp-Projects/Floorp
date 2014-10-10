@@ -479,7 +479,7 @@ setReq.onsuccess = function() {
         for (let i = 0; i < apps.length; i++) {
             let app = apps[i];
             if (app.manifest.name === 'Test Container') {
-                let manager = window.wrappedJSObject.AppWindowManager || window.wrappedJSObject.WindowManager;
+                let manager = window.wrappedJSObject.appWindowManager || window.wrappedJSObject.AppWindowManager;
                 if (!manager) {
                     marionetteScriptFinished(false);
                     return;
