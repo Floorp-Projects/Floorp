@@ -9,9 +9,12 @@ import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertFalse;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotNull;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
+import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.tests.StringHelper;
 import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.helpers.DeviceHelper;
+import org.mozilla.gecko.tests.helpers.NavigationHelper;
 import org.mozilla.gecko.tests.helpers.WaitHelper;
 
 import android.view.View;
@@ -26,6 +29,9 @@ import com.jayway.android.robotium.solo.Solo;
  * A class representing any interactions that take place on the Toolbar.
  */
 public class ToolbarComponent extends BaseComponent {
+
+    private static final String URL_HTTP_PREFIX = "http://";
+
     public ToolbarComponent(final UITestContext testContext) {
         super(testContext);
     }
@@ -40,7 +46,26 @@ public class ToolbarComponent extends BaseComponent {
         return this;
     }
 
-    public ToolbarComponent assertTitle(final String expected) {
+    public ToolbarComponent assertTitle(final String title, final String url) {
+        // We are asserting visible state - we shouldn't know if the title is null.
+        fAssertNotNull("The title argument is not null", title);
+        fAssertNotNull("The url argument is not null", url);
+
+        // TODO: We should also check the title bar preference.
+        final String expected;
+        if (!NewTabletUI.isEnabled(mActivity)) {
+            expected = title;
+        } else {
+            final String absoluteURL = NavigationHelper.adjustUrl(url);
+            if (StringHelper.ABOUT_HOME_URL.equals(absoluteURL)) {
+                expected = StringHelper.ABOUT_HOME_TITLE;
+            } else if (absoluteURL.startsWith(URL_HTTP_PREFIX)) {
+                expected = absoluteURL.substring(URL_HTTP_PREFIX.length());
+            } else {
+                expected = absoluteURL;
+            }
+        }
+
         fAssertEquals("The Toolbar title is " + expected, expected, getTitle());
         return this;
     }
