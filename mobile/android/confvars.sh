@@ -72,12 +72,8 @@ MOZ_NATIVE_DEVICES=1
 # Mark as WebGL conformant
 MOZ_WEBGL_CONFORMANT=1
 
-# Enable the Search Activity in nightly.
-if test "$NIGHTLY_BUILD"; then
-  MOZ_ANDROID_SEARCH_ACTIVITY=1
-else
-  MOZ_ANDROID_SEARCH_ACTIVITY=
-fi
+# Enable the Search Activity.
+MOZ_ANDROID_SEARCH_ACTIVITY=1
 
 # Enable the new tablet UI in pre-release builds
 # if the max Android sdk is undefined or at least 11.
