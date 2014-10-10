@@ -915,6 +915,7 @@ protected:
 #endif
     bool                       mAffectPrivateSessionLifetime;
     bool                       mInvisible;
+    bool                       mHasLoadedNonBlankURI;
     uint64_t                   mHistoryID;
     uint32_t                   mDefaultLoadFlags;
 
