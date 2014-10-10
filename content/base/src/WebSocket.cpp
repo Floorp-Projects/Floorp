@@ -17,6 +17,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
@@ -1543,18 +1544,20 @@ WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
   MOZ_ASSERT(mImpl);
   mImpl->AssertIsOnTargetThread();
 
+  AutoJSAPI jsapi;
+
   if (NS_IsMainThread()) {
-    AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(GetOwner()))) {
       return NS_ERROR_FAILURE;
     }
-
-    return CreateAndDispatchMessageEvent(jsapi.cx(), aData, aIsBinary);
+  } else {
+    MOZ_ASSERT(mWorkerPrivate);
+    if (NS_WARN_IF(!jsapi.Init(mWorkerPrivate->GlobalScope()))) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
-  MOZ_ASSERT(mWorkerPrivate);
-  return CreateAndDispatchMessageEvent(mWorkerPrivate->GetJSContext(), aData,
-                                       aIsBinary);
+  return CreateAndDispatchMessageEvent(jsapi.cx(), aData, aIsBinary);
 }
 
 nsresult
