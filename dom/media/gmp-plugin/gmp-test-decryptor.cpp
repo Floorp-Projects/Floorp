@@ -109,7 +109,7 @@ public:
 
 class VerifyAndFinishContinuation : public ReadContinuation {
 public:
-  VerifyAndFinishContinuation(string aValue)
+  explicit VerifyAndFinishContinuation(string aValue)
     : mValue(aValue)
   {}
   void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
@@ -146,7 +146,7 @@ static const string OpenAgainRecordId = "open-again-record-id";
 
 class OpenedSecondTimeContinuation : public OpenContinuation {
 public:
-  OpenedSecondTimeContinuation(GMPRecord* aRecord)
+  explicit OpenedSecondTimeContinuation(GMPRecord* aRecord)
     : mRecord(aRecord)
   {
   }
@@ -248,7 +248,7 @@ public:
 
 class ReportReadStatusContinuation : public ReadContinuation {
 public:
-  ReportReadStatusContinuation(const string& aRecordId)
+  explicit ReportReadStatusContinuation(const string& aRecordId)
     : mRecordId(aRecordId)
   {}
   void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
@@ -269,7 +269,7 @@ public:
 
 class ReportReadRecordContinuation : public ReadContinuation {
 public:
-  ReportReadRecordContinuation(const string& aRecordId)
+  explicit ReportReadRecordContinuation(const string& aRecordId)
     : mRecordId(aRecordId)
   {}
   void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
@@ -330,7 +330,7 @@ FakeDecryptor::UpdateSession(uint32_t aPromiseId,
 
 class CompleteShutdownTask : public GMPTask {
 public:
-  CompleteShutdownTask(GMPAsyncShutdownHost* aHost)
+  explicit CompleteShutdownTask(GMPAsyncShutdownHost* aHost)
     : mHost(aHost)
   {
   }
