@@ -142,7 +142,7 @@ public class GeckoJavaSampler {
         Sample sample = getSample(aThreadId, aSampleId);
         if (sample != null) {
             if (sample.mJavaTime != 0) {
-                return (double)(sample.mJavaTime -
+                return (sample.mJavaTime -
                     SystemClock.elapsedRealtime()) + getProfilerTime();
             }
             System.out.println("Sample: " + sample.mTime);

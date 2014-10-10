@@ -136,10 +136,10 @@ public class PluginLayer extends TileLayer {
         private void clampToMaxSize() {
             if (width > mMaxDimension || height > mMaxDimension) {
                 if (width > height) {
-                    height = Math.round(((float)height/(float)width) * mMaxDimension);
+                    height = Math.round(((float)height/ width) * mMaxDimension);
                     width = mMaxDimension;
                 } else {
-                    width = Math.round(((float)width/(float)height) * mMaxDimension);
+                    width = Math.round(((float)width/ height) * mMaxDimension);
                     height = mMaxDimension;
                 }
             }

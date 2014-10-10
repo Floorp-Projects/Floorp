@@ -76,11 +76,11 @@ class MotionEventReplayer {
     }
 
     private float scaleX(float value) {
-        return value * (float)mSurfaceWidth / (float)CAPTURE_WINDOW_WIDTH;
+        return value * mSurfaceWidth / CAPTURE_WINDOW_WIDTH;
     }
 
     private float scaleY(float value) {
-        return value * (float)mSurfaceHeight / (float)CAPTURE_WINDOW_HEIGHT;
+        return value * mSurfaceHeight / CAPTURE_WINDOW_HEIGHT;
     }
 
     public void replayEvents(InputStream eventDescriptions)

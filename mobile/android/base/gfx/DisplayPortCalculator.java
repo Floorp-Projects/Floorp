@@ -124,7 +124,7 @@ final class DisplayPortCalculator {
 
     private static float getFloatPref(Map<String, Integer> prefs, String prefName, int defaultValue) {
         Integer value = (prefs == null ? null : prefs.get(prefName));
-        return (float)(value == null || value < 0 ? defaultValue : value) / 1000f;
+        return (value == null || value < 0 ? defaultValue : value) / 1000f;
     }
 
     private static abstract class DisplayPortStrategy {
@@ -746,7 +746,7 @@ final class DisplayPortCalculator {
         @Override
         public boolean drawTimeUpdate(long millis, int pixels) {
             // calculate the number of frames it took to draw a viewport-sized area
-            float normalizedTime = (float)mPixelArea * (float)millis / (float)pixels;
+            float normalizedTime = (float)mPixelArea * millis / pixels;
             int normalizedFrames = (int)FloatMath.ceil(normalizedTime * 60f / 1000f);
             // broaden our range on how long it takes to draw if the draw falls outside
             // the range. this allows it to grow gradually. this heuristic may need to

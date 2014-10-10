@@ -56,7 +56,7 @@ public class HKDF {
     byte[] T  = {};
     byte[] Tn = {};
 
-    int iterations = (int) Math.ceil(((double)len) / ((double)BLOCKSIZE));
+    int iterations = (int) Math.ceil(((double)len) / (BLOCKSIZE));
     for (int i = 0; i < iterations; i++) {
       Tn = digestBytes(Utils.concatAll(Tn, info, Utils.hex2Byte(Integer.toHexString(i + 1))),
                        hmacHasher);
