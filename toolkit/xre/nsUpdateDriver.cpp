@@ -1092,12 +1092,18 @@ nsUpdateProcessor::ProcessUpdate(nsIUpdate* aUpdate)
     nsresult rv = ds->Get(NS_GRE_DIR, NS_GET_IID(nsIFile),
                           getter_AddRefs(greDir));
     NS_ASSERTION(NS_SUCCEEDED(rv), "Can't get the GRE dir");
-    appDir = greDir;
+
+    nsCOMPtr<nsIFile> exeFile;
+    rv = ds->Get(XRE_EXECUTABLE_FILE, NS_GET_IID(nsIFile),
+                 getter_AddRefs(exeFile));
+    if (NS_SUCCEEDED(rv))
+      rv = exeFile->GetParent(getter_AddRefs(appDir));
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't get the XREExeF parent dir");
 
     rv = ds->Get(XRE_UPDATE_ROOT_DIR, NS_GET_IID(nsIFile),
                  getter_AddRefs(updRoot));
-    if (NS_FAILED(rv))
-      updRoot = appDir;
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't get the UpdRootD dir");
 
     nsCOMPtr<nsIXULAppInfo> appInfo =
       do_GetService("@mozilla.org/xre/app-info;1");
