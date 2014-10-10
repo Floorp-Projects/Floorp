@@ -32,6 +32,7 @@ loop.shared.models = (function(l10n) {
       selectedCallType: "audio-video", // The selected type for the call that was
                                        // initiated ("audio" or "audio-video")
       callToken:    undefined,     // Incoming call token.
+      callUrl:      undefined,     // Incoming call url
                                    // Used for blocking a call url
       subscribedStream: false,     // Used to indicate that a stream has been
                                    // subscribed to
@@ -142,15 +143,18 @@ loop.shared.models = (function(l10n) {
     setIncomingSessionData: function(sessionData) {
       // Explicit property assignment to prevent later "surprises"
       this.set({
-        sessionId:      sessionData.sessionId,
-        sessionToken:   sessionData.sessionToken,
-        sessionType:    sessionData.sessionType,
-        apiKey:         sessionData.apiKey,
-        callId:         sessionData.callId,
-        progressURL:    sessionData.progressURL,
-        websocketToken: sessionData.websocketToken.toString(16),
-        callType:       sessionData.callType || "audio-video",
-        callToken:      sessionData.callToken
+        sessionId:       sessionData.sessionId,
+        sessionToken:    sessionData.sessionToken,
+        sessionType:     sessionData.sessionType,
+        apiKey:          sessionData.apiKey,
+        callId:          sessionData.callId,
+        callerId:        sessionData.callerId,
+        urlCreationDate: sessionData.urlCreationDate,
+        progressURL:     sessionData.progressURL,
+        websocketToken:  sessionData.websocketToken.toString(16),
+        callType:        sessionData.callType || "audio-video",
+        callToken:       sessionData.callToken,
+        callUrl:         sessionData.callUrl
       });
     },
 
@@ -196,6 +200,23 @@ loop.shared.models = (function(l10n) {
         return this.get("selectedCallType") === "audio-video";
       }
       return undefined;
+    },
+
+    /**
+     * Used to remove the scheme from a url.
+     */
+    _removeScheme: function(url) {
+      if (!url) {
+        return "";
+      }
+      return url.replace(/^https?:\/\//, "");
+    },
+
+    /**
+     * Returns a conversation identifier for the incoming call view
+     */
+    getCallIdentifier: function() {
+      return this.get("callerId") || this._removeScheme(this.get("callUrl"));
     },
 
     /**

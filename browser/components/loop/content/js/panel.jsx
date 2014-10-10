@@ -308,15 +308,6 @@ loop.panel = (function(_, mozL10n) {
       this._fetchCallUrl();
     },
 
-    /**
-    * Returns a random 5 character string used to identify
-    * the conversation.
-    * XXX this will go away once the backend changes
-    */
-    conversationIdentifier: function() {
-      return Math.random().toString(36).substring(5);
-    },
-
     componentDidMount: function() {
       // If we've already got a callURL, don't bother requesting a new one.
       // As of this writing, only used for visual testing in the UI showcase.
@@ -332,7 +323,9 @@ loop.panel = (function(_, mozL10n) {
      */
     _fetchCallUrl: function() {
       this.setState({pending: true});
-      this.props.client.requestCallUrl(this.conversationIdentifier(),
+      // XXX This is an empty string as a conversation identifier. Bug 1015938 implements
+      // a user-set string.
+      this.props.client.requestCallUrl("",
                                        this._onCallUrlReceived);
     },
 

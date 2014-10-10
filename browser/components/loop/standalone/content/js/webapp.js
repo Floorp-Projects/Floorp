@@ -446,10 +446,9 @@ loop.webapp = (function($, _, OT, mozL10n) {
       if (err) {
         this.props.notifications.errorL10n("unable_retrieve_call_info");
       } else {
-        var date = (new Date(callUrlInfo.urlCreationDate * 1000));
-        var options = {year: "numeric", month: "long", day: "numeric"};
-        var timestamp = date.toLocaleDateString(navigator.language, options);
-        this.setState({urlCreationDateString: timestamp});
+        this.setState({
+          urlCreationDateString: sharedUtils.formatDate(callUrlInfo.urlCreationDate)
+        });
       }
     },
 
