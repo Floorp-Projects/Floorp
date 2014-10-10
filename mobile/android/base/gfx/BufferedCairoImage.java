@@ -18,7 +18,7 @@ public class BufferedCairoImage extends CairoImage {
     private IntSize mSize;
     private int mFormat;
 
-    private static String LOGTAG = "GeckoBufferedCairoImage";
+    private static final String LOGTAG = "GeckoBufferedCairoImage";
 
     /** Creates a buffered Cairo image from a byte buffer. */
     public BufferedCairoImage(ByteBuffer inBuffer, int inWidth, int inHeight, int inFormat) {

@@ -95,7 +95,7 @@ public class Server11RepositorySession extends RepositorySession {
   /**
    * Used to track outstanding requests, so that we can abort them as needed.
    */
-  private Set<SyncStorageCollectionRequest> pending = Collections.synchronizedSet(new HashSet<SyncStorageCollectionRequest>());
+  private final Set<SyncStorageCollectionRequest> pending = Collections.synchronizedSet(new HashSet<SyncStorageCollectionRequest>());
 
   @Override
   public void abort() {
@@ -115,7 +115,7 @@ public class Server11RepositorySession extends RepositorySession {
    */
   public class RequestFetchDelegateAdapter extends WBOCollectionRequestDelegate {
     RepositorySessionFetchRecordsDelegate delegate;
-    private DelayedWorkTracker workTracker = new DelayedWorkTracker();
+    private final DelayedWorkTracker workTracker = new DelayedWorkTracker();
 
     // So that we can clean up.
     private SyncStorageCollectionRequest request;
@@ -427,9 +427,9 @@ public class Server11RepositorySession extends RepositorySession {
   protected class RecordUploadRunnable implements Runnable, SyncStorageRequestDelegate {
 
     public final String LOG_TAG = "RecordUploadRunnable";
-    private ArrayList<byte[]> outgoing;
+    private final ArrayList<byte[]> outgoing;
     private ArrayList<String> outgoingGuids;
-    private long byteCount;
+    private final long byteCount;
 
     public RecordUploadRunnable(RepositorySessionStoreDelegate storeDelegate,
                                 ArrayList<byte[]> outgoing,
@@ -556,7 +556,7 @@ public class Server11RepositorySession extends RepositorySession {
     }
 
     public class ByteArraysEntity extends EntityTemplate {
-      private long count;
+      private final long count;
       public ByteArraysEntity(ArrayList<byte[]> arrays, long totalBytes) {
         super(new ByteArraysContentProducer(arrays));
         this.count = totalBytes;

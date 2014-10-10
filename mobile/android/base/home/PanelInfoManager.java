@@ -59,7 +59,7 @@ public class PanelInfoManager implements GeckoEventListener {
         public void onComplete(List<PanelInfo> panelInfos);
     }
 
-    private static AtomicInteger sRequestId = new AtomicInteger(0);
+    private static final AtomicInteger sRequestId = new AtomicInteger(0);
 
     // Stores set of pending request callbacks.
     private static final SparseArray<RequestCallback> sCallbacks = new SparseArray<RequestCallback>();

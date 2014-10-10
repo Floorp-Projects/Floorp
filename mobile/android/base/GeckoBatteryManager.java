@@ -30,7 +30,7 @@ public class GeckoBatteryManager extends BroadcastReceiver {
     private static boolean sCharging                   = kDefaultCharging;
     private static double  sRemainingTime              = kDefaultRemainingTime;
 
-    private static GeckoBatteryManager sInstance = new GeckoBatteryManager();
+    private static final GeckoBatteryManager sInstance = new GeckoBatteryManager();
 
     private final IntentFilter mFilter;
     private Context mApplicationContext;

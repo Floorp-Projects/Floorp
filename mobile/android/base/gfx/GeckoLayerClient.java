@@ -33,7 +33,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     private LayerRenderer mLayerRenderer;
     private boolean mLayerRendererInitialized;
 
-    private Context mContext;
+    private final Context mContext;
     private IntSize mScreenSize;
     private IntSize mWindowSize;
     private DisplayPortMetrics mDisplayPort;
@@ -59,7 +59,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
      */
     private ImmutableViewportMetrics mFrameMetrics;
 
-    private List<DrawListener> mDrawListeners;
+    private final List<DrawListener> mDrawListeners;
 
     /* Used as temporaries by syncViewportInfo */
     private final ViewTransform mCurrentViewTransform;
@@ -94,7 +94,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     private final PanZoomController mPanZoomController;
     private final LayerMarginsAnimator mMarginsAnimator;
-    private LayerView mView;
+    private final LayerView mView;
 
     /* This flag is true from the time that browser.js detects a first-paint is about to start,
      * to the time that we receive the first-paint composite notification from the compositor.

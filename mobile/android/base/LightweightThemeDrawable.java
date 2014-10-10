@@ -26,11 +26,11 @@ import android.graphics.drawable.Drawable;
  * to specify the alpha) in order.
  */
 public class LightweightThemeDrawable extends Drawable {
-    private Paint mPaint;
+    private final Paint mPaint;
     private Paint mColorPaint;
 
-    private Bitmap mBitmap;
-    private Resources mResources;
+    private final Bitmap mBitmap;
+    private final Resources mResources;
 
     private int mStartColor;
     private int mEndColor;

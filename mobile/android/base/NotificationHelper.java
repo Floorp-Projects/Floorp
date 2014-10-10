@@ -64,7 +64,7 @@ public final class NotificationHelper implements GeckoEventListener {
     private static final String CLEARED_EVENT = "notification-cleared";
     private static final String CLOSED_EVENT = "notification-closed";
 
-    private Context mContext;
+    private final Context mContext;
 
     // Holds a list of notifications that should be cleared if the Fennec Activity is shut down.
     // Will not include ongoing or persistent notifications that are tied to Gecko's lifecycle.

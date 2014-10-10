@@ -28,7 +28,7 @@ import ch.boye.httpclientandroidlib.message.BasicHeader;
 
 public class GetRequestStage extends JPakeStage {
 
-  private Timer timerScheduler = new Timer();
+  private final Timer timerScheduler = new Timer();
   private int pollTries;
   private GetStepTimerTask getStepTimerTask;
 
@@ -188,7 +188,7 @@ public class GetRequestStage extends JPakeStage {
    *
    */
   public class GetStepTimerTask extends TimerTask {
-    private Resource request;
+    private final Resource request;
 
     public GetStepTimerTask(Resource request) {
       this.request = request;

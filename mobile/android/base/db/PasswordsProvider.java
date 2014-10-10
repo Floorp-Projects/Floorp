@@ -39,8 +39,8 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
 
     private static final UriMatcher URI_MATCHER;
 
-    private static HashMap<String, String> PASSWORDS_PROJECTION_MAP;
-    private static HashMap<String, String> DELETED_PASSWORDS_PROJECTION_MAP;
+    private static final HashMap<String, String> PASSWORDS_PROJECTION_MAP;
+    private static final HashMap<String, String> DELETED_PASSWORDS_PROJECTION_MAP;
 
     // this should be kept in sync with the version in toolkit/components/passwordmgr/storage-mozStorage.js
     private static final int DB_VERSION = 5;

@@ -1028,7 +1028,7 @@ OnSharedPreferenceChangeListener
     }
 
     @SuppressWarnings("serial")
-    private Map<String, PrefHandler> handlers = new HashMap<String, PrefHandler>() {{
+    private final Map<String, PrefHandler> handlers = new HashMap<String, PrefHandler>() {{
         put(ClearOnShutdownPref.PREF, new ClearOnShutdownPref());
     }};
 

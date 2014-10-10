@@ -183,7 +183,7 @@ public abstract class GeckoApp
     private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
 
-    private HashMap<String, PowerManager.WakeLock> mWakeLocks = new HashMap<String, PowerManager.WakeLock>();
+    private final HashMap<String, PowerManager.WakeLock> mWakeLocks = new HashMap<String, PowerManager.WakeLock>();
 
     protected boolean mShouldRestore;
     protected boolean mInitialized;

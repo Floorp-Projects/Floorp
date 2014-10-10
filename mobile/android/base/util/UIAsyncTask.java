@@ -72,7 +72,7 @@ public abstract class UIAsyncTask<Param, Result> {
     }
 
     private final class BackgroundTaskRunnable implements Runnable {
-        private Param mParam;
+        private final Param mParam;
 
         public BackgroundTaskRunnable(Param param) {
             mParam = param;

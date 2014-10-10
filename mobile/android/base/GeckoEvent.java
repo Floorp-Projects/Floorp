@@ -43,7 +43,7 @@ public class GeckoEvent {
     private static final int EVENT_FACTORY_SIZE = 5;
 
     // Maybe we're probably better to just make mType non final, and just store GeckoEvents in here...
-    private static SparseArray<ArrayBlockingQueue<GeckoEvent>> mEvents = new SparseArray<ArrayBlockingQueue<GeckoEvent>>();
+    private static final SparseArray<ArrayBlockingQueue<GeckoEvent>> mEvents = new SparseArray<ArrayBlockingQueue<GeckoEvent>>();
 
     public static GeckoEvent get(NativeGeckoEvent type) {
         synchronized (mEvents) {

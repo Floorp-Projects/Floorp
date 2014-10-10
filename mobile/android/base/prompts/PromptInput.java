@@ -132,7 +132,7 @@ public class PromptInput {
 
     public static class CheckboxInput extends PromptInput {
         public static final String INPUT_TYPE = "checkbox";
-        private boolean mChecked;
+        private final boolean mChecked;
 
         public CheckboxInput(JSONObject obj) {
             super(obj);

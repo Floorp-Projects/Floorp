@@ -50,8 +50,8 @@ import android.util.Log;
 public abstract class AbstractTransactionalProvider extends ContentProvider {
     private static final String LOGTAG = "GeckoTransProvider";
 
-    private static boolean logDebug = Log.isLoggable(LOGTAG, Log.DEBUG);
-    private static boolean logVerbose = Log.isLoggable(LOGTAG, Log.VERBOSE);
+    private static final boolean logDebug = Log.isLoggable(LOGTAG, Log.DEBUG);
+    private static final boolean logVerbose = Log.isLoggable(LOGTAG, Log.VERBOSE);
 
     protected abstract SQLiteDatabase getReadableDatabase(Uri uri);
     protected abstract SQLiteDatabase getWritableDatabase(Uri uri);

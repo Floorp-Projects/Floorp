@@ -14,8 +14,8 @@ import android.net.Uri;
 
 class DatabaseHelper {
     protected enum BrowserDataType {BOOKMARKS, HISTORY};
-    private Activity mActivity;
-    private Assert mAsserter;
+    private final Activity mActivity;
+    private final Assert mAsserter;
 
     public DatabaseHelper(Activity activity, Assert asserter) {
         mActivity = activity;

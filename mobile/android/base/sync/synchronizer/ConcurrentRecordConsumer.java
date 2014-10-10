@@ -29,7 +29,7 @@ class ConcurrentRecordConsumer extends RecordConsumer {
     this.delegate = delegate;
   }
 
-  private Object monitor = new Object();
+  private final Object monitor = new Object();
   @Override
   public void doNotify() {
     synchronized (monitor) {
@@ -54,7 +54,7 @@ class ConcurrentRecordConsumer extends RecordConsumer {
     }
   }
 
-  private Object countMonitor = new Object();
+  private final Object countMonitor = new Object();
   @Override
   public void stored() {
     Logger.trace(LOG_TAG, "Record stored. Notifying.");

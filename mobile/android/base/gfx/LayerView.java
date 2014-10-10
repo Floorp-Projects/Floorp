@@ -50,12 +50,12 @@ import android.widget.FrameLayout;
  * Note that LayerView is accessed by Robocop via reflection.
  */
 public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener {
-    private static String LOGTAG = "GeckoLayerView";
+    private static final String LOGTAG = "GeckoLayerView";
 
     private GeckoLayerClient mLayerClient;
     private PanZoomController mPanZoomController;
     private LayerMarginsAnimator mMarginsAnimator;
-    private GLController mGLController;
+    private final GLController mGLController;
     private InputConnectionHandler mInputConnectionHandler;
     private LayerRenderer mRenderer;
     /* Must be a PAINT_xxx constant */

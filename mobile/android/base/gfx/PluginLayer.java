@@ -18,10 +18,10 @@ import android.widget.AbsoluteLayout;
 public class PluginLayer extends TileLayer {
     private static final String LOGTAG = "PluginLayer";
 
-    private View mView;
+    private final View mView;
     private SurfaceView mSurfaceView;
-    private PluginLayoutParams mLayoutParams;
-    private AbsoluteLayout mContainer;
+    private final PluginLayoutParams mLayoutParams;
+    private final AbsoluteLayout mContainer;
 
     private boolean mDestroyed;
     private boolean mViewVisible;
@@ -123,7 +123,7 @@ public class PluginLayer extends TileLayer {
         private static final String LOGTAG = "GeckoApp.PluginLayoutParams";
 
         private RectF mRect;
-        private int mMaxDimension;
+        private final int mMaxDimension;
         private float mLastResolution;
 
         public PluginLayoutParams(RectF rect, int maxDimension) {
