@@ -659,9 +659,6 @@ if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
     search_source_dir = SRCDIR + '/../search'
     include('../search/search_activity_sources.mozbuild')
 
-    ANDROID_RES_DIRS += [search_source_dir + '/res']
-    resjar.generated_sources += ['org/mozilla/search/R.java']
-
     search_activity = add_java_jar('search-activity')
     search_activity.sources += [search_source_dir + '/' + f for f in search_activity_sources]
     search_activity.javac_flags += ['-Xlint:all']
@@ -831,17 +828,5 @@ if CONFIG['MOZ_ANDROID_MLS_STUMBLER']:
     DEFINES['MOZ_STUMBLER_API_KEY'] = CONFIG['MOZ_MOZILLA_API_KEY']
 
 if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
-    searchres = add_android_eclipse_library_project('FennecResourcesSearch')
-    # Eclipse generates org.mozilla.search.R for this project, which is
-    # referenced by the search/**/*.java code.
-    searchres.package_name = 'org.mozilla.search'
-    searchres.res = SRCDIR + '/../search/res'
-
-    searchres.included_projects += ['../' + static.name, '../' + generated.name, '../' + branding.name]
-    searchres.referenced_projects += ['../' + static.name, '../' + generated.name, '../' + branding.name]
-
-    resources.included_projects += ['../' + searchres.name]
-    resources.referenced_projects += ['../' + searchres.name]
-
     # The Search Activity code is built as part of Fennec, so we follow suit in Eclipse.
     main.add_classpathentry('search', TOPSRCDIR + '/mobile/android/search/java', dstdir='search')

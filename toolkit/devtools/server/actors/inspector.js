@@ -2106,8 +2106,7 @@ var WalkerActor = protocol.ActorClass({
       node: Arg(0, "domnode"),
       value: Arg(1),
     },
-    response: {
-    }
+    response: {}
   }),
 
   /**
@@ -2146,6 +2145,46 @@ var WalkerActor = protocol.ActorClass({
       node: Arg(0, "domnode"),
       parent: Arg(1, "domnode"),
       sibling: Arg(2, "nullable:domnode")
+    },
+    response: {}
+  }),
+
+  /**
+   * Editing a node's tagname actually means creating a new node with the same
+   * attributes, removing the node and inserting the new one instead.
+   * This method does not return anything as mutation events are taking care of
+   * informing the consumers about changes.
+   */
+  editTagName: method(function(node, tagName) {
+    let oldNode = node.rawNode;
+
+    // Create a new element with the same attributes as the current element and
+    // prepare to replace the current node with it.
+    let newNode;
+    try {
+      newNode = nodeDocument(oldNode).createElement(tagName);
+    } catch(x) {
+      // Failed to create a new element with that tag name, ignore the change,
+      // and signal the error to the front.
+      return Promise.reject(new Error("Could not change node's tagName to " + tagName));
+    }
+
+    let attrs = oldNode.attributes;
+    for (let i = 0; i < attrs.length; i ++) {
+      newNode.setAttribute(attrs[i].name, attrs[i].value);
+    }
+
+    // Insert the new node, and transfer the old node's children.
+    oldNode.parentNode.insertBefore(newNode, oldNode);
+    while (oldNode.firstChild) {
+      newNode.appendChild(oldNode.firstChild);
+    }
+
+    oldNode.remove();
+  }, {
+    request: {
+      node: Arg(0, "domnode"),
+      tagName: Arg(1, "string")
     },
     response: {}
   }),

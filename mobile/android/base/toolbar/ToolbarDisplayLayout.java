@@ -41,6 +41,7 @@ import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 
 /**
 * {@code ToolbarDisplayLayout} is the UI for when the toolbar is in
@@ -147,10 +148,32 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         mPrivateDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext_private));
 
         mFavicon = (ImageButton) findViewById(R.id.favicon);
+        mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
+
         if (NewTabletUI.isEnabled(context)) {
-            // We don't show favicons in the toolbar on new tablet.
-            // TODO: removeView(mFavicon);
-            mFavicon.setVisibility(View.GONE);
+            mSiteSecurity.setVisibility(View.VISIBLE);
+            // TODO: Rename this resource and remove this call when new tablet is default.
+            mSiteSecurity.setImageResource(R.drawable.new_tablet_site_security_level);
+
+            // TODO: This can likely be set statically in resources when new tablet is default.
+            // Dynamically update parameters for new tablet.
+            final LinearLayout.LayoutParams lp =
+                    (LinearLayout.LayoutParams) mSiteSecurity.getLayoutParams();
+            lp.height = res.getDimensionPixelSize(R.dimen.new_tablet_site_security_height);
+            lp.width = res.getDimensionPixelSize(R.dimen.new_tablet_site_security_width);
+            // TODO: Override a common static value when new tablet is standard.
+            lp.rightMargin = res.getDimensionPixelSize(R.dimen.new_tablet_site_security_right_margin);
+            mSiteSecurity.setLayoutParams(lp);
+            final int siteSecurityVerticalPadding =
+                    res.getDimensionPixelSize(R.dimen.new_tablet_site_security_padding_vertical);
+            final int siteSecurityHorizontalPadding =
+                    res.getDimensionPixelSize(R.dimen.new_tablet_site_security_padding_horizontal);
+            mSiteSecurity.setPadding(siteSecurityHorizontalPadding, siteSecurityVerticalPadding,
+                    siteSecurityHorizontalPadding, siteSecurityVerticalPadding);
+
+            // We don't show favicons in the toolbar on new tablet. Note that while we could
+            // null the favicon reference, we don't do so to avoid excessive null-checking.
+            removeView(mFavicon);
         } else {
             if (Versions.feature16Plus) {
                 mFavicon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -158,7 +181,6 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
             mFaviconSize = Math.round(res.getDimension(R.dimen.browser_toolbar_favicon_size));
         }
 
-        mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
         mSiteSecurityVisible = (mSiteSecurity.getVisibility() == View.VISIBLE);
 
         mSiteIdentityPopup = new SiteIdentityPopup(mActivity);
@@ -200,7 +222,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
             }
         });
 
-        float slideWidth = getResources().getDimension(R.dimen.browser_toolbar_lock_width);
+        float slideWidth = getResources().getDimension(R.dimen.browser_toolbar_site_security_width);
 
         LayoutParams siteSecParams = (LayoutParams) mSiteSecurity.getLayoutParams();
         final float scale = getResources().getDisplayMetrics().density;
@@ -456,7 +478,8 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     }
 
     private void setSiteSecurityVisibility(boolean visible, EnumSet<UpdateFlags> flags) {
-        if (visible == mSiteSecurityVisible) {
+        // We don't hide site security on new tablets.
+        if (visible == mSiteSecurityVisible || NewTabletUI.isEnabled(getContext())) {
             return;
         }
 
