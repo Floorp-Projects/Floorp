@@ -738,6 +738,18 @@ NewGCExternalString(js::ThreadSafeContext *cx)
     return js::gc::AllocateNonObject<JSExternalString, js::CanGC>(cx);
 }
 
+inline Shape *
+NewGCShape(ThreadSafeContext *cx)
+{
+    return gc::AllocateNonObject<Shape, CanGC>(cx);
+}
+
+inline Shape *
+NewGCAccessorShape(ThreadSafeContext *cx)
+{
+    return gc::AllocateNonObject<AccessorShape, CanGC>(cx);
+}
+
 } /* namespace js */
 
 inline JSScript *
@@ -750,12 +762,6 @@ inline js::LazyScript *
 js_NewGCLazyScript(js::ThreadSafeContext *cx)
 {
     return js::gc::AllocateNonObject<js::LazyScript, js::CanGC>(cx);
-}
-
-inline js::Shape *
-js_NewGCShape(js::ThreadSafeContext *cx)
-{
-    return js::gc::AllocateNonObject<js::Shape, js::CanGC>(cx);
 }
 
 template <js::AllowGC allowGC>
