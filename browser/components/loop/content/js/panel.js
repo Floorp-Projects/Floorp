@@ -168,7 +168,7 @@ loop.panel = (function(_, mozL10n) {
         var terms_of_use_url = navigator.mozLoop.getLoopCharPref('legal.ToS_url');
         var privacy_notice_url = navigator.mozLoop.getLoopCharPref('legal.privacy_url');
         var tosHTML = __("legal_text_and_links3", {
-          "clientShortname": __("client_shortname_fallback"),
+          "clientShortname": __("clientShortname2"),
           "terms_of_use": React.renderComponentToStaticMarkup(
             React.DOM.a({href: terms_of_use_url, target: "_blank"}, 
               __("legal_text_tos")
@@ -352,6 +352,9 @@ loop.panel = (function(_, mozL10n) {
           var token = callUrlData.callToken ||
                       callUrl.pathname.split('/').pop();
 
+          // Now that a new URL is available, indicate it has not been shared.
+          this.linkExfiltrated = false;
+
           this.setState({pending: false, copied: false,
                          callUrl: callUrl.href,
                          callUrlExpiry: callUrlData.expiresAt});
@@ -366,8 +369,11 @@ loop.panel = (function(_, mozL10n) {
     handleEmailButtonClick: function(event) {
       this.handleLinkExfiltration(event);
 
-      navigator.mozLoop.composeEmail(__("share_email_subject3"),
-        __("share_email_body3", { callUrl: this.state.callUrl }));
+      navigator.mozLoop.composeEmail(
+        __("share_email_subject4", { clientShortname: __("clientShortname2")}),
+        __("share_email_body4", { callUrl: this.state.callUrl,
+                                  clientShortname: __("clientShortname2"),
+                                  learnMoreUrl: navigator.mozLoop.getLoopCharPref("learnMoreUrl") }));
     },
 
     handleCopyButtonClick: function(event) {
@@ -378,12 +384,20 @@ loop.panel = (function(_, mozL10n) {
       this.setState({copied: true});
     },
 
+    linkExfiltrated: false,
+
     handleLinkExfiltration: function(event) {
-      try {
-        navigator.mozLoop.telemetryAdd("LOOP_CLIENT_CALL_URL_SHARED", true);
-      } catch (err) {
-        console.error("Error recording telemetry", err);
+      // Update the count of shared URLs only once per generated URL.
+      if (!this.linkExfiltrated) {
+        this.linkExfiltrated = true;
+        try {
+          navigator.mozLoop.telemetryAdd("LOOP_CLIENT_CALL_URL_SHARED", true);
+        } catch (err) {
+          console.error("Error recording telemetry", err);
+        }
       }
+
+      // Note URL expiration every time it is shared.
       if (this.state.callUrlExpiry) {
         navigator.mozLoop.noteCallUrlExpiry(this.state.callUrlExpiry);
       }
@@ -625,7 +639,9 @@ loop.panel = (function(_, mozL10n) {
 
     _onStatusChanged: function() {
       var profile = navigator.mozLoop.userProfile;
-      if (profile != this.state.userProfile) {
+      var currUid = this.state.userProfile ? this.state.userProfile.uid : null;
+      var newUid = profile ? profile.uid : null;
+      if (currUid != newUid) {
         // On profile change (login, logout), switch back to the default tab.
         this.selectTab("call");
       }

@@ -394,6 +394,24 @@ const CustomizableWidgets = [
       clearSubview(doc.getElementById("PanelUI-sidebarItems"));
     }
   }, {
+    id: "social-share-button",
+    tooltiptext: "social-share-button.label",
+    label: "social-share-button.tooltiptext",
+    // custom build our button so we can attach to the share command
+    type: "custom",
+    onBuild: function(aDocument) {
+      let node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+      node.setAttribute("id", this.id);
+      node.classList.add("toolbarbutton-1");
+      node.classList.add("chromeclass-toolbar-additional");
+      node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
+      node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
+      node.setAttribute("removable", "true");
+      node.setAttribute("observes", "Social:PageShareOrMark");
+      node.setAttribute("command", "Social:SharePage");
+      return node;
+    }
+  }, {
     id: "add-ons-button",
     shortcutId: "key_openAddons",
     tooltiptext: "add-ons-button.tooltiptext3",
@@ -905,9 +923,8 @@ const CustomizableWidgets = [
   }, {
     id: "loop-call-button",
     type: "custom",
-    // XXX Bug 1013989 will provide a label for the button
-    label: "loop-call-button.label",
-    tooltiptext: "loop-call-button.tooltiptext",
+    label: "loop-call-button2.label",
+    tooltiptext: "loop-call-button2.tooltiptext",
     defaultArea: CustomizableUI.AREA_NAVBAR,
     introducedInVersion: 1,
     onBuild: function(aDocument) {
