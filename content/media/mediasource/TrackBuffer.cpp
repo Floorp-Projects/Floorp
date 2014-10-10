@@ -91,8 +91,6 @@ TrackBuffer::Shutdown()
     mDecoders[i]->GetReader()->Shutdown();
   }
   mInitializedDecoders.Clear();
-  NS_DispatchToMainThread(new ReleaseDecoderTask(mDecoders));
-  MOZ_ASSERT(mDecoders.IsEmpty());
   mParentDecoder = nullptr;
 }
 
