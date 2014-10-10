@@ -738,7 +738,7 @@ class WorkerDebugger : public nsIWorkerDebugger {
   bool mIsEnabled;
 
 public:
-  WorkerDebugger(WorkerPrivate* aWorkerPrivate);
+  explicit WorkerDebugger(WorkerPrivate* aWorkerPrivate);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWORKERDEBUGGER

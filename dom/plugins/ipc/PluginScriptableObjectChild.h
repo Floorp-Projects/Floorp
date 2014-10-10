@@ -189,8 +189,8 @@ public:
   class MOZ_STACK_CLASS StackIdentifier
   {
   public:
-    StackIdentifier(const PluginIdentifier& aIdentifier);
-    StackIdentifier(NPIdentifier aIdentifier);
+    explicit StackIdentifier(const PluginIdentifier& aIdentifier);
+    explicit StackIdentifier(NPIdentifier aIdentifier);
     ~StackIdentifier();
 
     void MakePermanent()
