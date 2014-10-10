@@ -6,14 +6,13 @@ package org.mozilla.gecko.menu;
 
 import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.widget.ThemedImageButton;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.ImageButton;
 
-public class MenuItemActionBar extends ThemedImageButton
+public class MenuItemActionBar extends ImageButton
                                implements GeckoMenuItem.Layout {
     private static final String LOGTAG = "GeckoMenuItemActionBar";
 

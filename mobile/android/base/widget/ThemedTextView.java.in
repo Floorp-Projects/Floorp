@@ -1,5 +1,4 @@
 #filter substitution
 #define VIEW_NAME_SUFFIX TextView
 #define BASE_TYPE android.widget.TextView
-#define STYLE_CONSTRUCTOR 1
 #include ThemedView.java.frag
