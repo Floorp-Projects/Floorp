@@ -32,8 +32,7 @@ public class testBookmark extends AboutHomeTest {
         isBookmarkDisplayed(BOOKMARK_URL);
         loadBookmark(BOOKMARK_URL);
         waitForText(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
-        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE,
-                StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
+        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
 
         mDatabaseHelper.deleteBookmark(BOOKMARK_URL);
         waitForBookmarked(false);
