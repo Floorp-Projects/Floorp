@@ -357,7 +357,14 @@ StackShape::trace(JSTracer *trc)
 {
     if (base)
         MarkBaseShapeRoot(trc, (BaseShape**) &base, "StackShape base");
+
     MarkIdRoot(trc, (jsid*) &propid, "StackShape id");
+
+    if ((attrs & JSPROP_GETTER) && rawGetter)
+        MarkObjectRoot(trc, (JSObject**)&rawGetter, "StackShape getter");
+
+    if ((attrs & JSPROP_SETTER) && rawSetter)
+        MarkObjectRoot(trc, (JSObject**)&rawSetter, "StackShape setter");
 }
 
 void
