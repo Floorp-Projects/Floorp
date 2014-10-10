@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import imp
 import os
 import sys
 import argparse
@@ -36,7 +37,17 @@ commandline.add_logging_group(_parser)
 
 def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
     address=None, binary=None, topsrcdir=None, **kwargs):
-    from marionette.runtests import (
+
+    # Import the harness directly and under a different name here to avoid
+    # "marionette" being importable from two locations when "testing/marionette/client"
+    # is on sys.path.
+    # See bug 1050511.
+    path = os.path.join(topsrcdir, 'testing/marionette/client/marionette/runtests.py')
+    with open(path, 'r') as fh:
+        imp.load_module('marionetteharness', fh, path,
+                        ('.py', 'r', imp.PY_SOURCE))
+
+    from marionetteharness import (
         MarionetteTestRunner,
         BaseMarionetteOptions,
         startTestRunner
