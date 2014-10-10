@@ -48,10 +48,10 @@ GLScreenBuffer::Create(GLContext* gl,
         allocator &&
         XRE_GetProcessType() != GeckoProcessType_Default)
     {
-        layers::TextureFlags flags = TextureFlags::DEALLOCATE_CLIENT |
-                                     TextureFlags::NEEDS_Y_FLIP;
+        layers::TextureFlags flags = layers::TextureFlags::DEALLOCATE_CLIENT |
+                                     layers::TextureFlags::NEEDS_Y_FLIP;
         if (!caps.premultAlpha) {
-            flags |= TextureFlags::NON_PREMULTIPLIED;
+            flags |= layers::TextureFlags::NON_PREMULTIPLIED;
         }
 
         factory = MakeUnique<SurfaceFactory_Gralloc>(gl, caps, flags,
