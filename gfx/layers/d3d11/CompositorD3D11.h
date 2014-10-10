@@ -150,7 +150,7 @@ private:
   void VerifyBufferSize();
   void UpdateRenderTarget();
   bool CreateShaders();
-  bool UpdateConstantBuffers();
+  void UpdateConstantBuffers();
   void SetSamplerForFilter(gfx::Filter aFilter);
   void SetPSForEffect(Effect *aEffect, MaskType aMaskType, gfx::SurfaceFormat aFormat);
   void PaintToTarget();
