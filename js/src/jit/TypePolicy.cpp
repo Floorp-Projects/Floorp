@@ -866,10 +866,16 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
         return true;
     }
 
-    // The outputType should always be a subset of the inputType.
-    // So if types don't equal, the input type is definitely a MIRType_Value.
-    if (inputType != MIRType_Value)
-        MOZ_CRASH("Types should be in accordance.");
+    // The outputType should be a subset of the inputType else we are in code
+    // that has never executed yet. Bail to see the new type (if that hasn't
+    // happened yet).
+    if (inputType != MIRType_Value) {
+        MBail *bail = MBail::New(alloc);
+        ins->block()->insertBefore(ins, bail);
+        bail->setDependency(ins->dependency());
+        ins->setDependency(bail);
+        ins->replaceOperand(0, boxAt(alloc, ins, ins->getOperand(0)));
+    }
 
     // We can't unbox a value to null/undefined/lazyargs. So keep output
     // also a value.

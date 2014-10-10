@@ -75,6 +75,7 @@
     macro(float32x4, float32x4, "float32x4") \
     macro(float64, float64, "float64") \
     macro(format, format, "format") \
+    macro(frame, frame, "frame") \
     macro(from, from, "from") \
     macro(get, get, "get") \
     macro(getInternals, getInternals, "getInternals") \
@@ -175,6 +176,7 @@
     macro(style, style, "style") \
     macro(test, test, "test") \
     macro(throw, throw_, "throw") \
+    macro(timestamp, timestamp, "timestamp") \
     macro(timeZone, timeZone, "timeZone") \
     macro(toGMTString, toGMTString, "toGMTString") \
     macro(toISOString, toISOString, "toISOString") \

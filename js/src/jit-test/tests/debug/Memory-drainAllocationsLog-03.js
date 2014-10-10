@@ -19,6 +19,6 @@ const allocs = dbg.memory.drainAllocationsLog();
 // Should have stayed at the maximum length.
 assertEq(allocs.length, 3);
 // Should have kept the most recent allocation.
-assertEq(allocs[2].line, 4);
+assertEq(allocs[2].frame.line, 4);
 // Should have thrown away the oldest allocation.
-assertEq(allocs.map(x => x.line).indexOf(1), -1);
+assertEq(allocs.map(x => x.frame.line).indexOf(1), -1);
