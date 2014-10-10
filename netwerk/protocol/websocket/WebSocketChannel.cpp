@@ -1190,8 +1190,14 @@ WebSocketChannel::IsEncrypted() const
 void
 WebSocketChannel::BeginOpen()
 {
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(
+      NS_NewRunnableMethod(this, &WebSocketChannel::BeginOpen),
+                           NS_DISPATCH_NORMAL);
+    return;
+  }
+
   LOG(("WebSocketChannel::BeginOpen() %p\n", this));
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
 
   nsresult rv;
 
