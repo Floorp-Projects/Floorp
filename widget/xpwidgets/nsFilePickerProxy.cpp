@@ -34,6 +34,10 @@ nsFilePickerProxy::Init(nsIDOMWindow* aParent, const nsAString& aTitle,
   }
 
   mParent = do_QueryInterface(aParent);
+  if (!mParent->IsInnerWindow()) {
+    mParent = mParent->GetCurrentInnerWindow();
+  }
+
   mMode = aMode;
 
   NS_ADDREF_THIS();
