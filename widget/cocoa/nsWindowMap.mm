@@ -168,7 +168,7 @@
 // As best I can tell, if the notification's object has a corresponding
 // top-level widget (an nsCocoaWindow object), it has a delegate (set in
 // nsCocoaWindow::StandardCreate()) of class WindowDelegate, and otherwise
-// not (Camino doesn't use top-level widgets (nsCocoaWindow objects) --
+// not (Camino didn't use top-level widgets (nsCocoaWindow objects) --
 // only child widgets (nsChildView objects)).  (The notification is sent
 // to windowBecameKey: or windowBecameMain: below.)
 //
