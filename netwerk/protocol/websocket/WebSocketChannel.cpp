@@ -654,11 +654,9 @@ NS_IMPL_ISUPPORTS(CallOnServerClose, nsIRunnable)
 // CallAcknowledge
 //-----------------------------------------------------------------------------
 
-class CallAcknowledge MOZ_FINAL : public nsIRunnable
+class CallAcknowledge MOZ_FINAL : public nsCancelableRunnable
 {
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
   CallAcknowledge(WebSocketChannel *aChannel,
                   uint32_t          aSize)
     : mChannel(aChannel),
@@ -679,7 +677,6 @@ private:
   nsRefPtr<WebSocketChannel>        mChannel;
   uint32_t                          mSize;
 };
-NS_IMPL_ISUPPORTS(CallAcknowledge, nsIRunnable)
 
 //-----------------------------------------------------------------------------
 // CallOnTransportAvailable

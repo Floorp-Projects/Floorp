@@ -65,7 +65,7 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsILoadGroup>          mLoadGroup;
   nsCOMPtr<nsILoadInfo>           mLoadInfo;
-  nsCOMPtr<nsIThread>             mTargetThread;
+  nsCOMPtr<nsIEventTarget>        mTargetThread;
 
   nsCString                       mProtocol;
   nsCString                       mOrigin;
