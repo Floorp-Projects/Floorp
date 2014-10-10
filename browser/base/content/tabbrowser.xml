@@ -389,7 +389,7 @@
                                  .getInterface(Ci.nsIWebNavigation)
                                  .QueryInterface(Ci.nsIDocShell)
                                  .chromeEventHandler;
-            return this._getTabForBrowser(browser);
+            return this.getTabForBrowser(browser);
           }
 
           for (let i = 0; i < this.browsers.length; i++) {

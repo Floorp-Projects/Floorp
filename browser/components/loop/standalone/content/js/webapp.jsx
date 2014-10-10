@@ -118,7 +118,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       return (
         <h1 className="standalone-header-title">
           <strong>{mozL10n.get("brandShortname")}</strong>
-          {mozL10n.get("clientShortname")}
+          {mozL10n.get("clientShortname2")}
         </h1>
       );
     }

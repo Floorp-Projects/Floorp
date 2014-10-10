@@ -8,7 +8,7 @@
 
   <binding id="toolbarbutton-marks" display="xul:button"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
-    <content disabled="true">
+    <content>
       <xul:panel anonid="panel" hidden="true" type="arrow" class="social-panel"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
@@ -113,16 +113,11 @@
         if (this._frame.docShell)
           this._frame.docShell.createAboutBlankContentViewer(null);
 
-        // do we have a savable page loaded?
-        let aURI = gBrowser.currentURI;
-        let disabled = !aURI || !(aURI.schemeIs('http') || aURI.schemeIs('https'));
-        // when overflowed in toolbar, we must have the attribute set
-        if (disabled) {
-          this.setAttribute("disabled", "true");
+        // disabled attr is set by Social:PageShareOrMark command
+        if (this.hasAttribute("disabled")) {
           this.isMarked = false;
         } else {
-          this.removeAttribute("disabled");
-          Social.isURIMarked(provider.origin, aURI, (isMarked) => {
+          Social.isURIMarked(provider.origin, gBrowser.currentURI, (isMarked) => {
             this.isMarked = isMarked;
           });
         }

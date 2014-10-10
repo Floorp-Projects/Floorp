@@ -15,13 +15,15 @@ browser.jar:
   skin/classic/browser/aboutCertError_sectionExpanded.png
   skin/classic/browser/aboutNetError.css                        (../shared/aboutNetError.css)
   skin/classic/browser/aboutNetError_info.svg                   (../shared/aboutNetError_info.svg)
-  skin/classic/browser/aboutSocialError.css
+  skin/classic/browser/aboutSocialError.css                     (../shared/aboutSocialError.css)
+* skin/classic/browser/aboutProviderDirectory.css               (../shared/aboutProviderDirectory.css)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/aboutSyncTabs.css
 #endif
   skin/classic/browser/aboutTabCrashed.css
   skin/classic/browser/actionicon-tab.png
 * skin/classic/browser/browser.css
+* skin/classic/browser/devedition.css
 * skin/classic/browser/browser-lightweightTheme.css
   skin/classic/browser/click-to-play-warning-stripes.png
 * skin/classic/browser/content-contextmenu.svg
