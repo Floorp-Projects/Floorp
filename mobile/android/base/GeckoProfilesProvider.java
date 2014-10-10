@@ -70,13 +70,6 @@ public class GeckoProfilesProvider extends ContentProvider {
             return;
         }
 
-        String[] values = new String[len];
-        if (nameIndex >= 0) {
-            values[nameIndex] = name;
-        }
-        if (pathIndex >= 0) {
-            values[pathIndex] = path;
-        }
         cursor.addRow(profileValues(name, path, len, nameIndex, pathIndex));
     }
 
