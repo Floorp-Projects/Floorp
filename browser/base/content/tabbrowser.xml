@@ -1957,8 +1957,8 @@
                 aTab._pendingPermitUnload = true;
                 let permitUnload = ds.contentViewer.permitUnload();
                 delete aTab._pendingPermitUnload;
-                // If we were closed during the unload, we return false now so
-                // we don't (try to) close the same tab again. Of course, we
+                // If we were closed during onbeforeunload, we return false now
+                // so we don't (try to) close the same tab again. Of course, we
                 // also stop if the unload was cancelled by the user:
                 if (aTab.closing || !permitUnload) {
                   // NB: deliberately keep the _closedDuringPermitUnload set to
