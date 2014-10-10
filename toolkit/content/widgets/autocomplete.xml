@@ -1586,9 +1586,15 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                                                     [action.params.engineName, false],
                                                     [action.params.searchQuery, true]
                                                   ]);
-              // Remove the image, so we can style it ourselves with a generic
-              // search icon.
-              this.removeAttribute("image");
+              // If this is a default search match, we remove the image so we
+              // can style it ourselves with a generic search icon.
+              // We don't do this when matching an aliased search engine,
+              // because the icon helps with recognising which engine will be
+              // used (when using the default engine, we don't need that
+              // recognition).
+              if (!action.params.alias) {
+                this.removeAttribute("image");
+              }
             } else if (action.type == "visiturl") {
               emphasiseUrl = false;
               url = action.params.url;
