@@ -67,7 +67,6 @@ onmessage = function(event) {
   }
 
   postMessage({type: 'status', status: status, msg: 'Blob URL2:' + url});
-  postMessage({type: 'url', url: url});
 
   status = false;
   try {
@@ -77,6 +76,8 @@ onmessage = function(event) {
   }
 
   postMessage({type: 'status', status: status, msg: 'Exception wanted' });
+
+  postMessage({type: 'url', url: url});
 
   postMessage({type: 'finish' });
 }
