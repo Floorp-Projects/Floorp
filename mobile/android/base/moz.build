@@ -47,6 +47,7 @@ gujar = add_java_jar('gecko-util')
 gujar.sources += [
     'util/ActivityResultHandler.java',
     'util/ActivityResultHandlerMap.java',
+    'util/ActivityUtils.java',
     'util/Clipboard.java',
     'util/EventCallback.java',
     'util/FileUtils.java',
