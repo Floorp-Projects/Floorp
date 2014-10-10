@@ -335,7 +335,6 @@ MBasicBlock::NewAsmJS(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred, Kin
                 MOZ_ASSERT(predSlot->type() != MIRType_Value);
                 MPhi *phi = new(phis + i) MPhi(alloc, predSlot->type());
 
-                JS_ALWAYS_TRUE(phi->reserveLength(2));
                 phi->addInput(predSlot);
 
                 // Add append Phis in the block.
@@ -407,8 +406,10 @@ MBasicBlock::copySlots(MBasicBlock *from)
 {
     MOZ_ASSERT(stackPosition_ <= from->stackPosition_);
 
-    for (uint32_t i = 0; i < stackPosition_; i++)
-        slots_[i] = from->slots_[i];
+    MDefinition **thisSlots = slots_.begin();
+    MDefinition **fromSlots = from->slots_.begin();
+    for (size_t i = 0, e = stackPosition_; i < e; ++i)
+        thisSlots[i] = fromSlots[i];
 }
 
 bool
@@ -447,8 +448,7 @@ MBasicBlock::inherit(TempAllocator &alloc, BytecodeAnalysis *analysis, MBasicBlo
             size_t i = 0;
             for (i = 0; i < info().firstStackSlot(); i++) {
                 MPhi *phi = MPhi::New(alloc);
-                if (!phi->addInputSlow(pred->getSlot(i)))
-                    return false;
+                phi->addInput(pred->getSlot(i));
                 addPhi(phi);
                 setSlot(i, phi);
                 entryResumePoint()->initOperand(i, phi);
@@ -468,8 +468,7 @@ MBasicBlock::inherit(TempAllocator &alloc, BytecodeAnalysis *analysis, MBasicBlo
 
             for (; i < stackDepth(); i++) {
                 MPhi *phi = MPhi::New(alloc);
-                if (!phi->addInputSlow(pred->getSlot(i)))
-                    return false;
+                phi->addInput(pred->getSlot(i));
                 addPhi(phi);
                 setSlot(i, phi);
                 entryResumePoint()->initOperand(i, phi);
@@ -839,31 +838,13 @@ MBasicBlock::discardIgnoreOperands(MInstruction *ins)
     instructions_.remove(ins);
 }
 
-MInstructionIterator
-MBasicBlock::discardAt(MInstructionIterator &iter)
+void
+MBasicBlock::discardDef(MDefinition *at)
 {
-    prepareForDiscard(*iter);
-    return instructions_.removeAt(iter);
-}
-
-MInstructionReverseIterator
-MBasicBlock::discardAt(MInstructionReverseIterator &iter)
-{
-    prepareForDiscard(*iter);
-    return instructions_.removeAt(iter);
-}
-
-MDefinitionIterator
-MBasicBlock::discardDefAt(MDefinitionIterator &old)
-{
-    MDefinitionIterator iter(old);
-
-    if (iter.atPhi())
-        iter.phiIter_ = iter.block_->discardPhiAt(iter.phiIter_);
+    if (at->isPhi())
+        at->block_->discardPhi(at->toPhi());
     else
-        iter.iter_ = iter.block_->discardAt(iter.iter_);
-
-    return iter;
+        at->block_->discard(at->toInstruction());
 }
 
 void
@@ -874,14 +855,15 @@ MBasicBlock::discardAllInstructions()
 }
 
 void
-MBasicBlock::discardAllInstructionsStartingAt(MInstructionIterator &iter)
+MBasicBlock::discardAllInstructionsStartingAt(MInstructionIterator iter)
 {
     while (iter != end()) {
         // Discard operands and resume point operands and flag the instruction
         // as discarded.  Also we do not assert that we have no uses as blocks
         // might be removed in reverse post order.
-        prepareForDiscard(*iter, RefType_DefaultNoAssert);
-        iter = instructions_.removeAt(iter);
+        MInstruction *ins = *iter++;
+        prepareForDiscard(ins, RefType_DefaultNoAssert);
+        instructions_.remove(ins);
     }
 }
 
@@ -892,7 +874,7 @@ MBasicBlock::discardAllPhiOperands()
         iter->removeAllOperands();
 
     for (MBasicBlock **pred = predecessors_.begin(); pred != predecessors_.end(); pred++)
-        (*pred)->setSuccessorWithPhis(nullptr, 0);
+        (*pred)->clearSuccessorWithPhis();
 }
 
 void
@@ -980,21 +962,20 @@ MBasicBlock::addPhi(MPhi *phi)
     graph().allocDefinitionId(phi);
 }
 
-MPhiIterator
-MBasicBlock::discardPhiAt(MPhiIterator &at)
+void
+MBasicBlock::discardPhi(MPhi *phi)
 {
     MOZ_ASSERT(!phis_.empty());
 
-    at->removeAllOperands();
-    at->setDiscarded();
+    phi->removeAllOperands();
+    phi->setDiscarded();
 
-    MPhiIterator result = phis_.removeAt(at);
+    phis_.remove(phi);
 
     if (phis_.empty()) {
-        for (MBasicBlock **pred = predecessors_.begin(); pred != predecessors_.end(); pred++)
-            (*pred)->setSuccessorWithPhis(nullptr, 0);
+        for (MBasicBlock **pred = predecessors_.begin(), **end = predecessors_.end(); pred < end; ++pred)
+            (*pred)->clearSuccessorWithPhis();
     }
-    return result;
 }
 
 void
@@ -1043,7 +1024,7 @@ MBasicBlock::addPredecessorPopN(TempAllocator &alloc, MBasicBlock *pred, uint32_
     MOZ_ASSERT(pred->hasLastIns());
     MOZ_ASSERT(pred->stackPosition_ == stackPosition_ + popped);
 
-    for (uint32_t i = 0; i < stackPosition_; i++) {
+    for (uint32_t i = 0, e = stackPosition_; i < e; ++i) {
         MDefinition *mine = getSlot(i);
         MDefinition *other = pred->getSlot(i);
 
@@ -1069,7 +1050,7 @@ MBasicBlock::addPredecessorPopN(TempAllocator &alloc, MBasicBlock *pred, uint32_
                 if (!phi->reserveLength(predecessors_.length() + 1))
                     return false;
 
-                for (size_t j = 0; j < predecessors_.length(); j++) {
+                for (size_t j = 0, numPreds = predecessors_.length(); j < numPreds; ++j) {
                     MOZ_ASSERT(predecessors_[j]->getSlot(i) == mine);
                     phi->addInput(mine);
                 }
@@ -1215,7 +1196,7 @@ MBasicBlock::setBackedgeAsmJS(MBasicBlock *pred)
             exitDef = entryDef->getOperand(0);
         }
 
-        // MBasicBlock::NewAsmJS calls reserveLength(2) for loop header phis.
+        // Phis always have room for 2 operands, so we can use addInput.
         entryDef->addInput(exitDef);
 
         MOZ_ASSERT(slot < pred->stackDepth());
@@ -1360,7 +1341,7 @@ MBasicBlock::removePredecessorWithoutPhiOperands(MBasicBlock *pred, size_t predI
     // information yet.
     if (pred->successorWithPhis()) {
         MOZ_ASSERT(pred->positionInPhiSuccessor() == predIndex);
-        pred->setSuccessorWithPhis(nullptr, 0);
+        pred->clearSuccessorWithPhis();
         for (size_t j = predIndex+1; j < numPredecessors(); j++)
             getPredecessor(j)->setSuccessorWithPhis(this, j - 1);
     }
@@ -1454,9 +1435,10 @@ MBasicBlock::inheritPhisFromBackedge(MBasicBlock *backedge, bool *hadTypeChange)
 
         bool typeChange = false;
 
-        if (!entryDef->addInputSlow(exitDef, &typeChange))
+        if (!entryDef->addInputSlow(exitDef))
             return false;
-
+        if (!entryDef->checkForTypeChange(exitDef, &typeChange))
+            return false;
         *hadTypeChange |= typeChange;
         setSlot(slot, entryDef);
     }

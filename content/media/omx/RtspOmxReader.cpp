@@ -41,6 +41,7 @@ nsresult RtspOmxReader::Seek(int64_t aTime, int64_t aStartTime,
   // RtspMediaResource.
   if (mRtspResource) {
     mRtspResource->SeekTime(aTime);
+    mRtspResource->EnablePlayoutDelay();
   }
 
   // Call |MediaOmxReader::Seek| to notify the OMX decoder we are performing a
@@ -78,6 +79,24 @@ void RtspOmxReader::EnsureActive() {
 
   // Call parent class to set OMXCodec active.
   MediaOmxReader::EnsureActive();
+}
+
+nsresult RtspOmxReader::ReadMetadata(MediaInfo *aInfo, MetadataTags **aTags)
+{
+  // Send a PLAY command to the RTSP server before reading metadata.
+  // Because we might need some decoded samples to ensure we have configuration.
+  mRtspResource->DisablePlayoutDelay();
+  EnsureActive();
+  nsresult rv = MediaOmxReader::ReadMetadata(aInfo, aTags);
+
+  if (rv == NS_OK && !IsWaitingMediaResources()) {
+    mRtspResource->EnablePlayoutDelay();
+  } else if (IsWaitingMediaResources()) {
+    // Send a PAUSE to the RTSP server because the underlying media resource is
+    // not ready.
+    SetIdle();
+  }
+  return rv;
 }
 
 } // namespace mozilla

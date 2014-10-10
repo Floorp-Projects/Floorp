@@ -4,6 +4,17 @@
 
 package org.mozilla.search.autocomplete;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.SuggestClient;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.search.AcceptsSearchQuery;
+import org.mozilla.search.AcceptsSearchQuery.SuggestionAnimation;
+import org.mozilla.search.providers.SearchEngine;
+
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
@@ -20,17 +31,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-
-import org.mozilla.gecko.SuggestClient;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.search.AcceptsSearchQuery;
-import org.mozilla.search.AcceptsSearchQuery.SuggestionAnimation;
-import org.mozilla.search.R;
-import org.mozilla.search.providers.SearchEngine;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A fragment to show search suggestions.

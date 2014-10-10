@@ -44,25 +44,11 @@ function* runEditOuterHTMLTest(test, inspector) {
 
   let onUpdated = inspector.once("inspector-updated");
 
-  info("Listening for the markupmutation event");
-  // This event fires once the outerHTML is set, with a target as the parent node and a type of "childList".
-  let mutated = inspector.once("markupmutation");
-  info("Editing the outerHTML");
-  inspector.markup.updateNodeOuterHTML(inspector.selection.nodeFront, test.newHTML, test.oldHTML);
-  let mutations = yield mutated;
-  ok(true, "The markupmutation event has fired, mutation done");
-
-  info("Check to make the sure the correct mutation event was fired, and that the parent is selected");
-  let nodeFront = inspector.selection.nodeFront;
-  let mutation = mutations[0];
-  let isFromOuterHTML = mutation.removed.some(n => n === oldNodeFront);
-
-  ok(isFromOuterHTML, "The node is in the 'removed' list of the mutation");
-  is(mutation.type, "childList", "Mutation is a childList after updating outerHTML");
-  is(mutation.target, nodeFront, "Parent node is selected immediately after setting outerHTML");
-
-  // Wait for node to be reselected after outerHTML has been set
-  yield inspector.selection.once("new-node-front");
+  info("Listen for reselectedonremoved and edit the outerHTML");
+  let onReselected = inspector.markup.once("reselectedonremoved");
+  yield inspector.markup.updateNodeOuterHTML(inspector.selection.nodeFront,
+                                             test.newHTML, test.oldHTML);
+  yield onReselected;
 
   // Typically selectedNode will === pageNode, but if a new element has been injected in front
   // of it, this will not be the case.  If this happens.

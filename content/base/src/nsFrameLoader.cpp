@@ -847,10 +847,11 @@ nsFrameLoader::MarginsChanged(uint32_t aMarginWidth,
   mDocShell->SetMarginHeight(aMarginHeight);
 
   // Trigger a restyle if there's a prescontext
+  // FIXME: This could do something much less expensive.
   nsRefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (presContext)
-    presContext->RebuildAllStyleData(nsChangeHint(0));
+    presContext->RebuildAllStyleData(nsChangeHint(0), eRestyle_Subtree);
 }
 
 bool

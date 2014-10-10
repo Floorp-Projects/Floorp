@@ -141,6 +141,13 @@ class nsHtml5Highlighter
      * @param aMsgId the id of the message in the property file
      */
     void AddErrorToCurrentSlash(const char* aMsgId);
+    
+    /**
+     * Enqueues a tree op for adding base to the urls with the view-source:
+     *
+     * @param aValue the base URL to add
+     */
+    void AddBase(const nsString& aValue);
 
   private:
 
@@ -264,7 +271,7 @@ class nsHtml5Highlighter
      * @param aValue the (potentially relative) URL to link to
      */
     void AddViewSourceHref(const nsString& aValue);
-
+    
     /**
      * The state we are transitioning away from.
      */
@@ -399,6 +406,11 @@ class nsHtml5Highlighter
      * The string "pi"
      */
     static char16_t sPi[];
+    
+    /**
+     * Whether base is already visited once.
+     */
+     bool mSeenBase;
 };
 
 #endif // nsHtml5Highlighter_h

@@ -189,15 +189,20 @@ public:
     {
         if (!pageSize) {
             pageSize = determinePageSize();
-            /*
-             * On Windows, VirtualAlloc effectively allocates in 64K chunks.
-             * (Technically, it allocates in page chunks, but the starting
-             * address is always a multiple of 64K, so each allocation uses up
-             * 64K of address space.)  So a size less than that would be
-             * pointless.  But it turns out that 64KB is a reasonable size for
-             * all platforms.  (This assumes 4KB pages.)
-             */
+            // On Windows, VirtualAlloc effectively allocates in 64K chunks.
+            // (Technically, it allocates in page chunks, but the starting
+            // address is always a multiple of 64K, so each allocation uses up
+            // 64K of address space.)  So a size less than that would be
+            // pointless.  But it turns out that 64KB is a reasonable size for
+            // all platforms.  (This assumes 4KB pages.) On 64-bit windows,
+            // AllocateExecutableMemory prepends an extra page for structured
+            // exception handling data (see comments in function) onto whatever
+            // is passed in, so subtract one page here.
+#if defined(JS_CPU_X64) && defined(XP_WIN)
+            largeAllocSize = pageSize * 15;
+#else
             largeAllocSize = pageSize * 16;
+#endif
         }
 
         MOZ_ASSERT(m_smallPools.empty());
@@ -471,6 +476,13 @@ private:
 
     static size_t determinePageSize();
 };
+
+extern void *
+AllocateExecutableMemory(void *addr, size_t bytes, unsigned permissions, const char *tag,
+                         size_t pageSize);
+
+extern void
+DeallocateExecutableMemory(void *addr, size_t bytes, size_t pageSize);
 
 } // namespace jit
 } // namespace js
