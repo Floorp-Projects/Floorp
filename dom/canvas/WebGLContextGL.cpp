@@ -48,6 +48,7 @@
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Endian.h"
+#include "mozilla/fallible.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3755,7 +3756,12 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level,
         else
         {
             size_t convertedDataSize = height * dstStride;
-            convertedData = new uint8_t[convertedDataSize];
+            convertedData = (uint8_t*)moz_malloc(convertedDataSize);
+            if (!convertedData) {
+                ErrorOutOfMemory("texImage2D: Ran out of memory when allocating"
+                                 " a buffer for doing format conversion.");
+                return;
+            }
             if (!ConvertImage(width, height, srcStride, dstStride,
                               static_cast<uint8_t*>(data), convertedData,
                               actualSrcFormat, srcPremultiplied,
@@ -3945,7 +3951,12 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
 
     if (!noConversion) {
         size_t convertedDataSize = height * dstStride;
-        convertedData = new uint8_t[convertedDataSize];
+        convertedData = (uint8_t*)moz_malloc(convertedDataSize);
+        if (!convertedData) {
+            ErrorOutOfMemory("texImage2D: Ran out of memory when allocating"
+                             " a buffer for doing format conversion.");
+            return;
+        }
         if (!ConvertImage(width, height, srcStride, dstStride,
                           static_cast<const uint8_t*>(data), convertedData,
                           actualSrcFormat, srcPremultiplied,
