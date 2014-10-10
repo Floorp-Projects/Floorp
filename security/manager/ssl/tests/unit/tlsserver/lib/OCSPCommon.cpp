@@ -152,7 +152,7 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
   if (aORT == ORTExpired || aORT == ORTExpiredFreshCA ||
       aORT == ORTRevokedOld || aORT == ORTUnknownOld) {
     context.thisUpdate = oldNow;
-    context.nextUpdate = oldNow + Time::ONE_DAY_IN_SECONDS;
+    context.nextUpdate = oldNow + 10;
   }
   if (aORT == ORTLongValidityAlmostExpired) {
     context.thisUpdate = now - (320 * Time::ONE_DAY_IN_SECONDS);
