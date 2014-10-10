@@ -10,11 +10,47 @@ let manifest = { // normal provider
   iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png",
   shareURL: "https://example.com/browser/browser/base/content/test/social/share.html"
 };
+let activationPage = "https://example.com/browser/browser/base/content/test/social/share_activate.html";
+
+function sendActivationEvent(subframe) {
+  // hack Social.lastEventReceived so we don't hit the "too many events" check.
+  Social.lastEventReceived = 0;
+  let doc = subframe.contentDocument;
+  // if our test has a frame, use it
+  let button = doc.getElementById("activation");
+  ok(!!button, "got the activation button");
+  EventUtils.synthesizeMouseAtCenter(button, {}, doc.defaultView);
+}
+
+function promiseShareFrameEvent(iframe, eventName) {
+  let deferred = Promise.defer();
+  iframe.addEventListener(eventName, function load() {
+    info("page load is " + iframe.contentDocument.location.href);
+    if (iframe.contentDocument.location.href != "data:text/plain;charset=utf8,") {
+      iframe.removeEventListener(eventName, load, true);
+      deferred.resolve();
+    }
+  }, true);
+  return deferred.promise;
+}
 
 function test() {
   waitForExplicitFinish();
-
-  runSocialTests(tests);
+  Services.prefs.setCharPref("social.shareDirectory", activationPage);
+  registerCleanupFunction(function () {
+    Services.prefs.clearUserPref("social.directories");
+    Services.prefs.clearUserPref("social.shareDirectory");
+    Services.prefs.clearUserPref("social.share.activationPanelEnabled");
+  });
+  runSocialTests(tests, undefined, function(next) {
+    let shareButton = SocialShare.shareButton;
+    if (shareButton) {
+      CustomizableUI.removeWidgetFromArea("social-share-button", CustomizableUI.AREA_NAVBAR)
+      shareButton.remove();
+    }
+    ok(CustomizableUI.inDefaultState, "Should start in default state.");
+    next();
+  });
 }
 
 let corpus = [
@@ -72,16 +108,6 @@ let corpus = [
   }
 ];
 
-function loadURLInTab(url, callback) {
-  info("Loading tab with "+url);
-  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
-  tab.linkedBrowser.addEventListener("load", function listener() {
-    is(tab.linkedBrowser.currentURI.spec, url, "tab loaded")
-    tab.linkedBrowser.removeEventListener("load", listener, true);
-    executeSoon(function() { callback(tab) });
-  }, true);
-}
-
 function hasoptions(testOptions, options) {
   let msg;
   for (let option in testOptions) {
@@ -105,12 +131,17 @@ var tests = {
     // starting on about:blank page, share should be visible but disabled when
     // adding provider
     is(gBrowser.contentDocument.location.href, "about:blank");
+
+    // initialize the button into the navbar
+    CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);
+    // ensure correct state
+    SocialUI.onCustomizeEnd(window);
+
     SocialService.addProvider(manifest, function(provider) {
       is(SocialUI.enabled, true, "SocialUI is enabled");
       checkSocialUI();
       // share should not be enabled since we only have about:blank page
       let shareButton = SocialShare.shareButton;
-      is(shareButton.disabled, true, "share button is disabled");
       // verify the attribute for proper css
       is(shareButton.getAttribute("disabled"), "true", "share button attribute is disabled");
       // button should be visible
@@ -121,14 +152,18 @@ var tests = {
   testShareEnabledOnActivation: function(next) {
     // starting from *some* page, share should be visible and enabled when
     // activating provider
+    // initialize the button into the navbar
+    CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);
+    // ensure correct state
+    SocialUI.onCustomizeEnd(window);
+
     let testData = corpus[0];
-    loadURLInTab(testData.url, function(tab) {
+    addTab(testData.url, function(tab) {
       SocialService.addProvider(manifest, function(provider) {
         is(SocialUI.enabled, true, "SocialUI is enabled");
         checkSocialUI();
         // share should not be enabled since we only have about:blank page
         let shareButton = SocialShare.shareButton;
-        is(shareButton.disabled, false, "share button is enabled");
         // verify the attribute for proper css
         ok(!shareButton.hasAttribute("disabled"), "share button is enabled");
         // button should be visible
@@ -147,9 +182,9 @@ var tests = {
     let testData = corpus[testIndex++];
 
     function runOneTest() {
-      loadURLInTab(testData.url, function(tab) {
+      addTab(testData.url, function(tab) {
         testTab = tab;
-        SocialShare.sharePage();
+        SocialShare.sharePage(manifest.origin);
       });
     }
 
@@ -240,6 +275,49 @@ var tests = {
         target = doc.getElementById("simple-hcard");
         SocialShare.sharePage(manifest.origin, null, target);
       });
+    });
+  },
+  testSharePanelActivation: function(next) {
+    let testTab;
+    // cleared in the cleanup function
+    Services.prefs.setCharPref("social.directories", "https://example.com");
+    Services.prefs.setBoolPref("social.share.activationPanelEnabled", true);
+    // make the iframe so we can wait on the load
+    SocialShare._createFrame();
+    let iframe = SocialShare.iframe;
+
+    promiseShareFrameEvent(iframe, "load").then(() => {
+      let subframe = iframe.contentDocument.getElementById("activation-frame");
+      waitForCondition(() => {
+          // sometimes the iframe is ready before the panel is open, we need to
+          // wait for both conditions
+          return SocialShare.panel.state == "open"
+                 && subframe.contentDocument
+                 && subframe.contentDocument.readyState == "complete";
+        }, () => {
+        is(subframe.contentDocument.location.href, activationPage, "activation page loaded");
+        promiseObserverNotified("social:provider-enabled").then(() => {
+          let provider = Social._getProviderFromOrigin(manifest.origin);
+          let port = provider.getWorkerPort();
+          ok(!!port, "got port");
+          port.onmessage = function (e) {
+            let topic = e.data.topic;
+            switch (topic) {
+              case "got-share-data-message":
+                ok(true, "share completed");
+                gBrowser.removeTab(testTab);
+                SocialService.uninstallProvider(manifest.origin, next);
+                break;
+            }
+          }
+          port.postMessage({topic: "test-init"});
+        });
+        sendActivationEvent(subframe);
+      }, "share panel did not open and load share page");
+    });
+    addTab(activationPage, function(tab) {
+      testTab = tab;
+      SocialShare.sharePage();
     });
   }
 }

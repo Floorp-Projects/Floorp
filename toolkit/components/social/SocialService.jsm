@@ -152,8 +152,9 @@ XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
 
 function getOriginActivationType(origin) {
   // if this is an about uri, treat it as a directory
-  let originUri = Services.io.newURI(origin, null, null);
-  if (originUri.scheme == "moz-safe-about") {
+  let URI = Services.io.newURI(origin, null, null);
+  let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(URI);
+  if (Services.scriptSecurityManager.isSystemPrincipal(principal) || origin == "moz-safe-about:home") {
     return "internal";
   }
 
@@ -585,26 +586,24 @@ this.SocialService = {
                                       action, [], options);
   },
 
-  installProvider: function(aDOMDocument, data, installCallback, aBypassUserEnable=false) {
+  installProvider: function(aDOMDocument, data, installCallback, options={}) {
     let manifest;
     let installOrigin = aDOMDocument.nodePrincipal.origin;
 
-    if (data) {
-      let installType = getOriginActivationType(installOrigin);
-      // if we get data, we MUST have a valid manifest generated from the data
-      manifest = this._manifestFromData(installType, data, aDOMDocument.nodePrincipal);
-      if (!manifest)
-        throw new Error("SocialService.installProvider: service configuration is invalid from " + aDOMDocument.location.href);
+    let installType = getOriginActivationType(installOrigin);
+    // if we get data, we MUST have a valid manifest generated from the data
+    manifest = this._manifestFromData(installType, data, aDOMDocument.nodePrincipal);
+    if (!manifest)
+      throw new Error("SocialService.installProvider: service configuration is invalid from " + aDOMDocument.location.href);
 
-      let addon = new AddonWrapper(manifest);
-      if (addon && addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
-        throw new Error("installProvider: provider with origin [" +
-                        installOrigin + "] is blocklisted");
-      // manifestFromData call above will enforce correct origin. To support
-      // activation from about: uris, we need to be sure to use the updated
-      // origin on the manifest.
-      installOrigin = manifest.origin;
-    }
+    let addon = new AddonWrapper(manifest);
+    if (addon && addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
+      throw new Error("installProvider: provider with origin [" +
+                      installOrigin + "] is blocklisted");
+    // manifestFromData call above will enforce correct origin. To support
+    // activation from about: uris, we need to be sure to use the updated
+    // origin on the manifest.
+    installOrigin = manifest.origin;
 
     let id = getAddonIDFromOrigin(installOrigin);
     AddonManager.getAddonByID(id, function(aAddon) {
@@ -613,7 +612,7 @@ this.SocialService = {
         aAddon.userDisabled = false;
       }
       schedule(function () {
-        this._installProvider(aDOMDocument, manifest, aBypassUserEnable, aManifest => {
+        this._installProvider(aDOMDocument, manifest, options, aManifest => {
           this._notifyProviderListeners("provider-installed", aManifest.origin);
           installCallback(aManifest);
         });
@@ -621,43 +620,21 @@ this.SocialService = {
     }.bind(this));
   },
 
-  _installProvider: function(aDOMDocument, manifest, aBypassUserEnable, installCallback) {
-    let sourceURI = aDOMDocument.location.href;
-    let installOrigin = aDOMDocument.nodePrincipal.origin;
+  _installProvider: function(aDOMDocument, manifest, options, installCallback) {
+    if (!manifest)
+      throw new Error("Cannot install provider without manifest data");
 
-    let installType = getOriginActivationType(installOrigin);
-    let installer;
-    switch(installType) {
-      case "foreign":
-        if (!Services.prefs.getBoolPref("social.remote-install.enabled"))
-          throw new Error("Remote install of services is disabled");
-        if (!manifest)
-          throw new Error("Cannot install provider without manifest data");
+    let installType = getOriginActivationType(aDOMDocument.nodePrincipal.origin);
+    if (installType == "foreign" && !Services.prefs.getBoolPref("social.remote-install.enabled"))
+      throw new Error("Remote install of services is disabled");
 
-        installer = new AddonInstaller(sourceURI, manifest, installCallback);
-        this._showInstallNotification(aDOMDocument, installer);
-        break;
-      case "internal":
-        // double check here since "builtin" falls through this as well.
-        aBypassUserEnable = installType == "internal" && manifest.oneclick;
-      case "directory":
-        // a manifest is requried, and will have been vetted by reviewers. We
-        // also handle in-product installations without the verification step.
-        if (aBypassUserEnable) {
-          installer = new AddonInstaller(sourceURI, manifest, installCallback);
-          installer.install();
-          return;
-        }
-        // a manifest is required, we'll catch a missing manifest below.
-        if (!manifest)
-          throw new Error("Cannot install provider without manifest data");
-        installer = new AddonInstaller(sourceURI, manifest, installCallback);
-        this._showInstallNotification(aDOMDocument, installer);
-        break;
-      default:
-        throw new Error("SocialService.installProvider: Invalid install type "+installType+"\n");
-        break;
-    }
+    let installer = new AddonInstaller(aDOMDocument.location.href, manifest, installCallback);
+    let bypassPanel = options.bypassInstallPanel ||
+                      (installType == "internal" && manifest.oneclick);
+    if (bypassPanel)
+      installer.install();
+    else
+      this._showInstallNotification(aDOMDocument, installer);
   },
 
   createWrapper: function(manifest) {

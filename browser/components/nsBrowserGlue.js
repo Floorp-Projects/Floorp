@@ -740,13 +740,6 @@ BrowserGlue.prototype = {
 #endif
     webrtcUI.uninit();
     FormValidationHandler.uninit();
-
-    // XXX: Temporary hack to allow Loop FxA login after a restart to work.
-    // Remove this once bug 1071247 is deployed.
-    if (Services.prefs.getPrefType("loop.autologin-after-restart") != Ci.nsIPrefBranch.PREF_BOOL ||
-        !Services.prefs.getBoolPref("loop.autologin-after-restart")) {
-      Services.prefs.clearUserPref("loop.hawk-session-token.fxa");
-    }
   },
 
   // All initial windows have opened.

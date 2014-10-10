@@ -77,7 +77,7 @@ function getFindBar(domWindow) {
   var browser = getContainingBrowser(domWindow);
   try {
     var tabbrowser = browser.getTabBrowser();
-    var tab = tabbrowser._getTabForBrowser(browser);
+    var tab = tabbrowser.getTabForBrowser(browser);
     return tabbrowser.getFindBar(tab);
   } catch (e) {
     // FF22 has no _getTabForBrowser, and FF24 has no getFindBar
