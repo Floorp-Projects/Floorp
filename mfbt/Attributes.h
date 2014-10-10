@@ -65,6 +65,15 @@
 #  define MOZ_HAVE_CXX11_OVERRIDE
 #  define MOZ_HAVE_NEVER_INLINE          __declspec(noinline)
 #  define MOZ_HAVE_NORETURN              __declspec(noreturn)
+#  ifdef __clang__
+     /* clang-cl probably supports constexpr and explicit conversions. */
+#    if __has_extension(cxx_constexpr)
+#      define MOZ_HAVE_CXX11_CONSTEXPR
+#    endif
+#    if __has_extension(cxx_explicit_conversions)
+#      define MOZ_HAVE_EXPLICIT_CONVERSION
+#    endif
+#  endif
 #elif defined(__clang__)
    /*
     * Per Clang documentation, "Note that marketing version numbers should not
