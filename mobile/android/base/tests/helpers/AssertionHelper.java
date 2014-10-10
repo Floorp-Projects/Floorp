@@ -99,11 +99,11 @@ public final class AssertionHelper {
     }
 
     public static void fAssertIsPixel(final String message, final int actual, final int r, final int g, final int b) {
-	sAsserter.ispixel(actual, r, g, b, message);
+        sAsserter.ispixel(actual, r, g, b, message);
     }
 
     public static void fAssertIsNotPixel(final String message, final int actual, final int r, final int g, final int b) {
-	sAsserter.isnotpixel(actual, r, g, b, message);
+        sAsserter.isnotpixel(actual, r, g, b, message);
     }
 
     public static void fFail(final String message) {
