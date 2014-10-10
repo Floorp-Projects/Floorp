@@ -145,6 +145,10 @@ loop.conversation = (function(mozL10n) {
 
     render: function() {
       var mode = this.props.mode;
+      // As we don't have both strings in Fx34, we check to see if the tooltip exists
+      // if it doesn't, then we don't display a tooltip. Bug 1080387 will make it
+      // so this can be unit tested.
+      var secondaryTooltip = mode.secondary.tooltip ? mozL10n.get(mode.secondary.tooltip) : "";
       return (
         /* jshint ignore:start */
         React.DOM.div({className: "btn-chevron-menu-group"}, 
@@ -158,7 +162,7 @@ loop.conversation = (function(mozL10n) {
             ), 
             React.DOM.div({className: mode.secondary.className, 
                  onClick: mode.secondary.handler, 
-                 title: mozL10n.get(mode.secondary.tooltip)}
+                 title: secondaryTooltip}
             )
           )
         )
