@@ -189,11 +189,11 @@ class TextSelection extends Layer implements GeckoEventListener {
     }
 
     private void showActionMode(final JSONArray items) {
-	String itemsString = items.toString();
-	if (itemsString.equals(mCurrentItems)) {
-	    return;
-	}
-	mCurrentItems = itemsString;
+        String itemsString = items.toString();
+        if (itemsString.equals(mCurrentItems)) {
+            return;
+        }
+        mCurrentItems = itemsString;
 
         if (mCallback != null) {
             mCallback.updateItems(items);
@@ -214,7 +214,7 @@ class TextSelection extends Layer implements GeckoEventListener {
             final ActionModeCompat.Presenter presenter = (ActionModeCompat.Presenter) context;
             presenter.endActionModeCompat();
         }
-	mCurrentItems = null;
+        mCurrentItems = null;
     }
 
     @Override
