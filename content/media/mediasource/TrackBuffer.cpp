@@ -75,6 +75,11 @@ private:
 void
 TrackBuffer::Shutdown()
 {
+  // End the SourceBufferResource associated with mCurrentDecoder, which will
+  // unblock any decoder initialization in ReadMetadata().
+  DiscardDecoder();
+
+  // Finish any decoder initialization, which may add to mInitializedDecoders.
   // Shutdown waits for any pending events, which may require the monitor,
   // so we must not hold the monitor during this call.
   mParentDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
@@ -82,7 +87,6 @@ TrackBuffer::Shutdown()
   mTaskQueue = nullptr;
 
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
-  DiscardDecoder();
   for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
     mDecoders[i]->GetReader()->Shutdown();
   }
