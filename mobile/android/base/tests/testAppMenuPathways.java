@@ -48,7 +48,8 @@ public class testAppMenuPathways extends UITest {
         // The above mock video playback test changes Java state, but not the associated JS state.
         // Navigate to a new page so that the Java state is cleared.
         NavigationHelper.enterAndLoadUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
+        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE,
+                StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
 
         // Test save as pdf functionality.
         // The following call doesn't wait for the resulting pdf but checks that no exception are thrown.

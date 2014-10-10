@@ -25,6 +25,7 @@ import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.GeckoThread.LaunchState;
+import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.RobocopUtils;
 import org.mozilla.gecko.Tab;
@@ -68,6 +69,8 @@ abstract class BaseTest extends BaseRobocopTest {
     public static final int LONG_PRESS_TIME = 6000;
     private static final int GECKO_READY_WAIT_MS = 180000;
     public static final int MAX_WAIT_BLOCK_FOR_EVENT_DATA_MS = 90000;
+
+    private static final String URL_HTTP_PREFIX = "http://";
 
     private Activity mActivity;
     private int mPreferenceRequestID = 0;
@@ -527,7 +530,25 @@ abstract class BaseTest extends BaseRobocopTest {
         }
     }
 
-    public final void verifyPageTitle(String title) {
+    public final void verifyPageTitle(final String title, String url) {
+        // We are asserting visible state - we shouldn't know if the title is null.
+        mAsserter.isnot(title, null, "The title argument is not null");
+        mAsserter.isnot(url, null, "The url argument is not null");
+
+        // TODO: We should also check the title bar preference.
+        final String expected;
+        if (!NewTabletUI.isEnabled(mActivity)) {
+            expected = title;
+        } else {
+            if (StringHelper.ABOUT_HOME_URL.equals(url)) {
+                expected = StringHelper.ABOUT_HOME_TITLE;
+            } else if (url.startsWith(URL_HTTP_PREFIX)) {
+                expected = url.substring(URL_HTTP_PREFIX.length());
+            } else {
+                expected = url;
+            }
+        }
+
         final TextView urlBarTitle = (TextView) mSolo.getView(R.id.url_bar_title);
         String pageTitle = null;
         if (urlBarTitle != null) {
@@ -536,7 +557,7 @@ abstract class BaseTest extends BaseRobocopTest {
             waitForCondition(new VerifyTextViewText(urlBarTitle, title), MAX_WAIT_VERIFY_PAGE_TITLE_MS);
             pageTitle = urlBarTitle.getText().toString();
         }
-        mAsserter.is(pageTitle, title, "Page title is correct");
+        mAsserter.is(pageTitle, expected, "Page title is correct");
     }
 
     public final void verifyTabCount(int expectedTabCount) {
