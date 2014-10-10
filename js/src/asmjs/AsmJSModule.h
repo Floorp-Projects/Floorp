@@ -884,6 +884,10 @@ class AsmJSModule
     uint32_t minHeapLength() const {
         return pod.minHeapLength_;
     }
+    uint32_t heapLengthMask() const {
+        MOZ_ASSERT(pod.hasFixedMinHeapLength_);
+        return pod.heapLengthMask_;
+    }
     unsigned numFunctionCounts() const {
         return functionCounts_.length();
     }
