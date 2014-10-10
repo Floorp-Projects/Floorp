@@ -9,6 +9,7 @@ UNIFIED_SOURCES += [
     '../common/RefCountObject.cpp',
     '../common/tls.cpp',
     '../common/utilities.cpp',
+    '../common/win32/NativeWindow.cpp',
     'Config.cpp',
     'Display.cpp',
     'libEGL.cpp',
@@ -54,6 +55,7 @@ DISABLE_STL_WRAPPING = True
 
 LOCAL_INCLUDES += [ '../../include', '../../src' ]
 USE_LIBS += [ 'libGLESv2' ]
+EXTRA_DSO_LDOPTS += [ '../libGLESv2/libGLESv2.lib' ]
 
 SharedLibrary('libEGL')
 

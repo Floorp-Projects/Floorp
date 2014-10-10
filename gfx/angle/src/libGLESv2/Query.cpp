@@ -19,41 +19,32 @@ Query::Query(rx::QueryImpl *impl, GLuint id)
 
 Query::~Query()
 {
-    delete mQuery;
+    SafeDelete(mQuery);
 }
 
-void Query::begin()
+Error Query::begin()
 {
-    // TODO: Rather than keeping track of whether the query was successfully
-    // created via a boolean in the GL-level Query object, we should probably
-    // use the error system to track these failed creations at the context level,
-    // and reset the active query ID for the target to 0 upon failure.
-    mStarted = mQuery->begin();
+    return mQuery->begin();
 }
 
-void Query::end()
+Error Query::end()
 {
-    mQuery->end();
+    return mQuery->end();
 }
 
-GLuint Query::getResult()
+Error Query::getResult(GLuint *params)
 {
-    return mQuery->getResult();
+    return mQuery->getResult(params);
 }
 
-GLboolean Query::isResultAvailable()
+Error Query::isResultAvailable(GLuint *available)
 {
-    return mQuery->isResultAvailable();
+    return mQuery->isResultAvailable(available);
 }
 
 GLenum Query::getType() const
 {
     return mQuery->getType();
-}
-
-bool Query::isStarted() const
-{
-    return mStarted;
 }
 
 }

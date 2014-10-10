@@ -9,6 +9,7 @@
 #include "libGLESv2/State.h"
 
 #include "libGLESv2/Context.h"
+#include "libGLESv2/Caps.h"
 #include "libGLESv2/VertexArray.h"
 #include "libGLESv2/Query.h"
 #include "libGLESv2/Framebuffer.h"
@@ -18,7 +19,17 @@
 
 namespace gl
 {
+
 State::State()
+{
+}
+
+State::~State()
+{
+    reset();
+}
+
+void State::initialize(const Caps& caps, GLuint clientVersion)
 {
     mContext = NULL;
 
@@ -65,7 +76,7 @@ State::State()
     mDepthStencil.stencilMask = -1;
     mDepthStencil.stencilWritemask = -1;
     mDepthStencil.stencilBackFunc = GL_ALWAYS;
-    mDepthStencil.stencilBackMask = - 1;
+    mDepthStencil.stencilBackMask = -1;
     mDepthStencil.stencilBackWritemask = -1;
     mDepthStencil.stencilFail = GL_KEEP;
     mDepthStencil.stencilPassDepthFail = GL_KEEP;
@@ -97,18 +108,24 @@ State::State()
     mBlend.colorMaskBlue = true;
     mBlend.colorMaskAlpha = true;
 
+    mActiveSampler = 0;
+
     const GLfloat defaultFloatValues[] = { 0.0f, 0.0f, 0.0f, 1.0f };
     for (int attribIndex = 0; attribIndex < MAX_VERTEX_ATTRIBS; attribIndex++)
     {
         mVertexAttribCurrentValues[attribIndex].setFloatValues(defaultFloatValues);
     }
 
-    for (unsigned int textureUnit = 0; textureUnit < ArraySize(mSamplers); textureUnit++)
+    mSamplerTextures[GL_TEXTURE_2D].resize(caps.maxCombinedTextureImageUnits);
+    mSamplerTextures[GL_TEXTURE_CUBE_MAP].resize(caps.maxCombinedTextureImageUnits);
+    if (clientVersion >= 3)
     {
-        mSamplers[textureUnit].set(NULL);
+        // TODO: These could also be enabled via extension
+        mSamplerTextures[GL_TEXTURE_2D_ARRAY].resize(caps.maxCombinedTextureImageUnits);
+        mSamplerTextures[GL_TEXTURE_3D].resize(caps.maxCombinedTextureImageUnits);
     }
 
-    mActiveSampler = 0;
+    mSamplers.resize(caps.maxCombinedTextureImageUnits);
 
     mActiveQueries[GL_ANY_SAMPLES_PASSED].set(NULL);
     mActiveQueries[GL_ANY_SAMPLES_PASSED_CONSERVATIVE].set(NULL);
@@ -121,14 +138,19 @@ State::State()
     mDrawFramebuffer = NULL;
 }
 
-State::~State()
+void State::reset()
 {
-    for (int type = 0; type < TEXTURE_TYPE_COUNT; type++)
+    for (TextureBindingMap::iterator bindingVec = mSamplerTextures.begin(); bindingVec != mSamplerTextures.end(); bindingVec++)
     {
-        for (int sampler = 0; sampler < IMPLEMENTATION_MAX_COMBINED_TEXTURE_IMAGE_UNITS; sampler++)
+        TextureBindingVector &textureVector = bindingVec->second;
+        for (size_t textureIdx = 0; textureIdx < textureVector.size(); textureIdx++)
         {
-            mSamplerTexture[type][sampler].set(NULL);
+            textureVector[textureIdx].set(NULL);
         }
+    }
+    for (size_t samplerIdx = 0; samplerIdx < mSamplers.size(); samplerIdx++)
+    {
+        mSamplers[samplerIdx].set(NULL);
     }
 
     const GLfloat defaultFloatValues[] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -244,15 +266,8 @@ ClearParameters State::getClearParameters(GLbitfield mask) const
     {
         if (framebufferObject->getStencilbuffer() != NULL)
         {
-            rx::RenderTarget *depthStencil = framebufferObject->getStencilbuffer()->getRenderTarget();
-            if (!depthStencil)
-            {
-                ERR("Depth stencil pointer unexpectedly null.");
-                ClearParameters nullClearParam = { 0 };
-                return nullClearParam;
-            }
-
-            if (GetInternalFormatInfo(depthStencil->getActualFormat()).stencilBits > 0)
+            GLenum stencilActualFormat = framebufferObject->getStencilbuffer()->getActualFormat();
+            if (GetInternalFormatInfo(stencilActualFormat).stencilBits > 0)
             {
                 clearParams.clearStencil = true;
             }
@@ -590,26 +605,26 @@ unsigned int State::getActiveSampler() const
     return mActiveSampler;
 }
 
-void State::setSamplerTexture(TextureType type, Texture *texture)
+void State::setSamplerTexture(GLenum type, Texture *texture)
 {
-    mSamplerTexture[type][mActiveSampler].set(texture);
+    mSamplerTextures[type][mActiveSampler].set(texture);
 }
 
-Texture *State::getSamplerTexture(unsigned int sampler, TextureType type) const
+Texture *State::getSamplerTexture(unsigned int sampler, GLenum type) const
 {
-    GLuint texid = mSamplerTexture[type][sampler].id();
+    const BindingPointer<Texture>& binding = mSamplerTextures.at(type)[sampler];
 
-    if (texid == 0)   // Special case: 0 refers to default textures held by Context
+    if (binding.id() == 0)   // Special case: 0 refers to default textures held by Context
     {
         return NULL;
     }
 
-    return mSamplerTexture[type][sampler].get();
+    return binding.get();
 }
 
-GLuint State::getSamplerTextureId(unsigned int sampler, TextureType type) const
+GLuint State::getSamplerTextureId(unsigned int sampler, GLenum type) const
 {
-    return mSamplerTexture[type][sampler].id();
+    return mSamplerTextures.at(type)[sampler].id();
 }
 
 void State::detachTexture(GLuint texture)
@@ -623,13 +638,15 @@ void State::detachTexture(GLuint texture)
     // If a texture object is deleted, it is as if all texture units which are bound to that texture object are
     // rebound to texture object zero
 
-    for (int type = 0; type < TEXTURE_TYPE_COUNT; type++)
+    for (TextureBindingMap::iterator bindingVec = mSamplerTextures.begin(); bindingVec != mSamplerTextures.end(); bindingVec++)
     {
-        for (int sampler = 0; sampler < IMPLEMENTATION_MAX_COMBINED_TEXTURE_IMAGE_UNITS; sampler++)
+        TextureBindingVector &textureVector = bindingVec->second;
+        for (size_t textureIdx = 0; textureIdx < textureVector.size(); textureIdx++)
         {
-            if (mSamplerTexture[type][sampler].id() == texture)
+            BindingPointer<Texture> &binding = textureVector[textureIdx];
+            if (binding.id() == texture)
             {
-                mSamplerTexture[type][sampler].set(NULL);
+                binding.set(NULL);
             }
         }
     }
@@ -657,7 +674,7 @@ void State::setSamplerBinding(GLuint textureUnit, Sampler *sampler)
 
 GLuint State::getSamplerId(GLuint textureUnit) const
 {
-    ASSERT(textureUnit < ArraySize(mSamplers));
+    ASSERT(textureUnit < mSamplers.size());
     return mSamplers[textureUnit].id();
 }
 
@@ -672,11 +689,12 @@ void State::detachSampler(GLuint sampler)
     // If a sampler object that is currently bound to one or more texture units is
     // deleted, it is as though BindSampler is called once for each texture unit to
     // which the sampler is bound, with unit set to the texture unit and sampler set to zero.
-    for (unsigned int textureUnit = 0; textureUnit < ArraySize(mSamplers); textureUnit++)
+    for (size_t textureUnit = 0; textureUnit < mSamplers.size(); textureUnit++)
     {
-        if (mSamplers[textureUnit].id() == sampler)
+        BindingPointer<Sampler> &samplerBinding = mSamplers[textureUnit];
+        if (samplerBinding.id() == sampler)
         {
-            mSamplers[textureUnit].set(NULL);
+            samplerBinding.set(NULL);
         }
     }
 }
@@ -1315,19 +1333,19 @@ void State::getIntegerv(GLenum pname, GLint *params)
         break;
       case GL_TEXTURE_BINDING_2D:
         ASSERT(mActiveSampler < mContext->getCaps().maxCombinedTextureImageUnits);
-        *params = mSamplerTexture[TEXTURE_2D][mActiveSampler].id();
+        *params = mSamplerTextures.at(GL_TEXTURE_2D)[mActiveSampler].id();
         break;
       case GL_TEXTURE_BINDING_CUBE_MAP:
         ASSERT(mActiveSampler < mContext->getCaps().maxCombinedTextureImageUnits);
-        *params = mSamplerTexture[TEXTURE_CUBE][mActiveSampler].id();
+        *params = mSamplerTextures.at(GL_TEXTURE_CUBE_MAP)[mActiveSampler].id();
         break;
       case GL_TEXTURE_BINDING_3D:
         ASSERT(mActiveSampler <mContext->getCaps().maxCombinedTextureImageUnits);
-        *params = mSamplerTexture[TEXTURE_3D][mActiveSampler].id();
+        *params = mSamplerTextures.at(GL_TEXTURE_3D)[mActiveSampler].id();
         break;
       case GL_TEXTURE_BINDING_2D_ARRAY:
         ASSERT(mActiveSampler < mContext->getCaps().maxCombinedTextureImageUnits);
-        *params = mSamplerTexture[TEXTURE_2D_ARRAY][mActiveSampler].id();
+        *params = mSamplerTextures.at(GL_TEXTURE_2D_ARRAY)[mActiveSampler].id();
         break;
       case GL_UNIFORM_BUFFER_BINDING:
         *params = mGenericUniformBuffer.id();

@@ -15,10 +15,13 @@
 
 namespace rx
 {
-Query9::Query9(rx::Renderer9 *renderer, GLenum type) : QueryImpl(type), mStatus(GL_FALSE), mResult(0)
+Query9::Query9(rx::Renderer9 *renderer, GLenum type)
+    : QueryImpl(type),
+      mResult(GL_FALSE),
+      mQueryFinished(false),
+      mRenderer(renderer),
+      mQuery(NULL)
 {
-    mRenderer = renderer;
-    mQuery = NULL;
 }
 
 Query9::~Query9()
@@ -26,74 +29,91 @@ Query9::~Query9()
     SafeRelease(mQuery);
 }
 
-bool Query9::begin()
+gl::Error Query9::begin()
 {
     if (mQuery == NULL)
     {
-        if (FAILED(mRenderer->getDevice()->CreateQuery(D3DQUERYTYPE_OCCLUSION, &mQuery)))
+        HRESULT result = mRenderer->getDevice()->CreateQuery(D3DQUERYTYPE_OCCLUSION, &mQuery);
+        if (FAILED(result))
         {
-            return gl::error(GL_OUT_OF_MEMORY, false);
+            return gl::Error(GL_OUT_OF_MEMORY, "Internal query creation failed, result: 0x%X.", result);
         }
     }
 
     HRESULT result = mQuery->Issue(D3DISSUE_BEGIN);
-    UNUSED_ASSERTION_VARIABLE(result);
     ASSERT(SUCCEEDED(result));
-    return true;
+    if (FAILED(result))
+    {
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to begin internal query, result: 0x%X.", result);
+    }
+
+    return gl::Error(GL_NO_ERROR);
 }
 
-void Query9::end()
+gl::Error Query9::end()
 {
     ASSERT(mQuery);
 
     HRESULT result = mQuery->Issue(D3DISSUE_END);
-    UNUSED_ASSERTION_VARIABLE(result);
     ASSERT(SUCCEEDED(result));
+    if (FAILED(result))
+    {
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to end internal query, result: 0x%X.", result);
+    }
 
-    mStatus = GL_FALSE;
+    mQueryFinished = false;
     mResult = GL_FALSE;
+
+    return gl::Error(GL_NO_ERROR);
 }
 
-GLuint Query9::getResult()
+gl::Error Query9::getResult(GLuint *params)
 {
-    if (mQuery != NULL)
+    while (!mQueryFinished)
     {
-        while (!testQuery())
+        gl::Error error = testQuery();
+        if (error.isError())
+        {
+            return error;
+        }
+
+        if (!mQueryFinished)
         {
             Sleep(0);
-            // explicitly check for device loss
-            // some drivers seem to return S_FALSE even if the device is lost
-            // instead of D3DERR_DEVICELOST like they should
-            if (mRenderer->testDeviceLost(true))
-            {
-                return gl::error(GL_OUT_OF_MEMORY, 0);
-            }
         }
     }
 
-    return mResult;
+    ASSERT(mQueryFinished);
+    *params = mResult;
+
+    return gl::Error(GL_NO_ERROR);
 }
 
-GLboolean Query9::isResultAvailable()
+gl::Error Query9::isResultAvailable(GLuint *available)
 {
-    if (mQuery != NULL)
+    gl::Error error = testQuery();
+    if (error.isError())
     {
-        testQuery();
+        return error;
     }
 
-    return mStatus;
+    *available = (mQueryFinished ? GL_TRUE : GL_FALSE);
+
+    return gl::Error(GL_NO_ERROR);
 }
 
-GLboolean Query9::testQuery()
+gl::Error Query9::testQuery()
 {
-    if (mQuery != NULL && mStatus != GL_TRUE)
+    if (!mQueryFinished)
     {
+        ASSERT(mQuery);
+
         DWORD numPixels = 0;
 
         HRESULT hres = mQuery->GetData(&numPixels, sizeof(DWORD), D3DGETDATA_FLUSH);
         if (hres == S_OK)
         {
-            mStatus =  GL_TRUE;
+            mQueryFinished = true;
 
             switch (getType())
             {
@@ -101,20 +121,24 @@ GLboolean Query9::testQuery()
               case GL_ANY_SAMPLES_PASSED_CONSERVATIVE_EXT:
                 mResult = (numPixels > 0) ? GL_TRUE : GL_FALSE;
                 break;
+
               default:
-                ASSERT(false);
+                UNREACHABLE();
+                break;
             }
         }
         else if (d3d9::isDeviceLostError(hres))
         {
             mRenderer->notifyDeviceLost();
-            return gl::error(GL_OUT_OF_MEMORY, GL_TRUE);
+            return gl::Error(GL_OUT_OF_MEMORY, "Failed to test get query result, device is lost.");
         }
-
-        return mStatus;
+        else if (mRenderer->testDeviceLost(true))
+        {
+            return gl::Error(GL_OUT_OF_MEMORY, "Failed to test get query result, device is lost.");
+        }
     }
 
-    return GL_TRUE; // prevent blocking when query is null
+    return gl::Error(GL_NO_ERROR);
 }
 
 }
