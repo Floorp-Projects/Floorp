@@ -188,7 +188,7 @@
               <image id="PanelUI-panic-timeframe-icon-small" alt=""/>
               <description id="PanelUI-panic-mainDesc" flex="1">&panicButton.view.mainTimeframeDesc;</description>
             </hbox>
-            <radiogroup id="PanelUI-panic-timeSpan" aria-labelledby="PanelUI-panic-mainDesc">
+            <radiogroup id="PanelUI-panic-timeSpan" aria-labelledby="PanelUI-panic-mainDesc" closemenu="none">
               <radio id="PanelUI-panic-5min" label="&panicButton.view.5min;" selected="true"
                      value="5" class="subviewradio"/>
               <radio id="PanelUI-panic-2hr" label="&panicButton.view.2hr;"
