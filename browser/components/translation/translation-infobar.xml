@@ -229,7 +229,27 @@
                 en: ["Hey look! It's something new!",
                      "Now the Web is even more accessible with our new in-page translation feature. Click the translate button to try it!",
                      "Learn more.",
-                     "Thanks"]
+                     "Thanks"],
+                "es-AR": ["\xA1Mir\xE1! \xA1Hay algo nuevo!",
+                          "Ahora la web es a\xFAn m\xE1s accesible con nuestra nueva funcionalidad de traducci\xF3n integrada. \xA1Hac\xE9 clic en el bot\xF3n traducir para probarla!",
+                          "Conoc\xE9 m\xE1s.",
+                          "Gracias"],
+                "es-ES": ["\xA1Mira! \xA1Hay algo nuevo!",
+                          "Con la nueva funcionalidad de traducci\xF3n integrada, ahora la Web es a\xFAn m\xE1s accesible. \xA1Pulsa el bot\xF3n Traducir y pru\xE9bala!",
+                          "M\xE1s informaci\xF3n.",
+                          "Gracias"],
+                pl: ["Sp\xF3jrz tutaj! To co\u015B nowego!",
+                     "Sie\u0107 sta\u0142a si\u0119 w\u0142a\u015Bnie jeszcze bardziej dost\u0119pna dzi\u0119ki opcji bezpo\u015Bredniego t\u0142umaczenia stron. Kliknij przycisk t\u0142umaczenia, aby spr\xF3bowa\u0107!",
+                     "Dowiedz si\u0119 wi\u0119cej",
+                     "Dzi\u0119kuj\u0119"],
+                tr: ["Bak\u0131n, burada yeni bir \u015Fey var!",
+                     "Yeni sayfa i\xE7i \xE7eviri \xF6zelli\u011Fimiz sayesinde Web art\u0131k \xE7ok daha anla\u015F\u0131l\u0131r olacak. Denemek i\xE7in \xC7evir d\xFC\u011Fmesine t\u0131klay\u0131n!",
+                     "Daha fazla bilgi al\u0131n.",
+                     "Te\u015Fekk\xFCrler"],
+                vi: ["Nh\xECn n\xE0y! \u0110\u1ED3 m\u1EDBi!",
+                     "Gi\u1EDD \u0111\xE2y ch\xFAng ta c\xF3 th\u1EC3 ti\u1EBFp c\u1EADn web d\u1EC5 d\xE0ng h\u01A1n n\u1EEFa v\u1EDBi t\xEDnh n\u0103ng d\u1ECBch ngay trong trang.  Hay nh\u1EA5n n\xFAt d\u1ECBch \u0111\u1EC3 th\u1EED!",
+                     "T\xECm hi\u1EC3u th\xEAm.",
+                     "C\u1EA3m \u01A1n"]
               };
 
               let locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
