@@ -35,6 +35,67 @@ describe("loop.conversationViews", function () {
     sandbox.restore();
   });
 
+  describe("CallIdentifierView", function() {
+    function mountTestComponent(props) {
+      return TestUtils.renderIntoDocument(
+        loop.conversationViews.CallIdentifierView(props));
+    }
+
+    it("should set display the peer identifer", function() {
+      view = mountTestComponent({
+        showIcons: false,
+        peerIdentifier: "mrssmith"
+      });
+
+      expect(TestUtils.findRenderedDOMComponentWithClass(
+        view, "fx-embedded-call-identifier-text").props.children).eql("mrssmith");
+    });
+
+    it("should not display the icons if showIcons is false", function() {
+      view = mountTestComponent({
+        showIcons: false,
+        peerIdentifier: "mrssmith"
+      });
+
+      expect(TestUtils.findRenderedDOMComponentWithClass(
+        view, "fx-embedded-call-detail").props.className).to.contain("hide");
+    });
+
+    it("should display the icons if showIcons is true", function() {
+      view = mountTestComponent({
+        showIcons: true,
+        peerIdentifier: "mrssmith"
+      });
+
+      expect(TestUtils.findRenderedDOMComponentWithClass(
+        view, "fx-embedded-call-detail").props.className).to.not.contain("hide");
+    });
+
+    it("should display the url timestamp", function() {
+      sandbox.stub(loop.shared.utils, "formatDate").returns(("October 9, 2014"));
+
+      view = mountTestComponent({
+        showIcons: true,
+        peerIdentifier: "mrssmith",
+        urlCreationDate: (new Date() / 1000).toString()
+      });
+
+      expect(TestUtils.findRenderedDOMComponentWithClass(
+        view, "fx-embedded-conversation-timestamp").props.children).eql("(October 9, 2014)");
+    });
+
+    it("should show video as muted if video is false", function() {
+      view = mountTestComponent({
+        showIcons: true,
+        peerIdentifier: "mrssmith",
+        video: false
+      });
+
+      expect(TestUtils.findRenderedDOMComponentWithClass(
+        view, "fx-embedded-tiny-video-icon").props.className).to.contain("muted");
+    });
+  });
+
   describe("ConversationDetailView", function() {
     function mountTestComponent(props) {
       return TestUtils.renderIntoDocument(
@@ -47,23 +108,14 @@ describe("loop.conversationViews", function () {
       expect(document.title).eql("mrsmith");
     });
 
-    it("should set display the calledId", function() {
-      view = mountTestComponent({contact: contact});
-
-      expect(TestUtils.findRenderedDOMComponentWithTag(
-        view, "h2").props.children).eql("mrsmith");
-    });
-
     it("should fallback to the email if the contact name is not defined",
       function() {
         delete contact.name;
 
-        view = mountTestComponent({contact: contact});
+        mountTestComponent({contact: contact});
 
-        expect(TestUtils.findRenderedDOMComponentWithTag(
-          view, "h2").props.children).eql("fakeEmail");
-      }
-    );
+        expect(document.title).eql("fakeEmail");
+      });
   });
 
   describe("PendingConversationView", function() {
