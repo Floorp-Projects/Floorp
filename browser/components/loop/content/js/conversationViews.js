@@ -65,7 +65,7 @@ loop.conversationViews = (function(mozL10n) {
         React.DOM.div({className: "fx-embedded-call-identifier"}, 
           React.DOM.div({className: "fx-embedded-call-identifier-avatar fx-embedded-call-identifier-item"}), 
           React.DOM.div({className: "fx-embedded-call-identifier-info fx-embedded-call-identifier-item"}, 
-            React.DOM.div({className: "fx-embedded-call-identifier-text overflow-text-ellipsis font-bold"}, 
+            React.DOM.div({className: "fx-embedded-call-identifier-text overflow-text-ellipsis"}, 
               this.props.peerIdentifier
             ), 
             React.DOM.div({className: callDetailClasses}, 
