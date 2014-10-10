@@ -17,11 +17,11 @@ public class testHistory extends AboutHomeTest {
         String url3 = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_03_URL);
 
         inputAndLoadUrl(url);
-        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_URL, url);
+        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         inputAndLoadUrl(url2);
-        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_URL, url2);
+        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
         inputAndLoadUrl(url3);
-        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_03_URL, url3);
+        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_03_URL);
 
         openAboutHomeTab(AboutHomeTabs.HISTORY);
 
@@ -62,7 +62,7 @@ public class testHistory extends AboutHomeTest {
 
         // The first item here (since it was just visited) should be a "Switch to tab" item
         // i.e. don't expect a DOMCOntentLoaded event
-        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_03_URL, StringHelper.ROBOCOP_BLANK_PAGE_03_URL);
+        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_03_URL);
         verifyUrl(url3);
     }
 }
