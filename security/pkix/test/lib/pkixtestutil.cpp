@@ -143,7 +143,7 @@ OCSPResponseContext::OCSPResponseContext(const CertID& certID, time_t time)
   , certStatus(good)
   , revocationTime(0)
   , thisUpdate(time)
-  , nextUpdate(time + Time::ONE_DAY_IN_SECONDS)
+  , nextUpdate(time + 10)
   , includeNextUpdate(true)
 {
 }
