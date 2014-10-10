@@ -235,8 +235,7 @@ loop.conversation = (function(mozL10n) {
           );
         }
         case "connected": {
-          // XXX This should be the caller id (bug 1020449)
-          document.title = mozL10n.get("incoming_call_title2");
+          document.title = this.props.conversation.getCallIdentifier();
 
           var callType = this.props.conversation.get("selectedCallType");
 
