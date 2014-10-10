@@ -924,31 +924,42 @@ MacroAssemblerMIPS::ma_b(Label *label, JumpKind jumpKind)
 }
 
 void
-MacroAssemblerMIPS::ma_bal(Label *label, JumpKind jumpKind)
+MacroAssemblerMIPS::ma_bal(Label *label, DelaySlotFill delaySlotFill)
 {
-    branchWithCode(getBranchCode(BranchIsCall), label, jumpKind);
+    if (label->bound()) {
+        // Generate the long jump for calls because return address has to be
+        // the address after the reserved block.
+        addLongJump(nextOffset());
+        ma_liPatchable(ScratchRegister, Imm32(label->offset()));
+        as_jalr(ScratchRegister);
+        if (delaySlotFill == FillDelaySlot)
+            as_nop();
+        return;
+    }
+
+    // Second word holds a pointer to the next branch in label's chain.
+    uint32_t nextInChain = label->used() ? label->offset() : LabelBase::INVALID_OFFSET;
+
+    // Make the whole branch continous in the buffer.
+    m_buffer.ensureSpace(4 * sizeof(uint32_t));
+
+    BufferOffset bo = writeInst(getBranchCode(BranchIsCall).encode());
+    writeInst(nextInChain);
+    label->use(bo.getOffset());
+    // Leave space for long jump.
+    as_nop();
+    if (delaySlotFill == FillDelaySlot)
+        as_nop();
 }
 
 void
 MacroAssemblerMIPS::branchWithCode(InstImm code, Label *label, JumpKind jumpKind)
 {
-    InstImm inst_bgezal = InstImm(op_regimm, zero, rt_bgezal, BOffImm16(0));
+    MOZ_ASSERT(code.encode() != InstImm(op_regimm, zero, rt_bgezal, BOffImm16(0)).encode());
     InstImm inst_beq = InstImm(op_beq, zero, zero, BOffImm16(0));
 
     if (label->bound()) {
         int32_t offset = label->offset() - m_buffer.nextOffset().getOffset();
-
-        // Generate the long jump for calls because return address has to be
-        // the address after the reserved block.
-        if (code.encode() == inst_bgezal.encode()) {
-            MOZ_ASSERT(jumpKind != ShortJump);
-            // Handle long call
-            addLongJump(nextOffset());
-            ma_liPatchable(ScratchRegister, Imm32(label->offset()));
-            as_jalr(ScratchRegister);
-            as_nop();
-            return;
-        }
 
         if (BOffImm16::IsInRange(offset))
             jumpKind = ShortJump;
@@ -997,8 +1008,7 @@ MacroAssemblerMIPS::branchWithCode(InstImm code, Label *label, JumpKind jumpKind
         return;
     }
 
-    bool conditional = (code.encode() != inst_bgezal.encode() &&
-                        code.encode() != inst_beq.encode());
+    bool conditional = code.encode() != inst_beq.encode();
 
     // Make the whole branch continous in the buffer.
     m_buffer.ensureSpace((conditional ? 5 : 4) * sizeof(uint32_t));
