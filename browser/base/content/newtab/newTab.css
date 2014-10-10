@@ -61,6 +61,10 @@ input[type=button] {
   right: auto;
 }
 
+#newtab-scrollbox[page-disabled] #newtab-intro-what {
+  display: none;
+}
+
 #newtab-intro-panel {
   color: #6a7b86;
   font-size: 15px;
