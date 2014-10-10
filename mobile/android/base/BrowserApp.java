@@ -685,7 +685,20 @@ public class BrowserApp extends GeckoApp
 
         mTintManager = new SystemBarTintManager(this);
         mTintManager.setTintColor(getResources().getColor(R.color.background_tabs));
-        mTintManager.setStatusBarTintEnabled(true);
+        updateSystemUITinting(mRootLayout.getSystemUiVisibility());
+
+        mRootLayout.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+            @Override
+            public void onSystemUiVisibilityChange(int visibility) {
+                updateSystemUITinting(visibility);
+            }
+        });
+    }
+
+    private void updateSystemUITinting(int visibility) {
+        final boolean shouldTint = (visibility & View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) == 0 &&
+                                   (visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0;
+        mTintManager.setStatusBarTintEnabled(shouldTint);
     }
 
     /**
@@ -2655,10 +2668,6 @@ public class BrowserApp extends GeckoApp
                         mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
                         mLayerView.getLayerMarginsAnimator().setMaxMargins(0, mToolbarHeight, 0, 0);
                     }
-                }
-
-                if (mTintManager != null) {
-                    mTintManager.setStatusBarTintEnabled(!fullscreen);
                 }
             }
         });
