@@ -201,6 +201,7 @@ toolkit.jar:
         skin/classic/global/tree/sort-dsc-classic.png            (tree/sort-dsc-classic.png)
         skin/classic/global/tree/twisty-clsd.png                 (tree/twisty-clsd.png)
         skin/classic/global/tree/twisty-open.png                 (tree/twisty-open.png)
+        skin/classic/global/spinner.png                          (../../shared/spinner.png)
 
 #ifdef XP_WIN
 toolkit.jar:
