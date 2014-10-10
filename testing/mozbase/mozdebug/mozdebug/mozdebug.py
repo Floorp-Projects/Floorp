@@ -123,7 +123,7 @@ def get_debugger_info(debugger, debuggerArgs = None, debuggerInteractive = False
     # Extend the default arguments for the chosen debugger with the ones passed in, if any.
     if debuggerArgs:
         # Append the provided debugger arguments at the end of the arguments list.
-        debugger_arguments += debuggerArgs.split()
+        debugger_arguments.extend(debuggerArgs)
 
     # Override the default debugger interactive mode if needed.
     debugger_interactive = get_debugger_info('interactive', False)

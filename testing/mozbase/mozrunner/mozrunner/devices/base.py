@@ -61,8 +61,9 @@ class Device(object):
         remote_dump_dir = posixpath.join(self.app_ctx.remote_profile, 'minidumps')
         local_dump_dir = tempfile.mkdtemp()
         self.dm.getDirectory(remote_dump_dir, local_dump_dir)
-        for f in self.dm.listFiles(remote_dump_dir):
-            self.dm.removeFile(posixpath.join(remote_dump_dir, f))
+        if os.listdir(local_dump_dir):
+            for f in self.dm.listFiles(remote_dump_dir):
+                self.dm.removeFile(posixpath.join(remote_dump_dir, f))
         return local_dump_dir
 
     def setup_profile(self, profile):

@@ -56,28 +56,27 @@ private:
       return NS_ERROR_FAILURE;
     }
 
-    UInt8 tempBuffer[MAXPATHLEN];
     nsresult rv;
-    if (CFURLGetFileSystemRepresentation(executableURL, false, tempBuffer,
+    if (CFURLGetFileSystemRepresentation(executableURL, false, (UInt8*)aResult,
                                          MAXPATHLEN)) {
+      // Sanitize path in case the app was launched from Terminal via
+      // './firefox' for example.
+      size_t readPos = 0;
+      size_t writePos = 0;
+      while (aResult[readPos] != '\0') {
+        if (aResult[readPos] == '.' && aResult[readPos + 1] == '/') {
+          readPos += 2;
+        } else {
+          aResult[writePos] = aResult[readPos];
+          readPos++;
+          writePos++;
+        }
+      }
+      aResult[writePos] = '\0';
       rv = NS_OK;
     } else {
       rv = NS_ERROR_FAILURE;
     }
-
-    // Sanitize path in case the app was launched from Terminal via './firefox'
-    // for example.
-    size_t readPos = 0;
-    size_t writePos = 0;
-    while (tempBuffer[readPos] != '\0') {
-      if (tempBuffer[readPos] == '.' && tempBuffer[readPos + 1] == '/') {
-        readPos += 2;
-      }
-      aResult[writePos] = tempBuffer[readPos];
-      readPos++;
-      writePos++;
-    }
-    aResult[writePos] = '\0';
 
     CFRelease(executableURL);
     return rv;

@@ -211,8 +211,8 @@ bool ProcessTTF(ots::OpenTypeFile *header,
   // range_shift is NumTables x 16-searchRange. We know that 16*num_tables
   // doesn't over flow because we range checked it above. Also, we know that
   // it's > header->search_range by construction of search_range.
-  const uint32_t expected_range_shift
-      = 16 * header->num_tables - header->search_range;
+  const uint16_t expected_range_shift =
+      16 * header->num_tables - header->search_range;
   if (header->range_shift != expected_range_shift) {
     OTS_FAILURE_MSG_HDR("bad range shift");
     header->range_shift = expected_range_shift;  // the same as above.
@@ -611,7 +611,7 @@ bool ProcessGeneric(ots::OpenTypeFile *header, uint32_t signature,
     }
   }
 
-  unsigned num_output_tables = 0;
+  uint16_t num_output_tables = 0;
   for (unsigned i = 0; ; ++i) {
     if (table_parsers[i].parse == NULL) {
       break;
@@ -630,7 +630,7 @@ bool ProcessGeneric(ots::OpenTypeFile *header, uint32_t signature,
     }
   }
 
-  unsigned max_pow2 = 0;
+  uint16_t max_pow2 = 0;
   while (1u << (max_pow2 + 1) <= num_output_tables) {
     max_pow2++;
   }
@@ -829,6 +829,12 @@ bool OTSContext::Process(OTSStream *output,
     table_parsers[i].free(&header);
   }
   return result;
+}
+
+// For backward compatibility
+bool Process(OTSStream *output, const uint8_t *data, size_t length) {
+  static OTSContext context;
+  return context.Process(output, data, length);
 }
 
 #if !defined(_MSC_VER) && defined(OTS_DEBUG)

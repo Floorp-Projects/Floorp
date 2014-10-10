@@ -4,18 +4,18 @@
 
 package org.mozilla.search.autocomplete;
 
+import java.util.List;
+
+import org.mozilla.gecko.R;
+import org.mozilla.search.AcceptsSearchQuery;
+import org.mozilla.search.autocomplete.SuggestionsFragment.Suggestion;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
-
-import org.mozilla.search.AcceptsSearchQuery;
-import org.mozilla.search.R;
-import org.mozilla.search.autocomplete.SuggestionsFragment.Suggestion;
-
-import java.util.List;
 
 /**
  * The adapter that is used to populate the autocomplete rows.

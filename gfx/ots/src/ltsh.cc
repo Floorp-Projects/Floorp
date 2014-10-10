@@ -67,11 +67,13 @@ bool ots_ltsh_should_serialise(OpenTypeFile *file) {
 bool ots_ltsh_serialise(OTSStream *out, OpenTypeFile *file) {
   const OpenTypeLTSH *ltsh = file->ltsh;
 
-  if (!out->WriteU16(ltsh->version) ||
-      !out->WriteU16(ltsh->ypels.size())) {
+  const uint16_t num_ypels = static_cast<uint16_t>(ltsh->ypels.size());
+  if (num_ypels != ltsh->ypels.size() ||
+      !out->WriteU16(ltsh->version) ||
+      !out->WriteU16(num_ypels)) {
     return OTS_FAILURE_MSG("Failed to write pels size");
   }
-  for (unsigned i = 0; i < ltsh->ypels.size(); ++i) {
+  for (uint16_t i = 0; i < num_ypels; ++i) {
     if (!out->Write(&(ltsh->ypels[i]), 1)) {
       return OTS_FAILURE_MSG("Failed to write pixel size for glyph %d", i);
     }

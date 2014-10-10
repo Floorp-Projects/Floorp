@@ -78,7 +78,9 @@ bool ots_loca_serialise(OTSStream *out, OpenTypeFile *file) {
 
   if (head->index_to_loc_format == 0) {
     for (unsigned i = 0; i < loca->offsets.size(); ++i) {
-      if (!out->WriteU16(loca->offsets[i] >> 1)) {
+      const uint16_t offset = static_cast<uint16_t>(loca->offsets[i] >> 1);
+      if ((offset != (loca->offsets[i] >> 1)) ||
+          !out->WriteU16(offset)) {
         return OTS_FAILURE_MSG("Failed to write glyph offset for glyph %d", i);
       }
     }

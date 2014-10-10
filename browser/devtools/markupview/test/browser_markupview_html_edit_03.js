@@ -107,10 +107,9 @@ function* testBody(inspector) {
   let bodyFront = yield getNodeFront("body", inspector);
   let doc = content.document;
 
-  let mutated = inspector.once("markupmutation");
-  inspector.markup.updateNodeOuterHTML(bodyFront, bodyHTML, body.outerHTML);
-
-  let mutations = yield mutated;
+  let onReselected = inspector.markup.once("reselectedonremoved");
+  yield inspector.markup.updateNodeOuterHTML(bodyFront, bodyHTML, body.outerHTML);
+  yield onReselected;
 
   is(getNode("body").outerHTML, bodyHTML, "<body> HTML has been updated");
   is(doc.querySelectorAll("head").length, 1, "no extra <head>s have been added");
@@ -120,14 +119,15 @@ function* testBody(inspector) {
 
 function* testHead(inspector) {
   let head = getNode("head");
+  yield selectNode("head", inspector);
+
   let headHTML = '<head id="updated"><title>New Title</title><script>window.foo="bar";</script></head>';
   let headFront = yield getNodeFront("head", inspector);
   let doc = content.document;
 
-  let mutated = inspector.once("markupmutation");
-  inspector.markup.updateNodeOuterHTML(headFront, headHTML, head.outerHTML);
-
-  let mutations = yield mutated;
+  let onReselected = inspector.markup.once("reselectedonremoved");
+  yield inspector.markup.updateNodeOuterHTML(headFront, headHTML, head.outerHTML);
+  yield onReselected;
 
   is(doc.title, "New Title", "New title has been added");
   is(doc.defaultView.foo, undefined, "Script has not been executed");
@@ -143,10 +143,9 @@ function* testDocumentElement(inspector) {
   let docElementHTML = '<html id="updated" foo="bar"><head><title>Updated from document element</title><script>window.foo="bar";</script></head><body><p>Hello</p></body></html>';
   let docElementFront = yield inspector.markup.walker.documentElement();
 
-  let mutated = inspector.once("markupmutation");
-  inspector.markup.updateNodeOuterHTML(docElementFront, docElementHTML, docElement.outerHTML);
-
-  let mutations = yield mutated;
+  let onReselected = inspector.markup.once("reselectedonremoved");
+  yield inspector.markup.updateNodeOuterHTML(docElementFront, docElementHTML, docElement.outerHTML);
+  yield onReselected;
 
   is(doc.title, "Updated from document element", "New title has been added");
   is(doc.defaultView.foo, undefined, "Script has not been executed");
@@ -165,10 +164,9 @@ function* testDocumentElement2(inspector) {
   let docElementHTML = '<html class="updated" id="somethingelse"><head><title>Updated again from document element</title><script>window.foo="bar";</script></head><body><p>Hello again</p></body></html>';
   let docElementFront = yield inspector.markup.walker.documentElement();
 
-  let mutated = inspector.once("markupmutation");
+  let onReselected = inspector.markup.once("reselectedonremoved");
   inspector.markup.updateNodeOuterHTML(docElementFront, docElementHTML, docElement.outerHTML);
-
-  let mutations = yield mutated;
+  yield onReselected;
 
   is(doc.title, "Updated again from document element", "New title has been added");
   is(doc.defaultView.foo, undefined, "Script has not been executed");

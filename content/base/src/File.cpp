@@ -316,13 +316,6 @@ File::IsFile() const
   return mImpl->IsFile();
 }
 
-void
-File::SetLazyData(const nsAString& aName, const nsAString& aContentType,
-                     uint64_t aLength, uint64_t aLastModifiedDate)
-{
-  return mImpl->SetLazyData(aName, aContentType, aLength, aLastModifiedDate);
-}
-
 already_AddRefed<File>
 File::CreateSlice(uint64_t aStart, uint64_t aLength,
                   const nsAString& aContentType,
@@ -353,7 +346,7 @@ File::GetPath(nsAString& aPath)
 
 NS_IMETHODIMP
 File::GetLastModifiedDate(JSContext* aCx,
-                             JS::MutableHandle<JS::Value> aDate)
+                          JS::MutableHandle<JS::Value> aDate)
 {
   ErrorResult rv;
   Date value = GetLastModifiedDate(rv);

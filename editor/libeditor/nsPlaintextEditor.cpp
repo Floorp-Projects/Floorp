@@ -1163,6 +1163,9 @@ nsPlaintextEditor::CanCutOrCopy()
   if (NS_FAILED(GetSelection(getter_AddRefs(selection))))
     return false;
 
+  if (IsPasswordEditor())
+    return false;
+
   return !selection->Collapsed();
 }
 

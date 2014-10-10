@@ -69,14 +69,12 @@ var ResourceContainer = Class({
     this.elt.appendChild(this.children);
 
     this.line.addEventListener("click", (evt) => {
-      if (!this.selected) {
-        this.select();
-        this.expanded = true;
-        evt.stopPropagation();
-      }
+      this.select();
+      this.toggleExpansion();
+      evt.stopPropagation();
     }, false);
     this.expander.addEventListener("click", (evt) => {
-      this.expanded = !this.expanded;
+      this.toggleExpansion();
       this.select();
       evt.stopPropagation();
     }, true);
@@ -85,6 +83,14 @@ var ResourceContainer = Class({
       this.expanded = false;
     }
     this.update();
+  },
+
+  toggleExpansion: function() {
+    if (!this.resource.isRoot) {
+      this.expanded = !this.expanded;
+    } else {
+      this.expanded = true;
+    }
   },
 
   destroy: function() {

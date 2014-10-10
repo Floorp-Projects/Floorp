@@ -31,6 +31,7 @@
 #include "nss.h"
 #include "pk11pub.h"
 #include "pkix/pkixnss.h"
+#include "pkixder.h"
 #include "secerr.h"
 #include "secitem.h"
 
@@ -73,16 +74,32 @@ public:
   }
 
   virtual Result SignData(const ByteString& tbs,
-                          SignatureAlgorithm signatureAlgorithm,
+                          const ByteString& signatureAlgorithm,
                           /*out*/ ByteString& signature) const
   {
-    SECOidTag signatureAlgorithmOidTag;
-    switch (signatureAlgorithm) {
-      case SignatureAlgorithm::rsa_pkcs1_with_sha256:
-        signatureAlgorithmOidTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
-        break;
-      default:
-        return Result::FATAL_ERROR_INVALID_ARGS;
+    // signatureAlgorithm is of the form SEQUENCE { OID { <OID bytes> } },
+    // whereas SECOID_GetAlgorithmTag wants just the OID bytes, so we have to
+    // unwrap it here. As long as signatureAlgorithm is short enough, we don't
+    // have to do full DER decoding here.
+    // Also, this is just for testing purposes - there shouldn't be any
+    // untrusted input given to this function. If we make a mistake, we only
+    // have ourselves to blame.
+    if (signatureAlgorithm.length() > 127 ||
+        signatureAlgorithm.length() < 4 ||
+        signatureAlgorithm.data()[0] != der::SEQUENCE ||
+        signatureAlgorithm.data()[2] != der::OIDTag) {
+      return Result::FATAL_ERROR_INVALID_ARGS;
+    }
+    SECAlgorithmID signatureAlgorithmID;
+    signatureAlgorithmID.algorithm.data =
+      const_cast<unsigned char*>(signatureAlgorithm.data() + 4);
+    signatureAlgorithmID.algorithm.len = signatureAlgorithm.length() - 4;
+    signatureAlgorithmID.parameters.data = nullptr;
+    signatureAlgorithmID.parameters.len = 0;
+    SECOidTag signatureAlgorithmOidTag =
+      SECOID_GetAlgorithmTag(&signatureAlgorithmID);
+    if (signatureAlgorithmOidTag == SEC_OID_UNKNOWN) {
+      return Result::FATAL_ERROR_INVALID_ARGS;
     }
 
     SECItem signatureItem;

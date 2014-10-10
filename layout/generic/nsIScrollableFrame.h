@@ -385,6 +385,11 @@ public:
    * If this scroll frame is ignoring viewporting clipping
    */
   virtual bool IsIgnoringViewportClipping() const = 0;
+
+  /**
+   * Mark the scrollbar frames for reflow.
+   */
+  virtual void MarkScrollbarsDirtyForReflow() const = 0;
 };
 
 #endif
