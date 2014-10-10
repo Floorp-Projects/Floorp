@@ -2853,7 +2853,7 @@ static void LogRegistryEvent(const wchar_t *msg)
 
 #endif
 
-static DWORD InitDwriteBG(LPVOID lpdwThreadParam)
+static DWORD WINAPI InitDwriteBG(LPVOID lpdwThreadParam)
 {
   SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_BEGIN);
   LOGREGISTRY(L"loading dwrite.dll");
@@ -3043,8 +3043,7 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     // FntCache service is ready by the time it's needed.
 
     if (IsVistaOrLater()) {
-      CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)&InitDwriteBG,
-                   nullptr, 0, nullptr);
+      CreateThread(nullptr, 0, &InitDwriteBG, nullptr, 0, nullptr);
     }
   }
 #endif
