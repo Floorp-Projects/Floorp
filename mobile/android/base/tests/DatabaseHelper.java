@@ -92,7 +92,7 @@ class DatabaseHelper {
     // About the same implementation as getFolderIdFromGuid from LocalBrowserDB because it is declared private and we can't use reflections to access it
     protected long getFolderIdFromGuid(String guid) {
         ContentResolver resolver = mActivity.getContentResolver();
-        long folderId = Long.valueOf(-1);
+        long folderId = -1L;
         Uri bookmarksUri = buildUri(BrowserDataType.BOOKMARKS);
         Cursor c = null;
         try {

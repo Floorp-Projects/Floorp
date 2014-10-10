@@ -103,7 +103,8 @@ public abstract class AbstractTransactionalProvider extends ContentProvider {
         if (isInBatch == null) {
             return false;
         }
-        return isInBatch.booleanValue();
+
+        return isInBatch;
     }
 
     /**
