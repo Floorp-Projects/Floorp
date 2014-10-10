@@ -65,7 +65,7 @@ this.webrtcUI = {
       let browser = aStream.browser;
       let browserWindow = browser.ownerDocument.defaultView;
       let tab = browserWindow.gBrowser &&
-                browserWindow.gBrowser._getTabForBrowser(browser);
+                browserWindow.gBrowser.getTabForBrowser(browser);
       return {uri: state.documentURI, tab: tab, browser: browser, types: types};
     });
   },

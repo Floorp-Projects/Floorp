@@ -66,6 +66,7 @@ if CONFIG['MOZ_PLACES']:
         'ClusterLib.js',
         'ColorAnalyzer_worker.js',
         'ColorConversion.js',
+        'History.jsm',
         'PlacesBackups.jsm',
         'PlacesDBUtils.jsm',
         'PlacesSearchAutocompleteProvider.jsm',

@@ -28,13 +28,19 @@ let manifests = [
   }
 ];
 
+let ports = [];
+function getProviderPort(provider) {
+  let port = provider.getWorkerPort();
+  ok(port, "provider has a port");
+  ports.push(port);
+  return port;
+}
 let chatId = 0;
 function openChat(provider, callback) {
   let chatUrl = provider.origin + "/browser/browser/base/content/test/social/social_chat.html";
-  let port = provider.getWorkerPort();
+  let port = getProviderPort(provider);
   port.onmessage = function(e) {
     if (e.data.topic == "got-chatbox-message") {
-      port.close();
       callback();
     }
   }
@@ -42,6 +48,7 @@ function openChat(provider, callback) {
   port.postMessage({topic: "test-init"});
   port.postMessage({topic: "test-worker-chat", data: url});
   gURLsNotRemembered.push(url);
+  return port;
 }
 
 function windowHasChats(win) {
@@ -56,15 +63,22 @@ function test() {
   let oldleft = window.screenX;
   window.moveTo(0, window.screenY)
   let postSubTest = function(cb) {
+    // ensure ports are closed
+    for (let port of ports) {
+      port.close()
+      ok(port._closed, "port closed");
+    }
+    ports = [];
+
     let chats = document.getElementById("pinnedchats");
     ok(chats.children.length == 0, "no chatty children left behind");
     cb();
   };
   runSocialTestWithProvider(manifests, function (finishcb) {
     ok(Social.enabled, "Social is enabled");
-    ok(Social.providers[0].getWorkerPort(), "provider 0 has port");
-    ok(Social.providers[1].getWorkerPort(), "provider 1 has port");
-    ok(Social.providers[2].getWorkerPort(), "provider 2 has port");
+    ok(getProviderPort(Social.providers[0]), "provider 0 has port");
+    ok(getProviderPort(Social.providers[1]), "provider 1 has port");
+    ok(getProviderPort(Social.providers[2]), "provider 2 has port");
     SocialSidebar.show();
     runSocialTests(tests, undefined, postSubTest, function() {
       window.moveTo(oldleft, window.screenY)
@@ -77,8 +91,7 @@ function test() {
 var tests = {
   testOpenCloseChat: function(next) {
     let chats = document.getElementById("pinnedchats");
-    let port = SocialSidebar.provider.getWorkerPort();
-    ok(port, "provider has a port");
+    let port = getProviderPort(SocialSidebar.provider);
     port.onmessage = function (e) {
       let topic = e.data.topic;
       switch (topic) {
@@ -96,7 +109,6 @@ var tests = {
             content.addEventListener("unload", function chatUnload() {
               content.removeEventListener("unload", chatUnload, true);
               ok(true, "got chatbox unload on close");
-              port.close();
               next();
             }, true);
             chats.selectedChat.close();
@@ -114,8 +126,7 @@ var tests = {
   testWorkerChatWindow: function(next) {
     const chatUrl = SocialSidebar.provider.origin + "/browser/browser/base/content/test/social/social_chat.html";
     let chats = document.getElementById("pinnedchats");
-    let port = SocialSidebar.provider.getWorkerPort();
-    ok(port, "provider has a port");
+    let port = getProviderPort(SocialSidebar.provider);
     port.postMessage({topic: "test-init"});
     port.onmessage = function (e) {
       let topic = e.data.topic;
@@ -128,7 +139,6 @@ var tests = {
           }
           ok(!chats.selectedChat, "chats are all closed");
           gURLsNotRemembered.push(chatUrl);
-          port.close();
           next();
           break;
       }
@@ -138,8 +148,7 @@ var tests = {
   },
   testCloseSelf: function(next) {
     let chats = document.getElementById("pinnedchats");
-    let port = SocialSidebar.provider.getWorkerPort();
-    ok(port, "provider has a port");
+    let port = getProviderPort(SocialSidebar.provider);
     port.onmessage = function (e) {
       let topic = e.data.topic;
       switch (topic) {
@@ -157,7 +166,6 @@ var tests = {
           evt.initCustomEvent("socialTest-CloseSelf", true, true, {});
           doc.documentElement.dispatchEvent(evt);
           ok(!chat.parentNode, "chat is now closed");
-          port.close();
           next();
           break;
       }
@@ -172,6 +180,8 @@ var tests = {
     let num = 0;
     is(chatbar.childNodes.length, 0, "chatbar starting empty");
     is(chatbar.menupopup.childNodes.length, 0, "popup starting empty");
+    let port = getProviderPort(SocialSidebar.provider);
+    port.postMessage({topic: "test-init"});
 
     makeChat("normal", "first chat", function() {
       // got the first one.
@@ -202,22 +212,21 @@ var tests = {
   },
 
   testShowWhenCollapsed: function(next) {
-    let port = SocialSidebar.provider.getWorkerPort();
+    let port = getProviderPort(SocialSidebar.provider);
     port.postMessage({topic: "test-init"});
     get3ChatsForCollapsing("normal", function(first, second, third) {
       let chatbar = getChatBar();
       chatbar.showChat(first);
       ok(!first.collapsed, "first should no longer be collapsed");
-      ok(second.collapsed ||  third.collapsed, false, "one of the others should be collapsed");
+      is(second.collapsed ||  third.collapsed, true, "one of the others should be collapsed");
       closeAllChats();
-      port.close();
       next();
     });
   },
 
   testOnlyOneCallback: function(next) {
     let chats = document.getElementById("pinnedchats");
-    let port = SocialSidebar.provider.getWorkerPort();
+    let port = getProviderPort(SocialSidebar.provider);
     let numOpened = 0;
     port.onmessage = function (e) {
       let topic = e.data.topic;
@@ -233,7 +242,6 @@ var tests = {
           executeSoon(function() {
             is(numOpened, 1, "only got one open message");
             chats.selectedChat.close();
-            port.close();
             next();
           });
       }
@@ -243,24 +251,21 @@ var tests = {
 
   testMultipleProviderChat: function(next) {
     // test incomming chats from all providers
-    openChat(Social.providers[0], function() {
-      openChat(Social.providers[1], function() {
-        openChat(Social.providers[2], function() {
+    let port0 = openChat(Social.providers[0], function() {
+      let port1 = openChat(Social.providers[1], function() {
+        let port2 = openChat(Social.providers[2], function() {
           let chats = document.getElementById("pinnedchats");
           waitForCondition(function() chats.children.length == Social.providers.length,
             function() {
               ok(true, "one chat window per provider opened");
               // test logout of a single provider
-              let provider = Social.providers[2];
-              let port = provider.getWorkerPort();
-              port.postMessage({topic: "test-logout"});
+              port2.postMessage({topic: "test-logout"});
               waitForCondition(function() chats.children.length == Social.providers.length - 1,
                 function() {
                   closeAllChats();
                   waitForCondition(function() chats.children.length == 0,
                                    function() {
                                     ok(!chats.selectedChat, "multiprovider chats are all closed");
-                                    port.close();
                                     next();
                                    },
                                    "chat windows didn't close");
@@ -277,6 +282,7 @@ var tests = {
   testCloseOnLogout: function(next) {
     const chatUrl = SocialSidebar.provider.origin + "/browser/browser/base/content/test/social/social_chat.html";
     let port = SocialSidebar.provider.getWorkerPort();
+    ports.push(port);
     ok(port, "provider has a port");
     let opened = false;
     port.onmessage = function (e) {
@@ -292,7 +298,6 @@ var tests = {
             port.postMessage({topic: "test-logout"});
             waitForCondition(function() document.getElementById("pinnedchats").firstChild == null,
                              function() {
-                              port.close();
                               next();
                              },
                              "chat windows didn't close");

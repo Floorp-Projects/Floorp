@@ -285,7 +285,7 @@ let PdfjsChromeUtils = {
  */
 function PdfjsFindbarWrapper(aBrowser) {
   let tabbrowser = aBrowser.getTabBrowser();
-  let tab = tabbrowser._getTabForBrowser(aBrowser);
+  let tab = tabbrowser.getTabForBrowser(aBrowser);
   this._findbar = tabbrowser.getFindBar(tab);
 };
 

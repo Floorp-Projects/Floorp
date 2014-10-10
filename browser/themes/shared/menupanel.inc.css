@@ -234,3 +234,8 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-out-button {
 toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
   -moz-image-region: rect(0px, 96px, 16px, 80px);
 }
+
+#add-share-provider {
+  list-style-image: url(chrome://browser/skin/menuPanel-small.png);
+  -moz-image-region: rect(0px, 96px, 16px, 80px);
+}

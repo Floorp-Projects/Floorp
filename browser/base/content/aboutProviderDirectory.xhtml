@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+  %brandDTD;
+  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+  %browserDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&social.directory.label;</title>
+    <link rel="stylesheet" type="text/css" media="all"
+          href="chrome://browser/skin/aboutProviderDirectory.css"/>
+  </head>
+
+  <body>
+    <div id="activation-link" hidden="true">
+      <div id="message-box">
+        <p>&social.directory.text;</p>
+      </div>
+      <div id="button-box">
+        <button onclick="openDirectory()">&social.directory.button;</button>
+      </div>
+    </div>
+    <div id="activation" hidden="true">
+      <p>&social.directory.introText;</p>
+      <div><iframe id="activation-frame"/></div>
+      <p><a class="link" onclick="openDirectory()">&social.directory.viewmore.text;</a></p>
+    </div>
+  </body>
+
+  <script type="text/javascript;version=1.8"><![CDATA[
+    const Cu = Components.utils;
+
+    Cu.import("resource://gre/modules/Services.jsm");
+
+    function openDirectory() {
+      let url = Services.prefs.getCharPref("social.directories").split(',')[0];
+      window.open(url);
+      window.close();
+    }
+    
+    if (Services.prefs.getBoolPref("social.share.activationPanelEnabled")) {
+      let url = Services.prefs.getCharPref("social.shareDirectory");
+      document.getElementById("activation-frame").setAttribute("src", url);
+      document.getElementById("activation").removeAttribute("hidden");
+    } else {
+      document.getElementById("activation-link").removeAttribute("hidden");
+    }
+  ]]></script>
+</html>
