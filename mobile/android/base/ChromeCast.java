@@ -43,7 +43,7 @@ class ChromeCast implements GeckoMediaPlayer {
     private final RouteInfo route;
     private GoogleApiClient apiClient;
     private RemoteMediaPlayer remoteMediaPlayer;
-    private boolean canMirror;
+    private final boolean canMirror;
     private String mSessionId;
     private MirrorChannel mMirrorChannel;
     private boolean mApplicationStarted = false;

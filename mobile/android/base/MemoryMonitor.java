@@ -47,7 +47,7 @@ class MemoryMonitor extends BroadcastReceiver {
     private static final int MEMORY_PRESSURE_MEDIUM = 3;
     private static final int MEMORY_PRESSURE_HIGH = 4;
 
-    private static MemoryMonitor sInstance = new MemoryMonitor();
+    private static final MemoryMonitor sInstance = new MemoryMonitor();
 
     static MemoryMonitor getInstance() {
         return sInstance;

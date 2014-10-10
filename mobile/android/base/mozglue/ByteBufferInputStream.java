@@ -12,7 +12,7 @@ class ByteBufferInputStream extends InputStream {
 
     protected ByteBuffer mBuf;
     // Reference to a native object holding the data backing the ByteBuffer.
-    private NativeReference mNativeRef;
+    private final NativeReference mNativeRef;
 
     protected ByteBufferInputStream(ByteBuffer buffer, NativeReference ref) {
         mBuf = buffer;

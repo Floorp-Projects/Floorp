@@ -32,8 +32,8 @@ public class FormHistoryProvider extends SQLiteBridgeContentProvider {
 
 
     // This should be kept in sync with the db version in toolkit/components/satchel/nsFormHistory.js
-    private static int DB_VERSION = 4;
-    private static String DB_FILENAME = "formhistory.sqlite";
+    private static final int DB_VERSION = 4;
+    private static final String DB_FILENAME = "formhistory.sqlite";
     private static final String TELEMETRY_TAG = "SQLITEBRIDGE_PROVIDER_FORMS";
 
     private static final String WHERE_GUID_IS_NULL = BrowserContract.DeletedFormHistory.GUID + " IS NULL";

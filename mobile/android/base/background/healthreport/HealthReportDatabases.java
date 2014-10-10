@@ -17,7 +17,7 @@ import android.content.Context;
 public class HealthReportDatabases {
   private static final String LOG_TAG = "HealthReportDatabases";
 
-  private Context context;
+  private final Context context;
   private final HashMap<File, HealthReportDatabaseStorage> storages = new HashMap<File, HealthReportDatabaseStorage>();
 
 

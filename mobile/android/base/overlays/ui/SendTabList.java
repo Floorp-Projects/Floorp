@@ -55,7 +55,7 @@ public class SendTabList extends ListView {
     // Listener to fire when a share target is selected (either directly or via the prompt)
     private SendTabTargetSelectedListener listener;
 
-    private State currentState = LOADING;
+    private final State currentState = LOADING;
 
     /**
      * Enum defining the states this view may occupy.

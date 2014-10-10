@@ -25,7 +25,7 @@ public class GeckoConnectivityReceiver extends BroadcastReceiver {
 
     private static final String LOGTAG = "GeckoConnectivityReceiver";
 
-    private static GeckoConnectivityReceiver sInstance = new GeckoConnectivityReceiver();
+    private static final GeckoConnectivityReceiver sInstance = new GeckoConnectivityReceiver();
 
     private final IntentFilter mFilter;
     private Context mApplicationContext;

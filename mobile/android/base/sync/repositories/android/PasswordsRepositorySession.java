@@ -49,11 +49,11 @@ public class PasswordsRepositorySession extends
   }
 
   private static final String LOG_TAG = "PasswordsRepoSession";
-  private static String COLLECTION = "passwords";
+  private static final String COLLECTION = "passwords";
 
-  private RepoUtils.QueryHelper passwordsHelper;
-  private RepoUtils.QueryHelper deletedPasswordsHelper;
-  private ContentProviderClient passwordsProvider;
+  private final RepoUtils.QueryHelper passwordsHelper;
+  private final RepoUtils.QueryHelper deletedPasswordsHelper;
+  private final ContentProviderClient passwordsProvider;
 
   private final Context context;
 

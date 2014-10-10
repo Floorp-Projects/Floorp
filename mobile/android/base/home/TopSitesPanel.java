@@ -105,8 +105,8 @@ public class TopSitesPanel extends HomeFragment {
         return new TopSitesPanel();
     }
 
-    private static boolean logDebug = Log.isLoggable(LOGTAG, Log.DEBUG);
-    private static boolean logVerbose = Log.isLoggable(LOGTAG, Log.VERBOSE);
+    private static final boolean logDebug = Log.isLoggable(LOGTAG, Log.DEBUG);
+    private static final boolean logVerbose = Log.isLoggable(LOGTAG, Log.VERBOSE);
 
     private static void debug(final String message) {
         if (logDebug) {
@@ -406,7 +406,7 @@ public class TopSitesPanel extends HomeFragment {
         // Max number of search results.
         private static final int SEARCH_LIMIT = 30;
         private static final String TELEMETRY_HISTOGRAM_LOAD_CURSOR = "FENNEC_TOPSITES_LOADER_TIME_MS";
-        private int mMaxGridEntries;
+        private final int mMaxGridEntries;
 
         public TopSitesLoader(Context context) {
             super(context);
@@ -701,7 +701,7 @@ public class TopSitesPanel extends HomeFragment {
     @SuppressWarnings("serial")
     static class ThumbnailsLoader extends AsyncTaskLoader<Map<String, ThumbnailInfo>> {
         private Map<String, ThumbnailInfo> mThumbnailInfos;
-        private ArrayList<String> mUrls;
+        private final ArrayList<String> mUrls;
 
         private static final ArrayList<String> COLUMNS = new ArrayList<String>() {{
             add(TILE_IMAGE_URL_COLUMN);

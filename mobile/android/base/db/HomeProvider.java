@@ -27,8 +27,8 @@ public class HomeProvider extends SQLiteBridgeContentProvider {
     private static final String LOGTAG = "GeckoHomeProvider";
 
     // This should be kept in sync with the db version in mobile/android/modules/HomeProvider.jsm
-    private static int DB_VERSION = 2;
-    private static String DB_FILENAME = "home.sqlite";
+    private static final int DB_VERSION = 2;
+    private static final String DB_FILENAME = "home.sqlite";
     private static final String TELEMETRY_TAG = "SQLITEBRIDGE_PROVIDER_HOME";
 
     private static final String TABLE_ITEMS = "items";

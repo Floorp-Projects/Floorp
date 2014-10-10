@@ -40,7 +40,7 @@ public final class GeckoProfile {
     public static final String DEFAULT_PROFILE = "default";
     public static final String GUEST_PROFILE = "guest";
 
-    private static HashMap<String, GeckoProfile> sProfileCache = new HashMap<String, GeckoProfile>();
+    private static final HashMap<String, GeckoProfile> sProfileCache = new HashMap<String, GeckoProfile>();
     private static String sDefaultProfileName;
 
     // Caches the guest profile dir.

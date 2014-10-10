@@ -253,8 +253,8 @@ public class LayerMarginsAnimator {
     }
 
     class LayerMarginsAnimationTask extends RenderTask {
-        private float mStartLeft, mStartTop, mStartRight, mStartBottom;
-        private float mTop, mBottom, mLeft, mRight;
+        private final float mStartLeft, mStartTop, mStartRight, mStartBottom;
+        private final float mTop, mBottom, mLeft, mRight;
         private boolean mContinueAnimation;
 
         public LayerMarginsAnimationTask(boolean runAfter, ImmutableViewportMetrics metrics,

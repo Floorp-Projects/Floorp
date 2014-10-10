@@ -303,12 +303,12 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
     }
 
     private static class PageAction {
-        private OnPageActionClickListeners mOnPageActionClickListeners;
+        private final OnPageActionClickListeners mOnPageActionClickListeners;
         private Drawable mDrawable;
-        private String mTitle;
-        private String mId;
-        private int key;
-        private boolean mImportant;
+        private final String mTitle;
+        private final String mId;
+        private final int key;
+        private final boolean mImportant;
 
         public PageAction(String id,
                           String title,

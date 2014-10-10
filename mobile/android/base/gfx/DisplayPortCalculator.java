@@ -75,7 +75,7 @@ final class DisplayPortCalculator {
                                  PREF_DISPLAYPORT_PB_VELOCITY_THRESHOLD };
 
         PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
-            private Map<String, Integer> mValues = new HashMap<String, Integer>();
+            private final Map<String, Integer> mValues = new HashMap<String, Integer>();
 
             @Override public void prefValue(String pref, int value) {
                 mValues.put(pref, value);

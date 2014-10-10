@@ -23,7 +23,7 @@ import android.net.Uri;
 public class AndroidBrowserHistoryDataAccessor extends
     AndroidBrowserRepositoryDataAccessor {
 
-  private AndroidBrowserHistoryDataExtender dataExtender;
+  private final AndroidBrowserHistoryDataExtender dataExtender;
 
   public AndroidBrowserHistoryDataAccessor(Context context) {
     super(context);

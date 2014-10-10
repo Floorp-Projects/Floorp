@@ -52,7 +52,7 @@ public class SearchEngine {
                     "document.getElementsByTagName('head')[0].appendChild(tag);" +
                     "tag.innerText='%s'})();";
 
-    private String identifier;
+    private final String identifier;
     private String shortName;
     private String iconURL;
 
