@@ -25,7 +25,7 @@ let idx = -1;
 for (let object of root.tests) {
   let wrappedObject = wrappedRoot.makeDebuggeeValue(object);
   let allocSite = wrappedObject.allocationSite;
-  let newIdx = allocs.indexOf(allocSite);
+  let newIdx = allocs.map(x => x.frame).indexOf(allocSite);
   assertEq(newIdx > idx, true);
   idx = newIdx;
 }
