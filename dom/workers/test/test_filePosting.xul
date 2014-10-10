@@ -68,7 +68,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
       is(event.data.size, file.size, "size of file posted from worker does not match file posted to worker.");
       is(event.data.type, file.type, "type of file posted from worker does not match file posted to worker.");
       is(event.data.name, file.name, "name of file posted from worker does not match file posted to worker.");
-      is(event.data.mozFullPath, file.mozFullPath, "mozFullPath of file posted from worker does not match file posted to worker.");
       finish();
     };
 
