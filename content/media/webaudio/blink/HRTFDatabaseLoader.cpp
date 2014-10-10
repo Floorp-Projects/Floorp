@@ -37,6 +37,11 @@ namespace WebCore {
 nsTHashtable<HRTFDatabaseLoader::LoaderByRateEntry>*
     HRTFDatabaseLoader::s_loaderMap = nullptr;
 
+size_t HRTFDatabaseLoader::sizeOfLoaders(mozilla::MallocSizeOf aMallocSizeOf)
+{
+    return s_loaderMap ? s_loaderMap->SizeOfIncludingThis(aMallocSizeOf) : 0;
+}
+
 TemporaryRef<HRTFDatabaseLoader> HRTFDatabaseLoader::createAndLoadAsynchronouslyIfNecessary(float sampleRate)
 {
     MOZ_ASSERT(NS_IsMainThread());
