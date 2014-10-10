@@ -87,7 +87,7 @@ public class FadedTextView extends ThemedTextView {
         public FadedTextGradient(int width, int fadeWidth, int color) {
             super(0, 0, width, 0,
                   new int[] { color, color, 0x0 },
-                  new float[] { 0,  ((float) (width - fadeWidth) / (float) width), 1.0f },
+                  new float[] { 0,  ((float) (width - fadeWidth) / width), 1.0f },
                   Shader.TileMode.CLAMP);
 
             mWidth = width;

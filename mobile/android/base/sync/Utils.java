@@ -200,7 +200,7 @@ public class Utils {
   }
 
   public static long decimalSecondsToMilliseconds(Integer decimal) {
-    return (long)(decimal * 1000);
+    return (decimal * 1000);
   }
 
   public static byte[] sha256(byte[] in)
