@@ -613,6 +613,11 @@ gtjar.sources += [ thirdparty_source_dir + f for f in [
 ] ]
 #gtjar.javac_flags += ['-Xlint:all']
 
+if not CONFIG['MOZILLA_OFFICIAL']:
+    gtjar.sources += [ thirdparty_source_dir + f for f in [
+        'org/lucasr/dspec/DesignSpec.java',
+        'org/lucasr/dspec/RawResource.java'
+    ] ]
 
 ANDROID_RES_DIRS += [
     SRCDIR + '/resources',
