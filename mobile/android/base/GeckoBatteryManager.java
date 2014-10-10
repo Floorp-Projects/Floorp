@@ -107,8 +107,8 @@ public class GeckoBatteryManager extends BroadcastReceiver {
             }
 
             // We need two doubles because sLevel is a double.
-            double current =  (double)intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            double max = (double)intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            double current = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            double max = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
             if (current == -1 || max == -1) {
                 Log.e(LOGTAG, "Failed to get battery level!");
                 sLevel = kDefaultLevel;

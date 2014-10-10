@@ -170,7 +170,7 @@ class JavaPanZoomController
 
             @Override public void prefValue(String pref, int value) {
                 if (pref.equals("ui.scrolling.gamepad_dead_zone")) {
-                    GamepadUtils.overrideDeadZoneThreshold((float)value / 1000f);
+                    GamepadUtils.overrideDeadZoneThreshold(value / 1000f);
                 }
             }
 
@@ -660,7 +660,7 @@ class JavaPanZoomController
     }
 
     private void track(float x, float y, long time) {
-        float timeDelta = (float)(time - mLastEventTime);
+        float timeDelta = (time - mLastEventTime);
         if (FloatUtils.fuzzyEquals(timeDelta, 0)) {
             // probably a duplicate event, ignore it. using a zero timeDelta will mess
             // up our velocity

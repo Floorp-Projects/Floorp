@@ -61,7 +61,7 @@ public class PropertyAnimator implements Runnable {
 
     public PropertyAnimator(long duration, Interpolator interpolator) {
         mDuration = duration;
-        mDurationReciprocal = 1.0f / (float) mDuration;
+        mDurationReciprocal = 1.0f / mDuration;
         mInterpolator = interpolator;
         mElementsList = new ArrayList<ElementHolder>();
         mFramePoster = FramePoster.create(this);

@@ -53,7 +53,7 @@ abstract class Axis {
 
     private static float getFloatPref(Map<String, Integer> prefs, String prefName, int defaultValue) {
         Integer value = (prefs == null ? null : prefs.get(prefName));
-        return (float)(value == null || value < 0 ? defaultValue : value) / 1000f;
+        return (value == null || value < 0 ? defaultValue : value) / 1000f;
     }
 
     private static int getIntPref(Map<String, Integer> prefs, String prefName, int defaultValue) {
