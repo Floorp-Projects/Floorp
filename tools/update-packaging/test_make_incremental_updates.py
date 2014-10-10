@@ -11,7 +11,7 @@ from make_incremental_updates import PatchInfo, MarFileEntry
 class TestPatchInfo(unittest.TestCase):
     def setUp(self):
         self.work_dir = 'work_dir'
-        self.file_exclusion_list = ['update.manifest','updatev2.manifest','updatev3.manifest','removed-files']
+        self.file_exclusion_list = ['update.manifest','updatev2.manifest','updatev3.manifest']
         self.path_exclusion_list = ['/readme.txt']
         self.patch_info = PatchInfo(self.work_dir, self.file_exclusion_list, self.path_exclusion_list)
 
@@ -99,7 +99,7 @@ class TestMarFileEntry(unittest.TestCase):
 class TestMakeIncrementalUpdates(unittest.TestCase):
     def setUp(self):
         work_dir = '.'
-        self.patch_info = PatchInfo(work_dir, ['update.manifest','updatev2.manifest','updatev3.manifest','removed-files'],['/readme.txt'])
+        self.patch_info = PatchInfo(work_dir, ['update.manifest','updatev2.manifest','updatev3.manifest'],['/readme.txt'])
         root_path = '/'
         filename = 'test.file'
         self.mar_file_entry = MarFileEntry(root_path, filename)

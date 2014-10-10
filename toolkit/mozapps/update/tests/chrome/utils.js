@@ -928,7 +928,13 @@ function resetFiles() {
   // Not being able to remove the "updated" directory will not adversely affect
   // subsequent tests so wrap it in a try block and don't test whether its
   // removal was successful.
-  let updatedDir = getUpdatedDir();
+#ifdef XP_MACOSX
+  let updatedDir = getUpdatesDir();
+  updatedDir.append(DIR_PATCH);
+#else
+  let updatedDir = getAppBaseDir();
+#endif
+  updatedDir.append(DIR_UPDATED);
   if (updatedDir.exists()) {
     try {
       removeDirRecursive(updatedDir);

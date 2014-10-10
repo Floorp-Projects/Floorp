@@ -59,10 +59,25 @@ private:
     nsresult rv;
     if (CFURLGetFileSystemRepresentation(executableURL, false, (UInt8*)aResult,
                                          MAXPATHLEN)) {
+      // Sanitize path in case the app was launched from Terminal via
+      // './firefox' for example.
+      size_t readPos = 0;
+      size_t writePos = 0;
+      while (aResult[readPos] != '\0') {
+        if (aResult[readPos] == '.' && aResult[readPos + 1] == '/') {
+          readPos += 2;
+        } else {
+          aResult[writePos] = aResult[readPos];
+          readPos++;
+          writePos++;
+        }
+      }
+      aResult[writePos] = '\0';
       rv = NS_OK;
     } else {
       rv = NS_ERROR_FAILURE;
     }
+
     CFRelease(executableURL);
     return rv;
   }

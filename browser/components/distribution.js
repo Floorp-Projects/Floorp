@@ -26,12 +26,16 @@ this.DistributionCustomizer = function DistributionCustomizer() {
   } catch(ex) {}
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
-  let iniFile = loadFromProfile ? dirSvc.get("ProfD", Ci.nsIFile)
-                                : dirSvc.get("XREExeF", Ci.nsIFile);
-  iniFile.leafName = "distribution";
-  iniFile.append("distribution.ini");
-  if (iniFile.exists())
-    this._iniFile = iniFile;
+  try {
+    let iniFile = loadFromProfile ? dirSvc.get("ProfD", Ci.nsIFile)
+                                  : dirSvc.get("XREAppDist", Ci.nsIFile);
+    if (loadFromProfile) {
+      iniFile.leafName = "distribution";
+    }
+    iniFile.append("distribution.ini");
+    if (iniFile.exists())
+      this._iniFile = iniFile;
+  } catch(ex) {}
 }
 
 DistributionCustomizer.prototype = {
