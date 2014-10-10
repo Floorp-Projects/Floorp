@@ -909,6 +909,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     // Set the 'lang' and 'dir' attributes to <html> when the page is translated
     document.documentElement.lang = mozL10n.language.code;
     document.documentElement.dir = mozL10n.language.direction;
+    document.title = mozL10n.get("clientShortname2");
   }
 
   return {
