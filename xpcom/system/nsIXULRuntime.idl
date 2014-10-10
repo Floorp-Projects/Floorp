@@ -23,7 +23,7 @@ bool BrowserTabsRemoteAutostart();
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(588831D6-7576-4CEA-B368-3AAB76CD9FCC)]
+[scriptable, uuid(15b0e6cf-83da-4672-814e-cfa0b06ba31b)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -151,4 +151,9 @@ interface nsIXULRuntime : nsISupports
    * The distribution ID for this build (MOZ_DISTRIBUTION_ID).
    */
   readonly attribute AUTF8String distributionID;
+
+  /**
+   * True if this is an official build (MOZILLA_OFFICIAL).
+   */
+  readonly attribute boolean isOfficial;
 };
