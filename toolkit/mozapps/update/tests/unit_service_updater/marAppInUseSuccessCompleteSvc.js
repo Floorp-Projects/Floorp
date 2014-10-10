@@ -12,12 +12,12 @@ function run_test() {
   setupTestCommon();
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
-  setupUpdaterTest(FILE_COMPLETE_MAR, false, false);
+  setupUpdaterTest(FILE_COMPLETE_MAR);
 
   // Launch the callback helper application so it is in use during the update.
-  let callbackApp = getApplyDirFile("a/b/" + gCallbackBinFile);
+  let callbackApp = getApplyDirFile(DIR_RESOURCES + gCallbackBinFile);
   callbackApp.permissions = PERMS_DIRECTORY;
-  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s",
+  let args = [getApplyDirPath() + DIR_RESOURCES, "input", "output", "-s",
               HELPER_SLEEP_TIMEOUT];
   let callbackAppProcess = AUS_Cc["@mozilla.org/process/util;1"].
                            createInstance(AUS_Ci.nsIProcess);
@@ -59,11 +59,7 @@ function checkUpdate() {
     do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
   }
 
-  checkFilesAfterUpdateSuccess();
-  // Sorting on Linux is different so skip this check for now.
-  if (!IS_UNIX) {
-    checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
-  }
-
+  checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+  checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
   checkCallbackServiceLog();
 }

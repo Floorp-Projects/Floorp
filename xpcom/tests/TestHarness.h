@@ -199,6 +199,31 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
       return greD.forget();
     }
 
+    already_AddRefed<nsIFile> GetGREBinDirectory()
+    {
+      if (mGREBinD) {
+        nsCOMPtr<nsIFile> copy = mGREBinD;
+        return copy.forget();
+      }
+
+      nsCOMPtr<nsIFile> greD = GetGREDirectory();
+      if (!greD) {
+        return greD.forget();
+      }
+      greD->Clone(getter_AddRefs(mGREBinD));
+
+#ifdef XP_MACOSX
+      nsAutoCString leafName;
+      mGREBinD->GetNativeLeafName(leafName);
+      if (leafName.Equals("Resources")) {
+        mGREBinD->SetNativeLeafName(NS_LITERAL_CSTRING("MacOS"));
+      }
+#endif
+
+      nsCOMPtr<nsIFile> copy = mGREBinD;
+      return copy.forget();
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     //// nsIDirectoryServiceProvider
 
@@ -226,14 +251,19 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
         *_persistent = true;
         clone.forget(_result);
         return NS_OK;
-      }
-
-      if (0 == strcmp(aProperty, NS_GRE_DIR)) {
+      } else if (0 == strcmp(aProperty, NS_GRE_DIR)) {
         nsCOMPtr<nsIFile> greD = GetGREDirectory();
         NS_ENSURE_TRUE(greD, NS_ERROR_FAILURE);
 
         *_persistent = true;
         greD.forget(_result);
+        return NS_OK;
+      } else if (0 == strcmp(aProperty, NS_GRE_BIN_DIR)) {
+        nsCOMPtr<nsIFile> greBinD = GetGREBinDirectory();
+        NS_ENSURE_TRUE(greBinD, NS_ERROR_FAILURE);
+
+        *_persistent = true;
+        greBinD.forget(_result);
         return NS_OK;
       }
 
@@ -261,6 +291,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
     nsCOMPtr<nsIDirectoryServiceProvider> mDirSvcProvider;
     nsCOMPtr<nsIFile> mProfD;
     nsCOMPtr<nsIFile> mGRED;
+    nsCOMPtr<nsIFile> mGREBinD;
 };
 
 NS_IMPL_QUERY_INTERFACE(

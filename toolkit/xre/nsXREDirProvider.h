@@ -72,6 +72,7 @@ public:
 
   /* make sure you clone it, if you need to do stuff to it */
   nsIFile* GetGREDir() { return mGREDir; }
+  nsIFile* GetGREBinDir() { return mGREBinDir; }
   nsIFile* GetAppDir() {
     if (mXULAppDir)
       return mXULAppDir;
@@ -132,7 +133,11 @@ protected:
   void Append(nsIFile* aDirectory);
 
   nsCOMPtr<nsIDirectoryServiceProvider> mAppProvider;
+  // On OSX, mGREDir points to .app/Contents/Resources
   nsCOMPtr<nsIFile>      mGREDir;
+  // On OSX, mGREBinDir points to .app/Contents/MacOS
+  nsCOMPtr<nsIFile>      mGREBinDir;
+  // On OSX, mXULAppDir points to .app/Contents/Resources/browser
   nsCOMPtr<nsIFile>      mXULAppDir;
   nsCOMPtr<nsIFile>      mProfileDir;
   nsCOMPtr<nsIFile>      mProfileLocalDir;

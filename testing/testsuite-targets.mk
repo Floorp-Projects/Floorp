@@ -289,6 +289,12 @@ jstestbrowser:
 
 GARBAGE += $(addsuffix .log,$(MOCHITESTS) reftest crashtest jstestbrowser)
 
+ifeq ($(OS_ARCH),Darwin)
+xpcshell_path = $(TARGET_DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/MacOS/xpcshell
+else
+xpcshell_path = $(LIBXUL_DIST)/bin/xpcshell
+endif
+
 # Execute all xpcshell tests in the directories listed in the manifest.
 # See also config/rules.mk 'xpcshell-tests' target for local execution.
 # Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] xpcshell-tests|.
@@ -309,7 +315,7 @@ xpcshell-tests:
 	  --xunit-suite-name=xpcshell \
           $(SYMBOLS_PATH) \
 	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS) \
-	  $(LIBXUL_DIST)/bin/xpcshell
+	  $(xpcshell_path)
 
 B2G_XPCSHELL = \
 	rm -f ./@.log && \

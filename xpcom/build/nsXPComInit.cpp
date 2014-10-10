@@ -273,7 +273,7 @@ nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* aOuter,
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = nullptr;
 bool gXPCOMShuttingDown = false;
 bool gXPCOMThreadsShutDown = false;
-char16_t* gGREPath = nullptr;
+char16_t* gGREBinPath = nullptr;
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kINIParserFactoryCID, NS_INIPARSERFACTORY_CID);
@@ -474,6 +474,7 @@ NS_IMPL_ISUPPORTS(NesteggReporter, nsIMemoryReporter)
 CountingAllocatorBase<NesteggReporter>::sAmount(0);
 #endif /* MOZ_WEBM */
 
+// Note that on OSX, aBinDirectory will point to .app/Contents/Resources/browser
 EXPORT_XPCOM_API(nsresult)
 NS_InitXPCOM2(nsIServiceManager** aResult,
               nsIFile* aBinDirectory,
@@ -583,15 +584,15 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   }
 
   nsCOMPtr<nsIFile> xpcomLib;
-  nsDirectoryService::gService->Get(NS_GRE_DIR,
+  nsDirectoryService::gService->Get(NS_GRE_BIN_DIR,
                                     NS_GET_IID(nsIFile),
                                     getter_AddRefs(xpcomLib));
   MOZ_ASSERT(xpcomLib);
 
-  // set gGREPath
+  // set gGREBinPath
   nsAutoString path;
   xpcomLib->GetPath(path);
-  gGREPath = ToNewUnicode(path);
+  gGREBinPath = ToNewUnicode(path);
 
   xpcomLib->AppendNative(nsDependentCString(XPCOM_DLL));
   nsDirectoryService::gService->Set(NS_XPCOM_LIBRARY_FILE, xpcomLib);
@@ -903,8 +904,8 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   // Release the directory service
   NS_IF_RELEASE(nsDirectoryService::gService);
 
-  NS_Free(gGREPath);
-  gGREPath = nullptr;
+  NS_Free(gGREBinPath);
+  gGREBinPath = nullptr;
 
   if (moduleLoaders) {
     bool more;

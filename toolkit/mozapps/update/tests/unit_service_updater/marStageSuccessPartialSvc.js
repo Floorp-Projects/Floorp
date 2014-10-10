@@ -6,7 +6,7 @@
 /* General Partial MAR File Staged Patch Apply Test */
 
 function run_test() {
-  if (!shouldRunServiceTest()) {
+  if (!shouldRunServiceTest(false, true)) {
     return;
   }
 
@@ -17,7 +17,7 @@ function run_test() {
   gTestFiles[gTestFiles.length - 2].compareContents = "FromPartial\n";
   gTestFiles[gTestFiles.length - 2].comparePerms = 0o644;
   gTestDirs = gTestDirsPartialSuccess;
-  setupUpdaterTest(FILE_PARTIAL_MAR, false, false);
+  setupUpdaterTest(FILE_PARTIAL_MAR);
 
   createUpdaterINI(false);
 
@@ -39,31 +39,22 @@ function setupAppFilesFinished() {
 }
 
 function checkUpdateFinished() {
-  if (IS_MACOSX) {
-    logTestInfo("testing last modified time on the apply to directory has " +
-                "changed after a successful update (bug 600098)");
-    let now = Date.now();
-    let applyToDir = getApplyDirFile();
-    let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
-    do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
-  }
+  checkFilesAfterUpdateSuccess(getStageDirFile, true, false);
+  checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
 
-  checkFilesAfterUpdateSuccess();
-  // Sorting on Linux is different so skip this check for now.
-  if (!IS_UNIX) {
-    checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
-  }
-
-  if (IS_MACOSX || IS_WIN) {
-    // Check that the post update process was not launched when staging an
-    // update.
-    do_check_false(getPostUpdateFile(".running").exists());
+  if (IS_WIN || IS_MACOSX) {
+    let running = getPostUpdateFile(".running");
+    logTestInfo("checking that the post update process running file doesn't " +
+                "exist. Path: " + running.path);
+    do_check_false(running.exists());
   }
 
   // Switch the application to the staged application that was updated.
   gStageUpdate = false;
   gSwitchApp = true;
-  runUpdate(0, STATE_SUCCEEDED);
+  do_timeout(TEST_CHECK_TIMEOUT, function() {
+    runUpdate(0, STATE_SUCCEEDED);
+  });
 }
 
 /**
@@ -71,7 +62,7 @@ function checkUpdateFinished() {
  * support launching post update process.
  */
 function checkUpdateApplied() {
-  if (IS_MACOSX || IS_WIN) {
+  if (IS_WIN || IS_MACOSX) {
     gCheckFunc = finishCheckUpdateApplied;
     checkPostUpdateAppLog();
   } else {
@@ -93,11 +84,14 @@ function finishCheckUpdateApplied() {
     do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
   }
 
-  checkFilesAfterUpdateSuccess();
-  // Sorting on Linux is different so skip this check for now.
-  if (!IS_UNIX) {
-    checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
+  if (IS_WIN || IS_MACOSX) {
+    let running = getPostUpdateFile(".running");
+    logTestInfo("checking that the post update process running file exists. " +
+                "Path: " + running.path);
+    do_check_true(running.exists());
   }
 
+  checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+  checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
   checkCallbackAppLog();
 }

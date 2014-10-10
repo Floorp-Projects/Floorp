@@ -138,7 +138,7 @@ WeaveCrypto.prototype = {
         } catch(e) {
             // In case opening the library without a full path fails,
             // try again with a full path.
-            let file = Services.dirsvc.get("GreD", Ci.nsILocalFile);
+            let file = Services.dirsvc.get("GreBinD", Ci.nsILocalFile);
             file.append(path);
             this.log("Trying again with path " + file.path);
             nsslib = ctypes.open(file.path);
