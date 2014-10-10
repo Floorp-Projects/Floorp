@@ -311,7 +311,7 @@ public class PromptInput {
 
         @Override
         public Object getValue() {
-            return new Integer(spinner.getSelectedItemPosition());
+            return spinner.getSelectedItemPosition();
         }
     }
 
