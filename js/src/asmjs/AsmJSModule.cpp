@@ -731,6 +731,8 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
 void
 AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx)
 {
+    MOZ_ASSERT_IF(heap->is<ArrayBufferObject>(),
+                  heap->as<ArrayBufferObject>().isAsmJSArrayBuffer());
     MOZ_ASSERT(IsValidAsmJSHeapLength(heap->byteLength()));
     MOZ_ASSERT(dynamicallyLinked_);
     MOZ_ASSERT(!maybeHeap_);
@@ -772,6 +774,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
 #endif
 }
 
+// This method assumes the caller has a live AutoUnprotectCode.
 void
 AsmJSModule::restoreHeapToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer)
 {
@@ -793,6 +796,7 @@ AsmJSModule::restoreHeapToInitialState(ArrayBufferObjectMaybeShared *maybePrevBu
     heapDatum() = nullptr;
 }
 
+// This method assumes the caller has a live AutoUnprotectCode.
 void
 AsmJSModule::restoreToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer,
                                    uint8_t *prevCode,
@@ -1550,7 +1554,7 @@ AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) con
 }
 
 bool
-AsmJSModule::changeHeap(Handle<ArrayBufferObject*> newBuffer, JSContext *cx)
+AsmJSModule::changeHeap(Handle<ArrayBufferObject*> newHeap, JSContext *cx)
 {
     // Content JS should not be able to run (and change heap) from within an
     // interrupt callback, but in case it does, fail to change heap. Otherwise,
@@ -1559,15 +1563,9 @@ AsmJSModule::changeHeap(Handle<ArrayBufferObject*> newBuffer, JSContext *cx)
     if (interrupted_)
         return false;
 
-    uint32_t heapLength = newBuffer->byteLength();
-    if (heapLength & pod.heapLengthMask_ || heapLength < pod.minHeapLength_)
-        return false;
-
-    MOZ_ASSERT(IsValidAsmJSHeapLength(heapLength));
-    MOZ_ASSERT(!IsDeprecatedAsmJSHeapLength(heapLength));
-
+    AutoUnprotectCode auc(cx, *this);
     restoreHeapToInitialState(maybeHeap_);
-    initHeap(newBuffer, cx);
+    initHeap(newHeap, cx);
     return true;
 }
 
