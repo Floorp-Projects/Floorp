@@ -47,6 +47,7 @@ import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityResultHandler;
+import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -103,7 +104,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.AbsoluteLayout;
 import android.widget.FrameLayout;
 import android.widget.ListView;
@@ -1075,24 +1075,7 @@ public abstract class GeckoApp
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                // Hide/show the system notification bar
-                Window window = getWindow();
-
-                if (Versions.feature11Plus) {
-                    final int newVis;
-                    if (fullscreen) {
-                        newVis = View.SYSTEM_UI_FLAG_FULLSCREEN |
-                                 View.SYSTEM_UI_FLAG_LOW_PROFILE;
-                    } else {
-                        newVis = View.SYSTEM_UI_FLAG_VISIBLE;
-                    }
-
-                    window.getDecorView().setSystemUiVisibility(newVis);
-                } else {
-                    window.setFlags(fullscreen ?
-                                    WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
-                                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                }
+                ActivityUtils.setFullScreen(GeckoApp.this, fullscreen);
             }
         });
     }
