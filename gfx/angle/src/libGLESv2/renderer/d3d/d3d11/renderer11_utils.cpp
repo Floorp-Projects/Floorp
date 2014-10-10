@@ -9,6 +9,10 @@
 
 #include "libGLESv2/renderer/d3d/d3d11/renderer11_utils.h"
 #include "libGLESv2/renderer/d3d/d3d11/formatutils11.h"
+#include "libGLESv2/renderer/d3d/d3d11/RenderTarget11.h"
+#include "libGLESv2/renderer/Workarounds.h"
+#include "libGLESv2/ProgramBinary.h"
+#include "libGLESv2/Framebuffer.h"
 
 #include "common/debug.h"
 
@@ -392,9 +396,8 @@ static size_t GetMaximumSimultaneousRenderTargets(D3D_FEATURE_LEVEL featureLevel
       case D3D_FEATURE_LEVEL_11_1:
       case D3D_FEATURE_LEVEL_11_0: return D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT;
 
-        // FIXME(geofflang): Work around NVIDIA driver bug by repacking buffers
       case D3D_FEATURE_LEVEL_10_1:
-      case D3D_FEATURE_LEVEL_10_0: return 1; /* D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT; */
+      case D3D_FEATURE_LEVEL_10_0: return D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT;
 
       case D3D_FEATURE_LEVEL_9_3:  return D3D_FL9_3_SIMULTANEOUS_RENDER_TARGET_COUNT;
       case D3D_FEATURE_LEVEL_9_2:
@@ -942,7 +945,7 @@ void GenerateCaps(ID3D11Device *device, gl::Caps *caps, gl::TextureCapsMap *text
                                                  static_cast<GLint64>(caps->maxFragmentUniformComponents);
     caps->maxVaryingComponents = GetMaximumVertexOutputVectors(featureLevel) * 4;
     caps->maxVaryingVectors = GetMaximumVertexOutputVectors(featureLevel);
-    caps->maxCombinedTextureImageUnits = caps->maxVertexTextureImageUnits + caps->maxFragmentInputComponents;
+    caps->maxCombinedTextureImageUnits = caps->maxVertexTextureImageUnits + caps->maxTextureImageUnits;
 
     // Transform feedback limits
     caps->maxTransformFeedbackInterleavedComponents = GetMaximumStreamOutputInterleavedComponenets(featureLevel);
@@ -1061,6 +1064,19 @@ HRESULT SetDebugName(ID3D11DeviceChild *resource, const char *name)
 #else
     return S_OK;
 #endif
+}
+
+RenderTarget11 *GetAttachmentRenderTarget(gl::FramebufferAttachment *attachment)
+{
+    RenderTarget *renderTarget = rx::GetAttachmentRenderTarget(attachment);
+    return RenderTarget11::makeRenderTarget11(renderTarget);
+}
+
+Workarounds GenerateWorkarounds()
+{
+    Workarounds workarounds;
+    workarounds.mrtPerfWorkaround = true;
+    return workarounds;
 }
 
 }

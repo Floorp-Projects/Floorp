@@ -19,6 +19,8 @@
 #include "libEGL/Display.h"
 #include "libEGL/Surface.h"
 
+#include "common/NativeWindow.h"
+
 bool validateDisplay(egl::Display *display)
 {
     if (display == EGL_NO_DISPLAY)
@@ -324,14 +326,12 @@ EGLSurface __stdcall eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EG
         return EGL_NO_SURFACE;
     }
 
-    HWND window = (HWND)win;
-
-    if (!IsWindow(window))
+    if (!isValidEGLNativeWindowType(win))
     {
         return egl::error(EGL_BAD_NATIVE_WINDOW, EGL_NO_SURFACE);
     }
 
-    return display->createWindowSurface(window, config, attrib_list);
+    return display->createWindowSurface(win, config, attrib_list);
 }
 
 EGLSurface __stdcall eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig config, const EGLint *attrib_list)

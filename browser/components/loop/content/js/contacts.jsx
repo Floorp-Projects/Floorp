@@ -153,14 +153,14 @@ loop.contacts = (function(_, mozL10n) {
       document.body.removeEventListener("click", this._onBodyClick);
     },
 
-    componentShouldUpdate: function(nextProps, nextState) {
+    shouldComponentUpdate: function(nextProps, nextState) {
       let currContact = this.props.contact;
       let nextContact = nextProps.contact;
       return (
         currContact.name[0] !== nextContact.name[0] ||
         currContact.blocked !== nextContact.blocked ||
-        getPreferredEmail(currContact).value !==
-          getPreferredEmail(nextContact).value
+        getPreferredEmail(currContact).value !== getPreferredEmail(nextContact).value ||
+        nextState.showMenu !== this.state.showMenu
       );
     },
 
@@ -215,20 +215,32 @@ loop.contacts = (function(_, mozL10n) {
   const ContactsList = React.createClass({
     mixins: [React.addons.LinkedStateMixin],
 
+    /**
+     * Contacts collection object
+     */
+    contacts: null,
+
+    /**
+     * User profile
+     */
+    _userProfile: null,
+
     getInitialState: function() {
       return {
-        contacts: {},
         importBusy: false,
         filter: "",
       };
     },
 
-    componentDidMount: function() {
+    refresh: function(callback = function() {}) {
       let contactsAPI = navigator.mozLoop.contacts;
+
+      this.handleContactRemoveAll();
 
       contactsAPI.getAll((err, contacts) => {
         if (err) {
-          throw err;
+          callback(err);
+          return;
         }
 
         // Add contacts already present in the DB. We do this in timed chunks to
@@ -239,11 +251,32 @@ loop.contacts = (function(_, mozL10n) {
           });
           if (contacts.length) {
             setTimeout(addContactsInChunks, 0);
+          } else {
+            callback();
           }
           this.forceUpdate();
         };
 
         addContactsInChunks(contacts);
+      });
+    },
+
+    componentWillMount: function() {
+      // Take the time to initialize class variables that are used outside
+      // `this.state`.
+      this.contacts = {};
+      this._userProfile = navigator.mozLoop.userProfile;
+    },
+
+    componentDidMount: function() {
+      window.addEventListener("LoopStatusChanged", this._onStatusChanged);
+
+      this.refresh(err => {
+        if (err) {
+          throw err;
+        }
+
+        let contactsAPI = navigator.mozLoop.contacts;
 
         // Listen for contact changes/ updates.
         contactsAPI.on("add", (eventName, contact) => {
@@ -261,8 +294,24 @@ loop.contacts = (function(_, mozL10n) {
       });
     },
 
+    componentWillUnmount: function() {
+      window.removeEventListener("LoopStatusChanged", this._onStatusChanged);
+    },
+
+    _onStatusChanged: function() {
+      let profile = navigator.mozLoop.userProfile;
+      let currUid = this._userProfile ? this._userProfile.uid : null;
+      let newUid = profile ? profile.uid : null;
+      if (currUid != newUid) {
+        // On profile change (login, logout), reload all contacts.
+        this._userProfile = profile;
+        // The following will do a forceUpdate() for us.
+        this.refresh();
+      }
+    },
+
     handleContactAddOrUpdate: function(contact, render = true) {
-      let contacts = this.state.contacts;
+      let contacts = this.contacts;
       let guid = String(contact._guid);
       contacts[guid] = contact;
       if (render) {
@@ -271,7 +320,7 @@ loop.contacts = (function(_, mozL10n) {
     },
 
     handleContactRemove: function(contact) {
-      let contacts = this.state.contacts;
+      let contacts = this.contacts;
       let guid = String(contact._guid);
       if (!contacts[guid]) {
         return;
@@ -281,7 +330,9 @@ loop.contacts = (function(_, mozL10n) {
     },
 
     handleContactRemoveAll: function() {
-      this.setState({contacts: {}});
+      // Do not allow any race conditions when removing all contacts.
+      this.contacts = {};
+      this.forceUpdate();
     },
 
     handleImportButtonClick: function() {
@@ -364,11 +415,11 @@ loop.contacts = (function(_, mozL10n) {
                               handleContactAction={this.handleContactAction} />
       };
 
-      let shownContacts = _.groupBy(this.state.contacts, function(contact) {
+      let shownContacts = _.groupBy(this.contacts, function(contact) {
         return contact.blocked ? "blocked" : "available";
       });
 
-      let showFilter = Object.getOwnPropertyNames(this.state.contacts).length >=
+      let showFilter = Object.getOwnPropertyNames(this.contacts).length >=
                        MIN_CONTACTS_FOR_FILTERING;
       if (showFilter) {
         let filter = this.state.filter.trim().toLocaleLowerCase();

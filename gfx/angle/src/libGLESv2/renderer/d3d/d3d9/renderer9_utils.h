@@ -4,7 +4,7 @@
 // found in the LICENSE file.
 //
 
-// renderer9_utils.h: Conversion functions and other utility routines 
+// renderer9_utils.h: Conversion functions and other utility routines
 // specific to the D3D9 renderer
 
 #ifndef LIBGLESV2_RENDERER_RENDERER9_UTILS_H
@@ -13,8 +13,15 @@
 #include "libGLESv2/angletypes.h"
 #include "libGLESv2/Caps.h"
 
+namespace gl
+{
+class FramebufferAttachment;
+}
+
 namespace rx
 {
+class RenderTarget9;
+struct Workarounds;
 
 namespace gl_d3d9
 {
@@ -67,6 +74,9 @@ inline bool isDeviceLostError(HRESULT errorCode)
         return false;
     }
 }
+
+RenderTarget9 *GetAttachmentRenderTarget(gl::FramebufferAttachment *attachment);
+Workarounds GenerateWorkarounds();
 
 }
 

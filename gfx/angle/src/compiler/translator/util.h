@@ -33,7 +33,6 @@ bool IsVaryingIn(TQualifier qualifier);
 bool IsVaryingOut(TQualifier qualifier);
 bool IsVarying(TQualifier qualifier);
 InterpolationType GetInterpolationType(TQualifier qualifier);
-BlockLayoutType GetBlockLayoutType(TLayoutBlockStorage blockStorage);
 TString ArrayString(const TType &type);
 
 class GetVariableTraverser
@@ -51,8 +50,6 @@ class GetVariableTraverser
   private:
     DISALLOW_COPY_AND_ASSIGN(GetVariableTraverser);
 };
-
-void GetInterfaceBlockFields(const TInterfaceBlock &interfaceBlock, std::vector<InterfaceBlockField> *fieldsOut);
 
 }
 

@@ -20,12 +20,6 @@ struct TimingStruct {
   TimeStamp responseEnd;
 };
 
-struct ResourceTimingStruct : TimingStruct {
-  TimeStamp fetchStart;
-  TimeStamp redirectStart;
-  TimeStamp redirectEnd;
-};
-
 }} // namespace mozilla::net
 
 #endif

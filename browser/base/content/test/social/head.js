@@ -33,6 +33,16 @@ function waitForCondition(condition, nextTest, errorMsg) {
   var moveOn = function() { clearInterval(interval); nextTest(); };
 }
 
+
+function promiseObserverNotified(aTopic) {
+  let deferred = Promise.defer();
+  Services.obs.addObserver(function onNotification(aSubject, aTopic, aData) {
+    Services.obs.removeObserver(onNotification, aTopic);
+      deferred.resolve({subject: aSubject, data: aData});
+    }, aTopic, false);
+  return deferred.promise;
+}
+
 // Check that a specified (string) URL hasn't been "remembered" (ie, is not
 // in history, will not appear in about:newtab or auto-complete, etc.)
 function promiseSocialUrlNotRemembered(url) {

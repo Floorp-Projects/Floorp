@@ -11,6 +11,7 @@
 
 #include "common/angleutils.h"
 #include "libGLESv2/angletypes.h"
+#include "libGLESv2/Error.h"
 
 #include <map>
 
@@ -18,36 +19,30 @@ namespace rx
 {
 class Renderer11;
 
-enum Filter
-{
-    Point,
-    Linear,
-};
-
 class Blit11
 {
   public:
     explicit Blit11(Renderer11 *renderer);
     ~Blit11();
 
-    bool swizzleTexture(ID3D11ShaderResourceView *source, ID3D11RenderTargetView *dest, const gl::Extents &size,
-                        GLenum swizzleRed, GLenum swizzleGreen, GLenum swizzleBlue, GLenum swizzleAlpha);
+    gl::Error swizzleTexture(ID3D11ShaderResourceView *source, ID3D11RenderTargetView *dest, const gl::Extents &size,
+                             GLenum swizzleRed, GLenum swizzleGreen, GLenum swizzleBlue, GLenum swizzleAlpha);
 
-    bool copyTexture(ID3D11ShaderResourceView *source, const gl::Box &sourceArea, const gl::Extents &sourceSize,
-                     ID3D11RenderTargetView *dest, const gl::Box &destArea, const gl::Extents &destSize,
-                     const gl::Rectangle *scissor, GLenum destFormat, GLenum filter);
+    gl::Error copyTexture(ID3D11ShaderResourceView *source, const gl::Box &sourceArea, const gl::Extents &sourceSize,
+                          ID3D11RenderTargetView *dest, const gl::Box &destArea, const gl::Extents &destSize,
+                          const gl::Rectangle *scissor, GLenum destFormat, GLenum filter);
 
-    bool copyStencil(ID3D11Resource *source, unsigned int sourceSubresource, const gl::Box &sourceArea, const gl::Extents &sourceSize,
-                     ID3D11Resource *dest, unsigned int destSubresource, const gl::Box &destArea, const gl::Extents &destSize,
-                     const gl::Rectangle *scissor);
-
-    bool copyDepth(ID3D11ShaderResourceView *source, const gl::Box &sourceArea, const gl::Extents &sourceSize,
-                   ID3D11DepthStencilView *dest, const gl::Box &destArea, const gl::Extents &destSize,
-                   const gl::Rectangle *scissor);
-
-    bool copyDepthStencil(ID3D11Resource *source, unsigned int sourceSubresource, const gl::Box &sourceArea, const gl::Extents &sourceSize,
+    gl::Error copyStencil(ID3D11Resource *source, unsigned int sourceSubresource, const gl::Box &sourceArea, const gl::Extents &sourceSize,
                           ID3D11Resource *dest, unsigned int destSubresource, const gl::Box &destArea, const gl::Extents &destSize,
                           const gl::Rectangle *scissor);
+
+    gl::Error copyDepth(ID3D11ShaderResourceView *source, const gl::Box &sourceArea, const gl::Extents &sourceSize,
+                        ID3D11DepthStencilView *dest, const gl::Box &destArea, const gl::Extents &destSize,
+                        const gl::Rectangle *scissor);
+
+    gl::Error copyDepthStencil(ID3D11Resource *source, unsigned int sourceSubresource, const gl::Box &sourceArea, const gl::Extents &sourceSize,
+                               ID3D11Resource *dest, unsigned int destSubresource, const gl::Box &destArea, const gl::Extents &destSize,
+                               const gl::Rectangle *scissor);
 
   private:
     rx::Renderer11 *mRenderer;
@@ -59,9 +54,9 @@ class Blit11
         bool m3DBlit;
     };
 
-    bool copyDepthStencil(ID3D11Resource *source, unsigned int sourceSubresource, const gl::Box &sourceArea, const gl::Extents &sourceSize,
-                          ID3D11Resource *dest, unsigned int destSubresource, const gl::Box &destArea, const gl::Extents &destSize,
-                          const gl::Rectangle *scissor, bool stencilOnly);
+    gl::Error copyDepthStencil(ID3D11Resource *source, unsigned int sourceSubresource, const gl::Box &sourceArea, const gl::Extents &sourceSize,
+                               ID3D11Resource *dest, unsigned int destSubresource, const gl::Box &destArea, const gl::Extents &destSize,
+                               const gl::Rectangle *scissor, bool stencilOnly);
 
     static bool compareBlitParameters(const BlitParameters &a, const BlitParameters &b);
 

@@ -44,7 +44,7 @@ class VertexArray
     void setAttributeState(unsigned int attributeIndex, gl::Buffer *boundBuffer, GLint size, GLenum type,
                            bool normalized, bool pureInteger, GLsizei stride, const void *pointer);
 
-    const VertexAttribute* getVertexAttributes() const { return mVertexAttributes.data(); }
+    const VertexAttribute* getVertexAttributes() const { return &mVertexAttributes[0]; }
     Buffer *getElementArrayBuffer() const { return mElementArrayBuffer.get(); }
     void setElementArrayBuffer(Buffer *buffer);
     GLuint getElementArrayBufferId() const { return mElementArrayBuffer.id(); }
