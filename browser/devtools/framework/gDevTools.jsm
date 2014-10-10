@@ -406,6 +406,10 @@ DevTools.prototype = {
 
       this._toolboxes.set(target, toolbox);
 
+      toolbox.once("destroy", () => {
+        this.emit("toolbox-destroy", target);
+      });
+
       toolbox.once("destroyed", () => {
         this._toolboxes.delete(target);
         this.emit("toolbox-destroyed", target);
@@ -429,7 +433,7 @@ DevTools.prototype = {
    *         Target value e.g. the target that owns this toolbox
    *
    * @return {Toolbox} toolbox
-   *         The toobox that is debugging the given target
+   *         The toolbox that is debugging the given target
    */
   getToolbox: function DT_getToolbox(target) {
     return this._toolboxes.get(target);
@@ -440,7 +444,7 @@ DevTools.prototype = {
    *
    * @return promise
    *         This promise will resolve to false if no toolbox was found
-   *         associated to the target. true, if the toolbox was successfuly
+   *         associated to the target. true, if the toolbox was successfully
    *         closed.
    */
   closeToolbox: function DT_closeToolbox(target) {
@@ -606,11 +610,11 @@ let gDevToolsBrowser = {
    * selectToolCommand's behavior:
    * - if the toolbox is closed,
    *   we open the toolbox and select the tool
-   * - if the toolbox is open, and the targetted tool is not selected,
+   * - if the toolbox is open, and the targeted tool is not selected,
    *   we select it
-   * - if the toolbox is open, and the targetted tool is selected,
+   * - if the toolbox is open, and the targeted tool is selected,
    *   and the host is NOT a window, we close the toolbox
-   * - if the toolbox is open, and the targetted tool is selected,
+   * - if the toolbox is open, and the targeted tool is selected,
    *   and the host is a window, we raise the toolbox window
    */
   selectToolCommand: function(gBrowser, toolId) {
