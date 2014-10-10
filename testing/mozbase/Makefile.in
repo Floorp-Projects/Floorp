@@ -8,6 +8,7 @@ include $(topsrcdir)/config/rules.mk
 MOZBASE_PACKAGES = \
   manifestparser \
   mozcrash \
+  mozdebug \
   mozfile \
   mozhttpd \
   mozinfo \
