@@ -26,7 +26,7 @@ class xpcAccessibleGeneric : public xpcAccessible,
                              public xpcAccessibleValue
 {
 public:
-  xpcAccessibleGeneric(Accessible* aInternal) :
+  explicit xpcAccessibleGeneric(Accessible* aInternal) :
     mIntl(aInternal), mSupportedIfaces(0)
   {
     if (mIntl->IsSelect())
