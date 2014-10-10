@@ -1167,6 +1167,13 @@
                 promptBox.removePrompt(prompts[prompts.length - 1]);
               }
 
+              oldBrowser._urlbarFocused = (gURLBar && gURLBar.focused);
+              if (this.isFindBarInitialized(oldTab)) {
+                let findBar = this.getFindBar(oldTab);
+                oldTab._findBarFocused = (!findBar.hidden &&
+                  findBar._findField.getAttribute("focused") == "true");
+              }
+
               if (!gMultiProcessBrowser)
                 this._adjustFocusAfterTabSwitch(this.mCurrentTab, oldTab);
             }
@@ -1184,16 +1191,6 @@
         <parameter name="oldTab"/>
         <body><![CDATA[
         let newBrowser = this.getBrowserForTab(newTab);
-        let oldBrowser = this.getBrowserForTab(oldTab);
-
-        if (oldBrowser) {
-          oldBrowser._urlbarFocused = (gURLBar && gURLBar.focused);
-          if (this.isFindBarInitialized(oldTab)) {
-            let findBar = this.getFindBar(oldTab);
-            oldTab._findBarFocused = (!findBar.hidden &&
-              findBar._findField.getAttribute("focused") == "true");
-          }
-        }
 
         // When focus is in the tab bar, retain it there.
         if (document.activeElement == oldTab) {
