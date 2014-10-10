@@ -54,6 +54,6 @@ public class ColorPickerInput extends PromptInput {
 
     @Override
     public boolean canApplyInputStyle() {
-	return false;
+        return false;
     }
 }
