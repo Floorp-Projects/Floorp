@@ -65,11 +65,11 @@ class ResourceManager
     Renderbuffer *getRenderbuffer(GLuint handle);
     Sampler *getSampler(GLuint handle);
     FenceSync *getFenceSync(GLuint handle);
-    
+
     void setRenderbuffer(GLuint handle, Renderbuffer *renderbuffer);
 
     void checkBufferAllocation(unsigned int buffer);
-    void checkTextureAllocation(GLuint texture, TextureType type);
+    void checkTextureAllocation(GLuint texture, GLenum type);
     void checkRenderbufferAllocation(GLuint renderbuffer);
     void checkSamplerAllocation(GLuint sampler);
 

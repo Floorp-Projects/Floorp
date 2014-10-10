@@ -21,6 +21,10 @@
 #include "libGLESv2/renderer/d3d/d3d11/Renderer11.h"
 #endif // ANGLE_ENABLE_D3D11
 
+#if defined (ANGLE_TEST_CONFIG)
+#define ANGLE_DEFAULT_D3D11 1
+#endif
+
 #if !defined(ANGLE_DEFAULT_D3D11)
 // Enables use of the Direct3D 11 API for a default display, when available
 #define ANGLE_DEFAULT_D3D11 0
@@ -34,6 +38,7 @@ namespace rx
 Renderer::Renderer(egl::Display *display)
     : mDisplay(display),
       mCapsInitialized(false),
+      mWorkaroundsInitialized(false),
       mCurrentClientVersion(2)
 {
 }
@@ -73,6 +78,17 @@ const gl::Extensions &Renderer::getRendererExtensions() const
     }
 
     return mExtensions;
+}
+
+const Workarounds &Renderer::getWorkarounds() const
+{
+    if (!mWorkaroundsInitialized)
+    {
+        mWorkarounds = generateWorkarounds();
+        mWorkaroundsInitialized = true;
+    }
+
+    return mWorkarounds;
 }
 
 typedef Renderer *(*CreateRendererFunction)(egl::Display*, EGLNativeDisplayType, EGLint);

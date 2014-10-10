@@ -19,7 +19,7 @@ class Renderer9;
 class SwapChain9 : public SwapChain
 {
   public:
-    SwapChain9(Renderer9 *renderer, HWND window, HANDLE shareHandle,
+    SwapChain9(Renderer9 *renderer, rx::NativeWindow nativeWindow, HANDLE shareHandle,
                GLenum backBufferFormat, GLenum depthBufferFormat);
     virtual ~SwapChain9();
 

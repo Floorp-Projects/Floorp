@@ -29,7 +29,7 @@ VertexBuffer9::~VertexBuffer9()
     SafeRelease(mVertexBuffer);
 }
 
-bool VertexBuffer9::initialize(unsigned int size, bool dynamicUsage)
+gl::Error VertexBuffer9::initialize(unsigned int size, bool dynamicUsage)
 {
     SafeRelease(mVertexBuffer);
 
@@ -47,14 +47,13 @@ bool VertexBuffer9::initialize(unsigned int size, bool dynamicUsage)
 
         if (FAILED(result))
         {
-            ERR("Out of memory allocating a vertex buffer of size %lu.", size);
-            return false;
+            return gl::Error(GL_OUT_OF_MEMORY, "Failed to allocate internal vertex buffer of size, %lu.", size);
         }
     }
 
     mBufferSize = size;
     mDynamicUsage = dynamicUsage;
-    return true;
+    return gl::Error(GL_NO_ERROR);
 }
 
 VertexBuffer9 *VertexBuffer9::makeVertexBuffer9(VertexBuffer *vertexBuffer)
@@ -63,84 +62,80 @@ VertexBuffer9 *VertexBuffer9::makeVertexBuffer9(VertexBuffer *vertexBuffer)
     return static_cast<VertexBuffer9*>(vertexBuffer);
 }
 
-bool VertexBuffer9::storeVertexAttributes(const gl::VertexAttribute &attrib, const gl::VertexAttribCurrentValueData &currentValue,
-                                          GLint start, GLsizei count, GLsizei instances, unsigned int offset)
+gl::Error VertexBuffer9::storeVertexAttributes(const gl::VertexAttribute &attrib, const gl::VertexAttribCurrentValueData &currentValue,
+                                               GLint start, GLsizei count, GLsizei instances, unsigned int offset)
 {
-    if (mVertexBuffer)
+    if (!mVertexBuffer)
     {
-        gl::Buffer *buffer = attrib.buffer.get();
+        return gl::Error(GL_OUT_OF_MEMORY, "Internal vertex buffer is not initialized.");
+    }
 
-        int inputStride = gl::ComputeVertexAttributeStride(attrib);
-        int elementSize = gl::ComputeVertexAttributeTypeSize(attrib);
+    gl::Buffer *buffer = attrib.buffer.get();
 
-        DWORD lockFlags = mDynamicUsage ? D3DLOCK_NOOVERWRITE : 0;
+    int inputStride = gl::ComputeVertexAttributeStride(attrib);
+    int elementSize = gl::ComputeVertexAttributeTypeSize(attrib);
 
-        uint8_t *mapPtr = NULL;
+    DWORD lockFlags = mDynamicUsage ? D3DLOCK_NOOVERWRITE : 0;
 
-        unsigned int mapSize;
-        if (!spaceRequired(attrib, count, instances, &mapSize))
+    uint8_t *mapPtr = NULL;
+
+    unsigned int mapSize;
+    gl::Error error = spaceRequired(attrib, count, instances, &mapSize);
+    if (error.isError())
+    {
+        return error;
+    }
+
+    HRESULT result = mVertexBuffer->Lock(offset, mapSize, reinterpret_cast<void**>(&mapPtr), lockFlags);
+    if (FAILED(result))
+    {
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to lock internal vertex buffer, HRESULT: 0x%08x.", result);
+    }
+
+    const uint8_t *input = NULL;
+    if (attrib.enabled)
+    {
+        if (buffer)
         {
-            return false;
-        }
-
-        HRESULT result = mVertexBuffer->Lock(offset, mapSize, reinterpret_cast<void**>(&mapPtr), lockFlags);
-
-        if (FAILED(result))
-        {
-            ERR("Lock failed with error 0x%08x", result);
-            return false;
-        }
-
-        const uint8_t *input = NULL;
-        if (attrib.enabled)
-        {
-            if (buffer)
-            {
-                BufferImpl *storage = buffer->getImplementation();
-                input = static_cast<const uint8_t*>(storage->getData()) + static_cast<int>(attrib.offset);
-            }
-            else
-            {
-                input = static_cast<const uint8_t*>(attrib.pointer);
-            }
+            BufferImpl *storage = buffer->getImplementation();
+            input = static_cast<const uint8_t*>(storage->getData()) + static_cast<int>(attrib.offset);
         }
         else
         {
-            input = reinterpret_cast<const uint8_t*>(currentValue.FloatValues);
+            input = static_cast<const uint8_t*>(attrib.pointer);
         }
-
-        if (instances == 0 || attrib.divisor == 0)
-        {
-            input += inputStride * start;
-        }
-
-        gl::VertexFormat vertexFormat(attrib, currentValue.Type);
-        const d3d9::VertexFormat &d3dVertexInfo = d3d9::GetVertexFormatInfo(mRenderer->getCapsDeclTypes(), vertexFormat);
-        bool needsConversion = (d3dVertexInfo.conversionType & VERTEX_CONVERT_CPU) > 0;
-
-        if (!needsConversion && inputStride == elementSize)
-        {
-            size_t copySize = static_cast<size_t>(count) * static_cast<size_t>(inputStride);
-            memcpy(mapPtr, input, copySize);
-        }
-        else
-        {
-            d3dVertexInfo.copyFunction(input, inputStride, count, mapPtr);
-        }
-
-        mVertexBuffer->Unlock();
-
-        return true;
     }
     else
     {
-        ERR("Vertex buffer not initialized.");
-        return false;
+        input = reinterpret_cast<const uint8_t*>(currentValue.FloatValues);
     }
+
+    if (instances == 0 || attrib.divisor == 0)
+    {
+        input += inputStride * start;
+    }
+
+    gl::VertexFormat vertexFormat(attrib, currentValue.Type);
+    const d3d9::VertexFormat &d3dVertexInfo = d3d9::GetVertexFormatInfo(mRenderer->getCapsDeclTypes(), vertexFormat);
+    bool needsConversion = (d3dVertexInfo.conversionType & VERTEX_CONVERT_CPU) > 0;
+
+    if (!needsConversion && inputStride == elementSize)
+    {
+        size_t copySize = static_cast<size_t>(count) * static_cast<size_t>(inputStride);
+        memcpy(mapPtr, input, copySize);
+    }
+    else
+    {
+        d3dVertexInfo.copyFunction(input, inputStride, count, mapPtr);
+    }
+
+    mVertexBuffer->Unlock();
+
+    return gl::Error(GL_NO_ERROR);
 }
 
-bool VertexBuffer9::getSpaceRequired(const gl::VertexAttribute &attrib, GLsizei count, GLsizei instances,
-                                     unsigned int *outSpaceRequired) const
+gl::Error VertexBuffer9::getSpaceRequired(const gl::VertexAttribute &attrib, GLsizei count, GLsizei instances,
+                                          unsigned int *outSpaceRequired) const
 {
     return spaceRequired(attrib, count, instances, outSpaceRequired);
 }
@@ -150,7 +145,7 @@ unsigned int VertexBuffer9::getBufferSize() const
     return mBufferSize;
 }
 
-bool VertexBuffer9::setBufferSize(unsigned int size)
+gl::Error VertexBuffer9::setBufferSize(unsigned int size)
 {
     if (size > mBufferSize)
     {
@@ -158,38 +153,33 @@ bool VertexBuffer9::setBufferSize(unsigned int size)
     }
     else
     {
-        return true;
+        return gl::Error(GL_NO_ERROR);
     }
 }
 
-bool VertexBuffer9::discard()
+gl::Error VertexBuffer9::discard()
 {
-    if (mVertexBuffer)
+    if (!mVertexBuffer)
     {
-        void *dummy;
-        HRESULT result;
-
-        result = mVertexBuffer->Lock(0, 1, &dummy, D3DLOCK_DISCARD);
-        if (FAILED(result))
-        {
-            ERR("Discard lock failed with error 0x%08x", result);
-            return false;
-        }
-
-        result = mVertexBuffer->Unlock();
-        if (FAILED(result))
-        {
-            ERR("Discard unlock failed with error 0x%08x", result);
-            return false;
-        }
-
-        return true;
+        return gl::Error(GL_OUT_OF_MEMORY, "Internal vertex buffer is not initialized.");
     }
-    else
+
+    void *dummy;
+    HRESULT result;
+
+    result = mVertexBuffer->Lock(0, 1, &dummy, D3DLOCK_DISCARD);
+    if (FAILED(result))
     {
-        ERR("Vertex buffer not initialized.");
-        return false;
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to lock internal buffer for discarding, HRESULT: 0x%08x", result);
     }
+
+    result = mVertexBuffer->Unlock();
+    if (FAILED(result))
+    {
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to unlock internal buffer for discarding, HRESULT: 0x%08x", result);
+    }
+
+    return gl::Error(GL_NO_ERROR);
 }
 
 IDirect3DVertexBuffer9 * VertexBuffer9::getBuffer() const
@@ -197,8 +187,8 @@ IDirect3DVertexBuffer9 * VertexBuffer9::getBuffer() const
     return mVertexBuffer;
 }
 
-bool VertexBuffer9::spaceRequired(const gl::VertexAttribute &attrib, std::size_t count, GLsizei instances,
-                                  unsigned int *outSpaceRequired) const
+gl::Error VertexBuffer9::spaceRequired(const gl::VertexAttribute &attrib, std::size_t count, GLsizei instances,
+                                       unsigned int *outSpaceRequired) const
 {
     gl::VertexFormat vertexFormat(attrib, GL_FLOAT);
     const d3d9::VertexFormat &d3d9VertexInfo = d3d9::GetVertexFormatInfo(mRenderer->getCapsDeclTypes(), vertexFormat);
@@ -222,11 +212,11 @@ bool VertexBuffer9::spaceRequired(const gl::VertexAttribute &attrib, std::size_t
             {
                 *outSpaceRequired = d3d9VertexInfo.outputElementSize * elementCount;
             }
-            return true;
+            return gl::Error(GL_NO_ERROR);
         }
         else
         {
-            return false;
+            return gl::Error(GL_OUT_OF_MEMORY, "New vertex buffer size would result in an overflow.");
         }
     }
     else
@@ -236,7 +226,7 @@ bool VertexBuffer9::spaceRequired(const gl::VertexAttribute &attrib, std::size_t
         {
             *outSpaceRequired = elementSize * 4;
         }
-        return true;
+        return gl::Error(GL_NO_ERROR);
     }
 }
 

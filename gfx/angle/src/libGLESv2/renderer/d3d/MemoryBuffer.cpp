@@ -5,6 +5,7 @@
 //
 
 #include "libGLESv2/renderer/d3d/MemoryBuffer.h"
+#include "common/debug.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -28,7 +29,9 @@ bool MemoryBuffer::resize(size_t size)
 {
     if (size == 0)
     {
-        clear();
+        free(mData);
+        mData = NULL;
+        mSize = 0;
     }
     else
     {
@@ -64,14 +67,8 @@ const uint8_t *MemoryBuffer::data() const
 
 uint8_t *MemoryBuffer::data()
 {
+    ASSERT(mData);
     return mData;
-}
-
-void MemoryBuffer::clear()
-{
-    free(mData);
-    mData = NULL;
-    mSize = 0;
 }
 
 }

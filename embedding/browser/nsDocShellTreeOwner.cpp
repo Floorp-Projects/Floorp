@@ -1135,7 +1135,7 @@ ChromeTooltipListener::ChromeTooltipListener(nsWebBrowser* inBrowser,
   : mWebBrowser(inBrowser), mWebBrowserChrome(inChrome),
      mTooltipListenerInstalled(false),
      mMouseClientX(0), mMouseClientY(0),
-     mShowingTooltip(false)
+     mShowingTooltip(false), mTooltipShownOnce(false)
 {
   mTooltipTextProvider = do_GetService(NS_TOOLTIPTEXTPROVIDER_CONTRACTID);
   if (!mTooltipTextProvider) {
@@ -1270,11 +1270,17 @@ ChromeTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
   aEvent->GetType(eventType);
 
   if (eventType.EqualsLiteral("keydown") ||
-      eventType.EqualsLiteral("mousedown") ||
-      eventType.EqualsLiteral("mouseout"))
+      eventType.EqualsLiteral("mousedown")) {
     return HideTooltip();
-  if (eventType.EqualsLiteral("mousemove"))
+  }
+  else if (eventType.EqualsLiteral("mouseout")) {
+    // Reset flag so that tooltip will display on the next MouseMove
+    mTooltipShownOnce = false;
+    return HideTooltip();
+  }
+  else if (eventType.EqualsLiteral("mousemove")) {
     return MouseMove(aEvent);
+  }
 
   NS_ERROR("Unexpected event type");
   return NS_OK;
@@ -1302,35 +1308,43 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   mouseEvent->GetClientY(&newMouseY);
   if ( mMouseClientX == newMouseX && mMouseClientY == newMouseY )
     return NS_OK;
+
+  // Filter out minor mouse movements.
+  if (mShowingTooltip &&
+      (abs(mMouseClientX - newMouseX) <= kTooltipMouseMoveTolerance) &&
+      (abs(mMouseClientY - newMouseY) <= kTooltipMouseMoveTolerance))
+    return NS_OK;
+
   mMouseClientX = newMouseX; mMouseClientY = newMouseY;
   mouseEvent->GetScreenX(&mMouseScreenX);
   mouseEvent->GetScreenY(&mMouseScreenY);
 
-  // We want to close the tip if it is being displayed and the mouse moves. Recall 
-  // that |mShowingTooltip| is set when the popup is showing. Furthermore, as the mouse
-  // moves, we want to make sure we reset the timer to show it, so that the delay
-  // is from when the mouse stops moving, not when it enters the element.
-  if ( mShowingTooltip )
-    return HideTooltip();
-  if ( mTooltipTimer )
-    mTooltipTimer->Cancel();
-
-  mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
   if ( mTooltipTimer ) {
-    nsCOMPtr<EventTarget> eventTarget = aMouseEvent->InternalDOMEvent()->GetTarget();
-    if ( eventTarget )
-      mPossibleTooltipNode = do_QueryInterface(eventTarget);
-    if ( mPossibleTooltipNode ) {
-      nsresult rv =
-        mTooltipTimer->InitWithFuncCallback(sTooltipCallback, this,
-          LookAndFeel::GetInt(LookAndFeel::eIntID_TooltipDelay, 500),
-          nsITimer::TYPE_ONE_SHOT);
-      if (NS_FAILED(rv))
-        mPossibleTooltipNode = nullptr;
-    }
+    mTooltipTimer->Cancel();
   }
-  else
-    NS_WARNING ( "Could not create a timer for tooltip tracking" );
+
+  if (!mShowingTooltip && !mTooltipShownOnce) {
+    mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if ( mTooltipTimer ) {
+      nsCOMPtr<EventTarget> eventTarget = aMouseEvent->InternalDOMEvent()->GetTarget();
+      if ( eventTarget )
+        mPossibleTooltipNode = do_QueryInterface(eventTarget);
+      if ( mPossibleTooltipNode ) {
+        nsresult rv =
+          mTooltipTimer->InitWithFuncCallback(sTooltipCallback, this,
+            LookAndFeel::GetInt(LookAndFeel::eIntID_TooltipDelay, 500),
+            nsITimer::TYPE_ONE_SHOT);
+        if (NS_FAILED(rv))
+          mPossibleTooltipNode = nullptr;
+      }
+    }
+    else
+      NS_WARNING ( "Could not create a timer for tooltip tracking" );
+  }
+  else {
+    mTooltipShownOnce = true;
+    return HideTooltip();
+  }
 
   return NS_OK;
 
@@ -1378,10 +1392,6 @@ ChromeTooltipListener::HideTooltip()
     mTooltipTimer = nullptr;
     // release tooltip target
     mPossibleTooltipNode = nullptr;
-  }
-  if ( mAutoHideTimer ) {
-    mAutoHideTimer->Cancel();
-    mAutoHideTimer = nullptr;
   }
 
   // if we're showing the tip, tell the chrome to hide it
@@ -1461,7 +1471,6 @@ ChromeTooltipListener::sTooltipCallback(nsITimer *aTimer,
       
       if (textFound) {
         nsString tipText(tooltipText);
-        self->CreateAutoHideTimer();
         nsIntPoint screenDot = widget->WidgetToScreenOffset();
         self->ShowTooltip (self->mMouseScreenX - screenDot.x,
                            self->mMouseScreenY - screenDot.y,
@@ -1474,47 +1483,6 @@ ChromeTooltipListener::sTooltipCallback(nsITimer *aTimer,
   } // if "self" data valid
   
 } // sTooltipCallback
-
-
-//
-// CreateAutoHideTimer
-//
-// Create a new timer to see if we should auto-hide. It's ok if this fails.
-//
-void
-ChromeTooltipListener::CreateAutoHideTimer()
-{
-  // just to be anal (er, safe)
-  if ( mAutoHideTimer ) {
-    mAutoHideTimer->Cancel();
-    mAutoHideTimer = nullptr;
-  }
-  
-  mAutoHideTimer = do_CreateInstance("@mozilla.org/timer;1");
-  if ( mAutoHideTimer )
-    mAutoHideTimer->InitWithFuncCallback(sAutoHideCallback, this, kTooltipAutoHideTime, 
-                                         nsITimer::TYPE_ONE_SHOT);
-
-} // CreateAutoHideTimer
-
-
-//
-// sAutoHideCallback
-//
-// This fires after a tooltip has been open for a certain length of time. Just tell
-// the listener to close the popup. We don't have to worry, because HideTooltip() can
-// be called multiple times, even if the tip has already been closed.
-//
-void
-ChromeTooltipListener::sAutoHideCallback(nsITimer *aTimer, void* aListener)
-{
-  ChromeTooltipListener* self = static_cast<ChromeTooltipListener*>(aListener);
-  if ( self )
-    self->HideTooltip();
-
-  // NOTE: |aTimer| and |self->mAutoHideTimer| are invalid after calling ClosePopup();
-  
-} // sAutoHideCallback
 
 
 NS_IMPL_ISUPPORTS(ChromeContextMenuListener, nsIDOMEventListener)

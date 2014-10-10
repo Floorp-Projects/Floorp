@@ -10,6 +10,7 @@
 #define LIBGLESV2_RENDERER_CLEAR11_H_
 
 #include "libGLESv2/angletypes.h"
+#include "libGLESv2/Error.h"
 
 #include <map>
 #include <vector>
@@ -31,7 +32,7 @@ class Clear11
     ~Clear11();
 
     // Clears the framebuffer with the supplied clear parameters, assumes that the framebuffer is currently applied.
-    void clearFramebuffer(const gl::ClearParameters &clearParams, gl::Framebuffer *frameBuffer);
+    gl::Error clearFramebuffer(const gl::ClearParameters &clearParams, gl::Framebuffer *frameBuffer);
 
   private:
     Renderer11 *mRenderer;

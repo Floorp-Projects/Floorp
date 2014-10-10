@@ -21,12 +21,10 @@ class MemoryBuffer
 
     bool resize(size_t size);
     size_t size() const;
-    void clear();
+    bool empty() const { return mSize == 0; }
 
     const uint8_t *data() const;
     uint8_t *data();
-
-    bool empty() const { return (mSize == 0); }
 
   private:
     size_t mSize;

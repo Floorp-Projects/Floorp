@@ -21,6 +21,7 @@
 #include "compiler/translator/util.h"
 #include "compiler/translator/UniformHLSL.h"
 #include "compiler/translator/StructureHLSL.h"
+#include "compiler/translator/TranslatorHLSL.h"
 
 #include <algorithm>
 #include <cfloat>
@@ -28,18 +29,6 @@
 
 namespace sh
 {
-
-static sh::Attribute MakeAttributeFromType(const TType &type, const TString &name)
-{
-    sh::Attribute attributeVar;
-    attributeVar.type = GLVariableType(type);
-    attributeVar.precision = GLVariablePrecision(type);
-    attributeVar.name = name.c_str();
-    attributeVar.arraySize = static_cast<unsigned int>(type.getArraySize());
-    attributeVar.location = type.getLayoutQualifier().location;
-
-    return attributeVar;
-}
 
 TString OutputHLSL::TextureFunction::name() const
 {
@@ -105,8 +94,10 @@ bool OutputHLSL::TextureFunction::operator<(const TextureFunction &rhs) const
     return false;
 }
 
-OutputHLSL::OutputHLSL(TParseContext &context, const ShBuiltInResources& resources, ShShaderOutput outputType)
-    : TIntermTraverser(true, true, true), mContext(context), mOutputType(outputType)
+OutputHLSL::OutputHLSL(TParseContext &context, TranslatorHLSL *parentTranslator)
+    : TIntermTraverser(true, true, true),
+      mContext(context),
+      mOutputType(parentTranslator->getOutputType())
 {
     mUnfoldShortCircuit = new UnfoldShortCircuit(context, this);
     mInsideFunction = false;
@@ -138,6 +129,7 @@ OutputHLSL::OutputHLSL(TParseContext &context, const ShBuiltInResources& resourc
     mUsesDiscardRewriting = false;
     mUsesNestedBreak = false;
 
+    const ShBuiltInResources &resources = parentTranslator->getResources();
     mNumRenderTargets = resources.EXT_draw_buffers ? resources.MaxDrawBuffers : 1;
 
     mUniqueIndex = 0;
@@ -150,7 +142,7 @@ OutputHLSL::OutputHLSL(TParseContext &context, const ShBuiltInResources& resourc
     mExcessiveLoopIndex = NULL;
 
     mStructureHLSL = new StructureHLSL;
-    mUniformHLSL = new UniformHLSL(mStructureHLSL, mOutputType);
+    mUniformHLSL = new UniformHLSL(mStructureHLSL, parentTranslator);
 
     if (mOutputType == SH_HLSL9_OUTPUT)
     {
@@ -222,31 +214,6 @@ void OutputHLSL::makeFlaggedStructMaps(const std::vector<TIntermTyped *> &flagge
 TInfoSinkBase &OutputHLSL::getBodyStream()
 {
     return mBody;
-}
-
-const std::vector<sh::Uniform> &OutputHLSL::getUniforms()
-{
-    return mUniformHLSL->getUniforms();
-}
-
-const std::vector<sh::InterfaceBlock> &OutputHLSL::getInterfaceBlocks() const
-{
-    return mUniformHLSL->getInterfaceBlocks();
-}
-
-const std::vector<sh::Attribute> &OutputHLSL::getOutputVariables() const
-{
-    return mActiveOutputVariables;
-}
-
-const std::vector<sh::Attribute> &OutputHLSL::getAttributes() const
-{
-    return mActiveAttributes;
-}
-
-const std::vector<sh::Varying> &OutputHLSL::getVaryings() const
-{
-    return mActiveVaryings;
 }
 
 const std::map<std::string, unsigned int> &OutputHLSL::getInterfaceBlockRegisterMap() const
@@ -336,8 +303,6 @@ void OutputHLSL::header()
         // Program linking depends on this exact format
         varyings += "static " + InterpolationString(type.getQualifier()) + " " + TypeString(type) + " " +
                     Decorate(name) + ArrayString(type) + " = " + initializer(type) + ";\n";
-
-        declareVaryingToList(type, type.getQualifier(), name, mActiveVaryings);
     }
 
     for (ReferencedSymbols::const_iterator attribute = mReferencedAttributes.begin(); attribute != mReferencedAttributes.end(); attribute++)
@@ -346,9 +311,6 @@ void OutputHLSL::header()
         const TString &name = attribute->second->getSymbol();
 
         attributes += "static " + TypeString(type) + " " + Decorate(name) + ArrayString(type) + " = " + initializer(type) + ";\n";
-
-        sh::Attribute attributeVar = MakeAttributeFromType(type, name);
-        mActiveAttributes.push_back(attributeVar);
     }
 
     out << mStructureHLSL->structsHeader();
@@ -384,9 +346,6 @@ void OutputHLSL::header()
 
                 out << "static " + TypeString(variableType) + " out_" + variableName + ArrayString(variableType) +
                        " = " + initializer(variableType) + ";\n";
-
-                sh::Attribute outputVar = MakeAttributeFromType(variableType, variableName);
-                mActiveOutputVariables.push_back(outputVar);
             }
         }
         else
@@ -2920,14 +2879,6 @@ const ConstantUnion *OutputHLSL::writeConstantUnion(const TType &type, const Con
     }
 
     return constUnion;
-}
-
-void OutputHLSL::declareVaryingToList(const TType &type, TQualifier baseTypeQualifier,
-                                      const TString &name, std::vector<Varying> &fieldsOut)
-{
-    GetVariableTraverser traverser;
-    traverser.traverse(type, name, &fieldsOut);
-    fieldsOut.back().interpolation = GetInterpolationType(baseTypeQualifier);
 }
 
 }
