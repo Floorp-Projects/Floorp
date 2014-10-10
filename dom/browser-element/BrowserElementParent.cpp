@@ -76,6 +76,14 @@ CreateIframe(Element* aOpenerFrameElement, const nsAString& aName, bool aRemote)
                                        NS_LITERAL_STRING("false"),
                              /* aNotify = */ false);
 
+  // Copy the opener frame's mozprivatebrowsing attribute to the popup frame.
+  nsAutoString mozprivatebrowsing;
+  if (aOpenerFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::mozprivatebrowsing,
+                                   mozprivatebrowsing)) {
+    popupFrameElement->SetAttr(kNameSpaceID_None, nsGkAtoms::mozprivatebrowsing,
+                               mozprivatebrowsing, /* aNotify = */ false);
+  }
+
   return popupFrameElement.forget();
 }
 
