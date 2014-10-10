@@ -596,8 +596,11 @@ NO_PKG_FILES += \
 # If a manifest has not been supplied, the following
 # files should be excluded from the package too
 ifndef MOZ_PKG_MANIFEST
-NO_PKG_FILES += \
-	ssltunnel*
+NO_PKG_FILES += ssltunnel*
+endif
+
+ifdef MOZ_DMD
+NO_PKG_FILES += SmokeDMD
 endif
 
 # browser/locales/Makefile uses this makefile for its variable defs, but
