@@ -2711,10 +2711,93 @@ RunLastDitchGC(JSContext *cx, JS::Zone *zone, AllocKind thingKind)
      * return that list head.
      */
     size_t thingSize = Arena::thingSize(thingKind);
-    if (void *thing = zone->allocator.arenas.allocateFromFreeList(thingKind, thingSize))
-        return thing;
+    return zone->allocator.arenas.allocateFromFreeList(thingKind, thingSize);
+}
 
+template <AllowGC allowGC>
+/* static */ void *
+ArenaLists::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
+{
+    MOZ_ASSERT(!cx->runtime()->isHeapBusy(), "allocating while under GC");
+    MOZ_ASSERT_IF(allowGC, !cx->runtime()->currentThreadHasExclusiveAccess());
+
+    Allocator *allocator = cx->allocator();
+    Zone *zone = allocator->zone_;
+
+    // If we have grown past our GC heap threshold while in the middle of an
+    // incremental GC, we're growing faster than we're GCing, so stop the world
+    // and do a full, non-incremental GC right now, if possible.
+    const bool mustCollectNow = allowGC &&
+                                cx->runtime()->gc.incrementalState != NO_INCREMENTAL &&
+                                zone->usage.gcBytes() > zone->threshold.gcTriggerBytes();
+
+    bool outOfMemory = false;  // Set true if we fail to allocate.
+    bool ranGC = false;  // Once we've GC'd and still cannot allocate, report.
+    do {
+        if (MOZ_UNLIKELY(mustCollectNow || outOfMemory)) {
+            // If we are doing a fallible allocation, percolate up the OOM
+            // instead of reporting it.
+            if (!allowGC) {
+                MOZ_ASSERT(!mustCollectNow);
+                return nullptr;
+            }
+
+            if (void *thing = RunLastDitchGC(cx, zone, thingKind))
+                return thing;
+            ranGC = true;
+        }
+
+        AutoMaybeStartBackgroundAllocation maybeStartBGAlloc;
+        void *thing = allocator->arenas.allocateFromArenaInline(zone, thingKind, maybeStartBGAlloc);
+        if (MOZ_LIKELY(thing))
+            return thing;
+
+        // Even if allocateFromArenaInline failed due to OOM, a background
+        // finalization task may be running (freeing more memory); wait for it
+        // to finish, then try to allocate again in case it freed up the memory
+        // we need.
+        cx->runtime()->gc.waitBackgroundSweepEnd();
+
+        thing = allocator->arenas.allocateFromArenaInline(zone, thingKind, maybeStartBGAlloc);
+        if (MOZ_LIKELY(thing))
+            return thing;
+
+        // Retry after a last-ditch GC, unless we've already tried that.
+        outOfMemory = true;
+    } while (!ranGC);
+
+    MOZ_ASSERT(allowGC, "A fallible allocation must not report OOM on failure.");
+    js_ReportOutOfMemory(cx);
     return nullptr;
+}
+
+/* static */ void *
+ArenaLists::refillFreeListOffMainThread(ExclusiveContext *cx, AllocKind thingKind)
+{
+    Allocator *allocator = cx->allocator();
+    Zone *zone = allocator->zone_;
+    JSRuntime *rt = zone->runtimeFromAnyThread();
+
+    AutoMaybeStartBackgroundAllocation maybeStartBGAlloc;
+
+    // If we're off the main thread, we try to allocate once and return
+    // whatever value we get. We need to first ensure the main thread is not in
+    // a GC session.
+    AutoLockHelperThreadState lock;
+    while (rt->isHeapBusy())
+        HelperThreadState().wait(GlobalHelperThreadState::PRODUCER);
+
+    return allocator->arenas.allocateFromArenaInline(zone, thingKind, maybeStartBGAlloc);
+}
+
+/* static */ void *
+ArenaLists::refillFreeListPJS(ForkJoinContext *cx, AllocKind thingKind)
+{
+    Allocator *allocator = cx->allocator();
+    Zone *zone = allocator->zone_;
+
+    AutoMaybeStartBackgroundAllocation maybeStartBGAlloc;
+    return allocator->arenas.allocateFromArenaInline(zone, thingKind, maybeStartBGAlloc);
 }
 
 template <AllowGC allowGC>
@@ -2722,81 +2805,14 @@ template <AllowGC allowGC>
 ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
 {
     MOZ_ASSERT(cx->allocator()->arenas.freeLists[thingKind].isEmpty());
-    MOZ_ASSERT_IF(cx->isJSContext(), !cx->asJSContext()->runtime()->isHeapBusy());
 
-    Zone *zone = cx->allocator()->zone_;
+    if (cx->isJSContext())
+        return refillFreeListFromMainThread<allowGC>(cx->asJSContext(), thingKind);
 
-    bool runGC = cx->allowGC() && allowGC &&
-                 cx->asJSContext()->runtime()->gc.incrementalState != NO_INCREMENTAL &&
-                 zone->usage.gcBytes() > zone->threshold.gcTriggerBytes();
+    if (cx->allocator()->zone_->runtimeFromAnyThread()->exclusiveThreadsPresent())
+        return refillFreeListOffMainThread(cx->asExclusiveContext(), thingKind);
 
-    MOZ_ASSERT_IF(cx->isJSContext() && allowGC,
-                  !cx->asJSContext()->runtime()->currentThreadHasExclusiveAccess());
-
-    for (;;) {
-        if (MOZ_UNLIKELY(runGC)) {
-            if (void *thing = RunLastDitchGC(cx->asJSContext(), zone, thingKind))
-                return thing;
-        }
-
-        AutoMaybeStartBackgroundAllocation maybeStartBackgroundAllocation;
-
-        if (cx->isJSContext()) {
-            /*
-             * allocateFromArena may fail while the background finalization still
-             * run. If we are on the main thread, we want to wait for it to finish
-             * and restart. However, checking for that is racy as the background
-             * finalization could free some things after allocateFromArena decided
-             * to fail but at this point it may have already stopped. To avoid
-             * this race we always try to allocate twice.
-             */
-            for (bool secondAttempt = false; ; secondAttempt = true) {
-                void *thing = cx->allocator()->arenas.allocateFromArenaInline(zone, thingKind,
-                                                                              maybeStartBackgroundAllocation);
-                if (MOZ_LIKELY(!!thing))
-                    return thing;
-                if (secondAttempt)
-                    break;
-
-                cx->asJSContext()->runtime()->gc.waitBackgroundSweepEnd();
-            }
-        } else {
-            /*
-             * If we're off the main thread, we try to allocate once and
-             * return whatever value we get. If we aren't in a ForkJoin
-             * session (i.e. we are in a helper thread async with the main
-             * thread), we need to first ensure the main thread is not in a GC
-             * session.
-             */
-            mozilla::Maybe<AutoLockHelperThreadState> lock;
-            JSRuntime *rt = zone->runtimeFromAnyThread();
-            if (rt->exclusiveThreadsPresent()) {
-                lock.emplace();
-                while (rt->isHeapBusy())
-                    HelperThreadState().wait(GlobalHelperThreadState::PRODUCER);
-            }
-
-            void *thing = cx->allocator()->arenas.allocateFromArenaInline(zone, thingKind,
-                                                                          maybeStartBackgroundAllocation);
-            if (thing)
-                return thing;
-        }
-
-        if (!cx->allowGC() || !allowGC)
-            return nullptr;
-
-        /*
-         * We failed to allocate. Run the GC if we haven't done it already.
-         * Otherwise report OOM.
-         */
-        if (runGC)
-            break;
-        runGC = true;
-    }
-
-    MOZ_ASSERT(allowGC);
-    js_ReportOutOfMemory(cx);
-    return nullptr;
+    return refillFreeListPJS(cx->asForkJoinContext(), thingKind);
 }
 
 template void *

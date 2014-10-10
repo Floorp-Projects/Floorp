@@ -28,7 +28,6 @@
 #include "mozilla/net/ChannelDiverterChild.h"
 #include "mozilla/net/DNS.h"
 #include "SerializedLoadContext.h"
-#include "nsPerformance.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -506,39 +505,34 @@ class StopRequestEvent : public ChannelEvent
 {
  public:
   StopRequestEvent(HttpChannelChild* child,
-                   const nsresult& channelStatus,
-                   const ResourceTimingStruct& timing)
+                   const nsresult& channelStatus)
   : mChild(child)
-  , mChannelStatus(channelStatus)
-  , mTiming(timing) {}
+  , mChannelStatus(channelStatus) {}
 
-  void Run() { mChild->OnStopRequest(mChannelStatus, mTiming); }
+  void Run() { mChild->OnStopRequest(mChannelStatus); }
  private:
   HttpChannelChild* mChild;
   nsresult mChannelStatus;
-  ResourceTimingStruct mTiming;
 };
 
 bool
-HttpChannelChild::RecvOnStopRequest(const nsresult& channelStatus,
-                                    const ResourceTimingStruct& timing)
+HttpChannelChild::RecvOnStopRequest(const nsresult& channelStatus)
 {
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
     "Should not be receiving any more callbacks from parent!");
 
   if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new StopRequestEvent(this, channelStatus, timing));
+    mEventQ->Enqueue(new StopRequestEvent(this, channelStatus));
   } else {
     MOZ_ASSERT(!mDivertingToParent, "ShouldEnqueue when diverting to parent!");
 
-    OnStopRequest(channelStatus, timing);
+    OnStopRequest(channelStatus);
   }
   return true;
 }
 
 void
-HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
-                                const ResourceTimingStruct& timing)
+HttpChannelChild::OnStopRequest(const nsresult& channelStatus)
 {
   LOG(("HttpChannelChild::OnStopRequest [this=%p status=%x]\n",
            this, channelStatus));
@@ -549,22 +543,6 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
 
     SendDivertOnStopRequest(channelStatus);
     return;
-  }
-
-  mTransactionTimings.domainLookupStart = timing.domainLookupStart;
-  mTransactionTimings.domainLookupEnd = timing.domainLookupEnd;
-  mTransactionTimings.connectStart = timing.connectStart;
-  mTransactionTimings.connectEnd = timing.connectEnd;
-  mTransactionTimings.requestStart = timing.requestStart;
-  mTransactionTimings.responseStart = timing.responseStart;
-  mTransactionTimings.responseEnd = timing.responseEnd;
-  mAsyncOpenTime = timing.fetchStart;
-  mRedirectStartTimeStamp = timing.redirectStart;
-  mRedirectEndTimeStamp = timing.redirectEnd;
-
-  nsPerformance* documentPerformance = GetPerformance();
-  if (documentPerformance) {
-      documentPerformance->AddEntry(this, this);
   }
 
   mIsPending = false;

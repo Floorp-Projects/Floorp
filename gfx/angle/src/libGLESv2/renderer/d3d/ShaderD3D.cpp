@@ -16,19 +16,36 @@
 namespace rx
 {
 
+template <typename VarT>
+void FilterInactiveVariables(std::vector<VarT> *variableList)
+{
+    ASSERT(variableList);
+
+    for (size_t varIndex = 0; varIndex < variableList->size();)
+    {
+        if (!(*variableList)[varIndex].staticUse)
+        {
+            variableList->erase(variableList->begin() + varIndex);
+        }
+        else
+        {
+            varIndex++;
+        }
+    }
+}
+
 void *ShaderD3D::mFragmentCompiler = NULL;
 void *ShaderD3D::mVertexCompiler = NULL;
 
 template <typename VarT>
 const std::vector<VarT> *GetShaderVariables(const std::vector<VarT> *variableList)
 {
-    // TODO: handle staticUse. for now, assume all returned variables are active.
     ASSERT(variableList);
     return variableList;
 }
 
-ShaderD3D::ShaderD3D(rx::Renderer *renderer)
-    : ShaderImpl(),
+ShaderD3D::ShaderD3D(GLenum type, rx::Renderer *renderer)
+    : mType(type),
       mRenderer(renderer),
       mShaderVersion(100)
 {
@@ -111,12 +128,12 @@ void ShaderD3D::parseVaryings(void *compiler)
 {
      if (!mHlsl.empty())
     {
-        const std::vector<sh::Varying> *activeVaryings = ShGetVaryings(compiler);
-        ASSERT(activeVaryings);
+        const std::vector<sh::Varying> *varyings = ShGetVaryings(compiler);
+        ASSERT(varyings);
 
-        for (size_t varyingIndex = 0; varyingIndex < activeVaryings->size(); varyingIndex++)
+        for (size_t varyingIndex = 0; varyingIndex < varyings->size(); varyingIndex++)
         {
-            mVaryings.push_back(gl::PackedVarying((*activeVaryings)[varyingIndex]));
+            mVaryings.push_back(gl::PackedVarying((*varyings)[varyingIndex]));
         }
 
         mUsesMultipleRenderTargets = mHlsl.find("GL_USES_MRT")          != std::string::npos;
@@ -135,7 +152,7 @@ void ShaderD3D::parseVaryings(void *compiler)
 
 void ShaderD3D::resetVaryingsRegisterAssignment()
 {
-    for (unsigned int varyingIndex = 0; varyingIndex < mVaryings.size(); varyingIndex++)
+    for (size_t varyingIndex = 0; varyingIndex < mVaryings.size(); varyingIndex++)
     {
         mVaryings[varyingIndex].resetRegisterAssignment();
     }
@@ -147,9 +164,6 @@ void ShaderD3D::uncompile()
     // set by compileToHLSL
     mHlsl.clear();
     mInfoLog.clear();
-
-    // set by parseVaryings
-    mVaryings.clear();
 
     mUsesMultipleRenderTargets = false;
     mUsesFragColor = false;
@@ -164,8 +178,11 @@ void ShaderD3D::uncompile()
     mUsesDiscardRewriting = false;
     mUsesNestedBreak = false;
 
-    mActiveUniforms.clear();
-    mActiveInterfaceBlocks.clear();
+    mVaryings.clear();
+    mUniforms.clear();
+    mInterfaceBlocks.clear();
+    mActiveAttributes.clear();
+    mActiveOutputVariables.clear();
 }
 
 void ShaderD3D::compileToHLSL(void *compiler, const std::string &source)
@@ -173,7 +190,7 @@ void ShaderD3D::compileToHLSL(void *compiler, const std::string &source)
     // ensure the compiler is loaded
     initializeCompiler();
 
-    int compileOptions = SH_OBJECT_CODE;
+    int compileOptions = (SH_OBJECT_CODE | SH_VARIABLES);
     std::string sourcePath;
     if (gl::perfActive())
     {
@@ -218,8 +235,8 @@ void ShaderD3D::compileToHLSL(void *compiler, const std::string &source)
         size_t objCodeLen = 0;
         ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &objCodeLen);
 
-        char* outputHLSL = new char[objCodeLen];
-        ShGetObjectCode(compiler, outputHLSL);
+        std::vector<char> outputHLSL(objCodeLen);
+        ShGetObjectCode(compiler, outputHLSL.data());
 
 #ifdef _DEBUG
         std::ostringstream hlslStream;
@@ -237,40 +254,44 @@ void ShaderD3D::compileToHLSL(void *compiler, const std::string &source)
             curPos = (nextLine == std::string::npos) ? std::string::npos : (nextLine + 1);
         }
         hlslStream << "\n\n";
-        hlslStream << outputHLSL;
+        hlslStream << outputHLSL.data();
         mHlsl = hlslStream.str();
 #else
-        mHlsl = outputHLSL;
+        mHlsl = outputHLSL.data();
 #endif
 
-        SafeDeleteArray(outputHLSL);
+        mUniforms = *GetShaderVariables(ShGetUniforms(compiler));
 
-        mActiveUniforms = *GetShaderVariables(ShGetUniforms(compiler));
-
-        for (size_t uniformIndex = 0; uniformIndex < mActiveUniforms.size(); uniformIndex++)
+        for (size_t uniformIndex = 0; uniformIndex < mUniforms.size(); uniformIndex++)
         {
-            const sh::Uniform &uniform = mActiveUniforms[uniformIndex];
+            const sh::Uniform &uniform = mUniforms[uniformIndex];
 
-            unsigned int index = -1;
-            bool result = ShGetUniformRegister(compiler, uniform.name.c_str(), &index);
-            UNUSED_ASSERTION_VARIABLE(result);
-            ASSERT(result);
+            if (uniform.staticUse)
+            {
+                unsigned int index = -1;
+                bool result = ShGetUniformRegister(compiler, uniform.name.c_str(), &index);
+                UNUSED_ASSERTION_VARIABLE(result);
+                ASSERT(result);
 
-            mUniformRegisterMap[uniform.name] = index;
+                mUniformRegisterMap[uniform.name] = index;
+            }
         }
 
-        mActiveInterfaceBlocks = *GetShaderVariables(ShGetInterfaceBlocks(compiler));
+        mInterfaceBlocks = *GetShaderVariables(ShGetInterfaceBlocks(compiler));
 
-        for (size_t blockIndex = 0; blockIndex < mActiveInterfaceBlocks.size(); blockIndex++)
+        for (size_t blockIndex = 0; blockIndex < mInterfaceBlocks.size(); blockIndex++)
         {
-            const sh::InterfaceBlock &interfaceBlock = mActiveInterfaceBlocks[blockIndex];
+            const sh::InterfaceBlock &interfaceBlock = mInterfaceBlocks[blockIndex];
 
-            unsigned int index = -1;
-            bool result = ShGetInterfaceBlockRegister(compiler, interfaceBlock.name.c_str(), &index);
-            UNUSED_ASSERTION_VARIABLE(result);
-            ASSERT(result);
+            if (interfaceBlock.staticUse)
+            {
+                unsigned int index = -1;
+                bool result = ShGetInterfaceBlockRegister(compiler, interfaceBlock.name.c_str(), &index);
+                UNUSED_ASSERTION_VARIABLE(result);
+                ASSERT(result);
 
-            mInterfaceBlockRegisterMap[interfaceBlock.name] = index;
+                mInterfaceBlockRegisterMap[interfaceBlock.name] = index;
+            }
         }
     }
     else
@@ -278,11 +299,11 @@ void ShaderD3D::compileToHLSL(void *compiler, const std::string &source)
         size_t infoLogLen = 0;
         ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &infoLogLen);
 
-        char* infoLog = new char[infoLogLen];
-        ShGetInfoLog(compiler, infoLog);
-        mInfoLog = infoLog;
+        std::vector<char> infoLog(infoLogLen);
+        ShGetInfoLog(compiler, infoLog.data());
+        mInfoLog = infoLog.data();
 
-        TRACE("\n%s", mInfoLog.c_str());
+        TRACE("\n%s", infoLog.data());
     }
 }
 
@@ -325,7 +346,7 @@ bool ShaderD3D::compareVarying(const gl::PackedVarying &x, const gl::PackedVaryi
         return true;
     }
 
-    return gl::VariableSortOrder(x.type) <= gl::VariableSortOrder(y.type);
+    return gl::VariableSortOrder(x.type) < gl::VariableSortOrder(y.type);
 }
 
 unsigned int ShaderD3D::getUniformRegister(const std::string &uniformName) const
@@ -340,15 +361,28 @@ unsigned int ShaderD3D::getInterfaceBlockRegister(const std::string &blockName) 
     return mInterfaceBlockRegisterMap.find(blockName)->second;
 }
 
+void *ShaderD3D::getCompiler()
+{
+    if (mType == GL_VERTEX_SHADER)
+    {
+        return mVertexCompiler;
+    }
+    else
+    {
+        ASSERT(mType == GL_FRAGMENT_SHADER);
+        return mFragmentCompiler;
+    }
+}
+
 ShShaderOutput ShaderD3D::getCompilerOutputType(GLenum shader)
 {
     void *compiler = NULL;
 
     switch (shader)
     {
-    case GL_VERTEX_SHADER:   compiler = mVertexCompiler;   break;
-    case GL_FRAGMENT_SHADER: compiler = mFragmentCompiler; break;
-    default: UNREACHABLE();  return SH_HLSL9_OUTPUT;
+      case GL_VERTEX_SHADER:   compiler = mVertexCompiler;   break;
+      case GL_FRAGMENT_SHADER: compiler = mFragmentCompiler; break;
+      default: UNREACHABLE();  return SH_HLSL9_OUTPUT;
     }
 
     size_t outputType = 0;
@@ -357,60 +391,52 @@ ShShaderOutput ShaderD3D::getCompilerOutputType(GLenum shader)
     return static_cast<ShShaderOutput>(outputType);
 }
 
-VertexShaderD3D::VertexShaderD3D(rx::Renderer *renderer) : ShaderD3D(renderer)
-{
-}
-
-VertexShaderD3D::~VertexShaderD3D()
-{
-}
-
-VertexShaderD3D *VertexShaderD3D::makeVertexShaderD3D(ShaderImpl *impl)
-{
-    ASSERT(HAS_DYNAMIC_TYPE(VertexShaderD3D*, impl));
-    return static_cast<VertexShaderD3D*>(impl);
-}
-
-const VertexShaderD3D *VertexShaderD3D::makeVertexShaderD3D(const ShaderImpl *impl)
-{
-    ASSERT(HAS_DYNAMIC_TYPE(const VertexShaderD3D*, impl));
-    return static_cast<const VertexShaderD3D*>(impl);
-}
-
-bool VertexShaderD3D::compile(const std::string &source)
+bool ShaderD3D::compile(const std::string &source)
 {
     uncompile();
 
-    compileToHLSL(mVertexCompiler, source);
-    parseAttributes();
-    parseVaryings(mVertexCompiler);
+    void *compiler = getCompiler();
+
+    compileToHLSL(compiler, source);
+
+    if (mType == GL_VERTEX_SHADER)
+    {
+        parseAttributes(compiler);
+    }
+
+    parseVaryings(compiler);
+
+    if (mType == GL_FRAGMENT_SHADER)
+    {
+        std::sort(mVaryings.begin(), mVaryings.end(), compareVarying);
+
+        const std::string &hlsl = getTranslatedSource();
+        if (!hlsl.empty())
+        {
+            mActiveOutputVariables = *GetShaderVariables(ShGetOutputVariables(compiler));
+            FilterInactiveVariables(&mActiveOutputVariables);
+        }
+    }
 
     return !getTranslatedSource().empty();
 }
 
-void VertexShaderD3D::uncompile()
-{
-    ShaderD3D::uncompile();
-
-    // set by ParseAttributes
-    mActiveAttributes.clear();
-}
-
-void VertexShaderD3D::parseAttributes()
+void ShaderD3D::parseAttributes(void *compiler)
 {
     const std::string &hlsl = getTranslatedSource();
     if (!hlsl.empty())
     {
-        mActiveAttributes = *GetShaderVariables(ShGetAttributes(mVertexCompiler));
+        mActiveAttributes = *GetShaderVariables(ShGetAttributes(compiler));
+        FilterInactiveVariables(&mActiveAttributes);
     }
 }
 
-int VertexShaderD3D::getSemanticIndex(const std::string &attributeName)
+int ShaderD3D::getSemanticIndex(const std::string &attributeName) const
 {
     if (!attributeName.empty())
     {
         int semanticIndex = 0;
-        for (unsigned int attributeIndex = 0; attributeIndex < mActiveAttributes.size(); attributeIndex++)
+        for (size_t attributeIndex = 0; attributeIndex < mActiveAttributes.size(); attributeIndex++)
         {
             const sh::ShaderVariable &attribute = mActiveAttributes[attributeIndex];
 
@@ -424,50 +450,6 @@ int VertexShaderD3D::getSemanticIndex(const std::string &attributeName)
     }
 
     return -1;
-}
-
-FragmentShaderD3D::FragmentShaderD3D(rx::Renderer *renderer) : ShaderD3D(renderer)
-{
-}
-
-FragmentShaderD3D::~FragmentShaderD3D()
-{
-}
-
-FragmentShaderD3D *FragmentShaderD3D::makeFragmentShaderD3D(ShaderImpl *impl)
-{
-    ASSERT(HAS_DYNAMIC_TYPE(FragmentShaderD3D*, impl));
-    return static_cast<FragmentShaderD3D*>(impl);
-}
-
-const FragmentShaderD3D *FragmentShaderD3D::makeFragmentShaderD3D(const ShaderImpl *impl)
-{
-    ASSERT(HAS_DYNAMIC_TYPE(const FragmentShaderD3D*, impl));
-    return static_cast<const FragmentShaderD3D*>(impl);
-}
-
-bool FragmentShaderD3D::compile(const std::string &source)
-{
-    uncompile();
-
-    compileToHLSL(mFragmentCompiler, source);
-    parseVaryings(mFragmentCompiler);
-    std::sort(mVaryings.begin(), mVaryings.end(), compareVarying);
-
-    const std::string &hlsl = getTranslatedSource();
-    if (!hlsl.empty())
-    {
-        mActiveOutputVariables = *GetShaderVariables(ShGetOutputVariables(mFragmentCompiler));
-        return true;
-    }
-    return false;
-}
-
-void FragmentShaderD3D::uncompile()
-{
-    ShaderD3D::uncompile();
-
-    mActiveOutputVariables.clear();
 }
 
 }

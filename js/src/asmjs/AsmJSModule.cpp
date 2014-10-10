@@ -81,6 +81,7 @@ AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t
     dynamicallyLinked_(false),
     loadedFromCache_(false),
     profilingEnabled_(false),
+    interrupted_(false),
     codeIsProtected_(false)
 {
     mozilla::PodZero(&pod);
@@ -95,6 +96,8 @@ AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t
 
 AsmJSModule::~AsmJSModule()
 {
+    MOZ_ASSERT(!interrupted_);
+
     scriptSource_->decref();
 
     if (code_) {
@@ -446,8 +449,11 @@ AsmJSReportOverRecursed()
 static bool
 AsmJSHandleExecutionInterrupt()
 {
-    JSContext *cx = PerThreadData::innermostAsmJSActivation()->cx();
-    return HandleExecutionInterrupt(cx);
+    AsmJSActivation *act = PerThreadData::innermostAsmJSActivation();
+    act->module().setInterrupted(true);
+    bool ret = HandleExecutionInterrupt(act->cx());
+    act->module().setInterrupted(false);
+    return ret;
 }
 
 static int32_t
@@ -1546,6 +1552,13 @@ AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) con
 bool
 AsmJSModule::changeHeap(Handle<ArrayBufferObject*> newBuffer, JSContext *cx)
 {
+    // Content JS should not be able to run (and change heap) from within an
+    // interrupt callback, but in case it does, fail to change heap. Otherwise,
+    // the heap can change at every single instruction which would prevent
+    // future optimizations like heap-base hoisting.
+    if (interrupted_)
+        return false;
+
     uint32_t heapLength = newBuffer->byteLength();
     if (heapLength & pod.heapLengthMask_ || heapLength < pod.minHeapLength_)
         return false;

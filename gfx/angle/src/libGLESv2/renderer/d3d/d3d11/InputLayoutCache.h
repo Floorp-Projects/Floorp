@@ -11,6 +11,7 @@
 #define LIBGLESV2_RENDERER_INPUTLAYOUTCACHE_H_
 
 #include "libGLESv2/Constants.h"
+#include "libGLESv2/Error.h"
 #include "common/angleutils.h"
 
 #include <GLES2/gl2.h>
@@ -37,8 +38,8 @@ class InputLayoutCache
     void clear();
     void markDirty();
 
-    GLenum applyVertexBuffers(TranslatedAttribute attributes[gl::MAX_VERTEX_ATTRIBS],
-                              gl::ProgramBinary *programBinary);
+    gl::Error applyVertexBuffers(TranslatedAttribute attributes[gl::MAX_VERTEX_ATTRIBS],
+                                 gl::ProgramBinary *programBinary);
 
   private:
     DISALLOW_COPY_AND_ASSIGN(InputLayoutCache);
