@@ -74,7 +74,7 @@ protected:
 private:
   void End();
 
-  void SendAudioImpl(int16_t* aData, uint32_t aDataLen);
+  void SendAudioImpl(nsRefPtr<mozilla::SharedBuffer>& aSamples, uint32_t aDataLen);
 
   nsRefPtr<SourceMediaStream> mStream;
 

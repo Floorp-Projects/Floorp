@@ -126,6 +126,8 @@ bool ParseMetricsTable(const ots::OpenTypeFile *file,
       return OTS_FAILURE_MSG("Failed to read metric %d", i);
     }
 
+    // This check is bogus, see https://github.com/khaledhosny/ots/issues/36
+#if 0
     // Since so many fonts don't have proper value on |adv| and |sb|,
     // we should not call ots_failure() here. For example, about 20% of fonts
     // in http://www.princexml.com/fonts/ (200+ fonts) fails these tests.
@@ -138,6 +140,7 @@ bool ParseMetricsTable(const ots::OpenTypeFile *file,
       OTS_WARNING("bad sb: %d < %d", sb, header->min_sb1);
       sb = header->min_sb1;
     }
+#endif
 
     metrics->entries.push_back(std::make_pair(adv, sb));
   }
@@ -150,12 +153,15 @@ bool ParseMetricsTable(const ots::OpenTypeFile *file,
       return OTS_FAILURE_MSG("Failed to read side bearing %d", i + num_metrics);
     }
 
+    // This check is bogus, see https://github.com/khaledhosny/ots/issues/36
+#if 0
     if (sb < header->min_sb1) {
       // The same as above. Three fonts in http://www.fontsquirrel.com/fontface
       // (e.g., Notice2Std.otf) have weird lsb values.
       OTS_WARNING("bad lsb: %d < %d", sb, header->min_sb1);
       sb = header->min_sb1;
     }
+#endif
 
     metrics->sbs.push_back(sb);
   }

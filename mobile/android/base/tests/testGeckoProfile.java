@@ -4,19 +4,18 @@
 
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.GeckoProfileDirectories;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.INIParser;
-import org.mozilla.gecko.util.INISection;
-
-import android.view.View;
-
 import java.io.File;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoProfileDirectories;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.util.INIParser;
+import org.mozilla.gecko.util.INISection;
+
+import android.content.Context;
 import android.text.TextUtils;
 
 /**
@@ -278,5 +277,14 @@ public class testGeckoProfile extends PixelTest {
         }
 
         return null;
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        // Clear SharedPreferences.
+        final Context context = getInstrumentation().getContext();
+        GeckoSharedPrefs.forProfile(context).edit().clear().apply();
+
+        super.tearDown();
     }
 }

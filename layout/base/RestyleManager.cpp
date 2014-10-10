@@ -69,6 +69,7 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mIsProcessingAnimationStyleChange(false)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
+  , mRebuildAllRestyleHint(nsRestyleHint(0))
   , mLastUpdateForThrottledAnimations(aPresContext->RefreshDriver()->
                                         MostRecentRefresh())
   , mAnimationGeneration(0)
@@ -1409,7 +1410,8 @@ RestyleManager::RestyleForRemove(Element* aContainer,
 }
 
 void
-RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint)
+RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
+                                    nsRestyleHint aRestyleHint)
 {
   NS_ASSERTION(!(aExtraHint & nsChangeHint_ReconstructFrame),
                "Should not reconstruct the root of the frame tree.  "
@@ -1417,7 +1419,9 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint)
 
   mRebuildAllStyleData = false;
   NS_UpdateHint(aExtraHint, mRebuildAllExtraHint);
+  aRestyleHint |= mRebuildAllRestyleHint;
   mRebuildAllExtraHint = nsChangeHint(0);
+  mRebuildAllRestyleHint = nsRestyleHint(0);
 
   nsIPresShell* presShell = mPresContext->GetPresShell();
   if (!presShell || !presShell->GetRootFrame())
@@ -1448,13 +1452,7 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint)
   mSkipAnimationRules = true;
   mPostAnimationRestyles = true;
 
-  // FIXME (bug 1047928): Many of the callers probably don't need
-  // eRestyle_Subtree because they're changing things that affect data
-  // computation rather than selector matching; we could have a restyle
-  // hint passed in, and substantially improve the performance of things
-  // like pref changes and the restyling that we do for downloadable
-  // font loads.
-  DoRebuildAllStyleData(mPendingRestyles, aExtraHint, eRestyle_Subtree);
+  DoRebuildAllStyleData(mPendingRestyles, aExtraHint, aRestyleHint);
 
   mPostAnimationRestyles = false;
   mSkipAnimationRules = false;
@@ -1589,7 +1587,7 @@ RestyleManager::ProcessPendingRestyles()
     // We probably wasted a lot of work up above, but this seems safest
     // and it should be rarely used.
     // This might add us as a refresh observer again; that's ok.
-    RebuildAllStyleData(nsChangeHint(0));
+    RebuildAllStyleData(nsChangeHint(0), nsRestyleHint(0));
   }
 }
 
@@ -1691,7 +1689,8 @@ RestyleManager::PostRestyleEventInternal(bool aForLazyConstruction)
 }
 
 void
-RestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
+RestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
+                                             nsRestyleHint aRestyleHint)
 {
   NS_ASSERTION(!(aExtraHint & nsChangeHint_ReconstructFrame),
                "Should not reconstruct the root of the frame tree.  "
@@ -1699,6 +1698,7 @@ RestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
 
   mRebuildAllStyleData = true;
   NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
+  mRebuildAllRestyleHint |= aRestyleHint;
 
   // Get a restyle event posted if necessary
   PostRestyleEventInternal(false);

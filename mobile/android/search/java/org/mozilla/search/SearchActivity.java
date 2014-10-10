@@ -5,6 +5,7 @@
 package org.mozilla.search;
 
 import org.mozilla.gecko.LocaleAware;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;

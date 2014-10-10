@@ -472,6 +472,7 @@ public:
    * -- leave them as uninitialized memory.
    */
   bool growByUninitialized(size_t aIncr);
+  void infallibleGrowByUninitialized(size_t aIncr);
   bool resizeUninitialized(size_t aNewLength);
 
   /** Shorthand for shrinkBy(length()). */
@@ -879,6 +880,14 @@ VectorBase<T, N, AP, TV>::growByUninitialized(size_t aIncr)
   if (aIncr > mCapacity - mLength && !growStorageBy(aIncr)) {
     return false;
   }
+  infallibleGrowByUninitialized(aIncr);
+  return true;
+}
+
+template<typename T, size_t N, class AP, class TV>
+MOZ_ALWAYS_INLINE void
+VectorBase<T, N, AP, TV>::infallibleGrowByUninitialized(size_t aIncr)
+{
   MOZ_ASSERT(mLength + aIncr <= mCapacity);
   mLength += aIncr;
 #ifdef DEBUG
@@ -886,7 +895,6 @@ VectorBase<T, N, AP, TV>::growByUninitialized(size_t aIncr)
     mReserved = mLength;
   }
 #endif
-  return true;
 }
 
 template<typename T, size_t N, class AP, class TV>

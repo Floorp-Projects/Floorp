@@ -77,6 +77,7 @@ var ignoreCallees = {
     "mozilla::CycleCollectedJSRuntime.NoteCustomGCThingXPCOMChildren" : true, // During tracing, cannot GC.
     "PLDHashTableOps.hashKey" : true,
     "z_stream_s.zfree" : true,
+    "GrGLInterface.fCallback" : true,
 };
 
 function fieldCallCannotGC(csu, fullfield)

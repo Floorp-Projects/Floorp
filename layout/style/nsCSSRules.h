@@ -272,18 +272,11 @@ public:
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
 
-  mozilla::dom::FontFace* GetFontFace() const { return mFontFace; }
-  void SetFontFace(mozilla::dom::FontFace* aFontFace) { mFontFace = aFontFace; }
-
   void GetDescriptors(mozilla::CSSFontFaceDescriptors& aDescriptors) const
     { aDescriptors = mDecl.mDescriptors; }
 
 protected:
   ~nsCSSFontFaceRule() {}
-
-  // The CSS-connected FontFace object reflecting this @font-face rule, if one
-  // has been created.
-  nsRefPtr<mozilla::dom::FontFace> mFontFace;
 
   friend class nsCSSFontFaceStyleDecl;
   nsCSSFontFaceStyleDecl mDecl;

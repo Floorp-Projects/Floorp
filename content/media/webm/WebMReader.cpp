@@ -31,18 +31,11 @@ public:
   static void Release(NesteggPacketHolder* aHolder) { delete aHolder; }
 };
 
-namespace mozilla {
-
-using namespace gfx;
-using namespace layers;
-
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING
 
 #ifdef PR_LOGGING
 #include "prprf.h"
-extern PRLogModuleInfo* gMediaDecoderLog;
-PRLogModuleInfo* gNesteggLog;
 #define LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
 #ifdef SEEK_LOGGING
 #define SEEK_LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
@@ -53,6 +46,14 @@ PRLogModuleInfo* gNesteggLog;
 #define LOG(type, msg)
 #define SEEK_LOG(type, msg)
 #endif
+
+namespace mozilla {
+
+using namespace gfx;
+using namespace layers;
+
+extern PRLogModuleInfo* gMediaDecoderLog;
+PRLogModuleInfo* gNesteggLog;
 
 static const unsigned NS_PER_USEC = 1000;
 static const double NS_PER_S = 1e9;

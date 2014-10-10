@@ -878,12 +878,18 @@ js::math_round(JSContext *cx, unsigned argc, Value *vp)
 double
 js::math_sin_impl(MathCache *cache, double x)
 {
-    return cache->lookup(sin, x, MathCache::Sin);
+    return cache->lookup(math_sin_uncached, x, MathCache::Sin);
 }
 
 double
 js::math_sin_uncached(double x)
 {
+#ifdef _WIN64
+    // Workaround MSVC bug where sin(-0) is +0 instead of -0 on x64 on
+    // CPUs without FMA3 (pre-Haswell). See bug 1076670.
+    if (IsNegativeZero(x))
+        return -0.0;
+#endif
     return sin(x);
 }
 

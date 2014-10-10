@@ -170,6 +170,9 @@ def run_desktop_reftests(parser, options, args):
         if os.path.isfile("%s-bin" % options.app):
             options.app = "%s-bin" % options.app
 
+    if options.xrePath is None:
+        options.xrePath = os.path.dirname(options.app)
+
     if options.desktop and not options.profile:
         raise Exception("must specify --profile when specifying --desktop")
 

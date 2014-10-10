@@ -189,7 +189,7 @@ MDefinition::valueHash() const
     HashNumber out = op();
     for (size_t i = 0, e = numOperands(); i < e; i++)
         out = addU32ToHash(out, getOperand(i)->id());
-    if (MDefinition *dep = dependency())
+    if (MInstruction *dep = dependency())
         out = addU32ToHash(out, dep->id());
     return out;
 }
@@ -538,7 +538,7 @@ MDefinition::justReplaceAllUsesWith(MDefinition *dom)
     MOZ_ASSERT(dom != nullptr);
     MOZ_ASSERT(dom != this);
 
-    for (MUseIterator i(usesBegin()); i != usesEnd(); i++)
+    for (MUseIterator i(usesBegin()), e(usesEnd()); i != e; ++i)
         i->setProducerUnchecked(dom);
     dom->uses_.takeElements(uses_);
 }
@@ -1192,20 +1192,24 @@ MPhi::removeOperand(size_t index)
     // If we have phi(..., a, b, c, d, ..., z) and we plan
     // on removing a, then first shift downward so that we have
     // phi(..., b, c, d, ..., z, z):
-    size_t length = inputs_.length();
-    for (size_t i = index; i < length - 1; i++)
-        inputs_[i].replaceProducer(inputs_[i + 1].producer());
+    MUse *p = inputs_.begin() + index;
+    MUse *e = inputs_.end();
+    p->producer()->removeUse(p);
+    for (; p < e - 1; ++p) {
+        MDefinition *producer = (p + 1)->producer();
+        p->setProducerUnchecked(producer);
+        producer->replaceUse(p + 1, p);
+    }
 
     // truncate the inputs_ list:
-    inputs_[length - 1].releaseProducer();
-    inputs_.shrinkBy(1);
+    inputs_.popBack();
 }
 
 void
 MPhi::removeAllOperands()
 {
-    for (size_t i = 0; i < inputs_.length(); i++)
-        inputs_[i].releaseProducer();
+    for (MUse *p = inputs_.begin(), *e = inputs_.end(); p < e; ++p)
+        p->producer()->removeUse(p);
     inputs_.clear();
 }
 
@@ -1357,19 +1361,6 @@ MPhi::congruentTo(const MDefinition *ins) const
     return congruentIfOperandsEqual(ins);
 }
 
-bool
-MPhi::reserveLength(size_t length)
-{
-    // Initializes a new MPhi to have an Operand vector of at least the given
-    // capacity. This permits use of addInput() instead of addInputSlow(), the
-    // latter of which may call pod_realloc().
-    MOZ_ASSERT(numOperands() == 0);
-#if DEBUG
-    capacity_ = length;
-#endif
-    return inputs_.reserve(length);
-}
-
 static inline types::TemporaryTypeSet *
 MakeMIRTypeSet(MIRType type)
 {
@@ -1498,65 +1489,20 @@ MPhi::typeIncludes(MDefinition *def)
     return this->mightBeType(def->type());
 }
 
-void
-MPhi::addInput(MDefinition *ins)
-{
-    // This can only been done if the length was reserved through reserveLength,
-    // else the slower addInputSlow need to get called.
-    MOZ_ASSERT(inputs_.length() < capacity_);
-
-    inputs_.append(MUse());
-    inputs_.back().init(ins, this);
-}
-
 bool
-MPhi::addInputSlow(MDefinition *ins, bool *ptypeChange)
+MPhi::checkForTypeChange(MDefinition *ins, bool *ptypeChange)
 {
-    // The list of inputs to an MPhi is given as a vector of MUse nodes,
-    // each of which is in the list of the producer MDefinition.
-    // Because appending to a vector may reallocate the vector, it is possible
-    // that this operation may cause the producers' linked lists to reference
-    // invalid memory. Therefore, in the event of moving reallocation, each
-    // MUse must be removed and reinserted from/into its producer's use chain.
-    uint32_t index = inputs_.length();
-    bool performingRealloc = !inputs_.canAppendWithoutRealloc(1);
+    MIRType resultType = this->type();
+    types::TemporaryTypeSet *resultTypeSet = this->resultTypeSet();
 
-    // Remove all MUses from all use lists, in case pod_realloc() moves.
-    if (performingRealloc) {
-        for (uint32_t i = 0; i < index; i++) {
-            MUse *use = &inputs_[i];
-            use->producer()->removeUse(use);
-        }
-    }
-
-    // Insert the new input.
-    if (!inputs_.append(MUse()))
+    if (!MergeTypes(&resultType, &resultTypeSet, ins->type(), ins->resultTypeSet()))
         return false;
 
-    inputs_.back().init(ins, this);
-
-    if (ptypeChange) {
-        MIRType resultType = this->type();
-        types::TemporaryTypeSet *resultTypeSet = this->resultTypeSet();
-
-        if (!MergeTypes(&resultType, &resultTypeSet, ins->type(), ins->resultTypeSet()))
-            return false;
-
-        if (resultType != this->type() || resultTypeSet != this->resultTypeSet()) {
-            *ptypeChange = true;
-            setResultType(resultType);
-            setResultTypeSet(resultTypeSet);
-        }
+    if (resultType != this->type() || resultTypeSet != this->resultTypeSet()) {
+        *ptypeChange = true;
+        setResultType(resultType);
+        setResultTypeSet(resultTypeSet);
     }
-
-    // Add all previously-removed MUses back.
-    if (performingRealloc) {
-        for (uint32_t i = 0; i < index; i++) {
-            MUse *use = &inputs_[i];
-            use->producer()->addUse(use);
-        }
-    }
-
     return true;
 }
 

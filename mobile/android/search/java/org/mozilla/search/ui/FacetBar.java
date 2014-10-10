@@ -4,6 +4,8 @@
 
 package org.mozilla.search.ui;
 
+import org.mozilla.gecko.R;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -11,8 +13,6 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-
-import org.mozilla.search.R;
 
 public class FacetBar extends RadioGroup {
 
