@@ -60,7 +60,7 @@ if CONFIG['COMPILE_ENVIRONMENT'] and not CONFIG['LIBXUL_SDK']:
 
     if CONFIG['BUILD_CTYPES']:
         DIRS += ['config/external/ffi']
-    if CONFIG['ENABLE_INTL_API']:
+    if CONFIG['USE_ICU']:
         DIRS += ['config/external/icu']
     DIRS += ['js/src']
 

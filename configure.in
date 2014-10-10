@@ -9018,17 +9018,15 @@ dnl ========================================================
 #   Android:  bug 864843
 #   B2G:      bug 866301
 
-if test "$MOZ_WIDGET_TOOLKIT" = "android"; then
+if test "$MOZ_WIDGET_TOOLKIT" = "android" ||
+   test "$MOZ_BUILD_APP" = "b2g"; then
     _INTL_API=no
-elif test "$MOZ_BUILD_APP" = "b2g"; then
-    if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
-        # nsCollationMacUC needs ICU
-        _INTL_API=yes
-    else
-        _INTL_API=no
-    fi
 else
     _INTL_API=yes
+fi
+
+if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
+    USE_ICU=1
 fi
 
 MOZ_CONFIG_ICU()
