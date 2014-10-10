@@ -176,7 +176,7 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
                     String guid = Utils.generateGuid();
                     values.put(Passwords.GUID, guid);
                 }
-                String nowString = new Long(now).toString();
+                String nowString = Long.toString(now);
                 DBUtils.replaceKey(values, null, Passwords.HOSTNAME, "");
                 DBUtils.replaceKey(values, null, Passwords.HTTP_REALM, "");
                 DBUtils.replaceKey(values, null, Passwords.FORM_SUBMIT_URL, "");
