@@ -54,22 +54,17 @@ TrackBuffer::~TrackBuffer()
 class ReleaseDecoderTask : public nsRunnable {
 public:
   explicit ReleaseDecoderTask(SourceBufferDecoder* aDecoder)
+    : mDecoder(aDecoder)
   {
-    mDecoders.AppendElement(aDecoder);
-  }
-
-  explicit ReleaseDecoderTask(nsTArray<nsRefPtr<SourceBufferDecoder>>& aDecoders)
-  {
-    mDecoders.SwapElements(aDecoders);
   }
 
   NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL {
-    mDecoders.Clear();
+    mDecoder = nullptr;
     return NS_OK;
   }
 
 private:
-  nsTArray<nsRefPtr<SourceBufferDecoder>> mDecoders;
+  nsRefPtr<SourceBufferDecoder> mDecoder;
 };
 
 void
@@ -397,11 +392,12 @@ TrackBuffer::ContainsTime(int64_t aTime)
 void
 TrackBuffer::BreakCycles()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
     mDecoders[i]->GetReader()->BreakCycles();
   }
-  NS_DispatchToMainThread(new ReleaseDecoderTask(mDecoders));
-  MOZ_ASSERT(mDecoders.IsEmpty());
+  mDecoders.Clear();
 
   // These are cleared in Shutdown()
   MOZ_ASSERT(mInitializedDecoders.IsEmpty());
