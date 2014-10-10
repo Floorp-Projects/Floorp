@@ -29,6 +29,7 @@ public:
   virtual SurfaceType GetType() const { return SurfaceType::D2D1_1_IMAGE; }
   virtual IntSize GetSize() const { return mSize; }
   virtual SurfaceFormat GetFormat() const { return mFormat; }
+  virtual bool IsValid() const;
   virtual TemporaryRef<DataSourceSurface> GetDataSurface();
 
   ID2D1Image *GetImage() { return mImage; }
@@ -54,6 +55,8 @@ private:
   // had a reason yet to realize ourselves.
   RefPtr<ID2D1Bitmap1> mRealizedBitmap;
   RefPtr<ID2D1DeviceContext> mDC;
+  // Keep this around to verify whether out image is still valid in the future.
+  RefPtr<ID2D1Device> mDevice;
 
   SurfaceFormat mFormat;
   IntSize mSize;
@@ -70,6 +73,7 @@ public:
   virtual SurfaceType GetType() const { return SurfaceType::DATA; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const { return mFormat; }
+  virtual bool IsValid() const { return !!mBitmap; }
   virtual uint8_t *GetData();
   virtual int32_t Stride();
   virtual bool Map(MapType, MappedSurface *aMappedSurface);
