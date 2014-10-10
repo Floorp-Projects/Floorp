@@ -402,10 +402,12 @@ TrackBuffer::BreakCycles()
   for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
     mDecoders[i]->GetReader()->BreakCycles();
   }
-  mInitializedDecoders.Clear();
   NS_DispatchToMainThread(new ReleaseDecoderTask(mDecoders));
   MOZ_ASSERT(mDecoders.IsEmpty());
-  mParentDecoder = nullptr;
+
+  // These are cleared in Shutdown()
+  MOZ_ASSERT(mInitializedDecoders.IsEmpty());
+  MOZ_ASSERT(!mParentDecoder);
 }
 
 void
