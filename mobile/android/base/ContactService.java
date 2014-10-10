@@ -1898,7 +1898,7 @@ public class ContactService implements GeckoEventListener {
     private int getAddressType(String addressType) {
         initAddressTypesMap();
         Integer type = mAddressTypesMap.get(addressType.toLowerCase());
-        return (type != null ? Integer.valueOf(type) : StructuredPostal.TYPE_CUSTOM);
+        return type != null ? type : StructuredPostal.TYPE_CUSTOM;
     }
 
     private void initAddressTypesMap() {
@@ -1914,7 +1914,7 @@ public class ContactService implements GeckoEventListener {
     private int getPhoneType(String phoneType) {
         initPhoneTypesMap();
         Integer type = mPhoneTypesMap.get(phoneType.toLowerCase());
-        return (type != null ? Integer.valueOf(type) : Phone.TYPE_CUSTOM);
+        return type != null ? type : Phone.TYPE_CUSTOM;
     }
 
     private void initPhoneTypesMap() {
@@ -1949,7 +1949,7 @@ public class ContactService implements GeckoEventListener {
     private int getEmailType(String emailType) {
         initEmailTypesMap();
         Integer type = mEmailTypesMap.get(emailType.toLowerCase());
-        return (type != null ? Integer.valueOf(type) : Email.TYPE_CUSTOM);
+        return type != null ? type : Email.TYPE_CUSTOM;
     }
 
     private void initEmailTypesMap() {
@@ -1966,7 +1966,7 @@ public class ContactService implements GeckoEventListener {
     private int getWebsiteType(String webisteType) {
         initWebsiteTypesMap();
         Integer type = mWebsiteTypesMap.get(webisteType.toLowerCase());
-        return (type != null ? Integer.valueOf(type) : Website.TYPE_CUSTOM);
+        return type != null ? type : Website.TYPE_CUSTOM;
     }
 
     private void initWebsiteTypesMap() {
@@ -1986,7 +1986,7 @@ public class ContactService implements GeckoEventListener {
     private int getImType(String imType) {
         initImTypesMap();
         Integer type = mImTypesMap.get(imType.toLowerCase());
-        return (type != null ? Integer.valueOf(type) : Im.TYPE_CUSTOM);
+        return type != null ? type : Im.TYPE_CUSTOM;
     }
 
     private void initImTypesMap() {
