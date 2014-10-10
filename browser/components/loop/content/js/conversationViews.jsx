@@ -65,7 +65,7 @@ loop.conversationViews = (function(mozL10n) {
         <div className="fx-embedded-call-identifier">
           <div className="fx-embedded-call-identifier-avatar fx-embedded-call-identifier-item"/>
           <div className="fx-embedded-call-identifier-info fx-embedded-call-identifier-item">
-            <div className="fx-embedded-call-identifier-text overflow-text-ellipsis>
+            <div className="fx-embedded-call-identifier-text overflow-text-ellipsis">
               {this.props.peerIdentifier}
             </div>
             <div className={callDetailClasses}>
