@@ -197,7 +197,7 @@ public abstract class SessionTest extends BaseTest {
                             verifyUrl(page.url);
                         } else {
                             waitForText(page.title);
-                            verifyPageTitle(page.title);
+                            verifyPageTitle(page.title, page.url);
                         }
                     }
 
