@@ -24,6 +24,7 @@
             'common/RefCountObject.cpp',
             'common/RefCountObject.h',
             'common/angleutils.h',
+            'common/angleutils.cpp',
             'common/blocklayout.cpp',
             'common/blocklayout.h',
             'common/debug.cpp',

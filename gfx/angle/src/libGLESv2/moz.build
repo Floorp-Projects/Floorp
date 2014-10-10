@@ -10,6 +10,7 @@ UNIFIED_SOURCES += [
     '../common/RefCountObject.cpp',
     '../common/tls.cpp',
     '../common/utilities.cpp',
+    '../common/win32/NativeWindow.cpp',
     '../compiler/preprocessor/DiagnosticsBase.cpp',
     '../compiler/preprocessor/DirectiveHandlerBase.cpp',
     '../compiler/preprocessor/DirectiveParser.cpp',
@@ -92,6 +93,7 @@ UNIFIED_SOURCES += [
     'Framebuffer.cpp',
     'FramebufferAttachment.cpp',
     'HandleAllocator.cpp',
+    'ImageIndex.cpp',
     'libGLESv2.cpp',
     'main.cpp',
     'Program.cpp',
@@ -117,10 +119,12 @@ UNIFIED_SOURCES += [
     'renderer/d3d/d3d9/VertexBuffer9.cpp',
     'renderer/d3d/d3d9/VertexDeclarationCache.cpp',
     'renderer/d3d/DynamicHLSL.cpp',
+    'renderer/d3d/HLSLCompiler.cpp',
     'renderer/d3d/ImageD3D.cpp',
     'renderer/d3d/IndexBuffer.cpp',
     'renderer/d3d/IndexDataManager.cpp',
     'renderer/d3d/MemoryBuffer.cpp',
+    'renderer/d3d/ProgramD3D.cpp',
     'renderer/d3d/ShaderD3D.cpp',
     'renderer/d3d/TextureD3D.cpp',
     'renderer/d3d/TextureStorage.cpp',
@@ -147,7 +151,6 @@ UNIFIED_SOURCES += [
 SOURCES += [
     '../compiler/translator/glslang_lex.cpp',
     '../compiler/translator/glslang_tab.cpp',
-    'renderer/d3d/HLSLCompiler.cpp',
     'renderer/loadimageSSE2.cpp',
 ]
 SOURCES['renderer/loadimageSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
@@ -213,7 +216,7 @@ LOCAL_INCLUDES += [ '../../include', '../../src' ]
 
 
 if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
-  OS_LIBS += [ 'd3d9', 'dxguid' ]
+  EXTRA_DSO_LDOPTS += [ 'd3d9.lib', 'dxguid.lib' ]
 else:
   EXTRA_DSO_LDOPTS += [
     '\'%s/lib/%s/d3d9.lib\'' % (CONFIG['MOZ_DIRECTX_SDK_PATH'], CONFIG['MOZ_D3D_CPU_SUFFIX']),
@@ -225,5 +228,5 @@ SharedLibrary('libGLESv2')
 RCFILE = SRCDIR + '/libGLESv2.rc'
 DEFFILE = SRCDIR + '/libGLESv2.def'
 
-SOURCES['renderer/d3d/HLSLCompiler.cpp'].flags += ['-DANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES=\'{ TEXT("d3dcompiler_47.dll"), TEXT("d3dcompiler_46.dll"), TEXT("d3dcompiler_43.dll") }\'']
+DEFINES['ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES'] = '{ TEXT("d3dcompiler_47.dll"), TEXT("d3dcompiler_46.dll"), TEXT("d3dcompiler_43.dll") }'
 

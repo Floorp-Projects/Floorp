@@ -103,4 +103,4 @@ const FormatSet &GetAllSizedInternalFormats();
 
 }
 
-#endif LIBGLESV2_FORMATUTILS_H_
+#endif // LIBGLESV2_FORMATUTILS_H_

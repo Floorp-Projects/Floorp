@@ -17,15 +17,9 @@ TranslatorHLSL::TranslatorHLSL(sh::GLenum type, ShShaderSpec spec, ShShaderOutpu
 void TranslatorHLSL::translate(TIntermNode *root)
 {
     TParseContext& parseContext = *GetGlobalParseContext();
-    sh::OutputHLSL outputHLSL(parseContext, getResources(), getOutputType());
+    sh::OutputHLSL outputHLSL(parseContext, this);
 
     outputHLSL.output();
-
-    attributes      = outputHLSL.getAttributes();
-    outputVariables = outputHLSL.getOutputVariables();
-    uniforms        = outputHLSL.getUniforms();
-    varyings        = outputHLSL.getVaryings();
-    interfaceBlocks = outputHLSL.getInterfaceBlocks();
 
     mInterfaceBlockRegisterMap = outputHLSL.getInterfaceBlockRegisterMap();
     mUniformRegisterMap = outputHLSL.getUniformRegisterMap();

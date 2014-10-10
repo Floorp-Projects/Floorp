@@ -35,13 +35,16 @@ class ResourceManager;
 struct PackedVarying : public sh::Varying
 {
     unsigned int registerIndex; // Assigned during link
+    unsigned int columnIndex; // Assigned during link, defaults to 0
 
     PackedVarying(const sh::Varying &varying)
       : sh::Varying(varying),
-        registerIndex(GL_INVALID_INDEX)
+        registerIndex(GL_INVALID_INDEX),
+        columnIndex(0)
     {}
 
     bool registerAssigned() const { return registerIndex != GL_INVALID_INDEX; }
+    bool isBuiltIn() const { return name.compare(0, 3, "gl_") == 0; }
 
     void resetRegisterAssignment()
     {
@@ -79,6 +82,18 @@ class Shader
     unsigned int getRefCount() const;
     bool isFlaggedForDeletion() const;
     void flagForDeletion();
+
+    const std::vector<gl::PackedVarying> &getVaryings() const;
+    const std::vector<sh::Uniform> &getUniforms() const;
+    const std::vector<sh::InterfaceBlock> &getInterfaceBlocks() const;
+    const std::vector<sh::Attribute> &getActiveAttributes() const;
+    const std::vector<sh::Attribute> &getActiveOutputVariables() const;
+
+    std::vector<gl::PackedVarying> &getVaryings();
+    std::vector<sh::Uniform> &getUniforms();
+    std::vector<sh::InterfaceBlock> &getInterfaceBlocks();
+    std::vector<sh::Attribute> &getActiveAttributes();
+    std::vector<sh::Attribute> &getActiveOutputVariables();
 
   private:
     DISALLOW_COPY_AND_ASSIGN(Shader);

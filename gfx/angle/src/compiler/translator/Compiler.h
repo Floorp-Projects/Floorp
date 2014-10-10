@@ -83,6 +83,9 @@ class TCompiler : public TShHandleBase
     ShShaderOutput getOutputType() const { return outputType; }
     std::string getBuiltInResourcesString() const { return builtInResourcesString; }
 
+    // Get the resources set by InitBuiltInSymbolTable
+    const ShBuiltInResources& getResources() const;
+
   protected:
     sh::GLenum getShaderType() const { return shaderType; }
     // Initialize symbol-table with built-in symbols.
@@ -128,8 +131,6 @@ class TCompiler : public TShHandleBase
     bool limitExpressionComplexity(TIntermNode* root);
     // Get built-in extensions with default behavior.
     const TExtensionBehavior& getExtensionBehavior() const;
-    // Get the resources set by InitBuiltInSymbolTable
-    const ShBuiltInResources& getResources() const;
 
     const ArrayBoundsClamper& getArrayBoundsClamper() const;
     ShArrayIndexClampingStrategy getArrayIndexClampingStrategy() const;

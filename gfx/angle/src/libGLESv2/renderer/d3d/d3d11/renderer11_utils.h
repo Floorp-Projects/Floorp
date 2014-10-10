@@ -15,8 +15,15 @@
 
 #include <vector>
 
+namespace gl
+{
+class FramebufferAttachment;
+}
+
 namespace rx
 {
+class RenderTarget11;
+struct Workarounds;
 
 namespace gl_d3d11
 {
@@ -169,6 +176,10 @@ inline void SetBufferData(ID3D11DeviceContext *context, ID3D11Buffer *constantBu
 
     context->Unmap(constantBuffer, 0);
 }
+
+RenderTarget11 *GetAttachmentRenderTarget(gl::FramebufferAttachment *attachment);
+
+Workarounds GenerateWorkarounds();
 
 }
 

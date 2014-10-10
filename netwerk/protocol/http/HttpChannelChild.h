@@ -115,7 +115,7 @@ protected:
                               const nsCString& data,
                               const uint64_t& offset,
                               const uint32_t& count) MOZ_OVERRIDE;
-  bool RecvOnStopRequest(const nsresult& statusCode, const ResourceTimingStruct& timing);
+  bool RecvOnStopRequest(const nsresult& statusCode);
   bool RecvOnProgress(const uint64_t& progress, const uint64_t& progressMax) MOZ_OVERRIDE;
   bool RecvOnStatus(const nsresult& status) MOZ_OVERRIDE;
   bool RecvFailedAsyncOpen(const nsresult& status) MOZ_OVERRIDE;
@@ -182,7 +182,7 @@ private:
                           const nsCString& data,
                           const uint64_t& offset,
                           const uint32_t& count);
-  void OnStopRequest(const nsresult& channelStatus, const ResourceTimingStruct& timing);
+  void OnStopRequest(const nsresult& channelStatus);
   void OnProgress(const uint64_t& progress, const uint64_t& progressMax);
   void OnStatus(const nsresult& status);
   void FailedAsyncOpen(const nsresult& status);

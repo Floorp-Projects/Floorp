@@ -25,7 +25,7 @@ IndexBuffer9::~IndexBuffer9()
     SafeRelease(mIndexBuffer);
 }
 
-bool IndexBuffer9::initialize(unsigned int bufferSize, GLenum indexType, bool dynamic)
+gl::Error IndexBuffer9::initialize(unsigned int bufferSize, GLenum indexType, bool dynamic)
 {
     SafeRelease(mIndexBuffer);
 
@@ -33,28 +33,17 @@ bool IndexBuffer9::initialize(unsigned int bufferSize, GLenum indexType, bool dy
 
     if (bufferSize > 0)
     {
-        D3DFORMAT format;
+        D3DFORMAT format = D3DFMT_UNKNOWN;
         if (indexType == GL_UNSIGNED_SHORT || indexType == GL_UNSIGNED_BYTE)
         {
             format = D3DFMT_INDEX16;
         }
         else if (indexType == GL_UNSIGNED_INT)
         {
-            if (mRenderer->getRendererExtensions().elementIndexUint)
-            {
-                format = D3DFMT_INDEX32;
-            }
-            else
-            {
-                ERR("Attempted to create a 32-bit index buffer but renderer does not support 32-bit indices.");
-                return false;
-            }
+            ASSERT(mRenderer->getRendererExtensions().elementIndexUint);
+            format = D3DFMT_INDEX32;
         }
-        else
-        {
-            ERR("Invalid index type %u.", indexType);
-            return false;
-        }
+        else UNREACHABLE();
 
         DWORD usageFlags = D3DUSAGE_WRITEONLY;
         if (dynamic)
@@ -65,8 +54,7 @@ bool IndexBuffer9::initialize(unsigned int bufferSize, GLenum indexType, bool dy
         HRESULT result = mRenderer->createIndexBuffer(bufferSize, usageFlags, format, &mIndexBuffer);
         if (FAILED(result))
         {
-            ERR("Failed to create an index buffer of size %u, result: 0x%08x.", mBufferSize, result);
-            return false;
+            return gl::Error(GL_OUT_OF_MEMORY, "Failed to allocate internal index buffer of size, %lu.", bufferSize);
         }
     }
 
@@ -74,7 +62,7 @@ bool IndexBuffer9::initialize(unsigned int bufferSize, GLenum indexType, bool dy
     mIndexType = indexType;
     mDynamic = dynamic;
 
-    return true;
+    return gl::Error(GL_NO_ERROR);
 }
 
 IndexBuffer9 *IndexBuffer9::makeIndexBuffer9(IndexBuffer *indexBuffer)
@@ -83,48 +71,40 @@ IndexBuffer9 *IndexBuffer9::makeIndexBuffer9(IndexBuffer *indexBuffer)
     return static_cast<IndexBuffer9*>(indexBuffer);
 }
 
-bool IndexBuffer9::mapBuffer(unsigned int offset, unsigned int size, void** outMappedMemory)
+gl::Error IndexBuffer9::mapBuffer(unsigned int offset, unsigned int size, void** outMappedMemory)
 {
-    if (mIndexBuffer)
+    if (!mIndexBuffer)
     {
-        DWORD lockFlags = mDynamic ? D3DLOCK_NOOVERWRITE : 0;
-
-        void *mapPtr = NULL;
-        HRESULT result = mIndexBuffer->Lock(offset, size, &mapPtr, lockFlags);
-        if (FAILED(result))
-        {
-            ERR("Index buffer lock failed with error 0x%08x", result);
-            return false;
-        }
-
-        *outMappedMemory = mapPtr;
-        return true;
+        return gl::Error(GL_OUT_OF_MEMORY, "Internal index buffer is not initialized.");
     }
-    else
+
+    DWORD lockFlags = mDynamic ? D3DLOCK_NOOVERWRITE : 0;
+
+    void *mapPtr = NULL;
+    HRESULT result = mIndexBuffer->Lock(offset, size, &mapPtr, lockFlags);
+    if (FAILED(result))
     {
-        ERR("Index buffer not initialized.");
-        return false;
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to lock internal index buffer, HRESULT: 0x%08x.", result);
     }
+
+    *outMappedMemory = mapPtr;
+    return gl::Error(GL_NO_ERROR);
 }
 
-bool IndexBuffer9::unmapBuffer()
+gl::Error IndexBuffer9::unmapBuffer()
 {
-    if (mIndexBuffer)
+    if (!mIndexBuffer)
     {
-        HRESULT result = mIndexBuffer->Unlock();
-        if (FAILED(result))
-        {
-            ERR("Index buffer unlock failed with error 0x%08x", result);
-            return false;
-        }
+        return gl::Error(GL_OUT_OF_MEMORY, "Internal index buffer is not initialized.");
+    }
 
-        return true;
-    }
-    else
+    HRESULT result = mIndexBuffer->Unlock();
+    if (FAILED(result))
     {
-        ERR("Index buffer not initialized.");
-        return false;
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to unlock internal index buffer, HRESULT: 0x%08x.", result);
     }
+
+    return gl::Error(GL_NO_ERROR);
 }
 
 GLenum IndexBuffer9::getIndexType() const
@@ -137,7 +117,7 @@ unsigned int IndexBuffer9::getBufferSize() const
     return mBufferSize;
 }
 
-bool IndexBuffer9::setSize(unsigned int bufferSize, GLenum indexType)
+gl::Error IndexBuffer9::setSize(unsigned int bufferSize, GLenum indexType)
 {
     if (bufferSize > mBufferSize || indexType != mIndexType)
     {
@@ -145,38 +125,33 @@ bool IndexBuffer9::setSize(unsigned int bufferSize, GLenum indexType)
     }
     else
     {
-        return true;
+        return gl::Error(GL_NO_ERROR);
     }
 }
 
-bool IndexBuffer9::discard()
+gl::Error IndexBuffer9::discard()
 {
-    if (mIndexBuffer)
+    if (!mIndexBuffer)
     {
-        void *dummy;
-        HRESULT result;
-
-        result = mIndexBuffer->Lock(0, 1, &dummy, D3DLOCK_DISCARD);
-        if (FAILED(result))
-        {
-            ERR("Discard lock failed with error 0x%08x", result);
-            return false;
-        }
-
-        result = mIndexBuffer->Unlock();
-        if (FAILED(result))
-        {
-            ERR("Discard unlock failed with error 0x%08x", result);
-            return false;
-        }
-
-        return true;
+        return gl::Error(GL_OUT_OF_MEMORY, "Internal index buffer is not initialized.");
     }
-    else
+
+    void *dummy;
+    HRESULT result;
+
+    result = mIndexBuffer->Lock(0, 1, &dummy, D3DLOCK_DISCARD);
+    if (FAILED(result))
     {
-        ERR("Index buffer not initialized.");
-        return false;
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to lock internal index buffer, HRESULT: 0x%08x.", result);
     }
+
+    result = mIndexBuffer->Unlock();
+    if (FAILED(result))
+    {
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to unlock internal index buffer, HRESULT: 0x%08x.", result);
+    }
+
+    return gl::Error(GL_NO_ERROR);
 }
 
 D3DFORMAT IndexBuffer9::getIndexFormat() const

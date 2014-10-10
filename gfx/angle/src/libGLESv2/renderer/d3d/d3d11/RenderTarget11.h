@@ -51,4 +51,4 @@ class RenderTarget11 : public RenderTarget
 
 }
 
-#endif LIBGLESV2_RENDERER_RENDERTARGET11_H_
+#endif // LIBGLESV2_RENDERER_RENDERTARGET11_H_

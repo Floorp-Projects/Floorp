@@ -43,7 +43,7 @@ class Display
     bool getConfigs(EGLConfig *configs, const EGLint *attribList, EGLint configSize, EGLint *numConfig);
     bool getConfigAttrib(EGLConfig config, EGLint attribute, EGLint *value);
 
-    EGLSurface createWindowSurface(HWND window, EGLConfig config, const EGLint *attribList);
+    EGLSurface createWindowSurface(EGLNativeWindowType window, EGLConfig config, const EGLint *attribList);
     EGLSurface createOffscreenSurface(EGLConfig config, HANDLE shareHandle, const EGLint *attribList);
     EGLContext createContext(EGLConfig configHandle, EGLint clientVersion, const gl::Context *shareContext, bool notifyResets, bool robustAccess);
 
@@ -54,7 +54,7 @@ class Display
     bool isValidConfig(EGLConfig config);
     bool isValidContext(gl::Context *context);
     bool isValidSurface(egl::Surface *surface);
-    bool hasExistingWindowSurface(HWND window);
+    bool hasExistingWindowSurface(EGLNativeWindowType window);
 
     rx::Renderer *getRenderer() { return mRenderer; };
 
