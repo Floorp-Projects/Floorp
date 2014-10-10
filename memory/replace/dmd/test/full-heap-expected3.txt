@@ -12,7 +12,7 @@ Live {
   1,008 bytes (900 requested / 108 slop)
   35.49% of the heap (35.49% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -21,7 +21,7 @@ Live {
   528 bytes (528 requested / 0 slop)
   18.59% of the heap (54.08% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -30,7 +30,7 @@ Live {
   528 bytes (528 requested / 0 slop)
   18.59% of the heap (72.68% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -39,7 +39,7 @@ Live {
   512 bytes (512 requested / 0 slop)
   18.03% of the heap (90.70% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -48,7 +48,7 @@ Live {
   80 bytes (79 requested / 1 slop)
   2.82% of the heap (93.52% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -57,7 +57,7 @@ Live {
   80 bytes (78 requested / 2 slop)
   2.82% of the heap (96.34% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -66,7 +66,7 @@ Live {
   80 bytes (77 requested / 3 slop)
   2.82% of the heap (99.15% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -75,16 +75,16 @@ Live {
   16 bytes (10 requested / 6 slop)
   0.56% of the heap (99.72% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
 Live {
   1 block in heap block record 9 of 9
-  8 bytes (0 requested / 8 slop)
+  8 bytes (8 requested / 0 slop)
   0.28% of the heap (100.00% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 

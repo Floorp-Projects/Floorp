@@ -62,6 +62,10 @@ TEST_HARNESS_BINS += metrotestharness$(BIN_SUFFIX)
 endif
 endif
 
+ifdef MOZ_DMD
+TEST_HARNESS_BINS += dmd.py
+endif
+
 # Components / typelibs that don't get packaged with
 # the build, but that we need for the test harness.
 TEST_HARNESS_COMPONENTS := \
