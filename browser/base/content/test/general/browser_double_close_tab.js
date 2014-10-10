@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 const TEST_PAGE = "http://mochi.test:8888/browser/browser/base/content/test/general/file_double_close_tab.html";
 let testTab;
 
@@ -43,9 +43,9 @@ add_task(function*() {
   // everything gets messed up and the promise's .then callbacks never get
   // called, despite resolve() being called just fine.
   let dialogNode = yield new Promise(resolveOuter => {
-    waitForDialog(function(dialogNode) {
+    waitForDialog(dialogNode => {
       waitForDialogDestroyed(dialogNode, () => {
-        let doCompletion = () => setTimeout(resolveOuter, 10);
+        let doCompletion = () => setTimeout(resolveOuter, 0);
         info("Now checking if dialog is destroyed");
         ok(!dialogNode.parentNode, "onbeforeunload dialog should be gone.");
         if (dialogNode.parentNode) {
