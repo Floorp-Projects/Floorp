@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 1010538 - Element.ScrollLeft and Element.ScrollTop scroll-behavior</title>
+    <style type="text/css">
+
+        html,body {
+            color: black;
+            background-color: white;
+            font-size: 16px;
+            padding: 0;
+            margin: 0;
+        }
+
+        .a_box {
+            position: relative;
+            left: 0px;
+            top: 0px;
+            width: 20px;
+            height: 20px;
+            background: blue;
+        }
+
+        .another_box {
+            position: relative;
+            left: 2000px;
+            top: 2000px;
+            width: 20px;
+            height: 20px;
+            background: green;
+        }
+
+        .scroll_box {
+            width: 50px;
+            height: 50px;
+            overflow: scroll;
+        }
+
+        #scroll_2 {
+            scroll-behavior: auto;
+        }
+
+        #scroll_3 {
+            scroll-behavior: instant;
+        }
+
+        #scroll_4 {
+            scroll-behavior: smooth;
+        }
+
+    </style>
+</head>
+<body>
+  <div id="scroll_1" class="scroll_box">
+    <div id="box1a" class="a_box"></div>
+    <div id="box1b" class="another_box"></div>
+  </div>
+  <div id="scroll_2" class="scroll_box">
+    <div id="box2a" class="a_box"></div>
+    <div id="box2b" class="another_box"></div>
+  </div>
+  <div id="scroll_3" class="scroll_box">
+    <div id="box3a" class="a_box"></div>
+    <div id="box3b" class="another_box"></div>
+  </div>
+  <div id="scroll_4" class="scroll_box">
+    <div id="box4a" class="a_box"></div>
+    <div id="box4b" class="another_box"></div>
+  </div>
+<script>
+  function doTest() {
+    if (document.location.search != '?ref') {
+      // Expect instantaneous scroll:
+      document.getElementById("scroll_1").scrollLeft = 0;
+      document.getElementById("scroll_1").scrollTop = 0;
+      document.getElementById("scroll_2").scrollLeft = 0;
+      document.getElementById("scroll_2").scrollTop = 0;
+      document.getElementById("scroll_3").scrollLeft = 0;
+      document.getElementById("scroll_3").scrollTop = 0;
+
+      // Expect smooth scroll:
+      document.getElementById("scroll_4").scrollLeft = 0;
+      document.getElementById("scroll_4").scrollTop = 0;
+
+      // Interrupt any smooth scrolling
+      for (var i=1; i <= 4; i++) {
+        document.getElementById("scroll_" + i).scrollLeft
+          = document.getElementById("scroll_" + i).scrollLeft;
+        document.getElementById("scroll_" + i).scrollTop
+          = document.getElementById("scroll_" + i).scrollTop;
+      }
+    } else {
+      // Scroll all boxes except for box4a
+      for (var i=1; i <= 3; i++) {
+        document.getElementById("box" + i + "a").scrollIntoView(false, {behavior: "instant"});
+      }
+    }
+    document.documentElement.removeAttribute("class");
+  }
+
+  for (var i=1; i <= 4; i++) {
+    document.getElementById("box" + i + "b")
+      .scrollIntoView(true, {behavior: "instant"});
+  }
+
+  window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>
