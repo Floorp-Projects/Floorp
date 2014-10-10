@@ -1166,46 +1166,52 @@ ContentPrefService.prototype = {
   },
 
   _dbMigrate: function ContentPrefService__dbMigrate(aDBConnection, aOldVersion, aNewVersion) {
-    if (this["_dbMigrate" + aOldVersion + "To" + aNewVersion]) {
-      aDBConnection.beginTransaction();
-      try {
-        this["_dbMigrate" + aOldVersion + "To" + aNewVersion](aDBConnection);
-        aDBConnection.schemaVersion = aNewVersion;
-        aDBConnection.commitTransaction();
+    /**
+     * Migrations have to follow a template rules in bug 1074817 comment 3 which are:
+     * 1. Migration have to be incremental and non-breaking.
+     * 2. It have to be idempotent because one can downgrade an upgrade again.
+     * On downgrade:
+     * 1. Decrement schema version so that upgrade runs the migrations again.
+     */
+    aDBConnection.beginTransaction();
+
+    try {
+      /**
+      * If the schema version is 0, that means it was never set, which means
+      * the database was somehow created without the schema being applied, perhaps
+      * because the system ran out of disk space (although we check for this
+      * in _createDB) or because some other code created the database file without
+      * applying the schema. In any case, recover by simply reapplying the schema.
+      */
+      if (aOldVersion == 0) {
+        this._dbCreateSchema(aDBConnection);
+      } else {
+        // For downgrade this is a no-op since aOldVersion > aNewVersion.
+        for (let i = aOldVersion; i < aNewVersion; i++) {
+          let migrationName = "_dbMigrate" + i + "To" + (i + 1);
+          if (typeof this[migrationName] != 'function') {
+            throw("no migrator function from version " + aOldVersion + " to version " + aNewVersion);
+          }
+          this[migrationName](aDBConnection);
+        }
       }
-      catch(ex) {
-        aDBConnection.rollbackTransaction();
-        throw ex;
-      }
+      aDBConnection.schemaVersion = aNewVersion;
+      aDBConnection.commitTransaction();
+    } catch (ex) {
+      aDBConnection.rollbackTransaction();
+      throw ex;
     }
-    else
-      throw("no migrator function from version " + aOldVersion +
-            " to version " + aNewVersion);
   },
 
-  /**
-   * If the schema version is 0, that means it was never set, which means
-   * the database was somehow created without the schema being applied, perhaps
-   * because the system ran out of disk space (although we check for this
-   * in _createDB) or because some other code created the database file without
-   * applying the schema.  In any case, recover by simply reapplying the schema.
-   */
-  _dbMigrate0To3: function ContentPrefService___dbMigrate0To3(aDBConnection) {
-    this._dbCreateSchema(aDBConnection);
-  },
-
-  _dbMigrate1To3: function ContentPrefService___dbMigrate1To3(aDBConnection) {
+  _dbMigrate1To2: function ContentPrefService___dbMigrate1To2(aDBConnection) {
     aDBConnection.executeSimpleSQL("ALTER TABLE groups RENAME TO groupsOld");
     aDBConnection.createTable("groups", this._dbSchema.tables.groups);
     aDBConnection.executeSimpleSQL(`
       INSERT INTO groups (id, name)
       SELECT id, name FROM groupsOld
     `);
-
-    aDBConnection.executeSimpleSQL("DROP TABLE groupers");
+    aDBConnection.executeSimpleSQL("DROP TABLE IF EXISTS groupers");
     aDBConnection.executeSimpleSQL("DROP TABLE groupsOld");
-
-    this._dbCreateIndices(aDBConnection);
   },
 
   _dbMigrate2To3: function ContentPrefService__dbMigrate2To3(aDBConnection) {
