@@ -76,7 +76,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET
 
-  WebSocketImpl(WebSocket* aWebSocket)
+  explicit WebSocketImpl(WebSocket* aWebSocket)
   : mWebSocket(aWebSocket)
   , mOnCloseScheduled(false)
   , mFailed(false)
@@ -463,7 +463,7 @@ namespace {
 class DisconnectInternalRunnable MOZ_FINAL : public WorkerMainThreadRunnable
 {
 public:
-  DisconnectInternalRunnable(WebSocketImpl* aImpl)
+  explicit DisconnectInternalRunnable(WebSocketImpl* aImpl)
     : WorkerMainThreadRunnable(aImpl->mWorkerPrivate)
     , mImpl(aImpl)
   { }
@@ -1036,7 +1036,7 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
   class MOZ_STACK_CLASS ClearWebSocket
   {
   public:
-    ClearWebSocket(WebSocketImpl* aWebSocketImpl)
+    explicit ClearWebSocket(WebSocketImpl* aWebSocketImpl)
       : mWebSocketImpl(aWebSocketImpl)
       , mDone(false)
     {
@@ -1587,7 +1587,7 @@ namespace {
 class PrefEnabledRunnable MOZ_FINAL : public WorkerMainThreadRunnable
 {
 public:
-  PrefEnabledRunnable(WorkerPrivate* aWorkerPrivate)
+  explicit PrefEnabledRunnable(WorkerPrivate* aWorkerPrivate)
     : WorkerMainThreadRunnable(aWorkerPrivate)
     , mEnabled(false)
   { }
