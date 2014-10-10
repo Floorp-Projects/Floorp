@@ -52,6 +52,11 @@ function run_test()
 {
   setupFakeLoopServer();
 
+  // Setup fake login state so we get FxA requests.
+  const MozLoopServiceInternal = Cu.import("resource:///modules/loop/MozLoopService.jsm", {}).MozLoopServiceInternal;
+  MozLoopServiceInternal.fxAOAuthTokenData = {token_type:"bearer",access_token:"1bad3e44b12f77a88fe09f016f6a37c42e40f974bc7a8b432bb0d2f0e37e1752",scope:"profile"};
+  MozLoopServiceInternal.fxAOAuthProfile = {email: "test@example.com", uid: "abcd1234"};
+
   // For each notification received from the PushServer, MozLoopService will first query
   // for any pending calls on the FxA hawk session and then again using the guest session.
   // A pair of response objects in the callsResponses array will be consumed for each
@@ -96,6 +101,9 @@ function run_test()
   do_register_cleanup(function() {
     // Revert original Chat.open implementation
     Chat.open = openChatOrig;
+
+    // Revert fake login state
+    MozLoopServiceInternal.fxAOAuthTokenData = null;
 
     // clear test pref
     Services.prefs.clearUserPref("loop.seenToS");

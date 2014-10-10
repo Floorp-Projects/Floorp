@@ -19,10 +19,21 @@ function promiseGetMozLoopAPI() {
   let loopPanel = document.getElementById("loop-notification-panel");
   let btn = document.getElementById("loop-call-button");
 
-  // Wait for the popup to be shown, then we can get the iframe and
+  // Wait for the popup to be shown if it's not already, then we can get the iframe and
   // wait for the iframe's load to be completed.
-  loopPanel.addEventListener("popupshown", function onpopupshown() {
-    loopPanel.removeEventListener("popupshown", onpopupshown, true);
+  if (loopPanel.state == "closing" || loopPanel.state == "closed") {
+    loopPanel.addEventListener("popupshown", () => {
+      loopPanel.removeEventListener("popupshown", onpopupshown, true);
+      onpopupshown();
+    }, true);
+
+    // Now we're setup, click the button.
+    btn.click();
+  } else {
+    setTimeout(onpopupshown, 0);
+  }
+
+  function onpopupshown() {
     let iframe = document.getElementById(btn.getAttribute("notificationFrameId"));
 
     if (iframe.contentDocument &&
@@ -41,10 +52,7 @@ function promiseGetMozLoopAPI() {
         deferred.resolve();
       }, true);
     }
-  }, true);
-
-  // Now we're setup, click the button.
-  btn.click();
+  }
 
   // Remove the iframe after each test. This also avoids mochitest complaining
   // about leaks on shutdown as we intentionally hold the iframe open for the
@@ -107,28 +115,31 @@ function promiseOAuthParamsSetup(baseURL, params) {
   return deferred.promise;
 }
 
-function resetFxA() {
+function* resetFxA() {
   let global = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
   global.gHawkClient = null;
   global.gFxAOAuthClientPromise = null;
   global.gFxAOAuthClient = null;
-  global.gFxAOAuthTokenData = null;
-  global.gFxAOAuthProfile = null;
+  MozLoopServiceInternal.fxAOAuthProfile = null;
+  MozLoopServiceInternal.fxAOAuthTokenData = null;
   const fxASessionPref = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA);
   Services.prefs.clearUserPref(fxASessionPref);
+  MozLoopService.errors.clear();
+  let notified = promiseObserverNotified("loop-status-changed");
+  MozLoopServiceInternal.notifyStatusChanged();
+  yield notified;
 }
 
-function setInternalLoopGlobal(aName, aValue) {
-  let global = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
-  global[aName] = aValue;
+function checkFxAOAuthTokenData(aValue) {
+  ise(MozLoopServiceInternal.fxAOAuthTokenData, aValue, "fxAOAuthTokenData should be " + aValue);
 }
 
 function checkLoggedOutState() {
   let global = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
   ise(global.gFxAOAuthClientPromise, null, "gFxAOAuthClientPromise should be cleared");
-  ise(global.gFxAOAuthProfile, null, "gFxAOAuthProfile should be cleared");
+  ise(MozLoopService.userProfile, null, "fxAOAuthProfile should be cleared");
   ise(global.gFxAOAuthClient, null, "gFxAOAuthClient should be cleared");
-  ise(global.gFxAOAuthTokenData, null, "gFxAOAuthTokenData should be cleared");
+  checkFxAOAuthTokenData(null);
   const fxASessionPref = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA);
   ise(Services.prefs.getPrefType(fxASessionPref), Services.prefs.PREF_INVALID,
       "FxA hawk session should be cleared anyways");
@@ -172,6 +183,10 @@ function promiseOAuthGetRegistration(baseURL) {
   return deferred.promise;
 }
 
+function getLoopString(stringID) {
+  return MozLoopServiceInternal.localizedStrings[stringID].textContent;
+}
+
 /**
  * This is used to fake push registration and notifications for
  * MozLoopService tests. There is only one object created per test instance, as
@@ -196,5 +211,53 @@ let mockPushHandler = {
    */
   notify: function(version) {
     this._notificationCallback(version);
+  }
+};
+
+const mockDb = {
+  _store: { },
+  _next_guid: 1,
+
+  add: function(details, callback) {
+    if (!("id" in details)) {
+      callback(new Error("No 'id' field present"));
+      return;
+    }
+    details._guid = this._next_guid++;
+    this._store[details._guid] = details;
+    callback(null, details);
+  },
+  remove: function(guid, callback) {
+    if (!guid in this._store) {
+      callback(new Error("Could not find _guid '" + guid + "' in database"));
+      return;
+    }
+    delete this._store[guid];
+    callback(null);
+  },
+  getAll: function(callback) {
+    callback(null, this._store);
+  },
+  get: function(guid, callback) {
+    callback(null, this._store[guid]);
+  },
+  getByServiceId: function(serviceId, callback) {
+    for (let guid in this._store) {
+      if (serviceId === this._store[guid].id) {
+        callback(null, this._store[guid]);
+        return;
+      }
+    }
+    callback(null, null);
+  },
+  removeAll: function(callback) {
+    this._store = {};
+    this._next_guid = 1;
+    callback(null);
+  },
+  promise: function(method, ...params) {
+    return new Promise(resolve => {
+      this[method](...params, (err, res) => err ? reject(err) : resolve(res));
+    });
   }
 };

@@ -11,8 +11,7 @@ describe("loop.conversation", function() {
 
   var sharedModels = loop.shared.models,
       sharedView = loop.shared.views,
-      sandbox,
-      notifications;
+      sandbox;
 
   // XXX refactor to Just Work with "sandbox.stubComponent" or else
   // just pass in the sandbox and put somewhere generally usable
@@ -30,7 +29,6 @@ describe("loop.conversation", function() {
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     sandbox.useFakeTimers();
-    notifications = new loop.shared.models.NotificationCollection();
 
     navigator.mozLoop = {
       doNotDisturb: true,
@@ -41,7 +39,7 @@ describe("loop.conversation", function() {
         return "en-US";
       },
       setLoopCharPref: sinon.stub(),
-      getLoopCharPref: sinon.stub(),
+      getLoopCharPref: sinon.stub().returns(null),
       getLoopBoolPref: sinon.stub(),
       getCallData: sinon.stub(),
       releaseCallData: sinon.stub(),
@@ -59,6 +57,9 @@ describe("loop.conversation", function() {
 
     // XXX These stubs should be hoisted in a common file
     // Bug 1040968
+    sandbox.stub(document.mozL10n, "get", function(x) {
+      return x;
+    });
     document.mozL10n.initialize(navigator.mozLoop);
   });
 
@@ -68,14 +69,17 @@ describe("loop.conversation", function() {
   });
 
   describe("#init", function() {
-    var oldTitle;
-
     beforeEach(function() {
       sandbox.stub(React, "renderComponent");
       sandbox.stub(document.mozL10n, "initialize");
 
       sandbox.stub(loop.shared.models.ConversationModel.prototype,
         "initialize");
+
+      sandbox.stub(loop.Dispatcher.prototype, "dispatch");
+
+      sandbox.stub(loop.shared.utils.Helper.prototype,
+        "locationHash").returns("#incoming/42");
 
       window.OT = {
         overrideGuidStorage: sinon.stub()
@@ -94,17 +98,101 @@ describe("loop.conversation", function() {
         navigator.mozLoop);
     });
 
-    it("should create the IncomingConversationView", function() {
+    it("should create the ConversationControllerView", function() {
       loop.conversation.init();
 
       sinon.assert.calledOnce(React.renderComponent);
       sinon.assert.calledWith(React.renderComponent,
         sinon.match(function(value) {
           return TestUtils.isDescriptorOfType(value,
-            loop.conversation.IncomingConversationView);
+            loop.conversation.ConversationControllerView);
       }));
     });
 
+    it("should trigger a gatherCallData action", function() {
+      loop.conversation.init();
+
+      sinon.assert.calledOnce(loop.Dispatcher.prototype.dispatch);
+      sinon.assert.calledWithExactly(loop.Dispatcher.prototype.dispatch,
+        new loop.shared.actions.GatherCallData({
+          callId: "42",
+          outgoing: false
+        }));
+    });
+
+    it("should trigger an outgoing gatherCallData action for outgoing calls",
+      function() {
+        loop.shared.utils.Helper.prototype.locationHash.returns("#outgoing/24");
+
+        loop.conversation.init();
+
+        sinon.assert.calledOnce(loop.Dispatcher.prototype.dispatch);
+        sinon.assert.calledWithExactly(loop.Dispatcher.prototype.dispatch,
+          new loop.shared.actions.GatherCallData({
+            callId: "24",
+            outgoing: true
+          }));
+      });
+  });
+
+  describe("ConversationControllerView", function() {
+    var store, conversation, client, ccView, oldTitle, dispatcher;
+
+    function mountTestComponent() {
+      return TestUtils.renderIntoDocument(
+        loop.conversation.ConversationControllerView({
+          client: client,
+          conversation: conversation,
+          sdk: {},
+          store: store
+        }));
+    }
+
+    beforeEach(function() {
+      oldTitle = document.title;
+      client = new loop.Client();
+      conversation = new loop.shared.models.ConversationModel({}, {
+        sdk: {}
+      });
+      dispatcher = new loop.Dispatcher();
+      store = new loop.store.ConversationStore({
+        contact: {
+          name: [ "Mr Smith" ],
+          email: [{
+            type: "home",
+            value: "fakeEmail",
+            pref: true
+          }]
+        }
+      }, {
+        client: client,
+        dispatcher: dispatcher,
+        sdkDriver: {}
+      });
+    });
+
+    afterEach(function() {
+      ccView = undefined;
+      document.title = oldTitle;
+    });
+
+    it("should display the OutgoingConversationView for outgoing calls", function() {
+      store.set({outgoing: true});
+
+      ccView = mountTestComponent();
+
+      TestUtils.findRenderedComponentWithType(ccView,
+        loop.conversationViews.OutgoingConversationView);
+    });
+
+    it("should display the IncomingConversationView for incoming calls", function() {
+      store.set({outgoing: false});
+
+      ccView = mountTestComponent();
+
+      TestUtils.findRenderedComponentWithType(ccView,
+        loop.conversation.IncomingConversationView);
+    });
   });
 
   describe("IncomingConversationView", function() {
@@ -115,7 +203,6 @@ describe("loop.conversation", function() {
         loop.conversation.IncomingConversationView({
           client: client,
           conversation: conversation,
-          notifications: notifications,
           sdk: {}
         }));
     }
@@ -137,9 +224,13 @@ describe("loop.conversation", function() {
 
     describe("start", function() {
       it("should set the title to incoming_call_title2", function() {
-        sandbox.stub(document.mozL10n, "get", function(x) {
-          return x;
-        });
+        navigator.mozLoop.getCallData = function() {
+          return {
+            progressURL:    "fake",
+            websocketToken: "fake",
+            callId: 42
+          };
+        };
 
         icView = mountTestComponent();
 
@@ -231,7 +322,7 @@ describe("loop.conversation", function() {
 
           it("should set the state to incoming on success", function(done) {
             icView = mountTestComponent();
-            resolveWebSocketConnect();
+            resolveWebSocketConnect("incoming");
 
             promise.then(function () {
               expect(icView.state.callStatus).eql("incoming");
@@ -239,17 +330,24 @@ describe("loop.conversation", function() {
             });
           });
 
-          it("should display an error if the websocket failed to connect", function(done) {
-            sandbox.stub(notifications, "errorL10n");
+          it("should set the state to close on success if the progress " +
+            "state is terminated", function(done) {
+              icView = mountTestComponent();
+              resolveWebSocketConnect("terminated");
 
+              promise.then(function () {
+                expect(icView.state.callStatus).eql("close");
+                done();
+              });
+            });
+
+          // XXX implement me as part of bug 1047410
+          // see https://hg.mozilla.org/integration/fx-team/rev/5d2c69ebb321#l18.259
+          it.skip("should should switch view state to failed", function(done) {
             icView = mountTestComponent();
             rejectWebSocketConnect();
 
-            promise.then(function() {
-            }, function () {
-              sinon.assert.calledOnce(notifications.errorL10n);
-              sinon.assert.calledWithExactly(notifications.errorL10n,
-                "cannot_start_call_session_not_ready");
+            promise.then(function() {}, function() {
               done();
             });
           });
@@ -533,13 +631,20 @@ describe("loop.conversation", function() {
           });
       });
 
-      describe("session:peer-hungup", function() {
+      describe("session:network-disconnected", function() {
         it("should navigate to call/feedback when network disconnects",
           function() {
             conversation.trigger("session:network-disconnected");
 
               TestUtils.findRenderedComponentWithType(icView,
                 sharedView.FeedbackView);
+          });
+
+        it("should update the conversation window toolbar title",
+          function() {
+            conversation.trigger("session:network-disconnected");
+
+            expect(document.title).eql("generic_failure_title");
           });
       });
 
