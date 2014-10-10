@@ -10,25 +10,32 @@ public class testSessionHistory extends UITest {
     public void testSessionHistory() {
         GeckoHelper.blockForReady();
 
-        NavigationHelper.enterAndLoadUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
+        String url = StringHelper.ROBOCOP_BLANK_PAGE_01_URL;
+        NavigationHelper.enterAndLoadUrl(url);
+        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE, url);
 
-        NavigationHelper.enterAndLoadUrl(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE);
+        url = StringHelper.ROBOCOP_BLANK_PAGE_02_URL;
+        NavigationHelper.enterAndLoadUrl(url);
+        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE, url);
 
-        NavigationHelper.enterAndLoadUrl(StringHelper.ROBOCOP_BLANK_PAGE_03_URL);
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_03_TITLE);
+        url = StringHelper.ROBOCOP_BLANK_PAGE_03_URL;
+        NavigationHelper.enterAndLoadUrl(url);
+        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_03_TITLE, url);
 
         NavigationHelper.goBack();
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE);
+        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE,
+                StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
 
         NavigationHelper.goBack();
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
+        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE,
+                StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
 
         NavigationHelper.goForward();
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE);
+        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE,
+                StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
 
         NavigationHelper.reload();
-        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE);
+        mToolbar.assertTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE,
+                StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
     }
 }
