@@ -172,7 +172,7 @@ public class testSettingsMenuItems extends PixelTest {
 
             if (AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
                 // Anonymous cell tower/wifi collection
-                String[] networkReportingUi = { "Mozilla Location Service", "Receives Wi-Fi and cellular location data when running in the background and shares it with Mozilla to improve our geolocation service" };
+                String[] networkReportingUi = { "Mozilla Location Service", "Shares approximate Wi-Fi and cellular location of your device with Mozilla to improve our geolocation service" };
                 settingsMap.get(PATH_MOZILLA).add(networkReportingUi);
 
                 String[] learnMoreUi = { "Learn more" };
