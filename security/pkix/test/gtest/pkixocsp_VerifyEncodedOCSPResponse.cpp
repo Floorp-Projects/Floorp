@@ -250,6 +250,7 @@ public:
                     const ScopedSECKEYPrivateKey& signerPrivateKey,
                     PRTime producedAt, PRTime thisUpdate,
                     /*optional*/ const PRTime* nextUpdate,
+                    /*optional*/ SECOidTag signatureHashAlgorithm = SEC_OID_SHA1,
                     /*optional*/ SECItem const* const* certs = nullptr)
   {
     OCSPResponseContext context(arena.get(), certID, producedAt);
@@ -265,6 +266,7 @@ public:
     }
     context.responseStatus = OCSPResponseContext::successful;
     context.producedAt = producedAt;
+    context.signatureHashAlgorithm = signatureHashAlgorithm;
     context.certs = certs;
 
     context.certIDHashAlg = SEC_OID_SHA1;
@@ -352,6 +354,22 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful, unknown)
   ASSERT_FALSE(expired);
 }
 
+TEST_F(pkixocsp_VerifyEncodedResponse_successful,
+       good_unsupportedSignatureAlgorithm)
+{
+  SECItem* response(CreateEncodedOCSPSuccessfulResponse(
+                      OCSPResponseContext::good, *endEntityCertID, byKey,
+                      rootPrivateKey, oneDayBeforeNow, oneDayBeforeNow,
+                      &oneDayAfterNow, SEC_OID_MD5));
+  ASSERT_TRUE(response);
+  bool expired;
+  ASSERT_EQ(Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
+  ASSERT_FALSE(expired);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // indirect responses (signed by a delegated OCSP responder cert)
 
@@ -369,6 +387,9 @@ protected:
   // another value (usually equal to certSubjectName) to use the byName
   // ResponderID construction.
   //
+  // certSignatureAlgorithm specifies the signature algorithm that the
+  // certificate will be signed with, not the OCSP response.
+  //
   // If signerEKU is omitted, then the certificate will have the
   // id-kp-OCSPSigning EKU. If signerEKU is SEC_OID_UNKNOWN then it will not
   // have any EKU extension. Otherwise, the certificate will have the given
@@ -379,6 +400,7 @@ protected:
               const char* certSubjectName,
               OCSPResponseContext::CertStatus certStatus,
               const char* signerName,
+              SECOidTag certSignatureAlgorithm,
               SECOidTag signerEKU = SEC_OID_OCSP_RESPONDER,
               /*optional, out*/ const SECItem** signerDEROut = nullptr)
   {
@@ -393,7 +415,8 @@ protected:
     };
     ScopedSECKEYPrivateKey signerPrivateKey;
     SECItem* signerDER(CreateEncodedCertificate(
-                          arena.get(), ++rootIssuedCount, rootName,
+                          arena.get(), ++rootIssuedCount,
+                          certSignatureAlgorithm, rootName,
                           oneDayBeforeNow, oneDayAfterNow, certSubjectName,
                           signerEKU != SEC_OID_UNKNOWN ? extensions : nullptr,
                           rootPrivateKey.get(), signerPrivateKey));
@@ -416,11 +439,13 @@ protected:
     return CreateEncodedOCSPSuccessfulResponse(certStatus, *endEntityCertID,
                                                signerName, signerPrivateKey,
                                                oneDayBeforeNow, oneDayBeforeNow,
-                                               &oneDayAfterNow, certs);
+                                               &oneDayAfterNow, SEC_OID_SHA1,
+                                               certs);
   }
 
   static SECItem* CreateEncodedCertificate(PLArenaPool* arena,
                                            uint32_t serialNumber,
+                                           SECOidTag signatureAlgorithm,
                                            const char* issuer,
                                            PRTime notBefore,
                                            PRTime notAfter,
@@ -442,12 +467,19 @@ protected:
     if (!subjectDER) {
       return nullptr;
     }
+    SECOidTag signatureHashAlgorithm = SEC_OID_UNKNOWN;
+    if (signatureAlgorithm == SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION) {
+      signatureHashAlgorithm = SEC_OID_SHA256;
+    } else if (signatureAlgorithm == SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION) {
+      signatureHashAlgorithm = SEC_OID_MD5;
+    }
     return ::mozilla::pkix::test::CreateEncodedCertificate(
                                     arena, v3,
-                                    SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
+                                    signatureAlgorithm,
                                     serialNumberDER, issuerDER, notBefore,
                                     notAfter, subjectDER, extensions,
-                                    signerKey, SEC_OID_SHA256, privateKey);
+                                    signerKey, signatureHashAlgorithm,
+                                    privateKey);
   }
 };
 
@@ -455,7 +487,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_byKey)
 {
   SECItem* response(CreateEncodedIndirectOCSPSuccessfulResponse(
                       "CN=good_indirect_byKey", OCSPResponseContext::good,
-                      byKey));
+                      byKey, SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION));
   ASSERT_TRUE(response);
   bool expired;
   ASSERT_EQ(Success,
@@ -469,7 +501,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_byName)
 {
   SECItem* response(CreateEncodedIndirectOCSPSuccessfulResponse(
                       "CN=good_indirect_byName", OCSPResponseContext::good,
-                      "CN=good_indirect_byName"));
+                      "CN=good_indirect_byName",
+                      SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION));
   ASSERT_TRUE(response);
   bool expired;
   ASSERT_EQ(Success,
@@ -531,6 +564,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_expired)
   };
   ScopedSECKEYPrivateKey signerPrivateKey;
   SECItem* signerDER(CreateEncodedCertificate(arena.get(), ++rootIssuedCount,
+                                              SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
                                               rootName,
                                               now - (10 * ONE_DAY),
                                               now - (2 * ONE_DAY),
@@ -543,8 +577,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_expired)
   SECItem* response(CreateEncodedOCSPSuccessfulResponse(
                       OCSPResponseContext::good, *endEntityCertID, signerName,
                       signerPrivateKey, oneDayBeforeNow, oneDayBeforeNow,
-                      &oneDayAfterNow,
-                      certs));
+                      &oneDayAfterNow, SEC_OID_SHA1, certs));
   ASSERT_TRUE(response);
 
   bool expired;
@@ -566,6 +599,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_future)
   };
   ScopedSECKEYPrivateKey signerPrivateKey;
   SECItem* signerDER(CreateEncodedCertificate(arena.get(), ++rootIssuedCount,
+                                              SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
                                               rootName,
                                               now + (2 * ONE_DAY),
                                               now + (10 * ONE_DAY),
@@ -578,7 +612,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_future)
   SECItem* response(CreateEncodedOCSPSuccessfulResponse(
                       OCSPResponseContext::good, *endEntityCertID,
                       signerName, signerPrivateKey, oneDayBeforeNow,
-                      oneDayBeforeNow, &oneDayAfterNow, certs));
+                      oneDayBeforeNow, &oneDayAfterNow, SEC_OID_SHA1, certs));
   ASSERT_TRUE(response);
 
   bool expired;
@@ -593,7 +627,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_no_eku)
 {
   SECItem* response(CreateEncodedIndirectOCSPSuccessfulResponse(
                       "CN=good_indirect_wrong_eku", OCSPResponseContext::good,
-                      byKey, SEC_OID_UNKNOWN));
+                      byKey, SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
+                      SEC_OID_UNKNOWN));
   ASSERT_TRUE(response);
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
@@ -608,7 +643,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
 {
   SECItem* response(CreateEncodedIndirectOCSPSuccessfulResponse(
                       "CN=good_indirect_wrong_eku", OCSPResponseContext::good,
-                      byKey, SEC_OID_EXT_KEY_USAGE_SERVER_AUTH));
+                      byKey, SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
+                      SEC_OID_EXT_KEY_USAGE_SERVER_AUTH));
   ASSERT_TRUE(response);
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
@@ -624,6 +660,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_tampered_eku)
   SECItem* response(CreateEncodedIndirectOCSPSuccessfulResponse(
                       "CN=good_indirect_tampered_eku",
                       OCSPResponseContext::good, byKey,
+                      SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
                       SEC_OID_EXT_KEY_USAGE_SERVER_AUTH));
   ASSERT_TRUE(response);
 
@@ -665,6 +702,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_unknown_issuer)
   };
   ScopedSECKEYPrivateKey signerPrivateKey;
   SECItem* signerDER(CreateEncodedCertificate(arena.get(), 1,
+                        SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
                         subCAName, oneDayBeforeNow, oneDayAfterNow,
                         signerName, extensions, unknownPrivateKey.get(),
                         signerPrivateKey));
@@ -675,7 +713,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_unknown_issuer)
   SECItem* response(CreateEncodedOCSPSuccessfulResponse(
                         OCSPResponseContext::good, *endEntityCertID,
                         signerName, signerPrivateKey, oneDayBeforeNow,
-                        oneDayBeforeNow, &oneDayAfterNow, certs));
+                        oneDayBeforeNow, &oneDayAfterNow, SEC_OID_SHA1, certs));
   ASSERT_TRUE(response);
 
   bool expired;
@@ -703,6 +741,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   };
   ScopedSECKEYPrivateKey subCAPrivateKey;
   SECItem* subCADER(CreateEncodedCertificate(arena.get(), ++rootIssuedCount,
+                                             SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
                                              rootName,
                                              oneDayBeforeNow, oneDayAfterNow,
                                              subCAName, subCAExtensions,
@@ -718,7 +757,9 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
     nullptr
   };
   ScopedSECKEYPrivateKey signerPrivateKey;
-  SECItem* signerDER(CreateEncodedCertificate(arena.get(), 1, subCAName,
+  SECItem* signerDER(CreateEncodedCertificate(arena.get(), 1,
+                                              SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
+                                              subCAName,
                                               oneDayBeforeNow, oneDayAfterNow,
                                               signerName, extensions,
                                               subCAPrivateKey.get(),
@@ -731,8 +772,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   SECItem* response(CreateEncodedOCSPSuccessfulResponse(
                         OCSPResponseContext::good, *endEntityCertID, signerName,
                         signerPrivateKey, oneDayBeforeNow, oneDayBeforeNow,
-                        &oneDayAfterNow,
-                        certs));
+                        &oneDayAfterNow, SEC_OID_SHA1, certs));
   ASSERT_TRUE(response);
 
   bool expired;
@@ -760,6 +800,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   };
   ScopedSECKEYPrivateKey subCAPrivateKey;
   SECItem* subCADER(CreateEncodedCertificate(arena.get(), ++rootIssuedCount,
+                                             SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
                                              rootName,
                                              oneDayBeforeNow, oneDayAfterNow,
                                              subCAName, subCAExtensions,
@@ -775,7 +816,9 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
     nullptr
   };
   ScopedSECKEYPrivateKey signerPrivateKey;
-  SECItem* signerDER(CreateEncodedCertificate(arena.get(), 1, subCAName,
+  SECItem* signerDER(CreateEncodedCertificate(arena.get(), 1,
+                                              SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
+                                              subCAName,
                                               oneDayBeforeNow, oneDayAfterNow,
                                               signerName, extensions,
                                               subCAPrivateKey.get(),
@@ -788,7 +831,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   SECItem* response(CreateEncodedOCSPSuccessfulResponse(
                         OCSPResponseContext::good, *endEntityCertID,
                         signerName, signerPrivateKey, oneDayBeforeNow,
-                        oneDayBeforeNow, &oneDayAfterNow, certs));
+                        oneDayBeforeNow, &oneDayAfterNow, SEC_OID_SHA1, certs));
   ASSERT_TRUE(response);
 
   bool expired;
@@ -797,6 +840,24 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       *response, expired));
   ASSERT_FALSE(expired);
+}
+
+TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
+       good_unsupportedSignatureAlgorithmOnResponder)
+{
+  // Note that the algorithm ID (md5WithRSAEncryption) identifies the signature
+  // algorithm that will be used to sign the certificate that issues the
+  // OCSP responses, not the responses themselves.
+  SECItem* response(CreateEncodedIndirectOCSPSuccessfulResponse(
+                      "CN=good_indirect_unsupportedSignatureAlgorithm",
+                      OCSPResponseContext::good, byKey,
+                      SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION));
+  ASSERT_TRUE(response);
+  bool expired;
+  ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+                                      END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      *response, expired));
 }
 
 class pkixocsp_VerifyEncodedResponse_GetCertTrust
@@ -814,6 +875,7 @@ public:
     response = CreateEncodedIndirectOCSPSuccessfulResponse(
                           "CN=OCSPGetCertTrustTest Signer",
                           OCSPResponseContext::good, byKey,
+                          SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
                           SEC_OID_OCSP_RESPONDER, &signerCertDER);
     if (!response || !signerCertDER) {
       PR_Abort();

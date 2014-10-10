@@ -429,8 +429,8 @@ TEST_F(pkixder_SignatureAlgorithmIdentifier, Invalid_RSA_With_MD5)
   Input input;
   ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
   SignatureAlgorithm alg;
-  ASSERT_EQ(Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED,
-            SignatureAlgorithmIdentifier(input, alg));
+  ASSERT_EQ(Success, SignatureAlgorithmIdentifier(input, alg));
+  ASSERT_EQ(SignatureAlgorithm::unsupported_algorithm, alg);
 }
 
 TEST_F(pkixder_SignatureAlgorithmIdentifier, Invalid_SignatureAlgorithm_SHA256)
@@ -445,8 +445,8 @@ TEST_F(pkixder_SignatureAlgorithmIdentifier, Invalid_SignatureAlgorithm_SHA256)
   Input input;
   ASSERT_EQ(Success, input.Init(DER, sizeof(DER)));
   SignatureAlgorithm alg;
-  ASSERT_EQ(Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED,
-            SignatureAlgorithmIdentifier(input, alg));
+  ASSERT_EQ(Success, SignatureAlgorithmIdentifier(input, alg));
+  ASSERT_EQ(SignatureAlgorithm::unsupported_algorithm, alg);
 }
 
 } // unnamed namespace

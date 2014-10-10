@@ -243,6 +243,7 @@ OCSPResponseContext::OCSPResponseContext(PLArenaPool* arena,
   , producedAt(time)
   , extensions(nullptr)
   , includeEmptyExtensions(false)
+  , signatureHashAlgorithm(SEC_OID_SHA1)
   , badSignature(false)
   , certs(nullptr)
 
@@ -1094,7 +1095,8 @@ BasicOCSPResponse(OCSPResponseContext& context)
 
   // TODO(bug 980538): certs
   return SignedData(context.arena, tbsResponseData,
-                    context.signerPrivateKey.get(), SEC_OID_SHA1,
+                    context.signerPrivateKey.get(),
+                    context.signatureHashAlgorithm,
                     context.badSignature, context.certs);
 }
 
