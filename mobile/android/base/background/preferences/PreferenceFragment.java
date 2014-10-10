@@ -53,7 +53,7 @@ public abstract class PreferenceFragment extends Fragment implements PreferenceM
   // The issue is that the Handler references the Fragment; messages targeting
   // the Handler reference it; and if such messages are long lived, the Fragment
   // cannot be GCed. This is not an issue for us; our messages are short-lived.
-  private Handler mHandler = new Handler() {
+  private final Handler mHandler = new Handler() {
     @Override
     public void handleMessage(Message msg) {
       switch (msg.what) {
@@ -299,7 +299,7 @@ public abstract class PreferenceFragment extends Fragment implements PreferenceM
     mHandler.post(mRequestFocus);
   }
 
-  private OnKeyListener mListOnKeyListener = new OnKeyListener() {
+  private final OnKeyListener mListOnKeyListener = new OnKeyListener() {
 
     @Override
     public boolean onKey(View v, int keyCode, KeyEvent event) {

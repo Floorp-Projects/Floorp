@@ -184,7 +184,7 @@ public class BaseResource implements Resource {
     delegate.addHeaders(request, client);
   }
 
-  private static Object connManagerMonitor = new Object();
+  private static final Object connManagerMonitor = new Object();
   private static ClientConnectionManager connManager;
 
   // Call within a synchronized block on connManagerMonitor.

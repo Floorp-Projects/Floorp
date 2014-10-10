@@ -83,7 +83,7 @@ public class testSearchHistoryProvider extends ContentProviderTest {
      * Make sure this method is present and that it returns a new
      * instance of your class.
      */
-    private static Callable<ContentProvider> sProviderFactory =
+    private static final Callable<ContentProvider> sProviderFactory =
             new Callable<ContentProvider>() {
                 @Override
                 public ContentProvider call() {

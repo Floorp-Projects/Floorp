@@ -997,7 +997,7 @@ final class DebugGeckoInputConnection
         implements InvocationHandler {
 
     private InputConnection mProxy;
-    private StringBuilder mCallLevel;
+    private final StringBuilder mCallLevel;
 
     private DebugGeckoInputConnection(View targetView,
                                       GeckoEditableClient editable) {

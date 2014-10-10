@@ -38,57 +38,57 @@ import ch.boye.httpclientandroidlib.entity.StringEntity;
 
 public class JPakeClient {
 
-  private static String       LOG_TAG                 = "JPakeClient";
+  private static final String LOG_TAG = "JPakeClient";
 
   // J-PAKE constants.
-  public final static int     REQUEST_TIMEOUT         = 60 * 1000;       // 1 min
-  public final static int     KEYEXCHANGE_VERSION     = 3;
-  public final static String  JPAKE_VERIFY_VALUE      = "0123456789ABCDEF";
+  public static final int REQUEST_TIMEOUT = 60 * 1000;       // 1 min
+  public static final int KEYEXCHANGE_VERSION = 3;
+  public static final String JPAKE_VERIFY_VALUE = "0123456789ABCDEF";
 
-  private final static String JPAKE_SIGNERID_SENDER   = "sender";
-  private final static String JPAKE_SIGNERID_RECEIVER = "receiver";
-  private final static int    JPAKE_LENGTH_SECRET     = 8;
-  private final static int    JPAKE_LENGTH_CLIENTID   = 256;
+  private static final String JPAKE_SIGNERID_SENDER = "sender";
+  private static final String JPAKE_SIGNERID_RECEIVER = "receiver";
+  private static final int JPAKE_LENGTH_SECRET = 8;
+  private static final int JPAKE_LENGTH_CLIENTID = 256;
 
-  private final static int    MAX_TRIES               = 10;
-  private final static int    MAX_TRIES_FIRST_MSG     = 300;
-  private final static int    MAX_TRIES_LAST_MSG      = 300;
+  private static final int MAX_TRIES = 10;
+  private static final int MAX_TRIES_FIRST_MSG = 300;
+  private static final int MAX_TRIES_LAST_MSG = 300;
 
   // J-PAKE session values.
-  public String              clientId;
-  public String              secret;
+  public String clientId;
+  public String secret;
 
-  public String              myEtag;
-  public String              mySignerId;
-  public String              theirEtag;
-  public String              theirSignerId;
-  public String              jpakeServer;
+  public String myEtag;
+  public String mySignerId;
+  public String theirEtag;
+  public String theirSignerId;
+  public String jpakeServer;
 
   // J-PAKE state.
-  public boolean             paired                  = false;
-  public boolean             finished                = false;
+  public boolean paired;
+  public boolean finished;
 
   // J-PAKE values.
-  public int                 jpakePollInterval;
-  public int                 jpakeMaxTries;
-  public String              channel;
-  public volatile String     channelUrl;
+  public int jpakePollInterval;
+  public int jpakeMaxTries;
+  public String channel;
+  public volatile String channelUrl;
 
   // J-PAKE session data.
-  public KeyBundle           myKeyBundle;
-  public JSONObject          jCreds;
+  public KeyBundle myKeyBundle;
+  public JSONObject jCreds;
 
-  public ExtendedJSONObject  jOutgoing;
-  public ExtendedJSONObject  jIncoming;
+  public ExtendedJSONObject jOutgoing;
+  public ExtendedJSONObject jIncoming;
 
-  public JPakeParty          jParty;
-  public JPakeNumGenerator   numGen;
+  public JPakeParty jParty;
+  public JPakeNumGenerator numGen;
 
-  public int                 pollTries = 0;
+  public int pollTries;
 
   // UI controller.
-  private SetupSyncActivity controllerActivity;
-  private Queue<JPakeStage>  stages;
+  private final SetupSyncActivity controllerActivity;
+  private Queue<JPakeStage> stages;
 
   public JPakeClient(SetupSyncActivity activity) {
     controllerActivity = activity;

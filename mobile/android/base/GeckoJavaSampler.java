@@ -62,7 +62,7 @@ public class GeckoJavaSampler {
         private boolean mPauseSampler;
         private boolean mStopSampler;
 
-        private SparseArray<Sample[]> mSamples = new SparseArray<Sample[]>();
+        private final SparseArray<Sample[]> mSamples = new SparseArray<Sample[]>();
         private int mSamplePos;
 
         public SamplingThread(final int aInterval, final int aSampleCount) {

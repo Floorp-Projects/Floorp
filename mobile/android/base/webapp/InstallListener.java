@@ -22,11 +22,11 @@ import android.util.Log;
 
 public class InstallListener extends BroadcastReceiver {
 
-    private static String LOGTAG = "GeckoWebappInstallListener";
-    private JSONObject mData;
-    private String mManifestUrl;
+    private static final String LOGTAG = "GeckoWebappInstallListener";
+    private final JSONObject mData;
+    private final String mManifestUrl;
     private boolean mReceived;
-    private File mApkFile;
+    private final File mApkFile;
 
     public InstallListener(String manifestUrl, JSONObject data, File apkFile) {
         mData = data;

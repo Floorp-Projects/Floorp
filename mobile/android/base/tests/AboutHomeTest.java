@@ -35,7 +35,7 @@ abstract class AboutHomeTest extends PixelTest {
         READING_LIST
     };
 
-    private ArrayList<String> aboutHomeTabs = new ArrayList<String>() {{
+    private final ArrayList<String> aboutHomeTabs = new ArrayList<String>() {{
                   add("TOP_SITES");
                   add("BOOKMARKS");
                   add("READING_LIST");

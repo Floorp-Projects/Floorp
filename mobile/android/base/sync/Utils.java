@@ -40,7 +40,7 @@ public class Utils {
 
   private static final String LOG_TAG = "Utils";
 
-  private static SecureRandom sharedSecureRandom = new SecureRandom();
+  private static final SecureRandom sharedSecureRandom = new SecureRandom();
 
   // See <http://developer.android.com/reference/android/content/Context.html#getSharedPreferences%28java.lang.String,%20int%29>
   public static final int SHARED_PREFERENCES_MODE = 0;

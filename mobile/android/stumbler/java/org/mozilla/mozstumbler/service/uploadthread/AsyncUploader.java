@@ -28,7 +28,7 @@ public class AsyncUploader extends AsyncTask<Void, Void, SyncSummary> {
     private final UploadSettings mSettings;
     private final Object mListenerLock = new Object();
     private AsyncUploaderListener mListener;
-    private static AtomicBoolean sIsUploading = new AtomicBoolean();
+    private static final AtomicBoolean sIsUploading = new AtomicBoolean();
     private String mNickname;
 
     public interface AsyncUploaderListener {

@@ -69,7 +69,7 @@ public class RecordsChannel implements
   private static final String LOG_TAG = "RecordsChannel";
   public RepositorySession source;
   public RepositorySession sink;
-  private RecordsChannelDelegate delegate;
+  private final RecordsChannelDelegate delegate;
   private long fetchEnd = -1;
 
   protected final AtomicInteger numFetched = new AtomicInteger();
@@ -94,7 +94,7 @@ public class RecordsChannel implements
    */
   private RecordConsumer consumer;
   private boolean waitingForQueueDone = false;
-  private ConcurrentLinkedQueue<Record> toProcess = new ConcurrentLinkedQueue<Record>();
+  private final ConcurrentLinkedQueue<Record> toProcess = new ConcurrentLinkedQueue<Record>();
 
   @Override
   public ConcurrentLinkedQueue<Record> getQueue() {

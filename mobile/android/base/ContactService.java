@@ -90,8 +90,8 @@ public class ContactService implements GeckoEventListener {
     private HashMap<String, Integer> mWebsiteTypesMap;
     private HashMap<String, Integer> mImTypesMap;
 
-    private ContentResolver mContentResolver;
-    private GeckoApp mActivity;
+    private final ContentResolver mContentResolver;
+    private final GeckoApp mActivity;
 
     ContactService(EventDispatcher eventDispatcher, GeckoApp activity) {
         mEventDispatcher = eventDispatcher;
