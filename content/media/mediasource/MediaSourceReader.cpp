@@ -209,7 +209,6 @@ MediaSourceReader::Shutdown()
   mAudioReader = nullptr;
   mVideoTrack = nullptr;
   mVideoReader = nullptr;
-  mTrackBuffers.Clear();
 }
 
 void
