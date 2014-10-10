@@ -113,8 +113,8 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     if (subtable.entry_selector != max_pow2) {
       return OTS_FAILURE_MSG("Bad subtable %d entry selector %d", i, subtable.entry_selector);
     }
-    const uint32_t expected_range_shift
-        = kFormat0PairSize * num_pairs - subtable.search_range;
+    const uint16_t expected_range_shift =
+        kFormat0PairSize * num_pairs - subtable.search_range;
     if (subtable.range_shift != expected_range_shift) {
       OTS_WARNING("bad range shift");
       subtable.range_shift = expected_range_shift;
@@ -161,17 +161,21 @@ bool ots_kern_should_serialise(OpenTypeFile *file) {
 bool ots_kern_serialise(OTSStream *out, OpenTypeFile *file) {
   const OpenTypeKERN *kern = file->kern;
 
-  if (!out->WriteU16(kern->version) ||
-      !out->WriteU16(kern->subtables.size())) {
+  const uint16_t num_subtables = static_cast<uint16_t>(kern->subtables.size());
+  if (num_subtables != kern->subtables.size() ||
+      !out->WriteU16(kern->version) ||
+      !out->WriteU16(num_subtables)) {
     return OTS_FAILURE_MSG("Can't write kern table header");
   }
 
-  for (unsigned i = 0; i < kern->subtables.size(); ++i) {
-    const uint16_t length = 14 + (6 * kern->subtables[i].pairs.size());
-    if (!out->WriteU16(kern->subtables[i].version) ||
-        !out->WriteU16(length) ||
+  for (uint16_t i = 0; i < num_subtables; ++i) {
+    const size_t length = 14 + (6 * kern->subtables[i].pairs.size());
+    if (length > std::numeric_limits<uint16_t>::max() ||
+        !out->WriteU16(kern->subtables[i].version) ||
+        !out->WriteU16(static_cast<uint16_t>(length)) ||
         !out->WriteU16(kern->subtables[i].coverage) ||
-        !out->WriteU16(kern->subtables[i].pairs.size()) ||
+        !out->WriteU16(
+            static_cast<uint16_t>(kern->subtables[i].pairs.size())) ||
         !out->WriteU16(kern->subtables[i].search_range) ||
         !out->WriteU16(kern->subtables[i].entry_selector) ||
         !out->WriteU16(kern->subtables[i].range_shift)) {

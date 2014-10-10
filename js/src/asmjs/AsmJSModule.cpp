@@ -18,8 +18,6 @@
 
 #include "asmjs/AsmJSModule.h"
 
-#include <errno.h>
-
 #ifndef XP_WIN
 # include <sys/mman.h>
 #endif
@@ -57,37 +55,17 @@ using mozilla::Compression::LZ4;
 using mozilla::Swap;
 
 static uint8_t *
-AllocateExecutableMemory(ExclusiveContext *cx, size_t totalBytes)
-{
-    MOZ_ASSERT(totalBytes % AsmJSPageSize == 0);
-
-#ifdef XP_WIN
-    void *p = VirtualAlloc(nullptr, totalBytes, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    if (!p) {
-        js_ReportOutOfMemory(cx);
-        return nullptr;
-    }
-#else  // assume Unix
-    void *p = MozTaggedAnonymousMmap(nullptr, totalBytes,
-                                     PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANON,
-                                     -1, 0, "asm-js-code");
-    if (p == MAP_FAILED) {
-        js_ReportOutOfMemory(cx);
-        return nullptr;
-    }
-#endif
-
-    return (uint8_t *)p;
-}
-
-static void
-DeallocateExecutableMemory(uint8_t *code, size_t totalBytes)
+AllocateExecutableMemory(ExclusiveContext *cx, size_t bytes)
 {
 #ifdef XP_WIN
-    JS_ALWAYS_TRUE(VirtualFree(code, 0, MEM_RELEASE));
+    unsigned permissions = PAGE_EXECUTE_READWRITE;
 #else
-    JS_ALWAYS_TRUE(munmap(code, totalBytes) == 0 || errno == ENOMEM);
+    unsigned permissions = PROT_READ | PROT_WRITE | PROT_EXEC;
 #endif
+    void *p = AllocateExecutableMemory(nullptr, bytes, permissions, "asm-js-code", AsmJSPageSize);
+    if (!p)
+        js_ReportOutOfMemory(cx);
+    return (uint8_t *)p;
 }
 
 AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t srcBodyStart,
@@ -129,7 +107,7 @@ AsmJSModule::~AsmJSModule()
             exitDatum.ionScript->removeDependentAsmJSModule(exit);
         }
 
-        DeallocateExecutableMemory(code_, pod.totalBytes_);
+        DeallocateExecutableMemory(code_, pod.totalBytes_, AsmJSPageSize);
     }
 
     for (size_t i = 0; i < numFunctionCounts(); i++)

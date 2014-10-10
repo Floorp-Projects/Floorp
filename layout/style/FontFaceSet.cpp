@@ -352,14 +352,6 @@ static PLDHashOperator DestroyIterator(nsPtrHashKey<nsFontFaceLoader>* aKey,
 }
 
 void
-FontFaceSet::DisconnectFromRule(FontFace* aFontFace)
-{
-  nsCSSFontFaceRule* rule = aFontFace->GetRule();
-  aFontFace->DisconnectFromRule();
-  mRuleFaceMap.Remove(rule);
-}
-
-void
 FontFaceSet::DestroyUserFontSet()
 {
   Disconnect();
@@ -367,7 +359,7 @@ FontFaceSet::DestroyUserFontSet()
   mPresContext = nullptr;
   mLoaders.EnumerateEntries(DestroyIterator, nullptr);
   for (size_t i = 0; i < mRuleFaces.Length(); i++) {
-    DisconnectFromRule(mRuleFaces[i].mFontFace);
+    mRuleFaces[i].mFontFace->DisconnectFromRule();
     mRuleFaces[i].mFontFace->SetUserFontEntry(nullptr);
   }
   for (size_t i = 0; i < mNonRuleFaces.Length(); i++) {
@@ -447,8 +439,22 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
 #endif
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-  if (httpChannel)
+  if (httpChannel) {
     httpChannel->SetReferrer(aFontFaceSrc->mReferrer);
+    nsAutoCString accept("application/font-woff;q=0.9,*/*;q=0.8");
+    if (Preferences::GetBool(GFX_PREF_WOFF2_ENABLED)) {
+      accept.Insert(NS_LITERAL_CSTRING("application/font-woff2;q=1.0,"), 0);
+    }
+    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                  accept, false);
+    // For WOFF and WOFF2, we should tell servers/proxies/etc NOT to try
+    // and apply additional compression at the content-encoding layer
+    if (aFontFaceSrc->mFormatFlags & (gfxUserFontSet::FLAG_FORMAT_WOFF |
+                                      gfxUserFontSet::FLAG_FORMAT_WOFF2)) {
+      httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept-Encoding"),
+                                    NS_LITERAL_CSTRING("identity"), false);
+    }
+  }
   nsCOMPtr<nsISupportsPriority> priorityChannel(do_QueryInterface(channel));
   if (priorityChannel) {
     priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_HIGH);
@@ -516,6 +522,16 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
   bool modified = mNonRuleFacesDirty;
   mNonRuleFacesDirty = false;
 
+  // reuse existing FontFace objects mapped to rules already
+  nsDataHashtable<nsPtrHashKey<nsCSSFontFaceRule>, FontFace*> ruleFaceMap;
+  for (size_t i = 0, i_end = mRuleFaces.Length(); i < i_end; ++i) {
+    FontFace* f = mRuleFaces[i].mFontFace;
+    if (!f) {
+      continue;
+    }
+    ruleFaceMap.Put(f->GetRule(), f);
+  }
+
   // The @font-face rules that make up the user font set have changed,
   // so we need to update the set. However, we want to preserve existing
   // font entries wherever possible, so that we don't discard and then
@@ -546,9 +562,12 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
     if (handledRules.Contains(aRules[i].mRule)) {
       continue;
     }
-    InsertRuleFontFace(FontFaceForRule(aRules[i].mRule),
-                       aRules[i].mSheetType, oldRecords,
-                       modified);
+    nsCSSFontFaceRule* rule = aRules[i].mRule;
+    nsRefPtr<FontFace> f = ruleFaceMap.Get(rule);
+    if (!f.get()) {
+      f = FontFace::CreateForRule(GetParentObject(), mPresContext, rule);
+    }
+    InsertRuleFontFace(f, aRules[i].mSheetType, oldRecords, modified);
     handledRules.PutEntry(aRules[i].mRule);
   }
 
@@ -592,7 +611,7 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
                  "FontFace should not occur in mUnavailableFaces twice");
 
       mUnavailableFaces.AppendElement(f);
-      DisconnectFromRule(f);
+      f->DisconnectFromRule();
     }
   }
 
@@ -985,16 +1004,6 @@ FontFaceSet::FindRuleForUserFontEntry(gfxUserFontEntry* aUserFontEntry)
   return nullptr;
 }
 
-gfxUserFontEntry*
-FontFaceSet::FindUserFontEntryForRule(nsCSSFontFaceRule* aRule)
-{
-  FontFace* f = mRuleFaceMap.Get(aRule);
-  if (f) {
-    return f->GetUserFontEntry();
-  }
-  return nullptr;
-}
-
 nsresult
 FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
                         const char* aMessage,
@@ -1268,29 +1277,6 @@ FontFaceSet::DoRebuildUserFontSet()
   }
 
   mPresContext->RebuildUserFontSet();
-}
-
-FontFace*
-FontFaceSet::FontFaceForRule(nsCSSFontFaceRule* aRule)
-{
-  MOZ_ASSERT(aRule);
-
-  FontFace* f = mRuleFaceMap.Get(aRule);
-  if (f) {
-    MOZ_ASSERT(f->GetFontFaceSet() == this,
-               "existing FontFace is from another FontFaceSet?");
-    return f;
-  }
-
-  // We might be creating a FontFace object for an @font-face rule that we are
-  // just about to create a user font entry for, so entry might be null.
-  gfxUserFontEntry* entry = FindUserFontEntryForRule(aRule);
-  nsRefPtr<FontFace> newFontFace =
-    FontFace::CreateForRule(GetParentObject(), mPresContext, aRule, entry);
-  MOZ_ASSERT(newFontFace->GetFontFaceSet() == this,
-             "new FontFace is from another FontFaceSet?");
-  mRuleFaceMap.Put(aRule, newFontFace);
-  return newFontFace;
 }
 
 void

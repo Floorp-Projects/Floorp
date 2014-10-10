@@ -218,7 +218,7 @@ bool ParseFormat4(ots::OpenTypeFile *file, int platform, int encoding,
   // glyphs and that we don't access anything out-of-bounds.
   for (unsigned i = 0; i < segcount; ++i) {
     for (unsigned cp = ranges[i].start_range; cp <= ranges[i].end_range; ++cp) {
-      const uint16_t code_point = cp;
+      const uint16_t code_point = static_cast<uint16_t>(cp);
       if (ranges[i].id_range_offset == 0) {
         // this is explictly allowed to overflow in the spec
         const uint16_t glyph = code_point + ranges[i].id_delta;
@@ -866,13 +866,13 @@ bool ots_cmap_serialise(OTSStream *out, OpenTypeFile *file) {
   const bool have_314 = (!have_304) && file->cmap->subtable_3_1_4_data;
   const bool have_31012 = file->cmap->subtable_3_10_12.size() != 0;
   const bool have_31013 = file->cmap->subtable_3_10_13.size() != 0;
-  const unsigned num_subtables = static_cast<unsigned>(have_034) +
-                                 static_cast<unsigned>(have_0514) +
-                                 static_cast<unsigned>(have_100) +
-                                 static_cast<unsigned>(have_304) +
-                                 static_cast<unsigned>(have_314) +
-                                 static_cast<unsigned>(have_31012) +
-                                 static_cast<unsigned>(have_31013);
+  const uint16_t num_subtables = static_cast<uint16_t>(have_034) +
+                                 static_cast<uint16_t>(have_0514) +
+                                 static_cast<uint16_t>(have_100) +
+                                 static_cast<uint16_t>(have_304) +
+                                 static_cast<uint16_t>(have_314) +
+                                 static_cast<uint16_t>(have_31012) +
+                                 static_cast<uint16_t>(have_31013);
   const off_t table_start = out->Tell();
 
   // Some fonts don't have 3-0-4 MS Symbol nor 3-1-4 Unicode BMP tables
@@ -1006,8 +1006,8 @@ bool ots_cmap_serialise(OTSStream *out, OpenTypeFile *file) {
         = file->cmap->subtable_3_10_13;
     const unsigned num_groups = groups.size();
     if (!out->WriteU16(13) ||
-        !out->WriteU32(0) ||
-        !out->WriteU32(num_groups * 12 + 14) ||
+        !out->WriteU16(0) ||
+        !out->WriteU32(num_groups * 12 + 16) ||
         !out->WriteU32(0) ||
         !out->WriteU32(num_groups)) {
       return OTS_FAILURE();

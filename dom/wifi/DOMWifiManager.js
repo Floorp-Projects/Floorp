@@ -183,38 +183,6 @@ DOMWifiManager.prototype = {
     return capabilities;
   },
 
-  _genReadonlyPropDesc: function(value) {
-    return {
-      enumerable: true, configurable: false, writable: false, value: value
-    };
-  },
-
-  _convertWifiCertificateInfo: function(aInfo) {
-    let propList = {};
-    for (let k in aInfo) {
-      propList[k] = this._genReadonlyPropDesc(aInfo[k]);
-    }
-
-    let info = Cu.createObjectIn(this._window);
-    Object.defineProperties(info, propList);
-    Cu.makeObjectPropsNormal(info);
-
-    return info;
-  },
-
-  _convertWifiCertificateList: function(aList) {
-    let propList = {};
-    for (let k in aList) {
-      propList[k] = this._genReadonlyPropDesc(aList[k]);
-    }
-
-    let list = Cu.createObjectIn(this._window);
-    Object.defineProperties(list, propList);
-    Cu.makeObjectPropsNormal(list);
-
-    return list;
-  },
-
   _sendMessageForRequest: function(name, data, request) {
     let id = this.getRequestId(request);
     this._mm.sendAsyncMessage(name, { data: data, rid: id, mid: this._id });
@@ -307,7 +275,7 @@ DOMWifiManager.prototype = {
         break;
 
       case "WifiManager:importCert:Return:OK":
-        Services.DOMRequest.fireSuccess(request, this._convertWifiCertificateInfo(msg.data));
+        Services.DOMRequest.fireSuccess(request, Cu.cloneInto(msg.data, this._window));
         break;
 
       case "WifiManager:importCert:Return:NO":
@@ -315,7 +283,7 @@ DOMWifiManager.prototype = {
         break;
 
       case "WifiManager:getImportedCerts:Return:OK":
-        Services.DOMRequest.fireSuccess(request, this._convertWifiCertificateList(msg.data));
+        Services.DOMRequest.fireSuccess(request, Cu.cloneInto(msg.data, this._window));
         break;
 
       case "WifiManager:getImportedCerts:Return:NO":

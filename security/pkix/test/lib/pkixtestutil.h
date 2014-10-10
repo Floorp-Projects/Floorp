@@ -74,13 +74,36 @@ static const uint8_t tlv_id_kp_serverAuth[] = {
   0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x01
 };
 
-extern const Input sha256WithRSAEncryption;
+// python DottedOIDToCode.py --alg sha256WithRSAEncryption 1.2.840.113549.1.1.11
+const uint8_t alg_sha256WithRSAEncryption[] = {
+  0x30, 0x0b, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b
+};
+
+const ByteString sha256WithRSAEncryption(alg_sha256WithRSAEncryption,
+  MOZILLA_PKIX_ARRAY_LENGTH(alg_sha256WithRSAEncryption));
+
+// python DottedOIDToCode.py --alg md5WithRSAEncryption 1.2.840.113549.1.1.4
+const uint8_t alg_md5WithRSAEncryption[] = {
+  0x30, 0x0b, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x04
+};
+
+const ByteString md5WithRSAEncryption(alg_md5WithRSAEncryption,
+  MOZILLA_PKIX_ARRAY_LENGTH(alg_md5WithRSAEncryption));
+
+// python DottedOIDToCode.py --alg md2WithRSAEncryption 1.2.840.113549.1.1.2
+const uint8_t alg_md2WithRSAEncryption[] = {
+  0x30, 0x0b, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x02
+};
+
+const ByteString md2WithRSAEncryption(alg_md2WithRSAEncryption,
+  MOZILLA_PKIX_ARRAY_LENGTH(alg_md2WithRSAEncryption));
 
 // e.g. YMDHMS(2016, 12, 31, 1, 23, 45) => 2016-12-31:01:23:45 (GMT)
 mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
                            int16_t hour, int16_t minutes, int16_t seconds);
 
 ByteString CNToDERName(const char* cn);
+bool InputEqualsByteString(Input input, const ByteString& bs);
 
 class TestKeyPair
 {
@@ -96,7 +119,7 @@ public:
   const ByteString subjectPublicKey;
 
   virtual Result SignData(const ByteString& tbs,
-                          SignatureAlgorithm signatureAlgorithm,
+                          const ByteString& signatureAlgorithm,
                           /*out*/ ByteString& signature) const = 0;
 
   virtual TestKeyPair* Clone() const = 0;
@@ -139,7 +162,10 @@ Result TamperOnce(/*in/out*/ ByteString& item, const ByteString& from,
 
 enum Version { v1 = 0, v2 = 1, v3 = 2 };
 
-// signature is assumed to be the DER encoding of an AlgorithmIdentifer.
+// signature is assumed to be the DER encoding of an AlgorithmIdentifer. It is
+// put into the signature field of the TBSCertificate. In most cases, it will
+// be the same as signatureAlgorithm, which is the algorithm actually used
+// to sign the certificate.
 // serialNumber is assumed to be the DER encoding of an INTEGER.
 //
 // If extensions is null, then no extensions will be encoded. Otherwise,
@@ -150,14 +176,14 @@ enum Version { v1 = 0, v2 = 1, v3 = 2 };
 // If issuerPrivateKey is null, then the certificate will be self-signed.
 // Parameter order is based on the order of the attributes of the certificate
 // in RFC 5280.
-ByteString CreateEncodedCertificate(long version, Input signature,
+ByteString CreateEncodedCertificate(long version, const ByteString& signature,
                                     const ByteString& serialNumber,
                                     const ByteString& issuerNameDER,
                                     time_t notBefore, time_t notAfter,
                                     const ByteString& subjectNameDER,
                                     /*optional*/ const ByteString* extensions,
                                     /*optional*/ TestKeyPair* issuerKeyPair,
-                                    SignatureAlgorithm signatureAlgorithm,
+                                    const ByteString& signatureAlgorithm,
                                     /*out*/ ScopedTestKeyPair& keyPairResult);
 
 ByteString CreateEncodedSerialNumber(long value);
@@ -218,6 +244,7 @@ public:
                                // regardless of if there are any actual
                                // extensions.
   ScopedTestKeyPair signerKeyPair;
+  ByteString signatureAlgorithm; // DER encoding of signature algorithm to use.
   bool badSignature; // If true, alter the signature to fail verification
   const ByteString* certs; // optional; array terminated by an empty string
 
