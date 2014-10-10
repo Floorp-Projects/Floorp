@@ -61,6 +61,7 @@ public class FilePicker implements GeckoEventListener {
                 mimeType = GeckoAppShell.getMimeTypeFromExtensions(message.optString("extensions"));
 
             showFilePickerAsync(title, mimeType, new ResultHandler() {
+                @Override
                 public void gotFile(String filename) {
                     try {
                         message.put("file", filename);

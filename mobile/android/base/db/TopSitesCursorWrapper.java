@@ -476,6 +476,7 @@ public class TopSitesCursorWrapper implements Cursor {
         return false;
     }
 
+    @Override
     public Uri getNotificationUri() {
         // There's no single notification URI for the wrapper
         return null;
