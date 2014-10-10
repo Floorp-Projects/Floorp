@@ -189,10 +189,12 @@ abstract class PanelLayout extends FrameLayout {
         }
 
         public static final Creator<DatasetRequest> CREATOR = new Creator<DatasetRequest>() {
+            @Override
             public DatasetRequest createFromParcel(Parcel in) {
                 return new DatasetRequest(in);
             }
 
+            @Override
             public DatasetRequest[] newArray(int size) {
                 return new DatasetRequest[size];
             }
@@ -629,10 +631,12 @@ abstract class PanelLayout extends FrameLayout {
         }
 
         public static final Creator<FilterDetail> CREATOR = new Creator<FilterDetail>() {
+            @Override
             public FilterDetail createFromParcel(Parcel in) {
                 return new FilterDetail(in);
             }
 
+            @Override
             public FilterDetail[] newArray(int size) {
                 return new FilterDetail[size];
             }

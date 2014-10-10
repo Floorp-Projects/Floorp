@@ -112,6 +112,7 @@ public class RemoteClientsDialogFragment extends DialogFragment {
             });
         } else {
             builder.setItems(clientNames, new DialogInterface.OnClickListener() {
+                @Override
                 public void onClick(DialogInterface dialog, int index) {
                     final ArrayList<RemoteClient> checked = new ArrayList<RemoteClient>();
                     checked.add(clients.get(index));

@@ -1558,6 +1558,7 @@ public class ContactService implements GeckoEventListener {
             });
 
         mActivity.runOnUiThread(new Runnable() {
+            @Override
             public void run() {
                 builder.show();
             }
