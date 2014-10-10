@@ -189,6 +189,7 @@ public:
                                // regardless of if there are any actual
                                // extensions.
   ScopedSECKEYPrivateKey signerPrivateKey;
+  SECOidTag signatureHashAlgorithm;
   bool badSignature; // If true, alter the signature to fail verification
   SECItem const* const* certs; // non-owning pointer to certs to embed
 
