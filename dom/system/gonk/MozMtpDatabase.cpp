@@ -697,12 +697,18 @@ MozMtpDatabase::getNumObjects(MtpStorageID aStorageID,
 MtpObjectFormatList*
 MozMtpDatabase::getSupportedPlaybackFormats()
 {
-  static const uint16_t init_data[] = {MTP_FORMAT_UNDEFINED, MTP_FORMAT_ASSOCIATION, MTP_FORMAT_PNG};
+  static const uint16_t init_data[] = {MTP_FORMAT_UNDEFINED, MTP_FORMAT_ASSOCIATION,
+                                       MTP_FORMAT_TEXT, MTP_FORMAT_HTML, MTP_FORMAT_WAV,
+                                       MTP_FORMAT_MP3, MTP_FORMAT_MPEG, MTP_FORMAT_EXIF_JPEG,
+                                       MTP_FORMAT_TIFF_EP, MTP_FORMAT_BMP, MTP_FORMAT_GIF,
+                                       MTP_FORMAT_PNG, MTP_FORMAT_TIFF, MTP_FORMAT_WMA,
+                                       MTP_FORMAT_OGG, MTP_FORMAT_AAC, MTP_FORMAT_MP4_CONTAINER,
+                                       MTP_FORMAT_MP2, MTP_FORMAT_3GP_CONTAINER, MTP_FORMAT_FLAC};
 
   MtpObjectFormatList *list = new MtpObjectFormatList();
   list->appendArray(init_data, MOZ_ARRAY_LENGTH(init_data));
 
-  MTP_LOG("returning MTP_FORMAT_UNDEFINED, MTP_FORMAT_ASSOCIATION, MTP_FORMAT_PNG");
+  MTP_LOG("returning Supported Playback Formats");
   return list;
 }
 

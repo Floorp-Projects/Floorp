@@ -285,17 +285,27 @@ TCPSocketParent::SendEvent(const nsAString& aType, JS::Handle<JS::Value> aDataVa
   } else if (aDataVal.isObject()) {
     JS::Rooted<JSObject *> obj(aCx, &aDataVal.toObject());
     if (JS_IsArrayBufferObject(obj)) {
-      uint32_t nbytes = JS_GetArrayBufferByteLength(obj);
-      uint8_t* buffer = JS_GetArrayBufferData(obj);
-      if (!buffer) {
-        FireInteralError(this, __LINE__);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
       FallibleTArray<uint8_t> fallibleArr;
-      if (!fallibleArr.InsertElementsAt(0, buffer, nbytes)) {
-        FireInteralError(this, __LINE__);
-        return NS_ERROR_OUT_OF_MEMORY;
+      uint32_t errLine = 0;
+      do {
+          JS::AutoCheckCannotGC nogc;
+          uint32_t nbytes = JS_GetArrayBufferByteLength(obj);
+          uint8_t* buffer = JS_GetArrayBufferData(obj, nogc);
+          if (!buffer) {
+              errLine = __LINE__;
+              break;
+          }
+          if (!fallibleArr.InsertElementsAt(0, buffer, nbytes)) {
+              errLine = __LINE__;
+              break;
+          }
+      } while (false);
+
+      if (errLine) {
+          FireInteralError(this, errLine);
+          return NS_ERROR_OUT_OF_MEMORY;
       }
+
       InfallibleTArray<uint8_t> arr;
       arr.SwapElements(fallibleArr);
       data = SendableData(arr);

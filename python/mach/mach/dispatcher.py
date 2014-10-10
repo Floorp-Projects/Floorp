@@ -146,6 +146,11 @@ class CommandAction(argparse.Action):
         remainder = None
 
         for arg in handler.arguments:
+            # Remove our group keyword; it's not needed here.
+            group_name = arg[1].get('group')
+            if group_name:
+                del arg[1]['group']
+
             if arg[1].get('nargs') == argparse.REMAINDER:
                 # parse_known_args expects all argparse.REMAINDER ('...')
                 # arguments to be all stuck together. Instead, we want them to
@@ -288,7 +293,18 @@ class CommandAction(argparse.Action):
             c_parser = argparse.ArgumentParser(**parser_args)
             group = c_parser.add_argument_group('Command Arguments')
 
+        extra_groups = {}
+        for group_name in handler.argument_group_names:
+            group_full_name = 'Command Arguments for ' + group_name
+            extra_groups[group_name] = \
+                c_parser.add_argument_group(group_full_name)
+
         for arg in handler.arguments:
+            # Apply our group keyword.
+            group_name = arg[1].get('group')
+            if group_name:
+                del arg[1]['group']
+                group = extra_groups[group_name]
             group.add_argument(*arg[0], **arg[1])
 
         # This will print the description of the command below the usage.

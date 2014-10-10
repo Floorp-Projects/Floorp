@@ -13,21 +13,48 @@ import multiprocessing
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
+import tempfile
 import threading
 
-SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
+SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 sys.path.insert(0, SCRIPT_DIRECTORY)
 
-from automation import Automation
 from automationutils import (
-        addCommonOptions,
-        isURL,
-        processLeakLog
+    addCommonOptions,
+    dumpScreen,
+    environment,
+    isURL,
+    processLeakLog
 )
+import mozcrash
 import mozdebug
+import mozinfo
+import mozprocess
 import mozprofile
+import mozrunner
+from mozrunner.utils import findInPath as which
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+try:
+    from mozbuild.base import MozbuildObject
+    build_obj = MozbuildObject.from_environment(cwd=here)
+except ImportError:
+    build_obj = None
+
+# set up logging handler a la automation.py.in for compatability
+import logging
+log = logging.getLogger()
+def resetGlobalLog():
+  while log.handlers:
+    log.removeHandler(log.handlers[0])
+  handler = logging.StreamHandler(sys.stdout)
+  log.setLevel(logging.INFO)
+  log.addHandler(handler)
+resetGlobalLog()
 
 def categoriesToRegex(categoryList):
   return "\\(" + ', '.join(["(?P<%s>\\d+) %s" % c for c in categoryList]) + "\\)"
@@ -107,11 +134,24 @@ class ReftestThread(threading.Thread):
         yield line
 
 class RefTest(object):
-
   oldcwd = os.getcwd()
 
-  def __init__(self, automation=None):
-    self.automation = automation or Automation()
+  def __init__(self):
+    self.update_mozinfo()
+    self.lastTestSeen = 'reftest'
+    self.haveDumpedScreen = False
+
+  def update_mozinfo(self):
+    """walk up directories to find mozinfo.json update the info"""
+    # TODO: This should go in a more generic place, e.g. mozinfo
+
+    path = SCRIPT_DIRECTORY
+    dirs = set()
+    while path != os.path.expanduser('~'):
+        if path in dirs:
+            break
+        dirs.add(path)
+        path = os.path.split(path)[0]
 
   def getFullPath(self, path):
     "Get an absolute path relative to self.oldcwd."
@@ -225,8 +265,11 @@ class RefTest(object):
     self.copyExtraFilesToProfile(options, profile)
     return profile
 
+  def environment(self, **kwargs):
+    return environment(**kwargs)
+
   def buildBrowserEnv(self, options, profileDir):
-    browserEnv = self.automation.environment(xrePath = options.xrePath, debugger=options.debugger)
+    browserEnv = self.environment(xrePath = options.xrePath, debugger=options.debugger)
     browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
 
     for v in options.environment:
@@ -319,6 +362,206 @@ class RefTest(object):
 
     return int(any(t.retcode != 0 for t in threads))
 
+  def handleTimeout(self, timeout, proc, utilityPath, debuggerInfo):
+    """handle process output timeout"""
+    # TODO: bug 913975 : _processOutput should call self.processOutputLine one more time one timeout (I think)
+    log.error("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output" % (self.lastTestSeen, int(timeout)))
+    self.killAndGetStack(proc, utilityPath, debuggerInfo, dump_screen=not debuggerInfo)
+
+  def dumpScreen(self, utilityPath):
+    if self.haveDumpedScreen:
+      log.info("Not taking screenshot here: see the one that was previously logged")
+      return
+    self.haveDumpedScreen = True
+    dumpScreen(utilityPath)
+
+  def killAndGetStack(self, process, utilityPath, debuggerInfo, dump_screen=False):
+    """
+    Kill the process, preferrably in a way that gets us a stack trace.
+    Also attempts to obtain a screenshot before killing the process
+    if specified.
+    """
+
+    if dump_screen:
+      self.dumpScreen(utilityPath)
+
+    if mozinfo.info.get('crashreporter', True) and not debuggerInfo:
+      if mozinfo.isWin:
+        # We should have a "crashinject" program in our utility path
+        crashinject = os.path.normpath(os.path.join(utilityPath, "crashinject.exe"))
+        if os.path.exists(crashinject):
+          status = subprocess.Popen([crashinject, str(process.pid)]).wait()
+          printstatus(status, "crashinject")
+          if status == 0:
+            return
+      else:
+        try:
+          proc.kill(sig=signal.SIGABRT)
+        except OSError:
+          # https://bugzilla.mozilla.org/show_bug.cgi?id=921509
+          log.info("Can't trigger Breakpad, process no longer exists")
+        return
+    log.info("Can't trigger Breakpad, just killing process")
+    proc.kill()
+
+  ### output processing
+
+  class OutputHandler(object):
+    """line output handler for mozrunner"""
+    def __init__(self, harness, utilityPath, symbolsPath=None, dump_screen_on_timeout=True):
+      """
+      harness -- harness instance
+      dump_screen_on_timeout -- whether to dump the screen on timeout
+      """
+      self.harness = harness
+      self.utilityPath = utilityPath
+      self.symbolsPath = symbolsPath
+      self.dump_screen_on_timeout = dump_screen_on_timeout
+      self.stack_fixer_function = self.stack_fixer()
+
+    def processOutputLine(self, line):
+      """per line handler of output for mozprocess"""
+      for handler in self.output_handlers():
+        line = handler(line)
+    __call__ = processOutputLine
+
+    def output_handlers(self):
+      """returns ordered list of output handlers"""
+      return [self.fix_stack,
+              self.format,
+              self.record_last_test,
+              self.handle_timeout_and_dump_screen,
+              self.log,
+              ]
+
+    def stack_fixer(self):
+      """
+      return stackFixerFunction, if any, to use on the output lines
+      """
+
+      if not mozinfo.info.get('debug'):
+        return None
+
+      stack_fixer_function = None
+
+      def import_stack_fixer_module(module_name):
+        sys.path.insert(0, self.utilityPath)
+        module = __import__(module_name, globals(), locals(), [])
+        sys.path.pop(0)
+        return module
+
+      if self.symbolsPath and os.path.exists(self.symbolsPath):
+        # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad symbol files).
+        # This method is preferred for Tinderbox builds, since native symbols may have been stripped.
+        stack_fixer_module = import_stack_fixer_module('fix_stack_using_bpsyms')
+        stack_fixer_function = lambda line: stack_fixer_module.fixSymbols(line, self.symbolsPath)
+
+      elif mozinfo.isMac:
+        # Run each line through fix_macosx_stack.py (uses atos).
+        # This method is preferred for developer machines, so we don't have to run "make buildsymbols".
+        stack_fixer_module = import_stack_fixer_module('fix_macosx_stack')
+        stack_fixer_function = lambda line: stack_fixer_module.fixSymbols(line)
+
+      elif mozinfo.isLinux:
+        # Run each line through fix_linux_stack.py (uses addr2line).
+        # This method is preferred for developer machines, so we don't have to run "make buildsymbols".
+        stack_fixer_module = import_stack_fixer_module('fix_linux_stack')
+        stack_fixer_function = lambda line: stack_fixer_module.fixSymbols(line)
+
+      return stack_fixer_function
+
+    # output line handlers:
+    # these take a line and return a line
+    def fix_stack(self, line):
+      if self.stack_fixer_function:
+        return self.stack_fixer_function(line)
+      return line
+
+    def format(self, line):
+      """format the line"""
+      return line.rstrip().decode("UTF-8", "ignore")
+
+    def record_last_test(self, line):
+      """record last test on harness"""
+      if "TEST-START" in line and "|" in line:
+        self.harness.lastTestSeen = line.split("|")[1].strip()
+      return line
+
+    def handle_timeout_and_dump_screen(self, line):
+      if self.dump_screen_on_timeout and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
+        self.harness.dumpScreen(self.utilityPath)
+      return line
+
+    def log(self, line):
+      log.info(line)
+      return line
+
+  def runApp(self, profile, binary, cmdargs, env,
+             timeout=None, debuggerInfo=None,
+             symbolsPath=None, options=None):
+
+    def timeoutHandler():
+      self.handleTimeout(timeout, proc, options.utilityPath, debuggerInfo)
+
+    interactive = False
+    debug_args = None
+    if debuggerInfo:
+        interactive = debuggerInfo.interactive
+        debug_args = [debuggerInfo.path] + debuggerInfo.args
+
+    outputHandler = self.OutputHandler(harness=self,
+                                       utilityPath=options.utilityPath,
+                                       symbolsPath=symbolsPath,
+                                       dump_screen_on_timeout=not debuggerInfo,
+        )
+
+    kp_kwargs = {
+      'kill_on_timeout': False,
+      'cwd': SCRIPT_DIRECTORY,
+      'onTimeout': [timeoutHandler],
+      'processOutputLine': [outputHandler],
+    }
+
+    if interactive:
+        # If an interactive debugger is attached,
+        # don't use timeouts, and don't capture ctrl-c.
+        timeout = None
+        signal.signal(signal.SIGINT, lambda sigid, frame: None)
+
+    if mozinfo.info.get('appname') == 'b2g' and mozinfo.info.get('toolkit') != 'gonk':
+      runner_cls = mozrunner.Runner
+    else:
+      runner_cls = mozrunner.runners.get(mozinfo.info.get('appname', 'firefox'),
+                                         mozrunner.Runner)
+    runner = runner_cls(profile=profile,
+                        binary=binary,
+                        process_class=mozprocess.ProcessHandlerMixin,
+                        cmdargs=cmdargs,
+                        env=env,
+                        process_args=kp_kwargs)
+    runner.start(debug_args=debug_args,
+                 interactive=interactive,
+                 outputTimeout=timeout)
+    proc = runner.process_handler
+    status = runner.wait()
+    runner.process_handler = None
+    if timeout is None:
+      didTimeout = False
+    else:
+      didTimeout = proc.didTimeout
+
+    if status:
+      log.info("TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s", self.lastTestSeen, status)
+    else:
+      self.lastTestSeen = 'Main app process exited normally'
+
+    crashed = mozcrash.check_for_crashes(os.path.join(profile.profile, "minidumps"),
+                                         symbolsPath, test_name=self.lastTestSeen)
+    runner.cleanup()
+    if not status and crashed:
+      status = 1
+    return status
+
   def runSerialTests(self, testPath, options, cmdlineArgs = None):
     debuggerInfo = mozdebug.get_debugger_info(options.debugger, options.debuggerArgs,
         options.debuggerInteractive);
@@ -334,18 +577,18 @@ class RefTest(object):
       # browser environment
       browserEnv = self.buildBrowserEnv(options, profileDir)
 
-      self.automation.log.info("REFTEST INFO | runreftest.py | Running tests: start.\n")
-      status = self.automation.runApp(None, browserEnv, options.app, profileDir,
-                                 cmdlineArgs,
-                                 utilityPath = options.utilityPath,
-                                 xrePath=options.xrePath,
-                                 debuggerInfo=debuggerInfo,
-                                 symbolsPath=options.symbolsPath,
-                                 # give the JS harness 30 seconds to deal
-                                 # with its own timeouts
-                                 timeout=options.timeout + 30.0)
+      log.info("REFTEST INFO | runreftest.py | Running tests: start.\n")
+      status = self.runApp(profile,
+                           binary=options.app,
+                           cmdargs=cmdlineArgs,
+                           # give the JS harness 30 seconds to deal with its own timeouts
+                           env=browserEnv,
+                           timeout=options.timeout + 30.0,
+                           symbolsPath=options.symbolsPath,
+                           options=options,
+                           debuggerInfo=debuggerInfo)
       processLeakLog(self.leakLogFile, options)
-      self.automation.log.info("\nREFTEST INFO | runreftest.py | Running tests: end.")
+      log.info("\nREFTEST INFO | runreftest.py | Running tests: end.")
     finally:
       self.cleanup(profileDir)
     return status
@@ -365,25 +608,20 @@ class RefTest(object):
         dest = os.path.join(profileDir, os.path.basename(abspath))
         shutil.copytree(abspath, dest)
       else:
-        self.automation.log.warning("WARNING | runreftest.py | Failed to copy %s to profile", abspath)
+        log.warning("WARNING | runreftest.py | Failed to copy %s to profile", abspath)
         continue
 
 
 class ReftestOptions(OptionParser):
 
-  def __init__(self, automation=None):
-    self.automation = automation or Automation()
+  def __init__(self):
     OptionParser.__init__(self)
     defaults = {}
+    addCommonOptions(self)
 
-    # we want to pass down everything from automation.__all__
-    addCommonOptions(self,
-                     defaults=dict(zip(self.automation.__all__,
-                            [getattr(self.automation, x) for x in self.automation.__all__])))
-    self.automation.addCommonOptions(self)
     self.add_option("--appname",
                     action = "store", type = "string", dest = "app",
-                    default = os.path.join(SCRIPT_DIRECTORY, self.automation.DEFAULT_APP),
+                    default = build_obj.get_binary_path() if build_obj else None,
                     help = "absolute path to application, overriding default")
     self.add_option("--extra-profile-file",
                     action = "append", dest = "extraProfileFiles",
@@ -402,10 +640,9 @@ class ReftestOptions(OptionParser):
                            "is greater than the given number")
     self.add_option("--utility-path",
                     action = "store", type = "string", dest = "utilityPath",
-                    default = self.automation.DIST_BIN,
                     help = "absolute path to directory containing utility "
                            "programs (xpcshell, ssltunnel, certutil)")
-    defaults["utilityPath"] = self.automation.DIST_BIN
+    defaults["utilityPath"] = build_obj.bindir if build_obj else None
 
     self.add_option("--total-chunks",
                     type = "int", dest = "totalChunks",
@@ -481,6 +718,12 @@ class ReftestOptions(OptionParser):
                     help = "enables content processes")
     defaults["e10s"] = False
 
+    self.add_option("--setpref",
+                    action = "append", type = "string",
+                    default = [],
+                    dest = "extraPrefs", metavar = "PREF=VALUE",
+                    help = "defines an extra user preference")
+
     self.set_defaults(**defaults)
 
   def verifyCommonOptions(self, options, reftest):
@@ -516,9 +759,8 @@ class ReftestOptions(OptionParser):
     return options
 
 def main():
-  automation = Automation()
-  parser = ReftestOptions(automation)
-  reftest = RefTest(automation)
+  parser = ReftestOptions()
+  reftest = RefTest()
 
   options, args = parser.parse_args()
   if len(args) != 1:
@@ -526,6 +768,8 @@ def main():
     sys.exit(1)
 
   options = parser.verifyCommonOptions(options, reftest)
+  if options.app is None:
+      parser.error("could not find the application path, --appname must be specified")
 
   options.app = reftest.getFullPath(options.app)
   if not os.path.exists(options.app):

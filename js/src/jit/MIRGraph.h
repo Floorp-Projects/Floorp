@@ -289,11 +289,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Removes an instruction with the intention to discard it.
     void discard(MInstruction *ins);
     void discardLastIns();
-    MInstructionIterator discardAt(MInstructionIterator &iter);
-    MInstructionReverseIterator discardAt(MInstructionReverseIterator &iter);
-    MDefinitionIterator discardDefAt(MDefinitionIterator &iter);
+    void discardDef(MDefinition *def);
     void discardAllInstructions();
-    void discardAllInstructionsStartingAt(MInstructionIterator &iter);
+    void discardAllInstructionsStartingAt(MInstructionIterator iter);
     void discardAllPhiOperands();
     void discardAllPhis();
     void discardAllResumePoints(bool discardEntry = true);
@@ -303,7 +301,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void discardIgnoreOperands(MInstruction *ins);
 
     // Discards a phi instruction and updates predecessor successorWithPhis.
-    MPhiIterator discardPhiAt(MPhiIterator &at);
+    void discardPhi(MPhi *phi);
 
     // Some instruction which are guarding against some MIRType value, or
     // against a type expectation should be considered as removing a potenatial
@@ -565,6 +563,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void setSuccessorWithPhis(MBasicBlock *successor, uint32_t id) {
         successorWithPhis_ = successor;
         positionInPhiSuccessor_ = id;
+    }
+    void clearSuccessorWithPhis() {
+        successorWithPhis_ = nullptr;
     }
     size_t numSuccessors() const;
     MBasicBlock *getSuccessor(size_t index) const;

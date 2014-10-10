@@ -350,7 +350,9 @@ class MozbuildSandbox(Sandbox):
             for p in self._context.all_paths:
                 context.add_source(p)
 
-            sandbox = MozbuildSandbox(context, self.metadata)
+            sandbox = MozbuildSandbox(context, {
+                'templates': self.metadata.get('templates', {})
+            })
             for k, v in inspect.getcallargs(func, *args, **kwargs).items():
                 sandbox[k] = v
 

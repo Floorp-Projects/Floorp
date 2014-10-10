@@ -469,6 +469,17 @@ assertExpr("func`hey${4}``${5}there``mine`",
                template(["", "there"], ["", "there"], lit(5))),
                template(["mine"], ["mine"])));
 
+// multi-line template string - line numbers
+var node = Reflect.parse("`\n\n   ${2}\n\n\n`");
+Pattern({loc:{start:{line:1, column:0}, end:{line:6, column:1}, source:null}, type:"Program",
+body:[{loc:{start:{line:1, column:0}, end:{line:6, column:1}, source:null},
+type:"ExpressionStatement", expression:{loc:{start:{line:1, column:0}, end:{line:6, column:1},
+source:null}, type:"TemplateLiteral", elements:[{loc:{start:{line:1, column:0}, end:{line:3,
+column:5}, source:null}, type:"Literal", value:"\n\n   "}, {loc:{start:{line:3, column:5},
+end:{line:3, column:6}, source:null}, type:"Literal", value:2}, {loc:{start:{line:3, column:6},
+end:{line:6, column:1}, source:null}, type:"Literal", value:"\n\n\n"}]}}]}).match(node);
+
+
 assertStringExpr("\"hey there\"", literal("hey there"));
 
 assertStmt("foo: for(;;) break foo;", labStmt(ident("foo"), forStmt(null, null, null, breakStmt(ident("foo")))));
