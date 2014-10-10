@@ -3,40 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<selector xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:gecko="http://schemas.android.com/apk/res-auto">
-
-   <item gecko:state_private="true"
-         android:state_pressed="true"
-         android:state_enabled="true">
-
-        <inset android:insetTop="@dimen/new_tablet_browser_toolbar_menu_item_inset_vertical"
-               android:insetBottom="@dimen/new_tablet_browser_toolbar_menu_item_inset_vertical"
-               android:insetLeft="@dimen/new_tablet_browser_toolbar_menu_item_inset_horizontal"
-               android:insetRight="@dimen/new_tablet_browser_toolbar_menu_item_inset_horizontal">
-            <shape android:shape="rectangle">
-                <solid android:color="@color/new_tablet_highlight_pb"/>
-                <corners android:radius="@dimen/new_tablet_browser_toolbar_menu_item_corner_radius"/>
-            </shape>
-        </inset>
-
-    </item>
-
-    <item gecko:state_private="true"
-          android:state_focused="true"
-          android:state_pressed="false">
-
-        <inset android:insetTop="@dimen/new_tablet_browser_toolbar_menu_item_inset_vertical"
-               android:insetBottom="@dimen/new_tablet_browser_toolbar_menu_item_inset_vertical"
-               android:insetLeft="@dimen/new_tablet_browser_toolbar_menu_item_inset_horizontal"
-               android:insetRight="@dimen/new_tablet_browser_toolbar_menu_item_inset_horizontal">
-            <shape android:shape="rectangle">
-                <solid android:color="@color/new_tablet_highlight_focused_pb"/>
-                <corners android:radius="@dimen/new_tablet_browser_toolbar_menu_item_corner_radius"/>
-            </shape>
-        </inset>
-
-    </item>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:state_pressed="true"
           android:state_enabled="true">

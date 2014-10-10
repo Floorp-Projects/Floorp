@@ -31,16 +31,7 @@ public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
     private boolean mAutoUpdateTheme = true;
 
     public Themed@VIEW_NAME_SUFFIX@(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public Themed@VIEW_NAME_SUFFIX@(Context context, AttributeSet attrs, int defStyle) {
-#ifdef STYLE_CONSTRUCTOR
-        super(context, attrs, defStyle);
-#else
         super(context, attrs);
-#endif
-
         mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.LightweightTheme);
