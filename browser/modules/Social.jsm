@@ -12,8 +12,9 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cu = Components.utils;
 
-// The minimum sizes for the auto-resize panel code.
-const PANEL_MIN_HEIGHT = 100;
+// The minimum sizes for the auto-resize panel code, minimum size necessary to
+// properly show the error page in the panel.
+const PANEL_MIN_HEIGHT = 200;
 const PANEL_MIN_WIDTH = 330;
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -313,6 +314,7 @@ function CreateSocialMarkWidget(aId, aProvider) {
       let menuLabel = window.gNavigatorBundle.getFormattedString("social.markpageMenu.label", [aProvider.name]);
       node.setAttribute("label", menuLabel);
       node.setAttribute("tooltiptext", menuLabel);
+      node.setAttribute("observes", "Social:PageShareOrMark");
 
       return node;
     }
@@ -350,10 +352,12 @@ SocialErrorListener.prototype = {
       if (aRequest instanceof Ci.nsIHttpChannel) {
         try {
           // Change the frame to an error page on 4xx (client errors)
-          // and 5xx (server errors)
+          // and 5xx (server errors).  responseStatus throws if it is not set.
           failure = aRequest.responseStatus >= 400 &&
                     aRequest.responseStatus < 600;
-        } catch (e) {}
+        } catch (e) {
+          failure = aStatus == Components.results.NS_ERROR_CONNECTION_REFUSED;
+        }
       }
     }
 
@@ -361,8 +365,11 @@ SocialErrorListener.prototype = {
     // so avoid doing that more than once
     if (failure && aStatus != Components.results.NS_BINDING_ABORTED) {
       aRequest.cancel(Components.results.NS_BINDING_ABORTED);
-      let provider = Social._getProviderFromOrigin(this.iframe.getAttribute("origin"));
-      provider.errorState = "content-error";
+      let origin = this.iframe.getAttribute("origin");
+      if (origin) {
+        let provider = Social._getProviderFromOrigin(origin);
+        provider.errorState = "content-error";
+      }
       this.setErrorMessage(aWebProgress.QueryInterface(Ci.nsIDocShell)
                               .chromeEventHandler);
     }
@@ -371,9 +378,12 @@ SocialErrorListener.prototype = {
   onLocationChange: function SPL_onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
       aRequest.cancel(Components.results.NS_BINDING_ABORTED);
-      let provider = Social._getProviderFromOrigin(this.iframe.getAttribute("origin"));
-      if (!provider.errorState)
-        provider.errorState = "content-error";
+      let origin = this.iframe.getAttribute("origin");
+      if (origin) {
+        let provider = Social._getProviderFromOrigin(origin);
+        if (!provider.errorState)
+          provider.errorState = "content-error";
+      }
       schedule(function() {
         this.setErrorMessage(aWebProgress.QueryInterface(Ci.nsIDocShell)
                               .chromeEventHandler);

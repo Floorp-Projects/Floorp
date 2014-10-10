@@ -118,7 +118,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       return (
         React.DOM.h1({className: "standalone-header-title"}, 
           React.DOM.strong(null, mozL10n.get("brandShortname")), 
-          mozL10n.get("clientShortname")
+          mozL10n.get("clientShortname2")
         )
       );
     }
