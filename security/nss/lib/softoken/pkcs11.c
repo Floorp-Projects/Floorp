@@ -969,6 +969,17 @@ sftk_handlePublicKeyObject(SFTKSession *session, SFTKObject *object,
     }
     object->infoFree = (SFTKFree) nsslowkey_DestroyPublicKey;
 
+    /* Check that an imported EC key is valid */
+    if (key_type == CKK_EC) {
+      NSSLOWKEYPublicKey *pubKey = (NSSLOWKEYPublicKey*) object->objectInfo;
+      SECStatus rv = EC_ValidatePublicKey(&pubKey->u.ec.ecParams,
+                                          &pubKey->u.ec.publicValue);
+
+      if (rv != SECSuccess) {
+        return CKR_TEMPLATE_INCONSISTENT;
+      }
+    }
+
     if (sftk_isTrue(object,CKA_TOKEN)) {
 	SFTKSlot *slot = session->slot;
 	SFTKDBHandle *certHandle = sftk_getCertDB(slot);
