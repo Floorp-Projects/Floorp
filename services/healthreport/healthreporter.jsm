@@ -127,8 +127,8 @@ HealthReporterState.prototype = Object.freeze({
   },
 
   init: function () {
-    return Task.spawn(function init() {
-      OS.File.makeDir(this._stateDir);
+    return Task.spawn(function* init() {
+      yield OS.File.makeDir(this._stateDir);
 
       let resetObjectState = function () {
         this._s = {
