@@ -969,7 +969,7 @@ sftk_handlePublicKeyObject(SFTKSession *session, SFTKObject *object,
     }
     object->infoFree = (SFTKFree) nsslowkey_DestroyPublicKey;
 
-    // Check that an imported EC key is valid
+    /* Check that an imported EC key is valid */
     if (key_type == CKK_EC) {
       NSSLOWKEYPublicKey *pubKey = (NSSLOWKEYPublicKey*) object->objectInfo;
       SECStatus rv = EC_ValidatePublicKey(&pubKey->u.ec.ecParams,

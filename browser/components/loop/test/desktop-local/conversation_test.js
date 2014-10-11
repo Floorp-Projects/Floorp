@@ -609,6 +609,14 @@ describe("loop.conversation", function() {
             TestUtils.findRenderedComponentWithType(icView,
               sharedView.ConversationView);
           });
+
+        it("should set the title to the call identifier", function() {
+          sandbox.stub(conversation, "getCallIdentifier").returns("fakeId");
+
+          conversation.accepted();
+
+          expect(document.title).eql("fakeId");
+        });
       });
 
       describe("session:ended", function() {
@@ -696,7 +704,9 @@ describe("loop.conversation", function() {
     var view, model;
 
     beforeEach(function() {
-      var Model = Backbone.Model.extend({});
+      var Model = Backbone.Model.extend({
+        getCallIdentifier: function() {return "fakeId";}
+      });
       model = new Model();
       sandbox.spy(model, "trigger");
       sandbox.stub(model, "set");

@@ -35,7 +35,7 @@ struct nsIntRect;
 
 namespace mozilla {
 namespace gl {
-class SurfaceStream;
+class SharedSurface;
 }
 namespace ipc {
 class Shmem;
@@ -48,7 +48,7 @@ class CompositableHost;
 class CompositableBackendSpecificData;
 class CompositableParentManager;
 class SurfaceDescriptor;
-class SurfaceStreamDescriptor;
+class SharedSurfaceDescriptor;
 class ISurfaceAllocator;
 class TextureHostOGL;
 class TextureSourceOGL;
@@ -572,47 +572,66 @@ protected:
 };
 
 /**
- * A TextureHost for shared SurfaceStream
+ * A TextureHost for SharedSurfaces
  */
-class StreamTextureHost : public TextureHost
+class SharedSurfaceTextureHost : public TextureHost
 {
 public:
-  StreamTextureHost(TextureFlags aFlags,
-                    const SurfaceStreamDescriptor& aDesc);
+  SharedSurfaceTextureHost(TextureFlags aFlags,
+                           const SharedSurfaceDescriptor& aDesc);
 
-  virtual ~StreamTextureHost();
+  virtual ~SharedSurfaceTextureHost() {};
 
   virtual void DeallocateDeviceData() MOZ_OVERRIDE {};
 
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
-
-  virtual bool Lock() MOZ_OVERRIDE;
-
-  virtual void Unlock() MOZ_OVERRIDE;
-
-  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
-
-  virtual TextureSource* GetTextureSources() MOZ_OVERRIDE
-  {
-    return mTextureSource;
-  }
-
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
-  {
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE {
     return nullptr; // XXX - implement this (for MOZ_DUMP_PAINTING)
   }
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE {
+    MOZ_ASSERT(!mIsLocked);
+
+    if (aCompositor == mCompositor)
+      return;
+
+    mTexSource = nullptr;
+    mCompositor = aCompositor;
+  }
+
+public:
+  virtual bool Lock() MOZ_OVERRIDE {
+    MOZ_ASSERT(!mIsLocked);
+    mIsLocked = true;
+    EnsureTexSource();
+    return true;
+  }
+
+  virtual void Unlock() MOZ_OVERRIDE {
+    MOZ_ASSERT(mIsLocked);
+    mIsLocked = false;
+  }
+
+  virtual TextureSource* GetTextureSources() MOZ_OVERRIDE {
+    MOZ_ASSERT(mIsLocked);
+    MOZ_ASSERT(mTexSource);
+    return mTexSource;
+  }
+
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() { return "StreamTextureHost"; }
+  virtual const char* Name() { return "SharedSurfaceTextureHost"; }
 #endif
 
 protected:
+  void EnsureTexSource();
+
+  bool mIsLocked;
+  gl::SharedSurface* const mSurf;
   Compositor* mCompositor;
-  gl::SurfaceStream* mStream;
-  RefPtr<TextureSource> mTextureSource;
-  RefPtr<DataTextureSource> mDataTextureSource;
+  RefPtr<TextureSource> mTexSource;
 };
 
 class MOZ_STACK_CLASS AutoLockTextureHost

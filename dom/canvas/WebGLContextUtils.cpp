@@ -257,6 +257,18 @@ DriverFormatsFromEffectiveInternalFormat(gl::GLContext* gl,
             driverFormat = LOCAL_GL_RGBA;
         }
 
+        // WebGL2's new formats are not legal values for internalformat,
+        // as using unsized internalformat is deprecated.
+        if (driverFormat == LOCAL_GL_RED ||
+            driverFormat == LOCAL_GL_RG ||
+            driverFormat == LOCAL_GL_RED_INTEGER ||
+            driverFormat == LOCAL_GL_RG_INTEGER ||
+            driverFormat == LOCAL_GL_RGB_INTEGER ||
+            driverFormat == LOCAL_GL_RGBA_INTEGER)
+        {
+            driverInternalFormat = effectiveinternalformat.get();
+        }
+
         // Cases where desktop OpenGL requires a sized internalformat,
         // as opposed to the unsized internalformat that had the same
         // GLenum value as 'format', in order to get the precise

@@ -406,10 +406,11 @@ GetObjectAllocKindForCopy(const Nursery &nursery, JSObject *obj)
     return GetBackgroundAllocKind(kind);
 }
 
-MOZ_ALWAYS_INLINE void *
+MOZ_ALWAYS_INLINE TenuredCell *
 js::Nursery::allocateFromTenured(Zone *zone, AllocKind thingKind)
 {
-    void *t = zone->allocator.arenas.allocateFromFreeList(thingKind, Arena::thingSize(thingKind));
+    TenuredCell *t =
+        zone->allocator.arenas.allocateFromFreeList(thingKind, Arena::thingSize(thingKind));
     if (t)
         return t;
     zone->allocator.arenas.checkEmptyFreeList(thingKind);
@@ -569,7 +570,7 @@ js::Nursery::moveToTenured(MinorCollectionTracer *trc, JSObject *src)
 {
     AllocKind dstKind = GetObjectAllocKindForCopy(*this, src);
     Zone *zone = src->zone();
-    JSObject *dst = static_cast<JSObject *>(allocateFromTenured(zone, dstKind));
+    JSObject *dst = reinterpret_cast<JSObject *>(allocateFromTenured(zone, dstKind));
     if (!dst)
         CrashAtUnhandlableOOM("Failed to allocate object while tenuring.");
 

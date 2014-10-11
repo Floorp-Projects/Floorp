@@ -12,7 +12,7 @@ Live {
   8,192 bytes (4,097 requested / 4,095 slop)
   67.77% of the heap (67.77% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -21,7 +21,7 @@ Live {
   1,024 bytes (1,023 requested / 1 slop)
   8.47% of the heap (76.24% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -30,7 +30,7 @@ Live {
   1,008 bytes (900 requested / 108 slop)
   8.34% of the heap (84.58% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -39,7 +39,7 @@ Live {
   528 bytes (528 requested / 0 slop)
   4.37% of the heap (88.95% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -48,7 +48,7 @@ Live {
   528 bytes (528 requested / 0 slop)
   4.37% of the heap (93.32% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -57,7 +57,7 @@ Live {
   512 bytes (512 requested / 0 slop)
   4.24% of the heap (97.55% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -66,7 +66,7 @@ Live {
   80 bytes (79 requested / 1 slop)
   0.66% of the heap (98.21% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -75,7 +75,7 @@ Live {
   80 bytes (78 requested / 2 slop)
   0.66% of the heap (98.87% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -84,7 +84,7 @@ Live {
   80 bytes (77 requested / 3 slop)
   0.66% of the heap (99.54% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -93,7 +93,7 @@ Live {
   32 bytes (30 requested / 2 slop)
   0.26% of the heap (99.80% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -102,16 +102,16 @@ Live {
   16 bytes (10 requested / 6 slop)
   0.13% of the heap (99.93% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
 Live {
   1 block in heap block record 12 of 12
-  8 bytes (0 requested / 8 slop)
+  8 bytes (8 requested / 0 slop)
   0.07% of the heap (100.00% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 

@@ -32,6 +32,7 @@
 #include "pk11pub.h"
 #include "pkix/pkixnss.h"
 #include "pkixder.h"
+#include "prinit.h"
 #include "secerr.h"
 #include "secitem.h"
 
@@ -52,13 +53,24 @@ SECITEM_FreeItem_true(SECItem* item)
 
 typedef mozilla::pkix::ScopedPtr<SECItem, SECITEM_FreeItem_true> ScopedSECItem;
 
-Result
+TestKeyPair* GenerateKeyPairInner();
+
+void
 InitNSSIfNeeded()
 {
   if (NSS_NoDB_Init(nullptr) != SECSuccess) {
-    return MapPRErrorCodeToResult(PR_GetError());
+    abort();
   }
-  return Success;
+}
+
+static ScopedTestKeyPair reusedKeyPair;
+
+PRStatus
+InitReusedKeyPair()
+{
+  InitNSSIfNeeded();
+  reusedKeyPair = GenerateKeyPairInner();
+  return reusedKeyPair ? PR_SUCCESS : PR_FAILURE;
 }
 
 class NSSTestKeyPair : public TestKeyPair
@@ -142,16 +154,14 @@ TestKeyPair* CreateTestKeyPair(const ByteString& spki,
   return new (std::nothrow) NSSTestKeyPair(spki, spk, privateKey);
 }
 
-TestKeyPair*
-GenerateKeyPair()
-{
-  if (InitNSSIfNeeded() != Success) {
-    return nullptr;
-  }
+namespace {
 
+TestKeyPair*
+GenerateKeyPairInner()
+{
   ScopedPtr<PK11SlotInfo, PK11_FreeSlot> slot(PK11_GetInternalSlot());
   if (!slot) {
-    return nullptr;
+    abort();
   }
 
   // Bug 1012786: PK11_GenerateKeyPair can fail if there is insufficient
@@ -171,12 +181,12 @@ GenerateKeyPair()
       ScopedSECItem
         spkiDER(SECKEY_EncodeDERSubjectPublicKeyInfo(publicKey.get()));
       if (!spkiDER) {
-        return nullptr;
+        break;
       }
       ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
         spki(SECKEY_CreateSubjectPublicKeyInfo(publicKey.get()));
       if (!spki) {
-        return nullptr;
+        break;
       }
       SECItem spkDER = spki->subjectPublicKey;
       DER_ConvertBitString(&spkDER); // bits to bytes
@@ -201,15 +211,40 @@ GenerateKeyPair()
     }
   }
 
+  abort();
+#if defined(_MSC_VER) && (_MSC_VER < 1700)
+  // Older versions of MSVC don't know that abort() never returns, so silence
+  // its warning by adding a redundant and never-reached return. But, only do
+  // it for that ancient compiler, because some other compilers will rightly
+  // warn that the return statement is unreachable.
   return nullptr;
+#endif
+}
+
+} // unnamed namespace
+
+TestKeyPair*
+GenerateKeyPair()
+{
+  InitNSSIfNeeded();
+  return GenerateKeyPairInner();
+}
+
+TestKeyPair*
+CloneReusedKeyPair()
+{
+  static PRCallOnceType initCallOnce;
+  if (PR_CallOnce(&initCallOnce, InitReusedKeyPair) != PR_SUCCESS) {
+    abort();
+  }
+  assert(reusedKeyPair);
+  return reusedKeyPair->Clone();
 }
 
 ByteString
 SHA1(const ByteString& toHash)
 {
-  if (InitNSSIfNeeded() != Success) {
-    return ByteString();
-  }
+  InitNSSIfNeeded();
 
   uint8_t digestBuf[SHA1_LENGTH];
   SECStatus srv = PK11_HashBuf(SEC_OID_SHA1, digestBuf, toHash.data(),
@@ -223,10 +258,7 @@ SHA1(const ByteString& toHash)
 Result
 TestCheckPublicKey(Input subjectPublicKeyInfo)
 {
-  Result rv = InitNSSIfNeeded();
-  if (rv != Success) {
-    return rv;
-  }
+  InitNSSIfNeeded();
   return CheckPublicKey(subjectPublicKeyInfo);
 }
 
@@ -234,20 +266,14 @@ Result
 TestVerifySignedData(const SignedDataWithSignature& signedData,
                      Input subjectPublicKeyInfo)
 {
-  Result rv = InitNSSIfNeeded();
-  if (rv != Success) {
-    return rv;
-  }
+  InitNSSIfNeeded();
   return VerifySignedData(signedData, subjectPublicKeyInfo, nullptr);
 }
 
 Result
 TestDigestBuf(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
 {
-  Result rv = InitNSSIfNeeded();
-  if (rv != Success) {
-    return rv;
-  }
+  InitNSSIfNeeded();
   return DigestBuf(item, digestBuf, digestBufLen);
 }
 

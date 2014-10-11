@@ -1,0 +1,46 @@
+{
+ "version": 1,
+ "invocation": {
+  "dmdEnvVar": "1",
+  "sampleBelowSize": 2500
+ },
+ "blockList": [
+  {"req": 1048576,           "alloc": "A"},
+  {"req": 65536,             "alloc": "B"},
+  {"req": 8000, "slop": 192, "alloc": "C"},
+  {                          "alloc": "D"}
+ ],
+ "traceTable": {
+  "A": ["AA", "AB", "AC", "AD"],
+  "B": ["BA", "BB", "BC"],
+  "C": ["CA", "CB", "CC", "CD"],
+  "D": ["DA", "DB", "DD", "DD", "DE", "DF", "DG", "DH", "DI", "DJ"]
+ },
+ "frameTable": {
+  "AA": "#00: replace_malloc (DMD.cpp:1106)",
+  "AB": "#00: moz_xmalloc (mozalloc.cpp:68)",
+  "AC": "#00: operator new(unsigned long) (mozalloc.h:208)",
+  "AD": "#00: A (A.cpp:99)",
+
+  "BA": "#00: replace_calloc (DMD.cpp:1125)",
+  "BB": "#00: js_calloc(unsigned long) (Utility.h:107)",
+  "BC": "#06: js::jit::JitRuntime::initialize(JSContext*) (Ion.cpp:301)",
+
+  "CA": "#00: replace_realloc (DMD.cpp:1153)",
+  "CB": "#00: bool* mozilla::MallocAllocPolicy::pod_realloc<bool>(bool*, unsigned long, unsigned long) (AllocPolicy.h:74)",
+  "CC": "#00: mozilla::Vector::growStorageBy(unsigned long) (Vector.h:802)",
+  "CD": "#00: D (D.cpp:99)",
+
+  "DA": "#00: replace_memalign (DMD.cpp:1181)",
+  "DB": "#00: replace_posix_memalign (replace_malloc.h:120)",
+  "DC": "#00: ??? (/lib/x86_64-linux-gnu/libglib-2.0.so.0)",
+  "DD": "#00: g_slice_alloc (/lib/x86_64-linux-gnu/libglib-2.0.so.0)",
+  "DE": "#00: g_slice_alloc0 (/lib/x86_64-linux-gnu/libglib-2.0.so.0)",
+  "DF": "#00: g_type_create_instance (/usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0)",
+  "DG": "#00: not_an_alloc_function_so_alloc_functions_below_here_will_not_be_stripped (blah)",
+  "DH": "#00: replace_posix_memalign (replace_malloc.h:120)",
+  "DI": "#00: ??? (/lib/x86_64-linux-gnu/libglib-2.0.so.0)",
+  "DJ": "#00: another_non_alloc_function (blah)"
+ }
+}
+

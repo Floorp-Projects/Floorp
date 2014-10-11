@@ -17,6 +17,7 @@ EXPORTS += [
     'client/ClientTiledPaintedLayer.h',
     'composite/CompositableHost.h',
     'composite/ImageHost.h',
+    'CompositorTypes.h',
     'CopyableCanvasLayer.h',
     'D3D9SurfaceImage.h',
     'FrameMetrics.h',
@@ -33,6 +34,7 @@ EXPORTS += [
     'LayerScope.h',
     'LayersLogging.h',
     'LayerSorter.h',
+    'LayersTypes.h',
     'LayerTreeInvalidation.h',
     'opengl/Composer2D.h',
     'opengl/OGLShaderProgram.h',
@@ -98,7 +100,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         SOURCES += [
             'd3d11/CompositorD3D11.cpp',
             'd3d11/ReadbackManagerD3D11.cpp',
-        ]         
+        ]
         if CONFIG['MOZ_ENABLE_DIRECT2D1_1']:
             DEFINES['USE_D2D1_1'] = True
 

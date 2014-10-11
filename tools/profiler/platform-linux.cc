@@ -311,7 +311,7 @@ static void* SignalSender(void* arg) {
         ThreadInfo* info = threads[i];
 
         // This will be null if we're not interested in profiling this thread.
-        if (!info->Profile())
+        if (!info->Profile() || info->IsPendingDelete())
           continue;
 
         PseudoStack::SleepState sleeping = info->Stack()->observeSleeping();
@@ -459,7 +459,7 @@ bool Sampler::RegisterCurrentThread(const char* aName,
   int id = gettid();
   for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
     ThreadInfo* info = sRegisteredThreads->at(i);
-    if (info->ThreadId() == id) {
+    if (info->ThreadId() == id && !info->IsPendingDelete()) {
       // Thread already registered. This means the first unregister will be
       // too early.
       ASSERT(false);
@@ -495,10 +495,18 @@ void Sampler::UnregisterCurrentThread()
 
   for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
     ThreadInfo* info = sRegisteredThreads->at(i);
-    if (info->ThreadId() == id) {
-      delete info;
-      sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
-      break;
+    if (info->ThreadId() == id && !info->IsPendingDelete()) {
+      if (profiler_is_active()) {
+        // We still want to show the results of this thread if you
+        // save the profile shortly after a thread is terminated.
+        // For now we will defer the delete to profile stop.
+        info->SetPendingDelete();
+        break;
+      } else {
+        delete info;
+        sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
+        break;
+      }
     }
   }
 

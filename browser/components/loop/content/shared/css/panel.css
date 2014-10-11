@@ -25,6 +25,12 @@ body {
 
 /* Tabs and tab selection buttons */
 
+.tab-view-container {
+  background-image: url("../img/beta-ribbon.svg#beta-ribbon");
+  background-size: 36px 36px;
+  background-repeat: no-repeat;
+}
+
 .tab-view {
   display: flex;
   flex-direction: row;
@@ -53,15 +59,18 @@ body {
   border-right-style: none;
 }
 
-.tab-view > li[data-tab-name="call"] {
+.tab-view > li[data-tab-name="call"],
+.tab-view > li[data-tab-name="rooms"] {
   background-image: url("../img/icons-16x16.svg#precall");
 }
 
-.tab-view > li[data-tab-name="call"]:hover {
+.tab-view > li[data-tab-name="call"]:hover,
+.tab-view > li[data-tab-name="rooms"]:hover {
   background-image: url("../img/icons-16x16.svg#precall-hover");
 }
 
-.tab-view > li[data-tab-name="call"].selected {
+.tab-view > li[data-tab-name="call"].selected,
+.tab-view > li[data-tab-name="rooms"].selected {
   background-image: url("../img/icons-16x16.svg#precall-active");
 }
 
@@ -93,6 +102,12 @@ body {
 
 .content-area header {
   font-weight: 700;
+  -moz-padding-start: 20px;
+}
+
+.tab-view + .tab .content-area header {
+  /* The header shouldn't be indented if the tabs are present. */
+  -moz-padding-start: 0;
 }
 
 .content-area label {

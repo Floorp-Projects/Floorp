@@ -132,19 +132,15 @@ void
 GeckoChildProcessHost::GetPathToBinary(FilePath& exePath)
 {
   if (ShouldHaveDirectoryService()) {
-    MOZ_ASSERT(gGREPath);
+    MOZ_ASSERT(gGREBinPath);
 #ifdef OS_WIN
-    exePath = FilePath(char16ptr_t(gGREPath));
+    exePath = FilePath(char16ptr_t(gGREBinPath));
 #elif MOZ_WIDGET_COCOA
     nsCOMPtr<nsIFile> childProcPath;
-    NS_NewLocalFile(nsDependentString(gGREPath), false,
+    NS_NewLocalFile(nsDependentString(gGREBinPath), false,
                     getter_AddRefs(childProcPath));
     // We need to use an App Bundle on OS X so that we can hide
     // the dock icon. See Bug 557225.
-    nsCOMPtr<nsIFile> tempPath;
-    childProcPath->GetParent(getter_AddRefs(tempPath));
-    childProcPath = tempPath.forget();
-    childProcPath->AppendNative(NS_LITERAL_CSTRING("MacOS"));
     childProcPath->AppendNative(NS_LITERAL_CSTRING("plugin-container.app"));
     childProcPath->AppendNative(NS_LITERAL_CSTRING("Contents"));
     childProcPath->AppendNative(NS_LITERAL_CSTRING("MacOS"));
@@ -153,7 +149,7 @@ GeckoChildProcessHost::GetPathToBinary(FilePath& exePath)
     exePath = FilePath(tempCPath.get());
 #else
     nsCString path;
-    NS_CopyUnicodeToNative(nsDependentString(gGREPath), path);
+    NS_CopyUnicodeToNative(nsDependentString(gGREBinPath), path);
     exePath = FilePath(path.get());
 #endif
   }
@@ -548,19 +544,9 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   // since LD_LIBRARY_PATH is already set correctly in subprocesses
   // (meaning that we don't need to set that up in the environment).
   if (ShouldHaveDirectoryService()) {
-    MOZ_ASSERT(gGREPath);
+    MOZ_ASSERT(gGREBinPath);
     nsCString path;
-#ifdef MOZ_WIDGET_COCOA
-    nsCOMPtr<nsIFile> grePath;
-    nsCOMPtr<nsIFile> tempPath;
-    NS_NewLocalFile(nsDependentString(gGREPath), false,
-                    getter_AddRefs(grePath));
-    grePath->GetParent(getter_AddRefs(tempPath));
-    tempPath->AppendNative(NS_LITERAL_CSTRING("MacOS"));
-    tempPath->GetNativePath(path);
-#else
-    NS_CopyUnicodeToNative(nsDependentString(gGREPath), path);
-#endif
+    NS_CopyUnicodeToNative(nsDependentString(gGREBinPath), path);
 # if defined(OS_LINUX) || defined(OS_BSD)
 #  if defined(MOZ_WIDGET_ANDROID)
     path += "/lib";

@@ -83,7 +83,7 @@ them.
           // are new, and Firefox doesn't yet understand that they
           // are safe for chrome code to use, so we must tell it
           // so explicitly.
-          site = Components.utils.waiveXrays(site);
+          site = Components.utils.waiveXrays(site.frame);
 
           if (!counts.has(site))
             counts.set(site, 0);

@@ -1277,11 +1277,10 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
         // On OSX, the GreD needs to point to Contents/Resources in the .app
         // bundle. Libraries will be loaded at a relative path to GreD, i.e.
         // ../MacOS.
-        XRE_GetFileFromPath(argv[0], getter_AddRefs(greDir));
-        nsCOMPtr<nsIFile> parentDir;
-        greDir->GetParent(getter_AddRefs(parentDir));
-        parentDir->GetParent(getter_AddRefs(greDir));
-        greDir->AppendNative(NS_LITERAL_CSTRING("Resources"));
+        nsCOMPtr<nsIFile> tmpDir;
+        XRE_GetFileFromPath(argv[0], getter_AddRefs(tmpDir));
+        tmpDir->GetParent(getter_AddRefs(greDir));
+        greDir->SetNativeLeafName(NS_LITERAL_CSTRING("Resources"));
         bool dirExists = false;
         greDir->Exists(&dirExists);
         if (!dirExists) {
