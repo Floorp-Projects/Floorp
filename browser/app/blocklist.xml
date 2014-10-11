@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1412277891000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1412711894000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -995,6 +995,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i172" id="info@bflix.info">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i722" id="{9802047e-5a84-4da3-b103-c55995d147d1}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
