@@ -1142,22 +1142,44 @@ WebGLContext::ValidateTexImage(GLuint dims, TexImageTarget texImageTarget,
     if (!ValidateTexImageFormatAndType(format, type, func))
         return false;
 
+    if (!TexInternalFormat::IsValueLegal(internalFormat)) {
+        ErrorInvalidEnum("%s: invalid internalformat enum %s", info, EnumName(internalFormat));
+        return false;
+    }
+    TexInternalFormat unsizedInternalFormat =
+        UnsizedInternalFormatFromInternalFormat(internalFormat);
+
     if (IsCompressedFunc(func)) {
         if (!ValidateCompTexImageInternalFormat(internalFormat, func)) {
             return false;
         }
     } else if (IsCopyFunc(func)) {
-        if (!ValidateCopyTexImageInternalFormat(internalFormat, func)) {
+        if (!ValidateCopyTexImageInternalFormat(unsizedInternalFormat.get(), func)) {
             return false;
         }
-    } else if (format != internalFormat) {
+    } else if (format != unsizedInternalFormat) {
         if (IsWebGL2()) {
             // In WebGL2, it's OK to have internalformat != format if internalformat is the sized
             // internal format corresponding to the (format, type) pair according to Table 3.2
             // in the OpenGL ES 3.0.3 spec.
             if (internalFormat != EffectiveInternalFormatFromInternalFormatAndType(format, type)) {
-                ErrorInvalidOperation("%s: internalformat does not match format and type", info);
-                return false;
+                bool exceptionallyAllowed = false;
+                if (internalFormat == LOCAL_GL_SRGB8_ALPHA8 &&
+                    format == LOCAL_GL_RGBA &&
+                    type == LOCAL_GL_UNSIGNED_BYTE)
+                {
+                    exceptionallyAllowed = true;
+                }
+                else if (internalFormat == LOCAL_GL_SRGB8 &&
+                         format == LOCAL_GL_RGB &&
+                         type == LOCAL_GL_UNSIGNED_BYTE)
+                {
+                    exceptionallyAllowed = true;
+                }
+                if (!exceptionallyAllowed) {
+                    ErrorInvalidOperation("%s: internalformat does not match format and type", info);
+                    return false;
+                }
             }
         } else {
             // in WebGL 1, format must be equal to internalformat
