@@ -6071,7 +6071,7 @@ class MPhi;
 // register allocator. Like its equivalent in MIR, phis are collected at the
 // top of blocks and are meant to be executed in parallel, choosing the input
 // corresponding to the predecessor taken in the control flow graph.
-class LPhi MOZ_FINAL : public LInstruction
+class LPhi MOZ_FINAL : public LNode
 {
     LAllocation *const inputs_;
     LDefinition def_;

@@ -397,7 +397,7 @@ LinearScanAllocator::reifyAllocations()
             }
 
             if (reg->ins()->recoversInput()) {
-                LSnapshot *snapshot = reg->ins()->snapshot();
+                LSnapshot *snapshot = reg->ins()->toInstruction()->snapshot();
                 for (size_t i = 0; i < snapshot->numEntries(); i++) {
                     LAllocation *entry = snapshot->getEntry(i);
                     if (entry->isUse() && entry->toUse()->policy() == LUse::RECOVERED_INPUT)
@@ -437,7 +437,7 @@ LinearScanAllocator::reifyAllocations()
             // register.
             LiveInterval *prevInterval = reg->getInterval(interval->index() - 1);
             CodePosition start = interval->start();
-            LInstruction *ins = insData[start];
+            LNode *ins = insData[start];
 
             MOZ_ASSERT(start == inputOf(ins) || start == outputOf(ins));
 
@@ -789,7 +789,7 @@ LinearScanAllocator::assign(LAllocation allocation)
 
             // If this spill is inside a loop, and the definition is outside
             // the loop, instead move the spill to outside the loop.
-            LInstruction *other = insData[current->start()];
+            LNode *other = insData[current->start()];
             uint32_t loopDepthAtDef = reg->block()->mir()->loopDepth();
             uint32_t loopDepthAtSpill = other->block()->mir()->loopDepth();
             if (loopDepthAtSpill > loopDepthAtDef)

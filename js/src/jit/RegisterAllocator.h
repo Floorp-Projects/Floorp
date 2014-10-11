@@ -220,7 +220,7 @@ class CodePosition
 // Structure to track all moves inserted next to instructions in a graph.
 class InstructionDataMap
 {
-    FixedList<LInstruction *> insData_;
+    FixedList<LNode *> insData_;
 
   public:
     InstructionDataMap()
@@ -230,20 +230,20 @@ class InstructionDataMap
     bool init(MIRGenerator *gen, uint32_t numInstructions) {
         if (!insData_.init(gen->alloc(), numInstructions))
             return false;
-        memset(&insData_[0], 0, sizeof(LInstruction *) * numInstructions);
+        memset(&insData_[0], 0, sizeof(LNode *) * numInstructions);
         return true;
     }
 
-    LInstruction *&operator[](CodePosition pos) {
+    LNode *&operator[](CodePosition pos) {
         return operator[](pos.ins());
     }
-    LInstruction *const &operator[](CodePosition pos) const {
+    LNode *const &operator[](CodePosition pos) const {
         return operator[](pos.ins());
     }
-    LInstruction *&operator[](uint32_t ins) {
+    LNode *&operator[](uint32_t ins) {
         return insData_[ins];
     }
-    LInstruction *const &operator[](uint32_t ins) const {
+    LNode *const &operator[](uint32_t ins) const {
         return insData_[ins];
     }
 };
@@ -301,7 +301,7 @@ class RegisterAllocator
         }
         return CodePosition(pos, CodePosition::OUTPUT);
     }
-    CodePosition outputOf(const LInstruction *ins) const {
+    CodePosition outputOf(const LNode *ins) const {
         return outputOf(ins->id());
     }
     CodePosition inputOf(uint32_t pos) const {
@@ -314,7 +314,7 @@ class RegisterAllocator
         }
         return CodePosition(pos, CodePosition::INPUT);
     }
-    CodePosition inputOf(const LInstruction *ins) const {
+    CodePosition inputOf(const LNode *ins) const {
         return inputOf(ins->id());
     }
     CodePosition entryOf(const LBlock *block) {
@@ -334,13 +334,13 @@ class RegisterAllocator
         return getMoveGroupAfter(pos.ins());
     }
 
-    CodePosition minimalDefEnd(LInstruction *ins) {
+    CodePosition minimalDefEnd(LNode *ins) {
         // Compute the shortest interval that captures vregs defined by ins.
         // Watch for instructions that are followed by an OSI point and/or Nop.
         // If moves are introduced between the instruction and the OSI point then
         // safepoint information for the instruction may be incorrect.
         while (true) {
-            LInstruction *next = insData[ins->id() + 1];
+            LNode *next = insData[ins->id() + 1];
             if (!next->isNop() && !next->isOsiPoint())
                 break;
             ins = next;

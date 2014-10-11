@@ -595,41 +595,25 @@ class LDefinition
 
 class LSnapshot;
 class LSafepoint;
-class LInstructionVisitor;
+class LInstruction;
+class LElementVisitor;
 
-class LInstruction
-  : public TempObject,
-    public InlineListNode<LInstruction>
+// The common base class for LPhi and LInstruction.
+class LNode
 {
     uint32_t id_;
-
-    // This snapshot could be set after a ResumePoint.  It is used to restart
-    // from the resume point pc.
-    LSnapshot *snapshot_;
-
-    // Structure capturing the set of stack slots and registers which are known
-    // to hold either gcthings or Values.
-    LSafepoint *safepoint_;
-
     LBlock *block_;
-    LMoveGroup *inputMoves_;
-    LMoveGroup *movesAfter_;
 
   protected:
     MDefinition *mir_;
 
-    LInstruction()
+  public:
+    LNode()
       : id_(0),
-        snapshot_(nullptr),
-        safepoint_(nullptr),
         block_(nullptr),
-        inputMoves_(nullptr),
-        movesAfter_(nullptr),
         mir_(nullptr)
     { }
 
-  public:
-    class InputIterator;
     enum Opcode {
 #   define LIROP(name) LOp_##name,
         LIR_OPCODE_LIST(LIROP)
@@ -654,8 +638,13 @@ class LInstruction
         return nullptr;
     }
 
-  public:
     virtual Opcode op() const = 0;
+
+    bool isInstruction() const {
+        return op() != LOp_Phi;
+    }
+    inline LInstruction *toInstruction();
+    inline const LInstruction *toInstruction() const;
 
     // Returns the number of outputs of this instruction. If an output is
     // unallocated, it is an LDefinition, defining a virtual register.
@@ -691,12 +680,6 @@ class LInstruction
         MOZ_ASSERT(id);
         id_ = id;
     }
-    LSnapshot *snapshot() const {
-        return snapshot_;
-    }
-    LSafepoint *safepoint() const {
-        return safepoint_;
-    }
     void setMir(MDefinition *mir) {
         mir_ = mir;
     }
@@ -710,20 +693,6 @@ class LInstruction
     void setBlock(LBlock *block) {
         block_ = block;
     }
-    LMoveGroup *inputMoves() const {
-        return inputMoves_;
-    }
-    void setInputMoves(LMoveGroup *moves) {
-        inputMoves_ = moves;
-    }
-    LMoveGroup *movesAfter() const {
-        return movesAfter_;
-    }
-    void setMovesAfter(LMoveGroup *moves) {
-        movesAfter_ = moves;
-    }
-    void assignSnapshot(LSnapshot *snapshot);
-    void initSafepoint(TempAllocator &alloc);
 
     // For an instruction which has a MUST_REUSE_INPUT output, whether that
     // output register will be restored to its original value when bailing out.
@@ -747,23 +716,86 @@ class LInstruction
     LIR_OPCODE_LIST(LIROP)
 #   undef LIROP
 
-    virtual bool accept(LInstructionVisitor *visitor) = 0;
+    virtual bool accept(LElementVisitor *visitor) = 0;
 };
 
-class LInstructionVisitor
+class LInstruction
+  : public LNode
+  , public TempObject
+  , public InlineListNode<LInstruction>
 {
-    LInstruction *ins_;
+    // This snapshot could be set after a ResumePoint.  It is used to restart
+    // from the resume point pc.
+    LSnapshot *snapshot_;
+
+    // Structure capturing the set of stack slots and registers which are known
+    // to hold either gcthings or Values.
+    LSafepoint *safepoint_;
+
+    LMoveGroup *inputMoves_;
+    LMoveGroup *movesAfter_;
+
+  protected:
+    LInstruction()
+      : snapshot_(nullptr),
+        safepoint_(nullptr),
+        inputMoves_(nullptr),
+        movesAfter_(nullptr)
+    { }
+
+  public:
+    LSnapshot *snapshot() const {
+        return snapshot_;
+    }
+    LSafepoint *safepoint() const {
+        return safepoint_;
+    }
+    LMoveGroup *inputMoves() const {
+        return inputMoves_;
+    }
+    void setInputMoves(LMoveGroup *moves) {
+        inputMoves_ = moves;
+    }
+    LMoveGroup *movesAfter() const {
+        return movesAfter_;
+    }
+    void setMovesAfter(LMoveGroup *moves) {
+        movesAfter_ = moves;
+    }
+    void assignSnapshot(LSnapshot *snapshot);
+    void initSafepoint(TempAllocator &alloc);
+
+    class InputIterator;
+};
+
+LInstruction *
+LNode::toInstruction()
+{
+    MOZ_ASSERT(isInstruction());
+    return static_cast<LInstruction *>(this);
+}
+
+const LInstruction *
+LNode::toInstruction() const
+{
+    MOZ_ASSERT(isInstruction());
+    return static_cast<const LInstruction *>(this);
+}
+
+class LElementVisitor
+{
+    LNode *ins_;
 
   protected:
     jsbytecode *lastPC_;
     jsbytecode *lastNotInlinedPC_;
 
-    LInstruction *instruction() {
+    LNode *instruction() {
         return ins_;
     }
 
   public:
-    void setInstruction(LInstruction *ins) {
+    void setElement(LNode *ins) {
         ins_ = ins;
         if (ins->mirRaw()) {
             lastPC_ = ins->mirRaw()->trackedPc();
@@ -772,7 +804,7 @@ class LInstructionVisitor
         }
     }
 
-    LInstructionVisitor()
+    LElementVisitor()
       : ins_(nullptr),
         lastPC_(nullptr),
         lastNotInlinedPC_(nullptr)
@@ -1684,8 +1716,8 @@ LAllocation::toRegister() const
     Opcode op() const {                                                     \
         return LInstruction::LOp_##opcode;                                  \
     }                                                                       \
-    bool accept(LInstructionVisitor *visitor) {                             \
-        visitor->setInstruction(this);                                      \
+    bool accept(LElementVisitor *visitor) {                                 \
+        visitor->setElement(this);                                          \
         return visitor->visit##opcode(this);                                \
     }
 
@@ -1713,7 +1745,7 @@ namespace js {
 namespace jit {
 
 #define LIROP(name)                                                         \
-    L##name *LInstruction::to##name()                                       \
+    L##name *LNode::to##name()                                              \
     {                                                                       \
         MOZ_ASSERT(is##name());                                             \
         return static_cast<L##name *>(this);                                \
