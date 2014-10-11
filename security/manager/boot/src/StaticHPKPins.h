@@ -756,13 +756,13 @@ struct TransportSecurityPreload {
 /* Sort hostnames for binary search. */
 static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "2mdn.net", true, false, false, -1, &kPinset_google_root_pems },
-  { "accounts.firefox.com", true, false, false, 4, &kPinset_mozilla_services },
+  { "accounts.firefox.com", true, false, true, 4, &kPinset_mozilla_services },
   { "accounts.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "addons.mozilla.net", true, false, true, 2, &kPinset_mozilla },
   { "addons.mozilla.org", true, false, true, 1, &kPinset_mozilla },
   { "admin.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "android.com", true, false, false, -1, &kPinset_google_root_pems },
-  { "api.accounts.firefox.com", true, false, false, 5, &kPinset_mozilla_services },
+  { "api.accounts.firefox.com", true, false, true, 5, &kPinset_mozilla_services },
   { "api.twitter.com", true, false, false, -1, &kPinset_twitterCDN },
   { "apis.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "appengine.google.com", true, false, false, -1, &kPinset_google_root_pems },
@@ -1048,7 +1048,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "profiles.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "script.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "security.google.com", true, false, false, -1, &kPinset_google_root_pems },
-  { "services.mozilla.com", true, true, false, -1, &kPinset_mozilla_services },
+  { "services.mozilla.com", true, true, true, 6, &kPinset_mozilla_services },
   { "sites.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "spreadsheets.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "ssl.google-analytics.com", true, false, false, -1, &kPinset_google_root_pems },
@@ -1092,4 +1092,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1420884673118000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1421489353719000);
