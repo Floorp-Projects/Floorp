@@ -14,7 +14,6 @@ bassh.net: did not receive HSTS header
 bccx.com: could not connect to host
 betnet.fr: could not connect to host
 bigshinylock.minazo.net: could not connect to host
-bl4ckb0x.info: could not connect to host
 blog.lookout.com: did not receive HSTS header
 braintreegateway.com: did not receive HSTS header
 braintreepayments.com: did not receive HSTS header
@@ -42,6 +41,7 @@ docs.google.com: did not receive HSTS header (error ignored - included regardles
 drive.google.com: did not receive HSTS header (error ignored - included regardless)
 dropbox.com: max-age too low: 2592000
 dropcam.com: did not receive HSTS header
+ed.gs: did not receive HSTS header
 edmodo.com: did not receive HSTS header
 email.lookout.com: could not connect to host
 encrypted.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -53,13 +53,14 @@ gamesdepartment.co.uk: did not receive HSTS header
 get.zenpayroll.com: did not receive HSTS header
 getlantern.org: did not receive HSTS header
 glass.google.com: did not receive HSTS header (error ignored - included regardless)
+globalcs.co.uk: did not receive HSTS header
 gmail.com: did not receive HSTS header (error ignored - included regardless)
 googlemail.com: did not receive HSTS header (error ignored - included regardless)
 googleplex.com: could not connect to host
 googleplex.com: could not connect to host (error ignored - included regardless)
 goto.google.com: did not receive HSTS header (error ignored - included regardless)
 gparent.org: did not receive HSTS header
-greplin.com: did not receive HSTS header
+greplin.com: could not connect to host
 groups.google.com: did not receive HSTS header (error ignored - included regardless)
 hackerone-user-content.com: could not connect to host
 haste.ch: could not connect to host
@@ -88,6 +89,7 @@ lumi.do: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FA
 m.gparent.org: could not connect to host
 mail.google.com: did not receive HSTS header (error ignored - included regardless)
 market.android.com: did not receive HSTS header (error ignored - included regardless)
+markusueberallassetmanagement.de: could not connect to host
 matteomarescotti.name: could not connect to host
 mobilethreat.net: could not connect to host
 mobilethreatnetwork.net: could not connect to host
@@ -95,7 +97,6 @@ mudcrab.us: could not connect to host
 my.alfresco.com: did not receive HSTS header
 mydigipass.com: did not receive HSTS header
 mykolab.com: did not receive HSTS header
-nachsenden.info: did not receive HSTS header
 neonisi.com: could not connect to host
 netzpolitik.org: did not receive HSTS header
 nexth.de: could not connect to host
@@ -138,7 +139,6 @@ square.com: did not receive HSTS header
 ssl.google-analytics.com: did not receive HSTS header (error ignored - included regardless)
 ssl.panoramio.com: did not receive HSTS header
 stocktrade.de: could not connect to host
-strongest-privacy.com: could not connect to host
 sunshinepress.org: could not connect to host
 surfeasy.com: did not receive HSTS header
 talk.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -149,6 +149,7 @@ uprotect.it: could not connect to host
 wallet.google.com: did not receive HSTS header (error ignored - included regardless)
 webmail.mayfirst.org: did not receive HSTS header
 whonix.org: did not receive HSTS header
+wiz.biz: did not receive HSTS header
 www.calyxinstitute.org: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-periodicupdate-00/getHSTSPreloadList.js :: processStsHeader :: line 124"  data: no]
 www.cueup.com: could not connect to host
 www.developer.mydigipass.com: could not connect to host
@@ -156,7 +157,7 @@ www.dropbox.com: max-age too low: 2592000
 www.elanex.biz: did not receive HSTS header
 www.gmail.com: did not receive HSTS header (error ignored - included regardless)
 www.googlemail.com: did not receive HSTS header (error ignored - included regardless)
-www.greplin.com: did not receive HSTS header
+www.greplin.com: could not connect to host
 www.jitsi.org: did not receive HSTS header
 www.ledgerscope.net: did not receive HSTS header
 www.logentries.com: did not receive HSTS header
