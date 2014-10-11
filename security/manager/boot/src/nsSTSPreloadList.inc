@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1423303721492000);
+const PRTime gPreloadListExpirationTime = INT64_C(1423908606444000);
 
 class nsSTSPreload
 {
@@ -136,7 +136,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "drive.google.com", true },
   { "ebanking.indovinabank.com.vn", false },
   { "ecosystem.atlassian.net", true },
-  { "ed.gs", true },
   { "edyou.eu", true },
   { "eff.org", true },
   { "emailprivacytester.com", true },
@@ -171,7 +170,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "getdigitized.net", true },
   { "giacomopelagatti.it", true },
   { "glass.google.com", true },
-  { "globalcs.co.uk", true },
   { "globuli-info.de", true },
   { "gmail.com", false },
   { "gmantra.org", true },
@@ -298,6 +296,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "my.xero.com", false },
   { "mylookout.com", false },
   { "mynigma.org", true },
+  { "nachsenden.info", true },
   { "neg9.org", false },
   { "neilwynne.com", false },
   { "netzbit.de", true },
@@ -471,7 +470,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "wiki.python.org", true },
   { "wildbee.org", true },
   { "winhistory-forum.net", true },
-  { "wiz.biz", true },
   { "writeapp.me", false },
   { "wunderlist.com", true },
   { "www.aclu.org", false },
