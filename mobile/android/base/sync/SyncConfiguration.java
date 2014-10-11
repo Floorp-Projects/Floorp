@@ -411,8 +411,8 @@ public class SyncConfiguration {
 
     // Our history checkbox drives form history, too.
     // We don't need to do this for enablement: that's done at retrieval time.
-    if (selectedEngines.containsKey("history") && !selectedEngines.get("history").booleanValue()) {
-        declined.add("forms");
+    if (selectedEngines.containsKey("history") && !selectedEngines.get("history")) {
+      declined.add("forms");
     }
 
     String json = jObj.toJSONString();

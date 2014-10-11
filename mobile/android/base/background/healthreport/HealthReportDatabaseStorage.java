@@ -1197,7 +1197,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
   @Override
   public void recordDailyLast(int env, int day, int field, int value) {
-    this.recordDailyLast(env, day, field, Integer.valueOf(value), EVENTS_INTEGER);
+    this.recordDailyLast(env, day, field, value, EVENTS_INTEGER);
   }
 
   private void recordDailyDiscrete(int env, int day, int field, Object value, String table) {

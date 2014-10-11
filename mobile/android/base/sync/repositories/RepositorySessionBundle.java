@@ -37,7 +37,7 @@ public class RepositorySessionBundle {
 
   public void setTimestamp(long timestamp) {
     Logger.debug(LOG_TAG, "Setting timestamp to " + timestamp + ".");
-    object.put(JSON_KEY_TIMESTAMP, Long.valueOf(timestamp));
+    object.put(JSON_KEY_TIMESTAMP, timestamp);
   }
 
   public void bumpTimestamp(long timestamp) {

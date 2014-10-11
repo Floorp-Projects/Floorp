@@ -272,7 +272,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
       Logger.warn(LOG_TAG, "Couldn't find local ID for GUID " + guid);
       return -1;
     }
-    return id.longValue();
+    return id;
   }
 
   private String getGUID(Cursor cur) {
@@ -364,7 +364,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
       boolean changed = false;
       int i = 0;
       for (Entry<Long, ArrayList<String>> entry : guids.entrySet()) {
-        long pos = entry.getKey().longValue();
+        long pos = entry.getKey();
         int atPos = entry.getValue().size();
 
         // If every element has a different index, and the indices are

@@ -236,7 +236,7 @@ public class ObsoleteDocumentTracker {
       if (!(o instanceof Long)) {
         continue;
       }
-      if (((Long) o).longValue() > HealthReportConstants.DELETION_ATTEMPTS_PER_OBSOLETE_DOCUMENT_ID) {
+      if ((Long) o > HealthReportConstants.DELETION_ATTEMPTS_PER_OBSOLETE_DOCUMENT_ID) {
         ids.put(key, HealthReportConstants.DELETION_ATTEMPTS_PER_OBSOLETE_DOCUMENT_ID);
       }
     }

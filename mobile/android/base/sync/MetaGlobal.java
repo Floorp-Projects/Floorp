@@ -227,7 +227,7 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
       Integer version = engineEntry.getIntegerSafely("version");
       Logger.trace(LOG_TAG, "Engine " + engineName + " has server version " + version);
       if (version == null ||
-          version.intValue() == 0) {
+          version == 0) {
         // Invalid version. Wipe the server.
         Logger.warn(LOG_TAG, "Malformed version " + version +
                              " for " + engineName + ". Recording exception.");

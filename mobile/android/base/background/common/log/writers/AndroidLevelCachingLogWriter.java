@@ -42,7 +42,7 @@ public class AndroidLevelCachingLogWriter extends LogWriter {
   private boolean shouldLogError(String logTag) {
     Boolean out = isErrorLoggable.get(logTag);
     if (out != null) {
-      return out.booleanValue();
+      return out;
     }
     out = Log.isLoggable(logTag, Log.ERROR);
     isErrorLoggable.put(logTag, out);
@@ -52,7 +52,7 @@ public class AndroidLevelCachingLogWriter extends LogWriter {
   private boolean shouldLogWarn(String logTag) {
     Boolean out = isWarnLoggable.get(logTag);
     if (out != null) {
-      return out.booleanValue();
+      return out;
     }
     out = Log.isLoggable(logTag, Log.WARN);
     isWarnLoggable.put(logTag, out);
@@ -62,7 +62,7 @@ public class AndroidLevelCachingLogWriter extends LogWriter {
   private boolean shouldLogInfo(String logTag) {
     Boolean out = isInfoLoggable.get(logTag);
     if (out != null) {
-      return out.booleanValue();
+      return out;
     }
     out = Log.isLoggable(logTag, Log.INFO);
     isInfoLoggable.put(logTag, out);
@@ -72,7 +72,7 @@ public class AndroidLevelCachingLogWriter extends LogWriter {
   private boolean shouldLogDebug(String logTag) {
     Boolean out = isDebugLoggable.get(logTag);
     if (out != null) {
-      return out.booleanValue();
+      return out;
     }
     out = Log.isLoggable(logTag, Log.DEBUG);
     isDebugLoggable.put(logTag, out);
@@ -83,7 +83,7 @@ public class AndroidLevelCachingLogWriter extends LogWriter {
   public boolean shouldLogVerbose(String logTag) {
     Boolean out = isVerboseLoggable.get(logTag);
     if (out != null) {
-      return out.booleanValue();
+      return out;
     }
     out = Log.isLoggable(logTag, Log.VERBOSE);
     isVerboseLoggable.put(logTag, out);
