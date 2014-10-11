@@ -217,45 +217,10 @@ class CodePosition
     }
 };
 
-// Structure to track moves inserted before or after an instruction.
-class InstructionData
-{
-    LInstruction *ins_;
-    LBlock *block_;
-    LMoveGroup *inputMoves_;
-    LMoveGroup *movesAfter_;
-
-  public:
-    void init(LInstruction *ins, LBlock *block) {
-        MOZ_ASSERT(!ins_);
-        MOZ_ASSERT(!block_);
-        ins_ = ins;
-        block_ = block;
-    }
-    LInstruction *ins() const {
-        return ins_;
-    }
-    LBlock *block() const {
-        return block_;
-    }
-    void setInputMoves(LMoveGroup *moves) {
-        inputMoves_ = moves;
-    }
-    LMoveGroup *inputMoves() const {
-        return inputMoves_;
-    }
-    void setMovesAfter(LMoveGroup *moves) {
-        movesAfter_ = moves;
-    }
-    LMoveGroup *movesAfter() const {
-        return movesAfter_;
-    }
-};
-
 // Structure to track all moves inserted next to instructions in a graph.
 class InstructionDataMap
 {
-    FixedList<InstructionData> insData_;
+    FixedList<LInstruction *> insData_;
 
   public:
     InstructionDataMap()
@@ -265,26 +230,20 @@ class InstructionDataMap
     bool init(MIRGenerator *gen, uint32_t numInstructions) {
         if (!insData_.init(gen->alloc(), numInstructions))
             return false;
-        memset(&insData_[0], 0, sizeof(InstructionData) * numInstructions);
+        memset(&insData_[0], 0, sizeof(LInstruction *) * numInstructions);
         return true;
     }
 
-    InstructionData &operator[](CodePosition pos) {
+    LInstruction *&operator[](CodePosition pos) {
         return operator[](pos.ins());
     }
-    const InstructionData &operator[](CodePosition pos) const {
+    LInstruction *const &operator[](CodePosition pos) const {
         return operator[](pos.ins());
     }
-    InstructionData &operator[](LInstruction *ins) {
-        return operator[](ins->id());
-    }
-    const InstructionData &operator[](LInstruction *ins) const {
-        return operator[](ins->id());
-    }
-    InstructionData &operator[](uint32_t ins) {
+    LInstruction *&operator[](uint32_t ins) {
         return insData_[ins];
     }
-    const InstructionData &operator[](uint32_t ins) const {
+    LInstruction *const &operator[](uint32_t ins) const {
         return insData_[ins];
     }
 };
@@ -336,8 +295,8 @@ class RegisterAllocator
         // All phis in a block write their outputs after all of them have
         // read their inputs. Consequently, it doesn't make sense to talk
         // about code positions in the middle of a series of phis.
-        if (insData[pos].ins()->isPhi()) {
-            while (insData[pos + 1].ins()->isPhi())
+        if (insData[pos]->isPhi()) {
+            while (insData[pos + 1]->isPhi())
                 ++pos;
         }
         return CodePosition(pos, CodePosition::OUTPUT);
@@ -349,8 +308,8 @@ class RegisterAllocator
         // All phis in a block read their inputs before any of them write their
         // outputs. Consequently, it doesn't make sense to talk about code
         // positions in the middle of a series of phis.
-        if (insData[pos].ins()->isPhi()) {
-            while (pos > 0 && insData[pos - 1].ins()->isPhi())
+        if (insData[pos]->isPhi()) {
+            while (pos > 0 && insData[pos - 1]->isPhi())
                 --pos;
         }
         return CodePosition(pos, CodePosition::INPUT);
@@ -365,8 +324,8 @@ class RegisterAllocator
         return outputOf(block->lastId());
     }
 
-    LMoveGroup *getInputMoveGroup(uint32_t ins);
-    LMoveGroup *getMoveGroupAfter(uint32_t ins);
+    LMoveGroup *getInputMoveGroup(uint32_t id);
+    LMoveGroup *getMoveGroupAfter(uint32_t id);
 
     LMoveGroup *getInputMoveGroup(CodePosition pos) {
         return getInputMoveGroup(pos.ins());
@@ -381,7 +340,7 @@ class RegisterAllocator
         // If moves are introduced between the instruction and the OSI point then
         // safepoint information for the instruction may be incorrect.
         while (true) {
-            LInstruction *next = insData[outputOf(ins).next()].ins();
+            LInstruction *next = insData[ins->id() + 1];
             if (!next->isNop() && !next->isOsiPoint())
                 break;
             ins = next;
