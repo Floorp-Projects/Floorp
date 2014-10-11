@@ -8,7 +8,6 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -117,7 +116,7 @@ public class IntentChooserPrompt {
 
         // Add any intents from the provider.
         final PackageManager packageManager = context.getPackageManager();
-        final ArrayList<ResolveInfo> infos = provider.getSortedActivites();
+        final ArrayList<ResolveInfo> infos = provider.getSortedActivities();
 
         for (final ResolveInfo info : infos) {
             items.add(getItemForResolveInfo(info, packageManager, provider.getIntent()));

@@ -184,8 +184,8 @@ public class GLController {
 
         // Only try to create the compositor if we have a valid surface and gecko is up. When these
         // two conditions are satisfied, we can be relatively sure that the compositor creation will
-        // happen without needing to block anyhwere. Do it with a sync gecko event so that the
-        // android doesn't have a chance to destroy our surface in between.
+        // happen without needing to block anywhere. Do it with a synchronous Gecko event so that the
+        // Android doesn't have a chance to destroy our surface in between.
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createCompositorCreateEvent(mWidth, mHeight));
         }
@@ -208,7 +208,7 @@ public class GLController {
 
         // This join() should not be necessary, but makes this code a bit easier to think about.
         // The EGLPreloadingThread should long be done by now, and even if it's not,
-        // it shouldn't be a problem to be initalizing EGL from two different threads.
+        // it shouldn't be a problem to be initializing EGL from two different threads.
         // Still, having this join() here means that we don't have to wonder about what
         // kind of caveats might exist with EGL initialization reentrancy on various drivers.
         try {

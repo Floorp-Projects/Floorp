@@ -43,7 +43,7 @@ import android.widget.AbsListView;
 
 /**
  * GeckoSwipeRefreshLayout is mostly lifted from Android's support library (v4) with these
- * modfications:
+ * modifications:
  *  - Removes elastic "rubber banding" effect when overscrolling the child view.
  *  - Changes the height of the progress bar to match the height of HomePager's page indicator.
  *  - Uses a rectangle rather than a circle for the SwipeProgressBar indicator.

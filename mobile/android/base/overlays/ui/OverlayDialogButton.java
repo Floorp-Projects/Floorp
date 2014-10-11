@@ -42,7 +42,7 @@ public class OverlayDialogButton extends LinearLayout {
     private Drawable disabledIcon;
 
     // Click listeners used when enabled/disabled. Currently, disabledOnClickListener is set
-    // intenally to something that causes the icon to pulse.
+    // internally to something that causes the icon to pulse.
     private OnClickListener enabledOnClickListener;
     private OnClickListener disabledOnClickListener;
 

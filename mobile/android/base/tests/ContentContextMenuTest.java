@@ -17,7 +17,7 @@ abstract class ContentContextMenuTest extends PixelTest {
         DisplayMetrics dm = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
 
-        // The web content we are trying to open the context menu for should be positioned at the top of the page, at least 60px heigh and aligned to the middle
+        // The web content we are trying to open the context menu for should be positioned at the top of the page, at least 60px high and aligned to the middle
         float top = mDriver.getGeckoTop() + 30 * dm.density;
         float left = mDriver.getGeckoLeft() + mDriver.getGeckoWidth() / 2;
 

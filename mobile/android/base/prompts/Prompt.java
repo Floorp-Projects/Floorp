@@ -376,9 +376,9 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
      *
      * @param builder
      *        the alert builder currently building this dialog.
-     * @return 
+     * @return
      *         return true if the inputs were added successfully. This may fail
-     *         if the requested input is compatible with this Android verison
+     *         if the requested input is compatible with this Android version.
      */
     private boolean addInputs(AlertDialog.Builder builder) {
         int length = mInputs == null ? 0 : mInputs.length;
@@ -388,7 +388,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
 
         try {
             View root = null;
-            boolean scrollable = false; // If any of the innuts are scrollable, we won't wrap this in a ScrollView
+            boolean scrollable = false; // If any of the inputs are scrollable, we won't wrap this in a ScrollView
 
             if (length == 1) {
                 root = wrapInput(mInputs[0]);

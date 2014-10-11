@@ -1281,7 +1281,7 @@ public final class HomeConfig {
 
                 installed = true;
 
-                // Add an event to the queue if a new panel is sucessfully installed.
+                // Add an event to the queue if a new panel is successfully installed.
                 mEventQueue.add(GeckoEvent.createBroadcastEvent("HomePanels:Installed", panelConfig.getId()));
             }
 
@@ -1317,7 +1317,7 @@ public final class HomeConfig {
                 findNewDefault();
             }
 
-            // Add an event to the queue if a panel is succesfully uninstalled.
+            // Add an event to the queue if a panel is successfully uninstalled.
             mEventQueue.add(GeckoEvent.createBroadcastEvent("HomePanels:Uninstalled", panelId));
 
             mHasChanged = true;
