@@ -201,12 +201,6 @@ public class ActivityChooserModel extends DataSetObservable {
     private static final String ATTRIBUTE_WEIGHT = "weight";
 
     /**
-     * The default name of the choice history file.
-     */
-    public static final String DEFAULT_HISTORY_FILE_NAME =
-        "activity_choser_model_history.xml";
-
-    /**
      * The default maximal length of the choice history.
      */
     public static final int DEFAULT_HISTORY_MAX_LENGTH = 50;
@@ -327,19 +321,13 @@ public class ActivityChooserModel extends DataSetObservable {
     /**
      * Policy for controlling how the model handles chosen activities.
      */
-    private OnChooseActivityListener mActivityChoserModelPolicy;
+    private OnChooseActivityListener mActivityChooserModelPolicy;
 
     /**
      * Gets the data model backed by the contents of the provided file with historical data.
      * Note that only one data model is backed by a given file, thus multiple calls with
      * the same file name will return the same model instance. If no such instance is present
      * it is created.
-     * <p>
-     * <strong>Note:</strong> To use the default historical data file clients should explicitly
-     * pass as file name {@link #DEFAULT_HISTORY_FILE_NAME}. If no persistence of the choice
-     * history is desired clients should pass <code>null</code> for the file name. In such
-     * case a new model is returned for each invocation.
-     * </p>
      *
      * <p>
      * <strong>Always use difference historical data files for semantically different actions.
@@ -502,10 +490,10 @@ public class ActivityChooserModel extends DataSetObservable {
             Intent choiceIntent = new Intent(mIntent);
             choiceIntent.setComponent(chosenName);
 
-            if (mActivityChoserModelPolicy != null) {
+            if (mActivityChooserModelPolicy != null) {
                 // Do not allow the policy to change the intent.
                 Intent choiceIntentCopy = new Intent(choiceIntent);
-                final boolean handled = mActivityChoserModelPolicy.onChooseActivity(this,
+                final boolean handled = mActivityChooserModelPolicy.onChooseActivity(this,
                         choiceIntentCopy);
                 if (handled) {
                     return null;
@@ -527,7 +515,7 @@ public class ActivityChooserModel extends DataSetObservable {
      */
     public void setOnChooseActivityListener(OnChooseActivityListener listener) {
         synchronized (mInstanceLock) {
-            mActivityChoserModelPolicy = listener;
+            mActivityChooserModelPolicy = listener;
         }
     }
 

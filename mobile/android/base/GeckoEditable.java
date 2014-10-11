@@ -258,9 +258,9 @@ final class GeckoEditable
                                          KeyCharacterMap.VIRTUAL_KEYBOARD);
                 }
             } catch (Exception e) {
-                // KeyCharacterMap.UnavailableExcepton is not found on Gingerbread;
+                // KeyCharacterMap.UnavailableException is not found on Gingerbread;
                 // besides, it seems like HC and ICS will throw something other than
-                // KeyCharacterMap.UnavailableExcepton; so use a generic Exception here
+                // KeyCharacterMap.UnavailableException; so use a generic Exception here
                 return null;
             }
             KeyEvent [] keyEvents = mKeyMap.getEvents(cs.toString().toCharArray());
