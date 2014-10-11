@@ -501,7 +501,7 @@ LInstruction::dump(FILE *fp)
     }
 
     printName(fp);
-    printInfo(fp);
+    printOperands(fp);
 
     if (numTemps()) {
         fprintf(fp, " t=(");

@@ -711,7 +711,6 @@ class LInstruction
     static void printName(FILE *fp, Opcode op);
     virtual void printName(FILE *fp);
     virtual void printOperands(FILE *fp);
-    virtual void printInfo(FILE *fp) { }
 
   public:
     // Opcode testing and casts.
@@ -904,10 +903,6 @@ class LInstructionHelper : public LInstruction
     const LDefinition *output() {
         MOZ_ASSERT(numDefs() == 1);
         return getDef(0);
-    }
-
-    virtual void printInfo(FILE *fp) {
-        printOperands(fp);
     }
 };
 
