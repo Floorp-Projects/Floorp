@@ -291,37 +291,42 @@ class RegisterAllocator
         return mir->alloc();
     }
 
-    CodePosition outputOf(uint32_t pos) const {
+    CodePosition outputOf(const LNode *ins) const {
+        return ins->isPhi()
+               ? outputOf(ins->toPhi())
+               : outputOf(ins->toInstruction());
+    }
+    CodePosition outputOf(const LPhi *ins) const {
         // All phis in a block write their outputs after all of them have
         // read their inputs. Consequently, it doesn't make sense to talk
         // about code positions in the middle of a series of phis.
-        if (insData[pos]->isPhi()) {
-            while (insData[pos + 1]->isPhi())
-                ++pos;
-        }
-        return CodePosition(pos, CodePosition::OUTPUT);
+        LBlock *block = ins->block();
+        return CodePosition(block->getPhi(block->numPhis() - 1)->id(), CodePosition::OUTPUT);
     }
-    CodePosition outputOf(const LNode *ins) const {
-        return outputOf(ins->id());
+    CodePosition outputOf(const LInstruction *ins) const {
+        return CodePosition(ins->id(), CodePosition::OUTPUT);
     }
-    CodePosition inputOf(uint32_t pos) const {
+    CodePosition inputOf(const LNode *ins) const {
+        return ins->isPhi()
+               ? inputOf(ins->toPhi())
+               : inputOf(ins->toInstruction());
+    }
+    CodePosition inputOf(const LPhi *ins) const {
         // All phis in a block read their inputs before any of them write their
         // outputs. Consequently, it doesn't make sense to talk about code
         // positions in the middle of a series of phis.
-        if (insData[pos]->isPhi()) {
-            while (pos > 0 && insData[pos - 1]->isPhi())
-                --pos;
-        }
-        return CodePosition(pos, CodePosition::INPUT);
+        return CodePosition(ins->block()->getPhi(0)->id(), CodePosition::INPUT);
     }
-    CodePosition inputOf(const LNode *ins) const {
-        return inputOf(ins->id());
+    CodePosition inputOf(const LInstruction *ins) const {
+        return CodePosition(ins->id(), CodePosition::INPUT);
     }
     CodePosition entryOf(const LBlock *block) {
-        return inputOf(block->firstId());
+        return block->numPhis() != 0
+               ? CodePosition(block->getPhi(0)->id(), CodePosition::INPUT)
+               : inputOf(block->firstInstructionWithId());
     }
     CodePosition exitOf(const LBlock *block) {
-        return outputOf(block->lastId());
+        return outputOf(block->lastInstructionWithId());
     }
 
     LMoveGroup *getInputMoveGroup(uint32_t id);
