@@ -1316,8 +1316,17 @@ function sendMMI(aMmi) {
   let deferred = Promise.defer();
 
   telephony.dial(aMmi)
-    .then(result => {
-      deferred.resolve(result);
+    .then(request => {
+      ok(request instanceof DOMRequest,
+         "request is instanceof " + request.constructor);
+
+      request.addEventListener("success", function(event) {
+        deferred.resolve(request.result);
+      });
+
+      request.addEventListener("error", function(event) {
+        deferred.reject(request.error);
+      });
     }, cause => {
       deferred.reject(cause);
     });
