@@ -51,6 +51,7 @@ var tests = [
     ok("readyState" in req, "cursor has readyState");
     ok("done" in req, "cursor has finished");
     ok("continue" in req, "cursor has continue");
+    ok(!("then" in req), "cursor should not have a then method");
 
     is(req.readyState, "pending", "readyState is pending");
     is(req.result, undefined, "result is undefined");

@@ -220,7 +220,7 @@ class Heap : public js::HeapBase<T>
      * that will be used for both lvalue and rvalue copies, so we can simply
      * omit the rvalue variant.
      */
-    explicit Heap(const Heap<T> &p) { init(p.ptr); }
+    Heap(const Heap<T> &p) { init(p.ptr); }
 
     ~Heap() {
         if (js::GCMethods<T>::needsPostBarrier(ptr))
