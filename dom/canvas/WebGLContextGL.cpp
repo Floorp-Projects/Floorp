@@ -3875,13 +3875,9 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
 
     const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(texImageTarget, level);
     const TexInternalFormat existingEffectiveInternalFormat = imageInfo.EffectiveInternalFormat();
-    TexInternalFormat existingUnsizedInternalFormat = LOCAL_GL_NONE;
-    TexType existingType = LOCAL_GL_NONE;
-    UnsizedInternalFormatAndTypeFromEffectiveInternalFormat(existingEffectiveInternalFormat,
-                                                            &existingUnsizedInternalFormat,
-                                                            &existingType);
 
-    if (!ValidateTexImage(2, texImageTarget, level, existingUnsizedInternalFormat.get(),
+    if (!ValidateTexImage(2, texImageTarget, level,
+                          existingEffectiveInternalFormat.get(),
                           xoffset, yoffset, 0,
                           width, height, 0,
                           0, format, type, func))
@@ -3892,7 +3888,7 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
     if (!ValidateTexInputData(type, jsArrayType, func))
         return;
 
-    if (type != existingType) {
+    if (type != TypeFromInternalFormat(existingEffectiveInternalFormat)) {
         return ErrorInvalidOperation("texSubImage2D: type differs from that of the existing image");
     }
 
