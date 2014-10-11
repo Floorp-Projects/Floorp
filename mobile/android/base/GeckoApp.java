@@ -183,7 +183,7 @@ public abstract class GeckoApp
     private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
 
-    private HashMap<String, PowerManager.WakeLock> mWakeLocks = new HashMap<String, PowerManager.WakeLock>();
+    private final HashMap<String, PowerManager.WakeLock> mWakeLocks = new HashMap<String, PowerManager.WakeLock>();
 
     protected boolean mShouldRestore;
     protected boolean mInitialized;
@@ -1016,9 +1016,9 @@ public abstract class GeckoApp
         int inSampleSize = 1;
         if (height > idealHeight || width > idealWidth) {
             if (width > height) {
-                inSampleSize = Math.round((float)height / (float)idealHeight);
+                inSampleSize = Math.round((float)height / idealHeight);
             } else {
-                inSampleSize = Math.round((float)width / (float)idealWidth);
+                inSampleSize = Math.round((float)width / idealWidth);
             }
         }
         return inSampleSize;

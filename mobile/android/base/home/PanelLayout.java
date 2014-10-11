@@ -679,7 +679,7 @@ abstract class PanelLayout extends FrameLayout {
     }
 
     private class PanelOnItemOpenListener implements OnItemOpenListener {
-        private ViewState mViewState;
+        private final ViewState mViewState;
 
         public PanelOnItemOpenListener(ViewState viewState) {
             mViewState = viewState;
@@ -702,7 +702,7 @@ abstract class PanelLayout extends FrameLayout {
     }
 
     private class PanelKeyListener implements View.OnKeyListener {
-        private ViewState mViewState;
+        private final ViewState mViewState;
 
         public PanelKeyListener(ViewState viewState) {
             mViewState = viewState;

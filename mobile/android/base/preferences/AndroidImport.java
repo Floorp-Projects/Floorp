@@ -22,14 +22,14 @@ import android.util.Log;
 import java.util.ArrayList;
 
 class AndroidImport implements Runnable {
-    static final private String LOGTAG = "AndroidImport";
-    private Context mContext;
-    private Runnable mOnDoneRunnable;
-    private ArrayList<ContentProviderOperation> mOperations;
-    private ContentResolver mCr;
-    private LocalBrowserDB mDB;
-    private boolean mImportBookmarks;
-    private boolean mImportHistory;
+    private static final String LOGTAG = "AndroidImport";
+    private final Context mContext;
+    private final Runnable mOnDoneRunnable;
+    private final ArrayList<ContentProviderOperation> mOperations;
+    private final ContentResolver mCr;
+    private final LocalBrowserDB mDB;
+    private final boolean mImportBookmarks;
+    private final boolean mImportHistory;
 
     public AndroidImport(Context context, Runnable onDoneRunnable,
                          boolean doBookmarks, boolean doHistory) {

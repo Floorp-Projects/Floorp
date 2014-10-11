@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class GeckoActionProvider {
-    private static int MAX_HISTORY_SIZE = 2;
+    private static final int MAX_HISTORY_SIZE = 2;
 
     /**
      * A listener to know when a target was selected.
@@ -51,7 +51,7 @@ public class GeckoActionProvider {
 
     private final Callbacks mCallbacks = new Callbacks();
 
-    private static HashMap<String, GeckoActionProvider> mProviders = new HashMap<String, GeckoActionProvider>();
+    private static final HashMap<String, GeckoActionProvider> mProviders = new HashMap<String, GeckoActionProvider>();
 
     private static String getFilenameFromMimeType(String mimeType) {
         String[] mime = mimeType.split("/");

@@ -42,7 +42,7 @@ public class DoorHanger extends LinearLayout {
     private static int sSpinnerTextColor = -1;
     private static int sSpinnerTextSize = -1;
 
-    private static LayoutParams sButtonParams;
+    private static final LayoutParams sButtonParams;
     static {
         sButtonParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1.0f);
     }
@@ -60,7 +60,7 @@ public class DoorHanger extends LinearLayout {
     // Value used to identify the notification.
     private final String mValue;
 
-    private Resources mResources;
+    private final Resources mResources;
 
     private List<PromptInput> mInputs;
     private CheckBox mCheckBox;

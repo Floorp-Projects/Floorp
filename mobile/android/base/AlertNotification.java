@@ -33,7 +33,7 @@ public class AlertNotification
     private String mPrevAlertText = "";
 
     private static final double UPDATE_THRESHOLD = .01;
-    private Context mContext;
+    private final Context mContext;
 
     public AlertNotification(Context aContext, int aNotificationId, int aIcon,
                              String aTitle, String aText, long aWhen, Uri aIconUri) {

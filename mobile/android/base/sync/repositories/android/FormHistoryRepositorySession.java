@@ -44,8 +44,8 @@ public class FormHistoryRepositorySession extends
    */
   public static final int INSERT_ITEM_THRESHOLD = 200;
 
-  private static Uri FORM_HISTORY_CONTENT_URI = BrowserContractHelpers.FORM_HISTORY_CONTENT_URI;
-  private static Uri DELETED_FORM_HISTORY_CONTENT_URI = BrowserContractHelpers.DELETED_FORM_HISTORY_CONTENT_URI;
+  private static final Uri FORM_HISTORY_CONTENT_URI = BrowserContractHelpers.FORM_HISTORY_CONTENT_URI;
+  private static final Uri DELETED_FORM_HISTORY_CONTENT_URI = BrowserContractHelpers.DELETED_FORM_HISTORY_CONTENT_URI;
 
   public static class FormHistoryRepository extends Repository {
 

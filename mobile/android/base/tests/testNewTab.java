@@ -12,7 +12,7 @@ import com.jayway.android.robotium.solo.Condition;
 public class testNewTab extends BaseTest {
     private Element tabCount = null;
     private Element tabs = null;
-    private Element closeTab = null;
+    private final Element closeTab = null;
     private int tabCountInt = 0;
 
     public void testNewTab() {

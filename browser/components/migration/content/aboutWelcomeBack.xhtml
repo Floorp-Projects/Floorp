@@ -33,7 +33,7 @@
 
       <!-- Error Title -->
       <div id="errorTitle">
-        <h1 id="errorTitleText">&welcomeback.pageTitle;</h1>
+        <h1 id="errorTitleText">&welcomeback2.pageTitle;</h1>
       </div>
 
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
@@ -41,7 +41,9 @@
 
         <!-- Short Description -->
         <div id="errorShortDesc">
-          <p id="errorShortDescText">&welcomeback.pageInfo;</p>
+          <p>&welcomeback2.pageInfo1;</p>
+          <!-- Note a href in the anchor below is added by JS -->
+          <p>&welcomeback2.beforelink.pageInfo2;<a id="linkMoreTroubleshooting" target="_blank">&welcomeback2.link.pageInfo2;</a>&welcomeback2.afterlink.pageInfo2;</p>
         </div>
 
         <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
@@ -66,21 +68,9 @@
 
       <!-- Buttons -->
       <hbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="buttons">
-#ifdef XP_UNIX
-        <button id="errorCancel" label="&restorepage.closeButton;"
-                accesskey="&restorepage.close.access;"
-                oncommand="startNewSession();"/>
-        <button id="errorTryAgain" label="&restorepage.tryagainButton;"
-                accesskey="&restorepage.restore.access;"
+        <button id="errorTryAgain" label="&welcomeback2.restoreButton;"
+                accesskey="&welcomeback2.restoreButton.access;"
                 oncommand="restoreSession();"/>
-#else
-        <button id="errorTryAgain" label="&restorepage.tryagainButton;"
-                accesskey="&restorepage.restore.access;"
-                oncommand="restoreSession();"/>
-        <button id="errorCancel" label="&restorepage.closeButton;"
-                accesskey="&restorepage.close.access;"
-                oncommand="startNewSession();"/>
-#endif
       </hbox>
       <!-- holds the session data for when the tab is closed -->
       <input type="text" id="sessionData" style="display: none;"/>

@@ -74,10 +74,10 @@ public class GeckoSwipeRefreshLayout extends ViewGroup {
     private OnRefreshListener mListener;
     private MotionEvent mDownEvent;
     private boolean mRefreshing;
-    private int mTouchSlop;
+    private final int mTouchSlop;
     private float mDistanceToTriggerSync = -1;
     private float mPrevY;
-    private int mProgressBarHeight;
+    private final int mProgressBarHeight;
 
     // Target is returning to its start offset because it was cancelled or a
     // refresh was triggered.
@@ -527,9 +527,9 @@ public class GeckoSwipeRefreshLayout extends ViewGroup {
         private int mColor2;
         private int mColor3;
         private int mColor4;
-        private View mParent;
+        private final View mParent;
 
-        private Rect mBounds = new Rect();
+        private final Rect mBounds = new Rect();
 
         public SwipeProgressBar(View parent) {
             mParent = parent;

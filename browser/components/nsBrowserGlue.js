@@ -637,8 +637,8 @@ BrowserGlue.prototype = {
     let message = resetBundle.formatStringFromName("resetUnusedProfile.message", [productName], 1);
     let buttons = [
       {
-        label:     resetBundle.formatStringFromName("resetProfile.resetButton.label", [productName], 1),
-        accessKey: resetBundle.GetStringFromName("resetProfile.resetButton.accesskey"),
+        label:     resetBundle.formatStringFromName("refreshProfile.resetButton.label", [productName], 1),
+        accessKey: resetBundle.GetStringFromName("refreshProfile.resetButton.accesskey"),
         callback: function () {
           ResetProfile.openConfirmationDialog(win);
         }

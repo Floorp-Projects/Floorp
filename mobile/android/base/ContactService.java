@@ -90,8 +90,8 @@ public class ContactService implements GeckoEventListener {
     private HashMap<String, Integer> mWebsiteTypesMap;
     private HashMap<String, Integer> mImTypesMap;
 
-    private ContentResolver mContentResolver;
-    private GeckoApp mActivity;
+    private final ContentResolver mContentResolver;
+    private final GeckoApp mActivity;
 
     ContactService(EventDispatcher eventDispatcher, GeckoApp activity) {
         mEventDispatcher = eventDispatcher;
@@ -671,7 +671,7 @@ public class ContactService implements GeckoEventListener {
         if (typeConstant == BaseTypes.TYPE_CUSTOM) {
             type = cursor.getString(cursor.getColumnIndex(typeLabelColumn));
         } else {
-            type = getKeyFromMapValue(typeMap, Integer.valueOf(typeConstant));
+            type = getKeyFromMapValue(typeMap, typeConstant);
         }
 
         // Since an object may have multiple types, it may have already been added,
@@ -712,7 +712,7 @@ public class ContactService implements GeckoEventListener {
         if (typeConstant == Phone.TYPE_CUSTOM) {
             type = cursor.getString(cursor.getColumnIndex(Phone.LABEL));
         } else {
-            type = getKeyFromMapValue(mPhoneTypesMap, Integer.valueOf(typeConstant));
+            type = getKeyFromMapValue(mPhoneTypesMap, typeConstant);
         }
 
         // Since a phone may have multiple types, it may have already been added,
@@ -759,7 +759,7 @@ public class ContactService implements GeckoEventListener {
         if (typeConstant == StructuredPostal.TYPE_CUSTOM) {
             type = cursor.getString(cursor.getColumnIndex(StructuredPostal.LABEL));
         } else {
-            type = getKeyFromMapValue(mAddressTypesMap, Integer.valueOf(typeConstant));
+            type = getKeyFromMapValue(mAddressTypesMap, typeConstant);
         }
 
         // Since an email may have multiple types, it may have already been added,
@@ -984,7 +984,7 @@ public class ContactService implements GeckoEventListener {
         }
 
         String returnStatus = "KO";
-        Long newRawContactId = new Long(-1);
+        Long newRawContactId = -1L;
 
         // Insert the contact!
         ContentProviderResult[] insertResults = applyBatch(newContactOptions);
@@ -1476,7 +1476,7 @@ public class ContactService implements GeckoEventListener {
 
     private void getContactsCount(final String requestID) {
         Cursor cursor = getAllRawContactIdsCursor();
-        Integer numContacts = Integer.valueOf(cursor.getCount());
+        Integer numContacts = cursor.getCount();
         cursor.close();
 
         sendCallbackToJavascript("Android:Contacts:Count", requestID, new String[] {"count"},
@@ -1823,7 +1823,7 @@ public class ContactService implements GeckoEventListener {
         }
     }
 
-    private static String getKeyFromMapValue(final HashMap<String, Integer> map, Integer value) {
+    private static String getKeyFromMapValue(final HashMap<String, Integer> map, int value) {
         for (Entry<String, Integer> entry : map.entrySet()) {
             if (value == entry.getValue()) {
                 return entry.getKey();
@@ -1898,7 +1898,7 @@ public class ContactService implements GeckoEventListener {
     private int getAddressType(String addressType) {
         initAddressTypesMap();
         Integer type = mAddressTypesMap.get(addressType.toLowerCase());
-        return (type != null ? Integer.valueOf(type) : StructuredPostal.TYPE_CUSTOM);
+        return type != null ? type : StructuredPostal.TYPE_CUSTOM;
     }
 
     private void initAddressTypesMap() {
@@ -1914,7 +1914,7 @@ public class ContactService implements GeckoEventListener {
     private int getPhoneType(String phoneType) {
         initPhoneTypesMap();
         Integer type = mPhoneTypesMap.get(phoneType.toLowerCase());
-        return (type != null ? Integer.valueOf(type) : Phone.TYPE_CUSTOM);
+        return type != null ? type : Phone.TYPE_CUSTOM;
     }
 
     private void initPhoneTypesMap() {
@@ -1949,7 +1949,7 @@ public class ContactService implements GeckoEventListener {
     private int getEmailType(String emailType) {
         initEmailTypesMap();
         Integer type = mEmailTypesMap.get(emailType.toLowerCase());
-        return (type != null ? Integer.valueOf(type) : Email.TYPE_CUSTOM);
+        return type != null ? type : Email.TYPE_CUSTOM;
     }
 
     private void initEmailTypesMap() {
@@ -1966,7 +1966,7 @@ public class ContactService implements GeckoEventListener {
     private int getWebsiteType(String webisteType) {
         initWebsiteTypesMap();
         Integer type = mWebsiteTypesMap.get(webisteType.toLowerCase());
-        return (type != null ? Integer.valueOf(type) : Website.TYPE_CUSTOM);
+        return type != null ? type : Website.TYPE_CUSTOM;
     }
 
     private void initWebsiteTypesMap() {
@@ -1986,7 +1986,7 @@ public class ContactService implements GeckoEventListener {
     private int getImType(String imType) {
         initImTypesMap();
         Integer type = mImTypesMap.get(imType.toLowerCase());
-        return (type != null ? Integer.valueOf(type) : Im.TYPE_CUSTOM);
+        return type != null ? type : Im.TYPE_CUSTOM;
     }
 
     private void initImTypesMap() {

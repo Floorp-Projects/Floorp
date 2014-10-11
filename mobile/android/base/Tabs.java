@@ -65,7 +65,7 @@ public class Tabs implements GeckoEventListener {
 
     public static final int INVALID_TAB_ID = -1;
 
-    private static AtomicInteger sTabId = new AtomicInteger(0);
+    private static final AtomicInteger sTabId = new AtomicInteger(0);
     private volatile boolean mInitialTabsAdded;
 
     private Context mAppContext;
