@@ -48,8 +48,6 @@ function getIDHashForString(aStr) {
 }
 
 var PluginProvider = {
-  get name() "PluginProvider",
-
   // A dictionary mapping IDs to names and descriptions
   plugins: null,
 

@@ -245,8 +245,6 @@ let OpenH264Wrapper = {
 };
 
 let OpenH264Provider = {
-  get name() "OpenH264Provider",
-
   startup: function() {
     configureLogging();
     this._log = Log.repository.getLoggerWithMessagePrefix("Toolkit.OpenH264Provider",
