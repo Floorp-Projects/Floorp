@@ -588,10 +588,8 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
   PRTime start = PR_Now();
 #endif
 
-  // Create an SVGAutoRenderState so we can call SetPaintingToWindow on
-  // it, but do so without changing the render mode:
-  SVGAutoRenderState state(aContext->GetDrawTarget(),
-    SVGAutoRenderState::GetRenderMode(aContext->GetDrawTarget()));
+  // Create an SVGAutoRenderState so we can call SetPaintingToWindow on it.
+  SVGAutoRenderState state(aContext->GetDrawTarget());
 
   if (aBuilder->IsPaintingToWindow()) {
     state.SetPaintingToWindow(true);
