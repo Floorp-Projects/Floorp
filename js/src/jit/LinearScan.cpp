@@ -295,12 +295,12 @@ LinearScanAllocator::resolveControlFlow()
 }
 
 bool
-LinearScanAllocator::moveInputAlloc(CodePosition pos, LAllocation *from, LAllocation *to,
+LinearScanAllocator::moveInputAlloc(LInstruction *ins, LAllocation *from, LAllocation *to,
                                     LDefinition::Type type)
 {
     if (*from == *to)
         return true;
-    LMoveGroup *moves = getInputMoveGroup(pos);
+    LMoveGroup *moves = getInputMoveGroup(ins);
     return moves->add(from, to, type);
 }
 
@@ -349,7 +349,7 @@ LinearScanAllocator::reifyAllocations()
                 LiveInterval *to = fixedIntervals[GetFixedRegister(reg->def(), usePos->use).code()];
 
                 *static_cast<LAllocation *>(usePos->use) = *to->getAllocation();
-                if (!moveInput(usePos->pos, interval, to, reg->type()))
+                if (!moveInput(insData[usePos->pos]->toInstruction(), interval, to, reg->type()))
                     return false;
             } else {
                 MOZ_ASSERT(UseCompatibleWith(usePos->use, *interval->getAllocation()));
@@ -375,7 +375,7 @@ LinearScanAllocator::reifyAllocations()
                 // it should use the fixed register instead.
                 SetOsiPointUses(interval, defEnd, LAllocation(fixedReg));
 
-                if (!moveAfter(defEnd, from, interval, def->type()))
+                if (!moveAfter(insData[defEnd]->toInstruction(), from, interval, def->type()))
                     return false;
                 spillFrom = from->getAllocation();
             } else {
@@ -386,7 +386,7 @@ LinearScanAllocator::reifyAllocations()
                     MOZ_ASSERT(!inputAlloc->isUse());
 
                     *inputAlloc = *interval->getAllocation();
-                    if (!moveInputAlloc(inputOf(reg->ins()), origAlloc, inputAlloc, def->type()))
+                    if (!moveInputAlloc(reg->ins()->toInstruction(), origAlloc, inputAlloc, def->type()))
                         return false;
                 }
 
@@ -415,7 +415,7 @@ LinearScanAllocator::reifyAllocations()
                 // Insert a spill after this instruction (or after any OsiPoint
                 // or Nop instructions). Note that we explicitly ignore phis,
                 // which should have been handled in resolveControlFlow().
-                LMoveGroup *moves = getMoveGroupAfter(defEnd);
+                LMoveGroup *moves = getMoveGroupAfter(insData[defEnd]->toInstruction());
                 if (!moves->add(spillFrom, reg->canonicalSpill(), def->type()))
                     return false;
             }
@@ -437,15 +437,15 @@ LinearScanAllocator::reifyAllocations()
             // register.
             LiveInterval *prevInterval = reg->getInterval(interval->index() - 1);
             CodePosition start = interval->start();
-            LNode *ins = insData[start];
+            LInstruction *ins = insData[start]->toInstruction();
 
             MOZ_ASSERT(start == inputOf(ins) || start == outputOf(ins));
 
             if (start.subpos() == CodePosition::INPUT) {
-                if (!moveInput(inputOf(ins), prevInterval, interval, reg->type()))
+                if (!moveInput(ins, prevInterval, interval, reg->type()))
                     return false;
             } else {
-                if (!moveAfter(outputOf(ins), prevInterval, interval, reg->type()))
+                if (!moveAfter(ins, prevInterval, interval, reg->type()))
                     return false;
             }
 
