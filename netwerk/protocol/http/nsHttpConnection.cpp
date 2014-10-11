@@ -483,24 +483,47 @@ nsHttpConnection::SetupNPNList(nsISSLSocketControl *ssl, uint32_t caps)
 {
     nsTArray<nsCString> protocolArray;
 
-    // The first protocol is used as the fallback if none of the
-    // protocols supported overlap with the server's list.
-    // When using ALPN the advertised preferences are protocolArray indicies
-    // {1, .., N, 0} in decreasing order.
-    // For NPN, In the case of overlap, matching priority is driven by
-    // the order of the server's advertisement - with index 0 used when
-    // there is no match.
-    protocolArray.AppendElement(NS_LITERAL_CSTRING("http/1.1"));
+    nsCString npnToken = mConnInfo->GetNPNToken();
+    if (npnToken.IsEmpty()) {
+        // The first protocol is used as the fallback if none of the
+        // protocols supported overlap with the server's list.
+        // When using ALPN the advertised preferences are protocolArray indicies
+        // {1, .., N, 0} in decreasing order.
+        // For NPN, In the case of overlap, matching priority is driven by
+        // the order of the server's advertisement - with index 0 used when
+        // there is no match.
+        protocolArray.AppendElement(NS_LITERAL_CSTRING("http/1.1"));
 
-    if (gHttpHandler->IsSpdyEnabled() &&
-        !(caps & NS_HTTP_DISALLOW_SPDY)) {
-        LOG(("nsHttpConnection::SetupSSL Allow SPDY NPN selection"));
-        const SpdyInformation *info = gHttpHandler->SpdyInfo();
-        for (uint32_t index = SpdyInformation::kCount; index > 0; --index) {
-            if (info->ProtocolEnabled(index - 1) &&
-                info->ALPNCallbacks[index - 1](ssl)) {
-                protocolArray.AppendElement(info->VersionString[index - 1]);
+        if (gHttpHandler->IsSpdyEnabled() &&
+            !(caps & NS_HTTP_DISALLOW_SPDY)) {
+            LOG(("nsHttpConnection::SetupSSL Allow SPDY NPN selection"));
+            const SpdyInformation *info = gHttpHandler->SpdyInfo();
+            for (uint32_t index = SpdyInformation::kCount; index > 0; --index) {
+                if (info->ProtocolEnabled(index - 1) &&
+                    info->ALPNCallbacks[index - 1](ssl)) {
+                    protocolArray.AppendElement(info->VersionString[index - 1]);
+                }
             }
+        }
+    } else {
+        LOG(("nsHttpConnection::SetupSSL limiting NPN selection to %s",
+             npnToken.get()));
+        protocolArray.AppendElement(npnToken);
+    }
+
+    nsCString authHost = mConnInfo->GetAuthenticationHost();
+    int32_t   authPort = mConnInfo->GetAuthenticationPort();
+
+    if (!authHost.IsEmpty()) {
+        ssl->SetAuthenticationName(authHost);
+        ssl->SetAuthenticationPort(authPort);
+    }
+
+    if (mConnInfo->GetRelaxed()) { // http:// over tls
+        if (authHost.IsEmpty() || authHost.Equals(mConnInfo->GetHost())) {
+            LOG(("nsHttpConnection::SetupSSL %p TLS-Relaxed "
+                 "with Same Host Auth Bypass", this));
+            ssl->SetBypassAuthentication(true);
         }
     }
 
@@ -530,6 +553,14 @@ nsHttpConnection::AddTransaction(nsAHttpTransaction *httpTransaction,
 
     LOG(("nsHttpConnection::AddTransaction for SPDY%s",
          needTunnel ? " over tunnel" : ""));
+
+    // do a runtime check here just for defense in depth
+    if (transCI->GetRelaxed() &&
+        httpTransaction->RequestHead() && httpTransaction->RequestHead()->IsHTTPS()) {
+        LOG(("This Cannot happen - https on relaxed tls stream\n"));
+        MOZ_ASSERT(false, "https:// on tls relaxed");
+        return NS_ERROR_FAILURE;
+    }
 
     if (!mSpdySession->AddStream(httpTransaction, priority,
                                  needTunnel, mCallbacks)) {
@@ -1405,6 +1436,12 @@ nsHttpConnection::EndIdleMonitoring()
         if (mSocketIn)
             mSocketIn->AsyncWait(nullptr, 0, 0, nullptr);
     }
+}
+
+uint32_t
+nsHttpConnection::Version()
+{
+    return mUsingSpdyVersion  ? mUsingSpdyVersion : mLastHttpResponseVersion;
 }
 
 //-----------------------------------------------------------------------------

@@ -346,6 +346,128 @@ void EnsureBuffer(nsAutoArrayPtr<uint8_t> &buf, uint32_t newSize,
 {
     localEnsureBuffer<uint8_t> (buf, newSize, preserve, objSize);
 }
+///
+
+void
+ParsedHeaderValueList::Tokenize(char *input, uint32_t inputLen, char **token,
+                                uint32_t *tokenLen, bool *foundEquals, char **next)
+{
+    if (foundEquals) {
+        *foundEquals = false;
+    }
+    if (next) {
+        *next = nullptr;
+    }
+    if (inputLen < 1 || !input || !token) {
+        return;
+    }
+
+    bool foundFirst = false;
+    bool inQuote = false;
+    bool foundToken = false;
+    *token = input;
+    *tokenLen = inputLen;
+
+    for (uint32_t index = 0; !foundToken && index < inputLen; ++index) {
+        // strip leading cruft
+        if (!foundFirst &&
+            (input[index] == ' ' || input[index] == '"' || input[index] == '\t')) {
+            (*token)++;
+        } else {
+            foundFirst = true;
+        }
+
+        if (input[index] == '"') {
+            inQuote = !inQuote;
+            continue;
+        }
+
+        if (inQuote) {
+            continue;
+        }
+
+        if (input[index] == '=' || input[index] == ';') {
+            *tokenLen = (input + index) - *token;
+            if (next && ((index + 1) < inputLen)) {
+                *next = input + index + 1;
+            }
+            foundToken = true;
+            if (foundEquals && input[index] == '=') {
+                *foundEquals = true;
+            }
+            break;
+        }
+    }
+
+    if (!foundToken) {
+        *tokenLen = (input + inputLen) - *token;
+    }
+
+    // strip trailing cruft
+    for (char *index = *token + *tokenLen - 1; index >= *token; --index) {
+        if (*index != ' ' && *index != '\t' && *index != '"') {
+            break;
+        }
+        --(*tokenLen);
+        if (*index == '"') {
+            break;
+        }
+    }
+}
+
+ParsedHeaderValueList::ParsedHeaderValueList(char *t, uint32_t len)
+{
+    char *name = nullptr;
+    uint32_t nameLen = 0;
+    char *value = nullptr;
+    uint32_t valueLen = 0;
+    char *next = nullptr;
+    bool foundEquals;
+
+    while (t) {
+        Tokenize(t, len, &name, &nameLen, &foundEquals, &next);
+        if (next) {
+            len -= next - t;
+        }
+        t = next;
+        if (foundEquals && t) {
+            Tokenize(t, len, &value, &valueLen, nullptr, &next);
+            if (next) {
+                len -= next - t;
+            }
+            t = next;
+        }
+        mValues.AppendElement(ParsedHeaderPair(name, nameLen, value, valueLen));
+        value = name = nullptr;
+        valueLen = nameLen = 0;
+        next = nullptr;
+    }
+}
+
+ParsedHeaderValueListList::ParsedHeaderValueListList(const nsCString &fullHeader)
+    : mFull(fullHeader)
+{
+    char *t = mFull.BeginWriting();
+    uint32_t len = mFull.Length();
+    char *last = t;
+    bool inQuote = false;
+    for (uint32_t index = 0; index < len; ++index) {
+        if (t[index] == '"') {
+            inQuote = !inQuote;
+            continue;
+        }
+        if (inQuote) {
+            continue;
+        }
+        if (t[index] == ',') {
+            mValues.AppendElement(ParsedHeaderValueList(last, (t + index) - last));
+            last = t + index + 1;
+        }
+    }
+    if (!inQuote) {
+        mValues.AppendElement(ParsedHeaderValueList(last, (t + len) - last));
+    }
+}
 
 } // namespace mozilla::net
 } // namespace mozilla

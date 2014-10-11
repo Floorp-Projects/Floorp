@@ -89,11 +89,10 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(nsRenderingContext* aContext,
     return NS_OK;
   }
 
-  // Seems like this is a non-trivial clipPath, so we need to use a clip mask.
-
-  // Notify our children that they're painting into a clip mask:
-  SVGAutoRenderState mode(aContext->GetDrawTarget(),
-                          SVGAutoRenderState::CLIP_MASK);
+  // This is a non-trivial clipPath, so we need to paint its contents into a
+  // temporary surface and use that to mask the clipped content.  Note that
+  // nsSVGPathGeometryFrame::Render checks for the NS_STATE_SVG_CLIPPATH_CHILD
+  // state bit and paints into our mask surface using opaque black in that case.
 
   // Check if this clipPath is itself clipped by another clipPath:
   nsSVGClipPathFrame *clipPathFrame =

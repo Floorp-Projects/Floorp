@@ -249,7 +249,7 @@ BacktrackingAllocator::tryGroupReusedRegister(uint32_t def, uint32_t use)
         return true;
     }
     LiveInterval *interval = usedReg.getInterval(0);
-    LBlock *block = insData[reg.ins()].block();
+    LBlock *block = reg.ins()->block();
 
     // The input's lifetime must end within the same block as the definition,
     // otherwise it could live on in phis elsewhere.
@@ -263,7 +263,7 @@ BacktrackingAllocator::tryGroupReusedRegister(uint32_t def, uint32_t use)
             continue;
 
         LUse *use = iter->use;
-        if (FindReusingDefinition(insData[iter->pos].ins(), use)) {
+        if (FindReusingDefinition(insData[iter->pos], use)) {
             reg.setMustCopyInput();
             return true;
         }
@@ -958,16 +958,16 @@ BacktrackingAllocator::resolveControlFlow()
                 continue;
 
             CodePosition start = interval->start();
-            InstructionData *data = &insData[start];
-            if (interval->start() > entryOf(data->block())) {
-                MOZ_ASSERT(start == inputOf(data->ins()) || start == outputOf(data->ins()));
+            LNode *ins = insData[start];
+            if (interval->start() > entryOf(ins->block())) {
+                MOZ_ASSERT(start == inputOf(ins) || start == outputOf(ins));
 
                 LiveInterval *prevInterval = reg->intervalFor(start.previous());
                 if (start.subpos() == CodePosition::INPUT) {
-                    if (!moveInput(inputOf(data->ins()), prevInterval, interval, reg->type()))
+                    if (!moveInput(ins->toInstruction(), prevInterval, interval, reg->type()))
                         return false;
                 } else {
-                    if (!moveAfter(outputOf(data->ins()), prevInterval, interval, reg->type()))
+                    if (!moveAfter(ins->toInstruction(), prevInterval, interval, reg->type()))
                         return false;
                 }
             }
@@ -1042,7 +1042,7 @@ BacktrackingAllocator::resolveControlFlow()
 }
 
 bool
-BacktrackingAllocator::isReusedInput(LUse *use, LInstruction *ins, bool considerCopy)
+BacktrackingAllocator::isReusedInput(LUse *use, LNode *ins, bool considerCopy)
 {
     if (LDefinition *def = FindReusingDefinition(ins, use))
         return considerCopy || !vregs[def->virtualRegister()].mustCopyInput();
@@ -1050,7 +1050,7 @@ BacktrackingAllocator::isReusedInput(LUse *use, LInstruction *ins, bool consider
 }
 
 bool
-BacktrackingAllocator::isRegisterUse(LUse *use, LInstruction *ins, bool considerCopy)
+BacktrackingAllocator::isRegisterUse(LUse *use, LNode *ins, bool considerCopy)
 {
     switch (use->policy()) {
       case LUse::ANY:
@@ -1101,7 +1101,7 @@ BacktrackingAllocator::reifyAllocations()
             if (interval->index() == 0) {
                 reg->def()->setOutput(*interval->getAllocation());
                 if (reg->ins()->recoversInput()) {
-                    LSnapshot *snapshot = reg->ins()->snapshot();
+                    LSnapshot *snapshot = reg->ins()->toInstruction()->snapshot();
                     for (size_t i = 0; i < snapshot->numEntries(); i++) {
                         LAllocation *entry = snapshot->getEntry(i);
                         if (entry->isUse() && entry->toUse()->policy() == LUse::RECOVERED_INPUT)
@@ -1119,7 +1119,7 @@ BacktrackingAllocator::reifyAllocations()
 
                 // For any uses which feed into MUST_REUSE_INPUT definitions,
                 // add copies if the use and def have different allocations.
-                LInstruction *ins = insData[iter->pos].ins();
+                LNode *ins = insData[iter->pos];
                 if (LDefinition *def = FindReusingDefinition(ins, alloc)) {
                     LiveInterval *outputInterval =
                         vregs[def->virtualRegister()].intervalFor(outputOf(ins));
@@ -1127,7 +1127,7 @@ BacktrackingAllocator::reifyAllocations()
                     LAllocation *sourceAlloc = interval->getAllocation();
 
                     if (*res != *alloc) {
-                        LMoveGroup *group = getInputMoveGroup(inputOf(ins));
+                        LMoveGroup *group = getInputMoveGroup(ins->toInstruction());
                         if (!group->addAfter(sourceAlloc, res, reg->type()))
                             return false;
                         *alloc = *res;
@@ -1363,7 +1363,7 @@ BacktrackingAllocator::computePriority(const VirtualRegisterGroup *group)
 }
 
 bool
-BacktrackingAllocator::minimalDef(const LiveInterval *interval, LInstruction *ins)
+BacktrackingAllocator::minimalDef(const LiveInterval *interval, LNode *ins)
 {
     // Whether interval is a minimal interval capturing a definition at ins.
     return (interval->end() <= minimalDefEnd(ins).next()) &&
@@ -1371,7 +1371,7 @@ BacktrackingAllocator::minimalDef(const LiveInterval *interval, LInstruction *in
 }
 
 bool
-BacktrackingAllocator::minimalUse(const LiveInterval *interval, LInstruction *ins)
+BacktrackingAllocator::minimalUse(const LiveInterval *interval, LNode *ins)
 {
     // Whether interval is a minimal interval capturing a use at ins.
     return (interval->start() == inputOf(ins)) &&
@@ -1403,12 +1403,12 @@ BacktrackingAllocator::minimalInterval(const LiveInterval *interval, bool *pfixe
             if (fixed)
                 return false;
             fixed = true;
-            if (minimalUse(interval, insData[iter->pos].ins()))
+            if (minimalUse(interval, insData[iter->pos]))
                 minimal = true;
             break;
 
           case LUse::REGISTER:
-            if (minimalUse(interval, insData[iter->pos].ins()))
+            if (minimalUse(interval, insData[iter->pos]))
                 minimal = true;
             break;
 
@@ -1540,7 +1540,7 @@ BacktrackingAllocator::trySplitAfterLastRegisterUse(LiveInterval *interval, Live
     // If the definition of the interval is in a register, consider that a
     // register use too for our purposes here.
     if (isRegisterDefinition(interval)) {
-        CodePosition spillStart = minimalDefEnd(insData[interval->start()].ins()).next();
+        CodePosition spillStart = minimalDefEnd(insData[interval->start()]).next();
         if (!conflict || spillStart < conflict->start()) {
             lastUse = lastRegisterFrom = interval->start();
             lastRegisterTo = spillStart;
@@ -1552,7 +1552,7 @@ BacktrackingAllocator::trySplitAfterLastRegisterUse(LiveInterval *interval, Live
          iter++)
     {
         LUse *use = iter->use;
-        LInstruction *ins = insData[iter->pos].ins();
+        LNode *ins = insData[iter->pos];
 
         // Uses in the interval should be sorted.
         MOZ_ASSERT(iter->pos >= lastUse);
@@ -1609,7 +1609,7 @@ BacktrackingAllocator::trySplitBeforeFirstRegisterUse(LiveInterval *interval, Li
          iter++)
     {
         LUse *use = iter->use;
-        LInstruction *ins = insData[iter->pos].ins();
+        LNode *ins = insData[iter->pos];
 
         if (!conflict || outputOf(ins) >= conflict->end()) {
             if (isRegisterUse(use, ins, /* considerCopy = */ true)) {
@@ -1661,7 +1661,7 @@ BacktrackingAllocator::splitAtAllRegisterUses(LiveInterval *interval)
         // Treat the definition of the interval as a register use so that it
         // can be split and spilled ASAP.
         CodePosition from = interval->start();
-        CodePosition to = minimalDefEnd(insData[from].ins()).next();
+        CodePosition to = minimalDefEnd(insData[from]).next();
         if (!addLiveInterval(newIntervals, vreg, spillInterval, from, to))
             return false;
         spillStart = to;
@@ -1680,7 +1680,7 @@ BacktrackingAllocator::splitAtAllRegisterUses(LiveInterval *interval)
          iter != interval->usesEnd();
          iter++)
     {
-        LInstruction *ins = insData[iter->pos].ins();
+        LNode *ins = insData[iter->pos];
         if (iter->pos < spillStart) {
             newIntervals.back()->addUseAtEnd(new(alloc()) UsePosition(iter->use, iter->pos));
         } else if (isRegisterUse(iter->use, ins)) {
@@ -1748,7 +1748,7 @@ BacktrackingAllocator::splitAt(LiveInterval *interval,
     // Don't spill the interval until after the end of its definition.
     CodePosition spillStart = interval->start();
     if (isRegisterDefinition(interval))
-        spillStart = minimalDefEnd(insData[interval->start()].ins()).next();
+        spillStart = minimalDefEnd(insData[interval->start()]).next();
 
     uint32_t vreg = interval->vreg();
 
@@ -1782,7 +1782,7 @@ BacktrackingAllocator::splitAt(LiveInterval *interval,
 
     size_t activeSplitPosition = NextSplitPosition(0, splitPositions, interval->start());
     for (UsePositionIterator iter(interval->usesBegin()); iter != interval->usesEnd(); iter++) {
-        LInstruction *ins = insData[iter->pos].ins();
+        LNode *ins = insData[iter->pos];
         if (iter->pos < spillStart) {
             newIntervals.back()->addUseAtEnd(new(alloc()) UsePosition(iter->use, iter->pos));
             activeSplitPosition = NextSplitPosition(activeSplitPosition, splitPositions, iter->pos);
@@ -1820,7 +1820,7 @@ BacktrackingAllocator::splitAt(LiveInterval *interval,
             else
                 end = newInterval->usesBack()->pos.next();
         } else {
-            start = inputOf(insData[newInterval->usesBegin()->pos].ins());
+            start = inputOf(insData[newInterval->usesBegin()->pos]);
             end = newInterval->usesBack()->pos.next();
         }
         for (; activeRange > 0; --activeRange) {

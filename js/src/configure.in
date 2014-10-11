@@ -1181,7 +1181,6 @@ if test "$GNU_CC"; then
     # -Wmissing-braces - catches aggregate initializers missing nested braces
     # -Wmultichar - catches multicharacter integer constants like 'THIS'
     # -Wnonnull - catches NULL used with functions arguments marked as non-null
-    # -Wparentheses - catches `if (a=b)` and operator precedence bugs
     # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
     # -Wpointer-sign - catches mixing pointers to signed and unsigned types
     # -Wpointer-to-int-cast - catches casts from pointer to different sized int
@@ -1212,7 +1211,6 @@ if test "$GNU_CC"; then
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=missing-braces"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=multichar"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=nonnull"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=parentheses"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=pointer-arith"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=pointer-sign"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=pointer-to-int-cast"
@@ -1281,7 +1279,6 @@ if test "$GNU_CXX"; then
     # -Wint-to-pointer-cast - catches cast to pointer from integer of different size
     # -Wmissing-braces - catches aggregate initializers missing nested braces
     # -Woverloaded-virtual - function declaration hides virtual function from base class
-    # -Wparentheses - catches `if (a=b)` and operator precedence bugs
     # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
     # -Wpointer-to-int-cast - catches casts from pointer to different sized int
     # -Wreorder - catches ctor initializer list not matching class definition order
@@ -1309,7 +1306,6 @@ if test "$GNU_CXX"; then
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=int-to-pointer-cast"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=missing-braces"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=overloaded-virtual"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=parentheses"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=pointer-arith"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=reorder"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=return-type"

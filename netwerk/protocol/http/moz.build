@@ -39,6 +39,7 @@ EXPORTS.mozilla.net += [
 # ASpdySession.cpp and nsHttpAuthCache cannot be built in unified mode because
 # they use plarena.h.
 SOURCES += [
+    'AlternateServices.cpp',
     'ASpdySession.cpp',
     'nsHttpAuthCache.cpp',
     'nsHttpChannelAuthProvider.cpp', # redefines GetAuthType
