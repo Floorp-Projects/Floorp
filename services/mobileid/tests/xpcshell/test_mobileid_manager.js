@@ -1459,3 +1459,54 @@ add_test(function() {
     }
   });
 });
+
+add_test(function() {
+  do_print("= Cancel verification flow =");
+
+  do_register_cleanup(cleanup);
+
+  do_test_pending();
+
+  let _sessionToken = Date.now();
+
+  let ui = new MockUi();
+  ui.verificationCodePrompt = function() {
+    MobileIdentityManager.onUICancel();
+  };
+  MobileIdentityManager.ui = ui;
+
+  let credStore = new MockCredStore();
+  MobileIdentityManager.credStore = credStore;
+
+  let client = new MockClient();
+  MobileIdentityManager.client = client;
+
+  let promiseId = Date.now();
+  let mm = {
+    sendAsyncMessage: function(aMsg, aData) {
+      do_print("sendAsyncMessage " + aMsg + " - " + JSON.stringify(aData));
+
+      // Check result.
+      do_check_eq(aMsg, GET_ASSERTION_RETURN_KO);
+      do_check_eq(typeof aData, "object");
+      do_check_eq(aData.promiseId, promiseId);
+      do_check_eq(aData.error, DIALOG_CLOSED_BY_USER);
+
+      do_test_finished();
+      run_next_test();
+    }
+  };
+
+  addPermission(Ci.nsIPermissionManager.ALLOW_ACTION);
+
+  MobileIdentityManager.receiveMessage({
+    name: GET_ASSERTION_IPC_MSG,
+    principal: PRINCIPAL,
+    target: mm,
+    json: {
+      promiseId: promiseId,
+      options: {}
+    }
+  });
+});
+
