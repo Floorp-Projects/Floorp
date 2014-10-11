@@ -666,7 +666,7 @@ nsHostResolver::DnsExperimentChanged(const char* aPref, void* aClosure)
     // We can't set a pref in the context of a pref change callback, so
     // dispatch DnsExperimentChangedInternal for async getting/setting.
     DebugOnly<nsresult> rv = NS_DispatchToMainThread(
-        NS_NewRunnableMethod(self, &DnsExperimentChangedInternal));
+        NS_NewRunnableMethod(self, &nsHostResolver::DnsExperimentChangedInternal));
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                      "Could not dispatch DnsExperimentChanged event.");
 }
