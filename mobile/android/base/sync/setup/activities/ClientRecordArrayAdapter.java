@@ -24,7 +24,7 @@ public class ClientRecordArrayAdapter extends ArrayAdapter<ClientRecord> {
   public static final String LOG_TAG = "ClientRecArrayAdapter";
 
   private boolean[] checkedItems;
-  private SendTabActivity sendTabActivity;
+  private final SendTabActivity sendTabActivity;
 
   public ClientRecordArrayAdapter(Context context,
                                   int textViewResourceId) {

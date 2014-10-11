@@ -198,7 +198,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements BaseGlob
     }
     if (backoff > 0) {
       // Fuzz the backoff time (up to 25% more) to prevent client lock-stepping; agrees with desktop.
-      final long fuzzedBackoff = backoff + Math.round((double) backoff * 0.25d * Math.random());
+      final long fuzzedBackoff = backoff + Math.round(backoff * 0.25d * Math.random());
       this.backoffHandler.extendEarliestNextRequest(System.currentTimeMillis() + fuzzedBackoff);
     }
   }

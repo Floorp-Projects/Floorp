@@ -61,7 +61,7 @@ public class LayerMarginsAnimator {
         mPrefObserverId = PrefsHelper.getPref(PREF_SHOW_MARGINS_THRESHOLD, new PrefsHelper.PrefHandlerBase() {
             @Override
             public void prefValue(String pref, int value) {
-                SHOW_MARGINS_THRESHOLD = (float)value / 100.0f;
+                SHOW_MARGINS_THRESHOLD = value / 100.0f;
             }
 
             @Override
@@ -253,8 +253,8 @@ public class LayerMarginsAnimator {
     }
 
     class LayerMarginsAnimationTask extends RenderTask {
-        private float mStartLeft, mStartTop, mStartRight, mStartBottom;
-        private float mTop, mBottom, mLeft, mRight;
+        private final float mStartLeft, mStartTop, mStartRight, mStartBottom;
+        private final float mTop, mBottom, mLeft, mRight;
         private boolean mContinueAnimation;
 
         public LayerMarginsAnimationTask(boolean runAfter, ImmutableViewportMetrics metrics,

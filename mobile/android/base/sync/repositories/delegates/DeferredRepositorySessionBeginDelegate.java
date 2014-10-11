@@ -9,8 +9,8 @@ import java.util.concurrent.ExecutorService;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 
 public class DeferredRepositorySessionBeginDelegate implements RepositorySessionBeginDelegate {
-  private RepositorySessionBeginDelegate inner;
-  private ExecutorService executor;
+  private final RepositorySessionBeginDelegate inner;
+  private final ExecutorService executor;
   public DeferredRepositorySessionBeginDelegate(final RepositorySessionBeginDelegate inner, final ExecutorService executor) {
     this.inner = inner;
     this.executor = executor;

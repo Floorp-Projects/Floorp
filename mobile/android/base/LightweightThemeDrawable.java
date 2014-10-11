@@ -26,11 +26,11 @@ import android.graphics.drawable.Drawable;
  * to specify the alpha) in order.
  */
 public class LightweightThemeDrawable extends Drawable {
-    private Paint mPaint;
+    private final Paint mPaint;
     private Paint mColorPaint;
 
-    private Bitmap mBitmap;
-    private Resources mResources;
+    private final Bitmap mBitmap;
+    private final Resources mResources;
 
     private int mStartColor;
     private int mEndColor;
@@ -53,8 +53,9 @@ public class LightweightThemeDrawable extends Drawable {
     @Override
     public void draw(Canvas canvas) {
         // Draw the colors, if available.
-        if (mColorPaint != null)
+        if (mColorPaint != null) {
             canvas.drawPaint(mColorPaint);
+        }
 
         // Draw the bitmap.
         canvas.drawPaint(mPaint);
@@ -75,7 +76,7 @@ public class LightweightThemeDrawable extends Drawable {
     @Override
     public void setColorFilter(ColorFilter filter) {
         mPaint.setColorFilter(filter);
-    }		
+    }
 
     /**
      * Creates a paint that paint a particular color.
@@ -112,17 +113,17 @@ public class LightweightThemeDrawable extends Drawable {
     }
 
     private void initializeBitmapShader() {
-	// A bitmap-shader to draw the bitmap.
+        // A bitmap-shader to draw the bitmap.
         // Clamp mode will repeat the last row of pixels.
         // Hence its better to have an endAlpha of 0 for the linear-gradient.
-	BitmapShader bitmapShader = new BitmapShader(mBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+        BitmapShader bitmapShader = new BitmapShader(mBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
 
-	// A linear-gradient to specify the opacity of the bitmap.
-	LinearGradient gradient = new LinearGradient(0, 0, 0, mBitmap.getHeight(), mStartColor, mEndColor, Shader.TileMode.CLAMP);
+        // A linear-gradient to specify the opacity of the bitmap.
+        LinearGradient gradient = new LinearGradient(0, 0, 0, mBitmap.getHeight(), mStartColor, mEndColor, Shader.TileMode.CLAMP);
 
-	// Make a combined shader -- a performance win.
+        // Make a combined shader -- a performance win.
         // The linear-gradient is the 'SRC' and the bitmap-shader is the 'DST'.
-	// Drawing the DST in the SRC will provide the opacity.
-	mPaint.setShader(new ComposeShader(bitmapShader, gradient, PorterDuff.Mode.DST_IN));
+        // Drawing the DST in the SRC will provide the opacity.
+        mPaint.setShader(new ComposeShader(bitmapShader, gradient, PorterDuff.Mode.DST_IN));
     }
 }

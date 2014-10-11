@@ -3,7 +3,7 @@ package org.mozilla.gecko.tests;
 
 public class testBookmark extends AboutHomeTest {
     private static String BOOKMARK_URL;
-    private static int WAIT_FOR_BOOKMARKED_TIMEOUT = 10000;
+    private static final int WAIT_FOR_BOOKMARKED_TIMEOUT = 10000;
 
     public void testBookmark() {
         BOOKMARK_URL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);

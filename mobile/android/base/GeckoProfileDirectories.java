@@ -58,7 +58,7 @@ public class GeckoProfileDirectories {
     /**
      * Returns true if the supplied profile entry represents the default profile.
      */
-    private static INISectionPredicate sectionIsDefault = new INISectionPredicate() {
+    private static final INISectionPredicate sectionIsDefault = new INISectionPredicate() {
         @Override
         public boolean matches(INISection section) {
             return section.getIntProperty("Default") == 1;
@@ -68,7 +68,7 @@ public class GeckoProfileDirectories {
     /**
      * Returns true if the supplied profile entry has a 'Name' field.
      */
-    private static INISectionPredicate sectionHasName = new INISectionPredicate() {
+    private static final INISectionPredicate sectionHasName = new INISectionPredicate() {
         @Override
         public boolean matches(INISection section) {
             final String name = section.getStringProperty("Name");

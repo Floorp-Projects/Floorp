@@ -1,4 +1,4 @@
-#filter substitution
+//#filter substitution
 /* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -31,11 +31,11 @@ public class AppConstants {
     public static final class Versions {
         public static final int MIN_SDK_VERSION = @MOZ_ANDROID_MIN_SDK_VERSION@;
         public static final int MAX_SDK_VERSION =
-#ifdef MOZ_ANDROID_MAX_SDK_VERSION
+//#ifdef MOZ_ANDROID_MAX_SDK_VERSION
         @MOZ_ANDROID_MAX_SDK_VERSION@;
-#else
+//#else
         999;
-#endif
+//#endif
 
         /*
          * The SDK_INT >= N check can only pass if our MAX_SDK_VERSION is
@@ -93,11 +93,11 @@ public class AppConstants {
     public static final String MOZILLA_VERSION = @MOZILLA_VERSION@;
 
     public static final String MOZ_STUMBLER_API_KEY =
-#ifdef MOZ_ANDROID_MLS_STUMBLER
+//#ifdef MOZ_ANDROID_MLS_STUMBLER
     "@MOZ_STUMBLER_API_KEY@";
-#else
+//#else
     null;
-#endif
+//#endif
     public static final boolean MOZ_STUMBLER_BUILD_TIME_ENABLED = (MOZ_STUMBLER_API_KEY != null);
 
     public static final String MOZ_CHILD_PROCESS_NAME = "@MOZ_CHILD_PROCESS_NAME@";
@@ -122,142 +122,142 @@ public class AppConstants {
     public static final int MOZ_MIN_CPU_VERSION = @MOZ_MIN_CPU_VERSION@;
 
     public static final boolean MOZ_ANDROID_ANR_REPORTER =
-#ifdef MOZ_ANDROID_ANR_REPORTER
+//#ifdef MOZ_ANDROID_ANR_REPORTER
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     public static final String MOZ_PKG_SPECIAL =
-#ifdef MOZ_PKG_SPECIAL
+//#ifdef MOZ_PKG_SPECIAL
     "@MOZ_PKG_SPECIAL@";
-#else
+//#else
     null;
-#endif
+//#endif
 
     /**
      * Whether this APK was built with constrained resources --
      * no xhdpi+ images, for example.
      */
     public static final boolean MOZ_ANDROID_RESOURCE_CONSTRAINED =
-#ifdef MOZ_ANDROID_RESOURCE_CONSTRAINED
+//#ifdef MOZ_ANDROID_RESOURCE_CONSTRAINED
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     public static final boolean MOZ_SERVICES_HEALTHREPORT =
-#ifdef MOZ_SERVICES_HEALTHREPORT
+//#ifdef MOZ_SERVICES_HEALTHREPORT
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     public static final boolean MOZ_TELEMETRY_ON_BY_DEFAULT =
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+//#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     public static final String TELEMETRY_PREF_NAME =
           "toolkit.telemetry.enabled";
 
     public static final boolean MOZ_TELEMETRY_REPORTING =
-#ifdef MOZ_TELEMETRY_REPORTING
+//#ifdef MOZ_TELEMETRY_REPORTING
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     public static final boolean MOZ_CRASHREPORTER =
-#if MOZ_CRASHREPORTER
+//#if MOZ_CRASHREPORTER
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     public static final boolean MOZ_DATA_REPORTING =
-#ifdef MOZ_DATA_REPORTING
+//#ifdef MOZ_DATA_REPORTING
       true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     public static final boolean MOZ_LOCALE_SWITCHER =
-#ifdef MOZ_LOCALE_SWITCHER
+//#ifdef MOZ_LOCALE_SWITCHER
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     public static final boolean MOZ_UPDATER =
-#ifdef MOZ_UPDATER
+//#ifdef MOZ_UPDATER
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     public static final boolean MOZ_WEBSMS_BACKEND =
-#ifdef MOZ_WEBSMS_BACKEND
+//#ifdef MOZ_WEBSMS_BACKEND
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     // Android Beam is only supported on API14+, so we don't even bother building
     // it if this APK doesn't include API14 support.
     public static final boolean MOZ_ANDROID_BEAM =
-#ifdef MOZ_ANDROID_BEAM
+//#ifdef MOZ_ANDROID_BEAM
     Versions.feature14Plus;
-#else
+//#else
     false;
-#endif
+//#endif
 
     public static final boolean MOZ_ANDROID_APZ =
-#ifdef MOZ_ANDROID_APZ
+//#ifdef MOZ_ANDROID_APZ
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     // See this wiki page for more details about channel specific build defines:
     // https://wiki.mozilla.org/Platform/Channel-specific_build_defines
     public static final boolean RELEASE_BUILD =
-#ifdef RELEASE_BUILD
+//#ifdef RELEASE_BUILD
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     public static final boolean DEBUG_BUILD =
-#ifdef MOZ_DEBUG
+//#ifdef MOZ_DEBUG
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     public static final boolean MOZ_MEDIA_PLAYER =
-#ifdef MOZ_NATIVE_DEVICES
+//#ifdef MOZ_NATIVE_DEVICES
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     // Official corresponds, roughly, to whether this build is performed on
     // Mozilla's continuous integration infrastructure. You should disable
     // developer-only functionality when this flag is set.
     public static final boolean MOZILLA_OFFICIAL =
-#ifdef MOZILLA_OFFICIAL
+//#ifdef MOZILLA_OFFICIAL
     true;
-#else
+//#else
     false;
-#endif
+//#endif
 
     public static final boolean ANDROID_DOWNLOADS_INTEGRATION =
-#ifdef MOZ_ANDROID_DOWNLOADS_INTEGRATION
+//#ifdef MOZ_ANDROID_DOWNLOADS_INTEGRATION
     AppConstants.Versions.feature12Plus;
-#else
+//#else
     false;
-#endif
+//#endif
 }

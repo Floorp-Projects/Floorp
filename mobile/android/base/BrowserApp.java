@@ -240,7 +240,7 @@ public class BrowserApp extends GeckoApp
     // race by determining if the web content should be hidden at the animation's end.
     private boolean mHideWebContentOnAnimationEnd;
 
-    private DynamicToolbar mDynamicToolbar = new DynamicToolbar();
+    private final DynamicToolbar mDynamicToolbar = new DynamicToolbar();
 
     @Override
     public View onCreateView(final String name, final Context context, final AttributeSet attrs) {

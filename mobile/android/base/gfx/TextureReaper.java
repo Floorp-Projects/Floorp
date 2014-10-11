@@ -12,7 +12,7 @@ import java.util.ArrayList;
 /** Manages a list of dead tiles, so we don't leak resources. */
 public class TextureReaper {
     private static TextureReaper sSharedInstance;
-    private ArrayList<Integer> mDeadTextureIDs;
+    private final ArrayList<Integer> mDeadTextureIDs;
 
     private TextureReaper() { mDeadTextureIDs = new ArrayList<Integer>(); }
 

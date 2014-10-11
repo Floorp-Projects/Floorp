@@ -14,8 +14,8 @@ import android.net.Uri;
 
 class DatabaseHelper {
     protected enum BrowserDataType {BOOKMARKS, HISTORY};
-    private Activity mActivity;
-    private Assert mAsserter;
+    private final Activity mActivity;
+    private final Assert mAsserter;
 
     public DatabaseHelper(Activity activity, Assert asserter) {
         mActivity = activity;
@@ -92,7 +92,7 @@ class DatabaseHelper {
     // About the same implementation as getFolderIdFromGuid from LocalBrowserDB because it is declared private and we can't use reflections to access it
     protected long getFolderIdFromGuid(String guid) {
         ContentResolver resolver = mActivity.getContentResolver();
-        long folderId = Long.valueOf(-1);
+        long folderId = -1L;
         Uri bookmarksUri = buildUri(BrowserDataType.BOOKMARKS);
         Cursor c = null;
         try {

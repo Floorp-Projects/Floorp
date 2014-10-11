@@ -282,8 +282,8 @@ public class CrashReporter extends Activity
 
     private String generateBoundary() {
         // Generate some random numbers to fill out the boundary
-        int r0 = (int)((double)Integer.MAX_VALUE * Math.random());
-        int r1 = (int)((double)Integer.MAX_VALUE * Math.random());
+        int r0 = (int)(Integer.MAX_VALUE * Math.random());
+        int r1 = (int)(Integer.MAX_VALUE * Math.random());
         return String.format("---------------------------%08X%08X", r0, r1);
     }
 

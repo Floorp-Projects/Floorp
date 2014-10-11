@@ -26,7 +26,7 @@ public class ScrollAnimator implements View.OnGenericMotionListener {
     static final float MAX_SCROLL = 0.075f * GeckoAppShell.getDpi();
 
     private class ScrollRunnable extends TimerTask {
-        private View mView;
+        private final View mView;
 
         public ScrollRunnable(View view) {
             mView = view;

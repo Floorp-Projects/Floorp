@@ -32,7 +32,7 @@ public class BounceAnimator extends ValueAnimator {
 
     private final View mView;
     private final String mPropertyName;
-    private List<Animator> animatorChain = new LinkedList<Animator>();
+    private final List<Animator> animatorChain = new LinkedList<Animator>();
 
     public BounceAnimator(View view, String property) {
         mView = view;

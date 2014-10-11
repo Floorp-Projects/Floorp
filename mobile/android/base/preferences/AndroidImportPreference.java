@@ -16,9 +16,9 @@ import android.util.AttributeSet;
 import android.util.Log;
 
 class AndroidImportPreference extends MultiPrefMultiChoicePreference {
-    static final private String LOGTAG = "AndroidImport";
+    private static final String LOGTAG = "AndroidImport";
     private static final String PREF_KEY_PREFIX = "import_android.data.";
-    private Context mContext;
+    private final Context mContext;
 
     public AndroidImportPreference(Context context, AttributeSet attrs) {
         super(context, attrs);

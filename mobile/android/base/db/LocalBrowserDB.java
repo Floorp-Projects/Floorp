@@ -1078,7 +1078,7 @@ public class LocalBrowserDB {
 
         // After writing the encodedFavicon, ensure that the favicon_id in both the bookmark and
         // history tables are also up-to-date.
-        final Integer id = getIDForFaviconURL(cr, faviconUri);
+        final int id = getIDForFaviconURL(cr, faviconUri);
         if (id == FAVICON_ID_NOT_FOUND) {
             return;
         }

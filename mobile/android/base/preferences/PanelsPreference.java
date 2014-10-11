@@ -45,7 +45,7 @@ public class PanelsPreference extends CustomListPreference {
 
     private View preferenceView;
     protected boolean mIsHidden;
-    private boolean mIsRemovable;
+    private final boolean mIsRemovable;
 
     private boolean mAnimate;
     private static final int ANIMATION_DURATION_MS = 400;
