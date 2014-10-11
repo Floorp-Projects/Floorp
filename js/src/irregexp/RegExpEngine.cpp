@@ -1001,7 +1001,7 @@ ChoiceNode::FilterASCII(int depth, bool ignore_case)
         }
     }
 
-    alternatives_.appendAll(new_alternatives);
+    alternatives_ = Move(new_alternatives);
     return this;
 }
 
