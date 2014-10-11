@@ -19,7 +19,6 @@ found in the LICENSE file.
 <div id="console"></div>
 <script>
 description("Checks that ReadPixels works as expected.");
-testPassed("read-pixels-test start: " + (new Date().getTime()));
 
 var wtu = WebGLTestUtils;
 var canvas = document.getElementById("example");
@@ -181,65 +180,45 @@ function continueTestPart1() {
 }
 
 function continueTestPart2() {
-  testPassed("read-pixels-test continueTestPart2: " + (new Date().getTime()));
   gl.viewport(0, 0, 1024, 1024);
-  testPassed("read-pixels-test before setupTexturedQuad: " + (new Date().getTime()));
   var program = wtu.setupTexturedQuad(gl);
-  testPassed("read-pixels-test after setupTexturedQuad: " + (new Date().getTime()));
   var loc = gl.getUniformLocation(program, "tex");
   gl.disable(gl.BLEND);
   gl.disable(gl.DEPTH_TEST);
   var colors = [[255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]];
   var textures = [];
   var results = [];
-  testPassed("read-pixels-test before first loop: " + (new Date().getTime()));
   for (var ii = 0; ii < colors.length; ++ii) {
     gl.activeTexture(gl.TEXTURE0 + ii);
     var tex = gl.createTexture();
-    testPassed("read-pixels-test first loop, ii = " + ii + ", before fillTexture: " + (new Date().getTime()));
     wtu.fillTexture(gl, tex, 1, 1, colors[ii]);
-    testPassed("read-pixels-test first loop, ii = " + ii + ", after fillTexture: " + (new Date().getTime()));
     textures.push(tex);
   }
   for (var ii = 0; ii < colors.length; ++ii) {
-    testPassed("read-pixels-test second loop, ii = " + ii + ": " + (new Date().getTime()));
     for (var jj = 0; jj < 300 + ii + 1; ++jj) {
       gl.uniform1i(loc, jj % 3);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
     var buf = new Uint8Array(4);
-    testPassed("read-pixels-test second loop, before readpixels: " + (new Date().getTime()));
     gl.readPixels(512, 512, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, buf);
-    testPassed("read-pixels-test second loop, after readpixels: " + (new Date().getTime()));
     results.push(buf);
     for (var kk = 0; kk < 99; ++kk) {
       gl.uniform1i(loc, (jj + kk) % 3);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
-    testPassed("read-pixels-test second loop end: " + (new Date().getTime()));
   }
   for (var ii = 0; ii < colors.length; ++ii) {
-    testPassed("read-pixels-test third loop, ii = " + ii + ": " + (new Date().getTime()));
     var buf = results[ii];
     var color = colors[ii];
     actual = [buf[0], buf[1], buf[2], buf[3]];
     expected = [color[0], color[1], color[2], color[3]];
     shouldBe("actual", "expected");
-    testPassed("read-pixels-test third loop end: " + (new Date().getTime()));
   }
   glErrorShouldBe(gl, gl.NO_ERROR, "there should be no GL errors");
 
   debug("");
 
-  // bug 763355: temporary logging of exceptions here to understand intermittent timeout
-  // in this test, apparently in this finishTest() call.
-  try {
-    testPassed("read-pixels-test calling finishTest: " + (new Date().getTime()));
-    finishTest();
-    testPassed("read-pixels-test after finishTest: " + (new Date().getTime()));
-  } catch(e) {
-    testFailed("finishTest generated exception: " + e);
-  }
+  finishTest();
 }
 </script>
 </body>

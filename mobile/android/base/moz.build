@@ -47,6 +47,7 @@ gujar = add_java_jar('gecko-util')
 gujar.sources += [
     'util/ActivityResultHandler.java',
     'util/ActivityResultHandlerMap.java',
+    'util/ActivityUtils.java',
     'util/Clipboard.java',
     'util/EventCallback.java',
     'util/FileUtils.java',
@@ -59,6 +60,7 @@ gujar.sources += [
     'util/HardwareUtils.java',
     'util/INIParser.java',
     'util/INISection.java',
+    'util/IOUtils.java',
     'util/JSONUtils.java',
     'util/MenuUtils.java',
     'util/NativeEventListener.java',
@@ -227,7 +229,6 @@ gbjar.sources += [
     'gfx/LayerRenderer.java',
     'gfx/LayerView.java',
     'gfx/NativePanZoomController.java',
-    'gfx/NinePatchTileLayer.java',
     'gfx/Overscroll.java',
     'gfx/OverscrollEdgeEffect.java',
     'gfx/PanningPerfAPI.java',
@@ -240,9 +241,7 @@ gbjar.sources += [
     'gfx/RenderTask.java',
     'gfx/ScrollbarLayer.java',
     'gfx/SimpleScaleGestureDetector.java',
-    'gfx/SingleTileLayer.java',
     'gfx/SubdocumentScrollHelper.java',
-    'gfx/TextLayer.java',
     'gfx/TextureGenerator.java',
     'gfx/TextureReaper.java',
     'gfx/TileLayer.java',
@@ -612,6 +611,11 @@ gtjar.sources += [ thirdparty_source_dir + f for f in [
 ] ]
 #gtjar.javac_flags += ['-Xlint:all']
 
+if not CONFIG['MOZILLA_OFFICIAL']:
+    gtjar.sources += [ thirdparty_source_dir + f for f in [
+        'org/lucasr/dspec/DesignSpec.java',
+        'org/lucasr/dspec/RawResource.java'
+    ] ]
 
 ANDROID_RES_DIRS += [
     SRCDIR + '/resources',

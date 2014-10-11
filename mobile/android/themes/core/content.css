@@ -194,7 +194,7 @@ select > button {
   background-size: auto auto;
   background-color: transparent;
   background-image: url("chrome://browser/skin/images/dropmarker.svg") !important;
-  background-position: -moz-calc(50% + 1px) center !important;
+  background-position: calc(50% + 1px) center !important;
   background-repeat: no-repeat !important;
 
   font-size: inherit;

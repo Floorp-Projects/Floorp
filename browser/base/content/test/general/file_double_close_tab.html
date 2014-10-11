@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test for bug 1050638 - clicking tab close button twice should close tab even in beforeunload case</title>
+  </head>
+  <body>
+    This page will block beforeunload. It should still be user-closable at all times.
+    <script>
+      window.onbeforeunload = function() {
+        return "stop";
+      };
+    </script>
+  </body>
+</html>

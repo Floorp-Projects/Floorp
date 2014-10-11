@@ -1081,8 +1081,6 @@ protected:
 
     // -------------------------------------------------------------------------
     // Validation functions (implemented in WebGLContextValidate.cpp)
-    TexInternalFormat BaseTexFormat(TexInternalFormat internalFormat) const;
-
     bool CreateOffscreenGL(bool forceEnabled);
     bool InitAndValidateGL();
     bool ResizeBackbuffer(uint32_t width, uint32_t height);
@@ -1165,7 +1163,7 @@ protected:
     void TexParameter_base(GLenum target, GLenum pname,
                            GLint *intParamPtr, GLfloat *floatParamPtr);
 
-    void ConvertImage(size_t width, size_t height, size_t srcStride, size_t dstStride,
+    bool ConvertImage(size_t width, size_t height, size_t srcStride, size_t dstStride,
                       const uint8_t* src, uint8_t *dst,
                       WebGLTexelFormat srcFormat, bool srcPremultiplied,
                       WebGLTexelFormat dstFormat, bool dstPremultiplied,

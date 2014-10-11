@@ -46,6 +46,8 @@ protected:
 
   bool mAddToRecentDocs;
   nsCOMPtr<nsIFile> mDisplayDirectory;
+
+  // This is an innerWindow.
   nsCOMPtr<nsPIDOMWindow> mParent;
   int16_t mMode;
 };

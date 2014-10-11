@@ -94,8 +94,8 @@ class ChannelEventQueue MOZ_FINAL
   // Keep ptr to avoid refcount cycle: only grab ref during flushing.
   nsISupports *mOwner;
 
-  // Target thread for delivery of events.
-  nsCOMPtr<nsIThread> mTargetThread;
+  // EventTarget for delivery of events to the correct thread.
+  nsCOMPtr<nsIEventTarget> mTargetThread;
 
   friend class AutoEventEnqueuer;
 };

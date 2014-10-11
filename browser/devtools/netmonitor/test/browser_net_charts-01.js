@@ -1,6 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+///////////////////
+//
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejection should be fixed.
+//
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: aValue.content is undefined");
+
 /**
  * Makes sure Pie Charts have the right internal structure.
  */

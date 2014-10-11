@@ -340,6 +340,38 @@ tv = {
       "417381111a1d36de6375cf455b3c9812639dbc27600c751994fb61799ecf7da6" +
       "bcf51540afd0174db4033188556675b1d763360af46feeca5b60f882829ee7b2"
     ),
+    // This RSA private key has p < q
+    jwk_priv_pLTq: {
+      kty: "RSA",
+      n:  "p0HwS3l58WCcN5MPJ3TDu2fMRFZdAFhItiuGMvfDGj0myIM2BhJixSsDleu0h" +
+          "x8mSL4CP9c63-zTFdMjwHluYJ_ugK_jV5c4igfyyD2yQ9IAbaBtSh2GV_PrgM" +
+          "l9XCMobLQonC0ktHcMojYMTNSmLBc1kXLxKq1PnY8ja8oNoNKmDzJt3Hx_KlJ" +
+          "mORwrchrrVzKdrRuj37PmMKKl6MCNThrFFn4PtZ6e59cxgwSAWoOqvvTewCdI" +
+          "H4uGuoEnafBcPsuMOLD-oS0CTml_AK3Wgwt-zJ9BSFSial_PSTg0hpUp8pqWv" +
+          "1NZaxG1HiY3gS-8JHSqTVeoGznFmod3FqRG_Q",
+      e:  "AQAB",
+      d:  "SrxoBxGMr5KfuyV3DAZcv4yt9Ysxm0nXk673FCcpgrv4bHhU13m3sKp7u63Ky" +
+          "OXeUXq1vpkJsa081O-3dfXMoFhWViJBz42-sc7DaT5IPY3EqzeYHhn7Qam4fZ" +
+          "-K6HS9R3VpAAAb-peHiaPk8x_B8MmeIhPeN1ehz6F6DlwGoulDPOI3EMLoOCL" +
+          "V_cus8AV8il5FaJxwuuo2xc4oEbwT24AN2hXVZekTgPkNSGXBMhagu82lDlx8" +
+          "y7awiC1bchWMUJ88BLqgScbl4bpTLqos0fRXDugY957diwF_zRHdr2jsj8Dm_" +
+          "0J1XdgaIeycIApU61PSUy8ZLZbDQ9mlajRlgQ",
+      p:  "uQKh1mjslzbWrDBgqAWcCCPpV9tvA5AAotKuyDRe8ohj-WbKcClwQEXTLqT3Z" +
+          "uirrHrqrmronElxdN22ukpmf_Kk301Kz1HU5qJZKTOzwiO8JSJ7wtLDDWkoyV" +
+          "3Zj6On2N8ZX69cvwbo-S5trIv3iDjfsb0ZvmuGjEn-4dcYUxk",
+      q:  "52957s9n0wOBwe5sCtttd_R-h-IX03mZ3Jie4K2GugCZy6H2Rs0hPoylOn0X9" +
+          "eI7atHiP3laaHyEwTOQhdC_RUCLsS-ZMa8p0EaewF_Lk6eCL0pDmHpTZiGjeB" +
+          "EwvftzoO_cEpbkRkF-OxjRs6ejppm3MKkgZZJT2-R5iSaQU4U",
+      dp: "ijDlIXoN_oT_pG4eRGKsQYhRa0aEjWyqjPRBiVlU8mPeCRQ2ccECD4AYVebyx" +
+          "PNWB-doFA_W36YcEObq7gtUtI1RiVn6XxEIrZzmbFgqFQEML9CqEMPM3d-Gj6" +
+          "KCN0BOxzcdhNM_u5A1xKphUVja8-1HaUOOTyWRwogi0h4QFUE",
+      dq: "KN1yNkzBFG1mGAw1X6VnKuss_Glbs6ehF2aLhzictXMttNsgVVgbKqRC-JTmC" +
+          "jCsNSxiOrr-z7xM5KBqQHafj2baQ6sX7cH0LCaMGYPQun21aww960qON1ZxOt" +
+          "4uMR2ZSS2ROmcSX6Vo2J6FSKetKdmykxEJ-2VfEVDCdQkuKtE",
+      qi: "pDhm0DZADZiGIsjYMmpoDo4EmYHari-VfxjAqCgcec5nPfNt5BSKQow3_E_v0" +
+          "Yik1qa-AGWuC8vTh8vUFsQ0rE1lVSgXYPalMTjLFNY_hCBXmsDfMS5vcsL0-G" +
+          "Y8F2U_XRY3WEaoNPb9UZqzgp7xl6_XM__2U47LIoUpCgcN9RA",
+    },
   },
 
   // RSA test vectors, oaep-vect.txt, Example 1.1: A 1024-bit RSA Key Pair

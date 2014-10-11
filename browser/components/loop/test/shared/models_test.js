@@ -27,7 +27,9 @@ describe("loop.shared.models", function() {
       apiKey:         "apiKey",
       callType:       "callType",
       websocketToken: 123,
-      callToken:    "callToken"
+      callToken:      "callToken",
+      callUrl:        "http://invalid/callToken",
+      callerId:       "mrssmith"
     };
     fakeSession = _.extend({
       connect: function () {},
@@ -359,6 +361,38 @@ describe("loop.shared.models", function() {
 
           expect(model.hasVideoStream("outgoing")).to.eql(true);
         });
+      });
+
+      describe("#getCallIdentifier", function() {
+        var model;
+
+        beforeEach(function() {
+          model = new sharedModels.ConversationModel(fakeSessionData, {
+            sdk: fakeSDK
+          });
+          model.startSession();
+        });
+
+        it("should return the callerId", function() {
+          expect(model.getCallIdentifier()).eql("mrssmith");
+        });
+
+        it("should return the shorted callUrl if the callerId does not exist",
+          function() {
+            model.set({callerId: ""});
+
+            expect(model.getCallIdentifier()).eql("invalid/callToken");
+          });
+
+        it("should return an empty string if neither callerId nor callUrl exist",
+          function() {
+            model.set({
+              callerId: undefined,
+              callUrl: undefined
+            });
+
+            expect(model.getCallIdentifier()).eql("");
+          });
       });
     });
   });

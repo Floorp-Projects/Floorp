@@ -11,6 +11,8 @@ ac_add_options --enable-debug
 
 ac_add_options --disable-unified-compilation
 
+ac_add_options --with-google-oauth-api-keyfile=/builds/google-oauth-api.key
+
 # Use Clang as specified in manifest
 export CC="$topsrcdir/clang/bin/clang"
 export CXX="$topsrcdir/clang/bin/clang++"

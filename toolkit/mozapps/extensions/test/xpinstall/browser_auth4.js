@@ -1,3 +1,11 @@
+///////////////////
+//
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejection should be fixed.
+//
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: this.docShell is null");
+
+
 // ----------------------------------------------------------------------------
 // Test whether a request for auth for an XPI switches to the appropriate tab
 var gNewTab;

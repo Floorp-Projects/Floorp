@@ -6,11 +6,11 @@
 #include "GLScreenBuffer.h"
 
 #include <cstring>
+#include "CompositorTypes.h"
 #include "GLContext.h"
 #include "GLBlitHelper.h"
 #include "GLReadTexImageHelper.h"
 #include "SharedSurfaceGL.h"
-#include "SurfaceStream.h"
 #ifdef MOZ_WIDGET_GONK
 #include "SharedSurfaceGralloc.h"
 #include "nsXULAppAPI.h"
@@ -43,11 +43,19 @@ GLScreenBuffer::Create(GLContext* gl,
 
 #ifdef MOZ_WIDGET_GONK
     /* On B2G, we want a Gralloc factory, and we want one right at the start */
+    layers::ISurfaceAllocator* allocator = caps.surfaceAllocator;
     if (!factory &&
-        caps.surfaceAllocator &&
+        allocator &&
         XRE_GetProcessType() != GeckoProcessType_Default)
     {
-        factory = MakeUnique<SurfaceFactory_Gralloc>(gl, caps);
+        layers::TextureFlags flags = layers::TextureFlags::DEALLOCATE_CLIENT |
+                                     layers::TextureFlags::NEEDS_Y_FLIP;
+        if (!caps.premultAlpha) {
+            flags |= layers::TextureFlags::NON_PREMULTIPLIED;
+        }
+
+        factory = MakeUnique<SurfaceFactory_Gralloc>(gl, caps, flags,
+                                                     allocator);
     }
 #endif
 #ifdef XP_MACOSX
@@ -61,12 +69,7 @@ GLScreenBuffer::Create(GLContext* gl,
         factory = MakeUnique<SurfaceFactory_Basic>(gl, caps);
     }
 
-    auto streamType = SurfaceStream::ChooseGLStreamType(SurfaceStream::MainThread,
-                                                        caps.preserve);
-    RefPtr<SurfaceStream> stream;
-    stream = SurfaceStream::CreateForType(streamType, gl, nullptr);
-
-    ret.reset( new GLScreenBuffer(gl, caps, Move(factory), stream) );
+    ret.reset( new GLScreenBuffer(gl, caps, Move(factory)) );
     return Move(ret);
 }
 
@@ -375,20 +378,10 @@ GLScreenBuffer::AssureBlitted()
 }
 
 void
-GLScreenBuffer::Morph(UniquePtr<SurfaceFactory> newFactory,
-                      SurfaceStreamType streamType)
+GLScreenBuffer::Morph(UniquePtr<SurfaceFactory> newFactory)
 {
-    MOZ_ASSERT(mStream);
-
-    if (newFactory) {
-        mFactory = Move(newFactory);
-    }
-
-    if (mStream->mType == streamType)
-        return;
-
-    mStream = SurfaceStream::CreateForType(streamType, mGL, mStream);
-    MOZ_ASSERT(mStream);
+    MOZ_ASSERT(newFactory);
+    mFactory = Move(newFactory);
 }
 
 bool
@@ -428,28 +421,38 @@ GLScreenBuffer::Attach(SharedSurface* surf, const gfx::IntSize& size)
     // Check that we're all set up.
     MOZ_ASSERT(SharedSurf() == surf);
 
-    if (!PreserveBuffer()) {
-        // DiscardFramebuffer here could help perf on some mobile platforms.
-    }
-
     return true;
 }
 
 bool
 GLScreenBuffer::Swap(const gfx::IntSize& size)
 {
-    SharedSurface* nextSurf = mStream->SwapProducer(mFactory.get(), size);
-    if (!nextSurf) {
-        SurfaceFactory_Basic basicFactory(mGL, mFactory->mCaps);
-        nextSurf = mStream->SwapProducer(&basicFactory, size);
-        if (!nextSurf)
-          return false;
+    RefPtr<ShSurfHandle> newBack = mFactory->NewShSurfHandle(size);
+    if (!newBack)
+        return false;
 
-        NS_WARNING("SwapProd failed for sophisticated Factory type, fell back to Basic.");
+    if (!Attach(newBack->Surf(), size))
+        return false;
+    // Attach was successful.
+
+    mFront = mBack;
+    mBack = newBack;
+
+    // Fence before copying.
+    if (mFront) {
+        mFront->Surf()->Fence();
     }
-    MOZ_ASSERT(nextSurf);
 
-    return Attach(nextSurf, size);
+    if (ShouldPreserveBuffer() &&
+        mFront &&
+        mBack)
+    {
+        auto src  = mFront->Surf();
+        auto dest = mBack->Surf();
+        SharedSurface::ProdCopy(src, dest, mFactory.get());
+    }
+
+    return true;
 }
 
 bool
@@ -464,11 +467,15 @@ GLScreenBuffer::PublishFrame(const gfx::IntSize& size)
 bool
 GLScreenBuffer::Resize(const gfx::IntSize& size)
 {
-    SharedSurface* surf = mStream->Resize(mFactory.get(), size);
-    if (!surf)
+    RefPtr<ShSurfHandle> newBack = mFactory->NewShSurfHandle(size);
+    if (!newBack)
         return false;
 
-    return Attach(surf, size);
+    if (!Attach(newBack->Surf(), size))
+        return false;
+
+    mBack = newBack;
+    return true;
 }
 
 bool
@@ -507,7 +514,6 @@ GLScreenBuffer::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
       SharedSurf()->UnlockProd();
       src->LockProd();
   }
-
 
   {
       UniquePtr<ReadBuffer> buffer = CreateRead(src);

@@ -325,7 +325,7 @@ public:
 
 } // end anonymous namespace
 
-void
+bool
 WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t dstStride,
                            const uint8_t* src, uint8_t *dst,
                            WebGLTexelFormat srcFormat, bool srcPremultiplied,
@@ -333,7 +333,7 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
                            size_t dstTexelSize)
 {
     if (width <= 0 || height <= 0)
-        return;
+        return true;
 
     const bool FormatsRequireNoPremultiplicationOp =
         !HasAlpha(srcFormat) ||
@@ -368,7 +368,13 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
             ptr += srcStride;
             dst_row += dst_delta;
         }
-        return;
+        return true;
+    }
+
+    if (srcFormat == WebGLTexelFormat::FormatNotSupportingAnyConversion ||
+        dstFormat == WebGLTexelFormat::FormatNotSupportingAnyConversion)
+    {
+        return false;
     }
 
     uint8_t* dstStart = dst;
@@ -394,6 +400,8 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
         // and would be a bug in our code.
         NS_RUNTIMEABORT("programming mistake in WebGL texture conversions");
     }
+
+    return true;
 }
 
 } // end namespace mozilla

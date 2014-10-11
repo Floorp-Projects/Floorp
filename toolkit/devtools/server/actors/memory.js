@@ -258,7 +258,7 @@ let MemoryActor = protocol.ActorClass({
       allocations: []
     };
 
-    for (let stack of allocations) {
+    for (let { frame: stack } of allocations) {
       if (stack && Cu.isDeadWrapper(stack)) {
         continue;
       }
