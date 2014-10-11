@@ -964,10 +964,10 @@ BacktrackingAllocator::resolveControlFlow()
 
                 LiveInterval *prevInterval = reg->intervalFor(start.previous());
                 if (start.subpos() == CodePosition::INPUT) {
-                    if (!moveInput(inputOf(ins), prevInterval, interval, reg->type()))
+                    if (!moveInput(ins->toInstruction(), prevInterval, interval, reg->type()))
                         return false;
                 } else {
-                    if (!moveAfter(outputOf(ins), prevInterval, interval, reg->type()))
+                    if (!moveAfter(ins->toInstruction(), prevInterval, interval, reg->type()))
                         return false;
                 }
             }
@@ -1127,7 +1127,7 @@ BacktrackingAllocator::reifyAllocations()
                     LAllocation *sourceAlloc = interval->getAllocation();
 
                     if (*res != *alloc) {
-                        LMoveGroup *group = getInputMoveGroup(inputOf(ins));
+                        LMoveGroup *group = getInputMoveGroup(ins->toInstruction());
                         if (!group->addAfter(sourceAlloc, res, reg->type()))
                             return false;
                         *alloc = *res;
