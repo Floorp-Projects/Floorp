@@ -57,7 +57,7 @@ LIRGraph::noteNeedsSafepoint(LInstruction *ins)
 }
 
 void
-LIRGraph::dump(FILE *fp) const
+LIRGraph::dump(FILE *fp)
 {
     for (size_t i = 0; i < numBlocks(); i++) {
         getBlock(i)->dump(fp);
@@ -66,35 +66,40 @@ LIRGraph::dump(FILE *fp) const
 }
 
 void
-LIRGraph::dump() const
+LIRGraph::dump()
 {
     dump(stderr);
 }
 
-LBlock *
-LBlock::New(TempAllocator &alloc, MBasicBlock *from)
+LBlock::LBlock(MBasicBlock *from)
+  : block_(from),
+    phis_(),
+    entryMoveGroup_(nullptr),
+    exitMoveGroup_(nullptr)
 {
-    LBlock *block = new(alloc) LBlock(from);
-    if (!block)
-        return nullptr;
+    from->assignLir(this);
+}
 
+bool
+LBlock::init(TempAllocator &alloc)
+{
     // Count the number of LPhis we'll need.
     size_t numLPhis = 0;
-    for (MPhiIterator i(from->phisBegin()), e(from->phisEnd()); i != e; ++i) {
+    for (MPhiIterator i(block_->phisBegin()), e(block_->phisEnd()); i != e; ++i) {
         MPhi *phi = *i;
         numLPhis += (phi->type() == MIRType_Value) ? BOX_PIECES : 1;
     }
 
     // Allocate space for the LPhis.
-    if (!block->phis_.init(alloc, numLPhis))
+    if (!phis_.init(alloc, numLPhis))
         return nullptr;
 
     // For each MIR phi, set up LIR phis as appropriate. We'll fill in their
     // operands on each incoming edge, and set their definitions at the start of
     // their defining block.
     size_t phiIndex = 0;
-    size_t numPreds = from->numPredecessors();
-    for (MPhiIterator i(from->phisBegin()), e(from->phisEnd()); i != e; ++i) {
+    size_t numPreds = block_->numPredecessors();
+    for (MPhiIterator i(block_->phisBegin()), e(block_->phisEnd()); i != e; ++i) {
         MPhi *phi = *i;
         MOZ_ASSERT(phi->numOperands() == numPreds);
 
@@ -103,12 +108,12 @@ LBlock::New(TempAllocator &alloc, MBasicBlock *from)
             void *array = alloc.allocateArray<sizeof(LAllocation)>(numPreds);
             LAllocation *inputs = static_cast<LAllocation *>(array);
             if (!inputs)
-                return nullptr;
+                return false;
 
-            new (&block->phis_[phiIndex++]) LPhi(phi, inputs);
+            new (&phis_[phiIndex++]) LPhi(phi, inputs);
         }
     }
-    return block;
+    return true;
 }
 
 uint32_t
