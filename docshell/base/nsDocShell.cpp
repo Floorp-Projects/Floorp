@@ -851,7 +851,6 @@ nsDocShell::nsDocShell():
 #endif
     mAffectPrivateSessionLifetime(true),
     mInvisible(false),
-    mHasLoadedNonBlankURI(false),
     mDefaultLoadFlags(nsIRequest::LOAD_NORMAL),
     mFrameType(eFrameTypeRegular),
     mOwnOrContainingAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID),
@@ -1929,10 +1928,6 @@ nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
 
     mCurrentURI = NS_TryToMakeImmutable(aURI);
     
-    if (!NS_IsAboutBlank(mCurrentURI)) {
-      mHasLoadedNonBlankURI = true;
-    }
-
     bool isRoot = false;   // Is this the root docshell
     bool isSubFrame = false;  // Is this a subframe navigation?
 
@@ -2279,15 +2274,6 @@ nsDocShell::SetPrivateBrowsing(bool aUsePrivateBrowsing)
             }
         }
     }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetHasLoadedNonBlankURI(bool* aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-
-    *aResult = mHasLoadedNonBlankURI;
     return NS_OK;
 }
 

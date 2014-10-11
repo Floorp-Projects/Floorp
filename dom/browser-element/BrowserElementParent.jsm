@@ -389,8 +389,7 @@ BrowserElementParent.prototype = {
       name: this._frameElement.getAttribute('name'),
       fullscreenAllowed:
         this._frameElement.hasAttribute('allowfullscreen') ||
-        this._frameElement.hasAttribute('mozallowfullscreen'),
-      isPrivate: this._frameElement.hasAttribute('mozprivatebrowsing')
+        this._frameElement.hasAttribute('mozallowfullscreen')
     };
   },
 

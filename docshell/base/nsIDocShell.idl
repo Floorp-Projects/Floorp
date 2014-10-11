@@ -54,7 +54,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(23157a63-26fd-44a0-a0f9-fdc64dcc004c)]
+[scriptable, builtinclass, uuid(2b8e4a50-7744-454d-a05b-debead8070fe)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -1017,11 +1017,4 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   // URLSearchParams for the window.location is owned by the docShell.
   [noscript,notxpcom] URLSearchParams getURLSearchParams();
-
-  /**
-   * This attribute determines whether a document which is not about:blank has
-   * already be loaded by this docShell.
-   */
-  [infallible] readonly attribute boolean hasLoadedNonBlankURI;
-
 };
