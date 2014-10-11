@@ -15,6 +15,73 @@ loop.conversationViews = (function(mozL10n) {
   var sharedViews = loop.shared.views;
 
   /**
+   * Displays information about the call
+   * Caller avatar, name & conversation creation date
+   */
+  var CallIdentifierView = React.createClass({
+    propTypes: {
+      peerIdentifier: React.PropTypes.string,
+      showIcons: React.PropTypes.bool.isRequired,
+      urlCreationDate: React.PropTypes.string,
+      video: React.PropTypes.bool
+    },
+
+    getDefaultProps: function() {
+      return {
+        peerIdentifier: "",
+        showLinkDetail: true,
+        urlCreationDate: "",
+        video: true
+      };
+    },
+
+    getInitialState: function() {
+      return {timestamp: 0};
+    },
+
+    /**
+     * Gets and formats the incoming call creation date
+     */
+    formatCreationDate: function() {
+      if (!this.props.urlCreationDate) {
+        return "";
+      }
+
+      var timestamp = this.props.urlCreationDate;
+      return "(" + loop.shared.utils.formatDate(timestamp) + ")";
+    },
+
+    render: function() {
+      var iconVideoClasses = React.addons.classSet({
+        "fx-embedded-tiny-video-icon": true,
+        "muted": !this.props.video
+      });
+      var callDetailClasses = React.addons.classSet({
+        "fx-embedded-call-detail": true,
+        "hide": !this.props.showIcons
+      });
+
+      return (
+        <div className="fx-embedded-call-identifier">
+          <div className="fx-embedded-call-identifier-avatar fx-embedded-call-identifier-item"/>
+          <div className="fx-embedded-call-identifier-info fx-embedded-call-identifier-item">
+            <div className="fx-embedded-call-identifier-text overflow-text-ellipsis">
+              {this.props.peerIdentifier}
+            </div>
+            <div className={callDetailClasses}>
+              <span className="fx-embedded-tiny-audio-icon"></span>
+              <span className={iconVideoClasses}></span>
+              <span className="fx-embedded-conversation-timestamp">
+                {this.formatCreationDate()}
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+  });
+
+  /**
    * Displays details of the incoming/outgoing conversation
    * (name, link, audio/video type etc).
    *
@@ -51,7 +118,9 @@ loop.conversationViews = (function(mozL10n) {
 
       return (
         <div className="call-window">
-          <h2>{contactName}</h2>
+          <CallIdentifierView
+            peerIdentifier={contactName}
+            showIcons={false} />
           <div>{this.props.children}</div>
         </div>
       );
@@ -382,6 +451,7 @@ loop.conversationViews = (function(mozL10n) {
 
   return {
     PendingConversationView: PendingConversationView,
+    CallIdentifierView: CallIdentifierView,
     ConversationDetailView: ConversationDetailView,
     CallFailedView: CallFailedView,
     OngoingConversationView: OngoingConversationView,

@@ -20,7 +20,7 @@ section {
   margin-left: auto;
   margin-right: auto;
   overflow: auto;
-  height: -moz-calc(100% - 80px);
+  height: calc(100% - 80px);
   margin: 20px;
   padding: 5px;
 }
@@ -135,7 +135,7 @@ footer {
   color: #666;
   margin-bottom: 10px;
   padding: 5px;
-  width: -moz-calc(100% - 10px);
+  width: calc(100% - 10px);
   border-radius: 4px;
   border-width: 1px;
 }
@@ -146,7 +146,7 @@ footer {
 
 #last-url {
   color: #bebebe;
-  width: -moz-calc(100% - 10px);
+  width: calc(100% - 10px);
   border: none;
   background: transparent;
   /*padding: 0px;*/

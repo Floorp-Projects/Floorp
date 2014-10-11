@@ -202,9 +202,15 @@
         </body>
       </method>
 
-      <property name="currentURI"
-                onget="return this.webNavigation.currentURI;"
-                readonly="true"/>
+      <property name="currentURI" readonly="true">
+       <getter><![CDATA[
+          if (this.webNavigation) {
+            return this.webNavigation.currentURI;
+          }
+          return null;
+       ]]>
+       </getter>
+      </property>
 
       <!--
         Used by session restore to ensure that currentURI is set so
@@ -316,8 +322,12 @@
                 readonly="true">
         <getter>
         <![CDATA[
-          if (!this._webNavigation)
+          if (!this._webNavigation) {
+            if (!this.docShell) {
+              return null;
+            }
             this._webNavigation = this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+          }
           return this._webNavigation;
         ]]>
         </getter>

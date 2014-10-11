@@ -16,6 +16,7 @@ SourceSurfaceD2D1::SourceSurfaceD2D1(ID2D1Image *aImage, ID2D1DeviceContext *aDC
   : mImage(aImage)
   , mDC(aDC)
   , mDrawTarget(aDT)
+  , mDevice(Factory::GetD2D1Device())
 {
   aImage->QueryInterface((ID2D1Bitmap1**)byRef(mRealizedBitmap));
 
@@ -27,9 +28,17 @@ SourceSurfaceD2D1::~SourceSurfaceD2D1()
 {
 }
 
+bool
+SourceSurfaceD2D1::IsValid() const
+{
+  return mDevice == Factory::GetD2D1Device();
+}
+
 TemporaryRef<DataSourceSurface>
 SourceSurfaceD2D1::GetDataSurface()
 {
+  HRESULT hr;
+
   EnsureRealizedBitmap();
 
   RefPtr<ID2D1Bitmap1> softwareBitmap;
@@ -40,11 +49,23 @@ SourceSurfaceD2D1::GetDataSurface()
   props.colorContext = nullptr;
   props.bitmapOptions = D2D1_BITMAP_OPTIONS_CANNOT_DRAW |
                         D2D1_BITMAP_OPTIONS_CPU_READ;
-  mDC->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props, (ID2D1Bitmap1**)byRef(softwareBitmap));
+  hr = mDC->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props, (ID2D1Bitmap1**)byRef(softwareBitmap));
+
+  if (FAILED(hr)) {
+    gfxCriticalError() << "Failed to create software bitmap: " << mSize << " Code: " << hexa(hr);
+    return nullptr;
+  }
 
   D2D1_POINT_2U point = D2D1::Point2U(0, 0);
   D2D1_RECT_U rect = D2D1::RectU(0, 0, mSize.width, mSize.height);
-  softwareBitmap->CopyFromBitmap(&point, mRealizedBitmap, &rect);
+  
+  hr = softwareBitmap->CopyFromBitmap(&point, mRealizedBitmap, &rect);
+
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to readback into software bitmap. Code: " << hexa(hr);
+    return nullptr;
+  }
+
   return new DataSourceSurfaceD2D1(softwareBitmap, mFormat);
 }
 

@@ -88,6 +88,26 @@ describe("loop.shared.utils", function() {
     });
   });
 
+  describe("#formatDate", function() {
+    beforeEach(function() {
+      sandbox.stub(Date.prototype, "toLocaleDateString").returns("fake result");
+    });
+
+    it("should call toLocaleDateString with arguments", function() {
+      sharedUtils.formatDate(1000);
+
+      sinon.assert.calledOnce(Date.prototype.toLocaleDateString);
+      sinon.assert.calledWithExactly(Date.prototype.toLocaleDateString,
+        navigator.language,
+        {year: "numeric", month: "long", day: "numeric"}
+      );
+    });
+
+    it("should return the formatted string", function() {
+      expect(sharedUtils.formatDate(1000)).eql("fake result");
+    });
+  });
+
   describe("#getBoolPreference", function() {
     afterEach(function() {
       navigator.mozLoop = undefined;

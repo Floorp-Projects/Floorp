@@ -65,10 +65,13 @@ WebGLContext::InitWebGL2()
     const WebGLExtensionID sExtensionNativelySupportedArr[] = {
         WebGLExtensionID::ANGLE_instanced_arrays,
         WebGLExtensionID::EXT_blend_minmax,
+        WebGLExtensionID::EXT_sRGB,
         WebGLExtensionID::OES_element_index_uint,
         WebGLExtensionID::OES_standard_derivatives,
         WebGLExtensionID::OES_texture_float,
         WebGLExtensionID::OES_texture_float_linear,
+        WebGLExtensionID::OES_texture_half_float,
+        WebGLExtensionID::OES_texture_half_float_linear,
         WebGLExtensionID::OES_vertex_array_object,
         WebGLExtensionID::WEBGL_depth_texture,
         WebGLExtensionID::WEBGL_draw_buffers

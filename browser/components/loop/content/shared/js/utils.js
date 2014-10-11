@@ -18,6 +18,18 @@ loop.shared.utils = (function() {
   };
 
   /**
+   * Format a given date into an l10n-friendly string.
+   *
+   * @param {Integer} The timestamp in seconds to format.
+   * @return {String} The formatted string.
+   */
+  function formatDate(timestamp) {
+    var date = (new Date(timestamp * 1000));
+    var options = {year: "numeric", month: "long", day: "numeric"};
+    return date.toLocaleDateString(navigator.language, options);
+  }
+
+  /**
    * Used for adding different styles to the panel
    * @returns {String} Corresponds to the client platform
    * */
@@ -87,6 +99,7 @@ loop.shared.utils = (function() {
   return {
     CALL_TYPES: CALL_TYPES,
     Helper: Helper,
+    formatDate: formatDate,
     getTargetPlatform: getTargetPlatform,
     getBoolPreference: getBoolPreference
   };

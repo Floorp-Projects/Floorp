@@ -13,6 +13,7 @@
 enum BinaryType { "blob", "arraybuffer" };
 
 [Func="mozilla::dom::WebSocket::PrefEnabled",
+ Exposed=(Window,Worker),
  Constructor(DOMString url),
  Constructor(DOMString url, DOMString protocols),
  Constructor(DOMString url, sequence<DOMString> protocols)]

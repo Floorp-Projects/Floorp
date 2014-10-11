@@ -1576,7 +1576,6 @@ public:
         AFTER_GL_CALL;
     }
 
-private:
     void raw_fReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) {
         ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(pixels);
         BEFORE_GL_CALL;
@@ -1585,7 +1584,6 @@ private:
         mHeavyGLCallsSinceLastFlush = true;
     }
 
-public:
     void fReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) {
         BeforeGLReadCall();
 
@@ -3530,9 +3528,6 @@ public:
     GLScreenBuffer* Screen() const {
         return mScreen.get();
     }
-
-    bool PublishFrame();
-    SharedSurface* RequestFrame();
 
     /* Clear to transparent black, with 0 depth and stencil,
      * while preserving current ClearColor etc. values.

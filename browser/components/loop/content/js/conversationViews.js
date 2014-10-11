@@ -15,6 +15,73 @@ loop.conversationViews = (function(mozL10n) {
   var sharedViews = loop.shared.views;
 
   /**
+   * Displays information about the call
+   * Caller avatar, name & conversation creation date
+   */
+  var CallIdentifierView = React.createClass({displayName: 'CallIdentifierView',
+    propTypes: {
+      peerIdentifier: React.PropTypes.string,
+      showIcons: React.PropTypes.bool.isRequired,
+      urlCreationDate: React.PropTypes.string,
+      video: React.PropTypes.bool
+    },
+
+    getDefaultProps: function() {
+      return {
+        peerIdentifier: "",
+        showLinkDetail: true,
+        urlCreationDate: "",
+        video: true
+      };
+    },
+
+    getInitialState: function() {
+      return {timestamp: 0};
+    },
+
+    /**
+     * Gets and formats the incoming call creation date
+     */
+    formatCreationDate: function() {
+      if (!this.props.urlCreationDate) {
+        return "";
+      }
+
+      var timestamp = this.props.urlCreationDate;
+      return "(" + loop.shared.utils.formatDate(timestamp) + ")";
+    },
+
+    render: function() {
+      var iconVideoClasses = React.addons.classSet({
+        "fx-embedded-tiny-video-icon": true,
+        "muted": !this.props.video
+      });
+      var callDetailClasses = React.addons.classSet({
+        "fx-embedded-call-detail": true,
+        "hide": !this.props.showIcons
+      });
+
+      return (
+        React.DOM.div({className: "fx-embedded-call-identifier"}, 
+          React.DOM.div({className: "fx-embedded-call-identifier-avatar fx-embedded-call-identifier-item"}), 
+          React.DOM.div({className: "fx-embedded-call-identifier-info fx-embedded-call-identifier-item"}, 
+            React.DOM.div({className: "fx-embedded-call-identifier-text overflow-text-ellipsis"}, 
+              this.props.peerIdentifier
+            ), 
+            React.DOM.div({className: callDetailClasses}, 
+              React.DOM.span({className: "fx-embedded-tiny-audio-icon"}), 
+              React.DOM.span({className: iconVideoClasses}), 
+              React.DOM.span({className: "fx-embedded-conversation-timestamp"}, 
+                this.formatCreationDate()
+              )
+            )
+          )
+        )
+      );
+    }
+  });
+
+  /**
    * Displays details of the incoming/outgoing conversation
    * (name, link, audio/video type etc).
    *
@@ -51,7 +118,9 @@ loop.conversationViews = (function(mozL10n) {
 
       return (
         React.DOM.div({className: "call-window"}, 
-          React.DOM.h2(null, contactName), 
+          CallIdentifierView({
+            peerIdentifier: contactName, 
+            showIcons: false}), 
           React.DOM.div(null, this.props.children)
         )
       );
@@ -382,6 +451,7 @@ loop.conversationViews = (function(mozL10n) {
 
   return {
     PendingConversationView: PendingConversationView,
+    CallIdentifierView: CallIdentifierView,
     ConversationDetailView: ConversationDetailView,
     CallFailedView: CallFailedView,
     OngoingConversationView: OngoingConversationView,

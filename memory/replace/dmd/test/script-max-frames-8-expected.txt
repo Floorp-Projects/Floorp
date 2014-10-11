@@ -1,0 +1,68 @@
+#-----------------------------------------------------------------
+
+Invocation {
+  $DMD = '1'
+  Sample-below size = 1
+}
+
+#-----------------------------------------------------------------
+
+Live {
+  1 block in heap block record 1 of 4
+  4,096 bytes (4,096 requested / 0 slop)
+  92.75% of the heap (92.75% cumulative)
+  Allocated at {
+    #01: E (E.cpp:99)
+    #02: F (F.cpp:99)
+    #03: G (G.cpp:99)
+    #04: H (H.cpp:99)
+    #05: I (I.cpp:99)
+    #06: J (J.cpp:99)
+    #07: K (K.cpp:99)
+    #08: L (L.cpp:99)
+  }
+}
+
+Live {
+  1 block in heap block record 2 of 4
+  128 bytes (128 requested / 0 slop)
+  2.90% of the heap (95.65% cumulative)
+  Allocated at {
+    #01: E (E.cpp:99)
+    #02: F (F.cpp:99)
+    #03: G (G.cpp:99)
+    #04: R (R.cpp:99)
+    #05: S (S.cpp:99)
+    #06: T (T.cpp:99)
+    #07: U (U.cpp:99)
+    #08: V (V.cpp:99)
+  }
+}
+
+Live {
+  1 block in heap block record 3 of 4
+  112 bytes (100 requested / 12 slop)
+  2.54% of the heap (98.19% cumulative)
+  Allocated at {
+    #01: E (E.cpp:99)
+    #02: X (X.cpp:99)
+    #03: Y (Y.cpp:99)
+    #04: Z (Z.cpp:99)
+  }
+}
+
+Live {
+  1 block in heap block record 4 of 4
+  80 bytes (80 requested / 0 slop)
+  1.81% of the heap (100.00% cumulative)
+  Allocated at {
+    #01: E (E.cpp:99)
+  }
+}
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total: 4,416 bytes in 4 blocks
+}
+

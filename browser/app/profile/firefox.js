@@ -1418,7 +1418,7 @@ pref("devtools.storage.enabled", false);
 
 // Enable the Style Editor.
 pref("devtools.styleeditor.enabled", true);
-pref("devtools.styleeditor.source-maps-enabled", false);
+pref("devtools.styleeditor.source-maps-enabled", true);
 pref("devtools.styleeditor.autocompletion-enabled", true);
 pref("devtools.styleeditor.showMediaSidebar", true);
 pref("devtools.styleeditor.mediaSidebarWidth", 238);

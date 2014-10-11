@@ -78,7 +78,10 @@
 
   var mockSDK = {};
 
-  var mockConversationModel = new loop.shared.models.ConversationModel({}, {
+  var mockConversationModel = new loop.shared.models.ConversationModel({
+    callerId: "Mrs Jones",
+    urlCreationDate: (new Date() / 1000).toString()
+  }, {
     sdk: mockSDK
   });
   mockConversationModel.startSession = noop;

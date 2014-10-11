@@ -21,6 +21,7 @@
 namespace mozilla {
 namespace gl {
 class SharedSurface;
+class ShSurfHandle;
 }
 }
 
@@ -44,6 +45,7 @@ public:
   enum CanvasClientType {
     CanvasClientSurface,
     CanvasClientGLContext,
+    CanvasClientTypeShSurf,
   };
   static TemporaryRef<CanvasClient> CreateCanvasClient(CanvasClientType aType,
                                                        CompositableForwarder* aFwd,
@@ -112,30 +114,34 @@ private:
 
 // Used for GL canvases where we don't need to do any readback, i.e., with a
 // GL backend.
-class CanvasClientSurfaceStream : public CanvasClient
+class CanvasClientSharedSurface : public CanvasClient
 {
-public:
-  CanvasClientSurfaceStream(CompositableForwarder* aLayerForwarder, TextureFlags aFlags);
+private:
+  RefPtr<gl::ShSurfHandle> mFront;
+  RefPtr<gl::ShSurfHandle> mPrevFront;
 
-  TextureInfo GetTextureInfo() const
-  {
+  RefPtr<TextureClient> mFrontTex;
+
+public:
+  CanvasClientSharedSurface(CompositableForwarder* aLayerForwarder,
+                            TextureFlags aFlags);
+
+  virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE {
     return TextureInfo(CompositableType::IMAGE);
   }
 
-  virtual void Clear() MOZ_OVERRIDE
-  {
-    mBuffer = nullptr;
+  virtual void Clear() MOZ_OVERRIDE {
+    mFront = nullptr;
+    mPrevFront = nullptr;
+    mFrontTex = nullptr;
   }
 
-  virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) MOZ_OVERRIDE;
+  virtual void Update(gfx::IntSize aSize,
+                      ClientCanvasLayer* aLayer) MOZ_OVERRIDE;
 
-  virtual void OnDetach() MOZ_OVERRIDE
-  {
-    mBuffer = nullptr;
+  virtual void OnDetach() MOZ_OVERRIDE {
+    CanvasClientSharedSurface::Clear();
   }
-
-private:
-  RefPtr<TextureClient> mBuffer;
 };
 
 }

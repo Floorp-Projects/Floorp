@@ -1214,6 +1214,12 @@ ScanShape(GCMarker *gcmarker, Shape *shape)
     else if (JSID_IS_SYMBOL(id))
         PushMarkStack(gcmarker, JSID_TO_SYMBOL(id));
 
+    if (shape->hasGetterObject())
+        MaybePushMarkStackBetweenSlices(gcmarker, shape->getterObject());
+
+    if (shape->hasSetterObject())
+        MaybePushMarkStackBetweenSlices(gcmarker, shape->setterObject());
+
     shape = shape->previous();
     if (shape && shape->markIfUnmarked(gcmarker->getMarkColor()))
         goto restart;
@@ -1225,12 +1231,6 @@ ScanBaseShape(GCMarker *gcmarker, BaseShape *base)
     base->assertConsistency();
 
     base->compartment()->mark();
-
-    if (base->hasGetterObject())
-        MaybePushMarkStackBetweenSlices(gcmarker, base->getterObject());
-
-    if (base->hasSetterObject())
-        MaybePushMarkStackBetweenSlices(gcmarker, base->setterObject());
 
     if (JSObject *parent = base->getObjectParent()) {
         MaybePushMarkStackBetweenSlices(gcmarker, parent);
@@ -1427,9 +1427,8 @@ gc::MarkChildren(JSTracer *trc, BaseShape *base)
  * This function is used by the cycle collector to trace through the
  * children of a BaseShape (and its baseUnowned(), if any). The cycle
  * collector does not directly care about BaseShapes, so only the
- * getter, setter, and parent are marked. Furthermore, the parent is
- * marked only if it isn't the same as prevParent, which will be
- * updated to the current shape's parent.
+ * parent is marked. Furthermore, the parent is marked only if it isn't the
+ * same as prevParent, which will be updated to the current shape's parent.
  */
 static inline void
 MarkCycleCollectorChildren(JSTracer *trc, BaseShape *base, JSObject **prevParent)
@@ -1438,22 +1437,9 @@ MarkCycleCollectorChildren(JSTracer *trc, BaseShape *base, JSObject **prevParent
 
     /*
      * The cycle collector does not need to trace unowned base shapes,
-     * as they have the same getter, setter and parent as the original
-     * base shape.
+     * as they have the same parent as the original base shape.
      */
     base->assertConsistency();
-
-    if (base->hasGetterObject()) {
-        JSObject *tmp = base->getterObject();
-        MarkObjectUnbarriered(trc, &tmp, "getter");
-        MOZ_ASSERT(tmp == base->getterObject());
-    }
-
-    if (base->hasSetterObject()) {
-        JSObject *tmp = base->setterObject();
-        MarkObjectUnbarriered(trc, &tmp, "setter");
-        MOZ_ASSERT(tmp == base->setterObject());
-    }
 
     JSObject *parent = base->getObjectParent();
     if (parent && parent != *prevParent) {
@@ -1478,6 +1464,19 @@ gc::MarkCycleCollectorChildren(JSTracer *trc, Shape *shape)
     do {
         MarkCycleCollectorChildren(trc, shape->base(), &prevParent);
         MarkId(trc, &shape->propidRef(), "propid");
+
+        if (shape->hasGetterObject()) {
+            JSObject *tmp = shape->getterObject();
+            MarkObjectUnbarriered(trc, &tmp, "getter");
+            MOZ_ASSERT(tmp == shape->getterObject());
+        }
+
+        if (shape->hasSetterObject()) {
+            JSObject *tmp = shape->setterObject();
+            MarkObjectUnbarriered(trc, &tmp, "setter");
+            MOZ_ASSERT(tmp == shape->setterObject());
+        }
+
         shape = shape->previous();
     } while (shape);
 }

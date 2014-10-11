@@ -40,8 +40,6 @@ static ByteString
 CreateCert(const char* issuerCN,
            const char* subjectCN,
            EndEntityOrCA endEntityOrCA,
-           /*optional*/ TestKeyPair* issuerKey,
-           /*out*/ ScopedTestKeyPair& subjectKey,
            /*out*/ ScopedCERTCertificate* subjectCert = nullptr)
 {
   static long serialNumberValue = 0;
@@ -60,13 +58,12 @@ CreateCert(const char* issuerCN,
     EXPECT_FALSE(ENCODING_FAILED(extensions[0]));
   }
 
+  ScopedTestKeyPair reusedKey(CloneReusedKeyPair());
   ByteString certDER(CreateEncodedCertificate(
-                       v3, sha256WithRSAEncryption,
-                       serialNumber, issuerDER,
-                       oneDayBeforeNow, oneDayAfterNow,
-                       subjectDER, extensions, issuerKey,
-                       sha256WithRSAEncryption,
-                       subjectKey));
+                       v3, sha256WithRSAEncryption, serialNumber, issuerDER,
+                       oneDayBeforeNow, oneDayAfterNow, subjectDER,
+                       *reusedKey, extensions, *reusedKey,
+                       sha256WithRSAEncryption));
   EXPECT_FALSE(ENCODING_FAILED(certDER));
   if (subjectCert) {
     SECItem certDERItem = {
@@ -100,7 +97,7 @@ public:
     for (size_t i = 0; i < MOZILLA_PKIX_ARRAY_LENGTH(names); ++i) {
       const char* issuerName = i == 0 ? names[0] : names[i-1];
       (void) CreateCert(issuerName, names[i], EndEntityOrCA::MustBeCA,
-                        leafCAKey.get(), leafCAKey, &certChainTail[i]);
+                        &certChainTail[i]);
     }
 
     return true;
@@ -192,7 +189,6 @@ private:
   ScopedCERTCertificate certChainTail[7];
 
 public:
-  ScopedTestKeyPair leafCAKey;
   CERTCertificate* GetLeafCACert() const
   {
     return certChainTail[MOZILLA_PKIX_ARRAY_LENGTH(certChainTail) - 1].get();
@@ -238,11 +234,9 @@ TEST_F(pkixbuild, MaxAcceptableCertChainLength)
   }
 
   {
-    ScopedTestKeyPair unusedKeyPair;
     ScopedCERTCertificate cert;
     ByteString certDER(CreateCert("CA7", "Direct End-Entity",
-                                  EndEntityOrCA::MustBeEndEntity,
-                                  trustDomain.leafCAKey.get(), unusedKeyPair));
+                                  EndEntityOrCA::MustBeEndEntity));
     ASSERT_FALSE(ENCODING_FAILED(certDER));
     Input certDERInput;
     ASSERT_EQ(Success, certDERInput.Init(certDER.data(), certDER.length()));
@@ -259,7 +253,6 @@ TEST_F(pkixbuild, MaxAcceptableCertChainLength)
 TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
 {
   static char const* const caCertName = "CA Too Far";
-  ScopedTestKeyPair caKeyPair;
 
   // We need a CERTCertificate for caCert so that the trustdomain's FindIssuer
   // method can find it through the NSS cert DB.
@@ -267,7 +260,6 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
 
   {
     ByteString certDER(CreateCert("CA7", caCertName, EndEntityOrCA::MustBeCA,
-                                  trustDomain.leafCAKey.get(), caKeyPair,
                                   &caCert));
     ASSERT_FALSE(ENCODING_FAILED(certDER));
     Input certDERInput;
@@ -282,10 +274,8 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
   }
 
   {
-    ScopedTestKeyPair unusedKeyPair;
     ByteString certDER(CreateCert(caCertName, "End-Entity Too Far",
-                                  EndEntityOrCA::MustBeEndEntity,
-                                  caKeyPair.get(), unusedKeyPair));
+                                  EndEntityOrCA::MustBeEndEntity));
     ASSERT_FALSE(ENCODING_FAILED(certDER));
     Input certDERInput;
     ASSERT_EQ(Success, certDERInput.Init(certDER.data(), certDER.length()));
@@ -383,9 +373,8 @@ private:
 TEST_F(pkixbuild, NoRevocationCheckingForExpiredCert)
 {
   const char* rootCN = "Root CA";
-  ScopedTestKeyPair rootKey;
   ByteString rootDER(CreateCert(rootCN, rootCN, EndEntityOrCA::MustBeCA,
-                                nullptr, rootKey, nullptr));
+                                nullptr));
   EXPECT_FALSE(ENCODING_FAILED(rootDER));
   ExpiredCertTrustDomain expiredCertTrustDomain(rootDER);
 
@@ -393,15 +382,14 @@ TEST_F(pkixbuild, NoRevocationCheckingForExpiredCert)
   EXPECT_FALSE(ENCODING_FAILED(serialNumber));
   ByteString issuerDER(CNToDERName(rootCN));
   ByteString subjectDER(CNToDERName("Expired End-Entity Cert"));
-  ScopedTestKeyPair unusedSubjectKey;
+  ScopedTestKeyPair reusedKey(CloneReusedKeyPair());
   ByteString certDER(CreateEncodedCertificate(
                        v3, sha256WithRSAEncryption,
                        serialNumber, issuerDER,
                        oneDayBeforeNow - Time::ONE_DAY_IN_SECONDS,
                        oneDayBeforeNow,
-                       subjectDER, nullptr, rootKey.get(),
-                       sha256WithRSAEncryption,
-                       unusedSubjectKey));
+                       subjectDER, *reusedKey, nullptr, *reusedKey,
+                       sha256WithRSAEncryption));
   EXPECT_FALSE(ENCODING_FAILED(certDER));
 
   Input cert;

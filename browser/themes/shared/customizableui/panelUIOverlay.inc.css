@@ -144,9 +144,9 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
 
 .panel-subview-header {
   margin: -4px -4px 4px;
-  background-color: hsla(210,4%,10%,.05);
   box-shadow: 0 -1px 0 hsla(210,4%,10%,.05) inset;
-  color: hsl(0,0%,50%);
+  color: GrayText;
+  text-transform: uppercase;
 }
 
 .cui-widget-panelview .panel-subview-header {
@@ -710,7 +710,7 @@ panelview .toolbarbutton-1,
 .PanelUI-subView .subviewbutton[shortcut]::after {
   content: attr(shortcut);
   float: right;
-  color: hsl(0,0%,50%);
+  color: GrayText;
 }
 
 .PanelUI-subView.cui-widget-panelview .subviewbutton[shortcut]::after {
@@ -763,7 +763,6 @@ menuitem.subviewbutton@menuStateActive@,
   background-color: hsla(210,4%,10%,.07);
   border-top: 1px solid hsla(210,4%,10%,.12);
   border-radius: 0;
-  color: hsl(0,0%,25%)
 }
 
 menuitem.panel-subview-footer@menuStateHover@,
@@ -850,7 +849,7 @@ menuitem.panel-subview-footer@menuStateActive@,
   -moz-box-pack: start;
   -moz-margin-start: 10px;
   -moz-margin-end: auto;
-  color: hsl(0,0%,50%);
+  color: GrayText;
 }
 
 #PanelUI-historyItems > toolbarbutton {
@@ -1162,6 +1161,7 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 .subviewradio {
   -moz-binding: url(chrome://global/content/bindings/radio.xml#radio);
   -moz-appearance: none;
+  -moz-box-align: center;
   padding: 1px;
   margin: 0 0 2px;
   background-color: hsla(210,4%,10%,0);

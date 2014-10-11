@@ -430,6 +430,7 @@ UploadImageDataToTexture(GLContext* gl,
 
     MOZ_ASSERT(gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA ||
                gl->GetPreferredARGB32Format() == LOCAL_GL_RGBA);
+
     switch (aFormat) {
         case SurfaceFormat::B8G8R8A8:
             if (gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
@@ -454,6 +455,34 @@ UploadImageDataToTexture(GLContext* gl,
               format = LOCAL_GL_RGBA;
               surfaceFormat = SurfaceFormat::B8G8R8X8;
               type = LOCAL_GL_UNSIGNED_BYTE;
+            }
+            internalFormat = LOCAL_GL_RGBA;
+            break;
+        case SurfaceFormat::R8G8B8A8:
+            if (gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
+              // Upload our RGBA as BGRA, but store that the uploaded format is
+              // BGRA. (sample from R to get B)
+              format = LOCAL_GL_BGRA;
+              type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
+              surfaceFormat = SurfaceFormat::B8G8R8A8;
+            } else {
+              format = LOCAL_GL_RGBA;
+              type = LOCAL_GL_UNSIGNED_BYTE;
+              surfaceFormat = SurfaceFormat::R8G8B8A8;
+            }
+            internalFormat = LOCAL_GL_RGBA;
+            break;
+        case SurfaceFormat::R8G8B8X8:
+            // Treat RGBX surfaces as RGBA except for the surface
+            // format used.
+            if (gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
+              format = LOCAL_GL_BGRA;
+              type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
+              surfaceFormat = SurfaceFormat::B8G8R8X8;
+            } else {
+              format = LOCAL_GL_RGBA;
+              type = LOCAL_GL_UNSIGNED_BYTE;
+              surfaceFormat = SurfaceFormat::R8G8B8X8;
             }
             internalFormat = LOCAL_GL_RGBA;
             break;

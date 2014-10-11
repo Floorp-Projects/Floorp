@@ -8,7 +8,6 @@
 
 #include "gfxWindowsSurface.h"
 #include "gfxWindowsPlatform.h"
-#include "SurfaceStream.h"
 #include "SharedSurface.h"
 #include "SharedSurfaceGL.h"
 #include "GLContext.h"
@@ -80,9 +79,13 @@ CanvasLayerD3D9::UpdateSurface()
   RefPtr<SourceSurface> surface;
 
   if (mGLContext) {
-    SharedSurface* surf = mGLContext->RequestFrame();
+    auto screen = mGLContext->Screen();
+    MOZ_ASSERT(screen);
+
+    SharedSurface* surf = screen->Front()->Surf();
     if (!surf)
-        return;
+      return;
+    surf->WaitSync();
 
     SharedSurface_Basic* shareSurf = SharedSurface_Basic::Cast(surf);
     surface = shareSurf->GetData();

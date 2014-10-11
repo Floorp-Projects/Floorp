@@ -13,13 +13,13 @@ Twice-reported {
   0.66% of the heap (0.66% cumulative)
   29.41% of twice-reported (29.41% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported again at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -29,13 +29,13 @@ Twice-reported {
   0.66% of the heap (1.32% cumulative)
   29.41% of twice-reported (58.82% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported again at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -45,13 +45,13 @@ Twice-reported {
   0.66% of the heap (1.99% cumulative)
   29.41% of twice-reported (88.24% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported again at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -61,13 +61,13 @@ Twice-reported {
   0.26% of the heap (2.25% cumulative)
   11.76% of twice-reported (100.00% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported again at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -79,7 +79,7 @@ Unreported {
   8.34% of the heap (8.34% cumulative)
   81.82% of unreported (81.82% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -89,7 +89,7 @@ Unreported {
   0.93% of the heap (9.27% cumulative)
   9.09% of unreported (90.91% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -99,7 +99,7 @@ Unreported {
   0.93% of the heap (10.19% cumulative)
   9.09% of unreported (100.00% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -111,10 +111,10 @@ Once-reported {
   67.77% of the heap (67.77% cumulative)
   77.40% of once-reported (77.40% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -124,10 +124,10 @@ Once-reported {
   8.47% of the heap (76.24% cumulative)
   9.67% of once-reported (87.07% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -137,10 +137,10 @@ Once-reported {
   4.24% of the heap (80.48% cumulative)
   4.84% of once-reported (91.91% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -150,10 +150,10 @@ Once-reported {
   1.99% of the heap (82.46% cumulative)
   2.27% of once-reported (94.18% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -163,10 +163,10 @@ Once-reported {
   1.99% of the heap (84.45% cumulative)
   2.27% of once-reported (96.45% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -176,10 +176,10 @@ Once-reported {
   0.79% of the heap (85.24% cumulative)
   0.91% of once-reported (97.35% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -189,10 +189,10 @@ Once-reported {
   0.79% of the heap (86.04% cumulative)
   0.91% of once-reported (98.26% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -202,10 +202,10 @@ Once-reported {
   0.66% of the heap (86.70% cumulative)
   0.76% of once-reported (99.02% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -215,10 +215,10 @@ Once-reported {
   0.66% of the heap (87.36% cumulative)
   0.76% of once-reported (99.77% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
@@ -228,23 +228,23 @@ Once-reported {
   0.13% of the heap (87.49% cumulative)
   0.15% of once-reported (99.92% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
 Once-reported {
   1 block in heap block record 11 of 11
-  8 bytes (0 requested / 8 slop)
+  8 bytes (8 requested / 0 slop)
   0.07% of the heap (87.56% cumulative)
   0.08% of once-reported (100.00% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
   Reported at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 

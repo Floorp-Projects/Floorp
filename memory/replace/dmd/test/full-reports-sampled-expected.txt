@@ -7,72 +7,90 @@ Invocation {
 
 #-----------------------------------------------------------------
 
-Live {
+# no twice-reported heap blocks
+
+#-----------------------------------------------------------------
+
+Unreported {
   ~4 blocks in heap block record 1 of 7
   ~512 bytes (~512 requested / ~0 slop)
   35.96% of the heap (35.96% cumulative)
+  35.96% of unreported (35.96% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
-Live {
+Unreported {
   1 block in heap block record 2 of 7
   256 bytes (256 requested / 0 slop)
   17.98% of the heap (53.93% cumulative)
+  17.98% of unreported (53.93% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
-Live {
+Unreported {
   1 block in heap block record 3 of 7
   144 bytes (144 requested / 0 slop)
   10.11% of the heap (64.04% cumulative)
+  10.11% of unreported (64.04% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
-Live {
+Unreported {
   1 block in heap block record 4 of 7
   128 bytes (128 requested / 0 slop)
   8.99% of the heap (73.03% cumulative)
+  8.99% of unreported (73.03% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
-Live {
+Unreported {
   ~1 block in heap block record 5 of 7
   ~128 bytes (~128 requested / ~0 slop)
   8.99% of the heap (82.02% cumulative)
+  8.99% of unreported (82.02% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
-Live {
+Unreported {
   ~1 block in heap block record 6 of 7
   ~128 bytes (~128 requested / ~0 slop)
   8.99% of the heap (91.01% cumulative)
+  8.99% of unreported (91.01% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
-Live {
+Unreported {
   ~1 block in heap block record 7 of 7
   ~128 bytes (~128 requested / ~0 slop)
   8.99% of the heap (100.00% cumulative)
+  8.99% of unreported (100.00% cumulative)
   Allocated at {
-    ... DMD.cpp
+    #01: ... DMD.cpp ...
   }
 }
 
 #-----------------------------------------------------------------
 
+# no once-reported heap blocks
+
+#-----------------------------------------------------------------
+
 Summary {
-  Total: ~1,424 bytes in ~10 blocks
+  Total:                ~1,424 bytes (100.00%) in     ~10 blocks (100.00%)
+  Unreported:           ~1,424 bytes (100.00%) in     ~10 blocks (100.00%)
+  Once-reported:            ~0 bytes (  0.00%) in      ~0 blocks (  0.00%)
+  Twice-reported:           ~0 bytes (  0.00%) in      ~0 blocks (  0.00%)
 }
 

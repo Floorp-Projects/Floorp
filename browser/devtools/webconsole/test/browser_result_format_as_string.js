@@ -2,6 +2,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+///////////////////
+//
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejection should be fixed. 
+//
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Connection closed");
+
 // Make sure that JS eval result are properly formatted as strings.
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-result-format-as-string.html";

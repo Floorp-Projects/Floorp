@@ -4,6 +4,13 @@
 
 "use strict";
 
+///////////////////
+//
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejection should be fixed.
+//
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: this.docShell is null");
+
 const TEST_URL = "http://example.com/browser/toolkit/components/startup/tests/browser/beforeunload.html";
 
 function test() {

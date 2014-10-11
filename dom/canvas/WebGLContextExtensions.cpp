@@ -101,6 +101,8 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
     }
 
     switch (ext) {
+        case WebGLExtensionID::EXT_blend_minmax:
+            return WebGLExtensionBlendMinMax::IsSupported(this);
         case WebGLExtensionID::OES_element_index_uint:
             return gl->IsSupported(GLFeature::element_index_uint);
         case WebGLExtensionID::OES_standard_derivatives:
@@ -165,8 +167,6 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
 
     if (Preferences::GetBool("webgl.enable-draft-extensions", false) || IsWebGL2()) {
         switch (ext) {
-            case WebGLExtensionID::EXT_blend_minmax:
-                return WebGLExtensionBlendMinMax::IsSupported(this);
             case WebGLExtensionID::EXT_color_buffer_half_float:
                 return WebGLExtensionColorBufferHalfFloat::IsSupported(this);
             case WebGLExtensionID::WEBGL_color_buffer_float:

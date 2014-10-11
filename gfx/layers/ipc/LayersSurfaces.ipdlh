@@ -76,9 +76,8 @@ struct NewSurfaceDescriptorGralloc {
   IntSize size;
 };
 
-struct SurfaceStreamDescriptor {
-  uintptr_t surfStream;
-  bool yflip;
+struct SharedSurfaceDescriptor {
+  uintptr_t surf;
 };
 
 /**
@@ -106,9 +105,9 @@ union SurfaceDescriptor {
   SurfaceDescriptorX11;
   SurfaceTextureDescriptor;
   EGLImageDescriptor;
-  SurfaceStreamDescriptor;
   SurfaceDescriptorMacIOSurface;
   NewSurfaceDescriptorGralloc;
+  SharedSurfaceDescriptor;
   null_t;
 };
 
