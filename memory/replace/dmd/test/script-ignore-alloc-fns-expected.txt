@@ -1,0 +1,56 @@
+#-----------------------------------------------------------------
+
+Invocation {
+  $DMD = '1'
+  Sample-below size = 2500
+}
+
+#-----------------------------------------------------------------
+
+Live {
+  1 block in heap block record 1 of 4
+  1,048,576 bytes (1,048,576 requested / 0 slop)
+  93.22% of the heap (93.22% cumulative)
+  Allocated at {
+    #01: A (A.cpp:99)
+  }
+}
+
+Live {
+  1 block in heap block record 2 of 4
+  65,536 bytes (65,536 requested / 0 slop)
+  5.83% of the heap (99.05% cumulative)
+  Allocated at {
+    #01: js::jit::JitRuntime::initialize(JSContext*) (Ion.cpp:301)
+  }
+}
+
+Live {
+  1 block in heap block record 3 of 4
+  8,192 bytes (8,000 requested / 192 slop)
+  0.73% of the heap (99.78% cumulative)
+  Allocated at {
+    #01: mozilla::Vector::growStorageBy(unsigned long) (Vector.h:802)
+    #02: D (D.cpp:99)
+  }
+}
+
+Live {
+  ~1 block in heap block record 4 of 4
+  ~2,500 bytes (~2,500 requested / ~0 slop)
+  0.22% of the heap (100.00% cumulative)
+  Allocated at {
+    #01: g_type_create_instance (/usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0)
+    #02: not_an_alloc_function_so_alloc_functions_below_here_will_not_be_stripped (blah)
+    #03: replace_posix_memalign (replace_malloc.h:120)
+    #04: ??? (/lib/x86_64-linux-gnu/libglib-2.0.so.0)
+    #05: another_non_alloc_function (blah)
+  }
+}
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total: ~1,124,804 bytes in ~4 blocks
+}
+

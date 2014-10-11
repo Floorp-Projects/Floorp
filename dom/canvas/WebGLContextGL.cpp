@@ -411,11 +411,11 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
         framebuffertype = LOCAL_GL_UNSIGNED_BYTE;
     }
 
-    TexInternalFormat effectiveinternalformat =
+    TexInternalFormat effectiveInternalFormat =
         EffectiveInternalFormatFromUnsizedInternalFormatAndType(internalformat, framebuffertype);
 
     // this should never fail, validation happened earlier.
-    MOZ_ASSERT(effectiveinternalformat != LOCAL_GL_NONE);
+    MOZ_ASSERT(effectiveInternalFormat != LOCAL_GL_NONE);
 
     // check if the memory size of this texture may change with this call
     bool sizeMayChange = !sub;
@@ -423,7 +423,7 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
         const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(texImageTarget, level);
         sizeMayChange = width != imageInfo.Width() ||
                         height != imageInfo.Height() ||
-                        effectiveinternalformat != imageInfo.EffectiveInternalFormat();
+                        effectiveInternalFormat != imageInfo.EffectiveInternalFormat();
     }
 
     if (sizeMayChange)
@@ -441,7 +441,7 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
         // first, we initialize the texture as black
         if (!sub) {
             tex->SetImageInfo(texImageTarget, level, width, height,
-                      effectiveinternalformat,
+                      effectiveInternalFormat,
                       WebGLImageDataStatus::UninitializedImageData);
             tex->DoDeferredImageInitialization(texImageTarget, level);
         }
@@ -479,7 +479,7 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
 
     if (!sub) {
         tex->SetImageInfo(texImageTarget, level, width, height,
-                          effectiveinternalformat,
+                          effectiveInternalFormat,
                           WebGLImageDataStatus::InitializedImageData);
     }
 }
@@ -1171,12 +1171,12 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         switch (pname) {
              case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT:
                 if (IsExtensionEnabled(WebGLExtensionID::EXT_sRGB)) {
-                    const TexInternalFormat effectiveinternalformat =
+                    const TexInternalFormat effectiveInternalFormat =
                         fba.Texture()->ImageInfoBase().EffectiveInternalFormat();
                     TexInternalFormat unsizedinternalformat = LOCAL_GL_NONE;
                     TexType type = LOCAL_GL_NONE;
                     UnsizedInternalFormatAndTypeFromEffectiveInternalFormat(
-                        effectiveinternalformat, &unsizedinternalformat, &type);
+                        effectiveInternalFormat, &unsizedinternalformat, &type);
                     MOZ_ASSERT(unsizedinternalformat != LOCAL_GL_NONE);
                     const bool srgb = unsizedinternalformat == LOCAL_GL_SRGB ||
                                       unsizedinternalformat == LOCAL_GL_SRGB_ALPHA;
@@ -1217,9 +1217,9 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                 if (!fba.IsComplete())
                     return JS::NumberValue(uint32_t(LOCAL_GL_NONE));
 
-                TexInternalFormat effectiveinternalformat =
+                TexInternalFormat effectiveInternalFormat =
                     fba.Texture()->ImageInfoAt(fba.ImageTarget(), fba.MipLevel()).EffectiveInternalFormat();
-                TexType type = TypeFromInternalFormat(effectiveinternalformat);
+                TexType type = TypeFromInternalFormat(effectiveInternalFormat);
                 GLenum ret = LOCAL_GL_NONE;
                 switch (type.get()) {
                 case LOCAL_GL_UNSIGNED_BYTE:
@@ -1893,6 +1893,25 @@ bool WebGLContext::BindArrayAttribToLocation0(WebGLProgram *program)
     return false;
 }
 
+static void
+LinkAndUpdateProgram(GLContext* gl, WebGLProgram* prog)
+{
+    GLuint name = prog->GLName();
+    gl->fLinkProgram(name);
+
+    prog->SetLinkStatus(false);
+
+    GLint ok = 0;
+    gl->fGetProgramiv(name, LOCAL_GL_LINK_STATUS, &ok);
+    if (!ok)
+        return;
+
+    if (!prog->UpdateInfo())
+        return;
+
+    prog->SetLinkStatus(true);
+}
+
 void
 WebGLContext::LinkProgram(WebGLProgram *program)
 {
@@ -1905,16 +1924,20 @@ WebGLContext::LinkProgram(WebGLProgram *program)
     InvalidateBufferFetching(); // we do it early in this function
     // as some of the validation below changes program state
 
-    GLuint progname = program->GLName();
-
     if (!program->NextGeneration()) {
         // XXX throw?
         return;
     }
 
     if (!program->HasBothShaderTypesAttached()) {
-        GenerateWarning("linkProgram: this program doesn't have both a vertex shader"
-                        " and a fragment shader");
+        GenerateWarning("linkProgram: this program doesn't have both a vertex"
+                        " shader and a fragment shader");
+        program->SetLinkStatus(false);
+        return;
+    }
+
+    if (program->HasBadShaderAttached()) {
+        GenerateWarning("linkProgram: The program has bad shaders attached.");
         program->SetLinkStatus(false);
         return;
     }
@@ -1925,56 +1948,25 @@ WebGLContext::LinkProgram(WebGLProgram *program)
         mIsMesa &&
         program->UpperBoundNumSamplerUniforms() > 16)
     {
-        GenerateWarning("Programs with more than 16 samplers are disallowed on Mesa drivers " "to avoid a Mesa crasher.");
+        GenerateWarning("Programs with more than 16 samplers are disallowed on"
+                        " Mesa drivers to avoid a Mesa crasher.");
         program->SetLinkStatus(false);
         return;
     }
 
-    bool updateInfoSucceeded = false;
-    GLint ok = 0;
-    if (gl->WorkAroundDriverBugs() &&
-        program->HasBadShaderAttached())
-    {
-        // it's a common driver bug, caught by program-test.html, that linkProgram doesn't
-        // correctly preserve the state of an in-use program that has been attached a bad shader
-        // see bug 777883
-        ok = false;
-    } else {
-        MakeContextCurrent();
-        gl->fLinkProgram(progname);
-        gl->fGetProgramiv(progname, LOCAL_GL_LINK_STATUS, &ok);
+    MakeContextCurrent();
+    LinkAndUpdateProgram(gl, program);
 
-        if (ok) {
-            updateInfoSucceeded = program->UpdateInfo();
-            program->SetLinkStatus(updateInfoSucceeded);
-
-            if (BindArrayAttribToLocation0(program)) {
-                GenerateWarning("linkProgram: relinking program to make attrib0 an "
-                                "array.");
-                gl->fLinkProgram(progname);
-                gl->fGetProgramiv(progname, LOCAL_GL_LINK_STATUS, &ok);
-                if (ok) {
-                    updateInfoSucceeded = program->UpdateInfo();
-                    program->SetLinkStatus(updateInfoSucceeded);
-                }
-            }
+    if (program->LinkStatus()) {
+        if (BindArrayAttribToLocation0(program)) {
+            GenerateWarning("linkProgram: Relinking program to make attrib0 an"
+                            " array.");
+            LinkAndUpdateProgram(gl, program);
         }
     }
 
-    if (ok) {
-        // Bug 750527
-        if (gl->WorkAroundDriverBugs() &&
-            updateInfoSucceeded &&
-            gl->Vendor() == gl::GLVendor::NVIDIA)
-        {
-            if (program == mCurrentProgram)
-                gl->fUseProgram(progname);
-        }
-    } else {
-        program->SetLinkStatus(false);
-
+    if (!program->LinkStatus()) {
         if (ShouldGenerateWarnings()) {
-
             // report shader/program infoLogs as warnings.
             // note that shader compilation errors can be deferred to linkProgram,
             // which is why we can't do anything in compileShader. In practice we could
@@ -2020,6 +2012,14 @@ WebGLContext::LinkProgram(WebGLProgram *program)
                 }
             }
         }
+        return;
+    }
+
+    if (gl->WorkAroundDriverBugs() &&
+        gl->Vendor() == gl::GLVendor::NVIDIA)
+    {
+        if (program == mCurrentProgram)
+            gl->fUseProgram(program->GLName());
     }
 }
 
@@ -3667,7 +3667,7 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level,
     const bool isDepthTexture = format == LOCAL_GL_DEPTH_COMPONENT ||
                                 format == LOCAL_GL_DEPTH_STENCIL;
 
-    if (isDepthTexture) {
+    if (isDepthTexture && !IsWebGL2()) {
         if (data != nullptr || level != 0)
             return ErrorInvalidOperation("texImage2D: "
                                          "with format of DEPTH_COMPONENT or DEPTH_STENCIL, "
@@ -3678,17 +3678,27 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level,
     if (!ValidateTexInputData(type, jsArrayType, func))
         return;
 
-    TexInternalFormat effectiveinternalformat =
+    TexInternalFormat effectiveInternalFormat =
         EffectiveInternalFormatFromInternalFormatAndType(internalformat, type);
 
-    if (effectiveinternalformat == LOCAL_GL_NONE) {
+    if (effectiveInternalFormat == LOCAL_GL_NONE) {
         return ErrorInvalidOperation("texImage2D: bad combination of internalformat and type");
     }
 
-    WebGLTexelFormat dstFormat = GetWebGLTexelFormat(effectiveinternalformat);
-    WebGLTexelFormat actualSrcFormat = srcFormat == WebGLTexelFormat::Auto ? dstFormat : srcFormat;
-
-    uint32_t srcTexelSize = WebGLTexelConversions::TexelBytesForFormat(actualSrcFormat);
+    size_t srcTexelSize = size_t(-1);
+    if (srcFormat == WebGLTexelFormat::Auto) {
+        // we need to find the exact sized format of the source data. Slightly abusing
+        // EffectiveInternalFormatFromInternalFormatAndType for that purpose. Really, an unsized source format
+        // is the same thing as an unsized internalformat.
+        TexInternalFormat effectiveSourceFormat =
+            EffectiveInternalFormatFromInternalFormatAndType(format, type);
+        MOZ_ASSERT(effectiveSourceFormat != LOCAL_GL_NONE); // should have validated format/type combo earlier
+        const size_t srcbitsPerTexel = GetBitsPerTexel(effectiveSourceFormat);
+        MOZ_ASSERT((srcbitsPerTexel % 8) == 0); // should not have compressed formats here.
+        srcTexelSize = srcbitsPerTexel / 8;
+    } else {
+        srcTexelSize = WebGLTexelConversions::TexelBytesForFormat(srcFormat);
+    }
 
     CheckedUint32 checked_neededByteLength =
         GetImageSize(height, width, srcTexelSize, mPixelStoreUnpackAlignment);
@@ -3722,10 +3732,13 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level,
     void* pixels = nullptr;
     WebGLImageDataStatus imageInfoStatusIfSuccess = WebGLImageDataStatus::UninitializedImageData;
 
+    WebGLTexelFormat dstFormat = GetWebGLTexelFormat(effectiveInternalFormat);
+    WebGLTexelFormat actualSrcFormat = srcFormat == WebGLTexelFormat::Auto ? dstFormat : srcFormat;
+
     if (byteLength) {
-        size_t   bitspertexel = GetBitsPerTexel(effectiveinternalformat);
-        MOZ_ASSERT((bitspertexel % 8) == 0); // should not have compressed formats here.
-        size_t   dstTexelSize = bitspertexel / 8;
+        size_t   bitsPerTexel = GetBitsPerTexel(effectiveInternalFormat);
+        MOZ_ASSERT((bitsPerTexel % 8) == 0); // should not have compressed formats here.
+        size_t   dstTexelSize = bitsPerTexel / 8;
         size_t   srcStride = srcStrideOrZero ? srcStrideOrZero : checked_alignedRowSize.value();
         size_t   dstPlainRowSize = dstTexelSize * width;
         size_t   unpackAlignment = mPixelStoreUnpackAlignment;
@@ -3743,10 +3756,13 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level,
         {
             size_t convertedDataSize = height * dstStride;
             convertedData = new uint8_t[convertedDataSize];
-            ConvertImage(width, height, srcStride, dstStride,
-                        static_cast<uint8_t*>(data), convertedData,
-                        actualSrcFormat, srcPremultiplied,
-                        dstFormat, mPixelStorePremultiplyAlpha, dstTexelSize);
+            if (!ConvertImage(width, height, srcStride, dstStride,
+                              static_cast<uint8_t*>(data), convertedData,
+                              actualSrcFormat, srcPremultiplied,
+                              dstFormat, mPixelStorePremultiplyAlpha, dstTexelSize))
+            {
+                return ErrorInvalidOperation("texImage2D: Unsupported texture format conversion");
+            }
             pixels = reinterpret_cast<void*>(convertedData.get());
         }
         imageInfoStatusIfSuccess = WebGLImageDataStatus::InitializedImageData;
@@ -3766,7 +3782,7 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level,
     MOZ_ASSERT(imageInfoStatusIfSuccess != WebGLImageDataStatus::NoImageData);
 
     tex->SetImageInfo(texImageTarget, level, width, height,
-                      effectiveinternalformat, imageInfoStatusIfSuccess);
+                      effectiveInternalFormat, imageInfoStatusIfSuccess);
 }
 
 void
@@ -3880,10 +3896,14 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
         return ErrorInvalidOperation("texSubImage2D: type differs from that of the existing image");
     }
 
-    WebGLTexelFormat dstFormat = GetWebGLTexelFormat(existingEffectiveInternalFormat);
-    WebGLTexelFormat actualSrcFormat = srcFormat == WebGLTexelFormat::Auto ? dstFormat : srcFormat;
-
-    uint32_t srcTexelSize = WebGLTexelConversions::TexelBytesForFormat(actualSrcFormat);
+    size_t srcTexelSize = size_t(-1);
+    if (srcFormat == WebGLTexelFormat::Auto) {
+        const size_t bitsPerTexel = GetBitsPerTexel(existingEffectiveInternalFormat);
+        MOZ_ASSERT((bitsPerTexel % 8) == 0); // should not have compressed formats here.
+        srcTexelSize = bitsPerTexel / 8;
+    } else {
+        srcTexelSize = WebGLTexelConversions::TexelBytesForFormat(srcFormat);
+    }
 
     if (width == 0 || height == 0)
         return; // ES 2.0 says it has no effect, we better return right now
@@ -3918,6 +3938,9 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
     void* pixels = data;
     nsAutoArrayPtr<uint8_t> convertedData;
 
+    WebGLTexelFormat dstFormat = GetWebGLTexelFormat(existingEffectiveInternalFormat);
+    WebGLTexelFormat actualSrcFormat = srcFormat == WebGLTexelFormat::Auto ? dstFormat : srcFormat;
+
     // no conversion, no flipping, so we avoid copying anything and just pass the source pointer
     bool noConversion = (actualSrcFormat == dstFormat &&
                          srcPremultiplied == mPixelStorePremultiplyAlpha &&
@@ -3927,10 +3950,13 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
     if (!noConversion) {
         size_t convertedDataSize = height * dstStride;
         convertedData = new uint8_t[convertedDataSize];
-        ConvertImage(width, height, srcStride, dstStride,
-                    static_cast<const uint8_t*>(data), convertedData,
-                    actualSrcFormat, srcPremultiplied,
-                    dstFormat, mPixelStorePremultiplyAlpha, dstTexelSize);
+        if (!ConvertImage(width, height, srcStride, dstStride,
+                          static_cast<const uint8_t*>(data), convertedData,
+                          actualSrcFormat, srcPremultiplied,
+                          dstFormat, mPixelStorePremultiplyAlpha, dstTexelSize))
+        {
+            return ErrorInvalidOperation("texSubImage2D: Unsupported texture format conversion");
+        }
         pixels = reinterpret_cast<void*>(convertedData.get());
     }
 
@@ -4099,12 +4125,9 @@ BaseTypeAndSizeFromUniformType(GLenum uType, GLenum *baseType, GLint *unitSize)
 
 
 WebGLTexelFormat
-mozilla::GetWebGLTexelFormat(TexInternalFormat effectiveinternalformat)
+mozilla::GetWebGLTexelFormat(TexInternalFormat effectiveInternalFormat)
 {
-    switch (effectiveinternalformat.get()) {
-        case LOCAL_GL_DEPTH_COMPONENT16:      return WebGLTexelFormat::D16;
-        case LOCAL_GL_DEPTH_COMPONENT24:      return WebGLTexelFormat::D32;
-        case LOCAL_GL_DEPTH24_STENCIL8:       return WebGLTexelFormat::D24S8;
+    switch (effectiveInternalFormat.get()) {
         case LOCAL_GL_RGBA8:                  return WebGLTexelFormat::RGBA8;
         case LOCAL_GL_SRGB8_ALPHA8:           return WebGLTexelFormat::RGBA8;
         case LOCAL_GL_RGB8:                   return WebGLTexelFormat::RGB8;
@@ -4126,8 +4149,7 @@ mozilla::GetWebGLTexelFormat(TexInternalFormat effectiveinternalformat)
         case LOCAL_GL_RGB5_A1:                return WebGLTexelFormat::RGBA5551;
         case LOCAL_GL_RGB565:                 return WebGLTexelFormat::RGB565;
         default:
-            MOZ_CRASH("Unhandled format");
-            return WebGLTexelFormat::BadFormat;
+            return WebGLTexelFormat::FormatNotSupportingAnyConversion;
     }
 }
 

@@ -414,20 +414,30 @@ int main(int argc, char** argv)
   nsCOMPtr<nsIFile> manifest;
   scrv = NS_GetSpecialDirectory(NS_GRE_DIR,
                                 getter_AddRefs(manifest));
-#ifdef XP_MACOSX
-  if (NS_SUCCEEDED(scrv)) {
-    nsCOMPtr<nsIFile> parent;
-    manifest->GetParent(getter_AddRefs(parent));
-    parent->AppendNative(NS_LITERAL_CSTRING("MacOS"));
-    manifest = parent.forget();
-  }
-#endif
   if (NS_FAILED(scrv)) {
     fail("NS_XPCOM_CURRENT_PROCESS_DIR");
     return 1;
   }
 
-  manifest->AppendNative(NS_LITERAL_CSTRING("TestStartupCacheTelemetry.manifest"));
+#ifdef XP_MACOSX
+  nsCOMPtr<nsIFile> tempManifest;
+  manifest->Clone(getter_AddRefs(tempManifest));
+  manifest->AppendNative(
+    NS_LITERAL_CSTRING("TestStartupCacheTelemetry.manifest"));
+  bool exists;
+  manifest->Exists(&exists);
+  if (!exists) {
+    // Workaround for bug 1080338 in mozharness.
+    manifest = tempManifest.forget();
+    manifest->SetNativeLeafName(NS_LITERAL_CSTRING("MacOS"));
+    manifest->AppendNative(
+      NS_LITERAL_CSTRING("TestStartupCacheTelemetry.manifest"));
+  }
+#else
+  manifest->AppendNative(
+    NS_LITERAL_CSTRING("TestStartupCacheTelemetry.manifest"));
+#endif
+
   XRE_AddManifestLocation(NS_COMPONENT_LOCATION, manifest);
 
   nsCOMPtr<nsIObserver> telemetryThing =

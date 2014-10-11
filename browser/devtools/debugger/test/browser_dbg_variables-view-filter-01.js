@@ -78,8 +78,8 @@ function testVariablesAndPropertiesFiltering() {
       "There should be 0 variables displayed in the with scope.");
     is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length, 0,
       "There should be 0 variables displayed in the function scope.");
-    isnot(globalScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length, 0,
-      "There should be some variables displayed in the global scope.");
+    is(globalScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length, 0,
+      "There should be 0 variables displayed in the global scope.");
 
     is(withScope.target.querySelectorAll(".variables-view-property:not([unmatched])").length, 0,
       "There should be 0 properties displayed in the with scope.");

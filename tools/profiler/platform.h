@@ -402,12 +402,21 @@ class ThreadInfo {
 
   bool IsMainThread() const { return mIsMainThread; }
   PseudoStack* Stack() const { return mPseudoStack; }
-  
+  PseudoStack* ForgetStack() {
+    PseudoStack* stack = mPseudoStack;
+    mPseudoStack = nullptr;
+    return stack;
+  }
+
   void SetProfile(ThreadProfile* aProfile) { mProfile = aProfile; }
   ThreadProfile* Profile() const { return mProfile; }
 
   PlatformData* GetPlatformData() const { return mPlatformData; }
   void* StackTop() const { return mStackTop; }
+
+  void SetPendingDelete();
+  bool IsPendingDelete() const { return mPendingDelete; }
+
 
   /**
    * May be null for the main thread if the profiler was started during startup
@@ -422,6 +431,7 @@ class ThreadInfo {
   ThreadProfile* mProfile;
   void* const mStackTop;
   nsCOMPtr<nsIThread> mThread;
+  bool mPendingDelete;
 };
 
 #endif /* ndef TOOLS_PLATFORM_H_ */

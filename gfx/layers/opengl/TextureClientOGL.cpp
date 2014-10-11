@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GLContext.h"                  // for GLContext, etc
-#include "SurfaceStream.h"
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/TextureClientOGL.h"
@@ -31,15 +30,15 @@ EGLImageTextureClient::EGLImageTextureClient(TextureFlags aFlags,
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default,
              "Can't pass an `EGLImage` between processes.");
-  
+
   // Our data is always owned externally.
   AddFlags(TextureFlags::DEALLOCATE_CLIENT);
-  
+
   if (aInverted) {
     AddFlags(TextureFlags::NEEDS_Y_FLIP);
   }
 }
-  
+
 EGLImageTextureClient::~EGLImageTextureClient()
 {
   // Our data is always owned externally.
@@ -65,14 +64,14 @@ EGLImageTextureClient::Lock(OpenMode mode)
     mIsLocked = true;
     return true;
   }
-  
+
 void
 EGLImageTextureClient::Unlock()
 {
   MOZ_ASSERT(mIsLocked);
   mIsLocked = false;
 }
-  
+
 ////////////////////////////////////////////////////////////////////////
 // SurfaceTextureClient
 
@@ -97,7 +96,7 @@ SurfaceTextureClient::SurfaceTextureClient(TextureFlags aFlags,
     AddFlags(TextureFlags::NEEDS_Y_FLIP);
   }
 }
-  
+
 SurfaceTextureClient::~SurfaceTextureClient()
 {
   // Our data is always owned externally.
