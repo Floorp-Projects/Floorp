@@ -4081,11 +4081,8 @@ LIRGenerator::generate()
         if (gen->shouldCancel("Lowering (preparation loop)"))
             return false;
 
-        current = LBlock::New(alloc(), *block);
-        if (!current)
+        if (!lirGraph_.initBlock(*block))
             return false;
-        lirGraph_.setBlock(block->id(), current);
-        block->assignLir(current);
     }
 
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {

@@ -764,7 +764,7 @@ typedef InlineList<LInstruction>::reverse_iterator LInstructionReverseIterator;
 
 class LPhi;
 class LMoveGroup;
-class LBlock : public TempObject
+class LBlock
 {
     MBasicBlock *block_;
     FixedList<LPhi> phis_;
@@ -773,15 +773,10 @@ class LBlock : public TempObject
     LMoveGroup *exitMoveGroup_;
     Label label_;
 
-    explicit LBlock(MBasicBlock *block)
-      : block_(block),
-        phis_(),
-        entryMoveGroup_(nullptr),
-        exitMoveGroup_(nullptr)
-    { }
-
   public:
-    static LBlock *New(TempAllocator &alloc, MBasicBlock *from);
+    explicit LBlock(MBasicBlock *block);
+    bool init(TempAllocator &alloc);
+
     void add(LInstruction *ins) {
         instructions_.pushBack(ins);
     }
@@ -1517,7 +1512,7 @@ class LIRGraph
         }
     };
 
-    FixedList<LBlock *> blocks_;
+    FixedList<LBlock> blocks_;
     Vector<Value, 0, IonAllocPolicy> constantPool_;
     typedef HashMap<Value, uint32_t, ValueHasher, IonAllocPolicy> ConstantPoolMap;
     ConstantPoolMap constantPoolMap_;
@@ -1548,14 +1543,15 @@ class LIRGraph
     size_t numBlocks() const {
         return blocks_.length();
     }
-    LBlock *getBlock(size_t i) const {
-        return blocks_[i];
+    LBlock *getBlock(size_t i) {
+        return &blocks_[i];
     }
     uint32_t numBlockIds() const {
         return mir_.numBlockIds();
     }
-    void setBlock(size_t index, LBlock *block) {
-        blocks_[index] = block;
+    bool initBlock(MBasicBlock *mir) {
+        LBlock *lir = new (&blocks_[mir->id()]) LBlock(mir);
+        return lir->init(mir_.alloc());
     }
     uint32_t getVirtualRegister() {
         numVirtualRegisters_ += VREG_INCREMENT;
@@ -1634,8 +1630,8 @@ class LIRGraph
         return safepoints_[i];
     }
 
-    void dump(FILE *fp) const;
-    void dump() const;
+    void dump(FILE *fp);
+    void dump();
 };
 
 LAllocation::LAllocation(AnyRegister reg)
