@@ -144,7 +144,7 @@ public class FxAccountClient20 extends FxAccountClient10 implements FxAccountCli
           boolean verified = false; // In production, we're definitely not verified immediately upon creation.
           Boolean tempVerified = body.getBoolean(JSON_KEY_VERIFIED);
           if (tempVerified != null) {
-            verified = tempVerified.booleanValue();
+            verified = tempVerified;
           }
           byte[] sessionToken = Utils.hex2Byte(body.getString(JSON_KEY_SESSIONTOKEN));
           byte[] keyFetchToken = null;
@@ -154,10 +154,8 @@ public class FxAccountClient20 extends FxAccountClient10 implements FxAccountCli
           LoginResponse loginResponse = new LoginResponse(new String(emailUTF8, "UTF-8"), uid, verified, sessionToken, keyFetchToken);
 
           delegate.handleSuccess(loginResponse);
-          return;
         } catch (Exception e) {
           delegate.handleError(e);
-          return;
         }
       }
     };
@@ -172,7 +170,6 @@ public class FxAccountClient20 extends FxAccountClient10 implements FxAccountCli
       createAccount(emailUTF8, quickStretchedPW, true, false, "sync", delegate);
     } catch (Exception e) {
       invokeHandleError(delegate, e);
-      return;
     }
   }
 

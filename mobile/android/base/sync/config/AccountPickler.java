@@ -171,8 +171,8 @@ public class AccountPickler {
     Integer timestamp = json.getIntegerSafely(Constants.JSON_KEY_TIMESTAMP);
     if (version == null || timestamp == null) {
       Logger.warn(LOG_TAG, "Did not find version or timestamp in pickle file; ignoring.");
-      version = new Integer(-1);
-      timestamp = new Integer(-1);
+      version = -1;
+      timestamp = -1;
     }
 
     Logger.info(LOG_TAG, "Un-pickled Android account named " + params.username + " (version " + version + ", pickled at " + timestamp + ").");
