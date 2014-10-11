@@ -48,7 +48,7 @@ struct ReciprocalMulConstants {
     int32_t shiftAmount;
 };
 
-class CodeGeneratorShared : public LInstructionVisitor
+class CodeGeneratorShared : public LElementVisitor
 {
     js::Vector<OutOfLineCode *, 0, SystemAllocPolicy> outOfLineCode_;
     OutOfLineCode *oolIns;

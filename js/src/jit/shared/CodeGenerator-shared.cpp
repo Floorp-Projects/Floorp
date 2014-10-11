@@ -446,7 +446,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     uint32_t mirOpcode = 0;
     uint32_t mirId = 0;
 
-    if (LInstruction *ins = instruction()) {
+    if (LNode *ins = instruction()) {
         lirOpcode = ins->op();
         lirId = ins->id();
         if (ins->mirRaw()) {

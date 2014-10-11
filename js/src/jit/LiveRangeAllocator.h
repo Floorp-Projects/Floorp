@@ -166,7 +166,7 @@ UseCompatibleWith(const LUse *use, LAllocation alloc)
 #ifdef DEBUG
 
 static inline bool
-DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation alloc)
+DefinitionCompatibleWith(LNode *ins, const LDefinition *def, LAllocation alloc)
 {
     if (ins->isPhi()) {
         if (def->isFloatReg())
@@ -193,7 +193,7 @@ DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation 
 #endif // DEBUG
 
 static inline LDefinition *
-FindReusingDefinition(LInstruction *ins, LAllocation *alloc)
+FindReusingDefinition(LNode *ins, LAllocation *alloc)
 {
     for (size_t i = 0; i < ins->numDefs(); i++) {
         LDefinition *def = ins->getDef(i);
@@ -426,7 +426,7 @@ class LiveInterval
  */
 class VirtualRegister
 {
-    LInstruction *ins_;
+    LNode *ins_;
     LDefinition *def_;
     Vector<LiveInterval *, 1, IonAllocPolicy> intervals_;
 
@@ -442,7 +442,7 @@ class VirtualRegister
     {}
 
   public:
-    bool init(TempAllocator &alloc, LInstruction *ins, LDefinition *def,
+    bool init(TempAllocator &alloc, LNode *ins, LDefinition *def,
               bool isTemp)
     {
         MOZ_ASSERT(ins && !ins_);
@@ -457,7 +457,7 @@ class VirtualRegister
     LBlock *block() {
         return ins_->block();
     }
-    LInstruction *ins() {
+    LNode *ins() {
         return ins_;
     }
     LDefinition *def() const {
@@ -726,8 +726,10 @@ class LiveRangeAllocator : protected RegisterAllocator
             // We don't add the output register to the safepoint,
             // but it still might get added as one of the inputs.
             // So eagerly add this reg to the safepoint clobbered registers.
-            if (LSafepoint *safepoint = reg->ins()->safepoint())
-                safepoint->addClobberedRegister(a->toRegister());
+            if (reg->ins()->isInstruction()) {
+                if (LSafepoint *safepoint = reg->ins()->toInstruction()->safepoint())
+                    safepoint->addClobberedRegister(a->toRegister());
+            }
 #endif
             start = start.next();
         }

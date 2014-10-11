@@ -317,7 +317,7 @@ LSnapshot::rewriteRecoveredInput(LUse input)
 }
 
 void
-LInstruction::printName(FILE *fp, Opcode op)
+LNode::printName(FILE *fp, Opcode op)
 {
     static const char * const names[] =
     {
@@ -332,7 +332,7 @@ LInstruction::printName(FILE *fp, Opcode op)
 }
 
 void
-LInstruction::printName(FILE *fp)
+LNode::printName(FILE *fp)
 {
     printName(fp, op());
 }
@@ -467,7 +467,7 @@ LDefinition::dump() const
 }
 
 void
-LInstruction::printOperands(FILE *fp)
+LNode::printOperands(FILE *fp)
 {
     for (size_t i = 0, e = numOperands(); i < e; i++) {
         fprintf(fp, " (%s)", getOperand(i)->toString());
@@ -494,7 +494,7 @@ LInstruction::assignSnapshot(LSnapshot *snapshot)
 }
 
 void
-LInstruction::dump(FILE *fp)
+LNode::dump(FILE *fp)
 {
     if (numDefs() != 0) {
         fprintf(fp, "{");
@@ -531,7 +531,7 @@ LInstruction::dump(FILE *fp)
 }
 
 void
-LInstruction::dump()
+LNode::dump()
 {
     dump(stderr);
     fprintf(stderr, "\n");

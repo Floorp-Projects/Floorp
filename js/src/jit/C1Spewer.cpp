@@ -101,7 +101,7 @@ DumpDefinition(FILE *fp, MDefinition *def)
 }
 
 static void
-DumpLIR(FILE *fp, LInstruction *ins)
+DumpLIR(FILE *fp, LNode *ins)
 {
     fprintf(fp, "      ");
     fprintf(fp, "%d ", ins->id());
@@ -110,7 +110,7 @@ DumpLIR(FILE *fp, LInstruction *ins)
 }
 
 void
-C1Spewer::spewIntervals(FILE *fp, LinearScanAllocator *regalloc, LInstruction *ins, size_t &nextId)
+C1Spewer::spewIntervals(FILE *fp, LinearScanAllocator *regalloc, LNode *ins, size_t &nextId)
 {
     for (size_t k = 0; k < ins->numDefs(); k++) {
         uint32_t id = ins->getDef(k)->virtualRegister();
