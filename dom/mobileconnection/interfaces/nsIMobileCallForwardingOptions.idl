@@ -1,0 +1,51 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(c616ecb6-65f5-441e-b97e-c642ddef6888)]
+interface nsIMobileCallForwardingOptions : nsISupports
+{
+  /**
+   * Call forwarding rule status.
+   *
+   * It will be either not active (false), or active (true).
+   *
+   * Note: Unused for setting call forwarding options. It reports
+   *       the status of the rule when getting how the rule is
+   *       configured.
+   *
+   * @see 3GPP TS 27.007 7.11 "status".
+   */
+  readonly attribute bool active;
+
+  /**
+   * Indicates what to do with the rule. It shall be one of the
+   * nsIMobileConnection.CALL_FORWARD_ACTION_* values.
+   */
+  readonly attribute short action;
+
+  /**
+   * Indicates the reason the call is being forwarded. It shall be one of the
+   * nsIMobileConnection.CALL_FORWARD_REASON_* values.
+   */
+  readonly attribute short reason;
+
+  /**
+   * Phone number of forwarding address.
+   */
+  readonly attribute DOMString number;
+
+  /**
+   * When "no reply" is enabled or queried, this gives the time in
+   * seconds to wait before call is forwarded.
+   */
+  readonly attribute short timeSeconds;
+
+  /**
+   * Service for which the call forward is set up. It should be one of the
+   * nsIMobileConnection.ICC_SERVICE_CLASS_* values.
+   */
+  readonly attribute short serviceClass;
+};
