@@ -12,6 +12,7 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsError.h"
+#include "nsTArray.h"
 
 // http version codes
 #define NS_HTTP_VERSION_UNKNOWN  0
@@ -202,6 +203,56 @@ void EnsureBuffer(nsAutoArrayPtr<char> &buf, uint32_t newSize,
                   uint32_t preserve, uint32_t &objSize);
 void EnsureBuffer(nsAutoArrayPtr<uint8_t> &buf, uint32_t newSize,
                   uint32_t preserve, uint32_t &objSize);
+
+// h2=":443"; ma=60; single
+// results in 3 mValues = {{h2, :443}, {ma, 60}, {single}}
+
+class ParsedHeaderPair
+{
+public:
+    ParsedHeaderPair(const char *name, int32_t nameLen,
+                     const char *val, int32_t valLen)
+    {
+        if (nameLen > 0) {
+            mName.Rebind(name, name + nameLen);
+        }
+        if (valLen > 0) {
+            mValue.Rebind(val, val + valLen);
+        }
+    }
+
+    ParsedHeaderPair(ParsedHeaderPair const &copy)
+        : mName(copy.mName)
+        , mValue(copy.mValue)
+    {
+    }
+
+    nsDependentCSubstring mName;
+    nsDependentCSubstring mValue;
+};
+
+class ParsedHeaderValueList
+{
+public:
+    ParsedHeaderValueList(char *t, uint32_t len);
+    nsTArray<ParsedHeaderPair> mValues;
+
+private:
+    void ParsePair(char *t, uint32_t len);
+    void Tokenize(char *input, uint32_t inputLen, char **token,
+                  uint32_t *tokenLen, bool *foundEquals, char **next);
+};
+
+class ParsedHeaderValueListList
+{
+public:
+    explicit ParsedHeaderValueListList(const nsCString &txt);
+    nsTArray<ParsedHeaderValueList> mValues;
+
+private:
+    nsCString mFull;
+};
+
 
 } // namespace mozilla::net
 } // namespace mozilla

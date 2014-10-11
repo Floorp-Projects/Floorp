@@ -23,12 +23,10 @@ base-updater-head_DEST    := $(XPCSHELLTESTROOT)/unit_base_updater
 base-updater-head_FILES   := $(XPCSHELLTESTROOT)/unit_aus_update/head_update.js
 
 ifdef MOZ_MAINTENANCE_SERVICE
-ifndef HAVE_64BIT_BUILD
 INSTALL_TARGETS              += service-updater-head
 service-updater-head_TARGET  := libs
 service-updater-head_DEST    := $(XPCSHELLTESTROOT)/unit_service_updater
 service-updater-head_FILES   := $(XPCSHELLTESTROOT)/unit_aus_update/head_update.js
-endif # HAVE_64BIT_BUILD
 endif # MOZ_MAINTENANCE_SERVICE
 
 ifndef MOZ_PROFILE_GENERATE

@@ -211,6 +211,8 @@ public:
         return mTrafficStamp &&
             (mTrafficCount == (mTotalBytesWritten + mTotalBytesRead));
     }
+    // override of nsAHttpConnection
+    virtual uint32_t Version();
 
 private:
     // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.

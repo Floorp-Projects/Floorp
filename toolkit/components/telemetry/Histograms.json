@@ -1193,6 +1193,16 @@
     "kind": "boolean",
     "description": "Whether a HTTP base page load was over SSL or not."
   },
+  "HTTP_TRANSACTION_USE_ALTSVC": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a HTTP transaction was routed via Alt-Svc or not."
+  },
+  "HTTP_TRANSACTION_USE_ALTSVC_OE": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a HTTP transaction routed via Alt-Svc was scheme=http"
+  },
   "SSL_HANDSHAKE_VERSION": {
     "expires_in_version": "never",
     "kind": "enumerated",

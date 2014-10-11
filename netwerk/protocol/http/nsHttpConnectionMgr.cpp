@@ -382,6 +382,7 @@ public: // intentional!
     bool mIgnoreIdle;
     bool mIgnorePossibleSpdyConnections;
     bool mIsFromPredictor;
+    bool mAllow1918;
 
     // As above, added manually so we can use nsRefPtr without inheriting from
     // nsISupports
@@ -396,16 +397,25 @@ NS_IMPL_RELEASE(SpeculativeConnectArgs)
 nsresult
 nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
                                         nsIInterfaceRequestor *callbacks,
-                                        uint32_t caps)
+                                        uint32_t caps,
+                                        NullHttpTransaction *nullTransaction)
 {
     MOZ_ASSERT(NS_IsMainThread(), "nsHttpConnectionMgr::SpeculativeConnect called off main thread!");
 
     LOG(("nsHttpConnectionMgr::SpeculativeConnect [ci=%s]\n",
          ci->HashKey().get()));
 
+    nsCOMPtr<nsISpeculativeConnectionOverrider> overrider =
+        do_GetInterface(callbacks);
+
+    bool allow1918 = false;
+    if (overrider) {
+        overrider->GetAllow1918(&allow1918);
+    }
+
     // Hosts that are Local IP Literals should not be speculatively
     // connected - Bug 853423.
-    if (ci && ci->HostIsLocalIPLiteral()) {
+    if ((!allow1918) && ci && ci->HostIsLocalIPLiteral()) {
         LOG(("nsHttpConnectionMgr::SpeculativeConnect skipping RFC1918 "
              "address [%s]", ci->Host()));
         return NS_OK;
@@ -419,10 +429,9 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
     NS_NewInterfaceRequestorAggregation(callbacks, nullptr, getter_AddRefs(wrappedCallbacks));
 
     caps |= ci->GetAnonymous() ? NS_HTTP_LOAD_ANONYMOUS : 0;
-    args->mTrans = new NullHttpTransaction(ci, wrappedCallbacks, caps);
+    args->mTrans =
+        nullTransaction ? nullTransaction : new NullHttpTransaction(ci, wrappedCallbacks, caps);
 
-    nsCOMPtr<nsISpeculativeConnectionOverrider> overrider =
-        do_GetInterface(callbacks);
     if (overrider) {
         args->mOverridesOK = true;
         overrider->GetParallelSpeculativeConnectLimit(
@@ -431,6 +440,7 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
         overrider->GetIgnorePossibleSpdyConnections(
             &args->mIgnorePossibleSpdyConnections);
         overrider->GetIsFromPredictor(&args->mIsFromPredictor);
+        overrider->GetAllow1918(&args->mAllow1918);
     }
 
     nsresult rv =
@@ -1297,7 +1307,7 @@ nsHttpConnectionMgr::ReportFailedToProcess(nsIURI *uri)
     // report the event for all the permutations of anonymous and
     // private versions of this host
     nsRefPtr<nsHttpConnectionInfo> ci =
-        new nsHttpConnectionInfo(host, port, username, nullptr, usingSSL);
+        new nsHttpConnectionInfo(host, port, EmptyCString(), username, nullptr, usingSSL);
     ci->SetAnonymous(false);
     ci->SetPrivate(false);
     PipelineFeedbackInfo(ci, RedCorruptedContent, nullptr, 0);
@@ -1467,7 +1477,15 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
             LOG(("nsHttpConnectionMgr::MakeNewConnection [ci = %s]\n"
                  "Found a speculative half open connection\n",
                  ent->mConnInfo->HashKey().get()));
+
+            uint32_t flags;
             ent->mHalfOpens[i]->SetSpeculative(false);
+            nsISocketTransport *transport = ent->mHalfOpens[i]->SocketTransport();
+            if (transport && NS_SUCCEEDED(transport->GetConnectionFlags(&flags))) {
+                flags &= ~nsISocketTransport::DISABLE_RFC1918;
+                transport->SetConnectionFlags(flags);
+            }
+
             Telemetry::AutoCounter<Telemetry::HTTPCONNMGR_USED_SPECULATIVE_CONN> usedSpeculativeConn;
             ++usedSpeculativeConn;
 
@@ -1510,7 +1528,7 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
     if (AtActiveConnectionLimit(ent, trans->Caps()))
         return NS_ERROR_NOT_AVAILABLE;
 
-    nsresult rv = CreateTransport(ent, trans, trans->Caps(), false);
+    nsresult rv = CreateTransport(ent, trans, trans->Caps(), false, false, true);
     if (NS_FAILED(rv)) {
         /* hard failure */
         LOG(("nsHttpConnectionMgr::MakeNewConnection [ci = %s trans = %p] "
@@ -2137,13 +2155,15 @@ nsHttpConnectionMgr::CreateTransport(nsConnectionEntry *ent,
                                      nsAHttpTransaction *trans,
                                      uint32_t caps,
                                      bool speculative,
-                                     bool isFromPredictor)
+                                     bool isFromPredictor,
+                                     bool allow1918)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     nsRefPtr<nsHalfOpenSocket> sock = new nsHalfOpenSocket(ent, trans, caps);
     if (speculative) {
         sock->SetSpeculative(true);
+        sock->SetAllow1918(allow1918);
         Telemetry::AutoCounter<Telemetry::HTTPCONNMGR_TOTAL_SPECULATIVE_CONN> totalSpeculativeConn;
         ++totalSpeculativeConn;
 
@@ -2928,20 +2948,23 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, void *param)
     bool ignorePossibleSpdyConnections = false;
     bool ignoreIdle = false;
     bool isFromPredictor = false;
+    bool allow1918 = false;
 
     if (args->mOverridesOK) {
         parallelSpeculativeConnectLimit = args->mParallelSpeculativeConnectLimit;
         ignorePossibleSpdyConnections = args->mIgnorePossibleSpdyConnections;
         ignoreIdle = args->mIgnoreIdle;
         isFromPredictor = args->mIsFromPredictor;
+        allow1918 = args->mAllow1918;
     }
 
+    bool keepAlive = args->mTrans->Caps() & NS_HTTP_ALLOW_KEEPALIVE;
     if (mNumHalfOpenConns < parallelSpeculativeConnectLimit &&
         ((ignoreIdle && (ent->mIdleConns.Length() < parallelSpeculativeConnectLimit)) ||
          !ent->mIdleConns.Length()) &&
-        !RestrictConnections(ent, ignorePossibleSpdyConnections) &&
+        !(keepAlive && RestrictConnections(ent, ignorePossibleSpdyConnections)) &&
         !AtActiveConnectionLimit(ent, args->mTrans->Caps())) {
-        CreateTransport(ent, args->mTrans, args->mTrans->Caps(), true, isFromPredictor);
+        CreateTransport(ent, args->mTrans, args->mTrans->Caps(), true, isFromPredictor, allow1918);
     }
     else {
         LOG(("  Transport not created due to existing connection count\n"));
@@ -2975,7 +2998,6 @@ nsHttpConnectionMgr::nsConnectionHandle::PushBack(const char *buf, uint32_t bufL
 
 //////////////////////// nsHalfOpenSocket
 
-
 NS_IMPL_ISUPPORTS(nsHttpConnectionMgr::nsHalfOpenSocket,
                   nsIOutputStreamCallback,
                   nsITransportEventSink,
@@ -2991,6 +3013,7 @@ nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
     , mCaps(caps)
     , mSpeculative(false)
     , mIsFromPredictor(false)
+    , mAllow1918(true)
     , mHasConnected(false)
     , mPrimaryConnectedOK(false)
     , mBackupConnectedOK(false)
@@ -3066,7 +3089,7 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
         tmpFlags |= nsISocketTransport::DISABLE_IPV6;
     }
 
-    if (IsSpeculative()) {
+    if (!Allow1918()) {
         tmpFlags |= nsISocketTransport::DISABLE_RFC1918;
     }
 
@@ -3130,6 +3153,8 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupPrimaryStreams()
 nsresult
 nsHttpConnectionMgr::nsHalfOpenSocket::SetupBackupStreams()
 {
+    MOZ_ASSERT(mTransaction && !mTransaction->IsNullTransaction());
+
     mBackupSynStarted = TimeStamp::Now();
     nsresult rv = SetupStreams(getter_AddRefs(mBackupTransport),
                                getter_AddRefs(mBackupStreamIn),
@@ -3152,8 +3177,8 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupBackupTimer()
 {
     uint16_t timeout = gHttpHandler->GetIdleSynTimeout();
     MOZ_ASSERT(!mSynTimer, "timer already initd");
-
-    if (timeout && !mTransaction->IsDone()) {
+    if (timeout && !mTransaction->IsDone() &&
+        !mTransaction->IsNullTransaction()) {
         // Setup the timer that will establish a backup socket
         // if we do not get a writable event on the main one.
         // We do this because a lost SYN takes a very long time
@@ -3339,8 +3364,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         mEnt->mPendingQ.RemoveElementAt(index);
         gHttpHandler->ConnMgr()->AddActiveConn(conn, mEnt);
         rv = gHttpHandler->ConnMgr()->DispatchTransaction(mEnt, temp, conn);
-    }
-    else {
+    } else {
         // this transaction was dispatched off the pending q before all the
         // sockets established themselves.
 
@@ -3358,17 +3382,22 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
             !mEnt->mConnInfo->UsingConnect()) {
             LOG(("nsHalfOpenSocket::OnOutputStreamReady null transaction will "
                  "be used to finish SSL handshake on conn %p\n", conn.get()));
-            nsRefPtr<NullHttpTransaction>  trans =
-                new NullHttpTransaction(mEnt->mConnInfo,
-                                        callbacks,
-                                        mCaps & ~NS_HTTP_ALLOW_PIPELINING);
+            nsRefPtr<nsAHttpTransaction> trans;
+            if (mTransaction->IsNullTransaction()) {
+                // null transactions cannot be put in the entry queue, so that
+                // explains why it is not present.
+                trans = mTransaction;
+            } else {
+                trans = new NullHttpTransaction(mEnt->mConnInfo,
+                                                callbacks,
+                                                mCaps & ~NS_HTTP_ALLOW_PIPELINING);
+            }
 
             gHttpHandler->ConnMgr()->AddActiveConn(conn, mEnt);
             conn->Classify(nsAHttpTransaction::CLASS_SOLO);
             rv = gHttpHandler->ConnMgr()->
                 DispatchAbstractTransaction(mEnt, trans, mCaps, conn, 0);
-        }
-        else {
+        } else {
             // otherwise just put this in the persistent connection pool
             LOG(("nsHalfOpenSocket::OnOutputStreamReady no transaction match "
                  "returning conn %p to pool\n", conn.get()));

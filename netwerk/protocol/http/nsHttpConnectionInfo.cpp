@@ -20,16 +20,49 @@
 namespace mozilla {
 namespace net {
 
-nsHttpConnectionInfo::nsHttpConnectionInfo(const nsACString &host, int32_t port,
+nsHttpConnectionInfo::nsHttpConnectionInfo(const nsACString &physicalHost,
+                                           int32_t physicalPort,
+                                           const nsACString &npnToken,
                                            const nsACString &username,
-                                           nsProxyInfo* proxyInfo,
+                                           nsProxyInfo *proxyInfo,
                                            bool endToEndSSL)
-    : mUsername(username)
-    , mProxyInfo(proxyInfo)
-    , mEndToEndSSL(endToEndSSL)
-    , mUsingConnect(false)
+    : mAuthenticationPort(443)
 {
-    LOG(("Creating nsHttpConnectionInfo @%x\n", this));
+    Init(physicalHost, physicalPort, npnToken, username, proxyInfo, endToEndSSL);
+}
+
+nsHttpConnectionInfo::nsHttpConnectionInfo(const nsACString &physicalHost,
+                                           int32_t physicalPort,
+                                           const nsACString &npnToken,
+                                           const nsACString &username,
+                                           nsProxyInfo *proxyInfo,
+                                           const nsACString &logicalHost,
+                                           int32_t logicalPort)
+
+{
+    mEndToEndSSL = true; // so DefaultPort() works
+    mAuthenticationPort = logicalPort == -1 ? DefaultPort() : logicalPort;
+
+    if (!physicalHost.Equals(logicalHost) || (physicalPort != logicalPort)) {
+        mAuthenticationHost = logicalHost;
+    }
+    Init(physicalHost, physicalPort, npnToken, username, proxyInfo, true);
+}
+
+void
+nsHttpConnectionInfo::Init(const nsACString &host, int32_t port,
+                           const nsACString &npnToken,
+                           const nsACString &username,
+                           nsProxyInfo* proxyInfo,
+                           bool e2eSSL)
+{
+    LOG(("Init nsHttpConnectionInfo @%p\n", this));
+
+    mUsername = username;
+    mProxyInfo = proxyInfo;
+    mEndToEndSSL = e2eSSL;
+    mUsingConnect = false;
+    mNPNToken = npnToken;
 
     mUsingHttpsProxy = (proxyInfo && proxyInfo->IsHTTPS());
     mUsingHttpProxy = mUsingHttpsProxy || (proxyInfo && proxyInfo->IsHTTP());
@@ -78,8 +111,9 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, int32_t port)
     // byte 1 is S/. S is for end to end ssl such as https:// uris
     // byte 2 is A/. A is for an anonymous channel (no cookies, etc..)
     // byte 3 is P/. P is for a private browising channel
-    mHashKey.AssignLiteral("....");
+    // byte 4 is R/. R is for 'relaxed' unauthed TLS for http:// uris
 
+    mHashKey.AssignLiteral(".....");
     mHashKey.Append(keyHost);
     mHashKey.Append(':');
     mHashKey.AppendInt(keyPort);
@@ -118,18 +152,60 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, int32_t port)
         mHashKey.AppendInt(ProxyPort());
         mHashKey.Append(')');
     }
+
+    if(!mAuthenticationHost.IsEmpty()) {
+        mHashKey.AppendLiteral(" <TLS-LOGIC ");
+        mHashKey.Append(mAuthenticationHost);
+        mHashKey.Append(':');
+        mHashKey.AppendInt(mAuthenticationPort);
+        mHashKey.Append('>');
+    }
+
+    if (!mNPNToken.IsEmpty()) {
+        mHashKey.AppendLiteral(" {NPN-TOKEN ");
+        mHashKey.Append(mNPNToken);
+        mHashKey.AppendLiteral("}");
+    }
 }
 
 nsHttpConnectionInfo*
 nsHttpConnectionInfo::Clone() const
 {
-    nsHttpConnectionInfo* clone = new nsHttpConnectionInfo(mHost, mPort, mUsername, mProxyInfo, mEndToEndSSL);
+    nsHttpConnectionInfo *clone;
+    if (mAuthenticationHost.IsEmpty()) {
+        clone = new nsHttpConnectionInfo(mHost, mPort, mNPNToken, mUsername, mProxyInfo, mEndToEndSSL);
+    } else {
+        MOZ_ASSERT(mEndToEndSSL);
+        clone = new nsHttpConnectionInfo(mHost, mPort, mNPNToken, mUsername, mProxyInfo,
+                                         mAuthenticationHost,
+                                         mAuthenticationPort);
+    }
 
-    // Make sure the anonymous and private flags are transferred!
+    // Make sure the anonymous, relaxed, and private flags are transferred
     clone->SetAnonymous(GetAnonymous());
     clone->SetPrivate(GetPrivate());
+    clone->SetRelaxed(GetRelaxed());
     MOZ_ASSERT(clone->Equals(this));
+
     return clone;
+}
+
+void
+nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo **outCI)
+{
+    if (mAuthenticationHost.IsEmpty()) {
+        *outCI = Clone();
+        return;
+    }
+
+    nsRefPtr<nsHttpConnectionInfo> clone =
+        new nsHttpConnectionInfo(mAuthenticationHost, mAuthenticationPort,
+                                 EmptyCString(), mUsername, mProxyInfo, mEndToEndSSL);
+    // Make sure the anonymous, relaxed, and private flags are transferred
+    clone->SetAnonymous(GetAnonymous());
+    clone->SetPrivate(GetPrivate());
+    clone->SetRelaxed(GetRelaxed());
+    clone.forget(outCI);
 }
 
 nsresult
@@ -145,7 +221,7 @@ nsHttpConnectionInfo::CreateWildCard(nsHttpConnectionInfo **outParam)
 
     nsRefPtr<nsHttpConnectionInfo> clone;
     clone = new nsHttpConnectionInfo(NS_LITERAL_CSTRING("*"), 0,
-                                     mUsername, mProxyInfo, true);
+                                     mNPNToken, mUsername, mProxyInfo, true);
     // Make sure the anonymous and private flags are transferred!
     clone->SetAnonymous(GetAnonymous());
     clone->SetPrivate(GetPrivate());
