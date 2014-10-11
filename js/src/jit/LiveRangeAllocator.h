@@ -426,7 +426,6 @@ class LiveInterval
  */
 class VirtualRegister
 {
-    LBlock *block_;
     LInstruction *ins_;
     LDefinition *def_;
     Vector<LiveInterval *, 1, IonAllocPolicy> intervals_;
@@ -443,11 +442,10 @@ class VirtualRegister
     {}
 
   public:
-    bool init(TempAllocator &alloc, LBlock *block, LInstruction *ins, LDefinition *def,
+    bool init(TempAllocator &alloc, LInstruction *ins, LDefinition *def,
               bool isTemp)
     {
-        MOZ_ASSERT(block && !block_);
-        block_ = block;
+        MOZ_ASSERT(ins && !ins_);
         ins_ = ins;
         def_ = def;
         isTemp_ = isTemp;
@@ -457,7 +455,7 @@ class VirtualRegister
         return intervals_.append(initial);
     }
     LBlock *block() {
-        return block_;
+        return ins_->block();
     }
     LInstruction *ins() {
         return ins_;
