@@ -329,15 +329,8 @@ class RegisterAllocator
         return outputOf(block->lastInstructionWithId());
     }
 
-    LMoveGroup *getInputMoveGroup(uint32_t id);
-    LMoveGroup *getMoveGroupAfter(uint32_t id);
-
-    LMoveGroup *getInputMoveGroup(CodePosition pos) {
-        return getInputMoveGroup(pos.ins());
-    }
-    LMoveGroup *getMoveGroupAfter(CodePosition pos) {
-        return getMoveGroupAfter(pos.ins());
-    }
+    LMoveGroup *getInputMoveGroup(LInstruction *ins);
+    LMoveGroup *getMoveGroupAfter(LInstruction *ins);
 
     CodePosition minimalDefEnd(LNode *ins) {
         // Compute the shortest interval that captures vregs defined by ins.

@@ -673,17 +673,17 @@ class LiveRangeAllocator : protected RegisterAllocator
         return moves->add(from->getAllocation(), to->getAllocation(), type);
     }
 
-    bool moveInput(CodePosition pos, LiveInterval *from, LiveInterval *to, LDefinition::Type type) {
+    bool moveInput(LInstruction *ins, LiveInterval *from, LiveInterval *to, LDefinition::Type type) {
         if (*from->getAllocation() == *to->getAllocation())
             return true;
-        LMoveGroup *moves = getInputMoveGroup(pos);
+        LMoveGroup *moves = getInputMoveGroup(ins);
         return addMove(moves, from, to, type);
     }
 
-    bool moveAfter(CodePosition pos, LiveInterval *from, LiveInterval *to, LDefinition::Type type) {
+    bool moveAfter(LInstruction *ins, LiveInterval *from, LiveInterval *to, LDefinition::Type type) {
         if (*from->getAllocation() == *to->getAllocation())
             return true;
-        LMoveGroup *moves = getMoveGroupAfter(pos);
+        LMoveGroup *moves = getMoveGroupAfter(ins);
         return addMove(moves, from, to, type);
     }
 
