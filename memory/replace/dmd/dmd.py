@@ -10,6 +10,7 @@ from __future__ import print_function, division
 
 import argparse
 import collections
+import gzip
 import json
 import os
 import platform
@@ -22,7 +23,9 @@ import tempfile
 outputVersion = 1
 
 # If --ignore-alloc-fns is specified, stack frames containing functions that
-# match these strings will be removed.
+# match these strings will be removed from the *start* of stack traces. (Once
+# we hit a non-matching frame, any subsequent frames won't be removed even if
+# they do match.)
 allocatorFns = [
     'replace_malloc',
     'replace_calloc',
@@ -48,6 +51,10 @@ allocatorFns = [
     'pod_malloc',
     'pod_calloc',
     'pod_realloc',
+    # This one necessary to fully filter some sequences of allocation functions
+    # that happen in practice. Note that ??? entries that follow non-allocation
+    # functions won't be stripped, as explained above.
+    '???',
 ]
 
 class Record(object):
@@ -98,7 +105,7 @@ def parseCommandLine():
 
     description = '''
 Analyze heap data produced by DMD.
-If no files are specified, read from stdin.
+If no files are specified, read from stdin; input can be gzipped.
 Write to stdout unless -o/--output is specified.
 Stack traces are fixed to show function names, filenames and line numbers
 unless --no-fix-stacks is specified; stack fixing modifies the original file
@@ -133,14 +140,14 @@ variable is used to find breakpad symbols for stack fixing.
     p.add_argument('--filter-stacks-for-testing', action='store_true',
                    help='filter stack traces; only useful for testing purposes')
 
-    p.add_argument('input_file', type=argparse.FileType('r'))
+    p.add_argument('input_file')
 
     return p.parse_args(sys.argv[1:])
 
 
 # Fix stacks if necessary: first write the output to a tempfile, then replace
 # the original file with it.
-def fixStackTraces(args):
+def fixStackTraces(inputFilename, isZipped, opener):
     # This append() call is needed to make the import statements work when this
     # script is installed as a symlink.
     sys.path.append(os.path.dirname(__file__))
@@ -162,22 +169,45 @@ def fixStackTraces(args):
     if fix:
         # Fix stacks, writing output to a temporary file, and then
         # overwrite the original file.
-        with tempfile.NamedTemporaryFile(delete=False) as tmp:
-            for line in args.input_file:
-                tmp.write(fix(line))
-            shutil.move(tmp.name, args.input_file.name)
+        tmpFile = tempfile.NamedTemporaryFile(delete=False)
 
-        args.input_file = open(args.input_file.name)
+        # If the input is gzipped, then the output (written initially to
+        # |tmpFile|) should be gzipped as well.
+        #
+        # And we want to set its pre-gzipped filename to '' rather than the
+        # name of the temporary file, so that programs like the Unix 'file'
+        # utility don't say that it was called 'tmp6ozTxE' (or something like
+        # that) before it was zipped. So that explains the |filename=''|
+        # parameter.
+        #
+        # But setting the filename like that clobbers |tmpFile.name|, so we
+        # must get that now in order to move |tmpFile| at the end.
+        tmpFilename = tmpFile.name
+        if isZipped:
+            tmpFile = gzip.GzipFile(filename='', fileobj=tmpFile)
+
+        with opener(inputFilename, 'rb') as inputFile:
+            for line in inputFile:
+                tmpFile.write(fix(line))
+
+        tmpFile.close()
+
+        shutil.move(tmpFilename, inputFilename)
 
 
 def main():
     args = parseCommandLine()
 
+    # Handle gzipped input if necessary.
+    isZipped = args.input_file.endswith('.gz')
+    opener = gzip.open if isZipped else open
+
     # Fix stack traces unless otherwise instructed.
     if not args.no_fix_stacks:
-        fixStackTraces(args)
+        fixStackTraces(args.input_file, isZipped, opener)
 
-    j = json.load(args.input_file)
+    with opener(args.input_file, 'rb') as f:
+        j = json.load(f)
 
     if j['version'] != outputVersion:
         raise Exception("'version' property isn't '{:d}'".format(outputVersion))

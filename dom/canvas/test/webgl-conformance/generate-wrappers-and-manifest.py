@@ -24,6 +24,9 @@ SUPPORT_DIRS = [
 
 EXTRA_SUPPORT_FILES = [
     'always-fail.html',
+    'iframe-autoresize.js',
+    'mochi-single.html',
+    '../webgl-mochitest/driver-info.js',
 ]
 
 ACCEPTABLE_ERRATA_KEYS = set([
@@ -378,5 +381,3 @@ if __name__ == '__main__':
     WriteManifest(wrapperFilePathList, supportFilePathList)
 
     print('Done!')
-
-

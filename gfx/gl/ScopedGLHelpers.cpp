@@ -11,6 +11,14 @@
 namespace mozilla {
 namespace gl {
 
+#ifdef DEBUG
+bool
+IsContextCurrent(GLContext* gl)
+{
+    return gl->IsCurrent();
+}
+#endif
+
 /* ScopedGLState - Wraps glEnable/glDisable. **********************************/
 
 // Use |newState = true| to enable, |false| to disable.
@@ -483,5 +491,37 @@ ScopedGLDrawState::~ScopedGLDrawState()
 
     mGL->fUseProgram(boundProgram);
 }
+
+////////////////////////////////////////////////////////////////////////
+// ScopedPackAlignment
+
+ScopedPackAlignment::ScopedPackAlignment(GLContext* gl, GLint scopedVal)
+    : ScopedGLWrapper<ScopedPackAlignment>(gl)
+{
+    MOZ_ASSERT(scopedVal == 1 ||
+               scopedVal == 2 ||
+               scopedVal == 4 ||
+               scopedVal == 8);
+
+    gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &mOldVal);
+
+    if (scopedVal != mOldVal) {
+        gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, scopedVal);
+    } else {
+      // Don't try to re-set it during unwrap.
+        mOldVal = 0;
+    }
+}
+
+void
+ScopedPackAlignment::UnwrapImpl() {
+    // Check that we're not falling out of scope after the current context changed.
+    MOZ_ASSERT(mGL->IsCurrent());
+
+    if (mOldVal) {
+        mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, mOldVal);
+    }
+}
+
 } /* namespace gl */
 } /* namespace mozilla */

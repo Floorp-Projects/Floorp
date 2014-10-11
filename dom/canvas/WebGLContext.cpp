@@ -661,8 +661,12 @@ CreateOffscreen(GLContext* gl,
     baseCaps.alpha = options.alpha;
     baseCaps.antialias = options.antialias;
     baseCaps.depth = options.depth;
+    baseCaps.premultAlpha = options.premultipliedAlpha;
     baseCaps.preserve = options.preserveDrawingBuffer;
     baseCaps.stencil = options.stencil;
+
+    if (!baseCaps.alpha)
+        baseCaps.premultAlpha = true;
 
     // we should really have this behind a
     // |gfxPlatform::GetPlatform()->GetScreenDepth() == 16| check, but
@@ -1421,10 +1425,14 @@ WebGLContext::PresentScreenBuffer()
     if (!mShouldPresent) {
         return false;
     }
+    MOZ_ASSERT(!mBackbufferNeedsClear);
 
     gl->MakeCurrent();
-    MOZ_ASSERT(!mBackbufferNeedsClear);
-    if (!gl->PublishFrame()) {
+
+    GLScreenBuffer* screen = gl->Screen();
+    MOZ_ASSERT(screen);
+
+    if (!screen->PublishFrame(screen->Size())) {
         ForceLoseContext();
         return false;
     }

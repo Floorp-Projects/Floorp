@@ -52,7 +52,6 @@ EXPORTS += [
     'SharedSurface.h',
     'SharedSurfaceEGL.h',
     'SharedSurfaceGL.h',
-    'SurfaceStream.h',
     'SurfaceTypes.h',
     'TextureGarbageBin.h',
 ]
@@ -134,7 +133,6 @@ UNIFIED_SOURCES += [
     'SharedSurface.cpp',
     'SharedSurfaceEGL.cpp',
     'SharedSurfaceGL.cpp',
-    'SurfaceStream.cpp',
     'SurfaceTypes.cpp',
     'TextureGarbageBin.cpp',
     'TextureImageEGL.cpp',

@@ -1,0 +1,61 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for WebSocket object in workers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  var worker = new Worker("websocket_loadgroup_worker.js");
+
+  var stopped = false;
+  worker.onmessage = function(e) {
+    if (e.data == 'opened') {
+      stopped = true;
+      window.stop();
+    } else if (e.data == 'closed') {
+      ok(stopped, "Good!");
+      stopped = false;
+      runTest();
+    } else {
+      ok(false, "An error has been received");
+    }
+  };
+
+  worker.onerror = function(event) {
+    is(event.target, worker);
+    ok(false, "Worker had an error: " + event.data);
+    SimpleTest.finish();
+  };
+
+  var tests = [
+    function() { worker.postMessage(0); },
+    function() { worker.postMessage(1); }
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  runTest();
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
