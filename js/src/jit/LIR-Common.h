@@ -6125,10 +6125,6 @@ class LPhi MOZ_FINAL : public LInstruction
     void setSuccessor(size_t i, MBasicBlock *) {
         MOZ_CRASH("no successors");
     }
-
-    virtual void printInfo(FILE *fp) {
-        printOperands(fp);
-    }
 };
 
 class LIn : public LCallInstructionHelper<1, BOX_PIECES+1, 0>
