@@ -117,28 +117,14 @@ LBlock::init(TempAllocator &alloc)
     return true;
 }
 
-uint32_t
-LBlock::firstId() const
+const LInstruction *
+LBlock::firstInstructionWithId() const
 {
-    if (phis_.length()) {
-        return phis_[0].id();
-    } else {
-        for (LInstructionIterator i(instructions_.begin()); i != instructions_.end(); i++) {
-            if (i->id())
-                return i->id();
-        }
+    for (LInstructionIterator i(instructions_.begin()); i != instructions_.end(); ++i) {
+        if (i->id())
+            return *i;
     }
     return 0;
-}
-uint32_t
-LBlock::lastId() const
-{
-    LInstruction *last = *instructions_.rbegin();
-    MOZ_ASSERT(last->id());
-    // The last instruction is a control flow instruction which does not have
-    // any output.
-    MOZ_ASSERT(last->numDefs() == 0);
-    return last->id();
 }
 
 LMoveGroup *

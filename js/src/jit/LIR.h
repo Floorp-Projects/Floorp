@@ -712,11 +712,21 @@ class LNode
     bool is##name() const {                                                 \
         return op() == LOp_##name;                                          \
     }                                                                       \
-    inline L##name *to##name();
+    inline L##name *to##name();                                             \
+    inline const L##name *to##name() const;
     LIR_OPCODE_LIST(LIROP)
 #   undef LIROP
 
     virtual bool accept(LElementVisitor *visitor) = 0;
+
+#define LIR_HEADER(opcode)                                                  \
+    Opcode op() const {                                                     \
+        return LInstruction::LOp_##opcode;                                  \
+    }                                                                       \
+    bool accept(LElementVisitor *visitor) {                                 \
+        visitor->setElement(this);                                          \
+        return visitor->visit##opcode(this);                                \
+    }
 };
 
 class LInstruction
@@ -819,7 +829,68 @@ class LElementVisitor
 typedef InlineList<LInstruction>::iterator LInstructionIterator;
 typedef InlineList<LInstruction>::reverse_iterator LInstructionReverseIterator;
 
-class LPhi;
+class MPhi;
+
+// Phi is a pseudo-instruction that emits no code, and is an annotation for the
+// register allocator. Like its equivalent in MIR, phis are collected at the
+// top of blocks and are meant to be executed in parallel, choosing the input
+// corresponding to the predecessor taken in the control flow graph.
+class LPhi MOZ_FINAL : public LNode
+{
+    LAllocation *const inputs_;
+    LDefinition def_;
+
+  public:
+    LIR_HEADER(Phi)
+
+    LPhi(MPhi *ins, LAllocation *inputs)
+        : inputs_(inputs)
+    {
+        setMir(ins);
+    }
+
+    size_t numDefs() const {
+        return 1;
+    }
+    LDefinition *getDef(size_t index) {
+        MOZ_ASSERT(index == 0);
+        return &def_;
+    }
+    void setDef(size_t index, const LDefinition &def) {
+        MOZ_ASSERT(index == 0);
+        def_ = def;
+    }
+    size_t numOperands() const {
+        return mir_->toPhi()->numOperands();
+    }
+    LAllocation *getOperand(size_t index) {
+        MOZ_ASSERT(index < numOperands());
+        return &inputs_[index];
+    }
+    void setOperand(size_t index, const LAllocation &a) {
+        MOZ_ASSERT(index < numOperands());
+        inputs_[index] = a;
+    }
+    size_t numTemps() const {
+        return 0;
+    }
+    LDefinition *getTemp(size_t index) {
+        MOZ_CRASH("no temps");
+    }
+    void setTemp(size_t index, const LDefinition &temp) {
+        MOZ_CRASH("no temps");
+    }
+    size_t numSuccessors() const {
+        return 0;
+    }
+    MBasicBlock *getSuccessor(size_t i) const {
+        MOZ_CRASH("no successors");
+    }
+    void setSuccessor(size_t i, MBasicBlock *) {
+        MOZ_CRASH("no successors");
+    }
+};
+
 class LMoveGroup;
 class LBlock
 {
@@ -842,6 +913,9 @@ class LBlock
         return phis_.length();
     }
     LPhi *getPhi(size_t index) {
+        return &phis_[index];
+    }
+    const LPhi *getPhi(size_t index) const {
         return &phis_[index];
     }
     MBasicBlock *mir() const {
@@ -875,8 +949,26 @@ class LBlock
         MOZ_ASSERT(!at->isLabel());
         instructions_.insertBefore(at, ins);
     }
-    uint32_t firstId() const;
-    uint32_t lastId() const;
+    const LNode *firstElementWithId() const {
+        return !phis_.empty()
+               ? static_cast<const LNode *>(getPhi(0))
+               : firstInstructionWithId();
+    }
+    uint32_t firstId() const {
+        return firstElementWithId()->id();
+    }
+    uint32_t lastId() const {
+        return lastInstructionWithId()->id();
+    }
+    const LInstruction *firstInstructionWithId() const;
+    const LInstruction *lastInstructionWithId() const {
+        const LInstruction *last = *instructions_.rbegin();
+        MOZ_ASSERT(last->id());
+        // The last instruction is a control flow instruction which does not have
+        // any output.
+        MOZ_ASSERT(last->numDefs() == 0);
+        return last;
+    }
 
     // Return the label to branch to when branching to this block.
     Label *label() {
@@ -1712,15 +1804,6 @@ LAllocation::toRegister() const
 } // namespace jit
 } // namespace js
 
-#define LIR_HEADER(opcode)                                                  \
-    Opcode op() const {                                                     \
-        return LInstruction::LOp_##opcode;                                  \
-    }                                                                       \
-    bool accept(LElementVisitor *visitor) {                                 \
-        visitor->setElement(this);                                          \
-        return visitor->visit##opcode(this);                                \
-    }
-
 #include "jit/LIR-Common.h"
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 # if defined(JS_CODEGEN_X86)
@@ -1749,6 +1832,11 @@ namespace jit {
     {                                                                       \
         MOZ_ASSERT(is##name());                                             \
         return static_cast<L##name *>(this);                                \
+    }                                                                       \
+    const L##name *LNode::to##name() const                                  \
+    {                                                                       \
+        MOZ_ASSERT(is##name());                                             \
+        return static_cast<const L##name *>(this);                          \
     }
     LIR_OPCODE_LIST(LIROP)
 #undef LIROP
