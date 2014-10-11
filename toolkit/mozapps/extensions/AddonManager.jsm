@@ -122,6 +122,8 @@ let logger = Log.repository.getLogger(LOGGER_ID);
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
+const UNNAMED_PROVIDER = "<unnamed-provider>";
+
 /**
  * Preference listener which listens for a change in the
  * "extensions.logging.enabled" preference and changes the logging level of the
@@ -464,6 +466,8 @@ var gUpdateEnabled = true;
 var gAutoUpdateDefault = true;
 var gHotfixID = null;
 var gShutdownBarrier = null;
+var gRepoShutdownState = "";
+var gShutdownInProgress = false;
 
 /**
  * This is the real manager, kept here rather than in AddonManager to keep its
@@ -475,6 +479,7 @@ var AddonManagerInternal = {
   addonListeners: [],
   typeListeners: [],
   providers: [],
+  providerShutdowns: new Map(),
   types: {},
   startupChanges: {},
   // Store telemetry details per addon provider
@@ -614,6 +619,33 @@ var AddonManagerInternal = {
   },
 
   /**
+   * Start up a provider, and register its shutdown hook if it has one
+   */
+  _startProvider(aProvider, aAppChanged, aOldAppVersion, aOldPlatformVersion) {
+    if (!gStarted)
+      throw Components.Exception("AddonManager is not initialized",
+                                 Cr.NS_ERROR_NOT_INITIALIZED);
+
+    callProvider(aProvider, "startup", null, aAppChanged, aOldAppVersion, aOldPlatformVersion);
+    if ('shutdown' in aProvider) {
+      let name = aProvider.name || "Provider";
+      let AMProviderShutdown = () => {
+        return new Promise((resolve, reject) => {
+            logger.debug("Calling shutdown blocker for " + name);
+            resolve(aProvider.shutdown());
+          })
+          .catch(err => {
+            logger.warn("Failure during shutdown of " + name, err);
+            AddonManagerPrivate.recordException("AMI", "Async shutdown of " + name, err);
+          });
+      };
+      logger.debug("Registering shutdown blocker for " + name);
+      this.providerShutdowns.set(aProvider, AMProviderShutdown);
+      AddonManager.shutdown.addBlocker(name, AMProviderShutdown);
+    }
+  },
+
+  /**
    * Initializes the AddonManager, loading any known providers and initializing
    * them.
    */
@@ -742,15 +774,17 @@ var AddonManagerInternal = {
       }
 
       // Register our shutdown handler with the AsyncShutdown manager
-      gShutdownBarrier = new AsyncShutdown.Barrier("AddonManager: Waiting for clients to shut down.");
-      AsyncShutdown.profileBeforeChange.addBlocker("AddonManager: shutting down providers",
-                                                   this.shutdownManager.bind(this));
+      gShutdownBarrier = new AsyncShutdown.Barrier("AddonManager: Waiting for providers to shut down.");
+      AsyncShutdown.profileBeforeChange.addBlocker("AddonManager: shutting down.",
+                                                   this.shutdownManager.bind(this),
+                                                   this.shutdownState.bind(this));
 
       // Once we start calling providers we must allow all normal methods to work.
       gStarted = true;
 
-      this.callProviders("startup", appChanged, oldAppVersion,
-                         oldPlatformVersion);
+      for (let provider of this.providers) {
+        this._startProvider(provider, appChanged, oldAppVersion, oldPlatformVersion);
+      }
 
       // If this is a new profile just pretend that there were no changes
       if (appChanged === undefined) {
@@ -813,8 +847,9 @@ var AddonManagerInternal = {
     }
 
     // If we're registering after startup call this provider's startup.
-    if (gStarted)
-      callProvider(aProvider, "startup");
+    if (gStarted) {
+      this._startProvider(aProvider);
+    }
   },
 
   /**
@@ -822,6 +857,9 @@ var AddonManagerInternal = {
    *
    * @param  aProvider
    *         The provider to unregister
+   * @return Whatever the provider's 'shutdown' method returns (if anything).
+   *         For providers that have async shutdown methods returning Promises,
+   *         the caller should wait for that Promise to resolve.
    */
   unregisterProvider: function AMI_unregisterProvider(aProvider) {
     if (!aProvider || typeof aProvider != "object")
@@ -851,9 +889,19 @@ var AddonManagerInternal = {
       }
     }
 
-    // If we're unregistering after startup call this provider's shutdown.
-    if (gStarted)
-      callProvider(aProvider, "shutdown");
+    // If we're unregistering after startup but before shutting down,
+    // remove the blocker for this provider's shutdown and call it.
+    // If we're already shutting down, just let gShutdownBarrier call it to avoid races.
+    if (gStarted && !gShutdownInProgress) {
+      logger.debug("Unregistering shutdown blocker for " + (aProvider.name || "Provider"));
+      let shutter = this.providerShutdowns.get(aProvider);
+      if (shutter) {
+        this.providerShutdowns.delete(aProvider);
+        gShutdownBarrier.client.removeBlocker(shutter);
+        return shutter();
+      }
+    }
+    return undefined;
   },
 
   /**
@@ -884,46 +932,21 @@ var AddonManagerInternal = {
   },
 
   /**
-   * Calls a method on all registered providers, if the provider implements
-   * the method. The called method is expected to return a promise, and
-   * callProvidersAsync returns a promise that resolves when every provider
-   * method has either resolved or rejected. Rejection reasons are logged
-   * but otherwise ignored. Return values are ignored. Any parameters after the
-   * method parameter are passed to the provider's method.
-   *
-   * @param  aMethod
-   *         The method name to call
-   * @see    callProvider
+   * Report the current state of asynchronous shutdown
    */
-  callProvidersAsync: function AMI_callProviders(aMethod, ...aArgs) {
-    if (!aMethod || typeof aMethod != "string")
-      throw Components.Exception("aMethod must be a non-empty string",
-                                 Cr.NS_ERROR_INVALID_ARG);
-
-    let allProviders = [];
-
-    let providers = this.providers.slice(0);
-    for (let provider of providers) {
-      try {
-        if (aMethod in provider) {
-          // Resolve a new promise with the result of the method, to handle both
-          // methods that return values (or nothing) and methods that return promises.
-          let providerResult = provider[aMethod].apply(provider, aArgs);
-          let nextPromise = Promise.resolve(providerResult);
-          // Log and swallow the errors from methods that do return promises.
-          nextPromise = nextPromise.then(
-              null,
-              e => logger.error("Exception calling provider " + aMethod, e));
-          allProviders.push(nextPromise);
-        }
-      }
-      catch (e) {
-        logger.error("Exception calling provider " + aMethod, e);
-      }
+  shutdownState() {
+    let state = [];
+    if (gShutdownBarrier) {
+      state.push({
+        name: gShutdownBarrier._name,
+        state: gShutdownBarrier.state
+      });
     }
-    // Because we use promise.then to catch and log all errors above, Promise.all()
-    // will never exit early because of a rejection.
-    return Promise.all(allProviders);
+    state.push({
+      name: "AddonRepository: async shutdown",
+      state: gRepoShutdownState
+    });
+    return state;
   },
 
   /**
@@ -932,8 +955,10 @@ var AddonManagerInternal = {
    * @return Promise{null} that resolves when all providers and dependent modules
    *                       have finished shutting down
    */
-  shutdownManager: function() {
+  shutdownManager: Task.async(function* () {
     logger.debug("shutdown");
+    gRepoShutdownState = "pending";
+    gShutdownInProgress = true;
     // Clean up listeners
     Services.prefs.removeObserver(PREF_EM_CHECK_COMPATIBILITY, this);
     Services.prefs.removeObserver(PREF_EM_STRICT_COMPATIBILITY, this);
@@ -942,37 +967,47 @@ var AddonManagerInternal = {
     Services.prefs.removeObserver(PREF_EM_AUTOUPDATE_DEFAULT, this);
     Services.prefs.removeObserver(PREF_EM_HOTFIX_ID, this);
 
-    // Only shut down providers if they've been started. Shut down
-    // AddonRepository after providers (if any).
-    let shuttingDown = null;
+    let savedError = null;
+    // Only shut down providers if they've been started.
     if (gStarted) {
-      shuttingDown = gShutdownBarrier.wait()
-        .then(null, err => logger.error("Failure during wait for shutdown barrier", err))
-        .then(() => this.callProvidersAsync("shutdown"))
-        .then(null,
-              err => logger.error("Failure during async provider shutdown", err))
-        .then(() => AddonRepository.shutdown());
-    }
-    else {
-      shuttingDown = AddonRepository.shutdown();
+      try {
+        yield gShutdownBarrier.wait();
+      }
+      catch(err) {
+        savedError = err;
+        logger.error("Failure during wait for shutdown barrier", err);
+        AddonManagerPrivate.recordException("AMI", "Async shutdown of AddonRepository", err);
+      }
     }
 
-    shuttingDown.then(val => logger.debug("Async provider shutdown done"),
-                      err => logger.error("Failure during AddonRepository shutdown", err))
-      .then(() => {
-        this.managerListeners.splice(0, this.managerListeners.length);
-        this.installListeners.splice(0, this.installListeners.length);
-        this.addonListeners.splice(0, this.addonListeners.length);
-        this.typeListeners.splice(0, this.typeListeners.length);
-        for (let type in this.startupChanges)
-          delete this.startupChanges[type];
-        gStarted = false;
-        gStartupComplete = false;
-        gShutdownBarrier = null;
-      });
+    // Shut down AddonRepository after providers (if any).
+    try {
+      gRepoShutdownState = "in progress";
+      yield AddonRepository.shutdown();
+      gRepoShutdownState = "done";
+    }
+    catch(err) {
+      savedError = err;
+      logger.error("Failure during AddonRepository shutdown", err);
+      AddonManagerPrivate.recordException("AMI", "Async shutdown of AddonRepository", err);
+    }
 
-    return shuttingDown;
-  },
+    logger.debug("Async provider shutdown done");
+    this.managerListeners.splice(0, this.managerListeners.length);
+    this.installListeners.splice(0, this.installListeners.length);
+    this.addonListeners.splice(0, this.addonListeners.length);
+    this.typeListeners.splice(0, this.typeListeners.length);
+    this.providerShutdowns.clear();
+    for (let type in this.startupChanges)
+      delete this.startupChanges[type];
+    gStarted = false;
+    gStartupComplete = false;
+    gShutdownBarrier = null;
+    gShutdownInProgress = false;
+    if (savedError) {
+      throw savedError;
+    }
+  }),
 
   /**
    * Notified when a preference we're interested in has changed.
