@@ -150,33 +150,17 @@ class MOZ_STACK_CLASS SVGAutoRenderState
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
 public:
-  enum RenderMode {
-    /**
-     * Used to inform SVG frames that they should paint as normal.
-     */
-    NORMAL, 
-    /**
-     * Used to inform SVG frames when they are painting as the child of a
-     * complex clipPath that requires the use of a clip mask. In this case they
-     * should only draw their basic geometry as a path and then fill it using
-     * fully opaque white. They should not stroke, or paint anything else.
-     */
-    CLIP_MASK 
-  };
-
-  SVGAutoRenderState(DrawTarget* aDrawTarget, RenderMode aMode
-                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  explicit SVGAutoRenderState(DrawTarget* aDrawTarget
+                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   ~SVGAutoRenderState();
 
   void SetPaintingToWindow(bool aPaintingToWindow);
 
-  static RenderMode GetRenderMode(DrawTarget* aDrawTarget);
   static bool IsPaintingToWindow(DrawTarget* aDrawTarget);
 
 private:
   DrawTarget* mDrawTarget;
   void* mOriginalRenderState;
-  RenderMode mMode;
   bool mPaintingToWindow;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };

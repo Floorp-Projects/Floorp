@@ -36,13 +36,21 @@
 
 #include "mozilla/Types.h"
 
+#ifdef _MSC_VER
+// In clang-cl based ASAN, we link against the memory poisoning functions
+// statically.
+#define MOZ_ASAN_VISIBILITY
+#else
+#define MOZ_ASAN_VISIBILITY MOZ_EXPORT
+#endif
+
 extern "C" {
 /* These definitions are usually provided through the
  * sanitizer/asan_interface.h header installed by ASan.
  */
-void MOZ_EXPORT
+void MOZ_ASAN_VISIBILITY
 __asan_poison_memory_region(void const volatile *addr, size_t size);
-void MOZ_EXPORT
+void MOZ_ASAN_VISIBILITY
 __asan_unpoison_memory_region(void const volatile *addr, size_t size);
 
 #define MOZ_MAKE_MEM_NOACCESS(addr, size) \

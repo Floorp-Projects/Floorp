@@ -57,7 +57,7 @@ LIRGraph::noteNeedsSafepoint(LInstruction *ins)
 }
 
 void
-LIRGraph::dump(FILE *fp) const
+LIRGraph::dump(FILE *fp)
 {
     for (size_t i = 0; i < numBlocks(); i++) {
         getBlock(i)->dump(fp);
@@ -66,35 +66,40 @@ LIRGraph::dump(FILE *fp) const
 }
 
 void
-LIRGraph::dump() const
+LIRGraph::dump()
 {
     dump(stderr);
 }
 
-LBlock *
-LBlock::New(TempAllocator &alloc, MBasicBlock *from)
+LBlock::LBlock(MBasicBlock *from)
+  : block_(from),
+    phis_(),
+    entryMoveGroup_(nullptr),
+    exitMoveGroup_(nullptr)
 {
-    LBlock *block = new(alloc) LBlock(from);
-    if (!block)
-        return nullptr;
+    from->assignLir(this);
+}
 
+bool
+LBlock::init(TempAllocator &alloc)
+{
     // Count the number of LPhis we'll need.
     size_t numLPhis = 0;
-    for (MPhiIterator i(from->phisBegin()), e(from->phisEnd()); i != e; ++i) {
+    for (MPhiIterator i(block_->phisBegin()), e(block_->phisEnd()); i != e; ++i) {
         MPhi *phi = *i;
         numLPhis += (phi->type() == MIRType_Value) ? BOX_PIECES : 1;
     }
 
     // Allocate space for the LPhis.
-    if (!block->phis_.init(alloc, numLPhis))
+    if (!phis_.init(alloc, numLPhis))
         return nullptr;
 
     // For each MIR phi, set up LIR phis as appropriate. We'll fill in their
     // operands on each incoming edge, and set their definitions at the start of
     // their defining block.
     size_t phiIndex = 0;
-    size_t numPreds = from->numPredecessors();
-    for (MPhiIterator i(from->phisBegin()), e(from->phisEnd()); i != e; ++i) {
+    size_t numPreds = block_->numPredecessors();
+    for (MPhiIterator i(block_->phisBegin()), e(block_->phisEnd()); i != e; ++i) {
         MPhi *phi = *i;
         MOZ_ASSERT(phi->numOperands() == numPreds);
 
@@ -103,36 +108,23 @@ LBlock::New(TempAllocator &alloc, MBasicBlock *from)
             void *array = alloc.allocateArray<sizeof(LAllocation)>(numPreds);
             LAllocation *inputs = static_cast<LAllocation *>(array);
             if (!inputs)
-                return nullptr;
+                return false;
 
-            new (&block->phis_[phiIndex++]) LPhi(phi, inputs);
+            LPhi *lphi = new (&phis_[phiIndex++]) LPhi(phi, inputs);
+            lphi->setBlock(this);
         }
     }
-    return block;
+    return true;
 }
 
-uint32_t
-LBlock::firstId() const
+const LInstruction *
+LBlock::firstInstructionWithId() const
 {
-    if (phis_.length()) {
-        return phis_[0].id();
-    } else {
-        for (LInstructionIterator i(instructions_.begin()); i != instructions_.end(); i++) {
-            if (i->id())
-                return i->id();
-        }
+    for (LInstructionIterator i(instructions_.begin()); i != instructions_.end(); ++i) {
+        if (i->id())
+            return *i;
     }
     return 0;
-}
-uint32_t
-LBlock::lastId() const
-{
-    LInstruction *last = *instructions_.rbegin();
-    MOZ_ASSERT(last->id());
-    // The last instruction is a control flow instruction which does not have
-    // any output.
-    MOZ_ASSERT(last->numDefs() == 0);
-    return last->id();
 }
 
 LMoveGroup *
@@ -311,7 +303,7 @@ LSnapshot::rewriteRecoveredInput(LUse input)
 }
 
 void
-LInstruction::printName(FILE *fp, Opcode op)
+LNode::printName(FILE *fp, Opcode op)
 {
     static const char * const names[] =
     {
@@ -326,7 +318,7 @@ LInstruction::printName(FILE *fp, Opcode op)
 }
 
 void
-LInstruction::printName(FILE *fp)
+LNode::printName(FILE *fp)
 {
     printName(fp, op());
 }
@@ -461,7 +453,7 @@ LDefinition::dump() const
 }
 
 void
-LInstruction::printOperands(FILE *fp)
+LNode::printOperands(FILE *fp)
 {
     for (size_t i = 0, e = numOperands(); i < e; i++) {
         fprintf(fp, " (%s)", getOperand(i)->toString());
@@ -488,7 +480,7 @@ LInstruction::assignSnapshot(LSnapshot *snapshot)
 }
 
 void
-LInstruction::dump(FILE *fp)
+LNode::dump(FILE *fp)
 {
     if (numDefs() != 0) {
         fprintf(fp, "{");
@@ -501,7 +493,7 @@ LInstruction::dump(FILE *fp)
     }
 
     printName(fp);
-    printInfo(fp);
+    printOperands(fp);
 
     if (numTemps()) {
         fprintf(fp, " t=(");
@@ -525,7 +517,7 @@ LInstruction::dump(FILE *fp)
 }
 
 void
-LInstruction::dump()
+LNode::dump()
 {
     dump(stderr);
     fprintf(stderr, "\n");

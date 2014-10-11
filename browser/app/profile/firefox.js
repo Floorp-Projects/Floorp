@@ -220,9 +220,7 @@ pref("app.update.incompatible.mode", 0);
 
 // Whether or not to attempt using the service for updates.
 #ifdef MOZ_MAINTENANCE_SERVICE
-#ifndef HAVE_64BIT_BUILD
 pref("app.update.service.enabled", true);
-#endif
 #endif
 
 // Symmetric (can be overridden by individual extensions) update preferences.

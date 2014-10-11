@@ -527,7 +527,7 @@ LiveRangeAllocator<VREG, forLSRA>::init()
                 LDefinition *def = ins->getDef(j);
                 if (def->isBogusTemp())
                     continue;
-                if (!vregs[def].init(alloc(), block, *ins, def, /* isTemp */ false))
+                if (!vregs[def].init(alloc(), *ins, def, /* isTemp */ false))
                     return false;
             }
 
@@ -535,14 +535,14 @@ LiveRangeAllocator<VREG, forLSRA>::init()
                 LDefinition *def = ins->getTemp(j);
                 if (def->isBogusTemp())
                     continue;
-                if (!vregs[def].init(alloc(), block, *ins, def, /* isTemp */ true))
+                if (!vregs[def].init(alloc(), *ins, def, /* isTemp */ true))
                     return false;
             }
         }
         for (size_t j = 0; j < block->numPhis(); j++) {
             LPhi *phi = block->getPhi(j);
             LDefinition *def = phi->getDef(0);
-            if (!vregs[def].init(alloc(), block, phi, def, /* isTemp */ false))
+            if (!vregs[def].init(alloc(), phi, def, /* isTemp */ false))
                 return false;
         }
     }
@@ -775,7 +775,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     LUse *use = inputAlloc->toUse();
 
                     // The first instruction, LLabel, has no uses.
-                    MOZ_ASSERT_IF(forLSRA, inputOf(*ins) > outputOf(block->firstId()));
+                    MOZ_ASSERT_IF(forLSRA, inputOf(*ins) > outputOf(block->firstElementWithId()));
 
                     // Call uses should always be at-start or fixed, since the fixed intervals
                     // use all registers.
@@ -867,11 +867,9 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
             } else {
                 // This is a dead phi, so add a dummy range over all phis. This
                 // can go away if we have an earlier dead code elimination pass.
-                if (!vregs[def].getInterval(0)->addRangeAtHead(entryOf(block),
-                                                               outputOf(block->firstId())))
-                {
+                CodePosition entryPos = entryOf(block);
+                if (!vregs[def].getInterval(0)->addRangeAtHead(entryPos, entryPos.next()))
                     return false;
-                }
             }
         }
 

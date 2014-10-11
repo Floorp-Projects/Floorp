@@ -182,7 +182,7 @@ void
 StupidAllocator::syncRegister(LInstruction *ins, RegisterIndex index)
 {
     if (registers[index].dirty) {
-        LMoveGroup *input = getInputMoveGroup(ins->id());
+        LMoveGroup *input = getInputMoveGroup(ins);
         LAllocation *source = new(alloc()) LAllocation(registers[index].reg);
 
         uint32_t existing = registers[index].vreg;
@@ -214,7 +214,7 @@ void
 StupidAllocator::loadRegister(LInstruction *ins, uint32_t vreg, RegisterIndex index, LDefinition::Type type)
 {
     // Load a vreg from its stack location to a register.
-    LMoveGroup *input = getInputMoveGroup(ins->id());
+    LMoveGroup *input = getInputMoveGroup(ins);
     LAllocation *source = stackLocation(vreg);
     LAllocation *dest = new(alloc()) LAllocation(registers[index].reg);
     input->addAfter(source, dest, type);
@@ -309,7 +309,7 @@ StupidAllocator::syncForBlockEnd(LBlock *block, LInstruction *ins)
             if (!group) {
                 // The moves we insert here need to happen simultaneously with
                 // each other, yet after any existing moves before the instruction.
-                LMoveGroup *input = getInputMoveGroup(ins->id());
+                LMoveGroup *input = getInputMoveGroup(ins);
                 if (input->numMoves() == 0) {
                     group = input;
                 } else {
