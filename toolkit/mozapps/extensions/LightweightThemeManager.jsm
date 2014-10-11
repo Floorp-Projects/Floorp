@@ -70,6 +70,8 @@ var _themeIDBeingEnabled = null;
 var _themeIDBeingDisabled = null;
 
 this.LightweightThemeManager = {
+  get name() "LightweightThemeManager",
+
   get usedThemes () {
     try {
       return JSON.parse(_prefs.getComplexValue("usedThemes",
