@@ -93,7 +93,7 @@ public class GeckoViewComponent extends BaseComponent {
         }
 
         /**
-         * Returns whether an InputConnection is avaiable.
+         * Returns whether an InputConnection is available.
          * An InputConnection is available when text input is being directed to the
          * GeckoView, and a text field (input, textarea, contentEditable, etc.) is
          * currently focused inside the GeckoView.

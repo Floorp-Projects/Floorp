@@ -40,7 +40,7 @@ public class AddToReadingList extends ShareMethod {
     }
 
     @Override
-    public String getSuccessMesssage() {
+    public String getSuccessMessage() {
         return context.getResources().getString(R.string.reading_list_added);
     }
 
