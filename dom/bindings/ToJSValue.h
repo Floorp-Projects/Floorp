@@ -236,6 +236,24 @@ ToJSValue(JSContext* aCx, JS::Handle<JS::Value> aArgument,
   return MaybeWrapValue(aCx, aValue);
 }
 
+// Accept existing JS values on the Heap (which may not be same-compartment with us
+inline bool
+ToJSValue(JSContext* aCx, const JS::Heap<JS::Value>& aArgument,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  aValue.set(aArgument);
+  return MaybeWrapValue(aCx, aValue);
+}
+
+// Accept existing rooted JS values (which may not be same-compartment with us
+inline bool
+ToJSValue(JSContext* aCx, const JS::Rooted<JS::Value>& aArgument,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  aValue.set(aArgument);
+  return MaybeWrapValue(aCx, aValue);
+}
+
 // Accept nsresult, for use in rejections, and create an XPCOM
 // exception object representing that nsresult.
 bool
