@@ -611,6 +611,10 @@ class LInstruction
     // to hold either gcthings or Values.
     LSafepoint *safepoint_;
 
+    LBlock *block_;
+    LMoveGroup *inputMoves_;
+    LMoveGroup *movesAfter_;
+
   protected:
     MDefinition *mir_;
 
@@ -618,6 +622,9 @@ class LInstruction
       : id_(0),
         snapshot_(nullptr),
         safepoint_(nullptr),
+        block_(nullptr),
+        inputMoves_(nullptr),
+        movesAfter_(nullptr),
         mir_(nullptr)
     { }
 
@@ -696,6 +703,24 @@ class LInstruction
     MDefinition *mirRaw() const {
         /* Untyped MIR for this op. Prefer mir() methods in subclasses. */
         return mir_;
+    }
+    LBlock *block() const {
+        return block_;
+    }
+    void setBlock(LBlock *block) {
+        block_ = block;
+    }
+    LMoveGroup *inputMoves() const {
+        return inputMoves_;
+    }
+    void setInputMoves(LMoveGroup *moves) {
+        inputMoves_ = moves;
+    }
+    LMoveGroup *movesAfter() const {
+        return movesAfter_;
+    }
+    void setMovesAfter(LMoveGroup *moves) {
+        movesAfter_ = moves;
     }
     void assignSnapshot(LSnapshot *snapshot);
     void initSafepoint(TempAllocator &alloc);
@@ -778,6 +803,7 @@ class LBlock
     bool init(TempAllocator &alloc);
 
     void add(LInstruction *ins) {
+        ins->setBlock(this);
         instructions_.pushBack(ins);
     }
     size_t numPhis() const {
