@@ -9,17 +9,17 @@
 
 // Make sure we can initialize our ThreadProfile
 TEST(ThreadProfile, Initialization) {
-  PseudoStack stack;
+  PseudoStack* stack = new PseudoStack();
   Thread::tid_t tid = 1000;
-  ThreadInfo info("testThread", tid, true, &stack, nullptr);
+  ThreadInfo info("testThread", tid, true, stack, nullptr);
   ThreadProfile tp(&info, 10);
 }
 
 // Make sure we can record one tag and read it
 TEST(ThreadProfile, InsertOneTag) {
-  PseudoStack stack;
+  PseudoStack* stack = new PseudoStack();
   Thread::tid_t tid = 1000;
-  ThreadInfo info("testThread", tid, true, &stack, nullptr);
+  ThreadInfo info("testThread", tid, true, stack, nullptr);
   ThreadProfile tp(&info, 10);
   tp.addTag(ProfileEntry('t', 123.1f));
   ASSERT_TRUE(tp.mEntries != nullptr);
@@ -29,9 +29,9 @@ TEST(ThreadProfile, InsertOneTag) {
 
 // See if we can insert some tags
 TEST(ThreadProfile, InsertTagsNoWrap) {
-  PseudoStack stack;
+  PseudoStack* stack = new PseudoStack();
   Thread::tid_t tid = 1000;
-  ThreadInfo info("testThread", tid, true, &stack, nullptr);
+  ThreadInfo info("testThread", tid, true, stack, nullptr);
   ThreadProfile tp(&info, 100);
   int test_size = 50;
   for (int i = 0; i < test_size; i++) {
@@ -48,12 +48,12 @@ TEST(ThreadProfile, InsertTagsNoWrap) {
 
 // See if wrapping works as it should in the basic case
 TEST(ThreadProfile, InsertTagsWrap) {
-  PseudoStack stack;
+  PseudoStack* stack = new PseudoStack();
   Thread::tid_t tid = 1000;
   // we can fit only 24 tags in this buffer because of the empty slot
   int tags = 24;
   int buffer_size = tags + 1;
-  ThreadInfo info("testThread", tid, true, &stack, nullptr);
+  ThreadInfo info("testThread", tid, true, stack, nullptr);
   ThreadProfile tp(&info, buffer_size);
   int test_size = 43;
   for (int i = 0; i < test_size; i++) {

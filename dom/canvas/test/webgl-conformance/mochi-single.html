@@ -1,31 +1,33 @@
 <!DOCTYPE HTML>
-<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv='content-type' content='text/html; charset=utf-8' />
 <html>
 <head>
 <title>
 WebGL Conformance Test Suite Single Test Wrapper
 </title>
 <!-- Uncomment this to use this without mochi-wrapper.html files.
-<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type='application/javascript' src='/tests/SimpleTest/SimpleTest.js'></script>
+<link rel='stylesheet' type='text/css' href='/tests/SimpleTest/test.css'/>
 -->
-<script src="../webgl-mochitest/driver-info.js"></script>
+<script src='../webgl-mochitest/driver-info.js'></script>
+<script src='iframe-autoresize.js'></script>
 </head>
-<body>
+<body style='margin:0'>
+
 <div>Status: <span id='status'>Initializing</span></div>
 <div>Path: <span id='path'>-</span></div>
 <div>Failures: <span id='results'>-</span></div>
-<iframe id='test-frame' width='100%' scrolling='no'></iframe>
+<hr/>
+<iframe style='border:none' id='test-frame' width='100%' scrolling='no'></iframe>
 <script>
 'use strict';
-
-var IFRAME_BODY_MARGIN = 8;
-var IFRAME_SIZE_UPDATE_INTERVAL = 100; // ms
 
 var statusElem = document.getElementById('status');
 var pathElem = document.getElementById('path');
 var resultsElem = document.getElementById('results');
 var frameElem = document.getElementById('test-frame');
+
+IFrameAutoresize.Start(frameElem, true);
 
 ////////////////////////////////////////////////////////////////////////
 // Forward SimpleTest functions and replace if missing.
@@ -42,12 +44,12 @@ if (!window.SimpleTest) {
 
 if (!window.ok) {
   window.ok = function(status, message) {
-    console.log('ok(' + status + ', "' + message + '")');
+    console.log('ok(' + status + ', \'' + message + '\')');
   }
 }
 if (!window.todo) {
   window.todo = function(status, message) {
-    console.log('todo(' + status + ', "' + message + '")');
+    console.log('todo(' + status + ', \'' + message + '\')');
   }
 }
 if (!window.SimpleTest) {
@@ -160,6 +162,8 @@ function GetExpectedTestFailSet() {
 // Test running and harness.
 
 var gTestPath = null;
+var gExpectFailures;
+var gIsComplete;
 
 function RunTest(testPath) {
   console.log('testPath: ' + testPath);
@@ -171,45 +175,46 @@ function RunTest(testPath) {
     console.log('Driver: ' + DriverInfo.getDriver());
   }
 
-  pathElem.innerHTML = testPath;
   gTestPath = testPath;
+  pathElem.innerHTML = gTestPath;
 
-  // Auto-update to grow the size of the doc.
-  function UpdateFrameSize() {
-    var frameBody = frameElem.contentWindow.document.body;
-
-    if (frameBody) {
-      var scrollHeight = frameBody.scrollHeight;
-      frameElem.height = scrollHeight + 2*IFRAME_BODY_MARGIN;
-    }
-
-    setTimeout(UpdateFrameSize, IFRAME_SIZE_UPDATE_INTERVAL);
-  }
-  UpdateFrameSize();
+  gExpectFailures = (gTestPath in GetExpectedTestFailSet());
 
   // Load the iframe.
   statusElem.innerHTML = 'Loading';
 
-  frameElem.onloadstart = function() {
-    statusElem.innerHTML = 'Running';
+  gIsComplete = false;
+  frameElem.onload = function() {
+    if (!gIsComplete)
+      statusElem.innerHTML = 'Running';
   };
-  frameElem.src = testPath;
+  frameElem.src = gTestPath;
 }
 
-var failureCount = 0;
-var resultCount = 0;
+var gFailureCount = 0;
+var gResultCount = 0;
 window.webglTestHarness = {
   reportResults: function(success, message) {
-    resultCount++;
-    if (!success) {
-      failureCount++;
+    if (gExpectFailures) {
+      if (success) {
+        ok(success, message);
+      } else {
+        todo(success, message);
+      }
+    } else {
+      ok(success, message);
     }
 
-    var color = failureCount ? 'red' : 'green';
+    gResultCount++;
+    if (!success) {
+      gFailureCount++;
+    }
+
+    var color = gFailureCount ? 'red' : 'green';
 
     resultsElem.innerHTML = [
-      '<font color="' + color + '">',
-      '' + failureCount + '/' + resultCount,
+      '<font color=\'' + color + '\'>',
+      '' + gFailureCount + '/' + gResultCount,
       '</font>',
     ].join('\n');
   },
@@ -221,17 +226,15 @@ window.webglTestHarness = {
 
 function OnTestComplete() {
   statusElem.innerHTML = 'Complete';
+  gIsComplete = true;
 
-  var passed = failureCount == 0;
+  var hadFailures = gFailureCount != 0;
 
-  var passExpected = true;
-  if (gTestPath in GetExpectedTestFailSet())
-    passExpected = false;
-
-  var expectedStatus = passExpected ? 'pass' : 'fail';
-  var text = 'Should ' + expectedStatus + ': ' + gTestPath;
-
-  ok(passed == passExpected, text);
+  if (gExpectFailures) {
+    todo(!hadFailures, 'Expected failures: ' + gTestPath);
+  } else {
+    ok(!hadFailures, 'Expected no failures: ' + gTestPath);
+  }
   SimpleTest.finish();
 }
 

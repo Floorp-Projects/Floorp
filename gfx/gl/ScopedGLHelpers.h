@@ -6,12 +6,17 @@
 #ifndef SCOPEDGLHELPERS_H_
 #define SCOPEDGLHELPERS_H_
 
+#include "GLDefs.h"
 #include "mozilla/UniquePtr.h"
-
-#include "GLContext.h"
 
 namespace mozilla {
 namespace gl {
+
+class GLContext;
+
+#ifdef DEBUG
+bool IsContextCurrent(GLContext* gl);
+#endif
 
 //RAII via CRTP!
 template <class Derived>
@@ -29,7 +34,7 @@ protected:
     {
         MOZ_ASSERT(&ScopedGLWrapper<Derived>::Unwrap == &Derived::Unwrap);
         MOZ_ASSERT(&Derived::UnwrapImpl);
-        MOZ_ASSERT(mGL->IsCurrent());
+        MOZ_ASSERT(IsContextCurrent(mGL));
     }
 
     virtual ~ScopedGLWrapper() {
@@ -337,6 +342,21 @@ struct ScopedGLDrawState {
     GLint scissorBox[4];
     GLContext* const mGL;
     GLuint packAlign;
+};
+
+struct ScopedPackAlignment
+    : public ScopedGLWrapper<ScopedPackAlignment>
+{
+    friend struct ScopedGLWrapper<ScopedPackAlignment>;
+
+protected:
+    GLint mOldVal;
+
+public:
+    ScopedPackAlignment(GLContext* aGL, GLint scopedVal);
+
+protected:
+    void UnwrapImpl();
 };
 } /* namespace gl */
 } /* namespace mozilla */

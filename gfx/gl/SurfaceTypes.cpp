@@ -30,6 +30,7 @@ SurfaceCaps::operator=(const SurfaceCaps& other)
     depth = other.depth;
     stencil = other.stencil;
     antialias = other.antialias;
+    premultAlpha = other.premultAlpha;
     preserve = other.preserve;
     surfaceAllocator = other.surfaceAllocator;
 
@@ -46,6 +47,7 @@ SurfaceCaps::Clear()
     depth = false;
     stencil = false;
     antialias = false;
+    premultAlpha = true;
     preserve = false;
     surfaceAllocator = nullptr;
 }

@@ -11,6 +11,6 @@ ac_add_options --enable-official-branding
 # safeguard against someone forgetting to re-set EARLY_BETA_OR_EARLIER in
 # defines.sh during the beta cycle
 export BUILDING_RELEASE=1
-. $topsrcdir/build/win64/mozconfig.vs2010
+. $topsrcdir/build/win64/mozconfig.vs2013
 
 . "$topsrcdir/build/mozconfig.common.override"

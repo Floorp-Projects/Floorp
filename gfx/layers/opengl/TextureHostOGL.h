@@ -48,10 +48,6 @@ namespace gfx {
 class DataSourceSurface;
 }
 
-namespace gl {
-class SurfaceStream;
-}
-
 namespace layers {
 
 class Compositor;

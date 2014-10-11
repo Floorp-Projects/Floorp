@@ -51,6 +51,7 @@ const PREF_EXTENSIONS_STRICT_COMPAT       = "extensions.strictCompatibility";
 const NS_APP_PROFILE_DIR_STARTUP   = "ProfDS";
 const NS_APP_USER_PROFILE_50_DIR   = "ProfD";
 const NS_GRE_DIR                   = "GreD";
+const NS_GRE_BIN_DIR               = "GreBinD";
 const NS_XPCOM_CURRENT_PROCESS_DIR = "XCurProcD";
 const XRE_EXECUTABLE_FILE          = "XREExeF";
 const XRE_UPDATE_ROOT_DIR          = "UpdRootD";
@@ -62,13 +63,12 @@ const DIR_PATCH        = "0";
 const DIR_TOBEDELETED  = "tobedeleted";
 const DIR_UPDATES      = "updates";
 #ifdef XP_MACOSX
-const DIR_BIN_REL_PATH = "Contents/MacOS/";
 const DIR_UPDATED      = "Updated.app";
 #else
-const DIR_BIN_REL_PATH = "";
 const DIR_UPDATED      = "updated";
 #endif
 
+const FILE_APPLICATION_INI           = "application.ini";
 const FILE_BACKUP_LOG                = "backup-update.log";
 const FILE_LAST_LOG                  = "last-update.log";
 const FILE_UPDATER_INI               = "updater.ini";
@@ -571,15 +571,27 @@ function getAppBaseDir() {
 }
 
 /**
- * Returns the Gecko Runtime Engine directory. This is used to locate the the
- * updater binary (Windows and Linux) or updater package (Mac OS X). For
- * XULRunner applications this is different than the currently running process
- * directory.
+ * Returns the Gecko Runtime Engine directory where files other than executable
+ * binaries are located. On Mac OS X this will be <bundle>/Contents/Resources/
+ * and the installation directory on all other platforms.
  *
  * @return nsIFile for the Gecko Runtime Engine directory.
  */
 function getGREDir() {
   return Services.dirsvc.get(NS_GRE_DIR, AUS_Ci.nsIFile);
+}
+
+/**
+ * Returns the Gecko Runtime Engine Binary directory where the executable
+ * binaries are located such as the updater binary (Windows and Linux) or
+ * updater package (Mac OS X). On Mac OS X this will be
+ * <bundle>/Contents/MacOS/ and the installation directory on all other
+ * platforms.
+ *
+ * @return nsIFile for the Gecko Runtime Engine Binary directory.
+ */
+function getGREBinDir() {
+  return Services.dirsvc.get(NS_GRE_BIN_DIR, AUS_Ci.nsIFile);
 }
 
 /**
