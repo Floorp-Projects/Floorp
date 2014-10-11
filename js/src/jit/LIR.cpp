@@ -110,7 +110,8 @@ LBlock::init(TempAllocator &alloc)
             if (!inputs)
                 return false;
 
-            new (&phis_[phiIndex++]) LPhi(phi, inputs);
+            LPhi *lphi = new (&phis_[phiIndex++]) LPhi(phi, inputs);
+            lphi->setBlock(this);
         }
     }
     return true;
