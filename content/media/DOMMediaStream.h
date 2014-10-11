@@ -175,7 +175,7 @@ public:
     HINT_CONTENTS_UNKNOWN = 1 << 2
   };
   TrackTypeHints GetHintContents() const { return mHintContents; }
-  void SetHintContents(TrackTypeHints aHintContents);
+  void SetHintContents(TrackTypeHints aHintContents) { mHintContents = aHintContents; }
 
   TrackTypeHints GetTrackTypesAvailable() const { return mTrackTypesAvailable; }
 
@@ -197,8 +197,7 @@ public:
   }
 
   // Notifications from StreamListener.
-  // BindDOMTrack should only be called when it's safe to run script.
-  MediaStreamTrack* BindDOMTrack(TrackID aTrackID, MediaSegment::Type aType);
+  // CreateDOMTrack should only be called when it's safe to run script.
   MediaStreamTrack* CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType);
   MediaStreamTrack* GetDOMTrackFor(TrackID aTrackID);
 

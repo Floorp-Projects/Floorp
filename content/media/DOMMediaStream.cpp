@@ -73,7 +73,7 @@ public:
 
       nsRefPtr<MediaStreamTrack> track;
       if (mEvents & MediaStreamListener::TRACK_EVENT_CREATED) {
-        track = stream->BindDOMTrack(mID, mType);
+        track = stream->CreateDOMTrack(mID, mType);
         stream->NotifyMediaStreamTrackCreated(track);
       } else {
         track = stream->GetDOMTrackFor(mID);
@@ -302,18 +302,6 @@ DOMMediaStream::RemovePrincipalChangeObserver(PrincipalChangeObserver* aObserver
   return mPrincipalChangeObservers.RemoveElement(aObserver);
 }
 
-void
-DOMMediaStream::SetHintContents(TrackTypeHints aHintContents)
-{
-  mHintContents = aHintContents;
-  if (aHintContents & HINT_CONTENTS_AUDIO) {
-    CreateDOMTrack(0, MediaSegment::AUDIO);
-  }
-  if (aHintContents & HINT_CONTENTS_VIDEO) {
-    CreateDOMTrack(0, MediaSegment::VIDEO);
-  }
-}
-
 MediaStreamTrack*
 DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
 {
@@ -332,47 +320,6 @@ DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
   }
   mTracks.AppendElement(track);
 
-  return track;
-}
-
-MediaStreamTrack*
-DOMMediaStream::BindDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
-{
-  MediaStreamTrack* track = nullptr;
-  switch (aType) {
-  case MediaSegment::AUDIO: {
-    for (size_t i = 0; i < mTracks.Length(); ++i) {
-      track = mTracks[i]->AsAudioStreamTrack();
-      if (track) {
-        break;
-      }
-    }
-    if (track) {
-      track->BindTrackID(aTrackID);
-    } else {
-      track = CreateDOMTrack(aTrackID, aType);
-    }
-    MOZ_ASSERT(mTrackTypesAvailable & HINT_CONTENTS_AUDIO);
-    break;
-  }
-  case MediaSegment::VIDEO: {
-    for (size_t i = 0; i < mTracks.Length(); ++i) {
-      track = mTracks[i]->AsVideoStreamTrack();
-      if (track) {
-        break;
-      }
-    }
-    if (track) {
-      track->BindTrackID(aTrackID);
-    } else {
-      track = CreateDOMTrack(aTrackID, aType);
-    }
-    MOZ_ASSERT(mTrackTypesAvailable & HINT_CONTENTS_VIDEO);
-    break;
-  }
-  default:
-    MOZ_CRASH("Unhandled track type");
-  }
   CheckTracksAvailable();
 
   return track;
