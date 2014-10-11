@@ -1,6 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+///////////////////
+//
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejection should be fixed.
+//
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Protocol error (unknownError): Error: Got an invalid root window in DocumentWalker");
+
 const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_button_scratchpad.js</p>";
 
 // Because we need to gather stats for the period of time that a tool has been
