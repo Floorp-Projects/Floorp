@@ -21,7 +21,7 @@ class MInstruction;
 class MBasicBlock;
 class MIRGraph;
 class LinearScanAllocator;
-class LInstruction;
+class LNode;
 
 class C1Spewer
 {
@@ -42,7 +42,7 @@ class C1Spewer
 
   private:
     void spewPass(FILE *fp, MBasicBlock *block);
-    void spewIntervals(FILE *fp, LinearScanAllocator *regalloc, LInstruction *ins, size_t &nextId);
+    void spewIntervals(FILE *fp, LinearScanAllocator *regalloc, LNode *ins, size_t &nextId);
     void spewIntervals(FILE *fp, MBasicBlock *block, LinearScanAllocator *regalloc, size_t &nextId);
 };
 

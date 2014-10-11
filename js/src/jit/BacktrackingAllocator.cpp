@@ -958,7 +958,7 @@ BacktrackingAllocator::resolveControlFlow()
                 continue;
 
             CodePosition start = interval->start();
-            LInstruction *ins = insData[start];
+            LNode *ins = insData[start];
             if (interval->start() > entryOf(ins->block())) {
                 MOZ_ASSERT(start == inputOf(ins) || start == outputOf(ins));
 
@@ -1042,7 +1042,7 @@ BacktrackingAllocator::resolveControlFlow()
 }
 
 bool
-BacktrackingAllocator::isReusedInput(LUse *use, LInstruction *ins, bool considerCopy)
+BacktrackingAllocator::isReusedInput(LUse *use, LNode *ins, bool considerCopy)
 {
     if (LDefinition *def = FindReusingDefinition(ins, use))
         return considerCopy || !vregs[def->virtualRegister()].mustCopyInput();
@@ -1050,7 +1050,7 @@ BacktrackingAllocator::isReusedInput(LUse *use, LInstruction *ins, bool consider
 }
 
 bool
-BacktrackingAllocator::isRegisterUse(LUse *use, LInstruction *ins, bool considerCopy)
+BacktrackingAllocator::isRegisterUse(LUse *use, LNode *ins, bool considerCopy)
 {
     switch (use->policy()) {
       case LUse::ANY:
@@ -1101,7 +1101,7 @@ BacktrackingAllocator::reifyAllocations()
             if (interval->index() == 0) {
                 reg->def()->setOutput(*interval->getAllocation());
                 if (reg->ins()->recoversInput()) {
-                    LSnapshot *snapshot = reg->ins()->snapshot();
+                    LSnapshot *snapshot = reg->ins()->toInstruction()->snapshot();
                     for (size_t i = 0; i < snapshot->numEntries(); i++) {
                         LAllocation *entry = snapshot->getEntry(i);
                         if (entry->isUse() && entry->toUse()->policy() == LUse::RECOVERED_INPUT)
@@ -1119,7 +1119,7 @@ BacktrackingAllocator::reifyAllocations()
 
                 // For any uses which feed into MUST_REUSE_INPUT definitions,
                 // add copies if the use and def have different allocations.
-                LInstruction *ins = insData[iter->pos];
+                LNode *ins = insData[iter->pos];
                 if (LDefinition *def = FindReusingDefinition(ins, alloc)) {
                     LiveInterval *outputInterval =
                         vregs[def->virtualRegister()].intervalFor(outputOf(ins));
@@ -1363,7 +1363,7 @@ BacktrackingAllocator::computePriority(const VirtualRegisterGroup *group)
 }
 
 bool
-BacktrackingAllocator::minimalDef(const LiveInterval *interval, LInstruction *ins)
+BacktrackingAllocator::minimalDef(const LiveInterval *interval, LNode *ins)
 {
     // Whether interval is a minimal interval capturing a definition at ins.
     return (interval->end() <= minimalDefEnd(ins).next()) &&
@@ -1371,7 +1371,7 @@ BacktrackingAllocator::minimalDef(const LiveInterval *interval, LInstruction *in
 }
 
 bool
-BacktrackingAllocator::minimalUse(const LiveInterval *interval, LInstruction *ins)
+BacktrackingAllocator::minimalUse(const LiveInterval *interval, LNode *ins)
 {
     // Whether interval is a minimal interval capturing a use at ins.
     return (interval->start() == inputOf(ins)) &&
@@ -1552,7 +1552,7 @@ BacktrackingAllocator::trySplitAfterLastRegisterUse(LiveInterval *interval, Live
          iter++)
     {
         LUse *use = iter->use;
-        LInstruction *ins = insData[iter->pos];
+        LNode *ins = insData[iter->pos];
 
         // Uses in the interval should be sorted.
         MOZ_ASSERT(iter->pos >= lastUse);
@@ -1609,7 +1609,7 @@ BacktrackingAllocator::trySplitBeforeFirstRegisterUse(LiveInterval *interval, Li
          iter++)
     {
         LUse *use = iter->use;
-        LInstruction *ins = insData[iter->pos];
+        LNode *ins = insData[iter->pos];
 
         if (!conflict || outputOf(ins) >= conflict->end()) {
             if (isRegisterUse(use, ins, /* considerCopy = */ true)) {
@@ -1680,7 +1680,7 @@ BacktrackingAllocator::splitAtAllRegisterUses(LiveInterval *interval)
          iter != interval->usesEnd();
          iter++)
     {
-        LInstruction *ins = insData[iter->pos];
+        LNode *ins = insData[iter->pos];
         if (iter->pos < spillStart) {
             newIntervals.back()->addUseAtEnd(new(alloc()) UsePosition(iter->use, iter->pos));
         } else if (isRegisterUse(iter->use, ins)) {
@@ -1782,7 +1782,7 @@ BacktrackingAllocator::splitAt(LiveInterval *interval,
 
     size_t activeSplitPosition = NextSplitPosition(0, splitPositions, interval->start());
     for (UsePositionIterator iter(interval->usesBegin()); iter != interval->usesEnd(); iter++) {
-        LInstruction *ins = insData[iter->pos];
+        LNode *ins = insData[iter->pos];
         if (iter->pos < spillStart) {
             newIntervals.back()->addUseAtEnd(new(alloc()) UsePosition(iter->use, iter->pos));
             activeSplitPosition = NextSplitPosition(activeSplitPosition, splitPositions, iter->pos);

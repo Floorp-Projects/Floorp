@@ -487,8 +487,7 @@ RegisterAllocator::init()
 LMoveGroup *
 RegisterAllocator::getInputMoveGroup(uint32_t id)
 {
-    LInstruction *ins = insData[id];
-    MOZ_ASSERT(!ins->isPhi());
+    LInstruction *ins = insData[id]->toInstruction();
     MOZ_ASSERT(!ins->isLabel());
 
     if (ins->inputMoves())
@@ -504,8 +503,7 @@ RegisterAllocator::getInputMoveGroup(uint32_t id)
 LMoveGroup *
 RegisterAllocator::getMoveGroupAfter(uint32_t id)
 {
-    LInstruction *ins = insData[id];
-    MOZ_ASSERT(!ins->isPhi());
+    LInstruction *ins = insData[id]->toInstruction();
 
     if (ins->movesAfter())
         return ins->movesAfter();
