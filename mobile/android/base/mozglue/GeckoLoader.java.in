@@ -1,4 +1,4 @@
-#filter substitution
+//#filter substitution
 /* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -226,7 +226,7 @@ public final class GeckoLoader {
             }
         }
 
-#ifdef MOZ_LINKER_EXTRACT
+//#ifdef MOZ_LINKER_EXTRACT
         putenv("MOZ_LINKER_EXTRACT=1");
         // Ensure that the cache dir is world-writable
         File cacheDir = new File(linkerCache);
@@ -235,7 +235,7 @@ public final class GeckoLoader {
             cacheDir.setExecutable(true, false);
             cacheDir.setReadable(true, false);
         }
-#endif
+//#endif
     }
 
     @RobocopTarget

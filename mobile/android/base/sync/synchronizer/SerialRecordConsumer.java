@@ -21,7 +21,7 @@ class SerialRecordConsumer extends RecordConsumer {
     this.delegate = delegate;
   }
 
-  private Object monitor = new Object();
+  private final Object monitor = new Object();
   @Override
   public void doNotify() {
     synchronized (monitor) {
@@ -48,7 +48,7 @@ class SerialRecordConsumer extends RecordConsumer {
     }
   }
 
-  private Object storeSerializer = new Object();
+  private final Object storeSerializer = new Object();
   @Override
   public void stored() {
     Logger.debug(LOG_TAG, "Record stored. Notifying.");

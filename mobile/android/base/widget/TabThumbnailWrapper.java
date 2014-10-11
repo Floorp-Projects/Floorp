@@ -28,7 +28,7 @@ public class TabThumbnailWrapper extends FrameLayout {
 
         if (mRecording) {
             mergeDrawableStates(drawableState, STATE_RECORDING);
-	}
+        }
         return drawableState;
     }
 

@@ -75,7 +75,7 @@ public class SharedPreferencesClientsDataDelegate implements ClientsDataDelegate
 
   @Override
   public synchronized void setClientsCount(int clientsCount) {
-    sharedPreferences.edit().putLong(SyncConfiguration.PREF_NUM_CLIENTS, (long) clientsCount).commit();
+    sharedPreferences.edit().putLong(SyncConfiguration.PREF_NUM_CLIENTS, clientsCount).commit();
   }
 
   @Override

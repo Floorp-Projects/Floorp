@@ -5,7 +5,7 @@
 package org.mozilla.gecko.fxa.login;
 
 import java.security.NoSuchAlgorithmException;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.Set;
 
 import org.mozilla.gecko.background.fxa.FxAccountClient;
@@ -29,7 +29,7 @@ public class FxAccountLoginStateMachine {
     protected final LoginStateMachineDelegate delegate;
     protected final StateLabel desiredStateLabel;
     // It's as difficult to detect arbitrary cycles as repeated states.
-    protected final Set<StateLabel> stateLabelsSeen = new HashSet<StateLabel>();
+    protected final Set<StateLabel> stateLabelsSeen = EnumSet.noneOf(StateLabel.class);
 
     protected ExecuteDelegate(StateLabel initialStateLabel, StateLabel desiredStateLabel, LoginStateMachineDelegate delegate) {
       this.delegate = delegate;

@@ -58,9 +58,9 @@ public class DateTimePicker extends FrameLayout {
     private boolean mCalendarEnabled;
 
     // Size of the screen in inches;
-    private int mScreenWidth;
-    private int mScreenHeight;
-    private OnValueChangeListener mOnChangeListener;
+    private final int mScreenWidth;
+    private final int mScreenHeight;
+    private final OnValueChangeListener mOnChangeListener;
     private final LinearLayout mPickers;
     private final LinearLayout mDateSpinners;
     private final LinearLayout mTimeSpinners;
@@ -89,7 +89,7 @@ public class DateTimePicker extends FrameLayout {
     Calendar mCurrentDate;
     private Calendar mMinDate;
     private Calendar mMaxDate;
-    private PickersState mState;
+    private final PickersState mState;
 
     public static enum PickersState { DATE, MONTH, WEEK, TIME, DATETIME };
 

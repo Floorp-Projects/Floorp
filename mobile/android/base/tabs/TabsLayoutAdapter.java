@@ -20,9 +20,9 @@ import java.util.ArrayList;
 public class TabsLayoutAdapter extends BaseAdapter {
     public static final String LOGTAG = "Gecko" + TabsLayoutAdapter.class.getSimpleName();
 
-    private Context mContext;
+    private final Context mContext;
     private ArrayList<Tab> mTabs;
-    private LayoutInflater mInflater;
+    private final LayoutInflater mInflater;
 
     public TabsLayoutAdapter (Context context) {
         mContext = context;

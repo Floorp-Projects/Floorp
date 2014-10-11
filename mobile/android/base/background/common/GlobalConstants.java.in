@@ -1,4 +1,4 @@
-#filter substitution
+//#filter substitution
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,11 +16,11 @@ public class GlobalConstants {
   // If this is an official build, 'default' means 'release'.
   // Otherwise, it means 'dev'.
   public static final String MOZ_UPDATE_CHANNEL = "@MOZ_UPDATE_CHANNEL@";
-#ifdef MOZ_OFFICIAL_BRANDING
+//#ifdef MOZ_OFFICIAL_BRANDING
   public static final boolean MOZ_OFFICIAL_BRANDING = true;
-#else
+//#else
   public static final boolean MOZ_OFFICIAL_BRANDING = false;
-#endif
+//#endif
 
   public static final long BUILD_TIMESTAMP_SECONDS = @MOZ_BUILD_TIMESTAMP@L;
   public static final long BUILD_TIMESTAMP_MSEC = 1000L * @MOZ_BUILD_TIMESTAMP@L;

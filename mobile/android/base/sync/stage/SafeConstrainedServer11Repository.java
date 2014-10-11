@@ -31,7 +31,7 @@ import android.content.Context;
 public class SafeConstrainedServer11Repository extends ConstrainedServer11Repository {
 
   // This can be lazily evaluated if we need it.
-  private JSONRecordFetcher countFetcher;
+  private final JSONRecordFetcher countFetcher;
 
   public SafeConstrainedServer11Repository(String collection,
                                            String storageURL,
@@ -61,7 +61,7 @@ public class SafeConstrainedServer11Repository extends ConstrainedServer11Reposi
      * The session will report no data available if this is a first sync
      * and the server has more data available than this limit.
      */
-    private long fetchLimit;
+    private final long fetchLimit;
 
     public CountCheckingServer11RepositorySession(Repository repository, long fetchLimit) {
       super(repository);

@@ -88,7 +88,7 @@ public class GLController {
     private EGL10 mEGL;
     private EGLDisplay mEGLDisplay;
     private EGLConfig mEGLConfig;
-    private EGLPreloadingThread mEGLPreloadingThread;
+    private final EGLPreloadingThread mEGLPreloadingThread;
     private EGLSurface mEGLSurfaceForCompositor;
 
     private static final int LOCAL_EGL_OPENGL_ES2_BIT = 4;

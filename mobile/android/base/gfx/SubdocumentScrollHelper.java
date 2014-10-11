@@ -20,10 +20,10 @@ import android.util.Log;
 class SubdocumentScrollHelper implements GeckoEventListener {
     private static final String LOGTAG = "GeckoSubdocScroll";
 
-    private static String MESSAGE_PANNING_OVERRIDE = "Panning:Override";
-    private static String MESSAGE_CANCEL_OVERRIDE = "Panning:CancelOverride";
-    private static String MESSAGE_SCROLL = "Gesture:Scroll";
-    private static String MESSAGE_SCROLL_ACK = "Gesture:ScrollAck";
+    private static final String MESSAGE_PANNING_OVERRIDE = "Panning:Override";
+    private static final String MESSAGE_CANCEL_OVERRIDE = "Panning:CancelOverride";
+    private static final String MESSAGE_SCROLL = "Gesture:Scroll";
+    private static final String MESSAGE_SCROLL_ACK = "Gesture:ScrollAck";
 
     private final Handler mUiHandler;
     private final EventDispatcher mEventDispatcher;

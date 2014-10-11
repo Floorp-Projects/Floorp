@@ -42,7 +42,7 @@ import android.net.Uri;
  */
 public class CommandProcessor {
   private static final String LOG_TAG = "Command";
-  private static AtomicInteger currentId = new AtomicInteger();
+  private static final AtomicInteger currentId = new AtomicInteger();
   protected ConcurrentHashMap<String, CommandRunner> commands = new ConcurrentHashMap<String, CommandRunner>();
 
   private final static CommandProcessor processor = new CommandProcessor();

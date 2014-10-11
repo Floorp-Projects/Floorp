@@ -51,7 +51,7 @@ public class testReadingListProvider extends ContentProviderTest {
      * We want a fresh provider each test, so this should be invoked in
      * <code>setUp</code> before each individual test.
      */
-    private static Callable<ContentProvider> sProviderFactory = new Callable<ContentProvider>() {
+    private static final Callable<ContentProvider> sProviderFactory = new Callable<ContentProvider>() {
         @Override
         public ContentProvider call() {
             return new ReadingListProvider();

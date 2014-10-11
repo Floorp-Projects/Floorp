@@ -915,7 +915,7 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
         }
     }
 
-    private static ConcurrentLinkedQueue<Search> delayedSearches = new ConcurrentLinkedQueue<>();
+    private static final ConcurrentLinkedQueue<Search> delayedSearches = new ConcurrentLinkedQueue<>();
 
     public static void recordSearchDelayed(String location, String engineID) {
         final Search search = new Search(location, engineID);

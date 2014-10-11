@@ -46,7 +46,7 @@ public class SuggestClient {
     private final int mMaxResults;
 
     // used by robocop for testing
-    private boolean mCheckNetwork;
+    private final boolean mCheckNetwork;
 
     // used to make suggestions appear instantly after opt-in
     private String mPrevQuery;

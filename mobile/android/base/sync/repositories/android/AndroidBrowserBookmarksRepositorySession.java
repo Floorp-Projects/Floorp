@@ -42,8 +42,8 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
   public static final int DEFAULT_INSERTION_FLUSH_THRESHOLD = 50;
 
   // TODO: synchronization for these.
-  private HashMap<String, Long> parentGuidToIDMap = new HashMap<String, Long>();
-  private HashMap<Long, String> parentIDToGuidMap = new HashMap<Long, String>();
+  private final HashMap<String, Long> parentGuidToIDMap = new HashMap<String, Long>();
+  private final HashMap<Long, String> parentIDToGuidMap = new HashMap<Long, String>();
 
   /**
    * Some notes on reparenting/reordering.
@@ -100,11 +100,11 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
    */
 
   // TODO: can we guarantee serial access to these?
-  private HashMap<String, ArrayList<String>> missingParentToChildren = new HashMap<String, ArrayList<String>>();
-  private HashMap<String, JSONArray>         parentToChildArray      = new HashMap<String, JSONArray>();
+  private final HashMap<String, ArrayList<String>> missingParentToChildren = new HashMap<String, ArrayList<String>>();
+  private final HashMap<String, JSONArray>         parentToChildArray      = new HashMap<String, JSONArray>();
   private int needsReparenting = 0;
 
-  private AndroidBrowserBookmarksDataAccessor dataAccessor;
+  private final AndroidBrowserBookmarksDataAccessor dataAccessor;
 
   protected BookmarksDeletionManager deletionManager;
   protected BookmarksInsertionManager insertionManager;

@@ -247,8 +247,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
     // Calculate these once, at initialization. isLoggable is too expensive to
     // have in-line in each log call.
-    private static boolean logDebug   = Log.isLoggable(LOGTAG, Log.DEBUG);
-    private static boolean logVerbose = Log.isLoggable(LOGTAG, Log.VERBOSE);
+    private static final boolean logDebug   = Log.isLoggable(LOGTAG, Log.DEBUG);
+    private static final boolean logVerbose = Log.isLoggable(LOGTAG, Log.VERBOSE);
     protected static void trace(String message) {
         if (logVerbose) {
             Log.v(LOGTAG, message);
@@ -1065,7 +1065,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                     Long additional = values.getAsLong(History.VISITS);
 
                     // Increment visit count by a specified amount, or default to increment by 1
-                    values.put(History.VISITS, existing + ((additional != null) ? additional.longValue() : 1));
+                    values.put(History.VISITS, existing + ((additional != null) ? additional : 1));
                 }
 
                 updated += db.update(TABLE_HISTORY, values, "_id = ?",

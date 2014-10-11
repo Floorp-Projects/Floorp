@@ -28,7 +28,7 @@ import android.os.Message;
 public abstract class PersistentIntentService extends Service {
     private volatile Looper mServiceLooper;
     private volatile ServiceHandler mServiceHandler;
-    private String mName;
+    private final String mName;
     private boolean mRedelivery;
 
     private final class ServiceHandler extends Handler {
