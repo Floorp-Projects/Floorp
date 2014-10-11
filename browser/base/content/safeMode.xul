@@ -21,7 +21,7 @@
             title="&safeModeDialog.title;"
             buttons="accept,extra1"
             buttonlabelaccept="&startSafeMode.label;"
-            buttonlabelextra1="&resetProfile.label;"
+            buttonlabelextra1="&refreshProfile.label;"
             maxwidth="&window.maxWidth;"
             ondialogaccept="return onDefaultButton()"
             ondialogcancel="onCancel();"
@@ -32,30 +32,19 @@
   <script type="application/javascript" src="chrome://browser/content/safeMode.js"/>
 
   <vbox id="autoSafeMode" hidden="true">
-    <description>&autoSafeModeDescription2.label;</description>
+    <description>&autoSafeModeDescription3.label;</description>
   </vbox>
 
-  <vbox id ="safeMode">
+  <vbox id="safeMode">
     <label>&safeModeDescription3.label;</label>
     <separator class="thin"/>
     <label>&safeModeDescription4.label;</label>
     <separator class="thin"/>
-    <label id="resetProfileInstead">&resetProfileInstead.label;</label>
+    <label id="resetProfileInstead">&refreshProfileInstead.label;</label>
   </vbox>
 
   <vbox id="resetProfile" hidden="true">
-    <label>&resetProfile.dialog.items2.label;</label>
-
-    <vbox id="resetProfileItems" class="indent">
-    </vbox>
-
-    <separator class="thin"/>
-
-    <label id="resetProfileFooter">&resetProfileFooter.label;</label>
-
-    <label>&safeModeInstead.label;</label>
-
-    <separator/>
+    <label id="resetProfileInstead">&refreshProfileInstead.label;</label>
   </vbox>
 
   <separator class="thin"/>
