@@ -1,0 +1,6 @@
+Code taken from rlz project: https://code.google.com/p/rlz/
+
+Revision: 134, then with unused code stripped out.
+
+Note: base/ contains wrappers/dummies to provide implementations of the
+Chromium APIs that this code relies upon.
