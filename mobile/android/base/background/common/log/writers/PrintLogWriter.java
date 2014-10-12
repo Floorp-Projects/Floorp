@@ -64,6 +64,7 @@ public class PrintLogWriter extends LogWriter {
     return true;
   }
 
+  @Override
   public void close() {
     if (closed) {
       return;
