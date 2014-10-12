@@ -25,7 +25,6 @@
 #include "js/Id.h"
 /* LegacyIntTypes.h is deliberately exempted from this requirement */
 #include "js/MemoryMetrics.h"
-#include "js/OldDebugAPI.h"
 #include "js/ProfilingStack.h"
 #include "js/PropertyKey.h"
 #include "js/RequiredDefines.h"
