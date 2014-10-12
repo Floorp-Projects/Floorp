@@ -110,7 +110,7 @@ public class PasswordRecord extends Record {
 
   @Override
   public boolean congruentWith(Object o) {
-    if (o == null || !(o instanceof PasswordRecord)) {
+    if (!(o instanceof PasswordRecord)) {
       return false;
     }
     PasswordRecord other = (PasswordRecord) o;
@@ -130,7 +130,7 @@ public class PasswordRecord extends Record {
 
   @Override
   public boolean equalPayloads(Object o) {
-    if (o == null || !(o instanceof PasswordRecord)) {
+    if (!(o instanceof PasswordRecord)) {
       return false;
     }
 

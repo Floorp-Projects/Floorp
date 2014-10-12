@@ -1505,7 +1505,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
                             if (mSelector != null) {
                                 Drawable d = mSelector.getCurrent();
-                                if (d != null && d instanceof TransitionDrawable) {
+                                if (d instanceof TransitionDrawable) {
                                     ((TransitionDrawable) d).resetTransition();
                                 }
                             }
@@ -3346,7 +3346,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             final boolean longClickable = isLongClickable();
             final Drawable d = selector.getCurrent();
-            if (d != null && d instanceof TransitionDrawable) {
+            if (d instanceof TransitionDrawable) {
                 if (longClickable) {
                     ((TransitionDrawable) d).startTransition(
                             ViewConfiguration.getLongPressTimeout());
@@ -6257,7 +6257,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                     if (mSelector != null) {
                         Drawable d = mSelector.getCurrent();
 
-                        if (d != null && d instanceof TransitionDrawable) {
+                        if (d instanceof TransitionDrawable) {
                             if (longClickable) {
                                 final int longPressTimeout = ViewConfiguration.getLongPressTimeout();
                                 ((TransitionDrawable) d).startTransition(longPressTimeout);

@@ -342,7 +342,7 @@ public class ExtendedJSONObject {
 
   @Override
   public boolean equals(Object o) {
-    if (o == null || !(o instanceof ExtendedJSONObject)) {
+    if (!(o instanceof ExtendedJSONObject)) {
       return false;
     }
     if (o == this) {
