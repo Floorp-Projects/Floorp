@@ -5333,15 +5333,13 @@ nsLayoutUtils::DrawSingleImage(nsRenderingContext*    aRenderingContext,
     image = aImage;
   }
 
-  nsRect dest = nsLayoutUtils::GetWholeImageDestination(imageSize, source,
-                                                        aDest);
   // Ensure that only a single image tile is drawn. If aSourceArea extends
   // outside the image bounds, we want to honor the aSourceArea-to-aDest
   // transform but we don't want to actually tile the image.
   nsRect fill;
-  fill.IntersectRect(aDest, dest);
-  return DrawImageInternal(aRenderingContext, aPresContext, aImage,
-                           aGraphicsFilter, dest, fill, fill.TopLeft(),
+  fill.IntersectRect(aDest, aDest);
+  return DrawImageInternal(aRenderingContext, aPresContext, image,
+                           aGraphicsFilter, aDest, fill, fill.TopLeft(),
                            aDirty, aSVGContext, aImageFlags);
 }
 
