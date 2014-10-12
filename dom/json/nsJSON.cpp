@@ -6,7 +6,6 @@
 
 #include "jsapi.h"
 #include "js/CharacterEncoding.h"
-#include "js/OldDebugAPI.h"
 #include "nsJSON.h"
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
