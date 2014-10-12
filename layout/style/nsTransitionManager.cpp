@@ -602,8 +602,7 @@ nsTransitionManager::GetElementTransitions(
     static_cast<AnimationPlayerCollection*>(aElement->GetProperty(propName));
   if (!collection && aCreateIfNeeded) {
     // FIXME: Consider arena-allocating?
-    collection = new AnimationPlayerCollection(aElement, propName, this,
-      mPresContext->RefreshDriver()->MostRecentRefresh());
+    collection = new AnimationPlayerCollection(aElement, propName, this);
     nsresult rv =
       aElement->SetProperty(propName, collection,
                             &AnimationPlayerCollection::PropertyDtor, false);
