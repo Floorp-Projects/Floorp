@@ -114,8 +114,8 @@
 
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
-#ifdef USE_SKIA
 #include "SkiaGLGlue.h"
+#ifdef USE_SKIA
 #include "SurfaceTypes.h"
 #endif
 
