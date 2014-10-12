@@ -102,7 +102,7 @@ public:
   void Shutdown();
 
   // Threadsafe.
-  const nsAString& GetOrigin() const;
+  const nsCString& GetNodeId() const;
 
   // Main thread only.
   void OnResolveNewSessionPromise(uint32_t aPromiseId,
@@ -286,7 +286,7 @@ private:
   // EME plugin must come from this thread.
   nsRefPtr<nsIThread> mGMPThread;
 
-  nsAutoString mOrigin;
+  nsCString mNodeId;
 
   GMPDecryptorProxy* mCDM;
   CDMCaps mCapabilites;

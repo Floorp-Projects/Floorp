@@ -25,9 +25,10 @@ class GMPVideoHost;
 [ptr] native GMPDecryptorProxy(GMPDecryptorProxy);
 [ptr] native GMPAudioDecoderProxy(GMPAudioDecoderProxy);
 
-[scriptable, uuid(6ea374fc-32ad-46f6-ae9d-80b668f4fd49)]
+[scriptable, uuid(88ade941-a423-48f9-aa3d-a383af8de4b8)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
+
   /**
    * The GMP thread. Callable from any thread.
    */
@@ -38,7 +39,7 @@ interface mozIGeckoMediaPluginService : nsISupports
    * Callable on any thread
    */
   [noscript]
-  boolean hasPluginForAPI([optional] in AString origin,
+  boolean hasPluginForAPI([optional] in ACString nodeId,
                           in ACString api,
                           in TagArray tags);
 
@@ -50,7 +51,7 @@ interface mozIGeckoMediaPluginService : nsISupports
    */
   [noscript]
   GMPVideoDecoderProxy getGMPVideoDecoder(in TagArray tags,
-                                          [optional] in AString origin,
+                                          [optional] in ACString nodeId,
                                           out GMPVideoHost outVideoHost);
 
   /**
@@ -61,7 +62,7 @@ interface mozIGeckoMediaPluginService : nsISupports
    */
   [noscript]
   GMPVideoEncoderProxy getGMPVideoEncoder(in TagArray tags,
-		                                      [optional] in AString origin,
+		                                      [optional] in ACString nodeId,
 		                                      out GMPVideoHost outVideoHost);
 
   // Returns an audio decoder that supports the specified tags.
@@ -69,13 +70,13 @@ interface mozIGeckoMediaPluginService : nsISupports
   // other tags such as for EME keysystem.
   // Callable only on GMP thread.
   GMPAudioDecoderProxy getGMPAudioDecoder(in TagArray tags,
-                                          [optional] in AString origin);
+                                          [optional] in ACString nodeId);
 
   // Returns a decryption session manager that supports the specified tags.
   // The array of tags should at least contain a key system tag, and optionally
   // other tags.
   // Callable only on GMP thread.
-  GMPDecryptorProxy getGMPDecryptor(in TagArray tags, in AString origin);
+  GMPDecryptorProxy getGMPDecryptor(in TagArray tags, in ACString nodeId);
 
   /**
    * Add a directory to scan for gecko media plugins.
