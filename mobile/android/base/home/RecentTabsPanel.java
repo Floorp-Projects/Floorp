@@ -363,6 +363,7 @@ public class RecentTabsPanel extends HomeFragment
             super(context, null, VIEW_TYPES, LAYOUT_TYPES);
         }
 
+        @Override
         public int getItemViewType(int position) {
             final Cursor c = getCursor(position);
             final int type = c.getInt(c.getColumnIndexOrThrow(RecentTabs.TYPE));
@@ -378,6 +379,7 @@ public class RecentTabsPanel extends HomeFragment
             return ROW_STANDARD;
          }
 
+        @Override
         public boolean isEnabled(int position) {
             return (getItemViewType(position) != ROW_HEADER);
         }

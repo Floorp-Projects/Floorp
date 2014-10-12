@@ -277,6 +277,7 @@ class TextSelection extends Layer implements GeckoEventListener {
                     menuitem.setShowAsAction(actionEnum, R.attr.menuItemActionModeStyle);
 
                     BitmapUtils.getDrawable(mStartHandle.getContext(), obj.optString("icon"), new BitmapLoader() {
+                        @Override
                         public void onBitmapFound(Drawable d) {
                             if (d != null) {
                                 menuitem.setIcon(d);
@@ -290,11 +291,13 @@ class TextSelection extends Layer implements GeckoEventListener {
             return true;
         }
 
+        @Override
         public boolean onCreateActionMode(ActionModeCompat mode, Menu menu) {
             mActionMode = mode;
             return true;
         }
 
+        @Override
         public boolean onActionItemClicked(ActionModeCompat mode, MenuItem item) {
             try {
                 final JSONObject obj = mItems.getJSONObject(item.getItemId());
@@ -307,6 +310,7 @@ class TextSelection extends Layer implements GeckoEventListener {
         }
 
         // Called when the user exits the action mode
+        @Override
         public void onDestroyActionMode(ActionModeCompat mode) {
             mActionMode = null;
             mCallback = null;

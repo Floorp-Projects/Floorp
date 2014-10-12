@@ -144,6 +144,7 @@ public final class BitmapUtils {
          final Tab tab = Tabs.getInstance().getTab(id);
          runOnBitmapFoundOnUiThread(loader, tab.getThumbnail());
          Tabs.registerOnTabsChangedListener(new Tabs.OnTabsChangedListener() {
+                 @Override
                  public void onTabChanged(Tab t, Tabs.TabEvents msg, Object data) {
                      if (tab == t && msg == Tabs.TabEvents.THUMBNAIL) {
                          Tabs.unregisterOnTabsChangedListener(this);

@@ -19,6 +19,7 @@ public abstract class AbstractNonRepositorySyncStage extends AbstractSessionMana
     // Do nothing.
   }
 
+  @Override
   public Integer getStorageVersion() {
     return null; // Never include these engines in any meta/global records.
   }

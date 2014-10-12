@@ -24,7 +24,9 @@ public final class DirectBufferAllocator {
         ByteBuffer directBuffer = nativeAllocateDirectBuffer(size);
         if (directBuffer == null) {
             throw new OutOfMemoryError("allocateDirectBuffer() returned null");
-        } else if (!directBuffer.isDirect()) {
+        }
+
+        if (!directBuffer.isDirect()) {
             throw new AssertionError("allocateDirectBuffer() did not return a direct buffer");
         }
 

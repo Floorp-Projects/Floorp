@@ -237,6 +237,7 @@ public class StumblerService extends PersistentIntentService
     }
 
     // Note that in passive mode, having data isn't an upload trigger, it is triggered by the start intent
+    @Override
     public void notifyStorageStateEmpty(boolean isEmpty) {
         if (isEmpty) {
             UploadAlarmReceiver.cancelAlarm(this, !mScanManager.isPassiveMode());

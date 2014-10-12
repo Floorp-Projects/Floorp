@@ -36,7 +36,7 @@ class ListCheckboxPreference extends MultiChoicePreference implements Checkable 
         super.onBindView(view);
 
         View checkboxView = view.findViewById(R.id.checkbox);
-        if (checkboxView != null && checkboxView instanceof Checkable) {
+        if (checkboxView instanceof Checkable) {
             ((Checkable) checkboxView).setChecked(checked);
         }
     }

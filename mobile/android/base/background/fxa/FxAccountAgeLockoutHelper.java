@@ -91,6 +91,6 @@ public class FxAccountAgeLockoutHelper {
       FxAccountConstants.pii(LOG_TAG, "Passed age check: year text was found in item list but was not a number.");
       return true;
     }
-    return passesAgeCheck(yearOfBirth.intValue());
+    return passesAgeCheck(yearOfBirth);
   }
 }

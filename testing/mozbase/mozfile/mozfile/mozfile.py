@@ -133,10 +133,19 @@ def rmtree(dir):
 
 
 def remove(path):
-    """Removes the specified file, link, or directory tree
+    """Removes the specified file, link, or directory tree.
 
     This is a replacement for shutil.rmtree that works better under
-    windows.
+    windows. It does the following things:
+
+     - check path access for the current user before trying to remove
+     - retry operations on some known errors due to various things keeping
+       a handle on file paths - like explorer, virus scanners, etc. The
+       known errors are errno.EACCES and errno.ENOTEMPTY, and it will
+       retry up to 5 five times with a delay of 0.5 seconds between each
+       attempt.
+
+    Note that no error will be raised if the given path does not exists.
 
     :param path: path to be removed
     """
