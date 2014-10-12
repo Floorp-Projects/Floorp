@@ -1751,7 +1751,7 @@ public abstract class GeckoApp
         mCameraOrientationEventListener.enable();
 
         // Try to make it fully transparent.
-        if (mCameraView != null && (mCameraView instanceof SurfaceView)) {
+        if (mCameraView instanceof SurfaceView) {
             if (Versions.feature11Plus) {
                 mCameraView.setAlpha(0.0f);
             }

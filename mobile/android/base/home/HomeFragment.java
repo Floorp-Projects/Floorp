@@ -116,7 +116,7 @@ public abstract class HomeFragment extends Fragment {
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
-        if (menuInfo == null || !(menuInfo instanceof HomeContextMenuInfo)) {
+        if (!(menuInfo instanceof HomeContextMenuInfo)) {
             return;
         }
 
@@ -161,7 +161,7 @@ public abstract class HomeFragment extends Fragment {
         // between the activity and its fragments.
 
         ContextMenuInfo menuInfo = item.getMenuInfo();
-        if (menuInfo == null || !(menuInfo instanceof HomeContextMenuInfo)) {
+        if (!(menuInfo instanceof HomeContextMenuInfo)) {
             return false;
         }
 

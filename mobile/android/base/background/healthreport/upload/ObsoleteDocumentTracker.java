@@ -131,13 +131,13 @@ public class ObsoleteDocumentTracker {
     public int compare(Entry<String, Object> lhs, Entry<String, Object> rhs) {
       Object l = lhs.getValue();
       Object r = rhs.getValue();
-      if (l == null || !(l instanceof Long)) {
-        if (r == null || !(r instanceof Long)) {
+      if (!(l instanceof Long)) {
+        if (!(r instanceof Long)) {
           return 0;
         }
         return -1;
       }
-      if (r == null || !(r instanceof Long)) {
+      if (!(r instanceof Long)) {
         return 1;
       }
       return ((Long) r).compareTo((Long) l);
