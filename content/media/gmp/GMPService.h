@@ -45,10 +45,10 @@ public:
 private:
   ~GeckoMediaPluginService();
 
-  GMPParent* SelectPluginForAPI(const nsAString& aOrigin,
+  GMPParent* SelectPluginForAPI(const nsACString& aNodeId,
                                 const nsCString& aAPI,
                                 const nsTArray<nsCString>& aTags,
-                                bool aCloneCrossOrigin = true);
+                                bool aCloneCrossNodeIds = true);
 
   void UnloadPlugins();
   void CrashPlugins();
