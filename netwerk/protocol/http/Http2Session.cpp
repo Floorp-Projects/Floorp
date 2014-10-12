@@ -1153,10 +1153,12 @@ Http2Session::RecvHeaders(Http2Session *self)
     return NS_OK;
   }
 
+  // make sure this is either the first headers or a trailer
   if (self->mInputFrameDataStream->AllHeadersReceived() &&
       !(self->mInputFrameFlags & kFlag_END_STREAM)) {
     // Any header block after the first that does *not* end the stream is
     // illegal.
+    LOG3(("Http2Session::Illegal Extra HeaderBlock %p 0x%X\n", self, self->mInputFrameID));
     RETURN_SESSION_ERROR(self, PROTOCOL_ERROR);
   }
 
@@ -1192,7 +1194,7 @@ Http2Session::ResponseHeadersComplete()
   LOG3(("Http2Session::ResponseHeadersComplete %p for 0x%X fin=%d",
         this, mInputFrameDataStream->StreamID(), mInputFrameFinal));
 
-  // only interpret headers once, afterwards ignore trailers
+  // only interpret headers once, afterwards ignore as trailers
   if (mInputFrameDataStream->AllHeadersReceived()) {
     LOG3(("Http2Session::ResponseHeadersComplete extra headers"));
     MOZ_ASSERT(mInputFrameFlags & kFlag_END_STREAM);
@@ -1212,6 +1214,10 @@ Http2Session::ResponseHeadersComplete()
 
     return NS_OK;
   }
+
+  // if this turns out to be a 1xx response code we have to
+  // undo the headers received bit that we are setting here.
+  bool didFirstSetAllRecvd = !mInputFrameDataStream->AllHeadersReceived();
   mInputFrameDataStream->SetAllHeadersReceived();
 
   // The stream needs to see flattened http headers
@@ -1220,10 +1226,12 @@ Http2Session::ResponseHeadersComplete()
   // mFlatHTTPResponseHeaders via ConvertHeaders()
 
   nsresult rv;
+  int32_t httpResponseCode; // out param to ConvertResponseHeaders
   mFlatHTTPResponseHeadersOut = 0;
   rv = mInputFrameDataStream->ConvertResponseHeaders(&mDecompressor,
                                                      mDecompressBuffer,
-                                                     mFlatHTTPResponseHeaders);
+                                                     mFlatHTTPResponseHeaders,
+                                                     httpResponseCode);
   if (rv == NS_ERROR_ABORT) {
     LOG(("Http2Session::ResponseHeadersComplete ConvertResponseHeaders aborted\n"));
     if (mInputFrameDataStream->IsTunnel()) {
@@ -1236,6 +1244,11 @@ Http2Session::ResponseHeadersComplete()
     return NS_OK;
   } else if (NS_FAILED(rv)) {
     return rv;
+  }
+
+  // allow more headers in the case of 1xx
+  if (((httpResponseCode / 100) == 1) && didFirstSetAllRecvd) {
+    mInputFrameDataStream->UnsetAllHeadersReceived();
   }
 
   ChangeDownstreamState(PROCESSING_COMPLETE_HEADERS);

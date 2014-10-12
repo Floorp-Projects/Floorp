@@ -142,8 +142,7 @@ nsAnimationManager::GetAnimationPlayers(dom::Element *aElement,
   if (!collection && aCreateIfNeeded) {
     // FIXME: Consider arena-allocating?
     collection =
-      new AnimationPlayerCollection(aElement, propName, this,
-        mPresContext->RefreshDriver()->MostRecentRefresh());
+      new AnimationPlayerCollection(aElement, propName, this);
     nsresult rv =
       aElement->SetProperty(propName, collection,
                             &AnimationPlayerCollection::PropertyDtor, false);
