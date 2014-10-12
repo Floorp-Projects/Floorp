@@ -234,8 +234,7 @@ this.WebappManager = {
 
     // If the APK is installed, then _getAPKVersions will return a version
     // for it, so we can use that function to determine its install status.
-    let apkVersions = yield this._getAPKVersions([ app.apkPackageName ]);
-    if (app.apkPackageName in apkVersions) {
+    if (app.apkPackageName && app.apkPackageName in (yield this._getAPKVersions([ app.apkPackageName ]))) {
       debug("APK is installed; requesting uninstallation");
       Messaging.sendRequest({
         type: "Webapps:UninstallApk",
@@ -259,7 +258,7 @@ this.WebappManager = {
       // to ensure the user can always remove an app from the registry (and thus
       // about:apps) even if it's out of sync with installed APKs.
       debug("APK not installed; proceeding directly to removal from registry");
-      DOMApplicationRegistry.doUninstall(aData, aMessageManager);
+      DOMApplicationRegistry.uninstall(aData.manifestURL);
     }
 
   }),
