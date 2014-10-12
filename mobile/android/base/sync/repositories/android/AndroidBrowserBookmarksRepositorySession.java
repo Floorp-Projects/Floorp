@@ -1086,9 +1086,9 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     if (typeString == null) {
       Logger.warn(LOG_TAG, "Unsupported type code " + rowType);
       return null;
-    } else {
-      Logger.trace(LOG_TAG, "Record " + guid + " has type " + typeString);
     }
+
+    Logger.trace(LOG_TAG, "Record " + guid + " has type " + typeString);
 
     rec.type = typeString;
     rec.title = RepoUtils.getStringFromCursor(cur, BrowserContract.Bookmarks.TITLE);

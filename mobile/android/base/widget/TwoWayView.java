@@ -1276,7 +1276,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             if (mTouchMode == TOUCH_MODE_FLINGING) {
                 return true;
-            } else if (motionPosition >= 0) {
+            }
+
+            if (motionPosition >= 0) {
                 mMotionPosition = motionPosition;
                 mTouchMode = TOUCH_MODE_DOWN;
             }
@@ -1376,7 +1378,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                 reportScrollStateChange(OnScrollListener.SCROLL_STATE_TOUCH_SCROLL);
                 motionPosition = findMotionRowOrColumn((int) mLastTouchPos);
                 return true;
-            } else if (mMotionPosition >= 0 && mAdapter.isEnabled(mMotionPosition)) {
+            }
+
+            if (mMotionPosition >= 0 && mAdapter.isEnabled(mMotionPosition)) {
                 mTouchMode = TOUCH_MODE_DOWN;
                 triggerCheckForTap();
             }
@@ -3849,7 +3853,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             if (mItemCount == 0) {
                 resetState();
                 return;
-            } else if (mItemCount != mAdapter.getCount()) {
+            }
+
+            if (mItemCount != mAdapter.getCount()) {
                 throw new IllegalStateException("The content of the adapter has changed but "
                         + "TwoWayView did not receive a notification. Make sure the content of "
                         + "your adapter is not modified from a background thread, but only "
@@ -4274,31 +4280,30 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                         mSyncPosition = Math.min(Math.max(0, mSyncPosition), itemCount - 1);
 
                         return;
-                    } else {
-                        // See if we can find a position in the new data with the same
-                        // id as the old selection. This will change mSyncPosition.
-                        newPos = findSyncPosition();
-                        if (newPos >= 0) {
-                            // Found it. Now verify that new selection is still selectable
-                            selectablePos = lookForSelectablePosition(newPos, true);
-                            if (selectablePos == newPos) {
-                                // Same row id is selected
-                                mSyncPosition = newPos;
+                    }
+                    // See if we can find a position in the new data with the same
+                    // id as the old selection. This will change mSyncPosition.
+                    newPos = findSyncPosition();
+                    if (newPos >= 0) {
+                        // Found it. Now verify that new selection is still selectable
+                        selectablePos = lookForSelectablePosition(newPos, true);
+                        if (selectablePos == newPos) {
+                            // Same row id is selected
+                            mSyncPosition = newPos;
 
-                                if (mSyncHeight == getHeight()) {
-                                    // If we are at the same height as when we saved state, try
-                                    // to restore the scroll position too.
-                                    mLayoutMode = LAYOUT_SYNC;
-                                } else {
-                                    // We are not the same height as when the selection was saved, so
-                                    // don't try to restore the exact position
-                                    mLayoutMode = LAYOUT_SET_SELECTION;
-                                }
-
-                                // Restore selection
-                                setNextSelectedPositionInt(newPos);
-                                return;
+                            if (mSyncHeight == getHeight()) {
+                                // If we are at the same height as when we saved state, try
+                                // to restore the scroll position too.
+                                mLayoutMode = LAYOUT_SYNC;
+                            } else {
+                                // We are not the same height as when the selection was saved, so
+                                // don't try to restore the exact position
+                                mLayoutMode = LAYOUT_SET_SELECTION;
                             }
+
+                            // Restore selection
+                            setNextSelectedPositionInt(newPos);
+                            return;
                         }
                     }
                     break;
@@ -5787,11 +5792,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         View getScrapView(int position) {
             if (mViewTypeCount == 1) {
                 return retrieveFromScrap(mCurrentScrap, position);
-            } else {
-                int whichScrap = mAdapter.getItemViewType(position);
-                if (whichScrap >= 0 && whichScrap < mScrapViews.length) {
-                    return retrieveFromScrap(mScrapViews[whichScrap], position);
-                }
+            }
+            int whichScrap = mAdapter.getItemViewType(position);
+            if (whichScrap >= 0 && whichScrap < mScrapViews.length) {
+                return retrieveFromScrap(mScrapViews[whichScrap], position);
             }
 
             return null;

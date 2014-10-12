@@ -84,7 +84,9 @@ public class FaviconCacheElement implements Comparable<FaviconCacheElement> {
         final int w2 = another.imageSize;
         if (w1 > w2) {
             return 1;
-        } else if (w2 > w1) {
+        }
+
+        if (w2 > w1) {
             return -1;
         }
         return 0;

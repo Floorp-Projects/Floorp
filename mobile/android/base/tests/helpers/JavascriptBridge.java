@@ -256,52 +256,55 @@ public final class JavascriptBridge {
             }
             type = message.getString("innerType");
 
-            if ("progress".equals(type)) {
-                // Javascript harness message
-                mLogParser.logMessage(message.getString("message"));
-                return MessageStatus.PROCESSED;
+            switch (type) {
+                case "progress":
+                    // Javascript harness message
+                    mLogParser.logMessage(message.getString("message"));
+                    return MessageStatus.PROCESSED;
 
-            } else if ("notify-loaded".equals(type)) {
-                mJavaBridgeLoaded = true;
-                return MessageStatus.PROCESSED;
+                case "notify-loaded":
+                    mJavaBridgeLoaded = true;
+                    return MessageStatus.PROCESSED;
 
-            } else if ("sync-reply".equals(type)) {
-                // Reply to Java-to-Javascript sync call
-                return MessageStatus.REPLIED;
+                case "sync-reply":
+                    // Reply to Java-to-Javascript sync call
+                    return MessageStatus.REPLIED;
 
-            } else if ("sync-call".equals(type) || "async-call".equals(type)) {
+                case "sync-call":
+                case "async-call":
 
-                if ("async-call".equals(type)) {
-                    // Save this async message until another async message arrives, then we
-                    // process the saved message and save the new one. This is done as a
-                    // form of tail call optimization, by making sync-replies come before
-                    // async-calls. On the other hand, if (message == mSavedAsyncMessage),
-                    // it means we're currently processing the saved message and should clear
-                    // mSavedAsyncMessage.
-                    final JSONObject newSavedMessage =
-                        (message != mSavedAsyncMessage ? message : null);
-                    message = mSavedAsyncMessage;
-                    mSavedAsyncMessage = newSavedMessage;
-                    if (message == null) {
-                        // Saved current message and there wasn't an already saved one.
-                        return MessageStatus.SAVED;
+                    if ("async-call".equals(type)) {
+                        // Save this async message until another async message arrives, then we
+                        // process the saved message and save the new one. This is done as a
+                        // form of tail call optimization, by making sync-replies come before
+                        // async-calls. On the other hand, if (message == mSavedAsyncMessage),
+                        // it means we're currently processing the saved message and should clear
+                        // mSavedAsyncMessage.
+                        final JSONObject newSavedMessage =
+                                (message != mSavedAsyncMessage ? message : null);
+                        message = mSavedAsyncMessage;
+                        mSavedAsyncMessage = newSavedMessage;
+                        if (message == null) {
+                            // Saved current message and there wasn't an already saved one.
+                            return MessageStatus.SAVED;
+                        }
                     }
-                }
 
-                methodName = message.getString("method");
-                argsArray = message.getJSONArray("args");
-                args = new Object[argsArray.length()];
-                for (int i = 0; i < args.length; i++) {
-                    args[i] = convertFromJSONValue(argsArray.get(i));
-                }
-                invokeMethod(methodName, args);
+                    methodName = message.getString("method");
+                    argsArray = message.getJSONArray("args");
+                    args = new Object[argsArray.length()];
+                    for (int i = 0; i < args.length; i++) {
+                        args[i] = convertFromJSONValue(argsArray.get(i));
+                    }
+                    invokeMethod(methodName, args);
 
-                if ("sync-call".equals(type)) {
-                    // Reply for sync messages
-                    sendMessage("sync-reply", methodName, null);
-                }
-                return MessageStatus.PROCESSED;
+                    if ("sync-call".equals(type)) {
+                        // Reply for sync messages
+                        sendMessage("sync-reply", methodName, null);
+                    }
+                    return MessageStatus.PROCESSED;
             }
+
             throw new IllegalStateException("Message type is unexpected");
 
         } catch (final JSONException e) {

@@ -258,7 +258,9 @@ public class AndroidGamepadManager {
             // Queue up key events for pending devices.
             sPendingGamepads.get(deviceId).add(ev);
             return true;
-        } else if (!sGamepads.containsKey(deviceId)) {
+        }
+
+        if (!sGamepads.containsKey(deviceId)) {
             InputDevice device = ev.getDevice();
             if (device != null &&
                 (device.getSources() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
