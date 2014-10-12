@@ -12,6 +12,7 @@ public class GeckoViewContent implements GeckoView.ContentDelegate {
     * @param browser The Browser that is loading the content.
     * @param url The resource being loaded.
     */
+    @Override
     public void onPageStart(GeckoView view, GeckoView.Browser browser, String url) {}
 
     /**
@@ -20,6 +21,7 @@ public class GeckoViewContent implements GeckoView.ContentDelegate {
     * @param browser The Browser that was loading the content.
     * @param success Whether the page loaded successfully or an error occured.
     */
+    @Override
     public void onPageStop(GeckoView view, GeckoView.Browser browser, boolean success) {}
 
     /**
@@ -28,6 +30,7 @@ public class GeckoViewContent implements GeckoView.ContentDelegate {
     * @param view The GeckoView that initiated the callback.
     * @param browser The Browser that is showing the content.
     */
+    @Override
     public void onPageShow(GeckoView view, GeckoView.Browser browser) {}
 
     /**
@@ -37,6 +40,7 @@ public class GeckoViewContent implements GeckoView.ContentDelegate {
     * @param browser The Browser that is showing the content.
     * @param title The title sent from the content.
     */
+    @Override
     public void onReceivedTitle(GeckoView view, GeckoView.Browser browser, String title) {}
 
     /**
@@ -47,5 +51,6 @@ public class GeckoViewContent implements GeckoView.ContentDelegate {
     * @param url The href of the link element specifying the favicon.
     * @param size The maximum size specified for the favicon, or -1 for any size.
     */
+    @Override
     public void onReceivedFavicon(GeckoView view, GeckoView.Browser browser, String url, int size) {}
 }

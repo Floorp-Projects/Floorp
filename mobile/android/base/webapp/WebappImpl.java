@@ -149,9 +149,9 @@ public class WebappImpl extends GeckoApp implements InstallCallback {
                 installHelper.registerGeckoListener();
             }
             return;
-        } else {
-            launchWebapp(origin);
         }
+
+        launchWebapp(origin);
 
         setTitle(mAppName);
     }

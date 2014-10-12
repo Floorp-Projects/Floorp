@@ -255,10 +255,12 @@ public final class EventDispatcher {
             this.type = type;
         }
 
+        @Override
         public void sendSuccess(final Object response) {
             sendResponse(STATUS_SUCCESS, response);
         }
 
+        @Override
         public void sendError(final Object response) {
             sendResponse(STATUS_ERROR, response);
         }

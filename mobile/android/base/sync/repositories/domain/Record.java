@@ -102,7 +102,7 @@ public abstract class Record {
    * collection and guid as this object.
    */
   public boolean equalIdentifiers(Object o) {
-    if (o == null || !(o instanceof Record)) {
+    if (!(o instanceof Record)) {
       return false;
     }
 
@@ -179,7 +179,7 @@ public abstract class Record {
    */
   @Override
   public boolean equals(Object o) {
-    if (o == null || !(o instanceof Record)) {
+    if (!(o instanceof Record)) {
       return false;
     }
 
@@ -199,7 +199,7 @@ public abstract class Record {
   }
 
   public boolean equalTimestamps(Object o) {
-    if (o == null || !(o instanceof Record)) {
+    if (!(o instanceof Record)) {
       return false;
     }
     return ((Record) o).lastModified == this.lastModified;

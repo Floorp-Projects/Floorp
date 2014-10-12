@@ -194,7 +194,7 @@ public class RepoUtils {
 
     final String collection = "history";
     final long lastModified = getLongFromCursor(cur, BrowserContract.SyncColumns.DATE_MODIFIED);
-    final boolean deleted = getLongFromCursor(cur, BrowserContract.SyncColumns.IS_DELETED) == 1 ? true : false;
+    final boolean deleted = getLongFromCursor(cur, BrowserContract.SyncColumns.IS_DELETED) == 1;
 
     final HistoryRecord rec = new HistoryRecord(guid, collection, lastModified, deleted);
 

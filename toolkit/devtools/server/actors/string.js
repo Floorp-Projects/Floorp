@@ -79,11 +79,8 @@ exports.ShortLongString = Class({
 })
 
 exports.LongStringFront = protocol.FrontClass(exports.LongStringActor, {
-  initialize: function(client, form) {
-    // Don't give the form by default, because we're being tricky and it might just
-    // be a string.
-    protocol.Front.prototype.initialize.call(this, client, null);
-    this.form(form);
+  initialize: function(client) {
+    protocol.Front.prototype.initialize.call(this, client);
   },
 
   destroy: function() {
@@ -94,7 +91,7 @@ exports.LongStringFront = protocol.FrontClass(exports.LongStringActor, {
   },
 
   form: function(form) {
-    this.actorID = form.actorID;
+    this.actorID = form.actor;
     this.initial = form.initial;
     this.length = form.length;
   },

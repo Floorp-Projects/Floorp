@@ -25,26 +25,32 @@ public class StringLogWriter extends LogWriter {
     return true;
   }
 
+  @Override
   public void error(String tag, String message, Throwable error) {
     inner.error(tag, message, error);
   }
 
+  @Override
   public void warn(String tag, String message, Throwable error) {
     inner.warn(tag, message, error);
   }
 
+  @Override
   public void info(String tag, String message, Throwable error) {
     inner.info(tag, message, error);
   }
 
+  @Override
   public void debug(String tag, String message, Throwable error) {
     inner.debug(tag, message, error);
   }
 
+  @Override
   public void trace(String tag, String message, Throwable error) {
     inner.trace(tag, message, error);
   }
 
+  @Override
   public void close() {
     inner.close();
   }

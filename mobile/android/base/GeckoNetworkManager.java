@@ -280,9 +280,12 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
         if (networkOperator == null || networkOperator.length() <= 3) {
             return -1;
         }
+
         if (type == InfoType.MNC) {
             return Integer.parseInt(networkOperator.substring(3));
-        } else if (type == InfoType.MCC) {
+        }
+
+        if (type == InfoType.MCC) {
             return Integer.parseInt(networkOperator.substring(0, 3));
         }
 

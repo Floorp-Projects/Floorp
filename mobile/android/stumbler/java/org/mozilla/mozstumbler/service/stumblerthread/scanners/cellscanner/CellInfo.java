@@ -35,10 +35,12 @@ public class CellInfo implements Parcelable {
 
     public static final Parcelable.Creator<CellInfo> CREATOR
             = new Parcelable.Creator<CellInfo>() {
+        @Override
         public CellInfo createFromParcel(Parcel in) {
             return new CellInfo(in);
         }
 
+        @Override
         public CellInfo[] newArray(int size) {
             return new CellInfo[size];
         }

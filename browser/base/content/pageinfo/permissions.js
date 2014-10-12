@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource:///modules/SitePermissions.jsm");
+Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
 
 const nsIQuotaManager = Components.interfaces.nsIQuotaManager;
 
@@ -231,20 +232,6 @@ function onIndexedDBUsageCallback(uri, usage, fileUsage)
   }
 }
 
-// XXX copied this from browser-plugins.js - is there a way to share?
-function makeNicePluginName(aName) {
-  if (aName == "Shockwave Flash")
-    return "Adobe Flash";
-
-  // Clean up the plugin name by stripping off any trailing version numbers
-  // or "plugin". EG, "Foo Bar Plugin 1.23_02" --> "Foo Bar"
-  // Do this by first stripping the numbers, etc. off the end, and then
-  // removing "Plugin" (and then trimming to get rid of any whitespace).
-  // (Otherwise, something like "Java(TM) Plug-in 1.7.0_07" gets mangled)
-  let newName = aName.replace(/[\s\d\.\-\_\(\)]+$/, "").replace(/\bplug-?in\b/i, "").trim();
-  return newName;
-}
-
 function fillInPluginPermissionTemplate(aPluginName, aPermissionString) {
   let permPluginTemplate = document.getElementById("permPluginTemplate").cloneNode(true);
   permPluginTemplate.setAttribute("permString", aPermissionString);
@@ -288,7 +275,7 @@ function initPluginsRow() {
     for (let mimeType of plugin.getMimeTypes()) {
       let permString = pluginHost.getPermissionStringForType(mimeType);
       if (!permissionMap.has(permString)) {
-        var name = makeNicePluginName(plugin.name);
+        let name = BrowserUtils.makeNicePluginName(plugin.name);
         if (permString.startsWith("plugin-vulnerable:")) {
           name += " \u2014 " + vulnerableLabel;
         }

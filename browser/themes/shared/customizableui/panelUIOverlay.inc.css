@@ -146,7 +146,7 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
   margin: -4px -4px 4px;
   box-shadow: 0 -1px 0 hsla(210,4%,10%,.05) inset;
   color: GrayText;
-  text-transform: uppercase;
+  font-variant: small-caps;
 }
 
 .cui-widget-panelview .panel-subview-header {
