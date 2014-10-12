@@ -24,7 +24,9 @@ function test() {
 }
 
 function startTests() {
-  ok (!DevEdition.styleSheet, "There is no devedition style sheet by default.");
+  info ("Setting browser.devedition.theme.enabled to false.");
+  Services.prefs.setBoolPref(PREF_DEVEDITION_THEME, false);
+  ok (!DevEdition.styleSheet, "There is no devedition style sheet when the pref is false.");
 
   info ("Setting browser.devedition.theme.enabled to true.");
   Services.prefs.setBoolPref(PREF_DEVEDITION_THEME, true);
@@ -53,6 +55,7 @@ function startTests() {
   ok (!DevEdition.styleSheet, "The devedition stylesheet has been removed.");
 
   info ("Checking :root attributes based on devtools theme.");
+  Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "light");
   is (document.documentElement.getAttribute("devtoolstheme"), "light",
     "The documentElement has an attribute based on devtools theme.");
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "dark");

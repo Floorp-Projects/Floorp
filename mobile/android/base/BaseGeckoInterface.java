@@ -35,6 +35,7 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
         mContext = context;
     }
 
+    @Override
     public GeckoProfile getProfile() {
         // Fall back to default profile if we didn't load a specific one
         if (mProfile == null) {
@@ -44,32 +45,39 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     }
 
     // Bug 908770: Implement this
+    @Override
     public PromptService getPromptService() {
         return null;
     }
 
+    @Override
     public Activity getActivity() {
         return (Activity)mContext;
     }
 
+    @Override
     public String getDefaultUAString() {
         return HardwareUtils.isTablet() ? AppConstants.USER_AGENT_FENNEC_TABLET :
                                           AppConstants.USER_AGENT_FENNEC_MOBILE;
     }
 
     // Bug 908772: Implement this
+    @Override
     public LocationListener getLocationListener() {
         return null;
     }
 
     // Bug 908773: Implement this
+    @Override
     public SensorEventListener getSensorEventListener() {
         return null;
     }
 
     // Bug 908775: Implement this
+    @Override
     public void doRestart() {}
 
+    @Override
     public void setFullScreen(final boolean fullscreen) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
@@ -80,53 +88,67 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     }
 
     // Bug 908779: Implement this
+    @Override
     public void addPluginView(final View view, final RectF rect, final boolean isFullScreen) {}
 
     // Bug 908781: Implement this
+    @Override
     public void removePluginView(final View view, final boolean isFullScreen) {}
 
     // Bug 908783: Implement this
+    @Override
     public void enableCameraView() {}
 
     // Bug 908785: Implement this
+    @Override
     public void disableCameraView() {}
 
     // Bug 908786: Implement this
+    @Override
     public void addAppStateListener(GeckoAppShell.AppStateListener listener) {}
 
     // Bug 908787: Implement this
+    @Override
     public void removeAppStateListener(GeckoAppShell.AppStateListener listener) {}
 
     // Bug 908788: Implement this
+    @Override
     public View getCameraView() {
         return null;
     }
 
     // Bug 908789: Implement this
+    @Override
     public void notifyWakeLockChanged(String topic, String state) {}
 
     // Bug 908790: Implement this
+    @Override
     public FormAssistPopup getFormAssistPopup() {
         return null;
     }
 
+    @Override
     public boolean areTabsShown() {
         return false;
     }
 
     // Bug 908791: Implement this
+    @Override
     public AbsoluteLayout getPluginContainer() {
         return null;
     }
 
+    @Override
     public void notifyCheckUpdateResult(String result) {
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Update:CheckResult", result));
     }
 
+    @Override
     public boolean hasTabsSideBar() {
         return false;
     }
 
     // Bug 908792: Implement this
+    @Override
     public void invalidateOptionsMenu() {}
 }

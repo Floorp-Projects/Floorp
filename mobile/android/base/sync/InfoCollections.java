@@ -98,6 +98,6 @@ public class InfoCollections {
     }
 
     // Otherwise, we need an update if our modification time is stale.
-    return (serverLastModified.longValue() > lastModified);
+    return serverLastModified > lastModified;
   }
 }

@@ -192,9 +192,9 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
             // user cancelled; reset checkbox values to their previous state
             mValues = mPrevValues.clone();
             return;
-        } else {
-            mPrevValues = mValues.clone();
         }
+
+        mPrevValues = mValues.clone();
 
         if (!callChangeListener(getValues())) {
             return;

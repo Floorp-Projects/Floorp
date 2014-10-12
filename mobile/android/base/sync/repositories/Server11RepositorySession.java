@@ -470,7 +470,7 @@ public class Server11RepositorySession extends RepositorySession {
       if (body.containsKey("modified")) {
         Long modified = body.getTimestamp("modified");
         if (modified != null) {
-          Logger.trace(LOG_TAG, "POST request success. Modified timestamp: " + modified.longValue());
+          Logger.trace(LOG_TAG, "POST request success. Modified timestamp: " + modified);
         } else {
           Logger.warn(LOG_TAG, "POST success body contains malformed 'modified': " + body.toJSONString());
         }

@@ -33,6 +33,8 @@ public class Crypto5MiddlewareRepository extends MiddlewareRepository {
       this.repository = repository;
       this.outerDelegate = outerDelegate;
     }
+
+    @Override
     public void onSessionCreateFailed(Exception ex) {
       this.outerDelegate.onSessionCreateFailed(ex);
     }

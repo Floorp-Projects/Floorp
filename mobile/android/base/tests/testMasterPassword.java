@@ -136,6 +136,7 @@ public class testMasterPassword extends PixelTest {
         }
     }
 
+    @Override
     public void clearPrivateData() {
 
         // Look for the 'Settings' menu if this device/OS uses it

@@ -117,6 +117,7 @@ public class BasicColorPicker extends ListView {
             mColors = colors;
         }
 
+        @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View v = super.getView(position, convertView, parent);
 

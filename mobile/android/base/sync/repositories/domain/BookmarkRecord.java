@@ -317,7 +317,7 @@ public class BookmarkRecord extends Record {
   @Override
   public boolean equalPayloads(Object o) {
     trace("Calling BookmarkRecord.equalPayloads.");
-    if (o == null || !(o instanceof BookmarkRecord)) {
+    if (!(o instanceof BookmarkRecord)) {
       return false;
     }
 

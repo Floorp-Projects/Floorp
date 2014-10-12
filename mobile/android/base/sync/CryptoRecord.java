@@ -153,7 +153,7 @@ public class CryptoRecord extends Record {
       if (timestamp == null) {
         throw new RecordParseException("timestamp could not be parsed");
       }
-      record.lastModified = timestamp.longValue();
+      record.lastModified = timestamp;
     }
     if (jsonRecord.containsKey(KEY_SORTINDEX)) {
       // getLong tries to cast to Long, and might return null. We catch all

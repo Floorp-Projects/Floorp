@@ -354,6 +354,7 @@ public class GeckoView extends LayerView
         return DEFAULT_SHARED_PREFERENCES_FILE;
     }
 
+    @Override
     public SharedPreferences getSharedPreferences() {
         return getContext().getSharedPreferences(getSharedPreferencesFile(), 0);
     }

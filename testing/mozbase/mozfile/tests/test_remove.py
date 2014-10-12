@@ -6,6 +6,7 @@ import shutil
 import threading
 import time
 import unittest
+import errno
 
 import mozfile
 import mozinfo
@@ -181,3 +182,15 @@ class MozfileRemoveTestCase(unittest.TestCase):
         # original linked file
         mozfile.remove(symlink_path)
         self.assertFalse(os.path.exists(symlink_path))
+
+    def test_remove_path_that_does_not_exists(self):
+        not_existing_path = os.path.join(self.tempdir, 'I_do_not_not_exists')
+        try:
+            mozfile.remove(not_existing_path)
+        except OSError, exc:
+            if exc.errno == errno.ENOENT:
+                self.fail("removing non existing path must not raise error")
+            raise
+
+if __name__ == '__main__':
+    unittest.main()
