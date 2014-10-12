@@ -14,3 +14,5 @@ SharedLibrary('pkcs11testmodule')
 # just export all the symbols.
 NO_VISIBILITY_FLAGS = True
 NO_DIST_INSTALL = True
+
+FAIL_ON_WARNINGS = True
