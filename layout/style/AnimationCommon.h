@@ -150,8 +150,7 @@ enum EnsureStyleRuleFlags {
 struct AnimationPlayerCollection : public PRCList
 {
   AnimationPlayerCollection(dom::Element *aElement, nsIAtom *aElementProperty,
-                            mozilla::css::CommonAnimationManager *aManager,
-                            TimeStamp aNow)
+                            mozilla::css::CommonAnimationManager *aManager)
     : mElement(aElement)
     , mElementProperty(aElementProperty)
     , mManager(aManager)
