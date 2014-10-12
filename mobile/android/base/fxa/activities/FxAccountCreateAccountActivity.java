@@ -176,7 +176,7 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     for (int i = 1991; i <= year - 5; i++) {
       years.add(Integer.toString(i));
     }
-    return years.toArray(new String[0]);
+    return years.toArray(new String[years.size()]);
   }
 
   protected void createYearEdit() {

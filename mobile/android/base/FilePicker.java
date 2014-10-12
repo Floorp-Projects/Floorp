@@ -199,7 +199,7 @@ public class FilePicker implements GeckoEventListener {
             title = getFilePickerTitle(mimeType);
         }
         Intent chooser = Intent.createChooser(base, title);
-        chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, intents.toArray(new Parcelable[]{}));
+        chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, intents.toArray(new Parcelable[intents.size()]));
         handler.gotIntent(chooser);
     }
 
