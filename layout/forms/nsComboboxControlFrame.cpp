@@ -1596,12 +1596,7 @@ nsComboboxControlFrame::RestoreState(nsPresState* aState)
 }
 
 
-//
-// Camino uses a native widget for the combobox
-// popup, which affects drawing and event
-// handling here and in nsListControlFrame.
-//
-// Also, Fennec use a custom combobox built-in widget
+// Fennec uses a custom combobox built-in widget.
 //
 
 /* static */

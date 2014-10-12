@@ -32,12 +32,6 @@ else
 AUTOMATION_PPARGS += -DIS_LINUX=0
 endif
 
-ifeq ($(MOZ_BUILD_APP),camino)
-AUTOMATION_PPARGS += -DIS_CAMINO=1
-else
-AUTOMATION_PPARGS += -DIS_CAMINO=0
-endif
-
 ifeq ($(host_os), cygwin)
 AUTOMATION_PPARGS += -DIS_CYGWIN=1
 endif

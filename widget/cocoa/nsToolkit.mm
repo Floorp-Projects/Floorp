@@ -205,7 +205,7 @@ nsToolkit::RegisterForAllProcessMouseEvents()
   if (getenv("MOZ_DEBUG"))
     return;
 
-  // Don't do this for apps that (like Camino) use native context menus.
+  // Don't do this for apps that use native context menus.
 #ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
   return;
 #endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */

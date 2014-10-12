@@ -884,26 +884,6 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
 
     int32_t valueIndex = colonIndex + 1;
 
-    // if we have Expect: *100-continue,*" redact the 100-continue
-    // as we don't have a good mechanism for clients to make use of it
-    // anyhow
-    if (name.EqualsLiteral("expect")) {
-      const char *continueHeader =
-        nsHttp::FindToken(beginBuffer + valueIndex, "100-continue",
-                          HTTP_HEADER_VALUE_SEPS);
-      if (continueHeader) {
-        char *writableVal = const_cast<char *>(continueHeader);
-        memset(writableVal, 0, 12);
-        writableVal += 12;
-        // this will terminate safely because CRLF EOL has been confirmed
-        while ((*writableVal == ' ') || (*writableVal == '\t') ||
-               (*writableVal == ',')) {
-          *writableVal = ' ';
-          ++writableVal;
-        }
-      }
-    }
-
     while (valueIndex < crlfIndex && beginBuffer[valueIndex] == ' ')
       ++valueIndex;
 

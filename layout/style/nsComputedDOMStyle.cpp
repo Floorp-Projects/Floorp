@@ -5190,13 +5190,14 @@ nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
     AppendASCIItoUTF16(nsCSSKeywords::GetStringValue(eCSSKeyword_polygon),
                        shapeFunctionString);
     shapeFunctionString.Append('(');
-    uint8_t fillRule = aStyleBasicShape->GetFillRule();
-    if (fillRule == NS_STYLE_FILL_RULE_EVENODD) {
+    bool hasEvenOdd = aStyleBasicShape->GetFillRule() ==
+                          NS_STYLE_FILL_RULE_EVENODD;
+    if (hasEvenOdd) {
       shapeFunctionString.AppendLiteral("evenodd");
     }
     for (size_t i = 0; i < aStyleBasicShape->Coordinates().Length(); i += 2) {
       nsAutoString coordString;
-      if (i > 0 || fillRule) {
+      if (i > 0 || hasEvenOdd) {
         shapeFunctionString.AppendLiteral(", ");
       }
       SetCssTextToCoord(coordString,

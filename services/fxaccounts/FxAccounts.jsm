@@ -146,7 +146,11 @@ AccountState.prototype = {
       log.debug(" getCertificate already had one");
       return this.resolve(this.cert.cert);
     }
-    // else get our cert signed
+
+    if (Services.io.offline) {
+      return this.reject(new Error(ERROR_OFFLINE));
+    }
+
     let willBeValidUntil = this.fxaInternal.now() + CERT_LIFETIME;
     return this.fxaInternal.getCertificateSigned(data.sessionToken,
                                                  keyPair.serializedPublicKey,

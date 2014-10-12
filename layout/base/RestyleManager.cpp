@@ -266,6 +266,9 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     if ((aChange & nsChangeHint_UpdateTransformLayer) &&
         aFrame->IsTransformed()) {
       ActiveLayerTracker::NotifyRestyle(aFrame, eCSSProperty_transform);
+      if (!aFrame->GetPrevContinuation()) {
+        nsSVGEffects::InvalidateRenderingObservers(aFrame);
+      }
       // If we're not already going to do an invalidating paint, see
       // if we can get away with only updating the transform on a
       // layer for this frame, and not scheduling an invalidating

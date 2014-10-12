@@ -16,6 +16,9 @@ Cu.import("resource://gre/modules/Promise.jsm");
 let passwordResetOnServer = false;
 let deletedOnServer = false;
 
+// Global representing FxAccounts state
+let certExpired = false;
+
 // Mock RP
 let principal = {origin: 'app://settings.gaiamobile.org', appId: 27}
 
@@ -127,6 +130,8 @@ FxAccountsManager._fxAccounts = {
     let deferred = Promise.defer();
     if (passwordResetOnServer || deletedOnServer) {
       deferred.reject({errno: ERRNO_INVALID_AUTH_TOKEN});
+    } else if (Services.io.offline && certExpired) {
+      deferred.reject(new Error(ERROR_OFFLINE));
     } else {
       deferred.resolve(this._assertion);
     }
@@ -362,6 +367,68 @@ add_test(function(test_getAssertion_active_session_verified_account) {
     },
     error => {
       do_throw("Unexpected error: " + error);
+    }
+  );
+});
+
+add_test(function() {
+  // getAssertion() succeeds if offline with valid cert
+  do_print("= getAssertion active session, valid cert, offline");
+  FxAccountsManager._fxAccounts._signedInUser.verified = true;
+  FxAccountsManager._activeSession.verified = true;
+  Services.io.offline = true;
+  FxAccountsManager.getAssertion("audience", principal).then(
+    result => {
+      FxAccountsManager._fxAccounts._reset();
+      Services.io.offline = false;
+      run_next_test();
+    },
+    error => {
+      Services.io.offline = false;
+      do_throw("Unexpected error: " + error);
+    }
+  );
+});
+
+add_test(function() {
+  // getAssertion() rejects if offline and cert expired.
+  do_print("= getAssertion active session, expired cert, offline");
+  FxAccountsManager._fxAccounts._signedInUser.verified = true;
+  FxAccountsManager._activeSession.verified = true;
+  Services.io.offline = true;
+  certExpired = true;
+  FxAccountsManager.getAssertion("audience", principal).then(
+    result => {
+      Services.io.offline = false;
+      certExpired = false;
+      do_throw("Unexpected success");
+    },
+    error => {
+      FxAccountsManager._fxAccounts._reset();
+      Services.io.offline = false;
+      certExpired = false;
+      run_next_test();
+    }
+  );
+});
+
+add_test(function() {
+  // getAssertion() rejects if offline and UI needed.
+  do_print("= getAssertion active session, trigger UI, offline");
+  let user = FxAccountsManager._fxAccounts._signedInUser;
+  FxAccountsManager._fxAccounts._signedInUser = null;
+  Services.io.offline = true;
+  FxAccountsManager.getAssertion("audience", principal).then(
+    result => {
+      Services.io.offline = false;
+      do_throw("Unexpected success");
+    },
+    error => {
+      do_check_false(FxAccountsUIGlue._signInFlowCalled);
+      FxAccountsManager._fxAccounts._reset();
+      FxAccountsManager._fxAccounts._signedInUser = user;
+      Services.io.offline = false;
+      run_next_test();
     }
   );
 });

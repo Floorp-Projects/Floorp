@@ -573,15 +573,15 @@ class Shape : public gc::TenuredCell
 {
     friend class ::JSObject;
     friend class ::JSFunction;
-    friend class js::Bindings;
-    friend class js::Nursery;
-    friend class js::gc::ForkJoinNursery;
-    friend class js::NativeObject;
-    friend class js::PropertyTree;
-    friend class js::StaticBlockObject;
-    friend class js::ShapeGetterSetterRef;
-    friend struct js::StackShape;
-    friend struct js::StackBaseShape;
+    friend class Bindings;
+    friend class Nursery;
+    friend class gc::ForkJoinNursery;
+    friend class NativeObject;
+    friend class PropertyTree;
+    friend class StaticBlockObject;
+    friend class ShapeGetterSetterRef;
+    friend struct StackShape;
+    friend struct StackBaseShape;
 
   protected:
     HeapPtrBaseShape    base_;

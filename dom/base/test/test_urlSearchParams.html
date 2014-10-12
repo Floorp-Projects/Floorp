@@ -288,6 +288,44 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     runTest();
   }
 
+  function testSet() {
+    var u = new URLSearchParams();
+    u.set('a','b');
+    u.set('e','c');
+    u.set('i','d');
+    u.set('o','f');
+    u.set('u','g');
+
+    is(u.get('a'), 'b', "URL.searchParams.get('a') should return b");
+    is(u.getAll('a').length, 1, "URLSearchParams.getAll('a').length should be 1");
+
+    u.set('a','h1');
+    u.set('a','h2');
+    u.set('a','h3');
+    u.set('a','h4');
+    is(u.get('a'), 'h4', "URL.searchParams.get('a') should return h4");
+    is(u.getAll('a').length, 1, "URLSearchParams.getAll('a').length should be 1");
+
+    is(u.get('e'), 'c', "URL.searchParams.get('e') should return c");
+    is(u.get('i'), 'd', "URL.searchParams.get('i') should return d");
+    is(u.get('o'), 'f', "URL.searchParams.get('o') should return f");
+    is(u.get('u'), 'g', "URL.searchParams.get('u') should return g");
+
+    is(u.getAll('e').length, 1, "URLSearchParams.getAll('e').length should be 1");
+    is(u.getAll('i').length, 1, "URLSearchParams.getAll('i').length should be 1");
+    is(u.getAll('o').length, 1, "URLSearchParams.getAll('o').length should be 1");
+    is(u.getAll('u').length, 1, "URLSearchParams.getAll('u').length should be 1");
+
+    u = new URLSearchParams("name1=value1&name1=value2&name1=value3");
+    is(u.get('name1'), 'value1', "URL.searchParams.get('name1') should return value1");
+    is(u.getAll('name1').length, 3, "URLSearchParams.getAll('name1').length should be 3");
+    u.set('name1','firstPair');
+    is(u.get('name1'), 'firstPair', "URL.searchParams.get('name1') should return firstPair");
+    is(u.getAll('name1').length, 1, "URLSearchParams.getAll('name1').length should be 1");
+
+    runTest();
+  }
+
   var tests = [
     testSimpleURLSearchParams,
     testCopyURLSearchParams,
@@ -299,7 +337,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     testMultiURL,
     testOrdering,
     testDelete,
-    testGetNULL
+    testGetNULL,
+    testSet
   ];
 
   function runTest() {

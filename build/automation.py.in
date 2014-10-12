@@ -66,7 +66,6 @@ _APP_STATUS_CERTIFIED     = 3
 #else
 _IS_CYGWIN = False
 #endif
-#expand _IS_CAMINO = __IS_CAMINO__ != 0
 #expand _BIN_SUFFIX = __BIN_SUFFIX__
 
 #expand _DEFAULT_APP = "./" + __BROWSER_PATH__
@@ -140,7 +139,6 @@ class Automation(object):
   IS_MAC = _IS_MAC
   IS_LINUX = _IS_LINUX
   IS_CYGWIN = _IS_CYGWIN
-  IS_CAMINO = _IS_CAMINO
   BIN_SUFFIX = _BIN_SUFFIX
 
   UNIXISH = not IS_WIN32 and not IS_MAC
@@ -750,7 +748,7 @@ class Automation(object):
     """ build the application command line """
 
     cmd = os.path.abspath(app)
-    if self.IS_MAC and not self.IS_CAMINO and os.path.exists(cmd + "-bin"):
+    if self.IS_MAC and os.path.exists(cmd + "-bin"):
       # Prefer 'app-bin' in case 'app' is a shell script.
       # We can remove this hack once bug 673899 etc are fixed.
       cmd += "-bin"
@@ -772,10 +770,7 @@ class Automation(object):
 
     args.extend(("-no-remote", "-profile", profileDirectory))
     if testURL is not None:
-      if self.IS_CAMINO:
-        args.extend(("-url", testURL))
-      else:
-        args.append((testURL))
+      args.append((testURL))
     args.extend(extraArgs)
     return cmd, args
 
