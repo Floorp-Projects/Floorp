@@ -29,6 +29,21 @@ using mozilla::dom::CrashReporterChild;
 #include <unistd.h> // for _exit()
 #endif
 
+#if defined(XP_WIN)
+// In order to provide EME plugins with a "device binding" capability,
+// in the parent we generate and store some random bytes as salt for every
+// (origin, urlBarOrigin) pair that uses EME. We store these bytes so
+// that every time we revisit the same origin we get the same salt.
+// We send this salt to the child on startup. The child collects some
+// device specific data and munges that with the salt to create the
+// "node id" that we expose to EME plugins. It then overwrites the device
+// specific data, and activates the sandbox.
+#define HASH_NODE_ID_WITH_DEVICE_ID 1
+#include "rlz/lib/machine_id.h"
+#include "rlz/lib/string_utils.h"
+#include "mozilla/SHA1.h"
+#endif
+
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
 #define TARGET_SANDBOX_EXPORTS
 #include "mozilla/sandboxTarget.h"
@@ -275,8 +290,36 @@ GMPChild::Init(const std::string& aPluginPath,
 bool
 GMPChild::RecvSetNodeId(const nsCString& aNodeId)
 {
-  // TODO: hash mNodeId with machine specific data.
+#ifdef HASH_NODE_ID_WITH_DEVICE_ID
+  if (!aNodeId.IsEmpty() && !aNodeId.EqualsLiteral("null")) {
+    string16 deviceId;
+    int volumeId;
+    if (!rlz_lib::GetRawMachineId(&deviceId, &volumeId)) {
+      return false;
+    }
+
+    // TODO: Switch to SHA256.
+    mozilla::SHA1Sum hash;
+    hash.update(deviceId.c_str(), deviceId.size() * sizeof(string16::value_type));
+    hash.update(aNodeId.get(), aNodeId.Length());
+    hash.update(&volumeId, sizeof(int));
+    uint8_t digest[mozilla::SHA1Sum::kHashSize];
+    hash.finish(digest);
+    if (!rlz_lib::BytesToString(digest, mozilla::SHA1Sum::kHashSize, &mNodeId)) {
+      return false;
+    }
+
+    // Overwrite device id as it could potentially identify the user, so
+    // there's no chance a GMP can read it and use it for identity tracking.
+    volumeId = 0;
+    memset(&deviceId.front(), '*', sizeof(string16::value_type) * deviceId.size());
+    deviceId = L"";
+  } else {
+    mNodeId = "null";
+  }
+#else
   mNodeId = std::string(aNodeId.BeginReading(), aNodeId.EndReading());
+#endif
   return true;
 }
 
