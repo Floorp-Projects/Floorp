@@ -86,7 +86,7 @@ public class FormHistoryRecord extends Record {
    */
   @Override
   public boolean congruentWith(Object o) {
-    if (o == null || !(o instanceof FormHistoryRecord)) {
+    if (!(o instanceof FormHistoryRecord)) {
       return false;
     }
     FormHistoryRecord other = (FormHistoryRecord) o;
@@ -99,7 +99,7 @@ public class FormHistoryRecord extends Record {
 
   @Override
   public boolean equalPayloads(Object o) {
-    if (o == null || !(o instanceof FormHistoryRecord)) {
+    if (!(o instanceof FormHistoryRecord)) {
       Logger.debug(LOG_TAG, "Not a FormHistoryRecord: " + o.getClass());
       return false;
     }

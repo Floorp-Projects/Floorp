@@ -85,10 +85,12 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
         }
 
         public static final Creator<FolderInfo> CREATOR = new Creator<FolderInfo>() {
+            @Override
             public FolderInfo createFromParcel(Parcel in) {
                 return new FolderInfo(in);
             }
 
+            @Override
             public FolderInfo[] newArray(int size) {
                 return new FolderInfo[size];
             }

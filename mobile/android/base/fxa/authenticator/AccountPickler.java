@@ -82,8 +82,8 @@ public class AccountPickler {
 
   public static ExtendedJSONObject toJSON(final AndroidFxAccount account, final long now) {
     final ExtendedJSONObject o = new ExtendedJSONObject();
-    o.put(KEY_PICKLE_VERSION, Long.valueOf(PICKLE_VERSION));
-    o.put(KEY_PICKLE_TIMESTAMP, Long.valueOf(now));
+    o.put(KEY_PICKLE_VERSION, PICKLE_VERSION);
+    o.put(KEY_PICKLE_TIMESTAMP, now);
 
     o.put(KEY_ACCOUNT_VERSION, AndroidFxAccount.CURRENT_ACCOUNT_VERSION);
     o.put(KEY_ACCOUNT_TYPE, FxAccountConstants.ACCOUNT_TYPE);
@@ -188,7 +188,7 @@ public class AccountPickler {
     Long timestamp = json.getLong(KEY_PICKLE_TIMESTAMP);
     if (timestamp == null) {
       Logger.warn(LOG_TAG, "Did not find timestamp in pickle file; ignoring.");
-      timestamp = Long.valueOf(-1);
+      timestamp = -1L;
     }
 
     Logger.info(LOG_TAG, "Un-pickled Android account named " + params.email + " (version " +

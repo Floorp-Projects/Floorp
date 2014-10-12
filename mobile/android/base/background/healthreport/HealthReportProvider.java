@@ -189,7 +189,7 @@ public class HealthReportProvider extends ContentProvider {
       Object object = values.get("value");
       if (object instanceof Integer ||
           object instanceof Long) {
-        storage.recordDailyLast(env, day, field.getID(), ((Integer) object).intValue());
+        storage.recordDailyLast(env, day, field.getID(), (Integer) object);
       } else if (object instanceof String) {
         storage.recordDailyLast(env, day, field.getID(), (String) object);
       } else {
@@ -287,7 +287,7 @@ public class HealthReportProvider extends ContentProvider {
   private MeasurementFields getFieldSpecs(ContentValues values) {
     final ArrayList<FieldSpec> specs = new ArrayList<FieldSpec>(values.size());
     for (Entry<String, Object> entry : values.valueSet()) {
-      specs.add(new FieldSpec(entry.getKey(), ((Integer) entry.getValue()).intValue()));
+      specs.add(new FieldSpec(entry.getKey(), (Integer) entry.getValue()));
     }
 
     return new MeasurementFields() {

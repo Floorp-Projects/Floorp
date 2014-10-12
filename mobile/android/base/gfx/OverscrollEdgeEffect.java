@@ -34,6 +34,7 @@ public class OverscrollEdgeEffect implements Overscroll {
         }
     }
 
+    @Override
     public void setSize(final int width, final int height) {
         mEdges[LEFT].setSize(height, width);
         mEdges[RIGHT].setSize(height, width);
@@ -65,6 +66,7 @@ public class OverscrollEdgeEffect implements Overscroll {
         }
     }
 
+    @Override
     public void setVelocity(final float velocity, final Axis axis) {
         final EdgeEffect edge = getEdgeForAxisAndSide(axis, velocity);
 
@@ -79,6 +81,7 @@ public class OverscrollEdgeEffect implements Overscroll {
         invalidate();
     }
 
+    @Override
     public void setDistance(final float distance, final Axis axis) {
         // The first overscroll event often has zero distance. Throw it out
         if (distance == 0.0f) {
@@ -90,6 +93,7 @@ public class OverscrollEdgeEffect implements Overscroll {
         invalidate();
     }
 
+    @Override
     public void draw(final Canvas canvas, final ImmutableViewportMetrics metrics) {
         if (metrics == null) {
             return;
