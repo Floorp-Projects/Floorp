@@ -263,6 +263,7 @@ public class GeckoAccessibility {
             AccessibilityManager accessibilityManager =
                 (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
             accessibilityManager.addAccessibilityStateChangeListener(new AccessibilityManager.AccessibilityStateChangeListener() {
+                @Override
                 public void onAccessibilityStateChanged(boolean enabled) {
                     updateAccessibilitySettings(context);
                 }

@@ -224,7 +224,7 @@ public class ExtendedJSONObject {
       return (Integer) val;
     }
     if (val instanceof Long) {
-      return Integer.valueOf(((Long) val).intValue());
+      return ((Long) val).intValue();
     }
     if (val instanceof String) {
       return Integer.parseInt((String) val, 10);
@@ -243,7 +243,7 @@ public class ExtendedJSONObject {
 
     // This is absurd.
     if (val instanceof Double) {
-      double millis = ((Double) val).doubleValue() * 1000;
+      double millis = ((Double) val) * 1000;
       return Double.valueOf(millis).longValue();
     }
     if (val instanceof Float) {
@@ -342,7 +342,7 @@ public class ExtendedJSONObject {
 
   @Override
   public boolean equals(Object o) {
-    if (o == null || !(o instanceof ExtendedJSONObject)) {
+    if (!(o instanceof ExtendedJSONObject)) {
       return false;
     }
     if (o == this) {

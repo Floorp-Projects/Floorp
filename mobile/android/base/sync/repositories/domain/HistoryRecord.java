@@ -103,7 +103,7 @@ public class HistoryRecord extends Record {
    */
   @Override
   public boolean congruentWith(Object o) {
-    if (o == null || !(o instanceof HistoryRecord)) {
+    if (!(o instanceof HistoryRecord)) {
       return false;
     }
     HistoryRecord other = (HistoryRecord) o;
@@ -115,7 +115,7 @@ public class HistoryRecord extends Record {
 
   @Override
   public boolean equalPayloads(Object o) {
-    if (o == null || !(o instanceof HistoryRecord)) {
+    if (!(o instanceof HistoryRecord)) {
       Logger.debug(LOG_TAG, "Not a HistoryRecord: " + o.getClass());
       return false;
     }

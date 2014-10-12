@@ -162,7 +162,7 @@ public class NotificationHandler {
      * @return               whether the notification is an AlertNotification showing progress.
      */
     private boolean isProgressStyle(Notification notification) {
-        if (notification != null && notification instanceof AlertNotification) {
+        if (notification instanceof AlertNotification) {
             return ((AlertNotification)notification).isProgressStyle();
         }
         return false;

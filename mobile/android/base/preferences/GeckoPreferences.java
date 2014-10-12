@@ -440,6 +440,7 @@ OnSharedPreferenceChangeListener
         intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT_ARGUMENTS, fragmentArgs);
     }
 
+    @Override
     public boolean isValidFragment(String fragmentName) {
         return GeckoPreferenceFragment.class.getName().equals(fragmentName);
     }
@@ -1288,6 +1289,7 @@ OnSharedPreferenceChangeListener
                     prefSetter = new TwoStatePrefSetter();
                 }
                 ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
                     public void run() {
                         prefSetter.setBooleanPref(pref, value);
                     }

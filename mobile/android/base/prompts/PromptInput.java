@@ -62,6 +62,7 @@ public class PromptInput {
             mAutofocus = object.optBoolean("autofocus");
         }
 
+        @Override
         public View getView(final Context context) throws UnsupportedOperationException {
             EditText input = new FloatingHintEditText(context);
             input.setInputType(InputType.TYPE_CLASS_TEXT);
@@ -100,6 +101,7 @@ public class PromptInput {
             super(obj);
         }
 
+        @Override
         public View getView(final Context context) throws UnsupportedOperationException {
             EditText input = (EditText) super.getView(context);
             input.setRawInputType(Configuration.KEYBOARD_12KEY);
@@ -115,6 +117,7 @@ public class PromptInput {
             super(obj);
         }
 
+        @Override
         public View getView(Context context) throws UnsupportedOperationException {
             EditText input = (EditText) super.getView(context);
             input.setInputType(InputType.TYPE_CLASS_TEXT |
@@ -139,6 +142,7 @@ public class PromptInput {
             mChecked = obj.optBoolean("checked");
         }
 
+        @Override
         public View getView(Context context) throws UnsupportedOperationException {
             CheckBox checkbox = new CheckBox(context);
             checkbox.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
@@ -169,6 +173,7 @@ public class PromptInput {
             super(obj);
         }
 
+        @Override
         public View getView(Context context) throws UnsupportedOperationException {
             if (mType.equals("date")) {
                 try {
@@ -277,6 +282,7 @@ public class PromptInput {
             mSelected = obj.optInt("selected");
         }
 
+        @Override
         public View getView(final Context context) throws UnsupportedOperationException {
             if (Versions.preHC) {
                 spinner = new Spinner(context);
@@ -321,6 +327,7 @@ public class PromptInput {
             super(obj);
         }
 
+        @Override
         public View getView(Context context) throws UnsupportedOperationException {
             // not really an input, but a way to add labels and such to the dialog
             TextView view = new TextView(context);
@@ -340,31 +347,35 @@ public class PromptInput {
 
     public static PromptInput getInput(JSONObject obj) {
         String type = obj.optString("type");
-        if (EditInput.INPUT_TYPE.equals(type)) {
-            return new EditInput(obj);
-        } else if (NumberInput.INPUT_TYPE.equals(type)) {
-            return new NumberInput(obj);
-        } else if (PasswordInput.INPUT_TYPE.equals(type)) {
-            return new PasswordInput(obj);
-        } else if (CheckboxInput.INPUT_TYPE.equals(type)) {
-            return new CheckboxInput(obj);
-        } else if (MenulistInput.INPUT_TYPE.equals(type)) {
-            return new MenulistInput(obj);
-        } else if (LabelInput.INPUT_TYPE.equals(type)) {
-            return new LabelInput(obj);
-        } else if (IconGridInput.INPUT_TYPE.equals(type)) {
-            return new IconGridInput(obj);
-        } else if (ColorPickerInput.INPUT_TYPE.equals(type)) {
-            return new ColorPickerInput(obj);
-        } else if (TabInput.INPUT_TYPE.equals(type)) {
-            return new TabInput(obj);
-        } else {
-            for (String dtType : DateTimeInput.INPUT_TYPES) {
-                if (dtType.equals(type)) {
-                    return new DateTimeInput(obj);
+        switch (type) {
+            case EditInput.INPUT_TYPE:
+                return new EditInput(obj);
+            case NumberInput.INPUT_TYPE:
+                return new NumberInput(obj);
+            case PasswordInput.INPUT_TYPE:
+                return new PasswordInput(obj);
+            case CheckboxInput.INPUT_TYPE:
+                return new CheckboxInput(obj);
+            case MenulistInput.INPUT_TYPE:
+                return new MenulistInput(obj);
+            case LabelInput.INPUT_TYPE:
+                return new LabelInput(obj);
+            case IconGridInput.INPUT_TYPE:
+                return new IconGridInput(obj);
+            case ColorPickerInput.INPUT_TYPE:
+                return new ColorPickerInput(obj);
+            case TabInput.INPUT_TYPE:
+                return new TabInput(obj);
+            default:
+                for (String dtType : DateTimeInput.INPUT_TYPES) {
+                    if (dtType.equals(type)) {
+                        return new DateTimeInput(obj);
+                    }
                 }
-            }
+
+                break;
         }
+
         return null;
     }
 

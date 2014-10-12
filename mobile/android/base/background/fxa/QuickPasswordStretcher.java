@@ -19,6 +19,7 @@ public class QuickPasswordStretcher implements PasswordStretcher {
     this.password = password;
   }
 
+  @Override
   public synchronized byte[] getQuickStretchedPW(byte[] emailUTF8) throws UnsupportedEncodingException, GeneralSecurityException {
     if (emailUTF8 == null) {
       throw new IllegalArgumentException("emailUTF8 must not be null");

@@ -62,6 +62,7 @@ class ActionModeCompatView extends LinearLayout implements GeckoMenu.ActionItemB
         ((GeckoMenu) mPopupMenu.getMenu()).setActionItemBarPresenter(this);
 
         mMenuButton.setOnClickListener(new View.OnClickListener() {
+            @Override
             public void onClick(View v) {
                 openMenu();
             }
@@ -90,6 +91,7 @@ class ActionModeCompatView extends LinearLayout implements GeckoMenu.ActionItemB
         return mPopupMenu.getMenu();
     }
 
+    @Override
     public void invalidate() {
         // onFinishInflate may not have been called yet on some versions of Android
         if (mPopupMenu != null && mMenuButton != null) {

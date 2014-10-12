@@ -15,7 +15,7 @@ this.EXPORTED_SYMBOLS = [ "addDebuggerToGlobal" ];
  * same thread.
  *
  * For documentation on the API, see:
- *   https://wiki.mozilla.org/Debugger
+ *   https://developer.mozilla.org/en-US/docs/Tools/Debugger-API
  */
 
 const init = Components.classes["@mozilla.org/jsdebugger;1"].createInstance(Components.interfaces.IJSDebugger);

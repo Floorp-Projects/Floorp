@@ -145,6 +145,7 @@ types.addType = function(name, typeObject={}, options={}) {
   }
 
   let type = object.merge({
+    toString() { return "[protocol type:" + name + "]"},
     name: name,
     primitive: !(typeObject.read || typeObject.write),
     read: identityWrite,
@@ -258,13 +259,15 @@ types.addActorType = function(name) {
       // if it isn't found.
       let actorID = typeof(v) === "string" ? v : v.actor;
       let front = ctx.conn.getActor(actorID);
-      if (front) {
-        front.form(v, detail, ctx);
-      } else {
-        front = new type.frontClass(ctx.conn, v, detail, ctx)
+      if (!front) {
+        front = new type.frontClass(ctx.conn);
         front.actorID = actorID;
         ctx.marshallPool().manage(front);
       }
+
+      v = type.formType(detail).read(v, front, detail);
+      front.form(v, detail, ctx);
+
       return front;
     },
     write: (v, ctx, detail) => {
@@ -274,12 +277,28 @@ types.addActorType = function(name) {
         if (!v.actorID) {
           ctx.marshallPool().manage(v);
         }
-        return v.form(detail);
+        return type.formType(detail).write(v.form(detail), ctx, detail);
       }
 
       // Writing a request from the client side, just send the actor id.
       return v.actorID;
     },
+    formType: (detail) => {
+      if (!("formType" in type.actorSpec)) {
+        return types.Primitive;
+      }
+
+      let formAttr = "formType";
+      if (detail) {
+        formAttr += "#" + detail;
+      }
+
+      if (!(formAttr in type.actorSpec)) {
+        throw new Error("No type defined for " + formAttr);
+      }
+
+      return type.actorSpec[formAttr];
+    }
   }, {
     // We usually freeze types, but actor types are updated when clients are
     // created, so don't freeze yet.
@@ -824,6 +843,8 @@ let Actor = Class({
     }
   },
 
+  toString: function() { return "[Actor " + this.typeName + "/" + this.actorID + "]" },
+
   _sendEvent: function(name, ...args) {
     if (!this._actorSpec.events.has(name)) {
       // It's ok to emit events that don't go over the wire.
@@ -908,11 +929,22 @@ let actorProto = function(actorProto) {
     methods: [],
   };
 
-  // Find method specifications attached to prototype properties.
+  // Find method and form specifications attached to prototype properties.
   for (let name of Object.getOwnPropertyNames(actorProto)) {
     let desc = Object.getOwnPropertyDescriptor(actorProto, name);
     if (!desc.value) {
       continue;
+    }
+
+    if (name.startsWith("formType")) {
+      if (typeof(desc.value) === "string") {
+        protoSpec[name] = types.getType(desc.value);
+      } else if (desc.value.name && registeredTypes.has(desc.value.name)) {
+        protoSpec[name] = desc.value;
+      } else {
+        // Shorthand for a newly-registered DictType.
+        protoSpec[name] = types.addDictType(actorProto.typeName + "__" + name, desc.value);
+      }
     }
 
     if (desc.value._methodSpec) {
@@ -1044,8 +1076,14 @@ let Front = Class({
   initialize: function(conn=null, form=null, detail=null, context=null) {
     Pool.prototype.initialize.call(this, conn);
     this._requests = [];
+
+    // protocol.js no longer uses this data in the constructor, only external
+    // uses do.  External usage of manually-constructed fronts will be
+    // drastically reduced if we convert the root and tab actors to
+    // protocol.js, in which case this can probably go away.
     if (form) {
       this.actorID = form.actor;
+      form = types.getType(this.typeName).formType(detail).read(form, this, detail);
       this.form(form, detail, context);
     }
   },
@@ -1120,6 +1158,7 @@ let Front = Class({
         args = event.request.read(packet, this);
       } catch(ex) {
         console.error("Error reading event: " + packet.type);
+        console.exception(ex);
         throw ex;
       }
       if (event.pre) {
