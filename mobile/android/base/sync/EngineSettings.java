@@ -16,7 +16,7 @@ public class EngineSettings {
   public EngineSettings(ExtendedJSONObject object) {
     try {
       this.syncID = object.getString("syncID");
-      this.version = object.getIntegerSafely("version").intValue();
+      this.version = object.getIntegerSafely("version");
     } catch (Exception e ) {
       throw new IllegalArgumentException(e);
     }

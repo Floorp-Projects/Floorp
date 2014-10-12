@@ -42,7 +42,7 @@ public class AndroidLevelCachingLogWriter extends LogWriter {
   private boolean shouldLogError(String logTag) {
     Boolean out = isErrorLoggable.get(logTag);
     if (out != null) {
-      return out.booleanValue();
+      return out;
     }
     out = Log.isLoggable(logTag, Log.ERROR);
     isErrorLoggable.put(logTag, out);
@@ -52,7 +52,7 @@ public class AndroidLevelCachingLogWriter extends LogWriter {
   private boolean shouldLogWarn(String logTag) {
     Boolean out = isWarnLoggable.get(logTag);
     if (out != null) {
-      return out.booleanValue();
+      return out;
     }
     out = Log.isLoggable(logTag, Log.WARN);
     isWarnLoggable.put(logTag, out);
@@ -62,7 +62,7 @@ public class AndroidLevelCachingLogWriter extends LogWriter {
   private boolean shouldLogInfo(String logTag) {
     Boolean out = isInfoLoggable.get(logTag);
     if (out != null) {
-      return out.booleanValue();
+      return out;
     }
     out = Log.isLoggable(logTag, Log.INFO);
     isInfoLoggable.put(logTag, out);
@@ -72,7 +72,7 @@ public class AndroidLevelCachingLogWriter extends LogWriter {
   private boolean shouldLogDebug(String logTag) {
     Boolean out = isDebugLoggable.get(logTag);
     if (out != null) {
-      return out.booleanValue();
+      return out;
     }
     out = Log.isLoggable(logTag, Log.DEBUG);
     isDebugLoggable.put(logTag, out);
@@ -83,43 +83,49 @@ public class AndroidLevelCachingLogWriter extends LogWriter {
   public boolean shouldLogVerbose(String logTag) {
     Boolean out = isVerboseLoggable.get(logTag);
     if (out != null) {
-      return out.booleanValue();
+      return out;
     }
     out = Log.isLoggable(logTag, Log.VERBOSE);
     isVerboseLoggable.put(logTag, out);
     return out;
   }
 
+  @Override
   public void error(String tag, String message, Throwable error) {
     if (shouldLogError(tag)) {
       inner.error(tag, message, error);
     }
   }
 
+  @Override
   public void warn(String tag, String message, Throwable error) {
     if (shouldLogWarn(tag)) {
       inner.warn(tag, message, error);
     }
   }
 
+  @Override
   public void info(String tag, String message, Throwable error) {
     if (shouldLogInfo(tag)) {
       inner.info(tag, message, error);
     }
   }
 
+  @Override
   public void debug(String tag, String message, Throwable error) {
     if (shouldLogDebug(tag)) {
       inner.debug(tag, message, error);
     }
   }
 
+  @Override
   public void trace(String tag, String message, Throwable error) {
     if (shouldLogVerbose(tag)) {
       inner.trace(tag, message, error);
     }
   }
 
+  @Override
   public void close() {
     inner.close();
   }

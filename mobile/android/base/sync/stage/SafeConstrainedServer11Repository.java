@@ -94,8 +94,8 @@ public class SafeConstrainedServer11Repository extends ConstrainedServer11Reposi
           return false;
         }
 
-        Logger.info(LOG_TAG, "First sync for " + collection + ": " + c.intValue() + " items.");
-        if (c.intValue() > fetchLimit) {
+        Logger.info(LOG_TAG, "First sync for " + collection + ": " + c + " items.");
+        if (c > fetchLimit) {
           Logger.warn(LOG_TAG, "Too many items to sync safely. Skipping.");
           return true;
         }

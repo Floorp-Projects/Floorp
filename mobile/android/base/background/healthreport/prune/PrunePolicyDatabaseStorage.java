@@ -41,10 +41,12 @@ public class PrunePolicyDatabaseStorage implements PrunePolicyStorage {
     this.currentEnvironmentID = -1;
   }
 
+  @Override
   public void pruneEvents(final int count) {
     getStorage().pruneEvents(count);
   }
 
+  @Override
   public void pruneEnvironments(final int count) {
     getStorage().pruneEnvironments(count);
 
@@ -59,10 +61,12 @@ public class PrunePolicyDatabaseStorage implements PrunePolicyStorage {
    * current environment from the profile cache, it will not delete data so be sure to prune by
    * other methods (e.g. {@link pruneEvents}) as well.
    */
+  @Override
   public int deleteDataBefore(final long time) {
     return getStorage().deleteDataBefore(time, getCurrentEnvironmentID());
   }
 
+  @Override
   public void cleanup() {
     final HealthReportDatabaseStorage storage = getStorage();
     // The change to auto_vacuum will only take affect after a vacuum.
@@ -70,14 +74,17 @@ public class PrunePolicyDatabaseStorage implements PrunePolicyStorage {
     storage.vacuum();
   }
 
+  @Override
   public int getEventCount() {
     return getStorage().getEventCount();
   }
 
+  @Override
   public int getEnvironmentCount() {
     return getStorage().getEnvironmentCount();
   }
 
+  @Override
   public void close() {
     if (client != null) {
       client.release();

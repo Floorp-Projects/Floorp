@@ -43,6 +43,8 @@ add_task(function* () {
 
   let result = yield promise_first_result("open a search");
   isnot(result, null, "Should have a result");
+  is(result.hasAttribute("image"), false, "Result shouldn't have an image attribute");
+
   let tabPromise = promiseTabLoaded(gBrowser.selectedTab);
   EventUtils.synthesizeMouseAtCenter(result, {});
   yield tabPromise;

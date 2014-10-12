@@ -23,9 +23,11 @@
 
 const {Ci, Cu} = require("chrome");
 const protocol = require("devtools/server/protocol");
-const {method, Arg, RetVal} = protocol;
+const {method, Arg, RetVal, Option} = protocol;
 const events = require("sdk/event/core");
 const {setTimeout, clearTimeout} = require("sdk/timers");
+const {MemoryActor} = require("devtools/server/actors/memory");
+const {FramerateActor} = require("devtools/server/actors/framerate");
 
 // How often do we pull markers from the docShells, and therefore, how often do
 // we send events to the front (knowing that when there are no markers in the
@@ -50,6 +52,26 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     "markers" : {
       type: "markers",
       markers: Arg(0, "array:json")
+    },
+
+    /**
+     * "memory" events emitted in tandem with "markers", if this was enabled
+     * when the recording started.
+     */
+    "memory" : {
+      type: "memory",
+      delta: Arg(0, "number"),
+      measurement: Arg(1, "json")
+    },
+
+    /**
+     * "ticks" events (from the refresh driver) emitted in tandem with "markers",
+     * if this was enabled when the recording started.
+     */
+    "ticks" : {
+      type: "ticks",
+      delta: Arg(0, "number"),
+      timestamps: Arg(1, "array:number")
     }
   },
 
@@ -122,6 +144,12 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     if (markers.length > 0) {
       events.emit(this, "markers", markers);
     }
+    if (this._memoryActor) {
+      events.emit(this, "memory", Date.now(), this._memoryActor.measure());
+    }
+    if (this._framerateActor) {
+      events.emit(this, "ticks", Date.now(), this._framerateActor.getPendingTicks());
+    }
 
     this._dataPullTimeout = setTimeout(() => {
       this._pullTimelineData();
@@ -143,7 +171,7 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
   /**
    * Start recording profile markers.
    */
-  start: method(function() {
+  start: method(function({ withMemory, withTicks }) {
     if (this._isRecording) {
       return;
     }
@@ -153,8 +181,22 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
       docShell.recordProfileTimelineMarkers = true;
     }
 
+    if (withMemory) {
+      this._memoryActor = new MemoryActor(this.conn, this.tabActor);
+      events.emit(this, "memory", Date.now(), this._memoryActor.measure());
+    }
+    if (withTicks) {
+      this._framerateActor = new FramerateActor(this.conn, this.tabActor);
+      this._framerateActor.startRecording();
+    }
+
     this._pullTimelineData();
-  }, {}),
+  }, {
+    request: {
+      withMemory: Option(0, "boolean"),
+      withTicks: Option(0, "boolean")
+    }
+  }),
 
   /**
    * Stop recording profile markers.
@@ -164,6 +206,14 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
       return;
     }
     this._isRecording = false;
+
+    if (this._memoryActor) {
+      this._memoryActor = null;
+    }
+    if (this._framerateActor) {
+      this._framerateActor.stopRecording();
+      this._framerateActor = null;
+    }
 
     for (let docShell of this.docShells) {
       docShell.recordProfileTimelineMarkers = false;

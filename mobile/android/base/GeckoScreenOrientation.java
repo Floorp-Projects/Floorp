@@ -298,24 +298,21 @@ public class GeckoScreenOrientation {
      *         otherwise.
      */
     public static ScreenOrientation screenOrientationFromString(String aStr) {
-        if ("portrait".equals(aStr)) {
-            return ScreenOrientation.PORTRAIT_PRIMARY;
+        switch (aStr) {
+            case "portrait":
+                return ScreenOrientation.PORTRAIT_PRIMARY;
+            case "landscape":
+                return ScreenOrientation.LANDSCAPE_PRIMARY;
+            case "portrait-primary":
+                return ScreenOrientation.PORTRAIT_PRIMARY;
+            case "portrait-secondary":
+                return ScreenOrientation.PORTRAIT_SECONDARY;
+            case "landscape-primary":
+                return ScreenOrientation.LANDSCAPE_PRIMARY;
+            case "landscape-secondary":
+                return ScreenOrientation.LANDSCAPE_SECONDARY;
         }
-        else if ("landscape".equals(aStr)) {
-            return ScreenOrientation.LANDSCAPE_PRIMARY;
-        }
-        else if ("portrait-primary".equals(aStr)) {
-            return ScreenOrientation.PORTRAIT_PRIMARY;
-        }
-        else if ("portrait-secondary".equals(aStr)) {
-            return ScreenOrientation.PORTRAIT_SECONDARY;
-        }
-        else if ("landscape-primary".equals(aStr)) {
-            return ScreenOrientation.LANDSCAPE_PRIMARY;
-        }
-        else if ("landscape-secondary".equals(aStr)) {
-            return ScreenOrientation.LANDSCAPE_SECONDARY;
-        }
+
         Log.w(LOGTAG, "screenOrientationFromString: unknown orientation string");
         return DEFAULT_SCREEN_ORIENTATION;
     }

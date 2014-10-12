@@ -284,7 +284,7 @@ public class TopSitesPanel extends HomeFragment {
 
         ContextMenuInfo menuInfo = item.getMenuInfo();
 
-        if (menuInfo == null || !(menuInfo instanceof TopSitesGridContextMenuInfo)) {
+        if (!(menuInfo instanceof TopSitesGridContextMenuInfo)) {
             return false;
         }
 
