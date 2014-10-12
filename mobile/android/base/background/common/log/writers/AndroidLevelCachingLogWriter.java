@@ -90,36 +90,42 @@ public class AndroidLevelCachingLogWriter extends LogWriter {
     return out;
   }
 
+  @Override
   public void error(String tag, String message, Throwable error) {
     if (shouldLogError(tag)) {
       inner.error(tag, message, error);
     }
   }
 
+  @Override
   public void warn(String tag, String message, Throwable error) {
     if (shouldLogWarn(tag)) {
       inner.warn(tag, message, error);
     }
   }
 
+  @Override
   public void info(String tag, String message, Throwable error) {
     if (shouldLogInfo(tag)) {
       inner.info(tag, message, error);
     }
   }
 
+  @Override
   public void debug(String tag, String message, Throwable error) {
     if (shouldLogDebug(tag)) {
       inner.debug(tag, message, error);
     }
   }
 
+  @Override
   public void trace(String tag, String message, Throwable error) {
     if (shouldLogVerbose(tag)) {
       inner.trace(tag, message, error);
     }
   }
 
+  @Override
   public void close() {
     inner.close();
   }

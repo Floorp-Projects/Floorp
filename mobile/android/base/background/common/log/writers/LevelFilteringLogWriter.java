@@ -20,6 +20,7 @@ public class LevelFilteringLogWriter extends LogWriter {
     this.logLevel = logLevel;
   }
 
+  @Override
   public void close() {
     inner.close();
   }
