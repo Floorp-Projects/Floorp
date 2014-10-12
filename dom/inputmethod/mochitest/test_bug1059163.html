@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1059163
+-->
+<head>
+  <title>Basic test for repeat sendKey events</title>
+  <script type="application/javascript;version=1.7" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.7" src="inputmethod_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1059163">Mozilla Bug 1059163</a>
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+inputmethod_setup(function() {
+  runTest();
+});
+
+// The frame script running in the file
+function appFrameScript() {
+  addMessageListener('test:InputMethod:clear', function() {
+    var t = content.document.getElementById('text');
+    t.innerHTML = '';
+  });
+}
+
+function runTest() {
+  let im = navigator.mozInputMethod;
+
+  // Set current page as an input method.
+  SpecialPowers.wrap(im).setActive(true);
+
+  // Create an app frame to recieve keyboard inputs.
+  let app = document.createElement('iframe');
+  app.src = 'file_test_contenteditable.html';
+  app.setAttribute('mozbrowser', true);
+  document.body.appendChild(app);
+  app.addEventListener('mozbrowserloadend', function() {
+    let mm = SpecialPowers.getBrowserFrameMessageManager(app);
+
+    function register() {
+      im.inputcontext.onselectionchange = function() {
+        im.inputcontext.onselectionchange = null;
+
+        is(im.inputcontext.textBeforeCursor, '', 'textBeforeCursor');
+        is(im.inputcontext.textBeforeCursor, '', 'textAfterCursor');
+        is(im.inputcontext.selectionStart, 0, 'selectionStart');
+        is(im.inputcontext.selectionEnd, 0, 'selectionEnd');
+
+        inputmethod_cleanup();
+      };
+
+      mm.sendAsyncMessage('test:InputMethod:clear');
+    }
+
+    if (im.inputcontext) {
+       register();
+    }
+    else {
+      im.oninputcontextchange = function() {
+        if (im.inputcontext) {
+          im.oninputcontextchange = null;
+          register();
+        }
+      };
+    }
+
+    mm.loadFrameScript('data:,(' + appFrameScript.toString() + ')();', false);
+  });
+}
+</script>
+</pre>
+</body>
+</html>
+

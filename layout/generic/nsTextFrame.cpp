@@ -4476,6 +4476,15 @@ nsTextFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
 /* virtual */ void
 nsTextFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
+  // A belt-and-braces check just in case we never get the
+  // MarkIntrinsicISizesDirty call from the style system.
+  if (StyleText()->mTextTransform == NS_STYLE_TEXT_TRANSFORM_CAPITALIZE &&
+      mTextRun &&
+      !(mTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_TRANSFORMED)) {
+    NS_ERROR("the current textrun doesn't match the style");
+    // The current textrun is now of the wrong type.
+    ClearTextRuns();
+  }
   nsFrame::DidSetStyleContext(aOldStyleContext);
 }
 

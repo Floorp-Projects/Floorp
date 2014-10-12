@@ -12,12 +12,8 @@ endif
 
 TARGET_DIST = $(TARGET_DEPTH)/dist
 
-ifeq ($(MOZ_BUILD_APP),camino)
-browser_path = $(TARGET_DIST)/Camino.app/Contents/MacOS/Camino
-else
 ifeq ($(OS_ARCH),Darwin)
 browser_path = $(TARGET_DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/MacOS/$(program)
 else
 browser_path = $(TARGET_DIST)/bin/$(program)
-endif
 endif
