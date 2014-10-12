@@ -171,8 +171,7 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
   }
   OCSPResponseExtension extension;
   if (aORT == ORTCriticalExtension || aORT == ORTNoncriticalExtension) {
-    // python DottedOIDToCode.py --tlv some-Mozilla-OID \
-    //        1.3.6.1.4.1.13769.666.666.666.1.500.9.2
+    // python DottedOIDToCode.py --tlv some-Mozilla-OID 1.3.6.1.4.1.13769.666.666.666.1.500.9.2
     static const uint8_t tlv_some_Mozilla_OID[] = {
       0x06, 0x12, 0x2b, 0x06, 0x01, 0x04, 0x01, 0xeb, 0x49, 0x85, 0x1a, 0x85,
       0x1a, 0x85, 0x1a, 0x01, 0x83, 0x74, 0x09, 0x02
