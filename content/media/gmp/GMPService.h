@@ -17,6 +17,8 @@
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsITimer.h"
+#include "nsClassHashtable.h"
+#include "nsDataHashtable.h"
 
 template <class> struct already_AddRefed;
 
@@ -113,6 +115,14 @@ private:
   nsCOMPtr<nsITimer> mAsyncShutdownTimeout; // GMP Thread only.
 
   nsCOMPtr<nsIFile> mStorageBaseDir;
+
+  // Hashes of (origin,topLevelOrigin) to the node id for
+  // non-persistent sessions.
+  nsClassHashtable<nsUint32HashKey, nsCString> mTempNodeIds;
+
+  // Hashes node id to whether that node id is allowed to store data
+  // persistently on disk.
+  nsDataHashtable<nsCStringHashKey, bool> mPersistentStorageAllowed;
 };
 
 } // namespace gmp
