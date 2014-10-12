@@ -665,7 +665,7 @@ public class ContactService implements GeckoEventListener {
     }
 
     private boolean bool(int integer) {
-        return integer != 0 ? true : false;
+        return integer != 0;
     }
 
     private void getGenericDataAsJSONObject(Cursor cursor, JSONArray array, final String dataColumn,
