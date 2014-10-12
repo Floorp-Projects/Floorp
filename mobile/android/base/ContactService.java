@@ -247,9 +247,7 @@ public class ContactService implements GeckoEventListener {
                 // Truncate the raw contacts IDs array if necessary
                 if (filterLimit > 0 && allRawContactIds.length > filterLimit) {
                     long[] truncatedRawContactIds = new long[filterLimit];
-                    for (int i = 0; i < filterLimit; i++) {
-                        truncatedRawContactIds[i] = allRawContactIds[i];
-                    }
+                    System.arraycopy(allRawContactIds, 0, truncatedRawContactIds, 0, filterLimit);
                     return truncatedRawContactIds;
                 }
                 return allRawContactIds;
