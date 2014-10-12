@@ -325,10 +325,12 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
     return authHeaderProvider;
   }
 
+  @Override
   public String ifUnmodifiedSince() {
     return null;
   }
 
+  @Override
   public void handleRequestSuccess(SyncStorageResponse response) {
     if (this.isUploading) {
       this.handleUploadSuccess(response);
@@ -355,6 +357,7 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
     this.callback.handleFailure(response);
   }
 
+  @Override
   public void handleRequestFailure(SyncStorageResponse response) {
     if (response.getStatusCode() == 404) {
       this.callback.handleMissing(this, response);
@@ -363,6 +366,7 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
     this.callback.handleFailure(response);
   }
 
+  @Override
   public void handleRequestError(Exception e) {
     this.callback.handleError(e);
   }

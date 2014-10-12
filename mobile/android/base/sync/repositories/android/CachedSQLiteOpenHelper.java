@@ -41,6 +41,7 @@ public abstract class CachedSQLiteOpenHelper extends SQLiteOpenHelper {
     return writableDatabase;
   }
 
+  @Override
   synchronized public void close() {
     if (readableDatabase != null) {
       readableDatabase.close();
