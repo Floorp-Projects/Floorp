@@ -48,7 +48,10 @@ public:
   // Main thread only.
   // Loads the CDM corresponding to mKeySystem.
   // Calls MediaKeys::OnCDMCreated() when the CDM is created.
-  void Init(PromiseId aPromiseId);
+  void Init(PromiseId aPromiseId,
+            const nsAString& aOrigin,
+            const nsAString& aTopLevelOrigin,
+            bool aInPrivateBrowsing);
 
   // Main thread only.
   // Uses the CDM to create a key session.
@@ -165,8 +168,15 @@ public:
 
 private:
 
+  struct InitData {
+    uint32_t mPromiseId;
+    nsAutoString mOrigin;
+    nsAutoString mTopLevelOrigin;
+    bool mInPrivateBrowsing;
+  };
+
   // GMP thread only.
-  void gmp_Init(uint32_t aPromiseId);
+  void gmp_Init(nsAutoPtr<InitData> aData);
 
   // GMP thread only.
   void gmp_Shutdown();
