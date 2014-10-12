@@ -63,8 +63,7 @@ public class AndroidFxAccount {
   public static final String BUNDLE_KEY_STATE_LABEL = "stateLabel";
   public static final String BUNDLE_KEY_STATE = "state";
 
-  protected static final List<String> ANDROID_AUTHORITIES = Collections.unmodifiableList(Arrays.asList(
-      new String[] { BrowserContract.AUTHORITY }));
+  protected static final List<String> ANDROID_AUTHORITIES = Collections.unmodifiableList(Arrays.asList(BrowserContract.AUTHORITY));
 
   protected final Context context;
   protected final AccountManager accountManager;
