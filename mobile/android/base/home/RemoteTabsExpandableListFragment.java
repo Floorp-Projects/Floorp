@@ -168,7 +168,9 @@ public class RemoteTabsExpandableListFragment extends HomeFragment implements Re
                     info.url = tab.url;
                     info.title = tab.title;
                     return info;
-                } else if (type == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
+                }
+
+                if (type == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
                     final RemoteClient client = (RemoteClient) adapter.getGroup(groupPosition);
                     final RemoteTabsClientContextMenuInfo info = new RemoteTabsClientContextMenuInfo(view, position, id, client);
                     return info;
@@ -288,11 +290,14 @@ public class RemoteTabsExpandableListFragment extends HomeFragment implements Re
             sState.setClientHidden(info.client.guid, true);
             getLoaderManager().restartLoader(LOADER_ID_REMOTE_TABS, null, mCursorLoaderCallbacks);
             return true;
-        } else if (itemId == R.id.home_remote_tabs_show_client) {
+        }
+
+        if (itemId == R.id.home_remote_tabs_show_client) {
             sState.setClientHidden(info.client.guid, false);
             getLoaderManager().restartLoader(LOADER_ID_REMOTE_TABS, null, mCursorLoaderCallbacks);
             return true;
         }
+
         return false;
     }
 

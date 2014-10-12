@@ -111,16 +111,20 @@ public final class Reporter extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
 
-        if (action.equals(ACTION_FLUSH_TO_BUNDLE)) {
-            flush();
-            return;
-        } else if (action.equals(WifiScanner.ACTION_WIFIS_SCANNED)) {
-            receivedWifiMessage(intent);
-        } else if (action.equals(CellScanner.ACTION_CELLS_SCANNED)) {
-            receivedCellMessage(intent);
-        } else if (action.equals(GPSScanner.ACTION_GPS_UPDATED)) {
-            // Calls reportCollectedLocation, this is the ideal case
-            receivedGpsMessage(intent);
+        switch (action) {
+            case ACTION_FLUSH_TO_BUNDLE:
+                flush();
+                return;
+            case WifiScanner.ACTION_WIFIS_SCANNED:
+                receivedWifiMessage(intent);
+                break;
+            case CellScanner.ACTION_CELLS_SCANNED:
+                receivedCellMessage(intent);
+                break;
+            case GPSScanner.ACTION_GPS_UPDATED:
+                // Calls reportCollectedLocation, this is the ideal case
+                receivedGpsMessage(intent);
+                break;
         }
 
         if (mBundle != null &&

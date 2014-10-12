@@ -556,7 +556,9 @@ public class ToolbarEditText extends CustomEditText
                 }
 
                 return true;
-            } else if (GamepadUtils.isBackKey(event)) {
+            }
+
+            if (GamepadUtils.isBackKey(event)) {
                 if (mDismissListener != null) {
                     mDismissListener.onDismiss();
                 }
