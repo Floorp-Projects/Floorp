@@ -402,41 +402,47 @@ public class ContactService implements GeckoEventListener {
         filterValue = filterValue.toLowerCase();
         databaseValue = databaseValue.toLowerCase();
 
-        if ("match".equals(filterOp)) {
-            // If substring matching is a positive number, only pay attention to the last X characters
-            // of both the filter and database values
-            if (substringMatching > 0) {
-                databaseValue = substringStartFromEnd(cleanPhoneNumber(databaseValue), substringMatching);
-                filterValue = substringStartFromEnd(cleanPhoneNumber(filterValue), substringMatching);
-                return databaseValue.startsWith(filterValue);
-            }
-            return databaseValue.equals(filterValue);
-        } else if ("equals".equals(filterOp)) {
-            if (isPhone) {
-                return PhoneNumberUtils.compare(filterValue, databaseValue);
-            }
-            return databaseValue.equals(filterValue);
-        } else if ("contains".equals(filterOp)) {
-            if (isPhone) {
-                filterValue = cleanPhoneNumber(filterValue);
-                databaseValue = cleanPhoneNumber(databaseValue);
-            }
-            return databaseValue.contains(filterValue);
-        } else if ("startsWith".equals(filterOp)) {
-            // If a phone number, remove non-dialable characters and then only pay attention to
-            // the last X digits given by the substring matching values (see bug 877302)
-            if (isPhone) {
-                String cleanedDatabasePhone = cleanPhoneNumber(databaseValue);
+        switch (filterOp) {
+            case "match":
+                // If substring matching is a positive number, only pay attention to the last X characters
+                // of both the filter and database values
                 if (substringMatching > 0) {
-                    cleanedDatabasePhone = substringStartFromEnd(cleanedDatabasePhone, substringMatching);
+                    databaseValue = substringStartFromEnd(cleanPhoneNumber(databaseValue), substringMatching);
+                    filterValue = substringStartFromEnd(cleanPhoneNumber(filterValue), substringMatching);
+                    return databaseValue.startsWith(filterValue);
                 }
 
-                if (cleanedDatabasePhone.startsWith(filterValue)) {
-                    return true;
+                return databaseValue.equals(filterValue);
+            case "equals":
+                if (isPhone) {
+                    return PhoneNumberUtils.compare(filterValue, databaseValue);
                 }
-            }
-            return databaseValue.startsWith(filterValue);
+
+                return databaseValue.equals(filterValue);
+            case "contains":
+                if (isPhone) {
+                    filterValue = cleanPhoneNumber(filterValue);
+                    databaseValue = cleanPhoneNumber(databaseValue);
+                }
+
+                return databaseValue.contains(filterValue);
+            case "startsWith":
+                // If a phone number, remove non-dialable characters and then only pay attention to
+                // the last X digits given by the substring matching values (see bug 877302)
+                if (isPhone) {
+                    String cleanedDatabasePhone = cleanPhoneNumber(databaseValue);
+                    if (substringMatching > 0) {
+                        cleanedDatabasePhone = substringStartFromEnd(cleanedDatabasePhone, substringMatching);
+                    }
+
+                    if (cleanedDatabasePhone.startsWith(filterValue)) {
+                        return true;
+                    }
+                }
+
+                return databaseValue.startsWith(filterValue);
         }
+
         return false;
     }
 
