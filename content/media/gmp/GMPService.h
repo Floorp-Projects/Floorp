@@ -32,7 +32,7 @@ public:
   static already_AddRefed<GeckoMediaPluginService> GetGeckoMediaPluginService();
 
   GeckoMediaPluginService();
-  void Init();
+  nsresult Init();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZIGECKOMEDIAPLUGINSERVICE
@@ -111,6 +111,8 @@ private:
 
   nsTArray<nsRefPtr<GMPParent>> mAsyncShutdownPlugins; // GMP Thread only.
   nsCOMPtr<nsITimer> mAsyncShutdownTimeout; // GMP Thread only.
+
+  nsCOMPtr<nsIFile> mStorageBaseDir;
 };
 
 } // namespace gmp
