@@ -301,6 +301,7 @@ SearchSuggestionUIController.prototype = {
 
   _makeTableRow: function (type, suggestionStr, currentRow, searchWords) {
     let row = document.createElementNS(HTML_NS, "tr");
+    row.dir = "auto";
     row.classList.add("searchSuggestionRow");
     row.classList.add(type);
     row.setAttribute("role", "presentation");
@@ -365,7 +366,6 @@ SearchSuggestionUIController.prototype = {
     this._table = document.createElementNS(HTML_NS, "table");
     this._table.id = id;
     this._table.hidden = true;
-    this._table.dir = "auto";
     this._table.classList.add("searchSuggestionTable");
     this._table.setAttribute("role", "listbox");
     return this._table;
