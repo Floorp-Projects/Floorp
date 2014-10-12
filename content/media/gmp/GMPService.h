@@ -114,7 +114,9 @@ private:
   nsTArray<nsRefPtr<GMPParent>> mAsyncShutdownPlugins; // GMP Thread only.
   nsCOMPtr<nsITimer> mAsyncShutdownTimeout; // GMP Thread only.
 
+#ifndef MOZ_WIDGET_GONK
   nsCOMPtr<nsIFile> mStorageBaseDir;
+#endif
 
   // Hashes of (origin,topLevelOrigin) to the node id for
   // non-persistent sessions.

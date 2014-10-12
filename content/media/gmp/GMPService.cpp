@@ -177,8 +177,11 @@ GeckoMediaPluginService::Init()
     prefs->AddObserver("media.gmp.plugin.crash", this, false);
   }
 
+#ifndef MOZ_WIDGET_GONK
   // Directory service is main thread only, so cache the profile dir here
   // so that we can use it off main thread.
+  // We only do this on non-B2G, as this fails in multi-process Gecko.
+  // TODO: Make this work in multi-process Gecko.
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mStorageBaseDir));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -193,6 +196,7 @@ GeckoMediaPluginService::Init()
   if (NS_WARN_IF(NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)) {
     return rv;
   }
+#endif
 
   // Kick off scanning for plugins
   nsCOMPtr<nsIThread> thread;
@@ -889,10 +893,14 @@ GeckoMediaPluginService::ReAddOnGMPThread(nsRefPtr<GMPParent>& aOld)
 NS_IMETHODIMP
 GeckoMediaPluginService::GetStorageDir(nsIFile** aOutFile)
 {
+#ifndef MOZ_WIDGET_GONK
   if (NS_WARN_IF(!mStorageBaseDir)) {
     return NS_ERROR_FAILURE;
   }
   return mStorageBaseDir->Clone(aOutFile);
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 static nsresult
@@ -987,6 +995,11 @@ GeckoMediaPluginService::GetNodeId(const nsAString& aOrigin,
        NS_ConvertUTF16toUTF8(aOrigin).get(),
        NS_ConvertUTF16toUTF8(aTopLevelOrigin).get(),
        (aInPrivateBrowsing ? "PrivateBrowsing" : "NonPrivateBrowsing")));
+
+#ifdef MOZ_WIDGET_GONK
+  NS_WARNING("GeckoMediaPluginService::GetNodeId Not implemented on B2G");
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 
   nsresult rv;
   const uint32_t NodeIdSaltLength = 32;
