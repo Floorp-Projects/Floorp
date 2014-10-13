@@ -160,6 +160,8 @@ DER_GetInteger_Util
 DER_Lengths
 DER_SetUInteger
 DER_UTCTimeToTime_Util
+DSAU_DecodeDerSigToLen
+DSAU_EncodeDerSigWithLen
 DTLS_GetHandshakeTimeout
 DTLS_ImportFD
 HASH_Begin
@@ -308,6 +310,7 @@ PK11_DeriveWithTemplate
 PK11_DestroyContext
 PK11_DestroyGenericObject
 PK11_DestroyMergeLog
+PK11_DestroyObject
 PK11_DestroyTokenObject
 PK11_DigestBegin
 PK11_DigestFinal
@@ -369,6 +372,7 @@ PK11_ImportCert
 PK11_ImportCertForKey
 PK11_ImportCRL
 PK11_ImportDERPrivateKeyInfoAndReturnKey
+PK11_ImportPublicKey
 PK11_ImportSymKey
 PK11_InitPin
 PK11_IsDisabled
@@ -672,6 +676,7 @@ VFY_CreateContext
 VFY_DestroyContext
 VFY_End
 VFY_Update
+VFY_VerifyData
 VFY_VerifyDataDirect
 VFY_VerifyDataWithAlgorithmID
 _SGN_VerifyPKCS1DigestInfo
