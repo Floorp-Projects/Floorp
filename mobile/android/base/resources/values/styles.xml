@@ -63,10 +63,6 @@
     </style>
 
     <style name="Widget.Home.HomeList">
-        <item name="android:paddingTop">0dip</item>
-        <item name="android:paddingRight">0dip</item>
-        <item name="android:paddingLeft">0dip</item>
-        <item name="topDivider">true</item>
         <item name="android:scrollbarStyle">outsideOverlay</item>
     </style>
 
