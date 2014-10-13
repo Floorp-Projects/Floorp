@@ -3648,7 +3648,7 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level,
                               GLenum format,
                               GLenum type,
                               void* data, uint32_t byteLength,
-                              int jsArrayType, // a TypedArray format enum, or -1 if not relevant
+                              js::Scalar::Type jsArrayType,
                               WebGLTexelFormat srcFormat, bool srcPremultiplied)
 {
     const WebGLTexImageFunc func = WebGLTexImageFunc::TexImage;
@@ -3802,18 +3802,18 @@ WebGLContext::TexImage2D(GLenum rawTarget, GLint level,
 
     void* data;
     uint32_t length;
-    int jsArrayType;
+    js::Scalar::Type jsArrayType;
     if (pixels.IsNull()) {
         data = nullptr;
         length = 0;
-        jsArrayType = -1;
+        jsArrayType = js::Scalar::TypeMax;
     } else {
         const ArrayBufferView& view = pixels.Value();
         view.ComputeLengthAndData();
 
         data = view.Data();
         length = view.Length();
-        jsArrayType = int(JS_GetArrayBufferViewType(view.Obj()));
+        jsArrayType = JS_GetArrayBufferViewType(view.Obj());
     }
 
     if (!ValidateTexImageTarget(2, rawTarget, WebGLTexImageFunc::TexImage))
@@ -3850,7 +3850,7 @@ WebGLContext::TexImage2D(GLenum rawTarget, GLint level,
 
     return TexImage2D_base(rawTarget, level, internalformat, pixels->Width(),
                            pixels->Height(), 4*pixels->Width(), 0,
-                           format, type, pixelData, pixelDataLength, -1,
+                           format, type, pixelData, pixelDataLength, js::Scalar::TypeMax,
                            WebGLTexelFormat::RGBA8, false);
 }
 
@@ -3861,7 +3861,7 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
                                  GLsizei width, GLsizei height, GLsizei srcStrideOrZero,
                                  GLenum format, GLenum type,
                                  void* data, uint32_t byteLength,
-                                 int jsArrayType,
+                                 js::Scalar::Type jsArrayType,
                                  WebGLTexelFormat srcFormat, bool srcPremultiplied)
 {
     const WebGLTexImageFunc func = WebGLTexImageFunc::TexSubImage;
@@ -4027,7 +4027,7 @@ WebGLContext::TexSubImage2D(GLenum target, GLint level,
                               pixels->Width(), pixels->Height(),
                               4*pixels->Width(), format, type,
                               arr.Data(), arr.Length(),
-                              -1,
+                              js::Scalar::TypeMax,
                               WebGLTexelFormat::RGBA8, false);
 }
 
