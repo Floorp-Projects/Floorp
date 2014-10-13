@@ -292,9 +292,9 @@ MakeFrameDescriptor(uint32_t frameSize, FrameType type)
 
 // Returns the JSScript associated with the topmost Ion frame.
 inline JSScript *
-GetTopIonJSScript(ThreadSafeContext *cx, void **returnAddrOut = nullptr)
+GetTopIonJSScript(uint8_t *jitTop, void **returnAddrOut, ExecutionMode mode)
 {
-    JitFrameIterator iter(cx);
+    JitFrameIterator iter(jitTop, mode);
     MOZ_ASSERT(iter.type() == JitFrame_Exit);
     ++iter;
 

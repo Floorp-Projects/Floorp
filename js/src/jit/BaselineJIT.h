@@ -437,7 +437,7 @@ struct BaselineBailoutInfo
 };
 
 uint32_t
-BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIterator &iter,
+BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIterator &iter,
                      bool invalidate, BaselineBailoutInfo **bailoutInfo,
                      const ExceptionBailoutInfo *exceptionInfo = nullptr);
 
