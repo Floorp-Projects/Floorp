@@ -13,7 +13,7 @@ interface nsISupports;
  * A channel interface which allows special handling of encoded content
  */
 
-[scriptable, uuid(30d7ec3a-f376-4652-9276-3092ec57abb6)]
+[scriptable, uuid(29c29ce6-8ce4-45e6-8d60-36c8fa3e255b)]
 interface nsIEncodedChannel : nsISupports
 {
     /**
