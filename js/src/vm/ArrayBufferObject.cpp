@@ -985,7 +985,7 @@ template <>
 bool
 JSObject::is<js::ArrayBufferViewObject>() const
 {
-    return is<DataViewObject>() || is<TypedArrayObject>() || is<TypedObject>();
+    return is<DataViewObject>() || is<TypedArrayObject>();
 }
 
 void
