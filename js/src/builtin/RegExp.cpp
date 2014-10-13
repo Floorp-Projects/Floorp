@@ -670,7 +670,7 @@ bool
 js::regexp_exec(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsRegExp, regexp_exec_impl, args);
+    return CallNonGenericMethod<IsRegExp, regexp_exec_impl>(cx, args);
 }
 
 /* Separate interface for use by IonMonkey. */
@@ -721,7 +721,7 @@ bool
 js::regexp_test(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsRegExp, regexp_test_impl, args);
+    return CallNonGenericMethod<IsRegExp, regexp_test_impl>(cx, args);
 }
 
 bool
