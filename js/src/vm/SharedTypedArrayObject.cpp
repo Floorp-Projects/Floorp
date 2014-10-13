@@ -339,7 +339,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
     BufferGetter(JSContext *cx, unsigned argc, Value *vp)
     {
         CallArgs args = CallArgsFromVp(argc, vp);
-        return CallNonGenericMethod<is, BufferGetterImpl>(cx, args);
+        return CallNonGenericMethod(cx, is, BufferGetterImpl, args);
     }
 
     // Define an accessor for a read-only property that invokes a native getter
