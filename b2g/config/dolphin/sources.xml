@@ -17,13 +17,13 @@
   </project>
   <project name="gaia" path="gaia" remote="mozillaorg" revision="2a536e4df82410178d8440cc710d8f838a95a0b9"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="cc1f362ce43dce92ac786187ff4abf39060094bd"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="fd2ace405952a06d16eb8a1334129007c3f179fa"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="562d357b72279a9e35d4af5aeecc8e1ffa2f44f1"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="6ca2008ac50b163d31244ef9f036cb224f4f229b"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="7ddb07033043613303061416882c9b02ac3d76b6"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="95bb5b66b3ec5769c3de8d3f25d681787418e7d2"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="ebdad82e61c16772f6cd47e9f11936bf6ebe9aa0"/>
@@ -35,10 +35,10 @@
   <project name="device/sample" path="device/sample" revision="1a3d8efa0ad32ec8f145367a3cf0f54b97385c3c"/>
   <project name="platform/abi/cpp" path="abi/cpp" revision="18f1b5e28734183ff8073fe86dc46bc4ebba8a59"/>
   <project name="platform/bionic" path="bionic" revision="86b1f589c313422a7da1812512b9ec8d1cf9ba3c"/>
-  <project name="platform/bootable/recovery" path="bootable/recovery" revision="4eece0d80928a2b5266b78421ebf0c8686d4ad2c"/>
+  <project name="platform/bootable/recovery" path="bootable/recovery" revision="a556e98f857546c94b5a9c179ee3c99a7c17d729"/>
   <project name="platform/external/aac" path="external/aac" revision="fa3eba16446cc8f2f5e2dfc20d86a49dbd37299e"/>
   <project name="platform/external/bison" path="external/bison" revision="c2418b886165add7f5a31fc5609f0ce2d004a90e"/>
-  <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="c8e99ca7e11c00f8124196fe1726a15e6e976587"/>
+  <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="c50830cae1b748024eec7e73ad98a4e427f663c7"/>
   <project name="platform/external/bsdiff" path="external/bsdiff" revision="23e322ab19fb7d74c2c37e40ce364d9f709bdcee"/>
   <project name="platform/external/bzip2" path="external/bzip2" revision="1cb636bd8e9e5cdfd5d5b2909a122f6e80db62de"/>
   <project name="platform/external/checkpolicy" path="external/checkpolicy" revision="0d73ef7049feee794f14cf1af88d05dae8139914"/>
@@ -120,24 +120,24 @@
   <project name="platform/system/media" path="system/media" revision="7ff72c2ea2496fa50b5e8a915e56e901c3ccd240"/>
   <project name="platform/system/netd" path="system/netd" revision="3ae56364946d4a5bf5a5f83f12f9a45a30398e33"/>
   <project name="platform/system/security" path="system/security" revision="ee8068b9e7bfb2770635062fc9c2035be2142bd8"/>
-  <project name="platform/system/vold" path="system/vold" revision="2e43efe1b30d0b98574d293059556aebd2f46454"/>
+  <project name="platform/system/vold" path="system/vold" revision="118dec582647895a863dbbce8ec26bc7af457bbe"/>
   <!--original fetch url was http://sprdsource.spreadtrum.com:8085/b2g/android-->
   <remote fetch="https://git.mozilla.org/external/sprd-aosp" name="sprd-aosp"/>
   <default remote="sprd-aosp" revision="sprdb2g_gonk4.4" sync-j="4"/>
   <!-- Stock Android things -->
   <project name="platform/external/icu4c" path="external/icu4c" revision="2bb01561780583cc37bc667f0ea79f48a122d8a2"/>
   <!-- dolphin specific things -->
-  <project name="device/sprd" path="device/sprd" revision="3a0f1b51e3b27b36b9df484f3c286b6099889f6e"/>
+  <project name="device/sprd" path="device/sprd" revision="4eac1e31bf69596bf229a6877c9aa3493ecd9fce"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="4e58336019b5cbcfd134caf55b142236cf986618"/>
-  <project name="platform/frameworks/av" path="frameworks/av" revision="4387fe988e5a1001f29ce05fcfda03ed2d32137b"/>
+  <project name="platform/frameworks/av" path="frameworks/av" revision="facca8d3e35431b66f85a4eb42bc6c5b24bd04da"/>
   <project name="platform/hardware/akm" path="hardware/akm" revision="6d3be412647b0eab0adff8a2768736cf4eb68039"/>
   <project groups="invensense" name="platform/hardware/invensense" path="hardware/invensense" revision="e6d9ab28b4f4e7684f6c07874ee819c9ea0002a2"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="865ce3b4a2ba0b3a31421ca671f4d6c5595f8690"/>
-  <project name="kernel/common" path="kernel" revision="310657b79caae2c89e6375a4185fe35fde089c39"/>
+  <project name="kernel/common" path="kernel" revision="600fa6e2bbc9518a8c4ac9ad687d6eafd2cc9b7b"/>
   <project name="platform/system/core" path="system/core" revision="53d584d4a4b4316e4de9ee5f210d662f89b44e7e"/>
-  <project name="u-boot" path="u-boot" revision="982c1fd67b89d5573317c1796cf5b0143de44e8a"/>
-  <project name="vendor/sprd/gps" path="vendor/sprd/gps" revision="6974f8e771d4d8e910357a6739ab124768891e8f"/>
-  <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="1d4697b16ed039fd1de0a23bda150523e743e2ad"/>
+  <project name="u-boot" path="u-boot" revision="fc5df5228c1242cda0743231b3c63a89c802889e"/>
+  <project name="vendor/sprd/gps" path="vendor/sprd/gps" revision="7feb3df0e150053e0143ef525f6e082bda320aea"/>
+  <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="2be9b6d4984da4a2d0afde1e149c01a12f691f30"/>
   <project name="vendor/sprd/partner" path="vendor/sprd/partner" revision="8649c7145972251af11b0639997edfecabfc7c2e"/>
   <project name="vendor/sprd/proprietories" path="vendor/sprd/proprietories" revision="d2466593022f7078aaaf69026adf3367c2adb7bb"/>
 </manifest>
