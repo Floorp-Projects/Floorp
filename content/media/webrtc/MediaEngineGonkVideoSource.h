@@ -14,6 +14,7 @@
 
 #include "mozilla/Hal.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/dom/File.h"
 
 namespace mozilla {
 
