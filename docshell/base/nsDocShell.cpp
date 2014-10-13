@@ -2858,6 +2858,11 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
 
   nsTArray<mozilla::dom::ProfileTimelineMarker> profileTimelineMarkers;
 
+  // If we see an unpaired START, we keep it around for the next call
+  // to PopProfileTimelineMarkers.  We store the kept START objects in
+  // this array.
+  decltype(mProfileTimelineMarkers) keptMarkers;
+
   for (uint32_t i = 0; i < mProfileTimelineMarkers.Length(); ++i) {
     ProfilerMarkerTracing* startPayload = static_cast<ProfilerMarkerTracing*>(
       mProfileTimelineMarkers[i]->mPayload);
@@ -2866,6 +2871,8 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
     bool hasSeenPaintedLayer = false;
 
     if (startPayload->GetMetaData() == TRACING_INTERVAL_START) {
+      bool hasSeenEnd = false;
+
       // The assumption is that the devtools timeline flushes markers frequently
       // enough for the amount of markers to always be small enough that the
       // nested for loop isn't going to be a performance problem.
@@ -2893,8 +2900,18 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
             profileTimelineMarkers.AppendElement(marker);
           }
 
+          // We want the start to be dropped either way.
+          hasSeenEnd = true;
+
           break;
         }
+      }
+
+      // If we did not see the corresponding END, keep the START.
+      if (!hasSeenEnd) {
+        keptMarkers.AppendElement(mProfileTimelineMarkers[i]);
+        mProfileTimelineMarkers.RemoveElementAt(i);
+        --i;
       }
     }
   }
@@ -2902,6 +2919,7 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
   ToJSValue(aCx, profileTimelineMarkers, aProfileTimelineMarkers);
 
   ClearProfileTimelineMarkers();
+  mProfileTimelineMarkers.SwapElements(keptMarkers);
 
   return NS_OK;
 #else
@@ -2952,8 +2970,7 @@ nsDocShell::ClearProfileTimelineMarkers()
 {
 #ifdef MOZ_ENABLE_PROFILER_SPS
   for (uint32_t i = 0; i < mProfileTimelineMarkers.Length(); ++i) {
-    delete mProfileTimelineMarkers[i]->mPayload;
-    mProfileTimelineMarkers[i]->mPayload = nullptr;
+    delete mProfileTimelineMarkers[i];
   }
   mProfileTimelineMarkers.Clear();
 #endif
