@@ -8,8 +8,10 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.R;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -35,16 +37,35 @@ public class TabMenuStrip extends HorizontalScrollView
     private final int titleOffset;
     private final TabMenuStripLayout layout;
 
+    private final Paint shadowPaint;
+    private final int shadowSize;
+
     public TabMenuStrip(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         // Disable the scroll bar.
         setHorizontalScrollBarEnabled(false);
 
-        titleOffset = (int) (TITLE_OFFSET_DIPS * getResources().getDisplayMetrics().density);
+        final Resources res = getResources();
+
+        titleOffset = (int) (TITLE_OFFSET_DIPS * res.getDisplayMetrics().density);
 
         layout = new TabMenuStripLayout(context, attrs);
         addView(layout, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+
+        shadowSize = res.getDimensionPixelSize(R.dimen.tabs_strip_shadow_size);
+
+        shadowPaint = new Paint();
+        shadowPaint.setColor(res.getColor(R.color.url_bar_shadow));
+        shadowPaint.setStrokeWidth(0.0f);
+    }
+
+    @Override
+    public void draw(Canvas canvas) {
+        super.draw(canvas);
+
+        final int height = getHeight();
+        canvas.drawRect(0, height - shadowSize, getWidth(), height, shadowPaint);
     }
 
     @Override
