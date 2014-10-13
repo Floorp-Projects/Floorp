@@ -11,7 +11,6 @@
 
 #include "gc/Barrier.h"
 #include "js/HashTable.h"
-#include "js/OldDebugAPI.h"
 
 namespace js {
 

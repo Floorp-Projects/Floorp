@@ -261,4 +261,4 @@ user_pref("browser.uitour.url", "http://%(server)s/uitour-dummy/tour");
 user_pref("media.eme.enabled", true);
 
 // Don't prompt about e10s
-user_pref("browser.displayedE10SPrompt", 5);
+user_pref("browser.displayedE10SPrompt.1", 5);

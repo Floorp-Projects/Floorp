@@ -14,8 +14,6 @@
 #include "shared-libraries.h"
 #endif
 
-#include "js/OldDebugAPI.h"
-
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/IntegerPrintfMacros.h"

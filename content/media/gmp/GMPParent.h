@@ -99,26 +99,28 @@ public:
   GMPState State() const;
   nsIThread* GMPThread();
 
-  // A GMP can either be a single instance shared across all origins (like
+  // A GMP can either be a single instance shared across all NodeIds (like
   // in the OpenH264 case), or we can require a new plugin instance for every
-  // origin running the plugin (as in the EME plugin case).
+  // NodeIds running the plugin (as in the EME plugin case).
   //
-  // Plugins are associated with an origin by calling SetOrigin() before
+  // A NodeId is a hash of the ($urlBarOrigin, $ownerDocOrigin) pair.
+  //
+  // Plugins are associated with an NodeIds by calling SetNodeId() before
   // loading.
   //
-  // If a plugin has no origin specified and it is loaded, it is assumed to
-  // be shared across origins.
+  // If a plugin has no NodeId specified and it is loaded, it is assumed to
+  // be shared across NodeIds.
 
-  // Specifies that a GMP can only work with the specified origin.
-  void SetOrigin(const nsAString& aOrigin);
+  // Specifies that a GMP can only work with the specified NodeIds.
+  void SetNodeId(const nsACString& aNodeId);
 
-  // Returns true if a plugin can be or is being used across multiple origins.
-  bool CanBeSharedCrossOrigin() const;
+  // Returns true if a plugin can be or is being used across multiple NodeIds.
+  bool CanBeSharedCrossNodeIds() const;
 
-  // A GMP can be used from an origin if it's already been set to work with
-  // that origin, or if it's not been set to work with any origin and has
-  // not yet been loaded (i.e. it's not shared across origins).
-  bool CanBeUsedFrom(const nsAString& aOrigin) const;
+  // A GMP can be used from a NodeId if it's already been set to work with
+  // that NodeId, or if it's not been set to work with any NodeId and has
+  // not yet been loaded (i.e. it's not shared across NodeIds).
+  bool CanBeUsedFrom(const nsACString& aNodeId) const;
 
   already_AddRefed<nsIFile> GetDirectory() {
     return nsCOMPtr<nsIFile>(mDirectory).forget();
@@ -184,9 +186,9 @@ private:
   nsTArray<nsRefPtr<GMPTimerParent>> mTimers;
   nsTArray<nsRefPtr<GMPStorageParent>> mStorage;
   nsCOMPtr<nsIThread> mGMPThread;
-  // Origin the plugin is assigned to, or empty if the the plugin is not
-  // assigned to an origin.
-  nsAutoString mOrigin;
+  // NodeId the plugin is assigned to, or empty if the the plugin is not
+  // assigned to a NodeId.
+  nsAutoCString mNodeId;
 
   bool mAsyncShutdownRequired;
   bool mAsyncShutdownInProgress;

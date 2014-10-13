@@ -75,14 +75,7 @@ EvalCacheHashPolicy::match(const EvalCacheEntry &cacheEntry, const EvalCacheLook
            cacheEntry.pc == l.pc;
 }
 
-// There are two things we want to do with each script executed in EvalKernel:
-//  1. notify OldDebugAPI about script creation/destruction
-//  2. add the script to the eval cache when EvalKernel is finished
-//
-// NB: Although the eval cache keeps a script alive wrt to the JS engine, from
-// an OldDebugAPI  user's perspective, we want each eval() to create and
-// destroy a script. This hides implementation details and means we don't have
-// to deal with calls to JS_GetScriptObject for scripts in the eval cache.
+// Add the script to the eval cache when EvalKernel is finished
 class EvalScriptGuard
 {
     JSContext *cx_;

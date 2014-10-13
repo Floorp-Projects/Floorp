@@ -41,7 +41,6 @@
 #include "gc/Marking.h"
 #include "jit/Ion.h"
 #include "js/CharacterEncoding.h"
-#include "js/OldDebugAPI.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/Shape.h"

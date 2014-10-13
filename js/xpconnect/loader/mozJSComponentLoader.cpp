@@ -45,8 +45,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ScriptSettings.h"
 
-#include "js/OldDebugAPI.h"
-
 using namespace mozilla;
 using namespace mozilla::scache;
 using namespace xpc;
