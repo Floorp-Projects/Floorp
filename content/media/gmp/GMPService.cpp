@@ -143,7 +143,6 @@ GeckoMediaPluginService::GeckoMediaPluginService()
   : mMutex("GeckoMediaPluginService::mMutex")
   , mShuttingDown(false)
   , mShuttingDownOnGMPThread(false)
-  , mScannedPluginOnDisk(false)
   , mWaitingForPluginsAsyncShutdown(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -653,8 +652,6 @@ GeckoMediaPluginService::LoadFromEnvironment()
       pos = next + 1;
     }
   }
-
-  mScannedPluginOnDisk = true;
 }
 
 NS_IMETHODIMP
@@ -696,88 +693,47 @@ GeckoMediaPluginService::RemovePluginDirectory(const nsAString& aDirectory)
   return NS_OK;
 }
 
-class DummyRunnable : public nsRunnable {
-public:
-  NS_IMETHOD Run() { return NS_OK; }
-};
-
 NS_IMETHODIMP
-GeckoMediaPluginService::HasPluginForAPI(const nsACString& aAPI,
+GeckoMediaPluginService::HasPluginForAPI(const nsACString& aNodeId,
+                                         const nsACString& aAPI,
                                          nsTArray<nsCString>* aTags,
                                          bool* aResult)
 {
   NS_ENSURE_ARG(aTags && aTags->Length() > 0);
   NS_ENSURE_ARG(aResult);
 
-  const char* env = nullptr;
-  if (!mScannedPluginOnDisk && (env = PR_GetEnv("MOZ_GMP_PATH")) && *env) {
-    // We have a MOZ_GMP_PATH environment variable which may specify the
-    // location of plugins to load, and we haven't yet scanned the disk to
-    // see if there are plugins there. Get the GMP thread, which will
-    // cause an event to be dispatched to which scans for plugins. We
-    // dispatch a sync event to the GMP thread here in order to wait until
-    // after the GMP thread has scanned any paths in MOZ_GMP_PATH.
-    nsCOMPtr<nsIThread> thread;
-    nsresult rv = GetThread(getter_AddRefs(thread));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    thread->Dispatch(new DummyRunnable(), NS_DISPATCH_SYNC);
-    MOZ_ASSERT(mScannedPluginOnDisk, "Should have scanned MOZ_GMP_PATH by now");
-  }
-
-  {
-    MutexAutoLock lock(mMutex);
-    nsCString api(aAPI);
-    GMPParent* gmp = FindPluginForAPIFrom(0, api, *aTags, nullptr);
-    *aResult = (gmp != nullptr);
-  }
+  nsCString temp(aAPI);
+  GMPParent *parent = SelectPluginForAPI(aNodeId, temp, *aTags, false);
+  *aResult = !!parent;
 
   return NS_OK;
 }
 
 GMPParent*
-GeckoMediaPluginService::FindPluginForAPIFrom(size_t aSearchStartIndex,
-                                              const nsCString& aAPI,
-                                              const nsTArray<nsCString>& aTags,
-                                              size_t* aOutPluginIndex)
-{
-  mMutex.AssertCurrentThreadOwns();
-  for (size_t i = aSearchStartIndex; i < mPlugins.Length(); i++) {
-    GMPParent* gmp = mPlugins[i];
-    bool supportsAllTags = true;
-    for (uint32_t t = 0; t < aTags.Length(); t++) {
-      const nsCString& tag = aTags.ElementAt(t);
-      if (!gmp->SupportsAPI(aAPI, tag)) {
-        supportsAllTags = false;
-        break;
-      }
-    }
-    if (!supportsAllTags) {
-      continue;
-    }
-    if (aOutPluginIndex) {
-      *aOutPluginIndex = i;
-    }
-    return gmp;
-  }
-  return nullptr;
-}
-
-GMPParent*
 GeckoMediaPluginService::SelectPluginForAPI(const nsACString& aNodeId,
                                             const nsCString& aAPI,
-                                            const nsTArray<nsCString>& aTags)
+                                            const nsTArray<nsCString>& aTags,
+                                            bool aCloneCrossNodeIds)
 {
-  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread,
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread || !aCloneCrossNodeIds,
              "Can't clone GMP plugins on non-GMP threads.");
 
   GMPParent* gmpToClone = nullptr;
   {
     MutexAutoLock lock(mMutex);
-    size_t index = 0;
-    GMPParent* gmp = nullptr;
-    while ((gmp = FindPluginForAPIFrom(index, aAPI, aTags, &index))) {
+    for (uint32_t i = 0; i < mPlugins.Length(); i++) {
+      GMPParent* gmp = mPlugins[i];
+      bool supportsAllTags = true;
+      for (uint32_t t = 0; t < aTags.Length(); t++) {
+        const nsCString& tag = aTags[t];
+        if (!gmp->SupportsAPI(aAPI, tag)) {
+          supportsAllTags = false;
+          break;
+        }
+      }
+      if (!supportsAllTags) {
+        continue;
+      }
       if (aNodeId.IsEmpty()) {
         if (gmp->CanBeSharedCrossNodeIds()) {
           return gmp;
@@ -788,17 +744,15 @@ GeckoMediaPluginService::SelectPluginForAPI(const nsACString& aNodeId,
         return gmp;
       }
 
-      // This GMP has the correct type but has the wrong nodeId; hold on to it
+      // This GMP has the correct type but has the wrong origin; hold on to it
       // in case we need to clone it.
       gmpToClone = gmp;
-      // Loop around and try the next plugin; it may be usable from aNodeId.
-      index++;
     }
   }
 
   // Plugin exists, but we can't use it due to cross-origin separation. Create a
   // new one.
-  if (gmpToClone) {
+  if (aCloneCrossNodeIds && gmpToClone) {
     GMPParent* clone = ClonePlugin(gmpToClone);
     if (!aNodeId.IsEmpty()) {
       clone->SetNodeId(aNodeId);
