@@ -16,14 +16,9 @@
 #include "nsContentUtils.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "mozilla/Preferences.h"
-#include "nsContentTypeParser.h"
-#include "MP4Decoder.h"
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
 #endif
-#include "nsContentCID.h"
-#include "nsServiceManagerUtils.h"
-#include "mozIGeckoMediaPluginService.h"
 
 namespace mozilla {
 
@@ -112,82 +107,15 @@ MediaKeys::SetServerCertificate(const ArrayBufferViewOrArrayBuffer& aCert, Error
 }
 
 static bool
-HaveGMPFor(const nsCString& aKeySystem,
-           const nsCString& aAPI,
-           const nsCString& aTag = EmptyCString())
+IsSupportedKeySystem(const nsAString& aKeySystem)
 {
-  nsCOMPtr<mozIGeckoMediaPluginService> mps =
-    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-  if (NS_WARN_IF(!mps)) {
-    return false;
-  }
-
-  nsTArray<nsCString> tags;
-  tags.AppendElement(aKeySystem);
-  if (!aTag.IsEmpty()) {
-    tags.AppendElement(aTag);
-  }
-  // Note: EME plugins need a non-null nodeId here, as they must
-  // not be shared across origins.
-  bool hasPlugin = false;
-  if (NS_FAILED(mps->HasPluginForAPI(aAPI,
-                                     &tags,
-                                     &hasPlugin))) {
-    return false;
-  }
-  return hasPlugin;
-}
-
-static bool
-IsPlayableMP4Type(const nsAString& aContentType)
-{
-  nsContentTypeParser parser(aContentType);
-  nsAutoString mimeType;
-  nsresult rv = parser.GetType(mimeType);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-  nsAutoString codecs;
-  parser.GetParameter("codecs", codecs);
-
-  NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeType);
-  return MP4Decoder::CanHandleMediaType(mimeTypeUTF8, codecs);
-}
-
-bool
-MediaKeys::IsTypeSupported(const nsAString& aKeySystem,
-                           const Optional<nsAString>& aInitDataType,
-                           const Optional<nsAString>& aContentType)
-{
-  if (aKeySystem.EqualsLiteral("org.w3.clearkey") &&
-      (!aInitDataType.WasPassed() || aInitDataType.Value().EqualsLiteral("cenc")) &&
-      (!aContentType.WasPassed() || IsPlayableMP4Type(aContentType.Value())) &&
-      HaveGMPFor(NS_LITERAL_CSTRING("org.w3.clearkey"),
-                 NS_LITERAL_CSTRING("eme-decrypt"))) {
-    return true;
-  }
-
+  return aKeySystem.EqualsASCII("org.w3.clearkey") ||
 #ifdef XP_WIN
-  // Note: Adobe Access's GMP uses WMF to decode, so anything our MP4Reader
-  // thinks it can play on Windows, the Access GMP should be able to play.
-  if (aKeySystem.EqualsLiteral("com.adobe.access") &&
-      Preferences::GetBool("media.eme.adobe-access.enabled", false) &&
-      IsVistaOrLater() && // Win Vista and later only.
-      (!aInitDataType.WasPassed() || aInitDataType.Value().EqualsLiteral("cenc")) &&
-      (!aContentType.WasPassed() || IsPlayableMP4Type(aContentType.Value())) &&
-      HaveGMPFor(NS_LITERAL_CSTRING("com.adobe.access"),
-                 NS_LITERAL_CSTRING("eme-decrypt")) &&
-      HaveGMPFor(NS_LITERAL_CSTRING("com.adobe.access"),
-                 NS_LITERAL_CSTRING("decode-video"),
-                 NS_LITERAL_CSTRING("h264")) &&
-      HaveGMPFor(NS_LITERAL_CSTRING("com.adobe.access"),
-                 NS_LITERAL_CSTRING("decode-audio"),
-                 NS_LITERAL_CSTRING("aac"))) {
-      return true;
-  }
+         (aKeySystem.EqualsASCII("com.adobe.access") &&
+          IsVistaOrLater() &&
+          Preferences::GetBool("media.eme.adobe-access.enabled", false)) ||
 #endif
-
-  return false;
+         false;
 }
 
 /* static */
@@ -200,16 +128,8 @@ MediaKeys::IsTypeSupported(const GlobalObject& aGlobal,
 {
   // TODO: Should really get spec changed to this is async, so we can wait
   //       for user to consent to running plugin.
-  bool supported = IsTypeSupported(aKeySystem, aInitDataType, aContentType);
-
-  EME_LOG("MediaKeys::IsTypeSupported keySystem='%s' initDataType='%s' contentType='%s' supported=%d",
-          NS_ConvertUTF16toUTF8(aKeySystem).get(),
-          (aInitDataType.WasPassed() ? NS_ConvertUTF16toUTF8(aInitDataType.Value()).get() : ""),
-          (aContentType.WasPassed() ? NS_ConvertUTF16toUTF8(aContentType.Value()).get() : ""),
-          supported);
-
-  return supported ? IsTypeSupportedResult::Probably
-                   : IsTypeSupportedResult::_empty;
+  return IsSupportedKeySystem(aKeySystem) ? IsTypeSupportedResult::Maybe
+                                          : IsTypeSupportedResult::_empty;
 }
 
 already_AddRefed<Promise>
@@ -322,7 +242,7 @@ MediaKeys::Init(ErrorResult& aRv)
     return nullptr;
   }
 
-  if (!IsTypeSupported(mKeySystem)) {
+  if (!IsSupportedKeySystem(mKeySystem)) {
     promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return promise.forget();
   }
@@ -351,7 +271,7 @@ MediaKeys::Init(ErrorResult& aRv)
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
-
+  
   mTopLevelPrincipal = top->GetExtantDoc()->NodePrincipal();
 
   if (!mPrincipal || !mTopLevelPrincipal) {
