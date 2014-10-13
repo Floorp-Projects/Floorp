@@ -406,12 +406,6 @@ MediaEngineWebRTCAudioSource::NotifyPull(MediaStreamGraph* aGraph,
 #endif
 }
 
-nsresult
-MediaEngineWebRTCAudioSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
-{
-   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 void
 MediaEngineWebRTCAudioSource::Init()
 {
