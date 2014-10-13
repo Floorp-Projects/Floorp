@@ -3473,6 +3473,15 @@ JS_CompileUCScript(JSContext *cx, JS::HandleObject obj,
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalFromScript(JSScript *script);
 
+extern JS_PUBLIC_API(const char *)
+JS_GetScriptFilename(JSScript *script);
+
+extern JS_PUBLIC_API(unsigned)
+JS_GetScriptBaseLineNumber(JSContext *cx, JSScript *script);
+
+extern JS_PUBLIC_API(JSScript *)
+JS_GetFunctionScript(JSContext *cx, JS::HandleFunction fun);
+
 /*
  * |fun| will always be set. On failure, it will be set to nullptr.
  */

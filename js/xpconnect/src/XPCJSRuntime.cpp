@@ -35,7 +35,6 @@
 #include "jsfriendapi.h"
 #include "jsprf.h"
 #include "js/MemoryMetrics.h"
-#include "js/OldDebugAPI.h"
 #include "mozilla/dom/GeneratedAtomList.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
