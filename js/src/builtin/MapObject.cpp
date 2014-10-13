@@ -1001,7 +1001,7 @@ bool
 MapIteratorObject::next(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, next_impl, args);
+    return CallNonGenericMethod<MapIteratorObject::is, MapIteratorObject::next_impl>(cx, args);
 }
 
 
@@ -1432,7 +1432,7 @@ bool
 MapObject::keys(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, keys_impl, args);
+    return CallNonGenericMethod<MapObject::is, MapObject::keys_impl>(cx, args);
 }
 
 bool
@@ -1445,7 +1445,7 @@ bool
 MapObject::values(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, values_impl, args);
+    return CallNonGenericMethod<MapObject::is, MapObject::values_impl>(cx, args);
 }
 
 bool
@@ -1458,7 +1458,7 @@ bool
 MapObject::entries(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, entries_impl, args);
+    return CallNonGenericMethod<MapObject::is, MapObject::entries_impl>(cx, args);
 }
 
 bool
@@ -1477,7 +1477,7 @@ bool
 MapObject::clear(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, clear_impl, args);
+    return CallNonGenericMethod<MapObject::is, MapObject::clear_impl>(cx, args);
 }
 
 JSObject *
@@ -1646,7 +1646,7 @@ bool
 SetIteratorObject::next(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, next_impl, args);
+    return CallNonGenericMethod<SetIteratorObject::is, SetIteratorObject::next_impl>(cx, args);
 }
 
 
@@ -1930,7 +1930,7 @@ bool
 SetObject::values(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, values_impl, args);
+    return CallNonGenericMethod<SetObject::is, SetObject::values_impl>(cx, args);
 }
 
 bool
@@ -1943,7 +1943,7 @@ bool
 SetObject::entries(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, entries_impl, args);
+    return CallNonGenericMethod<SetObject::is, SetObject::entries_impl>(cx, args);
 }
 
 bool
@@ -1962,7 +1962,7 @@ bool
 SetObject::clear(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, clear_impl, args);
+    return CallNonGenericMethod<SetObject::is, SetObject::clear_impl>(cx, args);
 }
 
 JSObject *
