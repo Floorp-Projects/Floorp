@@ -1881,17 +1881,14 @@ ParallelBailoutRecord::reset()
     cause = ParallelBailoutNone;
 }
 
-template <class T>
-static void
-RematerializeFramesWithIter(ForkJoinContext *cx, T &frameIter,
-                            Vector<RematerializedFrame *> &frames)
+void
+ParallelBailoutRecord::rematerializeFrames(ForkJoinContext *cx, JitFrameIterator &frameIter)
 {
-    // This function as well as |rematerializeFrames| methods below are
-    // infallible. These are only called when we are already erroring out. If
-    // we OOM here, free what we've allocated and return. Error reporting is
-    // then unable to give the user detailed stack information.
+    // This function is infallible. These are only called when we are already
+    // erroring out. If we OOM here, free what we've allocated and return. Error
+    // reporting is then unable to give the user detailed stack information.
 
-    MOZ_ASSERT(frames.empty());
+    MOZ_ASSERT(frames().empty());
 
     for (; !frameIter.done(); ++frameIter) {
         if (!frameIter.isIonJS())
@@ -1904,31 +1901,19 @@ RematerializeFramesWithIter(ForkJoinContext *cx, T &frameIter,
                                                             inlineIter, inlineFrames))
         {
             RematerializedFrame::FreeInVector(inlineFrames);
-            RematerializedFrame::FreeInVector(frames);
+            RematerializedFrame::FreeInVector(frames());
             return;
         }
 
         // Reverse the inline frames into the main vector.
         while (!inlineFrames.empty()) {
-            if (!frames.append(inlineFrames.popCopy())) {
+            if (!frames().append(inlineFrames.popCopy())) {
                 RematerializedFrame::FreeInVector(inlineFrames);
-                RematerializedFrame::FreeInVector(frames);
+                RematerializedFrame::FreeInVector(frames());
                 return;
             }
         }
     }
-}
-
-void
-ParallelBailoutRecord::rematerializeFrames(ForkJoinContext *cx, JitFrameIterator &frameIter)
-{
-    RematerializeFramesWithIter(cx, frameIter, frames());
-}
-
-void
-ParallelBailoutRecord::rematerializeFrames(ForkJoinContext *cx, IonBailoutIterator &frameIter)
-{
-    RematerializeFramesWithIter(cx, frameIter, frames());
 }
 
 //////////////////////////////////////////////////////////////////////////////
