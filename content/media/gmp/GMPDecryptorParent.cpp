@@ -13,6 +13,7 @@ namespace gmp {
 
 GMPDecryptorParent::GMPDecryptorParent(GMPParent* aPlugin)
   : mIsOpen(false)
+  , mShuttingDown(false)
   , mPlugin(aPlugin)
   , mCallback(nullptr)
 {
@@ -328,16 +329,19 @@ GMPDecryptorParent::Shutdown()
 {
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
+  if (mShuttingDown) {
+    return;
+  }
+  mShuttingDown = true;
+
   // Notify client we're gone!  Won't occur after Close()
   if (mCallback) {
     mCallback->Terminated();
     mCallback = nullptr;
   }
 
-  if (mIsOpen) {
-    mIsOpen = false;
-    unused << SendDecryptingComplete();
-  }
+  mIsOpen = false;
+  unused << SendDecryptingComplete();
 }
 
 // Note: Keep this sync'd up with Shutdown
