@@ -110,30 +110,30 @@ function startTest(test, token)
   manager.started(token);
 
   v.addEventListener("encrypted", function(ev) {
-    info("got encrypted event");
+    info(token + " got encrypted event");
     ok(MediaKeys.isTypeSupported(KEYSYSTEM_TYPE, ev.initDataType, test.type),
-       "MediaKeys should support this keysystem");
+       token + " MediaKeys should support this keysystem");
 
     MediaKeys.create(KEYSYSTEM_TYPE).then(function(mediaKeys) {
-      info("created MediaKeys object ok");
+      info(token + " created MediaKeys object ok");
       return v.setMediaKeys(mediaKeys);
     }, bail("failed to create MediaKeys object")).then(function() {
-      info("set MediaKeys on <video> element ok");
+      info(token + " set MediaKeys on <video> element ok");
 
       var session = v.mediaKeys.createSession(test.sessionType);
       session.addEventListener("message", UpdateSessionFunc(test));
       session.generateRequest(ev.initDataType, ev.initData).then(function() {
-      }, bail("Failed to initialise MediaKeySession"));
+      }, bail(token + " Failed to initialise MediaKeySession"));
 
-    }, bail("Failed to set MediaKeys on <video> element"));
+    }, bail(token + " Failed to set MediaKeys on <video> element"));
   });
 
   v.addEventListener("ended", function(ev) {
-    ok(true, "got ended event");
     SimpleTest.finish();
+    ok(true, token + " got ended event");
   });
 
-  v.addEventListener("error", bail("got error event"));
+  v.addEventListener("error", bail(token + " got error event"));
 
   v.src = test.name;
   v.play();
