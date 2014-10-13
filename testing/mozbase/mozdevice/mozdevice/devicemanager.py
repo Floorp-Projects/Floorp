@@ -112,6 +112,7 @@ class DeviceManager(object):
           - `systime` - system time of the device
           - `screen` - screen resolution
           - `memory` - memory stats
+          - `memtotal` - total memory available on the device, for example 927208 kB
           - `process` - list of running processes (same as ps)
           - `disk` - total, free, available bytes on disk
           - `power` - power status (charge, battery temp)
