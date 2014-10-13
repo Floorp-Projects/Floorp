@@ -1301,6 +1301,8 @@ class ActivationIterator
 
 namespace jit {
 
+class BailoutFrameInfo;
+
 // A JitActivation is used for frames running in Baseline or Ion.
 class JitActivation : public Activation
 {
@@ -1328,9 +1330,11 @@ class JitActivation : public Activation
     IonRecoveryMap ionRecovery_;
 
     // If we are bailing out from Ion, then this field should be a non-null
-    // pointer which references the IonBailoutIterator used to walk the inner
-    // frames.
-    IonBailoutIterator  *ionBailoutIterator_;
+    // pointer which references the BailoutFrameInfo used to walk the inner
+    // frames. This field is used for all newly constructed JitFrameIterators to
+    // read the innermost frame information from this bailout data instead of
+    // reading it from the stack.
+    BailoutFrameInfo *bailoutData_;
 
     void clearRematerializedFrames();
 
@@ -1387,11 +1391,8 @@ class JitActivation : public Activation
     // if an IonFrameIterator pointing to the nearest uninlined frame can be
     // provided, as values need to be read out of snapshots.
     //
-    // T is either JitFrameIterator or IonBailoutIterator.
-    //
     // The inlineDepth must be within bounds of the frame pointed to by iter.
-    template <class T>
-    RematerializedFrame *getRematerializedFrame(ThreadSafeContext *cx, const T &iter,
+    RematerializedFrame *getRematerializedFrame(ThreadSafeContext *cx, const JitFrameIterator &iter,
                                                 size_t inlineDepth = 0);
 
     // Look up a rematerialized frame by the fp. If inlineDepth is out of
@@ -1421,17 +1422,14 @@ class JitActivation : public Activation
 
     void markIonRecovery(JSTracer *trc);
 
-    class RegisterBailoutIterator
-    {
-        JitActivation &activation_;
-
-      public:
-        RegisterBailoutIterator(JitActivation &activation, IonBailoutIterator *iter);
-        ~RegisterBailoutIterator();
-    };
-
     // Return the bailout information if it is registered.
-    const IonBailoutIterator *bailoutData() const { return ionBailoutIterator_; }
+    const BailoutFrameInfo *bailoutData() const { return bailoutData_; }
+
+    // Register the bailout data when it is constructed.
+    void setBailoutData(BailoutFrameInfo *bailoutData);
+
+    // Unregister the bailout data when the frame is reconstructed.
+    void cleanBailoutData();
 };
 
 // A filtering of the ActivationIterator to only stop at JitActivations.
