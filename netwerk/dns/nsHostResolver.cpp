@@ -464,19 +464,24 @@ nsHostRecord::GetPriority(uint16_t aFlags)
     return nsHostRecord::DNS_PRIORITY_LOW;
 }
 
-// Returns true if the entry can be removed, or false if it was marked to get
-// refreshed.
+// Returns true if the entry can be removed, or false if it should be left.
+// Sets mResolveAgain true for entries being resolved right now.
 bool
 nsHostRecord::RemoveOrRefresh()
 {
-  // This condition implies that the request has been passed to the OS
-  // resolver. The resultant DNS record should be considered stale and not
-  // trusted; set a flag to ensure it is called again.
-    if (resolving && !onQueue) {
-        mResolveAgain = true;
+    if (resolving) {
+        if (!onQueue) {
+            // The request has been passed to the OS resolver. The resultant DNS
+            // record should be considered stale and not trusted; set a flag to
+            // ensure it is called again.
+            mResolveAgain = true;
+        }
+        // if Onqueue is true, the host entry is already added to the cache
+        // but is still pending to get resolved: just leave it in hash.
         return false;
     }
-    return true; // can be removed now
+    // Already resolved; not in a pending state; remove from cache.
+    return true;
 }
 
 //----------------------------------------------------------------------------
@@ -599,9 +604,9 @@ HostDB_PruneEntry(PLDHashTable *table,
                   void *arg)
 {
     nsHostDBEnt* ent = static_cast<nsHostDBEnt *>(hdr);
-
     // Try to remove the record, or mark it for refresh
     if (ent->rec->RemoveOrRefresh()) {
+        PR_REMOVE_LINK(ent->rec);
         return PL_DHASH_REMOVE;
     }
     return PL_DHASH_NEXT;
@@ -786,26 +791,24 @@ nsHostResolver::ClearPendingQueue(PRCList *aPendingQ)
 void
 nsHostResolver::FlushCache()
 {
-    PRCList evictionQ;
-    PR_INIT_CLIST(&evictionQ);
+  MutexAutoLock lock(mLock);
+  mEvictionQSize = 0;
 
-    {
-        MutexAutoLock lock(mLock);
-        MoveCList(mEvictionQ, evictionQ);
-        mEvictionQSize = 0;
+  // Clear the evictionQ and remove all its corresponding entries from
+  // the cache first
+  if (!PR_CLIST_IS_EMPTY(&mEvictionQ)) {
+      PRCList *node = mEvictionQ.next;
+      while (node != &mEvictionQ) {
+          nsHostRecord *rec = static_cast<nsHostRecord *>(node);
+          node = node->next;
+          PR_REMOVE_AND_INIT_LINK(rec);
+          PL_DHashTableOperate(&mDB, (nsHostKey *) rec, PL_DHASH_REMOVE);
+          NS_RELEASE(rec);
+      }
+  }
 
-        // prune the hash from all hosts already resolved
-        PL_DHashTableEnumerate(&mDB, HostDB_PruneEntry, nullptr);
-    }
-
-    if (!PR_CLIST_IS_EMPTY(&evictionQ)) {
-        PRCList *node = evictionQ.next;
-        while (node != &evictionQ) {
-            nsHostRecord *rec = static_cast<nsHostRecord *>(node);
-            node = node->next;
-            NS_RELEASE(rec);
-        }
-    }
+  // Refresh the cache entries that are resolving RIGHT now, remove the rest.
+  PL_DHashTableEnumerate(&mDB, HostDB_PruneEntry, nullptr);
 }
 
 void
@@ -1459,6 +1462,17 @@ nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* r
                 // release reference to rec owned by mEvictionQ
                 NS_RELEASE(head);
             }
+#if TTL_AVAILABLE
+            if (!rec->mGetTtl && sDnsVariant != DNS_EXP_VARIANT_CONTROL
+                && !rec->resolving) {
+                LOG(("Issuing second async lookup for TTL for %s.", rec->host));
+                rec->flags =
+                  (rec->flags & ~RES_PRIORITY_MEDIUM) | RES_PRIORITY_LOW;
+                DebugOnly<nsresult> rv = IssueLookup(rec);
+                NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                                 "Could not issue second async lookup for TTL.");
+            }
+#endif
         }
     }
 
@@ -1474,21 +1488,6 @@ nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* r
             // NOTE: callback must not be dereferenced after this point!!
         }
     }
-
-#if TTL_AVAILABLE
-    {
-        MutexAutoLock lock(mLock);
-        if (!mShutdown && !rec->mGetTtl
-                && sDnsVariant != DNS_EXP_VARIANT_CONTROL && !rec->resolving) {
-            LOG(("Issuing second async lookup for TTL for %s.", rec->host));
-            rec->flags =
-                (rec->flags & ~RES_PRIORITY_MEDIUM) | RES_PRIORITY_LOW;
-            DebugOnly<nsresult> rv = IssueLookup(rec);
-            NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                             "Could not issue second async lookup for TTL.");
-        }
-    }
-#endif
 
     NS_RELEASE(rec);
 
