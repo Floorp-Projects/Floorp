@@ -246,6 +246,7 @@ private:
   void        GenerateRstStream(uint32_t, uint32_t);
   void        GenerateGoAway(uint32_t);
   void        CleanupStream(Http2Stream *, nsresult, errorType);
+  void        CleanupStream(uint32_t, nsresult, errorType);
   void        CloseStream(Http2Stream *, nsresult);
   void        SendHello();
   void        RemoveStreamFromQueues(Http2Stream *);
