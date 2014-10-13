@@ -387,7 +387,8 @@ ClearKeyDecryptor::AddRef()
 uint32_t
 ClearKeyDecryptor::Release()
 {
-  if (!--mRefCnt) {
+  uint32_t newCount = --mRefCnt;
+  if (!newCount) {
     if (mThread) {
       mThread->Post(new DestroyTask(this));
       mThread->Join();
@@ -396,5 +397,5 @@ ClearKeyDecryptor::Release()
     }
   }
 
-  return mRefCnt;
+  return newCount;
 }
