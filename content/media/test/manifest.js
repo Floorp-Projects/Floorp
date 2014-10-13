@@ -640,13 +640,26 @@ var gMetadataTests = [
 var gEMETests = [
   {
     name:"short-cenc.mp4",
-    type:"video/mp4",
+    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     keys: {
       // "keyid" : "key"
       "7e571d017e571d017e571d017e571d01" : "7e5711117e5711117e5711117e571111",
       "7e571d027e571d027e571d027e571d02" : "7e5722227e5722227e5722227e572222",
     },
     sessionType:"temporary",
+    duration:0.47
+  },
+  {
+    name:"gizmo-frag-cencinit.mp4",
+    fragments: [ "gizmo-frag-cencinit.mp4", "gizmo-frag-cenc1.m4s", "gizmo-frag-cenc2.m4s" ],
+    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
+    keys: {
+      // "keyid" : "key"
+      "7e571d037e571d037e571d037e571d03" : "7e5733337e5733337e5733337e573333",
+      "7e571d047e571d047e571d047e571d04" : "7e5744447e5744447e5744447e574444",
+    },
+    sessionType:"temporary",
+    duration:2.00,
   },
 ];
 
