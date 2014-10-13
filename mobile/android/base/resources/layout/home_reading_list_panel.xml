@@ -16,5 +16,5 @@
     <org.mozilla.gecko.home.HomeListView android:id="@+id/list"
                                          style="@style/Widget.ReadingListView"
                                          android:layout_width="match_parent"
-                                         android:layout_height="wrap_content"/>
+                                         android:layout_height="match_parent"/>
 </LinearLayout>
