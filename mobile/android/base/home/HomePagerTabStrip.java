@@ -10,7 +10,10 @@ import org.mozilla.gecko.animation.BounceAnimator;
 import org.mozilla.gecko.animation.BounceAnimator.Attributes;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.support.v4.view.PagerTabStrip;
 import android.util.AttributeSet;
 import android.view.View;
@@ -37,8 +40,11 @@ class HomePagerTabStrip extends PagerTabStrip {
     private static final int BOUNCE4_MS = 100;
     private static final int INIT_OFFSET = 100;
 
+    private final Paint shadowPaint;
+    private final int shadowSize;
+
     public HomePagerTabStrip(Context context) {
-        super(context);
+        this(context, null);
     }
 
     public HomePagerTabStrip(Context context, AttributeSet attrs) {
@@ -50,6 +56,13 @@ class HomePagerTabStrip extends PagerTabStrip {
 
         setTabIndicatorColor(color);
 
+        final Resources res = getResources();
+        shadowSize = res.getDimensionPixelSize(R.dimen.tabs_strip_shadow_size);
+
+        shadowPaint = new Paint();
+        shadowPaint.setColor(res.getColor(R.color.url_bar_shadow));
+        shadowPaint.setStrokeWidth(0.0f);
+
         getViewTreeObserver().addOnPreDrawListener(new PreDrawListener());
     }
 
@@ -59,6 +72,14 @@ class HomePagerTabStrip extends PagerTabStrip {
         // misalignments when using 'center_vertical' gravity. Force padding bottom
         // to 0dp so that children are properly centered.
         return 0;
+    }
+
+    @Override
+    public void draw(Canvas canvas) {
+        super.draw(canvas);
+
+        final int height = getHeight();
+        canvas.drawRect(0, height - shadowSize, getWidth(), height, shadowPaint);
     }
 
     private void animateTitles() {
