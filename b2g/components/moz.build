@@ -49,6 +49,7 @@ if CONFIG['MOZ_UPDATER']:
 EXTRA_JS_MODULES += [
     'AlertsHelper.jsm',
     'ContentRequestHelper.jsm',
+    'DebuggerActors.js',
     'ErrorPage.jsm',
     'Frames.jsm',
     'FxAccountsMgmtService.jsm',
