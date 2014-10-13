@@ -1003,6 +1003,19 @@ Http2Session::CleanupStream(Http2Stream *aStream, nsresult aResult,
   }
 }
 
+void
+Http2Session::CleanupStream(uint32_t aID, nsresult aResult, errorType aResetCode)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  Http2Stream *stream = mStreamIDHash.Get(aID);
+  LOG3(("Http2Session::CleanupStream %p by ID 0x%X to stream %p\n",
+        this, aID, stream));
+  if (!stream) {
+    return;
+  }
+  CleanupStream(stream, aResult, aResetCode);
+}
+
 static void RemoveStreamFromQueue(Http2Stream *aStream, nsDeque &queue)
 {
   uint32_t size = queue.GetSize();
@@ -2560,7 +2573,7 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
     MOZ_ASSERT(!mNeedsCleanup, "cleanup stream set unexpectedly");
     mNeedsCleanup = nullptr;                     /* just in case */
 
-    Http2Stream *stream = mInputFrameDataStream;
+    uint32_t streamID = mInputFrameDataStream->StreamID();
     mSegmentWriter = writer;
     rv = mInputFrameDataStream->WriteSegments(this, count, countWritten);
     mSegmentWriter = nullptr;
@@ -2578,13 +2591,12 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
 
       if (mInputFrameDataRead == mInputFrameDataSize)
         ResetDownstreamState();
-      LOG3(("Http2Session::WriteSegments session=%p stream=%p 0x%X "
+      LOG3(("Http2Session::WriteSegments session=%p id 0x%X "
             "needscleanup=%p. cleanup stream based on "
             "stream->writeSegments returning code %x\n",
-            this, stream, stream ? stream->StreamID() : 0,
-            mNeedsCleanup, rv));
-      CleanupStream(stream, NS_OK, CANCEL_ERROR);
-      MOZ_ASSERT(!mNeedsCleanup || mNeedsCleanup == stream);
+            this, streamID, mNeedsCleanup, rv));
+      CleanupStream(streamID, NS_OK, CANCEL_ERROR);
+      MOZ_ASSERT(!mNeedsCleanup || mNeedsCleanup->StreamID() == streamID);
       mNeedsCleanup = nullptr;
       return NS_OK;
     }
