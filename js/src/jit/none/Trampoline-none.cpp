@@ -47,12 +47,14 @@ const Register ABIArgGenerator::NonArg_VolatileReg = { 0 };
 const Register ABIArgGenerator::NonReturn_VolatileReg0 = { 0 };
 const Register ABIArgGenerator::NonReturn_VolatileReg1 = { 0 };
 
-BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator &iter, BailoutStack *bailout)
+IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &iter, BailoutStack *bailout)
+  : JitFrameIterator(iter)
 {
     MOZ_CRASH();
 }
 
-BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator &iter, InvalidationBailoutStack *bailout)
+IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &iter, InvalidationBailoutStack *bailout)
+  : JitFrameIterator(iter)
 {
     MOZ_CRASH();
 }

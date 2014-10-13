@@ -544,8 +544,7 @@ jit::BailoutPar(BailoutStack *sp, uint8_t **entryFramePointer)
     cx->perThreadData->jitTop = FAKE_JIT_TOP_FOR_BAILOUT;
 
     JitActivationIterator jitActivations(cx->perThreadData);
-    BailoutFrameInfo bailoutData(jitActivations, sp);
-    JitFrameIterator frameIter(jitActivations);
+    IonBailoutIterator frameIter(jitActivations, sp);
     SnapshotIterator snapIter(frameIter);
 
     cx->bailoutRecord->setIonBailoutKind(snapIter.bailoutKind());
