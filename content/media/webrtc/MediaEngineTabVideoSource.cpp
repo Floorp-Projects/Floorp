@@ -189,12 +189,6 @@ MediaEngineTabVideoSource::Start(mozilla::SourceMediaStream* aStream, mozilla::T
   return NS_OK;
 }
 
-nsresult
-MediaEngineTabVideoSource::Snapshot(uint32_t, nsIDOMFile**)
-{
-  return NS_OK;
-}
-
 void
 MediaEngineTabVideoSource::
 NotifyPull(MediaStreamGraph*, SourceMediaStream* aSource, mozilla::TrackID aID, mozilla::StreamTime aDesiredTime, mozilla::TrackTicks& aLastEndTime)

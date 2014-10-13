@@ -218,7 +218,8 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
   mCurrentConfiguration = initialConfig.forget();
 
   // Attach our DOM-facing media stream to our viewfinder stream.
-  mStream = mInput;
+  SetHintContents(HINT_CONTENTS_VIDEO);
+  InitStreamCommon(mInput);
   MOZ_ASSERT(mWindow, "Shouldn't be created with a null window!");
   if (mWindow->GetExtantDoc()) {
     CombineWithPrincipal(mWindow->GetExtantDoc()->NodePrincipal());

@@ -39,6 +39,7 @@ public:
 
   DOMMediaStream* GetStream() const { return mStream; }
   TrackID GetTrackID() const { return mTrackID; }
+  void BindTrackID(TrackID aTrackID) { mTrackID = aTrackID; }
   virtual AudioStreamTrack* AsAudioStreamTrack() { return nullptr; }
   virtual VideoStreamTrack* AsVideoStreamTrack() { return nullptr; }
 
