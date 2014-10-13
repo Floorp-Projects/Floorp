@@ -1404,7 +1404,8 @@ jit::JitActivation::JitActivation(JSContext *cx, bool active)
   : Activation(cx, Jit),
     active_(active),
     rematerializedFrames_(nullptr),
-    ionRecovery_(cx)
+    ionRecovery_(cx),
+    ionBailoutIterator_(nullptr)
 {
     if (active) {
         prevJitTop_ = cx->mainThread().jitTop;
@@ -1420,7 +1421,8 @@ jit::JitActivation::JitActivation(ForkJoinContext *cx)
   : Activation(cx, Jit),
     active_(true),
     rematerializedFrames_(nullptr),
-    ionRecovery_(cx)
+    ionRecovery_(cx),
+    ionBailoutIterator_(nullptr)
 {
     prevJitTop_ = cx->perThreadData->jitTop;
     prevJitJSContext_ = cx->perThreadData->jitJSContext;
@@ -1434,10 +1436,29 @@ jit::JitActivation::~JitActivation()
         cx_->perThreadData->jitJSContext = prevJitJSContext_;
     }
 
-    clearRematerializedFrames();
     // All reocvered value are taken from activation during the bailout.
     MOZ_ASSERT(ionRecovery_.empty());
+
+    // The Ion Bailout Iterator should have unregistered itself from the
+    // JitActivations.
+    MOZ_ASSERT(!ionBailoutIterator_);
+
+    clearRematerializedFrames();
     js_delete(rematerializedFrames_);
+}
+
+jit::JitActivation::RegisterBailoutIterator::RegisterBailoutIterator(JitActivation &activation,
+                                                                     IonBailoutIterator *iter)
+  : activation_(activation)
+{
+    MOZ_ASSERT(!activation_.ionBailoutIterator_);
+    activation_.ionBailoutIterator_ = iter;
+}
+
+jit::JitActivation::RegisterBailoutIterator::~RegisterBailoutIterator()
+{
+    MOZ_ASSERT(activation_.ionBailoutIterator_);
+    activation_.ionBailoutIterator_ = nullptr;
 }
 
 // setActive() is inlined in GenerateFFIIonExit() with explicit masm instructions so
