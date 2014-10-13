@@ -2702,9 +2702,16 @@ InvalidateActivation(FreeOp *fop, const JitActivationIterator &activations, bool
             break;
           case JitFrame_BaselineJS:
           case JitFrame_IonJS:
+          case JitFrame_Bailout:
           {
             MOZ_ASSERT(it.isScripted());
-            const char *type = it.isIonJS() ? "Optimized" : "Baseline";
+            const char *type = "Unknown";
+            if (it.isIonJS())
+                type = "Optimized";
+            else if (it.isBaselineJS())
+                type = "Baseline";
+            else if (it.isBailoutJS())
+                type = "Bailing";
             JitSpew(JitSpew_IonInvalidate, "#%d %s JS frame @ %p, %s:%d (fun: %p, script: %p, pc %p)",
                     frameno, type, it.fp(), it.script()->filename(), it.script()->lineno(),
                     it.maybeCallee(), (JSScript *)it.script(), it.returnAddressToFp());
