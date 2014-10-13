@@ -19,6 +19,7 @@
 #include "nsISpeculativeConnect.h"
 #include "nsDataHashtable.h"
 #include "mozilla/Attributes.h"
+#include "nsICaptivePortalService.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
@@ -101,6 +102,9 @@ private:
     nsresult CacheProtocolHandler(const char *scheme,
                                               nsIProtocolHandler* hdlr);
 
+    nsresult InitializeCaptivePortalService();
+    nsresult RecheckCaptivePortalIfLocalRedirect(nsIChannel* newChan);
+
     // Prefs wrangling
     void PrefsChanged(nsIPrefBranch *prefs, const char *pref = nullptr);
     void GetPrefBranch(nsIPrefBranch **);
@@ -147,6 +151,7 @@ private:
     nsCOMPtr<nsPISocketTransportService> mSocketTransportService;
     nsCOMPtr<nsPIDNSService>             mDNSService;
     nsCOMPtr<nsIProtocolProxyService2>   mProxyService;
+    nsCOMPtr<nsICaptivePortalService>    mCaptivePortalService;
     nsCOMPtr<nsINetworkLinkService>      mNetworkLinkService;
     bool                                 mNetworkLinkServiceInitialized;
 
