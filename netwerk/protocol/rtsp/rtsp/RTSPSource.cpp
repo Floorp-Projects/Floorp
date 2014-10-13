@@ -231,9 +231,10 @@ void RTSPSource::performPlay(int64_t playTimeUs) {
 
     int64_t duration = 0;
     getDuration(&duration);
-    MOZ_ASSERT(playTimeUs < duration,
+    MOZ_ASSERT(duration == 0 || playTimeUs < duration,
                "Should never receive an out of bounds play time!");
-    if (playTimeUs >= duration) {
+    if (duration > 0 && playTimeUs >= duration) {
+        // if not a live stream and play time out of bounds
         return;
     }
 
