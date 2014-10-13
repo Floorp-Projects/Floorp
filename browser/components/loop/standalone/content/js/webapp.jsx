@@ -117,8 +117,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     render: function() {
       return (
         <h1 className="standalone-header-title">
-          <strong>{mozL10n.get("brandShortname")}</strong>
-          {mozL10n.get("clientShortname2")}
+          <strong>{mozL10n.get("clientShortname2")}</strong>
         </h1>
       );
     }
@@ -457,6 +456,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       var privacyNoticeName = mozL10n.get("privacy_notice_link_text");
 
       var tosHTML = mozL10n.get("legal_text_and_links", {
+        "clientShortname": mozL10n.get("clientShortname2"),
         "terms_of_use_url": "<a target=_blank href='" +
           mozL10n.get("legal_website") + "'>" +
           tosLinkName + "</a>",
