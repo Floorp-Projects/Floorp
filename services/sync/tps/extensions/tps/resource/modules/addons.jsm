@@ -83,7 +83,7 @@ Addon.prototype = {
       Logger.AssertTrue(addon.userDisabled, "add-on is enabled: " + addon.id);
       return true;
     } else if (state) {
-      throw Error("Don't know how to handle state: " + state);
+      throw new Error("Don't know how to handle state: " + state);
     } else {
       // No state, so just checking that it exists.
       return true;
