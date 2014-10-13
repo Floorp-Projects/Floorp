@@ -382,8 +382,7 @@ public:
                            void* aClosure);
 
   void
-  DeleteFiles(QuotaManager* aQuotaManager,
-              PersistenceType aPersistenceType);
+  DeleteFiles(QuotaManager* aQuotaManager);
 
 private:
   ~ResetOrClearRunnable() {}
@@ -991,6 +990,9 @@ QuotaManager::Init()
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = baseDir->Append(NS_LITERAL_STRING("storage"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = baseDir->GetPath(mStoragePath);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIFile> persistentStorageDir;
@@ -1977,6 +1979,7 @@ QuotaManager::ResetOrClearCompleted()
 
   mInitializedOrigins.Clear();
   mTemporaryStorageInitialized = false;
+  mStorageAreaInitialized = false;
 
   ReleaseIOThreadObjects();
 }
@@ -3928,8 +3931,7 @@ ResetOrClearRunnable::InvalidateOpenedStorages(
 }
 
 void
-ResetOrClearRunnable::DeleteFiles(QuotaManager* aQuotaManager,
-                                  PersistenceType aPersistenceType)
+ResetOrClearRunnable::DeleteFiles(QuotaManager* aQuotaManager)
 {
   AssertIsOnIOThread();
   NS_ASSERTION(aQuotaManager, "Don't pass me null!");
@@ -3940,7 +3942,7 @@ ResetOrClearRunnable::DeleteFiles(QuotaManager* aQuotaManager,
     do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  rv = directory->InitWithPath(aQuotaManager->GetStoragePath(aPersistenceType));
+  rv = directory->InitWithPath(aQuotaManager->GetStoragePath());
   NS_ENSURE_SUCCESS_VOID(rv);
 
   rv = directory->Remove(true);
@@ -3988,8 +3990,7 @@ ResetOrClearRunnable::Run()
       AdvanceState();
 
       if (mClear) {
-        DeleteFiles(quotaManager, PERSISTENCE_TYPE_PERSISTENT);
-        DeleteFiles(quotaManager, PERSISTENCE_TYPE_TEMPORARY);
+        DeleteFiles(quotaManager);
       }
 
       quotaManager->RemoveQuota();

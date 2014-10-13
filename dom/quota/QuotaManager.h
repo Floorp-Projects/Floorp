@@ -280,6 +280,12 @@ public:
   GetClient(Client::Type aClientType);
 
   const nsString&
+  GetStoragePath() const
+  {
+    return mStoragePath;
+  }
+
+  const nsString&
   GetStoragePath(PersistenceType aPersistenceType) const
   {
     if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
@@ -520,6 +526,7 @@ private:
   nsAutoTArray<nsRefPtr<Client>, Client::TYPE_MAX> mClients;
 
   nsString mIndexedDBPath;
+  nsString mStoragePath;
   nsString mPersistentStoragePath;
   nsString mTemporaryStoragePath;
 
