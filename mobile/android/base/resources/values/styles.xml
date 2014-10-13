@@ -63,10 +63,6 @@
     </style>
 
     <style name="Widget.Home.HomeList">
-        <item name="android:paddingTop">0dip</item>
-        <item name="android:paddingRight">0dip</item>
-        <item name="android:paddingLeft">0dip</item>
-        <item name="topDivider">true</item>
         <item name="android:scrollbarStyle">outsideOverlay</item>
     </style>
 
@@ -229,7 +225,7 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">32dp</item>
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.Header</item>
-        <item name="android:background">#fff5f7f9</item>
+        <item name="android:background">@color/background_light</item>
         <item name="android:focusable">false</item>
         <item name="android:gravity">center|left</item>
         <item name="android:paddingLeft">10dip</item>
