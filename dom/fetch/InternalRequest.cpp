@@ -45,10 +45,9 @@ InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult
     copy->mOrigin = NS_ConvertUTF16toUTF8(location.mOrigin);
   }
 
+  copy->mContext = nsIContentPolicy::TYPE_FETCH;
   copy->mMode = mMode;
   copy->mCredentialsMode = mCredentialsMode;
-  // FIXME(nsm): Add ContentType fetch to nsIContentPolicy and friends.
-  // Then set copy's mContext to that.
   return copy.forget();
 }
 
