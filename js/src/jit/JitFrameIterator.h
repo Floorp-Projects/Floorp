@@ -100,20 +100,9 @@ class JitFrameIterator
     void dumpBaseline() const;
 
   public:
-    explicit JitFrameIterator(uint8_t *top, ExecutionMode mode)
-      : current_(top),
-        type_(JitFrame_Exit),
-        returnAddressToFp_(nullptr),
-        frameSize_(0),
-        mode_(mode),
-        kind_(Kind_FrameIterator),
-        cachedSafepointIndex_(nullptr),
-        activation_(nullptr)
-    { }
-
+    explicit JitFrameIterator();
     explicit JitFrameIterator(ThreadSafeContext *cx);
     explicit JitFrameIterator(const ActivationIterator &activations);
-    explicit JitFrameIterator(IonJSFrameLayout *fp, ExecutionMode mode);
 
     bool isBailoutIterator() const {
         return kind_ == Kind_BailoutIterator;
