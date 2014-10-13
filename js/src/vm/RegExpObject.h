@@ -106,6 +106,11 @@ class RegExpShared
         MatchOnly
     };
 
+    enum ForceByteCodeEnum {
+        DontForceByteCode,
+        ForceByteCode
+    };
+
   private:
     friend class RegExpCompartment;
     friend class RegExpStatics;
@@ -120,7 +125,9 @@ class RegExpShared
         RegExpCompilation() : byteCode(nullptr) {}
         ~RegExpCompilation() { js_free(byteCode); }
 
-        bool compiled() const { return jitCode || byteCode; }
+        bool compiled(ForceByteCodeEnum force = DontForceByteCode) const {
+            return byteCode || (force == DontForceByteCode && jitCode);
+        }
     };
 
     /* Source to the RegExp, for lazy compilation. */
@@ -145,10 +152,13 @@ class RegExpShared
     Vector<uint8_t *, 0, SystemAllocPolicy> tables;
 
     /* Internal functions. */
-    bool compile(JSContext *cx, HandleLinearString input, CompilationMode mode);
-    bool compile(JSContext *cx, HandleAtom pattern, HandleLinearString input, CompilationMode mode);
+    bool compile(JSContext *cx, HandleLinearString input,
+                 CompilationMode mode, ForceByteCodeEnum force);
+    bool compile(JSContext *cx, HandleAtom pattern, HandleLinearString input,
+                 CompilationMode mode, ForceByteCodeEnum force);
 
-    bool compileIfNecessary(JSContext *cx, HandleLinearString input, CompilationMode mode);
+    bool compileIfNecessary(JSContext *cx, HandleLinearString input,
+                            CompilationMode mode, ForceByteCodeEnum force);
 
     const RegExpCompilation &compilation(CompilationMode mode, bool latin1) const {
         return compilationArray[CompilationIndex(mode, latin1)];
@@ -189,8 +199,9 @@ class RegExpShared
     bool multiline() const              { return flags & MultilineFlag; }
     bool sticky() const                 { return flags & StickyFlag; }
 
-    bool isCompiled(CompilationMode mode, bool latin1) const {
-        return compilation(mode, latin1).compiled();
+    bool isCompiled(CompilationMode mode, bool latin1,
+                    ForceByteCodeEnum force = DontForceByteCode) const {
+        return compilation(mode, latin1).compiled(force);
     }
     bool isCompiled() const {
         return isCompiled(Normal, true) || isCompiled(Normal, false)
