@@ -298,6 +298,8 @@
   <string name="reading_list_added">&reading_list_added;</string>
   <string name="reading_list_failed">&reading_list_failed;</string>
   <string name="reading_list_duplicate">&reading_list_duplicate;</string>
+  <string name="reading_list_time_minutes">&reading_list_time_minutes;</string>
+  <string name="reading_list_time_over_an_hour">&reading_list_time_over_an_hour;</string>
 
   <string name="page_action_dropmarker_description">&page_action_dropmarker_description;</string>
 
