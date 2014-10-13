@@ -80,6 +80,18 @@ ReadFrameBooleanSlot(IonJSFrameLayout *fp, int32_t slot)
     return *(bool *)((char *)fp + OffsetOfFrameSlot(slot));
 }
 
+JitFrameIterator::JitFrameIterator()
+  : current_(nullptr),
+    type_(JitFrame_Exit),
+    returnAddressToFp_(nullptr),
+    frameSize_(0),
+    mode_(SequentialExecution),
+    kind_(Kind_FrameIterator),
+    cachedSafepointIndex_(nullptr),
+    activation_(nullptr)
+{
+}
+
 JitFrameIterator::JitFrameIterator(ThreadSafeContext *cx)
   : current_(cx->perThreadData->jitTop),
     type_(JitFrame_Exit),
@@ -88,7 +100,7 @@ JitFrameIterator::JitFrameIterator(ThreadSafeContext *cx)
     mode_(cx->isForkJoinContext() ? ParallelExecution : SequentialExecution),
     kind_(Kind_FrameIterator),
     cachedSafepointIndex_(nullptr),
-    activation_(nullptr)
+    activation_(cx->perThreadData->activation()->asJit())
 {
 }
 
@@ -102,16 +114,6 @@ JitFrameIterator::JitFrameIterator(const ActivationIterator &activations)
     kind_(Kind_FrameIterator),
     cachedSafepointIndex_(nullptr),
     activation_(activations->asJit())
-{
-}
-
-JitFrameIterator::JitFrameIterator(IonJSFrameLayout *fp, ExecutionMode mode)
-  : current_((uint8_t *)fp),
-    type_(JitFrame_IonJS),
-    returnAddressToFp_(fp->returnAddress()),
-    frameSize_(fp->prevFrameLocalSize()),
-    mode_(mode),
-    kind_(Kind_FrameIterator)
 {
 }
 
@@ -1035,7 +1037,7 @@ MarkBaselineStubFrame(JSTracer *trc, const JitFrameIterator &frame)
 void
 JitActivationIterator::jitStackRange(uintptr_t *&min, uintptr_t *&end)
 {
-    JitFrameIterator frames(jitTop(), SequentialExecution);
+    JitFrameIterator frames(*this);
 
     if (frames.isFakeExitFrame()) {
         min = reinterpret_cast<uintptr_t *>(frames.fp());
@@ -1366,7 +1368,8 @@ GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     JSRuntime *rt = cx->runtime();
 
     // Recover the return address.
-    JitFrameIterator it(rt->mainThread.jitTop, SequentialExecution);
+    JitActivationIterator iter(rt);
+    JitFrameIterator it(iter);
 
     // If the previous frame is a rectifier frame (maybe unwound),
     // skip past it.

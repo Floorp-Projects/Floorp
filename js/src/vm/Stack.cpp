@@ -628,7 +628,7 @@ FrameIter::Data::Data(ThreadSafeContext *cx, SavedOption savedOption,
     pc_(nullptr),
     interpFrames_(nullptr),
     activations_(cx->perThreadData),
-    jitFrames_((uint8_t *)nullptr, SequentialExecution),
+    jitFrames_(),
     ionInlineFrameNo_(0),
     asmJSFrames_()
 {
