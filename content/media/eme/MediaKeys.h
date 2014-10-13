@@ -124,6 +124,10 @@ public:
 
 private:
 
+  static bool IsTypeSupported(const nsAString& aKeySystem,
+                              const Optional<nsAString>& aInitDataType = Optional<nsAString>(),
+                              const Optional<nsAString>& aContentType = Optional<nsAString>());
+
   bool IsInPrivateBrowsing();
   already_AddRefed<Promise> Init(ErrorResult& aRv);
 
