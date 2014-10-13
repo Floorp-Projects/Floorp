@@ -82,7 +82,7 @@ TPSCmdLineHandler.prototype = {
 var TPSCmdLineFactory = {
   createInstance : function(outer, iid) {
     if (outer != null) {
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
+      throw new Error(Components.results.NS_ERROR_NO_AGGREGATION);
     }
 
     return new TPSCmdLineHandler().QueryInterface(iid);
@@ -127,10 +127,10 @@ var TPSCmdLineModule = {
     }
 
     if (!iid.equals(Components.interfaces.nsIFactory)) {
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+      throw new Error(Components.results.NS_ERROR_NOT_IMPLEMENTED);
     }
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw new Error(Components.results.NS_ERROR_NO_INTERFACE);
   },
 
   canUnload : function(compMgr) {
