@@ -44,10 +44,10 @@ GMPTestRunner::RunTestGMPTestCodec()
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_LITERAL_CSTRING("h264"));
 
-  service->GetGMPVideoDecoder(&tags, NS_LITERAL_STRING("o"), &host, &decoder2);
-  service->GetGMPVideoDecoder(&tags, NS_LITERAL_STRING(""), &host, &decoder);
+  service->GetGMPVideoDecoder(&tags, NS_LITERAL_CSTRING("o"), &host, &decoder2);
+  service->GetGMPVideoDecoder(&tags, NS_LITERAL_CSTRING(""), &host, &decoder);
 
-  service->GetGMPVideoEncoder(&tags, NS_LITERAL_STRING(""), &host, &encoder);
+  service->GetGMPVideoEncoder(&tags, NS_LITERAL_CSTRING(""), &host, &encoder);
 
   EXPECT_TRUE(host);
   EXPECT_TRUE(decoder);
@@ -74,24 +74,24 @@ GMPTestRunner::RunTestGMPCrossOrigin()
   GMPVideoEncoderProxy* encoder1 = nullptr;
   GMPVideoEncoderProxy* encoder2 = nullptr;
 
-  service->GetGMPVideoDecoder(&tags, NS_LITERAL_STRING("origin1"), &host, &decoder1);
-  service->GetGMPVideoDecoder(&tags, NS_LITERAL_STRING("origin2"), &host, &decoder2);
+  service->GetGMPVideoDecoder(&tags, NS_LITERAL_CSTRING("origin1"), &host, &decoder1);
+  service->GetGMPVideoDecoder(&tags, NS_LITERAL_CSTRING("origin2"), &host, &decoder2);
   EXPECT_TRUE(!!decoder1 && !!decoder2 &&
               decoder1->ParentID() != decoder2->ParentID());
 
-  service->GetGMPVideoEncoder(&tags, NS_LITERAL_STRING("origin1"), &host, &encoder1);
-  service->GetGMPVideoEncoder(&tags, NS_LITERAL_STRING("origin2"), &host, &encoder2);
+  service->GetGMPVideoEncoder(&tags, NS_LITERAL_CSTRING("origin1"), &host, &encoder1);
+  service->GetGMPVideoEncoder(&tags, NS_LITERAL_CSTRING("origin2"), &host, &encoder2);
   EXPECT_TRUE(!!encoder1 && !!encoder2 &&
               encoder1->ParentID() != encoder2->ParentID());
 
   if (decoder2) decoder2->Close();
   if (encoder2) encoder2->Close();
 
-  service->GetGMPVideoDecoder(&tags, NS_LITERAL_STRING("origin1"), &host, &decoder2);
+  service->GetGMPVideoDecoder(&tags, NS_LITERAL_CSTRING("origin1"), &host, &decoder2);
   EXPECT_TRUE(!!decoder1 && !!decoder2 &&
               decoder1->ParentID() == decoder2->ParentID());
 
-  service->GetGMPVideoEncoder(&tags, NS_LITERAL_STRING("origin1"), &host, &encoder2);
+  service->GetGMPVideoEncoder(&tags, NS_LITERAL_CSTRING("origin1"), &host, &encoder2);
   EXPECT_TRUE(!!encoder1 && !!encoder2 &&
               encoder1->ParentID() == encoder2->ParentID());
 
