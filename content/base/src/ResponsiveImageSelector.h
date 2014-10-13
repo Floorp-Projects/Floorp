@@ -9,6 +9,7 @@
 #include "nsISupports.h"
 #include "nsIContent.h"
 #include "nsString.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsMediaQuery;
 class nsCSSValue;
@@ -18,11 +19,13 @@ namespace dom {
 
 class ResponsiveImageCandidate;
 
-class ResponsiveImageSelector : public nsISupports
+class ResponsiveImageSelector
 {
   friend class ResponsiveImageCandidate;
 public:
-  NS_DECL_ISUPPORTS
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ResponsiveImageSelector)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ResponsiveImageSelector)
+
   explicit ResponsiveImageSelector(nsIContent* aContent);
 
   // NOTE ABOUT CURRENT SELECTION

@@ -22,7 +22,10 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS0(ResponsiveImageSelector);
+NS_IMPL_CYCLE_COLLECTION(ResponsiveImageSelector, mContent)
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ResponsiveImageSelector, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ResponsiveImageSelector, Release)
 
 static bool
 ParseInteger(const nsAString& aString, int32_t& aInt)
