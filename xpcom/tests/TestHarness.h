@@ -12,14 +12,6 @@
 #ifndef TestHarness_h__
 #define TestHarness_h__
 
-#if defined(_MSC_VER) && defined(MOZ_STATIC_JS)
-/*
- * Including js/OldDebugAPI.h may cause build break with --disable-shared-js
- * This is a workaround for bug 673616.
- */
-#define STATIC_JS_API
-#endif
-
 #include "mozilla/ArrayUtils.h"
 
 #include "prenv.h"

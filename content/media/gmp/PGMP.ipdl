@@ -40,6 +40,8 @@ child:
   async PGMPVideoDecoder();
   async PGMPVideoEncoder();
 
+  async SetNodeId(nsCString nodeId);
+  async StartPlugin();
   async BeginAsyncShutdown();
   async CrashPluginNow();
 };

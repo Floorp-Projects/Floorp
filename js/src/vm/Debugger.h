@@ -21,6 +21,14 @@
 #include "vm/GlobalObject.h"
 #include "vm/SavedStacks.h"
 
+typedef enum JSTrapStatus {
+    JSTRAP_ERROR,
+    JSTRAP_CONTINUE,
+    JSTRAP_RETURN,
+    JSTRAP_THROW,
+    JSTRAP_LIMIT
+} JSTrapStatus;
+
 namespace js {
 
 class Breakpoint;
