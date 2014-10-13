@@ -406,6 +406,46 @@ describe("loop.conversation", function() {
               });
             });
 
+            describe("progress - terminated - closed", function() {
+              it("should stop alerting", function(done) {
+                promise.then(function() {
+                  icView._websocket.trigger("progress", {
+                    state: "terminated",
+                    reason: "closed"
+                  });
+
+                  sinon.assert.calledOnce(navigator.mozLoop.stopAlerting);
+                  done();
+                });
+              });
+
+              it("should close the websocket", function(done) {
+                promise.then(function() {
+                  icView._websocket.trigger("progress", {
+                    state: "terminated",
+                    reason: "closed"
+                  });
+
+                  sinon.assert.calledOnce(icView._websocket.close);
+                  done();
+                });
+              });
+
+              it("should close the window", function(done) {
+                promise.then(function() {
+                  icView._websocket.trigger("progress", {
+                    state: "terminated",
+                    reason: "closed"
+                  });
+
+                  sandbox.clock.tick(1);
+
+                  sinon.assert.calledOnce(window.close);
+                  done();
+                });
+              });
+            });
+
             describe("progress - terminated - timeout (previousState = alerting)", function() {
               it("should stop alerting", function(done) {
                 promise.then(function() {
