@@ -14,7 +14,7 @@
                                   android:background="@android:color/white">
 
     <org.mozilla.gecko.home.HomePagerTabStrip android:layout_width="match_parent"
-                                              android:layout_height="40dip"
+                                              android:layout_height="@dimen/tabs_strip_height"
                                               android:layout_gravity="top"
                                               android:gravity="center_vertical"
                                               android:background="@color/background_light"

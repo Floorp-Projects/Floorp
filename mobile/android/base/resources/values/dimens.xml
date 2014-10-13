@@ -105,8 +105,10 @@
     <dimen name="tabs_panel_list_padding">16dip</dimen>
     <dimen name="tabs_list_divider_height">2dp</dimen>
     <dimen name="tabs_sidebar_width">200dp</dimen>
+    <dimen name="tabs_strip_height">40dp</dimen>
     <dimen name="tabs_strip_button_width">100dp</dimen>
     <dimen name="tabs_strip_button_padding">18dp</dimen>
+    <dimen name="tabs_strip_shadow_size">1dp</dimen>
     <dimen name="tabs_tray_horizontal_height">156dp</dimen>
     <dimen name="text_selection_handle_width">47dp</dimen>
     <dimen name="text_selection_handle_height">58dp</dimen>
