@@ -13,7 +13,6 @@
 
 #include "nsJSUtils.h"
 #include "jsapi.h"
-#include "js/OldDebugAPI.h"
 #include "jsfriendapi.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"

@@ -9,7 +9,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jswrapper.h"
-#include "js/OldDebugAPI.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsMemory.h"

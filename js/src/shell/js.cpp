@@ -64,7 +64,6 @@
 #include "jit/arm/Simulator-arm.h"
 #include "jit/Ion.h"
 #include "js/Debug.h"
-#include "js/OldDebugAPI.h"
 #include "js/StructuredClone.h"
 #include "perf/jsperf.h"
 #include "shell/jsheaptools.h"

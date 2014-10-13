@@ -34,7 +34,6 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
-#include "js/OldDebugAPI.h"
 #include "vm/Debugger.h"
 #include "vm/Opcodes.h"
 #include "vm/Shape.h"

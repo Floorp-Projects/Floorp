@@ -8,7 +8,6 @@
 #include "RuntimeService.h"
 
 #include "jsapi.h"
-#include "js/OldDebugAPI.h"
 #include "mozilla/dom/RegisterWorkerBindings.h"
 #include "mozilla/OSFileConstants.h"
 

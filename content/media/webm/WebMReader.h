@@ -71,20 +71,20 @@ class WebMPacketQueue : private nsDeque {
    WebMPacketQueue()
      : nsDeque(new PacketQueueDeallocator())
    {}
-  
+
   ~WebMPacketQueue() {
     Reset();
   }
 
-  inline int32_t GetSize() { 
+  inline int32_t GetSize() {
     return nsDeque::GetSize();
   }
-  
+
   inline void Push(NesteggPacketHolder* aItem) {
     NS_ASSERTION(aItem, "NULL pushed to WebMPacketQueue");
     nsDeque::Push(aItem);
   }
-  
+
   inline void PushFront(NesteggPacketHolder* aItem) {
     NS_ASSERTION(aItem, "NULL pushed to WebMPacketQueue");
     nsDeque::PushFront(aItem);
@@ -93,7 +93,7 @@ class WebMPacketQueue : private nsDeque {
   inline NesteggPacketHolder* PopFront() {
     return static_cast<NesteggPacketHolder*>(nsDeque::PopFront());
   }
-  
+
   void Reset() {
     while (GetSize() > 0) {
       delete PopFront();
@@ -116,7 +116,7 @@ public:
 
   // If the Theora granulepos has not been captured, it may read several packets
   // until one with a granulepos has been captured, to ensure that all packets
-  // read have valid time info.  
+  // read have valid time info.
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                   int64_t aTimeThreshold);
 
