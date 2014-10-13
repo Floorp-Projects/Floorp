@@ -19,7 +19,5 @@ category profile-after-change RadioInterfaceLayer @mozilla.org/ril;1
 
 # RILContentHelper.js
 component {472816e1-1fd6-4405-996c-806f9ea68174} RILContentHelper.js
-component {08a71987-408c-44ff-93fd-177c0a85c3dd} RILContentHelper.js
 contract @mozilla.org/ril/content-helper;1 {472816e1-1fd6-4405-996c-806f9ea68174}
-contract @mozilla.org/dom/icccardlock-error;1 {08a71987-408c-44ff-93fd-177c0a85c3dd}
 category profile-after-change RILContentHelper @mozilla.org/ril/content-helper;1
