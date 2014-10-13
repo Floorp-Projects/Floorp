@@ -679,17 +679,17 @@ FrameIter::FrameIter(JSContext *cx, ContextOption contextOption,
 FrameIter::FrameIter(const FrameIter &other)
   : data_(other.data_),
     ionInlineFrames_(other.data_.cx_,
-                     data_.jitFrames_.isIonJS() ? &other.ionInlineFrames_ : nullptr)
+                     data_.jitFrames_.isIonScripted() ? &other.ionInlineFrames_ : nullptr)
 {
 }
 
 FrameIter::FrameIter(const Data &data)
   : data_(data),
-    ionInlineFrames_(data.cx_, data_.jitFrames_.isIonJS() ? &data_.jitFrames_ : nullptr)
+    ionInlineFrames_(data.cx_, data_.jitFrames_.isIonScripted() ? &data_.jitFrames_ : nullptr)
 {
     MOZ_ASSERT(data.cx_);
 
-    if (data_.jitFrames_.isIonJS()) {
+    if (data_.jitFrames_.isIonScripted()) {
         while (ionInlineFrames_.frameNo() != data.ionInlineFrameNo_)
             ++ionInlineFrames_;
     }
@@ -698,7 +698,7 @@ FrameIter::FrameIter(const Data &data)
 void
 FrameIter::nextJitFrame()
 {
-    if (data_.jitFrames_.isIonJS()) {
+    if (data_.jitFrames_.isIonScripted()) {
         ionInlineFrames_.resetOn(&data_.jitFrames_);
         data_.pc_ = ionInlineFrames_.pc();
     } else {
@@ -712,7 +712,7 @@ FrameIter::popJitFrame()
 {
     MOZ_ASSERT(data_.state_ == JIT);
 
-    if (data_.jitFrames_.isIonJS() && ionInlineFrames_.more()) {
+    if (data_.jitFrames_.isIonScripted() && ionInlineFrames_.more()) {
         ++ionInlineFrames_;
         data_.pc_ = ionInlineFrames_.pc();
         return;
@@ -789,7 +789,7 @@ FrameIter::copyData() const
 {
     Data *data = data_.cx_->new_<Data>(data_);
     MOZ_ASSERT(data_.state_ != ASMJS);
-    if (data && data_.jitFrames_.isIonJS())
+    if (data && data_.jitFrames_.isIonScripted())
         data->ionInlineFrameNo_ = ionInlineFrames_.frameNo();
     return data;
 }
@@ -997,7 +997,7 @@ FrameIter::isConstructing() const
       case ASMJS:
         break;
       case JIT:
-        if (data_.jitFrames_.isIonJS())
+        if (data_.jitFrames_.isIonScripted())
             return ionInlineFrames_.isConstructing();
         MOZ_ASSERT(data_.jitFrames_.isBaselineJS());
         return data_.jitFrames_.isConstructing();
@@ -1026,7 +1026,7 @@ FrameIter::hasUsableAbstractFramePtr() const
         if (data_.jitFrames_.isBaselineJS())
             return true;
 
-        MOZ_ASSERT(data_.jitFrames_.isIonJS());
+        MOZ_ASSERT(data_.jitFrames_.isIonScripted());
         return !!activation()->asJit()->lookupRematerializedFrame(data_.jitFrames_.fp(),
                                                                   ionInlineFrames_.frameNo());
         break;
@@ -1048,7 +1048,7 @@ FrameIter::abstractFramePtr() const
         if (data_.jitFrames_.isBaselineJS())
             return data_.jitFrames_.baselineFrame();
 
-        MOZ_ASSERT(data_.jitFrames_.isIonJS());
+        MOZ_ASSERT(data_.jitFrames_.isIonScripted());
         return activation()->asJit()->lookupRematerializedFrame(data_.jitFrames_.fp(),
                                                                 ionInlineFrames_.frameNo());
         break;
@@ -1120,7 +1120,7 @@ FrameIter::callee() const
       case JIT:
         if (data_.jitFrames_.isBaselineJS())
             return data_.jitFrames_.callee();
-        MOZ_ASSERT(data_.jitFrames_.isIonJS());
+        MOZ_ASSERT(data_.jitFrames_.isIonScripted());
         return ionInlineFrames_.callee();
     }
     MOZ_CRASH("Unexpected state");
@@ -1153,7 +1153,7 @@ FrameIter::numActualArgs() const
         MOZ_ASSERT(isFunctionFrame());
         return interpFrame()->numActualArgs();
       case JIT:
-        if (data_.jitFrames_.isIonJS())
+        if (data_.jitFrames_.isIonScripted())
             return ionInlineFrames_.numActualArgs();
 
         MOZ_ASSERT(data_.jitFrames_.isBaselineJS());
@@ -1182,7 +1182,7 @@ FrameIter::scopeChain() const
       case ASMJS:
         break;
       case JIT:
-        if (data_.jitFrames_.isIonJS())
+        if (data_.jitFrames_.isIonScripted())
             return ionInlineFrames_.scopeChain();
         return data_.jitFrames_.baselineFrame()->scopeChain();
       case INTERP:
@@ -1237,7 +1237,7 @@ FrameIter::thisv(JSContext *cx)
       case ASMJS:
         break;
       case JIT:
-        if (data_.jitFrames_.isIonJS()) {
+        if (data_.jitFrames_.isIonScripted()) {
             jit::MaybeReadFallback recover(cx, activation()->asJit(), &data_.jitFrames_);
             return ionInlineFrames_.thisValue(recover);
         }
@@ -1293,7 +1293,7 @@ FrameIter::numFrameSlots() const
       case ASMJS:
         break;
       case JIT: {
-        if (data_.jitFrames_.isIonJS()) {
+        if (data_.jitFrames_.isIonScripted()) {
             return ionInlineFrames_.snapshotIterator().numAllocations() -
                 ionInlineFrames_.script()->nfixed();
         }
@@ -1315,7 +1315,7 @@ FrameIter::frameSlotValue(size_t index) const
       case ASMJS:
         break;
       case JIT:
-        if (data_.jitFrames_.isIonJS()) {
+        if (data_.jitFrames_.isIonScripted()) {
             jit::SnapshotIterator si(ionInlineFrames_.snapshotIterator());
             index += ionInlineFrames_.script()->nfixed();
             return si.maybeReadAllocByIndex(index);
@@ -1514,7 +1514,7 @@ jit::JitActivation::getRematerializedFrame(ThreadSafeContext *cx, const T &iter,
     // Only allow rematerializing from the same thread.
     MOZ_ASSERT(cx->perThreadData == cx_->perThreadData);
     MOZ_ASSERT(iter.activation() == this);
-    MOZ_ASSERT(iter.isIonJS());
+    MOZ_ASSERT(iter.isIonScripted());
 
     if (!rematerializedFrames_) {
         rematerializedFrames_ = cx->new_<RematerializedFrameTable>(cx);
