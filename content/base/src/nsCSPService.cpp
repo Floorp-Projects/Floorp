@@ -220,22 +220,11 @@ CSPService::ShouldProcess(uint32_t         aContentType,
                           nsIPrincipal     *aRequestPrincipal,
                           int16_t          *aDecision)
 {
-  if (!aContentLocation) {
+  if (!aContentLocation)
     return NS_ERROR_FAILURE;
-  }
 
-  if (aContentType != nsIContentPolicy::TYPE_OBJECT) {
-    *aDecision = nsIContentPolicy::ACCEPT;
-    return NS_OK;
-  }
-  return ShouldLoad(aContentType,
-                    aContentLocation,
-                    aRequestOrigin,
-                    aRequestContext,
-                    aMimeTypeGuess,
-                    aExtra,
-                    aRequestPrincipal,
-                    aDecision);
+  *aDecision = nsIContentPolicy::ACCEPT;
+  return NS_OK;
 }
 
 /* nsIChannelEventSink implementation */
