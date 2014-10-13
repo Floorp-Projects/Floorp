@@ -1041,8 +1041,7 @@ static SourceSet *
 /**
  * Runs on a seperate thread and is responsible for enumerating devices.
  * Depending on whether a picture or stream was asked for, either
- * ProcessGetUserMedia or ProcessGetUserMediaSnapshot is called, and the results
- * are sent back to the DOM.
+ * ProcessGetUserMedia is called, and the results are sent back to the DOM.
  *
  * Do not run this on the main thread. The success and error callbacks *MUST*
  * be dispatched on the main thread!
@@ -1124,18 +1123,6 @@ public:
       }
     }
 
-    // It is an error if audio or video are requested along with picture.
-    if (mConstraints.mPicture &&
-        (IsOn(mConstraints.mAudio) || IsOn(mConstraints.mVideo))) {
-      Fail(NS_LITERAL_STRING("NOT_SUPPORTED_ERR"));
-      return;
-    }
-
-    if (mConstraints.mPicture) {
-      ProcessGetUserMediaSnapshot(mVideoDevice->GetSource(), 0);
-      return;
-    }
-
     // There's a bug in the permission code that can leave us with mAudio but no audio device
     ProcessGetUserMedia(((IsOn(mConstraints.mAudio) && mAudioDevice) ?
                          mAudioDevice->GetSource() : nullptr),
@@ -1204,7 +1191,7 @@ public:
   {
     MOZ_ASSERT(mSuccess);
     MOZ_ASSERT(mError);
-    if (mConstraints.mPicture || IsOn(mConstraints.mVideo)) {
+    if (IsOn(mConstraints.mVideo)) {
       VideoTrackConstraintsN constraints(GetInvariant(mConstraints.mVideo));
       ScopedDeletePtr<SourceSet> sources(GetSources(backend, constraints,
                                &MediaEngine::EnumerateVideoDevices));
@@ -1273,38 +1260,6 @@ public:
     NS_DispatchToMainThread(new GetUserMediaStreamRunnable(
       mSuccess, mError, mWindowID, mListener, aAudioSource, aVideoSource,
       peerIdentity
-    ));
-
-    MOZ_ASSERT(!mSuccess);
-    MOZ_ASSERT(!mError);
-
-    return;
-  }
-
-  /**
-   * Allocates a video device, takes a snapshot and returns a File via
-   * a SuccessRunnable or an error via the ErrorRunnable. Off the main thread.
-   */
-  void
-  ProcessGetUserMediaSnapshot(MediaEngineVideoSource* aSource, int aDuration)
-  {
-    MOZ_ASSERT(mSuccess);
-    MOZ_ASSERT(mError);
-    nsresult rv = aSource->Allocate(GetInvariant(mConstraints.mVideo), mPrefs);
-    if (NS_FAILED(rv)) {
-      Fail(NS_LITERAL_STRING("HARDWARE_UNAVAILABLE"));
-      return;
-    }
-
-    /**
-     * Display picture capture UI here before calling Snapshot() - Bug 748835.
-     */
-    nsCOMPtr<nsIDOMFile> file;
-    aSource->Snapshot(aDuration, getter_AddRefs(file));
-    aSource->Deallocate();
-
-    NS_DispatchToMainThread(new SuccessCallbackRunnable(
-      mSuccess, mError, file, mWindowID
     ));
 
     MOZ_ASSERT(!mSuccess);
@@ -1594,35 +1549,6 @@ MediaManager::GetUserMedia(
 
   MediaStreamConstraints c(aConstraints); // copy
 
-  /**
-   * If we were asked to get a picture, before getting a snapshot, we check if
-   * the calling page is allowed to open a popup. We do this because
-   * {picture:true} will open a new "window" to let the user preview or select
-   * an image, on Android. The desktop UI for {picture:true} is TBD, at which
-   * may point we can decide whether to extend this test there as well.
-   */
-#if !defined(MOZ_WEBRTC)
-  if (c.mPicture && !privileged) {
-    if (aWindow->GetPopupControlState() > openControlled) {
-      nsCOMPtr<nsIPopupWindowManager> pm =
-        do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID);
-      if (!pm) {
-        return NS_OK;
-      }
-      uint32_t permission;
-      nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
-      if (doc) {
-        pm->TestPermission(doc->NodePrincipal(), &permission);
-        if (permission == nsIPopupWindowManager::DENY_POPUP) {
-          aWindow->FirePopupBlockedEvent(doc, nullptr, EmptyString(),
-                                         EmptyString());
-          return NS_OK;
-        }
-      }
-    }
-  }
-#endif
-
   static bool created = false;
   if (!created) {
     // Force MediaManager to startup before we try to access it from other threads
@@ -1748,15 +1674,6 @@ MediaManager::GetUserMedia(
 #ifdef MOZ_B2G_CAMERA
   if (mCameraManager == nullptr) {
     mCameraManager = nsDOMCameraManager::CreateInstance(aWindow);
-  }
-#endif
-
-#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
-  if (c.mPicture) {
-    // ShowFilePickerForMimeType() must run on the Main Thread! (on Android)
-    // Note, GetUserMediaRunnableWrapper takes ownership of task.
-    NS_DispatchToMainThread(new GetUserMediaRunnableWrapper(task.forget()));
-    return NS_OK;
   }
 #endif
 

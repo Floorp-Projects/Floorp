@@ -112,12 +112,6 @@ public:
   /* tell the source if there are any direct listeners attached */
   virtual void SetDirectListeners(bool) = 0;
 
-  /* Take a snapshot from this source. In the case of video this is a single
-   * image, and for audio, it is a snippet lasting aDuration milliseconds. The
-   * duration argument is ignored for a MediaEngineVideoSource.
-   */
-  virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile) = 0;
-
   /* Called when the stream wants more data */
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream *aSource,
@@ -178,6 +172,8 @@ public:
    * a Start(). Only Allocate() may be called after a Deallocate(). */
 
 protected:
+  // Only class' own members can be initialized in constructor initializer list.
+  explicit MediaEngineSource(MediaEngineState aState) : mState(aState) {}
   MediaEngineState mState;
 };
 
@@ -231,12 +227,14 @@ class MediaEngineVideoSource : public MediaEngineSource
 public:
   virtual ~MediaEngineVideoSource() {}
 
-  virtual const MediaSourceType GetMediaSource() {
-      return MediaSourceType::Camera;
-  }
   /* This call reserves but does not start the device. */
   virtual nsresult Allocate(const VideoTrackConstraintsN &aConstraints,
                             const MediaEnginePrefs &aPrefs) = 0;
+protected:
+  explicit MediaEngineVideoSource(MediaEngineState aState)
+    : MediaEngineSource(aState) {}
+  MediaEngineVideoSource()
+    : MediaEngineSource(kReleased) {}
 };
 
 /**
@@ -250,6 +248,11 @@ public:
   /* This call reserves but does not start the device. */
   virtual nsresult Allocate(const AudioTrackConstraintsN &aConstraints,
                             const MediaEnginePrefs &aPrefs) = 0;
+protected:
+  explicit MediaEngineAudioSource(MediaEngineState aState)
+    : MediaEngineSource(aState) {}
+  MediaEngineAudioSource()
+    : MediaEngineSource(kReleased) {}
 
 };
 
