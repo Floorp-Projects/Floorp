@@ -52,3 +52,10 @@ class TestCapabilities(MarionetteTestCase):
         self.assertEqual(self.caps["XULappId"], self.appinfo["ID"])
         self.assertEqual(self.caps["appBuildId"], self.appinfo["appBuildID"])
         self.assertEqual(self.caps["version"], self.appinfo["version"])
+
+    def test_we_can_pass_in_capabilities_on_session_start(self):
+        self.marionette.delete_session()
+        capabilities = {"somethingAwesome": "cake"}
+        self.marionette.start_session(capabilities)
+        caps = self.marionette.session_capabilities
+        self.assertIn("somethingAwesome", caps)
