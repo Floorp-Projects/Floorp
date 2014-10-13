@@ -41,9 +41,6 @@ protected:
     static nsXRemoteService *sRemoteImplementation;
 private:
     void EnsureAtoms();
-    static const char* HandleCommand(char* aCommand, nsIDOMWindow* aWindow,
-                                     uint32_t aTimestamp);
-
     static const char* HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow,
                                          uint32_t aTimestamp);
 
@@ -55,7 +52,6 @@ private:
 
     static Atom sMozVersionAtom;
     static Atom sMozLockAtom;
-    static Atom sMozCommandAtom;
     static Atom sMozResponseAtom;
     static Atom sMozUserAtom;
     static Atom sMozProfileAtom;
