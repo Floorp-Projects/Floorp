@@ -373,7 +373,6 @@ struct ParallelBailoutRecord
     }
 
     void rematerializeFrames(ForkJoinContext *cx, jit::JitFrameIterator &frameIter);
-    void rematerializeFrames(ForkJoinContext *cx, jit::IonBailoutIterator &frameIter);
 };
 
 class ForkJoinShared;
