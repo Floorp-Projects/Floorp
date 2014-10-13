@@ -19,11 +19,6 @@
         <item name="android:verticalSpacing">20dp</item>
     </style>
 
-    <style name="Widget.Home.HomeList">
-        <item name="android:scrollbarStyle">outsideOverlay</item>
-        <item name="topDivider">true</item>
-    </style>
-
     <!-- Tabs panel -->
     <style name="TabsPanelFrame.RemoteTabs" parent="TabsPanelFrameBase">
         <item name="android:paddingLeft">0dp</item>
