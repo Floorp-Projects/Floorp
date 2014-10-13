@@ -191,7 +191,7 @@ interface nsIAccessiblePivot : nsISupports
 /**
  * An observer interface for pivot changes.
  */
-[scriptable, uuid(b6508c5e-c081-467d-835c-613eedf9ee9b)]
+[scriptable, uuid(6006e502-3861-49bd-aba1-fa6d2e74e237)]
 interface nsIAccessiblePivotObserver : nsISupports
 {
   /**
