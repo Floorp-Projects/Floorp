@@ -17,9 +17,9 @@
 using namespace mozilla::layers;
 using namespace mozilla::dom;
 
-static const TrackID TRACK_VIDEO = 2;
-
 namespace mozilla {
+
+static const TrackID TRACK_VIDEO = 2;
 
 void
 FakeMediaStreamGraph::DispatchToMainThreadAfterStreamStateUpdate(already_AddRefed<nsIRunnable> aRunnable)
