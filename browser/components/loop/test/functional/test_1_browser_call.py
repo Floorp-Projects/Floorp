@@ -1,9 +1,9 @@
 from marionette_test import MarionetteTestCase
 from by import By
 import urlparse
-from marionette.errors import NoSuchElementException, StaleElementException
+from errors import NoSuchElementException, StaleElementException
 # noinspection PyUnresolvedReferences
-from marionette.wait import Wait
+from wait import Wait
 from time import sleep
 
 import os
