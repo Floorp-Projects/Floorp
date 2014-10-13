@@ -104,12 +104,66 @@ function UpdateSessionFunc(test) {
   }
 }
 
+function PlayFragmented(test, elem)
+{
+  var ms = new MediaSource();
+  elem.src = URL.createObjectURL(ms);
+
+  var sb;
+  var curFragment = 0;
+
+  function addNextFragment() {
+    if (curFragment >= test.fragments.length) {
+      ms.endOfStream();
+      elem.play();
+      return;
+    }
+
+    var fragmentFile = test.fragments[curFragment++];
+
+    var req = new XMLHttpRequest();
+    req.open("GET", fragmentFile);
+    req.responseType = "arraybuffer";
+
+    req.addEventListener("load", function() {
+      sb.appendBuffer(new Uint8Array(req.response));
+    });
+
+    info("fetching resource " + fragmentFile);
+    req.send(null);
+  }
+
+  ms.addEventListener("sourceopen", function () {
+    sb = ms.addSourceBuffer(test.type);
+    sb.addEventListener("updateend", addNextFragment);
+
+    addNextFragment();
+  });
+}
+
+function PlayTest(test, elem)
+{
+  if (test.fragments) {
+    PlayFragmented(test, elem);
+    return;
+  }
+
+  // This file isn't fragmented; set the media source normally.
+  elem.src = test.name;
+  elem.play();
+}
+
 function startTest(test, token)
 {
+  manager.started(test._token);
+
   var v = document.createElement("video");
-  manager.started(token);
+  var gotEncrypted = false;
+  var gotPlaying = false;
 
   v.addEventListener("encrypted", function(ev) {
+    gotEncrypted = true;
+
     info(token + " got encrypted event");
     ok(MediaKeys.isTypeSupported(KEYSYSTEM_TYPE, ev.initDataType, test.type),
        token + " MediaKeys should support this keysystem");
@@ -128,22 +182,34 @@ function startTest(test, token)
     }, bail(token + " Failed to set MediaKeys on <video> element"));
   });
 
+  v.addEventListener("playing", function () { gotPlaying = true; });
+
   v.addEventListener("ended", function(ev) {
-    SimpleTest.finish();
     ok(true, token + " got ended event");
+    manager.finished(test._token);
+
+    ok(gotEncrypted, token + " encrypted event should have fired");
+    ok(gotPlaying, token + " playing event should have fired");
+
+    ok(Math.abs(test.duration - v.duration) < 0.1,
+       token + " Duration of video should be corrrect");
+    ok(Math.abs(test.duration - v.currentTime) < 0.1,
+       token + " Current time should be same as duration");
   });
 
   v.addEventListener("error", bail(token + " got error event"));
 
-  v.src = test.name;
-  v.play();
+  PlayTest(test, v);
 }
 
 function beginTest() {
   manager.runTests(gEMETests, startTest);
 }
 
-var prefs = [ ];
+var prefs = [
+  [ "media.mediasource.enabled", true ],
+  [ "media.mediasource.ignore_codecs", true ],
+];
 
 if (/Linux/.test(navigator.userAgent) ||
     !document.createElement('video').canPlayType("video/mp4")) {

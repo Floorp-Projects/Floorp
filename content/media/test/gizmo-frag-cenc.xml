@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  This XML file describes the encryption applied to |gizmo-frag-cenc*|. To
+  generate the gizmo-frag-cenc files, run the following commands:
+
+  Encrypt gizmo.mp4 with the keys specified in this file, and output to |gizmo-cenc.mp4|
+    MP4Box -crypt gizmo-frag-cenc.xml -out gizmo-cenc.mp4 gizmo.mp4
+
+  Fragment |gizmo-cenc.mp4| into 1000ms segments:
+    MP4Box -dash 1000 -rap -segment-name gizmo-frag-cenc -subsegs-per-sidx 5 -rem 2 gizmo-cenc.mp4
+
+  The above command will generate a set of fragments in |gizmo-frag-cenc*.m4s|
+  and a single |gizmo-frag-cencinit.mp4| containing just the init segment.
+  
+  To cut down the duration, we throw out all but the first two segments:
+    rm gizmo-frag-cenc[^12].m4s
+-->
+
+<GPACDRM type="CENC AES-CTR">
+
+  <DRMInfo type="pssh" version="1">
+    <!--
+    SystemID specified in
+    https://dvcs.w3.org/hg/html-media/raw-file/tip/encrypted-media/cenc-format.html
+    -->
+    <BS ID128="1077efecc0b24d02ace33c1e52e2fb4b" />
+    <!-- Number of KeyIDs = 2 -->
+    <BS bits="32" value="2" />
+    <!-- KeyID -->
+    <BS ID128="0x7e571d037e571d037e571d037e571d03" />
+    <BS ID128="0x7e571d047e571d047e571d047e571d04" />
+  </DRMInfo>
+
+  <CrypTrack trackID="1" isEncrypted="1" IV_size="16" saiSavedBox="senc"
+    first_IV="0x00000000000000000000000000000000">
+    <key KID="0x7e571d037e571d037e571d037e571d03"
+      value="0x7e5733337e5733337e5733337e573333" />
+  </CrypTrack>
+
+  <CrypTrack trackID="2" isEncrypted="1" IV_size="16" saiSavedBox="senc"
+    first_IV="0x00000000000000000000000000000000">
+    <key KID="0x7e571d047e571d047e571d047e571d04"
+      value="0x7e5744447e5744447e5744447e574444" />
+  </CrypTrack>
+
+</GPACDRM>
+
