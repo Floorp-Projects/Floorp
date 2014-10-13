@@ -1429,6 +1429,9 @@ class JitActivation : public Activation
         RegisterBailoutIterator(JitActivation &activation, IonBailoutIterator *iter);
         ~RegisterBailoutIterator();
     };
+
+    // Return the bailout information if it is registered.
+    const IonBailoutIterator *bailoutData() const { return ionBailoutIterator_; }
 };
 
 // A filtering of the ActivationIterator to only stop at JitActivations.
