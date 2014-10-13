@@ -2861,12 +2861,6 @@ TabChild::MakeHidden()
     if (mWidget) {
         mWidget->Show(false);
     }
-
-    nsCOMPtr<nsIObserverService> os =
-        mozilla::services::GetObserverService();
-    if (os) {
-        os->NotifyObservers(nullptr, "memory-pressure", NS_LITERAL_STRING("heap-minimize").get());
-    }
 }
 
 void
