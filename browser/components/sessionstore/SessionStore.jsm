@@ -1017,6 +1017,10 @@ let SessionStoreInternal = {
         SessionCookies.update([winData]);
       }
 
+      // Until we decide otherwise elsewhere, this window is part of a series
+      // of closing windows to quit.
+      RevivableWindows.add(winData);
+
       // Store the window's close date to figure out when each individual tab
       // was closed. This timestamp should allow re-arranging data based on how
       // recently something was closed.
@@ -1047,10 +1051,6 @@ let SessionStoreInternal = {
           this._closedWindows.unshift(winData);
           this._capClosedWindows();
         }
-
-        // Until we decide otherwise elsewhere, this window
-        // is part of a series of closing windows to quit.
-        RevivableWindows.add(winData);
       }
 
       // clear this window from the list
