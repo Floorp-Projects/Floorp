@@ -8899,6 +8899,8 @@ if test "$MOZ_DEBUG"; then
 fi
 AC_SUBST(MOZ_EM_DEBUG)
 
+AC_SUBST(NSS_EXTRA_SYMBOLS_FILE)
+
 if test -n "$COMPILE_ENVIRONMENT"; then
 AC_CHECK_FUNCS(posix_fadvise posix_fallocate)
 
