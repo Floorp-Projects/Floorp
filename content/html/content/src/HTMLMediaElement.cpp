@@ -2520,6 +2520,9 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
     // It's value may have changed, so update it.
     UpdatePreloadAction();
   }
+  if (mDecoder) {
+    mDecoder->SetDormantIfNecessary(false);
+  }
 
   return rv;
 }
@@ -2529,6 +2532,11 @@ void HTMLMediaElement::UnbindFromTree(bool aDeep,
 {
   if (!mPaused && mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY)
     Pause();
+
+  if (mDecoder) {
+    mDecoder->SetDormantIfNecessary(true);
+  }
+
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
