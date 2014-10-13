@@ -115,14 +115,9 @@ WebGL2Context::ValidateTexStorage(GLenum target, GLsizei levels, GLenum internal
     if (depth < 1)  { ErrorInvalidValue("%s: depth is < 1", info);  return false; }
     if (levels < 1) { ErrorInvalidValue("%s: levels is < 1", info); return false; }
 
-    // The following check via FloorLog2 only requires a depth value if target is TEXTURE_3D.
-    bool is3D = (target != LOCAL_GL_TEXTURE_3D);
-    if (!is3D)
-        depth = 1;
-
     // GL_INVALID_OPERATION is generated if levels is greater than floor(log2(max(width, height, depth)))+1.
-    if (FloorLog2(std::max(std::max(width, height), depth))+1 < levels) {
-        ErrorInvalidOperation("%s: levels > floor(log2(max(width, height%s)))+1", info, is3D ? ", depth" : "");
+    if (FloorLog2(std::max(std::max(width, height), depth)) + 1 < levels) {
+        ErrorInvalidOperation("%s: too many levels for given texture dimensions", info);
         return false;
     }
 
@@ -140,7 +135,7 @@ WebGL2Context::TexStorage2D(GLenum target, GLsizei levels, GLenum internalformat
 
     // GL_INVALID_ENUM is generated if target is not one of the accepted target enumerants.
     if (target != LOCAL_GL_TEXTURE_2D && target != LOCAL_GL_TEXTURE_CUBE_MAP)
-        return ErrorInvalidEnum("texStorage2D: target is not TEXTURE_2D or TEXTURE_CUBE_MAP.");
+        return ErrorInvalidEnum("texStorage2D: target is not TEXTURE_2D or TEXTURE_CUBE_MAP");
 
     if (!ValidateTexStorage(target, levels, internalformat, width, height, 1, "texStorage2D"))
         return;
@@ -169,7 +164,33 @@ void
 WebGL2Context::TexStorage3D(GLenum target, GLsizei levels, GLenum internalformat,
                             GLsizei width, GLsizei height, GLsizei depth)
 {
-    MOZ_CRASH("Not Implemented.");
+    if (IsContextLost())
+        return;
+
+    // GL_INVALID_ENUM is generated if target is not one of the accepted target enumerants.
+    if (target != LOCAL_GL_TEXTURE_3D)
+        return ErrorInvalidEnum("texStorage3D: target is not TEXTURE_3D");
+
+    if (!ValidateTexStorage(target, levels, internalformat, width, height, depth, "texStorage3D"))
+        return;
+
+    WebGLTexture* tex = activeBoundTextureForTarget(target);
+    tex->SetImmutable();
+
+    GLsizei w = width;
+    GLsizei h = height;
+    GLsizei d = depth;
+    for (size_t l = 0; l < size_t(levels); l++) {
+        tex->SetImageInfo(TexImageTargetForTargetAndFace(target, 0),
+                          l, w, h, d,
+                          internalformat,
+                          WebGLImageDataStatus::UninitializedImageData);
+        w = std::max(1, w >> 1);
+        h = std::max(1, h >> 1);
+        d = std::max(1, d >> 1);
+    }
+
+    gl->fTexStorage3D(target, levels, internalformat, width, height, depth);
 }
 
 void
