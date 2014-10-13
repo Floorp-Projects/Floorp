@@ -19,6 +19,8 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
+static const TrackID TRACK_VIDEO = 2;
+
 void
 FakeMediaStreamGraph::DispatchToMainThreadAfterStreamStateUpdate(already_AddRefed<nsIRunnable> aRunnable)
 {
@@ -32,6 +34,7 @@ CameraPreviewMediaStream::CameraPreviewMediaStream(DOMMediaStream* aWrapper)
   , mInvalidatePending(0)
   , mDiscardedFrames(0)
   , mRateLimit(false)
+  , mTrackCreated(false)
 {
   SetGraphImpl(MediaStreamGraph::GetInstance());
   mFakeMediaStreamGraph = new FakeMediaStreamGraph();
@@ -109,6 +112,22 @@ CameraPreviewMediaStream::RemoveListener(MediaStreamListener* aListener)
   nsRefPtr<MediaStreamListener> listener(aListener);
   mListeners.RemoveElement(aListener);
   listener->NotifyEvent(mFakeMediaStreamGraph, MediaStreamListener::EVENT_REMOVED);
+}
+
+void
+CameraPreviewMediaStream::OnPreviewStateChange(bool aActive)
+{
+  MutexAutoLock lock(mMutex);
+  if (!mTrackCreated && aActive) {
+    mTrackCreated = true;
+    VideoSegment tmpSegment;
+    uint32_t trackEvent = aActive ? MediaStreamListener::TRACK_EVENT_CREATED
+                                  : MediaStreamListener::TRACK_EVENT_ENDED;
+    for (uint32_t j = 0; j < mListeners.Length(); ++j) {
+      MediaStreamListener* l = mListeners[j];
+      l->NotifyQueuedTrackChanges(mFakeMediaStreamGraph, TRACK_VIDEO, 0, 0, trackEvent, tmpSegment);
+    }
+  }
 }
 
 void
