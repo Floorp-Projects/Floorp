@@ -46,7 +46,7 @@ let chromeGlobal = this;
     actorPool.addActor(actor);
     conn.addActorPool(actorPool);
 
-    sendAsyncMessage("debug:actor", {actor: actor.grip(), childID: id});
+    sendAsyncMessage("debug:actor", {actor: actor.form(), childID: id});
   });
 
   addMessageListener("debug:connect", onConnect);
