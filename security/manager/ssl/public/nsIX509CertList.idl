@@ -7,7 +7,7 @@
 interface nsISimpleEnumerator;
 interface nsIX509Cert;
 
-[scriptable, uuid(a539759b-e22d-462f-94ea-2915b11b33e8)]
+[scriptable, uuid(ae74cda5-cd2f-473f-96f5-f0b7fff62c68)]
 interface nsIX509CertList : nsISupports {
    void addCert(in nsIX509Cert cert);
    void deleteCert(in nsIX509Cert cert);
