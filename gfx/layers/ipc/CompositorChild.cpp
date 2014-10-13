@@ -50,9 +50,11 @@ CompositorChild::Destroy()
 {
   mLayerManager->Destroy();
   mLayerManager = nullptr;
-  while (size_t len = ManagedPLayerTransactionChild().Length()) {
+  // start from the end of the array because Destroy() can cause the
+  // LayerTransactionChild to be removed from the array.
+  for (int i = ManagedPLayerTransactionChild().Length() - 1; i >= 0; --i) {
     RefPtr<LayerTransactionChild> layers =
-      static_cast<LayerTransactionChild*>(ManagedPLayerTransactionChild()[len - 1]);
+      static_cast<LayerTransactionChild*>(ManagedPLayerTransactionChild()[i]);
     layers->Destroy();
   }
   SendStop();
