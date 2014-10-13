@@ -119,8 +119,8 @@ public:
     };
     static DnsPriority GetPriority(uint16_t aFlags);
 
-    bool RemoveOrRefresh(); // Returns whether the host record can be removed
-                            // or needs to be refreshed
+    bool RemoveOrRefresh(); // Mark records currently being resolved as needed
+                            // to resolve again.
 
 private:
     friend class nsHostResolver;
