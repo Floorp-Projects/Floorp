@@ -214,6 +214,13 @@ let mockPushHandler = {
   }
 };
 
+// Add the Loop button to the navbar.
+CustomizableUI.addWidgetToArea("loop-call-button", CustomizableUI.AREA_NAVBAR);
+
+registerCleanupFunction(function() {
+  CustomizableUI.reset();
+});
+
 const mockDb = {
   _store: { },
   _next_guid: 1,

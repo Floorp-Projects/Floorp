@@ -669,7 +669,7 @@
              aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="small"
-             defaultset="urlbar-container,search-container,bookmarks-menu-button,downloads-button,home-button,loop-call-button,social-share-button,social-toolbar-item"
+             defaultset="urlbar-container,search-container,bookmarks-menu-button,downloads-button,home-button,social-share-button,social-toolbar-item"
              customizationtarget="nav-bar-customization-target"
              overflowable="true"
              overflowbutton="nav-bar-overflow-button"

@@ -44,8 +44,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
      * delayedStartup.
      */
     init: function() {
+      let toolbarButton = this.toolbarButton;
       if (!Services.prefs.getBoolPref("loop.enabled")) {
-        this.toolbarButton.node.hidden = true;
+        if (toolbarButton && toolbarButton.node) {
+          toolbarButton.node.hidden = true;
+        }
         return;
       }
 
@@ -54,8 +57,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
 
       // If we're throttled, check to see if it's our turn to be unthrottled
       if (Services.prefs.getBoolPref("loop.throttled")) {
-        this.toolbarButton.node.hidden = true;
-        MozLoopService.checkSoftStart(this.toolbarButton.node);
+        if (toolbarButton && toolbarButton.node) {
+          toolbarButton.node.hidden = true;
+        }
+        MozLoopService.checkSoftStart(toolbarButton && toolbarButton.node);
         return;
       }
 
@@ -86,6 +91,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
      *                   temporarily shown until the next state change.
      */
     updateToolbarState: function(aReason = null) {
+      let toolbarButton = this.toolbarButton;
+      if (!toolbarButton || !toolbarButton.node) {
+        return;
+      }
+
       let state = "";
       if (MozLoopService.errors.size) {
         state = "error";
@@ -94,7 +104,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
       } else if (MozLoopService.doNotDisturb) {
         state = "disabled";
       }
-      this.toolbarButton.node.setAttribute("state", state);
+      toolbarButton.node.setAttribute("state", state);
     },
   };
 })();
