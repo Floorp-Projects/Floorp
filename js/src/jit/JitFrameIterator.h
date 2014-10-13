@@ -57,7 +57,13 @@ enum FrameType
     // An exit frame is necessary for transitioning from a JS frame into C++.
     // From within C++, an exit frame is always the last frame in any
     // JitActivation.
-    JitFrame_Exit
+    JitFrame_Exit,
+
+    // A bailout frame is a special IonJS jit frame after a bailout, and before
+    // the reconstruction of the BaselineJS frame. From within C++, a bailout
+    // frame is always the last frame in a JitActivation iff the bailout frame
+    // information is recorded on the JitActivation.
+    JitFrame_Bailout
 };
 
 enum ReadFrameArgsBehavior {
@@ -127,10 +133,9 @@ class JitFrameIterator
 
     inline uint8_t *returnAddress() const;
 
-    IonJSFrameLayout *jsFrame() const {
-        MOZ_ASSERT(isScripted());
-        return (IonJSFrameLayout *) fp();
-    }
+    // Return the pointer of the JitFrame, the iterator is assumed to be settled
+    // on a scripted frame.
+    IonJSFrameLayout *jsFrame() const;
 
     // Returns true iff this exit frame was created using EnsureExitFrame.
     inline bool isFakeExitFrame() const;
@@ -143,13 +148,19 @@ class JitFrameIterator
     bool checkInvalidation() const;
 
     bool isScripted() const {
-        return type_ == JitFrame_BaselineJS || type_ == JitFrame_IonJS;
+        return type_ == JitFrame_BaselineJS || type_ == JitFrame_IonJS || type_ == JitFrame_Bailout;
     }
     bool isBaselineJS() const {
         return type_ == JitFrame_BaselineJS;
     }
+    bool isIonScripted() const {
+        return type_ == JitFrame_IonJS || type_ == JitFrame_Bailout;
+    }
     bool isIonJS() const {
         return type_ == JitFrame_IonJS;
+    }
+    bool isBailoutJS() const {
+        return type_ == JitFrame_Bailout;
     }
     bool isBaselineStub() const {
         return type_ == JitFrame_BaselineStub;
@@ -215,6 +226,10 @@ class JitFrameIterator
     // Returns the OSI index associated with this JS frame. Incurs a lookup
     // overhead.
     const OsiIndex *osiIndex() const;
+
+    // Returns the Snapshot offset associated with this JS frame. Incurs a
+    // lookup overhead.
+    SnapshotOffset snapshotOffset() const;
 
     uintptr_t *spillBase() const;
     MachineState machineState() const;

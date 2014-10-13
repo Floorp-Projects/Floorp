@@ -102,6 +102,10 @@ JitFrameIterator::JitFrameIterator(ThreadSafeContext *cx)
     cachedSafepointIndex_(nullptr),
     activation_(cx->perThreadData->activation()->asJit())
 {
+    if (activation_->bailoutData()) {
+        current_ = activation_->bailoutData()->fp();
+        type_ = JitFrame_Bailout;
+    }
 }
 
 JitFrameIterator::JitFrameIterator(const ActivationIterator &activations)
@@ -115,6 +119,10 @@ JitFrameIterator::JitFrameIterator(const ActivationIterator &activations)
     cachedSafepointIndex_(nullptr),
     activation_(activations->asJit())
 {
+    if (activation_->bailoutData()) {
+        current_ = activation_->bailoutData()->fp();
+        type_ = JitFrame_Bailout;
+    }
 }
 
 IonBailoutIterator *
@@ -275,6 +283,7 @@ SizeOfFramePrefix(FrameType type)
         return IonEntryFrameLayout::Size();
       case JitFrame_BaselineJS:
       case JitFrame_IonJS:
+      case JitFrame_Bailout:
       case JitFrame_Unwound_IonJS:
         return IonJSFrameLayout::Size();
       case JitFrame_BaselineStub:
@@ -339,6 +348,8 @@ JitFrameIterator::operator++()
 uintptr_t *
 JitFrameIterator::spillBase() const
 {
+    MOZ_ASSERT(isIonJS());
+
     // Get the base address to where safepoint registers are spilled.
     // Out-of-line calls do not unwind the extra padding space used to
     // aggregate bailout tables, so we use frameSize instead of frameLocals,
@@ -349,6 +360,12 @@ JitFrameIterator::spillBase() const
 MachineState
 JitFrameIterator::machineState() const
 {
+    MOZ_ASSERT(isIonScripted());
+
+    // The MachineState is used by GCs for marking call-sites.
+    if (MOZ_UNLIKELY(isBailoutJS()))
+        return activation_->bailoutData()->machineState();
+
     SafepointReader reader(ionScript(), safepoint());
     uintptr_t *spill = spillBase();
 
@@ -1532,7 +1549,7 @@ SnapshotIterator::SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshot
 
 SnapshotIterator::SnapshotIterator(const JitFrameIterator &iter)
   : snapshot_(iter.ionScript()->snapshots(),
-              iter.osiIndex()->snapshotOffset(),
+              iter.snapshotOffset(),
               iter.ionScript()->snapshotsRVATableSize(),
               iter.ionScript()->snapshotsListSize()),
     recover_(snapshot_,
@@ -1916,10 +1933,22 @@ SnapshotIterator::maybeReadAllocByIndex(size_t index)
     return s;
 }
 
+IonJSFrameLayout *
+JitFrameIterator::jsFrame() const
+{
+    MOZ_ASSERT(isScripted());
+    if (isBailoutJS())
+        return activation_->bailoutData()->jsFrame();
+
+    return (IonJSFrameLayout *) fp();
+}
+
 IonScript *
 JitFrameIterator::ionScript() const
 {
-    MOZ_ASSERT(type() == JitFrame_IonJS);
+    MOZ_ASSERT(isIonScripted());
+    if (isBailoutJS())
+        return activation_->bailoutData()->ionScript();
 
     IonScript *ionScript = nullptr;
     if (checkInvalidation(&ionScript))
@@ -1930,7 +1959,7 @@ JitFrameIterator::ionScript() const
 IonScript *
 JitFrameIterator::ionScriptFromCalleeToken() const
 {
-    MOZ_ASSERT(type() == JitFrame_IonJS);
+    MOZ_ASSERT(isIonJS());
     MOZ_ASSERT(!checkInvalidation());
 
     switch (mode_) {
@@ -1946,14 +1975,25 @@ JitFrameIterator::ionScriptFromCalleeToken() const
 const SafepointIndex *
 JitFrameIterator::safepoint() const
 {
+    MOZ_ASSERT(isIonJS());
     if (!cachedSafepointIndex_)
         cachedSafepointIndex_ = ionScript()->getSafepointIndex(returnAddressToFp());
     return cachedSafepointIndex_;
 }
 
+SnapshotOffset
+JitFrameIterator::snapshotOffset() const
+{
+    MOZ_ASSERT(isIonScripted());
+    if (isBailoutJS())
+        return activation_->bailoutData()->snapshotOffset();
+    return osiIndex()->snapshotOffset();
+}
+
 const OsiIndex *
 JitFrameIterator::osiIndex() const
 {
+    MOZ_ASSERT(isIonJS());
     SafepointReader reader(ionScript(), safepoint());
     return ionScript()->getOsiIndex(reader.osiReturnPointOffset());
 }
@@ -2335,6 +2375,7 @@ JitFrameIterator::dump() const
         fprintf(stderr, " Baseline stub frame\n");
         fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
         break;
+      case JitFrame_Bailout:
       case JitFrame_IonJS:
       {
         InlineFrameIterator frames(GetJSContextFromJitCode(), this);
