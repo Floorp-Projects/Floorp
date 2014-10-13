@@ -2439,7 +2439,7 @@ PeerConnectionWrapper.prototype = {
    * @param {object} stats
    *        The stats to check from this PeerConnectionWrapper
    */
-  checkStats : function PCW_checkStats(stats) {
+  checkStats : function PCW_checkStats(stats, twoMachines) {
     function toNum(obj) {
       return obj? obj : 0;
     }
@@ -2461,7 +2461,13 @@ PeerConnectionWrapper.prototype = {
         // validate stats
         ok(res.id == key, "Coherent stats id");
         var nowish = Date.now() + 1000;        // TODO: clock drift observed
+        if (twoMachines) {
+          nowish += 10000; // let's be very relaxed about clock sync
+        }
         var minimum = this.whenCreated - 1000; // on Windows XP (Bug 979649)
+        if (twoMachines) {
+          minimum -= 10000; // let's be very relaxed about clock sync
+        }
         if (isWinXP) {
           todo(false, "Can't reliably test rtcp timestamps on WinXP (Bug 979649)");
         } else {

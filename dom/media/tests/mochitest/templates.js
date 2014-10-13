@@ -478,7 +478,7 @@ var commandsPeerConnection = [
     'PC_LOCAL_CHECK_STATS',
     function (test) {
       test.pcLocal.getStats(null, function(stats) {
-        test.pcLocal.checkStats(stats);
+        test.pcLocal.checkStats(stats, test.steeplechase);
         test.next();
       });
     }
@@ -487,7 +487,7 @@ var commandsPeerConnection = [
     'PC_REMOTE_CHECK_STATS',
     function (test) {
       test.pcRemote.getStats(null, function(stats) {
-        test.pcRemote.checkStats(stats);
+        test.pcRemote.checkStats(stats, test.steeplechase);
         test.next();
       });
     }
