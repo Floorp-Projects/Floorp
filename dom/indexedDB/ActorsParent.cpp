@@ -153,6 +153,8 @@ const uint32_t kFileCopyBufferSize = 32768;
 
 const char kJournalDirectoryName[] = "journals";
 
+const char kFileManagerDirectoryNameSuffix[] = ".files";
+
 const char kPrefIndexedDBEnabled[] = "dom.indexedDB.enabled";
 
 #define IDB_PREFIX "indexedDB"
@@ -5419,19 +5421,23 @@ ConvertFileIdsToArray(const nsAString& aFileIds,
 
 bool
 GetDatabaseBaseFilename(const nsAString& aFilename,
-                        nsAString& aDatabaseBaseFilename)
+                        nsDependentSubstring& aDatabaseBaseFilename)
 {
   MOZ_ASSERT(!aFilename.IsEmpty());
+  MOZ_ASSERT(aDatabaseBaseFilename.IsEmpty());
 
   NS_NAMED_LITERAL_STRING(sqlite, ".sqlite");
 
-  if (!StringEndsWith(aFilename, sqlite)) {
+  if (!StringEndsWith(aFilename, sqlite) ||
+      aFilename.Length() == sqlite.Length()) {
     return false;
   }
 
-  aDatabaseBaseFilename =
-    Substring(aFilename, 0, aFilename.Length() - sqlite.Length());
+  MOZ_ASSERT(aFilename.Length() > sqlite.Length());
 
+  aDatabaseBaseFilename.Rebind(aFilename,
+                               0,
+                               aFilename.Length() - sqlite.Length());
   return true;
 }
 
@@ -9156,6 +9162,12 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
                         const nsACString& aOrigin,
                         UsageInfo* aUsageInfo)
 {
+  struct FileManagerInitInfo
+  {
+    nsCOMPtr<nsIFile> mDirectory;
+    nsCOMPtr<nsIFile> mDatabaseFile;
+  };
+
   AssertIsOnIOThread();
 
   nsCOMPtr<nsIFile> directory;
@@ -9170,8 +9182,9 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   // and also get the usage.
 
   nsAutoTArray<nsString, 20> subdirsToProcess;
-  nsAutoTArray<nsCOMPtr<nsIFile> , 20> unknownFiles;
+  nsTArray<nsCOMPtr<nsIFile>> unknownFiles;
   nsTHashtable<nsStringHashKey> validSubdirs(20);
+  nsAutoTArray<FileManagerInitInfo, 20> initInfos;
 
   nsCOMPtr<nsISimpleEnumerator> entries;
   rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
@@ -9179,9 +9192,12 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     return rv;
   }
 
+  const NS_ConvertASCIItoUTF16 filesSuffix(kFileManagerDirectoryNameSuffix);
+
   bool hasMore;
   while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
-         hasMore && (!aUsageInfo || !aUsageInfo->Canceled())) {
+         hasMore &&
+         (!aUsageInfo || !aUsageInfo->Canceled())) {
     nsCOMPtr<nsISupports> entry;
     rv = entries->GetNext(getter_AddRefs(entry));
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9212,17 +9228,20 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     }
 
     if (isDirectory) {
-      if (!validSubdirs.GetEntry(leafName)) {
+      if (!StringEndsWith(leafName, filesSuffix) ||
+          !validSubdirs.GetEntry(leafName)) {
         subdirsToProcess.AppendElement(leafName);
       }
       continue;
     }
 
-    nsString dbBaseFilename;
+    nsDependentSubstring dbBaseFilename;
     if (!GetDatabaseBaseFilename(leafName, dbBaseFilename)) {
       unknownFiles.AppendElement(file);
       continue;
     }
+
+    nsString fmDirectoryBaseName = dbBaseFilename + filesSuffix;
 
     nsCOMPtr<nsIFile> fmDirectory;
     rv = directory->Clone(getter_AddRefs(fmDirectory));
@@ -9230,52 +9249,97 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       return rv;
     }
 
-    rv = fmDirectory->Append(dbBaseFilename);
+    rv = fmDirectory->Append(fmDirectoryBaseName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = FileManager::InitDirectory(fmDirectory, file, aPersistenceType, aGroup,
-                                    aOrigin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    FileManagerInitInfo* initInfo = initInfos.AppendElement();
+    initInfo->mDirectory.swap(fmDirectory);
+    initInfo->mDatabaseFile.swap(file);
 
-    if (aUsageInfo) {
-      int64_t fileSize;
-      rv = file->GetFileSize(&fileSize);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      MOZ_ASSERT(fileSize >= 0);
-
-      aUsageInfo->AppendToDatabaseUsage(uint64_t(fileSize));
-
-      uint64_t usage;
-      rv = FileManager::GetUsage(fmDirectory, &usage);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      aUsageInfo->AppendToFileUsage(usage);
-    }
-
-    validSubdirs.PutEntry(dbBaseFilename);
+    validSubdirs.PutEntry(fmDirectoryBaseName);
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  for (uint32_t i = 0; i < subdirsToProcess.Length(); i++) {
-    const nsString& subdir = subdirsToProcess[i];
-    if (NS_WARN_IF(!validSubdirs.GetEntry(subdir))) {
+  for (uint32_t count = subdirsToProcess.Length(), i = 0; i < count; i++) {
+    const nsString& subdirName = subdirsToProcess[i];
+
+    // If the directory has the correct suffix then it must exist in
+    // validSubdirs.
+    if (StringEndsWith(subdirName, filesSuffix)) {
+      if (NS_WARN_IF(!validSubdirs.GetEntry(subdirName))) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      continue;
+    }
+
+    // The directory didn't have the right suffix but we might need to rename
+    // it. Check to see if we have a database that references this directory.
+    nsString subdirNameWithSuffix = subdirName + filesSuffix;
+    if (!validSubdirs.GetEntry(subdirNameWithSuffix)) {
+#ifdef XP_WIN
+      // Windows doesn't allow a directory to end with a dot ('.'), so we have
+      // to check that possibility here too.
+      subdirNameWithSuffix = subdirName + NS_LITERAL_STRING(".") + filesSuffix;
+      if (NS_WARN_IF(!validSubdirs.GetEntry(subdirNameWithSuffix))) {
+        return NS_ERROR_UNEXPECTED;
+      }
+#else
       return NS_ERROR_UNEXPECTED;
+#endif
+    }
+
+    // We do have a database that uses this directory so we should rename it
+    // now. However, first check to make sure that we're not overwriting
+    // something else.
+    nsCOMPtr<nsIFile> subdir;
+    rv = directory->Clone(getter_AddRefs(subdir));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = subdir->Append(subdirNameWithSuffix);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    bool exists;
+    rv = subdir->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (exists) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    rv = directory->Clone(getter_AddRefs(subdir));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = subdir->Append(subdirName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    DebugOnly<bool> isDirectory;
+    MOZ_ASSERT(NS_SUCCEEDED(subdir->IsDirectory(&isDirectory)));
+    MOZ_ASSERT(isDirectory);
+
+    rv = subdir->RenameTo(nullptr, subdirNameWithSuffix);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
 
-  for (uint32_t i = 0; i < unknownFiles.Length(); i++) {
+  for (uint32_t count = unknownFiles.Length(), i = 0; i < count; i++) {
     nsCOMPtr<nsIFile>& unknownFile = unknownFiles[i];
 
     // Some temporary SQLite files could disappear, so we have to check if the
@@ -9295,6 +9359,41 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
                                      NS_LITERAL_STRING(".sqlite-journal")))) {
         return NS_ERROR_UNEXPECTED;
       }
+    }
+  }
+
+  for (uint32_t count = initInfos.Length(), i = 0; i < count; i++) {
+    FileManagerInitInfo& initInfo = initInfos[i];
+    MOZ_ASSERT(initInfo.mDirectory);
+    MOZ_ASSERT(initInfo.mDatabaseFile);
+
+    rv = FileManager::InitDirectory(initInfo.mDirectory,
+                                    initInfo.mDatabaseFile,
+                                    aPersistenceType,
+                                    aGroup,
+                                    aOrigin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (aUsageInfo && !aUsageInfo->Canceled()) {
+      int64_t fileSize;
+      rv = initInfo.mDatabaseFile->GetFileSize(&fileSize);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      MOZ_ASSERT(fileSize >= 0);
+
+      aUsageInfo->AppendToDatabaseUsage(uint64_t(fileSize));
+
+      uint64_t usage;
+      rv = FileManager::GetUsage(initInfo.mDirectory, &usage);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      aUsageInfo->AppendToFileUsage(usage);
     }
   }
 
@@ -11174,7 +11273,9 @@ OpenDatabaseOp::DoDatabaseWork()
     return rv;
   }
 
-  rv = fmDirectory->Append(filename);
+  const NS_ConvertASCIItoUTF16 filesSuffix(kFileManagerDirectoryNameSuffix);
+
+  rv = fmDirectory->Append(filename + filesSuffix);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -12660,7 +12761,10 @@ VersionChangeOp::RunOnIOThread()
     return rv;
   }
 
-  rv = fmDirectory->Append(mDeleteDatabaseOp->mDatabaseFilenameBase);
+  const NS_ConvertASCIItoUTF16 filesSuffix(kFileManagerDirectoryNameSuffix);
+
+  rv = fmDirectory->Append(mDeleteDatabaseOp->mDatabaseFilenameBase +
+                           filesSuffix);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
