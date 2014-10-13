@@ -1405,7 +1405,7 @@ jit::JitActivation::JitActivation(JSContext *cx, bool active)
     active_(active),
     rematerializedFrames_(nullptr),
     ionRecovery_(cx),
-    ionBailoutIterator_(nullptr)
+    bailoutData_(nullptr)
 {
     if (active) {
         prevJitTop_ = cx->mainThread().jitTop;
@@ -1422,7 +1422,7 @@ jit::JitActivation::JitActivation(ForkJoinContext *cx)
     active_(true),
     rematerializedFrames_(nullptr),
     ionRecovery_(cx),
-    ionBailoutIterator_(nullptr)
+    bailoutData_(nullptr)
 {
     prevJitTop_ = cx->perThreadData->jitTop;
     prevJitJSContext_ = cx->perThreadData->jitJSContext;
@@ -1439,26 +1439,26 @@ jit::JitActivation::~JitActivation()
     // All reocvered value are taken from activation during the bailout.
     MOZ_ASSERT(ionRecovery_.empty());
 
-    // The Ion Bailout Iterator should have unregistered itself from the
+    // The BailoutFrameInfo should have unregistered itself from the
     // JitActivations.
-    MOZ_ASSERT(!ionBailoutIterator_);
+    MOZ_ASSERT(!bailoutData_);
 
     clearRematerializedFrames();
     js_delete(rematerializedFrames_);
 }
 
-jit::JitActivation::RegisterBailoutIterator::RegisterBailoutIterator(JitActivation &activation,
-                                                                     IonBailoutIterator *iter)
-  : activation_(activation)
+void
+jit::JitActivation::setBailoutData(jit::BailoutFrameInfo *bailoutData)
 {
-    MOZ_ASSERT(!activation_.ionBailoutIterator_);
-    activation_.ionBailoutIterator_ = iter;
+    MOZ_ASSERT(!bailoutData_);
+    bailoutData_ = bailoutData;
 }
 
-jit::JitActivation::RegisterBailoutIterator::~RegisterBailoutIterator()
+void
+jit::JitActivation::cleanBailoutData()
 {
-    MOZ_ASSERT(activation_.ionBailoutIterator_);
-    activation_.ionBailoutIterator_ = nullptr;
+    MOZ_ASSERT(bailoutData_);
+    bailoutData_ = nullptr;
 }
 
 // setActive() is inlined in GenerateFFIIonExit() with explicit masm instructions so
@@ -1507,9 +1507,8 @@ jit::JitActivation::clearRematerializedFrames()
     }
 }
 
-template <class T>
 jit::RematerializedFrame *
-jit::JitActivation::getRematerializedFrame(ThreadSafeContext *cx, const T &iter, size_t inlineDepth)
+jit::JitActivation::getRematerializedFrame(ThreadSafeContext *cx, const JitFrameIterator &iter, size_t inlineDepth)
 {
     // Only allow rematerializing from the same thread.
     MOZ_ASSERT(cx->perThreadData == cx_->perThreadData);
@@ -1543,15 +1542,6 @@ jit::JitActivation::getRematerializedFrame(ThreadSafeContext *cx, const T &iter,
 
     return p->value()[inlineDepth];
 }
-
-template jit::RematerializedFrame *
-jit::JitActivation::getRematerializedFrame<jit::JitFrameIterator>(ThreadSafeContext *cx,
-                                                                  const jit::JitFrameIterator &iter,
-                                                                  size_t inlineDepth);
-template jit::RematerializedFrame *
-jit::JitActivation::getRematerializedFrame<jit::IonBailoutIterator>(ThreadSafeContext *cx,
-                                                                    const jit::IonBailoutIterator &iter,
-                                                                    size_t inlineDepth);
 
 jit::RematerializedFrame *
 jit::JitActivation::lookupRematerializedFrame(uint8_t *top, size_t inlineDepth)

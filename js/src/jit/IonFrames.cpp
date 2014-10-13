@@ -86,7 +86,6 @@ JitFrameIterator::JitFrameIterator()
     returnAddressToFp_(nullptr),
     frameSize_(0),
     mode_(SequentialExecution),
-    kind_(Kind_FrameIterator),
     cachedSafepointIndex_(nullptr),
     activation_(nullptr)
 {
@@ -98,12 +97,12 @@ JitFrameIterator::JitFrameIterator(ThreadSafeContext *cx)
     returnAddressToFp_(nullptr),
     frameSize_(0),
     mode_(cx->isForkJoinContext() ? ParallelExecution : SequentialExecution),
-    kind_(Kind_FrameIterator),
     cachedSafepointIndex_(nullptr),
     activation_(cx->perThreadData->activation()->asJit())
 {
     if (activation_->bailoutData()) {
         current_ = activation_->bailoutData()->fp();
+        frameSize_ = activation_->bailoutData()->topFrameSize();
         type_ = JitFrame_Bailout;
     }
 }
@@ -115,28 +114,14 @@ JitFrameIterator::JitFrameIterator(const ActivationIterator &activations)
     frameSize_(0),
     mode_(activations->asJit()->cx()->isForkJoinContext() ? ParallelExecution
                                                           : SequentialExecution),
-    kind_(Kind_FrameIterator),
     cachedSafepointIndex_(nullptr),
     activation_(activations->asJit())
 {
     if (activation_->bailoutData()) {
         current_ = activation_->bailoutData()->fp();
+        frameSize_ = activation_->bailoutData()->topFrameSize();
         type_ = JitFrame_Bailout;
     }
-}
-
-IonBailoutIterator *
-JitFrameIterator::asBailoutIterator()
-{
-    MOZ_ASSERT(isBailoutIterator());
-    return static_cast<IonBailoutIterator *>(this);
-}
-
-const IonBailoutIterator *
-JitFrameIterator::asBailoutIterator() const
-{
-    MOZ_ASSERT(isBailoutIterator());
-    return static_cast<const IonBailoutIterator *>(this);
 }
 
 bool
@@ -1938,7 +1923,7 @@ JitFrameIterator::jsFrame() const
 {
     MOZ_ASSERT(isScripted());
     if (isBailoutJS())
-        return activation_->bailoutData()->jsFrame();
+        return (IonJSFrameLayout *) activation_->bailoutData()->fp();
 
     return (IonJSFrameLayout *) fp();
 }
@@ -2012,19 +1997,6 @@ InlineFrameIterator::InlineFrameIterator(JSRuntime *rt, const JitFrameIterator *
     resetOn(iter);
 }
 
-InlineFrameIterator::InlineFrameIterator(ThreadSafeContext *cx, const IonBailoutIterator *iter)
-  : frame_(iter),
-    framesRead_(0),
-    frameCount_(UINT32_MAX),
-    callee_(cx),
-    script_(cx)
-{
-    if (iter) {
-        start_ = SnapshotIterator(*iter);
-        findNextFrame();
-    }
-}
-
 InlineFrameIterator::InlineFrameIterator(ThreadSafeContext *cx, const InlineFrameIterator *iter)
   : frame_(iter ? iter->frame_ : nullptr),
     framesRead_(0),
@@ -2033,10 +2005,7 @@ InlineFrameIterator::InlineFrameIterator(ThreadSafeContext *cx, const InlineFram
     script_(cx)
 {
     if (frame_) {
-        if (frame_->isBailoutIterator())
-            start_ = SnapshotIterator(*frame_->asBailoutIterator());
-        else
-            start_ = SnapshotIterator(*frame_);
+        start_ = SnapshotIterator(*frame_);
 
         // findNextFrame will iterate to the next frame and init. everything.
         // Therefore to settle on the same frame, we report one frame less readed.

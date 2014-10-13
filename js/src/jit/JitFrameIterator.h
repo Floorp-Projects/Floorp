@@ -80,7 +80,6 @@ enum ReadFrameArgsBehavior {
 class IonCommonFrameLayout;
 class IonJSFrameLayout;
 class IonExitFrameLayout;
-class IonBailoutIterator;
 
 class BaselineFrame;
 
@@ -94,10 +93,6 @@ class JitFrameIterator
     uint8_t *returnAddressToFp_;
     size_t frameSize_;
     ExecutionMode mode_;
-    enum Kind {
-        Kind_FrameIterator,
-        Kind_BailoutIterator
-    } kind_;
 
   private:
     mutable const SafepointIndex *cachedSafepointIndex_;
@@ -109,12 +104,6 @@ class JitFrameIterator
     explicit JitFrameIterator();
     explicit JitFrameIterator(ThreadSafeContext *cx);
     explicit JitFrameIterator(const ActivationIterator &activations);
-
-    bool isBailoutIterator() const {
-        return kind_ == Kind_BailoutIterator;
-    }
-    IonBailoutIterator *asBailoutIterator();
-    const IonBailoutIterator *asBailoutIterator() const;
 
     // Current frame information.
     FrameType type() const {
@@ -480,7 +469,6 @@ class SnapshotIterator
     SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
                      IonJSFrameLayout *fp, const MachineState &machine);
     explicit SnapshotIterator(const JitFrameIterator &iter);
-    explicit SnapshotIterator(const IonBailoutIterator &iter);
     SnapshotIterator();
 
     Value read() {
@@ -595,7 +583,6 @@ class InlineFrameIterator
   public:
     InlineFrameIterator(ThreadSafeContext *cx, const JitFrameIterator *iter);
     InlineFrameIterator(JSRuntime *rt, const JitFrameIterator *iter);
-    InlineFrameIterator(ThreadSafeContext *cx, const IonBailoutIterator *iter);
     InlineFrameIterator(ThreadSafeContext *cx, const InlineFrameIterator *iter);
 
     bool more() const {
