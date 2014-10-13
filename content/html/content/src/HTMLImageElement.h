@@ -12,6 +12,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "imgRequestProxy.h"
 #include "Units.h"
+#include "nsCycleCollectionParticipant.h"
 
 // Only needed for IsPictureEnabled()
 #include "mozilla/dom/HTMLPictureElement.h"
@@ -36,6 +37,9 @@ public:
           const Optional<uint32_t>& aWidth,
           const Optional<uint32_t>& aHeight,
           ErrorResult& aError);
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLImageElement,
+                                           nsGenericHTMLElement)
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
