@@ -237,6 +237,7 @@ TrackBuffer::NewDecoder()
   mLastStartTimestamp = 0;
   mLastEndTimestamp = 0;
 
+  decoder->SetTaskQueue(mTaskQueue);
   return QueueInitializeDecoder(decoder);
 }
 
@@ -247,7 +248,6 @@ TrackBuffer::QueueInitializeDecoder(SourceBufferDecoder* aDecoder)
     NS_NewRunnableMethodWithArg<SourceBufferDecoder*>(this,
                                                       &TrackBuffer::InitializeDecoder,
                                                       aDecoder);
-  aDecoder->SetTaskQueue(mTaskQueue);
   if (NS_FAILED(mTaskQueue->Dispatch(task))) {
     MSE_DEBUG("MediaSourceReader(%p): Failed to enqueue decoder initialization task", this);
     RemoveDecoder(aDecoder);
@@ -272,8 +272,16 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
   MediaInfo mi;
   nsAutoPtr<MetadataTags> tags; // TODO: Handle metadata.
   nsresult rv = reader->ReadMetadata(&mi, getter_Transfers(tags));
-  aDecoder->SetTaskQueue(nullptr);
   reader->SetIdle();
+
+  if (NS_SUCCEEDED(rv) && reader->IsWaitingOnCDMResource()) {
+    ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
+    mWaitingDecoders.AppendElement(aDecoder);
+    return;
+  }
+
+  aDecoder->SetTaskQueue(nullptr);
+
   if (NS_FAILED(rv) || (!mi.HasVideo() && !mi.HasAudio())) {
     // XXX: Need to signal error back to owning SourceBuffer.
     MSE_DEBUG("TrackBuffer(%p): Reader %p failed to initialize rv=%x audio=%d video=%d",
@@ -414,6 +422,31 @@ TrackBuffer::Decoders()
   // XXX assert OnDecodeThread
   return mInitializedDecoders;
 }
+
+#ifdef MOZ_EME
+nsresult
+TrackBuffer::SetCDMProxy(CDMProxy* aProxy)
+{
+  ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
+
+  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+    nsresult rv = mDecoders[i]->SetCDMProxy(aProxy);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  for (uint32_t i = 0; i < mWaitingDecoders.Length(); ++i) {
+    CDMCaps::AutoLock caps(aProxy->Capabilites());
+    caps.CallOnMainThreadWhenCapsAvailable(
+      NS_NewRunnableMethodWithArg<SourceBufferDecoder*>(this,
+                                                        &TrackBuffer::QueueInitializeDecoder,
+                                                        mWaitingDecoders[i]));
+  }
+
+  mWaitingDecoders.Clear();
+
+  return NS_OK;
+}
+#endif
 
 #if defined(DEBUG)
 void
