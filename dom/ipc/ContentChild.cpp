@@ -530,6 +530,7 @@ ContentChild::ContentChild()
    ,mScreenSize(0, 0)
 #endif
    , mCanOverrideProcessName(true)
+   , mIsAlive(true)
 {
     // This process is a content process, so it's clearly running in
     // multiprocess mode!
@@ -666,6 +667,12 @@ void
 ContentChild::GetProcessName(nsAString& aName)
 {
     aName.Assign(mProcessName);
+}
+
+bool
+ContentChild::IsAlive()
+{
+    return mIsAlive;
 }
 
 void
@@ -1640,6 +1647,7 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
         svc->UnregisterListener(mConsoleListener);
         mConsoleListener->mChild = nullptr;
     }
+    mIsAlive = false;
 
     XRE_ShutdownChildProcess();
 }
