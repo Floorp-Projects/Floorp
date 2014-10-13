@@ -520,7 +520,7 @@ public:
         return TexImage2D_base(texImageTarget, level, internalformat,
                                size.width, size.height, data->Stride(),
                                0, format, type, data->GetData(), byteLength,
-                               -1, srcFormat, mPixelStorePremultiplyAlpha);
+                               js::Scalar::TypeMax, srcFormat, mPixelStorePremultiplyAlpha);
     }
 
     void TexParameterf(GLenum target, GLenum pname, GLfloat param) {
@@ -552,8 +552,11 @@ public:
         if (IsContextLost())
             return;
 
-        if (!ValidateTexImageTarget(2, rawTexImageTarget, WebGLTexImageFunc::TexSubImage))
+        if (!ValidateTexImageTarget(2, rawTexImageTarget,
+                                    WebGLTexImageFunc::TexSubImage))
+        {
             return ErrorInvalidEnumInfo("texSubImage2D: target", rawTexImageTarget);
+        }
 
         const TexImageTarget texImageTarget(rawTexImageTarget);
 
@@ -592,7 +595,7 @@ public:
                                   size.width, size.height,
                                   data->Stride(), format, type,
                                   data->GetData(), byteLength,
-                                  -1, srcFormat, mPixelStorePremultiplyAlpha);
+                                  js::Scalar::TypeMax, srcFormat, mPixelStorePremultiplyAlpha);
 
     }
 
@@ -1093,7 +1096,9 @@ protected:
     bool ValidateComparisonEnum(GLenum target, const char *info);
     bool ValidateStencilOpEnum(GLenum action, const char *info);
     bool ValidateFaceEnum(GLenum face, const char *info);
-    bool ValidateTexInputData(GLenum type, int jsArrayType, WebGLTexImageFunc func);
+    bool ValidateTexInputData(GLenum type,
+                              js::Scalar::Type jsArrayType,
+                              WebGLTexImageFunc func);
     bool ValidateDrawModeEnum(GLenum mode, const char *info);
     bool ValidateAttribIndex(GLuint index, const char *info);
     bool ValidateStencilParamsForDrawCall();
@@ -1144,6 +1149,7 @@ protected:
     void MakeContextCurrent() const;
 
     // helpers
+
     void TexImage2D_base(TexImageTarget target,
                          GLint level,
                          GLenum internalformat,
@@ -1151,7 +1157,7 @@ protected:
                          GLenum format,
                          GLenum type,
                          void *data, uint32_t byteLength,
-                         int jsArrayType,
+                         js::Scalar::Type jsArrayType, // special value TypeMax used to mean no array
                          WebGLTexelFormat srcFormat, bool srcPremultiplied);
     void TexSubImage2D_base(TexImageTarget target, GLint level,
                             GLint xoffset, GLint yoffset,
@@ -1159,7 +1165,7 @@ protected:
                             GLenum format,
                             GLenum type,
                             void *pixels, uint32_t byteLength,
-                            int jsArrayType,
+                            js::Scalar::Type jsArrayType, // special value TypeMax used to mean no array
                             WebGLTexelFormat srcFormat, bool srcPremultiplied);
     void TexParameter_base(GLenum target, GLenum pname,
                            GLint *intParamPtr, GLfloat *floatParamPtr);
