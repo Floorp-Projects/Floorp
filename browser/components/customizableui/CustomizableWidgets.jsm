@@ -901,14 +901,15 @@ const CustomizableWidgets = [{
       let win = aEvent.view;
       win.MailIntegration.sendLinkForWindow(win.content);
     }
-  }, {
+  }];
+
+if (Services.prefs.getBoolPref("loop.enabled") && !Services.prefs.getBoolPref("loop.throttled")) {
+  CustomizableWidgets.push({
     id: "loop-call-button",
     type: "custom",
     // XXX Bug 1013989 will provide a label for the button
     label: "loop-call-button.label",
     tooltiptext: "loop-call-button.tooltiptext",
-    defaultArea: CustomizableUI.AREA_NAVBAR,
-    introducedInVersion: 1,
     onBuild: function(aDocument) {
       let node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
       node.setAttribute("id", this.id);
@@ -923,7 +924,8 @@ const CustomizableWidgets = [{
       });
       return node;
     }
-  }];
+  });
+}
 
 #ifdef XP_WIN
 #ifdef MOZ_METRO

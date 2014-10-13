@@ -1280,7 +1280,9 @@ this.MozLoopService = {
         // Hot diggity! It's our turn! Activate the service.
         log.info("MozLoopService: Activating Loop via soft-start");
         Services.prefs.setBoolPref("loop.throttled", false);
-        buttonNode.hidden = false;
+        if (buttonNode) {
+          buttonNode.hidden = false;
+        }
         this.initialize();
       }
       if (typeof(doneCb) == "function") {
