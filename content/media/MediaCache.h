@@ -31,7 +31,7 @@ class ReentrantMonitorAutoEnter;
  * and you don't have much control over the rate. Also, transferring data
  * over the Internet can be slow and/or unpredictable, so we want to read
  * ahead to buffer and cache as much data as possible.
- * 
+ *
  * The job of the media cache is to resolve this impedance mismatch.
  * The media cache reads data from Necko channels into file-backed storage,
  * and offers a random-access file-like API to the stream data
@@ -56,25 +56,25 @@ class ReentrantMonitorAutoEnter;
  * can distribute data to any thread
  * -- The cache exposes APIs so clients can detect what data is
  * currently held
- * 
+ *
  * Note that although HTTP is the most important transport and we only
  * support transport-level seeking via HTTP byte-ranges, the media cache
  * works with any kind of Necko channels and provides random access to
  * cached data even for, e.g., FTP streams.
- * 
+ *
  * The media cache is not persistent. It does not currently allow
  * data from one load to be used by other loads, either within the same
  * browser session or across browser sessions. The media cache file
  * is marked "delete on close" so it will automatically disappear in the
  * event of a browser crash or shutdown.
- * 
+ *
  * The media cache is block-based. Streams are divided into blocks of a
  * fixed size (currently 4K) and we cache blocks. A single cache contains
  * blocks for all streams.
- * 
+ *
  * The cache size is controlled by the media.cache_size preference
  * (which is in KB). The default size is 500MB.
- * 
+ *
  * The replacement policy predicts a "time of next use" for each block
  * in the cache. When we need to free a block, the block with the latest
  * "time of next use" will be evicted. Blocks are divided into
@@ -108,19 +108,19 @@ class ReentrantMonitorAutoEnter;
  * next use. READAHEAD_BLOCKS have one linked list per stream, since their
  * time of next use depends on stream parameters, but the other lists
  * are global.
- * 
+ *
  * A block containing a current decoder read point can contain data
  * both behind and ahead of the read point. It will be classified as a
  * PLAYED_BLOCK but we will give it special treatment so it is never
  * evicted --- it actually contains the highest-priority readahead data
  * as well as played data.
- * 
+ *
  * "Time of next use" estimates are also used for flow control. When
  * reading ahead we can predict the time of next use for the data that
  * will be read. If the predicted time of next use is later then the
  * prediction for all currently cached blocks, and the cache is full, then
  * we should suspend reading from the Necko channel.
- * 
+ *
  * Unfortunately suspending the Necko channel can't immediately stop the
  * flow of data from the server. First our desire to suspend has to be
  * transmitted to the server (in practice, Necko stops reading from the
@@ -132,7 +132,7 @@ class ReentrantMonitorAutoEnter;
  * moving overflowing blocks back into the body of the cache, replacing
  * less valuable blocks as they become available. We try to avoid simply
  * discarding overflowing readahead data.
- * 
+ *
  * All changes to the actual contents of the cache happen on the main
  * thread, since that's where Necko's notifications happen.
  *
@@ -142,7 +142,7 @@ class ReentrantMonitorAutoEnter;
  * the loading of data from the beginning of the file.) The Necko channel
  * is managed through ChannelMediaResource; MediaCache does not
  * depend on Necko directly.
- * 
+ *
  * Every time something changes that might affect whether we want to
  * read from a Necko channel, or whether we want to seek on the Necko
  * channel --- such as data arriving or data being consumed by the
@@ -152,20 +152,20 @@ class ReentrantMonitorAutoEnter;
  * offset we should seek to, if any. It is also responsible for trimming
  * back the cache size to its desired limit by moving overflowing blocks
  * into the main part of the cache.
- * 
+ *
  * Streams can be opened in non-seekable mode. In non-seekable mode,
  * the cache will only call ChannelMediaResource::CacheClientSeek with
  * a 0 offset. The cache tries hard not to discard readahead data
  * for non-seekable streams, since that could trigger a potentially
  * disastrous re-read of the entire stream. It's up to cache clients
  * to try to avoid requesting seeks on such streams.
- * 
+ *
  * MediaCache has a single internal monitor for all synchronization.
  * This is treated as the lowest level monitor in the media code. So,
  * we must not acquire any MediaDecoder locks or MediaResource locks
  * while holding the MediaCache lock. But it's OK to hold those locks
  * and then get the MediaCache lock.
- * 
+ *
  * MediaCache associates a principal with each stream. CacheClientSeek
  * can trigger new HTTP requests; due to redirects to other domains,
  * each HTTP load can return data with a different principal. This
@@ -178,7 +178,7 @@ class MediaCache;
 /**
  * If the cache fails to initialize then Init will fail, so nonstatic
  * methods of this class can assume gMediaCache is non-null.
- * 
+ *
  * This class can be directly embedded as a value.
  */
 class MediaCacheStream {
@@ -357,7 +357,7 @@ private:
    * constant time. We declare this here so that a stream can contain a
    * BlockList of its read-ahead blocks. Blocks are referred to by index
    * into the MediaCache::mIndex array.
-   * 
+   *
    * Blocks can belong to more than one list at the same time, because
    * the next/prev pointers are not stored in the block.
    */

@@ -21,7 +21,6 @@
 #include "imgRequestProxy.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "js/OldDebugAPI.h"
 #include "js/Value.h"
 #include "Layers.h"
 #include "MediaDecoder.h"
