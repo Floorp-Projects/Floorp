@@ -11,7 +11,9 @@
 
 #include "NSSErrorsService.h"
 #include "mozilla/Likely.h"
+#ifndef MOZ_NO_MOZALLOC
 #include "mozilla/mozalloc_oom.h"
+#endif
 #include "mozilla/Scoped.h"
 #include "nsError.h"
 #include "nsDebug.h"
@@ -257,8 +259,11 @@ inline void
 SECITEM_AllocItem(SECItem & item, uint32_t len)
 {
   if (MOZ_UNLIKELY(!SECITEM_AllocItem(nullptr, &item, len))) {
+#ifndef MOZ_NO_MOZALLOC
     mozalloc_handle_oom(len);
-    if (MOZ_UNLIKELY(!SECITEM_AllocItem(nullptr, &item, len))) {
+    if (MOZ_UNLIKELY(!SECITEM_AllocItem(nullptr, &item, len)))
+#endif
+    {
       MOZ_CRASH();
     }
   }
