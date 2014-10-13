@@ -1097,6 +1097,26 @@ public:
     mActor = nullptr;
   }
 
+  BlobChild*
+  GetActor() const
+  {
+    AssertActorEventTargetIsOnCurrentThread();
+
+    return mActor;
+  }
+
+  nsIEventTarget*
+  GetActorEventTarget() const
+  {
+    return mActorTarget;
+  }
+
+  void
+  AssertActorEventTargetIsOnCurrentThread() const
+  {
+    MOZ_ASSERT(EventTargetIsOnCurrentThread(mActorTarget));
+  }
+
   NS_DECL_ISUPPORTS_INHERITED
 
   virtual void
@@ -1168,21 +1188,18 @@ class BlobChild::RemoteBlobImpl::StreamHelper MOZ_FINAL
   : public nsRunnable
 {
   Monitor mMonitor;
-  BlobChild* mActor;
-  nsRefPtr<FileImpl> mBlobImpl;
+  nsRefPtr<RemoteBlobImpl> mRemoteBlobImpl;
   nsRefPtr<RemoteInputStream> mInputStream;
   bool mDone;
 
 public:
-  StreamHelper(BlobChild* aActor, FileImpl* aBlobImpl)
+  StreamHelper(RemoteBlobImpl* aRemoteBlobImpl)
     : mMonitor("BlobChild::RemoteBlobImpl::StreamHelper::mMonitor")
-    , mActor(aActor)
-    , mBlobImpl(aBlobImpl)
+    , mRemoteBlobImpl(aRemoteBlobImpl)
     , mDone(false)
   {
     // This may be created on any thread.
-    MOZ_ASSERT(aActor);
-    MOZ_ASSERT(aBlobImpl);
+    MOZ_ASSERT(aRemoteBlobImpl);
   }
 
   nsresult
@@ -1190,14 +1207,14 @@ public:
   {
     // This may be called on any thread.
     MOZ_ASSERT(aInputStream);
-    MOZ_ASSERT(mActor);
+    MOZ_ASSERT(mRemoteBlobImpl);
     MOZ_ASSERT(!mInputStream);
     MOZ_ASSERT(!mDone);
 
-    if (mActor->IsOnOwningThread()) {
+    if (EventTargetIsOnCurrentThread(mRemoteBlobImpl->GetActorEventTarget())) {
       RunInternal(false);
     } else {
-      nsCOMPtr<nsIEventTarget> target = mActor->EventTarget();
+      nsCOMPtr<nsIEventTarget> target = mRemoteBlobImpl->GetActorEventTarget();
       if (!target) {
         target = do_GetMainThread();
       }
@@ -1215,7 +1232,7 @@ public:
       }
     }
 
-    MOZ_ASSERT(!mActor);
+    MOZ_ASSERT(!mRemoteBlobImpl);
     MOZ_ASSERT(mDone);
 
     if (!mInputStream) {
@@ -1229,8 +1246,8 @@ public:
   NS_IMETHOD
   Run() MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
+    MOZ_ASSERT(mRemoteBlobImpl);
+    mRemoteBlobImpl->AssertActorEventTargetIsOnCurrentThread();
 
     RunInternal(true);
     return NS_OK;
@@ -1240,19 +1257,22 @@ private:
   void
   RunInternal(bool aNotify)
   {
-    MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
+    MOZ_ASSERT(mRemoteBlobImpl);
+    mRemoteBlobImpl->AssertActorEventTargetIsOnCurrentThread();
     MOZ_ASSERT(!mInputStream);
     MOZ_ASSERT(!mDone);
 
-    nsRefPtr<RemoteInputStream> stream = new RemoteInputStream(mBlobImpl);
+    if (BlobChild* actor = mRemoteBlobImpl->GetActor()) {
+      nsRefPtr<RemoteInputStream> stream =
+        new RemoteInputStream(mRemoteBlobImpl);
 
-    InputStreamChild* streamActor = new InputStreamChild(stream);
-    if (mActor->SendPBlobStreamConstructor(streamActor)) {
-      stream.swap(mInputStream);
+      InputStreamChild* streamActor = new InputStreamChild(stream);
+      if (actor->SendPBlobStreamConstructor(streamActor)) {
+        stream.swap(mInputStream);
+      }
     }
 
-    mActor = nullptr;
+    mRemoteBlobImpl = nullptr;
 
     if (aNotify) {
       MonitorAutoLock lock(mMonitor);
@@ -1269,7 +1289,7 @@ class BlobChild::RemoteBlobImpl::SliceHelper MOZ_FINAL
   : public nsRunnable
 {
   Monitor mMonitor;
-  BlobChild* mActor;
+  nsRefPtr<RemoteBlobImpl> mRemoteBlobImpl;
   nsRefPtr<FileImpl> mSlice;
   uint64_t mStart;
   uint64_t mLength;
@@ -1278,24 +1298,22 @@ class BlobChild::RemoteBlobImpl::SliceHelper MOZ_FINAL
 
 public:
   explicit
-  SliceHelper(BlobChild* aActor)
+  SliceHelper(RemoteBlobImpl* aRemoteBlobImpl)
     : mMonitor("BlobChild::RemoteBlobImpl::SliceHelper::mMonitor")
-    , mActor(aActor)
+    , mRemoteBlobImpl(aRemoteBlobImpl)
     , mStart(0)
     , mLength(0)
     , mDone(false)
   {
     // This may be created on any thread.
-    MOZ_ASSERT(aActor);
+    MOZ_ASSERT(aRemoteBlobImpl);
   }
 
-  FileImpl*
-  GetSlice(uint64_t aStart,
-           uint64_t aLength,
-           const nsAString& aContentType)
+  already_AddRefed<FileImpl>
+  GetSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType)
   {
     // This may be called on any thread.
-    MOZ_ASSERT(mActor);
+    MOZ_ASSERT(mRemoteBlobImpl);
     MOZ_ASSERT(!mSlice);
     MOZ_ASSERT(!mDone);
 
@@ -1303,10 +1321,10 @@ public:
     mLength = aLength;
     mContentType = aContentType;
 
-    if (mActor->IsOnOwningThread()) {
+    if (EventTargetIsOnCurrentThread(mRemoteBlobImpl->GetActorEventTarget())) {
       RunInternal(false);
     } else {
-      nsCOMPtr<nsIEventTarget> target = mActor->EventTarget();
+      nsCOMPtr<nsIEventTarget> target = mRemoteBlobImpl->GetActorEventTarget();
       if (!target) {
         target = do_GetMainThread();
       }
@@ -1326,21 +1344,21 @@ public:
       }
     }
 
-    MOZ_ASSERT(!mActor);
+    MOZ_ASSERT(!mRemoteBlobImpl);
     MOZ_ASSERT(mDone);
 
     if (NS_WARN_IF(!mSlice)) {
       return nullptr;
     }
 
-    return mSlice;
+    return mSlice.forget();
   }
 
   NS_IMETHOD
   Run() MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
+    MOZ_ASSERT(mRemoteBlobImpl);
+    mRemoteBlobImpl->AssertActorEventTargetIsOnCurrentThread();
 
     RunInternal(true);
     return NS_OK;
@@ -1350,44 +1368,48 @@ private:
   void
   RunInternal(bool aNotify)
   {
-    MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
+    MOZ_ASSERT(mRemoteBlobImpl);
+    mRemoteBlobImpl->AssertActorEventTargetIsOnCurrentThread();
     MOZ_ASSERT(!mSlice);
     MOZ_ASSERT(!mDone);
 
-    NS_ENSURE_TRUE_VOID(mActor->HasManager());
+    if (BlobChild* actor = mRemoteBlobImpl->GetActor()) {
+      MOZ_ASSERT(actor->HasManager());
 
-    nsID id;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(gUUIDGenerator->GenerateUUIDInPlace(&id)));
+      nsID id;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(gUUIDGenerator->GenerateUUIDInPlace(&id)));
 
-    ChildBlobConstructorParams params(
-      id,
-      NormalBlobConstructorParams(mContentType /* contentType */,
-                                  mLength /* length */));
+      ChildBlobConstructorParams params(
+        id,
+        NormalBlobConstructorParams(mContentType /* contentType */,
+                                    mLength /* length */));
 
-    ParentBlobConstructorParams otherSideParams(
-      SlicedBlobConstructorParams(nullptr /* sourceParent */,
-                                  mActor /* sourceChild */,
-                                  id /* optionalID */,
-                                  mStart /* begin */,
-                                  mStart + mLength /* end */,
-                                  mContentType /* contentType */),
-      void_t() /* optionalInputStream */);
+      ParentBlobConstructorParams otherSideParams(
+        SlicedBlobConstructorParams(nullptr /* sourceParent */,
+                                    actor /* sourceChild */,
+                                    id /* optionalID */,
+                                    mStart /* begin */,
+                                    mStart + mLength /* end */,
+                                    mContentType /* contentType */),
+        void_t() /* optionalInputStream */);
 
-    BlobChild* newActor;
-    if (nsIContentChild* contentManager = mActor->GetContentManager()) {
-      newActor = SendSliceConstructor(contentManager, params, otherSideParams);
-    } else {
-      newActor = SendSliceConstructor(mActor->GetBackgroundManager(),
-                                      params,
-                                      otherSideParams);
+      BlobChild* newActor;
+      if (nsIContentChild* contentManager = actor->GetContentManager()) {
+        newActor = SendSliceConstructor(contentManager,
+                                        params,
+                                        otherSideParams);
+      } else {
+        newActor = SendSliceConstructor(actor->GetBackgroundManager(),
+                                        params,
+                                        otherSideParams);
+      }
+
+      if (newActor) {
+        mSlice = newActor->GetBlobImpl();
+      }
     }
 
-    if (newActor) {
-      mSlice = newActor->GetBlobImpl();
-    }
-
-    mActor = nullptr;
+    mRemoteBlobImpl = nullptr;
 
     if (aNotify) {
       MonitorAutoLock lock(mMonitor);
@@ -1415,6 +1437,10 @@ BlobChild::
 RemoteBlobImpl::GetMozFullPathInternal(nsAString& aFilePath,
                                        ErrorResult& aRv)
 {
+  if (!EventTargetIsOnCurrentThread(mActorTarget)) {
+    MOZ_CRASH("Not implemented!");
+  }
+
   if (!mActor) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
@@ -1434,12 +1460,7 @@ BlobChild::
 RemoteBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
                             const nsAString& aContentType, ErrorResult& aRv)
 {
-  if (!mActor) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsRefPtr<SliceHelper> helper = new SliceHelper(mActor);
+  nsRefPtr<SliceHelper> helper = new SliceHelper(this);
 
   nsRefPtr<FileImpl> impl = helper->GetSlice(aStart, aLength, aContentType);
   if (NS_WARN_IF(!impl)) {
@@ -1454,11 +1475,7 @@ nsresult
 BlobChild::
 RemoteBlobImpl::GetInternalStream(nsIInputStream** aStream)
 {
-  if (!mActor) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsRefPtr<StreamHelper> helper = new StreamHelper(mActor, this);
+  nsRefPtr<StreamHelper> helper = new StreamHelper(this);
   return helper->GetStream(aStream);
 }
 
@@ -1466,6 +1483,10 @@ int64_t
 BlobChild::
 RemoteBlobImpl::GetFileId()
 {
+  if (!EventTargetIsOnCurrentThread(mActorTarget)) {
+    MOZ_CRASH("Not implemented!");
+  }
+
   int64_t fileId;
   if (mActor && mActor->SendGetFileId(&fileId)) {
     return fileId;
