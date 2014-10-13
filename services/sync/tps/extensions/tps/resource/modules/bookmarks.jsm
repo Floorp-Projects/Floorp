@@ -776,7 +776,7 @@ Livemark.prototype = {
 
     let [status, livemark] = spinningCb.wait();
     if (!Components.isSuccessCode(status)) {
-      throw status;
+      throw new Error(status);
     }
 
     this.props.item_id = livemark.id;
