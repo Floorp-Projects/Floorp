@@ -228,8 +228,16 @@ public:
     void DummyFramebufferOperation(const char *info);
 
     WebGLTexture* activeBoundTextureForTarget(const TexTarget texTarget) const {
-        return texTarget == LOCAL_GL_TEXTURE_2D ? mBound2DTextures[mActiveTexture]
-                                                : mBoundCubeMapTextures[mActiveTexture];
+        switch (texTarget.get()) {
+            case LOCAL_GL_TEXTURE_2D:
+                return mBound2DTextures[mActiveTexture];
+            case LOCAL_GL_TEXTURE_CUBE_MAP:
+                return mBoundCubeMapTextures[mActiveTexture];
+            case LOCAL_GL_TEXTURE_3D:
+                return mBound3DTextures[mActiveTexture];
+            default:
+                MOZ_CRASH("bad target");
+        }
     }
 
     /* Use this function when you have the texture image target, for example:
@@ -978,6 +986,7 @@ protected:
 
     static CheckedUint32 GetImageSize(GLsizei height,
                                       GLsizei width,
+                                      GLsizei depth,
                                       uint32_t pixelSize,
                                       uint32_t alignment);
 
@@ -1282,6 +1291,7 @@ protected:
 
     nsTArray<WebGLRefPtr<WebGLTexture> > mBound2DTextures;
     nsTArray<WebGLRefPtr<WebGLTexture> > mBoundCubeMapTextures;
+    nsTArray<WebGLRefPtr<WebGLTexture> > mBound3DTextures;
 
     WebGLRefPtr<WebGLProgram> mCurrentProgram;
 

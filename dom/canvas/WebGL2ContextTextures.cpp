@@ -154,12 +154,12 @@ WebGL2Context::TexStorage2D(GLenum target, GLsizei levels, GLenum internalformat
     for (size_t l = 0; l < size_t(levels); l++) {
         for (size_t f = 0; f < facesCount; f++) {
             tex->SetImageInfo(TexImageTargetForTargetAndFace(target, f),
-                              l, w, h,
+                              l, w, h, 1,
                               internalformat,
                               WebGLImageDataStatus::UninitializedImageData);
         }
-        w = std::max(1, w/2);
-        h = std::max(1, h/2);
+        w = std::max(1, w / 2);
+        h = std::max(1, h / 2);
     }
 
     gl->fTexStorage2D(target, levels, internalformat, width, height);

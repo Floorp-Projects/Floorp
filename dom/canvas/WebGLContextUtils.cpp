@@ -60,7 +60,8 @@ TexImageTargetToTexTarget(TexImageTarget texImageTarget)
 {
     switch (texImageTarget.get()) {
     case LOCAL_GL_TEXTURE_2D:
-        return LOCAL_GL_TEXTURE_2D;
+    case LOCAL_GL_TEXTURE_3D:
+        return texImageTarget.get();
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
@@ -69,7 +70,7 @@ TexImageTargetToTexTarget(TexImageTarget texImageTarget)
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
         return LOCAL_GL_TEXTURE_CUBE_MAP;
     default:
-        MOZ_ASSERT(false, "Bad texture conversion");
+        MOZ_ASSERT(false, "Bad texture target");
         // Should be caught by the constructor for TexTarget
         return LOCAL_GL_NONE;
     }
@@ -448,6 +449,7 @@ WebGLContext::ShouldGenerateWarnings() const
 CheckedUint32
 WebGLContext::GetImageSize(GLsizei height,
                            GLsizei width,
+                           GLsizei depth,
                            uint32_t pixelSize,
                            uint32_t packOrUnpackAlignment)
 {
@@ -457,10 +459,12 @@ WebGLContext::GetImageSize(GLsizei height,
     CheckedUint32 checked_alignedRowSize = RoundedToNextMultipleOf(checked_plainRowSize, packOrUnpackAlignment);
 
     // if height is 0, we don't need any memory to store this; without this check, we'll get an overflow
-    CheckedUint32 checked_neededByteLength
+    CheckedUint32 checked_2dImageSize
         = height <= 0 ? 0 : (height-1) * checked_alignedRowSize + checked_plainRowSize;
 
-    return checked_neededByteLength;
+    // FIXME - we should honor UNPACK_IMAGE_HEIGHT
+    CheckedUint32 checked_imageSize = checked_2dImageSize * depth;
+    return checked_imageSize;
 }
 
 void

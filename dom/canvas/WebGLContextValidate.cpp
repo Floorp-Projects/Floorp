@@ -827,7 +827,7 @@ WebGLContext::ValidateTexImageSize(TexImageTarget texImageTarget, GLint level,
             return false;
         }
 
-        if (!is_pot_assuming_nonnegative(depth)) {
+        if (depth > 0 && !is_pot_assuming_nonnegative(depth)) {
             ErrorInvalidValue("%s: level >= 0, depth of %d must be a power of two.",
                               InfoFrom(func, dims), depth);
             return false;
@@ -1508,6 +1508,7 @@ WebGLContext::InitAndValidateGL()
 
     mBound2DTextures.Clear();
     mBoundCubeMapTextures.Clear();
+    mBound3DTextures.Clear();
 
     mBoundArrayBuffer = nullptr;
     mBoundTransformFeedbackBuffer = nullptr;
@@ -1548,6 +1549,7 @@ WebGLContext::InitAndValidateGL()
 
     mBound2DTextures.SetLength(mGLMaxTextureUnits);
     mBoundCubeMapTextures.SetLength(mGLMaxTextureUnits);
+    mBound3DTextures.SetLength(mGLMaxTextureUnits);
 
     if (MinCapabilityMode()) {
         mGLMaxTextureSize = MINVALUE_GL_MAX_TEXTURE_SIZE;

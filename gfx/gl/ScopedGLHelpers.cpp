@@ -180,6 +180,7 @@ ScopedBindTexture::Init(GLenum aTarget)
     mTarget = aTarget;
     mOldTex = 0;
     GLenum bindingTarget = (aTarget == LOCAL_GL_TEXTURE_2D) ? LOCAL_GL_TEXTURE_BINDING_2D
+                         : (aTarget == LOCAL_GL_TEXTURE_3D) ? LOCAL_GL_TEXTURE_BINDING_3D
                          : (aTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB) ? LOCAL_GL_TEXTURE_BINDING_RECTANGLE_ARB
                          : (aTarget == LOCAL_GL_TEXTURE_CUBE_MAP) ? LOCAL_GL_TEXTURE_BINDING_CUBE_MAP
                          : (aTarget == LOCAL_GL_TEXTURE_EXTERNAL) ? LOCAL_GL_TEXTURE_BINDING_EXTERNAL
