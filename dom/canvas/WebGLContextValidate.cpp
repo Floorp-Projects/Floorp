@@ -1009,19 +1009,27 @@ WebGLContext::ValidateCopyTexImageInternalFormat(GLenum format,
  * It is assumed that type has previously been validated.
  */
 bool
-WebGLContext::ValidateTexInputData(GLenum type, int jsArrayType, WebGLTexImageFunc func)
+WebGLContext::ValidateTexInputData(GLenum type,
+                                   js::Scalar::Type jsArrayType,
+                                   WebGLTexImageFunc func)
 {
     bool validInput = false;
     const char invalidTypedArray[] = "%s: invalid typed array type for given texture data type";
 
+    // We're using js::Scalar::TypeMax as dummy value when the tex source wasn't a
+    // typed array.
+    if (jsArrayType == js::Scalar::TypeMax) {
+        return true;
+    }
+
     // First, we check for packed types
     switch (type) {
     case LOCAL_GL_UNSIGNED_BYTE:
-        validInput = (jsArrayType == -1 || jsArrayType == js::Scalar::Uint8);
+        validInput = jsArrayType == js::Scalar::Uint8;
         break;
 
     case LOCAL_GL_BYTE:
-        validInput = (jsArrayType == -1 || jsArrayType == js::Scalar::Int8);
+        validInput = jsArrayType == js::Scalar::Int8;
         break;
 
     case LOCAL_GL_HALF_FLOAT:
@@ -1029,11 +1037,11 @@ WebGLContext::ValidateTexInputData(GLenum type, int jsArrayType, WebGLTexImageFu
     case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
     case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
     case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-        validInput = (jsArrayType == -1 || jsArrayType == js::Scalar::Uint16);
+        validInput = jsArrayType == js::Scalar::Uint16;
         break;
 
     case LOCAL_GL_SHORT:
-        validInput = (jsArrayType == -1 || jsArrayType == js::Scalar::Int16);
+        validInput = jsArrayType == js::Scalar::Int16;
         break;
 
     case LOCAL_GL_UNSIGNED_INT:
@@ -1041,15 +1049,15 @@ WebGLContext::ValidateTexInputData(GLenum type, int jsArrayType, WebGLTexImageFu
     case LOCAL_GL_UNSIGNED_INT_2_10_10_10_REV:
     case LOCAL_GL_UNSIGNED_INT_10F_11F_11F_REV:
     case LOCAL_GL_UNSIGNED_INT_5_9_9_9_REV:
-        validInput = (jsArrayType == -1 || jsArrayType == js::Scalar::Uint32);
+        validInput = jsArrayType == js::Scalar::Uint32;
         break;
 
     case LOCAL_GL_INT:
-        validInput = (jsArrayType == -1 || jsArrayType == js::Scalar::Int32);
+        validInput = jsArrayType == js::Scalar::Int32;
         break;
 
     case LOCAL_GL_FLOAT:
-        validInput = (jsArrayType == -1 || jsArrayType == js::Scalar::Float32);
+        validInput = jsArrayType == js::Scalar::Float32;
         break;
 
     default:
