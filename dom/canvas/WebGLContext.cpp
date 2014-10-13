@@ -345,6 +345,7 @@ WebGLContext::DestroyResourcesAndContext()
 
     mBound2DTextures.Clear();
     mBoundCubeMapTextures.Clear();
+    mBound3DTextures.Clear();
     mBoundArrayBuffer = nullptr;
     mBoundTransformFeedbackBuffer = nullptr;
     mCurrentProgram = nullptr;
@@ -1828,7 +1829,7 @@ bool WebGLContext::TexImageFromVideoElement(const TexImageTarget texImageTarget,
         TexInternalFormat effectiveinternalformat =
             EffectiveInternalFormatFromInternalFormatAndType(internalformat, type);
         MOZ_ASSERT(effectiveinternalformat != LOCAL_GL_NONE);
-        tex->SetImageInfo(texImageTarget, level, srcImage->GetSize().width, srcImage->GetSize().height,
+        tex->SetImageInfo(texImageTarget, level, srcImage->GetSize().width, srcImage->GetSize().height, 1,
                           effectiveinternalformat, WebGLImageDataStatus::InitializedImageData);
         tex->Bind(TexImageTargetToTexTarget(texImageTarget));
     }
@@ -1872,6 +1873,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLContext,
   mExtensions,
   mBound2DTextures,
   mBoundCubeMapTextures,
+  mBound3DTextures,
   mBoundArrayBuffer,
   mBoundTransformFeedbackBuffer,
   mCurrentProgram,

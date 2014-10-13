@@ -234,6 +234,12 @@ WebGLContext::BindTexture(GLenum rawTarget, WebGLTexture *newTex)
        case LOCAL_GL_TEXTURE_CUBE_MAP:
             currentTexPtr = &mBoundCubeMapTextures[mActiveTexture];
             break;
+       case LOCAL_GL_TEXTURE_3D:
+            if (!IsWebGL2()) {
+                return ErrorInvalidEnum("bindTexture: target TEXTURE_3D is only available in WebGL version 2.0 or newer");
+            }
+            currentTexPtr = &mBound3DTextures[mActiveTexture];
+            break;
        default:
             return ErrorInvalidEnumInfo("bindTexture: target", rawTarget);
     }
@@ -444,7 +450,7 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
 
         // first, we initialize the texture as black
         if (!sub) {
-            tex->SetImageInfo(texImageTarget, level, width, height,
+            tex->SetImageInfo(texImageTarget, level, width, height, 1,
                       effectiveInternalFormat,
                       WebGLImageDataStatus::UninitializedImageData);
             tex->DoDeferredImageInitialization(texImageTarget, level);
@@ -482,7 +488,7 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
     }
 
     if (!sub) {
-        tex->SetImageInfo(texImageTarget, level, width, height,
+        tex->SetImageInfo(texImageTarget, level, width, height, 1,
                           effectiveInternalFormat,
                           WebGLImageDataStatus::InitializedImageData);
     }
@@ -703,7 +709,8 @@ WebGLContext::DeleteTexture(WebGLTexture *tex)
     GLuint activeTexture = mActiveTexture;
     for (int32_t i = 0; i < mGLMaxTextureUnits; i++) {
         if ((mBound2DTextures[i] == tex && tex->Target() == LOCAL_GL_TEXTURE_2D) ||
-            (mBoundCubeMapTextures[i] == tex && tex->Target() == LOCAL_GL_TEXTURE_CUBE_MAP))
+            (mBoundCubeMapTextures[i] == tex && tex->Target() == LOCAL_GL_TEXTURE_CUBE_MAP) ||
+            (mBound3DTextures[i] == tex && tex->Target() == LOCAL_GL_TEXTURE_3D))
         {
             ActiveTexture(LOCAL_GL_TEXTURE0 + i);
             BindTexture(tex->Target().get(), static_cast<WebGLTexture*>(nullptr));
@@ -2149,7 +2156,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
 
     // Check the pixels param size
     CheckedUint32 checked_neededByteLength =
-        GetImageSize(height, width, bytesPerPixel, mPixelStorePackAlignment);
+        GetImageSize(height, width, 1, bytesPerPixel, mPixelStorePackAlignment);
 
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * bytesPerPixel;
 
@@ -3353,7 +3360,7 @@ WebGLContext::CompressedTexImage2D(GLenum rawTexImgTarget,
     MakeContextCurrent();
     gl->fCompressedTexImage2D(texImageTarget.get(), level, internalformat, width, height, border, byteLength, view.Data());
 
-    tex->SetImageInfo(texImageTarget, level, width, height, internalformat,
+    tex->SetImageInfo(texImageTarget, level, width, height, 1, internalformat,
                       WebGLImageDataStatus::InitializedImageData);
 }
 
@@ -3709,7 +3716,7 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level,
     }
 
     CheckedUint32 checked_neededByteLength =
-        GetImageSize(height, width, srcTexelSize, mPixelStoreUnpackAlignment);
+        GetImageSize(height, width, 1, srcTexelSize, mPixelStoreUnpackAlignment);
 
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * srcTexelSize;
     CheckedUint32 checked_alignedRowSize =
@@ -3794,7 +3801,7 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level,
     // have NoImageData at this point.
     MOZ_ASSERT(imageInfoStatusIfSuccess != WebGLImageDataStatus::NoImageData);
 
-    tex->SetImageInfo(texImageTarget, level, width, height,
+    tex->SetImageInfo(texImageTarget, level, width, height, 1,
                       effectiveInternalFormat, imageInfoStatusIfSuccess);
 }
 
@@ -3919,7 +3926,7 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
         return; // ES 2.0 says it has no effect, we better return right now
 
     CheckedUint32 checked_neededByteLength =
-        GetImageSize(height, width, srcTexelSize, mPixelStoreUnpackAlignment);
+        GetImageSize(height, width, 1, srcTexelSize, mPixelStoreUnpackAlignment);
 
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * srcTexelSize;
 
