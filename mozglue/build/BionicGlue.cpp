@@ -260,3 +260,20 @@ extern "C" NS_EXPORT size_t __wrap_strspn(const char * a0, const char * a1) { re
 extern "C" NS_EXPORT int __wrap_strcoll(const char * a0, const char * a1) { return __real_strcoll(a0, a1); }
 extern "C" NS_EXPORT size_t __wrap_strxfrm(char * a0, const char * a1, size_t a2) { return __real_strxfrm(a0, a1, a2); }
 #endif
+
+/* Flash plugin uses symbols that are not present in Android >= 4.4 */
+#ifndef MOZ_WIDGET_GONK
+namespace android {
+  namespace VectorImpl {
+    NS_EXPORT void reservedVectorImpl1(void) { }
+    NS_EXPORT void reservedVectorImpl2(void) { }
+    NS_EXPORT void reservedVectorImpl3(void) { }
+    NS_EXPORT void reservedVectorImpl4(void) { }
+    NS_EXPORT void reservedVectorImpl5(void) { }
+    NS_EXPORT void reservedVectorImpl6(void) { }
+    NS_EXPORT void reservedVectorImpl7(void) { }
+    NS_EXPORT void reservedVectorImpl8(void) { }
+  }
+}
+#endif
+
