@@ -546,6 +546,7 @@ jit::BailoutPar(BailoutStack *sp, uint8_t **entryFramePointer)
     JitActivationIterator jitActivations(cx->perThreadData);
     IonBailoutIterator frameIter(jitActivations, sp);
     SnapshotIterator snapIter(frameIter);
+    JitActivation::RegisterBailoutIterator registerIterator(*jitActivations->asJit(), &frameIter);
 
     cx->bailoutRecord->setIonBailoutKind(snapIter.bailoutKind());
     cx->bailoutRecord->rematerializeFrames(cx, frameIter);
