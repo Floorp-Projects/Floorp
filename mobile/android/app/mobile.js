@@ -297,60 +297,10 @@ pref("chrome.override_package.passwordmgr", "browser");
 // enable xul error pages
 pref("browser.xul.error_pages.enabled", true);
 
-// Specify emptyRestriction = 0 so that bookmarks appear in the list by default
-pref("browser.urlbar.default.behavior", 0);
-pref("browser.urlbar.default.behavior.emptyRestriction", 0);
-
-// Let the faviconservice know that we display favicons as 32x32px so that it
-// uses the right size when optimizing favicons
-pref("places.favicons.optimizeToDimension", 32);
-
-// various and sundry awesomebar prefs (should remove/re-evaluate
-// these once bug 447900 is fixed)
-pref("browser.urlbar.clickSelectsAll", true);
-pref("browser.urlbar.doubleClickSelectsAll", true);
-pref("browser.urlbar.autoFill", false);
-pref("browser.urlbar.matchOnlyTyped", false);
-pref("browser.urlbar.matchBehavior", 1);
-pref("browser.urlbar.filter.javascript", true);
-pref("browser.urlbar.maxRichResults", 24); // increased so we see more results when portrait
-pref("browser.urlbar.search.chunkSize", 1000);
-pref("browser.urlbar.search.timeout", 100);
-pref("browser.urlbar.restrict.history", "^");
-pref("browser.urlbar.restrict.bookmark", "*");
-pref("browser.urlbar.restrict.tag", "+");
-pref("browser.urlbar.match.title", "#");
-pref("browser.urlbar.match.url", "@");
-pref("browser.urlbar.autocomplete.search_threshold", 5);
 pref("browser.history.grouping", "day");
 pref("browser.history.showSessions", false);
 pref("browser.sessionhistory.max_entries", 50);
 pref("browser.history_expire_sites", 40000);
-pref("browser.places.migratePostDataAnnotations", true);
-pref("browser.places.updateRecentTagsUri", true);
-pref("places.frecency.numVisits", 10);
-pref("places.frecency.numCalcOnIdle", 50);
-pref("places.frecency.numCalcOnMigrate", 50);
-pref("places.frecency.updateIdleTime", 60000);
-pref("places.frecency.firstBucketCutoff", 4);
-pref("places.frecency.secondBucketCutoff", 14);
-pref("places.frecency.thirdBucketCutoff", 31);
-pref("places.frecency.fourthBucketCutoff", 90);
-pref("places.frecency.firstBucketWeight", 100);
-pref("places.frecency.secondBucketWeight", 70);
-pref("places.frecency.thirdBucketWeight", 50);
-pref("places.frecency.fourthBucketWeight", 30);
-pref("places.frecency.defaultBucketWeight", 10);
-pref("places.frecency.embedVisitBonus", 0);
-pref("places.frecency.linkVisitBonus", 100);
-pref("places.frecency.typedVisitBonus", 2000);
-pref("places.frecency.bookmarkVisitBonus", 150);
-pref("places.frecency.downloadVisitBonus", 0);
-pref("places.frecency.permRedirectVisitBonus", 0);
-pref("places.frecency.tempRedirectVisitBonus", 0);
-pref("places.frecency.defaultVisitBonus", 0);
-pref("places.frecency.unvisitedBookmarkBonus", 140);
-pref("places.frecency.unvisitedTypedBonus", 200);
 
 // disable color management
 pref("gfx.color_management.mode", 0);
