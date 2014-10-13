@@ -1772,8 +1772,11 @@ bool WebGLContext::TexImageFromVideoElement(const TexImageTarget texImageTarget,
         type = LOCAL_GL_HALF_FLOAT;
     }
 
-    if (!ValidateTexImageFormatAndType(format, type, WebGLTexImageFunc::TexImage))
+    if (!ValidateTexImageFormatAndType(format, type,
+                                       WebGLTexImageFunc::TexImage, WebGLTexDimensions::Tex2D))
+    {
         return false;
+    }
 
     HTMLVideoElement* video = HTMLVideoElement::FromContentOrNull(&elt);
     if (!video) {
