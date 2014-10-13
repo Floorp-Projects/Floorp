@@ -7,7 +7,6 @@
 
 #include "jscntxt.h"
 
-#include "js/OldDebugAPI.h"
 #include "jsapi-tests/tests.h"
 
 using namespace js;

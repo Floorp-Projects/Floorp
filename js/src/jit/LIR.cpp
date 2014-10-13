@@ -92,7 +92,7 @@ LBlock::init(TempAllocator &alloc)
 
     // Allocate space for the LPhis.
     if (!phis_.init(alloc, numLPhis))
-        return nullptr;
+        return false;
 
     // For each MIR phi, set up LIR phis as appropriate. We'll fill in their
     // operands on each incoming edge, and set their definitions at the start of

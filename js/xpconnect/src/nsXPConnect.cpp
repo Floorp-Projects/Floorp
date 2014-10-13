@@ -13,7 +13,6 @@
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
 #include "jsfriendapi.h"
-#include "js/OldDebugAPI.h"
 #include "nsJSEnvironment.h"
 #include "nsThreadUtils.h"
 #include "nsDOMJSUtils.h"
