@@ -846,4 +846,32 @@ WebGLContext::AssertCachedState()
 #endif
 }
 
+const char*
+InfoFrom(WebGLTexImageFunc func, WebGLTexDimensions dims)
+{
+    switch (dims) {
+    case WebGLTexDimensions::Tex2D:
+        switch (func) {
+        case WebGLTexImageFunc::TexImage:        return "texImage2D";
+        case WebGLTexImageFunc::TexSubImage:     return "texSubImage2D";
+        case WebGLTexImageFunc::CopyTexImage:    return "copyTexImage2D";
+        case WebGLTexImageFunc::CopyTexSubImage: return "copyTexSubImage2D";
+        case WebGLTexImageFunc::CompTexImage:    return "compressedTexImage2D";
+        case WebGLTexImageFunc::CompTexSubImage: return "compressedTexSubImage2D";
+        default:
+            MOZ_CRASH();
+        }
+    case WebGLTexDimensions::Tex3D:
+        switch (func) {
+        case WebGLTexImageFunc::TexSubImage:     return "texSubImage3D";
+        case WebGLTexImageFunc::CopyTexSubImage: return "copyTexSubImage3D";
+        case WebGLTexImageFunc::CompTexSubImage: return "compressedTexSubImage3D";
+        default:
+            MOZ_CRASH();
+        }
+    default:
+        MOZ_CRASH();
+    }
+}
+
 } // namespace mozilla

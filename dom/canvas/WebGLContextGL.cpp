@@ -368,22 +368,25 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
     GLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
     GLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
-    const char* info = sub ? "copyTexSubImage2D" : "copyTexImage2D";
-    WebGLTexImageFunc func = sub ? WebGLTexImageFunc::CopyTexSubImage : WebGLTexImageFunc::CopyTexImage;
+    WebGLTexImageFunc func = sub
+                             ? WebGLTexImageFunc::CopyTexSubImage
+                             : WebGLTexImageFunc::CopyTexImage;
+    WebGLTexDimensions dims = WebGLTexDimensions::Tex2D;
+    const char* info = InfoFrom(func, dims);
 
     // TODO: This changes with color_buffer_float. Reassess when the
     // patch lands.
-    if (!ValidateTexImage(2, texImageTarget, level, internalformat.get(),
+    if (!ValidateTexImage(texImageTarget, level, internalformat.get(),
                           xoffset, yoffset, 0,
                           width, height, 0,
                           0,
                           LOCAL_GL_NONE, LOCAL_GL_NONE,
-                          func))
+                          func, dims))
     {
         return;
     }
 
-    if (!ValidateCopyTexImage(internalformat.get(), func))
+    if (!ValidateCopyTexImage(internalformat.get(), func, dims))
         return;
 
     if (!mBoundFramebuffer)
@@ -500,20 +503,21 @@ WebGLContext::CopyTexImage2D(GLenum rawTexImgTarget,
 
     // copyTexImage2D only generates textures with type = UNSIGNED_BYTE
     const WebGLTexImageFunc func = WebGLTexImageFunc::CopyTexImage;
+    const WebGLTexDimensions dims = WebGLTexDimensions::Tex2D;
 
-    if (!ValidateTexImageTarget(2, rawTexImgTarget, WebGLTexImageFunc::CopyTexImage))
+    if (!ValidateTexImageTarget(rawTexImgTarget, func, dims))
         return;
 
-    if (!ValidateTexImage(2, rawTexImgTarget, level, internalformat,
+    if (!ValidateTexImage(rawTexImgTarget, level, internalformat,
                           0, 0, 0,
                           width, height, 0,
                           border, LOCAL_GL_NONE, LOCAL_GL_NONE,
-                          func))
+                          func, dims))
     {
         return;
     }
 
-    if (!ValidateCopyTexImage(internalformat, func))
+    if (!ValidateCopyTexImage(internalformat, func, dims))
         return;
 
     if (!mBoundFramebuffer)
@@ -3310,15 +3314,16 @@ WebGLContext::CompressedTexImage2D(GLenum rawTexImgTarget,
         return;
 
     const WebGLTexImageFunc func = WebGLTexImageFunc::CompTexImage;
+    const WebGLTexDimensions dims = WebGLTexDimensions::Tex2D;
 
-    if (!ValidateTexImageTarget(2, rawTexImgTarget, WebGLTexImageFunc::CompTexImage))
+    if (!ValidateTexImageTarget(rawTexImgTarget, func, dims))
         return;
 
-    if (!ValidateTexImage(2, rawTexImgTarget, level, internalformat,
+    if (!ValidateTexImage(rawTexImgTarget, level, internalformat,
                           0, 0, 0, width, height, 0,
                           border, LOCAL_GL_NONE,
                           LOCAL_GL_NONE,
-                          func))
+                          func, dims))
     {
         return;
     }
@@ -3326,11 +3331,11 @@ WebGLContext::CompressedTexImage2D(GLenum rawTexImgTarget,
     view.ComputeLengthAndData();
 
     uint32_t byteLength = view.Length();
-    if (!ValidateCompTexImageDataSize(level, internalformat, width, height, byteLength, func)) {
+    if (!ValidateCompTexImageDataSize(level, internalformat, width, height, byteLength, func, dims)) {
         return;
     }
 
-    if (!ValidateCompTexImageSize(level, internalformat, 0, 0, width, height, width, height, func))
+    if (!ValidateCompTexImageSize(level, internalformat, 0, 0, width, height, width, height, func, dims))
     {
         return;
     }
@@ -3362,16 +3367,17 @@ WebGLContext::CompressedTexSubImage2D(GLenum rawTexImgTarget, GLint level, GLint
         return;
 
     const WebGLTexImageFunc func = WebGLTexImageFunc::CompTexSubImage;
+    const WebGLTexDimensions dims = WebGLTexDimensions::Tex2D;
 
-    if (!ValidateTexImageTarget(2, rawTexImgTarget, WebGLTexImageFunc::CompTexSubImage))
+    if (!ValidateTexImageTarget(rawTexImgTarget, func, dims))
         return;
 
-    if (!ValidateTexImage(2, rawTexImgTarget,
+    if (!ValidateTexImage(rawTexImgTarget,
                           level, internalformat,
                           xoffset, yoffset, 0,
                           width, height, 0,
                           0, LOCAL_GL_NONE, LOCAL_GL_NONE,
-                          func))
+                          func, dims))
     {
         return;
     }
@@ -3389,14 +3395,14 @@ WebGLContext::CompressedTexSubImage2D(GLenum rawTexImgTarget, GLint level, GLint
     view.ComputeLengthAndData();
 
     uint32_t byteLength = view.Length();
-    if (!ValidateCompTexImageDataSize(level, internalformat, width, height, byteLength, func))
+    if (!ValidateCompTexImageDataSize(level, internalformat, width, height, byteLength, func, dims))
         return;
 
     if (!ValidateCompTexImageSize(level, internalformat,
                                   xoffset, yoffset,
                                   width, height,
                                   levelInfo.Width(), levelInfo.Height(),
-                                  func))
+                                  func, dims))
     {
         return;
     }
@@ -3652,15 +3658,16 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level,
                               WebGLTexelFormat srcFormat, bool srcPremultiplied)
 {
     const WebGLTexImageFunc func = WebGLTexImageFunc::TexImage;
+    const WebGLTexDimensions dims = WebGLTexDimensions::Tex2D;
 
     if (type == LOCAL_GL_HALF_FLOAT_OES) {
         type = LOCAL_GL_HALF_FLOAT;
     }
 
-    if (!ValidateTexImage(2, texImageTarget, level, internalformat,
+    if (!ValidateTexImage(texImageTarget, level, internalformat,
                           0, 0, 0,
                           width, height, 0,
-                          border, format, type, func))
+                          border, format, type, func, dims))
     {
         return;
     }
@@ -3676,7 +3683,7 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level,
                                          "level must be zero");
     }
 
-    if (!ValidateTexInputData(type, jsArrayType, func))
+    if (!ValidateTexInputData(type, jsArrayType, func, dims))
         return;
 
     TexInternalFormat effectiveInternalFormat =
@@ -3816,7 +3823,7 @@ WebGLContext::TexImage2D(GLenum rawTarget, GLint level,
         jsArrayType = JS_GetArrayBufferViewType(view.Obj());
     }
 
-    if (!ValidateTexImageTarget(2, rawTarget, WebGLTexImageFunc::TexImage))
+    if (!ValidateTexImageTarget(rawTarget, WebGLTexImageFunc::TexImage, WebGLTexDimensions::Tex2D))
         return;
 
     return TexImage2D_base(rawTarget, level, internalformat, width, height, 0, border, format, type,
@@ -3845,7 +3852,7 @@ WebGLContext::TexImage2D(GLenum rawTarget, GLint level,
     void* pixelData = arr.Data();
     const uint32_t pixelDataLength = arr.Length();
 
-    if (!ValidateTexImageTarget(2, rawTarget, WebGLTexImageFunc::TexImage))
+    if (!ValidateTexImageTarget(rawTarget, WebGLTexImageFunc::TexImage, WebGLTexDimensions::Tex2D))
         return;
 
     return TexImage2D_base(rawTarget, level, internalformat, pixels->Width(),
@@ -3865,6 +3872,7 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
                                  WebGLTexelFormat srcFormat, bool srcPremultiplied)
 {
     const WebGLTexImageFunc func = WebGLTexImageFunc::TexSubImage;
+    const WebGLTexDimensions dims = WebGLTexDimensions::Tex2D;
 
     if (type == LOCAL_GL_HALF_FLOAT_OES) {
         type = LOCAL_GL_HALF_FLOAT;
@@ -3882,16 +3890,16 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
     const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(texImageTarget, level);
     const TexInternalFormat existingEffectiveInternalFormat = imageInfo.EffectiveInternalFormat();
 
-    if (!ValidateTexImage(2, texImageTarget, level,
+    if (!ValidateTexImage(texImageTarget, level,
                           existingEffectiveInternalFormat.get(),
                           xoffset, yoffset, 0,
                           width, height, 0,
-                          0, format, type, func))
+                          0, format, type, func, dims))
     {
         return;
     }
 
-    if (!ValidateTexInputData(type, jsArrayType, func))
+    if (!ValidateTexInputData(type, jsArrayType, func, dims))
         return;
 
     if (type != TypeFromInternalFormat(existingEffectiveInternalFormat)) {
@@ -3996,7 +4004,7 @@ WebGLContext::TexSubImage2D(GLenum rawTarget, GLint level,
     const ArrayBufferView& view = pixels.Value();
     view.ComputeLengthAndData();
 
-    if (!ValidateTexImageTarget(2, rawTarget, WebGLTexImageFunc::TexSubImage))
+    if (!ValidateTexImageTarget(rawTarget, WebGLTexImageFunc::TexSubImage, WebGLTexDimensions::Tex2D))
         return;
 
     return TexSubImage2D_base(rawTarget, level, xoffset, yoffset,
