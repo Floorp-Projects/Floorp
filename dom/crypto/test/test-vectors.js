@@ -608,4 +608,54 @@ tv = {
       x: "XOe4bjsyZgQD5jcS7wmY3q4QJ_rsPBvp92-TTf61jpg",
     }
   },
+
+  // NIST ECDSA test vectors
+  // http://csrc.nist.gov/groups/STM/cavp/index.html
+  ecdsa_verify: {
+    pub_jwk: {
+      "kty": "EC",
+      "crv": "P-521",
+
+      // 0061387fd6b95914e885f912edfbb5fb274655027f216c4091ca83e19336740fd8
+      // 1aedfe047f51b42bdf68161121013e0d55b117a14e4303f926c8debb77a7fdaad1
+      "x": "AGE4f9a5WRTohfkS7fu1-ydGVQJ_IWxAkcqD4ZM2dA_Y" +
+           "Gu3-BH9RtCvfaBYRIQE-DVWxF6FOQwP5Jsjeu3en_arR",
+      // 00e7d0c75c38626e895ca21526b9f9fdf84dcecb93f2b233390550d2b1463b7ee3
+      // f58df7346435ff0434199583c97c665a97f12f706f2357da4b40288def888e59e6
+      "y": "AOfQx1w4Ym6JXKIVJrn5_fhNzsuT8rIzOQVQ0rFGO37j" +
+           "9Y33NGQ1_wQ0GZWDyXxmWpfxL3BvI1faS0Aoje-Ijlnm",
+    },
+
+    "data": util.hex2abv(
+            "9ecd500c60e701404922e58ab20cc002651fdee7cbc9336adda33e4c1088fab1" +
+            "964ecb7904dc6856865d6c8e15041ccf2d5ac302e99d346ff2f686531d255216" +
+            "78d4fd3f76bbf2c893d246cb4d7693792fe18172108146853103a51f824acc62" +
+            "1cb7311d2463c3361ea707254f2b052bc22cb8012873dcbb95bf1a5cc53ab89f"
+          ),
+    "sig": util.hex2abv(
+            "004de826ea704ad10bc0f7538af8a3843f284f55c8b946af9235af5af74f2b76e0" +
+            "99e4bc72fd79d28a380f8d4b4c919ac290d248c37983ba05aea42e2dd79fdd33e8" +
+            "0087488c859a96fea266ea13bf6d114c429b163be97a57559086edb64aed4a1859" +
+            "4b46fb9efc7fd25d8b2de8f09ca0587f54bd287299f47b2ff124aac566e8ee3b43"
+          ),
+
+    // Same as "sig", but with the last few octets set to 0
+    "sig_tampered": util.hex2abv(
+            "004de826ea704ad10bc0f7538af8a3843f284f55c8b946af9235af5af74f2b76e0" +
+            "99e4bc72fd79d28a380f8d4b4c919ac290d248c37983ba05aea42e2dd79fdd33e8" +
+            "0087488c859a96fea266ea13bf6d114c429b163be97a57559086edb64aed4a1859" +
+            "4b46fb9efc7fd25d8b2de8f09ca0587f54bd287299f47b2ff124aac56600000000"
+          )
+  },
+
+  ecdsa_bad: {
+    pub_jwk: {
+      "kty": "EC",
+      "crv": "P-521",
+      "x": "BhOH_WuVkU6IX5Eu37tfsnRlUCfyFsQJHKg-GTNnQP2B" +
+           "rt_gR_UbQr32gWESEBPg1VsRehTkMD-SbI3rt3p_2q0B",
+      "y": "AUNouOdGgHsraPNhXNeNdhpGTd15GPyN9R0iWWL98ePc" +
+           "JD4mUQD/DsEzNZ4zLkTdSa/Y5fOP6GEzVzQy0zwC+goD"
+    }
+  }
 }
