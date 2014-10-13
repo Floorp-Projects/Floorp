@@ -296,10 +296,6 @@ OnSharedPreferenceChangeListener
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (GeckoProfile.get(this).inGuestMode()) {
-            GuestSession.configureWindow(getWindow());
-        }
-
         // Apply the current user-selected locale, if necessary.
         checkLocale();
 
