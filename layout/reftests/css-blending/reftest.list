@@ -84,3 +84,6 @@ pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-bod
 pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
 
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-moz-element.html background-blending-moz-element-ref.html
+
+# Test plan 4.4.2 element with isolation:isolate creates an isolated group for blended children
+pref(layout.css.isolation.enabled,true) == blend-isolation.html blend-isolation-ref.html
