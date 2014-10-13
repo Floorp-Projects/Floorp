@@ -11,6 +11,9 @@
 #include "MediaDecoderReader.h"
 #include "SourceBufferResource.h"
 #include "mozilla/Attributes.h"
+#ifdef MOZ_EME
+#include "mozilla/CDMProxy.h"
+#endif
 #include "mozilla/ReentrantMonitor.h"
 
 namespace mozilla {
@@ -81,6 +84,23 @@ public:
     mTaskQueue = aTaskQueue;
   }
 
+#ifdef MOZ_EME
+  virtual nsresult SetCDMProxy(CDMProxy* aProxy)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+    mCDMProxy = aProxy;
+    return NS_OK;
+  }
+
+  virtual CDMProxy* GetCDMProxy() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(OnDecodeThread() || NS_IsMainThread());
+    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+    return mCDMProxy;
+  }
+#endif
+
   // Given a time convert it into an approximate byte offset from the
   // cached data. Returns -1 if no such value is computable.
   int64_t ConvertToByteOffset(double aTime);
@@ -96,6 +116,10 @@ private:
   AbstractMediaDecoder* mParentDecoder;
   nsRefPtr<MediaDecoderReader> mReader;
   int64_t mMediaDuration;
+
+#ifdef MOZ_EME
+  nsRefPtr<CDMProxy> mCDMProxy;
+#endif
 };
 
 } // namespace mozilla

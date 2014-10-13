@@ -101,6 +101,10 @@ public:
   // Return true if the Ended method has been called
   bool IsEnded();
 
+#ifdef MOZ_EME
+  nsresult SetCDMProxy(CDMProxy* aProxy);
+#endif
+
 private:
   bool SwitchAudioReader(int64_t aTarget);
   bool SwitchVideoReader(int64_t aTarget);
@@ -122,6 +126,10 @@ private:
   nsTArray<nsRefPtr<TrackBuffer>> mEssentialTrackBuffers;
   nsRefPtr<TrackBuffer> mAudioTrack;
   nsRefPtr<TrackBuffer> mVideoTrack;
+
+#ifdef MOZ_EME
+  nsRefPtr<CDMProxy> mCDMProxy;
+#endif
 
   // These are read and written on the decode task queue threads.
   int64_t mLastAudioTime;
