@@ -3276,42 +3276,64 @@ IonBuilder::improveTypesAtCompare(MCompare *ins, bool trueBranch, MTest *test)
         return true;
     }
 
-    MOZ_ASSERT(ins->jsop() == JSOP_STRICTNE || ins->jsop() == JSOP_NE ||
-               ins->jsop() == JSOP_STRICTEQ || ins->jsop() == JSOP_EQ);
+    // altersUndefined/Null represents if we can filter/set Undefined/Null.
+    bool altersUndefined, altersNull;
+    JSOp op = ins->jsop();
 
-    // JSOP_*NE only removes undefined/null from if/true branch
-    if (!trueBranch && (ins->jsop() == JSOP_STRICTNE || ins->jsop() == JSOP_NE))
-        return true;
-
-    // JSOP_*EQ only removes undefined/null from else/false branch
-    if (trueBranch && (ins->jsop() == JSOP_STRICTEQ || ins->jsop() == JSOP_EQ))
-        return true;
-
-    bool filtersUndefined = false;
-    bool filtersNull = false;
-    if (ins->jsop() == JSOP_STRICTEQ || ins->jsop() == JSOP_STRICTNE) {
-        filtersUndefined = (ins->compareType() == MCompare::Compare_Undefined);
-        filtersNull = (ins->compareType() == MCompare::Compare_Null);
-    } else {
-        filtersUndefined = filtersNull = true;
+    switch(op) {
+      case JSOP_STRICTNE:
+      case JSOP_STRICTEQ:
+        altersUndefined = ins->compareType() == MCompare::Compare_Undefined;
+        altersNull = ins->compareType() == MCompare::Compare_Null;
+        break;
+      case JSOP_NE:
+      case JSOP_EQ:
+        altersUndefined = altersNull = true;
+        break;
+      default:
+        MOZ_CRASH("Relational compares not supported");
     }
+
+    MDefinition *subject = ins->lhs();
 
     MOZ_ASSERT(IsNullOrUndefined(ins->rhs()->type()));
 
-    MDefinition *subject = ins->lhs();
     if (!subject->resultTypeSet() || subject->resultTypeSet()->unknown())
         return true;
 
-    // Make sure the type is present we want to filter else this is a NOP.
-    if ((!filtersUndefined || !subject->mightBeType(MIRType_Undefined)) &&
-        (!filtersNull || !subject->mightBeType(MIRType_Null)))
+    if (!subject->mightBeType(MIRType_Undefined) &&
+        !subject->mightBeType(MIRType_Null))
     {
         return true;
     }
 
-    types::TemporaryTypeSet *type =
-        subject->resultTypeSet()->filter(alloc_->lifoAlloc(), filtersUndefined,
-                                                              filtersNull);
+    if (!altersUndefined && !altersNull)
+        return true;
+
+    types::TemporaryTypeSet *type;
+
+    // Decide if we need to filter the type or set it.
+    if ((op == JSOP_STRICTEQ || op == JSOP_EQ) ^ trueBranch) {
+        // Filter undefined/null
+        type = subject->resultTypeSet()->filter(alloc_->lifoAlloc(), altersUndefined,
+                                                                     altersNull);
+    } else {
+        // Set undefined/null.
+        uint32_t flags = 0;
+        if (altersUndefined) {
+            flags |= types::TYPE_FLAG_UNDEFINED;
+            // If TypeSet emulates undefined, then we cannot filter the objects.
+            if (subject->resultTypeSet()->maybeEmulatesUndefined())
+                flags |= types::TYPE_FLAG_ANYOBJECT;
+        }
+
+        if (altersNull)
+            flags |= types::TYPE_FLAG_NULL;
+
+        types::TemporaryTypeSet base(flags, static_cast<types::TypeObjectKey**>(nullptr));
+        type = types::TypeSet::intersectSets(&base, subject->resultTypeSet(), alloc_->lifoAlloc());
+    }
+
     if (!type)
         return false;
 
