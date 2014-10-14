@@ -667,6 +667,9 @@ var Input = {
       case 'taphold1':
         this.sendContextMenuMessage();
         break;
+      case 'doubletaphold1':
+        Utils.dispatchChromeEvent('accessibility-control', 'quicknav-menu');
+        break;
       case 'swiperight1':
         this.moveCursor('moveNext', 'Simple', 'gestures');
         break;
