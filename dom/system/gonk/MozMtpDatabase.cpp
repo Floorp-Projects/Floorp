@@ -113,6 +113,13 @@ MozMtpDatabase::AddEntry(DbEntry *entry)
 }
 
 void
+MozMtpDatabase::AddEntryAndNotify(DbEntry* entry, RefCountedMtpServer* aMtpServer)
+{
+  AddEntry(entry);
+  aMtpServer->sendObjectAdded(entry->mHandle);
+}
+
+void
 MozMtpDatabase::DumpEntries(const char* aLabel)
 {
   MutexAutoLock lock(mMutex);
@@ -168,6 +175,13 @@ MozMtpDatabase::RemoveEntry(MtpObjectHandle aHandle)
   if (aHandle > 0 && aHandle < mDb.Length()) {
     mDb[aHandle] = nullptr;
   }
+}
+
+void
+MozMtpDatabase::RemoveEntryAndNotify(MtpObjectHandle aHandle, RefCountedMtpServer* aMtpServer)
+{
+  RemoveEntry(aHandle);
+  aMtpServer->sendObjectRemoved(aHandle);
 }
 
 class FileWatcherNotifyRunnable MOZ_FINAL : public nsRunnable
@@ -272,16 +286,11 @@ MozMtpDatabase::FileWatcherUpdate(RefCountedMtpServer* aMtpServer,
     // the existing file, then re-add the entry for the file.
     if (entryHandle != 0) {
       MTP_LOG("About to call sendObjectRemoved Handle 0x%08x file %s", entryHandle, filePath.get());
-      aMtpServer->sendObjectRemoved(entryHandle);
-      RemoveEntry(entryHandle);
+      RemoveEntryAndNotify(entryHandle, aMtpServer);
     }
-    entryHandle = CreateEntryForFile(filePath, aFile);
-    if (entryHandle == 0) {
-      // creating entry for the file failed, don't tell MTP
-      return;
-    }
-    MTP_LOG("About to call sendObjectAdded Handle 0x%08x file %s", entryHandle, filePath.get());
-    aMtpServer->sendObjectAdded(entryHandle);
+
+    // create entry for the file and tell MTP.
+    CreateEntryForFileAndNotify(filePath, aFile, aMtpServer);
     return;
   }
 
@@ -291,8 +300,7 @@ MozMtpDatabase::FileWatcherUpdate(RefCountedMtpServer* aMtpServer,
       return;
     }
     MTP_LOG("About to call sendObjectRemoved Handle 0x%08x file %s", entryHandle, filePath.get());
-    aMtpServer->sendObjectRemoved(entryHandle);
-    RemoveEntry(entryHandle);
+    RemoveEntryAndNotify(entryHandle, aMtpServer);
     return;
   }
 }
@@ -326,8 +334,10 @@ GetPathWithoutFileName(const nsCString& aFullPath)
   return path;
 }
 
-MtpObjectHandle
-MozMtpDatabase::CreateEntryForFile(const nsACString& aPath, DeviceStorageFile* aFile)
+void
+MozMtpDatabase::CreateEntryForFileAndNotify(const nsACString& aPath,
+                                            DeviceStorageFile* aFile,
+                                            RefCountedMtpServer* aMtpServer)
 {
   // Find the StorageID that this path corresponds to.
 
@@ -336,7 +346,7 @@ MozMtpDatabase::CreateEntryForFile(const nsACString& aPath, DeviceStorageFile* a
   if (storageID == 0) {
     // The path in question isn't for a storage area we're monitoring.
     nsCString path(aPath);
-    return 0;
+    return;
   }
 
   bool exists = false;
@@ -346,7 +356,7 @@ MozMtpDatabase::CreateEntryForFile(const nsACString& aPath, DeviceStorageFile* a
     // This could happen if Device Storage created and deleted a file right
     // away. Since the notifications wind up being async, the file might
     // not exist any more.
-    return 0;
+    return;
   }
 
   // Now walk the remaining directories, finding or creating as required.
@@ -406,12 +416,14 @@ MozMtpDatabase::CreateEntryForFile(const nsACString& aPath, DeviceStorageFile* a
     }
     entry->mDateModified = entry->mDateCreated;
 
-    AddEntry(entry);
+    AddEntryAndNotify(entry, aMtpServer);
+    MTP_LOG("About to call sendObjectAdded Handle 0x%08x file %s", entry->mHandle, entry->mPath.get());
+
     parent = entry->mHandle;
     offset = slash + 1;
   } while (slash != kNotFound);
 
-  return parent; // parent will be entry->mHandle
+  return;
 }
 
 void
