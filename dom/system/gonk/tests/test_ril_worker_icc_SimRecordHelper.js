@@ -1302,3 +1302,204 @@ add_test(function test_reading_img_color() {
   }
   run_next_test();
 });
+
+/**
+ * Verify SimRecordHelper.readCphsInfo
+ */
+add_test(function test_read_cphs_info() {
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let RIL = context.RIL;
+  let pduHelper = context.GsmPDUHelper;
+  let recordHelper = context.SimRecordHelper;
+  let buf  = context.Buf;
+  let io  = context.ICCIOHelper;
+  let cphsPDU = Uint8Array(3);
+
+  io.loadTransparentEF = function(options) {
+    if (cphsPDU) {
+      // Write data size
+      buf.writeInt32(cphsPDU.length * 2);
+
+      // Write CPHS INFO
+      for (let i = 0; i < cphsPDU.length; i++) {
+        pduHelper.writeHexOctet(cphsPDU[i]);
+      }
+
+      // Write string delimiter
+      buf.writeStringDelimiter(cphsPDU.length * 2);
+
+      if (options.callback) {
+        options.callback(options);
+      }
+    } else {
+      do_print("cphsPDU[] is not set.");
+    }
+  };
+
+  function do_test(cphsInfo, cphsSt) {
+    let onsuccess = false;
+    let onerror = false;
+
+    delete RIL.iccInfoPrivate.cphsSt;
+    cphsPDU.set(cphsInfo);
+    recordHelper.readCphsInfo(() => { onsuccess = true; },
+                              () => { onerror = true; });
+
+    do_check_true((cphsSt) ? onsuccess : onerror);
+    do_check_false((cphsSt) ? onerror : onsuccess);
+    if (cphsSt) {
+      do_check_eq(RIL.iccInfoPrivate.cphsSt.length, cphsSt.length);
+      for (let i = 0; i < cphsSt.length; i++) {
+        do_check_eq(RIL.iccInfoPrivate.cphsSt[i], cphsSt[i]);
+      }
+    } else {
+      do_check_eq(RIL.iccInfoPrivate.cphsSt, cphsSt);
+    }
+  }
+
+  do_test([
+    0x01, // Phase 1
+    0xFF, // All available & activated
+    0x03  // All available & activated
+  ],
+  [
+    0x3F, // All services except ONSF(bit 8-7) are available and activated.
+    0x00  // INFO_NUM shall not be available & activated.
+  ]);
+
+  do_test([
+    0x02, // Phase 2
+    0xFF, // All available & activated
+    0x03  // All available & activated
+  ],
+  [
+    0xF3, // All services except ONSF are available and activated.
+    0x03  // INFO_NUM shall not be available & activated.
+  ]);
+
+  do_test([
+    0x03, // Phase 3
+    0xFF, // All available & activated
+    0x03  // All available & activated
+  ],
+  undefined); // RIL.iccInfoPrivate.cphsSt shall be remained as 'undefined'.
+
+  run_next_test();
+});
+
+/**
+ * Verify SimRecordHelper.readMBDN/SimRecordHelper.readCphsMBN
+ */
+add_test(function test_read_voicemail_number() {
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let RIL = context.RIL;
+  let pduHelper = context.GsmPDUHelper;
+  let recordHelper = context.SimRecordHelper;
+  let buf    = context.Buf;
+  let io     = context.ICCIOHelper;
+  let postedMessage;
+
+  worker.postMessage = function(message) {
+    postedMessage = message;
+  };
+
+  io.loadLinearFixedEF = function(options) {
+    let mbnData = [
+      0x56, 0x6F, 0x69, 0x63, 0x65, 0x6D, 0x61, 0x69,
+      0x6C, 0xFF, // Alpha Identifier: Voicemail
+      0x03,       // Length of BCD number: 3
+      0x80,       // TOA: Unknown
+      0x11, 0xF1, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, // Dialing Number: 111
+      0xFF,       // Capability/Configuration Record Identifier
+      0xFF        // Extension Record Identifier
+    ];
+
+    // Write data size
+    buf.writeInt32(mbnData.length * 2);
+
+    // Write MBN
+    for (let i = 0; i < mbnData.length; i++) {
+      pduHelper.writeHexOctet(mbnData[i]);
+    }
+
+    // Write string delimiter
+    buf.writeStringDelimiter(mbnData.length * 2);
+
+    options.recordSize = mbnData.length;
+    if (options.callback) {
+      options.callback(options);
+    }
+  };
+
+  function do_test(funcName, msgCount) {
+    postedMessage = null;
+    delete RIL.iccInfoPrivate.mbdn;
+    recordHelper[funcName]();
+
+    do_check_eq("iccmbdn", postedMessage.rilMessageType);
+    do_check_eq("Voicemail", postedMessage.alphaId);
+    do_check_eq("111", postedMessage.number);
+  }
+
+  do_test("readMBDN");
+  do_test("readCphsMBN");
+
+  run_next_test();
+});
+
+/**
+ * Verify the recovery from SimRecordHelper.readCphsMBN() if MBDN is not valid
+ * or is empty after SimRecordHelper.readMBDN().
+ */
+add_test(function test_read_mbdn_recovered_from_cphs_mbn() {
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let RIL = context.RIL;
+  let pduHelper = context.GsmPDUHelper;
+  let recordHelper = context.SimRecordHelper;
+  let iccUtilsHelper = context.ICCUtilsHelper;
+  let buf    = context.Buf;
+  let io     = context.ICCIOHelper;
+
+  io.loadLinearFixedEF = function(options) {
+    let mbnData = [
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+    ];
+
+    // Write data size
+    buf.writeInt32(mbnData.length * 2);
+
+    // Write MBN
+    for (let i = 0; i < mbnData.length; i++) {
+      pduHelper.writeHexOctet(mbnData[i]);
+    }
+
+    // Write string delimiter
+    buf.writeStringDelimiter(mbnData.length * 2);
+
+    options.recordSize = mbnData.length;
+    if (options.callback) {
+      options.callback(options);
+    }
+  };
+
+  iccUtilsHelper.isCphsServiceAvailable = function(geckoService) {
+    return geckoService == "MBN";
+  };
+
+  let isRecovered = false;
+  recordHelper.readCphsMBN = function(onComplete) {
+    isRecovered = true;
+  };
+
+  recordHelper.readMBDN();
+
+  do_check_eq(RIL.iccInfoPrivate.mbdn, undefined);
+  do_check_true(isRecovered);
+
+  run_next_test();
+});
