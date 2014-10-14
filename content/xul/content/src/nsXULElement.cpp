@@ -73,7 +73,7 @@
 #include "nsRuleWalker.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsCSSParser.h"
-#include "nsIListBoxObject.h"
+#include "ListBoxObject.h"
 #include "nsContentUtils.h"
 #include "nsContentList.h"
 #include "mozilla/InternalMutationEvent.h"
@@ -109,6 +109,7 @@
 #include "nsICSSDeclaration.h"
 
 #include "mozilla/dom/XULElementBinding.h"
+#include "mozilla/dom/BoxObject.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1505,7 +1506,7 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
     return rv.ErrorCode();
 }
 
-already_AddRefed<nsIBoxObject>
+already_AddRefed<BoxObject>
 nsXULElement::GetBoxObject(ErrorResult& rv)
 {
     // XXX sXBL/XBL2 issue! Owner or current document?

@@ -98,7 +98,7 @@ function LoadSignons() {
   signonsTreeView.rowCount = signons.length;
 
   // sort and display the table
-  signonsTree.treeBoxObject.view = signonsTreeView;
+  signonsTree.view = signonsTreeView;
   // The sort column didn't change. SortTree (called by
   // SignonColumnSort) assumes we want to toggle the sort
   // direction but here we don't so we have to trick it

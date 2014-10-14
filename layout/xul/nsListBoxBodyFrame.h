@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsBoxFrame.h"
-#include "nsIListBoxObject.h"
 #include "nsIScrollbarMediator.h"
 #include "nsIReflowCallback.h"
 #include "nsBoxLayoutState.h"
@@ -34,10 +33,9 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  // non-virtual nsIListBoxObject
-  nsresult GetRowCount(int32_t *aResult);
-  nsresult GetNumberOfVisibleRows(int32_t *aResult);
-  nsresult GetIndexOfFirstVisibleRow(int32_t *aResult);
+  // non-virtual ListBoxObject
+  int32_t GetNumberOfVisibleRows();
+  int32_t GetIndexOfFirstVisibleRow();
   nsresult EnsureIndexIsVisible(int32_t aRowIndex);
   nsresult ScrollToIndex(int32_t aRowIndex);
   nsresult ScrollByLines(int32_t aNumLines);

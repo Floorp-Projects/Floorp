@@ -94,7 +94,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=616590
   function runTest() {
     var editorElement = document.getElementById("editor");
     editorElement.makeEditable("htmlmail", true);
-    var docShell = editorElement.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).docShell;
+    var docShell = editorElement.boxObject.docShell;
     progress = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);
     progressListener = new EditorContentListener(editorElement);
     progress.addProgressListener(progressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);

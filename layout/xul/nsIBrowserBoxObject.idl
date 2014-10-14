@@ -6,10 +6,10 @@
 #include "nsIContainerBoxObject.idl"
 
 /**
- * @deprecated Please consider using nsIContainerBoxObject.
+ * @deprecated Please consider using ContainerBoxObject.
  */
 
-[scriptable, uuid(db436f2f-c656-4754-b0fa-99bc353bd63f)]
+[uuid(db436f2f-c656-4754-b0fa-99bc353bd63f)]
 interface nsIBrowserBoxObject : nsIContainerBoxObject
 {
 };

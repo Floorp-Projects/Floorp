@@ -161,10 +161,9 @@ let gUsageTreeView = {
     if (event.button == 2)
       return;
 
-    let row = {}, col = {};
-    this.treeBox.getCellAt(event.clientX, event.clientY, row, col, {});
-    if (col.value && col.value.id == "enabled")
-      this.toggle(row.value);
+    let cell = this.treeBox.getCellAt(event.clientX, event.clientY);
+    if (cell.col && cell.col.id == "enabled")
+      this.toggle(cell.row);
   },
 
   /*

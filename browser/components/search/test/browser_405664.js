@@ -5,7 +5,7 @@ function test() {
   searchBar.focus();
 
   var pbo = searchBar._popup.popupBoxObject;
-  ok(pbo, "popup is nsIPopupBoxObject");
+  ok(pbo, "popup is PopupBoxObject");
 
   EventUtils.synthesizeKey("VK_UP", { altKey: true });
   is(pbo.popupState, "showing", "popup is opening after Alt+Up");

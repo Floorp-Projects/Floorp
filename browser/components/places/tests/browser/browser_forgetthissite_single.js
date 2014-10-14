@@ -62,12 +62,9 @@ function test() {
             organizer.close();
           }, true);
           // Get cell coordinates
-          var x = {}, y = {}, width = {}, height = {};
-          tree.treeBoxObject.getCoordsForCellItem(0, tree.columns[0], "text",
-                                                  x, y, width, height);
+          var rect = tree.treeBoxObject.getCoordsForCellItem(0, tree.columns[0], "text");
           // Initiate a context menu for the selected cell
-          EventUtils.synthesizeMouse(tree.body, x.value + width.value / 2, y.value + height.value / 2, {type: "contextmenu"}, organizer);
+          EventUtils.synthesizeMouse(tree.body, rect.x + rect.width / 2, rect.y + rect.height / 2, {type: "contextmenu"}, organizer);
     });
   }
 }
-

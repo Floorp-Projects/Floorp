@@ -2,9 +2,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsISupportsUtils.h"
-#include "nsIMenuBoxObject.h"
-#include "nsBoxObject.h"
+
+#include "mozilla/dom/MenuBoxObject.h"
+#include "mozilla/dom/MenuBoxObjectBinding.h"
+
+#include "mozilla/dom/KeyboardEvent.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIFrame.h"
 #include "nsMenuBarFrame.h"
@@ -12,30 +15,23 @@
 #include "nsMenuFrame.h"
 #include "nsMenuPopupFrame.h"
 
-class nsMenuBoxObject : public nsIMenuBoxObject,
-                        public nsBoxObject
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIMENUBOXOBJECT
+namespace mozilla {
+namespace dom {
 
-  nsMenuBoxObject();
-protected:
-  virtual ~nsMenuBoxObject();
-};
-
-nsMenuBoxObject::nsMenuBoxObject()
+MenuBoxObject::MenuBoxObject()
 {
 }
 
-nsMenuBoxObject::~nsMenuBoxObject()
+MenuBoxObject::~MenuBoxObject()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsMenuBoxObject, nsBoxObject, nsIMenuBoxObject)
+JSObject* MenuBoxObject::WrapObject(JSContext* aCx)
+{
+  return MenuBoxObjectBinding::Wrap(aCx, this);
+}
 
-/* void openMenu (in boolean openFlag); */
-NS_IMETHODIMP nsMenuBoxObject::OpenMenu(bool aOpenFlag)
+void MenuBoxObject::OpenMenu(bool aOpenFlag)
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm) {
@@ -55,56 +51,58 @@ NS_IMETHODIMP nsMenuBoxObject::OpenMenu(bool aOpenFlag)
       }
     }
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsMenuBoxObject::GetActiveChild(nsIDOMElement** aResult)
-{
-  *aResult = nullptr;
-  nsMenuFrame* menu = do_QueryFrame(GetFrame(false));
-  if (menu)
-    return menu->GetActiveChild(aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMenuBoxObject::SetActiveChild(nsIDOMElement* aResult)
+already_AddRefed<Element>
+MenuBoxObject::GetActiveChild()
 {
   nsMenuFrame* menu = do_QueryFrame(GetFrame(false));
-  if (menu)
-    return menu->SetActiveChild(aResult);
-  return NS_OK;
+  if (menu) {
+    nsCOMPtr<nsIDOMElement> el;
+    menu->GetActiveChild(getter_AddRefs(el));
+    nsCOMPtr<Element> ret(do_QueryInterface(el));
+    return ret.forget();
+  }
+  return nullptr;
 }
 
-/* boolean handleKeyPress (in nsIDOMKeyEvent keyEvent); */
-NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, bool* aHandledFlag)
+void MenuBoxObject::SetActiveChild(Element* arg)
 {
-  *aHandledFlag = false;
-  NS_ENSURE_ARG(aKeyEvent);
+  nsMenuFrame* menu = do_QueryFrame(GetFrame(false));
+  if (menu) {
+    nsCOMPtr<nsIDOMElement> el(do_QueryInterface(arg));
+    menu->SetActiveChild(el);
+  }
+}
 
+bool MenuBoxObject::HandleKeyPress(KeyboardEvent& keyEvent)
+{
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (!pm)
-    return NS_OK;
+  if (!pm) {
+    return false;
+  }
 
   // if event has already been handled, bail
   bool eventHandled = false;
-  aKeyEvent->GetDefaultPrevented(&eventHandled);
-  if (eventHandled)
-    return NS_OK;
+  keyEvent.GetDefaultPrevented(&eventHandled);
+  if (eventHandled) {
+    return false;
+  }
 
-  if (nsMenuBarListener::IsAccessKeyPressed(aKeyEvent))
-    return NS_OK;
+  if (nsMenuBarListener::IsAccessKeyPressed(&keyEvent))
+    return false;
 
   nsMenuFrame* menu = do_QueryFrame(GetFrame(false));
-  if (!menu)
-    return NS_OK;
+  if (!menu) {
+    return false;
+  }
 
   nsMenuPopupFrame* popupFrame = menu->GetPopup();
-  if (!popupFrame)
-    return NS_OK;
+  if (!popupFrame) {
+    return false;
+  }
 
-  uint32_t keyCode;
-  aKeyEvent->GetKeyCode(&keyCode);
+  uint32_t keyCode = keyEvent.KeyCode();
   switch (keyCode) {
     case nsIDOMKeyEvent::DOM_VK_UP:
     case nsIDOMKeyEvent::DOM_VK_DOWN:
@@ -113,48 +111,41 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, bool* a
     {
       nsNavigationDirection theDirection;
       theDirection = NS_DIRECTION_FROM_KEY_CODE(popupFrame, keyCode);
-      *aHandledFlag =
-        pm->HandleKeyboardNavigationInPopup(popupFrame, theDirection);
-      return NS_OK;
+      return pm->HandleKeyboardNavigationInPopup(popupFrame, theDirection);
     }
     default:
-      *aHandledFlag = pm->HandleShortcutNavigation(aKeyEvent, popupFrame);
-      return NS_OK;
+      return pm->HandleShortcutNavigation(&keyEvent, popupFrame);
   }
 }
 
-NS_IMETHODIMP
-nsMenuBoxObject::GetOpenedWithKey(bool* aOpenedWithKey)
+bool MenuBoxObject::OpenedWithKey()
 {
-  *aOpenedWithKey = false;
-
   nsMenuFrame* menuframe = do_QueryFrame(GetFrame(false));
-  if (!menuframe)
-    return NS_OK;
+  if (!menuframe) {
+    return false;
+  }
 
   nsIFrame* frame = menuframe->GetParent();
   while (frame) {
     nsMenuBarFrame* menubar = do_QueryFrame(frame);
     if (menubar) {
-      *aOpenedWithKey = menubar->IsActiveByKeyboard();
-      return NS_OK;
+      return menubar->IsActiveByKeyboard();
     }
     frame = frame->GetParent();
   }
-
-  return NS_OK;
+  return false;
 }
 
+} // namespace dom
+} // namespace mozilla
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
+
+using namespace mozilla::dom;
 
 nsresult
 NS_NewMenuBoxObject(nsIBoxObject** aResult)
 {
-  *aResult = new nsMenuBoxObject;
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*aResult);
+  NS_ADDREF(*aResult = new MenuBoxObject());
   return NS_OK;
 }
-
