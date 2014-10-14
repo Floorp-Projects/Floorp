@@ -1,7 +1,13 @@
 var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
 
-var hostname1 = "mozilla.org";
-var hostname2 = "mozilla.com";
+var hostname1 = "";
+var hostname2 = "";
+var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+for( var i=0; i < 20; i++ ) {
+  hostname1 += possible.charAt(Math.floor(Math.random() * possible.length));
+  hostname2 += possible.charAt(Math.floor(Math.random() * possible.length));
+}
 
 var requestList1Canceled1;
 var requestList1Canceled2;
