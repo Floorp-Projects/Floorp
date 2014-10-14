@@ -381,6 +381,7 @@ XPCOMGlueLoad(const char* aXPCOMFile)
   }
   char tempBuffer[MAXPATHLEN];
   memcpy(tempBuffer, aXPCOMFile, tempLen);
+  tempBuffer[tempLen] = '\0';
   const char *slash = strrchr(tempBuffer, '/');
   tempLen = size_t(slash - tempBuffer);
   const char *lastSlash = aXPCOMFile + tempLen;
