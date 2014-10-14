@@ -819,6 +819,8 @@ class AsmJSModule
     uint8_t *                             interruptExit_;
     StaticLinkData                        staticLinkData_;
     HeapPtrArrayBufferObjectMaybeShared   maybeHeap_;
+    AsmJSModule **                        prevLinked_;
+    AsmJSModule *                         nextLinked_;
     bool                                  dynamicallyLinked_;
     bool                                  loadedFromCache_;
     bool                                  profilingEnabled_;
@@ -1449,12 +1451,20 @@ class AsmJSModule
     // specializes it to a particular set of arguments. In particular, this
     // binds the code to a particular heap (via initHeap) and set of global
     // variables. A given asm.js module cannot be dynamically linked more than
-    // once so, if JS tries, the module is cloned.
-    void setIsDynamicallyLinked() {
+    // once so, if JS tries, the module is cloned. When linked, an asm.js module
+    // is kept in a list so that it can be updated if the linked buffer is
+    // detached.
+    void setIsDynamicallyLinked(JSRuntime *rt) {
         MOZ_ASSERT(!isDynamicallyLinked());
         dynamicallyLinked_ = true;
+        nextLinked_ = rt->linkedAsmJSModules;
+        prevLinked_ = &rt->linkedAsmJSModules;
+        if (nextLinked_)
+            nextLinked_->prevLinked_ = &nextLinked_;
+        rt->linkedAsmJSModules = this;
         MOZ_ASSERT(isDynamicallyLinked());
     }
+
     void initHeap(Handle<ArrayBufferObjectMaybeShared*> heap, JSContext *cx);
     void restoreHeapToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer);
     void restoreToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer,
@@ -1466,6 +1476,10 @@ class AsmJSModule
     /*************************************************************************/
     // Functions that can be called after dynamic linking succeeds:
 
+    AsmJSModule *nextLinked() const {
+        MOZ_ASSERT(isDynamicallyLinked());
+        return nextLinked_;
+    }
     CodePtr entryTrampoline(const ExportedFunction &func) const {
         MOZ_ASSERT(isDynamicallyLinked());
         MOZ_ASSERT(!func.isChangeHeap());

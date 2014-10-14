@@ -501,7 +501,7 @@ LinkModuleToHeap(JSContext *cx, AsmJSModule &module, Handle<ArrayBufferObjectMay
 static bool
 DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
 {
-    module.setIsDynamicallyLinked();
+    module.setIsDynamicallyLinked(cx->runtime());
 
     HandleValue globalVal = args.get(0);
     HandleValue importVal = args.get(1);
