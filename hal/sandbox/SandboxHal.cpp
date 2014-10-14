@@ -426,10 +426,11 @@ CancelFMRadioSeek()
   NS_RUNTIMEABORT("FM radio cannot be called from sandboxed contexts.");
 }
 
-void
+bool
 EnableRDS(uint32_t aMask)
 {
   NS_RUNTIMEABORT("FM radio cannot be called from sandboxed contexts.");
+  return false;
 }
 
 void
