@@ -686,10 +686,11 @@ var Input = {
         this.moveCursor('movePrevious', 'Simple', 'gesture');
         break;
       case 'swipeup1':
-        this.contextAction('backward');
+        this.moveCursor(
+          'movePrevious', this.quickNavMode.current, 'gesture', true);
         break;
       case 'swipedown1':
-        this.contextAction('forward');
+        this.moveCursor('moveNext', this.quickNavMode.current, 'gesture', true);
         break;
       case 'exploreend1':
       case 'dwellend1':
@@ -841,17 +842,12 @@ var Input = {
     }
   },
 
-  moveCursor: function moveCursor(aAction, aRule, aInputType) {
+  moveCursor: function moveCursor(aAction, aRule, aInputType, aAdjustRange) {
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
     mm.sendAsyncMessage('AccessFu:MoveCursor',
-                        {action: aAction, rule: aRule,
-                         origin: 'top', inputType: aInputType});
-  },
-
-  contextAction: function contextAction(aDirection) {
-    // XXX: For now, the only supported context action is adjusting a range.
-    let mm = Utils.getMessageManager(Utils.CurrentBrowser);
-    mm.sendAsyncMessage('AccessFu:AdjustRange', {direction: aDirection});
+                        { action: aAction, rule: aRule,
+                          origin: 'top', inputType: aInputType,
+                          adjustRange: aAdjustRange });
   },
 
   moveByGranularity: function moveByGranularity(aDetails) {
