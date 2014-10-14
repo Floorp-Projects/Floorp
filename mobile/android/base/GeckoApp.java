@@ -1853,7 +1853,7 @@ public abstract class GeckoApp
         }
     }
 
-    /*
+    /**
      * Handles getting a URI from an intent in a way that is backwards-
      * compatible with our previous implementations.
      */
@@ -1863,18 +1863,7 @@ public abstract class GeckoApp
             return null;
         }
 
-        String uri = intent.getDataString();
-        if (uri != null) {
-            return uri;
-        }
-
-        if ((action != null && action.startsWith(ACTION_WEBAPP_PREFIX)) || ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
-            uri = StringUtils.getStringExtra(intent, "args");
-            if (uri != null && uri.startsWith("--url=")) {
-                uri.replace("--url=", "");
-            }
-        }
-        return uri;
+        return intent.getDataString();
     }
 
     protected int getOrientation() {
