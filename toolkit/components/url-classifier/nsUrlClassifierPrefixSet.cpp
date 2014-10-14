@@ -41,8 +41,7 @@ NS_IMPL_ISUPPORTS(
 MOZ_DEFINE_MALLOC_SIZE_OF(UrlClassifierMallocSizeOf)
 
 nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
-  : mHasPrefixes(false)
-  , mTotalPrefixes(0)
+  : mTotalPrefixes(0)
   , mMemoryInUse(0)
   , mMemoryReportPath()
 {
@@ -77,12 +76,11 @@ nsUrlClassifierPrefixSet::SetPrefixes(const uint32_t* aArray, uint32_t aLength)
   nsresult rv = NS_OK;
 
   if (aLength <= 0) {
-    if (mHasPrefixes) {
+    if (mIndexPrefixes.Length() > 0) {
       LOG(("Clearing PrefixSet"));
       mIndexDeltas.Clear();
       mIndexPrefixes.Clear();
       mTotalPrefixes = 0;
-      mHasPrefixes = false;
     }
   } else {
     rv = MakePrefixSet(aArray, aLength);
@@ -138,8 +136,6 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
   LOG(("Total number of indices: %d", aLength));
   LOG(("Total number of deltas: %d", totalDeltas));
   LOG(("Total number of delta chunks: %d", mIndexDeltas.Length()));
-
-  mHasPrefixes = true;
 
   return NS_OK;
 }
@@ -201,7 +197,7 @@ nsUrlClassifierPrefixSet::Contains(uint32_t aPrefix, bool* aFound)
 {
   *aFound = false;
 
-  if (!mHasPrefixes) {
+  if (mIndexPrefixes.Length() == 0) {
     return NS_OK;
   }
 
@@ -270,7 +266,7 @@ nsUrlClassifierPrefixSet::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeO
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::IsEmpty(bool * aEmpty)
 {
-  *aEmpty = !mHasPrefixes;
+  *aEmpty = (mIndexPrefixes.Length() == 0);
   return NS_OK;
 }
 
@@ -328,8 +324,6 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose& fileFd)
         NS_ENSURE_TRUE(read == toRead, NS_ERROR_FILE_CORRUPTED);
       }
     }
-
-    mHasPrefixes = true;
   } else {
     LOG(("Version magic mismatch, not loading"));
     return NS_ERROR_FILE_CORRUPTED;
