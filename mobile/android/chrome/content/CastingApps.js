@@ -126,7 +126,6 @@ var CastingApps = {
           NativeWindow.menu.update(this.mirrorStartMenuId, { visible: true });
           NativeWindow.menu.update(this.mirrorStopMenuId, { visible: false });
         }.bind(this),
-        parent: NativeWindow.menu.toolsMenuID
       });
     }
     NativeWindow.menu.update(this.mirrorStopMenuId, { visible: false });
