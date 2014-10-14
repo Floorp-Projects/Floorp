@@ -134,27 +134,6 @@ MarkExactStackRoots(JSRuntime* rt, JSTracer *trc)
     MarkExactStackRootsAcrossTypes<PerThreadData*>(&rt->mainThread, trc);
 }
 
-MOZ_NEVER_INLINE void
-ConservativeGCData::recordStackTop()
-{
-    /* Update the native stack pointer if it points to a bigger stack. */
-    uintptr_t dummy;
-    nativeStackTop = &dummy;
-
-    /*
-     * To record and update the register snapshot for the conservative scanning
-     * with the latest values we use setjmp.
-     */
-#if defined(_MSC_VER)
-# pragma warning(push)
-# pragma warning(disable: 4611)
-#endif
-    (void) setjmp(registerSnapshot.jmpbuf);
-#if defined(_MSC_VER)
-# pragma warning(pop)
-#endif
-}
-
 void
 JS::AutoIdArray::trace(JSTracer *trc)
 {
