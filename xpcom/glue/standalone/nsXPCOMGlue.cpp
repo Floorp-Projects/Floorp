@@ -50,25 +50,25 @@ GetLibHandle(pathstr_t aDependentLib)
   LibHandleType libHandle =
     LoadLibraryExW(aDependentLib, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
 
+#ifdef DEBUG
   if (!libHandle) {
     DWORD err = GetLastError();
-#ifdef DEBUG
     LPVOID lpMsgBuf;
-    FormatMessage(
+    FormatMessageW(
       FORMAT_MESSAGE_ALLOCATE_BUFFER |
       FORMAT_MESSAGE_FROM_SYSTEM |
       FORMAT_MESSAGE_IGNORE_INSERTS,
       nullptr,
       err,
       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-      (LPTSTR)&lpMsgBuf,
+      (LPWSTR)&lpMsgBuf,
       0,
       nullptr
     );
     wprintf(L"Error loading %ls: %s\n", aDependentLib, lpMsgBuf);
     LocalFree(lpMsgBuf);
-#endif
   }
+#endif
 
   return libHandle;
 }
