@@ -148,6 +148,9 @@ mozNfc.prototype = {
   init: function init(aWindow) {
     debug("mozNfc init called");
     this._window = aWindow;
+    if (this._nfcContentHelper) {
+      this._nfcContentHelper.init(aWindow);
+    }
   },
 
   // Only apps which have nfc-manager permission can call the following interfaces
