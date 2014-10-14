@@ -154,6 +154,7 @@ const ADDON_PREP_DIR = "appupdateprep";
 // from interefering with the tests.
 const PREF_DISABLEDADDONS = "app.update.test.disabledAddons";
 const PREF_EM_HOTFIX_ID = "extensions.hotfix.id";
+const PREF_EM_SILENT = "app.update.silent";
 const TEST_ADDONS = [ "appdisabled_1", "appdisabled_2",
                       "compatible_1", "compatible_2",
                       "noupdate_1", "noupdate_2",
@@ -911,6 +912,7 @@ function setupPrefs() {
   Services.prefs.setIntPref(PREF_APP_UPDATE_PROMPTWAITTIME, 0);
   Services.prefs.setBoolPref(PREF_EXTENSIONS_STRICT_COMPAT, true);
   Services.prefs.setCharPref(PREF_EM_HOTFIX_ID, "hotfix" + ADDON_ID_SUFFIX);
+  Services.prefs.setBoolPref(PREF_EM_SILENT, false);
 }
 
 /**
@@ -1070,6 +1072,10 @@ function resetPrefs() {
 
   if (Services.prefs.prefHasUserValue(PREF_EM_HOTFIX_ID)) {
     Services.prefs.clearUserPref(PREF_EM_HOTFIX_ID);
+  }
+
+  if (Services.prefs.prefHasUserValue(PREF_EM_SILENT)) {
+    Services.prefs.clearUserPref(PREF_EM_SILENT);
   }
 }
 
