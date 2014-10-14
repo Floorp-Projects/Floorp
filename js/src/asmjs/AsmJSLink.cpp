@@ -587,6 +587,11 @@ ChangeHeap(JSContext *cx, AsmJSModule &module, CallArgs args)
         return true;
     }
 
+    if (!module.hasArrayView()) {
+        args.rval().set(BooleanValue(true));
+        return true;
+    }
+
     MOZ_ASSERT(IsValidAsmJSHeapLength(heapLength));
     MOZ_ASSERT(!IsDeprecatedAsmJSHeapLength(heapLength));
 
@@ -689,15 +694,14 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
-    // An asm.js module is specialized to its heap's base address and length
-    // which is normally immutable except for the neuter operation that occurs
-    // when an ArrayBuffer is transfered. Throw an internal error if we're
-    // about to run with a neutered heap.
-    if (module.maybeHeapBufferObject() &&
-        module.maybeHeapBufferObject()->is<ArrayBufferObject>() &&
-        module.maybeHeapBufferObject()->as<ArrayBufferObject>().isNeutered())
-    {
-        js_ReportOverRecursed(cx);
+    // The correct way to handle this situation would be to allocate a new range
+    // of PROT_NONE memory and module.changeHeap to this memory. That would
+    // cause every access to take the out-of-bounds signal-handler path which
+    // does the right thing. For now, just throw an out-of-memory exception
+    // since these can technically pop out anywhere and the full fix may
+    // actually OOM when trying to allocate the PROT_NONE memory.
+    if (module.hasDetachedHeap()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
         return false;
     }
 
