@@ -190,8 +190,9 @@ footer {
   color: #fff;
 }
 
-#sumo-link {
+.link {
   color: #222;
+  text-decoration: underline;
 }
 
 @media screen and (max-height: 400px) {

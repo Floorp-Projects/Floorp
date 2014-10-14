@@ -67,7 +67,9 @@ function init() {
   }
 
   let sumoLink = Services.urlFormatter.formatURLPref("app.support.baseURL");
-  document.getElementById("sumo-link").href = sumoLink;
+  document.getElementById("help-section").addEventListener("click", function() {
+    window.open(sumoLink, "_blank");
+  }, false);
 
   window.addEventListener("popstate", function (aEvent) {
 	updateActiveSection(aEvent.state ? aEvent.state.section : "intro")

@@ -18,19 +18,19 @@ let { ActorPool } = require("devtools/server/actors/common");
 let { DebuggerServer } = require("devtools/server/main");
 let Services = require("Services");
 
-let AppFramesMock = null;
+let FramesMock = null;
 
-exports.setAppFramesMock = function (mock) {
-  AppFramesMock = mock;
-}
+exports.setFramesMock = function (mock) {
+  FramesMock = mock;
+};
 
-DevToolsUtils.defineLazyGetter(this, "AppFrames", () => {
+DevToolsUtils.defineLazyGetter(this, "Frames", () => {
   // Offer a way for unit test to provide a mock
-  if (AppFramesMock) {
-    return AppFramesMock;
+  if (FramesMock) {
+    return FramesMock;
   }
   try {
-    return Cu.import("resource://gre/modules/AppFrames.jsm", {}).AppFrames;
+    return Cu.import("resource://gre/modules/Frames.jsm", {}).Frames;
   } catch(e) {}
   return null;
 });
@@ -860,8 +860,10 @@ WebappsActor.prototype = {
 
   _appFrames: function () {
     // Try to filter on b2g and mulet
-    if (AppFrames) {
-      return AppFrames.list();
+    if (Frames) {
+      return Frames.list().filter(frame => {
+        return frame.getAttribute('mozapp');
+      });
     } else {
       return [];
     }
@@ -955,8 +957,8 @@ WebappsActor.prototype = {
 
   watchApps: function () {
     // For now, app open/close events are only implement on b2g
-    if (AppFrames) {
-      AppFrames.addObserver(this);
+    if (Frames) {
+      Frames.addObserver(this);
     }
     Services.obs.addObserver(this, "webapps-installed", false);
     Services.obs.addObserver(this, "webapps-uninstall", false);
@@ -965,8 +967,8 @@ WebappsActor.prototype = {
   },
 
   unwatchApps: function () {
-    if (AppFrames) {
-      AppFrames.removeObserver(this);
+    if (Frames) {
+      Frames.removeObserver(this);
     }
     Services.obs.removeObserver(this, "webapps-installed", false);
     Services.obs.removeObserver(this, "webapps-uninstall", false);
@@ -974,8 +976,9 @@ WebappsActor.prototype = {
     return {};
   },
 
-  onAppFrameCreated: function (frame, isFirstAppFrame) {
-    if (!isFirstAppFrame) {
+  onFrameCreated: function (frame, isFirstAppFrame) {
+    let mozapp = frame.getAttribute('mozapp');
+    if (!mozapp || !isFirstAppFrame) {
       return;
     }
 
@@ -995,8 +998,9 @@ WebappsActor.prototype = {
     });
   },
 
-  onAppFrameDestroyed: function (frame, isLastAppFrame) {
-    if (!isLastAppFrame) {
+  onFrameDestroyed: function (frame, isLastAppFrame) {
+    let mozapp = frame.getAttribute('mozapp');
+    if (!mozapp || !isLastAppFrame) {
       return;
     }
 
