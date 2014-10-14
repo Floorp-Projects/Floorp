@@ -1733,10 +1733,28 @@ add_task(function test_toSerializable_startTime()
 add_task(function test_platform_integration()
 {
   let downloadFiles = [];
+  let oldDeviceStorageEnabled = false;
+  try {
+     oldDeviceStorageEnabled = Services.prefs.getBoolPref("device.storage.enabled");
+  } catch (e) {
+    // This happens if the pref doesn't exist.
+  }
+  let downloadWatcherNotified = false;
+  let observer = {
+    observe: function(subject, topic, data) {
+      do_check_eq(topic, "download-watcher-notify");
+      do_check_eq(data, "modified");
+      downloadWatcherNotified = true;
+    }
+  }
+  Services.obs.addObserver(observer, "download-watcher-notify", false);
+  Services.prefs.setBoolPref("device.storage.enabled", true);
   function cleanup() {
     for (let file of downloadFiles) {
       file.remove(true);
     }
+    Services.obs.removeObserver(observer, "download-watcher-notify");
+    Services.prefs.setBoolPref("device.storage.enabled", oldDeviceStorageEnabled);
   }
   do_register_cleanup(cleanup);
 
@@ -1770,6 +1788,7 @@ add_task(function test_platform_integration()
     // downloadDone should be called before the whenSucceeded promise is resolved.
     yield download.whenSucceeded().then(function () {
       do_check_true(DownloadIntegration.downloadDoneCalled);
+      do_check_true(downloadWatcherNotified);
     });
 
     // Then, wait for the promise returned by "start" to be resolved.
