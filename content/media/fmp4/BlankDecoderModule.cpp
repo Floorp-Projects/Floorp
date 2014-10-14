@@ -109,7 +109,7 @@ public:
     // with a U and V plane that are half the size of the Y plane, i.e 8 bit,
     // 2x2 subsampled. Have the data pointers of each frame point to the
     // first plane, they'll always be zero'd memory anyway.
-    uint8_t* frame = new uint8_t[mFrameWidth * mFrameHeight];
+    nsAutoArrayPtr<uint8_t> frame(new uint8_t[mFrameWidth * mFrameHeight]);
     memset(frame, 0, mFrameWidth * mFrameHeight);
     VideoData::YCbCrBuffer buffer;
 

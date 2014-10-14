@@ -26,7 +26,7 @@ class GMPVideoHost;
 [ptr] native GMPDecryptorProxy(GMPDecryptorProxy);
 [ptr] native GMPAudioDecoderProxy(GMPAudioDecoderProxy);
 
-[scriptable, uuid(b350d3b6-00c9-4602-bdfe-84c2be8d1e7a)]
+[scriptable, uuid(657443a4-6b5d-4181-98b0-56997b35bd57)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
 
@@ -40,9 +40,7 @@ interface mozIGeckoMediaPluginService : nsISupports
    * Callable on any thread
    */
   [noscript]
-  boolean hasPluginForAPI([optional] in ACString nodeId,
-                          in ACString api,
-                          in TagArray tags);
+  boolean hasPluginForAPI(in ACString api, in TagArray tags);
 
   /**
    * Get a video decoder that supports the specified tags.
