@@ -227,10 +227,12 @@ private:
   };
 
   void AddEntry(DbEntry* aEntry);
+  void AddEntryAndNotify(DbEntry* aEntr, RefCountedMtpServer* aMtpServer);
   void DumpEntries(const char* aLabel);
   MtpObjectHandle FindEntryByPath(const nsACString& aPath);
   mozilla::TemporaryRef<DbEntry> GetEntry(MtpObjectHandle aHandle);
   void RemoveEntry(MtpObjectHandle aHandle);
+  void RemoveEntryAndNotify(MtpObjectHandle aHandle, RefCountedMtpServer* aMtpServer);
   void QueryEntries(MatchType aMatchType, uint32_t aMatchField1,
                     uint32_t aMatchField2, UnprotectedDbArray& aResult);
 
@@ -244,7 +246,9 @@ private:
 
   void AddDirectory(MtpStorageID aStorageID, const char *aPath, MtpObjectHandle aParent);
 
-  MtpObjectHandle CreateEntryForFile(const nsACString& aPath, DeviceStorageFile* aFile);
+  void CreateEntryForFileAndNotify(const nsACString& aPath,
+                                   DeviceStorageFile* aFile,
+                                   RefCountedMtpServer* aMtpServer);
 
   StorageArray::index_type FindStorage(MtpStorageID aStorageID);
   MtpStorageID FindStorageIDFor(const nsACString& aPath, nsCSubstring& aRemainder);
