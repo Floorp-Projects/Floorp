@@ -8,25 +8,35 @@
 #define GECKO_TASK_TRACER_IMPL_H
 
 #include "GeckoTaskTracer.h"
+#include "mozilla/Mutex.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace tasktracer {
 
+typedef nsTArray<nsCString> TraceInfoLogsType;
+
 struct TraceInfo
 {
-  TraceInfo(uint32_t aThreadId) : mCurTraceSourceId(0)
-                                , mCurTaskId(0)
-                                , mSavedCurTraceSourceId(0)
-                                , mSavedCurTaskId(0)
-                                , mCurTraceSourceType(UNKNOWN)
-                                , mSavedCurTraceSourceType(UNKNOWN)
-                                , mThreadId(aThreadId)
-                                , mLastUniqueTaskId(0)
+  TraceInfo(uint32_t aThreadId, bool aStartLogging)
+    : mCurTraceSourceId(0)
+    , mCurTaskId(0)
+    , mSavedCurTraceSourceId(0)
+    , mSavedCurTaskId(0)
+    , mCurTraceSourceType(UNKNOWN)
+    , mSavedCurTraceSourceType(UNKNOWN)
+    , mThreadId(aThreadId)
+    , mLastUniqueTaskId(0)
+    , mStartLogging(aStartLogging)
+    , mLogsMutex("TraceInfoMutex")
   {
     MOZ_COUNT_CTOR(TraceInfo);
   }
 
   ~TraceInfo() { MOZ_COUNT_DTOR(TraceInfo); }
+
+  nsCString* AppendLog();
+  void MoveLogsInto(TraceInfoLogsType& aResult);
 
   uint64_t mCurTraceSourceId;
   uint64_t mCurTaskId;
@@ -36,10 +46,13 @@ struct TraceInfo
   SourceEventType mSavedCurTraceSourceType;
   uint32_t mThreadId;
   uint32_t mLastUniqueTaskId;
-};
+  bool mStartLogging;
 
-void InitTaskTracer();
-void ShutdownTaskTracer();
+  // This mutex protects the following log array because MoveLogsInto() might
+  // be called on another thread.
+  mozilla::Mutex mLogsMutex;
+  TraceInfoLogsType mLogs;
+};
 
 // Return the TraceInfo of current thread, allocate a new one if not exit.
 TraceInfo* GetOrCreateTraceInfo();
