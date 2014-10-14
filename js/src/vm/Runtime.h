@@ -1496,31 +1496,17 @@ FreeOp::freeLater(void *p)
 class AutoLockGC
 {
   public:
-    explicit AutoLockGC(JSRuntime *rt = nullptr
+    explicit AutoLockGC(JSRuntime *rt
                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : runtime(rt)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        // Avoid MSVC warning C4390 for non-threadsafe builds.
-        if (rt)
-            rt->lockGC();
+        rt->lockGC();
     }
 
     ~AutoLockGC()
     {
-        if (runtime)
-            runtime->unlockGC();
-    }
-
-    bool locked() const {
-        return !!runtime;
-    }
-
-    void lock(JSRuntime *rt) {
-        MOZ_ASSERT(rt);
-        MOZ_ASSERT(!runtime);
-        runtime = rt;
-        rt->lockGC();
+        runtime->unlockGC();
     }
 
   private:
