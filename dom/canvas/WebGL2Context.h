@@ -248,6 +248,7 @@ private:
     bool ValidateTexStorage(GLenum target, GLsizei levels, GLenum internalformat,
                                 GLsizei width, GLsizei height, GLsizei depth,
                                 const char* info);
+    JS::Value GetTexParameterInternal(const TexTarget& target, GLenum pname) MOZ_OVERRIDE;
 };
 
 } // namespace mozilla

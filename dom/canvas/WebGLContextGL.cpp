@@ -1611,6 +1611,12 @@ WebGLContext::GetTexParameter(GLenum rawTarget, GLenum pname)
         return JS::NullValue();
     }
 
+    return GetTexParameterInternal(target, pname);
+}
+
+JS::Value
+WebGLContext::GetTexParameterInternal(const TexTarget& target, GLenum pname)
+{
     switch (pname) {
         case LOCAL_GL_TEXTURE_MIN_FILTER:
         case LOCAL_GL_TEXTURE_MAG_FILTER:
