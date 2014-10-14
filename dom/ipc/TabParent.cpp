@@ -52,6 +52,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowWatcher.h"
+#include "nsPresShell.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -1460,6 +1461,29 @@ TabParent::RecvReplyKeyEvent(const WidgetKeyboardEvent& event)
   NS_ENSURE_TRUE(presContext, true);
 
   EventDispatcher::Dispatch(mFrameElement, presContext, &localEvent);
+  return true;
+}
+
+bool
+TabParent::RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent)
+{
+  NS_ENSURE_TRUE(mFrameElement, true);
+
+  WidgetKeyboardEvent localEvent(aEvent);
+  localEvent.widget = GetWidget();
+
+  nsIDocument* doc = mFrameElement->OwnerDoc();
+  nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
+  NS_ENSURE_TRUE(presShell, true);
+
+  if (mFrameElement &&
+      PresShell::BeforeAfterKeyboardEventEnabled() &&
+      localEvent.message != NS_KEY_PRESS) {
+    nsCOMPtr<nsINode> node(do_QueryInterface(mFrameElement));
+    presShell->DispatchAfterKeyboardEvent(mFrameElement, localEvent,
+                                          aEvent.mFlags.mDefaultPrevented);
+  }
+
   return true;
 }
 
