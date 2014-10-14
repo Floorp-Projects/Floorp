@@ -27,11 +27,7 @@
 # This script uses jprof's includes (-i) and excludes (-e) options to
 # split profiles into segments.  It takes as input a single text file,
 # and from that text file creates a series of jprof profiles in the
-# directory in which it is run.  It expects the application binaries
-# with which the profile was made, including jprof, and the jprof
-# profile data, to be in a directory called "bin" that is a subdirectory
-# of the current directory, and it will output the profiles into the
-# current directory.
+# directory in which it is run.
 #
 # The input file format looks like the following:
 #
