@@ -23,6 +23,9 @@ body,
   background: #fff;
   border: 1px solid #E7E7E7;
   box-shadow: 0px 2px 0px rgba(0, 0, 0, 0.03);
+  background-image: url("../shared/img/beta-ribbon.svg#beta-ribbon");
+  background-size: 5rem 5rem;
+  background-repeat: no-repeat;
 }
 
 .header-box {

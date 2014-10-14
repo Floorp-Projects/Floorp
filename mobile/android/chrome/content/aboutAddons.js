@@ -537,7 +537,7 @@ var Addons = {
 
     // Go back if we're in the detail view of the add-on that was uninstalled.
     let detailItem = document.querySelector("#addons-details > .addon-item");
-    if (detailItem.addon == aAddon) {
+    if (detailItem.addon.id == aAddon.id) {
       history.back();
     }
   },

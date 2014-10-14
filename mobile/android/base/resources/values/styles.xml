@@ -127,6 +127,25 @@
         <item name="android:ellipsize">middle</item>
     </style>
 
+    <style name="Widget.ReadingListRow" />
+
+    <style name="Widget.ReadingListRow.Title">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemTitle</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Widget.ReadingListRow.Description">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemDescription</item>
+        <item name="android:maxLines">4</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Widget.ReadingListRow.ReadTime">
+        <item name="android:textStyle">italic</item>
+        <item name="android:textColor">@color/text_color_highlight</item>
+    </style>
+
     <style name="Widget.BookmarkFolderView" parent="Widget.TwoLinePageRow.Title">
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">none</item>
