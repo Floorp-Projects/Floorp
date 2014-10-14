@@ -60,6 +60,7 @@ window.dialog {
   list-style-image: url("moz-icon://stock/gtk-dialog-info?size=dialog");
 }
 
+.alert-dialog #info\.icon,
 .alert-icon {
   list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=dialog");
 }

@@ -13,7 +13,6 @@
 <dialog id="commonDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         aria-describedby="info.body"
-        onload="commonDialogOnLoad();"
         onunload="commonDialogOnUnload();"
         ondialogaccept="Dialog.onButton0(); return true;"
         ondialogcancel="Dialog.onButton1(); return true;"
@@ -23,6 +22,11 @@
 
   <script type="application/javascript" src="chrome://global/content/commonDialog.js"/>
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+      commonDialogOnLoad();
+    });
+  </script>
 
   <commandset id="selectEditMenuItems">
     <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')" disabled="true"/>
