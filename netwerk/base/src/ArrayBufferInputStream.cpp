@@ -54,8 +54,12 @@ ArrayBufferInputStream::Available(uint64_t* aCount)
   if (mClosed) {
     return NS_BASE_STREAM_CLOSED;
   }
-  uint32_t buflen = JS_GetArrayBufferByteLength(mArrayBuffer->get());
-  *aCount = buflen ? buflen - mPos : 0;
+  if (mArrayBuffer) {
+    uint32_t buflen = JS_GetArrayBufferByteLength(mArrayBuffer->get());
+    *aCount = buflen ? buflen - mPos : 0;
+  } else {
+    *aCount = 0;
+  }
   return NS_OK;
 }
 
