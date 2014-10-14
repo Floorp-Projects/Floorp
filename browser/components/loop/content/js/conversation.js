@@ -14,8 +14,11 @@ loop.conversation = (function(mozL10n) {
   var sharedViews = loop.shared.views;
   var sharedMixins = loop.shared.mixins;
   var sharedModels = loop.shared.models;
+  var sharedActions = loop.shared.actions;
+
   var OutgoingConversationView = loop.conversationViews.OutgoingConversationView;
   var CallIdentifierView = loop.conversationViews.CallIdentifierView;
+  var EmptyRoomView = loop.roomViews.EmptyRoomView;
 
   var IncomingCallView = React.createClass({displayName: 'IncomingCallView',
     mixins: [sharedMixins.DropdownMenuMixin],
@@ -521,7 +524,7 @@ loop.conversation = (function(mozL10n) {
    * Master controller view for handling if incoming or outgoing calls are
    * in progress, and hence, which view to display.
    */
-  var ConversationControllerView = React.createClass({displayName: 'ConversationControllerView',
+  var AppControllerView = React.createClass({displayName: 'AppControllerView',
     propTypes: {
       // XXX Old types required for incoming call view.
       client: React.PropTypes.instanceOf(loop.Client).isRequired,
@@ -531,7 +534,10 @@ loop.conversation = (function(mozL10n) {
 
       // XXX New types for OutgoingConversationView
       store: React.PropTypes.instanceOf(loop.store.ConversationStore).isRequired,
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+
+      // if not passed, this is not a room view
+      localRoomStore: React.PropTypes.instanceOf(loop.store.LocalRoomStore)
     },
 
     getInitialState: function() {
@@ -545,6 +551,15 @@ loop.conversation = (function(mozL10n) {
     },
 
     render: function() {
+      if (this.props.localRoomStore) {
+        return (
+          EmptyRoomView({
+            mozLoop: navigator.mozLoop, 
+            localRoomStore: this.props.localRoomStore}
+          )
+        );
+      }
+
       // Don't display anything, until we know what type of call we are.
       if (this.state.outgoing === undefined) {
         return null;
@@ -610,13 +625,25 @@ loop.conversation = (function(mozL10n) {
     var locationHash = helper.locationHash();
     var callId;
     var outgoing;
+    var localRoomStore;
 
-    var hash = locationHash.match(/\#incoming\/(.*)/);
+    // XXX removeMe, along with noisy comment at the beginning of
+    // conversation_test.js "when locationHash begins with #room".
+    if (navigator.mozLoop.getLoopBoolPref("test.alwaysUseRooms")) {
+      locationHash = "#room/32";
+    }
+
+    var hash = locationHash.match(/#incoming\/(.*)/);
     if (hash) {
       callId = hash[1];
       outgoing = false;
+    } else if (hash = locationHash.match(/#room\/(.*)/)) {
+      localRoomStore = new loop.store.LocalRoomStore({
+        dispatcher: dispatcher,
+        mozLoop: navigator.mozLoop
+      });
     } else {
-      hash = locationHash.match(/\#outgoing\/(.*)/);
+      hash = locationHash.match(/#outgoing\/(.*)/);
       if (hash) {
         callId = hash[1];
         outgoing = true;
@@ -632,13 +659,20 @@ loop.conversation = (function(mozL10n) {
 
     document.body.classList.add(loop.shared.utils.getTargetPlatform());
 
-    React.renderComponent(ConversationControllerView({
+    React.renderComponent(AppControllerView({
+      localRoomStore: localRoomStore, 
       store: conversationStore, 
       client: client, 
       conversation: conversation, 
       dispatcher: dispatcher, 
       sdk: window.OT}
     ), document.querySelector('#main'));
+
+   if (localRoomStore) {
+      dispatcher.dispatch(
+        new sharedActions.SetupEmptyRoom({localRoomId: hash[1]}));
+      return;
+    }
 
     dispatcher.dispatch(new loop.shared.actions.GatherCallData({
       callId: callId,
@@ -647,7 +681,7 @@ loop.conversation = (function(mozL10n) {
   }
 
   return {
-    ConversationControllerView: ConversationControllerView,
+    AppControllerView: AppControllerView,
     IncomingConversationView: IncomingConversationView,
     IncomingCallView: IncomingCallView,
     IncomingCallFailedView: IncomingCallFailedView,

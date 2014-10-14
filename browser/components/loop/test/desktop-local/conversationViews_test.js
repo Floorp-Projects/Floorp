@@ -4,6 +4,8 @@
 var expect = chai.expect;
 
 describe("loop.conversationViews", function () {
+  "use strict";
+
   var sharedUtils = loop.shared.utils;
   var sandbox, oldTitle, view, dispatcher, contact;
 

@@ -38,6 +38,10 @@ describe("loop.shared.mixins", function() {
       });
     });
 
+    afterEach(function() {
+      loop.shared.mixins.setRootObject(window);
+    });
+
     function setupFakeVisibilityEventDispatcher(event) {
       loop.shared.mixins.setRootObject({
         document: {
