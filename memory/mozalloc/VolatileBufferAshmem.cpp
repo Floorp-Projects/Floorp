@@ -15,11 +15,7 @@
 #include <unistd.h>
 
 #ifdef MOZ_MEMORY
-#ifdef MOZ_WIDGET_ANDROID
-extern "C" int __wrap_posix_memalign(void** memptr, size_t alignment, size_t size);
-#else
 extern "C" int posix_memalign(void** memptr, size_t alignment, size_t size);
-#endif
 #endif
 
 #define MIN_VOLATILE_ALLOC_SIZE 8192
@@ -68,11 +64,7 @@ heap_alloc:
   }
 
 #ifdef MOZ_MEMORY
-#ifdef MOZ_WIDGET_ANDROID
-  __wrap_posix_memalign(&mBuf, aAlignment, aSize);
-#else
   posix_memalign(&mBuf, aAlignment, aSize);
-#endif
 #else
   mBuf = memalign(aAlignment, aSize);
 #endif

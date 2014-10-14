@@ -52,6 +52,7 @@ namespace gmp {
 GMPVideoEncoderParent::GMPVideoEncoderParent(GMPParent *aPlugin)
 : GMPSharedMemManager(aPlugin),
   mIsOpen(false),
+  mShuttingDown(false),
   mPlugin(aPlugin),
   mCallback(nullptr),
   mVideoHost(MOZ_THIS_IN_INITIALIZER_LIST())
@@ -220,17 +221,20 @@ GMPVideoEncoderParent::Shutdown()
   LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
+  if (mShuttingDown) {
+    return;
+  }
+  mShuttingDown = true;
+
   // Notify client we're gone!  Won't occur after Close()
   if (mCallback) {
     mCallback->Terminated();
     mCallback = nullptr;
   }
   mVideoHost.DoneWithAPI();
-  if (mIsOpen) {
-    // Don't send EncodingComplete if we died
-    mIsOpen = false;
-    unused << SendEncodingComplete();
-  }
+
+  mIsOpen = false;
+  unused << SendEncodingComplete();
 }
 
 static void

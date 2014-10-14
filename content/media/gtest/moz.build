@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     'TestAudioCompactor.cpp',
+    'TestGMPCrossOrigin.cpp',
     'TestTrackEncoder.cpp',
     'TestVideoSegment.cpp',
     'TestWebMBuffered.cpp'
@@ -25,6 +26,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
     '/content/media/encoder',
+    '/content/media/gmp',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'

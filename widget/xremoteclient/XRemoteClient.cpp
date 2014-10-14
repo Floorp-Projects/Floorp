@@ -26,7 +26,6 @@
 
 #define MOZILLA_VERSION_PROP   "_MOZILLA_VERSION"
 #define MOZILLA_LOCK_PROP      "_MOZILLA_LOCK"
-#define MOZILLA_COMMAND_PROP   "_MOZILLA_COMMAND"
 #define MOZILLA_COMMANDLINE_PROP "_MOZILLA_COMMANDLINE"
 #define MOZILLA_RESPONSE_PROP  "_MOZILLA_RESPONSE"
 #define MOZILLA_USER_PROP      "_MOZILLA_USER"
@@ -62,7 +61,6 @@ XRemoteClient::XRemoteClient()
   mInitialized = false;
   mMozVersionAtom = 0;
   mMozLockAtom = 0;
-  mMozCommandAtom = 0;
   mMozResponseAtom = 0;
   mMozWMStateAtom = 0;
   mMozUserAtom = 0;
@@ -83,7 +81,6 @@ XRemoteClient::~XRemoteClient()
 static const char *XAtomNames[] = {
   MOZILLA_VERSION_PROP,
   MOZILLA_LOCK_PROP,
-  MOZILLA_COMMAND_PROP,
   MOZILLA_RESPONSE_PROP,
   "WM_STATE",
   MOZILLA_USER_PROP,
@@ -113,7 +110,6 @@ XRemoteClient::Init()
   int i = 0;
   mMozVersionAtom  = XAtoms[i++];
   mMozLockAtom     = XAtoms[i++];
-  mMozCommandAtom  = XAtoms[i++];
   mMozResponseAtom = XAtoms[i++];
   mMozWMStateAtom  = XAtoms[i++];
   mMozUserAtom     = XAtoms[i++];
@@ -144,35 +140,6 @@ XRemoteClient::Shutdown (void)
   }
 }
 
-nsresult
-XRemoteClient::SendCommand (const char *aProgram, const char *aUsername,
-                            const char *aProfile, const char *aCommand,
-                            const char* aDesktopStartupID,
-                            char **aResponse, bool *aWindowFound)
-{
-  PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::SendCommand"));
-
-  return SendCommandInternal(aProgram, aUsername, aProfile,
-                             aCommand, 0, nullptr,
-                             aDesktopStartupID,
-                             aResponse, aWindowFound);
-}
-
-nsresult
-XRemoteClient::SendCommandLine (const char *aProgram, const char *aUsername,
-                                const char *aProfile,
-                                int32_t argc, char **argv,
-                                const char* aDesktopStartupID,
-                                char **aResponse, bool *aWindowFound)
-{
-  PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::SendCommandLine"));
-
-  return SendCommandInternal(aProgram, aUsername, aProfile,
-                             nullptr, argc, argv,
-                             aDesktopStartupID,
-                             aResponse, aWindowFound);
-}
-
 static int
 HandleBadWindow(Display *display, XErrorEvent *event)
 {
@@ -186,20 +153,21 @@ HandleBadWindow(Display *display, XErrorEvent *event)
 }
 
 nsresult
-XRemoteClient::SendCommandInternal(const char *aProgram, const char *aUsername,
-                                   const char *aProfile, const char *aCommand,
-                                   int32_t argc, char **argv,
-                                   const char* aDesktopStartupID,
-                                   char **aResponse, bool *aWindowFound)
+XRemoteClient::SendCommandLine (const char *aProgram, const char *aUsername,
+                                const char *aProfile,
+                                int32_t argc, char **argv,
+                                const char* aDesktopStartupID,
+                                char **aResponse, bool *aWindowFound)
 {
+  PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::SendCommandLine"));
+
   *aWindowFound = false;
-  bool isCommandLine = !aCommand;
 
   // FindBestWindow() iterates down the window hierarchy, so catch X errors
   // when windows get destroyed before being accessed.
   sOldHandler = XSetErrorHandler(HandleBadWindow);
 
-  Window w = FindBestWindow(aProgram, aUsername, aProfile, isCommandLine);
+  Window w = FindBestWindow(aProgram, aUsername, aProfile);
 
   nsresult rv = NS_OK;
 
@@ -223,14 +191,8 @@ XRemoteClient::SendCommandInternal(const char *aProgram, const char *aUsername,
 
     if (NS_SUCCEEDED(rv)) {
       // send our command
-      if (isCommandLine) {
-        rv = DoSendCommandLine(w, argc, argv, aDesktopStartupID, aResponse,
-                               &destroyed);
-      }
-      else {
-        rv = DoSendCommand(w, aCommand, aDesktopStartupID, aResponse,
-                           &destroyed);
-      }
+      rv = DoSendCommandLine(w, argc, argv, aDesktopStartupID, aResponse,
+                             &destroyed);
 
       // if the window was destroyed, don't bother trying to free the
       // lock.
@@ -448,8 +410,7 @@ XRemoteClient::GetLock(Window aWindow, bool *aDestroyed)
 
 Window
 XRemoteClient::FindBestWindow(const char *aProgram, const char *aUsername,
-                              const char *aProfile,
-                              bool aSupportsCommandLine)
+                              const char *aProfile)
 {
   Window root = RootWindowOfScreen(DefaultScreenOfDisplay(mDisplay));
   Window bestWindow = 0;
@@ -494,7 +455,7 @@ XRemoteClient::FindBestWindow(const char *aProgram, const char *aUsername,
     double version = PR_strtod((char*) data_return, nullptr);
     XFree(data_return);
 
-    if (aSupportsCommandLine && !(version >= 5.1 && version < 6))
+    if (!(version >= 5.1 && version < 6))
       continue;
 
     data_return = 0;
@@ -635,46 +596,6 @@ XRemoteClient::FreeLock(Window aWindow)
 
   if (data)
       XFree(data);
-  return NS_OK;
-}
-
-nsresult
-XRemoteClient::DoSendCommand(Window aWindow, const char *aCommand,
-                             const char* aDesktopStartupID,
-                             char **aResponse, bool *aDestroyed)
-{
-  *aDestroyed = false;
-
-  PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-     ("(writing " MOZILLA_COMMAND_PROP " \"%s\" to 0x%x)\n",
-      aCommand, (unsigned int) aWindow));
-
-  // We add the DESKTOP_STARTUP_ID setting as an extra line of
-  // the command string. Firefox ignores all lines but the first.
-  static char desktopStartupPrefix[] = "\nDESKTOP_STARTUP_ID=";
-
-  int32_t len = strlen(aCommand);
-  if (aDesktopStartupID) {
-    len += sizeof(desktopStartupPrefix) - 1 + strlen(aDesktopStartupID);
-  }
-  char* buffer = (char*)malloc(len + 1);
-  if (!buffer)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  strcpy(buffer, aCommand);
-  if (aDesktopStartupID) {
-    strcat(buffer, desktopStartupPrefix);
-    strcat(buffer, aDesktopStartupID);
-  }
-
-  XChangeProperty (mDisplay, aWindow, mMozCommandAtom, XA_STRING, 8,
-           PropModeReplace, (unsigned char *)buffer, len);
-
-  free(buffer);
-
-  if (!WaitForResponse(aWindow, aResponse, aDestroyed, mMozCommandAtom))
-    return NS_ERROR_FAILURE;
-  
   return NS_OK;
 }
 
@@ -870,7 +791,7 @@ XRemoteClient::WaitForResponse(Window aWindow, char **aResponse,
              event.xproperty.atom == aCommandAtom) {
       PR_LOG(sRemoteLm, PR_LOG_DEBUG,
              ("(server 0x%x has accepted "
-              MOZILLA_COMMAND_PROP ".)\n",
+              MOZILLA_COMMANDLINE_PROP ".)\n",
               (unsigned int) aWindow));
     }
     

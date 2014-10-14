@@ -203,16 +203,14 @@ int VcmSIPCCBinding::getVideoCodecsGmp()
   // H.264 only for now
   bool has_gmp;
   nsresult rv;
-  rv = gSelf->mGMPService->HasPluginForAPI(NS_LITERAL_CSTRING(""),
-                                           NS_LITERAL_CSTRING("encode-video"),
+  rv = gSelf->mGMPService->HasPluginForAPI(NS_LITERAL_CSTRING("encode-video"),
                                            &tags,
                                            &has_gmp);
   if (NS_FAILED(rv) || !has_gmp) {
     return 0;
   }
 
-  rv = gSelf->mGMPService->HasPluginForAPI(NS_LITERAL_CSTRING(""),
-                                           NS_LITERAL_CSTRING("decode-video"),
+  rv = gSelf->mGMPService->HasPluginForAPI(NS_LITERAL_CSTRING("decode-video"),
                                            &tags,
                                            &has_gmp);
   if (NS_FAILED(rv) || !has_gmp) {

@@ -330,7 +330,7 @@ nss_def_file := $(srcdir)/nss.def
 ifeq (WINNT,$(OS_TARGET))
 # Create a .def file based on the various .def files for nss, smime, ssl and
 # nssutil.
-nss3.def: $(nss_def_file) $(DEPTH)/db/sqlite3/src/sqlite-processed.def
+nss3.def: $(nss_def_file) $(DEPTH)/db/sqlite3/src/sqlite-processed.def $(NSS_EXTRA_SYMBOLS_FILE)
 	echo LIBRARY nss3$(DLL_SUFFIX) > $@.tmp
 	echo EXPORTS >> $@.tmp
 	grep -v -h -e ^LIBRARY -e ^EXPORTS -e ^\; $^ >> $@.tmp
@@ -340,10 +340,9 @@ ifdef GCC_USE_GNU_LD
 sqlite_def_file := $(topsrcdir)/db/sqlite3/src/sqlite.def
 nspr_def_file := $(srcdir)/nspr-dummy.def
 
-nss3.def: $(nss_def_file) $(sqlite_def_file) $(nspr_def_file)
+nss3.def: $(nss_def_file) $(sqlite_def_file) $(nspr_def_file) $(NSS_EXTRA_SYMBOLS_FILE)
 	@$(call py_action,convert_def_file, \
-	  $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) -o $@ \
-	  $(nss_def_file) $(sqlite_def_file) $(nspr_def_file))
+	  $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) -o $@ $^)
 
 GARBAGE += \
   nss3.def \
