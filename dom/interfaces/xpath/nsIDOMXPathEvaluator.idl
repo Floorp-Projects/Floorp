@@ -9,13 +9,11 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMXPathNSResolver;
 interface XPathException;
 
-[uuid(55e1a327-ad12-4b1d-a839-ddafa477f6c1)]
+[uuid(92584002-d0e2-4b88-9af9-fa6ff59ee002)]
 interface nsIDOMXPathEvaluator : nsISupports
 {
-  nsIDOMXPathNSResolver    createNSResolver(in nsIDOMNode nodeResolver);
   nsISupports              evaluate(in DOMString expression, 
                                     in nsIDOMNode contextNode, 
                                     in nsIDOMNode resolver,

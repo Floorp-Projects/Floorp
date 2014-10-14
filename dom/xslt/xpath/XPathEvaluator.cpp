@@ -84,21 +84,6 @@ XPathEvaluator::~XPathEvaluator()
 }
 
 NS_IMETHODIMP
-XPathEvaluator::CreateNSResolver(nsIDOMNode *aNodeResolver,
-                                 nsIDOMXPathNSResolver **aResult)
-{
-    NS_ENSURE_ARG(aNodeResolver);
-    if (!nsContentUtils::CanCallerAccess(aNodeResolver))
-        return NS_ERROR_DOM_SECURITY_ERR;
-
-    *aResult = new nsXPathNSResolver(aNodeResolver);
-    NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(*aResult);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 XPathEvaluator::Evaluate(const nsAString & aExpression,
                          nsIDOMNode *aContextNode,
                          nsIDOMNode *aResolver,

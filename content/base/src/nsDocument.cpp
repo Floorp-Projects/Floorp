@@ -12338,13 +12338,6 @@ nsIDocument::Evaluate(JSContext* aCx, const nsAString& aExpression,
 }
 
 NS_IMETHODIMP
-nsDocument::CreateNSResolver(nsIDOMNode* aNodeResolver,
-                             nsIDOMXPathNSResolver** aResult)
-{
-  return XPathEvaluator()->CreateNSResolver(aNodeResolver, aResult);
-}
-
-NS_IMETHODIMP
 nsDocument::Evaluate(const nsAString& aExpression, nsIDOMNode* aContextNode,
                      nsIDOMNode* aResolver, uint16_t aType,
                      nsISupports* aInResult, nsISupports** aResult)
