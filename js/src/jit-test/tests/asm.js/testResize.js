@@ -236,16 +236,21 @@ set(BUF_CHANGE_MIN, 262);
 assertEq(get(BUF_CHANGE_MIN), 0);
 
 var buf1 = new ArrayBuffer(BUF_CHANGE_MIN);
-new Int32Array(buf1)[0] = 13;
 var buf2 = new ArrayBuffer(BUF_CHANGE_MIN);
-new Int32Array(buf2)[0] = 42;
-
 var m = asmCompile('glob', 'ffis', 'b', USE_ASM +
                    `var len=glob.byteLength;
                     function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; b=b2; return true }
                     return ch`);
 var changeHeap = asmLink(m, this, null, buf1);
-changeHeap(buf2);
+assertEq(changeHeap(buf2), true);
+neuter(buf2, "change-data");
+assertEq(changeHeap(buf1), true);
+neuter(buf1, "change-data");
+
+var buf1 = new ArrayBuffer(BUF_CHANGE_MIN);
+new Int32Array(buf1)[0] = 13;
+var buf2 = new ArrayBuffer(BUF_CHANGE_MIN);
+new Int32Array(buf2)[0] = 42;
 
 // Tests for changing heap during an FFI:
 

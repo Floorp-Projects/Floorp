@@ -29,7 +29,7 @@ assertEq(get(4), 42);
 neuter(buffer, "change-data");
 neuter(buffer, "same-data");
 
-// These operations may throw internal errors
+// These operations may throw errors
 try {
     assertEq(get(4), 0);
     set(0, 42);
