@@ -407,11 +407,11 @@ do { 								\
 #pragma GCC visibility push(default)
 
 extern const char *
-__wrap_gai_strerror(int ecode);
+gai_strerror(int ecode);
 extern void
-__wrap_freeaddrinfo(struct addrinfo *ai);
+freeaddrinfo(struct addrinfo *ai);
 extern int
-__wrap_getaddrinfo(const char *hostname, const char *servname,
+getaddrinfo(const char *hostname, const char *servname,
     const struct addrinfo *hints, struct addrinfo **res);
 
 int android_sdk_version;
@@ -431,7 +431,7 @@ static int honeycomb_or_later()
 }
 
 const char *
-__wrap_gai_strerror(int ecode)
+gai_strerror(int ecode)
 {
 	if (honeycomb_or_later())
 		return gai_strerror(ecode);
@@ -441,7 +441,7 @@ __wrap_gai_strerror(int ecode)
 }
 
 void
-__wrap_freeaddrinfo(struct addrinfo *ai)
+freeaddrinfo(struct addrinfo *ai)
 {
 	struct addrinfo *next;
 
@@ -533,7 +533,7 @@ _have_ipv4() {
 }
 
 int
-__wrap_getaddrinfo(const char *hostname, const char *servname,
+getaddrinfo(const char *hostname, const char *servname,
     const struct addrinfo *hints, struct addrinfo **res)
 {
 	struct addrinfo sentinel;
@@ -731,7 +731,7 @@ __wrap_getaddrinfo(const char *hostname, const char *servname,
  free:
  bad:
 	if (sentinel.ai_next)
-		__wrap_freeaddrinfo(sentinel.ai_next);
+		freeaddrinfo(sentinel.ai_next);
 	*res = NULL;
 	return error;
 }
@@ -792,7 +792,7 @@ explore_fqdn(const struct addrinfo *pai, const char *hostname,
 
 free:
 	if (result)
-		__wrap_freeaddrinfo(result);
+		freeaddrinfo(result);
 	return error;
 }
 
@@ -860,7 +860,7 @@ explore_null(const struct addrinfo *pai, const char *servname,
 
 free:
 	if (sentinel.ai_next)
-		__wrap_freeaddrinfo(sentinel.ai_next);
+		freeaddrinfo(sentinel.ai_next);
 	return error;
 }
 
@@ -947,7 +947,7 @@ explore_numeric(const struct addrinfo *pai, const char *hostname,
 free:
 bad:
 	if (sentinel.ai_next)
-		__wrap_freeaddrinfo(sentinel.ai_next);
+		freeaddrinfo(sentinel.ai_next);
 	return error;
 }
 
@@ -2005,7 +2005,7 @@ _gethtent(_pseudo_FILE * __restrict__ hostf, const char *name, const struct addr
 found:
 	hints = *pai;
 	hints.ai_flags = AI_NUMERICHOST;
-	error = __wrap_getaddrinfo(addr, NULL, &hints, &res0);
+	error = getaddrinfo(addr, NULL, &hints, &res0);
 	if (error)
 		goto again;
 	for (res = res0; res; res = res->ai_next) {
@@ -2014,7 +2014,7 @@ found:
 
 		if (pai->ai_flags & AI_CANONNAME) {
 			if (get_canonname(pai, res, cname) != 0) {
-				__wrap_freeaddrinfo(res0);
+				freeaddrinfo(res0);
 				goto again;
 			}
 		}

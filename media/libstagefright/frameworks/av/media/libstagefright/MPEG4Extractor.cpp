@@ -155,6 +155,16 @@ private:
     Vector<Sample> mCurrentSamples;
     MPEG4Extractor::TrackExtends mTrackExtends;
 
+    // XXX hack -- demuxer expects a track's trun to be seen before saio or
+    // saiz. Here we store saiz/saio box offsets for parsing *after* the trun
+    // has been parsed.
+    struct AuxRange {
+        off64_t mStart;
+        off64_t mSize;
+    };
+    Vector<AuxRange> mDeferredSaiz;
+    Vector<AuxRange> mDeferredSaio;
+
     MPEG4Source(const MPEG4Source &);
     MPEG4Source &operator=(const MPEG4Source &);
 };
@@ -2606,16 +2616,20 @@ status_t MPEG4Source::parseChunk(off64_t *offset) {
 
         case FOURCC('s', 'a', 'i', 'z'): {
             status_t err;
-            if ((err = parseSampleAuxiliaryInformationSizes(data_offset, chunk_data_size)) != OK) {
-                return err;
+            if (mLastParsedTrackId == mTrackId) {
+                if ((err = parseSampleAuxiliaryInformationSizes(data_offset, chunk_data_size)) != OK) {
+                    return err;
+                }
             }
             *offset += chunk_size;
             break;
         }
         case FOURCC('s', 'a', 'i', 'o'): {
             status_t err;
-            if ((err = parseSampleAuxiliaryInformationOffsets(data_offset, chunk_data_size)) != OK) {
-                return err;
+            if (mLastParsedTrackId == mTrackId) {
+                if ((err = parseSampleAuxiliaryInformationOffsets(data_offset, chunk_data_size)) != OK) {
+                    return err;
+                }
             }
             *offset += chunk_size;
             break;
@@ -2640,6 +2654,18 @@ status_t MPEG4Source::parseChunk(off64_t *offset) {
 status_t MPEG4Source::parseSampleAuxiliaryInformationSizes(off64_t offset, off64_t size) {
     ALOGV("parseSampleAuxiliaryInformationSizes");
     // 14496-12 8.7.12
+
+    if (mCurrentSamples.isEmpty()) {
+        // XXX hack -- we haven't seen trun yet; defer parsing this box until
+        // after trun.
+        ALOGW("deferring processing of saiz box");
+        AuxRange range;
+        range.mStart = offset;
+        range.mSize = size;
+        mDeferredSaiz.add(range);
+        return OK;
+    }
+
     uint8_t version;
     if (mDataSource->readAt(
             offset, &version, sizeof(version))
@@ -2702,6 +2728,18 @@ status_t MPEG4Source::parseSampleAuxiliaryInformationSizes(off64_t offset, off64
 status_t MPEG4Source::parseSampleAuxiliaryInformationOffsets(off64_t offset, off64_t size) {
     ALOGV("parseSampleAuxiliaryInformationOffsets");
     // 14496-12 8.7.13
+
+    if (mCurrentSamples.isEmpty()) {
+        // XXX hack -- we haven't seen trun yet; defer parsing this box until
+        // after trun.
+        ALOGW("deferring processing of saio box");
+        AuxRange range;
+        range.mStart = offset;
+        range.mSize = size;
+        mDeferredSaio.add(range);
+        return OK;
+    }
+
     uint8_t version;
     if (mDataSource->readAt(offset, &version, sizeof(version)) != 1) {
         return ERROR_IO;
@@ -2713,6 +2751,11 @@ status_t MPEG4Source::parseSampleAuxiliaryInformationOffsets(off64_t offset, off
         return ERROR_IO;
     }
     offset += 3;
+
+    if (flags & 1) {
+      // Skip uint32s aux_info_type and aux_info_type_parameter
+      offset += 8;
+    }
 
     uint32_t entrycount;
     if (!mDataSource->getUInt32(offset, &entrycount)) {
@@ -3095,6 +3138,13 @@ status_t MPEG4Source::parseTrackFragmentRun(off64_t offset, off64_t size) {
     }
 
     mTrackFragmentHeaderInfo.mDataOffset = dataOffset;
+
+    for (size_t i = 0; i < mDeferredSaio.size() && i < mDeferredSaiz.size(); i++) {
+        const auto& saio = mDeferredSaio[i];
+        const auto& saiz = mDeferredSaiz[i];
+        parseSampleAuxiliaryInformationSizes(saiz.mStart, saiz.mSize);
+        parseSampleAuxiliaryInformationOffsets(saio.mStart, saio.mSize);
+    }
 
     return OK;
 }
@@ -3538,6 +3588,8 @@ status_t MPEG4Source::fragmentedRead(
             }
             mCurrentMoofOffset = totalOffset;
             mCurrentSamples.clear();
+            mDeferredSaio.clear();
+            mDeferredSaiz.clear();
             mCurrentSampleIndex = 0;
             mTrackFragmentData.mPresent = false;
             parseChunk(&totalOffset);
@@ -3569,6 +3621,8 @@ status_t MPEG4Source::fragmentedRead(
             // move to next fragment
             off64_t nextMoof = mNextMoofOffset; // lastSample.offset + lastSample.size;
             mCurrentSamples.clear();
+            mDeferredSaio.clear();
+            mDeferredSaiz.clear();
             mCurrentSampleIndex = 0;
             mTrackFragmentData.mPresent = false;
             uint32_t hdr[2];
