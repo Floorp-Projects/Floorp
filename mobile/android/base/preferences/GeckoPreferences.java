@@ -700,6 +700,12 @@ OnSharedPreferenceChangeListener
                     i--;
                     continue;
                 } else if (PREFS_DEVTOOLS_REMOTE_ENABLED.equals(key)) {
+                    if (!RestrictedProfiles.isAllowed(RestrictedProfiles.Restriction.DISALLOW_REMOTE_DEBUGGING)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+
                     final Context thisContext = this;
                     pref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
                         @Override
@@ -744,7 +750,11 @@ OnSharedPreferenceChangeListener
                     continue;
                 } else if (handlers.containsKey(key)) {
                     PrefHandler handler = handlers.get(key);
-                    handler.setupPref(this, pref);
+                    if (!handler.setupPref(this, pref)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
                 }
 
                 // Some Preference UI elements are not actually preferences,
@@ -1026,13 +1036,16 @@ OnSharedPreferenceChangeListener
     }
 
     public interface PrefHandler {
-        public void setupPref(Context context, Preference pref);
+        // Allows the pref to do any initialization it needs. Return false to have the pref removed
+        // from the prefs screen entirely.
+        public boolean setupPref(Context context, Preference pref);
         public void onChange(Context context, Preference pref, Object newValue);
     }
 
     @SuppressWarnings("serial")
     private final Map<String, PrefHandler> handlers = new HashMap<String, PrefHandler>() {{
         put(ClearOnShutdownPref.PREF, new ClearOnShutdownPref());
+        put(AndroidImportPreference.PREF_KEY, new AndroidImportPreference.Handler());
     }};
 
     @Override

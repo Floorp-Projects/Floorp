@@ -63,10 +63,6 @@
     </style>
 
     <style name="Widget.Home.HomeList">
-        <item name="android:paddingTop">0dip</item>
-        <item name="android:paddingRight">0dip</item>
-        <item name="android:paddingLeft">0dip</item>
-        <item name="topDivider">true</item>
         <item name="android:scrollbarStyle">outsideOverlay</item>
     </style>
 
@@ -129,6 +125,25 @@
         <item name="android:includeFontPadding">false</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">middle</item>
+    </style>
+
+    <style name="Widget.ReadingListRow" />
+
+    <style name="Widget.ReadingListRow.Title">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemTitle</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Widget.ReadingListRow.Description">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemDescription</item>
+        <item name="android:maxLines">4</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Widget.ReadingListRow.ReadTime">
+        <item name="android:textStyle">italic</item>
+        <item name="android:textColor">@color/text_color_highlight</item>
     </style>
 
     <style name="Widget.BookmarkFolderView" parent="Widget.TwoLinePageRow.Title">
@@ -229,7 +244,7 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">32dp</item>
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.Header</item>
-        <item name="android:background">#fff5f7f9</item>
+        <item name="android:background">@color/background_light</item>
         <item name="android:focusable">false</item>
         <item name="android:gravity">center|left</item>
         <item name="android:paddingLeft">10dip</item>
