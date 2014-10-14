@@ -2157,7 +2157,7 @@ RelocateCell(Zone *zone, TenuredCell *src, AllocKind thingKind, size_t thingSize
     MOZ_ASSERT(zone == src->zone());
     void *dstAlloc = zone->allocator.arenas.allocateFromFreeList(thingKind, thingSize);
     if (!dstAlloc)
-        dstAlloc = js::gc::ArenaLists::refillFreeListInGC(zone, thingKind);
+        dstAlloc = GCRuntime::refillFreeListInGC(zone, thingKind);
     if (!dstAlloc)
         return false;
     TenuredCell *dst = TenuredCell::fromPointer(dstAlloc);
