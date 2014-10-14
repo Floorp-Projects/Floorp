@@ -339,6 +339,18 @@ bool WebGLContext::ValidateGLSLString(const nsAString& string, const char *info)
 bool
 WebGLContext::ValidateFramebufferAttachment(GLenum attachment, const char* funcName)
 {
+    if (!mBoundFramebuffer) {
+        switch (attachment) {
+            case LOCAL_GL_COLOR:
+            case LOCAL_GL_DEPTH:
+            case LOCAL_GL_STENCIL:
+                return true;
+            default:
+                ErrorInvalidEnum("%s: attachment: invalid enum value 0x%x.", funcName, attachment);
+                return false;
+        }
+    }
+
     if (attachment == LOCAL_GL_DEPTH_ATTACHMENT ||
         attachment == LOCAL_GL_STENCIL_ATTACHMENT ||
         attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
