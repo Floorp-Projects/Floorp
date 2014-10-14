@@ -152,8 +152,6 @@ function task_populateDB(aArray)
             let folderId = PlacesUtils.bookmarks.createFolder(qdata.parentFolder,
                                                               qdata.title,
                                                               qdata.index);
-            if (qdata.readOnly)
-              PlacesUtils.bookmarks.setFolderReadonly(folderId, true);
           }
 
           if (qdata.isLivemark) {
@@ -246,7 +244,6 @@ function queryData(obj) {
   this.dateAdded = obj.dateAdded ? obj.dateAdded : today;
   this.keyword = obj.keyword ? obj.keyword : "";
   this.visitCount = obj.visitCount ? obj.visitCount : 0;
-  this.readOnly = obj.readOnly ? obj.readOnly : false;
   this.isSeparator = obj.hasOwnProperty("isSeparator") && obj.isSeparator;
 
   // And now, the attribute for whether or not this object should appear in the

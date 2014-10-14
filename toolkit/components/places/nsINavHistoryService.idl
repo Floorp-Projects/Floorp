@@ -175,7 +175,7 @@ interface nsINavHistoryResultNode : nsISupports
  * Bookmark folders and places queries will be QueryResultNodes which extends
  * these items.
  */
-[scriptable, uuid(5bac9734-c0ff-44eb-8d19-da88462ff6da)]
+[scriptable, uuid(3E9CC95F-0D93-45F1-894F-908EEB9866D7)]
 interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
 {
 
@@ -256,15 +256,6 @@ interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
                                             in PRTime aTime,
                                             in long long aItemId,
                                             in boolean aRecursive);
-
-  /**
-   * Returns false if this node's list of children can be modified
-   * (adding or removing children, or reordering children), or true if
-   * the UI should not allow the list of children to be modified.
-   * This is false for bookmark folder nodes unless setFolderReadOnly() has
-   * been called to override it, and true for non-folder nodes.
-   */
-  readonly attribute boolean childrenReadOnly;
 };
 
 
@@ -275,7 +266,7 @@ interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
  * generated this node, this item will report it has no children and never try
  * to populate itself.
  */
-[scriptable, uuid(a4144c3e-8125-46d5-a719-831bec8095f4)]
+[scriptable, uuid(91AC5E59-3F5C-4ACD-AB3B-325FC425A5A1)]
 interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
 {
   /**
@@ -1118,12 +1109,9 @@ interface nsINavHistoryQueryOptions : nsISupports
   attribute boolean excludeQueries;
 
   /**
-   * Set to true to exclude read-only folders from the query results. This is
-   * designed for cases where you want to give the user the option of filing
-   * something into a list of folders. It only affects cases where the actual
-   * folder result node would appear in its parent folder and filters it out.
-   * It doesn't affect the query at all, and doesn't affect more complex
-   * queries (such as "folders with annotation X").
+   * DO NOT USE THIS API. IT'LL BE REMOVED IN BUG 1072833.
+   *
+   * Set to true to exclude live bookmarks from the query results.
    */
   attribute boolean excludeReadOnlyFolders;
 

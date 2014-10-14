@@ -223,7 +223,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(A78EA368-E28E-462E-897A-26606D4DDCE6)]
+[scriptable, uuid(4C309044-B6DA-4511-AF57-E8940DB00045)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -465,30 +465,6 @@ interface nsINavBookmarksService : nsISupports
    * The type is one of the TYPE_* constants defined above.
    */
   unsigned short getItemType(in long long aItemId);
-
-  /**
-   * Checks whether a folder is marked as read-only.
-   * If this is set to true, UI will not allow the user to add, remove,
-   * or reorder children in this folder. The default for all folders is false.
-   * Note: This does not restrict API calls, only UI actions.
-   *
-   * @param aItemId
-   *        the item-id of the folder.
-   */
-  boolean getFolderReadonly(in long long aItemId);
-
-  /**
-   * Sets or unsets the readonly flag from a folder.
-   * If this is set to true, UI will not allow the user to add, remove,
-   * or reorder children in this folder. The default for all folders is false.
-   * Note: This does not restrict API calls, only UI actions.
-   *
-   * @param aFolder
-   *        the item-id of the folder.
-   * @param aReadOnly
-   *        the read-only state (boolean).
-   */
-  void setFolderReadonly(in long long aFolder, in boolean aReadOnly);
 
   /**
    * Returns true if the given URI is in any bookmark folder. If you want the
