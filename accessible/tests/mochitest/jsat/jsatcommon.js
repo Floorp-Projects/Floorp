@@ -365,19 +365,29 @@ var ContentMessages = {
     }
   },
 
-  adjustRangeUp: {
-    name: 'AccessFu:AdjustRange',
-    json: {
-      origin: 'top',
-      direction: 'backward'
+  moveOrAdjustUp: function moveOrAdjustUp(aRule) {
+    return {
+      name: 'AccessFu:MoveCursor',
+      json: {
+        origin: 'top',
+        action: 'movePrevious',
+        inputType: 'gesture',
+        rule: (aRule || 'Simple'),
+        adjustRange: true
+      }
     }
   },
 
-  adjustRangeDown: {
-    name: 'AccessFu:AdjustRange',
-    json: {
-      origin: 'top',
-      direction: 'forward'
+  moveOrAdjustDown: function moveOrAdjustUp(aRule) {
+    return {
+      name: 'AccessFu:MoveCursor',
+      json: {
+        origin: 'top',
+        action: 'moveNext',
+        inputType: 'gesture',
+        rule: (aRule || 'Simple'),
+        adjustRange: true
+      }
     }
   },
 
