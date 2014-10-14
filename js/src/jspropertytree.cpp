@@ -361,6 +361,9 @@ ShapeGetterSetterRef::mark(JSTracer *trc)
 
     JSObject *obj = *objp;
     JSObject *prior = obj;
+    if (!prior)
+        return;
+
     trc->setTracingLocation(&*prior);
     gc::Mark(trc, &obj, "AccessorShape getter or setter");
     if (obj == *objp)
