@@ -91,6 +91,11 @@ nsMacShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
     }
   }
 
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefs) {
+    (void) prefs->SetBoolPref(PREF_CHECKDEFAULTBROWSER, true);
+  }
+
   return NS_OK;
 }
 
