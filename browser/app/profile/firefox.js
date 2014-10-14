@@ -1552,7 +1552,7 @@ pref("browser.newtabpage.rows", 3);
 pref("browser.newtabpage.columns", 5);
 
 // directory tiles download URL
-pref("browser.newtabpage.directory.source", "https://tiles.services.mozilla.com/v2/links/fetch");
+pref("browser.newtabpage.directory.source", "https://tiles.services.mozilla.com/v2/links/fetch/%LOCALE%");
 
 // endpoint to send newtab click and view pings
 pref("browser.newtabpage.directory.ping", "https://tiles.services.mozilla.com/v2/links/");
