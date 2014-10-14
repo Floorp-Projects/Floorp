@@ -91,6 +91,9 @@ convert it to Unix-style line endings, check \
 "https://developer.mozilla.org/en-US/docs/Developer_Guide/Mozilla_build_FAQ\#Win32-specific_questions" \
 for a workaround of this issue.)
 endif
+
+# Set this for baseconfig.mk
+HOST_OS_ARCH=WINNT
 endif
 
 ####################################
@@ -166,6 +169,9 @@ OBJDIR_TARGETS = install export libs clean realclean distclean maybe_clobber_pro
 # The default rule is build
 build::
 	$(MAKE) -f $(TOPSRCDIR)/client.mk $(if $(MOZ_PGO),profiledbuild,realbuild) CREATE_MOZCONFIG_JSON=
+
+# Include baseconfig.mk for its $(MAKE) validation.
+include $(TOPSRCDIR)/config/baseconfig.mk
 
 # Define mkdir
 include $(TOPSRCDIR)/config/makefiles/makeutils.mk
