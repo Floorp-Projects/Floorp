@@ -174,17 +174,10 @@ SearchForName(/*optional*/ const Input* subjectAltName,
 
   if (subjectAltName) {
     Reader altNames;
-
-    {
-      Reader input(*subjectAltName);
-      rv = der::ExpectTagAndGetValue(input, der::SEQUENCE, altNames);
-      if (rv != Success) {
-        return rv;
-      }
-      rv = der::End(input);
-      if (rv != Success) {
-        return rv;
-      }
+    rv = der::ExpectTagAndGetValueAtEnd(*subjectAltName, der::SEQUENCE,
+                                        altNames);
+    if (rv != Success) {
+      return rv;
     }
 
     // do { ... } while(...) because subjectAltName isn't allowed to be empty.
