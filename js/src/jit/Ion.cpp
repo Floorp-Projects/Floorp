@@ -624,7 +624,7 @@ jit::LazyLinkTopActivation(JSContext *cx)
     JitActivationIterator iter(cx->runtime());
 
     // First frame should be an exit frame.
-    JitFrameIterator it(iter.jitTop(), SequentialExecution);
+    JitFrameIterator it(iter);
     MOZ_ASSERT(it.type() == JitFrame_Exit);
 
     // Second frame is the Ion frame.
@@ -1884,7 +1884,7 @@ AttachFinishedCompilations(JSContext *cx)
         {
             bool onStack = false;
             for (JitActivationIterator iter(cx->runtime()); !iter.done(); ++iter) {
-                for (JitFrameIterator it(iter.jitTop(), SequentialExecution); !it.done(); ++it) {
+                for (JitFrameIterator it(iter); !it.done(); ++it) {
                     if (!it.isIonJS())
                         continue;
                     if (it.checkInvalidation())
@@ -2686,13 +2686,13 @@ jit::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
 }
 
 static void
-InvalidateActivation(FreeOp *fop, uint8_t *jitTop, bool invalidateAll)
+InvalidateActivation(FreeOp *fop, const JitActivationIterator &activations, bool invalidateAll)
 {
     JitSpew(JitSpew_IonInvalidate, "BEGIN invalidating activation");
 
     size_t frameno = 1;
 
-    for (JitFrameIterator it(jitTop, SequentialExecution); !it.done(); ++it, ++frameno) {
+    for (JitFrameIterator it(activations); !it.done(); ++it, ++frameno) {
         MOZ_ASSERT_IF(frameno == 1, it.type() == JitFrame_Exit);
 
 #ifdef DEBUG
@@ -2702,9 +2702,16 @@ InvalidateActivation(FreeOp *fop, uint8_t *jitTop, bool invalidateAll)
             break;
           case JitFrame_BaselineJS:
           case JitFrame_IonJS:
+          case JitFrame_Bailout:
           {
             MOZ_ASSERT(it.isScripted());
-            const char *type = it.isIonJS() ? "Optimized" : "Baseline";
+            const char *type = "Unknown";
+            if (it.isIonJS())
+                type = "Optimized";
+            else if (it.isBaselineJS())
+                type = "Baseline";
+            else if (it.isBailoutJS())
+                type = "Bailing";
             JitSpew(JitSpew_IonInvalidate, "#%d %s JS frame @ %p, %s:%d (fun: %p, script: %p, pc %p)",
                     frameno, type, it.fp(), it.script()->filename(), it.script()->lineno(),
                     it.maybeCallee(), (JSScript *)it.script(), it.returnAddressToFp());
@@ -2841,7 +2848,7 @@ jit::InvalidateAll(FreeOp *fop, Zone *zone)
     for (JitActivationIterator iter(fop->runtime()); !iter.done(); ++iter) {
         if (iter->compartment()->zone() == zone) {
             JitSpew(JitSpew_IonInvalidate, "Invalidating all frames for GC");
-            InvalidateActivation(fop, iter.jitTop(), true);
+            InvalidateActivation(fop, iter, true);
         }
     }
 }
@@ -2884,7 +2891,7 @@ jit::Invalidate(types::TypeZone &types, FreeOp *fop,
     }
 
     for (JitActivationIterator iter(fop->runtime()); !iter.done(); ++iter)
-        InvalidateActivation(fop, iter.jitTop(), false);
+        InvalidateActivation(fop, iter, false);
 
     // Drop the references added above. If a script was never active, its
     // IonScript will be immediately destroyed. Otherwise, it will be held live
@@ -3350,7 +3357,7 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
         if (comp_ == comp || zone_ == comp->zone()) {
             IonContext ictx(CompileRuntime::get(rt));
             JitSpew(JitSpew_IonInvalidate, "Invalidating frames for debug mode toggle");
-            InvalidateActivation(fop, iter.jitTop(), true);
+            InvalidateActivation(fop, iter, true);
         }
     }
 

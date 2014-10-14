@@ -74,7 +74,7 @@ class BufferPointer
  */
 struct BaselineStackBuilder
 {
-    IonBailoutIterator &iter_;
+    JitFrameIterator &iter_;
     IonJSFrameLayout *frame_;
 
     static size_t HeaderSize() {
@@ -88,7 +88,7 @@ struct BaselineStackBuilder
 
     size_t framePushed_;
 
-    BaselineStackBuilder(IonBailoutIterator &iter, size_t initialSize)
+    BaselineStackBuilder(JitFrameIterator &iter, size_t initialSize)
       : iter_(iter),
         frame_(static_cast<IonJSFrameLayout*>(iter.current())),
         bufferTotal_(initialSize),
@@ -99,6 +99,7 @@ struct BaselineStackBuilder
         framePushed_(0)
     {
         MOZ_ASSERT(bufferTotal_ >= HeaderSize());
+        MOZ_ASSERT(iter.isBailoutJS());
     }
 
     ~BaselineStackBuilder() {
@@ -387,10 +388,11 @@ class SnapshotIteratorForBailout : public SnapshotIterator
     RInstructionResults results_;
   public:
 
-    SnapshotIteratorForBailout(const IonBailoutIterator &iter)
+    SnapshotIteratorForBailout(const JitFrameIterator &iter)
       : SnapshotIterator(iter),
         results_(iter.jsFrame())
     {
+        MOZ_ASSERT(iter.isBailoutJS());
     }
 
     // Take previously computed result out of the activation, or compute the
@@ -1287,7 +1289,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 }
 
 uint32_t
-jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIterator &iter,
+jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIterator &iter,
                           bool invalidate, BaselineBailoutInfo **bailoutInfo,
                           const ExceptionBailoutInfo *excInfo)
 {
@@ -1307,7 +1309,7 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     //      BaselineStub - Baseline calling into Ion.
     //      Entry - Interpreter or other calling into Ion.
     //      Rectifier - Arguments rectifier calling into Ion.
-    MOZ_ASSERT(iter.isIonJS());
+    MOZ_ASSERT(iter.isBailoutJS());
     FrameType prevFrameType = iter.prevType();
     MOZ_ASSERT(prevFrameType == JitFrame_IonJS ||
                prevFrameType == JitFrame_BaselineStub ||

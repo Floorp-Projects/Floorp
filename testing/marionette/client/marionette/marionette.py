@@ -815,7 +815,7 @@ class Marionette(object):
             capabilities.  This is currently ignored.
 
         :returns: A dict of the capabilities offered."""
-        self.session = self._send_message('newSession', 'value')
+        self.session = self._send_message('newSession', 'value', capabilities=desired_capabilities)
         self.b2g = 'b2g' in self.session
         return self.session
 

@@ -1298,7 +1298,7 @@ CreateDependentString(MacroAssembler &masm, const JSAtomState &names,
         Label noBase;
         masm.branchTest32(Assembler::Zero, Address(base, JSString::offsetOfFlags()),
                           Imm32(JSString::HAS_BASE_BIT), &noBase);
-        masm.branchTest32(Assembler::Zero, Address(base, JSString::offsetOfFlags()),
+        masm.branchTest32(Assembler::NonZero, Address(base, JSString::offsetOfFlags()),
                           Imm32(JSString::FLAT_BIT), &noBase);
         masm.loadPtr(Address(base, JSDependentString::offsetOfBase()), temp1);
         masm.storePtr(temp1, Address(string, JSDependentString::offsetOfBase()));

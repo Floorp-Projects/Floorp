@@ -497,26 +497,23 @@ class DeviceManagerADB(DeviceManager):
         return int(timestr)*1000
 
     def getInfo(self, directive=None):
+        directive = directive or "all"
         ret = {}
-        if (directive == "id" or directive == "all"):
+        if directive == "id" or directive == "all":
             ret["id"] = self._runCmd(["get-serialno"]).output[0]
-        if (directive == "os" or directive == "all"):
-            ret["os"] = self._runCmd(["shell", "getprop", "ro.build.display.id"]).output[0]
-        if (directive == "uptime" or directive == "all"):
-            utime = self._runCmd(["shell", "uptime"]).output[0]
+        if directive == "os" or directive == "all":
+            ret["os"] = self.shellCheckOutput(["getprop", "ro.build.display.id"])
+        if directive == "uptime" or directive == "all":
+            utime = self.shellCheckOutput(["uptime"])
             if (not utime):
                 raise DMError("error getting uptime")
-            utime = utime[9:]
-            hours = utime[0:utime.find(":")]
-            utime = utime[utime[1:].find(":") + 2:]
-            minutes = utime[0:utime.find(":")]
-            utime = utime[utime[1:].find(":") +  2:]
-            seconds = utime[0:utime.find(",")]
-            ret["uptime"] = ["0 days " + hours + " hours " + minutes + " minutes " + seconds + " seconds"]
-        if (directive == "process" or directive == "all"):
-            ret["process"] = self._runCmd(["shell", "ps"]).output
-        if (directive == "systime" or directive == "all"):
-            ret["systime"] = self._runCmd(["shell", "date"]).output[0]
+            m = re.match("up time: ((\d+) days, )*(\d{2}):(\d{2}):(\d{2})", utime)
+            ret["uptime"] = "%d days %d hours %d minutes %d seconds" % tuple(
+                [int(g or 0) for g in m.groups()[1:]])
+        if directive == "process" or directive == "all":
+            ret["process"] = self.shellCheckOutput(["ps"])
+        if directive == "systime" or directive == "all":
+            ret["systime"] = self.shellCheckOutput(["date"])
         self._logger.info(ret)
         return ret
 

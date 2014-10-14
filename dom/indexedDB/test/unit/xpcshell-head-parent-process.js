@@ -230,7 +230,7 @@ function setTimeout(fun, timeout) {
   return timer;
 }
 
-function clearAllDatabases(callback) {
+function resetOrClearAllDatabases(callback, clear) {
   if (!SpecialPowers.isMainProcess()) {
     throw new Error("clearAllDatabases not implemented for child processes!");
   }
@@ -248,7 +248,11 @@ function clearAllDatabases(callback) {
   SpecialPowers.setBoolPref(quotaPref, true);
 
   try {
-    quotaManager.clear();
+    if (clear) {
+      quotaManager.clear();
+    } else {
+      quotaManager.reset();
+    }
   } catch(e) {
     if (oldPrefValue !== undefined) {
       SpecialPowers.setBoolPref(quotaPref, oldPrefValue);
@@ -264,6 +268,14 @@ function clearAllDatabases(callback) {
   quotaManager.getUsageForURI(uri, function(usage, fileUsage) {
     callback();
   });
+}
+
+function resetAllDatabases(callback) {
+  resetOrClearAllDatabases(callback, false);
+}
+
+function clearAllDatabases(callback) {
+  resetOrClearAllDatabases(callback, true);
 }
 
 var SpecialPowers = {

@@ -161,6 +161,13 @@ LayerTransactionParent::~LayerTransactionParent()
   MOZ_COUNT_DTOR(LayerTransactionParent);
 }
 
+bool
+LayerTransactionParent::RecvShutdown()
+{
+  Destroy();
+  return Send__delete__(this);
+}
+
 void
 LayerTransactionParent::Destroy()
 {
