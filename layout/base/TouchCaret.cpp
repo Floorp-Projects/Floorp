@@ -351,11 +351,15 @@ void
 TouchCaret::SyncVisibilityWithCaret()
 {
   TOUCHCARET_LOG("SyncVisibilityWithCaret");
-  if (IsDisplayable()) {
-    SetVisibility(true);
-    UpdatePosition();
-  } else {
+
+  if (!IsDisplayable()) {
     SetVisibility(false);
+    return;
+  }
+
+  SetVisibility(true);
+  if (mVisible) {
+    UpdatePosition();
   }
 }
 
@@ -363,12 +367,15 @@ void
 TouchCaret::UpdatePositionIfNeeded()
 {
   TOUCHCARET_LOG("UpdatePositionIfNeeded");
-  if (IsDisplayable()) {
-    if (mVisible) {
-      UpdatePosition();
-    }
-  } else {
+
+  if (!IsDisplayable()) {
     SetVisibility(false);
+    return;
+
+  }
+
+  if (mVisible) {
+    UpdatePosition();
   }
 }
 
