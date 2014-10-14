@@ -56,9 +56,6 @@ protected:
   // Return the estimated size of the set on disk and in memory, in bytes.
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
-  // boolean indicating whether |setPrefixes| has been
-  // called with a non-empty array.
-  bool mHasPrefixes;
   // list of fully stored prefixes, that also form the
   // start of a run of deltas in mIndexDeltas.
   nsTArray<uint32_t> mIndexPrefixes;
