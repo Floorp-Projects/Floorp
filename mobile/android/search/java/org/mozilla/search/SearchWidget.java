@@ -102,8 +102,13 @@ public class SearchWidget extends AppWidgetProvider {
 
     // Utility to create the view for this widget and attach any event listeners to it
     private void addView(final AppWidgetManager manager, final Context context, final int id, final Bundle options) {
-        final int category = options.getInt(AppWidgetManager.OPTION_APPWIDGET_HOST_CATEGORY, -1);
-        final boolean isKeyguard = category == AppWidgetProviderInfo.WIDGET_CATEGORY_KEYGUARD;
+        final boolean isKeyguard;
+        if (options != null) {
+            final int category = options.getInt(AppWidgetManager.OPTION_APPWIDGET_HOST_CATEGORY, -1);
+            isKeyguard = category == AppWidgetProviderInfo.WIDGET_CATEGORY_KEYGUARD;
+        } else {
+            isKeyguard = false;
+        }
 
         final RemoteViews views;
         if (isKeyguard) {

@@ -55,14 +55,16 @@ public class RestrictedProfiles {
      */
     public static enum Restriction {
         DISALLOW_DOWNLOADS(1, "no_download_files"),
-        DISALLOW_INSTALL_EXTENSIONS(2, "no_install_extensions"),
+        DISALLOW_INSTALL_EXTENSION(2, "no_install_extensions"),
         DISALLOW_INSTALL_APPS(3, "no_install_apps"), // UserManager.DISALLOW_INSTALL_APPS
         DISALLOW_BROWSE_FILES(4, "no_browse_files"),
         DISALLOW_SHARE(5, "no_share"),
         DISALLOW_BOOKMARK(6, "no_bookmark"),
         DISALLOW_ADD_CONTACTS(7, "no_add_contacts"),
         DISALLOW_SET_IMAGE(8, "no_set_image"),
-        DISALLOW_MODIFY_ACCOUNTS(9, "no_modify_accounts"); // UserManager.DISALLOW_MODIFY_ACCOUNTS
+        DISALLOW_MODIFY_ACCOUNTS(9, "no_modify_accounts"), // UserManager.DISALLOW_MODIFY_ACCOUNTS
+        DISALLOW_REMOTE_DEBUGGING(10, "no_remote_debugging"),
+        DISALLOW_IMPORT_SETTINGS(11, "no_import_settings");
 
         public final int id;
         public final String name;
