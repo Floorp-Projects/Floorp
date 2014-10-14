@@ -78,6 +78,7 @@ namespace js {
 class Activation;
 class ActivationIterator;
 class AsmJSActivation;
+class AsmJSModule;
 class MathCache;
 
 namespace jit {
@@ -1080,7 +1081,10 @@ struct JSRuntime : public JS::shadow::Runtime,
     JSErrorReporter     errorReporter;
 
     /* AsmJSCache callbacks are runtime-wide. */
-    JS::AsmJSCacheOps asmJSCacheOps;
+    JS::AsmJSCacheOps   asmJSCacheOps;
+
+    /* Head of the linked list of linked asm.js modules. */
+    js::AsmJSModule    *linkedAsmJSModules;
 
     /*
      * The propertyRemovals counter is incremented for every JSObject::clear,
