@@ -407,7 +407,7 @@ MarionetteServerConnection.prototype = {
       if (e.target.id == self.oopFrameId) {
         curWindow.removeEventListener('mozbrowserclose', self.mozBrowserClose, true);
         self.switchToGlobalMessageManager();
-        self.sendError("The frame closed during the " + action +  ", recovering to allow further communications", 500, null, self.command_id);
+        self.sendError("The frame closed during the " + action +  ", recovering to allow further communications", 55, null, self.command_id);
       }
     };
     curWindow.addEventListener('mozbrowserclose', this.mozBrowserClose, true);
