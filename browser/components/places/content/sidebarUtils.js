@@ -27,7 +27,7 @@ var SidebarUtils = {
       if (isRTL)
         mouseInGutter = aEvent.clientX > rect.x;
       else
-        mouseInGutter = aEvent.clientX < rect.y;
+        mouseInGutter = aEvent.clientX < rect.x;
     }
 
 #ifdef XP_MACOSX
