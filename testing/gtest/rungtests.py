@@ -67,12 +67,21 @@ class GTests(object):
         """
         env["MOZILLA_FIVE_HOME"] = self.xre_path
         env["MOZ_XRE_DIR"] = self.xre_path
+        env["MOZ_GMP_PATH"] = os.path.join(self.xre_path, "gmp-fake", "1.0")
         env["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
         env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
         env["MOZ_CRASHREPORTER"] = "1"
         env["MOZ_RUN_GTEST"] = "1"
         # Normally we run with GTest default output, override this to use the TBPL test format.
         env["MOZ_TBPL_PARSER"] = "1"
+
+        if not mozinfo.has_sandbox:
+          # Bug 1082193 - This is horrible. Our linux build boxes run CentOS 6,
+          # which is too old to support sandboxing. Disable sandbox for gtests
+          # on machines which don't support sandboxing until they can be
+          # upgraded, or gtests are run on test machines instead.
+          env["MOZ_DISABLE_GMP_SANDBOX"] = "1"
+
         return env
 
     def build_environment(self):

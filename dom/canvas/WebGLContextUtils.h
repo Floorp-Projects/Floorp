@@ -106,6 +106,13 @@ WebGLContext::WebGLObjectAsJSObject(JSContext *cx, const WebGLObjectType *object
     return &v.toObject();
 }
 
+/**
+ * Return the displayable name for the texture function that is the
+ * source for validation.
+ */
+const char*
+InfoFrom(WebGLTexImageFunc func, WebGLTexDimensions dims);
+
 } // namespace mozilla
 
 #endif // WEBGLCONTEXTUTILS_H_
