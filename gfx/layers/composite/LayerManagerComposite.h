@@ -352,6 +352,8 @@ public:
 
   virtual Layer* GetLayer() = 0;
 
+  virtual void SetLayerManager(LayerManagerComposite* aManager);
+
   /**
    * Perform a first pass over the layer tree to render all of the intermediate
    * surfaces that we can. This allows us to avoid framebuffer switches in the

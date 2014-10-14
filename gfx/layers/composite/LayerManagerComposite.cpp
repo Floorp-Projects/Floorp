@@ -1083,6 +1083,13 @@ LayerManagerComposite::NotifyShadowTreeTransaction()
   }
 }
 
+void
+LayerComposite::SetLayerManager(LayerManagerComposite* aManager)
+{
+  mCompositeManager = aManager;
+  mCompositor = aManager->GetCompositor();
+}
+
 #ifndef MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
 
 /*static*/ bool
