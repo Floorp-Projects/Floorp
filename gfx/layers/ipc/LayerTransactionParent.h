@@ -101,6 +101,8 @@ public:
   }
 
 protected:
+  virtual bool RecvShutdown() MOZ_OVERRIDE;
+
   virtual bool RecvUpdate(const EditArray& cset,
                           const uint64_t& aTransactionId,
                           const TargetConfig& targetConfig,

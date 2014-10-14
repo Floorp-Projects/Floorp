@@ -1833,13 +1833,6 @@ HTMLInputElement::SetValue(const nsAString& aValue, ErrorResult& aRv)
 
       SetValueInternal(aValue, false, true);
 
-      if (mType == NS_FORM_INPUT_RANGE) {
-        nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
-        if (frame) {
-          frame->UpdateForValueChange();
-        }
-      }
-
       if (mFocusedValue.Equals(currentValue)) {
         GetValue(mFocusedValue);
       }
@@ -2847,6 +2840,11 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
             do_QueryFrame(GetPrimaryFrame());
           if (numberControlFrame) {
             numberControlFrame->SetValueOfAnonTextControl(value);
+          }
+        } else if (mType == NS_FORM_INPUT_RANGE) {
+          nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
+          if (frame) {
+            frame->UpdateForValueChange();
           }
         }
         if (!mParserCreating) {

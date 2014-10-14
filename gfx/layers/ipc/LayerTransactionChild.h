@@ -31,7 +31,8 @@ class LayerTransactionChild : public PLayerTransactionChild
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LayerTransactionChild)
   /**
-   * Clean this up, finishing with Send__delete__().
+   * Clean this up, finishing with SendShutDown() which will cause __delete__
+   * to be sent from the parent side.
    *
    * It is expected (checked with an assert) that all shadow layers
    * created by this have already been destroyed and
@@ -39,7 +40,7 @@ public:
    */
   void Destroy();
 
-  bool IPCOpen() const { return mIPCOpen; }
+  bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
 
   void SetForwarder(ShadowLayerForwarder* aForwarder)
   {

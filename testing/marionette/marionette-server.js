@@ -142,6 +142,30 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
   this.testName = null;
   this.mozBrowserClose = null;
   this.oopFrameId = null; // frame ID of current remote frame, used for mozbrowserclose events
+  this.sessionCapabilities = {
+    // Mandated capabilities
+    "browserName": appName,
+    "browserVersion": Services.appinfo.version,
+    "platformName": Services.appinfo.OS.toUpperCase(),
+    "platformVersion": Services.appinfo.platformVersion,
+
+    // Supported features
+    "handlesAlerts": false,
+    "nativeEvents": false,
+    "rotatable": appName == "B2G",
+    "secureSsl": false,
+    "takesElementScreenshot": true,
+    "takesScreenshot": true,
+
+    // Selenium 2 compat
+    "platform": Services.appinfo.OS.toUpperCase(),
+
+    // Proprietary extensions
+    "XULappId" : Services.appinfo.ID,
+    "appBuildId" : Services.appinfo.appBuildID,
+    "device": qemu == "1" ? "qemu" : (!device ? "desktop" : device),
+    "version": Services.appinfo.version
+  };
 }
 
 MarionetteServerConnection.prototype = {
@@ -516,11 +540,15 @@ MarionetteServerConnection.prototype = {
    * as part of the Marionette:register IPC command in the
    * receiveMessage callback when a new browser is created.
    */
-  newSession: function MDA_newSession() {
+  newSession: function MDA_newSession(aRequest) {
+    logger.info("The newSession request is " + JSON.stringify(aRequest))
     this.command_id = this.getCommandId();
     this.newSessionCommandId = this.command_id;
 
     this.scriptTimeout = 10000;
+    if (aRequest && aRequest.parameters) {
+      this.setSessionCapabilities(aRequest.parameters.capabilities);
+    }
 
     function waitForWindow() {
       let win = this.getCurrentWindow();
@@ -579,41 +607,38 @@ MarionetteServerConnection.prototype = {
   getSessionCapabilities: function MDA_getSessionCapabilities() {
     this.command_id = this.getCommandId();
 
-    let isB2G = appName == "B2G";
-    let platformName = Services.appinfo.OS.toUpperCase();
-
-    let caps = {
-      // Mandated capabilities
-      "browserName": appName,
-      "browserVersion": Services.appinfo.version,
-      "platformName": platformName,
-      "platformVersion": Services.appinfo.platformVersion,
-
-      // Supported features
-      "handlesAlerts": false,
-      "nativeEvents": false,
-      "rotatable": isB2G,
-      "secureSsl": false,
-      "takesElementScreenshot": true,
-      "takesScreenshot": true,
-
-      // Selenium 2 compat
-      "platform": platformName,
-
-      // Proprietary extensions
-      "XULappId" : Services.appinfo.ID,
-      "appBuildId" : Services.appinfo.appBuildID,
-      "device": qemu == "1" ? "qemu" : (!device ? "desktop" : device),
-      "version": Services.appinfo.version
-    };
-
     // eideticker (bug 965297) and mochitest (bug 965304)
     // compatibility.  They only check for the presence of this
     // property and should so not be in caps if not on a B2G device.
-    if (isB2G)
-      caps.b2g = true;
+    if (appName == "B2G")
+      this.sessionCapabilities.b2g = true;
 
-    this.sendResponse(caps, this.command_id);
+    this.sendResponse(this.sessionCapabilities, this.command_id);
+  },
+
+  /**
+   * Update the sessionCapabilities object with the keys that have been
+   * passed in when a new session is created
+   * This part of the WebDriver spec is currently in flux see
+   * http://lists.w3.org/Archives/Public/public-browser-tools-testing/2014OctDec/0000.html
+   *
+   * This is not a public API, only available when a new Session is created
+   *
+   * @param Object capabilities holds all the keys for capabilities
+   *
+   */
+  setSessionCapabilities: function MDA_setSessionCapabilities (capabilities) {
+    this.command_id = this.getCommandId();
+    var tempCapabilities = {};
+    for (var caps in this.sessionCapabilities) {
+      tempCapabilities[caps] = this.sessionCapabilities[caps];
+    }
+
+    for (var caps in capabilities) {
+      tempCapabilities[caps] = capabilities[caps];
+    }
+
+    this.sessionCapabilities = tempCapabilities;
   },
 
   /**

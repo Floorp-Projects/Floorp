@@ -22,6 +22,7 @@ fuzzy-if(B2G,1,1) == stepDown.html 75pct-common-ref.html
 == stepUp-unthemed.html 75pct-unthemed-common-ref.html
 == stepUp.html 75pct-common-ref.html
 fuzzy-if(B2G,1,1) == max-prop.html 100pct-common-ref.html
+== reset-value.html reset-value-ref.html
 
 # 'direction' property:
 == direction-unthemed-1.html direction-unthemed-1-ref.html
@@ -30,4 +31,3 @@ fuzzy-if(B2G,1,1) == max-prop.html 100pct-common-ref.html
 fails-if(B2G||Android) == moz-range-progress-1.html moz-range-progress-1-ref.html
 == moz-range-progress-2.html moz-range-progress-2-ref.html
 == moz-range-progress-3.html moz-range-progress-3-ref.html
-

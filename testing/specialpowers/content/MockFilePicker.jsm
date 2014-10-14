@@ -89,7 +89,7 @@ this.MockFilePicker = {
   useAnyFile: function() {
     var file = FileUtils.getDir("TmpD", [], false);
     file.append("testfile");
-    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
+    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
     this.returnFiles = [file];
   },
 
