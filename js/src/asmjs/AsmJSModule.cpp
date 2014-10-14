@@ -78,6 +78,8 @@ AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t
     bufferArgumentName_(nullptr),
     code_(nullptr),
     interruptExit_(nullptr),
+    prevLinked_(nullptr),
+    nextLinked_(nullptr),
     dynamicallyLinked_(false),
     loadedFromCache_(false),
     profilingEnabled_(false),
@@ -116,6 +118,11 @@ AsmJSModule::~AsmJSModule()
 
     for (size_t i = 0; i < numFunctionCounts(); i++)
         js_delete(functionCounts(i));
+
+    if (prevLinked_)
+        *prevLinked_ = nextLinked_;
+    if (nextLinked_)
+        nextLinked_->prevLinked_ = prevLinked_;
 }
 
 void
