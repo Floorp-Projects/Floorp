@@ -59,13 +59,9 @@
  *   zone allocator anyways. Jemalloc-specific functions are also left
  *   unprefixed.
  *
- * - On Android, both malloc implementation and duplication functions are
- *   prefixed with "__wrap_". Additionally, C++ allocation functions
- *   (operator new/delete) are also exported and prefixed with "__wrap_".
- *   Jemalloc specific functions are left unprefixed.
- *
- * - On Gonk, all functions are left unprefixed. Additionally, C++ allocation
- *   functions (operator new/delete) are also exported and unprefixed.
+ * - On Android and Gonk, all functions are left unprefixed. Additionally,
+ *   C++ allocation functions (operator new/delete) are also exported and
+ *   unprefixed.
  *
  * - On other systems (mostly Linux), all functions are left unprefixed.
  *
@@ -79,9 +75,10 @@
  *
  * All these functions are meant to be called with no prefix from Gecko code.
  * In most cases, this is because that's how they are available at runtime.
- * However, on Android, "__wrap_" prefixing is left to the build-time linker
- * (with -Wl,--wrap), or to the mozmemory.h header for malloc_good_size and
- * jemalloc specific functions.
+ * However, on Android, this relies on faulty.lib (the custom dynamic linker)
+ * resolving mozglue symbols before libc symbols, which is guaranteed by the
+ * way faulty.lib works (it respects the DT_NEEDED order, and libc always
+ * appears after mozglue ; which we double check when building anyways)
  *
  *
  * Within libmozglue (when MOZ_MEMORY_IMPL is defined), all the functions
@@ -155,13 +152,6 @@
 #    ifdef XP_WIN
 #      define mozmem_dup_impl(a)      wrap_ ## a
 #    endif
-#  endif
-
-#  if defined(MOZ_WIDGET_ANDROID)
-#    ifndef mozmem_malloc_impl
-#      define mozmem_malloc_impl(a)   __wrap_ ## a
-#    endif
-#    define mozmem_dup_impl(a)      __wrap_ ## a
 #  endif
 
 /* All other jemalloc3 functions are prefixed with "je_", except when

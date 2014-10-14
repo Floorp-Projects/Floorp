@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <assert.h>
 #include <ctype.h>
 #include <stdarg.h>
@@ -62,7 +63,9 @@ ClearKeyUtils::DecryptAES(const vector<uint8_t>& aKey,
     vector<uint8_t> enc(encLen);
     oaes_encrypt(aes, &aIV[0], CLEARKEY_KEY_LEN, &enc[0], &encLen);
 
-    for (size_t j = 0; j < CLEARKEY_KEY_LEN; j++) {
+    assert(encLen >= 2 * OAES_BLOCK_SIZE + CLEARKEY_KEY_LEN);
+    size_t blockLen = std::min(aData.size() - i, CLEARKEY_KEY_LEN);
+    for (size_t j = 0; j < blockLen; j++) {
       aData[i + j] ^= enc[2 * OAES_BLOCK_SIZE + j];
     }
     IncrementIV(aIV);

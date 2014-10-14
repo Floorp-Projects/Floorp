@@ -104,46 +104,131 @@ function UpdateSessionFunc(test) {
   }
 }
 
+function PlayFragmented(test, elem)
+{
+  var ms = new MediaSource();
+  elem.src = URL.createObjectURL(ms);
+
+  var sb;
+  var curFragment = 0;
+
+  function addNextFragment() {
+    if (curFragment >= test.fragments.length) {
+      ms.endOfStream();
+      elem.play();
+      return;
+    }
+
+    var fragmentFile = test.fragments[curFragment++];
+
+    var req = new XMLHttpRequest();
+    req.open("GET", fragmentFile);
+    req.responseType = "arraybuffer";
+
+    req.addEventListener("load", function() {
+      sb.appendBuffer(new Uint8Array(req.response));
+    });
+
+    info("fetching resource " + fragmentFile);
+    req.send(null);
+  }
+
+  ms.addEventListener("sourceopen", function () {
+    sb = ms.addSourceBuffer(test.type);
+    sb.addEventListener("updateend", addNextFragment);
+
+    addNextFragment();
+  });
+}
+
+function PlayTest(test, elem)
+{
+  if (test.fragments) {
+    PlayFragmented(test, elem);
+    return;
+  }
+
+  // This file isn't fragmented; set the media source normally.
+  elem.src = test.name;
+  elem.play();
+}
+
 function startTest(test, token)
 {
+  manager.started(test._token);
+
   var v = document.createElement("video");
-  manager.started(token);
+  var gotEncrypted = false;
+  var gotPlaying = false;
 
   v.addEventListener("encrypted", function(ev) {
-    info("got encrypted event");
+    gotEncrypted = true;
+
+    info(token + " got encrypted event");
     ok(MediaKeys.isTypeSupported(KEYSYSTEM_TYPE, ev.initDataType, test.type),
-       "MediaKeys should support this keysystem");
+       token + " MediaKeys should support this keysystem");
 
     MediaKeys.create(KEYSYSTEM_TYPE).then(function(mediaKeys) {
-      info("created MediaKeys object ok");
+      info(token + " created MediaKeys object ok");
       return v.setMediaKeys(mediaKeys);
     }, bail("failed to create MediaKeys object")).then(function() {
-      info("set MediaKeys on <video> element ok");
+      info(token + " set MediaKeys on <video> element ok");
+
+      ok(MediaKeys.isTypeSupported(KEYSYSTEM_TYPE, ev.initDataType, test.type),
+         "MediaKeys should still support keysystem after CDM created...");
 
       var session = v.mediaKeys.createSession(test.sessionType);
       session.addEventListener("message", UpdateSessionFunc(test));
       session.generateRequest(ev.initDataType, ev.initData).then(function() {
-      }, bail("Failed to initialise MediaKeySession"));
+      }, bail(token + " Failed to initialise MediaKeySession"));
 
-    }, bail("Failed to set MediaKeys on <video> element"));
+    }, bail(token + " Failed to set MediaKeys on <video> element"));
   });
+
+  v.addEventListener("playing", function () { gotPlaying = true; });
 
   v.addEventListener("ended", function(ev) {
-    ok(true, "got ended event");
-    SimpleTest.finish();
+    ok(true, token + " got ended event");
+    manager.finished(test._token);
+
+    ok(gotEncrypted, token + " encrypted event should have fired");
+    ok(gotPlaying, token + " playing event should have fired");
+
+    ok(Math.abs(test.duration - v.duration) < 0.1,
+       token + " Duration of video should be corrrect");
+    ok(Math.abs(test.duration - v.currentTime) < 0.1,
+       token + " Current time should be same as duration");
   });
 
-  v.addEventListener("error", bail("got error event"));
+  v.addEventListener("error", bail(token + " got error event"));
 
-  v.src = test.name;
-  v.play();
+  PlayTest(test, v);
+}
+
+function testIsTypeSupported()
+{
+  var t = MediaKeys.isTypeSupported;
+  const clearkey = "org.w3.clearkey";
+  ok(!t("bogus", "bogon", "video/bogus"), "Invalid type.");
+  ok(t(clearkey), "ClearKey supported.");
+  ok(!t(clearkey, "bogus"), "ClearKey bogus initDataType not supported.");
+  ok(t(clearkey, "cenc"), "ClearKey/cenc should be supported.");
+  ok(!t(clearkey, "cenc", "bogus"), "ClearKey/cenc bogus content type should be supported.");
+  ok(t(clearkey, "cenc", 'video/mp4'), "ClearKey/cenc video/mp4 supported.");
+  ok(t(clearkey, "cenc", 'video/mp4; codecs="avc1.4d4015,mp4a.40.2"'), "ClearKey/cenc H.264/AAC supported.");
+  ok(t(clearkey, "cenc", 'audio/mp4'), "ClearKey/cenc audio/mp4 supported.");
+  ok(t(clearkey, "cenc", 'audio/mp4; codecs="mp4a.40.2"'), "ClearKey/cenc AAC LC supported.");
 }
 
 function beginTest() {
+  testIsTypeSupported();
   manager.runTests(gEMETests, startTest);
 }
 
-var prefs = [ ];
+var prefs = [
+  [ "media.mediasource.enabled", true ],
+  [ "media.mediasource.ignore_codecs", true ],
+];
 
 if (/Linux/.test(navigator.userAgent) ||
     !document.createElement('video').canPlayType("video/mp4")) {

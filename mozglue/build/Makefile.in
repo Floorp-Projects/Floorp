@@ -49,11 +49,6 @@ OS_LDFLAGS += -Wl,-weak_library,$(DEPTH)/memory/replace/dummy/$(DLL_PREFIX)repla
 endif
 endif
 
-ifeq (android, $(MOZ_WIDGET_TOOLKIT))
-# To properly wrap jemalloc's pthread_atfork call.
-OS_LDFLAGS += -Wl,--wrap=pthread_atfork
-endif
-
 ifdef MOZ_LINKER
 ifeq (arm, $(TARGET_CPU))
 OS_LDFLAGS += -Wl,-version-script,$(srcdir)/arm-eabi-filter

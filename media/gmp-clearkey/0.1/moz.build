@@ -20,4 +20,6 @@ LOCAL_INCLUDES += [
 ]
 
 USE_STATIC_LIBS = True
-USE_LIBS += [ 'mozalloc' ]
+
+DISABLE_STL_WRAPPING = True
+DEFINES['MOZ_NO_MOZALLOC'] = True

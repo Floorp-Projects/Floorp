@@ -70,6 +70,29 @@ StringValue(JSContext* cx, const char* chars, ErrorResult& rv)
     return JS::StringValue(str);
 }
 
+bool
+WebGLContext::GetStencilBits(GLint* out_stencilBits)
+{
+    *out_stencilBits = 0;
+    if (mBoundFramebuffer) {
+        if (mBoundFramebuffer->HasDepthStencilConflict()) {
+            // Error, we don't know which stencil buffer's bits to use
+            ErrorInvalidFramebufferOperation("getParameter: framebuffer has two stencil buffers bound");
+            return false;
+        }
+
+        if (mBoundFramebuffer->StencilAttachment().IsDefined() ||
+            mBoundFramebuffer->DepthStencilAttachment().IsDefined())
+        {
+            *out_stencilBits = 8;
+        }
+    } else if (mOptions.stencil) {
+        *out_stencilBits = 8;
+    }
+
+    return true;
+}
+
 JS::Value
 WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 {
@@ -241,9 +264,26 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             return JS::NumberValue(uint32_t(i));
         }
         // int
-        case LOCAL_GL_STENCIL_CLEAR_VALUE:
         case LOCAL_GL_STENCIL_REF:
-        case LOCAL_GL_STENCIL_BACK_REF:
+        case LOCAL_GL_STENCIL_BACK_REF: {
+            GLint stencilBits = 0;
+            if (!GetStencilBits(&stencilBits))
+                return JS::NullValue();
+
+            // Assuming stencils have 8 bits
+            const GLint stencilMask = (1 << stencilBits) - 1;
+
+            GLint refValue = 0;
+            gl->fGetIntegerv(pname, &refValue);
+
+            return JS::Int32Value(refValue & stencilMask);
+        }
+        case LOCAL_GL_STENCIL_BITS: {
+            GLint stencilBits = 0;
+            GetStencilBits(&stencilBits);
+            return JS::Int32Value(stencilBits);
+        }
+        case LOCAL_GL_STENCIL_CLEAR_VALUE:
         case LOCAL_GL_UNPACK_ALIGNMENT:
         case LOCAL_GL_PACK_ALIGNMENT:
         case LOCAL_GL_SUBPIXEL_BITS:
@@ -257,8 +297,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_GREEN_BITS:
         case LOCAL_GL_BLUE_BITS:
         case LOCAL_GL_ALPHA_BITS:
-        case LOCAL_GL_DEPTH_BITS:
-        case LOCAL_GL_STENCIL_BITS: {
+        case LOCAL_GL_DEPTH_BITS: {
             GLint i = 0;
             gl->fGetIntegerv(pname, &i);
             return JS::Int32Value(i);
