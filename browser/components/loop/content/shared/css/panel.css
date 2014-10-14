@@ -25,6 +25,12 @@ body {
 
 /* Tabs and tab selection buttons */
 
+.tab-view-container {
+  background-image: url("../img/beta-ribbon.svg#beta-ribbon");
+  background-size: 36px 36px;
+  background-repeat: no-repeat;
+}
+
 .tab-view {
   display: flex;
   flex-direction: row;
@@ -93,6 +99,12 @@ body {
 
 .content-area header {
   font-weight: 700;
+  -moz-padding-start: 20px;
+}
+
+.tab-view + .tab .content-area header {
+  /* The header shouldn't be indented if the tabs are present. */
+  -moz-padding-start: 0;
 }
 
 .content-area label {
