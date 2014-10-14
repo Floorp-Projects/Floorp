@@ -17,7 +17,4 @@ interface DOMError {
 
   [Constant]
   readonly attribute DOMString message;
-
-  [ChromeOnly]
-  void init(DOMString name, optional DOMString message = "");
 };
