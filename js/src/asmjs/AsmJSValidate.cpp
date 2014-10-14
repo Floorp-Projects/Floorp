@@ -1329,6 +1329,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     NonAssertingLabel              stackOverflowLabel_;
     NonAssertingLabel              asyncInterruptLabel_;
     NonAssertingLabel              syncInterruptLabel_;
+    NonAssertingLabel              onDetachedLabel_;
 
     UniquePtr<char[], JS::FreePolicy> errorString_;
     uint32_t                       errorOffset_;
@@ -1522,6 +1523,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     Label &stackOverflowLabel() { return stackOverflowLabel_; }
     Label &asyncInterruptLabel() { return asyncInterruptLabel_; }
     Label &syncInterruptLabel() { return syncInterruptLabel_; }
+    Label &onDetachedLabel() { return onDetachedLabel_; }
     bool hasError() const { return errorString_ != nullptr; }
     const AsmJSModule &module() const { return *module_.get(); }
     bool usesSignalHandlersForInterrupt() const { return module_->usesSignalHandlersForInterrupt(); }
@@ -7638,6 +7640,27 @@ FillArgumentArray(ModuleCompiler &m, const VarTypeVector &argTypes,
     }
 }
 
+// If an FFI detaches its heap (viz., via ArrayBuffer.transfer), it must
+// call change-heap to another heap (viz., the new heap returned by transfer)
+// before returning to asm.js code. If the application fails to do this (if the
+// heap pointer is null), jump to a stub.
+static void
+GenerateCheckForHeapDetachment(ModuleCompiler &m, Register scratch)
+{
+    if (!m.module().hasArrayView())
+        return;
+
+    MacroAssembler &masm = m.masm();
+    AssertStackAlignment(masm, ABIStackAlignment);
+#if defined(JS_CODEGEN_X86)
+    CodeOffsetLabel label = masm.movlWithPatch(PatchedAbsoluteAddress(), scratch);
+    masm.append(AsmJSGlobalAccess(label, AsmJSHeapGlobalDataOffset));
+    masm.branchTestPtr(Assembler::Zero, scratch, scratch, &m.onDetachedLabel());
+#else
+    masm.branchTestPtr(Assembler::Zero, HeapReg, HeapReg, &m.onDetachedLabel());
+#endif
+}
+
 static bool
 GenerateFFIInterpExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit,
                       unsigned exitIndex, Label *throwLabel)
@@ -7721,8 +7744,10 @@ GenerateFFIInterpExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &e
         MOZ_CRASH("SIMD types shouldn't be returned from a FFI");
     }
 
-    // The heap pointer may have changed during the FFI, so reload it.
+    // The heap pointer may have changed during the FFI, so reload it and test
+    // for detachment.
     masm.loadAsmJSHeapRegisterFromGlobalData();
+    GenerateCheckForHeapDetachment(m, ABIArgGenerator::NonReturn_VolatileReg0);
 
     Label profilingReturn;
     GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::SlowFFI, &profilingReturn);
@@ -7931,14 +7956,18 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 
     MOZ_ASSERT(masm.framePushed() == framePushed);
 
-    // Reload pinned registers after all calls into arbitrary JS.
+    // Reload the global register since Ion code can clobber any register.
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     JS_STATIC_ASSERT(MaybeSavedGlobalReg > 0);
     masm.loadPtr(Address(StackPointer, savedGlobalOffset), GlobalReg);
 #else
     JS_STATIC_ASSERT(MaybeSavedGlobalReg == 0);
 #endif
+
+    // The heap pointer has to be reloaded anyway since Ion could have clobbered
+    // it. Additionally, the FFI may have detached the heap buffer.
     masm.loadAsmJSHeapRegisterFromGlobalData();
+    GenerateCheckForHeapDetachment(m, ABIArgGenerator::NonReturn_VolatileReg0);
 
     Label profilingReturn;
     GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::IonFFI, &profilingReturn);
@@ -8099,6 +8128,20 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     return m.finishGeneratingInlineStub(&m.stackOverflowLabel()) && !masm.oom();
 }
 
+static bool
+GenerateOnDetachedLabelExit(ModuleCompiler &m, Label *throwLabel)
+{
+    MacroAssembler &masm = m.masm();
+    masm.bind(&m.onDetachedLabel());
+    masm.assertStackAlignment(ABIStackAlignment);
+
+    // For now, OnDetached always throws (see OnDetached comment).
+    masm.call(AsmJSImmPtr(AsmJSImm_OnDetached));
+    masm.jump(throwLabel);
+
+    return m.finishGeneratingInlineStub(&m.onDetachedLabel()) && !masm.oom();
+}
+
 static const RegisterSet AllRegsExceptSP =
     RegisterSet(GeneralRegisterSet(Registers::AllMask &
                                    ~(uint32_t(1) << Registers::StackPointer)),
@@ -8152,7 +8195,6 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
 
     // Restore the machine state to before the interrupt.
     masm.PopRegsInMask(AllRegsExceptSP, AllRegsExceptSP.fpus()); // restore all GP/FP registers (except SP)
-    masm.loadAsmJSHeapRegisterFromGlobalData();  // In case there was a changeHeap
     masm.popFlags();              // after this, nothing that sets conditions
     masm.ret();                   // pop resumePC into PC
 #elif defined(JS_CODEGEN_MIPS)
@@ -8194,7 +8236,6 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     // during jump delay slot.
     masm.pop(HeapReg);
     masm.as_jr(HeapReg);
-    masm.loadAsmJSHeapRegisterFromGlobalData();  // In case there was a changeHeap
 #elif defined(JS_CODEGEN_ARM)
     masm.setFramePushed(0);         // set to zero so we can use masm.framePushed() below
     masm.PushRegsInMask(RegisterSet(GeneralRegisterSet(Registers::AllMask & ~(1<<Registers::sp)), FloatRegisterSet(uint32_t(0))));   // save all GP registers,excep sp
@@ -8244,7 +8285,6 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     masm.transferReg(r12);
     masm.transferReg(lr);
     masm.finishDataTransfer();
-    masm.loadAsmJSHeapRegisterFromGlobalData();  // In case there was a changeHeap
     masm.ret();
 
 #elif defined (JS_CODEGEN_NONE)
@@ -8269,9 +8309,6 @@ GenerateSyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     AssertStackAlignment(masm, ABIStackAlignment);
     masm.call(AsmJSImmPtr(AsmJSImm_HandleExecutionInterrupt));
     masm.branchIfFalseBool(ReturnReg, throwLabel);
-
-    // Reload the heap register in case the callback changed heaps.
-    masm.loadAsmJSHeapRegisterFromGlobalData();
 
     Label profilingReturn;
     GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::Interrupt, &profilingReturn);
@@ -8327,6 +8364,9 @@ GenerateStubs(ModuleCompiler &m)
     }
 
     if (m.stackOverflowLabel().used() && !GenerateStackOverflowExit(m, &throwLabel))
+        return false;
+
+    if (m.onDetachedLabel().used() && !GenerateOnDetachedLabelExit(m, &throwLabel))
         return false;
 
     if (!GenerateAsyncInterruptExit(m, &throwLabel))

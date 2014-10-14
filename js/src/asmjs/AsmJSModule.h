@@ -1054,6 +1054,10 @@ class AsmJSModule
     /*************************************************************************/
     // These functions are called while parsing/compiling function bodies:
 
+    bool hasArrayView() const {
+        MOZ_ASSERT(isFinishedWithModulePrologue());
+        return pod.hasArrayView_;
+    }
     void addChangeHeap(uint32_t mask, uint32_t min, uint32_t max) {
         MOZ_ASSERT(isFinishedWithModulePrologue());
         MOZ_ASSERT(!pod.hasFixedMinHeapLength_);
@@ -1243,10 +1247,6 @@ class AsmJSModule
     /*************************************************************************/
     // These accessor functions can be used after finish():
 
-    bool hasArrayView() const {
-        MOZ_ASSERT(isFinished());
-        return pod.hasArrayView_;
-    }
     unsigned numFFIs() const {
         MOZ_ASSERT(isFinished());
         return pod.numFFIs_;
