@@ -34,6 +34,7 @@
            new ExpectedCursorChange(
             ['Phone status bar', 'Traversal Rule test document'],
             { focused: 'body' })],
+          [ContentMessages.simpleMovePrevious, new ExpectedNoMove()],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
           [ContentMessages.simpleMoveNext, new ExpectedCursorChange(
@@ -251,7 +252,8 @@
             doc.defaultView.hideAlert();
             doc.querySelector('button#home').focus();
           }, new ExpectedCursorChange(['Home', {'string': 'pushbutton'},
-            'Traversal Rule test document'])]
+            'Traversal Rule test document'])],
+          [ContentMessages.simpleMoveNext, new ExpectedNoMove()]
         ]);
 
         addA11yLoadEvent(function() {

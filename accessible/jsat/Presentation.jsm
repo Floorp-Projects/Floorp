@@ -117,6 +117,11 @@ Presenter.prototype = {
   announce: function announce(aAnnouncement) {}, // jshint ignore:line
 
 
+  /**
+   * User tried to move cursor forward or backward with no success.
+   * @param {string} aMoveMethod move method that was used (eg. 'moveNext').
+   */
+  noMove: function noMove(aMoveMethod) {},
 
   /**
    * Announce a live region.
@@ -536,6 +541,17 @@ B2GPresenter.prototype.announce =
     };
   };
 
+B2GPresenter.prototype.noMove =
+  function B2GPresenter_noMove(aMoveMethod) {
+    return {
+      type: this.type,
+      details: {
+        eventType: 'no-move',
+        data: aMoveMethod
+      }
+    };
+  };
+
 /**
  * A braille presenter
  */
@@ -634,6 +650,10 @@ this.Presentation = { // jshint ignore:line
     // but there really isn't a point here.
     return [p.announce(UtteranceGenerator.genForAnnouncement(aAnnouncement)) // jshint ignore:line
       for each (p in this.presenters)]; // jshint ignore:line
+  },
+
+  noMove: function Presentation_noMove(aMoveMethod) {
+    return [p.noMove(aMoveMethod) for each (p in this.presenters)]; // jshint ignore:line
   },
 
   liveRegion: function Presentation_liveRegion(aAccessible, aIsPolite, aIsHide,
