@@ -2001,8 +2001,24 @@ this.DOMApplicationRegistry = {
           } else {
             // Update only the appcache if the manifest has not changed
             // based on the hash value.
-            this.updateHostedApp(aData, id, app, oldManifest,
-                                 oldHash == hash ? null : manifest);
+            if (oldHash == hash) {
+              debug("Update - oldhash");
+              this.updateHostedApp(aData, id, app, oldManifest, null);
+              return;
+            }
+
+            // For hosted apps and hosted apps with appcache, use the
+            // manifest "as is".
+            if (this.kTrustedHosted !== this.appKind(app, app.manifest)) {
+              this.updateHostedApp(aData, id, app, oldManifest, manifest);
+              return;
+            }
+
+            // For trusted hosted apps, verify the manifest before
+            // installation.
+            TrustedHostedAppsUtils.verifyManifest(app, id, manifest)
+              .then(() => this.updateHostedApp(aData, id, app, oldManifest, manifest),
+                sendError);
           }
         }
       } else if (xhr.status == 304) {
@@ -2326,8 +2342,8 @@ this.DOMApplicationRegistry = {
           installApp();
           return;
         }
-        TrustedHostedAppsUtils.verifyManifest(aData)
-        	.then(installApp, sendError);
+        TrustedHostedAppsUtils.verifyManifest(aData.app, aData.appId, app.manifest)
+          .then(installApp, sendError);
       } else {
         debug("Installed manifest check failed");
         // checkManifest() sends error before return
@@ -2361,7 +2377,7 @@ this.DOMApplicationRegistry = {
           }
 
           debug("App kind: " + this.kTrustedHosted);
-          TrustedHostedAppsUtils.verifyManifest(aData)
+          TrustedHostedAppsUtils.verifyManifest(aData.app, aData.appId, app.manifest)
             .then(installApp, sendError);
           return;
         } else {
