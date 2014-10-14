@@ -38,9 +38,12 @@ static const PRLogModuleInfo *gUrlClassifierPrefixSetLog = nullptr;
 NS_IMPL_ISUPPORTS(
   nsUrlClassifierPrefixSet, nsIUrlClassifierPrefixSet, nsIMemoryReporter)
 
+MOZ_DEFINE_MALLOC_SIZE_OF(UrlClassifierMallocSizeOf)
+
 nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
   : mHasPrefixes(false)
   , mTotalPrefixes(0)
+  , mMemoryInUse(0)
   , mMemoryReportPath()
 {
 #if defined(PR_LOGGING)
@@ -71,6 +74,8 @@ nsUrlClassifierPrefixSet::~nsUrlClassifierPrefixSet()
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::SetPrefixes(const uint32_t* aArray, uint32_t aLength)
 {
+  nsresult rv = NS_OK;
+
   if (aLength <= 0) {
     if (mHasPrefixes) {
       LOG(("Clearing PrefixSet"));
@@ -80,10 +85,12 @@ nsUrlClassifierPrefixSet::SetPrefixes(const uint32_t* aArray, uint32_t aLength)
       mHasPrefixes = false;
     }
   } else {
-    return MakePrefixSet(aArray, aLength);
+    rv = MakePrefixSet(aArray, aLength);
   }
 
-  return NS_OK;
+  mMemoryInUse = SizeOfIncludingThis(UrlClassifierMallocSizeOf);
+
+  return rv;
 }
 
 nsresult
@@ -236,15 +243,13 @@ nsUrlClassifierPrefixSet::Contains(uint32_t aPrefix, bool* aFound)
   return NS_OK;
 }
 
-MOZ_DEFINE_MALLOC_SIZE_OF(UrlClassifierMallocSizeOf)
-
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::CollectReports(nsIHandleReportCallback* aHandleReport,
                                          nsISupports* aData, bool aAnonymize)
 {
   return aHandleReport->Callback(
     EmptyCString(), mMemoryReportPath, KIND_HEAP, UNITS_BYTES,
-    SizeOfIncludingThis(UrlClassifierMallocSizeOf),
+    mMemoryInUse,
     NS_LITERAL_CSTRING("Memory used by the prefix set for a URL classifier."),
     aData);
 }
@@ -345,9 +350,12 @@ nsUrlClassifierPrefixSet::LoadFromFile(nsIFile* aFile)
   AutoFDClose fileFd;
   rv = aFile->OpenNSPRFileDesc(PR_RDONLY | nsIFile::OS_READAHEAD,
                                0, &fileFd.rwget());
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!NS_FAILED(rv)) {
+    rv = LoadFromFd(fileFd);
+    mMemoryInUse = SizeOfIncludingThis(UrlClassifierMallocSizeOf);
+  }
 
-  return LoadFromFd(fileFd);
+  return rv;
 }
 
 nsresult
