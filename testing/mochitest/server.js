@@ -110,6 +110,9 @@ if (this["nsHttpServer"]) {
 var serverBasePath;
 var displayResults = true;
 
+var gServerAddress;
+var SERVER_PORT;
+
 //
 // SERVER SETUP
 //
@@ -174,7 +177,7 @@ function runServer()
     serverAlive.append("server_alive.txt");
     foStream.init(serverAlive,
                   0x02 | 0x08 | 0x20, 436, 0); // write, create, truncate
-    data = "It's alive!";
+    var data = "It's alive!";
     foStream.write(data, data.length);
     foStream.close();
   }
@@ -441,7 +444,7 @@ function isTest(filename, pattern)
   var testPrefix = typeof(_TEST_PREFIX) == "string" ? _TEST_PREFIX : "test_";
   var testPattern = new RegExp("^" + testPrefix);
 
-  pathPieces = filename.split('/');
+  var pathPieces = filename.split('/');
     
   return testPattern.test(pathPieces[pathPieces.length - 1]) &&
          filename.indexOf(".js") == -1 &&
@@ -494,7 +497,7 @@ function linksToTableRows(links, recursionLevel)
       ? "non-test invisible"
       : "";
 
-    spacer = "padding-left: " + (10 * recursionLevel) + "px";
+    var spacer = "padding-left: " + (10 * recursionLevel) + "px";
 
     if (value instanceof Object) {
       response += TR({class: "dir", id: "tr-" + link },

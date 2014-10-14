@@ -4620,6 +4620,8 @@ DebuggerArguments_getArg(JSContext *cx, unsigned argc, Value *vp)
     RootedScript script(cx);
     if (unsigned(i) < frame.numActualArgs()) {
         script = frame.script();
+        if (!script->ensureHasAnalyzedArgsUsage(cx))
+            return false;
         if (unsigned(i) < frame.numFormalArgs() && script->formalIsAliased(i)) {
             for (AliasedFormalIter fi(script); ; fi++) {
                 if (fi.frameIndex() == unsigned(i)) {
