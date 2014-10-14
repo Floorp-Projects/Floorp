@@ -40,8 +40,8 @@ RtspHandler::GetDefaultPort(int32_t *aDefaultPort)
 NS_IMETHODIMP
 RtspHandler::GetProtocolFlags(uint32_t *aProtocolFlags)
 {
-  *aProtocolFlags = URI_NORELATIVE | URI_NOAUTH | URI_INHERITS_SECURITY_CONTEXT |
-    URI_LOADABLE_BY_ANYONE | URI_NON_PERSISTABLE | URI_SYNC_LOAD_IS_OK;
+  *aProtocolFlags = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE |
+    URI_NON_PERSISTABLE | URI_SYNC_LOAD_IS_OK;
 
   return NS_OK;
 }
