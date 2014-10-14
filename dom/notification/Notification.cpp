@@ -24,7 +24,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
-#include "mozilla/dom/Event.h"
 #include "mozilla/Services.h"
 #include "nsContentPermissionHelper.h"
 #ifdef MOZ_B2G
@@ -361,31 +360,19 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
                               const char16_t* aData)
 {
   nsCOMPtr<nsPIDOMWindow> window = mNotification->GetOwner();
-  if (!window || !window->IsCurrentInnerWindow()) {
+  if (!window) {
     // Window has been closed, this observer is not valid anymore
     return NS_ERROR_FAILURE;
   }
 
   if (!strcmp("alertclickcallback", aTopic)) {
-
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMEvent(getter_AddRefs(event), mNotification, nullptr, nullptr);
-    nsresult rv = event->InitEvent(NS_LITERAL_STRING("click"), false, true);
-    NS_ENSURE_SUCCESS(rv, rv);
-    event->SetTrusted(true);
-    WantsPopupControlCheck popupControlCheck(event);
-    bool doDefaultAction = true;
-    mNotification->DispatchEvent(event, &doDefaultAction);
-    if (doDefaultAction) {
-      nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
-      if (doc) {
-        // Browser UI may use DOMWebNotificationClicked to focus the tab
-        // from which the event was dispatched.
-        nsContentUtils::DispatchChromeEvent(doc, window->GetOuterWindow(),
-                                            NS_LITERAL_STRING("DOMWebNotificationClicked"),
-                                            true, true);
-      }
+    nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
+    if (doc) {
+      nsContentUtils::DispatchChromeEvent(doc, window,
+                                          NS_LITERAL_STRING("DOMWebNotificationClicked"),
+                                          true, true);
     }
+    mNotification->DispatchTrustedEvent(NS_LITERAL_STRING("click"));
   } else if (!strcmp("alertfinished", aTopic)) {
     nsCOMPtr<nsINotificationStorage> notificationStorage =
       do_GetService(NS_NOTIFICATION_STORAGE_CONTRACTID);

@@ -976,7 +976,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
   nsAutoTObserverArray<Listener, 2>::EndLimitedIterator iter(mListeners);
   Maybe<nsAutoPopupStatePusher> popupStatePusher;
   if (mIsMainThreadELM) {
-    popupStatePusher.emplace(Event::GetEventPopupControlState(aEvent, *aDOMEvent));
+    popupStatePusher.emplace(Event::GetEventPopupControlState(aEvent));
   }
 
   bool hasListener = false;
