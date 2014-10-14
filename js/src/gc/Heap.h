@@ -745,19 +745,14 @@ class ChunkPool
     inline void push(Chunk *chunk);
     inline void remove(Chunk *chunk);
 
-    void clear() {
-        head_ = nullptr;
-        tail_ = nullptr;
-        count_ = 0;
-    }
-
-    class Enum {
+    class Iter {
       public:
-        explicit Enum(ChunkPool &pool) : pool_(pool), current_(pool.head_) {}
-        bool empty() const { return !current_; }
-        Chunk *front() const { return current_; }
-        inline void popFront();
-        inline void removeAndPopFront();
+        explicit Iter(ChunkPool &pool) : pool_(pool), current_(pool.head_) {}
+        bool done() const { return !current_; }
+        inline void next();
+        Chunk *get() const { return current_; }
+        operator Chunk *() const { return get(); }
+        Chunk *operator->() const { return get(); }
       private:
         ChunkPool &pool_;
         Chunk *current_;
@@ -1030,6 +1025,12 @@ static_assert(js::gc::ChunkLocationOffset == offsetof(Chunk, info) +
                                              offsetof(ChunkInfo, trailer) +
                                              offsetof(ChunkTrailer, location),
               "The hardcoded API location offset must match the actual offset.");
+
+inline void
+ChunkPool::Iter::next()
+{
+    current_ = current_->info.next;
+}
 
 /*
  * Tracks the used sizes for owned heap data and automatically maintains the
