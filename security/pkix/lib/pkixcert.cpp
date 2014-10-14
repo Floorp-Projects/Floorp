@@ -42,13 +42,8 @@ BackCert::Init()
   // The scope of |input| and |certificate| are limited to this block so we
   // don't accidentally confuse them for tbsCertificate later.
   {
-    Reader input(der);
     Reader certificate;
-    rv = der::ExpectTagAndGetValue(input, der::SEQUENCE, certificate);
-    if (rv != Success) {
-      return rv;
-    }
-    rv = der::End(input);
+    rv = der::ExpectTagAndGetValueAtEnd(der, der::SEQUENCE, certificate);
     if (rv != Success) {
       return rv;
     }

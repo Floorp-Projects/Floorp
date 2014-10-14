@@ -409,23 +409,15 @@ BasicResponse(Reader& input, Context& context)
 
     // [0] wrapper
     Reader wrapped;
-    rv = der::ExpectTagAndGetValue(
+    rv = der::ExpectTagAndGetValueAtEnd(
           input, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0, wrapped);
-    if (rv != Success) {
-      return rv;
-    }
-    rv = der::End(input);
     if (rv != Success) {
       return rv;
     }
 
     // SEQUENCE wrapper
     Reader certsSequence;
-    rv = der::ExpectTagAndGetValue(wrapped, der::SEQUENCE, certsSequence);
-    if (rv != Success) {
-      return rv;
-    }
-    rv = der::End(wrapped);
+    rv = der::ExpectTagAndGetValueAtEnd(wrapped, der::SEQUENCE, certsSequence);
     if (rv != Success) {
       return rv;
     }
@@ -787,21 +779,8 @@ KeyHash(TrustDomain& trustDomain, const Input subjectPublicKeyInfo,
   //    subjectPublicKey     BIT STRING  }
 
   Reader spki;
-  Result rv;
-
-  {
-    // The scope of input is limited to reduce the possibility of confusing it
-    // with spki in places we need to be using spki below.
-    Reader input(subjectPublicKeyInfo);
-    rv = der::ExpectTagAndGetValue(input, der::SEQUENCE, spki);
-    if (rv != Success) {
-      return rv;
-    }
-    rv = der::End(input);
-    if (rv != Success) {
-      return rv;
-    }
-  }
+  Result rv = der::ExpectTagAndGetValueAtEnd(subjectPublicKeyInfo,
+                                             der::SEQUENCE, spki);
 
   // Skip AlgorithmIdentifier
   rv = der::ExpectTagAndSkipValue(spki, der::SEQUENCE);
