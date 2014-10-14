@@ -97,7 +97,7 @@ StoreBuffer::MonoTypeBuffer<T>::handleOverflow(StoreBuffer *owner)
          * trigger a minor collection.
          */
         compact(owner);
-        if (isAboutToOverflow())
+        if (isLowOnSpace())
             owner->setAboutToOverflow();
     } else {
          /*
