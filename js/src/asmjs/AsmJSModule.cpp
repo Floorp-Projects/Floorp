@@ -484,6 +484,14 @@ AsmJSReportOverRecursed()
     js_ReportOverRecursed(cx);
 }
 
+static void
+OnDetached()
+{
+    // See hasDetachedHeap comment in LinkAsmJS.
+    JSContext *cx = PerThreadData::innermostAsmJSActivation()->cx();
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
+}
+
 static bool
 AsmJSHandleExecutionInterrupt()
 {
@@ -667,6 +675,8 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         return cx->stackLimitAddressForJitCode(StackForUntrustedScript);
       case AsmJSImm_ReportOverRecursed:
         return RedirectCall(FuncCast(AsmJSReportOverRecursed), Args_General0);
+      case AsmJSImm_OnDetached:
+        return RedirectCall(FuncCast(OnDetached), Args_General0);
       case AsmJSImm_HandleExecutionInterrupt:
         return RedirectCall(FuncCast(AsmJSHandleExecutionInterrupt), Args_General0);
       case AsmJSImm_InvokeFromAsmJS_Ignore:
@@ -880,6 +890,20 @@ AsmJSModule::detachHeap(JSContext *cx)
     MOZ_ASSERT(isDynamicallyLinked());
     MOZ_ASSERT(maybeHeap_);
 
+    // Content JS should not be able to run (and detach heap) from within an
+    // interrupt callback, but in case it does, fail. Otherwise, the heap can
+    // change at an arbitrary instruction and break the assumption below.
+    if (interrupted_) {
+        JS_ReportError(cx, "attempt to detach from inside interrupt handler");
+        return false;
+    }
+
+    // Even if this->active(), to reach here, the activation must have called
+    // out via an FFI stub. FFI stubs check if heapDatum() is null on reentry
+    // and throw an exception if so.
+    MOZ_ASSERT_IF(active(), activation()->exitReason() == AsmJSExit::Reason_IonFFI ||
+                            activation()->exitReason() == AsmJSExit::Reason_SlowFFI);
+
     AutoUnprotectCode auc(cx, *this);
     restoreHeapToInitialState(maybeHeap_);
 
@@ -891,14 +915,8 @@ bool
 js::OnDetachAsmJSArrayBuffer(JSContext *cx, Handle<ArrayBufferObject*> buffer)
 {
     for (AsmJSModule *m = cx->runtime()->linkedAsmJSModules; m; m = m->nextLinked()) {
-        if (buffer == m->maybeHeapBufferObject()) {
-            if (m->active()) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
-                return false;
-            }
-            if (!m->detachHeap(cx))
-                return false;
-        }
+        if (buffer == m->maybeHeapBufferObject() && !m->detachHeap(cx))
+            return false;
     }
     return true;
 }

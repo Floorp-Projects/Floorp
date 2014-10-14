@@ -767,6 +767,7 @@ enum AsmJSImmKind
     AsmJSImm_RuntimeInterrupt,
     AsmJSImm_StackLimit,
     AsmJSImm_ReportOverRecursed,
+    AsmJSImm_OnDetached,
     AsmJSImm_HandleExecutionInterrupt,
     AsmJSImm_InvokeFromAsmJS_Ignore,
     AsmJSImm_InvokeFromAsmJS_ToInt32,

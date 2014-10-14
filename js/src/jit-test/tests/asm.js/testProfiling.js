@@ -1,4 +1,5 @@
 load(libdir + "asm.js");
+load(libdir + "asserts.js");
 
 // Single-step profiling currently only works in the ARM simulator
 if (!getBuildConfiguration()["arm-simulator"])
@@ -123,6 +124,15 @@ enableSingleStepProfiling();
 assertEq(f1(), 32);
 var stacks = disableSingleStepProfiling();
 assertEqualStacks(stacks, ",>,f1>,<f1>,><f1>,f2><f1>,<f2><f1>,f2><f1>,><f1>,<f1>,f1>,>,");
+
+// Detachment exit
+var buf = new ArrayBuffer(BUF_CHANGE_MIN);
+var ffi = function() { neuter(buf, 'change-data') }
+var f = asmLink(asmCompile('g','ffis','buf', USE_ASM + 'var ffi = ffis.ffi; var i32 = new g.Int32Array(buf); function f() { ffi() } return f'), this, {ffi:ffi}, buf);
+enableSingleStepProfiling();
+assertThrowsInstanceOf(f, InternalError);
+var stacks = disableSingleStepProfiling();
+assertEqualStacks(stacks, ",>,f>,<f>,inline stubf>,<f>,inline stubf>,");
 
 // This takes forever to run.
 // Stack-overflow exit test
