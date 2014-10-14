@@ -3,24 +3,7 @@
 <script>
 "use strict";
 
-function showNotification1() {
-  var options = {
-      dir: undefined,
-      lang: undefined,
-      body: "Test body",
-      tag: "Test tag",
-      icon: undefined,
-  };
-  var n = new Notification("Test title", options);
-  n.addEventListener("click", function(event) {
-    event.preventDefault();
-    dump("Should focus new window.");
-    newWindow.focus();
-  });
-  return n;
-}
-
-function showNotification2() {
+function showNotification() {
   var options = {
       dir: undefined,
       lang: undefined,
