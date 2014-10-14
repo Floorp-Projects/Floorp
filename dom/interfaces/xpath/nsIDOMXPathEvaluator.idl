@@ -12,13 +12,13 @@
 interface nsIDOMXPathNSResolver;
 interface XPathException;
 
-[uuid(89a0fe71-c1d9-46bd-b76b-47f51fd935ff)]
+[uuid(55e1a327-ad12-4b1d-a839-ddafa477f6c1)]
 interface nsIDOMXPathEvaluator : nsISupports
 {
   nsIDOMXPathNSResolver    createNSResolver(in nsIDOMNode nodeResolver);
   nsISupports              evaluate(in DOMString expression, 
                                     in nsIDOMNode contextNode, 
-                                    in nsIDOMXPathNSResolver resolver, 
+                                    in nsIDOMNode resolver,
                                     in unsigned short type, 
                                     in nsISupports result)
                                       raises(XPathException,
