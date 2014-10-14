@@ -4,67 +4,24 @@
 
 // This test makes sure that the URL bar is focused when entering the private window.
 
-function test() {
-  waitForExplicitFinish();
+"use strict";
 
-  const TEST_URL = "data:text/plain,test";
-
-  function checkUrlbarFocus(aWin, aIsPrivate, aCallback) {
-    let urlbar = aWin.gURLBar;
-    if (aIsPrivate) {
-      is(aWin.document.commandDispatcher.focusedElement, urlbar.inputField,
-         "URL Bar should be focused inside the private window");
-      is(urlbar.value, "",
-         "URL Bar should be empty inside the private window");
-    } else {
-      isnot(aWin.document.commandDispatcher.focusedElement, urlbar.inputField,
-            "URL Bar should not be focused after opening window");
-      isnot(urlbar.value, "",
-            "URL Bar should not be empty after opening window");
-    }
-    aCallback();
-  }
-
-  let windowsToClose = [];
-  function testOnWindow(aPrivate, aCallback) {
-    whenNewWindowLoaded({private: aPrivate}, function(win) {
-      windowsToClose.push(win);
-      executeSoon(function() aCallback(win));
-    });
-  }
-
-  function doneWithTests() {
-    windowsToClose.forEach(function(win) {
-      win.close();
-    });
-    finish();
-  }
-
-  function whenLoadTab(aPrivate, aCallback) {
-    testOnWindow(aPrivate, function(win) {
-      if (!aPrivate) {
-        let browser = win.gBrowser.selectedBrowser;
-        browser.addEventListener("load", function() {
-          browser.removeEventListener("load", arguments.callee, true);
-          aCallback(win);
-        }, true);
-        browser.focus();
-        browser.loadURI(TEST_URL);
-      } else {
-        aCallback(win);
-      }
-    });
-  }
-
-  whenLoadTab(false, function(win) {
-    checkUrlbarFocus(win, false, function() {
-      whenLoadTab(true, function(win) {
-        checkUrlbarFocus(win, true, function() {
-          whenLoadTab(false, function(win) {
-            checkUrlbarFocus(win, false, doneWithTests);
-          });
-        });
-      });
-    });
-  });
+function checkUrlbarFocus(win) {
+  let urlbar = win.gURLBar;
+  is(win.document.activeElement, urlbar.inputField, "URL Bar should be focused");
+  is(urlbar.value, "", "URL Bar should be empty");
 }
+
+function openNewPrivateWindow() {
+  let deferred = Promise.defer();
+  whenNewWindowLoaded({private: true}, win => {
+    executeSoon(() => deferred.resolve(win));
+  });
+  return deferred.promise;
+}
+
+add_task(function* () {
+  let win = yield openNewPrivateWindow();
+  checkUrlbarFocus(win);
+  win.close();
+});
