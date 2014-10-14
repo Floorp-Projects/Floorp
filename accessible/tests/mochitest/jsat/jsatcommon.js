@@ -135,7 +135,7 @@ var AccessFuTest = {
     testFunc();
   },
 
-  runTests: function AccessFuTest_runTests() {
+  runTests: function AccessFuTest_runTests(aAdditionalPrefs) {
     if (gTestFuncs.length === 0) {
       ok(false, "No tests specified!");
       SimpleTest.finish();
@@ -156,10 +156,11 @@ var AccessFuTest = {
       Logger.logLevel = Logger.DEBUG;
     };
 
-    SpecialPowers.pushPrefEnv({
-      'set': [['accessibility.accessfu.notify_output', 1],
-              ['dom.mozSettings.enabled', true]]
-    }, function () {
+    var prefs = [['accessibility.accessfu.notify_output', 1],
+      ['dom.mozSettings.enabled', true]];
+    prefs.push.apply(prefs, aAdditionalPrefs);
+
+    SpecialPowers.pushPrefEnv({ 'set': prefs }, function () {
       if (AccessFuTest._waitForExplicitFinish) {
         // Run all test functions asynchronously.
         AccessFuTest.nextTest();
