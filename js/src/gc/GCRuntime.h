@@ -472,6 +472,7 @@ class GCRuntime
 
     template <AllowGC allowGC>
     static void *refillFreeListFromAnyThread(ThreadSafeContext *cx, AllocKind thingKind);
+    static void *refillFreeListInGC(Zone *zone, AllocKind thingKind);
 
   private:
     // For ArenaLists::allocateFromArena()
@@ -483,7 +484,6 @@ class GCRuntime
     static void *refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind);
     static void *refillFreeListOffMainThread(ExclusiveContext *cx, AllocKind thingKind);
     static void *refillFreeListPJS(ForkJoinContext *cx, AllocKind thingKind);
-    static void *refillFreeListInGC(Zone *zone, AllocKind thingKind);
 
     /*
      * Return the list of chunks that can be released outside the GC lock.
