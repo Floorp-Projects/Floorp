@@ -22,6 +22,10 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
+                                   "@mozilla.org/settingsService;1",
+                                   "nsISettingsService");
+
 XPCOMUtils.defineLazyGetter(this, "NFC", function () {
   let obj = {};
   Cu.import("resource://gre/modules/nfc_consts.js", obj);
@@ -35,13 +39,16 @@ const NFC_ENABLED = libcutils.property_get("ro.moz.nfc.enabled", "false") === "t
 let DEBUG = NFC.DEBUG_NFC;
 
 let debug;
-if (DEBUG) {
-  debug = function (s) {
-    dump("-*- Nfc: " + s + "\n");
-  };
-} else {
-  debug = function (s) {};
-}
+function updateDebug() {
+  if (DEBUG) {
+    debug = function (s) {
+      dump("-*- Nfc: " + s + "\n");
+    };
+  } else {
+    debug = function (s) {};
+  }
+};
+updateDebug();
 
 const NFC_CONTRACTID = "@mozilla.org/nfc;1";
 const NFC_CID =
@@ -103,6 +110,10 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     init: function init(nfc) {
       this.nfc = nfc;
 
+      let lock = gSettingsService.createLock();
+      lock.get(NFC.SETTING_NFC_DEBUG, this.nfc);
+
+      Services.obs.addObserver(this, NFC.TOPIC_MOZSETTINGS_CHANGED, false);
       Services.obs.addObserver(this, NFC.TOPIC_XPCOM_SHUTDOWN, false);
       this._registerMessageListeners();
     },
@@ -111,6 +122,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       this.nfc.shutdown();
       this.nfc = null;
 
+      Services.obs.removeObserver(this, NFC.TOPIC_MOZSETTINGS_CHANGED);
       Services.obs.removeObserver(this, NFC.TOPIC_XPCOM_SHUTDOWN);
       this._unregisterMessageListeners();
     },
@@ -335,6 +347,14 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
     observe: function observe(subject, topic, data) {
       switch (topic) {
+        case NFC.TOPIC_MOZSETTINGS_CHANGED:
+          if ("wrappedJSObject" in subject) {
+            subject = subject.wrappedJSObject;
+          }
+          if (subject) {
+            this.nfc.handle(subject.key, subject.value);
+          }
+          break;
         case NFC.TOPIC_XPCOM_SHUTDOWN:
           this._shutdown();
           break;
@@ -647,6 +667,18 @@ Nfc.prototype = {
         delete this.targetsByRequestId[requestId];
       }
     });
+  },
+
+  /**
+   * nsISettingsServiceCallback
+   */
+  handle: function handle(name, result) {
+    switch (name) {
+      case NFC.SETTING_NFC_DEBUG:
+        DEBUG = result;
+        updateDebug();
+        break;
+    }
   },
 
   /**
