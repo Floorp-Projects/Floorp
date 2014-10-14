@@ -20,6 +20,8 @@ const ACCESSFU_ENABLE = 1;
 const ACCESSFU_AUTO = 2;
 
 const SCREENREADER_SETTING = 'accessibility.screenreader';
+const QUICKNAV_MODES_PREF = 'accessibility.accessfu.quicknav_modes';
+const QUICKNAV_INDEX_PREF = 'accessibility.accessfu.quicknav_index';
 
 this.AccessFu = { // jshint ignore:line
   /**
@@ -103,11 +105,18 @@ this.AccessFu = { // jshint ignore:line
 
     // Populate quicknav modes
     this._quicknavModesPref =
-      new PrefCache(
-        'accessibility.accessfu.quicknav_modes',
-        (aName, aValue) => {
-          this.Input.quickNavMode.updateModes(aValue);
-        }, true);
+      new PrefCache(QUICKNAV_MODES_PREF, (aName, aValue, aFirstRun) => {
+        this.Input.quickNavMode.updateModes(aValue);
+        if (!aFirstRun) {
+          // If the modes change, reset the current mode index to 0.
+          Services.prefs.setIntPref(QUICKNAV_INDEX_PREF, 0);
+        }
+      }, true);
+
+    this._quicknavCurrentModePref =
+      new PrefCache(QUICKNAV_INDEX_PREF, (aName, aValue) => {
+        this.Input.quickNavMode.updateCurrentMode(Number(aValue));
+      }, true);
 
     // Check for output notification
     this._notifyOutputPref =
@@ -960,15 +969,15 @@ var Input = {
     },
 
     previous: function quickNavMode_previous() {
-      if (--this._currentIndex < 0) {
-        this._currentIndex = this.modes.length - 1;
-      }
+      Services.prefs.setIntPref(QUICKNAV_INDEX_PREF,
+        this._currentIndex > 0 ?
+          this._currentIndex - 1 : this.modes.length - 1);
     },
 
     next: function quickNavMode_next() {
-      if (++this._currentIndex >= this.modes.length) {
-        this._currentIndex = 0;
-      }
+      Services.prefs.setIntPref(QUICKNAV_INDEX_PREF,
+        this._currentIndex + 1 >= this.modes.length ?
+          0 : this._currentIndex + 1);
     },
 
     updateModes: function updateModes(aModes) {
@@ -979,7 +988,10 @@ var Input = {
       }
     },
 
-    _currentIndex: -1
+    updateCurrentMode: function updateCurrentMode(aModeIndex) {
+      Logger.debug('Quicknav mode:', this.modes[aModeIndex]);
+      this._currentIndex = aModeIndex;
+    }
   }
 };
 AccessFu.Input = Input;
