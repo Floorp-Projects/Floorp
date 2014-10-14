@@ -9,24 +9,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="text/javascript" src="manifest.js"></script>
   <script>
-  
+
   var gRegisteredElements = [];
-  var gLog = false;
   var testWindows = [];
 
-  function log(msg) {
-    if (gLog) {
-      document.getElementById('log').innerHTML += "<p>"+msg+"</p>";
-      dump(msg + "\n");
-    }
-  }
-  
   function register(v) {
     gRegisteredElements.push(v);
   }
 
   function loaded() {
-    log("onload fired!");
+    info("onload fired!");
 
     for (var i = 0; i < gRegisteredElements.length; ++i) {
       var v = gRegisteredElements[i];
@@ -38,25 +30,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
       testWindows[i].close();
     }
 
-    mediaTestCleanup();    
+    mediaTestCleanup();
 
     SimpleTest.finish();
   }
-  
+
   addLoadEvent(loaded);
-  
 
   </script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=479711">Mozilla Bug 479711</a>
 <p id="display"></p>
-<div id="content" style="display: none">
-  
-</div>
-
-
-<div id="log" style="font-size: small;"></div>
+<div id="content" style="display: none"></div>
 <pre id="test">
 <script type="application/javascript">
 
@@ -64,6 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
 
 function createVideo(name, type, id) {
   var v = document.createElement("video");
+  v.preload = "metadata";
   // Make sure each video is a unique resource
   v.src = name + "?" + id;
   v._name = name;
@@ -82,7 +69,7 @@ document.body.appendChild(v);
 v = createVideo(test.name, test.type, "1");
 v.load();
 document.body.appendChild(v);
-v.parentNode.removeChild(v);
+v.remove();
 
 // Load and add.
 v = createVideo(test.name, test.type, "2");
