@@ -27,7 +27,6 @@ public:
 private:
   WifiCertService();
   ~WifiCertService();
-  nsCOMPtr<nsIThread> mRequestThread;
   nsCOMPtr<nsIWifiEventListener> mListener;
 };
 

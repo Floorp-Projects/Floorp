@@ -81,6 +81,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.StrictMode;
@@ -978,6 +979,12 @@ public abstract class GeckoApp
                 image = BitmapUtils.decodeByteArray(imgBuffer);
             }
             if (image != null) {
+                // Some devices don't have a DCIM folder and the Media.insertImage call will fail.
+                File dcimDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+                if (!dcimDir.mkdirs() && !dcimDir.isDirectory()) {
+                    Toast.makeText((Context) this, R.string.set_image_path_fail, Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 String path = Media.insertImage(getContentResolver(),image, null, null);
                 if (path == null) {
                     Toast.makeText((Context) this, R.string.set_image_path_fail, Toast.LENGTH_SHORT).show();
