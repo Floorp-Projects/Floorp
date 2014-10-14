@@ -160,14 +160,14 @@ add_test(function test_reading_optional_efs() {
 /**
  * Verify fetchSimRecords.
  */
-add_test(function test_fetch_sim_recodes() {
+add_test(function test_fetch_sim_records() {
   let worker = newWorker();
   let context = worker.ContextPool._contexts[0];
   let RIL = context.RIL;
   let iccRecord = context.ICCRecordHelper;
   let simRecord = context.SimRecordHelper;
 
-  function testFetchSimRecordes(expectCalled) {
+  function testFetchSimRecordes(expectCalled, expectCphsSuccess) {
     let ifCalled = [];
 
     RIL.getIMSI = function() {
@@ -176,6 +176,15 @@ add_test(function test_fetch_sim_recodes() {
 
     simRecord.readAD = function() {
       ifCalled.push("readAD");
+    };
+
+    simRecord.readCphsInfo = function(onsuccess, onerror) {
+      ifCalled.push("readCphsInfo");
+      if (expectCphsSuccess) {
+        onsuccess();
+      } else {
+        onerror();
+      }
     };
 
     simRecord.readSST = function() {
@@ -192,8 +201,9 @@ add_test(function test_fetch_sim_recodes() {
     }
   }
 
-  let expectCalled = ["getIMSI", "readAD", "readSST"];
-  testFetchSimRecordes(expectCalled);
+  let expectCalled = ["getIMSI", "readAD", "readCphsInfo", "readSST"];
+  testFetchSimRecordes(expectCalled, true);
+  testFetchSimRecordes(expectCalled, false);
 
   run_next_test();
 });
@@ -782,7 +792,7 @@ add_test(function test_reading_img_length_error() {
   let ril    = context.RIL;
   let buf    = context.Buf;
   let io     = context.ICCIOHelper;
- 
+
   let test_data = [
     {/* Offset length not enough, should be 4. */
      img: [0x01, 0x05, 0x05, 0x11, 0x4f, 0x00, 0x00, 0x04, 0x00, 0x06],
