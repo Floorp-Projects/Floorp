@@ -52,6 +52,14 @@
           </hbox>
         </panel>
       </button>
+
+      <button id="customization-devedition-theme-button"
+              class="customizationmode-button"
+              hidden="true"
+              label="&customizeMode.deveditionTheme.label;"
+              oncommand="gCustomizeMode.toggleDevEditionTheme()"
+              type="checkbox" />
+
       <spacer id="customization-footer-spacer"/>
       <button id="customization-undo-reset-button"
               class="customizationmode-button"
