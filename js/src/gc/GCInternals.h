@@ -147,7 +147,6 @@ struct MovingTracer : JSTracer {
 };
 #endif
 
-
 } /* namespace gc */
 } /* namespace js */
 
