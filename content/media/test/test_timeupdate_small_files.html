@@ -17,17 +17,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=495319
 
 var manager = new MediaTestManager;
 
-function timeupdate(e) {
-  var v = e.target;
-  v._timeupdateCount++;
-  ok(v.gotEnded == 0, v._name + " - shouldn't get timeupdate after ended");
-}
-
 function ended(e) {
   var v = e.target;
-  ++v.gotEnded;
-  ok(v._timeupdateCount > 0, v._name + " - should see at least one timeupdate: " + v.currentTime);
-  v._finished = true;
+  ++v.counter["ended"];
+  is(v.counter["ended"], 1, v._name + " should see ended only once");
+  ok(v.counter["timeupdate"] > 0, v._name + " should see at least one timeupdate: " + v.currentTime);
+
+  // Rest event counters for we don't allow events after ended.
+  eventsToLog.forEach(function(e) {
+    v.counter[e] = 0;
+  });
+
   // Finish the test after 500ms. We shouldn't receive any timeupdate events
   // after the ended event, so this gives time for any pending timeupdate events
   // to fire so we can ensure we don't regress behaviour.
@@ -39,10 +39,9 @@ function ended(e) {
       // invoked when it's removed from a document), and we don't want those
       // confusing the test results.
       v.removeEventListener("ended", ended, false);
-      v.removeEventListener("timeupdate", timeupdate, false);
-      for (var i = 0; i < eventsToLog.length; ++i) {
-        v.removeEventListener(eventsToLog[i], logEvent, false);
-      }
+      eventsToLog.forEach(function(e) {
+        v.removeEventListener(e, logEvent, false);
+      });
       removeNodeAndSource(v);
       manager.finished(v.token);
     },
@@ -50,17 +49,14 @@ function ended(e) {
 }
 
 var eventsToLog = ["play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
-  "loadeddata", "playing", "progress", "timeupdate", "ended", "suspend", "error", "stalled", "emptied", "abort",
+  "loadeddata", "playing", "timeupdate", "error", "stalled", "emptied", "abort",
   "waiting", "pause"];
+
 function logEvent(event) {
-  if (event.target.gotEnded > (event.type == "ended" ? 1 : 0)) {
-    if (event.target.currentSrc.slice(-9) == "seek.webm" && event.type == "stalled") {
-      todo(false, event.target.currentSrc + " got unexpected stalled after ended (bug 760770)");
-    } else {
-      ok(false, event.target.currentSrc + " got unexpected " + event.type + " after ended");
-    }
-  } else {
-    info(event.target.currentSrc + " got " + event.type);
+  var v = event.target;
+  ++v.counter[event.type];
+  if (v.counter["ended"] > 0) {
+    is(v.counter[event.type], 0, v._name + " got unexpected " + event.type + " after ended");
   }
 }
 
@@ -71,14 +67,15 @@ function startTest(test, token) {
   manager.started(token);
   v.src = test.name;
   v._name = test.name;
-  v._timeupdateCount = 0;
-  v._finished = false;
-  v.gotEnded = 0;
+
+  // Keep how many events received for each event type.
+  v.counter = {};
+  eventsToLog.forEach(function(e) {
+    v.addEventListener(e, logEvent, false);
+    v.counter[e] = 0;
+  });
   v.addEventListener("ended", ended, false);
-  v.addEventListener("timeupdate", timeupdate, false);
-  for (var i = 0; i < eventsToLog.length; ++i) {
-    v.addEventListener(eventsToLog[i], logEvent, false);
-  }
+  v.counter["ended"] = 0;
   document.body.appendChild(v);
   v.play();
 }
