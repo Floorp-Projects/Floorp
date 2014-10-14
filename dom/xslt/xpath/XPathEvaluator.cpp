@@ -23,6 +23,7 @@
 #include "txIXPathContext.h"
 #include "mozilla/dom/XPathEvaluatorBinding.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/XPathNSResolverBinding.h"
 
 extern nsresult
 TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, int32_t aNamespaceID,
@@ -36,7 +37,7 @@ namespace dom {
 class XPathEvaluatorParseContext : public txIParseContext
 {
 public:
-    XPathEvaluatorParseContext(nsIDOMXPathNSResolver* aResolver,
+    XPathEvaluatorParseContext(XPathNSResolver* aResolver,
                                bool aIsCaseSensitive)
         : mResolver(aResolver),
           mResolverNode(nullptr),
@@ -65,7 +66,7 @@ public:
     void SetErrorOffset(uint32_t aOffset);
 
 private:
-    nsIDOMXPathNSResolver* mResolver;
+    XPathNSResolver* mResolver;
     nsINode* mResolverNode;
     nsresult mLastError;
     bool mIsCaseSensitive;
@@ -100,14 +101,15 @@ XPathEvaluator::CreateNSResolver(nsIDOMNode *aNodeResolver,
 NS_IMETHODIMP
 XPathEvaluator::Evaluate(const nsAString & aExpression,
                          nsIDOMNode *aContextNode,
-                         nsIDOMXPathNSResolver *aResolver,
+                         nsIDOMNode *aResolver,
                          uint16_t aType,
                          nsISupports *aInResult,
                          nsISupports **aResult)
 {
+    nsCOMPtr<nsINode> resolver = do_QueryInterface(aResolver);
     ErrorResult rv;
     nsAutoPtr<XPathExpression> expression(CreateExpression(aExpression,
-                                                           aResolver, rv));
+                                                           resolver, rv));
     if (rv.Failed()) {
         return rv.ErrorCode();
     }
@@ -132,7 +134,7 @@ XPathEvaluator::Evaluate(const nsAString & aExpression,
 
 XPathExpression*
 XPathEvaluator::CreateExpression(const nsAString& aExpression,
-                                 nsIDOMXPathNSResolver* aResolver, ErrorResult& aRv)
+                                 XPathNSResolver* aResolver, ErrorResult& aRv)
 {
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
     XPathEvaluatorParseContext pContext(aResolver, !(doc && doc->IsHTML()));
@@ -187,34 +189,24 @@ XPathEvaluator::Constructor(const GlobalObject& aGlobal,
     return newObj.forget();
 }
 
-already_AddRefed<nsIDOMXPathNSResolver>
-XPathEvaluator::CreateNSResolver(nsINode* aNodeResolver,
-                                 ErrorResult& rv)
-{
-  nsCOMPtr<nsIDOMNode> nodeResolver = do_QueryInterface(aNodeResolver);
-  nsCOMPtr<nsIDOMXPathNSResolver> res;
-  rv = CreateNSResolver(nodeResolver, getter_AddRefs(res));
-  return res.forget();
-}
-
 already_AddRefed<XPathResult>
 XPathEvaluator::Evaluate(JSContext* aCx, const nsAString& aExpression,
                          nsINode* aContextNode,
-                         nsIDOMXPathNSResolver* aResolver, uint16_t aType,
+                         XPathNSResolver* aResolver, uint16_t aType,
                          JS::Handle<JSObject*> aResult, ErrorResult& rv)
 {
-  nsCOMPtr<nsIDOMNode> contextNode = do_QueryInterface(aContextNode);
-  nsCOMPtr<nsISupports> res;
-  rv = Evaluate(aExpression, contextNode, aResolver, aType,
-                aResult ? UnwrapDOMObjectToISupports(aResult) : nullptr,
-                getter_AddRefs(res));
-  return res.forget().downcast<nsIXPathResult>().downcast<XPathResult>();
+    nsAutoPtr<XPathExpression> expression(CreateExpression(aExpression,
+                                                           aResolver, rv));
+    if (rv.Failed()) {
+        return nullptr;
+    }
+    return expression->Evaluate(aCx, *aContextNode, aType, aResult, rv);
 }
 
 
 /*
  * Implementation of txIParseContext private to XPathEvaluator, based on a
- * nsIDOMXPathNSResolver
+ * XPathNSResolver
  */
 
 nsresult XPathEvaluatorParseContext::resolveNamespacePrefix
@@ -233,10 +225,17 @@ nsresult XPathEvaluatorParseContext::resolveNamespacePrefix
 
     nsVoidableString ns;
     if (mResolver) {
-        nsresult rv = mResolver->LookupNamespaceURI(prefix, ns);
-        NS_ENSURE_SUCCESS(rv, rv);
+        ErrorResult rv;
+        mResolver->LookupNamespaceURI(prefix, ns, rv);
+        if (rv.Failed()) {
+            return rv.ErrorCode();
+        }
     } else {
-        mResolverNode->LookupNamespaceURI(prefix, ns);
+        if (aPrefix == nsGkAtoms::xml) {
+            ns.AssignLiteral("http://www.w3.org/XML/1998/namespace");
+        } else {
+            mResolverNode->LookupNamespaceURI(prefix, ns);
+        }
     }
 
     if (DOMStringIsNull(ns)) {

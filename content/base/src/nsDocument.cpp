@@ -210,6 +210,7 @@
 #include "nsISecurityConsoleMessage.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/dom/XPathEvaluator.h"
+#include "mozilla/dom/XPathNSResolverBinding.h"
 #include "mozilla/dom/XPathResult.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDocumentActivity.h"
@@ -12314,22 +12315,21 @@ nsIDocument::Constructor(const GlobalObject& aGlobal,
 
 XPathExpression*
 nsIDocument::CreateExpression(const nsAString& aExpression,
-                              nsIDOMXPathNSResolver* aResolver,
+                              XPathNSResolver* aResolver,
                               ErrorResult& rv)
 {
   return XPathEvaluator()->CreateExpression(aExpression, aResolver, rv);
 }
 
-already_AddRefed<nsIDOMXPathNSResolver>
-nsIDocument::CreateNSResolver(nsINode* aNodeResolver,
-                              ErrorResult& rv)
+nsINode*
+nsIDocument::CreateNSResolver(nsINode& aNodeResolver)
 {
-  return XPathEvaluator()->CreateNSResolver(aNodeResolver, rv);
+  return XPathEvaluator()->CreateNSResolver(aNodeResolver);
 }
 
 already_AddRefed<XPathResult>
 nsIDocument::Evaluate(JSContext* aCx, const nsAString& aExpression,
-                      nsINode* aContextNode, nsIDOMXPathNSResolver* aResolver,
+                      nsINode* aContextNode, XPathNSResolver* aResolver,
                       uint16_t aType, JS::Handle<JSObject*> aResult,
                       ErrorResult& rv)
 {
@@ -12346,7 +12346,7 @@ nsDocument::CreateNSResolver(nsIDOMNode* aNodeResolver,
 
 NS_IMETHODIMP
 nsDocument::Evaluate(const nsAString& aExpression, nsIDOMNode* aContextNode,
-                     nsIDOMXPathNSResolver* aResolver, uint16_t aType,
+                     nsIDOMNode* aResolver, uint16_t aType,
                      nsISupports* aInResult, nsISupports** aResult)
 {
   return XPathEvaluator()->Evaluate(aExpression, aContextNode, aResolver, aType,

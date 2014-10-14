@@ -23,6 +23,7 @@ namespace dom {
 
 class GlobalObject;
 class XPathExpression;
+class XPathNSResolver;
 class XPathResult;
 
 /**
@@ -51,17 +52,19 @@ public:
         Constructor(const GlobalObject& aGlobal, ErrorResult& rv);
     XPathExpression*
         CreateExpression(const nsAString& aExpression,
-                         nsIDOMXPathNSResolver* aResolver,
+                         XPathNSResolver* aResolver,
                          ErrorResult& rv);
-    already_AddRefed<nsIDOMXPathNSResolver>
-        CreateNSResolver(nsINode* aNodeResolver, ErrorResult& rv);
     XPathExpression*
         CreateExpression(const nsAString& aExpression,
                          nsINode* aResolver,
                          ErrorResult& aRv);
+    nsINode* CreateNSResolver(nsINode& aNodeResolver)
+    {
+        return &aNodeResolver;
+    }
     already_AddRefed<XPathResult>
         Evaluate(JSContext* aCx, const nsAString& aExpression,
-                 nsINode* aContextNode, nsIDOMXPathNSResolver* aResolver,
+                 nsINode* aContextNode, XPathNSResolver* aResolver,
                  uint16_t aType, JS::Handle<JSObject*> aResult,
                  ErrorResult& rv);
 private:
