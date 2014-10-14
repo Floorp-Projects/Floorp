@@ -141,6 +141,13 @@ WebGL2Context::TexStorage2D(GLenum target, GLsizei levels, GLenum internalformat
     if (!ValidateTexStorage(target, levels, internalformat, width, height, 1, "texStorage2D"))
         return;
 
+    GetAndFlushUnderlyingGLErrors();
+    gl->fTexStorage2D(target, levels, internalformat, width, height);
+    GLenum error = GetAndFlushUnderlyingGLErrors();
+    if (error) {
+        return GenerateWarning("texStorage2D generated error %s", ErrorName(error));
+    }
+
     WebGLTexture* tex = activeBoundTextureForTarget(target);
     tex->SetImmutable();
 
@@ -157,8 +164,6 @@ WebGL2Context::TexStorage2D(GLenum target, GLsizei levels, GLenum internalformat
         w = std::max(1, w / 2);
         h = std::max(1, h / 2);
     }
-
-    gl->fTexStorage2D(target, levels, internalformat, width, height);
 }
 
 void
@@ -175,6 +180,13 @@ WebGL2Context::TexStorage3D(GLenum target, GLsizei levels, GLenum internalformat
     if (!ValidateTexStorage(target, levels, internalformat, width, height, depth, "texStorage3D"))
         return;
 
+    GetAndFlushUnderlyingGLErrors();
+    gl->fTexStorage3D(target, levels, internalformat, width, height, depth);
+    GLenum error = GetAndFlushUnderlyingGLErrors();
+    if (error) {
+        return GenerateWarning("texStorage3D generated error %s", ErrorName(error));
+    }
+
     WebGLTexture* tex = activeBoundTextureForTarget(target);
     tex->SetImmutable();
 
@@ -190,8 +202,6 @@ WebGL2Context::TexStorage3D(GLenum target, GLsizei levels, GLenum internalformat
         h = std::max(1, h >> 1);
         d = std::max(1, d >> 1);
     }
-
-    gl->fTexStorage3D(target, levels, internalformat, width, height, depth);
 }
 
 void
