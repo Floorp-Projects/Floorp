@@ -665,6 +665,12 @@ function ExpectedAnnouncement(aAnnouncement, aOptions) {
 
 ExpectedAnnouncement.prototype = Object.create(ExpectedPresent.prototype);
 
+function ExpectedNoMove(aOptions) {
+  ExpectedPresent.call(this, {eventType: 'no-move' }, null, aOptions);
+}
+
+ExpectedNoMove.prototype = Object.create(ExpectedPresent.prototype);
+
 var AndroidEvent = {
   VIEW_CLICKED: 0x01,
   VIEW_LONG_CLICKED: 0x02,
