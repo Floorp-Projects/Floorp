@@ -950,6 +950,11 @@ MobileConnectionService.prototype = {
     } catch (e) {}
   },
 
+  _broadcastCdmaInfoRecordSystemMessage: function(aMessage) {
+    // TODO: Bug 1072808, Broadcast System Message with proxy.
+    gSystemMessenger.broadcastMessage("cdma-info-rec-received", aMessage);
+  },
+
   /**
    * nsIMobileConnectionService interface.
    */
@@ -1165,6 +1170,111 @@ MobileConnectionService.prototype = {
     let provider = this.getItemByServiceId(aClientId);
     provider.notifyCFStateChanged(aAction, aReason, aNumber, aTimeSeconds,
                                   aServiceClass);
+  },
+
+  notifyCdmaInfoRecDisplay: function(aClientId, aDisplay) {
+    this._broadcastCdmaInfoRecordSystemMessage({
+      clientId: aClientId,
+      display: aDisplay
+    });
+  },
+
+  notifyCdmaInfoRecCalledPartyNumber: function(aClientId, aType, aPlan, aNumber,
+                                               aPi, aSi) {
+    this._broadcastCdmaInfoRecordSystemMessage({
+      clientId: aClientId,
+      calledNumber: {
+        type: aType,
+        plan: aPlan,
+        number: aNumber,
+        pi: aPi,
+        si: aSi
+      }
+    });
+  },
+
+  notifyCdmaInfoRecCallingPartyNumber: function(aClientId, aType, aPlan, aNumber,
+                                                aPi, aSi) {
+    this._broadcastCdmaInfoRecordSystemMessage({
+      clientId: aClientId,
+      callingNumber: {
+        type: aType,
+        plan: aPlan,
+        number: aNumber,
+        pi: aPi,
+        si: aSi
+      }
+    });
+  },
+
+  notifyCdmaInfoRecConnectedPartyNumber: function(aClientId, aType, aPlan, aNumber,
+                                                  aPi, aSi) {
+    this._broadcastCdmaInfoRecordSystemMessage({
+      clientId: aClientId,
+      connectedNumber: {
+        type: aType,
+        plan: aPlan,
+        number: aNumber,
+        pi: aPi,
+        si: aSi
+      }
+    });
+  },
+
+  notifyCdmaInfoRecSignal: function(aClientId, aType, aAlertPitch, aSignal){
+    this._broadcastCdmaInfoRecordSystemMessage({
+      clientId: aClientId,
+      signal: {
+        type: aType,
+        alertPitch: aAlertPitch,
+        signal: aSignal
+      }
+    });
+  },
+
+  notifyCdmaInfoRecRedirectingNumber: function(aClientId, aType, aPlan, aNumber,
+                                               aPi, aSi, aReason) {
+    this._broadcastCdmaInfoRecordSystemMessage({
+      clientId: aClientId,
+      redirect: {
+        type: aType,
+        plan: aPlan,
+        number: aNumber,
+        pi: aPi,
+        si: aSi,
+        reason: aReason
+      }
+    });
+  },
+
+  notifyCdmaInfoRecLineControl: function(aClientId, aPolarityIncluded, aToggle,
+                                         aReverse, aPowerDenial) {
+    this._broadcastCdmaInfoRecordSystemMessage({
+      clientId: aClientId,
+      lineControl: {
+        polarityIncluded: aPolarityIncluded,
+        toggle: aToggle,
+        reverse: aReverse,
+        powerDenial: aPowerDenial
+      }
+    });
+  },
+
+  notifyCdmaInfoRecClir: function(aClientId, aCause) {
+    this._broadcastCdmaInfoRecordSystemMessage({
+      clientId: aClientId,
+      clirCause: aCause
+    });
+  },
+
+  notifyCdmaInfoRecAudioControl: function(aClientId, aUplink, aDownLink) {
+    this._broadcastCdmaInfoRecordSystemMessage({
+      clientId: aClientId,
+      audioControl: {
+        upLink: aUplink,
+        downLink: aDownLink
+      }
+    });
   },
 
   /**
