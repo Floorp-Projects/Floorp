@@ -113,7 +113,7 @@ TouchCaret::GetCaretFocusFrame(nsRect* aOutRect)
   return frame;
 }
 
-nsIFrame*
+nsCanvasFrame*
 TouchCaret::GetCanvasFrame()
 {
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);

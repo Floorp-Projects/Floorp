@@ -15,6 +15,7 @@
 #include "mozilla/TouchEvents.h"
 #include "Units.h"
 
+class nsCanvasFrame;
 class nsIFrame;
 class nsIPresShell;
 
@@ -84,7 +85,7 @@ private:
   /**
    * Find the nsCanvasFrame which holds the touch caret.
    */
-  nsIFrame* GetCanvasFrame();
+  nsCanvasFrame* GetCanvasFrame();
 
   /**
    * Retrieve the bounding rectangle of the touch caret.
