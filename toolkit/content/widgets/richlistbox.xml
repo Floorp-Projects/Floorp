@@ -28,7 +28,7 @@
         document.getAnonymousElementByAttribute(this, "anonid", "main-box");
       </field>
       <field name="scrollBoxObject">
-        this._scrollbox.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+        this._scrollbox.boxObject;
       </field>
       <constructor>
         <![CDATA[
@@ -434,13 +434,11 @@
             if (!aItem)
               return false;
 
-            var y = {};
-            this.scrollBoxObject.getPosition({}, y);
-            y.value += this.scrollBoxObject.y;
+            var y = this.scrollBoxObject.positionY + this.scrollBoxObject.y;
 
             // Partially visible items are also considered visible
-            return (aItem.boxObject.y + aItem.boxObject.height > y.value) &&
-                   (aItem.boxObject.y < y.value + this.scrollBoxObject.height);
+            return (aItem.boxObject.y + aItem.boxObject.height > y) &&
+                   (aItem.boxObject.y < y + this.scrollBoxObject.height);
           ]]>
         </body>
       </method>
@@ -585,4 +583,3 @@
     </implementation>
   </binding>
 </bindings>
-

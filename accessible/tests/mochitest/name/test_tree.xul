@@ -32,7 +32,7 @@
 
       this.invoke = function treeTester_invoke()
       {
-        this.DOMNode.treeBoxObject.view = new nsTreeTreeView();
+        this.DOMNode.view = new nsTreeTreeView();
       }
 
       this.check = function treeTester_check(aEvent)
@@ -90,7 +90,7 @@
 
       this.invoke = function tableTester_invoke()
       {
-        this.DOMNode.treeBoxObject.view = new nsTableTreeView(2);
+        this.DOMNode.view = new nsTableTreeView(2);
       }
 
       this.check = function tableTester_check(aEvent)
@@ -209,4 +209,3 @@
   </vbox> <!-- close tests area -->
   </hbox> <!-- close main area -->
 </window>
-

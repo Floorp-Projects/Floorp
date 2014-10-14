@@ -57,32 +57,27 @@ function LoadCerts()
   caTreeView = Components.classes[nsCertTree]
                     .createInstance(nsICertTree);
   caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
-  document.getElementById('ca-tree')
-   .treeBoxObject.view = caTreeView;
+  document.getElementById('ca-tree').view = caTreeView;
 
   serverTreeView = Components.classes[nsCertTree]
                         .createInstance(nsICertTree);
   serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);
-  document.getElementById('server-tree')
-   .treeBoxObject.view = serverTreeView;
+  document.getElementById('server-tree').view = serverTreeView;
 
   emailTreeView = Components.classes[nsCertTree]
                        .createInstance(nsICertTree);
   emailTreeView.loadCertsFromCache(certcache, nsIX509Cert.EMAIL_CERT);
-  document.getElementById('email-tree')
-   .treeBoxObject.view = emailTreeView; 
+  document.getElementById('email-tree').view = emailTreeView;
 
   userTreeView = Components.classes[nsCertTree]
                       .createInstance(nsICertTree);
   userTreeView.loadCertsFromCache(certcache, nsIX509Cert.USER_CERT);
-  document.getElementById('user-tree')
-   .treeBoxObject.view = userTreeView;
+  document.getElementById('user-tree').view = userTreeView;
 
   orphanTreeView = Components.classes[nsCertTree]
                       .createInstance(nsICertTree);
   orphanTreeView.loadCertsFromCache(certcache, nsIX509Cert.UNKNOWN_CERT);
-  document.getElementById('orphan-tree')
-   .treeBoxObject.view = orphanTreeView;
+  document.getElementById('orphan-tree').view = orphanTreeView;
 
   enableBackupAllButton();
 }

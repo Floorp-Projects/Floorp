@@ -212,7 +212,7 @@ add_test(function selection_test() {
 
   var pos = 0;
   var scrollbox = gWin.document.getElementById("select-scrollbox");
-  var scrollBoxObject = scrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+  var scrollBoxObject = scrollbox.boxObject;
   for (var row = gWin.document.getElementById("select-rows").firstChild; row; row = row.nextSibling) {
     // Ignore separators but increase the position by a large amount so we
     // can verify they were in the right place

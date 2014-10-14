@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsBoxObject.h"
+#include "mozilla/dom/BoxObject.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
@@ -24,32 +24,32 @@
 #include "nsSupportsPrimitives.h"
 #include "mozilla/dom/Element.h"
 #include "nsComponentManagerUtils.h"
-
-using namespace mozilla::dom;
+#include "mozilla/dom/BoxObjectBinding.h"
 
 // Implementation /////////////////////////////////////////////////////////////////
+
+namespace mozilla {
+namespace dom {
 
 // Static member variable initialization
 
 // Implement our nsISupports methods
+NS_IMPL_CYCLE_COLLECTION_CLASS(BoxObject)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(BoxObject)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(BoxObject)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsBoxObject)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsBoxObject)
-
-DOMCI_DATA(BoxObject, nsBoxObject)
-
-// QueryInterface implementation for nsBoxObject
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsBoxObject)
+// QueryInterface implementation for BoxObject
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BoxObject)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIBoxObject)
   NS_INTERFACE_MAP_ENTRY(nsPIBoxObject)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(BoxObject)
 NS_INTERFACE_MAP_END
 
 static PLDHashOperator
 PropertyTraverser(const nsAString& aKey, nsISupports* aProperty, void* userArg)
 {
-  nsCycleCollectionTraversalCallback *cb = 
+  nsCycleCollectionTraversalCallback *cb =
     static_cast<nsCycleCollectionTraversalCallback*>(userArg);
 
   cb->NoteXPCOMChild(aProperty);
@@ -57,27 +57,32 @@ PropertyTraverser(const nsAString& aKey, nsISupports* aProperty, void* userArg)
   return PL_DHASH_NEXT;
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsBoxObject)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BoxObject)
+  // XXX jmorton: why aren't we unlinking mPropertyTable?
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsBoxObject)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBoxObject)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BoxObject)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   if (tmp->mPropertyTable) {
     tmp->mPropertyTable->EnumerateRead(PropertyTraverser, &cb);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(BoxObject)
+
 // Constructors/Destructors
-nsBoxObject::nsBoxObject(void)
-  :mContent(nullptr)
+BoxObject::BoxObject()
+  : mContent(nullptr)
 {
 }
 
-nsBoxObject::~nsBoxObject(void)
+BoxObject::~BoxObject()
 {
 }
 
 NS_IMETHODIMP
-nsBoxObject::GetElement(nsIDOMElement** aResult)
+BoxObject::GetElement(nsIDOMElement** aResult)
 {
   if (mContent) {
     return CallQueryInterface(mContent, aResult);
@@ -90,26 +95,26 @@ nsBoxObject::GetElement(nsIDOMElement** aResult)
 // nsPIBoxObject //////////////////////////////////////////////////////////////////////////
 
 nsresult
-nsBoxObject::Init(nsIContent* aContent)
+BoxObject::Init(nsIContent* aContent)
 {
   mContent = aContent;
   return NS_OK;
 }
 
 void
-nsBoxObject::Clear()
+BoxObject::Clear()
 {
   mPropertyTable = nullptr;
   mContent = nullptr;
 }
 
 void
-nsBoxObject::ClearCachedValues()
+BoxObject::ClearCachedValues()
 {
 }
 
 nsIFrame*
-nsBoxObject::GetFrame(bool aFlushLayout)
+BoxObject::GetFrame(bool aFlushLayout)
 {
   nsIPresShell* shell = GetPresShell(aFlushLayout);
   if (!shell)
@@ -132,7 +137,7 @@ nsBoxObject::GetFrame(bool aFlushLayout)
 }
 
 nsIPresShell*
-nsBoxObject::GetPresShell(bool aFlushLayout)
+BoxObject::GetPresShell(bool aFlushLayout)
 {
   if (!mContent) {
     return nullptr;
@@ -150,11 +155,11 @@ nsBoxObject::GetPresShell(bool aFlushLayout)
   return doc->GetShell();
 }
 
-nsresult 
-nsBoxObject::GetOffsetRect(nsIntRect& aRect)
+nsresult
+BoxObject::GetOffsetRect(nsIntRect& aRect)
 {
   aRect.SetRect(0, 0, 0, 0);
- 
+
   if (!mContent)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -185,7 +190,7 @@ nsBoxObject::GetOffsetRect(nsIntRect& aRect)
       origin += next->GetPositionOfChildIgnoringScrolling(parent);
       parent = next;
     }
-  
+
     // For the origin, add in the border for the frame
     const nsStyleBorder* border = frame->StyleBorder();
     origin.x += border->GetComputedBorderWidth(NS_SIDE_LEFT);
@@ -198,7 +203,7 @@ nsBoxObject::GetOffsetRect(nsIntRect& aRect)
 
     aRect.x = nsPresContext::AppUnitsToIntCSSPixels(origin.x);
     aRect.y = nsPresContext::AppUnitsToIntCSSPixels(origin.y);
-    
+
     // Get the union of all rectangles in this and continuation frames.
     // It doesn't really matter what we use as aRelativeTo here, since
     // we only care about the size. Using 'parent' might make things
@@ -212,10 +217,10 @@ nsBoxObject::GetOffsetRect(nsIntRect& aRect)
 }
 
 nsresult
-nsBoxObject::GetScreenPosition(nsIntPoint& aPoint)
+BoxObject::GetScreenPosition(nsIntPoint& aPoint)
 {
   aPoint.x = aPoint.y = 0;
-  
+
   if (!mContent)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -225,12 +230,12 @@ nsBoxObject::GetScreenPosition(nsIntPoint& aPoint)
     aPoint.x = rect.x;
     aPoint.y = rect.y;
   }
-  
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBoxObject::GetX(int32_t* aResult)
+BoxObject::GetX(int32_t* aResult)
 {
   nsIntRect rect;
   GetOffsetRect(rect);
@@ -238,8 +243,8 @@ nsBoxObject::GetX(int32_t* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsBoxObject::GetY(int32_t* aResult)
+NS_IMETHODIMP
+BoxObject::GetY(int32_t* aResult)
 {
   nsIntRect rect;
   GetOffsetRect(rect);
@@ -248,7 +253,7 @@ nsBoxObject::GetY(int32_t* aResult)
 }
 
 NS_IMETHODIMP
-nsBoxObject::GetWidth(int32_t* aResult)
+BoxObject::GetWidth(int32_t* aResult)
 {
   nsIntRect rect;
   GetOffsetRect(rect);
@@ -256,8 +261,8 @@ nsBoxObject::GetWidth(int32_t* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsBoxObject::GetHeight(int32_t* aResult)
+NS_IMETHODIMP
+BoxObject::GetHeight(int32_t* aResult)
 {
   nsIntRect rect;
   GetOffsetRect(rect);
@@ -266,31 +271,27 @@ nsBoxObject::GetHeight(int32_t* aResult)
 }
 
 NS_IMETHODIMP
-nsBoxObject::GetScreenX(int32_t *_retval)
+BoxObject::GetScreenX(int32_t *_retval)
 {
   nsIntPoint position;
   nsresult rv = GetScreenPosition(position);
   if (NS_FAILED(rv)) return rv;
-
   *_retval = position.x;
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBoxObject::GetScreenY(int32_t *_retval)
+BoxObject::GetScreenY(int32_t *_retval)
 {
   nsIntPoint position;
   nsresult rv = GetScreenPosition(position);
   if (NS_FAILED(rv)) return rv;
-
   *_retval = position.y;
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBoxObject::GetPropertyAsSupports(const char16_t* aPropertyName, nsISupports** aResult)
+BoxObject::GetPropertyAsSupports(const char16_t* aPropertyName, nsISupports** aResult)
 {
   NS_ENSURE_ARG(aPropertyName && *aPropertyName);
   if (!mPropertyTable) {
@@ -303,7 +304,7 @@ nsBoxObject::GetPropertyAsSupports(const char16_t* aPropertyName, nsISupports** 
 }
 
 NS_IMETHODIMP
-nsBoxObject::SetPropertyAsSupports(const char16_t* aPropertyName, nsISupports* aValue)
+BoxObject::SetPropertyAsSupports(const char16_t* aPropertyName, nsISupports* aValue)
 {
   NS_ENSURE_ARG(aPropertyName && *aPropertyName);
 
@@ -317,7 +318,7 @@ nsBoxObject::SetPropertyAsSupports(const char16_t* aPropertyName, nsISupports* a
 }
 
 NS_IMETHODIMP
-nsBoxObject::GetProperty(const char16_t* aPropertyName, char16_t** aResult)
+BoxObject::GetProperty(const char16_t* aPropertyName, char16_t** aResult)
 {
   nsCOMPtr<nsISupports> data;
   nsresult rv = GetPropertyAsSupports(aPropertyName,getter_AddRefs(data));
@@ -329,14 +330,15 @@ nsBoxObject::GetProperty(const char16_t* aPropertyName, char16_t** aResult)
   }
 
   nsCOMPtr<nsISupportsString> supportsStr = do_QueryInterface(data);
-  if (!supportsStr)
+  if (!supportsStr) {
     return NS_ERROR_FAILURE;
+  }
 
   return supportsStr->ToString(aResult);
 }
 
 NS_IMETHODIMP
-nsBoxObject::SetProperty(const char16_t* aPropertyName, const char16_t* aPropertyValue)
+BoxObject::SetProperty(const char16_t* aPropertyName, const char16_t* aPropertyValue)
 {
   NS_ENSURE_ARG(aPropertyName && *aPropertyName);
 
@@ -356,7 +358,7 @@ nsBoxObject::SetProperty(const char16_t* aPropertyName, const char16_t* aPropert
 }
 
 NS_IMETHODIMP
-nsBoxObject::RemoveProperty(const char16_t* aPropertyName)
+BoxObject::RemoveProperty(const char16_t* aPropertyName)
 {
   NS_ENSURE_ARG(aPropertyName && *aPropertyName);
 
@@ -367,8 +369,8 @@ nsBoxObject::RemoveProperty(const char16_t* aPropertyName)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsBoxObject::GetParentBox(nsIDOMElement * *aParentBox)
+NS_IMETHODIMP
+BoxObject::GetParentBox(nsIDOMElement * *aParentBox)
 {
   *aParentBox = nullptr;
   nsIFrame* frame = GetFrame(false);
@@ -382,8 +384,8 @@ nsBoxObject::GetParentBox(nsIDOMElement * *aParentBox)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsBoxObject::GetFirstChild(nsIDOMElement * *aFirstVisibleChild)
+NS_IMETHODIMP
+BoxObject::GetFirstChild(nsIDOMElement * *aFirstVisibleChild)
 {
   *aFirstVisibleChild = nullptr;
   nsIFrame* frame = GetFrame(false);
@@ -397,7 +399,7 @@ nsBoxObject::GetFirstChild(nsIDOMElement * *aFirstVisibleChild)
 }
 
 NS_IMETHODIMP
-nsBoxObject::GetLastChild(nsIDOMElement * *aLastVisibleChild)
+BoxObject::GetLastChild(nsIDOMElement * *aLastVisibleChild)
 {
   *aLastVisibleChild = nullptr;
   nsIFrame* frame = GetFrame(false);
@@ -406,7 +408,7 @@ nsBoxObject::GetLastChild(nsIDOMElement * *aLastVisibleChild)
 }
 
 NS_IMETHODIMP
-nsBoxObject::GetNextSibling(nsIDOMElement **aNextOrdinalSibling)
+BoxObject::GetNextSibling(nsIDOMElement **aNextOrdinalSibling)
 {
   *aNextOrdinalSibling = nullptr;
   nsIFrame* frame = GetFrame(false);
@@ -420,7 +422,7 @@ nsBoxObject::GetNextSibling(nsIDOMElement **aNextOrdinalSibling)
 }
 
 NS_IMETHODIMP
-nsBoxObject::GetPreviousSibling(nsIDOMElement **aPreviousOrdinalSibling)
+BoxObject::GetPreviousSibling(nsIDOMElement **aPreviousOrdinalSibling)
 {
   *aPreviousOrdinalSibling = nullptr;
   nsIFrame* frame = GetFrame(false);
@@ -431,8 +433,8 @@ nsBoxObject::GetPreviousSibling(nsIDOMElement **aPreviousOrdinalSibling)
 }
 
 nsresult
-nsBoxObject::GetPreviousSibling(nsIFrame* aParentFrame, nsIFrame* aFrame,
-                                nsIDOMElement** aResult)
+BoxObject::GetPreviousSibling(nsIFrame* aParentFrame, nsIFrame* aFrame,
+                              nsIDOMElement** aResult)
 {
   *aResult = nullptr;
   nsIFrame* nextFrame = aParentFrame->GetFirstPrincipalChild();
@@ -443,7 +445,7 @@ nsBoxObject::GetPreviousSibling(nsIFrame* aParentFrame, nsIFrame* aFrame,
     prevFrame = nextFrame;
     nextFrame = nextFrame->GetNextSibling();
   }
-   
+
   if (!prevFrame) return NS_OK;
   // get the content for the box and query to a dom element
   nsCOMPtr<nsIDOMElement> el = do_QueryInterface(prevFrame->GetContent());
@@ -451,15 +453,170 @@ nsBoxObject::GetPreviousSibling(nsIFrame* aParentFrame, nsIFrame* aFrame,
   return NS_OK;
 }
 
+nsIContent*
+BoxObject::GetParentObject() const
+{
+  return mContent;
+}
+
+JSObject*
+BoxObject::WrapObject(JSContext* aCx)
+{
+  return BoxObjectBinding::Wrap(aCx, this);
+}
+
+Element*
+BoxObject::GetElement() const
+{
+  return mContent && mContent->IsElement() ? mContent->AsElement() : nullptr;
+}
+
+int32_t
+BoxObject::X()
+{
+  int32_t ret = 0;
+  GetX(&ret);
+  return ret;
+}
+
+int32_t
+BoxObject::Y()
+{
+  int32_t ret = 0;
+  GetY(&ret);
+  return ret;
+}
+
+int32_t
+BoxObject::GetScreenX(ErrorResult& aRv)
+{
+  int32_t ret = 0;
+  aRv = GetScreenX(&ret);
+  return ret;
+}
+
+int32_t
+BoxObject::GetScreenY(ErrorResult& aRv)
+{
+  int32_t ret = 0;
+  aRv = GetScreenY(&ret);
+  return ret;
+}
+
+int32_t
+BoxObject::Width()
+{
+  int32_t ret = 0;
+  GetWidth(&ret);
+  return ret;
+}
+
+int32_t
+BoxObject::Height()
+{
+  int32_t ret = 0;
+  GetHeight(&ret);
+  return ret;
+}
+
+already_AddRefed<nsISupports>
+BoxObject::GetPropertyAsSupports(const nsAString& propertyName)
+{
+  nsCOMPtr<nsISupports> ret;
+  GetPropertyAsSupports(PromiseFlatString(propertyName).get(), getter_AddRefs(ret));
+  return ret.forget();
+}
+
+void
+BoxObject::SetPropertyAsSupports(const nsAString& propertyName, nsISupports* value)
+{
+  SetPropertyAsSupports(PromiseFlatString(propertyName).get(), value);
+}
+
+void
+BoxObject::GetProperty(const nsAString& propertyName, nsString& aRetVal, ErrorResult& aRv)
+{
+  nsCOMPtr<nsISupports> data(GetPropertyAsSupports(propertyName));
+  if (!data) {
+    return;
+  }
+
+  nsCOMPtr<nsISupportsString> supportsStr(do_QueryInterface(data));
+  if (!supportsStr) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  supportsStr->GetData(aRetVal);
+}
+
+void
+BoxObject::SetProperty(const nsAString& propertyName, const nsAString& propertyValue)
+{
+  SetProperty(PromiseFlatString(propertyName).get(), PromiseFlatString(propertyValue).get());
+}
+
+void
+BoxObject::RemoveProperty(const nsAString& propertyName)
+{
+  RemoveProperty(PromiseFlatString(propertyName).get());
+}
+
+already_AddRefed<Element>
+BoxObject::GetParentBox()
+{
+  nsCOMPtr<nsIDOMElement> el;
+  GetParentBox(getter_AddRefs(el));
+  nsCOMPtr<Element> ret(do_QueryInterface(el));
+  return ret.forget();
+}
+
+already_AddRefed<Element>
+BoxObject::GetFirstChild()
+{
+  nsCOMPtr<nsIDOMElement> el;
+  GetFirstChild(getter_AddRefs(el));
+  nsCOMPtr<Element> ret(do_QueryInterface(el));
+  return ret.forget();
+}
+
+already_AddRefed<Element>
+BoxObject::GetLastChild()
+{
+  nsCOMPtr<nsIDOMElement> el;
+  GetLastChild(getter_AddRefs(el));
+  nsCOMPtr<Element> ret(do_QueryInterface(el));
+  return ret.forget();
+}
+
+already_AddRefed<Element>
+BoxObject::GetNextSibling()
+{
+  nsCOMPtr<nsIDOMElement> el;
+  GetNextSibling(getter_AddRefs(el));
+  nsCOMPtr<Element> ret(do_QueryInterface(el));
+  return ret.forget();
+}
+
+already_AddRefed<Element>
+BoxObject::GetPreviousSibling()
+{
+  nsCOMPtr<nsIDOMElement> el;
+  GetPreviousSibling(getter_AddRefs(el));
+  nsCOMPtr<Element> ret(do_QueryInterface(el));
+  return ret.forget();
+}
+
+} // namespace dom
+} // namespace mozilla
+
 // Creation Routine ///////////////////////////////////////////////////////////////////////
+
+using namespace mozilla::dom;
 
 nsresult
 NS_NewBoxObject(nsIBoxObject** aResult)
 {
-  *aResult = new nsBoxObject;
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*aResult);
+  NS_ADDREF(*aResult = new BoxObject());
   return NS_OK;
 }
-

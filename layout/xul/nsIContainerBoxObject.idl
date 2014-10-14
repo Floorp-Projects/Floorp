@@ -5,16 +5,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDocShell;
-interface nsIBoxObject;
+// DEPRECATED: This file exists for shim purposes only,
+// see ContainerBoxObject.webidl
 
-[scriptable, uuid(35d4c04b-3bd3-4375-92e2-a818b4b4acb6)]
+[uuid(35d4c04b-3bd3-4375-92e2-a818b4b4acb6)]
 interface nsIContainerBoxObject : nsISupports
 {
-  readonly attribute nsIDocShell docShell;
 };
-
-%{C++
-nsresult
-NS_NewContainerBoxObject(nsIBoxObject** aResult);
-%}

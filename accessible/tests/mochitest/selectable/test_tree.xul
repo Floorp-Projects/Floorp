@@ -42,7 +42,7 @@
       
       this.invoke = function invoke()
       {
-        this.DOMNode.treeBoxObject.view = aView;
+        this.DOMNode.view = aView;
       }
       this.check = function check()
       {
@@ -186,4 +186,3 @@
   </hbox>
 
 </window>
-

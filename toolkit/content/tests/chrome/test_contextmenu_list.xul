@@ -106,7 +106,7 @@ function menuTests()
   is(gContextMenuFired, true, "context menu fired when menu open");
 
   gSelectionStep = 1;
-  $("menu").boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject).activeChild = $("menu2");
+  $("menu").boxObject.activeChild = $("menu2");
   synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
 
   $("menu").open = false;

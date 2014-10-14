@@ -1012,7 +1012,7 @@ MozMillDropList.prototype = Object.create(MozMillElement.prototype, {
         if (index != undefined) {
           if (index == -1) {
             this.dispatchEvent('focus', false);
-            this.element.boxObject.QueryInterface(Ci.nsIMenuBoxObject).activeChild = null;
+            this.element.boxObject.activeChild = null;
             this.dispatchEvent('change', true);
 
             broker.pass({'function':'MozMillDropList.select()'});
