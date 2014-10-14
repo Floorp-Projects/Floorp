@@ -169,7 +169,7 @@ this.ContentControl.prototype = {
       });
       try {
         if (aMessage.json.activateIfKey &&
-          aAccessible.role != Roles.KEY) {
+          !Utils.isActivatableOnFingerUp(aAccessible)) {
           // Only activate keys, don't do anything on other objects.
           return;
         }
@@ -210,7 +210,7 @@ this.ContentControl.prototype = {
         }
       }
 
-      if (aAccessible.role !== Roles.KEY) {
+      if (!Utils.isActivatableOnFingerUp(aAccessible)) {
         // Keys will typically have a sound of their own.
         this._contentScope.get().sendAsyncMessage('AccessFu:Present',
           Presentation.actionInvoked(aAccessible, 'click'));

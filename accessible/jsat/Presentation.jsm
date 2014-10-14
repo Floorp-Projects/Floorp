@@ -482,7 +482,7 @@ B2GPresenter.prototype.pivotChanged =
         data: UtteranceGenerator.genForContext(aContext),
         options: {
           pattern: this.PIVOT_CHANGE_HAPTIC_PATTERN,
-          isKey: aContext.accessible.role === Roles.KEY,
+          isKey: Utils.isActivatableOnFingerUp(aContext.accessible),
           reason: this.pivotChangedReasons[aReason],
           isUserInput: aIsUserInput
         }
