@@ -34,7 +34,9 @@ void
 TracedTaskCommon::SetTraceInfo()
 {
   TraceInfo* info = GetOrCreateTraceInfo();
-  NS_ENSURE_TRUE_VOID(info);
+  if (!info) {
+    return;
+  }
 
   info->mCurTraceSourceId = mSourceEventId;
   info->mCurTraceSourceType = mSourceEventType;
@@ -45,7 +47,9 @@ void
 TracedTaskCommon::ClearTraceInfo()
 {
   TraceInfo* info = GetOrCreateTraceInfo();
-  NS_ENSURE_TRUE_VOID(info);
+  if (!info) {
+    return;
+  }
 
   info->mCurTraceSourceId = 0;
   info->mCurTraceSourceType = SourceEventType::UNKNOWN;
