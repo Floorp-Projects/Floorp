@@ -113,6 +113,7 @@ public:
         size_t MemoryUsage() const;
 
         TexInternalFormat EffectiveInternalFormat() const { return mEffectiveInternalFormat; }
+        GLsizei Depth() const { return mDepth; }
 
     protected:
         /*
