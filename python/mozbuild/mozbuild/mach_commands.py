@@ -664,6 +664,10 @@ class GTestCommands(MachCommandBase):
         # https://code.google.com/p/googletest/wiki/AdvancedGuide#Running_Test_Programs:_Advanced_Options
         gtest_env = {b'GTEST_FILTER': gtest_filter}
 
+        xre_path = os.path.join(self.topobjdir, "dist", "bin")
+        gtest_env["MOZ_XRE_DIR"] = xre_path
+        gtest_env["MOZ_GMP_PATH"] = os.path.join(xre_path, "gmp-fake", "1.0")
+
         gtest_env[b"MOZ_RUN_GTEST"] = b"True"
 
         if shuffle:

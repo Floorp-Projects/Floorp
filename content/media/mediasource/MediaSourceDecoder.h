@@ -63,6 +63,10 @@ public:
   // registered TrackBuffers essential for initialization.
   void PrepareReaderInitialization();
 
+#ifdef MOZ_EME
+  virtual nsresult SetCDMProxy(CDMProxy* aProxy) MOZ_OVERRIDE;
+#endif
+
 private:
   // The owning MediaSource holds a strong reference to this decoder, and
   // calls Attach/DetachMediaSource on this decoder to set and clear

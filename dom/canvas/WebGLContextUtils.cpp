@@ -60,7 +60,8 @@ TexImageTargetToTexTarget(TexImageTarget texImageTarget)
 {
     switch (texImageTarget.get()) {
     case LOCAL_GL_TEXTURE_2D:
-        return LOCAL_GL_TEXTURE_2D;
+    case LOCAL_GL_TEXTURE_3D:
+        return texImageTarget.get();
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
@@ -69,7 +70,7 @@ TexImageTargetToTexTarget(TexImageTarget texImageTarget)
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
         return LOCAL_GL_TEXTURE_CUBE_MAP;
     default:
-        MOZ_ASSERT(false, "Bad texture conversion");
+        MOZ_ASSERT(false, "Bad texture target");
         // Should be caught by the constructor for TexTarget
         return LOCAL_GL_NONE;
     }
@@ -448,6 +449,7 @@ WebGLContext::ShouldGenerateWarnings() const
 CheckedUint32
 WebGLContext::GetImageSize(GLsizei height,
                            GLsizei width,
+                           GLsizei depth,
                            uint32_t pixelSize,
                            uint32_t packOrUnpackAlignment)
 {
@@ -457,10 +459,12 @@ WebGLContext::GetImageSize(GLsizei height,
     CheckedUint32 checked_alignedRowSize = RoundedToNextMultipleOf(checked_plainRowSize, packOrUnpackAlignment);
 
     // if height is 0, we don't need any memory to store this; without this check, we'll get an overflow
-    CheckedUint32 checked_neededByteLength
+    CheckedUint32 checked_2dImageSize
         = height <= 0 ? 0 : (height-1) * checked_alignedRowSize + checked_plainRowSize;
 
-    return checked_neededByteLength;
+    // FIXME - we should honor UNPACK_IMAGE_HEIGHT
+    CheckedUint32 checked_imageSize = checked_2dImageSize * depth;
+    return checked_imageSize;
 }
 
 void
@@ -705,6 +709,22 @@ AssertUintParamCorrect(gl::GLContext* gl, GLenum pname, GLuint shadow)
       MOZ_ASSERT(false, "Bad cached value.");
     }
 }
+
+void
+AssertMaskedUintParamCorrect(gl::GLContext* gl, GLenum pname, GLuint mask, GLuint shadow)
+{
+    GLuint val = 0;
+    gl->GetUIntegerv(pname, &val);
+
+    const GLuint valMasked = val & mask;
+    const GLuint shadowMasked = shadow & mask;
+
+    if (valMasked != shadowMasked) {
+      printf_stderr("Failed 0x%04x shadow: Cached 0x%x/%u, should be 0x%x/%u.\n",
+                    pname, shadowMasked, shadowMasked, valMasked, valMasked);
+      MOZ_ASSERT(false, "Bad cached value.");
+    }
+}
 #else
 void
 AssertUintParamCorrect(gl::GLContext*, GLenum, GLuint)
@@ -802,8 +822,12 @@ WebGLContext::AssertCachedState()
 
     AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_CLEAR_VALUE, mStencilClearValue);
 
-    AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_REF,      mStencilRefFront);
-    AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_REF, mStencilRefBack);
+    GLint stencilBits = 0;
+    gl->fGetIntegerv(LOCAL_GL_STENCIL_BITS, &stencilBits);
+    const GLuint stencilRefMask = (1 << stencilBits) - 1;
+
+    AssertMaskedUintParamCorrect(gl, LOCAL_GL_STENCIL_REF,      stencilRefMask, mStencilRefFront);
+    AssertMaskedUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_REF, stencilRefMask, mStencilRefBack);
 
     AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_VALUE_MASK,      mStencilValueMaskFront);
     AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_VALUE_MASK, mStencilValueMaskBack);
@@ -824,6 +848,34 @@ WebGLContext::AssertCachedState()
 
     MOZ_ASSERT(!GetAndFlushUnderlyingGLErrors());
 #endif
+}
+
+const char*
+InfoFrom(WebGLTexImageFunc func, WebGLTexDimensions dims)
+{
+    switch (dims) {
+    case WebGLTexDimensions::Tex2D:
+        switch (func) {
+        case WebGLTexImageFunc::TexImage:        return "texImage2D";
+        case WebGLTexImageFunc::TexSubImage:     return "texSubImage2D";
+        case WebGLTexImageFunc::CopyTexImage:    return "copyTexImage2D";
+        case WebGLTexImageFunc::CopyTexSubImage: return "copyTexSubImage2D";
+        case WebGLTexImageFunc::CompTexImage:    return "compressedTexImage2D";
+        case WebGLTexImageFunc::CompTexSubImage: return "compressedTexSubImage2D";
+        default:
+            MOZ_CRASH();
+        }
+    case WebGLTexDimensions::Tex3D:
+        switch (func) {
+        case WebGLTexImageFunc::TexSubImage:     return "texSubImage3D";
+        case WebGLTexImageFunc::CopyTexSubImage: return "copyTexSubImage3D";
+        case WebGLTexImageFunc::CompTexSubImage: return "compressedTexSubImage3D";
+        default:
+            MOZ_CRASH();
+        }
+    default:
+        MOZ_CRASH();
+    }
 }
 
 } // namespace mozilla
