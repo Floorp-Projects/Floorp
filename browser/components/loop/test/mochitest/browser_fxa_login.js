@@ -391,3 +391,41 @@ add_task(function* loginWithRegistration401() {
 
   yield checkFxA401();
 });
+
+add_task(function* openFxASettings() {
+  yield resetFxA();
+
+  // Since the default b-c window has a blank tab, open a new non-blank tab to
+  // force switchToTabHavingURI to open a new tab instead of reusing the current
+  // blank tab.
+  gBrowser.selectedTab = gBrowser.addTab(BASE_URL);
+
+  let params = {
+    client_id: "client_id",
+    content_uri: BASE_URL + "/content",
+    oauth_uri: BASE_URL + "/oauth",
+    profile_uri: BASE_URL + "/profile",
+    state: "state",
+    test_error: "token_401",
+  };
+  yield promiseOAuthParamsSetup(BASE_URL, params);
+
+  let deferredTab = Promise.defer();
+  let progressListener = {
+    onLocationChange: function onLocationChange(aBrowser) {
+      gBrowser.removeTabsProgressListener(progressListener);
+      let contentURI = Services.io.newURI(params.content_uri, null, null);
+      is(aBrowser.currentURI.spec, Services.io.newURI("/settings", null, contentURI).spec,
+         "Check settings tab URL");
+      deferredTab.resolve();
+    },
+  };
+  gBrowser.addTabsProgressListener(progressListener);
+
+  MozLoopService.openFxASettings();
+
+  yield deferredTab.promise;
+  while (gBrowser.tabs.length > 1) {
+    gBrowser.removeTab(gBrowser.tabs[1]);
+  }
+});
