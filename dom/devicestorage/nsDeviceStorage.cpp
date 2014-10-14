@@ -50,6 +50,7 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIPermissionManager.h"
 #include "nsIStringBundle.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIDocument.h"
 #include "nsPrintfCString.h"
 #include <algorithm>
@@ -80,6 +81,10 @@ using namespace mozilla::dom::devicestorage;
 using namespace mozilla::ipc;
 
 #include "nsDirectoryServiceDefs.h"
+
+const char* kFileWatcherUpdate = "file-watcher-update";
+const char* kFileWatcherNotify = "file-watcher-notify";
+const char *kDownloadWatcherNotify = "download-watcher-notify";
 
 namespace mozilla {
   MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc, PRFileDesc, PR_Close);
@@ -304,6 +309,15 @@ DeviceStorageTypeChecker::Check(const nsAString& aType, nsIFile* aFile)
     return false;
   }
 
+  nsString path;
+  aFile->GetPath(path);
+
+  return Check(aType, path);
+}
+
+bool
+DeviceStorageTypeChecker::Check(const nsAString& aType, const nsString& aPath)
+{
   if (aType.EqualsLiteral(DEVICESTORAGE_APPS) ||
       aType.EqualsLiteral(DEVICESTORAGE_SDCARD) ||
       aType.EqualsLiteral(DEVICESTORAGE_CRASHES)) {
@@ -311,17 +325,14 @@ DeviceStorageTypeChecker::Check(const nsAString& aType, nsIFile* aFile)
     return true;
   }
 
-  nsString path;
-  aFile->GetPath(path);
-
-  int32_t dotIdx = path.RFindChar(char16_t('.'));
+  int32_t dotIdx = aPath.RFindChar(char16_t('.'));
   if (dotIdx == kNotFound) {
     return false;
   }
 
   nsAutoString extensionMatch;
   extensionMatch.Assign('*');
-  extensionMatch.Append(Substring(path, dotIdx));
+  extensionMatch.Append(Substring(aPath, dotIdx));
   extensionMatch.Append(';');
 
   if (aType.EqualsLiteral(DEVICESTORAGE_PICTURES)) {
@@ -428,6 +439,14 @@ DeviceStorageTypeChecker::GetAccessForRequest(
   return NS_OK;
 }
 
+static bool IsMediaType(const nsAString& aType)
+{
+  return aType.EqualsLiteral(DEVICESTORAGE_PICTURES) ||
+         aType.EqualsLiteral(DEVICESTORAGE_VIDEOS) ||
+         aType.EqualsLiteral(DEVICESTORAGE_MUSIC) ||
+         aType.EqualsLiteral(DEVICESTORAGE_SDCARD);
+}
+
 //static
 bool
 DeviceStorageTypeChecker::IsVolumeBased(const nsAString& aType)
@@ -437,10 +456,24 @@ DeviceStorageTypeChecker::IsVolumeBased(const nsAString& aType)
   // we only ever return a single apps object, and not an array
   // with one per volume (as is the case for the remaining
   // storage types).
-  return !aType.EqualsLiteral(DEVICESTORAGE_APPS) &&
-         !aType.EqualsLiteral(DEVICESTORAGE_CRASHES);
+  return IsMediaType(aType);
 #else
   return false;
+#endif
+}
+
+//static
+bool
+DeviceStorageTypeChecker::IsSharedMediaRoot(const nsAString& aType)
+{
+  // This function determines if aType shares a root directory with the
+  // other media types (so only applies to music, videos, pictures and sdcard).
+#ifdef MOZ_WIDGET_GONK
+  return IsMediaType(aType);
+#else
+  // For desktop, if the directories have been overridden, then they share
+  // a common root.
+  return IsMediaType(aType) && sDirs->overrideRootDir;
 #endif
 }
 
@@ -457,32 +490,115 @@ FileUpdateDispatcher::GetSingleton()
 
   sSingleton = new FileUpdateDispatcher();
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  obs->AddObserver(sSingleton, "file-watcher-notify", false);
+  obs->AddObserver(sSingleton, kFileWatcherNotify, false);
+  obs->AddObserver(sSingleton, kDownloadWatcherNotify, false);
   ClearOnShutdown(&sSingleton);
 
   return sSingleton;
 }
 
 NS_IMETHODIMP
-FileUpdateDispatcher::Observe(nsISupports *aSubject,
-                              const char *aTopic,
-                              const char16_t *aData)
+FileUpdateDispatcher::Observe(nsISupports* aSubject,
+                              const char* aTopic,
+                              const char16_t* aData)
 {
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  nsRefPtr<DeviceStorageFile> dsf;
 
-    DeviceStorageFile* file = static_cast<DeviceStorageFile*>(aSubject);
-    if (!file || !file->mFile) {
-      NS_WARNING("Device storage file looks invalid!");
+  if (!strcmp(aTopic, kDownloadWatcherNotify)) {
+    // aSubject will be an nsISupportsString with the native path to the file
+    // in question.
+
+    nsCOMPtr<nsISupportsString> supportsString = do_QueryInterface(aSubject);
+    if (!supportsString) {
       return NS_OK;
     }
-    ContentChild::GetSingleton()
-      ->SendFilePathUpdateNotify(file->mStorageType,
-                                 file->mStorageName,
-                                 file->mPath,
-                                 NS_ConvertUTF16toUTF8(aData));
+    nsString path;
+    nsresult rv = supportsString->GetData(path);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return NS_OK;
+    }
+
+    // The downloader uses the sdcard storage type.
+    nsString volName;
+#ifdef MOZ_WIDGET_GONK
+    if (DeviceStorageTypeChecker::IsVolumeBased(NS_LITERAL_STRING(DEVICESTORAGE_SDCARD))) {
+      nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
+      if (NS_WARN_IF(!vs)) {
+        return NS_OK;
+      }
+      nsCOMPtr<nsIVolume> vol;
+      rv = vs->GetVolumeByPath(path, getter_AddRefs(vol));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return NS_OK;
+      }
+      rv = vol->GetName(volName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return NS_OK;
+      }
+      nsString mountPoint;
+      rv = vol->GetMountPoint(mountPoint);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return NS_OK;
+      }
+      if (!Substring(path, 0, mountPoint.Length()).Equals(mountPoint)) {
+        return NS_OK;
+      }
+      path = Substring(path, mountPoint.Length() + 1);
+    }
+#endif
+    dsf = new DeviceStorageFile(NS_LITERAL_STRING(DEVICESTORAGE_SDCARD), volName, path);
+
+  } else if (!strcmp(aTopic, kFileWatcherNotify)) {
+    dsf = static_cast<DeviceStorageFile*>(aSubject);
   } else {
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->NotifyObservers(aSubject, "file-watcher-update", aData);
+    NS_WARNING("FileUpdateDispatcher: Unrecognized topic");
+    return NS_OK;
+  }
+
+  if (!dsf || !dsf->mFile) {
+    NS_WARNING("FileUpdateDispatcher: Device storage file looks invalid!");
+    return NS_OK;
+  }
+
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    // Child process. Forward the notification to the parent.
+    ContentChild::GetSingleton()
+      ->SendFilePathUpdateNotify(dsf->mStorageType,
+                                 dsf->mStorageName,
+                                 dsf->mPath,
+                                 NS_ConvertUTF16toUTF8(aData));
+    return NS_OK;
+  }
+
+  // Multiple storage types may match the same files. So walk through each of
+  // the storage types, and if the extension matches, tell them about it.
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (DeviceStorageTypeChecker::IsSharedMediaRoot(dsf->mStorageType)) {
+    DeviceStorageTypeChecker* typeChecker
+      = DeviceStorageTypeChecker::CreateOrGet();
+    MOZ_ASSERT(typeChecker);
+
+    static const nsLiteralString kMediaTypes[] = {
+      NS_LITERAL_STRING(DEVICESTORAGE_SDCARD),
+      NS_LITERAL_STRING(DEVICESTORAGE_PICTURES),
+      NS_LITERAL_STRING(DEVICESTORAGE_VIDEOS),
+      NS_LITERAL_STRING(DEVICESTORAGE_MUSIC),
+    };
+
+    for (size_t i = 0; i < MOZ_ARRAY_LENGTH(kMediaTypes); i++) {
+      nsRefPtr<DeviceStorageFile> dsf2;
+      if (typeChecker->Check(kMediaTypes[i], dsf->mPath)) {
+        if (dsf->mStorageType.Equals(kMediaTypes[i])) {
+          dsf2 = dsf;
+        } else {
+          dsf2 = new DeviceStorageFile(kMediaTypes[i],
+                                       dsf->mStorageName, dsf->mPath);
+        }
+        obs->NotifyObservers(dsf2, kFileWatcherUpdate, aData);
+      }
+    }
+  } else {
+    obs->NotifyObservers(dsf, kFileWatcherUpdate, aData);
   }
   return NS_OK;
 }
@@ -505,7 +621,7 @@ public:
     CopyASCIItoUTF16(mType, data);
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
 
-    obs->NotifyObservers(mFile, "file-watcher-notify", data.get());
+    obs->NotifyObservers(mFile, kFileWatcherNotify, data.get());
 
     DeviceStorageUsedSpaceCache* usedSpaceCache
       = DeviceStorageUsedSpaceCache::CreateOrGet();
@@ -1742,7 +1858,7 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aStorageType,
                                              aStorageName,
                                              getter_AddRefs(f));
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  obs->AddObserver(this, "file-watcher-update", false);
+  obs->AddObserver(this, kFileWatcherUpdate, false);
   obs->AddObserver(this, "disk-space-watcher", false);
   mRootDirectory = f;
   mStorageType = aStorageType;
@@ -3316,7 +3432,7 @@ nsDOMDeviceStorage::Shutdown()
   }
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  obs->RemoveObserver(this, "file-watcher-update");
+  obs->RemoveObserver(this, kFileWatcherUpdate);
   obs->RemoveObserver(this, "disk-space-watcher");
 }
 
@@ -4245,7 +4361,7 @@ nsDOMDeviceStorage::Observe(nsISupports *aSubject,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!strcmp(aTopic, "file-watcher-update")) {
+  if (!strcmp(aTopic, kFileWatcherUpdate)) {
 
     DeviceStorageFile* file = static_cast<DeviceStorageFile*>(aSubject);
     Notify(NS_ConvertUTF16toUTF8(aData).get(), file);
@@ -4399,7 +4515,7 @@ nsDOMDeviceStorage::AddSystemEventListener(const nsAString & aType,
 {
   if (!mIsWatchingFile) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->AddObserver(this, "file-watcher-update", false);
+    obs->AddObserver(this, kFileWatcherUpdate, false);
     mIsWatchingFile = true;
   }
 
@@ -4417,7 +4533,7 @@ nsDOMDeviceStorage::RemoveEventListener(const nsAString & aType,
   if (mIsWatchingFile && !HasListenersFor(nsGkAtoms::onchange)) {
     mIsWatchingFile = false;
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->RemoveObserver(this, "file-watcher-update");
+    obs->RemoveObserver(this, kFileWatcherUpdate);
   }
   return NS_OK;
 }
@@ -4433,7 +4549,7 @@ nsDOMDeviceStorage::RemoveEventListener(const nsAString& aType,
   if (mIsWatchingFile && !HasListenersFor(nsGkAtoms::onchange)) {
     mIsWatchingFile = false;
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->RemoveObserver(this, "file-watcher-update");
+    obs->RemoveObserver(this, kFileWatcherUpdate);
   }
 }
 
