@@ -130,6 +130,15 @@
   -moz-appearance: none;
 }
 
+#customization-titlebar-visibility-button[checked],
+#customization-devedition-theme-button[checked] {
+  background-color: rgb(218, 218, 218);
+  border-color: rgb(168, 168, 168);
+  text-shadow: 0 1px rgb(236, 236, 236);
+  box-shadow: 0 1px rgba(255, 255, 255, 0.5),
+              inset 0 1px rgb(196, 196, 196);
+}
+
 .customizationmode-button[disabled="true"] {
   opacity: .5;
 }
@@ -156,11 +165,6 @@
 
 #customization-titlebar-visibility-button[checked] {
   -moz-image-region: rect(0, 48px, 24px, 24px);
-  background-color: rgb(218, 218, 218);
-  border-color: rgb(168, 168, 168);
-  text-shadow: 0 1px rgb(236, 236, 236);
-  box-shadow: 0 1px rgba(255, 255, 255, 0.5),
-              inset 0 1px rgb(196, 196, 196);
 }
 
 #main-window[customize-entered] #customization-panel-container {
