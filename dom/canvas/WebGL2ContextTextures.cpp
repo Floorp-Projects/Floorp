@@ -272,8 +272,19 @@ WebGL2Context::TexSubImage3D(GLenum rawTarget, GLint level,
     if (dataLength < bytesNeeded)
         return ErrorInvalidOperation("texSubImage2D: not enough data for operation (need %d, have %d)", bytesNeeded, dataLength);
 
-    if (imageInfo.HasUninitializedImageData())
-        tex->DoDeferredImageInitialization(texImageTarget, level);
+    if (imageInfo.HasUninitializedImageData()) {
+        bool coversWholeImage = xoffset == 0 &&
+                                yoffset == 0 &&
+                                zoffset == 0 &&
+                                width == imageInfo.Width() &&
+                                height == imageInfo.Height() &&
+                                depth == imageInfo.Depth();
+        if (coversWholeImage) {
+            tex->SetImageDataStatus(texImageTarget, level, WebGLImageDataStatus::InitializedImageData);
+        } else {
+            tex->DoDeferredImageInitialization(texImageTarget, level);
+        }
+    }
 
     GLenum driverType = LOCAL_GL_NONE;
     GLenum driverInternalFormat = LOCAL_GL_NONE;
