@@ -12,7 +12,7 @@ var Feedback = {
     try {
       Services.prefs.getCharPref("distribution.id");
     } catch (e) {
-      BrowserApp.addTab("about:feedback", { selected: true, parentId: BrowserApp.selectedTab.id });
+      BrowserApp.addTab("about:feedback?source=feedback-prompt", { selected: true, parentId: BrowserApp.selectedTab.id });
     }
   }
 };
