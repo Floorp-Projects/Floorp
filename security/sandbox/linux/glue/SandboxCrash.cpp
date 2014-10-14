@@ -19,12 +19,12 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/Exceptions.h"
 #include "nsContentUtils.h"
-#include "nsString.h"
-#include "nsThreadUtils.h"
-
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
+#include "nsStackWalk.h"
+#include "nsString.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 
@@ -74,17 +74,46 @@ SandboxLogJSStack(void)
   }
 }
 
+static void SandboxPrintStackFrame(uint32_t aFrameNumber, void *aPC, void *aSP,
+                                   void *aClosure)
+{
+  char buf[1024];
+  nsCodeAddressDetails details;
+
+  NS_DescribeCodeAddress(aPC, &details);
+  NS_FormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
+  SANDBOX_LOG_ERROR("frame %s", buf);
+}
+
+static void
+SandboxLogCStack()
+{
+  // Skip 3 frames: one for this module, one for the signal handler in
+  // libmozsandbox, and one for the signal trampoline.
+  //
+  // Warning: this might not print any stack frames.  NS_StackWalk
+  // can't walk past the signal trampoline on ARM (bug 968531), and
+  // x86 frame pointer walking may or may not work (bug 1082276).
+
+  NS_StackWalk(SandboxPrintStackFrame, /* skip */ 3, /* max */ 0,
+               nullptr, 0, nullptr);
+  SANDBOX_LOG_ERROR("end of stack.");
+}
+
 static void
 SandboxCrash(int nr, siginfo_t *info, void *void_context)
 {
   pid_t pid = getpid(), tid = syscall(__NR_gettid);
+  bool dumped = false;
 
 #ifdef MOZ_CRASHREPORTER
-  bool dumped = CrashReporter::WriteMinidumpForSigInfo(nr, info, void_context);
-  if (!dumped) {
-    SANDBOX_LOG_ERROR("Failed to write minidump");
-  }
+  dumped = CrashReporter::WriteMinidumpForSigInfo(nr, info, void_context);
 #endif
+  if (!dumped) {
+    SANDBOX_LOG_ERROR("crash reporter is disabled (or failed);"
+                      " trying stack trace:");
+    SandboxLogCStack();
+  }
 
   // Do this last, in case it crashes or deadlocks.
   SandboxLogJSStack();

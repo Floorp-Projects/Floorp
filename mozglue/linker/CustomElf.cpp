@@ -74,11 +74,6 @@ static int p_flags_to_mprot(Word flags)
          ((flags & PF_R) ? PROT_READ : 0);
 }
 
-void
-__void_stub(void)
-{
-}
-
 } /* anonymous namespace */
 
 /**
@@ -328,16 +323,6 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
       return FunctionPtr(signal);
     if (strcmp(symbol + 2, "gaction") == 0)
       return FunctionPtr(sigaction);
-  }
-
-#define MISSING_FLASH_SYMNAME_START "_ZN7android10VectorImpl19reservedVectorImpl"
-
-  // Android changed some symbols that Flash depended on in 4.4,
-  // so stub those out here
-  if (strncmp(symbol,
-              MISSING_FLASH_SYMNAME_START,
-              sizeof(MISSING_FLASH_SYMNAME_START) - 1) == 0) {
-    return FunctionPtr(__void_stub);
   }
 
   void *sym;

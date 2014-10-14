@@ -290,6 +290,11 @@ function openPrefs() {
 
 function init() {
   fxAccounts.getSignedInUser().then(user => {
+    // tests in particular might cause the window to start closing before
+    // getSignedInUser has returned.
+    if (window.closed) {
+      return;
+    }
     // If the url contains an entrypoint query parameter, extract it into a variable
     // to append it to the accounts URI resource.
     // Works for the following cases:
@@ -300,11 +305,6 @@ function init() {
     let entryPoint = "";
     if (entryPointPos >= 0) {
       entryPoint = window.location.href.substring(entryPointPos).split("&")[0];
-    }
-    // tests in particular might cause the window to start closing before
-    // getSignedInUser has returned.
-    if (window.closed) {
-      return;
     }
     if (window.location.href.contains("action=signin")) {
       if (user) {

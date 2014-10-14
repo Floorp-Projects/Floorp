@@ -61,6 +61,7 @@ PlatformDecoderModule::Init()
 #endif
 }
 
+#ifdef MOZ_EME
 class CreateTaskQueueTask : public nsRunnable {
 public:
   NS_IMETHOD Run() {
@@ -81,7 +82,6 @@ CreateTaskQueue()
   return t->mTaskQueue.forget();
 }
 
-#ifdef MOZ_EME
 /* static */
 PlatformDecoderModule*
 PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,

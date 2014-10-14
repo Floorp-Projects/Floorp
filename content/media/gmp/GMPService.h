@@ -19,6 +19,7 @@
 #include "nsITimer.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
+#include "mozilla/Atomics.h"
 
 template <class> struct already_AddRefed;
 
@@ -49,8 +50,11 @@ private:
 
   GMPParent* SelectPluginForAPI(const nsACString& aNodeId,
                                 const nsCString& aAPI,
-                                const nsTArray<nsCString>& aTags,
-                                bool aCloneCrossNodeIds = true);
+                                const nsTArray<nsCString>& aTags);
+  GMPParent* FindPluginForAPIFrom(size_t aSearchStartIndex,
+                                  const nsCString& aAPI,
+                                  const nsTArray<nsCString>& aTags,
+                                  size_t* aOutPluginIndex);
 
   void UnloadPlugins();
   void CrashPlugins();
@@ -93,6 +97,10 @@ private:
   nsCOMPtr<nsIThread> mGMPThread;
   bool mShuttingDown;
   bool mShuttingDownOnGMPThread;
+
+  // True if we've inspected MOZ_GMP_PATH on the GMP thread and loaded any
+  // plugins found there into mPlugins.
+  Atomic<bool> mScannedPluginOnDisk;
 
   template<typename T>
   class MainThreadOnly {

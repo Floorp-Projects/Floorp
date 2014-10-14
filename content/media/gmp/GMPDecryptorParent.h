@@ -106,6 +106,7 @@ private:
   virtual bool Recv__delete__() MOZ_OVERRIDE;
 
   bool mIsOpen;
+  bool mShuttingDown;
   nsRefPtr<GMPParent> mPlugin;
   GMPDecryptorProxyCallback* mCallback;
 };

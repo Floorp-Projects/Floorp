@@ -228,8 +228,16 @@ public:
     void DummyFramebufferOperation(const char *info);
 
     WebGLTexture* activeBoundTextureForTarget(const TexTarget texTarget) const {
-        return texTarget == LOCAL_GL_TEXTURE_2D ? mBound2DTextures[mActiveTexture]
-                                                : mBoundCubeMapTextures[mActiveTexture];
+        switch (texTarget.get()) {
+            case LOCAL_GL_TEXTURE_2D:
+                return mBound2DTextures[mActiveTexture];
+            case LOCAL_GL_TEXTURE_CUBE_MAP:
+                return mBoundCubeMapTextures[mActiveTexture];
+            case LOCAL_GL_TEXTURE_3D:
+                return mBound3DTextures[mActiveTexture];
+            default:
+                MOZ_CRASH("bad target");
+        }
     }
 
     /* Use this function when you have the texture image target, for example:
@@ -483,10 +491,12 @@ public:
         if (IsContextLost())
             return;
 
-        auto dims = 2;
-
-        if (!ValidateTexImageTarget(dims, rawTexImgTarget, WebGLTexImageFunc::TexImage))
+        if (!ValidateTexImageTarget(rawTexImgTarget,
+                                    WebGLTexImageFunc::TexImage,
+                                    WebGLTexDimensions::Tex2D))
+        {
             return ErrorInvalidEnumInfo("texSubImage2D: target", rawTexImgTarget);
+        }
 
         const TexImageTarget texImageTarget(rawTexImgTarget);
 
@@ -520,7 +530,7 @@ public:
         return TexImage2D_base(texImageTarget, level, internalformat,
                                size.width, size.height, data->Stride(),
                                0, format, type, data->GetData(), byteLength,
-                               -1, srcFormat, mPixelStorePremultiplyAlpha);
+                               js::Scalar::TypeMax, srcFormat, mPixelStorePremultiplyAlpha);
     }
 
     void TexParameterf(GLenum target, GLenum pname, GLfloat param) {
@@ -552,8 +562,12 @@ public:
         if (IsContextLost())
             return;
 
-        if (!ValidateTexImageTarget(2, rawTexImageTarget, WebGLTexImageFunc::TexSubImage))
+        if (!ValidateTexImageTarget(rawTexImageTarget,
+                                    WebGLTexImageFunc::TexSubImage,
+                                    WebGLTexDimensions::Tex2D))
+        {
             return ErrorInvalidEnumInfo("texSubImage2D: target", rawTexImageTarget);
+        }
 
         const TexImageTarget texImageTarget(rawTexImageTarget);
 
@@ -592,7 +606,7 @@ public:
                                   size.width, size.height,
                                   data->Stride(), format, type,
                                   data->GetData(), byteLength,
-                                  -1, srcFormat, mPixelStorePremultiplyAlpha);
+                                  js::Scalar::TypeMax, srcFormat, mPixelStorePremultiplyAlpha);
 
     }
 
@@ -836,6 +850,7 @@ private:
 public:
     void Disable(GLenum cap);
     void Enable(GLenum cap);
+    bool GetStencilBits(GLint* out_stencilBits);
     JS::Value GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv);
     void GetParameter(JSContext* cx, GLenum pname,
                       JS::MutableHandle<JS::Value> retval, ErrorResult& rv) {
@@ -971,6 +986,7 @@ protected:
 
     static CheckedUint32 GetImageSize(GLsizei height,
                                       GLsizei width,
+                                      GLsizei depth,
                                       uint32_t pixelSize,
                                       uint32_t alignment);
 
@@ -1092,7 +1108,10 @@ protected:
     bool ValidateComparisonEnum(GLenum target, const char *info);
     bool ValidateStencilOpEnum(GLenum action, const char *info);
     bool ValidateFaceEnum(GLenum face, const char *info);
-    bool ValidateTexInputData(GLenum type, int jsArrayType, WebGLTexImageFunc func);
+    bool ValidateTexInputData(GLenum type,
+                              js::Scalar::Type jsArrayType,
+                              WebGLTexImageFunc func,
+                              WebGLTexDimensions dims);
     bool ValidateDrawModeEnum(GLenum mode, const char *info);
     bool ValidateAttribIndex(GLuint index, const char *info);
     bool ValidateStencilParamsForDrawCall();
@@ -1102,40 +1121,56 @@ protected:
     bool ValidateGLSLString(const nsAString& string, const char *info);
 
     bool ValidateCopyTexImage(GLenum internalformat,
-                              WebGLTexImageFunc func);
-    bool ValidateTexImage(GLuint dims, TexImageTarget texImageTarget,
+                              WebGLTexImageFunc func,
+                              WebGLTexDimensions dims);
+    bool ValidateTexImage(TexImageTarget texImageTarget,
                           GLint level, GLenum internalFormat,
                           GLint xoffset, GLint yoffset, GLint zoffset,
                           GLint width, GLint height, GLint depth,
                           GLint border, GLenum format, GLenum type,
-                          WebGLTexImageFunc func);
-    bool ValidateTexImageTarget(GLuint dims, GLenum target, WebGLTexImageFunc func);
+                          WebGLTexImageFunc func,
+                          WebGLTexDimensions dims);
+    bool ValidateTexImageTarget(GLenum target,
+                                WebGLTexImageFunc func,
+                                WebGLTexDimensions dims);
     bool ValidateTexImageFormat(GLenum internalformat,
-                                WebGLTexImageFunc func);
-    bool ValidateTexImageType(GLenum type, WebGLTexImageFunc func);
-    bool ValidateTexImageFormatAndType(GLenum format, GLenum type, WebGLTexImageFunc func);
+                                WebGLTexImageFunc func,
+                                WebGLTexDimensions dims);
+    bool ValidateTexImageType(GLenum type,
+                              WebGLTexImageFunc func,
+                              WebGLTexDimensions dims);
+    bool ValidateTexImageFormatAndType(GLenum format,
+                                       GLenum type,
+                                       WebGLTexImageFunc func,
+                                       WebGLTexDimensions dims);
     bool ValidateCompTexImageInternalFormat(GLenum format,
-                                            WebGLTexImageFunc func);
+                                            WebGLTexImageFunc func,
+                                            WebGLTexDimensions dims);
     bool ValidateCopyTexImageInternalFormat(GLenum format,
-                                            WebGLTexImageFunc func);
+                                            WebGLTexImageFunc func,
+                                            WebGLTexDimensions dims);
     bool ValidateTexImageSize(TexImageTarget target, GLint level,
                               GLint width, GLint height, GLint depth,
-                              WebGLTexImageFunc func);
+                              WebGLTexImageFunc func,
+                              WebGLTexDimensions dims);
     bool ValidateTexSubImageSize(GLint x, GLint y, GLint z,
                                  GLsizei width, GLsizei height, GLsizei depth,
                                  GLsizei baseWidth, GLsizei baseHeight, GLsizei baseDepth,
-                                 WebGLTexImageFunc func);
-
+                                 WebGLTexImageFunc func,
+                                 WebGLTexDimensions dims);
     bool ValidateCompTexImageSize(GLint level,
                                   GLenum internalformat,
                                   GLint xoffset, GLint yoffset,
                                   GLsizei width, GLsizei height,
                                   GLsizei levelWidth, GLsizei levelHeight,
-                                  WebGLTexImageFunc func);
+                                  WebGLTexImageFunc func,
+                                  WebGLTexDimensions dims);
     bool ValidateCompTexImageDataSize(GLint level,
                                       GLenum internalformat,
                                       GLsizei width, GLsizei height,
-                                      uint32_t byteLength, WebGLTexImageFunc func);
+                                      uint32_t byteLength,
+                                      WebGLTexImageFunc func,
+                                      WebGLTexDimensions dims);
 
     void Invalidate();
     void DestroyResourcesAndContext();
@@ -1143,6 +1178,7 @@ protected:
     void MakeContextCurrent() const;
 
     // helpers
+
     void TexImage2D_base(TexImageTarget target,
                          GLint level,
                          GLenum internalformat,
@@ -1150,7 +1186,7 @@ protected:
                          GLenum format,
                          GLenum type,
                          void *data, uint32_t byteLength,
-                         int jsArrayType,
+                         js::Scalar::Type jsArrayType, // special value TypeMax used to mean no array
                          WebGLTexelFormat srcFormat, bool srcPremultiplied);
     void TexSubImage2D_base(TexImageTarget target, GLint level,
                             GLint xoffset, GLint yoffset,
@@ -1158,7 +1194,7 @@ protected:
                             GLenum format,
                             GLenum type,
                             void *pixels, uint32_t byteLength,
-                            int jsArrayType,
+                            js::Scalar::Type jsArrayType, // special value TypeMax used to mean no array
                             WebGLTexelFormat srcFormat, bool srcPremultiplied);
     void TexParameter_base(GLenum target, GLenum pname,
                            GLint *intParamPtr, GLfloat *floatParamPtr);
@@ -1255,6 +1291,7 @@ protected:
 
     nsTArray<WebGLRefPtr<WebGLTexture> > mBound2DTextures;
     nsTArray<WebGLRefPtr<WebGLTexture> > mBoundCubeMapTextures;
+    nsTArray<WebGLRefPtr<WebGLTexture> > mBound3DTextures;
 
     WebGLRefPtr<WebGLProgram> mCurrentProgram;
 
