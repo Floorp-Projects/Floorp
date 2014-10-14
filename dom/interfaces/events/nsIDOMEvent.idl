@@ -272,6 +272,13 @@ NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult,
                        mozilla::dom::EventTarget* aOwner,
                        nsPresContext* aPresContext,
                        mozilla::WidgetKeyboardEvent* aEvent);
+
+nsresult
+NS_NewDOMBeforeAfterKeyboardEvent(nsIDOMEvent** aInstancePtrResult,
+                                  mozilla::dom::EventTarget* aOwner,
+                                  nsPresContext* aPresContext,
+                                  mozilla::InternalBeforeAfterKeyboardEvent* aEvent);
+
 nsresult
 NS_NewDOMCompositionEvent(nsIDOMEvent** aInstancePtrResult,
                           mozilla::dom::EventTarget* aOwner,
