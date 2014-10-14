@@ -99,7 +99,6 @@
 
 #include "nsBidiUtils.h"
 
-#include "nsIDOMXPathNSResolver.h"
 #include "nsIParserService.h"
 #include "nsContentCreatorFunctions.h"
 
@@ -1779,8 +1778,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMXPathEvaluator)
   NS_INTERFACE_TABLE_END
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsDocument)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
-                                 new nsNode3Tearoff(this))
 NS_INTERFACE_MAP_END
 
 

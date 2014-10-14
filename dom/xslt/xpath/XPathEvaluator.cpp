@@ -8,7 +8,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "mozilla/dom/XPathExpression.h"
-#include "nsXPathNSResolver.h"
 #include "XPathResult.h"
 #include "nsContentCID.h"
 #include "txExpr.h"
