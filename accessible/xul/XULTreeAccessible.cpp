@@ -199,7 +199,7 @@ XULTreeAccessible::ChildAtPoint(int32_t aX, int32_t aY,
 
   int32_t row = -1;
   nsCOMPtr<nsITreeColumn> column;
-  nsAutoCString childEltUnused;
+  nsAutoString childEltUnused;
   mTree->GetCellAt(clientX, clientY, &row, getter_AddRefs(column),
                    childEltUnused);
 
@@ -746,7 +746,7 @@ XULTreeItemAccessibleBase::Bounds() const
   nsCOMPtr<nsITreeColumn> column = nsCoreUtils::GetFirstSensibleColumn(mTree);
 
   int32_t x = 0, y = 0, width = 0, height = 0;
-  nsresult rv = mTree->GetCoordsForCellItem(mRow, column, EmptyCString(),
+  nsresult rv = mTree->GetCoordsForCellItem(mRow, column, EmptyString(),
                                             &x, &y, &width, &height);
   if (NS_FAILED(rv))
     return nsIntRect();
@@ -996,7 +996,7 @@ XULTreeItemAccessibleBase::DispatchClickEvent(nsIContent* aContent,
 
   // Get column and pseudo element.
   nsCOMPtr<nsITreeColumn> column;
-  nsAutoCString pseudoElm;
+  nsAutoString pseudoElm;
 
   if (aActionIndex == eAction_Click) {
     // Key column is visible and clickable.
@@ -1004,7 +1004,7 @@ XULTreeItemAccessibleBase::DispatchClickEvent(nsIContent* aContent,
   } else {
     // Primary column contains a twisty we should click on.
     columns->GetPrimaryColumn(getter_AddRefs(column));
-    pseudoElm = NS_LITERAL_CSTRING("twisty");
+    pseudoElm = NS_LITERAL_STRING("twisty");
   }
 
   if (column)
@@ -1196,4 +1196,3 @@ XULTreeColumAccessible::GetSiblingAtOffset(int32_t aOffset,
 
   return nullptr;
 }
-

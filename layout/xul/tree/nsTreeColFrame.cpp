@@ -10,9 +10,8 @@
 #include "nsStyleContext.h"
 #include "nsNameSpaceManager.h"
 #include "nsIBoxObject.h"
-#include "nsTreeBoxObject.h"
+#include "mozilla/dom/TreeBoxObject.h"
 #include "nsIDOMElement.h"
-#include "nsITreeBoxObject.h"
 #include "nsITreeColumns.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsDisplayList.h"
@@ -188,7 +187,8 @@ nsTreeColFrame::InvalidateColumns(bool aCanWalkFrameTree)
     if (aCanWalkFrameTree) {
       treeBoxObject->GetColumns(getter_AddRefs(columns));
     } else {
-      nsTreeBodyFrame* body = static_cast<nsTreeBoxObject*>(treeBoxObject)->GetCachedTreeBody();
+      nsTreeBodyFrame* body = static_cast<mozilla::dom::TreeBoxObject*>
+        (treeBoxObject)->GetCachedTreeBodyFrame();
       if (body) {
         columns = body->Columns();
       }

@@ -1021,7 +1021,7 @@ this.UITour = {
       }
       if (aOpenCallback)
         menuBtn.addEventListener("popupshown", onPopupShown);
-      menuBtn.boxObject.QueryInterface(Ci.nsIMenuBoxObject).openMenu(true);
+      menuBtn.boxObject.openMenu(true);
     }
     function onPopupShown(event) {
       this.removeEventListener("popupshown", onPopupShown);
@@ -1049,7 +1049,7 @@ this.UITour = {
     function closeMenuButton(aID) {
       let menuBtn = aWindow.document.getElementById(aID);
       if (menuBtn && menuBtn.boxObject)
-        menuBtn.boxObject.QueryInterface(Ci.nsIMenuBoxObject).openMenu(false);
+        menuBtn.boxObject.openMenu(false);
     }
 
     if (aMenuName == "appMenu") {

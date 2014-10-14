@@ -196,11 +196,9 @@ function synthesizeClickOnSelectedTreeCell(aTree, aOptions) {
   let rowID = min.value;
   tbo.ensureRowIsVisible(rowID);
   // Calculate the click coordinates.
-  let x = {}, y = {}, width = {}, height = {};
-  tbo.getCoordsForCellItem(rowID, aTree.columns[0], "text",
-                           x, y, width, height);
-  x = x.value + width.value / 2;
-  y = y.value + height.value / 2;
+  var rect = tbo.getCoordsForCellItem(rowID, aTree.columns[0], "text");
+  var x = rect.x + rect.width / 2;
+  var y = rect.y + rect.height / 2;
   // Simulate the click.
   EventUtils.synthesizeMouse(aTree.body, x, y, aOptions || {},
                              aTree.ownerDocument.defaultView);
