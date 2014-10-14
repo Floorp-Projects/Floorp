@@ -584,7 +584,7 @@ hal::FMRadioSettings GetFMBandSettings(hal::FMRadioCountry aCountry);
 /**
  * Enable RDS data reception
  */
-void EnableRDS(uint32_t aMask);
+bool EnableRDS(uint32_t aMask);
 
 /**
  * Disable RDS data reception

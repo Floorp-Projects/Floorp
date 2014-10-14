@@ -636,23 +636,23 @@ readRDSDataThread(void* data)
 
 static int sRDSPipeFD;
 
-void
+bool
 EnableRDS(uint32_t aMask)
 {
   if (!sRadioEnabled || !sRDSSupported)
-    return;
+    return false;
 
   if (sMsmFMMode)
     setControl(V4L2_CID_PRIVATE_TAVARUA_RDSGROUP_MASK, aMask);
 
   if (sRDSEnabled)
-    return;
+    return true;
 
   int pipefd[2];
   int rc = pipe2(pipefd, O_NONBLOCK);
   if (rc < 0) {
     HAL_LOG("Could not create RDS thread signaling pipes (%d)", rc);
-    return;
+    return false;
   }
 
   ScopedClose writefd(pipefd[1]);
@@ -661,7 +661,7 @@ EnableRDS(uint32_t aMask)
   rc = setControl(V4L2_CID_RDS_RECEPTION, true);
   if (rc < 0) {
     HAL_LOG("Could not enable RDS reception (%d)", rc);
-    return;
+    return false;
   }
 
   sRDSPipeFD = writefd;
@@ -674,11 +674,12 @@ EnableRDS(uint32_t aMask)
     HAL_LOG("Could not start RDS reception thread (%d)", rc);
     setControl(V4L2_CID_RDS_RECEPTION, false);
     sRDSEnabled = false;
-    return;
+    return false;
   }
 
   readfd.forget();
   writefd.forget();
+  return true;
 }
 
 void
