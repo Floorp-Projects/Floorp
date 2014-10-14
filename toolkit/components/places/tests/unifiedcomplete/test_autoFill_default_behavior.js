@@ -183,6 +183,7 @@ add_task(function* test_default_behavior_url() {
   // RESTRICT TO HISTORY.
   Services.prefs.setIntPref("browser.urlbar.default.behavior", 1);
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", true);
+  Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", false);
 
   do_log_info("URL: Restrict history, common visit, should not autoFill");
   yield check_autocomplete({
