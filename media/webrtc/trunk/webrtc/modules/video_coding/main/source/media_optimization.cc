@@ -370,6 +370,7 @@ int32_t MediaOptimization::UpdateWithEncodedData(int encoded_length,
                                                  uint32_t timestamp,
                                                  FrameType encoded_frame_type) {
   const int64_t now_ms = clock_->TimeInMilliseconds();
+  bool same_frame;
   PurgeOldFrameSamples(now_ms);
   if (encoded_frame_samples_.size() > 0 &&
       encoded_frame_samples_.back().timestamp == timestamp) {
@@ -378,15 +379,19 @@ int32_t MediaOptimization::UpdateWithEncodedData(int encoded_length,
     // size_bytes.
     encoded_frame_samples_.back().size_bytes += encoded_length;
     encoded_frame_samples_.back().time_complete_ms = now_ms;
+    same_frame = true;
   } else {
     encoded_frame_samples_.push_back(
         EncodedFrameSample(encoded_length, timestamp, now_ms));
+    same_frame = false;
   }
   UpdateSentBitrate(now_ms);
   UpdateSentFramerate();
   if (encoded_length > 0) {
     const bool delta_frame = (encoded_frame_type != kVideoFrameKey);
 
+    // XXX TODO(jesup): if same_frame is true, we should be considering it a single
+    // frame here.
     frame_dropper_->Fill(encoded_length, delta_frame);
     if (max_payload_size_ > 0 && encoded_length > 0) {
       const float min_packets_per_frame =
@@ -409,10 +414,12 @@ int32_t MediaOptimization::UpdateWithEncodedData(int encoded_length,
     }
 
     // Updating counters.
-    if (delta_frame) {
-      delta_frame_cnt_++;
-    } else {
-      key_frame_cnt_++;
+    if (!same_frame) {
+      if (delta_frame) {
+        delta_frame_cnt_++;
+      } else {
+        key_frame_cnt_++;
+      }
     }
   }
 
