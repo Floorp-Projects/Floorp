@@ -158,12 +158,14 @@ public:
 
   bool Check(const nsAString& aType, nsIDOMBlob* aBlob);
   bool Check(const nsAString& aType, nsIFile* aFile);
+  bool Check(const nsAString& aType, const nsString& aPath);
   void GetTypeFromFile(nsIFile* aFile, nsAString& aType);
   void GetTypeFromFileName(const nsAString& aFileName, nsAString& aType);
 
   static nsresult GetPermissionForType(const nsAString& aType, nsACString& aPermissionResult);
   static nsresult GetAccessForRequest(const DeviceStorageRequestType aRequestType, nsACString& aAccessResult);
   static bool IsVolumeBased(const nsAString& aType);
+  static bool IsSharedMediaRoot(const nsAString& aType);
 
 private:
   nsString mPicturesExtensions;
