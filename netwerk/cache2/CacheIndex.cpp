@@ -53,7 +53,7 @@ public:
     mIndex->AssertOwnsLock();
 
     mHash = aHash;
-    const CacheIndexEntry *entry = FindEntry();
+    CacheIndexEntry *entry = FindEntry();
     mIndex->mIndexStats.BeforeChange(entry);
     if (entry && entry->IsInitialized() && !entry->IsRemoved()) {
       mOldRecord = entry->mRec;
@@ -66,7 +66,7 @@ public:
   {
     mIndex->AssertOwnsLock();
 
-    const CacheIndexEntry *entry = FindEntry();
+    CacheIndexEntry *entry = FindEntry();
     mIndex->mIndexStats.AfterChange(entry);
     if (!entry || !entry->IsInitialized() || entry->IsRemoved()) {
       entry = nullptr;
@@ -125,9 +125,9 @@ public:
   void DoNotSearchInUpdates() { mDoNotSearchInUpdates = true; }
 
 private:
-  const CacheIndexEntry * FindEntry()
+  CacheIndexEntry * FindEntry()
   {
-    const CacheIndexEntry *entry = nullptr;
+    CacheIndexEntry *entry = nullptr;
 
     switch (mIndex->mState) {
       case CacheIndex::READING:
@@ -520,7 +520,6 @@ CacheIndex::AddEntry(const SHA1Sum::Hash *aHash)
 
     CacheIndexEntry *entry = index->mIndex.GetEntry(*aHash);
     bool entryRemoved = entry && entry->IsRemoved();
-    CacheIndexEntryUpdate *updated = nullptr;
 
     if (index->mState == READY || index->mState == UPDATING ||
         index->mState == BUILDING) {
@@ -559,7 +558,7 @@ CacheIndex::AddEntry(const SHA1Sum::Hash *aHash)
         entry = index->mIndex.PutEntry(*aHash);
       }
     } else { // WRITING, READING
-      updated = index->mPendingUpdates.GetEntry(*aHash);
+      CacheIndexEntry *updated = index->mPendingUpdates.GetEntry(*aHash);
       bool updatedRemoved = updated && updated->IsRemoved();
 
       if ((updated && !updatedRemoved) ||
@@ -579,17 +578,12 @@ CacheIndex::AddEntry(const SHA1Sum::Hash *aHash)
       }
 
       updated = index->mPendingUpdates.PutEntry(*aHash);
+      entry = updated;
     }
 
-    if (updated) {
-      updated->InitNew();
-      updated->MarkDirty();
-      updated->MarkFresh();
-    } else {
-      entry->InitNew();
-      entry->MarkDirty();
-      entry->MarkFresh();
-    }
+    entry->InitNew();
+    entry->MarkDirty();
+    entry->MarkFresh();
   }
 
   if (updateIfNonFreshEntriesExist &&
@@ -658,7 +652,7 @@ CacheIndex::EnsureEntryExists(const SHA1Sum::Hash *aHash)
       }
       entry->MarkFresh();
     } else { // WRITING, READING
-      CacheIndexEntryUpdate *updated = index->mPendingUpdates.GetEntry(*aHash);
+      CacheIndexEntry *updated = index->mPendingUpdates.GetEntry(*aHash);
       bool updatedRemoved = updated && updated->IsRemoved();
 
       if (updatedRemoved ||
@@ -738,7 +732,6 @@ CacheIndex::InitEntry(const SHA1Sum::Hash *aHash,
     CacheIndexEntryAutoManage entryMng(aHash, index);
 
     CacheIndexEntry *entry = index->mIndex.GetEntry(*aHash);
-    CacheIndexEntryUpdate *updated = nullptr;
     bool reinitEntry = false;
 
     if (entry && entry->IsRemoved()) {
@@ -760,7 +753,7 @@ CacheIndex::InitEntry(const SHA1Sum::Hash *aHash,
         }
       }
     } else {
-      updated = index->mPendingUpdates.GetEntry(*aHash);
+      CacheIndexEntry *updated = index->mPendingUpdates.GetEntry(*aHash);
       DebugOnly<bool> removed = updated && updated->IsRemoved();
 
       MOZ_ASSERT(updated || !removed);
@@ -777,6 +770,7 @@ CacheIndex::InitEntry(const SHA1Sum::Hash *aHash,
             return NS_OK;
           }
         }
+        entry = updated;
       } else {
         MOZ_ASSERT(entry->IsFresh());
 
@@ -792,28 +786,18 @@ CacheIndex::InitEntry(const SHA1Sum::Hash *aHash,
         // make a copy of a read-only entry
         updated = index->mPendingUpdates.PutEntry(*aHash);
         *updated = *entry;
+        entry = updated;
       }
     }
 
     if (reinitEntry) {
       // There is a collision and we are going to rewrite this entry. Initialize
       // it as a new entry.
-      if (updated) {
-        updated->InitNew();
-        updated->MarkFresh();
-      } else {
-        entry->InitNew();
-        entry->MarkFresh();
-      }
+      entry->InitNew();
+      entry->MarkFresh();
     }
-
-    if (updated) {
-      updated->Init(aAppId, aAnonymous, aInBrowser);
-      updated->MarkDirty();
-    } else {
-      entry->Init(aAppId, aAnonymous, aInBrowser);
-      entry->MarkDirty();
-    }
+    entry->Init(aAppId, aAnonymous, aInBrowser);
+    entry->MarkDirty();
   }
 
   index->StartUpdatingIndexIfNeeded();
@@ -881,7 +865,7 @@ CacheIndex::RemoveEntry(const SHA1Sum::Hash *aHash)
         }
       }
     } else { // WRITING, READING
-      CacheIndexEntryUpdate *updated = index->mPendingUpdates.GetEntry(*aHash);
+      CacheIndexEntry *updated = index->mPendingUpdates.GetEntry(*aHash);
       bool updatedRemoved = updated && updated->IsRemoved();
 
       if (updatedRemoved ||
@@ -961,58 +945,42 @@ CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
       if (!HasEntryChanged(entry, aFrecency, aExpirationTime, aSize)) {
         return NS_OK;
       }
-
-      MOZ_ASSERT(entry->IsFresh());
-      MOZ_ASSERT(entry->IsInitialized());
-      entry->MarkDirty();
-
-      if (aFrecency) {
-        entry->SetFrecency(*aFrecency);
-      }
-
-      if (aExpirationTime) {
-        entry->SetExpirationTime(*aExpirationTime);
-      }
-
-      if (aSize) {
-        entry->SetFileSize(*aSize);
-      }
     } else {
-      CacheIndexEntryUpdate *updated = index->mPendingUpdates.GetEntry(*aHash);
+      CacheIndexEntry *updated = index->mPendingUpdates.GetEntry(*aHash);
       DebugOnly<bool> removed = updated && updated->IsRemoved();
 
       MOZ_ASSERT(updated || !removed);
       MOZ_ASSERT(updated || entry);
 
       if (!updated) {
-        if (!entry) {
-          LOG(("CacheIndex::UpdateEntry() - Entry was found neither in mIndex "
-               "nor in mPendingUpdates!"));
-          NS_WARNING(("CacheIndex::UpdateEntry() - Entry was found neither in "
-                      "mIndex nor in mPendingUpdates!"));
+        if (entry &&
+            HasEntryChanged(entry, aFrecency, aExpirationTime, aSize)) {
+          // make a copy of a read-only entry
+          updated = index->mPendingUpdates.PutEntry(*aHash);
+          *updated = *entry;
+          entry = updated;
+        } else {
           return NS_ERROR_NOT_AVAILABLE;
         }
-
-        // make a copy of a read-only entry
-        updated = index->mPendingUpdates.PutEntry(*aHash);
-        *updated = *entry;
+      } else {
+        entry = updated;
       }
+    }
 
-      MOZ_ASSERT(updated->IsFresh());
-      MOZ_ASSERT(updated->IsInitialized());
-      updated->MarkDirty();
+    MOZ_ASSERT(entry->IsFresh());
+    MOZ_ASSERT(entry->IsInitialized());
+    entry->MarkDirty();
 
-      if (aFrecency) {
-        updated->SetFrecency(*aFrecency);
-      }
+    if (aFrecency) {
+      entry->SetFrecency(*aFrecency);
+    }
 
-      if (aExpirationTime) {
-        updated->SetExpirationTime(*aExpirationTime);
-      }
+    if (aExpirationTime) {
+      entry->SetExpirationTime(*aExpirationTime);
+    }
 
-      if (aSize) {
-        updated->SetFileSize(*aSize);
-      }
+    if (aSize) {
+      entry->SetFileSize(*aSize);
     }
   }
 
@@ -1128,7 +1096,7 @@ CacheIndex::HasEntry(const nsACString &aKey, EntryStatus *_retval)
   sum.update(aKey.BeginReading(), aKey.Length());
   sum.finish(hash);
 
-  const CacheIndexEntry *entry = nullptr;
+  CacheIndexEntry *entry = nullptr;
 
   switch (index->mState) {
     case READING:
@@ -1513,7 +1481,7 @@ CacheIndex::ProcessPendingOperations()
 
 // static
 PLDHashOperator
-CacheIndex::UpdateEntryInIndex(CacheIndexEntryUpdate *aEntry, void* aClosure)
+CacheIndex::UpdateEntryInIndex(CacheIndexEntry *aEntry, void* aClosure)
 {
   CacheIndex *index = static_cast<CacheIndex *>(aClosure);
 
@@ -1548,16 +1516,8 @@ CacheIndex::UpdateEntryInIndex(CacheIndexEntryUpdate *aEntry, void* aClosure)
     return PL_DHASH_REMOVE;
   }
 
-  if (entry) {
-    // Some information in mIndex can be newer than in mPendingUpdates (see bug
-    // 1074832). This will copy just those values that were really updated.
-    aEntry->ApplyUpdate(entry);
-  } else {
-    // There is no entry in mIndex, copy all information from mPendingUpdates
-    // to mIndex.
-    entry = index->mIndex.PutEntry(*aEntry->Hash());
-    *entry = *aEntry;
-  }
+  entry = index->mIndex.PutEntry(*aEntry->Hash());
+  *entry = *aEntry;
 
   return PL_DHASH_REMOVE;
 }
