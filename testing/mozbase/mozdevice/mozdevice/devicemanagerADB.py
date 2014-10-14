@@ -514,12 +514,6 @@ class DeviceManagerADB(DeviceManager):
             ret["process"] = self.shellCheckOutput(["ps"])
         if directive == "systime" or directive == "all":
             ret["systime"] = self.shellCheckOutput(["date"])
-        if directive == "memtotal" or directive == "all":
-            meminfo = {}
-            for line in self.pullFile("/proc/meminfo").splitlines():
-                key, value = line.split(":")
-                meminfo[key] = value.strip()
-            ret["memtotal"] = meminfo["MemTotal"]
         self._logger.info(ret)
         return ret
 
