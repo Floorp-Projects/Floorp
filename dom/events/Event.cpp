@@ -76,7 +76,6 @@ Event::ConstructorInit(EventTarget* aOwner,
   }
 
   mPrivateDataDuplicated = false;
-  mWantsPopupControlCheck = false;
 
   if (aEvent) {
     mEvent = aEvent;
@@ -656,19 +655,11 @@ PopupAllowedForEvent(const char *eventName)
 
 // static
 PopupControlState
-Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
+Event::GetEventPopupControlState(WidgetEvent* aEvent)
 {
   // generally if an event handler is running, new windows are disallowed.
   // check for exceptions:
   PopupControlState abuse = openAbused;
-
-  if (aDOMEvent && aDOMEvent->InternalDOMEvent()->GetWantsPopupControlCheck()) {
-    nsAutoString type;
-    aDOMEvent->GetType(type);
-    if (PopupAllowedForEvent(NS_ConvertUTF16toUTF8(type).get())) {
-      return openAllowed;
-    }
-  }
 
   switch(aEvent->mClass) {
   case eBasicEventClass:
