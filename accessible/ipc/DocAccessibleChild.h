@@ -33,11 +33,6 @@ public:
 
   void ShowEvent(AccShowEvent* aShowEvent);
 
-  /*
-   * Return the state for the accessible with given ID.
-   */
-  virtual bool RecvState(const uint64_t& aID, uint64_t* aState) MOZ_OVERRIDE;
-
 private:
   DocAccessible* mDoc;
 };
