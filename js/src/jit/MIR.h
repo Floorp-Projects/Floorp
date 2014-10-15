@@ -2668,7 +2668,9 @@ class MNewDerivedTypedObject
 
 // Represent the content of all slots of an object.  This instruction is not
 // lowered and is not used to generate code.
-class MObjectState : public MVariadicInstruction
+class MObjectState
+  : public MVariadicInstruction,
+    public NoFloatPolicyAfter<1>::Data
 {
   private:
     uint32_t numSlots_;
@@ -2730,7 +2732,9 @@ class MObjectState : public MVariadicInstruction
 
 // Represent the contents of all elements of an array.  This instruction is not
 // lowered and is not used to generate code.
-class MArrayState : public MVariadicInstruction
+class MArrayState
+  : public MVariadicInstruction,
+    public NoFloatPolicyAfter<2>::Data
 {
   private:
     uint32_t numElements_;
