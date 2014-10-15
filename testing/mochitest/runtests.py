@@ -1238,6 +1238,14 @@ class Mochitest(MochitestUtilsMixin):
     # via the commandline at your own risk.
     browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
 
+    # When creating child processes on Windows pre-Vista (e.g. Windows XP) we
+    # don't normally inherit stdout/err handles, because you can only do it by
+    # inheriting all other inheritable handles as well.
+    # We need to inherit them for plain mochitests for test logging purposes, so
+    # we do so on the basis of a specific environment variable.
+    if self.getTestFlavor(options) == "mochitest":
+      browserEnv["MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA"] = "1"
+
     # interpolate environment passed with options
     try:
       browserEnv.update(dict(parseKeyValue(options.environment, context='--setenv')))
