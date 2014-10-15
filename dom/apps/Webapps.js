@@ -548,6 +548,20 @@ WebappsApplication.prototype = {
     return request;
   },
 
+  export: function() {
+    this.addMessageListeners(["Webapps:Export:Return"]);
+    return this.createPromise((aResolve, aReject) => {
+      cpmm.sendAsyncMessage("Webapps:Export",
+        { manifestURL: this.manifestURL,
+          oid: this._id,
+          requestID: this.getPromiseResolverId({
+            resolve: aResolve,
+            reject: aReject
+          })
+        });
+    });
+  },
+
   _prepareForContent: function() {
     if (this.__DOM_IMPL__) {
       return this.__DOM_IMPL__;
@@ -584,7 +598,8 @@ WebappsApplication.prototype = {
     let req;
     if (aMessage.name == "Webapps:Connect:Return:OK" ||
         aMessage.name == "Webapps:Connect:Return:KO" ||
-        aMessage.name == "Webapps:GetConnections:Return:OK") {
+        aMessage.name == "Webapps:GetConnections:Return:OK" ||
+        aMessage.name == "Webapps:Export:Return") {
       req = this.takePromiseResolver(msg.requestID);
     } else {
       req = this.takeRequest(msg.requestID);
@@ -672,6 +687,14 @@ WebappsApplication.prototype = {
                                      "Webapps:ReplaceReceipt:Return:KO"]);
         Services.DOMRequest.fireError(req, msg.error);
         break;
+      case "Webapps:Export:Return":
+        this.removeMessageListeners(["Webapps:Export:Return"]);
+        if (msg.success) {
+          req.resolve(Cu.cloneInto(msg.blob, this._window));
+        } else {
+          req.reject(new this._window.DOMError(msg.error || ""));
+        }
+        break;
     }
   },
 
@@ -697,7 +720,9 @@ WebappsApplicationMgmt.prototype = {
                                         "Webapps:Uninstall:Broadcast:Return:OK",
                                         "Webapps:Uninstall:Return:KO",
                                         "Webapps:Install:Return:OK",
-                                        "Webapps:GetNotInstalled:Return:OK"]);
+                                        "Webapps:GetNotInstalled:Return:OK",
+                                        "Webapps:Import:Return",
+                                        "Webapps:ExtractManifest:Return"]);
     cpmm.sendAsyncMessage("Webapps:RegisterForMessages",
                           {
                             messages: ["Webapps:Install:Return:OK",
@@ -755,6 +780,30 @@ WebappsApplicationMgmt.prototype = {
     return request;
   },
 
+  import: function(aBlob) {
+    return this.createPromise((aResolve, aReject) => {
+      cpmm.sendAsyncMessage("Webapps:Import",
+        { blob: aBlob,
+          oid: this._id,
+          requestID: this.getPromiseResolverId({
+            resolve: aResolve,
+            reject: aReject
+          })});
+    });
+  },
+
+  extractManifest: function(aBlob) {
+    return this.createPromise((aResolve, aReject) => {
+      cpmm.sendAsyncMessage("Webapps:ExtractManifest",
+        { blob: aBlob,
+          oid: this._id,
+          requestID: this.getPromiseResolverId({
+            resolve: aResolve,
+            reject: aReject
+          })});
+    });
+  },
+
   get oninstall() {
     return this.__DOM_IMPL__.getEventHandler("oninstall");
   },
@@ -772,8 +821,16 @@ WebappsApplicationMgmt.prototype = {
   },
 
   receiveMessage: function(aMessage) {
-    var msg = aMessage.json;
-    let req = this.getRequest(msg.requestID);
+    let msg = aMessage.data;
+    let req;
+    if (["Webapps:Import:Return",
+         "Webapps:ExtractManifest:Return"]
+         .indexOf(aMessage.name) != -1) {
+      req = this.takePromiseResolver(msg.requestID);
+    } else {
+      req = this.getRequest(msg.requestID);
+    }
+
     // We want Webapps:Install:Return:OK and Webapps:Uninstall:Broadcast:Return:OK
     // to be broadcasted to all instances of mozApps.mgmt.
     if (!((msg.oid == this._id && req) ||
@@ -781,6 +838,7 @@ WebappsApplicationMgmt.prototype = {
           aMessage.name == "Webapps:Uninstall:Broadcast:Return:OK")) {
       return;
     }
+
     switch (aMessage.name) {
       case "Webapps:GetNotInstalled:Return:OK":
         Services.DOMRequest.fireSuccess(req, convertAppsArray(msg.apps, this._window));
@@ -806,6 +864,20 @@ WebappsApplicationMgmt.prototype = {
         break;
       case "Webapps:Uninstall:Return:KO":
         Services.DOMRequest.fireError(req, "NOT_INSTALLED");
+        break;
+      case "Webapps:Import:Return":
+        if (msg.success) {
+          req.resolve(createContentApplicationObject(this._window, msg.app));
+        } else {
+          req.reject(new this._window.DOMError(msg.error || ""));
+        }
+        break;
+      case "Webapps:ExtractManifest:Return":
+        if (msg.success) {
+          req.resolve(Cu.cloneInto(msg.manifest, this._window));
+        } else {
+          req.reject(new this._window.DOMError(msg.error || ""));
+        }
         break;
     }
     if (aMessage.name !== "Webapps:Uninstall:Broadcast:Return:OK") {

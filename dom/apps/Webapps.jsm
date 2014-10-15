@@ -67,6 +67,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "ScriptPreloader",
 XPCOMUtils.defineLazyModuleGetter(this, "TrustedHostedAppsUtils",
                                   "resource://gre/modules/TrustedHostedAppsUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ImportExport",
+                                  "resource://gre/modules/ImportExport.jsm");
+
 #ifdef MOZ_WIDGET_GONK
 XPCOMUtils.defineLazyGetter(this, "libcutils", function() {
   Cu.import("resource://gre/modules/systemlibs.js");
@@ -167,6 +170,7 @@ this.DOMApplicationRegistry = {
   allAppsLaunchable: false,
   _updateHandlers: [ ],
   _pendingUninstalls: {},
+  dirKey: DIRECTORY_NAME,
 
   init: function() {
     this.messages = ["Webapps:Install", "Webapps:Uninstall",
@@ -181,6 +185,8 @@ this.DOMApplicationRegistry = {
                      "Webapps:Install:Return:Ack", "Webapps:AddReceipt",
                      "Webapps:RemoveReceipt", "Webapps:ReplaceReceipt",
                      "Webapps:RegisterBEP",
+                     "Webapps:Export", "Webapps:Import",
+                     "Webapps:ExtractManifest",
                      "child-process-shutdown"];
 
     this.frameMessages = ["Webapps:ClearBrowserData"];
@@ -1175,10 +1181,13 @@ this.DOMApplicationRegistry = {
     Services.prefs.setBoolPref("dom.mozApps.used", true);
 
     // We need to check permissions for calls coming from mozApps.mgmt.
-    // These are: getNotInstalled(), applyDownload() and uninstall().
+    // These are: getNotInstalled(), applyDownload(), uninstall(), import() and
+    // extractManifest().
     if (["Webapps:GetNotInstalled",
          "Webapps:ApplyDownload",
-         "Webapps:Uninstall"].indexOf(aMessage.name) != -1) {
+         "Webapps:Uninstall",
+         "Webapps:Import",
+         "Webapps:ExtractManifest"].indexOf(aMessage.name) != -1) {
       if (!aMessage.target.assertPermission("webapps-manage")) {
         debug("mozApps message " + aMessage.name +
         " from a content process with no 'webapps-manage' privileges.");
@@ -1304,6 +1313,15 @@ this.DOMApplicationRegistry = {
         case "Webapps:RegisterBEP":
           this.registerBrowserElementParentForApp(msg, mm);
           break;
+        case "Webapps:Export":
+          this.doExport(msg, mm);
+          break;
+        case "Webapps:Import":
+          this.doImport(msg, mm);
+          break;
+        case "Webapps:ExtractManifest":
+          this.doExtractManifest(msg, mm);
+          break;
       }
     });
   },
@@ -1371,8 +1389,10 @@ this.DOMApplicationRegistry = {
     let istream = converter.convertToInputStream(aData);
     NetUtil.asyncCopy(istream, ostream, function(aResult) {
       if (!Components.isSuccessCode(aResult)) {
-        deferred.reject()
+        debug("Error saving " + aPath + " : " + aResult);
+        deferred.reject(aResult)
       } else {
+        debug("Success saving " + aPath);
         deferred.resolve();
       }
     });
@@ -1411,6 +1431,99 @@ this.DOMApplicationRegistry = {
     return { webapps: this.webapps, manifests: res };
   },
 
+  doExport: function(aMsg, aMm) {
+
+    function sendError(aError) {
+      aMm.sendAsyncMessage("Webapps:Export:Return",
+        { requestID: aMsg.requestID,
+          oid: aMsg.oid,
+          error: aError,
+          success: false
+        });
+    }
+
+    let app = this.getAppByManifestURL(aMsg.manifestURL);
+    if (!app) {
+      sendError("NoSuchApp");
+      return;
+    }
+
+    ImportExport.export(app).then(
+      aBlob => {
+        debug("exporting " + aBlob);
+        aMm.sendAsyncMessage("Webapps:Export:Return",
+          { requestID: aMsg.requestID,
+            oid: aMsg.oid,
+            blob: aBlob,
+            success: true
+          });
+      },
+      aError => sendError(aError));
+  },
+
+  doImport: function(aMsg, aMm) {
+    function sendError(aError) {
+      aMm.sendAsyncMessage("Webapps:Import:Return",
+        { requestID: aMsg.requestID,
+          oid: aMsg.oid,
+          error: aError,
+          success: false
+        });
+    }
+
+    if (!aMsg.blob || !aMsg.blob instanceof Ci.nsIDOMBlob) {
+      sendError("NoBlobFound");
+      return;
+    }
+
+    ImportExport.import(aMsg.blob).then(
+      ([aManifestURL, aManifest]) => {
+        let app = this.getAppByManifestURL(aManifestURL);
+        app.manifest = aManifest;
+        aMm.sendAsyncMessage("Webapps:Import:Return",
+          { requestID: aMsg.requestID,
+            oid: aMsg.oid,
+            app: app,
+            success: true
+          });
+      },
+      aError => sendError(aError));
+  },
+
+  doExtractManifest: function(aMsg, aMm) {
+    function sendError() {
+      aMm.sendAsyncMessage("Webapps:ExtractManifest:Return",
+        { requestID: aMsg.requestID,
+          oid: aMsg.oid,
+          error: aError,
+          success: false
+        });
+    }
+
+    if (!aMsg.blob || !aMsg.blob instanceof Ci.nsIDOMBlob) {
+      sendError("NoBlobFound");
+      return;
+    }
+
+    ImportExport.extractManifest(aMsg.blob).then(
+      aManifest => {
+        aMm.sendAsyncMessage("Webapps:ExtractManifest:Return",
+          { requestID: aMsg.requestID,
+            oid: aMsg.oid,
+            manifest: aManifest,
+            success: true
+          });
+      },
+      aError => {
+        aMm.sendAsyncMessage("Webapps:ExtractManifest:Return",
+          { requestID: aMsg.requestID,
+            oid: aMsg.oid,
+            error: aError,
+            success: false
+          });
+      }
+    );
+  },
 
   doLaunch: function (aData, aMm) {
     this.launch(
