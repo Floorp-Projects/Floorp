@@ -77,8 +77,8 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 
 // Basic Shapes
 #define NS_STYLE_BASIC_SHAPE_POLYGON       0
-//#define NS_STYLE_BASIC_SHAPE_CIRCLE      1
-//#define NS_STYLE_BASIC_SHAPE_ELLIPSE     2
+#define NS_STYLE_BASIC_SHAPE_CIRCLE        1
+#define NS_STYLE_BASIC_SHAPE_ELLIPSE       2
 //#define NS_STYLE_BASIC_SHAPE_INSET       3
 
 // box-shadow
@@ -154,6 +154,9 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_ORIENT_HORIZONTAL 0
 #define NS_STYLE_ORIENT_VERTICAL   1
 #define NS_STYLE_ORIENT_AUTO       2
+
+#define NS_RADIUS_FARTHEST_SIDE 0
+#define NS_RADIUS_CLOSEST_SIDE  1
 
 // stack-sizing
 #define NS_STYLE_STACK_SIZING_IGNORE         0

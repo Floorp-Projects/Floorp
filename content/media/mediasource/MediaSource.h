@@ -85,6 +85,11 @@ public:
     return mDecoder;
   }
 
+  nsIPrincipal* GetPrincipal()
+  {
+    return mPrincipal;
+  }
+
   // Called by SourceBuffers to notify this MediaSource that data has
   // been evicted from the buffered data. The start and end times
   // that were evicted are provided.
@@ -127,6 +132,8 @@ private:
   nsRefPtr<SourceBufferList> mActiveSourceBuffers;
 
   nsRefPtr<MediaSourceDecoder> mDecoder;
+
+  nsRefPtr<nsIPrincipal> mPrincipal;
 
   MediaSourceReadyState mReadyState;
 

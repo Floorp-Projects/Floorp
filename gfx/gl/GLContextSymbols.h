@@ -334,6 +334,11 @@ struct GLContextSymbols
     typedef void (GLAPIENTRY * PFNGLRENDERBUFFERSTORAGE) (GLenum target, GLenum internalFormat, GLsizei width, GLsizei height);
     PFNGLRENDERBUFFERSTORAGE fRenderbufferStorage;
 
+    typedef void (GLAPIENTRY * PFNINVALIDATEFRAMEBUFFER) (GLenum target, GLsizei numAttachments, const GLenum* attachments);
+    PFNINVALIDATEFRAMEBUFFER fInvalidateFramebuffer;
+    typedef void (GLAPIENTRY * PFNINVALIDATESUBFRAMEBUFFER) (GLenum target, GLsizei numAttachments, const GLenum* attachments, GLint x, GLint y, GLsizei width, GLsizei height);
+    PFNINVALIDATESUBFRAMEBUFFER fInvalidateSubFramebuffer;
+
         // These functions are only used by Skia/GL in desktop mode.
         // Other parts of Gecko should avoid using these
         typedef void (GLAPIENTRY * PFNGLCLIENTACTIVETEXTURE) (GLenum texture);

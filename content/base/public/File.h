@@ -91,11 +91,17 @@ public:
   Create(nsISupports* aParent, const nsAString& aContentType, uint64_t aStart,
          uint64_t aLength);
 
+  // The returned File takes ownership of aMemoryBuffer. aMemoryBuffer will be
+  // freed by moz_free so it must be allocated by moz_malloc or something
+  // compatible with it.
   static already_AddRefed<File>
   CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer, uint64_t aLength,
                    const nsAString& aName, const nsAString& aContentType,
                    uint64_t aLastModifiedDate);
 
+  // The returned File takes ownership of aMemoryBuffer. aMemoryBuffer will be
+  // freed by moz_free so it must be allocated by moz_malloc or something
+  // compatible with it.
   static already_AddRefed<File>
   CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer, uint64_t aLength,
                    const nsAString& aContentType);

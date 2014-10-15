@@ -21,7 +21,7 @@
                                 onset="this.setAttribute('position', val); return val;"/>
       <property name="popupBoxObject">
         <getter>
-          return this.boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
+          return this.boxObject;
         </getter>
       </property>
 
@@ -87,7 +87,7 @@
           try {
             menuBox = this.parentNode.boxObject;
           } catch(e) {}
-          if (menuBox instanceof Components.interfaces.nsIMenuBoxObject)
+          if (menuBox instanceof MenuBoxObject)
             menuBox.openMenu(true);
           else if (popupBox)
             popupBox.showPopup(element, this, xpos, ypos, popuptype, anchoralignment, popupalignment);
@@ -102,14 +102,14 @@
           var popupBox = null;
           var menuBox = null;
           try {
-            popupBox = this.boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
+            popupBox = this.popupBoxObject;
           } catch(e) {}
           try {
             menuBox = this.parentNode.boxObject;
           } catch(e) {}
-          if (menuBox instanceof Components.interfaces.nsIMenuBoxObject)
+          if (menuBox instanceof MenuBoxObject)
             menuBox.openMenu(false);
-          else if (popupBox)
+          else if (popupBox instanceof PopupBoxObject)
             popupBox.hidePopup(cancel);
         ]]>
         </body>

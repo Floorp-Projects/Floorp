@@ -987,7 +987,7 @@ VariablesView.prototype = {
    * Gets the parent node holding this view.
    * @return nsIDOMNode
    */
-  get boxObject() this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject),
+  get boxObject() this._list.boxObject,
 
   /**
    * Gets the parent node holding this view.

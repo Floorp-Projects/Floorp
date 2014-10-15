@@ -308,7 +308,6 @@
         return;
 
       var boxObject = document.getElementById("results").parentNode.boxObject;
-      boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
       boxObject.scrollToElement(line);
     }
   ]]></script>

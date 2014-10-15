@@ -750,9 +750,9 @@ pc_error CC_SIPCCCall::setPeerConnection(const std::string& handle)
 
   peerconnection = handle;  // Cache this here. we need it to make the CC_SIPCCCallInfo
 
-  strncpy(command.data.pc.pc_handle,
-          handle.c_str(),
-          sizeof(command.data.pc.pc_handle));
+  sstrncpy(command.data.pc.pc_handle,
+           handle.c_str(),
+           sizeof(command.data.pc.pc_handle));
 
   switch (fcb->state) {
     case FSMDEF_S_IDLE:
@@ -836,12 +836,12 @@ pc_error CC_SIPCCCall::addICECandidate(const std::string & candidate,
     }
 
     command.data.candidate.level = level;
-    strncpy(command.data.candidate.candidate,
-            candidate.c_str(),
-            sizeof(command.data.candidate.candidate));
-    strncpy(command.data.candidate.mid,
-            mid.c_str(),
-            sizeof(command.data.candidate.mid));
+    sstrncpy(command.data.candidate.candidate,
+             candidate.c_str(),
+             sizeof(command.data.candidate.candidate));
+    sstrncpy(command.data.candidate.mid,
+             mid.c_str(),
+             sizeof(command.data.candidate.mid));
 
     switch (fcb->state) {
       case FSMDEF_S_STABLE:
@@ -873,12 +873,12 @@ pc_error CC_SIPCCCall::foundICECandidate(const std::string & candidate,
     }
 
     command.data.candidate.level = level;
-    strncpy(command.data.candidate.candidate,
-            candidate.c_str(),
-            sizeof(command.data.candidate.candidate));
-    strncpy(command.data.candidate.mid,
-            mid.c_str(),
-            sizeof(command.data.candidate.mid));
+    sstrncpy(command.data.candidate.candidate,
+             candidate.c_str(),
+             sizeof(command.data.candidate.candidate));
+    sstrncpy(command.data.candidate.mid,
+             mid.c_str(),
+             sizeof(command.data.candidate.mid));
 
     switch (fcb->state) {
       case FSMDEF_S_STABLE:

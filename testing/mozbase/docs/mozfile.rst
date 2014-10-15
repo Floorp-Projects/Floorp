@@ -6,5 +6,5 @@ tasks in automated testing, such as extracting files or recursively removing
 directories.
 
 .. automodule:: mozfile
-   :members: extract, extract_tarball, extract_zip, rmtree
+   :members: extract, extract_tarball, extract_zip, remove
 

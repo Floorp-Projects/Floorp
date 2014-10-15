@@ -62,7 +62,7 @@
 <script type="text/javascript"><![CDATA[
 function run() {
   var tree = document.getElementsByTagName("tree")[0];
-  var sel = tree.treeBoxObject.view.selection;
+  var sel = tree.view.selection;
   sel.rangedSelect(0, 0, true);
   sel.rangedSelect(1000, 1001, true);
   sel.adjustSelection(1, 0x7fffffff);
@@ -70,4 +70,3 @@ function run() {
 ]]></script>
 
 </window>
-

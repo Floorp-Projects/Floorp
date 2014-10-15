@@ -5,48 +5,8 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
 
-
-[scriptable, uuid(56E2ADA8-4631-11d4-BA11-001083023C1E)]
+[uuid(56E2ADA8-4631-11d4-BA11-001083023C1E)]
 interface nsIScrollBoxObject : nsISupports
 {
-  /**
-   * Scroll to the given coordinates, in css pixels.
-   * (0,0) will put the top left corner of the scrolled element's padding-box
-   * at the top left corner of the scrollport (which is its inner-border-box).
-   * Values will be clamped to legal values.
-   */
-  void scrollTo(in long x, in long y);
-
-  /**
-   * Scroll the given amount of device pixels to the right and down.
-   * Values will be clamped to make the resuling position legal.
-   */
-  void scrollBy(in long dx, in long dy);
-
-  void scrollByLine(in long dlines);
-  void scrollByIndex(in long dindexes);
-  void scrollToLine(in long line);
-  void scrollToElement(in nsIDOMElement child);
-  void scrollToIndex(in long index);
-
-  /**
-   * Get the current scroll position in css pixels.
-   * @see scrollTo for the definition of x and y.
-   */
-  void getPosition(out long x, out long y);
-
-  void getScrolledSize(out long width, out long height);
-  void ensureElementIsVisible(in nsIDOMElement child);
-  void ensureIndexIsVisible(in long index);
-  void ensureLineIsVisible(in long line);
 };
-
-%{C++
-class nsIBoxObject;
-
-nsresult
-NS_NewScrollBoxObject(nsIBoxObject** aResult);
-
-%}

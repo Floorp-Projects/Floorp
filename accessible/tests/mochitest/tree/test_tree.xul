@@ -72,7 +72,7 @@
       };
 
       var treeBoxObject = aTree.treeBoxObject;
-      var view = treeBoxObject.view;
+      var view = aTree.view;
       var columnCount = treeBoxObject.columns.count;
 
       for (var idx = 0; idx < columnCount; idx++)
@@ -95,7 +95,7 @@
 
       this.invoke = function invoke()
       {
-        this.DOMNode.treeBoxObject.view = aView;
+        this.DOMNode.view = aView;
       }
       this.check = function check(aEvent)
       {
@@ -180,4 +180,3 @@
   </hbox>
 
 </window>
-

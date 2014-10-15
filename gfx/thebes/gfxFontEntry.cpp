@@ -994,6 +994,7 @@ gfxFontEntry::InputsForOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag)
                                                nullptr, inputGlyphs,
                                                nullptr, nullptr);
         }
+        hb_set_destroy(featurelookups);
     }
 
     hb_face_destroy(face);

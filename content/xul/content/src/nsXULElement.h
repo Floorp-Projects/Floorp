@@ -26,7 +26,6 @@
 #include "nsIRDFResource.h"
 #include "nsIURI.h"
 #include "nsIXULTemplateBuilder.h"
-#include "nsIBoxObject.h"
 #include "nsLayoutCID.h"
 #include "nsAttrAndChildArray.h"
 #include "nsGkAtoms.h"
@@ -53,6 +52,9 @@ class EventChainPreVisitor;
 class EventListenerManager;
 namespace css {
 class StyleRule;
+}
+namespace dom {
+class BoxObject;
 }
 }
 
@@ -587,7 +589,7 @@ public:
     already_AddRefed<nsIXULTemplateBuilder> GetBuilder();
     already_AddRefed<nsIRDFResource> GetResource(mozilla::ErrorResult& rv);
     nsIControllers* GetControllers(mozilla::ErrorResult& rv);
-    already_AddRefed<nsIBoxObject> GetBoxObject(mozilla::ErrorResult& rv);
+    already_AddRefed<mozilla::dom::BoxObject> GetBoxObject(mozilla::ErrorResult& rv);
     void Focus(mozilla::ErrorResult& rv);
     void Blur(mozilla::ErrorResult& rv);
     void Click(mozilla::ErrorResult& rv);

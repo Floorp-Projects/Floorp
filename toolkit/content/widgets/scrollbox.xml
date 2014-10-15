@@ -120,9 +120,7 @@
       <property name="scrollBoxObject" readonly="true">
         <getter><![CDATA[
           if (!this._scrollBoxObject) {
-            this._scrollBoxObject =
-              this._scrollbox.boxObject
-                             .QueryInterface(Components.interfaces.nsIScrollBoxObject);
+            this._scrollBoxObject = this._scrollbox.boxObject;
           }
           return this._scrollBoxObject;
         ]]></getter>

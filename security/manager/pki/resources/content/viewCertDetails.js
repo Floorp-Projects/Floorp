@@ -123,8 +123,8 @@ function addTreeItemToTreeChild(treeChild,label,value,addTwistie)
 }
 
 function displaySelected() {
-  var asn1Tree = document.getElementById('prettyDumpTree').
-                     treeBoxObject.view.QueryInterface(nsIASN1Tree);
+  var asn1Tree = document.getElementById('prettyDumpTree')
+          .view.QueryInterface(nsIASN1Tree);
   var items = asn1Tree.selection;
   var certDumpVal = document.getElementById('certDumpVal');
   if (items.currentIndex != -1) {
@@ -140,8 +140,7 @@ function BuildPrettyPrint(cert)
   var certDumpTree = Components.classes[nsASN1Tree].
                           createInstance(nsIASN1Tree);
   certDumpTree.loadASN1Structure(cert.ASN1Structure);
-  document.getElementById('prettyDumpTree').
-           treeBoxObject.view =  certDumpTree;
+  document.getElementById('prettyDumpTree').view = certDumpTree;
 }
 
 function addAttributeFromCert(nodeName, value)
@@ -256,8 +255,8 @@ function DisplayGeneralDataFromCert(cert)
 
 function updateCertDump()
 {
-  var asn1Tree = document.getElementById('prettyDumpTree').
-                     treeBoxObject.view.QueryInterface(nsIASN1Tree);
+  var asn1Tree = document.getElementById('prettyDumpTree')
+          .view.QueryInterface(nsIASN1Tree);
 
   var tree = document.getElementById('treesetDump');
   if (tree.currentIndex < 0) {

@@ -15,6 +15,7 @@
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
@@ -22,7 +23,6 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIDOMFile.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
 #include "nsIMIMEService.h"
@@ -35,6 +35,7 @@
 
 USING_BLUETOOTH_NAMESPACE
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::ipc;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
@@ -371,7 +372,8 @@ BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIDOMBlob> blob = aActor->GetBlob();
+  nsRefPtr<FileImpl> impl = aActor->GetBlobImpl();
+  nsCOMPtr<nsIDOMBlob> blob = new File(nullptr, impl);
 
   return SendFile(aDeviceAddress, blob.get());
 }

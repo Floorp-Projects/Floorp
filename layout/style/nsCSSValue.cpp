@@ -852,6 +852,56 @@ nsCSSValue::AppendPolygonToString(nsCSSProperty aProperty, nsAString& aResult,
   array->Item(index).AppendToString(aProperty, aResult, aSerialization);
 }
 
+inline void
+nsCSSValue::AppendPositionCoordinateToString(
+                const nsCSSValue& aValue, nsCSSProperty aProperty,
+                nsAString& aResult, Serialization aSerialization) const
+{
+  if (aValue.GetUnit() == eCSSUnit_Enumerated) {
+    int32_t intValue = aValue.GetIntValue();
+    AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
+                          nsCSSProps::kShapeRadiusKTable), aResult);
+  } else {
+    aValue.AppendToString(aProperty, aResult, aSerialization);
+  }
+}
+
+void
+nsCSSValue::AppendCircleOrEllipseToString(nsCSSKeyword aFunctionId,
+                                          nsCSSProperty aProperty,
+                                          nsAString& aResult,
+                                          Serialization aSerialization) const
+{
+  const nsCSSValue::Array* array = GetArrayValue();
+  size_t count = aFunctionId == eCSSKeyword_circle ? 2 : 3;
+  NS_ABORT_IF_FALSE(array->Count() == count + 1, "wrong number of arguments");
+
+  bool hasRadii = array->Item(1).GetUnit() != eCSSUnit_Null;
+
+  AppendPositionCoordinateToString(array->Item(1), aProperty,
+                                     aResult, aSerialization);
+
+  if (hasRadii && aFunctionId == eCSSKeyword_ellipse) {
+    aResult.Append(' ');
+    AppendPositionCoordinateToString(array->Item(2), aProperty,
+                                     aResult, aSerialization);
+  }
+
+  // Any position specified?
+  if (array->Item(count).GetUnit() != eCSSUnit_Array) {
+    NS_ABORT_IF_FALSE(array->Item(count).GetUnit() == eCSSUnit_Null,
+                      "unexpected value");
+    return;
+  }
+
+  if (hasRadii) {
+    aResult.Append(' ');
+  }
+  aResult.AppendLiteral("at ");
+  array->Item(count).AppendToString(eCSSProperty_background_position,
+                                    aResult, aSerialization);
+}
+
 void
 nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                            Serialization aSerialization) const
@@ -989,6 +1039,12 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     switch (functionId) {
       case eCSSKeyword_polygon:
         AppendPolygonToString(aProperty, aResult, aSerialization);
+        break;
+
+      case eCSSKeyword_circle:
+      case eCSSKeyword_ellipse:
+        AppendCircleOrEllipseToString(functionId, aProperty, aResult,
+                                      aSerialization);
         break;
 
       default: {

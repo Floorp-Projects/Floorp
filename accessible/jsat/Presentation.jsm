@@ -117,6 +117,11 @@ Presenter.prototype = {
   announce: function announce(aAnnouncement) {}, // jshint ignore:line
 
 
+  /**
+   * User tried to move cursor forward or backward with no success.
+   * @param {string} aMoveMethod move method that was used (eg. 'moveNext').
+   */
+  noMove: function noMove(aMoveMethod) {},
 
   /**
    * Announce a live region.
@@ -482,7 +487,7 @@ B2GPresenter.prototype.pivotChanged =
         data: UtteranceGenerator.genForContext(aContext),
         options: {
           pattern: this.PIVOT_CHANGE_HAPTIC_PATTERN,
-          isKey: aContext.accessible.role === Roles.KEY,
+          isKey: Utils.isActivatableOnFingerUp(aContext.accessible),
           reason: this.pivotChangedReasons[aReason],
           isUserInput: aIsUserInput
         }
@@ -532,6 +537,17 @@ B2GPresenter.prototype.announce =
       details: {
         eventType: 'announcement',
         data: aAnnouncement
+      }
+    };
+  };
+
+B2GPresenter.prototype.noMove =
+  function B2GPresenter_noMove(aMoveMethod) {
+    return {
+      type: this.type,
+      details: {
+        eventType: 'no-move',
+        data: aMoveMethod
       }
     };
   };
@@ -634,6 +650,10 @@ this.Presentation = { // jshint ignore:line
     // but there really isn't a point here.
     return [p.announce(UtteranceGenerator.genForAnnouncement(aAnnouncement)) // jshint ignore:line
       for each (p in this.presenters)]; // jshint ignore:line
+  },
+
+  noMove: function Presentation_noMove(aMoveMethod) {
+    return [p.noMove(aMoveMethod) for each (p in this.presenters)]; // jshint ignore:line
   },
 
   liveRegion: function Presentation_liveRegion(aAccessible, aIsPolite, aIsHide,

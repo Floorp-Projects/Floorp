@@ -8,7 +8,7 @@ var xalan_field;
 function onLoad()
 {
     view.tree = document.getElementById('out');
-    view.boxObject = view.tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
+    view.boxObject = view.tree.boxObject;
     {  
         view.mIframe = document.getElementById('hiddenHtml');
         view.mIframe.webNavigation.allowPlugins = false;

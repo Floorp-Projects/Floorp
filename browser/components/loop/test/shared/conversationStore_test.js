@@ -3,7 +3,7 @@
 
 var expect = chai.expect;
 
-describe("loop.ConversationStore", function () {
+describe("loop.store.ConversationStore", function () {
   "use strict";
 
   var CALL_STATES = loop.store.CALL_STATES;

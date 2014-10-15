@@ -32,17 +32,73 @@ WebGL2Context::GetInternalformatParameter(JSContext*, GLenum target, GLenum inte
     MOZ_CRASH("Not Implemented.");
 }
 
-void
-WebGL2Context::InvalidateFramebuffer(GLenum target, const dom::Sequence<GLenum>& attachments)
+// Map attachments intended for the default buffer, to attachments for a non-
+// default buffer.
+static void
+TranslateDefaultAttachments(const dom::Sequence<GLenum>& in, dom::Sequence<GLenum>* out)
 {
-    MOZ_CRASH("Not Implemented.");
+    for (size_t i = 0; i < in.Length(); i++) {
+        switch (in[i]) {
+            case LOCAL_GL_COLOR:
+                out->AppendElement(LOCAL_GL_COLOR_ATTACHMENT0);
+                break;
+            case LOCAL_GL_DEPTH:
+                out->AppendElement(LOCAL_GL_DEPTH_ATTACHMENT);
+                break;
+            case LOCAL_GL_STENCIL:
+                out->AppendElement(LOCAL_GL_STENCIL_ATTACHMENT);
+                break;
+        }
+    }
 }
 
 void
-WebGL2Context::InvalidateSubFramebuffer (GLenum target, const dom::Sequence<GLenum>& attachments,
-                                         GLint x, GLint y, GLsizei width, GLsizei height)
+WebGL2Context::InvalidateFramebuffer(GLenum target, const dom::Sequence<GLenum>& attachments)
 {
-    MOZ_CRASH("Not Implemented.");
+    if (IsContextLost())
+        return;
+    MakeContextCurrent();
+
+    if (target != LOCAL_GL_FRAMEBUFFER)
+        return ErrorInvalidEnumInfo("invalidateFramebuffer: target", target);
+    for (size_t i = 0; i < attachments.Length(); i++) {
+        if (!ValidateFramebufferAttachment(attachments[i], "invalidateFramebuffer"))
+            return;
+    }
+
+    if (!mBoundFramebuffer && !gl->IsDrawingToDefaultFramebuffer()) {
+        dom::Sequence<GLenum> tmpAttachments;
+        TranslateDefaultAttachments(attachments, &tmpAttachments);
+        gl->fInvalidateFramebuffer(target, tmpAttachments.Length(), tmpAttachments.Elements());
+    } else {
+        gl->fInvalidateFramebuffer(target, attachments.Length(), attachments.Elements());
+    }
+}
+
+void
+WebGL2Context::InvalidateSubFramebuffer(GLenum target, const dom::Sequence<GLenum>& attachments,
+                                        GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    if (IsContextLost())
+        return;
+    MakeContextCurrent();
+
+    if (target != LOCAL_GL_FRAMEBUFFER)
+        return ErrorInvalidEnumInfo("invalidateFramebuffer: target", target);
+    for (size_t i = 0; i < attachments.Length(); i++) {
+        if (!ValidateFramebufferAttachment(attachments[i], "invalidateSubFramebuffer"))
+            return;
+    }
+
+    if (!mBoundFramebuffer && !gl->IsDrawingToDefaultFramebuffer()) {
+        dom::Sequence<GLenum> tmpAttachments;
+        TranslateDefaultAttachments(attachments, &tmpAttachments);
+        gl->fInvalidateSubFramebuffer(target, tmpAttachments.Length(), tmpAttachments.Elements(),
+                                      x, y, width, height);
+    } else {
+        gl->fInvalidateSubFramebuffer(target, attachments.Length(), attachments.Elements(),
+                                      x, y, width, height);
+    }
 }
 
 void

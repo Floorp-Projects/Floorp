@@ -20,12 +20,6 @@ method="POST" enctype="multipart/form-data">
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 1);
-} else {
-  SimpleTest.expectAssertions(1);
-}
-
 var filesToKill = [];
 singleFileInput = document.getElementById('singleFile');
 multiFileInput = document.getElementById('multiFile');

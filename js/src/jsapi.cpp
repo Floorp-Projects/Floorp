@@ -697,7 +697,6 @@ StopRequest(JSContext *cx)
     if (rt->requestDepth != 1) {
         rt->requestDepth--;
     } else {
-        rt->gc.notifyRequestEnd();
         rt->requestDepth = 0;
         rt->triggerActivityCallback(false);
     }

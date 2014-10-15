@@ -82,24 +82,23 @@ function runTest(win, searchTerm, cookies, matches) {
     // select first cookie and delete
     var tree = win.document.getElementById("cookiesList");
     var deleteButton = win.document.getElementById("removeCookie");
-    var x = {}, y = {}, width = {}, height = {};
-    tree.treeBoxObject.getCoordsForCellItem(0, tree.columns[0], "cell", x, y, width, height);
-    EventUtils.synthesizeMouse(tree.body, x.value + width.value / 2, y.value + height.value / 2, {}, win);
+    var rect = tree.treeBoxObject.getCoordsForCellItem(0, tree.columns[0], "cell");
+    EventUtils.synthesizeMouse(tree.body, rect.x + rect.width / 2, rect.y + rect.height / 2, {}, win);
     EventUtils.synthesizeMouseAtCenter(deleteButton, {}, win);
 
     // count cookies should be matches-1
     is(win.gCookiesWindow._view.rowCount, matches-1, "Deleted selected cookie");
 
     // select two adjacent cells and delete
-    EventUtils.synthesizeMouse(tree.body, x.value + width.value / 2, y.value + height.value / 2, {}, win);
+    EventUtils.synthesizeMouse(tree.body, rect.x + rect.width / 2, rect.y + rect.height / 2, {}, win);
     deleteButton = win.document.getElementById("removeCookies"); 
     var eventObj = {};
     if (navigator.platform.indexOf("Mac") >= 0)
         eventObj.metaKey = true;
     else
         eventObj.ctrlKey = true;
-    tree.treeBoxObject.getCoordsForCellItem(1, tree.columns[0], "cell", x, y, width, height);
-    EventUtils.synthesizeMouse(tree.body, x.value + width.value / 2, y.value + height.value / 2, eventObj, win);
+    rect = tree.treeBoxObject.getCoordsForCellItem(1, tree.columns[0], "cell");
+    EventUtils.synthesizeMouse(tree.body, rect.x + rect.width / 2, rect.y + rect.height / 2, eventObj, win);
     EventUtils.synthesizeMouseAtCenter(deleteButton, {}, win);
 
     // count cookies should be matches-3

@@ -292,7 +292,7 @@ WebGL2Context::TexSubImage3D(GLenum rawTarget, GLint level,
         if (coversWholeImage) {
             tex->SetImageDataStatus(texImageTarget, level, WebGLImageDataStatus::InitializedImageData);
         } else {
-            tex->DoDeferredImageInitialization(texImageTarget, level);
+            tex->EnsureNoUninitializedImageData(texImageTarget, level);
         }
     }
 
@@ -344,4 +344,18 @@ WebGL2Context::CompressedTexSubImage3D(GLenum target, GLint level, GLint xoffset
                                        GLenum format, GLsizei imageSize, const dom::ArrayBufferView& data)
 {
     MOZ_CRASH("Not Implemented.");
+}
+
+JS::Value
+WebGL2Context::GetTexParameterInternal(const TexTarget& target, GLenum pname)
+{
+    switch (pname) {
+        case LOCAL_GL_TEXTURE_IMMUTABLE_FORMAT:
+        {
+            GLint i = 0;
+            gl->fGetTexParameteriv(target.get(), pname, &i);
+            return JS::NumberValue(uint32_t(i));
+        }
+    }
+    return WebGLContext::GetTexParameterInternal(target, pname);
 }

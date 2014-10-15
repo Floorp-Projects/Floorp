@@ -199,7 +199,7 @@ public:
         imageInfo.mImageDataStatus = newStatus;
     }
 
-    void DoDeferredImageInitialization(TexImageTarget imageTarget, GLint level);
+    void EnsureNoUninitializedImageData(TexImageTarget imageTarget, GLint level);
 
 protected:
 

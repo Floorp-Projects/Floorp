@@ -8,7 +8,6 @@
  */
 
 interface XULCommandDispatcher;
-interface MozBoxObject;
 interface MozObserver;
 
 [Func="IsChromeOrXBL"]
@@ -51,7 +50,7 @@ interface XULDocument : Document {
   void persist([TreatNullAs=EmptyString] DOMString id, DOMString attr);
 
   [Throws]
-  MozBoxObject? getBoxObjectFor(Element? element);
+  BoxObject? getBoxObjectFor(Element? element);
 
   [Throws]
   void loadOverlay(DOMString url, MozObserver? observer);

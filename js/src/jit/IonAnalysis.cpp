@@ -407,8 +407,7 @@ EliminateTriviallyDeadResumePointOperands(MIRGraph &graph, MResumePoint *rp)
     if (def->isConstant())
         return;
 
-    MConstant *constant = MConstant::New(graph.alloc(), MagicValue(JS_OPTIMIZED_OUT));
-    rp->block()->insertBefore(*(rp->block()->begin()), constant);
+    MConstant *constant = rp->block()->optimizedOutConstant(graph.alloc());
     rp->replaceOperand(top, constant);
 }
 
@@ -722,8 +721,10 @@ jit::EliminatePhis(MIRGenerator *mir, MIRGraph &graph,
         MPhiIterator iter = block->phisBegin();
         while (iter != block->phisEnd()) {
             MPhi *phi = *iter++;
-            if (phi->isUnused())
+            if (phi->isUnused()) {
+                phi->optimizeOutAllUses(graph.alloc());
                 block->discardPhi(phi);
+            }
         }
     }
 
@@ -1764,9 +1765,7 @@ CheckPredecessorImpliesSuccessor(MBasicBlock *A, MBasicBlock *B)
 static bool
 CheckOperandImpliesUse(MNode *n, MDefinition *operand)
 {
-    // TODO: Fix code that leaves discarded things in resume point operands
-    // (bug 1055690).
-    MOZ_ASSERT_IF(!n->isResumePoint(), !operand->isDiscarded());
+    MOZ_ASSERT(!operand->isDiscarded());
     MOZ_ASSERT(operand->block() != nullptr);
 
     for (MUseIterator i = operand->usesBegin(); i != operand->usesEnd(); i++) {

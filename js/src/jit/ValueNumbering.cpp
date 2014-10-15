@@ -304,10 +304,6 @@ ValueNumberer::releaseResumePointOperands(MResumePoint *resume)
         if (!resume->hasOperand(i))
             continue;
         MDefinition *op = resume->getOperand(i);
-        // TODO: We shouldn't leave discarded operands sitting around
-        // (bug 1055690).
-        if (op->isDiscarded())
-            continue;
         resume->releaseOperand(i);
 
         // We set the UseRemoved flag when removing resume point operands,
