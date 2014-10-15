@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-pref("security.tls.version.min", 0);
+pref("security.tls.version.min", 1);
 pref("security.tls.version.max", 3);
 
 pref("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref", false);
