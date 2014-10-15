@@ -22,12 +22,6 @@ class DataSourceSurface;
 
 namespace gl {
 
-// Returns true if the `dest{Format,Type}` are the same as the
-// `read{Format,Type}`.
-bool GetActualReadFormats(GLContext* gl,
-                          GLenum destFormat, GLenum destType,
-                          GLenum* out_readFormat, GLenum* out_readType);
-
 void ReadPixelsIntoDataSurface(GLContext* aGL,
                                gfx::DataSourceSurface* aSurface);
 

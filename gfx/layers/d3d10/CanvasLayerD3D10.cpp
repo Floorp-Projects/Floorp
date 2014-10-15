@@ -8,6 +8,7 @@
 #include "../d3d9/Nv3DVUtils.h"
 #include "gfxWindowsSurface.h"
 #include "gfxWindowsPlatform.h"
+#include "SurfaceStream.h"
 #include "SharedSurfaceANGLE.h"
 #include "SharedSurfaceGL.h"
 #include "gfxContext.h"
@@ -46,6 +47,9 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     mNeedsYFlip = true;
 
     GLScreenBuffer* screen = mGLContext->Screen();
+    SurfaceStreamType streamType =
+        SurfaceStream::ChooseGLStreamType(SurfaceStream::MainThread,
+                                          screen->PreserveBuffer());
 
     UniquePtr<SurfaceFactory> factory = nullptr;
     if (!gfxPrefs::WebGLForceLayersReadback()) {
@@ -56,7 +60,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     }
 
     if (factory) {
-      screen->Morph(Move(factory));
+      screen->Morph(Move(factory), streamType);
     }
   } else if (aData.mDrawTarget) {
     mDrawTarget = aData.mDrawTarget;
@@ -117,13 +121,10 @@ CanvasLayerD3D10::UpdateSurface()
   }
 
   if (mGLContext) {
-    auto screen = mGLContext->Screen();
-    MOZ_ASSERT(screen);
-
-    SharedSurface* surf = screen->Front()->Surf();
-    if (!surf)
+    SharedSurface* surf = mGLContext->RequestFrame();
+    if (!surf) {
       return;
-    surf->WaitSync();
+    }
 
     switch (surf->mType) {
       case SharedSurfaceType::EGLSurfaceANGLE: {

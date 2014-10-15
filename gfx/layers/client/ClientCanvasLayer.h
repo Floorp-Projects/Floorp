@@ -21,6 +21,7 @@
 
 namespace mozilla {
 namespace gl {
+class SurfaceStream;
 class SharedSurface;
 class SurfaceFactory;
 }
@@ -38,6 +39,8 @@ public:
   explicit ClientCanvasLayer(ClientLayerManager* aLayerManager) :
     CopyableCanvasLayer(aLayerManager,
                         static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
+    , mTextureSurface(nullptr)
+    , mFactory(nullptr)
   {
     MOZ_COUNT_CTOR(ClientCanvasLayer);
   }
@@ -46,33 +49,33 @@ protected:
   virtual ~ClientCanvasLayer();
 
 public:
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion)
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     CanvasLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Initialize(const Data& aData) MOZ_OVERRIDE;
+  virtual void Initialize(const Data& aData);
 
-  virtual void RenderLayer() MOZ_OVERRIDE;
+  virtual void RenderLayer();
 
-  virtual void ClearCachedResources() MOZ_OVERRIDE
+  virtual void ClearCachedResources()
   {
     if (mCanvasClient) {
       mCanvasClient->Clear();
     }
   }
 
-  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) MOZ_OVERRIDE
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   {
     aAttrs = CanvasLayerAttributes(mFilter, mBounds);
   }
 
-  virtual Layer* AsLayer()  MOZ_OVERRIDE { return this; }
-  virtual ShadowableLayer* AsShadowableLayer()  MOZ_OVERRIDE { return this; }
+  virtual Layer* AsLayer() { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() { return this; }
 
-  virtual void Disconnect() MOZ_OVERRIDE
+  virtual void Disconnect()
   {
     mCanvasClient = nullptr;
     ClientLayer::Disconnect();
@@ -88,15 +91,23 @@ protected:
     return static_cast<ClientLayerManager*>(mManager);
   }
 
-  CanvasClientType GetCanvasClientType();
+  CanvasClientType GetCanvasClientType()
+  {
+    if (mGLContext) {
+      return CanvasClient::CanvasClientGLContext;
+    }
+    return CanvasClient::CanvasClientSurface;
+  }
 
   RefPtr<CanvasClient> mCanvasClient;
 
+  UniquePtr<gl::SharedSurface> mTextureSurface;
   UniquePtr<gl::SurfaceFactory> mFactory;
 
   friend class DeprecatedCanvasClient2D;
   friend class CanvasClient2D;
-  friend class CanvasClientSharedSurface;
+  friend class DeprecatedCanvasClientSurfaceStream;
+  friend class CanvasClientSurfaceStream;
 };
 }
 }

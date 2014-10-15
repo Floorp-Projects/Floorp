@@ -24,6 +24,7 @@
 #include "prlink.h"
 #include "ScopedGLHelpers.h"
 #include "SharedSurfaceGL.h"
+#include "SurfaceStream.h"
 #include "GfxTexturesReporter.h"
 #include "TextureGarbageBin.h"
 #include "gfx2DGlue.h"
@@ -1989,6 +1990,25 @@ GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
 
     return isComplete;
 }
+
+
+
+bool
+GLContext::PublishFrame()
+{
+    MOZ_ASSERT(mScreen);
+
+    return mScreen->PublishFrame(OffscreenSize());
+}
+
+SharedSurface*
+GLContext::RequestFrame()
+{
+    MOZ_ASSERT(mScreen);
+
+    return mScreen->Stream()->SwapConsumer();
+}
+
 
 
 void

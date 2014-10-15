@@ -116,6 +116,7 @@
             // method in SkTypes.h
 #ifdef USE_SKIA
 #include "SkiaGLGlue.h"
+#include "SurfaceStream.h"
 #include "SurfaceTypes.h"
 #endif
 
@@ -710,7 +711,7 @@ public:
     CanvasRenderingContext2DUserData* self =
       static_cast<CanvasRenderingContext2DUserData*>(aData);
     CanvasRenderingContext2D* context = self->mContext;
-    if (!context || !context->mTarget)
+    if (!context || !context->mStream || !context->mTarget)
       return;
 
     // Since SkiaGL default to store drawing command until flush
@@ -825,6 +826,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
   , mZero(false), mOpaque(false)
   , mResetLayer(true)
   , mIPC(false)
+  , mStream(nullptr)
   , mIsEntireFrameInvalid(false)
   , mPredictManyRedrawCalls(false), mPathTransformWillUpdate(false)
   , mInvalidateCount(0)
@@ -910,6 +912,7 @@ CanvasRenderingContext2D::Reset()
   }
 
   mTarget = nullptr;
+  mStream = nullptr;
 
   // reset hit regions
   mHitRegionsOptions.ClearAndRetainStorage();
@@ -1022,10 +1025,8 @@ CanvasRenderingContext2D::Redraw(const mgfx::Rect &r)
 void
 CanvasRenderingContext2D::DidRefresh()
 {
-  SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
-  if (glue) {
-    auto gl = glue->GetGLContext();
-    gl->FlushIfHeavyGLCallsSinceLastFlush();
+  if (mStream && mStream->GLContext()) {
+    mStream->GLContext()->FlushIfHeavyGLCallsSinceLastFlush();
   }
 }
 
@@ -1051,6 +1052,7 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
   RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
   RefPtr<DrawTarget> oldTarget = mTarget;
   mTarget = nullptr;
+  mStream = nullptr;
   mResetLayer = true;
 
   // Recreate target using the new rendering mode
@@ -1221,6 +1223,8 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
         if (glue && glue->GetGrContext() && glue->GetGLContext()) {
           mTarget = Factory::CreateDrawTargetSkiaWithGrContext(glue->GetGrContext(), size, format);
           if (mTarget) {
+            mStream = gl::SurfaceStream::CreateForType(gl::SurfaceStreamType::TripleBuffer,
+                                                       glue->GetGLContext());
             AddDemotableContext(this);
           } else {
             printf_stderr("Failed to create a SkiaGL DrawTarget, falling back to software\n");
@@ -4853,12 +4857,15 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
         aOldLayer->GetUserData(&g2DContextLayerUserData));
 
     CanvasLayer::Data data;
+    if (mStream) {
+#ifdef USE_SKIA
+      SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
 
-    SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
-    GLuint skiaGLTex = (GLuint)(uintptr_t)mTarget->GetNativeSurface(NativeSurfaceType::OPENGL_TEXTURE);
-    if (glue && skiaGLTex) {
-      data.mGLContext = glue->GetGLContext();
-      data.mFrontbufferGLTex = skiaGLTex;
+      if (glue) {
+        data.mGLContext = glue->GetGLContext();
+        data.mStream = mStream.get();
+      }
+#endif
     } else {
       data.mDrawTarget = mTarget;
     }
@@ -4895,19 +4902,24 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   canvasLayer->SetUserData(&g2DContextLayerUserData, userData);
 
   CanvasLayer::Data data;
-  data.mSize = nsIntSize(mWidth, mHeight);
-  data.mHasAlpha = !mOpaque;
+  if (mStream) {
+    SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
 
-  SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
-  GLuint skiaGLTex = (GLuint)(uintptr_t)mTarget->GetNativeSurface(NativeSurfaceType::OPENGL_TEXTURE);
-  if (glue && skiaGLTex) {
-    canvasLayer->SetPreTransactionCallback(
-            CanvasRenderingContext2DUserData::PreTransactionCallback, userData);
-    data.mGLContext = glue->GetGLContext();
-    data.mFrontbufferGLTex = skiaGLTex;
+    if (glue) {
+      canvasLayer->SetPreTransactionCallback(
+              CanvasRenderingContext2DUserData::PreTransactionCallback, userData);
+#if USE_SKIA
+      data.mGLContext = glue->GetGLContext();
+#endif
+      data.mStream = mStream.get();
+      data.mTexID = (uint32_t)((uintptr_t)mTarget->GetNativeSurface(NativeSurfaceType::OPENGL_TEXTURE));
+    }
   } else {
     data.mDrawTarget = mTarget;
   }
+
+  data.mSize = nsIntSize(mWidth, mHeight);
+  data.mHasAlpha = !mOpaque;
 
   canvasLayer->Initialize(data);
   uint32_t flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;

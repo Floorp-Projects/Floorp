@@ -37,13 +37,16 @@ using namespace android;
 
 SurfaceFactory_Gralloc::SurfaceFactory_Gralloc(GLContext* prodGL,
                                                const SurfaceCaps& caps,
-                                               layers::TextureFlags flags,
                                                layers::ISurfaceAllocator* allocator)
     : SurfaceFactory(prodGL, SharedSurfaceType::Gralloc, caps)
-    , mFlags(flags)
-    , mAllocator(allocator)
 {
-    MOZ_ASSERT(mAllocator);
+    if (caps.surfaceAllocator) {
+        allocator = caps.surfaceAllocator;
+    }
+
+    MOZ_ASSERT(allocator);
+
+    mAllocator = allocator;
 }
 
 /*static*/ UniquePtr<SharedSurface_Gralloc>
@@ -51,7 +54,6 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
                               const GLFormats& formats,
                               const gfx::IntSize& size,
                               bool hasAlpha,
-                              layers::TextureFlags flags,
                               ISurfaceAllocator* allocator)
 {
     GLLibraryEGL* egl = &sEGLLibrary;
@@ -67,17 +69,18 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
     gfxContentType type = hasAlpha ? gfxContentType::COLOR_ALPHA
                                    : gfxContentType::COLOR;
 
-    auto platform = gfxPlatform::GetPlatform();
-    gfxImageFormat format = platform->OptimalFormatForContent(type);
+    gfxImageFormat format
+      = gfxPlatform::GetPlatform()->OptimalFormatForContent(type);
 
-    typedef GrallocTextureClientOGL ptrT;
-    RefPtr<ptrT> grallocTC = new ptrT(allocator,
-                                      gfx::ImageFormatToSurfaceFormat(format),
-                                      gfx::BackendType::NONE, // we don't need to use it with a DrawTarget
-                                      flags);
+    RefPtr<GrallocTextureClientOGL> grallocTC =
+      new GrallocTextureClientOGL(
+          allocator,
+          gfx::ImageFormatToSurfaceFormat(format),
+          gfx::BackendType::NONE, // we don't need to use it with a DrawTarget
+          layers::TextureFlags::DEFAULT);
 
     if (!grallocTC->AllocateForGLRendering(size)) {
-        return Move(ret);
+      return Move(ret);
     }
 
     sp<GraphicBuffer> buffer = grallocTC->GetGraphicBuffer();
