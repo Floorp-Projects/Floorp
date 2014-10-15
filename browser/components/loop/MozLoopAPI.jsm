@@ -40,7 +40,17 @@ this.EXPORTED_SYMBOLS = ["injectLoopAPI"];
 const cloneErrorObject = function(error, targetWindow) {
   let obj = new targetWindow.Error();
   for (let prop of Object.getOwnPropertyNames(error)) {
-    obj[prop] = String(error[prop]);
+    let value = error[prop];
+    if (typeof value != "string" && typeof value != "number") {
+      value = String(value);
+    }
+
+    Object.defineProperty(Cu.waiveXrays(obj), prop, {
+      configurable: false,
+      enumerable: true,
+      value: value,
+      writable: false
+    });
   }
   return obj;
 };

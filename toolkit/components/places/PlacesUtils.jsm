@@ -208,35 +208,8 @@ this.PlacesUtils = {
     }
   },
 
-  /**
-   * Cache array of read-only item IDs.
-   *
-   * The first time this property is called:
-   * - the cache is filled with all ids with the RO annotation
-   * - an annotation observer is added
-   * - a shutdown observer is added
-   *
-   * When the annotation observer detects annotations added or
-   * removed that are the RO annotation name, it adds/removes
-   * the ids from the cache.
-   *
-   * At shutdown, the annotation and shutdown observers are removed.
-   */
-  get _readOnly() {
-    // Add annotations observer.
-    this.annotations.addObserver(this, false);
-    this.registerShutdownFunction(function () {
-      this.annotations.removeObserver(this);
-    });
-
-    var readOnly = this.annotations.getItemsWithAnnotation(this.READ_ONLY_ANNO);
-    this.__defineGetter__("_readOnly", function() readOnly);
-    return this._readOnly;
-  },
-
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIAnnotationObserver
-  , Ci.nsIObserver
+    Ci.nsIObserver
   , Ci.nsITransactionListener
   ]),
 
@@ -273,24 +246,6 @@ this.PlacesUtils = {
         }
         break;
     }
-  },
-
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsIAnnotationObserver
-
-  onItemAnnotationSet: function PU_onItemAnnotationSet(aItemId, aAnnotationName)
-  {
-    if (aAnnotationName == this.READ_ONLY_ANNO &&
-        this._readOnly.indexOf(aItemId) == -1)
-      this._readOnly.push(aItemId);
-  },
-
-  onItemAnnotationRemoved:
-  function PU_onItemAnnotationRemoved(aItemId, aAnnotationName)
-  {
-    var index = this._readOnly.indexOf(aItemId);
-    if (aAnnotationName == this.READ_ONLY_ANNO && index > -1)
-      delete this._readOnly[index];
   },
 
   onPageAnnotationSet: function() {},
@@ -341,27 +296,6 @@ this.PlacesUtils = {
   didEndBatch: function PU_didEndBatch() {},
   willMerge: function PU_willMerge() {},
   didMerge: function PU_didMerge() {},
-
-
-  /**
-   * Determines if a node is read only (children cannot be inserted, sometimes
-   * they cannot be removed depending on the circumstance)
-   * @param   aNode
-   *          A result node
-   * @returns true if the node is readonly, false otherwise
-   */
-  nodeIsReadOnly: function PU_nodeIsReadOnly(aNode) {
-    let itemId = aNode.itemId;
-    if (itemId != -1) {
-      return this._readOnly.indexOf(itemId) != -1;
-    }
-
-    if (this.nodeIsQuery(aNode) &&
-        asQuery(aNode).queryOptions.resultType !=
-        Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS)
-      return aNode.childrenReadOnly;
-    return false;
-  },
 
   /**
    * Determines whether or not a ResultNode is a host container.
@@ -431,17 +365,6 @@ this.PlacesUtils = {
             resultType == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY ||
             this.nodeIsDay(aNode) ||
             this.nodeIsHost(aNode));
-  },
-
-  /**
-   * Determines whether or not a node is a readonly folder.
-   * @param   aNode
-   *          The node to test.
-   * @returns true if the node is a readonly folder.
-  */
-  isReadonlyFolder: function(aNode) {
-    return this.nodeIsFolder(aNode) &&
-           this._readOnly.indexOf(asQuery(aNode).folderItemId) != -1;
   },
 
   /**
@@ -1113,10 +1036,9 @@ this.PlacesUtils = {
       if (guid) {
         aJSNode.itemGuid = guid;
         var parent = aPlacesNode.parent;
-        if (parent) {
+        if (parent)
           aJSNode.parent = parent.itemId;
-          aJSNode.parentReadOnly = PlacesUtils.nodeIsReadOnly(parent);
-        }
+
         var dateAdded = aPlacesNode.dateAdded;
         if (dateAdded)
           aJSNode.dateAdded = dateAdded;
