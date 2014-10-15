@@ -26,6 +26,12 @@
 #undef GetClassName
 #endif
 
+// Define MOZ_GL_DEBUG unconditionally to enable GL debugging in opt
+// builds.
+#ifdef DEBUG
+#define MOZ_GL_DEBUG 1
+#endif
+
 #include "mozilla/UniquePtr.h"
 
 #include "GLDefs.h"
@@ -643,7 +649,7 @@ private:
     ////////////////////////////////////
     // Use this safer option.
 private:
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
     bool mIsInLocalErrorCheck;
 #endif
 
@@ -657,7 +663,7 @@ public:
             : mGL(gl)
             , mHasBeenChecked(false)
         {
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
             MOZ_ASSERT(!mGL->mIsInLocalErrorCheck);
             mGL->mIsInLocalErrorCheck = true;
 #endif
@@ -665,7 +671,7 @@ public:
         }
 
         GLenum GetLocalError() {
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
             MOZ_ASSERT(mGL->mIsInLocalErrorCheck);
             mGL->mIsInLocalErrorCheck = false;
 #endif
@@ -704,7 +710,7 @@ private:
 #undef BEFORE_GL_CALL
 #undef AFTER_GL_CALL
 
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
 
 #ifndef MOZ_FUNCTION_NAME
 # ifdef __GNUC__
@@ -792,7 +798,7 @@ private:
 
 #define ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(ptr) AssertNotPassingStackBufferToTheGL(ptr)
 
-#else // ifdef DEBUG
+#else // ifdef MOZ_GL_DEBUG
 
 #ifdef MOZ_WIDGET_ANDROID
 // Record the name of the GL call for better hang stacks on Android.
@@ -804,7 +810,7 @@ private:
 #define TRACKING_CONTEXT(a) do {} while (0)
 #define ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(ptr) do {} while (0)
 
-#endif // ifdef DEBUG
+#endif // ifdef MOZ_GL_DEBUG
 
 #define ASSERT_SYMBOL_PRESENT(func) \
             do {\
@@ -3200,7 +3206,7 @@ protected:
     virtual bool MakeCurrentImpl(bool aForce) = 0;
 
 public:
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
     static void StaticInit() {
         PR_NewThreadPrivateIndex(&sCurrentGLContextTLS, nullptr);
     }
@@ -3210,7 +3216,7 @@ public:
         if (IsDestroyed()) {
             return false;
         }
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
     PR_SetThreadPrivate(sCurrentGLContextTLS, this);
 
     // XXX this assertion is disabled because it's triggering on Mac;
@@ -3385,7 +3391,7 @@ public:
     static uint32_t sDebugMode;
 
     static uint32_t DebugMode() {
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
         return sDebugMode;
 #else
         return 0;
@@ -3400,7 +3406,7 @@ protected:
 
     GLContextSymbols mSymbols;
 
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
     // GLDebugMode will check that we don't send call
     // to a GLContext that isn't current on the current
     // thread.
@@ -3641,7 +3647,7 @@ public:
 
 #undef ASSERT_SYMBOL_PRESENT
 
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
     void CreatedProgram(GLContext *aOrigin, GLuint aName);
     void CreatedShader(GLContext *aOrigin, GLuint aName);
     void CreatedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
