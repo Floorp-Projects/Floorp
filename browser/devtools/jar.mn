@@ -86,6 +86,10 @@ browser.jar:
     content/browser/devtools/profiler.js                               (profiler/profiler.js)
     content/browser/devtools/ui-recordings.js                          (profiler/ui-recordings.js)
     content/browser/devtools/ui-profile.js                             (profiler/ui-profile.js)
+#ifdef MOZ_DEVTOOLS_PERFTOOLS
+    content/browser/devtools/performance.xul                           (performance/performance.xul)
+    content/browser/devtools/performance.js                            (performance/performance.js)
+#endif
     content/browser/devtools/responsivedesign/resize-commands.js       (responsivedesign/resize-commands.js)
     content/browser/devtools/commandline.css                           (commandline/commandline.css)
     content/browser/devtools/commandlineoutput.xhtml                   (commandline/commandlineoutput.xhtml)
