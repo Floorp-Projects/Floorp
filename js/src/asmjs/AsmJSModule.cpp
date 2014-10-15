@@ -88,6 +88,7 @@ AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t
     pod.funcPtrTableAndExitBytes_ = SIZE_MAX;
     pod.functionBytes_ = UINT32_MAX;
     pod.minHeapLength_ = RoundUpToNextValidAsmJSHeapLength(0);
+    pod.maxHeapLength_ = 0x80000000;
     pod.strict_ = strict;
     pod.usesSignalHandlers_ = canUseSignalHandlers;
 

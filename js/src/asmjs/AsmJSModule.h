@@ -774,6 +774,7 @@ class AsmJSModule
         size_t                            codeBytes_;     // function bodies and stubs
         size_t                            totalBytes_;    // function bodies, stubs, and global data
         uint32_t                          minHeapLength_;
+        uint32_t                          maxHeapLength_;
         uint32_t                          heapLengthMask_;
         uint32_t                          numGlobalScalarVars_;
         uint32_t                          numGlobalSimdVars_;
@@ -883,6 +884,9 @@ class AsmJSModule
     // change as the module is compiled.
     uint32_t minHeapLength() const {
         return pod.minHeapLength_;
+    }
+    uint32_t maxHeapLength() const {
+        return pod.maxHeapLength_;
     }
     uint32_t heapLengthMask() const {
         MOZ_ASSERT(pod.hasFixedMinHeapLength_);
@@ -1044,18 +1048,23 @@ class AsmJSModule
     /*************************************************************************/
     // These functions are called while parsing/compiling function bodies:
 
-    void addChangeHeap(uint32_t mask, uint32_t min) {
+    void addChangeHeap(uint32_t mask, uint32_t min, uint32_t max) {
         MOZ_ASSERT(isFinishedWithModulePrologue());
         MOZ_ASSERT(!pod.hasFixedMinHeapLength_);
         MOZ_ASSERT(IsValidAsmJSHeapLength(mask + 1));
         MOZ_ASSERT(min >= RoundUpToNextValidAsmJSHeapLength(0));
+        MOZ_ASSERT(max <= pod.maxHeapLength_);
+        MOZ_ASSERT(min <= max);
         pod.heapLengthMask_ = mask;
         pod.minHeapLength_ = min;
+        pod.maxHeapLength_ = max;
         pod.hasFixedMinHeapLength_ = true;
     }
     bool tryRequireHeapLengthToBeAtLeast(uint32_t len) {
         MOZ_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
         if (pod.hasFixedMinHeapLength_ && len > pod.minHeapLength_)
+            return false;
+        if (len > pod.maxHeapLength_)
             return false;
         len = RoundUpToNextValidAsmJSHeapLength(len);
         if (len > pod.minHeapLength_)
