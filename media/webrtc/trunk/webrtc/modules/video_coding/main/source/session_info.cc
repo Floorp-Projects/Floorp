@@ -548,6 +548,9 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
 
   int returnLength = InsertBuffer(frame_buffer, packet_list_it);
   UpdateCompleteSession();
+  // We call MakeDecodable() before decoding, which removes packets after a loss
+  // (and which means h.264 mode 1 frames with a loss in the first packet will be
+  // totally removed)
   if (decode_error_mode == kWithErrors)
     decodable_ = true;
   else if (decode_error_mode == kSelectiveErrors)
