@@ -752,6 +752,7 @@ public:
 protected:
   virtual ~FileImplFile() {
     if (mFile && mIsTemporary) {
+      NS_WARNING("In temporary ~FileImplFile");
       // Ignore errors if any, not much we can do. Clean-up will be done by
       // https://mxr.mozilla.org/mozilla-central/source/xpcom/io/nsAnonymousTemporaryFile.cpp?rev=6c1c7e45c902#127
 #ifdef DEBUG

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={982874}
+-->
+<head>
+  <title>Test for Bug {982874}</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="test_packaged_app_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={982874}">Mozilla Bug {982874}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+var gManifestURL = "http://test/tests/dom/apps/tests/file_app.sjs?apptype=hosted&getmanifest=true";
+var gGenerator = runTest();
+
+function runApp(aApp, aCallback) {
+  var ifr = document.createElement('iframe');
+  ifr.setAttribute('mozbrowser', 'true');
+  ifr.setAttribute('mozapp', aApp.manifestURL);
+  ifr.src = aApp.origin + aApp.manifest.launch_path;
+
+  ifr.addEventListener('mozbrowsershowmodalprompt', function onAlert(e) {
+    var message = e.detail.message;
+    info("Got message " + message);
+
+    if (message.startsWith("OK: ")) {
+      ok(true, message.substring(4, message.length));
+    } else if (message.startsWith("ERROR: ")) {
+      ok(false, message.substring(7, message.length));
+    } else if (message == "DONE") {
+      ifr.removeEventListener('mozbrowsershowmodalprompt', onAlert, false);
+      document.body.removeChild(ifr);
+      aCallback();
+    }
+  }, false);
+
+  document.body.appendChild(ifr);
+}
+
+function go() {
+  SpecialPowers.pushPermissions(
+    [{ "type": "webapps-manage", "allow": 1, "context": document },
+     { "type": "browser", "allow": 1, "context": document },
+     { "type": "embed-apps", "allow": 1, "context": document }],
+    function() {
+      SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true]]},  continueTest) });
+}
+
+function continueTest() {
+  try {
+    gGenerator.next();
+  } catch (e if e instanceof StopIteration) {
+    finish();
+  }
+}
+
+function finish() {
+  SimpleTest.finish();
+}
+
+function cbError(aEvent) {
+  ok(false, "Error callback invoked " +
+            aEvent.target.error.name + " " + aEvent.target.error.message);
+  finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+/**
+  * Install 2 apps from the same origin and uninstall them.
+  */
+function runTest() {
+  SpecialPowers.setAllAppsLaunchable(true);
+
+  SpecialPowers.autoConfirmAppInstall(continueTest);
+  yield undefined;
+
+  SpecialPowers.autoConfirmAppUninstall(continueTest);
+  yield undefined;
+
+  // Check how many apps we are starting with.
+  request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  var initialAppsCount = request.result.length;
+  info("Starting with " + initialAppsCount + " apps installed.");
+
+  // Install a hosted app.
+  var request = navigator.mozApps.install(gManifestURL, { });
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+
+  var app = request.result;
+  ok(app, "App is non-null");
+  is(app.manifestURL, gManifestURL, "App manifest url is correct.");
+
+  // Export the hosted app.
+  var exported;
+
+  app.export().then(blob => {
+    exported = blob;
+    ok(blob !== null, "Exported blob is not null");
+    ok(blob.size > 0, "Exported blob size is > 0");
+    continueTest();
+  }, error => {
+    info(error);
+    ok(false, "Export 1 should not fail");
+  });
+
+  yield undefined;
+
+  // Try to import the same blob. That will fails since the app is
+  // already installed.
+  navigator.mozApps.mgmt.import(exported)
+    .then((app) => {
+      ok(false, "Can't import an app already installed!");
+    }, (error) => {
+      is(error.name, "AppAlreadyInstalled", "Reject import of already installed app.");
+      continueTest();
+    }
+  );
+
+  yield undefined;
+
+  // Get some information from the manifest.
+  navigator.mozApps.mgmt.extractManifest(exported)
+    .then((manifest) => {
+      is(manifest.name, "Really Rapid Release (hosted)",
+         "Check manifest.name");
+      continueTest();
+    }, (error) => {
+      ok(false, "Should not fail to extract the manifest.");
+    }
+  );
+
+  yield undefined;
+
+  // Uninstall the hosted app.
+  navigator.mozApps.mgmt.onuninstall = function(event) {
+    var app = event.application;
+    is(app.manifestURL, gManifestURL, "App uninstall event ok.");
+    is(app.manifest.name, "Really Rapid Release (hosted)",
+       "App uninstall manifest ok.");
+    continueTest();
+  }
+  request = navigator.mozApps.mgmt.uninstall(app);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  yield undefined;
+  is(request.result, gManifestURL, "Hosted App uninstalled.");
+  navigator.mozApps.mgmt.onuninstall = null;
+
+  // Re-import the app. This time this will succeed.
+  navigator.mozApps.mgmt.import(exported)
+    .then((imported) => {
+      ok(imported !== null, "Imported app is not null.");
+      is(imported.manifest.name, "Really Rapid Release (hosted)",
+         "Verifying manifest name");
+      app = imported;
+      continueTest();
+    }, (error) => {
+      ok(false, "We should not fail to import!");
+    }
+  );
+
+  yield undefined;
+
+  // Launch the imported hosted app.
+  info("Running " + app.manifestURL);
+  runApp(app, continueTest);
+  yield undefined;
+
+  // Uninstall the imported app to cleanup after ourself.
+  navigator.mozApps.mgmt.onuninstall = function(event) {
+    var app = event.application;
+    is(app.manifestURL, gManifestURL, "App uninstall event ok.");
+    is(app.manifest.name, "Really Rapid Release (hosted)",
+       "App uninstall manifest ok.");
+    continueTest();
+  }
+  request = navigator.mozApps.mgmt.uninstall(app);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  yield undefined;
+  is(request.result, gManifestURL, "Hosted App imported uninstalled.");
+  navigator.mozApps.mgmt.onuninstall = null;
+
+  // Install a packaged app.
+  PackagedTestHelper.setAppVersion(2, continueTest);
+
+  yield undefined;
+
+  var miniManifestURL = PackagedTestHelper.gSJS +
+                        "?getManifest=true";
+  info("Install packaged app from " + miniManifestURL);
+  navigator.mozApps.mgmt.oninstall = function(evt) {
+    info("Got oninstall event");
+    PackagedTestHelper.gApp = evt.application;
+    PackagedTestHelper.gApp.ondownloaderror = function() {
+      ok(false, "Package Download error " +
+                PackagedTestHelper.gApp.downloadError.name);
+      PackagedTestHelper.finish();
+    };
+    PackagedTestHelper.gApp.ondownloadsuccess = function() {
+      info("Packaged App downloaded");
+      var expected = {
+        name: PackagedTestHelper.gAppName,
+        manifestURL: miniManifestURL,
+        installOrigin: PackagedTestHelper.gInstallOrigin,
+        progress: 0,
+        installState: "installed",
+        downloadAvailable: false,
+        downloading: false,
+        downloadSize: 0,
+        size: 0,
+        readyToApplyDownload: false
+      };
+      PackagedTestHelper.checkAppState(PackagedTestHelper.gApp, 2, expected,
+                                       true, false, continueTest);
+    };
+  };
+
+  var request = navigator.mozApps.installPackage(miniManifestURL);
+  request.onerror = PackagedTestHelper.mozAppsError;
+  request.onsuccess = function() {
+    info("Packaged Application installed");
+  };
+
+  yield undefined;
+
+  // Export the packaged app.
+  PackagedTestHelper.gApp.export().then((blob) => {
+    exported = blob;
+    ok(blob !== null, "Exported blob is not null");
+    info("blob size is " + blob.size);
+    ok(blob.size > 0, "Exported blob size is > 0");
+    continueTest();
+  }, (error) => {
+    ok(false, "Export 2 should not fail");
+  });
+
+  yield undefined;
+
+  // Uninstall the packaged app.
+  navigator.mozApps.mgmt.onuninstall = function(event) {
+    var app = event.application;
+    is(app.manifestURL, miniManifestURL, "Packaged App uninstall event ok.");
+    is(app.manifest.name, "appname", "Packaged App uninstall manifest ok.");
+    continueTest();
+  }
+  request = navigator.mozApps.mgmt.uninstall(PackagedTestHelper.gApp);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  yield undefined;
+  is(request.result, miniManifestURL, "Packaged App uninstalled.");
+  navigator.mozApps.mgmt.onuninstall = null;
+
+  // Import the packaged app.
+  navigator.mozApps.mgmt.import(exported)
+    .then((imported) => {
+      ok(imported !== null, "Imported app is not null.");
+      is(imported.manifest.name, "appname", "Verifying imported app name");
+      app = imported;
+      continueTest();
+    }, (error) => {
+      ok(false, "We should not fail to import!");
+    }
+  );
+
+  yield undefined;
+
+  // Uninstall the imported packaged app.
+  navigator.mozApps.mgmt.onuninstall = function(event) {
+    var app = event.application;
+    is(app.manifestURL, miniManifestURL, "Packaged App uninstall event ok.");
+    is(app.manifest.name, "appname", "Packaged App uninstall manifest ok.");
+    continueTest();
+  }
+  request = navigator.mozApps.mgmt.uninstall(PackagedTestHelper.gApp);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  yield undefined;
+  is(request.result, miniManifestURL, "Packaged App uninstalled.");
+  navigator.mozApps.mgmt.onuninstall = null;
+
+  // Check that we restored the app registry.
+  request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  is(request.result.length, initialAppsCount, "All apps are uninstalled.");
+}
+
+addLoadEvent(go);
+
+</script>
+</pre>
+</body>
+</html>

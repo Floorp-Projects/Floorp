@@ -47,6 +47,8 @@ var mgmtProps = {
   ownerGlobal: "object",
   removeEventListener: "function",
   setEventHandler: "function",
+  extractManifest: "function",
+  import: "function"
 };
 
 isDeeply([p for (p in navigator.mozApps.mgmt)].sort(),

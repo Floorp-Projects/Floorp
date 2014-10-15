@@ -74,7 +74,7 @@ try {
   {
     let dirfile = new File(tmp, { temporary: true });
     ok(true, "Temporary File() created");
-    var reader = new FileReader();
+    let reader = new FileReader();
     reader.readAsArrayBuffer(dirfile);
     reader.onload = function(event) {
       let buffer = event.target.result;
