@@ -6,11 +6,13 @@
 "use strict";
 
 let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
+let DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 
 function test()
 {
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
+  Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, false);
   gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
     gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
     openScratchpad(runTests);
@@ -175,6 +177,7 @@ function runTests()
       pass++;
       testContextMenu();
     } else {
+      Services.prefs.clearUserPref(DEVTOOLS_CHROME_ENABLED);
       finish();
     }
   };
