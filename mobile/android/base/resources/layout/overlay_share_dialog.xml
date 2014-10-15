@@ -27,6 +27,7 @@
 
         <!-- Header -->
         <LinearLayout
+            android:id="@+id/share_overlay_top_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="0dp"
@@ -104,6 +105,7 @@
 
     <!-- Firefox logo (has to appear higher in the z-order than the content. -->
     <ImageView
+        android:id="@+id/share_overlay_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/share_overlay_content"
