@@ -740,8 +740,8 @@ void NetworkUtils::postTetherInterfaceList(CommandChain* aChain,
   snprintf(command, MAX_COMMAND_SIZE - 1, "%s", DUMMY_COMMAND);
 
   char buf[BUF_SIZE];
-  NS_ConvertUTF16toUTF8 reason(aResult.mResultReason);
-  memcpy(buf, reason.get(), reason.Lenth() + 1);
+  const char* reason = NS_ConvertUTF16toUTF8(aResult.mResultReason).get();
+  memcpy(buf, reason, strlen(reason));
   split(buf, INTERFACE_DELIMIT, GET_FIELD(mInterfaceList));
 
   doCommand(command, aChain, aCallback);
