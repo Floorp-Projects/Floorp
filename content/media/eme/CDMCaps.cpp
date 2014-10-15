@@ -88,12 +88,16 @@ CDMCaps::AutoLock::IsKeyUsable(const CencKeyId& aKeyId)
   return false;
 }
 
-void
+bool
 CDMCaps::AutoLock::SetKeyUsable(const CencKeyId& aKeyId,
                                 const nsString& aSessionId)
 {
   mData.mMonitor.AssertCurrentThreadOwns();
-  mData.mUsableKeyIds.AppendElement(UsableKey(aKeyId, aSessionId));
+  UsableKey key(aKeyId, aSessionId);
+  if (mData.mUsableKeyIds.Contains(key)) {
+    return false;
+  }
+  mData.mUsableKeyIds.AppendElement(key);
   auto& waiters = mData.mWaitForKeys;
   size_t i = 0;
   while (i < waiters.Length()) {
@@ -110,13 +114,18 @@ CDMCaps::AutoLock::SetKeyUsable(const CencKeyId& aKeyId,
       i++;
     }
   }
+  return true;
 }
 
-void
+bool
 CDMCaps::AutoLock::SetKeyUnusable(const CencKeyId& aKeyId,
                                   const nsString& aSessionId)
 {
   mData.mMonitor.AssertCurrentThreadOwns();
+  UsableKey key(aKeyId, aSessionId);
+  if (!mData.mUsableKeyIds.Contains(key)) {
+    return false;
+  }
   auto& keys = mData.mUsableKeyIds;
   for (size_t i = 0; i < keys.Length(); i++) {
     if (keys[i].mId == aKeyId &&
@@ -125,6 +134,7 @@ CDMCaps::AutoLock::SetKeyUnusable(const CencKeyId& aKeyId,
       break;
     }
   }
+  return true;
 }
 
 void

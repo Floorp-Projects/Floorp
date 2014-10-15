@@ -38,8 +38,13 @@ public:
 
     bool IsKeyUsable(const CencKeyId& aKeyId);
 
-    void SetKeyUsable(const CencKeyId& aKeyId, const nsString& aSessionId);
-    void SetKeyUnusable(const CencKeyId& aKeyId, const nsString& aSessionId);
+    // Returns true if setting this key usable results in the usable keys
+    // changing for this session, i.e. the key was not previously marked usable.
+    bool SetKeyUsable(const CencKeyId& aKeyId, const nsString& aSessionId);
+
+    // Returns true if setting this key unusable results in the usable keys
+    // changing for this session, i.e. the key was previously marked usable.
+    bool SetKeyUnusable(const CencKeyId& aKeyId, const nsString& aSessionId);
 
     void DropKeysForSession(const nsAString& aSessionId);
     void GetUsableKeysForSession(const nsAString& aSessionId,
@@ -99,6 +104,11 @@ private:
       : mId(aOther.mId)
       , mSessionId(aOther.mSessionId)
     {}
+    bool operator==(const UsableKey& aOther) const {
+      return mId == aOther.mId &&
+             mSessionId == aOther.mSessionId;
+    };
+
     CencKeyId mId;
     nsString mSessionId;
   };
