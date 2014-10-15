@@ -195,6 +195,53 @@ let tests = [
     gContentAPI.showHighlight("urlbar");
     waitForElementToBeVisible(highlight, checkDefaultEffect, "Highlight should be shown after showHighlight()");
   },
+  function test_highlight_search_engine(done) {
+    let highlight = document.getElementById("UITourHighlight");
+    gContentAPI.showHighlight("urlbar");
+    waitForElementToBeVisible(highlight, () => {
+
+      gContentAPI.showMenu("searchEngines", function() {
+        let searchbar = document.getElementById("searchbar");
+        isnot(searchbar, null, "Should have found searchbar");
+        let searchPopup = document.getAnonymousElementByAttribute(searchbar,
+                                                                   "anonid",
+                                                                   "searchbar-popup");
+        isnot(searchPopup, null, "Should have found search popup");
+
+        function getEngineNode(identifier) {
+          let engineNode = null;
+          for (let node of searchPopup.children) {
+            if (node.engine.identifier == identifier) {
+              engineNode = node;
+              break;
+            }
+          }
+          isnot(engineNode, null, "Should have found search engine node in popup");
+          return engineNode;
+        }
+        let googleEngineNode = getEngineNode("google");
+        let bingEngineNode = getEngineNode("bing");
+
+        gContentAPI.showHighlight("searchEngine-google");
+        waitForCondition(() => googleEngineNode.getAttribute("_moz-menuactive") == "true", function() {
+          is_element_hidden(highlight, "Highlight panel should be hidden by highlighting search engine");
+
+          gContentAPI.showHighlight("searchEngine-bing");
+          waitForCondition(() => bingEngineNode.getAttribute("_moz-menuactive") == "true", function() {
+            isnot(googleEngineNode.getAttribute("_moz-menuactive"), "true", "Previous engine should no longer be highlighted");
+
+            gContentAPI.hideHighlight();
+            waitForCondition(() => bingEngineNode.getAttribute("_moz-menuactive") != "true", function() {
+              gContentAPI.hideMenu("searchEngines");
+              waitForCondition(() => searchPopup.state == "closed", function() {
+                done();
+              }, "Search dropdown should close");
+            }, "Menu item should get attribute removed");
+          }, "Menu item should get attribute to make it look active");
+        });
+      });
+    });
+  },
   function test_highlight_effect_unsupported(done) {
     function checkUnsupportedEffect() {
       is(highlight.getAttribute("active"), "none", "No effect should be used when an unsupported effect is requested");
