@@ -367,6 +367,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         MOZ_ASSERT(hasLastIns());
         return instructions_.rbegin()->toControlInstruction();
     }
+    // Find or allocate an optimized out constant.
+    MConstant *optimizedOutConstant(TempAllocator &alloc);
     MPhiIterator phisBegin() const {
         return phis_.begin();
     }
