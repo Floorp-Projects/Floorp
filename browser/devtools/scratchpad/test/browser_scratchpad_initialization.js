@@ -2,10 +2,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+let DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
+
 function test()
 {
   waitForExplicitFinish();
 
+  Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, false);
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
     gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
@@ -44,5 +47,6 @@ function runTests()
   is(chromeContextCommand.getAttribute("disabled"), "true",
      "Chrome context command is disabled");
 
+  Services.prefs.clearUserPref(DEVTOOLS_CHROME_ENABLED);
   finish();
 }
