@@ -106,9 +106,9 @@
 
             let tagName = PlacesUtils.nodeIsTagQuery(elt._placesNode) ?
                             elt._placesNode.title : null;
-            if ((PlacesUtils.nodeIsFolder(elt._placesNode) ||
-                 PlacesUtils.nodeIsTagQuery(elt._placesNode)) &&
-                !PlacesUtils.nodeIsReadOnly(elt._placesNode)) {
+            if ((PlacesUtils.nodeIsFolder(elt._placesNode) &&
+                 !PlacesUIUtils.isContentsReadOnly(elt._placesNode)) ||
+                PlacesUtils.nodeIsTagQuery(elt._placesNode)) {
               // This is a folder or a tag container.
               if (eventY - eltY < eltHeight * 0.20) {
                 // If mouse is in the top part of the element, drop above folder.

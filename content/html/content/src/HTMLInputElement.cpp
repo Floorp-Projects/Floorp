@@ -2408,10 +2408,18 @@ HTMLInputElement::SetUserInput(const nsAString& aValue)
     SetValueInternal(aValue, true, true);
   }
 
-  return nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
-                                              static_cast<nsIDOMHTMLInputElement*>(this),
-                                              NS_LITERAL_STRING("input"), true,
-                                              true);
+  nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
+                                       static_cast<nsIDOMHTMLInputElement*>(this),
+                                       NS_LITERAL_STRING("input"), true,
+                                       true);
+
+  // If this element is not currently focused, it won't receive a change event for this
+  // update through the normal channels. So fire a change event immediately, instead.
+  if (!ShouldBlur(this)) {
+    FireChangeEventIfNeeded();
+  }
+
+  return NS_OK;
 }
 
 nsIEditor*

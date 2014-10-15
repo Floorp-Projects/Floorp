@@ -105,7 +105,10 @@ this.NFC_POWER_LEVEL_DISABLED       = 0;
 this.NFC_POWER_LEVEL_LOW            = 1;
 this.NFC_POWER_LEVEL_ENABLED        = 2;
 
+this.TOPIC_MOZSETTINGS_CHANGED      = "mozsettings-changed";
 this.TOPIC_XPCOM_SHUTDOWN           = "xpcom-shutdown";
+
+this.SETTING_NFC_DEBUG = "nfc.debugging.enabled";
 
 this.NFC_PEER_EVENT_READY = 0x01;
 this.NFC_PEER_EVENT_LOST  = 0x02;

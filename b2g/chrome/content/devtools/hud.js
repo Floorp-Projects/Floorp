@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyGetter(this, 'MemoryFront', function() {
   return devtools.require('devtools/server/actors/memory').MemoryFront;
 });
 
-Cu.import('resource://gre/modules/AppFrames.jsm');
+Cu.import('resource://gre/modules/Frames.jsm');
 
 /**
  * The Developer HUD is an on-device developer tool that displays widgets,
@@ -80,9 +80,10 @@ let developerHUD = {
       }
     }
 
-    AppFrames.addObserver(this);
+    Frames.addObserver(this);
 
-    for (let frame of AppFrames.list()) {
+    let appFrames = Frames.list().filter(frame => frame.getAttribute('mozapp'));
+    for (let frame of appFrames) {
       this.trackFrame(frame);
     }
 
@@ -100,7 +101,7 @@ let developerHUD = {
       this.untrackFrame(frame);
     }
 
-    AppFrames.removeObserver(this);
+    Frames.removeObserver(this);
 
     this._client.close();
     delete this._client;
@@ -137,11 +138,19 @@ let developerHUD = {
     }
   },
 
-  onAppFrameCreated: function (frame, isFirstAppFrame) {
+  onFrameCreated: function (frame, isFirstAppFrame) {
+    let mozapp = frame.getAttribute('mozapp');
+    if (!mozapp) {
+      return;
+    }
     this.trackFrame(frame);
   },
 
-  onAppFrameDestroyed: function (frame, isLastAppFrame) {
+  onFrameDestroyed: function (frame, isLastAppFrame) {
+    let mozapp = frame.getAttribute('mozapp');
+    if (!mozapp) {
+      return;
+    }
     this.untrackFrame(frame);
   },
 

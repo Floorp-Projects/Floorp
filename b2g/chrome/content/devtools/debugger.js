@@ -21,6 +21,12 @@ XPCOMUtils.defineLazyGetter(this, "discovery", function() {
   return devtools.require("devtools/toolkit/discovery/discovery");
 });
 
+XPCOMUtils.defineLazyGetter(this, "B2GTabList", function() {
+  const { B2GTabList } =
+    devtools.require("resource://gre/modules/DebuggerActors.js");
+  return B2GTabList;
+});
+
 let RemoteDebugger = {
   _promptDone: false,
   _promptAnswer: false,
@@ -91,15 +97,7 @@ let RemoteDebugger = {
     {
       let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
       let parameters = {
-        // We do not expose browser tab actors yet,
-        // but we still have to define tabList.getList(),
-        // otherwise, client won't be able to fetch global actors
-        // from listTabs request!
-        tabList: {
-          getList: function() {
-            return promise.resolve([]);
-          }
-        },
+        tabList: new B2GTabList(connection),
         // Use an explicit global actor list to prevent exposing
         // unexpected actors
         globalActorFactories: restrictPrivileges ? {

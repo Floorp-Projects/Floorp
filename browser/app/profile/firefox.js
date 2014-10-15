@@ -1292,6 +1292,7 @@ pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 
 // Developer edition preferences
 pref("browser.devedition.theme.enabled", false);
+pref("browser.devedition.theme.showCustomizeButton", false);
 
 // Disable the error console
 pref("devtools.errorconsole.enabled", false);
