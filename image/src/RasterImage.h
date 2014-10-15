@@ -330,7 +330,6 @@ private:
     explicit DecodeRequest(RasterImage* aImage)
       : mImage(aImage)
       , mRequestStatus(REQUEST_INACTIVE)
-      , mAllocatedNewFrame(false)
     {
       MOZ_ASSERT(aImage, "aImage cannot be null");
       MOZ_ASSERT(aImage->mStatusTracker,
@@ -354,10 +353,6 @@ private:
       REQUEST_WORK_DONE,
       REQUEST_STOPPED
     } mRequestStatus;
-
-    /* True if a new frame has been allocated, but DecodeSomeData hasn't yet
-     * been called to flush data to it */
-    bool mAllocatedNewFrame;
 
   private:
     ~DecodeRequest() {}
