@@ -341,7 +341,7 @@ XULTreeGridRowAccessible::ChildAtPoint(int32_t aX, int32_t aY,
 
   int32_t row = -1;
   nsCOMPtr<nsITreeColumn> column;
-  nsAutoCString childEltUnused;
+  nsAutoString childEltUnused;
   mTree->GetCellAt(clientX, clientY, &row, getter_AddRefs(column),
                    childEltUnused);
 
@@ -522,7 +522,7 @@ XULTreeGridCellAccessible::Bounds() const
 
   int32_t x = 0, y = 0, width = 0, height = 0;
   nsresult rv = mTree->GetCoordsForCellItem(mRow, mColumn,
-                                            NS_LITERAL_CSTRING("cell"),
+                                            NS_LITERAL_STRING("cell"),
                                             &x, &y, &width, &height);
   if (NS_FAILED(rv))
     return nsIntRect();

@@ -56,7 +56,9 @@
                 onget="return this.treeBoxObject.columns;"/>
 
       <property name="view"
-                onget="return this.treeBoxObject.view;"
+                onget="return this.treeBoxObject.view ?
+                       this.treeBoxObject.view.QueryInterface(Components.interfaces.nsITreeView) :
+                       null;"
                 onset="return this.treeBoxObject.view = val;"/>
 
       <property name="body"
@@ -80,7 +82,7 @@
                 onset="if (this.view) return this.view.selection.currentIndex = val; return val;"/>
 
       <property name="treeBoxObject"
-                onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
+                onget="return this.boxObject;"
                 readonly="true"/>
 # contentView is obsolete (see bug 202391)
       <property name="contentView"
@@ -242,6 +244,7 @@
           if (row < 0 || !this.view.isContainer(row)) {
             return false;
           }
+
           if (this.view.isContainerOpen(row) != openState) {
             this.view.toggleOpenState(row);
             if (row == this.currentIndex) {
@@ -352,36 +355,32 @@
             box.ensureCellIsVisible(row, column);
 
             // Get the coordinates of the text inside the cell.
-            var textx = {}, texty = {}, textwidth = {}, textheight = {};
-            var coords = box.getCoordsForCellItem(row, column, "text",
-                                                  textx, texty, textwidth, textheight);
+            var textRect = box.getCoordsForCellItem(row, column, "text");
 
             // Get the coordinates of the cell itself.
-            var cellx = {}, cellwidth = {};
-            coords = box.getCoordsForCellItem(row, column, "cell",
-                                              cellx, {}, cellwidth, {});
+            var cellRect = box.getCoordsForCellItem(row, column, "cell");
 
             // Calculate the top offset of the textbox.
             var style = window.getComputedStyle(input, "");
             var topadj = parseInt(style.borderTopWidth) + parseInt(style.paddingTop);
-            input.top = texty.value - topadj;
+            input.top = textRect.y - topadj;
 
             // The leftside of the textbox is aligned to the left side of the text
             // in LTR mode, and left side of the cell in RTL mode.
             var left, widthdiff;
             if (style.direction == "rtl") {
-              left = cellx.value;
-              widthdiff = cellx.value + cellwidth.value - textx.value - textwidth.value;
+              left = cellRect.x;
+              widthdiff = cellRect.x + cellRect.width - textRect.x - textRect.width;
             } else {
-              left = textx.value;
-              widthdiff = textx.value - cellx.value;
+              left = textRect.x;
+              widthdiff = textRect.x - cellRect.x;
             }
 
             input.left = left;
-            input.height = textheight.value + topadj +
+            input.height = textRect.height + topadj +
                            parseInt(style.borderBottomWidth) +
                            parseInt(style.paddingBottom);
-            input.width = cellwidth.value - widthdiff;
+            input.width = cellRect.width - widthdiff;
             input.hidden = false;
 
             input.value = this.view.getCellText(row, column);
@@ -1066,54 +1065,52 @@
              !this.parentNode.pageUpOrDownMovesSelection) &&
              !event.shiftKey && !event.metaKey) ||
              this.parentNode.view.selection.single) {
-           var row = {};
-           var col = {};
-           var obj = {};
            var b = this.parentNode.treeBoxObject;
-           b.getCellAt(event.clientX, event.clientY, row, col, obj);
+           var cell = b.getCellAt(event.clientX, event.clientY);
+           var view = this.parentNode.view;
 
            // save off the last selected row
-           this._lastSelectedRow = row.value;
+           this._lastSelectedRow = cell.row;
 
-           if (row.value == -1)
+           if (cell.row == -1)
              return;
 
-           if (obj.value == "twisty")
+           if (cell.childElt == "twisty")
              return;
 
-           if (col.value) {
-             if (col.value.cycler) {
-               b.view.cycleCell(row.value, col.value);
+           if (cell.col) {
+             if (cell.col.cycler) {
+               view.cycleCell(cell.row, cell.col);
                return;
-             } else if (col.value.type == Components.interfaces.nsITreeColumn.TYPE_CHECKBOX) {
-               if (this.parentNode.editable && col.value.editable &&
-                   b.view.isEditable(row.value, col.value)) {
-                 var value = b.view.getCellValue(row.value, col.value);
+             } else if (cell.col.type == Components.interfaces.nsITreeColumn.TYPE_CHECKBOX) {
+               if (this.parentNode.editable && cell.col.editable &&
+                   view.isEditable(cell.row, cell.col)) {
+                 var value = view.getCellValue(cell.row, cell.col);
                  value = value == "true" ? "false" : "true";
-                 b.view.setCellValue(row.value, col.value, value);
+                 view.setCellValue(cell.row, cell.col, value);
                  return;
                }
              }
            } 
 
            var cellSelType = this.parentNode._cellSelType;
-           if (cellSelType == "text" && obj.value != "text" && obj.value != "image")
+           if (cellSelType == "text" && cell.childElt != "text" && cell.childElt != "image")
              return;
 
            if (cellSelType) {
-             if (!col.value.selectable ||
-                 !b.view.isSelectable(row.value, col.value)) {
+             if (!cell.col.selectable ||
+                 !view.isSelectable(cell.row, cell.col)) {
                return;
              }
            }
 
-           if (!b.view.selection.isSelected(row.value)) {
-             b.view.selection.select(row.value);
-             b.ensureRowIsVisible(row.value);
+           if (!view.selection.isSelected(cell.row)) {
+             view.selection.select(cell.row);
+             b.ensureRowIsVisible(cell.row);
            }
 
            if (cellSelType) {
-             b.view.selection.currentColumn = col.value;
+             view.selection.currentColumn = cell.col;
            }
          }
       ]]>
@@ -1125,47 +1122,45 @@
       <![CDATA[
         if (this.parentNode.disabled)
           return;
-        var row = {};
-        var col = {};
-        var obj = {};
         var b = this.parentNode.treeBoxObject;
-        b.getCellAt(event.clientX, event.clientY, row, col, obj);
+        var cell = b.getCellAt(event.clientX, event.clientY);
+        var view = this.parentNode.view;
 
-        if (row.value == -1)
+        if (cell.row == -1)
           return;
 
-        if (obj.value == "twisty") {
-          if (b.view.selection.currentIndex >= 0 &&
-              b.view.isContainerOpen(row.value)) {
-            var parentIndex = b.view.getParentIndex(b.view.selection.currentIndex);
-            while (parentIndex >= 0 && parentIndex != row.value)
-              parentIndex = b.view.getParentIndex(parentIndex);
-            if (parentIndex == row.value) {
+        if (cell.childElt == "twisty") {
+          if (view.selection.currentIndex >= 0 &&
+              view.isContainerOpen(cell.row)) {
+            var parentIndex = view.getParentIndex(view.selection.currentIndex);
+            while (parentIndex >= 0 && parentIndex != cell.row)
+              parentIndex = view.getParentIndex(parentIndex);
+            if (parentIndex == cell.row) {
               var parentSelectable = true;
               if (this.parentNode._cellSelType) {
-                var currentColumn = b.view.selection.currentColumn;
-                if (!b.view.isSelectable(parentIndex, currentColumn))
+                var currentColumn = view.selection.currentColumn;
+                if (!view.isSelectable(parentIndex, currentColumn))
                   parentSelectable = false;
               }
               if (parentSelectable)
-                b.view.selection.select(parentIndex);
+                view.selection.select(parentIndex);
             }
           }
-          this.parentNode.changeOpenState(row.value);
+          this.parentNode.changeOpenState(cell.row);
           return;
         }
 
-        if (! b.view.selection.single) {
+        if (! view.selection.single) {
           var augment = this._isAccelPressed(event);
           if (event.shiftKey) {
-            b.view.selection.rangedSelect(-1, row.value, augment);
-            b.ensureRowIsVisible(row.value);
+            view.selection.rangedSelect(-1, cell.row, augment);
+            b.ensureRowIsVisible(cell.row);
             return;
           }
           if (augment) {
-            b.view.selection.toggleSelect(row.value);
-            b.ensureRowIsVisible(row.value);
-            b.view.selection.currentIndex = row.value;
+            view.selection.toggleSelect(cell.row);
+            b.ensureRowIsVisible(cell.row);
+            view.selection.currentIndex = cell.row;
             return;
           }
         }
@@ -1175,30 +1170,30 @@
           in click rather than mousedown so that you can drag a
           selected group of items */
 
-        if (!col.value) return;
+        if (!cell.col) return;
 
         // if the last row has changed in between the time we 
         // mousedown and the time we click, don't fire the select handler.
         // see bug #92366
-        if (!col.value.cycler && this._lastSelectedRow == row.value &&
-            col.value.type != Components.interfaces.nsITreeColumn.TYPE_CHECKBOX) {
+        if (!cell.col.cycler && this._lastSelectedRow == cell.row &&
+            cell.col.type != Components.interfaces.nsITreeColumn.TYPE_CHECKBOX) {
 
           var cellSelType = this.parentNode._cellSelType;
-          if (cellSelType == "text" && obj.value != "text" && obj.value != "image")
+          if (cellSelType == "text" && cell.childElt != "text" && cell.childElt != "image")
             return;
 
           if (cellSelType) {
-            if (!col.value.selectable ||
-                !b.view.isSelectable(row.value, col.value)) {
+            if (!cell.col.selectable ||
+                !view.isSelectable(cell.row, cell.col)) {
               return;
             }
           }
 
-          b.view.selection.select(row.value);  
-          b.ensureRowIsVisible(row.value);
+          view.selection.select(cell.row);
+          b.ensureRowIsVisible(cell.row);
 
           if (cellSelType) {
-            b.view.selection.currentColumn = col.value;
+            view.selection.currentColumn = cell.col;
           }
         }
       ]]>
@@ -1210,22 +1205,22 @@
         if (this.parentNode.disabled)
           return;
         var tbo = this.parentNode.treeBoxObject;
-        var row = tbo.view.selection.currentIndex;
+        var view = this.parentNode.view;
+        var row = view.selection.currentIndex;
+
         if (row == -1)
           return;
 
-        var col = {};
-        var obj = {};
-        tbo.getCellAt(event.clientX, event.clientY, {}, col, obj);
+        var cell = tbo.getCellAt(event.clientX, event.clientY);
 
-        if (obj.value != "twisty")
-          this.parentNode.startEditing(row, col.value);
+        if (cell.childElt != "twisty")
+          this.parentNode.startEditing(row, cell.col);
 
-        if (this.parentNode._editingColumn || !tbo.view.isContainer(row))
+        if (this.parentNode._editingColumn || !view.isContainer(row))
           return;
 
         // Cyclers and twisties respond to single clicks, not double clicks
-        if (col.value != -1 && !col.value.cycler && obj.value != "twisty")
+        if (cell.col && !cell.col.cycler && cell.childElt != "twisty")
           this.parentNode.changeOpenState(row);
       ]]>
       </handler>
@@ -1537,4 +1532,3 @@
     </handlers>
   </binding>
 </bindings>
-

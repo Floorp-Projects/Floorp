@@ -46,6 +46,11 @@ class RemoteOptions(MochitestOptions):
                     help = "ip address of remote device to test")
         defaults["deviceIP"] = None
 
+        self.add_option("--deviceSerial", action="store",
+                    type = "string", dest = "deviceSerial",
+                    help = "ip address of remote device to test")
+        defaults["deviceSerial"] = None
+
         self.add_option("--dm_trans", action="store",
                     type = "string", dest = "dm_trans",
                     help = "the transport to use to communicate with device: [adb|sut]; default=sut")
@@ -135,8 +140,8 @@ class RemoteOptions(MochitestOptions):
 
         options.webServer = options.remoteWebServer
 
-        if (options.deviceIP == None):
-            options_logger.error("you must provide a device IP")
+        if (options.dm_trans == 'sut' and options.deviceIP == None):
+            options_logger.error("If --dm_trans = sut, you must provide a device IP")
             return None
 
         if (options.remoteLogFile == None):
@@ -600,6 +605,8 @@ def main(args):
     if (options.dm_trans == "adb"):
         if (options.deviceIP):
             dm = droid.DroidADB(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
+        elif (options.deviceSerial):
+            dm = droid.DroidADB(None, None, deviceSerial=options.deviceSerial, deviceRoot=options.remoteTestRoot)
         else:
             dm = droid.DroidADB(deviceRoot=options.remoteTestRoot)
     else:

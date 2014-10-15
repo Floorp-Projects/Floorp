@@ -13,11 +13,8 @@ XPIDL_SOURCES += [
     'nsIBoxObject.idl',
     'nsIBrowserBoxObject.idl',
     'nsIContainerBoxObject.idl',
-    'nsIEditorBoxObject.idl',
-    'nsIIFrameBoxObject.idl',
     'nsIListBoxObject.idl',
     'nsIMenuBoxObject.idl',
-    'nsIPopupBoxObject.idl',
     'nsIScrollBoxObject.idl',
     'nsISliderListener.idl',
 ]
@@ -28,15 +25,25 @@ EXPORTS += [
     'nsBox.h',
     'nsIScrollbarMediator.h',
     'nsPIBoxObject.h',
+    'nsPIListBoxObject.h',
     'nsXULPopupManager.h',
 ]
 
+EXPORTS.mozilla.dom += [
+    'BoxObject.h',
+    'ContainerBoxObject.h',
+    'ListBoxObject.h',
+    'MenuBoxObject.h',
+    'PopupBoxObject.h',
+    'ScrollBoxObject.h',
+]
+
 UNIFIED_SOURCES += [
+    'BoxObject.cpp',
     'nsBox.cpp',
     'nsBoxFrame.cpp',
     'nsBoxLayout.cpp',
     'nsBoxLayoutState.cpp',
-    'nsBoxObject.cpp',
     'nsButtonBoxFrame.cpp',
     'nsRepeatService.cpp',
     'nsRootBoxFrame.cpp',
@@ -52,7 +59,9 @@ UNIFIED_SOURCES += [
 
 if CONFIG['MOZ_XUL']:
     UNIFIED_SOURCES += [
-        'nsContainerBoxObject.cpp',
+        'ContainerBoxObject.cpp',
+        'ListBoxObject.cpp',
+        'MenuBoxObject.cpp',
         'nsDeckFrame.cpp',
         'nsDocElementBoxFrame.cpp',
         'nsGroupBoxFrame.cpp',
@@ -60,23 +69,21 @@ if CONFIG['MOZ_XUL']:
         'nsLeafBoxFrame.cpp',
         'nsListBoxBodyFrame.cpp',
         'nsListBoxLayout.cpp',
-        'nsListBoxObject.cpp',
         'nsListItemFrame.cpp',
         'nsMenuBarFrame.cpp',
         'nsMenuBarListener.cpp',
-        'nsMenuBoxObject.cpp',
         'nsMenuFrame.cpp',
         'nsMenuPopupFrame.cpp',
-        'nsPopupBoxObject.cpp',
         'nsPopupSetFrame.cpp',
         'nsProgressMeterFrame.cpp',
         'nsResizerFrame.cpp',
-        'nsScrollBoxObject.cpp',
         'nsSplitterFrame.cpp',
         'nsTextBoxFrame.cpp',
         'nsTitleBarFrame.cpp',
         'nsXULLabelFrame.cpp',
         'nsXULPopupManager.cpp',
+        'PopupBoxObject.cpp',
+        'ScrollBoxObject.cpp',
     ]
 
 if CONFIG['MOZ_XUL']:
@@ -93,4 +100,3 @@ LOCAL_INCLUDES += [
     '../style',
     '/content/base/src',
 ]
-
