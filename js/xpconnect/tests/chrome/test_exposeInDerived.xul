@@ -27,8 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=804630
 
   // Make a chrome object that exposes objects off its prototype.
   sb.proto = { read: 42, readWrite: 32, __exposedProps__: {} };
-  sb.proto.__defineSetter__('setterProp', function(val) { this._setterProp = val; });
-  sb.obj = { __exposedProps__: { read: 'r', readWrite: 'rw', setterProp: 'w' } };
+  sb.obj = { __exposedProps__: { read: 'r', readWrite: 'rw' } };
   sb.obj.__proto__ = sb.proto;
 
   // Make sure we can't access any of the properties on the prototype directly.
@@ -36,16 +35,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=804630
   Cu.evalInSandbox('var wrote = false; ' +
                    'try { proto.readWrite = 12; wrote = true; } catch(e) {} ' +
                    ' ok(!wrote, "Should not write proto property");', sb);
-  Cu.evalInSandbox('var wrote = false; ' +
-                   'try { proto.setterProp = 12; wrote = true; } catch(e) {} ' +
-                   ' ok(!wrote, "Should not write proto setter");', sb);
 
   // Make sure we can access the exposed properties via the derived object.
   Cu.evalInSandbox('is(obj.read, 42, "obj.read accessible");', sb);
   Cu.evalInSandbox('is(obj.readWrite, 32, "obj.readWrite is readable");', sb);
   Cu.evalInSandbox('obj.readWrite = 8; is(obj.readWrite, 8, "obj.readWrite is writable");', sb);
-  Cu.evalInSandbox('obj.setterProp = 3;', sb);
-  is(sb.obj._setterProp, 3, "obj.setterProp works");
 
   ]]>
   </script>

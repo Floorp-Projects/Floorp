@@ -343,6 +343,16 @@ ExposedPropertiesOnly::check(JSContext *cx, HandleObject wrapper, HandleId id, W
         return false;
     }
 
+    // Inspect the property on the underlying object to check for red flags.
+    if (!JS_GetPropertyDescriptorById(cx, wrappedObject, id, &desc))
+        return false;
+
+    // Reject accessor properties.
+    if (desc.hasGetterOrSetter()) {
+        EnterAndThrow(cx, wrapper, "Exposing privileged accessor properties is prohibited");
+        return false;
+    }
+
     return true;
 }
 
