@@ -116,22 +116,17 @@ FrameWorker.prototype = {
     });
     // the "navigator" object in a worker is a subset of the full navigator;
     // specifically, just the interfaces 'NavigatorID' and 'NavigatorOnLine'
-    let navigator = {
-      __exposedProps__: {
-        "appName": "r",
-        "appVersion": "r",
-        "platform": "r",
-        "userAgent": "r",
-        "onLine": "r"
-      },
+    let navigator = Cu.cloneInto({
       // interface NavigatorID
       appName: workerWindow.navigator.appName,
       appVersion: workerWindow.navigator.appVersion,
       platform: workerWindow.navigator.platform,
       userAgent: workerWindow.navigator.userAgent,
-      // interface NavigatorOnLine
-      get onLine() workerWindow.navigator.onLine
-    };
+    }, sandbox);
+    Object.defineProperty(Cu.waiveXrays(navigator), 'onLine', {
+      configurable: true, enumerable: true,
+      get: Cu.exportFunction(() => workerWindow.navigator.onLine, sandbox)
+    });
     sandbox.navigator = navigator;
 
     // Our importScripts function needs to 'eval' the script code from inside
