@@ -329,7 +329,6 @@ private:
   {
     explicit DecodeRequest(RasterImage* aImage)
       : mImage(aImage)
-      , mBytesToDecode(0)
       , mRequestStatus(REQUEST_INACTIVE)
       , mAllocatedNewFrame(false)
     {
@@ -346,8 +345,6 @@ private:
     nsRefPtr<imgStatusTracker> mStatusTracker;
 
     RasterImage* mImage;
-
-    size_t mBytesToDecode;
 
     enum DecodeRequestStatus
     {
