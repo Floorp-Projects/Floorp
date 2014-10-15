@@ -6,6 +6,7 @@
 
 #include "DOMMobileMessageError.h"
 #include "mozilla/dom/DOMMobileMessageErrorBinding.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "nsIDOMMozMmsMessage.h"
 #include "nsIDOMMozSmsMessage.h"
 
