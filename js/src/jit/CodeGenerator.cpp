@@ -1215,16 +1215,18 @@ CreateDependentString(MacroAssembler &masm, const JSAtomState &names,
 
     Label notInline;
 
-    int32_t maxInlineLength =
-        latin1 ? JSFatInlineString::MAX_LENGTH_LATIN1 : JSFatInlineString::MAX_LENGTH_TWO_BYTE;
+    int32_t maxInlineLength = latin1
+                              ? (int32_t) JSFatInlineString::MAX_LENGTH_LATIN1
+                              : (int32_t) JSFatInlineString::MAX_LENGTH_TWO_BYTE;
     masm.branch32(Assembler::Above, temp1, Imm32(maxInlineLength), &notInline);
 
     {
         // Make a normal or fat inline string.
         Label stringAllocated, fatInline;
 
-        int32_t maxNormalInlineLength =
-            latin1 ? JSInlineString::MAX_LENGTH_LATIN1 : JSInlineString::MAX_LENGTH_TWO_BYTE;
+        int32_t maxNormalInlineLength = latin1
+                                        ? (int32_t) JSInlineString::MAX_LENGTH_LATIN1
+                                        : (int32_t) JSInlineString::MAX_LENGTH_TWO_BYTE;
         masm.branch32(Assembler::Above, temp1, Imm32(maxNormalInlineLength), &fatInline);
 
         int32_t normalFlags = (latin1 ? JSString::LATIN1_CHARS_BIT : 0) | JSString::INIT_INLINE_FLAGS;
