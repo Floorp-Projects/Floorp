@@ -1164,7 +1164,8 @@ nsresult HTMLMediaElement::LoadResource()
       return NS_ERROR_FAILURE;
     }
     mMediaSource = source.forget();
-    nsRefPtr<MediaResource> resource = MediaSourceDecoder::CreateResource();
+    nsRefPtr<MediaResource> resource =
+      MediaSourceDecoder::CreateResource(mMediaSource->GetPrincipal());
     return FinishDecoderSetup(decoder, resource, nullptr, nullptr);
   }
 
