@@ -102,6 +102,9 @@ SourceRepository = PlatformSourceRepo
             f.write('foobar')
         self._check_version(get_version(exe_name_unprefixed))
 
+    def test_not_found_with_binary_specified(self):
+        self.assertRaises(errors.LocalAppNotFoundError, get_version, self.binary)
+
     def _write_ini_files(self, application=True, platform=True):
         if application:
             with open(os.path.join(self.tempdir, 'application.ini'), 'w') as f:
