@@ -26,12 +26,12 @@ namespace mozilla {
 class MediaSourceResource MOZ_FINAL : public MediaResource
 {
 public:
-  MediaSourceResource() {}
+  MediaSourceResource(nsIPrincipal* aPrincipal = nullptr)
+    : mPrincipal(aPrincipal) {}
 
   virtual nsresult Close() MOZ_OVERRIDE { return NS_OK; }
   virtual void Suspend(bool aCloseImmediately) MOZ_OVERRIDE { UNIMPLEMENTED(); }
   virtual void Resume() MOZ_OVERRIDE { UNIMPLEMENTED(); }
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() MOZ_OVERRIDE { UNIMPLEMENTED(); return nullptr; }
   virtual bool CanClone() MOZ_OVERRIDE { UNIMPLEMENTED(); return false; }
   virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) MOZ_OVERRIDE { UNIMPLEMENTED(); return nullptr; }
   virtual void SetReadMode(MediaCacheStream::ReadMode aMode) MOZ_OVERRIDE { UNIMPLEMENTED(); }
@@ -51,6 +51,11 @@ public:
   virtual bool IsSuspended() MOZ_OVERRIDE { UNIMPLEMENTED(); return false; }
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) MOZ_OVERRIDE { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
   virtual nsresult Open(nsIStreamListener** aStreamListener) MOZ_OVERRIDE { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
+
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() MOZ_OVERRIDE
+  {
+    return nsRefPtr<nsIPrincipal>(mPrincipal).forget();
+  }
 
   virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) MOZ_OVERRIDE
   {
@@ -76,6 +81,7 @@ private:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
+  nsRefPtr<nsIPrincipal> mPrincipal;
   const nsCString mType;
 };
 
