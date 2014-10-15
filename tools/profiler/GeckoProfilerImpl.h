@@ -18,7 +18,7 @@
 #include "nsISupports.h"
 
 #ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracerImpl.h"
+#include "GeckoTaskTracer.h"
 #endif
 
 /* QT has a #define for the word "slots" and jsfriendapi.h has a struct with

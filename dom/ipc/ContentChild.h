@@ -87,10 +87,10 @@ public:
     const AppInfo& GetAppInfo() {
         return mAppInfo;
     }
-
     void SetProcessName(const nsAString& aName, bool aDontOverride = false);
     void GetProcessName(nsAString& aName);
     void GetProcessName(nsACString& aName);
+    bool IsAlive();
     static void AppendProcessId(nsACString& aName);
 
     ContentBridgeParent* GetLastBridge() {
@@ -421,6 +421,7 @@ private:
     bool mIsForApp;
     bool mIsForBrowser;
     bool mCanOverrideProcessName;
+    bool mIsAlive;
     nsString mProcessName;
 
     static ContentChild* sSingleton;

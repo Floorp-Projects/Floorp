@@ -49,6 +49,7 @@ WEBIDL_FILES = [
     'AutocompleteInfo.webidl',
     'BarProp.webidl',
     'BatteryManager.webidl',
+    'BeforeAfterKeyboardEvent.webidl',
     'BeforeUnloadEvent.webidl',
     'BiquadFilterNode.webidl',
     'Blob.webidl',

@@ -49,20 +49,30 @@ SourceRepository = PlatformSourceRepo
         self.assertTrue(isinstance(v, dict))
 
     def test_binary(self):
-        with open(os.path.join(self.tempdir, 'application.ini'), 'w') as f:
-            f.writelines(self.application_ini)
-
-        with open(os.path.join(self.tempdir, 'platform.ini'), 'w') as f:
-            f.writelines(self.platform_ini)
+        self._write_ini_files()
 
         self._check_version(get_version(self.binary))
 
-    def test_binary_in_current_path(self):
-        with open(os.path.join(self.tempdir, 'application.ini'), 'w') as f:
-            f.writelines(self.application_ini)
+    @unittest.skipIf(not hasattr(os, 'symlink'),
+                     'os.symlink not supported on this platform')
+    def test_symlinked_binary(self):
+        self._write_ini_files()
 
-        with open(os.path.join(self.tempdir, 'platform.ini'), 'w') as f:
-            f.writelines(self.platform_ini)
+        # create a symlink of the binary in another directory and check
+        # version against this symlink
+        tempdir = tempfile.mkdtemp()
+        try:
+            browser_link = os.path.join(tempdir,
+                                        os.path.basename(self.binary))
+            os.symlink(self.binary, browser_link)
+
+            self._check_version(get_version(browser_link))
+        finally:
+            mozfile.remove(tempdir)
+
+    def test_binary_in_current_path(self):
+        self._write_ini_files()
+
         os.chdir(self.tempdir)
         self._check_version(get_version())
 
@@ -77,25 +87,28 @@ SourceRepository = PlatformSourceRepo
 
     def test_without_platform_file(self):
         """With a missing platform file no exception should be thrown"""
-        with open(os.path.join(self.tempdir, 'application.ini'), 'w') as f:
-            f.writelines(self.application_ini)
+        self._write_ini_files(platform=False)
 
         v = get_version(self.binary)
         self.assertTrue(isinstance(v, dict))
 
     def test_with_exe(self):
         """Test that we can resolve .exe files"""
-        with open(os.path.join(self.tempdir, 'application.ini'), 'w') as f:
-            f.writelines(self.application_ini)
-
-        with open(os.path.join(self.tempdir, 'platform.ini'), 'w') as f:
-            f.writelines(self.platform_ini)
+        self._write_ini_files()
 
         exe_name_unprefixed = self.binary + '1'
         exe_name = exe_name_unprefixed + '.exe'
         with open(exe_name, 'w') as f:
             f.write('foobar')
         self._check_version(get_version(exe_name_unprefixed))
+
+    def _write_ini_files(self, application=True, platform=True):
+        if application:
+            with open(os.path.join(self.tempdir, 'application.ini'), 'w') as f:
+                f.writelines(self.application_ini)
+        if platform:
+            with open(os.path.join(self.tempdir, 'platform.ini'), 'w') as f:
+                f.writelines(self.platform_ini)
 
     def _check_version(self, version):
         self.assertEqual(version.get('application_name'), 'AppName')
