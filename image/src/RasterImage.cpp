@@ -2396,11 +2396,9 @@ RasterImage::SyncDecode()
     }
   }
 
-  // If we're currently waiting on a new frame for this image, we have to create
-  // it now.
+  // If we're currently waiting on a new frame for this image, create it now.
   if (mDecoder && mDecoder->NeedsNewFrame()) {
     mDecoder->AllocateFrame();
-    mDecodeRequest->mAllocatedNewFrame = true;
   }
 
   // If we don't have a decoder, create one
@@ -2780,8 +2778,7 @@ RasterImage::DecodeSomeData(size_t aMaxBytes, DecodeStrategy aStrategy)
   // First, if we've just been called because we allocated a frame on the main
   // thread, let the decoder deal with the data it set aside at that time by
   // passing it a null buffer.
-  if (mDecodeRequest->mAllocatedNewFrame) {
-    mDecodeRequest->mAllocatedNewFrame = false;
+  if (mDecoder->NeedsToFlushData()) {
     nsresult rv = WriteToDecoder(nullptr, 0, aStrategy);
     if (NS_FAILED(rv) || mDecoder->NeedsNewFrame()) {
       return rv;
@@ -2827,8 +2824,7 @@ RasterImage::IsDecodeFinished()
   // If the decoder returned because it needed a new frame and we haven't
   // written to it since then, the decoder may be storing data that it hasn't
   // decoded yet.
-  if (mDecoder->NeedsNewFrame() ||
-      (mDecodeRequest && mDecodeRequest->mAllocatedNewFrame)) {
+  if (mDecoder->NeedsNewFrame() || mDecoder->NeedsToFlushData()) {
     return false;
   }
 
@@ -3417,9 +3413,7 @@ RasterImage::DecodePool::DecodeSomeOfImage(RasterImage* aImg,
   // this image, get it now.
   if (aStrategy == DECODE_SYNC && aImg->mDecoder->NeedsNewFrame()) {
     MOZ_ASSERT(NS_IsMainThread());
-
     aImg->mDecoder->AllocateFrame();
-    aImg->mDecodeRequest->mAllocatedNewFrame = true;
   }
 
   // If we're not synchronous, we can't allocate a frame right now.
@@ -3460,7 +3454,7 @@ RasterImage::DecodePool::DecodeSomeOfImage(RasterImage* aImg,
           !aImg->IsDecodeFinished() &&
           !(aDecodeType == DECODE_TYPE_UNTIL_SIZE && aImg->mHasSize) &&
           !aImg->mDecoder->NeedsNewFrame()) ||
-         (aImg->mDecodeRequest && aImg->mDecodeRequest->mAllocatedNewFrame)) {
+         aImg->mDecoder->NeedsToFlushData()) {
     uint32_t chunkSize = std::min(bytesToDecode, maxBytes);
     nsresult rv = aImg->DecodeSomeData(chunkSize, aStrategy);
     if (NS_FAILED(rv)) {
@@ -3551,7 +3545,6 @@ RasterImage::FrameNeededWorker::Run()
   // anything.
   if (mImage->mDecoder && mImage->mDecoder->NeedsNewFrame()) {
     rv = mImage->mDecoder->AllocateFrame();
-    mImage->mDecodeRequest->mAllocatedNewFrame = true;
   }
 
   if (NS_SUCCEEDED(rv) && mImage->mDecoder) {
