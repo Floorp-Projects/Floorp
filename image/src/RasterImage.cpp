@@ -3004,8 +3004,9 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
   nsresult rv = NS_OK;
 
   if (image->mDecoder) {
-    if (request && request->mChunkCount && !image->mDecoder->IsSizeDecode()) {
-      Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, request->mChunkCount);
+    if (!image->mDecoder->IsSizeDecode() && image->mDecoder->ChunkCount()) {
+      Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS,
+                            image->mDecoder->ChunkCount());
     }
 
     if (!image->mHasSize && image->mDecoder->HasSize()) {
@@ -3025,14 +3026,14 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
       // Do some telemetry if this isn't a size decode.
       if (request && !wasSize) {
         Telemetry::Accumulate(Telemetry::IMAGE_DECODE_TIME,
-                              int32_t(request->mDecodeTime.ToMicroseconds()));
+                              int32_t(decoder->DecodeTime().ToMicroseconds()));
 
         // We record the speed for only some decoders. The rest have
         // SpeedHistogram return HistogramCount.
         Telemetry::ID id = decoder->SpeedHistogram();
         if (id < Telemetry::HistogramCount) {
           int32_t KBps = int32_t(decoder->BytesDecoded() /
-                                 (1024 * request->mDecodeTime.ToSeconds()));
+                                 (1024 * decoder->DecodeTime().ToSeconds()));
           Telemetry::Accumulate(id, KBps);
         }
       }
@@ -3446,9 +3447,8 @@ RasterImage::DecodePool::DecodeSomeOfImage(RasterImage* aImg,
     bytesToDecode = aImg->mSourceData.Length() - aImg->mDecoder->BytesDecoded();
   }
 
-  int32_t chunkCount = 0;
-  TimeStamp start = TimeStamp::Now();
-  TimeStamp deadline = start + TimeDuration::FromMilliseconds(gfxPrefs::ImageMemMaxMSBeforeYield());
+  TimeStamp deadline = TimeStamp::Now() +
+                       TimeDuration::FromMilliseconds(gfxPrefs::ImageMemMaxMSBeforeYield());
 
   // We keep decoding chunks until:
   //  * we don't have any data left to decode,
@@ -3463,7 +3463,6 @@ RasterImage::DecodePool::DecodeSomeOfImage(RasterImage* aImg,
           !(aDecodeType == DECODE_TYPE_UNTIL_SIZE && aImg->mHasSize) &&
           !aImg->mDecoder->NeedsNewFrame()) ||
          (aImg->mDecodeRequest && aImg->mDecodeRequest->mAllocatedNewFrame)) {
-    chunkCount++;
     uint32_t chunkSize = std::min(bytesToDecode, maxBytes);
     nsresult rv = aImg->DecodeSomeData(chunkSize, aStrategy);
     if (NS_FAILED(rv)) {
@@ -3477,11 +3476,6 @@ RasterImage::DecodePool::DecodeSomeOfImage(RasterImage* aImg,
     // a chunk to ensure that we don't yield without doing any decoding.
     if (aDecodeType == DECODE_TYPE_UNTIL_TIME && TimeStamp::Now() >= deadline)
       break;
-  }
-
-  if (aImg->mDecodeRequest) {
-    aImg->mDecodeRequest->mDecodeTime += (TimeStamp::Now() - start);
-    aImg->mDecodeRequest->mChunkCount += chunkCount;
   }
 
   // Flush invalidations (and therefore paint) now that we've decoded all the

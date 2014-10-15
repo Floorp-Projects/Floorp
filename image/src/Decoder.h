@@ -103,6 +103,12 @@ public:
 
   size_t BytesDecoded() const { return mBytesDecoded; }
 
+  // The amount of time we've spent inside Write() so far for this decoder.
+  TimeDuration DecodeTime() const { return mDecodeTime; }
+
+  // The number of times Write() has been called so far for this decoder.
+  uint32_t ChunkCount() const { return mChunkCount; }
+
   // The number of frames we have, including anything in-progress. Thus, this
   // is only 0 if we haven't begun any frames.
   uint32_t GetFrameCount() { return mFrameCount; }
@@ -234,6 +240,10 @@ protected:
   uint32_t mImageDataLength;
   uint32_t* mColormap;       // Current colormap to be used in Cairo format
   uint32_t mColormapSize;
+
+  // Telemetry data for this decoder.
+  TimeDuration mDecodeTime;
+  uint32_t mChunkCount;
 
   uint32_t mDecodeFlags;
   size_t mBytesDecoded;
