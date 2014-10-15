@@ -892,18 +892,19 @@ TranslateStates(uint64_t aState, AtkStateSet* aStateSet)
 AtkStateSet *
 refStateSetCB(AtkObject *aAtkObj)
 {
-  AtkStateSet *state_set = nullptr;
-  state_set = ATK_OBJECT_CLASS(parent_class)->ref_state_set(aAtkObj);
+    AtkStateSet *state_set = nullptr;
+    state_set = ATK_OBJECT_CLASS(parent_class)->ref_state_set(aAtkObj);
 
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (accWrap)
+    AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
+    if (!accWrap) {
+        TranslateStates(states::DEFUNCT, state_set);
+        return state_set;
+    }
+
+    // Map states
     TranslateStates(accWrap->State(), state_set);
-  else if (ProxyAccessible* proxy = GetProxy(aAtkObj))
-    TranslateStates(proxy->State(), state_set);
-  else
-    TranslateStates(states::DEFUNCT, state_set);
 
-  return state_set;
+    return state_set;
 }
 
 static void
