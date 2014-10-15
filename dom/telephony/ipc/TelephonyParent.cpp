@@ -43,6 +43,8 @@ TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActo
       return actor->DoRequest(aRequest.get_EnumerateCallsRequest());
     case IPCTelephonyRequest::TDialRequest:
       return actor->DoRequest(aRequest.get_DialRequest());
+    case IPCTelephonyRequest::TUSSDRequest:
+      return actor->DoRequest(aRequest.get_USSDRequest());
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -428,6 +430,20 @@ TelephonyRequestParent::DoRequest(const DialRequest& aRequest)
   if (service) {
     service->Dial(aRequest.clientId(), aRequest.number(),
                   aRequest.isEmergency(), this);
+  } else {
+    return NS_SUCCEEDED(NotifyError(NS_LITERAL_STRING("InvalidStateError")));
+  }
+
+  return true;
+}
+
+bool
+TelephonyRequestParent::DoRequest(const USSDRequest& aRequest)
+{
+  nsCOMPtr<nsITelephonyService> service =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
+  if (service) {
+    service->SendUSSD(aRequest.clientId(), aRequest.ussd(), this);
   } else {
     return NS_SUCCEEDED(NotifyError(NS_LITERAL_STRING("InvalidStateError")));
   }
