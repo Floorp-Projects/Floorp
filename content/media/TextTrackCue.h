@@ -15,6 +15,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsIDocument.h"
 #include "mozilla/dom/HTMLDivElement.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/TextTrack.h"
 
 namespace mozilla {

@@ -11,6 +11,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLFormControlsCollectionBinding.h"
 #include "mozilla/dom/HTMLFormElement.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "nsGenericHTMLElement.h" // nsGenericHTMLFormElement
 #include "nsIDocument.h"
 #include "nsIDOMNode.h"

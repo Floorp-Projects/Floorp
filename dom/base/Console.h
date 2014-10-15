@@ -7,6 +7,7 @@
 #define mozilla_dom_Console_h
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/UnionConversions.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
