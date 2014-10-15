@@ -67,6 +67,7 @@ private:
    */
   CustomElf(Mappable *mappable, const char *path)
   : BaseElf(path)
+  , link_map()
   , mappable(mappable)
   , init(0)
   , fini(0)
