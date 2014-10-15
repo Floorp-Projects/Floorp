@@ -133,8 +133,8 @@ class DestinationInsertionPointList;
 
 // IID for the dom::Element interface
 #define NS_ELEMENT_IID \
-{ 0xb0135f9d, 0xa476, 0x4711, \
-  { 0x8b, 0xb9, 0xca, 0xe5, 0x2a, 0x05, 0xf9, 0xbe } }
+{ 0xaa79cb98, 0xc785, 0x44c5, \
+  { 0x80, 0x80, 0x2e, 0x5f, 0x0c, 0xa5, 0xbd, 0x63 } }
 
 class Element : public FragmentOrElement
 {
@@ -672,6 +672,10 @@ public:
     bool activeState = false;
     if (!nsIPresShell::GetPointerInfo(aPointerId, activeState)) {
       aError.Throw(NS_ERROR_DOM_INVALID_POINTER_ERR);
+      return;
+    }
+    if (!IsInDoc()) {
+      aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return;
     }
     if (!activeState) {

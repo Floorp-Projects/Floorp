@@ -30,8 +30,6 @@
 #include "nsBindingManager.h"
 #include "nsInterfaceHashtable.h"
 #include "nsJSThingHashtable.h"
-#include "nsIBoxObject.h"
-#include "nsPIBoxObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
 #include "nsScriptLoader.h"
@@ -95,10 +93,12 @@ class nsHtml5TreeOpExecutor;
 class nsDocumentOnStack;
 class nsPointerLockPermissionRequest;
 class nsISecurityConsoleMessage;
+class nsPIBoxObject;
 
 namespace mozilla {
 class EventChainPreVisitor;
 namespace dom {
+class BoxObject;
 class UndoManager;
 struct LifecycleCallbacks;
 class CallbackFunction;
@@ -1002,8 +1002,10 @@ public:
   virtual void ForgetLink(mozilla::dom::Link* aLink);
 
   void ClearBoxObjectFor(nsIContent* aContent);
-  already_AddRefed<nsIBoxObject> GetBoxObjectFor(mozilla::dom::Element* aElement,
-                                                 mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+
+  virtual already_AddRefed<mozilla::dom::BoxObject>
+  GetBoxObjectFor(mozilla::dom::Element* aElement,
+                  mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
 
   virtual Element*
     GetAnonymousElementByAttribute(nsIContent* aElement,

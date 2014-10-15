@@ -113,7 +113,12 @@ AddonInterpositionService.prototype = {
     if (iid) {
       interp = this._interfaceInterpositions[iid];
     } else {
-      interp = this._taggedInterpositions[this.getObjectTag(target)];
+      try {
+        interp = this._taggedInterpositions[this.getObjectTag(target)];
+      }
+      catch (e) {
+        Cu.reportError(new Components.Exception("Failed to interpose object", e.result, Components.stack.caller));
+      }
     }
 
     if (!interp) {

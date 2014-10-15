@@ -6,18 +6,18 @@
 
 const Cu = Components.utils;
 
-// Use a COW to expose a function from a standard prototype, and make sure it's
-// still remapped.
+// Use a COW to expose a function from a standard prototype, and make we deny
+// access to it.
 
 function run_test()
 {
   var sb = Cu.Sandbox("http://www.example.com");
   sb.obj = { foo: 42, __exposedProps__: { hasOwnProperty: 'r' } };
   do_check_eq(Cu.evalInSandbox('typeof obj.foo', sb), 'undefined', "COW works as expected");
-  do_check_true(Cu.evalInSandbox('obj.hasOwnProperty === Object.prototype.hasOwnProperty', sb),
-                "Remapping happens even when the property is explicitly exposed");
-  // NB: We used to test for the following, but such behavior became very
-  // difficult to implement in a recent refactor. We're moving away from this
-  // API anyway, so we decided to explicitly drop support for this.
-  // do_check_eq(Cu.evalInSandbox('Object.prototype.bar = 10; obj.bar', sb), 10);
+  try {
+    Cu.evalInSandbox('obj.hasOwnProperty', sb);
+    do_check_true(false);
+  } catch (e) {
+    do_check_true(/privileged or cross-origin callable/i.test(e));
+  }
 }

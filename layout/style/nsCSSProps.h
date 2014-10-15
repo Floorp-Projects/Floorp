@@ -537,6 +537,7 @@ public:
   static const KTableValue kBoxPackKTable[];
   static const KTableValue kClipShapeSizingKTable[];
   static const KTableValue kDominantBaselineKTable[];
+  static const KTableValue kShapeRadiusKTable[];
   static const KTableValue kFillRuleKTable[];
   static const KTableValue kFilterFunctionKTable[];
   static const KTableValue kImageRenderingKTable[];

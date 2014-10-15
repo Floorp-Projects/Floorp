@@ -34,6 +34,10 @@ function BaseTraversalRule(aRoles, aMatchFunc, aPreFilter) {
   if (aRoles.indexOf(Roles.LABEL) < 0) {
     this._matchRoles.push(Roles.LABEL);
   }
+  if (aRoles.indexOf(Roles.INTERNAL_FRAME) < 0) {
+    // Used for traversing in to child OOP frames.
+    this._matchRoles.push(Roles.INTERNAL_FRAME);
+  }
   this._matchFunc = aMatchFunc || function() { return Filters.MATCH; };
   this.preFilter = aPreFilter || gSimplePreFilter;
 }
@@ -98,9 +102,7 @@ var gSimpleTraversalRoles =
    Roles.LISTITEM,
    Roles.GRID_CELL,
    Roles.COLUMNHEADER,
-   Roles.ROWHEADER,
-   // Used for traversing in to child OOP frames.
-   Roles.INTERNAL_FRAME];
+   Roles.ROWHEADER];
 
 var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
   // An object is simple, if it either has a single child lineage,

@@ -516,8 +516,8 @@ protected:
   int8_t mPopupAnchor;
   int8_t mPosition;
 
-  // One of nsIPopupBoxObject::ROLLUP_DEFAULT/ROLLUP_CONSUME/ROLLUP_NO_CONSUME
-  int8_t mConsumeRollupEvent;
+  // One of PopupBoxObject::ROLLUP_DEFAULT/ROLLUP_CONSUME/ROLLUP_NO_CONSUME
+  uint8_t mConsumeRollupEvent;
   FlipType mFlip; // Whether to flip
 
   bool mIsOpenChanged; // true if the open state changed since the last layout

@@ -143,6 +143,7 @@ function testRichListbox(id, andThen)
     var [aStart, aDelta, aIntDelta, aDeltaMode] = tests[0];
     tests.shift();
     listbox.scrollToIndex(aStart);
+
     synthesizeWheel(listbox, 10, 10,
                     { deltaMode: aDeltaMode, deltaY: aDelta,
                       lineOrPageDeltaY: aIntDelta });
@@ -200,10 +201,7 @@ function testArrowScrollbox(id)
 
   function helper(aStart, aDelta, aIntDelta, aDeltaMode, aExpected)
   {
-    var xpos = {};
-    var ypos = {};
     var orientIsHorizontal = (orient == "horizontal");
-    var pos = orientIsHorizontal ? xpos : ypos;
 
     scrollBoxObject.scrollTo(aStart, aStart);
 
@@ -211,12 +209,15 @@ function testArrowScrollbox(id)
       synthesizeWheel(scrollbox, 5, 5,
                       { deltaMode: aDeltaMode, deltaY: aDelta,
                         lineOrPageDeltaY: aIntDelta });
-      scrollBoxObject.getPosition(xpos, ypos);
+
+      var pos = orientIsHorizontal ? scrollBoxObject.positionX :
+                                     scrollBoxObject.positionY;
+
       // Note, vertical mouse scrolling is allowed to scroll horizontal
       // arrowscrollboxes, because many users have no horizontal mouse scroll
       // capability
       let expected = !i ? aExpected : aStart;
-      is(pos.value, expected,
+      is(pos, expected,
          "testArrowScrollbox(" + id +  "): vertical, starting " + aStart +
            " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
            " aDeltaMode " + aDeltaMode);
@@ -229,20 +230,20 @@ function testArrowScrollbox(id)
                         lineOrPageDeltaX: aIntDelta });
       // horizontal mouse scrolling is never allowed to scroll vertical
       // arrowscrollboxes
-      scrollBoxObject.getPosition(xpos, ypos);
+      var pos = orientIsHorizontal ? scrollBoxObject.positionX :
+                                     scrollBoxObject.positionY;
       let expected = (!i && orientIsHorizontal) ? aExpected : aStart;
-      is(pos.value, expected,
+      is(pos, expected,
          "testArrowScrollbox(" + id +  "): horizontal, starting " + aStart +
            " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
            " aDeltaMode " + aDeltaMode);
     }
   }
 
-  var scrolledWidth = {};
-  var scrolledHeight = {};
-  scrollBoxObject.getScrolledSize(scrolledWidth, scrolledHeight);
-  var scrollMaxX = scrolledWidth.value - scrollBoxObject.width;
-  var scrollMaxY = scrolledHeight.value - scrollBoxObject.height;
+  var scrolledWidth = scrollBoxObject.scrolledWidth;
+  var scrolledHeight = scrollBoxObject.scrolledHeight;
+  var scrollMaxX = scrolledWidth - scrollBoxObject.width;
+  var scrollMaxY = scrolledHeight - scrollBoxObject.height;
   var scrollMax = orient == "horizontal" ? scrollMaxX : scrollMaxY;
 
   deltaModes.forEach(function(aDeltaMode) {

@@ -1292,10 +1292,9 @@ function checkColumns(aTree, aReference, aMessage)
 
 function mouseOnCell(tree, row, column, testname)
 {
-  var x = {}, y = {}, width = {}, height = {};
-  tree.boxObject.getCoordsForCellItem(row, column, "text", x, y, width, height);
+  var rect = tree.boxObject.getCoordsForCellItem(row, column, "text");
 
-  synthesizeMouseExpectEvent(tree.body, x.value, y.value, {}, tree, "select", testname);
+  synthesizeMouseExpectEvent(tree.body, rect.x, rect.y, {}, tree, "select", testname);
 }
 
 function mouseClickOnColumnHeader(aColumns, aColumnIndex, aButton, aClickCount)
@@ -1321,10 +1320,9 @@ function mouseDblClickOnCell(tree, row, column, testname)
   tree.treeBoxObject.ensureRowIsVisible(row);
 
   // get cell coordinates
-  var x = {}, y = {}, width = {}, height = {};
-  tree.treeBoxObject.getCoordsForCellItem(row, column, "text", x, y, width, height);
+  var rect = tree.treeBoxObject.getCoordsForCellItem(row, column, "text");
 
-  synthesizeMouse(tree.body, x.value, y.value, { clickCount: 2 }, null);
+  synthesizeMouse(tree.body, rect.x, rect.y, { clickCount: 2 }, null);
 }
 
 function compareArrays(arr1, arr2)
