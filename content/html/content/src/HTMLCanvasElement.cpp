@@ -14,6 +14,7 @@
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/gfx/Rect.h"
