@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import android.os.Bundle;
+
 public class GeckoViewChrome implements GeckoView.ChromeDelegate {
     /**
     * Tell the host application that Gecko is ready to handle requests.
@@ -62,5 +64,18 @@ public class GeckoViewChrome implements GeckoView.ChromeDelegate {
     @Override
     public void onDebugRequest(GeckoView view, GeckoView.PromptResult result) {
         result.cancel();
+    }
+
+    /**
+    * Receive a message from an imported script.
+    * @param view The GeckoView that initiated the callback.
+    * @param data Bundle of data sent with the message. Never null.
+    * @param result A MessageResult used to send back a response without blocking. Can be null.
+    * Defaults to cancel requests with a failed response.
+    */
+    public void onScriptMessage(GeckoView view, Bundle data, GeckoView.MessageResult result) {
+        if (result != null) {
+            result.failure(null);
+        }
     }
 }
