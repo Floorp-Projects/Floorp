@@ -3206,11 +3206,6 @@ RasterImage::DecodePool::RequestDecode(RasterImage* aImg)
   // If we're currently waiting on a new frame for this image, we can't do any
   // decoding.
   if (!aImg->mDecoder->NeedsNewFrame()) {
-    // No matter whether this is currently being decoded, we need to update the
-    // number of bytes we want it to decode.
-    aImg->mDecodeRequest->mBytesToDecode =
-      aImg->mSourceData.Length() - aImg->mDecoder->BytesDecoded();
-
     if (aImg->mDecodeRequest->mRequestStatus == DecodeRequest::REQUEST_PENDING ||
         aImg->mDecodeRequest->mRequestStatus == DecodeRequest::REQUEST_ACTIVE) {
       // The image is already in our list of images to decode, or currently being
@@ -3311,7 +3306,10 @@ RasterImage::DecodePool::DecodeJob::Run()
     type = DECODE_TYPE_UNTIL_TIME;
   }
 
-  DecodePool::Singleton()->DecodeSomeOfImage(mImage, DECODE_ASYNC, type, mRequest->mBytesToDecode);
+  size_t maxBytes = mImage->mSourceData.Length() -
+                    mImage->mDecoder->BytesDecoded();
+  DecodePool::Singleton()->DecodeSomeOfImage(mImage, DECODE_ASYNC,
+                                             type, maxBytes);
 
   size_t bytesDecoded = mImage->mDecoder->BytesDecoded() - oldByteCount;
 
@@ -3328,7 +3326,7 @@ RasterImage::DecodePool::DecodeJob::Run()
            !mImage->mError &&
            !mImage->mPendingError &&
            !mImage->IsDecodeFinished() &&
-           bytesDecoded < mRequest->mBytesToDecode &&
+           bytesDecoded < maxBytes &&
            bytesDecoded > 0) {
     DecodePool::Singleton()->RequestDecode(mImage);
   } else {
