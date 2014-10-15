@@ -310,7 +310,7 @@ MultipartFileImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
     aFile->GetLeafName(mName);
   }
 
-  nsRefPtr<File> blob = File::CreateFromFile(aWindow, aFile);
+  nsRefPtr<File> blob = File::CreateFromFile(aWindow, aFile, aBag.mTemporary);
 
   // Pre-cache size.
   uint64_t unused;

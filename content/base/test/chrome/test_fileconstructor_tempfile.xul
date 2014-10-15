@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=982874
+
+Tests building a DOMFile with the "temporary" option and checks that
+the underlying file is removed when the DOMFile is gc'ed.
+-->
+<window title="Mozilla Bug 982874"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+    src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=982874">
+   Mozilla Bug 982874</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 982874 **/
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+let Cu = Components.utils;
+
+SimpleTest.waitForExplicitFinish();
+
+function cleanup(tmp) {
+  // Force cycle and garbage collection and check that we removed the file.
+  for (let i = 0; i < 10; i++) {
+    Cu.forceCC();
+    Cu.forceGC();
+  }
+  if (tmp.exists()) {
+    ok(false, "Failed to remove temporary file!");
+  } else {
+    ok(true, "Temporary file removed when gc-ing the DOMFile");
+  }
+  SimpleTest.finish();
+}
+
+try {
+  // Create a file in $TMPDIR/mozilla-temp-files
+  let tmp = Cc["@mozilla.org/file/directory_service;1"]
+              .getService(Ci.nsIProperties)
+              .get("TmpD", Ci.nsIFile);
+  tmp.append("mozilla-temp-files");
+  tmp.append("test.txt");
+  tmp.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+
+  // Add some content to the file.
+  let fileData = "I'm a temporary file!";
+  let outStream = Cc["@mozilla.org/network/file-output-stream;1"]
+                    .createInstance(Ci.nsIFileOutputStream);
+  outStream.init(tmp, 0x02 | 0x08 | 0x20, // write, create, truncate
+                 0666, 0);
+  outStream.write(fileData, fileData.length);
+  outStream.close();
+
+  // Create a scoped DOMFile so the gc will happily get rid of it.
+  {
+    let dirfile = new File(tmp, { temporary: true });
+    ok(true, "Temporary File() created");
+    var reader = new FileReader();
+    reader.readAsArrayBuffer(dirfile);
+    reader.onload = function(event) {
+      let buffer = event.target.result;
+      ok(buffer.byteLength > 0,
+         "Blob size should be > 0 : " + buffer.byteLength);
+      cleanup(tmp);
+    }
+  }
+} catch (e) {
+  ok(false, "Unable to create the File() object : " + e);
+  SimpleTest.finish();
+}
+]]>
+</script>
+
+</window>
