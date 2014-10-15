@@ -434,9 +434,9 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
             break;
         }
 
-        if (rref.isSymbol()) {
+        if (IsSymbolOrSymbolWrapper(rref)) {
             RootedObject obj(cx, objArg);
-            RootedId id(cx, SYMBOL_TO_JSID(rref.toSymbol()));
+            RootedId id(cx, SYMBOL_TO_JSID(ToSymbolPrimitive(rref)));
             if (!JSObject::getGeneric(cx, obj, obj, id, res))
                 return false;
 
