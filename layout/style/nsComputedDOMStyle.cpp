@@ -4229,6 +4229,15 @@ nsComputedDOMStyle::DoGetMixBlendMode()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetIsolation()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mIsolation,
+                                               nsCSSProps::kIsolationKTable));
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetObjectFit()
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
