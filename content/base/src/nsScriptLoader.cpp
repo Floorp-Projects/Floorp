@@ -1248,7 +1248,7 @@ nsScriptLoader::ReadyToExecuteScripts()
     }
   }
 
-  if (!mDocument->IsMasterDocument()) {
+  if (mDocument && !mDocument->IsMasterDocument()) {
     nsRefPtr<ImportManager> im = mDocument->ImportManager();
     nsRefPtr<ImportLoader> loader = im->Find(mDocument);
     MOZ_ASSERT(loader, "How can we have an import document without a loader?");
