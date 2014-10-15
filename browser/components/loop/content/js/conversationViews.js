@@ -284,9 +284,11 @@ loop.conversationViews = (function(mozL10n) {
         height: "100%",
         publishVideo: this.props.video.enabled,
         style: {
+          audioLevelDisplayMode: "off",
           bugDisplayMode: "off",
           buttonDisplayMode: "off",
-          nameDisplayMode: "off"
+          nameDisplayMode: "off",
+          videoDisabledDisplayMode: "off"
         }
       }
     },
