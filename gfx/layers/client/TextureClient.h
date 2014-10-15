@@ -34,7 +34,7 @@ class gfxImageSurface;
 namespace mozilla {
 namespace gl {
 class GLContext;
-class SharedSurface;
+class SurfaceStream;
 }
 
 namespace layers {
@@ -296,23 +296,6 @@ public:
    */
   TextureFlags GetFlags() const { return mFlags; }
 
-  bool HasFlags(TextureFlags aFlags) const
-  {
-    return (mFlags & aFlags) == aFlags;
-  }
-
-  void AddFlags(TextureFlags aFlags)
-  {
-    MOZ_ASSERT(!IsSharedWithCompositor());
-    mFlags |= aFlags;
-  }
-
-  void RemoveFlags(TextureFlags aFlags)
-  {
-    MOZ_ASSERT(!IsSharedWithCompositor());
-    mFlags &= ~aFlags;
-  }
-
   /**
    * valid only for TextureFlags::RECYCLE TextureClient.
    * When called this texture client will grab a strong reference and release
@@ -448,6 +431,12 @@ protected:
    */
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
 
+  void AddFlags(TextureFlags  aFlags)
+  {
+    MOZ_ASSERT(!IsSharedWithCompositor());
+    mFlags |= aFlags;
+  }
+
   ISurfaceAllocator* GetAllocator()
   {
     return mAllocator;
@@ -514,8 +503,6 @@ public:
   virtual void Unlock() MOZ_OVERRIDE;
 
   virtual bool IsLocked() const MOZ_OVERRIDE { return mLocked; }
-
-  uint8_t* GetLockedData() const;
 
   virtual bool CanExposeDrawTarget() const MOZ_OVERRIDE { return true; }
 
@@ -628,61 +615,53 @@ protected:
 };
 
 /**
- * A TextureClient implementation to share SharedSurfaces.
+ * A TextureClient implementation to share SurfaceStream.
  */
-class SharedSurfaceTextureClient : public TextureClient
+class StreamTextureClient : public TextureClient
 {
 public:
-  SharedSurfaceTextureClient(TextureFlags aFlags, gl::SharedSurface* surf);
+  explicit StreamTextureClient(TextureFlags aFlags);
 
 protected:
-  ~SharedSurfaceTextureClient();
+  ~StreamTextureClient();
 
 public:
-  // Boilerplate start
-  virtual bool IsAllocated() const MOZ_OVERRIDE { return true; }
+  virtual bool IsAllocated() const MOZ_OVERRIDE;
 
-  virtual bool Lock(OpenMode) MOZ_OVERRIDE {
-    MOZ_ASSERT(!mIsLocked);
-    mIsLocked = true;
-    return true;
-  }
+  virtual bool Lock(OpenMode mode) MOZ_OVERRIDE;
 
-  virtual void Unlock() MOZ_OVERRIDE {
-    MOZ_ASSERT(mIsLocked);
-    mIsLocked = false;
-  }
+  virtual void Unlock() MOZ_OVERRIDE;
 
   virtual bool IsLocked() const MOZ_OVERRIDE { return mIsLocked; }
 
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
+
   virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return false; }
 
-  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE {
+  void InitWith(gl::SurfaceStream* aStream);
+
+  virtual gfx::IntSize GetSize() const { return gfx::IntSize(); }
+
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE
+  {
     return gfx::SurfaceFormat::UNKNOWN;
   }
-
-  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return gfx::IntSize(); }
 
   // This TextureClient should not be used in a context where we use CreateSimilar
   // (ex. component alpha) because the underlying texture data is always created by
   // an external producer.
   virtual TemporaryRef<TextureClient>
-  CreateSimilar(TextureFlags, TextureAllocationFlags) const MOZ_OVERRIDE {
-    return nullptr;
-  }
+  CreateSimilar(TextureFlags, TextureAllocationFlags) const MOZ_OVERRIDE { return nullptr; }
 
-  virtual bool AllocateForSurface(gfx::IntSize,
-                                  TextureAllocationFlags) MOZ_OVERRIDE {
+  virtual bool AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags aFlags) MOZ_OVERRIDE
+  {
     MOZ_CRASH("Should never hit this.");
     return false;
   }
-  // Boilerplate end
-
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
 
 protected:
   bool mIsLocked;
-  gl::SharedSurface* const mSurf;
+  RefPtr<gl::SurfaceStream> mStream;
   RefPtr<gl::GLContext> mGL; // Just for reference holding.
 };
 

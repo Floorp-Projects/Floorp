@@ -59,7 +59,7 @@ class WebGLContext;
 
 namespace gl {
 class GLContext;
-class SharedSurface;
+class SurfaceStream;
 }
 
 namespace gfx {
@@ -2010,7 +2010,8 @@ public:
     Data()
       : mDrawTarget(nullptr)
       , mGLContext(nullptr)
-      , mFrontbufferGLTex(0)
+      , mStream(nullptr)
+      , mTexID(0)
       , mSize(0,0)
       , mHasAlpha(false)
       , mIsGLAlphaPremult(true)
@@ -2020,8 +2021,11 @@ public:
     mozilla::gfx::DrawTarget* mDrawTarget; // a DrawTarget for the canvas contents
     mozilla::gl::GLContext* mGLContext; // or this, for GL.
 
-    // Frontbuffer override
-    uint32_t mFrontbufferGLTex;
+    // Canvas/SkiaGL uses this
+    mozilla::gl::SurfaceStream* mStream;
+
+    // ID of the texture backing the canvas layer (defaults to 0)
+    uint32_t mTexID;
 
     // The size of the canvas content
     nsIntSize mSize;

@@ -6,7 +6,6 @@
 #ifndef SHARED_SURFACE_GRALLOC_H_
 #define SHARED_SURFACE_GRALLOC_H_
 
-#include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayersSurfaces.h"
 #include "SharedSurface.h"
 
@@ -28,7 +27,6 @@ public:
                                                    const GLFormats& formats,
                                                    const gfx::IntSize& size,
                                                    bool hasAlpha,
-                                                   layers::TextureFlags flags,
                                                    layers::ISurfaceAllocator* allocator);
 
     static SharedSurface_Gralloc* Cast(SharedSurface* surf) {
@@ -79,22 +77,20 @@ class SurfaceFactory_Gralloc
     : public SurfaceFactory
 {
 protected:
-    const layers::TextureFlags mFlags;
     RefPtr<layers::ISurfaceAllocator> mAllocator;
 
 public:
     SurfaceFactory_Gralloc(GLContext* prodGL,
                            const SurfaceCaps& caps,
-                           layers::TextureFlags flags,
-                           layers::ISurfaceAllocator* allocator);
+                           layers::ISurfaceAllocator* allocator = nullptr);
 
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
         bool hasAlpha = mReadCaps.alpha;
 
         UniquePtr<SharedSurface> ret;
         if (mAllocator) {
-            ret = SharedSurface_Gralloc::Create(mGL, mFormats, size, hasAlpha,
-                                                mFlags, mAllocator);
+            ret = SharedSurface_Gralloc::Create(mGL, mFormats, size,
+                                                hasAlpha, mAllocator);
         }
         return Move(ret);
     }
