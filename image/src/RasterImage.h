@@ -331,7 +331,6 @@ private:
       : mImage(aImage)
       , mBytesToDecode(0)
       , mRequestStatus(REQUEST_INACTIVE)
-      , mChunkCount(0)
       , mAllocatedNewFrame(false)
     {
       MOZ_ASSERT(aImage, "aImage cannot be null");
@@ -358,13 +357,6 @@ private:
       REQUEST_WORK_DONE,
       REQUEST_STOPPED
     } mRequestStatus;
-
-    /* Keeps track of how much time we've burned decoding this particular decode
-     * request. */
-    TimeDuration mDecodeTime;
-
-    /* The number of chunks it took to decode this image. */
-    int32_t mChunkCount;
 
     /* True if a new frame has been allocated, but DecodeSomeData hasn't yet
      * been called to flush data to it */

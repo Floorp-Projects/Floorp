@@ -19,6 +19,7 @@ Decoder::Decoder(RasterImage &aImage)
   , mCurrentFrame(nullptr)
   , mImageData(nullptr)
   , mColormap(nullptr)
+  , mChunkCount(0)
   , mDecodeFlags(0)
   , mBytesDecoded(0)
   , mDecodeDone(false)
@@ -97,10 +98,14 @@ Decoder::Write(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy)
   MOZ_ASSERT(!HasDecoderError(),
              "Not allowed to make more decoder calls after error!");
 
+  // Begin recording telemetry data.
+  TimeStamp start = TimeStamp::Now();
+  mChunkCount++;
+
   // Keep track of the total number of bytes written.
   mBytesDecoded += aCount;
 
-  // If a data error occured, just ignore future data
+  // If a data error occured, just ignore future data.
   if (HasDataError())
     return;
 
@@ -122,6 +127,9 @@ Decoder::Write(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy)
       WriteInternal(nullptr, 0, aStrategy);
     }
   }
+
+  // Finish telemetry.
+  mDecodeTime += (TimeStamp::Now() - start);
 }
 
 void
