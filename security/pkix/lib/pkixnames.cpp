@@ -42,8 +42,405 @@ namespace mozilla { namespace pkix {
 
 namespace {
 
+// GeneralName ::= CHOICE {
+//      otherName                       [0]     OtherName,
+//      rfc822Name                      [1]     IA5String,
+//      dNSName                         [2]     IA5String,
+//      x400Address                     [3]     ORAddress,
+//      directoryName                   [4]     Name,
+//      ediPartyName                    [5]     EDIPartyName,
+//      uniformResourceIdentifier       [6]     IA5String,
+//      iPAddress                       [7]     OCTET STRING,
+//      registeredID                    [8]     OBJECT IDENTIFIER }
+MOZILLA_PKIX_ENUM_CLASS GeneralNameType : uint8_t
+{
+  dNSName = der::CONTEXT_SPECIFIC | 2,
+  iPAddress = der::CONTEXT_SPECIFIC | 7,
+};
+
+MOZILLA_PKIX_ENUM_CLASS FallBackToCommonName { No = 0, Yes = 1 };
+
+Result SearchForName(const Input* subjectAltName, Input subject,
+                     GeneralNameType referenceIDType,
+                     Input referenceID,
+                     FallBackToCommonName fallBackToCommonName,
+                     /*out*/ bool& foundMatch);
+Result SearchWithinRDN(Reader& rdn,
+                       GeneralNameType referenceIDType,
+                       Input referenceID,
+                       /*in/out*/ bool& foundMatch);
+Result SearchWithinAVA(Reader& rdn,
+                       GeneralNameType referenceIDType,
+                       Input referenceID,
+                       /*in/out*/ bool& foundMatch);
+
+Result MatchPresentedIDWithReferenceID(GeneralNameType referenceIDType,
+                                       Input presentedID,
+                                       Input referenceID,
+                                       /*out*/ bool& foundMatch);
+
 uint8_t LocaleInsensitveToLower(uint8_t a);
 bool StartsWithIDNALabel(Input id);
+
+} // unnamed namespace
+
+bool IsValidDNSName(Input hostname);
+bool ParseIPv4Address(Input hostname, /*out*/ uint8_t (&out)[4]);
+bool ParseIPv6Address(Input hostname, /*out*/ uint8_t (&out)[16]);
+bool PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
+                                         Input referenceDNSID,
+                                         bool referenceDNSIDWasVerifiedAsValid);
+
+// Verify that the given end-entity cert, which is assumed to have been already
+// validated with BuildCertChain, is valid for the given hostname. hostname is
+// assumed to be a string representation of an IPv4 address, an IPv6 addresss,
+// or a normalized ASCII (possibly punycode) DNS name.
+Result
+CheckCertHostname(Input endEntityCertDER, Input hostname)
+{
+  BackCert cert(endEntityCertDER, EndEntityOrCA::MustBeEndEntity, nullptr);
+  Result rv = cert.Init();
+  if (rv != Success) {
+    return rv;
+  }
+
+  const Input* subjectAltName(cert.GetSubjectAltName());
+  Input subject(cert.GetSubject());
+
+  // For backward compatibility with legacy certificates, we fall back to
+  // searching for a name match in the subject common name for DNS names and
+  // IPv4 addresses. We don't do so for IPv6 addresses because we do not think
+  // there are many certificates that would need such fallback, and because
+  // comparisons of string representations of IPv6 addresses are particularly
+  // error prone due to the syntactic flexibility that IPv6 addresses have.
+  //
+  // IPv4 and IPv6 addresses are represented using the same type of GeneralName
+  // (iPAddress); they are differentiated by the lengths of the values.
+  bool found;
+  uint8_t ipv6[16];
+  uint8_t ipv4[4];
+  if (IsValidDNSName(hostname)) {
+    rv = SearchForName(subjectAltName, subject, GeneralNameType::dNSName,
+                       hostname, FallBackToCommonName::Yes, found);
+  } else if (ParseIPv6Address(hostname, ipv6)) {
+    rv = SearchForName(subjectAltName, subject, GeneralNameType::iPAddress,
+                       Input(ipv6), FallBackToCommonName::No, found);
+  } else if (ParseIPv4Address(hostname, ipv4)) {
+    rv = SearchForName(subjectAltName, subject, GeneralNameType::iPAddress,
+                       Input(ipv4), FallBackToCommonName::Yes, found);
+  } else {
+    return Result::ERROR_BAD_CERT_DOMAIN;
+  }
+  if (rv != Success) {
+    return rv;
+  }
+  if (!found) {
+    return Result::ERROR_BAD_CERT_DOMAIN;
+  }
+  return Success;
+}
+
+namespace {
+
+Result
+SearchForName(/*optional*/ const Input* subjectAltName,
+              Input subject,
+              GeneralNameType referenceIDType,
+              Input referenceID,
+              FallBackToCommonName fallBackToCommonName,
+              /*out*/ bool& foundMatch)
+{
+  Result rv;
+
+  foundMatch = false;
+
+  // RFC 6125 says "A client MUST NOT seek a match for a reference identifier
+  // of CN-ID if the presented identifiers include a DNS-ID, SRV-ID, URI-ID, or
+  // any application-specific identifier types supported by the client."
+  // Accordingly, we only consider CN-IDs if there are no DNS-IDs in the
+  // subjectAltName.
+  //
+  // RFC 6125 says that IP addresses are out of scope, but for backward
+  // compatibility we accept them, by considering IP addresses to be an
+  // "application-specific identifier type supported by the client."
+  //
+  // TODO(bug XXXXXXX): Consider strengthening this check to "A client MUST NOT
+  // seek a match for a reference identifier of CN-ID if the certificate
+  // contains a subjectAltName extension."
+  //
+  // TODO(bug XXXXXXX): Consider dropping support for IP addresses as
+  // identifiers completely.
+  bool hasAtLeastOneDNSNameOrIPAddressSAN = false;
+
+  if (subjectAltName) {
+    Reader altNames;
+
+    {
+      Reader input(*subjectAltName);
+      rv = der::ExpectTagAndGetValue(input, der::SEQUENCE, altNames);
+      if (rv != Success) {
+        return rv;
+      }
+      rv = der::End(input);
+      if (rv != Success) {
+        return rv;
+      }
+    }
+
+    // do { ... } while(...) because subjectAltName isn't allowed to be empty.
+    do {
+      uint8_t tag;
+      Input presentedID;
+      rv = der::ReadTagAndGetValue(altNames, tag, presentedID);
+      if (rv != Success) {
+        return rv;
+      }
+      if (tag == static_cast<uint8_t>(referenceIDType)) {
+        rv = MatchPresentedIDWithReferenceID(referenceIDType, presentedID,
+                                             referenceID, foundMatch);
+        if (rv != Success) {
+          return rv;
+        }
+        if (foundMatch) {
+          return Success;
+        }
+      }
+      if (tag == static_cast<uint8_t>(GeneralNameType::dNSName) ||
+          tag == static_cast<uint8_t>(GeneralNameType::iPAddress)) {
+        hasAtLeastOneDNSNameOrIPAddressSAN = true;
+      }
+    } while (!altNames.AtEnd());
+  }
+
+  if (hasAtLeastOneDNSNameOrIPAddressSAN ||
+      fallBackToCommonName != FallBackToCommonName::Yes) {
+    return Success;
+  }
+
+  // Attempt to match the reference ID against the CN-ID, which we consider to
+  // be the most-specific CN AVA in the subject field.
+  //
+  // https://tools.ietf.org/html/rfc6125#section-2.3.1 says:
+  //
+  //   To reduce confusion, in this specification we avoid such terms and
+  //   instead use the terms provided under Section 1.8; in particular, we
+  //   do not use the term "(most specific) Common Name field in the subject
+  //   field" from [HTTP-TLS] and instead state that a CN-ID is a Relative
+  //   Distinguished Name (RDN) in the certificate subject containing one
+  //   and only one attribute-type-and-value pair of type Common Name (thus
+  //   removing the possibility that an RDN might contain multiple AVAs
+  //   (Attribute Value Assertions) of type CN, one of which could be
+  //   considered "most specific").
+  //
+  // https://tools.ietf.org/html/rfc6125#section-7.4 says:
+  //
+  //   [...] Although it would be preferable to
+  //   forbid multiple CN-IDs entirely, there are several reasons at this
+  //   time why this specification states that they SHOULD NOT (instead of
+  //   MUST NOT) be included [...]
+  //
+  // Consequently, it is unclear what to do when there are multiple CNs in the
+  // subject, regardless of whether there "SHOULD NOT" be.
+  //
+  // NSS's CERT_VerifyCertName mostly follows RFC2818 in this instance, which
+  // says:
+  //
+  //   If a subjectAltName extension of type dNSName is present, that MUST
+  //   be used as the identity. Otherwise, the (most specific) Common Name
+  //   field in the Subject field of the certificate MUST be used.
+  //
+  //   [...]
+  //
+  //   In some cases, the URI is specified as an IP address rather than a
+  //   hostname. In this case, the iPAddress subjectAltName must be present
+  //   in the certificate and must exactly match the IP in the URI.
+  //
+  // (The main difference from RFC2818 is that NSS's CERT_VerifyCertName also
+  // matches IP addresses in the most-specific CN.)
+  //
+  // NSS's CERT_VerifyCertName finds the most specific CN via
+  // CERT_GetCommoName, which uses CERT_GetLastNameElement. Note that many
+  // NSS-based applications, including Gecko, also use CERT_GetCommonName. It
+  // is likely that other, non-NSS-based, applications also expect only the
+  // most specific CN to be matched against the reference ID.
+  //
+  // "A Layman's Guide to a Subset of ASN.1, BER, and DER" and other sources
+  // agree that an RDNSequence is ordered from most significant (least
+  // specific) to least significant (most specific), as do other references.
+  //
+  // However, Chromium appears to use the least-specific (first) CN instead of
+  // the most-specific; see https://crbug.com/366957. Also, MSIE and some other
+  // popular implementations apparently attempt to match the reference ID
+  // against any/all CNs in the subject. Since we're trying to phase out the
+  // use of CN-IDs, we intentionally avoid trying to match MSIE's more liberal
+  // behavior.
+
+  // Name ::= CHOICE { -- only one possibility for now --
+  //   rdnSequence  RDNSequence }
+  //
+  // RDNSequence ::= SEQUENCE OF RelativeDistinguishedName
+  //
+  // RelativeDistinguishedName ::=
+  //   SET SIZE (1..MAX) OF AttributeTypeAndValue
+  Reader subjectReader(subject);
+  return der::NestedOf(subjectReader, der::SEQUENCE, der::SET,
+                       der::EmptyAllowed::Yes,
+                       bind(SearchWithinRDN, _1, referenceIDType,
+                            referenceID, ref(foundMatch)));
+}
+
+// RelativeDistinguishedName ::=
+//   SET SIZE (1..MAX) OF AttributeTypeAndValue
+//
+// AttributeTypeAndValue ::= SEQUENCE {
+//   type     AttributeType,
+//   value    AttributeValue }
+Result
+SearchWithinRDN(Reader& rdn,
+                GeneralNameType referenceIDType,
+                Input referenceID,
+                /*in/out*/ bool& foundMatch)
+{
+  do {
+    Result rv = der::Nested(rdn, der::SEQUENCE,
+                            bind(SearchWithinAVA, _1, referenceIDType,
+                                 referenceID, ref(foundMatch)));
+    if (rv != Success) {
+      return rv;
+    }
+  } while (!rdn.AtEnd());
+
+  return Success;
+}
+
+// AttributeTypeAndValue ::= SEQUENCE {
+//   type     AttributeType,
+//   value    AttributeValue }
+//
+// AttributeType ::= OBJECT IDENTIFIER
+//
+// AttributeValue ::= ANY -- DEFINED BY AttributeType
+//
+// DirectoryString ::= CHOICE {
+//       teletexString           TeletexString (SIZE (1..MAX)),
+//       printableString         PrintableString (SIZE (1..MAX)),
+//       universalString         UniversalString (SIZE (1..MAX)),
+//       utf8String              UTF8String (SIZE (1..MAX)),
+//       bmpString               BMPString (SIZE (1..MAX)) }
+Result
+SearchWithinAVA(Reader& rdn,
+                GeneralNameType referenceIDType,
+                Input referenceID,
+                /*in/out*/ bool& foundMatch)
+{
+  // id-at OBJECT IDENTIFIER ::= { joint-iso-ccitt(2) ds(5) 4 }
+  // id-at-commonName AttributeType ::= { id-at 3 }
+  // python DottedOIDToCode.py id-at-commonName 2.5.4.3
+  static const uint8_t id_at_commonName[] = {
+    0x55, 0x04, 0x03
+  };
+
+  // AttributeTypeAndValue ::= SEQUENCE {
+  //   type     AttributeType,
+  //   value    AttributeValue }
+  //
+  // AttributeType ::= OBJECT IDENTIFIER
+  //
+  // AttributeValue ::= ANY -- DEFINED BY AttributeType
+  //
+  // DirectoryString ::= CHOICE {
+  //       teletexString           TeletexString (SIZE (1..MAX)),
+  //       printableString         PrintableString (SIZE (1..MAX)),
+  //       universalString         UniversalString (SIZE (1..MAX)),
+  //       utf8String              UTF8String (SIZE (1..MAX)),
+  //       bmpString               BMPString (SIZE (1..MAX)) }
+  Reader type;
+  Result rv = der::ExpectTagAndGetValue(rdn, der::OIDTag, type);
+  if (rv != Success) {
+    return rv;
+  }
+
+  // We're only interested in CN attributes.
+  if (!type.MatchRest(id_at_commonName)) {
+    rdn.SkipToEnd();
+    return Success;
+  }
+
+  // We might have previously found a match. Now that we've found another CN,
+  // we no longer consider that previous match to be a match, so "forget" about
+  // it.
+  foundMatch = false;
+
+  uint8_t valueEncodingTag;
+  Input presentedID;
+  rv = der::ReadTagAndGetValue(rdn, valueEncodingTag, presentedID);
+  if (rv != Success) {
+    return rv;
+  }
+
+  // We only support printableString and utf8String.
+  //
+  // In the case of UTF8String, we rely on the fact that in UTF-8 the octets in
+  // a multi-byte encoding of a code point are always distinct from ASCII. Any
+  // non-ASCII byte in a UTF-8 string causes us to fail to match. We make no
+  // attempt to detect or report malformed UTF-8 (e.g. incomplete or overlong
+  // encodings of code points, or encodings of invalid code points).
+  //
+  // We could trivially add support for teletexString if needed, but RFC 5280
+  // deprecated it. universalString and bmpString are also deprecated, and they
+  // are a little harder to support because they are not single-byte ASCII
+  // superset encodings.
+  if (valueEncodingTag != der::PrintableString &&
+      valueEncodingTag != der::UTF8String) {
+    return Success;
+  }
+
+  switch (referenceIDType)
+  {
+    case GeneralNameType::dNSName:
+      foundMatch = PresentedDNSIDMatchesReferenceDNSID(presentedID,
+                                                       referenceID, true);
+      break;
+    case GeneralNameType::iPAddress:
+    {
+      // We don't fall back to matching CN-IDs for IPv6 addresses, so we'll
+      // never get here for an IPv6 address.
+      assert(referenceID.GetLength() == 4);
+      uint8_t ipv4[4];
+      foundMatch = ParseIPv4Address(presentedID, ipv4) &&
+                   InputsAreEqual(Input(ipv4), referenceID);
+      break;
+    }
+    default:
+      return NotReached("unexpected referenceIDType in SearchWithinAVA",
+                        Result::FATAL_ERROR_INVALID_ARGS);
+  }
+
+  return Success;
+}
+
+Result
+MatchPresentedIDWithReferenceID(GeneralNameType nameType,
+                                Input presentedID,
+                                Input referenceID,
+                                /*out*/ bool& foundMatch)
+{
+  foundMatch = false;
+
+  switch (nameType) {
+    case GeneralNameType::dNSName:
+      foundMatch = PresentedDNSIDMatchesReferenceDNSID(presentedID,
+                                                       referenceID, true);
+      break;
+    case GeneralNameType::iPAddress:
+      foundMatch = InputsAreEqual(presentedID, referenceID);
+      break;
+    default:
+      return NotReached("Invalid nameType for SearchType::CheckName",
+                        Result::FATAL_ERROR_INVALID_ARGS);
+  }
+  return Success;
+}
 
 } // unnamed namespace
 
