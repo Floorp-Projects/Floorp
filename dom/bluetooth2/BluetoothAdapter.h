@@ -18,6 +18,7 @@
 namespace mozilla {
 namespace dom {
 class DOMRequest;
+class File;
 struct MediaMetaData;
 struct MediaPlayStatus;
 }
@@ -124,7 +125,7 @@ public:
 
   // OPP file transfer related methods
   already_AddRefed<DOMRequest> SendFile(const nsAString& aDeviceAddress,
-                                        nsIDOMBlob* aBlob,
+                                        File& aBlob,
                                         ErrorResult& aRv);
   already_AddRefed<DOMRequest> StopSendingFile(const nsAString& aDeviceAddress,
                                                ErrorResult& aRv);
