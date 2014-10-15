@@ -198,9 +198,32 @@ struct PatchedImmPtr {
     { }
 };
 
-// Used for immediates which require relocation.
-struct ImmGCPtr
+class AssemblerShared;
+class ImmGCPtr;
+
+// Used for immediates which require relocation and may be traced during minor GC.
+class ImmMaybeNurseryPtr
 {
+    friend class AssemblerShared;
+    friend class ImmGCPtr;
+    const gc::Cell *value;
+
+    ImmMaybeNurseryPtr() : value(0) {}
+
+  public:
+    explicit ImmMaybeNurseryPtr(const gc::Cell *ptr) : value(ptr)
+    {
+        MOZ_ASSERT(!IsPoisonedPtr(ptr));
+
+        // asm.js shouldn't be creating GC things
+        MOZ_ASSERT(!IsCompilingAsmJS());
+    }
+};
+
+// Used for immediates which require relocation.
+class ImmGCPtr
+{
+  public:
     const gc::Cell *value;
 
     explicit ImmGCPtr(const gc::Cell *ptr) : value(ptr)
@@ -212,17 +235,13 @@ struct ImmGCPtr
         JS_ASSERT(!IsCompilingAsmJS());
     }
 
-  protected:
+  private:
     ImmGCPtr() : value(0) {}
-};
 
-// Used for immediates which require relocation and may be traced during minor GC.
-struct ImmMaybeNurseryPtr : public ImmGCPtr
-{
-    explicit ImmMaybeNurseryPtr(gc::Cell *ptr)
+    friend class AssemblerShared;
+    explicit ImmGCPtr(ImmMaybeNurseryPtr ptr) : value(ptr.value)
     {
-        this->value = ptr;
-        JS_ASSERT(!IsPoisonedPtr(ptr));
+        JS_ASSERT(!IsPoisonedPtr(ptr.value));
 
         // asm.js shouldn't be creating GC things
         JS_ASSERT(!IsCompilingAsmJS());
@@ -833,10 +852,12 @@ class AssemblerShared
 
   protected:
     bool enoughMemory_;
+    bool embedsNurseryPointers_;
 
   public:
     AssemblerShared()
-     : enoughMemory_(true)
+     : enoughMemory_(true),
+       embedsNurseryPointers_(false)
     {}
 
     void propagateOOM(bool success) {
@@ -845,6 +866,23 @@ class AssemblerShared
 
     bool oom() const {
         return !enoughMemory_;
+    }
+
+    bool embedsNurseryPointers() const {
+        return embedsNurseryPointers_;
+    }
+
+    ImmGCPtr noteMaybeNurseryPtr(ImmMaybeNurseryPtr ptr) {
+#ifdef JSGC_GENERATIONAL
+        if (ptr.value && gc::IsInsideNursery(ptr.value)) {
+            // FIXME: Ideally we'd assert this in all cases, but PJS needs to
+            //        compile IC's from off-main-thread; it will not touch
+            //        nursery pointers, however.
+            MOZ_ASSERT(GetIonContext()->runtime->onMainThread());
+            embedsNurseryPointers_ = true;
+        }
+#endif
+        return ImmGCPtr(ptr);
     }
 
     void append(const CallSiteDesc &desc, size_t currentOffset, size_t framePushed) {
