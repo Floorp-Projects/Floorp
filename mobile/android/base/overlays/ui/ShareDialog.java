@@ -5,6 +5,25 @@
 
 package org.mozilla.gecko.overlays.ui;
 
+import java.net.URISyntaxException;
+
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.Assert;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.LocaleAware;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.LocalBrowserDB;
+import org.mozilla.gecko.overlays.OverlayConstants;
+import org.mozilla.gecko.overlays.service.OverlayActionService;
+import org.mozilla.gecko.overlays.service.sharemethods.ParcelableClientRecord;
+import org.mozilla.gecko.overlays.service.sharemethods.SendTab;
+import org.mozilla.gecko.overlays.service.sharemethods.ShareMethod;
+import org.mozilla.gecko.sync.setup.activities.WebURLFinder;
+import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.StringUtils;
+import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UIAsyncTask;
+
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -21,24 +40,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import org.mozilla.gecko.Assert;
-import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.db.LocalBrowserDB;
-import org.mozilla.gecko.overlays.OverlayConstants;
-import org.mozilla.gecko.overlays.service.OverlayActionService;
-import org.mozilla.gecko.overlays.service.sharemethods.ParcelableClientRecord;
-import org.mozilla.gecko.overlays.service.sharemethods.SendTab;
-import org.mozilla.gecko.overlays.service.sharemethods.ShareMethod;
-import org.mozilla.gecko.LocaleAware;
-import org.mozilla.gecko.sync.setup.activities.WebURLFinder;
-import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.util.StringUtils;
-import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UIAsyncTask;
 
 /**
  * A transparent activity that displays the share overlay.
@@ -165,6 +170,18 @@ public class ShareDialog extends LocaleAware.LocaleAwareActivity implements Send
         findViewById(R.id.sharedialog).startAnimation(anim);
 
         // Configure buttons.
+        final ImageView foxIcon = (ImageView) findViewById(R.id.share_overlay_icon);
+        final LinearLayout topBar = (LinearLayout) findViewById(R.id.share_overlay_top_bar);
+        View.OnClickListener launchBrowser = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ShareDialog.this.launchBrowser();
+            }
+        };
+
+        foxIcon.setOnClickListener(launchBrowser);
+        topBar.setOnClickListener(launchBrowser);
+
         final OverlayDialogButton bookmarkBtn = (OverlayDialogButton) findViewById(R.id.overlay_share_bookmark_btn);
 
         final String bookmarkEnabledLabel = resources.getString(R.string.overlay_share_bookmark_btn_label);
@@ -316,6 +333,19 @@ public class ShareDialog extends LocaleAware.LocaleAwareActivity implements Send
     public void addBookmark() {
         startService(getServiceIntent(ShareMethod.Type.ADD_BOOKMARK));
         slideOut();
+    }
+
+    public void launchBrowser() {
+        try {
+            // This can launch in the guest profile. Sorry.
+            final Intent i = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+            i.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS_NAME);
+            startActivity(i);
+        } catch (URISyntaxException e) {
+            // Nothing much we can do.
+        } finally {
+            slideOut();
+        }
     }
 
     private String getCurrentProfile() {
