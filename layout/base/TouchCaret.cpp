@@ -430,13 +430,17 @@ TouchCaret::UpdatePosition()
 {
   MOZ_ASSERT(mVisible);
 
+  nsPoint pos = GetTouchCaretPosition();
+  pos = ClampPositionToScrollFrame(pos);
+  SetTouchFramePos(pos);
+}
+
+nsPoint
+TouchCaret::GetTouchCaretPosition()
+{
   nsRect focusRect;
   nsIFrame* focusFrame = GetCaretFocusFrame(&focusRect);
   nsIFrame* canvasFrame = GetCanvasFrame();
-
-  if (!focusFrame || !canvasFrame || focusRect.IsEmpty()) {
-    return;
-  }
 
   // Position of the touch caret relative to focusFrame.
   nsPoint pos = nsPoint(focusRect.x + (focusRect.width / 2),
@@ -444,6 +448,16 @@ TouchCaret::UpdatePosition()
 
   // Transform the position to make it relative to canvas frame.
   nsLayoutUtils::TransformPoint(focusFrame, canvasFrame, pos);
+
+  return pos;
+}
+
+nsPoint
+TouchCaret::ClampPositionToScrollFrame(const nsPoint& aPosition)
+{
+  nsPoint pos = aPosition;
+  nsIFrame* focusFrame = GetCaretFocusFrame();
+  nsIFrame* canvasFrame = GetCanvasFrame();
 
   // Clamp the touch caret position to the scrollframe boundary.
   nsIFrame* closestScrollFrame =
@@ -462,7 +476,7 @@ TouchCaret::UpdatePosition()
                                            nsGkAtoms::scrollFrame);
   }
 
-  SetTouchFramePos(pos);
+  return pos;
 }
 
 /* static */void

@@ -112,6 +112,18 @@ private:
   nscoord GetCaretYCenterPosition();
 
   /**
+   * Retrieve the position of the touch caret.
+   * The returned point is relative to the canvas frame.
+   */
+  nsPoint GetTouchCaretPosition();
+
+  /**
+   * Clamp the position of the touch caret to the scroll frame boundary.
+   * The returned point is relative to the canvas frame.
+   */
+  nsPoint ClampPositionToScrollFrame(const nsPoint& aPosition);
+
+  /**
    * Set the position of the touch caret.
    * Touch caret is an absolute positioned div.
    */
