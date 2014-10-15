@@ -590,6 +590,11 @@ VCMEncodedFrame* VCMJitterBuffer::ExtractAndSetDecode(uint32_t timestamp) {
   if ((*frame).IsSessionComplete())
     UpdateAveragePacketsPerFrame(frame->NumPackets());
 
+  if (frame->Length() == 0) {
+    // Normally only if MakeDecodable() on an incomplete frame threw it all away
+    ReleaseFrame(frame);
+    return NULL;
+  }
   return frame;
 }
 
