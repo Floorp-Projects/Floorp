@@ -2361,8 +2361,8 @@ public:
   virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
   virtual mozilla::dom::SVGDocument* AsSVGDocument() { return nullptr; }
 
-  // Each import tree has exactly one master document which is
-  // the root of the tree, and owns the browser context.
+  // The root document of the import tree. If this document is not an import
+  // this will return the document itself.
   virtual nsIDocument* MasterDocument() = 0;
   virtual void SetMasterDocument(nsIDocument* master) = 0;
   virtual bool IsMasterDocument() = 0;

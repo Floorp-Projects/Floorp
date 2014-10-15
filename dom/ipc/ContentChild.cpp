@@ -515,12 +515,22 @@ InitOnContentProcessCreated()
     mozilla::dom::time::InitializeDateCacheCleaner();
 }
 
+#if defined(MOZ_TASK_TRACER) && defined(MOZ_NUWA_PROCESS)
+static void
+ReinitTaskTracer(void* /*aUnused*/)
+{
+    mozilla::tasktracer::InitTaskTracer(
+        mozilla::tasktracer::FORKED_AFTER_NUWA);
+}
+#endif
+
 ContentChild::ContentChild()
  : mID(uint64_t(-1))
 #ifdef ANDROID
    ,mScreenSize(0, 0)
 #endif
    , mCanOverrideProcessName(true)
+   , mIsAlive(true)
 {
     // This process is a content process, so it's clearly running in
     // multiprocess mode!
@@ -594,6 +604,12 @@ ContentChild::Init(MessageLoop* aIOLoop,
     SendGetProcessAttributes(&mID, &mIsForApp, &mIsForBrowser);
     InitProcessAttributes();
 
+#if defined(MOZ_TASK_TRACER) && defined (MOZ_NUWA_PROCESS)
+    if (IsNuwaProcess()) {
+        NuwaAddConstructor(ReinitTaskTracer, nullptr);
+    }
+#endif
+
     return true;
 }
 
@@ -651,6 +667,12 @@ void
 ContentChild::GetProcessName(nsAString& aName)
 {
     aName.Assign(mProcessName);
+}
+
+bool
+ContentChild::IsAlive()
+{
+    return mIsAlive;
 }
 
 void
@@ -1625,6 +1647,7 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
         svc->UnregisterListener(mConsoleListener);
         mConsoleListener->mChild = nullptr;
     }
+    mIsAlive = false;
 
     XRE_ShutdownChildProcess();
 }
