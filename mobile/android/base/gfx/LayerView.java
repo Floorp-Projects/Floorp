@@ -476,13 +476,8 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
      * TextureView instead of a SurfaceView, the first phase is skipped.
      */
     private void onSizeChanged(int width, int height) {
-        if (!mGLController.isCompositorCreated()) {
-            return;
-        }
-
-        surfaceChanged(width, height);
-
-        if (mSurfaceView == null) {
+        if (!mGLController.isServerSurfaceValid() || mSurfaceView == null) {
+            surfaceChanged(width, height);
             return;
         }
 
