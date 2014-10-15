@@ -19,8 +19,7 @@ this.E10SUtils = {
     if (aURL.startsWith("about:") &&
         aURL.toLowerCase() != "about:home" &&
         aURL.toLowerCase() != "about:blank" &&
-        !aURL.toLowerCase().startsWith("about:neterror")
-        !aURL.toLowerCase().startsWith("about:certerror")) {
+        !aURL.toLowerCase().startsWith("about:neterror")) {
       return false;
     }
 
