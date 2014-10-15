@@ -251,27 +251,6 @@ template void MacroAssembler::guardType(const Address &address, types::Type type
 template void MacroAssembler::guardType(const ValueOperand &value, types::Type type,
                                         Register scratch, Label *miss);
 
-void
-MacroAssembler::branchNurseryPtr(Condition cond, const Address &ptr1, ImmMaybeNurseryPtr ptr2,
-                                 Label *label)
-{
-#ifdef JSGC_GENERATIONAL
-    if (ptr2.value && gc::IsInsideNursery(ptr2.value))
-        embedsNurseryPointers_ = true;
-#endif
-    branchPtr(cond, ptr1, ptr2, label);
-}
-
-void
-MacroAssembler::moveNurseryPtr(ImmMaybeNurseryPtr ptr, Register reg)
-{
-#ifdef JSGC_GENERATIONAL
-    if (ptr.value && gc::IsInsideNursery(ptr.value))
-        embedsNurseryPointers_ = true;
-#endif
-    movePtr(ptr, reg);
-}
-
 template<typename S, typename T>
 static void
 StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, const T &dest)
