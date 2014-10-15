@@ -27,6 +27,7 @@ Decoder::Decoder(RasterImage &aImage)
   , mFrameCount(0)
   , mFailCode(NS_OK)
   , mNeedsNewFrame(false)
+  , mNeedsToFlushData(false)
   , mInitialized(false)
   , mSizeDecode(false)
   , mInFrame(false)
@@ -104,6 +105,12 @@ Decoder::Write(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy)
 
   // Keep track of the total number of bytes written.
   mBytesDecoded += aCount;
+
+  // If we're flushing data, clear the flag.
+  if (aBuffer == nullptr && aCount == 0) {
+    MOZ_ASSERT(mNeedsToFlushData, "Flushing when we don't need to");
+    mNeedsToFlushData = false;
+  }
 
   // If a data error occured, just ignore future data.
   if (HasDataError())
@@ -249,6 +256,12 @@ Decoder::AllocateFrame()
   // Mark ourselves as not needing another frame before talking to anyone else
   // so they can tell us if they need yet another.
   mNeedsNewFrame = false;
+
+  // If we've received any data at all, we may have pending data that needs to
+  // be flushed now that we have a frame to decode into.
+  if (mBytesDecoded > 0) {
+    mNeedsToFlushData = true;
+  }
 
   return rv;
 }

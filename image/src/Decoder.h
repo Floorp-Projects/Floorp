@@ -44,6 +44,11 @@ public:
   /**
    * Writes data to the decoder.
    *
+   * If aBuffer is null and aCount is 0, Write() flushes any buffered data to
+   * the decoder. Data is buffered if the decoder wasn't able to completely
+   * decode it because it needed a new frame.  If it's necessary to flush data,
+   * NeedsToFlushData() will return true.
+   *
    * @param aBuffer buffer containing the data to be written
    * @param aCount the number of bytes to write
    *
@@ -164,6 +169,11 @@ public:
 
   virtual bool NeedsNewFrame() const { return mNeedsNewFrame; }
 
+  // Returns true if we may have stored data that we need to flush now that we
+  // have a new frame to decode into. Callers can use Write() to actually
+  // flush the data; see the documentation for that method.
+  bool NeedsToFlushData() const { return mNeedsToFlushData; }
+
   // Try to allocate a frame as described in mNewFrameData and return the
   // status code from that attempt. Clears mNewFrameData.
   virtual nsresult AllocateFrame();
@@ -283,6 +293,7 @@ private:
   };
   NewFrameData mNewFrameData;
   bool mNeedsNewFrame;
+  bool mNeedsToFlushData;
   bool mInitialized;
   bool mSizeDecode;
   bool mInFrame;
