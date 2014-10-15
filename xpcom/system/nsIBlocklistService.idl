@@ -9,7 +9,7 @@
 interface nsIPluginTag;
 interface nsIVariant;
 
-[scriptable, uuid(d463dfbb-89c4-4553-97af-b4fd8854e161)]
+[scriptable, uuid(a6dcc76e-9f62-4cc1-a470-b483a1a6f096)]
 interface nsIBlocklistService : nsISupports
 {
   // Indicates that the item does not appear in the blocklist.
@@ -99,6 +99,15 @@ interface nsIBlocklistService : nsISupports
    * @returns The URL of the description page.
    */
   AString getPluginBlocklistURL(in nsIPluginTag plugin);
+
+  /**
+   * Determine the blocklist infoURL of a plugin.
+   * @param   plugin
+   *          The blocked plugin that we are determining the infoURL for.
+   * @returns The preferred URL to present the user, or |null| if
+   *          it is not available.
+   */
+  AString getPluginInfoURL(in nsIPluginTag plugin);
 };
 
 /**

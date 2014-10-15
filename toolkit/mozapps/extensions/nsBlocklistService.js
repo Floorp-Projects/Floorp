@@ -266,6 +266,26 @@ function parseRegExp(aStr) {
 }
 
 /**
+ * Helper function to test if the blockEntry matches with the plugin.
+ *
+ * @param   blockEntry
+ *          The plugin blocklist entries to compare against.
+ * @param   plugin
+ *          The nsIPluginTag to get the blocklist state for.
+ * @returns True if the blockEntry matches the plugin, false otherwise.
+ */
+function hasMatchingPluginName(blockEntry, plugin) {
+  for (let name in blockEntry.matches) {
+    if ((name in plugin) &&
+        typeof(plugin[name]) == "string" &&
+        blockEntry.matches[name].test(plugin[name])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Manages the Blocklist. The Blocklist is a representation of the contents of
  * blocklist.xml and allows us to remotely disable / re-enable blocklisted
  * items managed by the Extension Manager with an item's appDisabled property.
@@ -929,6 +949,7 @@ Blocklist.prototype = {
       matches: {},
       versions: [],
       blockID: null,
+      infoURL: null,
     };
     var hasMatch = false;
     for (var x = 0; x < matchNodes.length; ++x) {
@@ -945,8 +966,12 @@ Blocklist.prototype = {
           // Ignore invalid regular expressions
         }
       }
-      if (matchElement.localName == "versionRange")
+      if (matchElement.localName == "versionRange") {
         blockEntry.versions.push(new BlocklistItemData(matchElement));
+      }
+      else if (matchElement.localName == "infoURL") {
+        blockEntry.infoURL = matchElement.textContent;
+      }
     }
     // Plugin entries require *something* to match to an actual plugin
     if (!hasMatch)
@@ -1031,32 +1056,47 @@ Blocklist.prototype = {
     return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   },
 
-  /* See nsIBlocklistService */
-  getPluginBlocklistURL: function Blocklist_getPluginBlocklistURL(plugin) {
+  /**
+   * Get the matching blocklist entry for the passed plugin, if
+   * available.
+   * @param plugin The plugin to find the block entry for.
+   * @returns The block entry which matches the passed plugin, null
+   *          otherwise.
+   */
+  _getPluginBlockEntry: function (plugin) {
     if (!gBlocklistEnabled)
-      return "";
+      return null;
 
     if (!this._isBlocklistLoaded())
       this._loadBlocklist();
 
     for each (let blockEntry in this._pluginEntries) {
-      let matchFailed = false;
-      for (let name in blockEntry.matches) {
-        if (!(name in plugin) ||
-            typeof(plugin[name]) != "string" ||
-            !blockEntry.matches[name].test(plugin[name])) {
-          matchFailed = true;
-          break;
-        }
-      }
-
-      if (!matchFailed) {
-        if(!blockEntry.blockID)
-          return null;
-        else
-          return this._createBlocklistURL(blockEntry.blockID);
+      if (hasMatchingPluginName(blockEntry, plugin)) {
+        return blockEntry;
       }
     }
+
+	  return null;
+  },
+
+  /* See nsIBlocklistService */
+  getPluginBlocklistURL: function Blocklist_getPluginBlocklistURL(plugin) {
+    let blockEntry = this._getPluginBlockEntry(plugin);
+    if (!blockEntry || !blockEntry.blockID) {
+      return null;
+    }
+
+    return this._createBlocklistURL(blockEntry.blockID);
+  },
+
+  /* See nsIBlocklistService */
+  getPluginInfoURL: function (plugin) {
+    let blockEntry = this._getPluginBlockEntry(plugin);
+    if (!blockEntry || !blockEntry.blockID) {
+      return null;
+    }
+
+    return blockEntry.infoURL;
   },
 
   _blocklistUpdated: function Blocklist_blocklistUpdated(oldAddonEntries, oldPluginEntries) {

@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
+import android.os.Bundle;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -32,6 +33,7 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class GeckoView extends LayerView
     implements ContextGetter {
@@ -81,18 +83,27 @@ public class GeckoView extends LayerView
     private final NativeEventListener mNativeEventListener = new NativeEventListener() {
         @Override
         public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if ("Accessibility:Ready".equals(event)) {
-                            GeckoAccessibility.updateAccessibilitySettings(getContext());
-                        }
-                    } catch (Exception e) {
-                        Log.w(LOGTAG, "handleMessage threw for " + event, e);
+            try {
+                if ("Accessibility:Ready".equals(event)) {
+                    GeckoAccessibility.updateAccessibilitySettings(getContext());
+                } else if ("GeckoView:Message".equals(event)) {
+                    // We need to pull out the bundle while on the Gecko thread.
+                    NativeJSObject json = message.optObject("data", null);
+                    if (json == null) {
+                        // Must have payload to call the message handler.
+                        return;
                     }
+                    final Bundle data = json.toBundle();
+                    ThreadUtils.postToUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            handleScriptMessage(data, callback);
+                        }
+                    });
                 }
-            });
+            } catch (Exception e) {
+                Log.w(LOGTAG, "handleMessage threw for " + event, e);
+            }
         }
     };
 
@@ -164,7 +175,8 @@ public class GeckoView extends LayerView
             "Prompt:ShowTop");
 
         EventDispatcher.getInstance().registerGeckoThreadListener(mNativeEventListener,
-            "Accessibility:Ready");
+            "Accessibility:Ready",
+            "GeckoView:Message");
 
         initializeView(EventDispatcher.getInstance());
 
@@ -241,6 +253,15 @@ public class GeckoView extends LayerView
             browsers.add(new Browser(tab.getId()));
         }
         return Collections.unmodifiableList(browsers);
+    }
+
+    public void importScript(final String url) {
+        if (url.startsWith("resource://android/assets/")) {
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("GeckoView:ImportScript", url));
+            return;
+        }
+
+        throw new IllegalArgumentException("Must import script from 'resources://android/assets/' location.");
     }
 
     private void connectToGecko() {
@@ -321,6 +342,16 @@ public class GeckoView extends LayerView
             } else if ("remotedebug".equals(hint)) {
                 mChromeDelegate.onDebugRequest(GeckoView.this, new PromptResult(message));
             }
+        }
+    }
+
+    private void handleScriptMessage(final Bundle data, final EventCallback callback) {
+        if (mChromeDelegate != null) {
+            MessageResult result = null;
+            if (callback != null) {
+                result = new MessageResult(callback);
+            }
+            mChromeDelegate.onScriptMessage(GeckoView.this, data, result);
         }
     }
 
@@ -516,6 +547,51 @@ public class GeckoView extends LayerView
         }
     }
 
+    /* Provides a means for the client to respond to a script message with some data.
+     * An instance of this class is passed to GeckoViewChrome.onScriptMessage.
+     */
+    public class MessageResult {
+        private final EventCallback mCallback;
+
+        public MessageResult(EventCallback callback) {
+            if (callback == null) {
+                throw new IllegalArgumentException("EventCallback should not be null.");
+            }
+            mCallback = callback;
+        }
+
+        private JSONObject bundleToJSON(Bundle data) {
+            JSONObject result = new JSONObject();
+            if (data == null) {
+                return result;
+            }
+
+            final Set<String> keys = data.keySet();
+            for (String key : keys) {
+                try {
+                    result.put(key, data.get(key));
+                } catch (JSONException e) {
+                }
+            }
+            return result;
+        }
+
+        /**
+        * Handle a successful response to a script message.
+        * @param value Bundle value to return to the script context.
+        */
+        public void success(Bundle data) {
+            mCallback.sendSuccess(bundleToJSON(data));
+        }
+
+        /**
+        * Handle a failure response to a script message.
+        */
+        public void failure(Bundle data) {
+            mCallback.sendError(bundleToJSON(data));
+        }
+    }
+
     public interface ChromeDelegate {
         /**
         * Tell the host application that Gecko is ready to handle requests.
@@ -561,6 +637,15 @@ public class GeckoView extends LayerView
         * Defaults to cancel requests.
         */
         public void onDebugRequest(GeckoView view, GeckoView.PromptResult result);
+
+        /**
+        * Receive a message from an imported script.
+        * @param view The GeckoView that initiated the callback.
+        * @param data Bundle of data sent with the message. Never null.
+        * @param result A MessageResult used to send back a response without blocking. Can be null.
+        * Defaults to do nothing.
+        */
+        public void onScriptMessage(GeckoView view, Bundle data, GeckoView.MessageResult result);
     }
 
     public interface ContentDelegate {
