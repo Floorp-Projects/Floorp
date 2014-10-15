@@ -10,8 +10,11 @@ Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/loop/MozLoopService.jsm");
-Cu.import("resource:///modules/loop/LoopContacts.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "LoopContacts",
+                                        "resource:///modules/loop/LoopContacts.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LoopStorage",
+                                        "resource:///modules/loop/LoopStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "hookWindowCloseForPanelClose",
                                         "resource://gre/modules/MozSocialAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
@@ -230,6 +233,12 @@ function injectLoopAPI(targetWindow) {
       get: function() {
         if (contactsAPI) {
           return contactsAPI;
+        }
+
+        // Make a database switch when a userProfile is active already.
+        let profile = MozLoopService.userProfile;
+        if (profile) {
+          LoopStorage.switchDatabase(profile.uid);
         }
         return contactsAPI = injectObjectAPI(LoopContacts, targetWindow);
       }

@@ -29,15 +29,6 @@ registerCleanupFunction(function () {
 });
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Infrastructure
-
-function test()
-{
-  waitForExplicitFinish();
-  Task.spawn(test_task).then(null, ex => ok(false, ex)).then(finish);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 //// Asynchronous support subroutines
 
 function promiseFocus()

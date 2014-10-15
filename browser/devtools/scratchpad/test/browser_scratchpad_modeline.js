@@ -20,6 +20,7 @@ let gFileContent = "function main() { return 0; }";
 function test() {
   waitForExplicitFinish();
 
+  Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, false);
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
     gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
