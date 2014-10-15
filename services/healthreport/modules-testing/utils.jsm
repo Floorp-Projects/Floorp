@@ -193,12 +193,14 @@ this.getHealthReporter = function (name, uri=DUMMY_URI, inspected=false) {
   let policyPrefs = new Preferences(branch + "policy.");
   let listener = new MockPolicyListener();
   listener.onRequestDataUpload = function (request) {
-    reporter.requestDataUpload(request);
+    let promise = reporter.requestDataUpload(request);
     MockPolicyListener.prototype.onRequestDataUpload.call(this, request);
+    return promise;
   }
   listener.onRequestRemoteDelete = function (request) {
-    reporter.deleteRemoteData(request);
+    let promise = reporter.deleteRemoteData(request);
     MockPolicyListener.prototype.onRequestRemoteDelete.call(this, request);
+    return promise;
   }
   let policy = new DataReportingPolicy(policyPrefs, prefs, listener);
   let type = inspected ? InspectedHealthReporter : HealthReporter;
