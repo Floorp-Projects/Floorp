@@ -7710,6 +7710,19 @@ if test "$MOZ_CHROME_FILE_FORMAT" != "jar" &&
 fi
 
 dnl =========================================================
+dnl Enable support for revamped devtools Performance Tools
+dnl =========================================================
+
+MOZ_ARG_ENABLE_BOOL(devtools-perf,
+[  --enable-devtools-perf Set compile flags necessary for compiling devtools perftools],
+MOZ_DEVTOOLS_PERFTOOLS=1,
+MOZ_DEVTOOLS_PERFTOOLS= )
+if test -n "$MOZ_DEVTOOLS_PERFTOOLS"; then
+  AC_DEFINE(MOZ_DEVTOOLS_PERFTOOLS)
+fi
+AC_SUBST(MOZ_DEVTOOLS_PERFTOOLS)
+
+dnl =========================================================
 dnl Omnijar packaging (bug 552121)
 dnl =========================================================
 dnl Omnijar packaging is compatible with flat packaging.

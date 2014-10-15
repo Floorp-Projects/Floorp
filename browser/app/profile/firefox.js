@@ -1380,6 +1380,13 @@ pref("devtools.debugger.ui.variables-searchbox-visible", false);
 pref("devtools.profiler.enabled", true);
 pref("devtools.timeline.enabled", false);
 
+// Enable perftools via build command
+#ifdef MOZ_DEVTOOLS_PERFTOOLS
+  pref("devtools.performance_dev.enabled", true);
+#else
+  pref("devtools.performance_dev.enabled", false);
+#endif
+
 // The default Profiler UI settings
 pref("devtools.profiler.ui.show-platform-data", false);
 
