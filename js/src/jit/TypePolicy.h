@@ -233,6 +233,16 @@ class NoFloatPolicy : public TypePolicy
     }
 };
 
+// Policy for guarding variadic instructions such as object / array state
+// instructions.
+template <unsigned FirstOp>
+class NoFloatPolicyAfter : public TypePolicy
+{
+  public:
+    EMPTY_DATA_;
+    bool adjustInputs(TempAllocator &alloc, MInstruction *ins);
+};
+
 // Box objects or strings as an input to a ToDouble instruction.
 class ToDoublePolicy : public BoxInputsPolicy
 {
