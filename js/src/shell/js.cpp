@@ -5940,7 +5940,7 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation")
         || !op.addBoolOption('\0', "no-native-regexp", "Disable native regexp compilation")
         || !op.addStringOption('\0', "ion-scalar-replacement", "on/off",
-                               "Scalar Replacement (default: off, on to enable)")
+                               "Scalar Replacement (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-gvn", "[mode]",
                                "Specify Ion global value numbering:\n"
                                "  off: disable GVN\n"
