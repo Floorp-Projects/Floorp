@@ -353,6 +353,15 @@ ExposedPropertiesOnly::check(JSContext *cx, HandleObject wrapper, HandleId id, W
         return false;
     }
 
+    // Reject privileged or cross-origin callables.
+    if (desc.value().isObject()) {
+        RootedObject maybeCallable(cx, js::UncheckedUnwrap(&desc.value().toObject()));
+        if (JS::IsCallable(maybeCallable) && !AccessCheck::subsumes(wrapper, maybeCallable)) {
+            EnterAndThrow(cx, wrapper, "Exposing privileged or cross-origin callable is prohibited");
+            return false;
+        }
+    }
+
     return true;
 }
 

@@ -268,31 +268,6 @@ function COWTests() {
     } catch (e) {
         todo(false, "COWed functions should not raise " + e);
     }
-    try {
-        var objWithFunc = {__exposedProps__: {foo: 'r'},
-                           foo: function foo() { return 5; }};
-        is(getCOW((objWithFunc)).foo(), 5,
-           "Readable function exposed props should be callable");
-    } catch (e) {
-        ok(false, "Readable function exposed props should be callable" + e);
-    }
-
-    // Alien objects
-    try {
-        is(alienObject.funProp(1), 2,
-           "COWs wrapping objects from different principals should work");
-    } catch (e) {
-        ok(false, "COWs wrapping objs from different principals " +
-                  "shouldn't throw " + e);
-    }
-
-    try {
-        is(alienObject.funProp(1), 2,
-           "COWs wrapping objs from different principals should work twice");
-    } catch (e) {
-        ok(false, "COWs wrapping objs from different principals " +
-                  "shouldn't throw on second access but not first: " + e);
-    }
 }
 
 // Decompile the COW test suite, re-evaluate it in the sandbox and execute it.
