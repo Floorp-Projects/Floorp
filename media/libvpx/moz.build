@@ -58,6 +58,7 @@ if CONFIG['VPX_X86_ASM']:
 arm_asm_files = []
 if CONFIG['VPX_ARM_ASM']:
     arm_asm_files += files['ARM_ASM']
+    CFLAGS += ['-mfpu=neon']
 
     if CONFIG['VPX_AS_CONVERSION']:
         GENERATED_SOURCES += [ "%s.%s" % (f, CONFIG['VPX_ASM_SUFFIX'])
