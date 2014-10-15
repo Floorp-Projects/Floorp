@@ -91,13 +91,7 @@ convert it to Unix-style line endings, check \
 "https://developer.mozilla.org/en-US/docs/Developer_Guide/Mozilla_build_FAQ\#Win32-specific_questions" \
 for a workaround of this issue.)
 endif
-
-# Set this for baseconfig.mk
-HOST_OS_ARCH=WINNT
 endif
-
-# Include baseconfig.mk for its $(MAKE) validation.
-include $(TOPSRCDIR)/config/baseconfig.mk
 
 ####################################
 # Load mozconfig Options
