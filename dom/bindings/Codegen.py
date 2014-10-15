@@ -3907,8 +3907,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                 lenientFloatCode=None,
                                 allowTreatNonCallableAsNull=False,
                                 isCallbackReturnValue=False,
-                                sourceDescription="value",
-                                nestingLevel=""):
+                                sourceDescription="value"):
     """
     Get a template for converting a JS value to a native object based on the
     given type and descriptor.  If failureCode is given, then we're actually
@@ -4111,9 +4110,6 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                         dealWithOptional=isOptional,
                                         declArgs=declArgs)
 
-    def incrementNestingLevel():
-        return 1 if nestingLevel is "" else ++nestingLevel
-
     assert not (isEnforceRange and isClamp)  # These are mutually exclusive
 
     if type.isArray():
@@ -4161,8 +4157,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             elementType, descriptorProvider, isMember="Sequence",
             exceptionCode=exceptionCode, lenientFloatCode=lenientFloatCode,
             isCallbackReturnValue=isCallbackReturnValue,
-            sourceDescription="element of %s" % sourceDescription,
-            nestingLevel=incrementNestingLevel())
+            sourceDescription="element of %s" % sourceDescription)
         if elementInfo.dealWithOptional:
             raise TypeError("Shouldn't have optional things in sequences")
         if elementInfo.holderType is not None:
@@ -4177,41 +4172,41 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             arrayRef = "${declName}"
 
         elementConversion = string.Template(elementInfo.template).substitute({
-                "val": "temp" + str(nestingLevel),
-                "declName": "slot" + str(nestingLevel),
+                "val": "temp",
+                "declName": "slot",
                 # We only need holderName here to handle isExternal()
                 # interfaces, which use an internal holder for the
                 # conversion even when forceOwningType ends up true.
-                "holderName": "tempHolder" + str(nestingLevel),
+                "holderName": "tempHolder",
                 "passedToJSImpl": "${passedToJSImpl}"
             })
 
         # NOTE: Keep this in sync with variadic conversions as needed
         templateBody = fill(
             """
-            JS::ForOfIterator iter${nestingLevel}(cx);
-            if (!iter${nestingLevel}.init($${val}, JS::ForOfIterator::AllowNonIterable)) {
+            JS::ForOfIterator iter(cx);
+            if (!iter.init($${val}, JS::ForOfIterator::AllowNonIterable)) {
               $*{exceptionCode}
             }
-            if (!iter${nestingLevel}.valueIsIterable()) {
+            if (!iter.valueIsIterable()) {
               $*{notSequence}
             }
-            ${sequenceType} &arr${nestingLevel} = ${arrayRef};
-            JS::Rooted<JS::Value> temp${nestingLevel}(cx);
+            ${sequenceType} &arr = ${arrayRef};
+            JS::Rooted<JS::Value> temp(cx);
             while (true) {
               bool done;
-              if (!iter${nestingLevel}.next(&temp, &done)) {
+              if (!iter.next(&temp, &done)) {
                 $*{exceptionCode}
               }
               if (done) {
                 break;
               }
-              ${elementType}* slotPtr${nestingLevel} = arr${nestingLevel}.AppendElement();
-              if (!slotPtr${nestingLevel}) {
+              ${elementType}* slotPtr = arr.AppendElement();
+              if (!slotPtr) {
                 JS_ReportOutOfMemory(cx);
                 $*{exceptionCode}
               }
-              ${elementType}& slot${nestingLevel} = *slotPtr${nestingLevel};
+              ${elementType}& slot = *slotPtr;
               $*{elementConversion}
             }
             """,
@@ -4220,8 +4215,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             sequenceType=sequenceType,
             arrayRef=arrayRef,
             elementType=elementInfo.declType.define(),
-            elementConversion=elementConversion,
-            nestingLevel=str(nestingLevel))
+            elementConversion=elementConversion)
 
         templateBody = wrapObjectTemplate(templateBody, type,
                                           "${declName}.SetNull();\n", notSequence)
@@ -4268,8 +4262,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             valueType, descriptorProvider, isMember="MozMap",
             exceptionCode=exceptionCode, lenientFloatCode=lenientFloatCode,
             isCallbackReturnValue=isCallbackReturnValue,
-            sourceDescription="value in %s" % sourceDescription,
-            nestingLevel=incrementNestingLevel())
+            sourceDescription="value in %s" % sourceDescription)
         if valueInfo.dealWithOptional:
             raise TypeError("Shouldn't have optional things in MozMap")
         if valueInfo.holderType is not None:
