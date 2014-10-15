@@ -816,8 +816,10 @@ WebGLContext::ValidateTexImageSize(TexImageTarget texImageTarget, GLint level,
          *   "If level is greater than zero, and either width or
          *   height is not a power-of-two, the error INVALID_VALUE is
          *   generated."
+         *
+         * This restriction does not apply to GL ES Version 3.0+.
          */
-        if (level > 0) {
+        if (!IsWebGL2() && level > 0) {
             if (!is_pot_assuming_nonnegative(width)) {
                 ErrorInvalidValue("%s: level >= 0, width of %d must be a power of two.",
                                   InfoFrom(func, dims), width);
@@ -839,7 +841,7 @@ WebGLContext::ValidateTexImageSize(TexImageTarget texImageTarget, GLint level,
             return false;
         }
 
-        if (depth > 0 && !is_pot_assuming_nonnegative(depth)) {
+        if (!IsWebGL2() && !is_pot_assuming_nonnegative(depth)) {
             ErrorInvalidValue("%s: level >= 0, depth of %d must be a power of two.",
                               InfoFrom(func, dims), depth);
             return false;
