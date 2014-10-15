@@ -117,7 +117,7 @@ function testMozAccessFuGesture(aExpectedGestures) {
       return;
     }
     is(!!aEvent.detail.edge, !!types[0].edge);
-    ok(true, 'Received correct mozAccessFuGesture: ' + JSON.stringify(types.shift()) + '.');
+    ok(true, 'Received correct mozAccessFuGesture: ' + types.shift() + '.');
     if (types.length === 0) {
       win.removeEventListener('mozAccessFuGesture', handleGesture);
       if (AccessFuTest.sequenceCleanup) {

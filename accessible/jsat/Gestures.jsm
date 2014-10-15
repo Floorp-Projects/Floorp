@@ -7,15 +7,15 @@
 
 /******************************************************************************
   All gestures have the following pathways when being resolved(v)/rejected(x):
-               Tap -> DoubleTap        (x)
+               Tap -> DoubleTap        (v)
                    -> Dwell            (x)
                    -> Swipe            (x)
 
-        AndroidTap -> TripleTap        (x)
+        AndroidTap -> TripleTap        (v)
                    -> TapHold          (x)
                    -> Swipe            (x)
 
-         DoubleTap -> TripleTap        (x)
+         DoubleTap -> TripleTap        (v)
                    -> TapHold          (x)
                    -> Explore          (x)
 
@@ -360,7 +360,6 @@ Gesture.prototype = {
    * Clear the existing timer.
    */
   clearTimer: function Gesture_clearTimer() {
-    Logger.gesture('clearTimeout', this.type);
     clearTimeout(this._timer);
     delete this._timer;
   },
@@ -371,11 +370,9 @@ Gesture.prototype = {
    * started the gesture resolution sequence.
    */
   startTimer: function Gesture_startTimer(aTimeStamp) {
-    Logger.gesture('startTimer', this.type);
     this.clearTimer();
     let delay = this._getDelay(aTimeStamp);
     let handler = () => {
-      Logger.gesture('timer handler');
       delete this._timer;
       if (!this._inProgress) {
         this._deferred.reject();
@@ -675,17 +672,14 @@ DoubleTapHoldEnd.prototype.type = 'doubletapholdend';
  * the gesture resolution sequence.
  * @param {Object} aPoints An existing set of points (from previous events).
  * @param {?String} aLastEvent Last pointer event type.
- * @param {Function} aRejectToOnWait A constructor for the next gesture to
- * reject to in case no pointermove or pointerup happens within the
+ * @param {Function} aRejectTo A constructor for the next gesture to reject to
+ * in case no pointermove or pointerup happens within the
  * GestureSettings.dwellThreshold.
- * @param {Function} aRejectToOnPointerDown A constructor for the gesture to
- * reject to if a finger comes down immediately after the tap.
  * @param {Function} aTravelTo An optional constuctor for the next gesture to
  * reject to in case the the TravelGesture test fails.
  */
-function TapGesture(aTimeStamp, aPoints, aLastEvent, aRejectToOnWait, aTravelTo, aRejectToOnPointerDown) {
-  this._rejectToOnWait = aRejectToOnWait;
-  this._rejectToOnPointerDown = aRejectToOnPointerDown;
+function TapGesture(aTimeStamp, aPoints, aLastEvent, aRejectTo, aTravelTo) {
+  this._rejectToOnWait = aRejectTo;
   // If the pointer travels, reject to aTravelTo.
   TravelGesture.call(this, aTimeStamp, aPoints, aLastEvent, aTravelTo,
     TAP_MAX_RADIUS);
@@ -699,31 +693,6 @@ TapGesture.prototype._getDelay = function TapGesture__getDelay() {
   return GestureSettings.dwellThreshold;
 };
 
-TapGesture.prototype.pointerup = function TapGesture_pointerup(aPoints) {
-    if (this._rejectToOnPointerDown) {
-      let complete = this._update(aPoints, 'pointerup', false, true);
-      if (complete) {
-        this.clearTimer();
-        this._pointerUpTimer = setTimeout(() => {
-          delete this._pointerUpTimer;
-          this._deferred.resolve();
-        }, GestureSettings.maxConsecutiveGestureDelay);
-      }
-    } else {
-      TravelGesture.prototype.pointerup.call(this, aPoints);
-    }
-};
-
-TapGesture.prototype.pointerdown = function TapGesture_pointerdown(aPoints, aTimeStamp) {
-  TravelGesture.prototype.pointerdown.call(this, aPoints, aTimeStamp);
-  if (this._pointerUpTimer) {
-    clearTimeout(this._pointerUpTimer);
-    delete this._pointerUpTimer;
-    this._deferred.reject(this._rejectToOnPointerDown);
-  }
-};
-
-
 /**
  * Tap gesture.
  * @param {Number} aTimeStamp An original pointer event's timeStamp that started
@@ -733,11 +702,12 @@ TapGesture.prototype.pointerdown = function TapGesture_pointerdown(aPoints, aTim
  */
 function Tap(aTimeStamp, aPoints, aLastEvent) {
   // If the pointer travels, reject to Swipe.
-  TapGesture.call(this, aTimeStamp, aPoints, aLastEvent, Dwell, Swipe, DoubleTap);
+  TapGesture.call(this, aTimeStamp, aPoints, aLastEvent, Dwell, Swipe);
 }
 
 Tap.prototype = Object.create(TapGesture.prototype);
 Tap.prototype.type = 'tap';
+Tap.prototype.resolveTo = DoubleTap;
 
 /**
  * Tap (multi) gesture on Android.
@@ -749,11 +719,12 @@ Tap.prototype.type = 'tap';
 function AndroidTap(aTimeStamp, aPoints, aLastEvent) {
   // If the pointer travels, reject to Swipe. On dwell threshold reject to
   // TapHold.
-  TapGesture.call(this, aTimeStamp, aPoints, aLastEvent, TapHold, Swipe, TripleTap);
+  TapGesture.call(this, aTimeStamp, aPoints, aLastEvent, TapHold, Swipe);
 }
 AndroidTap.prototype = Object.create(TapGesture.prototype);
 // Android double taps are translated to single taps.
 AndroidTap.prototype.type = 'doubletap';
+AndroidTap.prototype.resolveTo = TripleTap;
 
 /**
  * Clear the pointerup handler timer in case of the 3 pointer swipe.
@@ -796,12 +767,12 @@ AndroidTap.prototype.pointerup = function AndroidTap_pointerup(aPoints) {
  * @param {?String} aLastEvent Last pointer event type.
  */
 function DoubleTap(aTimeStamp, aPoints, aLastEvent) {
-  this._inProgress = true;
-  TapGesture.call(this, aTimeStamp, aPoints, aLastEvent, TapHold, null, TripleTap);
+  TapGesture.call(this, aTimeStamp, aPoints, aLastEvent, TapHold);
 }
 
 DoubleTap.prototype = Object.create(TapGesture.prototype);
 DoubleTap.prototype.type = 'doubletap';
+DoubleTap.prototype.resolveTo = TripleTap;
 
 /**
  * Triple Tap gesture.
@@ -811,7 +782,6 @@ DoubleTap.prototype.type = 'doubletap';
  * @param {?String} aLastEvent Last pointer event type.
  */
 function TripleTap(aTimeStamp, aPoints, aLastEvent) {
-  this._inProgress = true;
   TapGesture.call(this, aTimeStamp, aPoints, aLastEvent, DoubleTapHold);
 }
 
