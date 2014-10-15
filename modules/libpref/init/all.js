@@ -2018,6 +2018,9 @@ pref("layout.css.masking.enabled", true);
 // Is support for mix-blend-mode enabled?
 pref("layout.css.mix-blend-mode.enabled", true);
 
+// Is support for isolation enabled?
+pref("layout.css.isolation.enabled", false);
+
 // Is support for CSS Filters enabled?
 pref("layout.css.filters.enabled", true);
 

@@ -594,6 +594,7 @@ public:
   static const KTableValue kGridTrackBreadthKTable[];
   static const KTableValue kImageOrientationKTable[];
   static const KTableValue kImageOrientationFlipKTable[];
+  static const KTableValue kIsolationKTable[];
   static const KTableValue kIMEModeKTable[];
   static const KTableValue kLineHeightKTable[];
   static const KTableValue kListStylePositionKTable[];
