@@ -888,7 +888,7 @@ class CSPReportSenderRunnable MOZ_FINAL : public nsRunnable
     nsString                mScriptSample;
     uint32_t                mLineNum;
     uint64_t                mInnerWindowID;
-    nsCSPContext*           mCSPContext;
+    nsRefPtr<nsCSPContext>  mCSPContext;
 };
 
 /**
