@@ -237,6 +237,22 @@ EVENT(keyup,
       NS_KEY_UP,
       EventNameType_HTMLXUL,
       eKeyboardEventClass)
+NON_IDL_EVENT(mozbrowserbeforekeydown,
+              NS_KEY_BEFORE_DOWN,
+              EventNameType_None,
+              eBeforeAfterKeyboardEventClass)
+NON_IDL_EVENT(mozbrowserafterkeydown,
+              NS_KEY_AFTER_DOWN,
+              EventNameType_None,
+              eBeforeAfterKeyboardEventClass)
+NON_IDL_EVENT(mozbrowserbeforekeyup,
+              NS_KEY_BEFORE_UP,
+              EventNameType_None,
+              eBeforeAfterKeyboardEventClass)
+NON_IDL_EVENT(mozbrowserafterkeyup,
+              NS_KEY_AFTER_UP,
+              EventNameType_None,
+              eBeforeAfterKeyboardEventClass)
 EVENT(loadeddata,
       NS_LOADEDDATA,
       EventNameType_HTML,

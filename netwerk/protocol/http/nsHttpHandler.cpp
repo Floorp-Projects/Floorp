@@ -616,6 +616,7 @@ nsHttpHandler::BuildUserAgent()
                            mAppVersion.Length() +
                            mCompatFirefox.Length() +
                            mCompatDevice.Length() +
+                           mDeviceModelId.Length() +
                            13);
 
     // Application portion
@@ -639,6 +640,10 @@ nsHttpHandler::BuildUserAgent()
     else if (!mOscpu.IsEmpty()) {
       mUserAgent += mOscpu;
       mUserAgent.AppendLiteral("; ");
+    }
+    if (!mDeviceModelId.IsEmpty()) {
+        mUserAgent += mDeviceModelId;
+        mUserAgent.AppendLiteral("; ");
     }
     mUserAgent += mMisc;
     mUserAgent += ')';
@@ -701,6 +706,31 @@ nsHttpHandler::InitUserAgentComponents()
         mCompatDevice.AssignLiteral("Tablet");
     else
         mCompatDevice.AssignLiteral("Mobile");
+#endif
+
+#if defined(MOZ_WIDGET_GONK)
+    // Device model identifier should be a simple token, which can be composed
+    // of letters, numbers, hyphen ("-") and dot (".").
+    // Any other characters means the identifier is invalid and ignored.
+    nsCString deviceId;
+    rv = Preferences::GetCString("general.useragent.device_id", &deviceId);
+    if (NS_SUCCEEDED(rv)) {
+        bool valid = true;
+        deviceId.Trim(" ", true, true);
+        for (int i = 0; i < deviceId.Length(); i++) {
+            char c = deviceId.CharAt(i);
+            if (!(isalnum(c) || c == '-' || c == '.')) {
+                valid = false;
+                break;
+            }
+        }
+        if (valid) {
+            mDeviceModelId = deviceId;
+        } else {
+            LOG(("nsHttpHandler: Ignore invalid device ID: [%s]\n",
+                  deviceId.get()));
+        }
+    }
 #endif
 
 #ifndef MOZ_UA_OS_AGNOSTIC

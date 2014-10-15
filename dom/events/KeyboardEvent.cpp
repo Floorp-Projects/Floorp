@@ -17,10 +17,8 @@ KeyboardEvent::KeyboardEvent(EventTarget* aOwner,
   : UIEvent(aOwner, aPresContext,
             aEvent ? aEvent : new WidgetKeyboardEvent(false, 0, nullptr))
   , mInitializedByCtor(false)
-  , mInitialzedWhichValue(0)
+  , mInitializedWhichValue(0)
 {
-  NS_ASSERTION(mEvent->mClass == eKeyboardEventClass, "event type mismatch");
-
   if (aEvent) {
     mEventIsInternal = false;
   }
@@ -257,8 +255,12 @@ KeyboardEvent::CharCode()
   }
 
   switch (mEvent->message) {
-  case NS_KEY_UP:
+  case NS_KEY_BEFORE_DOWN:
   case NS_KEY_DOWN:
+  case NS_KEY_AFTER_DOWN:
+  case NS_KEY_BEFORE_UP:
+  case NS_KEY_UP:
+  case NS_KEY_AFTER_UP:
     return 0;
   case NS_KEY_PRESS:
     return mEvent->AsKeyboardEvent()->charCode;
@@ -282,10 +284,7 @@ KeyboardEvent::KeyCode()
     return mEvent->AsKeyboardEvent()->keyCode;
   }
 
-  switch (mEvent->message) {
-  case NS_KEY_UP:
-  case NS_KEY_PRESS:
-  case NS_KEY_DOWN:
+  if (mEvent->HasKeyEventMessage()) {
     return mEvent->AsKeyboardEvent()->keyCode;
   }
   return 0;
@@ -296,12 +295,16 @@ KeyboardEvent::Which()
 {
   // If this event is initialized with ctor, which can have independent value.
   if (mInitializedByCtor) {
-    return mInitialzedWhichValue;
+    return mInitializedWhichValue;
   }
 
   switch (mEvent->message) {
-    case NS_KEY_UP:
+    case NS_KEY_BEFORE_DOWN:
     case NS_KEY_DOWN:
+    case NS_KEY_AFTER_DOWN:
+    case NS_KEY_BEFORE_UP:
+    case NS_KEY_UP:
+    case NS_KEY_AFTER_UP:
       return KeyCode();
     case NS_KEY_PRESS:
       //Special case for 4xp bug 62878.  Try to make value of which
@@ -343,26 +346,35 @@ KeyboardEvent::Constructor(const GlobalObject& aGlobal,
   nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.GetAsSupports());
   nsRefPtr<KeyboardEvent> newEvent =
     new KeyboardEvent(target, nullptr, nullptr);
-  bool trusted = newEvent->Init(target);
-  aRv = newEvent->InitKeyEvent(aType, aParam.mBubbles, aParam.mCancelable,
-                               aParam.mView, aParam.mCtrlKey, aParam.mAltKey,
-                               aParam.mShiftKey, aParam.mMetaKey,
-                               aParam.mKeyCode, aParam.mCharCode);
-  newEvent->SetTrusted(trusted);
-  newEvent->mDetail = aParam.mDetail;
-  newEvent->mInitializedByCtor = true;
-  newEvent->mInitialzedWhichValue = aParam.mWhich;
+  newEvent->InitWithKeyboardEventInit(target, aType, aParam, aRv);
 
-  WidgetKeyboardEvent* internalEvent = newEvent->mEvent->AsKeyboardEvent();
+  return newEvent.forget();
+}
+
+void
+KeyboardEvent::InitWithKeyboardEventInit(EventTarget* aOwner,
+                                         const nsAString& aType,
+                                         const KeyboardEventInit& aParam,
+                                         ErrorResult& aRv)
+{
+  bool trusted = Init(aOwner);
+  aRv = InitKeyEvent(aType, aParam.mBubbles, aParam.mCancelable,
+                     aParam.mView, aParam.mCtrlKey, aParam.mAltKey,
+                     aParam.mShiftKey, aParam.mMetaKey,
+                     aParam.mKeyCode, aParam.mCharCode);
+  SetTrusted(trusted);
+  mDetail = aParam.mDetail;
+  mInitializedByCtor = true;
+  mInitializedWhichValue = aParam.mWhich;
+
+  WidgetKeyboardEvent* internalEvent = mEvent->AsKeyboardEvent();
   internalEvent->location = aParam.mLocation;
   internalEvent->mIsRepeat = aParam.mRepeat;
   internalEvent->mIsComposing = aParam.mIsComposing;
   internalEvent->mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
-  internalEvent->mKeyValue = aParam.mKey;
   internalEvent->mCodeNameIndex = CODE_NAME_INDEX_USE_STRING;
+  internalEvent->mKeyValue = aParam.mKey;
   internalEvent->mCodeValue = aParam.mCode;
-
-  return newEvent.forget();
 }
 
 NS_IMETHODIMP
