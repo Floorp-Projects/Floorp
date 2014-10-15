@@ -8,7 +8,6 @@ builtin(include, ../../build/autoconf/acwinpaths.m4)dnl
 builtin(include, ../../build/autoconf/hooks.m4)dnl
 builtin(include, ../../build/autoconf/config.status.m4)dnl
 builtin(include, ../../build/autoconf/toolchain.m4)dnl
-builtin(include, ../../build/autoconf/ccache.m4)dnl
 builtin(include, ../../build/autoconf/wrapper.m4)dnl
 builtin(include, ../../build/autoconf/pkg.m4)dnl
 builtin(include, ../../build/autoconf/nspr.m4)dnl

@@ -149,12 +149,6 @@ function ParentPort(portid, browserPromise, clientWindow) {
 }
 
 ParentPort.prototype = {
-  __exposedProps__: {
-    onmessage: "rw",
-    postMessage: "r",
-    close: "r",
-    toString: "r"
-  },
   __proto__: AbstractPort.prototype,
   _portType: "parent",
 

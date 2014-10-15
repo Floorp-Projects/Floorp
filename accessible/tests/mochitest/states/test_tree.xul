@@ -38,7 +38,7 @@
 
       this.invoke = function statesChecker_invoke()
       {
-        this.DOMNode.treeBoxObject.view = aView;
+        this.DOMNode.view = aView;
       }
 
       this.check = function statesChecker_check()
@@ -150,4 +150,3 @@
   </hbox>
 
 </window>
-

@@ -20,7 +20,7 @@ function Tree(aId, aData)
 {
   this._data = aData;
   this._tree = document.getElementById(aId);
-  this._tree.treeBoxObject.view = this;
+  this._tree.view = this;
 }
 
 Tree.prototype = {

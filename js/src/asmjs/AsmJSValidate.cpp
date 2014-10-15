@@ -2009,7 +2009,10 @@ IsFloatLiteral(ModuleCompiler &m, ParseNode *pn)
 {
     ParseNode *coercedExpr;
     AsmJSCoercion coercion;
-    if (!IsCoercionCall(m, pn, &coercion, &coercedExpr) || coercion != AsmJS_FRound)
+    if (!IsCoercionCall(m, pn, &coercion, &coercedExpr))
+        return false;
+    // Don't fold into || to avoid clang/memcheck bug (bug 1077031).
+    if (coercion != AsmJS_FRound)
         return false;
     return IsNumericNonFloatLiteral(coercedExpr);
 }

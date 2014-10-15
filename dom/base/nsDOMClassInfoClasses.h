@@ -19,7 +19,6 @@ DOMCI_CLASS(CSSNameSpaceRule)
 DOMCI_CLASS(XULCommandDispatcher)
 #endif
 DOMCI_CLASS(XULControllers)
-DOMCI_CLASS(BoxObject)
 #ifdef MOZ_XUL
 DOMCI_CLASS(TreeSelection)
 DOMCI_CLASS(TreeContentView)

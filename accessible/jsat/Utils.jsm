@@ -470,6 +470,14 @@ this.Utils = { // jshint ignore:line
       }));
     }
 
+  },
+
+  isActivatableOnFingerUp: function isActivatableOnFingerUp(aAccessible) {
+    if (aAccessible.role === Roles.KEY) {
+      return true;
+    }
+    let quick_activate = this.getAttributes(aAccessible)['moz-quick-activate'];
+    return quick_activate && JSON.parse(quick_activate);
   }
 };
 
@@ -949,7 +957,7 @@ this.PrefCache = function PrefCache(aName, aCallback, aRunCallbackNow) { // jshi
 
   if (this.callback && aRunCallbackNow) {
     try {
-      this.callback(this.name, this.value);
+      this.callback(this.name, this.value, true);
     } catch (x) {
       Logger.logException(x);
     }
@@ -982,9 +990,10 @@ PrefCache.prototype = {
 
   observe: function observe(aSubject) {
     this.value = this._getValue(aSubject.QueryInterface(Ci.nsIPrefBranch));
+    Logger.info('pref changed', this.name, this.value);
     if (this.callback) {
       try {
-        this.callback(this.name, this.value);
+        this.callback(this.name, this.value, false);
       } catch (x) {
         Logger.logException(x);
       }

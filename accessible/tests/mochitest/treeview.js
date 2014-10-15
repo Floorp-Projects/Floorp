@@ -17,7 +17,7 @@ function loadXULTreeAndDoTest(aDoTestFunc, aTreeID, aTreeView)
 
     this.invoke = function loadXULTree_invoke()
     {
-      this.treeNode.treeBoxObject.view = aTreeView;
+      this.treeNode.view = aTreeView;
     }
 
     this.getID = function loadXULTree_getID()

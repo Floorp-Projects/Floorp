@@ -965,6 +965,7 @@ protected:
   /* Functions for basic shapes */
   bool ParseBasicShape(nsCSSValue& aValue, bool* aConsumedTokens);
   bool ParsePolygonFunction(nsCSSValue& aValue);
+  bool ParseCircleOrEllipseFunction(nsCSSKeyword, nsCSSValue& aValue);
 
   /* Functions for transform Parsing */
   bool ParseSingleTransform(bool aIsPrefixed, nsCSSValue& aValue);
@@ -13844,6 +13845,63 @@ CSSParserImpl::ParsePolygonFunction(nsCSSValue& aValue)
 }
 
 bool
+CSSParserImpl::ParseCircleOrEllipseFunction(nsCSSKeyword aKeyword,
+                                            nsCSSValue& aValue)
+{
+  nsCSSValue radiusX, radiusY, position;
+  bool hasRadius = false, hasPosition = false;
+
+  int32_t mask = VARIANT_LPCALC | VARIANT_NONNEGATIVE_DIMENSION |
+                 VARIANT_KEYWORD;
+  if (ParseVariant(radiusX, mask, nsCSSProps::kShapeRadiusKTable)) {
+    if (aKeyword == eCSSKeyword_ellipse) {
+      if (!ParseVariant(radiusY, mask, nsCSSProps::kShapeRadiusKTable)) {
+        REPORT_UNEXPECTED_TOKEN(PEExpectedRadius);
+        SkipUntil(')');
+        return false;
+      }
+    }
+    hasRadius = true;
+  }
+
+  if (!ExpectSymbol(')', true)) {
+    if (!GetToken(true)) {
+      REPORT_UNEXPECTED_EOF(PEPositionEOF);
+      return false;
+    }
+
+    if (mToken.mType != eCSSToken_Ident ||
+        !mToken.mIdent.LowerCaseEqualsLiteral("at") ||
+        !ParsePositionValue(position)) {
+      REPORT_UNEXPECTED_TOKEN(PEExpectedPosition);
+      SkipUntil(')');
+      return false;
+    }
+    if (!ExpectSymbol(')', true)) {
+      REPORT_UNEXPECTED_TOKEN(PEExpectedCloseParen);
+      SkipUntil(')');
+      return false;
+    }
+    hasPosition = true;
+  }
+
+  size_t count = aKeyword == eCSSKeyword_circle ? 2 : 3;
+  nsRefPtr<nsCSSValue::Array> functionArray =
+    aValue.InitFunction(aKeyword, count);
+  if (hasRadius) {
+    functionArray->Item(1) = radiusX;
+    if (aKeyword == eCSSKeyword_ellipse) {
+      functionArray->Item(2) = radiusY;
+    }
+  }
+  if (hasPosition) {
+    functionArray->Item(count) = position;
+  }
+
+  return true;
+}
+
+bool
 CSSParserImpl::ParseBasicShape(nsCSSValue& aValue, bool* aConsumedTokens)
 {
   if (!GetToken(true)) {
@@ -13861,6 +13919,9 @@ CSSParserImpl::ParseBasicShape(nsCSSValue& aValue, bool* aConsumedTokens)
   switch (keyword) {
   case eCSSKeyword_polygon:
     return ParsePolygonFunction(aValue);
+  case eCSSKeyword_circle:
+  case eCSSKeyword_ellipse:
+    return ParseCircleOrEllipseFunction(keyword, aValue);
   default:
     return false;
   }

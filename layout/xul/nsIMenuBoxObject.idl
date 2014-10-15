@@ -5,26 +5,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
-interface nsIDOMKeyEvent;
+// DEPRECATED: This file exists for shim purposes only,
+// see MenuBoxObject.webidl
 
-[scriptable, uuid(689ebf3d-0184-450a-9bfa-5a26be0e7a8c)]
+[uuid(689ebf3d-0184-450a-9bfa-5a26be0e7a8c)]
 interface nsIMenuBoxObject : nsISupports
 {
-  void openMenu(in boolean openFlag);
-
-  attribute nsIDOMElement activeChild;
-
-  boolean handleKeyPress(in nsIDOMKeyEvent keyEvent);
-
-  // true if the menu or menubar was opened via a keypress.
-  readonly attribute boolean openedWithKey;
 };
-
-%{C++
-class nsIBoxObject;
-
-nsresult
-NS_NewMenuBoxObject(nsIBoxObject** aResult);
-
-%}

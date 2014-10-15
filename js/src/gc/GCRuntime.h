@@ -7,8 +7,6 @@
 #ifndef gc_GCRuntime_h
 #define gc_GCRuntime_h
 
-#include <setjmp.h>
-
 #include "jsgc.h"
 
 #include "gc/Heap.h"
@@ -63,42 +61,6 @@ class ChunkPool
         ChunkPool &pool;
         Chunk **chunkp;
     };
-};
-
-struct ConservativeGCData
-{
-    /*
-     * The GC scans conservatively between ThreadData::nativeStackBase and
-     * nativeStackTop unless the latter is nullptr.
-     */
-    uintptr_t           *nativeStackTop;
-
-    union {
-        jmp_buf         jmpbuf;
-        uintptr_t       words[JS_HOWMANY(sizeof(jmp_buf), sizeof(uintptr_t))];
-    } registerSnapshot;
-
-    ConservativeGCData() {
-        mozilla::PodZero(this);
-    }
-
-    ~ConservativeGCData() {
-        /*
-         * The conservative GC scanner should be disabled when the thread leaves
-         * the last request.
-         */
-        MOZ_ASSERT(!hasStackToScan());
-    }
-
-    MOZ_NEVER_INLINE void recordStackTop();
-
-    void updateForRequestEnd() {
-        nativeStackTop = nullptr;
-    }
-
-    bool hasStackToScan() const {
-        return !!nativeStackTop;
-    }
 };
 
 /*
@@ -323,8 +285,6 @@ class GCRuntime
   public:
     // Internal public interface
     js::gc::State state() { return incrementalState; }
-    void recordNativeStackTop();
-    void notifyRequestEnd() { conservativeGC.updateForRequestEnd(); }
     bool isBackgroundSweeping() { return helperState.isBackgroundSweeping(); }
     void waitBackgroundSweepEnd() { helperState.waitBackgroundSweepEnd(); }
     void waitBackgroundSweepOrAllocEnd() { helperState.waitBackgroundSweepOrAllocEnd(); }
@@ -869,8 +829,6 @@ class GCRuntime
      * the current AllocKind being swept in order of increasing free space.
      */
     SortedArenaList incrementalSweepList;
-
-    ConservativeGCData conservativeGC;
 
     friend class js::GCHelperState;
     friend class js::gc::MarkingValidator;

@@ -829,14 +829,13 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
   mDefaultCertVerifier = new SharedCertVerifier(odc, osc, ogc, pinningMode);
 }
 
-// Enable the TLS versions given in the prefs, defaulting to SSL 3.0 (min
-// version) and TLS 1.2 (max version) when the prefs aren't set or set to
-// invalid values.
+// Enable the TLS versions given in the prefs, defaulting to TLS 1.0 (min) and
+// TLS 1.2 (max) when the prefs aren't set or set to invalid values.
 nsresult
 nsNSSComponent::setEnabledTLSVersions()
 {
   // keep these values in sync with security-prefs.js
-  static const int32_t PSM_DEFAULT_MIN_TLS_VERSION = 0;
+  static const int32_t PSM_DEFAULT_MIN_TLS_VERSION = 1;
   static const int32_t PSM_DEFAULT_MAX_TLS_VERSION = 3;
 
   int32_t minVersion = Preferences::GetInt("security.tls.version.min",

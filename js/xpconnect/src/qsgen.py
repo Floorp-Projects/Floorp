@@ -1098,10 +1098,7 @@ def writeDefiner(f, conf, stringtable, interfaces):
     # Write out the properties and functions
     propspecs_indices = {}
     funcspecs_indices = {}
-    prop_array_name = "all_properties"
     func_array_name = "all_functions"
-    writeSpecs(f, "xpc_qsPropertySpec", prop_array_name,
-               "propspecs", propspecs_indices, interfaces)
     writeSpecs(f, "xpc_qsFunctionSpec", func_array_name,
                "funcspecs", funcspecs_indices, interfaces)
 
@@ -1147,6 +1144,7 @@ def writeDefiner(f, conf, stringtable, interfaces):
             prop_index = 0
             prop_n_entries = 0
             if iface.propspecs:
+                assert False
                 prop_index = propspecs_indices[iface.name]
                 prop_n_entries = len(iface.propspecs)
 
@@ -1193,7 +1191,7 @@ def writeDefiner(f, conf, stringtable, interfaces):
     # The string table for property and method names.
     table_name = "stringtab"
     stringtable.writeDefinition(f, table_name)
-    structNames = [prop_array_name, func_array_name]
+    structNames = [func_array_name]
     for name in structNames:
         f.write("PR_STATIC_ASSERT(sizeof(%s) < (1 << (8 * sizeof(%s[0].name_index))));\n"
                 % (table_name, name))
@@ -1207,7 +1205,7 @@ def writeDefiner(f, conf, stringtable, interfaces):
             "{\n")
     f.write("    return !!xpc_qsDefineQuickStubs("
             "cx, proto, flags, count, iids, %d, tableData, %s, %s, %s);\n" % (
-            size, prop_array_name, func_array_name, table_name))
+            size, "nullptr", func_array_name, table_name))
     f.write("}\n")
     f.write("} // namespace xpc\n\n\n")
 

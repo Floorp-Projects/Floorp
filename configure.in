@@ -7327,8 +7327,6 @@ if test -n "$JS_GC_ZEAL" -o -n "$MOZ_DEBUG"; then
     AC_DEFINE(JS_GC_ZEAL)
 fi
 
-MOZ_CHECK_CCACHE
-
 dnl ========================================================
 dnl = Enable static checking using gcc-dehydra
 dnl ========================================================
@@ -9191,11 +9189,6 @@ fi
 if test "$COMPILE_ENVIRONMENT" -a -z "$LIBXUL_SDK_DIR"; then
 
 export WRAP_LDFLAGS
-
-if test -n "$MOZ_USING_CCACHE"; then
-    # Avoid double prepending ccache by omitting --with-ccache in building NSPR.
-    _SUBDIR_CONFIG_ARGS="`echo $_SUBDIR_CONFIG_ARGS | sed -e 's/--with-ccache[[^ ]]*//'`"
-fi
 
 MOZ_SUBCONFIGURE_NSPR()
 
