@@ -243,6 +243,15 @@ public class GeckoView extends LayerView
         return Collections.unmodifiableList(browsers);
     }
 
+    public void importScript(final String url) {
+        if (url.startsWith("resource://android/assets/")) {
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("GeckoView:ImportScript", url));
+            return;
+        }
+
+        throw new IllegalArgumentException("Must import script from 'resources://android/assets/' location.");
+    }
+
     private void connectToGecko() {
         GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoRunning);
         Tab selectedTab = Tabs.getInstance().getSelectedTab();
