@@ -33,7 +33,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/TypedEnum.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -136,14 +135,6 @@ namespace image {
 class Decoder;
 class FrameAnimator;
 class ScaleRunner;
-
-MOZ_BEGIN_ENUM_CLASS(DecodeStatus, uint8_t)
-  INACTIVE,
-  PENDING,
-  ACTIVE,
-  WORK_DONE,
-  STOPPED
-MOZ_END_ENUM_CLASS(DecodeStatus)
 
 class RasterImage MOZ_FINAL : public ImageResource
                             , public nsIProperties
@@ -322,11 +313,66 @@ private:
   {
     mDecodingMonitor.AssertCurrentThreadIn();
     nsRefPtr<imgStatusTracker> statusTracker;
-    statusTracker = mDecodeStatusTracker ? mDecodeStatusTracker
-                                         : mStatusTracker;
+    statusTracker = mDecodeRequest ? mDecodeRequest->mStatusTracker
+                                   : mStatusTracker;
     MOZ_ASSERT(statusTracker);
     return statusTracker.forget();
   }
+
+  nsresult OnImageDataCompleteCore(nsIRequest* aRequest, nsISupports*, nsresult aStatus);
+
+  /**
+   * Each RasterImage has a pointer to one or zero heap-allocated
+   * DecodeRequests.
+   */
+  struct DecodeRequest
+  {
+    explicit DecodeRequest(RasterImage* aImage)
+      : mImage(aImage)
+      , mBytesToDecode(0)
+      , mRequestStatus(REQUEST_INACTIVE)
+      , mChunkCount(0)
+      , mAllocatedNewFrame(false)
+    {
+      MOZ_ASSERT(aImage, "aImage cannot be null");
+      MOZ_ASSERT(aImage->mStatusTracker,
+                 "aImage should have an imgStatusTracker");
+      mStatusTracker = aImage->mStatusTracker->CloneForRecording();
+    }
+
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodeRequest)
+
+    // The status tracker that is associated with a given decode request, to
+    // ensure their lifetimes are linked.
+    nsRefPtr<imgStatusTracker> mStatusTracker;
+
+    RasterImage* mImage;
+
+    size_t mBytesToDecode;
+
+    enum DecodeRequestStatus
+    {
+      REQUEST_INACTIVE,
+      REQUEST_PENDING,
+      REQUEST_ACTIVE,
+      REQUEST_WORK_DONE,
+      REQUEST_STOPPED
+    } mRequestStatus;
+
+    /* Keeps track of how much time we've burned decoding this particular decode
+     * request. */
+    TimeDuration mDecodeTime;
+
+    /* The number of chunks it took to decode this image. */
+    int32_t mChunkCount;
+
+    /* True if a new frame has been allocated, but DecodeSomeData hasn't yet
+     * been called to flush data to it */
+    bool mAllocatedNewFrame;
+
+  private:
+    ~DecodeRequest() {}
+  };
 
   /*
    * DecodePool is a singleton class we use when decoding large images.
@@ -415,14 +461,18 @@ private:
     class DecodeJob : public nsRunnable
     {
     public:
-      DecodeJob(RasterImage* aImage) : mImage(aImage) { }
+      DecodeJob(DecodeRequest* aRequest, RasterImage* aImg)
+        : mRequest(aRequest)
+        , mImage(aImg)
+      {}
 
-      NS_IMETHOD Run() MOZ_OVERRIDE;
+      NS_IMETHOD Run();
 
     protected:
       virtual ~DecodeJob();
 
     private:
+      nsRefPtr<DecodeRequest> mRequest;
       nsRefPtr<RasterImage> mImage;
     };
 
@@ -445,21 +495,17 @@ private:
      * Ensures the decode state accumulated by the decoding process gets
      * applied to the image.
      */
-    static void NotifyFinishedSomeDecoding(RasterImage* aImage,
-                                           imgStatusTracker* aTracker);
+    static void NotifyFinishedSomeDecoding(RasterImage* image, DecodeRequest* request);
 
     NS_IMETHOD Run();
 
   private: /* methods */
-    DecodeDoneWorker(RasterImage* aImage, imgStatusTracker* aTracker)
-      : mImage(aImage)
-      , mTracker(aTracker)
-    { }
+    DecodeDoneWorker(RasterImage* image, DecodeRequest* request);
 
   private: /* members */
 
     nsRefPtr<RasterImage> mImage;
-    nsRefPtr<imgStatusTracker> mTracker;
+    nsRefPtr<DecodeRequest> mRequest;
   };
 
   class FrameNeededWorker : public nsRunnable
@@ -484,8 +530,8 @@ private:
     nsRefPtr<RasterImage> mImage;
   };
 
-  nsresult FinishedSomeDecoding(eShutdownIntent aIntent = eShutdownIntent_Done,
-                                imgStatusTracker* aDecodeTracker = nullptr);
+  nsresult FinishedSomeDecoding(eShutdownIntent intent = eShutdownIntent_Done,
+                                DecodeRequest* request = nullptr);
 
   void DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
                                     gfxContext* aContext,
@@ -609,8 +655,7 @@ private: // data
 
   // Decoder and friends
   nsRefPtr<Decoder>          mDecoder;
-  nsRefPtr<imgStatusTracker> mDecodeStatusTracker;
-  DecodeStatus               mDecodeStatus;
+  nsRefPtr<DecodeRequest>    mDecodeRequest;
 
   bool                       mInDecoder;
   // END LOCKED MEMBER VARIABLES
