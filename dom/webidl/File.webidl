@@ -35,7 +35,7 @@ dictionary FilePropertyBag {
 dictionary ChromeFilePropertyBag : FilePropertyBag {
 
       DOMString name = "";
-
+      boolean temporary = false;
 };
 
 // Mozilla extensions
