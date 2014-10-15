@@ -10,8 +10,6 @@
 
 enum NFCTechType {
   "NDEF",
-  "NDEF_WRITABLE",
-  "NDEF_FORMATABLE",
   "P2P",
   "NFC_A",
   "NFC_B",
