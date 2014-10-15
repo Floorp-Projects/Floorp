@@ -153,6 +153,25 @@ function PlayTest(test, elem)
   elem.play();
 }
 
+function KeysChangeFunc(session, keys) {
+  session.keyIdsReceived = [];
+  for (var keyid in keys) {
+    info("Set " + keyid + " to false in session.keyIdsReceived");
+    session.keyIdsReceived[keyid] = false;
+  }
+  return function(ev) {
+    var session = ev.target;
+    session.gotKeysChanged = true;
+    session.getUsableKeyIds().then(function(keyIds) {
+      for (var k = 0; k < keyIds.length; k++) {
+        var kid = Base64ToHex(window.btoa(ArrayBufferToString(keyIds[k])));
+        ok(kid in session.keyIdsReceived, "session.keyIdsReceived contained " + kid + " as expected.");
+        session.keyIdsReceived[kid] = true;
+      }
+    }, bail("Failed to get keyIds"));
+  }
+}
+
 function startTest(test, token)
 {
   manager.started(test._token);
@@ -170,6 +189,7 @@ function startTest(test, token)
 
     MediaKeys.create(KEYSYSTEM_TYPE).then(function(mediaKeys) {
       info(token + " created MediaKeys object ok");
+      mediaKeys.sessions = [];
       return v.setMediaKeys(mediaKeys);
     }, bail("failed to create MediaKeys object")).then(function() {
       info(token + " set MediaKeys on <video> element ok");
@@ -178,6 +198,8 @@ function startTest(test, token)
          "MediaKeys should still support keysystem after CDM created...");
 
       var session = v.mediaKeys.createSession(test.sessionType);
+      v.mediaKeys.sessions.push(session);
+      session.addEventListener("keyschange", KeysChangeFunc(session, test.keys), false);
       session.addEventListener("message", UpdateSessionFunc(test));
       session.generateRequest(ev.initDataType, ev.initData).then(function() {
       }, bail(token + " Failed to initialise MediaKeySession"));
@@ -198,6 +220,17 @@ function startTest(test, token)
        token + " Duration of video should be corrrect");
     ok(Math.abs(test.duration - v.currentTime) < 0.1,
        token + " Current time should be same as duration");
+    // Verify all sessions had all keys went sent the to the CDM usable, and thus
+    // that we received keyschange event(s).
+    var sessions = v.mediaKeys.sessions;
+    is(sessions.length, 1, "should have 1 session");
+    for (var i = 0; i < sessions.length; i++) {
+      var session = sessions[i];
+      ok(session.gotKeysChanged, "Should have received at least one keychange event");
+      for (var kid in session.keyIdsReceived) {
+        ok(session.keyIdsReceived[kid], "key with id " + kid + " was usable as expected");
+      }
+    }
   });
 
   v.addEventListener("error", bail(token + " got error event"));

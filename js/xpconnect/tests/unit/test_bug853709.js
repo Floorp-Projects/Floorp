@@ -2,10 +2,6 @@ const Cu = Components.utils;
 
 function setupChromeSandbox() {
   this.chromeObj = {a: 2, __exposedProps__: {a: "rw", b: "rw"} };
-  this._b = 3;
-  Object.defineProperty(chromeObj, 'b', { configurable: true,
-                                          get: function() { return _b; },
-                                          set: function(val) { _b = val; } });
   this.chromeArr = [4, 2, 1];
   this.chromeArr["__exposedProps__"] = { "1": "rw" };
 }
@@ -25,8 +21,6 @@ function run_test() {
   contentSB.chromeArr = chromeSB.chromeArr;
 
   do_check_eq(Cu.evalInSandbox('chromeObj.a', contentSB), 2);
-  do_check_eq(Cu.evalInSandbox('chromeObj.b', contentSB), 3);
-  do_check_eq(Cu.evalInSandbox('chromeObj.b = 4; chromeObj.b', contentSB), 4);
   do_check_eq(Cu.evalInSandbox('chromeArr[1]', contentSB), 2);
 
   checkDefineThrows(contentSB, 'chromeObj', 'a', {get: function() { return 2; }});

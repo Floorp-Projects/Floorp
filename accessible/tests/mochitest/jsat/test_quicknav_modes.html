@@ -1,0 +1,103 @@
+<html>
+
+<head>
+  <title>AccessFu test for enabling</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="./jsatcommon.js"></script>
+  <script type="application/javascript">
+
+    function prefStart() {
+      // Start AccessFu via pref.
+      SpecialPowers.setIntPref("accessibility.accessfu.activate", 1);
+      AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
+    }
+
+    function nextMode(aCurrentMode, aNextMode) {
+      return function() {
+        is(AccessFu.Input.quickNavMode.current, aCurrentMode,
+          'initial current mode is correct');
+        AccessFu.Input.quickNavMode.next();
+        _expectMode(aNextMode, AccessFuTest.nextTest);
+      }
+    }
+
+    function prevMode(aCurrentMode, aNextMode) {
+      return function() {
+        is(AccessFu.Input.quickNavMode.current, aCurrentMode,
+          'initial current mode is correct');
+        AccessFu.Input.quickNavMode.previous();
+        _expectMode(aNextMode, AccessFuTest.nextTest);
+      }
+    }
+
+    function setMode(aModeIndex, aExpectedMode) {
+      return function() {
+        SpecialPowers.setIntPref(
+          'accessibility.accessfu.quicknav_index', aModeIndex);
+        _expectMode(aExpectedMode, AccessFuTest.nextTest);
+      }
+    }
+
+    function reconfigureModes() {
+      SpecialPowers.setCharPref('accessibility.accessfu.quicknav_modes',
+        'Landmark,Button,Entry,Graphic');
+      // When the modes are reconfigured, the current mode should
+      // be set to the first in the new list.
+      _expectMode('Landmark', AccessFuTest.nextTest);
+    }
+
+    function _expectMode(aExpectedMode, aCallback) {
+      if (AccessFu.Input.quickNavMode.current === aExpectedMode) {
+        ok(true, 'correct mode');
+        aCallback();
+      } else {
+        AccessFuTest.once_log('Quicknav mode: ' + aExpectedMode, function() {
+          ok(true, 'correct mode');
+          aCallback();
+        });
+      }
+    }
+
+    // Listen for initial 'EventManager.start' and disable AccessFu.
+    function prefStop() {
+      ok(AccessFu._enabled, "AccessFu was started via preference.");
+      AccessFuTest.once_log("EventManager.stop", AccessFuTest.finish);
+      SpecialPowers.setIntPref("accessibility.accessfu.activate", 0);
+    }
+
+    function doTest() {
+      AccessFuTest.addFunc(prefStart);
+      AccessFuTest.addFunc(nextMode('Link', 'Heading'));
+      AccessFuTest.addFunc(nextMode('Heading', 'FormElement'));
+      AccessFuTest.addFunc(nextMode('FormElement', 'Link'));
+      AccessFuTest.addFunc(nextMode('Link', 'Heading'));
+      AccessFuTest.addFunc(prevMode('Heading', 'Link'));
+      AccessFuTest.addFunc(prevMode('Link', 'FormElement'));
+      AccessFuTest.addFunc(setMode(1, 'Heading'));
+      AccessFuTest.addFunc(reconfigureModes);
+      AccessFuTest.addFunc(prefStop);
+      AccessFuTest.waitForExplicitFinish();
+      AccessFuTest.runTests([   // Will call SimpleTest.finish();
+        ['accessibility.accessfu.quicknav_modes', 'Link,Heading,FormElement']]);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=811307"
+     title="[AccessFu] Add mochitest for enabling">
+    Mozilla Bug 811307
+  </a>
+</body>
+</html>

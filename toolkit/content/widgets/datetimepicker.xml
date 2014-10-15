@@ -1258,7 +1258,7 @@
       <property name="open" onget="return this.hasAttribute('open');">
         <setter>
           <![CDATA[
-            if (this.boxObject instanceof Components.interfaces.nsIMenuBoxObject)
+            if (this.boxObject instanceof MenuBoxObject)
               this.boxObject.openMenu(val);
             return val;
           ]]>

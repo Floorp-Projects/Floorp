@@ -12,6 +12,7 @@ this.EXPORTED_SYMBOLS = ["OnRefTestLoad"];
 const CC = Components.classes;
 const CI = Components.interfaces;
 const CR = Components.results;
+const CU = Components.utils;
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -600,15 +601,15 @@ function BuildConditionSandbox(aURL) {
     var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
     var appInfo = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULAppInfo);
     sandbox.isDebugBuild = gDebug.isDebugBuild;
-    sandbox.xulRuntime = {widgetToolkit: xr.widgetToolkit, OS: xr.OS, __exposedProps__: { widgetToolkit: "r", OS: "r", XPCOMABI: "r", shell: "r" } };
 
     // xr.XPCOMABI throws exception for configurations without full ABI
     // support (mobile builds on ARM)
+    var XPCOMABI = "";
     try {
-        sandbox.xulRuntime.XPCOMABI = xr.XPCOMABI;
-    } catch(e) {
-        sandbox.xulRuntime.XPCOMABI = "";
-    }
+        XPCOMABI = xr.XPCOMABI;
+    } catch(e) {}
+
+    sandbox.xulRuntime = CU.cloneInto({widgetToolkit: xr.widgetToolkit, OS: xr.OS, XPCOMABI: XPCOMABI}, sandbox);
 
     var testRect = gBrowser.getBoundingClientRect();
     sandbox.smallScreen = false;
@@ -669,14 +670,11 @@ function BuildConditionSandbox(aURL) {
 
     var hh = CC[NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX + "http"].
                  getService(CI.nsIHttpProtocolHandler);
-    sandbox.http = { __exposedProps__: {} };
-    for each (var prop in [ "userAgent", "appName", "appVersion",
-                            "vendor", "vendorSub",
-                            "product", "productSub",
-                            "platform", "oscpu", "language", "misc" ]) {
-        sandbox.http[prop] = hh[prop];
-        sandbox.http.__exposedProps__[prop] = "r";
-    }
+    var httpProps = ["userAgent", "appName", "appVersion", "vendor",
+                     "vendorSub", "product", "productSub", "platform",
+                     "oscpu", "language", "misc"];
+    sandbox.http = new sandbox.Object();
+    httpProps.forEach((x) => sandbox.http[x] = hh[x]);
 
     // Set OSX to the Mac OS X version for Mac, and 0 otherwise.
     var osxmatch = /Mac OS X (\d+.\d+)$/.exec(hh.oscpu);
@@ -699,21 +697,12 @@ function BuildConditionSandbox(aURL) {
         sandbox.nativeThemePref = true;
     }
 
-    sandbox.prefs = {
-        __exposedProps__: {
-            getBoolPref: 'r',
-            getIntPref: 'r',
-        },
-        _prefs:      prefs,
-        getBoolPref: function(p) { return this._prefs.getBoolPref(p); },
-        getIntPref:  function(p) { return this._prefs.getIntPref(p); }
-    }
+    sandbox.prefs = CU.cloneInto({
+        getBoolPref: function(p) { return prefs.getBoolPref(p); },
+        getIntPref:  function(p) { return prefs.getIntPref(p); }
+    }, sandbox, { cloneFunctions: true });
 
     sandbox.testPluginIsOOP = function () {
-        try {
-            netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-        } catch (ex) {}
-
         var prefservice = Components.classes["@mozilla.org/preferences-service;1"]
                                     .getService(CI.nsIPrefBranch);
 
@@ -756,7 +745,7 @@ function BuildConditionSandbox(aURL) {
 
     if (!gDumpedConditionSandbox) {
         dump("REFTEST INFO | Dumping JSON representation of sandbox \n");
-        dump("REFTEST INFO | " + JSON.stringify(sandbox) + " \n");
+        dump("REFTEST INFO | " + JSON.stringify(CU.waiveXrays(sandbox)) + " \n");
         gDumpedConditionSandbox = true;
     }
     return sandbox;

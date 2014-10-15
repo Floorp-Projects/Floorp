@@ -34,7 +34,6 @@
 #include "nsLayoutUtils.h"
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsIPopupBoxObject.h"
 #include "nsPIWindowRoot.h"
 #include "nsIReflowCallback.h"
 #include "nsBindingManager.h"
@@ -53,9 +52,11 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/PopupBoxObject.h"
 #include <algorithm>
 
 using namespace mozilla;
+using mozilla::dom::PopupBoxObject;
 
 int8_t nsMenuPopupFrame::sDefaultLevelIsTop = -1;
 
@@ -88,7 +89,7 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContex
   mPopupAlignment(POPUPALIGNMENT_NONE),
   mPopupAnchor(POPUPALIGNMENT_NONE),
   mPosition(POPUPPOSITION_UNKNOWN),
-  mConsumeRollupEvent(nsIPopupBoxObject::ROLLUP_DEFAULT),
+  mConsumeRollupEvent(PopupBoxObject::ROLLUP_DEFAULT),
   mFlip(FlipType_Default),
   mIsOpenChanged(false),
   mIsContextMenu(false),
@@ -1509,21 +1510,25 @@ void nsMenuPopupFrame::CanAdjustEdges(int8_t aHorizontalSide, int8_t aVerticalSi
 bool nsMenuPopupFrame::ConsumeOutsideClicks()
 {
   // If the popup has explicitly set a consume mode, honor that.
-  if (mConsumeRollupEvent != nsIPopupBoxObject::ROLLUP_DEFAULT)
-    return (mConsumeRollupEvent == nsIPopupBoxObject::ROLLUP_CONSUME);
+  if (mConsumeRollupEvent != PopupBoxObject::ROLLUP_DEFAULT) {
+    return (mConsumeRollupEvent == PopupBoxObject::ROLLUP_CONSUME);
+  }
 
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::consumeoutsideclicks,
-                            nsGkAtoms::_true, eCaseMatters))
+                            nsGkAtoms::_true, eCaseMatters)) {
     return true;
+  }
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::consumeoutsideclicks,
-                            nsGkAtoms::_false, eCaseMatters))
+                            nsGkAtoms::_false, eCaseMatters)) {
     return false;
+  }
 
   nsCOMPtr<nsIContent> parentContent = mContent->GetParent();
   if (parentContent) {
     dom::NodeInfo *ni = parentContent->NodeInfo();
-    if (ni->Equals(nsGkAtoms::menulist, kNameSpaceID_XUL))
+    if (ni->Equals(nsGkAtoms::menulist, kNameSpaceID_XUL)) {
       return true;  // Consume outside clicks for combo boxes on all platforms
+    }
 #if defined(XP_WIN)
     // Don't consume outside clicks for menus in Windows
     if (ni->Equals(nsGkAtoms::menu, kNameSpaceID_XUL) ||
@@ -1541,8 +1546,9 @@ bool nsMenuPopupFrame::ConsumeOutsideClicks()
     if (ni->Equals(nsGkAtoms::textbox, kNameSpaceID_XUL)) {
       // Don't consume outside clicks for autocomplete widget
       if (parentContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                     nsGkAtoms::autocomplete, eCaseMatters))
+                                     nsGkAtoms::autocomplete, eCaseMatters)) {
         return false;
+      }
     }
   }
 
@@ -1863,7 +1869,7 @@ nsMenuPopupFrame::GetWidget()
 void
 nsMenuPopupFrame::AttachedDismissalListener()
 {
-  mConsumeRollupEvent = nsIPopupBoxObject::ROLLUP_DEFAULT;
+  mConsumeRollupEvent = PopupBoxObject::ROLLUP_DEFAULT;
 }
 
 // helpers /////////////////////////////////////////////////////////////
@@ -1904,7 +1910,7 @@ nsMenuPopupFrame::MoveToAttributePosition()
   // Move the widget around when the user sets the |left| and |top| attributes. 
   // Note that this is not the best way to move the widget, as it results in lots
   // of FE notifications and is likely to be slow as molasses. Use |moveTo| on
-  // nsIPopupBoxObject if possible. 
+  // PopupBoxObject if possible.
   nsAutoString left, top;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::left, left);
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::top, top);

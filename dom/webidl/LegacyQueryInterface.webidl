@@ -20,6 +20,7 @@ interface LegacyQueryInterface {
 
 Attr implements LegacyQueryInterface;
 BarProp implements LegacyQueryInterface;
+BoxObject implements LegacyQueryInterface;
 CaretPosition implements LegacyQueryInterface;
 Comment implements LegacyQueryInterface;
 Crypto implements LegacyQueryInterface;

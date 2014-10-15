@@ -30,7 +30,7 @@ function openWindow() {
 
 function doTest() {
   scrollbox = win.document.getElementById("page-scrollbox");
-  sbo = scrollbox.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+  sbo = scrollbox.boxObject;
   content = win.document.getElementById("page-box");
   content.style.width = 400 + "px";
   
@@ -47,9 +47,8 @@ function doTest() {
 }
 
 function resize() {
-  let x = {}, y = {};
-  sbo.getPosition(x, y);
-  scrollX = x.value, scrollY = y.value;
+  scrollX = sbo.positionX;
+  scrollY = sbo.positionY;
 
   win.addEventListener("resize", function() {
     content.style.width = (oldWidth + 400) + "px";
@@ -72,10 +71,8 @@ function finish() {
   }
   sbo.scrollBy(scrollX, scrollY);
 
-  let x = {}, y = {};
-  sbo.getPosition(x, y);
-  is(x.value, 200, "Scroll X should have been restored to the value before the resize");
-  is(y.value, 0, "Scroll Y should have been restored to the value before the resize");
+  is(sbo.positionX, 200, "Scroll X should have been restored to the value before the resize");
+  is(sbo.positionY, 0, "Scroll Y should have been restored to the value before the resize");
 
   is(win.outerWidth, oldWidth, "Width should be resized");
   is(win.outerHeight, oldHeight, "Height should be resized");

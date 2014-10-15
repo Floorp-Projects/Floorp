@@ -1904,7 +1904,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
             Translate(p).       // translate origin for rotation
             Rotate(M_PI / 2.0). // turn 90deg clockwise
             Translate(-p).      // undo the translation
-            Translate(gfxPoint(0, metrics.emAscent - metrics.emDescent) / 2));
+            Translate(gfxPoint(0, (metrics.emAscent - metrics.emDescent) / 2)));
                                 // and offset the (alphabetic) baseline of the
                                 // horizontally-shaped text from the (centered)
                                 // default baseline used for vertical

@@ -40,16 +40,14 @@
       // tree rows and cells
       var treeBoxObject = tree.treeBoxObject;
       var treeBodyBoxObj = tree.treeBoxObject.treeBody.boxObject;
-      var xObj = {}, yObj = {}, widthObj = {}, heightObj = {};
-      treeBoxObject.getCoordsForCellItem(1, tree.columns[0], "cell",
-                                         xObj, yObj, widthObj, heightObj);
+      var rect = treeBoxObject.getCoordsForCellItem(1, tree.columns[0], "cell");
 
       var treeAcc = getAccessible(tree, [nsIAccessibleTable]);
       var cellAcc = treeAcc.getCellAt(1, 0);
       var rowAcc = cellAcc.parent;
 
-      var cssX = xObj.value + treeBodyBoxObj.x;
-      var cssY = yObj.value + treeBodyBoxObj.y;
+      var cssX = rect.x + treeBodyBoxObj.x;
+      var cssY = rect.y + treeBodyBoxObj.y;
       var [x, y] = CSSToDevicePixels(tabWindow, cssX, cssY);
 
       testChildAtPoint(treeAcc, x, y, rowAcc, cellAcc);
@@ -100,4 +98,3 @@
   </hbox>
 
 </window>
-
