@@ -1180,8 +1180,15 @@
                   findBar._findField.getAttribute("focused") == "true");
               }
 
+              // If focus is in the tab bar, retain it there.
+              if (document.activeElement == oldTab) {
+                // We need to explicitly focus the new tab, because
+                // tabbox.xml does this only in some cases.
+                this.mCurrentTab.focus();
+              }
+
               if (!gMultiProcessBrowser)
-                this._adjustFocusAfterTabSwitch(this.mCurrentTab, oldTab);
+                this._adjustFocusAfterTabSwitch(this.mCurrentTab);
             }
 
             this.tabContainer._setPositionalAttributes();
@@ -1194,17 +1201,12 @@
 
       <method name="_adjustFocusAfterTabSwitch">
         <parameter name="newTab"/>
-        <parameter name="oldTab"/>
         <body><![CDATA[
         let newBrowser = this.getBrowserForTab(newTab);
 
-        // When focus is in the tab bar, retain it there.
-        if (document.activeElement == oldTab) {
-          // We need to explicitly focus the new tab, because
-          // tabbox.xml does this only in some cases.
-          this.mCurrentTab.focus();
+        // Don't steal focus from the tab bar.
+        if (document.activeElement == newTab)
           return;
-        }
 
         // If there's a tabmodal prompt showing, focus it.
         if (newBrowser.hasAttribute("tabmodalPromptShowing")) {
@@ -3319,7 +3321,7 @@
         <parameter name="toTab"/>
         <parameter name="fromTab"/>
         <body><![CDATA[
-          this._adjustFocusAfterTabSwitch(toTab, fromTab);
+          this._adjustFocusAfterTabSwitch(toTab);
           this._deactivateContent(fromTab);
 
           let toBrowser = this.getBrowserForTab(toTab);
