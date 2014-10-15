@@ -40,6 +40,7 @@ class WheelTransaction;
 
 namespace dom {
 class DataTransfer;
+class Element;
 class TabParent;
 } // namespace dom
 
@@ -169,7 +170,7 @@ public:
    */
   uint32_t GetRegisteredAccessKey(nsIContent* aContent);
 
-  bool GetAccessKeyLabelPrefix(nsAString& aPrefix);
+  static void GetAccessKeyLabelPrefix(dom::Element* aElement, nsAString& aPrefix);
 
   nsresult SetCursor(int32_t aCursor, imgIContainer* aContainer,
                      bool aHaveHotspot, float aHotspotX, float aHotspotY,
