@@ -394,7 +394,7 @@ Convert(const bt_property_t& aIn, BluetoothProperty& aOut)
       }
       break;
     case PROPERTY_REMOTE_RSSI:
-      aOut.mInt32 = *static_cast<int32_t*>(aIn.val);
+      aOut.mInt32 = *static_cast<int8_t*>(aIn.val);
       break;
 #if ANDROID_VERSION >= 18
     case PROPERTY_REMOTE_VERSION_INFO:
