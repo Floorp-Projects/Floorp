@@ -585,7 +585,7 @@ TelephonyService.prototype = {
         return;
       }
 
-      this._dialMMI(aClientId, mmi, aCallback);
+      this._dialMMI(aClientId, mmi, aCallback, true);
     }
   },
 
@@ -673,16 +673,24 @@ TelephonyService.prototype = {
   },
 
   /**
+   * @param aClientId
+   *        Client id.
    * @param aMmi
    *        Parsed MMI structure.
+   * @param aCallback
+   *        A nsITelephonyDialCallback object.
+   * @param aStartNewSession
+   *        True to start a new session for ussd request.
    */
-  _dialMMI: function(aClientId, aMmi, aCallback) {
+  _dialMMI: function(aClientId, aMmi, aCallback, aStartNewSession) {
     let mmiServiceCode = aMmi ?
       this._serviceCodeToKeyString(aMmi.serviceCode) : RIL.MMI_KS_SC_USSD;
 
     aCallback.notifyDialMMI(mmiServiceCode);
 
-    this._sendToRilWorker(aClientId, "sendMMI", { mmi: aMmi }, response => {
+    this._sendToRilWorker(aClientId, "sendMMI",
+                          { mmi: aMmi,
+                            startNewSession: aStartNewSession }, response => {
       if (DEBUG) debug("MMI response: " + JSON.stringify(response));
 
       if (!response.success) {
@@ -1048,6 +1056,18 @@ TelephonyService.prototype = {
     this._sendToRilWorker(aClientId, "resumeConference");
   },
 
+  sendUSSD: function(aClientId, aUssd, aCallback) {
+    this._sendToRilWorker(aClientId, "sendUSSD",
+                          { ussd: aUssd, checkSession: true },
+                          response => {
+      if (!response.success) {
+        aCallback.notifyError(response.errorMsg);
+      } else {
+        aCallback.notifySuccess();
+      }
+    });
+  },
+
   get microphoneMuted() {
     return gAudioManager.microphoneMuted;
   },
@@ -1268,7 +1288,7 @@ TelephonyService.prototype = {
 
   dialMMI: function(aClientId, aMmiString, aCallback) {
     let mmi = this._parseMMI(aMmiString, this._hasCalls(aClientId));
-    this._dialMMI(aClientId, mmi, aCallback);
+    this._dialMMI(aClientId, mmi, aCallback, false);
   },
 
   /**
