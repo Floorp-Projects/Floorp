@@ -3938,6 +3938,10 @@ pref("layers.prefer-d3d9", false);
 // Force all possible layers to be always active layers
 pref("layers.force-active", false);
 
+// Never use gralloc surfaces, even when they're available on this
+// platform and are the optimal surface type.
+pref("layers.gralloc.disable", false);
+
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
 
