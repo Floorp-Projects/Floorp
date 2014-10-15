@@ -11205,21 +11205,45 @@ class MHasClass
 // outermost script (i.e. not the inlined script).
 class MRecompileCheck : public MNullaryInstruction
 {
+  public:
+    enum RecompileCheckType {
+        RecompileCheck_OptimizationLevel,
+        RecompileCheck_Inlining
+    };
+
+  private:
     JSScript *script_;
     uint32_t recompileThreshold_;
+    bool forceRecompilation_;
+    bool increaseWarmUpCounter_;
 
-    MRecompileCheck(JSScript *script, uint32_t recompileThreshold)
+    MRecompileCheck(JSScript *script, uint32_t recompileThreshold, RecompileCheckType type)
       : script_(script),
         recompileThreshold_(recompileThreshold)
     {
+        switch (type) {
+          case RecompileCheck_OptimizationLevel:
+            forceRecompilation_ = false;
+            increaseWarmUpCounter_ = true;
+            break;
+          case RecompileCheck_Inlining:
+            forceRecompilation_ = true;
+            increaseWarmUpCounter_ = false;
+            break;
+          default:
+            MOZ_CRASH("Unexpected recompile check type");
+        }
+
         setGuard();
     }
 
   public:
     INSTRUCTION_HEADER(RecompileCheck);
 
-    static MRecompileCheck *New(TempAllocator &alloc, JSScript *script_, uint32_t recompileThreshold) {
-        return new(alloc) MRecompileCheck(script_, recompileThreshold);
+    static MRecompileCheck *New(TempAllocator &alloc, JSScript *script_, uint32_t recompileThreshold,
+                                RecompileCheckType type)
+    {
+        return new(alloc) MRecompileCheck(script_, recompileThreshold, type);
     }
 
     JSScript *script() const {
@@ -11228,6 +11252,14 @@ class MRecompileCheck : public MNullaryInstruction
 
     uint32_t recompileThreshold() const {
         return recompileThreshold_;
+    }
+
+    bool forceRecompilation() const {
+        return forceRecompilation_;
+    }
+
+    bool increaseWarmUpCounter() const {
+        return increaseWarmUpCounter_;
     }
 
     AliasSet getAliasSet() const {

@@ -1489,7 +1489,6 @@ CacheIndex::UpdateEntryInIndex(CacheIndexEntry *aEntry, void* aClosure)
        LOGSHA1(aEntry->Hash())));
 
   MOZ_ASSERT(aEntry->IsFresh());
-  MOZ_ASSERT(aEntry->IsDirty());
 
   CacheIndexEntry *entry = index->mIndex.GetEntry(*aEntry->Hash());
 

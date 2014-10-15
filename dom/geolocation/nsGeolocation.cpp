@@ -918,7 +918,9 @@ nsGeolocationService::UpdateAccuracy(bool aForceHigh)
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     ContentChild* cpc = ContentChild::GetSingleton();
-    cpc->SendSetGeolocationHigherAccuracy(highRequired);
+    if (cpc->IsAlive()) {
+      cpc->SendSetGeolocationHigherAccuracy(highRequired);
+    }
     return;
   }
 
