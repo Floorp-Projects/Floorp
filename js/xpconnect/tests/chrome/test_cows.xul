@@ -277,14 +277,6 @@ function COWTests() {
         ok(false, "Readable function exposed props should be callable" + e);
     }
 
-    // Readables with getters
-    var obj = {
-        get prop() { return { __exposedProps__: {}, test: "FAIL" } },
-        __exposedProps__: {prop: 'r'}
-    };
-    is(getCOW(obj).prop.test, undefined, "getting prop.test shouldn't return anything");
-    ok(!("test" in getCOW(obj).prop), "getting prop.test shouldn't return anything");
-
     // Alien objects
     try {
         is(alienObject.funProp(1), 2,

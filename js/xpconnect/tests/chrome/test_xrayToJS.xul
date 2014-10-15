@@ -113,13 +113,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     var forwardingProxy = new iwin.Proxy(targetObject, new iwin.Object());
     is(global(forwardingProxy), iwin, "proxy global correct");
     is(Cu.waiveXrays(forwardingProxy).foo, 9, "forwards correctly");
-    // NB: COW-implemented proxy handlers are super dangerous, and we should not
-    // encourage them.
-    var handler = {get: function(target, name) { return name * 2; }, __exposedProps__: {get: 'r'}};
-    var doublingProxy = new iwin.Proxy(targetObject, handler);
-    is(global(doublingProxy), iwin, "doubling proxy global correct");
-    is(Cu.waiveXrays(doublingProxy)[3], 6, "Doubles correctly");
-    is(Cu.waiveXrays(doublingProxy)[20], 40, "Doubles correctly");
 
     // Test eval.
     var toEval = "({a: 2, b: {foo: 'bar'}, f: function() { return window; }})";
