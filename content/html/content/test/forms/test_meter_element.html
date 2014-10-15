@@ -21,12 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=657938
 <pre id="test">
 <script type="application/javascript">
 
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 1);
-} else {
-  SimpleTest.expectAssertions(1);
-}
-
 /** Test for <meter> **/
 
 function checkFormIDLAttribute(aElement)
