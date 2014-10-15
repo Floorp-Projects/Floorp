@@ -47,8 +47,6 @@ class nsIImageLoadingContent;
 class nsStyleContext;
 class nsBlockFrame;
 class nsContainerFrame;
-class gfxASurface;
-class gfxDrawable;
 class nsView;
 class nsIFrame;
 class nsStyleCoord;
@@ -1713,7 +1711,7 @@ public:
   static bool IsReallyFixedPos(nsIFrame* aFrame);
 
   /**
-   * Obtain a gfxASurface from the given DOM element, if possible.
+   * Obtain a SourceSurface from the given DOM element, if possible.
    * This obtains the most natural surface from the element; that
    * is, the one that can be obtained with the fewest conversions.
    *
@@ -1759,8 +1757,7 @@ public:
   struct SurfaceFromElementResult {
     SurfaceFromElementResult();
 
-    /* mSurface will contain the resulting surface, or will be nullptr on error */
-    nsRefPtr<gfxASurface> mSurface;
+    /* mSourceSurface will contain the resulting surface, or will be nullptr on error */
     mozilla::RefPtr<SourceSurface> mSourceSurface;
     /* Contains info for drawing when there is no mSourceSurface. */
     DirectDrawInfo mDrawInfo;
