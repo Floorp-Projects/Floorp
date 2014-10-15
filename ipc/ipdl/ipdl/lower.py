@@ -4894,6 +4894,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         actordecl = md.actorDecl()
         actorvar = actordecl.var()
         actorproto = actordecl.ipdltype.protocol
+        actortype = ipdl.type.ActorType(actorproto)
 
         if idexpr is None:
             idexpr = ExprCall(self.protocol.registerMethod(),
@@ -4903,7 +4904,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                               args=[ actorvar, idexpr ])
 
         return [
-            self.failIfNullActor(actorvar, errfn),
+            self.failIfNullActor(actorvar, errfn, msg="Error constructing actor %s" % actortype.name() + self.side.capitalize()),
             StmtExpr(ExprAssn(_actorId(actorvar), idexpr)),
             StmtExpr(ExprAssn(_actorManager(actorvar), ExprVar.THIS)),
             StmtExpr(ExprAssn(_actorChannel(actorvar),
@@ -5136,8 +5137,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     # helper methods
 
-    def failIfNullActor(self, actorExpr, retOnNull=ExprLiteral.FALSE):
+    def failIfNullActor(self, actorExpr, retOnNull=ExprLiteral.FALSE, msg=None):
         failif = StmtIf(ExprNot(actorExpr))
+        if msg:
+            failif.addifstmt(_printWarningMessage(msg))
         failif.addifstmt(StmtReturn(retOnNull))
         return failif
 
