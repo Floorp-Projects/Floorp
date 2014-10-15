@@ -1000,14 +1000,6 @@ MobileConnectionService.prototype = {
 
     this.getItemByServiceId(aClientId)
         .deliverListenerEvent("notifyUssdReceived", [aMessage, aSessionEnded]);
-
-    let info = {
-      message: aMessage,
-      sessionEnded: aSessionEnded,
-      serviceId: aClientId
-    };
-
-    gSystemMessenger.broadcastMessage("ussd-received", info);
   },
 
   notifyDataError: function(aClientId, aMessage) {
