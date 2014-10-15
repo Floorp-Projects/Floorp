@@ -1658,9 +1658,9 @@ class MOZ_STACK_CLASS ModuleCompiler
         Global *global = moduleLifo_.new_<Global>(Global::ByteLength);
         return global && globals_.putNew(name, global);
     }
-    bool addChangeHeap(PropertyName *name, ParseNode *fn, uint32_t mask, uint32_t min) {
+    bool addChangeHeap(PropertyName *name, ParseNode *fn, uint32_t mask, uint32_t min, uint32_t max) {
         hasChangeHeap_ = true;
-        module_->addChangeHeap(mask, min);
+        module_->addChangeHeap(mask, min, max);
         Global *global = moduleLifo_.new_<Global>(Global::ChangeHeap);
         if (!global)
             return false;
@@ -4161,8 +4161,9 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *elem, Scalar::Type *viewType,
 
         unsigned elementSize = 1 << TypedArrayShift(*viewType);
         if (!f.m().tryRequireHeapLengthToBeAtLeast(byteOffset + elementSize)) {
-            return f.failf(indexExpr, "constant index outside heap size declared by the "
-                                      "change-heap function (0x%x)", f.m().minHeapLength());
+            return f.failf(indexExpr, "constant index outside heap size range declared by the "
+                                      "change-heap function (0x%x - 0x%x)",
+                                      f.m().minHeapLength(), f.m().module().maxHeapLength());
         }
 
         *needsBoundsCheck = NO_BOUNDS_CHECK;
@@ -6542,41 +6543,58 @@ CheckByteLengthCall(ModuleCompiler &m, ParseNode *pn, PropertyName *newBufferNam
 
 static bool
 CheckHeapLengthCondition(ModuleCompiler &m, ParseNode *cond, PropertyName *newBufferName,
-                         uint32_t *mask, uint32_t *minimumLength)
+                         uint32_t *mask, uint32_t *minLength, uint32_t *maxLength)
 {
-    if (!cond->isKind(PNK_OR))
-        return m.fail(cond, "expecting byteLength & K || byteLength <= L");
+    if (!cond->isKind(PNK_OR) || !BinaryLeft(cond)->isKind(PNK_OR))
+        return m.fail(cond, "expecting byteLength & K || byteLength <= L || byteLength > M");
 
-    ParseNode *leftCond = BinaryLeft(cond);
-    ParseNode *rightCond = BinaryRight(cond);
+    ParseNode *cond1 = BinaryLeft(BinaryLeft(cond));
+    ParseNode *cond2 = BinaryRight(BinaryLeft(cond));
+    ParseNode *cond3 = BinaryRight(cond);
 
-    if (!leftCond->isKind(PNK_BITAND))
-        return m.fail(leftCond, "expecting byteLength & K");
+    if (!cond1->isKind(PNK_BITAND))
+        return m.fail(cond1, "expecting byteLength & K");
 
-    if (!CheckByteLengthCall(m, BinaryLeft(leftCond), newBufferName))
+    if (!CheckByteLengthCall(m, BinaryLeft(cond1), newBufferName))
         return false;
 
-    ParseNode *maskNode = BinaryRight(leftCond);
+    ParseNode *maskNode = BinaryRight(cond1);
     if (!IsLiteralInt(m, maskNode, mask))
         return m.fail(maskNode, "expecting integer literal mask");
     if ((*mask & 0xffffff) != 0xffffff)
         return m.fail(maskNode, "mask value must have the bits 0xffffff set");
 
-    if (!rightCond->isKind(PNK_LE))
-        return m.fail(rightCond, "expecting byteLength <= L");
+    if (!cond2->isKind(PNK_LE))
+        return m.fail(cond2, "expecting byteLength <= L");
 
-    if (!CheckByteLengthCall(m, BinaryLeft(rightCond), newBufferName))
+    if (!CheckByteLengthCall(m, BinaryLeft(cond2), newBufferName))
         return false;
 
-    ParseNode *minLengthNode = BinaryRight(rightCond);
+    ParseNode *minLengthNode = BinaryRight(cond2);
     uint32_t minLengthExclusive;
     if (!IsLiteralInt(m, minLengthNode, &minLengthExclusive))
-        return m.fail(minLengthNode, "expecting integer limit literal");
+        return m.fail(minLengthNode, "expecting integer literal");
     if (minLengthExclusive < 0xffffff)
-        return m.fail(minLengthNode, "limit value must be >= 0xffffff");
+        return m.fail(minLengthNode, "literal must be >= 0xffffff");
 
     // Add one to convert from exclusive (the branch rejects if ==) to inclusive.
-    *minimumLength = minLengthExclusive + 1;
+    *minLength = minLengthExclusive + 1;
+
+    if (!cond3->isKind(PNK_GT))
+        return m.fail(cond3, "expecting byteLength > M");
+
+    if (!CheckByteLengthCall(m, BinaryLeft(cond3), newBufferName))
+        return false;
+
+    ParseNode *maxLengthNode = BinaryRight(cond3);
+    if (!IsLiteralInt(m, maxLengthNode, maxLength))
+        return m.fail(maxLengthNode, "expecting integer literal");
+    if (*maxLength > 0x80000000)
+        return m.fail(maxLengthNode, "literal must be <= 0x80000000");
+
+    if (*maxLength < *minLength)
+        return m.fail(maxLengthNode, "maximum length must be greater or equal to minimum length");
+
     return true;
 }
 
@@ -6662,8 +6680,8 @@ CheckChangeHeap(ModuleCompiler &m, ParseNode *fn, bool *validated)
     if (ParseNode *elseStmt = TernaryKid3(stmtIter))
         return m.fail(elseStmt, "unexpected else statement");
 
-    uint32_t mask, min;
-    if (!CheckHeapLengthCondition(m, cond, newBufferName, &mask, &min))
+    uint32_t mask, min, max;
+    if (!CheckHeapLengthCondition(m, cond, newBufferName, &mask, &min, &max))
         return false;
 
     if (!CheckReturnBoolLiteral(m, thenStmt, false))
@@ -6710,7 +6728,7 @@ CheckChangeHeap(ModuleCompiler &m, ParseNode *fn, bool *validated)
     if (stmtIter)
         return m.fail(stmtIter, "expecting end of function");
 
-    return m.addChangeHeap(changeHeapName, fn, mask, min);
+    return m.addChangeHeap(changeHeapName, fn, mask, min, max);
 }
 
 static bool
