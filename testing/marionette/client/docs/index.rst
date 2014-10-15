@@ -100,7 +100,7 @@ Marionette Objects
 .. autoclass:: Marionette
 
 Session Management
-``````````````````
+^^^^^^^^^^^^^^^^^^
 .. automethod:: Marionette.start_session
 .. automethod:: Marionette.delete_session
 .. autoattribute:: Marionette.session_capabilities
@@ -110,7 +110,7 @@ Session Management
 .. automethod:: Marionette.delete_all_cookies
 
 Context Management
-``````````````````
+^^^^^^^^^^^^^^^^^^
 .. autoattribute:: Marionette.current_window_handle
 .. autoattribute:: Marionette.window_handles
 .. automethod:: Marionette.set_context
@@ -120,7 +120,7 @@ Context Management
 .. automethod:: Marionette.close
 
 Navigation Methods
-``````````````````
+^^^^^^^^^^^^^^^^^^
 .. autoattribute:: Marionette.title
 .. automethod:: Marionette.navigate
 .. automethod:: Marionette.get_url
@@ -131,19 +131,19 @@ Navigation Methods
 .. automethod:: Marionette.get_window_type
 
 DOM Element Methods
-```````````````````
+^^^^^^^^^^^^^^^^^^^
 .. automethod:: Marionette.set_search_timeout
 .. automethod:: Marionette.find_element
 .. automethod:: Marionette.find_elements
 
 Script Execution
-````````````````
+^^^^^^^^^^^^^^^^
 .. automethod:: Marionette.execute_script
 .. automethod:: Marionette.execute_async_script
 .. automethod:: Marionette.set_script_timeout
 
 Debugging
-`````````
+^^^^^^^^^
 .. autoattribute:: Marionette.page_source
 .. automethod:: Marionette.log
 .. automethod:: Marionette.get_logs
@@ -152,7 +152,6 @@ Debugging
 Querying and Modifying Document Content
 ---------------------------------------
 .. autoclass:: HTMLElement
-
 .. autoattribute:: HTMLElement.text
 .. autoattribute:: HTMLElement.location
 .. autoattribute:: HTMLElement.size
@@ -166,7 +165,6 @@ Querying and Modifying Document Content
 .. automethod:: HTMLElement.value_of_css_property
 
 .. autoclass:: DateTimeValue
-
 .. autoattribute:: DateTimeValue.date
 .. autoattribute:: DateTimeValue.time
 
@@ -174,9 +172,8 @@ Action Objects
 --------------
 
 Action Sequences
-````````````````
+^^^^^^^^^^^^^^^^
 .. autoclass:: Actions
-
 .. automethod:: Actions.press
 .. automethod:: Actions.release
 .. automethod:: Actions.move
@@ -190,12 +187,52 @@ Action Sequences
 .. automethod:: Actions.perform
 
 Multi-action Sequences
-``````````````````````
+^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: MultiActions
-
 .. automethod:: MultiActions.add
 .. automethod:: MultiActions.perform
 
+Explicit Waiting and Expected Conditions
+----------------------------------------
+
+Waits are used to pause program execution
+until a given condition is true.
+This is a useful technique to employ
+when documents load new content or change
+after ``Document.readyState``'s value changes to "complete".
+
+Because Marionette returns control to the user
+when the document is completely loaded,
+any subsequent interaction with elements
+are subject to manual synchronisation.
+The reason for this is that Marionette
+does not keep a direct representation of the DOM,
+but instead exposes a way for the user to
+query the browser's DOM state.
+
+The `Wait` helper class provided by Marionette
+avoids some of the caveats of ``time.sleep(n)``,
+which sets the condition to an exact time period to wait.
+It will return immediately
+once the provided condition evaluates to true.
+
+In addition to writing your own custom conditions
+you can combine `Wait`
+with a number of ready-made expected conditions
+that are listed below.
+
+Waits
+^^^^^
+.. autoclass:: marionette.wait.Wait
+   :members:
+   :special-members:
+.. autoattribute marionette.wait.DEFAULT_TIMEOUT
+.. autoattribute marionette.wait.DEFAULT_INTERVAL
+
+Expected Conditions
+^^^^^^^^^^^^^^^^^^^
+.. automodule:: marionette.expected
+   :members:
 
 Indices and tables
 ==================

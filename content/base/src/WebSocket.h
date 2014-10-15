@@ -23,6 +23,8 @@
 #define DEFAULT_WS_SCHEME_PORT  80
 #define DEFAULT_WSS_SCHEME_PORT 443
 
+class nsIInputStream;
+
 namespace mozilla {
 namespace dom {
 
@@ -88,7 +90,7 @@ public: // WebIDL interface:
   void GetUrl(nsAString& aResult);
 
   // webIDL: readonly attribute unsigned short readyState;
-  uint16_t ReadyState() const;
+  uint16_t ReadyState();
 
   // webIDL: readonly attribute unsigned long bufferedAmount;
   uint32_t BufferedAmount() const;
@@ -134,6 +136,8 @@ private: // constructor && distructor
   explicit WebSocket(nsPIDOMWindow* aOwnerWindow);
   virtual ~WebSocket();
 
+  void SetReadyState(uint16_t aReadyState);
+
   // These methods actually do the dispatch for various events.
   nsresult CreateAndDispatchSimpleEvent(const nsAString& aName);
   nsresult CreateAndDispatchMessageEvent(const nsACString& aData,
@@ -157,16 +161,39 @@ private:
   WebSocket(const WebSocket& x) MOZ_DELETE;   // prevent bad usage
   WebSocket& operator=(const WebSocket& x) MOZ_DELETE;
 
+  void Send(nsIInputStream* aMsgStream,
+            const nsACString& aMsgString,
+            uint32_t aMsgLength,
+            bool aIsBinary,
+            ErrorResult& aRv);
+
+  void AssertIsOnTargetThread() const;
+
   // Raw pointer because this WebSocketImpl is created, managed and destroyed by
   // WebSocket.
   WebSocketImpl* mImpl;
 
-  // This is used just to check in which thread this object is used when mImpl
-  // is null.
   workers::WorkerPrivate* mWorkerPrivate;
 
   bool mKeepingAlive;
   bool mCheckMustKeepAlive;
+
+  uint32_t mOutgoingBufferedAmount;
+
+  // related to the WebSocket constructor steps
+  nsString mOriginalURL;
+  nsString mEffectiveURL;   // after redirects
+  nsCString mEstablishedExtensions;
+  nsCString mEstablishedProtocol;
+
+  dom::BinaryType mBinaryType;
+
+  // This mutex protects mReadyState that is the only variable that is used in
+  // different threads.
+  mozilla::Mutex mMutex;
+
+  // This value should not be used directly but use ReadyState() instead.
+  uint16_t mReadyState;
 };
 
 } //namespace dom

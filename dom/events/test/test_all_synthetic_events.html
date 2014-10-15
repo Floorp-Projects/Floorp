@@ -34,6 +34,10 @@ const kEventConstructors = {
                                              },
   AudioProcessingEvent:                      { create: null, // Cannot create untrusted event from JS.
                                              },
+  BeforeAfterKeyboardEvent:                  { create: function (aName, aProps) {
+                                                         return new BeforeAfterKeyboardEvent(aName, aProps);
+                                                       },
+                                             },
   BeforeUnloadEvent:                         { create: function (aName, aProps) {
                                                          var e = document.createEvent("beforeunloadevent");
                                                          e.initEvent(aName, aProps.bubbles, aProps.cancelable);

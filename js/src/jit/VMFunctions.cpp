@@ -1049,7 +1049,7 @@ StringReplace(JSContext *cx, HandleString string, HandleString pattern, HandleSt
 }
 
 bool
-Recompile(JSContext *cx)
+RecompileImpl(JSContext *cx, bool force)
 {
     MOZ_ASSERT(cx->currentlyRunningInJit());
     JitActivationIterator activations(cx->runtime());
@@ -1065,11 +1065,23 @@ Recompile(JSContext *cx)
     if (!IsIonEnabled(cx))
         return true;
 
-    MethodStatus status = Recompile(cx, script, nullptr, nullptr, isConstructing);
+    MethodStatus status = Recompile(cx, script, nullptr, nullptr, isConstructing, force);
     if (status == Method_Error)
         return false;
 
     return true;
+}
+
+bool
+ForcedRecompile(JSContext *cx)
+{
+    return RecompileImpl(cx, /* force = */ true);
+}
+
+bool
+Recompile(JSContext *cx)
+{
+    return RecompileImpl(cx, /* force = */ false);
 }
 
 bool
