@@ -196,6 +196,7 @@ NfcMessageHandler::WriteNDEFRequest(Parcel& aParcel, const CommandOptions& aOpti
 {
   aParcel.writeInt32(NfcRequest::WriteNDEFReq);
   aParcel.writeInt32(aOptions.mSessionId);
+  aParcel.writeInt32(aOptions.mIsP2P);
   WriteNDEFMessage(aParcel, aOptions);
   mRequestIdQueue.AppendElement(aOptions.mRequestId);
   return true;
