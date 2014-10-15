@@ -1765,9 +1765,7 @@ CheckPredecessorImpliesSuccessor(MBasicBlock *A, MBasicBlock *B)
 static bool
 CheckOperandImpliesUse(MNode *n, MDefinition *operand)
 {
-    // TODO: Fix code that leaves discarded things in resume point operands
-    // (bug 1055690).
-    MOZ_ASSERT_IF(!n->isResumePoint(), !operand->isDiscarded());
+    MOZ_ASSERT(!operand->isDiscarded());
     MOZ_ASSERT(operand->block() != nullptr);
 
     for (MUseIterator i = operand->usesBegin(); i != operand->usesEnd(); i++) {
