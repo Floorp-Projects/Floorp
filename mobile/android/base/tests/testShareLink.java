@@ -37,7 +37,7 @@ public class testShareLink extends AboutHomeTest {
         openAboutHomeTab(AboutHomeTabs.READING_LIST);
 
         inputAndLoadUrl(url);
-        verifyPageTitle(urlTitle, url); // Waiting for page title to ensure the page is loaded
+        verifyPageTitle(urlTitle); // Waiting for page title to ensure the page is loaded
 
         selectMenuItem(StringHelper.SHARE_LABEL);
         if (Build.VERSION.SDK_INT >= 14) {
@@ -248,7 +248,7 @@ public class testShareLink extends AboutHomeTest {
             public boolean test() {
                 ArrayList<View> views = mSolo.getCurrentViews();
                 for (View view : views) {
-                    // List may be displayed in different view formats.
+                    // List may be displayed in different view formats. 
                     // On JB, GridView is common; on ICS-, ListView is common.
                     if (view instanceof ListView ||
                         view instanceof GridView) {
