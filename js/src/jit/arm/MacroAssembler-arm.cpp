@@ -2130,6 +2130,11 @@ MacroAssemblerARMCompat::movePtr(ImmGCPtr imm, Register dest)
     ma_mov(imm, dest);
 }
 void
+MacroAssemblerARMCompat::movePtr(ImmMaybeNurseryPtr imm, Register dest)
+{
+    movePtr(noteMaybeNurseryPtr(imm), dest);
+}
+void
 MacroAssemblerARMCompat::movePtr(ImmPtr imm, Register dest)
 {
     movePtr(ImmWord(uintptr_t(imm.value)), dest);
