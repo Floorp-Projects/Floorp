@@ -122,7 +122,11 @@ GetBitmapForSurface(SourceSurface* aSurface)
 }
 
 DrawTargetSkia::DrawTargetSkia()
-  : mTexture(0), mSnapshot(nullptr)
+  :
+#ifdef USE_SKIA_GPU
+ mTexture(0),
+#endif
+ mSnapshot(nullptr)
 {
 }
 
@@ -848,10 +852,11 @@ DrawTargetSkia::SetTransform(const Matrix& aTransform)
 void*
 DrawTargetSkia::GetNativeSurface(NativeSurfaceType aType)
 {
+#ifdef USE_SKIA_GPU
   if (aType == NativeSurfaceType::OPENGL_TEXTURE) {
     return (void*)((uintptr_t)mTexture);
   }
-
+#endif
   return nullptr;
 }
 
