@@ -126,6 +126,9 @@ private:
 
   bool
   DoRequest(const DialRequest& aRequest);
+
+  bool
+  DoRequest(const USSDRequest& aRequest);
 };
 
 END_TELEPHONY_NAMESPACE

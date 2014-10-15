@@ -302,6 +302,14 @@ TelephonyIPCService::StopTone(uint32_t aClientId)
 }
 
 NS_IMETHODIMP
+TelephonyIPCService::SendUSSD(uint32_t aClientId, const nsAString& aUssd,
+                              nsITelephonyCallback *aCallback)
+{
+  return SendRequest(nullptr, aCallback,
+                     USSDRequest(aClientId, nsString(aUssd)));
+}
+
+NS_IMETHODIMP
 TelephonyIPCService::GetMicrophoneMuted(bool* aMuted)
 {
   if (!mPTelephonyChild) {
