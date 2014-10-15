@@ -286,8 +286,8 @@ ChromeObjectWrapper::enter(JSContext *cx, HandleObject wrapper,
         return true;
     // COWs fail silently for GETs, and that also happens to be the only case
     // where we might want to redirect the lookup to the home prototype chain.
-    *bp = act == Wrapper::GET || act == Wrapper::ENUMERATE ||
-          act == Wrapper::GET_PROPERTY_DESCRIPTOR;
+    *bp = (act == Wrapper::GET || act == Wrapper::ENUMERATE ||
+           act == Wrapper::GET_PROPERTY_DESCRIPTOR) && !JS_IsExceptionPending(cx);
     if (!*bp || id == JSID_VOID)
         return false;
 
