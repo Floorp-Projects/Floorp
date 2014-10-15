@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 989198</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/NativeKeyCodes.js"></script>
+  <script type="text/javascript" src="bug989198_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTests();">
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=989198">Mozilla Bug 989198</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function testEventOrderAndAttr()
+{
+  const mainDesc = 'Testing the order of the events';
+  const kTests = [
+    {
+      description: mainDesc,
+      expectedEvents: [ [ kParent | kBeforeEvent | kKeyDownEvent,
+                          kChild | kKeyDownEvent,
+                          kParent | kAfterEvent | kKeyDownEvent ],
+                        [ kParent | kBeforeEvent | kKeyUpEvent,
+                          kChild | kKeyUpEvent,
+                          kParent | kAfterEvent | kKeyUpEvent ] ],
+      resultEvents: [],
+      classifiedEvents: [ [], [] ],
+      doPreventDefaultAt: kUnknownEvent
+    },
+    {
+      description: mainDesc + ', calling preventDefault() at "mozbrowserbeforekeydown" event',
+      expectedEvents: [ [ kParent | kBeforeEvent | kKeyDownEvent,
+                          kParent | kAfterEvent | kKeyDownEvent ],
+                        [ kParent | kBeforeEvent | kKeyUpEvent,
+                          kChild | kKeyUpEvent,
+                          kParent | kAfterEvent | kKeyUpEvent ] ],
+      resultEvents: [],
+      classifiedEvents: [ [], [] ],
+      doPreventDefaultAt: kParent | kBeforeEvent | kKeyDownEvent
+    },
+    {
+      description: mainDesc + ', calling preventDefault() at "mozbrowserbeforekeyup" event',
+      expectedEvents: [ [ kParent | kBeforeEvent | kKeyDownEvent,
+                          kChild | kKeyDownEvent,
+                          kParent | kAfterEvent | kKeyDownEvent ],
+                        [ kParent | kBeforeEvent | kKeyUpEvent,
+                          kParent | kAfterEvent | kKeyUpEvent ] ],
+      resultEvents: [],
+      classifiedEvents: [ [], [] ],
+      doPreventDefaultAt: kParent | kBeforeEvent | kKeyUpEvent
+    },
+    {
+      description: mainDesc + ', calling preventDefault() at "keydown" event',
+      expectedEvents: [ [ kParent | kBeforeEvent | kKeyDownEvent,
+                          kChild | kKeyDownEvent,
+                          kParent | kAfterEvent | kKeyDownEvent ],
+                        [ kParent | kBeforeEvent | kKeyUpEvent,
+                          kChild | kKeyUpEvent,
+                          kParent | kAfterEvent | kKeyUpEvent ] ],
+      resultEvents: [],
+      classifiedEvents: [ [], [] ],
+      doPreventDefaultAt: kChild | kKeyDownEvent
+    },
+    {
+      description: mainDesc + ', calling preventDefault() at "keyup" event',
+      expectedEvents: [ [ kParent | kBeforeEvent | kKeyDownEvent,
+                          kChild | kKeyDownEvent,
+                          kParent | kAfterEvent | kKeyDownEvent ],
+                        [ kParent | kBeforeEvent | kKeyUpEvent,
+                          kChild | kKeyUpEvent,
+                          kParent | kAfterEvent | kKeyUpEvent ] ],
+      resultEvents: [],
+      classifiedEvents: [ [], [] ],
+      doPreventDefaultAt: kChild | kKeyUpEvent
+    }
+  ];
+
+  for (var k = 0; k < kTests.length; k++ ) {
+    gCurrentTest = kTests[k];
+    synthesizeKey('a', {}, document.getElementById("embedded").contentWindow);
+    classifyEvents(kTests[k]);
+    verifyResults(kTests[k]);
+  }
+
+  runTests();
+}
+
+var tests = [
+  function addPermissions() {
+    SpecialPowers.pushPermissions(
+      [{ type: "before-after-keyboard-event", allow: true, context: document },
+       { type: "browser", allow: true, context: document }],
+      runTests);
+  },
+  function addPreferences() {
+    SpecialPowers.pushPrefEnv(
+      { "set": [["dom.beforeAfterKeyboardEvent.enabled", true],
+                ["dom.mozBrowserFramesEnabled", true],
+                ["dom.ipc.tabs.disabled", false]] },
+      runTests);
+  },
+
+  // Tests for in-process iframe, i.e. <iframe mozbrowser>.
+  ()=>prepareTest(false),
+  testEventOrderAndAttr,
+  cleanupTest,
+];
+
+</script>
+</body>
+</html>

@@ -10,11 +10,16 @@
 #include "nsThreadUtils.h"
 #include "DOMCursor.h"
 #include "nsIDOMEvent.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ScriptSettings.h"
 
+using mozilla::dom::AnyCallback;
 using mozilla::dom::DOMError;
 using mozilla::dom::DOMRequest;
 using mozilla::dom::DOMRequestService;
 using mozilla::dom::DOMCursor;
+using mozilla::dom::Promise;
 using mozilla::AutoSafeJSContext;
 
 DOMRequest::DOMRequest(nsPIDOMWindow* aWindow)
@@ -25,16 +30,24 @@ DOMRequest::DOMRequest(nsPIDOMWindow* aWindow)
 {
 }
 
+DOMRequest::~DOMRequest()
+{
+  mResult.setUndefined();
+  mozilla::DropJSObjects(this);
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(DOMRequest)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMRequest,
                                                   DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromise)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMRequest,
                                                 DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromise)
   tmp->mResult = JSVAL_VOID;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -107,6 +120,10 @@ DOMRequest::FireSuccess(JS::Handle<JS::Value> aResult)
   mResult = aResult;
 
   FireEvent(NS_LITERAL_STRING("success"), false, false);
+
+  if (mPromise) {
+    mPromise->MaybeResolve(mResult);
+  }
 }
 
 void
@@ -120,6 +137,10 @@ DOMRequest::FireError(const nsAString& aError)
   mError = new DOMError(GetOwner(), aError);
 
   FireEvent(NS_LITERAL_STRING("error"), true, true);
+
+  if (mPromise) {
+    mPromise->MaybeRejectBrokenly(mError);
+  }
 }
 
 void
@@ -133,6 +154,10 @@ DOMRequest::FireError(nsresult aError)
   mError = new DOMError(GetOwner(), aError);
 
   FireEvent(NS_LITERAL_STRING("error"), true, true);
+
+  if (mPromise) {
+    mPromise->MaybeRejectBrokenly(mError);
+  }
 }
 
 void
@@ -147,6 +172,10 @@ DOMRequest::FireDetailedError(DOMError* aError)
   mError = aError;
 
   FireEvent(NS_LITERAL_STRING("error"), true, true);
+
+  if (mPromise) {
+    mPromise->MaybeRejectBrokenly(mError);
+  }
 }
 
 void
@@ -173,6 +202,31 @@ void
 DOMRequest::RootResultVal()
 {
   mozilla::HoldJSObjects(this);
+}
+
+already_AddRefed<Promise>
+DOMRequest::Then(JSContext* aCx, AnyCallback* aResolveCallback,
+                 AnyCallback* aRejectCallback, mozilla::ErrorResult& aRv)
+{
+  if (!mPromise) {
+    mPromise = Promise::Create(DOMEventTargetHelper::GetParentObject(), aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+    if (mDone) {
+      // Since we create mPromise lazily, it's possible that the DOMRequest object
+      // has already fired its success/error event.  In that case we should
+      // manually resolve/reject mPromise here.  mPromise will take care of
+      // calling the callbacks on |promise| as needed.
+      if (mError) {
+        mPromise->MaybeRejectBrokenly(mError);
+      } else {
+        mPromise->MaybeResolve(mResult);
+      }
+    }
+  }
+
+  return mPromise->Then(aCx, aResolveCallback, aRejectCallback, aRv);
 }
 
 NS_IMPL_ISUPPORTS(DOMRequestService, nsIDOMRequestService)
@@ -253,7 +307,7 @@ public:
            const JS::Value& aResult)
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    AutoSafeJSContext cx;
+    mozilla::ThreadsafeAutoSafeJSContext cx;
     nsRefPtr<FireSuccessAsyncTask> asyncTask = new FireSuccessAsyncTask(cx, aRequest, aResult);
     if (NS_FAILED(NS_DispatchToMainThread(asyncTask))) {
       NS_WARNING("Failed to dispatch to main thread!");

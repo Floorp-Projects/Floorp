@@ -4703,10 +4703,6 @@ nsDocument::GetWindowInternal() const
     if (win) {
       // mScriptGlobalObject is always the inner window, let's get the outer.
       win = win->GetOuterWindow();
-    } else if (mMasterDocument) {
-      // For script execution in the imported document we need the window of
-      // the master document.
-      win = mMasterDocument->GetWindow();
     }
   }
 

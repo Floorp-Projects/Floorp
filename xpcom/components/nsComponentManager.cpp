@@ -563,11 +563,12 @@ nsComponentManagerImpl::RegisterContractIDLocked(
 
   nsFactoryEntry* f = mFactories.Get(*aEntry->cid);
   if (!f) {
-    NS_ERROR("No CID found when attempting to map contract ID");
+    NS_WARNING("No CID found when attempting to map contract ID");
 
     char idstr[NSID_LENGTH];
     aEntry->cid->ToProvidedString(idstr);
 
+    SafeMutexAutoUnlock unlock(mLock);
     LogMessage("Could not map contract ID '%s' to CID %s because no implementation of the CID is registered.",
                aEntry->contractid,
                idstr);

@@ -652,7 +652,12 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
       case AsmJSImm_ModD:
         return RedirectCall(FuncCast(NumberMod), Args_Double_DoubleDouble);
       case AsmJSImm_SinD:
+#ifdef _WIN64
+        // Workaround a VS 2013 sin issue, see math_sin_uncached.
+        return RedirectCall(FuncCast<double (double)>(js::math_sin_uncached), Args_Double_Double);
+#else
         return RedirectCall(FuncCast<double (double)>(sin), Args_Double_Double);
+#endif
       case AsmJSImm_CosD:
         return RedirectCall(FuncCast<double (double)>(cos), Args_Double_Double);
       case AsmJSImm_TanD:

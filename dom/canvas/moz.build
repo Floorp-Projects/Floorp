@@ -129,6 +129,7 @@ LOCAL_INCLUDES += [
     '/content/svg/content/src',
     '/content/xul/content/src',
     '/dom/base',
+    '/gfx/gl',
     '/image/src',
     '/js/xpconnect/src',
     '/layout/generic',
