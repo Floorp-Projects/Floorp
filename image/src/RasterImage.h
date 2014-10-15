@@ -33,6 +33,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/TypedEnum.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -135,6 +136,14 @@ namespace image {
 class Decoder;
 class FrameAnimator;
 class ScaleRunner;
+
+MOZ_BEGIN_ENUM_CLASS(DecodeStatus, uint8_t)
+  INACTIVE,
+  PENDING,
+  ACTIVE,
+  WORK_DONE,
+  STOPPED
+MOZ_END_ENUM_CLASS(DecodeStatus)
 
 class RasterImage MOZ_FINAL : public ImageResource
                             , public nsIProperties
@@ -319,35 +328,6 @@ private:
     return statusTracker.forget();
   }
 
-  nsresult OnImageDataCompleteCore(nsIRequest* aRequest, nsISupports*, nsresult aStatus);
-
-  /**
-   * Each RasterImage has a pointer to one or zero heap-allocated
-   * DecodeRequests.
-   */
-  struct DecodeRequest
-  {
-    explicit DecodeRequest()
-      : mRequestStatus(REQUEST_INACTIVE)
-    { }
-
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodeRequest)
-
-    RasterImage* mImage;
-
-    enum DecodeRequestStatus
-    {
-      REQUEST_INACTIVE,
-      REQUEST_PENDING,
-      REQUEST_ACTIVE,
-      REQUEST_WORK_DONE,
-      REQUEST_STOPPED
-    } mRequestStatus;
-
-  private:
-    ~DecodeRequest() {}
-  };
-
   /*
    * DecodePool is a singleton class we use when decoding large images.
    *
@@ -435,18 +415,14 @@ private:
     class DecodeJob : public nsRunnable
     {
     public:
-      DecodeJob(DecodeRequest* aRequest, RasterImage* aImg)
-        : mRequest(aRequest)
-        , mImage(aImg)
-      {}
+      DecodeJob(RasterImage* aImage) : mImage(aImage) { }
 
-      NS_IMETHOD Run();
+      NS_IMETHOD Run() MOZ_OVERRIDE;
 
     protected:
       virtual ~DecodeJob();
 
     private:
-      nsRefPtr<DecodeRequest> mRequest;
       nsRefPtr<RasterImage> mImage;
     };
 
@@ -633,8 +609,8 @@ private: // data
 
   // Decoder and friends
   nsRefPtr<Decoder>          mDecoder;
-  nsRefPtr<DecodeRequest>    mDecodeRequest;
   nsRefPtr<imgStatusTracker> mDecodeStatusTracker;
+  DecodeStatus               mDecodeStatus;
 
   bool                       mInDecoder;
   // END LOCKED MEMBER VARIABLES
