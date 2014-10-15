@@ -2013,10 +2013,6 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
      * prototypes; or shape is non-null, meaning id was found directly in pobj.
      */
     unsigned attrs = JSPROP_ENUMERATE;
-    const Class *clasp = obj->getClass();
-    PropertyOp getter = clasp->getProperty;
-    StrictPropertyOp setter = clasp->setProperty;
-
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         /* ES5 8.12.4 [[Put]] step 2, for a dense data property on pobj. */
         if (pobj != obj)
@@ -2053,11 +2049,11 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
             }
         }
 
-        attrs = shape->attributes();
-        if (pobj != obj) {
-            /*
-             * We found id in a prototype object: prepare to share or shadow.
-             */
+        if (pobj == obj) {
+            attrs = shape->attributes();
+        } else {
+            // We found id in a prototype object: prepare to share or shadow.
+
             if (!shape->shadowable()) {
                 if (shape->hasDefaultSetter() && !shape->hasGetterValue())
                     return true;
@@ -2068,28 +2064,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
                 return shape->set(cxArg->asJSContext(), obj, receiver, strict, vp);
             }
 
-            /*
-             * Preserve attrs except JSPROP_SHARED, getter, and setter when
-             * shadowing any property that has no slot (is shared). We must
-             * clear the shared attribute for the shadowing shape so that the
-             * property in obj that it defines has a slot to retain the value
-             * being set, in case the setter simply cannot operate on instances
-             * of obj's class by storing the value in some class-specific
-             * location.
-             */
-            if (!shape->hasSlot()) {
-                attrs &= ~JSPROP_SHARED;
-                getter = shape->getter();
-                setter = shape->setter();
-            } else {
-                /* Restore attrs to the ECMA default for new properties. */
-                attrs = JSPROP_ENUMERATE;
-            }
-
-            /*
-             * Forget we found the proto-property now that we've copied any
-             * needed member values.
-             */
+            // Forget we found the proto-property since we're shadowing it.
             shape = nullptr;
         }
     }
@@ -2172,11 +2147,12 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
             return true;
         }
 
+        const Class *clasp = obj->getClass();
         if (mode == ParallelExecution) {
             if (obj->isDelegate())
                 return false;
 
-            if (getter != JS_PropertyStub || !types::HasTypePropertyId(obj, id, vp))
+            if (clasp->getProperty != JS_PropertyStub || !types::HasTypePropertyId(obj, id, vp))
                 return false;
         } else {
             JSContext *cx = cxArg->asJSContext();
@@ -2186,7 +2162,8 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
                 return false;
         }
 
-        return DefinePropertyOrElement<mode>(cxArg, obj, id, getter, setter,
+        return DefinePropertyOrElement<mode>(cxArg, obj, id,
+                                             clasp->getProperty, clasp->setProperty,
                                              attrs, vp, true, strict);
     }
 
