@@ -39,6 +39,8 @@ const tests = [
   { path: "data/fl10.mp2", expected: "application/octet-stream" },
   // Truncated ff installer regression test for bug 875769.
   { path: "data/ff-inst.exe", expected: "application/octet-stream" },
+  // MP4 with invalid box size (0) for "ftyp".
+  { path: "data/bug1079747.mp4", expected: "application/octet-stream" },
 ];
 
 // A basic listener that reads checks the if we sniffed properly.
