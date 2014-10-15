@@ -43,6 +43,7 @@
 #include "base/platform_thread.h"       // for PlatformThreadId
 #include "mozilla/GenericRefCounted.h"
 #include "gfx2DGlue.h"
+#include "GeckoProfiler.h"
 
 class nsIntRegion;
 class nsIRunnable;
@@ -766,10 +767,18 @@ private:
 
     static void AssertNotPassingStackBufferToTheGL(const void* ptr);
 
+#ifdef MOZ_WIDGET_ANDROID
+// Record the name of the GL call for better hang stacks on Android.
+#define BEFORE_GL_CALL                              \
+            PROFILER_LABEL_FUNC(                    \
+              js::ProfileEntry::Category::GRAPHICS);\
+            BeforeGLCall(MOZ_FUNCTION_NAME)
+#else
 #define BEFORE_GL_CALL                              \
             do {                                    \
                 BeforeGLCall(MOZ_FUNCTION_NAME);    \
             } while (0)
+#endif
 
 #define AFTER_GL_CALL                               \
             do {                                    \
@@ -785,7 +794,12 @@ private:
 
 #else // ifdef DEBUG
 
+#ifdef MOZ_WIDGET_ANDROID
+// Record the name of the GL call for better hang stacks on Android.
+#define BEFORE_GL_CALL PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS)
+#else
 #define BEFORE_GL_CALL do { } while (0)
+#endif
 #define AFTER_GL_CALL do { } while (0)
 #define TRACKING_CONTEXT(a) do {} while (0)
 #define ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(ptr) do {} while (0)
