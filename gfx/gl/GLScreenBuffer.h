@@ -15,21 +15,20 @@
 #ifndef SCREEN_BUFFER_H_
 #define SCREEN_BUFFER_H_
 
+#include "SurfaceTypes.h"
+#include "SurfaceStream.h"
 #include "GLContextTypes.h"
 #include "GLDefs.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/UniquePtr.h"
-#include "SharedSurface.h"
-#include "SurfaceTypes.h"
 
 namespace mozilla {
 namespace gl {
 
 class GLContext;
 class SharedSurface;
-class ShSurfHandle;
-class SurfaceFactory;
+class SurfaceStream;
 
 class DrawBuffer
 {
@@ -88,7 +87,7 @@ protected:
     const GLuint mDepthRB;
     const GLuint mStencilRB;
     // note no mColorRB here: this is provided by mSurf.
-    SharedSurface* mSurf;
+    SharedSurface* mSurf; // Owned by GLScreenBuffer's SurfaceStream.
 
     ReadBuffer(GLContext* gl,
                GLuint fb,
@@ -130,9 +129,7 @@ public:
     const SurfaceCaps mCaps;
 protected:
     UniquePtr<SurfaceFactory> mFactory;
-
-    RefPtr<ShSurfHandle> mBack;
-    RefPtr<ShSurfHandle> mFront;
+    RefPtr<SurfaceStream> mStream;
 
     UniquePtr<DrawBuffer> mDraw;
     UniquePtr<ReadBuffer> mRead;
@@ -152,10 +149,14 @@ protected:
 
     GLScreenBuffer(GLContext* gl,
                    const SurfaceCaps& caps,
-                   UniquePtr<SurfaceFactory> factory)
+                   UniquePtr<SurfaceFactory> factory,
+                   const RefPtr<SurfaceStream>& stream)
         : mGL(gl)
         , mCaps(caps)
         , mFactory(Move(factory))
+        , mStream(stream)
+        , mDraw(nullptr)
+        , mRead(nullptr)
         , mNeedsBlit(true)
         , mUserDrawFB(0)
         , mUserReadFB(0)
@@ -170,12 +171,12 @@ protected:
 public:
     virtual ~GLScreenBuffer();
 
-    SurfaceFactory* Factory() const {
-        return mFactory.get();
+    SurfaceStream* Stream() const {
+        return mStream;
     }
 
-    ShSurfHandle* Front() const {
-        return mFront;
+    SurfaceFactory* Factory() const {
+        return mFactory.get();
     }
 
     SharedSurface* SharedSurf() const {
@@ -183,7 +184,7 @@ public:
         return mRead->SharedSurf();
     }
 
-    bool ShouldPreserveBuffer() const {
+    bool PreserveBuffer() const {
         return mCaps.preserve;
     }
 
@@ -223,8 +224,20 @@ public:
     bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type, GLvoid *pixels);
 
-    // Morph changes the factory used to create surfaces.
-    void Morph(UniquePtr<SurfaceFactory> newFactory);
+    /* Morph swaps out our SurfaceStream mechanism and replaces it with
+     * one best suited to our platform and compositor configuration.
+     *
+     * Must be called on the producing thread.
+     * We haven't made any guarantee that rendering is actually
+     * done when Morph is run, just that it can't run concurrently
+     * with rendering. This means that we can't just drop the contents
+     * of the buffer, since we may only be partially done rendering.
+     *
+     * Once you pass newFactory into Morph, newFactory will be owned by
+     * GLScreenBuffer, so `forget` any references to it that still exist.
+     */
+    void Morph(UniquePtr<SurfaceFactory> newFactory,
+               SurfaceStreamType streamType);
 
 protected:
     // Returns false on error or inability to resize.

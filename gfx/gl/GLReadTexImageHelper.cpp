@@ -155,19 +155,16 @@ GLReadTexImageHelper::DidGLErrorOccur(const char* str)
     return false;
 }
 
-bool
+static bool
 GetActualReadFormats(GLContext* gl,
                      GLenum destFormat, GLenum destType,
-                     GLenum* out_readFormat, GLenum* out_readType)
+                     GLenum& readFormat, GLenum& readType)
 {
-    MOZ_ASSERT(out_readFormat);
-    MOZ_ASSERT(out_readType);
-
     if (destFormat == LOCAL_GL_RGBA &&
         destType == LOCAL_GL_UNSIGNED_BYTE)
     {
-        *out_readFormat = destFormat;
-        *out_readType = destType;
+        readFormat = destFormat;
+        readType = destType;
         return true;
     }
 
@@ -192,23 +189,20 @@ GetActualReadFormats(GLContext* gl,
                 break;
             }
             case LOCAL_GL_BGRA: {
-                if (destType == LOCAL_GL_UNSIGNED_BYTE ||
-                    destType == LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV)
-                {
+                if (destType == LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV)
                     fallback = false;
-                }
                 break;
             }
         }
     }
 
     if (fallback) {
-        *out_readFormat = LOCAL_GL_RGBA;
-        *out_readType = LOCAL_GL_UNSIGNED_BYTE;
+        readFormat = LOCAL_GL_RGBA;
+        readType = LOCAL_GL_UNSIGNED_BYTE;
         return false;
     } else {
-        *out_readFormat = destFormat;
-        *out_readType = destType;
+        readFormat = destFormat;
+        readType = destType;
         return true;
     }
 }
@@ -401,7 +395,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
     GLenum readType = destType;
     bool needsTempSurf = !GetActualReadFormats(gl,
                                                destFormat, destType,
-                                               &readFormat, &readType);
+                                               readFormat, readType);
 
     RefPtr<DataSourceSurface> tempSurf;
     DataSourceSurface* readSurf = dest;

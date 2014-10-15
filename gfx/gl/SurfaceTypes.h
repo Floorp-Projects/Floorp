@@ -25,7 +25,6 @@ struct SurfaceCaps MOZ_FINAL
     bool bpp16;
     bool depth, stencil;
     bool antialias;
-    bool premultAlpha;
     bool preserve;
 
     // The surface allocator that we want to create this
@@ -81,6 +80,16 @@ MOZ_BEGIN_ENUM_CLASS(SharedSurfaceType, uint8_t)
 
     Max
 MOZ_END_ENUM_CLASS(SharedSurfaceType)
+
+
+MOZ_BEGIN_ENUM_CLASS(SurfaceStreamType, uint8_t)
+    SingleBuffer,
+    TripleBuffer_Copy,
+    TripleBuffer_Async,
+    TripleBuffer,
+    Max
+MOZ_END_ENUM_CLASS(SurfaceStreamType)
+
 
 MOZ_BEGIN_ENUM_CLASS(AttachmentType, uint8_t)
     Screen = 0,
