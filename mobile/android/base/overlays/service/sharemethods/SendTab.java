@@ -58,7 +58,7 @@ public class SendTab extends ShareMethod {
     public static final String EXTRA_CLIENT_RECORDS = "RECORDS";
 
     // The intent we should dispatch when the button for this ShareMethod is tapped, instead of
-    // taking the normal action (eg. "Set up sync!")
+    // taking the normal action (e.g., "Set up Sync!")
     public static final String OVERRIDE_INTENT = "OVERRIDE_INTENT";
 
     private Set<String> validGUIDs;
