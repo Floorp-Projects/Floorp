@@ -52,7 +52,7 @@ public class testBookmarkFolders extends AboutHomeTest {
         // Open the bookmark from a bookmark folder hierarchy
         loadBookmark(DESKTOP_BOOKMARK_URL);
         waitForText(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE);
-        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE, DESKTOP_BOOKMARK_URL);
+        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE);
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
 
         // Check that folders don't have a context menu

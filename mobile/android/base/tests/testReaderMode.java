@@ -73,7 +73,7 @@ public class testReaderMode extends AboutHomeTest {
         contentPageShowExpecter.unregisterListener();
         paintExpecter.blockUntilClear(EVENT_CLEAR_DELAY_MS);
         paintExpecter.unregisterListener();
-        verifyPageTitle(StringHelper.ROBOCOP_TEXT_PAGE_TITLE, StringHelper.ROBOCOP_TEXT_PAGE_URL);
+        verifyPageTitle(StringHelper.ROBOCOP_TEXT_PAGE_TITLE);
 
         // Open the share menu for the reader toolbar
         height = mDriver.getGeckoTop() + mDriver.getGeckoHeight() - 10;
@@ -134,7 +134,7 @@ public class testReaderMode extends AboutHomeTest {
         mSolo.clickOnView(child);
         contentEventExpecter.blockForEvent();
         contentEventExpecter.unregisterListener();
-        verifyPageTitle(StringHelper.ROBOCOP_TEXT_PAGE_TITLE, StringHelper.ROBOCOP_TEXT_PAGE_URL);
+        verifyPageTitle(StringHelper.ROBOCOP_TEXT_PAGE_TITLE);
 
         // Verify that we are in reader mode and remove the page from Reading List
         height = mDriver.getGeckoTop() + mDriver.getGeckoHeight() - 10;
@@ -142,7 +142,7 @@ public class testReaderMode extends AboutHomeTest {
         mAsserter.dumpLog("Long Clicking at width = " + String.valueOf(width) + " and height = " + String.valueOf(height));
         mSolo.clickOnScreen(width,height);
         mAsserter.ok(mSolo.waitForText("Page removed from your Reading List"), "Waiting for the page to removed from your Reading List", "The page is removed from your Reading List");
-        verifyPageTitle(StringHelper.ROBOCOP_TEXT_PAGE_TITLE, StringHelper.ROBOCOP_TEXT_PAGE_URL);
+        verifyPageTitle(StringHelper.ROBOCOP_TEXT_PAGE_TITLE);
 
         //Check if the Reading List is empty
         openAboutHomeTab(AboutHomeTabs.READING_LIST);

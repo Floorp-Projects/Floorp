@@ -19,8 +19,7 @@ public class testBookmarkKeyword extends AboutHomeTest {
         waitForText(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
 
         // Make sure the title of the page appeared.
-        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE,
-                StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
+        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
 
         // Delete the bookmark to clean up.
         mDatabaseHelper.deleteBookmark(url);

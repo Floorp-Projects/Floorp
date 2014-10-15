@@ -18,9 +18,7 @@ public class testBookmarklets extends AboutHomeTest {
 
         // load a standard page so bookmarklets work
         inputAndLoadUrl(url);
-        // Waiting for page title to ensure the page is loaded
-        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE,
-                StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
+        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE); // Waiting for page title to ensure the page is loaded
 
         // verify that user-entered bookmarklets do *not* work
         enterUrl(js);
