@@ -990,6 +990,8 @@ protected:
                                       uint32_t pixelSize,
                                       uint32_t alignment);
 
+    virtual JS::Value GetTexParameterInternal(const TexTarget& target, GLenum pname);
+
     // Returns x rounded to the next highest multiple of y.
     static CheckedUint32 RoundedToNextMultipleOf(CheckedUint32 x, CheckedUint32 y) {
         return ((x + y - 1) / y) * y;

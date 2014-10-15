@@ -484,7 +484,7 @@ ImportLoader::Open()
                                          nsIScriptSecurityManager::STANDARD);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  nsCOMPtr<nsILoadGroup> loadGroup = mImportParent->GetDocumentLoadGroup();
+  nsCOMPtr<nsILoadGroup> loadGroup = master->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannelPolicy> channelPolicy;
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   rv = principal->GetCsp(getter_AddRefs(csp));

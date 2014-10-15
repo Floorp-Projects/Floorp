@@ -41,7 +41,7 @@ public:
 
   virtual void Shutdown() MOZ_OVERRIDE;
 
-  static already_AddRefed<MediaResource> CreateResource();
+  static already_AddRefed<MediaResource> CreateResource(nsIPrincipal* aPrincipal = nullptr);
 
   void AttachMediaSource(dom::MediaSource* aMediaSource);
   void DetachMediaSource();

@@ -385,7 +385,7 @@ struct ParamTraits<mozilla::InternalBeforeAfterKeyboardEvent>
       ReadParam(aMsg, aIter, &value);
 
     aResult->mEmbeddedCancelled = Nullable<bool>();
-    if (!isNull) {
+    if (rv && !isNull) {
       aResult->mEmbeddedCancelled.SetValue(value);
     }
 

@@ -49,11 +49,10 @@ function treeClick()
   synthesizeMouseExpectEvent($("treechildren"), 2, 2, { }, $("treechildren"), "click", "");
   is(tree.currentIndex, 0, "selectedIndex after click");
 
-  var x = { }, y = { }, width = { }, height = { };
-  tree.treeBoxObject.getCoordsForCellItem(1, tree.columns.address, "", x, y, width, height);
-  synthesizeMouseExpectEvent($("treechildren"), x.value, y.value + 2,
+  var rect = tree.treeBoxObject.getCoordsForCellItem(1, tree.columns.address, "");
+  synthesizeMouseExpectEvent($("treechildren"), rect.x, rect.y + 2,
                              { }, $("treechildren"), "click", "");
-  is(tree.currentIndex, 1, "selectedIndex after second click " + x.value + "," + y.value);
+  is(tree.currentIndex, 1, "selectedIndex after second click " + rect.x + "," + rect.y);
 
   $("panel").hidePopup();
 }

@@ -5,8 +5,10 @@
 
 #include "SharedSurface.h"
 
+#include "../2d/2D.h"
 #include "GLBlitHelper.h"
 #include "GLContext.h"
+#include "GLReadTexImageHelper.h"
 #include "nsThreadUtils.h"
 #include "ScopedGLHelpers.h"
 #include "SharedSurfaceGL.h"
@@ -445,6 +447,107 @@ ScopedReadbackFB::~ScopedReadbackFB()
     if (mSurfToLock) {
         mSurfToLock->LockProd();
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class AutoLockBits
+{
+    gfx::DrawTarget* mDT;
+    uint8_t* mLockedBits;
+
+public:
+    AutoLockBits(gfx::DrawTarget* dt)
+        : mDT(dt)
+        , mLockedBits(nullptr)
+    {
+        MOZ_ASSERT(mDT);
+    }
+
+    bool Lock(uint8_t** data, gfx::IntSize* size, int32_t* stride,
+              gfx::SurfaceFormat* format)
+    {
+        bool success = mDT->LockBits(data, size, stride, format);
+        if (success)
+            mLockedBits = *data;
+        return success;
+    }
+
+    ~AutoLockBits() {
+        if (mLockedBits)
+            mDT->ReleaseBits(mLockedBits);
+    }
+};
+
+bool
+ReadbackSharedSurface(SharedSurface* src, gfx::DrawTarget* dst)
+{
+    AutoLockBits lock(dst);
+
+    uint8_t* dstBytes;
+    gfx::IntSize dstSize;
+    int32_t dstStride;
+    gfx::SurfaceFormat dstFormat;
+    if (!dst->LockBits(&dstBytes, &dstSize, &dstStride, &dstFormat))
+        return false;
+
+    const bool isDstRGBA = (dstFormat == gfx::SurfaceFormat::R8G8B8A8 ||
+                            dstFormat == gfx::SurfaceFormat::R8G8B8X8);
+    MOZ_ASSERT_IF(!isDstRGBA, dstFormat == gfx::SurfaceFormat::B8G8R8A8 ||
+                              dstFormat == gfx::SurfaceFormat::B8G8R8X8);
+
+    size_t width = src->mSize.width;
+    size_t height = src->mSize.height;
+    MOZ_ASSERT(width == (size_t)dstSize.width);
+    MOZ_ASSERT(height == (size_t)dstSize.height);
+
+    GLenum readGLFormat;
+    GLenum readType;
+
+    {
+        ScopedReadbackFB autoReadback(src);
+
+
+        // We have a source FB, now we need a format.
+        GLenum dstGLFormat = isDstRGBA ? LOCAL_GL_BGRA : LOCAL_GL_RGBA;
+        GLenum dstType = LOCAL_GL_UNSIGNED_BYTE;
+
+        // We actually don't care if they match, since we can handle
+        // any read{Format,Type} we get.
+        GLContext* gl = src->mGL;
+        GetActualReadFormats(gl, dstGLFormat, dstType, &readGLFormat,
+                             &readType);
+
+        MOZ_ASSERT(readGLFormat == LOCAL_GL_RGBA ||
+                   readGLFormat == LOCAL_GL_BGRA);
+        MOZ_ASSERT(readType == LOCAL_GL_UNSIGNED_BYTE);
+
+        // ReadPixels from the current FB into lockedBits.
+        {
+            size_t alignment = 8;
+            if (dstStride % 4 == 0)
+                alignment = 4;
+            ScopedPackAlignment autoAlign(gl, alignment);
+
+            gl->raw_fReadPixels(0, 0, width, height, readGLFormat, readType,
+                                dstBytes);
+        }
+    }
+
+    const bool isReadRGBA = readGLFormat == LOCAL_GL_RGBA;
+
+    if (isReadRGBA != isDstRGBA) {
+        for (size_t j = 0; j < height; ++j) {
+            uint8_t* rowItr = dstBytes + j*dstStride;
+            uint8_t* rowEnd = rowItr + 4*width;
+            while (rowItr != rowEnd) {
+                Swap(rowItr[0], rowItr[2]);
+                rowItr += 4;
+            }
+        }
+    }
+
+    return true;
 }
 
 } /* namespace gfx */

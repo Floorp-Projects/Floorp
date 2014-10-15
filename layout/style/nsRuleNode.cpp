@@ -8801,6 +8801,7 @@ nsRuleNode::SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
       nsCSSKeyword functionName =
         (nsCSSKeyword)shapeFunction->Item(0).GetIntValue();
       if (functionName == eCSSKeyword_polygon) {
+        NS_ABORT_IF_FALSE(!basicShape, "did not expect value");
         basicShape = new nsStyleBasicShape(nsStyleBasicShape::ePolygon);
         NS_ABORT_IF_FALSE(shapeFunction->Count() > 1,
                           "polygon has wrong number of arguments");
@@ -8829,6 +8830,46 @@ nsRuleNode::SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
           coordinates.AppendElement(yCoord);
           NS_ABORT_IF_FALSE(didSetCoordY, "unexpected y coordinate unit");
           curPair = curPair->mNext;
+        }
+      } else if (functionName == eCSSKeyword_circle ||
+                 functionName == eCSSKeyword_ellipse) {
+        nsStyleBasicShape::Type type = functionName == eCSSKeyword_circle ?
+                                       nsStyleBasicShape::eCircle :
+                                       nsStyleBasicShape::eEllipse;
+        NS_ABORT_IF_FALSE(!basicShape, "did not expect value");
+        basicShape = new nsStyleBasicShape(type);
+        int32_t mask = SETCOORD_PERCENT | SETCOORD_LENGTH |
+                       SETCOORD_STORE_CALC | SETCOORD_ENUMERATED;
+        size_t count = type == nsStyleBasicShape::eCircle ? 2 : 3;
+        NS_ABORT_IF_FALSE(shapeFunction->Count() == count + 1,
+                          "unexpected arguments count");
+        NS_ABORT_IF_FALSE(type == nsStyleBasicShape::eCircle ||
+                        (shapeFunction->Item(1).GetUnit() == eCSSUnit_Null) ==
+                        (shapeFunction->Item(2).GetUnit() == eCSSUnit_Null),
+                        "ellipse should have two radii or none");
+        for (size_t j = 1; j < count; ++j) {
+          const nsCSSValue& val = shapeFunction->Item(j);
+          nsStyleCoord radius;
+          if (val.GetUnit() != eCSSUnit_Null) {
+            DebugOnly<bool> didSetRadius = SetCoord(val, radius,
+                                                    nsStyleCoord(), mask,
+                                                    aStyleContext,
+                                                    aPresContext,
+                                                    aCanStoreInRuleTree);
+            NS_ABORT_IF_FALSE(didSetRadius, "unexpected radius unit");
+          } else {
+            radius.SetIntValue(NS_RADIUS_CLOSEST_SIDE, eStyleUnit_Enumerated);
+          }
+          basicShape->Coordinates().AppendElement(radius);
+        }
+        const nsCSSValue& positionVal = shapeFunction->Item(count);
+        if (positionVal.GetUnit() == eCSSUnit_Array) {
+          ComputePositionValue(aStyleContext, positionVal,
+                               basicShape->GetPosition(),
+                               aCanStoreInRuleTree);
+        } else {
+            NS_ABORT_IF_FALSE(positionVal.GetUnit() == eCSSUnit_Null,
+                              "expected no value");
         }
       } else {
         // XXX Handle more basic shape functions later.

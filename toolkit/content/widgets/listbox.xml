@@ -677,7 +677,7 @@
       <!-- ///////////////// public listbox members ///////////////// -->
 
       <property name="listBoxObject"
-                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIListBoxObject);"
+                onget="return this.boxObject;"
                 readonly="true"/>
 
       <!-- ///////////////// private listbox members ///////////////// -->
@@ -1142,4 +1142,3 @@
   </binding>
 
 </bindings>
-

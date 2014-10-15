@@ -1,4 +1,5 @@
 Please add a link to the bugzilla bug and patch name that should be re-applied.
 Also, please update any existing links to their actual mozilla-central changeset.
 
-https://bugzilla.mozilla.org/show_bug.cgi?id=1018966 wosChromiumChanges.patch
+https://hg.mozilla.org/mozilla-central/rev/e7eef85c1b0a
+https://bugzilla.mozilla.org/show_bug.cgi?id=1080567 bug1080567.patch

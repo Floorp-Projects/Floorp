@@ -3204,7 +3204,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
           PreTranslate(baselineOrigin).      // translate origin for rotation
           PreRotate(gfx::Float(M_PI / 2.0)). // turn 90deg clockwise
           PreTranslate(-baselineOrigin).     // undo the translation
-          PreTranslate(Point(0, metrics.emAscent - metrics.emDescent) / 2));
+          PreTranslate(Point(0, (metrics.emAscent - metrics.emDescent) / 2)));
                               // and offset the (alphabetic) baseline of the
                               // horizontally-shaped text from the (centered)
                               // default baseline used for vertical

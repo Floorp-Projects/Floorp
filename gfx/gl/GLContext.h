@@ -43,6 +43,7 @@
 #include "base/platform_thread.h"       // for PlatformThreadId
 #include "mozilla/GenericRefCounted.h"
 #include "gfx2DGlue.h"
+#include "GeckoProfiler.h"
 
 class nsIntRegion;
 class nsIRunnable;
@@ -100,6 +101,7 @@ MOZ_BEGIN_ENUM_CLASS(GLFeature)
     gpu_shader4,
     instanced_arrays,
     instanced_non_arrays,
+    invalidate_framebuffer,
     map_buffer_range,
     occlusion_query,
     occlusion_query_boolean,
@@ -367,6 +369,7 @@ public:
         ARB_framebuffer_sRGB,
         ARB_half_float_pixel,
         ARB_instanced_arrays,
+        ARB_invalidate_subdata,
         ARB_map_buffer_range,
         ARB_occlusion_query2,
         ARB_pixel_buffer_object,
@@ -764,10 +767,18 @@ private:
 
     static void AssertNotPassingStackBufferToTheGL(const void* ptr);
 
+#ifdef MOZ_WIDGET_ANDROID
+// Record the name of the GL call for better hang stacks on Android.
+#define BEFORE_GL_CALL                              \
+            PROFILER_LABEL_FUNC(                    \
+              js::ProfileEntry::Category::GRAPHICS);\
+            BeforeGLCall(MOZ_FUNCTION_NAME)
+#else
 #define BEFORE_GL_CALL                              \
             do {                                    \
                 BeforeGLCall(MOZ_FUNCTION_NAME);    \
             } while (0)
+#endif
 
 #define AFTER_GL_CALL                               \
             do {                                    \
@@ -783,7 +794,12 @@ private:
 
 #else // ifdef DEBUG
 
+#ifdef MOZ_WIDGET_ANDROID
+// Record the name of the GL call for better hang stacks on Android.
+#define BEFORE_GL_CALL PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS)
+#else
 #define BEFORE_GL_CALL do { } while (0)
+#endif
 #define AFTER_GL_CALL do { } while (0)
 #define TRACKING_CONTEXT(a) do {} while (0)
 #define ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(ptr) do {} while (0)
@@ -888,6 +904,20 @@ public:
         }
 
         raw_fBindFramebuffer(target, framebuffer);
+    }
+
+    void fInvalidateFramebuffer(GLenum target, GLsizei numAttachments, const GLenum* attachments) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fInvalidateFramebuffer);
+        mSymbols.fInvalidateFramebuffer(target, numAttachments, attachments);
+        AFTER_GL_CALL;
+    }
+
+    void fInvalidateSubFramebuffer(GLenum target, GLsizei numAttachments, const GLenum* attachments, GLint x, GLint y, GLsizei width, GLsizei height) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fInvalidateSubFramebuffer);
+        mSymbols.fInvalidateSubFramebuffer(target, numAttachments, attachments, x, y, width, height);
+        AFTER_GL_CALL;
     }
 
     void fBindTexture(GLenum target, GLuint texture) {
@@ -3536,6 +3566,10 @@ public:
     void ClearSafely();
 
     bool WorkAroundDriverBugs() const { return mWorkAroundDriverBugs; }
+
+    bool IsDrawingToDefaultFramebuffer() {
+        return Screen()->IsDrawFramebufferDefault();
+    }
 
 protected:
     nsRefPtr<TextureGarbageBin> mTexGarbageBin;

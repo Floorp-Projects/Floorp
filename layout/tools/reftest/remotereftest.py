@@ -42,6 +42,11 @@ class RemoteOptions(ReftestOptions):
                     help = "ip address of remote device to test")
         defaults["deviceIP"] = None
 
+        self.add_option("--deviceSerial", action="store",
+                    type = "string", dest = "deviceSerial",
+                    help = "adb serial number of remote device to test")
+        defaults["deviceSerial"] = None
+
         self.add_option("--devicePort", action="store",
                     type = "string", dest = "devicePort",
                     help = "port of remote device to test")
@@ -449,14 +454,16 @@ def main(args):
     parser = RemoteOptions(automation)
     options, args = parser.parse_args()
 
-    if (options.deviceIP == None):
-        print "Error: you must provide a device IP to connect to via the --device option"
+    if (options.dm_trans == 'sut' and options.deviceIP == None):
+        print "Error: If --dm_trans = sut, you must provide a device IP to connect to via the --deviceIP option"
         return 1
 
     try:
         if (options.dm_trans == "adb"):
             if (options.deviceIP):
                 dm = droid.DroidADB(options.deviceIP, options.devicePort, deviceRoot=options.remoteTestRoot)
+            elif (options.deviceSerial):
+                dm = droid.DroidADB(None, None, deviceSerial=options.deviceSerial, deviceRoot=options.remoteTestRoot)
             else:
                 dm = droid.DroidADB(None, None, deviceRoot=options.remoteTestRoot)
         else:

@@ -261,6 +261,9 @@ public:
     void BindFB_Internal(GLuint fb);
     void BindDrawFB_Internal(GLuint fb);
     void BindReadFB_Internal(GLuint fb);
+
+    bool IsDrawFramebufferDefault() const;
+    bool IsReadFramebufferDefault() const;
 };
 
 }   // namespace gl

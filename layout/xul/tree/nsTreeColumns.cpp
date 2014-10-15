@@ -14,6 +14,7 @@
 #include "nsContentUtils.h"
 #include "nsTreeBodyFrame.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/TreeBoxObject.h"
 #include "mozilla/dom/TreeColumnsBinding.h"
 
 using namespace mozilla;
@@ -379,10 +380,10 @@ nsTreeColumns::WrapObject(JSContext* aCx)
   return dom::TreeColumnsBinding::Wrap(aCx, this);
 }
 
-nsITreeBoxObject*
+dom::TreeBoxObject*
 nsTreeColumns::GetTree() const
 {
-  return mTree ? mTree->GetTreeBoxObject() : nullptr;
+  return mTree ? static_cast<mozilla::dom::TreeBoxObject*>(mTree->GetTreeBoxObject()) : nullptr;
 }
 
 NS_IMETHODIMP

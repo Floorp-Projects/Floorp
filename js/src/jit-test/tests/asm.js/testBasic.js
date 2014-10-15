@@ -10,6 +10,7 @@ assertAsmTypeFail(USE_ASM + 'function f() 0; return 0');
 assertAsmTypeFail(USE_ASM + 'function f(){} return g');
 assertAsmTypeFail(USE_ASM + 'function f(){} function f(){} return f');
 assertAsmTypeFail(USE_ASM + 'function f(){}; function g(){}; return {f, g}');
+assertAsmTypeFail(USE_ASM + 'var f = f;');
 assertAsmTypeFail(USE_ASM + 'var f=0; function f(){} return f');
 assertAsmTypeFail(USE_ASM + 'var f=glob.Math.imul; return {}');
 assertAsmTypeFail('glob', USE_ASM + 'var f=glob.Math.imul; function f(){} return f');

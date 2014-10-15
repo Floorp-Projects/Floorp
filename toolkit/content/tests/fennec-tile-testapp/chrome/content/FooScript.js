@@ -58,9 +58,7 @@ BrowserView.prototype = {
   get scrollbox() { return this._scrollbox; },
 
   init: function init() {
-    let scrollbox = document.getElementById("scrollbox")
-			.boxObject
-			.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+    let scrollbox = document.getElementById("scrollbox").boxObject;
     this._scrollbox = scrollbox;
 
     let leftbar  = document.getElementById("left_sidebar");
@@ -128,10 +126,7 @@ BrowserView.prototype = {
   },
 
   getScrollboxPosition: function getScrollboxPosition() {
-    let x = {};
-    let y = {};
-    this._scrollbox.getPosition(x, y);
-    return [x.value, y.value];
+    return [this._scrollbox.positionX, this._scrollbox.positionY];
   },
 
   getViewportInnerBoundsRect: function getViewportInnerBoundsRect(dx, dy) {
@@ -313,26 +308,24 @@ function onMouseMove(e) {
   if (window._isDragging) {
     let scrollbox = bv.scrollbox;
 
-    let x = {};
-    let y = {};
-    let w = {};
-    let h = {};
-    scrollbox.getPosition(x, y);
-    scrollbox.getScrolledSize(w, h);
+    let x = scrollbox.positionX;
+    let y = scrollbox.positionY;
+    let w = scrollbox.scrolledWidth;
+    let h = scrollbox.scrolledHeight;
 
     let dx = window._dragStart.x - e.clientX;
     let dy = window._dragStart.y - e.clientY;
 
     // XXX if max(x, 0) > scrollwidth we shouldn't do anything (same for y/height)
-    let newX = Math.max(x.value + dx, 0);
-    let newY = Math.max(y.value + dy, 0);
+    let newX = Math.max(x + dx, 0);
+    let newY = Math.max(y + dy, 0);
 
-    if (newX < w.value || newY < h.value) {
+    if (newX < w || newY < h) {
       // clip dx and dy to prevent us from going below 0
-      dx = Math.max(dx, -x.value);
-      dy = Math.max(dy, -y.value);
+      dx = Math.max(dx, -x);
+      dy = Math.max(dy, -y);
 
-      bv.onBeforeScroll(x.value, y.value, dx, dy);
+      bv.onBeforeScroll(x, y, dx, dy);
 
       /*dump("==========scroll==========" + endl);
       dump("delta: " + dx + "," + dy + endl);

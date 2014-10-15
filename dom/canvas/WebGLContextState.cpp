@@ -177,6 +177,18 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
     }
 
+    if (IsWebGL2()) {
+        switch (pname) {
+            case LOCAL_GL_MAX_SAMPLES:
+            case LOCAL_GL_MAX_UNIFORM_BLOCK_SIZE:
+            case LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS: {
+                GLint val;
+                gl->fGetIntegerv(pname, &val);
+                return JS::NumberValue(uint32_t(val));
+            }
+        }
+    }
+
     switch (pname) {
         //
         // String params

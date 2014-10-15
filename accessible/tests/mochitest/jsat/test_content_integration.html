@@ -34,6 +34,7 @@
            new ExpectedCursorChange(
             ['Phone status bar', 'Traversal Rule test document'],
             { focused: 'body' })],
+          [ContentMessages.simpleMovePrevious, new ExpectedNoMove()],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
           [ContentMessages.simpleMoveNext, new ExpectedCursorChange(
@@ -52,14 +53,14 @@
            new ExpectedCursorChange(['much range', {'string': 'label'}])],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(['much range', '5', {'string': 'slider'}])],
-          [ContentMessages.adjustRangeUp, new ExpectedValueChange('6')],
+          [ContentMessages.moveOrAdjustUp(), new ExpectedValueChange('6')],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(['Home', {'string': 'pushbutton'}])],
 
           // Simple traversal backward
           [ContentMessages.simpleMovePrevious,
            new ExpectedCursorChange(['much range', '6', {'string': 'slider'}, 'such app'])],
-          [ContentMessages.adjustRangeDown, new ExpectedValueChange('5')],
+          [ContentMessages.moveOrAdjustDown(), new ExpectedValueChange('5')],
           [ContentMessages.simpleMovePrevious,
            new ExpectedCursorChange(['much range', {'string': 'label'}])],
           [ContentMessages.simpleMovePrevious,
@@ -88,6 +89,32 @@
           [ContentMessages.simpleMoveLast,
             new ExpectedCursorChange(
               ['Home', {'string': 'pushbutton'}], { b2g_todo: true })],
+
+          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
+
+          [ContentMessages.simpleMoveNext,
+           new ExpectedCursorChange(['Phone status bar', 'Traversal Rule test document'])],
+          [ContentMessages.moveOrAdjustDown('FormElement'),
+           new ExpectedCursorChange(['Back', {"string": "pushbutton"}])],
+          [ContentMessages.moveOrAdjustDown('FormElement'),
+           new ExpectedCursorChange(['many option', {'string': 'stateNotChecked'},
+            {'string': 'checkbutton'}, {'string': 'listStart'},
+            {'string': 'list'}, {'string': 'listItemsCount', 'count': 1}, 'such app'])],
+          [ContentMessages.moveOrAdjustDown('FormElement'),
+           new ExpectedCursorChange(['much range', '5', {'string': 'slider'}])],
+          // Calling AdjustOrMove should adjust the range.
+          [ContentMessages.moveOrAdjustDown('FormElement'),
+           new ExpectedValueChange('4')],
+          [ContentMessages.moveOrAdjustUp('FormElement'),
+           new ExpectedValueChange('5')],
+          [ContentMessages.simpleMovePrevious,
+           new ExpectedCursorChange(['much range', {'string': 'label'}])],
+          [ContentMessages.moveOrAdjustUp('FormElement'),
+           new ExpectedCursorChange(['many option', {'string': 'stateNotChecked'},
+            {'string': 'checkbutton'}, {'string': 'listStart'},
+            {'string': 'list'}, {'string': 'listItemsCount', 'count': 1}])],
+          [ContentMessages.moveOrAdjustUp('FormElement'),
+           new ExpectedCursorChange(['Back', {"string": "pushbutton"}])],
 
           [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
@@ -225,7 +252,8 @@
             doc.defaultView.hideAlert();
             doc.querySelector('button#home').focus();
           }, new ExpectedCursorChange(['Home', {'string': 'pushbutton'},
-            'Traversal Rule test document'])]
+            'Traversal Rule test document'])],
+          [ContentMessages.simpleMoveNext, new ExpectedNoMove()]
         ]);
 
         addA11yLoadEvent(function() {

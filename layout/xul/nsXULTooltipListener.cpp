@@ -10,7 +10,6 @@
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
 #include "nsGkAtoms.h"
-#include "nsIPopupBoxObject.h"
 #include "nsMenuPopupFrame.h"
 #include "nsIServiceManager.h"
 #include "nsIDragService.h"
@@ -29,6 +28,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/BoxObject.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -346,7 +346,7 @@ nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
 
     int32_t row;
     nsCOMPtr<nsITreeColumn> col;
-    nsAutoCString obj;
+    nsAutoString obj;
 
     // subtract off the documentElement's boxObject
     int32_t boxX, boxY;

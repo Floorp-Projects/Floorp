@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
     'testAddPropertyPropcache.cpp',
     'testArgumentsObject.cpp',
     'testArrayBuffer.cpp',
+    'testArrayBufferView.cpp',
     'testBindCallable.cpp',
     'testBug604087.cpp',
     'testCallNonGenericMethodOnProxy.cpp',

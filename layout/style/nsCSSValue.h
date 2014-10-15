@@ -721,7 +721,14 @@ private:
 
   void AppendPolygonToString(nsCSSProperty aProperty, nsAString& aResult,
                              Serialization aValueSerialization) const;
-
+  void AppendPositionCoordinateToString(const nsCSSValue& aValue,
+                                        nsCSSProperty aProperty,
+                                        nsAString& aResult,
+                                        Serialization aSerialization) const;
+  void AppendCircleOrEllipseToString(
+           nsCSSKeyword aFunctionId,
+           nsCSSProperty aProperty, nsAString& aResult,
+           Serialization aValueSerialization) const;
 protected:
   nsCSSUnit mUnit;
   union {

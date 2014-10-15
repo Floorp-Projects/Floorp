@@ -17,6 +17,7 @@
 #include "base/win_util.h"
 
 #include <algorithm>
+#include "prenv.h"
 
 namespace {
 
@@ -275,10 +276,9 @@ bool LaunchApp(const std::wstring& cmdline,
   // blindly have all handles inherited.  Vista and later has a technique
   // where only specified handles are inherited - so we use this technique if
   // we can.  If that technique isn't available (or it fails), we just don't
-  // inherit anything.  This means that dump() etc isn't going to be seen on
-  // XP release builds, but that's OK (developers who really care can run a
-  // debug build on XP, where the processes are marked as "console" apps, so
-  // things work without these hoops)
+  // inherit anything.  This can cause us a problem for Windows XP testing,
+  // because we sometimes need the handles to get inherited for test logging to
+  // work. So we also inherit when a specific environment variable is set.
   DWORD dwCreationFlags = 0;
   BOOL bInheritHandles = FALSE;
   // We use a STARTUPINFOEX, but if we can't do the thread attribute thing, we
@@ -305,21 +305,30 @@ bool LaunchApp(const std::wstring& cmdline,
     if (stdErr != stdOut && IsInheritableHandle(stdErr))
       handlesToInherit[handleCount++] = stdErr;
 
-    if (handleCount)
+    if (handleCount) {
       lpAttributeList = CreateThreadAttributeList(handlesToInherit, handleCount);
-  }
-
-  if (lpAttributeList) {
-    // it's safe to inherit handles, so arrange for that...
-    startup_info.cb = sizeof(startup_info_ex);
+      if (lpAttributeList) {
+        // it's safe to inherit handles, so arrange for that...
+        startup_info.cb = sizeof(startup_info_ex);
+        startup_info.dwFlags |= STARTF_USESTDHANDLES;
+        startup_info.hStdOutput = stdOut;
+        startup_info.hStdError = stdErr;
+        startup_info.hStdInput = INVALID_HANDLE_VALUE;
+        startup_info_ex.lpAttributeList = lpAttributeList;
+        dwCreationFlags |= EXTENDED_STARTUPINFO_PRESENT;
+        bInheritHandles = TRUE;
+      }
+    }
+  } else if (PR_GetEnv("MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA")) {
+    // Even if we can't limit what gets inherited, we sometimes want to inherit
+    // stdout/err for testing purposes.
     startup_info.dwFlags |= STARTF_USESTDHANDLES;
     startup_info.hStdOutput = ::GetStdHandle(STD_OUTPUT_HANDLE);
     startup_info.hStdError = ::GetStdHandle(STD_ERROR_HANDLE);
     startup_info.hStdInput = INVALID_HANDLE_VALUE;
-    startup_info_ex.lpAttributeList = lpAttributeList;
-    dwCreationFlags |= EXTENDED_STARTUPINFO_PRESENT;
     bInheritHandles = TRUE;
   }
+
   PROCESS_INFORMATION process_info;
   BOOL createdOK = CreateProcess(NULL,
                      const_cast<wchar_t*>(cmdline.c_str()), NULL, NULL,

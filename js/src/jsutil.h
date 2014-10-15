@@ -293,7 +293,7 @@ Poison(void *ptr, int value, size_t num)
 }
 
 /* Crash diagnostics */
-#ifdef DEBUG
+#if defined(DEBUG) && !defined(MOZ_ASAN)
 # define JS_CRASH_DIAGNOSTICS 1
 #endif
 #if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)

@@ -23,12 +23,10 @@ let rightbar  = null;
 let topbar    = null;
 
 function debug() {
-  let w = {};
-  let h = {};
-  scrollbox.getScrolledSize(w, h);
+  let w = scrollbox.scrolledWidth;
+  let h = scrollbox.scrolledHeight;
   let container = document.getElementById("tile_container");
   let [x, y] = getScrollboxPosition();
-  let [w, h] = [w.value, h.value];
   if (bv) {
     dump('----------------------DEBUG!-------------------------\n');
     dump(bv._browserViewportState.toString() + endl);
@@ -185,27 +183,25 @@ function onMouseUp() {
 
 function onMouseMove(e) {
   if (window._isDragging) {
-    let x = {};
-    let y = {};
-    let w = {};
-    let h = {};
-    scrollbox.getPosition(x, y);
-    scrollbox.getScrolledSize(w, h);
+    let x = scrollbox.positionX;
+    let y = scrollbox.positionY;
+    let w = scrollbox.scrolledWidth;
+    let h = scrollbox.scrolledHeight;
 
     let dx = window._dragStart.x - e.clientX;
     let dy = window._dragStart.y - e.clientY;
 
     // XXX if max(x, 0) > scrollwidth we shouldn't do anything (same for y/height)
-    let newX = Math.max(x.value + dx, 0);
-    let newY = Math.max(y.value + dy, 0);
+    let newX = Math.max(x + dx, 0);
+    let newY = Math.max(y + dy, 0);
 
-    if (newX < w.value || newY < h.value) {
+    if (newX < w || newY < h) {
       // clip dx and dy to prevent us from going below 0
-      dx = Math.max(dx, -x.value);
-      dy = Math.max(dy, -y.value);
+      dx = Math.max(dx, -x);
+      dy = Math.max(dy, -y);
 
-      let oldx = x.value;
-      let oldy = y.value;
+      let oldx = x;
+      let oldy = y;
 
       bv.onBeforeVisibleMove(dx, dy);
 
@@ -231,9 +227,7 @@ function onAlmostLoad() {
 
 function onLoad() {
   // ----------------------------------------------------
-  scrollbox = document.getElementById("scrollbox")
-		.boxObject
-		.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+  scrollbox = document.getElementById("scrollbox").boxObject;
   leftbar  = document.getElementById("left_sidebar");
   rightbar = document.getElementById("right_sidebar");
   topbar   = document.getElementById("top_urlbar");
@@ -311,10 +305,7 @@ function scrollboxToViewportRect(rect) {
 }
 
 function getScrollboxPosition() {
-  let x = {};
-  let y = {};
-  scrollbox.getPosition(x, y);
-  return [x.value, y.value];
+  return [scrollbox.positionX, scrollbox.positionY];
 }
 
 function getContentScrollValues(browser) {

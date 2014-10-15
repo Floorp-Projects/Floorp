@@ -64,7 +64,7 @@ JitOptions::JitOptions()
     SET_DEFAULT(checkRangeAnalysis, false);
 
     // Toggle whether eager scalar replacement is globally disabled.
-    SET_DEFAULT(disableScalarReplacement, true); // experimental
+    SET_DEFAULT(disableScalarReplacement, false);
 
     // Toggle whether global value numbering is globally disabled.
     SET_DEFAULT(disableGvn, false);

@@ -39,31 +39,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760109
     // refactoring has made it possible to do the right thing here.
     is(typeof chromeObject.constructor, "undefined", "Object constructor does what we expect");
     ok(chromeArray.constructor === Array, "Array constructor remapped properly");
-
-    // We should be able to .forEach on the Array.
-    var concat = '';
-    chromeArray.forEach(function(val) { concat += val; });
-    is(concat, 'abz', "Should be able to .forEach COW-ed Array");
-
-    // Try other Array operations.
-    is(chromeArray.indexOf('b'), 1, "indexOf works correctly");
-    is(chromeArray.join(''), concat, "join works correctly");
-    is(chromeArray.slice(1).join(''), 'bz', "slice works correctly");
-    is(chromeArray.length, 3, "Able to check array length");
-
-    // Try some operations that modify the array.
-    is(chromeArray.pop(), 'z', "Able to call pop");
-    is(chromeArray.push('z'), 3, "Able to call push");
-    chromeArray.reverse();
-    is(chromeArray.join(''), 'zba', "Able to call reverse");
-    chromeArray.sort();
-    is(chromeArray.join(''), 'abz', "Able to call sort");
-
-    // We should be able to .hasOwnProperty on the Object, and have
-    // it filter the objects we can see.
-    ok(chromeObject.hasOwnProperty('foo'), "Should see r property");
-    ok(!chromeObject.hasOwnProperty('bar'), "Shouldn't see non-exposed property");
-    ok(chromeObject.hasOwnProperty('baz'), "Should see rw property");
   }
 
   // We use a constructor to create the test object so that there's an

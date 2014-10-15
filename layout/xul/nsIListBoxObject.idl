@@ -5,27 +5,15 @@
 
 #include "nsISupports.idl"
 
+// DEPRECATED: see ListBoxObject.webidl
+
 interface nsIDOMElement;
 
-[scriptable, uuid(AA9DEF4E-2E59-412d-A6DF-B76F52167795)]
+[uuid(AA9DEF4E-2E59-412d-A6DF-B76F52167795)]
 interface nsIListBoxObject : nsISupports
 {
   long getRowCount();
-  long getNumberOfVisibleRows();
-  long getIndexOfFirstVisibleRow();
-
-  void ensureIndexIsVisible(in long rowIndex);
-  void scrollToIndex(in long rowIndex);
-  void scrollByLines(in long numLines);
 
   nsIDOMElement getItemAtIndex(in long index);
   long getIndexOfItem(in nsIDOMElement item);
 };
-
-%{C++
-class nsIBoxObject;
-
-nsresult
-NS_NewListBoxObject(nsIBoxObject** aResult);
-
-%}

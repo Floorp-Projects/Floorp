@@ -12,7 +12,7 @@ interface nsITreeColumn;
 interface nsITreeColumns;
 interface nsIScriptableRegion;
 
-[scriptable, uuid(64BA5199-C4F4-4498-BBDC-F8E4C369086C)]
+[uuid(64BA5199-C4F4-4498-BBDC-F8E4C369086C)]
 interface nsITreeBoxObject : nsISupports
 {
   /**
@@ -148,12 +148,12 @@ interface nsITreeBoxObject : nsISupports
    * The coordinate system is the client coordinate system for the
    * document this boxObject lives in, and the units are CSS pixels.
    */
-  void getCellAt(in long x, in long y, out long row, out nsITreeColumn col, out ACString childElt);
+  void getCellAt(in long x, in long y, out long row, out nsITreeColumn col, out AString childElt);
 
   /** 
    * Find the coordinates of an element within a specific cell. 
    */
-  void getCoordsForCellItem(in long row, in nsITreeColumn col, in ACString element, 
+  void getCoordsForCellItem(in long row, in nsITreeColumn col, in AString element,
                             out long x, out long y, out long width, out long height);
 
   /** 
