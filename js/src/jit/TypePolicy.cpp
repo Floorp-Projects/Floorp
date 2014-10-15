@@ -504,6 +504,18 @@ template bool NoFloatPolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstru
 template bool NoFloatPolicy<2>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
 template bool NoFloatPolicy<3>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
 
+template <unsigned FirstOp>
+bool
+NoFloatPolicyAfter<FirstOp>::adjustInputs(TempAllocator &alloc, MInstruction *def)
+{
+    for (size_t op = FirstOp, e = def->numOperands(); op < e; op++)
+        EnsureOperandNotFloat32(alloc, def, op);
+    return true;
+}
+
+template bool NoFloatPolicyAfter<1>::adjustInputs(TempAllocator &alloc, MInstruction *def);
+template bool NoFloatPolicyAfter<2>::adjustInputs(TempAllocator &alloc, MInstruction *def);
+
 template <unsigned Op>
 bool
 BoxPolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
@@ -956,6 +968,8 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     _(MixPolicy<StringPolicy<0>, IntPolicy<1> >)                        \
     _(MixPolicy<StringPolicy<0>, StringPolicy<1> >)                     \
     _(NoFloatPolicy<0>)                                                 \
+    _(NoFloatPolicyAfter<1>)                                            \
+    _(NoFloatPolicyAfter<2>)                                            \
     _(ObjectPolicy<0>)                                                  \
     _(ObjectPolicy<1>)                                                  \
     _(ObjectPolicy<3>)                                                  \
