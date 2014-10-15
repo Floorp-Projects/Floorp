@@ -3442,8 +3442,6 @@ if test -n "$JS_OOM_BREAKPOINT"; then
     AC_DEFINE(JS_OOM_BREAKPOINT)
 fi
 
-MOZ_CHECK_CCACHE
-
 dnl ========================================================
 dnl = Enable static checking using gcc-dehydra
 dnl ========================================================
