@@ -235,6 +235,15 @@ private:
   ~nsNavBookmarks();
 
   /**
+   * Checks whether or not aFolderId points to a live bookmark.
+   *
+   * @param aFolderId
+   *        the item-id of the folder to check.
+   * @return true if aFolderId points to live bookmarks, false otherwise.
+   */
+  bool IsLivemark(int64_t aFolderId);
+
+  /**
    * Locates the root items in the bookmarks folder hierarchy assigning folder
    * ids to the root properties that are exposed through the service interface.
    */

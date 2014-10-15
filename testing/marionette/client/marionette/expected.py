@@ -19,11 +19,11 @@ class element_present(object):
     visible.
 
     You can select which element to be checked for presence by
-    supplying a locator:
+    supplying a locator::
 
         el = Wait(marionette).until(expected.element_present(By.ID, "foo"))
 
-    Or by using a function/lambda returning an element:
+    Or by using a function/lambda returning an element::
 
         el = Wait(marionette).until(expected.element_present(lambda m: m.find_element(By.ID, "foo")))
 
@@ -46,11 +46,11 @@ class element_not_present(element_present):
     context.
 
     You can select which element to be checked for lack of presence by
-    supplying a locator:
+    supplying a locator::
 
         r = Wait(marionette).until(expected.element_not_present(By.ID, "foo"))
 
-    Or by using a function/lambda returning an element:
+    Or by using a function/lambda returning an element::
 
         r = Wait(marionette).until(expected.element_present(lambda m: m.find_element(By.ID, "foo")))
 
@@ -72,7 +72,7 @@ class element_stale(object):
     This can be useful for waiting until an element is no longer
     present.
 
-    Sample usage:
+    Sample usage::
 
         el = marionette.find_element(By.ID, "foo")
         # ...
@@ -101,11 +101,11 @@ class elements_present(object):
     visible.
 
     You can select which elements to be checked for presence by
-    supplying a locator:
+    supplying a locator::
 
         els = Wait(marionette).until(expected.elements_present(By.TAG_NAME, "a"))
 
-    Or by using a function/lambda returning a list of elements:
+    Or by using a function/lambda returning a list of elements::
 
         els = Wait(marionette).until(expected.elements_present(lambda m: m.find_elements(By.TAG_NAME, "a")))
 
@@ -128,11 +128,11 @@ class elements_not_present(elements_present):
     current context.
 
     You can select which elements to be checked for not being present
-    by supplying a locator:
+    by supplying a locator::
 
         r = Wait(marionette).until(expected.elements_not_present(By.TAG_NAME, "a"))
 
-    Or by using a function/lambda returning a list of elements:
+    Or by using a function/lambda returning a list of elements::
 
         r = Wait(marionette).until(expected.elements_not_present(lambda m: m.find_elements(By.TAG_NAME, "a")))
 
@@ -214,7 +214,7 @@ class element_not_selected(element_selected):
     selected.
 
     :param element: the element to not be selected
-    :returns True if element is not selected, False if selected
+    :returns: True if element is not selected, False if selected
 
     """
 

@@ -41,6 +41,11 @@
 // Key is pressed within a window
 #define NS_KEY_DOWN                     (NS_WINDOW_START + 33)
 
+#define NS_KEY_BEFORE_DOWN              (NS_WINDOW_START + 34)
+#define NS_KEY_AFTER_DOWN               (NS_WINDOW_START + 35)
+#define NS_KEY_BEFORE_UP                (NS_WINDOW_START + 36)
+#define NS_KEY_AFTER_UP                 (NS_WINDOW_START + 37)
+
 #define NS_RESIZE_EVENT                 (NS_WINDOW_START + 60)
 #define NS_SCROLL_EVENT                 (NS_WINDOW_START + 61)
 
