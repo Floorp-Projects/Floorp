@@ -68,8 +68,7 @@ struct MallocProvider
             client()->reportAllocationOverflow();
             return nullptr;
         }
-        client()->onOutOfMemory(nullptr, numElems * sizeof(T));
-        return nullptr;
+        return (T *)client()->onOutOfMemory(nullptr, numElems * sizeof(T));
     }
 
     template <class T, class U>
@@ -88,8 +87,7 @@ struct MallocProvider
             client()->updateMallocCounter(bytes);
             return p;
         }
-        client()->onOutOfMemory(nullptr, bytes);
-        return nullptr;
+        return (T *)client()->onOutOfMemory(nullptr, bytes);
     }
 
     template <class T>
@@ -114,8 +112,7 @@ struct MallocProvider
             client()->reportAllocationOverflow();
             return nullptr;
         }
-        client()->onOutOfMemory(nullptr, numElems * sizeof(T));
-        return nullptr;
+        return (T *)client()->onOutOfMemory(nullptr, numElems * sizeof(T));
     }
 
     template <class T, class U>
@@ -134,8 +131,7 @@ struct MallocProvider
             client()->updateMallocCounter(bytes);
             return p;
         }
-        client()->onOutOfMemory(nullptr, bytes);
-        return nullptr;
+        return (T *)client()->onOutOfMemory(nullptr, bytes);
     }
 
     template <class T>
@@ -159,8 +155,7 @@ struct MallocProvider
             client()->reportAllocationOverflow();
             return nullptr;
         }
-        client()->onOutOfMemory(prior, newSize * sizeof(T));
-        return nullptr;
+        return (T *)client()->onOutOfMemory(prior, newSize * sizeof(T));
     }
 
     JS_DECLARE_NEW_METHODS(new_, pod_malloc<uint8_t>, MOZ_ALWAYS_INLINE)
