@@ -432,6 +432,7 @@ private:
     nsCString      mCompatFirefox;
     bool           mCompatFirefoxEnabled;
     nsXPIDLCString mCompatDevice;
+    nsCString      mDeviceModelId;
 
     nsCString      mUserAgent;
     nsXPIDLCString mUserAgentOverride;

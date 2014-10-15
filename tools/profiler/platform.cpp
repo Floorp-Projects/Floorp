@@ -689,6 +689,10 @@ const char** mozilla_sampler_get_features()
     "mainthreadio",
     // Add RSS collection
     "memory",
+#ifdef MOZ_TASK_TRACER
+    // Start profiling with feature TaskTracer.
+    "tasktracer",
+#endif
 #if defined(XP_WIN)
     // Add power collection
     "power",
