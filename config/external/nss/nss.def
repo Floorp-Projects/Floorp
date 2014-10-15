@@ -87,6 +87,7 @@ CERT_FilterCertListByUsage
 CERT_FilterCertListForUserCerts
 CERT_FindCertByDERCert
 CERT_FindCertByIssuerAndSN
+CERT_FindCertByName
 CERT_FindCertByNickname
 CERT_FindCertByNicknameOrEmailAddr
 CERT_FindCertExtension
@@ -632,6 +633,7 @@ SSL_CipherPrefSet
 SSL_CipherPrefSetDefault
 SSL_ClearSessionCache
 SSL_ConfigSecureServer
+SSL_ConfigSecureServerWithCertChain
 SSL_ConfigServerSessionIDCache
 SSL_ExportKeyingMaterial
 SSL_ForceHandshake

@@ -145,6 +145,31 @@ function make_INT {
   SERIALNO=$(($SERIALNO + 1))
 }
 
+# This creates an X.509 version 1 certificate (note --certVersion 1 and a lack
+# of extensions).
+function make_V1 {
+  NICKNAME="${1}"
+  SUBJECT="${2}"
+  CA="${3}"
+
+  cert_already_exists $NICKNAME
+  if [ $ALREADY_EXISTS -eq 1 ]; then
+    echo "cert \"$NICKNAME\" already exists - not regenerating it (use --clobber to force regeneration)"
+    return
+  fi
+
+  $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -S \
+                         -n $NICKNAME \
+                         -s "$SUBJECT" \
+                         -c $CA \
+                         -t ",," \
+                         -m $SERIALNO \
+                         --certVersion 1 \
+                         -v 360 -w -1 -z $NOISE_FILE
+
+  SERIALNO=$(($SERIALNO + 1))
+}
+
 function make_EE {
   CERT_RESPONSES="n\n\ny\n2\n7\nhttp://localhost:8080/\n\nn\nn\n"
   NICKNAME="${1}"
@@ -286,5 +311,12 @@ make_delegated badKeysizeDelegatedSigner 'CN=Bad Keysize Delegated Responder' te
 make_EE_with_nsCertType nsCertTypeCritical 'CN=nsCertType Critical' testCA "localhost,*.example.com" "y"
 make_EE_with_nsCertType nsCertTypeNotCritical 'CN=nsCertType Not Critical' testCA "localhost,*.example.com" "n"
 make_EE_with_nsCertType nsCertTypeCriticalWithExtKeyUsage 'CN=nsCertType Critical With extKeyUsage' testCA "localhost,*.example.com" "y" "--extKeyUsage serverAuth"
+
+# Make an X.509 version 1 certificate that will issue another certificate.
+# By default, this causes an error in verification that we allow overrides for.
+# However, if the v1 certificate is a trust anchor, then verification succeeds.
+make_V1 v1Cert 'CN=V1 Cert' testCA
+export_cert v1Cert v1Cert.der
+make_EE eeIssuedByV1Cert 'CN=EE Issued by V1 Cert' v1Cert "localhost,*.example.com"
 
 cleanup

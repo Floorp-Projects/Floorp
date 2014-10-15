@@ -197,6 +197,47 @@ ConfigSecureServerWithNamedCert(PRFileDesc *fd, const char *certName,
     PrintPRError("PK11_FindCertFromNickname failed");
     return SECFailure;
   }
+  // If an intermediate certificate issued the server certificate (rather than
+  // directly by a trust anchor), we want to send it along in the handshake so
+  // we don't encounter unknown issuer errors when that's not what we're
+  // testing.
+  ScopedCERTCertificateList certList;
+  ScopedCERTCertificate issuerCert(
+    CERT_FindCertByName(CERT_GetDefaultCertDB(), &cert->derIssuer));
+  // If we can't find the issuer cert, continue without it.
+  if (issuerCert) {
+    // Sadly, CERTCertificateList does not have a CERT_NewCertificateList
+    // utility function, so we must create it ourselves. This consists
+    // of creating an arena, allocating space for the CERTCertificateList,
+    // and then transferring ownership of the arena to that list.
+    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+    if (!arena) {
+      PrintPRError("PORT_NewArena failed");
+      return SECFailure;
+    }
+    certList = reinterpret_cast<CERTCertificateList*>(
+      PORT_ArenaAlloc(arena, sizeof(CERTCertificateList)));
+    if (!certList) {
+      PrintPRError("PORT_ArenaAlloc failed");
+      return SECFailure;
+    }
+    certList->arena = arena.forget();
+    // We also have to manually copy the certificates we care about to the
+    // list, because there aren't any utility functions for that either.
+    certList->certs = reinterpret_cast<SECItem*>(
+      PORT_ArenaAlloc(certList->arena, 2 * sizeof(SECItem)));
+    if (SECITEM_CopyItem(certList->arena, certList->certs, &cert->derCert)
+          != SECSuccess) {
+      PrintPRError("SECITEM_CopyItem failed");
+      return SECFailure;
+    }
+    if (SECITEM_CopyItem(certList->arena, certList->certs + 1,
+                         &issuerCert->derCert) != SECSuccess) {
+      PrintPRError("SECITEM_CopyItem failed");
+      return SECFailure;
+    }
+    certList->len = 2;
+  }
 
   ScopedSECKEYPrivateKey key(PK11_FindKeyByAnyCert(cert, nullptr));
   if (!key) {
@@ -206,7 +247,8 @@ ConfigSecureServerWithNamedCert(PRFileDesc *fd, const char *certName,
 
   SSLKEAType certKEA = NSS_FindCertKEAType(cert);
 
-  if (SSL_ConfigSecureServer(fd, cert, key, certKEA) != SECSuccess) {
+  if (SSL_ConfigSecureServerWithCertChain(fd, cert, certList, key, certKEA)
+        != SECSuccess) {
     PrintPRError("SSL_ConfigSecureServer failed");
     return SECFailure;
   }
