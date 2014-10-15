@@ -1192,6 +1192,12 @@ UpdateShapeTypeAndValue(typename ExecutionModeTraits<mode>::ExclusiveContextType
 }
 
 template <ExecutionMode mode>
+static bool
+NativeSet(typename ExecutionModeTraits<mode>::ContextType cx,
+          HandleNativeObject obj, HandleObject receiver,
+          HandleShape shape, bool strict, MutableHandleValue vp);
+
+template <ExecutionMode mode>
 static inline bool
 DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
                         HandleNativeObject obj, HandleId id,
@@ -1662,10 +1668,9 @@ js::NativeGet(JSContext *cx, HandleObject obj, HandleNativeObject pobj, HandleSh
 }
 
 template <ExecutionMode mode>
-bool
-js::NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg,
-              HandleNativeObject obj, Handle<JSObject*> receiver,
-              HandleShape shape, bool strict, MutableHandleValue vp)
+static bool
+NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg, HandleNativeObject obj,
+          HandleObject receiver, HandleShape shape, bool strict, MutableHandleValue vp)
 {
     MOZ_ASSERT(cxArg->isThreadLocal(obj));
     MOZ_ASSERT(obj->isNative());
@@ -1722,15 +1727,6 @@ js::NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg,
 
     return true;
 }
-
-template bool
-js::NativeSet<SequentialExecution>(JSContext *cx,
-                                   HandleNativeObject obj, HandleObject receiver,
-                                   HandleShape shape, bool strict, MutableHandleValue vp);
-template bool
-js::NativeSet<ParallelExecution>(ForkJoinContext *cx,
-                                 HandleNativeObject obj, HandleObject receiver,
-                                 HandleShape shape, bool strict, MutableHandleValue vp);
 
 /*
  * Given pc pointing after a property accessing bytecode, return true if the
