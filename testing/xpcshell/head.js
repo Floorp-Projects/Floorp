@@ -23,7 +23,7 @@ var _profileInitialized = false;
 // modules.
 _register_modules_protocol_handler();
 
-let _Promise = Components.utils.import("resource://gre/modules/Promise.jsm", this).Promise;
+let _Promise = Components.utils.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
 // Support a common assertion library, Assert.jsm.
 let AssertCls = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
