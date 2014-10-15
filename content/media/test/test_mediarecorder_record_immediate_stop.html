@@ -97,9 +97,9 @@ function startTest(test, token) {
 
   // This handler completes a start and stop of recording and verifies
   // respective media recorder state.
-  var canPlayThrough = function() {
-    element.removeEventListener('canplaythrough', canPlayThrough, false);
-
+  element.onloadedmetadata = function () {
+    element.onloadedmetadata = null;
+    element.play();
     mediaRecorder.start();
     is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
     is(mediaRecorder.stream, element.stream,
@@ -112,8 +112,7 @@ function startTest(test, token) {
        'Media recorder stream = element stream post recording');
   };
 
-  element.addEventListener('canplaythrough', canPlayThrough, false);
-  element.play();
+  element.preload = "metadata";
 }
 
 manager.runTests(gMediaRecorderTests, startTest);
