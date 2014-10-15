@@ -464,7 +464,7 @@ AsyncCubebTask::AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation
     mOperation(aOperation),
     mShutdownGrip(aDriver->GraphImpl())
 {
-  MOZ_ASSERT(mDriver->mAudioStream || aOperation == INIT, "No audio stream !");
+  NS_WARN_IF_FALSE(mDriver->mAudioStream || aOperation == INIT, "No audio stream !");
 }
 
 AsyncCubebTask::~AsyncCubebTask()
