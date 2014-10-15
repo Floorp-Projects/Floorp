@@ -54,15 +54,17 @@ function startTest(test, token) {
     ok(false, 'Unexpected warning fired');
   }
 
-  element.oncanplaythrough = function () {
-    element.oncanplaythrough = null;
+  element.preload = "metadata";
+
+  element.onloadedmetadata = function () {
+    element.onloadedmetadata = null;
+    element.play();
     for (var i = 0; i < mExpectStopCount; i++) {
       mediaRecorder.start(1000);
       mediaRecorder.stop();
     }
   }
 
-  element.play();
 }
 
 manager.runTests(gMediaRecorderTests, startTest);
