@@ -824,5 +824,46 @@ function test25() {
   ok(notification, "Test 25: There should be a plugin notification even if the plugin was immediately removed");
   ok(notification.dismissed, "Test 25: The notification should be dismissed by default");
 
+  prepareTest26();
+}
+
+function prepareTest26() {
+  info("prepareTest26");
+  let plugin = getTestPlugin();
+  plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
+  setAndUpdateBlocklist(gHttpTestRoot + "blockPluginInfoURL.xml",
+    function() {
+      info("prepareTest26 callback");
+      prepareTest(runAfterPluginBindingAttached(test26), gTestRoot + "plugin_test.html");
+  });
+}
+
+// Tests a page with a blocked plugin in it and make sure the
+// infoURL property from the blocklist file gets used.
+function test26() {
+  info("test26 - Test infoURL");
+  let notification = PopupNotifications.getNotification("click-to-play-plugins");
+
+  // Since the plugin notification is dismissed by default, reshow it.
+  notification.reshow();
+
+  let pluginNode = gTestBrowser.contentDocument.getElementById("test");
+  ok(pluginNode, "Test 26, Found plugin in page");
+  let objLoadingContent = pluginNode.QueryInterface(Ci.nsIObjectLoadingContent);
+  is(objLoadingContent.pluginFallbackType,
+     Ci.nsIObjectLoadingContent.PLUGIN_BLOCKLISTED,
+     "Test 26, plugin fallback type should be PLUGIN_BLOCKLISTED");
+
+  const testUrl = "http://test.url.com/";
+
+  let doc = gTestBrowser.contentDocument;
+  let firstPanelChild = PopupNotifications.panel.firstChild;
+
+  let infoLink = doc.getAnonymousElementByAttribute(
+    firstPanelChild, "anonid", "click-to-play-plugins-notification-link");
+
+  is(infoLink.href, testUrl,
+    "Test 26, the notification URL needs to match the infoURL from the blocklist file.");
+
   finishTest();
 }
