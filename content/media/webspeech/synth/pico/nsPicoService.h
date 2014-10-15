@@ -10,7 +10,6 @@
 #include "mozilla/Mutex.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
-#include "nsIObserver.h"
 #include "nsIThread.h"
 #include "nsISpeechService.h"
 #include "nsRefPtrHashtable.h"
@@ -27,8 +26,7 @@ typedef void* pico_System;
 typedef void* pico_Resource;
 typedef void* pico_Engine;
 
-class nsPicoService : public nsIObserver,
-                      public nsISpeechService
+class nsPicoService : public nsISpeechService
 {
   friend class PicoCallbackRunnable;
   friend class PicoInitRunnable;
@@ -36,7 +34,8 @@ class nsPicoService : public nsIObserver,
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISPEECHSERVICE
-  NS_DECL_NSIOBSERVER
+
+  nsPicoService();
 
   static nsPicoService* GetInstance();
 
@@ -83,19 +82,8 @@ private:
   nsAutoPtr<uint8_t> mPicoMemArea;
 
   static StaticRefPtr<nsPicoService> sSingleton;
-
-protected:
-  nsPicoService() : mInitialized(false)
-                  , mVoicesMonitor("nsPicoService::mVoices")
-                  , mCurrentTask(nullptr)
-                  , mPicoSystem(nullptr)
-                  , mPicoEngine(nullptr)
-                  , mSgResource(nullptr)
-                  , mTaResource(nullptr)
-                  , mPicoMemArea(nullptr)
-  {
-  }
 };
+
 } // namespace dom
 } // namespace mozilla
 
