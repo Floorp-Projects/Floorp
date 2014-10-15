@@ -26,7 +26,7 @@
 #include "TelephonyCall.h"
 #include "TelephonyCallGroup.h"
 #include "TelephonyCallId.h"
-#include "TelephonyCallback.h"
+#include "TelephonyDialCallback.h"
 
 // Service instantiation
 #include "ipc/TelephonyIPCService.h"
@@ -235,8 +235,8 @@ Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
     return promise.forget();
   }
 
-  nsCOMPtr<nsITelephonyCallback> callback =
-    new TelephonyCallback(GetOwner(), this, promise, aServiceId);
+  nsCOMPtr<nsITelephonyDialCallback> callback =
+    new TelephonyDialCallback(GetOwner(), this, promise, aServiceId);
 
   nsresult rv = mService->Dial(aServiceId, aNumber, aEmergency, callback);
   if (NS_FAILED(rv)) {
