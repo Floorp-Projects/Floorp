@@ -17,7 +17,7 @@ public class testAddonManager extends PixelTest  {
     public void testAddonManager() {
         Actions.EventExpecter tabEventExpecter;
         Actions.EventExpecter contentEventExpecter;
-        final String aboutAddonsURL = StringHelper.ABOUT_ADDONS_URL;
+        String url = StringHelper.ABOUT_ADDONS_URL;
 
         blockForGeckoReady();
 
@@ -36,22 +36,21 @@ public class testAddonManager extends PixelTest  {
         contentEventExpecter.unregisterListener();
 
         // Verify the url
-        verifyPageTitle(StringHelper.ADDONS_LABEL, aboutAddonsURL);
+        verifyPageTitle(StringHelper.ADDONS_LABEL);
 
         // Close the Add-on Manager
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
 
         // Load the about:addons page and verify it was loaded
-        loadAndPaint(aboutAddonsURL);
-        verifyPageTitle(StringHelper.ADDONS_LABEL, aboutAddonsURL);
+        loadAndPaint(url);
+        verifyPageTitle(StringHelper.ADDONS_LABEL);
 
         // Setup wait for tab to spawn and load
         tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
         contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
 
         // Open a new tab
-        final String blankURL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
-        addTab(blankURL);
+        addTab(getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL));
 
         // Wait for the new tab and page to load
         tabEventExpecter.blockForEvent();
@@ -64,7 +63,7 @@ public class testAddonManager extends PixelTest  {
         verifyTabCount(2);
 
         // Verify the page was opened
-        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE, blankURL);
+        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
 
         // Addons Manager is not opened 2 separate times when opened from the menu
         selectMenuItem(StringHelper.ADDONS_LABEL);

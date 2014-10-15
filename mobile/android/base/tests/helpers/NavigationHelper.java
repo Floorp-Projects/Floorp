@@ -44,7 +44,7 @@ final public class NavigationHelper {
     /**
      * Returns a new URL with the docshell HTTP server host prefix.
      */
-    public static String adjustUrl(final String url) {
+    private static String adjustUrl(final String url) {
         fAssertNotNull("url is not null", url);
 
         if (url.startsWith("about:") || url.startsWith("chrome:")) {
