@@ -61,6 +61,9 @@ function test() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
+    return new Promise(resolve => {
+      setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml", resolve);
+    });
   });
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
 
