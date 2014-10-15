@@ -13,6 +13,7 @@
 #include "mozilla/CDMProxy.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Move.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -282,6 +283,25 @@ MediaKeySession::DispatchKeyError(uint32_t aSystemCode)
   nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, event);
   asyncDispatcher->PostDOMEvent();
+}
+
+void
+MediaKeySession::DispatchKeysChange()
+{
+  if (IsClosed()) {
+    return;
+  }
+  DebugOnly<nsresult> rv =
+    nsContentUtils::DispatchTrustedEvent(mKeys->GetOwnerDoc(),
+                                         this,
+                                         NS_LITERAL_STRING("keyschange"),
+                                         false,
+                                         false);
+#ifdef DEBUG
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to dispatch keyschange event");
+  }
+#endif
 }
 
 } // namespace dom
