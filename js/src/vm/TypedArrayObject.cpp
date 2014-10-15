@@ -1815,51 +1815,6 @@ const Class TypedArrayObject::protoClasses[Scalar::TypeMax] = {
     IMPL_TYPED_ARRAY_PROTO_CLASS(Uint8ClampedArray)
 };
 
-JSObject *
-js_InitArrayBufferClass(JSContext *cx, HandleObject obj)
-{
-    Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
-    if (global->isStandardClassResolved(JSProto_ArrayBuffer))
-        return &global->getPrototype(JSProto_ArrayBuffer).toObject();
-
-    RootedNativeObject arrayBufferProto(cx, global->createBlankPrototype(cx, &ArrayBufferObject::protoClass));
-    if (!arrayBufferProto)
-        return nullptr;
-
-    RootedFunction ctor(cx, global->createConstructor(cx, ArrayBufferObject::class_constructor,
-                                                      cx->names().ArrayBuffer, 1));
-    if (!ctor)
-        return nullptr;
-
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_ArrayBuffer,
-                                              ctor, arrayBufferProto))
-    {
-        return nullptr;
-    }
-
-    if (!LinkConstructorAndPrototype(cx, ctor, arrayBufferProto))
-        return nullptr;
-
-    RootedId byteLengthId(cx, NameToId(cx->names().byteLength));
-    unsigned attrs = JSPROP_SHARED | JSPROP_GETTER;
-    JSObject *getter = NewFunction(cx, NullPtr(), ArrayBufferObject::byteLengthGetter, 0,
-                                   JSFunction::NATIVE_FUN, global, NullPtr());
-    if (!getter)
-        return nullptr;
-
-    if (!DefineNativeProperty(cx, arrayBufferProto, byteLengthId, UndefinedHandleValue,
-                              JS_DATA_TO_FUNC_PTR(PropertyOp, getter), nullptr, attrs))
-        return nullptr;
-
-    if (!JS_DefineFunctions(cx, ctor, ArrayBufferObject::jsstaticfuncs))
-        return nullptr;
-
-    if (!JS_DefineFunctions(cx, arrayBufferProto, ArrayBufferObject::jsfuncs))
-        return nullptr;
-
-    return arrayBufferProto;
-}
-
 /* static */ bool
 TypedArrayObject::isOriginalLengthGetter(Native native)
 {
