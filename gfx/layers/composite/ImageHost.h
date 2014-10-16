@@ -45,8 +45,6 @@ public:
 
   virtual CompositableType GetType() { return mTextureInfo.mCompositableType; }
 
-  virtual void SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData) MOZ_OVERRIDE;
-
   virtual void Composite(EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,
@@ -84,13 +82,12 @@ public:
 
   virtual void Unlock() MOZ_OVERRIDE;
 
-  virtual TemporaryRef<TextureSource> GetTextureSource();
-
   virtual TemporaryRef<TexturedEffect> GenEffect(const gfx::Filter& aFilter) MOZ_OVERRIDE;
 
 protected:
 
   RefPtr<TextureHost> mFrontBuffer;
+  CompositableTextureSourceRef mTextureSource;
   nsIntRect mPictureRect;
   bool mHasPictureRect;
   bool mLocked;
