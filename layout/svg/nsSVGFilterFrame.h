@@ -16,7 +16,6 @@ class nsIAtom;
 class nsIContent;
 class nsIFrame;
 class nsIPresShell;
-class nsRenderingContext;
 class nsStyleContext;
 class nsSVGIntegerPair;
 class nsSVGLength2;

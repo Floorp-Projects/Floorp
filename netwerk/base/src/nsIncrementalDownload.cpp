@@ -267,7 +267,6 @@ nsIncrementalDownload::ProcessTimeout()
                               nsContentUtils::GetSystemPrincipal(),
                               nsILoadInfo::SEC_NORMAL,
                               nsIContentPolicy::TYPE_OTHER,
-                              nullptr,   // aChannelPolicy
                               nullptr,   // loadGroup
                               this,      // aCallbacks
                               mLoadFlags);

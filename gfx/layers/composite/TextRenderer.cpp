@@ -134,7 +134,7 @@ TextRenderer::RenderText(const string& aText, const IntPoint& aOrigin,
   chain.mPrimaryEffect = effect;
 
   Matrix4x4 transform = aTransform;
-  transform.Scale(scaleFactor, scaleFactor, 1.0f);
+  transform.PreScale(scaleFactor, scaleFactor, 1.0f);
   mCompositor->DrawQuad(Rect(aOrigin.x, aOrigin.y, maxWidth, numLines * 16),
                         Rect(-10000, -10000, 20000, 20000), chain, 1.0f, transform);
 }

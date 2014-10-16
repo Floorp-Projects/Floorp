@@ -13,7 +13,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIViewSourceChannel.h"
-#include "nsChannelProperties.h"
 #include "nsContentUtils.h"
 #include "nsProxyRelease.h"
 

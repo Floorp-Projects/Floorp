@@ -95,6 +95,15 @@ struct BreadthFirst {
     // as many starting points as you like. Return false on OOM.
     bool addStart(Node node) { return pending.append(node); }
 
+    // Add |node| as a starting point for the traversal (see addStart) and also
+    // add it to the |visited| set. Return false on OOM.
+    bool addStartVisited(Node node) {
+        typename NodeMap::AddPtr ptr = visited.lookupForAdd(node);
+        if (!ptr && !visited.add(ptr, node, typename Handler::NodeData()))
+            return false;
+        return addStart(node);
+    }
+
     // True if the handler wants us to compute edge names; doing so can be
     // expensive in time and memory. True by default.
     bool wantNames;

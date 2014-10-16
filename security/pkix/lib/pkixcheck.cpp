@@ -348,10 +348,18 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
     // For compatibility, we must accept v1 trust anchors without basic
     // constraints as CAs.
     //
+    // There are devices with v1 certificates that are unlikely to be trust
+    // anchors. In order to allow applications to treat this case differently
+    // from other basic constraints violations (e.g. allowing certificate error
+    // overrides for only this case), we return a different error code.
+    //
     // TODO: add check for self-signedness?
-    if (endEntityOrCA == EndEntityOrCA::MustBeCA &&
-        trustLevel == TrustLevel::TrustAnchor && version == der::Version::v1) {
-      isCA = true;
+    if (endEntityOrCA == EndEntityOrCA::MustBeCA && version == der::Version::v1) {
+      if (trustLevel == TrustLevel::TrustAnchor) {
+        isCA = true;
+      } else {
+        return Result::ERROR_V1_CERT_USED_AS_CA;
+      }
     }
   }
 

@@ -156,6 +156,31 @@ GFX2D_API void AppendEllipseToPath(PathBuilder* aPathBuilder,
                                    const Point& aCenter,
                                    const Size& aDimensions);
 
+/**
+ * If aDrawTarget's transform only contains a translation, and if this line is
+ * a horizontal or vertical line, this function will snap the line's vertices
+ * to align with the device pixel grid so that stroking the line with a one
+ * pixel wide stroke will result in a crisp line that is not antialiased over
+ * two pixels across its width.
+ *
+ * @return Returns true if this function snaps aRect's vertices, else returns
+ *   false.
+ */
+GFX2D_API bool SnapLineToDevicePixelsForStroking(Point& aP1, Point& aP2,
+                                                 const DrawTarget& aDrawTarget);
+
+/**
+ * This function paints each edge of aRect separately, snapping the edges using
+ * SnapLineToDevicePixelsForStroking. Stroking the edges as separate paths
+ * helps ensure not only that the stroke spans a single row of device pixels if
+ * possible, but also that the ends of stroke dashes start and end on device
+ * pixels too.
+ */
+GFX2D_API void StrokeSnappedEdgesOfRect(const Rect& aRect,
+                                        DrawTarget& aDrawTarget,
+                                        const ColorPattern& aColor,
+                                        const StrokeOptions& aStrokeOptions);
+
 static inline bool
 UserToDevicePixelSnapped(Rect& aRect, const Matrix& aTransform)
 {

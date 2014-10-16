@@ -698,8 +698,8 @@ TEST_F(APZCBasicTester, ComplexTransform) {
     Matrix4x4(),
     Matrix4x4(),
   };
-  transforms[0].ScalePost(0.5f, 0.5f, 1.0f); // this results from the 2.0 resolution on the root layer
-  transforms[1].ScalePost(2.0f, 1.0f, 1.0f); // this is the 2.0 x-axis CSS transform on the child layer
+  transforms[0].PostScale(0.5f, 0.5f, 1.0f); // this results from the 2.0 resolution on the root layer
+  transforms[1].PostScale(2.0f, 1.0f, 1.0f); // this is the 2.0 x-axis CSS transform on the child layer
 
   nsTArray<nsRefPtr<Layer> > layers;
   nsRefPtr<LayerManager> lm;

@@ -46,8 +46,8 @@ class unbufferedLineConverter:
 objdump_section_re = re.compile("^ [0-9a-f]* ([0-9a-f ]{8}) ([0-9a-f ]{8}) ([0-9a-f ]{8}) ([0-9a-f ]{8}).*")
 def elf_section(file, section):
     """
-    Return the requested ELF section of the file as a str, represented
-    as a sequence of bytes.
+    Return the requested ELF section of the file as a str, representing
+    a sequence of bytes.
     """
     # We can read the .gnu_debuglink section using either of:
     #   objdump -s --section=.gnu_debuglink $file
@@ -136,8 +136,8 @@ gnu_debuglink_crc32_table = [
 ]
 
 def gnu_debuglink_crc32(stream):
-    # Note that treats bitwise operators as though integers have an
-    # infinite number of bits (and thus such that negative integers
+    # Note that python treats bitwise operators as though integers have
+    # an infinite number of bits (and thus such that negative integers
     # 1-pad out to infinity).
     crc = 0xffffffff
     while True:

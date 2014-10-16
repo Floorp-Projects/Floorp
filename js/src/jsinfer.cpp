@@ -2931,8 +2931,14 @@ UpdatePropertyType(ExclusiveContext *cx, HeapTypeSet *types, NativeObject *obj, 
          * Don't add initial undefined types for properties of global objects
          * that are not collated into the JSID_VOID property (see propertySet
          * comment).
+         *
+         * Also don't add initial uninitialized lexical magic values as
+         * appearing in CallObjects.
          */
-        if (indexed || !value.isUndefined() || !CanHaveEmptyPropertyTypesForOwnProperty(obj)) {
+        MOZ_ASSERT_IF(value.isMagic(JS_UNINITIALIZED_LEXICAL), obj->is<CallObject>());
+        if ((indexed || !value.isUndefined() || !CanHaveEmptyPropertyTypesForOwnProperty(obj)) &&
+            !value.isMagic(JS_UNINITIALIZED_LEXICAL))
+        {
             Type type = GetValueType(value);
             types->TypeSet::addType(type, &cx->typeLifoAlloc());
         }

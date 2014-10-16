@@ -88,7 +88,6 @@ gfxContext::gfxContext(DrawTarget *aTarget, const Point& aDeviceOffset)
   : mPathIsRect(false)
   , mTransformChanged(false)
   , mRefCairo(nullptr)
-  , mSurface(nullptr)
   , mFlags(0)
   , mDT(aTarget)
   , mOriginalDT(aTarget)
@@ -128,24 +127,6 @@ gfxContext::~gfxContext()
   }
   mDT->Flush();
   MOZ_COUNT_DTOR(gfxContext);
-}
-
-gfxASurface *
-gfxContext::OriginalSurface()
-{
-    if (mSurface) {
-        return mSurface;
-    }
-
-    if (mOriginalDT && mOriginalDT->GetBackendType() == BackendType::CAIRO) {
-        cairo_surface_t *s =
-            (cairo_surface_t*)mOriginalDT->GetNativeSurface(NativeSurfaceType::CAIRO_SURFACE);
-        if (s) {
-            mSurface = gfxASurface::Wrap(s);
-            return mSurface;
-        }
-    }
-    return nullptr;
 }
 
 already_AddRefed<gfxASurface>

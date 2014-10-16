@@ -1,0 +1,78 @@
+html {
+    background-color: #EDECEB;
+    font: message-box;
+}
+
+#logs {
+    font-family: monospace;
+}
+
+.peer-connections {
+    padding: 2em;
+    margin: 1em 0em;
+    border: 1px solid #AFACA9;
+    border-radius: 10px;
+    background: none repeat scroll 0% 0% #FFF;
+}
+
+.peer-connection h3 {
+    background-color: #DDD;
+    cursor: pointer;
+}
+
+.peer-connection h3 span:last-child {
+    float: right;
+}
+
+.peer-connection section {
+    border: 1px solid #AFACA9;
+    padding: 10px;
+}
+
+.peer-connection table {
+    width: 100%;
+    text-align: center;
+    border: none;
+}
+
+.peer-connection table th,
+.peer-connection table td {
+    padding: 0.4em;
+}
+
+.peer-connection table tr:nth-child(even) {
+    background-color: #DDD;
+}
+
+.pcid span:first-child {
+    font-weight: bold;
+}
+
+.tabs > ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 3px 10px;
+}
+
+.tabs li {
+  display: inline;
+  position: relative;
+  top: 1px;
+  padding: 3px 10px;
+}
+
+.tabs li > a {
+  text-decoration: none;
+  padding: 0 2em;
+}
+
+.tabs li.active {
+  background-color: #FFF;
+  border: 1px solid #AFACA9;
+  border-bottom: none;
+}
+
+.tabs section {
+  clear: both;
+}
+
