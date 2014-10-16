@@ -774,6 +774,7 @@ class AsmJSModule
         size_t                            codeBytes_;     // function bodies and stubs
         size_t                            totalBytes_;    // function bodies, stubs, and global data
         uint32_t                          minHeapLength_;
+        uint32_t                          maxHeapLength_;
         uint32_t                          heapLengthMask_;
         uint32_t                          numGlobalScalarVars_;
         uint32_t                          numGlobalSimdVars_;
@@ -818,6 +819,8 @@ class AsmJSModule
     uint8_t *                             interruptExit_;
     StaticLinkData                        staticLinkData_;
     HeapPtrArrayBufferObjectMaybeShared   maybeHeap_;
+    AsmJSModule **                        prevLinked_;
+    AsmJSModule *                         nextLinked_;
     bool                                  dynamicallyLinked_;
     bool                                  loadedFromCache_;
     bool                                  profilingEnabled_;
@@ -826,6 +829,10 @@ class AsmJSModule
     // This field is accessed concurrently when requesting an interrupt.
     // Access must be synchronized via the runtime's interrupt lock.
     mutable bool                          codeIsProtected_;
+
+    void restoreHeapToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer);
+    void restoreToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer, uint8_t *prevCode,
+                               ExclusiveContext *cx);
 
   public:
     explicit AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t srcBodyStart,
@@ -883,6 +890,9 @@ class AsmJSModule
     // change as the module is compiled.
     uint32_t minHeapLength() const {
         return pod.minHeapLength_;
+    }
+    uint32_t maxHeapLength() const {
+        return pod.maxHeapLength_;
     }
     uint32_t heapLengthMask() const {
         MOZ_ASSERT(pod.hasFixedMinHeapLength_);
@@ -1044,18 +1054,27 @@ class AsmJSModule
     /*************************************************************************/
     // These functions are called while parsing/compiling function bodies:
 
-    void addChangeHeap(uint32_t mask, uint32_t min) {
+    bool hasArrayView() const {
+        MOZ_ASSERT(isFinishedWithModulePrologue());
+        return pod.hasArrayView_;
+    }
+    void addChangeHeap(uint32_t mask, uint32_t min, uint32_t max) {
         MOZ_ASSERT(isFinishedWithModulePrologue());
         MOZ_ASSERT(!pod.hasFixedMinHeapLength_);
         MOZ_ASSERT(IsValidAsmJSHeapLength(mask + 1));
         MOZ_ASSERT(min >= RoundUpToNextValidAsmJSHeapLength(0));
+        MOZ_ASSERT(max <= pod.maxHeapLength_);
+        MOZ_ASSERT(min <= max);
         pod.heapLengthMask_ = mask;
         pod.minHeapLength_ = min;
+        pod.maxHeapLength_ = max;
         pod.hasFixedMinHeapLength_ = true;
     }
     bool tryRequireHeapLengthToBeAtLeast(uint32_t len) {
         MOZ_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
         if (pod.hasFixedMinHeapLength_ && len > pod.minHeapLength_)
+            return false;
+        if (len > pod.maxHeapLength_)
             return false;
         len = RoundUpToNextValidAsmJSHeapLength(len);
         if (len > pod.minHeapLength_)
@@ -1228,10 +1247,6 @@ class AsmJSModule
     /*************************************************************************/
     // These accessor functions can be used after finish():
 
-    bool hasArrayView() const {
-        MOZ_ASSERT(isFinished());
-        return pod.hasArrayView_;
-    }
     unsigned numFFIs() const {
         MOZ_ASSERT(isFinished());
         return pod.numFFIs_;
@@ -1440,23 +1455,37 @@ class AsmJSModule
     // specializes it to a particular set of arguments. In particular, this
     // binds the code to a particular heap (via initHeap) and set of global
     // variables. A given asm.js module cannot be dynamically linked more than
-    // once so, if JS tries, the module is cloned.
-    void setIsDynamicallyLinked() {
+    // once so, if JS tries, the module is cloned. When linked, an asm.js module
+    // is kept in a list so that it can be updated if the linked buffer is
+    // detached.
+    void setIsDynamicallyLinked(JSRuntime *rt) {
         MOZ_ASSERT(!isDynamicallyLinked());
         dynamicallyLinked_ = true;
+        nextLinked_ = rt->linkedAsmJSModules;
+        prevLinked_ = &rt->linkedAsmJSModules;
+        if (nextLinked_)
+            nextLinked_->prevLinked_ = &nextLinked_;
+        rt->linkedAsmJSModules = this;
         MOZ_ASSERT(isDynamicallyLinked());
     }
+
     void initHeap(Handle<ArrayBufferObjectMaybeShared*> heap, JSContext *cx);
-    void restoreHeapToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer);
-    void restoreToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer,
-                               uint8_t *prevCode,
-                               ExclusiveContext *cx);
-    bool clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) const;
     bool changeHeap(Handle<ArrayBufferObject*> newHeap, JSContext *cx);
+    bool detachHeap(JSContext *cx);
+
+    bool clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) const;
 
     /*************************************************************************/
     // Functions that can be called after dynamic linking succeeds:
 
+    AsmJSModule *nextLinked() const {
+        MOZ_ASSERT(isDynamicallyLinked());
+        return nextLinked_;
+    }
+    bool hasDetachedHeap() const {
+        MOZ_ASSERT(isDynamicallyLinked());
+        return hasArrayView() && !heapDatum();
+    }
     CodePtr entryTrampoline(const ExportedFunction &func) const {
         MOZ_ASSERT(isDynamicallyLinked());
         MOZ_ASSERT(!func.isChangeHeap());
@@ -1510,6 +1539,10 @@ LookupAsmJSModuleInCache(ExclusiveContext *cx,
                          AsmJSParser &parser,
                          ScopedJSDeletePtr<AsmJSModule> *module,
                          ScopedJSFreePtr<char> *compilationTimeReport);
+
+// This function must be called for every detached ArrayBuffer.
+extern bool
+OnDetachAsmJSArrayBuffer(JSContext *cx, Handle<ArrayBufferObject*> buffer);
 
 // An AsmJSModuleObject is an internal implementation object (i.e., not exposed
 // directly to user script) which manages the lifetime of an AsmJSModule. A

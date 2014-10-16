@@ -1011,9 +1011,10 @@ Chunk::releaseArena(ArenaHeader *aheader)
     MOZ_ASSERT(!aheader->hasDelayedMarking);
     Zone *zone = aheader->zone;
     JSRuntime *rt = zone->runtimeFromAnyThread();
-    AutoLockGC maybeLock;
+
+    Maybe<AutoLockGC> maybeLock;
     if (rt->gc.isBackgroundSweeping())
-        maybeLock.lock(rt);
+        maybeLock.emplace(rt);
 
     if (rt->gc.isBackgroundSweeping())
         zone->threshold.updateForRemovedArena(rt->gc.tunables);
@@ -1924,11 +1925,11 @@ ArenaLists::allocateFromArena(JS::Zone *zone, AllocKind thingKind,
                               AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc)
 {
     JSRuntime *rt = zone->runtimeFromAnyThread();
-    AutoLockGC maybeLock;
+    Maybe<AutoLockGC> maybeLock;
 
     // See if we can proceed without taking the GC lock.
     if (backgroundFinalizeState[thingKind] != BFS_DONE)
-        maybeLock.lock(rt);
+        maybeLock.emplace(rt);
 
     ArenaList &al = arenaLists[thingKind];
     ArenaHeader *aheader = al.takeNextArena();
@@ -1941,8 +1942,8 @@ ArenaLists::allocateFromArena(JS::Zone *zone, AllocKind thingKind,
 
     // Parallel threads have their own ArenaLists, but chunks are shared;
     // if we haven't already, take the GC lock now to avoid racing.
-    if (!maybeLock.locked())
-        maybeLock.lock(rt);
+    if (maybeLock.isNothing())
+        maybeLock.emplace(rt);
 
     Chunk *chunk = rt->gc.pickChunk(zone, maybeStartBGAlloc);
     if (!chunk)

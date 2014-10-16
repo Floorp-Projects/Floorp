@@ -178,8 +178,6 @@ button {
 
 input[type="radio"],
 input[type="checkbox"] {
-  max-width: 14px;
-  max-height: 14px;
   border: 1px solid #a7a7a7 !important;
   padding: 2px 1px 2px 1px;
 }

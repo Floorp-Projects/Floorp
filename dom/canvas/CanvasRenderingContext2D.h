@@ -698,7 +698,9 @@ protected:
   /**
    * Check if the target is valid after calling EnsureTarget.
    */
-  bool IsTargetValid() { return mTarget != sErrorTarget && mTarget != nullptr; }
+  bool IsTargetValid() const {
+    return mTarget != sErrorTarget && mTarget != nullptr;
+  }
 
   /**
     * Returns the surface format this canvas should be allocated using. Takes
@@ -763,6 +765,8 @@ protected:
   // accessing it. In the event of an error it will be equal to
   // sErrorTarget.
   mozilla::RefPtr<mozilla::gfx::DrawTarget> mTarget;
+
+  uint32_t SkiaGLTex() const;
 
   /**
     * Flag to avoid duplicate calls to InvalidateFrame. Set to true whenever

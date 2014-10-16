@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1037990
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1037990</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1037990">Mozilla Bug 1037990</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+
+  /** Test for Bug 1037990 **/
+
+  var pre, node, detachedAccess, attachedAcess;
+
+  node = document.createElement('a');
+  node.href = 'http://example.org';
+  node.accessKey = 'e';
+  detachedAccess = node.accessKeyLabel;
+  info('[window.document] detached: ' + detachedAccess);
+  document.body.appendChild(node);
+  attachedAcess = node.accessKeyLabel;
+  info('[window.document] attached: ' + attachedAcess);
+  is(detachedAccess, attachedAcess, "Both values are same for the window.document");
+
+  var parser=new DOMParser();
+  var xmlDoc=parser.parseFromString("<root></root>","text/xml");
+  var nn = xmlDoc.createElementNS('http://www.w3.org/1999/xhtml','a');
+  nn.setAttribute('accesskey','t')
+  detachedAccess = nn.accessKeyLabel;
+  info('[xmlDoc] detached: ' + detachedAccess);
+  var root = xmlDoc.getElementsByTagName('root')[0];
+  root.appendChild(nn);
+  attachedAcess = nn.accessKeyLabel;
+  info('[xmlDoc] attached: ' + attachedAcess);
+  is(detachedAccess, attachedAcess, "Both values are same for the xmlDoc");
+
+  var myDoc = new Document();
+  var newnode = myDoc.createElementNS('http://www.w3.org/1999/xhtml','a');
+  newnode.href = 'http://example.org';
+  newnode.accessKey = 'f';
+  detachedAccess = newnode.accessKeyLabel;
+  info('[new document] detached: ' + detachedAccess);
+  myDoc.appendChild(newnode);
+  attachedAcess = newnode.accessKeyLabel;
+  info('[new document] attached: ' + attachedAcess);
+  is(detachedAccess, attachedAcess, "Both values are same for the new Document()");
+
+</script>
+</body>
+</html>
