@@ -128,28 +128,6 @@ nsRenderingContext::SetClip(const nsIntRegion& aRegion)
 }
 
 void
-nsRenderingContext::SetLineStyle(nsLineStyle aLineStyle)
-{
-    switch (aLineStyle) {
-        case nsLineStyle_kSolid:
-            mThebes->SetDash(gfxContext::gfxLineSolid);
-            break;
-        case nsLineStyle_kDashed:
-            mThebes->SetDash(gfxContext::gfxLineDashed);
-            break;
-        case nsLineStyle_kDotted:
-            mThebes->SetDash(gfxContext::gfxLineDotted);
-            break;
-        case nsLineStyle_kNone:
-        default:
-            // nothing uses kNone
-            NS_ERROR("SetLineStyle: Invalid line style");
-            break;
-    }
-}
-
-
-void
 nsRenderingContext::SetColor(nscolor aColor)
 {
     /* This sets the color assuming the sRGB color space, since that's
