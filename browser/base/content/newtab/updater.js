@@ -154,14 +154,13 @@ let gUpdater = {
    */
   _fillEmptyCells: function Updater_fillEmptyCells(aLinks, aCallback) {
     let {cells, sites} = gGrid;
-    let batch = [];
 
     // Find empty cells and fill them.
-    sites.forEach(function (aSite, aIndex) {
+    Promise.all(sites.map((aSite, aIndex) => {
       if (aSite || !aLinks[aIndex])
-        return;
+        return null;
 
-      batch.push(new Promise(resolve => {
+      return new Promise(resolve => {
         // Create the new site and fade it in.
         let site = gGrid.createSite(aLinks[aIndex], cells[aIndex]);
 
@@ -172,9 +171,7 @@ let gUpdater = {
         // the fade-in transition work.
         window.getComputedStyle(site.node).opacity;
         gTransformation.showSite(site, resolve);
-      }));
-    });
-
-    Promise.all(batch).then(aCallback);
+      });
+    })).then(aCallback).catch(console.exception);
   }
 };

@@ -21,7 +21,9 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "GeckoProfiler.h"
+#ifdef MOZ_ENABLE_PROFILER_SPS
 #include "ProfilerMarkers.h"
+#endif
 
 // Helper Classes
 #include "nsCOMPtr.h"
@@ -951,6 +953,8 @@ private:
 
     // Storing profile timeline markers and if/when recording started
     mozilla::TimeStamp mProfileTimelineStartTime;
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
     struct InternalProfileTimelineMarker
     {
       InternalProfileTimelineMarker(const char* aName,
@@ -971,6 +975,7 @@ private:
       float mTime;
     };
     nsTArray<InternalProfileTimelineMarker*> mProfileTimelineMarkers;
+#endif
 
     // Get the elapsed time (in millis) since the profile timeline recording
     // started

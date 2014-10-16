@@ -23,7 +23,7 @@ public abstract class GeckoRequest {
      *
      * @param name The name of the event associated with this request, which must have a
      *             Gecko-side listener registered to respond to this request.
-     * @param data Data to send with this request, which can be any object serializeable by
+     * @param data Data to send with this request, which can be any object serializable by
      *             {@link JSONObject#put(String, Object)}.
      */
     @RobocopTarget

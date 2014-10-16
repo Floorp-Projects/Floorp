@@ -305,7 +305,7 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                     // History with and without bookmark.
                     " SELECT " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
                                  qualifyColumn(TABLE_HISTORY, History.URL) + " AS " + Combined.URL + ", " +
-                                 // Prioritze bookmark titles over history titles, since the user may have
+                                 // Prioritize bookmark titles over history titles, since the user may have
                                  // customized the title for a bookmark.
                                  "COALESCE(" + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TITLE) + ", " +
                                                qualifyColumn(TABLE_HISTORY, History.TITLE) +")" + " AS " + Combined.TITLE + ", " +
@@ -360,7 +360,7 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                     // History with and without bookmark.
                     " SELECT " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
                                  qualifyColumn(TABLE_HISTORY, History.URL) + " AS " + Combined.URL + ", " +
-                                 // Prioritze bookmark titles over history titles, since the user may have
+                                 // Prioritize bookmark titles over history titles, since the user may have
                                  // customized the title for a bookmark.
                                  "COALESCE(" + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TITLE) + ", " +
                                                qualifyColumn(TABLE_HISTORY, History.TITLE) +")" + " AS " + Combined.TITLE + ", " +
@@ -419,7 +419,7 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                     " SELECT " + "CASE " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED) + " WHEN 0 THEN " +
                                  qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) +  " ELSE NULL END AS " + Combined.BOOKMARK_ID + ", " +
                                  qualifyColumn(TABLE_HISTORY, History.URL) + " AS " + Combined.URL + ", " +
-                                 // Prioritze bookmark titles over history titles, since the user may have
+                                 // Prioritize bookmark titles over history titles, since the user may have
                                  // customized the title for a bookmark.
                                  "COALESCE(" + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TITLE) + ", " +
                                                qualifyColumn(TABLE_HISTORY, History.TITLE) +")" + " AS " + Combined.TITLE + ", " +
@@ -478,7 +478,7 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                     " SELECT " + "CASE " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED) + " WHEN 0 THEN " +
                                  qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) +  " ELSE NULL END AS " + Combined.BOOKMARK_ID + ", " +
                                  qualifyColumn(TABLE_HISTORY, History.URL) + " AS " + Combined.URL + ", " +
-                                 // Prioritze bookmark titles over history titles, since the user may have
+                                 // Prioritize bookmark titles over history titles, since the user may have
                                  // customized the title for a bookmark.
                                  "COALESCE(" + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TITLE) + ", " +
                                                qualifyColumn(TABLE_HISTORY, History.TITLE) +")" + " AS " + Combined.TITLE + ", " +

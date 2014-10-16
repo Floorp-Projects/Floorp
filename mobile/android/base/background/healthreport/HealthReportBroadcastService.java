@@ -108,7 +108,7 @@ public class HealthReportBroadcastService extends BackgroundService {
 
     // The same intent can be handled by multiple methods so do not short-circuit evaluate.
     boolean handled = attemptHandleIntentForUpload(intent);
-    handled = attemptHandleIntentForPrune(intent) ? true : handled;
+    handled = attemptHandleIntentForPrune(intent) || handled;
 
     if (!handled) {
       Logger.warn(LOG_TAG, "Unhandled intent with action " + intent.getAction() + ".");

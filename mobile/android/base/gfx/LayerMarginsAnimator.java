@@ -45,7 +45,7 @@ public class LayerMarginsAnimator {
     /* The distance that has been scrolled since either the first touch event,
      * or since the margins were last fully hidden */
     private final PointF mTouchTravelDistance;
-    /* The ID of the prefs listener for the show-marginss threshold */
+    /* The ID of the prefs listener for the show-margins threshold */
     private Integer mPrefObserverId;
 
     public LayerMarginsAnimator(GeckoLayerClient aTarget, LayerView aView) {

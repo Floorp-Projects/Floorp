@@ -66,7 +66,7 @@ public class TopSitesCursorWrapper implements Cursor {
     // The cursor for the pinned sites query
     private final Cursor pinnedCursor;
 
-    // The cursor for the sugested sites query
+    // The cursor for the suggested sites query
     private final Cursor suggestedCursor;
 
     // Associates pinned sites and their respective positions

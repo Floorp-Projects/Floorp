@@ -52,8 +52,8 @@ class TextSelection extends Layer implements GeckoEventListener {
 
     private TextSelectionActionModeCallback mCallback;
 
-    // These timers are used to avoid flicker caused by selection handles showing/hiding quickly. For isntance
-    // when moving between single handle caret mode and two handle selection mode.
+    // These timers are used to avoid flicker caused by selection handles showing/hiding quickly.
+    // For instance when moving between single handle caret mode and two handle selection mode.
     private final Timer mActionModeTimer = new Timer("actionMode");
     private class ActionModeTimerTask extends TimerTask {
         @Override

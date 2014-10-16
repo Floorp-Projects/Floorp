@@ -54,10 +54,10 @@ public class EditBookmarkDialog {
 
     /**
      * This text watcher to enable or disable the OK button if the dialog contains
-     * valid information. This class is overridden to do data checking diffferent fields.
+     * valid information. This class is overridden to do data checking on different fields.
      * By itself, it always enables the button.
      *
-     * Callers can also assing a paired partner to the TextWatcher, and callers will check
+     * Callers can also assign a paired partner to the TextWatcher, and callers will check
      * that both are enabled before enabling the ok button.
      */
     private class EditBookmarkTextWatcher implements TextWatcher {

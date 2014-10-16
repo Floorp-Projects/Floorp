@@ -22,7 +22,7 @@ The question, then, is when to do so.
 Locale events
 =============
 
-One might imagine that we need only set the locale when our Application is instantiated, and when a new locale is set. Alas, that's not the case: whenever there's a configuration change (*e.g.*, screen rotation), when a new activity is started, and at other apparently random times, Android will supply our activities with a configuration that's been reset to the sytem locale.
+One might imagine that we need only set the locale when our Application is instantiated, and when a new locale is set. Alas, that's not the case: whenever there's a configuration change (*e.g.*, screen rotation), when a new activity is started, and at other apparently random times, Android will supply our activities with a configuration that's been reset to the system locale.
 
 For this reason, each starting activity must ask ``BrowserLocaleManager`` to fix its locale.
 
