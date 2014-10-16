@@ -7,6 +7,7 @@
 
 var expect = chai.expect;
 var TestUtils = React.addons.TestUtils;
+var sharedUtils = loop.shared.utils;
 
 describe("loop.panel", function() {
   "use strict";
@@ -377,6 +378,7 @@ describe("loop.panel", function() {
 
       it("should display a share button for email", function() {
         fakeClient.requestCallUrl = sandbox.stub();
+        var composeCallUrlEmail = sandbox.stub(sharedUtils, "composeCallUrlEmail");
         var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
           notifications: notifications,
           client: fakeClient
@@ -385,7 +387,9 @@ describe("loop.panel", function() {
 
         TestUtils.findRenderedDOMComponentWithClass(view, "button-email");
         TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-email"));
-        sinon.assert.calledOnce(navigator.mozLoop.composeEmail);
+
+        sinon.assert.calledOnce(composeCallUrlEmail);
+        sinon.assert.calledWithExactly(composeCallUrlEmail, "http://example.com");
       });
 
       it("should feature a copy button capable of copying the call url when clicked", function() {
