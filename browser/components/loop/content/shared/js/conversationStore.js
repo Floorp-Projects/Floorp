@@ -327,10 +327,25 @@ loop.store.ConversationStore = (function() {
      */
     _setupOutgoingCall: function() {
       var contactAddresses = [];
+      var contact = this.get("contact");
 
-      this.get("contact").email.forEach(function(address) {
-        contactAddresses.push(address.value);
-      });
+      function appendContactValues(property, strip) {
+        if (contact.hasOwnProperty(property)) {
+          contact[property].forEach(function(item) {
+            if (strip) {
+              contactAddresses.push(item.value
+                .replace(/^(\+)?(.*)$/g, function(m, prefix, number) {
+                  return (prefix || "") + number.replace(/[\D]+/g, "");
+                }));
+            } else {
+              contactAddresses.push(item.value);
+            }
+          });
+        }
+      }
+
+      appendContactValues("email");
+      appendContactValues("tel", true);
 
       this.client.setupOutgoingCall(contactAddresses,
         this.get("callType"),
