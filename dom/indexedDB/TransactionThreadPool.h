@@ -15,6 +15,7 @@
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
+struct nsID;
 class nsIEventTarget;
 class nsIRunnable;
 class nsIThreadPool;
@@ -55,13 +56,13 @@ public:
 
   uint64_t NextTransactionId();
 
-  void Dispatch(uint64_t aTransactionId,
-                const nsACString& aDatabaseId,
-                const nsTArray<nsString>& aObjectStoreNames,
-                uint16_t aMode,
-                nsIRunnable* aRunnable,
-                bool aFinish,
-                FinishCallback* aFinishCallback);
+  void Start(uint64_t aTransactionId,
+             const nsACString& aDatabaseId,
+             const nsTArray<nsString>& aObjectStoreNames,
+             uint16_t aMode,
+             const nsID& aBackgroundChildLoggingId,
+             int64_t aLoggingSerialNumber,
+             nsIRunnable* aRunnable);
 
   void Dispatch(uint64_t aTransactionId,
                 const nsACString& aDatabaseId,
@@ -114,11 +115,13 @@ private:
   TransactionQueue* GetQueueForTransaction(uint64_t aTransactionId,
                                            const nsACString& aDatabaseId);
 
-  TransactionQueue& GetQueueForTransaction(
+  TransactionQueue& CreateQueueForTransaction(
                                     uint64_t aTransactionId,
                                     const nsACString& aDatabaseId,
                                     const nsTArray<nsString>& aObjectStoreNames,
-                                    uint16_t aMode);
+                                    uint16_t aMode,
+                                    const nsID& aBackgroundChildLoggingId,
+                                    int64_t aLoggingSerialNumber);
 
   bool MaybeFireCallback(DatabasesCompleteCallback* aCallback);
 

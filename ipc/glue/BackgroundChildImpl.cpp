@@ -4,12 +4,14 @@
 
 #include "BackgroundChildImpl.h"
 
+#include "ActorsChild.h" // IndexedDB
 #include "FileDescriptorSetChild.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/PBlobChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
+#include "nsID.h"
 #include "nsTraceRefcnt.h"
 
 namespace {
@@ -48,11 +50,6 @@ namespace ipc {
 
 BackgroundChildImpl::
 ThreadLocal::ThreadLocal()
-  : mCurrentTransaction(nullptr)
-#ifdef MOZ_ENABLE_PROFILER_SPS
-  , mNextTransactionSerialNumber(1)
-  , mNextRequestSerialNumber(1)
-#endif
 {
   // May happen on any thread!
   MOZ_COUNT_CTOR(mozilla::ipc::BackgroundChildImpl::ThreadLocal);
@@ -136,7 +133,8 @@ BackgroundChildImpl::DeallocPBackgroundTestChild(PBackgroundTestChild* aActor)
 }
 
 BackgroundChildImpl::PBackgroundIDBFactoryChild*
-BackgroundChildImpl::AllocPBackgroundIDBFactoryChild()
+BackgroundChildImpl::AllocPBackgroundIDBFactoryChild(
+                                                const LoggingInfo& aLoggingInfo)
 {
   MOZ_CRASH("PBackgroundIDBFactoryChild actors should be manually "
             "constructed!");
