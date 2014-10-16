@@ -26,6 +26,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
 
 
 const UITOUR_PERMISSION   = "uitour";
+const PREF_TEST_WHITELIST = "browser.uitour.testingOrigins";
 const PREF_SEENPAGEIDS    = "browser.uitour.seenPageIDs";
 const MAX_BUTTONS         = 4;
 
@@ -620,6 +621,25 @@ this.UITour = {
                            .wrappedJSObject;
   },
 
+  isTestingOrigin: function(aURI) {
+    if (Services.prefs.getPrefType(PREF_TEST_WHITELIST) != Services.prefs.PREF_STRING) {
+      return false;
+    }
+
+    // Add any testing origins (comma-seperated) to the whitelist for the session.
+    for (let origin of Services.prefs.getCharPref(PREF_TEST_WHITELIST).split(",")) {
+      try {
+        let testingURI = Services.io.newURI(origin, null, null);
+        if (aURI.prePath == testingURI.prePath) {
+          return true;
+        }
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+    }
+    return false;
+  },
+
   ensureTrustedOrigin: function(aDocument) {
     if (aDocument.defaultView.top != aDocument.defaultView)
       return false;
@@ -633,7 +653,10 @@ this.UITour = {
       return false;
 
     let permission = Services.perms.testPermission(uri, UITOUR_PERMISSION);
-    return permission == Services.perms.ALLOW_ACTION;
+    if (permission == Services.perms.ALLOW_ACTION)
+      return true;
+
+    return this.isTestingOrigin(uri);
   },
 
   isSafeScheme: function(aURI) {
