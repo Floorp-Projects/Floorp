@@ -35,13 +35,6 @@ public:
    * Inherited from LibHandle/BaseElf
    */
   virtual ~CustomElf();
-  virtual void *GetSymbolPtr(const char *symbol) const;
-  virtual bool Contains(void *addr) const;
-  virtual void *GetBase() const { return GetPtr(0); }
-
-#ifdef __ARM_EABI__
-  virtual const void *FindExidx(int *pcount) const;
-#endif
 
 protected:
   virtual Mappable *GetMappable() const;
@@ -161,11 +154,6 @@ private:
   bool initialized;
 
   bool has_text_relocs;
-
-#ifdef __ARM_EABI__
-  /* ARM.exidx information used by FindExidx */
-  Array<uint32_t[2]> arm_exidx;
-#endif
 };
 
 #endif /* CustomElf_h */
