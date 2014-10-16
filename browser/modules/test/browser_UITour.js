@@ -25,6 +25,23 @@ let tests = [
       done();
     }, "http://mochi.test:8888/");
   },
+  function test_testing_host(done) {
+    // Add two testing origins intentionally surrounded by whitespace to be ignored.
+    Services.prefs.setCharPref("browser.uitour.testingOrigins",
+                               "https://test1.example.com, https://test2.example.com:443 ");
+
+    registerCleanupFunction(() => {
+      Services.prefs.clearUserPref("browser.uitour.testingOrigins");
+    });
+    function callback(result) {
+      ok(result, "Callback should be called on a testing origin");
+      done();
+    }
+
+    loadUITourTestPage(function() {
+      gContentAPI.getConfiguration("appinfo", callback);
+    }, "https://test2.example.com/");
+  },
   function test_unsecure_host(done) {
     loadUITourTestPage(function() {
       let bookmarksMenu = document.getElementById("bookmarks-menu-button");
