@@ -276,6 +276,79 @@ describe("loop.store.ConversationStore", function () {
           ["fakeEmail"], sharedUtils.CALL_TYPES.AUDIO_VIDEO);
       });
 
+      it("should include all email addresses in the call data", function() {
+        contact = {
+          name: [ "Mr Smith" ],
+          email: [{
+            type: "home",
+            value: "fakeEmail",
+            pref: true
+          },
+          {
+            type: "work",
+            value: "emailFake",
+            pref: false
+          }]
+        };
+
+        dispatcher.dispatch(
+          new sharedActions.GatherCallData(outgoingCallData));
+
+        sinon.assert.calledOnce(client.setupOutgoingCall);
+        sinon.assert.calledWith(client.setupOutgoingCall,
+          ["fakeEmail", "emailFake"], sharedUtils.CALL_TYPES.AUDIO_VIDEO);
+      });
+
+      it("should include trim phone numbers for the call data", function() {
+        contact = {
+          name: [ "Mr Smith" ],
+          tel: [{
+            type: "home",
+            value: "+44-5667+345 496(2335)45+ 456+",
+            pref: true
+          }]
+        };
+
+        dispatcher.dispatch(
+          new sharedActions.GatherCallData(outgoingCallData));
+
+        sinon.assert.calledOnce(client.setupOutgoingCall);
+        sinon.assert.calledWith(client.setupOutgoingCall,
+          ["+445667345496233545456"], sharedUtils.CALL_TYPES.AUDIO_VIDEO);
+      });
+
+      it("should include all email and telephone values in the call data", function() {
+        contact = {
+          name: [ "Mr Smith" ],
+          email: [{
+            type: "home",
+            value: "fakeEmail",
+            pref: true
+          }, {
+            type: "work",
+            value: "emailFake",
+            pref: false
+          }],
+          tel: [{
+            type: "work",
+            value: "01234567890",
+            pref: false
+          }, {
+            type: "home",
+            value: "09876543210",
+            pref: false
+          }]
+        };
+
+        dispatcher.dispatch(
+          new sharedActions.GatherCallData(outgoingCallData));
+
+        sinon.assert.calledOnce(client.setupOutgoingCall);
+        sinon.assert.calledWith(client.setupOutgoingCall,
+          ["fakeEmail", "emailFake", "01234567890", "09876543210"],
+          sharedUtils.CALL_TYPES.AUDIO_VIDEO);
+      });
+
       describe("server response handling", function() {
         beforeEach(function() {
           sandbox.stub(dispatcher, "dispatch");
