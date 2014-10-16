@@ -17,8 +17,3 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-# We have to filter out -pedantic, because of
-# comma-at-end-of-enumerator list failures.  We can try to get this fixed
-# upstream at some point.
-CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
-CFLAGS   := $(filter-out -pedantic,$(CFLAGS))
