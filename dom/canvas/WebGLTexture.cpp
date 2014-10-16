@@ -573,8 +573,8 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
                         texelsize,
                         mContext->mPixelStoreUnpackAlignment);
     MOZ_ASSERT(checked_byteLength.isValid()); // should have been checked earlier
-    ScopedFreePtr<void> zeros;
-    zeros = calloc(1, checked_byteLength.value());
+
+    UniquePtr<uint8_t> zeros((uint8_t*)moz_xcalloc(1, checked_byteLength.value())); // Infallible for now.
 
     gl::GLContext* gl = mContext->gl;
     GLenum driverType = DriverTypeFromType(gl, type);
@@ -586,7 +586,7 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
     gl->fTexImage2D(imageTarget, level, driverInternalFormat,
                     imageInfo.mWidth, imageInfo.mHeight,
                     0, driverFormat, driverType,
-                    zeros);
+                    zeros.get());
     GLenum error = mContext->GetAndFlushUnderlyingGLErrors();
     if (error) {
         // Should only be OUT_OF_MEMORY. Anyway, there's no good way to recover from this here.
