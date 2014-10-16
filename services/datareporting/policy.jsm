@@ -817,8 +817,7 @@ this.DataReportingPolicy.prototype = Object.freeze({
     this._log.info("Requesting data submission. Will expire at " +
                    requestExpiresDate);
     try {
-      let promise = this._listener[handler](this._inProgressSubmissionRequest);
-      chained = chained.then(() => promise, null);
+      this._listener[handler](this._inProgressSubmissionRequest);
     } catch (ex) {
       this._log.warn("Exception when calling " + handler + ": " +
                      CommonUtils.exceptionStr(ex));
