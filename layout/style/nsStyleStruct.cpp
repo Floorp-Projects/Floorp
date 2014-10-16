@@ -2582,7 +2582,6 @@ nsStyleDisplay::nsStyleDisplay()
   mTransformStyle = NS_STYLE_TRANSFORM_STYLE_FLAT;
   mOrient = NS_STYLE_ORIENT_AUTO;
   mMixBlendMode = NS_STYLE_BLEND_NORMAL;
-  mIsolation = NS_STYLE_ISOLATION_AUTO;
   mTouchAction = NS_STYLE_TOUCH_ACTION_AUTO;
 
   mTransitions.AppendElement();
@@ -2629,7 +2628,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mClipFlags(aSource.mClipFlags)
   , mOrient(aSource.mOrient)
   , mMixBlendMode(aSource.mMixBlendMode)
-  , mIsolation(aSource.mIsolation)
   , mWillChangeBitField(aSource.mWillChangeBitField)
   , mWillChange(aSource.mWillChange)
   , mTouchAction(aSource.mTouchAction)
@@ -2728,8 +2726,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
     }
   }
 
-  if (mMixBlendMode != aOther.mMixBlendMode
-      || mIsolation != aOther.mIsolation) {
+  if (mMixBlendMode != aOther.mMixBlendMode) {
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
   }
 
