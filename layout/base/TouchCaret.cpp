@@ -406,6 +406,11 @@ TouchCaret::IsDisplayable()
     return false;
   }
 
+  if (presShell->IsPaintingSuppressed()) {
+    TOUCHCARET_LOG("PresShell is suppressing painting!");
+    return false;
+  }
+
   if (!caret->IsVisible()) {
     TOUCHCARET_LOG("Caret is not visible!");
     return false;
