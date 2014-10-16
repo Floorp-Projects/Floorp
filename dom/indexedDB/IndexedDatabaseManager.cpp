@@ -32,11 +32,13 @@
 #include "mozilla/storage.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
+#include "prlog.h"
 
 #include "IDBEvents.h"
 #include "IDBFactory.h"
 #include "IDBKeyRange.h"
 #include "IDBRequest.h"
+#include "ProfilerHelpers.h"
 
 // Bindings for ResolveConstructors
 #include "mozilla/dom/IDBCursorBinding.h"
@@ -111,7 +113,22 @@ private:
 
 namespace {
 
-const char kTestingPref[] = "dom.indexedDB.testing";
+#define IDB_PREF_BRANCH_ROOT "dom.indexedDB."
+
+const char kTestingPref[] = IDB_PREF_BRANCH_ROOT "testing";
+
+#define IDB_PREF_LOGGING_BRANCH_ROOT IDB_PREF_BRANCH_ROOT "logging."
+
+const char kPrefLoggingEnabled[] = IDB_PREF_LOGGING_BRANCH_ROOT "enabled";
+const char kPrefLoggingDetails[] = IDB_PREF_LOGGING_BRANCH_ROOT "details";
+
+#if defined(DEBUG) || defined(MOZ_ENABLE_PROFILER_SPS)
+const char kPrefLoggingProfiler[] =
+  IDB_PREF_LOGGING_BRANCH_ROOT "profiler-marks";
+#endif
+
+#undef IDB_PREF_LOGGING_BRANCH_ROOT
+#undef IDB_PREF_BRANCH_ROOT
 
 mozilla::StaticRefPtr<IndexedDatabaseManager> gDBManager;
 
@@ -205,6 +222,13 @@ IndexedDatabaseManager::~IndexedDatabaseManager()
 
 bool IndexedDatabaseManager::sIsMainProcess = false;
 bool IndexedDatabaseManager::sFullSynchronousMode = false;
+
+PRLogModuleInfo* IndexedDatabaseManager::sLoggingModule;
+
+Atomic<IndexedDatabaseManager::LoggingMode>
+  IndexedDatabaseManager::sLoggingMode(
+    IndexedDatabaseManager::Logging_Disabled);
+
 mozilla::Atomic<bool> IndexedDatabaseManager::sLowDiskSpaceMode(false);
 
 // static
@@ -220,6 +244,10 @@ IndexedDatabaseManager::GetOrCreate()
 
   if (!gDBManager) {
     sIsMainProcess = XRE_GetProcessType() == GeckoProcessType_Default;
+
+    if (!sLoggingModule) {
+      sLoggingModule = PR_NewLogModule("IndexedDB");
+    }
 
     if (sIsMainProcess && Preferences::GetBool("disk_space_watcher.enabled", false)) {
       // See if we're starting up in low disk space conditions.
@@ -300,6 +328,15 @@ IndexedDatabaseManager::Init()
   // hit.
   sFullSynchronousMode = Preferences::GetBool("dom.indexedDB.fullSynchronous");
 
+  Preferences::RegisterCallback(LoggingModePrefChangedCallback,
+                                kPrefLoggingDetails);
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  Preferences::RegisterCallback(LoggingModePrefChangedCallback,
+                                kPrefLoggingProfiler);
+#endif
+  Preferences::RegisterCallbackAndCall(LoggingModePrefChangedCallback,
+                                       kPrefLoggingEnabled);
+
   return NS_OK;
 }
 
@@ -313,6 +350,15 @@ IndexedDatabaseManager::Destroy()
   }
 
   Preferences::UnregisterCallback(TestingPrefChangedCallback, kTestingPref);
+
+  Preferences::UnregisterCallback(LoggingModePrefChangedCallback,
+                                  kPrefLoggingDetails);
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  Preferences::UnregisterCallback(LoggingModePrefChangedCallback,
+                                  kPrefLoggingProfiler);
+#endif
+  Preferences::UnregisterCallback(LoggingModePrefChangedCallback,
+                                  kPrefLoggingEnabled);
 
   delete this;
 }
@@ -491,7 +537,30 @@ IndexedDatabaseManager::InLowDiskSpaceMode()
                "initialized!");
   return sLowDiskSpaceMode;
 }
-#endif
+
+// static
+IndexedDatabaseManager::LoggingMode
+IndexedDatabaseManager::GetLoggingMode()
+{
+  MOZ_ASSERT(gDBManager,
+             "GetLoggingMode called before IndexedDatabaseManager has been "
+             "initialized!");
+
+  return sLoggingMode;
+}
+
+// static
+PRLogModuleInfo*
+IndexedDatabaseManager::GetLoggingModule()
+{
+  MOZ_ASSERT(gDBManager,
+             "GetLoggingModule called before IndexedDatabaseManager has been "
+             "initialized!");
+
+  return sLoggingModule;
+}
+
+#endif // DEBUG
 
 // static
 bool
@@ -685,6 +754,44 @@ IndexedDatabaseManager::BlockAndGetFileReferences(
   }
 
   return NS_OK;
+}
+
+// static
+void
+IndexedDatabaseManager::LoggingModePrefChangedCallback(
+                                                    const char* /* aPrefName */,
+                                                    void* /* aClosure */)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!Preferences::GetBool(kPrefLoggingEnabled)) {
+    sLoggingMode = Logging_Disabled;
+    return;
+  }
+
+  bool useProfiler = 
+#if defined(DEBUG) || defined(MOZ_ENABLE_PROFILER_SPS)
+    Preferences::GetBool(kPrefLoggingProfiler);
+#if !defined(MOZ_ENABLE_PROFILER_SPS)
+  if (useProfiler) {
+    NS_WARNING("IndexedDB cannot create profiler marks because this build does "
+               "not have profiler extensions enabled!");
+    useProfiler = false;
+  }
+#endif
+#else
+    false;
+#endif
+
+  const bool logDetails = Preferences::GetBool(kPrefLoggingDetails);
+
+  if (useProfiler) {
+    sLoggingMode = logDetails ?
+                   Logging_DetailedProfilerMarks :
+                   Logging_ConciseProfilerMarks;
+  } else {
+    sLoggingMode = logDetails ? Logging_Detailed : Logging_Concise;
+  }
 }
 
 NS_IMPL_ADDREF(IndexedDatabaseManager)
