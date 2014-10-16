@@ -134,6 +134,8 @@ public:
   // be called when any counter style may be affected.
   bool NotifyRuleChanged();
 
+  nsPresContext* PresContext() const { return mPresContext; }
+
   NS_INLINE_DECL_REFCOUNTING(CounterStyleManager)
 
 private:
