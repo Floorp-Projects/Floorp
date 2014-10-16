@@ -12,6 +12,7 @@
 #include "nsIconChannel.h"
 #include "nsIStringStream.h"
 #include "nsNetUtil.h"
+#include "nsNullPrincipal.h"
 
 NS_IMPL_ISUPPORTS(nsIconChannel,
                   nsIRequest,
@@ -102,7 +103,16 @@ moz_icon_to_channel(nsIURI *aURI, const nsACString& aFileExt, uint32_t aIconSize
   rv = stream->AdoptData((char*)buf, buf_size);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_NewInputStreamChannel(aChannel, aURI, stream,
+  nsCOMPtr<nsIPrincipal> nullPrincipal =
+    do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_NewInputStreamChannel(aChannel,
+                                  aURI,
+                                  stream,
+                                  nullPrincipal,
+                                  nsILoadInfo::SEC_NORMAL,
+                                  nsIContentPolicy::TYPE_OTHER,
                                   NS_LITERAL_CSTRING(IMAGE_ICON_MS));
 }
 
