@@ -324,8 +324,6 @@ var shell = {
     chromeEventHandler.addEventListener('keydown', this, true);
     chromeEventHandler.addEventListener('keypress', this, true);
     chromeEventHandler.addEventListener('keyup', this, true);
-    chromeEventHandler.addEventListener('mozbrowserbeforekeydown', this, true);
-    chromeEventHandler.addEventListener('mozbrowserbeforekeyup', this, true);
 
     window.addEventListener('MozApplicationManifest', this);
     window.addEventListener('mozfullscreenchange', this);
@@ -358,8 +356,6 @@ var shell = {
     window.removeEventListener('keydown', this, true);
     window.removeEventListener('keypress', this, true);
     window.removeEventListener('keyup', this, true);
-    window.removeEventListener('mozbrowserbeforekeydown', this, true);
-    window.removeEventListener('mozbrowserbeforekeyup', this, true);
     window.removeEventListener('MozApplicationManifest', this);
     window.removeEventListener('mozfullscreenchange', this);
     window.removeEventListener('sizemodechange', this);
@@ -424,14 +420,17 @@ var shell = {
       return;
     }
 
+    // If we didn't return, then the key event represents a hardware key
+    // and we need to prevent it from propagating to Gaia
+    evt.stopImmediatePropagation();
+    evt.preventDefault(); // Prevent keypress events (when #501496 is fixed).
+
     // If it is a key down or key up event, we send a chrome event to Gaia.
     // If it is a keypress event we just ignore it.
     switch (evt.type) {
-      case 'mozbrowserbeforekeydown':
       case 'keydown':
         type = type + '-press';
         break;
-      case 'mozbrowserbeforekeyup':
       case 'keyup':
         type = type + '-release';
         break;
@@ -474,8 +473,6 @@ var shell = {
       case 'keydown':
       case 'keyup':
       case 'keypress':
-      case 'mozbrowserbeforekeydown':
-      case 'mozbrowserbeforekeyup':
         this.filterHardwareKeys(evt);
         break;
       case 'mozfullscreenchange':

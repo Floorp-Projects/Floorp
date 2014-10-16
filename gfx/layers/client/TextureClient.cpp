@@ -215,6 +215,9 @@ TextureClient::GetIPDLActor()
 static bool
 DisableGralloc(SurfaceFormat aFormat, const gfx::IntSize& aSizeHint)
 {
+  if (gfxPrefs::DisableGralloc()) {
+    return true;
+  }
   if (aFormat == gfx::SurfaceFormat::A8) {
     return true;
   }

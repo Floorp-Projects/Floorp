@@ -125,7 +125,7 @@ USE_LIBS += [
     'zlib',
 ]
 
-if CONFIG['ENABLE_INTL_API']:
+if CONFIG['USE_ICU']:
     USE_LIBS += [
         'icu',
     ]

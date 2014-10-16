@@ -122,7 +122,6 @@ public:
     virtual bool RecvMoveFocus(const bool& aForward) MOZ_OVERRIDE;
     virtual bool RecvEvent(const RemoteDOMEvent& aEvent) MOZ_OVERRIDE;
     virtual bool RecvReplyKeyEvent(const WidgetKeyboardEvent& event);
-    virtual bool RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& event);
     virtual bool RecvPRenderFrameConstructor(PRenderFrameParent* aActor,
                                              ScrollingBehavior* aScrolling,
                                              TextureFactoryIdentifier* aFactoryIdentifier,
