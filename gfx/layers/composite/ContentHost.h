@@ -96,6 +96,18 @@ public:
   explicit ContentHostBase(const TextureInfo& aTextureInfo);
   virtual ~ContentHostBase();
 
+  virtual void Composite(EffectChain& aEffectChain,
+                         float aOpacity,
+                         const gfx::Matrix4x4& aTransform,
+                         const gfx::Filter& aFilter,
+                         const gfx::Rect& aClipRect,
+                         const nsIntRegion* aVisibleRegion = nullptr);
+
+  virtual TextureSource* GetTextureSource() = 0;
+  virtual TextureSource* GetTextureSourceOnWhite() = 0;
+
+  virtual TemporaryRef<TexturedEffect> GenEffect(const gfx::Filter& aFilter) MOZ_OVERRIDE;
+
 protected:
   virtual nsIntPoint GetOriginOffset()
   {
@@ -119,13 +131,6 @@ public:
     : ContentHostBase(aTextureInfo)
     , mLocked(false)
   { }
-
-  virtual void Composite(EffectChain& aEffectChain,
-                         float aOpacity,
-                         const gfx::Matrix4x4& aTransform,
-                         const gfx::Filter& aFilter,
-                         const gfx::Rect& aClipRect,
-                         const nsIntRegion* aVisibleRegion = nullptr);
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
@@ -168,15 +173,23 @@ public:
     mLocked = false;
   }
 
-  LayerRenderState GetRenderState();
+  virtual TextureSource* GetTextureSource() MOZ_OVERRIDE {
+    MOZ_ASSERT(mLocked);
+    return mTextureHost->GetTextureSources();
+  }
+  virtual TextureSource* GetTextureSourceOnWhite() MOZ_OVERRIDE {
+    MOZ_ASSERT(mLocked);
+    if (mTextureHostOnWhite) {
+      return mTextureHostOnWhite->GetTextureSources();
+    }
+    return nullptr;
+  }
 
-  virtual TemporaryRef<TexturedEffect> GenEffect(const gfx::Filter& aFilter) MOZ_OVERRIDE;
+  LayerRenderState GetRenderState();
 
 protected:
   RefPtr<TextureHost> mTextureHost;
   RefPtr<TextureHost> mTextureHostOnWhite;
-  CompositableTextureSourceRef mTextureSource;
-  CompositableTextureSourceRef mTextureSourceOnWhite;
   bool mLocked;
 };
 
@@ -264,13 +277,6 @@ public:
     return false;
   }
 
-  virtual void Composite(EffectChain& aEffectChain,
-                         float aOpacity,
-                         const gfx::Matrix4x4& aTransform,
-                         const gfx::Filter& aFilter,
-                         const gfx::Rect& aClipRect,
-                         const nsIntRegion* aVisibleRegion = nullptr);
-
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
 
   virtual bool Lock() MOZ_OVERRIDE {
@@ -285,8 +291,8 @@ public:
     mLocked = false;
   }
 
-  virtual TemporaryRef<TexturedEffect>
-  GenEffect(const gfx::Filter& aFilter) MOZ_OVERRIDE;
+  virtual TextureSource* GetTextureSource() MOZ_OVERRIDE;
+  virtual TextureSource* GetTextureSourceOnWhite() MOZ_OVERRIDE;
 
 private:
 
