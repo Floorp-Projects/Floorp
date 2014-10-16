@@ -494,7 +494,7 @@ ShadowLayerForwarder::RemoveTextureFromCompositableAsync(AsyncTransactionTracker
 bool
 ShadowLayerForwarder::InWorkerThread()
 {
-  return MessageLoop::current() && (GetMessageLoop()->id() == MessageLoop::current()->id());
+  return GetMessageLoop()->id() == MessageLoop::current()->id();
 }
 
 static void RemoveTextureWorker(TextureClient* aTexture, ReentrantMonitor* aBarrier, bool* aDone)
