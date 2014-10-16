@@ -684,7 +684,6 @@ private:
                                           gfxFont::BoundingBoxType aBoundingBoxType,
                                           gfxContext *aRefContext,
                                           PropertyProvider *aProvider,
-                                          uint16_t aOrientation,
                                           Metrics *aMetrics);
 
     // **** measurement helper ****
@@ -693,7 +692,6 @@ private:
                                  gfxContext *aRefContext,
                                  PropertyProvider *aProvider,
                                  uint32_t aSpacingStart, uint32_t aSpacingEnd,
-                                 uint16_t aOrientation,
                                  Metrics *aMetrics);
 
     // **** drawing helper ****

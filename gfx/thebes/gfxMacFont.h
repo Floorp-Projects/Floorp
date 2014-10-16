@@ -35,7 +35,7 @@ public:
                                uint32_t aStart, uint32_t aEnd,
                                BoundingBoxType aBoundingBoxType,
                                gfxContext *aContextForTightBoundingBox,
-                               Spacing *aSpacing, uint16_t aOrientation);
+                               Spacing *aSpacing);
 
     virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont> GetScaledFont(mozilla::gfx::DrawTarget *aTarget);
 
