@@ -61,11 +61,6 @@ public:
     static already_AddRefed<gfxContext> ContextForDrawTarget(mozilla::gfx::DrawTarget* aTarget);
 
     /**
-     * Return the surface that this gfxContext was created with
-     */
-    gfxASurface *OriginalSurface();
-
-    /**
      * Return the current transparency group target, if any, along
      * with its device offsets from the top.  If no group is
      * active, returns the surface the gfxContext was created with,
@@ -708,7 +703,6 @@ private:
   const AzureState &CurrentState() const { return mStateStack[mStateStack.Length() - 1]; }
 
   cairo_t *mRefCairo;
-  nsRefPtr<gfxASurface> mSurface;
   int32_t mFlags;
 
   mozilla::RefPtr<DrawTarget> mDT;
@@ -882,15 +876,12 @@ public:
     }
     ~gfxContextAutoDisableSubpixelAntialiasing()
     {
-        if (mSurface) {
-            mSurface->SetSubpixelAntialiasingEnabled(mSubpixelAntialiasingEnabled);
-        } else if (mDT) {
+        if (mDT) {
             mDT->SetPermitSubpixelAA(mSubpixelAntialiasingEnabled);
         }
     }
 
 private:
-    nsRefPtr<gfxASurface> mSurface;
     mozilla::RefPtr<mozilla::gfx::DrawTarget> mDT;
     bool mSubpixelAntialiasingEnabled;
 };
