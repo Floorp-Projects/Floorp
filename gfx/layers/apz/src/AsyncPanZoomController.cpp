@@ -1028,7 +1028,7 @@ nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent)
     // being processed) we only do this animation-cancellation if there are no older
     // touch blocks still in the queue.
     if (block == CurrentTouchBlock()) {
-      if (GetVelocityVector().Length() > gfxPrefs::APZFlingStopOnTapThreshold()) {
+      if (block->GetOverscrollHandoffChain()->HasFastMovingApzc()) {
         // If we're already in a fast fling, then we want the touch event to stop the fling
         // and to disallow the touch event from being used as part of a fling.
         block->DisallowSingleTap();
@@ -2328,6 +2328,11 @@ bool AsyncPanZoomController::SnapBackIfOverscrolled() {
     return true;
   }
   return false;
+}
+
+bool AsyncPanZoomController::IsMovingFast() const {
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  return (GetVelocityVector().Length() > gfxPrefs::APZFlingStopOnTapThreshold());
 }
 
 bool AsyncPanZoomController::IsPannable() const {

@@ -329,6 +329,12 @@ public:
   bool IsPannable() const;
 
   /**
+   * Returns true if the APZC has a velocity greater than the stop-on-tap
+   * fling velocity threshold (which is pref-controlled).
+   */
+  bool IsMovingFast() const;
+
+  /**
    * Returns the identifier of the touch in the last touch event processed by
    * this APZC. This should only be called when the last touch event contained
    * only one touch.
