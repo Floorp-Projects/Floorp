@@ -103,4 +103,39 @@ public:
 #endif
 };
 
+
+/**
+ * Class for ELF libraries that already loaded in memory.
+ */
+class LoadedElf: public BaseElf
+{
+public:
+  /**
+   * Returns a LoadedElf corresponding to the already loaded ELF
+   * at the given base address.
+   */
+  static mozilla::TemporaryRef<LibHandle> Create(const char *path,
+                                                 void *base_addr);
+
+private:
+  LoadedElf(const char *path)
+  : BaseElf(path) { }
+
+  ~LoadedElf()
+  {
+    /* Avoid base's destructor unmapping something that doesn't actually
+     * belong to it. */
+    base.release();
+    ElfLoader::Singleton.Forget(this);
+  }
+
+  /**
+   * Initializes the library according to information found in the given
+   * PT_DYNAMIC header.
+   * Returns whether this succeeded or failed.
+   */
+  bool InitDyn(const Elf::Phdr *pt_dyn);
+};
+
+
 #endif /* BaseElf_h */
