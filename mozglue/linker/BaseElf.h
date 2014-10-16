@@ -33,20 +33,23 @@ public:
    */
   const Elf::Sym *GetSymbol(const char *symbol, unsigned long hash) const;
 
-  BaseElf(const char *path)
-  : LibHandle(path) { }
+  BaseElf(const char *path, Mappable *mappable = nullptr)
+  : LibHandle(path)
+  , mappable(mappable)
+  {
+  }
 
 protected:
    /**
     * Inherited from LibHandle. Those are temporary and are not supposed to
     * be used.
     */
-   virtual void *GetSymbolPtr(const char *symbol) const { return NULL; };
-   virtual bool Contains(void *addr) const { return false; };
+   virtual void *GetSymbolPtr(const char *symbol) const;
+   virtual bool Contains(void *addr) const;
    virtual void *GetBase() const { return GetPtr(0); }
 
 #ifdef __ARM_EABI__
-  virtual const void *FindExidx(int *pcount) const { return NULL; };
+  virtual const void *FindExidx(int *pcount) const;
 #endif
 
   virtual Mappable *GetMappable() const { return NULL; };
@@ -75,6 +78,11 @@ public:
     return reinterpret_cast<const T *>(base + offset);
   }
 
+  /* Appropriated Mappable */
+  /* /!\ we rely on this being nullptr for BaseElf instances, but not
+   * CustomElf instances. */
+  mozilla::RefPtr<Mappable> mappable;
+
   /* Base address where the library is loaded */
   MappedPtr base;
 
@@ -88,6 +96,46 @@ public:
 
   /* Symbol table */
   UnsizedArray<Elf::Sym> symtab;
+
+#ifdef __ARM_EABI__
+  /* ARM.exidx information used by FindExidx */
+  Array<uint32_t[2]> arm_exidx;
+#endif
 };
+
+
+/**
+ * Class for ELF libraries that already loaded in memory.
+ */
+class LoadedElf: public BaseElf
+{
+public:
+  /**
+   * Returns a LoadedElf corresponding to the already loaded ELF
+   * at the given base address.
+   */
+  static mozilla::TemporaryRef<LibHandle> Create(const char *path,
+                                                 void *base_addr);
+
+private:
+  LoadedElf(const char *path)
+  : BaseElf(path) { }
+
+  ~LoadedElf()
+  {
+    /* Avoid base's destructor unmapping something that doesn't actually
+     * belong to it. */
+    base.release();
+    ElfLoader::Singleton.Forget(this);
+  }
+
+  /**
+   * Initializes the library according to information found in the given
+   * PT_DYNAMIC header.
+   * Returns whether this succeeded or failed.
+   */
+  bool InitDyn(const Elf::Phdr *pt_dyn);
+};
+
 
 #endif /* BaseElf_h */

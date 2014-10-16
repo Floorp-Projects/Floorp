@@ -257,9 +257,15 @@
           return this._browser;
         ]]></getter>
         <setter><![CDATA[
+          // A shortcut for the service.
+          let els = Components.classes["@mozilla.org/eventlistenerservice;1"].
+            getService(Components.interfaces.nsIEventListenerService);
+
           if (this._browser) {
-            this._browser.removeEventListener("keypress", this, false);
-            this._browser.removeEventListener("mouseup", this, false);
+            els.removeSystemEventListener(this._browser, "keypress", this,
+                                          false);
+            els.removeSystemEventListener(this._browser, "mouseup", this,
+                                          false);
             let finder = this._browser.finder;
             if (finder)
               finder.removeResultListener(this);
@@ -267,8 +273,8 @@
 
           this._browser = val;
           if (this._browser) {
-            this._browser.addEventListener("keypress", this, false);
-            this._browser.addEventListener("mouseup", this, false);
+            els.addSystemEventListener(this._browser, "keypress", this, false);
+            els.addSystemEventListener(this._browser, "mouseup", this, false);
             this._browser.finder.addResultListener(this);
 
             this._findField.value = this._browser._lastSearchString;

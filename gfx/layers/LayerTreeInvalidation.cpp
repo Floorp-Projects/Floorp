@@ -467,7 +467,7 @@ LayerPropertiesBase::ComputeDifferences(Layer* aRoot, NotifySubDocInvalidationFu
 void
 LayerPropertiesBase::MoveBy(const nsIntPoint& aOffset)
 {
-  mTransform.TranslatePost(aOffset.x, aOffset.y, 0);
+  mTransform.PostTranslate(aOffset.x, aOffset.y, 0);
 }
 
 } // namespace layers

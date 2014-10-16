@@ -131,7 +131,6 @@ function testBodyUsed() {
   });
 }
 
-// FIXME(nsm): Bug 1071290: We can't use Blobs as the body yet.
 function testBodyCreation() {
   var text = "κόσμε";
   var req1 = new Request("", { body: text });
@@ -150,6 +149,11 @@ function testBodyCreation() {
     is("Hello", v, "Extracted string should match");
   });
 
+  var reqblob = new Request("", { body: new Blob([text]) });
+  var pblob = reqblob.text().then(function(v) {
+    is(v, text, "Extracted string should match");
+  });
+
   var params = new URLSearchParams();
   params.append("item", "Geckos");
   params.append("feature", "stickyfeet");
@@ -162,7 +166,7 @@ function testBodyCreation() {
     is(extracted.get("quantity"), "700", "Param should match");
   });
 
-  return Promise.all([p1, p2, p2b, p3]);
+  return Promise.all([p1, p2, p2b, pblob, p3]);
 }
 
 function testBodyExtraction() {

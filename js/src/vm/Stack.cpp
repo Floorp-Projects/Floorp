@@ -957,6 +957,13 @@ FrameIter::scriptFilename() const
     MOZ_CRASH("Unexpected state");
 }
 
+const char16_t *
+FrameIter::scriptDisplayURL() const
+{
+    ScriptSource *ss = scriptSource();
+    return ss->hasDisplayURL() ? ss->displayURL() : nullptr;
+}
+
 unsigned
 FrameIter::computeLine(uint32_t *column) const
 {

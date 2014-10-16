@@ -1329,6 +1329,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     NonAssertingLabel              stackOverflowLabel_;
     NonAssertingLabel              asyncInterruptLabel_;
     NonAssertingLabel              syncInterruptLabel_;
+    NonAssertingLabel              onDetachedLabel_;
 
     UniquePtr<char[], JS::FreePolicy> errorString_;
     uint32_t                       errorOffset_;
@@ -1522,6 +1523,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     Label &stackOverflowLabel() { return stackOverflowLabel_; }
     Label &asyncInterruptLabel() { return asyncInterruptLabel_; }
     Label &syncInterruptLabel() { return syncInterruptLabel_; }
+    Label &onDetachedLabel() { return onDetachedLabel_; }
     bool hasError() const { return errorString_ != nullptr; }
     const AsmJSModule &module() const { return *module_.get(); }
     bool usesSignalHandlersForInterrupt() const { return module_->usesSignalHandlersForInterrupt(); }
@@ -1658,9 +1660,9 @@ class MOZ_STACK_CLASS ModuleCompiler
         Global *global = moduleLifo_.new_<Global>(Global::ByteLength);
         return global && globals_.putNew(name, global);
     }
-    bool addChangeHeap(PropertyName *name, ParseNode *fn, uint32_t mask, uint32_t min) {
+    bool addChangeHeap(PropertyName *name, ParseNode *fn, uint32_t mask, uint32_t min, uint32_t max) {
         hasChangeHeap_ = true;
-        module_->addChangeHeap(mask, min);
+        module_->addChangeHeap(mask, min, max);
         Global *global = moduleLifo_.new_<Global>(Global::ChangeHeap);
         if (!global)
             return false;
@@ -4164,8 +4166,9 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *elem, Scalar::Type *viewType,
 
         unsigned elementSize = 1 << TypedArrayShift(*viewType);
         if (!f.m().tryRequireHeapLengthToBeAtLeast(byteOffset + elementSize)) {
-            return f.failf(indexExpr, "constant index outside heap size declared by the "
-                                      "change-heap function (0x%x)", f.m().minHeapLength());
+            return f.failf(indexExpr, "constant index outside heap size range declared by the "
+                                      "change-heap function (0x%x - 0x%x)",
+                                      f.m().minHeapLength(), f.m().module().maxHeapLength());
         }
 
         *needsBoundsCheck = NO_BOUNDS_CHECK;
@@ -6545,41 +6548,58 @@ CheckByteLengthCall(ModuleCompiler &m, ParseNode *pn, PropertyName *newBufferNam
 
 static bool
 CheckHeapLengthCondition(ModuleCompiler &m, ParseNode *cond, PropertyName *newBufferName,
-                         uint32_t *mask, uint32_t *minimumLength)
+                         uint32_t *mask, uint32_t *minLength, uint32_t *maxLength)
 {
-    if (!cond->isKind(PNK_OR))
-        return m.fail(cond, "expecting byteLength & K || byteLength <= L");
+    if (!cond->isKind(PNK_OR) || !BinaryLeft(cond)->isKind(PNK_OR))
+        return m.fail(cond, "expecting byteLength & K || byteLength <= L || byteLength > M");
 
-    ParseNode *leftCond = BinaryLeft(cond);
-    ParseNode *rightCond = BinaryRight(cond);
+    ParseNode *cond1 = BinaryLeft(BinaryLeft(cond));
+    ParseNode *cond2 = BinaryRight(BinaryLeft(cond));
+    ParseNode *cond3 = BinaryRight(cond);
 
-    if (!leftCond->isKind(PNK_BITAND))
-        return m.fail(leftCond, "expecting byteLength & K");
+    if (!cond1->isKind(PNK_BITAND))
+        return m.fail(cond1, "expecting byteLength & K");
 
-    if (!CheckByteLengthCall(m, BinaryLeft(leftCond), newBufferName))
+    if (!CheckByteLengthCall(m, BinaryLeft(cond1), newBufferName))
         return false;
 
-    ParseNode *maskNode = BinaryRight(leftCond);
+    ParseNode *maskNode = BinaryRight(cond1);
     if (!IsLiteralInt(m, maskNode, mask))
         return m.fail(maskNode, "expecting integer literal mask");
     if ((*mask & 0xffffff) != 0xffffff)
         return m.fail(maskNode, "mask value must have the bits 0xffffff set");
 
-    if (!rightCond->isKind(PNK_LE))
-        return m.fail(rightCond, "expecting byteLength <= L");
+    if (!cond2->isKind(PNK_LE))
+        return m.fail(cond2, "expecting byteLength <= L");
 
-    if (!CheckByteLengthCall(m, BinaryLeft(rightCond), newBufferName))
+    if (!CheckByteLengthCall(m, BinaryLeft(cond2), newBufferName))
         return false;
 
-    ParseNode *minLengthNode = BinaryRight(rightCond);
+    ParseNode *minLengthNode = BinaryRight(cond2);
     uint32_t minLengthExclusive;
     if (!IsLiteralInt(m, minLengthNode, &minLengthExclusive))
-        return m.fail(minLengthNode, "expecting integer limit literal");
+        return m.fail(minLengthNode, "expecting integer literal");
     if (minLengthExclusive < 0xffffff)
-        return m.fail(minLengthNode, "limit value must be >= 0xffffff");
+        return m.fail(minLengthNode, "literal must be >= 0xffffff");
 
     // Add one to convert from exclusive (the branch rejects if ==) to inclusive.
-    *minimumLength = minLengthExclusive + 1;
+    *minLength = minLengthExclusive + 1;
+
+    if (!cond3->isKind(PNK_GT))
+        return m.fail(cond3, "expecting byteLength > M");
+
+    if (!CheckByteLengthCall(m, BinaryLeft(cond3), newBufferName))
+        return false;
+
+    ParseNode *maxLengthNode = BinaryRight(cond3);
+    if (!IsLiteralInt(m, maxLengthNode, maxLength))
+        return m.fail(maxLengthNode, "expecting integer literal");
+    if (*maxLength > 0x80000000)
+        return m.fail(maxLengthNode, "literal must be <= 0x80000000");
+
+    if (*maxLength < *minLength)
+        return m.fail(maxLengthNode, "maximum length must be greater or equal to minimum length");
+
     return true;
 }
 
@@ -6665,8 +6685,8 @@ CheckChangeHeap(ModuleCompiler &m, ParseNode *fn, bool *validated)
     if (ParseNode *elseStmt = TernaryKid3(stmtIter))
         return m.fail(elseStmt, "unexpected else statement");
 
-    uint32_t mask, min;
-    if (!CheckHeapLengthCondition(m, cond, newBufferName, &mask, &min))
+    uint32_t mask, min, max;
+    if (!CheckHeapLengthCondition(m, cond, newBufferName, &mask, &min, &max))
         return false;
 
     if (!CheckReturnBoolLiteral(m, thenStmt, false))
@@ -6713,7 +6733,7 @@ CheckChangeHeap(ModuleCompiler &m, ParseNode *fn, bool *validated)
     if (stmtIter)
         return m.fail(stmtIter, "expecting end of function");
 
-    return m.addChangeHeap(changeHeapName, fn, mask, min);
+    return m.addChangeHeap(changeHeapName, fn, mask, min, max);
 }
 
 static bool
@@ -7620,6 +7640,27 @@ FillArgumentArray(ModuleCompiler &m, const VarTypeVector &argTypes,
     }
 }
 
+// If an FFI detaches its heap (viz., via ArrayBuffer.transfer), it must
+// call change-heap to another heap (viz., the new heap returned by transfer)
+// before returning to asm.js code. If the application fails to do this (if the
+// heap pointer is null), jump to a stub.
+static void
+GenerateCheckForHeapDetachment(ModuleCompiler &m, Register scratch)
+{
+    if (!m.module().hasArrayView())
+        return;
+
+    MacroAssembler &masm = m.masm();
+    AssertStackAlignment(masm, ABIStackAlignment);
+#if defined(JS_CODEGEN_X86)
+    CodeOffsetLabel label = masm.movlWithPatch(PatchedAbsoluteAddress(), scratch);
+    masm.append(AsmJSGlobalAccess(label, AsmJSHeapGlobalDataOffset));
+    masm.branchTestPtr(Assembler::Zero, scratch, scratch, &m.onDetachedLabel());
+#else
+    masm.branchTestPtr(Assembler::Zero, HeapReg, HeapReg, &m.onDetachedLabel());
+#endif
+}
+
 static bool
 GenerateFFIInterpExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit,
                       unsigned exitIndex, Label *throwLabel)
@@ -7703,8 +7744,10 @@ GenerateFFIInterpExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &e
         MOZ_CRASH("SIMD types shouldn't be returned from a FFI");
     }
 
-    // The heap pointer may have changed during the FFI, so reload it.
+    // The heap pointer may have changed during the FFI, so reload it and test
+    // for detachment.
     masm.loadAsmJSHeapRegisterFromGlobalData();
+    GenerateCheckForHeapDetachment(m, ABIArgGenerator::NonReturn_VolatileReg0);
 
     Label profilingReturn;
     GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::SlowFFI, &profilingReturn);
@@ -7913,14 +7956,18 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 
     MOZ_ASSERT(masm.framePushed() == framePushed);
 
-    // Reload pinned registers after all calls into arbitrary JS.
+    // Reload the global register since Ion code can clobber any register.
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     JS_STATIC_ASSERT(MaybeSavedGlobalReg > 0);
     masm.loadPtr(Address(StackPointer, savedGlobalOffset), GlobalReg);
 #else
     JS_STATIC_ASSERT(MaybeSavedGlobalReg == 0);
 #endif
+
+    // The heap pointer has to be reloaded anyway since Ion could have clobbered
+    // it. Additionally, the FFI may have detached the heap buffer.
     masm.loadAsmJSHeapRegisterFromGlobalData();
+    GenerateCheckForHeapDetachment(m, ABIArgGenerator::NonReturn_VolatileReg0);
 
     Label profilingReturn;
     GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::IonFFI, &profilingReturn);
@@ -8081,6 +8128,20 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     return m.finishGeneratingInlineStub(&m.stackOverflowLabel()) && !masm.oom();
 }
 
+static bool
+GenerateOnDetachedLabelExit(ModuleCompiler &m, Label *throwLabel)
+{
+    MacroAssembler &masm = m.masm();
+    masm.bind(&m.onDetachedLabel());
+    masm.assertStackAlignment(ABIStackAlignment);
+
+    // For now, OnDetached always throws (see OnDetached comment).
+    masm.call(AsmJSImmPtr(AsmJSImm_OnDetached));
+    masm.jump(throwLabel);
+
+    return m.finishGeneratingInlineStub(&m.onDetachedLabel()) && !masm.oom();
+}
+
 static const RegisterSet AllRegsExceptSP =
     RegisterSet(GeneralRegisterSet(Registers::AllMask &
                                    ~(uint32_t(1) << Registers::StackPointer)),
@@ -8134,7 +8195,6 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
 
     // Restore the machine state to before the interrupt.
     masm.PopRegsInMask(AllRegsExceptSP, AllRegsExceptSP.fpus()); // restore all GP/FP registers (except SP)
-    masm.loadAsmJSHeapRegisterFromGlobalData();  // In case there was a changeHeap
     masm.popFlags();              // after this, nothing that sets conditions
     masm.ret();                   // pop resumePC into PC
 #elif defined(JS_CODEGEN_MIPS)
@@ -8176,7 +8236,6 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     // during jump delay slot.
     masm.pop(HeapReg);
     masm.as_jr(HeapReg);
-    masm.loadAsmJSHeapRegisterFromGlobalData();  // In case there was a changeHeap
 #elif defined(JS_CODEGEN_ARM)
     masm.setFramePushed(0);         // set to zero so we can use masm.framePushed() below
     masm.PushRegsInMask(RegisterSet(GeneralRegisterSet(Registers::AllMask & ~(1<<Registers::sp)), FloatRegisterSet(uint32_t(0))));   // save all GP registers,excep sp
@@ -8226,7 +8285,6 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     masm.transferReg(r12);
     masm.transferReg(lr);
     masm.finishDataTransfer();
-    masm.loadAsmJSHeapRegisterFromGlobalData();  // In case there was a changeHeap
     masm.ret();
 
 #elif defined (JS_CODEGEN_NONE)
@@ -8251,9 +8309,6 @@ GenerateSyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     AssertStackAlignment(masm, ABIStackAlignment);
     masm.call(AsmJSImmPtr(AsmJSImm_HandleExecutionInterrupt));
     masm.branchIfFalseBool(ReturnReg, throwLabel);
-
-    // Reload the heap register in case the callback changed heaps.
-    masm.loadAsmJSHeapRegisterFromGlobalData();
 
     Label profilingReturn;
     GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::Interrupt, &profilingReturn);
@@ -8309,6 +8364,9 @@ GenerateStubs(ModuleCompiler &m)
     }
 
     if (m.stackOverflowLabel().used() && !GenerateStackOverflowExit(m, &throwLabel))
+        return false;
+
+    if (m.onDetachedLabel().used() && !GenerateOnDetachedLabelExit(m, &throwLabel))
         return false;
 
     if (!GenerateAsyncInterruptExit(m, &throwLabel))

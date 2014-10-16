@@ -53,7 +53,6 @@
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
-#include "nsChannelProperties.h"
 
 #include "nsMimeTypes.h"
 // used for header disposition information.

@@ -59,6 +59,7 @@ const BadCertHost sBadCertHosts[] =
   { "nsCertTypeNotCritical.example.com", "nsCertTypeNotCritical" },
   { "nsCertTypeCriticalWithExtKeyUsage.example.com", "nsCertTypeCriticalWithExtKeyUsage" },
   { "nsCertTypeCritical.example.com", "nsCertTypeCritical" },
+  { "end-entity-issued-by-v1-cert.example.com", "eeIssuedByV1Cert" },
   { nullptr, nullptr }
 };
 

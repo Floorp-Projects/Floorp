@@ -186,6 +186,10 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
                 gl->fGetIntegerv(pname, &val);
                 return JS::NumberValue(uint32_t(val));
             }
+
+            case LOCAL_GL_TEXTURE_BINDING_3D: {
+                return WebGLObjectAsJSValue(cx, mBound3DTextures[mActiveTexture].get(), rv);
+            }
         }
     }
 

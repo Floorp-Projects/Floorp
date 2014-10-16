@@ -202,24 +202,26 @@ void
 MediaSourceReader::Shutdown()
 {
   MediaDecoderReader::Shutdown();
+  for (uint32_t i = 0; i < mTrackBuffers.Length(); ++i) {
+    mTrackBuffers[i]->Shutdown();
+  }
   mAudioTrack = nullptr;
   mAudioReader = nullptr;
   mVideoTrack = nullptr;
   mVideoReader = nullptr;
-  for (uint32_t i = 0; i < mTrackBuffers.Length(); ++i) {
-    mTrackBuffers[i]->Shutdown();
-  }
-  mTrackBuffers.Clear();
 }
 
 void
 MediaSourceReader::BreakCycles()
 {
   MediaDecoderReader::BreakCycles();
-  mAudioTrack = nullptr;
-  mAudioReader = nullptr;
-  mVideoTrack = nullptr;
-  mVideoReader = nullptr;
+
+  // These were cleared in Shutdown().
+  MOZ_ASSERT(!mAudioTrack);
+  MOZ_ASSERT(!mAudioReader);
+  MOZ_ASSERT(!mVideoTrack);
+  MOZ_ASSERT(!mVideoReader);
+
   for (uint32_t i = 0; i < mTrackBuffers.Length(); ++i) {
     mTrackBuffers[i]->BreakCycles();
   }

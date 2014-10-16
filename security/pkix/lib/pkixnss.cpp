@@ -242,7 +242,11 @@ RegisterErrorTable()
       "certificate, this should not be the case." },
     { "MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE",
       "The server presented a certificate with a key size that is too small "
-      "to establish a secure connection." }
+      "to establish a secure connection." },
+    { "MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA",
+      "An X.509 version 1 certificate that is not a trust anchor was used to "
+      "issue the server's certificate. X.509 version 1 certificates are "
+      "deprecated and should not be used to sign other certificates." },
   };
   // Note that these error strings are not localizable.
   // When these strings change, update the localization information too.

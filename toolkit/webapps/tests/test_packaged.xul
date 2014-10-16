@@ -119,6 +119,15 @@ let runTest = Task.async(function*() {
     yield wait(1000);
   }
   ok(true, "App launchable");
+
+  if (MAC) {
+    stat = yield OS.File.stat(testAppInfo.webappINI);
+    is(stat.unixMode, 0o644, "Configuration file permissions correct");
+  } else if (LINUX) {
+    stat = yield OS.File.stat(testAppInfo.desktopINI);
+    is(stat.unixMode, 0o744, "Configuration file permissions correct");
+  }
+
   ok((yield checkFiles(testAppInfo.installedFiles)), "Installation not corrupted");
   ok(!(yield OS.File.exists(OS.Path.join(testAppInfo.installPath, "update"))), "Update directory removed");
   ok((yield checkDateHigherThan(testAppInfo.updatedFiles, installTime)), "Modification date higher");

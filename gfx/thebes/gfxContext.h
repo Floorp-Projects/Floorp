@@ -61,11 +61,6 @@ public:
     static already_AddRefed<gfxContext> ContextForDrawTarget(mozilla::gfx::DrawTarget* aTarget);
 
     /**
-     * Return the surface that this gfxContext was created with
-     */
-    gfxASurface *OriginalSurface();
-
-    /**
      * Return the current transparency group target, if any, along
      * with its device offsets from the top.  If no group is
      * active, returns the surface the gfxContext was created with,
@@ -517,10 +512,6 @@ public:
      * how drawing something will modify the destination. For example, the
      * OVER operator will do alpha blending of source and destination, while
      * SOURCE will replace the destination with the source.
-     *
-     * Note that if the flag FLAG_SIMPLIFY_OPERATORS is set on this
-     * gfxContext, the actual operator set might change for optimization
-     * purposes.  Check the comments below around that flag.
      */
     void SetOperator(GraphicsOperator op);
     GraphicsOperator CurrentOperator() const;
@@ -593,32 +584,12 @@ public:
 
     mozilla::gfx::Point GetDeviceOffset() const;
 
-    /**
-     ** Flags
-     **/
-
     enum {
-        /* If this flag is set, operators other than CLEAR, SOURCE, or
-         * OVER will be converted to OVER before being sent to cairo.
-         *
-         * This is most useful with a printing surface, where
-         * operators such as ADD are used to avoid seams for on-screen
-         * display, but where such errors aren't noticeable in print.
-         * This approach is currently used in border rendering.
-         *
-         * However, when printing complex renderings such as SVG,
-         * care should be taken to clear this flag.
-         */
-        FLAG_SIMPLIFY_OPERATORS = (1 << 0),
-        /**
+         /**
          * When this flag is set, snapping to device pixels is disabled.
          * It simply never does anything.
          */
         FLAG_DISABLE_SNAPPING = (1 << 1),
-        /**
-         * Disable copying of backgrounds in PushGroupAndCopyBackground.
-         */
-        FLAG_DISABLE_COPY_BACKGROUND = (1 << 2)
     };
 
     void SetFlag(int32_t aFlag) { mFlags |= aFlag; }
@@ -732,7 +703,6 @@ private:
   const AzureState &CurrentState() const { return mStateStack[mStateStack.Length() - 1]; }
 
   cairo_t *mRefCairo;
-  nsRefPtr<gfxASurface> mSurface;
   int32_t mFlags;
 
   mozilla::RefPtr<DrawTarget> mDT;
@@ -906,15 +876,12 @@ public:
     }
     ~gfxContextAutoDisableSubpixelAntialiasing()
     {
-        if (mSurface) {
-            mSurface->SetSubpixelAntialiasingEnabled(mSubpixelAntialiasingEnabled);
-        } else if (mDT) {
+        if (mDT) {
             mDT->SetPermitSubpixelAA(mSubpixelAntialiasingEnabled);
         }
     }
 
 private:
-    nsRefPtr<gfxASurface> mSurface;
     mozilla::RefPtr<mozilla::gfx::DrawTarget> mDT;
     bool mSubpixelAntialiasingEnabled;
 };

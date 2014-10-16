@@ -4,22 +4,24 @@
 
 package org.mozilla.gecko.overlays.ui;
 
-import android.app.AlertDialog;
-import android.content.Context;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.TextView;
+import java.util.Collection;
+
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.overlays.service.sharemethods.ParcelableClientRecord;
+import org.mozilla.gecko.overlays.ui.SendTabList.State;
 
-import java.util.Collection;
-
-import static org.mozilla.gecko.overlays.ui.SendTabList.*;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.TextView;
 
 public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClientRecord> {
+    @SuppressWarnings("unused")
     private static final String LOGTAG = "GeckoSendTabAdapter";
 
     private State currentState;

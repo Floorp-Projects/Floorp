@@ -1022,8 +1022,10 @@ CanvasRenderingContext2D::Redraw(const mgfx::Rect &r)
 void
 CanvasRenderingContext2D::DidRefresh()
 {
-  SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
-  if (glue) {
+  if (IsTargetValid() && SkiaGLTex()) {
+    SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
+    MOZ_ASSERT(glue);
+
     auto gl = glue->GetGLContext();
     gl->FlushIfHeavyGLCallsSinceLastFlush();
   }
@@ -4823,6 +4825,14 @@ CanvasRenderingContext2D::CreateImageData(JSContext* cx,
 
 static uint8_t g2DContextLayerUserData;
 
+
+uint32_t
+CanvasRenderingContext2D::SkiaGLTex() const
+{
+    MOZ_ASSERT(IsTargetValid());
+    return (uint32_t)(uintptr_t)mTarget->GetNativeSurface(NativeSurfaceType::OPENGL_TEXTURE);
+}
+
 already_AddRefed<CanvasLayer>
 CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                          CanvasLayer *aOldLayer,
@@ -4854,9 +4864,11 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 
     CanvasLayer::Data data;
 
-    SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
-    GLuint skiaGLTex = (GLuint)(uintptr_t)mTarget->GetNativeSurface(NativeSurfaceType::OPENGL_TEXTURE);
-    if (glue && skiaGLTex) {
+    GLuint skiaGLTex = SkiaGLTex();
+    if (skiaGLTex) {
+      SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
+      MOZ_ASSERT(glue);
+
       data.mGLContext = glue->GetGLContext();
       data.mFrontbufferGLTex = skiaGLTex;
     } else {
@@ -4898,11 +4910,14 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   data.mSize = nsIntSize(mWidth, mHeight);
   data.mHasAlpha = !mOpaque;
 
-  SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
-  GLuint skiaGLTex = (GLuint)(uintptr_t)mTarget->GetNativeSurface(NativeSurfaceType::OPENGL_TEXTURE);
-  if (glue && skiaGLTex) {
+  GLuint skiaGLTex = SkiaGLTex();
+  if (skiaGLTex) {
     canvasLayer->SetPreTransactionCallback(
             CanvasRenderingContext2DUserData::PreTransactionCallback, userData);
+
+    SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
+    MOZ_ASSERT(glue);
+
     data.mGLContext = glue->GetGLContext();
     data.mFrontbufferGLTex = skiaGLTex;
   } else {

@@ -241,7 +241,7 @@ NativeApp.prototype = {
     writer.setString("Webapp", "Name", this.appLocalizedName);
     writer.setString("Webapp", "Profile", this.uniqueName);
     writer.writeFile();
-    applicationINI.permissions = PERMS_FILE;
+    yield OS.File.setPermissions(applicationINI.path, { unixMode: PERMS_FILE });
 
     // ${InstallDir}/Contents/Info.plist
     let infoPListContent = '<?xml version="1.0" encoding="UTF-8"?>\n\

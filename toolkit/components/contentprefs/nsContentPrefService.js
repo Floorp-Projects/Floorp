@@ -1167,6 +1167,13 @@ ContentPrefService.prototype = {
   },
 
   _dbMigrate: function ContentPrefService__dbMigrate(aDBConnection, aOldVersion, aNewVersion) {
+    /**
+     * Migrations should follow the template rules in bug 1074817 comment 3 which are:
+     * 1. Migration should be incremental and non-breaking.
+     * 2. It should be idempotent because one can downgrade an upgrade again.
+     * On downgrade:
+     * 1. Decrement schema version so that upgrade runs the migrations again.
+     */
     aDBConnection.beginTransaction();
 
     try {
@@ -1213,7 +1220,14 @@ ContentPrefService.prototype = {
   },
 
   _dbMigrate3To4: function ContentPrefService__dbMigrate3To4(aDBConnection) {
-    aDBConnection.executeSimpleSQL("ALTER TABLE prefs ADD COLUMN timestamp INTEGER NOT NULL DEFAULT 0");
+    // Add timestamp column if it does not exist yet. This operation is idempotent.
+    try {
+      let stmt = aDBConnection.createStatement("SELECT timestamp FROM prefs");
+      stmt.finalize();
+    } catch (e) {
+      aDBConnection.executeSimpleSQL("ALTER TABLE prefs ADD COLUMN timestamp INTEGER NOT NULL DEFAULT 0");
+    }
+
     // To modify prefs_idx drop it and create again.
     aDBConnection.executeSimpleSQL("DROP INDEX IF EXISTS prefs_idx");
     this._dbCreateIndices(aDBConnection);

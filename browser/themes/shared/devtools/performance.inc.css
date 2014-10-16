@@ -1,0 +1,34 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Toolbar */
+
+#performance-toolbar {
+  -moz-border-end: 1px solid;
+}
+
+.theme-dark #performance-toolbar > tabs,
+.theme-dark #performance-toolbar {
+  -moz-border-end-color: #000; /* Splitters */
+}
+
+.theme-light #performance-toolbar > tabs,
+.theme-light #performance-toolbar {
+  -moz-border-end-color: #aaa; /* Splitters */
+}
+
+/* Overview Panel */
+
+#record-button {
+  list-style-image: url(profiler-stopwatch.svg);
+}
+
+#record-button[checked] {
+  list-style-image: url(profiler-stopwatch-checked.svg);
+}
+
+#record-button[locked] {
+  pointer-events: none;
+}

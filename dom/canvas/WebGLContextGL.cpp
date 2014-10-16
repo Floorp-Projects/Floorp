@@ -922,7 +922,7 @@ WebGLContext::GenerateMipmap(GLenum rawTarget)
     const TexImageTarget imageTarget = (target == LOCAL_GL_TEXTURE_2D)
                                                   ? LOCAL_GL_TEXTURE_2D
                                                   : LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-    if (!tex->HasImageInfoAt(imageTarget, 0))
+    if (!tex->HasImageInfoAt(imageTarget, tex->GetBaseMipmapLevel()))
     {
         return ErrorInvalidOperation("generateMipmap: Level zero of texture is not defined.");
     }
@@ -1510,6 +1510,19 @@ void WebGLContext::TexParameter_base(GLenum rawTarget, GLenum pname,
     bool paramValueInvalid = false;
 
     switch (pname) {
+        case LOCAL_GL_TEXTURE_BASE_LEVEL:
+        case LOCAL_GL_TEXTURE_MAX_LEVEL:
+            if (!IsWebGL2())
+                return ErrorInvalidEnumInfo("texParameter: pname", pname);
+            if (intParam < 0) {
+                paramValueInvalid = true;
+                break;
+            }
+            if (pname == LOCAL_GL_TEXTURE_BASE_LEVEL)
+                tex->SetBaseMipmapLevel(intParam);
+            else
+                tex->SetMaxMipmapLevel(intParam);
+            break;
         case LOCAL_GL_TEXTURE_MIN_FILTER:
             switch (intParam) {
                 case LOCAL_GL_NEAREST:

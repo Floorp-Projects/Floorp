@@ -556,8 +556,8 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
 
   // Make sure the resolution and difference in frame resolution are accounted
   // for in the layer transform.
-  aTransform.Scale(1/(resolution * layerScale.width),
-                   1/(resolution * layerScale.height), 1);
+  aTransform.PreScale(1/(resolution * layerScale.width),
+                      1/(resolution * layerScale.height), 1);
 
   uint32_t rowCount = 0;
   uint32_t tileX = 0;

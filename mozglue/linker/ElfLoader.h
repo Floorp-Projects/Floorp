@@ -64,8 +64,10 @@ IsSignalHandlingBroken();
 
 }
 
-/* Forward declaration because BaseElf.h includes ElfLoader.h */
+/* Forward declarations for use in LibHandle */
 class BaseElf;
+class CustomElf;
+class SystemElf;
 
 /**
  * Specialize RefCounted template for LibHandle. We may get references to
@@ -203,6 +205,13 @@ public:
   virtual const void *FindExidx(int *pcount) const = 0;
 #endif
 
+  /**
+   * Shows some stats about the Mappable instance. The when argument is to be
+   * used by the caller to give an identifier of the when the stats call is
+   * made.
+   */
+  virtual void stats(const char *when) const { };
+
 protected:
   /**
    * Returns a mappable object for use by MappableMMap and related functions.
@@ -210,13 +219,15 @@ protected:
   virtual Mappable *GetMappable() const = 0;
 
   /**
-   * Returns whether the handle is a SystemElf or not. (short of a better way
-   * to do this without RTTI)
+   * Returns the instance, casted as the wanted type. Returns nullptr if
+   * that's not the actual type. (short of a better way to do this without
+   * RTTI)
    */
   friend class ElfLoader;
   friend class CustomElf;
   friend class SEGVHandler;
-  virtual bool IsSystemElf() const { return false; }
+  virtual BaseElf *AsBaseElf() { return nullptr; }
+  virtual SystemElf *AsSystemElf() { return nullptr; }
 
 private:
   MozRefCountType directRefCnt;
@@ -286,11 +297,11 @@ protected:
   virtual Mappable *GetMappable() const;
 
   /**
-   * Returns whether the handle is a SystemElf or not. (short of a better way
-   * to do this without RTTI)
+   * Returns the instance, casted as SystemElf. (short of a better way to do
+   * this without RTTI)
    */
   friend class ElfLoader;
-  virtual bool IsSystemElf() const { return true; }
+  virtual SystemElf *AsSystemElf() { return this; }
 
   /**
    * Remove the reference to the system linker handle. This avoids dlclose()
@@ -426,12 +437,14 @@ protected:
    * LibHandle subclass creators.
    */
   void Register(LibHandle *handle);
+  void Register(CustomElf *handle);
 
   /**
    * Forget about the given handle. This method is meant to be called by
    * LibHandle subclass destructors.
    */
   void Forget(LibHandle *handle);
+  void Forget(CustomElf *handle);
 
   /* Last error. Used for dlerror() */
   friend class SystemElf;
@@ -448,7 +461,15 @@ private:
 
   /* System loader handle for the library/program containing our code. This
    * is used to resolve wrapped functions. */
-  mozilla::UniquePtr<BaseElf> self_elf;
+  mozilla::RefPtr<LibHandle> self_elf;
+
+#if defined(ANDROID)
+  /* System loader handle for the libc. This is used to resolve weak symbols
+   * that some libcs contain that the Android linker won't dlsym(). Normally,
+   * we wouldn't treat non-Android differently, but glibc uses versioned
+   * symbols which this linker doesn't support. */
+  mozilla::RefPtr<LibHandle> libc;
+#endif
 
   /* Bookkeeping */
   typedef std::vector<LibHandle *> LibHandleList;
@@ -456,6 +477,7 @@ private:
 
 protected:
   friend class CustomElf;
+  friend class LoadedElf;
   /**
    * Show some stats about Mappables in CustomElfs. The when argument is to
    * be used by the caller to give an identifier of the when the stats call

@@ -202,7 +202,7 @@ public interface HealthReportStorage {
    * version.
    *
    * @param measurement
-   *          a measurement name, such as "org.mozila.appInfo.appInfo".
+   *          a measurement name, such as "org.mozilla.appInfo.appInfo".
    * @param version
    *          a version number, such as '3'.
    * @param fields

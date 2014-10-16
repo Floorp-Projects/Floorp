@@ -20,6 +20,7 @@
 #include "jit/BaselineJIT.h"
 #include "js/Debug.h"
 #include "js/GCAPI.h"
+#include "js/UbiNodeTraverse.h"
 #include "js/Vector.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/DebuggerMemory.h"
@@ -2982,6 +2983,202 @@ Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+/*
+ * A class for parsing 'findObjects' query arguments and searching for objects
+ * that match the criteria they represent.
+ */
+class MOZ_STACK_CLASS Debugger::ObjectQuery
+{
+  public:
+    /* Construct an ObjectQuery to use matching scripts for |dbg|. */
+    ObjectQuery(JSContext *cx, Debugger *dbg) :
+        cx(cx), dbg(dbg), className(cx)
+    {}
+
+    /*
+     * Parse the query object |query|, and prepare to match only the objects it
+     * specifies.
+     */
+    bool parseQuery(HandleObject query) {
+        /* Check for the 'class' property */
+        RootedValue cls(cx);
+        if (!JSObject::getProperty(cx, query, query, cx->names().class_, &cls))
+            return false;
+        if (!cls.isUndefined()) {
+            if (!cls.isString()) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                     "query object's 'class' property",
+                                     "neither undefined nor a string");
+                return false;
+            }
+            className = cls;
+        }
+        return true;
+    }
+
+    /* Set up this ObjectQuery appropriately for a missing query argument. */
+    void omittedQuery() {
+        className.setUndefined();
+    }
+
+    /*
+     * Traverse the heap to find all relevant objects and add them to the
+     * provided vector.
+     */
+    bool findObjects(AutoObjectVector &objs) {
+        if (!prepareQuery())
+            return false;
+
+        {
+            /*
+             * We can't tolerate the GC moving things around while we're
+             * searching the heap. Check that nothing we do causes a GC.
+             */
+            JS::AutoCheckCannotGC autoCannotGC;
+
+            Traversal traversal(cx, *this, autoCannotGC);
+            if (!traversal.init())
+                return false;
+
+            /* Add each debuggee global as a start point of our traversal. */
+            for (GlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
+                if (!traversal.addStartVisited(JS::ubi::Node(static_cast<JSObject *>(r.front()))))
+                    return false;
+            }
+
+            /*
+             * Iterate over all compartments and add traversal start points at
+             * objects that have CCWs in other compartments keeping them alive.
+             */
+            for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
+                JSCompartment *comp = c.get();
+                if (!comp)
+                    continue;
+                for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
+                    const CrossCompartmentKey &key = e.front().key();
+                    if (key.kind != CrossCompartmentKey::ObjectWrapper)
+                        continue;
+                    JSObject *obj = static_cast<JSObject *>(key.wrapped);
+                    if (!traversal.addStartVisited(JS::ubi::Node(obj)))
+                        return false;
+                }
+            }
+
+            if (!traversal.traverse())
+                return false;
+
+            /*
+             * Iterate over the visited set of nodes and accumulate all
+             * |JSObject|s matching our criteria in the given vector.
+             */
+            for (Traversal::NodeMap::Range r = traversal.visited.all(); !r.empty(); r.popFront()) {
+                JS::ubi::Node node = r.front().key();
+                if (!node.is<JSObject>())
+                    continue;
+
+                JSObject *obj = node.as<JSObject>();
+
+                if (!className.isUndefined()) {
+                    const char *objClassName = obj->getClass()->name;
+                    if (strcmp(objClassName, classNameCString.ptr()) != 0)
+                        continue;
+                }
+
+                if (!objs.append(obj))
+                    return false;
+            }
+
+            return true;
+        }
+    }
+
+    /*
+     * |ubi::Node::BreadthFirst| interface.
+     *
+     * We use an empty traversal function and just iterate over the traversal's
+     * visited set post-facto in |findObjects|.
+     */
+
+    class NodeData {};
+    typedef JS::ubi::BreadthFirst<ObjectQuery> Traversal;
+    bool operator() (Traversal &, JS::ubi::Node, const JS::ubi::Edge &, NodeData *, bool)
+    {
+        return true;
+    }
+
+  private:
+    /* The context in which we should do our work. */
+    JSContext *cx;
+
+    /* The debugger for which we conduct queries. */
+    Debugger *dbg;
+
+    /*
+     * If this is non-null, matching objects will have a class whose name is
+     * this property.
+     */
+    RootedValue className;
+
+    /* The className member, as a C string. */
+    JSAutoByteString classNameCString;
+
+    /*
+     * Given that either omittedQuery or parseQuery has been called, prepare the
+     * query for matching objects.
+     */
+    bool prepareQuery() {
+        if (className.isString()) {
+            if (!classNameCString.encodeLatin1(cx, className.toString()))
+                return false;
+        }
+
+        return true;
+    }
+};
+
+bool
+Debugger::findObjects(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "findObjects", args, dbg);
+
+    ObjectQuery query(cx, dbg);
+
+    if (args.length() >= 1) {
+        RootedObject queryObject(cx, NonNullObject(cx, args[0]));
+        if (!queryObject || !query.parseQuery(queryObject))
+            return false;
+    } else {
+        query.omittedQuery();
+    }
+
+    /*
+     * Accumulate the objects in an AutoObjectVector, instead of creating the JS
+     * array as we go, because we mustn't allocate JS objects or GC while we
+     * traverse the heap graph.
+     */
+    AutoObjectVector objects(cx);
+
+    if (!query.findObjects(objects))
+        return false;
+
+    size_t length = objects.length();
+    RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, length));
+    if (!result)
+        return false;
+
+    result->ensureDenseInitializedLength(cx, 0, length);
+
+    for (size_t i = 0; i < length; i++) {
+        RootedValue debuggeeVal(cx, ObjectValue(*objects[i]));
+        if (!dbg->wrapDebuggeeValue(cx, &debuggeeVal))
+            return false;
+        result->setDenseElement(i, debuggeeVal);
+    }
+
+    args.rval().setObject(*result);
+    return true;
+}
+
 bool
 Debugger::findAllGlobals(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -3061,6 +3258,7 @@ const JSFunctionSpec Debugger::methods[] = {
     JS_FN("getNewestFrame", Debugger::getNewestFrame, 0, 0),
     JS_FN("clearAllBreakpoints", Debugger::clearAllBreakpoints, 0, 0),
     JS_FN("findScripts", Debugger::findScripts, 1, 0),
+    JS_FN("findObjects", Debugger::findObjects, 1, 0),
     JS_FN("findAllGlobals", Debugger::findAllGlobals, 0, 0),
     JS_FN("makeGlobalObjectReference", Debugger::makeGlobalObjectReference, 1, 0),
     JS_FS_END
