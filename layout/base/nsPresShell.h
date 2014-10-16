@@ -50,7 +50,6 @@ class nsAutoCauseReflowNotifier;
 
 namespace mozilla {
 class CSSStyleSheet;
-class EventDispatchingCallback;
 } // namespace mozilla
 
 // 250ms.  This is actually pref-controlled, but we use this value if we fail
@@ -75,9 +74,6 @@ public:
 
   // Selection caret preference
   static bool SelectionCaretPrefEnabled();
-
-  // BeforeAfterKeyboardEvent preference
-  static bool BeforeAfterKeyboardEventEnabled();
 
   void Init(nsIDocument* aDocument, nsPresContext* aPresContext,
             nsViewManager* aViewManager, nsStyleSet* aStyleSet,
@@ -372,10 +368,6 @@ public:
   virtual bool AssumeAllImagesVisible() MOZ_OVERRIDE;
 
   virtual void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot);
-
-  virtual void DispatchAfterKeyboardEvent(nsINode* aTarget,
-                                          const mozilla::WidgetKeyboardEvent& aEvent,
-                                          bool aEmbeddedCancelled) MOZ_OVERRIDE;
 
   void SetNextPaintCompressed() { mNextPaintCompressed = true; }
 
@@ -726,24 +718,6 @@ protected:
   void MarkImagesInSubtreeVisible(nsIFrame* aFrame, const nsRect& aRect);
 
   void EvictTouches();
-
-  // Methods for dispatching KeyboardEvent and BeforeAfterKeyboardEvent.
-  void HandleKeyboardEvent(nsINode* aTarget,
-                           mozilla::WidgetKeyboardEvent& aEvent,
-                           bool aEmbeddedCancelled,
-                           nsEventStatus* aStatus,
-                           mozilla::EventDispatchingCallback* aEventCB);
-  void DispatchBeforeKeyboardEventInternal(
-         const nsTArray<nsCOMPtr<mozilla::dom::Element> >& aChain,
-         const mozilla::WidgetKeyboardEvent& aEvent,
-         size_t& aChainIndex,
-         bool& aDefaultPrevented);
-  void DispatchAfterKeyboardEventInternal(
-         const nsTArray<nsCOMPtr<mozilla::dom::Element> >& aChain,
-         const mozilla::WidgetKeyboardEvent& aEvent,
-         bool aEmbeddedCancelled,
-         size_t aChainIndex = 0);
-  bool CanDispatchEvent(const mozilla::WidgetGUIEvent* aEvent = nullptr) const;
 
   // A list of images that are visible or almost visible.
   nsTHashtable< nsRefPtrHashKey<nsIImageLoadingContent> > mVisibleImages;
