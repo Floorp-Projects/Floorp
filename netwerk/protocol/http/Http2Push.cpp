@@ -353,13 +353,13 @@ Http2PushTransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
     mIsDone = true;
   }
 
-  if (Available()) {
+  if (Available() || mIsDone) {
     Http2Stream *consumer = mPushStream->GetConsumerStream();
 
     if (consumer) {
       LOG3(("Http2PushTransactionBuffer::WriteSegments notifying connection "
-            "consumer data available 0x%X [%u]\n",
-            mPushStream->StreamID(), Available()));
+            "consumer data available 0x%X [%u] done=%d\n",
+            mPushStream->StreamID(), Available(), mIsDone));
       mPushStream->ConnectPushedStream(consumer);
     }
   }
