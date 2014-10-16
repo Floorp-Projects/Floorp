@@ -329,36 +329,6 @@ nsRenderingContext::FillRect(nscoord aX, nscoord aY,
 }
 
 void
-nsRenderingContext::DrawEllipse(nscoord aX, nscoord aY,
-                                nscoord aWidth, nscoord aHeight)
-{
-    mThebes->NewPath();
-    mThebes->Ellipse(gfxPoint(FROM_TWIPS(aX) + FROM_TWIPS(aWidth)/2.0,
-                              FROM_TWIPS(aY) + FROM_TWIPS(aHeight)/2.0),
-                     gfxSize(FROM_TWIPS(aWidth),
-                             FROM_TWIPS(aHeight)));
-    mThebes->Stroke();
-}
-
-void
-nsRenderingContext::FillEllipse(const nsRect& aRect)
-{
-    FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-void
-nsRenderingContext::FillEllipse(nscoord aX, nscoord aY,
-                                nscoord aWidth, nscoord aHeight)
-{
-    mThebes->NewPath();
-    mThebes->Ellipse(gfxPoint(FROM_TWIPS(aX) + FROM_TWIPS(aWidth)/2.0,
-                              FROM_TWIPS(aY) + FROM_TWIPS(aHeight)/2.0),
-                     gfxSize(FROM_TWIPS(aWidth),
-                             FROM_TWIPS(aHeight)));
-    mThebes->Fill();
-}
-
-void
 nsRenderingContext::FillPolygon(const nsPoint twPoints[], int32_t aNumPoints)
 {
     if (aNumPoints == 0)
