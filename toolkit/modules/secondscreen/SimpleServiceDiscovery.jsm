@@ -135,9 +135,7 @@ var SimpleServiceDiscovery = {
 
   _usingLAN: function() {
     let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
-    return (network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_WIFI ||
-            network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET ||
-            network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN);
+    return (network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_WIFI || network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET);
   },
 
   _search: function _search() {
