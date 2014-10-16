@@ -13,6 +13,7 @@ dictionary NfcCommandOptions
 
   long techType;
 
+  boolean isP2P;
   sequence<MozNDEFRecordOptions> records;
 };
 
