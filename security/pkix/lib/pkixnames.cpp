@@ -82,9 +82,18 @@ Result MatchPresentedIDWithReferenceID(GeneralNameType referenceIDType,
 uint8_t LocaleInsensitveToLower(uint8_t a);
 bool StartsWithIDNALabel(Input id);
 
+MOZILLA_PKIX_ENUM_CLASS ValidDNSIDMatchType
+{
+  ReferenceID = 0,
+  PresentedID = 1,
+};
+
+bool IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType);
+
 } // unnamed namespace
 
-bool IsValidDNSName(Input hostname);
+bool IsValidReferenceDNSID(Input hostname);
+bool IsValidPresentedDNSID(Input hostname);
 bool ParseIPv4Address(Input hostname, /*out*/ uint8_t (&out)[4]);
 bool ParseIPv6Address(Input hostname, /*out*/ uint8_t (&out)[16]);
 bool PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
@@ -119,7 +128,7 @@ CheckCertHostname(Input endEntityCertDER, Input hostname)
   bool found;
   uint8_t ipv6[16];
   uint8_t ipv4[4];
-  if (IsValidDNSName(hostname)) {
+  if (IsValidReferenceDNSID(hostname)) {
     rv = SearchForName(subjectAltName, subject, GeneralNameType::dNSName,
                        hostname, FallBackToCommonName::Yes, found);
   } else if (ParseIPv6Address(hostname, ipv6)) {
@@ -447,7 +456,7 @@ MatchPresentedIDWithReferenceID(GeneralNameType nameType,
 // example, UTF-8 is OK but UTF-16 is not.
 //
 // The referenceDNSIDWasVerifiedAsValid parameter must be the result of calling
-// IsValidDNSName.
+// IsValidReferenceDNSID.
 //
 // RFC6125 says that a wildcard label may be of the form <x>*<y>.<DNSID>, where
 // <x> and/or <y> may be empty. However, NSS requires <y> to be empty, and we
@@ -854,16 +863,36 @@ ParseIPv6Address(Input hostname, /*out*/ uint8_t (&out)[16])
 }
 
 bool
-IsValidDNSName(Input hostname)
+IsValidReferenceDNSID(Input hostname)
+{
+  return IsValidDNSID(hostname, ValidDNSIDMatchType::ReferenceID);
+}
+
+bool
+IsValidPresentedDNSID(Input hostname)
+{
+  return IsValidDNSID(hostname, ValidDNSIDMatchType::PresentedID);
+}
+
+namespace {
+
+bool
+IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
 {
   if (hostname.GetLength() > 253) {
     return false;
   }
 
   Reader input(hostname);
+
+  bool allowWildcard = matchType == ValidDNSIDMatchType::PresentedID;
+  bool isWildcard = false;
+  size_t dotCount = 0;
+
   size_t labelLength = 0;
   bool labelIsAllNumeric = false;
-  bool endsWithHyphen = false;
+  bool labelIsWildcard = false;
+  bool labelEndsWithHyphen = false;
 
   do {
     static const size_t MAX_LABEL_LENGTH = 63;
@@ -872,13 +901,21 @@ IsValidDNSName(Input hostname)
     if (input.Read(b) != Success) {
       return false;
     }
+    if (labelIsWildcard) {
+      // Like NSS, be stricter than RFC6125 requires by insisting that the
+      // "*" must be the last character in the label. This also prevents
+      // multiple "*" in the label.
+      if (b != '.') {
+        return false;
+      }
+    }
     switch (b) {
       case '-':
         if (labelLength == 0) {
           return false; // Labels must not start with a hyphen.
         }
         labelIsAllNumeric = false;
-        endsWithHyphen = true;
+        labelEndsWithHyphen = true;
         ++labelLength;
         if (labelLength > MAX_LABEL_LENGTH) {
           return false;
@@ -895,7 +932,7 @@ IsValidDNSName(Input hostname)
         if (labelLength == 0) {
           labelIsAllNumeric = true;
         }
-        endsWithHyphen = false;
+        labelEndsWithHyphen = false;
         ++labelLength;
         if (labelLength > MAX_LABEL_LENGTH) {
           return false;
@@ -919,7 +956,21 @@ IsValidDNSName(Input hostname)
       case 'l': case 'L': case 'y': case 'Y':
       case 'm': case 'M': case 'z': case 'Z':
         labelIsAllNumeric = false;
-        endsWithHyphen = false;
+        labelEndsWithHyphen = false;
+        ++labelLength;
+        if (labelLength > MAX_LABEL_LENGTH) {
+          return false;
+        }
+        break;
+
+      case '*':
+        if (!allowWildcard) {
+          return false;
+        }
+        labelIsWildcard = true;
+        isWildcard = true;
+        labelIsAllNumeric = false;
+        labelEndsWithHyphen = false;
         ++labelLength;
         if (labelLength > MAX_LABEL_LENGTH) {
           return false;
@@ -927,12 +978,15 @@ IsValidDNSName(Input hostname)
         break;
 
       case '.':
+        ++dotCount;
         if (labelLength == 0) {
           return false;
         }
-        if (endsWithHyphen) {
+        if (labelEndsWithHyphen) {
           return false; // Labels must not end with a hyphen.
         }
+        allowWildcard = false; // only allowed in the first label.
+        labelIsWildcard = false;
         labelLength = 0;
         break;
 
@@ -941,7 +995,7 @@ IsValidDNSName(Input hostname)
     }
   } while (!input.AtEnd());
 
-  if (endsWithHyphen) {
+  if (labelEndsWithHyphen) {
     return false; // Labels must not end with a hyphen.
   }
 
@@ -949,7 +1003,33 @@ IsValidDNSName(Input hostname)
     return false; // Last label must not be all numeric.
   }
 
+  if (isWildcard) {
+    // If the DNS ID ends with a dot, the last dot signifies an absolute ID.
+    size_t labelCount = (labelLength == 0) ? dotCount : (dotCount + 1);
+
+    // Like NSS, require at least two labels to follow the wildcard label.
+    //
+    // TODO(bug XXXXXXX): Allow the TrustDomain to control this on a
+    // per-eTLD+1 basis, similar to Chromium. Even then, it might be better to
+    // still enforce that there are at least two labels after the wildcard.
+    if (labelCount < 3) {
+      return false;
+    }
+    // XXX: RFC6125 says that we shouldn't accept wildcards within an IDN
+    // A-Label. The consequence of this is that we effectively discriminate
+    // against users of languages that cannot be encoded with ASCII.
+    if (StartsWithIDNALabel(hostname)) {
+      return false;
+    }
+
+    // TODO(bug XXXXXXX): Wildcards are not allowed for EV certificates.
+    // Provide an option to indicate whether wildcards should be matched, for
+    // the purpose of helping the application enforce this.
+  }
+
   return true;
 }
+
+} // unnamed namespace
 
 } } // namespace mozilla::pkix
