@@ -19,8 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyFilter",
   "resource:///modules/sessionstore/PrivacyFilter.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "RevivableWindows",
-  "resource:///modules/sessionstore/RevivableWindows.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionFile",
@@ -207,24 +205,23 @@ let SessionSaverInternal = {
       delete state.deferredInitialState;
     }
 
-    // We want to revive closed windows that have been closed in succession
-    // without any user action in between closing those. This happens here in
-    // the SessionSaver because we only want to revive when saving to disk.
-    // On Mac OS X this list will always be empty.
-    let windowsToRevive = RevivableWindows.get();
-    state.windows.unshift(...windowsToRevive);
-    let revivedWindows = state._closedWindows.splice(0, windowsToRevive.length);
-#ifdef DEBUG
-    // Check that the windows to revive equal the windows
-    // that we removed from the list of closed windows.
-    let match = revivedWindows.every((win, idx) => {
-      return win == windowsToRevive[windowsToRevive.length - 1 - idx];
-    });
+#ifndef XP_MACOSX
+    // We want to restore closed windows that are marked with _shouldRestore.
+    // We're doing this here because we want to control this only when saving
+    // the file.
+    while (state._closedWindows.length) {
+      let i = state._closedWindows.length - 1;
 
-    if (!match) {
-      throw new Error("SessionStore: revived windows didn't match closed windows");
+      if (!state._closedWindows[i]._shouldRestore) {
+        // We only need to go until _shouldRestore
+        // is falsy since we're going in reverse.
+        break;
+      }
+
+      delete state._closedWindows[i]._shouldRestore;
+      state.windows.unshift(state._closedWindows.pop());
     }
-#endif DEBUG
+#endif
 
     stopWatchFinish("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
     return this._writeState(state);
