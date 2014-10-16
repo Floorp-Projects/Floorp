@@ -452,8 +452,15 @@ void
 ElfLoader::Register(LibHandle *handle)
 {
   handles.push_back(handle);
-  if (dbg && !handle->IsSystemElf())
-    dbg.Add(static_cast<CustomElf *>(handle));
+}
+
+void
+ElfLoader::Register(CustomElf *handle)
+{
+  Register(static_cast<LibHandle *>(handle));
+  if (dbg) {
+    dbg.Add(handle);
+  }
 }
 
 void
@@ -466,12 +473,19 @@ ElfLoader::Forget(LibHandle *handle)
   if (it != handles.end()) {
     DEBUG_LOG("ElfLoader::Forget(%p [\"%s\"])", reinterpret_cast<void *>(handle),
                                                 handle->GetPath());
-    if (dbg && !handle->IsSystemElf())
-      dbg.Remove(static_cast<CustomElf *>(handle));
     handles.erase(it);
   } else {
     DEBUG_LOG("ElfLoader::Forget(%p [\"%s\"]): Handle not found",
               reinterpret_cast<void *>(handle), handle->GetPath());
+  }
+}
+
+void
+ElfLoader::Forget(CustomElf *handle)
+{
+  Forget(static_cast<LibHandle *>(handle));
+  if (dbg) {
+    dbg.Remove(handle);
   }
 }
 
@@ -534,8 +548,8 @@ ElfLoader::~ElfLoader()
   for (LibHandleList::reverse_iterator it = handles.rbegin();
        it < handles.rend(); ++it) {
     if ((*it)->DirectRefCount()) {
-      if ((*it)->IsSystemElf()) {
-        static_cast<SystemElf *>(*it)->Forget();
+      if (SystemElf *se = (*it)->AsSystemElf()) {
+        se->Forget();
       } else {
         list.push_back(*it);
       }
@@ -550,7 +564,7 @@ ElfLoader::~ElfLoader()
     list = handles;
     for (LibHandleList::reverse_iterator it = list.rbegin();
          it < list.rend(); ++it) {
-      if ((*it)->IsSystemElf()) {
+      if ((*it)->AsSystemElf()) {
         DEBUG_LOG("ElfLoader::~ElfLoader(): Remaining handle for \"%s\" "
                   "[%d direct refs, %d refs total]", (*it)->GetPath(),
                   (*it)->DirectRefCount(), (*it)->refCount());
@@ -1203,11 +1217,12 @@ void SEGVHandler::handler(int signum, siginfo_t *info, void *context)
   if (info->si_code == SEGV_ACCERR) {
     mozilla::RefPtr<LibHandle> handle =
       ElfLoader::Singleton.GetHandleByPtr(info->si_addr);
-    if (handle && !handle->IsSystemElf()) {
-      DEBUG_LOG("Within the address space of a CustomElf");
-      CustomElf *elf = static_cast<CustomElf *>(static_cast<LibHandle *>(handle));
-      if (elf->mappable->ensure(info->si_addr))
+    BaseElf *elf;
+    if (handle && (elf = handle->AsBaseElf())) {
+      DEBUG_LOG("Within the address space of %s", handle->GetPath());
+      if (elf->mappable && elf->mappable->ensure(info->si_addr)) {
         return;
+      }
     }
   }
 
