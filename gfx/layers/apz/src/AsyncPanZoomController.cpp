@@ -1776,7 +1776,7 @@ ScreenPoint AsyncPanZoomController::PanStart() const {
   return ScreenPoint(mX.PanStart(), mY.PanStart());
 }
 
-const ScreenPoint AsyncPanZoomController::GetVelocityVector() {
+const ScreenPoint AsyncPanZoomController::GetVelocityVector() const {
   return ScreenPoint(mX.GetVelocity(), mY.GetVelocity());
 }
 
