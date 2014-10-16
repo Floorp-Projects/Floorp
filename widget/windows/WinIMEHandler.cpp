@@ -129,13 +129,22 @@ IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
                                         aResult);
 }
 
+#ifdef NS_ENABLE_TSF
+// static
+bool
+IMEHandler::IsIMMActive()
+{
+  return nsTextStore::IsIMM_IME();
+}
+#endif // #ifdef NS_ENABLE_TSF
+
 // static
 bool
 IMEHandler::IsComposing()
 {
 #ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
-    return nsTextStore::IsComposing();
+    return nsTextStore::IsComposing() || nsIMM32Handler::IsComposing();
   }
 #endif // #ifdef NS_ENABLE_TSF
 
@@ -148,7 +157,8 @@ IMEHandler::IsComposingOn(nsWindow* aWindow)
 {
 #ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
-    return nsTextStore::IsComposingOn(aWindow);
+    return nsTextStore::IsComposingOn(aWindow) ||
+           nsIMM32Handler::IsComposingOn(aWindow);
   }
 #endif // #ifdef NS_ENABLE_TSF
 
@@ -163,8 +173,24 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
 #ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
     switch (aIMENotification.mMessage) {
-      case NOTIFY_IME_OF_SELECTION_CHANGE:
-        return nsTextStore::OnSelectionChange();
+      case NOTIFY_IME_OF_SELECTION_CHANGE: {
+        nsresult rv = nsTextStore::OnSelectionChange();
+        // If IMM IME is active, we need to notify nsIMM32Handler of updating
+        // composition change.  It will adjust candidate window position or
+        // composition window position.
+        if (IsIMMActive()) {
+          nsIMM32Handler::OnUpdateComposition(aWindow);
+        }
+        return rv;
+      }
+      case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+        // If IMM IME is active, we need to notify nsIMM32Handler of updating
+        // composition change.  It will adjust candidate window position or
+        // composition window position.
+        if (IsIMMActive()) {
+          nsIMM32Handler::OnUpdateComposition(aWindow);
+        }
+        return NS_OK;
       case NOTIFY_IME_OF_TEXT_CHANGE:
         return nsTextStore::OnTextChange(aIMENotification);
       case NOTIFY_IME_OF_FOCUS:
@@ -174,15 +200,23 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
         return nsTextStore::OnFocusChange(false, aWindow,
                                           aWindow->GetInputContext());
       case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+        // If IMM IME is active, we should send a mouse button event via IMM.
+        if (IsIMMActive()) {
+          return nsIMM32Handler::OnMouseButtonEvent(aWindow, aIMENotification);
+        }
         return nsTextStore::OnMouseButtonEvent(aIMENotification);
       case REQUEST_TO_COMMIT_COMPOSITION:
         if (nsTextStore::IsComposingOn(aWindow)) {
           nsTextStore::CommitComposition(false);
+        } else if (IsIMMActive()) {
+          nsIMM32Handler::CommitComposition(aWindow);
         }
         return NS_OK;
       case REQUEST_TO_CANCEL_COMPOSITION:
         if (nsTextStore::IsComposingOn(aWindow)) {
           nsTextStore::CommitComposition(true);
+        } else if (IsIMMActive()) {
+          nsIMM32Handler::CancelComposition(aWindow);
         }
         return NS_OK;
       case NOTIFY_IME_OF_POSITION_CHANGE:
@@ -239,7 +273,7 @@ bool
 IMEHandler::GetOpenState(nsWindow* aWindow)
 {
 #ifdef NS_ENABLE_TSF
-  if (IsTSFAvailable()) {
+  if (IsTSFAvailable() && !IsIMMActive()) {
     return nsTextStore::GetIMEOpenState();
   }
 #endif //NS_ENABLE_TSF
