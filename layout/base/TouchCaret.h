@@ -118,6 +118,12 @@ private:
   nsPoint GetTouchCaretPosition();
 
   /**
+   * Check whether nsCaret shows in the scroll frame boundary, i.e. its rect
+   * intersects scroll frame's rect.
+   */
+  bool IsCaretShowingInScrollFrame();
+
+  /**
    * Clamp the position of the touch caret to the scroll frame boundary.
    * The returned point is relative to the canvas frame.
    */
