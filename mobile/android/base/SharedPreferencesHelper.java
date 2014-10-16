@@ -224,7 +224,7 @@ public final class SharedPreferencesHelper
                 msg.put("profileName", this.profileName);
                 msg.put("key", key);
 
-                // Truly, this is awful, but the API impedence is strong: there
+                // Truly, this is awful, but the API impedance is strong: there
                 // is no way to get a single untyped value from a
                 // SharedPreferences instance.
                 msg.put("value", sharedPreferences.getAll().get(key));

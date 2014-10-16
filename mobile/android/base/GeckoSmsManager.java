@@ -470,7 +470,7 @@ public class GeckoSmsManager
           envelope.setMessageId(id);
           envelope.setMessageTimestamp(timestamp);
 
-          Log.i("GeckoSmsManager", "SMS sending was successfull!");
+          Log.i("GeckoSmsManager", "SMS sending was successful!");
         } else {
           notifySmsDelivery(envelope.getMessageId(),
                             kDeliveryStatusSuccess,

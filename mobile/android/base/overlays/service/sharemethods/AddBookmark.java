@@ -25,7 +25,7 @@ public class AddBookmark extends ShareMethod {
     }
 
     @Override
-    public String getSuccessMesssage() {
+    public String getSuccessMessage() {
         return context.getResources().getString(R.string.bookmark_added);
     }
 

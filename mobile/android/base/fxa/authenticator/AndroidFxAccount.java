@@ -96,7 +96,7 @@ public class AndroidFxAccount {
    * {@link AccountPickler#pickle}, and is identical to calling it directly.
    * <p>
    * Note that pickling is different from bundling, which involves operations on a
-   * {@link android.os.Bundle Bundle} object of miscellaenous data associated with the account.
+   * {@link android.os.Bundle Bundle} object of miscellaneous data associated with the account.
    * See {@link #persistBundle} and {@link #unbundle} for more.
    */
   public void pickle(final String filename) {

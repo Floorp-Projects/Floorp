@@ -166,7 +166,7 @@ NativeApp.prototype = {
   _applyTempInstallation: Task.async(function*(aTmpDir, aInstallDir) {
     yield moveDirectory(aTmpDir, aInstallDir);
 
-    this._createSystemFiles(aInstallDir);
+    yield this._createSystemFiles(aInstallDir);
   }),
 
   _removeInstallation: function(keepProfile, aInstallDir) {
@@ -273,7 +273,7 @@ NativeApp.prototype = {
     writer.writeFile();
   },
 
-  _createSystemFiles: function(aInstallDir) {
+  _createSystemFiles: Task.async(function*(aInstallDir) {
     let webappsBundle = Services.strings.createBundle("chrome://global/locale/webapps.properties");
 
     let webapprtPath = OS.Path.join(aInstallDir, this.webapprt);
@@ -306,8 +306,8 @@ NativeApp.prototype = {
 
     writer.writeFile();
 
-    desktopINIfile.permissions = PERMS_FILE | OS.Constants.libc.S_IXUSR;
-  },
+    yield OS.File.setPermissions(desktopINIfile.path, { unixMode: PERMS_FILE | OS.Constants.libc.S_IXUSR });
+  }),
 
   /**
    * Process the icon from the imageStream as retrieved from

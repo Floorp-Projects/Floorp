@@ -20,12 +20,12 @@ public class testTitleBar extends PixelTest {
         inputAndLoadUrl(blank1);
         verifyPageTitle(title);
 
-        // Verifing the full URL is displayed in the URL Bar
+        // Ensure the full URL is displayed in the URL Bar
         selectOption(StringHelper.SHOW_PAGE_ADDRESS_LABEL);
         inputAndLoadUrl(blank1);
         verifyUrl(blank1);
 
-        // Verifing the title is displayed in the URL Bar
+        // Ensure the title is displayed in the URL Bar
         selectOption(StringHelper.SHOW_PAGE_TITLE_LABEL);
         inputAndLoadUrl(blank1);
         verifyPageTitle(title);

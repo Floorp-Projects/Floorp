@@ -146,7 +146,7 @@ public class UninstallListener extends BroadcastReceiver {
         public void run() {
             ThreadUtils.assertOnBackgroundThread();
 
-            // Perform webapp uninstalls as appropiate.
+            // Perform webapp uninstalls as appropriate.
             UninstallListener.initUninstallPackageScan(mApp.getApplicationContext());
         }
     }
