@@ -567,10 +567,6 @@ public:
 
     return *this;
   }
-  Matrix4x4 &Translate(Float aX, Float aY, Float aZ)
-  {
-    return PreTranslate(aX, aY, aZ);
-  }
 
   /**
    * Similar to PreTranslate, but the translation is applied -after- this
@@ -626,10 +622,6 @@ public:
     _33 *= aZ;
 
     return *this;
-  }
-  Matrix4x4 &Scale(Float aX, Float aY, Float aZ)
-  {
-    return PreScale(aX, aY, aZ);
   }
 
   /**
