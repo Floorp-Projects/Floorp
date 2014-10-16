@@ -5643,6 +5643,15 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      */
     public final void setFragmentContext(@Local String context,
             @NsUri String ns, T node, boolean quirks) {
+        // [NOCPP[
+        if (!((context == null && ns == null)
+                || "http://www.w3.org/1999/xhtml" == ns
+                || "http://www.w3.org/2000/svg" == ns || "http://www.w3.org/1998/Math/MathML" == ns)) {
+            throw new IllegalArgumentException(
+                    "The namespace must be the HTML, SVG or MathML namespace (or null when the local name is null). Got: "
+                            + ns);
+        }
+        // ]NOCPP]
         this.contextName = context;
         this.contextNamespace = ns;
         this.contextNode = node;

@@ -16,6 +16,7 @@ EXPORTS.mozilla.dom += [
     'TelephonyCall.h',
     'TelephonyCallGroup.h',
     'TelephonyCallId.h',
+    'USSDSession.h'
 ]
 
 EXPORTS.mozilla.dom.telephony += [
@@ -23,6 +24,7 @@ EXPORTS.mozilla.dom.telephony += [
     'ipc/TelephonyParent.h',
     'TelephonyCallback.h',
     'TelephonyCommon.h',
+    'TelephonyDialCallback.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -35,6 +37,8 @@ UNIFIED_SOURCES += [
     'TelephonyCallback.cpp',
     'TelephonyCallGroup.cpp',
     'TelephonyCallId.cpp',
+    'TelephonyDialCallback.cpp',
+    'USSDSession.cpp',
 ]
 
 IPDL_SOURCES += [

@@ -40,20 +40,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1065185
         endMonitor();
         break;
       case 2:
-        doMonitor([/access to property 0/i]);
-        window[0].wrappedJSObject.probe = [42];
-        is(window[0].eval('probe[0]'), undefined, "Element undefined");
-        is(window[0].eval('probe.length'), undefined, "Length undefined");
-        endMonitor();
-        break;
-      case 3:
-        doMonitor([/access to property length/i]);
-        window[0].wrappedJSObject.probe = { a: 'verboten', b: [42], __exposedProps__: { 'b' : 'r' }};
-        is(window[0].eval('probe.b.length'), undefined, "Length undefined");
-        is(window[0].eval('probe.a'), undefined, "property undefined");
-        endMonitor();
-        break;
-      case 4:
         SimpleTest.finish();
         break;
       default:

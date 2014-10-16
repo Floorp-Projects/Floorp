@@ -29,8 +29,13 @@ function test() {
 
       // Open a newtab after setting the custom newtab url
       openNewTab(aWindow, function () {
-        is(aWindow.gBrowser.selectedBrowser.currentURI.spec, testURL,
-           "URL of NewTab should be the custom url");
+        if (aIsPrivateMode) {
+          is(aWindow.gBrowser.selectedBrowser.currentURI.spec, newTabURL,
+             "URL of NewTab should always be " + newTabURL + " in " + mode +  " mode");
+        } else {
+          is(aWindow.gBrowser.selectedBrowser.currentURI.spec, testURL,
+             "URL of NewTab should be the custom url");
+        }
 
         // clear the custom url preference
         Services.prefs.clearUserPref(newTabPrefName);

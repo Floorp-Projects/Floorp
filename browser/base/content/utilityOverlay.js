@@ -13,11 +13,11 @@ XPCOMUtils.defineLazyGetter(this, "BROWSER_NEW_TAB_URL", function () {
   const PREF = "browser.newtab.url";
 
   function getNewTabPageURL() {
-    if (!Services.prefs.prefHasUserValue(PREF)) {
-      if (PrivateBrowsingUtils.isWindowPrivate(window) &&
-          !PrivateBrowsingUtils.permanentPrivateBrowsing)
-        return "about:privatebrowsing";
+    if (PrivateBrowsingUtils.isWindowPrivate(window) &&
+        !PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      return "about:privatebrowsing";
     }
+
     let url = Services.prefs.getComplexValue(PREF, Ci.nsISupportsString).data;
     return url || "about:blank";
   }

@@ -147,6 +147,12 @@ OverscrollHandoffChain::HasOverscrolledApzc() const
   return AnyApzc(&AsyncPanZoomController::IsOverscrolled);
 }
 
+bool
+OverscrollHandoffChain::HasFastMovingApzc() const
+{
+  return AnyApzc(&AsyncPanZoomController::IsMovingFast);
+}
+
 
 } // namespace layers
 } // namespace mozilla

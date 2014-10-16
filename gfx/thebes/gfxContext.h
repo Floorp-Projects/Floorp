@@ -206,14 +206,6 @@ public:
     void SnappedRectangle(const gfxRect& rect) { return Rectangle(rect, true); }
 
     /**
-     * Draw an ellipse at the center corner with the given dimensions.
-     * It extends dimensions.width / 2.0 in the horizontal direction
-     * from the center, and dimensions.height / 2.0 in the vertical
-     * direction.
-     */
-    void Ellipse(const gfxPoint& center, const gfxSize& dimensions);
-
-    /**
      * Draw a polygon from the given points
      */
     void Polygon(const gfxPoint *points, uint32_t numPoints);

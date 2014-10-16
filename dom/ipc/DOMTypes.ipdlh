@@ -45,8 +45,7 @@ struct FileBlobConstructorParams
 struct SlicedBlobConstructorParams
 {
   PBlob source;
-  // Must be void_t for parent -> child and nsID for child -> parent.
-  OptionalID optionalID;
+  nsID id;
   uint64_t begin;
   uint64_t end;
   nsString contentType;
@@ -64,10 +63,15 @@ struct KnownBlobConstructorParams
 
 union AnyBlobConstructorParams
 {
+  // These types may be sent to/from parent and child.
   NormalBlobConstructorParams;
   FileBlobConstructorParams;
-  SlicedBlobConstructorParams;
+
+  // This type may only be sent from parent to child.
   MysteryBlobConstructorParams;
+
+  // These types may only be sent from child to parent.
+  SlicedBlobConstructorParams;
   KnownBlobConstructorParams;
 };
 
@@ -75,7 +79,7 @@ struct ChildBlobConstructorParams
 {
   nsID id;
 
-  // May never be KnownBlobConstructorParams.
+  // May not be SlicedBlobConstructorParams or KnownBlobConstructorParams.
   AnyBlobConstructorParams blobParams;
 };
 
