@@ -578,14 +578,18 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
         GetAndFlushUnderlyingGLErrors();
 
         if (mFakeVertexAttrib0BufferStatus == WebGLVertexAttrib0Status::EmulatedInitializedArray) {
-            nsAutoArrayPtr<GLfloat> array(new GLfloat[4 * vertexCount]);
+            UniquePtr<GLfloat[]> array(new ((fallible_t())) GLfloat[4 * vertexCount]);
+            if (!array) {
+                ErrorOutOfMemory("Fake attrib0 array.");
+                return false;
+            }
             for(size_t i = 0; i < vertexCount; ++i) {
                 array[4 * i + 0] = mVertexAttrib0Vector[0];
                 array[4 * i + 1] = mVertexAttrib0Vector[1];
                 array[4 * i + 2] = mVertexAttrib0Vector[2];
                 array[4 * i + 3] = mVertexAttrib0Vector[3];
             }
-            gl->fBufferData(LOCAL_GL_ARRAY_BUFFER, dataSize, array, LOCAL_GL_DYNAMIC_DRAW);
+            gl->fBufferData(LOCAL_GL_ARRAY_BUFFER, dataSize, array.get(), LOCAL_GL_DYNAMIC_DRAW);
         } else {
             gl->fBufferData(LOCAL_GL_ARRAY_BUFFER, dataSize, nullptr, LOCAL_GL_DYNAMIC_DRAW);
         }
@@ -750,17 +754,16 @@ WebGLContext::FakeBlackTexture::FakeBlackTexture(GLContext *gl, TexTarget target
   // to minimize the risk of running into a driver bug in texImage2D, as it is
   // a bit unusual maybe to create 1x1 textures, and the stack may not have the alignment
   // that texImage2D expects.
-  void* zeros = calloc(1, 16);
+  UniquePtr<uint8_t> zeros((uint8_t*)moz_xcalloc(1, 16));
   if (target == LOCAL_GL_TEXTURE_2D) {
       gl->fTexImage2D(target.get(), 0, format, 1, 1,
-                      0, format, LOCAL_GL_UNSIGNED_BYTE, zeros);
+                      0, format, LOCAL_GL_UNSIGNED_BYTE, zeros.get());
   } else {
       for (GLuint i = 0; i < 6; ++i) {
           gl->fTexImage2D(LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, 1, 1,
-                          0, format, LOCAL_GL_UNSIGNED_BYTE, zeros);
+                          0, format, LOCAL_GL_UNSIGNED_BYTE, zeros.get());
       }
   }
-  free(zeros);
 
   gl->fBindTexture(target.get(), formerBinding);
 }
