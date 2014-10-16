@@ -203,6 +203,13 @@ public:
   virtual const void *FindExidx(int *pcount) const = 0;
 #endif
 
+  /**
+   * Shows some stats about the Mappable instance. The when argument is to be
+   * used by the caller to give an identifier of the when the stats call is
+   * made.
+   */
+  virtual void stats(const char *when) const { };
+
 protected:
   /**
    * Returns a mappable object for use by MappableMMap and related functions.
