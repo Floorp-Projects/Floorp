@@ -4349,9 +4349,6 @@ pref("camera.control.low_memory_thresholdMB", 404);
 // UDPSocket API
 pref("dom.udpsocket.enabled", false);
 
-// Disable before keyboard events and after keyboard events by default.
-pref("dom.beforeAfterKeyboardEvent.enabled", false);
-
 // Experiment: Get TTL from DNS records.
 //     Unset initially (0); Randomly chosen on first run; will remain unchanged
 //     unless adjusted by the user or experiment ends. Variants defined in
