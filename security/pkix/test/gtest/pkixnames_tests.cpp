@@ -28,8 +28,7 @@
 namespace mozilla { namespace pkix {
 
 bool PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
-                                         Input referenceDNSID,
-                                         bool referenceDNSIDWasVerifiedAsValid);
+                                         Input referenceDNSID);
 
 bool IsValidReferenceDNSID(Input hostname);
 bool IsValidPresentedDNSID(Input hostname);
@@ -864,11 +863,12 @@ TEST_P(pkixnames_PresentedDNSIDMatchesReferenceDNSID,
   Input reference;
   ASSERT_EQ(Success, reference.Init(param.referenceDNSID.data(),
                                     param.referenceDNSID.length()));
-  bool referenceIsValidReferenceDNSID = IsValidReferenceDNSID(reference);
-  ASSERT_TRUE(referenceIsValidReferenceDNSID); // sanity check that test makes sense
+
+  // sanity check that test makes sense
+  ASSERT_TRUE(IsValidReferenceDNSID(reference));
+
   ASSERT_EQ(param.matches,
-            PresentedDNSIDMatchesReferenceDNSID(presented, reference,
-                                                referenceIsValidReferenceDNSID));
+            PresentedDNSIDMatchesReferenceDNSID(presented, reference));
 }
 
 INSTANTIATE_TEST_CASE_P(pkixnames_PresentedDNSIDMatchesReferenceDNSID,
@@ -893,10 +893,8 @@ TEST_P(pkixnames_Turkish_I_Comparison, PresentedDNSIDMatchesReferenceDNSID)
                                 inputValidity.input.length()));
   bool isASCII = InputsAreEqual(LOWERCASE_I, input) ||
                  InputsAreEqual(UPPERCASE_I, input);
-  ASSERT_EQ(isASCII, PresentedDNSIDMatchesReferenceDNSID(input, LOWERCASE_I,
-                                                         true));
-  ASSERT_EQ(isASCII, PresentedDNSIDMatchesReferenceDNSID(input, UPPERCASE_I,
-                                                         true));
+  ASSERT_EQ(isASCII, PresentedDNSIDMatchesReferenceDNSID(input, LOWERCASE_I));
+  ASSERT_EQ(isASCII, PresentedDNSIDMatchesReferenceDNSID(input, UPPERCASE_I));
 }
 
 INSTANTIATE_TEST_CASE_P(pkixnames_Turkish_I_Comparison,

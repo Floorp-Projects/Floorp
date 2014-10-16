@@ -97,8 +97,7 @@ bool IsValidPresentedDNSID(Input hostname);
 bool ParseIPv4Address(Input hostname, /*out*/ uint8_t (&out)[4]);
 bool ParseIPv6Address(Input hostname, /*out*/ uint8_t (&out)[16]);
 bool PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
-                                         Input referenceDNSID,
-                                         bool referenceDNSIDWasVerifiedAsValid);
+                                         Input referenceDNSID);
 
 // Verify that the given end-entity cert, which is assumed to have been already
 // validated with BuildCertChain, is valid for the given hostname. hostname is
@@ -401,7 +400,7 @@ SearchWithinAVA(Reader& rdn,
   {
     case GeneralNameType::dNSName:
       foundMatch = PresentedDNSIDMatchesReferenceDNSID(presentedID,
-                                                       referenceID, true);
+                                                       referenceID);
       break;
     case GeneralNameType::iPAddress:
     {
@@ -432,7 +431,7 @@ MatchPresentedIDWithReferenceID(GeneralNameType nameType,
   switch (nameType) {
     case GeneralNameType::dNSName:
       foundMatch = PresentedDNSIDMatchesReferenceDNSID(presentedID,
-                                                       referenceID, true);
+                                                       referenceID);
       break;
     case GeneralNameType::iPAddress:
       foundMatch = InputsAreEqual(presentedID, referenceID);
@@ -455,67 +454,30 @@ MatchPresentedIDWithReferenceID(GeneralNameType nameType,
 // of a non-US-ASCII character contains a code point in the range 0-127. For
 // example, UTF-8 is OK but UTF-16 is not.
 //
-// The referenceDNSIDWasVerifiedAsValid parameter must be the result of calling
-// IsValidReferenceDNSID.
-//
 // RFC6125 says that a wildcard label may be of the form <x>*<y>.<DNSID>, where
 // <x> and/or <y> may be empty. However, NSS requires <y> to be empty, and we
 // follow NSS's stricter policy by accepting wildcards only of the form
 // <x>*.<DNSID>, where <x> may be empty.
 bool
-PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
-                                    Input referenceDNSID,
-                                    bool referenceDNSIDWasVerifiedAsValid)
+PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID, Input referenceDNSID)
 {
-  assert(referenceDNSIDWasVerifiedAsValid);
-  if (!referenceDNSIDWasVerifiedAsValid) {
+  if (!IsValidPresentedDNSID(presentedDNSID)) {
+    return false;
+  }
+  if (!IsValidReferenceDNSID(referenceDNSID)) {
     return false;
   }
 
   Reader presented(presentedDNSID);
   Reader reference(referenceDNSID);
-
-  size_t currentLabel = 0;
-  bool hasWildcardLabel = false;
-  bool lastPresentedByteWasDot = false;
-  bool firstPresentedByteIsWildcard = presented.Peek('*');
-
+  bool isFirstPresentedByte = true;
   do {
     uint8_t presentedByte;
-    if (presented.Read(presentedByte) != Success) {
-      return false; // Reject completely empty input.
+    Result rv = presented.Read(presentedByte);
+    if (rv != Success) {
+      return false;
     }
-    if (presentedByte == '*' && currentLabel == 0) {
-      hasWildcardLabel = true;
-
-      // Like NSS, be stricter than RFC6125 requires by insisting that the
-      // "*" must be the last character in the label. This also prevents
-      // multiple "*" in the label.
-      if (!presented.Peek('.')) {
-        return false;
-      }
-
-      // RFC6125 says that we shouldn't accept wildcards within an IDN A-Label.
-      //
-      // We also don't allow a non-IDN presented ID label to match an IDN
-      // reference ID label, except when the entire presented ID label is "*".
-      // This avoids confusion when matching a presented ID like
-      // "xn-*.example.org" against "xn--www.example.org" (which attempts to
-      // abuse the punycode syntax) or "www-*.example.org" against
-      // "xn--www--ep4c4a2kpf" (which makes sense to match, semantically, but
-      // no implementations actually do).
-      //
-      // XXX: The consequence of this is that we effectively discriminate
-      // against users of languages that cannot be encoded with ASCII.
-      if (!firstPresentedByteIsWildcard) {
-        if (StartsWithIDNALabel(presentedDNSID)) {
-          return false;
-        }
-        if (StartsWithIDNALabel(referenceDNSID)) {
-          return false;
-        }
-      }
-
+    if (presentedByte == '*') {
       // RFC 6125 is unclear about whether "www*.example.org" matches
       // "www.example.org". The Chromium test suite has this test:
       //
@@ -523,70 +485,57 @@ PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
       //
       // We agree with Chromium by forbidding "*" from expanding to the empty
       // string.
-      uint8_t referenceByte;
-      if (reference.Read(referenceByte) != Success) {
-        return false;
-      }
-      if (referenceByte == '.') {
-        return false;
-      }
-      while (!reference.Peek('.')) {
-        if (reference.Read(referenceByte) != Success) {
+      do {
+        uint8_t referenceByte;
+        rv = reference.Read(referenceByte);
+        if (rv != Success) {
           return false;
         }
+      } while (!reference.Peek('.'));
+
+      // We also don't allow a non-IDN presented ID label to match an IDN
+      // reference ID label, except when the entire presented ID label is "*".
+      // This avoids confusion when matching a presented ID like
+      // "xn-*.example.org" against "xn--www.example.org" (which attempts to
+      // abuse the punycode syntax) or "www-*.example.org" against
+      // "xn--www--ep4c4a2kpf" (which makes sense to match, semantically, but
+      // no implementations actually do).
+      if (!isFirstPresentedByte && StartsWithIDNALabel(referenceDNSID)) {
+        return false;
       }
     } else {
-      if (presentedByte == '.') {
-        // This check is needed to prevent ".." at the end of the presented ID
-        // from being accepted.
-        if (lastPresentedByteWasDot) {
-          return false;
-        }
-        lastPresentedByteWasDot = true;
-
-        if (!presented.AtEnd()) {
-          ++currentLabel;
-        }
-      } else {
-        lastPresentedByteWasDot = false;
+      // Allow an absolute presented DNS ID to match a relative reference DNS
+      // ID.
+      if (reference.AtEnd() && presented.AtEnd() && presentedByte == '.') {
+        return true;
       }
 
-      // The presented ID may have a terminating dot '.' to mark it as
-      // absolute, and it still matches a reference ID without that
-      // terminating dot.
-      if (presentedByte != '.' || !presented.AtEnd() || !reference.AtEnd()) {
-        uint8_t referenceByte;
-        if (reference.Read(referenceByte) != Success) {
-          return false;
-        }
-        if (LocaleInsensitveToLower(presentedByte) !=
-            LocaleInsensitveToLower(referenceByte)) {
-          return false;
-        }
+      uint8_t referenceByte;
+      rv = reference.Read(referenceByte);
+      if (rv != Success) {
+        return false;
+      }
+      if (LocaleInsensitveToLower(presentedByte) !=
+          LocaleInsensitveToLower(referenceByte)) {
+        return false;
       }
     }
+    isFirstPresentedByte = false;
   } while (!presented.AtEnd());
 
-  // The reference ID may have a terminating dot '.' to mark it as absolute,
-  // and a presented ID without that terminating dot still matches it.
-  static const uint8_t DOT[1] = { '.' };
-  if (!reference.AtEnd() && !reference.MatchRest(DOT)) {
-    return false;
-  }
-
-  if (hasWildcardLabel) {
-    // Like NSS, we require at least two labels after the wildcard.
-    if (currentLabel < 2) {
+  // Allow a relative presented DNS ID to match an absolute reference DNS ID.
+  if (!reference.AtEnd()) {
+    uint8_t referenceByte;
+    Result rv = reference.Read(referenceByte);
+    if (rv != Success) {
       return false;
     }
-
-    // TODO(bug XXXXXXX): Allow the TrustDomain to control this on a
-    // per-eTLD+1 basis, similar to Chromium. Even then, it might be better to
-    // still enforce that there are at least two labels after the wildcard.
-
-    // TODO(bug XXXXXXX): Wildcards are not allowed for EV certificates.
-    // Provide an option to indicate whether wildcards should be matched, for
-    // the purpose of helping the application enforce this.
+    if (referenceByte != '.') {
+      return false;
+    }
+    if (!reference.AtEnd()) {
+      return false;
+    }
   }
 
   return true;
