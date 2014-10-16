@@ -558,7 +558,7 @@ public:
    * this method would be preferred since it only involves 12 floating-point
    * multiplications.)
    */
-  Matrix4x4 &Translate(Float aX, Float aY, Float aZ)
+  Matrix4x4 &PreTranslate(Float aX, Float aY, Float aZ)
   {
     _41 += aX * _11 + aY * _21 + aZ * _31;
     _42 += aX * _12 + aY * _22 + aZ * _32;
@@ -566,6 +566,10 @@ public:
     _44 += aX * _14 + aY * _24 + aZ * _34;
 
     return *this;
+  }
+  Matrix4x4 &Translate(Float aX, Float aY, Float aZ)
+  {
+    return PreTranslate(aX, aY, aZ);
   }
 
   /**
@@ -609,7 +613,7 @@ public:
   /**
    * Similar to PreTranslate, but applies a scale instead of a translation.
    */
-  Matrix4x4 &Scale(Float aX, Float aY, Float aZ)
+  Matrix4x4 &PreScale(Float aX, Float aY, Float aZ)
   {
     _11 *= aX;
     _12 *= aX;
@@ -622,6 +626,10 @@ public:
     _33 *= aZ;
 
     return *this;
+  }
+  Matrix4x4 &Scale(Float aX, Float aY, Float aZ)
+  {
+    return PreScale(aX, aY, aZ);
   }
 
   /**
@@ -663,7 +671,7 @@ public:
   Matrix4x4 &ChangeBasis(Float aX, Float aY, Float aZ)
   {
     // Translate to the origin before applying this matrix
-    Translate(-aX, -aY, -aZ);
+    PreTranslate(-aX, -aY, -aZ);
 
     // Translate back into position after applying this matrix
     PostTranslate(aX, aY, aZ);
