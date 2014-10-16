@@ -3943,7 +3943,7 @@ PresShell::UnsuppressAndInvalidate()
     rootFrame->InvalidateFrame();
 
     if (mTouchCaret) {
-      mTouchCaret->UpdatePositionIfNeeded();
+      mTouchCaret->SyncVisibilityWithCaret();
     }
   }
 
