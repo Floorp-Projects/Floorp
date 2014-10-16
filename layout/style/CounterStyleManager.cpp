@@ -966,11 +966,31 @@ public:
 
   // DependentBuiltinCounterStyle is managed in the same way as
   // CustomCounterStyle.
-  NS_INLINE_DECL_REFCOUNTING(DependentBuiltinCounterStyle)
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() MOZ_OVERRIDE;
+  NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE;
+
+  void* operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
+  {
+    return aPresContext->PresShell()->AllocateByObjectID(
+        nsPresArena::DependentBuiltinCounterStyle_id, sz);
+  }
 
 private:
+  void Destroy()
+  {
+    nsIPresShell* shell = mManager->PresContext()->PresShell();
+    this->~DependentBuiltinCounterStyle();
+    shell->FreeByObjectID(nsPresArena::DependentBuiltinCounterStyle_id, this);
+  }
+
   CounterStyleManager* mManager;
+
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
 };
+
+NS_IMPL_ADDREF(DependentBuiltinCounterStyle)
+NS_IMPL_RELEASE_WITH_DESTROY(DependentBuiltinCounterStyle, Destroy())
 
 /* virtual */ CounterStyle*
 DependentBuiltinCounterStyle::GetFallback()
@@ -1064,9 +1084,23 @@ public:
   // CustomCounterStyle should be reference-counted because it may be
   // dereferenced from the manager but still referenced by nodes and
   // frames before the style change is propagated.
-  NS_INLINE_DECL_REFCOUNTING(CustomCounterStyle)
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() MOZ_OVERRIDE;
+  NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE;
+
+  void* operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
+  {
+    return aPresContext->PresShell()->AllocateByObjectID(
+        nsPresArena::CustomCounterStyle_id, sz);
+  }
 
 private:
+  void Destroy()
+  {
+    nsIPresShell* shell = mManager->PresContext()->PresShell();
+    this->~CustomCounterStyle();
+    shell->FreeByObjectID(nsPresArena::CustomCounterStyle_id, this);
+  }
+
   const nsTArray<nsString>& GetSymbols();
   const nsTArray<AdditiveSymbol>& GetAdditiveSymbols();
 
@@ -1139,7 +1173,13 @@ private:
   // counter must be either a builtin style or a style whose system is
   // not 'extends'.
   CounterStyle* mExtendsRoot;
+
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
 };
+
+NS_IMPL_ADDREF(CustomCounterStyle)
+NS_IMPL_RELEASE_WITH_DESTROY(CustomCounterStyle, Destroy())
 
 void
 CustomCounterStyle::ResetCachedData()
@@ -1968,13 +2008,13 @@ CounterStyleManager::BuildCounterStyle(const nsSubstring& aName)
   nsCSSCounterStyleRule* rule =
     mPresContext->StyleSet()->CounterStyleRuleForName(mPresContext, aName);
   if (rule) {
-    data = new CustomCounterStyle(this, rule);
+    data = new (mPresContext) CustomCounterStyle(this, rule);
   } else {
     int32_t type;
     nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(aName);
     if (nsCSSProps::FindKeyword(keyword, nsCSSProps::kListStyleKTable, type)) {
       if (gBuiltinStyleTable[type].IsDependentStyle()) {
-        data = new DependentBuiltinCounterStyle(type, this);
+        data = new (mPresContext) DependentBuiltinCounterStyle(type, this);
       } else {
         data = GetBuiltinStyle(type);
       }
