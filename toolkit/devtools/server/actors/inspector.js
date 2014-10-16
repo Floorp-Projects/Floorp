@@ -563,6 +563,18 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
   }),
 
   /**
+   * Get a unique selector string for this node.
+   */
+  getUniqueSelector: method(function() {
+    return CssLogic.findCssSelector(this.rawNode);
+  }, {
+    request: {},
+    response: {
+      value: RetVal("string")
+    }
+  }),
+
+  /**
    * Get the node's image data if any (for canvas and img nodes).
    * Returns an imageData object with the actual data being a LongStringActor
    * and a size json object.
