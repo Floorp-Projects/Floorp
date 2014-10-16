@@ -129,7 +129,7 @@
   <project name="device-mako" path="device/lge/mako" remote="b2g" revision="78d17f0c117f0c66dd55ee8d5c5dde8ccc93ecba"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="3a9a17613cc685aa232432566ad6cc607eab4ec1"/>
   <project name="device/lge/mako-kernel" path="device/lge/mako-kernel" revision="d1729e53d71d711c8fde25eab8728ff2b9b4df0e"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="72e043bc37304769b004ed960a6d16028beab5ae"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="7047fcaa8bb55888ec7b84997e1bab41185ba3a3"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="7d33aaf740bbf6c7c6e9c34a92b371eda311b66b"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
   <project name="platform/hardware/broadcom/wlan" path="hardware/broadcom/wlan" revision="0e1929fa3aa38bf9d40e9e953d619fab8164c82e"/>
