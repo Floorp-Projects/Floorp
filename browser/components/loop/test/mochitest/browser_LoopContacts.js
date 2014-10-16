@@ -16,11 +16,6 @@ const kContacts = [{
     "type": ["work"],
     "value": "ally@mail.com"
   }],
-  tel: [{
-    "pref": true,
-    "type": ["mobile"],
-    "value": "+31-6-12345678"
-  }],
   category: ["google"],
   published: 1406798311748,
   updated: 1406798311748
@@ -31,11 +26,6 @@ const kContacts = [{
     "pref": true,
     "type": ["work"],
     "value": "bob@gmail.com"
-  }],
-  tel: [{
-    "pref": true,
-    "type": ["mobile"],
-    "value": "+1-214-5551234"
   }],
   category: ["local"],
   published: 1406798311748,
@@ -435,50 +425,11 @@ add_task(function* () {
   LoopStorage.switchDatabase();
   Assert.equal(LoopStorage.databaseName, "default", "The active partition should have changed");
 
-  contacts = yield LoopContacts.promise("getAll");
-  for (let i = 0, l = contacts.length; i < l; ++i) {
-    compareContacts(contacts[i], kContacts[i]);
-  }
-});
+  LoopContacts.getAll(function(err, contacts) {
+    Assert.equal(err, null, "There shouldn't be an error");
 
-// Test searching for contacts.
-add_task(function* () {
-  yield promiseLoadContacts();
-
-  let contacts = yield LoopContacts.promise("search", {
-    q: "bob@gmail.com"
+    for (let i = 0, l = contacts.length; i < l; ++i) {
+      compareContacts(contacts[i], kContacts[i]);
+    }
   });
-  Assert.equal(contacts.length, 1, "There should be one contact found");
-  compareContacts(contacts[0], kContacts[1]);
-
-  // Test searching by name.
-  contacts = yield LoopContacts.promise("search", {
-    q: "Ally Avocado",
-    field: "name"
-  });
-  Assert.equal(contacts.length, 1, "There should be one contact found");
-  compareContacts(contacts[0], kContacts[0]);
-
-  // Test searching for multiple contacts.
-  contacts = yield LoopContacts.promise("search", {
-    q: "google",
-    field: "category"
-  });
-  Assert.equal(contacts.length, 2, "There should be two contacts found");
-
-  // Test searching for telephone numbers.
-  contacts = yield LoopContacts.promise("search", {
-    q: "+31612345678",
-    field: "tel"
-  });
-  Assert.equal(contacts.length, 1, "There should be one contact found");
-  compareContacts(contacts[0], kContacts[0]);
-
-  // Test searching for telephone numbers without prefixes.
-  contacts = yield LoopContacts.promise("search", {
-    q: "5551234",
-    field: "tel"
-  });
-  Assert.equal(contacts.length, 1, "There should be one contact found");
-  compareContacts(contacts[0], kContacts[1]);
 });
