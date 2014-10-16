@@ -7953,8 +7953,7 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Static build options)
 
-if test "$OS_ARCH" = "WINNT"; then
-  GKMEDIAS_SHARED_LIBRARY=1
+if test -n "$GKMEDIAS_SHARED_LIBRARY"; then
   AC_DEFINE(GKMEDIAS_SHARED_LIBRARY)
 fi
 AC_SUBST(GKMEDIAS_SHARED_LIBRARY)
