@@ -1834,3 +1834,4 @@ test-pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-ref.htm
 == 1059498-3.html 1059498-1-ref.html
 test-pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1-ref.html
 == 1069716-1.html 1069716-1-ref.html
+== 1078262-1.html about:blank
