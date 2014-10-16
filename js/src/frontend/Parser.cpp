@@ -1259,7 +1259,7 @@ IsNonDominatingInScopedSwitch(ParseContext<FullParseHandler> *pc, HandleAtom nam
                               Definition *dn)
 {
     MOZ_ASSERT(dn->isLet());
-    StmtInfoPC *stmt = LexicalLookup(pc, name, nullptr, nullptr);
+    StmtInfoPC *stmt = LexicalLookup(pc, name, nullptr, (StmtInfoPC *)nullptr);
     if (stmt && stmt->type == STMT_SWITCH)
         return dn->pn_cookie.slot() < stmt->firstDominatingLexicalInCase;
     return false;
