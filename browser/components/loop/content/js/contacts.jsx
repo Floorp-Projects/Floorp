@@ -86,15 +86,12 @@ loop.contacts = (function(_, mozL10n) {
       return (
         <ul className={cx({ "dropdown-menu": true,
                             "dropdown-menu-up": this.state.openDirUp })}>
-          <li className={cx({ "dropdown-menu-item": true,
-                              "disabled": this.props.blocked })}
-              onClick={this.onItemClick}
-              data-action="video-call">
+          <li className={cx({ "dropdown-menu-item": true })}
+              onClick={this.onItemClick} data-action="video-call">
             <i className="icon icon-video-call" />
             {mozL10n.get("video_call_menu_button")}
           </li>
-          <li className={cx({ "dropdown-menu-item": true,
-                              "disabled": this.props.blocked })}
+          <li className={cx({ "dropdown-menu-item": true })}
               onClick={this.onItemClick} data-action="audio-call">
             <i className="icon icon-audio-call" />
             {mozL10n.get("audio_call_menu_button")}
@@ -391,14 +388,10 @@ loop.contacts = (function(_, mozL10n) {
           });
           break;
         case "video-call":
-          if (!contact.blocked) {
-            navigator.mozLoop.startDirectCall(contact, CALL_TYPES.AUDIO_VIDEO);
-          }
+          navigator.mozLoop.startDirectCall(contact, CALL_TYPES.AUDIO_VIDEO);
           break;
         case "audio-call":
-          if (!contact.blocked) {
-            navigator.mozLoop.startDirectCall(contact, CALL_TYPES.AUDIO_ONLY);
-          }
+          navigator.mozLoop.startDirectCall(contact, CALL_TYPES.AUDIO_ONLY);
           break;
         default:
           console.error("Unrecognized action: " + actionName);
