@@ -7,40 +7,76 @@
 #ifndef mozilla_dom_indexeddb_profilerhelpers_h__
 #define mozilla_dom_indexeddb_profilerhelpers_h__
 
+// This file is not exported and is only meant to be included in IndexedDB
+// source files.
+
+#include "BackgroundChildImpl.h"
 #include "GeckoProfiler.h"
-
-// Uncomment this if you want IndexedDB operations to be marked in the profiler.
-//#define IDB_PROFILER_USE_MARKS
-
-// Uncomment this if you want extended details to appear in profiler marks.
-//#define IDB_PROFILER_MARK_DETAILS 0
-
-// Sanity check the options above.
-#if defined(IDB_PROFILER_USE_MARKS) && !defined(MOZ_ENABLE_PROFILER_SPS)
-#error Cannot use IDB_PROFILER_USE_MARKS without MOZ_ENABLE_PROFILER_SPS!
-#endif
-
-#if defined(IDB_PROFILER_MARK_DETAILS) && !defined(IDB_PROFILER_USE_MARKS)
-#error Cannot use IDB_PROFILER_MARK_DETAILS without IDB_PROFILER_USE_MARKS!
-#endif
-
-#ifdef IDB_PROFILER_USE_MARKS
-
-#ifdef IDB_PROFILER_MARK_DETAILS
-
 #include "IDBCursor.h"
 #include "IDBDatabase.h"
 #include "IDBIndex.h"
 #include "IDBKeyRange.h"
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
+#include "IndexedDatabaseManager.h"
 #include "Key.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "nsDebug.h"
+#include "nsID.h"
+#include "nsIDOMEvent.h"
+#include "nsString.h"
+#include "prlog.h"
+
+// Include this last to avoid path problems on Windows.
+#include "ActorsChild.h"
 
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-class ProfilerString : public nsAutoCString
+class MOZ_STACK_CLASS LoggingIdString MOZ_FINAL
+  : public nsAutoCString
+{
+public:
+  LoggingIdString()
+  {
+    using mozilla::ipc::BackgroundChildImpl;
+
+    BackgroundChildImpl::ThreadLocal* threadLocal =
+      BackgroundChildImpl::GetThreadLocalForCurrentThread();
+    MOZ_ASSERT(threadLocal);
+
+    ThreadLocal* idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
+    MOZ_ASSERT(idbThreadLocal);
+
+    Init(idbThreadLocal->Id());
+  }
+
+  explicit
+  LoggingIdString(const nsID& aID)
+  {
+    Init(aID);
+  }
+
+private:
+  void
+  Init(const nsID& aID)
+  {
+    static_assert(NSID_LENGTH > 1, "NSID_LENGTH is set incorrectly!");
+    MOZ_ASSERT(Capacity() > NSID_LENGTH);
+
+    // NSID_LENGTH counts the null terminator, SetLength() does not.
+    SetLength(NSID_LENGTH - 1);
+
+    aID.ToProvidedString(
+      *reinterpret_cast<char(*)[NSID_LENGTH]>(BeginWriting()));
+  }
+};
+
+class MOZ_STACK_CLASS LoggingString MOZ_FINAL
+  : public nsAutoCString
 {
   static const char kQuote = '\"';
   static const char kOpenBracket = '[';
@@ -50,19 +86,37 @@ class ProfilerString : public nsAutoCString
 
 public:
   explicit
-  ProfilerString(IDBDatabase* aDatabase)
+  LoggingString(IDBDatabase* aDatabase)
+    : nsAutoCString(kQuote)
   {
     MOZ_ASSERT(aDatabase);
 
-    Append(kQuote);
     AppendUTF16toUTF8(aDatabase->Name(), *this);
     Append(kQuote);
   }
 
   explicit
-  ProfilerString(IDBTransaction* aTransaction)
+  LoggingString(IDBTransaction* aTransaction)
+    : nsAutoCString(kOpenBracket)
   {
     MOZ_ASSERT(aTransaction);
+
+    NS_NAMED_LITERAL_CSTRING(kCommaSpace, ", ");
+
+    const nsTArray<nsString>& stores = aTransaction->ObjectStoreNamesInternal();
+
+    for (uint32_t count = stores.Length(), index = 0; index < count; index++) {
+      Append(kQuote);
+      AppendUTF16toUTF8(stores[index], *this);
+      Append(kQuote);
+
+      if (index != count - 1) {
+        Append(kCommaSpace);
+      }
+    }
+
+    Append(kCloseBracket);
+    Append(kCommaSpace);
 
     switch (aTransaction->GetMode()) {
       case IDBTransaction::READ_ONLY:
@@ -80,128 +134,198 @@ public:
   }
 
   explicit
-  ProfilerString(IDBObjectStore* aObjectStore)
+  LoggingString(IDBObjectStore* aObjectStore)
+    : nsAutoCString(kQuote)
   {
     MOZ_ASSERT(aObjectStore);
 
-    Append(kQuote);
     AppendUTF16toUTF8(aObjectStore->Name(), *this);
     Append(kQuote);
   }
 
   explicit
-  ProfilerString(IDBIndex* aIndex)
+  LoggingString(IDBIndex* aIndex)
+    : nsAutoCString(kQuote)
   {
     MOZ_ASSERT(aIndex);
 
-    Append(kQuote);
     AppendUTF16toUTF8(aIndex->Name(), *this);
     Append(kQuote);
   }
 
   explicit
-  ProfilerString(IDBKeyRange* aKeyRange)
+  LoggingString(IDBKeyRange* aKeyRange)
   {
     if (aKeyRange) {
       if (aKeyRange->IsOnly()) {
-        Append(ProfilerString(aKeyRange->Lower()));
-      }
-      else {
-        Append(aKeyRange->IsLowerOpen() ? kOpenParen : kOpenBracket);
-        Append(ProfilerString(aKeyRange->Lower()));
+        Assign(LoggingString(aKeyRange->Lower()));
+      } else {
+        Assign(aKeyRange->LowerOpen() ? kOpenParen : kOpenBracket);
+        Append(LoggingString(aKeyRange->Lower()));
         AppendLiteral(", ");
-        Append(ProfilerString(aKeyRange->Upper()));
-        Append(aKeyRange->IsUpperOpen() ? kCloseParen : kCloseBracket);
+        Append(LoggingString(aKeyRange->Upper()));
+        Append(aKeyRange->UpperOpen() ? kCloseParen : kCloseBracket);
       }
+    } else {
+      AssignLiteral("<undefined>");
     }
   }
 
   explicit
-  ProfilerString(const Key& aKey)
+  LoggingString(const Key& aKey)
   {
     if (aKey.IsUnset()) {
-      AssignLiteral("null");
-    }
-    else if (aKey.IsFloat()) {
+      AssignLiteral("<undefined>");
+    } else if (aKey.IsFloat()) {
       AppendPrintf("%g", aKey.ToFloat());
-    }
-    else if (aKey.IsDate()) {
+    } else if (aKey.IsDate()) {
       AppendPrintf("<Date %g>", aKey.ToDateMsec());
-    }
-    else if (aKey.IsString()) {
+    } else if (aKey.IsString()) {
       nsAutoString str;
       aKey.ToString(str);
       AppendPrintf("\"%s\"", NS_ConvertUTF16toUTF8(str).get());
-    }
-    else {
+    } else {
       MOZ_ASSERT(aKey.IsArray());
-      AppendLiteral("<Array>");
+      AssignLiteral("[...]");
     }
   }
 
   explicit
-  ProfilerString(const IDBCursor::Direction aDirection)
+  LoggingString(const IDBCursor::Direction aDirection)
   {
     switch (aDirection) {
       case IDBCursor::NEXT:
-        AppendLiteral("\"next\"");
+        AssignLiteral("\"next\"");
         break;
       case IDBCursor::NEXT_UNIQUE:
-        AppendLiteral("\"nextunique\"");
+        AssignLiteral("\"nextunique\"");
         break;
       case IDBCursor::PREV:
-        AppendLiteral("\"prev\"");
+        AssignLiteral("\"prev\"");
         break;
       case IDBCursor::PREV_UNIQUE:
-        AppendLiteral("\"prevunique\"");
+        AssignLiteral("\"prevunique\"");
         break;
       default:
         MOZ_CRASH("Unknown direction!");
     };
   }
+
+  explicit
+  LoggingString(const Optional<uint64_t>& aVersion)
+  {
+    if (aVersion.WasPassed()) {
+      AppendInt(aVersion.Value());
+    } else {
+      AssignLiteral("<undefined>");
+    }
+  }
+
+  explicit
+  LoggingString(const Optional<uint32_t>& aLimit)
+  {
+    if (aLimit.WasPassed()) {
+      AppendInt(aLimit.Value());
+    } else {
+      AssignLiteral("<undefined>");
+    }
+  }
+
+  LoggingString(IDBObjectStore* aObjectStore, const Key& aKey)
+  {
+    MOZ_ASSERT(aObjectStore);
+
+    if (!aObjectStore->HasValidKeyPath()) {
+      Append(LoggingString(aKey));
+    }
+  }
+
+  LoggingString(nsIDOMEvent* aEvent, const char16_t* aDefault)
+    : nsAutoCString(kQuote)
+  {
+    MOZ_ASSERT(aDefault);
+
+    nsString eventType;
+
+    if (aEvent) {
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aEvent->GetType(eventType)));
+    } else {
+      eventType = nsDependentString(aDefault);
+    }
+
+    AppendUTF16toUTF8(eventType, *this);
+    Append(kQuote);
+  }
 };
+
+inline void
+LoggingHelper(bool aUseProfiler, const char* aFmt, ...)
+{
+  MOZ_ASSERT(IndexedDatabaseManager::GetLoggingMode() !=
+               IndexedDatabaseManager::Logging_Disabled);
+  MOZ_ASSERT(aFmt);
+
+  PRLogModuleInfo* logModule = IndexedDatabaseManager::GetLoggingModule();
+  MOZ_ASSERT(logModule);
+
+  static const PRLogModuleLevel logLevel = PR_LOG_DEBUG;
+
+  if (PR_LOG_TEST(logModule, logLevel) ||
+      (aUseProfiler && profiler_is_active())) {
+    nsAutoCString message;
+
+    {
+      va_list args;
+      va_start(args, aFmt);
+
+      message.AppendPrintf(aFmt, args);
+
+      va_end(args);
+    }
+
+    PR_LOG(logModule, logLevel, ("%s", message.get()));
+
+    if (aUseProfiler) {
+      PROFILER_MARKER(message.get());
+    }
+  }
+}
 
 } // namespace indexedDB
 } // namespace dom
 } // namespace mozilla
 
-#define IDB_PROFILER_MARK(_detailedFmt, _conciseFmt, ...)                      \
+#define IDB_LOG_MARK(_detailedFmt, _conciseFmt, ...)                           \
   do {                                                                         \
-    nsAutoCString _mark;                                                       \
-    _mark.AppendPrintf(_detailedFmt, ##__VA_ARGS__);                           \
-    PROFILER_MARKER(_mark.get());                                              \
-  } while (0)
-
-#define IDB_PROFILER_STRING(_arg)                                              \
-  mozilla::dom::indexedDB::ProfilerString((_arg)).get()
-
-#else // IDB_PROFILER_MARK_DETAILS
-
-#define IDB_PROFILER_MARK(_detailedFmt, _conciseFmt, ...)                      \
-  do {                                                                         \
-    nsAutoCString _mark;                                                       \
-    _mark.AppendPrintf(_conciseFmt, ##__VA_ARGS__);                            \
-    PROFILER_MARKER(_mark.get());                                              \
-  } while (0)
-
-#define IDB_PROFILER_STRING(_arg) ""
-
-#endif // IDB_PROFILER_MARK_DETAILS
-
-#define IDB_PROFILER_MARK_IF(_cond, _detailedFmt, _conciseFmt, ...)            \
-  do {                                                                         \
-    if (_cond) {                                                               \
-      IDB_PROFILER_MARK(_detailedFmt, _conciseFmt, __VA_ARGS__);               \
+    using namespace mozilla::dom::indexedDB;                                   \
+                                                                               \
+    const IndexedDatabaseManager::LoggingMode mode =                           \
+      IndexedDatabaseManager::GetLoggingMode();                                \
+                                                                               \
+    if (mode != IndexedDatabaseManager::Logging_Disabled) {                    \
+      const char* _fmt;                                                        \
+      if (mode == IndexedDatabaseManager::Logging_Concise ||                   \
+          mode == IndexedDatabaseManager::Logging_ConciseProfilerMarks) {      \
+        _fmt = _conciseFmt;                                                    \
+      } else {                                                                 \
+        MOZ_ASSERT(                                                            \
+          mode == IndexedDatabaseManager::Logging_Detailed ||                  \
+          mode == IndexedDatabaseManager::Logging_DetailedProfilerMarks);      \
+        _fmt = _detailedFmt;                                                   \
+      }                                                                        \
+                                                                               \
+      const bool _useProfiler =                                                \
+        mode == IndexedDatabaseManager::Logging_ConciseProfilerMarks ||        \
+        mode == IndexedDatabaseManager::Logging_DetailedProfilerMarks;         \
+                                                                               \
+      LoggingHelper(_useProfiler, _fmt, ##__VA_ARGS__);                        \
     }                                                                          \
   } while (0)
 
-#else // IDB_PROFILER_USE_MARKS
+#define IDB_LOG_ID_STRING(...)                                                 \
+  mozilla::dom::indexedDB::LoggingIdString(__VA_ARGS__).get()
 
-#define IDB_PROFILER_MARK(...) do { } while(0)
-#define IDB_PROFILER_MARK_IF(_cond, ...) do { } while(0)
-#define IDB_PROFILER_MARK2(_detailedFmt, _notdetailedFmt, ...) do { } while(0)
-#define IDB_PROFILER_STRING(_arg) ""
-
-#endif // IDB_PROFILER_USE_MARKS
+#define IDB_LOG_STRINGIFY(...)                                                 \
+  mozilla::dom::indexedDB::LoggingString(__VA_ARGS__).get()
 
 #endif // mozilla_dom_indexeddb_profilerhelpers_h__
