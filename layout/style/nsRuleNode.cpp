@@ -5297,13 +5297,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               parentDisplay->mMixBlendMode, NS_STYLE_BLEND_NORMAL,
               0, 0, 0, 0);
 
-    // isolation: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForIsolation(), display->mIsolation,
-              canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
-              parentDisplay->mIsolation, NS_STYLE_ISOLATION_AUTO,
-              0, 0, 0, 0);
-
   // Backup original display value for calculation of a hypothetical
   // box (CSS2 10.6.4/10.6.5), in addition to getting our style data right later.
   // See nsHTMLReflowState::CalculateHypotheticalBox

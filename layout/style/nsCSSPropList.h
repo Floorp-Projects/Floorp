@@ -2521,17 +2521,6 @@ CSS_PROP_DISPLAY(
     kBlendModeKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_DISPLAY(
-    isolation,
-    isolation,
-    Isolation,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_CREATES_STACKING_CONTEXT,
-    "layout.css.isolation.enabled",
-    VARIANT_HK,
-    kIsolationKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
 CSS_PROP_POSITION(
     object-fit,
     object_fit,

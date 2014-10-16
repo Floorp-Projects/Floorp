@@ -2023,7 +2023,6 @@ struct nsStyleDisplay {
   uint8_t mClipFlags;           // [reset] see nsStyleConsts.h
   uint8_t mOrient;              // [reset] see nsStyleConsts.h
   uint8_t mMixBlendMode;        // [reset] see nsStyleConsts.h
-  uint8_t mIsolation;           // [reset] see nsStyleConsts.h
   uint8_t mWillChangeBitField;  // [reset] see nsStyleConsts.h. Stores a
                                 // bitfield representation of the properties
                                 // that are frequently queried. This should

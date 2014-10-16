@@ -5514,17 +5514,6 @@ if (SpecialPowers.getBoolPref("layout.css.mix-blend-mode.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.isolation.enabled")) {
-  gCSSProperties["isolation"] = {
-    domProp: "isolation",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: ["isolated"],
-    invalid_values: []
-  };
-}
-
 if (SpecialPowers.getBoolPref("layout.css.background-blend-mode.enabled")) {
   gCSSProperties["background-blend-mode"] = {
     domProp: "backgroundBlendMode",

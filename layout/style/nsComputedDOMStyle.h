@@ -235,7 +235,6 @@ private:
   mozilla::dom::CSSValue* DoGetMinHeight();
   mozilla::dom::CSSValue* DoGetMinWidth();
   mozilla::dom::CSSValue* DoGetMixBlendMode();
-  mozilla::dom::CSSValue* DoGetIsolation();
   mozilla::dom::CSSValue* DoGetObjectFit();
   mozilla::dom::CSSValue* DoGetObjectPosition();
   mozilla::dom::CSSValue* DoGetLeft();
