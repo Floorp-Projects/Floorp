@@ -1195,22 +1195,29 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     const layers::PlanarYCbCrData *data = yuv->GetData();
 
     uint8_t *y = data->mYChannel;
-#ifdef DEBUG
     uint8_t *cb = data->mCbChannel;
     uint8_t *cr = data->mCrChannel;
-#endif
     uint32_t width = yuv->GetSize().width;
     uint32_t height = yuv->GetSize().height;
     uint32_t length = yuv->GetDataSize();
+    // NOTE: length may be rounded up or include 'other' data (see
+    // YCbCrImageDataDeserializerBase::ComputeMinBufferSize())
 
     // SendVideoFrame only supports contiguous YCrCb 4:2:0 buffers
     // Verify it's contiguous and in the right order
-    MOZ_ASSERT(cb == (y + YSIZE(width, height)) &&
-               cr == (cb + CRSIZE(width, height)) &&
-               length == I420SIZE(width, height));
-    // XXX Consider making this a non-debug-only check if we ever implement
+    if (cb != (y + YSIZE(width, height)) ||
+        cr != (cb + CRSIZE(width, height))) {
+      MOZ_ASSERT(false, "Incorrect cb/cr pointers in ProcessVideoChunk()!");
+      return;
+    }
+    if (length < I420SIZE(width, height)) {
+      MOZ_ASSERT(false, "Invalid length for ProcessVideoChunk()");
+      return;
+    }
+    // XXX Consider modifying these checks if we ever implement
     // any subclasses of PlanarYCbCrImage that allow disjoint buffers such
-    // that y+3(width*height)/2 might go outside the allocation.
+    // that y+3(width*height)/2 might go outside the allocation or there are
+    // pads between y, cr and cb.
     // GrallocImage can have wider strides, and so in some cases
     // would encode as garbage.  If we need to encode it we'll either want to
     // modify SendVideoFrame or copy/move the data in the buffer.
@@ -1218,7 +1225,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     // OK, pass it on to the conduit
     MOZ_MTLOG(ML_DEBUG, "Sending a video frame");
     // Not much for us to do with an error
-    conduit->SendVideoFrame(y, length, width, height, mozilla::kVideoI420, 0);
+    conduit->SendVideoFrame(y, I420SIZE(width, height), width, height, mozilla::kVideoI420, 0);
   } else if(format == ImageFormat::CAIRO_SURFACE) {
     layers::CairoImage* rgb =
     const_cast<layers::CairoImage *>(

@@ -99,7 +99,6 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
                      nsContentUtils::GetSystemPrincipal(),
                      nsILoadInfo::SEC_NORMAL,
                      nsIContentPolicy::TYPE_OTHER,
-                     nullptr,  // aChannelPolicy
                      nullptr,  // aLoadGroup
                      this,     // aInterfaceRequestor
                      loadFlags);

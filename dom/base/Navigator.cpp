@@ -67,7 +67,6 @@
 #include "mozIApplication.h"
 #include "WidgetUtils.h"
 #include "mozIThirdPartyUtil.h"
-#include "nsChannelPolicy.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "MediaManager.h"
@@ -1056,26 +1055,11 @@ Navigator::SendBeacon(const nsAString& aUrl,
   }
 
   nsCOMPtr<nsIChannel> channel;
-  nsCOMPtr<nsIChannelPolicy> channelPolicy;
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = principal->GetCsp(getter_AddRefs(csp));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return false;
-  }
-
-  if (csp) {
-    channelPolicy = do_CreateInstance(NSCHANNELPOLICY_CONTRACTID);
-    channelPolicy->SetContentSecurityPolicy(csp);
-    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_BEACON);
-  }
-
   rv = NS_NewChannel(getter_AddRefs(channel),
                      uri,
                      doc,
                      nsILoadInfo::SEC_NORMAL,
-                     nsIContentPolicy::TYPE_BEACON,
-                     channelPolicy);
+                     nsIContentPolicy::TYPE_BEACON);
 
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);

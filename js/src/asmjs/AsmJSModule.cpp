@@ -54,6 +54,36 @@ using mozilla::PodEqual;
 using mozilla::Compression::LZ4;
 using mozilla::Swap;
 
+// At any time, the executable code of an asm.js module can be protected (as
+// part of RequestInterruptForAsmJSCode). When we touch the executable outside
+// of executing it (which the AsmJSFaultHandler will correctly handle), we need
+// to guard against this by unprotecting the code (if it has been protected) and
+// preventing it from being protected while we are touching it.
+class AutoUnprotectCode
+{
+    JSRuntime *rt_;
+    JSRuntime::AutoLockForInterrupt lock_;
+    const AsmJSModule &module_;
+    const bool protectedBefore_;
+
+  public:
+    AutoUnprotectCode(JSContext *cx, const AsmJSModule &module)
+      : rt_(cx->runtime()),
+        lock_(rt_),
+        module_(module),
+        protectedBefore_(module_.codeIsProtected(rt_))
+    {
+        if (protectedBefore_)
+            module_.unprotectCode(rt_);
+    }
+
+    ~AutoUnprotectCode()
+    {
+        if (protectedBefore_)
+            module_.protectCode(rt_);
+    }
+};
+
 static uint8_t *
 AllocateExecutableMemory(ExclusiveContext *cx, size_t bytes)
 {
@@ -78,6 +108,8 @@ AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t
     bufferArgumentName_(nullptr),
     code_(nullptr),
     interruptExit_(nullptr),
+    prevLinked_(nullptr),
+    nextLinked_(nullptr),
     dynamicallyLinked_(false),
     loadedFromCache_(false),
     profilingEnabled_(false),
@@ -88,6 +120,7 @@ AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t
     pod.funcPtrTableAndExitBytes_ = SIZE_MAX;
     pod.functionBytes_ = UINT32_MAX;
     pod.minHeapLength_ = RoundUpToNextValidAsmJSHeapLength(0);
+    pod.maxHeapLength_ = 0x80000000;
     pod.strict_ = strict;
     pod.usesSignalHandlers_ = canUseSignalHandlers;
 
@@ -115,6 +148,11 @@ AsmJSModule::~AsmJSModule()
 
     for (size_t i = 0; i < numFunctionCounts(); i++)
         js_delete(functionCounts(i));
+
+    if (prevLinked_)
+        *prevLinked_ = nextLinked_;
+    if (nextLinked_)
+        nextLinked_->prevLinked_ = prevLinked_;
 }
 
 void
@@ -446,6 +484,14 @@ AsmJSReportOverRecursed()
     js_ReportOverRecursed(cx);
 }
 
+static void
+OnDetached()
+{
+    // See hasDetachedHeap comment in LinkAsmJS.
+    JSContext *cx = PerThreadData::innermostAsmJSActivation()->cx();
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
+}
+
 static bool
 AsmJSHandleExecutionInterrupt()
 {
@@ -629,6 +675,8 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         return cx->stackLimitAddressForJitCode(StackForUntrustedScript);
       case AsmJSImm_ReportOverRecursed:
         return RedirectCall(FuncCast(AsmJSReportOverRecursed), Args_General0);
+      case AsmJSImm_OnDetached:
+        return RedirectCall(FuncCast(OnDetached), Args_General0);
       case AsmJSImm_HandleExecutionInterrupt:
         return RedirectCall(FuncCast(AsmJSHandleExecutionInterrupt), Args_General0);
       case AsmJSImm_InvokeFromAsmJS_Ignore:
@@ -834,6 +882,43 @@ AsmJSModule::restoreToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer
 #endif
 
     restoreHeapToInitialState(maybePrevBuffer);
+}
+
+bool
+AsmJSModule::detachHeap(JSContext *cx)
+{
+    MOZ_ASSERT(isDynamicallyLinked());
+    MOZ_ASSERT(maybeHeap_);
+
+    // Content JS should not be able to run (and detach heap) from within an
+    // interrupt callback, but in case it does, fail. Otherwise, the heap can
+    // change at an arbitrary instruction and break the assumption below.
+    if (interrupted_) {
+        JS_ReportError(cx, "attempt to detach from inside interrupt handler");
+        return false;
+    }
+
+    // Even if this->active(), to reach here, the activation must have called
+    // out via an FFI stub. FFI stubs check if heapDatum() is null on reentry
+    // and throw an exception if so.
+    MOZ_ASSERT_IF(active(), activation()->exitReason() == AsmJSExit::Reason_IonFFI ||
+                            activation()->exitReason() == AsmJSExit::Reason_SlowFFI);
+
+    AutoUnprotectCode auc(cx, *this);
+    restoreHeapToInitialState(maybeHeap_);
+
+    MOZ_ASSERT(hasDetachedHeap());
+    return true;
+}
+
+bool
+js::OnDetachAsmJSArrayBuffer(JSContext *cx, Handle<ArrayBufferObject*> buffer)
+{
+    for (AsmJSModule *m = cx->runtime()->linkedAsmJSModules; m; m = m->nextLinked()) {
+        if (buffer == m->maybeHeapBufferObject() && !m->detachHeap(cx))
+            return false;
+    }
+    return true;
 }
 
 static void
@@ -1477,36 +1562,6 @@ AsmJSModule::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
     return cursor;
 }
 
-// At any time, the executable code of an asm.js module can be protected (as
-// part of RequestInterruptForAsmJSCode). When we touch the executable outside
-// of executing it (which the AsmJSFaultHandler will correctly handle), we need
-// to guard against this by unprotecting the code (if it has been protected) and
-// preventing it from being protected while we are touching it.
-class AutoUnprotectCode
-{
-    JSRuntime *rt_;
-    JSRuntime::AutoLockForInterrupt lock_;
-    const AsmJSModule &module_;
-    const bool protectedBefore_;
-
-  public:
-    AutoUnprotectCode(JSContext *cx, const AsmJSModule &module)
-      : rt_(cx->runtime()),
-        lock_(rt_),
-        module_(module),
-        protectedBefore_(module_.codeIsProtected(rt_))
-    {
-        if (protectedBefore_)
-            module_.unprotectCode(rt_);
-    }
-
-    ~AutoUnprotectCode()
-    {
-        if (protectedBefore_)
-            module_.protectCode(rt_);
-    }
-};
-
 bool
 AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) const
 {
@@ -1561,6 +1616,8 @@ AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) con
 bool
 AsmJSModule::changeHeap(Handle<ArrayBufferObject*> newHeap, JSContext *cx)
 {
+    MOZ_ASSERT(hasArrayView());
+
     // Content JS should not be able to run (and change heap) from within an
     // interrupt callback, but in case it does, fail to change heap. Otherwise,
     // the heap can change at every single instruction which would prevent
