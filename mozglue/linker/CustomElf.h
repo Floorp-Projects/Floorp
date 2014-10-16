@@ -66,9 +66,8 @@ private:
    * Private constructor
    */
   CustomElf(Mappable *mappable, const char *path)
-  : BaseElf(path)
+  : BaseElf(path, mappable)
   , link_map()
-  , mappable(mappable)
   , init(0)
   , fini(0)
   , initialized(false)
@@ -135,9 +134,6 @@ private:
   {
     return CallFunction(GetPtr(addr));
   }
-
-  /* Appropriated Mappable */
-  mozilla::RefPtr<Mappable> mappable;
 
   /* List of dependent libraries */
   std::vector<mozilla::RefPtr<LibHandle> > dependencies;
