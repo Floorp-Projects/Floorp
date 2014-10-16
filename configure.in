@@ -3796,11 +3796,6 @@ dnl system libffi Support
 dnl ========================================================
 MOZ_CONFIG_FFI()
 
-# split JS out by default to avoid VS2005 PGO crash (bug 591836).
-if test "$OS_ARCH" = "WINNT"; then
-  JS_SHARED_LIBRARY=1
-fi
-
 MOZ_ARG_ENABLE_BOOL(shared-js,
 [  --enable-shared-js
                           Create a shared JavaScript library.],
