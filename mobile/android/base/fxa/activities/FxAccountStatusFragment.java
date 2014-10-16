@@ -676,7 +676,7 @@ public class FxAccountStatusFragment
   }
 
   /**
-   * Iterate through debug buttons, adding a special deubg preference click
+   * Iterate through debug buttons, adding a special debug preference click
    * listener to each of them.
    */
   protected void connectDebugButtons() {

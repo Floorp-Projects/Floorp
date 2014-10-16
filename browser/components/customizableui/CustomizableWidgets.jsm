@@ -923,7 +923,7 @@ const CustomizableWidgets = [
   }, {
     id: "loop-call-button",
     type: "custom",
-    label: "loop-call-button2.label",
+    label: "loop-call-button3.label",
     tooltiptext: "loop-call-button2.tooltiptext",
     defaultArea: CustomizableUI.AREA_NAVBAR,
     introducedInVersion: 1,
