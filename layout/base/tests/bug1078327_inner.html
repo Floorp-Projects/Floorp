@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1078327
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1078327</title>
+  <meta name="author" content="Maksim Lebedev" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #target, #listener { background: yellow; padding: 10px; }
+    #mediator { background: red; padding: 20px; }
+  </style>
+  <script type="application/javascript">
+    var target = undefined;
+    var mediator = undefined;
+    var listener = undefined;
+    var test_target = false;
+    var test_capture = false;
+    var test_mediator_over = false;
+    var test_mediator_move = false;
+    var test_mediator_out = false;
+    var test_listener = false;
+
+    function TargetHandler(event) {
+      logger("Target receive event: " + event.type + ". Mediator.setPointerCapture()");
+      mediator.setPointerCapture(event.pointerId);
+      test_target = true;
+    }
+    function MediatorHandler(event) {
+      logger("Mediator receive event: " + event.type);
+      if(event.type == "gotpointercapture")
+        test_capture = true;
+      if(!test_capture)
+        return;
+      if(event.type == "pointermove")
+        test_mediator_move++;
+      if(event.type == "pointerover")
+        test_mediator_over++;
+      if(event.type == "pointerout")
+        test_mediator_out++;
+      if(event.type == "lostpointercapture")
+        test_capture = false;
+    }
+    function ListenerHandler(event) {
+      logger("Listener receive event: " + event.type);
+      test_listener = true;
+    }
+    function logger(message) {
+      console.log(message);
+      var log = document.getElementById('log');
+      log.innerHTML = message + "<br>" + log.innerHTML;
+    }
+
+    function prepareTest() {
+      parent.turnOnPointerEvents(executeTest);
+    }
+    function executeTest()
+    {
+      logger("executeTest");
+      target = document.getElementById("target");
+      mediator = document.getElementById("mediator");
+      listener = document.getElementById("listener");
+      target.addEventListener("pointerdown",          TargetHandler,    false);
+      mediator.addEventListener("gotpointercapture",  MediatorHandler,  false);
+      mediator.addEventListener("pointerover",        MediatorHandler,  false);
+      mediator.addEventListener("pointermove",        MediatorHandler,  false);
+      mediator.addEventListener("pointerout",         MediatorHandler,  false);
+      mediator.addEventListener("lostpointercapture", MediatorHandler,  false);
+      listener.addEventListener("pointermove",        ListenerHandler,  false);
+      var rect_t = target.getBoundingClientRect();
+      var rect_m = mediator.getBoundingClientRect();
+      var rect_l = listener.getBoundingClientRect();
+      synthesizePointer(target,   rect_t.width/2, rect_t.height/20, {type: "pointerdown"});
+      synthesizePointer(target,   rect_t.width/2, rect_t.height/20, {type: "pointermove"});
+      synthesizePointer(mediator, rect_m.width/2, rect_m.height/20, {type: "pointermove"});
+      synthesizePointer(listener, rect_l.width/2, rect_l.height/20, {type: "pointermove"});
+      synthesizePointer(mediator, rect_m.width/2, rect_m.height/20, {type: "pointermove"});
+      synthesizePointer(target,   rect_t.width/2, rect_t.height/20, {type: "pointermove"});
+      synthesizePointer(target,   rect_t.width/2, rect_t.height/20, {type: "pointerup"});
+      synthesizePointer(target,   rect_t.width/2, rect_t.height/20, {type: "pointermove"});
+      finishTest();
+    }
+    function finishTest() {
+      parent.is(test_target,        true,   "pointerdown event should be received by target");
+      parent.is(test_capture,       false,  "test_capture should be false at the end of the test");
+      parent.is(test_mediator_over, 1,      "mediator should receive pointerover event only once");
+      parent.is(test_mediator_move, 5,      "mediator should receive pointermove event five times");
+      parent.is(test_mediator_out,  1,      "mediator should receive pointerout event only once");
+      parent.is(test_listener,      false,  "listener shouldn't receive any events");
+      logger("finishTest");
+      parent.finishTest();
+    }
+  </script>
+</head>
+<body onload="prepareTest()">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1078327">Mozilla Bug 1078327</a>
+  <div id="mediator">
+    <div id="listener">div id=listener</div>
+  </div>
+  <div id="target">div id=target</div>
+  <pre id="log"></pre>
+</body>
+</html>
