@@ -407,26 +407,25 @@ SearchWithinAVA(Reader& rdn,
     return Success;
   }
 
-  switch (referenceIDType)
-  {
-    case GeneralNameType::dNSName:
-      foundMatch = PresentedDNSIDMatchesReferenceDNSID(presentedID,
-                                                       referenceID);
-      break;
-    case GeneralNameType::iPAddress:
-    {
-      // We don't fall back to matching CN-IDs for IPv6 addresses, so we'll
-      // never get here for an IPv6 address.
-      assert(referenceID.GetLength() == 4);
-      uint8_t ipv4[4];
-      foundMatch = ParseIPv4Address(presentedID, ipv4) &&
-                   InputsAreEqual(Input(ipv4), referenceID);
-      break;
-    }
-    default:
-      return NotReached("unexpected referenceIDType in SearchWithinAVA",
-                        Result::FATAL_ERROR_INVALID_ARGS);
+  if (referenceIDType == GeneralNameType::dNSName) {
+    return MatchPresentedIDWithReferenceID(GeneralNameType::dNSName,
+                                           presentedID, referenceID,
+                                           foundMatch);
   }
+
+  // We don't match CN-IDs for IPv6 addresses. MatchPresentedIDWithReferenceID
+  // ensures that it won't match an IPv4 address with an IPv6 address, so we
+  // don't need to check that referenceID is an IPv4 address here.
+  if (referenceIDType == GeneralNameType::iPAddress) {
+    uint8_t ipv4[4];
+    if (ParseIPv4Address(presentedID, ipv4)) {
+      return MatchPresentedIDWithReferenceID(GeneralNameType::iPAddress,
+                                             Input(ipv4), referenceID,
+                                             foundMatch);
+    }
+  }
+
+  // We don't match CN-IDs for any other types of names.
 
   return Success;
 }
