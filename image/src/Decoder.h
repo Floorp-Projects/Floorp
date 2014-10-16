@@ -101,6 +101,8 @@ public:
     mObserver = aObserver;
   }
 
+  size_t BytesDecoded() const { return mBytesDecoded; }
+
   // The number of frames we have, including anything in-progress. Thus, this
   // is only 0 if we haven't begun any frames.
   uint32_t GetFrameCount() { return mFrameCount; }
@@ -234,6 +236,7 @@ protected:
   uint32_t mColormapSize;
 
   uint32_t mDecodeFlags;
+  size_t mBytesDecoded;
   bool mDecodeDone;
   bool mDataError;
 

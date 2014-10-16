@@ -1224,7 +1224,7 @@ void
 nsBidiPresUtils::ReorderFrames(nsIFrame*   aFirstFrameOnLine,
                                int32_t     aNumFramesOnLine,
                                WritingMode aLineWM,
-                               nscoord&    aLineWidth,
+                               nscoord     aLineWidth,
                                nscoord     aStart)
 {
   // If this line consists of a line frame, reorder the line frame's children.
@@ -1399,7 +1399,7 @@ nsBidiPresUtils::RepositionFrame(nsIFrame*             aFrame,
                                  nscoord&              aStart,
                                  nsContinuationStates* aContinuationStates,
                                  WritingMode           aContainerWM,
-                                 nscoord&              aContainerWidth)
+                                 nscoord               aContainerWidth)
 {
   if (!aFrame)
     return;
@@ -1509,8 +1509,8 @@ void
 nsBidiPresUtils::RepositionInlineFrames(BidiLineData *aBld,
                                         nsIFrame* aFirstChild,
                                         WritingMode aLineWM,
-                                        nscoord& aLineWidth,
-                                        nscoord& aStart)
+                                        nscoord aLineWidth,
+                                        nscoord aStart)
 {
   nscoord start = aStart;
   nsIFrame* frame;

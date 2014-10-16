@@ -24,7 +24,7 @@ InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult
   nsRefPtr<InternalRequest> copy = new InternalRequest();
   copy->mURL.Assign(mURL);
   copy->SetMethod(mMethod);
-  copy->mHeaders = new Headers(*mHeaders);
+  copy->mHeaders = new InternalHeaders(*mHeaders);
 
   copy->mBodyStream = mBodyStream;
   copy->mPreserveContentCodings = true;

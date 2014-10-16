@@ -60,7 +60,6 @@
 #include "nsIDOMStyleSheet.h"
 #include "nsError.h"
 
-#include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 
 #include "mozilla/dom/EncodingUtils.h"
@@ -1549,20 +1548,10 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   mSyncCallback = true;
 #endif
   nsCOMPtr<nsILoadGroup> loadGroup;
-  // Content Security Policy information to pass into channel
-  nsCOMPtr<nsIChannelPolicy> channelPolicy;
   if (mDocument) {
     loadGroup = mDocument->GetDocumentLoadGroup();
     NS_ASSERTION(loadGroup,
                  "No loadgroup for stylesheet; onload will fire early");
-    nsCOMPtr<nsIContentSecurityPolicy> csp;
-    rv = mDocument->NodePrincipal()->GetCsp(getter_AddRefs(csp));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (csp) {
-      channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
-      channelPolicy->SetContentSecurityPolicy(csp);
-      channelPolicy->SetLoadType(nsIContentPolicy::TYPE_STYLESHEET);
-    }
   }
 
   nsLoadFlags securityFlags = nsILoadInfo::SEC_NORMAL;
@@ -1581,7 +1570,6 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
                              requestingPrincipal,
                              securityFlags,
                              nsIContentPolicy::TYPE_STYLESHEET,
-                             channelPolicy,
                              loadGroup,
                              nullptr,   // aCallbacks
                              nsIChannel::LOAD_NORMAL |

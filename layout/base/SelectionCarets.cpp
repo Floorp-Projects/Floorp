@@ -856,7 +856,9 @@ SelectionCarets::NotifySelectionChanged(nsIDOMDocument* aDoc,
     SetVisibility(false);
     return NS_OK;
   }
-  if (aReason & nsISelectionListener::KEYPRESS_REASON) {
+  if (!aReason || (aReason & (nsISelectionListener::DRAG_REASON |
+                               nsISelectionListener::KEYPRESS_REASON |
+                               nsISelectionListener::MOUSEDOWN_REASON))) {
     SetVisibility(false);
   } else {
     UpdateSelectionCarets();
@@ -905,7 +907,7 @@ SelectionCarets::AsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos)
 void
 SelectionCarets::ScrollPositionChanged()
 {
-  if (!mAPZenabled) {
+  if (!mAPZenabled && mVisible) {
     SetVisibility(false);
     //TODO: handling scrolling for selection bubble when APZ is off
     LaunchScrollEndDetector();

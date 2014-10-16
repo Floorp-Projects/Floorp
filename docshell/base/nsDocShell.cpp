@@ -168,7 +168,6 @@
 #endif
 
 #include "nsContentUtils.h"
-#include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsILoadInfo.h"
 #include "nsSandboxFlags.h"
@@ -10158,27 +10157,7 @@ nsDocShell::DoURILoad(nsIURI * aURI,
         loadFlags |= nsIChannel::LOAD_BACKGROUND;
     }
 
-    // check for Content Security Policy to pass along with the
-    // new channel we are creating
-    nsCOMPtr<nsIChannelPolicy> channelPolicy;
     if (IsFrame()) {
-        // check the parent docshell for a CSP
-        nsCOMPtr<nsIContentSecurityPolicy> csp;
-        nsCOMPtr<nsIDocShellTreeItem> parentItem;
-        GetSameTypeParent(getter_AddRefs(parentItem));
-        if (parentItem) {
-          nsCOMPtr<nsIDocument> doc = parentItem->GetDocument();
-          if (doc) {
-            rv = doc->NodePrincipal()->GetCsp(getter_AddRefs(csp));
-            NS_ENSURE_SUCCESS(rv, rv);
-            if (csp) {
-              channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
-              channelPolicy->SetContentSecurityPolicy(csp);
-              channelPolicy->SetLoadType(nsIContentPolicy::TYPE_SUBDOCUMENT);
-            }
-          }
-        }
-
         // Only allow view-source scheme in top-level docshells. view-source is
         // the only scheme to which this applies at the moment due to potential
         // timing attacks to read data from cross-origin iframes. If this widens
@@ -10247,7 +10226,6 @@ nsDocShell::DoURILoad(nsIURI * aURI,
                                    requestingPrincipal,
                                    securityFlags,
                                    aContentPolicyType,
-                                   channelPolicy,
                                    nullptr,   // loadGroup
                                    static_cast<nsIInterfaceRequestor*>(this),
                                    loadFlags);

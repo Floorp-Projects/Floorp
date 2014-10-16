@@ -72,69 +72,80 @@ const IMPORT1 = "var I8=glob.Int8Array; var i8=new I8(b); " + BYTELENGTH_IMPORT;
 const IMPORT2 = "var I8=glob.Int8Array; var i8=new I8(b); var I32=glob.Int32Array; var i32=new I32(b); var II32=glob.Int32Array; " + BYTELENGTH_IMPORT;
 
        asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function f() { return 42 } function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function b(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function f(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2=1) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2,xyz) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(...r) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2,...r) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch({b2}) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { ;if((len((b2))) & (0xffffff) || (len((b2)) <= (0xffffff))) {;;return false;;} ; i8=new I8(b2);; b=b2;; return true;; } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function ch2(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { 3; if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { b2=b2|0; if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function f() { return 42 } function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function b(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function f(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2=1) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2,xyz) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(...r) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2,...r) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch({b2}) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { ;if((len((b2))) & (0xffffff) || (len((b2)) <= (0xffffff)) || len(b2) > 0x80000000) {;;return false;;} ; i8=new I8(b2);; b=b2;; return true;; } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function ch2(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { 3; if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { b2=b2|0; if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
 assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(1) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(1 || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(1 & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || 1) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(i8(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(xyz) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff && len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) | 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) == 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xfffffe || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0x1ffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) < 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xfffffe) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0x1000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) ; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) {} i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) {return false} i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return true; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT0 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i7=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; b=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=1; b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new 1; b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I7(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new b(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8; b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(1); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2,1); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); xyz=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=1; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; 1; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return 1 } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return false } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true; 1 } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i32=new I32(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i32=new I32(b2); i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); i32=new I32(b2); b=b2; return true } function f() { return 42 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I32(b2); i32=new I8(b2); b=b2; return true } function f() { return 42 } return f');
-       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); i32=new II32(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(1 || 1) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(1 || 1 || 1) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(1 || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(1 & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || 1 || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(i8(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(xyz) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff && len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) | 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) == 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xfffffe || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0x1ffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) < 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xfffffe || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0x1000000 || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || 1) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) < 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || 1 > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0.0) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0xffffff) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x1000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0x1000000 || len(b2) > 0x1000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0x1000000 || len(b2) > 0x1000001) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000001) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) ; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) {} i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) {return false} i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return true; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT0 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i7=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; b=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=1; b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new 1; b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I7(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new b(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8; b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(1); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2,1); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); xyz=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=1; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; 1; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return 1 } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return false } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true; 1 } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i32=new I32(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i32=new I32(b2); i8=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); i32=new I32(b2); b=b2; return true } function f() { return 42 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I32(b2); i32=new I8(b2); b=b2; return true } function f() { return 42 } return f');
+       asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); i32=new II32(b2); b=b2; return true } function f() { return 42 } return f');
 
 // Tests for no calls in heap index expressions
 
-const SETUP = USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i8=new I8(b2); i32=new I32(b2); b=b2; return true }';
+const SETUP = USE_ASM + IMPORT2 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i8=new I8(b2); i32=new I32(b2); b=b2; return true }';
 
        asmCompile('glob', 'ffis', 'b', SETUP + 'function f() { i32[0] } return f');
        asmCompile('glob', 'ffis', 'b', SETUP + 'function f() { i32[0] = 0 } return f');
@@ -152,26 +163,28 @@ assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[i 
 
 // Tests for constant heap accesses when change-heap is used
 
-const HEADER = USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & MASK || len(b2) <= MIN) return false; i8=new I8(b2); b=b2; return true } ';
-assertAsmTypeFail('glob', 'ffis', 'b', HEADER.replace('MASK', '0xffffff').replace('MIN', '0xffffff') + 'function f() { i8[0x1000000] = 0 } return f');
-       asmCompile('glob', 'ffis', 'b', HEADER.replace('MASK', '0xffffff').replace('MIN', '0xffffff') + 'function f() { i8[0xffffff] = 0 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', HEADER.replace('MASK', '0xffffff').replace('MIN', '0x1000000') + 'function f() { i8[0x1000001] = 0 } return f');
-       asmCompile('glob', 'ffis', 'b', HEADER.replace('MASK', '0xffffff').replace('MIN', '0x1000000') + 'function f() { i8[0x1000000] = 0 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', HEADER.replace('MASK', '0xffffff').replace('MIN', '0xffffff') + 'function f() { return i8[0x1000000]|0 } return f');
-       asmCompile('glob', 'ffis', 'b', HEADER.replace('MASK', '0xffffff').replace('MIN', '0xffffff') + 'function f() { return i8[0xffffff]|0 } return f');
-assertAsmTypeFail('glob', 'ffis', 'b', HEADER.replace('MASK', '0xffffff').replace('MIN', '0x1000000') + 'function f() { return i8[0x1000001]|0 } return f');
-       asmCompile('glob', 'ffis', 'b', HEADER.replace('MASK', '0xffffff').replace('MIN', '0x1000000') + 'function f() { return i8[0x1000000]|0 } return f');
+const HEADER = USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= MIN || len(b2) > 0x80000000) return false; i8=new I8(b2); b=b2; return true } ';
+assertAsmTypeFail('glob', 'ffis', 'b', HEADER.replace('MIN', '0xffffff') + 'function f() { i8[0x1000000] = 0 } return f');
+       asmCompile('glob', 'ffis', 'b', HEADER.replace('MIN', '0xffffff') + 'function f() { i8[0xffffff] = 0 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', HEADER.replace('MIN', '0x1000000') + 'function f() { i8[0x1000001] = 0 } return f');
+       asmCompile('glob', 'ffis', 'b', HEADER.replace('MIN', '0x1000000') + 'function f() { i8[0x1000000] = 0 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', HEADER.replace('MIN', '0xffffff') + 'function f() { return i8[0x1000000]|0 } return f');
+       asmCompile('glob', 'ffis', 'b', HEADER.replace('MIN', '0xffffff') + 'function f() { return i8[0xffffff]|0 } return f');
+assertAsmTypeFail('glob', 'ffis', 'b', HEADER.replace('MIN', '0x1000000') + 'function f() { return i8[0x1000001]|0 } return f');
+       asmCompile('glob', 'ffis', 'b', HEADER.replace('MIN', '0x1000000') + 'function f() { return i8[0x1000000]|0 } return f');
 
 // Tests for validation of heap length
 
-var body = USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & MASK || len(b2) <= MIN) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return ch';
-var m = asmCompile('glob', 'ffis', 'b', body.replace('MASK', '0xffffff').replace('MIN', '0x1ffffff'));
+var body = USE_ASM + IMPORT1 + 'function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0x1ffffff || len(b2) > 0x4000000) return false; i8=new I8(b2); b=b2; return true } function f() { return 42 } return ch';
+var m = asmCompile('glob', 'ffis', 'b', body);
 assertAsmLinkFail(m, this, null, new ArrayBuffer(BUF_CHANGE_MIN));
 assertAsmLinkFail(m, this, null, new ArrayBuffer(0x1000000));
 var changeHeap = asmLink(m, this, null, new ArrayBuffer(0x2000000));
 assertEq(changeHeap(new ArrayBuffer(0x1000000)), false);
 assertEq(changeHeap(new ArrayBuffer(0x2000000)), true);
 assertEq(changeHeap(new ArrayBuffer(0x2000001)), false);
+assertEq(changeHeap(new ArrayBuffer(0x4000000)), true);
+assertEq(changeHeap(new ArrayBuffer(0x5000000)), false);
 assertThrowsInstanceOf(() => changeHeap(null), TypeError);
 assertThrowsInstanceOf(() => changeHeap({}), TypeError);
 assertThrowsInstanceOf(() => changeHeap(new Int32Array(100)), TypeError);
@@ -184,7 +197,7 @@ assertEq(changeHeap(detached), false);
 
 const CHANGE_HEAP = 'var changeHeap = glob.byteLength;';
 
-var changeHeapSource = `function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i32=new I32(b2); b=b2; return true }`;
+var changeHeapSource = `function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i32=new I32(b2); b=b2; return true }`;
 var body = `var I32=glob.Int32Array; var i32=new I32(b);
             var len=glob.byteLength;` +
             changeHeapSource +
@@ -223,16 +236,21 @@ set(BUF_CHANGE_MIN, 262);
 assertEq(get(BUF_CHANGE_MIN), 0);
 
 var buf1 = new ArrayBuffer(BUF_CHANGE_MIN);
+var buf2 = new ArrayBuffer(BUF_CHANGE_MIN);
+var m = asmCompile('glob', 'ffis', 'b', USE_ASM +
+                   `var len=glob.byteLength;
+                    function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; b=b2; return true }
+                    return ch`);
+var changeHeap = asmLink(m, this, null, buf1);
+assertEq(changeHeap(buf2), true);
+neuter(buf2, "change-data");
+assertEq(changeHeap(buf1), true);
+neuter(buf1, "change-data");
+
+var buf1 = new ArrayBuffer(BUF_CHANGE_MIN);
 new Int32Array(buf1)[0] = 13;
 var buf2 = new ArrayBuffer(BUF_CHANGE_MIN);
 new Int32Array(buf2)[0] = 42;
-
-var m = asmCompile('glob', 'ffis', 'b', USE_ASM +
-                   `var len=glob.byteLength;
-                    function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; b=b2; return true }
-                    return ch`);
-var changeHeap = asmLink(m, this, null, buf1);
-changeHeap(buf2);
 
 // Tests for changing heap during an FFI:
 
@@ -246,7 +264,7 @@ var m = asmCompile('glob', 'ffis', 'b', USE_ASM +
                    `var ffi=ffis.ffi;
                     var I32=glob.Int32Array; var i32=new I32(b);
                     var len=glob.byteLength;
-                    function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff) return false; i32=new I32(b2); b=b2; return true }
+                    function ch(b2) { if(len(b2) & 0xffffff || len(b2) <= 0xffffff || len(b2) > 0x80000000) return false; i32=new I32(b2); b=b2; return true }
                     function test(i) { i=i|0; var sum=0; sum = i32[i>>2]|0; sum = (sum + (ffi()|0))|0; sum = (sum + (i32[i>>2]|0))|0; return sum|0 }
                     return {test:test, changeHeap:ch}`);
 var ffi = function() { changeHeap(changeToBuf); return 1 }

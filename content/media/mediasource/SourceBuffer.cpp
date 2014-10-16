@@ -416,8 +416,21 @@ SourceBuffer::Dump(const char* aPath)
 }
 #endif
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(SourceBuffer, DOMEventTargetHelper,
-                                   mMediaSource)
+NS_IMPL_CYCLE_COLLECTION_CLASS(SourceBuffer)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SourceBuffer)
+  // Tell the TrackBuffer to end its current SourceBufferResource.
+  TrackBuffer* track = tmp->mTrackBuffer;
+  if (track) {
+    track->Detach();
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMediaSource)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(DOMEventTargetHelper)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SourceBuffer,
+                                                  DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaSource)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(SourceBuffer, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(SourceBuffer, DOMEventTargetHelper)

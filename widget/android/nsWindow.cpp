@@ -31,7 +31,6 @@ using mozilla::unused;
 #include "nsIWidgetListener.h"
 #include "nsViewManager.h"
 
-#include "nsRenderingContext.h"
 #include "nsIDOMSimpleGestureEvent.h"
 
 #include "nsGkAtoms.h"

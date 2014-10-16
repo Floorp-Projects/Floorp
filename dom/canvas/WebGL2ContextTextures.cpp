@@ -351,6 +351,8 @@ WebGL2Context::GetTexParameterInternal(const TexTarget& target, GLenum pname)
 {
     switch (pname) {
         case LOCAL_GL_TEXTURE_IMMUTABLE_FORMAT:
+        case LOCAL_GL_TEXTURE_BASE_LEVEL:
+        case LOCAL_GL_TEXTURE_MAX_LEVEL:
         {
             GLint i = 0;
             gl->fGetTexParameteriv(target.get(), pname, &i);

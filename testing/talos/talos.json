@@ -1,11 +1,11 @@
 {
     "talos.zip": {
-        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.49b74c08dad4.zip",
+        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.04081c46ff03.zip",
         "path": ""
     },
     "global": {
         "talos_repo": "https://hg.mozilla.org/build/talos",
-        "talos_revision": "ced1b2d1c400"
+        "talos_revision": "04081c46ff03"
     },
     "suites": {
         "chromez": {
@@ -54,7 +54,7 @@
             }
         },
         "xperf": {
-            "tests": ["tp5n"],
+            "tests": ["tp5n", "ts_paint_cold"],
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
             "pagesets_parent_dir_path": "talos/page_load_test/",
             "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5n.manifest",

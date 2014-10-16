@@ -7,6 +7,7 @@
 #define nsLayoutUtils_h__
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ArrayUtils.h"
 #include "nsChangeHint.h"
 #include "nsAutoPtr.h"
 #include "nsFrameList.h"
@@ -47,8 +48,6 @@ class nsIImageLoadingContent;
 class nsStyleContext;
 class nsBlockFrame;
 class nsContainerFrame;
-class gfxASurface;
-class gfxDrawable;
 class nsView;
 class nsIFrame;
 class nsStyleCoord;
@@ -120,9 +119,12 @@ class nsLayoutUtils
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::gfx::SourceSurface SourceSurface;
+  typedef mozilla::gfx::Color Color;
   typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::Float Float;
   typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
+  typedef mozilla::gfx::StrokeOptions StrokeOptions;
 
 public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
@@ -1482,6 +1484,29 @@ public:
                             const nsRect&       aDirty,
                             uint32_t            aImageFlags);
 
+  static inline Color NSColorToColor(nscolor aColor) {
+    return Color(NS_GET_R(aColor)/255.0,
+                 NS_GET_G(aColor)/255.0,
+                 NS_GET_B(aColor)/255.0,
+                 NS_GET_A(aColor)/255.0);
+  }
+
+  static inline void InitDashPattern(StrokeOptions& aStrokeOptions,
+                                     uint8_t aBorderStyle) {
+    if (aBorderStyle == NS_STYLE_BORDER_STYLE_DOTTED) {
+      static Float dot[] = { 1.f, 1.f };
+      aStrokeOptions.mDashLength = MOZ_ARRAY_LENGTH(dot);
+      aStrokeOptions.mDashPattern = dot;
+    } else if (aBorderStyle == NS_STYLE_BORDER_STYLE_DASHED) {
+      static Float dash[] = { 5.f, 5.f };
+      aStrokeOptions.mDashLength = MOZ_ARRAY_LENGTH(dash);
+      aStrokeOptions.mDashPattern = dash;
+    } else {
+      aStrokeOptions.mDashLength = 0;
+      aStrokeOptions.mDashPattern = nullptr;
+    }
+  }
+
   /**
    * Convert an nsRect to a gfxRect.
    */
@@ -1713,7 +1738,7 @@ public:
   static bool IsReallyFixedPos(nsIFrame* aFrame);
 
   /**
-   * Obtain a gfxASurface from the given DOM element, if possible.
+   * Obtain a SourceSurface from the given DOM element, if possible.
    * This obtains the most natural surface from the element; that
    * is, the one that can be obtained with the fewest conversions.
    *
@@ -1759,8 +1784,7 @@ public:
   struct SurfaceFromElementResult {
     SurfaceFromElementResult();
 
-    /* mSurface will contain the resulting surface, or will be nullptr on error */
-    nsRefPtr<gfxASurface> mSurface;
+    /* mSourceSurface will contain the resulting surface, or will be nullptr on error */
     mozilla::RefPtr<SourceSurface> mSourceSurface;
     /* Contains info for drawing when there is no mSourceSurface. */
     DirectDrawInfo mDrawInfo;

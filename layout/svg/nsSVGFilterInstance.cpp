@@ -10,7 +10,6 @@
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "nsISVGChildFrame.h"
-#include "nsRenderingContext.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "nsReferencedElement.h"
 #include "nsSVGFilterFrame.h"
