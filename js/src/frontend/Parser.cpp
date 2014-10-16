@@ -1254,6 +1254,17 @@ ConvertDefinitionToNamedLambdaUse(TokenStream &ts, ParseContext<FullParseHandler
     return true;
 }
 
+static bool
+IsNonDominatingInScopedSwitch(ParseContext<FullParseHandler> *pc, HandleAtom name,
+                              Definition *dn)
+{
+    MOZ_ASSERT(dn->isLet());
+    StmtInfoPC *stmt = LexicalLookup(pc, name, nullptr, nullptr);
+    if (stmt && stmt->type == STMT_SWITCH)
+        return dn->pn_cookie.slot() < stmt->firstDominatingLexicalInCase;
+    return false;
+}
+
 /*
  * Beware: this function is called for functions nested in other functions or
  * global scripts but not for functions compiled through the Function
@@ -1338,7 +1349,7 @@ Parser<FullParseHandler>::leaveFunction(ParseNode *fn, ParseContext<FullParseHan
                     // In ES6, lexical bindings cannot be accessed until
                     // initialized. If we are parsing a function with a
                     // hoisted body-level use, all free variables that get
-                    // linked to an outer 'let' binding need to be marked as
+                    // linked to an outer lexical binding need to be marked as
                     // needing dead zone checks. e.g.,
                     //
                     // function outer() {
@@ -1348,7 +1359,15 @@ Parser<FullParseHandler>::leaveFunction(ParseNode *fn, ParseContext<FullParseHan
                     // }
                     //
                     // The use of 'x' inside 'inner' needs to be marked.
-                    if (bodyLevelHoistedUse && outer_dn->isLet()) {
+                    //
+                    // Similarly, if we are closing over a lexical binding
+                    // from another case in a switch, those uses also need to
+                    // be marked as needing dead zone checks.
+                    RootedAtom name(context, atom);
+                    if (outer_dn->isLet() &&
+                        (bodyLevelHoistedUse ||
+                         IsNonDominatingInScopedSwitch(outerpc, name, outer_dn)))
+                    {
                         while (true) {
                             pnu->pn_dflags |= PND_LET;
                             if (!pnu->pn_link)
@@ -1872,6 +1891,13 @@ Parser<ParseHandler>::addFreeVariablesFromLazyFunction(JSFunction *fun,
         // Note that body-level function declaration statements are always
         // hoisted to the top, so all accesses to free let variables need the
         // dead zone check.
+        //
+        // Subtlety: we don't need to check for closing over a non-dominating
+        // lexical binding in a switch, as lexical declarations currently
+        // disable syntax parsing. So a non-dominating but textually preceding
+        // lexical declaration would have aborted syntax parsing, and a
+        // textually following declaration would return true for
+        // handler.isPlaceholderDefinition(dn) below.
         if (handler.isPlaceholderDefinition(dn) || bodyLevelHoistedUse)
             freeVariables[i].setIsHoistedUse();
 
@@ -3142,7 +3168,7 @@ Parser<ParseHandler>::noteNameUse(HandlePropertyName name, Node pn)
             handler.setFlag(pn, PND_DEOPTIMIZED);
         } else if (stmt->type == STMT_SWITCH && stmt->isBlockScope) {
             // See comments above StmtInfoPC and switchStatement for how
-            // firstDominatingLetInCase is computed.
+            // firstDominatingLexicalInCase is computed.
             MOZ_ASSERT(stmt->firstDominatingLexicalInCase <= stmt->staticBlock().numVariables());
             handler.markMaybeUninitializedLexicalUseInSwitch(pn, dn,
                                                              stmt->firstDominatingLexicalInCase);
