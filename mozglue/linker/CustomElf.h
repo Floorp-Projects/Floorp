@@ -54,6 +54,12 @@ public:
    */
   virtual void stats(const char *when) const;
 
+  /**
+   * Returns the instance, casted as BaseElf. (short of a better way to do
+   * this without RTTI)
+   */
+  virtual BaseElf *AsBaseElf() { return this; }
+
 private:
   /**
    * Scan dependent libraries to find the address corresponding to the

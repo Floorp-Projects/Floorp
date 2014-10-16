@@ -348,9 +348,8 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
    * happen. */
   for (std::vector<RefPtr<LibHandle> >::const_iterator it = dependencies.begin();
        it < dependencies.end(); ++it) {
-    if (!(*it)->IsSystemElf()) {
-      sym = static_cast<BaseElf *>(
-        static_cast<CustomElf *>((*it).get()))->GetSymbolPtr(symbol, hash);
+    if (BaseElf *be = (*it)->AsBaseElf()) {
+      sym = be->GetSymbolPtr(symbol, hash);
     } else {
       sym = (*it)->GetSymbolPtr(symbol);
     }

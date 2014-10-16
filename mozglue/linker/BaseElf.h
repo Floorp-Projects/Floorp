@@ -79,6 +79,8 @@ public:
   }
 
   /* Appropriated Mappable */
+  /* /!\ we rely on this being nullptr for BaseElf instances, but not
+   * CustomElf instances. */
   mozilla::RefPtr<Mappable> mappable;
 
   /* Base address where the library is loaded */
