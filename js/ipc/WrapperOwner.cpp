@@ -232,7 +232,7 @@ CPOWProxyHandler::ownPropertyKeys(JSContext *cx, HandleObject proxy,
 bool
 WrapperOwner::ownPropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    return getPropertyKeys(cx, proxy, JSITER_OWNONLY | JSITER_HIDDEN, props);
+    return getPropertyKeys(cx, proxy, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
 }
 
 bool
@@ -776,8 +776,8 @@ WrapperOwner::getPropertyKeys(JSContext *cx, HandleObject proxy, uint32_t flags,
     ObjectId objId = idOf(proxy);
 
     ReturnStatus status;
-    InfallibleTArray<nsString> names;
-    if (!SendGetPropertyKeys(objId, flags, &status, &names))
+    InfallibleTArray<JSIDVariant> ids;
+    if (!SendGetPropertyKeys(objId, flags, &status, &ids))
         return ipcfail(cx);
 
     LOG_STACK();
@@ -785,11 +785,11 @@ WrapperOwner::getPropertyKeys(JSContext *cx, HandleObject proxy, uint32_t flags,
     if (!ok(cx, status))
         return false;
 
-    for (size_t i = 0; i < names.Length(); i++) {
-        RootedId name(cx);
-        if (!convertGeckoStringToId(cx, names[i], &name))
+    for (size_t i = 0; i < ids.Length(); i++) {
+        RootedId id(cx);
+        if (!fromJSIDVariant(cx, ids[i], &id))
             return false;
-        if (!props.append(name))
+        if (!props.append(id))
             return false;
     }
 

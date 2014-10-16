@@ -102,8 +102,8 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     }
 
     bool RecvGetPropertyKeys(const uint64_t &objId, const uint32_t &flags,
-                             ReturnStatus *rs, nsTArray<nsString> *names) {
-        return Answer::RecvGetPropertyKeys(ObjectId::deserialize(objId), flags, rs, names);
+                             ReturnStatus *rs, nsTArray<JSIDVariant> *ids) {
+        return Answer::RecvGetPropertyKeys(ObjectId::deserialize(objId), flags, rs, ids);
     }
     bool RecvInstanceOf(const uint64_t &objId, const JSIID &iid,
                           ReturnStatus *rs, bool *instanceof) {
@@ -200,8 +200,8 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     }
 
     bool SendGetPropertyKeys(const ObjectId &objId, const uint32_t &flags,
-                             ReturnStatus *rs, nsTArray<nsString> *names) {
-        return Base::SendGetPropertyKeys(objId.serialize(), flags, rs, names);
+                             ReturnStatus *rs, nsTArray<JSIDVariant> *ids) {
+        return Base::SendGetPropertyKeys(objId.serialize(), flags, rs, ids);
     }
     bool SendInstanceOf(const ObjectId &objId, const JSIID &iid,
                         ReturnStatus *rs, bool *instanceof) {
