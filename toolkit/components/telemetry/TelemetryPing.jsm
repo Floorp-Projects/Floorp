@@ -32,6 +32,7 @@ const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_SERVER = PREF_BRANCH + "server";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
+const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 // Do not gather data more than once a minute
 const TELEMETRY_INTERVAL = 60000;
@@ -703,13 +704,23 @@ let Impl = {
       UIMeasurements: UITelemetry.getUIMeasurements(),
       log: TelemetryLog.entries(),
       info: info,
-      clientID: this._clientID,
     };
 
     if (Object.keys(this._slowSQLStartup).length != 0 &&
         (Object.keys(this._slowSQLStartup.mainThread).length ||
          Object.keys(this._slowSQLStartup.otherThreads).length)) {
       payloadObj.slowSQLStartup = this._slowSQLStartup;
+    }
+
+    let fhrUploadEnabled = false;
+    try {
+      fhrUploadEnabled = Services.prefs.getBoolPref(PREF_FHR_UPLOAD_ENABLED);
+    } catch (e) {
+      // Pref not set.
+    }
+
+    if (this._clientID && fhrUploadEnabled) {
+      payloadObj.clientID = this._clientID;
     }
 
     return payloadObj;
@@ -959,10 +970,12 @@ let Impl = {
         this.attachObservers();
         this.gatherMemory();
 
-        let drs = Cc["@mozilla.org/datareporting/service;1"]
-                    .getService(Ci.nsISupports)
-                    .wrappedJSObject;
-        this._clientID = yield drs.getClientID();
+        if ("@mozilla.org/datareporting/service;1" in Cc) {
+          let drs = Cc["@mozilla.org/datareporting/service;1"]
+                      .getService(Ci.nsISupports)
+                      .wrappedJSObject;
+          this._clientID = yield drs.getClientID();
+        }
 
         Telemetry.asyncFetchTelemetryData(function () {});
         delete this._timer;
