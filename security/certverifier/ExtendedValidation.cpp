@@ -90,6 +90,7 @@ struct nsMyTrustedEVInfo
 // OCSP signing certificate, or OCSP for the intermediate certificates
 // isn't working, or OCSP isn't working at all.
 
+static const size_t NUM_TEST_EV_ROOTS = 2;
 static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
   // IMPORTANT! When extending this list,
   // pairs of dotted_oid and oid_name should always be unique pairs.
@@ -98,10 +99,9 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
 #ifdef DEBUG
   // Debug EV certificates should all use the OID (repeating EV OID is OK):
   // 1.3.6.1.4.1.13769.666.666.666.1.500.9.1.
-  // If you add or remove debug EV certs you must also modify IdentityInfoInit
-  // (there is another #ifdef DEBUG section there) so that the correct number of
-  // certs are skipped as these debug EV certs are NOT part of the default trust
-  // store.
+  // If you add or remove debug EV certs you must also modify NUM_TEST_EV_ROOTS
+  // so that the correct number of certs are skipped as these debug EV certs are
+  // NOT part of the default trust store.
   {
     // This is the testing EV signature (xpcshell) (RSA)
     // CN=XPCShell EV Testing (untrustworthy) CA,OU=Security Engineering,O=Mozilla - EV debug test CA,L=Mountain View,ST=CA,C=US"
@@ -116,6 +116,20 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     "VQQLDBRTZWN1cml0eSBFbmdpbmVlcmluZzEvMC0GA1UEAwwmWFBDU2hlbGwgRVYg"
     "VGVzdGluZyAodW50cnVzdHdvcnRoeSkgQ0E=",
     "At+3zdo=",
+    nullptr
+  },
+  {
+    // The RSA root with an inadequate key size used for EV key size checking
+    // O=ev-rsa-caBad,CN=XPCShell Key Size Testing rsa 2040-bit (EV)
+    "1.3.6.1.4.1.13769.666.666.666.1.500.9.1",
+    "DEBUGtesting EV OID",
+    SEC_OID_UNKNOWN,
+    { 0x0E, 0xE2, 0x7A, 0x44, 0xD3, 0xAB, 0x66, 0x1A, 0x31, 0xBF, 0x0C,
+      0x1C, 0xFC, 0xAA, 0xD9, 0xD6, 0x27, 0x75, 0xC2, 0xDB, 0xC5, 0x69,
+      0xD7, 0x1C, 0xDE, 0x9C, 0x7E, 0xD5, 0x86, 0x88, 0x6C, 0xB7 },
+    "ME0xNDAyBgNVBAMMK1hQQ1NoZWxsIEtleSBTaXplIFRlc3RpbmcgcnNhIDIwNDAt"
+    "Yml0IChFVikxFTATBgNVBAoMDGV2LXJzYS1jYUJhZA==",
+    "PCQ3",
     nullptr
   },
 #endif
@@ -1082,8 +1096,9 @@ IdentityInfoInit()
     // treating that root cert as EV.
     if (!entry.cert) {
 #ifdef DEBUG
-      // The debug CA info is at position 0, and is NOT on the NSS root db
-      if (iEV == 0) {
+      // The debug CA structs are at positions 0 to NUM_TEST_EV_ROOTS - 1, and
+      // are NOT in the NSS root DB.
+      if (iEV < NUM_TEST_EV_ROOTS) {
         continue;
       }
 #endif
