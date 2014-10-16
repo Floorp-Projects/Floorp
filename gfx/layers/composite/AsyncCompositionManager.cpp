@@ -918,7 +918,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
                             1.0f/container->GetPreYScale(),
                             1);
   }
-  computedTransform.ScalePost(1.0f/aLayer->GetPostXScale(),
+  computedTransform.PostScale(1.0f/aLayer->GetPostXScale(),
                               1.0f/aLayer->GetPostYScale(),
                               1);
   layerComposite->SetShadowTransform(computedTransform);
