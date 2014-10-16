@@ -49,7 +49,6 @@ UNIFIED_SOURCES += [
     'nsMediaFragmentURIParser.cpp',
     'nsMIMEInputStream.cpp',
     'nsNetAddr.cpp',
-    'nsNetStrings.cpp',
     'nsNetUtil.cpp',
     'nsPACMan.cpp',
     'nsPreloadedStream.cpp',

@@ -16,7 +16,6 @@ interface nsIStreamListener;
 interface nsIURI;
 
 interface nsISimpleEnumerator;
-interface nsIChannelPolicy;
 
 #include "nsIRequest.idl" // for nsLoadFlags
 
@@ -27,7 +26,7 @@ interface nsIChannelPolicy;
  * @version 0.3
  * @see imagelib2
  */
-[scriptable, builtinclass, uuid(c8126129-8dac-43cd-b1ba-3896fba2dd01)]
+[scriptable, builtinclass, uuid(046d5fa6-ac59-489d-b51e-0ffe57e8df59)]
 interface imgILoader : nsISupports
 {
   // Extra flags to pass to loadImage if you want a load to use CORS
@@ -62,8 +61,7 @@ interface imgILoader : nsISupports
                              in imgINotificationObserver aObserver,
                              in nsISupports aCX,
                              in nsLoadFlags aLoadFlags,
-                             in nsISupports cacheKey,
-                             in nsIChannelPolicy channelPolicy);
+                             in nsISupports cacheKey);
 
   /**
    * Start the load and decode of an image.
