@@ -182,14 +182,6 @@ InspectedHealthReporter.prototype = {
 const DUMMY_URI="http://localhost:62013/";
 
 this.getHealthReporter = function (name, uri=DUMMY_URI, inspected=false) {
-  // The healthreporters use the client id from the datareporting service,
-  // so we need to ensure it is initialized.
-  let drs = Cc["@mozilla.org/datareporting/service;1"]
-              .getService(Ci.nsISupports)
-              .wrappedJSObject;
-  drs.observe(null, "app-startup", null);
-  drs.observe(null, "profile-after-change", null);
-
   let branch = "healthreport.testing." + name + ".";
 
   let prefs = new Preferences(branch + "healthreport.");
@@ -201,14 +193,12 @@ this.getHealthReporter = function (name, uri=DUMMY_URI, inspected=false) {
   let policyPrefs = new Preferences(branch + "policy.");
   let listener = new MockPolicyListener();
   listener.onRequestDataUpload = function (request) {
-    let promise = reporter.requestDataUpload(request);
+    reporter.requestDataUpload(request);
     MockPolicyListener.prototype.onRequestDataUpload.call(this, request);
-    return promise;
   }
   listener.onRequestRemoteDelete = function (request) {
-    let promise = reporter.deleteRemoteData(request);
+    reporter.deleteRemoteData(request);
     MockPolicyListener.prototype.onRequestRemoteDelete.call(this, request);
-    return promise;
   }
   let policy = new DataReportingPolicy(policyPrefs, prefs, listener);
   let type = inspected ? InspectedHealthReporter : HealthReporter;
