@@ -5,171 +5,33 @@
 "use strict";
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Messaging.jsm");
+
+const CONFIG = { iceServers: [{ "url": "stun:stun.services.mozilla.com" }] };
+
+let log = Cu.import("resource://gre/modules/AndroidLog.jsm",
+                    {}).AndroidLog.d.bind(null, "TabMirror");
+
+let failure = function(x) {
+  log("ERROR: " + JSON.stringify(x));
+};
 
 let TabMirror = function(deviceId, window) {
-  let out_queue = [];
-  let in_queue = [];
-  let DEBUG = false;
 
-  let log = Cu.import("resource://gre/modules/AndroidLog.jsm",
-                      {}).AndroidLog.d.bind(null, "TabMirror");
+  this.deviceId = deviceId;
+  // Save mozRTCSessionDescription and mozRTCIceCandidate for later when the window object is not available.
+  this.RTCSessionDescription = window.mozRTCSessionDescription;
+  this.RTCIceCandidate = window.mozRTCIceCandidate;
 
-  let RTCPeerConnection = window.mozRTCPeerConnection;
-  let RTCSessionDescription = window.mozRTCSessionDescription;
-  let RTCIceCandidate = window.mozRTCIceCandidate;
-  let getUserMedia = window.navigator.mozGetUserMedia.bind(window.navigator);
+  Services.obs.addObserver((aSubject, aTopic, aData) => this._processMessage(aData), "MediaPlayer:Response", false);
 
-  Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
-    in_queue.push(aData);
-  }, "MediaPlayer:Response", false);
+  this._pc = new window.mozRTCPeerConnection(CONFIG, {});
 
-  let poll_timeout = 1000; // ms
-
-  let audio_stream = undefined;
-  let video_stream = undefined;
-  let pc = undefined;
-
-  let poll_success = function(msg) {
-    if (!msg) {
-      poll_error();
-      return;
-    }
-
-    let js;
-    try {
-      js = JSON.parse(msg);
-    } catch(ex) {
-      log("ex: " + ex);
-    }
-
-    let sdp = js.body;
-
-    if (sdp) {
-      if (sdp.sdp) {
-        if (sdp.type === "offer") {
-          process_offer(sdp);
-        } else if (sdp.type === "answer") {
-          process_answer(sdp);
-        }
-      } else {
-        process_ice_candidate(sdp);
-      }
-    }
-
-    window.setTimeout(poll, poll_timeout);
-  };
-
-  let poll_error = function (msg) {
-    window.setTimeout(poll, poll_timeout);
-  };
-
-  let poll = function () {
-    if (in_queue) {
-      poll_success(in_queue.pop());
-    }
-  };
-
-  let failure = function(x) {
-    log("ERROR: " + JSON.stringify(x));
-  };
-
-
-  // Signaling methods
-  let send_sdpdescription= function(sdp) {
-    let msg = {
-      body: sdp
-    };
-
-    sendMessage(JSON.stringify(msg));
-  };
-
-
-  let deobjify = function(x) {
-    return JSON.parse(JSON.stringify(x));
-  };
-
-
-  let process_offer = function(sdp) {
-    pc.setRemoteDescription(new RTCSessionDescription(sdp),
-                            set_remote_offer_success, failure);
-  };
-
-  let process_answer = function(sdp) {
-    pc.setRemoteDescription(new RTCSessionDescription(sdp),
-                            set_remote_answer_success, failure);
-  };
-
-  let process_ice_candidate = function(msg) {
-    pc.addIceCandidate(new RTCIceCandidate(msg));
-  };
-
-  let set_remote_offer_success = function() {
-    pc.createAnswer(create_answer_success, failure);
-  };
-
-  let set_remote_answer_success= function() {
-  };
-
-  let set_local_success_offer = function(sdp) {
-    send_sdpdescription(sdp);
-  };
-
-  let set_local_success_answer = function(sdp) {
-    send_sdpdescription(sdp);
-  };
-
-  let filter_nonrelay_candidates = function(sdp) {
-    let lines = sdp.sdp.split("\r\n");
-    let lines2 = lines.filter(function(x) {
-      if (!/candidate/.exec(x))
-        return true;
-      if (/relay/.exec(x))
-        return true;
-
-      return false;
-    });
-
-    sdp.sdp = lines2.join("\r\n");
-  };
-
-  let create_offer_success = function(sdp) {
-    pc.setLocalDescription(sdp,
-                           function() {
-                             set_local_success_offer(sdp);
-                           },
-                           failure);
-  };
-
-  let create_answer_success = function(sdp) {
-    pc.setLocalDescription(sdp,
-                           function() {
-                             set_local_success_answer(sdp);
-                           },
-                           failure);
-  };
-
-  let on_ice_candidate = function (candidate) {
-    send_sdpdescription(candidate.candidate);
-  };
-
-  let ready = function() {
-    pc.createOffer(create_offer_success, failure);
-    poll();
-  };
-
-
-  let config = {
-    iceServers: [{ "url": "stun:stun.services.mozilla.com" }]
-  };
-
-  pc = new RTCPeerConnection(config, {});
-
-  if (!pc) {
-    log("Failure creating Webrtc object");
-    return;
+  if (!this._pc) {
+    throw "Failure creating Webrtc object";
   }
 
-  pc.onicecandidate = on_ice_candidate;
+  this._pc.onicecandidate = this._onIceCandidate.bind(this);
 
   let windowId = window.BrowserApp.selectedBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
   let viewport = window.BrowserApp.selectedTab.getViewport();
@@ -203,41 +65,95 @@ let TabMirror = function(deviceId, window) {
     }
   };
 
-  let gUM_success = function(stream){
-    pc.addStream(stream);
-    ready();
-  };
+  window.navigator.mozGetUserMedia(constraints, this._onGumSuccess.bind(this), this._onGumFailure.bind(this));
+};
 
-  let gUM_failure = function() {
-    log("Could not get video stream");
-  };
+TabMirror.prototype = {
 
-  getUserMedia( constraints, gUM_success, gUM_failure);
+  _processMessage: function(data) {
 
-  function sendMessage(msg) {
-    let obj = {
-      type: "MediaPlayer:Message",
-      id: deviceId,
-      data: msg
-    };
-
-    if (deviceId) {
-      Services.androidBridge.handleGeckoMessage(obj);
+    if (!data) {
+      return;
     }
-  }
 
-  return {
-    stop: function() {
+    let msg = JSON.parse(data);
+
+    if (!msg) {
+      return;
+    }
+
+    if (msg.sdp) {
+      if (msg.type === "answer") {
+        this._processAnswer(msg);
+      } else {
+        log("Unandled sdp message type: " + msg.type);
+      }
+    } else {
+      this._processIceCandidate(msg);
+    }
+  },
+
+  // Signaling methods
+  _processAnswer: function(msg) {
+    this._pc.setRemoteDescription(new this.RTCSessionDescription(msg),
+                                 this._setRemoteAnswerSuccess.bind(this), failure);
+  },
+
+  _processIceCandidate: function(msg) {
+    // WebRTC generates a warning if the success and fail callbacks are not passed in.
+    this._pc.addIceCandidate(new this.RTCIceCandidate(msg), () => log("Ice Candiated added successfuly"), () => log("Failed to add Ice Candidate"));
+  },
+
+  _setRemoteAnswerSuccess: function() {
+  },
+
+  _setLocalSuccessOffer: function(sdp) {
+    this._sendMessage(sdp);
+  },
+
+  _createOfferSuccess: function(sdp) {
+    this._pc.setLocalDescription(sdp, () => this._setLocalSuccessOffer(sdp), failure);
+  },
+
+  _onIceCandidate: function (msg) {
+    log("NEW Ice Candidate: " + JSON.stringify(msg.candidate));
+    this._sendMessage(msg.candidate);
+  },
+
+  _ready: function() {
+    this._pc.createOffer(this._createOfferSuccess.bind(this), failure);
+  },
+
+  _onGumSuccess: function(stream){
+    this._pc.addStream(stream);
+    this._ready();
+  },
+
+  _onGumFailure: function() {
+    log("Could not get video stream");
+    this._pc.close();
+  },
+
+  _sendMessage: function(msg) {
+    if (this.deviceId) {
+      let obj = {
+        type: "MediaPlayer:Message",
+        id: this.deviceId,
+        data: JSON.stringify(msg)
+      };
+      Messaging.sendRequest(obj);
+    }
+  },
+
+  stop: function() {
+    if (this.deviceId) {
       let obj = {
         type: "MediaPlayer:End",
-        id: deviceId
+        id: this.deviceId
       };
-
-      if (deviceId) {
-        Services.androidBridge.handleGeckoMessage(obj);
-      }
+      Services.androidBridge.handleGeckoMessage(obj);
     }
-  }
+  },
 };
 
 
