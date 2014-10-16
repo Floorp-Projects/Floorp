@@ -7578,7 +7578,13 @@ nsTextFrame::ComputeTightBounds(gfxContext* aContext) const
                               aContext, &provider);
   // mAscent should be the same as metrics.mAscent, but it's what we use to
   // paint so that's the one we'll use.
-  return RoundOut(metrics.mBoundingBox) + nsPoint(0, mAscent);
+  nsRect boundingBox = RoundOut(metrics.mBoundingBox) + nsPoint(0, mAscent);
+  if (mTextRun->IsVertical()) {
+    // Swap line-relative textMetrics dimensions to physical coordinates.
+    Swap(boundingBox.x, boundingBox.y);
+    Swap(boundingBox.width, boundingBox.height);
+  }
+  return boundingBox;
 }
 
 /* virtual */ nsresult
@@ -8284,6 +8290,11 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // Handle text that runs outside its normal bounds.
   nsRect boundingBox = RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent);
   aMetrics.SetOverflowAreasToDesiredBounds();
+  if (mTextRun->IsVertical()) {
+    // Swap line-relative textMetrics dimensions to physical coordinates.
+    Swap(boundingBox.x, boundingBox.y);
+    Swap(boundingBox.width, boundingBox.height);
+  }
   aMetrics.VisualOverflow().UnionRect(aMetrics.VisualOverflow(), boundingBox);
 
   // When we have text decorations, we don't need to compute their overflow now
@@ -8530,7 +8541,13 @@ nsTextFrame::RecomputeOverflow(const nsHTMLReflowState& aBlockReflowState)
                           gfxFont::LOOSE_INK_EXTENTS, nullptr,
                           &provider);
   nsRect &vis = result.VisualOverflow();
-  vis.UnionRect(vis, RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent));
+  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent);
+  if (mTextRun->IsVertical()) {
+    // Swap line-relative textMetrics dimensions to physical coordinates.
+    Swap(boundingBox.x, boundingBox.y);
+    Swap(boundingBox.width, boundingBox.height);
+  }
+  vis.UnionRect(vis, boundingBox);
   UnionAdditionalOverflow(PresContext(), aBlockReflowState.frame, provider,
                           &vis, true);
   return result;
