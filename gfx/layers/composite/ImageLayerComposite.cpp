@@ -129,8 +129,8 @@ ImageLayerComposite::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransform
         sourceRect.width != 0.0 && sourceRect.height != 0.0) {
       NS_ASSERTION(mScaleMode == ScaleMode::STRETCH,
                    "No other scalemodes than stretch and none supported yet.");
-      local.Scale(mScaleToSize.width / sourceRect.width,
-                  mScaleToSize.height / sourceRect.height, 1.0);
+      local.PreScale(mScaleToSize.width / sourceRect.width,
+                     mScaleToSize.height / sourceRect.height, 1.0);
     }
   }
   // Snap our local transform first, and snap the inherited transform as well.
