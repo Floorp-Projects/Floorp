@@ -1556,7 +1556,7 @@ public:
                                uint32_t aStart, uint32_t aEnd,
                                BoundingBoxType aBoundingBoxType,
                                gfxContext *aContextForTightBoundingBox,
-                               Spacing *aSpacing, uint16_t aOrientation);
+                               Spacing *aSpacing);
     /**
      * Line breaks have been changed at the beginning and/or end of a substring
      * of the text. Reshaping may be required; glyph updating is permitted.
