@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=807222
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=807222">Mozilla Bug 807222</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -21,9 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=807222
 /** Test for Bug 807222 **/
 var expectedProps = [ "Image", "Audio", "Option",
                       "PerformanceTiming", "CSS2Properties", "SVGElement" ];
-if (navigator.mozTelephony) {
-  expectedProps.push("USSDReceivedEvent");
-}
 var actualProps = Object.getOwnPropertyNames(window);
 
 for (var i = 0; i < expectedProps.length; ++i) {

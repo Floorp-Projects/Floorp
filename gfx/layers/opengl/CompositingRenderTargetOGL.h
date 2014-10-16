@@ -157,7 +157,12 @@ private:
   void InitializeImpl();
 
   InitParams mInitParams;
-  CompositorOGL* mCompositor;
+  /**
+   * There is temporary a cycle between the compositor and the render target,
+   * each having a strong ref to the other. The compositor's reference to
+   * the target is always cleared at the end of a frame.
+   */
+  RefPtr<CompositorOGL> mCompositor;
   GLContext* mGL;
   GLuint mTextureHandle;
   GLuint mFBO;

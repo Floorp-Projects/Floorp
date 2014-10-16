@@ -3935,6 +3935,10 @@ pref("layers.prefer-d3d9", false);
 // Force all possible layers to be always active layers
 pref("layers.force-active", false);
 
+// Never use gralloc surfaces, even when they're available on this
+// platform and are the optimal surface type.
+pref("layers.gralloc.disable", false);
+
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
 
@@ -4344,9 +4348,6 @@ pref("camera.control.low_memory_thresholdMB", 404);
 
 // UDPSocket API
 pref("dom.udpsocket.enabled", false);
-
-// Disable before keyboard events and after keyboard events by default.
-pref("dom.beforeAfterKeyboardEvent.enabled", false);
 
 // Experiment: Get TTL from DNS records.
 //     Unset initially (0); Randomly chosen on first run; will remain unchanged

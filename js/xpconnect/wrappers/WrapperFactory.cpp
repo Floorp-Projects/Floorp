@@ -119,7 +119,7 @@ ForceCOWBehavior(JSObject *obj)
         // expose COW-style.
         return false;
     }
-    if (key == JSProto_Object || key == JSProto_Array || key == JSProto_Function) {
+    if (key == JSProto_Object || key == JSProto_Function) {
         MOZ_ASSERT(GetXrayType(obj) == XrayForJSObject,
                    "We should use XrayWrappers for standard ES Object, Array, and Function "
                    "instances modulo this hack");

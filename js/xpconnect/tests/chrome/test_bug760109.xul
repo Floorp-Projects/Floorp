@@ -25,8 +25,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760109
 
     // Check that COWs for objects with standard prototypes use the standard
     // prototype in the home compartment.
-    ok(Object.getPrototypeOf(chromeArray) === Array.prototype,
-       "Array prototype remapped properly");
     var protoProto = Object.getPrototypeOf(Object.getPrototypeOf(chromeObject));
     ok(protoProto === Object.prototype,
        "Object prototype remapped properly");
@@ -38,7 +36,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760109
     // though we'd also be able to find it on Object.prototype. Some recent
     // refactoring has made it possible to do the right thing here.
     is(typeof chromeObject.constructor, "undefined", "Object constructor does what we expect");
-    ok(chromeArray.constructor === Array, "Array constructor remapped properly");
   }
 
   // We use a constructor to create the test object so that there's an
@@ -54,12 +51,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760109
 
   const Cu = Components.utils;
   var sb = new Cu.Sandbox('http://www.example.org');
-  sb.chromeArray = ['a', 'b', 'z'];
-  sb.chromeArray.__exposedProps__ = { length: 'rw' };
-  for (var i = 0; i < 10; ++i) {
-    sb.chromeArray.__exposedProps__[i] = 'rw';
-  }
-
   sb.chromeObject = new SomeConstructor();
   sb.ok = ok;
   sb.is = is;

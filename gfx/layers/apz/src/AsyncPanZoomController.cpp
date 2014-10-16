@@ -9,6 +9,7 @@
 #include <sys/types.h>                  // for int32_t
 #include <algorithm>                    // for max, min
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController, etc
+#include "Axis.h"                       // for AxisX, AxisY, Axis, etc
 #include "Compositor.h"                 // for Compositor
 #include "CompositorParent.h"           // for CompositorParent
 #include "FrameMetrics.h"               // for FrameMetrics, etc
@@ -16,6 +17,7 @@
 #include "InputData.h"                  // for MultiTouchInput, etc
 #include "InputBlockState.h"            // for InputBlockState, TouchBlockState
 #include "OverscrollHandoffState.h"     // for OverscrollHandoffState
+#include "TaskThrottler.h"              // for TaskThrottler
 #include "Units.h"                      // for CSSRect, CSSPoint, etc
 #include "UnitTransforms.h"             // for TransformTo
 #include "base/message_loop.h"          // for MessageLoop
@@ -41,12 +43,10 @@
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 #include "mozilla/layers/APZCTreeManager.h"  // for ScrollableLayerGuid
 #include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform
-#include "mozilla/layers/Axis.h"        // for AxisX, AxisY, Axis, etc
 #include "mozilla/layers/AxisPhysicsModel.h" // for AxisPhysicsModel
 #include "mozilla/layers/AxisPhysicsMSDModel.h" // for AxisPhysicsMSDModel
 #include "mozilla/layers/LayerTransactionParent.h" // for LayerTransactionParent
 #include "mozilla/layers/PCompositorParent.h" // for PCompositorParent
-#include "mozilla/layers/TaskThrottler.h"  // for TaskThrottler
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "mozilla/unused.h"             // for unused
 #include "mozilla/FloatingPoint.h"      // for FuzzyEquals*
@@ -1028,7 +1028,7 @@ nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent)
     // being processed) we only do this animation-cancellation if there are no older
     // touch blocks still in the queue.
     if (block == CurrentTouchBlock()) {
-      if (GetVelocityVector().Length() > gfxPrefs::APZFlingStopOnTapThreshold()) {
+      if (block->GetOverscrollHandoffChain()->HasFastMovingApzc()) {
         // If we're already in a fast fling, then we want the touch event to stop the fling
         // and to disallow the touch event from being used as part of a fling.
         block->DisallowSingleTap();
@@ -1776,7 +1776,7 @@ ScreenPoint AsyncPanZoomController::PanStart() const {
   return ScreenPoint(mX.PanStart(), mY.PanStart());
 }
 
-const ScreenPoint AsyncPanZoomController::GetVelocityVector() {
+const ScreenPoint AsyncPanZoomController::GetVelocityVector() const {
   return ScreenPoint(mX.GetVelocity(), mY.GetVelocity());
 }
 
@@ -2328,6 +2328,11 @@ bool AsyncPanZoomController::SnapBackIfOverscrolled() {
     return true;
   }
   return false;
+}
+
+bool AsyncPanZoomController::IsMovingFast() const {
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  return (GetVelocityVector().Length() > gfxPrefs::APZFlingStopOnTapThreshold());
 }
 
 bool AsyncPanZoomController::IsPannable() const {

@@ -788,9 +788,6 @@ pref("dom.ipc.systemMessageCPULockTimeoutSec", 30);
 // Ignore the "dialog=1" feature in window.open.
 pref("dom.disable_window_open_dialog_feature", true);
 
-// Enable before keyboard events and after keyboard events.
-pref("dom.beforeAfterKeyboardEvent.enabled", true);
-
 // Screen reader support
 pref("accessibility.accessfu.activate", 2);
 pref("accessibility.accessfu.quicknav_modes", "Link,Heading,FormElement,Landmark,ListItem");
