@@ -381,6 +381,9 @@ void SandboxFilterImplGMP::Build() {
   // NSPR can call this when creating a thread, but it will accept a
   // polite "no".
   Deny(EACCES, SYSCALL(getpriority));
+  // But if thread creation races with sandbox startup, that call
+  // could succeed, and then we get one of these:
+  Deny(EACCES, SYSCALL(setpriority));
 
   // Stack bounds are obtained via pthread_getattr_np, which calls
   // this but doesn't actually need it:
