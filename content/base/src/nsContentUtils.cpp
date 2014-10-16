@@ -6823,7 +6823,7 @@ nsContentUtils::HasDistributedChildren(nsIContent* aContent)
   if (shadowEl && shadowEl->IsInsertionPoint()) {
     // Children of a shadow insertion points are distributed
     // to the insertion points in the older shadow root.
-    return shadow->GetOlderShadow();
+    return shadowEl->GetOlderShadowRoot();
   }
 
   HTMLContentElement* contentEl = HTMLContentElement::FromContent(aContent);
