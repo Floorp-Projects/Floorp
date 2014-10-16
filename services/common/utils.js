@@ -398,8 +398,9 @@ this.CommonUtils = {
    * @return a promise, as produced by OS.File.writeAtomic.
    */
   writeJSON: function(contents, path) {
-    let data = JSON.stringify(contents);
-    return OS.File.writeAtomic(path, data, {encoding: "utf-8", tmpPath: path + ".tmp"});
+    let encoder = new TextEncoder();
+    let array = encoder.encode(JSON.stringify(contents));
+    return OS.File.writeAtomic(path, array, {tmpPath: path + ".tmp"});
   },
 
 
