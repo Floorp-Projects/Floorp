@@ -22,6 +22,22 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifneq (,$(filter beta release esr,$(MOZ_UPDATE_CHANNEL)))
+	PRIMARY_CERT = release_primary.der
+	SECONDARY_CERT = release_secondary.der
+else ifneq (,$(filter nightly aurora nightly-elm nightly-profiling nightly-oak nightly-ux,$(MOZ_UPDATE_CHANNEL)))
+	PRIMARY_CERT = nightly_aurora_level3_primary.der
+	SECONDARY_CERT = nightly_aurora_level3_secondary.der
+else
+	PRIMARY_CERT = dep1.der
+	SECONDARY_CERT = dep2.der
+endif
+
+export::
+	$(PYTHON) $(srcdir)/gen_cert_header.py primaryCertData $(srcdir)/$(PRIMARY_CERT) > primaryCert.h
+	$(PYTHON) $(srcdir)/gen_cert_header.py secondaryCertData $(srcdir)/$(SECONDARY_CERT) > secondaryCert.h
+	$(PYTHON) $(srcdir)/gen_cert_header.py xpcshellCertData $(srcdir)/xpcshellCertificate.der > xpcshellCert.h
+
 ifdef MOZ_WIDGET_GTK
 libs:: updater.png
 	$(NSINSTALL) -D $(DIST)/bin/icons
