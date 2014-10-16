@@ -44,6 +44,7 @@
 #include "libdisplay/GonkDisplay.h"
 #include "pixelflinger/format.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "ParentProcessController.h"
@@ -59,6 +60,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::hal;
+using namespace mozilla::gfx;
 using namespace mozilla::gl;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
@@ -126,6 +128,8 @@ displayEnabledCallback(bool enabled)
 
 nsWindow::nsWindow()
 {
+    mFramebuffer = nullptr;
+
     if (sScreenInitialized)
         return;
 
@@ -470,6 +474,74 @@ nsWindow::MakeFullScreen(bool aFullScreen)
                /*repaint*/true);
     }
     return NS_OK;
+}
+
+static gralloc_module_t const*
+gralloc_module()
+{
+    hw_module_t const *module;
+    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module)) {
+        return nullptr;
+    }
+    return reinterpret_cast<gralloc_module_t const*>(module);
+}
+
+static SurfaceFormat
+HalFormatToSurfaceFormat(int aHalFormat, int* bytepp)
+{
+    switch (aHalFormat) {
+    case HAL_PIXEL_FORMAT_RGBA_8888:
+        *bytepp = 4;
+        return SurfaceFormat::R8G8B8A8;
+    case HAL_PIXEL_FORMAT_RGBX_8888:
+        *bytepp = 4;
+        return SurfaceFormat::R8G8B8X8;
+    case HAL_PIXEL_FORMAT_BGRA_8888:
+        *bytepp = 4;
+        return SurfaceFormat::B8G8R8A8;
+    case HAL_PIXEL_FORMAT_RGB_565:
+        *bytepp = 2;
+        return SurfaceFormat::R5G6B5;
+    default:
+        MOZ_CRASH("Unhandled HAL pixel format");
+        return SurfaceFormat::UNKNOWN; // not reached
+    }
+}
+
+TemporaryRef<DrawTarget>
+nsWindow::StartRemoteDrawing()
+{
+    GonkDisplay* display = GetGonkDisplay();
+    mFramebuffer = display->DequeueBuffer();
+    int width = mFramebuffer->width, height = mFramebuffer->height;
+    void *vaddr;
+    if (gralloc_module()->lock(gralloc_module(), mFramebuffer->handle,
+                               GRALLOC_USAGE_SW_READ_NEVER |
+                               GRALLOC_USAGE_SW_WRITE_OFTEN |
+                               GRALLOC_USAGE_HW_FB,
+                               0, 0, width, height, &vaddr)) {
+        EndRemoteDrawing();
+        return nullptr;
+    }
+    int bytepp;
+    SurfaceFormat format = HalFormatToSurfaceFormat(display->surfaceformat,
+                                                    &bytepp);
+    return mFramebufferTarget = Factory::CreateDrawTargetForData(
+        BackendType::CAIRO, (uint8_t*)vaddr,
+        IntSize(width, height), mFramebuffer->stride * bytepp, format);
+}
+
+void
+nsWindow::EndRemoteDrawing()
+{
+    if (mFramebufferTarget) {
+        gralloc_module()->unlock(gralloc_module(), mFramebuffer->handle);
+    }
+    if (mFramebuffer) {
+        GetGonkDisplay()->QueueBuffer(mFramebuffer);
+    }
+    mFramebuffer = nullptr;
+    mFramebufferTarget = nullptr;
 }
 
 float
