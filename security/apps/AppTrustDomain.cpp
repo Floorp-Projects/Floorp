@@ -30,6 +30,8 @@ using namespace mozilla::pkix;
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
+static const unsigned int MINIMUM_NON_ECC_BITS = 2048;
+
 namespace mozilla { namespace psm {
 
 AppTrustDomain::AppTrustDomain(ScopedCERTCertList& certChain, void* pinArg)
@@ -213,7 +215,7 @@ AppTrustDomain::VerifySignedData(const SignedDataWithSignature& signedData,
                                  Input subjectPublicKeyInfo)
 {
   return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
-                                           mPinArg);
+                                           MINIMUM_NON_ECC_BITS, mPinArg);
 }
 
 Result
@@ -247,7 +249,8 @@ AppTrustDomain::IsChainValid(const DERArray& certChain, Time time)
 Result
 AppTrustDomain::CheckPublicKey(Input subjectPublicKeyInfo)
 {
-  return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
+  return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo,
+                                         MINIMUM_NON_ECC_BITS);
 }
 
 } } // namespace mozilla::psm
