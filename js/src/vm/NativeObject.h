@@ -1414,7 +1414,7 @@ JSObject::setGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject recei
                      js::HandleId id, js::MutableHandleValue vp, bool strict)
 {
     if (obj->getOps()->setGeneric)
-        return nonNativeSetProperty(cx, obj, id, vp, strict);
+        return nonNativeSetProperty(cx, obj, receiver, id, vp, strict);
     return js::baseops::SetPropertyHelper<js::SequentialExecution>(
         cx, obj.as<js::NativeObject>(), receiver, id, js::baseops::Qualified, vp, strict);
 }
@@ -1424,7 +1424,7 @@ JSObject::setElement(JSContext *cx, js::HandleObject obj, js::HandleObject recei
                      uint32_t index, js::MutableHandleValue vp, bool strict)
 {
     if (obj->getOps()->setElement)
-        return nonNativeSetElement(cx, obj, index, vp, strict);
+        return nonNativeSetElement(cx, obj, receiver, index, vp, strict);
     return js::baseops::SetElementHelper(cx, obj.as<js::NativeObject>(),
                                          receiver, index, vp, strict);
 }
