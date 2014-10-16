@@ -455,7 +455,9 @@ function actualTest() {
 add_task(function* asyncSetup() {
   yield TelemetryPing.setup();
 
-  gDataReportingClientID = yield gDatareportingService.getClientID();
+  if ("@mozilla.org/datareporting/service;1" in Cc) {
+    gDataReportingClientID = yield gDatareportingService.getClientID();
+  }
 });
 
 // Ensure that not overwriting an existing file fails silently
