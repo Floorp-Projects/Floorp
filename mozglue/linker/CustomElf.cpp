@@ -258,7 +258,9 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
                             arm_exidx_phdr->p_memsz);
 #endif
 
-  elf->stats("oneLibLoaded");
+  if (MOZ_UNLIKELY(Logging::isVerbose())) {
+    elf->stats("oneLibLoaded");
+  }
   DEBUG_LOG("CustomElf::Load(\"%s\", 0x%x) = %p", path, flags,
             static_cast<void *>(elf));
   return elf;
