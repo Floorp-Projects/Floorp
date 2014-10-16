@@ -1265,6 +1265,23 @@ IsNonDominatingInScopedSwitch(ParseContext<FullParseHandler> *pc, HandleAtom nam
     return false;
 }
 
+static void
+AssociateUsesWithOuterDefinition(ParseNode *pnu, Definition *dn, Definition *outer_dn,
+                                 bool markUsesAsLet)
+{
+    uint32_t dflags = markUsesAsLet ? PND_LET : 0;
+    while (true) {
+        pnu->pn_lexdef = outer_dn;
+        pnu->pn_dflags |= dflags;
+        if (!pnu->pn_link)
+            break;
+        pnu = pnu->pn_link;
+    }
+    pnu->pn_link = outer_dn->dn_uses;
+    outer_dn->dn_uses = dn->dn_uses;
+    dn->dn_uses = nullptr;
+}
+
 /*
  * Beware: this function is called for functions nested in other functions or
  * global scripts but not for functions compiled through the Function
@@ -1364,28 +1381,10 @@ Parser<FullParseHandler>::leaveFunction(ParseNode *fn, ParseContext<FullParseHan
                     // from another case in a switch, those uses also need to
                     // be marked as needing dead zone checks.
                     RootedAtom name(context, atom);
-                    if (outer_dn->isLet() &&
-                        (bodyLevelHoistedUse ||
-                         IsNonDominatingInScopedSwitch(outerpc, name, outer_dn)))
-                    {
-                        while (true) {
-                            pnu->pn_dflags |= PND_LET;
-                            if (!pnu->pn_link)
-                                break;
-                            pnu = pnu->pn_link;
-                        }
-                        pnu = dn->dn_uses;
-                    }
-
-                    while (true) {
-                        pnu->pn_lexdef = outer_dn;
-                        if (!pnu->pn_link)
-                            break;
-                        pnu = pnu->pn_link;
-                    }
-                    pnu->pn_link = outer_dn->dn_uses;
-                    outer_dn->dn_uses = dn->dn_uses;
-                    dn->dn_uses = nullptr;
+                    bool markUsesAsLet = outer_dn->isLet() &&
+                                         (bodyLevelHoistedUse ||
+                                          IsNonDominatingInScopedSwitch(outerpc, name, outer_dn));
+                    AssociateUsesWithOuterDefinition(pnu, dn, outer_dn, markUsesAsLet);
                 }
 
                 outer_dn->pn_dflags |= dn->pn_dflags & ~PND_PLACEHOLDER;
