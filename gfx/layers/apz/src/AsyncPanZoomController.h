@@ -491,7 +491,7 @@ protected:
   /**
    * Gets a vector of the velocities of each axis.
    */
-  const ScreenPoint GetVelocityVector();
+  const ScreenPoint GetVelocityVector() const;
 
   /**
    * Gets the first touch point from a MultiTouchInput.  This gets only
