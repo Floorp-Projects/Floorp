@@ -18,6 +18,7 @@ describe("loop.shared.utils", function() {
   });
 
   afterEach(function() {
+    navigator.mozLoop = undefined;
     sandbox.restore();
   });
 
@@ -110,7 +111,6 @@ describe("loop.shared.utils", function() {
 
   describe("#getBoolPreference", function() {
     afterEach(function() {
-      navigator.mozLoop = undefined;
       localStorage.removeItem("test.true");
     });
 
@@ -140,6 +140,33 @@ describe("loop.shared.utils", function() {
 
         expect(sharedUtils.getBoolPreference("test.true")).eql(true);
       });
+    });
+  });
+
+  describe("#composeCallUrlEmail", function() {
+    var composeEmail;
+
+    beforeEach(function() {
+      // fake mozL10n
+      sandbox.stub(navigator.mozL10n, "get", function(id) {
+        switch(id) {
+          case "share_email_subject4": return "subject";
+          case "share_email_body4":    return "body";
+        }
+      });
+      composeEmail = sandbox.spy();
+      navigator.mozLoop = {
+        getLoopCharPref: sandbox.spy(),
+        composeEmail: composeEmail
+      };
+    });
+
+    it("should compose a call url email", function() {
+      sharedUtils.composeCallUrlEmail("http://invalid", "fake@invalid.tld");
+
+      sinon.assert.calledOnce(composeEmail);
+      sinon.assert.calledWith(composeEmail,
+                              "subject", "body", "fake@invalid.tld");
     });
   });
 });
