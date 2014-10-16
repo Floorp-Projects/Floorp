@@ -88,7 +88,7 @@
 #include "mozilla/Preferences.h"
 #include "nsFrameSelection.h"
 #include "FrameLayerBuilder.h"
-#include "mozilla/layers/AsyncPanZoomController.h"
+#include "mozilla/layers/APZCTreeManager.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -2810,7 +2810,7 @@ nsLayoutUtils::GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
     // If we don't already have a displayport, calculate and set one.
     if (!haveDisplayPort) {
       FrameMetrics metrics = CalculateFrameMetricsForDisplayPort(aScrollFrame, scrollableFrame);
-      LayerMargin displayportMargins = AsyncPanZoomController::CalculatePendingDisplayPort(
+      LayerMargin displayportMargins = APZCTreeManager::CalculatePendingDisplayPort(
           metrics, ScreenPoint(0.0f, 0.0f), 0.0);
       nsIPresShell* presShell = aScrollFrame->PresContext()->GetPresShell();
       gfx::IntSize alignment = gfxPlatform::GetPlatform()->UseTiling()
