@@ -2702,7 +2702,6 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
                            NodePrincipal(),
                            nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
                            nsIContentPolicy::TYPE_OTHER,
-                           nullptr,    // aChannelPolicy
                            group);
 
         if (NS_SUCCEEDED(rv)) {

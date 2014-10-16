@@ -12,7 +12,6 @@
 #include "nsContentUtils.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsIChannel.h"
-#include "nsIChannelPolicy.h"
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocument.h"
@@ -485,23 +484,12 @@ ImportLoader::Open()
   NS_ENSURE_SUCCESS_VOID(rv);
 
   nsCOMPtr<nsILoadGroup> loadGroup = master->GetDocumentLoadGroup();
-  nsCOMPtr<nsIChannelPolicy> channelPolicy;
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = principal->GetCsp(getter_AddRefs(csp));
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  if (csp) {
-    channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
-    channelPolicy->SetContentSecurityPolicy(csp);
-    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_SUBDOCUMENT);
-  }
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
                      mURI,
                      mImportParent,
                      nsILoadInfo::SEC_NORMAL,
                      nsIContentPolicy::TYPE_SUBDOCUMENT,
-                     channelPolicy,
                      loadGroup,
                      nullptr,  // aCallbacks
                      nsIRequest::LOAD_BACKGROUND);
