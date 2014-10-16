@@ -573,10 +573,12 @@ ElfLoader::~ElfLoader()
 void
 ElfLoader::stats(const char *when)
 {
+  if (MOZ_LIKELY(!Logging::isVerbose()))
+    return;
+
   for (LibHandleList::iterator it = Singleton.handles.begin();
        it < Singleton.handles.end(); ++it)
-    if (!(*it)->IsSystemElf())
-      static_cast<CustomElf *>(*it)->stats(when);
+    (*it)->stats(when);
 }
 
 #ifdef __ARM_EABI__

@@ -52,7 +52,7 @@ public:
    * used by the caller to give an identifier of the when the stats call is
    * made.
    */
-  void stats(const char *when) const;
+  virtual void stats(const char *when) const;
 
 private:
   /**
