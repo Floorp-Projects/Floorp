@@ -128,28 +128,6 @@ nsRenderingContext::SetClip(const nsIntRegion& aRegion)
 }
 
 void
-nsRenderingContext::SetLineStyle(nsLineStyle aLineStyle)
-{
-    switch (aLineStyle) {
-        case nsLineStyle_kSolid:
-            mThebes->SetDash(gfxContext::gfxLineSolid);
-            break;
-        case nsLineStyle_kDashed:
-            mThebes->SetDash(gfxContext::gfxLineDashed);
-            break;
-        case nsLineStyle_kDotted:
-            mThebes->SetDash(gfxContext::gfxLineDotted);
-            break;
-        case nsLineStyle_kNone:
-        default:
-            // nothing uses kNone
-            NS_ERROR("SetLineStyle: Invalid line style");
-            break;
-    }
-}
-
-
-void
 nsRenderingContext::SetColor(nscolor aColor)
 {
     /* This sets the color assuming the sRGB color space, since that's
@@ -326,36 +304,6 @@ nsRenderingContext::FillRect(nscoord aX, nscoord aY,
                              nscoord aWidth, nscoord aHeight)
 {
     FillRect(nsRect(aX, aY, aWidth, aHeight));
-}
-
-void
-nsRenderingContext::DrawEllipse(nscoord aX, nscoord aY,
-                                nscoord aWidth, nscoord aHeight)
-{
-    mThebes->NewPath();
-    mThebes->Ellipse(gfxPoint(FROM_TWIPS(aX) + FROM_TWIPS(aWidth)/2.0,
-                              FROM_TWIPS(aY) + FROM_TWIPS(aHeight)/2.0),
-                     gfxSize(FROM_TWIPS(aWidth),
-                             FROM_TWIPS(aHeight)));
-    mThebes->Stroke();
-}
-
-void
-nsRenderingContext::FillEllipse(const nsRect& aRect)
-{
-    FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-void
-nsRenderingContext::FillEllipse(nscoord aX, nscoord aY,
-                                nscoord aWidth, nscoord aHeight)
-{
-    mThebes->NewPath();
-    mThebes->Ellipse(gfxPoint(FROM_TWIPS(aX) + FROM_TWIPS(aWidth)/2.0,
-                              FROM_TWIPS(aY) + FROM_TWIPS(aHeight)/2.0),
-                     gfxSize(FROM_TWIPS(aWidth),
-                             FROM_TWIPS(aHeight)));
-    mThebes->Fill();
 }
 
 void

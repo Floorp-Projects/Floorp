@@ -3,7 +3,6 @@ const Cu = Components.utils;
 function setupChromeSandbox() {
   this.chromeObj = {a: 2, __exposedProps__: {a: "rw", b: "rw"} };
   this.chromeArr = [4, 2, 1];
-  this.chromeArr["__exposedProps__"] = { "1": "rw" };
 }
 
 function checkDefineThrows(sb, obj, prop, desc) {
@@ -21,7 +20,10 @@ function run_test() {
   contentSB.chromeArr = chromeSB.chromeArr;
 
   do_check_eq(Cu.evalInSandbox('chromeObj.a', contentSB), 2);
-  do_check_eq(Cu.evalInSandbox('chromeArr[1]', contentSB), 2);
+  try {
+    Cu.evalInSandbox('chromeArr[1]', contentSB);
+    do_check_true(false);
+  } catch (e) { do_check_true(/denied|insecure/.test(e)); }
 
   checkDefineThrows(contentSB, 'chromeObj', 'a', {get: function() { return 2; }});
   checkDefineThrows(contentSB, 'chromeObj', 'a', {configurable: true, get: function() { return 2; }});

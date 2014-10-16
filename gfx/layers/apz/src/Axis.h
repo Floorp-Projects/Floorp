@@ -151,7 +151,7 @@ public:
   /**
    * Gets the raw velocity of this axis at this moment.
    */
-  float GetVelocity();
+  float GetVelocity() const;
 
   /**
    * Sets the raw velocity of this axis at this moment.

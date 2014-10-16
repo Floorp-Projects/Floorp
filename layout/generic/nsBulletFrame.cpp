@@ -7,6 +7,9 @@
 
 #include "nsBulletFrame.h"
 
+#include "gfx2DGlue.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/MathAlgorithms.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
@@ -32,6 +35,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 NS_DECLARE_FRAME_PROPERTY(FontSizeInflationProperty, nullptr)
 
@@ -312,7 +316,9 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
   }
 
   nsRefPtr<nsFontMetrics> fm;
-  aRenderingContext.SetColor(nsLayoutUtils::GetColor(this, eCSSProperty_color));
+  nscolor col = nsLayoutUtils::GetColor(this, eCSSProperty_color);
+  Color color = nsLayoutUtils::NSColorToColor(col);
+  aRenderingContext.SetColor(col);
 
   nsAutoString text;
   switch (listStyleType->GetStyle()) {
@@ -320,15 +326,24 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     break;
 
   case NS_STYLE_LIST_STYLE_DISC:
-    aRenderingContext.FillEllipse(padding.left + aPt.x, padding.top + aPt.y,
-                                  mRect.width - (padding.left + padding.right),
-                                  mRect.height - (padding.top + padding.bottom));
-    break;
-
   case NS_STYLE_LIST_STYLE_CIRCLE:
-    aRenderingContext.DrawEllipse(padding.left + aPt.x, padding.top + aPt.y,
-                                  mRect.width - (padding.left + padding.right),
-                                  mRect.height - (padding.top + padding.bottom));
+    {
+      nsRect rect(padding.left + aPt.x,
+                  padding.top + aPt.y,
+                  mRect.width - (padding.left + padding.right),
+                  mRect.height - (padding.top + padding.bottom));
+      Rect devPxRect =
+        ToRect(nsLayoutUtils::RectToGfxRect(rect, PresContext()->AppUnitsPerDevPixel()));
+      DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+      RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
+      AppendEllipseToPath(builder, devPxRect.Center(), devPxRect.Size());
+      RefPtr<Path> ellipse = builder->Finish();
+      if (listStyleType->GetStyle() == NS_STYLE_LIST_STYLE_DISC) {
+        drawTarget->Fill(ellipse, ColorPattern(color));
+      } else {
+        drawTarget->Stroke(ellipse, ColorPattern(color));
+      }
+    }
     break;
 
   case NS_STYLE_LIST_STYLE_SQUARE:
