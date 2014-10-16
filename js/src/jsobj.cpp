@@ -1840,7 +1840,7 @@ js::CreateThisForFunction(JSContext *cx, HandleObject callee, NewObjectKind newK
 }
 
 /* static */ bool
-JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj,
+JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
                                HandleId id, MutableHandleValue vp, bool strict)
 {
     if (MOZ_UNLIKELY(obj->watched())) {
@@ -1848,11 +1848,13 @@ JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj,
         if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, vp))
             return false;
     }
+    if (obj->is<ProxyObject>())
+        return Proxy::set(cx, obj, receiver, id, strict, vp);
     return obj->getOps()->setGeneric(cx, obj, id, vp, strict);
 }
 
 /* static */ bool
-JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj,
+JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
                               uint32_t index, MutableHandleValue vp, bool strict)
 {
     if (MOZ_UNLIKELY(obj->watched())) {
@@ -1863,6 +1865,11 @@ JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj,
         WatchpointMap *wpmap = cx->compartment()->watchpointMap;
         if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, vp))
             return false;
+    }
+    if (obj->is<ProxyObject>()) {
+        RootedId id(cx);
+        return IndexToId(cx, index, &id) &&
+               Proxy::set(cx, obj, receiver, id, strict, vp);
     }
     return obj->getOps()->setElement(cx, obj, index, vp, strict);
 }
