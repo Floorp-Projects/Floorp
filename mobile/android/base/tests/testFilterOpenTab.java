@@ -16,7 +16,7 @@ import android.database.Cursor;
 
 /**
  * Tests that local tabs are filtered prior to upload.
- * - create a set of tabs and perists them through TabsAccessor.
+ * - create a set of tabs and persists them through TabsAccessor.
  * - verifies that tabs are filtered by querying.
  */
 public class testFilterOpenTab extends ContentProviderTest {

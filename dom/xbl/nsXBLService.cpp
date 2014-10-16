@@ -1076,7 +1076,6 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
                              requestingPrincipal,
                              nsILoadInfo::SEC_NORMAL,
                              nsIContentPolicy::TYPE_OTHER,
-                             nullptr,   // aChannelPolicy
                              loadGroup);
 
   NS_ENSURE_SUCCESS(rv, rv);

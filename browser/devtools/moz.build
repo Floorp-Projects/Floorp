@@ -33,6 +33,9 @@ DIRS += [
     'webide',
 ]
 
+if CONFIG['MOZ_DEVTOOLS_PERFTOOLS']:
+  DIRS += ['performance']
+
 EXTRA_COMPONENTS += [
     'devtools-clhandler.js',
     'devtools-clhandler.manifest',

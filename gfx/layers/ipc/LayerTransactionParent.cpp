@@ -670,7 +670,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
   Matrix4x4 transform = layer->AsLayerComposite()->GetShadowTransform();
   if (ContainerLayer* c = layer->AsContainerLayer()) {
     // Undo the scale transform applied by AsyncCompositionManager::SampleValue
-    transform.ScalePost(1.0f/c->GetInheritedXScale(),
+    transform.PostScale(1.0f/c->GetInheritedXScale(),
                         1.0f/c->GetInheritedYScale(),
                         1.0f);
   }
@@ -694,7 +694,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
 
   // Undo the translation to the origin of the reference frame applied by
   // AsyncCompositionManager::SampleValue
-  transform.Translate(-scaledOrigin.x, -scaledOrigin.y, -scaledOrigin.z);
+  transform.PreTranslate(-scaledOrigin.x, -scaledOrigin.y, -scaledOrigin.z);
 
   // Undo the rebasing applied by
   // nsDisplayTransform::GetResultingTransformMatrixInternal

@@ -641,8 +641,8 @@ class DeviceManagerADB(DeviceManager):
         # Check whether we _are_ root by default (some development boards work
         # this way, this is also the result of some relatively rare rooting
         # techniques)
-        data = self._runCmd(["shell", "id"]).output[0]
-        if data.find('uid=0(root)') >= 0:
+        proc = self._runCmd(["shell", "id"])
+        if proc.output and 'uid=0(root)' in proc.output[0]:
             self._haveRootShell = True
             # if this returns true, we don't care about su
             return
@@ -660,8 +660,7 @@ class DeviceManagerADB(DeviceManager):
         if retcode is None: # still not terminated, kill
             proc.kill()
 
-        data = proc.output[0]
-        if data.find('uid=0(root)') >= 0:
+        if proc.output and 'uid=0(root)' in proc.output[0]:
             self._haveSu = True
 
         if self._runAdbAsRoot:

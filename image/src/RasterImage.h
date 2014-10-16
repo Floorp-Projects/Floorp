@@ -656,7 +656,6 @@ private: // data
   // Decoder and friends
   nsRefPtr<Decoder>          mDecoder;
   nsRefPtr<DecodeRequest>    mDecodeRequest;
-  size_t                     mBytesDecoded;
 
   bool                       mInDecoder;
   // END LOCKED MEMBER VARIABLES

@@ -128,7 +128,7 @@
             &community.start2;<label class="text-link" href="http://www.mozilla.org/">&community.mozillaLink;</label>&community.middle2;<label class="text-link" href="about:credits">&community.creditsLink;</label>&community.end3;
           </description>
           <description class="text-blurb" id="contributeDesc">
-            &contribute.start;<label class="text-link" href="http://www.mozilla.org/contribute/">&contribute.getInvolvedLink;</label>&contribute.end;
+              &helpus.start;<label class="text-link" href="https://sendto.mozilla.org/page/contribute/Give-Now?source=mozillaorg_default_footer&#38;ref=firefox_about&#38;utm_campaign=firefox_about&#38;tm_source=firefox&#38;tm_medium=referral&#38;utm_content=20140929_FireFoxAbout">&helpus.donateLink;</label>&helpus.middle;<label class="text-link" href="http://www.mozilla.org/contribute/">&helpus.getInvolvedLink;</label>&helpus.end;
           </description>
         </vbox>
       </vbox>

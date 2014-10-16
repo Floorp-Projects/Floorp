@@ -7241,9 +7241,6 @@ dnl our own linker.
 if test "$OS_TARGET" = Android; then
     WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozglue"
     WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=PR_GetEnv,--wrap=PR_SetEnv"
-    if test -z "$gonkdir"; then
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=memccpy,--wrap=memchr,--wrap=memrchr,--wrap=memcmp,--wrap=memcpy,--wrap=memmove,--wrap=memset,--wrap=memmem,--wrap=index,--wrap=strchr,--wrap=strrchr,--wrap=strlen,--wrap=strcmp,--wrap=strcpy,--wrap=strcat,--wrap=strcasecmp,--wrap=strncasecmp,--wrap=strstr,--wrap=strcasestr,--wrap=strtok,--wrap=strtok_r,--wrap=strerror,--wrap=strerror_r,--wrap=strnlen,--wrap=strncat,--wrap=strncmp,--wrap=strncpy,--wrap=strlcat,--wrap=strlcpy,--wrap=strcspn,--wrap=strpbrk,--wrap=strsep,--wrap=strspn,--wrap=strcoll,--wrap=strxfrm"
-    fi
     if test "$MOZ_WIDGET_TOOLKIT" = gonk -a -n "$MOZ_NUWA_PROCESS"; then
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=pthread_create,--wrap=epoll_wait,--wrap=poll,--wrap=pthread_cond_timedwait,--wrap=__pthread_cond_timedwait,--wrap=pthread_cond_wait,--wrap=epoll_create,--wrap=epoll_ctl,--wrap=close,--wrap=pthread_key_create,--wrap=pthread_key_delete,--wrap=socketpair,--wrap=pthread_self,--wrap=pthread_mutex_lock,--wrap=pthread_join,--wrap=pipe,--wrap=pipe2,--wrap=tgkill"
     fi
@@ -7708,6 +7705,19 @@ if test "$MOZ_CHROME_FILE_FORMAT" != "jar" &&
     test "$MOZ_CHROME_FILE_FORMAT" != "omni"; then
     AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, or omni])
 fi
+
+dnl =========================================================
+dnl Enable support for revamped devtools Performance Tools
+dnl =========================================================
+
+MOZ_ARG_ENABLE_BOOL(devtools-perf,
+[  --enable-devtools-perf Set compile flags necessary for compiling devtools perftools],
+MOZ_DEVTOOLS_PERFTOOLS=1,
+MOZ_DEVTOOLS_PERFTOOLS= )
+if test -n "$MOZ_DEVTOOLS_PERFTOOLS"; then
+  AC_DEFINE(MOZ_DEVTOOLS_PERFTOOLS)
+fi
+AC_SUBST(MOZ_DEVTOOLS_PERFTOOLS)
 
 dnl =========================================================
 dnl Omnijar packaging (bug 552121)

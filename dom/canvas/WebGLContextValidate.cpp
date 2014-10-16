@@ -219,6 +219,13 @@ bool WebGLContext::ValidateTextureTargetEnum(GLenum target, const char *info)
         case LOCAL_GL_TEXTURE_2D:
         case LOCAL_GL_TEXTURE_CUBE_MAP:
             return true;
+        case LOCAL_GL_TEXTURE_3D: {
+            const bool isValid = IsWebGL2();
+            if (!isValid) {
+                ErrorInvalidEnumInfo(info, target);
+            }
+            return isValid;
+        }
         default:
             ErrorInvalidEnumInfo(info, target);
             return false;

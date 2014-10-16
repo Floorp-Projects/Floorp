@@ -5,25 +5,16 @@
 
 #include "Request.h"
 
-#include "nsIUnicodeDecoder.h"
 #include "nsIURI.h"
-
-#include "nsDOMString.h"
-#include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
-#include "nsStreamUtils.h"
-#include "nsStringStream.h"
 
 #include "mozilla/ErrorResult.h"
-#include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/URL.h"
 #include "mozilla/dom/workers/bindings/URL.h"
 
-// dom/workers
 #include "WorkerPrivate.h"
 
 namespace mozilla {
@@ -31,7 +22,7 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Request)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Request)
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Request, mOwner)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Request, mOwner, mHeaders)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Request)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -39,9 +30,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Request)
 NS_INTERFACE_MAP_END
 
 Request::Request(nsIGlobalObject* aOwner, InternalRequest* aRequest)
-  : mOwner(aOwner)
+  : FetchBody<Request>()
+  , mOwner(aOwner)
   , mRequest(aRequest)
-  , mBodyUsed(false)
 {
 }
 
@@ -164,24 +155,24 @@ Request::Constructor(const GlobalObject& aGlobal,
     request->SetMethod(method);
   }
 
-  nsRefPtr<Request> domRequest = new Request(global, request);
-  nsRefPtr<Headers> domRequestHeaders = domRequest->Headers_();
+  nsRefPtr<InternalHeaders> requestHeaders = request->Headers();
 
-  nsRefPtr<Headers> headers;
+  nsRefPtr<InternalHeaders> headers;
   if (aInit.mHeaders.WasPassed()) {
-    headers = Headers::Constructor(aGlobal, aInit.mHeaders.Value(), aRv);
+    nsRefPtr<Headers> h = Headers::Constructor(aGlobal, aInit.mHeaders.Value(), aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
+    headers = h->GetInternalHeaders();
   } else {
-    headers = new Headers(*domRequestHeaders);
+    headers = new InternalHeaders(*requestHeaders);
   }
 
-  domRequestHeaders->Clear();
+  requestHeaders->Clear();
 
-  if (domRequest->Mode() == RequestMode::No_cors) {
+  if (request->Mode() == RequestMode::No_cors) {
     nsCString method;
-    domRequest->GetMethod(method);
+    request->GetMethod(method);
     ToLowerCase(method);
     if (!method.EqualsASCII("get") &&
         !method.EqualsASCII("head") &&
@@ -191,19 +182,19 @@ Request::Constructor(const GlobalObject& aGlobal,
       return nullptr;
     }
 
-    domRequestHeaders->SetGuard(HeadersGuardEnum::Request_no_cors, aRv);
+    requestHeaders->SetGuard(HeadersGuardEnum::Request_no_cors, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
   }
 
-  domRequestHeaders->Fill(*headers, aRv);
+  requestHeaders->Fill(*headers, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
   if (aInit.mBody.WasPassed()) {
-    const OwningArrayBufferOrArrayBufferViewOrScalarValueStringOrURLSearchParams& bodyInit = aInit.mBody.Value();
+    const OwningArrayBufferOrArrayBufferViewOrBlobOrScalarValueStringOrURLSearchParams& bodyInit = aInit.mBody.Value();
     nsCOMPtr<nsIInputStream> stream;
     nsCString contentType;
     aRv = ExtractByteStreamFromBody(bodyInit,
@@ -214,9 +205,9 @@ Request::Constructor(const GlobalObject& aGlobal,
     request->SetBody(stream);
 
     if (!contentType.IsVoid() &&
-        !domRequestHeaders->Has(NS_LITERAL_CSTRING("Content-Type"), aRv)) {
-      domRequestHeaders->Append(NS_LITERAL_CSTRING("Content-Type"),
-                                contentType, aRv);
+        !requestHeaders->Has(NS_LITERAL_CSTRING("Content-Type"), aRv)) {
+      requestHeaders->Append(NS_LITERAL_CSTRING("Content-Type"),
+                             contentType, aRv);
     }
 
     if (aRv.Failed()) {
@@ -224,21 +215,8 @@ Request::Constructor(const GlobalObject& aGlobal,
     }
   }
 
-  // Extract mime type.
-  nsTArray<nsCString> contentTypeValues;
-  domRequestHeaders->GetAll(NS_LITERAL_CSTRING("Content-Type"),
-                            contentTypeValues, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // HTTP ABNF states Content-Type may have only one value.
-  // This is from the "parse a header value" of the fetch spec.
-  if (contentTypeValues.Length() == 1) {
-    domRequest->mMimeType = contentTypeValues[0];
-    ToLowerCase(domRequest->mMimeType);
-  }
-
+  nsRefPtr<Request> domRequest = new Request(global, request);
+  domRequest->SetMimeType(aRv);
   return domRequest.forget();
 }
 
@@ -252,181 +230,15 @@ Request::Clone() const
   return request.forget();
 }
 
-namespace {
-nsresult
-DecodeUTF8(const nsCString& aBuffer, nsString& aDecoded)
+Headers*
+Request::Headers_()
 {
-  nsCOMPtr<nsIUnicodeDecoder> decoder =
-    EncodingUtils::DecoderForEncoding("UTF-8");
-  if (!decoder) {
-    return NS_ERROR_FAILURE;
+  if (!mHeaders) {
+    mHeaders = new Headers(mOwner, mRequest->Headers());
   }
 
-  int32_t destBufferLen;
-  nsresult rv =
-    decoder->GetMaxLength(aBuffer.get(), aBuffer.Length(), &destBufferLen);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!aDecoded.SetCapacity(destBufferLen, fallible_t())) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  char16_t* destBuffer = aDecoded.BeginWriting();
-  int32_t srcLen = (int32_t) aBuffer.Length();
-  int32_t outLen = destBufferLen;
-  rv = decoder->Convert(aBuffer.get(), &srcLen, destBuffer, &outLen);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(outLen <= destBufferLen);
-  aDecoded.SetLength(outLen);
-  return NS_OK;
-}
+  return mHeaders;
 }
 
-already_AddRefed<Promise>
-Request::ConsumeBody(ConsumeType aType, ErrorResult& aRv)
-{
-  nsRefPtr<Promise> promise = Promise::Create(mOwner, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  if (BodyUsed()) {
-    aRv.ThrowTypeError(MSG_REQUEST_BODY_CONSUMED_ERROR);
-    return nullptr;
-  }
-
-  SetBodyUsed();
-
-  // While the spec says to do this asynchronously, all the body constructors
-  // right now only accept bodies whose streams are backed by an in-memory
-  // buffer that can be read without blocking. So I think this is fine.
-  nsCOMPtr<nsIInputStream> stream;
-  mRequest->GetBody(getter_AddRefs(stream));
-
-  if (!stream) {
-    aRv = NS_NewByteInputStream(getter_AddRefs(stream), "", 0,
-                                NS_ASSIGNMENT_COPY);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-  }
-
-  AutoJSAPI api;
-  api.Init(mOwner);
-  JSContext* cx = api.cx();
-
-  // We can make this assertion because for now we only support memory backed
-  // structures for the body argument for a Request.
-  MOZ_ASSERT(NS_InputStreamIsBuffered(stream));
-  nsCString buffer;
-  uint64_t len;
-  aRv = stream->Available(&len);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  aRv = NS_ReadInputStreamToString(stream, buffer, len);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  buffer.SetLength(len);
-
-  switch (aType) {
-    case CONSUME_ARRAYBUFFER: {
-      JS::Rooted<JSObject*> arrayBuffer(cx);
-      arrayBuffer =
-        ArrayBuffer::Create(cx, buffer.Length(),
-                            reinterpret_cast<const uint8_t*>(buffer.get()));
-      JS::Rooted<JS::Value> val(cx);
-      val.setObjectOrNull(arrayBuffer);
-      promise->MaybeResolve(cx, val);
-      return promise.forget();
-    }
-    case CONSUME_BLOB: {
-      // XXXnsm it is actually possible to avoid these duplicate allocations
-      // for the Blob case by having the Blob adopt the stream's memory
-      // directly, but I've not added a special case for now.
-      //
-      // This is similar to nsContentUtils::CreateBlobBuffer, but also deals
-      // with worker wrapping.
-      uint32_t blobLen = buffer.Length();
-      void* blobData = moz_malloc(blobLen);
-      nsRefPtr<File> blob;
-      if (blobData) {
-        memcpy(blobData, buffer.BeginReading(), blobLen);
-        blob = File::CreateMemoryFile(GetParentObject(), blobData, blobLen,
-                                      NS_ConvertUTF8toUTF16(mMimeType));
-      } else {
-        aRv = NS_ERROR_OUT_OF_MEMORY;
-        return nullptr;
-      }
-
-      promise->MaybeResolve(blob);
-      return promise.forget();
-    }
-    case CONSUME_JSON: {
-      nsString decoded;
-      aRv = DecodeUTF8(buffer, decoded);
-      if (aRv.Failed()) {
-        return nullptr;
-      }
-
-      JS::Rooted<JS::Value> json(cx);
-      if (!JS_ParseJSON(cx, decoded.get(), decoded.Length(), &json)) {
-        JS::Rooted<JS::Value> exn(cx);
-        if (JS_GetPendingException(cx, &exn)) {
-          JS_ClearPendingException(cx);
-          promise->MaybeReject(cx, exn);
-        }
-      }
-      promise->MaybeResolve(cx, json);
-      return promise.forget();
-    }
-    case CONSUME_TEXT: {
-      nsString decoded;
-      aRv = DecodeUTF8(buffer, decoded);
-      if (aRv.Failed()) {
-        return nullptr;
-      }
-
-      promise->MaybeResolve(decoded);
-      return promise.forget();
-    }
-  }
-
-  NS_NOTREACHED("Unexpected consume body type");
-  // Silence warnings.
-  return nullptr;
-}
-
-already_AddRefed<Promise>
-Request::ArrayBuffer(ErrorResult& aRv)
-{
-  return ConsumeBody(CONSUME_ARRAYBUFFER, aRv);
-}
-
-already_AddRefed<Promise>
-Request::Blob(ErrorResult& aRv)
-{
-  return ConsumeBody(CONSUME_BLOB, aRv);
-}
-
-already_AddRefed<Promise>
-Request::Json(ErrorResult& aRv)
-{
-  return ConsumeBody(CONSUME_JSON, aRv);
-}
-
-already_AddRefed<Promise>
-Request::Text(ErrorResult& aRv)
-{
-  return ConsumeBody(CONSUME_TEXT, aRv);
-}
 } // namespace dom
 } // namespace mozilla

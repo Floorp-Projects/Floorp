@@ -165,7 +165,7 @@ function TestAppInfo(aApp, aIsPackaged) {
       xdg_data_home = OS.Path.join(OS.Constants.Path.homeDir, ".local", "share");
     }
 
-    let desktopINI = OS.Path.join(xdg_data_home, "applications",
+    this.desktopINI = OS.Path.join(xdg_data_home, "applications",
                                   "owa-" + this.uniqueName + ".desktop");
 
     this.installedFiles = [
@@ -173,7 +173,7 @@ function TestAppInfo(aApp, aIsPackaged) {
       this.webappINI,
       this.iconFile,
       this.exePath,
-      desktopINI,
+      this.desktopINI,
     ];
     this.tempUpdatedFiles = [
       OS.Path.join(this.installPath, "update", "icon.png"),
@@ -184,7 +184,7 @@ function TestAppInfo(aApp, aIsPackaged) {
       OS.Path.join(this.installPath, "webapp.json"),
       this.webappINI,
       this.iconFile,
-      desktopINI,
+      this.desktopINI,
     ];
 
     if (this.isPackaged) {
@@ -209,7 +209,7 @@ function TestAppInfo(aApp, aIsPackaged) {
 
       yield OS.File.removeDir(this.installPath, { ignoreAbsent: true });
 
-      yield OS.File.remove(desktopINI, { ignoreAbsent: true });
+      yield OS.File.remove(this.desktopINI, { ignoreAbsent: true });
     });
   } else if (WIN) {
     this.installPath = OS.Path.join(OS.Constants.Path.winAppDataDir,

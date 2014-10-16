@@ -84,7 +84,7 @@ public class GeckoBatteryManager extends BroadcastReceiver {
         // NOTE: it might not be common (in 2012) but technically, Android can run
         // on a device that has no battery so we want to make sure it's not the case
         // before bothering checking for battery state.
-        // However, the Galaxy Nexus phone advertizes itself as battery-less which
+        // However, the Galaxy Nexus phone advertises itself as battery-less which
         // force us to special-case the logic.
         // See the Google bug: https://code.google.com/p/android/issues/detail?id=22035
         if (intent.getBooleanExtra(BatteryManager.EXTRA_PRESENT, false) ||
