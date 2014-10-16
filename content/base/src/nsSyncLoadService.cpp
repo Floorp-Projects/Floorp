@@ -315,7 +315,6 @@ nsSyncLoadService::LoadDocument(nsIURI *aURI, nsIPrincipal *aLoaderPrincipal,
                                 aLoaderPrincipal,
                                 nsILoadInfo::SEC_NORMAL,
                                 nsIContentPolicy::TYPE_OTHER,
-                                nullptr,   // aChannelPolicy
                                 aLoadGroup);
     NS_ENSURE_SUCCESS(rv, rv);
 

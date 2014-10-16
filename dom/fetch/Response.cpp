@@ -4,30 +4,35 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Response.h"
-#include "nsDOMString.h"
-#include "nsPIDOMWindow.h"
-#include "nsIURI.h"
+
 #include "nsISupportsImpl.h"
+#include "nsIURI.h"
+#include "nsPIDOMWindow.h"
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Promise.h"
+
+#include "nsDOMString.h"
+
+#include "InternalResponse.h"
 
 namespace mozilla {
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Response)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Response)
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Response, mOwner)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Response, mOwner, mHeaders)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Response)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Response::Response(nsISupports* aOwner)
-  : mOwner(aOwner)
-  , mHeaders(new Headers(aOwner))
+Response::Response(nsIGlobalObject* aGlobal, InternalResponse* aInternalResponse)
+  : FetchBody<Response>()
+  , mOwner(aGlobal)
+  , mInternalResponse(aInternalResponse)
 {
 }
 
@@ -38,11 +43,9 @@ Response::~Response()
 /* static */ already_AddRefed<Response>
 Response::Error(const GlobalObject& aGlobal)
 {
-  ErrorResult result;
-  ResponseInit init;
-  init.mStatus = 0;
-  Optional<ArrayBufferOrArrayBufferViewOrScalarValueStringOrURLSearchParams> body;
-  nsRefPtr<Response> r = Response::Constructor(aGlobal, body, init, result);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  nsRefPtr<InternalResponse> error = InternalResponse::NetworkError();
+  nsRefPtr<Response> r = new Response(global, error);
   return r.forget();
 }
 
@@ -52,87 +55,109 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
 {
   ErrorResult result;
   ResponseInit init;
-  Optional<ArrayBufferOrArrayBufferViewOrScalarValueStringOrURLSearchParams> body;
+  Optional<ArrayBufferOrArrayBufferViewOrBlobOrScalarValueStringOrURLSearchParams> body;
   nsRefPtr<Response> r = Response::Constructor(aGlobal, body, init, result);
   return r.forget();
 }
 
 /*static*/ already_AddRefed<Response>
-Response::Constructor(const GlobalObject& global,
-                      const Optional<ArrayBufferOrArrayBufferViewOrScalarValueStringOrURLSearchParams>& aBody,
-                      const ResponseInit& aInit, ErrorResult& rv)
+Response::Constructor(const GlobalObject& aGlobal,
+                      const Optional<ArrayBufferOrArrayBufferViewOrBlobOrScalarValueStringOrURLSearchParams>& aBody,
+                      const ResponseInit& aInit, ErrorResult& aRv)
 {
-  nsRefPtr<Response> response = new Response(global.GetAsSupports());
-  return response.forget();
+  if (aInit.mStatus < 200 || aInit.mStatus > 599) {
+    aRv.Throw(NS_ERROR_RANGE_ERR);
+    return nullptr;
+  }
+
+  nsCString statusText;
+  if (aInit.mStatusText.WasPassed()) {
+    statusText = aInit.mStatusText.Value();
+    nsACString::const_iterator start, end;
+    statusText.BeginReading(start);
+    statusText.EndReading(end);
+    if (FindCharInReadable('\r', start, end)) {
+      aRv.ThrowTypeError(MSG_RESPONSE_INVALID_STATUSTEXT_ERROR);
+      return nullptr;
+    }
+    // Reset iterator since FindCharInReadable advances it.
+    statusText.BeginReading(start);
+    if (FindCharInReadable('\n', start, end)) {
+      aRv.ThrowTypeError(MSG_RESPONSE_INVALID_STATUSTEXT_ERROR);
+      return nullptr;
+    }
+  } else {
+    // Since we don't support default values for ByteString.
+    statusText = NS_LITERAL_CSTRING("OK");
+  }
+
+  nsRefPtr<InternalResponse> internalResponse =
+    new InternalResponse(aInit.mStatus, statusText);
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  nsRefPtr<Response> r = new Response(global, internalResponse);
+
+  if (aInit.mHeaders.WasPassed()) {
+    internalResponse->Headers()->Clear();
+
+    // Instead of using Fill, create an object to allow the constructor to
+    // unwrap the HeadersInit.
+    nsRefPtr<Headers> headers =
+      Headers::Constructor(aGlobal, aInit.mHeaders.Value(), aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+
+    internalResponse->Headers()->Fill(*headers->GetInternalHeaders(), aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+  }
+
+  if (aBody.WasPassed()) {
+    nsCOMPtr<nsIInputStream> bodyStream;
+    nsCString contentType;
+    aRv = ExtractByteStreamFromBody(aBody.Value(), getter_AddRefs(bodyStream), contentType);
+    internalResponse->SetBody(bodyStream);
+
+    if (!contentType.IsVoid() &&
+        !internalResponse->Headers()->Has(NS_LITERAL_CSTRING("Content-Type"), aRv)) {
+      internalResponse->Headers()->Append(NS_LITERAL_CSTRING("Content-Type"), contentType, aRv);
+    }
+
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  }
+
+  r->SetMimeType(aRv);
+  return r.forget();
 }
 
+// FIXME(nsm): Bug 1073231: This is currently unspecced!
 already_AddRefed<Response>
 Response::Clone()
 {
-  nsRefPtr<Response> response = new Response(mOwner);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mOwner);
+  nsRefPtr<Response> response = new Response(global, mInternalResponse);
   return response.forget();
 }
 
-already_AddRefed<Promise>
-Response::ArrayBuffer(ErrorResult& aRv)
+void
+Response::SetBody(nsIInputStream* aBody)
 {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
-  MOZ_ASSERT(global);
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  promise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
-  return promise.forget();
+  // FIXME(nsm): Do we flip bodyUsed here?
+  mInternalResponse->SetBody(aBody);
 }
 
-already_AddRefed<Promise>
-Response::Blob(ErrorResult& aRv)
+Headers*
+Response::Headers_()
 {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
-  MOZ_ASSERT(global);
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
+  if (!mHeaders) {
+    mHeaders = new Headers(mOwner, mInternalResponse->Headers());
   }
 
-  promise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
-  return promise.forget();
-}
-
-already_AddRefed<Promise>
-Response::Json(ErrorResult& aRv)
-{
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
-  MOZ_ASSERT(global);
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  promise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
-  return promise.forget();
-}
-
-already_AddRefed<Promise>
-Response::Text(ErrorResult& aRv)
-{
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
-  MOZ_ASSERT(global);
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  promise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
-  return promise.forget();
-}
-
-bool
-Response::BodyUsed()
-{
-  return false;
+  return mHeaders;
 }
 } // namespace dom
 } // namespace mozilla
