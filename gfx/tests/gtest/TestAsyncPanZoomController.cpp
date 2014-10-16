@@ -8,12 +8,12 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
-#include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/UniquePtr.h"
+#include "apz/src/AsyncPanZoomController.h"
 #include "base/task.h"
 #include "Layers.h"
 #include "TestLayers.h"
