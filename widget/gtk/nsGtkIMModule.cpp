@@ -1462,7 +1462,7 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
     if (wasComposing) {
         selOffset = mCompositionStart;
         if (editorHadCompositionString &&
-            !DispatchCompositionChangeEvent(mSelectedString, false)) {
+            !DispatchCompositionChangeEvent(mSelectedString, true)) {
             PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
                 ("    FAILED, quitting from DeletText"));
             return NS_ERROR_FAILURE;
@@ -1589,7 +1589,7 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
 
     nsAutoString compositionString;
     GetCompositionString(GetContext(), compositionString);
-    if (!DispatchCompositionChangeEvent(compositionString, true)) {
+    if (!DispatchCompositionChangeEvent(compositionString, false)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, restoring composition string"));
         return NS_ERROR_FAILURE;
