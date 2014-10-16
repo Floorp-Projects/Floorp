@@ -84,7 +84,10 @@ protected:
 
 private:
   bool
-  DoResponse(const DialResponseError& aResponse);
+  DoResponse(const SuccessResponse& aResponse);
+
+  bool
+  DoResponse(const ErrorResponse& aResponse);
 
   bool
   DoResponse(const DialResponseCallSuccess& aResponse);

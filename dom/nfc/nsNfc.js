@@ -31,20 +31,6 @@ function MozNFCTag() {
   this._nfcContentHelper = Cc["@mozilla.org/nfc/content-helper;1"]
                              .getService(Ci.nsINfcContentHelper);
   this.session = null;
-
-  // Map WebIDL declared enum map names to integer
-  this._techTypesMap = [];
-  this._techTypesMap['NFC_A'] = 0;
-  this._techTypesMap['NFC_B'] = 1;
-  this._techTypesMap['NFC_ISO_DEP'] = 2;
-  this._techTypesMap['NFC_F'] = 3;
-  this._techTypesMap['NFC_V'] = 4;
-  this._techTypesMap['NDEF'] = 5;
-  this._techTypesMap['NDEF_FORMATABLE'] = 6;
-  this._techTypesMap['MIFARE_CLASSIC'] = 7;
-  this._techTypesMap['MIFARE_ULTRALIGHT'] = 8;
-  this._techTypesMap['NFC_BARCODE'] = 9;
-  this._techTypesMap['P2P'] = 10;
 }
 MozNFCTag.prototype = {
   _nfcContentHelper: null,
@@ -54,8 +40,6 @@ MozNFCTag.prototype = {
     this._window = aWindow;
     this.session = aSessionToken;
   },
-
-  _techTypesMap: null,
 
   // NFCTag interface:
   readNDEF: function readNDEF() {

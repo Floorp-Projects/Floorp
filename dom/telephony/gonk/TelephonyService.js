@@ -564,7 +564,7 @@ TelephonyService.prototype = {
     // Note: isPlainPhoneNumber also accepts USSD and SS numbers
     if (!gPhoneNumberUtils.isPlainPhoneNumber(aNumber)) {
       if (DEBUG) debug("Error: Number '" + aNumber + "' is not viable. Drop.");
-      aCallback.notifyDialError(DIAL_ERROR_BAD_NUMBER);
+      aCallback.notifyError(DIAL_ERROR_BAD_NUMBER);
       return;
     }
 
@@ -581,11 +581,11 @@ TelephonyService.prototype = {
     } else {
       // Reject MMI code from dialEmergency api.
       if (aIsDialEmergency) {
-        aCallback.notifyDialError(DIAL_ERROR_BAD_NUMBER);
+        aCallback.notifyError(DIAL_ERROR_BAD_NUMBER);
         return;
       }
 
-      this._dialMMI(aClientId, mmi, aCallback);
+      this._dialMMI(aClientId, mmi, aCallback, true);
     }
   },
 
@@ -597,14 +597,14 @@ TelephonyService.prototype = {
   _dialCall: function(aClientId, aOptions, aCallback) {
     if (this._isDialing) {
       if (DEBUG) debug("Error: Already has a dialing call.");
-      aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+      aCallback.notifyError(DIAL_ERROR_INVALID_STATE_ERROR);
       return;
     }
 
     // We can only have at most two calls on the same line (client).
     if (this._numCallsOnLine(aClientId) >= 2) {
       if (DEBUG) debug("Error: Already has more than 2 calls on line.");
-      aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+      aCallback.notifyError(DIAL_ERROR_INVALID_STATE_ERROR);
       return;
     }
 
@@ -612,7 +612,7 @@ TelephonyService.prototype = {
     // any new call on other SIM.
     if (this._hasCallsOnOtherClient(aClientId)) {
       if (DEBUG) debug("Error: Already has a call on other sim.");
-      aCallback.notifyDialError(DIAL_ERROR_OTHER_CONNECTION_IN_USE);
+      aCallback.notifyError(DIAL_ERROR_OTHER_CONNECTION_IN_USE);
       return;
     }
 
@@ -622,7 +622,7 @@ TelephonyService.prototype = {
       aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
       if (aClientId === -1) {
         if (DEBUG) debug("Error: No client is avaialble for emergency call.");
-        aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+        aCallback.notifyError(DIAL_ERROR_INVALID_STATE_ERROR);
         return;
       }
     }
@@ -655,7 +655,7 @@ TelephonyService.prototype = {
       this._isDialing = false;
 
       if (!response.success) {
-        aCallback.notifyDialError(response.errorMsg);
+        aCallback.notifyError(response.errorMsg);
         return;
       }
 
@@ -673,16 +673,24 @@ TelephonyService.prototype = {
   },
 
   /**
+   * @param aClientId
+   *        Client id.
    * @param aMmi
    *        Parsed MMI structure.
+   * @param aCallback
+   *        A nsITelephonyDialCallback object.
+   * @param aStartNewSession
+   *        True to start a new session for ussd request.
    */
-  _dialMMI: function(aClientId, aMmi, aCallback) {
+  _dialMMI: function(aClientId, aMmi, aCallback, aStartNewSession) {
     let mmiServiceCode = aMmi ?
       this._serviceCodeToKeyString(aMmi.serviceCode) : RIL.MMI_KS_SC_USSD;
 
     aCallback.notifyDialMMI(mmiServiceCode);
 
-    this._sendToRilWorker(aClientId, "sendMMI", { mmi: aMmi }, response => {
+    this._sendToRilWorker(aClientId, "sendMMI",
+                          { mmi: aMmi,
+                            startNewSession: aStartNewSession }, response => {
       if (DEBUG) debug("MMI response: " + JSON.stringify(response));
 
       if (!response.success) {
@@ -1048,6 +1056,18 @@ TelephonyService.prototype = {
     this._sendToRilWorker(aClientId, "resumeConference");
   },
 
+  sendUSSD: function(aClientId, aUssd, aCallback) {
+    this._sendToRilWorker(aClientId, "sendUSSD",
+                          { ussd: aUssd, checkSession: true },
+                          response => {
+      if (!response.success) {
+        aCallback.notifyError(response.errorMsg);
+      } else {
+        aCallback.notifySuccess();
+      }
+    });
+  },
+
   get microphoneMuted() {
     return gAudioManager.microphoneMuted;
   },
@@ -1266,9 +1286,27 @@ TelephonyService.prototype = {
     this._notifyAllListeners("conferenceCallStateChanged", [aState]);
   },
 
+  notifyUssdReceived: function(aClientId, aMessage, aSessionEnded) {
+    if (DEBUG) {
+      debug("notifyUssdReceived for " + aClientId + ": " +
+            aMessage + " (sessionEnded : " + aSessionEnded + ")");
+    }
+
+    let info = {
+      serviceId: aClientId,
+      message: aMessage,
+      sessionEnded: aSessionEnded
+    };
+
+    gSystemMessenger.broadcastMessage("ussd-received", info);
+
+    gGonkMobileConnectionService.notifyUssdReceived(aClientId, aMessage,
+                                                    aSessionEnded);
+  },
+
   dialMMI: function(aClientId, aMmiString, aCallback) {
     let mmi = this._parseMMI(aMmiString, this._hasCalls(aClientId));
-    this._dialMMI(aClientId, mmi, aCallback);
+    this._dialMMI(aClientId, mmi, aCallback, false);
   },
 
   /**
@@ -1295,4 +1333,38 @@ TelephonyService.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TelephonyService]);
+/**
+ * This implements nsISystemMessagesWrapper.wrapMessage(), which provides a
+ * plugable way to wrap a "ussd-received" type system message.
+ *
+ * Please see SystemMessageManager.js to know how it customizes the wrapper.
+ */
+function USSDReceivedWrapper() {
+  if (DEBUG) debug("USSDReceivedWrapper()");
+}
+USSDReceivedWrapper.prototype = {
+  // nsISystemMessagesWrapper implementation.
+  wrapMessage: function(aMessage, aWindow) {
+    if (DEBUG) debug("wrapMessage: " + JSON.stringify(aMessage));
+
+    let session = aMessage.sessionEnded ? null :
+      new aWindow.USSDSession(aMessage.serviceId);
+
+    let event = new aWindow.USSDReceivedEvent("ussdreceived", {
+      serviceId: aMessage.serviceId,
+      message: aMessage.message,
+      sessionEnded: aMessage.sessionEnded,
+      session: session
+    });
+
+    return event;
+  },
+
+  classDescription: "USSDReceivedWrapper",
+  classID: Components.ID("{d03684ed-ede4-4210-8206-f4f32772d9f5}"),
+  contractID: "@mozilla.org/dom/system-messages/wrapper/ussd-received;1",
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISystemMessagesWrapper])
+};
+
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TelephonyService,
+                                                    USSDReceivedWrapper]);
