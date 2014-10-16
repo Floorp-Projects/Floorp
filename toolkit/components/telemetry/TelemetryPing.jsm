@@ -247,7 +247,6 @@ let Impl = {
   // The previous build ID, if this is the first run with a new build.
   // Undefined if this is not the first run, or the previous build ID is unknown.
   _previousBuildID: undefined,
-  _clientID: null,
 
   /**
    * Gets a series of simple measurements (counters). At the moment, this
@@ -702,8 +701,7 @@ let Impl = {
       addonDetails: AddonManagerPrivate.getTelemetryDetails(),
       UIMeasurements: UITelemetry.getUIMeasurements(),
       log: TelemetryLog.entries(),
-      info: info,
-      clientID: this._clientID,
+      info: info
     };
 
     if (Object.keys(this._slowSQLStartup).length != 0 &&
@@ -958,11 +956,6 @@ let Impl = {
 
         this.attachObservers();
         this.gatherMemory();
-
-        let drs = Cc["@mozilla.org/datareporting/service;1"]
-                    .getService(Ci.nsISupports)
-                    .wrappedJSObject;
-        this._clientID = yield drs.getClientID();
 
         Telemetry.asyncFetchTelemetryData(function () {});
         delete this._timer;
