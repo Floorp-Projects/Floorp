@@ -240,16 +240,21 @@
   min-height: 230px;
 }
 
+.call-window > .btn-label {
+  text-align: center;
+}
+
 .call-action-group {
   display: flex;
-  padding: 2.5em 0 0 0;
+  padding: 2.5em 4px 0 4px;
   width: 100%;
-  justify-content: space-around;
 }
 
 .call-action-group > .btn {
-  margin-left: .5em;
   height: 26px;
+  border-radius: 2px;
+  margin: 0 4px;
+  min-width: 64px;
 }
 
 .call-action-group .btn-group-chevron,
