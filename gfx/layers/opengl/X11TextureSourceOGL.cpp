@@ -6,7 +6,6 @@
 #ifdef GL_PROVIDER_GLX
 
 #include "X11TextureSourceOGL.h"
-#include "mozilla/layers/CompositorOGL.h"
 #include "gfxXlibSurface.h"
 #include "gfx2DGlue.h"
 
