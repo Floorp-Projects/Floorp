@@ -499,14 +499,20 @@ ElfLoader::Init()
   if (dladdr(_DYNAMIC, &info) != 0) {
     self_elf = LoadedElf::Create(info.dli_fname, info.dli_fbase);
   }
+#if defined(ANDROID)
+  if (dladdr(FunctionPtr(syscall), &info) != 0) {
+    libc = LoadedElf::Create(info.dli_fname, info.dli_fbase);
+  }
+#endif
 }
 
 ElfLoader::~ElfLoader()
 {
   LibHandleList list;
 
-  /* Release self_elf */
+  /* Release self_elf and libc */
   self_elf = nullptr;
+  libc = nullptr;
 
   /* Build up a list of all library handles with direct (external) references.
    * We actually skip system library handles because we want to keep at least
