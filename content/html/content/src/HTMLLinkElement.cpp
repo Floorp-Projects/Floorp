@@ -307,7 +307,9 @@ HTMLLinkElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   // to get updated information about the visitedness from Link.
   if (aName == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
     Link::ResetLinkState(!!aNotify, true);
-    CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkChanged"));
+    if (IsInUncomposedDoc()) {
+      CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkChanged"));
+    }
   }
 
   if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None &&
@@ -370,7 +372,9 @@ HTMLLinkElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
   // to get updated information about the visitedness from Link.
   if (aAttribute == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
     Link::ResetLinkState(!!aNotify, false);
-    CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkChanged"));
+    if (IsInUncomposedDoc()) {
+      CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkChanged"));
+    }
   }
 
   return rv;
