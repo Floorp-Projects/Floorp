@@ -597,101 +597,145 @@ NS_GetRealPort(nsIURI* aURI)
 }
 
 inline nsresult
-NS_NewInputStreamChannel(nsIChannel      **result,
-                         nsIURI           *uri,
-                         nsIInputStream   *stream,
-                         const nsACString &contentType,
-                         const nsACString *contentCharset)
+NS_NewInputStreamChannelInternal(nsIChannel**        outChannel,
+                                 nsIURI*             aUri,
+                                 nsIInputStream*     aStream,
+                                 const nsACString&   aContentType,
+                                 const nsACString&   aContentCharset,
+                                 nsINode*            aRequestingNode,
+                                 nsIPrincipal*       aRequestingPrincipal,
+                                 nsSecurityFlags     aSecurityFlags,
+                                 nsContentPolicyType aContentPolicyType)
 {
-    nsresult rv;
-    nsCOMPtr<nsIInputStreamChannel> isc =
-        do_CreateInstance(NS_INPUTSTREAMCHANNEL_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-    rv = isc->SetURI(uri);
-    nsresult tmp = isc->SetContentStream(stream);
-    if (NS_FAILED(tmp)) {
-        rv = tmp;
-    }
-    if (NS_FAILED(rv))
-        return rv;
-    nsCOMPtr<nsIChannel> chan = do_QueryInterface(isc, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-    if (!contentType.IsEmpty())
-        rv = chan->SetContentType(contentType);
-    if (contentCharset && !contentCharset->IsEmpty()) {
-        tmp = chan->SetContentCharset(*contentCharset);
-        if (NS_FAILED(tmp)) {
-            rv = tmp;
-        }
-    }
-    if (NS_SUCCEEDED(rv)) {
-        *result = nullptr;
-        chan.swap(*result);
-    }
-    return rv;
-}
+  nsresult rv;
+  nsCOMPtr<nsIInputStreamChannel> isc =
+    do_CreateInstance(NS_INPUTSTREAMCHANNEL_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = isc->SetURI(aUri);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = isc->SetContentStream(aStream);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-inline nsresult
-NS_NewInputStreamChannel(nsIChannel      **result,
-                         nsIURI           *uri,
-                         nsIInputStream   *stream,
-                         const nsACString &contentType    = EmptyCString())
-{
-    return NS_NewInputStreamChannel(result, uri, stream, contentType, nullptr);
-}
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(isc, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-inline nsresult
-NS_NewInputStreamChannel(nsIChannel      **result,
-                         nsIURI           *uri,
-                         nsIInputStream   *stream,
-                         const nsACString &contentType,
-                         const nsACString &contentCharset)
-{
-    return NS_NewInputStreamChannel(result, uri, stream, contentType,
-                                    &contentCharset);
-}
-
-inline nsresult
-NS_NewInputStreamChannel(nsIChannel      **result,
-                         nsIURI           *uri,
-                         const nsAString  &data,
-                         const nsACString &contentType,
-                         bool              isSrcdocChannel = false)
-{
-
-    nsresult rv;
-
-    nsCOMPtr<nsIStringInputStream> stream;
-    stream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
+  if (!aContentType.IsEmpty()) {
+    rv = channel->SetContentType(aContentType);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!aContentCharset.IsEmpty()) {
+    rv = channel->SetContentCharset(aContentCharset);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo =
+    new mozilla::LoadInfo(aRequestingPrincipal,
+                          aRequestingNode,
+                          aSecurityFlags,
+                          aContentPolicyType);
+  if (!loadInfo) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  channel->SetLoadInfo(loadInfo);
+
+  // If we're sandboxed, make sure to clear any owner the channel
+  // might already have.
+  if (loadInfo->GetLoadingSandboxed()) {
+    channel->SetOwner(nullptr);
+  }
+
+  channel.forget(outChannel);
+  return NS_OK;
+}
+
+inline nsresult /* NS_NewInputStreamChannelPrincipal */
+NS_NewInputStreamChannel(nsIChannel**        outChannel,
+                         nsIURI*             aUri,
+                         nsIInputStream*     aStream,
+                         nsIPrincipal*       aRequestingPrincipal,
+                         nsSecurityFlags     aSecurityFlags,
+                         nsContentPolicyType aContentPolicyType,
+                         const nsACString&   aContentType    = EmptyCString(),
+                         const nsACString&   aContentCharset = EmptyCString())
+{
+  return NS_NewInputStreamChannelInternal(outChannel,
+                                          aUri,
+                                          aStream,
+                                          aContentType,
+                                          aContentCharset,
+                                          nullptr, // aRequestingNode
+                                          aRequestingPrincipal,
+                                          aSecurityFlags,
+                                          aContentPolicyType);
+}
+
+inline nsresult
+NS_NewInputStreamChannelInternal(nsIChannel**        outChannel,
+                                 nsIURI*             aUri,
+                                 const nsAString&    aData,
+                                 const nsACString&   aContentType,
+                                 nsINode*            aRequestingNode,
+                                 nsIPrincipal*       aRequestingPrincipal,
+                                 nsSecurityFlags     aSecurityFlags,
+                                 nsContentPolicyType aContentPolicyType,
+                                 bool                aIsSrcdocChannel = false)
+{
+  nsresult rv;
+  nsCOMPtr<nsIStringInputStream> stream;
+  stream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef MOZILLA_INTERNAL_API
     uint32_t len;
-    char* utf8Bytes = ToNewUTF8String(data, &len);
+    char* utf8Bytes = ToNewUTF8String(aData, &len);
     rv = stream->AdoptData(utf8Bytes, len);
 #else
-    char* utf8Bytes = ToNewUTF8String(data);
+    char* utf8Bytes = ToNewUTF8String(aData);
     rv = stream->AdoptData(utf8Bytes, strlen(utf8Bytes));
 #endif
 
-    nsCOMPtr<nsIChannel> chan;
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
+                                        aUri,
+                                        stream,
+                                        aContentType,
+                                        NS_LITERAL_CSTRING("UTF-8"),
+                                        aRequestingNode,
+                                        aRequestingPrincipal,
+                                        aSecurityFlags,
+                                        aContentPolicyType);
 
-    rv = NS_NewInputStreamChannel(getter_AddRefs(chan), uri, stream,
-                                  contentType, NS_LITERAL_CSTRING("UTF-8"));
-    NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (isSrcdocChannel) {
-        nsCOMPtr<nsIInputStreamChannel> inStrmChan = do_QueryInterface(chan);
-        NS_ENSURE_TRUE(inStrmChan, NS_ERROR_FAILURE);
-        inStrmChan->SetSrcdocData(data);
-    }
+  if (aIsSrcdocChannel) {
+    nsCOMPtr<nsIInputStreamChannel> inStrmChan = do_QueryInterface(channel);
+    NS_ENSURE_TRUE(inStrmChan, NS_ERROR_FAILURE);
+    inStrmChan->SetSrcdocData(aData);
+  }
+  channel.forget(outChannel);
+  return NS_OK;
+}
 
-    *result = nullptr;
-    chan.swap(*result);
-
-    return NS_OK;
+inline nsresult
+NS_NewInputStreamChannel(nsIChannel**        outChannel,
+                         nsIURI*             aUri,
+                         const nsAString&    aData,
+                         const nsACString&   aContentType,
+                         nsIPrincipal*       aRequestingPrincipal,
+                         nsSecurityFlags     aSecurityFlags,
+                         nsContentPolicyType aContentPolicyType,
+                         bool                aIsSrcdocChannel = false)
+{
+  return NS_NewInputStreamChannelInternal(outChannel,
+                                          aUri,
+                                          aData,
+                                          aContentType,
+                                          nullptr, // aRequestingNode
+                                          aRequestingPrincipal,
+                                          aSecurityFlags,
+                                          aContentPolicyType,
+                                          aIsSrcdocChannel);
 }
 
 inline nsresult
