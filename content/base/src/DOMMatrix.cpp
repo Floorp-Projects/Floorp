@@ -435,7 +435,7 @@ DOMMatrix::TranslateSelf(double aTx,
 
   if (mMatrix3D || aTz != 0) {
     Ensure3DMatrix();
-    mMatrix3D->Translate(aTx, aTy, aTz);
+    mMatrix3D->PreTranslate(aTx, aTy, aTz);
   } else {
     mMatrix2D->PreTranslate(aTx, aTy);
   }

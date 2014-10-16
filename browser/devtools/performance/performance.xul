@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/devtools/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/performance.css" type="text/css"?>
+<!DOCTYPE window [
+  <!ENTITY % profilerDTD SYSTEM "chrome://browser/locale/devtools/profiler.dtd">
+  %profilerDTD;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://browser/content/devtools/theme-switching.js"/>
+  <script type="application/javascript" src="performance.js"/>
+
+  <vbox class="theme-body" flex="1">
+    <toolbar id="performance-toolbar" class="devtools-toolbar">
+      <hbox id="performance-toolbar-controls-recordings" class="devtools-toolbarbutton-group">
+        <toolbarbutton id="record-button"
+                       class="devtools-toolbarbutton"
+                       tooltiptext="&profilerUI.recordButton.tooltip;"/>
+        <toolbarbutton id="clear-button"
+                       class="devtools-toolbarbutton"
+                       label="&profilerUI.clearButton;"/>
+      </hbox>
+      <spacer flex="1"></spacer>
+      <hbox id="performance-toolbar-controls-storage" class="devtools-toolbarbutton-group">
+        <toolbarbutton id="import-button"
+                       class="devtools-toolbarbutton"
+                       label="&profilerUI.importButton;"/>
+      </hbox>
+    </toolbar>
+    <splitter class="devtools-horizontal-splitter" />
+    <box id="overview-pane"
+         class="devtools-responsive-container"
+         flex="1">
+    </box>
+    <splitter class="devtools-horizontal-splitter" />
+    <box id="details-pane"
+         class="devtools-responsive-container"
+         flex="1">
+    </box>
+  </vbox>
+</window>

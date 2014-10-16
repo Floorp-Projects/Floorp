@@ -84,24 +84,18 @@ function startTest(test, token) {
     }
   };
 
-  element.oncanplaythrough = function () {
-    element.oncanplaythrough = null;
-    // If content has ended, skip the test
-    if (element.ended) {
-      ok(true, 'ended fired before canplaythrough, skipping test');
-      manager.finished(token);
-    } else {
-      // If content hasn't ended, start recording
-      mediaRecorder.start();
-      is(mediaRecorder.state, 'recording',
-         'Media recorder should be recording');
-      is(mediaRecorder.stream, element.stream,
-         'Media recorder stream = element stream at the start of recording');
-      // Recording will automatically stop when the stream ends.
-    }
-  }
+  element.preload = "metadata";
 
-  element.play();
+  element.onloadedmetadata = function () {
+    element.onloadedmetadata = null;
+    mediaRecorder.start();
+    is(mediaRecorder.state, 'recording',
+     'Media recorder should be recording');
+    is(mediaRecorder.stream, element.stream,
+     'Media recorder stream = element stream at the start of recording');
+
+    element.play();
+  }
 }
 
 manager.runTests(gMediaRecorderTests, startTest);

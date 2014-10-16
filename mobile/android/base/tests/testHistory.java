@@ -61,7 +61,7 @@ public class testHistory extends AboutHomeTest {
         mSolo.clickOnView(mFirstChild);
 
         // The first item here (since it was just visited) should be a "Switch to tab" item
-        // i.e. don't expect a DOMCOntentLoaded event
+        // i.e. don't expect a DOMContentLoaded event
         verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_03_URL);
         verifyUrl(url3);
     }

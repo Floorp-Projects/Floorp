@@ -141,7 +141,7 @@ public class FxAccountConfirmAccountActivity extends FxAccountAbstractActivity i
     case None:
     default:
       // We're not in the right place!  Redirect to status.
-      Logger.warn(LOG_TAG, "No need to verifiy Firefox Account that needs action " + neededAction.toString() +
+      Logger.warn(LOG_TAG, "No need to verify Firefox Account that needs action " + neededAction.toString() +
           " (in state " + state.getStateLabel() + ").");
       setResult(RESULT_CANCELED);
       this.redirectToActivity(FxAccountStatusActivity.class);

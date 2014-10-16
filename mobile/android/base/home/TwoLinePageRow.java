@@ -251,7 +251,7 @@ public class TwoLinePageRow extends LinearLayout
         mFavicon.clearImage();
         Favicons.cancelFaviconLoad(mLoadFaviconJobId);
 
-        // Displayed RecentTabsPanel urls may refer to pages openned in readermode, so we
+        // Displayed RecentTabsPanel URLs may refer to pages opened in reader mode, so we
         // remove the about:reader prefix to ensure the Favicon loads properly.
         final String pageURL = AboutPages.isAboutReader(url) ?
             ReaderModeUtils.getUrlFromAboutReader(url) : url;

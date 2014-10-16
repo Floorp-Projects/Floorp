@@ -289,11 +289,17 @@ js::ComputeStackString(JSContext *cx)
                 return nullptr;
 
             /* Now the filename. */
-            const char *cfilename = i.scriptFilename();
-            if (!cfilename)
-                cfilename = "";
-            if (!sb.append(cfilename, strlen(cfilename)))
-                return nullptr;
+
+            /* First, try the `//# sourceURL=some-display-url.js` directive. */
+            if (const char16_t *display = i.scriptDisplayURL()) {
+                if (!sb.append(display, js_strlen(display)))
+                    return nullptr;
+            }
+            /* Second, try the actual filename. */
+            else if (const char *filename = i.scriptFilename()) {
+                if (!sb.append(filename, strlen(filename)))
+                    return nullptr;
+            }
 
             uint32_t column = 0;
             uint32_t line = i.computeLine(&column);

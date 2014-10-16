@@ -4712,7 +4712,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
 
   maskTransform.Invert();
   Matrix4x4 matrix = Matrix4x4::From2D(maskTransform);
-  matrix.Translate(mParameters.mOffset.x, mParameters.mOffset.y, 0);
+  matrix.PreTranslate(mParameters.mOffset.x, mParameters.mOffset.y, 0);
   maskLayer->SetBaseTransform(matrix);
 
   // save the details of the clip in user data

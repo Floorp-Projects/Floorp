@@ -9,8 +9,11 @@
 #include "nsWrapperCache.h"
 #include "nsISupportsImpl.h"
 
+#include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/ResponseBinding.h"
 #include "mozilla/dom/UnionTypes.h"
+
+#include "InternalResponse.h"
 
 class nsPIDOMWindow;
 
@@ -18,16 +21,20 @@ namespace mozilla {
 namespace dom {
 
 class Headers;
+class InternalHeaders;
 class Promise;
 
 class Response MOZ_FINAL : public nsISupports
                          , public nsWrapperCache
+                         , public FetchBody<Response>
 {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Response)
 
 public:
-  explicit Response(nsISupports* aOwner);
+  Response(nsIGlobalObject* aGlobal, InternalResponse* aInternalResponse);
+
+  Response(const Response& aOther) MOZ_DELETE;
 
   JSObject*
   WrapObject(JSContext* aCx)
@@ -38,29 +45,37 @@ public:
   ResponseType
   Type() const
   {
-    return ResponseType::Error;
+    return mInternalResponse->Type();
   }
 
   void
   GetUrl(DOMString& aUrl) const
   {
-    aUrl.AsAString() = EmptyString();
+    aUrl.AsAString() = NS_ConvertUTF8toUTF16(mInternalResponse->GetUrl());
   }
 
   uint16_t
   Status() const
   {
-    return 400;
+    return mInternalResponse->GetStatus();
   }
 
   void
   GetStatusText(nsCString& aStatusText) const
   {
-    aStatusText = EmptyCString();
+    aStatusText = mInternalResponse->GetStatusText();
   }
 
-  Headers*
-  Headers_() const { return mHeaders; }
+  InternalHeaders*
+  GetInternalHeaders() const
+  {
+    return mInternalResponse->Headers();
+  }
+
+  Headers* Headers_();
+
+  void
+  GetBody(nsIInputStream** aStream) { return mInternalResponse->GetBody(aStream); }
 
   static already_AddRefed<Response>
   Error(const GlobalObject& aGlobal);
@@ -70,10 +85,10 @@ public:
 
   static already_AddRefed<Response>
   Constructor(const GlobalObject& aGlobal,
-              const Optional<ArrayBufferOrArrayBufferViewOrScalarValueStringOrURLSearchParams>& aBody,
+              const Optional<ArrayBufferOrArrayBufferViewOrBlobOrScalarValueStringOrURLSearchParams>& aBody,
               const ResponseInit& aInit, ErrorResult& rv);
 
-  nsISupports* GetParentObject() const
+  nsIGlobalObject* GetParentObject() const
   {
     return mOwner;
   }
@@ -81,24 +96,14 @@ public:
   already_AddRefed<Response>
   Clone();
 
-  already_AddRefed<Promise>
-  ArrayBuffer(ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  Blob(ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  Json(ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  Text(ErrorResult& aRv);
-
-  bool
-  BodyUsed();
+  void
+  SetBody(nsIInputStream* aBody);
 private:
   ~Response();
 
-  nsCOMPtr<nsISupports> mOwner;
+  nsCOMPtr<nsIGlobalObject> mOwner;
+  nsRefPtr<InternalResponse> mInternalResponse;
+  // Lazily created
   nsRefPtr<Headers> mHeaders;
 };
 

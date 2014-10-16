@@ -332,7 +332,7 @@ public class testBrowserProvider extends ContentProviderTest {
             } catch (OperationApplicationException ex) {
                 seenException = true;
             }
-            mAsserter.is(seenException, false, "Batch updating succeded");
+            mAsserter.is(seenException, false, "Batch updating succeeded");
             mOperations.clear();
 
             // Delete all visits

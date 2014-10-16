@@ -40,7 +40,6 @@
 #include "mozqwidget.h"
 
 #include "nsIdleService.h"
-#include "nsRenderingContext.h"
 #include "nsIRollupListener.h"
 #include "nsWidgetsCID.h"
 #include "nsQtKeyUtils.h"

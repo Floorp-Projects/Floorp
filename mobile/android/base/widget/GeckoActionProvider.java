@@ -160,7 +160,7 @@ public class GeckoActionProvider {
         mOnTargetListener = listener;
     }
 
-    public ArrayList<ResolveInfo> getSortedActivites() {
+    public ArrayList<ResolveInfo> getSortedActivities() {
         ArrayList<ResolveInfo> infos = new ArrayList<ResolveInfo>();
 
         ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);

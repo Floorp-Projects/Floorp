@@ -39,7 +39,7 @@ public class SearchBar extends FrameLayout {
     private final ImageView engineIcon;
 
     private final Drawable focusedBackground;
-    private final Drawable defaultBackgound;
+    private final Drawable defaultBackground;
 
     private final InputMethodManager inputMethodManager;
 
@@ -111,7 +111,7 @@ public class SearchBar extends FrameLayout {
         engineIcon = (ImageView) findViewById(R.id.engine_icon);
 
         focusedBackground = getResources().getDrawable(R.drawable.edit_text_focused);
-        defaultBackgound = getResources().getDrawable(R.drawable.edit_text_default);
+        defaultBackground = getResources().getDrawable(R.drawable.edit_text_default);
 
         inputMethodManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
     }
@@ -166,7 +166,7 @@ public class SearchBar extends FrameLayout {
         // We can't use a selector drawable because we apply a color filter to the focused
         // background at run time.
         // TODO: setBackgroundDrawable is deprecated in API level 16
-        editText.setBackgroundDrawable(active ? focusedBackground : defaultBackgound);
+        editText.setBackgroundDrawable(active ? focusedBackground : defaultBackground);
 
         if (active) {
             editText.requestFocus();
