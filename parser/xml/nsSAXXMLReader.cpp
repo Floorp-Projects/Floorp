@@ -6,6 +6,7 @@
 #include "nsIInputStream.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsNullPrincipal.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsStreamUtils.h"
@@ -495,9 +496,18 @@ nsSAXXMLReader::ParseFromStream(nsIInputStream *aStream,
   rv = EnsureBaseURI();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIPrincipal> nullPrincipal =
+    do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIChannel> parserChannel;
-  rv = NS_NewInputStreamChannel(getter_AddRefs(parserChannel), mBaseURI,
-                                aStream, nsDependentCString(aContentType));
+  rv = NS_NewInputStreamChannel(getter_AddRefs(parserChannel),
+                                mBaseURI,
+                                aStream,
+                                nullPrincipal,
+                                nsILoadInfo::SEC_NORMAL,
+                                nsIContentPolicy::TYPE_OTHER,
+                                nsDependentCString(aContentType));
   if (!parserChannel || NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
