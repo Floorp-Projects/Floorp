@@ -907,8 +907,7 @@ if (Services.prefs.getBoolPref("loop.enabled") && !Services.prefs.getBoolPref("l
   CustomizableWidgets.push({
     id: "loop-call-button",
     type: "custom",
-    // XXX Bug 1013989 will provide a label for the button
-    label: "loop-call-button.label",
+    label: "Hello",
     tooltiptext: "loop-call-button.tooltiptext",
     onBuild: function(aDocument) {
       let node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
