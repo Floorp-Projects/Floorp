@@ -32,7 +32,6 @@ const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_SERVER = PREF_BRANCH + "server";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
-const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 // Do not gather data more than once a minute
 const TELEMETRY_INTERVAL = 60000;
@@ -248,7 +247,6 @@ let Impl = {
   // The previous build ID, if this is the first run with a new build.
   // Undefined if this is not the first run, or the previous build ID is unknown.
   _previousBuildID: undefined,
-  _clientID: null,
 
   /**
    * Gets a series of simple measurements (counters). At the moment, this
@@ -703,24 +701,13 @@ let Impl = {
       addonDetails: AddonManagerPrivate.getTelemetryDetails(),
       UIMeasurements: UITelemetry.getUIMeasurements(),
       log: TelemetryLog.entries(),
-      info: info,
+      info: info
     };
 
     if (Object.keys(this._slowSQLStartup).length != 0 &&
         (Object.keys(this._slowSQLStartup.mainThread).length ||
          Object.keys(this._slowSQLStartup.otherThreads).length)) {
       payloadObj.slowSQLStartup = this._slowSQLStartup;
-    }
-
-    let fhrUploadEnabled = false;
-    try {
-      fhrUploadEnabled = Services.prefs.getBoolPref(PREF_FHR_UPLOAD_ENABLED);
-    } catch (e) {
-      // Pref not set.
-    }
-
-    if (this._clientID && fhrUploadEnabled) {
-      payloadObj.clientID = this._clientID;
     }
 
     return payloadObj;
@@ -969,13 +956,6 @@ let Impl = {
 
         this.attachObservers();
         this.gatherMemory();
-
-        if ("@mozilla.org/datareporting/service;1" in Cc) {
-          let drs = Cc["@mozilla.org/datareporting/service;1"]
-                      .getService(Ci.nsISupports)
-                      .wrappedJSObject;
-          this._clientID = yield drs.getClientID();
-        }
 
         Telemetry.asyncFetchTelemetryData(function () {});
         delete this._timer;
