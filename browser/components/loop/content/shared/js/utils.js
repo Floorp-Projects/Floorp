@@ -6,7 +6,7 @@
 
 var loop = loop || {};
 loop.shared = loop.shared || {};
-loop.shared.utils = (function() {
+loop.shared.utils = (function(mozL10n) {
   "use strict";
 
   /**
@@ -96,11 +96,33 @@ loop.shared.utils = (function() {
     }
   };
 
+  /**
+   * Generates and opens a mailto: url with call URL information prefilled.
+   * Note: This only works for Desktop.
+   *
+   * @param  {String} callUrl   The call URL.
+   * @param  {String} recipient The recipient email address (optional).
+   */
+  function composeCallUrlEmail(callUrl, recipient) {
+    if (typeof navigator.mozLoop === "undefined") {
+      console.warn("composeCallUrlEmail isn't available for Loop standalone.");
+      return;
+    }
+    navigator.mozLoop.composeEmail(
+      mozL10n.get("share_email_subject3"),
+      mozL10n.get("share_email_body3", {
+        callUrl: callUrl
+      }),
+      recipient
+    );
+  }
+
   return {
     CALL_TYPES: CALL_TYPES,
     Helper: Helper,
+    composeCallUrlEmail: composeCallUrlEmail,
     formatDate: formatDate,
     getTargetPlatform: getTargetPlatform,
     getBoolPreference: getBoolPreference
   };
-})();
+})(document.mozL10n || navigator.mozL10n);
