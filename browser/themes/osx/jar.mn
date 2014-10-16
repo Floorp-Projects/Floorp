@@ -382,6 +382,7 @@ browser.jar:
   skin/classic/browser/devtools/eyedropper.css              (../shared/devtools/eyedropper.css)
 * skin/classic/browser/devtools/netmonitor.css              (devtools/netmonitor.css)
 * skin/classic/browser/devtools/profiler.css                (devtools/profiler.css)
+* skin/classic/browser/devtools/performance.css             (devtools/performance.css)
 * skin/classic/browser/devtools/timeline.css                (devtools/timeline.css)
 * skin/classic/browser/devtools/scratchpad.css              (devtools/scratchpad.css)
 * skin/classic/browser/devtools/shadereditor.css            (devtools/shadereditor.css)

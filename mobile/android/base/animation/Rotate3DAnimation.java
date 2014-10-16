@@ -43,7 +43,7 @@ public class Rotate3DAnimation extends Animation {
     /**
      * Creates a new 3D rotation on the Y axis. The rotation is defined by its
      * start angle and its end angle. Both angles are in degrees. The rotation
-     * is performed around a center point on the 2D space, definied by a pair
+     * is performed around a center point on the 2D space, defined by a pair
      * of X and Y coordinates, called centerX and centerY. When the animation
      * starts, a translation on the Z axis (depth) is performed. The length
      * of the translation can be specified, as well as whether the translation

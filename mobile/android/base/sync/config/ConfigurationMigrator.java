@@ -371,7 +371,7 @@ public class ConfigurationMigrator {
       upgrade0to1(context, accountManager, account, product, username, serverURL, profile);
     } else if (currentVersion == 1 && desiredVersion == 0) {
       Logger.info(LOG_TAG, "Upgrading from version 0 to version 1.");
-      upgrade0to1(context, accountManager, account, product, username, serverURL, profile);
+      downgrade1to0(context, accountManager, account, product, username, serverURL, profile);
     } else {
       Logger.warn(LOG_TAG, "Don't know how to migrate from version " + currentVersion + " to " + desiredVersion + ".");
     }

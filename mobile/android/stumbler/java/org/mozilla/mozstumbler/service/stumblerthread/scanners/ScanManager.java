@@ -185,6 +185,6 @@ public class ScanManager {
     }
 
     public boolean isGeofenced() {
-        return (mGPSScanner == null)? false : mGPSScanner.isGeofenced();
+        return (mGPSScanner != null) && mGPSScanner.isGeofenced();
     }
 }

@@ -661,10 +661,10 @@ public class GeckoView extends LayerView
         * A Browser has finished loading content from the network.
         * @param view The GeckoView that initiated the callback.
         * @param browser The Browser that was loading the content.
-        * @param success Whether the page loaded successfully or an error occured.
+        * @param success Whether the page loaded successfully or an error occurred.
         */
         public void onPageStop(GeckoView view, GeckoView.Browser browser, boolean success);
-    
+
         /**
         * A Browser is displaying content. This page could have been loaded via
         * network or from the session history.
@@ -672,7 +672,7 @@ public class GeckoView extends LayerView
         * @param browser The Browser that is showing the content.
         */
         public void onPageShow(GeckoView view, GeckoView.Browser browser);
-    
+
         /**
         * A page title was discovered in the content or updated after the content
         * loaded.
@@ -681,7 +681,7 @@ public class GeckoView extends LayerView
         * @param title The title sent from the content.
         */
         public void onReceivedTitle(GeckoView view, GeckoView.Browser browser, String title);
-    
+
         /**
         * A link element was discovered in the content or updated after the content
         * loaded that specifies a favicon.

@@ -766,7 +766,7 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
 
       (nsChromeRegistry::gChromeRegistry->*(directive->regfunc))(
         chromecx, line, argv, platform, contentAccessible);
-    } else if (directive->mgrfunc && (directive->ischrome || !aChromeOnly)) {
+    } else if (directive->ischrome || !aChromeOnly) {
       if (directive->isContract) {
         CachedDirective* cd = contracts.AppendElement();
         cd->lineno = line;
@@ -776,8 +776,6 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
         (nsComponentManagerImpl::gComponentManager->*(directive->mgrfunc))(
           mgrcx, line, argv);
       }
-    } else {
-      LogMessageWithContext(aFile, line, "No valid manifest directive.");
     }
   }
 

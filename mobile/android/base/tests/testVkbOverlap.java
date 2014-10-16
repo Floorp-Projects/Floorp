@@ -70,7 +70,7 @@ public class testVkbOverlap extends PixelTest {
             // account for borders and such of the text input which might still be out of view.
             int newCount = countGreenPixels(painted);
 
-            // if zooming is allowed, the number of green pixels visible should have increased substatially
+            // if zooming is allowed, the number of green pixels visible should have increased substantially
             if (shouldZoom) {
                 mAsserter.ok(newCount > greenPixelCount * 1.5, "testVkbOverlap", "Found " + newCount + " green pixels after tapping; expected " + greenPixelCount);
             } else {

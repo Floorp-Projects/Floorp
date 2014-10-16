@@ -290,7 +290,7 @@ public class GeckoScreenOrientation {
     }
 
     /*
-     * Retrieve the scren orientation from a string.
+     * Retrieve the screen orientation from a string.
      *
      * @param aStr
      *        String hopefully containing a screen orientation name.
