@@ -967,11 +967,6 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 
   mAnimationManager = new nsAnimationManager(this);
 
-  // Since CounterStyleManager is also the name of a method of
-  // nsPresContext, it is necessary to prefix the class with the mozilla
-  // namespace here.
-  mCounterStyleManager = new mozilla::CounterStyleManager(this);
-
   if (mDocument->GetDisplayDocument()) {
     NS_ASSERTION(mDocument->GetDisplayDocument()->GetShell() &&
                  mDocument->GetDisplayDocument()->GetShell()->GetPresContext(),
@@ -1095,6 +1090,10 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     mUserFontSet->Destroy();
     NS_RELEASE(mUserFontSet);
   }
+  if (mCounterStyleManager) {
+    mCounterStyleManager->Disconnect();
+    mCounterStyleManager = nullptr;
+  }
 
   if (mShell) {
     // Remove ourselves as the charset observer from the shell's doc, because
@@ -1108,6 +1107,11 @@ nsPresContext::SetShell(nsIPresShell* aShell)
   mShell = aShell;
 
   if (mShell) {
+    // Since CounterStyleManager is also the name of a method of
+    // nsPresContext, it is necessary to prefix the class with the mozilla
+    // namespace here.
+    mCounterStyleManager = new mozilla::CounterStyleManager(this);
+
     nsIDocument *doc = mShell->GetDocument();
     NS_ASSERTION(doc, "expect document here");
     if (doc) {
@@ -1150,10 +1154,6 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     if (mRestyleManager) {
       mRestyleManager->Disconnect();
       mRestyleManager = nullptr;
-    }
-    if (mCounterStyleManager) {
-      mCounterStyleManager->Disconnect();
-      mCounterStyleManager = nullptr;
     }
 
     if (IsRoot()) {
