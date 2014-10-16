@@ -329,7 +329,8 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
   if (ElfLoader::Singleton.self_elf) {
     /* We consider the library containing this code a permanent LD_PRELOAD,
      * so, check if the symbol exists here first. */
-    sym = ElfLoader::Singleton.self_elf->GetSymbolPtr(symbol, hash);
+    sym = static_cast<BaseElf *>(
+      ElfLoader::Singleton.self_elf.get())->GetSymbolPtr(symbol, hash);
     if (sym)
       return sym;
   }
@@ -342,6 +343,10 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
    * happen. */
   for (std::vector<RefPtr<LibHandle> >::const_iterator it = dependencies.begin();
        it < dependencies.end(); ++it) {
+    /* Skip if it's the library containing this code, since we've already
+     * looked at it above. */
+    if (*it == ElfLoader::Singleton.self_elf)
+      continue;
     if (BaseElf *be = (*it)->AsBaseElf()) {
       sym = be->GetSymbolPtr(symbol, hash);
     } else {

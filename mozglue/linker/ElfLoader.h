@@ -461,7 +461,7 @@ private:
 
   /* System loader handle for the library/program containing our code. This
    * is used to resolve wrapped functions. */
-  mozilla::UniquePtr<BaseElf> self_elf;
+  mozilla::RefPtr<LibHandle> self_elf;
 
   /* Bookkeeping */
   typedef std::vector<LibHandle *> LibHandleList;
@@ -469,6 +469,7 @@ private:
 
 protected:
   friend class CustomElf;
+  friend class LoadedElf;
   /**
    * Show some stats about Mappables in CustomElfs. The when argument is to
    * be used by the caller to give an identifier of the when the stats call
