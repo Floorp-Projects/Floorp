@@ -777,42 +777,6 @@ public:
       }
   }
 
-  void ScalePost(Float aX, Float aY, Float aZ)
-  {
-    _11 *= aX;
-    _21 *= aX;
-    _31 *= aX;
-    _41 *= aX;
-
-    _12 *= aY;
-    _22 *= aY;
-    _32 *= aY;
-    _42 *= aY;
-
-    _13 *= aZ;
-    _23 *= aZ;
-    _33 *= aZ;
-    _43 *= aZ;
-  }
-
-  void TranslatePost(Float aX, Float aY, Float aZ)
-  {
-      _11 += _14 * aX;
-      _21 += _24 * aX;
-      _31 += _34 * aX;
-      _41 += _44 * aX;
-
-      _12 += _14 * aY;
-      _22 += _24 * aY;
-      _32 += _34 * aY;
-      _42 += _44 * aY;
-
-      _13 += _14 * aZ;
-      _23 += _24 * aZ;
-      _33 += _34 * aZ;
-      _43 += _44 * aZ;
-  }
-
   bool FuzzyEqual(const Matrix4x4& o) const
   {
     return gfx::FuzzyEqual(_11, o._11) && gfx::FuzzyEqual(_12, o._12) &&
