@@ -6,6 +6,7 @@
 
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include <stdint.h>                     // for uint32_t
+#include "apz/src/AsyncPanZoomController.h"
 #include "CompositorParent.h"           // for CompositorParent, etc
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "LayerManagerComposite.h"      // for LayerManagerComposite, etc
@@ -18,7 +19,6 @@
 #include "mozilla/gfx/Point.h"          // for RoundedToInt, PointTyped
 #include "mozilla/gfx/Rect.h"           // for RoundedToInt, RectTyped
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
-#include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "nsCSSPropList.h"

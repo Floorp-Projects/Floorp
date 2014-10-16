@@ -320,7 +320,7 @@ CSSCoord Axis::ScaleWillOverscrollAmount(float aScale, CSSCoord aFocus) const {
   return 0;
 }
 
-float Axis::GetVelocity() {
+float Axis::GetVelocity() const {
   return mAxisLocked ? 0 : mVelocity;
 }
 

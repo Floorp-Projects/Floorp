@@ -1010,7 +1010,6 @@ public final class AttributeName
     public static final AttributeName ELEVATION = new AttributeName(ALL_NO_NS, SAME_LOCAL("elevation"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName DIRECTION = new AttributeName(ALL_NO_NS, SAME_LOCAL("direction"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName DRAGGABLE = new AttributeName(ALL_NO_NS, SAME_LOCAL("draggable"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName FILTERRES = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("filterres", "filterRes"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName FILL_RULE = new AttributeName(ALL_NO_NS, SAME_LOCAL("fill-rule"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName FONTSTYLE = new AttributeName(ALL_NO_NS, SAME_LOCAL("fontstyle"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName FONT_SIZE = new AttributeName(ALL_NO_NS, SAME_LOCAL("font-size"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1251,7 +1250,6 @@ public final class AttributeName
     public static final AttributeName STROKE_LINEJOIN = new AttributeName(ALL_NO_NS, SAME_LOCAL("stroke-linejoin"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName REPEAT_TEMPLATE = new AttributeName(ALL_NO_NS, SAME_LOCAL("repeat-template"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ARIA_DESCRIBEDBY = new AttributeName(ALL_NO_NS, SAME_LOCAL("aria-describedby"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName CONTENTSTYLETYPE = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("contentstyletype", "contentStyleType"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName FONT_SIZE_ADJUST = new AttributeName(ALL_NO_NS, SAME_LOCAL("font-size-adjust"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName KERNELUNITLENGTH = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("kernelunitlength", "kernelUnitLength"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONBEFOREACTIVATE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onbeforeactivate"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1268,7 +1266,6 @@ public final class AttributeName
     public static final AttributeName XCHANNELSELECTOR = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("xchannelselector", "xChannelSelector"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName YCHANNELSELECTOR = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("ychannelselector", "yChannelSelector"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ARIA_AUTOCOMPLETE = new AttributeName(ALL_NO_NS, SAME_LOCAL("aria-autocomplete"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName CONTENTSCRIPTTYPE = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("contentscripttype", "contentScriptType"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ENABLE_BACKGROUND = new AttributeName(ALL_NO_NS, SAME_LOCAL("enable-background"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName DOMINANT_BASELINE = new AttributeName(ALL_NO_NS, SAME_LOCAL("dominant-baseline"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName GRADIENTTRANSFORM = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("gradienttransform", "gradientTransform"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1297,7 +1294,6 @@ public final class AttributeName
     public static final AttributeName VERYVERYTHICKMATHSPACE = new AttributeName(ALL_NO_NS, SAME_LOCAL("veryverythickmathspace"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName STRIKETHROUGH_POSITION = new AttributeName(ALL_NO_NS, SAME_LOCAL("strikethrough-position"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName STRIKETHROUGH_THICKNESS = new AttributeName(ALL_NO_NS, SAME_LOCAL("strikethrough-thickness"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName EXTERNALRESOURCESREQUIRED = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("externalresourcesrequired", "externalResourcesRequired"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName GLYPH_ORIENTATION_VERTICAL = new AttributeName(ALL_NO_NS, SAME_LOCAL("glyph-orientation-vertical"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName COLOR_INTERPOLATION_FILTERS = new AttributeName(ALL_NO_NS, SAME_LOCAL("color-interpolation-filters"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName GLYPH_ORIENTATION_HORIZONTAL = new AttributeName(ALL_NO_NS, SAME_LOCAL("glyph-orientation-horizontal"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1595,7 +1591,6 @@ public final class AttributeName
     ELEVATION,
     DIRECTION,
     DRAGGABLE,
-    FILTERRES,
     FILL_RULE,
     FONTSTYLE,
     FONT_SIZE,
@@ -1836,7 +1831,6 @@ public final class AttributeName
     STROKE_LINEJOIN,
     REPEAT_TEMPLATE,
     ARIA_DESCRIBEDBY,
-    CONTENTSTYLETYPE,
     FONT_SIZE_ADJUST,
     KERNELUNITLENGTH,
     ONBEFOREACTIVATE,
@@ -1853,7 +1847,6 @@ public final class AttributeName
     XCHANNELSELECTOR,
     YCHANNELSELECTOR,
     ARIA_AUTOCOMPLETE,
-    CONTENTSCRIPTTYPE,
     ENABLE_BACKGROUND,
     DOMINANT_BASELINE,
     GRADIENTTRANSFORM,
@@ -1882,7 +1875,6 @@ public final class AttributeName
     VERYVERYTHICKMATHSPACE,
     STRIKETHROUGH_POSITION,
     STRIKETHROUGH_THICKNESS,
-    EXTERNALRESOURCESREQUIRED,
     GLYPH_ORIENTATION_VERTICAL,
     COLOR_INTERPOLATION_FILTERS,
     GLYPH_ORIENTATION_HORIZONTAL,
@@ -2181,7 +2173,6 @@ public final class AttributeName
     307227811,
     307468786,
     307724489,
-    309671175,
     310252031,
     310358241,
     310373094,
@@ -2422,7 +2413,6 @@ public final class AttributeName
     526807354,
     527348842,
     538294791,
-    539214049,
     544689535,
     545535009,
     548544752,
@@ -2439,7 +2429,6 @@ public final class AttributeName
     569212097,
     569474241,
     572252718,
-    572768481,
     575326764,
     576174758,
     576190819,
@@ -2468,7 +2457,6 @@ public final class AttributeName
     759097578,
     761686526,
     795383908,
-    843809551,
     878105336,
     908643300,
     945213471,

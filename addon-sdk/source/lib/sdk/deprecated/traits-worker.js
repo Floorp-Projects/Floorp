@@ -184,34 +184,17 @@ const WorkerSandbox = EventEmitter.compose({
     // by trading two methods that allow to send events to the other side:
     //   - `onEvent` called by content script
     //   - `result.emitToContent` called by addon script
-    // Bug 758203: We have to explicitely define `__exposedProps__` in order
-    // to allow access to these chrome object attributes from this sandbox with
-    // content priviledges
-    // https://developer.mozilla.org/en/XPConnect_wrappers#Other_security_wrappers
-    let chromeAPI = {
+    let chromeAPI = Cu.cloneInto({
       timers: {
-        setTimeout: timer.setTimeout,
-        setInterval: timer.setInterval,
-        clearTimeout: timer.clearTimeout,
-        clearInterval: timer.clearInterval,
-        __exposedProps__: {
-          setTimeout: 'r',
-          setInterval: 'r',
-          clearTimeout: 'r',
-          clearInterval: 'r'
-        }
+        setTimeout: timer.setTimeout.bind(timer),
+        setInterval: timer.setInterval.bind(timer),
+        clearTimeout: timer.clearTimeout.bind(timer),
+        clearInterval: timer.clearInterval.bind(timer),
       },
       sandbox: {
         evaluate: evaluate,
-        __exposedProps__: {
-          evaluate: 'r',
-        }
       },
-      __exposedProps__: {
-        timers: 'r',
-        sandbox: 'r',
-      }
-    };
+    }, ContentWorker, {cloneFunctions: true});
     let onEvent = this._onContentEvent.bind(this);
     let result = Cu.waiveXrays(ContentWorker).inject(content, chromeAPI, onEvent, options);
     this._emitToContent = result;
