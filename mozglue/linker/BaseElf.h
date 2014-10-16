@@ -33,8 +33,11 @@ public:
    */
   const Elf::Sym *GetSymbol(const char *symbol, unsigned long hash) const;
 
-  BaseElf(const char *path)
-  : LibHandle(path) { }
+  BaseElf(const char *path, Mappable *mappable = nullptr)
+  : LibHandle(path)
+  , mappable(mappable)
+  {
+  }
 
 protected:
    /**
@@ -74,6 +77,9 @@ public:
       return reinterpret_cast<const T *>(offset);
     return reinterpret_cast<const T *>(base + offset);
   }
+
+  /* Appropriated Mappable */
+  mozilla::RefPtr<Mappable> mappable;
 
   /* Base address where the library is loaded */
   MappedPtr base;
