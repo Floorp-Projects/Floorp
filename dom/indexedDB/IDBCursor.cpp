@@ -426,36 +426,41 @@ IDBCursor::Continue(JSContext* aCx,
     }
   }
 
+  const uint64_t requestSerialNumber = IDBRequest::NextSerialNumber();
+  mRequest->SetLoggingSerialNumber(requestSerialNumber);
+
+  if (mType == Type_ObjectStore || mType == Type_ObjectStoreKey) {
+    IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
+                   "database(%s).transaction(%s).objectStore(%s)."
+                   "cursor(%s).continue(%s)",
+                 "IndexedDB %s: C T[%lld] R[%llu]: IDBCursor.continue()",
+                 IDB_LOG_ID_STRING(),
+                 mTransaction->LoggingSerialNumber(),
+                 requestSerialNumber,
+                 IDB_LOG_STRINGIFY(mTransaction->Database()),
+                 IDB_LOG_STRINGIFY(mTransaction),
+                 IDB_LOG_STRINGIFY(mSourceObjectStore),
+                 IDB_LOG_STRINGIFY(mDirection),
+                 IDB_LOG_STRINGIFY(key));
+  } else {
+    IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
+                   "database(%s).transaction(%s).objectStore(%s)."
+                   "index(%s).cursor(%s).continue(%s)",
+                 "IndexedDB %s: C T[%lld] R[%llu]: IDBCursor.continue()",
+                 IDB_LOG_ID_STRING(),
+                 mTransaction->LoggingSerialNumber(),
+                 requestSerialNumber,
+                 IDB_LOG_STRINGIFY(mTransaction->Database()),
+                 IDB_LOG_STRINGIFY(mTransaction),
+                 IDB_LOG_STRINGIFY(mSourceIndex->ObjectStore()),
+                 IDB_LOG_STRINGIFY(mSourceIndex),
+                 IDB_LOG_STRINGIFY(mDirection),
+                 IDB_LOG_STRINGIFY(key));
+  }
+
   mBackgroundActor->SendContinueInternal(ContinueParams(key));
 
   mContinueCalled = true;
-
-#ifdef IDB_PROFILER_USE_MARKS
-  if (mType == Type_ObjectStore || mType == Type_ObjectStoreKey) {
-    IDB_PROFILER_MARK("IndexedDB Request %llu: "
-                      "database(%s).transaction(%s).objectStore(%s).cursor(%s)."
-                      "continue(%s)",
-                      "IDBRequest[%llu] MT IDBCursor.continue()",
-                      Request()->GetSerialNumber(),
-                      IDB_PROFILER_STRING(Transaction()->Database()),
-                      IDB_PROFILER_STRING(Transaction()),
-                      IDB_PROFILER_STRING(mSourceObjectStore),
-                      IDB_PROFILER_STRING(mDirection),
-                      key.IsUnset() ? "" : IDB_PROFILER_STRING(key));
-  } else {
-    IDB_PROFILER_MARK("IndexedDB Request %llu: "
-                      "database(%s).transaction(%s).objectStore(%s).index(%s)."
-                      "cursor(%s).continue(%s)",
-                      "IDBRequest[%llu] MT IDBCursor.continue()",
-                      Request()->GetSerialNumber(),
-                      IDB_PROFILER_STRING(Transaction()->Database()),
-                      IDB_PROFILER_STRING(Transaction()),
-                      IDB_PROFILER_STRING(mSourceIndex->ObjectStore()),
-                      IDB_PROFILER_STRING(mSourceIndex),
-                      IDB_PROFILER_STRING(mDirection),
-                      key.IsUnset() ? "" : IDB_PROFILER_STRING(key));
-  }
-#endif
 }
 
 void
@@ -478,36 +483,41 @@ IDBCursor::Advance(uint32_t aCount, ErrorResult &aRv)
     return;
   }
 
+  const uint64_t requestSerialNumber = IDBRequest::NextSerialNumber();
+  mRequest->SetLoggingSerialNumber(requestSerialNumber);
+
+  if (mType == Type_ObjectStore || mType == Type_ObjectStoreKey) {
+    IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
+                   "database(%s).transaction(%s).objectStore(%s)."
+                   "cursor(%s).advance(%ld)",
+                 "IndexedDB %s: C T[%lld] R[%llu]: IDBCursor.advance()",
+                 IDB_LOG_ID_STRING(),
+                 mTransaction->LoggingSerialNumber(),
+                 requestSerialNumber,
+                 IDB_LOG_STRINGIFY(mTransaction->Database()),
+                 IDB_LOG_STRINGIFY(mTransaction),
+                 IDB_LOG_STRINGIFY(mSourceObjectStore),
+                 IDB_LOG_STRINGIFY(mDirection),
+                 aCount);
+  } else {
+    IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
+                   "database(%s).transaction(%s).objectStore(%s)."
+                   "index(%s).cursor(%s).advance(%ld)",
+                 "IndexedDB %s: C T[%lld] R[%llu]: IDBCursor.advance()",
+                 IDB_LOG_ID_STRING(),
+                 mTransaction->LoggingSerialNumber(),
+                 requestSerialNumber,
+                 IDB_LOG_STRINGIFY(mTransaction->Database()),
+                 IDB_LOG_STRINGIFY(mTransaction),
+                 IDB_LOG_STRINGIFY(mSourceIndex->ObjectStore()),
+                 IDB_LOG_STRINGIFY(mSourceIndex),
+                 IDB_LOG_STRINGIFY(mDirection),
+                 aCount);
+  }
+
   mBackgroundActor->SendContinueInternal(AdvanceParams(aCount));
 
   mContinueCalled = true;
-
-#ifdef IDB_PROFILER_USE_MARKS
-  {
-    if (mType == Type_ObjectStore || mType == Type_ObjectStoreKey) {
-      IDB_PROFILER_MARK("IndexedDB Request %llu: "
-                        "database(%s).transaction(%s).objectStore(%s)."
-                        "cursor(%s).advance(%ld)",
-                        "IDBRequest[%llu] MT IDBCursor.advance()",
-                        Request()->GetSerialNumber(),
-                        IDB_PROFILER_STRING(Transaction()->Database()),
-                        IDB_PROFILER_STRING(Transaction()),
-                        IDB_PROFILER_STRING(mSourceObjectStore),
-                        IDB_PROFILER_STRING(mDirection), aCount);
-    } else {
-      IDB_PROFILER_MARK("IndexedDB Request %llu: "
-                        "database(%s).transaction(%s).objectStore(%s)."
-                        "index(%s).cursor(%s).advance(%ld)",
-                        "IDBRequest[%llu] MT IDBCursor.advance()",
-                        Request()->GetSerialNumber(),
-                        IDB_PROFILER_STRING(Transaction()->Database()),
-                        IDB_PROFILER_STRING(Transaction()),
-                        IDB_PROFILER_STRING(mSourceIndex->ObjectStore()),
-                        IDB_PROFILER_STRING(mSourceIndex),
-                        IDB_PROFILER_STRING(mDirection), aCount);
-    }
-  }
-#endif
 }
 
 already_AddRefed<IDBRequest>
@@ -563,7 +573,12 @@ IDBCursor::Update(JSContext* aCx, JS::Handle<JS::Value> aValue,
       return nullptr;
     }
 
-    request = objectStore->Put(aCx, aValue, JS::UndefinedHandleValue, aRv);
+    request = objectStore->AddOrPut(aCx,
+                                    aValue,
+                                    /* aKey */ JS::UndefinedHandleValue,
+                                    /* aOverwrite */ true,
+                                    /* aFromCursor */ true,
+                                    aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
@@ -575,7 +590,12 @@ IDBCursor::Update(JSContext* aCx, JS::Handle<JS::Value> aValue,
       return nullptr;
     }
 
-    request = objectStore->Put(aCx, aValue, keyVal, aRv);
+    request = objectStore->AddOrPut(aCx,
+                                    aValue,
+                                    keyVal,
+                                    /* aOverwrite */ true,
+                                    /* aFromCursor */ true,
+                                    aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
@@ -583,37 +603,34 @@ IDBCursor::Update(JSContext* aCx, JS::Handle<JS::Value> aValue,
 
   request->SetSource(this);
 
-#ifdef IDB_PROFILER_USE_MARKS
-  {
-    uint64_t requestSerial = request->GetSerialNumber();
-    if (mType == Type_ObjectStore) {
-      IDB_PROFILER_MARK("IndexedDB Request %llu: "
-                        "database(%s).transaction(%s).objectStore(%s)."
-                        "cursor(%s).update(%s)",
-                        "IDBRequest[%llu] MT IDBCursor.update()",
-                        requestSerial,
-                        IDB_PROFILER_STRING(mTransaction->Database()),
-                        IDB_PROFILER_STRING(mTransaction),
-                        IDB_PROFILER_STRING(objectStore),
-                        IDB_PROFILER_STRING(mDirection),
-                        mObjectStore->HasValidKeyPath() ? "" :
-                          IDB_PROFILER_STRING(primaryKey));
-    } else {
-      IDB_PROFILER_MARK("IndexedDB Request %llu: "
-                        "database(%s).transaction(%s).objectStore(%s)."
-                        "index(%s).cursor(%s).update(%s)",
-                        "IDBRequest[%llu] MT IDBCursor.update()",
-                        requestSerial,
-                        IDB_PROFILER_STRING(mTransaction->Database()),
-                        IDB_PROFILER_STRING(mTransaction),
-                        IDB_PROFILER_STRING(objectStore),
-                        IDB_PROFILER_STRING(mSourceIndex),
-                        IDB_PROFILER_STRING(mDirection),
-                        mObjectStore->HasValidKeyPath() ? "" :
-                          IDB_PROFILER_STRING(primaryKey));
-    }
+  if (mType == Type_ObjectStore) {
+    IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
+                   "database(%s).transaction(%s).objectStore(%s)."
+                   "cursor(%s).update(%s)",
+                 "IndexedDB %s: C T[%lld] R[%llu]: IDBCursor.update()",
+                 IDB_LOG_ID_STRING(),
+                 mTransaction->LoggingSerialNumber(),
+                 request->LoggingSerialNumber(),
+                 IDB_LOG_STRINGIFY(mTransaction->Database()),
+                 IDB_LOG_STRINGIFY(mTransaction),
+                 IDB_LOG_STRINGIFY(objectStore),
+                 IDB_LOG_STRINGIFY(mDirection),
+                 IDB_LOG_STRINGIFY(objectStore, primaryKey));
+  } else {
+    IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
+                   "database(%s).transaction(%s).objectStore(%s)."
+                   "index(%s).cursor(%s).update(%s)",
+                 "IndexedDB %s: C T[%lld] R[%llu]: IDBCursor.update()",
+                 IDB_LOG_ID_STRING(),
+                 mTransaction->LoggingSerialNumber(),
+                 request->LoggingSerialNumber(),
+                 IDB_LOG_STRINGIFY(mTransaction->Database()),
+                 IDB_LOG_STRINGIFY(mTransaction),
+                 IDB_LOG_STRINGIFY(objectStore),
+                 IDB_LOG_STRINGIFY(mSourceIndex),
+                 IDB_LOG_STRINGIFY(mDirection),
+                 IDB_LOG_STRINGIFY(objectStore, primaryKey));
   }
-#endif
 
   return request.forget();
 }
@@ -658,44 +675,42 @@ IDBCursor::Delete(JSContext* aCx, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<IDBRequest> request = objectStore->Delete(aCx, key, aRv);
+  nsRefPtr<IDBRequest> request =
+    objectStore->DeleteInternal(aCx, key, /* aFromCursor */ true, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
   request->SetSource(this);
 
-#ifdef IDB_PROFILER_USE_MARKS
-  {
-    uint64_t requestSerial = request->GetSerialNumber();
-    if (mType == Type_ObjectStore) {
-      IDB_PROFILER_MARK("IndexedDB Request %llu: "
-                        "database(%s).transaction(%s).objectStore(%s)."
-                        "cursor(%s).delete(%s)",
-                        "IDBRequest[%llu] MT IDBCursor.delete()",
-                        requestSerial,
-                        IDB_PROFILER_STRING(mTransaction->Database()),
-                        IDB_PROFILER_STRING(mTransaction),
-                        IDB_PROFILER_STRING(objectStore),
-                        IDB_PROFILER_STRING(mDirection),
-                        mObjectStore->HasValidKeyPath() ? "" :
-                          IDB_PROFILER_STRING(primaryKey));
-    } else {
-      IDB_PROFILER_MARK("IndexedDB Request %llu: "
-                        "database(%s).transaction(%s).objectStore(%s)."
-                        "index(%s).cursor(%s).delete(%s)",
-                        "IDBRequest[%llu] MT IDBCursor.delete()",
-                        requestSerial,
-                        IDB_PROFILER_STRING(mTransaction->Database()),
-                        IDB_PROFILER_STRING(mTransaction),
-                        IDB_PROFILER_STRING(objectStore),
-                        IDB_PROFILER_STRING(mSourceIndex),
-                        IDB_PROFILER_STRING(mDirection),
-                        mObjectStore->HasValidKeyPath() ? "" :
-                          IDB_PROFILER_STRING(primaryKey));
-    }
+  if (mType == Type_ObjectStore) {
+  IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
+                 "database(%s).transaction(%s).objectStore(%s)."
+                 "cursor(%s).delete(%s)",
+               "IndexedDB %s: C T[%lld] R[%llu]: IDBCursor.delete()",
+               IDB_LOG_ID_STRING(),
+               mTransaction->LoggingSerialNumber(),
+               request->LoggingSerialNumber(),
+               IDB_LOG_STRINGIFY(mTransaction->Database()),
+               IDB_LOG_STRINGIFY(mTransaction),
+               IDB_LOG_STRINGIFY(objectStore),
+               IDB_LOG_STRINGIFY(mDirection),
+               IDB_LOG_STRINGIFY(objectStore, primaryKey));
+  } else {
+    IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
+                   "database(%s).transaction(%s).objectStore(%s)."
+                   "index(%s).cursor(%s).delete(%s)",
+                 "IndexedDB %s: C T[%lld] R[%llu]: IDBCursor.delete()",
+                 IDB_LOG_ID_STRING(),
+                 mTransaction->LoggingSerialNumber(),
+                 request->LoggingSerialNumber(),
+                 IDB_LOG_STRINGIFY(mTransaction->Database()),
+                 IDB_LOG_STRINGIFY(mTransaction),
+                 IDB_LOG_STRINGIFY(objectStore),
+                 IDB_LOG_STRINGIFY(mSourceIndex),
+                 IDB_LOG_STRINGIFY(mDirection),
+                 IDB_LOG_STRINGIFY(objectStore, primaryKey));
   }
-#endif
 
   return request.forget();
 }

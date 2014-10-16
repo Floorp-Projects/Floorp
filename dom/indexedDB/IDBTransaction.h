@@ -83,14 +83,11 @@ private:
     BackgroundVersionChangeTransactionChild* mVersionChangeBackgroundActor;
   } mBackgroundActor;
 
+  const int64_t mLoggingSerialNumber;
 
   // Only used for VERSION_CHANGE transactions.
   int64_t mNextObjectStoreId;
   int64_t mNextIndexId;
-
-#ifdef MOZ_ENABLE_PROFILER_SPS
-  uint64_t mSerialNumber;
-#endif
 
   nsresult mAbortCode;
   uint32_t mPendingRequestCount;
@@ -245,14 +242,13 @@ public:
   void
   Abort(nsresult aAbortCode);
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
-  uint32_t
-  GetSerialNumber() const
+  int64_t
+  LoggingSerialNumber() const
   {
     AssertIsOnOwningThread();
-    return mSerialNumber;
+
+    return mLoggingSerialNumber;
   }
-#endif
 
   nsPIDOMWindow*
   GetParentObject() const;

@@ -119,6 +119,12 @@ pref("dom.indexedDB.enabled", true);
 pref("dom.indexedDB.warningQuota", 50);
 // Whether or not indexedDB experimental features are enabled.
 pref("dom.indexedDB.experimental", false);
+// Enable indexedDB logging.
+pref("dom.indexedDB.logging.enabled", true);
+// Detailed output in log messages.
+pref("dom.indexedDB.logging.details", true);
+// Enable profiler marks for indexedDB events.
+pref("dom.indexedDB.logging.profiler-marks", false);
 
 // Whether or not Web Workers are enabled.
 pref("dom.workers.enabled", true);

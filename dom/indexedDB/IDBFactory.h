@@ -42,6 +42,7 @@ namespace indexedDB {
 class BackgroundFactoryChild;
 class FactoryRequestParams;
 class IDBOpenDBRequest;
+class LoggingInfo;
 
 class IDBFactory MOZ_FINAL
   : public nsISupports
@@ -111,6 +112,9 @@ public:
 
     mBackgroundActor = nullptr;
   }
+
+  void
+  IncrementParentLoggingRequestSerialNumber();
 
   nsPIDOMWindow*
   GetParentObject() const
@@ -208,7 +212,8 @@ private:
                ErrorResult& aRv);
 
   nsresult
-  BackgroundActorCreated(PBackgroundChild* aBackgroundActor);
+  BackgroundActorCreated(PBackgroundChild* aBackgroundActor,
+                         const LoggingInfo& aLoggingInfo);
 
   void
   BackgroundActorFailed();
