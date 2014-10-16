@@ -74,19 +74,13 @@ public:
 protected:
   ~KeyboardEvent() {}
 
-  void InitWithKeyboardEventInit(EventTarget* aOwner,
-                                 const nsAString& aType,
-                                 const KeyboardEventInit& aParam,
-                                 ErrorResult& aRv);
-
 private:
   // True, if the instance is created with Constructor().
   bool mInitializedByCtor;
-
   // If the instance is created with Constructor(), which may have independent
   // value.  mInitializedWhichValue stores it.  I.e., this is invalid when
   // mInitializedByCtor is false.
-  uint32_t mInitializedWhichValue;
+  uint32_t mInitialzedWhichValue;
 };
 
 } // namespace dom

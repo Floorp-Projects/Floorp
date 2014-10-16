@@ -49,7 +49,7 @@ namespace gl {
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
 unsigned GLContext::sCurrentGLContextTLS = -1;
 #endif
 
@@ -292,7 +292,7 @@ GLContext::GLContext(const SurfaceCaps& caps,
     mVendor(GLVendor::Other),
     mRenderer(GLRenderer::Other),
     mHasRobustness(false),
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
     mIsInLocalErrorCheck(false),
 #endif
     mSharedContext(sharedContext),
@@ -312,7 +312,7 @@ GLContext::GLContext(const SurfaceCaps& caps,
 
 GLContext::~GLContext() {
     NS_ASSERTION(IsDestroyed(), "GLContext implementation must call MarkDestroyed in destructor!");
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
     if (mSharedContext) {
         GLContext *tip = mSharedContext;
         while (tip->mSharedContext)
@@ -511,7 +511,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
         ParseGLVersion(this, &version);
 
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
         printf_stderr("OpenGL version detected: %u\n", version);
         printf_stderr("OpenGL vendor: %s\n", fGetString(LOCAL_GL_VENDOR));
         printf_stderr("OpenGL renderer: %s\n", fGetString(LOCAL_GL_RENDERER));
@@ -631,7 +631,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
     }
 
 
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
     if (PR_GetEnv("MOZ_GL_DEBUG"))
         sDebugMode |= DebugEnabled;
 
@@ -646,7 +646,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 #endif
 
     if (mInitialized) {
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
         static bool firstRun = true;
         if (firstRun && DebugMode()) {
             const char *vendors[size_t(GLVendor::Other)] = {
@@ -1608,7 +1608,7 @@ GLContext::InitExtensions()
     if (!extensions)
         return;
 
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
     static bool firstRun = true;
 #else
     // Non-DEBUG, so never spew.
@@ -1659,7 +1659,7 @@ GLContext::InitExtensions()
     }
 #endif
 
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
     firstRun = false;
 #endif
 }
@@ -1749,7 +1749,7 @@ void
 GLContext::UpdatePixelFormat()
 {
     PixelBufferFormat format = QueryPixelFormat();
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
     const SurfaceCaps& caps = Caps();
     MOZ_ASSERT(!caps.any, "Did you forget to DetermineCaps()?");
 
@@ -1973,7 +1973,7 @@ GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
 
     if (!IsFramebufferComplete(drawFB, &status)) {
         NS_WARNING("DrawFBO: Incomplete");
-  #ifdef DEBUG
+  #ifdef MOZ_GL_DEBUG
         if (DebugMode()) {
             printf_stderr("Framebuffer status: %X\n", status);
         }
@@ -1983,7 +1983,7 @@ GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
 
     if (!IsFramebufferComplete(readFB, &status)) {
         NS_WARNING("ReadFBO: Incomplete");
-  #ifdef DEBUG
+  #ifdef MOZ_GL_DEBUG
         if (DebugMode()) {
             printf_stderr("Framebuffer status: %X\n", status);
         }
@@ -2107,7 +2107,7 @@ GLContext::MarkDestroyed()
     mSymbols.Zero();
 }
 
-#ifdef DEBUG
+#ifdef MOZ_GL_DEBUG
 /* static */ void
 GLContext::AssertNotPassingStackBufferToTheGL(const void* ptr)
 {

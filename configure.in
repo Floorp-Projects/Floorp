@@ -2206,6 +2206,10 @@ ia64*-hpux*)
         # on non-Western system locales even if it is in a comment.
         CFLAGS="$CFLAGS -wd4244 -wd4267 -wd4819"
         CXXFLAGS="$CXXFLAGS -wd4251 -wd4244 -wd4267 -wd4345 -wd4351 -wd4482 -wd4800 -wd4819"
+        if test -n "$CLANG_CL"; then
+            # Suppress the clang-cl warning for the inline 'new' and 'delete' in mozalloc
+            CXXFLAGS="$CXXFLAGS -Wno-inline-new-delete"
+        fi
         # make 'foo == bar;' error out
         CFLAGS="$CFLAGS -we4553"
         CXXFLAGS="$CXXFLAGS -we4553"
@@ -8025,6 +8029,11 @@ MOZ_ARG_ENABLE_BOOL(skia,
 MOZ_ENABLE_SKIA=1,
 MOZ_ENABLE_SKIA=)
 
+MOZ_ARG_DISABLE_BOOL(skia-gpu,
+[  --disable-skia-gpu  Disable use of Skia-GPU],
+MOZ_DISABLE_SKIA_GPU=1,
+MOZ_DISABLE_SKIA_GPU=)
+
 if test "$USE_FC_FREETYPE"; then
     if test "$COMPILE_ENVIRONMENT"; then
         dnl ========================================================
@@ -8259,7 +8268,7 @@ if test "$MOZ_ENABLE_SKIA"; then
     AC_DEFINE(SK_BUILD_FOR_ANDROID_NDK)
   fi
 
-  if test "${CPU_ARCH}" != "ppc" -a "${CPU_ARCH}" != "ppc64" -a "${CPU_ARCH}" != "sparc" ; then
+  if test "${CPU_ARCH}" != "ppc" -a "${CPU_ARCH}" != "ppc64" -a "${CPU_ARCH}" != "sparc" -a -z "$MOZ_DISABLE_SKIA_GPU" ; then
     MOZ_ENABLE_SKIA_GPU=1
     AC_DEFINE(USE_SKIA_GPU)
     AC_SUBST(MOZ_ENABLE_SKIA_GPU)
@@ -9027,17 +9036,15 @@ dnl ========================================================
 #   Android:  bug 864843
 #   B2G:      bug 866301
 
-if test "$MOZ_WIDGET_TOOLKIT" = "android"; then
+if test "$MOZ_WIDGET_TOOLKIT" = "android" ||
+   test "$MOZ_BUILD_APP" = "b2g"; then
     _INTL_API=no
-elif test "$MOZ_BUILD_APP" = "b2g"; then
-    if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
-        # nsCollationMacUC needs ICU
-        _INTL_API=yes
-    else
-        _INTL_API=no
-    fi
 else
     _INTL_API=yes
+fi
+
+if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
+    USE_ICU=1
 fi
 
 MOZ_CONFIG_ICU()

@@ -6,18 +6,18 @@ import sys
 from setuptools import setup, find_packages
 
 PACKAGE_NAME = 'mozrunner'
-PACKAGE_VERSION = '6.3'
+PACKAGE_VERSION = '6.4'
 
 desc = """Reliable start/stop/configuration of Mozilla Applications (Firefox, Thunderbird, etc.)"""
 
-deps = ['mozcrash >= 0.11',
+deps = ['mozcrash >= 0.14',
         'mozdevice >= 0.37',
         'mozfile >= 1.0',
         'mozinfo >= 0.7',
         'mozlog >= 1.5',
         'mozprocess >= 0.17',
         'mozprofile >= 0.18',
-       ]
+        ]
 
 # we only support python 2 right now
 assert sys.version_info[0] == 2

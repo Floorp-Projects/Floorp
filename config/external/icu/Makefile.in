@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Ensure that this happens before including rules.mk
-ifdef ENABLE_INTL_API
+ifdef USE_ICU
   ifndef MOZ_NATIVE_ICU
   # Library names: On Windows, ICU uses modified library names for static
   # and debug libraries.
@@ -36,11 +36,11 @@ ifdef ENABLE_INTL_API
       endif
     endif # MOZ_SHARED_ICU
   endif # !MOZ_NATIVE_ICU
-endif # ENABLE_INTL_API
+endif # USE_ICU
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef ENABLE_INTL_API
+ifdef USE_ICU
 ifndef MOZ_NATIVE_ICU
 target:: buildicu
 $(STATIC_LIBS): buildicu

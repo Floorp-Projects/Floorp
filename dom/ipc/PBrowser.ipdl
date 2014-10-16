@@ -398,8 +398,6 @@ parent:
 
     ReplyKeyEvent(WidgetKeyboardEvent event);
 
-    DispatchAfterKeyboardEvent(WidgetKeyboardEvent event);
-
     sync RequestNativeKeyBindings(WidgetKeyboardEvent event)
         returns (MaybeNativeKeyBinding bindings);
 

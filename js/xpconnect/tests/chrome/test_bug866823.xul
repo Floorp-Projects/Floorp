@@ -33,14 +33,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=866823
     ok(iwin.wrappedJSObject.eval('waiver == window'), "Waivers disappear same-compartment");
 
     // Make sure that COW prototype always happens.
-    sb.arrayProto = Array.prototype;
-    ok(Cu.evalInSandbox('arrayProto == Array.prototype', sb),
+    sb.objProto = Object.prototype;
+    ok(Cu.evalInSandbox('objProto == Object.prototype', sb),
                         "Prototype remapping should happen even when the object isn't used as a prototype");
 
     // Make sure that prototype remapping happens even for nsEP.
     var sbEP = new Cu.Sandbox(['http://example.org']);
-    sb.epArrayProto = sbEP.Array.prototype;
-    ok(Cu.evalInSandbox('epArrayProto == Array.prototype', sb),
+    sb.epObjProto = sbEP.Object.prototype;
+    ok(Cu.evalInSandbox('epObjProto == Object.prototype', sb),
                         "Prototype remapping should happen for all non-subsuming access");
 
     SimpleTest.finish();
