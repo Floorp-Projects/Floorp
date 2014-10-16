@@ -3305,22 +3305,6 @@ JS_ReleaseMappedArrayBufferContents(void *contents, size_t length);
 extern JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JS::HandleObject obj);
 
-/*
- * Create an object to iterate over enumerable properties of obj, in arbitrary
- * property definition order.  NB: This differs from longstanding for..in loop
- * order, which uses order of property definition in obj.
- */
-extern JS_PUBLIC_API(JSObject *)
-JS_NewPropertyIterator(JSContext *cx, JS::Handle<JSObject*> obj);
-
-/*
- * Return true on success with *idp containing the id of the next enumerable
- * property to visit using iterobj, or JSID_IS_VOID if there is no such property
- * left to visit.  Return false on error.
- */
-extern JS_PUBLIC_API(bool)
-JS_NextProperty(JSContext *cx, JS::HandleObject iterobj, JS::MutableHandleId idp);
-
 extern JS_PUBLIC_API(jsval)
 JS_GetReservedSlot(JSObject *obj, uint32_t index);
 

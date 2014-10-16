@@ -2625,8 +2625,8 @@ ImplicitConvert(JSContext* cx,
     if (val.isObject() && !sourceData) {
       // Enumerate the properties of the object; if they match the struct
       // specification, convert the fields.
-      RootedObject iter(cx, JS_NewPropertyIterator(cx, valObj));
-      if (!iter)
+      AutoIdArray props(cx, JS_Enumerate(cx, valObj));
+      if (!props)
         return false;
 
       // Convert into an intermediate, in case of failure.
@@ -2637,13 +2637,15 @@ ImplicitConvert(JSContext* cx,
         return false;
       }
 
+      const FieldInfoHash* fields = StructType::GetFieldInfo(targetType);
+      if (props.length() != fields->count()) {
+        JS_ReportError(cx, "missing fields");
+        return false;
+      }
+
       RootedId id(cx);
-      size_t i = 0;
-      while (1) {
-        if (!JS_NextProperty(cx, iter, &id))
-          return false;
-        if (JSID_IS_VOID(id))
-          break;
+      for (size_t i = 0; i < props.length(); ++i) {
+        id = props[i];
 
         if (!JSID_IS_STRING(id)) {
           JS_ReportError(cx, "property name is not a string");
@@ -2663,14 +2665,6 @@ ImplicitConvert(JSContext* cx,
         char* fieldData = intermediate.get() + field->mOffset;
         if (!ImplicitConvert(cx, prop, field->mType, fieldData, false, nullptr))
           return false;
-
-        ++i;
-      }
-
-      const FieldInfoHash* fields = StructType::GetFieldInfo(targetType);
-      if (i != fields->count()) {
-        JS_ReportError(cx, "missing fields");
-        return false;
       }
 
       memcpy(buffer, intermediate.get(), structSize);
@@ -4705,30 +4699,20 @@ ExtractStructField(JSContext* cx, jsval val, MutableHandleObject typeObj)
     return nullptr;
   }
 
-  RootedObject obj(cx, val.toObjectOrNull());
-  RootedObject iter(cx, JS_NewPropertyIterator(cx, obj));
-  if (!iter)
+  RootedObject obj(cx, &val.toObject());
+  AutoIdArray props(cx, JS_Enumerate(cx, obj));
+  if (!props)
     return nullptr;
-
-  RootedId nameid(cx);
-  if (!JS_NextProperty(cx, iter, &nameid))
-    return nullptr;
-  if (JSID_IS_VOID(nameid)) {
-    JS_ReportError(cx, "struct field descriptors require a valid name and type");
-    return nullptr;
-  }
-
-  if (!JSID_IS_STRING(nameid)) {
-    JS_ReportError(cx, "struct field descriptors require a valid name and type");
-    return nullptr;
-  }
 
   // make sure we have one, and only one, property
-  RootedId id(cx);
-  if (!JS_NextProperty(cx, iter, &id))
-    return nullptr;
-  if (!JSID_IS_VOID(id)) {
+  if (props.length() != 1) {
     JS_ReportError(cx, "struct field descriptors must contain one property");
+    return nullptr;
+  }
+
+  RootedId nameid(cx, props[0]);
+  if (!JSID_IS_STRING(nameid)) {
+    JS_ReportError(cx, "struct field descriptors require a valid name and type");
     return nullptr;
   }
 
