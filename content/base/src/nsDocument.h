@@ -326,6 +326,8 @@ private:
 // being created flag.
 struct CustomElementData
 {
+  NS_INLINE_DECL_REFCOUNTING(CustomElementData)
+
   explicit CustomElementData(nsIAtom* aType);
   // Objects in this array are transient and empty after each microtask
   // checkpoint.
@@ -347,6 +349,9 @@ struct CustomElementData
 
   // Empties the callback queue.
   void RunCallbackQueue();
+
+private:
+  virtual ~CustomElementData() {}
 };
 
 // The required information for a custom element as defined in:
@@ -1498,7 +1503,7 @@ private:
   // CustomElementData in this array, separated by nullptr that
   // represent the boundaries of the items in the stack. The first
   // queue in the stack is the base element queue.
-  static mozilla::Maybe<nsTArray<mozilla::dom::CustomElementData*>> sProcessingStack;
+  static mozilla::Maybe<nsTArray<nsRefPtr<mozilla::dom::CustomElementData>>> sProcessingStack;
 
   // Flag to prevent re-entrance into base element queue as described in the
   // custom elements speicification.
