@@ -31,7 +31,8 @@ bool PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
                                          Input referenceDNSID,
                                          bool referenceDNSIDWasVerifiedAsValid);
 
-bool IsValidDNSName(Input hostname);
+bool IsValidReferenceDNSID(Input hostname);
+bool IsValidPresentedDNSID(Input hostname);
 bool ParseIPv4Address(Input hostname, /*out*/ uint8_t (&out)[4]);
 bool ParseIPv6Address(Input hostname, /*out*/ uint8_t (&out)[16]);
 
@@ -273,172 +274,208 @@ static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
 struct InputValidity
 {
   ByteString input;
-  bool isValid;
+  bool isValidReferenceID;
+  bool isValidPresentedID;
 };
 
 // str is null-terminated, which is why we subtract 1. str may contain embedded
 // nulls (including at the end) preceding the null terminator though.
-#define I(str, valid) \
+#define I(str, validReferenceID, validPresentedID) \
   { \
-    ByteString(reinterpret_cast<const uint8_t*>(str), sizeof(str) - 1), valid \
+    ByteString(reinterpret_cast<const uint8_t*>(str), sizeof(str) - 1), \
+    validReferenceID, \
+    validPresentedID, \
   }
 
 static const InputValidity DNSNAMES_VALIDITY[] =
 {
-  I("a", true),
-  I("a.b", true),
-  I("a.b.c", true),
-  I("a.b.c.d", true),
+  I("a", true, true),
+  I("a.b", true, true),
+  I("a.b.c", true, true),
+  I("a.b.c.d", true, true),
 
   // empty labels
-  I("", false),
-  I(".", false),
-  I("a", true),
-  I(".a", false), // PresentedDNSIDMatchesReferenceDNSID depends on this
-  I(".a.b", false), // PresentedDNSIDMatchesReferenceDNSID depends on this
-  I("..a", false),
-  I("a..b", false),
-  I("a...b", false),
-  I("a..b.c", false),
-  I("a.b..c", false),
-  I(".a.b.c.", false),
+  I("", false, false),
+  I(".", false, false),
+  I("a", true, true),
+  I(".a", false, false), // PresentedDNSIDMatchesReferenceDNSID depends on this
+  I(".a.b", false, false), // PresentedDNSIDMatchesReferenceDNSID depends on this
+  I("..a", false, false),
+  I("a..b", false, false),
+  I("a...b", false, false),
+  I("a..b.c", false, false),
+  I("a.b..c", false, false),
+  I(".a.b.c.", false, false),
 
   // absolute names
-  I("a.", true),
-  I("a.b.", true),
-  I("a.b.c.", true),
+  I("a.", true, true),
+  I("a.b.", true, true),
+  I("a.b.c.", true, true),
 
   // absolute names with empty label at end
-  I("a..", false),
-  I("a.b..", false),
-  I("a.b.c..", false),
-  I("a...", false),
+  I("a..", false, false),
+  I("a.b..", false, false),
+  I("a.b.c..", false, false),
+  I("a...", false, false),
 
   // Punycode
-  I("xn--", false),
-  I("xn--.", false),
-  I("xn--.a", false),
-  I("a.xn--", false),
-  I("a.xn--.", false),
-  I("a.xn--.b", false),
-  I("a.xn--.b", false),
-  I("a.xn--\0.b", false),
-  I("a.xn--a.b", true),
-  I("xn--a", true),
-  I("a.xn--a", true),
-  I("a.xn--a.a", true),
-  I("\0xc4\0x95.com", false), // UTF-8 ĕ
-  I("xn--jea.com", true), // punycode ĕ
-  I("xn--\0xc4\0x95.com", false), // UTF-8 ĕ, malformed punycode + UTF-8 mashup
+  I("xn--", false, false),
+  I("xn--.", false, false),
+  I("xn--.a", false, false),
+  I("a.xn--", false, false),
+  I("a.xn--.", false, false),
+  I("a.xn--.b", false, false),
+  I("a.xn--.b", false, false),
+  I("a.xn--\0.b", false, false),
+  I("a.xn--a.b", true, true),
+  I("xn--a", true, true),
+  I("a.xn--a", true, true),
+  I("a.xn--a.a", true, true),
+  I("\0xc4\0x95.com", false, false), // UTF-8 ĕ
+  I("xn--jea.com", true, true), // punycode ĕ
+  I("xn--\0xc4\0x95.com", false, false), // UTF-8 ĕ, malformed punycode + UTF-8 mashup
 
   // Surprising punycode
-  I("xn--google.com", true), // 䕮䕵䕶䕱.com
-  I("xn--citibank.com", true), // 岍岊岊岅岉岎.com
-  I("xn--cnn.com", true), // 䁾.com
-  I("a.xn--cnn", true), // a.䁾
-  I("a.xn--cnn.com", true), // a.䁾.com
+  I("xn--google.com", true, true), // 䕮䕵䕶䕱.com
+  I("xn--citibank.com", true, true), // 岍岊岊岅岉岎.com
+  I("xn--cnn.com", true, true), // 䁾.com
+  I("a.xn--cnn", true, true), // a.䁾
+  I("a.xn--cnn.com", true, true), // a.䁾.com
 
-  I("1.2.3.4", false), // IPv4 address
-  I("1::2", false), // IPV6 address
+  I("1.2.3.4", false, false), // IPv4 address
+  I("1::2", false, false), // IPV6 address
 
   // whitespace not allowed anywhere.
-  I(" ", false),
-  I(" a", false),
-  I("a ", false),
-  I("a b", false),
-  I("a.b 1", false),
-  I("a\t", false),
+  I(" ", false, false),
+  I(" a", false, false),
+  I("a ", false, false),
+  I("a b", false, false),
+  I("a.b 1", false, false),
+  I("a\t", false, false),
 
   // Nulls not allowed
-  I("\0", false),
-  I("a\0", false),
-  I("example.org\0.example.com", false), // Hi Moxie!
-  I("\0a", false),
-  I("xn--\0", false),
+  I("\0", false, false),
+  I("a\0", false, false),
+  I("example.org\0.example.com", false, false), // Hi Moxie!
+  I("\0a", false, false),
+  I("xn--\0", false, false),
 
   // Allowed character set
-  I("a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z", true),
-  I("A.B.C.D.E.F.G.H.I.J.K.L.M.N.O.P.Q.R.S.T.U.V.W.X.Y.Z", true),
-  I("0.1.2.3.4.5.6.7.8.9.a", true), // "a" needed to avoid numeric last label
-  I("a-b", true), // hyphen (a label cannot start or end with a hyphen)
+  I("a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z", true, true),
+  I("A.B.C.D.E.F.G.H.I.J.K.L.M.N.O.P.Q.R.S.T.U.V.W.X.Y.Z", true, true),
+  I("0.1.2.3.4.5.6.7.8.9.a", true, true), // "a" needed to avoid numeric last label
+  I("a-b", true, true), // hyphen (a label cannot start or end with a hyphen)
 
   // An invalid character in various positions
-  I("!", false),
-  I("!a", false),
-  I("a!", false),
-  I("a!b", false),
-  I("a.!", false),
-  I("a.a!", false),
-  I("a.!a", false),
-  I("a.a!a", false),
-  I("a.!a.a", false),
-  I("a.a!.a", false),
-  I("a.a!a.a", false),
+  I("!", false, false),
+  I("!a", false, false),
+  I("a!", false, false),
+  I("a!b", false, false),
+  I("a.!", false, false),
+  I("a.a!", false, false),
+  I("a.!a", false, false),
+  I("a.a!a", false, false),
+  I("a.!a.a", false, false),
+  I("a.a!.a", false, false),
+  I("a.a!a.a", false, false),
 
   // Various other invalid characters
-  I("a!", false),
-  I("a@", false),
-  I("a#", false),
-  I("a$", false),
-  I("a%", false),
-  I("a^", false),
-  I("a&", false),
-  I("a*", false),
-  I("a(", false),
-  I("a)", false),
+  I("a!", false, false),
+  I("a@", false, false),
+  I("a#", false, false),
+  I("a$", false, false),
+  I("a%", false, false),
+  I("a^", false, false),
+  I("a&", false, false),
+  I("a*", false, false),
+  I("a(", false, false),
+  I("a)", false, false),
 
   // last label can't be fully numeric
-  I("1", false),
-  I("a.1", false),
+  I("1", false, false),
+  I("a.1", false, false),
 
   // other labels can be fully numeric
-  I("1.a", true),
-  I("1.2.a", true),
-  I("1.2.3.a", true),
+  I("1.a", true, true),
+  I("1.2.a", true, true),
+  I("1.2.3.a", true, true),
 
   // last label can be *partly* numeric
-  I("1a", true),
-  I("1.1a", true),
-  I("1-1", true),
-  I("a.1-1", true),
-  I("a.1-a", true),
+  I("1a", true, true),
+  I("1.1a", true, true),
+  I("1-1", true, true),
+  I("a.1-1", true, true),
+  I("a.1-a", true, true),
 
   // labels cannot start with a hyphen
-  I("-", false),
-  I("-1", false),
+  I("-", false, false),
+  I("-1", false, false),
 
   // labels cannot end with a hyphen
-  I("1-", false),
-  I("1-.a", false),
-  I("a-", false),
-  I("a-.a", false),
-  I("a.1-.a", false),
-  I("a.a-.a", false),
+  I("1-", false, false),
+  I("1-.a", false, false),
+  I("a-", false, false),
+  I("a-.a", false, false),
+  I("a.1-.a", false, false),
+  I("a.a-.a", false, false),
 
   // labels can contain a hyphen in the middle
-  I("a-b", true),
-  I("1-2", true),
-  I("a.a-1", true),
+  I("a-b", true, true),
+  I("1-2", true, true),
+  I("a.a-1", true, true),
 
   // multiple consecutive hyphens allowed
-  I("a--1", true),
-  I("1---a", true),
-  I("a-----------------b", true),
+  I("a--1", true, true),
+  I("1---a", true, true),
+  I("a-----------------b", true, true),
 
-  // Wildcard specifications are not valid DNS names
-  I("*.a", false),
-  I("a*", false),
-  I("a*.a", false),
+  // Wildcard specifications are not valid reference names, but are valid
+  // presented names if there are enough labels
+  I("*.a", false, false),
+  I("a*", false, false),
+  I("a*.", false, false),
+  I("a*.a", false, false),
+  I("a*.a.", false, false),
+  I("*.a.b", false, true),
+  I("*.a.b.", false, true),
+  I("a*.b.c", false, true),
+  I("*.a.b.c", false, true),
+  I("a*.b.c.d", false, true),
+
+  // Multiple wildcards are not allowed.
+  I("a**.b.c", false, false),
+  I("a*b*.c.d", false, false),
+  I("a*.b*.c", false, false),
+
+  // Wildcards are only allowed in the first label.
+  I("a.*", false, false),
+  I("a.*.b", false, false),
+  I("a.b.*", false, false),
+  I("a.b*.c", false, false),
+  I("*.b*.c", false, false),
+  I(".*.a.b", false, false),
+  I(".a*.b.c", false, false),
+
+  // Wildcards must be at the *end* of the first label.
+  I("*a.b.c", false, false),
+  I("a*b.c.d", false, false),
+
+  // Wildcards not allowed with IDNA prefix
+  I("x*.a.b", false, true),
+  I("xn*.a.b", false, true),
+  I("xn-*.a.b", false, true),
+  I("xn--*.a.b", false, false),
+  I("xn--w*.a.b", false, false),
 
   // Redacted labels from RFC6962bis draft 4
   // https://tools.ietf.org/html/draft-ietf-trans-rfc6962-bis-04#section-3.2.2
-  I("(PRIVATE).foo", false),
+  I("(PRIVATE).foo", false, false),
 
   // maximum label length is 63 characters
   I("1234567890" "1234567890" "1234567890"
-    "1234567890" "1234567890" "1234567890" "abc", true),
+    "1234567890" "1234567890" "1234567890" "abc", true, true),
   I("1234567890" "1234567890" "1234567890"
-    "1234567890" "1234567890" "1234567890" "abcd", false),
+    "1234567890" "1234567890" "1234567890" "abcd", false, false),
 
   // maximum total length is 253 characters
   I("1234567890" "1234567890" "1234567890" "1234567890" "1234567890" "."
@@ -446,13 +483,13 @@ static const InputValidity DNSNAMES_VALIDITY[] =
     "1234567890" "1234567890" "1234567890" "1234567890" "1234567890" "."
     "1234567890" "1234567890" "1234567890" "1234567890" "1234567890" "."
     "1234567890" "1234567890" "1234567890" "1234567890" "12345678" "a",
-    true),
+    true, true),
   I("1234567890" "1234567890" "1234567890" "1234567890" "1234567890" "."
     "1234567890" "1234567890" "1234567890" "1234567890" "1234567890" "."
     "1234567890" "1234567890" "1234567890" "1234567890" "1234567890" "."
     "1234567890" "1234567890" "1234567890" "1234567890" "1234567890" "."
     "1234567890" "1234567890" "1234567890" "1234567890" "123456789" "a",
-    false),
+    false, false),
 };
 
 static const InputValidity DNSNAMES_VALIDITY_TURKISH_I[] =
@@ -460,14 +497,14 @@ static const InputValidity DNSNAMES_VALIDITY_TURKISH_I[] =
   // http://en.wikipedia.org/wiki/Dotted_and_dotless_I#In_computing
   // IDN registration rules disallow "latin capital letter i with dot above,"
   // but our checks aren't intended to enforce those rules.
-  I("I", true), // ASCII capital I
-  I("i", true), // ASCII lowercase i
-  I("\0xC4\0xB0", false), // latin capital letter i with dot above
-  I("\0xC4\0xB1", false), // latin small letter dotless i
-  I("xn--i-9bb", true), // latin capital letter i with dot above, in punycode
-  I("xn--cfa", true), // latin small letter dotless i, in punycode
-  I("xn--\0xC4\0xB0", false), // latin capital letter i with dot above, mashup
-  I("xn--\0xC4\0xB1", false), // latin small letter dotless i, mashup
+  I("I", true, true), // ASCII capital I
+  I("i", true, true), // ASCII lowercase i
+  I("\0xC4\0xB0", false, false), // latin capital letter i with dot above
+  I("\0xC4\0xB1", false, false), // latin small letter dotless i
+  I("xn--i-9bb", true, true), // latin capital letter i with dot above, in punycode
+  I("xn--cfa", true, true), // latin small letter dotless i, in punycode
+  I("xn--\0xC4\0xB0", false, false), // latin capital letter i with dot above, mashup
+  I("xn--\0xC4\0xB1", false, false), // latin small letter dotless i, mashup
 };
 
 static const uint8_t LOWERCASE_I_VALUE[1] = { 'i' };
@@ -827,11 +864,11 @@ TEST_P(pkixnames_PresentedDNSIDMatchesReferenceDNSID,
   Input reference;
   ASSERT_EQ(Success, reference.Init(param.referenceDNSID.data(),
                                     param.referenceDNSID.length()));
-  bool referenceIsValidDNSName = IsValidDNSName(reference);
-  ASSERT_TRUE(referenceIsValidDNSName); // sanity check that test makes sense
+  bool referenceIsValidReferenceDNSID = IsValidReferenceDNSID(reference);
+  ASSERT_TRUE(referenceIsValidReferenceDNSID); // sanity check that test makes sense
   ASSERT_EQ(param.matches,
             PresentedDNSIDMatchesReferenceDNSID(presented, reference,
-                                                referenceIsValidDNSName));
+                                                referenceIsValidReferenceDNSID));
 }
 
 INSTANTIATE_TEST_CASE_P(pkixnames_PresentedDNSIDMatchesReferenceDNSID,
@@ -866,27 +903,28 @@ INSTANTIATE_TEST_CASE_P(pkixnames_Turkish_I_Comparison,
                         pkixnames_Turkish_I_Comparison,
                         testing::ValuesIn(DNSNAMES_VALIDITY_TURKISH_I));
 
-class pkixnames_IsValidDNSName
+class pkixnames_IsValidReferenceDNSID
   : public ::testing::Test
   , public ::testing::WithParamInterface<InputValidity>
 {
 };
 
-TEST_P(pkixnames_IsValidDNSName, IsValidDNSName)
+TEST_P(pkixnames_IsValidReferenceDNSID, IsValidReferenceDNSID)
 {
   const InputValidity& inputValidity(GetParam());
   SCOPED_TRACE(inputValidity.input.c_str());
   Input input;
   ASSERT_EQ(Success, input.Init(inputValidity.input.data(),
                                 inputValidity.input.length()));
-  ASSERT_EQ(inputValidity.isValid, IsValidDNSName(input));
+  ASSERT_EQ(inputValidity.isValidReferenceID, IsValidReferenceDNSID(input));
+  ASSERT_EQ(inputValidity.isValidPresentedID, IsValidPresentedDNSID(input));
 }
 
-INSTANTIATE_TEST_CASE_P(pkixnames_IsValidDNSName,
-                        pkixnames_IsValidDNSName,
+INSTANTIATE_TEST_CASE_P(pkixnames_IsValidReferenceDNSID,
+                        pkixnames_IsValidReferenceDNSID,
                         testing::ValuesIn(DNSNAMES_VALIDITY));
-INSTANTIATE_TEST_CASE_P(pkixnames_IsValidDNSName_Turkish_I,
-                        pkixnames_IsValidDNSName,
+INSTANTIATE_TEST_CASE_P(pkixnames_IsValidReferenceDNSID_Turkish_I,
+                        pkixnames_IsValidReferenceDNSID,
                         testing::ValuesIn(DNSNAMES_VALIDITY_TURKISH_I));
 
 class pkixnames_ParseIPv4Address
@@ -1457,7 +1495,7 @@ TEST_P(pkixnames_CheckCertHostname_IPV4_Addresses,
                                         param.input.length()));
 
   // Some of the invalid IPv4 addresses are valid DNS names!
-  Result expectedResult = (param.isValid || IsValidDNSName(hostnameInput))
+  Result expectedResult = (param.isValid || IsValidReferenceDNSID(hostnameInput))
                         ? Success
                         : Result::ERROR_BAD_CERT_DOMAIN;
 
