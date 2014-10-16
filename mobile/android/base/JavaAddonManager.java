@@ -39,7 +39,7 @@ import java.util.Map;
  * addon code can be compiled against the android.jar provided in the Android
  * SDK, rather than having to be compiled against Fennec source code.
  *
- * The Handler.Callback instances provided (as described above) are inovked with
+ * The Handler.Callback instances provided (as described above) are invoked with
  * Message objects when the corresponding events are dispatched. The Bundle
  * object attached to the Message will contain the "primitive" values from the
  * JSON of the event. ("primitive" includes bool/int/long/double/String). If

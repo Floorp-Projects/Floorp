@@ -54,7 +54,7 @@ public final class WebActivityMapper {
         }
 
         /**
-         * If 'uri' or 'url' is present in data object, uses the respecitve value as the Uri.
+         * If 'uri' or 'url' is present in data object, uses the respective value as the Uri.
          */
         @Override
         public String getUri(JSONObject data) throws JSONException {

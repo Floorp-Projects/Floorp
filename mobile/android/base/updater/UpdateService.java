@@ -222,7 +222,8 @@ public class UpdateService extends IntentService {
          *
          * - We have a FORCE_DOWNLOAD flag passed in
          * - The preference is set to 'always'
-         * - The preference is set to 'wifi' and we are using a non-metered network (i.e. the user is OK with large data transfers occuring)
+         * - The preference is set to 'wifi' and we are using a non-metered network (i.e. the user
+         *   is OK with large data transfers occurring)
          */
         boolean shouldStartDownload = hasFlag(flags, UpdateServiceHelper.FLAG_FORCE_DOWNLOAD) ||
             autoDownloadPolicy == UpdateServiceHelper.AUTODOWNLOAD_ENABLED ||

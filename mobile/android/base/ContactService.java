@@ -120,7 +120,7 @@ public class ContactService implements GeckoEventListener {
     @Override
     public void handleMessage(final String event, final JSONObject message) {
         // If the account chooser dialog needs shown to the user, the message handling becomes
-        // asychronous so it needs posted to a background thread from the UI thread when the
+        // asynchronous so it needs posted to a background thread from the UI thread when the
         // account chooser dialog is dismissed by the user.
         Runnable handleMessage = new Runnable() {
             @Override
@@ -1024,7 +1024,7 @@ public class ContactService implements GeckoEventListener {
         // row from the contacts data table that belongs to the contact, and insert the new
         // fields. But then why not just delete all the data from the data in one go and
         // insert the new data in another? Because if all the data relating to a contact is
-        // deleted, Android will "conviently" remove the ID making it impossible to insert data
+        // deleted, Android will "conveniently" remove the ID making it impossible to insert data
         // under the old ID. To work around this, we put a Mozilla contact flag in the database
 
         ContentProviderOperation removeOptions = ContentProviderOperation.newDelete(Data.CONTENT_URI)
@@ -1968,9 +1968,9 @@ public class ContactService implements GeckoEventListener {
         mEmailTypesMap.put("work", Email.TYPE_WORK);
     }
 
-    private int getWebsiteType(String webisteType) {
+    private int getWebsiteType(String websiteType) {
         initWebsiteTypesMap();
-        Integer type = mWebsiteTypesMap.get(webisteType.toLowerCase());
+        Integer type = mWebsiteTypesMap.get(websiteType.toLowerCase());
         return type != null ? type : Website.TYPE_CUSTOM;
     }
 

@@ -114,7 +114,7 @@ public class TabsLayoutItemView extends LinearLayout
         mThumbnail.setImageDrawable(thumbnail);
     }
 
-    public void setCloseVisibile(boolean visible) {
+    public void setCloseVisible(boolean visible) {
         mCloseButton.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
     }
 }
