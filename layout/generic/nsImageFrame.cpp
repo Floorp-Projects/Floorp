@@ -7,8 +7,11 @@
 
 #include "nsImageFrame.h"
 
+#include "gfx2DGlue.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Helpers.h"
 #include "mozilla/MouseEvents.h"
 
 #include "nsCOMPtr.h"
@@ -70,6 +73,7 @@
 #include "mozilla/dom/Link.h"
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 // sizes (pixels) for image icon, padding and border frame
 #define ICON_SIZE        (16)
@@ -1292,19 +1296,19 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
 
 #ifdef DEBUG
 static void PaintDebugImageMap(nsIFrame* aFrame, nsRenderingContext* aCtx,
-     const nsRect& aDirtyRect, nsPoint aPt) {
+                               const nsRect& aDirtyRect, nsPoint aPt)
+{
   nsImageFrame* f = static_cast<nsImageFrame*>(aFrame);
   nsRect inner = f->GetInnerArea() + aPt;
-
-  aCtx->SetColor(NS_RGB(0, 0, 0));
-  aCtx->ThebesContext()->Save();
   gfxPoint devPixelOffset =
     nsLayoutUtils::PointToGfxPoint(inner.TopLeft(),
                                    aFrame->PresContext()->AppUnitsPerDevPixel());
-  aCtx->ThebesContext()->SetMatrix(
-    aCtx->ThebesContext()->CurrentMatrix().Translate(devPixelOffset));
-  f->GetImageMap()->Draw(aFrame, *aCtx);
-  aCtx->ThebesContext()->Restore();
+  DrawTarget* drawTarget = aCtx->GetDrawTarget();
+  AutoRestoreTransform autoRestoreTransform(drawTarget);
+  drawTarget->SetTransform(
+    drawTarget->GetTransform().PreTranslate(ToPoint(devPixelOffset)));
+  f->GetImageMap()->Draw(aFrame, *drawTarget,
+                         ColorPattern(Color(0.f, 0.f, 0.f, 1.f)));
 }
 #endif
 
@@ -1458,6 +1462,8 @@ nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
                          const nsRect& aDirtyRect, imgIContainer* aImage,
                          uint32_t aFlags)
 {
+  DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+
   // Render the image into our content area (the area inside
   // the borders and padding)
   NS_ASSERTION(GetInnerArea().width == mComputedSize.width, "bad width");
@@ -1470,20 +1476,22 @@ nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
     nullptr, aFlags);
 
   nsImageMap* map = GetImageMap();
-  if (nullptr != map) {
-    aRenderingContext.ThebesContext()->Save();
+  if (map) {
     gfxPoint devPixelOffset =
       nsLayoutUtils::PointToGfxPoint(inner.TopLeft(),
                                      PresContext()->AppUnitsPerDevPixel());
-    aRenderingContext.ThebesContext()->SetMatrix(
-      aRenderingContext.ThebesContext()->CurrentMatrix().Translate(devPixelOffset));
-    aRenderingContext.SetColor(NS_RGB(255, 255, 255));
-    aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
-    map->Draw(this, aRenderingContext);
-    aRenderingContext.SetColor(NS_RGB(0, 0, 0));
-    aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
-    map->Draw(this, aRenderingContext);
-    aRenderingContext.ThebesContext()->Restore();
+    AutoRestoreTransform autoRestoreTransform(drawTarget);
+    drawTarget->SetTransform(
+      drawTarget->GetTransform().PreTranslate(ToPoint(devPixelOffset)));
+
+    // solid white stroke:
+    map->Draw(this, *drawTarget, ColorPattern(Color(1.f, 1.f, 1.f, 1.f)));
+
+    // then dashed black stroke over the top:
+    StrokeOptions strokeOptions;
+    nsLayoutUtils::InitDashPattern(strokeOptions, NS_STYLE_BORDER_STYLE_DOTTED);
+    map->Draw(this, *drawTarget, ColorPattern(Color(0.f, 0.f, 0.f, 1.f)),
+              strokeOptions);
   }
 }
 
@@ -1931,7 +1939,6 @@ nsImageFrame::LoadIcon(const nsAString& aSpec,
                        nullptr,      /* Not associated with any particular document */
                        loadFlags,
                        nullptr,
-                       nullptr,      /* channel policy not needed */
                        EmptyString(),
                        aRequest);
 }

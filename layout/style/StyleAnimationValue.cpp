@@ -1556,7 +1556,7 @@ StyleAnimationValue::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
 
   Point3D translate =
     InterpolateNumerically(translate1, translate2, aProgress);
-  result.Translate(translate.x, translate.y, translate.z);
+  result.PreTranslate(translate.x, translate.y, translate.z);
 
   gfxQuaternion q3 = rotate1.Slerp(rotate2, aProgress);
   Matrix4x4 rotate = q3.ToMatrix();
@@ -1586,7 +1586,7 @@ StyleAnimationValue::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
   Point3D scale =
     InterpolateNumerically(scale1, scale2, aProgress);
   if (scale != Point3D(1.0, 1.0, 1.0)) {
-    result.Scale(scale.x, scale.y, scale.z);
+    result.PreScale(scale.x, scale.y, scale.z);
   }
 
   return To3DMatrix(result);

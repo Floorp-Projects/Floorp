@@ -383,7 +383,7 @@ static void DrawDigits(unsigned int aValue,
   float textureWidth = FontWidth * 10;
   gfx::Float opacity = 1;
   gfx::Matrix4x4 transform;
-  transform.Scale(FontScaleX, FontScaleY, 1);
+  transform.PreScale(FontScaleX, FontScaleY, 1);
 
   for (size_t n = 0; n < 3; ++n) {
     unsigned int digit = aValue % (divisor * 10) / divisor;

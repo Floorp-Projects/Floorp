@@ -1644,12 +1644,9 @@ class FrameIter
     bool isGeneratorFrame() const;
     bool hasArgs() const { return isNonEvalFunctionFrame(); }
 
-    /*
-     * Get an abstract frame pointer dispatching to either an interpreter,
-     * baseline, or rematerialized optimized frame.
-     */
     ScriptSource *scriptSource() const;
     const char *scriptFilename() const;
+    const char16_t *scriptDisplayURL() const;
     unsigned computeLine(uint32_t *column = nullptr) const;
     JSAtom *functionDisplayAtom() const;
     bool mutedErrors() const;
