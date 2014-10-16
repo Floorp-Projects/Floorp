@@ -25,13 +25,6 @@ class nsIntRegion;
 struct nsPoint;
 struct nsRect;
 
-typedef enum {
-    nsLineStyle_kNone   = 0,
-    nsLineStyle_kSolid  = 1,
-    nsLineStyle_kDashed = 2,
-    nsLineStyle_kDotted = 3
-} nsLineStyle;
-
 class nsRenderingContext MOZ_FINAL
 {
     typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -53,7 +46,6 @@ public:
 
     void IntersectClip(const nsRect& aRect);
     void SetClip(const nsIntRegion& aRegion);
-    void SetLineStyle(nsLineStyle aLineStyle);
     void SetColor(nscolor aColor);
 
     // Shapes
