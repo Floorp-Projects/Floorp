@@ -44,12 +44,12 @@ protected:
     * Inherited from LibHandle. Those are temporary and are not supposed to
     * be used.
     */
-   virtual void *GetSymbolPtr(const char *symbol) const { return NULL; };
-   virtual bool Contains(void *addr) const { return false; };
+   virtual void *GetSymbolPtr(const char *symbol) const;
+   virtual bool Contains(void *addr) const;
    virtual void *GetBase() const { return GetPtr(0); }
 
 #ifdef __ARM_EABI__
-  virtual const void *FindExidx(int *pcount) const { return NULL; };
+  virtual const void *FindExidx(int *pcount) const;
 #endif
 
   virtual Mappable *GetMappable() const { return NULL; };
@@ -96,6 +96,11 @@ public:
 
   /* Symbol table */
   UnsizedArray<Elf::Sym> symtab;
+
+#ifdef __ARM_EABI__
+  /* ARM.exidx information used by FindExidx */
+  Array<uint32_t[2]> arm_exidx;
+#endif
 };
 
 #endif /* BaseElf_h */

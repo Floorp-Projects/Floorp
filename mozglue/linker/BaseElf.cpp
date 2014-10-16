@@ -23,6 +23,12 @@ BaseElf::Hash(const char *symbol)
 }
 
 void *
+BaseElf::GetSymbolPtr(const char *symbol) const
+{
+  return GetSymbolPtr(symbol, Hash(symbol));
+}
+
+void *
 BaseElf::GetSymbolPtr(const char *symbol, unsigned long hash) const
 {
   const Sym *sym = GetSymbol(symbol, hash);
@@ -53,3 +59,22 @@ BaseElf::GetSymbol(const char *symbol, unsigned long hash) const
   }
   return nullptr;
 }
+
+bool
+BaseElf::Contains(void *addr) const
+{
+  return base.Contains(addr);
+}
+
+#ifdef __ARM_EABI__
+const void *
+BaseElf::FindExidx(int *pcount) const
+{
+  if (arm_exidx) {
+    *pcount = arm_exidx.numElements();
+    return arm_exidx;
+  }
+  *pcount = 0;
+  return nullptr;
+}
+#endif

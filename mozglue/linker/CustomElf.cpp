@@ -279,12 +279,6 @@ CustomElf::~CustomElf()
 }
 
 void *
-CustomElf::GetSymbolPtr(const char *symbol) const
-{
-  return BaseElf::GetSymbolPtr(symbol, Hash(symbol));
-}
-
-void *
 CustomElf::GetSymbolPtrInDeps(const char *symbol) const
 {
   /* Resolve dlopen and related functions to point to ours */
@@ -358,25 +352,6 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
   }
   return nullptr;
 }
-
-bool
-CustomElf::Contains(void *addr) const
-{
-  return base.Contains(addr);
-}
-
-#ifdef __ARM_EABI__
-const void *
-CustomElf::FindExidx(int *pcount) const
-{
-  if (arm_exidx) {
-    *pcount = arm_exidx.numElements();
-    return arm_exidx;
-  }
-  *pcount = 0;
-  return nullptr;
-}
-#endif
 
 void
 CustomElf::stats(const char *when) const
