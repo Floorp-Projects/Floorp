@@ -88,8 +88,9 @@ function setupTestData() {
   Telemetry.newHistogram(IGNORE_HISTOGRAM, "never", Telemetry.HISTOGRAM_BOOLEAN);
   Telemetry.histogramFrom(IGNORE_CLONED_HISTOGRAM, IGNORE_HISTOGRAM_TO_CLONE);
   Services.startup.interrupted = true;
-  Telemetry.registerAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM, 1, 5, 6,
-                                   Telemetry.HISTOGRAM_LINEAR);
+  Telemetry.registerAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM,
+                                   Telemetry.HISTOGRAM_LINEAR,
+                                   1, 5, 6);
   let h1 = Telemetry.getAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM);
   h1.add(1);
   let h2 = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT");

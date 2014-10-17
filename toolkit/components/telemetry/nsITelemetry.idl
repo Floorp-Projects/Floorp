@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(080b55ca-2469-4a61-a230-fc9dac02c2c1)]
+[scriptable, uuid(3869a5cd-f886-40e6-b298-e4b3efc79d3b)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -243,16 +243,18 @@ interface nsITelemetry : nsISupports
    *
    * @param addon_id - Unique ID of the addon
    * @param name - Unique histogram name
+   * @param histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR,
+   *        HISTOGRAM_BOOLEAN or HISTOGRAM_COUNT
    * @param min - Minimal bucket size
    * @param max - Maximum bucket size
    * @param bucket_count - number of buckets in the histogram
-   * @param histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR,
-   *        HISTOGRAM_BOOLEAN or HISTOGRAM_COUNT
    */
+  [optional_argc]
   void registerAddonHistogram(in ACString addon_id, in ACString name,
-                              in uint32_t min, in uint32_t max,
-                              in uint32_t bucket_count,
-                              in unsigned long histogram_type);
+                              in unsigned long histogram_type,
+                              [optional] in uint32_t min,
+                              [optional] in uint32_t max,
+                              [optional] in uint32_t bucket_count);
 
   /**
    * Return a histogram previously registered via
