@@ -22,7 +22,7 @@ using namespace mozilla::gfx;
 gfxPattern::gfxPattern(const gfxRGBA& aColor)
   : mExtend(EXTEND_NONE)
 {
-  mGfxPattern.InitColorPattern(Color(aColor.r, aColor.g, aColor.b, aColor.a));
+  mGfxPattern.InitColorPattern(ToDeviceColor(aColor));
 }
 
 // linear

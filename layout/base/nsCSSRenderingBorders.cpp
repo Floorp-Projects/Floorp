@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsCSSRenderingBorders.h"
+
+#include "gfxUtils.h"
 #include "nsStyleConsts.h"
 #include "nsCSSColorUtils.h"
 #include "GeckoProfiler.h"
@@ -12,7 +15,6 @@
 #include "nsClassHashtable.h"
 #include "nsStyleStruct.h"
 #include "gfxContext.h"
-#include "nsCSSRenderingBorders.h"
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
 #include "gfxGradientCache.h"
@@ -1250,7 +1252,7 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
     builder->MoveTo(strokeStart);
     builder->LineTo(strokeEnd);
     RefPtr<Path> path = builder->Finish();
-    dt->Stroke(path, ColorPattern(Color::FromABGR(mBorderColors[i])), StrokeOptions(mBorderWidths[i]));
+    dt->Stroke(path, ColorPattern(ToDeviceColor(mBorderColors[i])), StrokeOptions(mBorderWidths[i]));
     builder = nullptr;
     path = nullptr;
 
@@ -1260,7 +1262,7 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
       gradPat.mStops = CreateCornerGradient(c, firstColor, secondColor, dt, gradPat.mBegin, gradPat.mEnd);
       pattern = &gradPat;
     } else {
-      colorPat.mColor = Color::FromABGR(firstColor);
+      colorPat.mColor = ToDeviceColor(firstColor);
       pattern = &colorPat;
     }
 
