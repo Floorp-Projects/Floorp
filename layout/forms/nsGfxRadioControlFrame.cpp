@@ -6,6 +6,7 @@
 #include "nsGfxRadioControlFrame.h"
 
 #include "gfx2DGlue.h"
+#include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "nsLayoutUtils.h"
@@ -59,7 +60,7 @@ PaintCheckedRadioButton(nsIFrame* aFrame,
     ToRect(nsLayoutUtils::RectToGfxRect(rect,
                                         aFrame->PresContext()->AppUnitsPerDevPixel()));
 
-  ColorPattern color(nsLayoutUtils::NSColorToColor(aFrame->StyleColor()->mColor));
+  ColorPattern color(ToDeviceColor(aFrame->StyleColor()->mColor));
 
   DrawTarget* drawTarget = aCtx->GetDrawTarget();
   RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
