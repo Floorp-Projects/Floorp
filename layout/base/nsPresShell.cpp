@@ -5114,16 +5114,21 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   }
 
   nsRefPtr<gfxContext> ctx = new gfxContext(dt);
-  nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
-  rc->Init(deviceContext, ctx);
 
   if (aRegion) {
     // Convert aRegion from CSS pixels to dev pixels
     nsIntRegion region =
       aRegion->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel())
         .ToOutsidePixels(pc->AppUnitsPerDevPixel());
-    rc->SetClip(region);
+    nsIntRegionRectIterator iter(region);
+    const nsIntRect* rect;
+    while ((rect = iter.Next())) {
+      ctx->Clip(gfxRect(rect->x, rect->y, rect->width, rect->height));
+    }
   }
+
+  nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
+  rc->Init(deviceContext, ctx);
 
   gfxMatrix initialTM = ctx->CurrentMatrix();
 
