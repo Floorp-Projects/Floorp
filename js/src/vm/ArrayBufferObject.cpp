@@ -139,6 +139,9 @@ const JSFunctionSpec ArrayBufferObject::jsfuncs[] = {
 
 const JSFunctionSpec ArrayBufferObject::jsstaticfuncs[] = {
     JS_FN("isView", ArrayBufferObject::fun_isView, 1, 0),
+#ifdef NIGHTLY_BUILD
+    JS_FN("transfer", ArrayBufferObject::fun_transfer, 2, 0),
+#endif
     JS_FS_END
 };
 
@@ -238,6 +241,104 @@ ArrayBufferObject::fun_isView(JSContext *cx, unsigned argc, Value *vp)
                            JS_IsArrayBufferViewObject(&args.get(0).toObject()));
     return true;
 }
+
+#ifdef NIGHTLY_BUILD
+/*
+ * Experimental implementation of ArrayBuffer.transfer:
+ *   https://gist.github.com/andhow/95fb9e49996615764eff
+ * which is currently in the early stages of proposal for ES7.
+ */
+bool
+ArrayBufferObject::fun_transfer(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    HandleValue oldBufferArg = args.get(0);
+    HandleValue newByteLengthArg = args.get(1);
+
+    if (!oldBufferArg.isObject()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+        return false;
+    }
+
+    RootedObject oldBufferObj(cx, &oldBufferArg.toObject());
+    if (!ObjectClassIs(oldBufferObj, ESClass_ArrayBuffer, cx)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+        return false;
+    }
+
+    // Beware: oldBuffer can point across compartment boundaries. ArrayBuffer
+    // contents are not compartment-specific so this is safe.
+    Rooted<ArrayBufferObject*> oldBuffer(cx);
+    if (oldBufferObj->is<ArrayBufferObject>()) {
+        oldBuffer = &oldBufferObj->as<ArrayBufferObject>();
+    } else {
+        JSObject *unwrapped = CheckedUnwrap(oldBuffer);
+        if (!unwrapped->is<ArrayBufferObject>()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+            return false;
+        }
+        oldBuffer = &unwrapped->as<ArrayBufferObject>();
+    }
+
+    if (oldBuffer->isNeutered()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        return false;
+    }
+
+    size_t oldByteLength = oldBuffer->byteLength();
+    size_t newByteLength;
+    if (newByteLengthArg.isUndefined()) {
+        newByteLength = oldByteLength;
+    } else {
+        int32_t i32;
+        if (!ToInt32(cx, newByteLengthArg, &i32))
+            return false;
+        if (i32 < 0) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
+            return false;
+        }
+        newByteLength = size_t(i32);
+    }
+
+    uint8_t *newData;
+    if (!newByteLength) {
+        if (!ArrayBufferObject::neuter(cx, oldBuffer, oldBuffer->contents()))
+            return false;
+        newData = nullptr;
+    } else {
+        // Since we try to realloc below, only allow stealing malloc'd buffers.
+        // If !hasMallocedContents, stealContents will malloc a copy which we
+        // can then realloc.
+        ArrayBufferObject::BufferContents stolen =
+            ArrayBufferObject::stealContents(cx, oldBuffer, oldBuffer->hasMallocedContents());
+        if (!stolen)
+            return false;
+
+        if (newByteLength != oldByteLength) {
+            newData = cx->runtime()->pod_reallocCanGC<uint8_t>(stolen.data(), oldByteLength, newByteLength);
+            if (!newData) {
+                js_free(stolen.data());
+                js_ReportOutOfMemory(cx);
+                return false;
+            }
+
+            if (newByteLength > oldByteLength)
+                memset(newData + oldByteLength, 0, newByteLength - oldByteLength);
+        } else {
+            newData = stolen.data();
+        }
+    }
+
+    RootedObject newBuffer(cx, JS_NewArrayBufferWithContents(cx, newByteLength, newData));
+    if (!newBuffer) {
+        js_free(newData);
+        return false;
+    }
+
+    args.rval().setObject(*newBuffer);
+    return true;
+}
+#endif
 
 /*
  * new ArrayBuffer(byteLength)
@@ -1062,7 +1163,7 @@ JS_NewArrayBuffer(JSContext *cx, uint32_t nbytes)
 JS_PUBLIC_API(JSObject *)
 JS_NewArrayBufferWithContents(JSContext *cx, size_t nbytes, void *data)
 {
-    MOZ_ASSERT(data);
+    MOZ_ASSERT_IF(!data, nbytes == 0);
     ArrayBufferObject::BufferContents contents =
         ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(data);
     return ArrayBufferObject::create(cx, nbytes, contents, TenuredObject);
