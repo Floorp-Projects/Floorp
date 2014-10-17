@@ -297,4 +297,47 @@ function run_test() {
     expected: "foo",
     operator: "="
   }).message, "[object Object] = \"foo\"");
+
+  run_next_test();
 }
+
+add_task(function* test_rejects() {
+  let ns = {};
+  Components.utils.import("resource://testing-common/Assert.jsm", ns);
+  let assert = new ns.Assert();
+
+  // A helper function to test failures.
+  function* checkRejectsFails(err, expected) {
+    try {
+      yield assert.rejects(Promise.reject(err), expected);
+      ok(false, "should have thrown");
+    } catch(ex) {
+      deepEqual(ex, err, "Assert.rejects threw the original unexpected error");
+    }
+  }
+
+  // A "throwable" error that's not an actual Error().
+  let SomeErrorLikeThing = function() {};
+
+  // The actual tests...
+  // No "expected" or "message" values supplied.
+  yield assert.rejects(Promise.reject(new Error("oh no")));
+  yield assert.rejects(Promise.reject("oh no"));
+
+  // An explicit error object:
+  // An instance to check against.
+  yield assert.rejects(Promise.reject(new Error("oh no")), Error, "rejected");
+  // A regex to match against the message.
+  yield assert.rejects(Promise.reject(new Error("oh no")), /oh no/, "rejected");
+
+  // Failure cases:
+  // An instance to check against that doesn't match.
+  yield checkRejectsFails(new Error("something else"), SomeErrorLikeThing);
+  // A regex that doesn't match.
+  yield checkRejectsFails(new Error("something else"), /oh no/);
+
+  // Check simple string messages.
+  yield assert.rejects(Promise.reject("oh no"), /oh no/, "rejected");
+  // Wrong message.
+  yield checkRejectsFails("something else", /oh no/);
+});
