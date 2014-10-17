@@ -66,6 +66,7 @@
 #include "CacheObserver.h"
 #include "mozilla/Telemetry.h"
 #include "AlternateServices.h"
+#include "InterceptedChannel.h"
 
 namespace mozilla { namespace net {
 
@@ -199,43 +200,6 @@ AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded)
 
     MOZ_EVENT_TRACER_DONE(channel, "net::http::redirect-callbacks");
 }
-
-// An object representing a channel that has been intercepted. This avoids complicating
-// the actual channel implementation with the details of synthesizing responses.
-class InterceptedChannel : public nsIInterceptedChannel
-{
-    // The actual channel being intercepted
-    nsRefPtr<nsHttpChannel> mChannel;
-
-    // The interception controller to notify about the successful channel interception
-    nsCOMPtr<nsINetworkInterceptController> mController;
-
-    // Writeable cache entry for use when synthesizing a response
-    nsCOMPtr<nsICacheEntry>           mSynthesizedCacheEntry;
-
-    // Response head for use when synthesizing
-    Maybe<nsHttpResponseHead>         mSynthesizedResponseHead;
-
-    void EnsureSynthesizedResponse();
-
-    virtual ~InterceptedChannel() {}
-public:
-    InterceptedChannel(nsHttpChannel* aChannel,
-                       nsINetworkInterceptController* aController,
-                       nsICacheEntry* aEntry)
-    : mChannel(aChannel)
-    , mController(aController)
-    , mSynthesizedCacheEntry(aEntry)
-    {
-    }
-
-    // Notify the interception controller that the channel has been intercepted
-    // and prepare the response body output stream.
-    void NotifyController();
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIINTERCEPTEDCHANNEL
-};
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel <public>
@@ -2829,7 +2793,8 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
         nsCOMPtr<nsINetworkInterceptController> controller;
         GetCallback(controller);
 
-        nsRefPtr<InterceptedChannel> intercepted = new InterceptedChannel(this, controller, entry);
+        nsRefPtr<InterceptedChannelChrome> intercepted =
+                new InterceptedChannelChrome(this, controller, entry);
         intercepted->NotifyController();
     } else {
         rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
@@ -6512,104 +6477,6 @@ bool
 nsHttpChannel::AwaitingCacheCallbacks()
 {
     return mCacheEntriesToWaitFor != 0;
-}
-
-NS_IMPL_ISUPPORTS(InterceptedChannel, nsIInterceptedChannel)
-
-void
-InterceptedChannel::NotifyController()
-{
-    nsCOMPtr<nsIOutputStream> out;
-    nsresult rv = mSynthesizedCacheEntry->OpenOutputStream(0, getter_AddRefs(out));
-    NS_ENSURE_SUCCESS_VOID(rv);
-
-    rv = mController->ChannelIntercepted(this, out);
-    NS_ENSURE_SUCCESS_VOID(rv);
-}
-
-void
-InterceptedChannel::EnsureSynthesizedResponse()
-{
-    if (mSynthesizedResponseHead.isNothing()) {
-        mSynthesizedResponseHead.emplace();
-    }
-}
-
-NS_IMETHODIMP
-InterceptedChannel::ResetInterception()
-{
-    if (!mChannel) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    mSynthesizedCacheEntry->AsyncDoom(nullptr);
-    mSynthesizedCacheEntry = nullptr;
-
-    nsCOMPtr<nsIURI> uri;
-    mChannel->GetURI(getter_AddRefs(uri));
-
-    nsresult rv = mChannel->StartRedirectChannelToURI(uri, nsIChannelEventSink::REDIRECT_INTERNAL);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mChannel = nullptr;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptedChannel::SynthesizeHeader(const nsACString& aName, const nsACString& aValue)
-{
-    if (!mSynthesizedCacheEntry) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    EnsureSynthesizedResponse();
-    nsAutoCString header = aName + NS_LITERAL_CSTRING(": ") + aValue;
-    // Overwrite any existing header.
-    nsresult rv = mSynthesizedResponseHead->ParseHeaderLine(header.get());
-    NS_ENSURE_SUCCESS(rv, rv);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptedChannel::FinishSynthesizedResponse()
-{
-    if (!mChannel) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    mChannel->MarkIntercepted();
-
-    // First we ensure the appropriate metadata is set on the synthesized cache entry
-    // (i.e. the flattened response head)
-
-    nsCOMPtr<nsISupports> securityInfo;
-    nsresult rv = mChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    EnsureSynthesizedResponse();
-    rv = DoAddCacheEntryHeaders(mChannel, mSynthesizedCacheEntry, mChannel->GetRequestHead(),
-                                mSynthesizedResponseHead.ptr(), securityInfo);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIURI> uri;
-    mChannel->GetURI(getter_AddRefs(uri));
-
-    bool usingSSL = false;
-    uri->SchemeIs("https", &usingSSL);
-
-    // Then we open a real cache entry to read the synthesized response from.
-    rv = mChannel->OpenCacheEntry(usingSSL);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mSynthesizedCacheEntry = nullptr;
-
-    if (!mChannel->AwaitingCacheCallbacks()) {
-        rv = mChannel->ContinueConnect();
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    mChannel = nullptr;
-    return NS_OK;
 }
 
 } } // namespace mozilla::net

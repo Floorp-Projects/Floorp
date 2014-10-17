@@ -38,10 +38,14 @@
 #include "PrivateBrowsingChannel.h"
 #include "mozilla/net/DNS.h"
 #include "nsITimedChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsISecurityConsoleMessage.h"
+#include "nsCOMArray.h"
 
 extern PRLogModuleInfo *gHttpLog;
 class nsPerformance;
+class nsISecurityConsoleMessage;
+class nsIPrincipal;
 
 namespace mozilla {
 namespace net {
