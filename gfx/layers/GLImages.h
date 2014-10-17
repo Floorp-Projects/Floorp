@@ -57,10 +57,7 @@ public:
 
   gfx::IntSize GetSize() { return mData.mSize; }
 
-  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE
-  {
-    return nullptr;
-  }
+  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
 
   SurfaceTextureImage() : Image(nullptr, ImageFormat::SURFACE_TEXTURE) {}
 
