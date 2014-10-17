@@ -2708,7 +2708,6 @@ AdjustTruncatedInputs(TempAllocator &alloc, MDefinition *truncated)
             continue;
 
         if (input->isToDouble() && input->getOperand(0)->type() == MIRType_Int32) {
-            MOZ_ASSERT(input->range()->isInt32());
             truncated->replaceOperand(i, input->getOperand(0));
         } else {
             MInstruction *op;
