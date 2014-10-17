@@ -182,8 +182,9 @@ public class PreSearchFragment extends Fragment {
             final ViewStub emptyViewStub = (ViewStub) getView().findViewById(R.id.empty_view_stub);
             emptyView = emptyViewStub.inflate();
 
-            ((ImageView) emptyView.findViewById(R.id.empty_image)).setImageResource(R.drawable.search_fox);
-            ((TextView) emptyView.findViewById(R.id.empty_title)).setText(R.string.search_empty_title);
+            ((ImageView) emptyView.findViewById(R.id.empty_image)).setImageResource(R.drawable.icon_search_empty_firefox);
+            // Hidden in Firefox 35. See bug 1084590.
+            ((TextView) emptyView.findViewById(R.id.empty_title)).setVisibility(View.GONE);
             ((TextView) emptyView.findViewById(R.id.empty_message)).setText(R.string.search_empty_message);
 
             listView.setEmptyView(emptyView);
