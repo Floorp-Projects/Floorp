@@ -779,8 +779,7 @@ static MOZ_ALWAYS_INLINE bool
 NewObjectMetadata(ExclusiveContext *cxArg, JSObject **pmetadata)
 {
     // The metadata callback is invoked before each created object, except when
-    // analysis/compilation is active, to avoid recursion.  It is also skipped
-    // when we allocate objects during a bailout, to prevent stack iterations.
+    // analysis/compilation is active, to avoid recursion.
     MOZ_ASSERT(!*pmetadata);
     if (JSContext *cx = cxArg->maybeJSContext()) {
         if (MOZ_UNLIKELY((size_t)cx->compartment()->hasObjectMetadataCallback()) &&
