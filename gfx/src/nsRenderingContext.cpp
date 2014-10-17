@@ -163,21 +163,6 @@ nsRenderingContext::DrawLine(nscoord aX0, nscoord aY0,
     }
 }
 
-void
-nsRenderingContext::DrawRect(const nsRect& aRect)
-{
-    mThebes->NewPath();
-    mThebes->Rectangle(GFX_RECT_FROM_TWIPS_RECT(aRect), true);
-    mThebes->Stroke();
-}
-
-void
-nsRenderingContext::DrawRect(nscoord aX, nscoord aY,
-                             nscoord aWidth, nscoord aHeight)
-{
-    DrawRect(nsRect(aX, aY, aWidth, aHeight));
-}
-
 
 /* Clamp r to (0,0) (2^23,2^23)
  * these are to be device coordinates.
