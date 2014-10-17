@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1082672
+-->
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 1082672 part 2</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1082672">Mozilla Bug 1082672</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+var sym = Symbol("ponies");
+Object.defineProperty(window, sym, {configurable: true, value: 3});
+is(window[sym], 3);
+</script>
+</pre>
+</body>
+</html>

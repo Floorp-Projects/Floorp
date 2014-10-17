@@ -1,3 +1,4 @@
+// |jit-test| error: already executing generator
 // Forced return from a star generator frame.
 
 load(libdir + 'asserts.js')
@@ -16,4 +17,5 @@ function* gen() {
 var iter = gen();
 assertIteratorNext(iter, '1');
 assertEq(iter.next(), '!');
-assertIteratorDone(iter);
+iter.next();
+assertEq(0, 1);

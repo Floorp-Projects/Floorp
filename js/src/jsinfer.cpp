@@ -2264,6 +2264,8 @@ types::UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc)
      * Sub2 lets us continue to distinguish the two subclasses and any extra
      * properties added to those prototype objects.
      */
+    if (script->isGenerator())
+        return false;
     if (JSOp(*pc) != JSOP_NEW)
         return false;
     pc += JSOP_NEW_LENGTH;
