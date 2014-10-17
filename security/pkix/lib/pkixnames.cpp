@@ -102,6 +102,14 @@ bool IsValidPresentedDNSID(Input hostname);
 bool ParseIPv4Address(Input hostname, /*out*/ uint8_t (&out)[4]);
 bool ParseIPv6Address(Input hostname, /*out*/ uint8_t (&out)[16]);
 
+bool PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
+                                         Input referenceDNSID)
+{
+  return PresentedDNSIDMatchesReferenceDNSID(presentedDNSID,
+                                             ValidDNSIDMatchType::ReferenceID,
+                                             referenceDNSID);
+}
+
 // Verify that the given end-entity cert, which is assumed to have been already
 // validated with BuildCertChain, is valid for the given hostname. hostname is
 // assumed to be a string representation of an IPv4 address, an IPv6 addresss,
@@ -738,17 +746,64 @@ PresentedDNSIDMatchesReferenceDNSID(
   return true;
 }
 
-} // unnamed namespace
-
-bool PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
-                                         Input referenceDNSID)
+// https://tools.ietf.org/html/rfc5280#section-4.2.1.10 says:
+//
+//     For IPv4 addresses, the iPAddress field of GeneralName MUST contain
+//     eight (8) octets, encoded in the style of RFC 4632 (CIDR) to represent
+//     an address range [RFC4632].  For IPv6 addresses, the iPAddress field
+//     MUST contain 32 octets similarly encoded.  For example, a name
+//     constraint for "class C" subnet 192.0.2.0 is represented as the
+//     octets C0 00 02 00 FF FF FF 00, representing the CIDR notation
+//     192.0.2.0/24 (mask 255.255.255.0).
+Result
+MatchPresentedIPAddressWithConstraint(Input presentedID,
+                                      Input iPAddressConstraint,
+                                      /*out*/ bool& foundMatch)
 {
-  return PresentedDNSIDMatchesReferenceDNSID(presentedDNSID,
-                                             ValidDNSIDMatchType::ReferenceID,
-                                             referenceDNSID);
-}
+  if (presentedID.GetLength() != 4 && presentedID.GetLength() != 16) {
+    return Result::ERROR_BAD_DER;
+  }
 
-namespace {
+  Reader presented(presentedID);
+  Reader constraint(iPAddressConstraint);
+  Reader constraintAddress;
+  Result rv = constraint.Skip(presentedID.GetLength(),
+                              constraintAddress);
+  if (rv != Success) {
+    return rv;
+  }
+  Reader constraintMask;
+  rv = constraint.Skip(presentedID.GetLength(), constraintMask);
+  if (rv != Success) {
+    return rv;
+  }
+  rv = der::End(constraint);
+  if (rv != Success) {
+    return rv;
+  }
+
+  do {
+    uint8_t presentedByte;
+    rv = presented.Read(presentedByte);
+    if (rv != Success) {
+      return rv;
+    }
+    uint8_t constraintAddressByte;
+    rv = constraintAddress.Read(constraintAddressByte);
+    if (rv != Success) {
+      return rv;
+    }
+    uint8_t constraintMaskByte;
+    rv = constraintMask.Read(constraintMaskByte);
+    if (rv != Success) {
+      return rv;
+    }
+    foundMatch =
+      ((presentedByte ^ constraintAddressByte) & constraintMaskByte) == 0;
+  } while (foundMatch && !presented.AtEnd());
+
+  return Success;
+}
 
 // We avoid isdigit because it is locale-sensitive. See
 // http://pubs.opengroup.org/onlinepubs/009695399/functions/tolower.html.
