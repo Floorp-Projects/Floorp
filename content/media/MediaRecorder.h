@@ -41,7 +41,6 @@ class MediaRecorder : public DOMEventTargetHelper,
                       public nsIDocumentActivity
 {
   class Session;
-  friend class CreateAndDispatchBlobEventRunnable;
 
 public:
   MediaRecorder(DOMMediaStream& aSourceMediaStream, nsPIDOMWindow* aOwnerWindow);
