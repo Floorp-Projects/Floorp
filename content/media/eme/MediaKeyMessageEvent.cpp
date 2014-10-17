@@ -56,7 +56,7 @@ MediaKeyMessageEvent::AsMediaKeyMessageEvent()
 }
 
 JSObject*
-MediaKeyMessageEvent::WrapObject(JSContext* aCx)
+MediaKeyMessageEvent::WrapObjectInternal(JSContext* aCx)
 {
   return MediaKeyMessageEventBinding::Wrap(aCx, this);
 }
