@@ -2203,7 +2203,6 @@ RuntimeService::CreateServiceWorker(const GlobalObject& aGlobal,
     new ServiceWorker(window, sharedWorker);
 
   serviceWorker->mURL = aScriptURL;
-  serviceWorker->mScope = NS_ConvertUTF8toUTF16(aScope);
 
   serviceWorker.forget(aServiceWorker);
   return rv;
@@ -2230,7 +2229,6 @@ RuntimeService::CreateServiceWorkerFromLoadInfo(JSContext* aCx,
     new ServiceWorker(nullptr, sharedWorker);
 
   serviceWorker->mURL = aScriptURL;
-  serviceWorker->mScope = NS_ConvertUTF8toUTF16(aScope);
 
   serviceWorker.forget(aServiceWorker);
   return rv;
