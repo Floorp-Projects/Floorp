@@ -45,6 +45,10 @@ function TCPServerSocket() {
   this.useWin = null;
 }
 
+// When this API moves to WebIDL and these __exposedProps__ go away, remove
+// this call here and remove the API from XPConnect.
+Cu.skipCOWCallableChecks();
+
 TCPServerSocket.prototype = {
   __exposedProps__: {
     port: 'r',
