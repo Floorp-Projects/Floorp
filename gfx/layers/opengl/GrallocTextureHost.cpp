@@ -9,7 +9,6 @@
 #include <ui/GraphicBuffer.h>
 #include "GrallocImages.h"  // for GrallocImage
 #include "mozilla/layers/GrallocTextureHost.h"
-#include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
 #include "EGLImageHelpers.h"
 #include "GLReadTexImageHelper.h"
