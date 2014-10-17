@@ -364,6 +364,7 @@ def prepare_upstream(prefix, commit=None):
             configure += ['--enable-pic']
         if 'linux' in target:
             configure += ['--enable-pic']
+            configure += ['--disable-avx2']
         # x86inc.asm is not compatible with pic 32bit builds
         if target == 'x86-linux-gcc':
             configure += ['--disable-use-x86inc']
