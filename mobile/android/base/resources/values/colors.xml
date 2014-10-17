@@ -137,4 +137,8 @@
   <color name="toast_button_background">#00000000</color>
   <color name="toast_button_pressed">#DD2C3136</color>
   <color name="toast_button_text">#FFFFFFFF</color>
+
+  <!-- Colour used for Find-In-Page dialog -->
+  <color name="find_status_default">#AFB1B3</color>
+
 </resources>

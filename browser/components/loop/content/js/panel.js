@@ -15,6 +15,7 @@ loop.panel = (function(_, mozL10n) {
   var sharedModels = loop.shared.models;
   var sharedMixins = loop.shared.mixins;
   var sharedActions = loop.shared.actions;
+  var sharedUtils = loop.shared.utils;
   var Button = sharedViews.Button;
   var ButtonGroup = sharedViews.ButtonGroup;
   var ContactsList = loop.contacts.ContactsList;
@@ -362,11 +363,7 @@ loop.panel = (function(_, mozL10n) {
     handleEmailButtonClick: function(event) {
       this.handleLinkExfiltration(event);
 
-      navigator.mozLoop.composeEmail(
-        __("share_email_subject4", { clientShortname: __("clientShortname2")}),
-        __("share_email_body4", { callUrl: this.state.callUrl,
-                                  clientShortname: __("clientShortname2"),
-                                  learnMoreUrl: navigator.mozLoop.getLoopCharPref("learnMoreUrl") }));
+      sharedUtils.composeCallUrlEmail(this.state.callUrl);
     },
 
     handleCopyButtonClick: function(event) {

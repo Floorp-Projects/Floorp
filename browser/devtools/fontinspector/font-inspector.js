@@ -41,7 +41,7 @@ FontInspector.prototype = {
    */
   destroy: function FI_destroy() {
     this.chromeDoc = null;
-    this.inspector.sidebar.off("layoutview-selected", this.onNewNode);
+    this.inspector.sidebar.off("fontinspector-selected", this.onNewNode);
     this.inspector.selection.off("new-node", this.onNewNode);
     this.showAllButton.removeEventListener("click", this.showAll);
   },

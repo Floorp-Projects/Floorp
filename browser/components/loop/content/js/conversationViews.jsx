@@ -12,7 +12,19 @@ loop.conversationViews = (function(mozL10n) {
   var CALL_STATES = loop.store.CALL_STATES;
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;
   var sharedActions = loop.shared.actions;
+  var sharedUtils = loop.shared.utils;
   var sharedViews = loop.shared.views;
+
+  // This duplicates a similar function in contacts.jsx that isn't used in the
+  // conversation window. If we get too many of these, we might want to consider
+  // finding a logical place for them to be shared.
+  function _getPreferredEmail(contact) {
+    // A contact may not contain email addresses, but only a phone number.
+    if (!contact.email || contact.email.length === 0) {
+      return { value: "" };
+    }
+    return contact.email.find(e => e.pref) || contact.email[0];
+  }
 
   /**
    * Displays information about the call
@@ -93,17 +105,6 @@ loop.conversationViews = (function(mozL10n) {
       contact: React.PropTypes.object
     },
 
-    // This duplicates a similar function in contacts.jsx that isn't used in the
-    // conversation window. If we get too many of these, we might want to consider
-    // finding a logical place for them to be shared.
-    _getPreferredEmail: function(contact) {
-      // A contact may not contain email addresses, but only a phone number.
-      if (!contact.email || contact.email.length == 0) {
-        return { value: "" };
-      }
-      return contact.email.find(e => e.pref) || contact.email[0];
-    },
-
     render: function() {
       var contactName;
 
@@ -111,7 +112,7 @@ loop.conversationViews = (function(mozL10n) {
           this.props.contact.name[0]) {
         contactName = this.props.contact.name[0];
       } else {
-        contactName = this._getPreferredEmail(this.props.contact).value;
+        contactName = _getPreferredEmail(this.props.contact).value;
       }
 
       document.title = contactName;
@@ -170,12 +171,10 @@ loop.conversationViews = (function(mozL10n) {
           <p className="btn-label">{pendingStateString}</p>
 
           <div className="btn-group call-action-group">
-            <div className="fx-embedded-call-button-spacer"></div>
-              <button className={btnCancelStyles}
-                      onClick={this.cancelCall}>
-                {mozL10n.get("initiate_call_cancel_button")}
-              </button>
-            <div className="fx-embedded-call-button-spacer"></div>
+            <button className={btnCancelStyles}
+                    onClick={this.cancelCall}>
+              {mozL10n.get("initiate_call_cancel_button")}
+            </button>
           </div>
 
         </ConversationDetailView>
@@ -187,8 +186,54 @@ loop.conversationViews = (function(mozL10n) {
    * Call failed view. Displayed when a call fails.
    */
   var CallFailedView = React.createClass({
+    mixins: [Backbone.Events],
+
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      store: React.PropTypes.instanceOf(
+        loop.store.ConversationStore).isRequired,
+      contact: React.PropTypes.object.isRequired,
+      // This is used by the UI showcase.
+      emailLinkError: React.PropTypes.bool,
+    },
+
+    getInitialState: function() {
+      return {
+        emailLinkError: this.props.emailLinkError,
+        emailLinkButtonDisabled: false
+      };
+    },
+
+    componentDidMount: function() {
+      this.listenTo(this.props.store, "change:emailLink",
+                    this._onEmailLinkReceived);
+      this.listenTo(this.props.store, "error:emailLink",
+                    this._onEmailLinkError);
+    },
+
+    componentWillUnmount: function() {
+      this.stopListening(this.props.store);
+    },
+
+    _onEmailLinkReceived: function() {
+      var emailLink = this.props.store.get("emailLink");
+      var contactEmail = _getPreferredEmail(this.props.contact).value;
+      sharedUtils.composeCallUrlEmail(emailLink, contactEmail);
+      window.close();
+    },
+
+    _onEmailLinkError: function() {
+      this.setState({
+        emailLinkError: true,
+        emailLinkButtonDisabled: false
+      });
+    },
+
+    _renderError: function() {
+      if (!this.state.emailLinkError) {
+        return;
+      }
+      return <p className="error">{mozL10n.get("unable_retrieve_url")}</p>;
     },
 
     retryCall: function() {
@@ -199,25 +244,38 @@ loop.conversationViews = (function(mozL10n) {
       this.props.dispatcher.dispatch(new sharedActions.CancelCall());
     },
 
+    emailLink: function() {
+      this.setState({
+        emailLinkError: false,
+        emailLinkButtonDisabled: true
+      });
+
+      this.props.dispatcher.dispatch(new sharedActions.FetchEmailLink());
+    },
+
     render: function() {
       return (
         <div className="call-window">
           <h2>{mozL10n.get("generic_failure_title")}</h2>
 
-          <p className="btn-label">{mozL10n.get("generic_failure_no_reason2")}</p>
+          <p className="btn-label">{mozL10n.get("generic_failure_with_reason2")}</p>
+
+          {this._renderError()}
 
           <div className="btn-group call-action-group">
-            <div className="fx-embedded-call-button-spacer"></div>
-              <button className="btn btn-accept btn-retry"
-                      onClick={this.retryCall}>
-                {mozL10n.get("retry_call_button")}
-              </button>
-            <div className="fx-embedded-call-button-spacer"></div>
-              <button className="btn btn-cancel"
-                      onClick={this.cancelCall}>
-                {mozL10n.get("cancel_button")}
-              </button>
-            <div className="fx-embedded-call-button-spacer"></div>
+            <button className="btn btn-cancel"
+                    onClick={this.cancelCall}>
+              {mozL10n.get("cancel_button")}
+            </button>
+            <button className="btn btn-info btn-retry"
+                    onClick={this.retryCall}>
+              {mozL10n.get("retry_call_button")}
+            </button>
+            <button className="btn btn-info btn-email"
+                    onClick={this.emailLink}
+                    disabled={this.state.emailLinkButtonDisabled}>
+              {mozL10n.get("share_button2")}
+            </button>
           </div>
         </div>
       );
@@ -426,6 +484,8 @@ loop.conversationViews = (function(mozL10n) {
         case CALL_STATES.TERMINATED: {
           return (<CallFailedView
             dispatcher={this.props.dispatcher}
+            store={this.props.store}
+            contact={this.state.contact}
           />);
         }
         case CALL_STATES.ONGOING: {
@@ -445,7 +505,7 @@ loop.conversationViews = (function(mozL10n) {
             callState={this.state.callState}
             contact={this.state.contact}
             enableCancelButton={this._isCancellable()}
-          />)
+          />);
         }
       }
     },
