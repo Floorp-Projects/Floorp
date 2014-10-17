@@ -5,6 +5,7 @@
 
 #include "nsGfxCheckboxControlFrame.h"
 
+#include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
