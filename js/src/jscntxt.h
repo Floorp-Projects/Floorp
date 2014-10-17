@@ -284,6 +284,7 @@ struct ThreadSafeContext : ContextFriendFields,
     JSAtomState &names() { return *runtime_->commonNames; }
     StaticStrings &staticStrings() { return *runtime_->staticStrings; }
     AtomSet &permanentAtoms() { return *runtime_->permanentAtoms; }
+    WellKnownSymbols &wellKnownSymbols() { return *runtime_->wellKnownSymbols; }
     const JS::AsmJSCacheOps &asmJSCacheOps() { return runtime_->asmJSCacheOps; }
     PropertyName *emptyString() { return runtime_->emptyString; }
     FreeOp *defaultFreeOp() { return runtime_->defaultFreeOp(); }
@@ -551,14 +552,7 @@ struct JSContext : public js::ExclusiveContext,
         runtime_->gc.gcIfNeeded(this);
     }
 
-  private:
-    /* Innermost-executing generator or null if no generator are executing. */
-    JSGenerator *innermostGenerator_;
   public:
-    JSGenerator *innermostGenerator() const { return innermostGenerator_; }
-    void enterGenerator(JSGenerator *gen);
-    void leaveGenerator(JSGenerator *gen);
-
     bool isExceptionPending() {
         return throwing;
     }

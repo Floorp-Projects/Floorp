@@ -8,4 +8,5 @@
     <!-- Remote Tabs static view top padding. Less in landscape on phones. -->
     <dimen name="home_remote_tabs_top_padding">16dp</dimen>
 
+    <dimen name="new_tablet_tab_panel_grid_padding">48dp</dimen>
 </resources>

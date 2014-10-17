@@ -206,10 +206,16 @@
     }
 
     function recvSymbolTest(message) {
-      let object = message.objects;
+      let object = message.objects.object;
       is(object[Symbol.iterator], Symbol.iterator, "Should use Symbol.iterator");
       is(Symbol.keyFor(object[Symbol.for("cpow-test")]), "cpow-test", "Symbols aren't registered correctly");
-      // is(object.unique, object[object.unique], "Unique symbols as ids and values don't seem to work");
+      let symbols = Object.getOwnPropertySymbols(object);
+      is(symbols.length, 2, "Object should have two symbol keys");
+      let test = undefined;
+      for (let x of message.objects.test) {
+        test = x;
+      }
+      is(test, "a", "for .. of iteration should work");
     }
 
     let systemGlobal = this;
@@ -307,7 +313,9 @@
       mm.addMessageListener("cpows:dom_test", recvDomTest);
       mm.addMessageListener("cpows:dom_test_after_gc", recvDomTestAfterGC);
       mm.addMessageListener("cpows:xray_test", recvXrayTest);
-      mm.addMessageListener("cpows:symbol_test", recvSymbolTest);
+      if (typeof Symbol === "function") {
+        mm.addMessageListener("cpows:symbol_test", recvSymbolTest);
+      }
       mm.addMessageListener("cpows:compartment_test", recvCompartmentTest);
       mm.addMessageListener("cpows:regexp_test", recvRegExpTest);
       mm.addMessageListener("cpows:lifetime_test_1", recvLifetimeTest1);

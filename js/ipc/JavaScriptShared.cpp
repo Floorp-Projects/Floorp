@@ -440,7 +440,8 @@ JavaScriptShared::toSymbolVariant(JSContext *cx, JS::Symbol *symArg, SymbolVaria
         *symVarp = RegisteredSymbol(autoStr);
         return true;
     }
-    MOZ_CRASH("unique symbols not yet implemented");
+
+    JS_ReportError(cx, "unique symbol can't be used with CPOW");
     return false;
 }
 

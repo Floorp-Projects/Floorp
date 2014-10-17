@@ -1376,7 +1376,7 @@ PlacesToolbar.prototype = {
         elt.localName != "menupopup") {
       let eltRect = elt.getBoundingClientRect();
       let eltIndex = Array.indexOf(this._rootElt.childNodes, elt);
-      if (PlacesUIUtils.nodeIsFolder(elt._placesNode) &&
+      if (PlacesUtils.nodeIsFolder(elt._placesNode) &&
           !PlacesUIUtils.isContentsReadOnly(elt._placesNode)) {
         // This is a folder.
         // If we are in the middle of it, drop inside it.

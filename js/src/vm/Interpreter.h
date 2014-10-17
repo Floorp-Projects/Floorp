@@ -111,7 +111,6 @@ Execute(JSContext *cx, HandleScript script, JSObject &scopeChain, Value *rval);
 
 class ExecuteState;
 class InvokeState;
-class GeneratorState;
 
 // RunState is passed to RunScript and RunScript then eiter passes it to the
 // interpreter or to the JITs. RunState contains all information we need to
@@ -119,7 +118,7 @@ class GeneratorState;
 class RunState
 {
   protected:
-    enum Kind { Execute, Invoke, Generator };
+    enum Kind { Execute, Invoke };
     Kind kind_;
 
     RootedScript script_;
@@ -132,7 +131,6 @@ class RunState
   public:
     bool isExecute() const { return kind_ == Execute; }
     bool isInvoke() const { return kind_ == Invoke; }
-    bool isGenerator() const { return kind_ == Generator; }
 
     ExecuteState *asExecute() const {
         MOZ_ASSERT(isExecute());
@@ -141,10 +139,6 @@ class RunState
     InvokeState *asInvoke() const {
         MOZ_ASSERT(isInvoke());
         return (InvokeState *)this;
-    }
-    GeneratorState *asGenerator() const {
-        MOZ_ASSERT(isGenerator());
-        return (GeneratorState *)this;
     }
 
     JS::HandleScript script() const { return script_; }
@@ -158,7 +152,6 @@ class RunState
     RunState(const RunState &other) MOZ_DELETE;
     RunState(const ExecuteState &other) MOZ_DELETE;
     RunState(const InvokeState &other) MOZ_DELETE;
-    RunState(const GeneratorState &other) MOZ_DELETE;
     void operator=(const RunState &other) MOZ_DELETE;
 };
 
@@ -222,24 +215,6 @@ class InvokeState : public RunState
     virtual void setReturnValue(Value v) {
         args_.rval().set(v);
     }
-};
-
-// Generator script.
-class GeneratorState : public RunState
-{
-    JSContext *cx_;
-    JSGenerator *gen_;
-    JSGeneratorState futureState_;
-    bool entered_;
-
-  public:
-    GeneratorState(JSContext *cx, JSGenerator *gen, JSGeneratorState futureState);
-    ~GeneratorState();
-
-    virtual InterpreterFrame *pushInterpreterFrame(JSContext *cx);
-    virtual void setReturnValue(Value) { }
-
-    JSGenerator *gen() const { return gen_; }
 };
 
 extern bool

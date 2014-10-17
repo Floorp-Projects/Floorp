@@ -137,6 +137,9 @@ DEFINES += -DMOZ_ICU_DBG_SUFFIX=$(MOZ_ICU_DBG_SUFFIX)
 ifdef CLANG_CXX
 DEFINES += -DCLANG_CXX
 endif
+ifdef CLANG_CL
+DEFINES += -DCLANG_CL
+endif
 
 libs::
 	$(MAKE) -C $(DEPTH)/browser/locales langpack

@@ -145,6 +145,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   var version = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).version;
   var isNightlyBuild = version.endsWith("a1");
   var isReleaseBuild = !version.contains("a");
+  const jsHasSymbols = typeof Symbol === "function";
   var gPrototypeProperties = {};
   gPrototypeProperties['Date'] =
     ["getTime", "getTimezoneOffset", "getYear", "getFullYear", "getUTCFullYear",
@@ -197,17 +198,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ["constructor", "toSource", "toString", "apply", "call", "bind",
      "isGenerator", "length", "name", "arguments", "caller"];
 
+  // Sort an array that may contain symbols as well as strings.
+  function sortProperties(arr) {
+    function sortKey(prop) {
+      return typeof prop + ":" + prop.toString();
+    }
+    arr.sort((a, b) => sortKey(a) < sortKey(b) ? -1 : +1);
+  }
+
   // Sort all the lists so we don't need to mutate them later (or copy them
   // again to sort them).
   for (var c of Object.keys(gPrototypeProperties))
-    gPrototypeProperties[c].sort();
+    sortProperties(gPrototypeProperties[c]);
 
   function filterOut(array, props) {
     return array.filter(p => props.indexOf(p) == -1);
-  }
-
-  function appendUnique(array, vals) {
-    filterOut(vals, array).forEach(v => array.push(v));
   }
 
   function isTypedArrayClass(classname) {
@@ -267,6 +272,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
        gPrototypeProperties[classname].filter(id => typeof id === "string").toSource(),
        "A property on the " + classname +
        " prototype has changed! You need a security audit from an XPConnect peer");
+    if (jsHasSymbols) {
+      is(Object.getOwnPropertySymbols(localProto).map(uneval).sort().toSource(),
+         gPrototypeProperties[classname].filter(id => typeof id !== "string").map(uneval).sort().toSource(),
+         "A symbol-keyed property on the " + classname +
+         " prototype has been changed! You need a security audit from an XPConnect peer");
+    }
 
     let protoProps = filterOut(desiredProtoProps, propsToSkip);
     let protoCallables = protoProps.filter(name => propertyIsGetter(localProto, name, classname) ||
@@ -280,6 +291,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     testProtoCallables(protoCallables, xray, xrayProto, localProto);
     is(Object.getOwnPropertyNames(xrayProto).sort().toSource(),
        protoProps.toSource(), "getOwnPropertyNames works");
+    if (jsHasSymbols) {
+      is(Object.getOwnPropertySymbols(xrayProto).map(uneval).sort().toSource(),
+         gPrototypeProperties[classname].filter(id => typeof id !== "string").map(uneval).sort().toSource(),
+         protoProps.toSource(), "getOwnPropertySymbols works");
+    }
 
     is(xrayProto.constructor, iwin[classname], "constructor property works");
 
@@ -303,26 +319,35 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     is(d.toLocaleString('de-DE'), d.wrappedJSObject.toLocaleString('de-DE'), "Results match");
   }
 
+  var uniqueSymbol;
+
   function testObject() {
     testXray('Object', Cu.unwaiveXrays(Cu.waiveXrays(iwin).Object.create(new iwin.Object())),
              new iwin.Object(), []);
 
     // Construct an object full of tricky things.
+    let symbolProps = '';
+    if (jsHasSymbols) {
+      uniqueSymbol = iwin.eval('var uniqueSymbol = Symbol("uniqueSymbol"); uniqueSymbol');
+      symbolProps = `, [uniqueSymbol]: 43,
+                     [Symbol.for("registrySymbolProp")]: 44`;
+    }
     var trickyObject =
-      iwin.eval('new Object({ \
-                   primitiveProp: 42, objectProp: { foo: 2 }, \
-                   xoProp: top.location, hasOwnProperty: 10, \
-                   get getterProp() { return 2; }, \
-                   set setterProp(x) { }, \
-                   get getterSetterProp() { return 3; }, \
-                   set getterSetterProp(x) { }, \
-                   callableProp: function() { }, \
-                   nonXrayableProp: new WeakMap() })');
+      iwin.eval(`new Object({
+                   primitiveProp: 42, objectProp: { foo: 2 },
+                   xoProp: top.location, hasOwnProperty: 10,
+                   get getterProp() { return 2; },
+                   set setterProp(x) { },
+                   get getterSetterProp() { return 3; },
+                   set getterSetterProp(x) { },
+                   callableProp: function() { },
+                   nonXrayableProp: new WeakMap()
+                   ${symbolProps}
+                 })`);
     testTrickyObject(trickyObject);
-
   }
 
-function testArray() {
+  function testArray() {
     // The |length| property is generally very weird, especially with respect
     // to its behavior on the prototype. Array.prototype is actually an Array
     // instance, and therefore has a vestigial .length. But we don't want to
@@ -332,18 +357,25 @@ function testArray() {
     let propsToSkip = ['length'];
     testXray('Array', new iwin.Array(20), new iwin.Array(), propsToSkip);
 
+    let symbolProps = '';
+    if (jsHasSymbols) {
+      uniqueSymbol = iwin.eval('var uniqueSymbol = Symbol("uniqueSymbol"); uniqueSymbol');
+      symbolProps = `trickyArray[uniqueSymbol] = 43;
+                     trickyArray[Symbol.for("registrySymbolProp")] = 44;`;
+    }
     var trickyArray =
-      iwin.eval("var trickyArray = []; \
-                 trickyArray.primitiveProp = 42; \
-                 trickyArray.objectProp = { foo: 2 }; \
-                 trickyArray.xoProp = top.location; \
-                 trickyArray.hasOwnProperty = 10; \
-                 Object.defineProperty(trickyArray, 'getterProp', { get: function() { return 2; }}); \
-                 Object.defineProperty(trickyArray, 'setterProp', { set: function(x) {}}); \
-                 Object.defineProperty(trickyArray, 'getterSetterProp', { get: function() { return 3; }, set: function(x) {}}); \
-                 trickyArray.callableProp = function() {}; \
-                 trickyArray.nonXrayableProp = new WeakMap(); \
-                 trickyArray;");
+      iwin.eval(`var trickyArray = [];
+                 trickyArray.primitiveProp = 42;
+                 trickyArray.objectProp = { foo: 2 };
+                 trickyArray.xoProp = top.location;
+                 trickyArray.hasOwnProperty = 10;
+                 Object.defineProperty(trickyArray, 'getterProp', { get: function() { return 2; }});
+                 Object.defineProperty(trickyArray, 'setterProp', { set: function(x) {}});
+                 Object.defineProperty(trickyArray, 'getterSetterProp', { get: function() { return 3; }, set: function(x) {}});
+                 trickyArray.callableProp = function() {};
+                 trickyArray.nonXrayableProp = new WeakMap();
+                 ${symbolProps}
+                 trickyArray;`);
 
     // Test indexed access.
     trickyArray.wrappedJSObject[9] = "some indexed property";
@@ -366,11 +398,11 @@ function testArray() {
     is(trickyArray[1], undefined, "Frozen length forbids new properties");
 
     testTrickyObject(trickyArray);
-}
+  }
 
-// Parts of this function are kind of specific to testing Object, but we factor
-// it out so that we can re-use the trickyObject stuff on Arrays.
-function testTrickyObject(trickyObject) {
+  // Parts of this function are kind of specific to testing Object, but we factor
+  // it out so that we can re-use the trickyObject stuff on Arrays.
+  function testTrickyObject(trickyObject) {
 
     // Make sure it looks right under the hood.
     is(trickyObject.wrappedJSObject.getterProp, 2, "Underlying object has getter");
@@ -382,11 +414,21 @@ function testTrickyObject(trickyObject) {
       expectedNames.push('length');
     is(Object.getOwnPropertyNames(trickyObject).sort().toSource(),
        expectedNames.sort().toSource(), "getOwnPropertyNames should be filtered correctly");
+    if (jsHasSymbols) {
+      var expectedSymbols = [Symbol.for("registrySymbolProp"), uniqueSymbol];
+      is(Object.getOwnPropertySymbols(trickyObject).map(uneval).sort().toSource(),
+         expectedSymbols.map(uneval).sort().toSource(),
+         "getOwnPropertySymbols should be filtered correctly");
+    }
 
     // Test that cloning uses the Xray view.
     var cloned = Cu.cloneInto(trickyObject, this);
     is(Object.getOwnPropertyNames(cloned).sort().toSource(),
        expectedNames.sort().toSource(), "structured clone should use the Xray view");
+    if (jsHasSymbols) {
+      is(Object.getOwnPropertySymbols(cloned).map(uneval).sort().toSource(),
+         "[]", "structured cloning doesn't clone symbol-keyed properties yet");
+    }
 
     // Test iteration and in-place modification. Beware of 'expando', which is the property
     // we placed on the xray proto.

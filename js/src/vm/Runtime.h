@@ -414,7 +414,7 @@ namespace js {
  * Storage for well-known symbols. It's a separate struct from the Runtime so
  * that it can be shared across multiple runtimes. As in JSAtomState, each
  * field is a smart pointer that's immutable once initialized.
- * `rt->wellKnownSymbols.iterator` is convertible to Handle<Symbol*>.
+ * `rt->wellKnownSymbols->iterator` is convertible to Handle<Symbol*>.
  *
  * Well-known symbols are never GC'd. The description() of each well-known
  * symbol is a permanent atom.
@@ -423,10 +423,14 @@ struct WellKnownSymbols
 {
     js::ImmutableSymbolPtr iterator;
 
-    ImmutableSymbolPtr &get(size_t i) {
-        MOZ_ASSERT(i < JS::WellKnownSymbolLimit);
+    ImmutableSymbolPtr &get(size_t u) {
+        MOZ_ASSERT(u < JS::WellKnownSymbolLimit);
         ImmutableSymbolPtr *symbols = reinterpret_cast<ImmutableSymbolPtr *>(this);
-        return symbols[i];
+        return symbols[u];
+    }
+
+    ImmutableSymbolPtr &get(JS::SymbolCode code) {
+        return get(size_t(code));
     }
 };
 

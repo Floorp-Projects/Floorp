@@ -323,6 +323,17 @@ class FullParseHandler
         return true;
     }
 
+    ParseNode *newYieldExpression(uint32_t begin, ParseNode *value, ParseNode *gen,
+                                  JSOp op = JSOP_YIELD) {
+        TokenPos pos(begin, value ? value->pn_pos.end : begin + 1);
+        return new_<BinaryNode>(PNK_YIELD, op, pos, value, gen);
+    }
+
+    ParseNode *newYieldStarExpression(uint32_t begin, ParseNode *value, ParseNode *gen) {
+        TokenPos pos(begin, value->pn_pos.end);
+        return new_<BinaryNode>(PNK_YIELD_STAR, JSOP_NOP, pos, value, gen);
+    }
+
     // Statements
 
     ParseNode *newStatementList(unsigned blockid, const TokenPos &pos) {
@@ -350,6 +361,31 @@ class FullParseHandler
         }
 
         list->append(stmt);
+    }
+
+    bool prependInitialYield(ParseNode *stmtList, ParseNode *genName) {
+        MOZ_ASSERT(stmtList->isKind(PNK_STATEMENTLIST));
+
+        TokenPos yieldPos(stmtList->pn_pos.begin, stmtList->pn_pos.begin + 1);
+        ParseNode *makeGen = new_<NullaryNode>(PNK_GENERATOR, yieldPos);
+        if (!makeGen)
+            return false;
+
+        MOZ_ASSERT(genName->getOp() == JSOP_NAME);
+        genName->setOp(JSOP_SETNAME);
+        genName->markAsAssigned();
+        ParseNode *genInit = newBinary(PNK_ASSIGN, genName, makeGen);
+
+        ParseNode *initialYield = newYieldExpression(yieldPos.begin, nullptr, genInit,
+                                                     JSOP_INITIALYIELD);
+        if (!initialYield)
+            return false;
+
+        initialYield->pn_next = stmtList->pn_head;
+        stmtList->pn_head = initialYield;
+        stmtList->pn_count++;
+
+        return true;
     }
 
     ParseNode *newEmptyStatement(const TokenPos &pos) {

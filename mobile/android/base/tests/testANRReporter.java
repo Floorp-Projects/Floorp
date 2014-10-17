@@ -20,7 +20,7 @@ public class testANRReporter extends BaseTest {
 
     private static final String ANR_ACTION = "android.intent.action.ANR";
     private static final String PING_DIR = "saved-telemetry-pings";
-    private static final int WAIT_FOR_PING_TIMEOUT = 10000;
+    private static final int WAIT_FOR_PING_TIMEOUT = 60000;
     private static final String ANR_PATH = "/data/anr/traces.txt";
     private static final String SAMPLE_ANR
         = "----- pid 1 at 2014-01-15 18:55:51 -----\n"
@@ -159,10 +159,17 @@ public class testANRReporter extends BaseTest {
         mAsserter.info("Triggering second ANR", null);
         testContext.sendBroadcast(new Intent(anrIntent));
 
-        mAsserter.info("Waiting for ping", null);
         waitForCondition(new Condition() {
             @Override
             public boolean isSatisfied() {
+                mAsserter.info("Waiting for ping", null);
+
+                try {
+                    // Sleep to allow the ANR reporter thread time to process the ANR.
+                    Thread.sleep(1000);
+                } catch (final InterruptedException e) {
+                }
+
                 final File[] newFiles = pingDir.listFiles();
                 if (newFiles == null || newFiles.length == 0) {
                     // Keep waiting.

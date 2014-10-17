@@ -413,7 +413,7 @@ gfxUserFontEntry::LoadNextSrc()
                                                             mItalic);
             mFontSet->SetLocalRulesUsed();
             if (fe) {
-                LOG(("fontset (%p) [src %d] loaded local: (%s) for (%s) gen: %8.8x\n",
+                LOG(("userfonts (%p) [src %d] loaded local: (%s) for (%s) gen: %8.8x\n",
                      mFontSet, mSrcIndex,
                      NS_ConvertUTF16toUTF8(currSrc.mLocalName).get(),
                      NS_ConvertUTF16toUTF8(mFamilyName).get(),
@@ -430,7 +430,7 @@ gfxUserFontEntry::LoadNextSrc()
                 SetLoadState(STATUS_LOADED);
                 return;
             } else {
-                LOG(("fontset (%p) [src %d] failed local: (%s) for (%s)\n",
+                LOG(("userfonts (%p) [src %d] failed local: (%s) for (%s)\n",
                      mFontSet, mSrcIndex,
                      NS_ConvertUTF16toUTF8(currSrc.mLocalName).get(),
                      NS_ConvertUTF16toUTF8(mFamilyName).get()));
@@ -647,7 +647,7 @@ gfxUserFontEntry::LoadPlatformFont(const uint8_t* aFontData, uint32_t& aLength)
             nsAutoCString fontURI;
             mSrcList[mSrcIndex].mURI->GetSpec(fontURI);
             LOG(("userfonts (%p) [src %d] loaded uri: (%s) for (%s) gen: %8.8x\n",
-                 this, mSrcIndex, fontURI.get(),
+                 mFontSet, mSrcIndex, fontURI.get(),
                  NS_ConvertUTF16toUTF8(mFamilyName).get(),
                  uint32_t(mFontSet->mGeneration)));
         }
@@ -662,7 +662,7 @@ gfxUserFontEntry::LoadPlatformFont(const uint8_t* aFontData, uint32_t& aLength)
             mSrcList[mSrcIndex].mURI->GetSpec(fontURI);
             LOG(("userfonts (%p) [src %d] failed uri: (%s) for (%s)"
                  " error making platform font\n",
-                 this, mSrcIndex, fontURI.get(),
+                 mFontSet, mSrcIndex, fontURI.get(),
                  NS_ConvertUTF16toUTF8(mFamilyName).get()));
         }
 #endif

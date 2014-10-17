@@ -8,35 +8,100 @@ var FindHelper = {
   _targetTab: null,
   _initialViewport: null,
   _viewportChanged: false,
+  _matchesCountResult: null,
 
   observe: function(aMessage, aTopic, aData) {
     switch(aTopic) {
-      case "FindInPage:Find":
-        this.doFind(aData);
+      case "FindInPage:Opened": {
+        this._findOpened();
+        this._init();
         break;
+      }
 
-      case "FindInPage:Prev":
-        this.findAgain(aData, true);
+      case "Tab:Selected": {
+        // Allow for page switching.
+        this._uninit();
         break;
+      }
 
-      case "FindInPage:Next":
-        this.findAgain(aData, false);
-        break;
-
-      case "Tab:Selected":
       case "FindInPage:Closed":
-        this.findClosed();
+        this._uninit();
+        this._findClosed();
         break;
     }
   },
 
+  _findOpened: function() {
+    Messaging.addListener((data) => {
+      this.doFind(data);
+      return this._getMatchesCountResult(data);
+    }, "FindInPage:Find");
+
+    Messaging.addListener((data) => {
+      this.findAgain(data, false);
+      return this._getMatchesCountResult(data);
+    }, "FindInPage:Next");
+
+    Messaging.addListener((data) => {
+      this.findAgain(data, true);
+      return this._getMatchesCountResult(data);
+    }, "FindInPage:Prev");
+  },
+
+  _init: function() {
+    // If there's no find in progress, start one.
+    if (this._finder) {
+      return;
+    }
+
+    this._targetTab = BrowserApp.selectedTab;
+    this._finder = this._targetTab.browser.finder;
+    this._finder.addResultListener(this);
+    this._initialViewport = JSON.stringify(this._targetTab.getViewport());
+    this._viewportChanged = false;
+  },
+
+  _uninit: function() {
+    // If there's no find in progress, there's nothing to clean up.
+    if (!this._finder) {
+      return;
+    }
+
+    this._finder.removeSelection();
+    this._finder.removeResultListener(this);
+    this._finder = null;
+    this._targetTab = null;
+    this._initialViewport = null;
+    this._viewportChanged = false;
+  },
+
+  _findClosed: function() {
+    Messaging.removeListener("FindInPage:Find");
+    Messaging.removeListener("FindInPage:Next");
+    Messaging.removeListener("FindInPage:Prev");
+  },
+
+  /**
+   * Request, wait for, and return the current matchesCount results for a string.
+   */
+  _getMatchesCountResult: function(findString) {
+      // Sync call to Finder, results available immediately.
+      this._matchesCountResult = null;
+      this._finder.requestMatchesCount(findString);
+
+      return this._matchesCountResult;
+  },
+
+  /**
+   * Pass along the count results to FindInPageBar for display.
+   */
+  onMatchesCountResult: function(result) {
+    this._matchesCountResult = result;
+  },
+
   doFind: function(aSearchString) {
     if (!this._finder) {
-      this._targetTab = BrowserApp.selectedTab;
-      this._finder = this._targetTab.browser.finder;
-      this._finder.addResultListener(this);
-      this._initialViewport = JSON.stringify(this._targetTab.getViewport());
-      this._viewportChanged = false;
+      this._init();
     }
 
     this._finder.fastFind(aSearchString, false);
@@ -50,19 +115,6 @@ var FindHelper = {
     }
 
     this._finder.findAgain(aFindBackwards, false, false);
-  },
-
-  findClosed: function() {
-    // If there's no find in progress, there's nothing to clean up
-    if (!this._finder)
-      return;
-
-    this._finder.removeSelection();
-    this._finder.removeResultListener(this);
-    this._finder = null;
-    this._targetTab = null;
-    this._initialViewport = null;
-    this._viewportChanged = false;
   },
 
   onFindResult: function(aData) {

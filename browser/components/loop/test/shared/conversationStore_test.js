@@ -38,7 +38,8 @@ describe("loop.store.ConversationStore", function () {
 
     dispatcher = new loop.Dispatcher();
     client = {
-      setupOutgoingCall: sinon.stub()
+      setupOutgoingCall: sinon.stub(),
+      requestCallUrl: sinon.stub()
     };
     sdkDriver = {
       connectSession: sinon.stub(),
@@ -273,6 +274,79 @@ describe("loop.store.ConversationStore", function () {
         sinon.assert.calledOnce(client.setupOutgoingCall);
         sinon.assert.calledWith(client.setupOutgoingCall,
           ["fakeEmail"], sharedUtils.CALL_TYPES.AUDIO_VIDEO);
+      });
+
+      it("should include all email addresses in the call data", function() {
+        contact = {
+          name: [ "Mr Smith" ],
+          email: [{
+            type: "home",
+            value: "fakeEmail",
+            pref: true
+          },
+          {
+            type: "work",
+            value: "emailFake",
+            pref: false
+          }]
+        };
+
+        dispatcher.dispatch(
+          new sharedActions.GatherCallData(outgoingCallData));
+
+        sinon.assert.calledOnce(client.setupOutgoingCall);
+        sinon.assert.calledWith(client.setupOutgoingCall,
+          ["fakeEmail", "emailFake"], sharedUtils.CALL_TYPES.AUDIO_VIDEO);
+      });
+
+      it("should include trim phone numbers for the call data", function() {
+        contact = {
+          name: [ "Mr Smith" ],
+          tel: [{
+            type: "home",
+            value: "+44-5667+345 496(2335)45+ 456+",
+            pref: true
+          }]
+        };
+
+        dispatcher.dispatch(
+          new sharedActions.GatherCallData(outgoingCallData));
+
+        sinon.assert.calledOnce(client.setupOutgoingCall);
+        sinon.assert.calledWith(client.setupOutgoingCall,
+          ["+445667345496233545456"], sharedUtils.CALL_TYPES.AUDIO_VIDEO);
+      });
+
+      it("should include all email and telephone values in the call data", function() {
+        contact = {
+          name: [ "Mr Smith" ],
+          email: [{
+            type: "home",
+            value: "fakeEmail",
+            pref: true
+          }, {
+            type: "work",
+            value: "emailFake",
+            pref: false
+          }],
+          tel: [{
+            type: "work",
+            value: "01234567890",
+            pref: false
+          }, {
+            type: "home",
+            value: "09876543210",
+            pref: false
+          }]
+        };
+
+        dispatcher.dispatch(
+          new sharedActions.GatherCallData(outgoingCallData));
+
+        sinon.assert.calledOnce(client.setupOutgoingCall);
+        sinon.assert.calledWith(client.setupOutgoingCall,
+          ["fakeEmail", "emailFake", "01234567890", "09876543210"],
+          sharedUtils.CALL_TYPES.AUDIO_VIDEO);
       });
 
       describe("server response handling", function() {
@@ -564,6 +638,37 @@ describe("loop.store.ConversationStore", function () {
 
       expect(store.get("videoMuted")).eql(true);
     });
+  });
+
+  describe("#fetchEmailLink", function() {
+    it("should request a new call url to the server", function() {
+      dispatcher.dispatch(new sharedActions.FetchEmailLink());
+
+      sinon.assert.calledOnce(client.requestCallUrl);
+      sinon.assert.calledWith(client.requestCallUrl, "");
+    });
+
+    it("should update the emailLink attribute when the new call url is received",
+      function() {
+        client.requestCallUrl = function(callId, cb) {
+          cb(null, {callUrl: "http://fake.invalid/"});
+        };
+        dispatcher.dispatch(new sharedActions.FetchEmailLink());
+
+        expect(store.get("emailLink")).eql("http://fake.invalid/");
+      });
+
+    it("should trigger an error:emailLink event in case of failure",
+      function() {
+        var trigger = sandbox.stub(store, "trigger");
+        client.requestCallUrl = function(callId, cb) {
+          cb("error");
+        };
+        dispatcher.dispatch(new sharedActions.FetchEmailLink());
+
+        sinon.assert.calledOnce(trigger);
+        sinon.assert.calledWithExactly(trigger, "error:emailLink");
+      });
   });
 
   describe("Events", function() {
