@@ -190,6 +190,8 @@ AndroidSurfaceTexture::Init(GLuint aTexture)
     return false;
   }
 
+  mNativeWindow = AndroidNativeWindow::CreateFromSurface(env, mSurface);
+
   mID = ++sNextID;
   sInstances.insert(std::pair<int, AndroidSurfaceTexture*>(mID, this));
 
