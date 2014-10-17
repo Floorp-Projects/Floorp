@@ -35,7 +35,7 @@
   <project name="device/sample" path="device/sample" revision="1a3d8efa0ad32ec8f145367a3cf0f54b97385c3c"/>
   <project name="platform/abi/cpp" path="abi/cpp" revision="18f1b5e28734183ff8073fe86dc46bc4ebba8a59"/>
   <project name="platform/bionic" path="bionic" revision="86b1f589c313422a7da1812512b9ec8d1cf9ba3c"/>
-  <project name="platform/bootable/recovery" path="bootable/recovery" revision="4eece0d80928a2b5266b78421ebf0c8686d4ad2c"/>
+  <project name="platform/bootable/recovery" path="bootable/recovery" revision="67978bf5ecdd59441296436677b3729b4142e2ff"/>
   <project name="platform/external/aac" path="external/aac" revision="fa3eba16446cc8f2f5e2dfc20d86a49dbd37299e"/>
   <project name="platform/external/bison" path="external/bison" revision="c2418b886165add7f5a31fc5609f0ce2d004a90e"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="c8e99ca7e11c00f8124196fe1726a15e6e976587"/>
