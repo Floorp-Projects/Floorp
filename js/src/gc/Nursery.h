@@ -30,6 +30,7 @@ namespace js {
 
 class TypedArrayObject;
 class ObjectElements;
+class NativeObject;
 class HeapSlot;
 void SetGCZeal(JSRuntime *, uint8_t, uint32_t);
 
@@ -285,8 +286,8 @@ class Nursery
     MOZ_ALWAYS_INLINE void markSlot(gc::MinorCollectionTracer *trc, HeapSlot *slotp);
     void *moveToTenured(gc::MinorCollectionTracer *trc, JSObject *src);
     size_t moveObjectToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
-    size_t moveElementsToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
-    size_t moveSlotsToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
+    size_t moveElementsToTenured(NativeObject *dst, NativeObject *src, gc::AllocKind dstKind);
+    size_t moveSlotsToTenured(NativeObject *dst, NativeObject *src, gc::AllocKind dstKind);
     void forwardTypedArrayPointers(TypedArrayObject *dst, TypedArrayObject *src);
 
     /* Handle relocation of slots/elements pointers stored in Ion frames. */

@@ -6550,14 +6550,7 @@ IsCacheableDOMProxy(JSObject *obj)
         return false;
 
     const BaseProxyHandler *handler = obj->as<ProxyObject>().handler();
-
-    if (handler->family() != GetDOMProxyHandlerFamily())
-        return false;
-
-    if (obj->fakeNativeNumFixedSlots() <= GetDOMProxyExpandoSlot())
-        return false;
-
-    return true;
+    return handler->family() == GetDOMProxyHandlerFamily();
 }
 
 } // namespace jit

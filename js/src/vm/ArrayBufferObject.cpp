@@ -541,7 +541,7 @@ ArrayBufferObject::changeViewContents(JSContext *cx, ArrayBufferViewObject *view
         MOZ_ASSERT(newContents);
         ptrdiff_t offset = viewDataPointer - oldDataPointer;
         viewDataPointer = static_cast<uint8_t *>(newContents.data()) + offset;
-        view->fakeNativeSetPrivate(viewDataPointer);
+        view->setDataPointer(viewDataPointer);
     }
 
     // Notify compiled jit code that the base pointer has moved.
@@ -1151,6 +1151,19 @@ ArrayBufferViewObject::dataPointer()
     if (is<TypedArrayObject>())
         return static_cast<uint8_t *>(as<TypedArrayObject>().viewData());
     return as<TypedObject>().typedMem();
+}
+
+void
+ArrayBufferViewObject::setDataPointer(uint8_t *data)
+{
+    if (is<DataViewObject>())
+        as<DataViewObject>().setPrivate(data);
+    else if (is<TypedArrayObject>())
+        as<TypedArrayObject>().setPrivate(data);
+    else if (is<OutlineTypedObject>())
+        as<OutlineTypedObject>().setData(data);
+    else
+        MOZ_CRASH();
 }
 
 /* static */ ArrayBufferObject *

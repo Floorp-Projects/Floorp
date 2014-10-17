@@ -497,7 +497,6 @@ class CGDOMProxyJSClass(CGThing):
             """
             static const DOMJSClass Class = {
               PROXY_CLASS_WITH_EXT("${name}",
-                                   0, /* extra slots */
                                    ${flags},
                                    PROXY_MAKE_EXT(nullptr, /* outerObject */
                                                   nullptr, /* innerObject */
@@ -3465,8 +3464,6 @@ class CGUpdateMemberSlotsMethod(CGAbstractStaticMethod):
                 body += fill(
                     """
 
-                    static_assert(${slot} < js::shadow::Object::MAX_FIXED_SLOTS,
-                                  "Not enough fixed slots to fit '${interface}.${member}'");
                     if (!get_${member}(aCx, aWrapper, aObject, args)) {
                       return false;
                     }
