@@ -17,7 +17,7 @@ add_task(function test_findCluster() {
   });
 
   yield Service.identity.initializeWithCurrentIdentity();
-  yield Assert_rejects(Service.identity.whenReadyToAuthenticate.promise,
+  yield Assert.rejects(Service.identity.whenReadyToAuthenticate.promise,
                        "should reject due to 500");
 
   Assert.throws(function() {
@@ -32,7 +32,7 @@ add_task(function test_findCluster() {
   });
 
   yield Service.identity.initializeWithCurrentIdentity();
-  yield Assert_rejects(Service.identity.whenReadyToAuthenticate.promise,
+  yield Assert.rejects(Service.identity.whenReadyToAuthenticate.promise,
                        "should reject due to 401");
 
   cluster = Service._clusterManager._findCluster();
