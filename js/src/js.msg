@@ -421,7 +421,7 @@ MSG_DEF(JSMSG_TYPEDOBJECT_TOO_BIG,     0, JSEXN_ERR, "Type is too large to alloc
 
 // Typed array
 MSG_DEF(JSMSG_BAD_INDEX,               0, JSEXN_RANGEERR, "invalid or out-of-range index")
-MSG_DEF(JSMSG_TYPED_ARRAY_BAD_ARGS,    0, JSEXN_ERR, "invalid arguments")
+MSG_DEF(JSMSG_TYPED_ARRAY_BAD_ARGS,    0, JSEXN_TYPEERR, "invalid arguments")
 MSG_DEF(JSMSG_TYPED_ARRAY_BAD_OBJECT,  0, JSEXN_TYPEERR, "invalid object argument")
 MSG_DEF(JSMSG_TYPED_ARRAY_BAD_INDEX,   0, JSEXN_ERR, "invalid or out-of-range index")
 MSG_DEF(JSMSG_TYPED_ARRAY_NEGATIVE_ARG,1, JSEXN_ERR, "argument {0} must be >= 0")
