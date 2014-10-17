@@ -7035,8 +7035,18 @@ AutoMaybeDisableFontInflation::~AutoMaybeDisableFontInflation()
 }
 
 namespace mozilla {
+
+Rect NSRectToRect(const nsRect& aRect, int32_t aAppUnitsPerPixel)
+{
+  return Rect(Float(aRect.x) / aAppUnitsPerPixel,
+              Float(aRect.y) / aAppUnitsPerPixel,
+              Float(aRect.width) / aAppUnitsPerPixel,
+              Float(aRect.height) / aAppUnitsPerPixel);
+}
+
 namespace layout {
 
+  
 void
 MaybeSetupTransactionIdAllocator(layers::LayerManager* aManager, nsView* aView)
 {

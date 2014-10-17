@@ -391,27 +391,33 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
       rect.x = pc->RoundAppUnitsToNearestDevPixels(rect.x);
       rect.y = pc->RoundAppUnitsToNearestDevPixels(rect.y);
 
-      nsPoint points[3];
+      DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+      RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
+      int32_t appUnitsPerDevPixel = pc->AppUnitsPerDevPixel();
       if (isDown) {
         // to bottom
-        points[0] = rect.TopLeft();
-        points[1] = rect.TopRight();
-        points[2] = (rect.BottomLeft() + rect.BottomRight()) / 2;
+        builder->MoveTo(NSPointToPoint(rect.TopLeft(), appUnitsPerDevPixel));
+        builder->LineTo(NSPointToPoint(rect.TopRight(), appUnitsPerDevPixel));
+        builder->LineTo(NSPointToPoint((rect.BottomLeft() + rect.BottomRight()) / 2,
+                                       appUnitsPerDevPixel));
       } else {
         bool isLR = isVertical ? wm.IsVerticalLR() : wm.IsBidiLTR();
         if (isLR) {
           // to right
-          points[0] = rect.TopLeft();
-          points[1] = (rect.TopRight() + rect.BottomRight()) / 2;
-          points[2] = rect.BottomLeft();
+          builder->MoveTo(NSPointToPoint(rect.TopLeft(), appUnitsPerDevPixel));
+          builder->LineTo(NSPointToPoint((rect.TopRight() + rect.BottomRight()) / 2,
+                                         appUnitsPerDevPixel));
+          builder->LineTo(NSPointToPoint(rect.BottomLeft(), appUnitsPerDevPixel));
         } else {
           // to left
-          points[0] = rect.TopRight();
-          points[1] = rect.BottomRight();
-          points[2] = (rect.TopLeft() + rect.BottomLeft()) / 2;
+          builder->MoveTo(NSPointToPoint(rect.TopRight(), appUnitsPerDevPixel));
+          builder->LineTo(NSPointToPoint(rect.BottomRight(), appUnitsPerDevPixel));
+          builder->LineTo(NSPointToPoint((rect.TopLeft() + rect.BottomLeft()) / 2,
+                                         appUnitsPerDevPixel));
         }
       }
-      aRenderingContext.FillPolygon(points, 3);
+      RefPtr<Path> path = builder->Finish();
+      drawTarget->Fill(path, color);
     }
     break;
 
