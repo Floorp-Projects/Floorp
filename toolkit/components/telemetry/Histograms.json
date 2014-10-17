@@ -6631,6 +6631,13 @@
     "n_buckets": 10,
     "extended_statistics_ok": true
   },
+  "CERT_PINNING_FAILURES_BY_CA": {
+    "alert_emails": ["pinning@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 256,
+    "description": "Pinning failures by CA (see RootHashes.inc for names of CAs)"
+  },
   "CERT_PINNING_RESULTS": {
     "alert_emails": ["pinning@mozilla.org"],
     "expires_in_version": "never",
