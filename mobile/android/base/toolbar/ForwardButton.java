@@ -40,7 +40,7 @@ public class ForwardButton extends ShapedButton {
     @Override
     public void setPrivateMode(boolean isPrivate) {
         super.setPrivateMode(isPrivate);
-        mBorderPaint.setColor(isPrivate ? 0xFF363B40 : 0xFFBFBFBF);
+        mBorderPaint.setColor(isPrivate ? 0xFF5F6368 : 0xFFBFBFBF);
     }
 
     @Override
