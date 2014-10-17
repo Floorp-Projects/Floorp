@@ -56,9 +56,6 @@ public:
 
     void DrawLine(const nsPoint& aStartPt, const nsPoint& aEndPt);
     void DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
-    void DrawRect(const nsRect& aRect);
-    void DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-
     void FillRect(const nsRect& aRect);
     void FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
