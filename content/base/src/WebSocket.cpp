@@ -193,6 +193,8 @@ public:
   WorkerPrivate* mWorkerPrivate;
   nsAutoPtr<WorkerFeature> mWorkerFeature;
 
+  nsWeakPtr mWeakLoadGroup;
+
 private:
   ~WebSocketImpl()
   {
@@ -528,8 +530,7 @@ WebSocketImpl::DisconnectInternal()
 {
   AssertIsOnMainThread();
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  GetLoadGroup(getter_AddRefs(loadGroup));
+  nsCOMPtr<nsILoadGroup> loadGroup = do_QueryReferent(mWeakLoadGroup);
   if (loadGroup) {
     loadGroup->RemoveRequest(this, nullptr, NS_OK);
   }
@@ -1390,6 +1391,8 @@ WebSocketImpl::InitializeConnection()
     NS_ENSURE_SUCCESS(rv, rv);
     rv = loadGroup->AddRequest(this, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    mWeakLoadGroup = do_GetWeakReference(loadGroup);
   }
 
   // manually adding loadinfo to the channel since it
