@@ -6,6 +6,7 @@ var expect = chai.expect;
 describe("loop.conversationViews", function () {
   "use strict";
 
+  var sharedUtils = loop.shared.utils;
   var sandbox, oldTitle, view, dispatcher, contact;
 
   var CALL_STATES = loop.store.CALL_STATES;
@@ -201,12 +202,24 @@ describe("loop.conversationViews", function () {
   });
 
   describe("CallFailedView", function() {
+    var store;
+
     function mountTestComponent(props) {
       return TestUtils.renderIntoDocument(
         loop.conversationViews.CallFailedView({
-          dispatcher: dispatcher
+          dispatcher: dispatcher,
+          store: store,
+          contact: {email: [{value: "test@test.tld"}]}
         }));
     }
+
+    beforeEach(function() {
+      store = new loop.store.ConversationStore({}, {
+        dispatcher: dispatcher,
+        client: {},
+        sdkDriver: {}
+      });
+    });
 
     it("should dispatch a retryCall action when the retry button is pressed",
       function() {
@@ -232,6 +245,66 @@ describe("loop.conversationViews", function () {
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "cancelCall"));
+      });
+
+    it("should dispatch a fetchEmailLink action when the cancel button is pressed",
+      function() {
+        view = mountTestComponent();
+
+        var emailLinkBtn = view.getDOMNode().querySelector('.btn-email');
+
+        React.addons.TestUtils.Simulate.click(emailLinkBtn);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithMatch(dispatcher.dispatch,
+          sinon.match.hasOwn("name", "fetchEmailLink"));
+      });
+
+    it("should disable the email link button once the action is dispatched",
+      function() {
+        view = mountTestComponent();
+        var emailLinkBtn = view.getDOMNode().querySelector('.btn-email');
+        React.addons.TestUtils.Simulate.click(emailLinkBtn);
+
+        expect(view.getDOMNode().querySelector(".btn-email").disabled).eql(true);
+      });
+
+    it("should compose an email once the email link is received", function() {
+      var composeCallUrlEmail = sandbox.stub(sharedUtils, "composeCallUrlEmail");
+      view = mountTestComponent();
+      store.set("emailLink", "http://fake.invalid/");
+
+      sinon.assert.calledOnce(composeCallUrlEmail);
+      sinon.assert.calledWithExactly(composeCallUrlEmail,
+        "http://fake.invalid/", "test@test.tld");
+    });
+
+    it("should close the conversation window once the email link is received",
+      function() {
+        sandbox.stub(window, "close");
+        view = mountTestComponent();
+
+        store.set("emailLink", "http://fake.invalid/");
+
+        sinon.assert.calledOnce(window.close);
+      });
+
+    it("should display an error message in case email link retrieval failed",
+      function() {
+        view = mountTestComponent();
+
+        store.trigger("error:emailLink");
+
+        expect(view.getDOMNode().querySelector(".error")).not.eql(null);
+      });
+
+    it("should allow retrying to get a call url if it failed previously",
+      function() {
+        view = mountTestComponent();
+
+        store.trigger("error:emailLink");
+
+        expect(view.getDOMNode().querySelector(".btn-email").disabled).eql(false);
       });
   });
 

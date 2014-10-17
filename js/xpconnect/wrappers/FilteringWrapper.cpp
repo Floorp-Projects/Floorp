@@ -112,11 +112,12 @@ FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, HandleObject wrapper,
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::keys(JSContext *cx, HandleObject wrapper,
-                                     AutoIdVector &props) const
+FilteringWrapper<Base, Policy>::getOwnEnumerablePropertyKeys(JSContext *cx,
+                                                             HandleObject wrapper,
+                                                             AutoIdVector &props) const
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
-    return Base::keys(cx, wrapper, props) &&
+    return Base::getOwnEnumerablePropertyKeys(cx, wrapper, props) &&
            Filter<Policy>(cx, wrapper, props);
 }
 

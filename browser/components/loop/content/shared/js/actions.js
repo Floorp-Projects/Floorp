@@ -31,6 +31,13 @@ loop.shared.actions = (function() {
 
   return {
     /**
+     * Fetch a new call url from the server, intended to be sent over email when
+     * a contact can't be reached.
+     */
+    FetchEmailLink: Action.define("fetchEmailLink", {
+    }),
+
+    /**
      * Used to trigger gathering of initial call data.
      */
     GatherCallData: Action.define("gatherCallData", {

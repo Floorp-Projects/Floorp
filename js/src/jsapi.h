@@ -2475,15 +2475,27 @@ struct JSFunctionSpec {
  * JSFUN_STUB_GSOPS. JS_FNINFO allows the simple adding of
  * JSJitInfos. JS_SELF_HOSTED_FN declares a self-hosted function. Finally
  * JS_FNSPEC has slots for all the fields.
+ *
+ * The _SYM variants allow defining a function with a symbol key rather than a
+ * string key. For example, use JS_SYM_FN(iterator, ...) to define an
+ * @@iterator method.
  */
 #define JS_FS(name,call,nargs,flags)                                          \
     JS_FNSPEC(name, call, nullptr, nargs, flags, nullptr)
 #define JS_FN(name,call,nargs,flags)                                          \
     JS_FNSPEC(name, call, nullptr, nargs, (flags) | JSFUN_STUB_GSOPS, nullptr)
+#define JS_SYM_FN(name,call,nargs,flags)                                      \
+    JS_SYM_FNSPEC(symbol, call, nullptr, nargs, (flags) | JSFUN_STUB_GSOPS, nullptr)
 #define JS_FNINFO(name,call,info,nargs,flags)                                 \
     JS_FNSPEC(name, call, info, nargs, flags, nullptr)
 #define JS_SELF_HOSTED_FN(name,selfHostedName,nargs,flags)                    \
     JS_FNSPEC(name, nullptr, nullptr, nargs, flags, selfHostedName)
+#define JS_SELF_HOSTED_SYM_FN(symbol, selfHostedName, nargs, flags)           \
+    JS_SYM_FNSPEC(symbol, nullptr, nullptr, nargs, flags, selfHostedName)
+#define JS_SYM_FNSPEC(symbol, call, info, nargs, flags, selfHostedName)       \
+    JS_FNSPEC(reinterpret_cast<const char *>(                                 \
+                  uint32_t(::JS::SymbolCode::symbol) + 1),                    \
+              call, info, nargs, flags, selfHostedName)
 #define JS_FNSPEC(name,call,info,nargs,flags,selfHostedName)                  \
     {name, {call, info}, nargs, flags, selfHostedName}
 
@@ -3304,22 +3316,6 @@ JS_ReleaseMappedArrayBufferContents(void *contents, size_t length);
 
 extern JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JS::HandleObject obj);
-
-/*
- * Create an object to iterate over enumerable properties of obj, in arbitrary
- * property definition order.  NB: This differs from longstanding for..in loop
- * order, which uses order of property definition in obj.
- */
-extern JS_PUBLIC_API(JSObject *)
-JS_NewPropertyIterator(JSContext *cx, JS::Handle<JSObject*> obj);
-
-/*
- * Return true on success with *idp containing the id of the next enumerable
- * property to visit using iterobj, or JSID_IS_VOID if there is no such property
- * left to visit.  Return false on error.
- */
-extern JS_PUBLIC_API(bool)
-JS_NextProperty(JSContext *cx, JS::HandleObject iterobj, JS::MutableHandleId idp);
 
 extern JS_PUBLIC_API(jsval)
 JS_GetReservedSlot(JSObject *obj, uint32_t index);
@@ -4509,6 +4505,31 @@ GetSymbolCode(Handle<Symbol*> symbol);
  */
 JS_PUBLIC_API(Symbol *)
 GetWellKnownSymbol(JSContext *cx, SymbolCode which);
+
+/*
+ * Return true if the given JSPropertySpec::name or JSFunctionSpec::name value
+ * is actually a symbol code and not a string. See JS_SYM_FN.
+ */
+inline bool
+PropertySpecNameIsSymbol(const char *name)
+{
+    uintptr_t u = reinterpret_cast<uintptr_t>(name);
+    return u != 0 && u - 1 < WellKnownSymbolLimit;
+}
+
+JS_PUBLIC_API(bool)
+PropertySpecNameEqualsId(const char *name, HandleId id);
+
+/*
+ * Create a jsid that does not need to be marked for GC.
+ *
+ * 'name' is a JSPropertySpec::name or JSFunctionSpec::name value. The
+ * resulting jsid, on success, is either an interned string or a well-known
+ * symbol; either way it is immune to GC so there is no need to visit *idp
+ * during GC marking.
+ */
+JS_PUBLIC_API(bool)
+PropertySpecNameToPermanentId(JSContext *cx, const char *name, jsid *idp);
 
 } /* namespace JS */
 

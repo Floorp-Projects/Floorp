@@ -158,7 +158,7 @@
 .addon:not([active]) .addon-icon,
 #disable-list .addon-icon,
 #incompatible-list .addon-icon {
-  filter: url("chrome://mozapps/skin/extensions/extensions.svg#greyscale");
+  filter: grayscale(1);
 }
 
 #footer {

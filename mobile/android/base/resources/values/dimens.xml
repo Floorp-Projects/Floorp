@@ -118,6 +118,11 @@
     <dimen name="url_bar_offset_left">32dp</dimen>
     <dimen name="history_tab_indicator_height">50dp</dimen>
 
+
+    <dimen name="new_tablet_tab_thumbnail_height">180dp</dimen>
+    <dimen name="new_tablet_tab_thumbnail_width">180dp</dimen>
+    <dimen name="new_tablet_tab_panel_grid_padding">24dp</dimen>
+
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">32dp</dimen>
 
@@ -144,4 +149,13 @@
     <dimen name="arrow_popup_arrow_width">40dip</dimen>
     <dimen name="arrow_popup_arrow_height">12dip</dimen>
     <dimen name="arrow_popup_arrow_offset">8dp</dimen>
+
+    <!-- Find-In-Page dialog dimensions. -->
+    <dimen name="find_in_page_text_margin_left">5dip</dimen>
+    <dimen name="find_in_page_text_margin_right">12dip</dimen>
+    <dimen name="find_in_page_text_padding_left">10dip</dimen>
+    <dimen name="find_in_page_text_padding_right">10dip</dimen>
+    <dimen name="find_in_page_status_margin_right">5dip</dimen>
+    <dimen name="find_in_page_control_margin_top">2dip</dimen>
+
 </resources>

@@ -17,6 +17,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Assertions.h"
 #include <algorithm>
+#include "nsAlgorithm.h"
 
 namespace mozilla {
 
@@ -286,16 +287,22 @@ public:
     bool IsImmutable() const { return mImmutable; }
     void SetImmutable() { mImmutable = true; }
 
-    void SetBaseMipmapLevel(unsigned level) { mBaseMipmapLevel = level; }
-    void SetMaxMipmapLevel(unsigned level) { mMaxMipmapLevel = level; }
-    size_t GetBaseMipmapLevel() const {
-        // Clamp to [0, levels - 1]
-        return std::min(mBaseMipmapLevel, mMaxLevelWithCustomImages);
+    void SetBaseMipmapLevel(size_t level) { mBaseMipmapLevel = level; }
+    void SetMaxMipmapLevel(size_t level) { mMaxMipmapLevel = level; }
+
+    // Clamping (from ES 3.0.4, section 3.8 - Texturing). When not immutable,
+    // the ranges must be guarded.
+    size_t EffectiveBaseMipmapLevel() const {
+        if (IsImmutable())
+            return std::min(mBaseMipmapLevel, mMaxLevelWithCustomImages);
+        return mBaseMipmapLevel;
     }
-    size_t GetMaxMipmapLevel() const {
-        // Clamp to [base, levels - 1]
+    size_t EffectiveMaxMipmapLevel() const {
+        if (IsImmutable())
+            return mozilla::clamped(mMaxMipmapLevel, EffectiveBaseMipmapLevel(), mMaxLevelWithCustomImages);
         return std::min(mMaxMipmapLevel, mMaxLevelWithCustomImages);
     }
+    bool IsMipmapRangeValid() const;
 
     size_t MaxLevelWithCustomImages() const { return mMaxLevelWithCustomImages; }
 

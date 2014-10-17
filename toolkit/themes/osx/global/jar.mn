@@ -206,3 +206,4 @@ toolkit.jar:
   skin/classic/global/tree/columnpicker.gif                          (tree/columnpicker.gif)
   skin/classic/global/tree/folder.png                                (tree/folder.png)
   skin/classic/global/tree/folder@2x.png                             (tree/folder@2x.png)
+  skin/classic/global/spinner.png                                    (../../shared/spinner.png)

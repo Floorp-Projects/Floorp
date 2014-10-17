@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<org.mozilla.gecko.tabs.TabsLayoutItemView xmlns:android="http://schemas.android.com/apk/res/android"
+                                           style="@style/TabsItem"
+                                           android:focusable="true"
+                                           android:id="@+id/info"
+                                           android:layout_width="wrap_content"
+                                           android:layout_height="wrap_content"
+                                           android:paddingTop="6dip"
+                                           android:paddingBottom="6dip"
+                                           android:paddingLeft="1dip"
+                                           android:paddingRight="1dip"
+                                           android:gravity="center"
+                                           android:orientation="vertical">
+
+    <LinearLayout android:layout_width="@dimen/new_tablet_tab_thumbnail_width"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal"
+                  android:padding="3dip">
+
+        <TextView android:id="@+id/title"
+                  android:layout_width="0dip"
+                  android:layout_height="wrap_content"
+                  android:layout_weight="1.0"
+                  android:paddingTop="4dip"
+                  style="@style/TabRowTextAppearance"
+                  android:textSize="12sp"
+                  android:textColor="#FFFFFFFF"
+                  android:singleLine="true"
+                  android:duplicateParentState="true"/>
+
+        <ImageButton android:id="@+id/close"
+                     style="@style/TabsItemClose"
+                     android:layout_width="wrap_content"
+                     android:layout_height="match_parent"
+                     android:background="@drawable/action_bar_button_inverse"
+                     android:scaleType="center"
+                     android:contentDescription="@string/close_tab"
+                     android:src="@drawable/new_tablet_tab_close"/>
+
+    </LinearLayout>
+
+    <RelativeLayout android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="3dp"
+                    android:background="@drawable/tab_thumbnail"
+                    android:duplicateParentState="true">
+
+        <org.mozilla.gecko.widget.ThumbnailView android:id="@+id/thumbnail"
+                                                android:layout_width="@dimen/new_tablet_tab_thumbnail_width"
+                                                android:layout_height="@dimen/new_tablet_tab_thumbnail_height"
+                                                android:src="@drawable/tab_thumbnail_default"/>
+
+    </RelativeLayout>
+
+</org.mozilla.gecko.tabs.TabsLayoutItemView>

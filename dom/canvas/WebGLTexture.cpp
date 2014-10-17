@@ -14,6 +14,7 @@
 #include "WebGLTexelConversions.h"
 
 #include <algorithm>
+#include "mozilla/MathAlgorithms.h"
 
 using namespace mozilla;
 
@@ -64,35 +65,49 @@ WebGLTexture::MemoryUsage() const {
         return 0;
     size_t result = 0;
     for(size_t face = 0; face < mFacesCount; face++) {
-      for(size_t level = 0; level <= mMaxLevelWithCustomImages; level++)
-        result += ImageInfoAtFace(face, level).MemoryUsage();
-    }
+            for(size_t level = 0; level <= mMaxLevelWithCustomImages; level++)
+                result += ImageInfoAtFace(face, level).MemoryUsage();
+        }
     return result;
+}
+
+static inline size_t
+MipmapLevelsForSize(const WebGLTexture::ImageInfo &info)
+{
+    GLsizei size = std::max(std::max(info.Width(), info.Height()), info.Depth());
+
+    // Find floor(log2(size)). (ES 3.0.4, 3.8 - Mipmapping).
+    return mozilla::FloorLog2(size);
 }
 
 bool
 WebGLTexture::DoesMipmapHaveAllLevelsConsistentlyDefined(TexImageTarget texImageTarget) const
 {
+    // We could not have generated a mipmap if the base image wasn't defined.
     if (mHaveGeneratedMipmap)
         return true;
 
-    if (GetMaxMipmapLevel() < GetBaseMipmapLevel())
+    if (!IsMipmapRangeValid())
         return false;
 
     // We want a copy here so we can modify it temporarily.
-    ImageInfo expected = ImageInfoAt(texImageTarget, GetBaseMipmapLevel());
+    ImageInfo expected = ImageInfoAt(texImageTarget, EffectiveBaseMipmapLevel());
+    if (!expected.IsPositive())
+        return false;
 
-    // checks if custom level>0 images are all defined up to the highest level defined
-    // and have the expected dimensions
-    for (size_t level = GetBaseMipmapLevel(); level <= GetMaxMipmapLevel(); ++level) {
+    // If Level{max} is > mMaxLevelWithCustomImages, then check if we are
+    // missing any image levels.
+    if (mMaxMipmapLevel > mMaxLevelWithCustomImages) {
+        if (MipmapLevelsForSize(expected) > mMaxLevelWithCustomImages)
+            return false;
+    }
+
+    // Checks if custom images are all defined up to the highest level and
+    // have the expected dimensions.
+    for (size_t level = EffectiveBaseMipmapLevel(); level <= EffectiveMaxMipmapLevel(); ++level) {
         const ImageInfo& actual = ImageInfoAt(texImageTarget, level);
         if (actual != expected)
             return false;
-
-        // Check the raw value here, not the clamped one, since we don't want
-        // to terminate early if there aren't enough levels defined.
-        if (level == mMaxMipmapLevel)
-            return true;
 
         expected.mWidth = std::max(1, expected.mWidth / 2);
         expected.mHeight = std::max(1, expected.mHeight / 2);
@@ -108,8 +123,7 @@ WebGLTexture::DoesMipmapHaveAllLevelsConsistentlyDefined(TexImageTarget texImage
         }
     }
 
-    // if we're here, we've exhausted all levels without finding a 1x1 image
-    return false;
+    return true;
 }
 
 void
@@ -177,25 +191,19 @@ WebGLTexture::SetGeneratedMipmap() {
 void
 WebGLTexture::SetCustomMipmap() {
     if (mHaveGeneratedMipmap) {
-        // if we were in GeneratedMipmap mode and are now switching to CustomMipmap mode,
-        // we need to compute now all the mipmap image info.
+        if (!IsMipmapRangeValid())
+            return;
 
-        // since we were in GeneratedMipmap mode, we know that the level 0 images all have the same info,
-        // and are power-of-two.
-        ImageInfo imageInfo = ImageInfoAtFace(0, GetBaseMipmapLevel());
+        // If we were in GeneratedMipmap mode and are now switching to CustomMipmap mode,
+        // we now need to compute all the mipmap image info.
+        ImageInfo imageInfo = ImageInfoAtFace(0, EffectiveBaseMipmapLevel());
         NS_ASSERTION(mContext->IsWebGL2() || imageInfo.IsPowerOfTwo(),
                      "this texture is NPOT, so how could GenerateMipmap() ever accept it?");
 
-        GLsizei size = std::max(std::max(imageInfo.mWidth, imageInfo.mHeight), imageInfo.mDepth);
+        size_t maxLevel = MipmapLevelsForSize(imageInfo);
+        EnsureMaxLevelWithCustomImagesAtLeast(EffectiveBaseMipmapLevel() + maxLevel);
 
-        // Find floor(log2(size)). (ES 3.0.4, 3.8 - Mipmapping).
-        size_t maxLevel = 0;
-        for (GLsizei n = size; n > 1; n >>= 1)
-            ++maxLevel;
-
-        EnsureMaxLevelWithCustomImagesAtLeast(maxLevel);
-
-        for (size_t level = GetBaseMipmapLevel() + 1; level <= GetMaxMipmapLevel(); ++level) {
+        for (size_t level = EffectiveBaseMipmapLevel() + 1; level <= EffectiveMaxMipmapLevel(); ++level) {
             imageInfo.mWidth = std::max(imageInfo.mWidth / 2, 1);
             imageInfo.mHeight = std::max(imageInfo.mHeight / 2, 1);
             imageInfo.mDepth = std::max(imageInfo.mDepth / 2, 1);
@@ -219,11 +227,6 @@ bool
 WebGLTexture::IsMipmapComplete() const {
     MOZ_ASSERT(mTarget == LOCAL_GL_TEXTURE_2D ||
                mTarget == LOCAL_GL_TEXTURE_3D);
-
-    if (!ImageInfoAtFace(0, GetBaseMipmapLevel()).IsPositive())
-        return false;
-    if (mHaveGeneratedMipmap)
-        return true;
     return DoesMipmapHaveAllLevelsConsistentlyDefined(LOCAL_GL_TEXTURE_2D);
 }
 
@@ -249,6 +252,17 @@ WebGLTexture::IsMipmapCubeComplete() const {
     return true;
 }
 
+bool
+WebGLTexture::IsMipmapRangeValid() const
+{
+    // In ES3, if a texture is immutable, the mipmap levels are clamped.
+    if (IsImmutable())
+        return true;
+    if (mBaseMipmapLevel > std::min(mMaxLevelWithCustomImages, mMaxMipmapLevel))
+        return false;
+    return true;
+}
+
 WebGLTextureFakeBlackStatus
 WebGLTexture::ResolvedFakeBlackStatus() {
     if (MOZ_LIKELY(mFakeBlackStatus != WebGLTextureFakeBlackStatus::Unknown)) {
@@ -256,10 +270,14 @@ WebGLTexture::ResolvedFakeBlackStatus() {
     }
 
     // Determine if the texture needs to be faked as a black texture.
-    // See 3.8.2 Shader Execution in the OpenGL ES 2.0.24 spec.
-
+    // See 3.8.2 Shader Execution in the OpenGL ES 2.0.24 spec, and 3.8.13 in
+    // the OpenGL ES 3.0.4 spec.
+    if (!IsMipmapRangeValid()) {
+        mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
+        return mFakeBlackStatus;
+    }
     for (size_t face = 0; face < mFacesCount; ++face) {
-        if (ImageInfoAtFace(face, GetBaseMipmapLevel()).mImageDataStatus == WebGLImageDataStatus::NoImageData) {
+        if (ImageInfoAtFace(face, EffectiveBaseMipmapLevel()).mImageDataStatus == WebGLImageDataStatus::NoImageData) {
             // In case of undefined texture image, we don't print any message because this is a very common
             // and often legitimate case (asynchronous texture loading).
             mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;

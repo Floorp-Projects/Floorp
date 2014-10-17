@@ -6,34 +6,44 @@
               android:layout_width="0dip"
               android:layout_height="wrap_content"
               android:layout_weight="1.0"
-              android:layout_marginLeft="5dip"
-              android:layout_marginRight="5dip"
+              android:layout_marginLeft="@dimen/find_in_page_text_margin_left"
+              android:layout_marginRight="@dimen/find_in_page_text_margin_right"
               android:contentDescription="@string/find_text"
               android:background="@drawable/url_bar_entry"
               android:singleLine="true"
               android:textColor="#000000"
               android:textCursorDrawable="@null"
               android:inputType="text"
-              android:paddingLeft="15dip"
-              android:paddingRight="15dip"
+              android:paddingLeft="@dimen/find_in_page_text_padding_left"
+              android:paddingRight="@dimen/find_in_page_text_padding_right"
               android:textColorHighlight="@color/url_bar_text_highlight"
               android:imeOptions="actionSearch"
               android:selectAllOnFocus="true"
               android:gravity="center_vertical|left"/>
 
+    <TextView android:id="@+id/find_status"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_marginRight="@dimen/find_in_page_status_margin_right"
+              android:textColor="@color/find_status_default"
+              android:visibility="gone"/>
+
     <ImageButton android:id="@+id/find_prev"
                  style="@style/FindBar.ImageButton"
                  android:contentDescription="@string/find_prev"
+                 android:layout_marginTop="@dimen/find_in_page_control_margin_top"
                  android:src="@drawable/find_prev"/>
 
     <ImageButton android:id="@+id/find_next"
                  style="@style/FindBar.ImageButton"
                  android:contentDescription="@string/find_next"
+                 android:layout_marginTop="@dimen/find_in_page_control_margin_top"
                  android:src="@drawable/find_next"/>
 
     <ImageButton android:id="@+id/find_close"
                  style="@style/FindBar.ImageButton"
                  android:contentDescription="@string/find_close"
+                 android:layout_marginTop="@dimen/find_in_page_control_margin_top"
                  android:src="@drawable/find_close"/>
 
 </merge>
