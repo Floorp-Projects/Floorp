@@ -57,7 +57,7 @@ MessageEvent::~MessageEvent()
 }
 
 JSObject*
-MessageEvent::WrapObject(JSContext* aCx)
+MessageEvent::WrapObjectInternal(JSContext* aCx)
 {
   return mozilla::dom::MessageEventBinding::Wrap(aCx, this);
 }
