@@ -1,0 +1,41 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <style>
+    .parent {
+      position: relative;
+      width: 100px;
+      height: 100px;
+    }
+
+    .child {
+      filter: blur(3px);
+      background: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+
+    .black-rect {
+      position: absolute;
+      top: 50px;
+      width: 100px;
+      height: 50px;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+  <!--
+    You should see a blurred green square, with its bottom half mostly
+    covered by a black rectangle.
+  -->
+  <div class="parent">
+    <div class="child"></div>
+    <div class="black-rect"></div>
+  </div>
+</body>
+</html>
