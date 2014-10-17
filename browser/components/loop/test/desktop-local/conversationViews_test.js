@@ -288,6 +288,24 @@ describe("loop.conversationViews", function () {
 
         sinon.assert.calledOnce(window.close);
       });
+
+    it("should display an error message in case email link retrieval failed",
+      function() {
+        view = mountTestComponent();
+
+        store.trigger("error:emailLink");
+
+        expect(view.getDOMNode().querySelector(".error")).not.eql(null);
+      });
+
+    it("should allow retrying to get a call url if it failed previously",
+      function() {
+        view = mountTestComponent();
+
+        store.trigger("error:emailLink");
+
+        expect(view.getDOMNode().querySelector(".btn-email").disabled).eql(false);
+      });
   });
 
   describe("OngoingConversationView", function() {
