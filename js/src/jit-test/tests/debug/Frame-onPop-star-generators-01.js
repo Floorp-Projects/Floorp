@@ -1,5 +1,5 @@
 // Returning {throw:} from an onPop handler when yielding works and
-// does not close the generator-iterator.
+// closes the generator-iterator.
 
 load(libdir + "iteration.js");
 
@@ -17,4 +17,4 @@ var rv = gw.evalInGlobal("it.next();");
 assertEq(rv.throw, "fit");
 
 dbg.enabled = false;
-assertIteratorNext(g.it, 1);
+assertIteratorDone(g.it);

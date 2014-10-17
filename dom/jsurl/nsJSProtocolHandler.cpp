@@ -36,6 +36,7 @@
 #include "nsIContentViewer.h"
 #include "nsIXPConnect.h"
 #include "nsContentUtils.h"
+#include "nsNullPrincipal.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 #include "nsIScriptChannel.h"
@@ -427,9 +428,18 @@ nsresult nsJSChannel::Init(nsIURI *aURI)
     // and the underlying Input Stream will not be created...
     nsCOMPtr<nsIChannel> channel;
 
+    nsCOMPtr<nsIPrincipal> nullPrincipal =
+      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // If the resultant script evaluation actually does return a value, we
     // treat it as html.
-    rv = NS_NewInputStreamChannel(getter_AddRefs(channel), aURI, mIOThunk,
+    rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
+                                  aURI,
+                                  mIOThunk,
+                                  nullPrincipal,
+                                  nsILoadInfo::SEC_NORMAL,
+                                  nsIContentPolicy::TYPE_OTHER,
                                   NS_LITERAL_CSTRING("text/html"));
     if (NS_FAILED(rv)) return rv;
 

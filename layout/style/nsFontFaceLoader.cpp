@@ -26,8 +26,8 @@
 using namespace mozilla;
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo* 
-GetFontDownloaderLog()
+PRLogModuleInfo*
+nsFontFaceLoader::GetFontDownloaderLog()
 {
   static PRLogModuleInfo* sLog;
   if (!sLog)

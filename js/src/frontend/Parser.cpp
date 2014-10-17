@@ -1035,6 +1035,23 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
         break;
     }
 
+    if (pc->isGenerator()) {
+        MOZ_ASSERT(type == StatementListBody);
+        Node generator = newName(context->names().dotGenerator);
+        if (!generator)
+            return null();
+        if (!pc->define(tokenStream, context->names().dotGenerator, generator, Definition::VAR))
+            return null();
+
+        generator = newName(context->names().dotGenerator);
+        if (!generator)
+            return null();
+        if (!noteNameUse(context->names().dotGenerator, generator))
+            return null();
+        if (!handler.prependInitialYield(pn, generator))
+            return null();
+    }
+
     /* Define the 'arguments' binding if necessary. */
     if (!checkFunctionArguments())
         return null();
@@ -5009,6 +5026,21 @@ Parser<ParseHandler>::returnStatement()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::newYieldExpression(uint32_t begin, typename ParseHandler::Node expr,
+                                         bool isYieldStar)
+{
+    Node generator = newName(context->names().dotGenerator);
+    if (!generator)
+        return null();
+    if (!noteNameUse(context->names().dotGenerator, generator))
+        return null();
+    if (isYieldStar)
+        return handler.newYieldStarExpression(begin, expr, generator);
+    return handler.newYieldExpression(begin, expr, generator);
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::yieldExpression()
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_YIELD));
@@ -5052,7 +5084,7 @@ Parser<ParseHandler>::yieldExpression()
             if (!exprNode)
                 return null();
         }
-        return handler.newUnary(kind, JSOP_NOP, begin, exprNode);
+        return newYieldExpression(begin, exprNode, kind == PNK_YIELD_STAR);
       }
 
       case NotGenerator:
@@ -5110,7 +5142,7 @@ Parser<ParseHandler>::yieldExpression()
                 return null();
         }
 
-        return handler.newUnary(PNK_YIELD, JSOP_NOP, begin, exprNode);
+        return newYieldExpression(begin, exprNode);
       }
     }
 
@@ -6189,9 +6221,17 @@ LegacyCompExprTransplanter::transplant(ParseNode *pn)
             MOZ_ASSERT(!stmt || stmt != pc->topStmt);
 #endif
             if (isGenexp && !dn->isOp(JSOP_CALLEE)) {
-                MOZ_ASSERT(!pc->decls().lookupFirst(atom));
+                MOZ_ASSERT_IF(atom != parser->context->names().dotGenerator,
+                              !pc->decls().lookupFirst(atom));
 
-                if (dn->pn_pos < root->pn_pos) {
+                if (atom == parser->context->names().dotGenerator) {
+                    if (dn->dn_uses == pn) {
+                        if (!BumpStaticLevel(parser->tokenStream, dn, pc))
+                            return false;
+                        if (!AdjustBlockId(parser->tokenStream, dn, adjust, pc))
+                            return false;
+                    }
+                } else if (dn->pn_pos < root->pn_pos) {
                     /*
                      * The variable originally appeared to be a use of a
                      * definition or placeholder outside the generator, but now
@@ -6304,7 +6344,7 @@ LegacyComprehensionHeadBlockScopeDepth(ParseContext<ParseHandler> *pc)
  */
 template <>
 ParseNode *
-Parser<FullParseHandler>::legacyComprehensionTail(ParseNode *bodyStmt, unsigned blockid,
+Parser<FullParseHandler>::legacyComprehensionTail(ParseNode *bodyExpr, unsigned blockid,
                                                   GeneratorKind comprehensionKind,
                                                   ParseContext<FullParseHandler> *outerpc,
                                                   unsigned innerBlockScopeDepth)
@@ -6368,15 +6408,15 @@ Parser<FullParseHandler>::legacyComprehensionTail(ParseNode *bodyStmt, unsigned 
         adjust = blockid - adjust;
     }
 
-    handler.setBeginPosition(pn, bodyStmt);
+    handler.setBeginPosition(pn, bodyExpr);
 
     pnp = &pn->pn_expr;
 
-    LegacyCompExprTransplanter transplanter(bodyStmt, this, outerpc, comprehensionKind, adjust);
+    LegacyCompExprTransplanter transplanter(bodyExpr, this, outerpc, comprehensionKind, adjust);
     if (!transplanter.init())
         return null();
 
-    if (!transplanter.transplant(bodyStmt))
+    if (!transplanter.transplant(bodyExpr))
         return null();
 
     MOZ_ASSERT(pc->staticScope && pc->staticScope == pn->pn_objbox->object);
@@ -6532,6 +6572,23 @@ Parser<FullParseHandler>::legacyComprehensionTail(ParseNode *bodyStmt, unsigned 
         pnp = &pn2->pn_kid2;
     }
 
+    ParseNode *bodyStmt;
+    if (isGenexp) {
+        ParseNode *yieldExpr = newYieldExpression(bodyExpr->pn_pos.begin, bodyExpr);
+        if (!yieldExpr)
+            return null();
+        yieldExpr->setInParens(true);
+
+        bodyStmt = handler.newExprStatement(yieldExpr, bodyExpr->pn_pos.end);
+        if (!bodyStmt)
+            return null();
+    } else {
+        bodyStmt = handler.newUnary(PNK_ARRAYPUSH, JSOP_ARRAYPUSH,
+                                    bodyExpr->pn_pos.begin, bodyExpr);
+        if (!bodyStmt)
+            return null();
+    }
+
     *pnp = bodyStmt;
 
     pc->topStmt->innerBlockScopeDepth += innerBlockScopeDepth;
@@ -6568,12 +6625,7 @@ Parser<FullParseHandler>::legacyArrayComprehension(ParseNode *array)
     array->pn_tail = &array->pn_head;
     *array->pn_tail = nullptr;
 
-    ParseNode *arrayPush = handler.newUnary(PNK_ARRAYPUSH, JSOP_ARRAYPUSH,
-                                            bodyExpr->pn_pos.begin, bodyExpr);
-    if (!arrayPush)
-        return null();
-
-    ParseNode *comp = legacyComprehensionTail(arrayPush, array->pn_blockid, NotGenerator,
+    ParseNode *comp = legacyComprehensionTail(bodyExpr, array->pn_blockid, NotGenerator,
                                               nullptr, LegacyComprehensionHeadBlockScopeDepth(pc));
     if (!comp)
         return null();
@@ -6596,10 +6648,10 @@ Parser<SyntaxParseHandler>::legacyArrayComprehension(Node array)
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::generatorComprehensionLambda(GeneratorKind comprehensionKind,
-                                                   unsigned begin, Node innerStmt)
+                                                   unsigned begin, Node innerExpr)
 {
     MOZ_ASSERT(comprehensionKind == LegacyGenerator || comprehensionKind == StarGenerator);
-    MOZ_ASSERT(!!innerStmt == (comprehensionKind == LegacyGenerator));
+    MOZ_ASSERT(!!innerExpr == (comprehensionKind == LegacyGenerator));
 
     Node genfn = handler.newFunctionDefinition();
     if (!genfn)
@@ -6650,28 +6702,46 @@ Parser<ParseHandler>::generatorComprehensionLambda(GeneratorKind comprehensionKi
     genFunbox->inGenexpLambda = true;
     handler.setBlockId(genfn, genpc.bodyid);
 
-    Node body;
+    Node generator = newName(context->names().dotGenerator);
+    if (!generator)
+        return null();
+    if (!pc->define(tokenStream, context->names().dotGenerator, generator, Definition::VAR))
+        return null();
 
+    Node body = handler.newStatementList(pc->blockid(), TokenPos(begin, pos().end));
+    if (!body)
+        return null();
+
+    Node comp;
     if (comprehensionKind == StarGenerator) {
-        body = comprehension(StarGenerator);
-        if (!body)
+        comp = comprehension(StarGenerator);
+        if (!comp)
             return null();
     } else {
         MOZ_ASSERT(comprehensionKind == LegacyGenerator);
-        body = legacyComprehensionTail(innerStmt, outerpc->blockid(), LegacyGenerator,
+        comp = legacyComprehensionTail(innerExpr, outerpc->blockid(), LegacyGenerator,
                                        outerpc, LegacyComprehensionHeadBlockScopeDepth(outerpc));
-        if (!body)
+        if (!comp)
             return null();
     }
 
     if (comprehensionKind == StarGenerator)
         MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
 
-    handler.setBeginPosition(body, begin);
+    handler.setBeginPosition(comp, begin);
+    handler.setEndPosition(comp, pos().end);
+    handler.addStatementToList(body, comp, pc);
     handler.setEndPosition(body, pos().end);
-
     handler.setBeginPosition(genfn, begin);
     handler.setEndPosition(genfn, pos().end);
+
+    generator = newName(context->names().dotGenerator);
+    if (!generator)
+        return null();
+    if (!noteNameUse(context->names().dotGenerator, generator))
+        return null();
+    if (!handler.prependInitialYield(body, generator))
+        return null();
 
     // Note that if we ever start syntax-parsing generators, we will also
     // need to propagate the closed-over variable set to the inner
@@ -6709,19 +6779,8 @@ Parser<FullParseHandler>::legacyGeneratorExpr(ParseNode *expr)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FOR));
 
-    /* Create a |yield| node for |kid|. */
-    ParseNode *yieldExpr = handler.newUnary(PNK_YIELD, JSOP_NOP, expr->pn_pos.begin, expr);
-    if (!yieldExpr)
-        return null();
-    yieldExpr->setInParens(true);
-
-    // A statement to wrap the yield expression.
-    ParseNode *yieldStmt = handler.newExprStatement(yieldExpr, expr->pn_pos.end);
-    if (!yieldStmt)
-        return null();
-
     /* Make a new node for the desugared generator function. */
-    ParseNode *genfn = generatorComprehensionLambda(LegacyGenerator, expr->pn_pos.begin, yieldStmt);
+    ParseNode *genfn = generatorComprehensionLambda(LegacyGenerator, expr->pn_pos.begin, expr);
     if (!genfn)
         return null();
 
@@ -6871,7 +6930,7 @@ Parser<ParseHandler>::comprehensionTail(GeneratorKind comprehensionKind)
         return handler.newUnary(PNK_ARRAYPUSH, JSOP_ARRAYPUSH, begin, bodyExpr);
 
     MOZ_ASSERT(comprehensionKind == StarGenerator);
-    Node yieldExpr = handler.newUnary(PNK_YIELD, JSOP_NOP, begin, bodyExpr);
+    Node yieldExpr = newYieldExpression(begin, bodyExpr);
     if (!yieldExpr)
         return null();
     handler.setInParens(yieldExpr);

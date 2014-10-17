@@ -35,19 +35,9 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-#ifdef PR_LOGGING
-static PRLogModuleInfo*
-GetFontFaceSetLog()
-{
-  static PRLogModuleInfo* sLog;
-  if (!sLog)
-    sLog = PR_NewLogModule("fontfaceset");
-  return sLog;
-}
-#endif /* PR_LOGGING */
-
-#define LOG(args) PR_LOG(GetFontFaceSetLog(), PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(GetFontFaceSetLog(), PR_LOG_DEBUG)
+#define LOG(args) PR_LOG(gfxUserFontSet::GetUserFontsLog(), PR_LOG_DEBUG, args)
+#define LOG_ENABLED() PR_LOG_TEST(gfxUserFontSet::GetUserFontsLog(), \
+                                  PR_LOG_DEBUG)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(FontFaceSet)
 
@@ -415,14 +405,16 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
     return NS_ERROR_OUT_OF_MEMORY;
 
 #ifdef PR_LOGGING
-  if (LOG_ENABLED()) {
+  if (PR_LOG_TEST(nsFontFaceLoader::GetFontDownloaderLog(),
+                  PR_LOG_DEBUG)) {
     nsAutoCString fontURI, referrerURI;
     aFontFaceSrc->mURI->GetSpec(fontURI);
     if (aFontFaceSrc->mReferrer)
       aFontFaceSrc->mReferrer->GetSpec(referrerURI);
-    LOG(("fontdownloader (%p) download start - font uri: (%s) "
-         "referrer uri: (%s)\n",
-         fontLoader.get(), fontURI.get(), referrerURI.get()));
+    PR_LOG(nsFontFaceLoader::GetFontDownloaderLog(), PR_LOG_DEBUG,
+           ("fontdownloader (%p) download start - font uri: (%s) "
+            "referrer uri: (%s)\n",
+            fontLoader.get(), fontURI.get(), referrerURI.get()));
   }
 #endif
 
@@ -612,6 +604,13 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
 
   // local rules have been rebuilt, so clear the flag
   mUserFontSet->mLocalRulesUsed = false;
+
+#if PR_LOGGING
+  LOG(("userfonts (%p) userfont rules update (%s) rule count: %d",
+       mUserFontSet.get(),
+       (modified ? "modified" : "not modified"),
+       mRuleFaces.Length()));
+#endif
 
   return modified;
 }
@@ -1046,13 +1045,13 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
       break;
     }
   }
-  message.AppendLiteral("\nsource: ");
+  message.AppendLiteral(" source: ");
   message.Append(fontURI);
 
 #ifdef PR_LOGGING
-  if (PR_LOG_TEST(GetFontFaceSetLog(), PR_LOG_DEBUG)) {
-    PR_LOG(GetFontFaceSetLog(), PR_LOG_DEBUG,
-           ("userfonts (%p) %s", this, message.get()));
+  if (PR_LOG_TEST(gfxUserFontSet::GetUserFontsLog(), PR_LOG_DEBUG)) {
+    PR_LOG(gfxUserFontSet::GetUserFontsLog(), PR_LOG_DEBUG,
+           ("userfonts (%p) %s", mUserFontSet.get(), message.get()));
   }
 #endif
 
