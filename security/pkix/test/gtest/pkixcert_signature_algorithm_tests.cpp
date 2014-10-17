@@ -111,7 +111,7 @@ private:
   {
     EXPECT_NE(SignatureAlgorithm::unsupported_algorithm, signedData.algorithm);
     return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
-                                             MINIMUM_TEST_KEY_BITS, nullptr);
+                                             nullptr);
   }
 
   virtual Result DigestBuf(Input, uint8_t*, size_t)

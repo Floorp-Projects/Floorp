@@ -211,7 +211,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       // just use trustEmail as it is the closest alternative.
       NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, mOCSPCache,
                                        pinArg, ocspGETConfig, pinningDisabled,
-                                       false, nullptr, builtChain);
+                                       nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::digitalSignature,
@@ -236,7 +236,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                       ocspFetching == NSSCertDBTrustDomain::NeverFetchOCSP
                         ? NSSCertDBTrustDomain::LocalOnlyOCSPForEV
                         : NSSCertDBTrustDomain::FetchOCSPForEV,
-                      mOCSPCache, pinArg, ocspGETConfig, mPinningMode, true,
+                      mOCSPCache, pinArg, ocspGETConfig, mPinningMode,
                       hostname, builtChain);
         rv = BuildCertChainForOneKeyUsage(trustDomain, certDER, time,
                                           KeyUsage::digitalSignature,// (EC)DHE
@@ -261,7 +261,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       // Now try non-EV.
       NSSCertDBTrustDomain trustDomain(trustSSL, ocspFetching, mOCSPCache,
                                        pinArg, ocspGETConfig, mPinningMode,
-                                       false, hostname, builtChain);
+                                       hostname, builtChain);
       rv = BuildCertChainForOneKeyUsage(trustDomain, certDER, time,
                                         KeyUsage::digitalSignature, // (EC)DHE
                                         KeyUsage::keyEncipherment, // RSA
@@ -275,7 +275,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
     case certificateUsageSSLCA: {
       NSSCertDBTrustDomain trustDomain(trustSSL, ocspFetching, mOCSPCache,
                                        pinArg, ocspGETConfig, pinningDisabled,
-                                       false, nullptr, builtChain);
+                                       nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeCA, KeyUsage::keyCertSign,
                           KeyPurposeId::id_kp_serverAuth,
@@ -286,7 +286,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
     case certificateUsageEmailSigner: {
       NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, mOCSPCache,
                                        pinArg, ocspGETConfig, pinningDisabled,
-                                       false, nullptr, builtChain);
+                                       nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::digitalSignature,
@@ -301,7 +301,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       // based on the result of the verification(s).
       NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, mOCSPCache,
                                        pinArg, ocspGETConfig, pinningDisabled,
-                                       false, nullptr, builtChain);
+                                       nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::keyEncipherment, // RSA
@@ -320,8 +320,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
     case certificateUsageObjectSigner: {
       NSSCertDBTrustDomain trustDomain(trustObjectSigning, ocspFetching,
                                        mOCSPCache, pinArg, ocspGETConfig,
-                                       pinningDisabled, false, nullptr,
-                                       builtChain);
+                                       pinningDisabled, nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::digitalSignature,
@@ -349,15 +348,15 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       }
 
       NSSCertDBTrustDomain sslTrust(trustSSL, ocspFetching, mOCSPCache, pinArg,
-                                    ocspGETConfig, pinningDisabled, false,
-                                    nullptr, builtChain);
+                                    ocspGETConfig, pinningDisabled, nullptr,
+                                    builtChain);
       rv = BuildCertChain(sslTrust, certDER, time, endEntityOrCA,
                           keyUsage, eku, CertPolicyId::anyPolicy,
                           stapledOCSPResponse);
       if (rv == Result::ERROR_UNKNOWN_ISSUER) {
         NSSCertDBTrustDomain emailTrust(trustEmail, ocspFetching, mOCSPCache,
                                         pinArg, ocspGETConfig, pinningDisabled,
-                                        false, nullptr, builtChain);
+                                        nullptr, builtChain);
         rv = BuildCertChain(emailTrust, certDER, time, endEntityOrCA,
                             keyUsage, eku, CertPolicyId::anyPolicy,
                             stapledOCSPResponse);
@@ -365,8 +364,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
           NSSCertDBTrustDomain objectSigningTrust(trustObjectSigning,
                                                   ocspFetching, mOCSPCache,
                                                   pinArg, ocspGETConfig,
-                                                  pinningDisabled, false,
-                                                  nullptr, builtChain);
+                                                  pinningDisabled, nullptr,
+                                                  builtChain);
           rv = BuildCertChain(objectSigningTrust, certDER, time,
                               endEntityOrCA, keyUsage, eku,
                               CertPolicyId::anyPolicy, stapledOCSPResponse);

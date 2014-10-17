@@ -39,7 +39,7 @@ namespace mozilla { namespace pkix {
 typedef ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey> ScopedSECKeyPublicKey;
 
 Result
-CheckPublicKeySize(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
+CheckPublicKeySize(Input subjectPublicKeyInfo,
                    /*out*/ ScopedSECKeyPublicKey& publicKey)
 {
   SECItem subjectPublicKeyInfoSECItem =
@@ -54,13 +54,16 @@ CheckPublicKeySize(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
     return MapPRErrorCodeToResult(PR_GetError());
   }
 
+  static const unsigned int MINIMUM_NON_ECC_BITS = 1024;
+
   switch (publicKey.get()->keyType) {
     case ecKey:
-      // TODO(bug 1077790): We should check which curve.
+      // TODO(bug 622859): We should check which curve.
       return Success;
     case dsaKey: // fall through
     case rsaKey:
-      if (SECKEY_PublicKeyStrengthInBits(publicKey.get()) < minimumNonECCBits) {
+      // TODO(bug 622859): Enforce a minimum of 2048 bits for EV certs.
+      if (SECKEY_PublicKeyStrengthInBits(publicKey.get()) < MINIMUM_NON_ECC_BITS) {
         return Result::ERROR_INADEQUATE_KEY_SIZE;
       }
       break;
@@ -78,16 +81,15 @@ CheckPublicKeySize(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
 }
 
 Result
-CheckPublicKey(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits)
+CheckPublicKey(Input subjectPublicKeyInfo)
 {
   ScopedSECKeyPublicKey unused;
-  return CheckPublicKeySize(subjectPublicKeyInfo, minimumNonECCBits, unused);
+  return CheckPublicKeySize(subjectPublicKeyInfo, unused);
 }
 
 Result
 VerifySignedData(const SignedDataWithSignature& sd,
-                 Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
-                 void* pkcs11PinArg)
+                 Input subjectPublicKeyInfo, void* pkcs11PinArg)
 {
   SECOidTag pubKeyAlg;
   SECOidTag digestAlg;
@@ -140,7 +142,7 @@ VerifySignedData(const SignedDataWithSignature& sd,
 
   Result rv;
   ScopedSECKeyPublicKey pubKey;
-  rv = CheckPublicKeySize(subjectPublicKeyInfo, minimumNonECCBits, pubKey);
+  rv = CheckPublicKeySize(subjectPublicKeyInfo, pubKey);
   if (rv != Success) {
     return rv;
   }
