@@ -463,27 +463,26 @@ CryptoKey::PrivateKeyToPkcs8(SECKEYPrivateKey* aPrivKey,
 
 nsresult
 PublicDhKeyToSpki(SECKEYPublicKey* aPubKey,
-                  CERTSubjectPublicKeyInfo* aSpki,
-                  PLArenaPool* aArena)
+                  CERTSubjectPublicKeyInfo* aSpki)
 {
-  SECItem* params = ::SECITEM_AllocItem(aArena, nullptr, 0);
+  SECItem* params = ::SECITEM_AllocItem(aSpki->arena, nullptr, 0);
   if (!params) {
     return NS_ERROR_DOM_OPERATION_ERR;
   }
 
-  SECItem* rvItem = SEC_ASN1EncodeItem(aArena, params, aPubKey,
+  SECItem* rvItem = SEC_ASN1EncodeItem(aSpki->arena, params, aPubKey,
                                        SECKEY_DHParamKeyTemplate);
   if (!rvItem) {
     return NS_ERROR_DOM_OPERATION_ERR;
   }
 
-  SECStatus rv = SECOID_SetAlgorithmID(aArena, &aSpki->algorithm,
+  SECStatus rv = SECOID_SetAlgorithmID(aSpki->arena, &aSpki->algorithm,
                                        SEC_OID_X942_DIFFIE_HELMAN_KEY, params);
   if (rv != SECSuccess) {
     return NS_ERROR_DOM_OPERATION_ERR;
   }
 
-  rvItem = SEC_ASN1EncodeItem(aArena, &aSpki->subjectPublicKey, aPubKey,
+  rvItem = SEC_ASN1EncodeItem(aSpki->arena, &aSpki->subjectPublicKey, aPubKey,
                               SECKEY_DHPublicKeyTemplate);
   if (!rvItem) {
     return NS_ERROR_DOM_OPERATION_ERR;
@@ -522,7 +521,7 @@ CryptoKey::PublicKeyToSpki(SECKEYPublicKey* aPubKey,
     // goes out of scope, not when |arena| does.
     spki->arena = arena.forget();
 
-    nsresult rv = PublicDhKeyToSpki(aPubKey, spki, arena);
+    nsresult rv = PublicDhKeyToSpki(aPubKey, spki);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     spki = SECKEY_CreateSubjectPublicKeyInfo(aPubKey);
