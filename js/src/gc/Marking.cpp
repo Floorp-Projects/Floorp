@@ -111,9 +111,6 @@ template<typename T>
 static inline bool
 IsThingPoisoned(T *thing)
 {
-    static_assert(sizeof(T) >= sizeof(FreeSpan) + sizeof(uint32_t),
-                  "Ensure it is well defined to look past any free span that "
-                  "may be embedded in the thing's header when freed.");
     const uint8_t poisonBytes[] = {
         JS_FRESH_NURSERY_PATTERN,
         JS_SWEPT_NURSERY_PATTERN,
@@ -972,12 +969,12 @@ gc::MarkArraySlots(JSTracer *trc, size_t len, HeapSlot *vec, const char *name)
 }
 
 void
-gc::MarkObjectSlots(JSTracer *trc, JSObject *obj, uint32_t start, uint32_t nslots)
+gc::MarkObjectSlots(JSTracer *trc, NativeObject *obj, uint32_t start, uint32_t nslots)
 {
     MOZ_ASSERT(obj->isNative());
     for (uint32_t i = start; i < (start + nslots); ++i) {
         trc->setTracingDetails(js_GetObjectSlotName, obj, i);
-        MarkValueInternal(trc, obj->fakeNativeGetSlotRef(i).unsafeGet());
+        MarkValueInternal(trc, obj->getSlotRef(i).unsafeGet());
     }
 }
 
@@ -1041,10 +1038,10 @@ gc::MarkCrossCompartmentScriptUnbarriered(JSTracer *trc, JSObject *src, JSScript
 }
 
 void
-gc::MarkCrossCompartmentSlot(JSTracer *trc, JSObject *src, HeapSlot *dst, const char *name)
+gc::MarkCrossCompartmentSlot(JSTracer *trc, JSObject *src, HeapValue *dst, const char *name)
 {
     if (dst->isMarkable() && ShouldMarkCrossCompartment(trc, src, (Cell *)dst->toGCThing()))
-        MarkSlot(trc, dst, name);
+        MarkValue(trc, dst, name);
 }
 
 /*** Special Marking ***/

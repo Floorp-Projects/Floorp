@@ -343,37 +343,13 @@ class ArrayBufferViewObject : public JSObject
     void neuter(void *newData);
 
     uint8_t *dataPointer();
+    void setDataPointer(uint8_t *data);
 
     static void trace(JSTracer *trc, JSObject *obj);
 };
 
 bool
 ToClampedIndex(JSContext *cx, HandleValue v, uint32_t length, uint32_t *out);
-
-inline void
-PostBarrierTypedArrayObject(JSObject *obj)
-{
-#ifdef JSGC_GENERATIONAL
-    MOZ_ASSERT(obj);
-    JSRuntime *rt = obj->runtimeFromMainThread();
-    if (!rt->isHeapBusy() && !IsInsideNursery(JS::AsCell(obj)))
-        rt->gc.storeBuffer.putWholeCellFromMainThread(obj);
-#endif
-}
-
-inline void
-InitArrayBufferViewDataPointer(JSObject *obj, ArrayBufferObject *buffer, size_t byteOffset)
-{
-    /*
-     * N.B. The base of the array's data is stored in the object's
-     * private data rather than a slot to avoid the restriction that
-     * private Values that are pointers must have the low bits clear.
-     */
-    MOZ_ASSERT(buffer->dataPointer() != nullptr);
-    obj->as<NativeObject>().initPrivate(buffer->dataPointer() + byteOffset);
-
-    PostBarrierTypedArrayObject(obj);
-}
 
 /*
  * Tests for ArrayBufferObject, like obj->is<ArrayBufferObject>().

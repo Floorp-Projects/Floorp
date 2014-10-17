@@ -45,13 +45,24 @@ ProxyObject::New(JSContext *cx, const BaseProxyHandler *handler, HandleValue pri
     if (handler->finalizeInBackground(priv))
         allocKind = GetBackgroundAllocKind(allocKind);
 
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent, allocKind, newKind));
-    if (!obj)
+    ProxyValueArray *values = cx->zone()->new_<ProxyValueArray>();
+    if (!values)
         return nullptr;
 
+    // Note: this will initialize the object's |data| to strange values, but we
+    // will immediately overwrite those below.
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent, allocKind, newKind));
+    if (!obj) {
+        js_free(values);
+        return nullptr;
+    }
+
     Rooted<ProxyObject*> proxy(cx, &obj->as<ProxyObject>());
-    proxy->initHandler(handler);
-    proxy->initCrossCompartmentPrivate(priv);
+
+    proxy->data.values = values;
+    proxy->data.handler = handler;
+
+    proxy->setCrossCompartmentPrivate(priv);
 
     /* Don't track types of properties of non-DOM and non-singleton proxies. */
     if (newKind != SingletonObject && !clasp->isDOMClass())
@@ -61,36 +72,33 @@ ProxyObject::New(JSContext *cx, const BaseProxyHandler *handler, HandleValue pri
 }
 
 void
-ProxyObject::initCrossCompartmentPrivate(HandleValue priv)
+ProxyObject::setCrossCompartmentPrivate(const Value &priv)
 {
-    fakeNativeInitCrossCompartmentSlot(PRIVATE_SLOT, priv);
+    *slotOfPrivate() = priv;
 }
 
 void
 ProxyObject::setSameCompartmentPrivate(const Value &priv)
 {
-    fakeNativeSetSlot(PRIVATE_SLOT, priv);
-}
-
-void
-ProxyObject::initHandler(const BaseProxyHandler *handler)
-{
-    fakeNativeInitSlot(HANDLER_SLOT, PrivateValue(const_cast<BaseProxyHandler*>(handler)));
-}
-
-static void
-NukeSlot(ProxyObject *proxy, uint32_t slot)
-{
-    proxy->fakeNativeSetReservedSlot(slot, NullValue());
+    MOZ_ASSERT(IsObjectValueInCompartment(priv, compartment()));
+    *slotOfPrivate() = priv;
 }
 
 void
 ProxyObject::nuke(const BaseProxyHandler *handler)
 {
-    /* Allow people to add their own number of reserved slots beyond the expected 4 */
-    unsigned numSlots = JSCLASS_RESERVED_SLOTS(getClass());
-    for (unsigned i = 0; i < numSlots; i++)
-        NukeSlot(this, i);
+    setSameCompartmentPrivate(NullValue());
+    for (size_t i = 0; i < PROXY_EXTRA_SLOTS; i++)
+        SetProxyExtra(this, i, NullValue());
+
     /* Restore the handler as requested after nuking. */
     setHandler(handler);
+}
+
+JS_FRIEND_API(void)
+js::SetValueInProxy(Value *slot, const Value &value)
+{
+    // Slots in proxies are not HeapValues, so do a cast whenever assigning
+    // values to them which might trigger a barrier.
+    *reinterpret_cast<HeapValue *>(slot) = value;
 }

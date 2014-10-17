@@ -682,10 +682,4 @@ DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj,
 
 } // namespace js
 
-inline uint8_t *
-JSObject::fakeNativeFixedData(size_t nslots) const
-{
-    return static_cast<const js::NativeObject*>(this)->fixedData(nslots);
-}
-
 #endif /* vm_NativeObject_inl_h */

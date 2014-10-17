@@ -607,7 +607,7 @@ AllocateObject(ThreadSafeContext *cx, AllocKind kind, size_t nDynamicSlots, Init
         obj = reinterpret_cast<JSObject *>(GCRuntime::refillFreeListFromAnyThread<allowGC>(cx, kind));
 
     if (obj)
-        obj->fakeNativeSetInitialSlots(slots);
+        obj->setInitialSlotsMaybeNonNative(slots);
     else
         js_free(slots);
 

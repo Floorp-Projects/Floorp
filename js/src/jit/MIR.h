@@ -2599,6 +2599,36 @@ class MTypedObjectProto
     }
 };
 
+class MTypedObjectUnsizedLength
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+  private:
+    explicit MTypedObjectUnsizedLength(MDefinition *object)
+      : MUnaryInstruction(object)
+    {
+        setResultType(MIRType_Int32);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(TypedObjectUnsizedLength)
+
+    static MTypedObjectUnsizedLength *New(TempAllocator &alloc, MDefinition *object) {
+        return new(alloc) MTypedObjectUnsizedLength(object);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
+};
+
 // Creates a new derived type object. At runtime, this is just a call
 // to `BinaryBlock::createDerived()`. That is, the MIR itself does not
 // compile to particularly optimized code. However, using a distinct
