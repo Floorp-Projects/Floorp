@@ -274,7 +274,7 @@ AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes)
     if (!p)
         js_ReportOutOfMemory(cx);
 
-    return ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN_BUFFER>(p);
+    return ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(p);
 }
 
 void
@@ -291,7 +291,7 @@ ArrayBufferObject::neuterView(JSContext *cx, ArrayBufferViewObject *view,
 ArrayBufferObject::neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer,
                           BufferContents newContents)
 {
-    if (buffer->isAsmJSArrayBuffer() && !OnDetachAsmJSArrayBuffer(cx, buffer))
+    if (buffer->isAsmJS() && !OnDetachAsmJSArrayBuffer(cx, buffer))
         return false;
 
     // Neuter all views on the buffer, clear out the list of views and the
@@ -317,8 +317,6 @@ ArrayBufferObject::neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer,
 void
 ArrayBufferObject::setNewOwnedData(FreeOp* fop, BufferContents newContents)
 {
-    MOZ_ASSERT(!isAsmJSArrayBuffer());
-
     if (ownsData()) {
         MOZ_ASSERT(newContents.data() != dataPointer());
         releaseData(fop);
@@ -365,9 +363,6 @@ ArrayBufferObject::changeContents(JSContext *cx, BufferContents newContents)
 /* static */ bool
 ArrayBufferObject::prepareForAsmJSNoSignals(JSContext *cx, Handle<ArrayBufferObject*> buffer)
 {
-    if (buffer->isAsmJSArrayBuffer())
-        return true;
-
     if (!buffer->ownsData()) {
         BufferContents contents = AllocateArrayBufferContents(cx, buffer->byteLength());
         if (!contents)
@@ -376,15 +371,8 @@ ArrayBufferObject::prepareForAsmJSNoSignals(JSContext *cx, Handle<ArrayBufferObj
         buffer->changeContents(cx, contents);
     }
 
-    buffer->setIsAsmJSArrayBuffer();
+    buffer->setIsAsmJSMalloced();
     return true;
-}
-
-void
-ArrayBufferObject::releaseAsmJSArrayNoSignals(FreeOp *fop)
-{
-    MOZ_ASSERT(!(bufferKind() & MAPPED_BUFFER));
-    fop->free_(dataPointer());
 }
 
 #ifdef JS_CODEGEN_X64
@@ -396,8 +384,14 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
     if (!usesSignalHandlers)
         return prepareForAsmJSNoSignals(cx, buffer);
 
-    if (buffer->isAsmJSArrayBuffer())
+    if (buffer->isAsmJSMapped())
         return true;
+
+    // This can't happen except via the shell toggling signals.enabled.
+    if (buffer->isAsmJSMalloced()) {
+        JS_ReportError(cx, "can't access same buffer with and without signals enabled");
+        return false;
+    }
 
     // Get the entire reserved region (with all pages inaccessible).
     void *data;
@@ -436,37 +430,31 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
 
     // Swap the new elements into the ArrayBufferObject. Mark the
     // ArrayBufferObject so we don't do this again.
-    BufferContents newContents = BufferContents::create<BufferKind(ASMJS_BUFFER|MAPPED_BUFFER)>(data);
+    BufferContents newContents = BufferContents::create<ASMJS_MAPPED>(data);
     buffer->changeContents(cx, newContents);
     MOZ_ASSERT(data == buffer->dataPointer());
 
     return true;
 }
 
-void
-ArrayBufferObject::releaseAsmJSArray(FreeOp *fop)
+static void
+ReleaseAsmJSMappedData(void *base)
 {
-    if (!(bufferKind() & MAPPED_BUFFER)) {
-        releaseAsmJSArrayNoSignals(fop);
-        return;
-    }
-
-    void *data = dataPointer();
-
-    MOZ_ASSERT(uintptr_t(data) % AsmJSPageSize == 0);
-# ifdef XP_WIN
-    VirtualFree(data, 0, MEM_RELEASE);
-# else
-    munmap(data, AsmJSMappedSize);
-#   if defined(MOZ_VALGRIND) && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
+    MOZ_ASSERT(uintptr_t(base) % AsmJSPageSize == 0);
+#ifdef XP_WIN
+    VirtualFree(base, 0, MEM_RELEASE);
+#else
+    munmap(base, AsmJSMappedSize);
+# if defined(MOZ_VALGRIND) && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
     // Tell Valgrind/Memcheck to recommence reporting accesses in the
     // previously-inaccessible region.
     if (AsmJSMappedSize > 0) {
-        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(data, AsmJSMappedSize);
+        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(base, AsmJSMappedSize);
     }
-#   endif
 # endif
+#endif
 }
+
 #else // JS_CODEGEN_X64
 bool
 ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer,
@@ -477,29 +465,13 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
     MOZ_ASSERT(!usesSignalHandlers);
     return prepareForAsmJSNoSignals(cx, buffer);
 }
-
-void
-ArrayBufferObject::releaseAsmJSArray(FreeOp *fop)
-{
-    // See comment above.
-    releaseAsmJSArrayNoSignals(fop);
-}
 #endif
 
 ArrayBufferObject::BufferContents
 ArrayBufferObject::createMappedContents(int fd, size_t offset, size_t length)
 {
     void *data = AllocateMappedContent(fd, offset, length, ARRAY_BUFFER_ALIGNMENT);
-    return BufferContents::create<MAPPED_BUFFER>(data);
-}
-
-void
-ArrayBufferObject::releaseMappedArray()
-{
-    if(!isMappedArrayBuffer() || isNeutered())
-        return;
-
-    DeallocateMappedContent(dataPointer(), byteLength());
+    return BufferContents::create<MAPPED>(data);
 }
 
 uint8_t *
@@ -519,13 +491,18 @@ ArrayBufferObject::releaseData(FreeOp *fop)
 {
     MOZ_ASSERT(ownsData());
 
-    BufferKind bufkind = bufferKind();
-    if (bufkind & ASMJS_BUFFER)
-        releaseAsmJSArray(fop);
-    else if (bufkind & MAPPED_BUFFER)
-        releaseMappedArray();
-    else
+    switch (bufferKind()) {
+      case PLAIN:
+      case ASMJS_MALLOCED:
         fop->free_(dataPointer());
+        break;
+      case MAPPED:
+        DeallocateMappedContent(dataPointer(), byteLength());
+        break;
+      case ASMJS_MAPPED:
+        ReleaseAsmJSMappedData(dataPointer());
+        break;
+    }
 }
 
 void
@@ -564,7 +541,7 @@ ArrayBufferObject *
 ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, BufferContents contents,
                           NewObjectKind newKind /* = GenericObject */)
 {
-    MOZ_ASSERT_IF(contents.kind() & MAPPED_BUFFER, contents);
+    MOZ_ASSERT_IF(contents.kind() == MAPPED, contents);
 
     // If we need to allocate data, try to use a larger object size class so
     // that the array buffer's data can be allocated inline with the object.
@@ -577,7 +554,7 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, BufferContents content
     if (contents) {
         // The ABO is taking ownership, so account the bytes against the zone.
         size_t nAllocated = nbytes;
-        if (contents.kind() & MAPPED_BUFFER)
+        if (contents.kind() == MAPPED)
             nAllocated = JS_ROUNDUP(nbytes, js::gc::SystemPageSize());
         cx->zone()->updateMallocCounter(nAllocated);
     } else {
@@ -721,17 +698,19 @@ ArrayBufferObject::addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf m
     if (!buffer.ownsData())
         return;
 
-    if (MOZ_UNLIKELY(buffer.bufferKind() & ASMJS_BUFFER)) {
-        // On x64, ArrayBufferObject::prepareForAsmJS switches the
-        // ArrayBufferObject to use mmap'd storage.
-        if (buffer.bufferKind() & MAPPED_BUFFER)
-            info->objectsNonHeapElementsAsmJS += buffer.byteLength();
-        else
-            info->objectsMallocHeapElementsAsmJS += mallocSizeOf(buffer.dataPointer());
-    } else if (MOZ_UNLIKELY(buffer.bufferKind() & MAPPED_BUFFER)) {
-        info->objectsNonHeapElementsMapped += buffer.byteLength();
-    } else if (buffer.dataPointer()) {
+    switch (buffer.bufferKind()) {
+      case PLAIN:
         info->objectsMallocHeapElementsNonAsmJS += mallocSizeOf(buffer.dataPointer());
+        break;
+      case MAPPED:
+        info->objectsNonHeapElementsMapped += buffer.byteLength();
+        break;
+      case ASMJS_MALLOCED:
+        info->objectsMallocHeapElementsAsmJS += mallocSizeOf(buffer.dataPointer());
+        break;
+      case ASMJS_MAPPED:
+        info->objectsNonHeapElementsAsmJS += buffer.byteLength();
+        break;
     }
 }
 
@@ -1008,7 +987,7 @@ JS_FRIEND_API(bool)
 JS_IsArrayBufferViewObject(JSObject *obj)
 {
     obj = CheckedUnwrap(obj);
-    return obj ? obj->is<ArrayBufferViewObject>() : false;
+    return obj && obj->is<ArrayBufferViewObject>();
 }
 
 JS_FRIEND_API(JSObject *)
@@ -1070,9 +1049,7 @@ JS_IsNeuteredArrayBufferObject(JSObject *obj)
     if (!obj)
         return false;
 
-    return obj->is<ArrayBufferObject>()
-           ? obj->as<ArrayBufferObject>().isNeutered()
-           : false;
+    return obj->is<ArrayBufferObject>() && obj->as<ArrayBufferObject>().isNeutered();
 }
 
 JS_FRIEND_API(JSObject *)
@@ -1087,7 +1064,7 @@ JS_NewArrayBufferWithContents(JSContext *cx, size_t nbytes, void *data)
 {
     MOZ_ASSERT(data);
     ArrayBufferObject::BufferContents contents =
-        ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN_BUFFER>(data);
+        ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(data);
     return ArrayBufferObject::create(cx, nbytes, contents, TenuredObject);
 }
 
@@ -1095,7 +1072,7 @@ JS_FRIEND_API(bool)
 JS_IsArrayBufferObject(JSObject *obj)
 {
     obj = CheckedUnwrap(obj);
-    return obj ? obj->is<ArrayBufferObject>() : false;
+    return obj && obj->is<ArrayBufferObject>();
 }
 
 JS_FRIEND_API(bool)
@@ -1134,8 +1111,7 @@ JS_StealArrayBufferContents(JSContext *cx, HandleObject objArg)
     // hasStealableContents is true for mapped buffers, so we must additionally
     // require that the buffer is plain. In the future, we could consider
     // returning something that handles releasing the memory.
-    bool hasStealableContents = buffer->hasStealableContents() &&
-                                buffer->bufferKind() == ArrayBufferObject::PLAIN_BUFFER;
+    bool hasStealableContents = buffer->hasStealableContents() && buffer->isPlain();
 
     return ArrayBufferObject::stealContents(cx, buffer, hasStealableContents).data();
 }
@@ -1145,7 +1121,7 @@ JS_NewMappedArrayBufferWithContents(JSContext *cx, size_t nbytes, void *data)
 {
     MOZ_ASSERT(data);
     ArrayBufferObject::BufferContents contents =
-        ArrayBufferObject::BufferContents::create<ArrayBufferObject::MAPPED_BUFFER>(data);
+        ArrayBufferObject::BufferContents::create<ArrayBufferObject::MAPPED>(data);
     return ArrayBufferObject::create(cx, nbytes, contents, TenuredObject);
 }
 
@@ -1168,9 +1144,7 @@ JS_IsMappedArrayBufferObject(JSObject *obj)
     if (!obj)
         return false;
 
-    return obj->is<ArrayBufferObject>()
-           ? obj->as<ArrayBufferObject>().isMappedArrayBuffer()
-           : false;
+    return obj->is<ArrayBufferObject>() && obj->as<ArrayBufferObject>().isMapped();
 }
 
 JS_FRIEND_API(void *)
