@@ -1484,13 +1484,6 @@ public:
                             const nsRect&       aDirty,
                             uint32_t            aImageFlags);
 
-  static inline Color NSColorToColor(nscolor aColor) {
-    return Color(NS_GET_R(aColor)/255.0,
-                 NS_GET_G(aColor)/255.0,
-                 NS_GET_B(aColor)/255.0,
-                 NS_GET_A(aColor)/255.0);
-  }
-
   static inline void InitDashPattern(StrokeOptions& aStrokeOptions,
                                      uint8_t aBorderStyle) {
     if (aBorderStyle == NS_STYLE_BORDER_STYLE_DOTTED) {
