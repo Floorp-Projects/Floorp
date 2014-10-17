@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GLBlitHelper.h"
+#include "AndroidSurfaceTexture.h"
 #include "GLContext.h"
 #include "ScopedGLHelpers.h"
 #include "mozilla/Preferences.h"
@@ -738,7 +739,7 @@ GLBlitHelper::BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage)
 
     surfaceTexture->UpdateTexImage();
 
-    Matrix4x4 transform;
+    gfx::Matrix4x4 transform;
     surfaceTexture->GetTransformMatrix(transform);
 
     mGL->fUniformMatrix4fv(mTextureTransformLoc, 1, false, &transform._11);
