@@ -16,6 +16,10 @@ this.EXPORTED_SYMBOLS = [
   "Assert"
 ];
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/Promise.jsm");
 /**
  * 1. The assert module provides functions that throw AssertionError's when
  * particular conditions are not met.
@@ -441,4 +445,35 @@ proto.throws = function(block, expected, message) {
   }
 
   this.report(false, expected, expected, message);
+};
+
+/**
+ * A promise that is expected to reject:
+ * assert.rejects(promise, expected, message);
+ *
+ * @param promise
+ *        (promise) A promise that is expected to reject
+ * @param expected (optional)
+ *        (mixed) Test reference to evaluate against the rejection result
+ * @param message (optional)
+ *        (string) Short explanation of the expected result
+ */
+proto.rejects = function(promise, expected, message) {
+  return new Promise((resolve, reject) => {
+    if (typeof expected === "string") {
+      message = expected;
+      expected = null;
+    }
+    return promise.then(
+      () => this.report(true, null, expected, "Missing expected exception " + message),
+      err => {
+        if (expected && !expectedException(err, expected)) {
+          reject(err);
+          return;
+        }
+        this.report(false, err, expected, message);
+        resolve();
+      }
+    ).then(null, reject);
+  });
 };
