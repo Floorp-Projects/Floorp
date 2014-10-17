@@ -109,10 +109,10 @@
           let lis;
 
           lis = addonDoc.querySelectorAll("li");
-          is(lis.length, 4, "4 addons listed");
+          is(lis.length, 5, "5 addons listed");
 
           lis = addonDoc.querySelectorAll('li[status="installed"]');
-          is(lis.length, 2, "2 addons installed");
+          is(lis.length, 3, "3 addons installed");
 
           lis = addonDoc.querySelectorAll('li[status="uninstalled"]');
           is(lis.length, 2, "2 addons uninstalled");
