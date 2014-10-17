@@ -41,7 +41,7 @@ public class BackButton extends ShapedButton {
     @Override
     public void setPrivateMode(boolean isPrivate) {
         super.setPrivateMode(isPrivate);
-        mBorderPaint.setColor(isPrivate ? 0xFF363B40 : 0xFFB5B5B5);
+        mBorderPaint.setColor(isPrivate ? 0xFF5F6368 : 0xFFBFBFBF);
     }
 
     @Override
