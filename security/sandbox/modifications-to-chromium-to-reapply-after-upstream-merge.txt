@@ -2,4 +2,5 @@ Please add a link to the bugzilla bug and patch name that should be re-applied.
 Also, please update any existing links to their actual mozilla-central changeset.
 
 https://hg.mozilla.org/mozilla-central/rev/e7eef85c1b0a
-https://bugzilla.mozilla.org/show_bug.cgi?id=1080567 bug1080567.patch
+https://hg.mozilla.org/mozilla-central/rev/8d0aca89e1b2
+https://bugzilla.mozilla.org/show_bug.cgi?id=1083701 bug1083701.patch
