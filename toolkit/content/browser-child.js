@@ -11,7 +11,8 @@ Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import("resource://gre/modules/RemoteAddonsChild.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
-const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
+XPCOMUtils.defineLazyModuleGetter(this, "PageThumbUtils",
+  "resource://gre/modules/PageThumbUtils.jsm");
 
 #ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
@@ -374,19 +375,20 @@ addMessageListener("UpdateCharacterSet", function (aMessage) {
  * Remote thumbnail request handler for PageThumbs thumbnails.
  */
 addMessageListener("Browser:Thumbnail:Request", function (aMessage) {
-  let thumbnail = content.document.createElementNS(HTML_NAMESPACE, "canvas");
+  let thumbnail = content.document.createElementNS(PageThumbUtils.HTML_NAMESPACE,
+                                                   "canvas");
   thumbnail.mozOpaque = true;
   thumbnail.mozImageSmoothingEnabled = true;
 
-  // width and height are crop dims
-  let width = aMessage.data.width || content.innerWidth;
-  let height = aMessage.data.height || content.innerHeight;
-  thumbnail.width = Math.round(width * aMessage.data.scale);
-  thumbnail.height = Math.round(height * aMessage.data.scale);
+  thumbnail.width = aMessage.data.canvasWidth;
+  thumbnail.height = aMessage.data.canvasHeight;
+
+  let [width, height, scale] =
+    PageThumbUtils.determineCropSize(content, thumbnail);
 
   let ctx = thumbnail.getContext("2d");
   ctx.save();
-  ctx.scale(aMessage.data.scale, aMessage.data.scale);
+  ctx.scale(scale, scale);
   ctx.drawWindow(content, 0, 0, width, height,
                  aMessage.data.background,
                  ctx.DRAWWINDOW_DO_NOT_FLUSH);
