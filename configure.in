@@ -506,6 +506,11 @@ case "$target" in
         if test -z "$CLANG_CL"; then
             AC_DEFINE(HAVE_SEH_EXCEPTIONS)
         else
+            # Build on clang-cl with MSVC 2013 with fallback emulation.
+            CFLAGS="$CFLAGS -fmsc-version=1800 -fallback"
+            CXXFLAGS="$CXXFLAGS -fmsc-version=1800 -fallback"
+            # Send our CFLAGS to NSS too
+            MOZ_CFLAGS_NSS=1
             AC_DEFINE_UNQUOTED(GTEST_HAS_SEH, 0)
         fi
 
