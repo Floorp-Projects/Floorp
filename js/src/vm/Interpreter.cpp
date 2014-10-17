@@ -35,6 +35,7 @@
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
 #include "vm/Debugger.h"
+#include "vm/GeneratorObject.h"
 #include "vm/Opcodes.h"
 #include "vm/Shape.h"
 #include "vm/TraceLogging.h"
@@ -1657,10 +1658,6 @@ CASE(JSOP_UNUSED190)
 CASE(JSOP_UNUSED191)
 CASE(JSOP_UNUSED192)
 CASE(JSOP_UNUSED196)
-CASE(JSOP_UNUSED201)
-CASE(JSOP_UNUSED205)
-CASE(JSOP_UNUSED206)
-CASE(JSOP_UNUSED207)
 CASE(JSOP_UNUSED208)
 CASE(JSOP_UNUSED209)
 CASE(JSOP_UNUSED210)
@@ -1774,9 +1771,7 @@ CASE(JSOP_RETRVAL)
   successful_return_continuation:
     interpReturnOK = true;
   return_continuation:
-    if (activation.entryFrame() != REGS.fp())
-  inline_return:
-    {
+    if (activation.entryFrame() != REGS.fp()) {
         // Stop the engine. (No details about which engine exactly, could be
         // interpreter, Baseline or IonMonkey.)
         TraceLogStopEvent(logger);
@@ -1785,11 +1780,7 @@ CASE(JSOP_RETRVAL)
 
         interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), interpReturnOK);
 
-        if (!REGS.fp()->isYielding())
-            REGS.fp()->epilogue(cx);
-        else
-            probes::ExitScript(cx, script, script->functionNonDelazifying(),
-                               REGS.fp()->hasPushedSPSFrame());
+        REGS.fp()->epilogue(cx);
 
   jit_return_pop_frame:
 
@@ -3380,32 +3371,80 @@ CASE(JSOP_GENERATOR)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
     REGS.fp()->initGeneratorFrame();
-    REGS.pc += JSOP_GENERATOR_LENGTH;
-    JSObject *obj = js_NewGenerator(cx, REGS);
+    JSObject *obj = GeneratorObject::create(cx, REGS);
     if (!obj)
         goto error;
-    REGS.fp()->setReturnValue(ObjectValue(*obj));
-    REGS.fp()->setYielding();
-    interpReturnOK = true;
-    if (activation.entryFrame() != REGS.fp())
-        goto inline_return;
-    goto exit;
+    PUSH_OBJECT(*obj);
+}
+END_CASE(JSOP_GENERATOR)
+
+CASE(JSOP_INITIALYIELD)
+{
+    MOZ_ASSERT(!cx->isExceptionPending());
+    MOZ_ASSERT(REGS.fp()->isNonEvalFunctionFrame());
+    RootedObject &obj = rootObject0;
+    obj = &REGS.sp[-1].toObject();
+    POP_RETURN_VALUE();
+    MOZ_ASSERT(REGS.stackDepth() == 0);
+    if (!GeneratorObject::initialSuspend(cx, obj, REGS.fp(), REGS.pc + JSOP_INITIALYIELD_LENGTH))
+        goto error;
+    goto successful_return_continuation;
 }
 
 CASE(JSOP_YIELD)
+{
     MOZ_ASSERT(!cx->isExceptionPending());
     MOZ_ASSERT(REGS.fp()->isNonEvalFunctionFrame());
-    if (cx->innermostGenerator()->state == JSGEN_CLOSING) {
-        RootedValue &val = rootValue0;
-        val.setObject(REGS.fp()->callee());
-        js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_SEARCH_STACK, val, js::NullPtr());
+    RootedObject &obj = rootObject0;
+    obj = &REGS.sp[-1].toObject();
+    if (!GeneratorObject::normalSuspend(cx, obj, REGS.fp(), REGS.pc + JSOP_YIELD_LENGTH,
+                                        REGS.spForStackDepth(0), REGS.stackDepth() - 2))
+    {
         goto error;
     }
-    REGS.fp()->setReturnValue(REGS.sp[-1]);
-    REGS.fp()->setYielding();
-    REGS.pc += JSOP_YIELD_LENGTH;
-    interpReturnOK = true;
-    goto exit;
+
+    REGS.sp--;
+    POP_RETURN_VALUE();
+
+    goto successful_return_continuation;
+}
+
+CASE(JSOP_RESUME)
+{
+    RootedObject &gen = rootObject0;
+    RootedValue &val = rootValue0;
+    val = REGS.sp[-1];
+    gen = &REGS.sp[-2].toObject();
+    // popInlineFrame expects there to be an additional value on the stack to
+    // pop off, so leave "gen" on the stack.
+
+    GeneratorObject::ResumeKind resumeKind = GeneratorObject::getResumeKind(REGS.pc);
+    bool ok = GeneratorObject::resume(cx, activation, gen, val, resumeKind);
+    SET_SCRIPT(REGS.fp()->script());
+    if (!ok)
+        goto error;
+
+    ADVANCE_AND_DISPATCH(0);
+}
+
+CASE(JSOP_FINALYIELD)
+    REGS.fp()->setReturnValue(REGS.sp[-2]);
+    REGS.sp[-2] = REGS.sp[-1];
+    REGS.sp--;
+    /* FALL THROUGH */
+CASE(JSOP_FINALYIELDRVAL)
+{
+    RootedObject &gen = rootObject0;
+    gen = &REGS.sp[-1].toObject();
+    REGS.sp--;
+
+    if (!GeneratorObject::finalSuspend(cx, gen)) {
+        interpReturnOK = false;
+        goto return_continuation;
+    }
+
+    goto successful_return_continuation;
+}
 
 CASE(JSOP_ARRAYPUSH)
 {
@@ -3463,11 +3502,7 @@ DEFAULT()
   exit:
     interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), interpReturnOK);
 
-    if (!REGS.fp()->isYielding())
-        REGS.fp()->epilogue(cx);
-    else
-        probes::ExitScript(cx, script, script->functionNonDelazifying(),
-                           REGS.fp()->hasPushedSPSFrame());
+    REGS.fp()->epilogue(cx);
 
     gc::MaybeVerifyBarriers(cx, true);
 

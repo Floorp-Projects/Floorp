@@ -2149,7 +2149,6 @@ DebugScopes::addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject 
 void
 DebugScopes::onPopCall(AbstractFramePtr frame, JSContext *cx)
 {
-    MOZ_ASSERT(!frame.isYielding());
     assertSameCompartment(cx, frame);
 
     DebugScopes *scopes = cx->compartment()->debugScopes;
@@ -2164,6 +2163,9 @@ DebugScopes::onPopCall(AbstractFramePtr frame, JSContext *cx)
          * CallObject. See ScopeIter::settle.
          */
         if (!frame.hasCallObj())
+            return;
+
+        if (frame.fun()->isGenerator())
             return;
 
         CallObject &callobj = frame.scopeChain()->as<CallObject>();

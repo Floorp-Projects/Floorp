@@ -46,6 +46,10 @@ public:
                                    nsIURI* aTargetURI,
                                    nsISupports* aContext);
 
+#ifdef PR_LOGGING
+  static PRLogModuleInfo* GetFontDownloaderLog();
+#endif
+
 protected:
   virtual ~nsFontFaceLoader();
 

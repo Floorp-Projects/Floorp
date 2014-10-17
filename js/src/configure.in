@@ -1294,7 +1294,6 @@ if test "$GNU_CXX"; then
     # -Wwrite-strings - catches non-const char* pointers to string literals
     #
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wignored-qualifiers"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wsign-compare"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wtype-limits"
 
@@ -1303,6 +1302,7 @@ if test "$GNU_CXX"; then
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=comment"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=empty-body"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=endif-labels"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=ignored-qualifiers"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=int-to-pointer-cast"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=missing-braces"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=overloaded-virtual"

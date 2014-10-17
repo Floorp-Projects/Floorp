@@ -642,6 +642,12 @@ struct GLContextSymbols
     PFNGLGETFRAGDATALOCATIONPROC fGetFragDataLocation;
 
     // 3D Textures
+    typedef void (GLAPIENTRY * PFNGLTEXIMAGE3DPROC) (GLenum target, GLint level,
+                                                     GLenum internalFormat,
+                                                     GLenum width, GLsizei height, GLsizei depth,
+                                                     GLint border, GLenum format, GLenum type,
+                                                     const GLvoid* pixels);
+    PFNGLTEXIMAGE3DPROC fTexImage3D;
     typedef void (GLAPIENTRY * PFNGLTEXSUBIMAGE3DPROC) (GLenum target, GLint level, GLint xoffset,
                                                         GLint yoffset, GLint zoffset, GLsizei width,
                                                         GLsizei height, GLsizei depth, GLenum format,

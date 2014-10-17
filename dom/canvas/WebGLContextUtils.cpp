@@ -867,6 +867,7 @@ InfoFrom(WebGLTexImageFunc func, WebGLTexDimensions dims)
         }
     case WebGLTexDimensions::Tex3D:
         switch (func) {
+        case WebGLTexImageFunc::TexImage:        return "texImage3D";
         case WebGLTexImageFunc::TexSubImage:     return "texSubImage3D";
         case WebGLTexImageFunc::CopyTexSubImage: return "copyTexSubImage3D";
         case WebGLTexImageFunc::CompTexSubImage: return "compressedTexSubImage3D";

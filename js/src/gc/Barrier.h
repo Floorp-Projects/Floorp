@@ -25,7 +25,7 @@
  *   - writes to object properties
  *   - writes to array slots
  *   - writes to fields like JSObject::shape_ that we trace through
- *   - writes to fields in private data, like JSGenerator::obj
+ *   - writes to fields in private data
  *   - writes to non-markable fields like JSObject::private that point to
  *     markable data
  * The last category is the trickiest. Even though the private pointers does not

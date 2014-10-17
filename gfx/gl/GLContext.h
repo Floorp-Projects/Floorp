@@ -3132,6 +3132,21 @@ public:
 
 // -----------------------------------------------------------------------------
 // 3D Textures
+    void fTexImage3D(GLenum target, GLint level,
+                     GLint internalFormat,
+                     GLsizei width, GLsizei height, GLsizei depth,
+                     GLint border, GLenum format, GLenum type,
+                     const GLvoid * data)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fTexImage3D);
+        mSymbols.fTexImage3D(target, level, internalFormat,
+                             width, height, depth,
+                             border, format, type,
+                             data);
+        AFTER_GL_CALL;
+    }
+
     void fTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                         GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
                         GLenum format, GLenum type, const GLvoid* pixels)

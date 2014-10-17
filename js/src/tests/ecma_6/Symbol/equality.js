@@ -10,7 +10,8 @@ if (typeof Symbol === "function") {
         Symbol(),
         Symbol("Symbol.iterator"),
         Symbol("Symbol.iterator"),  // distinct new symbol with the same description
-        Symbol.for("Symbol.iterator")
+        Symbol.for("Symbol.iterator"),
+        Symbol.iterator
     ];
 
     // Distinct symbols are never equal to each other, even if they have the same
