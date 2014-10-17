@@ -961,7 +961,8 @@ AndroidSurfaceTexture* nsNPAPIPluginInstance::CreateSurfaceTexture()
   if (!texture)
     return nullptr;
 
-  AndroidSurfaceTexture* surface = AndroidSurfaceTexture::Create(texture);
+  AndroidSurfaceTexture* surface = AndroidSurfaceTexture::Create(TexturePoolOGL::GetGLContext(),
+                                                                 texture);
   if (!surface)
     return nullptr;
 
