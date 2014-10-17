@@ -27,6 +27,13 @@ class AccessCheck {
                                              JS::HandleId id, js::Wrapper::Action act);
 };
 
+enum CrossOriginObjectType {
+    CrossOriginWindow,
+    CrossOriginLocation,
+    CrossOriginOpaque
+};
+CrossOriginObjectType IdentifyCrossOriginObject(JSObject *obj);
+
 struct Policy {
 };
 
