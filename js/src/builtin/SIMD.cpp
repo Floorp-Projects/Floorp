@@ -971,53 +971,60 @@ FuncWith(JSContext *cx, unsigned argc, Value *vp)
 
 template<typename V>
 static bool
-FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
+Swizzle(JSContext *cx, unsigned argc, Value *vp)
 {
     typedef typename V::Elem Elem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 2 && args.length() != 3)
+    if (args.length() != (V::lanes + 1) || !IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
 
-    // Let L be V::Lanes. Each lane can contain L lanes, so the log2(L) first
-    // bits select the first lane, the next log2(L) the second, and so on.
-    const uint32_t SELECT_SHIFT = FloorLog2(V::lanes);
-    const uint32_t SELECT_MASK  = V::lanes - 1;
-    const int32_t MAX_MASK_VALUE = int32_t(pow(double(V::lanes), double(V::lanes))) - 1;
-    MOZ_ASSERT(MAX_MASK_VALUE > 0);
+    int32_t lanes[V::lanes];
+    for (unsigned i = 0; i < V::lanes; i++) {
+        int32_t lane = -1;
+        if (!ToInt32(cx, args[i + 1], &lane))
+            return false;
+        if (lane < 0 || lane >= V::lanes)
+            return ErrorBadArgs(cx);
+        lanes[i] = lane;
+    }
+
+    Elem *val = TypedObjectMemory<Elem *>(args[0]);
 
     Elem result[V::lanes];
-    if (args.length() == 2) {
-        if (!IsVectorObject<V>(args[0]) || !args[1].isInt32())
-            return ErrorBadArgs(cx);
+    for (unsigned i = 0; i < V::lanes; i++)
+        result[i] = val[lanes[i]];
 
-        Elem *val = TypedObjectMemory<Elem *>(args[0]);
-        int32_t maskArg;
-        if (!ToInt32(cx, args[1], &maskArg))
+    return StoreResult<V>(cx, args, result);
+}
+
+template<typename V>
+static bool
+Shuffle(JSContext *cx, unsigned argc, Value *vp)
+{
+    typedef typename V::Elem Elem;
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != (V::lanes + 2) || !IsVectorObject<V>(args[0]) || !IsVectorObject<V>(args[1]))
+        return ErrorBadArgs(cx);
+
+    int32_t lanes[V::lanes];
+    for (unsigned i = 0; i < V::lanes; i++) {
+        int32_t lane = -1;
+        if (!ToInt32(cx, args[i + 2], &lane))
             return false;
-        if (maskArg < 0 || maskArg > MAX_MASK_VALUE)
+        if (lane < 0 || lane >= (2 * V::lanes))
             return ErrorBadArgs(cx);
+        lanes[i] = lane;
+    }
 
-        for (unsigned i = 0; i < V::lanes; i++)
-            result[i] = val[(maskArg >> (i * SELECT_SHIFT)) & SELECT_MASK];
-    } else {
-        MOZ_ASSERT(args.length() == 3);
-        if (!IsVectorObject<V>(args[0]) || !IsVectorObject<V>(args[1]) || !args[2].isInt32())
-            return ErrorBadArgs(cx);
+    Elem *lhs = TypedObjectMemory<Elem *>(args[0]);
+    Elem *rhs = TypedObjectMemory<Elem *>(args[1]);
 
-        Elem *val1 = TypedObjectMemory<Elem *>(args[0]);
-        Elem *val2 = TypedObjectMemory<Elem *>(args[1]);
-        int32_t maskArg;
-        if (!ToInt32(cx, args[2], &maskArg))
-            return false;
-        if (maskArg < 0 || maskArg > MAX_MASK_VALUE)
-            return ErrorBadArgs(cx);
-
-        unsigned i = 0;
-        for (; i < V::lanes / 2; i++)
-            result[i] = val1[(maskArg >> (i * SELECT_SHIFT)) & SELECT_MASK];
-        for (; i < V::lanes; i++)
-            result[i] = val2[(maskArg >> (i * SELECT_SHIFT)) & SELECT_MASK];
+    Elem result[V::lanes];
+    for (unsigned i = 0; i < V::lanes; i++) {
+        Elem *selectedInput = lanes[i] < V::lanes ? lhs : rhs;
+        result[i] = selectedInput[lanes[i] % V::lanes];
     }
 
     return StoreResult<V>(cx, args, result);
