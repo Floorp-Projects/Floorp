@@ -5,6 +5,8 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.GeckoRequest;
+import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONObject;
@@ -19,12 +21,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnClickListener, GeckoEventListener  {
     private static final String REQUEST_ID = "FindInPageBar";
 
     private final Context mContext;
     private CustomEditText mFindText;
+    private TextView mStatusText;
     private boolean mInflated;
 
     public FindInPageBar(Context context, AttributeSet attrs) {
@@ -58,6 +62,8 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
             }
         });
 
+        mStatusText = (TextView) content.findViewById(R.id.find_status);
+
         mInflated = true;
         EventDispatcher.getInstance().registerGeckoThreadListener(this, "TextSelection:Data");
     }
@@ -71,6 +77,7 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
 
         // handleMessage() receives response message and determines initial state of softInput
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("TextSelection:Get", REQUEST_ID));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FindInPage:Opened", null));
     }
 
     public void hide() {
@@ -95,7 +102,7 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
 
     @Override
     public void afterTextChanged(Editable s) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FindInPage:Find", s.toString()));
+        sendRequestToFinderHelper("FindInPage:Find", s.toString());
     }
 
     @Override
@@ -115,13 +122,13 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
         final int viewId = v.getId();
 
         if (viewId == R.id.find_prev) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FindInPage:Prev", mFindText.getText().toString()));
+            sendRequestToFinderHelper("FindInPage:Prev", mFindText.getText().toString());
             getInputMethodManager(mFindText).hideSoftInputFromWindow(mFindText.getWindowToken(), 0);
             return;
         }
 
         if (viewId == R.id.find_next) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FindInPage:Next", mFindText.getText().toString()));
+            sendRequestToFinderHelper("FindInPage:Next", mFindText.getText().toString());
             getInputMethodManager(mFindText).hideSoftInputFromWindow(mFindText.getWindowToken(), 0);
             return;
         }
@@ -169,5 +176,29 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
                }
             });
         }
+    }
+
+    /**
+     * Request find operation, and update matchCount results (current count and total).
+     */
+    private void sendRequestToFinderHelper(String request, String searchString) {
+        GeckoAppShell.sendRequestToGecko(new GeckoRequest(request, searchString) {
+            @Override
+            public void onResponse(NativeJSObject nativeJSObject) {
+                final int total = nativeJSObject.optInt("total", 0);
+                final int current = nativeJSObject.optInt("current", 0);
+
+                final Boolean statusVisibility = (total > 0);
+                final String statusText = current + "/" + total;
+
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mStatusText.setVisibility(statusVisibility ? View.VISIBLE : View.GONE);
+                        mStatusText.setText(statusText);
+                    }
+                });
+            }
+        });
     }
 }

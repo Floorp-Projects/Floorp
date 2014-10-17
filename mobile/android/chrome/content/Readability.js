@@ -585,7 +585,6 @@ Readability.prototype = {
       }
 
       let topCandidate = topCandidates[0] || null;
-      let lastTopCandidate = (topCandidates.length > 3 ? topCandidates[topCandidates.length - 1] : null);
 
       // If we still have no top candidate, just use the body as a last resort.
       // We also have to copy the body node so it is something we can modify.
@@ -704,17 +703,6 @@ Readability.prototype = {
           return null;
         }
       } else {
-        if (lastTopCandidate !== null) {
-          // EXPERIMENTAL: Contrast ratio is how we measure the level of competition between candidates in the
-          // readability algorithm. This is to avoid offering reader mode on pages that are more like
-          // a list or directory of links with summaries. It takes the score of the last top candidate
-          // (see N_TOP_CANDIDATES) and checks how it compares to the top candidate's. On pages that are not
-          // actual articles, there will likely be many candidates with similar score (i.e. higher contrast ratio).
-          let contrastRatio = lastTopCandidate.readability.contentScore / topCandidate.readability.contentScore;
-          if (contrastRatio > 0.45)
-            return null;
-        }
-
         return articleContent;
       }
     }

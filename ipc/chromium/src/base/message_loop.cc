@@ -125,6 +125,9 @@ MessageLoop::MessageLoop(Type type)
     pump_ = new mozilla::ipc::MessagePumpForNonMainUIThreads();
     return;
 #endif
+  default:
+    // Create one of Chromium's standard MessageLoop types below.
+    break;
   }
 
 #if defined(OS_WIN)

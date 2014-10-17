@@ -715,10 +715,11 @@ xpc::SandboxProxyHandler::set(JSContext *cx, JS::Handle<JSObject*> proxy,
 }
 
 bool
-xpc::SandboxProxyHandler::keys(JSContext *cx, JS::Handle<JSObject*> proxy,
-                               AutoIdVector &props) const
+xpc::SandboxProxyHandler::getOwnEnumerablePropertyKeys(JSContext *cx,
+                                                       JS::Handle<JSObject*> proxy,
+                                                       AutoIdVector &props) const
 {
-    return BaseProxyHandler::keys(cx, proxy, props);
+    return BaseProxyHandler::getOwnEnumerablePropertyKeys(cx, proxy, props);
 }
 
 bool
