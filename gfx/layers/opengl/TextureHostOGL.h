@@ -39,6 +39,7 @@
 
 class gfxReusableSurfaceWrapper;
 class nsIntRegion;
+class nsSurfaceTexture;
 struct nsIntPoint;
 struct nsIntRect;
 struct nsIntSize;
@@ -46,10 +47,6 @@ struct nsIntSize;
 namespace mozilla {
 namespace gfx {
 class DataSourceSurface;
-}
-
-namespace gl {
-class AndroidSurfaceTexture;
 }
 
 namespace layers {
@@ -342,7 +339,7 @@ class SurfaceTextureSource : public TextureSource
 {
 public:
   SurfaceTextureSource(CompositorOGL* aCompositor,
-                       mozilla::gl::AndroidSurfaceTexture* aSurfTex,
+                       nsSurfaceTexture* aSurfTex,
                        gfx::SurfaceFormat aFormat,
                        GLenum aTarget,
                        GLenum aWrapMode,
@@ -373,7 +370,7 @@ public:
 
 protected:
   RefPtr<CompositorOGL> mCompositor;
-  mozilla::gl::AndroidSurfaceTexture* const mSurfTex;
+  nsSurfaceTexture* const mSurfTex;
   const gfx::SurfaceFormat mFormat;
   const GLenum mTextureTarget;
   const GLenum mWrapMode;
@@ -384,7 +381,7 @@ class SurfaceTextureHost : public TextureHost
 {
 public:
   SurfaceTextureHost(TextureFlags aFlags,
-                     mozilla::gl::AndroidSurfaceTexture* aSurfTex,
+                     nsSurfaceTexture* aSurfTex,
                      gfx::IntSize aSize);
 
   virtual ~SurfaceTextureHost();
@@ -417,7 +414,7 @@ public:
   virtual const char* Name() { return "SurfaceTextureHost"; }
 
 protected:
-  mozilla::gl::AndroidSurfaceTexture* const mSurfTex;
+  nsSurfaceTexture* const mSurfTex;
   const gfx::IntSize mSize;
   RefPtr<CompositorOGL> mCompositor;
   RefPtr<SurfaceTextureSource> mTextureSource;

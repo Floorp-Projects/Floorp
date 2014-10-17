@@ -26,8 +26,6 @@ if CONFIG['MOZ_GL_PROVIDER']:
     gl_provider = CONFIG['MOZ_GL_PROVIDER']
 
 EXPORTS += [
-    'AndroidNativeWindow.h',
-    'AndroidSurfaceTexture.h',
     'DecomposeIntoNoRepeatTriangles.h',
     'EGLUtils.h',
     'ForceDiscreteGPUHelperCGL.h',
@@ -116,8 +114,6 @@ else:
     ]
 
 UNIFIED_SOURCES += [
-    'AndroidNativeWindow.cpp',
-    'AndroidSurfaceTexture.cpp',
     'DecomposeIntoNoRepeatTriangles.cpp',
     'EGLUtils.cpp',
     'GfxTexturesReporter.cpp',

@@ -185,7 +185,7 @@ AttachToContainerAsSurfaceTexture(ImageContainer* container,
   MOZ_ASSERT(out_image);
   MOZ_ASSERT(!*out_image);
 
-  mozilla::gl::AndroidSurfaceTexture* surfTex = instance->AsSurfaceTexture();
+  nsSurfaceTexture* surfTex = instance->AsSurfaceTexture();
   if (!surfTex) {
     return;
   }

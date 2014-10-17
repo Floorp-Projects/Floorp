@@ -21,7 +21,7 @@
 #include "nsAutoPtr.h"
 #include "nsIRunnable.h"
 #include "GLContextTypes.h"
-#include "AndroidSurfaceTexture.h"
+#include "nsSurfaceTexture.h"
 #include "AndroidBridge.h"
 #include <map>
 class PluginEventRunnable;
@@ -192,12 +192,12 @@ public:
   void* AcquireContentWindow();
 
   EGLImage AsEGLImage();
-  mozilla::gl::AndroidSurfaceTexture* AsSurfaceTexture();
+  nsSurfaceTexture* AsSurfaceTexture();
 
   // For ANPVideo
   class VideoInfo {
   public:
-    VideoInfo(mozilla::gl::AndroidSurfaceTexture* aSurfaceTexture) :
+    VideoInfo(nsSurfaceTexture* aSurfaceTexture) :
       mSurfaceTexture(aSurfaceTexture)
     {
     }
@@ -207,7 +207,7 @@ public:
       mSurfaceTexture = nullptr;
     }
 
-    nsRefPtr<mozilla::gl::AndroidSurfaceTexture> mSurfaceTexture;
+    nsRefPtr<nsSurfaceTexture> mSurfaceTexture;
     gfxRect mDimensions;
   };
 
@@ -334,7 +334,7 @@ protected:
   bool mInverted;
 
   nsRefPtr<SharedPluginTexture> mContentTexture;
-  nsRefPtr<mozilla::gl::AndroidSurfaceTexture> mContentSurface;
+  nsRefPtr<nsSurfaceTexture> mContentSurface;
 #endif
 
   enum {
@@ -383,7 +383,7 @@ private:
 
 #ifdef MOZ_WIDGET_ANDROID
   void EnsureSharedTexture();
-  mozilla::gl::AndroidSurfaceTexture* CreateSurfaceTexture();
+  nsSurfaceTexture* CreateSurfaceTexture();
 
   std::map<void*, VideoInfo*> mVideos;
   bool mOnScreen;
