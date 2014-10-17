@@ -281,24 +281,6 @@ nsRenderingContext::FillRect(nscoord aX, nscoord aY,
     FillRect(nsRect(aX, aY, aWidth, aHeight));
 }
 
-void
-nsRenderingContext::FillPolygon(const nsPoint twPoints[], int32_t aNumPoints)
-{
-    if (aNumPoints == 0)
-        return;
-
-    nsAutoArrayPtr<gfxPoint> pxPoints(new gfxPoint[aNumPoints]);
-
-    for (int i = 0; i < aNumPoints; i++) {
-        pxPoints[i].x = FROM_TWIPS(twPoints[i].x);
-        pxPoints[i].y = FROM_TWIPS(twPoints[i].y);
-    }
-
-    mThebes->NewPath();
-    mThebes->Polygon(pxPoints, aNumPoints);
-    mThebes->Fill();
-}
-
 //
 // text
 //

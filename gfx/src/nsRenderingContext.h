@@ -42,6 +42,11 @@ public:
     DrawTarget *GetDrawTarget() { return mThebes->GetDrawTarget(); }
     nsDeviceContext *DeviceContext() { return mDeviceContext; }
 
+    int32_t AppUnitsPerDevPixel() const {
+      // we know this is an int (it's stored as a double for convenience)
+      return int32_t(mP2A);
+    }
+
     // Graphics state
 
     void IntersectClip(const nsRect& aRect);
@@ -56,7 +61,6 @@ public:
 
     void FillRect(const nsRect& aRect);
     void FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-    void FillPolygon(const nsPoint aPoints[], int32_t aNumPoints);
 
     // Text
 
