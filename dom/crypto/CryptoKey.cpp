@@ -501,16 +501,15 @@ CryptoKey::PublicKeyToSpki(SECKEYPublicKey* aPubKey,
                            CryptoBuffer& aRetVal,
                            const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
-  ScopedPLArenaPool arena;
   ScopedCERTSubjectPublicKeyInfo spki;
+
+  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
+    return NS_ERROR_DOM_OPERATION_ERR;
+  }
 
   // NSS doesn't support exporting DH public keys.
   if (aPubKey->keyType == dhKey) {
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (!arena) {
-      return NS_ERROR_DOM_OPERATION_ERR;
-    }
-
     // It's alright to assign the result of PORT_ArenaZNew(ScopedPLArenaPool)
     // to a ScopedCERTSubjectPublicKeyInfo as long as we don't set |spki->arena|
     // as that's what would be freed when |spki| goes out of scope.
@@ -542,17 +541,16 @@ CryptoKey::PublicKeyToSpki(SECKEYPublicKey* aPubKey,
       MOZ_ASSERT(false);
     }
 
-    SECStatus rv = SECITEM_CopyItem(spki->arena, &spki->algorithm.algorithm,
-                                    oidData);
+    SECStatus rv = SECITEM_CopyItem(arena, &spki->algorithm.algorithm, oidData);
     if (rv != SECSuccess) {
       return NS_ERROR_DOM_OPERATION_ERR;
     }
   }
 
   const SEC_ASN1Template* tpl = SEC_ASN1_GET(CERT_SubjectPublicKeyInfoTemplate);
-  ScopedSECItem spkiItem(SEC_ASN1EncodeItem(nullptr, nullptr, spki, tpl));
+  SECItem* spkiItem(SEC_ASN1EncodeItem(arena, nullptr, spki, tpl));
 
-  aRetVal.Assign(spkiItem.get());
+  aRetVal.Assign(spkiItem);
   return NS_OK;
 }
 
