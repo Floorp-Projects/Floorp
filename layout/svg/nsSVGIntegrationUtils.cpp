@@ -589,7 +589,8 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
   if (maskSurface) {
     gfx->Mask(maskSurface, maskTransform);
-  } else if (opacity != 1.0f) {
+  } else if (opacity != 1.0f ||
+             aFrame->StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
     gfx->Paint(opacity);
   }
 
