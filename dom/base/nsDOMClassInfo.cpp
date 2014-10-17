@@ -91,7 +91,6 @@
 #include "nsITreeContentView.h"
 #include "nsITreeView.h"
 #include "nsIXULTemplateBuilder.h"
-#include "nsITreeColumns.h"
 #endif
 #include "nsIDOMXPathNSResolver.h"
 
@@ -262,11 +261,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                                       DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(XULTreeBuilder, nsDOMGenericSH,
-                                      DEFAULT_SCRIPTABLE_FLAGS)
-#endif
-
-#ifdef MOZ_XUL
-  NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(TreeColumn, nsDOMGenericSH,
                                       DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
@@ -713,12 +707,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIXULTreeBuilder)
     DOM_CLASSINFO_MAP_ENTRY(nsIXULTemplateBuilder)
     DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
-  DOM_CLASSINFO_MAP_END
-#endif
-
-#ifdef MOZ_XUL
-  DOM_CLASSINFO_MAP_BEGIN(TreeColumn, nsITreeColumn)
-    DOM_CLASSINFO_MAP_ENTRY(nsITreeColumn)
   DOM_CLASSINFO_MAP_END
 #endif
 
