@@ -3,16 +3,29 @@
 
 "use strict";
 
-const {interfaces: Ci, results: Cr, utils: Cu} = Components;
+const {interfaces: Ci, results: Cr, utils: Cu, classes: Cc} = Components;
 
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 Cu.import("resource://testing-common/services/healthreport/utils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
+  () => Cc["@mozilla.org/datareporting/service;1"]
+          .getService(Ci.nsISupports)
+          .wrappedJSObject);
 
 
 function run_test() {
+  do_get_profile();
+
+  // Send the needed startup notifications to the datareporting service
+  // to ensure that it has been initialized.
+  gDatareportingService.observe(null, "app-startup", null);
+  gDatareportingService.observe(null, "profile-after-change", null);
+
   run_next_test();
 }
 
