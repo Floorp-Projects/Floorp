@@ -313,6 +313,12 @@
                 <CallFailedView dispatcher={dispatcher} />
               </div>
             </Example>
+            <Example summary="Call Failed — with call URL error" dashed="true"
+                     style={{width: "260px", height: "265px"}}>
+              <div className="fx-embedded">
+                <CallFailedView dispatcher={dispatcher} emailLinkError={true} />
+              </div>
+            </Example>
           </Section>
 
           <Section name="StartConversationView">
