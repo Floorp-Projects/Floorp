@@ -298,6 +298,8 @@ BytecodeFallsThrough(JSOp op)
       case JSOP_DEFAULT:
       case JSOP_RETURN:
       case JSOP_RETRVAL:
+      case JSOP_FINALYIELD:
+      case JSOP_FINALYIELDRVAL:
       case JSOP_THROW:
       case JSOP_TABLESWITCH:
         return false;
@@ -599,8 +601,18 @@ inline bool
 FlowsIntoNext(JSOp op)
 {
     /* JSOP_YIELD is considered to flow into the next instruction, like JSOP_CALL. */
-    return op != JSOP_RETRVAL && op != JSOP_RETURN && op != JSOP_THROW &&
-           op != JSOP_GOTO && op != JSOP_RETSUB;
+    switch (op) {
+      case JSOP_RETRVAL:
+      case JSOP_RETURN:
+      case JSOP_THROW:
+      case JSOP_GOTO:
+      case JSOP_RETSUB:
+      case JSOP_FINALYIELD:
+      case JSOP_FINALYIELDRVAL:
+        return false;
+      default:
+        return true;
+    }
 }
 
 inline bool
