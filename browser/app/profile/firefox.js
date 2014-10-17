@@ -1044,6 +1044,8 @@ pref("browser.sessionstore.resume_session_once", false);
 
 // minimal interval between two save operations in milliseconds
 pref("browser.sessionstore.interval", 15000);
+// Minimal interval between two save operations when device is unplugged
+pref("browser.sessionstore.interval_battery", 60000);
 // on which sites to save text data, POSTDATA and cookies
 // 0 = everywhere, 1 = unencrypted sites, 2 = nowhere
 pref("browser.sessionstore.privacy_level", 0);

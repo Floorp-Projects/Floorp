@@ -17,6 +17,8 @@ Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Battery",
+  "resource://gre/modules/Battery.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyFilter",
   "resource:///modules/sessionstore/PrivacyFilter.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
@@ -26,22 +28,21 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionFile",
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-// Minimal interval between two save operations (in milliseconds).
-XPCOMUtils.defineLazyGetter(this, "gInterval", function () {
-  const PREF = "browser.sessionstore.interval";
-
+function observeSaveIntervalPref(obj, pref, property) {
   // Observer that updates the cached value when the preference changes.
-  Services.prefs.addObserver(PREF, () => {
-    this.gInterval = Services.prefs.getIntPref(PREF);
+  Services.prefs.addObserver(pref, () => {
+    obj[property] = Services.prefs.getIntPref(pref);
 
-    // Cancel any pending runs and call runDelayed() with
-    // zero to apply the newly configured interval.
+    // Cancel any pending runs and call runDelayed()
+    // to apply the newly configured interval.
     SessionSaverInternal.cancel();
     SessionSaverInternal.runDelayed(0);
   }, false);
+  obj[property] = Services.prefs.getIntPref(pref);
+}
 
-  return Services.prefs.getIntPref(PREF);
-});
+observeSaveIntervalPref(this, "browser.sessionstore.interval", "gInterval");
+observeSaveIntervalPref(this, "browser.sessionstore.interval_battery", "gIntervalBattery");
 
 // Notify observers about a given topic with a given subject.
 function notify(subject, topic) {
@@ -145,7 +146,8 @@ let SessionSaverInternal = {
     }
 
     // Interval until the next disk operation is allowed.
-    delay = Math.max(this._lastSaveTime + gInterval - Date.now(), delay, 0);
+    let interval = Battery.charging ? gInterval : gIntervalBattery;
+    delay = Math.max(this._lastSaveTime + interval - Date.now(), delay, 0);
 
     // Schedule a state save.
     this._timeoutID = setTimeout(() => this._saveStateAsync(), delay);
