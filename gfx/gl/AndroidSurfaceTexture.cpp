@@ -18,6 +18,7 @@
 #include "GLContext.h"
 
 using namespace mozilla;
+using namespace mozilla::gl;
 using namespace mozilla::widget::android;
 
 // UGH
