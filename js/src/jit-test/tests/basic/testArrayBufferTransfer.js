@@ -1,4 +1,5 @@
 load(libdir + "asserts.js");
+load(libdir + "asm.js");
 
 // Currently, ArrayBuffer.transfer is #ifdef NIGHTLY_BUILD. When
 // ArrayBuffer.transfer is enabled on release, this test should be removed.
@@ -83,3 +84,30 @@ test(4, 1000);
 test(1000, 0);
 test(1000, 4);
 test(1000, 1000);
+
+// asm.js:
+function testAsmJS(N1, N2) {
+    var buf1 = new ArrayBuffer(N1);
+    asmLink(asmCompile('stdlib', 'ffis', 'buf', USE_ASM + "var i32=new stdlib.Int32Array(buf); function f() {} return f"), this, null, buf1);
+    var i32 = new Int32Array(buf1);
+    for (var i = 0; i < i32.length; i+=100)
+        i32[i] = i;
+
+    var buf2 = XF(buf1, N2);
+
+    assertEq(buf1.byteLength, 0);
+    assertEq(i32.length, 0);
+    assertEq(buf2.byteLength, N2);
+    var i32 = new Int32Array(buf2);
+    var i = 0;
+    for (; i < Math.min(N1, N2)/4; i+=100)
+        assertEq(i32[i], i);
+    for (; i < i32.length; i+=100) {
+        assertEq(i32[i], 0);
+        i32[i] = -i;
+    }
+}
+testAsmJS(BUF_MIN, 0);
+testAsmJS(BUF_MIN, BUF_MIN);
+testAsmJS(BUF_MIN, 2*BUF_MIN);
+testAsmJS(2*BUF_MIN, BUF_MIN);
