@@ -387,7 +387,7 @@ gfxWindowsPlatform::UpdateRenderMode()
 
     if (isVistaOrHigher  && !safeMode && tryD2D) {
         VerifyD2DDevice(d2dForceEnabled);
-        if (mD2DDevice) {
+        if (mD2DDevice && GetD3D11Device()) {
             mRenderMode = RENDER_DIRECT2D;
             mUseDirectWrite = true;
         }
@@ -1385,10 +1385,16 @@ gfxWindowsPlatform::GetD3D11Device()
     return nullptr;
   }
 
-  HRESULT hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-                                 D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-                                 featureLevels.Elements(), featureLevels.Length(),
-                                 D3D11_SDK_VERSION, byRef(mD3D11Device), nullptr, nullptr);
+  HRESULT hr = E_INVALIDARG;
+  __try {
+    hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
+                                    D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+                                    featureLevels.Elements(), featureLevels.Length(),
+                                    D3D11_SDK_VERSION, byRef(mD3D11Device), nullptr, nullptr);
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+    mD3D11Device = nullptr;
+    return nullptr;
+  }
 
   // We leak these everywhere and we need them our entire runtime anyway, let's
   // leak it here as well.
