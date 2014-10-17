@@ -98,6 +98,7 @@ this.UITour = {
     }],
     ["help",        {query: "#PanelUI-help"}],
     ["home",        {query: "#home-button"}],
+    ["privateWindow",  {query: "#privatebrowsing-button"}],
     ["quit",        {query: "#PanelUI-quit"}],
     ["search",      {
       query: "#searchbar",
