@@ -112,24 +112,27 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
         }
 
         // The remaining states delegate to the SentTabTargetSelectedListener.
-        final String listenerGUID;
-
-        ParcelableClientRecord clientRecord = getItem(position);
+        final ParcelableClientRecord clientRecord = getItem(position);
         if (currentState == State.LIST) {
             row.setText(clientRecord.name);
             row.setCompoundDrawablesWithIntrinsicBounds(getImage(clientRecord), 0, 0, 0);
 
-            listenerGUID = clientRecord.guid;
-        } else {
-            listenerGUID = null;
-        }
+            final String listenerGUID = clientRecord.guid;
 
-        row.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                listener.onSendTabTargetSelected(listenerGUID);
-            }
-        });
+            row.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    listener.onSendTabTargetSelected(listenerGUID);
+                }
+            });
+        } else {
+            row.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    listener.onSendTabActionSelected();
+                }
+            });
+        }
 
         return row;
     }

@@ -15,4 +15,11 @@ public interface SendTabTargetSelectedListener {
      * @param targetGUID The GUID of the ClientRecord the element represents (if any, otherwise null)
      */
     public void onSendTabTargetSelected(String targetGUID);
+
+    /**
+     * Called when the overall Send Tab item is clicked.
+     *
+     * This implies that the clients list was unavailable.
+     */
+    public void onSendTabActionSelected();
 }
