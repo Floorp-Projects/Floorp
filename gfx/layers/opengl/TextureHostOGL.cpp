@@ -534,12 +534,15 @@ SurfaceTextureHost::Lock()
                                               mSize);
   }
 
+  mSurfTex->Attach(gl());
+
   return true;
 }
 
 void
 SurfaceTextureHost::Unlock()
 {
+  mSurfTex->Detach();
 }
 
 void
