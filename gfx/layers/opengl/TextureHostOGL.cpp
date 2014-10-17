@@ -23,7 +23,7 @@
 #include "mozilla/layers/GrallocTextureHost.h"
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRegion.h"                   // for nsIntRegion
-#include "AndroidSurfaceTexture.h"
+#include "nsSurfaceTexture.h"
 #include "GfxTexturesReporter.h"        // for GfxTexturesReporter
 #include "GLBlitTextureImageHelper.h"
 #ifdef XP_MACOSX
@@ -58,7 +58,7 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
     case SurfaceDescriptor::TSurfaceTextureDescriptor: {
       const SurfaceTextureDescriptor& desc = aDesc.get_SurfaceTextureDescriptor();
       result = new SurfaceTextureHost(aFlags,
-                                      (AndroidSurfaceTexture*)desc.surfTex(),
+                                      (nsSurfaceTexture*)desc.surfTex(),
                                       desc.size());
       break;
     }
@@ -429,7 +429,7 @@ GLTextureSource::gl() const
 #ifdef MOZ_WIDGET_ANDROID
 
 SurfaceTextureSource::SurfaceTextureSource(CompositorOGL* aCompositor,
-                                           AndroidSurfaceTexture* aSurfTex,
+                                           nsSurfaceTexture* aSurfTex,
                                            gfx::SurfaceFormat aFormat,
                                            GLenum aTarget,
                                            GLenum aWrapMode,
@@ -450,8 +450,10 @@ SurfaceTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
     NS_WARNING("Trying to bind a texture without a GLContext");
     return;
   }
+  GLuint tex = mCompositor->GetTemporaryTexture(GetTextureTarget(), aTextureUnit);
 
   gl()->fActiveTexture(aTextureUnit);
+  gl()->fBindTexture(mTextureTarget, tex);
 #ifndef DEBUG
   // SurfaceTexture spams us if there are any existing GL errors, so
   // we'll clear them here in order to avoid that.
@@ -496,7 +498,7 @@ SurfaceTextureSource::GetTextureTransform()
 ////////////////////////////////////////////////////////////////////////
 
 SurfaceTextureHost::SurfaceTextureHost(TextureFlags aFlags,
-                                       AndroidSurfaceTexture* aSurfTex,
+                                       nsSurfaceTexture* aSurfTex,
                                        gfx::IntSize aSize)
   : TextureHost(aFlags)
   , mSurfTex(aSurfTex)
@@ -534,15 +536,12 @@ SurfaceTextureHost::Lock()
                                               mSize);
   }
 
-  mSurfTex->Attach(gl());
-
   return true;
 }
 
 void
 SurfaceTextureHost::Unlock()
 {
-  mSurfTex->Detach();
 }
 
 void
