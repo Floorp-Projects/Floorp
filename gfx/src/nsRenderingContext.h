@@ -45,7 +45,6 @@ public:
     // Graphics state
 
     void IntersectClip(const nsRect& aRect);
-    void SetClip(const nsIntRegion& aRegion);
     void SetColor(nscolor aColor);
 
     // Shapes

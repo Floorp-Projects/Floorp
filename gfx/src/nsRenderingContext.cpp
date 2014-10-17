@@ -103,31 +103,6 @@ nsRenderingContext::IntersectClip(const nsRect& aRect)
 }
 
 void
-nsRenderingContext::SetClip(const nsIntRegion& aRegion)
-{
-    // Region is in device coords, no transformation.  This should
-    // only be called when there is no transform in place, when we we
-    // just start painting a widget. The region is set by the platform
-    // paint routine.  Therefore, there is no option to intersect with
-    // an existing clip.
-
-    gfxMatrix mat = mThebes->CurrentMatrix();
-    mThebes->SetMatrix(gfxMatrix());
-
-    mThebes->ResetClip();
-
-    mThebes->NewPath();
-    nsIntRegionRectIterator iter(aRegion);
-    const nsIntRect* rect;
-    while ((rect = iter.Next())) {
-        mThebes->Rectangle(gfxRect(rect->x, rect->y, rect->width, rect->height),
-                           true);
-    }
-    mThebes->Clip();
-    mThebes->SetMatrix(mat);
-}
-
-void
 nsRenderingContext::SetColor(nscolor aColor)
 {
     /* This sets the color assuming the sRGB color space, since that's
