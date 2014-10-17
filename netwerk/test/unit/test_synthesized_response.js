@@ -19,15 +19,27 @@ function make_uri(url) {
 // ensure the cache service is prepped when running the test
 Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
 
+var gotOnProgress;
+var gotOnStatus;
+
 function make_channel(url, body, cb) {
+  gotOnProgress = false;
+  gotOnStatus = false;
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   var chan = ios.newChannel(url, null, null).QueryInterface(Ci.nsIHttpChannel);
   chan.notificationCallbacks = {
     numChecks: 0,
     QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkInterceptController,
-                                           Ci.nsIInterfaceRequestor]),
+                                           Ci.nsIInterfaceRequestor,
+                                           Ci.nsIProgressEventSink]),
     getInterface: function(iid) {
       return this.QueryInterface(iid);
+    },
+    onProgress: function(request, context, progress, progressMax) {
+      gotOnProgress = true;
+    },
+    onStatus: function(request, context, status, statusArg) {
+      gotOnStatus = true;
     },
     shouldPrepareForIntercept: function() {
       do_check_eq(this.numChecks, 0);
@@ -72,16 +84,22 @@ function run_test() {
 
 function handle_synthesized_response(request, buffer) {
   do_check_eq(buffer, NON_REMOTE_BODY);
+  do_check_true(gotOnStatus);
+  do_check_true(gotOnProgress);
   run_next_test();
 }
 
 function handle_synthesized_response_2(request, buffer) {
   do_check_eq(buffer, NON_REMOTE_BODY_2);
+  do_check_true(gotOnStatus);
+  do_check_true(gotOnProgress);
   run_next_test();
 }
 
 function handle_remote_response(request, buffer) {
   do_check_eq(buffer, REMOTE_BODY);
+  do_check_true(gotOnStatus);
+  do_check_true(gotOnProgress);
   run_next_test();
 }
 
@@ -138,6 +156,24 @@ add_test(function() {
     });
   });
   chan.asyncOpen(new ChannelListener(handle_remote_response, null), null);
+});
+
+// ensure that the intercepted channel supports suspend/resume
+add_test(function() {
+  var chan = make_channel(URL + '/body', null, function(intercepted, stream) {
+    var synthesized = Cc["@mozilla.org/io/string-input-stream;1"]
+                        .createInstance(Ci.nsIStringInputStream);
+    synthesized.data = NON_REMOTE_BODY;
+
+    NetUtil.asyncCopy(synthesized, stream, function() {
+      // set the content-type to ensure that the stream converter doesn't hold up notifications
+      // and cause the test to fail
+      intercepted.synthesizeHeader("Content-Type", "text/plain");
+      intercepted.finishSynthesizedResponse();
+    });
+  });
+  chan.asyncOpen(new ChannelListener(handle_synthesized_response, null,
+				     CL_ALLOW_UNKNOWN_CL | CL_SUSPEND | CL_EXPECT_3S_DELAY), null);
 });
 
 add_test(function() {
