@@ -8,6 +8,7 @@
 #define NS_CSS_RENDERING_BORDERS_H
 
 #include "gfxRect.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
 #include "nsColor.h"
 #include "nsCOMPtr.h"
