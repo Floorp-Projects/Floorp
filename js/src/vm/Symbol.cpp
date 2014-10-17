@@ -9,6 +9,7 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 
+#include "builtin/SymbolObject.h"
 #include "gc/Rooting.h"
 #include "vm/StringBuffer.h"
 
