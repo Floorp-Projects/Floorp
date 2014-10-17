@@ -66,6 +66,13 @@ LLDBINIT_FINAL_TARGET_FILES := $(DEPTH)/.lldbinit
 LLDBINIT_FINAL_TARGET_DEST = $(FINAL_TARGET)
 INSTALL_TARGETS += LLDBINIT_FINAL_TARGET
 
+ifeq (1_1,$(MOZ_ASAN)_$(CLANG_CL))
+# Install the clang-cl runtime library for ASAN next to the binaries we produce.
+CLANG_RT_ASAN_FILES := $(MOZ_CLANG_RT_ASAN_LIB_PATH)
+CLANG_RT_ASAN_DEST = $(FINAL_TARGET)
+INSTALL_TARGETS += CLANG_RT_ASAN
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 TARGET_DEPTH = ..

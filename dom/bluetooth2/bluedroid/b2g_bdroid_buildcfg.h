@@ -39,4 +39,9 @@
 /* CHLD values */
 #define BTA_AG_CHLD_VAL    "(0,1,2,3)"
 
+/* BLE Feature */
+#define BTA_GATT_INCLUDED  TRUE
+#define BLE_INCLUDED       TRUE
+#define SMP_INCLUDED       TRUE
+
 #endif /* B2G_BDROID_BUILDCFG_H */

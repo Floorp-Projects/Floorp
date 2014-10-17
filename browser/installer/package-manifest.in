@@ -921,4 +921,7 @@ bin/libfreebl_32int64_3.so
 #ifdef CLANG_CXX
 @BINPATH@/llvm-symbolizer
 #endif
+#ifdef CLANG_CL
+@BINPATH@/clang_rt.asan_dynamic-i386.dll
+#endif
 #endif

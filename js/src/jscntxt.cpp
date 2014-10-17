@@ -1109,11 +1109,10 @@ JSContext::JSContext(JSRuntime *rt)
     data(nullptr),
     data2(nullptr),
     outstandingRequests(0),
-    jitIsBroken(false),
+    jitIsBroken(false)
 #ifdef MOZ_TRACE_JSCALLS
-    functionCallback(nullptr),
+  , functionCallback(nullptr)
 #endif
-    innermostGenerator_(nullptr)
 {
     MOZ_ASSERT(static_cast<ContextFriendFields*>(this) ==
                ContextFriendFields::get(this));
@@ -1145,23 +1144,6 @@ JSContext::isThrowingOutOfMemory()
 {
     return throwing && unwrappedException_ == StringValue(names().outOfMemory);
 }
-
-void
-JSContext::enterGenerator(JSGenerator *gen)
-{
-    MOZ_ASSERT(!gen->prevGenerator);
-    gen->prevGenerator = innermostGenerator_;
-    innermostGenerator_ = gen;
-}
-
-void
-JSContext::leaveGenerator(JSGenerator *gen)
-{
-    MOZ_ASSERT(innermostGenerator_ == gen);
-    innermostGenerator_ = innermostGenerator_->prevGenerator;
-    gen->prevGenerator = nullptr;
-}
-
 
 bool
 JSContext::saveFrameChain()

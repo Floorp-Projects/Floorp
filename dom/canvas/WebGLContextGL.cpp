@@ -922,7 +922,11 @@ WebGLContext::GenerateMipmap(GLenum rawTarget)
     const TexImageTarget imageTarget = (target == LOCAL_GL_TEXTURE_2D)
                                                   ? LOCAL_GL_TEXTURE_2D
                                                   : LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-    if (!tex->HasImageInfoAt(imageTarget, tex->GetBaseMipmapLevel()))
+    if (!tex->IsMipmapRangeValid())
+    {
+        return ErrorInvalidOperation("generateMipmap: Texture does not have a valid mipmap range.");
+    }
+    if (!tex->HasImageInfoAt(imageTarget, tex->EffectiveBaseMipmapLevel()))
     {
         return ErrorInvalidOperation("generateMipmap: Level zero of texture is not defined.");
     }

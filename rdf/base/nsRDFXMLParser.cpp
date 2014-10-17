@@ -13,6 +13,7 @@
 #include "nsParserCIID.h"
 #include "nsStringStream.h"
 #include "nsNetUtil.h"
+#include "nsNullPrincipal.h"
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
@@ -114,8 +115,17 @@ nsRDFXMLParser::ParseString(nsIRDFDataSource* aSink, nsIURI* aBaseURI, const nsA
     rv = NS_NewCStringInputStream(getter_AddRefs(stream), aString);
     if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsIPrincipal> nullPrincipal =
+      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewInputStreamChannel(getter_AddRefs(channel), aBaseURI, stream,
+    rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
+                                  aBaseURI,
+                                  stream,
+                                  nullPrincipal,
+                                  nsILoadInfo::SEC_NORMAL,
+                                  nsIContentPolicy::TYPE_OTHER,
                                   NS_LITERAL_CSTRING("text/xml"));
     if (NS_FAILED(rv)) return rv;
 
