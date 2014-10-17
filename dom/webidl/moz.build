@@ -498,6 +498,7 @@ WEBIDL_FILES = [
     'TouchList.webidl',
     'TransitionEvent.webidl',
     'TreeBoxObject.webidl',
+    'TreeColumn.webidl',
     'TreeColumns.webidl',
     'TreeWalker.webidl',
     'UDPMessageEvent.webidl',
