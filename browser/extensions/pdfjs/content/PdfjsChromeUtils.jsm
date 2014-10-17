@@ -43,7 +43,9 @@ var DEFAULT_PREFERENCES = {
   sidebarViewOnLoad: 0,
   enableHandToolOnLoad: false,
   enableWebGL: false,
+  pdfBugEnabled: false,
   disableRange: false,
+  disableStream: false,
   disableAutoFetch: false,
   disableFontFace: false,
   disableTextLayer: false,
@@ -285,7 +287,8 @@ let PdfjsChromeUtils = {
  */
 function PdfjsFindbarWrapper(aBrowser) {
   let tabbrowser = aBrowser.getTabBrowser();
-  let tab = tabbrowser.getTabForBrowser(aBrowser);
+  let tab;
+  tab = tabbrowser.getTabForBrowser(aBrowser);
   this._findbar = tabbrowser.getFindBar(tab);
 };
 
