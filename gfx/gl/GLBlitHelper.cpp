@@ -10,15 +10,10 @@
 #include "mozilla/Preferences.h"
 #include "ImageContainer.h"
 #include "HeapCopyOfStackArray.h"
-#include "mozilla/gfx/Matrix.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "GrallocImages.h"
 #include "GLLibraryEGL.h"
-#endif
-
-#ifdef MOZ_WIDGET_ANDROID
-#include "GLImages.h"
 #endif
 
 using mozilla::layers::PlanarYCbCrImage;
@@ -149,7 +144,6 @@ GLBlitHelper::GLBlitHelper(GLContext* gl)
     , mTex2DBlit_Program(0)
     , mTex2DRectBlit_Program(0)
     , mYFlipLoc(-1)
-    , mTextureTransformLoc(-1)
     , mTexExternalBlit_FragShader(0)
     , mTexYUVPlanarBlit_FragShader(0)
     , mTexExternalBlit_Program(0)
@@ -244,23 +238,21 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
                                          vTexCoord * uTexCoordMult);  \n\
         }                                                             \n\
     ";
-#ifdef ANDROID /* MOZ_WIDGET_ANDROID || MOZ_WIDGET_GONK */
+#ifdef MOZ_WIDGET_GONK
     const char kTexExternalBlit_FragShaderSource[] = "\
-        #extension GL_OES_EGL_image_external : require                  \n\
-        #ifdef GL_FRAGMENT_PRECISION_HIGH                               \n\
-            precision highp float;                                      \n\
-        #else                                                           \n\
-            precision mediump float;                                    \n\
-        #endif                                                          \n\
-        varying vec2 vTexCoord;                                         \n\
-        uniform mat4 uTextureTransform;                                 \n\
-        uniform samplerExternalOES uTexUnit;                            \n\
-                                                                        \n\
-        void main()                                                     \n\
-        {                                                               \n\
-            gl_FragColor = texture2D(uTexUnit,                          \n\
-                (uTextureTransform * vec4(vTexCoord, 0.0, 1.0)).xy);    \n\
-        }                                                               \n\
+        #extension GL_OES_EGL_image_external : require      \n\
+        #ifdef GL_FRAGMENT_PRECISION_HIGH                   \n\
+            precision highp float;                          \n\
+        #else                                               \n\
+            precision mediump float;                        \n\
+        #endif                                              \n\
+        varying vec2 vTexCoord;                             \n\
+        uniform samplerExternalOES uTexUnit;                \n\
+                                                            \n\
+        void main()                                         \n\
+        {                                                   \n\
+            gl_FragColor = texture2D(uTexUnit, vTexCoord);  \n\
+        }                                                   \n\
     ";
 #endif
     /* From Rec601:
@@ -314,8 +306,7 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
         fragShaderPtr = &mTex2DRectBlit_FragShader;
         fragShaderSource = kTex2DRectBlit_FragShaderSource;
         break;
-#ifdef ANDROID
-    case ConvertSurfaceTexture:
+#ifdef MOZ_WIDGET_GONK
     case ConvertGralloc:
         programPtr = &mTexExternalBlit_Program;
         fragShaderPtr = &mTexExternalBlit_FragShader;
@@ -450,9 +441,8 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
         switch (target) {
             case BlitTex2D:
             case BlitTexRect:
-            case ConvertSurfaceTexture:
             case ConvertGralloc: {
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_GONK
                 GLint texUnitLoc = mGL->fGetUniformLocation(program, "uTexUnit");
                 MOZ_ASSERT(texUnitLoc != -1, "uniform uTexUnit not found");
                 mGL->fUniform1i(texUnitLoc, 0);
@@ -482,12 +472,6 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
         MOZ_ASSERT(mGL->fGetAttribLocation(program, "aPosition") == 0);
         mYFlipLoc = mGL->fGetUniformLocation(program, "uYflip");
         MOZ_ASSERT(mYFlipLoc != -1, "uniform: uYflip not found");
-        mTextureTransformLoc = mGL->fGetUniformLocation(program, "uTextureTransform");
-        if (mTextureTransformLoc >= 0) {
-            // Set identity matrix as default
-            gfx::Matrix4x4 identity;
-            mGL->fUniformMatrix4fv(mTextureTransformLoc, 1, false, &identity._11);
-        }
         success = true;
     } while (false);
 
@@ -716,42 +700,6 @@ GLBlitHelper::BlitGrallocImage(layers::GrallocImage* grallocImage, bool yFlip)
 }
 #endif
 
-#ifdef MOZ_WIDGET_ANDROID
-
-bool
-GLBlitHelper::BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage)
-{
-    AndroidSurfaceTexture* surfaceTexture = stImage->GetData()->mSurfTex;
-    bool yFlip = stImage->GetData()->mInverted;
-
-    ScopedBindTextureUnit boundTU(mGL, LOCAL_GL_TEXTURE0);
-    mGL->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
-
-    if (!surfaceTexture->Attach(mGL)) {
-        return false;
-    }
-
-    // UpdateTexImage() changes the EXTERNAL binding, so save it here
-    // so we can restore it after.
-    int oldBinding = 0;
-    mGL->fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_EXTERNAL, &oldBinding);
-
-    surfaceTexture->UpdateTexImage();
-
-    Matrix4x4 transform;
-    surfaceTexture->GetTransformMatrix(transform);
-
-    mGL->fUniformMatrix4fv(mTextureTransformLoc, 1, false, &transform._11);
-    mGL->fUniform1f(mYFlipLoc, yFlip ? 1.0f : 0.0f);
-    mGL->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
-
-    surfaceTexture->Detach();
-
-    mGL->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL, oldBinding);
-    return true;
-}
-#endif
-
 bool
 GLBlitHelper::BlitPlanarYCbCrImage(layers::PlanarYCbCrImage* yuvImage, bool yFlip)
 {
@@ -790,14 +738,15 @@ GLBlitHelper::BlitPlanarYCbCrImage(layers::PlanarYCbCrImage* yuvImage, bool yFli
 }
 
 bool
-GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
-                                     const gfx::IntSize& destSize,
-                                     GLuint destFB,
-                                     bool yFlip,
-                                     GLuint xoffset,
-                                     GLuint yoffset,
-                                     GLuint cropWidth,
-                                     GLuint cropHeight)
+GLBlitHelper::BlitImageToTexture(layers::Image* srcImage,
+                                 const gfx::IntSize& destSize,
+                                 GLuint destTex,
+                                 GLenum destTarget,
+                                 bool yFlip,
+                                 GLuint xoffset,
+                                 GLuint yoffset,
+                                 GLuint cropWidth,
+                                 GLuint cropHeight)
 {
     ScopedGLDrawState autoStates(mGL);
 
@@ -811,11 +760,6 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
         type = ConvertGralloc;
         break;
 #endif
-#ifdef MOZ_WIDGET_ANDROID
-    case ImageFormat::SURFACE_TEXTURE:
-        type = ConvertSurfaceTexture;
-        break;
-#endif
     default:
         return false;
     }
@@ -825,7 +769,12 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
         return false;
     }
 
-    ScopedBindFramebuffer boundFB(mGL, destFB);
+    if (!mFBO) {
+        mGL->fGenFramebuffers(1, &mFBO);
+    }
+
+    ScopedBindFramebuffer boundFB(mGL, mFBO);
+    mGL->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, destTarget, destTex, 0);
     mGL->fColorMask(LOCAL_GL_TRUE, LOCAL_GL_TRUE, LOCAL_GL_TRUE, LOCAL_GL_TRUE);
     mGL->fViewport(0, 0, destSize.width, destSize.height);
     if (xoffset != 0 && yoffset != 0 && cropWidth != 0 && cropHeight != 0) {
@@ -844,37 +793,8 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
         PlanarYCbCrImage* yuvImage = static_cast<PlanarYCbCrImage*>(srcImage);
         return BlitPlanarYCbCrImage(yuvImage, yFlip);
     }
-#ifdef MOZ_WIDGET_ANDROID
-    if (type == ConvertSurfaceTexture) {
-        layers::SurfaceTextureImage* stImage = static_cast<layers::SurfaceTextureImage*>(srcImage);
-        return BlitSurfaceTextureImage(stImage);
-    }
-#endif
 
     return false;
-}
-
-bool
-GLBlitHelper::BlitImageToTexture(layers::Image* srcImage,
-                                 const gfx::IntSize& destSize,
-                                 GLuint destTex,
-                                 GLenum destTarget,
-                                 bool yFlip,
-                                 GLuint xoffset,
-                                 GLuint yoffset,
-                                 GLuint cropWidth,
-                                 GLuint cropHeight)
-{
-    ScopedGLDrawState autoStates(mGL);
-
-    if (!mFBO) {
-        mGL->fGenFramebuffers(1, &mFBO);
-    }
-
-    ScopedBindFramebuffer boundFB(mGL, mFBO);
-    mGL->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, destTarget, destTex, 0);
-    return BlitImageToFramebuffer(srcImage, destSize, mFBO, yFlip, xoffset, yoffset,
-                                  cropWidth, cropHeight);
 }
 
 void
