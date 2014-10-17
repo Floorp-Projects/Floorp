@@ -12,6 +12,9 @@ import android.app.Activity;
  *  - check that about: loads from Settings/About...
  */
 public class testAboutPage extends PixelTest {
+    /**
+     * Ensures the page title matches the given regex (as opposed to String equality).
+     */
     private void ensureTitleMatches(final String titleRegex, final String urlRegex) {
         final Activity activity = getActivity();
         final Element urlBarTitle = mDriver.findElement(activity, R.id.url_bar_title);
@@ -29,7 +32,7 @@ public class testAboutPage extends PixelTest {
         String url = StringHelper.ABOUT_SCHEME;
         loadAndPaint(url);
 
-        verifyPageTitle(StringHelper.ABOUT_LABEL, url);
+        ensureTitleMatches(StringHelper.ABOUT_LABEL, url);
 
         // Open a new page to remove the about: page from the current tab.
         url = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
@@ -52,6 +55,6 @@ public class testAboutPage extends PixelTest {
         contentEventExpecter.unregisterListener();
 
         // Grab the title to make sure the about: page was loaded.
-        verifyPageTitle(StringHelper.ABOUT_LABEL, StringHelper.ABOUT_SCHEME);
+        ensureTitleMatches(StringHelper.ABOUT_LABEL, StringHelper.ABOUT_SCHEME);
     }
 }
