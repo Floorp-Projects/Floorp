@@ -815,6 +815,7 @@ class CSPReportSenderRunnable MOZ_FINAL : public nsRunnable
       , mInnerWindowID(aInnerWindowID)
       , mCSPContext(aCSPContext)
     {
+      NS_ASSERTION(!aViolatedDirective.IsEmpty(), "Can not send reports without a violated directive");
       // the observer subject is an nsISupports: either an nsISupportsCString
       // from the arg passed in directly, or if that's empty, it's the blocked
       // source.
