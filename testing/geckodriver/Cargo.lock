@@ -1,0 +1,70 @@
+[root]
+name = "wires"
+version = "0.0.1"
+dependencies = [
+ "hyper 0.0.1 (git+https://github.com/hyperium/hyper.git#46e1f4443f766c98696150b6056d387fcac0f1a0)",
+ "uuid 0.0.1 (git+https://github.com/rust-lang/uuid.git#c6159089a491ff4398c6d423263a085c95092a04)",
+]
+
+[[package]]
+name = "encoding"
+version = "0.1.0"
+source = "git+https://github.com/lifthrasiir/rust-encoding#97e5a56658d11e6386d0d17386560094490b1daf"
+
+[[package]]
+name = "hyper"
+version = "0.0.1"
+source = "git+https://github.com/hyperium/hyper.git#46e1f4443f766c98696150b6056d387fcac0f1a0"
+dependencies = [
+ "intertwine 0.0.1 (git+https://github.com/reem/rust-intertwine#3b23760cf7da3c7f38db16bf488c88f6e506de2d)",
+ "mime 0.0.1 (git+https://github.com/seanmonstar/mime.rs#62a454863b189fa03a3f8c3db0207cb8fe366b7a)",
+ "move-acceptor 0.0.1 (git+https://github.com/reem/rust-move-acceptor#4eef9c13745db3da74c22a26b659dc054aec5500)",
+ "openssl 0.0.0 (git+https://github.com/sfackler/rust-openssl#d6578469a85bcc06a5761c1e25a73036427affef)",
+ "typeable 0.0.1 (git+https://github.com/reem/rust-typeable#55154e1809db8ceec8f8519bdbb638c2fbd712f5)",
+ "unsafe-any 0.1.0 (git+https://github.com/reem/rust-unsafe-any#75cff194795447a901c1658e31629899c9c8d52f)",
+ "url 0.1.0 (git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b)",
+]
+
+[[package]]
+name = "intertwine"
+version = "0.0.1"
+source = "git+https://github.com/reem/rust-intertwine#3b23760cf7da3c7f38db16bf488c88f6e506de2d"
+
+[[package]]
+name = "mime"
+version = "0.0.1"
+source = "git+https://github.com/seanmonstar/mime.rs#62a454863b189fa03a3f8c3db0207cb8fe366b7a"
+
+[[package]]
+name = "move-acceptor"
+version = "0.0.1"
+source = "git+https://github.com/reem/rust-move-acceptor#4eef9c13745db3da74c22a26b659dc054aec5500"
+
+[[package]]
+name = "openssl"
+version = "0.0.0"
+source = "git+https://github.com/sfackler/rust-openssl#d6578469a85bcc06a5761c1e25a73036427affef"
+
+[[package]]
+name = "typeable"
+version = "0.0.1"
+source = "git+https://github.com/reem/rust-typeable#55154e1809db8ceec8f8519bdbb638c2fbd712f5"
+
+[[package]]
+name = "unsafe-any"
+version = "0.1.0"
+source = "git+https://github.com/reem/rust-unsafe-any#75cff194795447a901c1658e31629899c9c8d52f"
+
+[[package]]
+name = "url"
+version = "0.1.0"
+source = "git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b"
+dependencies = [
+ "encoding 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding#97e5a56658d11e6386d0d17386560094490b1daf)",
+]
+
+[[package]]
+name = "uuid"
+version = "0.0.1"
+source = "git+https://github.com/rust-lang/uuid.git#c6159089a491ff4398c6d423263a085c95092a04"
+
