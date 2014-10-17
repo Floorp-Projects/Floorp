@@ -375,74 +375,13 @@ this.PageThumbs = {
   },
 
   /**
-   * Determines the crop size for a given content window.
-   * @param aWindow The content window.
-   * @param aCanvas The target canvas.
-   * @return An array containing width, height and scale.
-   */
-  _determineCropSize: function PageThumbs_determineCropSize(aWindow, aCanvas) {
-    let utils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
-    let sbWidth = {}, sbHeight = {};
-
-    try {
-      utils.getScrollbarSize(false, sbWidth, sbHeight);
-    } catch (e) {
-      // This might fail if the window does not have a presShell.
-      Cu.reportError("Unable to get scrollbar size in _determineCropSize.");
-      sbWidth.value = sbHeight.value = 0;
-    }
-
-    // Even in RTL mode, scrollbars are always on the right.
-    // So there's no need to determine a left offset.
-    let sw = aWindow.innerWidth - sbWidth.value;
-    let sh = aWindow.innerHeight - sbHeight.value;
-
-    let {width: thumbnailWidth, height: thumbnailHeight} = aCanvas;
-    let scale = Math.min(Math.max(thumbnailWidth / sw, thumbnailHeight / sh), 1);
-    let scaledWidth = sw * scale;
-    let scaledHeight = sh * scale;
-
-    if (scaledHeight > thumbnailHeight)
-      sh -= Math.floor(Math.abs(scaledHeight - thumbnailHeight) * scale);
-
-    if (scaledWidth > thumbnailWidth)
-      sw -= Math.floor(Math.abs(scaledWidth - thumbnailWidth) * scale);
-
-    return [sw, sh, scale];
-  },
-
-  /**
    * Creates a new hidden canvas element.
    * @param aWindow The document of this window will be used to create the
    *                canvas.  If not given, the hidden window will be used.
    * @return The newly created canvas.
    */
   createCanvas: function PageThumbs_createCanvas(aWindow) {
-    let doc = (aWindow || Services.appShell.hiddenDOMWindow).document;
-    let canvas = doc.createElementNS(HTML_NAMESPACE, "canvas");
-    canvas.mozOpaque = true;
-    canvas.mozImageSmoothingEnabled = true;
-    let [thumbnailWidth, thumbnailHeight] = this._getThumbnailSize();
-    canvas.width = thumbnailWidth;
-    canvas.height = thumbnailHeight;
-    return canvas;
-  },
-
-  /**
-   * Calculates the thumbnail size based on current desktop's dimensions.
-   * @return The calculated thumbnail size or a default if unable to calculate.
-   */
-  _getThumbnailSize: function PageThumbs_getThumbnailSize() {
-    if (!this._thumbnailWidth || !this._thumbnailHeight) {
-      let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"]
-                            .getService(Ci.nsIScreenManager);
-      let left = {}, top = {}, width = {}, height = {};
-      screenManager.primaryScreen.GetRectDisplayPix(left, top, width, height);
-      this._thumbnailWidth = Math.round(width.value / 3);
-      this._thumbnailHeight = Math.round(height.value / 3);
-    }
-    return [this._thumbnailWidth, this._thumbnailHeight];
+    return PageThumbUtils.createCanvas(aWindow);
   },
 
   /**
