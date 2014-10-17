@@ -1111,7 +1111,7 @@ JS_StealArrayBufferContents(JSContext *cx, HandleObject objArg)
     // hasStealableContents is true for mapped buffers, so we must additionally
     // require that the buffer is plain. In the future, we could consider
     // returning something that handles releasing the memory.
-    bool hasStealableContents = buffer->hasStealableContents() && buffer->isPlain();
+    bool hasStealableContents = buffer->hasStealableContents() && buffer->hasMallocedContents();
 
     return ArrayBufferObject::stealContents(cx, buffer, hasStealableContents).data();
 }

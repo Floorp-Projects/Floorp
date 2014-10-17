@@ -205,17 +205,18 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         if (!ownsData())
             return false;
 
-        // asm.js buffer contents are transferred by copying, just like inline
-        // elements.
-        if (isAsmJS())
-            return false;
-
         // Neutered contents aren't transferrable because we want a neutered
         // array's contents to be backed by zeroed memory equal in length to
         // the original buffer contents.  Transferring these contents would
         // allocate new ones based on the current byteLength, which is 0 for a
         // neutered array -- not the original byteLength.
         return !isNeutered();
+    }
+
+    // Return whether the buffer is allocated by js_malloc and should be freed
+    // with js_free.
+    bool hasMallocedContents() const {
+        return (ownsData() && isPlain()) || isAsmJSMalloced();
     }
 
     static void addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf mallocSizeOf,
