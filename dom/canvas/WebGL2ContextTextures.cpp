@@ -205,6 +205,119 @@ WebGL2Context::TexStorage3D(GLenum target, GLsizei levels, GLenum internalformat
 }
 
 void
+WebGL2Context::TexImage3D(GLenum target, GLint level, GLenum internalformat,
+                          GLsizei width, GLsizei height, GLsizei depth,
+                          GLint border, GLenum format, GLenum type,
+                          const Nullable<dom::ArrayBufferView> &pixels,
+                          ErrorResult& rv)
+{
+    if (IsContextLost())
+        return;
+
+    void* data;
+    size_t dataLength;
+    js::Scalar::Type jsArrayType;
+    if (pixels.IsNull()) {
+        data = nullptr;
+        dataLength = 0;
+        jsArrayType = js::Scalar::TypeMax;
+    } else {
+        const ArrayBufferView& view = pixels.Value();
+        view.ComputeLengthAndData();
+
+        data = view.Data();
+        dataLength = view.Length();
+        jsArrayType = JS_GetArrayBufferViewType(view.Obj());
+    }
+
+    const WebGLTexImageFunc func = WebGLTexImageFunc::TexImage;
+    const WebGLTexDimensions dims = WebGLTexDimensions::Tex3D;
+
+    if (!ValidateTexImageTarget(target, func, dims))
+        return;
+
+    TexImageTarget texImageTarget = target;
+
+    if (!ValidateTexImage(texImageTarget, level, internalformat,
+                          0, 0, 0,
+                          width, height, depth,
+                          border, format, type, func, dims))
+    {
+        return;
+    }
+
+    if (!ValidateTexInputData(type, jsArrayType, func, dims))
+        return;
+
+    TexInternalFormat effectiveInternalFormat =
+        EffectiveInternalFormatFromInternalFormatAndType(internalformat, type);
+
+    if (effectiveInternalFormat == LOCAL_GL_NONE) {
+        return ErrorInvalidOperation("texImage3D: bad combination of internalformat and type");
+    }
+
+    // we need to find the exact sized format of the source data. Slightly abusing
+    // EffectiveInternalFormatFromInternalFormatAndType for that purpose. Really, an unsized source format
+    // is the same thing as an unsized internalformat.
+    TexInternalFormat effectiveSourceFormat =
+        EffectiveInternalFormatFromInternalFormatAndType(format, type);
+    MOZ_ASSERT(effectiveSourceFormat != LOCAL_GL_NONE); // should have validated format/type combo earlier
+    const size_t srcbitsPerTexel = GetBitsPerTexel(effectiveSourceFormat);
+    MOZ_ASSERT((srcbitsPerTexel % 8) == 0); // should not have compressed formats here.
+    size_t srcTexelSize = srcbitsPerTexel / 8;
+
+    CheckedUint32 checked_neededByteLength =
+        GetImageSize(height, width, depth, srcTexelSize, mPixelStoreUnpackAlignment);
+
+    if (!checked_neededByteLength.isValid())
+        return ErrorInvalidOperation("texSubImage2D: integer overflow computing the needed buffer size");
+
+    uint32_t bytesNeeded = checked_neededByteLength.value();
+
+    if (dataLength && dataLength < bytesNeeded)
+        return ErrorInvalidOperation("texImage3D: not enough data for operation (need %d, have %d)",
+                                 bytesNeeded, dataLength);
+
+    WebGLTexture* tex = activeBoundTextureForTexImageTarget(texImageTarget);
+
+    if (!tex)
+        return ErrorInvalidOperation("texImage3D: no texture is bound to this target");
+
+    if (tex->IsImmutable()) {
+        return ErrorInvalidOperation(
+            "texImage3D: disallowed because the texture "
+            "bound to this target has already been made immutable by texStorage3D");
+    }
+
+    GLenum driverType = LOCAL_GL_NONE;
+    GLenum driverInternalFormat = LOCAL_GL_NONE;
+    GLenum driverFormat = LOCAL_GL_NONE;
+    DriverFormatsFromEffectiveInternalFormat(gl,
+                                             effectiveInternalFormat,
+                                             &driverInternalFormat,
+                                             &driverFormat,
+                                             &driverType);
+
+    MakeContextCurrent();
+    GetAndFlushUnderlyingGLErrors();
+    gl->fTexImage3D(texImageTarget.get(), level,
+                    driverInternalFormat,
+                    width, height, depth,
+                    0, driverFormat, driverType,
+                    data);
+    GLenum error = GetAndFlushUnderlyingGLErrors();
+    if (error) {
+        return GenerateWarning("texImage3D generated error %s", ErrorName(error));
+    }
+
+    tex->SetImageInfo(texImageTarget, level,
+                      width, height, depth,
+                      effectiveInternalFormat,
+                      data ? WebGLImageDataStatus::InitializedImageData
+                           : WebGLImageDataStatus::UninitializedImageData);
+}
+
+void
 WebGL2Context::TexSubImage3D(GLenum rawTarget, GLint level,
                              GLint xoffset, GLint yoffset, GLint zoffset,
                              GLsizei width, GLsizei height, GLsizei depth,
