@@ -342,6 +342,11 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     void texStorage2D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height);
     void texStorage3D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height,
                       GLsizei depth);
+    [Throws]
+    void texImage3D(GLenum target, GLint level, GLenum internalformat,
+                    GLsizei width, GLsizei height, GLsizei depth,
+                    GLint border, GLenum format,
+                    GLenum type, ArrayBufferView? pixels);
     [Throws] void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                                 GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
                                 ArrayBufferView? pixels);
