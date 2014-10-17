@@ -450,7 +450,7 @@ nsresult
 AndroidMediaResourceServer::AddResource(mozilla::MediaResource* aResource, nsCString& aUrl)
 {
   nsCString url = GetURLPrefix();
-  nsresult rv = GenerateRandomPathName(url, 16);
+  nsresult rv = AppendRandomPath(url);
   if (NS_FAILED (rv)) return rv;
 
   {
