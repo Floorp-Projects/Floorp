@@ -1067,7 +1067,7 @@ CacheEntry_setBytecode(JSContext *cx, HandleObject cache, uint8_t *buffer, uint3
     MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
 
     ArrayBufferObject::BufferContents contents =
-        ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN_BUFFER>(buffer);
+        ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(buffer);
     Rooted<ArrayBufferObject*> arrayBuffer(cx, ArrayBufferObject::create(cx, length, contents));
     if (!arrayBuffer)
         return false;
