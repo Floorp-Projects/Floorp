@@ -96,7 +96,7 @@ NS_INTERFACE_MAP_BEGIN(IDBVersionChangeEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
 JSObject*
-IDBVersionChangeEvent::WrapObject(JSContext* aCx)
+IDBVersionChangeEvent::WrapObjectInternal(JSContext* aCx)
 {
   return IDBVersionChangeEventBinding::Wrap(aCx, this);
 }

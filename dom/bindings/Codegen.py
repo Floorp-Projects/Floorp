@@ -12865,7 +12865,7 @@ class CGBindingImplClass(CGClass):
     """
     Common codegen for generating a C++ implementation of a WebIDL interface
     """
-    def __init__(self, descriptor, cgMethod, cgGetter, cgSetter, wantGetParent=True):
+    def __init__(self, descriptor, cgMethod, cgGetter, cgSetter, wantGetParent=True, wrapMethodName="WrapObject"):
         """
         cgMethod, cgGetter and cgSetter are classes used to codegen methods,
         getters and setters.
@@ -12988,7 +12988,7 @@ class CGBindingImplClass(CGClass):
 
         wrapArgs = [Argument('JSContext*', 'aCx')]
         self.methodDecls.insert(0,
-                                ClassMethod("WrapObject", "JSObject*",
+                                ClassMethod(wrapMethodName, "JSObject*",
                                             wrapArgs, virtual=descriptor.wrapperCache,
                                             breakAfterReturnDecl=" ",
                                             override=descriptor.wrapperCache,
@@ -14835,7 +14835,7 @@ class CGEventClass(CGBindingImplClass):
     Codegen for the actual Event class implementation for this descriptor
     """
     def __init__(self, descriptor):
-        CGBindingImplClass.__init__(self, descriptor, CGEventMethod, CGEventGetter, CGEventSetter, False)
+        CGBindingImplClass.__init__(self, descriptor, CGEventMethod, CGEventGetter, CGEventSetter, False, "WrapObjectInternal")
         members = []
         for m in descriptor.interface.members:
             if m.isAttr():
