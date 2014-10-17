@@ -92,47 +92,6 @@ InterpreterFrame::initExecuteFrame(JSContext *cx, JSScript *script, AbstractFram
 #endif
 }
 
-template <InterpreterFrame::TriggerPostBarriers doPostBarrier>
-void
-InterpreterFrame::copyFrameAndValues(JSContext *cx, Value *vp, InterpreterFrame *otherfp,
-                                     const Value *othervp, Value *othersp)
-{
-    MOZ_ASSERT(othervp == otherfp->generatorArgsSnapshotBegin());
-    MOZ_ASSERT(othersp >= otherfp->slots());
-    MOZ_ASSERT(othersp <= otherfp->generatorSlotsSnapshotBegin() + otherfp->script()->nslots());
-
-    /* Copy args, InterpreterFrame, and slots. */
-    const Value *srcend = otherfp->generatorArgsSnapshotEnd();
-    Value *dst = vp;
-    for (const Value *src = othervp; src < srcend; src++, dst++) {
-        *dst = *src;
-        if (doPostBarrier)
-            HeapValue::writeBarrierPost(*dst, dst);
-    }
-
-    *this = *otherfp;
-    argv_ = vp + 2;
-    unsetPushedSPSFrame();
-    if (doPostBarrier)
-        writeBarrierPost();
-
-    srcend = othersp;
-    dst = slots();
-    for (const Value *src = otherfp->slots(); src < srcend; src++, dst++) {
-        *dst = *src;
-        if (doPostBarrier)
-            HeapValue::writeBarrierPost(*dst, dst);
-    }
-}
-
-/* Note: explicit instantiation for js_NewGenerator located in jsiter.cpp. */
-template
-void InterpreterFrame::copyFrameAndValues<InterpreterFrame::NoPostBarrier>(
-                                    JSContext *, Value *, InterpreterFrame *, const Value *, Value *);
-template
-void InterpreterFrame::copyFrameAndValues<InterpreterFrame::DoPostBarrier>(
-                                    JSContext *, Value *, InterpreterFrame *, const Value *, Value *);
-
 void
 InterpreterFrame::writeBarrierPost()
 {
@@ -265,8 +224,6 @@ InterpreterFrame::prologue(JSContext *cx)
 void
 InterpreterFrame::epilogue(JSContext *cx)
 {
-    MOZ_ASSERT(!isYielding());
-
     RootedScript script(cx, this->script());
     probes::ExitScript(cx, script, script->functionNonDelazifying(), hasPushedSPSFrame());
 
@@ -303,11 +260,12 @@ InterpreterFrame::epilogue(JSContext *cx)
 
     MOZ_ASSERT(isNonEvalFunctionFrame());
 
-    if (fun()->isHeavyweight())
-        MOZ_ASSERT_IF(hasCallObj(),
+    if (fun()->isHeavyweight()) {
+        MOZ_ASSERT_IF(hasCallObj() && !fun()->isGenerator(),
                       scopeChain()->as<CallObject>().callee().nonLazyScript() == script);
-    else
+    } else {
         AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
+    }
 
     if (MOZ_UNLIKELY(cx->compartment()->debugMode()))
         DebugScopes::onPopCall(this, cx);

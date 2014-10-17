@@ -2401,10 +2401,6 @@ jit::CanEnter(JSContext *cx, RunState &state)
 
         if (!state.maybeCreateThisForConstructor(cx))
             return Method_Skipped;
-    } else if (state.isGenerator()) {
-        JitSpew(JitSpew_IonAbort, "generator frame");
-        ForbidCompilation(cx, script);
-        return Method_CantCompile;
     }
 
     // If --ion-eager is used, compile with Baseline first, so that we
