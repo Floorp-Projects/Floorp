@@ -1349,3 +1349,36 @@ bool gfxUtils::sDumpPainting = getenv("MOZ_DUMP_PAINT") != 0;
 bool gfxUtils::sDumpPaintingToFile = getenv("MOZ_DUMP_PAINT_TO_FILE") != 0;
 FILE *gfxUtils::sDumpPaintFile = nullptr;
 #endif
+
+namespace mozilla {
+namespace gfx {
+
+Color ToDeviceColor(Color aColor)
+{
+  // aColor is pass-by-value since to get return value optimization goodness we
+  // need to return the same object from all return points in this function. We
+  // could declare a local Color variable and use that, but we might as well
+  // just use aColor.
+  if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
+    qcms_transform *transform = gfxPlatform::GetCMSRGBTransform();
+    if (transform) {
+      gfxPlatform::TransformPixel(aColor, aColor, transform);
+      // Use the original alpha to avoid unnecessary float->byte->float
+      // conversion errors
+    }
+  }
+  return aColor;
+}
+
+Color ToDeviceColor(nscolor aColor)
+{
+  return ToDeviceColor(Color::FromABGR(aColor));
+}
+
+Color ToDeviceColor(const gfxRGBA& aColor)
+{
+  return ToDeviceColor(ToColor(aColor));
+}
+
+} // namespace gfx
+} // namespace mozilla

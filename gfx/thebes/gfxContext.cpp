@@ -827,7 +827,7 @@ gfxContext::SetColor(const gfxRGBA& c)
   CurrentState().pattern = nullptr;
   CurrentState().sourceSurfCairo = nullptr;
   CurrentState().sourceSurface = nullptr;
-  CurrentState().color = gfxPlatform::MaybeTransformColor(c);
+  CurrentState().color = ToDeviceColor(c);
 }
 
 void
