@@ -160,6 +160,9 @@ class Configuration:
             elif key == 'isExposedInAnyWorker':
                 getter = lambda x: (not x.interface.isExternal() and
                                     x.interface.isExposedInAnyWorker())
+            elif key == 'isExposedInSystemGlobals':
+                getter = lambda x: (not x.interface.isExternal() and
+                                    x.interface.isExposedInSystemGlobals())
             else:
                 # Have to watch out: just closing over "key" is not enough,
                 # since we're about to mutate its value

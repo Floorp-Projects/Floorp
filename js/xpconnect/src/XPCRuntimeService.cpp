@@ -11,8 +11,10 @@
 #include "nsIPrincipal.h"
 
 #include "mozilla/dom/workers/Workers.h"
+#include "mozilla/dom/ResolveSystemBinding.h"
 
 using mozilla::dom::workers::ResolveWorkerClasses;
+using mozilla::dom::ResolveSystemBinding;
 
 NS_INTERFACE_MAP_BEGIN(BackstagePass)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
@@ -74,6 +76,14 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
         return NS_OK;
     }
 
+    *_retval = ResolveSystemBinding(cx, obj, id, &objp);
+    NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
+
+    if (objp) {
+        *objpArg = objp;
+        return NS_OK;
+    }
+
     return NS_OK;
 }
 
@@ -88,6 +98,9 @@ BackstagePass::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     JS::RootedObject ignored(cx);
     *_retval = ResolveWorkerClasses(cx, obj, JSID_VOIDHANDLE, &ignored);
+    NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
+
+    *_retval = ResolveSystemBinding(cx, obj, JSID_VOIDHANDLE, &ignored);
     NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
 
     return NS_OK;
