@@ -43,6 +43,7 @@ let gNumberOfThreadsLaunched = 0;
 
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
+const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
 
@@ -171,9 +172,12 @@ function checkPayloadInfo(payload, reason) {
     do_check_true(payload.info.revision.startsWith("http"));
   }
 
-  do_check_true("clientID" in payload);
-  do_check_neq(payload.clientID, null);
-  do_check_eq(payload.clientID, gDataReportingClientID);
+  if ("@mozilla.org/datareporting/service;1" in Cc &&
+      Services.prefs.getBoolPref(PREF_FHR_UPLOAD_ENABLED)) {
+    do_check_true("clientID" in payload);
+    do_check_neq(payload.clientID, null);
+    do_check_eq(payload.clientID, gDataReportingClientID);
+  }
 
   try {
     // If we've not got nsIGfxInfoDebug, then this will throw and stop us doing
@@ -393,11 +397,14 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   Services.prefs.setBoolPref(PREF_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
 
   // Send the needed startup notifications to the datareporting service
   // to ensure that it has been initialized.
-  gDatareportingService.observe(null, "app-startup", null);
-  gDatareportingService.observe(null, "profile-after-change", null);
+  if ("@mozilla.org/datareporting/service;1" in Cc) {
+    gDatareportingService.observe(null, "app-startup", null);
+    gDatareportingService.observe(null, "profile-after-change", null);
+  }
 
   // Make it look like we've previously failed to lock a profile a couple times.
   write_fake_failedprofilelocks_file();
@@ -448,7 +455,9 @@ function actualTest() {
 add_task(function* asyncSetup() {
   yield TelemetryPing.setup();
 
-  gDataReportingClientID = yield gDatareportingService.getClientID();
+  if ("@mozilla.org/datareporting/service;1" in Cc) {
+    gDataReportingClientID = yield gDatareportingService.getClientID();
+  }
 });
 
 // Ensure that not overwriting an existing file fails silently
