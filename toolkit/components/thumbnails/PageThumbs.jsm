@@ -216,12 +216,9 @@ this.PageThumbs = {
   // participate in this service's telemetry, which is why this method exists.
   _captureToCanvas: function (aBrowser, aCanvas, aCallback) {
     if (aBrowser.isRemoteBrowser) {
-      let [sw, sh, scale] =
-        PageThumbUtils.determineCropSize(aBrowser.contentWindowAsCPOW, aCanvas);
       Task.spawn(function () {
         let data =
-          yield this._captureRemoteThumbnail(aBrowser, sw, sh, scale,
-                                             PageThumbUtils.THUMBNAIL_BG_COLOR);
+          yield this._captureRemoteThumbnail(aBrowser, aCanvas);
         let canvas = data.thumbnail;
         let ctx = canvas.getContext("2d");
         let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -234,7 +231,7 @@ this.PageThumbs = {
     }
 
     // Generate in-process content thumbnail
-    let [sw, sh, scale] =
+    let [width, height, scale] =
       PageThumbUtils.determineCropSize(aBrowser.contentWindow, aCanvas);
     let ctx = aCanvas.getContext("2d");
 
@@ -244,7 +241,7 @@ this.PageThumbs = {
 
     try {
       // Draw the window contents to the canvas.
-      ctx.drawWindow(aBrowser.contentWindow, 0, 0, sw, sh,
+      ctx.drawWindow(aBrowser.contentWindow, 0, 0, width, height,
                      PageThumbUtils.THUMBNAIL_BG_COLOR,
                      ctx.DRAWWINDOW_DO_NOT_FLUSH);
     } catch (e) {
@@ -258,18 +255,13 @@ this.PageThumbs = {
   },
 
   /**
-   * Request a thumbnail using requested bounds and scale factor.
-   * @param aWidth - (optional) a width value less than or equal to the
-   *   innerWidth of the dom window. Defaults to the visible frame.
-   * @param aHeight - (optional) a height value less than or equal to the
-   *   innerHeight of the dom window. Defaults to the visible frame.
-   * @param aScaleFactor - (optional) 0.0 - 1.0 scale factor applied to the
-   *   returned thumbnail. Defaults to 1.0.
-   * @param aCssBackground - (optional) a css '#fff' color value to use as
-   *   the background color of the thumbnail.
+   * Asynchrnously render an appropriately scaled thumbnail to canvas.
+   *
+   * @param aBrowser The browser to capture a thumbnail from.
+   * @param aCanvas The canvas to draw to.
+   * @return a promise
    */
-  _captureRemoteThumbnail: function (aBrowser,  aWidth, aHeight,
-                                     aScaleFactor, aCssBackground) {
+  _captureRemoteThumbnail: function (aBrowser, aCanvas) {
     let deferred = Promise.defer();
 
     // The index we send with the request so we can identify the
@@ -308,18 +300,13 @@ this.PageThumbs = {
       // xxx wish there was a way to skip this encoding step
       reader.readAsDataURL(imageBlob);
     }
-    mm.addMessageListener("Browser:Thumbnail:Response", thumbFunc);
 
     // Send a thumbnail request
-    let width = aWidth || 0;
-    let height = aHeight || 0;
-    let scale = aScaleFactor || 1.0;
-    let background = aCssBackground || "#fff";
+    mm.addMessageListener("Browser:Thumbnail:Response", thumbFunc);
     mm.sendAsyncMessage("Browser:Thumbnail:Request", {
-      width: width,
-      height: height,
-      scale: scale,
-      background: background,
+      canvasWidth: aCanvas.width,
+      canvasHeight: aCanvas.height,
+      background: PageThumbUtils.THUMBNAIL_BG_COLOR,
       id: index
     });
 
