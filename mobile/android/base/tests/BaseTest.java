@@ -619,23 +619,23 @@ abstract class BaseTest extends BaseRobocopTest {
     /**
      * Gets the AdapterView of the tabs list.
      *
-     * @return List view in the tabs tray
+     * @return List view in the tabs panel
      */
-    private final AdapterView<ListAdapter> getTabsList() {
+    private final AdapterView<ListAdapter> getTabsLayout() {
         Element tabs = mDriver.findElement(getActivity(), R.id.tabs);
         tabs.click();
         return (AdapterView<ListAdapter>) getActivity().findViewById(R.id.normal_tabs);
     }
 
     /**
-     * Gets the view in the tabs tray at the specified index.
+     * Gets the view in the tabs panel at the specified index.
      *
      * @return View at index
      */
     private View getTabViewAt(final int index) {
         final View[] childView = { null };
 
-        final AdapterView<ListAdapter> view = getTabsList();
+        final AdapterView<ListAdapter> view = getTabsLayout();
 
         runOnUiThreadSync(new Runnable() {
             @Override
