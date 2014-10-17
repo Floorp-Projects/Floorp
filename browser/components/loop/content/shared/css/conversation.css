@@ -244,6 +244,12 @@
   text-align: center;
 }
 
+.call-window > .error {
+  text-align: center;
+  color: #f00;
+  font-size: 90%;
+}
+
 .call-action-group {
   display: flex;
   padding: 2.5em 4px 0 4px;
