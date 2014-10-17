@@ -233,6 +233,9 @@ class SavedStacks {
 
         void trace(JSTracer *trc);
 
+        // Note: we don't have to hold/drop principals, because we're
+        // only alive while the stack is being walked and during this
+        // time the principals are kept alive by the stack itself.
         JSPrincipals  *principals;
         JSAtom        *name;
         LocationValue location;
