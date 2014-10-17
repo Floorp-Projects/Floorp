@@ -235,6 +235,54 @@ assertEq(get(4), 13);
 set(BUF_CHANGE_MIN, 262);
 assertEq(get(BUF_CHANGE_MIN), 0);
 
+if (ArrayBuffer.transfer) {
+    var buf1 = new ArrayBuffer(BUF_CHANGE_MIN);
+    var {get, set, changeHeap} = asmLink(m, this, null, buf1);
+    set(0, 100);
+    set(BUF_CHANGE_MIN - 4, 101);
+    set(BUF_CHANGE_MIN, 102);
+    var buf2 = ArrayBuffer.transfer(buf1);
+    assertEq(changeHeap(buf2), true);
+    assertEq(buf1.byteLength, 0);
+    assertEq(buf2.byteLength, BUF_CHANGE_MIN);
+    assertEq(get(0), 100);
+    assertEq(get(BUF_CHANGE_MIN-4), 101);
+    assertEq(get(BUF_CHANGE_MIN), 0);
+    assertEq(get(2*BUF_CHANGE_MIN-4), 0);
+    var buf3 = ArrayBuffer.transfer(buf2, 3*BUF_CHANGE_MIN);
+    assertEq(changeHeap(buf3), true);
+    assertEq(buf2.byteLength, 0);
+    assertEq(buf3.byteLength, 3*BUF_CHANGE_MIN);
+    assertEq(get(0), 100);
+    assertEq(get(BUF_CHANGE_MIN-4), 101);
+    assertEq(get(BUF_CHANGE_MIN), 0);
+    assertEq(get(2*BUF_CHANGE_MIN), 0);
+    set(BUF_CHANGE_MIN, 102);
+    set(2*BUF_CHANGE_MIN, 103);
+    assertEq(get(BUF_CHANGE_MIN), 102);
+    assertEq(get(2*BUF_CHANGE_MIN), 103);
+    var buf4 = ArrayBuffer.transfer(buf3, 2*BUF_CHANGE_MIN);
+    assertEq(changeHeap(buf4), true);
+    assertEq(buf3.byteLength, 0);
+    assertEq(buf4.byteLength, 2*BUF_CHANGE_MIN);
+    assertEq(get(0), 100);
+    assertEq(get(BUF_CHANGE_MIN-4), 101);
+    assertEq(get(BUF_CHANGE_MIN), 102);
+    assertEq(get(2*BUF_CHANGE_MIN), 0);
+    var buf5 = ArrayBuffer.transfer(buf4, 3*BUF_CHANGE_MIN);
+    assertEq(changeHeap(buf5), true);
+    assertEq(buf4.byteLength, 0);
+    assertEq(buf5.byteLength, 3*BUF_CHANGE_MIN);
+    assertEq(get(0), 100);
+    assertEq(get(BUF_CHANGE_MIN-4), 101);
+    assertEq(get(BUF_CHANGE_MIN), 102);
+    assertEq(get(2*BUF_CHANGE_MIN), 0);
+    var buf6 = ArrayBuffer.transfer(buf5, 0);
+    assertEq(buf5.byteLength, 0);
+    assertEq(buf6.byteLength, 0);
+    assertEq(changeHeap(buf6), false);
+}
+
 var buf1 = new ArrayBuffer(BUF_CHANGE_MIN);
 var buf2 = new ArrayBuffer(BUF_CHANGE_MIN);
 var m = asmCompile('glob', 'ffis', 'b', USE_ASM +
@@ -292,3 +340,16 @@ changeToBuf = buf1;
 assertEq(test(0), 155);
 changeToBuf = buf1;
 assertEq(test(0), 126);
+
+if (ArrayBuffer.transfer) {
+    var buf = new ArrayBuffer(BUF_CHANGE_MIN);
+    new Int32Array(buf)[0] = 3;
+    var ffi = function() {
+        var buf2 = ArrayBuffer.transfer(buf, 2*BUF_CHANGE_MIN);
+        new Int32Array(buf2)[BUF_CHANGE_MIN/4] = 13;
+        assertEq(changeHeap(buf2), true);
+        return 1
+    }
+    var {test, changeHeap} = asmLink(m, this, {ffi:ffi}, buf);
+    assertEq(test(BUF_CHANGE_MIN), 14);
+}
