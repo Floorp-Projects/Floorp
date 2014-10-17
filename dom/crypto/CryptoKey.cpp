@@ -501,23 +501,26 @@ CryptoKey::PublicKeyToSpki(SECKEYPublicKey* aPubKey,
                            CryptoBuffer& aRetVal,
                            const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
-  ScopedPLArenaPool arena;
   ScopedCERTSubjectPublicKeyInfo spki;
 
   // NSS doesn't support exporting DH public keys.
   if (aPubKey->keyType == dhKey) {
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    // Mimic the behavior of SECKEY_CreateSubjectPublicKeyInfo() and create
+    // a new arena for the SPKI object.
+    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
     if (!arena) {
       return NS_ERROR_DOM_OPERATION_ERR;
     }
 
-    // It's alright to assign the result of PORT_ArenaZNew(ScopedPLArenaPool)
-    // to a ScopedCERTSubjectPublicKeyInfo as long as we don't set |spki->arena|
-    // as that's what would be freed when |spki| goes out of scope.
     spki = PORT_ArenaZNew(arena, CERTSubjectPublicKeyInfo);
     if (!spki) {
       return NS_ERROR_DOM_OPERATION_ERR;
     }
+
+    // Assign |arena| to |spki| and null the variable afterwards so that the
+    // arena created above that holds the SPKI object is free'd when |spki|
+    // goes out of scope, not when |arena| does.
+    spki->arena = arena.forget();
 
     nsresult rv = PublicDhKeyToSpki(aPubKey, spki, arena);
     NS_ENSURE_SUCCESS(rv, rv);
