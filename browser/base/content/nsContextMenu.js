@@ -208,19 +208,9 @@ nsContextMenu.prototype = {
     // Send media URL (but not for canvas, since it's a big data: URL)
     this.showItem("context-sendimage", this.onImage);
     this.showItem("context-sendvideo", this.onVideo);
-    this.showItem("context-castvideo", this.onVideo);
     this.showItem("context-sendaudio", this.onAudio);
     this.setItemAttr("context-sendvideo", "disabled", !this.mediaURL);
     this.setItemAttr("context-sendaudio", "disabled", !this.mediaURL);
-    // getServicesForVideo alone would be sufficient here (it depends on
-    // SimpleServiceDiscovery.services), but SimpleServiceDiscovery is garanteed
-    // to be already loaded, since we load it on startup, and CastingApps isn't,
-    // so check SimpleServiceDiscovery.services first to avoid needing to load
-    // CastingApps.jsm if we don't need to.
-    let shouldShowCast = this.mediaURL &&
-                         SimpleServiceDiscovery.services.length > 0 &&
-                         CastingApps.getServicesForVideo(this.target).length > 0;
-    this.setItemAttr("context-castvideo", "disabled", !shouldShowCast);
   },
 
   initViewItems: function CM_initViewItems() {
@@ -1324,25 +1314,6 @@ nsContextMenu.prototype = {
 
   sendMedia: function() {
     MailIntegration.sendMessage(this.mediaURL, "");
-  },
-
-  castVideo: function() {
-    CastingApps.openExternal(this.target, window);
-  },
-
-  populateCastVideoMenu: function(popup) {
-    let videoEl = this.target;
-    popup.innerHTML = null;
-    let doc = popup.ownerDocument;
-    let services = CastingApps.getServicesForVideo(videoEl);
-    services.forEach(service => {
-      let item = doc.createElement("menuitem");
-      item.setAttribute("label", service.friendlyName);
-      item.addEventListener("command", event => {
-        CastingApps.sendVideoToService(videoEl, service);
-      });
-      popup.appendChild(item);
-    });
   },
 
   playPlugin: function() {
