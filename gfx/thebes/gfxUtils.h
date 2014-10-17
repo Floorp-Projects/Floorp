@@ -12,6 +12,7 @@
 #include "imgIContainer.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
+#include "nsColor.h"
 #include "nsPrintfCString.h"
 
 class gfxASurface;
@@ -309,6 +310,16 @@ public:
 namespace mozilla {
 namespace gfx {
 
+/**
+ * If the CMS mode is eCMSMode_All, these functions transform the passed
+ * color to a device color using the transform returened by gfxPlatform::
+ * GetCMSRGBTransform().  If the CMS mode is some other value, the color is
+ * returned unchanged (other than a type change to Moz2D Color, if
+ * applicable).
+ */
+Color ToDeviceColor(Color aColor);
+Color ToDeviceColor(nscolor aColor);
+Color ToDeviceColor(const gfxRGBA& aColor);
 
 /* These techniques are suggested by "Bit Twiddling Hacks"
  */
