@@ -1406,8 +1406,11 @@ XrayAttributeOrMethodKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
       // looking at now.
       size_t i = list->specs - specList;
       for ( ; ids[i] != JSID_VOID; ++i) {
+        // Skip non-enumerable properties and symbol-keyed properties unless
+        // they are specially requested via flags.
         if (((flags & JSITER_HIDDEN) ||
              (specList[i].flags & JSPROP_ENUMERATE)) &&
+            ((flags & JSITER_SYMBOLS) || !JSID_IS_SYMBOL(ids[i])) &&
             !props.append(ids[i])) {
           return false;
         }

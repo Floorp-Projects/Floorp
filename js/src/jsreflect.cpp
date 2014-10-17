@@ -2665,11 +2665,11 @@ ASTSerializer::generatorExpression(ParseNode *pn, MutableHandleValue dst)
 
     LOCAL_ASSERT(next->isKind(PNK_SEMI) &&
                  next->pn_kid->isKind(PNK_YIELD) &&
-                 next->pn_kid->pn_kid);
+                 next->pn_kid->pn_left);
 
     RootedValue body(cx);
 
-    return expression(next->pn_kid->pn_kid, &body) &&
+    return expression(next->pn_kid->pn_left, &body) &&
            builder.generatorExpression(body, blocks, filter, isLegacy, &pn->pn_pos, dst);
 }
 
@@ -2996,19 +2996,19 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
 
       case PNK_YIELD_STAR:
       {
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
 
         RootedValue arg(cx);
-        return expression(pn->pn_kid, &arg) &&
+        return expression(pn->pn_left, &arg) &&
                builder.yieldExpression(arg, Delegating, &pn->pn_pos, dst);
       }
 
       case PNK_YIELD:
       {
-        MOZ_ASSERT_IF(pn->pn_kid, pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+        MOZ_ASSERT_IF(pn->pn_left, pn->pn_pos.encloses(pn->pn_left->pn_pos));
 
         RootedValue arg(cx);
-        return optExpression(pn->pn_kid, &arg) &&
+        return optExpression(pn->pn_left, &arg) &&
                builder.yieldExpression(arg, NotDelegating, &pn->pn_pos, dst);
       }
 
@@ -3312,6 +3312,12 @@ ASTSerializer::functionArgsAndBody(ParseNode *pn, NodeVector &args, NodeVector &
         ParseNode *pnstart = (pnbody->pn_xflags & PNX_DESTRUCT)
                                ? pnbody->pn_head->pn_next
                                : pnbody->pn_head;
+
+        // Skip over initial yield in generator.
+        if (pnstart && pnstart->isKind(PNK_YIELD)) {
+            MOZ_ASSERT(pnstart->getOp() == JSOP_INITIALYIELD);
+            pnstart = pnstart->pn_next;
+        }
 
         return functionArgs(pn, pnargs, pndestruct, pnbody, args, defaults, rest) &&
                functionBody(pnstart, &pnbody->pn_pos, body);

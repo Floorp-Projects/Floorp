@@ -289,8 +289,8 @@ TransportSecurityInfo::GetInterface(const nsIID & uuid, void * *result)
 // of the previous value. This is so when older versions attempt to
 // read a newer serialized TransportSecurityInfo, they will actually
 // fail and return NS_ERROR_FAILURE instead of silently failing.
-#define TRANSPORTSECURITYINFOMAGIC { 0xa9863a23, 0xf40a, 0x4060, \
-    { 0xb2, 0xe1, 0x62, 0xab, 0x2b, 0x85, 0x26, 0xa9 } }
+#define TRANSPORTSECURITYINFOMAGIC { 0xa9863a23, 0xda1f, 0x4008, \
+  { 0xac, 0x3c, 0x52, 0x86, 0x21, 0x54, 0x10, 0x70 } }
 static NS_DEFINE_CID(kTransportSecurityInfoMagic, TRANSPORTSECURITYINFOMAGIC);
 
 NS_IMETHODIMP
@@ -325,9 +325,15 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* stream)
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  // For successful connections and for connections with overridable errors,
+  // mSSLStatus will be non-null. However, for connections with non-overridable
+  // errors, it will be null.
   nsCOMPtr<nsISerializable> serializable(mSSLStatus);
-  rv = stream->WriteCompoundObject(serializable, NS_GET_IID(nsISSLStatus),
-                                   true);
+  rv = NS_WriteOptionalCompoundObject(stream,
+                                      serializable,
+                                      NS_GET_IID(nsISSLStatus),
+                                      true);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -385,16 +391,18 @@ TransportSecurityInfo::Read(nsIObjectInputStream* stream)
   if (NS_FAILED(rv)) {
     return rv;
   }
+
   mErrorCode = 0;
+
+  // For successful connections and for connections with overridable errors,
+  // mSSLStatus will be non-null. For connections with non-overridable errors,
+  // it will be null.
   nsCOMPtr<nsISupports> supports;
-  rv = stream->ReadObject(true, getter_AddRefs(supports));
+  rv = NS_ReadOptionalObject(stream, true, getter_AddRefs(supports));
   if (NS_FAILED(rv)) {
     return rv;
   }
   mSSLStatus = reinterpret_cast<nsSSLStatus*>(supports.get());
-  if (!mSSLStatus) {
-    return NS_ERROR_FAILURE;
-  }
 
   nsCOMPtr<nsISupports> failedCertChainSupports;
   rv = NS_ReadOptionalObject(stream, true, getter_AddRefs(failedCertChainSupports));

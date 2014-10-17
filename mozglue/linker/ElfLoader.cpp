@@ -512,7 +512,9 @@ ElfLoader::~ElfLoader()
 
   /* Release self_elf and libc */
   self_elf = nullptr;
+#if defined(ANDROID)
   libc = nullptr;
+#endif
 
   /* Build up a list of all library handles with direct (external) references.
    * We actually skip system library handles because we want to keep at least

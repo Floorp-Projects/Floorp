@@ -10,6 +10,7 @@ const { value: frame } = (function iife1() {
 
 assertEq(frame.functionDisplayName, "iife2");
 assertEq(frame.parent.functionDisplayName, "generator");
-assertEq(frame.parent.parent.functionDisplayName, "iife1");
-assertEq(frame.parent.parent.parent.functionDisplayName, null);
-assertEq(frame.parent.parent.parent.parent, null);
+assertEq(frame.parent.parent.functionDisplayName, "next");
+assertEq(frame.parent.parent.parent.functionDisplayName, "iife1");
+assertEq(frame.parent.parent.parent.parent.functionDisplayName, null);
+assertEq(frame.parent.parent.parent.parent.parent, null);

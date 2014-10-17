@@ -91,7 +91,7 @@ class ProxyObject : public JSObject
         // friend api exposure.
 
         // Proxy classes are not allowed to have call or construct hooks directly. Their
-        // callability is instead decided by a trap call
+        // callability is instead decided by handler()->isCallable().
         return clasp->isProxy() &&
                (clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS) &&
                clasp->trace == proxy_Trace &&

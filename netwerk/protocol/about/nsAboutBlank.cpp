@@ -7,6 +7,7 @@
 #include "nsStringStream.h"
 #include "nsDOMString.h"
 #include "nsNetUtil.h"
+#include "nsContentUtils.h"
 
 NS_IMPL_ISUPPORTS(nsAboutBlank, nsIAboutModule)
 
@@ -20,7 +21,12 @@ nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewInputStreamChannel(getter_AddRefs(channel), aURI, in,
+    rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
+                                  aURI,
+                                  in,
+                                  nsContentUtils::GetSystemPrincipal(),
+                                  nsILoadInfo::SEC_NORMAL,
+                                  nsIContentPolicy::TYPE_OTHER,
                                   NS_LITERAL_CSTRING("text/html"),
                                   NS_LITERAL_CSTRING("utf-8"));
     if (NS_FAILED(rv)) return rv;

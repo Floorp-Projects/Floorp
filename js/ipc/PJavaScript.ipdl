@@ -42,7 +42,7 @@ both:
     prio(high) sync ClassName(uint64_t objId) returns (nsString name);
     prio(high) sync RegExpToShared(uint64_t objId) returns (ReturnStatus rs, nsString source, uint32_t flags);
 
-    prio(high) sync GetPropertyKeys(uint64_t objId, uint32_t flags) returns (ReturnStatus rs, nsString[] names);
+    prio(high) sync GetPropertyKeys(uint64_t objId, uint32_t flags) returns (ReturnStatus rs, JSIDVariant[] ids);
     prio(high) sync InstanceOf(uint64_t objId, JSIID iid) returns (ReturnStatus rs, bool instanceof);
     prio(high) sync DOMInstanceOf(uint64_t objId, int prototypeID, int depth) returns (ReturnStatus rs, bool instanceof);
 

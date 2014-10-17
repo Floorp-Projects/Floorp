@@ -615,6 +615,9 @@ class GlobalObject : public NativeObject
     static bool initIteratorClasses(JSContext *cx, Handle<GlobalObject*> global);
     static bool initStopIterationClass(JSContext *cx, Handle<GlobalObject*> global);
 
+    // Implemented in vm/GeneratorObject.cpp.
+    static bool initGeneratorClasses(JSContext *cx, Handle<GlobalObject*> global);
+
     // Implemented in builtin/MapObject.cpp.
     static bool initMapIteratorProto(JSContext *cx, Handle<GlobalObject*> global);
     static bool initSetIteratorProto(JSContext *cx, Handle<GlobalObject*> global);

@@ -1551,27 +1551,61 @@
      */ \
     macro(JSOP_DEBUGLEAVEBLOCK, 200,"debugleaveblock", NULL, 1,  0,  0,  JOF_BYTE) \
     \
-    macro(JSOP_UNUSED201,     201,"unused201",  NULL,     1,  0,  0,  JOF_BYTE) \
-    \
     /*
-     * Initializes generator frame, creates a generator, sets 'YIELDING' flag,
-     * stops interpretation and returns the generator.
+     * Initializes generator frame, creates a generator and pushes it on the
+     * stack.
      *   Category: Statements
      *   Type: Generator
      *   Operands:
-     *   Stack: =>
+     *   Stack: => generator
      */ \
-    macro(JSOP_GENERATOR,     202,"generator",   NULL,    1,  0,  0,  JOF_BYTE) \
+    macro(JSOP_GENERATOR,     201,"generator",   NULL,    1,  0,  1,  JOF_BYTE) \
     /*
-     * Pops the top of stack value as 'rval1', sets 'YIELDING' flag,
-     * stops interpretation and returns 'rval1', pushes sent value from
-     * 'send()' onto the stack.
+     * Pops the generator from the top of the stack, suspends it and stops
+     * interpretation.
      *   Category: Statements
      *   Type: Generator
      *   Operands:
-     *   Stack: rval1 => rval2
+     *   Stack: generator =>
      */ \
-    macro(JSOP_YIELD,         203,"yield",       NULL,    1,  1,  1,  JOF_BYTE) \
+    macro(JSOP_INITIALYIELD,  202,"initialyield", NULL,   1,  1,  0,  JOF_BYTE) \
+    /*
+     * Pops the generator and the return value 'rval1', stops interpretation and
+     * returns 'rval1'. Pushes sent value from 'send()' onto the stack.
+     *   Category: Statements
+     *   Type: Generator
+     *   Operands:
+     *   Stack: rval1, gen => rval2
+     */ \
+    macro(JSOP_YIELD,         203,"yield",       NULL,    1,  2,  1,  JOF_BYTE) \
+    /*
+     * Pops the generator and the value to yield from the stack. Then suspends
+     * and closes the generator.
+     *   Category: Statements
+     *   Type: Generator
+     *   Operands:
+     *   Stack: gen, val =>
+     */ \
+    macro(JSOP_FINALYIELD,    204,"finalyield",  NULL,    1,  2,  0,  JOF_BYTE) \
+    /*
+     * Pops the generator and suspends and closes it. Yields the value in the
+     * frame's return value slot.
+     *   Category: Statements
+     *   Type: Generator
+     *   Operands:
+     *   Stack: gen =>
+     */ \
+    macro(JSOP_FINALYIELDRVAL,205,"finalyieldrval",NULL,  1,  1,  0,  JOF_BYTE) \
+    /*
+     * Pops the generator and argument from the stack, pushes a new generator
+     * frame and resumes execution of it. Pushes the return value after the
+     * generator yields.
+     *   Category: Statements
+     *   Type: Generator
+     *   Operands: resume kind (GeneratorObject::ResumeKind)
+     *   Stack: gen, val => rval
+     */ \
+    macro(JSOP_RESUME,        206,"resume",      NULL,    3,  2,  1,  JOF_UINT8|JOF_INVOKE) \
     /*
      * Pops the top two values on the stack as 'obj' and 'v', pushes 'v' to
      * 'obj'.
@@ -1582,12 +1616,8 @@
      *   Operands:
      *   Stack: v, obj =>
      */ \
-    macro(JSOP_ARRAYPUSH,     204,"arraypush",   NULL,    1,  2,  0,  JOF_BYTE) \
+    macro(JSOP_ARRAYPUSH,     207,"arraypush",   NULL,    1,  2,  0,  JOF_BYTE) \
     \
-    macro(JSOP_UNUSED205,     205, "unused205",    NULL,  1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED206,     206, "unused206",    NULL,  1,  0,  0,  JOF_BYTE) \
-    \
-    macro(JSOP_UNUSED207,     207, "unused207",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED208,     208, "unused208",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED209,     209, "unused209",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED210,     210, "unused210",    NULL,  1,  0,  0,  JOF_BYTE) \
