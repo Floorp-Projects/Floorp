@@ -3198,7 +3198,7 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
         // Moz2D treats OP_SOURCE operations as unbounded, so we need to
         // clip to the rect that we want to fill:
         dt->PushClipRect(rect);
-        dt->FillRect(rect, ColorPattern(ToColor(aColor)),
+        dt->FillRect(rect, ColorPattern(ToColor(aColor)), // aColor is already a device color
                      DrawOptions(1.f, CompositionOp::OP_SOURCE));
         dt->PopClip();
         dt->Flush();

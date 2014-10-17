@@ -8,6 +8,7 @@
 #include "nsBulletFrame.h"
 
 #include "gfx2DGlue.h"
+#include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/MathAlgorithms.h"
@@ -316,9 +317,9 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
   }
 
   nsRefPtr<nsFontMetrics> fm;
-  nscolor col = nsLayoutUtils::GetColor(this, eCSSProperty_color);
-  Color color = nsLayoutUtils::NSColorToColor(col);
-  aRenderingContext.SetColor(col);
+  ColorPattern color(ToDeviceColor(
+                       nsLayoutUtils::GetColor(this, eCSSProperty_color)));
+  aRenderingContext.SetColor(nsLayoutUtils::GetColor(this, eCSSProperty_color));
 
   nsAutoString text;
   switch (listStyleType->GetStyle()) {
@@ -339,9 +340,9 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
       AppendEllipseToPath(builder, devPxRect.Center(), devPxRect.Size());
       RefPtr<Path> ellipse = builder->Finish();
       if (listStyleType->GetStyle() == NS_STYLE_LIST_STYLE_DISC) {
-        drawTarget->Fill(ellipse, ColorPattern(color));
+        drawTarget->Fill(ellipse, color);
       } else {
-        drawTarget->Stroke(ellipse, ColorPattern(color));
+        drawTarget->Stroke(ellipse, color);
       }
     }
     break;

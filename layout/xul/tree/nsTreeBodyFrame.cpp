@@ -13,6 +13,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Likely.h"
 
+#include "gfxUtils.h"
 #include "nsAlgorithm.h"
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
@@ -3185,7 +3186,7 @@ nsTreeBodyFrame::PaintCell(int32_t              aRowIndex,
         // GetBorderColor didn't touch color, thus grab it from the treeline context
         color = lineContext->StyleColor()->mColor;
       }
-      ColorPattern colorPatt(nsLayoutUtils::NSColorToColor(color));
+      ColorPattern colorPatt(ToDeviceColor(color));
 
       uint8_t style;
       style = borderStyle->GetBorderStyle(NS_SIDE_LEFT);

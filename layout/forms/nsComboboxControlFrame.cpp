@@ -5,6 +5,7 @@
 
 #include "nsComboboxControlFrame.h"
 
+#include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "nsCOMPtr.h"
@@ -1517,7 +1518,7 @@ void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
 
   StrokeOptions strokeOptions;
   nsLayoutUtils::InitDashPattern(strokeOptions, NS_STYLE_BORDER_STYLE_DOTTED);
-  ColorPattern color(nsLayoutUtils::NSColorToColor(StyleColor()->mColor));
+  ColorPattern color(ToDeviceColor(StyleColor()->mColor));
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
   clipRect.width -= onePixel;
   clipRect.height -= onePixel;
