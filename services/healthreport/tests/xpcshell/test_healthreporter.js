@@ -21,6 +21,12 @@ Cu.import("resource://testing-common/services/common/bagheeraserver.js");
 Cu.import("resource://testing-common/services/metrics/mocks.jsm");
 Cu.import("resource://testing-common/services/healthreport/utils.jsm");
 Cu.import("resource://testing-common/AppData.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
+  () => Cc["@mozilla.org/datareporting/service;1"]
+          .getService(Ci.nsISupports)
+          .wrappedJSObject);
 
 
 const DUMMY_URI = "http://localhost:62013/";
@@ -108,6 +114,13 @@ function ensureUserNotified (reporter) {
 }
 
 function run_test() {
+  do_get_profile();
+
+  // Send the needed startup notifications to the datareporting service
+  // to ensure that it has been initialized.
+  gDatareportingService.observe(null, "app-startup", null);
+  gDatareportingService.observe(null, "profile-after-change", null);
+
   run_next_test();
 }
 
@@ -745,7 +758,7 @@ add_task(function test_request_remote_data_deletion() {
     do_check_false(reporter.haveRemoteData());
     do_check_false(server.hasDocument(reporter.serverNamespace, id));
 
-    // Client ID should be updated.
+     // Client ID should be updated.
     do_check_neq(reporter._state.clientID, null);
     do_check_neq(reporter._state.clientID, clientID);
     do_check_eq(reporter._state.clientIDVersion, 1);
@@ -1168,38 +1181,6 @@ add_task(function test_state_downgrade_upgrade() {
     do_check_eq(o.lastPingTime, now.getTime() + 1000);
   } finally {
     yield reporter._shutdown();
-  }
-});
-
-// Missing client ID in state should be created on state load.
-add_task(function* test_state_create_client_id() {
-  let reporter = getHealthReporter("state_create_client_id");
-
-  yield CommonUtils.writeJSON({
-    v: 1,
-    remoteIDs: ["id1", "id2"],
-    lastPingTime: Date.now(),
-    removeOutdatedLastPayload: true,
-  }, reporter._state._filename);
-
-  try {
-    yield reporter.init();
-
-    do_check_eq(reporter.lastSubmitID, "id1");
-    do_check_neq(reporter._state.clientID, null);
-    do_check_eq(reporter._state.clientID.length, 36);
-    do_check_eq(reporter._state.clientIDVersion, 1);
-
-    let clientID = reporter._state.clientID;
-
-    // The client ID should be persisted as soon as it is created.
-    reporter._shutdown();
-
-    reporter = getHealthReporter("state_create_client_id");
-    yield reporter.init();
-    do_check_eq(reporter._state.clientID, clientID);
-  } finally {
-    reporter._shutdown();
   }
 });
 
