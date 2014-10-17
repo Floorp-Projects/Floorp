@@ -171,12 +171,10 @@ loop.conversationViews = (function(mozL10n) {
           <p className="btn-label">{pendingStateString}</p>
 
           <div className="btn-group call-action-group">
-            <div className="fx-embedded-call-button-spacer"></div>
-              <button className={btnCancelStyles}
-                      onClick={this.cancelCall}>
-                {mozL10n.get("initiate_call_cancel_button")}
-              </button>
-            <div className="fx-embedded-call-button-spacer"></div>
+            <button className={btnCancelStyles}
+                    onClick={this.cancelCall}>
+              {mozL10n.get("initiate_call_cancel_button")}
+            </button>
           </div>
 
         </ConversationDetailView>
@@ -194,16 +192,23 @@ loop.conversationViews = (function(mozL10n) {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       store: React.PropTypes.instanceOf(
         loop.store.ConversationStore).isRequired,
-      contact: React.PropTypes.object.isRequired
+      contact: React.PropTypes.object.isRequired,
+      // This is used by the UI showcase.
+      emailLinkError: React.PropTypes.bool,
     },
 
     getInitialState: function() {
-      return {emailLinkButtonDisabled: false};
+      return {
+        emailLinkError: this.props.emailLinkError,
+        emailLinkButtonDisabled: false
+      };
     },
 
     componentDidMount: function() {
       this.listenTo(this.props.store, "change:emailLink",
                     this._onEmailLinkReceived);
+      this.listenTo(this.props.store, "error:emailLink",
+                    this._onEmailLinkError);
     },
 
     componentWillUnmount: function() {
@@ -217,6 +222,20 @@ loop.conversationViews = (function(mozL10n) {
       window.close();
     },
 
+    _onEmailLinkError: function() {
+      this.setState({
+        emailLinkError: true,
+        emailLinkButtonDisabled: false
+      });
+    },
+
+    _renderError: function() {
+      if (!this.state.emailLinkError) {
+        return;
+      }
+      return <p className="error">{mozL10n.get("unable_retrieve_url")}</p>;
+    },
+
     retryCall: function() {
       this.props.dispatcher.dispatch(new sharedActions.RetryCall());
     },
@@ -226,7 +245,10 @@ loop.conversationViews = (function(mozL10n) {
     },
 
     emailLink: function() {
-      this.setState({emailLinkButtonDisabled: true});
+      this.setState({
+        emailLinkError: false,
+        emailLinkButtonDisabled: true
+      });
 
       this.props.dispatcher.dispatch(new sharedActions.FetchEmailLink());
     },
@@ -237,6 +259,8 @@ loop.conversationViews = (function(mozL10n) {
           <h2>{mozL10n.get("generic_failure_title")}</h2>
 
           <p className="btn-label">{mozL10n.get("generic_failure_with_reason2")}</p>
+
+          {this._renderError()}
 
           <div className="btn-group call-action-group">
             <button className="btn btn-cancel"
