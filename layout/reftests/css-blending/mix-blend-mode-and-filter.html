@@ -1,0 +1,37 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <style>
+    .parent {
+      /*
+        With the darken blend mode, green will overwrite white parts of this
+        background, while black parts of this background will show through.
+      */
+      background: linear-gradient(#fff 0%, #fff 50%, #000 50%, #000 100%);
+      width: 100px;
+      height: 100px;
+    }
+
+    .child {
+      filter: blur(3px);
+      mix-blend-mode: darken;
+      background: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <!--
+    You should see a blurred green square, with its bottom half mostly
+    covered by a black rectangle.
+  -->
+  <div class="parent">
+    <div class="child"></div>
+  </div>
+</body>
+</html>
