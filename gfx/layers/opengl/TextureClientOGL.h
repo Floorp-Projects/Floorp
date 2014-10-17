@@ -74,7 +74,7 @@ class SurfaceTextureClient : public TextureClient
 {
 public:
   SurfaceTextureClient(TextureFlags aFlags,
-                       gl::AndroidSurfaceTexture* aSurfTex,
+                       AndroidSurfaceTexture* aSurfTex,
                        gfx::IntSize aSize,
                        bool aInverted);
 
@@ -113,7 +113,7 @@ public:
   }
 
 protected:
-  const RefPtr<gl::AndroidSurfaceTexture> mSurfTex;
+  const RefPtr<AndroidSurfaceTexture> mSurfTex;
   const gfx::IntSize mSize;
   bool mIsLocked;
 };
