@@ -36,6 +36,8 @@ public class TabCounter extends ThemedTextSwitcher
     private final int mLayoutId;
 
     private int mCount;
+    public static final int MAX_VISIBLE_TABS = 99;
+    public static final String SO_MANY_TABS_OPEN = "∞";
 
     private enum FadeMode {
         FADE_IN,
@@ -84,6 +86,12 @@ public class TabCounter extends ThemedTextSwitcher
             return;
         }
 
+        // don't animate if there are still over MAX_VISIBLE_TABS tabs open
+        if (mCount > MAX_VISIBLE_TABS && count > MAX_VISIBLE_TABS) {
+            mCount = count;
+            return;
+        }
+
         if (count < mCount) {
             setInAnimation(mFlipInBackward);
             setOutAnimation(mFlipOutForward);
@@ -97,14 +105,21 @@ public class TabCounter extends ThemedTextSwitcher
         setDisplayedChild(0);
 
         // Set In value, trigger animation to Out value
-        setCurrentText(String.valueOf(mCount));
-        setText(String.valueOf(count));
+        setCurrentText(formatForDisplay(mCount));
+        setText(formatForDisplay(count));
 
         mCount = count;
     }
 
+    private String formatForDisplay(int count) {
+        if (count > MAX_VISIBLE_TABS) {
+            return SO_MANY_TABS_OPEN;
+        }
+        return String.valueOf(count);
+    }
+
     void setCount(int count) {
-        setCurrentText(String.valueOf(count));
+        setCurrentText(formatForDisplay(count));
         mCount = count;
     }
 
