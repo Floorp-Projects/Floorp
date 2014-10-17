@@ -1,0 +1,11 @@
+[package]
+
+name = "wires"
+version = "0.0.1"
+authors = ["James Graham <james@hoppipolla.co.uk>"]
+
+[dependencies.hyper]
+git = "https://github.com/hyperium/hyper.git"
+
+[dependencies.uuid]
+git = "https://github.com/rust-lang/uuid.git"
