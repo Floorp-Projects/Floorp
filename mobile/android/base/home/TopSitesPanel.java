@@ -98,6 +98,9 @@ public class TopSitesPanel extends HomeFragment {
     // Max number of entries shown in the grid from the cursor.
     private int mMaxGridEntries;
 
+    // Time in ms until the Gecko thread is reset to normal priority.
+    private static final long PRIORITY_RESET_TIMEOUT = 10000;
+
     public static TopSitesPanel newInstance() {
         return new TopSitesPanel();
     }
@@ -344,7 +347,7 @@ public class TopSitesPanel extends HomeFragment {
         // appear, especially during startup (bug 897162). By minimizing the
         // Gecko thread priority, we ensure that the UI appears quickly. The
         // priority is reset to normal once thumbnails are loaded.
-        ThreadUtils.reduceGeckoPriority();
+        ThreadUtils.reduceGeckoPriority(PRIORITY_RESET_TIMEOUT);
     }
 
     /**
