@@ -68,6 +68,12 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
   size_t active, allocated, mapped, page, pdirty;
   size_t lg_chunk;
 
+  // Refresh jemalloc's stats by updating its epoch, see ctl_refresh in
+  // src/ctl.c
+  uint64_t epoch = 0;
+  size_t esz = sizeof(epoch);
+  int ret = je_(mallctl)("epoch", &epoch, &esz, &epoch, esz);
+
   CTL_GET("arenas.narenas", narenas);
   CTL_GET("arenas.page", page);
   CTL_GET("stats.active", active);
