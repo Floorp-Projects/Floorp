@@ -245,7 +245,7 @@ class SavedStacks {
             frames(cx)
         { }
 
-        typedef Vector<FrameState> FrameStateVector;
+        typedef Vector<FrameState, 20> FrameStateVector;
         inline FrameStateVector *operator->() { return &frames; }
         inline FrameState &operator[](size_t i) { return frames[i]; }
 
