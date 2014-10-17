@@ -122,7 +122,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(faa33210-536b-42e5-b9b0-8ea239899ba4)]
+[scriptable, uuid(ad41689c-ed0e-4a92-8f19-a53c2dba5711)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -463,6 +463,16 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     void forcePermissiveCOWs();
+
+    /*
+     * Disables the XPConnect security checks that deny access to callables and
+     * accessor descriptors on COWs. Do not use this unless you are bholley.
+     *
+     * For the benefit of his magesty TCPSocket while he takes his sweet time
+     * converting to WebIDL. See bug 885982.
+     */
+    [implicit_jscontext]
+    void skipCOWCallableChecks();
 
     /*
      * Forces the usage of a privileged |Components| object for a potentially-
