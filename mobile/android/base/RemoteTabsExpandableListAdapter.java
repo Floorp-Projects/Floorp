@@ -128,7 +128,7 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
         lastModifiedView.setText(TabsAccessor.getLastSyncedString(context, now, client.lastModified));
 
         // These views exists only in some of our group views: they are present
-        // for the home panel groups and not for the tabs tray groups.
+        // for the home panel groups and not for the tabs panel groups.
         // Therefore, we must handle null.
         final ImageView deviceTypeView = (ImageView) view.findViewById(R.id.device_type);
         if (deviceTypeView != null) {
@@ -174,7 +174,7 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
         final RemoteTab tab = client.tabs.get(childPosition);
 
         // The view is a TwoLinePageRow only for some of our child views: it's
-        // present for the home panel children and not for the tabs tray
+        // present for the home panel children and not for the tabs panel
         // children. Therefore, we must handle one case manually.
         if (view instanceof TwoLinePageRow) {
             ((TwoLinePageRow) view).update(tab.title, tab.url);

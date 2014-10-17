@@ -98,7 +98,7 @@
         <attr name="entryKeys" format="string"/>
     </declare-styleable>
 
-    <declare-styleable name="TabsTray">
+    <declare-styleable name="TabsLayout">
         <attr name="tabs">
             <flag name="tabs_normal" value="0x00" />
             <flag name="tabs_private" value ="0x01" />
