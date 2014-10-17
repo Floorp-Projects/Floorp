@@ -15,7 +15,11 @@ function chunkifyTests(tests, totalChunks, thisChunk, chunkByDir, logger) {
     var tests_by_dir = {};
     var test_dirs = []
     for (var i = 0; i < tests.length; ++i) {
-      var test_path = tests[i];
+      if ('test' in tests[i]) {
+        var test_path = tests[i]['test']['url'];
+      } else {
+        var test_path = tests[i]['url'];
+      }
       if (test_path[0] == '/') {
         test_path = test_path.substr(1);
       }
