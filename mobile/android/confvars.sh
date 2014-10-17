@@ -86,12 +86,8 @@ if test ! "$RELEASE_BUILD"; then
   MOZ_ANDROID_SHARE_OVERLAY=1
 fi
 
-# Enable the Mozilla Location Service stumbler in Nightly.
-if test "$NIGHTLY_BUILD"; then
-  MOZ_ANDROID_MLS_STUMBLER=1
-else
-  MOZ_ANDROID_MLS_STUMBLER=
-fi
+# Enable the Mozilla Location Service stumbler.
+MOZ_ANDROID_MLS_STUMBLER=1
 
 # Enable adding to the system downloads list in pre-release builds.
 if test ! "$RELEASE_BUILD"; then
