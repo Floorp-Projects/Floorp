@@ -14,7 +14,6 @@
 #include "gfxReusableSurfaceWrapper.h"  // for gfxReusableSurfaceWrapper
 #include "mozilla/gfx/2D.h"             // for DataSourceSurface
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
-#include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
 #ifdef MOZ_WIDGET_GONK
 # include "GrallocImages.h"  // for GrallocImage
 # include "EGLImageHelpers.h"

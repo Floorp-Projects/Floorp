@@ -887,7 +887,7 @@ StreamTextureHost::Lock()
         gl::SharedSurface_GLTexture* surf = gl::SharedSurface_GLTexture::Cast(abstractSurf);
 
         MOZ_ASSERT(mCompositor->GetBackendType() == LayersBackend::LAYERS_OPENGL);
-        CompositorOGL* compositorOGL = static_cast<CompositorOGL*>(mCompositor);
+        CompositorOGL* compositorOGL = static_cast<CompositorOGL*>(mCompositor.get());
         gl::GLContext* gl = compositorOGL->gl();
 
         GLenum target = surf->ConsTextureTarget();
@@ -905,7 +905,7 @@ StreamTextureHost::Lock()
         HANDLE shareHandle = surf->GetShareHandle();
 
         MOZ_ASSERT(mCompositor->GetBackendType() == LayersBackend::LAYERS_D3D11);
-        CompositorD3D11* compositorD3D11 = static_cast<CompositorD3D11*>(mCompositor);
+        CompositorD3D11* compositorD3D11 = static_cast<CompositorD3D11*>(mCompositor.get());
         ID3D11Device* d3d = compositorD3D11->GetDevice();
 
         nsRefPtr<ID3D11Texture2D> tex;
@@ -924,7 +924,7 @@ StreamTextureHost::Lock()
         gl::SharedSurface_EGLImage* surf = gl::SharedSurface_EGLImage::Cast(abstractSurf);
 
         MOZ_ASSERT(mCompositor->GetBackendType() == LayersBackend::LAYERS_OPENGL);
-        CompositorOGL* compositorOGL = static_cast<CompositorOGL*>(mCompositor);
+        CompositorOGL* compositorOGL = static_cast<CompositorOGL*>(mCompositor.get());
         gl::GLContext* gl = compositorOGL->gl();
         MOZ_ASSERT(gl->IsCurrent());
 
@@ -949,7 +949,7 @@ StreamTextureHost::Lock()
         MacIOSurface* ioSurf = surf->GetIOSurface();
 
         MOZ_ASSERT(mCompositor->GetBackendType() == LayersBackend::LAYERS_OPENGL);
-        CompositorOGL* compositorOGL = static_cast<CompositorOGL*>(mCompositor);
+        CompositorOGL* compositorOGL = static_cast<CompositorOGL*>(mCompositor.get());
 
         newTexSource = new MacIOSurfaceTextureSourceOGL(compositorOGL,
                                                         ioSurf);

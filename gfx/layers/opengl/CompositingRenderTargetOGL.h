@@ -157,7 +157,7 @@ private:
   void InitializeImpl();
 
   InitParams mInitParams;
-  CompositorOGL* mCompositor;
+  RefPtr<CompositorOGL> mCompositor;
   GLContext* mGL;
   GLuint mTextureHandle;
   GLuint mFBO;
