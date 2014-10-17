@@ -302,14 +302,15 @@ ScriptedIndirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObjec
 }
 
 bool
-ScriptedIndirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props) const
+ScriptedIndirectProxyHandler::getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
+                                                           AutoIdVector &props) const
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
     RootedValue value(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().keys, &value))
         return false;
     if (!IsCallable(value))
-        return BaseProxyHandler::keys(cx, proxy, props);
+        return BaseProxyHandler::getOwnEnumerablePropertyKeys(cx, proxy, props);
     return Trap(cx, handler, value, 0, nullptr, &value) &&
            ArrayToIdVector(cx, value, props);
 }

@@ -1685,7 +1685,7 @@ InitIds(JSContext* cx, const Prefable<Spec>* prefableSpecs, jsid* ids)
     // because this is only done once per application runtime.
     Spec* spec = prefableSpecs->specs;
     do {
-      if (!InternJSString(cx, *ids, spec->name)) {
+      if (!JS::PropertySpecNameToPermanentId(cx, spec->name, ids)) {
         return false;
       }
     } while (++ids, (++spec)->name);

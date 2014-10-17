@@ -266,6 +266,47 @@ GetBlacklistCountHistogram(DnsExpirationVariant aVariant,
     return DNS_BLACKLIST_COUNT_VAR_CONTROL_LOW;
 }
 
+static mozilla::Telemetry::ID
+GetRenewalTimeHistogram(DnsExpirationVariant aVariant)
+{
+    using namespace mozilla::Telemetry;
+
+#ifdef TTL_AVAILABLE
+    switch (sDnsVariant) {
+        case DNS_EXP_VARIANT_CONTROL:
+            return DNS_RENEWAL_TIME;
+        case DNS_EXP_VARIANT_TTL_ONLY:
+            return DNS_RENEWAL_TIME__TTL_ONLY_EXPT;
+        case DNS_EXP_VARIANT_TTL_PLUS_CONST_GRACE:
+            return DNS_RENEWAL_TIME__TTL_PLUS_CONST_GRACE_EXPT;
+        default:
+            MOZ_ASSERT_UNREACHABLE("Invalid variant.");
+    }
+#endif
+    return DNS_RENEWAL_TIME;
+}
+
+static mozilla::Telemetry::ID
+GetRenewalTimeForTTLHistogram(DnsExpirationVariant aVariant)
+{
+    using namespace mozilla::Telemetry;
+
+#ifdef TTL_AVAILABLE
+    switch (sDnsVariant) {
+        case DNS_EXP_VARIANT_CONTROL:
+            MOZ_ASSERT_UNREACHABLE("No TTL for Control Expt.");
+            return DNS_RENEWAL_TIME;
+        case DNS_EXP_VARIANT_TTL_ONLY:
+            return DNS_RENEWAL_TIME_FOR_TTL__TTL_ONLY_EXPT;
+        case DNS_EXP_VARIANT_TTL_PLUS_CONST_GRACE:
+            return DNS_RENEWAL_TIME_FOR_TTL__TTL_PLUS_CONST_GRACE_EXPT;
+        default:
+            MOZ_ASSERT_UNREACHABLE("Invalid variant.");
+    }
+#endif
+    return DNS_RENEWAL_TIME;
+}
+
 // this macro filters out any flags that are not used when constructing the
 // host key.  the significant flags are those that would affect the resulting
 // host record (i.e., the flags that are passed down to PR_GetAddrInfoByName).
@@ -1610,12 +1651,19 @@ nsHostResolver::ThreadFunc(void *arg)
         uint32_t millis = static_cast<uint32_t>(elapsed.ToMilliseconds());
 
         if (NS_SUCCEEDED(status)) {
-            Telemetry::Accumulate(!rec->addr_info_gencnt ?
-                                    Telemetry::DNS_LOOKUP_TIME :
-                                    Telemetry::DNS_RENEWAL_TIME,
-                                  millis);
-        }
-        else {
+            Telemetry::ID histogramID;
+            if (!rec->addr_info_gencnt) {
+                // Time for initial lookup.
+                histogramID = Telemetry::DNS_LOOKUP_TIME;
+            } else if (!getTtl) {
+                // Time for renewal; categorized by expiration strategy.
+                histogramID = GetRenewalTimeHistogram(sDnsVariant);
+            } else {
+                // Time to get TTL; categorized by expiration strategy.
+                histogramID = GetRenewalTimeForTTLHistogram(sDnsVariant);
+            }
+            Telemetry::Accumulate(histogramID, millis);
+        } else {
             Telemetry::Accumulate(Telemetry::DNS_FAILED_LOOKUP_TIME, millis);
         }
 

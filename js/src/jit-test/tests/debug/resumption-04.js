@@ -1,3 +1,4 @@
+// |jit-test| error: already executing generator
 // Forced return from a generator frame.
 
 var g = newGlobal();
@@ -10,5 +11,9 @@ function gen() {
     debugger;  // Force return here. The value is ignored.
     yield '2';
 }
-var x = [v for (v in gen())];
-assertEq(x.join(","), "1");
+
+var iter = gen();
+assertEq(iter.next(), "1");
+assertEq(iter.next(), "!");
+iter.next();
+assertEq(0, 1);
