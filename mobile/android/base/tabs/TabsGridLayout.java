@@ -16,8 +16,11 @@ import org.mozilla.gecko.tabs.TabsPanel.TabsLayout;
 import org.mozilla.gecko.Tabs;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.GridView;
 import android.view.ViewGroup;
@@ -58,6 +61,18 @@ class TabsGridLayout extends GridView
                 item.setThumbnail(null);
             }
         });
+
+        setScrollBarStyle(View.SCROLLBARS_OUTSIDE_OVERLAY);
+        setStretchMode(GridView.STRETCH_SPACING);
+        setGravity(Gravity.CENTER);
+        setNumColumns(GridView.AUTO_FIT);
+
+        final Resources resources = getResources();
+        final int columnWidth = resources.getDimensionPixelSize(R.dimen.new_tablet_tab_thumbnail_width);
+        setColumnWidth(columnWidth);
+
+        final int padding = resources.getDimensionPixelSize(R.dimen.new_tablet_tab_panel_grid_padding);
+        setPadding(padding, 0, padding, 0);
     }
 
     private class TabsGridLayoutAdapter extends TabsLayoutAdapter {
@@ -66,7 +81,7 @@ class TabsGridLayout extends GridView
         final private View.OnClickListener mSelectClickListener;
 
         public TabsGridLayoutAdapter (Context context) {
-            super(context);
+            super(context, R.layout.new_tablet_tabs_item_cell);
 
             mCloseClickListener = new Button.OnClickListener() {
                 @Override
