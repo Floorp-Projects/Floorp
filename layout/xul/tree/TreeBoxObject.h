@@ -11,6 +11,7 @@
 #include "nsITreeBoxObject.h"
 
 class nsTreeBodyFrame;
+class nsTreeColumn;
 class nsTreeColumns;
 
 namespace mozilla {
@@ -68,7 +69,7 @@ public:
   void GetCellAt(int32_t x, int32_t y, TreeCellInfo& aRetVal, ErrorResult& aRv);
 
   already_AddRefed<DOMRect> GetCoordsForCellItem(int32_t row,
-                                                 nsITreeColumn* col,
+                                                 nsTreeColumn& col,
                                                  const nsAString& element,
                                                  ErrorResult& aRv);
 
@@ -84,7 +85,7 @@ public:
 
   void GetCoordsForCellItem(JSContext* cx,
                             int32_t row,
-                            nsITreeColumn* col,
+                            nsTreeColumn& col,
                             const nsAString& element,
                             JS::Handle<JSObject*> xOut,
                             JS::Handle<JSObject*> yOut,

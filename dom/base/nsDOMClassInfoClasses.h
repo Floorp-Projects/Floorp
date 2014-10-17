@@ -29,10 +29,6 @@ DOMCI_CLASS(XULTemplateBuilder)
 DOMCI_CLASS(XULTreeBuilder)
 #endif
 
-#ifdef MOZ_XUL
-DOMCI_CLASS(TreeColumn)
-#endif
-
 DOMCI_CLASS(CSSMozDocumentRule)
 DOMCI_CLASS(CSSSupportsRule)
 

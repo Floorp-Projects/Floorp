@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-interface MozTreeColumn;
-
 [Func="IsChromeOrXBL"]
 interface TreeColumns {
   /**
@@ -25,26 +23,26 @@ interface TreeColumns {
   /**
    * Get the first/last column.
    */
-  MozTreeColumn? getFirstColumn();
-  MozTreeColumn? getLastColumn();
+  TreeColumn? getFirstColumn();
+  TreeColumn? getLastColumn();
 
   /**
    * Attribute based column getters.
    */
-  MozTreeColumn? getPrimaryColumn();
-  MozTreeColumn? getSortedColumn();
-  MozTreeColumn? getKeyColumn();
+  TreeColumn? getPrimaryColumn();
+  TreeColumn? getSortedColumn();
+  TreeColumn? getKeyColumn();
 
   /**
    * Get the column for the given element.
    */
-  MozTreeColumn? getColumnFor(Element? element);
+  TreeColumn? getColumnFor(Element? element);
 
   /**
    * Parametric column getters.
    */
-  getter MozTreeColumn? getNamedColumn(DOMString name);
-  getter MozTreeColumn? getColumnAt(unsigned long index);
+  getter TreeColumn? getNamedColumn(DOMString name);
+  getter TreeColumn? getColumnAt(unsigned long index);
 
   /**
    * This method is called whenever a treecol is added or removed and
