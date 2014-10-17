@@ -465,6 +465,11 @@ ParallelSafetyVisitor::convertToBailout(MInstructionIterator &iter)
         block->getSuccessor(i)->removePredecessor(block);
     block->discardAllInstructionsStartingAt(iter);
 
+    // No more successors are reachable, so the current block can no longer be
+    // the parent of an inlined function.
+    if (block->outerResumePoint())
+        block->clearOuterResumePoint();
+
     // End the block in a bail.
     block->add(bail);
     block->end(MUnreachable::New(alloc()));
