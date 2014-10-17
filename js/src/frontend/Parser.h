@@ -464,6 +464,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool addExprAndGetNextTemplStrToken(Node nodeList, TokenKind &tt);
 
     inline Node newName(PropertyName *name);
+    inline Node newYieldExpression(uint32_t begin, Node expr, bool isYieldStar = false);
 
     inline bool abortIfSyntaxParser();
 
