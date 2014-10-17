@@ -1176,7 +1176,7 @@ JSStructuredCloneWriter::transferOwnership()
                 return false; // Destructor will clean up the already-transferred data.
             content = bufContents.data();
             tag = SCTAG_TRANSFER_MAP_ARRAY_BUFFER;
-            if (bufContents.kind() & ArrayBufferObject::MAPPED_BUFFER)
+            if (bufContents.kind() == ArrayBufferObject::MAPPED)
                 ownership = JS::SCTAG_TMO_MAPPED_DATA;
             else
                 ownership = JS::SCTAG_TMO_ALLOC_DATA;
