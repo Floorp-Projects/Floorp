@@ -14,7 +14,7 @@ dictionary PromiseDebuggingStateHolder {
 };
 enum PromiseDebuggingState { "pending", "fulfilled", "rejected" };
 
-[ChromeOnly]
+[ChromeOnly, Exposed=(Window,System)]
 interface PromiseDebugging {
   static PromiseDebuggingStateHolder getState(Promise<any> p);
 };
