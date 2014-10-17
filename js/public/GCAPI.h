@@ -420,7 +420,7 @@ class JS_PUBLIC_API(AutoAssertNoAlloc)
  * object is live. This is most useful to help the exact rooting hazard analysis
  * in complex regions, since it cannot understand dataflow.
  *
- * Note: GC behavior is unpredictable even when deterministice and is generally
+ * Note: GC behavior is unpredictable even when deterministic and is generally
  *       non-deterministic in practice. The fact that this guard has not
  *       asserted is not a guarantee that a GC cannot happen in the guarded
  *       region. As a rule, anyone performing a GC unsafe action should
