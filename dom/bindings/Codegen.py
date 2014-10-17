@@ -11919,6 +11919,63 @@ class CGRegisterWorkerBindings(CGAbstractMethod):
         return CGList(lines, "\n").define()
 
 
+class CGResolveSystemBinding(CGAbstractMethod):
+    def __init__(self, config):
+        CGAbstractMethod.__init__(self, None, 'ResolveSystemBinding', 'bool',
+                                  [Argument('JSContext*', 'aCx'),
+                                   Argument('JS::Handle<JSObject*>', 'aObj'),
+                                   Argument('JS::Handle<jsid>', 'aId'),
+                                   Argument('JS::MutableHandle<JSObject*>',
+                                            'aObjp')])
+        self.config = config
+
+    def definition_body(self):
+        descriptors = self.config.getDescriptors(hasInterfaceObject=True,
+                                                 isExposedInSystemGlobals=True,
+                                                 register=True,
+                                                 skipGen=False)
+
+        def descNameToId(name):
+            return "s%s_id" % name
+        jsidNames = [descNameToId(desc.name) for desc in descriptors]
+        jsidDecls = CGList(CGGeneric("static jsid %s;\n" % name)
+                           for name in jsidNames)
+
+        jsidInits = CGList(
+            (CGIfWrapper(
+                CGGeneric("return false;\n"),
+                '!InternJSString(aCx, %s, "%s")' %
+                (descNameToId(desc.name), desc.interface.identifier.name))
+             for desc in descriptors),
+            "\n")
+        jsidInits.append(CGGeneric("idsInited = true;\n"))
+        jsidInits = CGIfWrapper(jsidInits, "!idsInited")
+        jsidInits = CGList([CGGeneric("static bool idsInited = false;\n"),
+                            jsidInits])
+
+        definitions = CGList([], "\n")
+        for desc in descriptors:
+            bindingNS = toBindingNamespace(desc.name)
+            defineCode = "!%s::GetConstructorObject(aCx, aObj)" % bindingNS
+            defineCode = CGIfWrapper(CGGeneric("return false;\n"), defineCode)
+            defineCode = CGList([defineCode,
+                                 CGGeneric("aObjp.set(aObj);\n"),
+                                 CGGeneric("return true;\n")])
+
+            condition = "JSID_IS_VOID(aId) || aId == %s" % descNameToId(desc.name)
+            if desc.isExposedConditionally():
+                condition = "(%s) && %s::ConstructorEnabled(aCx, aObj)" % (condition, bindingNS)
+
+            definitions.append(CGIfWrapper(defineCode, condition))
+
+        return CGList([CGGeneric("MOZ_ASSERT(NS_IsMainThread());\n"),
+                       jsidDecls,
+                       jsidInits,
+                       definitions,
+                       CGGeneric("return true;\n")],
+                      "\n").define()
+
+
 class CGRegisterProtos(CGAbstractMethod):
     def __init__(self, config):
         CGAbstractMethod.__init__(self, None, 'Register', 'void',
@@ -14341,7 +14398,6 @@ class GlobalGenRoots():
     @staticmethod
     def RegisterBindings(config):
 
-        # TODO - Generate the methods we want
         curr = CGRegisterProtos(config)
 
         # Wrap all of that in our namespaces.
@@ -14371,7 +14427,6 @@ class GlobalGenRoots():
     @staticmethod
     def RegisterWorkerBindings(config):
 
-        # TODO - Generate the methods we want
         curr = CGRegisterWorkerBindings(config)
 
         # Wrap all of that in our namespaces.
@@ -14391,6 +14446,35 @@ class GlobalGenRoots():
 
         # Add include guards.
         curr = CGIncludeGuard('RegisterWorkerBindings', curr)
+
+        # Done.
+        return curr
+
+    @staticmethod
+    def ResolveSystemBinding(config):
+
+        curr = CGResolveSystemBinding(config)
+
+        # Wrap all of that in our namespaces.
+        curr = CGNamespace.build(['mozilla', 'dom'],
+                                 CGWrapper(curr, post='\n'))
+        curr = CGWrapper(curr, post='\n')
+
+        # Add the includes
+        defineIncludes = [CGHeaders.getDeclarationFilename(desc.interface)
+                          for desc in config.getDescriptors(hasInterfaceObject=True,
+                                                            register=True,
+                                                            isExposedInSystemGlobals=True,
+                                                            skipGen=False)]
+        defineIncludes.append("nsThreadUtils.h") # For NS_IsMainThread
+        defineIncludes.append("js/Id.h") # For jsid
+        defineIncludes.append("mozilla/dom/BindingUtils.h") # InternJSString
+
+        curr = CGHeaders([], [], [], [], [], defineIncludes,
+                         'ResolveSystemBinding', curr)
+
+        # Add include guards.
+        curr = CGIncludeGuard('ResolveSystemBinding', curr)
 
         # Done.
         return curr
