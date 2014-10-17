@@ -173,6 +173,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     static bool fun_slice(JSContext *cx, unsigned argc, Value *vp);
 
     static bool fun_isView(JSContext *cx, unsigned argc, Value *vp);
+#ifdef NIGHTLY_BUILD
+    static bool fun_transfer(JSContext *cx, unsigned argc, Value *vp);
+#endif
 
     static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
 
