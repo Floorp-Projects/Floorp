@@ -107,10 +107,6 @@ struct ExposedPropertiesOnly : public Policy {
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl) {
         return false;
     }
-    static bool checkCall(JSContext *cx, JS::HandleObject wrapper, const JS::CallArgs &args) {
-        // XXXbholley - This goes away in the next patch.
-        return AccessCheck::checkPassToPrivilegedCode(cx, wrapper, args);
-    }
 };
 
 }

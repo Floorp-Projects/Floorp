@@ -101,55 +101,18 @@ function COWTests() {
         isPropHidden(getCOW(nonempty), name, "object without exposedProps");
     });
 
-    // Test function objects without __exposedProps__
+    // Test function objects.
     var func = function(x) { return 42; };
+    func.__exposedProps__ = { foo: "r" };
     func.foo = "foo property";
     var funcCOW = getCOW(func);
-    PROPS_TO_TEST.forEach(function(name) {
-        isPropHidden(funcCOW, name, "function without exposedProps");
-    });
-    is([name for (name in funcCOW)].length, 0,
-       "function without exposedProps shouldn't have any properties");
-    is(funcCOW(), 42, "COW without exposedProps should still be callable");
-
-    // Test function objects with __exposedProps__
-    var func = function(x) { return 42; };
-    func.foo = "foo property";
-    func.__exposedProps__ = { foo: "r" };
-    var funcCOWr = getCOW(func);
-    PROPS_TO_TEST.forEach(function(name) {
-        if (name == "foo") {
-            isProp(funcCOWr, name, "foo property",
-                   "function with exposedProps");
-        }
-        else {
-            isPropHidden(funcCOWr, name, "function with exposedProps");
-        }
-    });
-    is([name for (name in funcCOWr)].length, 1,
-       "function with exposedProps should only enumerate exposed props");
-    is([name for (name in funcCOWr)][0], "foo",
-       "function with exposedProps should only enumerate exposed props");
-    is(funcCOWr(), 42, "COW with exposedProps should be callable");
-
-    // Test function objects with __exposedProps__
-    var func = function(x) { return 42; };
-    func.foo = "foo property";
-    func.__exposedProps__ = { foo: "r", bar: "r" };
-    var funcCOWr2 = getCOW(func);
-    PROPS_TO_TEST.forEach(function(name) {
-        if (name == "foo") {
-            isProp(funcCOWr2, name, "foo property",
-                   "function with more exposedProps");
-        }
-        else {
-            isPropHidden(funcCOWr2, name, "function with more exposedProps");
-        }
-    });
-    is([name for (name in funcCOWr2)].length, 1,
-       "function with exposedProps should only enumerate exposed props");
-    is([name for (name in funcCOWr2)][0], "foo",
-       "function with exposedProps should only enumerate exposed props");
+    try {
+      funcCOW.foo;
+      ok(false, 'Functions are no longer COWable');
+    } catch (e) {
+      ok(/denied|insecure/.test(e), 'Functions are no longer COWable');
+    }
+    is(funcCOW(), 42, "Chrome functions should be callable");
 
     // Test object with empty exposedProps
     var strict = { __exposedProps__: {}, foo: "foo property" };

@@ -113,20 +113,7 @@ WrapperFactory::WaiveXray(JSContext *cx, JSObject *objArg)
 static bool
 ForceCOWBehavior(JSObject *obj)
 {
-    JSProtoKey key = IdentifyStandardInstanceOrPrototype(obj);
-    if (key == JSProto_Function && GetXrayType(obj) == XrayForDOMObject) {
-        // This means that we've got a DOM constructor, which we never want to
-        // expose COW-style.
-        return false;
-    }
-    if (key == JSProto_Object || key == JSProto_Function) {
-        MOZ_ASSERT(GetXrayType(obj) == XrayForJSObject,
-                   "We should use XrayWrappers for standard ES Object, Array, and Function "
-                   "instances modulo this hack");
-        return true;
-    }
-
-    return false;
+    return IdentifyStandardInstanceOrPrototype(obj) == JSProto_Object;
 }
 
 inline bool
@@ -481,6 +468,14 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
     else if (CompartmentPrivate::Get(origin)->forcePermissiveCOWs) {
         CrashIfNotInAutomation();
         wrapper = &CrossCompartmentWrapper::singleton;
+    }
+
+    // If this is a chrome function being exposed to content, we need to allow
+    // call (but nothing else).
+    else if (originIsChrome && !targetIsChrome &&
+             IdentifyStandardInstance(obj) == JSProto_Function)
+    {
+        wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
     }
 
     // If this is a chrome object being exposed to content without Xrays, use
