@@ -11,6 +11,8 @@ Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import("resource://gre/modules/RemoteAddonsChild.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
+const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
+
 #ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
                                    "@mozilla.org/xre/app-info;1",
@@ -366,6 +368,36 @@ addEventListener("ZoomChangeUsingMouseWheel", function () {
 addMessageListener("UpdateCharacterSet", function (aMessage) {
   docShell.charset = aMessage.data.value;
   docShell.gatherCharsetMenuTelemetry();
+});
+
+/**
+ * Remote thumbnail request handler for PageThumbs thumbnails.
+ */
+addMessageListener("Browser:Thumbnail:Request", function (aMessage) {
+  let thumbnail = content.document.createElementNS(HTML_NAMESPACE, "canvas");
+  thumbnail.mozOpaque = true;
+  thumbnail.mozImageSmoothingEnabled = true;
+
+  // width and height are crop dims
+  let width = aMessage.data.width || content.innerWidth;
+  let height = aMessage.data.height || content.innerHeight;
+  thumbnail.width = Math.round(width * aMessage.data.scale);
+  thumbnail.height = Math.round(height * aMessage.data.scale);
+
+  let ctx = thumbnail.getContext("2d");
+  ctx.save();
+  ctx.scale(aMessage.data.scale, aMessage.data.scale);
+  ctx.drawWindow(content, 0, 0, width, height,
+                 aMessage.data.background,
+                 ctx.DRAWWINDOW_DO_NOT_FLUSH);
+  ctx.restore();
+
+  thumbnail.toBlob(function (aBlob) {
+    sendAsyncMessage("Browser:Thumbnail:Response", {
+      thumbnail: aBlob,
+      id: aMessage.data.id
+    });
+  });
 });
 
 // The AddonsChild needs to be rooted so that it stays alive as long as
