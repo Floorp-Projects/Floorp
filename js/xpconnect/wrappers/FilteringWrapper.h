@@ -49,6 +49,9 @@ class FilteringWrapper : public Base {
     virtual bool defaultValue(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint,
                               JS::MutableHandleValue vp) const MOZ_OVERRIDE;
 
+    virtual bool getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
+                                JS::MutableHandleObject protop) const MOZ_OVERRIDE;
+
     static const FilteringWrapper singleton;
 };
 
@@ -73,8 +76,6 @@ class CrossOriginXrayWrapper : public SecurityXrayDOM {
                          JS::Handle<jsid> id, bool *bp) const MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper,
                            JS::AutoIdVector &props) const MOZ_OVERRIDE;
-    virtual bool getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
-                                JS::MutableHandleObject protop) const MOZ_OVERRIDE;
 
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,
