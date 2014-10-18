@@ -259,7 +259,7 @@ Result
 TestCheckPublicKey(Input subjectPublicKeyInfo)
 {
   InitNSSIfNeeded();
-  return CheckPublicKey(subjectPublicKeyInfo);
+  return CheckPublicKey(subjectPublicKeyInfo, MINIMUM_TEST_KEY_BITS);
 }
 
 Result
@@ -267,7 +267,8 @@ TestVerifySignedData(const SignedDataWithSignature& signedData,
                      Input subjectPublicKeyInfo)
 {
   InitNSSIfNeeded();
-  return VerifySignedData(signedData, subjectPublicKeyInfo, nullptr);
+  return VerifySignedData(signedData, subjectPublicKeyInfo,
+                          MINIMUM_TEST_KEY_BITS, nullptr);
 }
 
 Result
