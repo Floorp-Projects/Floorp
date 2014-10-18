@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      window.onload = function() {
+        document.removeChild(document.documentElement);
+        var oFrameset1 = document.createElement('frameset'),
+            oFrameset2 = document.createElement('frameset');
+        document.appendChild(oFrameset1);
+        oFrameset1.appendChild(oFrameset2);
+        oFrameset2.offsetWidth;
+      };
+    </script>
+  </head>
+</html>
