@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+(function () { // bug 673569 workaround :(
+
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.importGlobalProperties(['Blob']);
 
-Cu.import("resource://gre/modules/PageThumbUtils.jsm");
+Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -47,7 +49,7 @@ const backgroundPageThumbsContent = {
     // in the parent (eg, auth) aren't prevented, but alert() etc are.
     // disableDialogs only works on the current inner window, so it has
     // to be called every page load, but before scripts run.
-    if (content && subj == content.document) {
+    if (subj == content.document) {
       content.
         QueryInterface(Ci.nsIInterfaceRequestor).
         getInterface(Ci.nsIDOMWindowUtils).
@@ -127,19 +129,9 @@ const backgroundPageThumbsContent = {
     capture.finalURL = this._webNav.currentURI.spec;
     capture.pageLoadTime = new Date() - capture.pageLoadStartDate;
 
+    let canvas = PageThumbs.createCanvas(content);
     let canvasDrawDate = new Date();
-
-    let canvas = PageThumbUtils.createCanvas(content);
-    let [sw, sh, scale] = PageThumbUtils.determineCropSize(content, canvas);
-
-    let ctx = canvas.getContext("2d");
-    ctx.save();
-    ctx.scale(scale, scale);
-    ctx.drawWindow(content, 0, 0, sw, sh,
-                   PageThumbUtils.THUMBNAIL_BG_COLOR,
-                   ctx.DRAWWINDOW_DO_NOT_FLUSH);
-    ctx.restore();
-
+    PageThumbs._captureToCanvas(content, canvas);
     capture.canvasDrawTime = new Date() - canvasDrawDate;
 
     canvas.toBlob(blob => {
@@ -192,3 +184,5 @@ const backgroundPageThumbsContent = {
 };
 
 backgroundPageThumbsContent.init();
+
+})();
