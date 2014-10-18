@@ -377,6 +377,7 @@ load 663295.html
 load 663662-1.html
 load 663662-2.html
 load 665837.html
+load 668579.html
 load 668941.xhtml
 load 670226.html
 asserts(2) load 675246-1.xhtml # Bug 675713
