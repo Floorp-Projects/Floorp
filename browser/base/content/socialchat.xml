@@ -707,7 +707,7 @@
         canvas.mozOpaque = true;
         canvas.width = 160 * scale;
         canvas.height = 90 * scale;
-        PageThumbs.captureToCanvas(chatbox.contentWindow, canvas);
+        PageThumbs.captureToCanvas(chatbox, canvas);
         dt.setDragImage(canvas, -16 * scale, -16 * scale);
 
         event.stopPropagation();
