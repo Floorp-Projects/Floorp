@@ -441,6 +441,12 @@ SearchWithinAVA(Reader& rdn,
   return Success;
 }
 
+MOZILLA_PKIX_ENUM_CLASS NameConstraintsSubtrees : uint8_t
+{
+  permittedSubtrees = der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 0,
+  excludedSubtrees  = der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 1
+};
+
 Result
 MatchPresentedIDWithReferenceID(GeneralNameType nameType,
                                 Input presentedID,
@@ -803,6 +809,101 @@ MatchPresentedIPAddressWithConstraint(Input presentedID,
   } while (foundMatch && !presented.AtEnd());
 
   return Success;
+}
+
+// Names are sequences of RDNs. RDNS are sets of AVAs. That means that RDNs are
+// unordered, so in theory we should match RDNs with equivalent AVAs that are
+// in different orders. Within the AVAs are DirectoryNames that are supposed to
+// be compared according to LDAP stringprep normalization rules (e.g.
+// normalizing whitespace), consideration of different character encodings,
+// etc. Indeed, RFC 5280 says we MUST deal with all of that.
+//
+// In practice, many implementations, including NSS, only match Names in a way
+// that only meets a subset of the requirements of RFC 5280. Those
+// normalization and character encoding conversion steps appear to be
+// unnecessary for processing real-world certificates, based on experience from
+// having used NSS in Firefox for many years.
+//
+// RFC 5280 also says "CAs issuing certificates with a restriction of the form
+// directoryName SHOULD NOT rely on implementation of the full
+// ISO DN name comparison algorithm. This implies name restrictions MUST
+// be stated identically to the encoding used in the subject field or
+// subjectAltName extension." It goes on to say, in the security
+// considerations:
+//
+//     In addition, name constraints for distinguished names MUST be stated
+//     identically to the encoding used in the subject field or
+//     subjectAltName extension.  If not, then name constraints stated as
+//     excludedSubtrees will not match and invalid paths will be accepted
+//     and name constraints expressed as permittedSubtrees will not match
+//     and valid paths will be rejected.  To avoid acceptance of invalid
+//     paths, CAs SHOULD state name constraints for distinguished names as
+//     permittedSubtrees wherever possible.
+//
+// Consequently, we implement the comparison in the simplest possible way. For
+// permittedSubtrees, we rely on implementations to follow that MUST-level
+// requirement for compatibility. For excludedSubtrees, we simply prohibit any
+// non-empty directoryName constraint to ensure we are not being too lenient.
+// We support empty DirectoryName constraints in excludedSubtrees so that a CA
+// can say "Do not allow any DirectoryNames in issued certificates."
+Result
+MatchPresentedDirectoryNameWithConstraint(NameConstraintsSubtrees subtreesType,
+                                          Input presentedID,
+                                          Input directoryNameConstraint,
+                                          /*out*/ bool& matches)
+{
+  Reader constraintRDNs;
+  Result rv = der::ExpectTagAndGetValueAtEnd(directoryNameConstraint,
+                                             der::SEQUENCE, constraintRDNs);
+  if (rv != Success) {
+    return rv;
+  }
+  Reader presentedRDNs;
+  rv = der::ExpectTagAndGetValueAtEnd(presentedID, der::SEQUENCE,
+                                      presentedRDNs);
+  if (rv != Success) {
+    return rv;
+  }
+
+  switch (subtreesType) {
+    case NameConstraintsSubtrees::permittedSubtrees:
+      break; // dealt with below
+    case NameConstraintsSubtrees::excludedSubtrees:
+      if (!constraintRDNs.AtEnd() || !presentedRDNs.AtEnd()) {
+        return Result::ERROR_CERT_NOT_IN_NAME_SPACE;
+      }
+      matches = true;
+      return Success;
+    default:
+      return NotReached("invalid subtrees", Result::FATAL_ERROR_INVALID_ARGS);
+  }
+
+  for (;;) {
+    // The AVAs have to be fully equal, but the constraint RDNs just need to be
+    // a prefix of the presented RDNs.
+    if (constraintRDNs.AtEnd()) {
+      matches = true;
+      return Success;
+    }
+    if (presentedRDNs.AtEnd()) {
+      matches = false;
+      return Success;
+    }
+    Input constraintRDN;
+    rv = der::ExpectTagAndGetValue(constraintRDNs, der::SET, constraintRDN);
+    if (rv != Success) {
+      return rv;
+    }
+    Input presentedRDN;
+    rv = der::ExpectTagAndGetValue(presentedRDNs, der::SET, presentedRDN);
+    if (rv != Success) {
+      return rv;
+    }
+    if (!InputsAreEqual(constraintRDN, presentedRDN)) {
+      matches = false;
+      return Success;
+    }
+  }
 }
 
 // We avoid isdigit because it is locale-sensitive. See
