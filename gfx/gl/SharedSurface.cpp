@@ -491,7 +491,7 @@ ReadbackSharedSurface(SharedSurface* src, gfx::DrawTarget* dst)
     gfx::IntSize dstSize;
     int32_t dstStride;
     gfx::SurfaceFormat dstFormat;
-    if (!lock->Lock(&dstBytes, &dstSize, &dstStride, &dstFormat))
+    if (!lock.Lock(&dstBytes, &dstSize, &dstStride, &dstFormat))
         return false;
 
     const bool isDstRGBA = (dstFormat == gfx::SurfaceFormat::R8G8B8A8 ||
