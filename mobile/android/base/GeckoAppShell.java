@@ -1835,7 +1835,7 @@ public class GeckoAppShell
                                     true, // Media scanner should scan this
                                     mimeType,
                                     f.getAbsolutePath(),
-                                    Math.max(0, f.length()),
+                                    Math.max(1, f.length()), // Some versions of Android require downloads to be at least length 1
                                     false); // Don't show a notification.
         } else {
             Context context = getContext();
