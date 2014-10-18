@@ -4366,64 +4366,6 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   border-radius: 1px;
 }
 
-/* === social toolbar button === */
-
-#social-toolbar-item > .toolbarbutton-1 {
-  margin-left: 0;
-  margin-right: 0;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-#social-toolbar-item > .toolbarbutton-1:-moz-locale-dir(ltr) {
-  -moz-border-end-width: 0;
-}
-#social-toolbar-item > .toolbarbutton-1:last-child:-moz-locale-dir(ltr) {
-  -moz-border-end-width: 1px;
-}
-#social-toolbar-item > .toolbarbutton-1:-moz-locale-dir(rtl) {
-  -moz-border-start-width: 0;
-}
-#social-toolbar-item > .toolbarbutton-1:first-child:-moz-locale-dir(rtl) {
-  -moz-border-start-width: 1px;
-}
-
-#social-toolbar-item > .toolbarbutton-1:-moz-locale-dir(ltr):first-child,
-#social-toolbar-item > .toolbarbutton-1:-moz-locale-dir(rtl):last-child {
-  margin-left: 4px;
-  border-top-left-radius: 3px;
-  border-bottom-left-radius: 3px;
-}
-#social-toolbar-item > .toolbarbutton-1:-moz-locale-dir(rtl):first-child,
-#social-toolbar-item > .toolbarbutton-1:-moz-locale-dir(ltr):last-child {
-  margin-right: 4px;
-  border-top-right-radius: 3px;
-  border-bottom-right-radius: 3px;
-}
-
-#social-toolbar-item > toolbaritem {
-  margin: 0;
-}
-
-#social-provider-button {
-  list-style-image: url(chrome://browser/skin/social/services-16.png);
-}
-
-@media (min-resolution: 2dppx) {
-  #social-provider-button {
-    list-style-image: url(chrome://browser/skin/social/services-16@2x.png);
-  }
-  #social-provider-button > .toolbarbutton-icon {
-    width: 16px;
-  }
-}
-
-#social-provider-button > .toolbarbutton-menu-dropmarker {
-  display: none;
-}
-
 .popup-notification-icon[popupid="servicesInstall"] {
   list-style-image: url(chrome://browser/skin/social/services-64.png);
 }
