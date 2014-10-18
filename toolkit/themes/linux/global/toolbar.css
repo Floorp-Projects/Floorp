@@ -34,6 +34,7 @@ menubar, toolbar[type="menubar"] {
 menubar:-moz-lwtheme,
 toolbar:-moz-lwtheme {
   -moz-appearance: none;
+  color: inherit;
 }
 
 /* in browser.xul, the menubar is inside a toolbar... */
