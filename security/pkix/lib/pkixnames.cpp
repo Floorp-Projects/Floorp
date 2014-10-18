@@ -36,6 +36,7 @@
 // can't rely on them.
 
 #include "pkix/bind.h"
+#include "pkixcheck.h"
 #include "pkixutil.h"
 
 namespace mozilla { namespace pkix {
@@ -54,30 +55,96 @@ namespace {
 //      registeredID                    [8]     OBJECT IDENTIFIER }
 MOZILLA_PKIX_ENUM_CLASS GeneralNameType : uint8_t
 {
+  // Note that these values are NOT contiguous because directoryName also
+  // has the der::CONSTRUCTED bit set.
+  otherName = der::CONTEXT_SPECIFIC | 0,
+  rfc822Name = der::CONTEXT_SPECIFIC | 1,
   dNSName = der::CONTEXT_SPECIFIC | 2,
+  x400Address = der::CONTEXT_SPECIFIC | 3,
+  directoryName = der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 4,
+  ediPartyName = der::CONTEXT_SPECIFIC | 5,
+  uniformResourceIdentifier = der::CONTEXT_SPECIFIC | 6,
   iPAddress = der::CONTEXT_SPECIFIC | 7,
+  registeredID = der::CONTEXT_SPECIFIC | 8,
+  // nameConstraints is a pseudo-GeneralName used to signify that a
+  // reference ID is actually the entire name constraint extension.
+  nameConstraints = 0xff
 };
+
+inline Result
+ReadGeneralName(Reader& reader,
+                /*out*/ GeneralNameType& generalNameType,
+                /*out*/ Input& value)
+{
+  uint8_t tag;
+  Result rv = der::ReadTagAndGetValue(reader, tag, value);
+  if (rv != Success) {
+    return rv;
+  }
+  switch (tag) {
+    case static_cast<uint8_t>(GeneralNameType::otherName):
+      generalNameType = GeneralNameType::otherName;
+      break;
+    case static_cast<uint8_t>(GeneralNameType::rfc822Name):
+      generalNameType = GeneralNameType::rfc822Name;
+      break;
+    case static_cast<uint8_t>(GeneralNameType::dNSName):
+      generalNameType = GeneralNameType::dNSName;
+      break;
+    case static_cast<uint8_t>(GeneralNameType::x400Address):
+      generalNameType = GeneralNameType::x400Address;
+      break;
+    case static_cast<uint8_t>(GeneralNameType::directoryName):
+      generalNameType = GeneralNameType::directoryName;
+      break;
+    case static_cast<uint8_t>(GeneralNameType::ediPartyName):
+      generalNameType = GeneralNameType::ediPartyName;
+      break;
+    case static_cast<uint8_t>(GeneralNameType::uniformResourceIdentifier):
+      generalNameType = GeneralNameType::uniformResourceIdentifier;
+      break;
+    case static_cast<uint8_t>(GeneralNameType::iPAddress):
+      generalNameType = GeneralNameType::iPAddress;
+      break;
+    case static_cast<uint8_t>(GeneralNameType::registeredID):
+      generalNameType = GeneralNameType::registeredID;
+      break;
+    default:
+      return Result::ERROR_BAD_DER;
+  }
+  return Success;
+}
 
 MOZILLA_PKIX_ENUM_CLASS FallBackToCommonName { No = 0, Yes = 1 };
 
-Result SearchForName(const Input* subjectAltName, Input subject,
-                     GeneralNameType referenceIDType,
-                     Input referenceID,
-                     FallBackToCommonName fallBackToCommonName,
-                     /*out*/ bool& foundMatch);
+MOZILLA_PKIX_ENUM_CLASS MatchResult
+{
+  NoNamesOfGivenType = 0,
+  Mismatch = 1,
+  Match = 2
+};
+
+Result SearchNames(const Input* subjectAltName, Input subject,
+                   GeneralNameType referenceIDType,
+                   Input referenceID,
+                   FallBackToCommonName fallBackToCommonName,
+                   /*out*/ MatchResult& match);
 Result SearchWithinRDN(Reader& rdn,
                        GeneralNameType referenceIDType,
                        Input referenceID,
-                       /*in/out*/ bool& foundMatch);
+                       /*in/out*/ MatchResult& match);
 Result SearchWithinAVA(Reader& rdn,
                        GeneralNameType referenceIDType,
                        Input referenceID,
-                       /*in/out*/ bool& foundMatch);
+                       /*in/out*/ MatchResult& match);
 
 Result MatchPresentedIDWithReferenceID(GeneralNameType referenceIDType,
                                        Input presentedID,
                                        Input referenceID,
-                                       /*out*/ bool& foundMatch);
+                                       /*out*/ bool& isMatch);
+Result CheckPresentedIDConformsToConstraints(GeneralNameType referenceIDType,
+                                             Input presentedID,
+                                             Input nameConstraints);
 
 uint8_t LocaleInsensitveToLower(uint8_t a);
 bool StartsWithIDNALabel(Input id);
@@ -135,43 +202,91 @@ CheckCertHostname(Input endEntityCertDER, Input hostname)
   //
   // IPv4 and IPv6 addresses are represented using the same type of GeneralName
   // (iPAddress); they are differentiated by the lengths of the values.
-  bool found;
+  MatchResult match;
   uint8_t ipv6[16];
   uint8_t ipv4[4];
   if (IsValidReferenceDNSID(hostname)) {
-    rv = SearchForName(subjectAltName, subject, GeneralNameType::dNSName,
-                       hostname, FallBackToCommonName::Yes, found);
+    rv = SearchNames(subjectAltName, subject, GeneralNameType::dNSName,
+                     hostname, FallBackToCommonName::Yes, match);
   } else if (ParseIPv6Address(hostname, ipv6)) {
-    rv = SearchForName(subjectAltName, subject, GeneralNameType::iPAddress,
-                       Input(ipv6), FallBackToCommonName::No, found);
+    rv = SearchNames(subjectAltName, subject, GeneralNameType::iPAddress,
+                     Input(ipv6), FallBackToCommonName::No, match);
   } else if (ParseIPv4Address(hostname, ipv4)) {
-    rv = SearchForName(subjectAltName, subject, GeneralNameType::iPAddress,
-                       Input(ipv4), FallBackToCommonName::Yes, found);
+    rv = SearchNames(subjectAltName, subject, GeneralNameType::iPAddress,
+                     Input(ipv4), FallBackToCommonName::Yes, match);
   } else {
     return Result::ERROR_BAD_CERT_DOMAIN;
   }
   if (rv != Success) {
     return rv;
   }
-  if (!found) {
-    return Result::ERROR_BAD_CERT_DOMAIN;
+  switch (match) {
+    case MatchResult::NoNamesOfGivenType: // fall through
+    case MatchResult::Mismatch:
+      return Result::ERROR_BAD_CERT_DOMAIN;
+    case MatchResult::Match:
+      return Success;
+    default:
+      return NotReached("Invalid match result",
+                        Result::FATAL_ERROR_LIBRARY_FAILURE);
   }
+}
+
+// 4.2.1.10. Name Constraints
+Result
+CheckNameConstraints(Input encodedNameConstraints,
+                     const BackCert& firstChild,
+                     KeyPurposeId requiredEKUIfPresent)
+{
+  for (const BackCert* child = &firstChild; child; child = child->childCert) {
+    FallBackToCommonName fallBackToCommonName
+      = (child->endEntityOrCA == EndEntityOrCA::MustBeEndEntity &&
+         requiredEKUIfPresent == KeyPurposeId::id_kp_serverAuth)
+      ? FallBackToCommonName::Yes
+      : FallBackToCommonName::No;
+
+    MatchResult match;
+    Result rv = SearchNames(child->GetSubjectAltName(), child->GetSubject(),
+                            GeneralNameType::nameConstraints,
+                            encodedNameConstraints, fallBackToCommonName,
+                            match);
+    if (rv != Success) {
+      return rv;
+    }
+    switch (match) {
+      case MatchResult::Match: // fall through
+      case MatchResult::NoNamesOfGivenType:
+        break;
+      case MatchResult::Mismatch:
+        return Result::ERROR_CERT_NOT_IN_NAME_SPACE;
+    }
+  }
+
   return Success;
 }
 
 namespace {
 
+// SearchNames is used by CheckCertHostname and CheckNameConstraints. The
+// main benefit of using the exact same code paths for both is that we ensure
+// the consistency between name validation and name constraint enforcement
+// regarding thing like "Which CN attributes should be considered as potential
+// CN-IDs" and "Which character sets are acceptable for CN-IDs?" If the name
+// matching and the name constraint enforcement logic were out of sync on these
+// issues (e.g. if name matching were to consider all subject CN attributes,
+// but name constraints were only enforced on the most specific subject CN),
+// trivial name constraint bypasses could result.
 Result
-SearchForName(/*optional*/ const Input* subjectAltName,
-              Input subject,
-              GeneralNameType referenceIDType,
-              Input referenceID,
-              FallBackToCommonName fallBackToCommonName,
-              /*out*/ bool& foundMatch)
+SearchNames(/*optional*/ const Input* subjectAltName,
+            Input subject,
+            GeneralNameType referenceIDType,
+            Input referenceID,
+            FallBackToCommonName fallBackToCommonName,
+            /*out*/ MatchResult& match)
 {
   Result rv;
 
-  foundMatch = false;
+  match = MatchResult::NoNamesOfGivenType;
 
   // RFC 6125 says "A client MUST NOT seek a match for a reference identifier
   // of CN-ID if the presented identifiers include a DNS-ID, SRV-ID, URI-ID, or
@@ -201,27 +316,44 @@ SearchForName(/*optional*/ const Input* subjectAltName,
 
     // do { ... } while(...) because subjectAltName isn't allowed to be empty.
     do {
-      uint8_t tag;
+      GeneralNameType presentedIDType;
       Input presentedID;
-      rv = der::ReadTagAndGetValue(altNames, tag, presentedID);
+      rv = ReadGeneralName(altNames, presentedIDType, presentedID);
       if (rv != Success) {
         return rv;
       }
-      if (tag == static_cast<uint8_t>(referenceIDType)) {
-        rv = MatchPresentedIDWithReferenceID(referenceIDType, presentedID,
-                                             referenceID, foundMatch);
+      if (referenceIDType == GeneralNameType::nameConstraints) {
+        rv = CheckPresentedIDConformsToConstraints(presentedIDType,
+                                                   presentedID, referenceID);
         if (rv != Success) {
           return rv;
         }
-        if (foundMatch) {
+      } else if (presentedIDType == referenceIDType) {
+        bool isMatch;
+        rv = MatchPresentedIDWithReferenceID(presentedIDType, presentedID,
+                                             referenceID, isMatch);
+        if (rv != Success) {
+          return rv;
+        }
+        if (isMatch) {
+          match = MatchResult::Match;
           return Success;
         }
+        match = MatchResult::Mismatch;
       }
-      if (tag == static_cast<uint8_t>(GeneralNameType::dNSName) ||
-          tag == static_cast<uint8_t>(GeneralNameType::iPAddress)) {
+      if (presentedIDType == GeneralNameType::dNSName ||
+          presentedIDType == GeneralNameType::iPAddress) {
         hasAtLeastOneDNSNameOrIPAddressSAN = true;
       }
     } while (!altNames.AtEnd());
+  }
+
+  if (referenceIDType == GeneralNameType::nameConstraints) {
+    rv = CheckPresentedIDConformsToConstraints(GeneralNameType::directoryName,
+                                               subject, referenceID);
+    if (rv != Success) {
+      return rv;
+    }
   }
 
   if (hasAtLeastOneDNSNameOrIPAddressSAN ||
@@ -298,7 +430,7 @@ SearchForName(/*optional*/ const Input* subjectAltName,
   return der::NestedOf(subjectReader, der::SEQUENCE, der::SET,
                        der::EmptyAllowed::Yes,
                        bind(SearchWithinRDN, _1, referenceIDType,
-                            referenceID, ref(foundMatch)));
+                            referenceID, ref(match)));
 }
 
 // RelativeDistinguishedName ::=
@@ -311,12 +443,12 @@ Result
 SearchWithinRDN(Reader& rdn,
                 GeneralNameType referenceIDType,
                 Input referenceID,
-                /*in/out*/ bool& foundMatch)
+                /*in/out*/ MatchResult& match)
 {
   do {
     Result rv = der::Nested(rdn, der::SEQUENCE,
                             bind(SearchWithinAVA, _1, referenceIDType,
-                                 referenceID, ref(foundMatch)));
+                                 referenceID, ref(match)));
     if (rv != Success) {
       return rv;
     }
@@ -343,7 +475,7 @@ Result
 SearchWithinAVA(Reader& rdn,
                 GeneralNameType referenceIDType,
                 Input referenceID,
-                /*in/out*/ bool& foundMatch)
+                /*in/out*/ MatchResult& match)
 {
   // id-at OBJECT IDENTIFIER ::= { joint-iso-ccitt(2) ds(5) 4 }
   // id-at-commonName AttributeType ::= { id-at 3 }
@@ -381,7 +513,7 @@ SearchWithinAVA(Reader& rdn,
   // We might have previously found a match. Now that we've found another CN,
   // we no longer consider that previous match to be a match, so "forget" about
   // it.
-  foundMatch = false;
+  match = MatchResult::NoNamesOfGivenType;
 
   uint8_t valueEncodingTag;
   Input presentedID;
@@ -418,21 +550,45 @@ SearchWithinAVA(Reader& rdn,
     return Success;
   }
 
-  if (referenceIDType == GeneralNameType::dNSName) {
-    return MatchPresentedIDWithReferenceID(GeneralNameType::dNSName,
-                                           presentedID, referenceID,
-                                           foundMatch);
-  }
-
-  // We don't match CN-IDs for IPv6 addresses. MatchPresentedIDWithReferenceID
-  // ensures that it won't match an IPv4 address with an IPv6 address, so we
-  // don't need to check that referenceID is an IPv4 address here.
-  if (referenceIDType == GeneralNameType::iPAddress) {
+  if (IsValidPresentedDNSID(presentedID)) {
+    if (referenceIDType == GeneralNameType::nameConstraints) {
+      rv = CheckPresentedIDConformsToConstraints(GeneralNameType::dNSName,
+                                                 presentedID, referenceID);
+      if (rv == Success) {
+        match = MatchResult::Match;
+      } else {
+        match = MatchResult::Mismatch;
+      }
+    } else if (referenceIDType == GeneralNameType::dNSName) {
+      bool isMatch;
+      rv = MatchPresentedIDWithReferenceID(GeneralNameType::dNSName,
+                                           presentedID, referenceID, isMatch);
+      match = isMatch ? MatchResult::Match : MatchResult::Mismatch;
+    }
+  } else {
     uint8_t ipv4[4];
+    // We don't match CN-IDs for IPv6 addresses. MatchPresentedIDWithReferenceID
+    // ensures that it won't match an IPv4 address with an IPv6 address, so we
+    // don't need to check that referenceID is an IPv4 address here.
     if (ParseIPv4Address(presentedID, ipv4)) {
-      return MatchPresentedIDWithReferenceID(GeneralNameType::iPAddress,
+      if (referenceIDType == GeneralNameType::nameConstraints) {
+        rv = CheckPresentedIDConformsToConstraints(GeneralNameType::iPAddress,
+                                                   Input(ipv4), referenceID);
+        if (rv == Success) {
+          match = MatchResult::Match;
+        } else {
+          match = MatchResult::Mismatch;
+        }
+      } else if (referenceIDType == GeneralNameType::iPAddress) {
+        bool isMatch;
+        rv = MatchPresentedIDWithReferenceID(GeneralNameType::iPAddress,
                                              Input(ipv4), referenceID,
-                                             foundMatch);
+                                             isMatch);
+        if (rv != Success) {
+          return rv;
+        }
+        match = isMatch ? MatchResult::Match : MatchResult::Mismatch;
+      }
     }
   }
 
@@ -441,33 +597,233 @@ SearchWithinAVA(Reader& rdn,
   return Success;
 }
 
-MOZILLA_PKIX_ENUM_CLASS NameConstraintsSubtrees : uint8_t
-{
-  permittedSubtrees = der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 0,
-  excludedSubtrees  = der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 1
-};
-
 Result
 MatchPresentedIDWithReferenceID(GeneralNameType nameType,
                                 Input presentedID,
                                 Input referenceID,
                                 /*out*/ bool& foundMatch)
 {
-  foundMatch = false;
-
   switch (nameType) {
     case GeneralNameType::dNSName:
       foundMatch = PresentedDNSIDMatchesReferenceDNSID(
                      presentedID, ValidDNSIDMatchType::ReferenceID,
                      referenceID);
-      break;
+      return Success;
+
     case GeneralNameType::iPAddress:
       foundMatch = InputsAreEqual(presentedID, referenceID);
-      break;
+      return Success;
+
+    case GeneralNameType::rfc822Name: // fall through
+    case GeneralNameType::directoryName:
+      // fall through (At some point, we may add APIs for matching rfc822Name
+      // and/or directoryName names.)
+
+    case GeneralNameType::otherName: // fall through
+    case GeneralNameType::x400Address: // fall through
+    case GeneralNameType::ediPartyName: // fall through
+    case GeneralNameType::uniformResourceIdentifier: // fall through
+    case GeneralNameType::registeredID: // fall through
+    case GeneralNameType::nameConstraints:
+      return NotReached("unexpected nameType for SearchType::Match",
+                        Result::FATAL_ERROR_INVALID_ARGS);
+
     default:
-      return NotReached("Invalid nameType for SearchType::CheckName",
+      return NotReached("Invalid nameType for MatchPresentedIDWithReferenceID",
                         Result::FATAL_ERROR_INVALID_ARGS);
   }
+}
+
+MOZILLA_PKIX_ENUM_CLASS NameConstraintsSubtrees : uint8_t
+{
+  permittedSubtrees = der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 0,
+  excludedSubtrees  = der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 1
+};
+
+Result CheckPresentedIDConformsToNameConstraintsSubtrees(
+         GeneralNameType presentedIDType,
+         Input presentedID,
+         Reader& nameConstraints,
+         NameConstraintsSubtrees subtreesType);
+Result MatchPresentedIPAddressWithConstraint(Input presentedID,
+                                             Input iPAddressConstraint,
+                                             /*out*/ bool& foundMatch);
+Result MatchPresentedDirectoryNameWithConstraint(
+         NameConstraintsSubtrees subtreesType, Input presentedID,
+         Input directoryNameConstraint, /*out*/ bool& matches);
+
+Result
+CheckPresentedIDConformsToConstraints(
+  GeneralNameType presentedIDType,
+  Input presentedID,
+  Input encodedNameConstraints)
+{
+  // NameConstraints ::= SEQUENCE {
+  //      permittedSubtrees       [0]     GeneralSubtrees OPTIONAL,
+  //      excludedSubtrees        [1]     GeneralSubtrees OPTIONAL }
+  Reader nameConstraints;
+  Result rv = der::ExpectTagAndGetValueAtEnd(encodedNameConstraints,
+                                             der::SEQUENCE, nameConstraints);
+  if (rv != Success) {
+    return rv;
+  }
+
+  // RFC 5280 says "Conforming CAs MUST NOT issue certificates where name
+  // constraints is an empty sequence. That is, either the permittedSubtrees
+  // field or the excludedSubtrees MUST be present."
+  if (nameConstraints.AtEnd()) {
+    return Result::ERROR_BAD_DER;
+  }
+
+  rv = CheckPresentedIDConformsToNameConstraintsSubtrees(
+         presentedIDType, presentedID, nameConstraints,
+         NameConstraintsSubtrees::permittedSubtrees);
+  if (rv != Success) {
+    return rv;
+  }
+
+  rv = CheckPresentedIDConformsToNameConstraintsSubtrees(
+         presentedIDType, presentedID, nameConstraints,
+         NameConstraintsSubtrees::excludedSubtrees);
+  if (rv != Success) {
+    return rv;
+  }
+
+  return der::End(nameConstraints);
+}
+
+Result
+CheckPresentedIDConformsToNameConstraintsSubtrees(
+  GeneralNameType presentedIDType,
+  Input presentedID,
+  Reader& nameConstraints,
+  NameConstraintsSubtrees subtreesType)
+{
+  if (!nameConstraints.Peek(static_cast<uint8_t>(subtreesType))) {
+    return Success;
+  }
+
+  Reader subtrees;
+  Result rv = der::ExpectTagAndGetValue(nameConstraints,
+                                        static_cast<uint8_t>(subtreesType),
+                                        subtrees);
+  if (rv != Success) {
+    return rv;
+  }
+
+  bool hasPermittedSubtreesMatch = false;
+  bool hasPermittedSubtreesMismatch = false;
+
+  // GeneralSubtrees ::= SEQUENCE SIZE (1..MAX) OF GeneralSubtree
+  //
+  // do { ... } while(...) because subtrees isn't allowed to be empty.
+  do {
+    // GeneralSubtree ::= SEQUENCE {
+    //      base                    GeneralName,
+    //      minimum         [0]     BaseDistance DEFAULT 0,
+    //      maximum         [1]     BaseDistance OPTIONAL }
+    Reader subtree;
+    rv = ExpectTagAndGetValue(subtrees, der::SEQUENCE, subtree);
+    if (rv != Success) {
+      return rv;
+    }
+    GeneralNameType nameConstraintType;
+    Input base;
+    rv = ReadGeneralName(subtree, nameConstraintType, base);
+    if (rv != Success) {
+      return rv;
+    }
+    // http://tools.ietf.org/html/rfc5280#section-4.2.1.10: "Within this
+    // profile, the minimum and maximum fields are not used with any name
+    // forms, thus, the minimum MUST be zero, and maximum MUST be absent."
+    //
+    // Since the default value isn't allowed to be encoded according to the DER
+    // encoding rules for DEFAULT, this is equivalent to saying that neither
+    // minimum or maximum must be encoded.
+    rv = der::End(subtree);
+    if (rv != Success) {
+      return rv;
+    }
+
+    if (presentedIDType == nameConstraintType) {
+      bool matches;
+
+      switch (presentedIDType) {
+        case GeneralNameType::dNSName:
+          matches = PresentedDNSIDMatchesReferenceDNSID(
+                      presentedID, ValidDNSIDMatchType::NameConstraint, base);
+          break;
+
+        case GeneralNameType::iPAddress:
+          rv = MatchPresentedIPAddressWithConstraint(presentedID, base,
+                                                     matches);
+          if (rv != Success) {
+            return rv;
+          }
+          break;
+
+        case GeneralNameType::directoryName:
+          rv = MatchPresentedDirectoryNameWithConstraint(subtreesType,
+                                                         presentedID, base,
+                                                         matches);
+          if (rv != Success) {
+            return rv;
+          }
+          break;
+
+        case GeneralNameType::rfc822Name:
+          return Result::FATAL_ERROR_LIBRARY_FAILURE; // TODO: implement
+
+        // RFC 5280 says "Conforming CAs [...] SHOULD NOT impose name
+        // constraints on the x400Address, ediPartyName, or registeredID
+        // name forms. It also says "Applications conforming to this profile
+        // [...] SHOULD be able to process name constraints that are imposed
+        // on [...] uniformResourceIdentifier [...]", but we don't bother.
+        //
+        // TODO: Ask to have spec updated to say ""Conforming CAs [...] SHOULD
+        // NOT impose name constraints on the otherName, x400Address,
+        // ediPartyName, uniformResourceIdentifier, or registeredID name
+        // forms."
+        case GeneralNameType::otherName: // fall through
+        case GeneralNameType::x400Address: // fall through
+        case GeneralNameType::ediPartyName: // fall through
+        case GeneralNameType::uniformResourceIdentifier: // fall through
+        case GeneralNameType::registeredID: // fall through
+          return Result::ERROR_CERT_NOT_IN_NAME_SPACE;
+
+        case GeneralNameType::nameConstraints: // fall through
+        default:
+          return NotReached("invalid presentedIDType",
+                            Result::FATAL_ERROR_LIBRARY_FAILURE);
+      }
+
+      switch (subtreesType) {
+        case NameConstraintsSubtrees::permittedSubtrees:
+          if (matches) {
+            hasPermittedSubtreesMatch = true;
+          } else {
+            hasPermittedSubtreesMismatch = true;
+          }
+          break;
+        case NameConstraintsSubtrees::excludedSubtrees:
+          if (matches) {
+            return Result::ERROR_CERT_NOT_IN_NAME_SPACE;
+          }
+          break;
+        default:
+          return NotReached("unexpected subtreesType",
+                            Result::FATAL_ERROR_INVALID_ARGS);
+      }
+    }
+  } while (!subtrees.AtEnd());
+
+  if (hasPermittedSubtreesMismatch && !hasPermittedSubtreesMatch) {
+    // If there was any entry of the given type in permittedSubtrees, then it
+    // required that at least one of them must match. Since none of them did,
+    // we have a failure.
+    return Result::ERROR_CERT_NOT_IN_NAME_SPACE;
+  }
+
   return Success;
 }
 
