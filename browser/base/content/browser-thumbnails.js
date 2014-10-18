@@ -33,6 +33,10 @@ let gBrowserThumbnails = {
   _tabEvents: ["TabClose", "TabSelect"],
 
   init: function Thumbnails_init() {
+    // Bug 863512 - Make page thumbnails work in electrolysis
+    if (gMultiProcessBrowser)
+      return;
+
     PageThumbs.addExpirationFilter(this);
     gBrowser.addTabsProgressListener(this);
     Services.prefs.addObserver(this.PREF_DISK_CACHE_SSL, this, false);
@@ -48,6 +52,10 @@ let gBrowserThumbnails = {
   },
 
   uninit: function Thumbnails_uninit() {
+    // Bug 863512 - Make page thumbnails work in electrolysis
+    if (gMultiProcessBrowser)
+      return;
+
     PageThumbs.removeExpirationFilter(this);
     gBrowser.removeTabsProgressListener(this);
     Services.prefs.removeObserver(this.PREF_DISK_CACHE_SSL, this);
@@ -117,6 +125,10 @@ let gBrowserThumbnails = {
 
   // FIXME: This should be part of the PageThumbs API. (bug 1062414)
   _shouldCapture: function Thumbnails_shouldCapture(aBrowser) {
+    // Don't try to capture in e10s yet (because of bug 698371)
+    if (gMultiProcessBrowser)
+      return false;
+
     // Capture only if it's the currently selected tab.
     if (aBrowser != gBrowser.selectedBrowser)
       return false;
@@ -132,16 +144,12 @@ let gBrowserThumbnails = {
     if (doc instanceof SVGDocument || doc instanceof XMLDocument)
       return false;
 
-    // Don't take screenshots of about: pages.
-    if (aBrowser.currentURI.schemeIs("about"))
-      return false;
-
-    // FIXME e10s work around, we need channel information. bug 1073957
-    if (!aBrowser.docShell)
-      return true;
-
     // There's no point in taking screenshot of loading pages.
     if (aBrowser.docShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE)
+      return false;
+
+    // Don't take screenshots of about: pages.
+    if (aBrowser.currentURI.schemeIs("about"))
       return false;
 
     let channel = aBrowser.docShell.currentDocumentChannel;

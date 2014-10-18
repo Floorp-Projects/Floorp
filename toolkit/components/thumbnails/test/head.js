@@ -137,7 +137,6 @@ function captureAndCheckColor(aRed, aGreen, aBlue, aMessage) {
 /**
  * For a given URL, loads the corresponding thumbnail
  * to a canvas and passes its image data to the callback.
- * Note, not compat with e10s!
  * @param aURL The url associated with the thumbnail.
  * @param aCallback The function to pass the image data to.
  */
