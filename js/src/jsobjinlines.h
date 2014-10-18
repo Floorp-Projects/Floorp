@@ -94,7 +94,7 @@ JSObject::finalize(js::FreeOp *fop)
     js::NativeObject *nobj = &as<js::NativeObject>();
 
     if (nobj->hasDynamicSlots())
-        fop->free_(nobj->slots);
+        fop->free_(nobj->slots_);
 
     if (nobj->hasDynamicElements()) {
         js::ObjectElements *elements = nobj->getElementsHeader();
@@ -338,13 +338,13 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
 inline void
 JSObject::setInitialSlotsMaybeNonNative(js::HeapSlot *slots)
 {
-    static_cast<js::NativeObject *>(this)->slots = slots;
+    static_cast<js::NativeObject *>(this)->slots_ = slots;
 }
 
 inline void
 JSObject::setInitialElementsMaybeNonNative(js::HeapSlot *elements)
 {
-    static_cast<js::NativeObject *>(this)->elements = elements;
+    static_cast<js::NativeObject *>(this)->elements_ = elements;
 }
 
 /* static */ inline bool

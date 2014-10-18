@@ -839,19 +839,19 @@ ForkJoinNursery::copySlotsToTospace(NativeObject *dst, NativeObject *src, AllocK
     if (!src->hasDynamicSlots())
         return 0;
 
-    if (!isInsideFromspace(src->slots)) {
-        hugeSlots[hugeSlotsFrom].remove(src->slots);
+    if (!isInsideFromspace(src->slots_)) {
+        hugeSlots[hugeSlotsFrom].remove(src->slots_);
         if (!isEvacuating_)
-            hugeSlots[hugeSlotsNew].put(src->slots);
+            hugeSlots[hugeSlotsNew].put(src->slots_);
         return 0;
     }
 
     size_t count = src->numDynamicSlots();
-    dst->slots = allocateInTospace<HeapSlot>(count);
-    if (!dst->slots)
+    dst->slots_ = allocateInTospace<HeapSlot>(count);
+    if (!dst->slots_)
         CrashAtUnhandlableOOM("Failed to allocate slots while moving object.");
-    js_memcpy(dst->slots, src->slots, count * sizeof(HeapSlot));
-    setSlotsForwardingPointer(src->slots, dst->slots, count);
+    js_memcpy(dst->slots_, src->slots_, count * sizeof(HeapSlot));
+    setSlotsForwardingPointer(src->slots_, dst->slots_, count);
     return count * sizeof(HeapSlot);
 }
 
@@ -867,7 +867,7 @@ ForkJoinNursery::copyElementsToTospace(NativeObject *dst, NativeObject *src, All
     // TODO Bug 874151: Prefer to put element data inline if we have space.
     // (Note, not a correctness issue.)
     if (!isInsideFromspace(srcHeader)) {
-        MOZ_ASSERT(src->elements == dst->elements);
+        MOZ_ASSERT(src->elements_ == dst->elements_);
         hugeSlots[hugeSlotsFrom].remove(reinterpret_cast<HeapSlot*>(srcHeader));
         if (!isEvacuating_)
             hugeSlots[hugeSlotsNew].put(reinterpret_cast<HeapSlot*>(srcHeader));
@@ -891,7 +891,7 @@ ForkJoinNursery::copyElementsToTospace(NativeObject *dst, NativeObject *src, All
         CrashAtUnhandlableOOM("Failed to allocate elements while moving object.");
     js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
     setElementsForwardingPointer(srcHeader, dstHeader, nslots);
-    dst->elements = dstHeader->elements();
+    dst->elements_ = dstHeader->elements();
     return nslots * sizeof(HeapSlot);
 }
 

@@ -2361,16 +2361,16 @@ NativeObject::fillInAfterSwap(JSContext *cx, const Vector<Value> &values, void *
     else
         MOZ_ASSERT(!priv);
 
-    if (slots) {
-        js_free(slots);
-        slots = nullptr;
+    if (slots_) {
+        js_free(slots_);
+        slots_ = nullptr;
     }
 
     if (size_t ndynamic = dynamicSlotsCount(nfixed, values.length(), getClass())) {
-        slots = cx->zone()->pod_malloc<HeapSlot>(ndynamic);
-        if (!slots)
+        slots_ = cx->zone()->pod_malloc<HeapSlot>(ndynamic);
+        if (!slots_)
             CrashAtUnhandlableOOM("fillInAfterSwap");
-        Debug_SetSlotRangeToCrashOnTouch(slots, ndynamic);
+        Debug_SetSlotRangeToCrashOnTouch(slots_, ndynamic);
     }
 
     initSlotRange(0, values.begin(), values.length());
@@ -2745,7 +2745,7 @@ JSObject::fixupAfterMovingGC()
             HeapPtrNativeObject &owner = header->ownerObject();
             if (IsForwarded(owner.get()))
                 owner = Forwarded(owner.get());
-            as<NativeObject>().elements = owner->getElementsHeader()->elements();
+            as<NativeObject>().elements_ = owner->getElementsHeader()->elements();
         }
     }
 }
@@ -4144,7 +4144,7 @@ void
 JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo *info)
 {
     if (is<NativeObject>() && as<NativeObject>().hasDynamicSlots())
-        info->objectsMallocHeapSlots += mallocSizeOf(as<NativeObject>().slots);
+        info->objectsMallocHeapSlots += mallocSizeOf(as<NativeObject>().slots_);
 
     if (is<NativeObject>() && as<NativeObject>().hasDynamicElements()) {
         js::ObjectElements *elements = as<NativeObject>().getElementsHeader();

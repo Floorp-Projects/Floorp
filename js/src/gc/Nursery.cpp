@@ -667,18 +667,18 @@ js::Nursery::moveSlotsToTenured(NativeObject *dst, NativeObject *src, AllocKind 
     if (!src->hasDynamicSlots())
         return 0;
 
-    if (!isInside(src->slots)) {
-        hugeSlots.remove(src->slots);
+    if (!isInside(src->slots_)) {
+        hugeSlots.remove(src->slots_);
         return 0;
     }
 
     Zone *zone = src->zone();
     size_t count = src->numDynamicSlots();
-    dst->slots = zone->pod_malloc<HeapSlot>(count);
-    if (!dst->slots)
+    dst->slots_ = zone->pod_malloc<HeapSlot>(count);
+    if (!dst->slots_)
         CrashAtUnhandlableOOM("Failed to allocate slots while tenuring.");
-    PodCopy(dst->slots, src->slots, count);
-    setSlotsForwardingPointer(src->slots, dst->slots, count);
+    PodCopy(dst->slots_, src->slots_, count);
+    setSlotsForwardingPointer(src->slots_, dst->slots_, count);
     return count * sizeof(HeapSlot);
 }
 
@@ -694,7 +694,7 @@ js::Nursery::moveElementsToTenured(NativeObject *dst, NativeObject *src, AllocKi
 
     /* TODO Bug 874151: Prefer to put element data inline if we have space. */
     if (!isInside(srcHeader)) {
-        MOZ_ASSERT(src->elements == dst->elements);
+        MOZ_ASSERT(src->elements_ == dst->elements_);
         hugeSlots.remove(reinterpret_cast<HeapSlot*>(srcHeader));
         return 0;
     }
@@ -716,7 +716,7 @@ js::Nursery::moveElementsToTenured(NativeObject *dst, NativeObject *src, AllocKi
         CrashAtUnhandlableOOM("Failed to allocate elements while tenuring.");
     js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
     setElementsForwardingPointer(srcHeader, dstHeader, nslots);
-    dst->elements = dstHeader->elements();
+    dst->elements_ = dstHeader->elements();
     return nslots * sizeof(HeapSlot);
 }
 
