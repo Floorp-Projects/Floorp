@@ -169,7 +169,7 @@ private:
                                   Input subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
-                                             nullptr);
+                                             MINIMUM_TEST_KEY_BITS, nullptr);
   }
 
   virtual Result DigestBuf(Input item, /*out*/ uint8_t *digestBuf,
@@ -352,7 +352,7 @@ public:
                                   Input subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
-                                             nullptr);
+                                             MINIMUM_TEST_KEY_BITS, nullptr);
   }
 
   virtual Result DigestBuf(Input, /*out*/uint8_t*, size_t)
