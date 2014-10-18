@@ -124,7 +124,3 @@
 #endif
 @DIR_MACOS@searchplugins/*
 @DIR_MACOS@webapprt/components/
-#ifdef XP_WIN
-  mozjs.dll
-  gkmedias.dll
-#endif
