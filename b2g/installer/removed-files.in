@@ -45,4 +45,5 @@
 @DIR_MACOS@@DLL_PREFIX@xpcom@DLL_SUFFIX@
 #ifdef XP_WIN
   mozjs.dll
+  gkmedias.dll
 #endif
