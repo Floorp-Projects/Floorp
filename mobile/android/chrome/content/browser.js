@@ -112,6 +112,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences",
   ["Linkifier", "chrome://browser/content/Linkify.js"],
   ["ZoomHelper", "chrome://browser/content/ZoomHelper.js"],
   ["CastingApps", "chrome://browser/content/CastingApps.js"],
+#ifdef NIGHTLY_BUILD
+  ["WebcompatReporter", "chrome://browser/content/WebcompatReporter.js"],
+#endif
 ].forEach(function (aScript) {
   let [name, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -334,6 +337,9 @@ var BrowserApp = {
           // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
           SafeBrowsing.init();
         }, Ci.nsIThread.DISPATCH_NORMAL);
+#endif
+#ifdef NIGHTLY_BUILD
+        WebcompatReporter.init();
 #endif
       } catch(ex) { console.log(ex); }
     }, false);
@@ -858,6 +864,9 @@ var BrowserApp = {
     CastingApps.uninit();
     Distribution.uninit();
     Tabs.uninit();
+#ifdef NIGHTLY_BUILD
+    WebcompatReporter.uninit();
+#endif
   },
 
   // This function returns false during periods where the browser displayed document is

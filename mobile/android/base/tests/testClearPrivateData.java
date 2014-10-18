@@ -30,14 +30,14 @@ public class testClearPrivateData extends PixelTest {
         String blank2 = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
         String title = StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE;
         inputAndLoadUrl(blank1);
-        verifyPageTitle(title);
+        verifyPageTitle(title, blank1);
         mDatabaseHelper.addOrUpdateMobileBookmark(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE, blank2);
 
         // Checking that the history list is not empty
         verifyHistoryCount(1);
 
         //clear and check for device
-        checkDevice(title);
+        checkDevice(title, blank1);
 
         // Checking that history list is empty
         verifyHistoryCount(0);
@@ -65,7 +65,7 @@ public class testClearPrivateData extends PixelTest {
         checkOption(shareStrings[3], "Cancel");
         loadCheckDismiss(shareStrings[2], url, shareStrings[0]);
         checkOption(shareStrings[2], "Cancel");
-        checkDevice(titleGeolocation);
+        checkDevice(titleGeolocation, url);
     }
 
     public void clearPassword(){
@@ -75,24 +75,20 @@ public class testClearPrivateData extends PixelTest {
         loadCheckDismiss(passwordStrings[1], loginUrl, passwordStrings[0]);
         checkOption(passwordStrings[1], "Clear");
         loadCheckDismiss(passwordStrings[2], loginUrl, passwordStrings[0]);
-        checkDevice(title);
+        checkDevice(title, getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL));
     }
 
     // clear private data and verify the device type because for phone there is an extra back action to exit the settings menu
-    public void checkDevice(String title) {
+    public void checkDevice(final String title, final String url) {
         clearPrivateData();
         if (mDevice.type.equals("phone")) {
             mActions.sendSpecialKey(Actions.SpecialKey.BACK);
             mAsserter.ok(waitForText(StringHelper.PRIVACY_SECTION_LABEL), "waiting to perform one back", "one back");
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
-            verifyPageTitle(title);
         }
-        else {
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
-            verifyPageTitle(title);
-        }
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        verifyPageTitle(title, url);
     }
-   
+
     // Load a URL, verify that the doorhanger appears and dismiss it
     public void loadCheckDismiss(String option, String url, String message) {
         inputAndLoadUrl(url);
