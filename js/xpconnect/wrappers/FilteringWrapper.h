@@ -43,6 +43,12 @@ class FilteringWrapper : public Base {
                                               JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned flags,
                          JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
+
+    virtual bool call(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                      const JS::CallArgs &args) const MOZ_OVERRIDE;
+    virtual bool construct(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                           const JS::CallArgs &args) const MOZ_OVERRIDE;
+
     virtual bool nativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl,
                             JS::CallArgs args) const MOZ_OVERRIDE;
 
