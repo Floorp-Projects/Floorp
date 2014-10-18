@@ -228,8 +228,7 @@ ExposedPropertiesOnly::check(JSContext *cx, HandleObject wrapper, HandleId id, W
     RootedObject wrappedObject(cx, Wrapper::wrappedObject(wrapper));
 
     if (act == Wrapper::CALL)
-        return true;
-
+        return false;
 
     // For the case of getting a property descriptor, we allow if either GET or SET
     // is allowed, and rely on FilteringWrapper to filter out any disallowed accessors.
