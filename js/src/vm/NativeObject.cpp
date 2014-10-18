@@ -1940,8 +1940,7 @@ MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 template <ExecutionMode mode>
 static bool
 SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
-                      Handle<NativeObject*> obj, HandleId id, unsigned attrs, HandleValue v,
-                      bool strict);
+                      Handle<NativeObject*> obj, HandleId id, HandleValue v, bool strict);
 
 template <ExecutionMode mode>
 bool
@@ -2132,7 +2131,9 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
 
     if (shape)
         return NativeSet<mode>(cxArg, obj, receiver, shape, strict, vp);
-    return SetPropertyByDefining<mode>(cxArg, obj, id, attrs, vp, strict);
+
+    MOZ_ASSERT(attrs == JSPROP_ENUMERATE);
+    return SetPropertyByDefining<mode>(cxArg, obj, id, vp, strict);
 }
 
 /*
@@ -2148,8 +2149,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
 template <ExecutionMode mode>
 static bool
 SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
-                      Handle<NativeObject*> obj, HandleId id, unsigned attrs, HandleValue v,
-                      bool strict)
+                      Handle<NativeObject*> obj, HandleId id, HandleValue v, bool strict)
 {
     bool extensible;
     if (mode == ParallelExecution) {
@@ -2190,7 +2190,7 @@ SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
 
     return DefinePropertyOrElement<mode>(cxArg, obj, id,
                                          clasp->getProperty, clasp->setProperty,
-                                         attrs, v, true, strict);
+                                         JSPROP_ENUMERATE, v, true, strict);
 }
 
 template bool
