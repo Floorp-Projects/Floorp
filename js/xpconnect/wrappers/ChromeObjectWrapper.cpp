@@ -106,8 +106,8 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
     return JS_GetPropertyDescriptorById(cx, wrapperProto, id, desc);
 }
 
-static bool
-CheckPassToChrome(JSContext *cx, HandleObject wrapper, HandleValue v)
+bool
+AccessCheck::checkPassToPrivilegedCode(JSContext *cx, HandleObject wrapper, HandleValue v)
 {
     // Primitives are fine.
     if (!v.isObject())
@@ -128,10 +128,10 @@ CheckPassToChrome(JSContext *cx, HandleObject wrapper, HandleValue v)
         return true;
     }
 
-    // COWs are fine to pass back if and only if they have __exposedProps__,
+    // COWs are fine to pass to chrome if and only if they have __exposedProps__,
     // since presumably content should never have a reason to pass an opaque
     // object back to chrome.
-    if (WrapperFactory::IsCOW(obj)) {
+    if (AccessCheck::isChrome(js::UncheckedUnwrap(wrapper)) && WrapperFactory::IsCOW(obj)) {
         RootedObject target(cx, js::UncheckedUnwrap(obj));
         JSAutoCompartment ac(cx, target);
         RootedId id(cx, GetRTIdByIndex(cx, XPCJSRuntime::IDX_EXPOSEDPROPS));
@@ -147,17 +147,17 @@ CheckPassToChrome(JSContext *cx, HandleObject wrapper, HandleValue v)
         return true;
 
     // Badness.
-    JS_ReportError(cx, "Permission denied to pass object to chrome");
+    JS_ReportError(cx, "Permission denied to pass object to privileged code");
     return false;
 }
 
-static bool
-CheckPassToChrome(JSContext *cx, HandleObject wrapper, const CallArgs &args)
+bool
+AccessCheck::checkPassToPrivilegedCode(JSContext *cx, HandleObject wrapper, const CallArgs &args)
 {
-    if (!CheckPassToChrome(cx, wrapper, args.thisv()))
+    if (!checkPassToPrivilegedCode(cx, wrapper, args.thisv()))
         return false;
     for (size_t i = 0; i < args.length(); ++i) {
-        if (!CheckPassToChrome(cx, wrapper, args[i]))
+        if (!checkPassToPrivilegedCode(cx, wrapper, args[i]))
             return false;
     }
     return true;
@@ -168,7 +168,7 @@ ChromeObjectWrapper::defineProperty(JSContext *cx, HandleObject wrapper,
                                     HandleId id,
                                     MutableHandle<JSPropertyDescriptor> desc) const
 {
-    if (!CheckPassToChrome(cx, wrapper, desc.value()))
+    if (!AccessCheck::checkPassToPrivilegedCode(cx, wrapper, desc.value()))
         return false;
     return ChromeObjectWrapperBase::defineProperty(cx, wrapper, id, desc);
 }
@@ -178,7 +178,7 @@ ChromeObjectWrapper::set(JSContext *cx, HandleObject wrapper,
                          HandleObject receiver, HandleId id,
                          bool strict, MutableHandleValue vp) const
 {
-    if (!CheckPassToChrome(cx, wrapper, vp))
+    if (!AccessCheck::checkPassToPrivilegedCode(cx, wrapper, vp))
         return false;
     return ChromeObjectWrapperBase::set(cx, wrapper, receiver, id, strict, vp);
 }
@@ -244,24 +244,6 @@ ChromeObjectWrapper::get(JSContext *cx, HandleObject wrapper,
     // Try the prototype.
     MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
     return js::GetGeneric(cx, wrapperProto, receiver, id, vp.address());
-}
-
-bool
-ChromeObjectWrapper::call(JSContext *cx, HandleObject wrapper,
-                      const CallArgs &args) const
-{
-    if (!CheckPassToChrome(cx, wrapper, args))
-        return false;
-    return ChromeObjectWrapperBase::call(cx, wrapper, args);
-}
-
-bool
-ChromeObjectWrapper::construct(JSContext *cx, HandleObject wrapper,
-                               const CallArgs &args) const
-{
-    if (!CheckPassToChrome(cx, wrapper, args))
-        return false;
-    return ChromeObjectWrapperBase::construct(cx, wrapper, args);
 }
 
 // SecurityWrapper categorically returns false for objectClassIs, but the
