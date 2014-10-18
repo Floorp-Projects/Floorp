@@ -25,6 +25,10 @@ class AccessCheck {
     static nsIPrincipal *getPrincipal(JSCompartment *compartment);
     static bool isCrossOriginAccessPermitted(JSContext *cx, JS::HandleObject obj,
                                              JS::HandleId id, js::Wrapper::Action act);
+    static bool checkPassToPrivilegedCode(JSContext *cx, JS::HandleObject wrapper,
+                                          JS::HandleValue value);
+    static bool checkPassToPrivilegedCode(JSContext *cx, JS::HandleObject wrapper,
+                                          const JS::CallArgs &args);
 };
 
 enum CrossOriginObjectType {
@@ -36,6 +40,10 @@ CrossOriginObjectType IdentifyCrossOriginObject(JSObject *obj);
 
 struct Policy {
     static const bool AllowGetPrototypeOf = false;
+
+    static bool checkCall(JSContext *cx, JS::HandleObject wrapper, const JS::CallArgs &args) {
+        MOZ_CRASH("As a rule, filtering wrappers are non-callable");
+    }
 };
 
 // This policy allows no interaction with the underlying callable. Everything throws.
@@ -61,6 +69,9 @@ struct OpaqueWithCall : public Policy {
     }
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl) {
         return false;
+    }
+    static bool checkCall(JSContext *cx, JS::HandleObject wrapper, const JS::CallArgs &args) {
+        return AccessCheck::checkPassToPrivilegedCode(cx, wrapper, args);
     }
 };
 
@@ -95,6 +106,10 @@ struct ExposedPropertiesOnly : public Policy {
     static bool deny(js::Wrapper::Action act, JS::HandleId id);
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl) {
         return false;
+    }
+    static bool checkCall(JSContext *cx, JS::HandleObject wrapper, const JS::CallArgs &args) {
+        // XXXbholley - This goes away in the next patch.
+        return AccessCheck::checkPassToPrivilegedCode(cx, wrapper, args);
     }
 };
 

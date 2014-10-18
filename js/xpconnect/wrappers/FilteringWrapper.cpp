@@ -136,6 +136,26 @@ FilteringWrapper<Base, Policy>::iterate(JSContext *cx, HandleObject wrapper,
 
 template <typename Base, typename Policy>
 bool
+FilteringWrapper<Base, Policy>::call(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                    const JS::CallArgs &args) const
+{
+    if (!Policy::checkCall(cx, wrapper, args))
+        return false;
+    return Base::call(cx, wrapper, args);
+}
+
+template <typename Base, typename Policy>
+bool
+FilteringWrapper<Base, Policy>::construct(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                          const JS::CallArgs &args) const
+{
+    if (!Policy::checkCall(cx, wrapper, args))
+        return false;
+    return Base::construct(cx, wrapper, args);
+}
+
+template <typename Base, typename Policy>
+bool
 FilteringWrapper<Base, Policy>::nativeCall(JSContext *cx, JS::IsAcceptableThis test,
                                            JS::NativeImpl impl, JS::CallArgs args) const
 {
