@@ -176,7 +176,7 @@ const WorkerSandbox = Class({
     // by trading two methods that allow to send events to the other side:
     //   - `onEvent` called by content script
     //   - `result.emitToContent` called by addon script
-    let onEvent = onContentEvent.bind(null, this);
+    let onEvent = Cu.exportFunction(onContentEvent.bind(null, this), ContentWorker);
     let chromeAPI = createChromeAPI(ContentWorker);
     let result = Cu.waiveXrays(ContentWorker).inject(content, chromeAPI, onEvent, options);
 
