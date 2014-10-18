@@ -39,6 +39,9 @@
   locale/@AB_CD@/browser/payments.properties      (%chrome/payments.properties)
   locale/@AB_CD@/browser/handling.properties      (%chrome/handling.properties)
   locale/@AB_CD@/browser/webapp.properties        (%chrome/webapp.properties)
+#ifdef NIGHTLY_BUILD
+  locale/@AB_CD@/browser/webcompatReporter.properties (%chrome/webcompatReporter.properties)
+#endif
 
 # overrides for toolkit l10n, also for en-US
 relativesrcdir toolkit/locales:

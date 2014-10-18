@@ -23,6 +23,8 @@ const LOOP_SESSION_TYPE = {
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL = "loop.debug.loglevel";
 
+const EMAIL_OR_PHONE_RE = /^(:?\S+@\S+|\+\d+)$/;
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -55,6 +57,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "HawkClient",
 
 XPCOMUtils.defineLazyModuleGetter(this, "deriveHawkCredentials",
                                   "resource://services-common/hawkrequest.js");
+
+XPCOMUtils.defineLazyModuleGetter(this, "LoopContacts",
+                                  "resource:///modules/loop/LoopContacts.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoopStorage",
                                   "resource:///modules/loop/LoopStorage.jsm");
@@ -786,17 +791,46 @@ let MozLoopServiceInternal = {
    * Starts a call, saves the call data, and opens a chat window.
    *
    * @param {Object} callData The data associated with the call including an id.
-   * @param {Boolean} conversationType Whether or not the call is "incoming"
-   *                                   or "outgoing"
+   * @param {String} conversationType Whether or not the call is "incoming"
+   *                                  or "outgoing"
    */
   _startCall: function(callData, conversationType) {
-    this.callsData.inUse = true;
-    this.callsData.data = callData;
-    this.openChatWindow(
-      null,
-      // No title, let the page set that, to avoid flickering.
-      "",
-      "about:loopconversation#" + conversationType + "/" + callData.callId);
+    const openChat = () => {
+      this.callsData.inUse = true;
+      this.callsData.data = callData;
+
+      this.openChatWindow(
+        null,
+        // No title, let the page set that, to avoid flickering.
+        "",
+        "about:loopconversation#" + conversationType + "/" + callData.callId);
+    };
+
+    if (conversationType == "incoming" && ("callerId" in callData) &&
+        EMAIL_OR_PHONE_RE.test(callData.callerId)) {
+      LoopContacts.search({
+        q: callData.callerId,
+        field: callData.callerId.contains("@") ? "email" : "tel"
+      }, (err, contacts) => {
+        if (err) {
+          // Database error, helas!
+          openChat();
+          return;
+        }
+
+        for (let contact of contacts) {
+          if (contact.blocked) {
+            // Blocked! Send a busy signal back to the caller.
+            this._returnBusy(callData);
+            return;
+          }
+        }
+
+        openChat();
+      })
+    } else {
+      openChat();
+    }
   },
 
   /**

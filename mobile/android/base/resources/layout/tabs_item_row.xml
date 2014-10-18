@@ -36,7 +36,7 @@
               android:paddingTop="4dip"
               android:paddingLeft="8dip"
               android:paddingRight="4dip"
-              style="@style/TabRowTextAppearance"
+              style="@style/TabLayoutItemTextAppearance"
               android:textColor="#FFFFFFFF"
               android:textSize="14sp"
               android:singleLine="false"
