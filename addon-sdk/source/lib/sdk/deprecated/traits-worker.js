@@ -83,7 +83,7 @@ const WorkerSandbox = EventEmitter.compose({
    */
   emitSync: function emitSync() {
     let args = Array.slice(arguments);
-    return this._emitToContent(args);
+    return this._emitToContent(Cu.cloneInto(args, this._addonWorker._window));
   },
 
   /**
