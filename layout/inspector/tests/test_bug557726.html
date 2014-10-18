@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=557726
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=557726">Mozilla Bug 557726</a>
 
 <div id="div1">
-  text with :before, :after, and :first-letter pseudo-elements
+  text with ::before, ::after, and ::first-letter pseudo-elements
 </div>
 
 <script type="application/javascript">
@@ -79,12 +79,12 @@ is(rules, null, "invalid pseudo-element returns no rules list");
 /* valid pseudo-element argument */
 selectors = getSelectors(domUtils.getCSSStyleRules(div, ":first-letter"));
 is(selectors.length, 1, "pseudo-element argument can be used");
-is(selectors[0], "#div1:first-letter", "should only have the :first-letter rule");
+is(selectors[0], "#div1::first-letter", "should only have the ::first-letter rule");
 
 selectors = getSelectors(domUtils.getCSSStyleRules(div, ":before"));
-is(selectors.length, 2, ":before pseudo-element has two matching rules");
-isnot(selectors.indexOf("#div1:after, #div1:before"), -1, "fetched rule for :before")
-isnot(selectors.indexOf("#div1:before"), -1, "fetched rule for :before")
+is(selectors.length, 2, "::before pseudo-element has two matching rules");
+isnot(selectors.indexOf("#div1::after, #div1::before"), -1, "fetched rule for ::before")
+isnot(selectors.indexOf("#div1::before"), -1, "fetched rule for ::before")
 
 selectors = getSelectors(domUtils.getCSSStyleRules(div, ":first-line"));
 is(selectors.length, 0, "valid pseudo-element but no matching rules");
