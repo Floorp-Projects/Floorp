@@ -1940,7 +1940,7 @@ MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 template <ExecutionMode mode>
 static bool
 SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
-                      Handle<NativeObject*> obj, HandleId id, HandleValue v, bool strict);
+                      HandleObject receiver, HandleId id, HandleValue v, bool strict);
 
 template <ExecutionMode mode>
 bool
@@ -2133,15 +2133,13 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
         return NativeSet<mode>(cxArg, obj, receiver, shape, strict, vp);
 
     MOZ_ASSERT(attrs == JSPROP_ENUMERATE);
-    return SetPropertyByDefining<mode>(cxArg, obj, id, vp, strict);
+    return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
 }
 
 /*
  * When a [[Set]] operation finds no existing property with the given id
  * or finds a writable data property on the prototype chain, we end up here.
- * Finish the [[Set]] by defining a new property on obj.
- *
- * (FIXME: Should really define it on receiver, not obj.)
+ * Finish the [[Set]] by defining a new property on receiver.
  *
  * This should follow ES6 draft rev 28, 9.1.9 [[Set]] steps 5.c-f, but it
  * is really old code and we're not there yet.
@@ -2149,46 +2147,56 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
 template <ExecutionMode mode>
 static bool
 SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
-                      Handle<NativeObject*> obj, HandleId id, HandleValue v, bool strict)
+                      HandleObject receiver, HandleId id, HandleValue v, bool strict)
 {
+    // If receiver is inextensible, stop. (According to the specification, this
+    // is supposed to be enforced by [[DefineOwnProperty]], but we haven't
+    // implemented that yet.)
     bool extensible;
     if (mode == ParallelExecution) {
-        if (obj->is<ProxyObject>())
+        if (receiver->is<ProxyObject>())
             return false;
-        extensible = obj->nonProxyIsExtensible();
+        extensible = receiver->nonProxyIsExtensible();
     } else {
-        if (!JSObject::isExtensible(cxArg->asJSContext(), obj, &extensible))
+        if (!JSObject::isExtensible(cxArg->asJSContext(), receiver, &extensible))
             return false;
     }
-
     if (!extensible) {
-        /* Error in strict mode code, warn with extra warnings option, otherwise do nothing. */
+        // Error in strict mode code, warn with extra warnings option,
+        // otherwise do nothing.
         if (strict)
-            return obj->reportNotExtensible(cxArg);
+            return receiver->reportNotExtensible(cxArg);
         if (mode == SequentialExecution &&
             cxArg->asJSContext()->compartment()->options().extraWarnings(cxArg->asJSContext()))
         {
-            return obj->reportNotExtensible(cxArg, JSREPORT_STRICT | JSREPORT_WARNING);
+            return receiver->reportNotExtensible(cxArg, JSREPORT_STRICT | JSREPORT_WARNING);
         }
         return true;
     }
 
-    const Class *clasp = obj->getClass();
+    // Invalidate SpiderMonkey-specific caches or bail.
+    const Class *clasp = receiver->getClass();
     if (mode == ParallelExecution) {
-        if (obj->isDelegate())
+        if (receiver->isDelegate())
             return false;
 
-        if (clasp->getProperty != JS_PropertyStub || !types::HasTypePropertyId(obj, id, v))
+        if (clasp->getProperty != JS_PropertyStub || !types::HasTypePropertyId(receiver, id, v))
             return false;
     } else {
-        JSContext *cx = cxArg->asJSContext();
-
-        /* Purge the property cache of now-shadowed id in obj's scope chain. */
-        if (!PurgeScopeChain(cx, obj, id))
+        // Purge the property cache of now-shadowed id in receiver's scope chain.
+        if (!PurgeScopeChain(cxArg->asJSContext(), receiver, id))
             return false;
     }
 
-    return DefinePropertyOrElement<mode>(cxArg, obj, id,
+    // Define the new data property.
+    if (!receiver->is<NativeObject>()) {
+        if (mode == ParallelExecution)
+            return false;
+        return JSObject::defineGeneric(cxArg->asJSContext(), receiver, id, v,
+                                       clasp->getProperty, clasp->setProperty, JSPROP_ENUMERATE);
+    }
+    Rooted<NativeObject*> nativeReceiver(cxArg, &receiver->as<NativeObject>());
+    return DefinePropertyOrElement<mode>(cxArg, nativeReceiver, id,
                                          clasp->getProperty, clasp->setProperty,
                                          JSPROP_ENUMERATE, v, true, strict);
 }
