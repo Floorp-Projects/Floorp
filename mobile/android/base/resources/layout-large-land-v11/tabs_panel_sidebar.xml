@@ -33,7 +33,7 @@
 
     </RelativeLayout>
 
-    <view class="org.mozilla.gecko.tabs.TabsPanel$PanelViewContainer"
+    <view class="org.mozilla.gecko.tabs.TabsPanel$TabsLayoutContainer"
           android:id="@+id/tabs_container"
           android:layout_width="match_parent"
           android:layout_height="0dip"
@@ -41,7 +41,7 @@
 
         <view class="org.mozilla.gecko.tabs.TabsPanel$TabsLayout"
               android:id="@+id/normal_tabs"
-              style="@style/TabsList"
+              style="@style/TabsLayout"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:choiceMode="singleChoice"

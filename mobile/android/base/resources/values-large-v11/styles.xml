@@ -50,7 +50,7 @@
         <item name="android:orientation">horizontal</item>
     </style>
 
-    <style name="TabsList" parent="TabsListBase">
+    <style name="TabsLayout" parent="TabsLayoutBase">
          <item name="android:orientation">horizontal</item>
          <item name="android:scrollbars">horizontal</item>
     </style>

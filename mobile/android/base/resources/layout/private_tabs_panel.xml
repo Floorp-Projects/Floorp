@@ -45,11 +45,11 @@
 
     </ScrollView>
 
-    <!-- Note: for an unknown reason, scrolling in the TabsListLayout
+    <!-- Note: for an unknown reason, scrolling in the TabsLayout
          does not work unless it is laid out after the empty view. -->
     <view class="org.mozilla.gecko.tabs.TabsPanel$TabsLayout"
-          android:id="@+id/private_tabs_tray"
-          style="@style/TabsList"
+          android:id="@+id/private_tabs_layout"
+          style="@style/TabsLayout"
           android:layout_width="match_parent"
           android:layout_height="match_parent"
           android:choiceMode="singleChoice"

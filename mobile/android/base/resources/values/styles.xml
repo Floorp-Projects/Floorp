@@ -480,13 +480,13 @@
          <item name="android:layout_weight">0.0</item>
     </style>
 
-    <!-- TabsTray List -->
-    <style name="TabsListBase">
+    <!-- TabsLayout -->
+    <style name="TabsLayoutBase">
          <item name="android:background">@android:color/transparent</item>
          <item name="android:listSelector">@android:color/transparent</item>
     </style>
 
-    <style name="TabsList" parent="TabsListBase">
+    <style name="TabsLayout" parent="TabsLayoutBase">
          <item name="android:orientation">vertical</item>
          <item name="android:scrollbars">vertical</item>
     </style>
@@ -615,15 +615,15 @@
         <item name="android:drawSelectorOnTop">true</item>
     </style>
 
-    <!-- TabsTray Row -->
-    <style name="TabRowTextAppearance">
+    <!-- TabsLayout Row -->
+    <style name="TabLayoutItemTextAppearance">
         <item name="android:textColor">#FFFFFFFF</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">middle</item>
     </style>
 
-    <!-- TabsTray RemoteTabs Row Url -->
-    <style name="TabRowTextAppearance.Url">
+    <!-- TabsLayout RemoteTabs Row Url -->
+    <style name="TabLayoutItemTextAppearance.Url">
         <item name="android:textColor">#FFA4A7A9</item>
     </style>
 
