@@ -268,7 +268,7 @@ class GetUserMediaNotificationEvent: public nsRunnable
                                   already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError)
     : mStream(aStream), mOnTracksAvailableCallback(aOnTracksAvailableCallback),
       mStatus(aStatus), mIsAudio(aIsAudio), mIsVideo(aIsVideo), mWindowID(aWindowID),
-      mError(aError) {}
+      mOnFailure(aError) {}
     virtual ~GetUserMediaNotificationEvent()
     {
 
@@ -284,7 +284,7 @@ class GetUserMediaNotificationEvent: public nsRunnable
     bool mIsAudio;
     bool mIsVideo;
     uint64_t mWindowID;
-    nsRefPtr<nsIDOMGetUserMediaErrorCallback> mError;
+    nsRefPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
 };
 
 typedef enum {
@@ -299,7 +299,7 @@ class GetUserMediaTask;
 
 /**
  * Send an error back to content. The error is the form a string.
- * Do this only on the main thread. The success callback is also passed here
+ * Do this only on the main thread. The onSuccess callback is also passed here
  * so it can be released correctly.
  */
 class ErrorCallbackRunnable : public nsRunnable
@@ -313,8 +313,8 @@ public:
 private:
   ~ErrorCallbackRunnable();
 
-  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mSuccess;
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
+  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
+  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
   const nsString mErrorMsg;
   uint64_t mWindowID;
   nsRefPtr<MediaManager> mManager; // get ref to this when creating the runnable
@@ -357,7 +357,7 @@ public:
     , mListener(aListener)
     , mBool(aBool)
     , mWindowID(aWindowID)
-    , mError(aError)
+    , mOnFailure(aError)
   {}
 
   ~MediaOperationTask()
@@ -374,8 +374,8 @@ public:
     nsString log;
 
     log.AssignASCII(errorLog, strlen(errorLog));
-    nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> success;
-    NS_DispatchToMainThread(new ErrorCallbackRunnable(success, mError,
+    nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onSuccess;
+    NS_DispatchToMainThread(new ErrorCallbackRunnable(onSuccess, mOnFailure,
       log, mWindowID));
   }
 
@@ -428,7 +428,7 @@ public:
                                               mOnTracksAvailableCallback.forget(),
                                               mAudioSource != nullptr,
                                               mVideoSource != nullptr,
-                                              mWindowID, mError.forget());
+                                              mWindowID, mOnFailure.forget());
           // event must always be released on mainthread due to the JS callbacks
           // in the TracksAvailableCallback
           NS_DispatchToMainThread(event);
@@ -490,7 +490,7 @@ private:
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener; // threadsafe
   bool mBool;
   uint64_t mWindowID;
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
+  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
 };
 
 typedef nsTArray<nsRefPtr<GetUserMediaCallbackMediaStreamListener> > StreamListeners;
