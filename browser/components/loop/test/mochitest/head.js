@@ -218,6 +218,10 @@ const mockDb = {
   _store: { },
   _next_guid: 1,
 
+  get size() {
+    return Object.getOwnPropertyNames(this._store).length;
+  },
+
   add: function(details, callback) {
     if (!("id" in details)) {
       callback(new Error("No 'id' field present"));

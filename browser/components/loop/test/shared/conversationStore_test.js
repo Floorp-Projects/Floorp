@@ -36,6 +36,11 @@ describe("loop.store.ConversationStore", function () {
       }]
     };
 
+    navigator.mozLoop = {
+      getLoopBoolPref: sandbox.stub(),
+      releaseCallData: sandbox.stub()
+    };
+
     dispatcher = new loop.Dispatcher();
     client = {
       setupOutgoingCall: sinon.stub(),
@@ -120,6 +125,8 @@ describe("loop.store.ConversationStore", function () {
   describe("#connectionFailure", function() {
     beforeEach(function() {
       store._websocket = fakeWebsocket;
+      sandbox.stub(loop.shared.utils.Helper.prototype, "locationHash")
+        .returns("#outgoing/42");
     });
 
     it("should disconnect the session", function() {
@@ -144,6 +151,14 @@ describe("loop.store.ConversationStore", function () {
 
       expect(store.get("callState")).eql(CALL_STATES.TERMINATED);
       expect(store.get("callStateReason")).eql("fake");
+    });
+
+    it("should release mozLoop callsData", function() {
+      dispatcher.dispatch(
+        new sharedActions.ConnectionFailure({reason: "fake"}));
+
+      sinon.assert.calledOnce(navigator.mozLoop.releaseCallData);
+      sinon.assert.calledWithExactly(navigator.mozLoop.releaseCallData, "42");
     });
   });
 
@@ -481,6 +496,8 @@ describe("loop.store.ConversationStore", function () {
         close: wsCloseSpy
       };
       store.set({callState: CALL_STATES.ONGOING});
+      sandbox.stub(loop.shared.utils.Helper.prototype, "locationHash")
+        .returns("#outgoing/42");
     });
 
     it("should disconnect the session", function() {
@@ -506,6 +523,13 @@ describe("loop.store.ConversationStore", function () {
 
       expect(store.get("callState")).eql(CALL_STATES.FINISHED);
     });
+
+    it("should release mozLoop callsData", function() {
+      dispatcher.dispatch(new sharedActions.HangupCall());
+
+      sinon.assert.calledOnce(navigator.mozLoop.releaseCallData);
+      sinon.assert.calledWithExactly(navigator.mozLoop.releaseCallData, "42");
+    });
   });
 
   describe("#peerHungupCall", function() {
@@ -519,6 +543,8 @@ describe("loop.store.ConversationStore", function () {
         close: wsCloseSpy
       };
       store.set({callState: CALL_STATES.ONGOING});
+      sandbox.stub(loop.shared.utils.Helper.prototype, "locationHash")
+        .returns("#outgoing/42");
     });
 
     it("should disconnect the session", function() {
@@ -538,6 +564,13 @@ describe("loop.store.ConversationStore", function () {
 
       expect(store.get("callState")).eql(CALL_STATES.FINISHED);
     });
+
+    it("should release mozLoop callsData", function() {
+      dispatcher.dispatch(new sharedActions.PeerHungupCall());
+
+      sinon.assert.calledOnce(navigator.mozLoop.releaseCallData);
+      sinon.assert.calledWithExactly(navigator.mozLoop.releaseCallData, "42");
+    });
   });
 
   describe("#cancelCall", function() {
@@ -545,6 +578,8 @@ describe("loop.store.ConversationStore", function () {
       store._websocket = fakeWebsocket;
 
       store.set({callState: CALL_STATES.CONNECTING});
+      sandbox.stub(loop.shared.utils.Helper.prototype, "locationHash")
+        .returns("#outgoing/42");
     });
 
     it("should disconnect the session", function() {
@@ -579,6 +614,12 @@ describe("loop.store.ConversationStore", function () {
       expect(store.get("callState")).eql(CALL_STATES.CLOSE);
     });
 
+    it("should release mozLoop callsData", function() {
+      dispatcher.dispatch(new sharedActions.CancelCall());
+
+      sinon.assert.calledOnce(navigator.mozLoop.releaseCallData);
+      sinon.assert.calledWithExactly(navigator.mozLoop.releaseCallData, "42");
+    });
   });
 
   describe("#retryCall", function() {

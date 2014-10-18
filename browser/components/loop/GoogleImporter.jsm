@@ -448,10 +448,13 @@ this.GoogleImporter.prototype = {
     if (phoneNodes.length) {
       contact.tel = [];
       for (let [,phoneNode] of Iterator(phoneNodes)) {
+        let phoneNumber = phoneNode.hasAttribute("uri") ?
+          phoneNode.getAttribute("uri").replace("tel:", "") :
+          phoneNode.firstChild.nodeValue;
         contact.tel.push({
           pref: (phoneNode.getAttribute("primary") == "true"),
           type: [getFieldType(phoneNode)],
-          value: phoneNode.getAttribute("uri").replace("tel:", "")
+          value: phoneNumber
         });
       }
     }
