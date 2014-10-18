@@ -62,6 +62,9 @@ chrome.jar:
   content/aboutDevices.xhtml           (content/aboutDevices.xhtml)
   content/aboutDevices.js              (content/aboutDevices.js)
 #endif
+#ifdef NIGHTLY_BUILD
+  content/WebcompatReporter.js         (content/WebcompatReporter.js)
+#endif
 
 % content branding %content/branding/
 

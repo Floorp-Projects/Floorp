@@ -15,7 +15,7 @@
 * limitations under the License.
 */
 /* jshint esnext:true */
-/* globals Components, PdfjsContentUtils, PdfJs */
+/* globals Components, PdfjsContentUtils, PdfJs, Services */
 
 'use strict';
 

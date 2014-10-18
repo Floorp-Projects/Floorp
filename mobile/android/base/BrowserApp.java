@@ -1788,7 +1788,7 @@ public class BrowserApp extends GeckoApp
         mTabsPanel.prepareTabsAnimation(mMainLayoutAnimator);
         mBrowserToolbar.triggerTabsPanelTransition(mMainLayoutAnimator, areTabsShown());
 
-        // If the tabs layout is animating onto the screen, pin the dynamic
+        // If the tabs panel is animating onto the screen, pin the dynamic
         // toolbar.
         if (mDynamicToolbar.isEnabled()) {
             if (width > 0 && height > 0) {
@@ -2376,7 +2376,7 @@ public class BrowserApp extends GeckoApp
     }
 
     /**
-     * Hides certain UI elements (e.g. button toast, tabs tray) when the
+     * Hides certain UI elements (e.g. button toast, tabs panel) when the
      * user touches the main layout.
      */
     private class HideOnTouchListener implements TouchEventInterceptor {
@@ -2412,7 +2412,7 @@ public class BrowserApp extends GeckoApp
                     return false;
             }
 
-            // If the tab tray is showing, hide the tab tray and don't send the event to content.
+            // If the tabs panel is showing, hide the tab panel and don't send the event to content.
             if (event.getActionMasked() == MotionEvent.ACTION_DOWN && autoHideTabs()) {
                 mIsHidingTabs = true;
                 return true;
