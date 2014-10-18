@@ -165,9 +165,11 @@
   }
 
   /* Vertical toolbar border */
-  #main-window[sizemode=normal] #navigator-toolbox:not(:-moz-lwtheme)::after,
-  #main-window[sizemode=normal] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme),
-  #main-window[sizemode=normal] #navigator-toolbox:-moz-lwtheme {
+  #main-window:not([customizing])[sizemode=normal] #navigator-toolbox:not(:-moz-lwtheme)::after,
+  #main-window:not([customizing])[sizemode=normal] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme),
+  #main-window:not([customizing])[sizemode=normal] #navigator-toolbox:-moz-lwtheme,
+  #main-window[customizing] #navigator-toolbox::after,
+  #main-window[customizing] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
     border-left: 1px solid @toolbarShadowColor@;
     border-right: 1px solid @toolbarShadowColor@;
     background-clip: padding-box;
