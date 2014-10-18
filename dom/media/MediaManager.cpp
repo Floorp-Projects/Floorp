@@ -194,20 +194,20 @@ HostHasPermission(nsIURI &docURI)
 }
 
 ErrorCallbackRunnable::ErrorCallbackRunnable(
-  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback>& aSuccess,
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aError,
+  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback>& aOnSuccess,
+  nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aOnFailure,
   const nsAString& aErrorMsg, uint64_t aWindowID)
   : mErrorMsg(aErrorMsg)
   , mWindowID(aWindowID)
   , mManager(MediaManager::GetInstance())
 {
-  mSuccess.swap(aSuccess);
-  mError.swap(aError);
+  mOnSuccess.swap(aOnSuccess);
+  mOnFailure.swap(aOnFailure);
 }
 
 ErrorCallbackRunnable::~ErrorCallbackRunnable()
 {
-  MOZ_ASSERT(!mSuccess && !mError);
+  MOZ_ASSERT(!mOnSuccess && !mOnFailure);
 }
 
 NS_IMETHODIMP
@@ -216,15 +216,15 @@ ErrorCallbackRunnable::Run()
   // Only run if the window is still active.
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> success = mSuccess.forget();
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error = mError.forget();
+  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onSuccess = mOnSuccess.forget();
+  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure = mOnFailure.forget();
 
   if (!(mManager->IsWindowStillActive(mWindowID))) {
     return NS_OK;
   }
   // This is safe since we're on main-thread, and the windowlist can only
   // be invalidated from the main-thread (see OnNavigation)
-  error->OnError(mErrorMsg);
+  onFailure->OnError(mErrorMsg);
   return NS_OK;
 }
 
@@ -238,15 +238,15 @@ class SuccessCallbackRunnable : public nsRunnable
 {
 public:
   SuccessCallbackRunnable(
-    nsCOMPtr<nsIDOMGetUserMediaSuccessCallback>& aSuccess,
-    nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aError,
+    nsCOMPtr<nsIDOMGetUserMediaSuccessCallback>& aOnSuccess,
+    nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aOnFailure,
     nsIDOMFile* aFile, uint64_t aWindowID)
     : mFile(aFile)
     , mWindowID(aWindowID)
     , mManager(MediaManager::GetInstance())
   {
-    mSuccess.swap(aSuccess);
-    mError.swap(aError);
+    mOnSuccess.swap(aOnSuccess);
+    mOnFailure.swap(aOnFailure);
   }
 
   NS_IMETHOD
@@ -255,21 +255,21 @@ public:
     // Only run if the window is still active.
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-    nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> success = mSuccess.forget();
-    nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error = mError.forget();
+    nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onSuccess = mOnSuccess.forget();
+    nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure = mOnFailure.forget();
 
     if (!(mManager->IsWindowStillActive(mWindowID))) {
       return NS_OK;
     }
     // This is safe since we're on main-thread, and the windowlist can only
     // be invalidated from the main-thread (see OnNavigation)
-    success->OnSuccess(mFile);
+    onSuccess->OnSuccess(mFile);
     return NS_OK;
   }
 
 private:
-  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mSuccess;
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
+  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
+  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
   nsCOMPtr<nsIDOMFile> mFile;
   uint64_t mWindowID;
   nsRefPtr<MediaManager> mManager; // get ref to this when creating the runnable
@@ -285,15 +285,15 @@ class DeviceSuccessCallbackRunnable: public nsRunnable
 public:
   DeviceSuccessCallbackRunnable(
     uint64_t aWindowID,
-    nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback>& aSuccess,
-    nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aError,
+    nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback>& aOnSuccess,
+    nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aOnFailure,
     nsTArray<nsRefPtr<MediaDevice>>* aDevices)
     : mDevices(aDevices)
     , mWindowID(aWindowID)
     , mManager(MediaManager::GetInstance())
   {
-    mSuccess.swap(aSuccess);
-    mError.swap(aError);
+    mOnSuccess.swap(aOnSuccess);
+    mOnFailure.swap(aOnFailure);
   }
 
   NS_IMETHOD
@@ -315,7 +315,7 @@ public:
       // We should in the future return an empty array, and dynamically add
       // devices to the dropdowns if things are hotplugged while the
       // requester is up.
-      mError->OnError(NS_LITERAL_STRING("NO_DEVICES_FOUND"));
+      mOnFailure->OnError(NS_LITERAL_STRING("NO_DEVICES_FOUND"));
       return NS_OK;
     }
 
@@ -331,13 +331,13 @@ public:
                           static_cast<const void*>(tmp.Elements())
                         ));
 
-    mSuccess->OnSuccess(devices);
+    mOnSuccess->OnSuccess(devices);
     return NS_OK;
   }
 
 private:
-  nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> mSuccess;
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
+  nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> mOnSuccess;
+  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
   nsAutoPtr<nsTArray<nsRefPtr<MediaDevice>>> mDevices;
   uint64_t mWindowID;
   nsRefPtr<MediaManager> mManager;
@@ -723,8 +723,8 @@ class GetUserMediaStreamRunnable : public nsRunnable
 {
 public:
   GetUserMediaStreamRunnable(
-    nsCOMPtr<nsIDOMGetUserMediaSuccessCallback>& aSuccess,
-    nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aError,
+    nsCOMPtr<nsIDOMGetUserMediaSuccessCallback>& aOnSuccess,
+    nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aOnFailure,
     uint64_t aWindowID,
     GetUserMediaCallbackMediaStreamListener* aListener,
     MediaEngineSource* aAudioSource,
@@ -737,8 +737,8 @@ public:
     , mPeerIdentity(aPeerIdentity)
     , mManager(MediaManager::GetInstance())
   {
-    mSuccess.swap(aSuccess);
-    mError.swap(aError);
+    mOnSuccess.swap(aOnSuccess);
+    mOnFailure.swap(aOnFailure);
   }
 
   ~GetUserMediaStreamRunnable() {}
@@ -750,7 +750,7 @@ public:
                             nsIDOMGetUserMediaSuccessCallback* aSuccess,
                             uint64_t aWindowID,
                             DOMMediaStream* aStream)
-      : mWindowID(aWindowID), mSuccess(aSuccess), mManager(aManager),
+      : mWindowID(aWindowID), mOnSuccess(aSuccess), mManager(aManager),
         mStream(aStream) {}
     virtual void NotifyTracksAvailable(DOMMediaStream* aStream) MOZ_OVERRIDE
     {
@@ -766,10 +766,10 @@ public:
       // This is safe since we're on main-thread, and the windowlist can only
       // be invalidated from the main-thread (see OnNavigation)
       LOG(("Returning success for getUserMedia()"));
-      mSuccess->OnSuccess(aStream);
+      mOnSuccess->OnSuccess(aStream);
     }
     uint64_t mWindowID;
-    nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mSuccess;
+    nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
     nsRefPtr<MediaManager> mManager;
     // Keep the DOMMediaStream alive until the NotifyTracksAvailable callback
     // has fired, otherwise we might immediately destroy the DOMMediaStream and
@@ -830,7 +830,7 @@ public:
       nsDOMUserMediaStream::CreateTrackUnionStream(window, mListener,
                                                    mAudioSource, mVideoSource);
     if (!trackunion) {
-      nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error = mError.forget();
+      nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error = mOnFailure.forget();
       LOG(("Returning error for getUserMedia() - no stream"));
       error->OnError(NS_LITERAL_STRING("NO_STREAM"));
       return NS_OK;
@@ -874,7 +874,7 @@ public:
 
     // Note: includes JS callbacks; must be released on MainThread
     TracksAvailableCallback* tracksAvailableCallback =
-      new TracksAvailableCallback(mManager, mSuccess, mWindowID, trackunion);
+      new TracksAvailableCallback(mManager, mOnSuccess, mWindowID, trackunion);
 
     mListener->AudioConfig(aec_on, (uint32_t) aec,
                            agc_on, (uint32_t) agc,
@@ -889,16 +889,16 @@ public:
       new MediaOperationTask(MEDIA_START, mListener, trackunion,
                              tracksAvailableCallback,
                              mAudioSource, mVideoSource, false, mWindowID,
-                             mError.forget()));
+                             mOnFailure.forget()));
 
-    // We won't need mError now.
-    mError = nullptr;
+    // We won't need mOnFailure now.
+    mOnFailure = nullptr;
     return NS_OK;
   }
 
 private:
-  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mSuccess;
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
+  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
+  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
   nsRefPtr<MediaEngineSource> mAudioSource;
   nsRefPtr<MediaEngineSource> mVideoSource;
   uint64_t mWindowID;
@@ -1056,13 +1056,13 @@ class GetUserMediaTask : public Task
 public:
   GetUserMediaTask(
     const MediaStreamConstraints& aConstraints,
-    already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aSuccess,
-    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
+    already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aOnSuccess,
+    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aOnFailure,
     uint64_t aWindowID, GetUserMediaCallbackMediaStreamListener *aListener,
     MediaEnginePrefs &aPrefs)
     : mConstraints(aConstraints)
-    , mSuccess(aSuccess)
-    , mError(aError)
+    , mOnSuccess(aOnSuccess)
+    , mOnFailure(aOnFailure)
     , mWindowID(aWindowID)
     , mListener(aListener)
     , mPrefs(aPrefs)
@@ -1077,14 +1077,14 @@ public:
    */
   GetUserMediaTask(
     const MediaStreamConstraints& aConstraints,
-    already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aSuccess,
-    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
+    already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aOnSuccess,
+    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aOnFailure,
     uint64_t aWindowID, GetUserMediaCallbackMediaStreamListener *aListener,
     MediaEnginePrefs &aPrefs,
     MediaEngine* aBackend)
     : mConstraints(aConstraints)
-    , mSuccess(aSuccess)
-    , mError(aError)
+    , mOnSuccess(aOnSuccess)
+    , mOnFailure(aOnFailure)
     , mWindowID(aWindowID)
     , mListener(aListener)
     , mPrefs(aPrefs)
@@ -1099,10 +1099,10 @@ public:
   void
   Fail(const nsAString& aMessage) {
     nsRefPtr<ErrorCallbackRunnable> runnable =
-      new ErrorCallbackRunnable(mSuccess, mError, aMessage, mWindowID);
+      new ErrorCallbackRunnable(mOnSuccess, mOnFailure, aMessage, mWindowID);
     // These should be empty now
-    MOZ_ASSERT(!mSuccess);
-    MOZ_ASSERT(!mError);
+    MOZ_ASSERT(!mOnSuccess);
+    MOZ_ASSERT(!mOnFailure);
 
     NS_DispatchToMainThread(runnable);
   }
@@ -1111,8 +1111,8 @@ public:
   Run()
   {
     NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
-    MOZ_ASSERT(mSuccess);
-    MOZ_ASSERT(mError);
+    MOZ_ASSERT(mOnSuccess);
+    MOZ_ASSERT(mOnFailure);
 
     MediaEngine* backend = mBackend;
     // Was a backend provided?
@@ -1138,17 +1138,17 @@ public:
   nsresult
   Denied(const nsAString& aErrorMsg)
   {
-    MOZ_ASSERT(mSuccess);
-    MOZ_ASSERT(mError);
+    MOZ_ASSERT(mOnSuccess);
+    MOZ_ASSERT(mOnFailure);
 
     // We add a disabled listener to the StreamListeners array until accepted
     // If this was the only active MediaStream, remove the window from the list.
     if (NS_IsMainThread()) {
       // This is safe since we're on main-thread, and the window can only
       // be invalidated from the main-thread (see OnNavigation)
-      nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> success = mSuccess.forget();
-      nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error = mError.forget();
-      error->OnError(aErrorMsg);
+      nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onSuccess = mOnSuccess.forget();
+      nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure = mOnFailure.forget();
+      onFailure->OnError(aErrorMsg);
 
       // Should happen *after* error runs for consistency, but may not matter
       nsRefPtr<MediaManager> manager(MediaManager::GetInstance());
@@ -1162,8 +1162,8 @@ public:
       NS_DispatchToMainThread(new GetUserMediaListenerRemove(mWindowID, mListener));
     }
 
-    MOZ_ASSERT(!mSuccess);
-    MOZ_ASSERT(!mError);
+    MOZ_ASSERT(!mOnSuccess);
+    MOZ_ASSERT(!mOnFailure);
 
     return NS_OK;
   }
@@ -1194,8 +1194,8 @@ public:
   nsresult
   SelectDevice(MediaEngine* backend)
   {
-    MOZ_ASSERT(mSuccess);
-    MOZ_ASSERT(mError);
+    MOZ_ASSERT(mOnSuccess);
+    MOZ_ASSERT(mOnFailure);
     if (IsOn(mConstraints.mVideo)) {
       VideoTrackConstraintsN constraints(GetInvariant(mConstraints.mVideo));
       nsTArray<nsRefPtr<VideoDevice>> sources;
@@ -1234,8 +1234,8 @@ public:
   ProcessGetUserMedia(MediaEngineAudioSource* aAudioSource,
                       MediaEngineVideoSource* aVideoSource)
   {
-    MOZ_ASSERT(mSuccess);
-    MOZ_ASSERT(mError);
+    MOZ_ASSERT(mOnSuccess);
+    MOZ_ASSERT(mOnFailure);
     nsresult rv;
     if (aAudioSource) {
       rv = aAudioSource->Allocate(GetInvariant(mConstraints.mAudio), mPrefs);
@@ -1262,12 +1262,12 @@ public:
     }
 
     NS_DispatchToMainThread(new GetUserMediaStreamRunnable(
-      mSuccess, mError, mWindowID, mListener, aAudioSource, aVideoSource,
+      mOnSuccess, mOnFailure, mWindowID, mListener, aAudioSource, aVideoSource,
       peerIdentity
     ));
 
-    MOZ_ASSERT(!mSuccess);
-    MOZ_ASSERT(!mError);
+    MOZ_ASSERT(!mOnSuccess);
+    MOZ_ASSERT(!mOnFailure);
 
     return;
   }
@@ -1275,8 +1275,8 @@ public:
 private:
   MediaStreamConstraints mConstraints;
 
-  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mSuccess;
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
+  nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
+  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
   uint64_t mWindowID;
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener;
   nsRefPtr<AudioDevice> mAudioDevice;
@@ -1322,13 +1322,13 @@ class GetUserMediaDevicesTask : public Task
 public:
   GetUserMediaDevicesTask(
     const MediaStreamConstraints& aConstraints,
-    already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> aSuccess,
-    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
+    already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> aOnSuccess,
+    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aOnFailure,
     uint64_t aWindowId, nsACString& aAudioLoopbackDev,
     nsACString& aVideoLoopbackDev)
     : mConstraints(aConstraints)
-    , mSuccess(aSuccess)
-    , mError(aError)
+    , mOnSuccess(aOnSuccess)
+    , mOnFailure(aOnFailure)
     , mManager(MediaManager::GetInstance())
     , mWindowId(aWindowId)
     , mLoopbackAudioDevice(aAudioLoopbackDev)
@@ -1368,16 +1368,16 @@ public:
     }
 
     NS_DispatchToMainThread(new DeviceSuccessCallbackRunnable(mWindowId,
-                                                              mSuccess, mError,
+                                                              mOnSuccess, mOnFailure,
                                                               final.forget()));
     // DeviceSuccessCallbackRunnable should have taken these.
-    MOZ_ASSERT(!mSuccess && !mError);
+    MOZ_ASSERT(!mOnSuccess && !mOnFailure);
   }
 
 private:
   MediaStreamConstraints mConstraints;
-  nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> mSuccess;
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
+  nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> mOnSuccess;
+  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
   nsRefPtr<MediaManager> mManager;
   uint64_t mWindowId;
   const nsString mCallId;
@@ -1544,18 +1544,18 @@ nsresult
 MediaManager::GetUserMedia(
   nsPIDOMWindow* aWindow, const MediaStreamConstraints& aConstraints,
   nsIDOMGetUserMediaSuccessCallback* aOnSuccess,
-  nsIDOMGetUserMediaErrorCallback* aOnError)
+  nsIDOMGetUserMediaErrorCallback* aOnFailure)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   NS_ENSURE_TRUE(aWindow, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(aOnError, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aOnFailure, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(aOnSuccess, NS_ERROR_NULL_POINTER);
 
   bool privileged = nsContentUtils::IsChromeDoc(aWindow->GetExtantDoc());
 
   nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onSuccess(aOnSuccess);
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onError(aOnError);
+  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure(aOnFailure);
 
   MediaStreamConstraints c(aConstraints); // copy
 
@@ -1640,11 +1640,11 @@ MediaManager::GetUserMedia(
   if (c.mFake) {
     // Fake stream from default backend.
     task = new GetUserMediaTask(c, onSuccess.forget(),
-      onError.forget(), windowID, listener, mPrefs, new MediaEngineDefault());
+      onFailure.forget(), windowID, listener, mPrefs, new MediaEngineDefault());
   } else {
     // Stream from default device from WebRTC backend.
     task = new GetUserMediaTask(c, onSuccess.forget(),
-      onError.forget(), windowID, listener, mPrefs);
+      onFailure.forget(), windowID, listener, mPrefs);
   }
 
   nsIURI* docURI = aWindow->GetDocumentURI();
@@ -1778,16 +1778,16 @@ nsresult
 MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
   const MediaStreamConstraints& aConstraints,
   nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
-  nsIDOMGetUserMediaErrorCallback* aOnError,
+  nsIDOMGetUserMediaErrorCallback* aOnFailure,
   uint64_t aInnerWindowID)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  NS_ENSURE_TRUE(aOnError, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aOnFailure, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(aOnSuccess, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> onSuccess(aOnSuccess);
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onError(aOnError);
+  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure(aOnFailure);
 
   // Check if the preference for using loopback devices is enabled.
   nsAdoptingCString loopbackAudioDevice =
@@ -1797,7 +1797,7 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
 
   MediaManager::GetMessageLoop()->PostTask(FROM_HERE,
     new GetUserMediaDevicesTask(
-      aConstraints, onSuccess.forget(), onError.forget(),
+      aConstraints, onSuccess.forget(), onFailure.forget(),
       (aInnerWindowID ? aInnerWindowID : aWindow->WindowID()),
       loopbackAudioDevice, loopbackVideoDevice));
 
