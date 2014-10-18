@@ -218,28 +218,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
     Object.defineProperty(bound, 'prop', {value: "redefined"});
     bound.primitiveField = 321;
 
-    // We need a chrome window to create trusted events. This isn't really doable
-    // in child processes, so let's just skip if that's the case.
-    if (SpecialPowers.isMainProcess()) {
-      var Ci = SpecialPowers.Ci;
-      var chromeWin = SpecialPowers.wrap(window.top)
-                                   .QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIWebNavigation)
-                                   .QueryInterface(Ci.nsIDocShell)
-                                   .chromeEventHandler.ownerDocument.defaultView;
-
       // Untrusted events should not trigger event handlers without
       // exposeToUntrustedContent=true.
       window.triggeredTrustedHandler = false;
       var untrustedEvent = new CustomEvent('testtrusted');
-      ok(!untrustedEvent.isTrusted, "Created an untrusted event");
       is(untrustedEvent.type, 'testtrusted', "Constructor should see type");
       bound.dispatchEvent(untrustedEvent);
       ok(!window.triggeredTrustedHandler, "untrusted events should not trigger trusted handler");
-      var trustedEvent = new chromeWin.CustomEvent('testtrusted');
-      ok(trustedEvent.isTrusted, "Created a trusted event");
+      var trustedEvent = new CustomEvent('testtrusted');
       is(trustedEvent.type, 'testtrusted', "Wrapped constructor should see type");
-      SpecialPowers.wrap(bound).dispatchEvent(trustedEvent);
+      SpecialPowers.wrap(bound).dispatchEvent(trustedEvent); // Dispatch over SpecialPowers to make the event trusted.
       ok(window.triggeredTrustedHandler, "trusted events should trigger trusted handler");
 
       //
@@ -265,12 +253,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
       bound.dispatchEvent(fakeTrustedKeyEvent);
       ok(!window.triggeredTrustedKeyHandler, "untrusted key events should not trigger trusted handler");
 
-      // Trusted event, strict handler.
-      var trustedKeyEvent = chromeWin.document.createEvent('KeyboardEvent');
+      // Trusted event, strict handler. Dispatch using SpecialPowers to make the event trusted.
+      var trustedKeyEvent = document.createEvent('KeyboardEvent');
       trustedKeyEvent.initEvent('keydown', true, true);
       SpecialPowers.wrap(bound).dispatchEvent(trustedKeyEvent);
       ok(window.triggeredTrustedKeyHandler, "trusted key events should trigger trusted handler");
-    }
 
     // Hand control back to the XBL scope by dispatching an event on the bound element.
     bound.dispatchEvent(new CustomEvent('testevent'));
