@@ -195,7 +195,7 @@ const WorkerSandbox = EventEmitter.compose({
         evaluate: evaluate,
       },
     }, ContentWorker, {cloneFunctions: true});
-    let onEvent = this._onContentEvent.bind(this);
+    let onEvent = Cu.exportFunction(this._onContentEvent.bind(this), ContentWorker);
     let result = Cu.waiveXrays(ContentWorker).inject(content, chromeAPI, onEvent, options);
     this._emitToContent = result;
 
