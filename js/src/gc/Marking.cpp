@@ -1631,9 +1631,9 @@ GCMarker::saveValueRanges()
                     MOZ_ASSERT(arr->end == vp + Min(nfixed, obj->slotSpan()));
                     arr->index = arr->start - vp;
                 } else {
-                    MOZ_ASSERT(arr->start >= obj->slots &&
-                               arr->end == obj->slots + obj->slotSpan() - nfixed);
-                    arr->index = (arr->start - obj->slots) + nfixed;
+                    MOZ_ASSERT(arr->start >= obj->slots_ &&
+                               arr->end == obj->slots_ + obj->slotSpan() - nfixed);
+                    arr->index = (arr->start - obj->slots_) + nfixed;
                 }
                 arr->kind = HeapSlot::Slot;
             }
@@ -1673,8 +1673,8 @@ GCMarker::restoreValueArray(NativeObject *obj, void **vpp, void **endp)
                 *vpp = vp + start;
                 *endp = vp + Min(nfixed, nslots);
             } else {
-                *vpp = obj->slots + start - nfixed;
-                *endp = obj->slots + nslots - nfixed;
+                *vpp = obj->slots_ + start - nfixed;
+                *endp = obj->slots_ + nslots - nfixed;
             }
         } else {
             /* The object shrunk, in which case no scanning is needed. */
@@ -1830,11 +1830,11 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
         } while (false);
 
         vp = nobj->fixedSlots();
-        if (nobj->slots) {
+        if (nobj->slots_) {
             unsigned nfixed = nobj->numFixedSlots();
             if (nslots > nfixed) {
                 pushValueArray(nobj, vp, vp + nfixed);
-                vp = nobj->slots;
+                vp = nobj->slots_;
                 end = vp + (nslots - nfixed);
                 goto scan_value_array;
             }
