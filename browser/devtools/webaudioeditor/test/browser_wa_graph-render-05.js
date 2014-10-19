@@ -6,7 +6,7 @@
  */
 
 function spawnTest() {
-  let { target, panel } = yield initWebAudioEditor(CONNECT_TOGGLE_PARAM_URL);
+  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS } = panelWin;
 
@@ -14,10 +14,14 @@ function spawnTest() {
 
   let [actors] = yield Promise.all([
     getN(gFront, "create-node", 3),
-    waitForGraphRendered(panelWin, 3, 1, 0)
+    waitForGraphRendered(panelWin, 3, 2, 0)
   ]);
-  ok(true, "Graph rendered without param connection");
 
+  let [dest, osc, gain] = actors;
+
+  yield osc.disconnect();
+
+  osc.connectParam(gain, "gain");
   yield waitForGraphRendered(panelWin, 3, 1, 1);
   ok(true, "Graph re-rendered upon param connection");
 
