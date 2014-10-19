@@ -58,7 +58,8 @@ WrapperAnswer::ok(ReturnStatus *rs)
 }
 
 bool
-WrapperAnswer::RecvPreventExtensions(const ObjectId &objId, ReturnStatus *rs)
+WrapperAnswer::RecvPreventExtensions(const ObjectId &objId, ReturnStatus *rs,
+                                     bool *succeeded)
 {
     AutoSafeJSContext cx;
     JSAutoRequest request(cx);
@@ -68,7 +69,7 @@ WrapperAnswer::RecvPreventExtensions(const ObjectId &objId, ReturnStatus *rs)
         return fail(cx, rs);
 
     JSAutoCompartment comp(cx, obj);
-    if (!JS_PreventExtensions(cx, obj))
+    if (!JS_PreventExtensions(cx, obj, succeeded))
         return fail(cx, rs);
 
     LOG("%s.preventExtensions()", ReceiverObj(objId));

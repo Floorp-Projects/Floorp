@@ -5863,7 +5863,14 @@ DebuggerObject_sealHelper(JSContext *cx, unsigned argc, Value *vp, SealHelperOp 
         ok = JSObject::freeze(cx, obj);
     } else {
         MOZ_ASSERT(op == PreventExtensions);
-        ok = JSObject::preventExtensions(cx, obj);
+        bool succeeded;
+        ok = JSObject::preventExtensions(cx, obj, &succeeded);
+        if (!ok)
+            return false;
+        if (!succeeded) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
+            return false;
+        }
     }
     if (!ok)
         return false;

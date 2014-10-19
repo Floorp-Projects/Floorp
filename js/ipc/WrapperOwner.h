@@ -41,7 +41,7 @@ class WrapperOwner : public virtual JavaScriptShared
     bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
     bool enumerate(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
     bool isExtensible(JSContext *cx, JS::HandleObject proxy, bool *extensible);
-    bool preventExtensions(JSContext *cx, JS::HandleObject proxy);
+    bool preventExtensions(JSContext *cx, JS::HandleObject proxy, bool *succeeded);
     bool has(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
     bool get(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
              JS::HandleId id, JS::MutableHandleValue vp);
@@ -106,7 +106,8 @@ class WrapperOwner : public virtual JavaScriptShared
     /*** Dummy call handlers ***/
   public:
     virtual bool SendDropObject(const ObjectId &objId) = 0;
-    virtual bool SendPreventExtensions(const ObjectId &objId, ReturnStatus *rs) = 0;
+    virtual bool SendPreventExtensions(const ObjectId &objId, ReturnStatus *rs,
+                                       bool *succeeded) = 0;
     virtual bool SendGetPropertyDescriptor(const ObjectId &objId, const JSIDVariant &id,
                                            ReturnStatus *rs,
                                            PPropertyDescriptor *out) = 0;

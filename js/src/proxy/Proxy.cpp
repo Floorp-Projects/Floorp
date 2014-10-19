@@ -387,11 +387,11 @@ Proxy::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
 }
 
 bool
-Proxy::preventExtensions(JSContext *cx, HandleObject proxy)
+Proxy::preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded)
 {
     JS_CHECK_RECURSION(cx, return false);
     const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    return handler->preventExtensions(cx, proxy);
+    return handler->preventExtensions(cx, proxy, succeeded);
 }
 
 bool

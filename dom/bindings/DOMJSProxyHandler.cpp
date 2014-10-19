@@ -149,12 +149,11 @@ DOMProxyHandler::isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *
 }
 
 bool
-DOMProxyHandler::preventExtensions(JSContext *cx, JS::Handle<JSObject*> proxy) const
+DOMProxyHandler::preventExtensions(JSContext *cx, JS::Handle<JSObject*> proxy,
+                                   bool *succeeded) const
 {
-  // Throw a TypeError, per WebIDL.
-  JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                       JSMSG_CANT_CHANGE_EXTENSIBILITY);
-  return false;
+  *succeeded = false;
+  return true;
 }
 
 bool
