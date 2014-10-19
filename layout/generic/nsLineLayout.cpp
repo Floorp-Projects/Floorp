@@ -93,7 +93,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   mLineNumber = 0;
   mTotalPlacedFrames = 0;
   mBStartEdge = 0;
-  mTrimmableWidth = 0;
+  mTrimmableISize = 0;
 
   mInflationMinFontSize =
     nsLayoutUtils::InflationMinFontSizeFor(aOuterReflowState->frame);
@@ -876,10 +876,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       pfd->SetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE, true);
       nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
-        // Add mTrimmableWidth to the available width since if the line ends
+        // Add mTrimmableISize to the available width since if the line ends
         // here, the width of the inline content will be reduced by
-        // mTrimmableWidth.
-        nscoord availableWidth = psd->mIEnd - (psd->mICoord - mTrimmableWidth);
+        // mTrimmableISize.
+        nscoord availableISize = psd->mIEnd - (psd->mICoord - mTrimmableISize);
         if (psd->mNoWrap) {
           // If we place floats after inline content where there's
           // no break opportunity, we don't know how much additional
@@ -890,9 +890,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
           // but hopefully rare. Fixing it will require significant
           // restructuring of line layout.
           // We might as well allow zero-width floats to be placed, though.
-          availableWidth = 0;
+          availableISize = 0;
         }
-        placedFloat = AddFloat(outOfFlowFrame, availableWidth);
+        placedFloat = AddFloat(outOfFlowFrame, availableISize);
         NS_ASSERTION(!(outOfFlowFrame->GetType() == nsGkAtoms::letterFrame &&
                        GetFirstLetterStyleOK()),
                     "FirstLetterStyle set on line with floating first letter");
@@ -1001,9 +1001,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     // runs (hence return false here) except for text frames and inline containers.
     bool continuingTextRun = aFrame->CanContinueTextRun();
     
-    // Clear any residual mTrimmableWidth if this isn't a text frame
+    // Clear any residual mTrimmableISize if this isn't a text frame
     if (!continuingTextRun && !pfd->GetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE)) {
-      mTrimmableWidth = 0;
+      mTrimmableISize = 0;
     }
 
     // See if we can place the frame. If we can't fit it, then we
@@ -1202,7 +1202,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
   // Set outside to true if the result of the reflow leads to the
   // frame sticking outside of our available area.
-  bool outside = pfd->mBounds.IEnd(lineWM) - mTrimmableWidth + endMargin >
+  bool outside = pfd->mBounds.IEnd(lineWM) - mTrimmableISize + endMargin >
                  psd->mIEnd;
   if (!outside) {
     // If it fits, it fits
