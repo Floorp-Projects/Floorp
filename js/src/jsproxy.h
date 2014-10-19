@@ -257,7 +257,7 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const = 0;
     virtual bool enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props) const = 0;
     virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const = 0;
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy) const = 0;
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const = 0;
 
     /*
      * These methods are standard, but the engine does not normally call them.
@@ -369,7 +369,7 @@ class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
     virtual bool enumerate(JSContext *cx, HandleObject proxy,
                            AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE;
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const MOZ_OVERRIDE;
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
                                 MutableHandleObject protop) const MOZ_OVERRIDE;
     virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto,

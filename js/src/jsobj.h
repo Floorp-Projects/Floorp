@@ -514,10 +514,11 @@ class JSObject : public js::gc::Cell
         return !lastProperty()->hasObjectFlag(js::BaseShape::NOT_EXTENSIBLE);
     }
 
-    // Attempt to change the [[Extensible]] bit on |obj| to false.  Callers
-    // must ensure that |obj| is currently extensible before calling this!
+    // Attempt to change the [[Extensible]] bit on |obj| to false.  Indicate
+    // success or failure through the |*succeeded| outparam, or actual error
+    // through the return value.
     static bool
-    preventExtensions(JSContext *cx, js::HandleObject obj);
+    preventExtensions(JSContext *cx, js::HandleObject obj, bool *succeeded);
 
   private:
     enum ImmutabilityType { SEAL, FREEZE };

@@ -415,7 +415,7 @@ class XrayWrapper : public Base {
                          JS::Handle<jsid> id, bool *bp) const MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool isExtensible(JSContext *cx, JS::Handle<JSObject*> wrapper, bool *extensible) const MOZ_OVERRIDE;
-    virtual bool preventExtensions(JSContext *cx, JS::Handle<JSObject*> wrapper) const MOZ_OVERRIDE;
+    virtual bool preventExtensions(JSContext *cx, JS::Handle<JSObject*> wrapper, bool *succeeded) const MOZ_OVERRIDE;
     virtual bool getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
                                 JS::MutableHandleObject protop) const MOZ_OVERRIDE;
     virtual bool setPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
