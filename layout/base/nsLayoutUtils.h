@@ -2410,7 +2410,20 @@ inline gfx::Point NSPointToPoint(const nsPoint& aPoint,
  * are device pixels or CSS px depends on what the caller chooses to pass as
  * aAppUnitsPerPixel).
  */
-gfx::Rect NSRectToRect(const nsRect& aRect, int32_t aAppUnitsPerPixel);
+gfx::Rect NSRectToRect(const nsRect& aRect, double aAppUnitsPerPixel);
+
+/**
+ * Converts an nsRect in app units to a Moz2D Rect in pixels (whether those
+ * are device pixels or CSS px depends on what the caller chooses to pass as
+ * aAppUnitsPerPixel).
+ *
+ * The passed DrawTarget is used to additionally snap the returned Rect to
+ * device pixels, if appropriate (as decided and carried out by Moz2D's
+ * MaybeSnapToDevicePixels helper, which this function calls to do any
+ * snapping).
+ */
+gfx::Rect NSRectToRect(const nsRect& aRect, double aAppUnitsPerPixel,
+                       const gfx::DrawTarget& aSnapDT);
 
   namespace layout {
 
