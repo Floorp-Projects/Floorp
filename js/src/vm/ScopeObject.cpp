@@ -1513,11 +1513,11 @@ class DebugScopeProxy : public BaseProxyHandler
         return true;
     }
 
-    bool preventExtensions(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE
+    bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const MOZ_OVERRIDE
     {
         // See above.
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
-        return false;
+        *succeeded = false;
+        return true;
     }
 
     bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
