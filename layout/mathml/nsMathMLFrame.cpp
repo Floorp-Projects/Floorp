@@ -365,8 +365,13 @@ void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
                                nsRenderingContext* aCtx)
 {
   // paint the bar with the current text color
-  aCtx->SetColor(mFrame->GetVisitedDependentColor(eCSSProperty_color));
-  aCtx->FillRect(mRect + ToReferenceFrame());
+  DrawTarget* drawTarget = aCtx->GetDrawTarget();
+  Rect rect = NSRectToRect(mRect + ToReferenceFrame(),
+                           mFrame->PresContext()->AppUnitsPerDevPixel(),
+                           *drawTarget);
+  ColorPattern color(ToDeviceColor(
+                       mFrame->GetVisitedDependentColor(eCSSProperty_color)));
+  drawTarget->FillRect(rect, color);
 }
 
 void

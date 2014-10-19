@@ -62,14 +62,18 @@ PaintIndeterminateMark(nsIFrame* aFrame,
                        const nsRect& aDirtyRect,
                        nsPoint aPt)
 {
+  DrawTarget* drawTarget = aCtx->GetDrawTarget();
+  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+
   nsRect rect(aPt, aFrame->GetSize());
   rect.Deflate(aFrame->GetUsedBorderAndPadding());
-
   rect.y += (rect.height - rect.height/4) / 2;
   rect.height /= 4;
 
-  aCtx->SetColor(aFrame->StyleColor()->mColor);
-  aCtx->FillRect(rect);
+  Rect devPxRect = NSRectToRect(rect, appUnitsPerDevPixel, *drawTarget);
+
+  drawTarget->FillRect(devPxRect,
+                    ColorPattern(ToDeviceColor(aFrame->StyleColor()->mColor)));
 }
 
 //------------------------------------------------------------
