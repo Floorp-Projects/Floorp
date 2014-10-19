@@ -3560,6 +3560,9 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
   if (text.Length() == 0)
     return; // Don't paint an empty string. XXX What about background/borders? Still paint?
 
+  int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
+  DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+
   // Resolve style for the text.  It contains all the info we need to lay ourselves
   // out and to paint.
   nsStyleContext* textContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecelltext);
@@ -3609,6 +3612,7 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
   textRect.Deflate(bp);
 
   // Set our color.
+  ColorPattern color(ToDeviceColor(textContext->StyleColor()->mColor));
   aRenderingContext.SetColor(textContext->StyleColor()->mColor);
 
   // Draw decorations.
@@ -3618,14 +3622,23 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
   nscoord size;
   if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
     fontMet->GetUnderline(offset, size);
-    if (decorations & NS_FONT_DECORATION_OVERLINE)
-      aRenderingContext.FillRect(textRect.x, textRect.y, textRect.width, size);
-    if (decorations & NS_FONT_DECORATION_UNDERLINE)
-      aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, textRect.width, size);
+    if (decorations & NS_FONT_DECORATION_OVERLINE) {
+      nsRect r(textRect.x, textRect.y, textRect.width, size);
+      Rect devPxRect = NSRectToRect(r, appUnitsPerDevPixel, *drawTarget);
+      drawTarget->FillRect(devPxRect, color);
+    }
+    if (decorations & NS_FONT_DECORATION_UNDERLINE) {
+      nsRect r(textRect.x, textRect.y + baseline - offset,
+               textRect.width, size);
+      Rect devPxRect = NSRectToRect(r, appUnitsPerDevPixel, *drawTarget);
+      drawTarget->FillRect(devPxRect, color);
+    }
   }
   if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
     fontMet->GetStrikeout(offset, size);
-    aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, textRect.width, size);
+    nsRect r(textRect.x, textRect.y + baseline - offset, textRect.width, size);
+    Rect devPxRect = NSRectToRect(r, appUnitsPerDevPixel, *drawTarget);
+    drawTarget->FillRect(devPxRect, color);
   }
   nsStyleContext* cellContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecell);
 
