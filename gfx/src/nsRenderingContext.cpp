@@ -259,13 +259,6 @@ nsRenderingContext::FillRect(const nsRect& aRect)
     mThebes->Fill();
 }
 
-void
-nsRenderingContext::FillRect(nscoord aX, nscoord aY,
-                             nscoord aWidth, nscoord aHeight)
-{
-    FillRect(nsRect(aX, aY, aWidth, aHeight));
-}
-
 //
 // text
 //
