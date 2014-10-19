@@ -3784,7 +3784,12 @@ nsTreeBodyFrame::PaintProgressMeter(int32_t              aRowIndex,
           nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),
           aDirtyRect, imgIContainer::FLAG_NONE);
     } else {
-      aRenderingContext.FillRect(meterRect);
+      DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+      int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
+      Rect rect = NSRectToRect(meterRect, appUnitsPerDevPixel, *drawTarget);
+      ColorPattern color(ToDeviceColor(
+                           GetVisitedDependentColor(eCSSProperty_color)));
+      drawTarget->FillRect(rect, color);
     }
   }
   else if (state == nsITreeView::PROGRESS_UNDETERMINED) {

@@ -702,8 +702,8 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
   aContext->SetMatrix(aNewTransform);
 
   if (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) {
-    Color white(1.0f, 1.0f, 1.0f, 1.0f);
-    drawTarget->Fill(path, ColorPattern(ToDeviceColor(white)),
+    ColorPattern white(ToDeviceColor(Color(1.0f, 1.0f, 1.0f, 1.0f)));
+    drawTarget->Fill(path, white,
                      DrawOptions(1.0f, CompositionOp::OP_OVER, aaMode));
     return;
   }
