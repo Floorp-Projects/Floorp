@@ -903,28 +903,49 @@ const CustomizableWidgets = [{
     }
   }];
 
-if (Services.prefs.getBoolPref("loop.enabled") && !Services.prefs.getBoolPref("loop.throttled")) {
-  CustomizableWidgets.push({
-    id: "loop-call-button",
-    type: "custom",
-    label: "Hello",
-    tooltiptext: "loop-call-button.tooltiptext",
-    onBuild: function(aDocument) {
-      let node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
-      node.setAttribute("id", this.id);
-      node.classList.add("toolbarbutton-1");
-      node.classList.add("chromeclass-toolbar-additional");
-      node.setAttribute("type", "badged");
-      node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
-      node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
-      node.setAttribute("removable", "true");
-      node.addEventListener("command", function(event) {
-        aDocument.defaultView.LoopUI.openCallPanel(event);
-      });
-      return node;
+CustomizableWidgets.push({
+  id: "loop-button-throttled",
+  type: "custom",
+  label: "Hello",
+  tooltiptext: "loop-call-button.tooltiptext",
+  onBuild: function(aDocument) {
+    // If we're not supposed to see the button, return zip.
+    if (!Services.prefs.getBoolPref("loop.enabled")) {
+      return null;
     }
-  });
-}
+
+    let node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+    node.setAttribute("id", this.id);
+    node.classList.add("toolbarbutton-1");
+    node.classList.add("chromeclass-toolbar-additional");
+    node.setAttribute("type", "badged");
+    node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
+    node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
+    node.setAttribute("removable", "true");
+    node.addEventListener("command", function(event) {
+      aDocument.defaultView.LoopUI.openCallPanel(event);
+    });
+
+    // If we're throttled, check to see if it's our turn to be unthrottled
+    if (Services.prefs.getBoolPref("loop.throttled")) {
+      // If we're throttled, hide the button.
+      node.setAttribute("hidden", true);
+      aDocument.defaultView.MozLoopService.checkSoftStart(() => {
+        // If the check unthrottled us, reveal the button.
+        if (!Services.prefs.getBoolPref("loop.throttled")) {
+          node.removeAttribute("hidden");
+          // If we're in CustomizationMode and the transition has already finished,
+          // re-populate the palette to make the Loop button appear.
+          if (aDocument.documentElement.hasAttribute("customize-entered")) {
+            aDocument.defaultView.gCustomizeMode.repopulatePalette();
+          }
+        }
+       });
+    }
+
+    return node;
+  }
+});
 
 #ifdef XP_WIN
 #ifdef MOZ_METRO
