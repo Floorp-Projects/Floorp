@@ -2454,14 +2454,14 @@ Widgets.ObjectRenderers.add({
 
     let anchorText = this.objectActor.class;
     let anchorClass = "cm-variable";
-    if ("timestamp" in preview && typeof preview.timestamp != "number") {
+    if (preview && "timestamp" in preview && typeof preview.timestamp != "number") {
       anchorText = new Date(preview.timestamp).toString(); // invalid date
       anchorClass = "";
     }
 
     this._anchor(anchorText, { className: anchorClass });
 
-    if (!("timestamp" in preview) || typeof preview.timestamp != "number") {
+    if (!preview || !("timestamp" in preview) || typeof preview.timestamp != "number") {
       return;
     }
 
