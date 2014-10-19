@@ -155,8 +155,8 @@ public:
     return mBlockRS->AddFloat(this, aFloat, aAvailableWidth);
   }
 
-  void SetTrimmableWidth(nscoord aTrimmableWidth) {
-    mTrimmableWidth = aTrimmableWidth;
+  void SetTrimmableISize(nscoord aTrimmableISize) {
+    mTrimmableISize = aTrimmableISize;
   }
 
   //----------------------------------------
@@ -504,8 +504,9 @@ protected:
   // the block has been called.
   nscoord mFinalLineBSize;
   
-  // Amount of trimmable whitespace width for the trailing text frame, if any
-  nscoord mTrimmableWidth;
+  // Amount of trimmable whitespace inline size for the trailing text
+  // frame, if any
+  nscoord mTrimmableISize;
 
   nscoord mContainerWidth;
 
