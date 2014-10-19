@@ -7,7 +7,9 @@ use regex::Captures;
 use hyper::method;
 use hyper::method::Method;
 
+use common::{WebDriverResult, WebDriverError, Status, UnknownError};
 use messagebuilder::{MessageBuilder, MatchType, MatchNewSession, MatchGet, MatchGetCurrentUrl};
+
 
 #[deriving(PartialEq)]
 pub enum WebDriverCommand {
@@ -50,24 +52,27 @@ impl WebDriverMessage {
         }
     }
 
-    pub fn from_http(match_type: MatchType, params: &Captures, body: &str) -> WebDriverMessage {
+    pub fn from_http(match_type: MatchType, params: &Captures, body: &str) -> WebDriverResult<WebDriverMessage> {
         let session_id = WebDriverMessage::get_session_id(params);
         let command = match match_type {
-            MatchNewSession => {
-                NewSession
-            },
+            MatchNewSession => NewSession,
             MatchGet => {
-                let parameters: GetParameters = json::decode(body).unwrap();
-                Get(parameters)
+                let parameters_result: Result<GetParameters, json::DecoderError> = json::decode(body);
+                match parameters_result {
+                    Ok(parameters) => Get(parameters),
+                    Err(_) => {
+                        return Err(WebDriverError::new(None,
+                                                       UnknownError,
+                                                       "Failed to decode request body"));
+                    }
+                }
             },
-            MatchGetCurrentUrl => {
-                GetCurrentUrl
-            }
+            MatchGetCurrentUrl => GetCurrentUrl
         };
-        WebDriverMessage {
+        Ok(WebDriverMessage {
             session_id: session_id,
             command: command
-        }
+        })
     }
 
     fn get_session_id(params: &Captures) -> Option<String> {

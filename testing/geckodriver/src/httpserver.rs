@@ -4,35 +4,57 @@ use regex::Regex;
 use serialize::json;
 
 use hyper;
+use hyper::status::StatusCode;
 use hyper::header::common::ContentLength;
+use hyper::method::Post;
 use hyper::server::{Server, Incoming};
 use hyper::uri::AbsolutePath;
 
+use common::WebDriverResult;
+use response::WebDriverResponse;
 use messagebuilder::{get_builder};
-use marionette::{MarionetteSession, MarionetteConnection};
+use marionette::MarionetteConnection;
 
 fn handle(mut incoming: Incoming) {
     let mut marionette = MarionetteConnection::new();
-    marionette.connect();
+    if marionette.connect().is_err() {
+        fail!("Failed to connect to marionette. Start marionette client before proxy");
+    };
 
     let builder = get_builder();
     for (mut req, mut resp) in incoming {
-        println!("{}", req.uri);
-        let body = req.read_to_string().unwrap();
+        println!("{}", req.uri);;
+        let body = match req.method {
+            Post => req.read_to_string().unwrap(),
+            _ => "".to_string()
+        };
         match req.uri {
             AbsolutePath(path) => {
-                let message = builder.from_http(req.method, path[], body[]);
-                //Should return a Result instead
-                if message.is_some() {
-                    let response = marionette.send_message(&message.unwrap());
-                    if response.is_some() {
-                        let body = response.unwrap().to_json().to_string();
-                        resp.headers_mut().set(ContentLength(body.len()));
-                        let mut stream = resp.start();
-                        stream.write_str(body.as_slice());
-                        stream.unwrap().end();
+                let (status, resp_data) = match builder.from_http(req.method, path[], body[]) {
+                    Ok(message) => {
+                        match marionette.send_message(&message) {
+                            Ok(response) => {
+                                if response.is_none() {
+                                    continue;
+                                }
+                                (200, response.unwrap())
+                            }
+                            Err(err) => (err.http_status(), WebDriverResponse::from_err(&err))
+                        }
+                    },
+                    Err(err) => {
+                        (err.http_status(), WebDriverResponse::from_err(&err))
                     }
+                };
+                let body = resp_data.to_json().to_string();
+                {
+                    let mut status_code = resp.status_mut();
+                    *status_code = FromPrimitive::from_int(status).unwrap();
                 }
+                resp.headers_mut().set(ContentLength(body.len()));
+                let mut stream = resp.start();
+                stream.write_str(body.as_slice());
+                stream.unwrap().end();
             },
             _ => {}
         };
