@@ -270,13 +270,17 @@ nsLineLayout::EndLineReflow()
 // per-span mIStart?
 
 void
-nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
+nsLineLayout::UpdateBand(WritingMode aWM,
+                         const LogicalRect& aNewAvailSpace,
                          nsIFrame* aFloatFrame)
 {
   WritingMode lineWM = mRootSpan->mWritingMode;
-  LogicalRect availSpace(lineWM, aNewAvailSpace, mContainerWidth);
+  // need to convert to our writing mode, because we might have a different
+  // mode from the caller due to dir: auto
+  LogicalRect availSpace = aNewAvailSpace.ConvertTo(lineWM, aWM,
+                                                    mContainerWidth);
 #ifdef REALLY_NOISY_REFLOW
-  printf("nsLL::UpdateBand %d, %d, %d, %d, (logical %d, %d, %d, %d); frame=%p\n  will set mImpacted to true\n",
+  printf("nsLL::UpdateBand %d, %d, %d, %d, (converted to %d, %d, %d, %d); frame=%p\n  will set mImpacted to true\n",
          aNewAvailSpace.x, aNewAvailSpace.y,
          aNewAvailSpace.width, aNewAvailSpace.height,
          availSpace.IStart(lineWM), availSpace.BStart(lineWM),
@@ -300,21 +304,22 @@ nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
 
   // Compute the difference between last times width and the new width
   NS_WARN_IF_FALSE(mRootSpan->mIEnd != NS_UNCONSTRAINEDSIZE &&
-                   aNewAvailSpace.width != NS_UNCONSTRAINEDSIZE,
-                   "have unconstrained width; this should only result from "
-                   "very large sizes, not attempts at intrinsic width "
+                   availSpace.ISize(lineWM) != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained inline size; this should only result "
+                   "from very large sizes, not attempts at intrinsic width "
                    "calculation");
   // The root span's mIStart moves to aICoord
   nscoord deltaICoord = availSpace.IStart(lineWM) - mRootSpan->mIStart;
-  // The width of all spans changes by this much (the root span's
-  // mIEnd moves to aICoord + aISize, its new width is aISize)
+  // The inline size of all spans changes by this much (the root span's
+  // mIEnd moves to aICoord + aISize, its new inline size is aISize)
   nscoord deltaISize = availSpace.ISize(lineWM) -
                        (mRootSpan->mIEnd - mRootSpan->mIStart);
 #ifdef NOISY_REFLOW
   nsFrame::ListTag(stdout, mBlockReflowState->frame);
   printf(": UpdateBand: %d,%d,%d,%d deltaISize=%d deltaICoord=%d\n",
-         aNewAvailSpace.IStart(lineWM), aNewAvailSpace.BStart(lineWM),
-         aNewAvailSpace.ISize(lineWM), aNewAvailSpace.BSize(lineWM), deltaISize, deltaICoord);
+         availSpace.IStart(lineWM), availSpace.BStart(lineWM),
+         availSpace.ISize(lineWM), availSpace.BSize(lineWM),
+         deltaISize, deltaICoord);
 #endif
 
   // Update the root span position
