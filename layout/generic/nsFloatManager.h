@@ -30,13 +30,15 @@ class nsPresContext;
  * the content rectangle.
  */
 struct nsFlowAreaRect {
-  nsRect mRect;
+  mozilla::LogicalRect mRect;
   bool mHasFloats;
 
-  nsFlowAreaRect(nscoord aICoord, nscoord aBCoord,
+  nsFlowAreaRect(mozilla::WritingMode aWritingMode,
+                 nscoord aICoord, nscoord aBCoord,
                  nscoord aISize, nscoord aBSize,
                  bool aHasFloats)
-    : mRect(aICoord, aBCoord, aISize, aBSize), mHasFloats(aHasFloats) {}
+    : mRect(aWritingMode, aICoord, aBCoord, aISize, aBSize)
+    , mHasFloats(aHasFloats) {}
 };
 
 #define NS_FLOAT_MANAGER_CACHE_SIZE 4
