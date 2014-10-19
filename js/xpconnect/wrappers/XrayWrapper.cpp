@@ -1759,11 +1759,12 @@ XrayWrapper<Base, Traits>::isExtensible(JSContext *cx, JS::Handle<JSObject*> wra
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::preventExtensions(JSContext *cx, HandleObject wrapper) const
+XrayWrapper<Base, Traits>::preventExtensions(JSContext *cx, HandleObject wrapper, bool *succeeded)
+                                             const
 {
     // See above.
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
-    return false;
+    *succeeded = false;
+    return true;
 }
 
 template <typename Base, typename Traits>
