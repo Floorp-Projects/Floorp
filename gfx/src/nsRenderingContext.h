@@ -57,7 +57,6 @@ public:
     void DrawLine(const nsPoint& aStartPt, const nsPoint& aEndPt);
     void DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
     void FillRect(const nsRect& aRect);
-    void FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
     // Text
 

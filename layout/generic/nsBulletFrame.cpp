@@ -321,6 +321,9 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                        nsLayoutUtils::GetColor(this, eCSSProperty_color)));
   aRenderingContext.SetColor(nsLayoutUtils::GetColor(this, eCSSProperty_color));
 
+  DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+  int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
+
   nsAutoString text;
   switch (listStyleType->GetStyle()) {
   case NS_STYLE_LIST_STYLE_NONE:
@@ -333,9 +336,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                   padding.top + aPt.y,
                   mRect.width - (padding.left + padding.right),
                   mRect.height - (padding.top + padding.bottom));
-      Rect devPxRect =
-        ToRect(nsLayoutUtils::RectToGfxRect(rect, PresContext()->AppUnitsPerDevPixel()));
-      DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+      Rect devPxRect = NSRectToRect(rect, appUnitsPerDevPixel, *drawTarget);
       RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
       AppendEllipseToPath(builder, devPxRect.Center(), devPxRect.Size());
       RefPtr<Path> ellipse = builder->Finish();
@@ -364,8 +365,8 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                       pc->RoundAppUnitsToNearestDevPixels(rect.height));
       snapRect.MoveBy((rect.width - snapRect.width) / 2,
                       (rect.height - snapRect.height) / 2);
-      aRenderingContext.FillRect(snapRect.x, snapRect.y,
-                                 snapRect.width, snapRect.height);
+      Rect devPxRect = NSRectToRect(snapRect, appUnitsPerDevPixel, *drawTarget);
+      drawTarget->FillRect(devPxRect, color);
     }
     break;
 
@@ -391,9 +392,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
       rect.x = pc->RoundAppUnitsToNearestDevPixels(rect.x);
       rect.y = pc->RoundAppUnitsToNearestDevPixels(rect.y);
 
-      DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
       RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
-      int32_t appUnitsPerDevPixel = pc->AppUnitsPerDevPixel();
       if (isDown) {
         // to bottom
         builder->MoveTo(NSPointToPoint(rect.TopLeft(), appUnitsPerDevPixel));

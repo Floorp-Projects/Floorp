@@ -5,6 +5,8 @@
 
 #include "nsTextBoxFrame.h"
 
+#include "gfxUtils.h"
+#include "mozilla/gfx/2D.h"
 #include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
@@ -39,6 +41,7 @@
 #include "nsBidiPresUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 class nsAccessKeyInfo
 {
@@ -385,6 +388,8 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
                          const nscolor*      aOverrideColor)
 {
     nsPresContext* presContext = PresContext();
+    int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+    DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
 
     // paint the title
     nscolor overColor;
@@ -500,7 +505,9 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
 
     CalculateUnderline(*refContext);
 
-    aRenderingContext.SetColor(aOverrideColor ? *aOverrideColor : StyleColor()->mColor);
+    nscolor c = aOverrideColor ? *aOverrideColor : StyleColor()->mColor;
+    ColorPattern color(ToDeviceColor(c));
+    aRenderingContext.SetColor(c);
 
     nsresult rv = NS_ERROR_FAILURE;
 
@@ -550,10 +557,12 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
     }
 
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
-        aRenderingContext.FillRect(aTextRect.x + mAccessKeyInfo->mBeforeWidth,
-                                   aTextRect.y + mAccessKeyInfo->mAccessOffset,
-                                   mAccessKeyInfo->mAccessWidth,
-                                   mAccessKeyInfo->mAccessUnderlineSize);
+      nsRect r(aTextRect.x + mAccessKeyInfo->mBeforeWidth,
+               aTextRect.y + mAccessKeyInfo->mAccessOffset,
+               mAccessKeyInfo->mAccessWidth,
+               mAccessKeyInfo->mAccessUnderlineSize);
+      Rect devPxRect = NSRectToRect(r, appUnitsPerDevPixel, *drawTarget);
+      drawTarget->FillRect(devPxRect, color);
     }
 
     // Strikeout is drawn on top of the text, per
