@@ -2324,27 +2324,6 @@ IsItemAreaInWindowOpaqueRegion(nsDisplayListBuilder* aBuilder,
   return aBuilder->GetWindowOpaqueRegion().Contains(aComponentAlphaBounds);
 }
 
-// Return true if aItem is a uniform color over the intersection of its
-// visible rect, bounds rect, and clip rect.
-static bool
-IsDisplayItemUniform(nsDisplayListBuilder* aBuilder,
-                     nsDisplayItem* aItem,
-                     const DisplayItemClip& aClip,
-                     nscolor* aUniformColor)
-{
-  bool uniform = aItem->IsUniform(aBuilder, aUniformColor);
-  if (!uniform) {
-    return false;
-  }
-  bool snap;
-  // Check to see if rounded-rect clipping affects the intersection of the
-  // item's visible and bounds rects. If it doesn't, then we're uniform over
-  // the intersection of those rects and the clip rect.
-  nsRect visibleRect =
-    aItem->GetBounds(aBuilder, &snap).Intersect(aItem->GetVisibleRect());
-  return !aClip.IsRectClippedByRoundedCorner(visibleRect);
-}
-
 void
 PaintedLayerData::Accumulate(ContainerState* aState,
                             nsDisplayItem* aItem,
@@ -2372,16 +2351,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
   bool clipMatches = mItemClip == aClip;
   mItemClip = aClip;
 
-  nscolor uniformColor;
-  // If a rounded corner affects the visible area of aItem (the intersection
-  // of its visible rect with its bounds), then it's not really uniform over
-  // its bounds. Implementations of nsDisplayItem::IsUniform do not
-  // consider this clipping.
-  bool isUniform = IsDisplayItemUniform(aState->mBuilder, aItem, aClip,
-                                        &uniformColor);
-
-  if (!mIsSolidColorInVisibleRegion && !isUniform &&
-      mOpaqueRegion.Contains(aDrawRect) &&
+  if (!mIsSolidColorInVisibleRegion && mOpaqueRegion.Contains(aDrawRect) &&
       mVisibleRegion.Contains(aVisibleRect) && !mImage) {
     // A very common case! Most pages have a PaintedLayer with the page
     // background (opaque) visible and most or all of the page content over the
@@ -2408,6 +2378,9 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     mImage = nullptr;
   }
 
+  nscolor uniformColor;
+  bool isUniform = aItem->IsUniform(aState->mBuilder, &uniformColor);
+
   // Some display items have to exist (so they can set forceTransparentSurface
   // below) but don't draw anything. They'll return true for isUniform but
   // a color with opacity 0.
@@ -2422,14 +2395,10 @@ PaintedLayerData::Accumulate(ContainerState* aState,
         isUniform = false;
         FLB_LOG_PAINTED_LAYER_DECISION(this, "  Display item does not cover the visible rect\n");
       }
-
+    }
+    if (isUniform) {
       if (mVisibleRegion.IsEmpty()) {
         // This color is all we have
-        mSolidColor = uniformColor;
-        mIsSolidColorInVisibleRegion = true;
-      } else if (NS_GET_A(uniformColor) == 255 &&
-                 aVisibleRect.Contains(mVisibleRegion.GetBounds())) {
-        // This color covers everything else in the layer
         mSolidColor = uniformColor;
         mIsSolidColorInVisibleRegion = true;
       } else if (mIsSolidColorInVisibleRegion &&

@@ -67,7 +67,7 @@ LayerHasCheckerboardingAPZC(Layer* aLayer, gfxRGBA* aOutColor)
 }
 
 /**
- * Returns a rectangle of content painted opaquely by aLayer. Very conservative;
+ * Returns a rectangle of content painted opaquely by aLayer. Very consertative;
  * bails by returning an empty rect in any tricky situations.
  */
 static nsIntRect
