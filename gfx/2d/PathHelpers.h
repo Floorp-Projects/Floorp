@@ -197,10 +197,14 @@ extern UserDataKey sDisablePixelSnapping;
  * stroke width then the edges of the stroke will be antialiased (assuming an
  * AntialiasMode that does antialiasing).
  */
-inline bool UserToDevicePixelSnapped(Rect& aRect, const Matrix& aTransform,
+inline bool UserToDevicePixelSnapped(Rect& aRect, const DrawTarget& aDrawTarget,
                                      bool aAllowScaleOr90DegreeRotate = false)
 {
-  Matrix mat = aTransform;
+  if (aDrawTarget.GetUserData(&sDisablePixelSnapping)) {
+    return false;
+  }
+
+  Matrix mat = aDrawTarget.GetTransform();
 
   const Float epsilon = 0.0000001f;
 #define WITHIN_E(a,b) (fabs((a)-(b)) < epsilon)
@@ -233,15 +237,6 @@ inline bool UserToDevicePixelSnapped(Rect& aRect, const Matrix& aTransform,
   }
 
   return false;
-}
-
-inline bool UserToDevicePixelSnapped(Rect& aRect, const DrawTarget& aDrawTarget,
-                                     bool aIgnoreScale = false)
-{
-  if (aDrawTarget.GetUserData(&sDisablePixelSnapping)) {
-    return false;
-  }
-  return UserToDevicePixelSnapped(aRect, aDrawTarget.GetTransform());
 }
 
 /**
