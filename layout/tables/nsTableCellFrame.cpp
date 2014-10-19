@@ -343,7 +343,8 @@ nsTableCellFrame::DecorateForSelection(nsRenderingContext& aRenderingContext,
         //middle
         nsRect r(onePixel, onePixel,
                  mRect.width - onePixel, mRect.height - onePixel);
-        drawTarget->StrokeRect(NSRectToRect(r, appUnitsPerDevPixel), color);
+        Rect devPixelRect = NSRectToRect(r, appUnitsPerDevPixel, *drawTarget);
+        drawTarget->StrokeRect(devPixelRect, color);
         //shading
         aRenderingContext.DrawLine(2*onePixel, mRect.height-2*onePixel,
                                    mRect.width-onePixel, mRect.height- (2*onePixel));

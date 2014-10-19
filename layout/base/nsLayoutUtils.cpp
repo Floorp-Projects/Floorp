@@ -8,6 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsPresContext.h"
@@ -7036,12 +7037,27 @@ AutoMaybeDisableFontInflation::~AutoMaybeDisableFontInflation()
 
 namespace mozilla {
 
-Rect NSRectToRect(const nsRect& aRect, int32_t aAppUnitsPerPixel)
+Rect NSRectToRect(const nsRect& aRect, double aAppUnitsPerPixel)
 {
-  return Rect(Float(aRect.x) / aAppUnitsPerPixel,
-              Float(aRect.y) / aAppUnitsPerPixel,
-              Float(aRect.width) / aAppUnitsPerPixel,
-              Float(aRect.height) / aAppUnitsPerPixel);
+  // Note that by making aAppUnitsPerPixel a double we're doing floating-point
+  // division using a larger type and avoiding rounding error.
+  return Rect(Float(aRect.x / aAppUnitsPerPixel),
+              Float(aRect.y / aAppUnitsPerPixel),
+              Float(aRect.width / aAppUnitsPerPixel),
+              Float(aRect.height / aAppUnitsPerPixel));
+}
+
+Rect NSRectToRect(const nsRect& aRect, double aAppUnitsPerPixel,
+                  const gfx::DrawTarget& aSnapDT)
+{
+  // Note that by making aAppUnitsPerPixel a double we're doing floating-point
+  // division using a larger type and avoiding rounding error.
+  Rect rect(Float(aRect.x / aAppUnitsPerPixel),
+            Float(aRect.y / aAppUnitsPerPixel),
+            Float(aRect.width / aAppUnitsPerPixel),
+            Float(aRect.height / aAppUnitsPerPixel));
+  MaybeSnapToDevicePixels(rect, aSnapDT, true);
+  return rect;
 }
 
 namespace layout {
