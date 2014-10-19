@@ -24,7 +24,7 @@ DeadObjectProxy::isExtensible(JSContext *cx, HandleObject proxy, bool *extensibl
 }
 
 bool
-DeadObjectProxy::preventExtensions(JSContext *cx, HandleObject proxy) const
+DeadObjectProxy::preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;

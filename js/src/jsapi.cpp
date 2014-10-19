@@ -6458,9 +6458,9 @@ JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length)
 }
 
 JS_PUBLIC_API(bool)
-JS_PreventExtensions(JSContext *cx, JS::HandleObject obj)
+JS_PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded)
 {
-    return JSObject::preventExtensions(cx, obj);
+    return JSObject::preventExtensions(cx, obj, succeeded);
 }
 
 JS_PUBLIC_API(void)
