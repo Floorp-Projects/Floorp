@@ -5,6 +5,7 @@ use serialize::json;
 use hyper::method::{Method, Get, Post};
 
 use command::{WebDriverMessage, WebDriverCommand};
+use common::{WebDriverResult, WebDriverError, UnknownCommand};
 
 #[deriving(Clone)]
 pub enum MatchType {
@@ -31,7 +32,7 @@ impl RequestMatcher {
     }
 
     pub fn get_match<'t>(&'t self, method: Method, path: &'t str) -> Option<Captures> {
-        println!("{}", path);
+        println!("{} {}", method, path);
         if method == self.method {
             self.path_regexp.captures(path)
         } else {
@@ -56,7 +57,7 @@ impl RequestMatcher {
         //Remove the trailing /
         rv.pop();
         rv.push_str("$");
-        println!("{}", rv);
+        //This will fail at runtime if the regexp is invalid
         Regex::new(rv[]).unwrap()
     }
 }
@@ -72,18 +73,22 @@ impl MessageBuilder {
         }
     }
 
-    pub fn from_http(&self, method: Method, path: &str, body: &str) -> Option<WebDriverMessage> {
+    pub fn from_http(&self, method: Method, path: &str, body: &str) -> WebDriverResult<WebDriverMessage> {
+        println!("{} {}", method, path)
         for &(ref match_method, ref matcher) in self.http_matchers.iter() {
+            println!("{} {}", match_method, matcher.path_regexp);
             if method == *match_method {
                 let captures = matcher.get_match(method.clone(), path);
                 if captures.is_some() {
-                    return Some(WebDriverMessage::from_http(matcher.match_type,
-                                                            &captures.unwrap(),
-                                                            body))
+                    return WebDriverMessage::from_http(matcher.match_type,
+                                                       &captures.unwrap(),
+                                                       body)
                 }
             }
         }
-        None
+        Err(WebDriverError::new(None,
+                                UnknownCommand,
+                                format!("{} did not match a known command", path)[]))
     }
 
     pub fn add(&mut self, method: Method, path: &str, match_type: MatchType) {
@@ -98,6 +103,7 @@ pub fn get_builder() -> MessageBuilder {
                         (Post, "/session/{sessionId}/url", MatchGet),
                         (Get, "/session/{sessionId}/url", MatchGetCurrentUrl)];
     for &(ref method, ref url, ref match_type) in matchers.iter() {
+        println!("{} {}", method, url);
         builder.add(method.clone(), *url, *match_type);
     }
     builder
