@@ -10053,10 +10053,12 @@ void ReflowCountMgr::PaintCount(const char*     aName,
     IndiReflowCounter * counter =
       (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
     if (counter != nullptr && counter->mName.EqualsASCII(aName)) {
+      DrawTarget* drawTarget = aRenderingContext->GetDrawTarget();
+      int32_t appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
+
       aRenderingContext->ThebesContext()->Save();
       gfxPoint devPixelOffset =
-        nsLayoutUtils::PointToGfxPoint(aOffset,
-                                       aPresContext->AppUnitsPerDevPixel());
+        nsLayoutUtils::PointToGfxPoint(aOffset, appUnitsPerDevPixel);
       aRenderingContext->ThebesContext()->SetMatrix(
         aRenderingContext->ThebesContext()->CurrentMatrix().Translate(devPixelOffset));
       nsFont font(eFamily_serif, NS_FONT_STYLE_NORMAL,
@@ -10101,8 +10103,10 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       }
 
       nsRect rect(0,0, width+15, height+15);
-      aRenderingContext->SetColor(NS_RGB(0,0,0));
-      aRenderingContext->FillRect(rect);
+      Rect devPxRect = NSRectToRect(rect, appUnitsPerDevPixel, *drawTarget);
+      ColorPattern black(ToDeviceColor(Color(0.f, 0.f, 0.f, 1.f)));
+      drawTarget->FillRect(devPxRect, black);
+
       aRenderingContext->SetColor(color2);
       aRenderingContext->DrawString(buf, strlen(buf), x+15,y+15);
       aRenderingContext->SetColor(color);

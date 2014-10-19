@@ -3496,6 +3496,11 @@ DrawSolidBorderSegment(nsRenderingContext& aContext,
                        uint8_t              aEndBevelSide = 0,
                        nscoord              aEndBevelOffset = 0)
 {
+  DrawTarget* drawTarget = aContext.GetDrawTarget();
+  int32_t appUnitsPerDevPixel = aContext.AppUnitsPerDevPixel();
+
+  ColorPattern color(ToDeviceColor(aColor));
+  DrawOptions drawOptions(1.f, CompositionOp::OP_OVER, AntialiasMode::NONE);
 
   if ((aRect.width == aTwipsPerPixel) || (aRect.height == aTwipsPerPixel) ||
       ((0 == aStartBevelOffset) && (0 == aEndBevelOffset))) {
@@ -3504,18 +3509,19 @@ DrawSolidBorderSegment(nsRenderingContext& aContext,
       if (1 == aRect.height)
         aContext.DrawLine(aRect.TopLeft(), aRect.BottomLeft());
       else
-        aContext.FillRect(aRect);
+        drawTarget->FillRect(NSRectToRect(aRect, appUnitsPerDevPixel, *drawTarget),
+                             color, drawOptions);
     }
     else {
       if (1 == aRect.width)
         aContext.DrawLine(aRect.TopLeft(), aRect.TopRight());
       else
-        aContext.FillRect(aRect);
+        drawTarget->FillRect(NSRectToRect(aRect, appUnitsPerDevPixel, *drawTarget),
+                             color, drawOptions);
     }
   }
   else {
     // polygon with beveling
-    int32_t appUnitsPerDevPixel = aContext.AppUnitsPerDevPixel();
     Point poly[4];
     SetPoly(NSRectToRect(aRect, appUnitsPerDevPixel), poly);
 
@@ -3551,7 +3557,6 @@ DrawSolidBorderSegment(nsRenderingContext& aContext,
       poly[3].y -= endBevelOffset;
     }
 
-    DrawTarget* drawTarget = aContext.GetDrawTarget();
     RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
     builder->MoveTo(poly[0]);
     builder->LineTo(poly[1]);
@@ -3559,9 +3564,7 @@ DrawSolidBorderSegment(nsRenderingContext& aContext,
     builder->LineTo(poly[3]);
     builder->Close();
     RefPtr<Path> path = builder->Finish();
-    drawTarget->Fill(path, ColorPattern(ToDeviceColor(aColor)),
-                     DrawOptions(1.f, CompositionOp::OP_OVER,
-                                 AntialiasMode::NONE));
+    drawTarget->Fill(path, color, drawOptions);
   }
 }
 

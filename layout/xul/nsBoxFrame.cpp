@@ -1609,10 +1609,13 @@ nsBoxFrame::DrawLine(nsRenderingContext& aRenderingContext, bool aHorizontal, ns
 void
 nsBoxFrame::FillRect(nsRenderingContext& aRenderingContext, bool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height)
 {
-    if (aHorizontal)
-       aRenderingContext.FillRect(x,y,width,height);
-    else
-       aRenderingContext.FillRect(y,x,height,width);
+    DrawTarget* drawTarget = aRenderingContext->GetDrawTarget();
+    Rect rect = NSRectToRect(aHorizontal ? nsRect(x, y, width, height) :
+                                           nsRect(y, x, height, width),
+                             PresContext()->AppUnitsPerDevPixel(),
+                             *drawTarget);
+    ColorPattern white(ToDeviceColor(Color(1.f, 1.f, 1.f, 1.f)));
+    drawTarget->FillRect(rect, white);
 }
 
 void 

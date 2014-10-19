@@ -1497,15 +1497,14 @@ nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
       drawTarget->GetTransform().PreTranslate(ToPoint(devPixelOffset)));
 
     // solid white stroke:
-    Color white(1.f, 1.f, 1.f, 1.f);
-    map->Draw(this, *drawTarget, ColorPattern(ToDeviceColor(white)));
+    ColorPattern white(ToDeviceColor(Color(1.f, 1.f, 1.f, 1.f)));
+    map->Draw(this, *drawTarget, white);
 
     // then dashed black stroke over the top:
+    ColorPattern black(ToDeviceColor(Color(0.f, 0.f, 0.f, 1.f)));
     StrokeOptions strokeOptions;
     nsLayoutUtils::InitDashPattern(strokeOptions, NS_STYLE_BORDER_STYLE_DOTTED);
-    Color black(0.f, 0.f, 0.f, 1.f);
-    map->Draw(this, *drawTarget, ColorPattern(ToDeviceColor(black)),
-              strokeOptions);
+    map->Draw(this, *drawTarget, black, strokeOptions);
   }
 }
 
