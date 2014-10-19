@@ -612,7 +612,12 @@ class BaseMarionetteTestRunner(object):
 
     def run_tests(self, tests):
         self.reset_test_stats()
+
+        for test in tests:
+            self.add_test(test)
+
         self.start_time = time.time()
+        self.logger.suite_start(self.tests)
 
         need_external_ip = True
         if not self.marionette:
@@ -630,11 +635,6 @@ class BaseMarionetteTestRunner(object):
         if not self.httpd:
             self.logger.info("starting httpd")
             self.start_httpd(need_external_ip)
-
-        for test in tests:
-            self.add_test(test)
-
-        self.logger.suite_start(self.tests)
 
         for test in self.manifest_skipped_tests:
             name = os.path.basename(test['path'])
