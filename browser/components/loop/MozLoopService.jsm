@@ -1243,13 +1243,10 @@ this.MozLoopService = {
    * isn't already activated, check whether it's time for it to become active.
    * If so, activate the loop service.
    *
-   * @param {Object} buttonNode DOM node representing the Loop button -- if we
-   *                            change from inactive to active, we need this
-   *                            in order to unhide the Loop button.
    * @param {Function} doneCb   [optional] Callback that is called when the
    *                            check has completed.
    */
-  checkSoftStart(buttonNode, doneCb) {
+  checkSoftStart(doneCb) {
     if (!Services.prefs.getBoolPref("loop.throttled")) {
       if (typeof(doneCb) == "function") {
         doneCb(new Error("Throttling is not active"));
@@ -1314,9 +1311,6 @@ this.MozLoopService = {
         // Hot diggity! It's our turn! Activate the service.
         log.info("MozLoopService: Activating Loop via soft-start");
         Services.prefs.setBoolPref("loop.throttled", false);
-        if (buttonNode) {
-          buttonNode.hidden = false;
-        }
         this.initialize();
       }
       if (typeof(doneCb) == "function") {

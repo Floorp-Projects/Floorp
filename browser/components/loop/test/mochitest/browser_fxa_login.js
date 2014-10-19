@@ -18,7 +18,7 @@ function* checkFxA401() {
       "Check friendlyDetails");
   ise(err.friendlyDetailsButtonLabel, getLoopString("retry_button"),
       "Check friendlyDetailsButtonLabel");
-  let loopButton = document.getElementById("loop-call-button");
+  let loopButton = document.getElementById("loop-button-throttled");
   is(loopButton.getAttribute("state"), "error",
      "state of loop button should be error after a 401 with login");
 
@@ -265,7 +265,7 @@ add_task(function* basicAuthorizationAndRegistration() {
   let visibleEmail = loopDoc.getElementsByClassName("user-identity")[0];
   is(visibleEmail.textContent, "Guest", "Guest should be displayed on the panel when not logged in");
   is(MozLoopService.userProfile, null, "profile should be null before log-in");
-  let loopButton = document.getElementById("loop-call-button");
+  let loopButton = document.getElementById("loop-button-throttled");
   is(loopButton.getAttribute("state"), "", "state of loop button should be empty when not logged in");
 
   let tokenData = yield MozLoopService.logInToFxA();
