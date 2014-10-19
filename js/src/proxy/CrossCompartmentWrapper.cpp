@@ -37,11 +37,12 @@ CrossCompartmentWrapper::isExtensible(JSContext *cx, HandleObject wrapper, bool 
 }
 
 bool
-CrossCompartmentWrapper::preventExtensions(JSContext *cx, HandleObject wrapper) const
+CrossCompartmentWrapper::preventExtensions(JSContext *cx, HandleObject wrapper,
+                                           bool *succeeded) const
 {
     PIERCE(cx, wrapper,
            NOTHING,
-           Wrapper::preventExtensions(cx, wrapper),
+           Wrapper::preventExtensions(cx, wrapper, succeeded),
            NOTHING);
 }
 
