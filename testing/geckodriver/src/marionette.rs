@@ -1,11 +1,13 @@
-use std::io::{IoResult, TcpStream};
-use serialize::json;
 use serialize::json::ToJson;
-use command::{WebDriverMessage, GetMarionetteId, NewSession};
-use response::WebDriverResponse;
+use serialize::json;
 use std::collections::TreeMap;
+use std::io::{IoResult, TcpStream, IoError};
 
 use uuid::Uuid;
+
+use command::{WebDriverMessage, GetMarionetteId, NewSession};
+use response::WebDriverResponse;
+use common::{WebDriverResult, WebDriverError, UnknownError};
 
 pub struct MarionetteSession {
     pub session_id: String,
@@ -20,6 +22,10 @@ impl MarionetteSession {
             to: String::from_str("root"),
             marionette_session_id: None
         }
+    }
+
+    pub fn id(&self) -> String {
+        self.session_id.clone()
     }
 
     pub fn update(&mut self, msg: &WebDriverMessage, from: &json::Json, session_id: &json::Json) {
@@ -66,8 +72,7 @@ impl MarionetteSession {
     }
 
     pub fn msg_to_json(&self, msg: &WebDriverMessage) -> json::Json {
-        //needing a clone here seems unfortunate
-        let mut data = msg.to_json().as_object().expect("Message was not a map").clone();
+        let mut data = msg.to_json().as_object().unwrap().clone();
         let session_id = self.id_to_marionette(msg);
         if session_id.is_some() {
             data.insert("sessionId".to_string(), session_id.unwrap());
@@ -91,13 +96,14 @@ impl MarionetteConnection {
         }
     }
 
-    pub fn connect(&mut self) {
-        self.read_resp();
+    pub fn connect(&mut self) -> Result<(), IoError> {
+        try!(self.read_resp());
         //Would get traits and application type here
         self.send_message(&WebDriverMessage::new(GetMarionetteId, None));
+        Ok(())
     }
 
-    fn encode_msg(&self, msg: &WebDriverMessage) ->  String {
+    fn encode_msg(&self, msg: &WebDriverMessage) -> String {
         let data = format!("{}", self.session.msg_to_json(msg));
         let len = data.len().to_string();
         let mut message = len;
@@ -106,21 +112,34 @@ impl MarionetteConnection {
         message
     }
 
-    pub fn send_message(&mut self, msg: &WebDriverMessage) -> Option<WebDriverResponse> {
+    pub fn send_message(&mut self, msg: &WebDriverMessage) -> WebDriverResult<Option<WebDriverResponse>> {
         let data = self.encode_msg(msg);
         println!("{}", data);
-        //TODO: Error handling
-        self.stream.write_str(data.as_slice()).unwrap();
-        let resp = self.read_resp();
-        println!("{}", resp);
-        WebDriverResponse::from_json(&mut self.session, msg, resp.as_slice())
+        match self.stream.write_str(data.as_slice()) {
+            Ok(_) => {},
+            Err(_) => {
+                return Err(WebDriverError::new(Some(self.session.session_id.clone()),
+                                               UnknownError,
+                                               "Failed to write response to stream"))
+            }
+        }
+        match self.read_resp() {
+            Ok(resp) => {
+                println!("{}", resp);
+                Ok(WebDriverResponse::from_json(&mut self.session, msg, resp.as_slice()))
+            },
+            Err(_) => {
+                Err(WebDriverError::new(Some(self.session.id()),
+                                        UnknownError,
+                                        "Failed to decode response from marionette"))
+            }
+        }
     }
 
-    fn read_resp(&mut self) -> String {
+    fn read_resp(&mut self) -> Result<String, IoError> {
         let mut bytes = 0 as uint;
         loop {
-            //TODO: better error handling here
-            let byte = self.stream.read_byte().unwrap() as char;
+            let byte = try!(self.stream.read_byte()) as char;
             match byte {
                 '0'...'9' => {
                     bytes = bytes * 10;
@@ -132,7 +151,8 @@ impl MarionetteConnection {
                 _ => {}
             }
         }
-        let data = self.stream.read_exact(bytes).unwrap();
-        String::from_utf8(data).unwrap()
+        let data = try!(self.stream.read_exact(bytes));
+        //Need to handle the error here
+        Ok(String::from_utf8(data).unwrap())
     }
 }
