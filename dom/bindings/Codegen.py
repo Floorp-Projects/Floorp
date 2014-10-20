@@ -11956,8 +11956,7 @@ class CGResolveSystemBinding(CGAbstractMethod):
             defineCode = "!%s::GetConstructorObject(aCx, aObj)" % bindingNS
             defineCode = CGIfWrapper(CGGeneric("return false;\n"), defineCode)
             defineCode = CGList([defineCode,
-                                 CGGeneric("aObjp.set(aObj);\n"),
-                                 CGGeneric("return true;\n")])
+                                 CGGeneric("aObjp.set(aObj);\n")])
 
             condition = "JSID_IS_VOID(aId) || aId == %s" % descNameToId(desc.name)
             if desc.isExposedConditionally():
