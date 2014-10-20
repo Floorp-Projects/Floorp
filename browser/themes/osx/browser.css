@@ -214,6 +214,10 @@ toolbarbutton.chevron {
   padding: 0;
 }
 
+toolbar[brighttext] toolbarbutton.chevron {
+  list-style-image: url("chrome://global/skin/icons/chevron-inverted.png");
+}
+
 toolbarbutton.chevron > .toolbarbutton-text {
   display: none;
 }
@@ -225,6 +229,10 @@ toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
 @media (min-resolution: 2dppx) {
   toolbarbutton.chevron {
     list-style-image: url("chrome://global/skin/icons/chevron@2x.png");
+  }
+
+  toolbar[brighttext] toolbarbutton.chevron {
+    list-style-image: url("chrome://global/skin/icons/chevron-inverted@2x.png");
   }
 
   toolbarbutton.chevron > .toolbarbutton-icon {
