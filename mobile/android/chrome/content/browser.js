@@ -7389,15 +7389,17 @@ let Reader = {
   },
 
   pageAction: {
-    readerModeCallback: function(){
+    readerModeCallback: function(tabID) {
       Messaging.sendRequest({
         type: "Reader:Click",
+        tabID: tabID
       });
     },
 
-    readerModeActiveCallback: function(){
+    readerModeActiveCallback: function(tabID) {
       Messaging.sendRequest({
         type: "Reader:LongClick",
+        tabID: tabID
       });
 
       UITelemetry.addEvent("save.1", "pageaction", null, "reader");
@@ -7414,7 +7416,7 @@ let Reader = {
       this.pageAction.id = PageActions.add({
         title: Strings.browser.GetStringFromName("readerMode.exit"),
         icon: "drawable://reader_active",
-        clickCallback: this.pageAction.readerModeCallback,
+        clickCallback: () => this.pageAction.readerModeCallback(tab.id),
         important: true
       });
 
@@ -7431,8 +7433,8 @@ let Reader = {
       this.pageAction.id = PageActions.add({
         title: Strings.browser.GetStringFromName("readerMode.enter"),
         icon: "drawable://reader",
-        clickCallback:this.pageAction.readerModeCallback,
-        longClickCallback: this.pageAction.readerModeActiveCallback,
+        clickCallback: () => this.pageAction.readerModeCallback(tab.id),
+        longClickCallback: () => this.pageAction.readerModeActiveCallback(tab.id),
         important: true
       });
     }
