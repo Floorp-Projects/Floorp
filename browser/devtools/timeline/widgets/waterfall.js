@@ -76,16 +76,17 @@ Waterfall.prototype = {
    * @param array markers
    *        A list of markers received from the controller.
    * @param number timeStart
-   *        The delta time (in milliseconds) to start drawing from.
+   *        The time (in milliseconds) to start drawing from.
    * @param number timeEnd
-   *        The delta time (in milliseconds) to end drawing at.
+   *        The time (in milliseconds) to end drawing at.
    */
   setData: function(markers, timeStart, timeEnd) {
     this.clearView();
 
     let dataScale = this._waterfallWidth / (timeEnd - timeStart);
     this._drawWaterfallBackground(dataScale);
-    this._buildHeader(this._headerContents, timeStart, dataScale);
+    // Label the header as if the first possible marker was at T=0.
+    this._buildHeader(this._headerContents, timeStart - markers.startTime, dataScale);
     this._buildMarkers(this._listContents, markers, timeStart, timeEnd, dataScale);
   },
 

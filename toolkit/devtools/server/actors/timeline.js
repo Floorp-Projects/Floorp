@@ -51,7 +51,8 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
      */
     "markers" : {
       type: "markers",
-      markers: Arg(0, "array:json")
+      markers: Arg(0, "array:json"),
+      endTime: Arg(1, "number")
     },
 
     /**
@@ -80,6 +81,7 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     this.tabActor = tabActor;
 
     this._isRecording = false;
+    this._startTime = 0;
 
     // Make sure to get markers from new windows as they become available
     this._onWindowReady = this._onWindowReady.bind(this);
@@ -142,7 +144,8 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
       markers = [...markers, ...docShell.popProfileTimelineMarkers()];
     }
     if (markers.length > 0) {
-      events.emit(this, "markers", markers);
+      let endTime = this.docShells[0].now();
+      events.emit(this, "markers", markers, endTime);
     }
     if (this._memoryActor) {
       events.emit(this, "memory", Date.now(), this._memoryActor.measure());
@@ -176,6 +179,7 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
       return;
     }
     this._isRecording = true;
+    this._startTime = this.docShells[0].now();
 
     for (let docShell of this.docShells) {
       docShell.recordProfileTimelineMarkers = true;
@@ -191,10 +195,14 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     }
 
     this._pullTimelineData();
+    return this._startTime;
   }, {
     request: {
       withMemory: Option(0, "boolean"),
       withTicks: Option(0, "boolean")
+    },
+    response: {
+      value: RetVal("number")
     }
   }),
 
@@ -228,8 +236,6 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
    */
   _onWindowReady: function({window}) {
     if (this._isRecording) {
-      // XXX As long as bug 1070089 isn't fixed, each docShell has its own start
-      // recording time, so markers aren't going to be properly ordered.
       let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIWebNavigation)
                            .QueryInterface(Ci.nsIDocShell);

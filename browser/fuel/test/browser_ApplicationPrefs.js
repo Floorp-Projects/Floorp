@@ -127,7 +127,7 @@ function test() {
   is(Application.prefs.root, "", "Check the Application preference root");
 
   // test for user changed preferences
-  ok(Application.prefs.get("browser.shell.checkDefaultBrowser").modified, "A single preference is marked as modified.");
+  ok(Application.prefs.get("browser.dom.window.dump.enabled").modified, "A single preference is marked as modified.");
   ok(!Application.prefs.get(testdata.string).modified, "A single preference is marked as not modified.");
 
   // test for a locked preference
