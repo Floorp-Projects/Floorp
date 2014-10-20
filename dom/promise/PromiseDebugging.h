@@ -12,6 +12,9 @@
 #include "nsRefPtr.h"
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 
 class Promise;
@@ -32,6 +35,9 @@ public:
                                    JS::MutableHandle<JSObject*> aStack);
   static void GetDependentPromises(GlobalObject&, Promise& aPromise,
                                    nsTArray<nsRefPtr<Promise>>& aPromises);
+  static double GetPromiseLifetime(GlobalObject&, Promise& aPromise);
+  static double GetTimeToSettle(GlobalObject&, Promise& aPromise,
+                                ErrorResult& aRv);
 };
 
 } // namespace dom
