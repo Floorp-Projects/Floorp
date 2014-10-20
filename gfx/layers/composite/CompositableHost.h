@@ -50,6 +50,42 @@ class PCompositableParent;
 struct EffectChain;
 
 /**
+ * A base class for doing CompositableHost and platform dependent task on TextureHost.
+ */
+class CompositableBackendSpecificData
+{
+protected:
+  virtual ~CompositableBackendSpecificData() {}
+
+public:
+  NS_INLINE_DECL_REFCOUNTING(CompositableBackendSpecificData)
+
+  CompositableBackendSpecificData();
+
+  virtual void ClearData() {}
+  virtual void SetCompositor(Compositor* aCompositor) {}
+
+  bool IsAllowingSharingTextureHost()
+  {
+    return mAllowSharingTextureHost;
+  }
+
+  void SetAllowSharingTextureHost(bool aAllow)
+  {
+    mAllowSharingTextureHost = aAllow;
+  }
+
+  uint64_t GetId()
+  {
+    return mId;
+  }
+
+public:
+  bool mAllowSharingTextureHost;
+  uint64_t mId;
+};
+
+/**
  * The compositor-side counterpart to CompositableClient. Responsible for
  * updating textures and data about textures from IPC and how textures are
  * composited (tiling, double buffering, etc.).
@@ -75,6 +111,16 @@ public:
   static TemporaryRef<CompositableHost> Create(const TextureInfo& aTextureInfo);
 
   virtual CompositableType GetType() = 0;
+
+  virtual CompositableBackendSpecificData* GetCompositableBackendSpecificData()
+  {
+    return mBackendData;
+  }
+
+  virtual void SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData)
+  {
+    mBackendData = aBackendData;
+  }
 
   // If base class overrides, it should still call the parent implementation
   virtual void SetCompositor(Compositor* aCompositor);
@@ -206,6 +252,9 @@ public:
       SetLayer(nullptr);
       mAttached = false;
       mKeepAttached = false;
+      if (mBackendData) {
+        mBackendData->ClearData();
+      }
     }
   }
   bool IsAttached() { return mAttached; }
@@ -265,6 +314,7 @@ protected:
   uint64_t mCompositorID;
   RefPtr<Compositor> mCompositor;
   Layer* mLayer;
+  RefPtr<CompositableBackendSpecificData> mBackendData;
   uint32_t mFlashCounter; // used when the pref "layers.flash-borders" is true.
   bool mAttached;
   bool mKeepAttached;
