@@ -7,7 +7,6 @@
 #include "ChromeObjectWrapper.h"
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
-#include "JavaScriptParent.h"
 #include "xpcprivate.h"
 #include "jsapi.h"
 #include "jswrapper.h"
@@ -104,63 +103,6 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
     // If not, try doing the lookup on the prototype.
     MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
     return JS_GetPropertyDescriptorById(cx, wrapperProto, id, desc);
-}
-
-bool
-AccessCheck::checkPassToPrivilegedCode(JSContext *cx, HandleObject wrapper, HandleValue v)
-{
-    // Primitives are fine.
-    if (!v.isObject())
-        return true;
-    RootedObject obj(cx, &v.toObject());
-
-    // Non-wrappers are fine.
-    if (!js::IsWrapper(obj))
-        return true;
-
-    // CPOWs use COWs (in the unprivileged junk scope) for all child->parent
-    // references. Without this test, the child process wouldn't be able to
-    // pass any objects at all to CPOWs.
-    if (mozilla::jsipc::IsWrappedCPOW(obj) &&
-        js::GetObjectCompartment(wrapper) == js::GetObjectCompartment(xpc::UnprivilegedJunkScope()) &&
-        XRE_GetProcessType() == GeckoProcessType_Default)
-    {
-        return true;
-    }
-
-    // COWs are fine to pass to chrome if and only if they have __exposedProps__,
-    // since presumably content should never have a reason to pass an opaque
-    // object back to chrome.
-    if (AccessCheck::isChrome(js::UncheckedUnwrap(wrapper)) && WrapperFactory::IsCOW(obj)) {
-        RootedObject target(cx, js::UncheckedUnwrap(obj));
-        JSAutoCompartment ac(cx, target);
-        RootedId id(cx, GetRTIdByIndex(cx, XPCJSRuntime::IDX_EXPOSEDPROPS));
-        bool found = false;
-        if (!JS_HasPropertyById(cx, target, id, &found))
-            return false;
-        if (found)
-            return true;
-    }
-
-    // Same-origin wrappers are fine.
-    if (AccessCheck::wrapperSubsumes(obj))
-        return true;
-
-    // Badness.
-    JS_ReportError(cx, "Permission denied to pass object to privileged code");
-    return false;
-}
-
-bool
-AccessCheck::checkPassToPrivilegedCode(JSContext *cx, HandleObject wrapper, const CallArgs &args)
-{
-    if (!checkPassToPrivilegedCode(cx, wrapper, args.thisv()))
-        return false;
-    for (size_t i = 0; i < args.length(); ++i) {
-        if (!checkPassToPrivilegedCode(cx, wrapper, args[i]))
-            return false;
-    }
-    return true;
 }
 
 bool
