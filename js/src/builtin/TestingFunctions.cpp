@@ -2157,24 +2157,8 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 
 #ifdef JS_GC_ZEAL
     JS_FN_HELP("gczeal", GCZeal, 2, 0,
-"gczeal(level, [period])",
-"  Specifies how zealous the garbage collector should be. Values for level:\n"
-"    0: Normal amount of collection\n"
-"    1: Collect when roots are added or removed\n"
-"    2: Collect when memory is allocated\n"
-"    3: Collect when the window paints (browser only)\n"
-"    4: Verify pre write barriers between instructions\n"
-"    5: Verify pre write barriers between paints\n"
-"    6: Verify stack rooting\n"
-"    7: Collect the nursery every N nursery allocations\n"
-"    8: Incremental GC in two slices: 1) mark roots 2) finish collection\n"
-"    9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
-"   10: Incremental GC in multiple slices\n"
-"   11: Verify post write barriers between instructions\n"
-"   12: Verify post write barriers between paints\n"
-"   13: Check internal hashtables on minor GC\n"
-"   14: Always compact arenas after GC\n"
-"  Period specifies that collection happens every n allocations.\n"),
+"gczeal(level, [N])",
+gc::ZealModeHelpText),
 
     JS_FN_HELP("schedulegc", ScheduleGC, 1, 0,
 "schedulegc(num | obj)",
