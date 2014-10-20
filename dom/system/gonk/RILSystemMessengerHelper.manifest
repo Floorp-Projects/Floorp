@@ -1,0 +1,6 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+component {19d9a4ea-580d-11e4-8f6c-37ababfaaea9} RILSystemMessengerHelper.js
+contract @mozilla.org/ril/system-messenger-helper;1 {19d9a4ea-580d-11e4-8f6c-37ababfaaea9}
