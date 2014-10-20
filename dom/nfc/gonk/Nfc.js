@@ -247,8 +247,23 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
       // Remember the target that receives onpeerready.
       this.currentPeer = target;
-      this.notifyDOMEvent(target, {event: NFC.NFC_PEER_EVENT_READY,
+      this.notifyDOMEvent(target, {event: NFC.PEER_EVENT_READY,
                                    sessionToken: sessionToken});
+    },
+
+    onTagFound: function onTagFound(message) {
+      message.event = NFC.TAG_EVENT_FOUND;
+      for (let target of this.eventTargets) {
+        this.notifyDOMEvent(target, message);
+      }
+      delete message.event;
+    },
+
+    onTagLost: function onTagLost(sessionToken) {
+      for (let target of this.eventTargets) {
+        this.notifyDOMEvent(target, {event: NFC.TAG_EVENT_LOST,
+                                     sessionToken: sessionToken});
+      }
     },
 
     onPeerLost: function onPeerLost(sessionToken) {
@@ -259,7 +274,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
       // For peerlost, the message is delievered to the target which
       // onpeerready has been called before.
-      this.notifyDOMEvent(this.currentPeer, {event: NFC.NFC_PEER_EVENT_LOST,
+      this.notifyDOMEvent(this.currentPeer, {event: NFC.PEER_EVENT_LOST,
                                              sessionToken: sessionToken});
       this.currentPeer = null;
     },
@@ -526,7 +541,12 @@ Nfc.prototype = {
           SessionHelper.registerSession(message.sessionId, message.techList);
 
         // Do not expose the actual session to the content
+        let sessionId = message.sessionId;
         delete message.sessionId;
+
+        if (!SessionHelper.isP2PSession(sessionId)) {
+          gMessageManager.onTagFound(message);
+        }
 
         gSystemMessenger.broadcastMessage("nfc-manager-tech-discovered", message);
         break;
@@ -537,6 +557,8 @@ Nfc.prototype = {
         message.sessionToken = SessionHelper.getToken(message.sessionId);
         if (SessionHelper.isP2PSession(message.sessionId)) {
           gMessageManager.onPeerLost(message.sessionToken);
+        } else {
+          gMessageManager.onTagLost(message.sessionToken);
         }
 
         SessionHelper.unregisterSession(message.sessionId);
