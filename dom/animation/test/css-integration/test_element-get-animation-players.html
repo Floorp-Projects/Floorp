@@ -323,8 +323,8 @@ test(function() {
   // Update pause state (an AnimationPlayer change)
   div.style.animationPlayState = 'paused';
   var pausedPlayer = div.getAnimationPlayers()[0];
-  // FIXME: Check pausedPlayer.playState has changed once the API is available
-  // (bug 1037321)
+  assert_equals(pausedPlayer.playState, 'paused',
+                'player\'s paused state is updated');
   assert_equals(originalPlayer, pausedPlayer,
                 'getAnimationPlayers returns the same objects even when their'
                 + ' play state changes');

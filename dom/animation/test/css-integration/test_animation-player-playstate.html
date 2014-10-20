@@ -1,0 +1,57 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<style>
+@keyframes anim { }
+</style>
+<script>
+'use strict';
+
+function addDiv() {
+  var div = document.createElement('div');
+  document.body.appendChild(div);
+  return div;
+}
+
+test(function() {
+  var div = addDiv();
+  var cs = window.getComputedStyle(div);
+  div.style.animation = 'anim 1000s';
+
+  var player = div.getAnimationPlayers()[0];
+  assert_equals(player.playState, 'running');
+}, 'Player returns correct playState when running');
+
+test(function() {
+  var div = addDiv();
+  var cs = window.getComputedStyle(div);
+  div.style.animation = 'anim 1000s paused';
+
+  var player = div.getAnimationPlayers()[0];
+  assert_equals(player.playState, 'paused');
+}, 'Player returns correct playState when paused');
+
+test(function() {
+  var div = addDiv();
+  var cs = window.getComputedStyle(div);
+  div.style.animation = 'anim 1000s';
+
+  var player = div.getAnimationPlayers()[0];
+  player.pause();
+  assert_equals(player.playState, 'paused');
+}, 'Player.playState updates when paused by script');
+
+test(function() {
+  var div = addDiv();
+  var cs = window.getComputedStyle(div);
+  div.style.animation = 'anim 1000s paused';
+
+  var player = div.getAnimationPlayers()[0];
+  div.style.animationPlayState = 'running';
+  // This test also checks that calling playState flushes style
+  assert_equals(player.playState, 'running');
+}, 'Player.playState updates when resumed by setting style');
+
+</script>

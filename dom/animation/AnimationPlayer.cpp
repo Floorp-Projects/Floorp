@@ -34,6 +34,25 @@ AnimationPlayer::GetCurrentTime() const
   return AnimationUtils::TimeDurationToDouble(GetCurrentTimeDuration());
 }
 
+AnimationPlayState
+AnimationPlayer::PlayState() const
+{
+  Nullable<TimeDuration> currentTime = GetCurrentTimeDuration();
+  if (currentTime.IsNull()) {
+    return AnimationPlayState::Idle;
+  }
+
+  if (mIsPaused) {
+    return AnimationPlayState::Paused;
+  }
+
+  if (currentTime.Value() >= SourceContentEnd()) {
+    return AnimationPlayState::Finished;
+  }
+
+  return AnimationPlayState::Running;
+}
+
 void
 AnimationPlayer::Play(UpdateFlags aFlags)
 {
@@ -79,6 +98,17 @@ AnimationPlayer::Pause(UpdateFlags aFlags)
   if (aFlags == eUpdateStyle) {
     MaybePostRestyle();
   }
+}
+
+AnimationPlayState
+AnimationPlayer::PlayStateFromJS() const
+{
+  // FIXME: Once we introduce CSSTransitionPlayer, this should move to an
+  // override of PlayStateFromJS in CSSAnimationPlayer and CSSTransitionPlayer
+  // and we should skip it in the general case.
+  FlushStyle();
+
+  return PlayState();
 }
 
 void
@@ -172,6 +202,17 @@ AnimationPlayer::MaybePostRestyle() const
   nsLayoutUtils::PostRestyleEvent(mSource->GetTarget(),
                                   eRestyle_Self,
                                   nsChangeHint_AllReflowHints);
+}
+
+StickyTimeDuration
+AnimationPlayer::SourceContentEnd() const
+{
+  if (!mSource) {
+    return StickyTimeDuration(0);
+  }
+
+  return mSource->Timing().mDelay
+         + mSource->GetComputedTiming().mActiveDuration;
 }
 
 } // namespace dom
