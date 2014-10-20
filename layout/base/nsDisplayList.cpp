@@ -412,7 +412,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
       continue;
     }
     AddAnimationForProperty(aFrame, aProperty, player, aLayer, aData, aPending);
-    player->mIsRunningOnCompositor = true;
+    player->SetIsRunningOnCompositor();
   }
 }
 

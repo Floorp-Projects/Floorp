@@ -834,7 +834,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           } else if ((computedTiming.mPhase ==
                       ComputedTiming::AnimationPhase_Active) &&
                      canThrottleTick &&
-                    !player->mIsRunningOnCompositor) {
+                     !player->IsRunningOnCompositor()) {
             // Start a transition with a delay where we should start the
             // transition proper.
             collection->UpdateAnimationGeneration(mPresContext);
