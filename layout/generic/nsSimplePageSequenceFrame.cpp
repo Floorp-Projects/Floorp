@@ -6,6 +6,7 @@
 #include "nsSimplePageSequenceFrame.h"
 
 #include "nsCOMPtr.h"
+#include "nsDeviceContext.h"
 #include "nsPresContext.h"
 #include "gfxContext.h"
 #include "nsRenderingContext.h"

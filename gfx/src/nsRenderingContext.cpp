@@ -20,12 +20,6 @@
 #include "nsRect.h"                     // for nsRect, nsIntRect
 #include "nsRegion.h"                   // for nsIntRegionRectIterator, etc
 
-// XXXTodo: rename FORM_TWIPS to FROM_APPUNITS
-#define FROM_TWIPS(_x)  ((gfxFloat)((_x)/(mP2A)))
-#define FROM_TWIPS_INT(_x)  (NSToIntRound((gfxFloat)((_x)/(mP2A))))
-#define TO_TWIPS(_x)    ((nscoord)((_x)*(mP2A)))
-#define GFX_RECT_FROM_TWIPS_RECT(_r)   (gfxRect(FROM_TWIPS((_r).x), FROM_TWIPS((_r).y), FROM_TWIPS((_r).width), FROM_TWIPS((_r).height)))
-
 // Hard limit substring lengths to 8000 characters ... this lets us statically
 // size the cluster buffer array in FindSafeLength
 #define MAX_GFX_TEXT_BUF_SIZE 8000
@@ -64,21 +58,16 @@ static int32_t FindSafeLength(const char *aString, uint32_t aLength,
 //// nsRenderingContext
 
 void
-nsRenderingContext::Init(nsDeviceContext* aContext,
-                         gfxContext *aThebesContext)
+nsRenderingContext::Init(gfxContext *aThebesContext)
 {
-    mDeviceContext = aContext;
     mThebes = aThebesContext;
-
     mThebes->SetLineWidth(1.0);
-    mP2A = mDeviceContext->AppUnitsPerDevPixel();
 }
 
 void
-nsRenderingContext::Init(nsDeviceContext* aContext,
-                         DrawTarget *aDrawTarget)
+nsRenderingContext::Init(DrawTarget *aDrawTarget)
 {
-    Init(aContext, new gfxContext(aDrawTarget));
+    Init(new gfxContext(aDrawTarget));
 }
 
 
