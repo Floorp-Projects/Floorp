@@ -51,6 +51,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         if (isCreated())
             return false;
         sGeckoThread = new GeckoThread(sArgs, sAction, sUri);
+        ThreadUtils.sGeckoThread = sGeckoThread;
         return true;
     }
 
@@ -164,7 +165,6 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     @Override
     public void run() {
         Looper.prepare();
-        ThreadUtils.sGeckoThread = this;
         ThreadUtils.sGeckoHandler = new Handler();
         ThreadUtils.sGeckoQueue = Looper.myQueue();
 
