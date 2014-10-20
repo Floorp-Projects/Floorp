@@ -6,6 +6,7 @@
 #include "nsPageFrame.h"
 
 #include "mozilla/gfx/2D.h"
+#include "nsDeviceContext.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"

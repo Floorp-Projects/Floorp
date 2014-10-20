@@ -1589,7 +1589,7 @@ nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
   aContext->GetDrawTarget()->AddUserData(&gfxTextContextPaint::sUserDataKey,
                                          aContextPaint, nullptr);
   nsRefPtr<nsRenderingContext> context(new nsRenderingContext());
-  context->Init(frame->PresContext()->DeviceContext(), aContext);
+  context->Init(aContext);
   svgFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
   gfxMatrix m;
   if (frame->GetContent()->IsSVG()) {

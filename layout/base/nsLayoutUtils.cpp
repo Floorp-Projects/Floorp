@@ -4710,7 +4710,7 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
     // Conjure an nsRenderingContext from a gfxContext for drawing the text
     // to blur.
     nsRefPtr<nsRenderingContext> renderingContext = new nsRenderingContext();
-    renderingContext->Init(presCtx->DeviceContext(), shadowContext);
+    renderingContext->Init(shadowContext);
 
     aDestCtx->Save();
     aDestCtx->NewPath();
