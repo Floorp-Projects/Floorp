@@ -12,7 +12,7 @@ interface nsITreeColumn;
 interface nsITreeColumns;
 interface nsIScriptableRegion;
 
-[uuid(64BA5199-C4F4-4498-BBDC-F8E4C369086C)]
+[scriptable, uuid(64BA5199-C4F4-4498-BBDC-F8E4C369086C)]
 interface nsITreeBoxObject : nsISupports
 {
   /**
