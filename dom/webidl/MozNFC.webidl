@@ -72,6 +72,17 @@ interface MozNFC : EventTarget {
   attribute EventHandler onpeerready;
   [CheckPermissions="nfc-write"]
   attribute EventHandler onpeerlost;
+
+  /**
+   * Ths event will be fired when a NFCTag is detected.
+   */
+  [CheckPermissions="nfc-read nfc-write"]
+  attribute EventHandler ontagfound;
+
+  /**
+   * This event will be fired if the tag detected in ontagfound has been removed.
+   */
+  attribute EventHandler ontaglost;
 };
 
 // Mozilla Only
