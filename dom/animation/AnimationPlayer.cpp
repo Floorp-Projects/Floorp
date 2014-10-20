@@ -202,12 +202,7 @@ AnimationPlayer::CanThrottle() const
   // finishing, we need an unthrottled sample so we can apply the correct
   // end-of-animation behavior on the main thread (either removing the
   // animation style or applying the fill mode).
-  //
-  // XXX We shouldn't really be using LastNotification() below as a general
-  // indicator that the animation has finished, it should be reserved for
-  // events. If we use it differently in the future this use might need
-  // changing.
-  return mSource->LastNotification() == Animation::LAST_NOTIFICATION_END;
+  return mIsPreviousStateFinished;
 }
 
 void
@@ -219,11 +214,14 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
     return;
   }
 
-  if (PlayState() == AnimationPlayState::Running) {
+  AnimationPlayState playState = PlayState();
+  if (playState == AnimationPlayState::Running) {
     aNeedsRefreshes = true;
   }
 
   mSource->ComposeStyle(aStyleRule, aSetProperties);
+
+  mIsPreviousStateFinished = (playState == AnimationPlayState::Finished);
 }
 
 void

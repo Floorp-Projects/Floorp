@@ -42,6 +42,7 @@ public:
     : mTimeline(aTimeline)
     , mIsPaused(false)
     , mIsRunningOnCompositor(false)
+    , mIsPreviousStateFinished(false)
   {
   }
 
@@ -128,6 +129,12 @@ protected:
   Nullable<TimeDuration> mHoldTime;  // Player timescale
   bool mIsPaused;
   bool mIsRunningOnCompositor;
+  // Indicates whether we were in the finished state during our
+  // most recent unthrottled sample (our last ComposeStyle call).
+  // FIXME: When we implement the finished promise (bug 1074630) we can
+  // probably remove this and check if the promise has been settled yet
+  // or not instead.
+  bool mIsPreviousStateFinished; // Spec calls this "previous finished state"
 };
 
 } // namespace dom
