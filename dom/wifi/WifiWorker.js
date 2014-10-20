@@ -82,6 +82,9 @@ const WPA_SUPPLICANT = "wpa_supplicant";
 const DHCP_PROP = "init.svc.dhcpcd";
 const DHCP = "dhcpcd";
 
+const MODE_ESS = 0;
+const MODE_IBSS = 1;
+
 XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
                                    "@mozilla.org/network/manager;1",
                                    "nsINetworkManager");
@@ -112,21 +115,26 @@ var WifiManager = (function() {
       driverDelay: libcutils.property_get("ro.moz.wifi.driverDelay"),
       p2pSupported: libcutils.property_get("ro.moz.wifi.p2p_supported") === "1",
       eapSimSupported: libcutils.property_get("ro.moz.wifi.eapsim_supported") === "1",
+      ibssSupported: libcutils.property_get("ro.moz.wifi.ibss_supported", "true") === "true",
       ifname: libcutils.property_get("wifi.interface")
     };
   }
 
   let {sdkVersion, unloadDriverEnabled, schedScanRecovery,
-       driverDelay, p2pSupported, eapSimSupported, ifname} = getStartupPrefs();
+       driverDelay, p2pSupported, eapSimSupported, ibssSupported, ifname} = getStartupPrefs();
 
   let capabilities = {
     security: ["OPEN", "WEP", "WPA-PSK", "WPA-EAP"],
     eapMethod: ["PEAP", "TTLS"],
     eapPhase2: ["MSCHAPV2"],
-    certificate: ["SERVER"]
+    certificate: ["SERVER"],
+    mode: [MODE_ESS]
   };
   if (eapSimSupported) {
     capabilities.eapMethod.unshift("SIM");
+  }
+  if (ibssSupported) {
+    capabilities.mode.push(MODE_IBSS);
   }
 
   let wifiListener = {
@@ -1188,7 +1196,13 @@ var WifiManager = (function() {
     {name: "pin",           type: "string"},
     {name: "pcsc",          type: "string"},
     {name: "ca_cert",       type: "string"},
-    {name: "subject_match", type: "string"}
+    {name: "subject_match", type: "string"},
+    {name: "frequency",     type: "integer"},
+    {name: "mode",          type: "integer"}
+  ];
+  // These fields are only handled in IBSS (aka ad-hoc) mode
+  var ibssNetworkConfigurationFields = [
+    "frequency", "mode"
   ];
 
   manager.getNetworkConfiguration = function(config, callback) {
@@ -1223,9 +1237,23 @@ var WifiManager = (function() {
                 config[name] !== '*'));
     }
 
+    function getModeFromConfig() {
+      /* we use the mode from the config, or ESS as default */
+      return hasValidProperty("mode") ? config["mode"] : MODE_ESS;
+    }
+
+    var mode = getModeFromConfig();
+
+    function validForMode(name, mode) {
+            /* all fields are valid for IBSS */
+      return (mode == MODE_IBSS) ||
+            /* IBSS fields are not valid for ESS */
+            ((mode == MODE_ESS) && !(name in ibssNetworkConfigurationFields));
+    }
+
     for (var n = 0; n < networkConfigurationFields.length; ++n) {
       let fieldName = networkConfigurationFields[n].name;
-      if (!hasValidProperty(fieldName)) {
+      if (!hasValidProperty(fieldName) || !validForMode(fieldName, mode)) {
         ++done;
       } else {
         wifiCommand.setNetworkVariable(netId, fieldName, config[fieldName], function(ok) {
@@ -1556,6 +1584,18 @@ function getNetworkKey(network)
   return escape(ssid) + encryption;
 }
 
+function getMode(flags) {
+  if (!flags)
+    return -1;
+
+  if (/\[ESS/.test(flags))
+    return MODE_ESS;
+  if (/\[IBSS/.test(flags))
+    return MODE_IBSS;
+
+  return -1;
+}
+
 function getKeyManagement(flags) {
   var types = [];
   if (!flags)
@@ -1602,8 +1642,10 @@ function calculateSignal(strength) {
   return Math.floor(((strength - MIN_RSSI) / (MAX_RSSI - MIN_RSSI)) * 100);
 }
 
-function Network(ssid, security, password, capabilities) {
+function Network(ssid, mode, frequency, security, password, capabilities) {
   this.ssid = ssid;
+  this.mode = mode;
+  this.frequency = frequency;
   this.security = security;
 
   if (typeof password !== "undefined")
@@ -1617,6 +1659,8 @@ function Network(ssid, security, password, capabilities) {
 
 Network.api = {
   ssid: "r",
+  mode: "r",
+  frequency: "r",
   security: "r",
   capabilities: "r",
   known: "r",
@@ -1636,9 +1680,9 @@ Network.api = {
 
 // Note: We never use ScanResult.prototype, so the fact that it's unrelated to
 // Network.prototype is OK.
-function ScanResult(ssid, bssid, flags, signal) {
-  Network.call(this, ssid, getKeyManagement(flags), undefined,
-               getCapabilities(flags));
+function ScanResult(ssid, bssid, frequency, flags, signal) {
+  Network.call(this, ssid, getMode(flags), frequency,
+               getKeyManagement(flags), undefined, getCapabilities(flags));
   this.bssid = bssid;
   this.signalStrength = signal;
   this.relSignalStrength = calculateSignal(Number(signal));
@@ -1850,6 +1894,8 @@ function WifiWorker() {
       return null;
     }
     var ssid = dequote(net.ssid);
+    var mode = net.mode;
+    var frequency = net.frequency;
     var security = (net.key_mgmt === "NONE" && net.wep_key0) ? ["WEP"] :
                    (net.key_mgmt && net.key_mgmt !== "NONE") ? [net.key_mgmt.split(" ")[0]] :
                    [];
@@ -1860,7 +1906,7 @@ function WifiWorker() {
       password = "*";
     }
 
-    var pub = new Network(ssid, security, password);
+    var pub = new Network(ssid, mode, frequency, security, password);
     if (net.identity)
       pub.identity = dequote(net.identity);
     if ("netId" in net)
@@ -2062,10 +2108,12 @@ function WifiWorker() {
         break;
       case "ASSOCIATING":
         // id has not yet been filled in, so we can only report the ssid and
-        // bssid.
+        // bssid. mode and frequency are simply made up.
         self.currentNetwork =
           { bssid: WifiManager.connectionInfo.bssid,
-            ssid: quote(WifiManager.connectionInfo.ssid) };
+            ssid: quote(WifiManager.connectionInfo.ssid),
+            mode: MODE_ESS,
+            frequency: 0};
         self._fireEvent("onconnecting", { network: netToDOM(self.currentNetwork) });
         break;
       case "ASSOCIATED":
@@ -2261,6 +2309,8 @@ function WifiWorker() {
         return;
       }
 
+      let capabilities = WifiManager.getCapabilities();
+
       // Now that we have scan results, there's no more need to continue
       // scanning. Ignore any errors from this command.
       WifiManager.setScanMode("inactive", function() {});
@@ -2274,17 +2324,18 @@ function WifiWorker() {
         if (match && match[5]) {
           let ssid = match[5],
               bssid = match[1],
+              frequency = match[2],
               signalLevel = match[3],
               flags = match[4];
 
-          // Skip ad-hoc networks which aren't supported (bug 811635).
-          if (flags && flags.indexOf("[IBSS]") >= 0)
+          /* Skip networks with unknown or unsupported modes. */
+          if (capabilities.mode.indexOf(getMode(flags)) == -1)
             continue;
 
           // If this is the first time that we've seen this SSID in the scan
           // results, add it to the list along with any other information.
           // Also, we use the highest signal strength that we see.
-          let network = new ScanResult(ssid, bssid, flags, signalLevel);
+          let network = new ScanResult(ssid, bssid, frequency, flags, signalLevel);
 
           let networkKey = getNetworkKey(network);
           let eapIndex = -1;
