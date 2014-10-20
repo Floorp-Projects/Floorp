@@ -2802,7 +2802,7 @@ CalculateFrameMetricsForDisplayPort(nsIFrame* aScrollFrame,
     * nsLayoutUtils::GetTransformToAncestorScale(aScrollFrame).width);
 
   metrics.mDevPixelsPerCSSPixel = deviceScale;
-  metrics.mResolution = resolution;
+  metrics.mPresShellResolution = resolution;
   metrics.mCumulativeResolution = cumulativeResolution;
   metrics.SetZoom(deviceScale * cumulativeResolution * LayerToScreenScale(1));
 
