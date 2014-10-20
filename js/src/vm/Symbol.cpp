@@ -9,6 +9,7 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 
+#include "builtin/SymbolObject.h"
 #include "gc/Rooting.h"
 #include "vm/StringBuffer.h"
 
@@ -135,4 +136,17 @@ js::SymbolDescriptiveString(JSContext *cx, Symbol *sym, MutableHandleValue resul
         return false;
     result.setString(str);
     return true;
+}
+
+bool
+js::IsSymbolOrSymbolWrapper(Value v)
+{
+    return v.isSymbol() || (v.isObject() && v.toObject().is<SymbolObject>());
+}
+
+JS::Symbol *
+js::ToSymbolPrimitive(Value v)
+{
+    MOZ_ASSERT(IsSymbolOrSymbolWrapper(v));
+    return v.isSymbol() ? v.toSymbol() : v.toObject().as<SymbolObject>().unbox();
 }

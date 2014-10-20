@@ -29,6 +29,10 @@ public:
   virtual void Call(JSContext* aCx,
                     JS::Handle<JS::Value> aValue) = 0;
 
+  // Return the Promise that this callback will end up resolving or
+  // rejecting, if any.
+  virtual Promise* GetDependentPromise() = 0;
+
   enum Task {
     Resolve,
     Reject
@@ -53,6 +57,11 @@ public:
   void Call(JSContext* aCx,
             JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
 
+  Promise* GetDependentPromise() MOZ_OVERRIDE
+  {
+    return mNextPromise;
+  }
+
   WrapperPromiseCallback(Promise* aNextPromise, JS::Handle<JSObject*> aGlobal,
                          AnyCallback* aCallback);
 
@@ -76,6 +85,11 @@ public:
   void Call(JSContext* aCx,
             JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
 
+  Promise* GetDependentPromise() MOZ_OVERRIDE
+  {
+    return mPromise;
+  }
+
   ResolvePromiseCallback(Promise* aPromise, JS::Handle<JSObject*> aGlobal);
 
 private:
@@ -97,6 +111,11 @@ public:
   void Call(JSContext* aCx,
             JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
 
+  Promise* GetDependentPromise() MOZ_OVERRIDE
+  {
+    return mPromise;
+  }
+
   RejectPromiseCallback(Promise* aPromise, JS::Handle<JSObject*> aGlobal);
 
 private:
@@ -116,6 +135,11 @@ public:
 
   void Call(JSContext* aCx,
             JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
+
+  Promise* GetDependentPromise() MOZ_OVERRIDE
+  {
+    return nullptr;
+  }
 
   NativePromiseCallback(PromiseNativeHandler* aHandler,
                         Promise::PromiseState aState);

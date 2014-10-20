@@ -1,0 +1,10 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<iframe src="data:text/xml,
+  <html xmlns='http://www.w3.org/1999/xhtml'
+   onDOMAttrModified='window.frameElement.parentNode.removeChild(window.frameElement)'>
+  </html>"
+ onload="event.target.contentDocument.documentElement.setAttribute('x', 'y');"></iframe>
+</body>
+</html>

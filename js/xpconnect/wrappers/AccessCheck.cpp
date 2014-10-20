@@ -93,16 +93,16 @@ AccessCheck::getPrincipal(JSCompartment *compartment)
 
 // Hardcoded policy for cross origin property access. See the HTML5 Spec.
 static bool
-IsPermitted(const char *name, JSFlatString *prop, bool set)
+IsPermitted(CrossOriginObjectType type, JSFlatString *prop, bool set)
 {
     size_t propLength = JS_GetStringLength(JS_FORGET_STRING_FLATNESS(prop));
     if (!propLength)
         return false;
 
     char16_t propChar0 = JS_GetFlatStringCharAt(prop, 0);
-    if (name[0] == 'L' && !strcmp(name, "Location"))
+    if (type == CrossOriginLocation)
         return dom::LocationBinding::IsPermitted(prop, propChar0, set);
-    if (name[0] == 'W' && !strcmp(name, "Window"))
+    if (type == CrossOriginWindow)
         return dom::WindowBinding::IsPermitted(prop, propChar0, set);
 
     return false;
@@ -141,10 +141,19 @@ IsFrameId(JSContext *cx, JSObject *objArg, jsid idArg)
     return domwin != nullptr;
 }
 
-static bool
-IsWindow(const char *name)
+CrossOriginObjectType
+IdentifyCrossOriginObject(JSObject *obj)
 {
-    return name[0] == 'W' && !strcmp(name, "Window");
+    obj = js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
+    const js::Class *clasp = js::GetObjectClass(obj);
+    MOZ_ASSERT(!XrayUtils::IsXPCWNHolderClass(Jsvalify(clasp)), "shouldn't have a holder here");
+
+    if (clasp->name[0] == 'L' && !strcmp(clasp->name, "Location"))
+        return CrossOriginLocation;
+    if (clasp->name[0] == 'W' && !strcmp(clasp->name, "Window"))
+        return CrossOriginWindow;
+
+    return CrossOriginOpaque;
 }
 
 bool
@@ -166,16 +175,9 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, HandleObject wrapper, H
 
     RootedObject obj(cx, Wrapper::wrappedObject(wrapper));
 
-    const char *name;
-    const js::Class *clasp = js::GetObjectClass(obj);
-    MOZ_ASSERT(!XrayUtils::IsXPCWNHolderClass(Jsvalify(clasp)), "shouldn't have a holder here");
-    if (clasp->ext.innerObject)
-        name = "Window";
-    else
-        name = clasp->name;
-
+    CrossOriginObjectType type = IdentifyCrossOriginObject(obj);
     if (JSID_IS_STRING(id)) {
-        if (IsPermitted(name, JSID_TO_FLAT_STRING(id), act == Wrapper::SET))
+        if (IsPermitted(type, JSID_TO_FLAT_STRING(id), act == Wrapper::SET))
             return true;
     }
 
@@ -184,7 +186,7 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, HandleObject wrapper, H
 
     // Check for frame IDs. If we're resolving named frames, make sure to only
     // resolve ones that don't shadow native properties. See bug 860494.
-    if (IsWindow(name)) {
+    if (type == CrossOriginWindow) {
         if (JSID_IS_STRING(id)) {
             bool wouldShadow = false;
             if (!XrayUtils::HasNativeProperty(cx, wrapper, id, &wouldShadow) ||
@@ -226,8 +228,7 @@ ExposedPropertiesOnly::check(JSContext *cx, HandleObject wrapper, HandleId id, W
     RootedObject wrappedObject(cx, Wrapper::wrappedObject(wrapper));
 
     if (act == Wrapper::CALL)
-        return true;
-
+        return false;
 
     // For the case of getting a property descriptor, we allow if either GET or SET
     // is allowed, and rely on FilteringWrapper to filter out any disallowed accessors.
@@ -344,17 +345,18 @@ ExposedPropertiesOnly::check(JSContext *cx, HandleObject wrapper, HandleId id, W
     }
 
     // Inspect the property on the underlying object to check for red flags.
+    bool skipCallableChecks = CompartmentPrivate::Get(wrappedObject)->skipCOWCallableChecks;
     if (!JS_GetPropertyDescriptorById(cx, wrappedObject, id, &desc))
         return false;
 
     // Reject accessor properties.
-    if (desc.hasGetterOrSetter()) {
+    if (!skipCallableChecks && desc.hasGetterOrSetter()) {
         EnterAndThrow(cx, wrapper, "Exposing privileged accessor properties is prohibited");
         return false;
     }
 
     // Reject privileged or cross-origin callables.
-    if (desc.value().isObject()) {
+    if (!skipCallableChecks && desc.value().isObject()) {
         RootedObject maybeCallable(cx, js::UncheckedUnwrap(&desc.value().toObject()));
         if (JS::IsCallable(maybeCallable) && !AccessCheck::subsumes(wrapper, maybeCallable)) {
             EnterAndThrow(cx, wrapper, "Exposing privileged or cross-origin callable is prohibited");

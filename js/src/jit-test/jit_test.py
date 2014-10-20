@@ -117,6 +117,8 @@ def main(argv):
                   help='The test chunk to run.')
     op.add_option('--total-chunks', type=int, default=1,
                   help='The total number of test chunks.')
+    op.add_option('--ignore-timeouts', dest='ignore_timeouts', metavar='FILE',
+                  help='Ignore timeouts of tests listed in [FILE]')
 
     options, args = op.parse_args(argv)
     if len(args) < 1:
@@ -212,6 +214,16 @@ def main(argv):
                 new_test = test.copy()
                 new_test.jitflags.extend(jitflags)
                 job_list.append(new_test)
+
+    if options.ignore_timeouts:
+        read_all = False
+        try:
+            with open(options.ignore_timeouts) as f:
+                options.ignore_timeouts = set([line.strip('\n') for line in f.readlines()])
+        except IOError:
+            sys.exit("Error reading file: " + options.ignore_timeouts)
+    else:
+        options.ignore_timeouts = set()
 
     prefix = [which(args[0])] + shlex.split(options.shell_args)
     prolog = os.path.join(jittests.LIB_DIR, 'prolog.js')

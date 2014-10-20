@@ -8,6 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#ifndef VPX_PORTS_MEM_OPS_ALIGNED_H_
+#define VPX_PORTS_MEM_OPS_ALIGNED_H_
+
+#include "vpx/vpx_integer.h"
 
 /* \file
  * \brief Provides portable memory access primitives for operating on aligned
@@ -40,19 +44,22 @@
 #define swap_endian_32_se(val,raw) swap_endian_32(val,raw)
 
 #define mem_get_ne_aligned_generic(end,sz) \
-  static unsigned MEM_VALUE_T mem_get_##end##sz##_aligned(const void *vmem) {\
+  static VPX_INLINE unsigned MEM_VALUE_T \
+    mem_get_##end##sz##_aligned(const void *vmem) {\
     const uint##sz##_t *mem = (const uint##sz##_t *)vmem;\
     return *mem;\
   }
 
 #define mem_get_sne_aligned_generic(end,sz) \
-  static signed MEM_VALUE_T mem_get_s##end##sz##_aligned(const void *vmem) {\
+  static VPX_INLINE signed MEM_VALUE_T \
+    mem_get_s##end##sz##_aligned(const void *vmem) {\
     const int##sz##_t *mem = (const int##sz##_t *)vmem;\
     return *mem;\
   }
 
 #define mem_get_se_aligned_generic(end,sz) \
-  static unsigned MEM_VALUE_T mem_get_##end##sz##_aligned(const void *vmem) {\
+  static VPX_INLINE unsigned MEM_VALUE_T \
+    mem_get_##end##sz##_aligned(const void *vmem) {\
     const uint##sz##_t *mem = (const uint##sz##_t *)vmem;\
     unsigned MEM_VALUE_T val, raw = *mem;\
     swap_endian_##sz(val,raw);\
@@ -60,7 +67,8 @@
   }
 
 #define mem_get_sse_aligned_generic(end,sz) \
-  static signed MEM_VALUE_T mem_get_s##end##sz##_aligned(const void *vmem) {\
+  static VPX_INLINE signed MEM_VALUE_T \
+    mem_get_s##end##sz##_aligned(const void *vmem) {\
     const int##sz##_t *mem = (const int##sz##_t *)vmem;\
     unsigned MEM_VALUE_T val, raw = *mem;\
     swap_endian_##sz##_se(val,raw);\
@@ -68,13 +76,15 @@
   }
 
 #define mem_put_ne_aligned_generic(end,sz) \
-  static void mem_put_##end##sz##_aligned(void *vmem, MEM_VALUE_T val) {\
+  static VPX_INLINE void \
+    mem_put_##end##sz##_aligned(void *vmem, MEM_VALUE_T val) {\
     uint##sz##_t *mem = (uint##sz##_t *)vmem;\
     *mem = (uint##sz##_t)val;\
   }
 
 #define mem_put_se_aligned_generic(end,sz) \
-  static void mem_put_##end##sz##_aligned(void *vmem, MEM_VALUE_T val) {\
+  static VPX_INLINE void \
+    mem_put_##end##sz##_aligned(void *vmem, MEM_VALUE_T val) {\
     uint##sz##_t *mem = (uint##sz##_t *)vmem, raw;\
     swap_endian_##sz(raw,val);\
     *mem = (uint##sz##_t)raw;\
@@ -155,3 +165,5 @@ mem_put_le_aligned_generic(32)
 #undef swap_endian_32
 #undef swap_endian_16_se
 #undef swap_endian_32_se
+
+#endif  // VPX_PORTS_MEM_OPS_ALIGNED_H_

@@ -12,6 +12,5 @@ if CONFIG['MOZ_JEMALLOC3'] or CONFIG['MOZ_REPLACE_MALLOC']:
 
 DIRS += ['build']
 
-if CONFIG['MOZ_REPLACE_MALLOC_LINKAGE'] == 'dummy library':
-    DIRS += ['replace/dummy']
-
+if CONFIG['MOZ_REPLACE_MALLOC']:
+    DIRS += ['replace']

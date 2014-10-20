@@ -9056,6 +9056,10 @@ if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
     USE_ICU=1
 fi
 
+if test "$OS_TARGET" = WINNT; then
+    MOZ_SHARED_ICU=1
+fi
+
 MOZ_CONFIG_ICU()
 
 if test -z "$JS_SHARED_LIBRARY"; then

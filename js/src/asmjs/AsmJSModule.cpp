@@ -784,8 +784,7 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
 void
 AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx)
 {
-    MOZ_ASSERT_IF(heap->is<ArrayBufferObject>(),
-                  heap->as<ArrayBufferObject>().isAsmJSArrayBuffer());
+    MOZ_ASSERT_IF(heap->is<ArrayBufferObject>(), heap->as<ArrayBufferObject>().isAsmJS());
     MOZ_ASSERT(IsValidAsmJSHeapLength(heap->byteLength()));
     MOZ_ASSERT(dynamicallyLinked_);
     MOZ_ASSERT(!maybeHeap_);

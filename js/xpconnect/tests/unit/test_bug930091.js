@@ -17,8 +17,8 @@ function run_test() {
   sb.cow = { foopy: 2, __exposedProps__: { foopy: 'rw' } };
   sb.payload = Cu.evalInSandbox('new Object()', xosb);
   Cu.evalInSandbox(checkThrows.toSource(), sb);
-  Cu.evalInSandbox('checkThrows(fun.bind(null, payload));', sb);
-  Cu.evalInSandbox('checkThrows(fun.bind(payload));', sb);
+  Cu.evalInSandbox('checkThrows(Function.bind.call(fun, null, payload));', sb);
+  Cu.evalInSandbox('checkThrows(Function.bind.call(fun, payload));', sb);
   Cu.evalInSandbox('checkThrows(function() { new fun(payload); });', sb);
   Cu.evalInSandbox('checkThrows(function() { cow.foopy = payload; });', sb);
   Cu.evalInSandbox('checkThrows(function() { Object.defineProperty(cow, "foopy", { value: payload }); });', sb);

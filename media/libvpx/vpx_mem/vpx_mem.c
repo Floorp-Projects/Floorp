@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "include/vpx_mem_intrnl.h"
+#include "vpx/vpx_integer.h"
 
 #if CONFIG_MEM_TRACKER
 #ifndef VPX_NO_GLOBALS
@@ -451,6 +452,29 @@ void *vpx_memset(void *dest, int val, size_t length) {
 
   return VPX_MEMSET_L(dest, val, length);
 }
+
+#if CONFIG_VP9 && CONFIG_VP9_HIGHBITDEPTH
+void *vpx_memset16(void *dest, int val, size_t length) {
+#if CONFIG_MEM_CHECKS
+  if ((int)dest < 0x4000) {
+    _P(printf("WARNING: vpx_memset dest:0x%x val:%d len:%d\n",
+              (int)dest, val, length);)
+
+#if defined(VXWORKS)
+    sp(get_my_tt, task_id_self(), 0, 0, 0, 0, 0, 0, 0, 0);
+
+    vx_sleep(10000);
+#endif
+  }
+#endif
+  int i;
+  void *orig = dest;
+  uint16_t *dest16 = dest;
+  for (i = 0; i < length; i++)
+    *dest16++ = val;
+  return orig;
+}
+#endif  // CONFIG_VP9 && CONFIG_VP9_HIGHBITDEPTH
 
 void *vpx_memmove(void *dest, const void *src, size_t count) {
 #if CONFIG_MEM_CHECKS

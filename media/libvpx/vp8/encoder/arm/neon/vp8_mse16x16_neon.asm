@@ -27,6 +27,8 @@
 ;from vp8_variance().
 
 |vp8_mse16x16_neon| PROC
+    vpush           {q7}
+
     vmov.i8         q7, #0                      ;q7, q8, q9, q10 - sse
     vmov.i8         q8, #0
     vmov.i8         q9, #0
@@ -62,7 +64,7 @@ mse16x16_neon_loop
     vadd.u32        q7, q7, q8
     vadd.u32        q9, q9, q10
 
-    ldr             r12, [sp]               ;load *sse from stack
+    ldr             r12, [sp, #16]              ;load *sse from stack
 
     vadd.u32        q10, q7, q9
     vpaddl.u32      q1, q10
@@ -71,6 +73,7 @@ mse16x16_neon_loop
     vst1.32         {d0[0]}, [r12]
     vmov.32         r0, d0[0]
 
+    vpop            {q7}
     bx              lr
 
     ENDP
@@ -82,6 +85,8 @@ mse16x16_neon_loop
 ; r2    unsigned char *ref_ptr,
 ; r3    int  recon_stride
 |vp8_get4x4sse_cs_neon| PROC
+    vpush           {q7}
+
     vld1.8          {d0}, [r0], r1              ;Load up source and reference
     vld1.8          {d4}, [r2], r3
     vld1.8          {d1}, [r0], r1
@@ -109,6 +114,8 @@ mse16x16_neon_loop
     vadd.u64        d0, d2, d3
 
     vmov.32         r0, d0[0]
+
+    vpop            {q7}
     bx              lr
 
     ENDP

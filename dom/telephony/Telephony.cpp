@@ -11,7 +11,6 @@
 #include "mozilla/dom/MozMobileConnectionBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TelephonyBinding.h"
-#include "mozilla/dom/UnionTypes.h"
 
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"

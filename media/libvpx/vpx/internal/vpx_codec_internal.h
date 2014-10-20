@@ -41,12 +41,15 @@
  * Once initialized, the instance is manged using other functions from
  * the vpx_codec_* family.
  */
-#ifndef VPX_CODEC_INTERNAL_H
-#define VPX_CODEC_INTERNAL_H
+#ifndef VPX_INTERNAL_VPX_CODEC_INTERNAL_H_
+#define VPX_INTERNAL_VPX_CODEC_INTERNAL_H_
 #include "../vpx_decoder.h"
 #include "../vpx_encoder.h"
 #include <stdarg.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!\brief Current ABI version number
  *
@@ -56,7 +59,7 @@
  * types, removing or reassigning enums, adding/removing/rearranging
  * fields to structures
  */
-#define VPX_CODEC_INTERNAL_ABI_VERSION (4) /**<\hideinitializer*/
+#define VPX_CODEC_INTERNAL_ABI_VERSION (5) /**<\hideinitializer*/
 
 typedef struct vpx_codec_alg_priv  vpx_codec_alg_priv_t;
 typedef struct vpx_codec_priv_enc_mr_cfg vpx_codec_priv_enc_mr_cfg_t;
@@ -151,9 +154,8 @@ typedef vpx_codec_err_t (*vpx_codec_get_si_fn_t)(vpx_codec_alg_priv_t    *ctx,
  * \retval #VPX_CODEC_OK
  *     The internal state data was deserialized.
  */
-typedef vpx_codec_err_t (*vpx_codec_control_fn_t)(vpx_codec_alg_priv_t  *ctx,
-                                                  int                  ctrl_id,
-                                                  va_list              ap);
+typedef vpx_codec_err_t (*vpx_codec_control_fn_t)(vpx_codec_alg_priv_t *ctx,
+                                                  va_list ap);
 
 /*!\brief control function pointer mapping
  *
@@ -167,8 +169,8 @@ typedef vpx_codec_err_t (*vpx_codec_control_fn_t)(vpx_codec_alg_priv_t  *ctx,
  * \ref MUST be non-zero.
  */
 typedef const struct vpx_codec_ctrl_fn_map {
-  int                    ctrl_id;
-  vpx_codec_control_fn_t   fn;
+  int ctrl_id;
+  vpx_codec_control_fn_t fn;
 } vpx_codec_ctrl_fn_map_t;
 
 /*!\brief decode data function pointer prototype
@@ -215,37 +217,36 @@ typedef vpx_codec_err_t (*vpx_codec_decode_fn_t)(vpx_codec_alg_priv_t  *ctx,
 typedef vpx_image_t *(*vpx_codec_get_frame_fn_t)(vpx_codec_alg_priv_t *ctx,
                                                  vpx_codec_iter_t     *iter);
 
-
-/*\brief eXternal Memory Allocation memory map get iterator
+/*!\brief Pass in external frame buffers for the decoder to use.
  *
- * Iterates over a list of the memory maps requested by the decoder. The
- * iterator storage should be initialized to NULL to start the iteration.
- * Iteration is complete when this function returns NULL.
+ * Registers functions to be called when libvpx needs a frame buffer
+ * to decode the current frame and a function to be called when libvpx does
+ * not internally reference the frame buffer. This set function must
+ * be called before the first call to decode or libvpx will assume the
+ * default behavior of allocating frame buffers internally.
  *
- * \param[in out] iter     Iterator storage, initialized to NULL
- *
- * \return Returns a pointer to an memory segment descriptor, or NULL to
- *         indicate end-of-list.
- */
-typedef vpx_codec_err_t (*vpx_codec_get_mmap_fn_t)(const vpx_codec_ctx_t      *ctx,
-                                                   vpx_codec_mmap_t           *mmap,
-                                                   vpx_codec_iter_t           *iter);
-
-
-/*\brief eXternal Memory Allocation memory map set iterator
- *
- * Sets a memory descriptor inside the decoder instance.
- *
- * \param[in] ctx      Pointer to this instance's context
- * \param[in] mmap     Memory map to store.
+ * \param[in] ctx          Pointer to this instance's context
+ * \param[in] cb_get       Pointer to the get callback function
+ * \param[in] cb_release   Pointer to the release callback function
+ * \param[in] cb_priv      Callback's private data
  *
  * \retval #VPX_CODEC_OK
- *     The memory map was accepted and stored.
- * \retval #VPX_CODEC_MEM_ERROR
- *     The memory map was rejected.
+ *     External frame buffers will be used by libvpx.
+ * \retval #VPX_CODEC_INVALID_PARAM
+ *     One or more of the callbacks were NULL.
+ * \retval #VPX_CODEC_ERROR
+ *     Decoder context not initialized, or algorithm not capable of
+ *     using external frame buffers.
+ *
+ * \note
+ * When decoding VP9, the application may be required to pass in at least
+ * #VP9_MAXIMUM_REF_BUFFERS + #VPX_MAXIMUM_WORK_BUFFERS external frame
+ * buffers.
  */
-typedef vpx_codec_err_t (*vpx_codec_set_mmap_fn_t)(vpx_codec_ctx_t         *ctx,
-                                                   const vpx_codec_mmap_t  *mmap);
+typedef vpx_codec_err_t (*vpx_codec_set_fb_fn_t)(
+    vpx_codec_alg_priv_t *ctx,
+    vpx_get_frame_buffer_cb_fn_t cb_get,
+    vpx_release_frame_buffer_cb_fn_t cb_release, void *cb_priv);
 
 
 typedef vpx_codec_err_t (*vpx_codec_encode_fn_t)(vpx_codec_alg_priv_t  *ctx,
@@ -285,8 +286,6 @@ typedef const struct vpx_codec_enc_cfg_map {
   vpx_codec_enc_cfg_t cfg;
 } vpx_codec_enc_cfg_map_t;
 
-#define NOT_IMPLEMENTED 0
-
 /*!\brief Decoder algorithm interface interface
  *
  * All decoders \ref MUST expose a variable of this type.
@@ -298,15 +297,15 @@ struct vpx_codec_iface {
   vpx_codec_init_fn_t       init;    /**< \copydoc ::vpx_codec_init_fn_t */
   vpx_codec_destroy_fn_t    destroy;     /**< \copydoc ::vpx_codec_destroy_fn_t */
   vpx_codec_ctrl_fn_map_t  *ctrl_maps;   /**< \copydoc ::vpx_codec_ctrl_fn_map_t */
-  vpx_codec_get_mmap_fn_t   get_mmap;    /**< \copydoc ::vpx_codec_get_mmap_fn_t */
-  vpx_codec_set_mmap_fn_t   set_mmap;    /**< \copydoc ::vpx_codec_set_mmap_fn_t */
   struct vpx_codec_dec_iface {
     vpx_codec_peek_si_fn_t    peek_si;     /**< \copydoc ::vpx_codec_peek_si_fn_t */
     vpx_codec_get_si_fn_t     get_si;      /**< \copydoc ::vpx_codec_get_si_fn_t */
     vpx_codec_decode_fn_t     decode;      /**< \copydoc ::vpx_codec_decode_fn_t */
     vpx_codec_get_frame_fn_t  get_frame;   /**< \copydoc ::vpx_codec_get_frame_fn_t */
+    vpx_codec_set_fb_fn_t     set_fb_fn;   /**< \copydoc ::vpx_codec_set_fb_fn_t */
   } dec;
   struct vpx_codec_enc_iface {
+    int                                cfg_map_count;
     vpx_codec_enc_cfg_map_t           *cfg_maps;      /**< \copydoc ::vpx_codec_enc_cfg_map_t */
     vpx_codec_encode_fn_t              encode;        /**< \copydoc ::vpx_codec_encode_fn_t */
     vpx_codec_get_cx_data_fn_t         get_cx_data;   /**< \copydoc ::vpx_codec_get_cx_data_fn_t */
@@ -336,9 +335,6 @@ typedef struct vpx_codec_priv_cb_pair {
  * and the pointer cast to the proper type.
  */
 struct vpx_codec_priv {
-  unsigned int                    sz;
-  vpx_codec_iface_t              *iface;
-  struct vpx_codec_alg_priv      *alg_priv;
   const char                     *err_detail;
   vpx_codec_flags_t               init_flags;
   struct {
@@ -346,8 +342,7 @@ struct vpx_codec_priv {
     vpx_codec_priv_cb_pair_t    put_slice_cb;
   } dec;
   struct {
-    int                         tbd;
-    struct vpx_fixed_buf        cx_data_dst_buf;
+    vpx_fixed_buf_t             cx_data_dst_buf;
     unsigned int                cx_data_pad_before;
     unsigned int                cx_data_pad_after;
     vpx_codec_cx_pkt_t          cx_data_pkt;
@@ -368,36 +363,13 @@ struct vpx_codec_priv_enc_mr_cfg
 
 #undef VPX_CTRL_USE_TYPE
 #define VPX_CTRL_USE_TYPE(id, typ) \
-  static typ id##__value(va_list args) {return va_arg(args, typ);} \
-  static typ id##__convert(void *x)\
-  {\
-    union\
-    {\
-      void *x;\
-      typ   d;\
-    } u;\
-    u.x = x;\
-    return u.d;\
-  }
-
+  static VPX_INLINE typ id##__value(va_list args) {return va_arg(args, typ);}
 
 #undef VPX_CTRL_USE_TYPE_DEPRECATED
 #define VPX_CTRL_USE_TYPE_DEPRECATED(id, typ) \
-  static typ id##__value(va_list args) {return va_arg(args, typ);} \
-  static typ id##__convert(void *x)\
-  {\
-    union\
-    {\
-      void *x;\
-      typ   d;\
-    } u;\
-    u.x = x;\
-    return u.d;\
-  }
+  static VPX_INLINE typ id##__value(va_list args) {return va_arg(args, typ);}
 
 #define CAST(id, arg) id##__value(arg)
-#define RECAST(id, x) id##__convert(x)
-
 
 /* CODEC_INTERFACE convenience macro
  *
@@ -444,6 +416,7 @@ vpx_codec_pkt_list_get(struct vpx_codec_pkt_list *list,
 
 #include <stdio.h>
 #include <setjmp.h>
+
 struct vpx_internal_error_info {
   vpx_codec_err_t  error_code;
   int              has_detail;
@@ -452,52 +425,13 @@ struct vpx_internal_error_info {
   jmp_buf          jmp;
 };
 
-static void vpx_internal_error(struct vpx_internal_error_info *info,
-                               vpx_codec_err_t                 error,
-                               const char                     *fmt,
-                               ...) {
-  va_list ap;
+void vpx_internal_error(struct vpx_internal_error_info *info,
+                        vpx_codec_err_t                 error,
+                        const char                     *fmt,
+                        ...);
 
-  info->error_code = error;
-  info->has_detail = 0;
-
-  if (fmt) {
-    size_t  sz = sizeof(info->detail);
-
-    info->has_detail = 1;
-    va_start(ap, fmt);
-    vsnprintf(info->detail, sz - 1, fmt, ap);
-    va_end(ap);
-    info->detail[sz - 1] = '\0';
-  }
-
-  if (info->setjmp)
-    longjmp(info->jmp, info->error_code);
-}
-
-//------------------------------------------------------------------------------
-// mmap interface
-
-typedef struct {
-  unsigned int   id;
-  unsigned long  sz;
-  unsigned int   align;
-  unsigned int   flags;
-  unsigned long (*calc_sz)(const vpx_codec_dec_cfg_t *, vpx_codec_flags_t);
-} mem_req_t;
-
-// Allocates mmap.priv and sets mmap.base based on mmap.sz/align/flags
-// requirements.
-// Returns #VPX_CODEC_OK on success, #VPX_CODEC_MEM_ERROR otherwise.
-vpx_codec_err_t vpx_mmap_alloc(vpx_codec_mmap_t *mmap);
-
-// Frees mmap.base allocated by a call to vpx_mmap_alloc().
-void vpx_mmap_dtor(vpx_codec_mmap_t *mmap);
-
-// Checks each mmap has the size requirement specificied by mem_reqs.
-// Returns #VPX_CODEC_OK on success, #VPX_CODEC_MEM_ERROR otherwise.
-vpx_codec_err_t vpx_validate_mmaps(const vpx_codec_stream_info_t *si,
-                                   const vpx_codec_mmap_t *mmaps,
-                                   const mem_req_t *mem_reqs, int nreqs,
-                                   vpx_codec_flags_t init_flags);
+#ifdef __cplusplus
+}  // extern "C"
 #endif
+
+#endif  // VPX_INTERNAL_VPX_CODEC_INTERNAL_H_

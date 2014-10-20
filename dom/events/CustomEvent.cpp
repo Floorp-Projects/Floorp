@@ -53,7 +53,7 @@ CustomEvent::Constructor(const GlobalObject& aGlobal,
 }
 
 JSObject*
-CustomEvent::WrapObject(JSContext* aCx)
+CustomEvent::WrapObjectInternal(JSContext* aCx)
 {
   return mozilla::dom::CustomEventBinding::Wrap(aCx, this);
 }

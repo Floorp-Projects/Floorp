@@ -7,7 +7,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/#channel-messaging
  */
 
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker,System)]
 interface MessagePort : EventTarget {
   [Throws]
   void postMessage(any message, optional sequence<Transferable> transferable);

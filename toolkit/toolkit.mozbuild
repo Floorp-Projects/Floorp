@@ -24,9 +24,6 @@ if CONFIG['MOZ_UPDATER']:
 if CONFIG['NS_TRACE_MALLOC']:
     DIRS += ['/tools/trace-malloc/lib']
 
-if CONFIG['MOZ_DMD']:
-    DIRS += ['/memory/replace/dmd']
-
 DIRS += [
     '/config/external/freetype2',
     '/xpcom',
@@ -163,9 +160,6 @@ DIRS += [
     '/toolkit/library/StaticXULComponentsEnd',
     '/toolkit/library',
 ]
-
-if CONFIG['MOZ_REPLACE_MALLOC']:
-    DIRS += ['/memory/replace']
 
 if CONFIG['NS_TRACE_MALLOC']:
     DIRS += ['/tools/trace-malloc']

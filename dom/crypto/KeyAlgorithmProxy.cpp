@@ -31,6 +31,10 @@ KeyAlgorithmProxy::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
     }
     case EC:
       return WriteString(aWriter, mEc.mNamedCurve);
+    case DH: {
+      return WriteBuffer(aWriter, mDh.mPrime) &&
+             WriteBuffer(aWriter, mDh.mGenerator);
+    }
   }
 
   return false;
@@ -90,6 +94,15 @@ KeyAlgorithmProxy::ReadStructuredClone(JSStructuredCloneReader* aReader)
       }
 
       mEc.mName = mName;
+      return true;
+    }
+    case DH: {
+      if (!ReadBuffer(aReader, mDh.mPrime) ||
+          !ReadBuffer(aReader, mDh.mGenerator)) {
+        return false;
+      }
+
+      mDh.mName = mName;
       return true;
     }
   }

@@ -15,7 +15,6 @@
 #include <assert.h>
 #include "vpx_config.h"
 #include "vp8_rtcd.h"
-#include "vp8/common/pragmas.h"
 #include "tokenize.h"
 #include "treewriter.h"
 #include "onyx_int.h"
@@ -528,18 +527,15 @@ static int cost_coeffs(MACROBLOCK *mb, BLOCKD *b, int type, ENTROPY_CONTEXT *a, 
 
     VP8_COMBINEENTROPYCONTEXTS(pt, *a, *l);
 
-# define QC( I)  ( qcoeff_ptr [vp8_default_zig_zag1d[I]] )
-
+    assert(eob <= 16);
     for (; c < eob; c++)
     {
-        int v = QC(c);
-        int t = vp8_dct_value_tokens_ptr[v].Token;
+        const int v = qcoeff_ptr[vp8_default_zig_zag1d[c]];
+        const int t = vp8_dct_value_tokens_ptr[v].Token;
         cost += mb->token_costs [type] [vp8_coef_bands[c]] [pt] [t];
         cost += vp8_dct_value_cost_ptr[v];
         pt = vp8_prev_token_class[t];
     }
-
-# undef QC
 
     if (c < 16)
         cost += mb->token_costs [type] [vp8_coef_bands[c]] [pt] [DCT_EOB_TOKEN];
@@ -1939,7 +1935,8 @@ static void update_best_mode(BEST_MODE* best_mode, int this_rd,
 
 void vp8_rd_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
                             int recon_uvoffset, int *returnrate,
-                            int *returndistortion, int *returnintra)
+                            int *returndistortion, int *returnintra,
+                            int mb_row, int mb_col)
 {
     BLOCK *b = &x->block[0];
     BLOCKD *d = &x->e_mbd.block[0];
@@ -1977,8 +1974,8 @@ void vp8_rd_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
                                              cpi->common.y1dc_delta_q);
 
 #if CONFIG_TEMPORAL_DENOISING
-    unsigned int zero_mv_sse = INT_MAX, best_sse = INT_MAX,
-            best_rd_sse = INT_MAX;
+    unsigned int zero_mv_sse = UINT_MAX, best_sse = UINT_MAX,
+            best_rd_sse = UINT_MAX;
 #endif
 
     mode_mv = mode_mv_sb[sign_bias];
@@ -2514,6 +2511,7 @@ void vp8_rd_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
 #if CONFIG_TEMPORAL_DENOISING
     if (cpi->oxcf.noise_sensitivity)
     {
+        int block_index = mb_row * cpi->common.mb_cols + mb_col;
         if (x->best_sse_inter_mode == DC_PRED)
         {
             /* No best MV found. */
@@ -2524,8 +2522,9 @@ void vp8_rd_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
             best_sse = best_rd_sse;
         }
         vp8_denoiser_denoise_mb(&cpi->denoiser, x, best_sse, zero_mv_sse,
-                                recon_yoffset, recon_uvoffset);
-
+                                recon_yoffset, recon_uvoffset,
+                                &cpi->common.lf_info, mb_row, mb_col,
+                                block_index);
 
         /* Reevaluate ZEROMV after denoising. */
         if (best_mode.mbmode.ref_frame == INTRA_FRAME &&

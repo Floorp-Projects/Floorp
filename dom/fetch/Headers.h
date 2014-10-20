@@ -8,7 +8,6 @@
 #define mozilla_dom_Headers_h
 
 #include "mozilla/dom/HeadersBinding.h"
-#include "mozilla/dom/UnionTypes.h"
 
 #include "nsClassHashtable.h"
 #include "nsWrapperCache.h"
@@ -25,6 +24,7 @@ namespace dom {
 
 template<typename T> class MozMap;
 class HeadersOrByteStringSequenceSequenceOrByteStringMozMap;
+class OwningHeadersOrByteStringSequenceSequenceOrByteStringMozMap;
 
 /**
  * This Headers class is only used to represent the content facing Headers

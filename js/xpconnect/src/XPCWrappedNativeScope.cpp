@@ -511,9 +511,13 @@ XPCWrappedNativeScope::UpdateWeakPointersAfterGC(XPCJSRuntime* rt)
 
         XPCWrappedNativeScope* next = cur->mNext;
 
-        // Check for finalization of the global object.  Note that global
-        // objects are never moved, so we don't need to handle updating the
-        // object pointer here.
+        if (cur->mContentXBLScope)
+            cur->mContentXBLScope.updateWeakPointerAfterGC();
+        for (size_t i = 0; i < cur->mAddonScopes.Length(); i++)
+            cur->mAddonScopes[i].updateWeakPointerAfterGC();
+
+        // Check for finalization of the global object or update our pointer if
+        // it was moved.
         if (cur->mGlobalJSObject) {
             cur->mGlobalJSObject.updateWeakPointerAfterGC();
             if (!cur->mGlobalJSObject) {

@@ -940,9 +940,9 @@ static int64_t estimate_modemvcost(VP8_COMP *cpi,
     /* Crude estimate of overhead cost from modes
      * << 9 is the normalization to (bits * 512) used in vp8_bits_per_mb
      */
-    mode_cost =((((av_pct_inter - av_pct_motion) * zz_cost) +
-                (av_pct_motion * motion_cost) +
-                (av_intra * intra_cost)) * cpi->common.MBs) * 512;
+    mode_cost = (int64_t)((((av_pct_inter - av_pct_motion) * zz_cost) +
+                             (av_pct_motion * motion_cost) +
+                             (av_intra * intra_cost)) * cpi->common.MBs) * 512;
 
     return mv_cost + mode_cost;
 }
@@ -2310,7 +2310,7 @@ static void define_gf_group(VP8_COMP *cpi, FIRSTPASS_STATS *this_frame)
                 pct_extra = (pct_extra > 20) ? 20 : pct_extra;
 
                 cpi->twopass.alt_extra_bits =
-                    (cpi->twopass.gf_group_bits * pct_extra) / 100;
+                    (int)(cpi->twopass.gf_group_bits * pct_extra) / 100;
                 cpi->twopass.gf_group_bits -= cpi->twopass.alt_extra_bits;
                 cpi->twopass.alt_extra_bits /=
                     ((cpi->baseline_gf_interval-1)>>1);
@@ -2386,7 +2386,7 @@ static void assign_std_frame_bits(VP8_COMP *cpi, FIRSTPASS_STATS *this_frame)
             target_frame_size = max_bits;
 
         if (target_frame_size > cpi->twopass.gf_group_bits)
-            target_frame_size = cpi->twopass.gf_group_bits;
+            target_frame_size = (int)cpi->twopass.gf_group_bits;
     }
 
     /* Adjust error and bits remaining */
@@ -2444,10 +2444,10 @@ void vp8_second_pass(VP8_COMP *cpi)
         find_next_key_frame(cpi, &this_frame_copy);
 
         /* Special case: Error error_resilient_mode mode does not make much
-         * sense for two pass but with its current meaning but this code is
+         * sense for two pass but with its current meaning this code is
          * designed to stop outlandish behaviour if someone does set it when
          * using two pass. It effectively disables GF groups. This is
-         * temporary code till we decide what should really happen in this
+         * temporary code until we decide what should really happen in this
          * case.
          */
         if (cpi->oxcf.error_resilient_mode)
@@ -2773,7 +2773,7 @@ static void find_next_key_frame(VP8_COMP *cpi, FIRSTPASS_STATS *this_frame)
         kf_group_intra_err += this_frame->intra_error;
         kf_group_coded_err += this_frame->coded_error;
 
-        /* load a the next frame's stats */
+        /* Load the next frame's stats. */
         vpx_memcpy(&last_frame, this_frame, sizeof(*this_frame));
         input_stats(cpi, this_frame);
 

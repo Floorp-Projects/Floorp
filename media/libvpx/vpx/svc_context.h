@@ -16,19 +16,12 @@
 #ifndef VPX_SVC_CONTEXT_H_
 #define VPX_SVC_CONTEXT_H_
 
-#include "vpx/vp8cx.h"
-#include "vpx/vpx_encoder.h"
+#include "./vp8cx.h"
+#include "./vpx_encoder.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef enum SVC_ENCODING_MODE {
-  INTER_LAYER_PREDICTION_I,
-  ALT_INTER_LAYER_PREDICTION_IP,
-  INTER_LAYER_PREDICTION_IP,
-  USE_GOLDEN_FRAME
-} SVC_ENCODING_MODE;
 
 typedef enum SVC_LOG_LEVEL {
   SVC_LOG_ERROR,
@@ -38,9 +31,8 @@ typedef enum SVC_LOG_LEVEL {
 
 typedef struct {
   // public interface to svc_command options
-  int spatial_layers;               // number of layers
-  int first_frame_full_size;        // set to one to force first frame full size
-  SVC_ENCODING_MODE encoding_mode;  // svc encoding strategy
+  int spatial_layers;               // number of spatial layers
+  int temporal_layers;               // number of temporal layers
   SVC_LOG_LEVEL log_level;  // amount of information to display
   int log_print;  // when set, printf log messages instead of returning the
                   // message with svc_get_message
@@ -104,14 +96,27 @@ const char *vpx_svc_dump_statistics(SvcContext *svc_ctx);
 const char *vpx_svc_get_message(const SvcContext *svc_ctx);
 
 /**
- * return size of encoded data to be returned by vpx_svc_get_buffer
+ * return size of encoded data to be returned by vpx_svc_get_buffer.
+ * it needs to be called before vpx_svc_get_buffer.
  */
 size_t vpx_svc_get_frame_size(const SvcContext *svc_ctx);
 
 /**
- * return buffer with encoded data
+ * return buffer with encoded data. encoder will maintain a list of frame
+ * buffers. each call of vpx_svc_get_buffer() will return one frame.
  */
-void *vpx_svc_get_buffer(const SvcContext *svc_ctx);
+void *vpx_svc_get_buffer(SvcContext *svc_ctx);
+
+/**
+ * return size of two pass rate control stats data to be returned by
+ * vpx_svc_get_rc_stats_buffer
+ */
+size_t vpx_svc_get_rc_stats_buffer_size(const SvcContext *svc_ctx);
+
+/**
+ * return buffer two pass of rate control stats data
+ */
+char *vpx_svc_get_rc_stats_buffer(const SvcContext *svc_ctx);
 
 /**
  * return spatial resolution of the specified layer
@@ -139,4 +144,4 @@ void vpx_svc_set_keyframe(SvcContext *svc_ctx);
 }  // extern "C"
 #endif
 
-#endif  /* VPX_SVC_CONTEXT_H_ */
+#endif  // VPX_SVC_CONTEXT_H_

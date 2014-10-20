@@ -21,6 +21,7 @@ typedef enum {
   OUTPUT_FMT_PLAIN,
   OUTPUT_FMT_RVDS,
   OUTPUT_FMT_GAS,
+  OUTPUT_FMT_C_HEADER,
 } output_fmt_t;
 
 int log_msg(const char *fmt, ...) {
@@ -33,6 +34,18 @@ int log_msg(const char *fmt, ...) {
 }
 
 #if defined(__GNUC__) && __GNUC__
+
+#if defined(FORCE_PARSE_ELF)
+
+#if defined(__MACH__)
+#undef __MACH__
+#endif
+
+#if !defined(__ELF__)
+#define __ELF__
+#endif
+#endif
+
 #if defined(__MACH__)
 
 #include <mach-o/loader.h>
@@ -43,8 +56,11 @@ int print_macho_equ(output_fmt_t mode, uint8_t* name, int val) {
     case OUTPUT_FMT_RVDS:
       printf("%-40s EQU %5d\n", name, val);
       return 0;
-    case  OUTPUT_FMT_GAS:
+    case OUTPUT_FMT_GAS:
       printf(".set %-40s, %5d\n", name, val);
+      return 0;
+    case OUTPUT_FMT_C_HEADER:
+      printf("#define %-40s %5d\n", name, val);
       return 0;
     default:
       log_msg("Unsupported mode: %d", mode);
@@ -321,7 +337,7 @@ bail:
   return 1;
 }
 
-char *parse_elf_string_table(elf_obj_t *elf, int s_idx, int idx) {
+const char *parse_elf_string_table(elf_obj_t *elf, int s_idx, int idx) {
   if (elf->bits == 32) {
     Elf32_Shdr shdr;
 
@@ -491,6 +507,13 @@ int parse_elf(uint8_t *buf, size_t sz, output_fmt_t mode) {
                                               sym.st_name),
                        val);
                 break;
+              case OUTPUT_FMT_C_HEADER:
+                printf("#define %-40s %5d\n",
+                       parse_elf_string_table(&elf,
+                                              shdr.sh_link,
+                                              sym.st_name),
+                       val);
+                break;
               default:
                 printf("%s = %d\n",
                        parse_elf_string_table(&elf,
@@ -655,7 +678,11 @@ int parse_coff(uint8_t *buf, size_t sz) {
     }
     strcpy(sectionlist[i], sectionname);
 
-    if (!strcmp(sectionname, ".rdata")) sectionrawdata_ptr = get_le32(ptr + 20);
+    // check if it's .rdata and is not a COMDAT section.
+    if (!strcmp(sectionname, ".rdata") &&
+        (get_le32(ptr + 36) & 0x1000) == 0) {
+      sectionrawdata_ptr = get_le32(ptr + 20);
+    }
 
     ptr += 40;
   }
@@ -762,6 +789,7 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Output Formats:\n");
     fprintf(stderr, "  gas  - compatible with GNU assembler\n");
     fprintf(stderr, "  rvds - compatible with armasm\n");
+    fprintf(stderr, "  cheader - c/c++ header file\n");
     goto bail;
   }
 
@@ -771,6 +799,8 @@ int main(int argc, char **argv) {
     mode = OUTPUT_FMT_RVDS;
   else if (!strcmp(argv[1], "gas"))
     mode = OUTPUT_FMT_GAS;
+  else if (!strcmp(argv[1], "cheader"))
+    mode = OUTPUT_FMT_C_HEADER;
   else
     f = argv[1];
 
