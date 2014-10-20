@@ -414,6 +414,7 @@ gbjar.sources += [
     'toolbar/BrowserToolbarTabletBase.java',
     'toolbar/CanvasDelegate.java',
     'toolbar/ForwardButton.java',
+    'toolbar/NavButton.java',
     'toolbar/PageActionLayout.java',
     'toolbar/PhoneTabsButton.java',
     'toolbar/ShapedButton.java',
