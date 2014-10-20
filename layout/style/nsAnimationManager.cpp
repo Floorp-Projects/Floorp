@@ -9,7 +9,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "mozilla/dom/AnimationPlayer.h"
 
 #include "nsPresContext.h"
 #include "nsRuleProcessorData.h"
@@ -27,6 +26,41 @@ using namespace mozilla::css;
 using mozilla::dom::Animation;
 using mozilla::dom::AnimationPlayer;
 using mozilla::CSSAnimationPlayer;
+
+void
+CSSAnimationPlayer::Play(UpdateFlags aUpdateFlags)
+{
+  mPauseShouldStick = false;
+  AnimationPlayer::Play(aUpdateFlags);
+}
+
+void
+CSSAnimationPlayer::Pause(UpdateFlags aUpdateFlags)
+{
+  mPauseShouldStick = true;
+  AnimationPlayer::Pause(aUpdateFlags);
+}
+
+void
+CSSAnimationPlayer::PlayFromStyle()
+{
+  mIsStylePaused = false;
+  if (!mPauseShouldStick) {
+    AnimationPlayer::Play(eNoUpdate);
+  }
+}
+
+void
+CSSAnimationPlayer::PauseFromStyle()
+{
+  // Check if the pause state is being overridden
+  if (mIsStylePaused) {
+    return;
+  }
+
+  mIsStylePaused = true;
+  AnimationPlayer::Pause(eNoUpdate);
+}
 
 void
 nsAnimationManager::UpdateStyleAndEvents(AnimationPlayerCollection*
