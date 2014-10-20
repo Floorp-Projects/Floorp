@@ -763,8 +763,8 @@ class GCRuntime
      * Otherwise, no additional GCs take place.
      *
      * You can control these values in several ways:
-     *   - Pass the -Z flag to the shell (see the usage info for details)
-     *   - Call   zeal() or schedulegc() from inside shell-executed JS code
+     *   - Set the JS_GC_ZEAL environment variable
+     *   - Call zeal() or schedulegc() from inside shell-executed JS code
      *     (see the help for details)
      *
      * If gzZeal_ == 1 then we perform GCs in select places (during MaybeGC and
@@ -775,6 +775,8 @@ class GCRuntime
      *
      * zeal_ values from 8 to 10 periodically run different types of
      * incremental GC.
+     *
+     * zeal_ value 14 performs periodic shrinking collections.
      */
 #ifdef JS_GC_ZEAL
     int                   zealMode;
