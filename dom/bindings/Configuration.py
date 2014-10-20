@@ -319,19 +319,29 @@ class Descriptor(DescriptorProvider):
             'LegacyCaller': None,
             'Jsonifier': None
             }
-        if self.concrete:
-            self.proxy = False
-            iface = self.interface
-            def addOperation(operation, m):
-                if not self.operations[operation]:
-                    self.operations[operation] = m
-            # Since stringifiers go on the prototype, we only need to worry
-            # about our own stringifier, not those of our ancestor interfaces.
-            for m in iface.members:
+        # Stringifiers and jsonifiers need to be set up whether an interface is
+        # concrete or not, because they're actually prototype methods and hence
+        # can apply to instances of descendant interfaces.  Legacy callers and
+        # named/indexed operations only need to be set up on concrete
+        # interfaces, since they affect the JSClass we end up using, not the
+        # prototype object.
+        def addOperation(operation, m):
+            if not self.operations[operation]:
+                self.operations[operation] = m
+
+        # Since stringifiers go on the prototype, we only need to worry
+        # about our own stringifier, not those of our ancestor interfaces.
+        if not self.interface.isExternal():
+            for m in self.interface.members:
                 if m.isMethod() and m.isStringifier():
                     addOperation('Stringifier', m)
                 if m.isMethod() and m.isJsonifier():
                     addOperation('Jsonifier', m)
+
+        if self.concrete:
+            self.proxy = False
+            iface = self.interface
+            for m in iface.members:
                 # Don't worry about inheriting legacycallers either: in
                 # practice these are on most-derived prototypes.
                 if m.isMethod() and m.isLegacycaller():
