@@ -4418,12 +4418,6 @@ void nsDisplayZoom::HitTest(nsDisplayListBuilder *aBuilder,
   mList.HitTest(aBuilder, rect, aState, aOutFrames);
 }
 
-void nsDisplayZoom::Paint(nsDisplayListBuilder* aBuilder,
-                          nsRenderingContext* aCtx)
-{
-  mList.PaintForFrame(aBuilder, aCtx, mFrame, nsDisplayList::PAINT_DEFAULT);
-}
-
 bool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
                                       nsRegion *aVisibleRegion)
 {
