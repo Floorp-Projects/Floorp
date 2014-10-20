@@ -29,7 +29,7 @@ let test = Task.async(function*() {
   let selection = TimelineView.overview.getSelection();
 
   is((selection.start) | 0,
-     (markers[0].start * TimelineView.overview.dataScaleX) | 0,
+     ((markers[0].start - markers.startTime) * TimelineView.overview.dataScaleX) | 0,
     "The initial selection start is correct.");
 
   is((selection.end - selection.start) | 0,
