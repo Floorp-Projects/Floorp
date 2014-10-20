@@ -138,6 +138,11 @@ public: /* internal necko use only */
         return NS_OK;
     }
 
+    nsresult OpenCacheEntry(bool usingSSL);
+    nsresult ContinueConnect();
+
+    nsresult StartRedirectChannelToURI(nsIURI *, uint32_t);
+
     // This allows cache entry to be marked as foreign even after channel itself
     // is gone.  Needed for e10s (see HttpChannelParent::RecvDocumentChannelCleanup)
     class OfflineCacheEntryAsForeignMarker {
@@ -186,6 +191,9 @@ public: /* internal necko use only */
       uint32_t mKeep : 2;
     };
 
+    void MarkIntercepted();
+    bool AwaitingCacheCallbacks();
+
 protected:
     virtual ~nsHttpChannel();
 
@@ -195,7 +203,6 @@ private:
     bool     RequestIsConditional();
     nsresult BeginConnect();
     nsresult Connect();
-    nsresult ContinueConnect();
     void     SpeculativeConnect();
     nsresult SetupTransaction();
     void     SetupTransactionLoadGroupInfo();
@@ -230,7 +237,6 @@ private:
     void     HandleAsyncFallback();
     nsresult ContinueHandleAsyncFallback(nsresult);
     nsresult PromptTempRedirect();
-    nsresult StartRedirectChannelToURI(nsIURI *, uint32_t);
     virtual  nsresult SetupReplacementChannel(nsIURI *, nsIChannel *, bool preserveMethod);
 
     // proxy specific methods
@@ -240,7 +246,6 @@ private:
     nsresult ResolveProxy();
 
     // cache specific methods
-    nsresult OpenCacheEntry(bool usingSSL);
     nsresult OnOfflineCacheEntryAvailable(nsICacheEntry *aEntry,
                                           bool aNew,
                                           nsIApplicationCache* aAppCache,
@@ -267,7 +272,6 @@ private:
     void     UpdateInhibitPersistentCachingFlag();
     nsresult InitOfflineCacheEntry();
     nsresult AddCacheEntryHeaders(nsICacheEntry *entry);
-    nsresult StoreAuthorizationMetaData(nsICacheEntry *entry);
     nsresult FinalizeCacheEntry();
     nsresult InstallCacheListener(int64_t offset = 0);
     nsresult InstallOfflineCacheListener(int64_t offset = 0);
@@ -366,6 +370,17 @@ private:
 
     // auth specific data
     nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;
+
+    // States of channel interception
+    enum {
+        DO_NOT_INTERCEPT,  // no interception will occur
+        MAYBE_INTERCEPT,   // interception in progress, but can be cancelled
+        INTERCEPTED,       // a synthesized response has been provided
+    } mInterceptCache;
+
+    bool PossiblyIntercepted() {
+        return mInterceptCache != DO_NOT_INTERCEPT;
+    }
 
     // If the channel is associated with a cache, and the URI matched
     // a fallback namespace, this will hold the key for the fallback

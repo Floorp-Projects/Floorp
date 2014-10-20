@@ -7,8 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef VPX_DECODER_H
-#define VPX_DECODER_H
+#ifndef VPX_VPX_DECODER_H_
+#define VPX_VPX_DECODER_H_
 
 /*!\defgroup decoder Decoder Algorithm Interface
  * \ingroup codec
@@ -29,7 +29,8 @@
 extern "C" {
 #endif
 
-#include "vpx_codec.h"
+#include "./vpx_codec.h"
+#include "./vpx_frame_buffer.h"
 
   /*!\brief Current ABI version number
    *
@@ -39,7 +40,7 @@ extern "C" {
    * types, removing or reassigning enums, adding/removing/rearranging
    * fields to structures
    */
-#define VPX_DECODER_ABI_VERSION (2 + VPX_CODEC_ABI_VERSION) /**<\hideinitializer*/
+#define VPX_DECODER_ABI_VERSION (3 + VPX_CODEC_ABI_VERSION) /**<\hideinitializer*/
 
   /*! \brief Decoder capabilities bitfield
    *
@@ -66,6 +67,8 @@ extern "C" {
    */
 #define VPX_CODEC_CAP_FRAME_THREADING   0x200000 /**< Can support frame-based
                                                       multi-threading */
+#define VPX_CODEC_CAP_EXTERNAL_FRAME_BUFFER 0x400000 /**< Can support external
+                                                          frame buffers */
 
 #define VPX_CODEC_USE_POSTPROC   0x10000 /**< Postprocess decoded frame */
 #define VPX_CODEC_USE_ERROR_CONCEALMENT 0x20000 /**< Conceal errors in decoded
@@ -119,10 +122,6 @@ extern "C" {
    * is not thread safe and should be guarded with a lock if being used
    * in a multithreaded context.
    *
-   * In XMA mode (activated by setting VPX_CODEC_USE_XMA in the flags
-   * parameter), the storage pointed to by the cfg parameter must be
-   * kept readable and stable until all memory maps have been set.
-   *
    * \param[in]    ctx     Pointer to this instance's context.
    * \param[in]    iface   Pointer to the algorithm interface to use.
    * \param[in]    cfg     Configuration to use, if known. May be NULL.
@@ -136,7 +135,7 @@ extern "C" {
    */
   vpx_codec_err_t vpx_codec_dec_init_ver(vpx_codec_ctx_t      *ctx,
                                          vpx_codec_iface_t    *iface,
-                                         vpx_codec_dec_cfg_t  *cfg,
+                                         const vpx_codec_dec_cfg_t *cfg,
                                          vpx_codec_flags_t     flags,
                                          int                   ver);
 
@@ -326,9 +325,54 @@ extern "C" {
 
   /*!@} - end defgroup cap_put_slice*/
 
+  /*!\defgroup cap_external_frame_buffer External Frame Buffer Functions
+   *
+   * The following section is required to be implemented for all decoders
+   * that advertise the VPX_CODEC_CAP_EXTERNAL_FRAME_BUFFER capability.
+   * Calling this function for codecs that don't advertise this capability
+   * will result in an error code being returned, usually VPX_CODEC_ERROR.
+   *
+   * \note
+   * Currently this only works with VP9.
+   * @{
+   */
+
+  /*!\brief Pass in external frame buffers for the decoder to use.
+   *
+   * Registers functions to be called when libvpx needs a frame buffer
+   * to decode the current frame and a function to be called when libvpx does
+   * not internally reference the frame buffer. This set function must
+   * be called before the first call to decode or libvpx will assume the
+   * default behavior of allocating frame buffers internally.
+   *
+   * \param[in] ctx          Pointer to this instance's context
+   * \param[in] cb_get       Pointer to the get callback function
+   * \param[in] cb_release   Pointer to the release callback function
+   * \param[in] cb_priv      Callback's private data
+   *
+   * \retval #VPX_CODEC_OK
+   *     External frame buffers will be used by libvpx.
+   * \retval #VPX_CODEC_INVALID_PARAM
+   *     One or more of the callbacks were NULL.
+   * \retval #VPX_CODEC_ERROR
+   *     Decoder context not initialized, or algorithm not capable of
+   *     using external frame buffers.
+   *
+   * \note
+   * When decoding VP9, the application may be required to pass in at least
+   * #VP9_MAXIMUM_REF_BUFFERS + #VPX_MAXIMUM_WORK_BUFFERS external frame
+   * buffers.
+   */
+  vpx_codec_err_t vpx_codec_set_frame_buffer_functions(
+      vpx_codec_ctx_t *ctx,
+      vpx_get_frame_buffer_cb_fn_t cb_get,
+      vpx_release_frame_buffer_cb_fn_t cb_release, void *cb_priv);
+
+  /*!@} - end defgroup cap_external_frame_buffer */
+
   /*!@} - end defgroup decoder*/
 #ifdef __cplusplus
 }
 #endif
-#endif
+#endif  // VPX_VPX_DECODER_H_
 

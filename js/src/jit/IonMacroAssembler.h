@@ -327,7 +327,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void branchTestProxyHandlerFamily(Condition cond, Register proxy, Register scratch,
                                       const void *handlerp, Label *label) {
         Address handlerAddr(proxy, ProxyObject::offsetOfHandler());
-        loadPrivate(handlerAddr, scratch);
+        loadPtr(handlerAddr, scratch);
         Address familyAddr(scratch, BaseProxyHandler::offsetOfFamily());
         branchPtr(cond, familyAddr, ImmPtr(handlerp), label);
     }

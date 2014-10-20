@@ -421,7 +421,7 @@ function list(requestPath, directory, recurse)
       count += childCount;
     } else {
       if (file.leafName.charAt(0) != '.') {
-        links[key] = true;
+        links[key] = {'test': {'url': key, 'expected': 'pass'}};
       }
     }
   }
@@ -493,13 +493,13 @@ function linksToTableRows(links, recursionLevel)
 {
   var response = "";
   for (var [link, value] in links) {
-    var classVal = (!isTest(link) && !(value instanceof Object))
+    var classVal = (!isTest(link) && ((value instanceof Object) && ('test' in value)))
       ? "non-test invisible"
       : "";
 
     var spacer = "padding-left: " + (10 * recursionLevel) + "px";
 
-    if (value instanceof Object) {
+    if ((value instanceof Object) && !('test' in value)) {
       response += TR({class: "dir", id: "tr-" + link },
                      TD({colspan: "3"}, "&#160;"),
                      TD({style: spacer},
@@ -535,10 +535,10 @@ function linksToTableRows(links, recursionLevel)
 
 function arrayOfTestFiles(linkArray, fileArray, testPattern) {
   for (var [link, value] in Iterator(linkArray)) {
-    if (value instanceof Object) {
+    if ((value instanceof Object) && !('test' in value)) {
       arrayOfTestFiles(value, fileArray, testPattern);
-    } else if (isTest(link, testPattern)) {
-      fileArray.push(link)
+    } else if (isTest(link, testPattern) && (value instanceof Object)) {
+      fileArray.push(value['test'])
     }
   }
 }
@@ -549,7 +549,7 @@ function jsonArrayOfTestFiles(links)
 {
   var testFiles = [];
   arrayOfTestFiles(links, testFiles);
-  testFiles = ['"' + file + '"' for each(file in testFiles)];
+  testFiles = ['"' + file['url'] + '"' for each(file in testFiles)];
   return "[" + testFiles.join(",\n") + "]";
 }
 

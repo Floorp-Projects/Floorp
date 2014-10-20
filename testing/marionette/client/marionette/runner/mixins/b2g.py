@@ -27,9 +27,9 @@ def get_dm(marionette=None,**kwargs):
 
 def get_b2g_pid(dm):
     b2g_output = dm.shellCheckOutput(['b2g-ps'])
-    pid_re = re.compile(r"""[\s\S]*root[\s]*([\d]+)[\s]*(?:[\w]*[\s]*){6}/system/b2g/b2g""")
-    if '/system/b2g/b2g' in b2g_output:
-        pid = pid_re.match(b2g_output)
+    pid_re = re.compile(r"""b2g[\s]+0[\s]+root\s+([\d]+).*/system/b2g/b2g""")
+    pid = pid_re.match(b2g_output)
+    if pid:
         return pid.group(1)
 
 

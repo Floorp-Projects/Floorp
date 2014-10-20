@@ -23,7 +23,6 @@
 #include "mozilla/JSEventHandler.h"
 #include "mozilla/Likely.h"
 #include "mozilla/dom/ErrorEvent.h"
-#include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla {
 

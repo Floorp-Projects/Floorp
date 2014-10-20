@@ -248,8 +248,8 @@ def get_version(binary=None, sources=None, dm_type=None, host=None,
     a path to the binary of the application or an Android APK file (to get
     version information for Firefox for Android). If this is omitted then the
     current directory is checked for the existance of an application.ini
-    file. If not found, then it is assumed the target application is a remote
-    Firefox OS instance.
+    file. If not found and that the binary path was not specified, then it is
+    assumed the target application is a remote Firefox OS instance.
 
     :param binary: Path to the binary for the application or Android APK file
     :param sources: Path to the sources.xml file (Firefox OS)
@@ -266,13 +266,13 @@ def get_version(binary=None, sources=None, dm_type=None, host=None,
             if version._info.get('application_name') == 'B2G':
                 version = LocalB2GVersion(binary, sources=sources)
     except errors.LocalAppNotFoundError:
-        try:
-            version = RemoteB2GVersion(sources=sources,
-                                       dm_type=dm_type,
-                                       host=host,
-                                       device_serial=device_serial)
-        except errors.RemoteAppNotFoundError:
-            raise errors.AppNotFoundError('No application found')
+        if binary:
+            # we had a binary argument, do not search for remote B2G
+            raise
+        version = RemoteB2GVersion(sources=sources,
+                                   dm_type=dm_type,
+                                   host=host,
+                                   device_serial=device_serial)
 
     for (key, value) in sorted(version._info.items()):
         if value:

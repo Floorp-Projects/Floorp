@@ -9,8 +9,8 @@
  */
 
 
-#ifndef __INC_VP8C_INT_H
-#define __INC_VP8C_INT_H
+#ifndef VP8_COMMON_ONYXC_INT_H_
+#define VP8_COMMON_ONYXC_INT_H_
 
 #include "vpx_config.h"
 #include "vp8_rtcd.h"
@@ -25,6 +25,10 @@
 /*#ifdef PACKET_TESTING*/
 #include "header.h"
 /*#endif*/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define MINQ 0
 #define MAXQ 127
@@ -174,4 +178,8 @@ typedef struct VP8Common
     int cpu_caps;
 } VP8_COMMON;
 
+#ifdef __cplusplus
+}  // extern "C"
 #endif
+
+#endif  // VP8_COMMON_ONYXC_INT_H_

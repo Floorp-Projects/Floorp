@@ -132,6 +132,7 @@ class WebIDLCodegenManager(LoggingMixin):
         'PrototypeList.h',
         'RegisterBindings.h',
         'RegisterWorkerBindings.h',
+        'ResolveSystemBinding.h',
         'UnionConversions.h',
         'UnionTypes.h',
     }
@@ -140,6 +141,7 @@ class WebIDLCodegenManager(LoggingMixin):
     GLOBAL_DEFINE_FILES = {
         'RegisterBindings.cpp',
         'RegisterWorkerBindings.cpp',
+        'ResolveSystemBinding.cpp',
         'UnionTypes.cpp',
         'PrototypeList.cpp',
     }

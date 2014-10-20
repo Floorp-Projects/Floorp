@@ -35,7 +35,7 @@ AudioProcessingEvent::~AudioProcessingEvent()
 }
 
 JSObject*
-AudioProcessingEvent::WrapObject(JSContext* aCx)
+AudioProcessingEvent::WrapObjectInternal(JSContext* aCx)
 {
   return AudioProcessingEventBinding::Wrap(aCx, this);
 }

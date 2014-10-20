@@ -152,7 +152,12 @@ function compartment_test()
     ok(/Privileged Junk/.test(cpowLocation),
        "child->parent CPOWs should live in the privileged junk scope: " + cpowLocation);
     is(obj(), 42, "child->parent CPOW is invokable");
-    is(obj.expando, undefined, "child->parent CPOW cannot access properties");
+    try {
+      obj.expando;
+      ok(false, "child->parent CPOW cannot access properties");
+    } catch (e) {
+      ok(true, "child->parent CPOW cannot access properties");
+    }
 
     return results;
   }

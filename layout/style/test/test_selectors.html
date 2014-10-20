@@ -867,9 +867,13 @@ function run() {
                          emptyset, classset(["a", "b", "nomatch"]));
 
     // Test serialization of pseudo-elements.
-    should_serialize_to("p:first-letter", "p:first-letter");
-    should_serialize_to("div>p:first-letter", "div > p:first-letter");
-    should_serialize_to("span +div:first-line", "span + div:first-line");
+    should_serialize_to("p::first-letter", "p::first-letter");
+    should_serialize_to("p:first-letter", "p::first-letter");
+    should_serialize_to("div>p:first-letter", "div > p::first-letter");
+    should_serialize_to("span +div:first-line", "span + div::first-line");
+
+    // Test serialization of non CSS2 pseudo-element.
+    should_serialize_to("input::-moz-placeholder", "input::-moz-placeholder");
 
     // Test default namespaces, including inside :not().
     var html_default_ns = "@namespace url(http://www.w3.org/1999/xhtml);";

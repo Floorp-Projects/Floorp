@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[NoInterfaceObject, ArrayClass, Exposed=(Window,Worker)]
+[NoInterfaceObject, ArrayClass, Exposed=(Window,Worker,System)]
 interface MessagePortList {
   readonly attribute unsigned long length;
   getter MessagePort? item(unsigned long index);

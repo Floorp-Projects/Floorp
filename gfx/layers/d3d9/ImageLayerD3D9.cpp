@@ -315,7 +315,7 @@ ImageLayerD3D9::GetLayer()
 
 /*
   * Returns a texture which backs aImage
-  * Will only work if aImage is a cairo or remote image.
+  * Will only work if aImage is a cairo image.
   * Returns nullptr if unsuccessful.
   * If successful, aHasAlpha will be set to true if the texture has an
   * alpha component, false otherwise.
@@ -325,20 +325,7 @@ ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
 {
   NS_ASSERTION(aImage, "Null image.");
 
-  if (aImage->GetFormat() == ImageFormat::REMOTE_IMAGE_BITMAP) {
-    RemoteBitmapImage *remoteImage =
-      static_cast<RemoteBitmapImage*>(aImage);
-
-    if (!aImage->GetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D9)) {
-      nsAutoPtr<TextureD3D9BackendData> dat(new TextureD3D9BackendData());
-      dat->mTexture = DataToTexture(device(), remoteImage->mData, remoteImage->mStride, remoteImage->mSize, D3DFMT_A8R8G8B8);
-      if (dat->mTexture) {
-        aImage->SetBackendData(mozilla::layers::LayersBackend::LAYERS_D3D9, dat.forget());
-      }
-    }
-
-    aHasAlpha = remoteImage->mFormat == RemoteImageData::BGRA32;
-  } else if (aImage->GetFormat() == ImageFormat::CAIRO_SURFACE) {
+  if (aImage->GetFormat() == ImageFormat::CAIRO_SURFACE) {
     CairoImage *cairoImage =
       static_cast<CairoImage*>(aImage);
 
@@ -409,7 +396,6 @@ ImageLayerD3D9::RenderLayer()
   gfx::IntSize size = image->GetSize();
 
   if (image->GetFormat() == ImageFormat::CAIRO_SURFACE ||
-      image->GetFormat() == ImageFormat::REMOTE_IMAGE_BITMAP ||
       image->GetFormat() == ImageFormat::D3D9_RGB32_TEXTURE)
   {
     NS_ASSERTION(image->GetFormat() != ImageFormat::CAIRO_SURFACE ||
@@ -561,8 +547,7 @@ ImageLayerD3D9::GetAsTexture(gfx::IntSize* aSize)
     return nullptr;
   }
 
-  if (image->GetFormat() != ImageFormat::CAIRO_SURFACE &&
-      image->GetFormat() != ImageFormat::REMOTE_IMAGE_BITMAP) {
+  if (image->GetFormat() != ImageFormat::CAIRO_SURFACE) {
     return nullptr;
   }
 

@@ -10,12 +10,17 @@
 
 #include "nsPlaceholderFrame.h"
 
+#include "gfxUtils.h"
+#include "mozilla/gfx/2D.h"
 #include "nsDisplayList.h"
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
 #include "nsIFrameInlines.h"
+
+using namespace mozilla;
+using namespace mozilla::gfx;
 
 nsIFrame*
 NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
@@ -201,15 +206,21 @@ static void
 PaintDebugPlaceholder(nsIFrame* aFrame, nsRenderingContext* aCtx,
                       const nsRect& aDirtyRect, nsPoint aPt)
 {
-  aCtx->SetColor(NS_RGB(0, 255, 255));
+  ColorPattern cyan(ToDeviceColor(Color(0.f, 1.f, 1.f, 1.f)));
+  DrawTarget* drawTarget = aCtx->GetDrawTarget();
+  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+
   nscoord x = nsPresContext::CSSPixelsToAppUnits(-5);
-  aCtx->FillRect(aPt.x + x, aPt.y,
-                 nsPresContext::CSSPixelsToAppUnits(13),
-                 nsPresContext::CSSPixelsToAppUnits(3));
+  nsRect r(aPt.x + x, aPt.y,
+           nsPresContext::CSSPixelsToAppUnits(13),
+           nsPresContext::CSSPixelsToAppUnits(3));
+  drawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), cyan);
+
   nscoord y = nsPresContext::CSSPixelsToAppUnits(-10);
-  aCtx->FillRect(aPt.x, aPt.y + y,
-                 nsPresContext::CSSPixelsToAppUnits(3),
-                 nsPresContext::CSSPixelsToAppUnits(10));
+  r = nsRect(aPt.x, aPt.y + y,
+             nsPresContext::CSSPixelsToAppUnits(3),
+             nsPresContext::CSSPixelsToAppUnits(10));
+  drawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), cyan);
 }
 #endif // DEBUG
 

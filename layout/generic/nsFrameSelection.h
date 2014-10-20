@@ -584,8 +584,6 @@ public:
   void DisconnectFromPresShell();
   nsresult ClearNormalSelection();
 
-  static CaretAssociateHint GetHintForPosition(nsIContent* aContent, int32_t aOffset);
-
 private:
   ~nsFrameSelection();
 

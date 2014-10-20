@@ -125,7 +125,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     , mContentsScaleFactor(1.0)
 #endif
     , mDrawingModel(kDefaultDrawingModel)
-    , mCurrentAsyncSurface(0)
     , mAsyncInvalidateMutex("PluginInstanceChild::mAsyncInvalidateMutex")
     , mAsyncInvalidateTask(0)
     , mCachedWindowActor(nullptr)
@@ -381,25 +380,6 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 #endif
     }
 
-    case NPNVsupportsAsyncBitmapSurfaceBool: {
-#ifdef XP_WIN
-        *((NPBool*)aValue) = PluginModuleChild::current()->AsyncDrawingAllowed();
-#else
-        // We do not support non-windows yet.
-        *((NPBool*)aValue) = false;
-#endif
-        return NPERR_NO_ERROR;
-    }
-
-#ifdef XP_WIN
-    case NPNVsupportsAsyncWindowsDXGISurfaceBool: {
-        bool val;
-        CallNPN_GetValue_DrawingModelSupport(NPNVsupportsAsyncWindowsDXGISurfaceBool, &val);
-        *((NPBool*)aValue) = val;
-        return NPERR_NO_ERROR;
-    }
-#endif
-
 #ifdef XP_MACOSX
    case NPNVsupportsCoreGraphicsBool: {
         *((NPBool*)aValue) = true;
@@ -543,24 +523,9 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
         NPError rv;
         int drawingModel = (int16_t) (intptr_t) aValue;
 
-        if (!PluginModuleChild::current()->AsyncDrawingAllowed() &&
-            IsDrawingModelAsync(drawingModel)) {
-            return NPERR_GENERIC_ERROR;
-        }              
-
-        CrossProcessMutexHandle handle;
-        OptionalShmem optionalShmem;
-        if (!CallNPN_SetValue_NPPVpluginDrawingModel(drawingModel, &optionalShmem, &handle, &rv))
+        if (!CallNPN_SetValue_NPPVpluginDrawingModel(drawingModel, &rv))
             return NPERR_GENERIC_ERROR;
 
-        if (IsDrawingModelAsync(drawingModel)) {
-            if (optionalShmem.type() != OptionalShmem::TShmem) {
-                return NPERR_GENERIC_ERROR;
-            }
-            mRemoteImageDataShmem = optionalShmem.get_Shmem();
-            mRemoteImageData = mRemoteImageDataShmem.get<RemoteImageData>();
-            mRemoteImageDataMutex = new CrossProcessMutex(handle);
-        }
         mDrawingModel = drawingModel;
 
 #ifdef XP_MACOSX
@@ -2485,212 +2450,6 @@ PluginInstanceChild::NPN_URLRedirectResponse(void* notifyData, NPBool allow)
     NS_ASSERTION(false, "Couldn't find stream for redirect response!");
 }
 
-NPError
-PluginInstanceChild::DeallocateAsyncBitmapSurface(NPAsyncSurface *aSurface)
-{
-    AsyncBitmapData* data;
-    
-    if (!mAsyncBitmaps.Get(aSurface, &data)) {
-        return NPERR_INVALID_PARAM;
-    }
-
-    DeallocShmem(data->mShmem);
-    aSurface->bitmap.data = nullptr;
-
-    mAsyncBitmaps.Remove(aSurface);
-    return NPERR_NO_ERROR;
-}
-
-bool
-PluginInstanceChild::IsAsyncDrawing()
-{
-    return IsDrawingModelAsync(mDrawingModel);
-}
-
-NPError
-PluginInstanceChild::NPN_InitAsyncSurface(NPSize *size, NPImageFormat format,
-                                          void *initData, NPAsyncSurface *surface)
-{
-    AssertPluginThread();
-
-    surface->bitmap.data = nullptr;
-
-    if (!IsAsyncDrawing()) {
-        return NPERR_GENERIC_ERROR;
-    }
-
-    switch (mDrawingModel) {
-    case NPDrawingModelAsyncBitmapSurface: {
-            if (mAsyncBitmaps.Get(surface, nullptr)) {
-                return NPERR_INVALID_PARAM;
-            }
-
-            if (size->width < 0 || size->height < 0) {
-                return NPERR_INVALID_PARAM;
-            }
-
-
-            bool result;
-            NPRemoteAsyncSurface remote;
-
-            if (!CallNPN_InitAsyncSurface(gfxIntSize(size->width, size->height), format, &remote, &result) || !result) {
-                return NPERR_OUT_OF_MEMORY_ERROR;
-            }
-
-            NS_ABORT_IF_FALSE(remote.data().get_Shmem().IsWritable(),
-                "Failed to create writable shared memory.");
-            
-            AsyncBitmapData *data = new AsyncBitmapData;
-            mAsyncBitmaps.Put(surface, data);
-
-            data->mRemotePtr = (void*)remote.hostPtr();
-            data->mShmem = remote.data().get_Shmem();
-
-            surface->bitmap.data = data->mShmem.get<unsigned char>();
-            surface->bitmap.stride = remote.stride();
-            surface->format = remote.format();
-            surface->size.width = remote.size().width;
-            surface->size.height = remote.size().height;
-
-            return NPERR_NO_ERROR;
-        }
-#ifdef XP_WIN
-    case NPDrawingModelAsyncWindowsDXGISurface: {
-            if (size->width < 0 || size->height < 0) {
-                return NPERR_INVALID_PARAM;
-            }
-            bool result;
-            NPRemoteAsyncSurface remote;
-
-            if (!CallNPN_InitAsyncSurface(gfxIntSize(size->width, size->height), format, &remote, &result) || !result) {
-                return NPERR_OUT_OF_MEMORY_ERROR;
-            }
-
-            surface->format = remote.format();
-            surface->size.width = remote.size().width;
-            surface->size.height = remote.size().height;
-            surface->sharedHandle = remote.data().get_DXGISharedSurfaceHandle();
-
-            return NPERR_NO_ERROR;
-        }
-#endif
-    }
-
-    return NPERR_GENERIC_ERROR;
-}
-
-NPError
-PluginInstanceChild::NPN_FinalizeAsyncSurface(NPAsyncSurface *surface)
-{
-    AssertPluginThread();
-
-    if (!IsAsyncDrawing()) {
-        return NPERR_GENERIC_ERROR;
-    }
-
-    switch (mDrawingModel) {
-    case NPDrawingModelAsyncBitmapSurface: {
-            AsyncBitmapData *bitmapData;
-
-            if (!mAsyncBitmaps.Get(surface, &bitmapData)) {
-                return NPERR_GENERIC_ERROR;
-            }
-
-            {
-                CrossProcessMutexAutoLock autoLock(*mRemoteImageDataMutex);
-                RemoteImageData *data = mRemoteImageData;
-                if (data->mBitmap.mData == bitmapData->mRemotePtr) {
-                    data->mBitmap.mData = nullptr;
-                    data->mSize = IntSize(0, 0);
-                    data->mWasUpdated = true;
-                }
-            }
-
-            return DeallocateAsyncBitmapSurface(surface);
-        }
-#ifdef XP_WIN
-    case NPDrawingModelAsyncWindowsDXGISurface: {
-            
-            {
-                CrossProcessMutexAutoLock autoLock(*mRemoteImageDataMutex);
-                RemoteImageData *data = mRemoteImageData;
-                if (data->mTextureHandle == surface->sharedHandle) {
-                    data->mTextureHandle = nullptr;
-                    data->mSize = IntSize(0, 0);
-                    data->mWasUpdated = true;
-                }
-            }
-
-            SendReleaseDXGISharedSurface(surface->sharedHandle);
-            return NPERR_NO_ERROR;
-        }
-#endif
-    }
-
-    return NPERR_GENERIC_ERROR;
-}
-
-void
-PluginInstanceChild::NPN_SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed)
-{
-    if (!IsAsyncDrawing()) {
-        return;
-    }
-
-    RemoteImageData *data = mRemoteImageData;
-
-    if (!surface) {
-        CrossProcessMutexAutoLock autoLock(*mRemoteImageDataMutex);
-        data->mBitmap.mData = nullptr;
-        data->mSize = IntSize(0, 0);
-        data->mWasUpdated = true;
-    } else {
-        switch (mDrawingModel) {
-        case NPDrawingModelAsyncBitmapSurface:
-            {
-                AsyncBitmapData *bitmapData;
-        
-                if (!mAsyncBitmaps.Get(surface, &bitmapData)) {
-                    return;
-                }
-              
-                CrossProcessMutexAutoLock autoLock(*mRemoteImageDataMutex);
-                data->mBitmap.mData = (unsigned char*)bitmapData->mRemotePtr;
-                data->mSize = IntSize(surface->size.width, surface->size.height);
-                data->mFormat = surface->format == NPImageFormatBGRX32 ?
-                                RemoteImageData::BGRX32 : RemoteImageData::BGRA32;
-                data->mBitmap.mStride = surface->bitmap.stride;
-                data->mWasUpdated = true;
-                break;
-            }
-#ifdef XP_WIN
-        case NPDrawingModelAsyncWindowsDXGISurface:
-            {
-                CrossProcessMutexAutoLock autoLock(*mRemoteImageDataMutex);
-                data->mType = RemoteImageData::DXGI_TEXTURE_HANDLE;
-                data->mSize = IntSize(surface->size.width, surface->size.height);
-                data->mFormat = surface->format == NPImageFormatBGRX32 ?
-                                RemoteImageData::BGRX32 : RemoteImageData::BGRA32;
-                data->mTextureHandle = surface->sharedHandle;
-
-                data->mWasUpdated = true;
-                break;
-            }
-#endif
-        }
-    }
-
-    {
-        MutexAutoLock autoLock(mAsyncInvalidateMutex);
-        if (!mAsyncInvalidateTask) {
-            mAsyncInvalidateTask = 
-                NewRunnableMethod<PluginInstanceChild, void (PluginInstanceChild::*)()>
-                    (this, &PluginInstanceChild::DoAsyncRedraw);
-            ProcessChild::message_loop()->PostTask(FROM_HERE, mAsyncInvalidateTask);
-        }
-    }
-}
-
 void
 PluginInstanceChild::DoAsyncRedraw()
 {
@@ -3198,7 +2957,7 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
         // Moz2D treats OP_SOURCE operations as unbounded, so we need to
         // clip to the rect that we want to fill:
         dt->PushClipRect(rect);
-        dt->FillRect(rect, ColorPattern(ToColor(aColor)),
+        dt->FillRect(rect, ColorPattern(ToColor(aColor)), // aColor is already a device color
                      DrawOptions(1.f, CompositionOp::OP_SOURCE));
         dt->PopClip();
         dt->Flush();
@@ -3919,16 +3678,6 @@ PluginInstanceChild::ClearAllSurfaces()
 #endif
 }
 
-PLDHashOperator
-PluginInstanceChild::DeleteSurface(NPAsyncSurface* surf, nsAutoPtr<AsyncBitmapData> &data, void* userArg)
-{
-    PluginInstanceChild *inst = static_cast<PluginInstanceChild*>(userArg);
-
-    inst->DeallocShmem(data->mShmem);
-
-    return PL_DHASH_REMOVE;
-}
-
 bool
 PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 {
@@ -4004,11 +3753,6 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 
     mPendingAsyncCalls.Clear();
     
-    if (mAsyncBitmaps.Count()) {
-        NS_ERROR("Not all AsyncBitmaps were finalized by a plugin!");
-        mAsyncBitmaps.Enumerate(DeleteSurface, this);
-    }
-
 #ifdef MOZ_WIDGET_GTK
     if (mWindow.type == NPWindowTypeWindow && !mXEmbed) {
       xt_client_xloop_destroy();

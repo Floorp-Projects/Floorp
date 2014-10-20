@@ -9,14 +9,21 @@
  */
 
 
-#ifndef common_h
-#define common_h 1
+#ifndef VP8_COMMON_COMMON_H_
+#define VP8_COMMON_COMMON_H_
 
 #include <assert.h>
 
 /* Interface header for common constant data structures and lookup tables */
 
 #include "vpx_mem/vpx_mem.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 /* Only need this for fixed-size arrays, for structs just assign. */
 
@@ -37,4 +44,8 @@
 #define vp8_zero_array( Dest, N)  vpx_memset( Dest, 0, N * sizeof( *Dest));
 
 
-#endif  /* common_h */
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
+#endif  // VP8_COMMON_COMMON_H_

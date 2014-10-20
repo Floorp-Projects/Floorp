@@ -984,7 +984,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Date_valueOf",                    date_valueOf,                 0,0),
 
     JS_FN("std_Function_bind",                   fun_bind,                     1,0),
-    JS_FN("std_Function_apply",                  js_fun_apply,                 1,0),
+    JS_FN("std_Function_apply",                  js_fun_apply,                 2,0),
 
     JS_FN("std_Math_floor",                      math_floor,                   1,0),
     JS_FN("std_Math_max",                        math_max,                     2,0),
@@ -1002,7 +1002,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Object_getPrototypeOf",           obj_getPrototypeOf,           1,0),
     JS_FN("std_Object_getOwnPropertyNames",      obj_getOwnPropertyNames,      1,0),
     JS_FN("std_Object_getOwnPropertyDescriptor", obj_getOwnPropertyDescriptor, 2,0),
-    JS_FN("std_Object_hasOwnProperty",           obj_hasOwnProperty,           2,0),
+    JS_FN("std_Object_hasOwnProperty",           obj_hasOwnProperty,           1,0),
 
     JS_FN("std_Set_has",                         SetObject::has,               1,0),
     JS_FN("std_Set_iterator",                    SetObject::values,            0,0),
@@ -1014,7 +1014,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_String_match",                    str_match,                    1,0),
     JS_FN("std_String_replace",                  str_replace,                  2,0),
     JS_FN("std_String_split",                    str_split,                    2,0),
-    JS_FN("std_String_startsWith",               str_startsWith,               2,0),
+    JS_FN("std_String_startsWith",               str_startsWith,               1,0),
     JS_FN("std_String_substring",                str_substring,                2,0),
     JS_FN("std_String_toLowerCase",              str_toLowerCase,              0,0),
     JS_FN("std_String_toUpperCase",              str_toUpperCase,              0,0),
@@ -1036,7 +1036,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ThrowError",              intrinsic_ThrowError,              4,0),
     JS_FN("AssertionFailed",         intrinsic_AssertionFailed,         1,0),
     JS_FN("SetScriptHints",          intrinsic_SetScriptHints,          2,0),
-    JS_FN("MakeConstructible",       intrinsic_MakeConstructible,       1,0),
+    JS_FN("MakeConstructible",       intrinsic_MakeConstructible,       2,0),
     JS_FN("_IsConstructing",         intrinsic_IsConstructing,          0,0),
     JS_FN("DecompileArg",            intrinsic_DecompileArg,            2,0),
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
@@ -1313,6 +1313,12 @@ bool
 JSRuntime::isSelfHostingCompartment(JSCompartment *comp)
 {
     return selfHostingGlobal_->compartment() == comp;
+}
+
+bool
+JSRuntime::isSelfHostingZone(JS::Zone *zone)
+{
+    return selfHostingGlobal_->zoneFromAnyThread() == zone;
 }
 
 static bool

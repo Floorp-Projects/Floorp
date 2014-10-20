@@ -8,10 +8,10 @@
 ;  be found in the AUTHORS file in the root of the source tree.
 ;
 
-    EXPORT  |vp9_loop_filter_horizontal_edge_neon|
-    EXPORT  |vp9_loop_filter_vertical_edge_neon|
-    EXPORT  |vp9_mbloop_filter_horizontal_edge_neon|
-    EXPORT  |vp9_mbloop_filter_vertical_edge_neon|
+    EXPORT  |vp9_lpf_horizontal_4_neon|
+    EXPORT  |vp9_lpf_vertical_4_neon|
+    EXPORT  |vp9_lpf_horizontal_8_neon|
+    EXPORT  |vp9_lpf_vertical_8_neon|
     ARM
 
     AREA ||.text||, CODE, READONLY, ALIGN=2
@@ -21,12 +21,12 @@
 ; TODO(fgalligan): See about removing the count code as this function is only
 ; called with a count of 1.
 ;
-; void vp9_loop_filter_horizontal_edge_neon(uint8_t *s,
-;                                           int p /* pitch */,
-;                                           const uint8_t *blimit,
-;                                           const uint8_t *limit,
-;                                           const uint8_t *thresh,
-;                                           int count)
+; void vp9_lpf_horizontal_4_neon(uint8_t *s,
+;                                int p /* pitch */,
+;                                const uint8_t *blimit,
+;                                const uint8_t *limit,
+;                                const uint8_t *thresh,
+;                                int count)
 ;
 ; r0    uint8_t *s,
 ; r1    int p, /* pitch */
@@ -34,7 +34,7 @@
 ; r3    const uint8_t *limit,
 ; sp    const uint8_t *thresh,
 ; sp+4  int count
-|vp9_loop_filter_horizontal_edge_neon| PROC
+|vp9_lpf_horizontal_4_neon| PROC
     push        {lr}
 
     vld1.8      {d0[]}, [r2]               ; duplicate *blimit
@@ -77,19 +77,19 @@ count_lf_h_loop
 
 end_vp9_lf_h_edge
     pop         {pc}
-    ENDP        ; |vp9_loop_filter_horizontal_edge_neon|
+    ENDP        ; |vp9_lpf_horizontal_4_neon|
 
 ; Currently vp9 only works on iterations 8 at a time. The vp8 loop filter
 ; works on 16 iterations at a time.
 ; TODO(fgalligan): See about removing the count code as this function is only
 ; called with a count of 1.
 ;
-; void vp9_loop_filter_vertical_edge_neon(uint8_t *s,
-;                                         int p /* pitch */,
-;                                         const uint8_t *blimit,
-;                                         const uint8_t *limit,
-;                                         const uint8_t *thresh,
-;                                         int count)
+; void vp9_lpf_vertical_4_neon(uint8_t *s,
+;                              int p /* pitch */,
+;                              const uint8_t *blimit,
+;                              const uint8_t *limit,
+;                              const uint8_t *thresh,
+;                              int count)
 ;
 ; r0    uint8_t *s,
 ; r1    int p, /* pitch */
@@ -97,7 +97,7 @@ end_vp9_lf_h_edge
 ; r3    const uint8_t *limit,
 ; sp    const uint8_t *thresh,
 ; sp+4  int count
-|vp9_loop_filter_vertical_edge_neon| PROC
+|vp9_lpf_vertical_4_neon| PROC
     push        {lr}
 
     vld1.8      {d0[]}, [r2]              ; duplicate *blimit
@@ -158,7 +158,7 @@ count_lf_v_loop
 
 end_vp9_lf_v_edge
     pop         {pc}
-    ENDP        ; |vp9_loop_filter_vertical_edge_neon|
+    ENDP        ; |vp9_lpf_vertical_4_neon|
 
 ; void vp9_loop_filter_neon();
 ; This is a helper function for the loopfilters. The invidual functions do the
@@ -276,18 +276,18 @@ end_vp9_lf_v_edge
     bx          lr
     ENDP        ; |vp9_loop_filter_neon|
 
-; void vp9_mbloop_filter_horizontal_edge_neon(uint8_t *s, int p,
-;                                             const uint8_t *blimit,
-;                                             const uint8_t *limit,
-;                                             const uint8_t *thresh,
-;                                             int count)
+; void vp9_lpf_horizontal_8_neon(uint8_t *s, int p,
+;                                const uint8_t *blimit,
+;                                const uint8_t *limit,
+;                                const uint8_t *thresh,
+;                                int count)
 ; r0    uint8_t *s,
 ; r1    int p, /* pitch */
 ; r2    const uint8_t *blimit,
 ; r3    const uint8_t *limit,
 ; sp    const uint8_t *thresh,
 ; sp+4  int count
-|vp9_mbloop_filter_horizontal_edge_neon| PROC
+|vp9_lpf_horizontal_8_neon| PROC
     push        {r4-r5, lr}
 
     vld1.8      {d0[]}, [r2]               ; duplicate *blimit
@@ -333,14 +333,14 @@ count_mblf_h_loop
 end_vp9_mblf_h_edge
     pop         {r4-r5, pc}
 
-    ENDP        ; |vp9_mbloop_filter_horizontal_edge_neon|
+    ENDP        ; |vp9_lpf_horizontal_8_neon|
 
-; void vp9_mbloop_filter_vertical_edge_neon(uint8_t *s,
-;                                           int pitch,
-;                                           const uint8_t *blimit,
-;                                           const uint8_t *limit,
-;                                           const uint8_t *thresh,
-;                                           int count)
+; void vp9_lpf_vertical_8_neon(uint8_t *s,
+;                              int pitch,
+;                              const uint8_t *blimit,
+;                              const uint8_t *limit,
+;                              const uint8_t *thresh,
+;                              int count)
 ;
 ; r0    uint8_t *s,
 ; r1    int pitch,
@@ -348,7 +348,7 @@ end_vp9_mblf_h_edge
 ; r3    const uint8_t *limit,
 ; sp    const uint8_t *thresh,
 ; sp+4  int count
-|vp9_mbloop_filter_vertical_edge_neon| PROC
+|vp9_lpf_vertical_8_neon| PROC
     push        {r4-r5, lr}
 
     vld1.8      {d0[]}, [r2]              ; duplicate *blimit
@@ -420,7 +420,7 @@ count_mblf_v_loop
 
 end_vp9_mblf_v_edge
     pop         {r4-r5, pc}
-    ENDP        ; |vp9_mbloop_filter_vertical_edge_neon|
+    ENDP        ; |vp9_lpf_vertical_8_neon|
 
 ; void vp9_mbloop_filter_neon();
 ; This is a helper function for the loopfilters. The invidual functions do the
