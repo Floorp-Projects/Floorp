@@ -40,7 +40,7 @@
 		}, "createCaption method returns the first caption element child of the table")
 		test(function () {
 			var table2 = document.getElementById('table2');
-			var test2Caption = table2.createCaption(); 
+			var test2Caption = table2.createCaption();
 			var table2FirstNode = table2.firstChild;
 			assert_true(test2Caption instanceof  HTMLTableCaptionElement);
 			assert_equals(table2FirstNode, test2Caption);

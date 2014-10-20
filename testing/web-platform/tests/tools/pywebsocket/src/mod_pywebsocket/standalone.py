@@ -36,6 +36,7 @@ Use this file to launch pywebsocket without Apache HTTP Server.
 
 
 BASIC USAGE
+===========
 
 Go to the src directory and run
 
@@ -61,10 +62,13 @@ For trouble shooting, adding "--log_level debug" might help you.
 
 
 TRY DEMO
+========
 
-Go to the src directory and run
+Go to the src directory and run standalone.py with -d option to set the
+document root to the directory containing example HTMLs and handlers like this:
 
-  $ python standalone.py -d example
+  $ cd src
+  $ PYTHONPATH=. python mod_pywebsocket/standalone.py -d example
 
 to launch pywebsocket with the sample handler and html on port 80. Open
 http://localhost/console.html, click the connect button, type something into
@@ -72,24 +76,48 @@ the text box next to the send button and click the send button. If everything
 is working, you'll see the message you typed echoed by the server.
 
 
-SUPPORTING TLS
+USING TLS
+=========
 
-To support TLS, run standalone.py with -t, -k, and -c options.
+To run the standalone server with TLS support, run it with -t, -k, and -c
+options. When TLS is enabled, the standalone server accepts only TLS connection.
 
 Note that when ssl module is used and the key/cert location is incorrect,
 TLS connection silently fails while pyOpenSSL fails on startup.
 
+Example:
 
-SUPPORTING CLIENT AUTHENTICATION
+  $ PYTHONPATH=. python mod_pywebsocket/standalone.py \
+        -d example \
+        -p 10443 \
+        -t \
+        -c ../test/cert/cert.pem \
+        -k ../test/cert/key.pem \
 
-To support client authentication with TLS, run standalone.py with -t, -k, -c,
-and --tls-client-auth, and --tls-client-ca options.
+Note that when passing a relative path to -c and -k option, it will be resolved
+using the document root directory as the base.
 
-E.g., $./standalone.py -d ../example -p 10443 -t -c ../test/cert/cert.pem -k
-../test/cert/key.pem --tls-client-auth --tls-client-ca=../test/cert/cacert.pem
+
+USING CLIENT AUTHENTICATION
+===========================
+
+To run the standalone server with TLS client authentication support, run it with
+--tls-client-auth and --tls-client-ca options in addition to ones required for
+TLS support.
+
+Example:
+
+  $ PYTHONPATH=. python mod_pywebsocket/standalone.py -d example -p 10443 -t \
+        -c ../test/cert/cert.pem -k ../test/cert/key.pem \
+        --tls-client-auth \
+        --tls-client-ca=../test/cert/cacert.pem
+
+Note that when passing a relative path to --tls-client-ca option, it will be
+resolved using the document root directory as the base.
 
 
 CONFIGURATION FILE
+==================
 
 You can also write a configuration file and use it by specifying the path to
 the configuration file by --config option. Please write a configuration file
@@ -113,12 +141,14 @@ configuration file.
 
 
 THREADING
+=========
 
 This server is derived from SocketServer.ThreadingMixIn. Hence a thread is
 used for each request.
 
 
 SECURITY WARNING
+================
 
 This uses CGIHTTPServer and CGIHTTPServer is not secure.
 It may execute arbitrary Python code or external programs. It should not be
@@ -149,6 +179,7 @@ from mod_pywebsocket import handshake
 from mod_pywebsocket import http_header_util
 from mod_pywebsocket import memorizingfile
 from mod_pywebsocket import util
+from mod_pywebsocket.xhr_benchmark_handler import XHRBenchmarkHandler
 
 
 _DEFAULT_LOG_MAX_BYTES = 1024 * 256
@@ -583,8 +614,9 @@ class WebSocketServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
                     self._logger.debug('%r', e)
                     raise socket.error(1, '%r' % e)
                 cert = accepted_socket.get_peer_certificate()
-                self._logger.debug('Client cert subject: %r',
-                                   cert.get_subject().get_components())
+                if cert is not None:
+                    self._logger.debug('Client cert subject: %r',
+                                       cert.get_subject().get_components())
                 accepted_socket = _StandaloneSSLConnection(accepted_socket)
             else:
                 raise ValueError('No TLS support module is available')
@@ -626,6 +658,8 @@ class WebSocketRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
     # Use httplib.HTTPMessage instead of mimetools.Message.
     MessageClass = httplib.HTTPMessage
 
+    protocol_version = "HTTP/1.1"
+
     def setup(self):
         """Override SocketServer.StreamRequestHandler.setup to wrap rfile
         with MemorizingFile.
@@ -661,99 +695,6 @@ class WebSocketRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
         CGIHTTPServer.CGIHTTPRequestHandler.__init__(
             self, request, client_address, server)
 
-    def _xhr_send_benchmark_helper(self):
-        content_length = int(self.headers.getheader('Content-Length'))
-
-        self._logger.debug('Requested to receive %s bytes', content_length)
-
-        RECEIVE_BLOCK_SIZE = 1024 * 1024
-
-        bytes_to_receive = content_length
-        while bytes_to_receive > 0:
-            bytes_to_receive_in_this_loop = bytes_to_receive
-            if bytes_to_receive_in_this_loop > RECEIVE_BLOCK_SIZE:
-                bytes_to_receive_in_this_loop = RECEIVE_BLOCK_SIZE
-            received_data = self.rfile.read(bytes_to_receive_in_this_loop)
-            for c in received_data:
-                if c != 'a':
-                    self._logger.debug('Request body verification failed')
-                    return
-            bytes_to_receive -= len(received_data)
-        if bytes_to_receive < 0:
-            self._logger.debug('Received %d more bytes than expected' %
-                               (-bytes_to_receive))
-            return
-
-        # Return the number of received bytes back to the client.
-        response_body = '%d' % content_length
-        self.wfile.write(
-            'HTTP/1.1 200 OK\r\n'
-            'Content-Type: text/html\r\n'
-            'Content-Length: %d\r\n'
-            '\r\n%s' % (len(response_body), response_body))
-        self.wfile.flush()
-
-    def _xhr_receive_benchmark_helper(self):
-        content_length = self.headers.getheader('Content-Length')
-        request_body = self.rfile.read(int(content_length))
-
-        request_array = request_body.split(' ')
-        if len(request_array) < 2:
-            self._logger.debug('Malformed request body: %r', request_body)
-            return
-
-        # Parse the size parameter.
-        bytes_to_send = request_array[0]
-        try:
-            bytes_to_send = int(bytes_to_send)
-        except ValueError, e:
-            self._logger.debug('Malformed size parameter: %r', bytes_to_send)
-            return
-        self._logger.debug('Requested to send %s bytes', bytes_to_send)
-
-        # Parse the transfer encoding parameter.
-        chunked_mode = False
-        mode_parameter = request_array[1]
-        if mode_parameter == 'chunked':
-            self._logger.debug('Requested chunked transfer encoding')
-            chunked_mode = True
-        elif mode_parameter != 'none':
-            self._logger.debug('Invalid mode parameter: %r', mode_parameter)
-            return
-
-        # Write a header
-        response_header = (
-            'HTTP/1.1 200 OK\r\n'
-            'Content-Type: application/octet-stream\r\n')
-        if chunked_mode:
-            response_header += 'Transfer-Encoding: chunked\r\n\r\n'
-        else:
-            response_header += (
-                'Content-Length: %d\r\n\r\n' % bytes_to_send)
-        self.wfile.write(response_header)
-        self.wfile.flush()
-
-        # Write a body
-        SEND_BLOCK_SIZE = 1024 * 1024
-
-        while bytes_to_send > 0:
-            bytes_to_send_in_this_loop = bytes_to_send
-            if bytes_to_send_in_this_loop > SEND_BLOCK_SIZE:
-                bytes_to_send_in_this_loop = SEND_BLOCK_SIZE
-
-            if chunked_mode:
-                self.wfile.write('%x\r\n' % bytes_to_send_in_this_loop)
-            self.wfile.write('a' * bytes_to_send_in_this_loop)
-            if chunked_mode:
-                self.wfile.write('\r\n')
-            self.wfile.flush()
-
-            bytes_to_send -= bytes_to_send_in_this_loop
-
-        if chunked_mode:
-            self.wfile.write('0\r\n\r\n')
-            self.wfile.flush()
-
     def parse_request(self):
         """Override BaseHTTPServer.BaseHTTPRequestHandler.parse_request.
 
@@ -775,6 +716,12 @@ class WebSocketRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
         if not CGIHTTPServer.CGIHTTPRequestHandler.parse_request(self):
             return False
 
+        if self.command == "CONNECT":
+            self.send_response(200, "Connected")
+            self.send_header("Connection", "keep-alive")
+            self.end_headers()
+            return False
+
         if self._options.use_basic_auth:
             auth = self.headers.getheader('Authorization')
             if auth != self._options.basic_auth_credential:
@@ -783,17 +730,21 @@ class WebSocketRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
                                  'Basic realm="Pywebsocket"')
                 self.end_headers()
                 self._logger.info('Request basic authentication')
-                return True
+                return False
 
         host, port, resource = http_header_util.parse_uri(self.path)
 
         # Special paths for XMLHttpRequest benchmark
         xhr_benchmark_helper_prefix = '/073be001e10950692ccbf3a2ad21c245'
         if resource == (xhr_benchmark_helper_prefix + '_send'):
-            self._xhr_send_benchmark_helper()
+            xhr_benchmark_handler = XHRBenchmarkHandler(
+                self.headers, self.rfile, self.wfile)
+            xhr_benchmark_handler.do_send()
             return False
         if resource == (xhr_benchmark_helper_prefix + '_receive'):
-            self._xhr_receive_benchmark_helper()
+            xhr_benchmark_handler = XHRBenchmarkHandler(
+                self.headers, self.rfile, self.wfile)
+            xhr_benchmark_handler.do_receive()
             return False
 
         if resource is None:
