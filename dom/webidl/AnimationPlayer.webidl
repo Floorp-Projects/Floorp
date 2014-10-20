@@ -21,6 +21,7 @@ interface AnimationPlayer {
   readonly attribute AnimationTimeline timeline;
   [Pure]
   readonly attribute double? startTime;
+  [BinaryName="currentTimeAsDouble"]
   readonly attribute double? currentTime;
 
   /* Not yet implemented

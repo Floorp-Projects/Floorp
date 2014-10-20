@@ -28,16 +28,25 @@ AnimationPlayer::GetStartTime() const
   return AnimationUtils::TimeDurationToDouble(mStartTime);
 }
 
-Nullable<double>
+Nullable<TimeDuration>
 AnimationPlayer::GetCurrentTime() const
 {
-  return AnimationUtils::TimeDurationToDouble(GetCurrentTimeDuration());
+  Nullable<TimeDuration> result;
+  if (!mHoldTime.IsNull()) {
+    result = mHoldTime;
+  } else {
+    Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTime();
+    if (!timelineTime.IsNull() && !mStartTime.IsNull()) {
+      result.SetValue(timelineTime.Value() - mStartTime.Value());
+    }
+  }
+  return result;
 }
 
 AnimationPlayState
 AnimationPlayer::PlayState() const
 {
-  Nullable<TimeDuration> currentTime = GetCurrentTimeDuration();
+  Nullable<TimeDuration> currentTime = GetCurrentTime();
   if (currentTime.IsNull()) {
     return AnimationPlayState::Idle;
   }
@@ -65,7 +74,7 @@ AnimationPlayer::Play(UpdateFlags aFlags)
   }
   mIsPaused = false;
 
-  Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTimeDuration();
+  Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTime();
   if (timelineTime.IsNull()) {
     // FIXME: We should just sit in the pending state in this case.
     // We will introduce the pending state in Bug 927349.
@@ -92,12 +101,18 @@ AnimationPlayer::Pause(UpdateFlags aFlags)
   mIsRunningOnCompositor = false;
 
   // Bug 927349 - check for null result here and go to pending state
-  mHoldTime = GetCurrentTimeDuration();
+  mHoldTime = GetCurrentTime();
   mStartTime.SetNull();
 
   if (aFlags == eUpdateStyle) {
     MaybePostRestyle();
   }
+}
+
+Nullable<double>
+AnimationPlayer::GetCurrentTimeAsDouble() const
+{
+  return AnimationUtils::TimeDurationToDouble(GetCurrentTime());
 }
 
 AnimationPlayState
@@ -142,7 +157,7 @@ AnimationPlayer::SetSource(Animation* aSource)
   }
   mSource = aSource;
   if (mSource) {
-    mSource->SetParentTime(GetCurrentTimeDuration());
+    mSource->SetParentTime(GetCurrentTime());
   }
 }
 
@@ -150,7 +165,7 @@ void
 AnimationPlayer::Tick()
 {
   if (mSource) {
-    mSource->SetParentTime(GetCurrentTimeDuration());
+    mSource->SetParentTime(GetCurrentTime());
   }
 }
 
@@ -163,21 +178,6 @@ AnimationPlayer::IsRunning() const
 
   ComputedTiming computedTiming = GetSource()->GetComputedTiming();
   return computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
-}
-
-Nullable<TimeDuration>
-AnimationPlayer::GetCurrentTimeDuration() const
-{
-  Nullable<TimeDuration> result;
-  if (!mHoldTime.IsNull()) {
-    result = mHoldTime;
-  } else {
-    Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTimeDuration();
-    if (!timelineTime.IsNull() && !mStartTime.IsNull()) {
-      result.SetValue(timelineTime.Value() - mStartTime.Value());
-    }
-  }
-  return result;
 }
 
 void
