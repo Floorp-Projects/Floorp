@@ -2576,8 +2576,8 @@ let BrowserOnClick = {
         TabCrashReporter.submitCrashReport(browser);
       }
 #endif
-
-      TabCrashReporter.reloadCrashedTab(browser);
+      let tab = gBrowser.getTabForBrowser(browser);
+      SessionStore.reviveCrashedTab(tab);
     }
   },
 

@@ -276,6 +276,10 @@ this.SessionStore = {
     return SessionStoreInternal.getCurrentState(aUpdateAll);
   },
 
+  reviveCrashedTab(aTab) {
+    return SessionStoreInternal.reviveCrashedTab(aTab);
+  },
+
   /**
    * Backstage pass to implementation details, used for testing purpose.
    * Controlled by preference "browser.sessionstore.testmode".
@@ -1946,6 +1950,35 @@ let SessionStoreInternal = {
     this._updateSessionStartTime(lastSessionState);
 
     LastSession.clear();
+  },
+
+  /**
+   * Revive a crashed tab and restore its state from before it crashed.
+   *
+   * @param aTab
+   *        A <xul:tab> linked to a crashed browser. This is a no-op if the
+   *        browser hasn't actually crashed, or is not associated with a tab.
+   *        This function will also throw if the browser happens to be remote.
+   */
+  reviveCrashedTab(aTab) {
+    if (!aTab) {
+      throw new Error("SessionStore.reviveCrashedTab expected a tab, but got null.");
+    }
+
+    let browser = aTab.linkedBrowser;
+    if (!this._crashedBrowsers.has(browser)) {
+      return;
+    }
+
+    // Sanity check - the browser to be revived should not be remote
+    // at this point.
+    if (browser.isRemoteBrowser) {
+      throw new Error("SessionStore.reviveCrashedTab: " +
+                      "Somehow a crashed browser is still remote.")
+    }
+
+    let data = TabState.collect(aTab);
+    this.restoreTab(aTab, data);
   },
 
   /**

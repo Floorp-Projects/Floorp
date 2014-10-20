@@ -87,18 +87,6 @@ this.TabCrashReporter = {
     }
   },
 
-  reloadCrashedTab: function (browser) {
-    if (browser.isRemoteBrowser)
-      return;
-
-    let doc = browser.contentDocument;
-    if (!doc.documentURI.startsWith("about:tabcrashed"))
-      return;
-
-    let url = browser.currentURI.spec;
-    browser.loadURIWithFlags(url, Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
-  },
-
   onAboutTabCrashedLoad: function (aBrowser) {
     if (!this.childMap)
       return;
