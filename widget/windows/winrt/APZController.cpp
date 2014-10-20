@@ -147,7 +147,7 @@ APZController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
   nsCOMPtr<nsIContent> targetContent;
   if (!GetDOMTargets(aFrameMetrics.GetScrollId(),
                      subDocument, targetContent)) {
-    return NS_OK;
+    return;
   }
 
   // If we're dealing with a sub frame or content editable element,
@@ -158,7 +158,7 @@ APZController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
 #endif
     FrameMetrics metrics = aFrameMetrics;
     mozilla::layers::APZCCallbackHelper::UpdateSubFrame(targetContent, metrics);
-    return NS_OK;
+    return;
   }
 
 #ifdef DEBUG_CONTROLLER

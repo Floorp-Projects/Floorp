@@ -368,6 +368,7 @@ gbjar.sources += [
     'prompts/PromptService.java',
     'prompts/TabInput.java',
     'ReaderModeUtils.java',
+    'ReadingListHelper.java',
     'RemoteClientsDialogFragment.java',
     'RemoteTabsExpandableListAdapter.java',
     'Restarter.java',

@@ -11,7 +11,7 @@
                android:layout_height="match_parent"
                android:layout_alignLeft="@+id/back"
                android:layout_toLeftOf="@id/menu_items"
-               android:layout_marginLeft="@dimen/back_button_width_half"
+               android:layout_marginLeft="@dimen/new_tablet_nav_button_width_half"
                android:layout_marginTop="10dp"
                android:layout_marginBottom="10dp"
                android:duplicateParentState="true"
@@ -25,8 +25,8 @@
 
     <org.mozilla.gecko.toolbar.BackButton android:id="@id/back"
                                           style="@style/UrlBar.ImageButton.NewTablet"
-                                          android:layout_width="@dimen/back_button_width"
-                                          android:layout_height="@dimen/back_button_width"
+                                          android:layout_width="@dimen/new_tablet_nav_button_width"
+                                          android:layout_height="@dimen/new_tablet_nav_button_width"
                                           android:layout_centerVertical="true"
                                           android:layout_marginLeft="12dp"
                                           android:layout_alignParentLeft="true"
@@ -43,8 +43,7 @@
                   android:layout_toRightOf="@id/back"
                   android:layout_toLeftOf="@id/menu_items"/>
 
-    <!-- Note: * Values of marginLeft are used to animate the forward button so don't change its value.
-               * We set the padding on the site security icon to increase its tappable area. -->
+    <!-- Note: we set the padding on the site security icon to increase its tappable area. -->
     <org.mozilla.gecko.toolbar.ToolbarDisplayLayout android:id="@+id/display_layout"
                   style="@style/UrlBar.Button.Container"
                   android:layout_toRightOf="@id/back"

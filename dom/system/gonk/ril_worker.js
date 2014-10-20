@@ -3993,6 +3993,26 @@ RilObject.prototype = {
     if (conferenceChanged) {
       this._ensureConference();
     }
+
+    // Update audio state.
+    let message = {rilMessageType: "audioStateChanged",
+                   state: this._detectAudioState()};
+    this.sendChromeMessage(message);
+  },
+
+  _detectAudioState: function() {
+    let callNum = Object.keys(this.currentCalls).length;
+    if (!callNum) {
+      return AUDIO_STATE_NO_CALL;
+    }
+
+    let firstIndex = Object.keys(this.currentCalls)[0];
+    if (callNum == 1 &&
+        this.currentCalls[firstIndex].state == CALL_STATE_INCOMING) {
+      return AUDIO_STATE_INCOMING;
+    }
+
+    return AUDIO_STATE_IN_CALL;
   },
 
   _addNewVoiceCall: function(newCall) {

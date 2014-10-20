@@ -293,6 +293,36 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
   }),
 
   /**
+   * Connects this audionode to an AudioParam via `node.connect(param)`.
+   */
+  connectParam: method(function (destActor, paramName, output) {
+    let srcNode = this.node.get();
+    let destNode = destActor.node.get();
+
+    if (srcNode === null || destNode === null) {
+      return CollectedAudioNodeError();
+    }
+
+    try {
+      // Connect via the unwrapped node, so we can call the
+      // patched method that fires the webaudio actor's `connect-param` event.
+      // Connect directly to the wrapped `destNode`, otherwise
+      // the patched method thinks this is a new node and won't be
+      // able to find it in `_nativeToActorID`.
+      XPCNativeWrapper.unwrap(srcNode).connect(destNode[paramName], output);
+    } catch (e) {
+      return constructError(e);
+    }
+  }, {
+    request: {
+      destActor: Arg(0, "audionode"),
+      paramName: Arg(1, "string"),
+      output: Arg(2, "nullable:number")
+    },
+    response: { error: RetVal("nullable:json") }
+  }),
+
+  /**
    * Connects this audionode to another via `node.connect(dest)`.
    */
   connectNode: method(function (destActor, output, input) {
