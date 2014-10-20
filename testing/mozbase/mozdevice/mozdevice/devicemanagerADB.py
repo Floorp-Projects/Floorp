@@ -522,7 +522,7 @@ class DeviceManagerADB(DeviceManager):
                 key, value = line.split(":")
                 meminfo[key] = value.strip()
             ret["memtotal"] = meminfo["MemTotal"]
-        self._logger.info(ret)
+        self._logger.debug("getInfo: %s" % ret)
         return ret
 
     def uninstallApp(self, appName, installPath=None):
