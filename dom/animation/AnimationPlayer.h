@@ -60,14 +60,17 @@ public:
   Animation* GetSource() const { return mSource; }
   AnimationTimeline* Timeline() const { return mTimeline; }
   Nullable<double> GetStartTime() const;
-  Nullable<double> GetCurrentTime() const;
+  Nullable<TimeDuration> GetCurrentTime() const;
   AnimationPlayState PlayState() const;
   virtual void Play(UpdateFlags aUpdateFlags);
   virtual void Pause(UpdateFlags aUpdateFlags);
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
 
-  // Wrapper functions for performing extra steps such as flushing
-  // style when calling from JS.
+  // Wrapper functions for AnimationPlayer DOM methods when called
+  // from script. We often use the same methods internally and from
+  // script but when called from script we perform extra steps such
+  // as flushing style or converting the return type.
+  Nullable<double> GetCurrentTimeAsDouble() const;
   AnimationPlayState PlayStateFromJS() const;
   void PlayFromJS();
   void PauseFromJS();
@@ -89,10 +92,6 @@ public:
   bool HasInEffectSource() const {
     return GetSource() && GetSource()->IsInEffect();
   }
-
-  // Return the duration since the start time of the player, taking into
-  // account the pause state.  May be negative or null.
-  Nullable<TimeDuration> GetCurrentTimeDuration() const;
 
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale

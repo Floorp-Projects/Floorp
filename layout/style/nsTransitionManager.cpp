@@ -533,7 +533,7 @@ nsTransitionManager::ConsiderStartingTransition(
   segment.mTimingFunction.Init(tf);
 
   nsRefPtr<dom::AnimationPlayer> player = new dom::AnimationPlayer(timeline);
-  player->mStartTime = timeline->GetCurrentTimeDuration();
+  player->mStartTime = timeline->GetCurrentTime();
   player->SetSource(pt);
 
   if (!aElementTransitions) {
