@@ -12,8 +12,8 @@ public class testMailToContextMenu extends ContentContextMenuTest {
         blockForGeckoReady();
 
         MAILTO_PAGE_URL=getAbsoluteUrl(StringHelper.ROBOCOP_BIG_MAILTO_URL);
-        inputAndLoadUrl(MAILTO_PAGE_URL);
-        waitForText(MAILTO_PAGE_TITLE);
+        loadAndPaint(MAILTO_PAGE_URL);
+        verifyPageTitle(MAILTO_PAGE_TITLE, MAILTO_PAGE_URL);
 
         verifyContextMenuItems(mailtoMenuItems);
         verifyCopyOption(mailtoMenuItems[0], "foo.bar@example.com"); // Test the "Copy Email Address" option
