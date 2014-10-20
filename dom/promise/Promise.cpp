@@ -1226,6 +1226,32 @@ Promise::CaptureStack(JSContext* aCx, JS::Heap<JSObject*>& aTarget)
   return true;
 }
 
+void
+Promise::GetDependentPromises(nsTArray<nsRefPtr<Promise>>& aPromises)
+{
+  // We want to return promises that correspond to then() calls, Promise.all()
+  // calls, and Promise.race() calls.
+  //
+  // For the then() case, we have both resolve and reject callbacks that know
+  // what the next promise is.
+  //
+  // For the race() case, likewise.
+  //
+  // For the all() case, our reject callback knows what the next promise is, but
+  // our resolve callback just knows it needs to notify some
+  // PromiseNativeHandler, which itself only has an indirect relationship to the
+  // next promise.
+  //
+  // So we walk over our _reject_ callbacks and ask each of them what promise
+  // its dependent promise is.
+  for (size_t i = 0; i < mRejectCallbacks.Length(); ++i) {
+    Promise* p = mRejectCallbacks[i]->GetDependentPromise();
+    if (p) {
+      aPromises.AppendElement(p);
+    }
+  }
+}
+
 // A WorkerRunnable to resolve/reject the Promise on the worker thread.
 
 class PromiseWorkerProxyRunnable : public workers::WorkerRunnable

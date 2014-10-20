@@ -182,6 +182,8 @@ protected:
     return mResolvePending;
   }
 
+  void GetDependentPromises(nsTArray<nsRefPtr<Promise>>& aPromises);
+
 private:
   friend class PromiseDebugging;
 
