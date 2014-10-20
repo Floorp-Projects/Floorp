@@ -869,6 +869,7 @@ struct JSRuntime : public JS::shadow::Runtime,
         return global == selfHostingGlobal_;
     }
     bool isSelfHostingCompartment(JSCompartment *comp);
+    bool isSelfHostingZone(JS::Zone *zone);
     bool cloneSelfHostedFunctionScript(JSContext *cx, js::Handle<js::PropertyName*> name,
                                        js::Handle<JSFunction*> targetFun);
     bool cloneSelfHostedValue(JSContext *cx, js::Handle<js::PropertyName*> name,
