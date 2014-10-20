@@ -168,9 +168,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
 /** Test for css3-animations running on the compositor thread (Bug 964646) **/
  
 // Global state
-var gDisplay        = document.getElementById("display"),
-    gDiv            = null,
-    gEventsReceived = [];
+var gDisplay = document.getElementById("display")
+  , gDiv     = null;
 
 // Shortcut omta_is and friends by filling in the initial 'elem' argument
 // with gDiv.
@@ -184,6 +183,17 @@ var gDisplay        = document.getElementById("display"),
     return origFn.apply(window, args);
   };
 });
+
+// Shortcut new_div and done_div to update gDiv
+var originalNewDiv = window.new_div;
+window.new_div = function(style) {
+  [ gDiv ] = originalNewDiv(style);
+};
+var originalDoneDiv = window.done_div;
+window.done_div = function() {
+  originalDoneDiv();
+  gDiv = null;
+};
 
 SimpleTest.waitForExplicitFinish();
 runOMTATest(function() {
@@ -2073,73 +2083,5 @@ addAsyncAnimTest(function *() {
   visitedLink.remove();
 });
 
-//----------------------------------------------------------------------
-//
-// Helper functions from test_animations.html
-//
-//----------------------------------------------------------------------
-
-function new_div(style) {
-  if (gDiv !== null) {
-    ok(false, "test author forgot to call done_div");
-  }
-  if (typeof(style) != "string") {
-    ok(false, "test author forgot to pass style argument");
-  }
-  gDiv = document.createElement("div");
-  gDiv.classList.add("target");
-  gDiv.setAttribute("style", style);
-  gDisplay.appendChild(gDiv);
-}
-
-function done_div() {
-  if (gDiv === null) {
-    ok(false, "test author forgot to call new_div");
-  }
-  gDisplay.removeChild(gDiv);
-  gDiv = null;
-}
-
-function listen() {
-  gEventsReceived = [];
-  function listener(event) {
-    gEventsReceived.push(event);
-  }
-  gDiv.addEventListener("animationstart", listener, false);
-  gDiv.addEventListener("animationiteration", listener, false);
-  gDiv.addEventListener("animationend", listener, false);
-}
-
-function check_events(events_expected, desc) {
-  // This function checks that the list of events_expected matches
-  // the received events -- but it only checks the properties that
-  // are present on events_expected.
-  is(gEventsReceived.length, events_expected.length,
-     "number of events received for " + desc);
-  for (var i = 0,
-       i_end = Math.min(events_expected.length, gEventsReceived.length);
-       i != i_end; ++i) {
-    var exp = events_expected[i];
-    var rec = gEventsReceived[i];
-    for (var prop in exp) {
-      if (prop == "elapsedTime") {
-        // Allow floating point error.
-        ok(Math.abs(rec.elapsedTime - exp.elapsedTime) < 0.000002,
-           "events[" + i + "]." + prop + " for " + desc +
-           " received=" + rec.elapsedTime + " expected=" + exp.elapsedTime);
-      } else {
-        is(rec[prop], exp[prop], "events[" + i + "]." + prop + " for " + desc);
-      }
-    }
-  }
-  for (i = events_expected.length; i < gEventsReceived.length; ++i) {
-    ok(false, "unexpected " + gEventsReceived[i].type + " event for " + desc);
-  }
-  gEventsReceived = [];
-}
-
-function advance_clock(milliseconds) {
-  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
-}
 </script>
 </html>
