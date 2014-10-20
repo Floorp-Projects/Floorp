@@ -15,7 +15,6 @@
               android:layout_height="match_parent"
               android:background="@color/background_tabs">
 
-
             <org.mozilla.gecko.widget.IconTabWidget android:id="@+id/tab_widget"
                                                     android:layout_width="wrap_content"
                                                     android:layout_height="match_parent"
