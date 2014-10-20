@@ -29,10 +29,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionHistory",
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
   "resource:///modules/sessionstore/SessionStorage.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
-                                   "@mozilla.org/childprocessmessagemanager;1",
-                                   "nsISyncMessageSender");
-
 Cu.import("resource:///modules/sessionstore/FrameTree.jsm", this);
 let gFrameTree = new FrameTree(this);
 
@@ -715,35 +711,7 @@ ScrollPositionListener.init();
 DocShellCapabilitiesListener.init();
 PrivacyListener.init();
 
-function handleRevivedTab() {
-  if (content.document.documentURI.startsWith("about:tabcrashed")) {
-    if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
-      // Sanity check - we'd better be loading this in a non-remote browser.
-      throw new Error("We seem to be navigating away from about:tabcrashed in " +
-                      "a non-remote browser. This should really never happen.");
-    }
-
-    // We can't send a message using the frame message manager because by
-    // the time we reach the unload event handler, it's "too late", and messages
-    // won't be sent or received. The child-process message manager works though,
-    // despite the fact that we're really running in the parent process.
-    let browser = docShell.chromeEventHandler;
-    cpmm.sendSyncMessage("SessionStore:RemoteTabRevived", null, {browser: browser});
-  }
-}
-
-// If we're browsing from the tab crashed UI to a blacklisted URI that keeps
-// this browser non-remote, we'll handle that in a pagehide event.
-addEventListener("pagehide", handleRevivedTab);
-
 addEventListener("unload", () => {
-  // If we're browsing from the tab crashed UI to a URI that causes the tab
-  // to go remote again, we catch this in the unload event handler, because
-  // swapping out the non-remote browser for a remote one in
-  // tabbrowser.xml's updateBrowserRemoteness doesn't cause the pagehide
-  // event to be fired.
-  handleRevivedTab();
-
   // Remove all registered nsIObservers.
   PageStyleListener.uninit();
   SessionStorageListener.uninit();
