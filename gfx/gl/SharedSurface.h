@@ -53,6 +53,8 @@ public:
     const bool mHasAlpha;
 protected:
     bool mIsLocked;
+    bool mIsProducerAcquired;
+    bool mIsConsumerAcquired;
     DebugOnly<nsIThread* const> mOwningThread;
 
     SharedSurface(SharedSurfaceType type,
@@ -80,7 +82,37 @@ protected:
     virtual void LockProdImpl() = 0;
     virtual void UnlockProdImpl() = 0;
 
+    virtual void ProducerAcquireImpl() {}
+    virtual void ProducerReleaseImpl() {
+        Fence();
+    }
+    virtual void ConsumerAcquireImpl() {
+        WaitSync();
+    }
+    virtual void ConsumerReleaseImpl() {}
+
 public:
+    void ProducerAcquire() {
+        MOZ_ASSERT(!mIsProducerAcquired);
+        ProducerAcquireImpl();
+        mIsProducerAcquired = true;
+    }
+    void ProducerRelease() {
+        MOZ_ASSERT(mIsProducerAcquired);
+        ProducerReleaseImpl();
+        mIsProducerAcquired = false;
+    }
+    void ConsumerAcquire() {
+        MOZ_ASSERT(!mIsConsumerAcquired);
+        ConsumerAcquireImpl();
+        mIsConsumerAcquired = true;
+    }
+    void ConsumerRelease() {
+        MOZ_ASSERT(mIsConsumerAcquired);
+        ConsumerReleaseImpl();
+        mIsConsumerAcquired = false;
+    }
+
     virtual void Fence() = 0;
     virtual bool WaitSync() = 0;
     virtual bool PollSync() = 0;

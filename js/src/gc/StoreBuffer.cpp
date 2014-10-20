@@ -24,27 +24,20 @@ using mozilla::ReentrancyGuard;
 void
 StoreBuffer::SlotsEdge::mark(JSTracer *trc)
 {
-    JSObject *obj = object();
+    NativeObject *obj = object();
 
     if (IsInsideNursery(obj))
         return;
 
-    if (!obj->isNative()) {
-        const Class *clasp = obj->getClass();
-        if (clasp)
-            clasp->trace(trc, obj);
-        return;
-    }
-
     if (kind() == ElementKind) {
-        int32_t initLen = obj->fakeNativeGetDenseInitializedLength();
+        int32_t initLen = obj->getDenseInitializedLength();
         int32_t clampedStart = Min(start_, initLen);
         int32_t clampedEnd = Min(start_ + count_, initLen);
         gc::MarkArraySlots(trc, clampedEnd - clampedStart,
-                           obj->fakeNativeGetDenseElements() + clampedStart, "element");
+                           obj->getDenseElements() + clampedStart, "element");
     } else {
-        int32_t start = Min(uint32_t(start_), obj->fakeNativeSlotSpan());
-        int32_t end = Min(uint32_t(start_) + count_, obj->fakeNativeSlotSpan());
+        int32_t start = Min(uint32_t(start_), obj->slotSpan());
+        int32_t end = Min(uint32_t(start_) + count_, obj->slotSpan());
         MOZ_ASSERT(end >= start);
         MarkObjectSlots(trc, obj, start, end - start);
     }

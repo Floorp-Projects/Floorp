@@ -45,7 +45,7 @@ StorageEvent::AsStorageEvent()
 }
 
 JSObject*
-StorageEvent::WrapObject(JSContext* aCx)
+StorageEvent::WrapObjectInternal(JSContext* aCx)
 {
   return StorageEventBinding::Wrap(aCx, this);
 }

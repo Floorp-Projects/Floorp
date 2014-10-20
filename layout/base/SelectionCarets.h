@@ -15,6 +15,8 @@
 #include "mozilla/EventForwards.h"
 
 class nsCanvasFrame;
+class nsFrameSelection;
+class nsIContent;
 class nsIDocument;
 class nsIFrame;
 class nsIPresShell;
@@ -23,6 +25,10 @@ class nsIWidget;
 class nsPresContext;
 
 namespace mozilla {
+
+namespace dom {
+class Selection;
+}
 
 /**
  * The SelectionCarets draw a pair of carets when the selection is not
@@ -182,9 +188,9 @@ private:
   void SetTilted(bool aIsTilt);
 
   // Utility function
-  nsIFrame* GetCaretFocusFrame();
-  bool GetCaretVisible();
-  nsISelection* GetSelection();
+  dom::Selection* GetSelection();
+  already_AddRefed<nsFrameSelection> GetFrameSelection();
+  nsIContent* GetFocusedContent();
 
   /**
    * Detecting long tap using timer

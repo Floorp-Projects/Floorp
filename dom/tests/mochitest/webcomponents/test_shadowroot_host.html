@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1083587
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1083587</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1083587">Mozilla Bug 1083587</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<div id="host"></div>
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+
+/** Test for Bug 1083587 **/
+var hostInDoc = document.getElementById("host");
+var shadowOne = hostInDoc.createShadowRoot();
+is(shadowOne.host, hostInDoc);
+
+var shadowTwo = hostInDoc.createShadowRoot();
+is(shadowOne.host, hostInDoc);
+is(shadowTwo.host, hostInDoc);
+
+var hostNotInDoc = document.createElement("div");
+var shadowThree = hostNotInDoc.createShadowRoot();
+is(shadowThree.host, hostNotInDoc);
+
+var shadowFour = hostNotInDoc.createShadowRoot();
+is(shadowThree.host, hostNotInDoc);
+is(shadowFour.host, hostNotInDoc);
+
+</script>
+</body>
+</html>

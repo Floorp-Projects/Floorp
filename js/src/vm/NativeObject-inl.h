@@ -92,7 +92,7 @@ NativeObject::setDenseElementWithType(ExclusiveContext *cx, uint32_t index,
     // Avoid a slow AddTypePropertyId call if the type is the same as the type
     // of the previous element.
     types::Type thisType = types::GetValueType(val);
-    if (index == 0 || types::GetValueType(elements[index - 1]) != thisType)
+    if (index == 0 || types::GetValueType(elements_[index - 1]) != thisType)
         types::AddTypePropertyId(cx, this, JSID_VOID, thisType);
     setDenseElementMaybeConvertDouble(index, val);
 }
@@ -154,8 +154,8 @@ NativeObject::ensureDenseInitializedLengthNoPackedCheck(ThreadSafeContext *cx, u
 
     if (initlen < index + extra) {
         size_t offset = initlen;
-        for (HeapSlot *sp = elements + initlen;
-             sp != elements + (index + extra);
+        for (HeapSlot *sp = elements_ + initlen;
+             sp != elements_ + (index + extra);
              sp++, offset++)
         {
             sp->init(this, HeapSlot::Element, offset, MagicValue(JS_ELEMENTS_HOLE));
@@ -308,7 +308,7 @@ NativeObject::initDenseElementsUnbarriered(uint32_t dstStart, const Value *src, 
             MOZ_ASSERT(!gc::IsInsideGGCNursery(static_cast<gc::Cell *>(value.toGCThing())));
     }
 #endif
-    memcpy(&elements[dstStart], src, count * sizeof(HeapSlot));
+    memcpy(&elements_[dstStart], src, count * sizeof(HeapSlot));
 }
 
 /* static */ inline NativeObject *
@@ -681,11 +681,5 @@ DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj,
 }
 
 } // namespace js
-
-inline uint8_t *
-JSObject::fakeNativeFixedData(size_t nslots) const
-{
-    return static_cast<const js::NativeObject*>(this)->fixedData(nslots);
-}
 
 #endif /* vm_NativeObject_inl_h */

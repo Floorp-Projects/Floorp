@@ -874,12 +874,7 @@ RStringSplit::recover(JSContext *cx, SnapshotIterator &iter) const
     RootedString str(cx, iter.read().toString());
     RootedString sep(cx, iter.read().toString());
     RootedTypeObject typeObj(cx, iter.read().toObject().type());
-
     RootedValue result(cx);
-
-    // Use AutoEnterAnalysis to avoid invoking the object metadata callback,
-    // which could try to walk the stack while bailing out.
-    types::AutoEnterAnalysis enter(cx);
 
     JSObject *res = str_split_string(cx, typeObj, str, sep);
     if (!res)
@@ -1008,10 +1003,6 @@ RNewObject::recover(JSContext *cx, SnapshotIterator &iter) const
     RootedValue result(cx);
     JSObject *resultObject = nullptr;
 
-    // Use AutoEnterAnalysis to avoid invoking the object metadata callback
-    // while bailing out, which could try to walk the stack.
-    types::AutoEnterAnalysis enter(cx);
-
     // See CodeGenerator::visitNewObjectVMCall
     if (templateObjectIsClassPrototype_)
         resultObject = NewInitObjectWithClassPrototype(cx, templateObject);
@@ -1049,10 +1040,6 @@ RNewArray::recover(JSContext *cx, SnapshotIterator &iter) const
     RootedValue result(cx);
     RootedTypeObject type(cx);
 
-    // Use AutoEnterAnalysis to avoid invoking the object metadata callback
-    // while bailing out, which could try to walk the stack.
-    types::AutoEnterAnalysis enter(cx);
-
     // See CodeGenerator::visitNewArrayCallVM
     if (!templateObject->hasSingletonType())
         type = templateObject->type();
@@ -1084,10 +1071,6 @@ RNewDerivedTypedObject::recover(JSContext *cx, SnapshotIterator &iter) const
     Rooted<TypedObject *> owner(cx, &iter.read().toObject().as<TypedObject>());
     int32_t offset = iter.read().toInt32();
 
-    // Use AutoEnterAnalysis to avoid invoking the object metadata callback
-    // while bailing out, which could try to walk the stack.
-    types::AutoEnterAnalysis enter(cx);
-
     JSObject *obj = OutlineTypedObject::createDerived(cx, descr, owner, offset);
     if (!obj)
         return false;
@@ -1115,10 +1098,6 @@ bool
 RCreateThisWithTemplate::recover(JSContext *cx, SnapshotIterator &iter) const
 {
     RootedNativeObject templateObject(cx, &iter.read().toObject().as<NativeObject>());
-
-    // Use AutoEnterAnalysis to avoid invoking the object metadata callback
-    // while bailing out, which could try to walk the stack.
-    types::AutoEnterAnalysis enter(cx);
 
     // See CodeGenerator::visitCreateThisWithTemplate
     gc::AllocKind allocKind = templateObject->asTenured().getAllocKind();

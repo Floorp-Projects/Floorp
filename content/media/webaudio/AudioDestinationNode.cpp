@@ -208,7 +208,7 @@ public:
   explicit DestinationNodeEngine(AudioDestinationNode* aNode)
     : AudioNodeEngine(aNode)
     , mVolume(1.0f)
-    , mLastInputMuted(true)
+    , mLastInputMuted(false)
   {
     MOZ_ASSERT(aNode);
   }
@@ -622,6 +622,10 @@ AudioDestinationNode::CreateAudioChannelAgent()
     bool isActive = false;
     docshell->GetIsActive(&isActive);
     mAudioChannelAgent->SetVisibilityState(isActive);
+
+    // The AudioChannelAgent must start playing immediately in order to avoid
+    // race conditions with mozinterruptbegin/end events.
+    InputMuted(false);
   }
 }
 
@@ -709,10 +713,12 @@ AudioDestinationNode::InputMuted(bool aMuted)
   }
 
   int32_t state = 0;
-  mAudioChannelAgent->StartPlaying(&state);
-  mAudioChannelAgentPlaying =
-    state == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL;
-  SetCanPlay(mAudioChannelAgentPlaying);
+  nsresult rv = mAudioChannelAgent->StartPlaying(&state);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  CanPlayChanged(state);
 }
 
 } // dom namespace

@@ -23,14 +23,18 @@ enum MixedContentTypes {
 };
 
 #include "nsIContentPolicy.h"
+#include "nsIChannel.h"
+#include "nsIChannelEventSink.h"
 
-class nsMixedContentBlocker : public nsIContentPolicy
+class nsMixedContentBlocker : public nsIContentPolicy,
+                              public nsIChannelEventSink
 {
   virtual ~nsMixedContentBlocker();
 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTPOLICY
+  NS_DECL_NSICHANNELEVENTSINK
 
   nsMixedContentBlocker();
   static bool sBlockMixedScript;

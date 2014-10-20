@@ -1201,9 +1201,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
         return NS_ERROR_FAILURE;
     }
 
-    uint32_t flags = 0;
-
-    if (!CallNP_Initialize(flags, error)) {
+    if (!CallNP_Initialize(error)) {
         Close();
         return NS_ERROR_FAILURE;
     }
@@ -1229,12 +1227,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
         return NS_ERROR_FAILURE;
     }
 
-    uint32_t flags = 0;
-#ifdef XP_WIN
-    flags |= kAllowAsyncDrawing;
-#endif
-
-    if (!CallNP_Initialize(flags, error)) {
+    if (!CallNP_Initialize(error)) {
         Close();
         return NS_ERROR_FAILURE;
     }

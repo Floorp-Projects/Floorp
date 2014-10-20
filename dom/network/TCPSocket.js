@@ -69,6 +69,10 @@ function TCPSocketEvent(type, sock, data) {
   this._data = data;
 }
 
+// When this API moves to WebIDL and these __exposedProps__ go away, remove
+// this call here and remove the API from XPConnect.
+Cu.skipCOWCallableChecks();
+
 TCPSocketEvent.prototype = {
   __exposedProps__: {
     type: 'r',

@@ -13,7 +13,8 @@
  NamedConstructor=Example(DOMString str),
  NamedConstructor=Example2(DictForConstructor dict, any any1, object obj1,
                            object? obj2, sequence<Dict> seq, optional any any2,
-                           optional object obj3, optional object? obj4)
+                           optional object obj3, optional object? obj4),
+ NamedConstructor=Example2((long or MozMap<any>) arg1)
  ]
 interface TestExampleInterface {
   // Integer types

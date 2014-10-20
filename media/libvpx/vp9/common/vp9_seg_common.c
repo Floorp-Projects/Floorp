@@ -41,22 +41,12 @@ void vp9_enable_segfeature(struct segmentation *seg, int segment_id,
   seg->feature_mask[segment_id] |= 1 << feature_id;
 }
 
-void vp9_disable_segfeature(struct segmentation *seg, int segment_id,
-                            SEG_LVL_FEATURES feature_id) {
-  seg->feature_mask[segment_id] &= ~(1 << feature_id);
-}
-
 int vp9_seg_feature_data_max(SEG_LVL_FEATURES feature_id) {
   return seg_feature_data_max[feature_id];
 }
 
 int vp9_is_segfeature_signed(SEG_LVL_FEATURES feature_id) {
   return seg_feature_data_signed[feature_id];
-}
-
-void vp9_clear_segdata(struct segmentation *seg, int segment_id,
-                       SEG_LVL_FEATURES feature_id) {
-  seg->feature_data[segment_id][feature_id] = 0;
 }
 
 void vp9_set_segdata(struct segmentation *seg, int segment_id,

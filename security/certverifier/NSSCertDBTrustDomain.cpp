@@ -35,6 +35,9 @@ extern PRLogModuleInfo* gCertVerifierLog;
 
 static const uint64_t ServerFailureDelaySeconds = 5 * 60;
 
+static const unsigned int MINIMUM_NON_ECC_BITS_DV = 1024;
+static const unsigned int MINIMUM_NON_ECC_BITS_EV = 2048;
+
 namespace mozilla { namespace psm {
 
 const char BUILTIN_ROOTS_MODULE_DEFAULT_NAME[] = "Builtin Roots Module";
@@ -53,6 +56,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
              /*optional but shouldn't be*/ void* pinArg,
                                            CertVerifier::ocsp_get_config ocspGETConfig,
                                            CertVerifier::PinningMode pinningMode,
+                                           bool forEV,
                               /*optional*/ const char* hostname,
                               /*optional*/ ScopedCERTCertList* builtChain)
   : mCertDBTrustType(certDBTrustType)
@@ -61,6 +65,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mPinArg(pinArg)
   , mOCSPGetConfig(ocspGETConfig)
   , mPinningMode(pinningMode)
+  , mMinimumNonECCBits(forEV ? MINIMUM_NON_ECC_BITS_EV : MINIMUM_NON_ECC_BITS_DV)
   , mHostname(hostname)
   , mBuiltChain(builtChain)
 {
@@ -226,7 +231,7 @@ NSSCertDBTrustDomain::VerifySignedData(const SignedDataWithSignature& signedData
                                        Input subjectPublicKeyInfo)
 {
   return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
-                                           mPinArg);
+                                           mMinimumNonECCBits, mPinArg);
 }
 
 Result
@@ -663,7 +668,8 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
 Result
 NSSCertDBTrustDomain::CheckPublicKey(Input subjectPublicKeyInfo)
 {
-  return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
+  return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo,
+                                         mMinimumNonECCBits);
 }
 
 namespace {

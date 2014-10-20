@@ -50,12 +50,12 @@ function test() {
             let tab2 = gBrowser.duplicateTab(tab1);
             gBrowser.selectedTab = tab2;
             whenTabRestored(tab2, function() {
-              is(doc.getElementById("mozAudioChannelTest").textContent, "READY",
-                 "AudioContext should not be muted by the second tab.");
+              is(doc.getElementById("mozAudioChannelTest").textContent, "mozinterruptbegin",
+                 "AudioContext should be muted by the second tab.");
 
               whenBrowserUnloaded(tab2.linkedBrowser, function() {
-                is(doc.getElementById("mozAudioChannelTest").textContent, "READY",
-                   "AudioContext should not be muted by the second tab.");
+                is(doc.getElementById("mozAudioChannelTest").textContent, "mozinterruptend",
+                   "AudioContext should be muted by the second tab.");
                 gBrowser.removeTab(tab1);
                 finish();
               });

@@ -1015,6 +1015,8 @@ class Shape : public gc::TenuredCell
 
     /* For JIT usage */
     static inline size_t offsetOfBase() { return offsetof(Shape, base_); }
+    static inline size_t offsetOfSlotInfo() { return offsetof(Shape, slotInfo); }
+    static inline uint32_t fixedSlotsMask() { return FIXED_SLOTS_MASK; }
 
   private:
 #ifdef JSGC_COMPACTING
@@ -1026,8 +1028,6 @@ class Shape : public gc::TenuredCell
         JS_STATIC_ASSERT(offsetof(Shape, base_) == offsetof(js::shadow::Shape, base));
         JS_STATIC_ASSERT(offsetof(Shape, slotInfo) == offsetof(js::shadow::Shape, slotInfo));
         JS_STATIC_ASSERT(FIXED_SLOTS_SHIFT == js::shadow::Shape::FIXED_SLOTS_SHIFT);
-        static_assert(js::shadow::Object::MAX_FIXED_SLOTS <= FIXED_SLOTS_MAX,
-                      "verify numFixedSlots() bitfield is big enough");
     }
 };
 

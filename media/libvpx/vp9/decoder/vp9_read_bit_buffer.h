@@ -15,7 +15,11 @@
 
 #include "vpx/vpx_integer.h"
 
-typedef void (*vp9_rb_error_handler)(void *data, size_t bit_offset);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef void (*vp9_rb_error_handler)(void *data);
 
 struct vp9_read_bit_buffer {
   const uint8_t *bit_buffer;
@@ -26,35 +30,16 @@ struct vp9_read_bit_buffer {
   vp9_rb_error_handler error_handler;
 };
 
-static size_t vp9_rb_bytes_read(struct vp9_read_bit_buffer *rb) {
-  return rb->bit_offset / CHAR_BIT + (rb->bit_offset % CHAR_BIT > 0);
-}
+size_t vp9_rb_bytes_read(struct vp9_read_bit_buffer *rb);
 
-static int vp9_rb_read_bit(struct vp9_read_bit_buffer *rb) {
-  const size_t off = rb->bit_offset;
-  const size_t p = off / CHAR_BIT;
-  const int q = CHAR_BIT - 1 - (int)off % CHAR_BIT;
-  if (rb->bit_buffer + p >= rb->bit_buffer_end) {
-    rb->error_handler(rb->error_handler_data, rb->bit_offset);
-    return 0;
-  } else {
-    const int bit = (rb->bit_buffer[p] & (1 << q)) >> q;
-    rb->bit_offset = off + 1;
-    return bit;
-  }
-}
+int vp9_rb_read_bit(struct vp9_read_bit_buffer *rb);
 
-static int vp9_rb_read_literal(struct vp9_read_bit_buffer *rb, int bits) {
-  int value = 0, bit;
-  for (bit = bits - 1; bit >= 0; bit--)
-    value |= vp9_rb_read_bit(rb) << bit;
-  return value;
-}
+int vp9_rb_read_literal(struct vp9_read_bit_buffer *rb, int bits);
 
-static int vp9_rb_read_signed_literal(struct vp9_read_bit_buffer *rb,
-                                      int bits) {
-  const int value = vp9_rb_read_literal(rb, bits);
-  return vp9_rb_read_bit(rb) ? -value : value;
-}
+int vp9_rb_read_signed_literal(struct vp9_read_bit_buffer *rb, int bits);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // VP9_DECODER_VP9_READ_BIT_BUFFER_H_
