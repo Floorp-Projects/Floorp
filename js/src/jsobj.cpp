@@ -1584,8 +1584,10 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
     JSProtoKey protoKey = ClassProtoKeyOrAnonymousOrNull(clasp);
 
     NewObjectCache::EntryIndex entry = -1;
+    uint64_t gcNumber = 0;
     if (JSContext *cx = cxArg->maybeJSContext()) {
-        NewObjectCache &cache = cx->runtime()->newObjectCache;
+        JSRuntime *rt = cx->runtime();
+        NewObjectCache &cache = rt->newObjectCache;
         if (parentArg->is<GlobalObject>() &&
             protoKey != JSProto_Null &&
             newKind == GenericObject &&
@@ -1604,6 +1606,8 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
                     protoArg = proto;
                     parentArg = parent;
                 }
+            } else {
+                gcNumber = rt->gc.gcNumber();
             }
         }
     }
@@ -1623,7 +1627,9 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
     if (!obj)
         return nullptr;
 
-    if (entry != -1 && !obj->as<NativeObject>().hasDynamicSlots()) {
+    if (entry != -1 && !obj->as<NativeObject>().hasDynamicSlots() &&
+        cxArg->asJSContext()->runtime()->gc.gcNumber() == gcNumber)
+    {
         cxArg->asJSContext()->runtime()->newObjectCache.fillGlobal(entry, clasp,
                                                                    &parent->as<GlobalObject>(),
                                                                    allocKind, &obj->as<NativeObject>());
