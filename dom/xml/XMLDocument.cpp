@@ -306,7 +306,7 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
 
   // The callingDoc's Principal and doc's Principal should be the same
-  if (callingDoc->NodePrincipal() != principal) {
+  if (callingDoc && (callingDoc->NodePrincipal() != principal)) {
     nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                     NS_LITERAL_CSTRING("DOM"),
                                     callingDoc,
