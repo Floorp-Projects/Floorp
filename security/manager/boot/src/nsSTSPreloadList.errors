@@ -8,13 +8,14 @@ apis.google.com: did not receive HSTS header (error ignored - included regardles
 app.manilla.com: could not connect to host
 appengine.google.com: did not receive HSTS header (error ignored - included regardless)
 appseccalifornia.org: did not receive HSTS header
-auf-feindgebiet.de: could not connect to host
 azprep.us: did not receive HSTS header
 bassh.net: did not receive HSTS header
 bccx.com: could not connect to host
+bedeta.de: could not connect to host
 betnet.fr: could not connect to host
 bigshinylock.minazo.net: could not connect to host
 blog.lookout.com: did not receive HSTS header
+boxcryptor.com: could not connect to host
 braintreegateway.com: did not receive HSTS header
 braintreepayments.com: did not receive HSTS header
 browserid.org: did not receive HSTS header
@@ -90,7 +91,7 @@ m.gparent.org: could not connect to host
 mail.google.com: did not receive HSTS header (error ignored - included regardless)
 market.android.com: did not receive HSTS header (error ignored - included regardless)
 markusueberallassetmanagement.de: could not connect to host
-matteomarescotti.name: could not connect to host
+matteomarescotti.name: max-age too low: 0
 mobilethreat.net: could not connect to host
 mobilethreatnetwork.net: could not connect to host
 mudcrab.us: could not connect to host
@@ -117,12 +118,12 @@ profiles.google.com: did not receive HSTS header (error ignored - included regar
 promecon-gmbh.de: did not receive HSTS header
 rapidresearch.me: could not connect to host
 riseup.net: did not receive HSTS header
+rme.li: did not receive HSTS header
 robteix.com: did not receive HSTS header
 sah3.net: could not connect to host
 saturngames.co.uk: did not receive HSTS header
 script.google.com: did not receive HSTS header (error ignored - included regardless)
 security.google.com: did not receive HSTS header (error ignored - included regardless)
-secuvera.de: could not connect to host
 semenkovich.com: did not receive HSTS header
 serverdensity.io: did not receive HSTS header
 shops.neonisi.com: could not connect to host
@@ -148,8 +149,6 @@ translate.googleapis.com: did not receive HSTS header (error ignored - included 
 uprotect.it: could not connect to host
 wallet.google.com: did not receive HSTS header (error ignored - included regardless)
 webmail.mayfirst.org: did not receive HSTS header
-wf-training-master.appspot.com: could not connect to host
-wf-training-master.appspot.com: could not connect to host (error ignored - included regardless)
 whonix.org: did not receive HSTS header
 wiz.biz: did not receive HSTS header
 www.calyxinstitute.org: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-periodicupdate-00000/getHSTSPreloadList.js :: processStsHeader :: line 126"  data: no]
