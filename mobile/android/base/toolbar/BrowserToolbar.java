@@ -12,7 +12,6 @@ import java.util.List;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.LightweightTheme;
@@ -31,7 +30,6 @@ import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnStopListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnTitleChangeListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.UpdateFlags;
 import org.mozilla.gecko.util.Clipboard;
-import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.widget.ThemedImageButton;
@@ -76,8 +74,7 @@ import android.widget.PopupWindow;
 */
 public abstract class BrowserToolbar extends ThemedRelativeLayout
                                      implements Tabs.OnTabsChangedListener,
-                                                GeckoMenu.ActionItemBarPresenter,
-                                                GeckoEventListener {
+                                                GeckoMenu.ActionItemBarPresenter {
     private static final String LOGTAG = "GeckoToolbar";
 
     public interface OnActivateListener {
@@ -186,10 +183,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
         Tabs.registerOnTabsChangedListener(this);
         isSwitchingTabs = true;
-
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
-            "Reader:Click",
-            "Reader:LongClick");
 
         urlDisplayLayout = (ToolbarDisplayLayout) findViewById(R.id.display_layout);
         urlBarEntry = findViewById(R.id.url_bar_entry);
@@ -850,10 +843,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
     public void onDestroy() {
         Tabs.unregisterOnTabsChangedListener(this);
-
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
-            "Reader:Click",
-            "Reader:LongClick");
     }
 
     public boolean openOptionsMenu() {
@@ -893,22 +882,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         }
 
         return true;
-    }
-
-    @Override
-    public void handleMessage(String event, JSONObject message) {
-        Log.d(LOGTAG, "handleMessage: " + event);
-        if (event.equals("Reader:Click")) {
-            Tab tab = Tabs.getInstance().getSelectedTab();
-            if (tab != null) {
-                tab.toggleReaderMode();
-            }
-        } else if (event.equals("Reader:LongClick")) {
-            Tab tab = Tabs.getInstance().getSelectedTab();
-            if (tab != null) {
-                tab.addToReadingList();
-            }
-        }
     }
 
     @Override
