@@ -2588,9 +2588,8 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() const {
     }
   }
 
-  ParentLayerToScreenScale scale = mFrameMetrics.GetZoom()
-        / mLastContentPaintMetrics.mDevPixelsPerCSSPixel
-        / mFrameMetrics.GetParentResolution();
+  ParentLayerToScreenScale scale = mFrameMetrics.mPresShellResolution  // non-transient portion
+                                 * mFrameMetrics.GetAsyncZoom();       // transient portion
   ScreenPoint translation = (currentScrollOffset - lastPaintScrollOffset)
                           * mFrameMetrics.GetZoom();
 
@@ -2599,24 +2598,27 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() const {
 
 Matrix4x4 AsyncPanZoomController::GetNontransientAsyncTransform() const {
   ReentrantMonitorAutoEnter lock(mMonitor);
-  return Matrix4x4::Scaling(mLastContentPaintMetrics.mResolution.scale,
-                            mLastContentPaintMetrics.mResolution.scale,
+  return Matrix4x4::Scaling(mLastContentPaintMetrics.mPresShellResolution.scale,
+                            mLastContentPaintMetrics.mPresShellResolution.scale,
                             1.0f);
 }
 
 Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
-  // Technically we should be taking the scroll delta in the coordinate space
-  // of transformed layer pixels (i.e. this layer's LayerPixels, with the layer
-  // transform applied). However in the absence of actual CSS transforms, we
-  // can use the parent-layer space instead.
-  // When we fix bug 993525 and properly support CSS transforms we might have
-  // to revisit this.
   ParentLayerPoint scrollChange =
     (mLastContentPaintMetrics.GetScrollOffset() - mLastDispatchedPaintMetrics.GetScrollOffset())
     * mLastContentPaintMetrics.mDevPixelsPerCSSPixel
-    * mLastContentPaintMetrics.GetParentResolution();
+    * mLastContentPaintMetrics.mCumulativeResolution
+      // This transform ("LD" in the terminology of the comment above
+      // GetScreenToApzcTransform() in APZCTreeManager.h) is applied in a
+      // coordinate space that includes the APZC's CSS transform ("LC").
+      // This CSS transform is the identity unless this APZC sets a pres-shell
+      // resolution, in which case the transform has a post-scale that cancels
+      // out the pres-shell resolution. We simulate applying the "LC" transform
+      // by dividing by the pres-shell resolution. This will go away once
+      // bug 1076192 is fixed.
+    / mLastContentPaintMetrics.mPresShellResolution;
 
   float zoomChange = mLastContentPaintMetrics.GetZoom().scale / mLastDispatchedPaintMetrics.GetZoom().scale;
 
@@ -2710,9 +2712,18 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
 
     if (FuzzyEqualsAdditive(mFrameMetrics.mCompositionBounds.width, aLayerMetrics.mCompositionBounds.width) &&
         mFrameMetrics.mDevPixelsPerCSSPixel == aLayerMetrics.mDevPixelsPerCSSPixel) {
-      float parentResolutionChange = aLayerMetrics.GetParentResolution().scale
-                                   / mFrameMetrics.GetParentResolution().scale;
-      mFrameMetrics.ZoomBy(parentResolutionChange);
+      // Any change to the pres shell resolution was requested by APZ and is
+      // already included in our zoom; however, other components of the
+      // cumulative resolution (a parent document's pres-shell resolution, or
+      // the css-driven resolution) may have changed, and we need to update
+      // our zoom to reflect that. Note that we can't just take
+      // aLayerMetrics.mZoom because the APZ may have additional async zoom
+      // since the repaint request.
+      float totalResolutionChange = aLayerMetrics.mCumulativeResolution.scale
+                                  / mFrameMetrics.mCumulativeResolution.scale;
+      float presShellResolutionChange = aLayerMetrics.mPresShellResolution.scale
+                                      / mFrameMetrics.mPresShellResolution.scale;
+      mFrameMetrics.ZoomBy(totalResolutionChange / presShellResolutionChange);
     } else {
       // Take the new zoom as either device scale or composition width or both
       // got changed (e.g. due to orientation change).
@@ -2725,7 +2736,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     }
     mFrameMetrics.mCompositionBounds = aLayerMetrics.mCompositionBounds;
     mFrameMetrics.SetRootCompositionSize(aLayerMetrics.GetRootCompositionSize());
-    mFrameMetrics.mResolution = aLayerMetrics.mResolution;
+    mFrameMetrics.mPresShellResolution = aLayerMetrics.mPresShellResolution;
     mFrameMetrics.mCumulativeResolution = aLayerMetrics.mCumulativeResolution;
     mFrameMetrics.SetHasScrollgrab(aLayerMetrics.GetHasScrollgrab());
 

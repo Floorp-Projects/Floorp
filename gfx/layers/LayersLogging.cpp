@@ -159,7 +159,7 @@ AppendToString(std::stringstream& aStream, const FrameMetrics& m,
     AppendToString(aStream, m.GetRootCompositionSize(), " rcs=");
     AppendToString(aStream, m.GetViewport(), " v=");
     aStream << nsPrintfCString(" z=(ld=%.3f r=%.3f cr=%.3f z=%.3f ts=%.3f)",
-            m.mDevPixelsPerCSSPixel.scale, m.mResolution.scale,
+            m.mDevPixelsPerCSSPixel.scale, m.mPresShellResolution.scale,
             m.mCumulativeResolution.scale, m.GetZoom().scale,
             m.mTransformScale.scale).get();
     aStream << nsPrintfCString(" u=(%d %d %lu)",
