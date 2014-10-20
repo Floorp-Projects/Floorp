@@ -286,6 +286,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Promise)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mResult)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mAllocationStack)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mRejectionStack)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -301,6 +302,7 @@ Promise::Promise(nsIGlobalObject* aGlobal)
   : mGlobal(aGlobal)
   , mResult(JS::UndefinedValue())
   , mAllocationStack(nullptr)
+  , mRejectionStack(nullptr)
   , mState(Pending)
   , mTaskPending(false)
   , mHadRejectCallback(false)
@@ -397,6 +399,9 @@ Promise::JSCallback(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
     promise->MaybeResolveInternal(aCx, args.get(0));
   } else {
     promise->MaybeRejectInternal(aCx, args.get(0));
+    if (!promise->CaptureStack(aCx, promise->mRejectionStack)) {
+      return false;
+    }
   }
 
   return true;
@@ -607,7 +612,11 @@ Promise::Reject(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  return Reject(global, aGlobal.Context(), aValue, aRv);
+  nsRefPtr<Promise> p = Reject(global, aGlobal.Context(), aValue, aRv);
+  if (p) {
+    p->mRejectionStack = p->mAllocationStack;
+  }
+  return p.forget();
 }
 
 /* static */ already_AddRefed<Promise>

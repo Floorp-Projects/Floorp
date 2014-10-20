@@ -299,6 +299,11 @@ private:
   // A stack that shows where this promise was allocated, if there was
   // JS running at the time.  Otherwise null.
   JS::Heap<JSObject*> mAllocationStack;
+  // mRejectionStack is only set when the promise is rejected directly from
+  // script, by calling Promise.reject() or the rejection callback we pass to
+  // the PromiseInit function.  Promises that are rejected internally do not
+  // have a rejection stack.
+  JS::Heap<JSObject*> mRejectionStack;
   PromiseState mState;
   bool mTaskPending;
   bool mHadRejectCallback;
