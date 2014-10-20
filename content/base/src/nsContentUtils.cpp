@@ -6998,3 +6998,23 @@ nsContentUtils::GetInnerWindowID(nsIRequest* aRequest)
 
   return inner ? inner->WindowID() : 0;
 }
+
+void
+nsContentUtils::GetHostOrIPv6WithBrackets(nsIURI* aURI, nsAString& aHost)
+{
+  aHost.Truncate();
+  nsAutoCString hostname;
+  nsresult rv = aURI->GetHost(hostname);
+  if (NS_FAILED(rv)) { // Some URIs do not have a host
+    return;
+  }
+
+  if (hostname.FindChar(':') != -1) { // Escape IPv6 address
+    MOZ_ASSERT(!hostname.Length() ||
+      (hostname[0] !='[' && hostname[hostname.Length() - 1] != ']'));
+    hostname.Insert('[', 0);
+    hostname.Append(']');
+  }
+
+  CopyUTF8toUTF16(hostname, aHost);
+}
