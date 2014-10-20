@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>WebCrypto Test Suite</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" href="./test_WebCrypto.css"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<!-- Utilities for manipulating ABVs -->
+<script src="util.js"></script>
+
+<!-- A simple wrapper around IndexedDB -->
+<script src="simpledb.js"></script>
+
+<!-- Test vectors drawn from the literature -->
+<script src="./test-vectors.js"></script>
+
+<!-- General testing framework -->
+<script src="./test-array.js"></script>
+
+<script>/*<![CDATA[*/
+"use strict";
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Generate a DH key",
+  function() {
+    var that = this;
+    var alg = {
+      name: "DH",
+      prime: tv.dh.prime,
+      generator: new Uint8Array([0x02])
+    };
+    crypto.subtle.generateKey(alg, false, ["deriveKey", "deriveBits"]).then(
+      complete(that, function(x) {
+        return exists(x.publicKey) &&
+               (x.publicKey.algorithm.name == alg.name) &&
+               util.memcmp(x.publicKey.algorithm.prime, alg.prime) &&
+               util.memcmp(x.publicKey.algorithm.generator, alg.generator) &&
+               (x.publicKey.type == "public") &&
+               x.publicKey.extractable &&
+               (x.publicKey.usages.length == 0) &&
+               exists(x.privateKey) &&
+               (x.privateKey.algorithm.name == alg.name) &&
+               util.memcmp(x.privateKey.algorithm.prime, alg.prime) &&
+               util.memcmp(x.privateKey.algorithm.generator, alg.generator) &&
+               (x.privateKey.type == "private") &&
+               !x.privateKey.extractable &&
+               (x.privateKey.usages.length == 2) &&
+               (x.privateKey.usages[0] == "deriveKey") &&
+               (x.privateKey.usages[1] == "deriveBits");
+      }),
+      error(that)
+    );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Derive bits from a DH key",
+  function() {
+    var that = this;
+    var alg = {
+      name: "DH",
+      prime: tv.dh.prime,
+      generator: new Uint8Array([0x02])
+    };
+
+    function doDerive(x) {
+      var alg = {
+        name: "DH",
+        public: x.publicKey
+      };
+      return crypto.subtle.deriveBits(alg, x.privateKey, 128);
+    }
+
+    crypto.subtle.generateKey(alg, false, ["deriveBits"])
+      .then(doDerive, error(that))
+      .then(complete(that, function (x) {
+        return x.byteLength == 16;
+      }), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test that DH deriveBits() fails when the public key is not a DH key",
+  function() {
+    var that = this;
+    var pubKey, privKey;
+    function setPub(x) { pubKey = x.publicKey; }
+    function setPriv(x) { privKey = x.privateKey; }
+
+    function doGenerateDH() {
+      var alg = {
+        name: "DH",
+        prime: tv.dh.prime,
+        generator: new Uint8Array([0x02])
+      };
+      return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
+    }
+
+    function doGenerateRSA() {
+      var alg = {
+        name: "RSA-OAEP",
+        hash: "SHA-256",
+        modulusLength: 2048,
+        publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+      };
+      return crypto.subtle.generateKey(alg, false, ["encrypt"])
+    }
+
+    function doDerive() {
+      var alg = {name: "DH", public: pubKey};
+      return crypto.subtle.deriveBits(alg, privKey, 128);
+    }
+
+    doGenerateDH()
+      .then(setPriv, error(that))
+      .then(doGenerateRSA, error(that))
+      .then(setPub, error(that))
+      .then(doDerive, error(that))
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test that DH deriveBits() fails when the given keys' primes or bases don't match",
+  function() {
+    var that = this;
+    var pubKey, privKey;
+    function setPub(x) { pubKey = x.publicKey; }
+    function setPriv(x) { privKey = x.privateKey; }
+
+    function doGenerateDH() {
+      var alg = {
+        name: "DH",
+        prime: tv.dh.prime,
+        generator: new Uint8Array([0x02])
+      };
+      return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
+    }
+
+    function doGenerateDH2() {
+      var alg = {
+        name: "DH",
+        prime: tv.dh.prime2,
+        generator: new Uint8Array([0x02])
+      };
+      return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
+    }
+
+    function doGenerateDH3() {
+      var alg = {
+        name: "DH",
+        prime: tv.dh.prime,
+        generator: new Uint8Array([0x03])
+      };
+      return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
+    }
+
+    function doDerive() {
+      var alg = {name: "DH", public: pubKey};
+      return crypto.subtle.deriveBits(alg, privKey, 128);
+    }
+
+    doGenerateDH()
+      .then(setPriv, error(that))
+      .then(doGenerateDH2, error(that))
+      .then(setPub, error(that))
+      .then(doDerive, error(that))
+      .then(error(that), doGenerateDH3)
+      .then(setPub, error(that))
+      .then(doDerive, error(that))
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Raw import/export of a public DH key",
+  function () {
+    var that = this;
+    var alg = {
+      name: "DH",
+      prime: tv.dh_nist.prime,
+      generator: tv.dh_nist.gen
+    };
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("raw", x);
+    }
+
+    crypto.subtle.importKey("raw", tv.dh_nist.raw, alg, true, ["deriveBits"])
+      .then(doExport)
+      .then(memcmp_complete(that, tv.dh_nist.raw), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Derive bits from an imported public and a generated private DH key",
+  function() {
+    var that = this;
+    var alg = {
+      name: "DH",
+      prime: tv.dh_nist.prime,
+      generator: tv.dh_nist.gen
+    };
+
+    var privKey;
+    function setPriv(x) { privKey = x.privateKey; }
+
+    function doImport() {
+      return crypto.subtle.importKey("raw", tv.dh_nist.raw, alg, true, ["deriveBits"]);
+    }
+
+    function doDerive(pubKey) {
+      var alg = {name: "DH", public: pubKey};
+      return crypto.subtle.deriveBits(alg, privKey, 128);
+    }
+
+    crypto.subtle.generateKey(alg, false, ["deriveBits"])
+      .then(setPriv, error(that))
+      .then(doImport, error(that))
+      .then(doDerive, error(that))
+      .then(complete(that, function (x) {
+        return x.byteLength == 16;
+      }), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "SPKI import/export of a public DH key",
+  function() {
+    var that = this;
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("spki", x);
+    }
+
+    crypto.subtle.importKey("spki", tv.dh_nist.spki, "DH", true, ["deriveBits"])
+      .then(doExport, error(that))
+      .then(memcmp_complete(that, tv.dh_nist.spki), error(that));
+  }
+);
+/*]]>*/</script>
+</head>
+
+<body>
+
+<div id="content">
+	<div id="head">
+		<b>Web</b>Crypto<br>
+	</div>
+
+    <div id="start" onclick="start();">RUN ALL</div>
+
+    <div id="resultDiv" class="content">
+    Summary:
+    <span class="pass"><span id="passN">0</span> passed, </span>
+    <span class="fail"><span id="failN">0</span> failed, </span>
+    <span class="pending"><span id="pendingN">0</span> pending.</span>
+    <br/>
+    <br/>
+
+    <table id="results">
+        <tr>
+            <th>Test</th>
+            <th>Result</th>
+            <th>Time</th>
+        </tr>
+    </table>
+
+    </div>
+
+    <div id="foot"></div>
+</div>
+
+</body>
+</html>

@@ -2230,17 +2230,31 @@ Debugger::hasDebuggee(JSContext *cx, unsigned argc, Value *vp)
 Debugger::getDebuggees(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "getDebuggees", args, dbg);
-    RootedArrayObject arrobj(cx, NewDenseFullyAllocatedArray(cx, dbg->debuggees.count()));
+
+    // Obtain the list of debuggees before wrapping each debuggee, as a GC could
+    // update the debuggees set while we are iterating it.
+    unsigned count = dbg->debuggees.count();
+    AutoValueVector debuggees(cx);
+    if (!debuggees.resize(count))
+        return false;
+    unsigned i = 0;
+    {
+        JS::AutoCheckCannotGC nogc;
+        for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
+            debuggees[i++].setObject(*e.front());
+    }
+
+    RootedArrayObject arrobj(cx, NewDenseFullyAllocatedArray(cx, count));
     if (!arrobj)
         return false;
-    arrobj->ensureDenseInitializedLength(cx, 0, dbg->debuggees.count());
-    unsigned i = 0;
-    for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront()) {
-        RootedValue v(cx, ObjectValue(*e.front()));
+    arrobj->ensureDenseInitializedLength(cx, 0, count);
+    for (i = 0; i < count; i++) {
+        RootedValue v(cx, debuggees[i]);
         if (!dbg->wrapDebuggeeValue(cx, &v))
             return false;
-        arrobj->setDenseElement(i++, v);
+        arrobj->setDenseElement(i, v);
     }
+
     args.rval().setObject(*arrobj);
     return true;
 }

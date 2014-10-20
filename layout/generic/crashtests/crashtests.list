@@ -303,8 +303,10 @@ load 455171-3.html
 load 455643-1.xhtml
 load 457375.html
 load 457380-1.html
+asserts-if(!Android,4) load 459968.html # bug 1067022
 load 460910-1.xml
 load 461294-1.html
+load 462968.xhtml
 load 463350-1.html
 load 463350-2.html
 load 463350-3.html
@@ -493,9 +495,11 @@ load 801268-1.html
 load 804089-1.xhtml
 load 807565-1.html
 load 807565-2.html
+load 810303.html
 load 810726.html
 load 812879.html
 load 812879-2.html
+load 814995.html
 load 825810-1.html
 load 825810-2.html
 load 827076.html

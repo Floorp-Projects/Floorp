@@ -32,10 +32,12 @@ public:
   nsISupports* GetParentObject() const { return mDocument; }
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-  // WebIDL API
-  Nullable<double> GetCurrentTime() const;
+  // AnimationTimeline methods
+  Nullable<TimeDuration> GetCurrentTime() const;
 
-  Nullable<TimeDuration> GetCurrentTimeDuration() const;
+  // Wrapper functions for AnimationTimeline DOM methods when called from
+  // script.
+  Nullable<double> GetCurrentTimeAsDouble() const;
 
   Nullable<TimeDuration> ToTimelineTime(const TimeStamp& aTimeStamp) const;
   TimeStamp ToTimeStamp(const TimeDuration& aTimelineTime) const;

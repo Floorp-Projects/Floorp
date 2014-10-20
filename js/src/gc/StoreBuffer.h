@@ -299,11 +299,11 @@ class StoreBuffer
         const static int SlotKind = 0;
         const static int ElementKind = 1;
 
-        uintptr_t objectAndKind_; // JSObject* | Kind
+        uintptr_t objectAndKind_; // NativeObject* | Kind
         int32_t start_;
         int32_t count_;
 
-        SlotsEdge(JSObject *object, int kind, int32_t start, int32_t count)
+        SlotsEdge(NativeObject *object, int kind, int32_t start, int32_t count)
           : objectAndKind_(uintptr_t(object) | kind), start_(start), count_(count)
         {
             MOZ_ASSERT((uintptr_t(object) & 1) == 0);
@@ -312,7 +312,7 @@ class StoreBuffer
             MOZ_ASSERT(count > 0);
         }
 
-        JSObject *object() const { return reinterpret_cast<JSObject *>(objectAndKind_ & ~1); }
+        NativeObject *object() const { return reinterpret_cast<NativeObject *>(objectAndKind_ & ~1); }
         int kind() const { return (int)(objectAndKind_ & 1); }
 
         bool operator==(const SlotsEdge &other) const {
@@ -326,7 +326,7 @@ class StoreBuffer
         }
 
         bool maybeInRememberedSet(const Nursery &) const {
-            return !IsInsideNursery(JS::AsCell(object()));
+            return !IsInsideNursery(JS::AsCell(reinterpret_cast<JSObject *>(object())));
         }
 
         void mark(JSTracer *trc);
@@ -457,7 +457,7 @@ class StoreBuffer
     /* Insert a single edge into the buffer/remembered set. */
     void putValueFromAnyThread(JS::Value *valuep) { putFromAnyThread(bufferVal, ValueEdge(valuep)); }
     void putCellFromAnyThread(Cell **cellp) { putFromAnyThread(bufferCell, CellPtrEdge(cellp)); }
-    void putSlotFromAnyThread(JSObject *obj, int kind, int32_t start, int32_t count) {
+    void putSlotFromAnyThread(NativeObject *obj, int kind, int32_t start, int32_t count) {
         putFromAnyThread(bufferSlot, SlotsEdge(obj, kind, start, count));
     }
     void putWholeCellFromMainThread(Cell *cell) {

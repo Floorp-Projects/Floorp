@@ -17,7 +17,6 @@
 const js::Class OuterWrapperClass =
     PROXY_CLASS_WITH_EXT(
         "Proxy",
-        0, /* additional slots */
         0, /* additional class flags */
         PROXY_MAKE_EXT(
             nullptr, /* outerObject */

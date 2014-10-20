@@ -1067,7 +1067,7 @@ CacheEntry_setBytecode(JSContext *cx, HandleObject cache, uint8_t *buffer, uint3
     MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
 
     ArrayBufferObject::BufferContents contents =
-        ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN_BUFFER>(buffer);
+        ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(buffer);
     Rooted<ArrayBufferObject*> arrayBuffer(cx, ArrayBufferObject::create(cx, length, contents));
     if (!arrayBuffer)
         return false;
@@ -5996,6 +5996,7 @@ main(int argc, char **argv, char **envp)
 #ifdef JSGC_GENERATIONAL
         || !op.addBoolOption('\0', "no-ggc", "Disable Generational GC")
 #endif
+        || !op.addBoolOption('\0', "no-incremental-gc", "Disable Incremental GC")
         || !op.addIntOption('\0', "available-memory", "SIZE",
                             "Select GC settings based on available memory (MB)", 0)
 #if defined(JS_CODEGEN_ARM)
@@ -6131,6 +6132,17 @@ main(int argc, char **argv, char **envp)
 
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
+
+    // Set some parameters to allow incremental GC in low memory conditions,
+    // as is done for the browser, except in more-deterministic builds or when
+    // disabled by command line options.
+#ifndef JS_MORE_DETERMINISTIC
+    if (!op.getBoolOption("no-incremental-gc")) {
+        JS_SetGCParameter(rt, JSGC_DYNAMIC_HEAP_GROWTH, 1);
+        JS_SetGCParameter(rt, JSGC_DYNAMIC_MARK_SLICE, 1);
+        JS_SetGCParameter(rt, JSGC_SLICE_TIME_BUDGET, 10);
+    }
+#endif
 
     js::SetPreserveWrapperCallback(rt, DummyPreserveWrapperCallback);
 

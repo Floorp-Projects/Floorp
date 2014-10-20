@@ -8,6 +8,7 @@
 
 #include "2D.h"
 #include "mozilla/Constants.h"
+#include "UserData.h"
 
 namespace mozilla {
 namespace gfx {
@@ -181,12 +182,43 @@ GFX2D_API void StrokeSnappedEdgesOfRect(const Rect& aRect,
                                         const ColorPattern& aColor,
                                         const StrokeOptions& aStrokeOptions);
 
-static inline bool
-UserToDevicePixelSnapped(Rect& aRect, const Matrix& aTransform)
+extern UserDataKey sDisablePixelSnapping;
+
+/**
+ * If aDrawTarget's transform only contains a translation or, if
+ * aAllowScaleOr90DegreeRotate is true, and/or a scale/90 degree rotation, this
+ * function will convert aRect to device space and snap it to device pixels.
+ * This function returns true if aRect is modified, otherwise it returns false.
+ *
+ * Note that the snapping is such that filling the rect using a DrawTarget
+ * which has the identity matrix as its transform will result in crisp edges.
+ * (That is, aRect will have integer values, aligning its edges between pixel
+ * boundaries.)  If on the other hand you stroking the rect with an odd valued
+ * stroke width then the edges of the stroke will be antialiased (assuming an
+ * AntialiasMode that does antialiasing).
+ */
+inline bool UserToDevicePixelSnapped(Rect& aRect, const DrawTarget& aDrawTarget,
+                                     bool aAllowScaleOr90DegreeRotate = false)
 {
-  Point p1 = aTransform * aRect.TopLeft();
-  Point p2 = aTransform * aRect.TopRight();
-  Point p3 = aTransform * aRect.BottomRight();
+  if (aDrawTarget.GetUserData(&sDisablePixelSnapping)) {
+    return false;
+  }
+
+  Matrix mat = aDrawTarget.GetTransform();
+
+  const Float epsilon = 0.0000001f;
+#define WITHIN_E(a,b) (fabs((a)-(b)) < epsilon)
+  if (!aAllowScaleOr90DegreeRotate &&
+      (!WITHIN_E(mat._11, 1.f) || !WITHIN_E(mat._22, 1.f) ||
+       !WITHIN_E(mat._12, 0.f) || !WITHIN_E(mat._21, 0.f))) {
+    // We have non-translation, but only translation is allowed.
+    return false;
+  }
+#undef WITHIN_E
+
+  Point p1 = mat * aRect.TopLeft();
+  Point p2 = mat * aRect.TopRight();
+  Point p3 = mat * aRect.BottomRight();
 
   // Check that the rectangle is axis-aligned. For an axis-aligned rectangle,
   // two opposite corners define the entire rectangle. So check if
@@ -205,6 +237,22 @@ UserToDevicePixelSnapped(Rect& aRect, const Matrix& aTransform)
   }
 
   return false;
+}
+
+/**
+ * This function has the same behavior as UserToDevicePixelSnapped except that
+ * aRect is not transformed to device space.
+ */
+inline void MaybeSnapToDevicePixels(Rect& aRect, const DrawTarget& aDrawTarget,
+                                    bool aIgnoreScale = false)
+{
+  if (UserToDevicePixelSnapped(aRect, aDrawTarget, aIgnoreScale)) {
+    // Since UserToDevicePixelSnapped returned true we know there is no
+    // rotation/skew in 'mat', so we can just use TransformBounds() here.
+    Matrix mat = aDrawTarget.GetTransform();
+    mat.Invert();
+    aRect = mat.TransformBounds(aRect);
+  }
 }
 
 } // namespace gfx

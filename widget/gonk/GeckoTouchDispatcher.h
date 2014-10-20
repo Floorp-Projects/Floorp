@@ -44,7 +44,7 @@ class GeckoTouchDispatcher
 
 public:
   GeckoTouchDispatcher();
-  void NotifyTouch(MultiTouchInput& aData, uint64_t aEventTime);
+  void NotifyTouch(MultiTouchInput& aTouch, uint64_t aEventTime);
   void DispatchTouchEvent(MultiTouchInput& aMultiTouch);
   void DispatchTouchMoveEvents(uint64_t aVsyncTime);
   static bool NotifyVsync(uint64_t aVsyncTimestamp);
@@ -80,6 +80,9 @@ private:
 
   // The system time at which the last touch event occured
   uint64_t mLastTouchTime;
+
+  // Threshold if a vsync event runs too far behind touch events
+  uint64_t mDelayedVsyncThreshold;
 };
 
 } // namespace mozilla

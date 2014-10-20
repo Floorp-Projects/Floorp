@@ -53,11 +53,6 @@ MOZ_BEGIN_ENUM_CLASS(ImageFormat)
   MAC_IOSURFACE,
 
   /**
-   * An bitmap image that can be shared with a remote process.
-   */
-  REMOTE_IMAGE_BITMAP,
-
-  /**
    * An Android SurfaceTexture ID that can be shared across threads and
    * processes.
    */
@@ -67,11 +62,6 @@ MOZ_BEGIN_ENUM_CLASS(ImageFormat)
    * An EGL Image that can be shared across threads.
    */
   EGLIMAGE,
-
-  /**
-   * An DXGI shared surface handle that can be shared with a remote process.
-   */
-  REMOTE_IMAGE_DXGI_TEXTURE,
 
   /**
    * The D3D9_RGB32_TEXTURE format creates a D3D9SurfaceImage, and wraps a

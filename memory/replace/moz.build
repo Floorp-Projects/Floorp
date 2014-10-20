@@ -8,4 +8,8 @@
 if not CONFIG['MOZ_JEMALLOC3']:
     DIRS += ['jemalloc']
 
-DISABLE_STL_WRAPPING = True
+if CONFIG['MOZ_REPLACE_MALLOC_LINKAGE'] == 'dummy library':
+    DIRS += ['dummy']
+
+if CONFIG['MOZ_DMD']:
+    DIRS += ['dmd']
