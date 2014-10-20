@@ -42,12 +42,12 @@ def browser_kwargs(**kwargs):
 def executor_kwargs(http_server_url, **kwargs):
     executor_kwargs = base_executor_kwargs(http_server_url, **kwargs)
     executor_kwargs["close_after_done"] = True
-    executor_kwargs["http_server_override"] = "http://web-platform.test:8000"
     return executor_kwargs
 
 
 def env_options():
     return {"host": "localhost",
+            "external_host": "web-platform.test",
             "bind_hostname": "true",
             "required_files": required_files}
 
@@ -82,7 +82,13 @@ class FirefoxBrowser(Browser):
 
         preferences = self.load_prefs()
 
-        self.profile = FirefoxProfile(locations=locations, proxy=True, preferences=preferences)
+        ports = {"http": "8000",
+                 "https": "8443",
+                 "ws": "8888"}
+
+        self.profile = FirefoxProfile(locations=locations,
+                                      proxy=ports,
+                                      preferences=preferences)
         self.profile.set_preferences({"marionette.defaultPrefs.enabled": True,
                                       "marionette.defaultPrefs.port": self.marionette_port,
                                       "dom.disable_open_during_load": False})
@@ -133,7 +139,9 @@ class FirefoxBrowser(Browser):
                                    command=" ".join(self.runner.command))
 
     def is_alive(self):
-        return self.runner.is_running()
+        if self.runner:
+            return self.runner.is_running()
+        return False
 
     def cleanup(self):
         self.stop()
@@ -142,8 +150,8 @@ class FirefoxBrowser(Browser):
         assert self.marionette_port is not None
         return ExecutorBrowser, {"marionette_port": self.marionette_port}
 
-    def log_crash(self, logger, process, test):
+    def log_crash(self, process, test):
         dump_dir = os.path.join(self.profile.profile, "minidumps")
-        mozcrash.log_crashes(logger, dump_dir, symbols_path=self.symbols_path,
+        mozcrash.log_crashes(self.logger, dump_dir, symbols_path=self.symbols_path,
                              stackwalk_binary=self.stackwalk_binary,
                              process=process, test=test)
