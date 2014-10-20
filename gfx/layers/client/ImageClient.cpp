@@ -191,8 +191,9 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
   if (image->AsSharedImage() && image->AsSharedImage()->GetTextureClient(this)) {
     // fast path: no need to allocate and/or copy image data
     RefPtr<TextureClient> texture = image->AsSharedImage()->GetTextureClient(this);
-
-    autoRemoveTexture.mTexture = mFrontBuffer;
+    if (texture != mFrontBuffer) {
+      autoRemoveTexture.mTexture = mFrontBuffer;
+    }
     mFrontBuffer = texture;
     if (!AddTextureClient(texture)) {
       mFrontBuffer = nullptr;
