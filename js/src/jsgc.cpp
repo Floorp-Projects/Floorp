@@ -2406,12 +2406,6 @@ GCRuntime::updatePointersToRelocatedCells()
     for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next())
         comp->sweepCrossCompartmentWrappers();
 
-    // Fixup generators as these are not normally traced.
-    for (ContextIter i(rt); !i.done(); i.next()) {
-        for (JSGenerator *gen = i.get()->innermostGenerator(); gen; gen = gen->prevGenerator)
-            gen->obj = MaybeForwarded(gen->obj.get());
-    }
-
     // Iterate through all allocated cells to update internal pointers.
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         ArenaLists &al = zone->allocator.arenas;
