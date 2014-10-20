@@ -718,7 +718,7 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
       // aScrollbarIsDescendant hunk below we unapply the entire async
       // transform, which includes the nontransientasync transform and would
       // normally account for the resolution.
-      scale *= metrics.mResolution.scale;
+      scale *= metrics.mPresShellResolution.scale;
     }
     scrollbarTransform.PostScale(1.f, 1.f / transientTransform._22, 1.f);
     scrollbarTransform.PostTranslate(0, -transientTransform._42 * scale, 0);
@@ -726,7 +726,7 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
   if (aScrollbar->GetScrollbarDirection() == Layer::HORIZONTAL) {
     float scale = metrics.CalculateCompositedSizeInCssPixels().width / metrics.mScrollableRect.width;
     if (aScrollbarIsDescendant) {
-      scale *= metrics.mResolution.scale;
+      scale *= metrics.mPresShellResolution.scale;
     }
     scrollbarTransform.PostScale(1.f / transientTransform._11, 1.f, 1.f);
     scrollbarTransform.PostTranslate(-transientTransform._41 * scale, 0, 0);
@@ -888,9 +888,10 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   if (metrics.IsScrollable()) {
     geckoScroll = metrics.GetScrollOffset() * userZoom;
   }
-  ParentLayerToScreenScale scale = userZoom
-                                  / metrics.mDevPixelsPerCSSPixel
-                                  / metrics.GetParentResolution();
+
+  LayerToScreenScale asyncZoom = userZoom / metrics.LayersPixelsPerCSSPixel();
+  ParentLayerToScreenScale scale = metrics.mPresShellResolution
+                                 * asyncZoom;
   ScreenPoint translation = userScroll - geckoScroll;
   Matrix4x4 treeTransform = ViewTransform(scale, -translation);
 
@@ -900,7 +901,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
 
   // Apply resolution scaling to the old transform - the layer tree as it is
   // doesn't have the necessary transform to display correctly.
-  oldTransform.PreScale(metrics.mResolution.scale, metrics.mResolution.scale, 1);
+  oldTransform.PreScale(metrics.mPresShellResolution.scale, metrics.mPresShellResolution.scale, 1);
 
   // Make sure that overscroll and under-zoom are represented in the old
   // transform so that fixed position content moves and scales accordingly.
