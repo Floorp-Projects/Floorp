@@ -1,3 +1,4 @@
+# NOTE: bug 1084564 covers "fails"/"skip" annotations for b2g/android below:
 fails-if(Android||B2G) HTTP(..) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
 fails-if(Android||B2G) HTTP(..) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
 fails-if(Android||B2G) skip-if(gtk2Widget) HTTP(..) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
