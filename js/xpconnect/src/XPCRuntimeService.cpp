@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "xpcprivate.h"
+
 #include "nsContentUtils.h"
 #include "BackstagePass.h"
 #include "nsIProgrammingLanguage.h"
@@ -42,6 +44,23 @@ NS_IMPL_RELEASE(BackstagePass)
                             nsIXPCScriptable::IS_GLOBAL_OBJECT             |  \
                             nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES
 #include "xpc_map_end.h" /* This will #undef the above */
+
+
+JSObject *
+BackstagePass::GetGlobalJSObject()
+{
+    if (mWrapper)
+        return mWrapper->GetFlatJSObject();
+    return nullptr;
+}
+
+void
+BackstagePass::SetGlobalObject(JSObject* global)
+{
+    nsISupports* p = XPCWrappedNative::Get(global);
+    MOZ_ASSERT(p);
+    mWrapper = static_cast<XPCWrappedNative*>(p);
+}
 
 /* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, out JSObjectPtr objp); */
 NS_IMETHODIMP

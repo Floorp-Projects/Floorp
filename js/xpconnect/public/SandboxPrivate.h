@@ -55,6 +55,11 @@ public:
         MOZ_CRASH("SandboxPrivate doesn't use DOM bindings!");
     }
 
+    void ObjectMoved(JSObject *obj, const JSObject *old)
+    {
+        UpdateWrapper(obj, old);
+    }
+
 private:
     virtual ~SandboxPrivate() { }
 
