@@ -26,6 +26,7 @@ using namespace mozilla;
 using namespace mozilla::css;
 using mozilla::dom::Animation;
 using mozilla::dom::AnimationPlayer;
+using mozilla::CSSAnimationPlayer;
 
 void
 nsAnimationManager::UpdateStyleAndEvents(AnimationPlayerCollection*
@@ -275,8 +276,6 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       // in the first place).
       if (!collection->mPlayers.IsEmpty()) {
 
-        Nullable<TimeDuration> now = timeline->GetCurrentTimeDuration();
-
         for (size_t newIdx = newPlayers.Length(); newIdx-- != 0;) {
           AnimationPlayer* newPlayer = newPlayers[newIdx];
 
@@ -286,10 +285,13 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           // the new list of animations with a given name than in the old
           // list, it will be the animations towards the of the beginning of
           // the list that do not match and are treated as new animations.
-          nsRefPtr<AnimationPlayer> oldPlayer;
+          nsRefPtr<CSSAnimationPlayer> oldPlayer;
           size_t oldIdx = collection->mPlayers.Length();
           while (oldIdx-- != 0) {
-            AnimationPlayer* a = collection->mPlayers[oldIdx];
+            CSSAnimationPlayer* a =
+              collection->mPlayers[oldIdx]->AsCSSAnimationPlayer();
+            MOZ_ASSERT(a, "All players in the CSS Animation collection should"
+                          " be CSSAnimationPlayer objects");
             if (a->Name() == newPlayer->Name()) {
               oldPlayer = a;
               break;
@@ -312,19 +314,18 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           oldPlayer->mIsRunningOnCompositor = false;
 
           // Handle changes in play state.
-          if (!oldPlayer->IsPaused() && newPlayer->IsPaused()) {
-            // Start pause at current time.
-            oldPlayer->mHoldTime = oldPlayer->GetCurrentTimeDuration();
-          } else if (oldPlayer->IsPaused() && !newPlayer->IsPaused()) {
-            if (now.IsNull()) {
-              oldPlayer->mStartTime.SetNull();
-            } else {
-              oldPlayer->mStartTime.SetValue(now.Value() -
-                                               oldPlayer->mHoldTime.Value());
-            }
-            oldPlayer->mHoldTime.SetNull();
+          // CSSAnimationPlayer takes care of override behavior so that,
+          // for example, if the author has called pause(), that will
+          // override the animation-play-state.
+          // (We should check newPlayer->IsStylePaused() but that requires
+          //  downcasting to CSSAnimationPlayer and we happen to know that
+          //  newPlayer will only ever be paused by calling PauseFromStyle
+          //  making IsPaused synonymous in this case.)
+          if (!oldPlayer->IsStylePaused() && newPlayer->IsPaused()) {
+            oldPlayer->PauseFromStyle();
+          } else if (oldPlayer->IsStylePaused() && !newPlayer->IsPaused()) {
+            oldPlayer->PlayFromStyle();
           }
-          oldPlayer->mIsPaused = newPlayer->mIsPaused;
 
           // Replace new animation with the (updated) old one and remove the
           // old one from the array so we don't try to match it any more.
@@ -442,8 +443,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       continue;
     }
 
-    nsRefPtr<AnimationPlayer> dest =
-      *aPlayers.AppendElement(new AnimationPlayer(aTimeline));
+    nsRefPtr<CSSAnimationPlayer> dest = new CSSAnimationPlayer(aTimeline);
+    aPlayers.AppendElement(dest);
 
     AnimationTiming timing;
     timing.mIterationDuration =
@@ -459,10 +460,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     dest->SetSource(destAnim);
 
     dest->mStartTime = now;
-    dest->mIsPaused =
-      src.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
-    if (dest->IsPaused()) {
-      dest->mHoldTime.SetValue(TimeDuration(0));
+    if (src.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED) {
+      dest->PauseFromStyle();
     }
 
     // While current drafts of css3-animations say that later keyframes
