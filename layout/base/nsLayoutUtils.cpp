@@ -7060,6 +7060,19 @@ Rect NSRectToRect(const nsRect& aRect, double aAppUnitsPerPixel,
   return rect;
 }
 
+void StrokeLineWithSnapping(const nsPoint& aP1, const nsPoint& aP2,
+                            int32_t aAppUnitsPerDevPixel,
+                            DrawTarget& aDrawTarget,
+                            const Pattern& aPattern,
+                            const StrokeOptions& aStrokeOptions,
+                            const DrawOptions& aDrawOptions)
+{
+  Point p1 = NSPointToPoint(aP1, aAppUnitsPerDevPixel);
+  Point p2 = NSPointToPoint(aP2, aAppUnitsPerDevPixel);
+  SnapLineToDevicePixelsForStroking(p1, p2, aDrawTarget);
+  aDrawTarget.StrokeLine(p1, p2, aPattern, aStrokeOptions, aDrawOptions);
+}
+
 namespace layout {
 
   
