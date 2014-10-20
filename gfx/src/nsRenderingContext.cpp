@@ -81,19 +81,6 @@ nsRenderingContext::Init(nsDeviceContext* aContext,
     Init(aContext, new gfxContext(aDrawTarget));
 }
 
-//
-// graphics state
-//
-
-void
-nsRenderingContext::SetColor(nscolor aColor)
-{
-    /* This sets the color assuming the sRGB color space, since that's
-     * what all CSS colors are defined to be in by the spec.
-     */
-    mThebes->SetColor(gfxRGBA(aColor));
-}
-
 
 //
 // text

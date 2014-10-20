@@ -47,10 +47,6 @@ public:
       return int32_t(mP2A);
     }
 
-    // Graphics state
-
-    void SetColor(nscolor aColor);
-
     // Text
 
     void SetFont(nsFontMetrics *aFontMetrics);
