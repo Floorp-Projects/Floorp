@@ -211,6 +211,22 @@ AnimationPlayer::CanThrottle() const
 }
 
 void
+AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
+                              nsCSSPropertySet& aSetProperties,
+                              bool& aNeedsRefreshes)
+{
+  if (!mSource || mSource->IsFinishedTransition()) {
+    return;
+  }
+
+  if (PlayState() == AnimationPlayState::Running) {
+    aNeedsRefreshes = true;
+  }
+
+  mSource->ComposeStyle(aStyleRule, aSetProperties);
+}
+
+void
 AnimationPlayer::FlushStyle() const
 {
   if (mSource && mSource->GetTarget()) {
