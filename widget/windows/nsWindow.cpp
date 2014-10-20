@@ -2865,7 +2865,7 @@ nsWindow::MakeFullScreen(bool aFullScreen)
   UpdateNonClientMargins();
 
   bool visible = mIsVisible;
-  if (mOldSizeMode == nsSizeMode_Normal)
+  if (mOldSizeMode == nsSizeMode_Normal || mOldSizeMode == nsSizeMode_Maximized)
     Show(false);
   
   // Will call hide chrome, reposition window. Note this will

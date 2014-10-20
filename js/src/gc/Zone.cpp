@@ -28,6 +28,7 @@ JS::Zone::Zone(JSRuntime *rt)
     gcMallocBytes(0),
     gcMallocGCTriggered(false),
     usage(&rt->gc.usage),
+    gcDelayBytes(0),
     data(nullptr),
     isSystem(false),
     usedByExclusiveThread(false),

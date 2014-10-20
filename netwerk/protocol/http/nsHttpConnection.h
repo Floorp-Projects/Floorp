@@ -13,6 +13,7 @@
 #include "nsProxyRelease.h"
 #include "prinrval.h"
 #include "TunnelUtils.h"
+#include "mozilla/Mutex.h"
 
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"

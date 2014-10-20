@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 609976 - CLOBBER 
+Bug 609976 needs a CLOBBER on Windows again.

@@ -63,34 +63,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=696253
 
 /** Test for flex-grow and flex-shrink animation (Bug 696253) **/
 
-function advance_clock(milliseconds) {
-  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
-}
-
-var display = document.getElementById("display");
-var div = null;
-var cs = null;
-function new_div(style) {
-  return new_element("div", style);
-}
-function new_element(tagname, style) {
-  if (div != null || cs != null) {
-    ok(false, "test author forgot to call done_div");
-  }
-  if (typeof(style) != "string") {
-    ok(false, "test author forgot to pass argument");
-  }
-  div = document.createElement(tagname);
-  div.setAttribute("style", style);
-  display.appendChild(div);
-  cs = getComputedStyle(div, "");
-}
-
-function done_div() {
-  display.removeChild(div);
-  div = null;
-  cs = null;
-}
 // take over the refresh driver
 advance_clock(0);
 
@@ -98,7 +70,7 @@ advance_clock(0);
 // --------------------------------------------
 
 // flexGrowTwoToThree: 2.0 at 0%, 2.5 at 50%, 10 after animation is over
-new_div("animation: flexGrowTwoToThree linear 1s");
+var [ div, cs ] = new_div("animation: flexGrowTwoToThree linear 1s");
 is_approx(cs.flexGrow, 2, 0.01, "flexGrowTwoToThree at 0.0s");
 advance_clock(500);
 is_approx(cs.flexGrow, 2.5, 0.01, "flexGrowTwoToThree at 0.5s");
@@ -107,7 +79,7 @@ is(cs.flexGrow, 10, "flexGrowTwoToThree at 1.5s");
 done_div();
 
 // flexShrinkTwoToThree: 2.0 at 0%, 2.5 at 50%, 20 after animation is over
-new_div("animation: flexShrinkTwoToThree linear 1s");
+[ div, cs ] = new_div("animation: flexShrinkTwoToThree linear 1s");
 is_approx(cs.flexShrink, 2, 0.01,  "flexShrinkTwoToThree at 0.0s");
 advance_clock(500);
 is_approx(cs.flexShrink, 2.5, 0.01, "flexShrinkTwoToThree at 0.5s");
@@ -116,7 +88,7 @@ is(cs.flexShrink, 20, "flexShrinkTwoToThree at 1.5s");
 done_div();
 
 // flexGrowZeroToZero: 0 at 0%, 0 at 50%, 10 after animation is over
-new_div("animation: flexGrowZeroToZero linear 1s");
+[ div, cs ] = new_div("animation: flexGrowZeroToZero linear 1s");
 is(cs.flexGrow, 0, "flexGrowZeroToZero at 0.0s");
 advance_clock(500);
 is(cs.flexGrow, 0, "flexGrowZeroToZero at 0.5s");
@@ -125,7 +97,7 @@ is(cs.flexGrow, 10, "flexGrowZeroToZero at 1.5s");
 done_div();
 
 // flexShrinkZeroToZero: 0 at 0%, 0 at 50%, 20 after animation is over
-new_div("animation: flexShrinkZeroToZero linear 1s");
+[ div, cs ] = new_div("animation: flexShrinkZeroToZero linear 1s");
 is(cs.flexShrink, 0, "flexShrinkZeroToZero at 0.0s");
 advance_clock(500);
 is(cs.flexShrink, 0, "flexShrinkZeroToZero at 0.5s");
@@ -139,7 +111,7 @@ done_div();
 // allowed to animate between 0 and other values. But now that's allowed.)
 
 // flexGrowZeroToOne: 0 at 0%, 0.5 at 50%, 10 after animation is over.
-new_div("animation: flexGrowZeroToOne linear 1s");
+[ div, cs ] = new_div("animation: flexGrowZeroToOne linear 1s");
 is(cs.flexGrow, 0, "flexGrowZeroToOne at 0.0s");
 advance_clock(500);
 is(cs.flexGrow, 0.5, "flexGrowZeroToOne at 0.5s");
@@ -148,7 +120,7 @@ is(cs.flexGrow, 10, "flexGrowZeroToOne at 1.5s");
 done_div();
 
 // flexShrinkZeroToOne: 0 at 0%, 0.5 at 50%, 20 after animation is over.
-new_div("animation: flexShrinkZeroToOne linear 1s");
+[ div, cs ] = new_div("animation: flexShrinkZeroToOne linear 1s");
 is(cs.flexShrink, 0,  "flexShrinkZeroToOne at 0.0s");
 advance_clock(500);
 is(cs.flexShrink, 0.5, "flexShrinkZeroToOne at 0.5s");
@@ -157,7 +129,7 @@ is(cs.flexShrink, 20, "flexShrinkZeroToOne at 1.5s");
 done_div();
 
 // flexGrowOneToZero: 1 at 0%, 0.5 at 50%, 10 after animation is over.
-new_div("animation: flexGrowOneToZero linear 1s");
+[ div, cs ] = new_div("animation: flexGrowOneToZero linear 1s");
 is(cs.flexGrow, 1, "flexGrowOneToZero at 0.0s");
 advance_clock(500);
 is(cs.flexGrow, 0.5, "flexGrowOneToZero at 0.5s");
@@ -166,7 +138,7 @@ is(cs.flexGrow, 10, "flexGrowOneToZero at 1.5s");
 done_div();
 
 // flexShrinkOneToZero: 1 at 0%, 0.5 at 50%, 20 after animation is over.
-new_div("animation: flexShrinkOneToZero linear 1s");
+[ div, cs ] = new_div("animation: flexShrinkOneToZero linear 1s");
 is(cs.flexShrink, 1,  "flexShrinkOneToZero at 0.0s");
 advance_clock(500);
 is(cs.flexShrink, 0.5, "flexShrinkOneToZero at 0.5s");

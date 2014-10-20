@@ -8,6 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#ifndef VP8_ENCODER_DEFAULTCOEFCOUNTS_H_
+#define VP8_ENCODER_DEFAULTCOEFCOUNTS_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Generated file, included by entropy.c */
 
 static const unsigned int default_coef_counts[BLOCK_TYPES]
@@ -221,3 +228,9 @@ static const unsigned int default_coef_counts[BLOCK_TYPES]
         },
     },
 };
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
+#endif  // VP8_ENCODER_DEFAULTCOEFCOUNTS_H_

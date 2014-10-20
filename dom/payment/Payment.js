@@ -98,7 +98,7 @@ PaymentContentHelper.prototype = {
       this._debug = false;
     }
 
-    return this.pay.bind(this);
+    return Cu.exportFunction(this.pay.bind(this), aWindow);
   },
 
   // nsIFrameMessageListener

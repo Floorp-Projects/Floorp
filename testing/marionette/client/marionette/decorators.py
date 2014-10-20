@@ -4,6 +4,7 @@
 
 from errors import MarionetteException
 from functools import wraps
+import socket
 import sys
 import traceback
 
@@ -33,10 +34,11 @@ def do_crash_check(func, always=False):
 
         try:
             return func(*args, **kwargs)
-        except (MarionetteException, IOError):
+        except (MarionetteException, socket.error, IOError) as e:
             exc, val, tb = sys.exc_info()
-            if not always:
-                check()
+            if not isinstance(e, MarionetteException) or type(e) is MarionetteException:
+                if not always:
+                    check()
             raise exc, val, tb
         finally:
             if always:

@@ -412,66 +412,121 @@ inline bool IsProxy(JSObject *obj)
     return GetObjectClass(obj)->isProxy();
 }
 
-/*
- * These are part of the API.
- *
- * NOTE: PROXY_PRIVATE_SLOT is 0 because that way slot 0 is usable by API
- * clients for both proxy and non-proxy objects.  So an API client that only
- * needs to store one slot's worth of data doesn't need to branch on what sort
- * of object it has.
- */
-const uint32_t PROXY_PRIVATE_SLOT   = 0;
-const uint32_t PROXY_HANDLER_SLOT   = 1;
-const uint32_t PROXY_EXTRA_SLOT     = 2;
-const uint32_t PROXY_MINIMUM_SLOTS  = 4;
+const uint32_t PROXY_EXTRA_SLOTS = 2;
+
+// Layout of the values stored by a proxy. Note that API clients require the
+// private slot to be the first slot in the proxy's values, so that the private
+// slot can be accessed in the same fashion as the first reserved slot, via
+// {Get,Set}ReservedOrProxyPrivateSlot.
+
+struct ProxyValueArray
+{
+    Value privateSlot;
+    Value extraSlots[PROXY_EXTRA_SLOTS];
+
+    ProxyValueArray()
+      : privateSlot(JS::UndefinedValue())
+    {
+        for (size_t i = 0; i < PROXY_EXTRA_SLOTS; i++)
+            extraSlots[i] = JS::UndefinedValue();
+    }
+};
+
+// All proxies share the same data layout. Following the object's shape and
+// type, the proxy has a ProxyDataLayout structure with a pointer to an array
+// of values and the proxy's handler. This is designed both so that proxies can
+// be easily swapped with other objects (via RemapWrapper) and to mimic the
+// layout of other objects (proxies and other objects have the same size) so
+// that common code can access either type of object.
+//
+// See GetReservedOrProxyPrivateSlot below.
+struct ProxyDataLayout
+{
+    ProxyValueArray *values;
+    const BaseProxyHandler *handler;
+};
+
+const uint32_t ProxyDataOffset = 2 * sizeof(void *);
+
+// This method should only be used internally and by the accessors below.
+inline ProxyDataLayout *
+GetProxyDataLayout(JSObject *obj)
+{
+    MOZ_ASSERT(IsProxy(obj));
+    return reinterpret_cast<ProxyDataLayout *>(reinterpret_cast<uint8_t *>(obj) + ProxyDataOffset);
+}
 
 inline const BaseProxyHandler *
 GetProxyHandler(JSObject *obj)
 {
-    MOZ_ASSERT(IsProxy(obj));
-    return (const BaseProxyHandler *) GetReservedSlot(obj, PROXY_HANDLER_SLOT).toPrivate();
+    return GetProxyDataLayout(obj)->handler;
 }
 
 inline const Value &
 GetProxyPrivate(JSObject *obj)
 {
-    MOZ_ASSERT(IsProxy(obj));
-    return GetReservedSlot(obj, PROXY_PRIVATE_SLOT);
+    return GetProxyDataLayout(obj)->values->privateSlot;
 }
 
 inline JSObject *
 GetProxyTargetObject(JSObject *obj)
 {
-    MOZ_ASSERT(IsProxy(obj));
     return GetProxyPrivate(obj).toObjectOrNull();
 }
 
 inline const Value &
 GetProxyExtra(JSObject *obj, size_t n)
 {
-    MOZ_ASSERT(IsProxy(obj));
-    return GetReservedSlot(obj, PROXY_EXTRA_SLOT + n);
+    MOZ_ASSERT(n < PROXY_EXTRA_SLOTS);
+    return GetProxyDataLayout(obj)->values->extraSlots[n];
 }
 
 inline void
-SetProxyHandler(JSObject *obj, BaseProxyHandler *handler)
+SetProxyHandler(JSObject *obj, const BaseProxyHandler *handler)
 {
-    MOZ_ASSERT(IsProxy(obj));
-    SetReservedSlot(obj, PROXY_HANDLER_SLOT, PrivateValue(handler));
+    GetProxyDataLayout(obj)->handler = handler;
 }
+
+JS_FRIEND_API(void)
+SetValueInProxy(Value *slot, const Value &value);
 
 inline void
 SetProxyExtra(JSObject *obj, size_t n, const Value &extra)
 {
-    MOZ_ASSERT(IsProxy(obj));
-    MOZ_ASSERT(n <= 1);
-    SetReservedSlot(obj, PROXY_EXTRA_SLOT + n, extra);
+    MOZ_ASSERT(n < PROXY_EXTRA_SLOTS);
+    Value *vp = &GetProxyDataLayout(obj)->values->extraSlots[n];
+
+    // Trigger a barrier before writing the slot.
+    if (vp->isMarkable() || extra.isMarkable())
+        SetValueInProxy(vp, extra);
+    else
+        *vp = extra;
 }
 
 inline bool
 IsScriptedProxy(JSObject *obj)
 {
     return IsProxy(obj) && GetProxyHandler(obj)->isScripted();
+}
+
+inline const Value &
+GetReservedOrProxyPrivateSlot(JSObject *obj, size_t slot)
+{
+    MOZ_ASSERT(slot == 0);
+    MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)) || IsProxy(obj));
+    return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
+}
+
+inline void
+SetReservedOrProxyPrivateSlot(JSObject *obj, size_t slot, const Value &value)
+{
+    MOZ_ASSERT(slot == 0);
+    MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)) || IsProxy(obj));
+    shadow::Object *sobj = reinterpret_cast<shadow::Object *>(obj);
+    if (sobj->slotRef(slot).isMarkable() || value.isMarkable())
+        SetReservedOrProxyPrivateSlotWithBarrier(obj, slot, value);
+    else
+        sobj->slotRef(slot) = value;
 }
 
 class MOZ_STACK_CLASS ProxyOptions {

@@ -9,8 +9,8 @@
  */
 
 
-#ifndef VPX_PORTS_MEM_H
-#define VPX_PORTS_MEM_H
+#ifndef VPX_PORTS_MEM_H_
+#define VPX_PORTS_MEM_H_
 
 #include "vpx_config.h"
 #include "vpx/vpx_integer.h"
@@ -44,4 +44,4 @@
 #define UNINITIALIZED_IS_SAFE(x) x=x
 #else
 #define UNINITIALIZED_IS_SAFE(x) x
-#endif
+#endif  // VPX_PORTS_MEM_H_

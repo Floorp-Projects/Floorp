@@ -22,6 +22,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <hardware_legacy/power.h>
 #include <signal.h>
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
@@ -100,6 +101,7 @@ static int32_t sMicrophoneState;
 
 // Amount of time in MS before an input is considered expired.
 static const uint64_t kInputExpirationThresholdMs = 1000;
+static const char kKey_WAKE_LOCK_ID[] = "GeckoKeyEvent";
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAppShell, nsBaseAppShell, nsIObserver)
 
@@ -495,6 +497,7 @@ public:
         , mEventHub(aEventHub)
         , mKeyDownCount(0)
         , mKeyEventsFiltered(false)
+        , mPowerWakelock(false)
     {
         mTouchDispatcher = new GeckoTouchDispatcher();
     }
@@ -545,6 +548,7 @@ private:
 
     int mKeyDownCount;
     bool mKeyEventsFiltered;
+    bool mPowerWakelock;
 };
 
 // GeckoInputReaderPolicy
@@ -636,6 +640,11 @@ GeckoInputDispatcher::dispatchOnce()
         break;
     }
     }
+    MutexAutoLock lock(mQueueLock);
+    if (mPowerWakelock && mEventQueue.empty()) {
+        release_wake_lock(kKey_WAKE_LOCK_ID);
+        mPowerWakelock = false;
+    }
 }
 
 void
@@ -658,6 +667,10 @@ GeckoInputDispatcher::notifyKey(const NotifyKeyArgs* args)
     {
         MutexAutoLock lock(mQueueLock);
         mEventQueue.push(data);
+        if (!mPowerWakelock) {
+            mPowerWakelock =
+                acquire_wake_lock(PARTIAL_WAKE_LOCK, kKey_WAKE_LOCK_ID);
+        }
     }
     gAppShell->NotifyNativeEvent();
 }

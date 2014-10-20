@@ -3150,6 +3150,14 @@ nsXPCComponents_Utils::ForcePermissiveCOWs(JSContext *cx)
     return NS_OK;
 }
 
+/* jsval skipCOWCallableChecks(); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::SkipCOWCallableChecks(JSContext *cx)
+{
+    CompartmentPrivate::Get(CurrentGlobalOrNull(cx))->skipCOWCallableChecks = true;
+    return NS_OK;
+}
+
 /* jsval forcePrivilegedComponentsForScope(jsval vscope); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForcePrivilegedComponentsForScope(HandleValue vscope,

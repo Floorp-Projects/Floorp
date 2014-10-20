@@ -98,7 +98,6 @@
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/TextMetrics.h"
-#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/FloatingPoint.h"
 #include "nsGlobalWindow.h"
@@ -236,7 +235,7 @@ public:
     const ContextState &state = aCtx->CurrentState();
 
     if (state.StyleIsColor(aStyle)) {
-      mPattern.InitColorPattern(Color::FromABGR(state.colorStyles[aStyle]));
+      mPattern.InitColorPattern(ToDeviceColor(state.colorStyles[aStyle]));
     } else if (state.gradientStyles[aStyle] &&
                state.gradientStyles[aStyle]->GetType() == CanvasGradient::Type::LINEAR) {
       CanvasLinearGradient *gradient =

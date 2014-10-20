@@ -5,9 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'SimpleTest',
-    'browser',
+    'SimpleTest'
 ]
 
 MOCHITEST_MANIFESTS += ['Harness_sanity/mochitest.ini']
-
+BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']

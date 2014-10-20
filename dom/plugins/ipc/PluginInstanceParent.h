@@ -119,8 +119,6 @@ public:
                                                   NPError* result) MOZ_OVERRIDE;
     virtual bool
     AnswerNPN_SetValue_NPPVpluginDrawingModel(const int& drawingModel,
-                                              OptionalShmem *remoteImageData,
-                                              CrossProcessMutexHandle *mutex,
                                               NPError* result) MOZ_OVERRIDE;
     virtual bool
     AnswerNPN_SetValue_NPPVpluginEventModel(const int& eventModel,
@@ -207,18 +205,10 @@ public:
                            bool *result) MOZ_OVERRIDE;
 
     virtual bool
-    AnswerNPN_InitAsyncSurface(const gfxIntSize& size,
-                               const NPImageFormat& format,
-                               NPRemoteAsyncSurface* surfData,
-                               bool* result) MOZ_OVERRIDE;
-
-    virtual bool
     RecvRedrawPlugin() MOZ_OVERRIDE;
 
     virtual bool
     RecvNegotiatedCarbon() MOZ_OVERRIDE;
-
-    virtual bool RecvReleaseDXGISharedSurface(const DXGISharedSurfaceHandle &aHandle) MOZ_OVERRIDE;
 
     NPError NPP_SetWindow(const NPWindow* aWindow);
 
@@ -301,15 +291,11 @@ private:
                                      PPluginScriptableObjectParent** aValue,
                                      NPError* aResult);
 
-    bool IsAsyncDrawing();
-
 private:
     PluginModuleParent* mParent;
     NPP mNPP;
     const NPNetscapeFuncs* mNPNIface;
     NPWindowType mWindowType;
-    Shmem mRemoteImageDataShmem;
-    nsAutoPtr<CrossProcessMutex> mRemoteImageDataMutex;
     int16_t            mDrawingModel;
     nsAutoPtr<mozilla::layers::CompositionNotifySink> mNotifySink;
 

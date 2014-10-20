@@ -381,6 +381,14 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
       // have limited which handles will be inherited.
       inherit_handles = true;
     }
+  } else if (getenv("MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA")) {
+    // On pre-Vista versions even if we can't limit what gets inherited, we
+    // sometimes want to inherit stdout/err for testing purposes.
+    startup_info.startup_info()->dwFlags |= STARTF_USESTDHANDLES;
+    startup_info.startup_info()->hStdInput = INVALID_HANDLE_VALUE;
+    startup_info.startup_info()->hStdOutput = policy_base->GetStdoutHandle();
+    startup_info.startup_info()->hStdError = policy_base->GetStderrHandle();
+    inherit_handles = true;
   }
 
   // Construct the thread pool here in case it is expensive.

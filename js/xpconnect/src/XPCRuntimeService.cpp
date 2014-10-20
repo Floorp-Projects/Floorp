@@ -4,15 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "xpcprivate.h"
+
 #include "nsContentUtils.h"
 #include "BackstagePass.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsDOMClassInfo.h"
 #include "nsIPrincipal.h"
 
-#include "mozilla/dom/workers/Workers.h"
+#include "mozilla/dom/ResolveSystemBinding.h"
 
-using mozilla::dom::workers::ResolveWorkerClasses;
+using mozilla::dom::ResolveSystemBinding;
 
 NS_INTERFACE_MAP_BEGIN(BackstagePass)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
@@ -43,6 +45,23 @@ NS_IMPL_RELEASE(BackstagePass)
                             nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES
 #include "xpc_map_end.h" /* This will #undef the above */
 
+
+JSObject *
+BackstagePass::GetGlobalJSObject()
+{
+    if (mWrapper)
+        return mWrapper->GetFlatJSObject();
+    return nullptr;
+}
+
+void
+BackstagePass::SetGlobalObject(JSObject* global)
+{
+    nsISupports* p = XPCWrappedNative::Get(global);
+    MOZ_ASSERT(p);
+    mWrapper = static_cast<XPCWrappedNative*>(p);
+}
+
 /* bool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id, out JSObjectPtr objp); */
 NS_IMETHODIMP
 BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
@@ -66,7 +85,7 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
 
     JS::RootedObject objp(cx, *objpArg);
 
-    *_retval = ResolveWorkerClasses(cx, obj, id, &objp);
+    *_retval = ResolveSystemBinding(cx, obj, id, &objp);
     NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
 
     if (objp) {
@@ -87,7 +106,7 @@ BackstagePass::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
 
     JS::RootedObject ignored(cx);
-    *_retval = ResolveWorkerClasses(cx, obj, JSID_VOIDHANDLE, &ignored);
+    *_retval = ResolveSystemBinding(cx, obj, JSID_VOIDHANDLE, &ignored);
     NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
 
     return NS_OK;

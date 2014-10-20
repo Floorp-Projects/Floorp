@@ -521,7 +521,9 @@ TreeBoxObject::GetCellAt(int32_t aX, int32_t aY, int32_t *aRow,
 void
 TreeBoxObject::GetCellAt(int32_t x, int32_t y, TreeCellInfo& aRetVal, ErrorResult& aRv)
 {
-  GetCellAt(x, y, &aRetVal.mRow, getter_AddRefs(aRetVal.mCol), aRetVal.mChildElt);
+  nsCOMPtr<nsITreeColumn> col;
+  GetCellAt(x, y, &aRetVal.mRow, getter_AddRefs(col), aRetVal.mChildElt);
+  aRetVal.mCol = col.forget().downcast<nsTreeColumn>();
 }
 
 void
@@ -569,10 +571,10 @@ TreeBoxObject::GetCoordsForCellItem(int32_t aRow, nsITreeColumn* aCol, const nsA
 }
 
 already_AddRefed<DOMRect>
-TreeBoxObject::GetCoordsForCellItem(int32_t row, nsITreeColumn* col, const nsAString& element, ErrorResult& aRv)
+TreeBoxObject::GetCoordsForCellItem(int32_t row, nsTreeColumn& col, const nsAString& element, ErrorResult& aRv)
 {
   int32_t x, y, w, h;
-  GetCoordsForCellItem(row, col, element, &x, &y, &w, &h);
+  GetCoordsForCellItem(row, &col, element, &x, &y, &w, &h);
   nsRefPtr<DOMRect> rect = new DOMRect(mContent, x, y, w, h);
   return rect.forget();
 }
@@ -580,7 +582,7 @@ TreeBoxObject::GetCoordsForCellItem(int32_t row, nsITreeColumn* col, const nsASt
 void
 TreeBoxObject::GetCoordsForCellItem(JSContext* cx,
                                     int32_t row,
-                                    nsITreeColumn* col,
+                                    nsTreeColumn& col,
                                     const nsAString& element,
                                     JS::Handle<JSObject*> xOut,
                                     JS::Handle<JSObject*> yOut,
@@ -589,7 +591,7 @@ TreeBoxObject::GetCoordsForCellItem(JSContext* cx,
                                     ErrorResult& aRv)
 {
   int32_t x, y, w, h;
-  GetCoordsForCellItem(row, col, element, &x, &y, &w, &h);
+  GetCoordsForCellItem(row, &col, element, &x, &y, &w, &h);
   JS::Rooted<JS::Value> v(cx, INT_TO_JSVAL(x));
   if (!JS_SetProperty(cx, xOut, "value", v)) {
     aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);

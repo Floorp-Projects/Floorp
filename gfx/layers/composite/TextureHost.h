@@ -581,7 +581,9 @@ public:
   SharedSurfaceTextureHost(TextureFlags aFlags,
                            const SharedSurfaceDescriptor& aDesc);
 
-  virtual ~SharedSurfaceTextureHost() {};
+  virtual ~SharedSurfaceTextureHost() {
+    MOZ_ASSERT(!mIsLocked);
+  }
 
   virtual void DeallocateDeviceData() MOZ_OVERRIDE {};
 
@@ -600,17 +602,9 @@ public:
   }
 
 public:
-  virtual bool Lock() MOZ_OVERRIDE {
-    MOZ_ASSERT(!mIsLocked);
-    mIsLocked = true;
-    EnsureTexSource();
-    return true;
-  }
 
-  virtual void Unlock() MOZ_OVERRIDE {
-    MOZ_ASSERT(mIsLocked);
-    mIsLocked = false;
-  }
+  virtual bool Lock() MOZ_OVERRIDE;
+  virtual void Unlock() MOZ_OVERRIDE;
 
   virtual TextureSource* GetTextureSources() MOZ_OVERRIDE {
     MOZ_ASSERT(mIsLocked);

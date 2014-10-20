@@ -183,6 +183,33 @@ def generate_pkcs12(db_dir, dest_dir, der_cert_filename, key_pem_filename,
     child.expect(pexpect.EOF)
     return pk12_filename
 
+def import_cert_and_pkcs12(db_dir, cert_filename, pkcs12_filename, nickname,
+                           trust_flags):
+    """
+    Imports a given certificate file and PKCS12 file into the SQL NSS DB.
+
+    Arguments:
+      db_dir -- the location of the database and password file
+      cert_filename -- the filename of the cert in DER format
+      pkcs12_filename -- the filename of the private key of the cert in PEM
+                         format
+      nickname -- the nickname to assign to the cert
+      trust_flags -- the trust flags the cert should have
+    """
+    os.system('certutil -A -d sql:' + db_dir + ' -n ' + nickname + ' -i ' +
+              cert_filename + ' -t "' + trust_flags + '"')
+    os.system('pk12util -i ' + pkcs12_filename + ' -d sql:' + db_dir +
+              ' -w ' + db_dir + '/pwfile')
+
+def print_cert_info_for_ev(cert_filename):
+    """
+    Prints out the information required to enable EV for the given cert.
+
+    Arguments:
+      cert_filename -- the filename of the cert in DER format
+    """
+    os.system('pp -t certificate-identity -i ' + cert_filename)
+
 def init_nss_db(db_dir):
     """
     Remove the current nss database in the specified directory and create a new

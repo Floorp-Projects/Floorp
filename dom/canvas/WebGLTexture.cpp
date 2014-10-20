@@ -595,8 +595,8 @@ WebGLTexture::EnsureNoUninitializedImageData(TexImageTarget imageTarget, GLint l
                         bytespertexel,
                         mContext->mPixelStoreUnpackAlignment);
     MOZ_ASSERT(checked_byteLength.isValid()); // should have been checked earlier
-    ScopedFreePtr<void> zeros;
-    zeros = calloc(1, checked_byteLength.value());
+
+    UniquePtr<uint8_t> zeros((uint8_t*)moz_xcalloc(1, checked_byteLength.value())); // Infallible for now.
 
     gl::GLContext* gl = mContext->gl;
     GLenum driverInternalFormat = LOCAL_GL_NONE;
@@ -611,18 +611,18 @@ WebGLTexture::EnsureNoUninitializedImageData(TexImageTarget imageTarget, GLint l
         gl->fTexSubImage3D(imageTarget.get(), level, 0, 0, 0,
                         imageInfo.mWidth, imageInfo.mHeight, imageInfo.mDepth,
                         driverFormat, driverType,
-                        zeros);
+                        zeros.get());
     } else {
         if (mImmutable) {
             gl->fTexSubImage2D(imageTarget.get(), level, 0, 0,
                             imageInfo.mWidth, imageInfo.mHeight,
                             driverFormat, driverType,
-                            zeros);
+                            zeros.get());
         } else {
             gl->fTexImage2D(imageTarget.get(), level, driverInternalFormat,
                             imageInfo.mWidth, imageInfo.mHeight,
                             0, driverFormat, driverType,
-                            zeros);
+                            zeros.get());
         }
     }
     GLenum error = mContext->GetAndFlushUnderlyingGLErrors();

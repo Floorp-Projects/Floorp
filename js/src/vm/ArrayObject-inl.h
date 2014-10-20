@@ -96,7 +96,7 @@ ArrayObject::createArray(ExclusiveContext *cx, gc::InitialHeap heap,
     if (!obj)
         return nullptr;
 
-    obj->elements = elements;
+    obj->elements_ = elements;
 
     return finishCreateArray(obj, shape);
 }
@@ -119,7 +119,7 @@ ArrayObject::createCopyOnWriteArray(ExclusiveContext *cx, gc::InitialHeap heap,
     if (!obj)
         return nullptr;
 
-    obj->elements = sharedElementsOwner->getDenseElementsAllowCopyOnWrite();
+    obj->elements_ = sharedElementsOwner->getDenseElementsAllowCopyOnWrite();
 
     return finishCreateArray(obj, shape);
 }

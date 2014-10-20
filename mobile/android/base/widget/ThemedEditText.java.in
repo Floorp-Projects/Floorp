@@ -1,4 +1,5 @@
 //#filter substitution
 //#define VIEW_NAME_SUFFIX EditText
 //#define BASE_TYPE android.widget.EditText
+//#define STYLE_CONSTRUCTOR 1
 //#include ThemedView.java.frag

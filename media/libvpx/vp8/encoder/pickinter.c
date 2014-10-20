@@ -14,6 +14,7 @@
 #include "onyx_int.h"
 #include "modecosts.h"
 #include "encodeintra.h"
+#include "vp8/common/common.h"
 #include "vp8/common/entropymode.h"
 #include "pickinter.h"
 #include "vp8/common/findnearmv.h"
@@ -38,7 +39,6 @@ extern const int vp8_ref_frame_order[MAX_MODES];
 extern const MB_PREDICTION_MODE vp8_mode_order[MAX_MODES];
 
 extern int vp8_cost_mv_ref(MB_PREDICTION_MODE m, const int near_mv_ref_ct[4]);
-
 
 int vp8_skip_fractional_mv_step(MACROBLOCK *mb, BLOCK *b, BLOCKD *d,
                                 int_mv *bestmv, int_mv *ref_mv,
@@ -487,6 +487,7 @@ static int evaluate_inter_mode(unsigned int* sse, int rate2, int* distortion2,
     MB_PREDICTION_MODE this_mode = x->e_mbd.mode_info_context->mbmi.mode;
     int_mv mv = x->e_mbd.mode_info_context->mbmi.mv;
     int this_rd;
+    int denoise_aggressive = 0;
     /* Exit early and don't compute the distortion if this macroblock
      * is marked inactive. */
     if (cpi->active_map_enabled && x->active_ptr[0] == 0)
@@ -505,16 +506,18 @@ static int evaluate_inter_mode(unsigned int* sse, int rate2, int* distortion2,
 
     this_rd = RDCOST(x->rdmult, x->rddiv, rate2, *distortion2);
 
-    /* Adjust rd to bias to ZEROMV */
-    if(this_mode == ZEROMV)
-    {
-        /* Bias to ZEROMV on LAST_FRAME reference when it is available. */
-        if ((cpi->ref_frame_flags & VP8_LAST_FRAME &
-            cpi->common.refresh_last_frame)
-            && x->e_mbd.mode_info_context->mbmi.ref_frame != LAST_FRAME)
-            rd_adj = 100;
+#if CONFIG_TEMPORAL_DENOISING
+    if (cpi->oxcf.noise_sensitivity > 0) {
+      denoise_aggressive =
+        (cpi->denoiser.denoiser_mode == kDenoiserOnYUVAggressive) ? 1 : 0;
+    }
+#endif
 
-        // rd_adj <= 100
+    // Adjust rd for ZEROMV and LAST, if LAST is the closest reference frame.
+    if (this_mode == ZEROMV &&
+        x->e_mbd.mode_info_context->mbmi.ref_frame == LAST_FRAME &&
+        (denoise_aggressive || cpi->closest_reference_frame == LAST_FRAME))
+    {
         this_rd = ((int64_t)this_rd) * rd_adj / 100;
     }
 
@@ -589,9 +592,9 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
     int distortion2;
     int bestsme = INT_MAX;
     int best_mode_index = 0;
-    unsigned int sse = INT_MAX, best_rd_sse = INT_MAX;
+    unsigned int sse = UINT_MAX, best_rd_sse = UINT_MAX;
 #if CONFIG_TEMPORAL_DENOISING
-    unsigned int zero_mv_sse = INT_MAX, best_sse = INT_MAX;
+    unsigned int zero_mv_sse = UINT_MAX, best_sse = UINT_MAX;
 #endif
 
     int sf_improved_mv_pred = cpi->sf.improved_mv_pred;
@@ -692,6 +695,13 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
      * motion area, its mode decision is biased to ZEROMV mode.
      */
     calculate_zeromv_rd_adjustment(cpi, x, &rd_adjustment);
+
+#if CONFIG_TEMPORAL_DENOISING
+    if (cpi->oxcf.noise_sensitivity) {
+      rd_adjustment = (int)(rd_adjustment *
+          cpi->denoiser.denoise_pars.pickmode_mv_bias / 100);
+    }
+#endif
 
     /* if we encode a new mv this is important
      * find the best new motion vector
@@ -1167,6 +1177,7 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
 #if CONFIG_TEMPORAL_DENOISING
     if (cpi->oxcf.noise_sensitivity)
     {
+        int block_index = mb_row * cpi->common.mb_cols + mb_col;
         if (x->best_sse_inter_mode == DC_PRED)
         {
             /* No best MV found. */
@@ -1176,9 +1187,11 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
             x->best_reference_frame = best_mbmode.ref_frame;
             best_sse = best_rd_sse;
         }
+        x->increase_denoising = 0;
         vp8_denoiser_denoise_mb(&cpi->denoiser, x, best_sse, zero_mv_sse,
-                                recon_yoffset, recon_uvoffset);
-
+                                recon_yoffset, recon_uvoffset,
+                                &cpi->common.lf_info, mb_row, mb_col,
+                                block_index);
 
         /* Reevaluate ZEROMV after denoising. */
         if (best_mbmode.ref_frame == INTRA_FRAME &&

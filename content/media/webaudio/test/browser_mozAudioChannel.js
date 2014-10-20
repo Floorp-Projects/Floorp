@@ -11,15 +11,6 @@ function whenBrowserLoaded(aBrowser, aCallback) {
   }, true);
 }
 
-function whenTabRestored(aTab, aCallback) {
-  aTab.addEventListener("SSTabRestored", function onRestored(aEvent) {
-    aTab.removeEventListener("SSTabRestored", onRestored, true);
-    executeSoon(function executeWhenTabRestored() {
-      aCallback();
-    });
-  }, true);
-}
-
 function whenBrowserUnloaded(aBrowser, aCallback) {
   aBrowser.addEventListener("unload", function onUnload() {
     aBrowser.removeEventListener("unload", onUnload, true);
@@ -73,11 +64,11 @@ function test() {
               gBrowser.selectedTab = tab1;
             }
 
-            let tab2 = gBrowser.duplicateTab(tab1);
+            let tab2 = gBrowser.addTab(testURL);
             gBrowser.selectedTab = tab2;
 
-            info("Restoring the tab...");
-            whenTabRestored(tab2, function() { info("Tab restored."); });
+            info("Loading the tab...");
+            whenBrowserLoaded(tab2.linkedBrowser, function() { info("Tab restored."); });
           }
         );
       });

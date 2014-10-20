@@ -535,6 +535,8 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         mForwardAnim = anim;
 
         if (animation == ForwardButtonAnimation.HIDE) {
+            // We animate these items individually, rather than this entire view,
+            // so that we don't animate certain views, e.g. the stop button.
             anim.attach(mTitle,
                         PropertyAnimator.Property.TRANSLATION_X,
                         0);

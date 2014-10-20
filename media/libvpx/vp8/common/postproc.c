@@ -71,11 +71,6 @@ static const unsigned char MV_REFERENCE_FRAME_colors[MAX_REF_FRAMES][3] =
 };
 #endif
 
-static const short kernel5[] =
-{
-    1, 1, 4, 1, 1
-};
-
 const short vp8_rv[] =
 {
     8, 5, 2, 2, 8, 12, 4, 9, 8, 3,
@@ -308,13 +303,14 @@ void vp8_mbpost_proc_down_c(unsigned char *dst, int pitch, int rows, int cols, i
             {
                 d[r&15] = (rv2[r&127] + sum + s[0]) >> 4;
             }
-
-            s[-8*pitch] = d[(r-8)&15];
+            if (r >= 8)
+              s[-8*pitch] = d[(r-8)&15];
             s += pitch;
         }
     }
 }
 
+#if CONFIG_POSTPROC
 static void vp8_de_mblock(YV12_BUFFER_CONFIG         *post,
                           int                         q)
 {
@@ -387,6 +383,7 @@ void vp8_deblock(VP8_COMMON                 *cm,
         vp8_yv12_copy_frame(source, post);
     }
 }
+#endif
 
 #if !(CONFIG_TEMPORAL_DENOISING)
 void vp8_de_noise(VP8_COMMON                 *cm,
@@ -396,12 +393,12 @@ void vp8_de_noise(VP8_COMMON                 *cm,
                   int                         low_var_thresh,
                   int                         flag)
 {
+    int mbr;
     double level = 6.0e-05 * q * q * q - .0067 * q * q + .306 * q + .0065;
     int ppl = (int)(level + .5);
-    int mb_rows = source->y_width >> 4;
-    int mb_cols = source->y_height >> 4;
+    int mb_rows = cm->mb_rows;
+    int mb_cols = cm->mb_cols;
     unsigned char *limits = cm->pp_limits_buffer;;
-    int mbr, mbc;
     (void) post;
     (void) low_var_thresh;
     (void) flag;

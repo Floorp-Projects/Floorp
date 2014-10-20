@@ -9,9 +9,13 @@
  */
 
 
-#ifndef __INC_MV_H
-#define __INC_MV_H
+#ifndef VP8_COMMON_MV_H_
+#define VP8_COMMON_MV_H_
 #include "vpx/vpx_integer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct
 {
@@ -25,4 +29,8 @@ typedef union int_mv
     MV        as_mv;
 } int_mv;        /* facilitates faster equality tests and copies */
 
+#ifdef __cplusplus
+}  // extern "C"
 #endif
+
+#endif  // VP8_COMMON_MV_H_

@@ -9,32 +9,29 @@
  */
 
 #include "./vpx_config.h"
+#include "./vp9_rtcd.h"
 
 #include "vpx_mem/vpx_mem.h"
-#include "vpx_ports/vpx_once.h"
-
-#include "./vp9_rtcd.h"
 
 #include "vp9/common/vp9_reconintra.h"
 #include "vp9/common/vp9_onyxc_int.h"
 
-const TX_TYPE mode2txfm_map[MB_MODE_COUNT] = {
-    DCT_DCT,    // DC
-    ADST_DCT,   // V
-    DCT_ADST,   // H
-    DCT_DCT,    // D45
-    ADST_ADST,  // D135
-    ADST_DCT,   // D117
-    DCT_ADST,   // D153
-    DCT_ADST,   // D207
-    ADST_DCT,   // D63
-    ADST_ADST,  // TM
-    DCT_DCT,    // NEARESTMV
-    DCT_DCT,    // NEARMV
-    DCT_DCT,    // ZEROMV
-    DCT_DCT     // NEWMV
+const TX_TYPE intra_mode_to_tx_type_lookup[INTRA_MODES] = {
+  DCT_DCT,    // DC
+  ADST_DCT,   // V
+  DCT_ADST,   // H
+  DCT_DCT,    // D45
+  ADST_ADST,  // D135
+  ADST_DCT,   // D117
+  DCT_ADST,   // D153
+  DCT_ADST,   // D207
+  ADST_DCT,   // D63
+  ADST_ADST,  // TM
 };
 
+// This serves as a wrapper function, so that all the prediction functions
+// can be unified and accessed as a pointer array. Note that the boundary
+// above and left are not necessarily used all the time.
 #define intra_pred_sized(type, size) \
   void vp9_##type##_predictor_##size##x##size##_c(uint8_t *dst, \
                                                   ptrdiff_t stride, \
@@ -52,7 +49,7 @@ const TX_TYPE mode2txfm_map[MB_MODE_COUNT] = {
 static INLINE void d207_predictor(uint8_t *dst, ptrdiff_t stride, int bs,
                                   const uint8_t *above, const uint8_t *left) {
   int r, c;
-
+  (void) above;
   // first column
   for (r = 0; r < bs - 1; ++r)
     dst[r * stride] = ROUND_POWER_OF_TWO(left[r] + left[r + 1], 1);
@@ -81,6 +78,7 @@ intra_pred_allsizes(d207)
 static INLINE void d63_predictor(uint8_t *dst, ptrdiff_t stride, int bs,
                                  const uint8_t *above, const uint8_t *left) {
   int r, c;
+  (void) left;
   for (r = 0; r < bs; ++r) {
     for (c = 0; c < bs; ++c)
       dst[c] = r & 1 ? ROUND_POWER_OF_TWO(above[r/2 + c] +
@@ -96,6 +94,7 @@ intra_pred_allsizes(d63)
 static INLINE void d45_predictor(uint8_t *dst, ptrdiff_t stride, int bs,
                                  const uint8_t *above, const uint8_t *left) {
   int r, c;
+  (void) left;
   for (r = 0; r < bs; ++r) {
     for (c = 0; c < bs; ++c)
       dst[c] = r + c + 2 < bs * 2 ?  ROUND_POWER_OF_TWO(above[r + c] +
@@ -188,6 +187,7 @@ intra_pred_allsizes(d153)
 static INLINE void v_predictor(uint8_t *dst, ptrdiff_t stride, int bs,
                                const uint8_t *above, const uint8_t *left) {
   int r;
+  (void) left;
 
   for (r = 0; r < bs; r++) {
     vpx_memcpy(dst, above, bs);
@@ -199,6 +199,7 @@ intra_pred_allsizes(v)
 static INLINE void h_predictor(uint8_t *dst, ptrdiff_t stride, int bs,
                                const uint8_t *above, const uint8_t *left) {
   int r;
+  (void) above;
 
   for (r = 0; r < bs; r++) {
     vpx_memset(dst, left[r], bs);
@@ -223,6 +224,8 @@ intra_pred_allsizes(tm)
 static INLINE void dc_128_predictor(uint8_t *dst, ptrdiff_t stride, int bs,
                                     const uint8_t *above, const uint8_t *left) {
   int r;
+  (void) above;
+  (void) left;
 
   for (r = 0; r < bs; r++) {
     vpx_memset(dst, 128, bs);
@@ -235,6 +238,7 @@ static INLINE void dc_left_predictor(uint8_t *dst, ptrdiff_t stride, int bs,
                                      const uint8_t *above,
                                      const uint8_t *left) {
   int i, r, expected_dc, sum = 0;
+  (void) above;
 
   for (i = 0; i < bs; i++)
     sum += left[i];
@@ -250,6 +254,7 @@ intra_pred_allsizes(dc_left)
 static INLINE void dc_top_predictor(uint8_t *dst, ptrdiff_t stride, int bs,
                                     const uint8_t *above, const uint8_t *left) {
   int i, r, expected_dc, sum = 0;
+  (void) left;
 
   for (i = 0; i < bs; i++)
     sum += above[i];
@@ -285,45 +290,49 @@ intra_pred_allsizes(dc)
 typedef void (*intra_pred_fn)(uint8_t *dst, ptrdiff_t stride,
                               const uint8_t *above, const uint8_t *left);
 
-static intra_pred_fn pred[INTRA_MODES][4];
-static intra_pred_fn dc_pred[2][2][4];
+static intra_pred_fn pred[INTRA_MODES][TX_SIZES];
+static intra_pred_fn dc_pred[2][2][TX_SIZES];
 
-static void init_intra_pred_fn_ptrs(void) {
-#define intra_pred_allsizes(l, type) \
-  l[0] = vp9_##type##_predictor_4x4; \
-  l[1] = vp9_##type##_predictor_8x8; \
-  l[2] = vp9_##type##_predictor_16x16; \
-  l[3] = vp9_##type##_predictor_32x32
+void vp9_init_intra_predictors() {
+#define INIT_ALL_SIZES(p, type) \
+  p[TX_4X4] = vp9_##type##_predictor_4x4; \
+  p[TX_8X8] = vp9_##type##_predictor_8x8; \
+  p[TX_16X16] = vp9_##type##_predictor_16x16; \
+  p[TX_32X32] = vp9_##type##_predictor_32x32
 
-  intra_pred_allsizes(pred[V_PRED], v);
-  intra_pred_allsizes(pred[H_PRED], h);
-  intra_pred_allsizes(pred[D207_PRED], d207);
-  intra_pred_allsizes(pred[D45_PRED], d45);
-  intra_pred_allsizes(pred[D63_PRED], d63);
-  intra_pred_allsizes(pred[D117_PRED], d117);
-  intra_pred_allsizes(pred[D135_PRED], d135);
-  intra_pred_allsizes(pred[D153_PRED], d153);
-  intra_pred_allsizes(pred[TM_PRED], tm);
+  INIT_ALL_SIZES(pred[V_PRED], v);
+  INIT_ALL_SIZES(pred[H_PRED], h);
+  INIT_ALL_SIZES(pred[D207_PRED], d207);
+  INIT_ALL_SIZES(pred[D45_PRED], d45);
+  INIT_ALL_SIZES(pred[D63_PRED], d63);
+  INIT_ALL_SIZES(pred[D117_PRED], d117);
+  INIT_ALL_SIZES(pred[D135_PRED], d135);
+  INIT_ALL_SIZES(pred[D153_PRED], d153);
+  INIT_ALL_SIZES(pred[TM_PRED], tm);
 
-  intra_pred_allsizes(dc_pred[0][0], dc_128);
-  intra_pred_allsizes(dc_pred[0][1], dc_top);
-  intra_pred_allsizes(dc_pred[1][0], dc_left);
-  intra_pred_allsizes(dc_pred[1][1], dc);
+  INIT_ALL_SIZES(dc_pred[0][0], dc_128);
+  INIT_ALL_SIZES(dc_pred[0][1], dc_top);
+  INIT_ALL_SIZES(dc_pred[1][0], dc_left);
+  INIT_ALL_SIZES(dc_pred[1][1], dc);
 
-#undef intra_pred_allsizes
+#undef INIT_ALL_SIZES
 }
 
-static void build_intra_predictors(const uint8_t *ref, int ref_stride,
-                                   uint8_t *dst, int dst_stride,
-                                   MB_PREDICTION_MODE mode, TX_SIZE tx_size,
+static void build_intra_predictors(const MACROBLOCKD *xd, const uint8_t *ref,
+                                   int ref_stride, uint8_t *dst, int dst_stride,
+                                   PREDICTION_MODE mode, TX_SIZE tx_size,
                                    int up_available, int left_available,
-                                   int right_available) {
+                                   int right_available, int x, int y,
+                                   int plane) {
   int i;
   DECLARE_ALIGNED_ARRAY(16, uint8_t, left_col, 64);
   DECLARE_ALIGNED_ARRAY(16, uint8_t, above_data, 128 + 16);
   uint8_t *above_row = above_data + 16;
   const uint8_t *const_above_row = above_row;
   const int bs = 4 << tx_size;
+  int frame_width, frame_height;
+  int x0, y0;
+  const struct macroblockd_plane *const pd = &xd->plane[plane];
 
   // 127 127 127 .. 127 127 127 127 127 127
   // 129  A   B  ..  Y   Z
@@ -332,28 +341,90 @@ static void build_intra_predictors(const uint8_t *ref, int ref_stride,
   // 129  G   H  ..  S   T   T   T   T   T
   // ..
 
-  once(init_intra_pred_fn_ptrs);
+  // Get current frame pointer, width and height.
+  if (plane == 0) {
+    frame_width = xd->cur_buf->y_width;
+    frame_height = xd->cur_buf->y_height;
+  } else {
+    frame_width = xd->cur_buf->uv_width;
+    frame_height = xd->cur_buf->uv_height;
+  }
+
+  // Get block position in current frame.
+  x0 = (-xd->mb_to_left_edge >> (3 + pd->subsampling_x)) + x;
+  y0 = (-xd->mb_to_top_edge >> (3 + pd->subsampling_y)) + y;
+
+  vpx_memset(left_col, 129, 64);
 
   // left
   if (left_available) {
-    for (i = 0; i < bs; i++)
-      left_col[i] = ref[i * ref_stride - 1];
-  } else {
-    vpx_memset(left_col, 129, bs);
+    if (xd->mb_to_bottom_edge < 0) {
+      /* slower path if the block needs border extension */
+      if (y0 + bs <= frame_height) {
+        for (i = 0; i < bs; ++i)
+          left_col[i] = ref[i * ref_stride - 1];
+      } else {
+        const int extend_bottom = frame_height - y0;
+        for (i = 0; i < extend_bottom; ++i)
+          left_col[i] = ref[i * ref_stride - 1];
+        for (; i < bs; ++i)
+          left_col[i] = ref[(extend_bottom - 1) * ref_stride - 1];
+      }
+    } else {
+      /* faster path if the block does not need extension */
+      for (i = 0; i < bs; ++i)
+        left_col[i] = ref[i * ref_stride - 1];
+    }
   }
 
+  // TODO(hkuang) do not extend 2*bs pixels for all modes.
   // above
   if (up_available) {
     const uint8_t *above_ref = ref - ref_stride;
-    if (bs == 4 && right_available && left_available) {
-      const_above_row = above_ref;
-    } else {
-      vpx_memcpy(above_row, above_ref, bs);
-      if (bs == 4 && right_available)
-        vpx_memcpy(above_row + bs, above_ref + bs, bs);
-      else
-        vpx_memset(above_row + bs, above_row[bs - 1], bs);
+    if (xd->mb_to_right_edge < 0) {
+      /* slower path if the block needs border extension */
+      if (x0 + 2 * bs <= frame_width) {
+        if (right_available && bs == 4) {
+          vpx_memcpy(above_row, above_ref, 2 * bs);
+        } else {
+          vpx_memcpy(above_row, above_ref, bs);
+          vpx_memset(above_row + bs, above_row[bs - 1], bs);
+        }
+      } else if (x0 + bs <= frame_width) {
+        const int r = frame_width - x0;
+        if (right_available && bs == 4) {
+          vpx_memcpy(above_row, above_ref, r);
+          vpx_memset(above_row + r, above_row[r - 1],
+                     x0 + 2 * bs - frame_width);
+        } else {
+          vpx_memcpy(above_row, above_ref, bs);
+          vpx_memset(above_row + bs, above_row[bs - 1], bs);
+        }
+      } else if (x0 <= frame_width) {
+        const int r = frame_width - x0;
+        if (right_available && bs == 4) {
+          vpx_memcpy(above_row, above_ref, r);
+          vpx_memset(above_row + r, above_row[r - 1],
+                     x0 + 2 * bs - frame_width);
+        } else {
+          vpx_memcpy(above_row, above_ref, r);
+          vpx_memset(above_row + r, above_row[r - 1],
+                     x0 + 2 * bs - frame_width);
+        }
+      }
       above_row[-1] = left_available ? above_ref[-1] : 129;
+    } else {
+      /* faster path if the block does not need extension */
+      if (bs == 4 && right_available && left_available) {
+        const_above_row = above_ref;
+      } else {
+        vpx_memcpy(above_row, above_ref, bs);
+        if (bs == 4 && right_available)
+          vpx_memcpy(above_row + bs, above_ref + bs, bs);
+        else
+          vpx_memset(above_row + bs, above_row[bs - 1], bs);
+        above_row[-1] = left_available ? above_ref[-1] : 129;
+      }
     }
   } else {
     vpx_memset(above_row, 127, bs * 2);
@@ -370,16 +441,19 @@ static void build_intra_predictors(const uint8_t *ref, int ref_stride,
 }
 
 void vp9_predict_intra_block(const MACROBLOCKD *xd, int block_idx, int bwl_in,
-                            TX_SIZE tx_size, int mode,
-                            const uint8_t *ref, int ref_stride,
-                            uint8_t *dst, int dst_stride) {
+                             TX_SIZE tx_size, PREDICTION_MODE mode,
+                             const uint8_t *ref, int ref_stride,
+                             uint8_t *dst, int dst_stride,
+                             int aoff, int loff, int plane) {
   const int bwl = bwl_in - tx_size;
   const int wmask = (1 << bwl) - 1;
   const int have_top = (block_idx >> bwl) || xd->up_available;
   const int have_left = (block_idx & wmask) || xd->left_available;
   const int have_right = ((block_idx & wmask) != wmask);
+  const int x = aoff * 4;
+  const int y = loff * 4;
 
   assert(bwl >= 0);
-  build_intra_predictors(ref, ref_stride, dst, dst_stride, mode, tx_size,
-                         have_top, have_left, have_right);
+  build_intra_predictors(xd, ref, ref_stride, dst, dst_stride, mode, tx_size,
+                         have_top, have_left, have_right, x, y, plane);
 }

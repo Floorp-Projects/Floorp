@@ -41,11 +41,11 @@ let test = asyncTest(function*() {
 
   info("Selecting the test element");
   yield selectNode("#testid3", inspector);
-  yield testEditSelector(view, ".testclass2:first-letter");
+  yield testEditSelector(view, ".testclass2::first-letter");
 
   info("Selecting the modified element");
   yield selectNode(".testclass2", inspector);
-  yield checkModifiedElement(view, ".testclass2:first-letter");
+  yield checkModifiedElement(view, ".testclass2::first-letter");
 });
 
 function* testEditSelector(view, name) {

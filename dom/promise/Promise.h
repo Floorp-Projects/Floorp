@@ -182,6 +182,8 @@ protected:
     return mResolvePending;
   }
 
+  void GetDependentPromises(nsTArray<nsRefPtr<Promise>>& aPromises);
+
 private:
   friend class PromiseDebugging;
 
@@ -286,12 +288,29 @@ private:
 
   void RemoveFeature();
 
+  // Capture the current stack and store it in aTarget.  If false is
+  // returned, an exception is presumably pending on aCx.
+  bool CaptureStack(JSContext* aCx, JS::Heap<JSObject*>& aTarget);
+
   nsRefPtr<nsIGlobalObject> mGlobal;
 
   nsTArray<nsRefPtr<PromiseCallback> > mResolveCallbacks;
   nsTArray<nsRefPtr<PromiseCallback> > mRejectCallbacks;
 
   JS::Heap<JS::Value> mResult;
+  // A stack that shows where this promise was allocated, if there was
+  // JS running at the time.  Otherwise null.
+  JS::Heap<JSObject*> mAllocationStack;
+  // mRejectionStack is only set when the promise is rejected directly from
+  // script, by calling Promise.reject() or the rejection callback we pass to
+  // the PromiseInit function.  Promises that are rejected internally do not
+  // have a rejection stack.
+  JS::Heap<JSObject*> mRejectionStack;
+  // mFullfillmentStack is only set when the promise is fulfilled directly from
+  // script, by calling Promise.resolve() or the fulfillment callback we pass to
+  // the PromiseInit function.  Promises that are fulfilled internally do not
+  // have a fulfillment stack.
+  JS::Heap<JSObject*> mFullfillmentStack;
   PromiseState mState;
   bool mTaskPending;
   bool mHadRejectCallback;

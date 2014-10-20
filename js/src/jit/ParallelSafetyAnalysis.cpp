@@ -244,6 +244,7 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     SAFE_OP(TypedArrayLength)
     SAFE_OP(TypedArrayElements)
     SAFE_OP(TypedObjectProto)
+    SAFE_OP(TypedObjectUnsizedLength)
     SAFE_OP(TypedObjectElements)
     SAFE_OP(SetTypedObjectOffset)
     SAFE_OP(InitializedLength)
@@ -464,6 +465,11 @@ ParallelSafetyVisitor::convertToBailout(MInstructionIterator &iter)
     for (size_t i = 0; i < block->numSuccessors(); i++)
         block->getSuccessor(i)->removePredecessor(block);
     block->discardAllInstructionsStartingAt(iter);
+
+    // No more successors are reachable, so the current block can no longer be
+    // the parent of an inlined function.
+    if (block->outerResumePoint())
+        block->clearOuterResumePoint();
 
     // End the block in a bail.
     block->add(bail);

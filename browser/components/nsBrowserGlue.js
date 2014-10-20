@@ -99,6 +99,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
                                   "resource://gre/modules/LoginManagerParent.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "SimpleServiceDiscovery",
+                                  "resource://gre/modules/SimpleServiceDiscovery.jsm");
+
 #ifdef NIGHTLY_BUILD
 XPCOMUtils.defineLazyModuleGetter(this, "SignInToWebsiteUX",
                                   "resource:///modules/SignInToWebsite.jsm");
@@ -747,8 +750,30 @@ BrowserGlue.prototype = {
     FormValidationHandler.uninit();
   },
 
+  _initServiceDiscovery: function () {
+    var rokuDevice = {
+      id: "roku:ecp",
+      target: "roku:ecp",
+      factory: function(aService) {
+        Cu.import("resource://gre/modules/RokuApp.jsm");
+        return new RokuApp(aService);
+      },
+      mirror: false,
+      types: ["video/mp4"],
+      extensions: ["mp4"]
+    };
+
+    // Register targets
+    SimpleServiceDiscovery.registerDevice(rokuDevice);
+
+    // Search for devices continuously every 120 seconds
+    SimpleServiceDiscovery.search(120 * 1000);
+  },
+
   // All initial windows have opened.
   _onWindowsRestored: function BG__onWindowsRestored() {
+    this._initServiceDiscovery();
+
     // Show update notification, if needed.
     if (Services.prefs.prefHasUserValue("app.update.postupdate"))
       this._showUpdateNotification();
@@ -1344,7 +1369,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 23;
+    const UI_VERSION = 24;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
     let currentUIVersion = 0;
     try {
@@ -1422,15 +1447,6 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 8) {
-      // Reset homepage pref for users who have it set to google.com/firefox
-      let uri = Services.prefs.getComplexValue("browser.startup.homepage",
-                                               Ci.nsIPrefLocalizedString).data;
-      if (uri && /^https?:\/\/(www\.)?google(\.\w{2,3}){1,2}\/firefox\/?$/.test(uri)) {
-        Services.prefs.clearUserPref("browser.startup.homepage");
-      }
-    }
-
     if (currentUIVersion < 9) {
       // This code adds the customizable downloads buttons.
       let currentset = xulStore.getValue(BROWSER_DOCURL, "nav-bar", "currentset");
@@ -1493,10 +1509,6 @@ BrowserGlue.prototype = {
           xulStore.setValue(BROWSER_DOCURL, "nav-bar", "currentset", currentset);
         }
       }
-    }
-
-    if (currentUIVersion < 13) {
-      /* Obsolete */
     }
 
     if (currentUIVersion < 14) {
@@ -1590,6 +1602,18 @@ BrowserGlue.prototype = {
                                                     Ci.nsIPrefLocalizedString).data;
           Services.search.currentEngine = Services.search.getEngineByName(name);
         } catch (ex) {}
+      }
+    }
+
+    if (currentUIVersion < 24) {
+      // Reset homepage pref for users who have it set to start.mozilla.org
+      // or google.com/firefox.
+      const HOMEPAGE_PREF = "browser.startup.homepage";
+      let uri = Services.prefs.getComplexValue(HOMEPAGE_PREF,
+                                               Ci.nsIPrefLocalizedString).data;
+      if (uri && (uri.startsWith("http://start.mozilla.org") ||
+                  /^https?:\/\/(www\.)?google\.[a-z.]+\/firefox/i.test(uri))) {
+        Services.prefs.clearUserPref(HOMEPAGE_PREF);
       }
     }
 

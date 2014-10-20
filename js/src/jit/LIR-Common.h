@@ -4125,7 +4125,21 @@ class LTypedObjectProto : public LCallInstructionHelper<1, 1, 1>
     }
 };
 
-// Load a typed array's elements vector.
+// Load an unsized typed object's length.
+class LTypedObjectUnsizedLength : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(TypedObjectUnsizedLength)
+
+    LTypedObjectUnsizedLength(const LAllocation &object) {
+        setOperand(0, object);
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+};
+
+// Load a typed object's elements vector.
 class LTypedObjectElements : public LInstructionHelper<1, 1, 0>
 {
   public:
