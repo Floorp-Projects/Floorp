@@ -30,3 +30,5 @@ LOCAL_INCLUDES += [
 FINAL_LIBRARY = 'xul'
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']

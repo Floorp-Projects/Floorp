@@ -17,7 +17,7 @@ callback AnyCallback = any (any value);
 
 // REMOVE THE RELEVANT ENTRY FROM test_interfaces.html WHEN THIS IS IMPLEMENTED IN JS.
 [Constructor(PromiseInit init),
- Exposed=(Window,Worker)]
+ Exposed=(Window,Worker,System)]
 // Need to escape "Promise" so it's treated as an identifier.
 interface _Promise {
   // TODO bug 875289 - static Promise fulfill(any value);
