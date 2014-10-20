@@ -177,6 +177,14 @@ public:
     return mTarget;
   }
 
+  // Temporary workaround to return both the target element and pseudo-type
+  // until we implement PseudoElement.
+  void GetTarget(Element*& aTarget,
+                 nsCSSPseudoElements::Type& aPseudoType) const {
+    aTarget = mTarget;
+    aPseudoType = mPseudoType;
+  }
+
   void SetParentTime(Nullable<TimeDuration> aParentTime);
 
   const AnimationTiming& Timing() const {
