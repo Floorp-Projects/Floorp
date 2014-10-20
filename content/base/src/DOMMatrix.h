@@ -124,6 +124,7 @@ public:
   void                        ToFloat64Array(JSContext* aCx,
                                              JS::MutableHandle<JSObject*> aResult,
                                              ErrorResult& aRv) const;
+  void                        Stringify(nsAString& aResult);
 protected:
   nsCOMPtr<nsISupports>     mParent;
   nsAutoPtr<gfx::Matrix>    mMatrix2D;
