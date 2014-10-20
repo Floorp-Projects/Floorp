@@ -562,6 +562,19 @@ TestRunner.resetTests = function(listURLs) {
   TestRunner.runNextTest();
 }
 
+TestRunner.getNextUrl = function() {
+    var url = "";
+    // sometimes we have a subtest/harness which doesn't use a manifest
+    if ((TestRunner._urls[TestRunner._currentTest] instanceof Object) && ('test' in TestRunner._urls[TestRunner._currentTest])) {
+        url = TestRunner._urls[TestRunner._currentTest]['test']['url'];
+        TestRunner.expected = TestRunner._urls[TestRunner._currentTest]['test']['expected'];
+    } else {
+        url = TestRunner._urls[TestRunner._currentTest];
+        TestRunner.expected = 'pass';
+    }
+    return url;
+}
+
 /**
  * Run the next test. If no test remains, calls onComplete().
  **/
@@ -570,7 +583,7 @@ TestRunner.runNextTest = function() {
     if (TestRunner._currentTest < TestRunner._urls.length &&
         !TestRunner._haltTests)
     {
-        var url = TestRunner._urls[TestRunner._currentTest];
+        var url = TestRunner.getNextUrl();
         TestRunner.currentTestURL = url;
 
         $("current-test-path").innerHTML = url;
@@ -775,7 +788,7 @@ TestRunner.testUnloaded = function() {
         var numAsserts = newAssertionCount - TestRunner._lastAssertionCount;
         TestRunner._lastAssertionCount = newAssertionCount;
 
-        var url = TestRunner._urls[TestRunner._currentTest];
+        var url = TestRunner.getNextUrl();
         var max = TestRunner._expectedMaxAsserts;
         var min = TestRunner._expectedMinAsserts;
         if (numAsserts > max) {

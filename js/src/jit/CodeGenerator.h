@@ -185,6 +185,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitTypedObjectElements(LTypedObjectElements *lir);
     bool visitSetTypedObjectOffset(LSetTypedObjectOffset *lir);
     bool visitTypedObjectProto(LTypedObjectProto *ins);
+    bool visitTypedObjectUnsizedLength(LTypedObjectUnsizedLength *ins);
     bool visitStringLength(LStringLength *lir);
     bool visitInitializedLength(LInitializedLength *lir);
     bool visitSetInitializedLength(LSetInitializedLength *lir);

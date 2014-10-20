@@ -22,11 +22,24 @@ log_formatters = {
 def level_filter_wrapper(formatter, level):
     return handlers.LogLevelFilter(formatter, level)
 
+def verbose_wrapper(formatter, verbose):
+    formatter.verbose = verbose
+    return formatter
+
+formatter_option_defaults = {
+    'verbose': False,
+    'level': 'info',
+}
+
 fmt_options = {
-    # <option name>: (<wrapper function>, description, <applicable formatters>)
+    # <option name>: (<wrapper function>, description, <applicable formatters>, action)
+    # "action" is used by the commandline parser in use.
+    'verbose': (verbose_wrapper,
+                "Enables verbose mode for the given formatter.",
+                ["mach"], "store_true"),
     'level': (level_filter_wrapper,
               "A least log level to subscribe to for the given formatter (debug, info, error, etc.)",
-              ["mach", "tbpl"]),
+              ["mach", "tbpl"], "store"),
 }
 
 
@@ -61,10 +74,10 @@ def add_logging_group(parser):
         for name, (cls, help_str) in log_formatters.iteritems():
             group.add_option("--log-" + name, action="append", type="str",
                              help=help_str)
-        for optname, (cls, help_str, formatters) in fmt_options.iteritems():
+        for optname, (cls, help_str, formatters, action) in fmt_options.iteritems():
             for fmt in formatters:
-                group.add_option("--log-%s-%s" % (fmt, optname), action="store",
-                                 type="str", help=help_str)
+                group.add_option("--log-%s-%s" % (fmt, optname), action=action,
+                                 help=help_str, default=None)
         parser.add_option_group(group)
     else:
         group = parser.add_argument_group(group_name,
@@ -73,10 +86,10 @@ def add_logging_group(parser):
             group.add_argument("--log-" + name, action="append", type=log_file,
                                help=help_str)
 
-        for optname, (cls, help_str, formatters) in fmt_options.iteritems():
+        for optname, (cls, help_str, formatters, action) in fmt_options.iteritems():
             for fmt in formatters:
-                group.add_argument("--log-%s-%s" % (fmt, optname), action="store",
-                                   type=str, help=help_str)
+                group.add_argument("--log-%s-%s" % (fmt, optname), action=action,
+                                   help=help_str, default=None)
 
 
 def setup_handlers(logger, formatters, formatter_options):
@@ -125,13 +138,9 @@ def setup_logging(suite, args, defaults=None):
     :rtype: StructuredLogger
     """
 
-    _option_defaults = {
-        'level': 'info',
-    }
-
     logger = StructuredLogger(suite)
     # Keep track of any options passed for formatters.
-    formatter_options = defaultdict(lambda: _option_defaults.copy())
+    formatter_options = defaultdict(lambda: formatter_option_defaults.copy())
     # Keep track of formatters and list of streams specified.
     formatters = {}
     found = False

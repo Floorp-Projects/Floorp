@@ -750,22 +750,14 @@ ProxyObject::trace(JSTracer *trc, JSObject *obj)
     // Note: If you add new slots here, make sure to change
     // nuke() to cope.
     MarkCrossCompartmentSlot(trc, obj, proxy->slotOfPrivate(), "private");
-    MarkSlot(trc, proxy->slotOfExtra(0), "extra0");
+    MarkValue(trc, proxy->slotOfExtra(0), "extra0");
 
     /*
      * The GC can use the second reserved slot to link the cross compartment
      * wrappers into a linked list, in which case we don't want to trace it.
      */
     if (!proxy->is<CrossCompartmentWrapperObject>())
-        MarkSlot(trc, proxy->slotOfExtra(1), "extra1");
-
-    /*
-     * Allow for people to add extra slots to "proxy" classes, without allowing
-     * them to set their own trace hook. Trace the extras.
-     */
-    unsigned numSlots = JSCLASS_RESERVED_SLOTS(proxy->getClass());
-    for (unsigned i = PROXY_MINIMUM_SLOTS; i < numSlots; i++)
-        MarkSlot(trc, proxy->slotOfClassSpecific(i), "class-specific");
+        MarkValue(trc, proxy->slotOfExtra(1), "extra1");
 }
 
 JSObject *
@@ -785,8 +777,12 @@ js::proxy_Convert(JSContext *cx, HandleObject proxy, JSType hint, MutableHandleV
 void
 js::proxy_Finalize(FreeOp *fop, JSObject *obj)
 {
+    // Suppress a bogus warning about finalize().
+    JS::AutoSuppressGCAnalysis nogc;
+
     MOZ_ASSERT(obj->is<ProxyObject>());
     obj->as<ProxyObject>().handler()->finalize(fop, obj);
+    js_free(GetProxyDataLayout(obj)->values);
 }
 
 void
@@ -844,9 +840,7 @@ js::proxy_Slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
 }
 
 const Class js::ProxyObject::class_ =
-    PROXY_CLASS_DEF("Proxy",
-                    0,
-                    JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy));
+    PROXY_CLASS_DEF("Proxy", JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy));
 
 const Class* const js::ProxyClassPtr = &js::ProxyObject::class_;
 
@@ -868,9 +862,9 @@ ProxyObject::renew(JSContext *cx, const BaseProxyHandler *handler, Value priv)
     MOZ_ASSERT(getTaggedProto().isLazy());
 
     setHandler(handler);
-    fakeNativeSetCrossCompartmentSlot(PRIVATE_SLOT, priv);
-    fakeNativeSetSlot(EXTRA_SLOT + 0, UndefinedValue());
-    fakeNativeSetSlot(EXTRA_SLOT + 1, UndefinedValue());
+    setCrossCompartmentPrivate(priv);
+    setExtra(0, UndefinedValue());
+    setExtra(1, UndefinedValue());
 }
 
 JS_FRIEND_API(JSObject *)

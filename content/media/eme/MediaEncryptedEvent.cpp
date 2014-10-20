@@ -46,7 +46,7 @@ MediaEncryptedEvent::~MediaEncryptedEvent()
 }
 
 JSObject*
-MediaEncryptedEvent::WrapObject(JSContext* aCx)
+MediaEncryptedEvent::WrapObjectInternal(JSContext* aCx)
 {
   return MediaEncryptedEventBinding::Wrap(aCx, this);
 }

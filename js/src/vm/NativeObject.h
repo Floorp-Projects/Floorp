@@ -303,6 +303,23 @@ IsObjectValueInCompartment(Value v, JSCompartment *comp);
 #endif
 
 /*
+ * NOTE: This is a placeholder for bug 619558.
+ *
+ * Run a post write barrier that encompasses multiple contiguous slots in a
+ * single step.
+ */
+inline void
+DenseRangeWriteBarrierPost(JSRuntime *rt, NativeObject *obj, uint32_t start, uint32_t count)
+{
+#ifdef JSGC_GENERATIONAL
+    if (count > 0) {
+        JS::shadow::Runtime *shadowRuntime = JS::shadow::Runtime::asShadowRuntime(rt);
+        shadowRuntime->gcStoreBufferPtr()->putSlotFromAnyThread(obj, HeapSlot::Element, start, count);
+    }
+#endif
+}
+
+/*
  * NativeObject specifies the internal implementation of a native object.
  *
  * Native objects extend the base implementation of an object with storage
@@ -321,9 +338,9 @@ IsObjectValueInCompartment(Value v, JSCompartment *comp);
  * allocated array (the slots member). For an object with N fixed slots, shapes
  * with slots [0..N-1] are stored in the fixed slots, and the remainder are
  * stored in the dynamic array. If all properties fit in the fixed slots, the
- * 'slots' member is nullptr.
+ * 'slots_' member is nullptr.
  *
- * Elements are indexed via the 'elements' member. This member can point to
+ * Elements are indexed via the 'elements_' member. This member can point to
  * either the shared emptyObjectElements singleton, into the inline value array
  * (the address of the third value, to leave room for a ObjectElements header;
  * in this case numFixedSlots() is zero) or to a dynamically allocated array.
@@ -334,16 +351,22 @@ IsObjectValueInCompartment(Value v, JSCompartment *comp);
 class NativeObject : public JSObject
 {
   protected:
+    /* Slots for object properties. */
+    js::HeapSlot *slots_;
+
+    /* Slots for object dense elements. */
+    js::HeapSlot *elements_;
+
     friend bool
     ArraySetLength(JSContext *cx, Handle<ArrayObject*> obj, HandleId id, unsigned attrs,
                    HandleValue value, bool setterIsStrict);
 
-    // FIXME Bug 1073842: this is temporary until non-native objects can
-    // access non-slot storage.
     friend class ::JSObject;
 
   private:
     static void staticAsserts() {
+        static_assert(sizeof(NativeObject) == sizeof(JSObject_Slots0),
+                      "native object size must match GC thing size");
         static_assert(sizeof(NativeObject) == sizeof(shadow::Object),
                       "shadow interface must match actual implementation");
         static_assert(sizeof(NativeObject) % sizeof(Value) == 0,
@@ -353,30 +376,29 @@ class NativeObject : public JSObject
                       "shadow shape must match actual shape");
         static_assert(offsetof(NativeObject, type_) == offsetof(shadow::Object, type),
                       "shadow type must match actual type");
-        static_assert(offsetof(NativeObject, slots) == offsetof(shadow::Object, slots),
+        static_assert(offsetof(NativeObject, slots_) == offsetof(shadow::Object, slots),
                       "shadow slots must match actual slots");
-        static_assert(offsetof(NativeObject, elements) == offsetof(shadow::Object, _1),
+        static_assert(offsetof(NativeObject, elements_) == offsetof(shadow::Object, _1),
                       "shadow placeholder must match actual elements");
 
-        static_assert(js::shadow::Object::MAX_FIXED_SLOTS == MAX_FIXED_SLOTS,
-                      "We shouldn't be confused about our actual maximum "
-                      "number of fixed slots");
+        static_assert(MAX_FIXED_SLOTS <= Shape::FIXED_SLOTS_MAX,
+                      "verify numFixedSlots() bitfield is big enough");
     }
 
   public:
     HeapSlotArray getDenseElements() {
-        return HeapSlotArray(elements, !getElementsHeader()->isCopyOnWrite());
+        return HeapSlotArray(elements_, !getElementsHeader()->isCopyOnWrite());
     }
     HeapSlotArray getDenseElementsAllowCopyOnWrite() {
         // Backdoor allowing direct access to copy on write elements.
-        return HeapSlotArray(elements, true);
+        return HeapSlotArray(elements_, true);
     }
     const Value &getDenseElement(uint32_t idx) {
         MOZ_ASSERT(idx < getDenseInitializedLength());
-        return elements[idx];
+        return elements_[idx];
     }
     bool containsDenseElement(uint32_t idx) {
-        return idx < getDenseInitializedLength() && !elements[idx].isMagic(JS_ELEMENTS_HOLE);
+        return idx < getDenseInitializedLength() && !elements_[idx].isMagic(JS_ELEMENTS_HOLE);
     }
     uint32_t getDenseInitializedLength() {
         return getElementsHeader()->initializedLength;
@@ -450,13 +472,13 @@ class NativeObject : public JSObject
                 uint32_t localCopy = fixed - start;
                 *fixedStart = &fixedSlots()[start];
                 *fixedEnd = &fixedSlots()[start + localCopy];
-                *slotsStart = &slots[0];
-                *slotsEnd = &slots[length - localCopy];
+                *slotsStart = &slots_[0];
+                *slotsEnd = &slots_[length - localCopy];
             }
         } else {
             *fixedStart = *fixedEnd = nullptr;
-            *slotsStart = &slots[start - fixed];
-            *slotsEnd = &slots[start - fixed + length];
+            *slotsStart = &slots_[start - fixed];
+            *slotsEnd = &slots_[start - fixed + length];
         }
     }
 
@@ -563,7 +585,7 @@ class NativeObject : public JSObject
     static void shrinkSlots(ThreadSafeContext *cx, HandleNativeObject obj, uint32_t oldCount,
                             uint32_t newCount);
 
-    bool hasDynamicSlots() const { return !!slots; }
+    bool hasDynamicSlots() const { return !!slots_; }
 
     /* Compute dynamicSlotsCount() for this object. */
     uint32_t numDynamicSlots() const {
@@ -698,6 +720,8 @@ class NativeObject : public JSObject
                         uint32_t slot, unsigned attrs, unsigned flags, Shape **spp,
                         bool allowDictionary);
 
+    void fillInAfterSwap(JSContext *cx, const Vector<Value> &values, void *priv);
+
   public:
     // Return true if this object has been converted from shared-immutable
     // prototype-rooted shape storage to dictionary-shapes in a doubly-linked
@@ -711,21 +735,21 @@ class NativeObject : public JSObject
         uint32_t fixed = numFixedSlots();
         if (slot < fixed)
             return fixedSlots()[slot];
-        return slots[slot - fixed];
+        return slots_[slot - fixed];
     }
 
     const HeapSlot *getSlotAddressUnchecked(uint32_t slot) const {
         uint32_t fixed = numFixedSlots();
         if (slot < fixed)
             return fixedSlots() + slot;
-        return slots + (slot - fixed);
+        return slots_ + (slot - fixed);
     }
 
     HeapSlot *getSlotAddressUnchecked(uint32_t slot) {
         uint32_t fixed = numFixedSlots();
         if (slot < fixed)
             return fixedSlots() + slot;
-        return slots + (slot - fixed);
+        return slots_ + (slot - fixed);
     }
 
     HeapSlot *getSlotAddress(uint32_t slot) {
@@ -764,21 +788,10 @@ class NativeObject : public JSObject
         getSlotRef(slot).set(this, HeapSlot::Slot, slot, value);
     }
 
-    MOZ_ALWAYS_INLINE void setCrossCompartmentSlot(uint32_t slot, const Value &value) {
-        MOZ_ASSERT(slotInRange(slot));
-        getSlotRef(slot).set(this, HeapSlot::Slot, slot, value);
-    }
-
     void initSlot(uint32_t slot, const Value &value) {
         MOZ_ASSERT(getSlot(slot).isUndefined());
         MOZ_ASSERT(slotInRange(slot));
         MOZ_ASSERT(IsObjectValueInCompartment(value, compartment()));
-        initSlotUnchecked(slot, value);
-    }
-
-    void initCrossCompartmentSlot(uint32_t slot, const Value &value) {
-        MOZ_ASSERT(getSlot(slot).isUndefined());
-        MOZ_ASSERT(slotInRange(slot));
         initSlotUnchecked(slot, value);
     }
 
@@ -808,7 +821,7 @@ class NativeObject : public JSObject
         MOZ_ASSERT(end <= getDenseInitializedLength());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
         for (size_t i = start; i < end; i++)
-            elements[i].HeapSlot::~HeapSlot();
+            elements_[i].HeapSlot::~HeapSlot();
     }
 
     static bool rollbackProperties(ExclusiveContext *cx, HandleNativeObject obj,
@@ -880,7 +893,7 @@ class NativeObject : public JSObject
     static const uint32_t NELEMENTS_LIMIT = JS_BIT(28);
 
     ObjectElements * getElementsHeader() const {
-        return ObjectElements::fromElements(elements);
+        return ObjectElements::fromElements(elements_);
     }
 
     /* Accessors for elements. */
@@ -896,7 +909,7 @@ class NativeObject : public JSObject
     void shrinkElements(ThreadSafeContext *cx, uint32_t cap);
     void setDynamicElements(ObjectElements *header) {
         MOZ_ASSERT(!hasDynamicElements());
-        elements = header->elements();
+        elements_ = header->elements();
         MOZ_ASSERT(hasDynamicElements());
     }
 
@@ -927,13 +940,13 @@ class NativeObject : public JSObject
     void setDenseElement(uint32_t index, const Value &val) {
         MOZ_ASSERT(index < getDenseInitializedLength());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
-        elements[index].set(this, HeapSlot::Element, index, val);
+        elements_[index].set(this, HeapSlot::Element, index, val);
     }
 
     void initDenseElement(uint32_t index, const Value &val) {
         MOZ_ASSERT(index < getDenseInitializedLength());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
-        elements[index].init(this, HeapSlot::Element, index, val);
+        elements_[index].init(this, HeapSlot::Element, index, val);
     }
 
     void setDenseElementMaybeConvertDouble(uint32_t index, const Value &val) {
@@ -961,9 +974,9 @@ class NativeObject : public JSObject
         if (JS::IsIncrementalBarrierNeeded(rt)) {
             Zone *zone = this->zone();
             for (uint32_t i = 0; i < count; ++i)
-                elements[dstStart + i].set(zone, this, HeapSlot::Element, dstStart + i, src[i]);
+                elements_[dstStart + i].set(zone, this, HeapSlot::Element, dstStart + i, src[i]);
         } else {
-            memcpy(&elements[dstStart], src, count * sizeof(HeapSlot));
+            memcpy(&elements_[dstStart], src, count * sizeof(HeapSlot));
             DenseRangeWriteBarrierPost(rt, this, dstStart, count);
         }
     }
@@ -971,7 +984,7 @@ class NativeObject : public JSObject
     void initDenseElements(uint32_t dstStart, const Value *src, uint32_t count) {
         MOZ_ASSERT(dstStart + count <= getDenseCapacity());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
-        memcpy(&elements[dstStart], src, count * sizeof(HeapSlot));
+        memcpy(&elements_[dstStart], src, count * sizeof(HeapSlot));
         DenseRangeWriteBarrierPost(runtimeFromMainThread(), this, dstStart, count);
     }
 
@@ -998,18 +1011,18 @@ class NativeObject : public JSObject
         JS::shadow::Zone *shadowZone = JS::shadow::Zone::asShadowZone(zone);
         if (shadowZone->needsIncrementalBarrier()) {
             if (dstStart < srcStart) {
-                HeapSlot *dst = elements + dstStart;
-                HeapSlot *src = elements + srcStart;
+                HeapSlot *dst = elements_ + dstStart;
+                HeapSlot *src = elements_ + srcStart;
                 for (uint32_t i = 0; i < count; i++, dst++, src++)
-                    dst->set(zone, this, HeapSlot::Element, dst - elements, *src);
+                    dst->set(zone, this, HeapSlot::Element, dst - elements_, *src);
             } else {
-                HeapSlot *dst = elements + dstStart + count - 1;
-                HeapSlot *src = elements + srcStart + count - 1;
+                HeapSlot *dst = elements_ + dstStart + count - 1;
+                HeapSlot *src = elements_ + srcStart + count - 1;
                 for (uint32_t i = 0; i < count; i++, dst--, src--)
-                    dst->set(zone, this, HeapSlot::Element, dst - elements, *src);
+                    dst->set(zone, this, HeapSlot::Element, dst - elements_, *src);
             }
         } else {
-            memmove(elements + dstStart, elements + srcStart, count * sizeof(HeapSlot));
+            memmove(elements_ + dstStart, elements_ + srcStart, count * sizeof(HeapSlot));
             DenseRangeWriteBarrierPost(runtimeFromMainThread(), this, dstStart, count);
         }
     }
@@ -1021,7 +1034,7 @@ class NativeObject : public JSObject
         MOZ_ASSERT(srcStart + count <= getDenseCapacity());
         MOZ_ASSERT(!denseElementsAreCopyOnWrite());
 
-        memmove(elements + dstStart, elements + srcStart, count * sizeof(Value));
+        memmove(elements_ + dstStart, elements_ + srcStart, count * sizeof(Value));
         DenseRangeWriteBarrierPost(runtimeFromMainThread(), this, dstStart, count);
     }
 
@@ -1104,7 +1117,7 @@ class NativeObject : public JSObject
 
     void setFixedElements() {
         MOZ_ASSERT(canHaveNonEmptyElements());
-        this->elements = fixedElements();
+        elements_ = fixedElements();
     }
 
     inline bool hasDynamicElements() const {
@@ -1115,15 +1128,15 @@ class NativeObject : public JSObject
          * immediately afterwards. Such cases cannot occur for dense arrays
          * (which have at least two fixed slots) and can only result in a leak.
          */
-        return !hasEmptyElements() && elements != fixedElements();
+        return !hasEmptyElements() && elements_ != fixedElements();
     }
 
     inline bool hasFixedElements() const {
-        return elements == fixedElements();
+        return elements_ == fixedElements();
     }
 
     inline bool hasEmptyElements() const {
-        return elements == emptyObjectElements;
+        return elements_ == emptyObjectElements;
     }
 
     /*
@@ -1192,14 +1205,12 @@ class NativeObject : public JSObject
         return privateRef(nfixed);
     }
 
-    void setInitialSlots(HeapSlot *newSlots) { slots = newSlots; }
-
     static inline NativeObject *
     copy(ExclusiveContext *cx, gc::AllocKind kind, gc::InitialHeap heap,
          HandleNativeObject templateObject);
 
     /* JIT Accessors */
-    static size_t offsetOfElements() { return offsetof(NativeObject, elements); }
+    static size_t offsetOfElements() { return offsetof(NativeObject, elements_); }
     static size_t offsetOfFixedElements() {
         return sizeof(NativeObject) + sizeof(ObjectElements);
     }
@@ -1208,7 +1219,7 @@ class NativeObject : public JSObject
         return sizeof(NativeObject) + slot * sizeof(Value);
     }
     static size_t getPrivateDataOffset(size_t nfixed) { return getFixedSlotOffset(nfixed); }
-    static size_t offsetOfSlots() { return offsetof(NativeObject, slots); }
+    static size_t offsetOfSlots() { return offsetof(NativeObject, slots_); }
 };
 
 inline void
@@ -1357,204 +1368,6 @@ HasDataProperty(JSContext *cx, NativeObject *obj, PropertyName *name, Value *vp)
 }
 
 } /* namespace js */
-
-inline void *
-JSObject::fakeNativeGetPrivate() const
-{
-    return static_cast<const js::NativeObject*>(this)->getPrivate();
-}
-
-inline void *
-JSObject::fakeNativeGetPrivate(uint32_t nfixed) const
-{
-    return static_cast<const js::NativeObject*>(this)->getPrivate(nfixed);
-}
-
-inline void
-JSObject::fakeNativeSetPrivate(void *data)
-{
-    static_cast<js::NativeObject*>(this)->setPrivate(data);
-}
-
-inline bool
-JSObject::fakeNativeHasPrivate() const
-{
-    return static_cast<const js::NativeObject*>(this)->hasPrivate();
-}
-
-inline void
-JSObject::fakeNativeInitPrivate(void *data)
-{
-    static_cast<js::NativeObject*>(this)->initPrivate(data);
-}
-
-inline void *&
-JSObject::fakeNativePrivateRef(uint32_t nfixed) const
-{
-    return static_cast<const js::NativeObject*>(this)->privateRef(nfixed);
-}
-
-inline uint32_t
-JSObject::fakeNativeSlotSpan()
-{
-    return static_cast<js::NativeObject*>(this)->slotSpan();
-}
-
-inline const js::Value &
-JSObject::fakeNativeGetSlot(uint32_t slot)
-{
-    return static_cast<js::NativeObject*>(this)->getSlot(slot);
-}
-
-inline void
-JSObject::fakeNativeSetSlot(uint32_t slot, const js::Value &value)
-{
-    static_cast<js::NativeObject*>(this)->setSlot(slot, value);
-}
-
-inline js::HeapSlot &
-JSObject::fakeNativeGetSlotRef(uint32_t slot)
-{
-    return static_cast<js::NativeObject*>(this)->getSlotRef(slot);
-}
-
-inline const js::Value &
-JSObject::fakeNativeGetReservedSlot(uint32_t slot) const
-{
-    return static_cast<const js::NativeObject*>(this)->getReservedSlot(slot);
-}
-
-inline js::HeapSlot &
-JSObject::fakeNativeGetReservedSlotRef(uint32_t slot)
-{
-    return static_cast<js::NativeObject*>(this)->getReservedSlotRef(slot);
-}
-
-inline void
-JSObject::fakeNativeSetReservedSlot(uint32_t slot, const js::Value &value)
-{
-    static_cast<js::NativeObject*>(this)->setReservedSlot(slot, value);
-}
-
-inline void
-JSObject::fakeNativeInitReservedSlot(uint32_t slot, const js::Value &value)
-{
-    static_cast<js::NativeObject*>(this)->initReservedSlot(slot, value);
-}
-
-inline void
-JSObject::fakeNativeSetCrossCompartmentSlot(uint32_t slot, const js::Value &value)
-{
-    static_cast<js::NativeObject*>(this)->setCrossCompartmentSlot(slot, value);
-}
-
-inline void
-JSObject::fakeNativeInitCrossCompartmentSlot(uint32_t slot, const js::Value &value)
-{
-    static_cast<js::NativeObject*>(this)->initCrossCompartmentSlot(slot, value);
-}
-
-inline void
-JSObject::fakeNativeSetInitialSlots(js::HeapSlot *newSlots)
-{
-    static_cast<js::NativeObject*>(this)->setInitialSlots(newSlots);
-}
-
-inline bool
-JSObject::fakeNativeHasDynamicSlots() const
-{
-    return static_cast<const js::NativeObject*>(this)->hasDynamicSlots();
-}
-
-inline uint32_t
-JSObject::fakeNativeNumFixedSlots() const
-{
-    return static_cast<const js::NativeObject*>(this)->numFixedSlots();
-}
-
-inline uint32_t
-JSObject::fakeNativeNumDynamicSlots() const
-{
-    return static_cast<const js::NativeObject*>(this)->numDynamicSlots();
-}
-
-inline js::HeapSlot *&
-JSObject::fakeNativeSlots()
-{
-    return slots;
-}
-
-inline void
-JSObject::fakeNativeInitSlot(uint32_t slot, const js::Value &value)
-{
-    static_cast<js::NativeObject*>(this)->initSlot(slot, value);
-}
-
-inline void
-JSObject::fakeNativeInitSlotRange(uint32_t start, const js::Value *vector, uint32_t length)
-{
-    static_cast<js::NativeObject*>(this)->initSlotRange(start, vector, length);
-}
-
-inline void
-JSObject::fakeNativeInitializeSlotRange(uint32_t start, uint32_t count)
-{
-    static_cast<js::NativeObject*>(this)->initializeSlotRange(start, count);
-}
-
-inline bool
-JSObject::fakeNativeHasDynamicElements() const
-{
-    return static_cast<const js::NativeObject*>(this)->hasDynamicElements();
-}
-
-inline bool
-JSObject::fakeNativeHasEmptyElements() const
-{
-    return static_cast<const js::NativeObject*>(this)->hasEmptyElements();
-}
-
-inline js::HeapSlotArray
-JSObject::fakeNativeGetDenseElements()
-{
-    return static_cast<js::NativeObject*>(this)->getDenseElements();
-}
-
-inline bool
-JSObject::fakeNativeDenseElementsAreCopyOnWrite()
-{
-    return static_cast<js::NativeObject*>(this)->denseElementsAreCopyOnWrite();
-}
-
-inline js::ObjectElements *
-JSObject::fakeNativeGetElementsHeader() const
-{
-    return static_cast<const js::NativeObject*>(this)->getElementsHeader();
-}
-
-inline js::HeapSlot *&
-JSObject::fakeNativeElements()
-{
-    return elements;
-}
-
-inline const js::Value &
-JSObject::fakeNativeGetDenseElement(uint32_t idx)
-{
-    return static_cast<js::NativeObject*>(this)->getDenseElement(idx);
-}
-
-inline uint32_t
-JSObject::fakeNativeGetDenseInitializedLength()
-{
-    return static_cast<js::NativeObject*>(this)->getDenseInitializedLength();
-}
-
-inline const js::HeapSlot *
-JSObject::fakeNativeGetSlotAddressUnchecked(uint32_t slot) const
-{
-    return static_cast<const js::NativeObject*>(this)->getSlotAddressUnchecked(slot);
-}
 
 template <>
 inline bool

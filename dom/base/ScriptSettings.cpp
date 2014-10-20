@@ -131,7 +131,16 @@ GetEntryGlobal()
 nsIDocument*
 GetEntryDocument()
 {
-  nsCOMPtr<nsPIDOMWindow> entryWin = do_QueryInterface(GetEntryGlobal());
+  nsIGlobalObject* global = GetEntryGlobal();
+  nsCOMPtr<nsPIDOMWindow> entryWin = do_QueryInterface(global);
+
+  // If our entry global isn't a window, see if it's an addon scope associated
+  // with a window. If it is, the caller almost certainly wants that rather
+  // than null.
+  if (!entryWin && global) {
+    entryWin = xpc::AddonWindowOrNull(global->GetGlobalJSObject());
+  }
+
   return entryWin ? entryWin->GetExtantDoc() : nullptr;
 }
 

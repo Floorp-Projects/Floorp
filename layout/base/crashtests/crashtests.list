@@ -228,6 +228,7 @@ load 412651-1.html
 load 413587-1.svg
 load 414058-1.html
 load 414175-1.xul
+load 415503.xhtml
 load 420031-1.html
 load 420213-1.html
 load 420219-1.html
@@ -237,6 +238,7 @@ asserts(0-1) load 421432.html # bug 844525
 load 422276.html
 load 423107-1.xhtml
 load 425981-1.html
+load 428113.xhtml
 load 428138-1.html
 load 428448-1.html
 load 429088-1.html
@@ -284,8 +286,10 @@ load 468645-2.xhtml
 load 468645-3.xhtml
 load 469861-1.xhtml
 load 469861-2.xhtml
+load 470851-1.xhtml
 load 471594-1.xhtml
-asserts(0-1) load 474075.html # bug 847368
+asserts-if(Android,2) load 473042.xhtml # bug 1034369 (may also cause a few assertions to be registered on the next test)
+asserts(0-5) load 474075.html # bug 847368
 load 479114-1.html
 load 477333-1.xhtml
 load 477731-1.html
@@ -374,6 +378,7 @@ load 663295.html
 load 663662-1.html
 load 663662-2.html
 load 665837.html
+load 668579.html
 load 668941.xhtml
 load 670226.html
 asserts(2) load 675246-1.xhtml # Bug 675713

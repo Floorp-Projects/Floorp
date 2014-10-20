@@ -106,7 +106,7 @@ public:
   {
     MOZ_ASSERT(!PreservingWrapper(), "Clearing a preserved wrapper!");
     MOZ_ASSERT(aWrapper, "Use ClearWrapper!");
-    MOZ_ASSERT(js::HasObjectMovedOpIfRequired(aWrapper),
+    MOZ_ASSERT(js::HasObjectMovedOp(aWrapper),
                "Object has not provided the hook to update the wrapper if it is moved");
 
     SetWrapperJSObject(aWrapper);

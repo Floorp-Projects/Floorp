@@ -273,7 +273,7 @@ namespace js {
  * Helper Macros for creating JSClasses that function as proxies.
  *
  * NB: The macro invocation must be surrounded by braces, so as to
- *     allow for potention JSClass extensions.
+ *     allow for potential JSClass extensions.
  */
 #define PROXY_MAKE_EXT(outerObject, innerObject, iteratorObject,        \
                        isWrappedNative, objectMoved)                    \
@@ -286,13 +286,12 @@ namespace js {
         objectMoved                                                     \
     }
 
-#define PROXY_CLASS_WITH_EXT(name, extraSlots, flags, ext)                              \
+#define PROXY_CLASS_WITH_EXT(name, flags, ext)                                          \
     {                                                                                   \
         name,                                                                           \
         js::Class::NON_NATIVE |                                                         \
             JSCLASS_IS_PROXY |                                                          \
             JSCLASS_IMPLEMENTS_BARRIERS |                                               \
-            JSCLASS_HAS_RESERVED_SLOTS(js::PROXY_MINIMUM_SLOTS + (extraSlots)) |        \
             flags,                                                                      \
         JS_PropertyStub,         /* addProperty */                                      \
         JS_DeletePropertyStub,   /* delProperty */                                      \
@@ -331,8 +330,8 @@ namespace js {
         }                                                                               \
     }
 
-#define PROXY_CLASS_DEF(name, extraSlots, flags)                        \
-  PROXY_CLASS_WITH_EXT(name, extraSlots, flags,                         \
+#define PROXY_CLASS_DEF(name, flags)                                    \
+  PROXY_CLASS_WITH_EXT(name, flags,                                     \
                        PROXY_MAKE_EXT(                                  \
                          nullptr, /* outerObject */                     \
                          nullptr, /* innerObject */                     \
@@ -586,11 +585,13 @@ public:
     static const uint32_t FIXED_SLOTS_SHIFT = 27;
 };
 
+// This layout is shared by all objects except for Typed Objects (which still
+// have a shape and type).
 struct Object {
     shadow::Shape      *shape;
     shadow::TypeObject *type;
     JS::Value          *slots;
-    JS::Value          *_1;
+    void               *_1;
 
     size_t numFixedSlots() const { return shape->slotInfo >> Shape::FIXED_SLOTS_SHIFT; }
     JS::Value *fixedSlots() const {
@@ -603,10 +604,6 @@ struct Object {
             return fixedSlots()[slot];
         return slots[slot - nfixed];
     }
-
-    // Reserved slots with index < MAX_FIXED_SLOTS are guaranteed to
-    // be fixed slots.
-    static const uint32_t MAX_FIXED_SLOTS = 16;
 };
 
 struct Function {
@@ -788,15 +785,12 @@ GetOriginalEval(JSContext *cx, JS::HandleObject scope,
 inline void *
 GetObjectPrivate(JSObject *obj)
 {
+    MOZ_ASSERT(GetObjectClass(obj)->flags & JSCLASS_HAS_PRIVATE);
     const shadow::Object *nobj = reinterpret_cast<const shadow::Object*>(obj);
     void **addr = reinterpret_cast<void**>(&nobj->fixedSlots()[nobj->numFixedSlots()]);
     return *addr;
 }
 
-/*
- * Get a slot that is both reserved for object's clasp *and* is fixed (fits
- * within the maximum capacity for the object's fixed slots).
- */
 inline const JS::Value &
 GetReservedSlot(JSObject *obj, size_t slot)
 {
@@ -805,23 +799,17 @@ GetReservedSlot(JSObject *obj, size_t slot)
 }
 
 JS_FRIEND_API(void)
-SetReservedSlotWithBarrier(JSObject *obj, size_t slot, const JS::Value &value);
+SetReservedOrProxyPrivateSlotWithBarrier(JSObject *obj, size_t slot, const JS::Value &value);
 
 inline void
 SetReservedSlot(JSObject *obj, size_t slot, const JS::Value &value)
 {
     MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
     shadow::Object *sobj = reinterpret_cast<shadow::Object *>(obj);
-    if (sobj->slotRef(slot).isMarkable()
-#ifdef JSGC_GENERATIONAL
-        || value.isMarkable()
-#endif
-       )
-    {
-        SetReservedSlotWithBarrier(obj, slot, value);
-    } else {
+    if (sobj->slotRef(slot).isMarkable() || value.isMarkable())
+        SetReservedOrProxyPrivateSlotWithBarrier(obj, slot, value);
+    else
         sobj->slotRef(slot) = value;
-    }
 }
 
 JS_FRIEND_API(uint32_t)

@@ -15,6 +15,7 @@
 #include "nsTreeBodyFrame.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TreeBoxObject.h"
+#include "mozilla/dom/TreeColumnBinding.h"
 #include "mozilla/dom/TreeColumnsBinding.h"
 
 using namespace mozilla;
@@ -43,6 +44,7 @@ nsTreeColumn::~nsTreeColumn()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsTreeColumn)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsTreeColumn)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContent)
   if (tmp->mNext) {
     tmp->mNext->SetPrevious(nullptr);
@@ -52,18 +54,18 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsTreeColumn)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsTreeColumn)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTreeColumn)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTreeColumn)
 
-DOMCI_DATA(TreeColumn, nsTreeColumn)
-
 // QueryInterface implementation for nsTreeColumn
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeColumn)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsITreeColumn)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TreeColumn)
   if (aIID.Equals(NS_GET_IID(nsTreeColumn))) {
     AddRef();
     *aInstancePtr = this;
@@ -344,6 +346,51 @@ nsTreeColumn::Invalidate()
   return NS_OK;
 }
 
+nsIContent*
+nsTreeColumn::GetParentObject() const
+{
+  return mContent;
+}
+
+/* virtual */ JSObject*
+nsTreeColumn::WrapObject(JSContext* aCx)
+{
+  return dom::TreeColumnBinding::Wrap(aCx, this);
+}
+
+mozilla::dom::Element*
+nsTreeColumn::GetElement(mozilla::ErrorResult& aRv)
+{
+  nsCOMPtr<nsIDOMElement> element;
+  aRv = GetElement(getter_AddRefs(element));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  nsCOMPtr<nsINode> node = do_QueryInterface(element);
+  return node->AsElement();
+}
+
+int32_t
+nsTreeColumn::GetX(mozilla::ErrorResult& aRv)
+{
+  int32_t x;
+  aRv = GetX(&x);
+  return x;
+}
+
+int32_t
+nsTreeColumn::GetWidth(mozilla::ErrorResult& aRv)
+{
+  int32_t width;
+  aRv = GetWidth(&width);
+  return width;
+}
+
+void
+nsTreeColumn::Invalidate(mozilla::ErrorResult& aRv)
+{
+  aRv = Invalidate();
+}
 
 nsTreeColumns::nsTreeColumns(nsTreeBodyFrame* aTree)
   : mTree(aTree),

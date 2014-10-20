@@ -49,23 +49,6 @@ bool    pluginSupportsWindowMode();
 bool    pluginSupportsWindowlessMode();
 
 /**
- * Returns true if the plugin supports async bitmap drawing.
- */
-bool    pluginSupportsAsyncBitmapDrawing();
-
-/**
- * Returns true if the plugin supports DXGI bitmap drawing.
- */
-inline bool    pluginSupportsAsyncDXGIDrawing()
-{
-#ifdef XP_WIN
-  return true;
-#else
-  return false;
-#endif
-}
-
-/**
  * Initialize the plugin instance. Returning an error here will cause the
  * plugin instantiation to fail.
  */
@@ -92,10 +75,6 @@ void    pluginWidgetInit(InstanceData* instanceData, void* oldWindow);
  * responsible for listening for their own events.)
  */
 int16_t pluginHandleEvent(InstanceData* instanceData, void* event);
-
-#ifdef XP_WIN
-void    pluginDrawAsyncDxgiColor(InstanceData* instanceData);
-#endif
 
 enum RectEdge {
   EDGE_LEFT = 0,

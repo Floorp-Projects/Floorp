@@ -522,6 +522,19 @@ void encode_mb_row(VP8_COMP *cpi,
             }
 
 #endif
+            // Keep track of how many (consecutive) times a block is coded
+            // as ZEROMV_LASTREF, for base layer frames.
+            // Reset to 0 if its coded as anything else.
+            if (cpi->current_layer == 0) {
+              if (xd->mode_info_context->mbmi.mode == ZEROMV &&
+                  xd->mode_info_context->mbmi.ref_frame == LAST_FRAME) {
+                // Increment, check for wrap-around.
+                if (cpi->consec_zero_last[map_index+mb_col] < 255)
+                  cpi->consec_zero_last[map_index+mb_col] += 1;
+              } else {
+                cpi->consec_zero_last[map_index+mb_col] = 0;
+              }
+            }
 
             /* Special case code for cyclic refresh
              * If cyclic update enabled then copy xd->mbmi.segment_id; (which
@@ -1246,7 +1259,7 @@ int vp8cx_encode_inter_macroblock
             x->zbin_mode_boost_enabled = 0;
         }
         vp8_rd_pick_inter_mode(cpi, x, recon_yoffset, recon_uvoffset, &rate,
-                               &distortion, &intra_error);
+                               &distortion, &intra_error, mb_row, mb_col);
 
         /* switch back to the regular quantizer for the encode */
         if (cpi->sf.improved_quant)

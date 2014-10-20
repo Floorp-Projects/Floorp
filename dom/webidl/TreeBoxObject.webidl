@@ -6,12 +6,11 @@
  */
 
 interface MozTreeView;
-interface MozTreeColumn;
 interface nsIScriptableRegion;
 
 dictionary TreeCellInfo {
     long row = 0;
-    MozTreeColumn? col = null;
+    TreeColumn? col = null;
     DOMString childElt = "";
 };
 
@@ -84,7 +83,7 @@ interface TreeBoxObject : BoxObject {
   /**
    * Ensures that a given cell in the tree is visible.
    */
-  void ensureCellIsVisible(long row, MozTreeColumn? col);
+  void ensureCellIsVisible(long row, TreeColumn? col);
 
   /**
    * Scrolls such that the row at index is at the top of the visible view.
@@ -110,13 +109,13 @@ interface TreeBoxObject : BoxObject {
    * Scrolls such that a given cell is visible (if possible)
    * at the top left corner of the visible view.
    */
-  void scrollToCell(long row, MozTreeColumn? col);
+  void scrollToCell(long row, TreeColumn? col);
 
   /**
    * Scrolls horizontally so that the specified column is
    * at the left of the view (if possible).
    */
-  void scrollToColumn(MozTreeColumn? col);
+  void scrollToColumn(TreeColumn? col);
 
   /**
    * Scroll to a specific horizontal pixel position.
@@ -127,11 +126,11 @@ interface TreeBoxObject : BoxObject {
    * Invalidation methods for fine-grained painting control.
    */
   void invalidate();
-  void invalidateColumn(MozTreeColumn? col);
+  void invalidateColumn(TreeColumn? col);
   void invalidateRow(long index);
-  void invalidateCell(long row, MozTreeColumn? col);
+  void invalidateCell(long row, TreeColumn? col);
   void invalidateRange(long startIndex, long endIndex);
-  void invalidateColumnRange(long startIndex, long endIndex, MozTreeColumn? col);
+  void invalidateColumnRange(long startIndex, long endIndex, TreeColumn? col);
 
   /**
    * A hit test that can tell you what row the mouse is over.
@@ -165,20 +164,20 @@ interface TreeBoxObject : BoxObject {
    * Find the coordinates of an element within a specific cell.
    */
   [Throws]
-  DOMRect? getCoordsForCellItem(long row, MozTreeColumn col, DOMString element);
+  DOMRect? getCoordsForCellItem(long row, TreeColumn col, DOMString element);
 
   /**
    * DEPRECATED: Please use above version
    */
   [Throws]
-  void getCoordsForCellItem(long row, MozTreeColumn col, DOMString element,
+  void getCoordsForCellItem(long row, TreeColumn col, DOMString element,
                             object x, object y, object width, object height);
 
   /**
    * Determine if the text of a cell is being cropped or not.
    */
   [Throws]
-  boolean isCellCropped(long row, MozTreeColumn? col);
+  boolean isCellCropped(long row, TreeColumn? col);
 
   /**
    * The view is responsible for calling these notification methods when

@@ -11,6 +11,10 @@
 #ifndef VP9_COMMON_VP9_TILE_COMMON_H_
 #define VP9_COMMON_VP9_TILE_COMMON_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct VP9Common;
 
 typedef struct TileInfo {
@@ -23,7 +27,14 @@ typedef struct TileInfo {
 void vp9_tile_init(TileInfo *tile, const struct VP9Common *cm,
                    int row, int col);
 
+void vp9_tile_set_row(TileInfo *tile, const struct VP9Common *cm, int row);
+void vp9_tile_set_col(TileInfo *tile, const struct VP9Common *cm, int col);
+
 void vp9_get_tile_n_bits(int mi_cols,
                          int *min_log2_tile_cols, int *max_log2_tile_cols);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // VP9_COMMON_VP9_TILE_COMMON_H_
