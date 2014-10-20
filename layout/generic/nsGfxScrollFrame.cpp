@@ -3047,10 +3047,10 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
                                        nsRect* aClipRect,
                                        nsTArray<FrameMetrics>* aOutput) const
 {
-  nsRect viewport = mScrollPort +
+  nsRect scrollport = mScrollPort +
     mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
   if (!(mIsRoot && mOuter->PresContext()->PresShell()->GetIsViewportOverridden())) {
-    *aClipRect = viewport;
+    *aClipRect = scrollport;
   }
 
   if (!mShouldBuildScrollableLayer || BuildScrollContainerLayers()) {
@@ -3062,7 +3062,7 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
   *aOutput->AppendElement() =
       nsDisplayScrollLayer::ComputeFrameMetrics(mScrolledFrame, mOuter,
         aContainerReferenceFrame, aLayer, mScrollParentID,
-        viewport, false, false, aParameters);
+        scrollport, false, false, aParameters);
 }
 
 bool
