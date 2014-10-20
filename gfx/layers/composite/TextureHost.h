@@ -46,6 +46,7 @@ namespace layers {
 
 class Compositor;
 class CompositableHost;
+class CompositableBackendSpecificData;
 class CompositableParentManager;
 class SurfaceDescriptor;
 class SharedSurfaceDescriptor;
@@ -149,69 +150,10 @@ public:
     return nullptr;
   }
 
-  void AddCompositableRef() { ++mCompositableCount; }
-
-  void ReleaseCompositableRef() {
-    --mCompositableCount;
-    MOZ_ASSERT(mCompositableCount >= 0);
-  }
-
-  int NumCompositableRefs() const { return mCompositableCount; }
-
 protected:
   virtual ~TextureSource();
 
   RefPtr<TextureSource> mNextSibling;
-  int mCompositableCount;
-};
-
-/**
- * equivalent of a RefPtr<TextureSource>, that calls AddCompositableRef and
- * ReleaseCompositableRef in addition to the usual AddRef and Release.
- */
-class CompositableTextureSourceRef {
-public:
-  CompositableTextureSourceRef() {}
-
-  ~CompositableTextureSourceRef()
-  {
-    if (mRef) {
-      mRef->ReleaseCompositableRef();
-    }
-  }
-
-  CompositableTextureSourceRef& operator=(const TemporaryRef<TextureSource>& aOther)
-  {
-    RefPtr<TextureSource> temp = aOther;
-    if (temp) {
-      temp->AddCompositableRef();
-    }
-    if (mRef) {
-      mRef->ReleaseCompositableRef();
-    }
-    mRef = temp;
-    return *this;
-  }
-
-  CompositableTextureSourceRef& operator=(TextureSource* aOther)
-  {
-    if (aOther) {
-      aOther->AddCompositableRef();
-    }
-    if (mRef) {
-      mRef->ReleaseCompositableRef();
-    }
-    mRef = aOther;
-    return *this;
-  }
-
-  TextureSource* get() const { return mRef; }
-  operator TextureSource*() const { return mRef; }
-  TextureSource* operator->() const { return mRef; }
-  TextureSource& operator*() const { return *mRef; }
-
-private:
-  RefPtr<TextureSource> mRef;
 };
 
 /**
@@ -361,25 +303,6 @@ public:
   virtual TextureSource* GetTextureSources() = 0;
 
   /**
-   * Called during the transaction. The TextureSource may or may not be composited.
-   *
-   * Note that this is called outside of lock/unlock.
-   */
-  virtual void PrepareTextureSource(CompositableTextureSourceRef& aTexture) {}
-
-  /**
-   * Called at composition time, just before compositing the TextureSource composited.
-   *
-   * Note that this is called only withing lock/unlock.
-   */
-  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture);
-
-  /**
-   * Called when another TextureHost will take over.
-   */
-  virtual void UnbindTextureSource() {}
-
-  /**
    * Is called before compositing if the shared data has changed since last
    * composition.
    * This method should be overload in cases like when we need to do a texture
@@ -483,6 +406,10 @@ public:
     return LayerRenderState();
   }
 
+  virtual void SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData);
+
+  virtual void UnsetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData);
+
   // If a texture host holds a reference to shmem, it should override this method
   // to forget about the shmem _without_ releasing it.
   virtual void OnShutdown() {}
@@ -508,6 +435,7 @@ public:
 protected:
   PTextureParent* mActor;
   TextureFlags mFlags;
+  RefPtr<CompositableBackendSpecificData> mCompositableBackendData;
 
   friend class TextureParent;
 };
