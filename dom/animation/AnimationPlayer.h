@@ -43,19 +43,26 @@ public:
   AnimationTimeline* GetParentObject() const { return mTimeline; }
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
+  // Temporary flags to control restyle behavior until bug 1073336
+  // provides a better solution.
+  enum UpdateFlags {
+    eNoUpdate,
+    eUpdateStyle
+  };
+
   // AnimationPlayer methods
   Animation* GetSource() const { return mSource; }
   AnimationTimeline* Timeline() const { return mTimeline; }
   Nullable<double> GetStartTime() const;
   Nullable<double> GetCurrentTime() const;
-  void Play();
-  void Pause();
+  void Play(UpdateFlags aUpdateFlags);
+  void Pause(UpdateFlags aUpdateFlags);
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
 
   // Wrapper functions for performing extra steps such as flushing
   // style when calling from JS.
-  void PauseFromJS();
   void PlayFromJS();
+  void PauseFromJS();
 
   void SetSource(Animation* aSource);
   void Tick();
@@ -80,13 +87,17 @@ public:
   Nullable<TimeDuration> GetCurrentTimeDuration() const;
 
   // The beginning of the delay period.
-  Nullable<TimeDuration> mStartTime;
-  Nullable<TimeDuration> mHoldTime;
+  Nullable<TimeDuration> mStartTime; // Timeline timescale
+  Nullable<TimeDuration> mHoldTime;  // Player timescale
   bool mIsPaused;
   bool mIsRunningOnCompositor;
 
   nsRefPtr<AnimationTimeline> mTimeline;
   nsRefPtr<Animation> mSource;
+
+protected:
+  void FlushStyle() const;
+  void MaybePostRestyle() const;
 };
 
 } // namespace dom

@@ -165,7 +165,7 @@ public:
   already_AddRefed<AnimationEffect> GetEffect();
   Element* GetTarget() const {
     // Currently we only implement Element.getAnimationPlayers() which only
-    // returns animations targetting Elements so we should this should never
+    // returns animations targetting Elements so this should never
     // be called for an animation that targets a pseudo-element.
     MOZ_ASSERT(mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
                "Requesting the target of an Animation that targets a"
