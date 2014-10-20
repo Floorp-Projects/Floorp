@@ -132,6 +132,7 @@ gbjar.sources += [
     'BrowserLocaleManager.java',
     'ContactService.java',
     'ContextGetter.java',
+    'CrashHandler.java',
     'CustomEditText.java',
     'DataReportingNotification.java',
     'db/AbstractPerProfileDatabaseProvider.java',
