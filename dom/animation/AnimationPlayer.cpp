@@ -262,40 +262,4 @@ AnimationPlayer::SourceContentEnd() const
 }
 
 } // namespace dom
-
-void
-CSSAnimationPlayer::Play(UpdateFlags aUpdateFlags)
-{
-  mPauseShouldStick = false;
-  AnimationPlayer::Play(aUpdateFlags);
-}
-
-void
-CSSAnimationPlayer::Pause(UpdateFlags aUpdateFlags)
-{
-  mPauseShouldStick = true;
-  AnimationPlayer::Pause(aUpdateFlags);
-}
-
-void
-CSSAnimationPlayer::PlayFromStyle()
-{
-  mIsStylePaused = false;
-  if (!mPauseShouldStick) {
-    AnimationPlayer::Play(eNoUpdate);
-  }
-}
-
-void
-CSSAnimationPlayer::PauseFromStyle()
-{
-  // Check if the pause state is being overridden
-  if (mIsStylePaused) {
-    return;
-  }
-
-  mIsStylePaused = true;
-  AnimationPlayer::Pause(eNoUpdate);
-}
-
 } // namespace mozilla
