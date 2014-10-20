@@ -3124,7 +3124,8 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     flags |= nsDisplayList::PAINT_COMPRESSED;
   }
 
-  list.PaintRoot(&builder, aRenderingContext, flags);
+  nsRefPtr<LayerManager> layerManager =
+    list.PaintRoot(&builder, aRenderingContext, flags);
 
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::DumpPaintList() || gfxUtils::sDumpPainting) {
@@ -3134,14 +3135,10 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     *ss << "Painting --- after optimization:\n";
     nsFrame::PrintDisplayList(&builder, list, *ss, gfxUtils::sDumpPaintingToFile);
 
-    *ss << "Painting --- retained layer tree:\n";
-    nsIWidget* widget = aFrame->GetNearestWidget();
-    if (widget) {
-      nsRefPtr<LayerManager> layerManager = widget->GetLayerManager();
-      if (layerManager) {
-        FrameLayerBuilder::DumpRetainedLayerTree(layerManager, *ss,
-                                                 gfxUtils::sDumpPaintingToFile);
-      }
+    *ss << "Painting --- layer tree:\n";
+    if (layerManager) {
+      FrameLayerBuilder::DumpRetainedLayerTree(layerManager, *ss,
+                                               gfxUtils::sDumpPaintingToFile);
     }
     if (gfxUtils::sDumpPaintingToFile) {
       *ss << "</body></html>";
@@ -3177,12 +3174,6 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 
   if (builder.WillComputePluginGeometry()) {
-    nsRefPtr<LayerManager> layerManager;
-    nsIWidget* widget = aFrame->GetNearestWidget();
-    if (widget) {
-      layerManager = widget->GetLayerManager();
-    }
-
     rootPresContext->ComputePluginGeometryUpdates(aFrame, &builder, &list);
 
     // We're not going to get a WillPaintWindow event here if we didn't do
