@@ -84,7 +84,16 @@ AnimationPlayer::Pause(UpdateFlags aFlags)
 void
 AnimationPlayer::PlayFromJS()
 {
-  // TODO (flush styles etc.)
+  // Flush style to ensure that any properties controlling animation state
+  // (e.g. animation-play-state) are fully updated before we proceed.
+  //
+  // Note that this might trigger PlayFromStyle()/PauseFromStyle() on this
+  // object.
+  //
+  // FIXME: Once we introduce CSSTransitionPlayer, this should move to an
+  // override of PlayFromJS in CSSAnimationPlayer and CSSTransitionPlayer and
+  // we should skip it in the general case.
+  FlushStyle();
 
   Play(eUpdateStyle);
 }
