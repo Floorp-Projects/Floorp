@@ -1440,7 +1440,7 @@ js::IsInRequest(JSContext *cx)
 }
 
 bool
-js::HasObjectMovedOpIfRequired(JSObject *obj) {
+js::HasObjectMovedOp(JSObject *obj) {
     return !!GetObjectClass(obj)->ext.objectMovedOp;
 }
 #endif
