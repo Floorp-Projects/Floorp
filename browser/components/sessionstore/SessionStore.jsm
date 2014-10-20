@@ -583,7 +583,7 @@ let SessionStoreInternal = {
   receiveMessage(aMessage) {
     // We'll deal with any Parent Process Message Manager messages first...
     if (aMessage.name == "SessionStore:RemoteTabRevived") {
-      this._crashedBrowsers.delete(aMessage.objects.browser);
+      this._crashedBrowsers.delete(aMessage.objects.browser.permanentKey);
       return;
     }
 
@@ -740,7 +740,7 @@ let SessionStoreInternal = {
         this.saveStateDelayed(win);
         break;
       case "oop-browser-crashed":
-        this._crashedBrowsers.add(aEvent.originalTarget);
+        this._crashedBrowsers.add(aEvent.originalTarget.permanentKey);
         break;
     }
     this._clearRestoringWindows();
@@ -1966,7 +1966,7 @@ let SessionStoreInternal = {
     }
 
     let browser = aTab.linkedBrowser;
-    if (!this._crashedBrowsers.has(browser)) {
+    if (!this._crashedBrowsers.has(browser.permanentKey)) {
       return;
     }
 
