@@ -10,12 +10,13 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 const PREF_STORAGE_VERSION = "browser.pagethumbnails.storage_version";
 const LATEST_STORAGE_VERSION = 3;
 
 const EXPIRATION_MIN_CHUNK_SIZE = 50;
 const EXPIRATION_INTERVAL_SECS = 3600;
+
+var gRemoteThumbId = 0;
 
 // If a request for a thumbnail comes in and we find one that is "stale"
 // (or don't find one at all) we automatically queue a request to generate a
@@ -26,11 +27,6 @@ const MAX_THUMBNAIL_AGE_SECS = 172800; // 2 days == 60*60*24*2 == 172800 secs.
  * Name of the directory in the profile that contains the thumbnails.
  */
 const THUMBNAIL_DIRECTORY = "thumbnails";
-
-/**
- * The default background color for page thumbnails.
- */
-const THUMBNAIL_BG_COLOR = "#fff";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/PromiseWorker.jsm", this);
@@ -69,6 +65,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
   "resource://gre/modules/Deprecated.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
   "resource://gre/modules/AsyncShutdown.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PageThumbUtils",
+  "resource://gre/modules/PageThumbUtils.jsm");
 
 /**
  * Utilities for dealing with promises and Task.jsm
@@ -168,72 +166,73 @@ this.PageThumbs = {
    },
 
   /**
-   * Captures a thumbnail for the given window.
-   * @param aWindow The DOM window to capture a thumbnail from.
-   * @param aCallback The function to be called when the thumbnail has been
-   *                  captured. The first argument will be the data stream
-   *                  containing the image data.
-   */
-  capture: function PageThumbs_capture(aWindow, aCallback) {
-    if (!this._prefEnabled()) {
-      return;
-    }
-
-    let canvas = this.createCanvas();
-    this.captureToCanvas(aWindow, canvas);
-
-    // Fetch the canvas data on the next event loop tick so that we allow
-    // some event processing in between drawing to the canvas and encoding
-    // its data. We want to block the UI as short as possible. See bug 744100.
-    Services.tm.currentThread.dispatch(function () {
-      canvas.mozFetchAsStream(aCallback, this.contentType);
-    }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
-  },
-
-
-  /**
-   * Captures a thumbnail for the given window.
+   * Asynchronously returns a thumbnail as a blob for the given
+   * window.
    *
-   * @param aWindow The DOM window to capture a thumbnail from.
+   * @param aBrowser The <browser> to capture a thumbnail from.
    * @return {Promise}
    * @resolve {Blob} The thumbnail, as a Blob.
    */
-  captureToBlob: function PageThumbs_captureToBlob(aWindow) {
+  captureToBlob: function PageThumbs_captureToBlob(aBrowser) {
     if (!this._prefEnabled()) {
       return null;
     }
 
-    let canvas = this.createCanvas();
-    this.captureToCanvas(aWindow, canvas);
-
     let deferred = Promise.defer();
-    let type = this.contentType;
-    // Fetch the canvas data on the next event loop tick so that we allow
-    // some event processing in between drawing to the canvas and encoding
-    // its data. We want to block the UI as short as possible. See bug 744100.
-    canvas.toBlob(function asBlob(blob) {
-      deferred.resolve(blob, type);
+
+    let canvas = this.createCanvas();
+    this.captureToCanvas(aBrowser, canvas, () => {
+      canvas.toBlob(blob => {
+        deferred.resolve(blob, this.contentType);
+      });
     });
+
     return deferred.promise;
   },
 
   /**
    * Captures a thumbnail from a given window and draws it to the given canvas.
-   * @param aWindow The DOM window to capture a thumbnail from.
+   * Note, when dealing with remote content, this api draws into the passed
+   * canvas asynchronously. Pass aCallback to receive an async callback after
+   * canvas painting has completed.
+   * @param aBrowser The browser to capture a thumbnail from.
    * @param aCanvas The canvas to draw to.
+   * @param aCallback (optional) A callback invoked once the thumbnail has been
+   * rendered to aCanvas.
    */
-  captureToCanvas: function PageThumbs_captureToCanvas(aWindow, aCanvas) {
+  captureToCanvas: function PageThumbs_captureToCanvas(aBrowser, aCanvas, aCallback) {
     let telemetryCaptureTime = new Date();
-    this._captureToCanvas(aWindow, aCanvas);
-    let telemetry = Services.telemetry;
-    telemetry.getHistogramById("FX_THUMBNAILS_CAPTURE_TIME_MS")
-      .add(new Date() - telemetryCaptureTime);
+    this._captureToCanvas(aBrowser, aCanvas, function () {
+      Services.telemetry
+              .getHistogramById("FX_THUMBNAILS_CAPTURE_TIME_MS")
+              .add(new Date() - telemetryCaptureTime);
+      if (aCallback) {
+        aCallback(aCanvas);
+      }
+    });
   },
 
   // The background thumbnail service captures to canvas but doesn't want to
   // participate in this service's telemetry, which is why this method exists.
-  _captureToCanvas: function PageThumbs__captureToCanvas(aWindow, aCanvas) {
-    let [sw, sh, scale] = this._determineCropSize(aWindow, aCanvas);
+  _captureToCanvas: function (aBrowser, aCanvas, aCallback) {
+    if (aBrowser.isRemoteBrowser) {
+      Task.spawn(function () {
+        let data =
+          yield this._captureRemoteThumbnail(aBrowser, aCanvas);
+        let canvas = data.thumbnail;
+        let ctx = canvas.getContext("2d");
+        let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        aCanvas.getContext("2d").putImageData(imgData, 0, 0);
+        if (aCallback) {
+          aCallback(aCanvas);
+        }
+      }.bind(this));
+      return;
+    }
+
+    // Generate in-process content thumbnail
+    let [width, height, scale] =
+      PageThumbUtils.determineCropSize(aBrowser.contentWindow, aCanvas);
     let ctx = aCanvas.getContext("2d");
 
     // Scale the canvas accordingly.
@@ -242,13 +241,76 @@ this.PageThumbs = {
 
     try {
       // Draw the window contents to the canvas.
-      ctx.drawWindow(aWindow, 0, 0, sw, sh, THUMBNAIL_BG_COLOR,
+      ctx.drawWindow(aBrowser.contentWindow, 0, 0, width, height,
+                     PageThumbUtils.THUMBNAIL_BG_COLOR,
                      ctx.DRAWWINDOW_DO_NOT_FLUSH);
     } catch (e) {
       // We couldn't draw to the canvas for some reason.
     }
-
     ctx.restore();
+
+    if (aCallback) {
+      aCallback(aCanvas);
+    }
+  },
+
+  /**
+   * Asynchrnously render an appropriately scaled thumbnail to canvas.
+   *
+   * @param aBrowser The browser to capture a thumbnail from.
+   * @param aCanvas The canvas to draw to.
+   * @return a promise
+   */
+  _captureRemoteThumbnail: function (aBrowser, aCanvas) {
+    let deferred = Promise.defer();
+
+    // The index we send with the request so we can identify the
+    // correct response.
+    let index = gRemoteThumbId++;
+
+    // Thumbnail request response handler
+    let mm = aBrowser.messageManager;
+
+    // Browser:Thumbnail:Response handler
+    let thumbFunc = function (aMsg) {
+      // Ignore events unrelated to our request
+      if (aMsg.data.id != index) {
+        return;
+      }
+
+      mm.removeMessageListener("Browser:Thumbnail:Response", thumbFunc);
+      let imageBlob = aMsg.data.thumbnail;
+      let doc = aBrowser.parentElement.ownerDocument;
+      let reader = Cc["@mozilla.org/files/filereader;1"].
+                   createInstance(Ci.nsIDOMFileReader);
+      reader.addEventListener("loadend", function() {
+        let image = doc.createElementNS(PageThumbUtils.HTML_NAMESPACE, "img");
+        image.onload = function () {
+          let thumbnail = doc.createElementNS(PageThumbUtils.HTML_NAMESPACE, "canvas");
+          thumbnail.width = image.naturalWidth;
+          thumbnail.height = image.naturalHeight;
+          let ctx = thumbnail.getContext("2d");
+          ctx.drawImage(image, 0, 0);
+          deferred.resolve({
+            thumbnail: thumbnail
+          });
+        }
+        image.src = reader.result;
+      });
+      // xxx wish there was a way to skip this encoding step
+      reader.readAsDataURL(imageBlob);
+    }
+
+    // Send a thumbnail request
+    mm.addMessageListener("Browser:Thumbnail:Response", thumbFunc);
+    mm.sendAsyncMessage("Browser:Thumbnail:Request", {
+      canvasWidth: aCanvas.width,
+      canvasHeight: aCanvas.height,
+      background: PageThumbUtils.THUMBNAIL_BG_COLOR,
+      id: index
+    });
+
+    return deferred.promise;
   },
 
   /**
@@ -262,19 +324,27 @@ this.PageThumbs = {
     }
 
     let url = aBrowser.currentURI.spec;
-    let channel = aBrowser.docShell.currentDocumentChannel;
-    let originalURL = channel.originalURI.spec;
+    let originalURL;
+    let channelError = false;
 
-    // see if this was an error response.
-    let wasError = this._isChannelErrorResponse(channel);
+    if (!aBrowser.isRemoteBrowser) {
+      let channel = aBrowser.docShell.currentDocumentChannel;
+      originalURL = channel.originalURI.spec;
+      // see if this was an error response.
+      channelError = this._isChannelErrorResponse(channel);
+    } else {
+      // We need channel info (bug 1073957)
+      originalURL = url;
+    }
 
     Task.spawn((function task() {
       let isSuccess = true;
       try {
-        let blob = yield this.captureToBlob(aBrowser.contentWindow);
+        let blob = yield this.captureToBlob(aBrowser);
         let buffer = yield TaskUtils.readBlob(blob);
-        yield this._store(originalURL, url, buffer, wasError);
-      } catch (_) {
+        yield this._store(originalURL, url, buffer, channelError);
+      } catch (ex) {
+        Components.utils.reportError("Exception thrown during thumbnail capture: '" + ex + "'");
         isSuccess = false;
       }
       if (aCallback) {
@@ -375,74 +445,13 @@ this.PageThumbs = {
   },
 
   /**
-   * Determines the crop size for a given content window.
-   * @param aWindow The content window.
-   * @param aCanvas The target canvas.
-   * @return An array containing width, height and scale.
-   */
-  _determineCropSize: function PageThumbs_determineCropSize(aWindow, aCanvas) {
-    let utils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
-    let sbWidth = {}, sbHeight = {};
-
-    try {
-      utils.getScrollbarSize(false, sbWidth, sbHeight);
-    } catch (e) {
-      // This might fail if the window does not have a presShell.
-      Cu.reportError("Unable to get scrollbar size in _determineCropSize.");
-      sbWidth.value = sbHeight.value = 0;
-    }
-
-    // Even in RTL mode, scrollbars are always on the right.
-    // So there's no need to determine a left offset.
-    let sw = aWindow.innerWidth - sbWidth.value;
-    let sh = aWindow.innerHeight - sbHeight.value;
-
-    let {width: thumbnailWidth, height: thumbnailHeight} = aCanvas;
-    let scale = Math.min(Math.max(thumbnailWidth / sw, thumbnailHeight / sh), 1);
-    let scaledWidth = sw * scale;
-    let scaledHeight = sh * scale;
-
-    if (scaledHeight > thumbnailHeight)
-      sh -= Math.floor(Math.abs(scaledHeight - thumbnailHeight) * scale);
-
-    if (scaledWidth > thumbnailWidth)
-      sw -= Math.floor(Math.abs(scaledWidth - thumbnailWidth) * scale);
-
-    return [sw, sh, scale];
-  },
-
-  /**
    * Creates a new hidden canvas element.
    * @param aWindow The document of this window will be used to create the
    *                canvas.  If not given, the hidden window will be used.
    * @return The newly created canvas.
    */
   createCanvas: function PageThumbs_createCanvas(aWindow) {
-    let doc = (aWindow || Services.appShell.hiddenDOMWindow).document;
-    let canvas = doc.createElementNS(HTML_NAMESPACE, "canvas");
-    canvas.mozOpaque = true;
-    canvas.mozImageSmoothingEnabled = true;
-    let [thumbnailWidth, thumbnailHeight] = this._getThumbnailSize();
-    canvas.width = thumbnailWidth;
-    canvas.height = thumbnailHeight;
-    return canvas;
-  },
-
-  /**
-   * Calculates the thumbnail size based on current desktop's dimensions.
-   * @return The calculated thumbnail size or a default if unable to calculate.
-   */
-  _getThumbnailSize: function PageThumbs_getThumbnailSize() {
-    if (!this._thumbnailWidth || !this._thumbnailHeight) {
-      let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"]
-                            .getService(Ci.nsIScreenManager);
-      let left = {}, top = {}, width = {}, height = {};
-      screenManager.primaryScreen.GetRectDisplayPix(left, top, width, height);
-      this._thumbnailWidth = Math.round(width.value / 3);
-      this._thumbnailHeight = Math.round(height.value / 3);
-    }
-    return [this._thumbnailWidth, this._thumbnailHeight];
+    return PageThumbUtils.createCanvas(aWindow);
   },
 
   /**

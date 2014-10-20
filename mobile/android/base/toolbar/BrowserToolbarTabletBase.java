@@ -10,6 +10,7 @@ import java.util.Arrays;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.menu.MenuItemActionBar;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -121,8 +122,13 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
     @Override
     public void setPrivateMode(final boolean isPrivate) {
         super.setPrivateMode(isPrivate);
+
         backButton.setPrivateMode(isPrivate);
         forwardButton.setPrivateMode(isPrivate);
+        for (int i = 0; i < actionItemBar.getChildCount(); ++i) {
+            final MenuItemActionBar child = (MenuItemActionBar) actionItemBar.getChildAt(i);
+            child.setPrivateMode(isPrivate);
+        }
     }
 
     protected boolean canDoBack(final Tab tab) {

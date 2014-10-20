@@ -275,20 +275,15 @@ nsWindowsShellService::ShortcutMaintenance()
     return NS_ERROR_UNEXPECTED;
 
   NS_NAMED_LITERAL_CSTRING(prefName, "browser.taskbar.lastgroupid");
-  nsCOMPtr<nsIPrefService> prefs =
+  nsCOMPtr<nsIPrefBranch> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (!prefs)
     return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  prefs->GetBranch(nullptr, getter_AddRefs(prefBranch));
-  if (!prefBranch)
-    return NS_ERROR_UNEXPECTED;
-
   nsCOMPtr<nsISupportsString> prefString;
-  rv = prefBranch->GetComplexValue(prefName.get(),
-                                   NS_GET_IID(nsISupportsString),
-                                   getter_AddRefs(prefString));
+  rv = prefs->GetComplexValue(prefName.get(),
+                              NS_GET_IID(nsISupportsString),
+                              getter_AddRefs(prefString));
   if (NS_SUCCEEDED(rv)) {
     nsAutoString version;
     prefString->GetData(version);
@@ -304,9 +299,9 @@ nsWindowsShellService::ShortcutMaintenance()
     return rv;
 
   prefString->SetData(appId);
-  rv = prefBranch->SetComplexValue(prefName.get(),
-                                   NS_GET_IID(nsISupportsString),
-                                   prefString);
+  rv = prefs->SetComplexValue(prefName.get(),
+                              NS_GET_IID(nsISupportsString),
+                              prefString);
   if (NS_FAILED(rv)) {
     NS_WARNING("Couldn't set last user model id!");
     return NS_ERROR_UNEXPECTED;
@@ -707,6 +702,11 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
     }
   }
 
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefs) {
+    (void) prefs->SetBoolPref(PREF_CHECKDEFAULTBROWSER, true);
+  }
+
   return rv;
 }
 
@@ -722,13 +722,11 @@ nsWindowsShellService::GetShouldCheckDefaultBrowser(bool* aResult)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPrefBranch> prefs;
   nsresult rv;
-  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = pserve->GetBranch("", getter_AddRefs(prefs));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   return prefs->GetBoolPref(PREF_CHECKDEFAULTBROWSER, aResult);
 }
@@ -736,14 +734,11 @@ nsWindowsShellService::GetShouldCheckDefaultBrowser(bool* aResult)
 NS_IMETHODIMP
 nsWindowsShellService::SetShouldCheckDefaultBrowser(bool aShouldCheck)
 {
-  nsCOMPtr<nsIPrefBranch> prefs;
   nsresult rv;
-
-  nsCOMPtr<nsIPrefService> pserve(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  rv = pserve->GetBranch("", getter_AddRefs(prefs));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   return prefs->SetBoolPref(PREF_CHECKDEFAULTBROWSER, aShouldCheck);
 }
