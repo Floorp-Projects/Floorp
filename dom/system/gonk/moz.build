@@ -90,10 +90,13 @@ if CONFIG['MOZ_B2G_RIL']:
         'RadioInterfaceLayer.js',
         'RadioInterfaceLayer.manifest',
         'RILContentHelper.js',
+        'RILSystemMessengerHelper.js',
+        'RILSystemMessengerHelper.manifest',
     ]
     EXTRA_JS_MODULES += [
         'ril_consts.js',
         'ril_worker.js',
+        'RILSystemMessenger.jsm',
     ]
 
 FAIL_ON_WARNINGS = True
