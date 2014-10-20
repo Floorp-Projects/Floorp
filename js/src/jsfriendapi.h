@@ -45,7 +45,7 @@ class JSAtom;
 struct JSErrorFormatString;
 class JSLinearString;
 struct JSJitInfo;
-struct JSErrorReport;
+class JSErrorReport;
 
 namespace JS {
 template <class T>
