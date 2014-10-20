@@ -162,6 +162,7 @@ gbjar.sources += [
     'distribution/ReferrerDescriptor.java',
     'distribution/ReferrerReceiver.java',
     'DoorHangerPopup.java',
+    'DownloadsIntegration.java',
     'DynamicToolbar.java',
     'EditBookmarkDialog.java',
     'EventDispatcher.java',

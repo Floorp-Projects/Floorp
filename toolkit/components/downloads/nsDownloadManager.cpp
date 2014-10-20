@@ -2794,7 +2794,7 @@ nsDownload::SetState(DownloadState aState)
             if (mimeInfo)
               mimeInfo->GetMIMEType(contentType);
 
-            mozilla::widget::android::GeckoAppShell::ScanMedia(path, NS_ConvertUTF8toUTF16(contentType));
+            mozilla::widget::android::DownloadsIntegration::ScanMedia(path, NS_ConvertUTF8toUTF16(contentType));
 #endif
           }
 #ifdef MOZ_ENABLE_GIO
