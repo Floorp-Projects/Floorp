@@ -21,6 +21,12 @@
 
 class nsBoxLayoutState;
 
+namespace mozilla {
+namespace gfx {
+class DrawTarget;
+}
+}
+
 nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                          nsStyleContext* aContext,
                          bool aIsRoot,
@@ -30,6 +36,8 @@ nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
 
 class nsBoxFrame : public nsContainerFrame
 {
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+
 public:
   NS_DECL_FRAMEARENA_HELPERS
 #ifdef DEBUG
@@ -174,7 +182,7 @@ protected:
     virtual void GetBoxName(nsAutoString& aName) MOZ_OVERRIDE;
     void PaintXULDebugBackground(nsRenderingContext& aRenderingContext,
                                  nsPoint aPt);
-    void PaintXULDebugOverlay(nsRenderingContext& aRenderingContext,
+    void PaintXULDebugOverlay(DrawTarget& aRenderingContext,
                               nsPoint aPt);
 #endif
 
@@ -224,9 +232,9 @@ private:
 
     void GetValue(nsPresContext* aPresContext, const nsSize& a, const nsSize& b, char* value);
     void GetValue(nsPresContext* aPresContext, int32_t a, int32_t b, char* value);
-    void DrawSpacer(nsPresContext* aPresContext, nsRenderingContext& aRenderingContext, bool aHorizontal, int32_t flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
-    void DrawLine(nsRenderingContext& aRenderingContext,  bool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
-    void FillRect(nsRenderingContext& aRenderingContext,  bool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
+    void DrawSpacer(nsPresContext* aPresContext, DrawTarget& aDrawTarget, bool aHorizontal, int32_t flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
+    void DrawLine(DrawTarget& aDrawTarget,  bool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
+    void FillRect(DrawTarget& aDrawTarget,  bool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
 #endif
     virtual void UpdateMouseThrough();
 

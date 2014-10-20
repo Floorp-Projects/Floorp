@@ -3507,14 +3507,18 @@ DrawSolidBorderSegment(nsRenderingContext& aContext,
     // simple line or rectangle
     if ((NS_SIDE_TOP == aStartBevelSide) || (NS_SIDE_BOTTOM == aStartBevelSide)) {
       if (1 == aRect.height)
-        aContext.DrawLine(aRect.TopLeft(), aRect.BottomLeft());
+        StrokeLineWithSnapping(aRect.TopLeft(), aRect.BottomLeft(),
+                               appUnitsPerDevPixel, *drawTarget,
+                               color, StrokeOptions(), drawOptions);
       else
         drawTarget->FillRect(NSRectToRect(aRect, appUnitsPerDevPixel, *drawTarget),
                              color, drawOptions);
     }
     else {
       if (1 == aRect.width)
-        aContext.DrawLine(aRect.TopLeft(), aRect.TopRight());
+        StrokeLineWithSnapping(aRect.TopLeft(), aRect.TopRight(),
+                               appUnitsPerDevPixel, *drawTarget,
+                               color, StrokeOptions(), drawOptions);
       else
         drawTarget->FillRect(NSRectToRect(aRect, appUnitsPerDevPixel, *drawTarget),
                              color, drawOptions);
