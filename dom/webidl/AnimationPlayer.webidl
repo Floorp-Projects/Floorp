@@ -28,8 +28,12 @@ interface AnimationPlayer {
   readonly attribute Promise            finished;
   void cancel ();
   void finish ();
+  */
+  [BinaryName="playFromJS"]
   void play ();
+  [BinaryName="pauseFromJS"]
   void pause ();
+  /*
   void reverse ();
   */
 };

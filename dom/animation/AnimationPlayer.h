@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_AnimationPlayer_h
 #define mozilla_dom_AnimationPlayer_h
 
-#include <algorithm> // for std::max
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
@@ -49,7 +48,14 @@ public:
   AnimationTimeline* Timeline() const { return mTimeline; }
   Nullable<double> GetStartTime() const;
   Nullable<double> GetCurrentTime() const;
+  void Play();
+  void Pause();
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
+
+  // Wrapper functions for performing extra steps such as flushing
+  // style when calling from JS.
+  void PauseFromJS();
+  void PlayFromJS();
 
   void SetSource(Animation* aSource);
   void Tick();
