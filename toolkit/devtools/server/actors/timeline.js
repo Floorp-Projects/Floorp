@@ -138,20 +138,24 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     if (!this._isRecording) {
       return;
     }
+    if (!this.docShells.length) {
+      return;
+    }
 
+    let endTime = this.docShells[0].now();
     let markers = [];
+
     for (let docShell of this.docShells) {
       markers = [...markers, ...docShell.popProfileTimelineMarkers()];
     }
     if (markers.length > 0) {
-      let endTime = this.docShells[0].now();
       events.emit(this, "markers", markers, endTime);
     }
     if (this._memoryActor) {
-      events.emit(this, "memory", Date.now(), this._memoryActor.measure());
+      events.emit(this, "memory", endTime, this._memoryActor.measure());
     }
     if (this._framerateActor) {
-      events.emit(this, "ticks", Date.now(), this._framerateActor.getPendingTicks());
+      events.emit(this, "ticks", endTime, this._framerateActor.getPendingTicks());
     }
 
     this._dataPullTimeout = setTimeout(() => {
