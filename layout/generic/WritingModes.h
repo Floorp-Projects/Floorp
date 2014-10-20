@@ -507,12 +507,6 @@ public:
                            aContainerWidth);
   }
 
-  bool operator==(LogicalPoint aOther) const
-  {
-    CHECK_WRITING_MODE(aOther.GetWritingMode());
-    return mPoint == aOther.mPoint;
-  }
-
   LogicalPoint operator+(const LogicalPoint& aOther) const
   {
     CHECK_WRITING_MODE(aOther.GetWritingMode());
@@ -522,33 +516,6 @@ public:
     return LogicalPoint(GetWritingMode(),
                         mPoint.x + aOther.mPoint.x,
                         mPoint.y + aOther.mPoint.y);
-  }
-
-  LogicalPoint& operator+=(const LogicalPoint& aOther)
-  {
-    CHECK_WRITING_MODE(aOther.GetWritingMode());
-    I() += aOther.I();
-    B() += aOther.B();
-    return *this;
-  }
-
-  LogicalPoint operator-(const LogicalPoint& aOther) const
-  {
-    CHECK_WRITING_MODE(aOther.GetWritingMode());
-    // In non-debug builds, LogicalPoint does not store the WritingMode,
-    // so the first parameter here (which will always be eUnknownWritingMode)
-    // is ignored.
-    return LogicalPoint(GetWritingMode(),
-                        mPoint.x - aOther.mPoint.x,
-                        mPoint.y - aOther.mPoint.y);
-  }
-
-  LogicalPoint& operator-=(const LogicalPoint& aOther)
-  {
-    CHECK_WRITING_MODE(aOther.GetWritingMode());
-    I() -= aOther.I();
-    B() -= aOther.B();
-    return *this;
   }
 
 private:
@@ -1353,12 +1320,6 @@ public:
 
   void SetEmpty() { mRect.SetEmpty(); }
 
-  bool IsEqualEdges(const LogicalRect aOther) const
-  {
-    CHECK_WRITING_MODE(aOther.GetWritingMode());
-    return mRect.IsEqualEdges(aOther.mRect);
-  }
-
 /* XXX are these correct?
   nscoord ILeft(WritingMode aWritingMode) const
   {
@@ -1471,17 +1432,17 @@ public:
     }
   }
 
+#if 0 // XXX this would require aContainerWidth as well
   /**
    * Return a LogicalRect representing this rect in a different writing mode
    */
-  LogicalRect ConvertTo(WritingMode aToMode, WritingMode aFromMode,
-                        nscoord aContainerWidth) const
+  LogicalRect ConvertTo(WritingMode aToMode, WritingMode aFromMode) const
   {
     CHECK_WRITING_MODE(aFromMode);
     return aToMode == aFromMode ?
-      *this : LogicalRect(aToMode, GetPhysicalRect(aFromMode, aContainerWidth),
-                          aContainerWidth);
+      *this : LogicalRect(aToMode, GetPhysicalRect(aFromMode));
   }
+#endif
 
 private:
   LogicalRect() MOZ_DELETE;
