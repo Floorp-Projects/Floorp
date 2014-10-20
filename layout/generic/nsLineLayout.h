@@ -62,8 +62,7 @@ public:
    * space rectangle, relative to the containing block.
    * @param aFloatFrame the float frame that was placed.
    */
-  void UpdateBand(mozilla::WritingMode aWM,
-                  const mozilla::LogicalRect& aNewAvailableSpace,
+  void UpdateBand(const nsRect& aNewAvailableSpace,
                   nsIFrame* aFloatFrame);
 
   void BeginSpan(nsIFrame* aFrame, const nsHTMLReflowState* aSpanReflowState,
@@ -151,13 +150,13 @@ public:
   //----------------------------------------
   // Inform the line-layout about the presence of a floating frame
   // XXX get rid of this: use get-frame-type?
-  bool AddFloat(nsIFrame* aFloat, nscoord aAvailableISize)
+  bool AddFloat(nsIFrame* aFloat, nscoord aAvailableWidth)
   {
-    return mBlockRS->AddFloat(this, aFloat, aAvailableISize);
+    return mBlockRS->AddFloat(this, aFloat, aAvailableWidth);
   }
 
-  void SetTrimmableISize(nscoord aTrimmableISize) {
-    mTrimmableISize = aTrimmableISize;
+  void SetTrimmableWidth(nscoord aTrimmableWidth) {
+    mTrimmableWidth = aTrimmableWidth;
   }
 
   //----------------------------------------
@@ -505,9 +504,8 @@ protected:
   // the block has been called.
   nscoord mFinalLineBSize;
   
-  // Amount of trimmable whitespace inline size for the trailing text
-  // frame, if any
-  nscoord mTrimmableISize;
+  // Amount of trimmable whitespace width for the trailing text frame, if any
+  nscoord mTrimmableWidth;
 
   nscoord mContainerWidth;
 
