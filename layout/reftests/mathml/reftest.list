@@ -37,6 +37,7 @@ skip-if(B2G&&browserIsRemote) random-if(smallScreen&&Android) fuzzy(255,200) == 
 != mfenced-8.html mfenced-8-ref.html
 == mfenced-9.html mfenced-9-ref.html
 fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfenced-10.html mfenced-10-ref.html # Windows versions without Cambria Math, see bug 670592
+fails-if(winWidget&&d2d) == mfenced-11.html mfenced-11-ref.html
 == mi-mathvariant-1.xhtml mi-mathvariant-1-ref.xhtml
 == mi-mathvariant-2.xhtml mi-mathvariant-2-ref.xhtml
 != mi-mathvariant-3.html mi-mathvariant-3-ref.html

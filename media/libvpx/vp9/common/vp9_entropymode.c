@@ -10,7 +10,6 @@
 
 #include "vpx_mem/vpx_mem.h"
 
-#include "vp9/common/vp9_alloccommon.h"
 #include "vp9/common/vp9_onyxc_int.h"
 #include "vp9/common/vp9_seg_common.h"
 
@@ -232,21 +231,18 @@ const vp9_tree_index vp9_intra_mode_tree[TREE_SIZE(INTRA_MODES)] = {
   -D63_PRED, 16,                    /* 7 = D63_NODE */
   -D153_PRED, -D207_PRED             /* 8 = D153_NODE */
 };
-struct vp9_token vp9_intra_mode_encodings[INTRA_MODES];
 
 const vp9_tree_index vp9_inter_mode_tree[TREE_SIZE(INTER_MODES)] = {
   -INTER_OFFSET(ZEROMV), 2,
   -INTER_OFFSET(NEARESTMV), 4,
   -INTER_OFFSET(NEARMV), -INTER_OFFSET(NEWMV)
 };
-struct vp9_token vp9_inter_mode_encodings[INTER_MODES];
 
 const vp9_tree_index vp9_partition_tree[TREE_SIZE(PARTITION_TYPES)] = {
   -PARTITION_NONE, 2,
   -PARTITION_HORZ, 4,
   -PARTITION_VERT, -PARTITION_SPLIT
 };
-struct vp9_token vp9_partition_encodings[PARTITION_TYPES];
 
 static const vp9_prob default_intra_inter_p[INTRA_INTER_CONTEXTS] = {
   9, 102, 187, 225
@@ -306,7 +302,7 @@ void tx_counts_to_branch_counts_8x8(const unsigned int *tx_count_8x8p,
   ct_8x8p[0][1] = tx_count_8x8p[TX_8X8];
 }
 
-static const vp9_prob default_mbskip_probs[MBSKIP_CONTEXTS] = {
+static const vp9_prob default_skip_probs[SKIP_CONTEXTS] = {
   192, 128, 64
 };
 
@@ -318,17 +314,18 @@ static const vp9_prob default_switchable_interp_prob[SWITCHABLE_FILTER_CONTEXTS]
   { 149, 144, },
 };
 
-void vp9_init_mbmode_probs(VP9_COMMON *cm) {
-  vp9_copy(cm->fc.uv_mode_prob, default_if_uv_probs);
-  vp9_copy(cm->fc.y_mode_prob, default_if_y_probs);
-  vp9_copy(cm->fc.switchable_interp_prob, default_switchable_interp_prob);
-  vp9_copy(cm->fc.partition_prob, default_partition_probs);
-  vp9_copy(cm->fc.intra_inter_prob, default_intra_inter_p);
-  vp9_copy(cm->fc.comp_inter_prob, default_comp_inter_p);
-  vp9_copy(cm->fc.comp_ref_prob, default_comp_ref_p);
-  vp9_copy(cm->fc.single_ref_prob, default_single_ref_p);
-  cm->fc.tx_probs = default_tx_probs;
-  vp9_copy(cm->fc.mbskip_probs, default_mbskip_probs);
+void vp9_init_mode_probs(FRAME_CONTEXT *fc) {
+  vp9_copy(fc->uv_mode_prob, default_if_uv_probs);
+  vp9_copy(fc->y_mode_prob, default_if_y_probs);
+  vp9_copy(fc->switchable_interp_prob, default_switchable_interp_prob);
+  vp9_copy(fc->partition_prob, default_partition_probs);
+  vp9_copy(fc->intra_inter_prob, default_intra_inter_p);
+  vp9_copy(fc->comp_inter_prob, default_comp_inter_p);
+  vp9_copy(fc->comp_ref_prob, default_comp_ref_p);
+  vp9_copy(fc->single_ref_prob, default_single_ref_p);
+  fc->tx_probs = default_tx_probs;
+  vp9_copy(fc->skip_probs, default_skip_probs);
+  vp9_copy(fc->inter_mode_probs, default_inter_mode_probs);
 }
 
 const vp9_tree_index vp9_switchable_interp_tree
@@ -336,15 +333,6 @@ const vp9_tree_index vp9_switchable_interp_tree
   -EIGHTTAP, 2,
   -EIGHTTAP_SMOOTH, -EIGHTTAP_SHARP
 };
-struct vp9_token vp9_switchable_interp_encodings[SWITCHABLE_FILTERS];
-
-void vp9_entropy_mode_init() {
-  vp9_tokens_from_tree(vp9_intra_mode_encodings, vp9_intra_mode_tree);
-  vp9_tokens_from_tree(vp9_switchable_interp_encodings,
-                       vp9_switchable_interp_tree);
-  vp9_tokens_from_tree(vp9_partition_encodings, vp9_partition_tree);
-  vp9_tokens_from_tree(vp9_inter_mode_encodings, vp9_inter_mode_tree);
-}
 
 #define COUNT_SAT 20
 #define MAX_UPDATE_FACTOR 128
@@ -356,7 +344,7 @@ static int adapt_prob(vp9_prob pre_prob, const unsigned int ct[2]) {
 static void adapt_probs(const vp9_tree_index *tree,
                         const vp9_prob *pre_probs, const unsigned int *counts,
                         vp9_prob *probs) {
-  tree_merge_probs(tree, pre_probs, counts, COUNT_SAT, MAX_UPDATE_FACTOR,
+  vp9_tree_merge_probs(tree, pre_probs, counts, COUNT_SAT, MAX_UPDATE_FACTOR,
                    probs);
 }
 
@@ -396,7 +384,7 @@ void vp9_adapt_mode_probs(VP9_COMMON *cm) {
     adapt_probs(vp9_partition_tree, pre_fc->partition_prob[i],
                 counts->partition[i], fc->partition_prob[i]);
 
-  if (cm->mcomp_filter_type == SWITCHABLE) {
+  if (cm->interp_filter == SWITCHABLE) {
     for (i = 0; i < SWITCHABLE_FILTER_CONTEXTS; i++)
       adapt_probs(vp9_switchable_interp_tree, pre_fc->switchable_interp_prob[i],
                   counts->switchable_interp[i], fc->switchable_interp_prob[i]);
@@ -426,9 +414,8 @@ void vp9_adapt_mode_probs(VP9_COMMON *cm) {
     }
   }
 
-  for (i = 0; i < MBSKIP_CONTEXTS; ++i)
-    fc->mbskip_probs[i] = adapt_prob(pre_fc->mbskip_probs[i],
-                                     counts->mbskip[i]);
+  for (i = 0; i < SKIP_CONTEXTS; ++i)
+    fc->skip_probs[i] = adapt_prob(pre_fc->skip_probs[i], counts->skip[i]);
 }
 
 static void set_default_lf_deltas(struct loopfilter *lf) {
@@ -464,27 +451,24 @@ void vp9_setup_past_independence(VP9_COMMON *cm) {
   lf->last_sharpness_level = -1;
 
   vp9_default_coef_probs(cm);
-  vp9_init_mbmode_probs(cm);
+  vp9_init_mode_probs(&cm->fc);
   vp9_init_mv_probs(cm);
-  vp9_copy(cm->fc.inter_mode_probs, default_inter_mode_probs);
 
   if (cm->frame_type == KEY_FRAME ||
       cm->error_resilient_mode || cm->reset_frame_context == 3) {
     // Reset all frame contexts.
-    for (i = 0; i < NUM_FRAME_CONTEXTS; ++i)
+    for (i = 0; i < FRAME_CONTEXTS; ++i)
       cm->frame_contexts[i] = cm->fc;
   } else if (cm->reset_frame_context == 2) {
     // Reset only the frame context specified in the frame header.
     cm->frame_contexts[cm->frame_context_idx] = cm->fc;
   }
 
-  vpx_memset(cm->prev_mip, 0,
-             cm->mode_info_stride * (cm->mi_rows + 1) * sizeof(MODE_INFO));
-  vpx_memset(cm->mip, 0,
-             cm->mode_info_stride * (cm->mi_rows + 1) * sizeof(MODE_INFO));
+  if (frame_is_intra_only(cm))
+    vpx_memset(cm->prev_mip, 0, cm->mi_stride * (cm->mi_rows + 1) *
+                                    sizeof(*cm->prev_mip));
 
-  vp9_update_mode_info_border(cm, cm->mip);
-  vp9_update_mode_info_border(cm, cm->prev_mip);
+  vpx_memset(cm->mip, 0, cm->mi_stride * (cm->mi_rows + 1) * sizeof(*cm->mip));
 
   vp9_zero(cm->ref_frame_sign_bias);
 

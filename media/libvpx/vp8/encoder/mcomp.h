@@ -9,11 +9,15 @@
  */
 
 
-#ifndef __INC_MCOMP_H
-#define __INC_MCOMP_H
+#ifndef VP8_ENCODER_MCOMP_H_
+#define VP8_ENCODER_MCOMP_H_
 
 #include "block.h"
 #include "vp8/common/variance.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifdef VP8_ENTROPY_STATS
 extern void init_mv_ref_counts();
@@ -104,4 +108,8 @@ typedef int (*vp8_diamond_search_fn_t)
      int_mv *center_mv
     );
 
+#ifdef __cplusplus
+}  // extern "C"
 #endif
+
+#endif  // VP8_ENCODER_MCOMP_H_

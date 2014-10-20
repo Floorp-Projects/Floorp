@@ -12,6 +12,21 @@
 #include "mozilla/dom/SubtleCryptoBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 
+// Templates taken from security/nss/lib/cryptohi/seckey.c
+// These would ideally be exported by NSS and until that
+// happens we have to keep our own copies.
+const SEC_ASN1Template SECKEY_DHPublicKeyTemplate[] = {
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.dh.publicValue), },
+    { 0, }
+};
+const SEC_ASN1Template SECKEY_DHParamKeyTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SECKEYPublicKey) },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.dh.prime), },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPublicKey,u.dh.base), },
+    { SEC_ASN1_SKIP_REST },
+    { 0, }
+};
+
 namespace mozilla {
 namespace dom {
 
@@ -112,6 +127,12 @@ CryptoKey::GetAlgorithm(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal,
     case KeyAlgorithmProxy::EC:
       converted = ToJSValue(cx, mAlgorithm.mEc, &val);
       break;
+    case KeyAlgorithmProxy::DH: {
+      RootedDictionary<DhKeyAlgorithm> dh(cx);
+      mAlgorithm.mDh.ToKeyAlgorithm(cx, dh);
+      converted = ToJSValue(cx, dh, &val);
+      break;
+    }
   }
   if (!converted) {
     aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
@@ -346,8 +367,14 @@ CryptoKey::PrivateKeyFromPkcs8(CryptoBuffer& aKeyData,
 {
   SECKEYPrivateKey* privKey;
   ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
-  ScopedSECItem pkcs8Item(aKeyData.ToSECItem());
-  if (!pkcs8Item) {
+
+  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
+    return nullptr;
+  }
+
+  SECItem pkcs8Item = { siBuffer, nullptr, 0 };
+  if (!aKeyData.ToSECItem(arena, &pkcs8Item)) {
     return nullptr;
   }
 
@@ -355,7 +382,7 @@ CryptoKey::PrivateKeyFromPkcs8(CryptoBuffer& aKeyData,
   unsigned int usage = KU_ALL;
 
   SECStatus rv = PK11_ImportDERPrivateKeyInfoAndReturnKey(
-                 slot.get(), pkcs8Item.get(), nullptr, nullptr, false, false,
+                 slot.get(), &pkcs8Item, nullptr, nullptr, false, false,
                  usage, &privKey, nullptr);
 
   if (rv == SECFailure) {
@@ -368,22 +395,40 @@ SECKEYPublicKey*
 CryptoKey::PublicKeyFromSpki(CryptoBuffer& aKeyData,
                        const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
-  ScopedSECItem spkiItem(aKeyData.ToSECItem());
-  if (!spkiItem) {
+  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
     return nullptr;
   }
 
-  ScopedCERTSubjectPublicKeyInfo spki(SECKEY_DecodeDERSubjectPublicKeyInfo(spkiItem.get()));
+  SECItem spkiItem = { siBuffer, nullptr, 0 };
+  if (!aKeyData.ToSECItem(arena, &spkiItem)) {
+    return nullptr;
+  }
+
+  ScopedCERTSubjectPublicKeyInfo spki(SECKEY_DecodeDERSubjectPublicKeyInfo(&spkiItem));
   if (!spki) {
     return nullptr;
   }
 
-  // Check for id-ecDH. Per the WebCrypto spec we must support it but NSS
-  // does unfortunately not know about it. Let's change the algorithm to
-  // id-ecPublicKey to make NSS happy.
-  if (SECITEM_ItemsAreEqual(&SEC_OID_DATA_EC_DH, &spki->algorithm.algorithm)) {
-    // Retrieve OID data for id-ecPublicKey (1.2.840.10045.2.1).
-    SECOidData* oidData = SECOID_FindOIDByTag(SEC_OID_ANSIX962_EC_PUBLIC_KEY);
+  bool isECDHAlgorithm = SECITEM_ItemsAreEqual(&SEC_OID_DATA_EC_DH,
+                                               &spki->algorithm.algorithm);
+  bool isDHAlgorithm = SECITEM_ItemsAreEqual(&SEC_OID_DATA_DH_KEY_AGREEMENT,
+                                             &spki->algorithm.algorithm);
+
+  // Check for |id-ecDH| and |dhKeyAgreement|. Per the WebCrypto spec we must
+  // support these OIDs but NSS does unfortunately not know about them. Let's
+  // change the algorithm to |id-ecPublicKey| or |dhPublicKey| to make NSS happy.
+  if (isECDHAlgorithm || isDHAlgorithm) {
+    SECOidTag oid = SEC_OID_UNKNOWN;
+    if (isECDHAlgorithm) {
+      oid = SEC_OID_ANSIX962_EC_PUBLIC_KEY;
+    } else if (isDHAlgorithm) {
+      oid = SEC_OID_X942_DIFFIE_HELMAN_KEY;
+    } else {
+      MOZ_ASSERT(false);
+    }
+
+    SECOidData* oidData = SECOID_FindOIDByTag(oid);
     if (!oidData) {
       return nullptr;
     }
@@ -417,21 +462,90 @@ CryptoKey::PrivateKeyToPkcs8(SECKEYPrivateKey* aPrivKey,
 }
 
 nsresult
-CryptoKey::PublicKeyToSpki(SECKEYPublicKey* aPubKey,
-                     CryptoBuffer& aRetVal,
-                     const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+PublicDhKeyToSpki(SECKEYPublicKey* aPubKey,
+                  CERTSubjectPublicKeyInfo* aSpki)
 {
-  ScopedCERTSubjectPublicKeyInfo spki(SECKEY_CreateSubjectPublicKeyInfo(aPubKey));
-  if (!spki) {
+  SECItem* params = ::SECITEM_AllocItem(aSpki->arena, nullptr, 0);
+  if (!params) {
     return NS_ERROR_DOM_OPERATION_ERR;
   }
 
+  SECItem* rvItem = SEC_ASN1EncodeItem(aSpki->arena, params, aPubKey,
+                                       SECKEY_DHParamKeyTemplate);
+  if (!rvItem) {
+    return NS_ERROR_DOM_OPERATION_ERR;
+  }
+
+  SECStatus rv = SECOID_SetAlgorithmID(aSpki->arena, &aSpki->algorithm,
+                                       SEC_OID_X942_DIFFIE_HELMAN_KEY, params);
+  if (rv != SECSuccess) {
+    return NS_ERROR_DOM_OPERATION_ERR;
+  }
+
+  rvItem = SEC_ASN1EncodeItem(aSpki->arena, &aSpki->subjectPublicKey, aPubKey,
+                              SECKEY_DHPublicKeyTemplate);
+  if (!rvItem) {
+    return NS_ERROR_DOM_OPERATION_ERR;
+  }
+
+  // The public value is a BIT_STRING encoded as an INTEGER. After encoding
+  // an INT we need to adjust the length to reflect the number of bits.
+  aSpki->subjectPublicKey.len <<= 3;
+
+  return NS_OK;
+}
+
+nsresult
+CryptoKey::PublicKeyToSpki(SECKEYPublicKey* aPubKey,
+                           CryptoBuffer& aRetVal,
+                           const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+{
+  ScopedCERTSubjectPublicKeyInfo spki;
+
+  // NSS doesn't support exporting DH public keys.
+  if (aPubKey->keyType == dhKey) {
+    // Mimic the behavior of SECKEY_CreateSubjectPublicKeyInfo() and create
+    // a new arena for the SPKI object.
+    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+    if (!arena) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    spki = PORT_ArenaZNew(arena, CERTSubjectPublicKeyInfo);
+    if (!spki) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    // Assign |arena| to |spki| and null the variable afterwards so that the
+    // arena created above that holds the SPKI object is free'd when |spki|
+    // goes out of scope, not when |arena| does.
+    spki->arena = arena.forget();
+
+    nsresult rv = PublicDhKeyToSpki(aPubKey, spki);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    spki = SECKEY_CreateSubjectPublicKeyInfo(aPubKey);
+    if (!spki) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+  }
+
   // Per WebCrypto spec we must export ECDH SPKIs with the algorithm OID
-  // id-ecDH (1.3.132.112). NSS doesn't know about that OID and there is
+  // id-ecDH (1.3.132.112) and DH SPKIs with OID dhKeyAgreement
+  // (1.2.840.113549.1.3.1). NSS doesn't know about these OIDs and there is
   // no way to specify the algorithm to use when exporting a public key.
-  if (aPubKey->keyType == ecKey) {
+  if (aPubKey->keyType == ecKey || aPubKey->keyType == dhKey) {
+    const SECItem* oidData = nullptr;
+    if (aPubKey->keyType == ecKey) {
+      oidData = &SEC_OID_DATA_EC_DH;
+    } else if (aPubKey->keyType == dhKey) {
+      oidData = &SEC_OID_DATA_DH_KEY_AGREEMENT;
+    } else {
+      MOZ_ASSERT(false);
+    }
+
     SECStatus rv = SECITEM_CopyItem(spki->arena, &spki->algorithm.algorithm,
-                                    &SEC_OID_DATA_EC_DH);
+                                    oidData);
     if (rv != SECSuccess) {
       return NS_ERROR_DOM_OPERATION_ERR;
     }
@@ -575,14 +689,19 @@ CryptoKey::PrivateKeyFromJwk(const JsonWebKey& aJwk,
       return nullptr;
     }
 
-    // Compute the ID for this key
-    // This is generated with a SHA-1 hash, so unlikely to collide
-    ScopedSECItem nItem(n.ToSECItem());
-    if (!nItem.get()) {
+    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+    if (!arena) {
       return nullptr;
     }
 
-    ScopedSECItem objID(PK11_MakeIDFromPubKey(nItem.get()));
+    // Compute the ID for this key
+    // This is generated with a SHA-1 hash, so unlikely to collide
+    SECItem nItem = { siBuffer, nullptr, 0 };
+    if (!n.ToSECItem(arena, &nItem)) {
+      return nullptr;
+    }
+
+    ScopedSECItem objID(PK11_MakeIDFromPubKey(&nItem));
     if (!objID.get()) {
       return nullptr;
     }
@@ -888,6 +1007,49 @@ CryptoKey::PublicKeyToJwk(SECKEYPublicKey* aPubKey,
     default:
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
+}
+
+SECKEYPublicKey*
+CryptoKey::PublicDhKeyFromRaw(CryptoBuffer& aKeyData,
+                              const CryptoBuffer& aPrime,
+                              const CryptoBuffer& aGenerator,
+                              const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+{
+  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
+    return nullptr;
+  }
+
+  SECKEYPublicKey* key = PORT_ArenaZNew(arena, SECKEYPublicKey);
+  if (!key) {
+    return nullptr;
+  }
+
+  key->keyType = dhKey;
+  key->pkcs11Slot = nullptr;
+  key->pkcs11ID = CK_INVALID_HANDLE;
+
+  // Set DH public key params.
+  if (!aPrime.ToSECItem(arena, &key->u.dh.prime) ||
+      !aGenerator.ToSECItem(arena, &key->u.dh.base) ||
+      !aKeyData.ToSECItem(arena, &key->u.dh.publicValue)) {
+    return nullptr;
+  }
+
+  key->u.dh.prime.type = siUnsignedInteger;
+  key->u.dh.base.type = siUnsignedInteger;
+  key->u.dh.publicValue.type = siUnsignedInteger;
+
+  return SECKEY_CopyPublicKey(key);
+}
+
+nsresult
+CryptoKey::PublicDhKeyToRaw(SECKEYPublicKey* aPubKey,
+                            CryptoBuffer& aRetVal,
+                            const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+{
+  aRetVal.Assign(&aPubKey->u.dh.publicValue);
+  return NS_OK;
 }
 
 bool

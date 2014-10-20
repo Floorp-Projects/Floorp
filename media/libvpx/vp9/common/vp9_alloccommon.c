@@ -8,54 +8,33 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #include "./vpx_config.h"
 #include "vpx_mem/vpx_mem.h"
 
 #include "vp9/common/vp9_blockd.h"
 #include "vp9/common/vp9_entropymode.h"
 #include "vp9/common/vp9_entropymv.h"
-#include "vp9/common/vp9_findnearmv.h"
 #include "vp9/common/vp9_onyxc_int.h"
 #include "vp9/common/vp9_systemdependent.h"
 
-void vp9_update_mode_info_border(VP9_COMMON *cm, MODE_INFO *mi) {
-  const int stride = cm->mode_info_stride;
+static void clear_mi_border(const VP9_COMMON *cm, MODE_INFO *mi) {
   int i;
 
-  // Clear down top border row
-  vpx_memset(mi, 0, sizeof(MODE_INFO) * stride);
+  // Top border row
+  vpx_memset(mi, 0, sizeof(*mi) * cm->mi_stride);
 
-  // Clear left border column
-  for (i = 1; i < cm->mi_rows + 1; i++)
-    vpx_memset(&mi[i * stride], 0, sizeof(MODE_INFO));
+  // Left border column
+  for (i = 1; i < cm->mi_rows + 1; ++i)
+    vpx_memset(&mi[i * cm->mi_stride], 0, sizeof(*mi));
 }
 
-void vp9_free_frame_buffers(VP9_COMMON *cm) {
-  int i;
+void vp9_set_mb_mi(VP9_COMMON *cm, int width, int height) {
+  const int aligned_width = ALIGN_POWER_OF_TWO(width, MI_SIZE_LOG2);
+  const int aligned_height = ALIGN_POWER_OF_TWO(height, MI_SIZE_LOG2);
 
-  for (i = 0; i < NUM_YV12_BUFFERS; i++)
-    vp9_free_frame_buffer(&cm->yv12_fb[i]);
-
-  vp9_free_frame_buffer(&cm->post_proc_buffer);
-
-  vpx_free(cm->mip);
-  vpx_free(cm->prev_mip);
-  vpx_free(cm->last_frame_seg_map);
-  vpx_free(cm->mi_grid_base);
-  vpx_free(cm->prev_mi_grid_base);
-
-  cm->mip = NULL;
-  cm->prev_mip = NULL;
-  cm->last_frame_seg_map = NULL;
-  cm->mi_grid_base = NULL;
-  cm->prev_mi_grid_base = NULL;
-}
-
-static void set_mb_mi(VP9_COMMON *cm, int aligned_width, int aligned_height) {
   cm->mi_cols = aligned_width >> MI_SIZE_LOG2;
   cm->mi_rows = aligned_height >> MI_SIZE_LOG2;
-  cm->mode_info_stride = cm->mi_cols + MI_BLOCK_SIZE;
+  cm->mi_stride = calc_mi_size(cm->mi_cols);
 
   cm->mb_cols = (cm->mi_cols + 1) >> 1;
   cm->mb_rows = (cm->mi_rows + 1) >> 1;
@@ -63,167 +42,194 @@ static void set_mb_mi(VP9_COMMON *cm, int aligned_width, int aligned_height) {
 }
 
 static void setup_mi(VP9_COMMON *cm) {
-  cm->mi = cm->mip + cm->mode_info_stride + 1;
-  cm->prev_mi = cm->prev_mip + cm->mode_info_stride + 1;
-  cm->mi_grid_visible = cm->mi_grid_base + cm->mode_info_stride + 1;
-  cm->prev_mi_grid_visible = cm->prev_mi_grid_base + cm->mode_info_stride + 1;
+  cm->mi = cm->mip + cm->mi_stride + 1;
+  cm->prev_mi = cm->prev_mip + cm->mi_stride + 1;
+  cm->mi_grid_visible = cm->mi_grid_base + cm->mi_stride + 1;
+  cm->prev_mi_grid_visible = cm->prev_mi_grid_base + cm->mi_stride + 1;
 
-  vpx_memset(cm->mip, 0,
-             cm->mode_info_stride * (cm->mi_rows + 1) * sizeof(MODE_INFO));
+  vpx_memset(cm->mip, 0, cm->mi_stride * (cm->mi_rows + 1) * sizeof(*cm->mip));
 
-  vpx_memset(cm->mi_grid_base, 0,
-             cm->mode_info_stride * (cm->mi_rows + 1) *
-             sizeof(*cm->mi_grid_base));
+  vpx_memset(cm->mi_grid_base, 0, cm->mi_stride * (cm->mi_rows + 1) *
+                                      sizeof(*cm->mi_grid_base));
 
-  vp9_update_mode_info_border(cm, cm->mip);
-  vp9_update_mode_info_border(cm, cm->prev_mip);
+  clear_mi_border(cm, cm->prev_mip);
 }
 
-int vp9_resize_frame_buffers(VP9_COMMON *cm, int width, int height) {
-  const int aligned_width = ALIGN_POWER_OF_TWO(width, MI_SIZE_LOG2);
-  const int aligned_height = ALIGN_POWER_OF_TWO(height, MI_SIZE_LOG2);
-  const int ss_x = cm->subsampling_x;
-  const int ss_y = cm->subsampling_y;
-  int mi_size;
+static int alloc_mi(VP9_COMMON *cm, int mi_size) {
+  int i;
 
-  if (vp9_realloc_frame_buffer(&cm->post_proc_buffer, width, height, ss_x, ss_y,
-                             VP9BORDERINPIXELS) < 0)
-    goto fail;
+  for (i = 0; i < 2; ++i) {
+    cm->mip_array[i] =
+        (MODE_INFO *)vpx_calloc(mi_size, sizeof(MODE_INFO));
+    if (cm->mip_array[i] == NULL)
+      return 1;
 
-  set_mb_mi(cm, aligned_width, aligned_height);
+    cm->mi_grid_base_array[i] =
+        (MODE_INFO **)vpx_calloc(mi_size, sizeof(MODE_INFO*));
+    if (cm->mi_grid_base_array[i] == NULL)
+      return 1;
+  }
 
-  // Allocation
-  mi_size = cm->mode_info_stride * (cm->mi_rows + MI_BLOCK_SIZE);
+  cm->mi_alloc_size = mi_size;
 
-  vpx_free(cm->mip);
-  cm->mip = vpx_calloc(mi_size, sizeof(MODE_INFO));
-  if (!cm->mip)
-    goto fail;
+  // Init the index.
+  cm->mi_idx = 0;
+  cm->prev_mi_idx = 1;
 
-  vpx_free(cm->prev_mip);
-  cm->prev_mip = vpx_calloc(mi_size, sizeof(MODE_INFO));
-  if (!cm->prev_mip)
-    goto fail;
+  cm->mip = cm->mip_array[cm->mi_idx];
+  cm->prev_mip = cm->mip_array[cm->prev_mi_idx];
+  cm->mi_grid_base = cm->mi_grid_base_array[cm->mi_idx];
+  cm->prev_mi_grid_base = cm->mi_grid_base_array[cm->prev_mi_idx];
 
-  vpx_free(cm->mi_grid_base);
-  cm->mi_grid_base = vpx_calloc(mi_size, sizeof(*cm->mi_grid_base));
-  if (!cm->mi_grid_base)
-    goto fail;
+  return 0;
+}
 
-  vpx_free(cm->prev_mi_grid_base);
-  cm->prev_mi_grid_base = vpx_calloc(mi_size, sizeof(*cm->prev_mi_grid_base));
-  if (!cm->prev_mi_grid_base)
-    goto fail;
+static void free_mi(VP9_COMMON *cm) {
+  int i;
 
-  setup_mi(cm);
+  for (i = 0; i < 2; ++i) {
+    vpx_free(cm->mip_array[i]);
+    cm->mip_array[i] = NULL;
+    vpx_free(cm->mi_grid_base_array[i]);
+    cm->mi_grid_base_array[i] = NULL;
+  }
 
-  // Create the segmentation map structure and set to 0.
+  cm->mip = NULL;
+  cm->prev_mip = NULL;
+  cm->mi_grid_base = NULL;
+  cm->prev_mi_grid_base = NULL;
+}
+
+void vp9_free_ref_frame_buffers(VP9_COMMON *cm) {
+  int i;
+
+  for (i = 0; i < FRAME_BUFFERS; ++i) {
+    vp9_free_frame_buffer(&cm->frame_bufs[i].buf);
+
+    if (cm->frame_bufs[i].ref_count > 0 &&
+        cm->frame_bufs[i].raw_frame_buffer.data != NULL) {
+      cm->release_fb_cb(cm->cb_priv, &cm->frame_bufs[i].raw_frame_buffer);
+      cm->frame_bufs[i].ref_count = 0;
+    }
+  }
+
+  vp9_free_frame_buffer(&cm->post_proc_buffer);
+}
+
+void vp9_free_context_buffers(VP9_COMMON *cm) {
+  free_mi(cm);
+
   vpx_free(cm->last_frame_seg_map);
-  cm->last_frame_seg_map = vpx_calloc(cm->mi_rows * cm->mi_cols, 1);
-  if (!cm->last_frame_seg_map)
+  cm->last_frame_seg_map = NULL;
+
+  vpx_free(cm->above_context);
+  cm->above_context = NULL;
+
+  vpx_free(cm->above_seg_context);
+  cm->above_seg_context = NULL;
+}
+
+int vp9_alloc_context_buffers(VP9_COMMON *cm, int width, int height) {
+  vp9_free_context_buffers(cm);
+
+  vp9_set_mb_mi(cm, width, height);
+  if (alloc_mi(cm, cm->mi_stride * calc_mi_size(cm->mi_rows)))
     goto fail;
+
+  cm->last_frame_seg_map = (uint8_t *)vpx_calloc(cm->mi_rows * cm->mi_cols, 1);
+  if (!cm->last_frame_seg_map) goto fail;
+
+  cm->above_context = (ENTROPY_CONTEXT *)vpx_calloc(
+      2 * mi_cols_aligned_to_sb(cm->mi_cols) * MAX_MB_PLANE,
+      sizeof(*cm->above_context));
+  if (!cm->above_context) goto fail;
+
+  cm->above_seg_context = (PARTITION_CONTEXT *)vpx_calloc(
+      mi_cols_aligned_to_sb(cm->mi_cols), sizeof(*cm->above_seg_context));
+  if (!cm->above_seg_context) goto fail;
 
   return 0;
 
  fail:
-  vp9_free_frame_buffers(cm);
+  vp9_free_context_buffers(cm);
   return 1;
 }
 
-int vp9_alloc_frame_buffers(VP9_COMMON *cm, int width, int height) {
+static void init_frame_bufs(VP9_COMMON *cm) {
   int i;
 
-  const int aligned_width = ALIGN_POWER_OF_TWO(width, MI_SIZE_LOG2);
-  const int aligned_height = ALIGN_POWER_OF_TWO(height, MI_SIZE_LOG2);
+  cm->new_fb_idx = FRAME_BUFFERS - 1;
+  cm->frame_bufs[cm->new_fb_idx].ref_count = 1;
+
+  for (i = 0; i < REF_FRAMES; ++i) {
+    cm->ref_frame_map[i] = i;
+    cm->frame_bufs[i].ref_count = 1;
+  }
+}
+
+int vp9_alloc_ref_frame_buffers(VP9_COMMON *cm, int width, int height) {
+  int i;
   const int ss_x = cm->subsampling_x;
   const int ss_y = cm->subsampling_y;
-  int mi_size;
 
-  vp9_free_frame_buffers(cm);
+  vp9_free_ref_frame_buffers(cm);
 
-  for (i = 0; i < NUM_YV12_BUFFERS; i++) {
-    cm->fb_idx_ref_cnt[i] = 0;
-    if (vp9_alloc_frame_buffer(&cm->yv12_fb[i], width, height, ss_x, ss_y,
-                               VP9BORDERINPIXELS) < 0)
+  for (i = 0; i < FRAME_BUFFERS; ++i) {
+    cm->frame_bufs[i].ref_count = 0;
+    if (vp9_alloc_frame_buffer(&cm->frame_bufs[i].buf, width, height,
+                               ss_x, ss_y,
+#if CONFIG_VP9_HIGHBITDEPTH
+                               cm->use_highbitdepth,
+#endif
+                               VP9_ENC_BORDER_IN_PIXELS) < 0)
       goto fail;
   }
 
-  cm->new_fb_idx = NUM_YV12_BUFFERS - 1;
-  cm->fb_idx_ref_cnt[cm->new_fb_idx] = 1;
+  init_frame_bufs(cm);
 
-  for (i = 0; i < ALLOWED_REFS_PER_FRAME; i++)
-    cm->active_ref_idx[i] = i;
-
-  for (i = 0; i < NUM_REF_FRAMES; i++) {
-    cm->ref_frame_map[i] = i;
-    cm->fb_idx_ref_cnt[i] = 1;
-  }
-
+#if CONFIG_INTERNAL_STATS || CONFIG_VP9_POSTPROC
   if (vp9_alloc_frame_buffer(&cm->post_proc_buffer, width, height, ss_x, ss_y,
-                             VP9BORDERINPIXELS) < 0)
+#if CONFIG_VP9_HIGHBITDEPTH
+                             cm->use_highbitdepth,
+#endif
+                             VP9_ENC_BORDER_IN_PIXELS) < 0)
     goto fail;
-
-  set_mb_mi(cm, aligned_width, aligned_height);
-
-  // Allocation
-  mi_size = cm->mode_info_stride * (cm->mi_rows + MI_BLOCK_SIZE);
-
-  cm->mip = vpx_calloc(mi_size, sizeof(MODE_INFO));
-  if (!cm->mip)
-    goto fail;
-
-  cm->prev_mip = vpx_calloc(mi_size, sizeof(MODE_INFO));
-  if (!cm->prev_mip)
-    goto fail;
-
-  cm->mi_grid_base = vpx_calloc(mi_size, sizeof(*cm->mi_grid_base));
-  if (!cm->mi_grid_base)
-    goto fail;
-
-  cm->prev_mi_grid_base = vpx_calloc(mi_size, sizeof(*cm->prev_mi_grid_base));
-  if (!cm->prev_mi_grid_base)
-    goto fail;
-
-  setup_mi(cm);
-
-  // Create the segmentation map structure and set to 0.
-  cm->last_frame_seg_map = vpx_calloc(cm->mi_rows * cm->mi_cols, 1);
-  if (!cm->last_frame_seg_map)
-    goto fail;
+#endif
 
   return 0;
 
  fail:
-  vp9_free_frame_buffers(cm);
+  vp9_free_ref_frame_buffers(cm);
   return 1;
 }
 
-void vp9_create_common(VP9_COMMON *cm) {
-  vp9_machine_specific_config(cm);
-
-  cm->tx_mode = ONLY_4X4;
-  cm->comp_pred_mode = HYBRID_PREDICTION;
-}
-
 void vp9_remove_common(VP9_COMMON *cm) {
-  vp9_free_frame_buffers(cm);
+  vp9_free_ref_frame_buffers(cm);
+  vp9_free_context_buffers(cm);
+  vp9_free_internal_frame_buffers(&cm->int_frame_buffers);
 }
 
-void vp9_initialize_common() {
-  vp9_init_neighbors();
-  vp9_coef_tree_initialize();
-  vp9_entropy_mode_init();
-  vp9_entropy_mv_init();
-}
-
-void vp9_update_frame_size(VP9_COMMON *cm) {
-  const int aligned_width = ALIGN_POWER_OF_TWO(cm->width, MI_SIZE_LOG2);
-  const int aligned_height = ALIGN_POWER_OF_TWO(cm->height, MI_SIZE_LOG2);
-
-  set_mb_mi(cm, aligned_width, aligned_height);
+void vp9_init_context_buffers(VP9_COMMON *cm) {
   setup_mi(cm);
-
-  // Initialize the previous frame segment map to 0.
   if (cm->last_frame_seg_map)
     vpx_memset(cm->last_frame_seg_map, 0, cm->mi_rows * cm->mi_cols);
+}
+
+void vp9_swap_mi_and_prev_mi(VP9_COMMON *cm) {
+  // Swap indices.
+  const int tmp = cm->mi_idx;
+  cm->mi_idx = cm->prev_mi_idx;
+  cm->prev_mi_idx = tmp;
+
+  // Current mip will be the prev_mip for the next frame.
+  cm->mip = cm->mip_array[cm->mi_idx];
+  cm->prev_mip = cm->mip_array[cm->prev_mi_idx];
+  cm->mi_grid_base = cm->mi_grid_base_array[cm->mi_idx];
+  cm->prev_mi_grid_base = cm->mi_grid_base_array[cm->prev_mi_idx];
+
+  // Update the upper left visible macroblock ptrs.
+  cm->mi = cm->mip + cm->mi_stride + 1;
+  cm->prev_mi = cm->prev_mip + cm->mi_stride + 1;
+  cm->mi_grid_visible = cm->mi_grid_base + cm->mi_stride + 1;
+  cm->prev_mi_grid_visible = cm->prev_mi_grid_base + cm->mi_stride + 1;
 }

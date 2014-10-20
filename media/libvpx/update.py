@@ -120,16 +120,20 @@ MODULES = {
         'VP8_COMMON_SRCS-$(HAVE_MEDIA)',
         'VP8_COMMON_SRCS-$(HAVE_NEON)',
         'VP9_COMMON_SRCS-$(HAVE_NEON)',
+        'VP9_COMMON_SRCS-$(HAVE_NEON_ASM)',
         'VP8_CX_SRCS-$(ARCH_ARM)',
         'VP8_CX_SRCS-$(HAVE_EDSP)',
         'VP8_CX_SRCS-$(HAVE_MEDIA)',
         'VP8_CX_SRCS-$(HAVE_NEON)',
+        'VP8_CX_SRCS-$(HAVE_NEON_ASM)',
+        'VP9_CX_SRCS-$(HAVE_NEON)',
     ],
     'ERROR_CONCEALMENT': [
         'VP8_DX_SRCS-$(CONFIG_ERROR_CONCEALMENT)',
     ],
     'AVX2': [
         'VP9_COMMON_SRCS-$(HAVE_AVX2)',
+        'VP9_CX_SRCS-$(HAVE_AVX2)',
     ],
     'VP8_POSTPROC': [
         'VP8_COMMON_SRCS-$(CONFIG_POSTPROC)',
@@ -140,12 +144,14 @@ MODULES = {
 }
 
 DISABLED_MODULES = [
+    'API_SRCS-$(CONFIG_SPATIAL_SVC)',
     'MEM_SRCS-$(CONFIG_MEM_MANAGER)',
     'MEM_SRCS-$(CONFIG_MEM_TRACKER)',
     'VP8_COMMON_SRCS-$(CONFIG_POSTPROC_VISUALIZER)',
     'VP9_COMMON_SRCS-$(CONFIG_POSTPROC_VISUALIZER)',
     'VP8_CX_SRCS-$(CONFIG_INTERNAL_STATS)',
     'VP9_CX_SRCS-$(CONFIG_INTERNAL_STATS)',
+    'VP9_CX_SRCS-$(CONFIG_VP9_TEMPORAL_DENOISING)',
 
     # mips files are also ignored via ignored_folders
     'SCALE_SRCS-$(HAVE_DSPR2)',
@@ -205,23 +211,95 @@ files = {
         'vpx/vpx_codec.h',
         'vpx/vpx_decoder.h',
         'vpx/vpx_encoder.h',
+        'vpx/vpx_frame_buffer.h',
         'vpx/vpx_image.h',
         'vpx/vpx_integer.h',
     ],
     'X86-64_ASM': [
         'third_party/x86inc/x86inc.asm',
-        'vp8/common/x86/loopfilter_block_sse2.asm',
-        'vp9/encoder/x86/vp9_quantize_ssse3.asm',
+        'vp8/common/x86/loopfilter_block_sse2_x86_64.asm',
+        'vp9/encoder/x86/vp9_quantize_ssse3_x86_64.asm',
     ],
     'SOURCES': [
         'vp8/common/rtcd.c',
         'vp8/common/sad_c.c',
+        'vp8/encoder/bitstream.c',
+        'vp8/encoder/onyx_if.c',
         'vp8/vp8_dx_iface.c',
+        'vp9/common/vp9_alloccommon.c',
+        'vp9/common/vp9_blockd.c',
+        'vp9/common/vp9_common_data.c',
+        'vp9/common/vp9_convolve.c',
+        'vp9/common/vp9_debugmodes.c',
+        'vp9/common/vp9_entropy.c',
+        'vp9/common/vp9_entropymode.c',
         'vp9/common/vp9_entropymv.c',
+        'vp9/common/vp9_filter.c',
+        'vp9/common/vp9_frame_buffers.c',
+        'vp9/common/vp9_idct.c',
+        'vp9/common/vp9_loopfilter.c',
+        'vp9/common/vp9_loopfilter_filters.c',
+        'vp9/common/vp9_mvref_common.c',
+        'vp9/common/vp9_pred_common.c',
+        'vp9/common/vp9_prob.c',
+        'vp9/common/vp9_quant_common.c',
+        'vp9/common/vp9_reconinter.c',
+        'vp9/common/vp9_reconintra.c',
         'vp9/common/vp9_rtcd.c',
+        'vp9/common/vp9_scale.c',
+        'vp9/common/vp9_scan.c',
+        'vp9/common/vp9_seg_common.c',
+        'vp9/common/vp9_thread.c',
+        'vp9/common/vp9_tile_common.c',
+        'vp9/decoder/vp9_decodeframe.c',
+        'vp9/decoder/vp9_decodemv.c',
+        'vp9/decoder/vp9_decoder.c',
+        'vp9/decoder/vp9_detokenize.c',
+        'vp9/decoder/vp9_dsubexp.c',
+        'vp9/decoder/vp9_dthread.c',
+        'vp9/decoder/vp9_reader.c',
         'vp9/encoder/vp9_bitstream.c',
+        'vp9/encoder/vp9_aq_complexity.c',
+        'vp9/encoder/vp9_aq_cyclicrefresh.c',
+        'vp9/encoder/vp9_aq_variance.c',
+        'vp9/encoder/vp9_context_tree.c',
+        'vp9/encoder/vp9_cost.c',
+        'vp9/encoder/vp9_dct.c',
+        'vp9/encoder/vp9_encodeframe.c',
+        'vp9/encoder/vp9_encodemb.c',
+        'vp9/encoder/vp9_encodemv.c',
+        'vp9/encoder/vp9_encoder.c',
+        'vp9/encoder/vp9_extend.c',
+        'vp9/encoder/vp9_firstpass.c',
+        'vp9/encoder/vp9_lookahead.c',
+        'vp9/encoder/vp9_mbgraph.c',
+        'vp9/encoder/vp9_mcomp.c',
+        'vp9/encoder/vp9_picklpf.c',
+        'vp9/encoder/vp9_pickmode.c',
+        'vp9/encoder/vp9_quantize.c',
+        'vp9/encoder/vp9_ratectrl.c',
+        'vp9/encoder/vp9_rd.c',
+        'vp9/encoder/vp9_rdopt.c',
+        'vp9/encoder/vp9_resize.c',
+        'vp9/encoder/vp9_sad.c',
+        'vp9/encoder/vp9_segmentation.c',
+        'vp9/encoder/vp9_speed_features.c',
+        'vp9/encoder/vp9_subexp.c',
+        'vp9/encoder/vp9_svc_layercontext.c',
+        'vp9/encoder/vp9_temporal_filter.c',
+        'vp9/encoder/vp9_tokenize.c',
+        'vp9/encoder/vp9_treewriter.c',
+        'vp9/encoder/vp9_variance.c',
+        'vp9/encoder/vp9_write_bit_buffer.c',
+        'vp9/encoder/vp9_writer.c',
+        'vp9/vp9_cx_iface.c',
+        'vp9/vp9_dx_iface.c',
         'vpx/src/svc_encodeframe.c',
+        'vpx/src/vpx_encoder.c',
         'vpx_mem/vpx_mem.c',
+        'vpx_scale/vpx_scale_rtcd.c',
+        'vpx_scale/generic/yv12config.c',
+        'vpx_scale/generic/yv12extend.c',
     ]
 }
 
@@ -230,8 +308,8 @@ manual = [
     'vp8/encoder/boolhuff.c',
 
     # 64bit only
-    'vp8/common/x86/loopfilter_block_sse2.asm',
-    'vp9/encoder/x86/vp9_quantize_ssse3.asm',
+    'vp8/common/x86/loopfilter_block_sse2_x86_64.asm',
+    'vp9/encoder/x86/vp9_quantize_ssse3_x86_64.asm',
 
     # offsets are special cased in Makefile.in
     'vp8/encoder/vp8_asm_enc_offsets.c',
@@ -286,6 +364,7 @@ def prepare_upstream(prefix, commit=None):
             configure += ['--enable-pic']
         if 'linux' in target:
             configure += ['--enable-pic']
+            configure += ['--disable-avx2']
         # x86inc.asm is not compatible with pic 32bit builds
         if target == 'x86-linux-gcc':
             configure += ['--disable-use-x86inc']
@@ -450,9 +529,7 @@ def update_and_remove_files(prefix, libvpx_files, files):
 
 def apply_patches():
     # Patch to permit vpx users to specify their own <stdint.h> types.
-    os.system("patch -p3 < stdint.patch")
-    os.system("patch -p3 < unified.patch")
-    os.system("patch -p3 < mingw.patch")
+    os.system("patch -p0 < stdint.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:

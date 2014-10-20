@@ -30,8 +30,13 @@
 #include "nsIDivertableChannel.h"
 #include "mozilla/net/DNS.h"
 
+class nsInputStreamPump;
+
 namespace mozilla {
 namespace net {
+
+class InterceptedChannelContent;
+class InterceptStreamListener;
 
 class HttpChannelChild MOZ_FINAL : public PHttpChannelChild
                                  , public HttpBaseChannel
@@ -134,9 +139,28 @@ protected:
   virtual void DoNotifyListenerCleanup();
 
 private:
+  nsresult ContinueAsyncOpen();
+
+  void DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
+  void DoOnStatus(nsIRequest* aRequest, nsresult status);
+  void DoOnProgress(nsIRequest* aRequest, uint64_t progress, uint64_t progressMax);
+  void DoOnDataAvailable(nsIRequest* aRequest, nsISupports* aContext, nsIInputStream* aStream,
+                         uint64_t offset, uint32_t count);
+  void DoPreOnStopRequest(nsresult aStatus);
+  void DoOnStopRequest(nsIRequest* aRequest, nsISupports* aContext);
+
+  // Discard the prior interception and continue with the original network request.
+  void ResetInterception();
+
+  // Override this channel's pending response with a synthesized one. The content will be
+  // asynchronously read from the pump.
+  void OverrideWithSynthesizedResponse(nsHttpResponseHead* aResponseHead, nsInputStreamPump* aPump);
+
   RequestHeaderTuples mClientSetRequestHeaders;
   nsCOMPtr<nsIChildChannel> mRedirectChannelChild;
   nsCOMPtr<nsISupports> mSecurityInfo;
+  nsRefPtr<InterceptStreamListener> mInterceptListener;
+  nsRefPtr<nsInputStreamPump> mSynthesizedResponsePump;
 
   bool mIsFromCache;
   bool mCacheEntryAvailable;
@@ -205,6 +229,8 @@ private:
   friend class Redirect3Event;
   friend class DeleteSelfEvent;
   friend class HttpAsyncAborter<HttpChannelChild>;
+  friend class InterceptStreamListener;
+  friend class InterceptedChannelContent;
 };
 
 //-----------------------------------------------------------------------------

@@ -16,6 +16,7 @@ XPIDL_MODULE = 'layout_xul_tree'
 
 EXPORTS += [
     'nsTreeColFrame.h',
+    'nsTreeColumns.h',
     'nsTreeUtils.h',
 ]
 

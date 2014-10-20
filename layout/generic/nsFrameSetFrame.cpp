@@ -8,7 +8,9 @@
 #include "nsFrameSetFrame.h"
 
 #include "gfxContext.h"
+#include "gfxUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/Likely.h"
 
 #include "nsGenericHTMLElement.h"
@@ -40,6 +42,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::gfx;
 
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
@@ -1691,9 +1694,11 @@ public:
 void nsDisplayFramesetBlank::Paint(nsDisplayListBuilder* aBuilder,
                                    nsRenderingContext* aCtx)
 {
-  nscolor white = NS_RGB(255,255,255);
-  aCtx->SetColor(white);
-  aCtx->FillRect(mVisibleRect);
+  DrawTarget* drawTarget = aCtx->GetDrawTarget();
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  Rect rect = NSRectToRect(mVisibleRect, appUnitsPerDevPixel, *drawTarget);
+  ColorPattern white(ToDeviceColor(Color(1.f, 1.f, 1.f, 1.f)));
+  drawTarget->FillRect(rect, white);
 }
 
 void

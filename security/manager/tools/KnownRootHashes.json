@@ -1,0 +1,779 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+//
+//***************************************************************************
+// This is an automatically generated file. It's used to maintain state for
+// runs of genRootCAHashes.js; you should never need to manually edit it
+//***************************************************************************
+
+{
+  "roots": [
+    {
+      "label": "GTE_CyberTrust_Global_Root",
+      "binNumber": 1,
+      "sha256Fingerprint": "pTElGI0hEKqWSwLHt8baMgMXCJTl+3H/+2Zn1eaBCjY="
+    },
+    {
+      "label": "Thawte_Server_CA",
+      "binNumber": 2,
+      "sha256Fingerprint": "tEELc+Lm6spH+8Qvj6QBivQ4HcVM+qhEUEYe7QlFTek="
+    },
+    {
+      "label": "Thawte_Premium_Server_CA",
+      "binNumber": 3,
+      "sha256Fingerprint": "q3A2NlxxVKopwsKfXUGRFjsWKiIlARNX1W0H/6e8H3I="
+    },
+    {
+      "label": "OU_Equifax_Secure_Certificate_Authority_O_Equifax_C_US",
+      "binNumber": 4,
+      "sha256Fingerprint": "CCl6QEfbojaAxzHbbjF2U8p4SOG+vToLAXmnB/ks8Xg="
+    },
+    {
+      "label": "OU_VeriSign_Trust_Network_OU___c__1998_VeriSign__Inc____For_authorized_use_only__OU_Class_3_Public_Primary_Certification_Authority___G2_O__VeriSign__Inc___C_US",
+      "binNumber": 5,
+      "sha256Fingerprint": "g848Eiloilk9SF+BlzwPkZVDHto3zF42Qw55x6iIY4s="
+    },
+    {
+      "label": "GlobalSign_Root_CA",
+      "binNumber": 6,
+      "sha256Fingerprint": "69QQQOS7PsdCyeOB0x7ypBpItmhclufO88HfbNQzHJk="
+    },
+    {
+      "label": "GlobalSign",
+      "binNumber": 7,
+      "sha256Fingerprint": "ykLdQXRf0LgeuQI2LPnYv3Gdob0bHvyUb1tMmfQsG54="
+    },
+    {
+      "label": "VeriSign_Class_3_Public_Primary_Certification_Authority___G3",
+      "binNumber": 8,
+      "sha256Fingerprint": "6wTPXrHzmvp2LyuxIPKWy6Ugwbl9sViVZbgcuaF7ckQ="
+    },
+    {
+      "label": "VeriSign_Class_4_Public_Primary_Certification_Authority___G3",
+      "binNumber": 9,
+      "sha256Fingerprint": "44k2DQ/brrPSUFhLRzAxTiIvOcFWoCAUTo2WBWF5FQY="
+    },
+    {
+      "label": "Entrust_net_Certification_Authority__2048_",
+      "binNumber": 10,
+      "sha256Fingerprint": "bcRxcuAcvLC/YlgNiV/iuKya1PhzgB4MELnIN9IesXc="
+    },
+    {
+      "label": "Baltimore_CyberTrust_Root",
+      "binNumber": 11,
+      "sha256Fingerprint": "Fq9XqfZ2sKsSYJWqXrre8iqzERnWRKyVzUuT2/Pyaus="
+    },
+    {
+      "label": "Equifax_Secure_Global_eBusiness_CA_1",
+      "binNumber": 12,
+      "sha256Fingerprint": "Xwti6rXjU+plIWUWWPu2U1n0QygKSvvRBNd9EPnwTAc="
+    },
+    {
+      "label": "Equifax_Secure_eBusiness_CA_1",
+      "binNumber": 13,
+      "sha256Fingerprint": "z1b/RqShhhCd2WWEte61ilEMQnWw5flPQLuuhl4Z9nM="
+    },
+    {
+      "label": "AddTrust_Class_1_CA_Root",
+      "binNumber": 14,
+      "sha256Fingerprint": "jHIJJ5rATideFtB/07d16AFUtZaARuMfUt0ldmMk6ac="
+    },
+    {
+      "label": "AddTrust_External_CA_Root",
+      "binNumber": 15,
+      "sha256Fingerprint": "aH+kUTgieP/wyLEfjUPVdmccbrK86rQT+4PZZdBtL/I="
+    },
+    {
+      "label": "AddTrust_Public_CA_Root",
+      "binNumber": 16,
+      "sha256Fingerprint": "B5HKB0myB4Kq08fXvQzfyUhYNYQ+steZYAnOQ6tsaSc="
+    },
+    {
+      "label": "AddTrust_Qualified_CA_Root",
+      "binNumber": 17,
+      "sha256Fingerprint": "gJUhCAXbS7w1XkQo2P1uws3jq1+5eplCmI649NzQYBY="
+    },
+    {
+      "label": "Entrust_Root_Certification_Authority",
+      "binNumber": 18,
+      "sha256Fingerprint": "c8F2Q08bxtWt9FsOducnKHyN5XYWwebmFBorLLx9jkw="
+    },
+    {
+      "label": "OU_RSA_Security_2048_V3_O_RSA_Security_Inc",
+      "binNumber": 19,
+      "sha256Fingerprint": "r4tnYqHlKCKBYaldXFWe4mYnj3XXnoMBiaUDUGq9a0w="
+    },
+    {
+      "label": "GeoTrust_Global_CA",
+      "binNumber": 20,
+      "sha256Fingerprint": "/4VqLSUdzYjTZlb0UBJnmM+rqt5AeZxyLeTStds2pzo="
+    },
+    {
+      "label": "GeoTrust_Global_CA_2",
+      "binNumber": 21,
+      "sha256Fingerprint": "yi2CoIZ3By+KtnZP8DVnbP4+XjJeASFy3z+SCW23m4U="
+    },
+    {
+      "label": "GeoTrust_Universal_CA",
+      "binNumber": 22,
+      "sha256Fingerprint": "oEWbn2OyJVn1+l1MbbP59y/xk0IDNXjwc78dG0bLuRI="
+    },
+    {
+      "label": "GeoTrust_Universal_CA_2",
+      "binNumber": 23,
+      "sha256Fingerprint": "oCNPO8hSfKVijuyBrV1piV2laA3JHRy4R38z+Hi5Wws="
+    },
+    {
+      "label": "America_Online_Root_Certification_Authority_1",
+      "binNumber": 24,
+      "sha256Fingerprint": "d0BzEsY6FT1bwAtOUXWc39rCN9wqM7Z5RumOm/poCuM="
+    },
+    {
+      "label": "America_Online_Root_Certification_Authority_2",
+      "binNumber": 25,
+      "sha256Fingerprint": "fTtGWmAU5SbAr/zuISfSMRcnrYEcJoQtAGrzcwbMgL0="
+    },
+    {
+      "label": "Visa_eCommerce_Root",
+      "binNumber": 26,
+      "sha256Fingerprint": "afrJvVX7CseNU7vuXPHVl5if0KqrIKJRUb3xcz7n0SI="
+    },
+    {
+      "label": "Certum_CA",
+      "binNumber": 27,
+      "sha256Fingerprint": "2OD+vB2y440AlA830n1BNE2ZPnNLmdVlbZd41NgUNiQ="
+    },
+    {
+      "label": "AAA_Certificate_Services",
+      "binNumber": 28,
+      "sha256Fingerprint": "16eg+11+JzHXcelITrze9x1fDD4KKUh4K8g+4OppnvQ="
+    },
+    {
+      "label": "Secure_Certificate_Services",
+      "binNumber": 29,
+      "sha256Fingerprint": "vYHOO09lkdEaZ7X8ekf97yVSG/mqThi5498uNKeAO+g="
+    },
+    {
+      "label": "Trusted_Certificate_Services",
+      "binNumber": 30,
+      "sha256Fingerprint": "PwblVoHUlvW+Fp61OJ+fK4/2HhcI32iBckhJzV0ny2k="
+    },
+    {
+      "label": "QuoVadis_Root_Certification_Authority",
+      "binNumber": 31,
+      "sha256Fingerprint": "pF7eO7vwnIrhXHLvwHJo1pOiHJlv1R5nygeUYP1tiHM="
+    },
+    {
+      "label": "QuoVadis_Root_CA_2",
+      "binNumber": 32,
+      "sha256Fingerprint": "haDdfdcgrbf/Bfg9VCsgncf/RSj31nexg4n+peXEnoY="
+    },
+    {
+      "label": "QuoVadis_Root_CA_3",
+      "binNumber": 33,
+      "sha256Fingerprint": "GPH8fyBd+K3d63/gB91X4683WpxNjXNUa/Tx/tHhjTU="
+    },
+    {
+      "label": "OU_Security_Communication_RootCA1_O_SECOM_Trust_net_C_JP",
+      "binNumber": 34,
+      "sha256Fingerprint": "515y7Z9WDuxutIAAc6Q/w60ZGVo5IoIBeJWXSpkCa2w="
+    },
+    {
+      "label": "Sonera_Class2_CA",
+      "binNumber": 35,
+      "sha256Fingerprint": "eQi0AxTBOBALUY0HNYB/+/z4UYoAlTNxBbo4axU92Sc="
+    },
+    {
+      "label": "Staat_der_Nederlanden_Root_CA",
+      "binNumber": 36,
+      "sha256Fingerprint": "1B2CnowWWYIq+T/OYr/83iZPyE6LlQxf8nXQUjVGlaM="
+    },
+    {
+      "label": "UTN___DATACorp_SGC",
+      "binNumber": 37,
+      "sha256Fingerprint": "hfsvkd0SJ1oBRbY2U0+EAkrWi2m47ohoT/cRN1gFs0g="
+    },
+    {
+      "label": "UTN_USERFirst_Hardware",
+      "binNumber": 38,
+      "sha256Fingerprint": "bqVHQdAEZn7tG0gWY0qjp55uS5aVD4J52vyNm9iBITc="
+    },
+    {
+      "label": "Chambers_of_Commerce_Root",
+      "binNumber": 39,
+      "sha256Fingerprint": "DCWKEqVnSu8l8oun3Prs7qNI5UHm9cxO5jtxs2FgasM="
+    },
+    {
+      "label": "Global_Chambersign_Root",
+      "binNumber": 40,
+      "sha256Fingerprint": "7zy0F/yOv2+Xh2yeTs453h6l/mSRQdECi30RwLIpjO0="
+    },
+    {
+      "label": "NetLock_Kozjegyzoi__Class_A__Tanusitvanykiado",
+      "binNumber": 41,
+      "sha256Fingerprint": "fxLNX35eKQ7H2FF51bcsIKW+dQj/21v4GrloSn/J9mc="
+    },
+    {
+      "label": "XRamp_Global_Certification_Authority",
+      "binNumber": 42,
+      "sha256Fingerprint": "zs3ckFCZ2NrfxbHSCbc3y+LBjPssEMD/C88NMob8GqI="
+    },
+    {
+      "label": "OU_Go_Daddy_Class_2_Certification_Authority_O__The_Go_Daddy_Group__Inc___C_US",
+      "binNumber": 43,
+      "sha256Fingerprint": "w4Rr8kuek8pkJ0wOxnwezF4CT/ys0tdAGTUOgf5UauQ="
+    },
+    {
+      "label": "OU_Starfield_Class_2_Certification_Authority_O__Starfield_Technologies__Inc___C_US",
+      "binNumber": 44,
+      "sha256Fingerprint": "FGX6IFOXuHb6pvCplY5VkOQPzH+qT7fCyGd1Iftftlg="
+    },
+    {
+      "label": "StartCom_Certification_Authority",
+      "binNumber": 45,
+      "sha256Fingerprint": "x2apvvLUBxyGOjGqSSDoE7LRmGCMt7fP4hFDuDbfCeo="
+    },
+    {
+      "label": "O_Government_Root_Certification_Authority_C_TW",
+      "binNumber": 46,
+      "sha256Fingerprint": "dgApXu/oW54f1iTbdgYqqq5ZgYpU0ndM1MCywBEx4bM="
+    },
+    {
+      "label": "Swisscom_Root_CA_1",
+      "binNumber": 47,
+      "sha256Fingerprint": "IdsgEjZguy7UGCBdoR7nqFpl4rxuVbWvfniZyKJm2S4="
+    },
+    {
+      "label": "DigiCert_Assured_ID_Root_CA",
+      "binNumber": 48,
+      "sha256Fingerprint": "PpCZtQFej0hsALzqnREe5yH6ujVaibzx32lWHj3GMlw="
+    },
+    {
+      "label": "DigiCert_Global_Root_CA",
+      "binNumber": 49,
+      "sha256Fingerprint": "Q0ig6URMeMsmXgWNXolEtNhPlmK9Jtslf4k0pEPHAWE="
+    },
+    {
+      "label": "DigiCert_High_Assurance_EV_Root_CA",
+      "binNumber": 50,
+      "sha256Fingerprint": "dDHl9MPBzkaQd08LYeBUQIg7qaAe0Aumq9eAbtOxGM8="
+    },
+    {
+      "label": "Class_2_Primary_CA",
+      "binNumber": 51,
+      "sha256Fingerprint": "D5k8iu+Xuq9WhxQO1ZrRghu0r6zwqppYtdV6M4o6+8s="
+    },
+    {
+      "label": "DST_Root_CA_X3",
+      "binNumber": 52,
+      "sha256Fingerprint": "BocmAzGnJAPZCfEF5pvPDTLhvSST/8bZIG0RvNZ3Bzk="
+    },
+    {
+      "label": "DST_ACES_CA_X6",
+      "binNumber": 53,
+      "sha256Fingerprint": "dnyVWnZBLImvaI6QoccPVWz9a2Al2+oQQW1+toMfjEA="
+    },
+    {
+      "label": "T_RKTRUST_Elektronik_Sertifika_Hizmet_Sa_lay_c_s_",
+      "binNumber": 54,
+      "sha256Fingerprint": "RATjO14UDc+ZgFH9/IAox8gWFcXuc3sRG1iCM6m1NaA="
+    },
+    {
+      "label": "T_RKTRUST_Elektronik_Sertifika_Hizmet_Sa_lay_c_s_",
+      "binNumber": 55,
+      "sha256Fingerprint": "xHDPVH4jArl3+yndcaiae2wfYHd7Ayn1YBfzKL9Pa+Y="
+    },
+    {
+      "label": "SwissSign_Gold_CA___G2",
+      "binNumber": 56,
+      "sha256Fingerprint": "Yt0L6bn1ChY+oPjnXAU7HspX6lXIaI9kfGiB8sg1e5U="
+    },
+    {
+      "label": "SwissSign_Silver_CA___G2",
+      "binNumber": 57,
+      "sha256Fingerprint": "vmxNoru5ulm285OXaDdCRsPABZk/qY8CDR3tvtSKgdU="
+    },
+    {
+      "label": "GeoTrust_Primary_Certification_Authority",
+      "binNumber": 58,
+      "sha256Fingerprint": "N9UQBsUS6qtiZCHx7IySAT/F+CrpjuUz60YZuN600Gw="
+    },
+    {
+      "label": "thawte_Primary_Root_CA",
+      "binNumber": 59,
+      "sha256Fingerprint": "jXIvganBE8B5HfE2opZtsmyVCpcdtGtBmfTqVLeL+58="
+    },
+    {
+      "label": "VeriSign_Class_3_Public_Primary_Certification_Authority___G5",
+      "binNumber": 60,
+      "sha256Fingerprint": "ms+rfkPI2IDQayYqlN7u5LRlmYnD0Mrxm69kBeQat98="
+    },
+    {
+      "label": "SecureTrust_CA",
+      "binNumber": 61,
+      "sha256Fingerprint": "8cG1CuWiDdgDDsn2vCSCPdNntSVXWbTnG2H86fc3XXM="
+    },
+    {
+      "label": "Secure_Global_CA",
+      "binNumber": 62,
+      "sha256Fingerprint": "QgD1BDrIWQ67Un0gntFQMCn7y9QcobUG7CfxWt59rGk="
+    },
+    {
+      "label": "COMODO_Certification_Authority",
+      "binNumber": 63,
+      "sha256Fingerprint": "DCzWPfeAb6OZ7egJEWtXW/h5ifBlGPmAjIYFAxeLr2Y="
+    },
+    {
+      "label": "Network_Solutions_Certificate_Authority",
+      "binNumber": 64,
+      "sha256Fingerprint": "FfC6AKOsevOsiEwHKxARoHe9d8CX9AFksvhZir2Dhgw="
+    },
+    {
+      "label": "WellsSecure_Public_Root_Certificate_Authority",
+      "binNumber": 65,
+      "sha256Fingerprint": "pxJyrqqjz+hyf3+znw+z0eVCbpBgsG7m8T6aPFgzzUM="
+    },
+    {
+      "label": "COMODO_ECC_Certification_Authority",
+      "binNumber": 66,
+      "sha256Fingerprint": "F5OSegYUVJeJrc4vjzT38LZtDzrjo7hNIewV27pPrcc="
+    },
+    {
+      "label": "IGC_A",
+      "binNumber": 67,
+      "sha256Fingerprint": "ub6nhgqWLqNhHauXq22j4hwQaLl9VVde0OESecEciTI="
+    },
+    {
+      "label": "OU_Security_Communication_EV_RootCA1_O__SECOM_Trust_Systems_CO__LTD___C_JP",
+      "binNumber": 68,
+      "sha256Fingerprint": "oi26aB6XN24tOX1yiq46m2KWuf26YLwuEfZH8sZ1+zc="
+    },
+    {
+      "label": "OISTE_WISeKey_Global_Root_GA_CA",
+      "binNumber": 69,
+      "sha256Fingerprint": "Qckjhmq0yta3rVeAgVguAgeXpsvfT/94zoOWs4k31/U="
+    },
+    {
+      "label": "Microsec_e_Szigno_Root_CA",
+      "binNumber": 70,
+      "sha256Fingerprint": "Mno9dhq63qA065mEBidcsaR3bv2uL99tAWjqHE9VZ9A="
+    },
+    {
+      "label": "Certigna",
+      "binNumber": 71,
+      "sha256Fingerprint": "47ai2y7XzkiEL3rFMkHHtx1UFEv7QMEfPx0LQvXuoS0="
+    },
+    {
+      "label": "TC_TrustCenter_Class_2_CA_II",
+      "binNumber": 72,
+      "sha256Fingerprint": "5rj4dmSF+Aeuf42sFnBGHwfAoT7vOh/3F1ONerrTkbQ="
+    },
+    {
+      "label": "TC_TrustCenter_Class_3_CA_II",
+      "binNumber": 73,
+      "sha256Fingerprint": "jaCE/Pmc4Hci+JsyBZOYBvpcuBHhyBP2oQjH0zazQI4="
+    },
+    {
+      "label": "TC_TrustCenter_Universal_CA_I",
+      "binNumber": 74,
+      "sha256Fingerprint": "6/PAKoeJsft9URmV1mO3KQbZE84NXhBWiop34lhhZ+c="
+    },
+    {
+      "label": "Deutsche_Telekom_Root_CA_2",
+      "binNumber": 75,
+      "sha256Fingerprint": "thkaUNDDl399qZvNqshqIn2uuWeexwujsMnZInHBcNM="
+    },
+    {
+      "label": "ComSign_Secured_CA",
+      "binNumber": 76,
+      "sha256Fingerprint": "UHlBx0RgoLRwhiINTpkyVyq10bW7y4mAqxyxdlGoRNI="
+    },
+    {
+      "label": "Cybertrust_Global_Root",
+      "binNumber": 77,
+      "sha256Fingerprint": "lgrfAGPpY1Z1DCll3QoIZ9oLnL1ud3FK6vsjSas5PaM="
+    },
+    {
+      "label": "OU_ePKI_Root_Certification_Authority_O__Chunghwa_Telecom_Co___Ltd___C_TW",
+      "binNumber": 78,
+      "sha256Fingerprint": "wKb03GOiS/3PVO8qaggqCnLeNYA+L/X/Unrl2HIG39U="
+    },
+    {
+      "label": "T_B_TAK_UEKAE_K_k_Sertifika_Hizmet_Sa_lay_c_s____S_r_m_3",
+      "binNumber": 79,
+      "sha256Fingerprint": "5Mc0MNeltQkl30M3Cg0hbpp5udbbg3Ogxp6xzDHHxSo="
+    },
+    {
+      "label": "Buypass_Class_2_CA_1",
+      "binNumber": 80,
+      "sha256Fingerprint": "D06c3SZLAlVQ0XCAY0AhT+lENMmwL2l+xxD8X+r7Xjg="
+    },
+    {
+      "label": "Buypass_Class_3_CA_1",
+      "binNumber": 81,
+      "sha256Fingerprint": "t7ErFx+CHaqZDND+UIexKESLqOUYT4TFHgK1yPuWKyQ="
+    },
+    {
+      "label": "EBG_Elektronik_Sertifika_Hizmet_Sa_lay_c_s_",
+      "binNumber": 82,
+      "sha256Fingerprint": "Na5b3dj3rmNc/7pWgqjwC5X0hGLHEI7poOUpKwdKr7I="
+    },
+    {
+      "label": "OU_certSIGN_ROOT_CA_O_certSIGN_C_RO",
+      "binNumber": 83,
+      "sha256Fingerprint": "6qlixPpKa6/r5BUZbTUczYiNT1Pz+orm18RmqU5gQrs="
+    },
+    {
+      "label": "CNNIC_ROOT",
+      "binNumber": 84,
+      "sha256Fingerprint": "4oOTdz2oRaZ58ggMx/tEo7ehw3kst+t3Kf3Lao2Zrqc="
+    },
+    {
+      "label": "OU_ApplicationCA_O_Japanese_Government_C_JP",
+      "binNumber": 85,
+      "sha256Fingerprint": "LUdDfeF5USFaEvPFjlHHKaWAJu8fzApfs9ncAS9gDRk="
+    },
+    {
+      "label": "GeoTrust_Primary_Certification_Authority___G3",
+      "binNumber": 86,
+      "sha256Fingerprint": "tHi4EiUN+HhjXCqn7H0VXqpiXugpFuLNKUNhiGzR+9Q="
+    },
+    {
+      "label": "thawte_Primary_Root_CA___G2",
+      "binNumber": 87,
+      "sha256Fingerprint": "pDENUK8YpkRxkDcqhq+vi5Uf+0Mdg38eVoi0WXHtFVc="
+    },
+    {
+      "label": "thawte_Primary_Root_CA___G3",
+      "binNumber": 88,
+      "sha256Fingerprint": "SwP0WAetcPIb/Cyuccn95GBMBkz1/7aGuuXbqtf900w="
+    },
+    {
+      "label": "GeoTrust_Primary_Certification_Authority___G2",
+      "binNumber": 89,
+      "sha256Fingerprint": "Xtt6xDuCoGqHYejXvkl56/JhH33Xm/kcHGtWaiGe12Y="
+    },
+    {
+      "label": "VeriSign_Universal_Root_Certification_Authority",
+      "binNumber": 90,
+      "sha256Fingerprint": "I5lWESelcSXejO/qYQ3fL6B4tcgGf06CgpC/uGDoSzw="
+    },
+    {
+      "label": "VeriSign_Class_3_Public_Primary_Certification_Authority___G4",
+      "binNumber": 91,
+      "sha256Fingerprint": "ad3X6pC7V8k+E13IXqb81UgLYDI5vcRU/HWLKibPf3k="
+    },
+    {
+      "label": "NetLock_Arany__Class_Gold__F_tan_s_tv_ny",
+      "binNumber": 92,
+      "sha256Fingerprint": "bGHaw6Le8DFQa+A20qb+QBmU+9E9+cjUZlmSdMRG7Jg="
+    },
+    {
+      "label": "Staat_der_Nederlanden_Root_CA___G2",
+      "binNumber": 93,
+      "sha256Fingerprint": "ZoyDlH2mO3JL7OF0PDGg5q7Q247Fsxvjd7t4T5G2cW8="
+    },
+    {
+      "label": "CA_Disig",
+      "binNumber": 94,
+      "sha256Fingerprint": "kr9RGavsytCxMy3E4dBfunW1Z5BE7gyibpMfdE8vM88="
+    },
+    {
+      "label": "Juur_SK",
+      "binNumber": 95,
+      "sha256Fingerprint": "7MPpw0B1A77gkaqVL0E0j/iLqoY7ImS++sgHkBV06Tk="
+    },
+    {
+      "label": "Hongkong_Post_Root_CA_1",
+      "binNumber": 96,
+      "sha256Fingerprint": "+eZ9M2xRACrAVMYyAi1m3aLn4//xCtBh7THYu7QQz7I="
+    },
+    {
+      "label": "SecureSign_RootCA11",
+      "binNumber": 97,
+      "sha256Fingerprint": "vw/u+546WBrV+enbdYmYV0PSYQhcTTFPb11yWapCFhI="
+    },
+    {
+      "label": "ACEDICOM_Root",
+      "binNumber": 98,
+      "sha256Fingerprint": "A5UPtJpTHz4ZkZQjmN+p4Ooy17oc3ZvIXbV+2UALQ0o="
+    },
+    {
+      "label": "Microsec_e_Szigno_Root_CA_2009",
+      "binNumber": 99,
+      "sha256Fingerprint": "PF+B/qX6uCxkv6Lq7K/N6OB3/IYgp8rlNxY9827b83g="
+    },
+    {
+      "label": "e_Guven_Kok_Elektronik_Sertifika_Hizmet_Saglayicisi",
+      "binNumber": 100,
+      "sha256Fingerprint": "5gkHhGWkGXgMtqxMHAv7RlPZ2cxus5Rut/PWmZe61Zg="
+    },
+    {
+      "label": "GlobalSign",
+      "binNumber": 101,
+      "sha256Fingerprint": "y7Ui17fxJ61qAROGW98c1BAufQdZr2NafPRyDcljxTs="
+    },
+    {
+      "label": "Autoridad_de_Certificacion_Firmaprofesional_CIF_A62634068",
+      "binNumber": 102,
+      "sha256Fingerprint": "BASAKL8fKGTUj5rU2DKUNmqCiFZVPzsUMD+QFH9dQO8="
+    },
+    {
+      "label": "Izenpe_com",
+      "binNumber": 103,
+      "sha256Fingerprint": "JTDMjpgyFQK62W+bH7obCZ4tKZ4PRUi7kU82O8DUUx8="
+    },
+    {
+      "label": "Chambers_of_Commerce_Root___2008",
+      "binNumber": 104,
+      "sha256Fingerprint": "Bj5K+sSR39My8wibhULpRhfYk9f+lE4Qp5N+4p2Wk8A="
+    },
+    {
+      "label": "Global_Chambersign_Root___2008",
+      "binNumber": 105,
+      "sha256Fingerprint": "E2M1Q5M0p2mAFqDTJN5yKE4HnXtSILuPvXR4Fu6+uso="
+    },
+    {
+      "label": "Go_Daddy_Root_Certificate_Authority___G2",
+      "binNumber": 106,
+      "sha256Fingerprint": "RRQLMkfrnMjFtPDXtTCR9zKSCJ5uWmPidJ3TrKkZjto="
+    },
+    {
+      "label": "Starfield_Root_Certificate_Authority___G2",
+      "binNumber": 107,
+      "sha256Fingerprint": "LOHLC/nS+eECmT++IVFSw7LdDKveHGjlMZuDkVTbt/U="
+    },
+    {
+      "label": "Starfield_Services_Root_Certificate_Authority___G2",
+      "binNumber": 108,
+      "sha256Fingerprint": "Vo1pBaLIhwikswJRkO3P7bGXSmBqE8blKQ/LKuY+2rU="
+    },
+    {
+      "label": "AffirmTrust_Commercial",
+      "binNumber": 109,
+      "sha256Fingerprint": "A3arHVTF+YA85LLiAaDufu97V7Y26Kk8m41IYMlvX6c="
+    },
+    {
+      "label": "AffirmTrust_Networking",
+      "binNumber": 110,
+      "sha256Fingerprint": "CoHsWpKXd/FFkErzjV1Qn2a14sWPzbUxBYsOF/PwtBs="
+    },
+    {
+      "label": "AffirmTrust_Premium",
+      "binNumber": 111,
+      "sha256Fingerprint": "cKc/fzdrYAdCSJBFNLEUgtW/DmmOzEmN9SV36/LpO5o="
+    },
+    {
+      "label": "AffirmTrust_Premium_ECC",
+      "binNumber": 112,
+      "sha256Fingerprint": "vXH99tqX5M9i0WR63SWBsH15rfg5frTsupxehIiCFCM="
+    },
+    {
+      "label": "Certum_Trusted_Network_CA",
+      "binNumber": 113,
+      "sha256Fingerprint": "XFhGjVX1jkl+dDmC0rUAELbRZTdKz4On1KMtt2jEQI4="
+    },
+    {
+      "label": "Certinomis___Autorit__Racine",
+      "binNumber": 114,
+      "sha256Fingerprint": "/L/iiGIG9ysnWTyLBwKX4S12ntEO15MHBagJjv/BTRc="
+    },
+    {
+      "label": "Root_CA_Generalitat_Valenciana",
+      "binNumber": 115,
+      "sha256Fingerprint": "jE7f0ENI8yKWnn4ppM1NygBGVQYcFuGwdkIu80KtYw4="
+    },
+    {
+      "label": "A_Trust_nQual_03",
+      "binNumber": 116,
+      "sha256Fingerprint": "eTy/RVm5/eOKsi3xaGn2mIGuFMSwE5rHiKeKGvzKAvs="
+    },
+    {
+      "label": "TWCA_Root_Certification_Authority",
+      "binNumber": 117,
+      "sha256Fingerprint": "v9iP4RAcQa4+gBv4vlY1Dum60aa5vVFe3FxtW4cRrEQ="
+    },
+    {
+      "label": "OU_Security_Communication_RootCA2_O__SECOM_Trust_Systems_CO__LTD___C_JP",
+      "binNumber": 118,
+      "sha256Fingerprint": "UTss7LgQ1M3l3YU5Gt/Gwt1g2Hu3NtK1IUhKpHoOvvY="
+    },
+    {
+      "label": "EC_ACC",
+      "binNumber": 119,
+      "sha256Fingerprint": "iEl/AWAvMVQkauKMTVrvEPHYfrt2Ym9K4Lf5W6eWh5k="
+    },
+    {
+      "label": "Hellenic_Academic_and_Research_Institutions_RootCA_2011",
+      "binNumber": 120,
+      "sha256Fingerprint": "vBBPFaSL5wncpUKn4dS5328FRSfoAuqpLVlURCWK/nE="
+    },
+    {
+      "label": "Actalis_Authentication_Root_CA",
+      "binNumber": 121,
+      "sha256Fingerprint": "VZJghOyWOmS5biq+Ac4LqGpk+/68x6q1r8FVs3/XYGY="
+    },
+    {
+      "label": "OU_Trustis_FPS_Root_CA_O_Trustis_Limited_C_GB",
+      "binNumber": 122,
+      "sha256Fingerprint": "wbSCmaulII/pYwrOVcpooD7aWlGciAKg06Zzvo+OVX0="
+    },
+    {
+      "label": "StartCom_Certification_Authority",
+      "binNumber": 123,
+      "sha256Fingerprint": "4XiQ7gmj+/T0i5xBShfWN7elBkfpvHUjInJ/zBdCqRE="
+    },
+    {
+      "label": "StartCom_Certification_Authority_G2",
+      "binNumber": 124,
+      "sha256Fingerprint": "x7plZ96Tp5iuH6p5HnEtN4+uH5PEOX/qRBu3y+b9WZU="
+    },
+    {
+      "label": "Buypass_Class_2_Root_CA",
+      "binNumber": 125,
+      "sha256Fingerprint": "mhFAJRl8W7ldlOY9Vc1DeQhHtkayPN8RraSgDv8V+0g="
+    },
+    {
+      "label": "Buypass_Class_3_Root_CA",
+      "binNumber": 126,
+      "sha256Fingerprint": "7ffrvKJ6KjhNOHt9QBDGZuLttIQ+TCm0rh1bkzLmsk0="
+    },
+    {
+      "label": "T_TeleSec_GlobalRoot_Class_3",
+      "binNumber": 127,
+      "sha256Fingerprint": "/XPa0xxkT/G0O+8MzdqWcQuc2Ydeyn4xcHrz6W1SK70="
+    },
+    {
+      "label": "EE_Certification_Centre_Root_CA",
+      "binNumber": 128,
+      "sha256Fingerprint": "PoS6Q0KQhRbndXPAmS8JecoITkaFaB/xlcy6iiKbinY="
+    },
+    {
+      "label": "T_RKTRUST_Elektronik_Sertifika_Hizmet_Sa_lay_c_s_",
+      "binNumber": 129,
+      "sha256Fingerprint": "l4zZZvL6oHunqpUA2cAunXfyza2mrWunSvS5HGZZPFA="
+    },
+    {
+      "label": "D_TRUST_Root_Class_3_CA_2_2009",
+      "binNumber": 130,
+      "sha256Fingerprint": "SeekQqzw6mKHBQBUtSVktlDk9J5C40jWqjjgOelXscE="
+    },
+    {
+      "label": "D_TRUST_Root_Class_3_CA_2_EV_2009",
+      "binNumber": 131,
+      "sha256Fingerprint": "7sVJa5iM6YYluTQJLuwpCL7QsPMWwtRzDITq8fPTSIE="
+    },
+    {
+      "label": "PSCProcert",
+      "binNumber": 132,
+      "sha256Fingerprint": "PPw8FNH2hP8X44xDykQMALln7JM+i/4GTKHXLJDyrbA="
+    },
+    {
+      "label": "China_Internet_Network_Information_Center_EV_Certificates_Root",
+      "binNumber": 133,
+      "sha256Fingerprint": "HAHG9Nuy/vwiVYsryjJWP0mESs/DK3vksP9Zn56Mevc="
+    },
+    {
+      "label": "Swisscom_Root_CA_2",
+      "binNumber": 134,
+      "sha256Fingerprint": "8JsSLHEU9KCb1OpPSpnVWLRuTCXNgRQNKcBWE5FMOEE="
+    },
+    {
+      "label": "Swisscom_Root_EV_CA_2",
+      "binNumber": 135,
+      "sha256Fingerprint": "2V/qPKTu3OdM1251/G0f9ixEHw+ovHfwNLGeXbJYAV0="
+    },
+    {
+      "label": "CA_Disig_Root_R1",
+      "binNumber": 136,
+      "sha256Fingerprint": "+W8j9MPnnAd6RpiNWvWQBnag8DnLZF3RdUmyFsgkQM4="
+    },
+    {
+      "label": "CA_Disig_Root_R2",
+      "binNumber": 137,
+      "sha256Fingerprint": "4j1KA217cOn1lbFCIHnSuR7fux+2UaBjPqqKncX4BwM="
+    },
+    {
+      "label": "ACCVRAIZ1",
+      "binNumber": 138,
+      "sha256Fingerprint": "mm7AEuGn2p2+NBlNR4rXwNsYIvsHHfEpgUlu0QQ4QRM="
+    },
+    {
+      "label": "TWCA_Global_Root_CA",
+      "binNumber": 139,
+      "sha256Fingerprint": "WXaQB/doXQ/NUIcvn5XVdVpbK0V9gfNpK2EKmGcvDhs="
+    },
+    {
+      "label": "TeliaSonera_Root_CA_v1",
+      "binNumber": 140,
+      "sha256Fingerprint": "3Wk2/iH48HfBI6GlIcEiJPciVbc+A6cmBpPooksPo4k="
+    },
+    {
+      "label": "E_Tugra_Certification_Authority",
+      "binNumber": 141,
+      "sha256Fingerprint": "sL/VK7DX2b2Sv11NwT2iVcAsVC83g2XqiTkR9V5V8jw="
+    },
+    {
+      "label": "T_TeleSec_GlobalRoot_Class_2",
+      "binNumber": 142,
+      "sha256Fingerprint": "keL1eI1YEOunulhzfeFUio7KzQFFmLwLFD4EGxcFJVI="
+    },
+    {
+      "label": "Atos_TrustedRoot_2011",
+      "binNumber": 143,
+      "sha256Fingerprint": "81a+okS3qR6zXVPKmteGSs4Bji011fj5bd9opvQapHQ="
+    },
+    {
+      "label": "QuoVadis_Root_CA_1_G3",
+      "binNumber": 144,
+      "sha256Fingerprint": "ioZv0bJ2tX5XjpIcZYKKK+1Y6fLyiAVBNLfx9L/JzHQ="
+    },
+    {
+      "label": "QuoVadis_Root_CA_2_G3",
+      "binNumber": 145,
+      "sha256Fingerprint": "j+T7Cvk6TQ1n2wvrsj43xxvzJdy83SQOoE2vWLR+GEA="
+    },
+    {
+      "label": "QuoVadis_Root_CA_3_G3",
+      "binNumber": 146,
+      "sha256Fingerprint": "iO+B3iAusBhFLkP4ZHJc6l+9H8LZ0gVzBwnF2LhpD0Y="
+    },
+    {
+      "label": "DigiCert_Assured_ID_Root_G2",
+      "binNumber": 147,
+      "sha256Fingerprint": "fQXrtoIzn4yUUe4JTuv++nlToRTtsvRJSUUvq30vwYU="
+    },
+    {
+      "label": "DigiCert_Assured_ID_Root_G3",
+      "binNumber": 148,
+      "sha256Fingerprint": "fjfLi0xHCQyrNlUbpvRduEBoD7oWapUtsQBxf0MFP8I="
+    },
+    {
+      "label": "DigiCert_Global_Root_G2",
+      "binNumber": 149,
+      "sha256Fingerprint": "yzzLt2Ax5eATj43TmiP53kf/w15DwRRM6ifUalqxy18="
+    },
+    {
+      "label": "DigiCert_Global_Root_G3",
+      "binNumber": 150,
+      "sha256Fingerprint": "Ma1mSPgQQTjHOPOepDIBMzk+OhjMAilu+Xwqye9nMdA="
+    },
+    {
+      "label": "DigiCert_Trusted_Root_G4",
+      "binNumber": 151,
+      "sha256Fingerprint": "VS973PGnr55s5nIBf08Sq/dyQMeOdhrCA9HZ0grImYg="
+    },
+    {
+      "label": "Certification_Authority_of_WoSign",
+      "binNumber": 152,
+      "sha256Fingerprint": "SyLVpq7JnzzbeapewGg4R5zV7LpxZPfyLcHWX2PYVwg="
+    },
+    {
+      "label": "CA______",
+      "binNumber": 153,
+      "sha256Fingerprint": "1vA0vZSqIz8Cl+ykJFsoOXPkR6pZDzEMd/SP34MRIlQ="
+    }
+  ],
+  "maxBin": 153
+}

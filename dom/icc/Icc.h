@@ -6,7 +6,6 @@
 #define mozilla_dom_Icc_h
 
 #include "mozilla/dom/MozIccBinding.h" // For IccCardState
-#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
 class nsIIccInfo;
@@ -16,6 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class DOMRequest;
+class OwningMozIccInfoOrMozGsmIccInfoOrMozCdmaIccInfo;
 
 class Icc MOZ_FINAL : public DOMEventTargetHelper
 {

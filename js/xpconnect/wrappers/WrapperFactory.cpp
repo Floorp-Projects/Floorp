@@ -113,20 +113,7 @@ WrapperFactory::WaiveXray(JSContext *cx, JSObject *objArg)
 static bool
 ForceCOWBehavior(JSObject *obj)
 {
-    JSProtoKey key = IdentifyStandardInstanceOrPrototype(obj);
-    if (key == JSProto_Function && GetXrayType(obj) == XrayForDOMObject) {
-        // This means that we've got a DOM constructor, which we never want to
-        // expose COW-style.
-        return false;
-    }
-    if (key == JSProto_Object || key == JSProto_Function) {
-        MOZ_ASSERT(GetXrayType(obj) == XrayForJSObject,
-                   "We should use XrayWrappers for standard ES Object, Array, and Function "
-                   "instances modulo this hack");
-        return true;
-    }
-
-    return false;
+    return IdentifyStandardInstanceOrPrototype(obj) == JSProto_Object;
 }
 
 inline bool
@@ -367,7 +354,7 @@ DEBUG_CheckUnwrapSafety(HandleObject obj, const js::Wrapper *handler,
 
 static const Wrapper *
 SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
-              bool waiveXrays, bool originIsXBLScope)
+              bool waiveXrays, bool originIsXBLScope, JSObject *obj)
 {
     // Waived Xray uses a modified CCW that has transparent behavior but
     // transitively waives Xrays on arguments.
@@ -398,7 +385,7 @@ SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
     }
 
     // This is a security wrapper. Use the security versions and filter.
-    if (xrayType == XrayForDOMObject)
+    if (xrayType == XrayForDOMObject && IdentifyCrossOriginObject(obj) != CrossOriginOpaque)
         return &FilteringWrapper<CrossOriginXrayWrapper,
                                  CrossOriginAccessiblePropertiesOnly>::singleton;
 
@@ -410,7 +397,7 @@ SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
     // functions exposed from the XBL scope. We could remove this exception,
     // if needed, by using ExportFunction to generate the content-side
     // representations of XBL methods.
-    if (originIsXBLScope)
+    if (xrayType == XrayForJSObject && originIsXBLScope)
         return &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
     return &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
 }
@@ -483,6 +470,14 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
         wrapper = &CrossCompartmentWrapper::singleton;
     }
 
+    // If this is a chrome function being exposed to content, we need to allow
+    // call (but nothing else).
+    else if (originIsChrome && !targetIsChrome &&
+             IdentifyStandardInstance(obj) == JSProto_Function)
+    {
+        wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
+    }
+
     // If this is a chrome object being exposed to content without Xrays, use
     // a COW.
     //
@@ -525,7 +520,7 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
         bool originIsContentXBLScope = IsContentXBLScope(origin);
 
         wrapper = SelectWrapper(securityWrapper, wantXrays, xrayType, waiveXrays,
-                                originIsContentXBLScope);
+                                originIsContentXBLScope, obj);
 
         // If we want to apply add-on interposition in the target compartment,
         // then we try to "upgrade" the wrapper to an interposing one.
