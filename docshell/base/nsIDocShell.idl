@@ -54,7 +54,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(23157a63-26fd-44a0-a0f9-fdc64dcc004c)]
+[scriptable, builtinclass, uuid(da8f78f1-8f20-4d6d-be56-fe53e177b630)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -671,6 +671,14 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Whether the docShell records profile timeline markers at the moment
    */
   [infallible] attribute boolean recordProfileTimelineMarkers;
+
+  /**
+   * Return a DOMHighResTimeStamp representing the number of
+   * milliseconds from an arbitrary point in time.  The reference
+   * point is shared by all DocShells and is also used by timestamps
+   * on markers.
+   */
+  DOMHighResTimeStamp now();
 
   /**
    * Returns and flushes the profile timeline markers gathered by the docShell
