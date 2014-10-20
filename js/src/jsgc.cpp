@@ -2105,6 +2105,14 @@ ArenaContainsGlobal(ArenaHeader *arena)
 }
 
 static bool
+CanRelocateZone(JSRuntime *rt, Zone *zone)
+{
+    // We cannot move atoms as we depend on their addresses being constant and
+    // self-hosting objects may be shared by multiple runtimes.
+    return !rt->isAtomsZone(zone) && !rt->isSelfHostingZone(zone);
+}
+
+static bool
 CanRelocateArena(ArenaHeader *arena)
 {
     /*
@@ -2309,8 +2317,7 @@ GCRuntime::relocateArenas()
         MOZ_ASSERT(zone->isGCFinished());
         MOZ_ASSERT(!zone->isPreservingCode());
 
-        // We cannot move atoms as we depend on their addresses being constant.
-        if (!rt->isAtomsZone(zone)) {
+        if (CanRelocateZone(rt, zone)) {
             zone->setGCState(Zone::Compact);
             relocatedList = zone->allocator.arenas.relocateArenas(relocatedList);
         }
@@ -2443,7 +2450,7 @@ GCRuntime::updatePointersToRelocatedCells()
     WatchpointMap::sweepAll(rt);
     Debugger::sweepAll(rt->defaultFreeOp());
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        if (!rt->isAtomsZone(zone))
+        if (CanRelocateZone(rt, zone))
             rt->gc.sweepZoneAfterCompacting(zone);
     }
 
@@ -5185,7 +5192,7 @@ GCRuntime::compactPhase()
 #ifdef DEBUG
     CheckHashTablesAfterMovingGC(rt);
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        if (!rt->isAtomsZone(zone) && !zone->isPreservingCode())
+        if (CanRelocateZone(rt, zone) && !zone->isPreservingCode())
             zone->allocator.arenas.checkEmptyFreeLists();
     }
 #endif

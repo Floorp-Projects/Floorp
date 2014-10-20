@@ -1315,6 +1315,12 @@ JSRuntime::isSelfHostingCompartment(JSCompartment *comp)
     return selfHostingGlobal_->compartment() == comp;
 }
 
+bool
+JSRuntime::isSelfHostingZone(JS::Zone *zone)
+{
+    return selfHostingGlobal_->zoneFromAnyThread() == zone;
+}
+
 static bool
 CloneValue(JSContext *cx, HandleValue selfHostedValue, MutableHandleValue vp);
 
