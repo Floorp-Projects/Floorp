@@ -93,33 +93,6 @@ function runEmulatorCmdSafe(aCommand) {
 }
 
 /**
- * Wrap DOMRequest onsuccess/onerror events to Promise resolve/reject.
- *
- * Fulfill params: A DOMEvent.
- * Reject params: A DOMEvent.
- *
- * @param aRequest
- *        A DOMRequest instance.
- *
- * @return A deferred promise.
- */
-function wrapDomRequestAsPromise(aRequest) {
-  let deferred = Promise.defer();
-
-  ok(aRequest instanceof DOMRequest,
-     "aRequest is instanceof " + aRequest.constructor);
-
-  aRequest.onsuccess = function(aEvent) {
-    deferred.resolve(aEvent);
-  };
-  aRequest.onerror = function(aEvent) {
-    deferred.reject(aEvent);
-  };
-
-  return deferred.promise;
-}
-
-/**
  * Add a Bluetooth remote device to scatternet and set its properties.
  *
  * Use QEMU command 'bt remote add' to add a virtual Bluetooth remote
@@ -246,16 +219,15 @@ function getEmulatorDeviceProperty(aAddress, aPropertyName) {
 function startDiscovery(aAdapter) {
   let request = aAdapter.startDiscovery();
 
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve() {
+  return request.then(function resolve() {
       // TODO (bug 892207): Make Bluetooth APIs available for 3rd party apps.
       //     Currently, discovering state wouldn't change immediately here.
       //     We would turn on this check when the redesigned API are landed.
       // is(aAdapter.discovering, false, "BluetoothAdapter.discovering");
       log("  Start discovery - Success");
-    }, function reject(aEvent) {
+    }, function reject(aError) {
       ok(false, "Start discovery - Fail");
-      throw aEvent.target.error;
+      throw aError;
     });
 }
 
@@ -275,16 +247,15 @@ function startDiscovery(aAdapter) {
 function stopDiscovery(aAdapter) {
   let request = aAdapter.stopDiscovery();
 
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve() {
+  return request.then(function resolve() {
       // TODO (bug 892207): Make Bluetooth APIs available for 3rd party apps.
       //     Currently, discovering state wouldn't change immediately here.
       //     We would turn on this check when the redesigned API are landed.
       // is(aAdapter.discovering, false, "BluetoothAdapter.discovering");
       log("  Stop discovery - Success");
-    }, function reject(aEvent) {
+    }, function reject(aError) {
       ok(false, "Stop discovery - Fail");
-      throw aEvent.target.error;
+      throw aError;
     });
 }
 
@@ -363,12 +334,11 @@ function startDiscoveryAndWaitDevicesFound(aAdapter, aRemoteAddresses) {
 function pair(aAdapter, aDeviceAddress) {
   let request = aAdapter.pair(aDeviceAddress);
 
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve() {
+  return request.then(function resolve() {
       log("  Pair - Success");
-    }, function reject(aEvent) {
+    }, function reject(aError) {
       ok(false, "Pair - Fail");
-      throw aEvent.target.error;
+      throw aError;
     });
 }
 
@@ -390,12 +360,11 @@ function pair(aAdapter, aDeviceAddress) {
 function unpair(aAdapter, aDeviceAddress) {
   let request = aAdapter.unpair(aDeviceAddress);
 
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve() {
+  return request.then(function resolve() {
       log("  Unpair - Success");
-    }, function reject(aEvent) {
+    }, function reject(aError) {
       ok(false, "Unpair - Fail");
-      throw aEvent.target.error;
+      throw aError;
     });
 }
 
@@ -440,14 +409,13 @@ function pairDeviceAndWait(aAdapter, aDeviceAddress) {
 function getPairedDevices(aAdapter) {
   let request = aAdapter.getPairedDevices();
 
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve() {
+  return request.then(function resolve() {
       log("  getPairedDevices - Success");
       let pairedDevices = request.result.slice();
       return pairedDevices;
-    }, function reject(aEvent) {
+    }, function reject(aError) {
       ok(false, "getPairedDevices - Fail");
-      throw aEvent.target.error;
+      throw aError;
     });
 }
 
@@ -469,13 +437,12 @@ function getPairedDevices(aAdapter) {
 function getSettings(aKey) {
   let request = navigator.mozSettings.createLock().get(aKey);
 
-  return wrapDomRequestAsPromise(request)
-    .then(function resolve(aEvent) {
+  return request.then(function resolve(aValue) {
       ok(true, "getSettings(" + aKey + ")");
-      return aEvent.target.result[aKey];
-    }, function reject(aEvent) {
+      return aValue[aKey];
+    }, function reject(aError) {
       ok(false, "getSettings(" + aKey + ")");
-      throw aEvent.target.error;
+      throw aError;
     });
 }
 
