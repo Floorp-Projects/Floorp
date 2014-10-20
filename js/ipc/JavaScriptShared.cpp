@@ -537,8 +537,7 @@ JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> des
     if (!toVariant(cx, desc.value(), &out->value()))
         return false;
 
-    MOZ_ASSERT(desc.object());
-    if (!toObjectVariant(cx, desc.object(), &out->obj()))
+    if (!toObjectOrNullVariant(cx, desc.object(), &out->obj()))
         return false;
 
     if (!desc.getter()) {
@@ -595,11 +594,7 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
     out.setAttributes(in.attrs());
     if (!fromVariant(cx, in.value(), out.value()))
         return false;
-    Rooted<JSObject*> obj(cx);
-    obj = fromObjectVariant(cx, in.obj());
-    if (!obj)
-        return false;
-    out.object().set(obj);
+    out.object().set(fromObjectOrNullVariant(cx, in.obj()));
 
     if (in.getter().type() == GetterSetter::Tuint64_t && !in.getter().get_uint64_t()) {
         out.setGetter(nullptr);
@@ -632,6 +627,31 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
     }
 
     return true;
+}
+
+bool
+JavaScriptShared::toObjectOrNullVariant(JSContext *cx, JSObject *obj, ObjectOrNullVariant *objVarp)
+{
+    if (!obj) {
+        *objVarp = NullVariant();
+        return true;
+    }
+
+    ObjectVariant objVar;
+    if (!toObjectVariant(cx, obj, &objVar))
+        return false;
+
+    *objVarp = objVar;
+    return true;
+}
+
+JSObject *
+JavaScriptShared::fromObjectOrNullVariant(JSContext *cx, ObjectOrNullVariant objVar)
+{
+    if (objVar.type() == ObjectOrNullVariant::TNullVariant)
+        return nullptr;
+
+    return fromObjectVariant(cx, objVar.get_ObjectVariant());
 }
 
 CpowIdHolder::CpowIdHolder(dom::CPOWManagerGetter *managerGetter, const InfallibleTArray<CpowEntry> &cpows)
