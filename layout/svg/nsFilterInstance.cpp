@@ -449,7 +449,7 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
                          PreMultiply(deviceToFilterSpace));
 
   nsRefPtr<nsRenderingContext> tmpCtx(new nsRenderingContext());
-  tmpCtx->Init(mTargetFrame->PresContext()->DeviceContext(), ctx);
+  tmpCtx->Init(ctx);
   mPaintCallback->Paint(tmpCtx, mTargetFrame, mPaintTransform, &dirty);
 
   mSourceGraphic.mSourceSurface = offscreenDT->Snapshot();

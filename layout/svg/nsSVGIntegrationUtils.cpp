@@ -642,7 +642,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   mFrame->AddStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
 
   nsRefPtr<nsRenderingContext> context(new nsRenderingContext());
-  context->Init(mFrame->PresContext()->DeviceContext(), aContext);
+  context->Init(aContext);
   aContext->Save();
 
   // Clip to aFillRect so that we don't paint outside.
