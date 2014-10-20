@@ -102,4 +102,16 @@
     <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/8" rel="edit" type="application/atom+xml"/>
     <gd:phoneNumber rel="http://schemas.google.com/g/2005#mobile" uri="tel:+31-6-12345678">0612345678</gd:phoneNumber>
   </entry>
+  <entry gd:etag="&quot;SX8-ejVSLit7I2A9XRdQFUkDRgY.&quot;">
+    <id>http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/6</id>
+    <updated>2014-10-17T12:32:08.152Z</updated>
+    <app:edited xmlns:app="http://www.w3.org/2007/app">2014-10-17T12:32:08.152Z</app:edited>
+    <category scheme="http://schemas.google.com/g/2005#kind" term="http://schemas.google.com/contact/2008#contact"/>
+    <title/>
+    <link href="https://www.google.com/m8/feeds/photos/media/tester%40mochi.com/6" rel="http://schemas.google.com/contacts/2008/rel#photo" type="image/*"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/6" rel="self" type="application/atom+xml"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/6" rel="edit" type="application/atom+xml"/>
+    <gd:phoneNumber rel="http://schemas.google.com/g/2005#mobile">215234523452345</gd:phoneNumber>
+    <gContact:groupMembershipInfo deleted="false" href="http://www.google.com/m8/feeds/groups/tester%40mochi.com/base/6"/>
+  </entry>
 </feed>
