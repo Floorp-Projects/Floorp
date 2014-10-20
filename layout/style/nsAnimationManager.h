@@ -56,6 +56,7 @@ public:
     : dom::AnimationPlayer(aTimeline)
     , mIsStylePaused(false)
     , mPauseShouldStick(false)
+    , mLastNotification(LAST_NOTIFICATION_NONE)
   {
   }
 
@@ -70,8 +71,12 @@ public:
 
   bool IsStylePaused() const { return mIsStylePaused; }
 
+  void QueueEvents(EventArray& aEventsToDispatch);
+
 protected:
   virtual ~CSSAnimationPlayer() { }
+
+  static nsString PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType);
 
   // When combining animation-play-state with play() / pause() the following
   // behavior applies:
@@ -124,6 +129,14 @@ protected:
   // they don't represent valid states.)
   bool mIsStylePaused;
   bool mPauseShouldStick;
+
+  enum {
+    LAST_NOTIFICATION_NONE = uint64_t(-1),
+    LAST_NOTIFICATION_END = uint64_t(-2)
+  };
+  // One of the LAST_NOTIFICATION_* constants, or an integer for the iteration
+  // whose start we last notified on.
+  uint64_t mLastNotification;
 };
 
 } /* namespace mozilla */
@@ -159,8 +172,8 @@ public:
   void UpdateStyleAndEvents(mozilla::AnimationPlayerCollection* aEA,
                             mozilla::TimeStamp aRefreshTime,
                             mozilla::EnsureStyleRuleFlags aFlags);
-  void GetEventsForCurrentTime(mozilla::AnimationPlayerCollection* aEA,
-                               mozilla::EventArray &aEventsToDispatch);
+  void QueueEvents(mozilla::AnimationPlayerCollection* aEA,
+                   mozilla::EventArray &aEventsToDispatch);
 
   // nsIStyleRuleProcessor (parts)
   virtual void RulesMatching(ElementRuleProcessorData* aData) MOZ_OVERRIDE;
