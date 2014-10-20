@@ -2090,25 +2090,8 @@ AutoDisableCompactingGC::~AutoDisableCompactingGC()
 }
 
 static bool
-ArenaContainsGlobal(ArenaHeader *arena)
-{
-    if (arena->getAllocKind() > FINALIZE_OBJECT_LAST)
-        return false;
-
-    for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
-        JSObject *obj = i.get<JSObject>();
-        if (obj->is<GlobalObject>())
-            return true;
-    }
-
-    return false;
-}
-
-static bool
 CanRelocateZone(JSRuntime *rt, Zone *zone)
 {
-    // We cannot move atoms as we depend on their addresses being constant and
-    // self-hosting objects may be shared by multiple runtimes.
     return !rt->isAtomsZone(zone) && !rt->isSelfHostingZone(zone);
 }
 
@@ -2119,7 +2102,7 @@ CanRelocateArena(ArenaHeader *arena)
      * We can't currently move global objects because their address can be baked
      * into compiled code so we skip relocation of any area containing one.
      */
-    return arena->getAllocKind() <= FINALIZE_OBJECT_LAST && !ArenaContainsGlobal(arena);
+    return arena->getAllocKind() <= FINALIZE_OBJECT_LAST;
 }
 
 static bool

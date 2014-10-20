@@ -64,6 +64,10 @@ checkSize(JS::HandleObject map, uint32_t expected)
 }
 END_TEST(testWeakMap_basicOperations)
 
+// TODO: this test stores object pointers in a private slot which is not marked
+// and so doesn't work with compacting GC.
+#ifndef JSGC_COMPACTING
+
 BEGIN_TEST(testWeakMap_keyDelegates)
 {
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
@@ -238,3 +242,5 @@ checkSize(JS::HandleObject map, uint32_t expected)
     return true;
 }
 END_TEST(testWeakMap_keyDelegates)
+
+#endif
