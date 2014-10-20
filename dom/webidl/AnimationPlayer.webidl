@@ -10,6 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
+enum AnimationPlayState { "idle", "pending", "running", "paused", "finished" };
+
 [Pref="dom.animations-api.core.enabled"]
 interface AnimationPlayer {
   // Bug 1049975
@@ -22,8 +24,10 @@ interface AnimationPlayer {
   readonly attribute double? currentTime;
 
   /* Not yet implemented
-           attribute double             playbackRate;
+           attribute double             playbackRate; */
+  [BinaryName="playStateFromJS"]
   readonly attribute AnimationPlayState playState;
+  /*
   readonly attribute Promise            ready;
   readonly attribute Promise            finished;
   void cancel ();

@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h" // for TimeStamp, TimeDuration
 #include "mozilla/dom/Animation.h" // for Animation
+#include "mozilla/dom/AnimationPlayerBinding.h" // for AnimationPlayState
 #include "mozilla/dom/AnimationTimeline.h" // for AnimationTimeline
 #include "nsCSSProperty.h" // for nsCSSProperty
 
@@ -60,12 +61,14 @@ public:
   AnimationTimeline* Timeline() const { return mTimeline; }
   Nullable<double> GetStartTime() const;
   Nullable<double> GetCurrentTime() const;
+  AnimationPlayState PlayState() const;
   virtual void Play(UpdateFlags aUpdateFlags);
   virtual void Pause(UpdateFlags aUpdateFlags);
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
 
   // Wrapper functions for performing extra steps such as flushing
   // style when calling from JS.
+  AnimationPlayState PlayStateFromJS() const;
   void PlayFromJS();
   void PauseFromJS();
 
@@ -101,6 +104,7 @@ public:
 protected:
   void FlushStyle() const;
   void MaybePostRestyle() const;
+  StickyTimeDuration SourceContentEnd() const;
 
   Nullable<TimeDuration> mHoldTime;  // Player timescale
   bool mIsPaused;
