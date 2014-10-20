@@ -95,7 +95,7 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
           g_free(uri);
         }
 #elif MOZ_WIDGET_ANDROID
-        mozilla::widget::android::GeckoAppShell::ScanMedia(path, NS_ConvertUTF8toUTF16(aContentType));
+        mozilla::widget::android::DownloadsIntegration::ScanMedia(path, NS_ConvertUTF8toUTF16(aContentType));
 #endif
       }
 #ifdef MOZ_ENABLE_GIO
