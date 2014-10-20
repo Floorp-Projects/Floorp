@@ -15,6 +15,7 @@
 
 #include "mozilla/dom/ContentParent.h"
 
+#include "nsISupportsPrimitives.h"
 #include "nsThreadUtils.h"
 #include "nsHashPropertyBag.h"
 #include "nsComponentManagerUtils.h"
@@ -112,6 +113,7 @@ AudioChannelService::AudioChannelService()
     if (obs) {
       obs->AddObserver(this, "ipc:content-shutdown", false);
       obs->AddObserver(this, "xpcom-shutdown", false);
+      obs->AddObserver(this, "inner-window-destroyed", false);
 #ifdef MOZ_WIDGET_GONK
       // To monitor the volume settings based on audio channel.
       obs->AddObserver(this, "mozsettings-changed", false);
@@ -222,6 +224,7 @@ AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
     UnregisterType(data->mChannel, data->mElementHidden,
                    CONTENT_PROCESS_ID_MAIN, data->mWithVideo);
   }
+
 #ifdef MOZ_WIDGET_GONK
   bool active = AnyAudioChannelIsActive();
   for (uint32_t i = 0; i < mSpeakerManager.Length(); i++) {
@@ -746,6 +749,28 @@ AudioChannelService::ChannelsActiveWithHigherPriorityThan(
   return false;
 }
 
+PLDHashOperator
+AudioChannelService::WindowDestroyedEnumerator(AudioChannelAgent* aAgent,
+                                               nsAutoPtr<AudioChannelAgentData>& aData,
+                                               void* aPtr)
+{
+  uint64_t* innerID = static_cast<uint64_t*>(aPtr);
+  MOZ_ASSERT(innerID);
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aAgent->Window());
+  if (!window || window->WindowID() != *innerID) {
+    return PL_DHASH_NEXT;
+  }
+
+  AudioChannelService* service = AudioChannelService::GetAudioChannelService();
+  MOZ_ASSERT(service);
+
+  service->UnregisterType(aData->mChannel, aData->mElementHidden,
+                          CONTENT_PROCESS_ID_MAIN, aData->mWithVideo);
+
+  return PL_DHASH_REMOVE;
+}
+
 NS_IMETHODIMP
 AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
 {
@@ -798,6 +823,7 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const ch
       NS_WARNING("ipc:content-shutdown message without childID property");
     }
   }
+
 #ifdef MOZ_WIDGET_GONK
   // To process the volume control on each audio channel according to
   // change of settings
@@ -838,6 +864,26 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const ch
     }
   }
 #endif
+
+  else if (!strcmp(aTopic, "inner-window-destroyed")) {
+    nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
+    NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
+
+    uint64_t innerID;
+    nsresult rv = wrapper->GetData(&innerID);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    mAgents.Enumerate(WindowDestroyedEnumerator, &innerID);
+
+#ifdef MOZ_WIDGET_GONK
+    bool active = AnyAudioChannelIsActive();
+    for (uint32_t i = 0; i < mSpeakerManager.Length(); i++) {
+      mSpeakerManager[i]->SetAudioChannelActive(active);
+    }
+#endif
+  }
 
   return NS_OK;
 }

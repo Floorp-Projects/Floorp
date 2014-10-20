@@ -105,10 +105,12 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
   public:
 
     enum BufferKind {
-        PLAIN_BUFFER        =   0, // malloced or inline data
-        ASMJS_BUFFER        = 0x1,
-        MAPPED_BUFFER       = 0x2,
-        KIND_MASK           = ASMJS_BUFFER | MAPPED_BUFFER
+        PLAIN               = 0, // malloced or inline data
+        ASMJS_MALLOCED      = 1,
+        ASMJS_MAPPED        = 2,
+        MAPPED              = 3,
+
+        KIND_MASK           = 0x3
     };
 
   protected:
@@ -117,7 +119,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         // The flags also store the BufferKind
         BUFFER_KIND_MASK    = BufferKind::KIND_MASK,
 
-        NEUTERED_BUFFER     = 0x4,
+        NEUTERED            = 0x4,
 
         // The dataPointer() is owned by this buffer and should be released
         // when no longer in use. Releasing the pointer may be done by either
@@ -151,7 +153,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
         static BufferContents createUnowned(void *data)
         {
-            return BufferContents(static_cast<uint8_t*>(data), PLAIN_BUFFER);
+            return BufferContents(static_cast<uint8_t*>(data), PLAIN);
         }
 
         uint8_t *data() const { return data_; }
@@ -171,6 +173,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     static bool fun_slice(JSContext *cx, unsigned argc, Value *vp);
 
     static bool fun_isView(JSContext *cx, unsigned argc, Value *vp);
+#ifdef NIGHTLY_BUILD
+    static bool fun_transfer(JSContext *cx, unsigned argc, Value *vp);
+#endif
 
     static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
 
@@ -203,17 +208,18 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         if (!ownsData())
             return false;
 
-        // asm.js buffer contents are transferred by copying, just like inline
-        // elements.
-        if (isAsmJSArrayBuffer())
-            return false;
-
         // Neutered contents aren't transferrable because we want a neutered
         // array's contents to be backed by zeroed memory equal in length to
         // the original buffer contents.  Transferring these contents would
         // allocate new ones based on the current byteLength, which is 0 for a
         // neutered array -- not the original byteLength.
         return !isNeutered();
+    }
+
+    // Return whether the buffer is allocated by js_malloc and should be freed
+    // with js_free.
+    bool hasMallocedContents() const {
+        return (ownsData() && isPlain()) || isAsmJSMalloced();
     }
 
     static void addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf mallocSizeOf,
@@ -271,9 +277,12 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     }
 
     BufferKind bufferKind() const { return BufferKind(flags() & BUFFER_KIND_MASK); }
-    bool isAsmJSArrayBuffer() const { return flags() & ASMJS_BUFFER; }
-    bool isMappedArrayBuffer() const { return flags() & MAPPED_BUFFER; }
-    bool isNeutered() const { return flags() & NEUTERED_BUFFER; }
+    bool isPlain() const { return bufferKind() == PLAIN; }
+    bool isAsmJSMapped() const { return bufferKind() == ASMJS_MAPPED; }
+    bool isAsmJSMalloced() const { return bufferKind() == ASMJS_MALLOCED; }
+    bool isAsmJS() const { return isAsmJSMapped() || isAsmJSMalloced(); }
+    bool isMapped() const { return bufferKind() == MAPPED; }
+    bool isNeutered() const { return flags() & NEUTERED; }
 
     static bool prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer,
                                 bool usesSignalHandlers);
@@ -290,7 +299,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         return getFixedSlotOffset(DATA_SLOT);
     }
 
-    static uint32_t neuteredFlag() { return NEUTERED_BUFFER; }
+    static uint32_t neuteredFlag() { return NEUTERED; }
 
   protected:
     enum OwnsState {
@@ -309,9 +318,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         setFlags(owns ? (flags() | OWNS_DATA) : (flags() & ~OWNS_DATA));
     }
 
-    void setIsAsmJSArrayBuffer() { setFlags(flags() | ASMJS_BUFFER); }
-    void setIsMappedArrayBuffer() { setFlags(flags() | MAPPED_BUFFER); }
-    void setIsNeutered() { setFlags(flags() | NEUTERED_BUFFER); }
+    void setIsAsmJSMalloced() { setFlags((flags() & ~KIND_MASK) | ASMJS_MALLOCED); }
+    void setIsNeutered() { setFlags(flags() | NEUTERED); }
 
     void initialize(size_t byteLength, BufferContents contents, OwnsState ownsState) {
         setByteLength(byteLength);
@@ -319,10 +327,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         setFirstView(nullptr);
         setDataPointer(contents, ownsState);
     }
-
-    void releaseAsmJSArray(FreeOp *fop);
-    void releaseAsmJSArrayNoSignals(FreeOp *fop);
-    void releaseMappedArray();
 };
 
 /*
@@ -339,37 +343,13 @@ class ArrayBufferViewObject : public JSObject
     void neuter(void *newData);
 
     uint8_t *dataPointer();
+    void setDataPointer(uint8_t *data);
 
     static void trace(JSTracer *trc, JSObject *obj);
 };
 
 bool
 ToClampedIndex(JSContext *cx, HandleValue v, uint32_t length, uint32_t *out);
-
-inline void
-PostBarrierTypedArrayObject(JSObject *obj)
-{
-#ifdef JSGC_GENERATIONAL
-    MOZ_ASSERT(obj);
-    JSRuntime *rt = obj->runtimeFromMainThread();
-    if (!rt->isHeapBusy() && !IsInsideNursery(JS::AsCell(obj)))
-        rt->gc.storeBuffer.putWholeCellFromMainThread(obj);
-#endif
-}
-
-inline void
-InitArrayBufferViewDataPointer(JSObject *obj, ArrayBufferObject *buffer, size_t byteOffset)
-{
-    /*
-     * N.B. The base of the array's data is stored in the object's
-     * private data rather than a slot to avoid the restriction that
-     * private Values that are pointers must have the low bits clear.
-     */
-    MOZ_ASSERT(buffer->dataPointer() != nullptr);
-    obj->as<NativeObject>().initPrivate(buffer->dataPointer() + byteOffset);
-
-    PostBarrierTypedArrayObject(obj);
-}
 
 /*
  * Tests for ArrayBufferObject, like obj->is<ArrayBufferObject>().

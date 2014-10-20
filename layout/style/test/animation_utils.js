@@ -1,3 +1,108 @@
+//----------------------------------------------------------------------
+//
+// Common testing functions
+//
+//----------------------------------------------------------------------
+
+function advance_clock(milliseconds) {
+  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
+}
+
+// Test-element creation/destruction and event checking
+(function() {
+  var gElem;
+  var gEventsReceived = [];
+
+  function new_div(style) {
+    return new_element("div", style);
+  }
+
+  // Creates a new |tagname| element with inline style |style| and appends
+  // it as a child of the element with ID 'display'.
+  // The element will also be given the class 'target' which can be used
+  // for additional styling.
+  function new_element(tagname, style) {
+    if (gElem) {
+      ok(false, "test author forgot to call done_div/done_elem");
+    }
+    if (typeof(style) != "string") {
+      ok(false, "test author forgot to pass argument");
+    }
+    if (!document.getElementById("display")) {
+      ok(false, "no 'display' element to append to");
+    }
+    gElem = document.createElement(tagname);
+    gElem.setAttribute("style", style);
+    gElem.classList.add("target");
+    document.getElementById("display").appendChild(gElem);
+    return [ gElem, getComputedStyle(gElem, "") ];
+  }
+
+  function listen() {
+    if (!gElem) {
+      ok(false, "test author forgot to call new_div before listen");
+    }
+    gEventsReceived = [];
+    function listener(event) {
+      gEventsReceived.push(event);
+    }
+    gElem.addEventListener("animationstart", listener, false);
+    gElem.addEventListener("animationiteration", listener, false);
+    gElem.addEventListener("animationend", listener, false);
+  }
+
+  function check_events(eventsExpected, desc) {
+    // This function checks that the list of eventsExpected matches
+    // the received events -- but it only checks the properties that
+    // are present on eventsExpected.
+    is(gEventsReceived.length, gEventsReceived.length,
+       "number of events received for " + desc);
+    for (var i = 0,
+         i_end = Math.min(eventsExpected.length, gEventsReceived.length);
+         i != i_end; ++i) {
+      var exp = eventsExpected[i];
+      var rec = gEventsReceived[i];
+      for (var prop in exp) {
+        if (prop == "elapsedTime") {
+          // Allow floating point error.
+          ok(Math.abs(rec.elapsedTime - exp.elapsedTime) < 0.000002,
+             "events[" + i + "]." + prop + " for " + desc +
+             " received=" + rec.elapsedTime + " expected=" + exp.elapsedTime);
+        } else {
+          is(rec[prop], exp[prop],
+             "events[" + i + "]." + prop + " for " + desc);
+        }
+      }
+    }
+    for (var i = eventsExpected.length; i < gEventsReceived.length; ++i) {
+      ok(false, "unexpected " + gEventsReceived[i].type + " event for " + desc);
+    }
+    gEventsReceived = [];
+  }
+
+  function done_element() {
+    if (!gElem) {
+      ok(false, "test author called done_element/done_div without matching"
+                + " call to new_element/new_div");
+    }
+    gElem.remove();
+    gElem = null;
+    if (gEventsReceived.length) {
+      ok(false, "caller should have called check_events");
+    }
+  }
+
+  [ new_div
+    , new_element
+    , listen
+    , check_events
+    , done_element ]
+  .forEach(function(fn) {
+    window[fn.name] = fn;
+  });
+  window.done_div = done_element;
+})();
+
 function px_to_num(str)
 {
     return Number(String(str).match(/^([\d.]+)px$/)[1]);

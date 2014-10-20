@@ -12,6 +12,7 @@
 #include "gfxFont.h"
 #include "gfxSkipChars.h"
 #include "gfxTypes.h"
+#include "gfxUtils.h"
 #include "LookAndFeel.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PatternHelpers.h"
@@ -2926,7 +2927,7 @@ SVGTextDrawPathCallbacks::MakeFillPattern(GeneralPattern* aOutPattern)
     return;
   }
 
-  aOutPattern->InitColorPattern(ToColor(gfxRGBA(mColor)));
+  aOutPattern->InitColorPattern(ToDeviceColor(mColor));
 }
 
 void

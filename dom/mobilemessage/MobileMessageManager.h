@@ -7,7 +7,6 @@
 #define mozilla_dom_mobilemessage_MobileMessageManager_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsIObserver.h"
 
@@ -23,6 +22,7 @@ class DOMCursor;
 struct MmsParameters;
 struct MmsSendParameters;
 struct MobileMessageFilter;
+class OwningLongOrMozSmsMessageOrMozMmsMessage;
 struct SmsSendParameters;
 
 class MobileMessageManager MOZ_FINAL : public DOMEventTargetHelper

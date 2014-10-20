@@ -533,6 +533,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         MOZ_ASSERT(!outerResumePoint_);
         outerResumePoint_ = outer;
     }
+    void clearOuterResumePoint() {
+        discardResumePoint(outerResumePoint_);
+        outerResumePoint_ = nullptr;
+    }
     MResumePoint *callerResumePoint() {
         return entryResumePoint() ? entryResumePoint()->caller() : nullptr;
     }

@@ -4,6 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMathMLFrame.h"
+
+#include "gfxUtils.h"
+#include "mozilla/gfx/2D.h"
+#include "nsLayoutUtils.h"
 #include "nsNameSpaceManager.h"
 #include "nsMathMLChar.h"
 #include "nsCSSPseudoElements.h"
@@ -14,6 +18,9 @@
 #include "nsAutoPtr.h"
 #include "nsDisplayList.h"
 #include "nsRenderingContext.h"
+
+using namespace mozilla;
+using namespace mozilla::gfx;
 
 eMathMLFrameType
 nsMathMLFrame::GetMathMLFrameType()
@@ -309,8 +316,11 @@ private:
 void nsDisplayMathMLBoundingMetrics::Paint(nsDisplayListBuilder* aBuilder,
                                            nsRenderingContext* aCtx)
 {
-  aCtx->SetColor(NS_RGB(0,0,255));
-  aCtx->DrawRect(mRect + ToReferenceFrame());
+  DrawTarget* drawTarget = aRenderingContext->GetDrawTarget();
+  Rect r = NSRectToRect(mRect + ToReferenceFrame(),
+                        mFrame->PresContext()->AppUnitsPerDevPixel());
+  ColorPattern blue(ToDeviceColor(Color(0.f, 0.f, 1.f, 1.f)));
+  drawTarget->StrokeRect(r, blue);
 }
 
 nsresult
@@ -355,8 +365,13 @@ void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
                                nsRenderingContext* aCtx)
 {
   // paint the bar with the current text color
-  aCtx->SetColor(mFrame->GetVisitedDependentColor(eCSSProperty_color));
-  aCtx->FillRect(mRect + ToReferenceFrame());
+  DrawTarget* drawTarget = aCtx->GetDrawTarget();
+  Rect rect = NSRectToRect(mRect + ToReferenceFrame(),
+                           mFrame->PresContext()->AppUnitsPerDevPixel(),
+                           *drawTarget);
+  ColorPattern color(ToDeviceColor(
+                       mFrame->GetVisitedDependentColor(eCSSProperty_color)));
+  drawTarget->FillRect(rect, color);
 }
 
 void

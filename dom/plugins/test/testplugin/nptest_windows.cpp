@@ -65,12 +65,6 @@ pluginSupportsWindowlessMode()
   return true;
 }
 
-bool
-pluginSupportsAsyncBitmapDrawing()
-{
-  return true;
-}
-
 NPError
 pluginInstanceInit(InstanceData* instanceData)
 {
@@ -105,118 +99,10 @@ pluginInstanceShutdown(InstanceData* instanceData)
   instanceData->platformData = 0;
 }
 
-static ID3D10Device1*
-getD3D10Device()
-{
-  ID3D10Device1 *device;
-    
-  HMODULE d3d10module = LoadLibraryA("d3d10_1.dll");
-  decltype(D3D10CreateDevice1)* createD3DDevice =
-      (decltype(D3D10CreateDevice1)*) GetProcAddress(d3d10module,
-                                                     "D3D10CreateDevice1");
-
-  if (createD3DDevice) {
-    HMODULE dxgiModule = LoadLibraryA("dxgi.dll");
-    decltype(CreateDXGIFactory1)* createDXGIFactory1 =
-        (decltype(CreateDXGIFactory1)*) GetProcAddress(dxgiModule,
-                                                       "CreateDXGIFactory1");
-
-    HRESULT hr;
-
-    // Try to use a DXGI 1.1 adapter in order to share resources
-    // across processes.
-    IDXGIAdapter1 *adapter1;
-    if (createDXGIFactory1) {
-      IDXGIFactory1 *factory1;
-      hr = createDXGIFactory1(__uuidof(IDXGIFactory1),
-                              (void**)&factory1);
-
-      if (FAILED(hr) || !factory1) {
-        // Uh-oh
-        return nullptr;
-      }
-
-      hr = factory1->EnumAdapters1(0, &adapter1);
-
-      if (SUCCEEDED(hr) && adapter1) {
-        hr = adapter1->CheckInterfaceSupport(__uuidof(ID3D10Device),
-                                             nullptr);
-        if (FAILED(hr)) {
-            adapter1 = nullptr;
-        }
-      }
-      factory1->Release();
-    }
-
-    hr = createD3DDevice(
-          adapter1, 
-          D3D10_DRIVER_TYPE_HARDWARE,
-          nullptr,
-          D3D10_CREATE_DEVICE_BGRA_SUPPORT |
-          D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-          D3D10_FEATURE_LEVEL_10_0,
-          D3D10_1_SDK_VERSION,
-          &device);
-
-    adapter1->Release();
-  }
-
-  return device;
-}
-
 void
 pluginDoSetWindow(InstanceData* instanceData, NPWindow* newWindow)
 {
   instanceData->window = *newWindow;
-  NPP npp = instanceData->npp;
-
-  if (instanceData->asyncDrawing == AD_DXGI) {
-    if (instanceData->frontBuffer &&
-        instanceData->frontBuffer->size.width == newWindow->width &&
-        instanceData->frontBuffer->size.height == newWindow->height) {
-          return;
-    }
-    if (instanceData->frontBuffer) {
-      instanceData->platformData->frontBuffer->Release();
-      instanceData->platformData->frontBuffer = nullptr;
-      NPN_FinalizeAsyncSurface(npp, instanceData->frontBuffer);
-      NPN_MemFree(instanceData->frontBuffer);
-    }
-    if (instanceData->backBuffer) {
-      instanceData->platformData->backBuffer->Release();
-      instanceData->platformData->backBuffer = nullptr;
-      NPN_FinalizeAsyncSurface(npp, instanceData->backBuffer);
-      NPN_MemFree(instanceData->backBuffer);
-    }
-
-    if (!instanceData->platformData->device) {
-      instanceData->platformData->device = getD3D10Device();
-    }
-
-    ID3D10Device1 *dev = instanceData->platformData->device;
-
-    if (!dev) {
-      return;
-    }
-
-    instanceData->frontBuffer = (NPAsyncSurface*)NPN_MemAlloc(sizeof(NPAsyncSurface));
-    instanceData->backBuffer = (NPAsyncSurface*)NPN_MemAlloc(sizeof(NPAsyncSurface));
-
-    NPSize size;
-    size.width = newWindow->width;
-    size.height = newWindow->height;
-
-    memset(instanceData->frontBuffer, 0, sizeof(NPAsyncSurface));
-    memset(instanceData->backBuffer, 0, sizeof(NPAsyncSurface));
-
-    NPN_InitAsyncSurface(npp, &size, NPImageFormatBGRA32, nullptr, instanceData->frontBuffer);
-    NPN_InitAsyncSurface(npp, &size, NPImageFormatBGRA32, nullptr, instanceData->backBuffer);
-
-    dev->OpenSharedResource(instanceData->frontBuffer->sharedHandle, __uuidof(ID3D10Texture2D), (void**)&instanceData->platformData->frontBuffer);
-    dev->OpenSharedResource(instanceData->backBuffer->sharedHandle, __uuidof(ID3D10Texture2D), (void**)&instanceData->platformData->backBuffer);
-
-    pluginDrawAsyncDxgiColor(instanceData);
-  }
 }
 
 #define CHILD_WIDGET_SIZE 10
@@ -704,46 +590,4 @@ void pluginDoInternalConsistencyCheck(InstanceData* instanceData, string& error)
     checkEquals(childRect.right, childRect.left + CHILD_WIDGET_SIZE, "Child widget width", error);
     checkEquals(childRect.bottom, childRect.top + CHILD_WIDGET_SIZE, "Child widget height", error);
   }
-}
-
-void
-pluginDrawAsyncDxgiColor(InstanceData* id)
-{
-  PlatformData *pd = id->platformData;
-
-  ID3D10Device1 *dev = pd->device;
-
-  IDXGIKeyedMutex *mutex;
-  pd->backBuffer->QueryInterface(&mutex);
-
-  mutex->AcquireSync(0, INFINITE);
-  ID3D10RenderTargetView *rtView;
-  dev->CreateRenderTargetView(pd->backBuffer, nullptr, &rtView);
-
-  uint32_t rgba = id->scriptableObject->drawColor;
-
-  unsigned char subpixels[4];
-  subpixels[0] = rgba & 0xFF;
-  subpixels[1] = (rgba & 0xFF00) >> 8;
-  subpixels[2] = (rgba & 0xFF0000) >> 16;
-  subpixels[3] = (rgba & 0xFF000000) >> 24;
-
-  float color[4];
-  color[2] = float(subpixels[3] * subpixels[0]) / 0xFE01;
-  color[1] = float(subpixels[3] * subpixels[1]) / 0xFE01;
-  color[0] = float(subpixels[3] * subpixels[2]) / 0xFE01;
-  color[3] = float(subpixels[3]) / 0xFF;
-  dev->ClearRenderTargetView(rtView, color);
-  rtView->Release();
-
-  mutex->ReleaseSync(0);
-  mutex->Release();
-
-  NPN_SetCurrentAsyncSurface(id->npp, id->backBuffer, nullptr);
-  NPAsyncSurface *oldFront = id->frontBuffer;
-  id->frontBuffer = id->backBuffer;
-  id->backBuffer = oldFront;
-  ID3D10Texture2D *oldFrontT = pd->frontBuffer;
-  pd->frontBuffer = pd->backBuffer;
-  pd->backBuffer = oldFrontT;
 }

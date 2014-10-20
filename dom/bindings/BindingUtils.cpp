@@ -1668,15 +1668,15 @@ public:
   AutoCloneDOMObjectSlotGuard(JSContext* aCx, JSObject* aOld, JSObject* aNew)
     : mOldReflector(aCx, aOld), mNewReflector(aCx, aNew)
   {
-    MOZ_ASSERT(js::GetReservedSlot(aOld, DOM_OBJECT_SLOT) ==
-                 js::GetReservedSlot(aNew, DOM_OBJECT_SLOT));
+    MOZ_ASSERT(js::GetReservedOrProxyPrivateSlot(aOld, DOM_OBJECT_SLOT) ==
+               js::GetReservedOrProxyPrivateSlot(aNew, DOM_OBJECT_SLOT));
   }
 
   ~AutoCloneDOMObjectSlotGuard()
   {
-    if (js::GetReservedSlot(mOldReflector, DOM_OBJECT_SLOT).toPrivate()) {
-      js::SetReservedSlot(mNewReflector, DOM_OBJECT_SLOT,
-                          JS::PrivateValue(nullptr));
+    if (js::GetReservedOrProxyPrivateSlot(mOldReflector, DOM_OBJECT_SLOT).toPrivate()) {
+      js::SetReservedOrProxyPrivateSlot(mNewReflector, DOM_OBJECT_SLOT,
+                                        JS::PrivateValue(nullptr));
     }
   }
 
@@ -1742,8 +1742,8 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
     return NS_ERROR_FAILURE;
   }
 
-  js::SetReservedSlot(newobj, DOM_OBJECT_SLOT,
-                      js::GetReservedSlot(aObj, DOM_OBJECT_SLOT));
+  js::SetReservedOrProxyPrivateSlot(newobj, DOM_OBJECT_SLOT,
+                                    js::GetReservedOrProxyPrivateSlot(aObj, DOM_OBJECT_SLOT));
 
   // At this point, both |aObj| and |newobj| point to the same native
   // which is bad, because one of them will end up being finalized with a
@@ -1782,7 +1782,7 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
     // NB: It's important to do this _after_ copying the properties to
     // propertyHolder. Otherwise, an object with |foo.x === foo| will
     // crash when JS_CopyPropertiesFrom tries to call wrap() on foo.x.
-    js::SetReservedSlot(aObj, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
+    js::SetReservedOrProxyPrivateSlot(aObj, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
   }
 
   aObj = xpc::TransplantObject(aCx, aObj, newobj);

@@ -67,11 +67,6 @@ public:
   NPBool     ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
                           double *destX, double *destY, NPCoordinateSpace destSpace) MOZ_OVERRIDE;
   
-  virtual NPError InitAsyncSurface(NPSize *size, NPImageFormat format,
-                                   void *initData, NPAsyncSurface *surface) MOZ_OVERRIDE;
-  virtual NPError FinalizeAsyncSurface(NPAsyncSurface *surface) MOZ_OVERRIDE;
-  virtual void SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed) MOZ_OVERRIDE;
-
   /**
    * Get the type of the HTML tag that was used ot instantiate this
    * plugin.  Currently supported tags are EMBED, OBJECT and APPLET.

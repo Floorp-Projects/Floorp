@@ -8,23 +8,23 @@
 ;  be found in the AUTHORS file in the root of the source tree.
 ;
 
-    EXPORT  |vp9_mb_lpf_horizontal_edge_w_neon|
-    EXPORT  |vp9_mb_lpf_vertical_edge_w_neon|
+    EXPORT  |vp9_lpf_horizontal_16_neon|
+    EXPORT  |vp9_lpf_vertical_16_neon|
     ARM
 
     AREA ||.text||, CODE, READONLY, ALIGN=2
 
-; void vp9_mb_lpf_horizontal_edge_w_neon(uint8_t *s, int p,
-;                                        const uint8_t *blimit,
-;                                        const uint8_t *limit,
-;                                        const uint8_t *thresh
-;                                        int count)
+; void vp9_lpf_horizontal_16_neon(uint8_t *s, int p,
+;                                 const uint8_t *blimit,
+;                                 const uint8_t *limit,
+;                                 const uint8_t *thresh
+;                                 int count)
 ; r0    uint8_t *s,
 ; r1    int p, /* pitch */
 ; r2    const uint8_t *blimit,
 ; r3    const uint8_t *limit,
 ; sp    const uint8_t *thresh,
-|vp9_mb_lpf_horizontal_edge_w_neon| PROC
+|vp9_lpf_horizontal_16_neon| PROC
     push        {r4-r8, lr}
     vpush       {d8-d15}
     ldr         r4, [sp, #88]              ; load thresh
@@ -115,18 +115,18 @@ h_next
     vpop        {d8-d15}
     pop         {r4-r8, pc}
 
-    ENDP        ; |vp9_mb_lpf_horizontal_edge_w_neon|
+    ENDP        ; |vp9_lpf_horizontal_16_neon|
 
-; void vp9_mb_lpf_vertical_edge_w_neon(uint8_t *s, int p,
-;                                        const uint8_t *blimit,
-;                                        const uint8_t *limit,
-;                                        const uint8_t *thresh)
+; void vp9_lpf_vertical_16_neon(uint8_t *s, int p,
+;                               const uint8_t *blimit,
+;                               const uint8_t *limit,
+;                               const uint8_t *thresh)
 ; r0    uint8_t *s,
 ; r1    int p, /* pitch */
 ; r2    const uint8_t *blimit,
 ; r3    const uint8_t *limit,
 ; sp    const uint8_t *thresh,
-|vp9_mb_lpf_vertical_edge_w_neon| PROC
+|vp9_lpf_vertical_16_neon| PROC
     push        {r4-r8, lr}
     vpush       {d8-d15}
     ldr         r4, [sp, #88]              ; load thresh
@@ -279,7 +279,7 @@ v_end
     vpop        {d8-d15}
     pop         {r4-r8, pc}
 
-    ENDP        ; |vp9_mb_lpf_vertical_edge_w_neon|
+    ENDP        ; |vp9_lpf_vertical_16_neon|
 
 ; void vp9_wide_mbfilter_neon();
 ; This is a helper function for the loopfilters. The invidual functions do the
@@ -438,6 +438,9 @@ v_end
 
     tst         r7, #1
     bxne        lr
+
+    orrs        r5, r5, r6                 ; Check for 0
+    orreq       r7, r7, #2                 ; Only do mbfilter branch
 
     ; mbfilter flat && mask branch
     ; TODO(fgalligan): Can I decrease the cycles shifting to consective d's

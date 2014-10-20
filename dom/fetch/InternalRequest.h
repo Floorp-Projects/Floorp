@@ -9,7 +9,6 @@
 #include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/RequestBinding.h"
-#include "mozilla/dom/UnionTypes.h"
 
 #include "nsIContentPolicy.h"
 #include "nsIInputStream.h"

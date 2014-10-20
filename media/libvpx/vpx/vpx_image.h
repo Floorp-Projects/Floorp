@@ -13,12 +13,12 @@
  * \brief Describes the vpx image descriptor and associated operations
  *
  */
+#ifndef VPX_VPX_IMAGE_H_
+#define VPX_VPX_IMAGE_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifndef VPX_IMAGE_H
-#define VPX_IMAGE_H
 
   /*!\brief Current ABI version number
    *
@@ -28,13 +28,13 @@ extern "C" {
    * types, removing or reassigning enums, adding/removing/rearranging
    * fields to structures
    */
-#define VPX_IMAGE_ABI_VERSION (1) /**<\hideinitializer*/
+#define VPX_IMAGE_ABI_VERSION (2) /**<\hideinitializer*/
 
 
-#define VPX_IMG_FMT_PLANAR     0x100  /**< Image is a planar format */
-#define VPX_IMG_FMT_UV_FLIP    0x200  /**< V plane precedes U plane in memory */
-#define VPX_IMG_FMT_HAS_ALPHA  0x400  /**< Image has an alpha channel component */
-
+#define VPX_IMG_FMT_PLANAR     0x100  /**< Image is a planar format. */
+#define VPX_IMG_FMT_UV_FLIP    0x200  /**< V plane precedes U in memory. */
+#define VPX_IMG_FMT_HAS_ALPHA  0x400  /**< Image has an alpha channel. */
+#define VPX_IMG_FMT_HIGHBITDEPTH 0x800  /**< Image uses 16bit framebuffer. */
 
   /*!\brief List of supported image formats */
   typedef enum vpx_img_fmt {
@@ -58,7 +58,10 @@ extern "C" {
     VPX_IMG_FMT_VPXI420 = VPX_IMG_FMT_PLANAR | 4,
     VPX_IMG_FMT_I422    = VPX_IMG_FMT_PLANAR | 5,
     VPX_IMG_FMT_I444    = VPX_IMG_FMT_PLANAR | 6,
-    VPX_IMG_FMT_444A    = VPX_IMG_FMT_PLANAR | VPX_IMG_FMT_HAS_ALPHA | 7
+    VPX_IMG_FMT_444A    = VPX_IMG_FMT_PLANAR | VPX_IMG_FMT_HAS_ALPHA | 7,
+    VPX_IMG_FMT_I42016    = VPX_IMG_FMT_I420 | VPX_IMG_FMT_HIGHBITDEPTH,
+    VPX_IMG_FMT_I42216    = VPX_IMG_FMT_I422 | VPX_IMG_FMT_HIGHBITDEPTH,
+    VPX_IMG_FMT_I44416    = VPX_IMG_FMT_I444 | VPX_IMG_FMT_HIGHBITDEPTH
   } vpx_img_fmt_t; /**< alias for enum vpx_img_fmt */
 
 #if !defined(VPX_CODEC_DISABLE_COMPAT) || !VPX_CODEC_DISABLE_COMPAT
@@ -100,8 +103,9 @@ extern "C" {
     vpx_img_fmt_t fmt; /**< Image Format */
 
     /* Image storage dimensions */
-    unsigned int  w;   /**< Stored image width */
-    unsigned int  h;   /**< Stored image height */
+    unsigned int  w;           /**< Stored image width */
+    unsigned int  h;           /**< Stored image height */
+    unsigned int  bit_depth;   /**< Stored image bit-depth */
 
     /* Image display dimensions */
     unsigned int  d_w;   /**< Displayed image width */
@@ -139,6 +143,8 @@ extern "C" {
     unsigned char *img_data;       /**< private */
     int      img_data_owner; /**< private */
     int      self_allocd;    /**< private */
+
+    void    *fb_priv; /**< Frame buffer data associated with the image. */
   } vpx_image_t; /**< alias for struct vpx_image */
 
   /**\brief Representation of a rectangle on a surface */
@@ -237,7 +243,8 @@ extern "C" {
    */
   void vpx_img_free(vpx_image_t *img);
 
-#endif
 #ifdef __cplusplus
-}
+}  // extern "C"
 #endif
+
+#endif  // VPX_VPX_IMAGE_H_

@@ -247,15 +247,6 @@ _unscheduletimer(NPP instance, uint32_t timerID);
 NPError
 _popupcontextmenu(NPP instance, NPMenu* menu);
 
-NPError
-_initasyncsurface(NPP instance, NPSize *size, NPImageFormat format, void *initData, NPAsyncSurface *surface);
-
-NPError
-_finalizeasyncsurface(NPP instance, NPAsyncSurface *surface);
-
-void
-_setcurrentasyncsurface(NPP instance, NPAsyncSurface *surface, NPRect *changed);
-
 NPBool
 _convertpoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace);
 

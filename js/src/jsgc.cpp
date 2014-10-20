@@ -267,8 +267,8 @@ static_assert(JS_ARRAY_LENGTH(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
     MOZ_FOR_EACH(CHECK_MIN_THING_SIZE_INNER, (), (__VA_ARGS__ UINT32_MAX))
 
 const uint32_t Arena::ThingSizes[] = CHECK_MIN_THING_SIZE(
-    sizeof(JSObject),           /* FINALIZE_OBJECT0             */
-    sizeof(JSObject),           /* FINALIZE_OBJECT0_BACKGROUND  */
+    sizeof(JSObject_Slots0),    /* FINALIZE_OBJECT0             */
+    sizeof(JSObject_Slots0),    /* FINALIZE_OBJECT0_BACKGROUND  */
     sizeof(JSObject_Slots2),    /* FINALIZE_OBJECT2             */
     sizeof(JSObject_Slots2),    /* FINALIZE_OBJECT2_BACKGROUND  */
     sizeof(JSObject_Slots4),    /* FINALIZE_OBJECT4             */
@@ -298,8 +298,8 @@ const uint32_t Arena::ThingSizes[] = CHECK_MIN_THING_SIZE(
 #define OFFSET(type) uint32_t(sizeof(ArenaHeader) + (ArenaSize - sizeof(ArenaHeader)) % sizeof(type))
 
 const uint32_t Arena::FirstThingOffsets[] = {
-    OFFSET(JSObject),           /* FINALIZE_OBJECT0             */
-    OFFSET(JSObject),           /* FINALIZE_OBJECT0_BACKGROUND  */
+    OFFSET(JSObject_Slots0),    /* FINALIZE_OBJECT0             */
+    OFFSET(JSObject_Slots0),    /* FINALIZE_OBJECT0_BACKGROUND  */
     OFFSET(JSObject_Slots2),    /* FINALIZE_OBJECT2             */
     OFFSET(JSObject_Slots2),    /* FINALIZE_OBJECT2_BACKGROUND  */
     OFFSET(JSObject_Slots4),    /* FINALIZE_OBJECT4             */
@@ -971,9 +971,36 @@ Chunk::allocateArena(Zone *zone, AllocKind thingKind)
 
     zone->usage.addGCArena();
 
-    if (!rt->isHeapCompacting() && zone->usage.gcBytes() >= zone->threshold.gcTriggerBytes()) {
-        AutoUnlockGC unlock(rt);
-        rt->gc.triggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
+    if (!rt->isHeapCompacting()) {
+        size_t usedBytes = zone->usage.gcBytes();
+        size_t thresholdBytes = zone->threshold.gcTriggerBytes();
+        size_t igcThresholdBytes = thresholdBytes * rt->gc.tunables.zoneAllocThresholdFactor();
+
+        if (usedBytes >= thresholdBytes) {
+            // The threshold has been surpassed, immediately trigger a GC,
+            // which will be done non-incrementally.
+            AutoUnlockGC unlock(rt);
+            rt->gc.triggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
+        } else if (usedBytes >= igcThresholdBytes) {
+            // Reduce the delay to the start of the next incremental slice.
+            if (zone->gcDelayBytes < ArenaSize)
+                zone->gcDelayBytes = 0;
+            else
+                zone->gcDelayBytes -= ArenaSize;
+
+            if (!zone->gcDelayBytes) {
+                // Start or continue an in progress incremental GC. We do this
+                // to try to avoid performing non-incremental GCs on zones
+                // which allocate a lot of data, even when incremental slices
+                // can't be triggered via scheduling in the event loop.
+                AutoUnlockGC unlock(rt);
+                rt->gc.triggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
+
+                // Delay the next slice until a certain amount of allocation
+                // has been performed.
+                zone->gcDelayBytes = rt->gc.tunables.zoneAllocDelayBytes();
+            }
+        }
     }
 
     return aheader;
@@ -1214,6 +1241,24 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
 
 #ifdef JS_GC_ZEAL
 
+const char *gc::ZealModeHelpText =
+    "  Specifies how zealous the garbage collector should be. Values for level:\n"
+    "    0: Normal amount of collection\n"
+    "    1: Collect when roots are added or removed\n"
+    "    2: Collect when every N allocations (default: 100)\n"
+    "    3: Collect when the window paints (browser only)\n"
+    "    4: Verify pre write barriers between instructions\n"
+    "    5: Verify pre write barriers between paints\n"
+    "    6: Verify stack rooting\n"
+    "    7: Collect the nursery every N nursery allocations\n"
+    "    8: Incremental GC in two slices: 1) mark roots 2) finish collection\n"
+    "    9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
+    "   10: Incremental GC in multiple slices\n"
+    "   11: Verify post write barriers between instructions\n"
+    "   12: Verify post write barriers between paints\n"
+    "   13: Check internal hashtables on minor GC\n"
+    "   14: Perform a shrinking collection every N allocations\n";
+
 void
 GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
 {
@@ -1261,23 +1306,8 @@ GCRuntime::initZeal()
     }
 
     if (zeal < 0 || zeal > ZealLimit || frequency < 0) {
-        fprintf(stderr,
-                "Format: JS_GC_ZEAL=N[,F]\n"
-                "N indicates \"zealousness\":\n"
-                "  0: no additional GCs\n"
-                "  1: additional GCs at common danger points\n"
-                "  2: GC every F allocations (default: 100)\n"
-                "  3: GC when the window paints (browser only)\n"
-                "  4: Verify pre write barriers between instructions\n"
-                "  5: Verify pre write barriers between paints\n"
-                "  6: Verify stack rooting\n"
-                "  7: Collect the nursery every N nursery allocations\n"
-                "  8: Incremental GC in two slices: 1) mark roots 2) finish collection\n"
-                "  9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
-                " 10: Incremental GC in multiple slices\n"
-                " 11: Verify post write barriers between instructions\n"
-                " 12: Verify post write barriers between paints\n"
-                " 13: Purge analysis state every F allocations (default: 100)\n");
+        fprintf(stderr, "Format: JS_GC_ZEAL=level[,N]\n");
+        fputs(ZealModeHelpText, stderr);
         return false;
     }
 
@@ -2060,28 +2090,15 @@ AutoDisableCompactingGC::~AutoDisableCompactingGC()
 }
 
 static bool
-ArenaContainsGlobal(ArenaHeader *arena)
+CanRelocateZone(JSRuntime *rt, Zone *zone)
 {
-    if (arena->getAllocKind() > FINALIZE_OBJECT_LAST)
-        return false;
-
-    for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
-        JSObject *obj = i.get<JSObject>();
-        if (obj->is<GlobalObject>())
-            return true;
-    }
-
-    return false;
+    return !rt->isAtomsZone(zone) && !rt->isSelfHostingZone(zone);
 }
 
 static bool
 CanRelocateArena(ArenaHeader *arena)
 {
-    /*
-     * We can't currently move global objects because their address can be baked
-     * into compiled code so we skip relocation of any area containing one.
-     */
-    return arena->getAllocKind() <= FINALIZE_OBJECT_LAST && !ArenaContainsGlobal(arena);
+    return arena->getAllocKind() <= FINALIZE_OBJECT_LAST;
 }
 
 static bool
@@ -2279,8 +2296,7 @@ GCRuntime::relocateArenas()
         MOZ_ASSERT(zone->isGCFinished());
         MOZ_ASSERT(!zone->isPreservingCode());
 
-        // We cannot move atoms as we depend on their addresses being constant.
-        if (!rt->isAtomsZone(zone)) {
+        if (CanRelocateZone(rt, zone)) {
             zone->setGCState(Zone::Compact);
             relocatedList = zone->allocator.arenas.relocateArenas(relocatedList);
         }
@@ -2379,12 +2395,6 @@ GCRuntime::updatePointersToRelocatedCells()
     for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next())
         comp->sweepCrossCompartmentWrappers();
 
-    // Fixup generators as these are not normally traced.
-    for (ContextIter i(rt); !i.done(); i.next()) {
-        for (JSGenerator *gen = i.get()->innermostGenerator(); gen; gen = gen->prevGenerator)
-            gen->obj = MaybeForwarded(gen->obj.get());
-    }
-
     // Iterate through all allocated cells to update internal pointers.
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         ArenaLists &al = zone->allocator.arenas;
@@ -2419,7 +2429,7 @@ GCRuntime::updatePointersToRelocatedCells()
     WatchpointMap::sweepAll(rt);
     Debugger::sweepAll(rt->defaultFreeOp());
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        if (!rt->isAtomsZone(zone))
+        if (CanRelocateZone(rt, zone))
             rt->gc.sweepZoneAfterCompacting(zone);
     }
 
@@ -4344,10 +4354,10 @@ IsGrayListObject(JSObject *obj)
 }
 
 /* static */ unsigned
-ProxyObject::grayLinkSlot(JSObject *obj)
+ProxyObject::grayLinkExtraSlot(JSObject *obj)
 {
     MOZ_ASSERT(IsGrayListObject(obj));
-    return ProxyObject::EXTRA_SLOT + 1;
+    return 1;
 }
 
 #ifdef DEBUG
@@ -4355,7 +4365,7 @@ static void
 AssertNotOnGrayList(JSObject *obj)
 {
     MOZ_ASSERT_IF(IsGrayListObject(obj),
-                  obj->fakeNativeGetReservedSlot(ProxyObject::grayLinkSlot(obj)).isUndefined());
+                  GetProxyExtra(obj, ProxyObject::grayLinkExtraSlot(obj)).isUndefined());
 }
 #endif
 
@@ -4369,12 +4379,12 @@ CrossCompartmentPointerReferent(JSObject *obj)
 static JSObject *
 NextIncomingCrossCompartmentPointer(JSObject *prev, bool unlink)
 {
-    unsigned slot = ProxyObject::grayLinkSlot(prev);
-    JSObject *next = prev->fakeNativeGetReservedSlot(slot).toObjectOrNull();
+    unsigned slot = ProxyObject::grayLinkExtraSlot(prev);
+    JSObject *next = GetProxyExtra(prev, slot).toObjectOrNull();
     MOZ_ASSERT_IF(next, IsGrayListObject(next));
 
     if (unlink)
-        prev->fakeNativeSetSlot(slot, UndefinedValue());
+        SetProxyExtra(prev, slot, UndefinedValue());
 
     return next;
 }
@@ -4385,15 +4395,15 @@ js::DelayCrossCompartmentGrayMarking(JSObject *src)
     MOZ_ASSERT(IsGrayListObject(src));
 
     /* Called from MarkCrossCompartmentXXX functions. */
-    unsigned slot = ProxyObject::grayLinkSlot(src);
+    unsigned slot = ProxyObject::grayLinkExtraSlot(src);
     JSObject *dest = CrossCompartmentPointerReferent(src);
     JSCompartment *comp = dest->compartment();
 
-    if (src->fakeNativeGetReservedSlot(slot).isUndefined()) {
-        src->fakeNativeSetCrossCompartmentSlot(slot, ObjectOrNullValue(comp->gcIncomingGrayPointers));
+    if (GetProxyExtra(src, slot).isUndefined()) {
+        SetProxyExtra(src, slot, ObjectOrNullValue(comp->gcIncomingGrayPointers));
         comp->gcIncomingGrayPointers = src;
     } else {
-        MOZ_ASSERT(src->fakeNativeGetReservedSlot(slot).isObjectOrNull());
+        MOZ_ASSERT(GetProxyExtra(src, slot).isObjectOrNull());
     }
 
 #ifdef DEBUG
@@ -4462,12 +4472,12 @@ RemoveFromGrayList(JSObject *wrapper)
     if (!IsGrayListObject(wrapper))
         return false;
 
-    unsigned slot = ProxyObject::grayLinkSlot(wrapper);
-    if (wrapper->fakeNativeGetReservedSlot(slot).isUndefined())
+    unsigned slot = ProxyObject::grayLinkExtraSlot(wrapper);
+    if (GetProxyExtra(wrapper, slot).isUndefined())
         return false;  /* Not on our list. */
 
-    JSObject *tail = wrapper->fakeNativeGetReservedSlot(slot).toObjectOrNull();
-    wrapper->fakeNativeSetReservedSlot(slot, UndefinedValue());
+    JSObject *tail = GetProxyExtra(wrapper, slot).toObjectOrNull();
+    SetProxyExtra(wrapper, slot, UndefinedValue());
 
     JSCompartment *comp = CrossCompartmentPointerReferent(wrapper)->compartment();
     JSObject *obj = comp->gcIncomingGrayPointers;
@@ -4477,10 +4487,10 @@ RemoveFromGrayList(JSObject *wrapper)
     }
 
     while (obj) {
-        unsigned slot = ProxyObject::grayLinkSlot(obj);
-        JSObject *next = obj->fakeNativeGetReservedSlot(slot).toObjectOrNull();
+        unsigned slot = ProxyObject::grayLinkExtraSlot(obj);
+        JSObject *next = GetProxyExtra(obj, slot).toObjectOrNull();
         if (next == wrapper) {
-            obj->fakeNativeSetCrossCompartmentSlot(slot, ObjectOrNullValue(tail));
+            SetProxyExtra(obj, slot, ObjectOrNullValue(tail));
             return true;
         }
         obj = next;
@@ -5161,7 +5171,7 @@ GCRuntime::compactPhase()
 #ifdef DEBUG
     CheckHashTablesAfterMovingGC(rt);
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        if (!rt->isAtomsZone(zone) && !zone->isPreservingCode())
+        if (CanRelocateZone(rt, zone) && !zone->isPreservingCode())
             zone->allocator.arenas.checkEmptyFreeLists();
     }
 #endif
@@ -5675,8 +5685,13 @@ GCRuntime::gcCycle(bool incremental, int64_t budget, JSGCInvocationKind gckind,
     State prevState = incrementalState;
 
     if (!incremental) {
-        /* If non-incremental GC was requested, reset incremental GC. */
-        resetIncrementalGC("requested");
+        // Reset any in progress incremental GC if this was triggered via the
+        // API. This isn't required for correctness, but sometimes during tests
+        // the caller expects this GC to collect certain objects, and we need
+        // to make sure to collect everything possible.
+        if (reason != JS::gcreason::ALLOC_TRIGGER)
+            resetIncrementalGC("requested");
+
         stats.nonincremental("requested");
         budget = SliceBudget::Unlimited;
     } else {
@@ -5874,6 +5889,8 @@ GCRuntime::gcSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64
     int64_t budget;
     if (millis)
         budget = SliceBudget::TimeBudget(millis);
+    else if (reason == JS::gcreason::ALLOC_TRIGGER)
+        budget = sliceBudget;
     else if (schedulingState.inHighFrequencyGCMode() && tunables.isDynamicMarkSliceEnabled())
         budget = sliceBudget * IGC_MARK_SLICE_MULTIPLIER;
     else
