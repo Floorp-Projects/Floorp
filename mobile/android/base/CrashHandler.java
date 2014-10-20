@@ -16,9 +16,14 @@ class CrashHandler implements Thread.UncaughtExceptionHandler {
     private static final String LOGTAG = "GeckoCrashHandler";
     private static final Thread MAIN_THREAD = Thread.currentThread();
 
+    // Context for getting device information
+    protected final Context appContext;
+    // Thread that this handler applies to, or null for a global handler
+    protected final Thread handlerThread;
     protected final Thread.UncaughtExceptionHandler systemUncaughtHandler;
 
     protected boolean crashing;
+    protected boolean unregistered;
 
     /**
      * Get the root exception from the 'cause' chain of an exception.
@@ -58,7 +63,18 @@ class CrashHandler implements Thread.UncaughtExceptionHandler {
      * Create and register a CrashHandler for all threads and thread groups.
      */
     public CrashHandler() {
-        systemUncaughtHandler = Thread.getDefaultUncaughtExceptionHandler();
+        this((Context) null);
+    }
+
+    /**
+     * Create and register a CrashHandler for all threads and thread groups.
+     *
+     * @param appContext A Context for retrieving application information.
+     */
+    public CrashHandler(final Context appContext) {
+        this.appContext = appContext;
+        this.handlerThread = null;
+        this.systemUncaughtHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(this);
     }
 
@@ -68,8 +84,41 @@ class CrashHandler implements Thread.UncaughtExceptionHandler {
      * @param thread A thread to register the CrashHandler
      */
     public CrashHandler(final Thread thread) {
-        systemUncaughtHandler = thread.getUncaughtExceptionHandler();
+        this(thread, null);
+    }
+
+    /**
+     * Create and register a CrashHandler for a particular thread.
+     *
+     * @param thread A thread to register the CrashHandler
+     * @param appContext A Context for retrieving application information.
+     */
+    public CrashHandler(final Thread thread, final Context appContext) {
+        this.appContext = appContext;
+        this.handlerThread = thread;
+        this.systemUncaughtHandler = thread.getUncaughtExceptionHandler();
         thread.setUncaughtExceptionHandler(this);
+    }
+
+    /**
+     * Unregister this CrashHandler for exception handling.
+     */
+    public void unregister() {
+        unregistered = true;
+
+        // Restore the previous handler if we are still the topmost handler.
+        // If not, we are part of a chain of handlers, and we cannot just restore the previous
+        // handler, because that would replace whatever handler that's above us in the chain.
+
+        if (handlerThread != null) {
+            if (handlerThread.getUncaughtExceptionHandler() == this) {
+                handlerThread.setUncaughtExceptionHandler(systemUncaughtHandler);
+            }
+        } else {
+            if (Thread.getDefaultUncaughtExceptionHandler() == this) {
+                Thread.setDefaultUncaughtExceptionHandler(systemUncaughtHandler);
+            }
+        }
     }
 
     /**
@@ -125,13 +174,17 @@ class CrashHandler implements Thread.UncaughtExceptionHandler {
         }
 
         try {
-            this.crashing = true;
-            exc = getRootException(exc);
-            logException(thread, exc);
+            if (!this.unregistered) {
+                // Only process crash ourselves if we have not been unregistered.
 
-            if (reportException(thread, exc)) {
-                // Reporting succeeded; we can terminate our process now.
-                return;
+                this.crashing = true;
+                exc = getRootException(exc);
+                logException(thread, exc);
+
+                if (reportException(thread, exc)) {
+                    // Reporting succeeded; we can terminate our process now.
+                    return;
+                }
             }
 
             if (systemUncaughtHandler != null) {
