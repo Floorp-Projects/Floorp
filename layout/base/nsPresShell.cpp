@@ -10109,9 +10109,9 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       ColorPattern black(ToDeviceColor(Color(0.f, 0.f, 0.f, 1.f)));
       drawTarget->FillRect(devPxRect, black);
 
-      aRenderingContext->SetColor(color2);
+      aRenderingContext->ThebesContext()->SetColor(color2);
       aRenderingContext->DrawString(buf, strlen(buf), x+15,y+15);
-      aRenderingContext->SetColor(color);
+      aRenderingContext->ThebesContext()->SetColor(color);
       aRenderingContext->DrawString(buf, strlen(buf), x,y);
 
       aRenderingContext->ThebesContext()->Restore();

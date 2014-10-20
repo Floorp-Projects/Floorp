@@ -383,7 +383,7 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
     gfx->Save();
     gfx->Clip(NSRectToRect(aRect, PresContext()->AppUnitsPerDevPixel(),
                            *drawTarget));
-    aRenderingContext.SetColor(NS_RGB(0,0,0));
+    aRenderingContext.ThebesContext()->SetColor(NS_RGB(0,0,0));
     nsLayoutUtils::DrawString(this, &aRenderingContext, str.get(), str.Length(), nsPoint(x, y + aAscent));
     gfx->Restore();
   }
@@ -586,7 +586,7 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
   }
 
   nsRect rect(aPt, mRect.Size());
-  aRenderingContext.SetColor(NS_RGB(0,0,0));
+  aRenderingContext.ThebesContext()->SetColor(NS_RGB(0,0,0));
 
   // Get the FontMetrics to determine width.height of strings
   nsRefPtr<nsFontMetrics> fontMet;

@@ -3618,7 +3618,6 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
 
   // Set our color.
   ColorPattern color(ToDeviceColor(textContext->StyleColor()->mColor));
-  aRenderingContext.SetColor(textContext->StyleColor()->mColor);
 
   // Draw decorations.
   uint8_t decorations = textContext->StyleTextReset()->mTextDecorationLine;
@@ -3652,6 +3651,7 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
     ctx->PushGroup(gfxContentType::COLOR_ALPHA);
   }
 
+  ctx->SetColor(textContext->StyleColor()->mColor);
   nsLayoutUtils::DrawString(this, &aRenderingContext, text.get(), text.Length(),
                             textRect.TopLeft() + nsPoint(0, baseline), cellContext);
 
@@ -3756,9 +3756,6 @@ nsTreeBodyFrame::PaintProgressMeter(int32_t              aRowIndex,
   if (state == nsITreeView::PROGRESS_NORMAL) {
     // Adjust the rect for its border and padding.
     AdjustForBorderPadding(meterContext, meterRect);
-
-    // Set our color.
-    aRenderingContext.SetColor(meterContext->StyleColor()->mColor);
 
     // Now obtain the value for our cell.
     nsAutoString value;
