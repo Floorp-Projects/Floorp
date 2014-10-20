@@ -21,6 +21,7 @@ EXPORTS += [
     'nsCSSParser.h',
     'nsCSSPropAliasList.h',
     'nsCSSProperty.h',
+    'nsCSSPropertySet.h',
     'nsCSSPropList.h',
     'nsCSSProps.h',
     'nsCSSPseudoClasses.h',

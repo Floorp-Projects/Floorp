@@ -7,6 +7,8 @@
 #include "mozilla/dom/AnimationBinding.h"
 #include "mozilla/dom/AnimationEffect.h"
 #include "mozilla/FloatingPoint.h"
+#include "AnimationCommon.h"
+#include "nsCSSPropertySet.h"
 
 namespace mozilla {
 
@@ -260,6 +262,89 @@ Animation::HasAnimationOfProperty(nsCSSProperty aProperty) const
     }
   }
   return false;
+}
+
+void
+Animation::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
+                        nsCSSPropertySet& aSetProperties)
+{
+  ComputedTiming computedTiming = GetComputedTiming();
+
+  // If the time fraction is null, we don't have fill data for the current
+  // time so we shouldn't animate.
+  if (computedTiming.mTimeFraction == ComputedTiming::kNullTimeFraction) {
+    return;
+  }
+
+  MOZ_ASSERT(0.0 <= computedTiming.mTimeFraction &&
+             computedTiming.mTimeFraction <= 1.0,
+             "timing fraction should be in [0-1]");
+
+  for (size_t propIdx = 0, propEnd = mProperties.Length();
+       propIdx != propEnd; ++propIdx)
+  {
+    const AnimationProperty& prop = mProperties[propIdx];
+
+    MOZ_ASSERT(prop.mSegments[0].mFromKey == 0.0, "incorrect first from key");
+    MOZ_ASSERT(prop.mSegments[prop.mSegments.Length() - 1].mToKey == 1.0,
+               "incorrect last to key");
+
+    if (aSetProperties.HasProperty(prop.mProperty)) {
+      // Animations are composed by AnimationPlayerCollection by iterating
+      // from the last animation to first. For animations targetting the
+      // same property, the later one wins. So if this property is already set,
+      // we should not override it.
+      return;
+    }
+
+    aSetProperties.AddProperty(prop.mProperty);
+
+    MOZ_ASSERT(prop.mSegments.Length() > 0,
+               "property should not be in animations if it has no segments");
+
+    // FIXME: Maybe cache the current segment?
+    const AnimationPropertySegment *segment = prop.mSegments.Elements(),
+                                *segmentEnd = segment + prop.mSegments.Length();
+    while (segment->mToKey < computedTiming.mTimeFraction) {
+      MOZ_ASSERT(segment->mFromKey < segment->mToKey, "incorrect keys");
+      ++segment;
+      if (segment == segmentEnd) {
+        MOZ_ASSERT_UNREACHABLE("incorrect time fraction");
+        break; // in order to continue in outer loop (just below)
+      }
+      MOZ_ASSERT(segment->mFromKey == (segment-1)->mToKey, "incorrect keys");
+    }
+    if (segment == segmentEnd) {
+      continue;
+    }
+    MOZ_ASSERT(segment->mFromKey < segment->mToKey, "incorrect keys");
+    MOZ_ASSERT(segment >= prop.mSegments.Elements() &&
+               size_t(segment - prop.mSegments.Elements()) <
+                 prop.mSegments.Length(),
+               "out of array bounds");
+
+    if (!aStyleRule) {
+      // Allocate the style rule now that we know we have animation data.
+      aStyleRule = new css::AnimValuesStyleRule();
+    }
+
+    double positionInSegment =
+      (computedTiming.mTimeFraction - segment->mFromKey) /
+      (segment->mToKey - segment->mFromKey);
+    double valuePosition =
+      segment->mTimingFunction.GetValue(positionInSegment);
+
+    StyleAnimationValue *val = aStyleRule->AddEmptyValue(prop.mProperty);
+
+#ifdef DEBUG
+    bool result =
+#endif
+      StyleAnimationValue::Interpolate(prop.mProperty,
+                                       segment->mFromValue,
+                                       segment->mToValue,
+                                       valuePosition, *val);
+    MOZ_ASSERT(result, "interpolate must succeed now");
+  }
 }
 
 } // namespace dom
