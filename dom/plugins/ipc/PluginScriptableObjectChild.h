@@ -9,15 +9,16 @@
 
 #include "mozilla/plugins/PPluginScriptableObjectChild.h"
 #include "mozilla/plugins/PluginMessageUtils.h"
+#include "mozilla/plugins/PluginTypes.h"
 
 #include "npruntime.h"
+#include "nsDataHashtable.h"
 
 namespace mozilla {
 namespace plugins {
 
 class PluginInstanceChild;
 class PluginScriptableObjectChild;
-class PPluginIdentifierChild;
 
 struct ChildNPObject : NPObject
 {
@@ -57,11 +58,11 @@ public:
   AnswerInvalidate() MOZ_OVERRIDE;
 
   virtual bool
-  AnswerHasMethod(PPluginIdentifierChild* aId,
+  AnswerHasMethod(const PluginIdentifier& aId,
                   bool* aHasMethod) MOZ_OVERRIDE;
 
   virtual bool
-  AnswerInvoke(PPluginIdentifierChild* aId,
+  AnswerInvoke(const PluginIdentifier& aId,
                const InfallibleTArray<Variant>& aArgs,
                Variant* aResult,
                bool* aSuccess) MOZ_OVERRIDE;
@@ -72,27 +73,27 @@ public:
                       bool* aSuccess) MOZ_OVERRIDE;
 
   virtual bool
-  AnswerHasProperty(PPluginIdentifierChild* aId,
+  AnswerHasProperty(const PluginIdentifier& aId,
                     bool* aHasProperty) MOZ_OVERRIDE;
 
   virtual bool
-  AnswerGetChildProperty(PPluginIdentifierChild* aId,
+  AnswerGetChildProperty(const PluginIdentifier& aId,
                          bool* aHasProperty,
                          bool* aHasMethod,
                          Variant* aResult,
                          bool* aSuccess) MOZ_OVERRIDE;
 
   virtual bool
-  AnswerSetProperty(PPluginIdentifierChild* aId,
+  AnswerSetProperty(const PluginIdentifier& aId,
                     const Variant& aValue,
                     bool* aSuccess) MOZ_OVERRIDE;
 
   virtual bool
-  AnswerRemoveProperty(PPluginIdentifierChild* aId,
+  AnswerRemoveProperty(const PluginIdentifier& aId,
                        bool* aSuccess) MOZ_OVERRIDE;
 
   virtual bool
-  AnswerEnumerate(InfallibleTArray<PPluginIdentifierChild*>* aProperties,
+  AnswerEnumerate(InfallibleTArray<PluginIdentifier>* aProperties,
                   bool* aSuccess) MOZ_OVERRIDE;
 
   virtual bool
@@ -155,6 +156,66 @@ public:
   Type() const {
     return mType;
   }
+
+private:
+  struct StoredIdentifier
+  {
+    nsCString mIdentifier;
+    nsAutoRefCnt mRefCnt;
+    bool mPermanent;
+
+    nsrefcnt AddRef() {
+      ++mRefCnt;
+      return mRefCnt;
+    }
+
+    nsrefcnt Release() {
+      --mRefCnt;
+      if (mRefCnt == 0) {
+        delete this;
+        return 0;
+      }
+      return mRefCnt;
+    }
+
+    explicit StoredIdentifier(const nsCString& aIdentifier)
+      : mIdentifier(aIdentifier), mRefCnt(), mPermanent(false)
+    { MOZ_COUNT_CTOR(StoredIdentifier); }
+
+    ~StoredIdentifier() { MOZ_COUNT_DTOR(StoredIdentifier); }
+  };
+
+public:
+  class MOZ_STACK_CLASS StackIdentifier
+  {
+  public:
+    StackIdentifier(const PluginIdentifier& aIdentifier);
+    StackIdentifier(NPIdentifier aIdentifier);
+    ~StackIdentifier();
+
+    void MakePermanent()
+    {
+      if (mStored) {
+        mStored->mPermanent = true;
+      }
+    }
+    NPIdentifier ToNPIdentifier() const;
+
+    bool IsString() const { return mIdentifier.type() == PluginIdentifier::TnsCString; }
+    const nsCString& GetString() const { return mIdentifier.get_nsCString(); }
+
+    int32_t GetInt() const { return mIdentifier.get_int32_t(); }
+
+    PluginIdentifier GetIdentifier() const { return mIdentifier; }
+
+   private:
+    DISALLOW_COPY_AND_ASSIGN(StackIdentifier);
+
+    PluginIdentifier mIdentifier;
+    nsRefPtr<StoredIdentifier> mStored;
+  };
+
+  static void ClearIdentifiers();
 
 private:
   static NPObject*
@@ -230,6 +291,12 @@ private:
   ScriptableObjectType mType;
 
   static const NPClass sNPClass;
+
+  static StoredIdentifier* HashIdentifier(const nsCString& aIdentifier);
+  static void UnhashIdentifier(StoredIdentifier* aIdentifier);
+
+  typedef nsDataHashtable<nsCStringHashKey, nsRefPtr<StoredIdentifier>> IdentifierTable;
+  static IdentifierTable sIdentifiers;
 };
 
 } /* namespace plugins */
