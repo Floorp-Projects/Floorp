@@ -6,6 +6,7 @@
 #include "AnimationPlayer.h"
 #include "AnimationUtils.h"
 #include "mozilla/dom/AnimationPlayerBinding.h"
+#include "nsLayoutUtils.h" // For PostRestyleEvent (remove after bug 1073336)
 
 namespace mozilla {
 namespace dom {
@@ -34,15 +35,48 @@ AnimationPlayer::GetCurrentTime() const
 }
 
 void
-AnimationPlayer::Play()
+AnimationPlayer::Play(UpdateFlags aFlags)
 {
-  // TODO
+  // FIXME: When we implement finishing behavior (bug 1074630) we should
+  // not return early if mIsPaused is false since we may still need to seek.
+  if (!mIsPaused) {
+    return;
+  }
+  mIsPaused = false;
+
+  Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTimeDuration();
+  if (timelineTime.IsNull()) {
+    // FIXME: We should just sit in the pending state in this case.
+    // We will introduce the pending state in Bug 927349.
+    return;
+  }
+
+  // Update start time to an appropriate offset from the current timeline time
+  MOZ_ASSERT(!mHoldTime.IsNull(), "Hold time should not be null when paused");
+  mStartTime.SetValue(timelineTime.Value() - mHoldTime.Value());
+  mHoldTime.SetNull();
+
+  if (aFlags == eUpdateStyle) {
+    MaybePostRestyle();
+  }
 }
 
 void
-AnimationPlayer::Pause()
+AnimationPlayer::Pause(UpdateFlags aFlags)
 {
-  // TODO
+  if (mIsPaused) {
+    return;
+  }
+  mIsPaused = true;
+  mIsRunningOnCompositor = false;
+
+  // Bug 927349 - check for null result here and go to pending state
+  mHoldTime = GetCurrentTimeDuration();
+  mStartTime.SetNull();
+
+  if (aFlags == eUpdateStyle) {
+    MaybePostRestyle();
+  }
 }
 
 void
@@ -50,15 +84,13 @@ AnimationPlayer::PlayFromJS()
 {
   // TODO (flush styles etc.)
 
-  Play();
+  Play(eUpdateStyle);
 }
 
 void
 AnimationPlayer::PauseFromJS()
 {
-  Pause();
-
-  // TODO (flush styles etc.)
+  Pause(eUpdateStyle);
 }
 
 void
@@ -105,6 +137,30 @@ AnimationPlayer::GetCurrentTimeDuration() const
     }
   }
   return result;
+}
+
+void
+AnimationPlayer::FlushStyle() const
+{
+  if (mSource && mSource->GetTarget()) {
+    nsIDocument* doc = mSource->GetTarget()->GetComposedDoc();
+    if (doc) {
+      doc->FlushPendingNotifications(Flush_Style);
+    }
+  }
+}
+
+void
+AnimationPlayer::MaybePostRestyle() const
+{
+  if (!mSource || !mSource->GetTarget())
+    return;
+
+  // FIXME: This is a bit heavy-handed but in bug 1073336 we hope to
+  // introduce a better means for players to update style.
+  nsLayoutUtils::PostRestyleEvent(mSource->GetTarget(),
+                                  eRestyle_Self,
+                                  nsChangeHint_AllReflowHints);
 }
 
 } // namespace dom
