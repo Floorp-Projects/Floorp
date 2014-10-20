@@ -112,11 +112,9 @@ FetchDriver::ContinueFetch(bool aCORSFlag)
     return FailWithNetworkError();
   }
 
-  bool corsPreflight = false;
-
   if (mRequest->Mode() == RequestMode::Cors_with_forced_preflight ||
       (mRequest->UnsafeRequest() && (mRequest->HasSimpleMethod() || !mRequest->Headers()->HasOnlySimpleHeaders()))) {
-    corsPreflight = true;
+    // FIXME(nsm): Set corsPreflight;
   }
 
   mRequest->SetResponseTainting(InternalRequest::RESPONSETAINT_CORS);
