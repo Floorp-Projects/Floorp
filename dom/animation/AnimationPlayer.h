@@ -83,7 +83,6 @@ public:
   }
 
   bool IsPaused() const { return mIsPaused; }
-
   bool IsRunning() const;
 
   bool HasCurrentSource() const {
@@ -92,6 +91,11 @@ public:
   bool HasInEffectSource() const {
     return GetSource() && GetSource()->IsInEffect();
   }
+
+  // Returns true if this animation does not currently need to update
+  // style on the main thread (e.g. because it is empty, or is
+  // running on the compositor).
+  bool CanThrottle() const;
 
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale

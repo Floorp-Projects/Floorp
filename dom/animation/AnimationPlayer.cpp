@@ -180,6 +180,36 @@ AnimationPlayer::IsRunning() const
   return computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
 }
 
+bool
+AnimationPlayer::CanThrottle() const
+{
+  if (!mSource ||
+      mSource->IsFinishedTransition() ||
+      mSource->Properties().IsEmpty()) {
+    return true;
+  }
+
+  if (!mIsRunningOnCompositor) {
+    return false;
+  }
+
+  if (PlayState() != AnimationPlayState::Finished) {
+    // Unfinished animations can be throttled.
+    return true;
+  }
+
+  // The animation has finished but, if this is the first sample since
+  // finishing, we need an unthrottled sample so we can apply the correct
+  // end-of-animation behavior on the main thread (either removing the
+  // animation style or applying the fill mode).
+  //
+  // XXX We shouldn't really be using LastNotification() below as a general
+  // indicator that the animation has finished, it should be reserved for
+  // events. If we use it differently in the future this use might need
+  // changing.
+  return mSource->LastNotification() == Animation::LAST_NOTIFICATION_END;
+}
+
 void
 AnimationPlayer::FlushStyle() const
 {

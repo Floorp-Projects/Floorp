@@ -489,33 +489,11 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   // most of the work in this method. But even if we are throttled, then we
   // have to do the work if an animation is ending in order to get correct end
   // of animation behaviour (the styles of the animation disappear, or the fill
-  // mode behaviour). This loop checks for any finishing animations and forces
-  // the style recalculation if we find any.
+  // mode behaviour). CanThrottle returns false for any finishing animations
+  // so we can force style recalculation in that case.
   if (aFlags == EnsureStyleRule_IsThrottled) {
     for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-      AnimationPlayer* player = mPlayers[playerIdx];
-
-      // Skip player with no source content, finished transitions, or animations
-      // whose @keyframes rule is empty.
-      if (!player->GetSource() ||
-          player->GetSource()->IsFinishedTransition() ||
-          player->GetSource()->Properties().IsEmpty()) {
-        continue;
-      }
-
-      // The GetComputedTiming() call here handles pausing.  But:
-      // FIXME: avoid recalculating every time when paused.
-      ComputedTiming computedTiming = player->GetSource()->GetComputedTiming();
-
-      // XXX We shouldn't really be using LastNotification() as a general
-      // indicator that the animation has finished, it should be reserved for
-      // events. If we use it differently in the future this use might need
-      // changing.
-      if (!player->mIsRunningOnCompositor ||
-          (computedTiming.mPhase == ComputedTiming::AnimationPhase_After &&
-           player->GetSource()->LastNotification()
-             != Animation::LAST_NOTIFICATION_END))
-      {
+      if (!mPlayers[playerIdx]->CanThrottle()) {
         aFlags = EnsureStyleRule_IsNotThrottled;
         break;
       }
