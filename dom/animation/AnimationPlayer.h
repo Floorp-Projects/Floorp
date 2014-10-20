@@ -31,7 +31,7 @@ protected:
 
 public:
   explicit AnimationPlayer(AnimationTimeline* aTimeline)
-    : mPlayState(NS_STYLE_ANIMATION_PLAY_STATE_RUNNING)
+    : mIsPaused(false)
     , mIsRunningOnCompositor(false)
     , mTimeline(aTimeline)
   {
@@ -64,9 +64,7 @@ public:
     return mSource ? mSource->Name() : EmptyString();
   }
 
-  bool IsPaused() const {
-    return mPlayState == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
-  }
+  bool IsPaused() const { return mIsPaused; }
 
   bool IsRunning() const;
 
@@ -84,7 +82,7 @@ public:
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime;
   Nullable<TimeDuration> mHoldTime;
-  uint8_t mPlayState;
+  bool mIsPaused;
   bool mIsRunningOnCompositor;
 
   nsRefPtr<AnimationTimeline> mTimeline;
