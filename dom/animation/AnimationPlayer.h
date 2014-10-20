@@ -118,14 +118,13 @@ public:
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale
 
-  nsRefPtr<AnimationTimeline> mTimeline;
-  nsRefPtr<Animation> mSource;
-
 protected:
   void FlushStyle() const;
   void MaybePostRestyle() const;
   StickyTimeDuration SourceContentEnd() const;
 
+  nsRefPtr<AnimationTimeline> mTimeline;
+  nsRefPtr<Animation> mSource;
   Nullable<TimeDuration> mHoldTime;  // Player timescale
   bool mIsPaused;
   bool mIsRunningOnCompositor;
