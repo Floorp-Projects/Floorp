@@ -28,6 +28,7 @@
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsISVGChildFrame.h"
+#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
 #include "nsStyleCoord.h"
@@ -556,6 +557,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   if (opacity != 1.0f && CanOptimizeOpacity(aFrame))
     opacity = 1.0f;
 
+  DrawTarget* drawTarget = aContext->GetDrawTarget();
   gfxContext *gfx = aContext->ThebesContext();
   bool complexEffects = false;
 
@@ -587,7 +589,9 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
         // GetCanvasTM().
         overflowRect = overflowRect + aFrame->GetPosition();
       }
-      aContext->IntersectClip(overflowRect);
+      gfx->Clip(NSRectToRect(overflowRect,
+                             aFrame->PresContext()->AppUnitsPerDevPixel(),
+                             *drawTarget));
     }
     gfx->PushGroup(gfxContentType::COLOR_ALPHA);
   }

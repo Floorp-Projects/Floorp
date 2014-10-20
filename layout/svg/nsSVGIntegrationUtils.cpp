@@ -473,6 +473,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
   bool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : true;
 
+  DrawTarget* drawTarget = aCtx->GetDrawTarget();
   gfxContext* gfx = aCtx->ThebesContext();
   gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
 
@@ -519,8 +520,11 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
       || aFrame->StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
     complexEffects = true;
     gfx->Save();
-    aCtx->IntersectClip(aFrame->GetVisualOverflowRectRelativeToSelf() +
-                        toUserSpace);
+    nsRect clipRect =
+      aFrame->GetVisualOverflowRectRelativeToSelf() + toUserSpace;
+    gfx->Clip(NSRectToRect(clipRect,
+                           aFrame->PresContext()->AppUnitsPerDevPixel(),
+                           *drawTarget));
     gfx->PushGroup(gfxContentType::COLOR_ALPHA);
   }
 

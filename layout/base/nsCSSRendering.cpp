@@ -683,7 +683,10 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
     } else {
       // We're drawing borders around the joined continuation boxes so we need
       // to clip that to the slice that we want for this frame.
-      aRenderingContext.IntersectClip(aBorderArea);
+      aRenderingContext.ThebesContext()->
+        Clip(NSRectToRect(aBorderArea,
+                          aForFrame->PresContext()->AppUnitsPerDevPixel(),
+                          *aRenderingContext.GetDrawTarget()));
     }
   } else {
     MOZ_ASSERT(joinedBorderArea.IsEqualEdges(aBorderArea),
@@ -1368,7 +1371,10 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
           }
         }
       }
-      aRenderingContext.IntersectClip(fragmentClip);
+      aRenderingContext.ThebesContext()->
+        Clip(NSRectToRect(fragmentClip,
+                          aForFrame->PresContext()->AppUnitsPerDevPixel(),
+                          *aRenderingContext.GetDrawTarget()));
 
       gfxCornerSizes clipRectRadii;
       if (hasBorderRadius) {
@@ -3207,7 +3213,9 @@ DrawBorderImage(nsPresContext*       aPresContext,
       nsRect clip = aBorderArea;
       clip.Inflate(imageOutset);
       autoSR.EnsureSaved(aRenderingContext.ThebesContext());
-      aRenderingContext.IntersectClip(clip);
+      aRenderingContext.ThebesContext()->
+        Clip(NSRectToRect(clip, aForFrame->PresContext()->AppUnitsPerDevPixel(),
+                          *aRenderingContext.GetDrawTarget()));
     }
   } else {
     borderImgArea = aBorderArea;
