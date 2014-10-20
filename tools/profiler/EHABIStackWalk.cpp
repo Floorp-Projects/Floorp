@@ -42,10 +42,37 @@
 #define PT_ARM_EXIDX 0x70000001
 #endif
 
+// Bug 1082817: ICS B2G has a buggy linker that doesn't always ensure
+// that the EXIDX is sorted by address, as the spec requires.  So in
+// that case we build and sort an array of pointers into the index,
+// and binary-search that; otherwise, we search the index in place
+// (avoiding the time and space overhead of the indirection).
+#if defined(ANDROID_VERSION) && ANDROID_VERSION < 16
+#define HAVE_UNSORTED_EXIDX
+#endif
 
 namespace mozilla {
 
-struct EHEntry;
+struct PRel31 {
+  uint32_t mBits;
+  bool topBit() const { return mBits & 0x80000000; }
+  uint32_t value() const { return mBits & 0x7fffffff; }
+  int32_t offset() const { return (static_cast<int32_t>(mBits) << 1) >> 1; }
+  const void *compute() const {
+    return reinterpret_cast<const char *>(this) + offset();
+  }
+private:
+  PRel31(const PRel31 &copied) MOZ_DELETE;
+  PRel31() MOZ_DELETE;
+};
+
+struct EHEntry {
+  PRel31 startPC;
+  PRel31 exidx;
+private:
+  EHEntry(const EHEntry &copied) MOZ_DELETE;
+  EHEntry() MOZ_DELETE;
+};
 
 class EHState {
   // Note that any core register can be used as a "frame pointer" to
@@ -64,6 +91,7 @@ enum {
   R_PC = 15
 };
 
+#ifdef HAVE_UNSORTED_EXIDX
 class EHEntryHandle {
   const EHEntry *mValue;
 public:
@@ -71,19 +99,38 @@ public:
   const EHEntry *value() const { return mValue; }
 };
 
+bool operator<(const EHEntryHandle &lhs, const EHEntryHandle &rhs) {
+  return lhs.value()->startPC.compute() < rhs.value()->startPC.compute();
+}
+#endif
+
 class EHTable {
   uint32_t mStartPC;
   uint32_t mEndPC;
   uint32_t mLoadOffset;
+#ifdef HAVE_UNSORTED_EXIDX
   // In principle we should be able to binary-search the index section in
   // place, but the ICS toolchain's linker is noncompliant and produces
   // indices that aren't entirely sorted (e.g., libc).  So we have this:
   std::vector<EHEntryHandle> mEntries;
+  typedef std::vector<EHEntryHandle>::const_iterator EntryIterator;
+  EntryIterator entriesBegin() const { return mEntries.begin(); }
+  EntryIterator entriesEnd() const { return mEntries.end(); }
+  static const EHEntry* entryGet(EntryIterator aEntry) {
+    return aEntry->value();
+  }
+#else
+  typedef const EHEntry *EntryIterator;
+  EntryIterator mEntriesBegin, mEntriesEnd;
+  EntryIterator entriesBegin() const { return mEntriesBegin; }
+  EntryIterator entriesEnd() const { return mEntriesEnd; }
+  static const EHEntry* entryGet(EntryIterator aEntry) { return aEntry; }
+#endif
   std::string mName;
 public:
   EHTable(const void *aELF, size_t aSize, const std::string &aName);
   const EHEntry *lookup(uint32_t aPC) const;
-  bool isValid() const { return mEntries.size() > 0; }
+  bool isValid() const { return entriesEnd() != entriesBegin(); }
   const std::string &name() const { return mName; }
   uint32_t startPC() const { return mStartPC; }
   uint32_t endPC() const { return mEndPC; }
@@ -137,28 +184,6 @@ size_t EHABIStackWalk(const mcontext_t &aContext, void *stackBase,
   
   return count;
 }
-
-
-struct PRel31 {
-  uint32_t mBits;
-  bool topBit() const { return mBits & 0x80000000; }
-  uint32_t value() const { return mBits & 0x7fffffff; }
-  int32_t offset() const { return (static_cast<int32_t>(mBits) << 1) >> 1; }
-  const void *compute() const {
-    return reinterpret_cast<const char *>(this) + offset();
-  }
-private:
-  PRel31(const PRel31 &copied) MOZ_DELETE;
-  PRel31() MOZ_DELETE;
-};
-
-struct EHEntry {
-  PRel31 startPC;
-  PRel31 exidx;
-private:
-  EHEntry(const EHEntry &copied) MOZ_DELETE;
-  EHEntry() MOZ_DELETE;
-};
 
 
 class EHInterp {
@@ -477,29 +502,31 @@ const EHTable *EHAddrSpace::lookup(uint32_t aPC) const {
 }
 
 
-bool operator<(const EHEntryHandle &lhs, const EHEntryHandle &rhs) {
-  return lhs.value()->startPC.compute() < rhs.value()->startPC.compute();
-}
-
 const EHEntry *EHTable::lookup(uint32_t aPC) const {
   MOZ_ASSERT(aPC >= mStartPC);
   if (aPC >= mEndPC)
     return nullptr;
 
-  std::vector<EHEntryHandle>::const_iterator begin = mEntries.begin();
-  std::vector<EHEntryHandle>::const_iterator end = mEntries.end();
+  EntryIterator begin = entriesBegin();
+  EntryIterator end = entriesEnd();
   MOZ_ASSERT(begin < end);
-  if (aPC < reinterpret_cast<uint32_t>(begin->value()->startPC.compute()))
+  if (aPC < reinterpret_cast<uint32_t>(entryGet(begin)->startPC.compute()))
     return nullptr;
 
   while (end - begin > 1) {
-    std::vector<EHEntryHandle>::const_iterator mid = begin + (end - begin) / 2;
-    if (aPC < reinterpret_cast<uint32_t>(mid->value()->startPC.compute()))
+#ifdef EHABI_UNWIND_MORE_ASSERTS
+    if (entryGet(end - 1)->startPC.compute()
+        < entryGet(begin)->startPC.compute()) {
+      MOZ_CRASH("unsorted exidx");
+    }
+#endif
+    EntryIterator mid = begin + (end - begin) / 2;
+    if (aPC < reinterpret_cast<uint32_t>(entryGet(mid)->startPC.compute()))
       end = mid;
     else
       begin = mid;
   }
-  return begin->value();
+  return entryGet(begin);
 }
 
 
@@ -511,10 +538,14 @@ static const unsigned char hostEndian = ELFDATA2MSB;
 #error "No endian?"
 #endif
 
-// Async signal unsafe.  (Note use of std::vector::reserve.)
+// Async signal unsafe: std::vector::reserve, std::string copy ctor.
 EHTable::EHTable(const void *aELF, size_t aSize, const std::string &aName)
   : mStartPC(~0), // largest uint32_t
     mEndPC(0),
+#ifndef HAVE_UNSORTED_EXIDX
+    mEntriesBegin(nullptr),
+    mEntriesEnd(nullptr),
+#endif
     mName(aName)
 {
   const uint32_t base = reinterpret_cast<uint32_t>(aELF);
@@ -568,10 +599,15 @@ EHTable::EHTable(const void *aELF, size_t aSize, const std::string &aName)
   const EHEntry *endTable =
     reinterpret_cast<const EHEntry *>(mLoadOffset + exidxHdr->p_vaddr
                                     + exidxHdr->p_memsz);
+#ifdef HAVE_UNSORTED_EXIDX
   mEntries.reserve(endTable - startTable);
   for (const EHEntry *i = startTable; i < endTable; ++i)
     mEntries.push_back(i);
   std::sort(mEntries.begin(), mEntries.end());
+#else
+  mEntriesBegin = startTable;
+  mEntriesEnd = endTable;
+#endif
 }
 
 
