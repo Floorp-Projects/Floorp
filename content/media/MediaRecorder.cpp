@@ -386,6 +386,19 @@ public:
     return NS_OK;
   }
 
+  nsresult RequestData()
+  {
+    LOG(PR_LOG_DEBUG, ("Session.RequestData"));
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (NS_FAILED(NS_DispatchToMainThread(new PushBlobRunnable(this)))) {
+      MOZ_ASSERT(false, "RequestData NS_DispatchToMainThread failed");
+      return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+  }
+
   already_AddRefed<nsIDOMBlob> GetEncodedData()
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -816,25 +829,6 @@ MediaRecorder::Resume(ErrorResult& aResult)
   mState = RecordingState::Recording;
 }
 
-class CreateAndDispatchBlobEventRunnable : public nsRunnable {
-  nsCOMPtr<nsIDOMBlob> mBlob;
-  nsRefPtr<MediaRecorder> mRecorder;
-public:
-  CreateAndDispatchBlobEventRunnable(already_AddRefed<nsIDOMBlob>&& aBlob,
-                                     MediaRecorder* aRecorder)
-    : mBlob(aBlob), mRecorder(aRecorder)
-  { }
-
-  NS_IMETHOD
-  Run();
-};
-
-NS_IMETHODIMP
-CreateAndDispatchBlobEventRunnable::Run()
-{
-  return mRecorder->CreateAndDispatchBlobEvent(mBlob.forget());
-}
-
 void
 MediaRecorder::RequestData(ErrorResult& aResult)
 {
@@ -843,10 +837,9 @@ MediaRecorder::RequestData(ErrorResult& aResult)
     return;
   }
   MOZ_ASSERT(mSessions.Length() > 0);
-  if (NS_FAILED(NS_DispatchToMainThread(
-                  new CreateAndDispatchBlobEventRunnable(
-                    mSessions.LastElement()->GetEncodedData(), this)))) {
-    MOZ_ASSERT(false, "NS_DispatchToMainThread CreateAndDispatchBlobEventRunnable failed");
+  nsresult rv = mSessions.LastElement()->RequestData();
+  if (NS_FAILED(rv)) {
+    NotifyError(rv);
   }
 }
 

@@ -105,7 +105,7 @@ NS_CreateMobileConnectionService()
     service = new mozilla::dom::mobileconnection::MobileConnectionIPCService();
   } else {
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
-    service = do_CreateInstance(GONK_MOBILECONNECTION_SERVICE_CONTRACTID);
+    service = do_GetService(GONK_MOBILECONNECTION_SERVICE_CONTRACTID);
 #endif
   }
 
