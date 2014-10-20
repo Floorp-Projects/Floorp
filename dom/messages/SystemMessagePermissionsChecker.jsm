@@ -14,9 +14,12 @@ Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
 Cu.import("resource://gre/modules/PermissionsTable.jsm");
 Cu.import("resource://gre/modules/PermissionSettings.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "dataStoreService",
+                                   "@mozilla.org/datastore-service;1",
+                                   "nsIDataStoreService");
+
 this.EXPORTED_SYMBOLS = ["SystemMessagePermissionsChecker",
-                         "SystemMessagePermissionsTable",
-                         "SystemMessagePrefixPermissionsTable"];
+                         "SystemMessagePermissionsTable"];
 
 function debug(aStr) {
   // dump("SystemMessagePermissionsChecker.jsm: " + aStr + "\n");
@@ -129,17 +132,6 @@ this.SystemMessagePermissionsTable = {
   }
 };
 
-// This table maps system message prefix to permission(s), indicating only
-// the system messages with specified prefixes granted by the page's permissions
-// are allowed to be registered or sent to that page. Note the empty permission
-// set means this type of system message is always permitted.
-//
-// Note that this table is only used when the permission checker can't find a
-// match in SystemMessagePermissionsTable listed above.
-
-this.SystemMessagePrefixPermissionsTable = {
-  "datastore-update-": { },
-};
 
 this.SystemMessagePermissionsChecker = {
   /**
@@ -159,19 +151,9 @@ this.SystemMessagePermissionsChecker = {
 
     let permNames = SystemMessagePermissionsTable[aSysMsgName];
     if (permNames === undefined) {
-      // Try to look up in the prefix table.
-      for (let sysMsgPrefix in SystemMessagePrefixPermissionsTable) {
-        if (aSysMsgName.indexOf(sysMsgPrefix) === 0) {
-          permNames = SystemMessagePrefixPermissionsTable[sysMsgPrefix];
-          break;
-        }
-      }
-
-      if (permNames === undefined) {
-        debug("'" + aSysMsgName + "' is not associated with permissions. " +
-              "Please add them to the SystemMessage[Prefix]PermissionsTable.");
-        return null;
-      }
+      debug("'" + aSysMsgName + "' is not associated with permissions. " +
+            "Please add them to the SystemMessage[Prefix]PermissionsTable.");
+      return null;
     }
 
     let object = { };
@@ -195,6 +177,34 @@ this.SystemMessagePermissionsChecker = {
   },
 
   /**
+   * Check if the message is a datastore-update message
+   * @param string aSysMsgName
+   *        The system messsage name.
+   */
+  isDataStoreSystemMessage: function(aSysMsgName) {
+    return aSysMsgName.indexOf('datastore-update-') === 0;
+  },
+
+  /**
+   * Check if this manifest can deliver this particular datastore message.
+   */
+  canDeliverDataStoreSystemMessage: function(aSysMsgName, aManifestURL) {
+    let store = aSysMsgName.substr('datastore-update-'.length);
+
+    // Get all the manifest URLs of the apps which can access the datastore.
+    let manifestURLs = dataStoreService.getAppManifestURLsForDataStore(store);
+    let enumerate = manifestURLs.enumerate();
+    while (enumerate.hasMoreElements()) {
+      let manifestURL = enumerate.getNext().QueryInterface(Ci.nsISupportsString);
+      if (manifestURL == aManifestURL) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
+  /**
    * Check if the system message is permitted to be registered for the given
    * app at start-up based on the permissions claimed in the app's manifest.
    * @param string aSysMsgName
@@ -214,6 +224,11 @@ this.SystemMessagePermissionsChecker = {
           "aSysMsgName: " + aSysMsgName + ", " +
           "aManifestURL: " + aManifestURL + ", " +
           "aManifest: " + JSON.stringify(aManifest));
+
+    if (this.isDataStoreSystemMessage(aSysMsgName) &&
+        this.canDeliverDataStoreSystemMessage(aSysMsgName, aManifestURL)) {
+      return true;
+    }
 
     let permNames = this.getSystemMessagePermissions(aSysMsgName);
     if (permNames === null) {
@@ -301,6 +316,11 @@ this.SystemMessagePermissionsChecker = {
           "aSysMsgName: " + aSysMsgName + ", " +
           "aPageURL: " + aPageURL + ", " +
           "aManifestURL: " + aManifestURL);
+
+    if (this.isDataStoreSystemMessage(aSysMsgName) &&
+        this.canDeliverDataStoreSystemMessage(aSysMsgName, aManifestURL)) {
+      return true;
+    }
 
     let permNames = this.getSystemMessagePermissions(aSysMsgName);
     if (permNames === null) {
