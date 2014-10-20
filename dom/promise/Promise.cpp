@@ -285,6 +285,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Promise)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mResult)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mAllocationStack)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -299,6 +300,7 @@ NS_INTERFACE_MAP_END
 Promise::Promise(nsIGlobalObject* aGlobal)
   : mGlobal(aGlobal)
   , mResult(JS::UndefinedValue())
+  , mAllocationStack(nullptr)
   , mState(Pending)
   , mTaskPending(false)
   , mHadRejectCallback(false)
@@ -349,8 +351,14 @@ Promise::CreateWrapper(ErrorResult& aRv)
     return;
   }
 
-  // Need the .get() bit here to get template deduction working right
   dom::PreserveWrapper(this);
+
+  // Now grab our allocation stack
+  if (!CaptureStack(cx, mAllocationStack)) {
+    JS_ClearPendingException(cx);
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
 }
 
 void
@@ -1184,6 +1192,17 @@ PromiseReportRejectFeature::Notify(JSContext* aCx, workers::Status aStatus)
   MOZ_ASSERT(aStatus > workers::Running);
   mPromise->MaybeReportRejectedOnce();
   // After this point, `this` has been deleted by RemoveFeature!
+  return true;
+}
+
+bool
+Promise::CaptureStack(JSContext* aCx, JS::Heap<JSObject*>& aTarget)
+{
+  JS::Rooted<JSObject*> stack(aCx);
+  if (!JS::CaptureCurrentStack(aCx, &stack)) {
+    return false;
+  }
+  aTarget = stack;
   return true;
 }
 
