@@ -22,9 +22,11 @@
  * limitations under the License.
  */
 #include "pkix/pkix.h"
+#include "pkixcheck.h"
 #include "pkixder.h"
 #include "pkixgtest.h"
 #include "pkixtestutil.h"
+#include "pkixutil.h"
 
 namespace mozilla { namespace pkix {
 
@@ -1542,3 +1544,269 @@ TEST_P(pkixnames_CheckCertHostname_IPV4_Addresses,
 INSTANTIATE_TEST_CASE_P(pkixnames_CheckCertHostname_IPV4_ADDRESSES,
                         pkixnames_CheckCertHostname_IPV4_Addresses,
                         testing::ValuesIn(IPV4_ADDRESSES));
+
+struct NameConstraintParams
+{
+  ByteString subject;
+  ByteString subjectAltName;
+  ByteString subtrees;
+  Result expectedPermittedSubtreesResult;
+  Result expectedExcludedSubtreesResult;
+};
+
+static ByteString
+PermittedSubtrees(const ByteString& generalSubtrees)
+{
+  return TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
+             generalSubtrees);
+}
+
+static ByteString
+ExcludedSubtrees(const ByteString& generalSubtrees)
+{
+  return TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
+             generalSubtrees);
+}
+
+// Does not encode min or max.
+static ByteString
+GeneralSubtree(const ByteString& base)
+{
+  return TLV(der::SEQUENCE, base);
+}
+
+static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
+{
+  /////////////////////////////////////////////////////////////////////////////
+  // Edge cases of name constraint absolute vs. relative and subdomain matching
+  // that are not clearly explained in RFC 5280. (See the long comment above
+  // PresentedDNSIDMatchesReferenceDNSID.)
+
+  // Q: Does a presented identifier equal (case insensitive) to the name
+  //    constraint match the constraint? For example, does the presented
+  //    ID "host.example.com" match a "host.example.com" constraint?
+  { ByteString(), DNSName("host.example.com"),
+    GeneralSubtree(DNSName("host.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // This test case is an example from RFC 5280.
+    ByteString(), DNSName("host1.example.com"),
+    GeneralSubtree(DNSName("host.example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // Q: When the name constraint does not start with ".", do subdomain
+  //    presented identifiers match it? For example, does the presented
+  //    ID "www.host.example.com" match a "host.example.com" constraint?
+  { // This test case is an example from RFC 5280.
+    ByteString(),  DNSName("www.host.example.com"),
+    GeneralSubtree(DNSName(    "host.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+
+  // Q: When the name constraint does not start with ".", does a
+  //    non-subdomain prefix match it? For example, does "bigfoo.bar.com"
+  //    match "foo.bar.com"?
+  { ByteString(), DNSName("bigfoo.bar.com"),
+    GeneralSubtree(DNSName("foo.bar.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // Q: Is a name constraint that starts with "." valid, and if so, what
+  //    semantics does it have? For example, does a presented ID of
+  //    "www.example.com" match a constraint of ".example.com"? Does a
+  //    presented ID of "example.com" match a constraint of ".example.com"?
+  { ByteString(), DNSName("www.example.com"),
+    GeneralSubtree(DNSName(".example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // Check that we only allow subdomains to match.
+    ByteString(), DNSName("example.com"),
+    GeneralSubtree(DNSName(".example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // Check that we don't get confused and consider "b" == "."
+    ByteString(), DNSName("bexample.com"),
+    GeneralSubtree(DNSName(".example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // Q: Is there a way to prevent subdomain matches?
+  // (This is tested in a different set of tests because it requires a
+  // combination of permittedSubtrees and excludedSubtrees.)
+
+  // Q: Are name constraints allowed to be specified as absolute names?
+  //    For example, does a presented ID of "example.com" match a name
+  //    constraint of "example.com." and vice versa.
+  //
+  { ByteString(), DNSName("example.com"),
+    GeneralSubtree(DNSName("example.com.")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success,
+  },
+  { ByteString(), DNSName("example.com."),
+    GeneralSubtree(DNSName("example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success,
+  },
+  { // The presented ID is the same length as the constraint, because the
+    // subdomain is only one character long and because the constraint both
+    // begins and ends with ".".
+    ByteString(), DNSName("p.example.com"),
+    GeneralSubtree(DNSName(".example.com.")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success,
+  },
+  { // Same as previous test case, but using a wildcard presented ID.
+    ByteString(), DNSName("*.example.com"),
+    GeneralSubtree(DNSName(".example.com.")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // Q: Are "" and "." valid DNSName constraints? If so, what do they mean?
+  { ByteString(), DNSName("example.com"),
+    GeneralSubtree(DNSName("")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), DNSName("example.com."),
+    GeneralSubtree(DNSName("")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), DNSName("example.com"),
+    GeneralSubtree(DNSName(".")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success,
+  },
+  { ByteString(), DNSName("example.com."),
+    GeneralSubtree(DNSName(".")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Basic CN-ID DNSName constraint tests.
+
+  { // Empty Name is ignored for DNSName constraints.
+    ByteString(), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { // Empty CN is ignored for DNSName constraints because it isn't a
+    // syntactically-valid DNSName.
+    //
+    // NSS gives different results.
+    RDN(CN("")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { // IP Address is ignored for DNSName constraints.
+    //
+    // NSS gives different results.
+    RDN(CN("1.2.3.4")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { // OU has something that looks like a dNSName that matches.
+    RDN(OU("a.example.com")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { // OU has something that looks like a dNSName that does not match.
+    RDN(OU("b.example.com")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { // NSS gives different results.
+    RDN(CN("Not a DNSName")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Success
+  },
+  { RDN(CN("a.example.com")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { RDN(CN("b.example.com")), NO_SAN, GeneralSubtree(DNSName("a.example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Test that constraints are applied to the most specific (last) CN, and only
+  // that CN-ID.
+
+  { // Name constraint only matches a.example.com, but the most specific CN
+    // (i.e. the CN-ID) is b.example.com. (Two CNs in one RDN.)
+    RDN(CN("a.example.com") + CN("b.example.com")), NO_SAN,
+    GeneralSubtree(DNSName("a.example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // Name constraint only matches a.example.com, but the most specific CN
+    // (i.e. the CN-ID) is b.example.com. (Two CNs in separate RDNs.)
+    RDN(CN("a.example.com")) + RDN(CN("b.example.com")), NO_SAN,
+    GeneralSubtree(DNSName("a.example.com")),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // Name constraint only permits b.example.com, and the most specific CN
+    // (i.e. the CN-ID) is b.example.com. (Two CNs in one RDN.)
+    RDN(CN("a.example.com") + CN("b.example.com")), NO_SAN,
+    GeneralSubtree(DNSName("b.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // Name constraint only permits b.example.com, and the most specific CN
+    // (i.e. the CN-ID) is b.example.com. (Two CNs in separate RDNs.)
+    RDN(CN("a.example.com")) + RDN(CN("b.example.com")), NO_SAN,
+    GeneralSubtree(DNSName("b.example.com")),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+};
+
+class pkixnames_CheckNameConstraints
+  : public ::testing::Test
+  , public ::testing::WithParamInterface<NameConstraintParams>
+{
+};
+
+TEST_P(pkixnames_CheckNameConstraints,
+       NameConstraintsEnforcedforDirectlyIssuedEndEntity)
+{
+  // Test that name constraints are enforced on a certificate directly issued by
+  // this certificate.
+
+  const NameConstraintParams& param(GetParam());
+
+  ByteString certDER(CreateCert(param.subject, param.subjectAltName));
+  ASSERT_FALSE(ENCODING_FAILED(certDER));
+  Input certInput;
+  ASSERT_EQ(Success, certInput.Init(certDER.data(), certDER.length()));
+  BackCert cert(certInput, EndEntityOrCA::MustBeEndEntity, nullptr);
+  ASSERT_EQ(Success, cert.Init());
+
+  {
+    ByteString nameConstraintsDER(TLV(der::SEQUENCE,
+                                      PermittedSubtrees(param.subtrees)));
+    Input nameConstraints;
+    ASSERT_EQ(Success,
+              nameConstraints.Init(nameConstraintsDER.data(),
+                                   nameConstraintsDER.length()));
+    ASSERT_EQ(param.expectedPermittedSubtreesResult,
+              CheckNameConstraints(nameConstraints, cert,
+                                   KeyPurposeId::id_kp_serverAuth));
+  }
+  {
+    ByteString nameConstraintsDER(TLV(der::SEQUENCE,
+                                      ExcludedSubtrees(param.subtrees)));
+    Input nameConstraints;
+    ASSERT_EQ(Success,
+              nameConstraints.Init(nameConstraintsDER.data(),
+                                   nameConstraintsDER.length()));
+    ASSERT_EQ(param.expectedExcludedSubtreesResult,
+              CheckNameConstraints(nameConstraints, cert,
+                                   KeyPurposeId::id_kp_serverAuth));
+  }
+  {
+    ByteString nameConstraintsDER(TLV(der::SEQUENCE,
+                                      PermittedSubtrees(param.subtrees) +
+                                      ExcludedSubtrees(param.subtrees)));
+    Input nameConstraints;
+    ASSERT_EQ(Success,
+              nameConstraints.Init(nameConstraintsDER.data(),
+                                   nameConstraintsDER.length()));
+    ASSERT_EQ((param.expectedPermittedSubtreesResult == Success &&
+               param.expectedExcludedSubtreesResult == Success)
+                ? Success
+                : Result::ERROR_CERT_NOT_IN_NAME_SPACE,
+              CheckNameConstraints(nameConstraints, cert,
+                                   KeyPurposeId::id_kp_serverAuth));
+  }
+}
+
+INSTANTIATE_TEST_CASE_P(pkixnames_CheckNameConstraints,
+                        pkixnames_CheckNameConstraints,
+                        testing::ValuesIn(NAME_CONSTRAINT_PARAMS));
