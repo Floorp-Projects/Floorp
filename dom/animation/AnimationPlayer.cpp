@@ -39,6 +39,8 @@ AnimationPlayer::Play(UpdateFlags aFlags)
 {
   // FIXME: When we implement finishing behavior (bug 1074630) we should
   // not return early if mIsPaused is false since we may still need to seek.
+  // (However, we will need to pass a flag so that when we start playing due to
+  //  a change in animation-play-state we *don't* trigger finishing behavior.)
   if (!mIsPaused) {
     return;
   }
@@ -164,4 +166,40 @@ AnimationPlayer::MaybePostRestyle() const
 }
 
 } // namespace dom
+
+void
+CSSAnimationPlayer::Play(UpdateFlags aUpdateFlags)
+{
+  mPauseShouldStick = false;
+  AnimationPlayer::Play(aUpdateFlags);
+}
+
+void
+CSSAnimationPlayer::Pause(UpdateFlags aUpdateFlags)
+{
+  mPauseShouldStick = true;
+  AnimationPlayer::Pause(aUpdateFlags);
+}
+
+void
+CSSAnimationPlayer::PlayFromStyle()
+{
+  mIsStylePaused = false;
+  if (!mPauseShouldStick) {
+    AnimationPlayer::Play(eNoUpdate);
+  }
+}
+
+void
+CSSAnimationPlayer::PauseFromStyle()
+{
+  // Check if the pause state is being overridden
+  if (mIsStylePaused) {
+    return;
+  }
+
+  mIsStylePaused = true;
+  AnimationPlayer::Pause(eNoUpdate);
+}
+
 } // namespace mozilla
