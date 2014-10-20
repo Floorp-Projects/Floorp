@@ -11,6 +11,7 @@
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "gfxSVGGlyphs.h"
+#include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/RefPtr.h"
@@ -701,7 +702,8 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
   aContext->SetMatrix(aNewTransform);
 
   if (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) {
-    drawTarget->Fill(path, ColorPattern(Color(1.0f, 1.0f, 1.0f, 1.0f)),
+    ColorPattern white(ToDeviceColor(Color(1.0f, 1.0f, 1.0f, 1.0f)));
+    drawTarget->Fill(path, white,
                      DrawOptions(1.0f, CompositionOp::OP_OVER, aaMode));
     return;
   }

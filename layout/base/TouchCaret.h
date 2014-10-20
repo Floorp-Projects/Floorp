@@ -15,6 +15,7 @@
 #include "mozilla/TouchEvents.h"
 #include "Units.h"
 
+class nsCanvasFrame;
 class nsIFrame;
 class nsIPresShell;
 
@@ -84,7 +85,7 @@ private:
   /**
    * Find the nsCanvasFrame which holds the touch caret.
    */
-  nsIFrame* GetCanvasFrame();
+  nsCanvasFrame* GetCanvasFrame();
 
   /**
    * Retrieve the bounding rectangle of the touch caret.
@@ -109,6 +110,24 @@ private:
    * The returned point is relative to the canvas frame.
    */
   nscoord GetCaretYCenterPosition();
+
+  /**
+   * Retrieve the position of the touch caret.
+   * The returned point is relative to the canvas frame.
+   */
+  nsPoint GetTouchCaretPosition();
+
+  /**
+   * Check whether nsCaret shows in the scroll frame boundary, i.e. its rect
+   * intersects scroll frame's rect.
+   */
+  bool IsCaretShowingInScrollFrame();
+
+  /**
+   * Clamp the position of the touch caret to the scroll frame boundary.
+   * The returned point is relative to the canvas frame.
+   */
+  nsPoint ClampPositionToScrollFrame(const nsPoint& aPosition);
 
   /**
    * Set the position of the touch caret.

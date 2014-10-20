@@ -36,5 +36,33 @@ PromiseDebugging::GetState(GlobalObject&, Promise& aPromise,
   }
 }
 
+/* static */ void
+PromiseDebugging::GetAllocationStack(GlobalObject&, Promise& aPromise,
+                                     JS::MutableHandle<JSObject*> aStack)
+{
+  aStack.set(aPromise.mAllocationStack);
+}
+
+/* static */ void
+PromiseDebugging::GetRejectionStack(GlobalObject&, Promise& aPromise,
+                                    JS::MutableHandle<JSObject*> aStack)
+{
+  aStack.set(aPromise.mRejectionStack);
+}
+
+/* static */ void
+PromiseDebugging::GetFullfillmentStack(GlobalObject&, Promise& aPromise,
+                                       JS::MutableHandle<JSObject*> aStack)
+{
+  aStack.set(aPromise.mFullfillmentStack);
+}
+
+/* static */ void
+PromiseDebugging::GetDependentPromises(GlobalObject&, Promise& aPromise,
+                                       nsTArray<nsRefPtr<Promise>>& aPromises)
+{
+  aPromise.GetDependentPromises(aPromises);
+}
+
 } // namespace dom
 } // namespace mozilla

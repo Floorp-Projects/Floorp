@@ -440,7 +440,10 @@ GLScreenBuffer::Swap(const gfx::IntSize& size)
 
     // Fence before copying.
     if (mFront) {
-        mFront->Surf()->Fence();
+        mFront->Surf()->ProducerRelease();
+    }
+    if (mBack) {
+        mBack->Surf()->ProducerAcquire();
     }
 
     if (ShouldPreserveBuffer() &&
@@ -474,7 +477,13 @@ GLScreenBuffer::Resize(const gfx::IntSize& size)
     if (!Attach(newBack->Surf(), size))
         return false;
 
+    if (mBack)
+        mBack->Surf()->ProducerRelease();
+
     mBack = newBack;
+
+    mBack->Surf()->ProducerAcquire();
+
     return true;
 }
 

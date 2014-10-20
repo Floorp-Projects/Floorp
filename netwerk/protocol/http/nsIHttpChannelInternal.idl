@@ -38,7 +38,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(a4bf4fc5-b5a9-4098-bd20-409d71bf18e6)]
+[scriptable, uuid(a95e45c1-b145-487c-b2a9-4e96e814a1b5)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -201,4 +201,10 @@ interface nsIHttpChannelInternal : nsISupports
     void addRedirect(in nsIPrincipal aPrincipal);
 
     readonly attribute PRTime lastModifiedTime;
+
+    /**
+     * Force a channel that has not been AsyncOpen'ed to skip any check for possible
+     * interception and proceed immediately to the network/cache.
+     */
+    void forceNoIntercept();
 };

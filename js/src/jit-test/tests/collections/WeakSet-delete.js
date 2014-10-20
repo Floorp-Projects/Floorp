@@ -26,3 +26,6 @@ assertEq(ws.delete(value), true);
 assertEq(ws.has(value), false);
 assertEq(ws.delete(value), false);
 assertEq(ws.has(value), false);
+
+// Delete primitive
+assertEq(ws.delete(15), false);

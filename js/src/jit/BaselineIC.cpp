@@ -3221,11 +3221,10 @@ GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, Register object,
     //      2. The object does not have expando properties, or has an expando
     //          which is known to not have the desired property.
     Address handlerAddr(object, ProxyObject::offsetOfHandler());
-    Address expandoAddr(object, NativeObject::getFixedSlotOffset(GetDOMProxyExpandoSlot()));
 
     // Check that object is a DOMProxy.
     masm.loadPtr(checkProxyHandlerAddr, scratch);
-    masm.branchPrivatePtr(Assembler::NotEqual, handlerAddr, scratch, checkFailed);
+    masm.branchPtr(Assembler::NotEqual, handlerAddr, scratch, checkFailed);
 
     // At this point, if not checking for an expando object, just return.
     if (!checkExpandoShapeAddr)
@@ -3238,6 +3237,9 @@ GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, Register object,
 
     Label failDOMProxyCheck;
     Label domProxyOk;
+
+    masm.loadPtr(Address(object, ProxyObject::offsetOfValues()), scratch);
+    Address expandoAddr(scratch, ProxyObject::offsetOfExtraSlotInValues(GetDOMProxyExpandoSlot()));
 
     if (expandoAndGenerationAddr) {
         MOZ_ASSERT(generationAddr);
@@ -6188,7 +6190,7 @@ static bool
 UpdateExistingGenerationalDOMProxyStub(ICGetProp_Fallback *stub,
                                        HandleObject obj)
 {
-    Value expandoSlot = obj->fakeNativeGetReservedSlot(GetDOMProxyExpandoSlot());
+    Value expandoSlot = GetProxyExtra(obj, GetDOMProxyExpandoSlot());
     MOZ_ASSERT(!expandoSlot.isObject() && !expandoSlot.isUndefined());
     ExpandoAndGeneration *expandoAndGeneration = (ExpandoAndGeneration*)expandoSlot.toPrivate();
     for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd(); iter++) {
@@ -7244,7 +7246,7 @@ ICGetPropCallDOMProxyNativeCompiler::getStub(ICStubSpace *space)
     RootedShape shape(cx, proxy_->lastProperty());
     RootedShape holderShape(cx, holder_->lastProperty());
 
-    Value expandoSlot = proxy_->fakeNativeGetReservedSlot(GetDOMProxyExpandoSlot());
+    Value expandoSlot = GetProxyExtra(proxy_, GetDOMProxyExpandoSlot());
     RootedShape expandoShape(cx, nullptr);
     ExpandoAndGeneration *expandoAndGeneration;
     int32_t generation;
@@ -7657,7 +7659,7 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
     RootedTypeObject oldType(cx, obj->getType(cx));
     if (!oldType)
         return false;
-    uint32_t oldSlots = obj->fakeNativeNumDynamicSlots();
+    uint32_t oldSlots = obj->isNative() ? obj->as<NativeObject>().numDynamicSlots() : 0;
 
     if (op == JSOP_INITPROP) {
         MOZ_ASSERT(obj->is<JSObject>());

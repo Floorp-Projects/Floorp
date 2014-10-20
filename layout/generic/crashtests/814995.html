@@ -1,0 +1,20 @@
+<html class="reftest-wait">
+<script>
+function start() {
+tmp = document.createElement('iframe');
+document.documentElement.appendChild(tmp);
+window.setTimeout('second()',100);
+}
+
+function second() {
+tmp.contentDocument.removeChild(tmp.contentDocument.childNodes[0]);
+o988=document.createElement('frameset');
+o1051=document.createElement('frameset');
+tmp.contentDocument.appendChild(o1051);
+tmp.contentDocument.documentElement.appendChild(o988);
+
+document.documentElement.removeAttribute("class");
+}
+</script>
+<body onload="start()"></body>
+</html>

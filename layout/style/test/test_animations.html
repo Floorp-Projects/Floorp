@@ -165,73 +165,12 @@ is(e.elapsedTime, 0.5);
 is(e.pseudoElement, "pseudo");
 is(e.isTrusted, false)
 
-function advance_clock(milliseconds) {
-  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
-}
-
-var display = document.getElementById("display");
-var div = null;
-var cs = null;
-var events_received = [];
-function new_div(style) {
-  return new_element("div", style);
-}
-function new_element(tagname, style) {
-  if (div != null || cs != null) {
-    ok(false, "test author forgot to call done_div");
-  }
-  if (typeof(style) != "string") {
-    ok(false, "test author forgot to pass argument");
-  }
-  div = document.createElement(tagname);
-  div.setAttribute("style", style);
-  display.appendChild(div);
-  cs = getComputedStyle(div, "");
-}
-function listen() {
-  events_received = [];
-  function listener(event) {
-    events_received.push(event);
-  }
-  div.addEventListener("animationstart", listener, false);
-  div.addEventListener("animationiteration", listener, false);
-  div.addEventListener("animationend", listener, false);
-}
-function check_events(events_expected, desc) {
-  // This function checks that the list of events_expected matches
-  // the received events -- but it only checks the properties that
-  // are present on events_expected.
-  is(events_received.length, events_expected.length,
-     "number of events received for " + desc);
-  for (var i = 0,
-       i_end = Math.min(events_expected.length, events_received.length);
-       i != i_end; ++i) {
-    var exp = events_expected[i];
-    var rec = events_received[i];
-    for (var prop in exp) {
-      if (prop == "elapsedTime") {
-        // Allow floating point error.
-        ok(Math.abs(rec.elapsedTime - exp.elapsedTime) < 0.000002,
-           "events[" + i + "]." + prop + " for " + desc +
-           " received=" + rec.elapsedTime + " expected=" + exp.elapsedTime);
-      } else {
-        is(rec[prop], exp[prop], "events[" + i + "]." + prop + " for " + desc);
-      }
-    }
-  }
-  for (var i = events_expected.length; i < events_received.length; ++i) {
-    ok(false, "unexpected " + events_received[i].type + " event for " + desc);
-  }
-  events_received = [];
-}
-function done_div() {
-  display.removeChild(div);
-  div = null;
-  cs = null;
-  if (events_received.length) {
-    ok(false, "caller should have called check_events");
-  }
-}
+// Shortcut new_div to update div, cs
+var div, cs;
+var originalNewDiv = window.new_div;
+window.new_div = function(style) {
+  [ div, cs ] = originalNewDiv(style);
+};
 
 // take over the refresh driver right from the start.
 advance_clock(0);
@@ -820,7 +759,9 @@ is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.3), 0.01,
           "animation-iteration-count test 1 at 8.1s");
 done_div();
 
-new_div("animation: anim2 ease-in 10s 0.3, anim3 ease-out 20s 1.2 alternate forwards, anim4 ease-in-out 5s 1.6 forwards");
+new_div("animation: anim2 ease-in 10s 0.3"
+        + ", anim3 ease-out 20s 1.2 alternate forwards"
+        + ", anim4 ease-in-out 5s 1.6 forwards");
 is(cs.marginRight, "0px", "animation-iteration-count test 2 at 0s");
 is(cs.marginTop, "0px", "animation-iteration-count test 3 at 0s");
 is(cs.marginBottom, "0px", "animation-iteration-count test 4 at 0s");
@@ -1378,10 +1319,12 @@ done_div();
 // This test depends on forms.css having a rule
 //   select { line-height: !important }
 // If that rule changes, we should rewrite it to depend on a different rule.
-new_element("select", "");
+var select;
+[ select, cs ] = new_element("select", "");
 var default_line_height = cs.lineHeight;
-done_div();
-new_element("select", "animation: uaoverride 2s linear infinite");
+done_element();
+[ select, cs ] = new_element("select",
+                             "animation: uaoverride 2s linear infinite");
 is(cs.lineHeight, default_line_height,
    "animations should not override UA !important at 0ms");
 is(cs.marginTop, "20px",
@@ -1391,14 +1334,15 @@ is(cs.lineHeight, default_line_height,
    "animations should not override UA !important at 200ms");
 is(cs.marginTop, "40px",
    "rest of animation should still work when UA !important present at 200ms");
-done_div();
+done_element();
 
 // Test that author !important rules override animations, but
 // that animations override regular author rules.
 new_div("animation: always_fifty 1s linear infinite; margin-left: 200px");
 is(cs.marginLeft, "50px", "animations override regular author rules");
 done_div();
-new_div("animation: always_fifty 1s linear infinite; margin-left: 200px ! important;");
+new_div("animation: always_fifty 1s linear infinite;"
+        + " margin-left: 200px ! important;");
 is(cs.marginLeft, "200px", "important author rules override animations");
 done_div();
 
@@ -1515,11 +1459,17 @@ done_div();
 // start animations.
 // note: anim2 animates margin-right from 0 to 100px
 // note: anim3 animates margin-top from 0 to 100px
-new_div("animation-name: anim2, anim3; animation-duration: 1s; animation-timing-function: linear; animation-delay: -250ms, -250ms, -750ms, -500ms;");
+new_div("animation-name: anim2, anim3;"
+        + " animation-duration: 1s;"
+        + " animation-timing-function: linear;"
+        + " animation-delay: -250ms, -250ms, -750ms, -500ms;");
 is(cs.marginRight, "25px", "animation-name list length is the length that matters");
 is(cs.marginTop, "25px", "animation-name list length is the length that matters");
 done_div();
-new_div("animation-name: anim2, anim3, anim2; animation-duration: 1s; animation-timing-function: linear; animation-delay: -250ms, -250ms, -750ms, -500ms;");
+new_div("animation-name: anim2, anim3, anim2;"
+        + " animation-duration: 1s;"
+        + " animation-timing-function: linear;"
+        + " animation-delay: -250ms, -250ms, -750ms, -500ms;");
 is(cs.marginRight, "75px", "animation-name list length is the length that matters, and the last occurrence of a name wins");
 is(cs.marginTop, "25px", "animation-name list length is the length that matters");
 done_div();
@@ -1652,7 +1602,8 @@ check_events([]);
 done_div();
 
 // Test with animation-direction reverse
-new_div("margin-right: 200px; animation: anim2 0s 1s both reverse");
+new_div("margin-right: 200px;"
+                      + " animation: anim2 0s 1s both reverse");
 advance_clock(0);
 is(cs.getPropertyValue("margin-right"), "100px",
    "margin-right during backwards fill of reversed zero-duration animation");
@@ -1693,8 +1644,8 @@ is(cs.getPropertyValue("margin-right"), "100px",
 done_div();
 
 // Test with animation-direction alternate and non-integral number of iterations
-new_div("margin-right: 200px; " +
-        "animation: anim2 0s 1s both alternate 7.3 linear");
+new_div("margin-right: 200px;"
+        + " animation: anim2 0s 1s both alternate 7.3 linear");
 advance_clock(0);
 is(cs.getPropertyValue("margin-right"), "0px",
    "margin-right during backwards fill of alternating zero-duration " +
@@ -1743,8 +1694,8 @@ is(cs.getPropertyValue("margin-right"), "0px",
 done_div();
 
 // Test with infinite iteration count and alternate-reverse direction
-new_div("margin-right: 200px; " +
-        "animation: anim2 0s 1s alternate-reverse infinite both");
+new_div("margin-right: 200px;"
+        + " animation: anim2 0s 1s alternate-reverse infinite both");
 advance_clock(0);
 is(cs.getPropertyValue("margin-right"), "100px",
    "margin-right during backwards fill of infinitely repeating and " +
@@ -1756,8 +1707,8 @@ is(cs.getPropertyValue("margin-right"), "100px",
 done_div();
 
 // Test with negative delay
-new_div("margin-right: 200px; " +
-        "animation: anim2 0s -1s both reverse 12.7 linear");
+new_div("margin-right: 200px;"
+        + " animation: anim2 0s -1s both reverse 12.7 linear");
 listen();
 advance_clock(0);
 is(cs.getPropertyValue("margin-right"), "30px",

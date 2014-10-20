@@ -13,42 +13,32 @@
 
 #include "./vpx_config.h"
 #include "vp9/encoder/vp9_block.h"
-#include "vp9/encoder/vp9_onyx_int.h"
+#include "vp9/encoder/vp9_encoder.h"
 #include "vp9/common/vp9_onyxc_int.h"
 
-typedef struct {
-  MB_PREDICTION_MODE mode;
-  MV_REFERENCE_FRAME ref_frame;
-  MV_REFERENCE_FRAME second_ref_frame;
-} MODE_DEFINITION;
-
-typedef struct {
-  MV_REFERENCE_FRAME ref_frame;
-  MV_REFERENCE_FRAME second_ref_frame;
-} REF_DEFINITION;
-
-struct optimize_ctx {
-  ENTROPY_CONTEXT ta[MAX_MB_PLANE][16];
-  ENTROPY_CONTEXT tl[MAX_MB_PLANE][16];
-};
-
-struct encode_b_args {
-  MACROBLOCK *x;
-  struct optimize_ctx *ctx;
-};
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void vp9_encode_sb(MACROBLOCK *x, BLOCK_SIZE bsize);
-void vp9_encode_sby(MACROBLOCK *x, BLOCK_SIZE bsize);
+void vp9_encode_sby_pass1(MACROBLOCK *x, BLOCK_SIZE bsize);
+void vp9_xform_quant_fp(MACROBLOCK *x, int plane, int block,
+                        BLOCK_SIZE plane_bsize, TX_SIZE tx_size);
+void vp9_xform_quant_dc(MACROBLOCK *x, int plane, int block,
+                        BLOCK_SIZE plane_bsize, TX_SIZE tx_size);
+void vp9_xform_quant(MACROBLOCK *x, int plane, int block,
+                     BLOCK_SIZE plane_bsize, TX_SIZE tx_size);
 
-void vp9_xform_quant(int plane, int block, BLOCK_SIZE plane_bsize,
-                     TX_SIZE tx_size, void *arg);
+void vp9_subtract_plane(MACROBLOCK *x, BLOCK_SIZE bsize, int plane);
 
-void vp9_subtract_sby(MACROBLOCK *x, BLOCK_SIZE bsize);
-void vp9_subtract_sbuv(MACROBLOCK *x, BLOCK_SIZE bsize);
-void vp9_subtract_sb(MACROBLOCK *x, BLOCK_SIZE bsize);
+void vp9_encode_block_intra(MACROBLOCK *x, int plane, int block,
+                            BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
+                            int8_t *skip);
 
-void vp9_encode_intra_block_y(MACROBLOCK *x, BLOCK_SIZE bsize);
-void vp9_encode_intra_block_uv(MACROBLOCK *x, BLOCK_SIZE bsize);
+void vp9_encode_intra_block_plane(MACROBLOCK *x, BLOCK_SIZE bsize, int plane);
 
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // VP9_ENCODER_VP9_ENCODEMB_H_
