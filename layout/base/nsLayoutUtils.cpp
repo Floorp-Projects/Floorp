@@ -2861,7 +2861,8 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
   bool usingDisplayPort = false;
   nsRect displayport;
-  if (rootScrollFrame && !aFrame->GetParent()) {
+  if (rootScrollFrame && !aFrame->GetParent() &&
+      (aFlags & (PAINT_WIDGET_LAYERS | PAINT_TO_WINDOW))) {
     nsRect displayportBase(
         nsPoint(0,0),
         nsLayoutUtils::CalculateCompositionSizeForFrame(rootScrollFrame));

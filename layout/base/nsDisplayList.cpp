@@ -3791,11 +3791,18 @@ nsDisplaySubDocument::ComputeFrameMetrics(Layer* aLayer,
                        false, isRootContentDocument, params));
 }
 
+static bool
+UseDisplayPortForViewport(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                          nsRect* aDisplayPort = nullptr)
+{
+  return aBuilder->IsPaintingToWindow() &&
+      nsLayoutUtils::ViewportHasDisplayPort(aFrame->PresContext(), aDisplayPort);
+}
+
 nsRect
 nsDisplaySubDocument::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
-  bool usingDisplayPort =
-    nsLayoutUtils::ViewportHasDisplayPort(mFrame->PresContext());
+  bool usingDisplayPort = UseDisplayPortForViewport(aBuilder, mFrame);
 
   if ((mFlags & GENERATE_SCROLLABLE_LAYER) && usingDisplayPort) {
     *aSnap = false;
@@ -3810,8 +3817,7 @@ nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                         nsRegion* aVisibleRegion)
 {
   nsRect displayport;
-  bool usingDisplayPort =
-    nsLayoutUtils::ViewportHasDisplayPort(mFrame->PresContext(), &displayport);
+  bool usingDisplayPort = UseDisplayPortForViewport(aBuilder, mFrame, &displayport);
 
   if (!(mFlags & GENERATE_SCROLLABLE_LAYER) || !usingDisplayPort) {
     return nsDisplayWrapList::ComputeVisibility(aBuilder, aVisibleRegion);
@@ -3847,8 +3853,7 @@ nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 bool
 nsDisplaySubDocument::ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder)
 {
-  bool usingDisplayPort =
-    nsLayoutUtils::ViewportHasDisplayPort(mFrame->PresContext());
+  bool usingDisplayPort = UseDisplayPortForViewport(aBuilder, mFrame);
 
   if ((mFlags & GENERATE_SCROLLABLE_LAYER) && usingDisplayPort) {
     return true;
@@ -3860,8 +3865,7 @@ nsDisplaySubDocument::ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBui
 nsRegion
 nsDisplaySubDocument::GetOpaqueRegion(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
-  bool usingDisplayPort =
-    nsLayoutUtils::ViewportHasDisplayPort(mFrame->PresContext());
+  bool usingDisplayPort = UseDisplayPortForViewport(aBuilder, mFrame);
 
   if ((mFlags & GENERATE_SCROLLABLE_LAYER) && usingDisplayPort) {
     *aSnap = false;
@@ -4426,8 +4430,7 @@ bool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
   // If we are to generate a scrollable layer we call
   // nsDisplaySubDocument::ComputeVisibility to make the necessary adjustments
   // for ComputeVisibility, it does all it's calculations in the child APD.
-  bool usingDisplayPort =
-    nsLayoutUtils::ViewportHasDisplayPort(mFrame->PresContext());
+  bool usingDisplayPort = UseDisplayPortForViewport(aBuilder, mFrame);
   if (!(mFlags & GENERATE_SCROLLABLE_LAYER) || !usingDisplayPort) {
     retval =
       mList.ComputeVisibilityForSublist(aBuilder, &visibleRegion,
