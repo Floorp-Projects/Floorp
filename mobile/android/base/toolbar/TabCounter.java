@@ -48,7 +48,7 @@ public class TabCounter extends ThemedTextSwitcher
         super(context, attrs);
 
         final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabCounter);
-        mLayoutId = a.getResourceId(R.styleable.TabCounter_layout, R.layout.tabs_counter);
+        mLayoutId = a.getResourceId(R.styleable.TabCounter_android_layout, R.layout.tabs_counter);
         a.recycle();
 
         mInflater = LayoutInflater.from(context);
