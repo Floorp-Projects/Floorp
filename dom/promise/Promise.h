@@ -304,6 +304,11 @@ private:
   // the PromiseInit function.  Promises that are rejected internally do not
   // have a rejection stack.
   JS::Heap<JSObject*> mRejectionStack;
+  // mFullfillmentStack is only set when the promise is fulfilled directly from
+  // script, by calling Promise.resolve() or the fulfillment callback we pass to
+  // the PromiseInit function.  Promises that are fulfilled internally do not
+  // have a fulfillment stack.
+  JS::Heap<JSObject*> mFullfillmentStack;
   PromiseState mState;
   bool mTaskPending;
   bool mHadRejectCallback;
