@@ -227,23 +227,40 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
 void
 AnimationPlayer::FlushStyle() const
 {
-  if (mSource && mSource->GetTarget()) {
-    nsIDocument* doc = mSource->GetTarget()->GetComposedDoc();
-    if (doc) {
-      doc->FlushPendingNotifications(Flush_Style);
-    }
+  if (!mSource) {
+    return;
+  }
+
+  Element* targetElement;
+  nsCSSPseudoElements::Type pseudoType;
+  mSource->GetTarget(targetElement, pseudoType);
+  if (!targetElement) {
+    return;
+  }
+
+  nsIDocument* doc = targetElement->GetComposedDoc();
+  if (doc) {
+    doc->FlushPendingNotifications(Flush_Style);
   }
 }
 
 void
 AnimationPlayer::MaybePostRestyle() const
 {
-  if (!mSource || !mSource->GetTarget())
+  if (!mSource) {
     return;
+  }
+
+  Element* targetElement;
+  nsCSSPseudoElements::Type pseudoType;
+  mSource->GetTarget(targetElement, pseudoType);
+  if (!targetElement) {
+    return;
+  }
 
   // FIXME: This is a bit heavy-handed but in bug 1073336 we hope to
   // introduce a better means for players to update style.
-  nsLayoutUtils::PostRestyleEvent(mSource->GetTarget(),
+  nsLayoutUtils::PostRestyleEvent(targetElement,
                                   eRestyle_Self,
                                   nsChangeHint_AllReflowHints);
 }
