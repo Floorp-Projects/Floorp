@@ -27,7 +27,7 @@ test(function () {
 
     var table = doc.querySelector('#table');
     var template = table.querySelector('#template');
-    
+
     assert_equals(table.childNodes.length, 2, 'Wrong number of table children');
     assert_not_equals(template, null, 'Template element must be parsed');
     assert_equals(table.rows.length, 1, 'Wrong number of table rows');

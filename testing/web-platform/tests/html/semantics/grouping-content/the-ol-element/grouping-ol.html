@@ -11,7 +11,7 @@
 <body>
     <h1>Description</h1>
     <p>This test validates the ol element.</p>
-	
+
     <div id="log"></div>
 
     <p>Ordered List</p>
@@ -198,14 +198,14 @@
             assert_equals(testList.type, "A");
         }, "OL's 'type' IDL property reflects content attribute.");
 
- 
-        // "The reversed attribute is a boolean attribute." 
+
+        // "The reversed attribute is a boolean attribute."
 
         // check lists for which reversed value should be false
         test(function() {
             assert_false(document.getElementById("basic").reversed, "IDL 'reversed' attribute value false when content attribute absent");
         }, "IDL 'reversed' attribute value false when content attribute absent");
-		
+
         // check lists for which reversed value should be true
         test(function() {
             assert_true(document.getElementById("justRev").reversed);
@@ -214,19 +214,19 @@
             assert_true(document.getElementById("basicRevEmpty").reversed);
             assert_true(document.getElementById("basicRevTrue").reversed);
             assert_true(document.getElementById("basicRevFalse").reversed);
-        }, "IDL 'reversed' attribute value true when content attribute exists");	
+        }, "IDL 'reversed' attribute value true when content attribute exists");
 
         // check that IDL property works to change reversed value
         test(function() {
             document.getElementById("justRev").reversed = false;
             assert_false(document.getElementById("justRev").reversed, "Changing IDL 'reversed' property changes list's reversed property.");
         }, "Changing IDL 'reversed' property changes list's reversed property.");
-        	
 
-        // If the start attribute is present, user agents must parse it as an integer, in order to determine the attribute's value. 
-        // The default value, used if the attribute is missing or 
-        //                         if the value cannot be converted to a number according to the referenced algorithm, 
-        // is 1 if the element has no reversed attribute, and 
+
+        // If the start attribute is present, user agents must parse it as an integer, in order to determine the attribute's value.
+        // The default value, used if the attribute is missing or
+        //                         if the value cannot be converted to a number according to the referenced algorithm,
+        // is 1 if the element has no reversed attribute, and
         // is the number of child li elements otherwise."
         // "The start IDL attribute has the same default as its content attribute."
 
@@ -272,18 +272,18 @@
             var myList = document.getElementById("basicRevTrue");
             myList.removeChild(myList.children[0]);
             assert_equals(document.getElementById("basicRevTrue").start, 2, "Deleting child element from reversed list reduces start value by 1");
-        }, "Deleting child element from reversed list reduces start value by 1"); 
-  
+        }, "Deleting child element from reversed list reduces start value by 1");
+
         // start2's first element has value of 2
         test(function() {
             assert_equals(document.getElementById("start2").start, 2, "start of 2 -> 2");
         }, "IDL and content attribute parse start of '2' correctly.");
-		
+
         // negative's first element has value of -10
         test(function() {
             assert_equals(document.getElementById("negative").start, -10, "start of -10 -> -10");
         }, "IDL and content attribute parse start of '-10' correctly.");
-	
+
         // posFloatDown's first element has value of 4.03 which should return 4
         test(function() {
             assert_equals(document.getElementById("posFloatDown").start, 4, "start of 4.03 -> 4");
@@ -309,6 +309,6 @@
             assert_equals(document.getElementById("exponent").start, 7, "start of 7e2 -> 7");
         }, "IDL and content attribute parse start of '7e2' correctly.");
 
-    </script>	
+    </script>
 </body>
 </html>

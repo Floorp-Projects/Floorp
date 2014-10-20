@@ -53,7 +53,7 @@
       "help" : "http://www.w3.org/TR/html5/common-input-element-apis.html#dom-input-stepup" });
     test(function() {assert_true(typeof(document.getElementsByTagName("input")[1].stepDown) == "function")}, "[time] stepDown method support on input 'time' element", {
       "help" : "http://www.w3.org/TR/html5/common-input-element-apis.html#dom-input-stepdown" });
-    
+
     test(function() {assert_equals(document.getElementsByTagName("input")[2].type, "datetime")}, "datetime type support on input element", {
       "help" : "http://www.w3.org/TR/html5/the-input-element.html#dom-input-type" });
     test(function() {assert_equals(document.getElementsByTagName("input")[2].value, "2011-12-01T12:00Z")}, "[datetime] The must be a valid global date and time string", {
