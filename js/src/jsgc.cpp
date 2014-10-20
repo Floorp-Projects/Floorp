@@ -2098,10 +2098,6 @@ CanRelocateZone(JSRuntime *rt, Zone *zone)
 static bool
 CanRelocateArena(ArenaHeader *arena)
 {
-    /*
-     * We can't currently move global objects because their address can be baked
-     * into compiled code so we skip relocation of any area containing one.
-     */
     return arena->getAllocKind() <= FINALIZE_OBJECT_LAST;
 }
 
