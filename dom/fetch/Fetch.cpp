@@ -104,6 +104,9 @@ public:
     nsresult rv = fetch->Fetch(mResolver);
     // Right now we only support async fetch, which should never directly fail.
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     return NS_OK;
   }
 };
@@ -166,7 +169,7 @@ MainThreadFetchResolver::MainThreadFetchResolver(Promise* aPromise)
 void
 MainThreadFetchResolver::OnResponseAvailable(InternalResponse* aResponse)
 {
-  NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver)
+  NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver);
   AssertIsOnMainThread();
   mInternalResponse = aResponse;
 
@@ -178,7 +181,7 @@ MainThreadFetchResolver::OnResponseAvailable(InternalResponse* aResponse)
 
 MainThreadFetchResolver::~MainThreadFetchResolver()
 {
-  NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver)
+  NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver);
 }
 
 class WorkerFetchResponseRunnable : public WorkerRunnable
