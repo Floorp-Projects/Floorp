@@ -143,7 +143,6 @@ public:
     , mTiming(aTiming)
     , mName(aName)
     , mIsFinishedTransition(false)
-    , mLastNotification(LAST_NOTIFICATION_NONE)
     , mPseudoType(aPseudoType)
   {
     MOZ_ASSERT(aTarget, "null animation target is not yet supported");
@@ -254,15 +253,6 @@ public:
   bool IsCurrent() const;
   bool IsInEffect() const;
 
-  enum {
-    LAST_NOTIFICATION_NONE = uint64_t(-1),
-    LAST_NOTIFICATION_END = uint64_t(-2)
-  };
-  uint64_t LastNotification() const { return mLastNotification; }
-  void SetLastNotification(uint64_t aLastNotification) {
-    mLastNotification = aLastNotification;
-  }
-
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
   const InfallibleTArray<AnimationProperty>& Properties() const {
     return mProperties;
@@ -292,9 +282,6 @@ protected:
   // A flag to mark transitions that have finished and are due to
   // be removed on the next throttle-able cycle.
   bool mIsFinishedTransition;
-  // One of the LAST_NOTIFICATION_* constants, or an integer for the iteration
-  // whose start we last notified on.
-  uint64_t mLastNotification;
   nsCSSPseudoElements::Type mPseudoType;
 
   InfallibleTArray<AnimationProperty> mProperties;
