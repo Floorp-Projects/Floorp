@@ -1283,9 +1283,9 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
  * single layer representing the display list, and then making it the
  * root of the layer manager, drawing into the PaintedLayers.
  */
-void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
-                              nsRenderingContext* aCtx,
-                              uint32_t aFlags) {
+already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
+                                                        nsRenderingContext* aCtx,
+                                                        uint32_t aFlags) {
   PROFILER_LABEL("nsDisplayList", "PaintRoot",
     js::ProfileEntry::Category::GRAPHICS);
 
@@ -1311,7 +1311,7 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
   if (!layerManager) {
     if (!aCtx) {
       NS_WARNING("Nowhere to paint into");
-      return;
+      return nullptr;
     }
     layerManager = new BasicLayerManager(BasicLayerManager::BLM_OFFSCREEN);
   }
@@ -1369,7 +1369,7 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
 
   if (!root) {
     layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
-    return;
+    return nullptr;
   }
   // Root is being scaled up by the X/Y resolution. Scale it back down.
   root->SetPostScale(1.0f/containerParameters.mXScale,
@@ -1468,6 +1468,7 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
   }
 
   layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
+  return layerManager.forget();
 }
 
 uint32_t nsDisplayList::Count() const {

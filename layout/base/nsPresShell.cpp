@@ -5255,7 +5255,9 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
     ctx->SetMatrix(initialTM.Translate(rootOffset));
     aArea.MoveBy(-rangeInfo->mRootOffset.x, -rangeInfo->mRootOffset.y);
     nsRegion visible(aArea);
-    rangeInfo->mList.PaintRoot(&rangeInfo->mBuilder, &rc, nsDisplayList::PAINT_DEFAULT);
+    nsRefPtr<LayerManager> layerManager =
+        rangeInfo->mList.PaintRoot(&rangeInfo->mBuilder, &rc,
+                                   nsDisplayList::PAINT_DEFAULT);
     aArea.MoveBy(rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
   }
 
