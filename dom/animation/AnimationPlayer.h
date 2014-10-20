@@ -21,8 +21,12 @@
 #endif
 
 struct JSContext;
+class nsCSSPropertySet;
 
 namespace mozilla {
+namespace css {
+class AnimValuesStyleRule;
+} // namespace css
 
 class CSSAnimationPlayer;
 
@@ -99,6 +103,17 @@ public:
   // style on the main thread (e.g. because it is empty, or is
   // running on the compositor).
   bool CanThrottle() const;
+
+  // Updates |aStyleRule| with the animation values of this player's source
+  // content, if any.
+  // Any properties already contained in |aSetProperties| are not changed. Any
+  // properties that are changed are added to |aSetProperties|.
+  // |aNeedsRefreshes| will be set to true if this player expects to update
+  // the style rule on the next refresh driver tick as well (because it
+  // is running and has source content to sample).
+  void ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
+                    nsCSSPropertySet& aSetProperties,
+                    bool& aNeedsRefreshes);
 
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale
