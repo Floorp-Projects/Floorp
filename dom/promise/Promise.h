@@ -286,12 +286,19 @@ private:
 
   void RemoveFeature();
 
+  // Capture the current stack and store it in aTarget.  If false is
+  // returned, an exception is presumably pending on aCx.
+  bool CaptureStack(JSContext* aCx, JS::Heap<JSObject*>& aTarget);
+
   nsRefPtr<nsIGlobalObject> mGlobal;
 
   nsTArray<nsRefPtr<PromiseCallback> > mResolveCallbacks;
   nsTArray<nsRefPtr<PromiseCallback> > mRejectCallbacks;
 
   JS::Heap<JS::Value> mResult;
+  // A stack that shows where this promise was allocated, if there was
+  // JS running at the time.  Otherwise null.
+  JS::Heap<JSObject*> mAllocationStack;
   PromiseState mState;
   bool mTaskPending;
   bool mHadRejectCallback;
