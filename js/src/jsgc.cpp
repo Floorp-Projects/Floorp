@@ -1241,6 +1241,24 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
 
 #ifdef JS_GC_ZEAL
 
+const char *gc::ZealModeHelpText =
+    "  Specifies how zealous the garbage collector should be. Values for level:\n"
+    "    0: Normal amount of collection\n"
+    "    1: Collect when roots are added or removed\n"
+    "    2: Collect when every N allocations (default: 100)\n"
+    "    3: Collect when the window paints (browser only)\n"
+    "    4: Verify pre write barriers between instructions\n"
+    "    5: Verify pre write barriers between paints\n"
+    "    6: Verify stack rooting\n"
+    "    7: Collect the nursery every N nursery allocations\n"
+    "    8: Incremental GC in two slices: 1) mark roots 2) finish collection\n"
+    "    9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
+    "   10: Incremental GC in multiple slices\n"
+    "   11: Verify post write barriers between instructions\n"
+    "   12: Verify post write barriers between paints\n"
+    "   13: Check internal hashtables on minor GC\n"
+    "   14: Perform a shrinking collection every N allocations\n";
+
 void
 GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
 {
@@ -1288,23 +1306,8 @@ GCRuntime::initZeal()
     }
 
     if (zeal < 0 || zeal > ZealLimit || frequency < 0) {
-        fprintf(stderr,
-                "Format: JS_GC_ZEAL=N[,F]\n"
-                "N indicates \"zealousness\":\n"
-                "  0: no additional GCs\n"
-                "  1: additional GCs at common danger points\n"
-                "  2: GC every F allocations (default: 100)\n"
-                "  3: GC when the window paints (browser only)\n"
-                "  4: Verify pre write barriers between instructions\n"
-                "  5: Verify pre write barriers between paints\n"
-                "  6: Verify stack rooting\n"
-                "  7: Collect the nursery every N nursery allocations\n"
-                "  8: Incremental GC in two slices: 1) mark roots 2) finish collection\n"
-                "  9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
-                " 10: Incremental GC in multiple slices\n"
-                " 11: Verify post write barriers between instructions\n"
-                " 12: Verify post write barriers between paints\n"
-                " 13: Purge analysis state every F allocations (default: 100)\n");
+        fprintf(stderr, "Format: JS_GC_ZEAL=level[,N]\n");
+        fputs(ZealModeHelpText, stderr);
         return false;
     }
 
