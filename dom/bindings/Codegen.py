@@ -6344,7 +6344,7 @@ class CGCallGenerator(CGThing):
         if isFallible:
             self.cgRoot.prepend(CGGeneric("ErrorResult rv;\n"))
             self.cgRoot.append(CGGeneric("rv.WouldReportJSException();\n"))
-            self.cgRoot.append(CGGeneric("if (rv.Failed()) {\n"))
+            self.cgRoot.append(CGGeneric("if (MOZ_UNLIKELY(rv.Failed())) {\n"))
             self.cgRoot.append(CGIndenter(errorReport))
             self.cgRoot.append(CGGeneric("}\n"))
 
@@ -6900,7 +6900,7 @@ class CGMethodCall(CGThing):
             if requiredArgs > 0:
                 code = fill(
                     """
-                    if (args.length() < ${requiredArgs}) {
+                    if (MOZ_UNLIKELY(args.length() < ${requiredArgs})) {
                       return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "${methodName}");
                     }
                     """,
