@@ -20,10 +20,15 @@ abstract class NavButton extends ShapedButton {
     protected final Paint mBorderPaint;
     protected final float mBorderWidth;
 
+    protected final int mBorderColor;
+    protected final int mBorderColorPrivate;
+
     public NavButton(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         final Resources res = getResources();
+        mBorderColor = res.getColor(R.color.nav_button_border_color);
+        mBorderColorPrivate = res.getColor(R.color.nav_button_border_color_private);
         mBorderWidth = res.getDimension(R.dimen.nav_button_border_width);
 
         // Paint to draw the border.
@@ -36,6 +41,12 @@ abstract class NavButton extends ShapedButton {
         mBorderPath = new Path();
 
         setPrivateMode(false);
+    }
+
+    @Override
+    public void setPrivateMode(boolean isPrivate) {
+        super.setPrivateMode(isPrivate);
+        mBorderPaint.setColor(isPrivate ? mBorderColorPrivate : mBorderColor);
     }
 
     @Override

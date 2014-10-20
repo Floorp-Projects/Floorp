@@ -12,13 +12,6 @@ public class ForwardButton extends NavButton {
         super(context, attrs);
     }
 
-    // TODO: The only reason we can't inherit this method is because there's a color inconsistency.
-    @Override
-    public void setPrivateMode(boolean isPrivate) {
-        super.setPrivateMode(isPrivate);
-        mBorderPaint.setColor(isPrivate ? 0xFF363B40 : 0xFFBFBFBF);
-    }
-
     @Override
     protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
