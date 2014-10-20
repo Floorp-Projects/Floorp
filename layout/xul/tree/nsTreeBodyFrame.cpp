@@ -2797,8 +2797,13 @@ nsTreeBodyFrame::PaintTreeBody(nsRenderingContext& aRenderingContext,
 {
   // Update our available height and our page count.
   CalcInnerBox();
-  aRenderingContext.ThebesContext()->Save();
-  aRenderingContext.IntersectClip(mInnerBox + aPt);
+
+  DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+  gfxContext* gfx = aRenderingContext.ThebesContext();
+
+  gfx->Save();
+  gfx->Clip(NSRectToRect(mInnerBox + aPt, PresContext()->AppUnitsPerDevPixel(),
+                         *drawTarget));
   int32_t oldPageCount = mPageLength;
   if (!mHasFixedRowCount)
     mPageLength = mInnerBox.height/mRowHeight;
@@ -2856,7 +2861,7 @@ nsTreeBodyFrame::PaintTreeBody(nsRenderingContext& aRenderingContext,
       PaintDropFeedback(feedbackRect, PresContext(), aRenderingContext, aDirtyRect, aPt);
     }
   }
-  aRenderingContext.ThebesContext()->Restore();
+  gfx->Restore();
 }
 
 
