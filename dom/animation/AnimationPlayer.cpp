@@ -56,7 +56,7 @@ AnimationPlayer::PlayFromJS()
 void
 AnimationPlayer::PauseFromJS()
 {
-  Play();
+  Pause();
 
   // TODO (flush styles etc.)
 }
