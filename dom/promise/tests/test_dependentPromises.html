@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1083950
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1083950</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1083950 **/
+  var p = new Promise(() => {});
+  p.name = "p";
+  var q = p.then();
+  q.name = "q";
+  var r = p.then(null, () => {});
+  r.name = "r";
+  var s = Promise.all([p, q]);
+  s.name = "s";
+  var t = Promise.race([r, s]);
+  t.name = "t";
+
+  function getDependentNames(promise) {
+    return PromiseDebugging.getDependentPromises(promise).map((p) => p.name);
+  }
+
+  function arraysEqual(arr1, arr2, msg) {
+    is(arr1.length, arr2.length, msg + ": length");
+    for (var i = 0; i < arr1.length; ++i) {
+      is(arr1[i], arr2[i], msg + ": [" + i + "]");
+    }
+  }
+
+  arraysEqual(getDependentNames(p), ["q", "r", "s"], "deps for p");
+  arraysEqual(getDependentNames(q), ["s"], "deps for q");
+  arraysEqual(getDependentNames(r), ["t"], "deps for r");
+  arraysEqual(getDependentNames(s), ["t"], "deps for s");
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1083950">Mozilla Bug 1083950</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
