@@ -1,3 +1,4 @@
+#![feature(slicing_syntax)]
 extern crate hyper;
 extern crate serialize;
 extern crate uuid;
