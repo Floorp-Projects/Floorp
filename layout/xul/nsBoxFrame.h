@@ -36,6 +36,7 @@ nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
 
 class nsBoxFrame : public nsContainerFrame
 {
+protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
 public:

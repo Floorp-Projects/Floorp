@@ -86,23 +86,6 @@ nsRenderingContext::Init(nsDeviceContext* aContext,
 //
 
 void
-nsRenderingContext::IntersectClip(const nsRect& aRect)
-{
-    mThebes->NewPath();
-    gfxRect clipRect(GFX_RECT_FROM_TWIPS_RECT(aRect));
-    if (mThebes->UserToDevicePixelSnapped(clipRect, true)) {
-        gfxMatrix mat(mThebes->CurrentMatrix());
-        mat.Invert();
-        clipRect = mat.Transform(clipRect);
-        mThebes->Rectangle(clipRect);
-    } else {
-        mThebes->Rectangle(clipRect);
-    }
-
-    mThebes->Clip();
-}
-
-void
 nsRenderingContext::SetColor(nscolor aColor)
 {
     /* This sets the color assuming the sRGB color space, since that's

@@ -49,7 +49,6 @@ public:
 
     // Graphics state
 
-    void IntersectClip(const nsRect& aRect);
     void SetColor(nscolor aColor);
 
     // Text
