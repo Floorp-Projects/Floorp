@@ -17,4 +17,24 @@ enum PromiseDebuggingState { "pending", "fulfilled", "rejected" };
 [ChromeOnly, Exposed=(Window,System)]
 interface PromiseDebugging {
   static PromiseDebuggingStateHolder getState(Promise<any> p);
+
+  /**
+   * Return the stack to the promise's allocation point.  This can
+   * return null if the promise was not created from script.
+   */
+  static object? getAllocationStack(Promise<any> p);
+
+  /**
+   * Return the stack to the promise's rejection point, if the
+   * rejection happened from script.  This can return null if the
+   * promise has not been rejected or was not rejected from script.
+   */
+  static object? getRejectionStack(Promise<any> p);
+
+  /**
+   * Return the stack to the promise's fulfillment point, if the
+   * fulfillment happened from script.  This can return null if the
+   * promise has not been fulfilled or was not fulfilled from script.
+   */
+  static object? getFullfillmentStack(Promise<any> p);
 };
