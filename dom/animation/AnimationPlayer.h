@@ -35,9 +35,9 @@ protected:
 
 public:
   explicit AnimationPlayer(AnimationTimeline* aTimeline)
-    : mIsRunningOnCompositor(false)
-    , mTimeline(aTimeline)
+    : mTimeline(aTimeline)
     , mIsPaused(false)
+    , mIsRunningOnCompositor(false)
   {
   }
 
@@ -92,6 +92,9 @@ public:
     return GetSource() && GetSource()->IsInEffect();
   }
 
+  void SetIsRunningOnCompositor() { mIsRunningOnCompositor = true; }
+  void ClearIsRunningOnCompositor() { mIsRunningOnCompositor = false; }
+
   // Returns true if this animation does not currently need to update
   // style on the main thread (e.g. because it is empty, or is
   // running on the compositor).
@@ -99,7 +102,6 @@ public:
 
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale
-  bool mIsRunningOnCompositor;
 
   nsRefPtr<AnimationTimeline> mTimeline;
   nsRefPtr<Animation> mSource;
@@ -111,6 +113,7 @@ protected:
 
   Nullable<TimeDuration> mHoldTime;  // Player timescale
   bool mIsPaused;
+  bool mIsRunningOnCompositor;
 };
 
 } // namespace dom

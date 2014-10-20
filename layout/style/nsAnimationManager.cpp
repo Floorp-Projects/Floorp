@@ -311,7 +311,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           }
 
           // Reset compositor state so animation will be re-synchronized.
-          oldPlayer->mIsRunningOnCompositor = false;
+          oldPlayer->ClearIsRunningOnCompositor();
 
           // Handle changes in play state.
           // CSSAnimationPlayer takes care of override behavior so that,
