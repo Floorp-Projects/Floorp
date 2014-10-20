@@ -335,21 +335,28 @@ nsTableCellFrame::DecorateForSelection(nsRenderingContext& aRenderingContext,
 
         nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
-        aRenderingContext.SetColor(bordercolor);
-        aRenderingContext.DrawLine(onePixel, 0, mRect.width, 0);
-        aRenderingContext.DrawLine(0, onePixel, 0, mRect.height);
-        aRenderingContext.DrawLine(onePixel, mRect.height, mRect.width, mRect.height);
-        aRenderingContext.DrawLine(mRect.width, onePixel, mRect.width, mRect.height);
+        StrokeLineWithSnapping(nsPoint(onePixel, 0), nsPoint(mRect.width, 0),
+                               appUnitsPerDevPixel, *drawTarget, color);
+        StrokeLineWithSnapping(nsPoint(0, onePixel), nsPoint(0, mRect.height),
+                               appUnitsPerDevPixel, *drawTarget, color);
+        StrokeLineWithSnapping(nsPoint(onePixel, mRect.height),
+                               nsPoint(mRect.width, mRect.height),
+                               appUnitsPerDevPixel, *drawTarget, color);
+        StrokeLineWithSnapping(nsPoint(mRect.width, onePixel),
+                               nsPoint(mRect.width, mRect.height),
+                               appUnitsPerDevPixel, *drawTarget, color);
         //middle
         nsRect r(onePixel, onePixel,
                  mRect.width - onePixel, mRect.height - onePixel);
         Rect devPixelRect = NSRectToRect(r, appUnitsPerDevPixel, *drawTarget);
         drawTarget->StrokeRect(devPixelRect, color);
         //shading
-        aRenderingContext.DrawLine(2*onePixel, mRect.height-2*onePixel,
-                                   mRect.width-onePixel, mRect.height- (2*onePixel));
-        aRenderingContext.DrawLine(mRect.width - (2*onePixel), 2*onePixel,
-                                   mRect.width - (2*onePixel), mRect.height-onePixel);
+        StrokeLineWithSnapping(nsPoint(2*onePixel, mRect.height-2*onePixel),
+                               nsPoint(mRect.width-onePixel, mRect.height- (2*onePixel)),
+                               appUnitsPerDevPixel, *drawTarget, color);
+        StrokeLineWithSnapping(nsPoint(mRect.width - (2*onePixel), 2*onePixel),
+                               nsPoint(mRect.width - (2*onePixel), mRect.height-onePixel),
+                               appUnitsPerDevPixel, *drawTarget, color);
       }
     }
   }
