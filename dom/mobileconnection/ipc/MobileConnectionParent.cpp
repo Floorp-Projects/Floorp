@@ -129,7 +129,7 @@ MobileConnectionParent::RecvInit(nsMobileConnectionInfo* aVoice,
                                  nsString* aLastKnownNetwork,
                                  nsString* aLastKnownHomeNetwork,
                                  nsString* aIccId,
-                                 nsString* aNetworkSelectionMode,
+                                 int32_t* aNetworkSelectionMode,
                                  nsString* aRadioState,
                                  nsTArray<nsString>* aSupportedNetworkTypes)
 {
@@ -140,7 +140,7 @@ MobileConnectionParent::RecvInit(nsMobileConnectionInfo* aVoice,
   NS_ENSURE_SUCCESS(mMobileConnection->GetLastKnownNetwork(*aLastKnownNetwork), false);
   NS_ENSURE_SUCCESS(mMobileConnection->GetLastKnownHomeNetwork(*aLastKnownHomeNetwork), false);
   NS_ENSURE_SUCCESS(mMobileConnection->GetIccId(*aIccId), false);
-  NS_ENSURE_SUCCESS(mMobileConnection->GetNetworkSelectionMode(*aNetworkSelectionMode), false);
+  NS_ENSURE_SUCCESS(mMobileConnection->GetNetworkSelectionMode(aNetworkSelectionMode), false);
   NS_ENSURE_SUCCESS(mMobileConnection->GetRadioState(*aRadioState), false);
 
   char16_t** types = nullptr;
@@ -309,8 +309,8 @@ MobileConnectionParent::NotifyNetworkSelectionModeChanged()
   NS_ENSURE_TRUE(mLive, NS_ERROR_FAILURE);
 
   nsresult rv;
-  nsAutoString mode;
-  rv = mMobileConnection->GetNetworkSelectionMode(mode);
+  int32_t mode;
+  rv = mMobileConnection->GetNetworkSelectionMode(&mode);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return SendNotifyNetworkSelectionModeChanged(mode) ? NS_OK : NS_ERROR_FAILURE;

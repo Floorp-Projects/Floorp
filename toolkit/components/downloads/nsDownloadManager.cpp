@@ -2773,7 +2773,18 @@ nsDownload::SetState(DownloadState aState)
           bool addToRecentDocs = true;
           if (pref)
             pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
+#ifdef MOZ_WIDGET_ANDROID
+          if (addToRecentDocs) {
+            nsCOMPtr<nsIMIMEInfo> mimeInfo;
+            nsAutoCString contentType;
+            GetMIMEInfo(getter_AddRefs(mimeInfo));
 
+            if (mimeInfo)
+              mimeInfo->GetMIMEType(contentType);
+
+            mozilla::widget::android::DownloadsIntegration::ScanMedia(path, NS_ConvertUTF8toUTF16(contentType));
+          }
+#else
           if (addToRecentDocs && !mPrivate) {
 #ifdef XP_WIN
             ::SHAddToRecentDocs(SHARD_PATHW, path.get());
@@ -2786,17 +2797,9 @@ nsDownload::SetState(DownloadState aState)
               gtk_recent_manager_add_item(manager, uri);
               g_free(uri);
             }
-#elif defined(MOZ_WIDGET_ANDROID)
-            nsCOMPtr<nsIMIMEInfo> mimeInfo;
-            nsAutoCString contentType;
-            GetMIMEInfo(getter_AddRefs(mimeInfo));
-
-            if (mimeInfo)
-              mimeInfo->GetMIMEType(contentType);
-
-            mozilla::widget::android::GeckoAppShell::ScanMedia(path, NS_ConvertUTF8toUTF16(contentType));
 #endif
           }
+#endif
 #ifdef MOZ_ENABLE_GIO
           // Use GIO to store the source URI for later display in the file manager.
           GFile* gio_file = g_file_new_for_path(NS_ConvertUTF16toUTF8(path).get());
@@ -2814,6 +2817,7 @@ nsDownload::SetState(DownloadState aState)
 #endif
         }
 #endif
+
 #ifdef XP_MACOSX
         // On OS X, make the downloads stack bounce.
         CFStringRef observedObject = ::CFStringCreateWithCString(kCFAllocatorDefault,
