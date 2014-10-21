@@ -9,9 +9,15 @@ TEST_DIRS += ['tests']
 
 EXTRA_JS_MODULES['services-crypto'] += [
     'modules/utils.js',
+]
+
+EXTRA_PP_JS_MODULES['services-crypto'] += [
     'modules/WeaveCrypto.js',
 ]
 
 EXTRA_COMPONENTS += [
     'cryptoComponents.manifest',
 ]
+
+if CONFIG['MOZ_NATIVE_NSS']:
+    DEFINES['MOZ_NATIVE_NSS'] = 1

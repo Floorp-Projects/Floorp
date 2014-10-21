@@ -206,6 +206,7 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/BrowserElementDictionariesBinding.h"
 #include "mozilla/dom/Console.h"
+#include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/HashChangeEvent.h"
 #include "mozilla/dom/MozSelfSupportBinding.h"
@@ -6368,8 +6369,7 @@ already_AddRefed<Promise>
 nsGlobalWindow::Fetch(const RequestOrScalarValueString& aInput,
                       const RequestInit& aInit, ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  return FetchRequest(this, aInput, aInit, aRv);
 }
 
 void

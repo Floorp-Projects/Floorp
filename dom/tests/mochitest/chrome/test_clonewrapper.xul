@@ -64,16 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=667388
                true,
                "Chrome should be able to clone content object");
 
-    // COWs without __exposedProps__ silently deny property gets. So Content
-    // should be able to clone a COW, but the result of the clone should be empty.
-    var p = contentWin.wrappedJSObject.tryToClone(window.testObject, true,
-                                                  "Content should be able to clone COW");
-    return new Promise(function(resolve) {
-      p.then(function(cloneResult) {
-        is(Cu.waiveXrays(cloneResult).toSource(), "({})", "Empty COW clone");
-        resolve();
-      });
-    });
+    return Promise.resolve();
   }
 
   // Test cloning between content and content.
