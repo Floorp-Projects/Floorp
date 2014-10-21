@@ -14,12 +14,12 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/ProcessedStack.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
 #include "nsReadableUtils.h"
 #include "nsStackWalk.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
-#include "StaticPtr.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
