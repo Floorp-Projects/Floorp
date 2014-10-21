@@ -9,6 +9,7 @@
 
 #include "base/process.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/HangMonitor.h"
 #include "mozilla/PluginLibrary.h"
 #include "mozilla/plugins/ScopedMethodFactory.h"
 #include "mozilla/plugins/PluginProcessParent.h"
@@ -59,6 +60,7 @@ class PluginModuleParent
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     , public CrashReporter::InjectorCrashCallback
 #endif
+    , public mozilla::HangMonitor::Annotator
 {
 private:
     typedef mozilla::PluginLibrary PluginLibrary;
@@ -112,9 +114,22 @@ public:
 
     void TerminateChildProcess(MessageLoop* aMsgLoop);
 
-#ifdef XP_WIN
-    void
+    virtual void
+    EnteredCxxStack() MOZ_OVERRIDE;
+
+    virtual void
     ExitedCxxStack() MOZ_OVERRIDE;
+
+    virtual void
+    AnnotateHang(mozilla::HangMonitor::HangAnnotations& aAnnotations) MOZ_OVERRIDE;
+
+#ifdef XP_WIN
+    /**
+     * Called by Plugin Hang UI to notify that the user has clicked continue.
+     * Used for chrome hang annotations.
+     */
+    void
+    OnHangUIContinue();
 #endif // XP_WIN
 
 protected:
@@ -287,6 +302,16 @@ private:
     nsString mBrowserDumpID;
     nsString mHangID;
     nsRefPtr<nsIObserver> mProfilerObserver;
+    enum HangAnnotationFlags
+    {
+        kInPluginCall = (1u << 0),
+        kHangUIShown = (1u << 1),
+        kHangUIContinued = (1u << 2),
+        kHangUIDontShow = (1u << 3)
+    };
+    Atomic<uint32_t> mHangAnnotationFlags;
+    nsCString mPluginName;
+    nsCString mPluginVersion;
 #ifdef XP_WIN
     InfallibleTArray<float> mPluginCpuUsageOnHang;
     PluginHangUIParent *mHangUIParent;
@@ -307,9 +332,6 @@ private:
     void
     EvaluateHangUIState(const bool aReset);
 
-    bool
-    GetPluginName(nsAString& aPluginName);
-
     /**
      * Launches the Plugin Hang UI.
      *
@@ -326,6 +348,9 @@ private:
     void
     FinishHangUI();
 #endif
+
+    bool
+    GetPluginDetails(nsACString& aPluginName, nsACString& aPluginVersion);
 
 #ifdef MOZ_X11
     // Dup of plugin's X socket, used to scope its resources to this
