@@ -149,7 +149,7 @@ MozWifiP2pManager.prototype = {
 
      case "WifiP2pManager:getPeerList:Return:OK":
         request = this.takeRequest(msg.rid);
-        Services.DOMRequest.fireSuccess(request, msg.data);
+        Services.DOMRequest.fireSuccess(request, Cu.cloneInto(msg.data, this._window));
         break;
 
       case "WifiP2pManager:getPeerList:Return:NO":

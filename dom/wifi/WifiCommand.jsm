@@ -26,6 +26,13 @@ this.WifiCommand = function(aControlMessage, aInterface, aSdkVersion) {
   var command = {};
 
   //-------------------------------------------------
+  // Utilities.
+  //-------------------------------------------------
+  command.getSdkVersion = function() {
+    return aSdkVersion;
+  };
+
+  //-------------------------------------------------
   // General commands.
   //-------------------------------------------------
 
