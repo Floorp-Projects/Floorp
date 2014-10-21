@@ -40,6 +40,7 @@ class gfxContext MOZ_FINAL {
     typedef mozilla::gfx::FillRule FillRule;
     typedef mozilla::gfx::Path Path;
     typedef mozilla::gfx::Pattern Pattern;
+    typedef mozilla::gfx::Rect Rect;
 
     NS_INLINE_DECL_REFCOUNTING(gfxContext)
 
@@ -531,6 +532,7 @@ public:
      * Helper functions that will create a rect path and call Clip().
      * Any current path will be destroyed by these functions!
      */
+    void Clip(const Rect& rect);
     void Clip(const gfxRect& rect); // will clip to a rect
 
     /**
@@ -613,7 +615,6 @@ private:
   typedef mozilla::gfx::Color Color;
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
   typedef mozilla::gfx::Float Float;
-  typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::CompositionOp CompositionOp;
   typedef mozilla::gfx::PathBuilder PathBuilder;
   typedef mozilla::gfx::SourceSurface SourceSurface;

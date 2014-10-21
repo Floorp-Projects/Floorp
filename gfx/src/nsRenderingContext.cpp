@@ -20,12 +20,6 @@
 #include "nsRect.h"                     // for nsRect, nsIntRect
 #include "nsRegion.h"                   // for nsIntRegionRectIterator, etc
 
-// XXXTodo: rename FORM_TWIPS to FROM_APPUNITS
-#define FROM_TWIPS(_x)  ((gfxFloat)((_x)/(mP2A)))
-#define FROM_TWIPS_INT(_x)  (NSToIntRound((gfxFloat)((_x)/(mP2A))))
-#define TO_TWIPS(_x)    ((nscoord)((_x)*(mP2A)))
-#define GFX_RECT_FROM_TWIPS_RECT(_r)   (gfxRect(FROM_TWIPS((_r).x), FROM_TWIPS((_r).y), FROM_TWIPS((_r).width), FROM_TWIPS((_r).height)))
-
 // Hard limit substring lengths to 8000 characters ... this lets us statically
 // size the cluster buffer array in FindSafeLength
 #define MAX_GFX_TEXT_BUF_SIZE 8000
@@ -64,103 +58,16 @@ static int32_t FindSafeLength(const char *aString, uint32_t aLength,
 //// nsRenderingContext
 
 void
-nsRenderingContext::Init(nsDeviceContext* aContext,
-                         gfxContext *aThebesContext)
+nsRenderingContext::Init(gfxContext *aThebesContext)
 {
-    mDeviceContext = aContext;
     mThebes = aThebesContext;
-
     mThebes->SetLineWidth(1.0);
-    mP2A = mDeviceContext->AppUnitsPerDevPixel();
 }
 
 void
-nsRenderingContext::Init(nsDeviceContext* aContext,
-                         DrawTarget *aDrawTarget)
+nsRenderingContext::Init(DrawTarget *aDrawTarget)
 {
-    Init(aContext, new gfxContext(aDrawTarget));
-}
-
-//
-// graphics state
-//
-
-void
-nsRenderingContext::IntersectClip(const nsRect& aRect)
-{
-    mThebes->NewPath();
-    gfxRect clipRect(GFX_RECT_FROM_TWIPS_RECT(aRect));
-    if (mThebes->UserToDevicePixelSnapped(clipRect, true)) {
-        gfxMatrix mat(mThebes->CurrentMatrix());
-        mat.Invert();
-        clipRect = mat.Transform(clipRect);
-        mThebes->Rectangle(clipRect);
-    } else {
-        mThebes->Rectangle(clipRect);
-    }
-
-    mThebes->Clip();
-}
-
-void
-nsRenderingContext::SetColor(nscolor aColor)
-{
-    /* This sets the color assuming the sRGB color space, since that's
-     * what all CSS colors are defined to be in by the spec.
-     */
-    mThebes->SetColor(gfxRGBA(aColor));
-}
-
-//
-// shapes
-//
-
-void
-nsRenderingContext::DrawLine(const nsPoint& aStartPt, const nsPoint& aEndPt)
-{
-    DrawLine(aStartPt.x, aStartPt.y, aEndPt.x, aEndPt.y);
-}
-
-void
-nsRenderingContext::DrawLine(nscoord aX0, nscoord aY0,
-                             nscoord aX1, nscoord aY1)
-{
-    gfxPoint p0 = gfxPoint(FROM_TWIPS(aX0), FROM_TWIPS(aY0));
-    gfxPoint p1 = gfxPoint(FROM_TWIPS(aX1), FROM_TWIPS(aY1));
-
-    // we can't draw thick lines with gfx, so we always assume we want
-    // pixel-aligned lines if the rendering context is at 1.0 scale
-    gfxMatrix savedMatrix = mThebes->CurrentMatrix();
-    if (!savedMatrix.HasNonTranslation()) {
-        p0 = mThebes->UserToDevice(p0);
-        p1 = mThebes->UserToDevice(p1);
-
-        p0.Round();
-        p1.Round();
-
-        mThebes->SetMatrix(gfxMatrix());
-
-        mThebes->NewPath();
-
-        // snap straight lines
-        if (p0.x == p1.x) {
-            mThebes->Line(p0 + gfxPoint(0.5, 0),
-                          p1 + gfxPoint(0.5, 0));
-        } else if (p0.y == p1.y) {
-            mThebes->Line(p0 + gfxPoint(0, 0.5),
-                          p1 + gfxPoint(0, 0.5));
-        } else {
-            mThebes->Line(p0, p1);
-        }
-
-        mThebes->Stroke();
-
-        mThebes->SetMatrix(savedMatrix);
-    } else {
-        mThebes->NewPath();
-        mThebes->Line(p0, p1);
-        mThebes->Stroke();
-    }
+    Init(new gfxContext(aDrawTarget));
 }
 
 
