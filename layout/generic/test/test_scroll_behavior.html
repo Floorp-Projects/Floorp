@@ -58,7 +58,7 @@
       ok(window.scrollX == 15 && window.scrollY == 16,
         "instant scroll-behavior must be synchronous when setting new position");
 
-      window.scrollTo(100, 200, {behavior: 'smooth'});
+      window.scrollTo({left: 100, top: 200, behavior: 'smooth'});
       ok(window.scrollX == 15 && window.scrollY == 16,
         "smooth scroll-behavior must be asynchronous");
 
@@ -238,7 +238,7 @@
     waitForAllPaintsFlushed(function() {
 
       window.scrollTo(startX, startY);
-      window.scrollTo(endX, endY, {behavior: 'smooth'});
+      window.scrollTo({left: endX, top: endY, behavior: 'smooth'});
 
       var currentTime = 0; // ms
 

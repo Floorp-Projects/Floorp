@@ -9,6 +9,13 @@ random-if(Android&&!browserIsRemote) skip-if(B2G&&browserIsRemote) == iframe-bor
 random-if(Android) HTTP == image-1.html image-1.html?ref
 random-if(Android&&!browserIsRemote) HTTP == opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html?ref # bug 760269
 skip-if(B2G) random-if(cocoaWidget) HTTP == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html?ref # see bug 625357
+skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-1.html scroll-behavior-1.html?ref # see bug 1041833
+skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-2.html scroll-behavior-2.html?ref # see bug 1041833
+skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-3.html scroll-behavior-3.html?ref # see bug 1041833
+skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-4.html scroll-behavior-4.html?ref # see bug 1041833
+skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-5.html scroll-behavior-5.html?ref # see bug 1041833
+skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-6.html scroll-behavior-6.html?ref # see bug 1041833
+skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-7.html scroll-behavior-7.html?ref # see bug 1041833
 skip-if(B2G&&browserIsRemote) HTTP == simple-1.html simple-1.html?ref
 skip-if(B2G) HTTP == subpixel-1.html#d subpixel-1-ref.html#d
 fuzzy-if(Android,4,120) HTTP == text-1.html text-1.html?ref

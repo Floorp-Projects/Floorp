@@ -11,6 +11,18 @@
 #include "mozilla/dom/File.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsISupports.h"
+
+#define FILEIMPLSNAPSHOT_IID \
+  {0x0dfc11b1, 0x75d3, 0x473b, {0x8c, 0x67, 0xb7, 0x23, 0xf4, 0x67, 0xd6, 0x73}}
+
+class PIFileImplSnapshot : public nsISupports
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(FILEIMPLSNAPSHOT_IID)
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(PIFileImplSnapshot, FILEIMPLSNAPSHOT_IID)
 
 namespace mozilla {
 namespace dom {
@@ -23,6 +35,7 @@ class IDBFileHandle;
 
 class FileImplSnapshot MOZ_FINAL
   : public FileImplBase
+  , public PIFileImplSnapshot
 {
   typedef mozilla::dom::MetadataParameters MetadataParameters;
 

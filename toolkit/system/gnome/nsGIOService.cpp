@@ -18,28 +18,6 @@
 #endif
 
 
-char *
-get_content_type_from_mime_type(const char *mimeType)
-{
-  GList* contentTypes = g_content_types_get_registered();
-  GList* ct_ptr = contentTypes;
-  char* foundContentType = nullptr;
-
-  while (ct_ptr) {
-    char *mimeTypeFromContentType =  g_content_type_get_mime_type((char*)ct_ptr->data);
-    if (strcmp(mimeTypeFromContentType, mimeType) == 0) {
-      foundContentType = g_strdup((char*)ct_ptr->data);
-      g_free(mimeTypeFromContentType);
-      break;
-    }
-    g_free(mimeTypeFromContentType);
-    ct_ptr = ct_ptr->next;
-  }
-  g_list_foreach(contentTypes, (GFunc) g_free, nullptr);
-  g_list_free(contentTypes);
-  return foundContentType;
-}
-
 class nsGIOMimeApp MOZ_FINAL : public nsIGIOMimeApp
 {
 public:
@@ -172,7 +150,7 @@ NS_IMETHODIMP
 nsGIOMimeApp::SetAsDefaultForMimeType(nsACString const& aMimeType)
 {
   char *content_type =
-    get_content_type_from_mime_type(PromiseFlatCString(aMimeType).get());
+    g_content_type_from_mime_type(PromiseFlatCString(aMimeType).get());
   if (!content_type)
     return NS_ERROR_FAILURE;
   GError *error = nullptr;
@@ -310,7 +288,7 @@ nsGIOService::GetAppForMimeType(const nsACString& aMimeType,
 {
   *aApp = nullptr;
   char *content_type =
-    get_content_type_from_mime_type(PromiseFlatCString(aMimeType).get());
+    g_content_type_from_mime_type(PromiseFlatCString(aMimeType).get());
   if (!content_type)
     return NS_ERROR_FAILURE;
 
@@ -332,7 +310,7 @@ nsGIOService::GetDescriptionForMimeType(const nsACString& aMimeType,
                                               nsACString& aDescription)
 {
   char *content_type =
-    get_content_type_from_mime_type(PromiseFlatCString(aMimeType).get());
+    g_content_type_from_mime_type(PromiseFlatCString(aMimeType).get());
   if (!content_type)
     return NS_ERROR_FAILURE;
 

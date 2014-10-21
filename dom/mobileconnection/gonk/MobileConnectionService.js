@@ -236,7 +236,7 @@ MobileConnectionProvider.prototype = {
   voice: null,
   data: null,
   iccId: null,
-  networkSelectionMode: null,
+  networkSelectionMode: Ci.nsIMobileConnection.NETWORK_SELECTION_MODE_UNKNOWN,
   radioState: null,
   lastKnownNetwork: null,
   lastKnownHomeNetwork: null,

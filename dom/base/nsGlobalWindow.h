@@ -910,12 +910,12 @@ public:
                 mozilla::ErrorResult& aError);
   void ResizeBy(int32_t aWidthDif, int32_t aHeightDif,
                 mozilla::ErrorResult& aError);
-  void Scroll(double aXScroll, double aYScroll,
-              const mozilla::dom::ScrollOptions& aOptions);
-  void ScrollTo(double aXScroll, double aYScroll,
-                const mozilla::dom::ScrollOptions& aOptions);
-  void ScrollBy(double aXScrollDif, double aYScrollDif,
-                const mozilla::dom::ScrollOptions& aOptions);
+  void Scroll(double aXScroll, double aYScroll);
+  void Scroll(const mozilla::dom::ScrollToOptions& aOptions);
+  void ScrollTo(double aXScroll, double aYScroll);
+  void ScrollTo(const mozilla::dom::ScrollToOptions& aOptions);
+  void ScrollBy(double aXScrollDif, double aYScrollDif);
+  void ScrollBy(const mozilla::dom::ScrollToOptions& aOptions);
   void ScrollByLines(int32_t numLines,
                      const mozilla::dom::ScrollOptions& aOptions);
   void ScrollByPages(int32_t numPages,

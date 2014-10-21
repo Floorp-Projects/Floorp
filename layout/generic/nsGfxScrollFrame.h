@@ -98,6 +98,8 @@ public:
   void PostScrolledAreaEvent();
   void FireScrolledAreaEvent();
 
+  bool IsSmoothScrollingEnabled();
+
   class ScrollEvent : public nsRunnable {
   public:
     NS_DECL_NSIRUNNABLE
