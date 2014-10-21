@@ -286,7 +286,7 @@ Tools.timeline = {
   tooltip: l10n("timeline.tooltip", timelineStrings),
 
   isTargetSupported: function(target) {
-    return !target.isAddon;
+    return !target.isAddon && target.hasActor("timeline");
   },
 
   build: function (iframeWindow, toolbox) {

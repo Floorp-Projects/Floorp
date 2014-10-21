@@ -1451,6 +1451,15 @@ RootClient.prototype = {
   listAddons: DebuggerClient.requester({ type: "listAddons" },
                                        { telemetry: "LISTADDONS" }),
 
+  /**
+   * Description of protocol's actors and methods.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+   protocolDescription: DebuggerClient.requester({ type: "protocolDescription" },
+                                                 { telemetry: "PROTOCOLDESCRIPTION" }),
+
   /*
    * Methods constructed by DebuggerClient.requester require these forwards
    * on their 'this'.
