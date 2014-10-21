@@ -157,6 +157,77 @@ public class testDoorHanger extends BaseTest {
         mSolo.clickOnButton(LOGIN_ALLOW);
         waitForTextDismissed(LOGIN_MESSAGE);
         mAsserter.is(mSolo.searchText(LOGIN_MESSAGE), false, "Login doorhanger notification is hidden when allowing saving password");
+
+        testPopupBlocking();
+    }
+
+    private void testPopupBlocking() {
+        String POPUP_URL = getAbsoluteUrl(StringHelper.ROBOCOP_POPUP_URL);
+        String POPUP_MESSAGE = "prevented this site from opening";
+        String POPUP_ALLOW = "Show";
+        String POPUP_DENY = "Don't show";
+
+        try {
+            JSONObject jsonPref = new JSONObject();
+            jsonPref.put("name", "dom.disable_open_during_load");
+            jsonPref.put("type", "bool");
+            jsonPref.put("value", true);
+            setPreferenceAndWaitForChange(jsonPref);
+        } catch (JSONException e) {
+            mAsserter.ok(false, "exception setting preference", e.toString());
+        }
+
+        // Load page with popup
+        inputAndLoadUrl(POPUP_URL);
+        waitForText(POPUP_MESSAGE);
+        mAsserter.is(mSolo.searchText(POPUP_MESSAGE), true, "Popup blocker is displayed");
+
+        // Wait for the popup to be shown.
+        Actions.EventExpecter tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
+
+        waitForCheckBox();
+        mSolo.clickOnCheckBox(0);
+        mSolo.clickOnButton(POPUP_ALLOW);
+        waitForTextDismissed(POPUP_MESSAGE);
+        mAsserter.is(mSolo.searchText(POPUP_MESSAGE), false, "Popup blocker is hidden when popup allowed");
+
+        try {
+            final JSONObject data = new JSONObject(tabEventExpecter.blockForEventData());
+
+            // Check to make sure the popup window was opened.
+            mAsserter.is("data:text/plain;charset=utf-8,a", data.getString("uri"), "Checking popup URL");
+
+            // Close the popup window.
+            closeTab(data.getInt("tabID"));
+
+        } catch (JSONException e) {
+            mAsserter.ok(false, "exception getting event data", e.toString());
+        }
+        tabEventExpecter.unregisterListener();
+
+        // Load page with popup
+        inputAndLoadUrl(POPUP_URL);
+        waitForText(POPUP_MESSAGE);
+        mAsserter.is(mSolo.searchText(POPUP_MESSAGE), true, "Popup blocker is displayed");
+
+        waitForCheckBox();
+        mSolo.clickOnCheckBox(0);
+        mSolo.clickOnButton(POPUP_DENY);
+        waitForTextDismissed(POPUP_MESSAGE);
+        mAsserter.is(mSolo.searchText(POPUP_MESSAGE), false, "Popup blocker is hidden when popup denied");
+
+        // Check that we're on the same page to verify that the popup was not shown.
+        verifyUrl(POPUP_URL);
+
+        try {
+            JSONObject jsonPref = new JSONObject();
+            jsonPref.put("name", "dom.disable_open_during_load");
+            jsonPref.put("type", "bool");
+            jsonPref.put("value", false);
+            setPreferenceAndWaitForChange(jsonPref);
+        } catch (JSONException e) {
+            mAsserter.ok(false, "exception setting preference", e.toString());
+        }
     }
 
     // wait for a CheckBox view that is clickable

@@ -588,19 +588,32 @@ nsFontTableProtocolHandler::GetScheme(nsACString &result)
 }
 
 nsresult
-NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
+NS_GetBlobForBlobURI(nsIURI* aURI, FileImpl** aBlob)
 {
   NS_ASSERTION(IsBlobURI(aURI), "Only call this with blob URIs");
 
-  *aStream = nullptr;
+  *aBlob = nullptr;
 
   nsCOMPtr<PIFileImpl> blobImpl = do_QueryInterface(GetDataObject(aURI));
   if (!blobImpl) {
     return NS_ERROR_DOM_BAD_URI;
   }
 
-  FileImpl* blob = static_cast<FileImpl*>(blobImpl.get());
-  return blob->GetInternalStream(aStream);
+  nsRefPtr<FileImpl> blob = static_cast<FileImpl*>(blobImpl.get());
+  blob.forget(aBlob);
+  return NS_OK;
+}
+
+nsresult
+NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
+{
+  nsRefPtr<FileImpl> blobImpl;
+  nsresult rv = NS_GetBlobForBlobURI(aURI, getter_AddRefs(blobImpl));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return blobImpl->GetInternalStream(aStream);
 }
 
 nsresult

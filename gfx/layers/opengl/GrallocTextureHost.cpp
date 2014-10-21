@@ -38,6 +38,9 @@ SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
   case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_TILED:
   case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS:
   case HAL_PIXEL_FORMAT_YV12:
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+  case HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED:
+#endif
     return gfx::SurfaceFormat::R8G8B8A8; // yup, use SurfaceFormat::R8G8B8A8 even though it's a YUV texture. This is an external texture.
   default:
     if (aFormat >= 0x100 && aFormat <= 0x1FF) {
@@ -66,6 +69,9 @@ TextureTargetForAndroidPixelFormat(android::PixelFormat aFormat)
   case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_TILED:
   case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS:
   case HAL_PIXEL_FORMAT_YV12:
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+  case HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED:
+#endif
     return LOCAL_GL_TEXTURE_EXTERNAL;
   case android::PIXEL_FORMAT_BGRA_8888:
   case android::PIXEL_FORMAT_RGBA_8888:

@@ -77,6 +77,14 @@ public:
   void Fill(const InternalHeaders& aInit, ErrorResult& aRv);
   void Fill(const Sequence<Sequence<nsCString>>& aInit, ErrorResult& aRv);
   void Fill(const MozMap<nsCString>& aInit, ErrorResult& aRv);
+
+  bool HasOnlySimpleHeaders() const;
+
+  static already_AddRefed<InternalHeaders>
+  BasicHeaders(InternalHeaders* aHeaders);
+
+  static already_AddRefed<InternalHeaders>
+  CORSHeaders(InternalHeaders* aHeaders);
 private:
   virtual ~InternalHeaders();
 

@@ -6,9 +6,124 @@
 
 #include "PluginScriptableObjectChild.h"
 #include "PluginScriptableObjectUtils.h"
-#include "PluginIdentifierChild.h"
+#include "mozilla/plugins/PluginTypes.h"
 
 using namespace mozilla::plugins;
+
+/**
+ * NPIdentifiers in the plugin process use a tagged representation. The low bit
+ * stores the tag. If it's zero, the identifier is a string, and the value is a
+ * pointer to a StoredIdentifier. If the tag bit is 1, then the rest of the
+ * NPIdentifier value is the integer itself. Like the JSAPI, we require that all
+ * integers stored in NPIdentifier be non-negative.
+ *
+ * String identifiers are stored in the sIdentifiers hashtable to ensure
+ * uniqueness. The lifetime of these identifiers is only as long as the incoming
+ * IPC call from the chrome process. If the plugin wants to retain an
+ * identifier, it needs to call NPN_GetStringIdentifier, which causes the
+ * mPermanent flag to be set on the identifier. When this flag is set, the
+ * identifier is saved until the plugin process exits.
+ *
+ * The StackIdentifier RAII class is used to manage ownership of
+ * identifiers. Any identifier obtained from this class should not be used
+ * outside its scope, except when the MakePermanent() method has been called on
+ * it.
+ *
+ * The lifetime of an NPIdentifier in the plugin process is totally divorced
+ * from the lifetime of an NPIdentifier in the chrome process (where an
+ * NPIdentifier is stored as a jsid). The JS GC in the chrome process is able to
+ * trace through the entire heap, unlike in the plugin process, so there is no
+ * reason to retain identifiers there.
+ */
+
+PluginScriptableObjectChild::IdentifierTable PluginScriptableObjectChild::sIdentifiers;
+
+/* static */ PluginScriptableObjectChild::StoredIdentifier*
+PluginScriptableObjectChild::HashIdentifier(const nsCString& aIdentifier)
+{
+  StoredIdentifier* stored = sIdentifiers.Get(aIdentifier);
+  if (stored) {
+    return stored;
+  }
+
+  stored = new StoredIdentifier(aIdentifier);
+  sIdentifiers.Put(aIdentifier, stored);
+  return stored;
+}
+
+/* static */ void
+PluginScriptableObjectChild::UnhashIdentifier(StoredIdentifier* aStored)
+{
+  MOZ_ASSERT(sIdentifiers.Get(aStored->mIdentifier));
+  sIdentifiers.Remove(aStored->mIdentifier);
+}
+
+/* static */ void
+PluginScriptableObjectChild::ClearIdentifiers()
+{
+  sIdentifiers.Clear();
+}
+
+PluginScriptableObjectChild::StackIdentifier::StackIdentifier(const PluginIdentifier& aIdentifier)
+: mIdentifier(aIdentifier),
+  mStored(nullptr)
+{
+  if (aIdentifier.type() == PluginIdentifier::TnsCString) {
+    mStored = PluginScriptableObjectChild::HashIdentifier(mIdentifier.get_nsCString());
+  }
+}
+
+PluginScriptableObjectChild::StackIdentifier::StackIdentifier(NPIdentifier aIdentifier)
+: mStored(nullptr)
+{
+  uintptr_t bits = reinterpret_cast<uintptr_t>(aIdentifier);
+  if (bits & 1) {
+    int32_t num = int32_t(bits >> 1);
+    mIdentifier = PluginIdentifier(num);
+  } else {
+    mStored = static_cast<StoredIdentifier*>(aIdentifier);
+    mIdentifier = mStored->mIdentifier;
+  }
+}
+
+PluginScriptableObjectChild::StackIdentifier::~StackIdentifier()
+{
+  if (!mStored) {
+    return;
+  }
+
+  // Each StackIdentifier owns one reference to its StoredIdentifier. In
+  // addition, the sIdentifiers table owns a reference. If mPermanent is false
+  // and sIdentifiers has the last reference, then we want to remove the
+  // StoredIdentifier from the table (and destroy it).
+  StoredIdentifier *stored = mStored;
+  mStored = nullptr;
+  if (stored->mRefCnt == 1 && !stored->mPermanent) {
+    PluginScriptableObjectChild::UnhashIdentifier(stored);
+  }
+}
+
+NPIdentifier
+PluginScriptableObjectChild::StackIdentifier::ToNPIdentifier() const
+{
+  if (mStored) {
+    MOZ_ASSERT(mIdentifier.type() == PluginIdentifier::TnsCString);
+    MOZ_ASSERT((reinterpret_cast<uintptr_t>(mStored.get()) & 1) == 0);
+    return mStored;
+  }
+
+  int32_t num = mIdentifier.get_int32_t();
+  // The JS engine imposes this condition on int32s in jsids, so we assume it.
+  MOZ_ASSERT(num >= 0);
+  return reinterpret_cast<NPIdentifier>((num << 1) | 1);
+}
+
+static PluginIdentifier
+FromNPIdentifier(NPIdentifier aIdentifier)
+{
+  PluginScriptableObjectChild::StackIdentifier stack(aIdentifier);
+  return stack.GetIdentifier();
+}
 
 // static
 NPObject*
@@ -85,7 +200,7 @@ PluginScriptableObjectChild::ScriptableHasMethod(NPObject* aObject,
   NS_ASSERTION(actor->Type() == Proxy, "Bad type!");
 
   bool result;
-  actor->CallHasMethod(static_cast<PPluginIdentifierChild*>(aName), &result);
+  actor->CallHasMethod(FromNPIdentifier(aName), &result);
 
   return result;
 }
@@ -122,7 +237,7 @@ PluginScriptableObjectChild::ScriptableInvoke(NPObject* aObject,
 
   Variant remoteResult;
   bool success;
-  actor->CallInvoke(static_cast<PPluginIdentifierChild*>(aName), args,
+  actor->CallInvoke(FromNPIdentifier(aName), args,
                     &remoteResult, &success);
 
   if (!success) {
@@ -196,7 +311,7 @@ PluginScriptableObjectChild::ScriptableHasProperty(NPObject* aObject,
   NS_ASSERTION(actor->Type() == Proxy, "Bad type!");
 
   bool result;
-  actor->CallHasProperty(static_cast<PPluginIdentifierChild*>(aName), &result);
+  actor->CallHasProperty(FromNPIdentifier(aName), &result);
 
   return result;
 }
@@ -225,7 +340,7 @@ PluginScriptableObjectChild::ScriptableGetProperty(NPObject* aObject,
 
   Variant result;
   bool success;
-  actor->CallGetParentProperty(static_cast<PPluginIdentifierChild*>(aName),
+  actor->CallGetParentProperty(FromNPIdentifier(aName),
                                &result, &success);
 
   if (!success) {
@@ -265,7 +380,7 @@ PluginScriptableObjectChild::ScriptableSetProperty(NPObject* aObject,
   }
 
   bool success;
-  actor->CallSetProperty(static_cast<PPluginIdentifierChild*>(aName), value,
+  actor->CallSetProperty(FromNPIdentifier(aName), value,
                          &success);
 
   return success;
@@ -293,7 +408,7 @@ PluginScriptableObjectChild::ScriptableRemoveProperty(NPObject* aObject,
   NS_ASSERTION(actor->Type() == Proxy, "Bad type!");
 
   bool success;
-  actor->CallRemoveProperty(static_cast<PPluginIdentifierChild*>(aName),
+  actor->CallRemoveProperty(FromNPIdentifier(aName),
                             &success);
 
   return success;
@@ -321,7 +436,7 @@ PluginScriptableObjectChild::ScriptableEnumerate(NPObject* aObject,
   NS_ASSERTION(actor, "This shouldn't ever be null!");
   NS_ASSERTION(actor->Type() == Proxy, "Bad type!");
 
-  AutoInfallibleTArray<PPluginIdentifierChild*, 10> identifiers;
+  AutoInfallibleTArray<PluginIdentifier, 10> identifiers;
   bool success;
   actor->CallEnumerate(&identifiers, &success);
 
@@ -343,8 +458,10 @@ PluginScriptableObjectChild::ScriptableEnumerate(NPObject* aObject,
   }
 
   for (uint32_t index = 0; index < *aCount; index++) {
-    (*aIdentifiers)[index] =
-      static_cast<PPluginIdentifierChild*>(identifiers[index]);
+    StackIdentifier id(identifiers[index]);
+    // Make the id permanent in case the plugin retains it.
+    id.MakePermanent();
+    (*aIdentifiers)[index] = id.ToNPIdentifier();
   }
   return true;
 }
@@ -610,7 +727,7 @@ PluginScriptableObjectChild::AnswerInvalidate()
 }
 
 bool
-PluginScriptableObjectChild::AnswerHasMethod(PPluginIdentifierChild* aId,
+PluginScriptableObjectChild::AnswerHasMethod(const PluginIdentifier& aId,
                                              bool* aHasMethod)
 {
   AssertPluginThread();
@@ -629,13 +746,13 @@ PluginScriptableObjectChild::AnswerHasMethod(PPluginIdentifierChild* aId,
     return true;
   }
 
-  PluginIdentifierChild::StackIdentifier id(aId);
-  *aHasMethod = mObject->_class->hasMethod(mObject, id->ToNPIdentifier());
+  StackIdentifier id(aId);
+  *aHasMethod = mObject->_class->hasMethod(mObject, id.ToNPIdentifier());
   return true;
 }
 
 bool
-PluginScriptableObjectChild::AnswerInvoke(PPluginIdentifierChild* aId,
+PluginScriptableObjectChild::AnswerInvoke(const PluginIdentifier& aId,
                                           const InfallibleTArray<Variant>& aArgs,
                                           Variant* aResult,
                                           bool* aSuccess)
@@ -673,8 +790,8 @@ PluginScriptableObjectChild::AnswerInvoke(PPluginIdentifierChild* aId,
 
   NPVariant result;
   VOID_TO_NPVARIANT(result);
-  PluginIdentifierChild::StackIdentifier id(aId);
-  bool success = mObject->_class->invoke(mObject, id->ToNPIdentifier(),
+  StackIdentifier id(aId);
+  bool success = mObject->_class->invoke(mObject, id.ToNPIdentifier(),
                                          convertedArgs.Elements(), argCount,
                                          &result);
 
@@ -775,7 +892,7 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const InfallibleTArray<Variant>
 }
 
 bool
-PluginScriptableObjectChild::AnswerHasProperty(PPluginIdentifierChild* aId,
+PluginScriptableObjectChild::AnswerHasProperty(const PluginIdentifier& aId,
                                                bool* aHasProperty)
 {
   AssertPluginThread();
@@ -794,13 +911,13 @@ PluginScriptableObjectChild::AnswerHasProperty(PPluginIdentifierChild* aId,
     return true;
   }
 
-  PluginIdentifierChild::StackIdentifier id(aId);
-  *aHasProperty = mObject->_class->hasProperty(mObject, id->ToNPIdentifier());
+  StackIdentifier id(aId);
+  *aHasProperty = mObject->_class->hasProperty(mObject, id.ToNPIdentifier());
   return true;
 }
 
 bool
-PluginScriptableObjectChild::AnswerGetChildProperty(PPluginIdentifierChild* aId,
+PluginScriptableObjectChild::AnswerGetChildProperty(const PluginIdentifier& aId,
                                                     bool* aHasProperty,
                                                     bool* aHasMethod,
                                                     Variant* aResult,
@@ -824,8 +941,8 @@ PluginScriptableObjectChild::AnswerGetChildProperty(PPluginIdentifierChild* aId,
     return true;
   }
 
-  PluginIdentifierChild::StackIdentifier stackID(aId);
-  NPIdentifier id = stackID->ToNPIdentifier();
+  StackIdentifier stackID(aId);
+  NPIdentifier id = stackID.ToNPIdentifier();
 
   *aHasProperty = mObject->_class->hasProperty(mObject, id);
   *aHasMethod = mObject->_class->hasMethod(mObject, id);
@@ -850,7 +967,7 @@ PluginScriptableObjectChild::AnswerGetChildProperty(PPluginIdentifierChild* aId,
 }
 
 bool
-PluginScriptableObjectChild::AnswerSetProperty(PPluginIdentifierChild* aId,
+PluginScriptableObjectChild::AnswerSetProperty(const PluginIdentifier& aId,
                                                const Variant& aValue,
                                                bool* aSuccess)
 {
@@ -871,8 +988,8 @@ PluginScriptableObjectChild::AnswerSetProperty(PPluginIdentifierChild* aId,
     return true;
   }
 
-  PluginIdentifierChild::StackIdentifier stackID(aId);
-  NPIdentifier id = stackID->ToNPIdentifier();
+  StackIdentifier stackID(aId);
+  NPIdentifier id = stackID.ToNPIdentifier();
 
   if (!mObject->_class->hasProperty(mObject, id)) {
     *aSuccess = false;
@@ -889,7 +1006,7 @@ PluginScriptableObjectChild::AnswerSetProperty(PPluginIdentifierChild* aId,
 }
 
 bool
-PluginScriptableObjectChild::AnswerRemoveProperty(PPluginIdentifierChild* aId,
+PluginScriptableObjectChild::AnswerRemoveProperty(const PluginIdentifier& aId,
                                                   bool* aSuccess)
 {
   AssertPluginThread();
@@ -909,8 +1026,8 @@ PluginScriptableObjectChild::AnswerRemoveProperty(PPluginIdentifierChild* aId,
     return true;
   }
 
-  PluginIdentifierChild::StackIdentifier stackID(aId);
-  NPIdentifier id = stackID->ToNPIdentifier();
+  StackIdentifier stackID(aId);
+  NPIdentifier id = stackID.ToNPIdentifier();
   *aSuccess = mObject->_class->hasProperty(mObject, id) ?
               mObject->_class->removeProperty(mObject, id) :
               true;
@@ -919,7 +1036,7 @@ PluginScriptableObjectChild::AnswerRemoveProperty(PPluginIdentifierChild* aId,
 }
 
 bool
-PluginScriptableObjectChild::AnswerEnumerate(InfallibleTArray<PPluginIdentifierChild*>* aProperties,
+PluginScriptableObjectChild::AnswerEnumerate(InfallibleTArray<PluginIdentifier>* aProperties,
                                              bool* aSuccess)
 {
   AssertPluginThread();
@@ -948,8 +1065,7 @@ PluginScriptableObjectChild::AnswerEnumerate(InfallibleTArray<PPluginIdentifierC
   aProperties->SetCapacity(idCount);
 
   for (uint32_t index = 0; index < idCount; index++) {
-    PluginIdentifierChild* id = static_cast<PluginIdentifierChild*>(ids[index]);
-    aProperties->AppendElement(id);
+    aProperties->AppendElement(FromNPIdentifier(ids[index]));
   }
 
   PluginModuleChild::sBrowserFuncs.memfree(ids);
