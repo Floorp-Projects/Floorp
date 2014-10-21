@@ -27,6 +27,8 @@ include('/ipc/chromium/chromium-config.mozbuild')
 LOCAL_INCLUDES += [
     '/content/media/encoder',
     '/content/media/gmp',
+    '/security/certverifier',
+    '/security/pkix/include',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
