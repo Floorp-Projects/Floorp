@@ -172,6 +172,7 @@ GeckoMediaPluginService::Init()
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "profile-change-teardown", false)));
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false)));
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "last-pb-context-exited", false)));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "gmp-clear-storage", false)));
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
@@ -325,6 +326,15 @@ GeckoMediaPluginService::Observe(nsISupports* aSubject,
     // mode, we'll get the NodeId salt stored on-disk, and if we try to
     // open a PB mode origin-pair, we'll re-generate new salt.
     mTempNodeIds.Clear();
+  } else if (!strcmp("gmp-clear-storage", aTopic)) {
+    nsCOMPtr<nsIThread> thread;
+    nsresult rv = GetThread(getter_AddRefs(thread));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    thread->Dispatch(
+      NS_NewRunnableMethod(this, &GeckoMediaPluginService::ClearStorage),
+      NS_DISPATCH_NORMAL);
   }
   return NS_OK;
 }
@@ -1185,6 +1195,67 @@ GeckoMediaPluginService::GetNodeId(const nsAString& aOrigin,
   mPersistentStorageAllowed.Put(salt, true);
 
   return NS_OK;
+}
+
+class StorageClearedTask : public nsRunnable {
+public:
+  NS_IMETHOD Run() {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
+    MOZ_ASSERT(obsService);
+    if (obsService) {
+      obsService->NotifyObservers(nullptr, "gmp-clear-storage-complete", nullptr);
+    }
+    return NS_OK;
+  }
+};
+
+void
+GeckoMediaPluginService::ClearStorage()
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+  LOGD(("%s::%s", __CLASS__, __FUNCTION__));
+
+#ifdef MOZ_WIDGET_GONK
+  NS_WARNING("GeckoMediaPluginService::ClearStorage not implemented on B2G");
+  return;
+#endif
+
+  // Shutdown plugins that have touched storage, as they could have
+  // state that depends on storage. We don't want them to write data
+  // after we've cleared storage, as they could end up in an inconsistent
+  // state, so we must ensure they're shutdown before we actually clear
+  // storage. Note: we can't shut them down while holding the lock,
+  // as the lock is not re-entrant and shutdown requires taking the lock.
+  // The plugin list is only edited on the GMP thread, so this should be OK.
+  nsTArray<nsRefPtr<GMPParent>> pluginsToKill;
+  {
+    MutexAutoLock lock(mMutex);
+    for (size_t i = 0; i < mPlugins.Length(); i++) {
+      nsRefPtr<GMPParent> parent(mPlugins[i]);
+      if (parent->HasAccessedStorage()) {
+        pluginsToKill.AppendElement(parent);
+      }
+    }
+  }
+
+  for (size_t i = 0; i < pluginsToKill.Length(); i++) {
+    pluginsToKill[i]->CloseActive(false);
+    // Abort async shutdown because we're going to wipe the plugin's storage,
+    // so we don't want it writing more data in its async shutdown path.
+    pluginsToKill[i]->AbortAsyncShutdown();
+  }
+
+  nsCOMPtr<nsIFile> path; // $profileDir/gmp/
+  nsresult rv = GetStorageDir(getter_AddRefs(path));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  if (NS_FAILED(path->Remove(true))) {
+    NS_WARNING("Failed to delete GMP storage directory");
+  }
+  NS_DispatchToMainThread(new StorageClearedTask(), NS_DISPATCH_NORMAL);
 }
 
 } // namespace gmp

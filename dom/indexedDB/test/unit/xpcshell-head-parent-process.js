@@ -46,7 +46,7 @@ if (!this.runTest) {
       enableExperimental();
     }
 
-    Cu.importGlobalProperties(["indexedDB"]);
+    Cu.importGlobalProperties(["indexedDB", "Blob", "File"]);
 
     do_test_pending();
     testGenerator.next();
@@ -332,5 +332,21 @@ var SpecialPowers = {
     var prefService =
       Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
     return prefService.getBranch(null);
-  }
+  },
+
+  get Cc() {
+    return Cc;
+  },
+
+  get Ci() {
+    return Ci;
+  },
+
+  get Cu() {
+    return Cu;
+  },
+
+  createDOMFile: function(file, options) {
+    return new File(file, options);
+  },
 };

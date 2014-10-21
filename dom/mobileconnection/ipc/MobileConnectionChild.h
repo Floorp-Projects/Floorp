@@ -104,7 +104,7 @@ protected:
   RecvNotifyLastHomeNetworkChanged(const nsString& aNetwork) MOZ_OVERRIDE;
 
   virtual bool
-  RecvNotifyNetworkSelectionModeChanged(const nsString& aMode) MOZ_OVERRIDE;
+  RecvNotifyNetworkSelectionModeChanged(const int32_t& aMode) MOZ_OVERRIDE;
 
 private:
   uint32_t mServiceId;
@@ -116,7 +116,7 @@ private:
   nsString mRadioState;
   nsString mLastNetwork;
   nsString mLastHomeNetwork;
-  nsString mNetworkSelectionMode;
+  int32_t mNetworkSelectionMode;
   nsTArray<nsString> mSupportedNetworkTypes;
 };
 
