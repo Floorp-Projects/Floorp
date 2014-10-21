@@ -9,10 +9,9 @@ function animateZoom() prefsBranch.getBoolPref("animate_zoom");
 
 function test() {
   waitForExplicitFinish();
-  
-  let charsetArg = "charset=" + window.content.document.characterSet;
+
   let win = window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
-                              "about:blank", charsetArg, null, null, true);
+                              "about:blank", null, null, null, true);
 
   registerCleanupFunction(function() {
     prefsBranch.setBoolPref("animate_zoom", true);
