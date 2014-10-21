@@ -91,11 +91,6 @@ class Browser(object):
         pass
 
     @abstractmethod
-    def pid(self):
-        """pid of the browser process or None if there is no pid"""
-        pass
-
-    @abstractmethod
     def is_alive(self):
         """Boolean indicating whether the browser process is still running"""
         pass
@@ -109,10 +104,10 @@ class Browser(object):
         with which it should be instantiated"""
         return ExecutorBrowser, {}
 
-    def log_crash(self, process, test):
+    def log_crash(self, logger, process, test):
         """Return a list of dictionaries containing information about crashes that happend
         in the browser, or an empty list if no crashes occurred"""
-        self.logger.crash(process, test)
+        logger.crash(process, test)
 
 class NullBrowser(Browser):
     def start(self):
@@ -123,9 +118,6 @@ class NullBrowser(Browser):
 
     def stop(self):
         pass
-
-    def pid(self):
-        return None
 
     def is_alive(self):
         return True

@@ -40,46 +40,21 @@ def web_socket_transfer_data(request):
     data = ''
 
     while True:
-        command = request.ws_stream.receive_message()
-        if command is None:
+        line = request.ws_stream.receive_message()
+        if line is None:
             return
 
-        if not isinstance(command, unicode):
-            raise ValueError('Invalid command data:' + command)
-        commands = command.split(' ')
-        if len(commands) == 0:
-            raise ValueError('Invalid command data: ' + command)
-
-        if commands[0] == 'receive':
-            if len(commands) != 2:
-                raise ValueError(
-                        'Illegal number of arguments for send command' +
-                        command)
-            size = int(commands[1])
-
-            # Reuse data if possible.
-            if len(data) != size:
+        if isinstance(line, unicode):
+            # Respond with a binary data of the specified number of bytes.
+            size = int(line)
+            if len(data) < size:
                 data = 'a' * size
             request.ws_stream.send_message(data, binary=True)
-        elif commands[0] == 'send':
-            if len(commands) != 2:
-                raise ValueError(
-                        'Illegal number of arguments for receive command' +
-                        command)
-            verify_data = commands[1] == '1'
-
-            data = request.ws_stream.receive_message()
-            if data is None:
-                raise ValueError('Payload not received')
-            size = len(data)
-
-            if verify_data:
-                if data != 'a' * size:
-                    raise ValueError('Payload verification failed')
-
-            request.ws_stream.send_message(str(size))
         else:
-            raise ValueError('Invalid command: ' + commands[0])
+            # Otherwise, just ack.
+            if line != 'a' * len(line):
+                return
+            request.ws_stream.send_message(str(len(line)));
 
 
 # vi:sts=4 sw=4 et

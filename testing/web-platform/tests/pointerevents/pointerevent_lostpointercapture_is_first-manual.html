@@ -15,8 +15,8 @@
             This test checks if lostpointercapture is handled asynchronously and prior to all subsequent events.
             Complete the folowing actions:
             <ol>
-                <li>Press and hold left mouse button over "Set Capture" button. "gotpointercapture" should be logged inside of the black rectangle
-                <li>"lostpointercapture" should be logged inside of the black rectangle after a short delay
+                <li> Press and hold left mouse button over "Set Capture" button. "gotpointercapture" should be logged inside of the black rectangle
+                <li>Release left mouse button. "lostpointercapture" should be logged inside of the black rectangle
             </ol>
         </h4>
         Test passes if lostpointercapture is dispatched after releasing the mouse button and before any additional pointer events.
@@ -46,15 +46,11 @@
                         isPointerCapture = true;
                         captureButton.value = 'Release Capture';
                         sPointerCapture(e);
+                        pointerupGot = false;
+                    }
+                    else {
+                        rPointerCapture(e);
                         setTimeout(function() {
-                            pointeroverReceived = false;
-                            pointeroutReceived = false;
-                            pointermoveReceived = false;
-                            pointerdownReceived = false;
-                            pointerupReceived = false;
-                            pointerleaveReceived = false;
-                            pointerenterReceived = false;
-                            rPointerCapture(e);
                             isAsync = true;
                         });
                     }
@@ -62,6 +58,13 @@
 
                 on_event(target0, 'gotpointercapture', function(e) {
                     log("gotpointercapture", document.getElementById('target0'));
+                    pointeroverReceived = false;
+                    pointeroutReceived = false;
+                    pointermoveReceived = false;
+                    pointerdownReceived = false;
+                    pointerupReceived = false;
+                    pointerleaveReceived = false;
+                    pointerenterReceived = false;
                 });
 
                 on_event(target0, 'lostpointercapture', function(e) {

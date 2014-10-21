@@ -28,67 +28,42 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-// Utilities for example applications (for both main and worker thread).
+// Utilities for example applications.
 
-var results = {};
+
+var logBox = null;
+var queuedLog = '';
+
+function queueLog(log) {
+  queuedLog += log + '\n';
+}
+
+function addToLog(log) {
+  logBox.value += queuedLog;
+  queuedLog = '';
+  logBox.value += log + '\n';
+  logBox.scrollTop = 1000000;
+}
 
 function getTimeStamp() {
   return Date.now();
 }
 
-function formatResultInKiB(size, timePerMessageInMs, stddevTimePerMessageInMs,
-    speed, printSize) {
+function formatResultInKiB(size, speed, printSize) {
   if (printSize) {
-    return (size / 1024) +
-        '\t' + timePerMessageInMs.toFixed(3) +
-        (stddevTimePerMessageInMs == -1 ?
-            '' :
-            '\t' + stddevTimePerMessageInMs.toFixed(3)) +
-        '\t' + speed.toFixed(3);
+    return (size / 1024) + '\t' + speed;
   } else {
     return speed.toString();
   }
 }
 
-function clearAverageData() {
-  results = {};
+function calculateSpeedInKB(size, startTimeInMs) {
+  return Math.round(size / (getTimeStamp() - startTimeInMs) * 1000) / 1000;
 }
 
-function reportAverageData(config) {
-  config.addToSummary(
-      'Size[KiB]\tAverage time[ms]\tStddev time[ms]\tSpeed[KB/s]');
-  for (var size in results) {
-    var averageTimePerMessageInMs = results[size].sum_t / results[size].n;
-    var speed = calculateSpeedInKB(size, averageTimePerMessageInMs);
-    // Calculate sample standard deviation
-    var stddevTimePerMessageInMs = Math.sqrt(
-        (results[size].sum_t2 / results[size].n -
-            averageTimePerMessageInMs * averageTimePerMessageInMs) *
-        results[size].n /
-        (results[size].n - 1));
-    config.addToSummary(formatResultInKiB(
-        size, averageTimePerMessageInMs, stddevTimePerMessageInMs, speed,
-        true));
-  }
-}
-
-function calculateSpeedInKB(size, timeSpentInMs) {
-  return Math.round(size / timeSpentInMs * 1000) / 1000;
-}
-
-function calculateAndLogResult(config, size, startTimeInMs, totalSize) {
-  var timeSpentInMs = getTimeStamp() - startTimeInMs;
-  var speed = calculateSpeedInKB(totalSize, timeSpentInMs);
-  var timePerMessageInMs = timeSpentInMs / (totalSize / size);
-  if (!results[size]) {
-    results[size] = {n: 0, sum_t: 0, sum_t2: 0};
-  }
-  config.measureValue(timePerMessageInMs);
-  results[size].n ++;
-  results[size].sum_t += timePerMessageInMs;
-  results[size].sum_t2 += timePerMessageInMs * timePerMessageInMs;
-  config.addToLog(formatResultInKiB(size, timePerMessageInMs, -1, speed,
-      config.printSize));
+function calculateAndLogResult(size, startTimeInMs, totalSize, printSize) {
+  var speed = calculateSpeedInKB(totalSize, startTimeInMs);
+  addToLog(formatResultInKiB(size, speed, printSize));
 }
 
 function fillArrayBuffer(buffer, c) {
@@ -135,10 +110,9 @@ function verifyArrayBuffer(buffer, expectedChar) {
   return true;
 }
 
-function verifyBlob(config, blob, expectedChar, doneCallback) {
+function verifyBlob(blob, expectedChar, doneCallback) {
   var reader = new FileReader(blob);
   reader.onerror = function() {
-    config.addToLog('FileReader Error: ' + reader.error.message);
     doneCallback(blob.size, false);
   }
   reader.onloadend = function() {
@@ -148,30 +122,22 @@ function verifyBlob(config, blob, expectedChar, doneCallback) {
   reader.readAsArrayBuffer(blob);
 }
 
-function verifyAcknowledgement(config, message, size) {
+function verifyAcknowledgement(message, size) {
   if (typeof message != 'string') {
-    config.addToLog('Invalid ack type: ' + typeof message);
+    addToLog('Invalid ack type: ' + typeof message);
     return false;
   }
   var parsedAck = parseInt(message);
   if (isNaN(parsedAck)) {
-    config.addToLog('Invalid ack value: ' + message);
+    addToLog('Invalid ack value: ' + message);
     return false;
   }
   if (parsedAck != size) {
-    config.addToLog(
+    addToLog(
         'Expected ack for ' + size + 'B but received one for ' + parsedAck +
         'B');
     return false;
   }
 
   return true;
-}
-
-function cloneConfig(obj) {
-  var newObj = {};
-  for (key in obj) {
-    newObj[key] = obj[key];
-  }
-  return newObj;
 }

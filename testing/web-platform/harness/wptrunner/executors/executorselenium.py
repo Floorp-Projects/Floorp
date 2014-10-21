@@ -33,9 +33,10 @@ def do_delayed_imports():
 
 class SeleniumTestExecutor(TestExecutor):
     def __init__(self, browser, http_server_url, timeout_multiplier=1,
-                 **kwargs):
+                 http_server_override=None, **kwargs):
         do_delayed_imports()
-        TestExecutor.__init__(self, browser, http_server_url, timeout_multiplier)
+        TestExecutor.__init__(self, browser, http_server_url, timeout_multiplier,
+                              http_server_override)
         self.webdriver_port = browser.webdriver_port
         self.webdriver = None
 

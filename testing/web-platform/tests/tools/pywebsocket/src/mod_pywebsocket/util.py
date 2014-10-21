@@ -331,8 +331,8 @@ class _RFC1979Deflater(object):
         self._window_bits = window_bits
         self._no_context_takeover = no_context_takeover
 
-    def filter(self, bytes, end=True, bfinal=False):
-        if self._deflater is None:
+    def filter(self, bytes, flush=True, bfinal=False):
+        if self._deflater is None or (self._no_context_takeover and flush):
             self._deflater = _Deflater(self._window_bits)
 
         if bfinal:
@@ -341,17 +341,11 @@ class _RFC1979Deflater(object):
             result = result + chr(0)
             self._deflater = None
             return result
-
-        result = self._deflater.compress_and_flush(bytes)
-        if end:
+        if flush:
             # Strip last 4 octets which is LEN and NLEN field of a
             # non-compressed block added for Z_SYNC_FLUSH.
-            result = result[:-4]
-
-        if self._no_context_takeover and end:
-            self._deflater = None
-
-        return result
+            return self._deflater.compress_and_flush(bytes)[:-4]
+        return self._deflater.compress(bytes)
 
 
 class _RFC1979Inflater(object):

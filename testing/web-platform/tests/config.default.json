@@ -1,5 +1,4 @@
 {"host": "web-platform.test",
- "external_host": null,
  "ports":{"http":[8000, "auto"],
           "https":[],
           "ws":["auto"]},

@@ -159,6 +159,7 @@ CharRangesArray.prototype.testEach = function(namingFunction, checkFunction) {
             var rangeEnd = getCharCode(this.array[i+1]);
             for (var c = rangeStart; c <= rangeEnd; c++) {
                 checkFunction(namingFunction(c));
+                testCharCode(c, namingFunction, checkFunction);
             }
         }
     }
