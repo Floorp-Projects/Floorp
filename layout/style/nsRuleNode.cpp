@@ -17,6 +17,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/LookAndFeel.h"
 
+#include "nsDeviceContext.h"
 #include "nsRuleNode.h"
 #include "nscore.h"
 #include "nsIWidget.h"

@@ -5,7 +5,9 @@
 
 #include "nsFieldSetFrame.h"
 
+#include "mozilla/gfx/2D.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsLayoutUtils.h"
 #include "nsLegendFrame.h"
 #include "nsCSSRendering.h"
 #include <algorithm>
@@ -21,6 +23,7 @@
 #include "mozilla/Maybe.h"
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 using namespace mozilla::layout;
 
 nsContainerFrame*
@@ -219,12 +222,15 @@ nsFieldSetFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     clipRect.width = legendRect.x - rect.x;
     clipRect.height = topBorder;
 
-    aRenderingContext.ThebesContext()->Save();
-    aRenderingContext.IntersectClip(clipRect);
+    DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+    gfxContext* gfx = aRenderingContext.ThebesContext();
+    int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+
+    gfx->Save();
+    gfx->Clip(NSRectToRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext);
-
-    aRenderingContext.ThebesContext()->Restore();
+    gfx->Restore();
 
 
     // draw right side
@@ -233,12 +239,11 @@ nsFieldSetFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     clipRect.width = rect.XMost() - legendRect.XMost();
     clipRect.height = topBorder;
 
-    aRenderingContext.ThebesContext()->Save();
-    aRenderingContext.IntersectClip(clipRect);
+    gfx->Save();
+    gfx->Clip(NSRectToRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext);
-
-    aRenderingContext.ThebesContext()->Restore();
+    gfx->Restore();
 
     
     // draw bottom
@@ -246,12 +251,11 @@ nsFieldSetFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     clipRect.y += topBorder;
     clipRect.height = mRect.height - (yoff + topBorder);
     
-    aRenderingContext.ThebesContext()->Save();
-    aRenderingContext.IntersectClip(clipRect);
+    gfx->Save();
+    gfx->Clip(NSRectToRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext);
-
-    aRenderingContext.ThebesContext()->Restore();
+    gfx->Restore();
   } else {
 
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,

@@ -106,7 +106,7 @@ void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
   ColorPattern red(ToDeviceColor(Color(1.f, 0.f, 0.f, 1.f)));
   drawTarget->FillRect(rect, red);
 
-  aCtx->SetColor(NS_RGB(255,255,255));
+  aCtx->ThebesContext()->SetColor(NS_RGB(255,255,255));
   nscoord ascent = aCtx->FontMetrics()->MaxAscent();
   NS_NAMED_LITERAL_STRING(errorMsg, "invalid-markup");
   aCtx->DrawString(errorMsg.get(), uint32_t(errorMsg.Length()),
