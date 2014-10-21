@@ -1550,12 +1550,13 @@ jit::JitActivation::maybeIonFrameRecovery(IonJSFrameLayout *fp)
 }
 
 void
-jit::JitActivation::removeIonFrameRecovery(IonJSFrameLayout *fp)
+jit::JitActivation::maybeTakeIonFrameRecovery(IonJSFrameLayout *fp, RInstructionResults *results)
 {
     RInstructionResults *elem = maybeIonFrameRecovery(fp);
     if (!elem)
         return;
 
+    *results = mozilla::Move(*elem);
     ionRecovery_.erase(elem);
 }
 

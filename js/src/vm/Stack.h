@@ -1367,9 +1367,10 @@ class JitActivation : public Activation
     // Return the pointer to the Ion frame recovery, if it is already registered.
     RInstructionResults *maybeIonFrameRecovery(IonJSFrameLayout *fp);
 
-    // If an Ion frame recovery exists for the |fp| frame exists, then remove it
-    // from the activation.
-    void removeIonFrameRecovery(IonJSFrameLayout *fp);
+    // If an Ion frame recovery exists for the |fp| frame exists on the
+    // activation, then move its content to the |results| argument, and remove
+    // it from the activation.
+    void maybeTakeIonFrameRecovery(IonJSFrameLayout *fp, RInstructionResults *results);
 
     void markIonRecovery(JSTracer *trc);
 
