@@ -45,8 +45,6 @@ TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActo
       return actor->DoRequest(aRequest.get_DialRequest());
     case IPCTelephonyRequest::TUSSDRequest:
       return actor->DoRequest(aRequest.get_USSDRequest());
-    case IPCTelephonyRequest::THangUpConferenceRequest:
-      return actor->DoRequest(aRequest.get_HangUpConferenceRequest());
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -446,20 +444,6 @@ TelephonyRequestParent::DoRequest(const USSDRequest& aRequest)
     do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   if (service) {
     service->SendUSSD(aRequest.clientId(), aRequest.ussd(), this);
-  } else {
-    return NS_SUCCEEDED(NotifyError(NS_LITERAL_STRING("InvalidStateError")));
-  }
-
-  return true;
-}
-
-bool
-TelephonyRequestParent::DoRequest(const HangUpConferenceRequest& aRequest)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  if (service) {
-    service->HangUpConference(aRequest.clientId(), this);
   } else {
     return NS_SUCCEEDED(NotifyError(NS_LITERAL_STRING("InvalidStateError")));
   }

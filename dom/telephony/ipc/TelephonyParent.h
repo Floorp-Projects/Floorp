@@ -129,9 +129,6 @@ private:
 
   bool
   DoRequest(const USSDRequest& aRequest);
-
-  bool
-  DoRequest(const HangUpConferenceRequest& aRequest);
 };
 
 END_TELEPHONY_NAMESPACE
