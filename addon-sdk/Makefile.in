@@ -12,7 +12,7 @@ endif
 
 libs::
 	$(PYTHON) $(srcdir)/copy_source.py $(topsrcdir) $(srcdir)/source/lib $(FINAL_TARGET)/modules/commonjs $(MOZ_B2G) >copy_source.mk
-	$(MAKE) -f copy_source.mk libs
+	$(MAKE) -f copy_source.mk copy_source
 
 include $(topsrcdir)/config/rules.mk
 
