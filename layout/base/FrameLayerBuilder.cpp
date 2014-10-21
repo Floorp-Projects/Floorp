@@ -4212,7 +4212,7 @@ static void DebugPaintItem(nsRenderingContext* aDest,
   nsRefPtr<gfxContext> context = new gfxContext(tempDT);
   context->SetMatrix(gfxMatrix::Translation(-gfxPoint(bounds.x, bounds.y)));
   nsRefPtr<nsRenderingContext> ctx = new nsRenderingContext();
-  ctx->Init(aDest->DeviceContext(), context);
+  ctx->Init(context);
 
   aItem->Paint(aBuilder, ctx);
   RefPtr<SourceSurface> surface = tempDT->Snapshot();
@@ -4479,7 +4479,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
   }
 
   nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
-  rc->Init(presContext->DeviceContext(), aContext);
+  rc->Init(aContext);
 
   if (shouldDrawRectsSeparately) {
     nsIntRegionRectIterator it(aRegionToDraw);

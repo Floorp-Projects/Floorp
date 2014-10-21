@@ -2797,8 +2797,13 @@ nsTreeBodyFrame::PaintTreeBody(nsRenderingContext& aRenderingContext,
 {
   // Update our available height and our page count.
   CalcInnerBox();
-  aRenderingContext.ThebesContext()->Save();
-  aRenderingContext.IntersectClip(mInnerBox + aPt);
+
+  DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+  gfxContext* gfx = aRenderingContext.ThebesContext();
+
+  gfx->Save();
+  gfx->Clip(NSRectToRect(mInnerBox + aPt, PresContext()->AppUnitsPerDevPixel(),
+                         *drawTarget));
   int32_t oldPageCount = mPageLength;
   if (!mHasFixedRowCount)
     mPageLength = mInnerBox.height/mRowHeight;
@@ -2856,7 +2861,7 @@ nsTreeBodyFrame::PaintTreeBody(nsRenderingContext& aRenderingContext,
       PaintDropFeedback(feedbackRect, PresContext(), aRenderingContext, aDirtyRect, aPt);
     }
   }
-  aRenderingContext.ThebesContext()->Restore();
+  gfx->Restore();
 }
 
 
@@ -3613,7 +3618,6 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
 
   // Set our color.
   ColorPattern color(ToDeviceColor(textContext->StyleColor()->mColor));
-  aRenderingContext.SetColor(textContext->StyleColor()->mColor);
 
   // Draw decorations.
   uint8_t decorations = textContext->StyleTextReset()->mTextDecorationLine;
@@ -3647,6 +3651,7 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
     ctx->PushGroup(gfxContentType::COLOR_ALPHA);
   }
 
+  ctx->SetColor(textContext->StyleColor()->mColor);
   nsLayoutUtils::DrawString(this, &aRenderingContext, text.get(), text.Length(),
                             textRect.TopLeft() + nsPoint(0, baseline), cellContext);
 
@@ -3751,9 +3756,6 @@ nsTreeBodyFrame::PaintProgressMeter(int32_t              aRowIndex,
   if (state == nsITreeView::PROGRESS_NORMAL) {
     // Adjust the rect for its border and padding.
     AdjustForBorderPadding(meterContext, meterRect);
-
-    // Set our color.
-    aRenderingContext.SetColor(meterContext->StyleColor()->mColor);
 
     // Now obtain the value for our cell.
     nsAutoString value;

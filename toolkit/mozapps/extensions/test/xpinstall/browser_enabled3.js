@@ -12,11 +12,13 @@ function test() {
     "Unsigned XPI": TESTROOT + "unsigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-    // Allow the in-page load handler to run first
-    executeSoon(page_loaded);
-  }, true);
+
+  function loadListener() {
+    gBrowser.selectedBrowser.removeEventListener("load", loadListener, true);
+    gBrowser.contentWindow.addEventListener("InstallTriggered", page_loaded, false);
+  }
+
+  gBrowser.selectedBrowser.addEventListener("load", loadListener, true);
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 
@@ -35,6 +37,7 @@ function confirm_install(window) {
 }
 
 function page_loaded() {
+  gBrowser.contentWindow.removeEventListener("InstallTriggered", page_loaded, false);
   Services.prefs.clearUserPref("xpinstall.enabled");
 
   var doc = gBrowser.contentDocument;
