@@ -315,22 +315,6 @@ private:
      * period with a failed connect or all cached entries are negative.
      */
     nsresult ConditionallyRefreshRecord(nsHostRecord *rec, const char *host);
-    
-#if TTL_AVAILABLE
-    // For DNS TTL Experiments.
-
-    // Internal function which initializes the TTL experiment pref to a random
-    // value corresponding to one of the TTL experiment variants. To be
-    // dispatched by DnsExperimentChanged to the main thread, since setting
-    // prefs can't be done in the context of a "pref changed" callback.
-    void DnsExperimentChangedInternal();
-
-    // Callback to be registered with Preferences::RegisterCallback.
-    static void DnsExperimentChanged(const char* aPref, void* aClosure);
-
-    // Dispatched to the main thread to ensure that rand is seeded.
-    void InitCRandom();
-#endif
 
     static void  MoveQueue(nsHostRecord *aRec, PRCList &aDestQ);
     

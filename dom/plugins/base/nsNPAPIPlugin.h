@@ -126,7 +126,7 @@ IntToNPIdentifier(int i)
 JSContext* GetJSContext(NPP npp);
 
 inline bool
-NPStringIdentifierIsPermanent(NPP npp, NPIdentifier id)
+NPStringIdentifierIsPermanent(NPIdentifier id)
 {
   AutoSafeJSContext cx;
   return JS_StringHasBeenInterned(cx, NPIdentifierToString(id));

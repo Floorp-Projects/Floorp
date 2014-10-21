@@ -3,11 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PPluginIdentifier;
 include protocol PPluginInstance;
 include protocol PPluginScriptableObject;
 include protocol PCrashReporter;
-
 
 using NPError from "npapi.h";
 using NPNVariable from "npapi.h";
@@ -21,25 +19,9 @@ namespace plugins {
 intr protocol PPluginModule
 {
   manages PPluginInstance;
-  manages PPluginIdentifier;
   manages PCrashReporter;
 
 both:
-  /**
-   * Sending a void string to this constructor creates an int identifier whereas
-   * sending a non-void string will create a string identifier. This constructor
-   * may be called by either child or parent. If a race occurs by calling the
-   * constructor with the same string or int argument then we create two actors
-   * and detect the second instance in the child. We prevent the parent's actor
-   * from leaking out to plugin code and only allow the child's to be used.
-   *
-   * When calling into the plugin, the parent may create a "temporary"
-   * identifier which is only valid for the lifetime of the current inerrupt frame.
-   */
-  async PPluginIdentifier(nsCString aString,
-                          int32_t aInt,
-                          bool temporary);
-
   // Window-specific message which instructs the interrupt mechanism to enter
   // a nested event loop for the current interrupt call.
   async ProcessNativeEventsInInterruptCall();
