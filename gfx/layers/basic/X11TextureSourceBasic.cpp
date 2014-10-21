@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "X11TextureSourceBasic.h"
+#include "mozilla/layers/BasicCompositor.h"
 #include "gfxXlibSurface.h"
 #include "gfx2DGlue.h"
 
