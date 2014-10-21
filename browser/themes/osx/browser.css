@@ -1937,6 +1937,10 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   background-clip: padding-box;
 }
 
+#urlbar[readonly] {
+  background-color: -moz-field;
+}
+
 @media (-moz-mac-lion-theme) {
   #urlbar,
   .searchbar-textbox {

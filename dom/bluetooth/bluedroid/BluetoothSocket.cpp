@@ -143,6 +143,11 @@ public:
     return mConsumer.get();
   }
 
+  SocketBase* GetSocketBase()
+  {
+    return GetConsumer();
+  }
+
   /**
    * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
    * directly from main thread. All non-main-thread accesses should happen with
@@ -661,7 +666,8 @@ BluetoothSocket::SendSocketData(UnixSocketRawData* aData)
   MOZ_ASSERT(!mImpl->IsShutdownOnMainThread());
 
   XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE, new SocketIOSendTask<DroidSocketImpl>(mImpl, aData));
+    FROM_HERE,
+    new SocketIOSendTask<DroidSocketImpl, UnixSocketRawData>(mImpl, aData));
 
   return true;
 }
