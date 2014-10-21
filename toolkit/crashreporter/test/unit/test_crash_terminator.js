@@ -21,6 +21,7 @@ function setup_crash() {
   // Inform the terminator that shutdown has started
   // Pick an arbitrary notification
   terminator.observe(null, "xpcom-will-shutdown", null);
+  terminator.observe(null, "profile-before-change", null);
 
   dump("Waiting (actively) for the crash\n");
   while(true) {
@@ -30,7 +31,8 @@ function setup_crash() {
 
 
 function after_crash(mdump, extra) {
-  Assert.equal(extra.ShutdownProgress, "xpcom-will-shutdown");
+  do_print("Crash signature: " + JSON.stringify(extra, null, "\t"));
+  Assert.equal(extra.ShutdownProgress, "profile-before-change");
 }
 
 function run_test() {
