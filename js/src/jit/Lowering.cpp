@@ -3836,16 +3836,20 @@ LIRGenerator::visitSimdShuffle(MSimdShuffle *ins)
     MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
     MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
     MOZ_ASSERT(IsSimdType(ins->type()));
+    MOZ_ASSERT(ins->type() == MIRType_Int32x4 || ins->type() == MIRType_Float32x4);
 
-    if (ins->type() == MIRType_Int32x4 || ins->type() == MIRType_Float32x4) {
-        MDefinition *lhs = ins->lhs();
-        MDefinition *rhs = ins->rhs();
-        LSimdShuffle *lir = new (alloc()) LSimdShuffle;
-        return lowerForFPU(lir, ins, lhs, rhs);
-    }
+    bool zFromLHS = ins->laneZ() < 4;
+    bool wFromLHS = ins->laneW() < 4;
+    uint32_t lanesFromLHS = (ins->laneX() < 4) + (ins->laneY() < 4) + zFromLHS + wFromLHS;
 
-    MOZ_CRASH("Unknown SIMD kind when getting lane");
-    return false;
+    LUse lhs = useRegisterAtStart(ins->lhs());
+    LUse rhs = useRegister(ins->rhs());
+
+    // See codegen for requirements details.
+    LDefinition temp = (lanesFromLHS == 3) ? tempCopy(ins->rhs(), 1) : LDefinition::BogusTemp();
+
+    LSimdShuffle *lir = new (alloc()) LSimdShuffle(lhs, rhs, temp);
+    return defineReuseInput(lir, ins, 0);
 }
 
 bool
