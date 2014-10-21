@@ -2996,12 +2996,18 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // metadata about this scroll box to the compositor process.
     nsDisplayScrollInfoLayer* layerItem = new (aBuilder) nsDisplayScrollInfoLayer(
       aBuilder, mScrolledFrame, mOuter);
-    nsDisplayList* positionedDescendants = scrolledContent.PositionedDescendants();
-    if (!positionedDescendants->IsEmpty()) {
-      layerItem->SetOverrideZIndex(MaxZIndexInList(positionedDescendants, aBuilder));
-      positionedDescendants->AppendNewToTop(layerItem);
+    if (BuildScrollContainerLayers()) {
+      // We process display items from bottom to top, so if we need to flatten after
+      // the scroll layer items have been processed we need to be on the top.
+      nsDisplayList* positionedDescendants = scrolledContent.PositionedDescendants();
+      if (!positionedDescendants->IsEmpty()) {
+        layerItem->SetOverrideZIndex(MaxZIndexInList(positionedDescendants, aBuilder));
+        positionedDescendants->AppendNewToTop(layerItem);
+      } else {
+        aLists.Outlines()->AppendNewToTop(layerItem);
+      }
     } else {
-      aLists.Outlines()->AppendNewToTop(layerItem);
+      scrolledContent.BorderBackground()->AppendNewToBottom(layerItem);
     }
   }
   // Now display overlay scrollbars and the resizer, if we have one.
