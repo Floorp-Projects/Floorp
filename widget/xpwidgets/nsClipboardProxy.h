@@ -7,16 +7,24 @@
 #define NS_CLIPBOARD_PROXY_H
 
 #include "nsIClipboard.h"
+#include "mozilla/dom/PContent.h"
 
 class nsClipboardProxy MOZ_FINAL : public nsIClipboard
 {
-  ~nsClipboardProxy() {}
+  typedef mozilla::dom::ClipboardCapabilities ClipboardCapabilities;
 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICLIPBOARD
 
   nsClipboardProxy();
+
+  void SetCapabilities(const ClipboardCapabilities& aClipboardCaps);
+
+private:
+  ~nsClipboardProxy() {}
+
+  ClipboardCapabilities mClipboardCaps;
 };
 
 #endif
