@@ -348,7 +348,7 @@ function RilObject(aContext) {
 
   this.telephonyRequestQueue = new TelephonyRequestQueue(this);
   this.currentCalls = {};
-  this.currentConference = {state: null, participants: {}};
+  this.currentConferenceState = CALL_STATE_UNKNOWN;
   this.currentDataCalls = {};
   this._pendingSentSmsMap = {};
   this.pendingNetworkType = {};
@@ -375,9 +375,9 @@ RilObject.prototype = {
   currentCalls: null,
 
   /**
-   * Existing conference call and its participants.
+   * Call state of current conference group.
    */
-  currentConference: null,
+  currentConferenceState: null,
 
   /**
    * Existing data calls.
@@ -3833,171 +3833,189 @@ RilObject.prototype = {
   },
 
   /**
-   * Helpers for processing call state and handle the active call.
+   * Classify new calls into three groups: (removed, remained, added).
    */
-  _processCalls: function(newCalls) {
-    let conferenceChanged = false;
-    let clearConferenceRequest = false;
+  _classifyCalls: function(newCalls) {
+    newCalls = newCalls || {};
 
-    // Go through the calls we currently have on file and see if any of them
-    // changed state. Remove them from the newCalls map as we deal with them
-    // so that only new calls remain in the map after we're done.
+    let removedCalls = [];
+    let remainedCalls = [];
+    let addedCalls = [];
+
     for each (let currentCall in this.currentCalls) {
-      let newCall;
-      if (newCalls) {
-        newCall = newCalls[currentCall.callIndex];
-        delete newCalls[currentCall.callIndex];
-      }
-
-      // Call is no longer reported by the radio. Remove from our map and send
-      // disconnected state change.
+      let newCall = newCalls[currentCall.callIndex];
       if (!newCall) {
-        if (this.currentConference.participants[currentCall.callIndex]) {
-          conferenceChanged = true;
-        }
-        this._removeVoiceCall(currentCall,
-                              currentCall.hangUpLocal ?
-                                GECKO_CALL_ERROR_NORMAL_CALL_CLEARING : null);
-        continue;
-      }
-
-      // Call is still valid.
-      if (newCall.state == currentCall.state &&
-          newCall.isMpty == currentCall.isMpty) {
-        continue;
-      }
-
-      // State has changed.
-      if (newCall.state == CALL_STATE_INCOMING &&
-          currentCall.state == CALL_STATE_WAITING) {
-        // Update the call internally but we don't notify chrome since these two
-        // states are viewed as the same one there.
-        currentCall.state = newCall.state;
-        continue;
-      }
-
-      if (!currentCall.started && newCall.state == CALL_STATE_ACTIVE) {
-        currentCall.started = new Date().getTime();
-      }
-
-      if (currentCall.isMpty == newCall.isMpty &&
-          newCall.state != currentCall.state) {
-        currentCall.state = newCall.state;
-        if (currentCall.isConference) {
-          conferenceChanged = true;
-        }
-        this._handleChangedCallState(currentCall);
-        continue;
-      }
-
-      // '.isMpty' becomes false when the conference call is put on hold.
-      // We need to introduce additional 'isConference' to correctly record the
-      // real conference status
-
-      // Update a possible conference participant when .isMpty changes.
-      if (!currentCall.isMpty && newCall.isMpty) {
-        if (this._hasConferenceRequest) {
-          conferenceChanged = true;
-          clearConferenceRequest = true;
-          currentCall.state = newCall.state;
-          currentCall.isMpty = newCall.isMpty;
-          currentCall.isConference = true;
-          this.currentConference.participants[currentCall.callIndex] = currentCall;
-          this._handleChangedCallState(currentCall);
-        } else if (currentCall.isConference) {
-          // The case happens when resuming a held conference call.
-          conferenceChanged = true;
-          currentCall.state = newCall.state;
-          currentCall.isMpty = newCall.isMpty;
-          this.currentConference.participants[currentCall.callIndex] = currentCall;
-          this._handleChangedCallState(currentCall);
-        } else {
-          // Weird. This sometimes happens when we switch two calls, but it is
-          // not a conference call.
-          currentCall.state = newCall.state;
-          this._handleChangedCallState(currentCall);
-        }
-      } else if (currentCall.isMpty && !newCall.isMpty) {
-        if (!this.currentConference.participants[newCall.callIndex]) {
-          continue;
-        }
-
-        // '.isMpty' of a conference participant is set to false by rild when
-        // the conference call is put on hold. We don't actually know if the call
-        // still attends the conference until updating all calls finishes. We
-        // cache it for further determination.
-        if (newCall.state != CALL_STATE_HOLDING) {
-          delete this.currentConference.participants[newCall.callIndex];
-          currentCall.state = newCall.state;
-          currentCall.isMpty = newCall.isMpty;
-          currentCall.isConference = false;
-          conferenceChanged = true;
-          this._handleChangedCallState(currentCall);
-          continue;
-        }
-
-        if (!this.currentConference.cache) {
-          this.currentConference.cache = {};
-        }
-        this.currentConference.cache[currentCall.callIndex] = newCall;
-        currentCall.state = newCall.state;
-        currentCall.isMpty = newCall.isMpty;
-        conferenceChanged = true;
-      }
-    }
-
-    // We have a successful dialing request. Check whether we could find a new
-    // call for it.
-    if (this.pendingMO) {
-      let options = this.pendingMO.options;
-      this.pendingMO = null;
-
-      // Find the callIndex of the new outgoing call.
-      let callIndex = -1;
-      for (let i in newCalls) {
-        if (newCalls[i].state !== CALL_STATE_INCOMING) {
-          callIndex = newCalls[i].callIndex;
-          newCalls[i].isEmergency = options.isEmergency;
-          break;
-        }
-      }
-
-      if (callIndex === -1) {
-        // The call doesn't exist.
-        options.success = false;
-        options.errorMsg = GECKO_CALL_ERROR_UNSPECIFIED;
-        this.sendChromeMessage(options);
+        removedCalls.push(currentCall);
       } else {
-        options.success = true;
-        options.callIndex = callIndex;
-        this.sendChromeMessage(options);
+        remainedCalls.push(newCall);
+        delete newCalls[currentCall.callIndex];
       }
     }
 
     // Go through any remaining calls that are new to us.
     for each (let newCall in newCalls) {
-      if (!newCall.isVoice) {
+      if (newCall.isVoice) {
+        addedCalls.push(newCall);
+      }
+    }
+
+    return [removedCalls, remainedCalls, addedCalls];
+  },
+
+  /**
+   * Check the calls in addedCalls and assign an appropriate one to pendingMO.
+   * Also update the |isEmergency| on that call.
+   */
+  _assignPendingMO: function(addedCalls) {
+    let options = this.pendingMO.options;
+    this.pendingMO = null;
+
+    for (let call of addedCalls) {
+      if (call.state !== CALL_STATE_INCOMING) {
+        call.isEmergency = options.isEmergency;
+        options.success = true;
+        options.callIndex = call.callIndex;
+        this.sendChromeMessage(options);
+        return;
+      }
+    }
+
+    // The call doesn't exist.
+    options.success = false;
+    options.errorMsg = GECKO_CALL_ERROR_UNSPECIFIED;
+    this.sendChromeMessage(options);
+  },
+
+  /**
+   * Check the currentCalls and identify the conference group.
+   * Return the conference state and the group as a set.
+   */
+  _detectConference: function() {
+    // There are some difficuties to identify the conference by |.isMpty| so we
+    // don't rely on this flag.
+    //  - |.isMpty| becomes false when the conference call is put on hold.
+    //  - |.isMpty| may remain true when other participants left the conference.
+
+    // All the calls in the conference should have the same state and it is
+    // either ACTIVE or HOLDING. That means, if we find a group of call with
+    // the same state and its size is larger than 2, it must be a conference.
+    let activeCalls = new Set();
+    let holdingCalls = new Set();
+
+    for each (let call in this.currentCalls) {
+      if (call.state === CALL_STATE_ACTIVE) {
+        activeCalls.add(call);
+      } else if (call.state === CALL_STATE_HOLDING) {
+        holdingCalls.add(call);
+      }
+    }
+
+    if (activeCalls.size >= 2) {
+      return [CALL_STATE_ACTIVE, activeCalls];
+    } else if (holdingCalls.size >= 2) {
+      return [CALL_STATE_HOLDING, holdingCalls];
+    }
+
+    return [CALL_STATE_UNKNOWN, new Set()];
+  },
+
+  /**
+   * Helpers for processing call state changes.
+   */
+  _processClassifiedCalls: function(removedCalls, remainedCalls, addedCalls,
+                                    failCause) {
+    // Handle removed calls.
+    for (let call of removedCalls) {
+      this._removeVoiceCall(call, call.hangUpLocal ?
+                            GECKO_CALL_ERROR_NORMAL_CALL_CLEARING : failCause);
+    }
+
+    let changedCalls = new Set();
+
+    // Handle remained calls.
+    for (let newCall of remainedCalls) {
+      let oldCall = this.currentCalls[newCall.callIndex];
+      if (oldCall.state == newCall.state) {
         continue;
       }
 
-      if (newCall.isMpty) {
-        conferenceChanged = true;
+      if (oldCall.state == CALL_STATE_WAITING &&
+          newCall.state == CALL_STATE_INCOMING) {
+        // Update the call internally but we don't notify chrome since these two
+        // states are viewed as the same one there.
+        oldCall.state = newCall.state;
+        continue;
       }
 
-      this._addNewVoiceCall(newCall);
+      if (!oldCall.started && newCall.state == CALL_STATE_ACTIVE) {
+        oldCall.started = new Date().getTime();
+      }
+
+      oldCall.state = newCall.state;
+      changedCalls.add(oldCall);
+
+      // Clear pending conference request.
+      if (this._hasConferenceRequest && !oldCall.isMpty && newCall.isMpty) {
+        this._hasConferenceRequest = false;
+      }
     }
 
-    if (clearConferenceRequest) {
-      this._hasConferenceRequest = false;
-    }
-    if (conferenceChanged) {
-      this._ensureConference();
+    // Handle pendingMO.
+    if (this.pendingMO) {
+      this._assignPendingMO(addedCalls);
     }
 
-    // Update audio state.
-    let message = {rilMessageType: "audioStateChanged",
-                   state: this._detectAudioState()};
-    this.sendChromeMessage(message);
+    // Handle added calls.
+    for (let call of addedCalls) {
+      this._addVoiceCall(call);
+      changedCalls.add(call);
+    }
+
+    // Detect conference and update isConference flag.
+    let [newConferenceState, conference] = this._detectConference();
+    for each (let call in this.currentCalls) {
+      let isConference = conference.has(call);
+      if (call.isConference != isConference) {
+        call.isConference = isConference;
+        changedCalls.add(call);
+      }
+    }
+
+    // Update audio state. We have to send the message before callstatechange
+    // to make sure that the audio state is ready first.
+    this.sendChromeMessage({
+      rilMessageType: "audioStateChanged",
+      state: this._detectAudioState()
+    });
+
+    // Notify call state change.
+    for (let call of changedCalls) {
+      this._handleChangedCallState(call);
+    }
+
+    // Notify conference state change.
+    if (this.currentConferenceState != newConferenceState) {
+      this.currentConferenceState = newConferenceState;
+      let message = {rilMessageType: "conferenceCallStateChanged",
+                     state: newConferenceState};
+      this.sendChromeMessage(message);
+    }
+  },
+
+  _processCalls: function(newCalls) {
+    let [removed, remained, added] = this._classifyCalls(newCalls);
+
+    // Let's get the failCause first if there are removed calls. Otherwise, we
+    // need to trigger another async request when removing call and it cause
+    // the order of callDisconnected and conferenceCallStateChanged
+    // unpredictable.
+    if (removed.length) {
+      this.getFailCauseCode((function(removed, remained, added, failCause) {
+        this._processClassifiedCalls(removed, remained, added, failCause);
+      }).bind(this, removed, remained, added));
+    } else {
+      this._processClassifiedCalls(removed, remained, added);
+    }
   },
 
   _detectAudioState: function() {
@@ -4015,90 +4033,23 @@ RilObject.prototype = {
     return AUDIO_STATE_IN_CALL;
   },
 
-  _addNewVoiceCall: function(newCall) {
+  _addVoiceCall: function(newCall) {
     // Format international numbers appropriately.
     if (newCall.number && newCall.toa == TOA_INTERNATIONAL &&
         newCall.number[0] != "+") {
       newCall.number = "+" + newCall.number;
     }
 
-    if (newCall.state == CALL_STATE_INCOMING) {
-      newCall.isOutgoing = false;
-    } else if (newCall.state == CALL_STATE_DIALING) {
-      newCall.isOutgoing = true;
-    }
+    newCall.isOutgoing = !(newCall.state == CALL_STATE_INCOMING);
+    newCall.isConference = false;
 
-    // Set flag for conference.
-    newCall.isConference = newCall.isMpty ? true : false;
-
-    // Add to our map.
-    if (newCall.isMpty) {
-      this.currentConference.participants[newCall.callIndex] = newCall;
-    }
-    this._handleChangedCallState(newCall);
     this.currentCalls[newCall.callIndex] = newCall;
   },
 
-  _removeVoiceCall: function(removedCall, failCause) {
-    if (this.currentConference.participants[removedCall.callIndex]) {
-      removedCall.isConference = false;
-      delete this.currentConference.participants[removedCall.callIndex];
-      delete this.currentCalls[removedCall.callIndex];
-      // We don't query the fail cause here as it triggers another asynchrouns
-      // request that leads to a problem of updating all conferece participants
-      // in one task.
-      this._handleDisconnectedCall(removedCall);
-    } else {
-      delete this.currentCalls[removedCall.callIndex];
-      if (failCause) {
-        removedCall.failCause = failCause;
-        this._handleDisconnectedCall(removedCall);
-      } else {
-        this.getFailCauseCode((function(call, failCause) {
-          call.failCause = failCause;
-          this._handleDisconnectedCall(call);
-        }).bind(this, removedCall));
-      }
-    }
-  },
-
-  _ensureConference: function() {
-    let oldState = this.currentConference.state;
-    let remaining = Object.keys(this.currentConference.participants);
-
-    if (remaining.length == 1) {
-      // Remove that if only does one remain in a conference call.
-      let call = this.currentCalls[remaining[0]];
-      call.isConference = false;
-      this._handleChangedCallState(call);
-      delete this.currentConference.participants[call.callIndex];
-    } else if (remaining.length > 1) {
-      for each (let call in this.currentConference.cache) {
-        call.isConference = true;
-        this.currentConference.participants[call.callIndex] = call;
-        this.currentCalls[call.callIndex] = call;
-        this._handleChangedCallState(call);
-      }
-    }
-    delete this.currentConference.cache;
-
-    // Update the conference call's state.
-    let state = CALL_STATE_UNKNOWN;
-    for each (let call in this.currentConference.participants) {
-      if (state != CALL_STATE_UNKNOWN && state != call.state) {
-        // Each participant should have the same state, otherwise something
-        // wrong happens.
-        state = CALL_STATE_UNKNOWN;
-        break;
-      }
-      state = call.state;
-    }
-    if (oldState != state) {
-      this.currentConference.state = state;
-      let message = {rilMessageType: "conferenceCallStateChanged",
-                     state: state};
-      this.sendChromeMessage(message);
-    }
+  _removeVoiceCall: function(call, failCause) {
+    delete this.currentCalls[call.callIndex];
+    call.failCause = failCause;
+    this._handleDisconnectedCall(call);
   },
 
   _handleChangedCallState: function(changedCall) {
