@@ -8481,7 +8481,7 @@ static bool
 FinishModule(ModuleCompiler &m,
              ScopedJSDeletePtr<AsmJSModule> *module)
 {
-    LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+    LifoAlloc lifo(TempAllocator::PreferredLifoChunkSize);
     TempAllocator alloc(&lifo);
     IonContext ionContext(m.cx(), &alloc);
 

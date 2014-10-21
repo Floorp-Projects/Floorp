@@ -1938,8 +1938,6 @@ AttachFinishedCompilations(JSContext *cx)
     }
 }
 
-static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
-
 static inline bool
 OffThreadCompilationAvailable(JSContext *cx)
 {
@@ -2004,7 +2002,7 @@ IonCompile(JSContext *cx, JSScript *script,
 
     TrackPropertiesForSingletonScopes(cx, script, baselineFrame);
 
-    LifoAlloc *alloc = cx->new_<LifoAlloc>(BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+    LifoAlloc *alloc = cx->new_<LifoAlloc>(TempAllocator::PreferredLifoChunkSize);
     if (!alloc)
         return AbortReason_Alloc;
 
@@ -3377,3 +3375,8 @@ jit::JitSupportsSimd()
 {
     return js::jit::MacroAssembler::SupportsSimd();
 }
+
+// If you change these, please also change the comment in TempAllocator.
+/* static */ const size_t TempAllocator::BallastSize            = 16 * 1024;
+/* static */ const size_t TempAllocator::PreferredLifoChunkSize = 32 * 1024;
+
