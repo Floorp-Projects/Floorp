@@ -882,37 +882,45 @@ XrayTraits::expandoObjectMatchesConsumer(JSContext *cx,
     return owner == exclusiveGlobal;
 }
 
-JSObject *
+bool
 XrayTraits::getExpandoObjectInternal(JSContext *cx, HandleObject target,
                                      nsIPrincipal *origin,
-                                     JSObject *exclusiveGlobalArg)
+                                     JSObject *exclusiveGlobalArg,
+                                     MutableHandleObject expandoObject)
 {
+    MOZ_ASSERT(!JS_IsExceptionPending(cx));
+    expandoObject.set(nullptr);
+
     // The expando object lives in the compartment of the target, so all our
     // work needs to happen there.
     RootedObject exclusiveGlobal(cx, exclusiveGlobalArg);
     JSAutoCompartment ac(cx, target);
     if (!JS_WrapObject(cx, &exclusiveGlobal))
-        return nullptr;
+        return false;
 
     // Iterate through the chain, looking for a same-origin object.
     RootedObject head(cx, getExpandoChain(target));
     while (head) {
-        if (expandoObjectMatchesConsumer(cx, head, origin, exclusiveGlobal))
-            return head;
+        if (expandoObjectMatchesConsumer(cx, head, origin, exclusiveGlobal)) {
+            expandoObject.set(head);
+            return true;
+        }
         head = JS_GetReservedSlot(head, JSSLOT_EXPANDO_NEXT).toObjectOrNull();
     }
 
     // Not found.
-    return nullptr;
+    return true;
 }
 
-JSObject *
-XrayTraits::getExpandoObject(JSContext *cx, HandleObject target, HandleObject consumer)
+bool
+XrayTraits::getExpandoObject(JSContext *cx, HandleObject target, HandleObject consumer,
+                             MutableHandleObject expandoObject)
 {
     JSObject *consumerGlobal = js::GetGlobalForObjectCrossCompartment(consumer);
     bool isSandbox = !strcmp(js::GetObjectJSClass(consumerGlobal)->name, "Sandbox");
     return getExpandoObjectInternal(cx, target, ObjectPrincipal(consumer),
-                                    isSandbox ? consumerGlobal : nullptr);
+                                    isSandbox ? consumerGlobal : nullptr,
+                                    expandoObject);
 }
 
 JSObject *
@@ -924,7 +932,15 @@ XrayTraits::attachExpandoObject(JSContext *cx, HandleObject target,
     MOZ_ASSERT(!exclusiveGlobal || js::IsObjectInContextCompartment(exclusiveGlobal, cx));
 
     // No duplicates allowed.
-    MOZ_ASSERT(!getExpandoObjectInternal(cx, target, origin, exclusiveGlobal));
+#ifdef DEBUG
+    {
+        RootedObject existingExpandoObject(cx);
+        if (getExpandoObjectInternal(cx, target, origin, exclusiveGlobal, &existingExpandoObject))
+            MOZ_ASSERT(!existingExpandoObject);
+        else
+            JS_ClearPendingException(cx);
+    }
+#endif
 
     // Create the expando object. We parent it directly to the target object.
     RootedObject expandoObject(cx, JS_NewObjectWithGivenProto(cx, &ExpandoObjectClass,
@@ -960,7 +976,9 @@ XrayTraits::ensureExpandoObject(JSContext *cx, HandleObject wrapper,
 {
     // Expando objects live in the target compartment.
     JSAutoCompartment ac(cx, target);
-    JSObject *expandoObject = getExpandoObject(cx, target, wrapper);
+    RootedObject expandoObject(cx);
+    if (!getExpandoObject(cx, target, wrapper, &expandoObject))
+        return nullptr;
     if (!expandoObject) {
         // If the object is a sandbox, we don't want it to share expandos with
         // anyone else, so we tag it with the sandbox global.
@@ -1244,7 +1262,9 @@ XrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
 {
     desc.object().set(nullptr);
     RootedObject target(cx, getTargetObject(wrapper));
-    RootedObject expando(cx, getExpandoObject(cx, target, wrapper));
+    RootedObject expando(cx);
+    if (!getExpandoObject(cx, target, wrapper, &expando))
+        return false;
 
     // Check for expando properties first. Note that the expando object lives
     // in the target compartment.
@@ -1993,7 +2013,10 @@ XrayWrapper<Base, Traits>::delete_(JSContext *cx, HandleObject wrapper,
 
     // Check the expando object.
     RootedObject target(cx, Traits::getTargetObject(wrapper));
-    RootedObject expando(cx, Traits::singleton.getExpandoObject(cx, target, wrapper));
+    RootedObject expando(cx);
+    if (!Traits::singleton.getExpandoObject(cx, target, wrapper, &expando))
+        return false;
+
     if (expando) {
         JSAutoCompartment ac(cx, expando);
         return JS_DeletePropertyById2(cx, expando, id, bp);
@@ -2012,7 +2035,10 @@ XrayWrapper<Base, Traits>::enumerate(JSContext *cx, HandleObject wrapper, unsign
     // Enumerate expando properties first. Note that the expando object lives
     // in the target compartment.
     RootedObject target(cx, Traits::singleton.getTargetObject(wrapper));
-    RootedObject expando(cx, Traits::singleton.getExpandoObject(cx, target, wrapper));
+    RootedObject expando(cx);
+    if (!Traits::singleton.getExpandoObject(cx, target, wrapper, &expando))
+        return false;
+
     if (expando) {
         JSAutoCompartment ac(cx, expando);
         if (!js::GetPropertyKeys(cx, expando, flags, &props))
@@ -2143,7 +2169,9 @@ XrayWrapper<Base, Traits>::getPrototypeOf(JSContext *cx, JS::HandleObject wrappe
         return Base::getPrototypeOf(cx, wrapper, protop);
 
     RootedObject target(cx, Traits::getTargetObject(wrapper));
-    RootedObject expando(cx, Traits::singleton.getExpandoObject(cx, target, wrapper));
+    RootedObject expando(cx);
+    if (!Traits::singleton.getExpandoObject(cx, target, wrapper, &expando))
+        return false;
 
     // We want to keep the Xray's prototype distinct from that of content, but
     // only if there's been a set. If there's not an expando, or the expando
@@ -2173,6 +2201,8 @@ XrayWrapper<Base, Traits>::setPrototypeOf(JSContext *cx, JS::HandleObject wrappe
 
     RootedObject target(cx, Traits::getTargetObject(wrapper));
     RootedObject expando(cx, Traits::singleton.ensureExpandoObject(cx, wrapper, target));
+    if (!expando)
+        return false;
 
     // The expando lives in the target's compartment, so do our installation there.
     JSAutoCompartment ac(cx, target);
