@@ -14,6 +14,7 @@
 #include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
 #include "nsISupportsImpl.h"            // for TextureImage::AddRef, etc
 #include "nscore.h"                     // for nsACString
+#include "CompositableHost.h"           // for CompositableHost
 
 struct nsIntPoint;
 struct nsIntRect;
@@ -21,7 +22,6 @@ struct nsIntRect;
 namespace mozilla {
 namespace layers {
 
-class CompositableHost;
 class ImageHost;
 class Layer;
 
@@ -44,6 +44,15 @@ public:
   virtual bool SetCompositableHost(CompositableHost* aHost) MOZ_OVERRIDE;
 
   virtual Layer* GetLayer() MOZ_OVERRIDE;
+
+  virtual void SetLayerManager(LayerManagerComposite* aManager) MOZ_OVERRIDE
+  {
+    LayerComposite::SetLayerManager(aManager);
+    mManager = aManager;
+    if (mImageHost) {
+      mImageHost->SetCompositor(mCompositor);
+    }
+  }
 
   virtual void RenderLayer(const nsIntRect& aClipRect);
 

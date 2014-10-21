@@ -62,6 +62,16 @@ CanvasLayerComposite::GetLayer()
   return this;
 }
 
+void
+CanvasLayerComposite::SetLayerManager(LayerManagerComposite* aManager)
+{
+  LayerComposite::SetLayerManager(aManager);
+  mManager = aManager;
+  if (mImageHost) {
+    mImageHost->SetCompositor(mCompositor);
+  }
+}
+
 LayerRenderState
 CanvasLayerComposite::GetRenderState()
 {

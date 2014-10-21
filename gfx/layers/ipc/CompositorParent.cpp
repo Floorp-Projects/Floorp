@@ -1039,6 +1039,19 @@ CompositorParent::NotifyChildCreated(const uint64_t& aChild)
   sIndirectLayerTrees[aChild].mLayerManager = mLayerManager;
 }
 
+bool
+CompositorParent::RecvAdoptChild(const uint64_t& child)
+{
+  NotifyChildCreated(child);
+  if (sIndirectLayerTrees[child].mLayerTree) {
+    sIndirectLayerTrees[child].mLayerTree->mLayerManager = mLayerManager;
+  }
+  if (sIndirectLayerTrees[child].mRoot) {
+    sIndirectLayerTrees[child].mRoot->AsLayerComposite()->SetLayerManager(mLayerManager);
+  }
+  return true;
+}
+
 /*static*/ uint64_t
 CompositorParent::AllocateLayerTreeId()
 {
@@ -1179,6 +1192,7 @@ public:
   virtual bool RecvPause() MOZ_OVERRIDE { return true; }
   virtual bool RecvResume() MOZ_OVERRIDE { return true; }
   virtual bool RecvNotifyChildCreated(const uint64_t& child) MOZ_OVERRIDE;
+  virtual bool RecvAdoptChild(const uint64_t& child) MOZ_OVERRIDE { return false; }
   virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
                                 const nsIntRect& aRect)
   { return true; }

@@ -62,6 +62,17 @@ public:
   // LayerComposite Implementation
   virtual Layer* GetLayer() MOZ_OVERRIDE { return this; }
 
+  virtual void SetLayerManager(LayerManagerComposite* aManager) MOZ_OVERRIDE
+  {
+    LayerComposite::SetLayerManager(aManager);
+    mManager = aManager;
+
+    for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
+      LayerComposite* child = l->AsLayerComposite();
+      child->SetLayerManager(aManager);
+    }
+  }
+
   virtual void Destroy() MOZ_OVERRIDE;
 
   LayerComposite* GetFirstChildComposite();
