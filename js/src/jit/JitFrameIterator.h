@@ -388,6 +388,7 @@ class SnapshotIterator
 
     Value allocationValue(const RValueAllocation &a);
     bool allocationReadable(const RValueAllocation &a);
+    void writeAllocationValuePayload(const RValueAllocation &a, Value v);
     void warnUnreadableAllocation();
 
   public:
@@ -501,6 +502,8 @@ class SnapshotIterator
 
         return fallback.unreadablePlaceholder();
     }
+
+    void traceAllocation(JSTracer *trc);
 
     void readCommonFrameSlots(Value *scopeChain, Value *rval) {
         if (scopeChain)
