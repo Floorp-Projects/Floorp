@@ -266,18 +266,25 @@ class LSimdSwizzleF : public LSimdSwizzleBase
 };
 
 // Base class for both int32x4 and float32x4 shuffle instructions.
-class LSimdShuffle : public LInstructionHelper<1, 2, 0>
+class LSimdShuffle : public LInstructionHelper<1, 2, 1>
 {
   public:
     LIR_HEADER(SimdShuffle);
-    LSimdShuffle()
-    {}
+    LSimdShuffle(const LAllocation &lhs, const LAllocation &rhs, const LDefinition &temp)
+    {
+        setOperand(0, lhs);
+        setOperand(1, rhs);
+        setTemp(0, temp);
+    }
 
     const LAllocation *lhs() {
         return getOperand(0);
     }
     const LAllocation *rhs() {
         return getOperand(1);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
     }
 
     int32_t laneX() const { return mir_->toSimdShuffle()->laneX(); }
