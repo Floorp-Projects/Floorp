@@ -75,7 +75,7 @@
                         android:layout_marginBottom="18dp"
                         android:layout_marginLeft="16dp"
                         android:layout_marginRight="16dp"
-                        gecko:layout="@layout/new_tablet_tabs_counter"/>
+                        android:layout="@layout/new_tablet_tabs_counter"/>
 
     <org.mozilla.gecko.widget.ThemedImageButton
             android:id="@+id/menu"

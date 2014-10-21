@@ -2974,6 +2974,16 @@ CSS_PROP_POSITION(
     nullptr,
     offsetof(nsStylePosition, mOffset),
     eStyleAnimType_Sides_Right)
+CSS_PROP_DISPLAY(
+    scroll-behavior,
+    scroll_behavior,
+    ScrollBehavior,
+    CSS_PROPERTY_PARSE_VALUE,
+    "layout.css.scroll-behavior.property-enabled",
+    VARIANT_HK,
+    kScrollBehaviorKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_BACKENDONLY(
     size,
     size,

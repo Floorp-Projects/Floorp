@@ -430,6 +430,7 @@ private:
   mozilla::dom::CSSValue* DoGetPerspectiveOrigin();
   mozilla::dom::CSSValue* DoGetTransformStyle();
   mozilla::dom::CSSValue* DoGetOrient();
+  mozilla::dom::CSSValue* DoGetScrollBehavior();
 
   /* User interface properties */
   mozilla::dom::CSSValue* DoGetCursor();

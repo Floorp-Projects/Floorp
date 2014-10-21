@@ -18,6 +18,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+Cu.importGlobalProperties(["File"]);
+
 // Allow stuff from this scope to be accessed from non-privileged scopes. This
 // would crash if used outside of automation.
 Cu.forcePermissiveCOWs();
@@ -1876,6 +1878,10 @@ SpecialPowersAPI.prototype = {
 
     let msg = { op: op, uri: uri, appId: appId, inBrowser: inBrowser, id: id };
     this._sendAsyncMessage(messageTopic, msg);
+  },
+
+  createDOMFile: function(path, options) {
+    return new File(path, options);
   },
 };
 

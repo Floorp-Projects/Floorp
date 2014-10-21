@@ -145,7 +145,8 @@ function main()
       testTranslate3D,
       testScale3D,
       test3D,
-      testParsing
+      testParsing,
+      testStringify
     ];
   for (var i = 0; i < tests.length; i++) {
     try{
@@ -704,6 +705,19 @@ function testParsing()
   m = new DOMMatrix();
   m.setMatrixValue("translate(10, 20) scale(.5, 2) rotate(45)");
   ok(CompareDOMMatrix(m2, m), "string parsing didn't match");
+}
+
+
+function testStringify() {
+    var m = new DOMMatrix();
+    var s = "" + m;
+    ok(s == "matrix" + formatMatrix(m), "stringifier 1 produced wrong result: " + s);
+    m.a = 100;
+    s = "" + m;
+    ok(s == "matrix" + formatMatrix(m), "stringifier 2 produced wrong result: " + s);
+    m.m43 = 200;
+    s = "" + m;
+    ok(s == "matrix3d" + formatMatrix(m), "stringifier 3 produced wrong result:" + s);
 }
 
 window.addEventListener("load", main, false);
