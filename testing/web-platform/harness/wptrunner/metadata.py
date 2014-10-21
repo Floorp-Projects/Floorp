@@ -142,7 +142,7 @@ def update_from_logs(metadata_path, manifest, *log_filenames, **kwargs):
 
 def write_changes(metadata_path, expected_map):
     # First write the new manifest files to a temporary directory
-    temp_path = tempfile.mkdtemp(dir=os.path.split(metadata_path)[0])
+    temp_path = tempfile.mkdtemp()
     write_new_expected(temp_path, expected_map)
     shutil.copyfile(os.path.join(metadata_path, "MANIFEST.json"),
                     os.path.join(temp_path, "MANIFEST.json"))
@@ -235,9 +235,6 @@ class ExpectedUpdater(object):
         if test is None:
             return
         test_cls = wpttest.manifest_test_cls[test.test_type]
-
-        if data["status"] == "SKIP":
-            return
 
         result = test_cls.result_cls(
             data["status"],

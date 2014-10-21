@@ -9,18 +9,12 @@
 <script>
 "use strict";
 
-// Taken straight from https://encoding.spec.whatwg.org/
+// Taken straight from the encoding spec.
 var encodingMap = {
   "utf-8": [
     "unicode-1-1-utf-8",
     "utf-8",
     "utf8",
-    // As we use <meta>, utf-16 will map to utf-8 per
-    // https://html.spec.whatwg.org/multipage/syntax.html#documentEncoding
-    "utf-16",
-    "utf-16le",
-    "utf-16be",
-    "utf-16be",
   ],
   "ibm866": [
     "866",
@@ -201,9 +195,6 @@ var encodingMap = {
     "us-ascii",
     "windows-1252",
     "x-cp1252",
-    // As we use <meta>, x-user-defined will map to windows-1252 per
-    // https://html.spec.whatwg.org/multipage/syntax.html#documentEncoding
-    "x-user-defined"
   ],
   "windows-1253": [
     "cp1253",
@@ -302,11 +293,21 @@ var encodingMap = {
     "ksc_5601",
     "windows-949",
   ],
-  "replacement": [
+  "iso-2022-kr": [
     "csiso2022kr",
-    "iso-2022-cn",
-    "iso-2022-cn-ext",
     "iso-2022-kr",
+  ],
+// """A meta tag was used to declare the character encoding as UTF-16. This was
+//    interpreted as an UTF-8 declaration instead."""
+//  "utf-16": [
+//    "utf-16",
+//    "utf-16le",
+//  ],
+//  "utf-16be": [
+//    "utf-16be",
+//  ],
+  "x-user-defined": [
+    "x-user-defined",
   ],
 };
 
@@ -348,7 +349,7 @@ Object.keys(encodingMap).forEach(function(name) {
     var t = async_test("Name " + format_value(name) +
                        " has label " + format_value(label));
     /*
-    iframe.src = "data:text/html,<!doctype html>" +
+    iframe.src = "data:text/html,<!doctype html>" + 
                  '<meta charset="' + label + '">';
     */
     iframe.src = "encoding.py?label=" + label;
