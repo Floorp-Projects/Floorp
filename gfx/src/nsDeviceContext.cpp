@@ -410,7 +410,7 @@ nsDeviceContext::CreateRenderingContext()
     dt->AddUserData(&gfxContext::sDontUseAsSourceKey, dt, nullptr);
 #endif
 
-    pContext->Init(this, dt);
+    pContext->Init(dt);
     pContext->GetDrawTarget()->AddUserData(&sDisablePixelSnapping,
                                            (void*)0x1, nullptr);
     pContext->ThebesContext()->SetMatrix(gfxMatrix::Scaling(mPrintingScale,

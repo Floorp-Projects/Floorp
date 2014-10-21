@@ -589,6 +589,7 @@ struct nsCSSRendering {
                                      nscolor              aBorderColor,
                                      const nsStyleBackground* aBGColor,
                                      const nsRect&        aBorderRect,
+                                     int32_t              aAppUnitsPerDevPixel,
                                      int32_t              aAppUnitsPerCSSPixel,
                                      uint8_t              aStartBevelSide = 0,
                                      nscoord              aStartBevelOffset = 0,

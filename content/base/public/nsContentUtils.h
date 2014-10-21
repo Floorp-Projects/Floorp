@@ -2184,6 +2184,12 @@ public:
    */
   static uint64_t GetInnerWindowID(nsIRequest* aRequest);
 
+  /**
+   * If the hostname for aURI is an IPv6 it encloses it in brackets,
+   * otherwise it just outputs the hostname in aHost.
+   */
+  static void GetHostOrIPv6WithBrackets(nsIURI* aURI, nsAString& aHost);
+
 private:
   static bool InitializeEventTable();
 

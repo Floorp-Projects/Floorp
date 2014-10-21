@@ -379,7 +379,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
   }
 
   nsRefPtr<nsRenderingContext> context(new nsRenderingContext());
-  context->Init(aSource->PresContext()->DeviceContext(), dt);
+  context->Init(dt);
   gfxContext* gfx = context->ThebesContext();
 
   // Fill with transparent black

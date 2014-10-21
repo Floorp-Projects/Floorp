@@ -407,18 +407,9 @@ nsLocation::GetHostname(nsAString& aHostname)
   aHostname.Truncate();
 
   nsCOMPtr<nsIURI> uri;
-  nsresult result;
-
-  result = GetURI(getter_AddRefs(uri), true);
-
+  GetURI(getter_AddRefs(uri), true);
   if (uri) {
-    nsAutoCString host;
-
-    result = uri->GetHost(host);
-
-    if (NS_SUCCEEDED(result)) {
-      AppendUTF8toUTF16(host, aHostname);
-    }
+    nsContentUtils::GetHostOrIPv6WithBrackets(uri, aHostname);
   }
 
   return NS_OK;

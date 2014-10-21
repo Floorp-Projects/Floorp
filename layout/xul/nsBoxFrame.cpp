@@ -37,6 +37,7 @@
 #include "mozilla/gfx/2D.h"
 #include "nsBoxLayoutState.h"
 #include "mozilla/dom/Touch.h"
+#include "mozilla/Move.h"
 #include "nsStyleContext.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
@@ -1292,7 +1293,7 @@ nsDisplayXULDebug::Paint(nsDisplayListBuilder* aBuilder,
                          nsRenderingContext* aCtx)
 {
   static_cast<nsBoxFrame*>(mFrame)->
-    PaintXULDebugOverlay(*aCtx, ToReferenceFrame());
+    PaintXULDebugOverlay(*aCtx->GetDrawTarget(), ToReferenceFrame());
 }
 
 static void
@@ -1472,8 +1473,7 @@ nsBoxFrame::PaintXULDebugBackground(nsRenderingContext& aRenderingContext,
 }
 
 void
-nsBoxFrame::PaintXULDebugOverlay(nsRenderingContext& aRenderingContext,
-                                 nsPoint aPt)
+nsBoxFrame::PaintXULDebugOverlay(DrawTarget& aDrawTarget, nsPoint aPt)
   nsMargin border;
   GetBorder(border);
 
@@ -1516,14 +1516,12 @@ nsBoxFrame::PaintXULDebugOverlay(nsRenderingContext& aRenderingContext,
     nscoord flex = kid->GetFlex(state);
 
     if (!kid->IsCollapsed()) {
-      aRenderingContext.SetColor(NS_RGB(255,255,255));
-
       if (isHorizontal) 
           borderSize = cr.width;
       else 
           borderSize = cr.height;
-    
-      DrawSpacer(GetPresContext(), aRenderingContext, isHorizontal, flex, x, y, borderSize, spacerSize);
+
+      DrawSpacer(GetPresContext(), aDrawTarget, isHorizontal, flex, x, y, borderSize, spacerSize);
     }
 
     kid = GetNextBox(kid);
@@ -1598,28 +1596,34 @@ nsBoxFrame::GetDebug(bool& aDebug)
 
 #ifdef DEBUG_LAYOUT
 void
-nsBoxFrame::DrawLine(nsRenderingContext& aRenderingContext, bool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2)
+nsBoxFrame::DrawLine(DrawTarget& aDrawTarget, bool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2)
 {
-    if (aHorizontal)
-       aRenderingContext.DrawLine(x1,y1,x2,y2);
-    else
-       aRenderingContext.DrawLine(y1,x1,y2,x2);
+    nsPoint p1(x1, y1);
+    nsPoint p2(x2, y2);
+    if (!aHorizontal) {
+      Swap(p1.x, p1.y);
+      Swap(p2.x, p2.y);
+    }
+    ColorPattern white(ToDeviceColor(Color(1.f, 1.f, 1.f, 1.f)));
+    StrokeLineWithSnapping(p1, p2, PresContext()->AppUnitsPerDevPixel(),
+                           aDrawTarget, color);
 }
 
 void
-nsBoxFrame::FillRect(nsRenderingContext& aRenderingContext, bool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height)
+nsBoxFrame::FillRect(DrawTarget& aDrawTarget, bool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height)
 {
-    DrawTarget* drawTarget = aRenderingContext->GetDrawTarget();
     Rect rect = NSRectToRect(aHorizontal ? nsRect(x, y, width, height) :
                                            nsRect(y, x, height, width),
                              PresContext()->AppUnitsPerDevPixel(),
-                             *drawTarget);
+                             aDrawTarget);
     ColorPattern white(ToDeviceColor(Color(1.f, 1.f, 1.f, 1.f)));
-    drawTarget->FillRect(rect, white);
+    aDrawTarget.FillRect(rect, white);
 }
 
 void 
-nsBoxFrame::DrawSpacer(nsPresContext* aPresContext, nsRenderingContext& aRenderingContext, bool aHorizontal, int32_t flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize)
+nsBoxFrame::DrawSpacer(nsPresContext* aPresContext, DrawTarget& aDrawTarget,
+                       bool aHorizontal, int32_t flex, nscoord x, nscoord y,
+                       nscoord size, nscoord spacerSize)
 {    
          nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 
@@ -1639,21 +1643,19 @@ nsBoxFrame::DrawSpacer(nsPresContext* aPresContext, nsRenderingContext& aRenderi
         int halfCoilSize = coilSize/2;
 
         if (flex == 0) {
-            DrawLine(aRenderingContext, aHorizontal, x,y + spacerSize/2, x + size, y + spacerSize/2);
+            DrawLine(aDrawTarget, aHorizontal, x,y + spacerSize/2, x + size, y + spacerSize/2);
         } else {
             for (int i=0; i < coils; i++)
             {
-                   DrawLine(aRenderingContext, aHorizontal, offset, center+halfSpacer, offset+halfCoilSize, center-halfSpacer);
-                   DrawLine(aRenderingContext, aHorizontal, offset+halfCoilSize, center-halfSpacer, offset+coilSize, center+halfSpacer);
+                   DrawLine(aDrawTarget, aHorizontal, offset, center+halfSpacer, offset+halfCoilSize, center-halfSpacer);
+                   DrawLine(aDrawTarget, aHorizontal, offset+halfCoilSize, center-halfSpacer, offset+coilSize, center+halfSpacer);
 
                    offset += coilSize;
             }
         }
 
-        FillRect(aRenderingContext, aHorizontal, x + size - spacerSize/2, y, spacerSize/2, spacerSize);
-        FillRect(aRenderingContext, aHorizontal, x, y, spacerSize/2, spacerSize);
-
-        //DrawKnob(aPresContext, aRenderingContext, x + size - spacerSize, y, spacerSize);
+        FillRect(aDrawTarget, aHorizontal, x + size - spacerSize/2, y, spacerSize/2, spacerSize);
+        FillRect(aDrawTarget, aHorizontal, x, y, spacerSize/2, spacerSize);
 }
 
 void
