@@ -983,6 +983,31 @@ RTypeOf::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MToFloat32::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_ToFloat32));
+    return true;
+}
+
+RToFloat32::RToFloat32(CompactBufferReader &reader)
+{ }
+
+bool
+RToFloat32::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue v(cx, iter.read());
+    RootedValue result(cx);
+
+    MOZ_ASSERT(!v.isObject());
+    if (!RoundFloat32(cx, v, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MNewObject::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());

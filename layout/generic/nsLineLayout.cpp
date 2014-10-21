@@ -360,9 +360,10 @@ nsLineLayout::NewPerSpanData()
   PerSpanData* psd = mSpanFreeList;
   if (!psd) {
     void *mem;
-    PL_ARENA_ALLOCATE(mem, &mArena, sizeof(PerSpanData));
+    size_t sz = sizeof(PerSpanData);
+    PL_ARENA_ALLOCATE(mem, &mArena, sz);
     if (!mem) {
-      NS_RUNTIMEABORT("OOM");
+      NS_ABORT_OOM(sz);
     }
     psd = reinterpret_cast<PerSpanData*>(mem);
   }
@@ -583,9 +584,10 @@ nsLineLayout::NewPerFrameData(nsIFrame* aFrame)
   PerFrameData* pfd = mFrameFreeList;
   if (!pfd) {
     void *mem;
-    PL_ARENA_ALLOCATE(mem, &mArena, sizeof(PerFrameData));
+    size_t sz = sizeof(PerFrameData);
+    PL_ARENA_ALLOCATE(mem, &mArena, sz);
     if (!mem) {
-      NS_RUNTIMEABORT("OOM");
+      NS_ABORT_OOM(sz);
     }
     pfd = reinterpret_cast<PerFrameData*>(mem);
   }

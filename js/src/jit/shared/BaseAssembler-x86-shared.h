@@ -295,6 +295,8 @@ private:
         OP2_MOVPS_WpsVps    = 0x11,
         OP2_MOVHLPS_VqUq    = 0x12,
         OP2_UNPCKLPS_VsdWsd = 0x14,
+        OP2_UNPCKHPS_VsdWsd = 0x15,
+        OP2_MOVLHPS_VqUq    = 0x16,
         OP2_MOVAPD_VsdWsd   = 0x28,
         OP2_MOVAPS_VsdWsd   = 0x28,
         OP2_MOVAPS_WsdVsd   = 0x29,
@@ -2921,6 +2923,13 @@ public:
         m_formatter.twoByteOp(OP2_UNPCKLPS_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
 
+    void unpckhps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("unpckhps   %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_UNPCKHPS_VsdWsd, (RegisterID)dst, (RegisterID)src);
+    }
+
     void movd_rr(RegisterID src, XMMRegisterID dst)
     {
         spew("movd       %s, %s",
@@ -2940,7 +2949,7 @@ public:
     void pshufd_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
     {
         MOZ_ASSERT(mask < 256);
-        spew("pshufd      0x%x, %s, %s",
+        spew("pshufd     0x%x, %s, %s",
              mask, nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_PSHUFD_VdqWdqIb, (RegisterID)dst, (RegisterID)src);
@@ -2956,11 +2965,36 @@ public:
         m_formatter.immediate8(uint8_t(mask));
     }
 
+    void shufps_imr(uint32_t mask, int offset, RegisterID base, XMMRegisterID dst)
+    {
+        MOZ_ASSERT(mask < 256);
+        spew("shufps     0x%x, %s0x%x(%s), %s",
+             mask, PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SHUFPS_VpsWpsIb, (RegisterID)dst, base, offset);
+        m_formatter.immediate8(uint8_t(mask));
+    }
+
+    void shufps_imr(uint32_t mask, const void* address, XMMRegisterID dst)
+    {
+        spew("shufps     %x, %p, %s",
+             mask, address, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_SHUFPS_VpsWpsIb, (RegisterID)dst, address);
+        m_formatter.immediate8(uint8_t(mask));
+    }
+
     void movhlps_rr(XMMRegisterID src, XMMRegisterID dst)
     {
         spew("movhlps     %s, %s",
              nameFPReg(src), nameFPReg(dst));
         m_formatter.twoByteOp(OP2_MOVHLPS_VqUq, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void movlhps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("movlhps     %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MOVLHPS_VqUq, (RegisterID)dst, (RegisterID)src);
     }
 
     void psrldq_ir(int shift, XMMRegisterID dest)

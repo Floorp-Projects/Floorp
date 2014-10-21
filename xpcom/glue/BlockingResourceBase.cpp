@@ -229,7 +229,9 @@ BlockingResourceBase::~BlockingResourceBase()
   // base class, or its underlying primitive, will check for such
   // stupid mistakes.
   mChainPrev = 0;             // racy only for stupidly buggy client code
-  sDeadlockDetector->Remove(this);
+  if (sDeadlockDetector) {
+    sDeadlockDetector->Remove(this);
+  }
 }
 
 

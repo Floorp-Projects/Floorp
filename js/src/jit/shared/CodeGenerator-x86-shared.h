@@ -219,6 +219,9 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool visitSimdInsertElementI(LSimdInsertElementI *lir);
     bool visitSimdInsertElementF(LSimdInsertElementF *lir);
     bool visitSimdSignMaskX4(LSimdSignMaskX4 *ins);
+    bool visitSimdSwizzleI(LSimdSwizzleI *lir);
+    bool visitSimdSwizzleF(LSimdSwizzleF *lir);
+    bool visitSimdShuffle(LSimdShuffle *lir);
     bool visitSimdUnaryArithIx4(LSimdUnaryArithIx4 *lir);
     bool visitSimdUnaryArithFx4(LSimdUnaryArithFx4 *lir);
     bool visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *lir);

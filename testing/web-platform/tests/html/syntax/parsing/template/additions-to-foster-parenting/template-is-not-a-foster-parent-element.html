@@ -17,7 +17,7 @@
 
 test(function () {
     var doc = newHTMLDocument();
-    
+
     doc.body.innerHTML = '' +
     '<div id="tmplParent">' +
         '<template id="tmpl1">' +
@@ -31,13 +31,13 @@ test(function () {
             '</div>' +
         '</template>' +
     '</div>';
-    
+
     var template = doc.querySelector('#tmpl1');
     var fosterParent = template.content.querySelector('#fosterParent');
     var div = template.content.querySelector('#orphanDiv');
-    
+
     assert_equals(div.parentNode, fosterParent, 'Wrong foster parent element');
-    
+
 }, 'Template is not a foster parent element. '
     + 'Test the case when <template> is higher in stack of open elements');
 
@@ -45,7 +45,7 @@ test(function () {
 
 test(function () {
     var doc = newHTMLDocument();
-    
+
     doc.body.innerHTML = '' +
             '<div id="fosterParent">' +
                 '<table id="tbl">' +
@@ -56,13 +56,13 @@ test(function () {
                 '</table>' +
             '</div>' +
     '</div>';
-    
+
     var t = doc.querySelector('#tmpl1');
     var fosterParent = doc.querySelector('#fosterParent');
     var div = doc.querySelector('#orphanDiv');
-    
+
     assert_equals(div.parentNode, fosterParent, 'Wrong foster parent element');
-    
+
 }, 'Template is not a foster parent element. '
     + 'Test the case when <template> is lower in stack of open elements');
 

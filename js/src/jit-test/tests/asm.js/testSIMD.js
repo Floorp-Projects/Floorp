@@ -832,6 +832,90 @@ assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + 'function f(){var x=i4(1,2
 assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + I32A + 'function f(){var x=i4(1,2,3,4); var c=0; return i4(x); x=i4a(x,x); return i4(x);} return f'), this)(), [1, 2, 3, 4]);
 assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + I32S + 'function f(){var x=i4(1,2,3,4); var c=0; return i4(x); x=i4s(x,x); return i4(x);} return f'), this)(), [1, 2, 3, 4]);
 
+// Swizzle
+assertAsmTypeFail('glob', USE_ASM + I32 + "var swizzle=i4.swizzle; function f() {var x=i4(1,2,3,4); x=swizzle(x, -1, 0, 0, 0);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "var swizzle=i4.swizzle; function f() {var x=i4(1,2,3,4); x=swizzle(x, 4, 0, 0, 0);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "var swizzle=i4.swizzle; function f() {var x=i4(1,2,3,4); x=swizzle(x, 0.0, 0, 0, 0);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "var swizzle=i4.swizzle; function f() {var x=i4(1,2,3,4); x=swizzle(x);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "var swizzle=i4.swizzle; function f() {var x=i4(1,2,3,4); x=swizzle(x, 0, 0, 0, x);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "var swizzle=i4.swizzle; function f() {var x=i4(1,2,3,4); var y=42; x=swizzle(x, 0, 0, 0, y);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + "var swizzle=i4.swizzle; function f() {var x=f4(1,2,3,4); x=swizzle(x, 0, 0, 0, 0);} return f");
+
+function swizzle(arr, lanes) {
+    return [arr[lanes[0]], arr[lanes[1]], arr[lanes[2]], arr[lanes[3]]];
+}
+
+var before = Date.now();
+for (var i = 0; i < Math.pow(4, 4); i++) {
+    var lanes = [i & 3, (i >> 2) & 3, (i >> 4) & 3, (i >> 6) & 3];
+    CheckI4('var swizzle=i4.swizzle;', 'var x=i4(1,2,3,4); x=swizzle(x, ' + lanes.join(',') + ')', swizzle([1,2,3,4], lanes));
+    CheckF4('var swizzle=f4.swizzle;', 'var x=f4(1,2,3,4); x=swizzle(x, ' + lanes.join(',') + ')', swizzle([1,2,3,4], lanes));
+}
+DEBUG && print('time for checking all swizzles:', Date.now() - before);
+
+// Shuffle
+assertAsmTypeFail('glob', USE_ASM + I32 + "var shuffle=i4.shuffle; function f() {var x=i4(1,2,3,4); var y=i4(1,2,3,4); x=shuffle(x, y, -1, 0, 0);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "var shuffle=i4.shuffle; function f() {var x=i4(1,2,3,4); var y=i4(1,2,3,4); x=shuffle(x, y, 8, 0, 0, 0);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "var shuffle=i4.shuffle; function f() {var x=i4(1,2,3,4); var y=i4(1,2,3,4); x=shuffle(x, y, 0.0, 0, 0, 0);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "var shuffle=i4.shuffle; function f() {var x=i4(1,2,3,4); var y=i4(1,2,3,4); x=shuffle(x);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "var shuffle=i4.shuffle; function f() {var x=i4(1,2,3,4); var y=i4(1,2,3,4); x=shuffle(x, 0, 0, 0, 0, 0);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "var shuffle=i4.shuffle; function f() {var x=i4(1,2,3,4); var y=i4(1,2,3,4); x=shuffle(x, y, 0, 0, 0, x);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "var shuffle=i4.shuffle; function f() {var x=i4(1,2,3,4); var y=i4(1,2,3,4); var z=42; x=shuffle(x, y, 0, 0, 0, z);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + "var shuffle=i4.shuffle; function f() {var x=f4(1,2,3,4); x=shuffle(x, x, 0, 0, 0, 0);} return f");
+
+function shuffle(lhs, rhs, lanes) {
+    return [(lanes[0] < 4 ? lhs : rhs)[lanes[0] % 4],
+            (lanes[1] < 4 ? lhs : rhs)[lanes[1] % 4],
+            (lanes[2] < 4 ? lhs : rhs)[lanes[2] % 4],
+            (lanes[3] < 4 ? lhs : rhs)[lanes[3] % 4]];
+}
+
+before = Date.now();
+
+const LANE_SELECTORS = [
+    // Four of lhs or four of rhs, equivalent to swizzle
+    [0, 1, 2, 3],
+    [4, 5, 6, 7],
+    [0, 2, 3, 1],
+    [4, 7, 4, 6],
+    // One of lhs, three of rhs
+    [0, 4, 5, 6],
+    [4, 0, 5, 6],
+    [4, 5, 0, 6],
+    [4, 5, 6, 0],
+    // Two of lhs, two of rhs
+    //      in one shufps
+    [1, 2, 4, 5],
+    [4, 5, 1, 2],
+    //      in two shufps
+    [7, 0, 5, 2],
+    [0, 7, 5, 2],
+    [0, 7, 2, 5],
+    [7, 0, 2, 5],
+    // Three of lhs, one of rhs
+    [7, 0, 1, 2],
+    [0, 7, 1, 2],
+    [0, 1, 7, 2],
+    [0, 1, 2, 7],
+    // Impl-specific special cases for swizzle
+    [2, 3, 2, 3],
+    [0, 1, 0, 1],
+    [0, 0, 1, 1],
+    [2, 2, 3, 3],
+    // Impl-specific special cases for shuffle (case and swapped case)
+    [2, 3, 6, 7], [6, 7, 2, 3],
+    [0, 1, 4, 5], [4, 5, 0, 1],
+    [0, 4, 1, 5], [4, 0, 5, 1],
+    [2, 6, 3, 7], [6, 2, 7, 3],
+    [4, 1, 2, 3], [0, 5, 6, 7]
+];
+
+for (var lanes of LANE_SELECTORS) {
+    CheckI4('var shuffle=i4.shuffle;', 'var x=i4(1,2,3,4); var y=i4(5,6,7,8); x=shuffle(x, y, ' + lanes.join(',') + ')', shuffle([1,2,3,4], [5,6,7,8], lanes));
+    CheckF4('var shuffle=f4.shuffle;', 'var x=f4(1,2,3,4); var y=f4(5,6,7,8); x=shuffle(x, y, ' + lanes.join(',') + ')', shuffle([1,2,3,4], [5,6,7,8], lanes));
+}
+DEBUG && print('time for checking all shuffles:', Date.now() - before);
+
 // 3. Function calls
 // 3.1. No math builtins
 assertAsmTypeFail('glob', USE_ASM + I32 + "var fround=glob.Math.fround; function f() {var x=i4(1,2,3,4); return +fround(x);} return f");
