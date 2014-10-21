@@ -254,13 +254,6 @@ TelephonyIPCService::SeparateCall(uint32_t aClientId, uint32_t aCallIndex)
 }
 
 NS_IMETHODIMP
-TelephonyIPCService::HangUpConference(uint32_t aClientId,
-                                      nsITelephonyCallback *aCallback)
-{
-  return SendRequest(nullptr, aCallback, HangUpConferenceRequest(aClientId));
-}
-
-NS_IMETHODIMP
 TelephonyIPCService::HoldConference(uint32_t aClientId)
 {
   if (!mPTelephonyChild) {

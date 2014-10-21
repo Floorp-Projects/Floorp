@@ -30,17 +30,11 @@ struct USSDRequest
   nsString ussd;
 };
 
-struct HangUpConferenceRequest
-{
-  uint32_t clientId;
-};
-
 union IPCTelephonyRequest
 {
   EnumerateCallsRequest;
   DialRequest;
   USSDRequest;
-  HangUpConferenceRequest;
 };
 
 sync protocol PTelephony {
