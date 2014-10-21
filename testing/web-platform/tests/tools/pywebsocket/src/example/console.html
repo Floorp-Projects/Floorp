@@ -137,18 +137,24 @@ function connect() {
     } else {
       socket = new WebSocket(url);
     }
-  } else if ('MozWebSocket' in window) {
-    socket = new MozWebSocket(url);
   } else {
     return;
   }
 
   socket.onopen = function () {
+    var extraInfo = [];
     if (('protocol' in socket) && socket.protocol) {
-      addToLog('Opened (protocol = ' + socket.protocol + ')');
-    } else {
-      addToLog('Opened');
+      extraInfo.push('protocol = ' + socket.protocol);
     }
+    if (('extensions' in socket) && socket.extensions) {
+      extraInfo.push('extensions = ' + socket.extensions);
+    }
+
+    var logMessage = 'Opened';
+    if (extraInfo.length > 0) {
+      logMessage += ' (' + extraInfo.join(', ') + ')';
+    }
+    addToLog(logMessage);
   };
   socket.onmessage = function (event) {
     if (('ArrayBuffer' in window) && (event.data instanceof ArrayBuffer)) {
@@ -228,9 +234,7 @@ function init() {
 
   addressBox.value = defaultAddress;
 
-  if ('MozWebSocket' in window) {
-    addToLog('Use MozWebSocket');
-  } else if (!('WebSocket' in window)) {
+  if (!('WebSocket' in window)) {
     addToLog('WebSocket is not available');
   }
 }

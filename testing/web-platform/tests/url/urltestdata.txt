@@ -248,37 +248,26 @@ test.txt  s:http h:www.example.com p:/test.txt
 ../../test.txt  s:http h:www.example.com p:/test.txt
 \u4E2D/test.txt  s:http h:www.example.com p:/%E4%B8%AD/test.txt
 http://www.example2.com  s:http h:www.example2.com p:/
+//www.example2.com  s:http h:www.example2.com p:/
 
 # Based on http://trac.webkit.org/browser/trunk/LayoutTests/fast/url/host.html
-
-# Basic canonicalization, uppercase should be converted to lowercase
 http://ExAmPlE.CoM http://other.com/ s:http p:/ h:example.com
-
-# Spaces should fail
 http://example\sexample.com
-
-# This should fail
 http://Goo%20\sgoo%7C|.com
 
-# This should fail
+# U+3000 is mapped to U+0020 (space) which is disallowed
 http://GOO\u00a0\u3000goo.com
 
-# Other types of space (no-break, zero-width, zero-width-no-break) are
-# name-prepped away to nothing.
+# U+200B, U+2060, and U+FEFF, are ignored
 http://GOO\u200b\u2060\ufeffgoo.com  s:http p:/ h:googoo.com
 
-# Ideographic full stop (full-width period for Chinese, etc.) should be
-# treated as a dot.
+# U+3002 is mapped to U+002E (dot)
 http://www.foo\u3002bar.com  s:http p:/ h:www.foo.bar.com
 
-# Invalid unicode characters should fail...
+# U+FDD0 is disallowed; %ef%b7%90 is U+FDD0
 http://\ufdd0zyx.com
-
-# ...This is the same as previous but with with escaped.
 http://%ef%b7%90zyx.com
 
-# Test name prepping, fullwidth input should be converted to ASCII and NOT
-# IDN-ized. This is "Go" in fullwidth UTF-8/UTF-16.
 http://\uff27\uff4f.com  s:http p:/ h:go.com
 
 # URL spec forbids the following.
@@ -290,7 +279,7 @@ http://%ef%bc%85%ef%bc%94%ef%bc%91.com
 http://\uff05\uff10\uff10.com
 http://%ef%bc%85%ef%bc%90%ef%bc%90.com
 
-# Basic IDN support, UTF-8 and UTF-16 input should be converted to IDN
+# Basic IDN support
 http://\u4f60\u597d\u4f60\u597d  s:http p:/ h:xn--6qqa088eba
 
 # Invalid escaped characters should fail and the percents should be
@@ -301,9 +290,10 @@ http://%zz%66%a.com
 http://%25
 http://hello%00
 
-# Escaped numbers should be treated like IP addresses if they are.
+# No special handling for IPv4 or IPv4-like URLs
 http://%30%78%63%30%2e%30%32%35%30.01  s:http p:/ h:127.0.0.1
-http://%30%78%63%30%2e%30%32%35%30.01%2e
+http://%30%78%63%30%2e%30%32%35%30.01%2e  s:http p:/ h:0xc0.0250.01.
+http://192.168.0.257  s:http p:/ h:192.168.0.257
 
 # Invalid escaping should trigger the regular host error handling.
 http://%3g%78%63%30%2e%30%32%35%30%2E.01
@@ -312,10 +302,8 @@ http://%3g%78%63%30%2e%30%32%35%30%2E.01
 # spaces escaped.
 http://192.168.0.1\shello
 
-# Fullwidth and escaped UTF-8 fullwidth should still be treated as IP.
-# These are "0Xc0.0250.01" in fullwidth.
-http://\uff10\uff38\uff43\uff10\uff0e\uff10\uff12\uff15\uff10\uff0e\uff10\uff11  s:http p:/ h:192.168.0.1
+# Mapped to "0xc0.0250.01"
+http://\uff10\uff38\uff43\uff10\uff0e\uff10\uff12\uff15\uff10\uff0e\uff10\uff11  s:http p:/ h:0xc0.0250.01
 
-# Broken IP addresses.
-http://192.168.0.257
+# Broken IPv6
 http://[google.com]
