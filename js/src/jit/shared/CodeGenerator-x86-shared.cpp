@@ -2440,12 +2440,9 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
 
     uint32_t mask;
 
-    // Trivial cases: all lanes come from only one vector (Lx, Ly, Lz, Lz).
-    if (numLanesFromLHS == 4) {
-        mask = MacroAssembler::ComputeShuffleMask(x, y, z, w);
-        masm.shufps(mask, lhs, out);
-        return true;
-    }
+    // If all lanes came from a single vector, we should have constructed a
+    // MSimdSwizzle instead.
+    MOZ_ASSERT(numLanesFromLHS < 4);
 
     // One element of the second, all other elements of the first
     if (numLanesFromLHS == 3) {
