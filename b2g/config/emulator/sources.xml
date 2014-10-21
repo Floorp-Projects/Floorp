@@ -15,7 +15,7 @@
   <remote fetch="https://git.mozilla.org/external/apitrace" name="apitrace"/>
   <default remote="caf" revision="refs/tags/android-4.0.4_r2.1" sync-j="4"/>
   <!-- Gonk specific things and forks -->
-  <project name="platform_build" path="build" remote="b2g" revision="84923f1940625c47ff4c1fdf01b10fde3b7d909e">
+  <project name="platform_build" path="build" remote="b2g" revision="70eb0cb0977d6295e7da8896f9efb9f3ca1c13ea">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
