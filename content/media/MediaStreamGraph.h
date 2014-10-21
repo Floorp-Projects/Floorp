@@ -495,10 +495,6 @@ public:
   {
     return TimeToTicksRoundDown(1000000, aTime);
   }
-  StreamTime SecondsToStreamTimeRoundDown(double aS)
-  {
-    return SecondsToTicksRoundDown(mBuffer.GraphRate(), aS);
-  }
   TrackTicks TimeToTicksRoundUp(TrackRate aRate, StreamTime aTime)
   {
     return RateConvertTicksRoundUp(aRate, mBuffer.GraphRate(), aTime);
