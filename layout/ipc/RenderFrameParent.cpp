@@ -73,6 +73,9 @@ already_AddRefed<LayerManager>
 GetFrom(nsFrameLoader* aFrameLoader)
 {
   nsIDocument* doc = aFrameLoader->GetOwnerDoc();
+  if (!doc) {
+    return nullptr;
+  }
   return nsContentUtils::LayerManagerForDocument(doc);
 }
 
@@ -401,6 +404,14 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
 {
   NS_ABORT_IF_FALSE(mFrameLoader->GetOwnerContent() == aContent,
                     "Don't build new map if owner is same!");
+
+  nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
+  // Perhaps the document containing this frame currently has no presentation?
+  if (lm && lm->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
+    ClientLayerManager *clientManager =
+      static_cast<ClientLayerManager*>(lm.get());
+    clientManager->GetRemoteRenderer()->SendAdoptChild(mLayersId);
+  }
 }
 
 nsEventStatus

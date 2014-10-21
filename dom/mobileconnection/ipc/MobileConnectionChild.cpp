@@ -146,9 +146,9 @@ MobileConnectionChild::GetLastKnownHomeNetwork(nsAString& aNetwork)
 }
 
 NS_IMETHODIMP
-MobileConnectionChild::GetNetworkSelectionMode(nsAString& aMode)
+MobileConnectionChild::GetNetworkSelectionMode(int32_t* aMode)
 {
-  aMode = mNetworkSelectionMode;
+  *aMode = mNetworkSelectionMode;
   return NS_OK;
 }
 
@@ -512,9 +512,9 @@ MobileConnectionChild::RecvNotifyLastHomeNetworkChanged(const nsString& aNetwork
 }
 
 bool
-MobileConnectionChild::RecvNotifyNetworkSelectionModeChanged(const nsString& aMode)
+MobileConnectionChild::RecvNotifyNetworkSelectionModeChanged(const int32_t& aMode)
 {
-  mNetworkSelectionMode.Assign(aMode);
+  mNetworkSelectionMode = aMode;
 
   return true;
 }

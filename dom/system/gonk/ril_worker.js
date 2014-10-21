@@ -469,7 +469,7 @@ RilObject.prototype = {
      */
     this.appType = null;
 
-    this.networkSelectionMode = null;
+    this.networkSelectionMode = GECKO_NETWORK_SELECTION_UNKNOWN;
 
     this.voiceRegistrationState = {};
     this.dataRegistrationState = {};
