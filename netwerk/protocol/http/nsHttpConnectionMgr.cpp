@@ -1882,8 +1882,8 @@ nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry *ent,
     nsresult rv;
 
     LOG(("nsHttpConnectionMgr::DispatchTransaction "
-         "[ent-ci=%s trans=%p caps=%x conn=%p priority=%d]\n",
-         ent->mConnInfo->HashKey().get(), trans, caps, conn, priority));
+         "[ent-ci=%s %p trans=%p caps=%x conn=%p priority=%d]\n",
+         ent->mConnInfo->HashKey().get(), ent, trans, caps, conn, priority));
 
     // It is possible for a rate-paced transaction to be dispatched independent
     // of the token bucket when the amount of parallelization has changed or
@@ -2045,6 +2045,13 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
     }
 
     trans->SetPendingTime();
+
+    Http2PushedStream *pushedStream = trans->GetPushedStream();
+    if (pushedStream) {
+        return pushedStream->Session()->
+            AddStream(trans, trans->Priority(), false, nullptr) ?
+            NS_OK : NS_ERROR_UNEXPECTED;
+    }
 
     nsresult rv = NS_OK;
     nsHttpConnectionInfo *ci = trans->ConnectionInfo();

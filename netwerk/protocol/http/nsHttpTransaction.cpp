@@ -96,6 +96,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mContentLength(-1)
     , mContentRead(0)
     , mInvalidResponseBytesRead(0)
+    , mPushedStream(nullptr)
     , mChunkedDecoder(nullptr)
     , mStatus(NS_OK)
     , mPriority(0)
@@ -142,6 +143,11 @@ nsHttpTransaction::nsHttpTransaction()
 nsHttpTransaction::~nsHttpTransaction()
 {
     LOG(("Destroying nsHttpTransaction @%p\n", this));
+
+    if (mPushedStream) {
+        mPushedStream->OnPushFailed();
+        mPushedStream = nullptr;
+    }
 
     if (mTokenBucketCancel) {
         mTokenBucketCancel->Cancel(NS_ERROR_ABORT);
@@ -225,7 +231,6 @@ nsHttpTransaction::Init(uint32_t caps,
     if (NS_SUCCEEDED(rv) && activityDistributorActive) {
         // there are some observers registered at activity distributor, gather
         // nsISupports for the channel that called Init()
-        mChannel = do_QueryInterface(eventsink);
         LOG(("nsHttpTransaction::Init() " \
              "mActivityDistributor is active " \
              "this=%p", this));
@@ -234,7 +239,7 @@ nsHttpTransaction::Init(uint32_t caps,
         activityDistributorActive = false;
         mActivityDistributor = nullptr;
     }
-
+    mChannel = do_QueryInterface(eventsink);
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(eventsink);
     if (channel) {
         bool isInBrowser;
