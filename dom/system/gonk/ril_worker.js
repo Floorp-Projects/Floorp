@@ -7871,6 +7871,12 @@ GsmPDUHelperObject.prototype = {
 
     msg.body = null;
     msg.data = null;
+
+    if (length <= 0) {
+      // No data to read.
+      return;
+    }
+
     switch (msg.encoding) {
       case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
         // 7 bit encoding allows 140 octets, which means 160 characters
