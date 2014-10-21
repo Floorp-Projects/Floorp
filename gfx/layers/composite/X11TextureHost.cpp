@@ -41,13 +41,13 @@ X11TextureHost::Lock()
     switch (mCompositor->GetBackendType()) {
       case LayersBackend::LAYERS_BASIC:
         mTextureSource =
-          new X11TextureSourceBasic(static_cast<BasicCompositor*>(mCompositor.get()),
+          new X11TextureSourceBasic(static_cast<BasicCompositor*>(mCompositor),
                                     mSurface);
         break;
 #ifdef GL_PROVIDER_GLX
       case LayersBackend::LAYERS_OPENGL:
         mTextureSource =
-          new X11TextureSourceOGL(static_cast<CompositorOGL*>(mCompositor.get()),
+          new X11TextureSourceOGL(static_cast<CompositorOGL*>(mCompositor),
                                   mSurface);
         break;
 #endif

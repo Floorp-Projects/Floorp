@@ -6,7 +6,6 @@
 #ifndef MOZILLA_GFX_MACIOSURFACETEXTUREHOSTOGL_H
 #define MOZILLA_GFX_MACIOSURFACETEXTUREHOSTOGL_H
 
-#include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/TextureHostOGL.h"
 
 class MacIOSurface;
@@ -50,7 +49,7 @@ public:
   gl::GLContext* gl() const;
 
 protected:
-  RefPtr<CompositorOGL> mCompositor;
+  CompositorOGL* mCompositor;
   RefPtr<MacIOSurface> mSurface;
 };
 
@@ -93,7 +92,7 @@ public:
 #endif
 
 protected:
-  RefPtr<CompositorOGL> mCompositor;
+  CompositorOGL* mCompositor;
   RefPtr<MacIOSurfaceTextureSourceOGL> mTextureSource;
   RefPtr<MacIOSurface> mSurface;
 };

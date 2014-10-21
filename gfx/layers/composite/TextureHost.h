@@ -15,7 +15,6 @@
 #include "mozilla/gfx/2D.h"             // for DataSourceSurface
 #include "mozilla/gfx/Point.h"          // for IntSize, IntPoint
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
-#include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
 #include "mozilla/layers/FenceUtils.h"  // for FenceHandle
 #include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
@@ -496,7 +495,7 @@ protected:
   bool Upload(nsIntRegion *aRegion = nullptr);
   bool MaybeUpload(nsIntRegion *aRegion = nullptr);
 
-  RefPtr<Compositor> mCompositor;
+  Compositor* mCompositor;
   RefPtr<DataTextureSource> mFirstSource;
   nsIntRegion mMaybeUpdatedRegion;
   gfx::IntSize mSize;
@@ -610,7 +609,7 @@ public:
 #endif
 
 protected:
-  RefPtr<Compositor> mCompositor;
+  Compositor* mCompositor;
   gl::SurfaceStream* mStream;
   RefPtr<TextureSource> mTextureSource;
   RefPtr<DataTextureSource> mDataTextureSource;
