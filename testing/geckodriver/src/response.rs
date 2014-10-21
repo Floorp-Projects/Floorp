@@ -2,7 +2,7 @@ use std::collections::TreeMap;
 use serialize::json;
 use serialize::json::{decode, ToJson, Builder};
 
-use command::{WebDriverMessage, GetMarionetteId, NewSession, Get, GetCurrentUrl};
+use command::{WebDriverMessage, GetMarionetteId, NewSession, Get, GetCurrentUrl, GoBack, GoForward, Refresh, GetTitle};
 use marionette::{MarionetteSession};
 
 use common::{Status, Success, Timeout, UnknownError, UnknownCommand, WebDriverError};
@@ -50,6 +50,27 @@ impl WebDriverResponse {
         };
         match message.command {
             GetMarionetteId => None,
+            //Everything that doesn't have a response value
+            Get(_) | GoBack | GoForward | Refresh => {
+                Some(WebDriverResponse::new(Some(session.session_id.clone()),
+                                            status,
+                                            json::Null))
+            },
+            //Things that simply return the contents of the marionette "value" property
+            GetCurrentUrl | GetTitle => {
+                let value = match json_data.find(&"value".to_string()) {
+                    Some(data) => data,
+                    None => {
+                        let error = WebDriverError::new(Some(session.session_id.clone()),
+                                                        UnknownError,
+                                                        "Failed to find value field");
+                        return Some(WebDriverResponse::from_err(&error));
+                    }
+                };
+                Some(WebDriverResponse::new(Some(session.id()),
+                                       status,
+                                       value.clone()))
+            },
             NewSession => {
                 if status == Success {
                     session.update(message,
@@ -69,25 +90,8 @@ impl WebDriverResponse {
                 Some(WebDriverResponse::new(Some(session.session_id.clone()), status,
                                             value.clone()
                                             ))
-            },
-            Get(_) => {
-                Some(WebDriverResponse::new(Some(session.session_id.clone()), status,
-                                            json::Null))
-            },
-            GetCurrentUrl => {
-                let value = match json_data.find(&"value".to_string()) {
-                    Some(data) => data,
-                    None => {
-                        let error = WebDriverError::new(Some(session.session_id.clone()),
-                                                        UnknownError,
-                                                        "Failed to find value field");
-                        return Some(WebDriverResponse::from_err(&error));
-                    }
-                };
-                Some(WebDriverResponse::new(Some(session.id()),
-                                       status,
-                                       value.clone()))
             }
+
         }
     }
 
