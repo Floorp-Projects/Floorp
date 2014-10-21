@@ -26,6 +26,8 @@ leak:libfontconfig.so
 leak:GI___strdup
 # The symbol is really __GI___strdup, but if you have the leading _, it doesn't suppress it.
 
+# Bug 1078015 - If the process terminates during a PR_Sleep, LSAN  detects a leak
+leak:PR_Sleep
 
 ###
 ### Bug 979928 - WebRTC leaks. m2, m3.
