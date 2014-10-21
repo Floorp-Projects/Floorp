@@ -15,8 +15,8 @@ Invocation 2 {
 Live {
   4 blocks in heap block record 1 of 6
   16,384 bytes (16,384 requested / 0 slop)
-  -232.76% of the heap (-232.76% cumulative)
   Individual block sizes: 4,096 x 4
+  -232.76% of the heap (-232.76% cumulative)
   Allocated at {
     #01: E (E.cpp:99)
   }
@@ -25,8 +25,8 @@ Live {
 Live {
   ~5 blocks in heap block record 2 of 6
   ~-13,183 bytes (~-13,231 requested / ~48 slop)
-  187.29% of the heap (-45.48% cumulative)
   Individual block sizes: -15,360; 2,048; -1,024; 512 x 2; 128; ~-127 x 3; 64 x 4; ~63 x 2
+  187.29% of the heap (-45.48% cumulative)
   Allocated at {
     #01: F (F.cpp:99)
   }
@@ -35,8 +35,8 @@ Live {
 Live {
   -3 blocks in heap block record 3 of 6
   -10,240 bytes (-10,192 requested / -48 slop)
-  145.48% of the heap (100.00% cumulative)
   Individual block sizes: -4,096 x 2; -2,048
+  145.48% of the heap (100.00% cumulative)
   Allocated at {
     #01: D (D.cpp:99)
   }
@@ -45,8 +45,8 @@ Live {
 Live {
   0 blocks in heap block record 4 of 6
   0 bytes (-384 requested / 384 slop)
-  -0.00% of the heap (100.00% cumulative)
   Individual block sizes: (no change)
+  -0.00% of the heap (100.00% cumulative)
   Allocated at {
     #01: C (C.cpp:99)
   }
@@ -55,8 +55,8 @@ Live {
 Live {
   0 blocks in heap block record 5 of 6
   0 bytes (0 requested / 0 slop)
-  -0.00% of the heap (100.00% cumulative)
   Individual block sizes: 20,480; -16,384; -8,192; 4,096
+  -0.00% of the heap (100.00% cumulative)
   Allocated at {
     #01: G (G.cpp:99)
   }
@@ -65,8 +65,8 @@ Live {
 Live {
   -2 blocks in heap block record 6 of 6
   0 bytes (0 requested / 0 slop)
-  -0.00% of the heap (100.00% cumulative)
   Individual block sizes: 8,192 x 2; -4,096 x 4
+  -0.00% of the heap (100.00% cumulative)
   Allocated at {
     #01: B (B.cpp:99)
   }
