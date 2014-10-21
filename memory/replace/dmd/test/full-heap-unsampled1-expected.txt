@@ -1,4 +1,5 @@
 #-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o full-heap-unsampled1-actual.txt --ignore-reports full-unsampled1.json
 
 Invocation {
   $DMD = '1'

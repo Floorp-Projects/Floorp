@@ -1,4 +1,5 @@
 #-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o script-sort-by-req-actual.txt --ignore-reports --sort-by=req --no-fix-stacks script-sort-by.json.gz
 
 Invocation {
   $DMD = '1'
