@@ -8,7 +8,7 @@ use hyper::method;
 use hyper::method::Method;
 
 use common::{WebDriverResult, WebDriverError, Status, UnknownError};
-use messagebuilder::{MessageBuilder, MatchType, MatchNewSession, MatchGet, MatchGetCurrentUrl};
+use messagebuilder::{MessageBuilder, MatchType, MatchNewSession, MatchGet, MatchGetCurrentUrl, MatchGoBack, MatchGoForward, MatchRefresh, MatchGetTitle};
 
 
 #[deriving(PartialEq)]
@@ -16,7 +16,11 @@ pub enum WebDriverCommand {
     GetMarionetteId,
     NewSession,
     Get(GetParameters),
-    GetCurrentUrl
+    GetCurrentUrl,
+    GoBack,
+    GoForward,
+    Refresh,
+    GetTitle
 }
 
 pub struct WebDriverMessage {
@@ -37,7 +41,11 @@ impl WebDriverMessage {
             GetMarionetteId => "getMarionetteID",
             NewSession => "newSession",
             Get(_) => "get",
-            GetCurrentUrl => "getCurrentUrl"
+            GetCurrentUrl => "getCurrentUrl",
+            GoBack => "goBack",
+            GoForward => "goForward",
+            Refresh => "refresh",
+            GetTitle => "getTitle"
         }.to_string()
     }
 
@@ -67,7 +75,11 @@ impl WebDriverMessage {
                     }
                 }
             },
-            MatchGetCurrentUrl => GetCurrentUrl
+            MatchGetCurrentUrl => GetCurrentUrl,
+            MatchGoBack => GoBack,
+            MatchGoForward => GoForward,
+            MatchRefresh => Refresh,
+            MatchGetTitle => GetTitle
         };
         Ok(WebDriverMessage {
             session_id: session_id,

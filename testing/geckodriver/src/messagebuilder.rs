@@ -11,7 +11,11 @@ use common::{WebDriverResult, WebDriverError, UnknownCommand};
 pub enum MatchType {
     MatchNewSession,
     MatchGet,
-    MatchGetCurrentUrl
+    MatchGetCurrentUrl,
+    MatchGoBack,
+    MatchGoForward,
+    MatchRefresh,
+    MatchGetTitle
 }
 
 #[deriving(Clone)]
@@ -101,7 +105,11 @@ pub fn get_builder() -> MessageBuilder {
     let mut builder = MessageBuilder::new();
     let matchers = vec![(Post, "/session", MatchNewSession),
                         (Post, "/session/{sessionId}/url", MatchGet),
-                        (Get, "/session/{sessionId}/url", MatchGetCurrentUrl)];
+                        (Get, "/session/{sessionId}/url", MatchGetCurrentUrl),
+                        (Post, "/session/{sessionId}/back", MatchGoBack),
+                        (Post, "/session/{sessionId}/forward", MatchGoForward),
+                        (Post, "/session/{sessionId}/refresh", MatchRefresh),
+                        (Get, "/session/{sessionId}/title", MatchGetTitle)];
     for &(ref method, ref url, ref match_type) in matchers.iter() {
         println!("{} {}", method, url);
         builder.add(method.clone(), *url, *match_type);
