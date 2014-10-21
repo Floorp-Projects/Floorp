@@ -107,15 +107,6 @@ WrapperFactory::WaiveXray(JSContext *cx, JSObject *objArg)
     return CreateXrayWaiver(cx, obj);
 }
 
-// In general, we're trying to deprecate COWs incrementally as we introduce
-// Xrays to the corresponding object types. But switching off COWs for certain
-// things would be too tumultuous at present, so we punt on them for later.
-static bool
-ForceCOWBehavior(JSObject *obj)
-{
-    return IdentifyStandardInstanceOrPrototype(obj) == JSProto_Object;
-}
-
 inline bool
 ShouldWaiveXray(JSContext *cx, JSObject *originalObj)
 {
@@ -170,45 +161,6 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
     // Here are the rules for wrapping:
     // We should never get a proxy here (the JS engine unwraps those for us).
     MOZ_ASSERT(!IsWrapper(obj));
-
-    // If the object being wrapped is a prototype for a standard class and the
-    // wrapper does not subsumes the wrappee, use the one from the content
-    // compartment. This is generally safer all-around, and in the COW case this
-    // lets us safely take advantage of things like .forEach() via the
-    // ChromeObjectWrapper machinery.
-    //
-    // If the prototype chain of chrome object |obj| looks like this:
-    //
-    // obj => foo => bar => chromeWin.StandardClass.prototype
-    //
-    // The prototype chain of COW(obj) looks lke this:
-    //
-    // COW(obj) => COW(foo) => COW(bar) => contentWin.StandardClass.prototype
-    //
-    // NB: We now remap all non-subsuming access of standard prototypes.
-    //
-    // NB: We need to ignore domain here so that the security relationship we
-    // compute here can't change over time. See the comment above the other
-    // subsumes call below.
-    bool subsumes = AccessCheck::subsumes(js::GetContextCompartment(cx),
-                                          js::GetObjectCompartment(obj));
-    XrayType xrayType = GetXrayType(obj);
-    if (!subsumes && (xrayType == NotXray || ForceCOWBehavior(obj))) {
-        JSProtoKey key = JSProto_Null;
-        {
-            JSAutoCompartment ac(cx, obj);
-            key = IdentifyStandardPrototype(obj);
-        }
-        if (key != JSProto_Null) {
-            RootedObject homeProto(cx);
-            if (!JS_GetClassPrototype(cx, key, &homeProto))
-                return nullptr;
-            MOZ_ASSERT(homeProto);
-            // No need to double-wrap here. We should never have waivers to
-            // COWs.
-            return homeProto;
-        }
-    }
 
     // Now, our object is ready to be wrapped, but several objects (notably
     // nsJSIIDs) have a wrapper per scope. If we are about to wrap one of
@@ -478,13 +430,11 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
         wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
     }
 
-    // If this is a chrome object being exposed to content without Xrays, use
-    // a COW.
-    //
-    // We make an exception for Object instances, because we still rely on COWs
-    // for those in a lot of places in the tree.
+    // For Vanilla JSObjects exposed from chrome to content, we use a wrapper
+    // that supports __exposedProps__. We'd like to get rid of these eventually,
+    // but in their current form they don't cause much trouble.
     else if (originIsChrome && !targetIsChrome &&
-             (xrayType == NotXray || ForceCOWBehavior(obj)))
+             IdentifyStandardInstance(obj) == JSProto_Object)
     {
         wrapper = &ChromeObjectWrapper::singleton;
     }

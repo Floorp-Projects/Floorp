@@ -1493,6 +1493,9 @@ pref("network.dnsCacheEntries", 400);
 // In the absence of OS TTLs, the DNS cache TTL value
 pref("network.dnsCacheExpiration", 60);
 
+// Get TTL; not supported on all platforms; nop on the unsupported ones.
+pref("network.dns.get-ttl", true);
+
 // The grace period allows the DNS cache to use expired entries, while kicking off
 // a revalidation in the background.
 pref("network.dnsCacheExpirationGracePeriod", 60);
@@ -4350,13 +4353,6 @@ pref("camera.control.low_memory_thresholdMB", 404);
 
 // UDPSocket API
 pref("dom.udpsocket.enabled", false);
-
-// Experiment: Get TTL from DNS records.
-//     Unset initially (0); Randomly chosen on first run; will remain unchanged
-//     unless adjusted by the user or experiment ends. Variants defined in
-//     nsHostResolver.cpp.
-pref("dns.ttl-experiment.variant", 0);
-pref("dns.ttl-experiment.enabled", true);
 
 // Use raw ICU instead of CoreServices API in Unicode collation
 #ifdef XP_MACOSX

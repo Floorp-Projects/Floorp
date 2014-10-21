@@ -4258,6 +4258,10 @@ XRE_metroStartup(bool runXREMain)
 {
   nsresult rv;
 
+  // XXX This call, odly enough, will set this thread as
+  // the main thread. (see bug 1033358)
+  ScopedLogging log;
+
   bool exit = false;
   if (xreMainPtr->XRE_mainStartup(&exit) != 0 || exit)
     return NS_ERROR_FAILURE;
@@ -4345,8 +4349,6 @@ XRE_mainMetro(int argc, char* argv[], const nsXREAppData* aAppData)
     return 1;
   // used throughout this file
   gAppData = xreMainPtr->mAppData;
-
-  ScopedLogging log;
 
   // init
   bool exit = false;

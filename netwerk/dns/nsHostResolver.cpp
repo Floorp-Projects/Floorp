@@ -154,159 +154,6 @@ IsLowPriority(uint16_t flags)
 }
 
 //----------------------------------------------------------------------------
-
-enum DnsExpirationVariant {
-    DNS_EXP_VARIANT_UNSET = 0,
-    DNS_EXP_VARIANT_CONTROL = 1,
-    DNS_EXP_VARIANT_TTL_ONLY = 2,
-    DNS_EXP_VARIANT_TTL_PLUS_CONST_GRACE = 3,
-    DNS_EXP_VARIANT_MAX_VALUE = 3,
-};
-static DnsExpirationVariant sDnsVariant;
-
-static mozilla::Telemetry::ID
-GetCacheHitHistogram(DnsExpirationVariant aVariant,
-                     nsHostRecord::DnsPriority aPriority)
-{
-    using namespace mozilla::Telemetry;
-
-    switch (aVariant) {
-        case DNS_EXP_VARIANT_CONTROL:
-            switch (aPriority) {
-                case nsHostRecord::DNS_PRIORITY_HIGH:
-                    return DNS_CACHE_HIT_VAR_CONTROL_HIGH;
-
-                case nsHostRecord::DNS_PRIORITY_MEDIUM:
-                    return DNS_CACHE_HIT_VAR_CONTROL_MEDIUM;
-
-                case nsHostRecord::DNS_PRIORITY_LOW:
-                    return DNS_CACHE_HIT_VAR_CONTROL_LOW;
-            }
-
-        case DNS_EXP_VARIANT_TTL_ONLY:
-            switch (aPriority) {
-                case nsHostRecord::DNS_PRIORITY_HIGH:
-                    return DNS_CACHE_HIT_VAR_TTL_ONLY_HIGH;
-
-                case nsHostRecord::DNS_PRIORITY_MEDIUM:
-                    return DNS_CACHE_HIT_VAR_TTL_ONLY_MEDIUM;
-
-                case nsHostRecord::DNS_PRIORITY_LOW:
-                    return DNS_CACHE_HIT_VAR_TTL_ONLY_LOW;
-            }
-
-        case DNS_EXP_VARIANT_TTL_PLUS_CONST_GRACE:
-            switch (aPriority) {
-                case nsHostRecord::DNS_PRIORITY_HIGH:
-                    return DNS_CACHE_HIT_VAR_TTL_PLUS_CONST_GRACE_HIGH;
-
-                case nsHostRecord::DNS_PRIORITY_MEDIUM:
-                    return DNS_CACHE_HIT_VAR_TTL_PLUS_CONST_GRACE_MEDIUM;
-
-                case nsHostRecord::DNS_PRIORITY_LOW:
-                    return DNS_CACHE_HIT_VAR_TTL_PLUS_CONST_GRACE_LOW;
-            }
-
-        case DNS_EXP_VARIANT_UNSET:
-            ;
-    }
-
-    MOZ_ASSERT_UNREACHABLE("Invalid expiration variant.");
-    return DNS_CACHE_HIT_VAR_CONTROL_LOW;
-}
-
-static mozilla::Telemetry::ID
-GetBlacklistCountHistogram(DnsExpirationVariant aVariant,
-                           nsHostRecord::DnsPriority aPriority)
-{
-    using namespace mozilla::Telemetry;
-
-    switch (aVariant) {
-        case DNS_EXP_VARIANT_CONTROL:
-            switch (aPriority) {
-                case nsHostRecord::DNS_PRIORITY_HIGH:
-                    return DNS_BLACKLIST_COUNT_VAR_CONTROL_HIGH;
-
-                case nsHostRecord::DNS_PRIORITY_MEDIUM:
-                    return DNS_BLACKLIST_COUNT_VAR_CONTROL_MEDIUM;
-
-                case nsHostRecord::DNS_PRIORITY_LOW:
-                    return DNS_BLACKLIST_COUNT_VAR_CONTROL_LOW;
-            }
-
-        case DNS_EXP_VARIANT_TTL_ONLY:
-            switch (aPriority) {
-                case nsHostRecord::DNS_PRIORITY_HIGH:
-                    return DNS_BLACKLIST_COUNT_VAR_TTL_ONLY_HIGH;
-
-                case nsHostRecord::DNS_PRIORITY_MEDIUM:
-                    return DNS_BLACKLIST_COUNT_VAR_TTL_ONLY_MEDIUM;
-
-                case nsHostRecord::DNS_PRIORITY_LOW:
-                    return DNS_BLACKLIST_COUNT_VAR_TTL_ONLY_LOW;
-            }
-
-        case DNS_EXP_VARIANT_TTL_PLUS_CONST_GRACE:
-            switch (aPriority) {
-                case nsHostRecord::DNS_PRIORITY_HIGH:
-                    return DNS_BLACKLIST_COUNT_VAR_TTL_PLUS_CONST_GRACE_HIGH;
-
-                case nsHostRecord::DNS_PRIORITY_MEDIUM:
-                    return DNS_BLACKLIST_COUNT_VAR_TTL_PLUS_CONST_GRACE_MEDIUM;
-
-                case nsHostRecord::DNS_PRIORITY_LOW:
-                    return DNS_BLACKLIST_COUNT_VAR_TTL_PLUS_CONST_GRACE_LOW;
-            }
-
-        case DNS_EXP_VARIANT_UNSET:
-            ; // Fall through
-    }
-
-    MOZ_ASSERT_UNREACHABLE("Invalid variant.");
-    return DNS_BLACKLIST_COUNT_VAR_CONTROL_LOW;
-}
-
-static mozilla::Telemetry::ID
-GetRenewalTimeHistogram(DnsExpirationVariant aVariant)
-{
-    using namespace mozilla::Telemetry;
-
-#ifdef TTL_AVAILABLE
-    switch (sDnsVariant) {
-        case DNS_EXP_VARIANT_CONTROL:
-            return DNS_RENEWAL_TIME;
-        case DNS_EXP_VARIANT_TTL_ONLY:
-            return DNS_RENEWAL_TIME__TTL_ONLY_EXPT;
-        case DNS_EXP_VARIANT_TTL_PLUS_CONST_GRACE:
-            return DNS_RENEWAL_TIME__TTL_PLUS_CONST_GRACE_EXPT;
-        default:
-            MOZ_ASSERT_UNREACHABLE("Invalid variant.");
-    }
-#endif
-    return DNS_RENEWAL_TIME;
-}
-
-static mozilla::Telemetry::ID
-GetRenewalTimeForTTLHistogram(DnsExpirationVariant aVariant)
-{
-    using namespace mozilla::Telemetry;
-
-#ifdef TTL_AVAILABLE
-    switch (sDnsVariant) {
-        case DNS_EXP_VARIANT_CONTROL:
-            MOZ_ASSERT_UNREACHABLE("No TTL for Control Expt.");
-            return DNS_RENEWAL_TIME;
-        case DNS_EXP_VARIANT_TTL_ONLY:
-            return DNS_RENEWAL_TIME_FOR_TTL__TTL_ONLY_EXPT;
-        case DNS_EXP_VARIANT_TTL_PLUS_CONST_GRACE:
-            return DNS_RENEWAL_TIME_FOR_TTL__TTL_PLUS_CONST_GRACE_EXPT;
-        default:
-            MOZ_ASSERT_UNREACHABLE("Invalid variant.");
-    }
-#endif
-    return DNS_RENEWAL_TIME;
-}
-
 // this macro filters out any flags that are not used when constructing the
 // host key.  the significant flags are those that would affect the resulting
 // host record (i.e., the flags that are passed down to PR_GetAddrInfoByName).
@@ -364,10 +211,7 @@ nsHostRecord::SetExpiration(const mozilla::TimeStamp& now, unsigned int valid, u
 
 nsHostRecord::~nsHostRecord()
 {
-    Telemetry::Accumulate(
-        GetBlacklistCountHistogram(sDnsVariant,
-                                   nsHostRecord::GetPriority(flags)),
-        mBlacklistedCount);
+    Telemetry::Accumulate(Telemetry::DNS_BLACKLIST_COUNT, mBlacklistedCount);
     delete addr_info;
     delete addr;
 }
@@ -656,73 +500,23 @@ HostDB_PruneEntry(PLDHashTable *table,
 //----------------------------------------------------------------------------
 
 #if TTL_AVAILABLE
-static const char kTtlExperiment[] = "dns.ttl-experiment.";
-static const char kTtlExperimentEnabled[] = "dns.ttl-experiment.enabled";
-static const char kNetworkExperimentsEnabled[] = "network.allow-experiments";
-static const char kTtlExperimentVariant[] = "dns.ttl-experiment.variant";
+static const char kPrefGetTtl[] = "network.dns.get-ttl";
+static bool sGetTtlEnabled = false;
 
-void
-nsHostResolver::DnsExperimentChangedInternal()
-{
-    MOZ_ASSERT(NS_IsMainThread(), "Can only get prefs on main thread!");
-
-    if (!Preferences::GetBool(kTtlExperimentEnabled) ||
-            !Preferences::GetBool(kNetworkExperimentsEnabled)) {
-        sDnsVariant = DNS_EXP_VARIANT_CONTROL;
-        LOG(("DNS TTL experiment is disabled."));
-        return;
-    }
-
-    auto variant = static_cast<DnsExpirationVariant>(
-        Preferences::GetInt(kTtlExperimentVariant));
-
-    // Setup this profile to use a particular DNS expiration strategy
-    if (variant == DNS_EXP_VARIANT_UNSET) {
-        variant = static_cast<DnsExpirationVariant>(
-            rand() % DNS_EXP_VARIANT_MAX_VALUE + 1);
-        LOG(("No DNS TTL experiment variant saved. Randomly picked %d.",
-             variant));
-
-        DebugOnly<nsresult> rv = Preferences::SetInt(
-            kTtlExperimentVariant, variant);
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                         "Could not set experiment variant pref.");
-    } else {
-        LOG(("Using saved DNS TTL experiment %d.", variant));
-    }
-
-    sDnsVariant = variant;
-}
-
-void
-nsHostResolver::DnsExperimentChanged(const char* aPref, void* aClosure)
+static void DnsPrefChanged(const char* aPref, void* aClosure)
 {
     MOZ_ASSERT(NS_IsMainThread(),
                "Should be getting pref changed notification on main thread!");
 
-    if (strcmp(aPref, kNetworkExperimentsEnabled) != 0 &&
-        strncmp(aPref, kTtlExperiment, strlen(kTtlExperiment)) != 0) {
-        LOG(("DnsExperimentChanged ignoring pref \"%s\"", aPref));
+    if (strcmp(aPref, kPrefGetTtl) != 0) {
+        LOG(("DnsPrefChanged ignoring pref \"%s\"", aPref));
         return;
     }
 
     auto self = static_cast<nsHostResolver*>(aClosure);
     MOZ_ASSERT(self);
 
-    // We can't set a pref in the context of a pref change callback, so
-    // dispatch DnsExperimentChangedInternal for async getting/setting.
-    DebugOnly<nsresult> rv = NS_DispatchToMainThread(
-        NS_NewRunnableMethod(self, &nsHostResolver::DnsExperimentChangedInternal));
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "Could not dispatch DnsExperimentChanged event.");
-}
-
-void
-nsHostResolver::InitCRandom()
-{
-    MOZ_ASSERT(NS_IsMainThread(), "Should be seeding rand() on main thread!");
-
-    srand(time(nullptr));
+    sGetTtlEnabled = Preferences::GetBool(kPrefGetTtl);
 }
 #endif
 
@@ -767,26 +561,16 @@ nsHostResolver::Init()
 
     mShutdown = false;
 
-    sDnsVariant = DNS_EXP_VARIANT_CONTROL;
-
 #if TTL_AVAILABLE
     // The preferences probably haven't been loaded from the disk yet, so we
     // need to register a callback that will set up the experiment once they
     // are. We also need to explicitly set a value for the props otherwise the
     // callback won't be called.
     {
-        DebugOnly<nsresult> rv = NS_DispatchToMainThread(
-            NS_NewRunnableMethod(this, &nsHostResolver::InitCRandom));
+        DebugOnly<nsresult> rv = Preferences::RegisterCallbackAndCall(
+            &DnsPrefChanged, kPrefGetTtl, this);
         NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                         "Could not dispatch InitCRandom event.");
-        rv = Preferences::RegisterCallbackAndCall(
-            &DnsExperimentChanged, kTtlExperiment, this);
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                         "Could not register DNS experiment callback.");
-        rv = Preferences::RegisterCallback(
-            &DnsExperimentChanged, kNetworkExperimentsEnabled, this);
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                         "Could not register network experiment callback.");
+                         "Could not register DNS TTL pref callback.");
     }
 #endif
 
@@ -860,13 +644,9 @@ nsHostResolver::Shutdown()
 #if TTL_AVAILABLE
     {
         DebugOnly<nsresult> rv = Preferences::UnregisterCallback(
-            &DnsExperimentChanged, kTtlExperiment, this);
+            &DnsPrefChanged, kPrefGetTtl, this);
         NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                         "Could not unregister TTL experiment callback.");
-        rv = Preferences::UnregisterCallback(
-            &DnsExperimentChanged, kNetworkExperimentsEnabled, this);
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                         "Could not unregister network experiment callback.");
+                         "Could not unregister DNS TTL pref callback.");
     }
 #endif
 
@@ -1164,9 +944,6 @@ nsHostResolver::ResolveHost(const char            *host,
         callback->OnLookupComplete(this, result, status);
     }
 
-    Telemetry::Accumulate(
-        GetCacheHitHistogram(sDnsVariant, nsHostRecord::GetPriority(flags)),
-        static_cast<bool>(result));
     return rv;
 }
 
@@ -1329,7 +1106,7 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
         
 #if TTL_AVAILABLE
         #define SET_GET_TTL(var, val) \
-            (var)->mGetTtl = sDnsVariant != DNS_EXP_VARIANT_CONTROL && (val)
+            (var)->mGetTtl = sGetTtlEnabled && (val)
 #else
         #define SET_GET_TTL(var, val)
 #endif
@@ -1402,39 +1179,23 @@ nsHostResolver::PrepareRecordExpiration(nsHostRecord* rec) const
         return;
     }
 
-    unsigned int ttl = mDefaultCacheLifetime;
+    unsigned int lifetime = mDefaultCacheLifetime;
+    unsigned int grace = mDefaultGracePeriod;
 #if TTL_AVAILABLE
-    if (sDnsVariant == DNS_EXP_VARIANT_TTL_ONLY
-            || sDnsVariant == DNS_EXP_VARIANT_TTL_PLUS_CONST_GRACE) {
+    unsigned int ttl = mDefaultCacheLifetime;
+    if (sGetTtlEnabled) {
         MutexAutoLock lock(rec->addr_info_lock);
         if (rec->addr_info && rec->addr_info->ttl != AddrInfo::NO_TTL_DATA) {
             ttl = rec->addr_info->ttl;
         }
+        lifetime = ttl;
+        grace = 0;
     }
 #endif
 
-    unsigned int lifetime = 0;
-    unsigned int grace = 0;
-    switch (sDnsVariant) {
-        case DNS_EXP_VARIANT_TTL_ONLY:
-            lifetime = ttl;
-            grace = 0;
-            break;
-
-        case DNS_EXP_VARIANT_TTL_PLUS_CONST_GRACE:
-            lifetime = ttl;
-            grace = mDefaultGracePeriod;
-            break;
-
-        default:
-            lifetime = mDefaultCacheLifetime;
-            grace = mDefaultGracePeriod;
-            break;
-    }
-
     rec->SetExpiration(TimeStamp::NowLoRes(), lifetime, grace);
-    LOG(("Caching [%s] record for %u seconds (grace %d) (sDnsVariant = %d).",
-         rec->host, lifetime, grace, sDnsVariant));
+    LOG(("Caching [%s] record for %u seconds (grace %d).",
+         rec->host, lifetime, grace));
 }
 
 //
@@ -1504,8 +1265,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* r
                 NS_RELEASE(head);
             }
 #if TTL_AVAILABLE
-            if (!rec->mGetTtl && sDnsVariant != DNS_EXP_VARIANT_CONTROL
-                && !rec->resolving) {
+            if (!rec->mGetTtl && !rec->resolving && sGetTtlEnabled) {
                 LOG(("Issuing second async lookup for TTL for %s.", rec->host));
                 rec->flags =
                   (rec->flags & ~RES_PRIORITY_MEDIUM) | RES_PRIORITY_LOW;
@@ -1657,10 +1417,10 @@ nsHostResolver::ThreadFunc(void *arg)
                 histogramID = Telemetry::DNS_LOOKUP_TIME;
             } else if (!getTtl) {
                 // Time for renewal; categorized by expiration strategy.
-                histogramID = GetRenewalTimeHistogram(sDnsVariant);
+                histogramID = Telemetry::DNS_RENEWAL_TIME;
             } else {
                 // Time to get TTL; categorized by expiration strategy.
-                histogramID = GetRenewalTimeForTTLHistogram(sDnsVariant);
+                histogramID = Telemetry::DNS_RENEWAL_TIME_FOR_TTL;
             }
             Telemetry::Accumulate(histogramID, millis);
         } else {
