@@ -23,13 +23,7 @@ Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/TelemetryFile.jsm", this);
 Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 let {OS: {File, Path, Constants}} = Cu.import("resource://gre/modules/osfile.jsm", {});
-
-XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
-  () => Cc["@mozilla.org/datareporting/service;1"]
-          .getService(Ci.nsISupports)
-          .wrappedJSObject);
 
 // We increment TelemetryFile's MAX_PING_FILE_AGE and
 // OVERDUE_PING_FILE_AGE by 1 minute so that our test pings exceed
@@ -196,12 +190,6 @@ function run_test() {
   gHttpServer.registerPrefixHandler("/submit/telemetry/", pingHandler);
   gHttpServer.start(-1);
   do_get_profile();
-
-  // Send the needed startup notifications to the datareporting service
-  // to ensure that it has been initialized.
-  gDatareportingService.observe(null, "app-startup", null);
-  gDatareportingService.observe(null, "profile-after-change", null);
-
   Services.prefs.setBoolPref(TelemetryPing.Constants.PREF_ENABLED, true);
   Services.prefs.setCharPref(TelemetryPing.Constants.PREF_SERVER,
                              "http://localhost:" + gHttpServer.identity.primaryPort);
