@@ -95,6 +95,35 @@ CopySections(const unsigned char *data, PIMAGE_NT_HEADERS old_headers, PMEMORYMO
   }
 }
 
+static bool
+CopyRegion(HANDLE hRemoteProcess, void* remoteAddress, void* localAddress, DWORD size, DWORD protect)
+{
+  if (size > 0) {
+    // Copy the data from local->remote and set the memory protection
+    if (!VirtualAllocEx(hRemoteProcess, remoteAddress, size, MEM_COMMIT, PAGE_READWRITE))
+      return false;
+
+    if (!WriteProcessMemory(hRemoteProcess,
+                            remoteAddress,
+                            localAddress,
+                            size,
+                            nullptr)) {
+#ifdef DEBUG_OUTPUT
+      OutputLastError("Error writing remote memory.\n");
+#endif
+      return false;
+    }
+
+    DWORD oldProtect;
+    if (VirtualProtectEx(hRemoteProcess, remoteAddress, size, protect, &oldProtect) == 0) {
+#ifdef DEBUG_OUTPUT
+      OutputLastError("Error protecting memory page");
+#endif
+      return false;
+    }
+  }
+  return true;
+}
 // Protection flags for memory pages (Executable, Readable, Writeable)
 static int ProtectionFlags[2][2][2] = {
   {
@@ -117,11 +146,20 @@ FinalizeSections(PMEMORYMODULE module, HANDLE hRemoteProcess)
 #endif
 
   int i;
+  int numSections = module->headers->FileHeader.NumberOfSections;
+
+  if (numSections < 1)
+    return false;
+
   PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(module->headers);
-  
+
+  // Copy any data before the first section (i.e. the image header)
+  if (!CopyRegion(hRemoteProcess, module->remoteCodeBase, module->localCodeBase, section->VirtualAddress, PAGE_READONLY))
+    return false;
+
   // loop through all sections and change access flags
-  for (i=0; i<module->headers->FileHeader.NumberOfSections; i++, section++) {
-    DWORD protect, oldProtect, size;
+  for (i=0; i<numSections; i++, section++) {
+    DWORD protect, size;
     int executable = (section->Characteristics & IMAGE_SCN_MEM_EXECUTE) != 0;
     int readable =   (section->Characteristics & IMAGE_SCN_MEM_READ) != 0;
     int writeable =  (section->Characteristics & IMAGE_SCN_MEM_WRITE) != 0;
@@ -132,39 +170,17 @@ FinalizeSections(PMEMORYMODULE module, HANDLE hRemoteProcess)
       protect |= PAGE_NOCACHE;
     }
 
+    void* remoteAddress = module->remoteCodeBase + section->VirtualAddress;
+    void* localAddress = module->localCodeBase + section->VirtualAddress;
+
     // determine size of region
     size = section->Misc.VirtualSize;
-    if (size > 0) {
-      void* remoteAddress = module->remoteCodeBase + section->VirtualAddress;
-      void* localAddress = module->localCodeBase + section->VirtualAddress;
-
 #ifdef DEBUG_OUTPUT
       fprintf(stderr, "Copying section %s to %p, size %x, executable %i readable %i writeable %i\n",
               section->Name, remoteAddress, size, executable, readable, writeable);
 #endif
-
-      // Copy the data from local->remote and set the memory protection
-      if (!VirtualAllocEx(hRemoteProcess, remoteAddress, size, MEM_COMMIT, PAGE_READWRITE))
-        return false;
-
-      if (!WriteProcessMemory(hRemoteProcess,
-                              remoteAddress,
-                              localAddress,
-                              size,
-                              nullptr)) {
-#ifdef DEBUG_OUTPUT
-        OutputLastError("Error writing remote memory.\n");
-#endif
-        return false;
-      }
-
-      if (VirtualProtectEx(hRemoteProcess, remoteAddress, size, protect, &oldProtect) == 0) {
-#ifdef DEBUG_OUTPUT
-        OutputLastError("Error protecting memory page");
-#endif
-        return false;
-      }
-    }
+    if (!CopyRegion(hRemoteProcess, remoteAddress, localAddress, size, protect))
+      return false;
   }
   return true;
 }
