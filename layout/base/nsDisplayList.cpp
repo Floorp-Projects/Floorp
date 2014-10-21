@@ -1024,11 +1024,12 @@ nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(nsIFrame* aDirtyFrame, 
 }
 
 void*
-nsDisplayListBuilder::Allocate(size_t aSize) {
+nsDisplayListBuilder::Allocate(size_t aSize)
+{
   void *tmp;
   PL_ARENA_ALLOCATE(tmp, &mPool, aSize);
   if (!tmp) {
-    NS_RUNTIMEABORT("out of memory");
+    NS_ABORT_OOM(aSize);
   }
   return tmp;
 }
