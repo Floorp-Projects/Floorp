@@ -171,12 +171,6 @@ function run_test() {
   test("script-ignore-alloc-fns",
        ["--ignore-reports", "--ignore-alloc-fns", jsonFile.path]);
 
-  // This file has numerous allocations of different sizes, some repeated, some
-  // sampled, that all end up in the same record.
-  jsonFile = FileUtils.getFile("CurWorkD", ["script-show-all-block-sizes.json"]);
-  test("script-show-all-block-sizes",
-       ["--ignore-reports", "--show-all-block-sizes", jsonFile.path]);
-
   // This tests diffs. The first invocation has no options, the second has
   // several.
   jsonFile  = FileUtils.getFile("CurWorkD", ["script-diff1.json"]);
@@ -184,7 +178,6 @@ function run_test() {
   test("script-diff-basic",
        [jsonFile.path, jsonFile2.path]);
   test("script-diff-options",
-       ["--ignore-reports", "--show-all-block-sizes",
-        jsonFile.path, jsonFile2.path]);
+       ["--ignore-reports", jsonFile.path, jsonFile2.path]);
 }
 

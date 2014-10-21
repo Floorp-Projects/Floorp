@@ -77,7 +77,7 @@ class Record(object):
                self.reqSize == 0 and \
                self.slopSize == 0 and \
                self.usableSize == 0 and \
-               (not args.show_all_block_sizes or len(self.usableSizes) == 0)
+               len(self.usableSizes) == 0
 
     def negate(self):
         self.numBlocks = -self.numBlocks
@@ -194,9 +194,6 @@ variable is used to find breakpad symbols for stack fixing.
 
     p.add_argument('-a', '--ignore-alloc-fns', action='store_true',
                    help='ignore allocation functions at the start of traces')
-
-    p.add_argument('-b', '--show-all-block-sizes', action='store_true',
-                   help='show individual block sizes for each record')
 
     p.add_argument('--no-fix-stacks', action='store_true',
                    help='do not fix stacks')
@@ -559,24 +556,16 @@ def printDigest(args, digest):
                 format(number(record.usableSize, isSampled),
                        number(record.reqSize, isSampled),
                        number(record.slopSize, isSampled)))
-            out('  {:4.2f}% of the heap ({:4.2f}% cumulative)'.
-                format(perc(record.usableSize, heapUsableSize),
-                       perc(kindCumulativeUsableSize, heapUsableSize)))
-            if args.ignore_reports:
-                pass
-            else:
-                out('  {:4.2f}% of {:} ({:4.2f}% cumulative)'.
-                    format(perc(record.usableSize, kindUsableSize),
-                           recordKind,
-                           perc(kindCumulativeUsableSize, kindUsableSize)))
 
-            if args.show_all_block_sizes:
-                abscmp = lambda ((usableSize1, _1a), _1b), \
-                                ((usableSize2, _2a), _2b): \
-                                cmp(abs(usableSize1), abs(usableSize2))
-                usableSizes = sorted(record.usableSizes.items(), cmp=abscmp,
-                                     reverse=True)
+            abscmp = lambda ((usableSize1, _1a), _1b), \
+                            ((usableSize2, _2a), _2b): \
+                            cmp(abs(usableSize1), abs(usableSize2))
+            usableSizes = sorted(record.usableSizes.items(), cmp=abscmp,
+                                 reverse=True)
 
+            hasSingleBlock = len(usableSizes) == 1 and usableSizes[0][1] == 1
+
+            if not hasSingleBlock:
                 out('  Individual block sizes: ', end='')
                 if len(usableSizes) == 0:
                     out('(no change)', end='')
@@ -591,6 +580,16 @@ def printDigest(args, digest):
                         isFirst = False
                 out()
 
+            out('  {:4.2f}% of the heap ({:4.2f}% cumulative)'.
+                format(perc(record.usableSize, heapUsableSize),
+                       perc(kindCumulativeUsableSize, heapUsableSize)))
+            if args.ignore_reports:
+                pass
+            else:
+                out('  {:4.2f}% of {:} ({:4.2f}% cumulative)'.
+                    format(perc(record.usableSize, kindUsableSize),
+                           recordKind,
+                           perc(kindCumulativeUsableSize, kindUsableSize)))
             out('  Allocated at {')
             printStack(record.allocatedAtDesc)
             out('  }')

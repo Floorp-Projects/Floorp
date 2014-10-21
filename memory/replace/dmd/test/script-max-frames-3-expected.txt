@@ -10,6 +10,7 @@ Invocation {
 Live {
   2 blocks in heap block record 1 of 3
   4,224 bytes (4,224 requested / 0 slop)
+  Individual block sizes: 4,096; 128
   95.65% of the heap (95.65% cumulative)
   Allocated at {
     #01: E (E.cpp:99)
