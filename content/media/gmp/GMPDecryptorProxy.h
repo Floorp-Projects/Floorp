@@ -8,6 +8,7 @@
 
 #include "GMPCallbackBase.h"
 #include "gmp-decryption.h"
+#include "nsString.h"
 
 namespace mp4_demuxer {
 class CryptoSample;
