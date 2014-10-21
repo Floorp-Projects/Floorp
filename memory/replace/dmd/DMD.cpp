@@ -318,25 +318,11 @@ class MutexBase
   DISALLOW_COPY_AND_ASSIGN(MutexBase);
 
 public:
-  MutexBase()
-  {
-    InitializeCriticalSection(&mCS);
-  }
+  MutexBase()  { InitializeCriticalSection(&mCS); }
+  ~MutexBase() { DeleteCriticalSection(&mCS); }
 
-  ~MutexBase()
-  {
-    DeleteCriticalSection(&mCS);
-  }
-
-  void Lock()
-  {
-    EnterCriticalSection(&mCS);
-  }
-
-  void Unlock()
-  {
-    LeaveCriticalSection(&mCS);
-  }
+  void Lock()   { EnterCriticalSection(&mCS); }
+  void Unlock() { LeaveCriticalSection(&mCS); }
 };
 
 #else
@@ -351,20 +337,10 @@ class MutexBase
   DISALLOW_COPY_AND_ASSIGN(MutexBase);
 
 public:
-  MutexBase()
-  {
-    pthread_mutex_init(&mMutex, nullptr);
-  }
+  MutexBase() { pthread_mutex_init(&mMutex, nullptr); }
 
-  void Lock()
-  {
-    pthread_mutex_lock(&mMutex);
-  }
-
-  void Unlock()
-  {
-    pthread_mutex_unlock(&mMutex);
-  }
+  void Lock()   { pthread_mutex_lock(&mMutex); }
+  void Unlock() { pthread_mutex_unlock(&mMutex); }
 };
 
 #endif
@@ -394,10 +370,7 @@ public:
     MutexBase::Unlock();
   }
 
-  bool IsLocked()
-  {
-    return mIsLocked;
-  }
+  bool IsLocked() { return mIsLocked; }
 };
 
 // This lock must be held while manipulating global state, such as
@@ -409,14 +382,8 @@ class AutoLockState
   DISALLOW_COPY_AND_ASSIGN(AutoLockState);
 
 public:
-  AutoLockState()
-  {
-    gStateLock->Lock();
-  }
-  ~AutoLockState()
-  {
-    gStateLock->Unlock();
-  }
+  AutoLockState()  { gStateLock->Lock(); }
+  ~AutoLockState() { gStateLock->Unlock(); }
 };
 
 class AutoUnlockState
@@ -424,14 +391,8 @@ class AutoUnlockState
   DISALLOW_COPY_AND_ASSIGN(AutoUnlockState);
 
 public:
-  AutoUnlockState()
-  {
-    gStateLock->Unlock();
-  }
-  ~AutoUnlockState()
-  {
-    gStateLock->Lock();
-  }
+  AutoUnlockState()  { gStateLock->Unlock(); }
+  ~AutoUnlockState() { gStateLock->Lock(); }
 };
 
 //---------------------------------------------------------------------------
@@ -494,10 +455,7 @@ public:
     return mBlockIntercepts = false;
   }
 
-  bool InterceptsAreBlocked() const
-  {
-    return mBlockIntercepts;
-  }
+  bool InterceptsAreBlocked() const { return mBlockIntercepts; }
 };
 
 /* static */ Thread*
@@ -543,10 +501,7 @@ public:
 class StringTable
 {
 public:
-  StringTable()
-  {
-    (void)mSet.init(64);
-  }
+  StringTable() { (void)mSet.init(64); }
 
   const char*
   Intern(const char* aString)
@@ -598,13 +553,11 @@ private:
 class StringAlloc
 {
 public:
-  static char*
-  copy(const char* aString)
+  static char* copy(const char* aString)
   {
     return InfallibleAllocPolicy::strdup_(aString);
   }
-  static void
-  free(char* aString)
+  static void free(char* aString)
   {
     InfallibleAllocPolicy::free_(aString);
   }
