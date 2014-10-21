@@ -6,7 +6,7 @@
  */
 
 function spawnTest() {
-  let { target, panel } = yield initWebAudioEditor(CONNECT_TOGGLE_URL);
+  let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS } = panelWin;
 
@@ -17,15 +17,18 @@ function spawnTest() {
     waitForGraphRendered(panelWin, 3, 2)
   ]);
 
-  let nodeIDs = actors.map(actor => actor.actorID);
+  let [dest, osc, gain] = actors;
 
-  yield clickGraphNode(panelWin, nodeIDs[1]);
-  ok(findGraphNode(panelWin, nodeIDs[1]).classList.contains("selected"),
+  yield clickGraphNode(panelWin, gain.actorID);
+  ok(findGraphNode(panelWin, gain.actorID).classList.contains("selected"),
     "Node selected once.");
+
+  // Disconnect a node to trigger a rerender
+  osc.disconnect();
 
   yield once(panelWin, EVENTS.UI_GRAPH_RENDERED);
   
-  ok(findGraphNode(panelWin, nodeIDs[1]).classList.contains("selected"),
+  ok(findGraphNode(panelWin, gain.actorID).classList.contains("selected"),
     "Node still selected after rerender.");
 
   yield teardown(panel);
