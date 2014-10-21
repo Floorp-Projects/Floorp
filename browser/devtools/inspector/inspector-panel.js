@@ -106,6 +106,10 @@ InspectorPanel.prototype = {
     return this._target.client.traits.urlToImageDataResolver;
   },
 
+  get canGetUniqueSelector() {
+    return this._target.client.traits.getUniqueSelector;
+  },
+
   _deferredOpen: function(defaultSelection) {
     let deferred = promise.defer();
 
@@ -624,6 +628,9 @@ InspectorPanel.prototype = {
       copyInnerHTML.setAttribute("disabled", "true");
       copyOuterHTML.setAttribute("disabled", "true");
     }
+    if (!this.canGetUniqueSelector) {
+      unique.hidden = true;
+    }
 
     // Enable the "edit HTML" item if the selection is an element and the root
     // actor has the appropriate trait (isOuterHTMLEditable)
@@ -842,10 +849,9 @@ InspectorPanel.prototype = {
       return;
     }
 
-    let toCopy = CssLogic.findCssSelector(this.selection.node);
-    if (toCopy) {
-      clipboardHelper.copyString(toCopy);
-    }
+    this.selection.nodeFront.getUniqueSelector().then((selector) => {
+      clipboardHelper.copyString(selector);
+    }).then(null, console.error);
   },
 
   /**

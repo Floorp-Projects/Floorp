@@ -7,6 +7,20 @@ let gConcurrentTabs = [];
 let gQueuedForInstall = [];
 let gResults = [];
 
+function frame_script() {
+  addMessageListener("Test:StartInstall", () => {
+    content.document.getElementById("installnow").click()
+  });
+
+  addEventListener("load", () => {
+    sendAsyncMessage("Test:Loaded");
+
+    content.addEventListener("InstallComplete", (e) => {
+      sendAsyncMessage("Test:InstallComplete", e.detail);
+    }, true);
+  }, true);
+}
+
 let gAddonAndWindowListener = {
   onOpenWindow: function(win) {
     var window = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
@@ -33,11 +47,25 @@ let gAddonAndWindowListener = {
 
 function installNext() {
   let tab = gQueuedForInstall.shift();
-  tab.linkedBrowser.contentDocument.getElementById("installnow").click();
+  tab.linkedBrowser.messageManager.sendAsyncMessage("Test:StartInstall");
 }
 
 function winForTab(t) {
-  return t.linkedBrowser.contentDocument.defaultView;
+  return t.linkedBrowser.contentWindow;
+}
+
+function createTab(url) {
+  let tab = gBrowser.addTab(url);
+  tab.linkedBrowser.messageManager.loadFrameScript("data:,(" + frame_script.toString() + ")();", true);
+
+  tab.linkedBrowser.messageManager.addMessageListener("Test:InstallComplete", ({data}) => {
+    gResults.push(data);
+    if (gResults.length == 2) {
+      executeSoon(endThisTest);
+    }
+  });
+
+  return tab;
 }
 
 function test() {
@@ -63,24 +91,13 @@ function test() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
   pm.add(makeURI("http://example.org/"), "install", pm.ALLOW_ACTION);
 
-  gConcurrentTabs.push(gBrowser.addTab(TESTROOT + "concurrent_installs.html"));
-  gConcurrentTabs.push(gBrowser.addTab(TESTROOT2 + "concurrent_installs.html"));
+  gConcurrentTabs.push(createTab(TESTROOT + "concurrent_installs.html"));
+  gConcurrentTabs.push(createTab(TESTROOT2 + "concurrent_installs.html"));
 
   let promises = gConcurrentTabs.map((t) => {
-    let deferred = Promise.defer();
-    t.linkedBrowser.addEventListener("load", () => {
-      let win = winForTab(t);
-      if (win.location.host.startsWith("example")) {
-        win.wrappedJSObject.installTriggerCallback = function(rv) {
-          gResults.push(rv);
-          if (gResults.length == 2) {
-            executeSoon(endThisTest);
-          }
-        };
-        deferred.resolve();
-      }
-    }, true);
-    return deferred.promise;
+    return new Promise(resolve => {
+      t.linkedBrowser.messageManager.addMessageListener("Test:Loaded", resolve);
+    });
   });
 
   Promise.all(promises).then(() => {

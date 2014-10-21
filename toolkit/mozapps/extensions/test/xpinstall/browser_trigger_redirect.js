@@ -4,6 +4,7 @@ function test() {
   Harness.installConfirmCallback = confirm_install;
   Harness.installEndedCallback = install_ended;
   Harness.installsCompletedCallback = finish_test;
+  Harness.finalContentEvent = "InstallComplete";
   Harness.setup();
 
   var pm = Services.perms;

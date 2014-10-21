@@ -400,9 +400,12 @@ loop.conversation = (function(mozL10n) {
         return;
       }
 
-      if (progressData.reason === "timeout" &&
-          (previousState === "init" || previousState === "alerting")) {
-        this._abortIncomingCall();
+      if (progressData.reason === "timeout") {
+        if (previousState === "init" || previousState === "alerting") {
+          this._abortIncomingCall();
+        } else {
+          this.setState({callFailed: true, callStatus: "end"});
+        }
       }
     },
 

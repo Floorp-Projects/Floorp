@@ -319,7 +319,6 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
   nsRefPtr<nsFontMetrics> fm;
   ColorPattern color(ToDeviceColor(
                        nsLayoutUtils::GetColor(this, eCSSProperty_color)));
-  aRenderingContext.SetColor(nsLayoutUtils::GetColor(this, eCSSProperty_color));
 
   DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
   int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
@@ -421,6 +420,9 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     break;
 
   default:
+    aRenderingContext.ThebesContext()->SetColor(
+                        nsLayoutUtils::GetColor(this, eCSSProperty_color));
+
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                           GetFontSizeInflation());
     GetListItemText(text);

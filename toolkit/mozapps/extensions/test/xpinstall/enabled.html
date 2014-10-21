@@ -10,6 +10,9 @@
 <script type="text/javascript">
 function init() {
   document.getElementById("enabled").textContent = InstallTrigger.enabled() ? "true" : "false";
+  dump("Sending PageLoaded\n");
+  var event = new CustomEvent("PageLoaded");
+  window.dispatchEvent(event);
 }
 </script>
 </head>
