@@ -79,7 +79,6 @@
 #include "nsThreadManager.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsISpellChecker.h"
-#include "nsClipboardProxy.h"
 
 #include "IHistory.h"
 #include "nsNetUtil.h"
@@ -718,15 +717,8 @@ ContentChild::InitXPCOM()
         NS_WARNING("Couldn't register console listener for child process");
 
     bool isOffline;
-    ClipboardCapabilities clipboardCaps;
-    SendGetXPCOMProcessAttributes(&isOffline, &mAvailableDictionaries, &clipboardCaps);
+    SendGetXPCOMProcessAttributes(&isOffline, &mAvailableDictionaries);
     RecvSetOffline(isOffline);
-
-    nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1"));
-    MOZ_ASSERT(clipboard, "should have gotten a clipboard proxy");
-
-    auto clipboardProxy = static_cast<nsClipboardProxy *>(clipboard.get());
-    clipboardProxy->SetCapabilities(clipboardCaps);
 
     DebugOnly<FileUpdateDispatcher*> observer = FileUpdateDispatcher::GetSingleton();
     NS_ASSERTION(observer, "FileUpdateDispatcher is null");
