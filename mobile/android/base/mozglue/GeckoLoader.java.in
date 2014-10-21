@@ -265,6 +265,11 @@ public final class GeckoLoader {
         loadNSSLibsNative(apkName);
     }
 
+    @SuppressWarnings("deprecation")
+    private static final String getCPUABI() {
+        return android.os.Build.CPU_ABI;
+    }
+
     /**
      * Copy a library out of our APK.
      *
@@ -291,7 +296,8 @@ public final class GeckoLoader {
             }
         }
 
-        final String abi = android.os.Build.CPU_ABI;
+        final String abi = getCPUABI();
+
         try {
             final ZipFile zipFile = new ZipFile(new File(apkPath));
             try {
@@ -353,7 +359,7 @@ public final class GeckoLoader {
         message.append(lib);
 
         // These might differ. If so, we know why the library won't load!
-        message.append(": ABI: " + MOZ_APP_ABI + ", " + android.os.Build.CPU_ABI);
+        message.append(": ABI: " + MOZ_APP_ABI + ", " + getCPUABI());
         message.append(": Data: " + context.getApplicationInfo().dataDir);
         try {
             final boolean appLibExists = new File("/data/app-lib/" + ANDROID_PACKAGE_NAME + "/lib" + lib + ".so").exists();

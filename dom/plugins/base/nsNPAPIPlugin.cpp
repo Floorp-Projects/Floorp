@@ -1876,7 +1876,10 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
   PluginDestructionGuard guard(npp);
 
-  switch(variable) {
+  // Cast NPNVariable enum to int to avoid warnings about including switch
+  // cases for android_npapi.h's non-standard ANPInterface values.
+  switch (static_cast<int>(variable)) {
+
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
   case NPNVxDisplay : {
 #if defined(MOZ_X11)
@@ -2299,7 +2302,6 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       return NPERR_NO_ERROR;
     }
 
-
     case kSystemInterfaceV1_ANPGetValue: {
       LOG("get system interface v1");
       ANPSystemInterfaceV1* i = reinterpret_cast<ANPSystemInterfaceV1*>(result);
@@ -2313,7 +2315,6 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       InitSystemInterfaceV2(i);
       return NPERR_NO_ERROR;
     }
-
 #endif
 
   // we no longer hand out any XPCOM objects
@@ -2354,7 +2355,9 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
 
   PluginDestructionGuard guard(inst);
 
-  switch (variable) {
+  // Cast NPNVariable enum to int to avoid warnings about including switch
+  // cases for android_npapi.h's non-standard ANPInterface values.
+  switch (static_cast<int>(variable)) {
 
     // we should keep backward compatibility with NPAPI where the
     // actual pointer value is checked rather than its content

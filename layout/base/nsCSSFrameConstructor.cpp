@@ -2306,15 +2306,22 @@ NeedFrameFor(const nsFrameConstructorState& aState,
 static bool CheckOverflow(nsPresContext* aPresContext,
                             const nsStyleDisplay* aDisplay)
 {
-  if (aDisplay->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE)
+  if (aDisplay->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE &&
+      aDisplay->mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_AUTO) {
     return false;
+  }
 
-  if (aDisplay->mOverflowX == NS_STYLE_OVERFLOW_CLIP)
-    aPresContext->SetViewportOverflowOverride(NS_STYLE_OVERFLOW_HIDDEN,
-                                              NS_STYLE_OVERFLOW_HIDDEN);
-  else
-    aPresContext->SetViewportOverflowOverride(aDisplay->mOverflowX,
-                                              aDisplay->mOverflowY);
+  if (aDisplay->mOverflowX == NS_STYLE_OVERFLOW_CLIP) {
+    aPresContext->SetViewportScrollbarStylesOverride(
+                                    ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
+                                                    NS_STYLE_OVERFLOW_HIDDEN,
+                                                    aDisplay->mScrollBehavior));
+  } else {
+    aPresContext->SetViewportScrollbarStylesOverride(
+                                    ScrollbarStyles(aDisplay->mOverflowX,
+                                                    aDisplay->mOverflowY,
+                                                    aDisplay->mScrollBehavior));
+  }
   return true;
 }
 
@@ -2331,8 +2338,10 @@ nsCSSFrameConstructor::PropagateScrollToViewport()
 {
   // Set default
   nsPresContext* presContext = mPresShell->GetPresContext();
-  presContext->SetViewportOverflowOverride(NS_STYLE_OVERFLOW_AUTO,
-                                           NS_STYLE_OVERFLOW_AUTO);
+  presContext->SetViewportScrollbarStylesOverride(
+                             ScrollbarStyles(NS_STYLE_OVERFLOW_AUTO,
+                                             NS_STYLE_OVERFLOW_AUTO,
+                                             NS_STYLE_SCROLL_BEHAVIOR_AUTO));
 
   // We never mess with the viewport scroll state
   // when printing or in print preview
