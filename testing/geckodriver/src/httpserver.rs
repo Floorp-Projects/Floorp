@@ -46,7 +46,7 @@ fn handle(mut incoming: Incoming) {
                         (err.http_status(), WebDriverResponse::from_err(&err))
                     }
                 };
-                let body = resp_data.to_json().to_string();
+                let body = format!("{}\n", resp_data.to_json().to_string());
                 {
                     let mut status_code = resp.status_mut();
                     *status_code = FromPrimitive::from_int(status).unwrap();
