@@ -63,8 +63,9 @@ function endGame() {
 }
 
 function newWindowWithTabView(callback, completeCallback) {
+  let charsetArg = "charset=" + window.content.document.characterSet;
   let win = window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no,height=800,width=800",
-                              "about:blank", null, null, null, true);
+                              "about:blank", charsetArg, null, null, true);
   let onLoad = function() {
     win.removeEventListener("load", onLoad, false);
     let onShown = function() {
