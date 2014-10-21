@@ -1505,9 +1505,13 @@ void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
   if (eventStates.HasState(NS_EVENT_STATE_DISABLED) || sFocused != this)
     return;
 
-  aRenderingContext.ThebesContext()->Save();
+  gfxContext* gfx = aRenderingContext.ThebesContext();
+
+  gfx->Save();
   nsRect clipRect = mDisplayFrame->GetRect() + aPt;
-  aRenderingContext.IntersectClip(clipRect);
+  gfx->Clip(NSRectToRect(clipRect,
+                         PresContext()->AppUnitsPerDevPixel(),
+                         *aRenderingContext.GetDrawTarget()));
 
   // REVIEW: Why does the old code paint mDisplayFrame again? We've
   // already painted it in the children above. So clipping it here won't do
@@ -1527,7 +1531,7 @@ void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
   StrokeSnappedEdgesOfRect(r, *aRenderingContext.GetDrawTarget(),
                            color, strokeOptions);
 
-  aRenderingContext.ThebesContext()->Restore();
+  gfx->Restore();
 }
 
 //---------------------------------------------------------
