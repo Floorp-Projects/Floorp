@@ -86,9 +86,14 @@ MOZILLA_PKIX_ENUM_CLASS ValidDNSIDMatchType
 {
   ReferenceID = 0,
   PresentedID = 1,
+  NameConstraint = 2,
 };
 
 bool IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType);
+
+bool PresentedDNSIDMatchesReferenceDNSID(
+       Input presentedDNSID, ValidDNSIDMatchType referenceDNSIDMatchType,
+       Input referenceDNSID);
 
 } // unnamed namespace
 
@@ -96,8 +101,6 @@ bool IsValidReferenceDNSID(Input hostname);
 bool IsValidPresentedDNSID(Input hostname);
 bool ParseIPv4Address(Input hostname, /*out*/ uint8_t (&out)[4]);
 bool ParseIPv6Address(Input hostname, /*out*/ uint8_t (&out)[16]);
-bool PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
-                                         Input referenceDNSID);
 
 // Verify that the given end-entity cert, which is assumed to have been already
 // validated with BuildCertChain, is valid for the given hostname. hostname is
@@ -440,8 +443,9 @@ MatchPresentedIDWithReferenceID(GeneralNameType nameType,
 
   switch (nameType) {
     case GeneralNameType::dNSName:
-      foundMatch = PresentedDNSIDMatchesReferenceDNSID(presentedID,
-                                                       referenceID);
+      foundMatch = PresentedDNSIDMatchesReferenceDNSID(
+                     presentedID, ValidDNSIDMatchType::ReferenceID,
+                     referenceID);
       break;
     case GeneralNameType::iPAddress:
       foundMatch = InputsAreEqual(presentedID, referenceID);
@@ -452,8 +456,6 @@ MatchPresentedIDWithReferenceID(GeneralNameType nameType,
   }
   return Success;
 }
-
-} // unnamed namespace
 
 // We do not distinguish between a syntactically-invalid presentedDNSID and one
 // that is syntactically valid but does not match referenceDNSID; in both
@@ -468,23 +470,208 @@ MatchPresentedIDWithReferenceID(GeneralNameType nameType,
 // <x> and/or <y> may be empty. However, NSS requires <y> to be empty, and we
 // follow NSS's stricter policy by accepting wildcards only of the form
 // <x>*.<DNSID>, where <x> may be empty.
+//
+// An absolute presented DNS ID matches an absolute reference ID and a relative
+// reference ID, and vice-versa. For example, all of these are matches:
+//
+//      Presented ID   Reference ID
+//      ---------------------------
+//      example.com    example.com
+//      example.com.   example.com
+//      example.com    example.com.
+//      example.com.   exmaple.com.
+//
+// There are more subtleties documented inline in the code.
+//
+// Name constraints ///////////////////////////////////////////////////////////
+//
+// This is all RFC 5280 has to say about DNSName constraints:
+//
+//     DNS name restrictions are expressed as host.example.com.  Any DNS
+//     name that can be constructed by simply adding zero or more labels to
+//     the left-hand side of the name satisfies the name constraint.  For
+//     example, www.host.example.com would satisfy the constraint but
+//     host1.example.com would not.
+//
+// This lack of specificity has lead to a lot of uncertainty regarding
+// subdomain matching. In particular, the following questions have been
+// raised and answered:
+//
+//     Q: Does a presented identifier equal (case insensitive) to the name
+//        constraint match the constraint? For example, does the presented
+//        ID "host.example.com" match a "host.example.com" constraint?
+//     A: Yes. RFC5280 says "by simply adding zero or more labels" and this
+//        is the case of adding zero labels.
+//
+//     Q: When the name constraint does not start with ".", do subdomain
+//        presented identifiers match it? For example, does the presented
+//        ID "www.host.example.com" match a "host.example.com" constraint?
+//     A: Yes. RFC5280 says "by simply adding zero or more labels" and this
+//        is the case of adding more than zero labels. The example is the
+//        one from RFC 5280.
+//
+//     Q: When the name constraint does not start with ".", does a
+//        non-subdomain prefix match it? For example, does "bigfoo.bar.com"
+//        match "foo.bar.com"? [4]
+//     A: No. We interpret RFC 5280's language of "adding zero or more labels"
+//        to mean that whole labels must be prefixed.
+//
+//     (Note that the above three scenarios are the same as the RFC 6265
+//     domain matching rules [0].)
+//
+//     Q: Is a name constraint that starts with "." valid, and if so, what
+//        semantics does it have? For example, does a presented ID of
+//        "www.example.com" match a constraint of ".example.com"? Does a
+//        presented ID of "example.com" match a constraint of ".example.com"?
+//     A: This implementation, NSS[1], and SChannel[2] all support a
+//        leading ".", but OpenSSL[3] does not yet. Amongst the
+//        implementations that support it, a leading "." is legal and means
+//        the same thing as when the "." is omitted, EXCEPT that a
+//        presented identifier equal (case insensitive) to the name
+//        constraint is not matched; i.e. presented DNSName identifiers
+//        must be subdomains. Some CAs in Mozilla's CA program (e.g. HARICA)
+//        have name constraints with the leading "." in their root
+//        certificates. The name constraints imposed on DCISS by Mozilla also
+//        have the it, so supporting this is a requirement for backward
+//        compatibility, even if it is not yet standardized. So, for example, a
+//        presented ID of "www.example.com" matches a constraint of
+//        ".example.com" but a presented ID of "example.com" does not.
+//
+//     Q: Is there a way to prevent subdomain matches?
+//     A: Yes.
+//
+//        Some people have proposed that dNSName constraints that do not
+//        start with a "." should be restricted to exact (case insensitive)
+//        matches. However, such a change of semantics from what RFC5280
+//        specifies would be a non-backward-compatible change in the case of
+//        permittedSubtrees constraints, and it would be a security issue for
+//        excludedSubtrees constraints.
+//
+//        However, it can be done with a combination of permittedSubtrees and
+//        excludedSubtrees, e.g. "example.com" in permittedSubtrees and
+//        ".example.com" in excudedSubtrees.
+//
+//     Q: Are name constraints allowed to be specified as absolute names?
+//        For example, does a presented ID of "example.com" match a name
+//        constraint of "example.com." and vice versa.
+//     A: Relative DNSNames match relative DNSName constraints but not
+//        absolute DNSName constraints. Absolute DNSNames match absolute
+//        DNSName constraints but not relative DNSName constraints (except "";
+//        see below). This follows from the requirement that matching DNSNames
+//        are constructed "by simply adding zero or more labels to the
+//        left-hand side" of the constraint.
+//
+//     Q: Are "" and "." valid DNSName constraints? If so, what do they mean?
+//     A: Yes, both are valid. All relative and absolute DNSNames match
+//        a constraint of "" because any DNSName can be formed "by simply
+//        adding zero or more labels to the left-hand side" of "". In
+//        particular, an excludedSubtrees DNSName constraint of "" forbids all
+//        DNSNames. Only absolute names match a DNSName constraint of ".";
+//        relative DNSNames do not match "." because one cannot form a relative
+//        DNSName "by simply adding zero or more labels to the left-hand side"
+//        of "." (all such names would be absolute).
+//
+// [0] RFC 6265 (Cookies) Domain Matching rules:
+//     http://tools.ietf.org/html/rfc6265#section-5.1.3
+// [1] NSS source code:
+//     https://mxr.mozilla.org/nss/source/lib/certdb/genname.c?rev=2a7348f013cb#1209
+// [2] Description of SChannel's behavior from Microsoft:
+//     http://www.imc.org/ietf-pkix/mail-archive/msg04668.html
+// [3] Proposal to add such support to OpenSSL:
+//     http://www.mail-archive.com/openssl-dev%40openssl.org/msg36204.html
+//     https://rt.openssl.org/Ticket/Display.html?id=3562
+// [4] Feedback on the lack of clarify in the definition that never got
+//     incorporated into the spec:
+//     https://www.ietf.org/mail-archive/web/pkix/current/msg21192.html
 bool
-PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID, Input referenceDNSID)
+PresentedDNSIDMatchesReferenceDNSID(
+  Input presentedDNSID,
+  ValidDNSIDMatchType referenceDNSIDMatchType,
+  Input referenceDNSID)
 {
   if (!IsValidPresentedDNSID(presentedDNSID)) {
     return false;
   }
-  if (!IsValidReferenceDNSID(referenceDNSID)) {
+
+  if (!IsValidDNSID(referenceDNSID, referenceDNSIDMatchType)) {
     return false;
   }
 
   Reader presented(presentedDNSID);
   Reader reference(referenceDNSID);
+
+  switch (referenceDNSIDMatchType)
+  {
+    case ValidDNSIDMatchType::ReferenceID:
+      break;
+
+    case ValidDNSIDMatchType::NameConstraint:
+    {
+      if (presentedDNSID.GetLength() > referenceDNSID.GetLength()) {
+        if (referenceDNSID.GetLength() == 0) {
+          // An empty constraint matches everything.
+          return true;
+        }
+        // If the reference ID starts with a dot then skip the prefix of
+        // of the presented ID and start the comparison at the position of that
+        // dot. Examples:
+        //
+        //                                       Matches     Doesn't Match
+        //     -----------------------------------------------------------
+        //       original presented ID:  www.example.com    badexample.com
+        //                     skipped:  www                ba
+        //     presented ID w/o prefix:     .example.com      dexample.com
+        //                reference ID:     .example.com      .example.com
+        //
+        // If the reference ID does not start with a dot then we skip the
+        // prefix of the presented ID but also verify that the prefix ends with
+        // a dot. Examples:
+        //
+        //                                       Matches     Doesn't Match
+        //     -----------------------------------------------------------
+        //       original presented ID:  www.example.com    badexample.com
+        //                     skipped:  www                ba
+        //                 must be '.':     .                 d
+        //     presented ID w/o prefix:      example.com       example.com
+        //                reference ID:      example.com       example.com
+        //
+        if (reference.Peek('.')) {
+          if (presented.Skip(static_cast<Input::size_type>(
+                               presentedDNSID.GetLength() -
+                                 referenceDNSID.GetLength())) != Success) {
+            assert(false);
+            return false;
+          }
+        } else {
+          if (presented.Skip(static_cast<Input::size_type>(
+                               presentedDNSID.GetLength() -
+                                 referenceDNSID.GetLength() - 1)) != Success) {
+            assert(false);
+            return false;
+          }
+          uint8_t b;
+          if (presented.Read(b) != Success) {
+            assert(false);
+            return false;
+          }
+          if (b != '.') {
+            return false;
+          }
+        }
+      }
+      break;
+    }
+
+    case ValidDNSIDMatchType::PresentedID: // fall through
+    default:
+      assert(false);
+      return false;
+  }
+
   bool isFirstPresentedByte = true;
   do {
     uint8_t presentedByte;
-    Result rv = presented.Read(presentedByte);
-    if (rv != Success) {
+    if (presented.Read(presentedByte) != Success) {
       return false;
     }
     if (presentedByte == '*') {
@@ -497,8 +684,7 @@ PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID, Input referenceDNSID)
       // string.
       do {
         uint8_t referenceByte;
-        rv = reference.Read(referenceByte);
-        if (rv != Success) {
+        if (reference.Read(referenceByte) != Success) {
           return false;
         }
       } while (!reference.Peek('.'));
@@ -521,8 +707,7 @@ PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID, Input referenceDNSID)
       }
 
       uint8_t referenceByte;
-      rv = reference.Read(referenceByte);
-      if (rv != Success) {
+      if (reference.Read(referenceByte) != Success) {
         return false;
       }
       if (LocaleInsensitveToLower(presentedByte) !=
@@ -533,15 +718,17 @@ PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID, Input referenceDNSID)
     isFirstPresentedByte = false;
   } while (!presented.AtEnd());
 
-  // Allow a relative presented DNS ID to match an absolute reference DNS ID.
+  // Allow a relative presented DNS ID to match an absolute reference DNS ID,
+  // unless we're matching a name constraint.
   if (!reference.AtEnd()) {
-    uint8_t referenceByte;
-    Result rv = reference.Read(referenceByte);
-    if (rv != Success) {
-      return false;
-    }
-    if (referenceByte != '.') {
-      return false;
+    if (referenceDNSIDMatchType != ValidDNSIDMatchType::NameConstraint) {
+      uint8_t referenceByte;
+      if (reference.Read(referenceByte) != Success) {
+        return false;
+      }
+      if (referenceByte != '.') {
+        return false;
+      }
     }
     if (!reference.AtEnd()) {
       return false;
@@ -549,6 +736,16 @@ PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID, Input referenceDNSID)
   }
 
   return true;
+}
+
+} // unnamed namespace
+
+bool PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
+                                         Input referenceDNSID)
+{
+  return PresentedDNSIDMatchesReferenceDNSID(presentedDNSID,
+                                             ValidDNSIDMatchType::ReferenceID,
+                                             referenceDNSID);
 }
 
 namespace {
@@ -844,6 +1041,10 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
 
   Reader input(hostname);
 
+  if (matchType == ValidDNSIDMatchType::NameConstraint && input.AtEnd()) {
+    return true;
+  }
+
   bool allowWildcard = matchType == ValidDNSIDMatchType::PresentedID;
   bool isWildcard = false;
   size_t dotCount = 0;
@@ -852,6 +1053,8 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
   bool labelIsAllNumeric = false;
   bool labelIsWildcard = false;
   bool labelEndsWithHyphen = false;
+
+  bool isFirstByte = true;
 
   do {
     static const size_t MAX_LABEL_LENGTH = 63;
@@ -938,7 +1141,9 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
 
       case '.':
         ++dotCount;
-        if (labelLength == 0) {
+        if (labelLength == 0 &&
+            (matchType != ValidDNSIDMatchType::NameConstraint ||
+             !isFirstByte)) {
           return false;
         }
         if (labelEndsWithHyphen) {
@@ -952,6 +1157,7 @@ IsValidDNSID(Input hostname, ValidDNSIDMatchType matchType)
       default:
         return false; // Invalid character.
     }
+    isFirstByte = false;
   } while (!input.AtEnd());
 
   if (labelEndsWithHyphen) {
