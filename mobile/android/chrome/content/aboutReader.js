@@ -191,6 +191,7 @@ AboutReader.prototype = {
       }
 
       case "Reader:Add": {
+        // Page can be added by long-press pageAction, or by tap on banner icon.
         let args = JSON.parse(aData);
         if (args.url == this._article.url) {
           if (this._isReadingListItem != 1) {
