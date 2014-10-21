@@ -35,11 +35,11 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
                IsInRange(FAKE_JIT_TOP_FOR_BAILOUT + sizeof(IonCommonFrameLayout), 0, 0x1000),
                "Fake jitTop pointer should be within the first page.");
     cx->mainThread().jitTop = FAKE_JIT_TOP_FOR_BAILOUT;
+    gc::AutoSuppressGC suppress(cx);
 
     JitActivationIterator jitActivations(cx->runtime());
     BailoutFrameInfo bailoutData(jitActivations, sp);
     JitFrameIterator iter(jitActivations);
-    MOZ_ASSERT(!iter.ionScript()->invalidated());
 
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
     TraceLogTimestamp(logger, TraceLogger::Bailout);
@@ -78,17 +78,6 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
         EnsureExitFrame(iter.jsFrame());
     }
 
-    // This condition was wrong when we entered this bailout function, but it
-    // might be true now. A GC might have reclaimed all the Jit code and
-    // invalidated all frames which are currently on the stack. As we are
-    // already in a bailout, we could not switch to an invalidation
-    // bailout. When the code of an IonScript which is on the stack is
-    // invalidated (see InvalidateActivation), we remove references to it and
-    // increment the reference counter for each activation that appear on the
-    // stack. As the bailed frame is one of them, we have to decrement it now.
-    if (iter.ionScript()->invalidated())
-        iter.ionScript()->decref(cx->runtime()->defaultFreeOp());
-
     return retval;
 }
 
@@ -102,6 +91,7 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
 
     // We don't have an exit frame.
     cx->mainThread().jitTop = FAKE_JIT_TOP_FOR_BAILOUT;
+    gc::AutoSuppressGC suppress(cx);
 
     JitActivationIterator jitActivations(cx->runtime());
     BailoutFrameInfo bailoutData(jitActivations, sp);

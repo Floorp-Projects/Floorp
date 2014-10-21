@@ -56,12 +56,6 @@ ReadFrameSlot(IonJSFrameLayout *fp, int32_t slot)
     return *(uintptr_t *)((char *)fp + OffsetOfFrameSlot(slot));
 }
 
-static inline void
-WriteFrameSlot(IonJSFrameLayout *fp, int32_t slot, uintptr_t value)
-{
-    *(uintptr_t *)((char *)fp + OffsetOfFrameSlot(slot)) = value;
-}
-
 static inline double
 ReadFrameDoubleSlot(IonJSFrameLayout *fp, int32_t slot)
 {
@@ -140,13 +134,8 @@ JitFrameIterator::checkInvalidation() const
 bool
 JitFrameIterator::checkInvalidation(IonScript **ionScriptOut) const
 {
-    JSScript *script = this->script();
-    if (isBailoutJS()) {
-        *ionScriptOut = activation_->bailoutData()->ionScript();
-        return !script->hasIonScript() || script->ionScript() != *ionScriptOut;
-    }
-
     uint8_t *returnAddr = returnAddressToFp();
+    JSScript *script = this->script();
     // N.B. the current IonScript is not the same as the frame's
     // IonScript if the frame has since been invalidated.
     bool invalidated;
@@ -983,42 +972,6 @@ MarkIonJSFrame(JSTracer *trc, const JitFrameIterator &frame)
 #endif
 }
 
-static void
-MarkBailoutFrame(JSTracer *trc, const JitFrameIterator &frame)
-{
-    IonJSFrameLayout *layout = (IonJSFrameLayout *)frame.fp();
-
-    layout->replaceCalleeToken(MarkCalleeToken(trc, layout->calleeToken()));
-
-    // We have to mark the list of actual arguments, as only formal arguments
-    // are represented in the Snapshot.
-    MarkFrameAndActualArguments(trc, frame);
-
-    // Under a bailout, do not have a Safepoint to only iterate over GC-things.
-    // Thus we use a SnapshotIterator to trace all the locations which would be
-    // used to reconstruct the Baseline frame.
-    //
-    // Note that at the time where this function is called, we have not yet
-    // started to reconstruct baseline frames.
-
-    // The vector of recover instructions is already traced as part of the
-    // JitActivation.
-    SnapshotIterator snapIter(frame);
-
-    // For each instruction, we read the allocations without evaluating the
-    // recover instruction, nor reconstructing the frame. We are only looking at
-    // tracing readable allocations.
-    while (true) {
-        while (snapIter.moreAllocations())
-            snapIter.traceAllocation(trc);
-
-        if (!snapIter.moreInstructions())
-            break;
-        snapIter.nextInstruction();
-    };
-
-}
-
 #ifdef JSGC_GENERATIONAL
 template <typename T>
 void
@@ -1352,9 +1305,6 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
             break;
           case JitFrame_IonJS:
             MarkIonJSFrame(trc, frames);
-            break;
-          case JitFrame_Bailout:
-            MarkBailoutFrame(trc, frames);
             break;
           case JitFrame_Unwound_IonJS:
             MOZ_CRASH("invalid");
@@ -1802,87 +1752,6 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc)
     }
 }
 
-void
-SnapshotIterator::writeAllocationValuePayload(const RValueAllocation &alloc, Value v)
-{
-    switch (alloc.mode()) {
-      case RValueAllocation::CONSTANT:
-        ionScript_->getConstant(alloc.index()) = v;
-        break;
-
-      case RValueAllocation::CST_UNDEFINED:
-      case RValueAllocation::CST_NULL:
-      case RValueAllocation::DOUBLE_REG:
-      case RValueAllocation::FLOAT32_REG:
-      case RValueAllocation::FLOAT32_STACK:
-        MOZ_CRASH("Not a GC thing: Unexpected write");
-        break;
-
-      case RValueAllocation::TYPED_REG:
-        machine_.write(alloc.reg2(), *v.payloadUIntPtr());
-        break;
-
-      case RValueAllocation::TYPED_STACK:
-        switch (alloc.knownType()) {
-          default:
-            MOZ_CRASH("Not a GC thing: Unexpected write");
-            break;
-          case JSVAL_TYPE_STRING:
-          case JSVAL_TYPE_SYMBOL:
-          case JSVAL_TYPE_OBJECT:
-            WriteFrameSlot(fp_, alloc.stackOffset2(), *v.payloadUIntPtr());
-            break;
-        }
-        break;
-
-#if defined(JS_NUNBOX32)
-      case RValueAllocation::UNTYPED_REG_REG:
-      case RValueAllocation::UNTYPED_STACK_REG:
-        machine_.write(alloc.reg2(), *v.payloadUIntPtr());
-        break;
-
-      case RValueAllocation::UNTYPED_REG_STACK:
-      case RValueAllocation::UNTYPED_STACK_STACK:
-        WriteFrameSlot(fp_, alloc.stackOffset2(), *v.payloadUIntPtr());
-        break;
-#elif defined(JS_PUNBOX64)
-      case RValueAllocation::UNTYPED_REG:
-        machine_.write(alloc.reg(), *v.payloadUIntPtr());
-        break;
-
-      case RValueAllocation::UNTYPED_STACK:
-        WriteFrameSlot(fp_, alloc.stackOffset(), *v.payloadUIntPtr());
-        break;
-#endif
-
-      case RValueAllocation::RECOVER_INSTRUCTION:
-        MOZ_CRASH("Recover instructions are handled by the JitActivation.");
-        break;
-
-      default:
-        MOZ_CRASH("huh?");
-    }
-}
-
-void
-SnapshotIterator::traceAllocation(JSTracer *trc)
-{
-    RValueAllocation alloc = readAllocation();
-    if (!allocationReadable(alloc))
-        return;
-
-    Value v = allocationValue(alloc);
-    if (!v.isMarkable())
-        return;
-
-    Value copy = v;
-    gc::MarkValueRoot(trc, &v, "ion-typed-reg");
-    if (v != copy) {
-        MOZ_ASSERT(SameType(v, copy));
-        writeAllocationValuePayload(alloc, v);
-    }
-}
-
 const RResumePoint *
 SnapshotIterator::resumePoint() const
 {
@@ -1930,11 +1799,8 @@ SnapshotIterator::initInstructionResults(MaybeReadFallback &fallback)
         // same reason, we need to recompile without optimizing away the
         // observable stack slots.  The script would later be recompiled to have
         // support for Argument objects.
-        if (fallback.consequence == MaybeReadFallback::Fallback_Invalidate &&
-            !ionScript_->invalidate(cx, /* resetUses = */ false, "Observe recovered instruction."))
-        {
+        if (!ionScript_->invalidate(cx, /* resetUses = */ false, "Observe recovered instruction."))
             return false;
-        }
 
         // Register the list of result on the activation.  We need to do that
         // before we initialize the list such as if any recover instruction
@@ -1954,7 +1820,7 @@ SnapshotIterator::initInstructionResults(MaybeReadFallback &fallback)
 
             // If the evaluation failed because of OOMs, then we discard the
             // current set of result that we collected so far.
-            fallback.activation->removeIonFrameRecovery(fp);
+            fallback.activation->maybeTakeIonFrameRecovery(fp, &tmp);
             return false;
         }
     }
