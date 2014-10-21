@@ -56,8 +56,19 @@ impl WebDriverResponse {
                                    json_data.find(&"from".to_string()).unwrap(),
                                    json_data.find(&"value".to_string()).unwrap());
                 };
+                //XXX spec - no idea what capabilities are supposed to be
+                let value = match json_data.find(&"value".to_string()) {
+                    Some(data) => data,
+                    None => {
+                        let error = WebDriverError::new(Some(session.session_id.clone()),
+                                                        UnknownError,
+                                                        "Failed to find value field");
+                        return Some(WebDriverResponse::from_err(&error));
+                    }
+                };
                 Some(WebDriverResponse::new(Some(session.session_id.clone()), status,
-                                            json::Null))
+                                            value.clone()
+                                            ))
             },
             Get(_) => {
                 Some(WebDriverResponse::new(Some(session.session_id.clone()), status,
@@ -65,9 +76,7 @@ impl WebDriverResponse {
             },
             GetCurrentUrl => {
                 let value = match json_data.find(&"value".to_string()) {
-                    Some(ref data) => {
-                        data.clone()
-                    },
+                    Some(data) => data,
                     None => {
                         let error = WebDriverError::new(Some(session.session_id.clone()),
                                                         UnknownError,
