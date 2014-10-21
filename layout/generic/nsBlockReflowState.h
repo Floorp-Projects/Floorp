@@ -157,7 +157,8 @@ public:
   // padding. This, therefore, represents the inner "content area" (in
   // spacemanager coordinates) where child frames will be placed,
   // including child blocks and floats.
-  nscoord mFloatManagerX, mFloatManagerY;
+  mozilla::WritingMode mFloatManagerWM;
+  mozilla::LogicalPoint mFloatManagerOrigin;
 
   // XXX get rid of this
   nsReflowStatus mReflowStatus;
