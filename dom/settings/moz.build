@@ -23,3 +23,5 @@ EXTRA_JS_MODULES += [
 ]
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']

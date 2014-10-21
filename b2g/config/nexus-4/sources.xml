@@ -17,7 +17,7 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="3ec94f448bb5c1c9c264896685c6ef77ab718c87"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="82174cee5ede9f23aedad8a39f8b8cdc1ae710c4"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="73d68c9c91bc568ce7c888ac057b3f44bd1b2e79"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="562d357b72279a9e35d4af5aeecc8e1ffa2f44f1"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="9f6b7471c881ee689183d681658cf2ba3dfc5610"/>
@@ -129,7 +129,7 @@
   <project name="device-mako" path="device/lge/mako" remote="b2g" revision="78d17f0c117f0c66dd55ee8d5c5dde8ccc93ecba"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="3a9a17613cc685aa232432566ad6cc607eab4ec1"/>
   <project name="device/lge/mako-kernel" path="device/lge/mako-kernel" revision="d1729e53d71d711c8fde25eab8728ff2b9b4df0e"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="d872fc1462d367eb67833de6942c297d6c4dc874"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="a28a47cf4de9cc676e8a14d58826f7927d77f5d5"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="7d33aaf740bbf6c7c6e9c34a92b371eda311b66b"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
   <project name="platform/hardware/broadcom/wlan" path="hardware/broadcom/wlan" revision="0e1929fa3aa38bf9d40e9e953d619fab8164c82e"/>
