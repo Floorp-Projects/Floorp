@@ -14,6 +14,7 @@
 #include "mozilla/plugins/PluginProcessParent.h"
 #include "mozilla/plugins/PPluginModuleParent.h"
 #include "mozilla/plugins/PluginMessageUtils.h"
+#include "mozilla/plugins/PluginTypes.h"
 #include "npapi.h"
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
@@ -35,7 +36,6 @@ namespace plugins {
 //-----------------------------------------------------------------------------
 
 class BrowserStreamParent;
-class PluginIdentifierParent;
 class PluginInstanceParent;
 
 #ifdef XP_WIN
@@ -66,14 +66,6 @@ private:
     typedef mozilla::dom::CrashReporterParent CrashReporterParent;
 
 protected:
-
-    virtual PPluginIdentifierParent*
-    AllocPPluginIdentifierParent(const nsCString& aString,
-                                 const int32_t& aInt,
-                                 const bool& aTemporary) MOZ_OVERRIDE;
-
-    virtual bool
-    DeallocPPluginIdentifierParent(PPluginIdentifierParent* aActor) MOZ_OVERRIDE;
 
     PPluginInstanceParent*
     AllocPPluginInstanceParent(const nsCString& aMimeType,
@@ -115,15 +107,6 @@ public:
     bool OkToCleanup() const {
         return !IsOnCxxStack();
     }
-
-    /**
-     * Get an identifier actor for this NPIdentifier. If this is a temporary
-     * identifier, the temporary refcount is increased by one. This method
-     * is intended only for use by StackIdentifier and the scriptable
-     * Enumerate hook.
-     */
-    PluginIdentifierParent*
-    GetIdentifierForNPIdentifier(NPP npp, NPIdentifier aIdentifier);
 
     void ProcessRemoteNativeEventsInInterruptCall();
 
@@ -298,7 +281,6 @@ private:
     bool mClearSiteDataSupported;
     bool mGetSitesWithDataSupported;
     const NPNetscapeFuncs* mNPNIface;
-    nsDataHashtable<nsPtrHashKey<void>, PluginIdentifierParent*> mIdentifiers;
     nsNPAPIPlugin* mPlugin;
     ScopedMethodFactory<PluginModuleParent> mTaskFactory;
     nsString mPluginDumpID;

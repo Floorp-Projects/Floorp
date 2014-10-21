@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PPluginInstance;
-include protocol PPluginIdentifier;
+include PluginTypes;
 
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
@@ -39,10 +39,10 @@ child:
 
 both:
   // NPClass methods
-  intr HasMethod(PPluginIdentifier aId)
+  intr HasMethod(PluginIdentifier aId)
     returns (bool aHasMethod);
 
-  intr Invoke(PPluginIdentifier aId,
+  intr Invoke(PluginIdentifier aId,
              Variant[] aArgs)
     returns (Variant aResult,
              bool aSuccess);
@@ -51,18 +51,18 @@ both:
     returns (Variant aResult,
              bool aSuccess);
 
-  intr HasProperty(PPluginIdentifier aId)
+  intr HasProperty(PluginIdentifier aId)
     returns (bool aHasProperty);
 
-  intr SetProperty(PPluginIdentifier aId,
+  intr SetProperty(PluginIdentifier aId,
                   Variant aValue)
     returns (bool aSuccess);
 
-  intr RemoveProperty(PPluginIdentifier aId)
+  intr RemoveProperty(PluginIdentifier aId)
     returns (bool aSuccess);
 
   intr Enumerate()
-    returns (PPluginIdentifier[] aProperties,
+    returns (PluginIdentifier[] aProperties,
              bool aSuccess);
 
   intr Construct(Variant[] aArgs)
@@ -86,12 +86,12 @@ both:
    * several checks at once and return all the results simultaneously.
    */
 parent:
-  intr GetParentProperty(PPluginIdentifier aId)
+  intr GetParentProperty(PluginIdentifier aId)
     returns (Variant aResult,
              bool aSuccess);
 
 child:
-  intr GetChildProperty(PPluginIdentifier aId)
+  intr GetChildProperty(PluginIdentifier aId)
     returns (bool aHasProperty,
              bool aHasMethod,
              Variant aResult,

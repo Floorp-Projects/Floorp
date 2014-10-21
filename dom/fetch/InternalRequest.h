@@ -66,7 +66,11 @@ public:
     , mForceOriginHeader(false)
     , mManualRedirect(false)
     , mPreserveContentCodings(false)
-    , mSameOriginDataURL(false)
+      // FIXME(nsm): This should be false by default, but will lead to the
+      // algorithm never loading data: URLs right now. See Bug 1018872 about
+      // how certain contexts will override it to set it to true. Fetch
+      // specification does not handle this yet.
+    , mSameOriginDataURL(true)
     , mSkipServiceWorker(false)
     , mSynchronous(false)
     , mUnsafeRequest(false)
@@ -111,6 +115,14 @@ public:
   SetMethod(const nsACString& aMethod)
   {
     mMethod.Assign(aMethod);
+  }
+
+  bool
+  HasSimpleMethod() const
+  {
+    return mMethod.LowerCaseEqualsASCII("get") ||
+           mMethod.LowerCaseEqualsASCII("post") ||
+           mMethod.LowerCaseEqualsASCII("head");
   }
 
   void
@@ -177,10 +189,28 @@ public:
     mCredentialsMode = aCredentialsMode;
   }
 
+  ResponseTainting
+  GetResponseTainting() const
+  {
+    return mResponseTainting;
+  }
+
+  void
+  SetResponseTainting(ResponseTainting aTainting)
+  {
+    mResponseTainting = aTainting;
+  }
+
   nsContentPolicyType
   GetContext() const
   {
     return mContext;
+  }
+
+  bool
+  UnsafeRequest() const
+  {
+    return mUnsafeRequest;
   }
 
   InternalHeaders*
@@ -199,6 +229,12 @@ public:
   GetOrigin(nsCString& aOrigin) const
   {
     aOrigin.Assign(mOrigin);
+  }
+
+  bool
+  SameOriginDataURL() const
+  {
+    return mSameOriginDataURL;
   }
 
   void

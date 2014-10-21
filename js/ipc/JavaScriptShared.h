@@ -169,6 +169,9 @@ class JavaScriptShared
     bool toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
                       JS::MutableHandle<JSPropertyDescriptor> out);
 
+    bool toObjectOrNullVariant(JSContext *cx, JSObject *obj, ObjectOrNullVariant *objVarp);
+    JSObject *fromObjectOrNullVariant(JSContext *cx, ObjectOrNullVariant objVar);
+
     bool convertIdToGeckoString(JSContext *cx, JS::HandleId id, nsString *to);
     bool convertGeckoStringToId(JSContext *cx, const nsString &from, JS::MutableHandleId id);
 

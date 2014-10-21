@@ -313,6 +313,8 @@ Promise::Promise(nsIGlobalObject* aGlobal)
   MOZ_ASSERT(mGlobal);
 
   mozilla::HoldJSObjects(this);
+
+  mCreationTimestamp = TimeStamp::Now();
 }
 
 Promise::~Promise()
@@ -1172,6 +1174,7 @@ Promise::RunResolveTask(JS::Handle<JS::Value> aValue,
 
   SetResult(aValue);
   SetState(aState);
+  mSettlementTimestamp = TimeStamp::Now();
 
   // If the Promise was rejected, and there is no reject handler already setup,
   // watch for thread shutdown.

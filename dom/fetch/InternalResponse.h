@@ -25,8 +25,6 @@ public:
 
   InternalResponse(uint16_t aStatus, const nsACString& aStatusText);
 
-  explicit InternalResponse(const InternalResponse& aOther) MOZ_DELETE;
-
   static already_AddRefed<InternalResponse>
   NetworkError()
   {
@@ -34,6 +32,24 @@ public:
     response->mType = ResponseType::Error;
     return response.forget();
   }
+
+  static already_AddRefed<InternalResponse>
+  OpaqueResponse()
+  {
+    nsRefPtr<InternalResponse> response = new InternalResponse(0, EmptyCString());
+    response->mType = ResponseType::Opaque;
+    return response.forget();
+  }
+
+  // DO NOT use the inner response after filtering it since the filtered
+  // response will adopt the inner response's body.
+  static already_AddRefed<InternalResponse>
+  BasicResponse(InternalResponse* aInner);
+
+  // DO NOT use the inner response after filtering it since the filtered
+  // response will adopt the inner response's body.
+  static already_AddRefed<InternalResponse>
+  CORSResponse(InternalResponse* aInner);
 
   ResponseType
   Type() const
@@ -48,10 +64,16 @@ public:
   }
 
   // FIXME(nsm): Return with exclude fragment.
-  nsCString&
-  GetUrl()
+  void
+  GetUrl(nsCString& aURL) const
   {
-    return mURL;
+    aURL.Assign(mURL);
+  }
+
+  void
+  SetUrl(const nsACString& aURL)
+  {
+    mURL.Assign(aURL);
   }
 
   uint16_t
@@ -88,6 +110,10 @@ public:
 private:
   ~InternalResponse()
   { }
+
+  // Used to create filtered responses.
+  // Does not copy headers.
+  explicit InternalResponse(const InternalResponse& aOther);
 
   ResponseType mType;
   nsCString mTerminationReason;
