@@ -463,14 +463,14 @@ private:
 /* |SocketIOTask| holds a reference to a Socket I/O object. It's
  * supposed to run on the I/O thread.
  */
-template <typename T>
+template<typename Tio>
 class SocketIOTask : public CancelableTask
 {
 public:
   virtual ~SocketIOTask()
   { }
 
-  T* GetIO() const
+  Tio* GetIO() const
   {
     return mIO;
   }
@@ -486,25 +486,26 @@ public:
   }
 
 protected:
-  SocketIOTask(T* aIO)
+  SocketIOTask(Tio* aIO)
   : mIO(aIO)
   {
     MOZ_ASSERT(mIO);
   }
 
 private:
-  T* mIO;
+  Tio* mIO;
 };
 
-/* |SocketIOSendTask| transfers an instance of |UnixSocketRawData| to
- * the I/O thread and queues it up for sending the contained data.
+/* |SocketIOSendTask| transfers an instance of |Tdata|, such as
+ * |UnixSocketRawData|, to the I/O thread and queues it up for
+ * sending the contained data.
  */
-template <typename T>
-class SocketIOSendTask MOZ_FINAL : public SocketIOTask<T>
+template<typename Tio, typename Tdata>
+class SocketIOSendTask MOZ_FINAL : public SocketIOTask<Tio>
 {
 public:
-  SocketIOSendTask(T* aIO, UnixSocketRawData* aData)
-  : SocketIOTask<T>(aIO)
+  SocketIOSendTask(Tio* aIO, Tdata* aData)
+  : SocketIOTask<Tio>(aIO)
   , mData(aData)
   {
     MOZ_ASSERT(aData);
@@ -513,34 +514,34 @@ public:
   void Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(!SocketIOTask<T>::IsCanceled());
+    MOZ_ASSERT(!SocketIOTask<Tio>::IsCanceled());
 
-    T* io = SocketIOTask<T>::GetIO();
+    Tio* io = SocketIOTask<Tio>::GetIO();
     MOZ_ASSERT(!io->IsShutdownOnIOThread());
 
     io->Send(mData);
   }
 
 private:
-  UnixSocketRawData* mData;
+  Tdata* mData;
 };
 
 /* |SocketIOShutdownTask| signals shutdown to the Socket I/O object on
  * the I/O thread and sends it to the main thread for destruction.
  */
-template <typename T>
-class SocketIOShutdownTask MOZ_FINAL : public SocketIOTask<T>
+template<typename Tio>
+class SocketIOShutdownTask MOZ_FINAL : public SocketIOTask<Tio>
 {
 public:
-  SocketIOShutdownTask(T* aIO)
-  : SocketIOTask<T>(aIO)
+  SocketIOShutdownTask(Tio* aIO)
+  : SocketIOTask<Tio>(aIO)
   { }
 
   void Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
-    T* io = SocketIOTask<T>::GetIO();
+    Tio* io = SocketIOTask<Tio>::GetIO();
 
     // At this point, there should be no new events on the I/O thread
     // after this one with the possible exception of an accept task,
@@ -549,7 +550,7 @@ public:
     // |io| safely knowing that it's not reference any longer.
     io->ShutdownOnIOThread();
 
-    nsRefPtr<nsRunnable> r = new SocketIODeleteInstanceRunnable<T>(io);
+    nsRefPtr<nsRunnable> r = new SocketIODeleteInstanceRunnable<Tio>(io);
     nsresult rv = NS_DispatchToMainThread(r);
     NS_ENSURE_SUCCESS_VOID(rv);
   }
