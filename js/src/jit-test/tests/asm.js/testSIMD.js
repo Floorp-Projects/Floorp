@@ -152,10 +152,9 @@ assertEq(asmLink(asmCompile('glob', USE_ASM + F32 + "function f() {f4(1,2,3,4);}
 
 // Int32x4 ctor should accept int?
 assertEqX4(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + I32 + "var i32=new glob.Int32Array(heap); function f(i) {i=i|0; return i4(i4(i32[i>>2], 2, 3, 4))} return f"), this, {}, new ArrayBuffer(0x10000))(0x20000), [0, 2, 3, 4]);
-// Float32x4 ctor should accept floatish (i.e. float || float? || floatish) and doublit
+// Float32x4 ctor should accept floatish, i.e. float || float? || floatish
 assertEqX4(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + F32 + FROUND + "var h=new glob.Float32Array(heap); function f(i) {i=i|0; return f4(f4(h[i>>2], f32(2), f32(3), f32(4)))} return f"), this, {}, new ArrayBuffer(0x10000))(0x20000), [NaN, 2, 3, 4]);
 assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + FROUND + "function f(i) {i=i|0; return f4(f4(f32(1) + f32(2), f32(2), f32(3), f32(4)))} return f"), this, {}, new ArrayBuffer(0x10000))(0x20000), [3, 2, 3, 4]);
-assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + FROUND + "function f(i) {i=i|0; return f4(f4(f32(1) + f32(2), 2.0, 3.0, 4.0))} return f"), this, {}, new ArrayBuffer(0x10000))(0x20000), [3, 2, 3, 4]);
 
 // 1.3.2 Reading values out of lanes
 assertAsmTypeFail('glob', USE_ASM + "function f() {var x=1; return x.y | 0;} return f");
@@ -816,10 +815,8 @@ assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + I32SPLAT + 'function f(){r
 
 const l33t = Math.fround(13.37);
 assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + F32SPLAT + FROUND + 'function f(){return f4(splat(f32(1)));} return f'), this)(), [1, 1, 1, 1]);
-assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + F32SPLAT + FROUND + 'function f(){return f4(splat(1.0));} return f'), this)(), [1, 1, 1, 1]);
 assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + F32SPLAT + FROUND + 'function f(){return f4(splat(f32(1 >>> 0)));} return f'), this)(), [1, 1, 1, 1]);
 assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + F32SPLAT + FROUND + 'function f(){return f4(splat(f32(13.37)));} return f'), this)(), [l33t, l33t, l33t, l33t]);
-assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + F32SPLAT + FROUND + 'function f(){return f4(splat(13.37));} return f'), this)(), [l33t, l33t, l33t, l33t]);
 
 var i32view = new Int32Array(heap);
 var f32view = new Float32Array(heap);
