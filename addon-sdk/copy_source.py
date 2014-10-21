@@ -58,6 +58,7 @@ for dirpath, dirnames, filenames in os.walk(real_source):
         print "  %s/%s \\" % (dirpath, name)
     print "  $(NULL)"
     print "%s_DEST = %s%s" % (varname, target_dir, relative)
+    print "%s_TARGET = copy_source" % varname
     print "INSTALL_TARGETS += %s\n" % varname
 
 print "include $(topsrcdir)/config/rules.mk"
