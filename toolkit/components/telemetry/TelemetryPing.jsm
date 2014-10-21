@@ -907,7 +907,7 @@ let Impl = {
     }
 
 #ifdef MOZILLA_OFFICIAL
-    if (!Telemetry.canSend && !aTesting) {
+    if (!Telemetry.canSend) {
       // We can't send data; no point in initializing observers etc.
       // Only do this for official builds so that e.g. developer builds
       // still enable Telemetry based on prefs.
