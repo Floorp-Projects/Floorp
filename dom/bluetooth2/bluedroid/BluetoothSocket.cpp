@@ -143,6 +143,11 @@ public:
     return mConsumer.get();
   }
 
+  SocketBase* GetSocketBase()
+  {
+    return GetConsumer();
+  }
+
   /**
    * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
    * directly from main thread. All non-main-thread accesses should happen with

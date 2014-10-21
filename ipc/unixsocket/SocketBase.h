@@ -106,15 +106,15 @@ enum SocketConnectionStatus {
 };
 
 //
-// SocketConsumerBase
+// SocketBase
 //
 
-class SocketConsumerBase
+class SocketBase
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SocketConsumerBase)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SocketBase)
 
-  virtual ~SocketConsumerBase();
+  virtual ~SocketBase();
 
   SocketConnectionStatus GetConnectionStatus() const;
 
@@ -125,24 +125,6 @@ public:
    * from main thread.
    */
   virtual void CloseSocket() = 0;
-
-  /**
-   * Function to be called whenever data is received. This is only called on the
-   * main thread.
-   *
-   * @param aMessage Data received from the socket.
-   */
-  virtual void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage) = 0;
-
-  /**
-   * Queue data to be sent to the socket on the IO thread. Can only be called on
-   * originating thread.
-   *
-   * @param aMessage Data to be sent to socket
-   *
-   * @return true if data is queued, false otherwise (i.e. not connected)
-   */
-  virtual bool SendSocketData(UnixSocketRawData* aMessage) = 0;
 
   /**
    * Callback for socket connect/accept success. Called after connect/accept has
@@ -176,7 +158,7 @@ public:
   void NotifyDisconnect();
 
 protected:
-  SocketConsumerBase();
+  SocketBase();
 
   void SetConnectionStatus(SocketConnectionStatus aConnectionStatus);
 
@@ -186,6 +168,34 @@ private:
   SocketConnectionStatus mConnectionStatus;
   PRIntervalTime mConnectTimestamp;
   uint32_t mConnectDelayMs;
+};
+
+//
+// SocketConsumerBase
+//
+
+class SocketConsumerBase : public SocketBase
+{
+public:
+  virtual ~SocketConsumerBase();
+
+  /**
+   * Function to be called whenever data is received. This is only called on the
+   * main thread.
+   *
+   * @param aMessage Data received from the socket.
+   */
+  virtual void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage) = 0;
+
+  /**
+   * Queue data to be sent to the socket on the IO thread. Can only be called on
+   * originating thread.
+   *
+   * @param aMessage Data to be sent to socket
+   *
+   * @return true if data is queued, false otherwise (i.e. not connected)
+   */
+  virtual bool SendSocketData(UnixSocketRawData* aMessage) = 0;
 };
 
 //
@@ -249,15 +259,15 @@ public:
       return NS_OK;
     }
 
-    SocketConsumerBase* consumer = io->GetConsumer();
-    MOZ_ASSERT(consumer);
+    SocketBase* base = io->GetSocketBase();
+    MOZ_ASSERT(base);
 
     if (mEvent == CONNECT_SUCCESS) {
-      consumer->NotifySuccess();
+      base->NotifySuccess();
     } else if (mEvent == CONNECT_ERROR) {
-      consumer->NotifyError();
+      base->NotifyError();
     } else if (mEvent == DISCONNECT) {
-      consumer->NotifyDisconnect();
+      base->NotifyDisconnect();
     }
 
     return NS_OK;
@@ -325,10 +335,10 @@ public:
       return NS_OK;
     }
 
-    SocketConsumerBase* consumer = io->GetConsumer();
-    MOZ_ASSERT(consumer);
+    SocketBase* base = io->GetSocketBase();
+    MOZ_ASSERT(base);
 
-    consumer->CloseSocket();
+    base->CloseSocket();
 
     return NS_OK;
   }
