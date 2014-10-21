@@ -819,6 +819,14 @@ MSimdSplatX4::foldsTo(TempAllocator &alloc)
     return MSimdConstant::New(alloc, cst, type());
 }
 
+MDefinition *
+MSimdSwizzle::foldsTo(TempAllocator &alloc)
+{
+    if (lanesMatch(0, 1, 2, 3))
+        return input();
+    return this;
+}
+
 MCloneLiteral *
 MCloneLiteral::New(TempAllocator &alloc, MDefinition *obj)
 {

@@ -2394,8 +2394,12 @@ CodeGeneratorX86Shared::visitSimdSwizzleI(LSimdSwizzleI *ins)
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
 
-    uint32_t mask = MacroAssembler::ComputeShuffleMask(ins->laneX(), ins->laneY(), ins->laneZ(),
-                                                       ins->laneW());
+    uint32_t x = ins->laneX();
+    uint32_t y = ins->laneY();
+    uint32_t z = ins->laneZ();
+    uint32_t w = ins->laneW();
+
+    uint32_t mask = MacroAssembler::ComputeShuffleMask(x, y, z, w);
     masm.shuffleInt32(mask, input, output);
     return true;
 }
@@ -2406,8 +2410,38 @@ CodeGeneratorX86Shared::visitSimdSwizzleF(LSimdSwizzleF *ins)
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
 
-    uint32_t mask = MacroAssembler::ComputeShuffleMask(ins->laneX(), ins->laneY(), ins->laneZ(),
-                                                       ins->laneW());
+    uint32_t x = ins->laneX();
+    uint32_t y = ins->laneY();
+    uint32_t z = ins->laneZ();
+    uint32_t w = ins->laneW();
+
+    // TODO Here and below, arch specific lowering could identify this pattern
+    // and use defineReuseInput to avoid this move (bug 1084404)
+    if (ins->lanesMatch(2, 3, 2, 3)) {
+        masm.movaps(input, output);
+        masm.movhlps(input, output);
+        return true;
+    }
+
+    if (ins->lanesMatch(0, 1, 0, 1)) {
+        masm.movaps(input, output);
+        masm.movlhps(input, output);
+        return true;
+    }
+
+    if (ins->lanesMatch(0, 0, 1, 1)) {
+        masm.movaps(input, output);
+        masm.unpcklps(input, output);
+        return true;
+    }
+
+    if (ins->lanesMatch(2, 2, 3, 3)) {
+        masm.movaps(input, output);
+        masm.unpckhps(input, output);
+        return true;
+    }
+
+    uint32_t mask = MacroAssembler::ComputeShuffleMask(x, y, z, w);
     masm.shuffleFloat32(mask, input, output);
     return true;
 }
@@ -2447,6 +2481,11 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
     // One element of the second, all other elements of the first
     if (numLanesFromLHS == 3) {
         unsigned firstMask = -1, secondMask = -1;
+
+        if (ins->lanesMatch(4, 1, 2, 3)) {
+            masm.movss(rhs, out);
+            return true;
+        }
 
         FloatRegister rhsCopy = ToFloatRegister(ins->temp());
 
@@ -2496,6 +2535,46 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
 
     // Two elements from one vector, two other elements from the other
     MOZ_ASSERT(numLanesFromLHS == 2);
+
+    // TODO Here and below, symmetric case would be more handy to avoid a move,
+    // but can't be reached because operands would get swapped (bug 1084404).
+    if (ins->lanesMatch(2, 3, 6, 7)) {
+        masm.movaps(rhs, ScratchSimdReg);
+        masm.movhlps(lhs, ScratchSimdReg);
+        masm.movaps(ScratchSimdReg, out);
+        return true;
+    }
+
+    if (ins->lanesMatch(0, 1, 4, 5)) {
+        masm.movlhps(rhs, lhs);
+        return true;
+    }
+
+    if (ins->lanesMatch(0, 4, 1, 5)) {
+        masm.unpcklps(rhs, lhs);
+        return true;
+    }
+
+    // TODO swapped case would be better (bug 1084404)
+    if (ins->lanesMatch(4, 0, 5, 1)) {
+        masm.movaps(rhs, ScratchSimdReg);
+        masm.unpcklps(lhs, ScratchSimdReg);
+        masm.movaps(ScratchSimdReg, out);
+        return true;
+    }
+
+    if (ins->lanesMatch(2, 6, 3, 7)) {
+        masm.unpckhps(rhs, lhs);
+        return true;
+    }
+
+    // TODO swapped case would be better (bug 1084404)
+    if (ins->lanesMatch(6, 2, 7, 3)) {
+        masm.movaps(rhs, ScratchSimdReg);
+        masm.unpckhps(lhs, ScratchSimdReg);
+        masm.movaps(ScratchSimdReg, out);
+        return true;
+    }
 
     // In one shufps
     if (x < 4 && y < 4) {

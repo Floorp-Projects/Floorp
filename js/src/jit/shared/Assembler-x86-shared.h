@@ -1414,10 +1414,6 @@ class AssemblerX86Shared : public AssemblerShared
         masm.divl_r(divisor.code());
     }
 
-    void unpcklps(FloatRegister src, FloatRegister dest) {
-        MOZ_ASSERT(HasSSE2());
-        masm.unpcklps_rr(src.code(), dest.code());
-    }
     void pinsrd(unsigned lane, Register src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE41());
         masm.pinsrd_irr(lane, src.code(), dest.code());
@@ -1859,6 +1855,18 @@ class AssemblerX86Shared : public AssemblerShared
     void movhlps(FloatRegister src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         masm.movhlps_rr(src.code(), dest.code());
+    }
+    void movlhps(FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.movlhps_rr(src.code(), dest.code());
+    }
+    void unpcklps(FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.unpcklps_rr(src.code(), dest.code());
+    }
+    void unpckhps(FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.unpckhps_rr(src.code(), dest.code());
     }
     void shufps(uint32_t mask, FloatRegister src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
