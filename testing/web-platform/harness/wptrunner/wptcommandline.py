@@ -44,8 +44,7 @@ def create_parser(product_choices=None):
         config_data = config.load()
         product_choices = products.products_enabled(config_data)
 
-    parser = argparse.ArgumentParser("web-platform-tests",
-                                     description="Runner for web-platform-tests tests.")
+    parser = argparse.ArgumentParser(description="Runner for web-platform-tests tests.")
     parser.add_argument("--metadata", action="store", type=abs_path, dest="metadata_root",
                         help="Path to the folder containing test metadata"),
     parser.add_argument("--tests", action="store", type=abs_path, dest="tests_root",
@@ -68,6 +67,11 @@ def create_parser(product_choices=None):
                         help="URL prefix to exclude")
     parser.add_argument("--include-manifest", type=abs_path,
                         help="Path to manifest listing tests to include")
+
+    parser.add_argument("--run-by-dir", type=int, nargs="?", default=False,
+                        help="Split run into groups by directories. With a parameter,"
+                        "limit the depth of splits e.g. --run-by-dir=1 to split by top-level"
+                        "directory")
 
     parser.add_argument("--total-chunks", action="store", type=int, default=1,
                         help="Total number of chunks to use")

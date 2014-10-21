@@ -1116,7 +1116,7 @@ bool GeckoAppShell::PumpMessageLoop() {
 }
 
 void GeckoAppShell::RegisterSurfaceTextureFrameListener(jobject a0, int32_t a1) {
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    JNIEnv *env = GetJNIForThread();
     if (env->PushLocalFrame(1) != 0) {
         AndroidBridge::HandleUncaughtException(env);
         MOZ_CRASH("Exception should have caused crash.");

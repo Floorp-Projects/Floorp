@@ -958,8 +958,13 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
 
                 if (function->isInterpretedLazy())
                     funEnclosingScope = function->lazyScript()->enclosingScope();
-                else
+                else if (function->isInterpreted())
                     funEnclosingScope = function->nonLazyScript()->enclosingStaticScope();
+                else {
+                    MOZ_ASSERT(function->isAsmJSNative());
+                    JS_ReportError(cx, "AsmJS modules are not yet supported in XDR serialization.");
+                    return false;
+                }
 
                 StaticScopeIter<NoGC> ssi(funEnclosingScope);
                 if (ssi.done() || ssi.type() == StaticScopeIter<NoGC>::FUNCTION) {

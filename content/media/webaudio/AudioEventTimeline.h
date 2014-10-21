@@ -15,6 +15,7 @@
 
 #include "nsTArray.h"
 #include "math.h"
+#include "WebAudioUtils.h"
 
 namespace mozilla {
 
@@ -73,6 +74,11 @@ struct AudioTimelineEvent {
           return false;
         }
       }
+    }
+
+    if (mType == AudioTimelineEvent::SetTarget &&
+        WebAudioUtils::FuzzyEqual(mTimeConstant, 0.0)) {
+      return false;
     }
 
     return IsValid(mTime) &&

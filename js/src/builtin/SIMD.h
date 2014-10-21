@@ -149,6 +149,8 @@
     _(or)                            \
     _(xor)                           \
     _(select)                        \
+    _(swizzle)                       \
+    _(shuffle)                       \
     _(splat)                         \
     _(withX)                         \
     _(withY)                         \

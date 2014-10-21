@@ -13,22 +13,22 @@
 
   <body>
 
-  
+
   		<h1>Required Attribute</h1>
   		<div style="display: none">
   		<input type="text" required="required" />
 		</div>
-		
+
     <div id="log">
     </div>
-	
+
 	<script type="text/javascript">
 
 
 		test(function() {assert_equals(document.getElementsByTagName("input")[0].getAttribute("required"), "required")}, "required attribute support on input element");
 
 	</script>
-	
+
   </body>
-  
+
 </html>

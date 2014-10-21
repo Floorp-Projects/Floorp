@@ -2862,9 +2862,12 @@ MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
     mNeedsMemoryReport = true;
 
     {
-      // Wake up the MSG thread.
+      // Wake up the MSG thread if it's real time (Offline graphs can't be
+      // sleeping).
       MonitorAutoLock monitorLock(mMonitor);
-      CurrentDriver()->WakeUp();
+      if (!CurrentDriver()->AsOfflineClockDriver()) {
+        CurrentDriver()->WakeUp();
+      }
     }
 
     if (mLifecycleState >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN) {

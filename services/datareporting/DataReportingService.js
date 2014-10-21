@@ -9,6 +9,9 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 
 
 const ROOT_BRANCH = "datareporting.";
@@ -61,6 +64,13 @@ this.DataReportingService = function () {
 
   this._os = Cc["@mozilla.org/observer-service;1"]
                .getService(Ci.nsIObserverService);
+
+  this._clientID = null;
+  this._loadClientIdTask = null;
+  this._saveClientIdTask = null;
+
+  this._stateDir = null;
+  this._stateFilePath = null;
 }
 
 DataReportingService.prototype = Object.freeze({
@@ -125,6 +135,9 @@ DataReportingService.prototype = Object.freeze({
           // We can't interact with prefs until after the profile is present.
           let policyPrefs = new Preferences(POLICY_BRANCH);
           this.policy = new DataReportingPolicy(policyPrefs, this._prefs, this);
+
+          this._stateDir = OS.Path.join(OS.Constants.Path.profileDir, "datareporting");
+          this._stateFilePath = OS.Path.join(this._stateDir, "state.json");
 
           this._os.addObserver(this, "sessionstore-windows-restored", true);
         } catch (ex) {
@@ -284,6 +297,109 @@ DataReportingService.prototype = Object.freeze({
       this._prefs.set("service.firstRun", true);
     }.bind(this));
   },
+
+  _loadClientID: Task.async(function* () {
+    if (this._loadClientIdTask) {
+      return this._loadClientIdTask;
+    }
+
+    // Previously we had the stable client ID managed in FHR.
+    // As we want to start correlating FHR and telemetry data (and moving towards
+    // unifying the two), we moved the ID management to the datareporting
+    // service. Consequently, we try to import the FHR ID first, so we can keep
+    // using it.
+
+    // Try to load the client id from the DRS state file first.
+    try {
+      let state = yield CommonUtils.readJSON(this._stateFilePath);
+      if (state && 'clientID' in state && typeof(state.clientID) == 'string') {
+        this._clientID = state.clientID;
+        this._loadClientIdTask = null;
+        return this._clientID;
+      }
+    } catch (e) {
+      // fall through to next option
+    }
+
+    // If we dont have DRS state yet, try to import from the FHR state.
+    try {
+      let fhrStatePath = OS.Path.join(OS.Constants.Path.profileDir, "healthreport", "state.json");
+      let state = yield CommonUtils.readJSON(fhrStatePath);
+      if (state && 'clientID' in state && typeof(state.clientID) == 'string') {
+        this._clientID = state.clientID;
+        this._loadClientIdTask = null;
+        this._saveClientID();
+        return this._clientID;
+      }
+    } catch (e) {
+      // fall through to next option
+    }
+
+    // We dont have an id from FHR yet, generate a new ID.
+    this._clientID = CommonUtils.generateUUID();
+    this._loadClientIdTask = null;
+    this._saveClientIdTask = this._saveClientID();
+
+    // Wait on persisting the id. Otherwise failure to save the ID would result in
+    // the client creating and subsequently sending multiple IDs to the server.
+    // This would appear as multiple clients submitting similar data, which would
+    // result in orphaning.
+    yield this._saveClientIdTask;
+
+    return this._clientID;
+  }),
+
+  _saveClientID: Task.async(function* () {
+    let obj = { clientID: this._clientID };
+    yield OS.File.makeDir(this._stateDir);
+    yield CommonUtils.writeJSON(obj, this._stateFilePath);
+    this._saveClientIdTask = null;
+  }),
+
+  /**
+   * This returns a promise resolving to the the stable client ID we use for
+   * data reporting (FHR & Telemetry). Previously exising FHR client IDs are
+   * migrated to this.
+   *
+   * @return Promise<string> The stable client ID.
+   */
+  getClientID: function() {
+    if (this._loadClientIdTask) {
+      return this._loadClientIdTask;
+    }
+
+    if (!this._clientID) {
+      this._loadClientIdTask = this._loadClientID();
+      return this._loadClientIdTask;
+    }
+
+    return Promise.resolve(this._clientID);
+  },
+
+  /**
+   * Reset the stable client id.
+   *
+   * @return Promise<string> The new client ID.
+   */
+  resetClientID: Task.async(function* () {
+    yield this._loadClientIdTask;
+    yield this._saveClientIdTask;
+
+    this._clientID = CommonUtils.generateUUID();
+    this._saveClientIdTask = this._saveClientID();
+    yield this._saveClientIdTask;
+
+    return this._clientID;
+  }),
+
+  /*
+   * Simulate a restart of the service. This is for testing only.
+   */
+  _reset: Task.async(function* () {
+    yield this._loadClientIdTask;
+    yield this._saveClientIdTask;
+    this._clientID = null;
+  }),
 });
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DataReportingService]);

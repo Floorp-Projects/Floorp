@@ -77,6 +77,31 @@ class TestClickScrolling(MarionetteTestCase):
         # If we dont throw we are good
         self.marionette.find_element(By.ID, "radio").click()
 
+    def test_should_scroll_elements_if_click_point_is_out_of_view_but_element_is_in_view(self):
+        test_html = self.marionette.absolute_url("element_outside_viewport.html")
+
+        for s in ["top", "bottom"]:
+            self.marionette.navigate(test_html)
+            scroll_y = self.marionette.execute_script("return window.scrollY;")
+            self.marionette.find_element(By.ID, "%s-70" % s).click()
+            self.assertNotEqual(scroll_y, self.marionette.execute_script("return window.scrollY;"))
+
+        for s in ["left", "right"]:
+            self.marionette.navigate(test_html)
+            scroll_x = self.marionette.execute_script("return window.scrollX;")
+            self.marionette.find_element(By.ID, "%s-70" % s).click()
+            self.assertNotEqual(scroll_x, self.marionette.execute_script("return window.scrollX;"))
+
+    def test_should_not_scroll_elements_if_click_point_is_in_view(self):
+        test_html = self.marionette.absolute_url("element_outside_viewport.html")
+
+        for s in ["top", "right", "bottom", "left"]:
+            for p in ["50", "30"]:
+                self.marionette.navigate(test_html)
+                scroll = self.marionette.execute_script("return [window.scrollX, window.scrollY];")
+                self.marionette.find_element(By.ID, "%s-%s" % (s, p)).click()
+                self.assertEqual(scroll, self.marionette.execute_script("return [window.scrollX, window.scrollY];"))
+
     @skip("Bug 1003687")
     def test_should_scroll_overflow_elements_if_click_point_is_out_of_view_but_element_is_in_view(self):
         test_html = self.marionette.absolute_url("scroll5.html")
