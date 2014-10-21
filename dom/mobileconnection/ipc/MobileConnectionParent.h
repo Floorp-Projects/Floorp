@@ -51,7 +51,7 @@ protected:
   virtual bool
   RecvInit(nsMobileConnectionInfo* aVoice, nsMobileConnectionInfo* aData,
            nsString* aLastKnownNetwork, nsString* aLastKnownHomeNetwork,
-           nsString* aIccId, nsString* aNetworkSelectionMode,
+           nsString* aIccId, int32_t* aNetworkSelectionMode,
            nsString* aRadioState, nsTArray<nsString>* aSupportedNetworkTypes) MOZ_OVERRIDE;
 
 private:
