@@ -277,7 +277,7 @@ MediaEngineWebRTC::EnumerateVideoDevices(MediaSourceType aMediaSource,
     }
   }
 
-  if (mHasTabVideoSource)
+  if (mHasTabVideoSource || MediaSourceType::Browser == aMediaSource)
     aVSources->AppendElement(new MediaEngineTabVideoSource());
 
   return;
