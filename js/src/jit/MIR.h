@@ -1669,7 +1669,7 @@ class MSimdShuffle : public MBinaryInstruction, public MSimdShuffleBase
   public:
     INSTRUCTION_HEADER(SimdShuffle);
 
-    static MSimdShuffle *NewAsmJS(TempAllocator &alloc, MDefinition *lhs, MDefinition *rhs,
+    static MInstruction *NewAsmJS(TempAllocator &alloc, MDefinition *lhs, MDefinition *rhs,
                                   MIRType type, int32_t laneX, int32_t laneY, int32_t laneZ,
                                   int32_t laneW)
     {
@@ -1684,6 +1684,10 @@ class MSimdShuffle : public MBinaryInstruction, public MSimdShuffleBase
             laneW = (laneW + 4) % 8;
             mozilla::Swap(lhs, rhs);
         }
+
+        // If all lanes come from the same vector, just use swizzle instead.
+        if (laneX < 4 && laneY < 4 && laneZ < 4 && laneW < 4)
+            return MSimdSwizzle::NewAsmJS(alloc, lhs, type, laneX, laneY, laneZ, laneW);
 
         return new(alloc) MSimdShuffle(lhs, rhs, type, laneX, laneY, laneZ, laneW);
     }
