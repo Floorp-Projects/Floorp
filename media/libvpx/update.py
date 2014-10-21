@@ -530,6 +530,8 @@ def update_and_remove_files(prefix, libvpx_files, files):
 def apply_patches():
     # Patch to permit vpx users to specify their own <stdint.h> types.
     os.system("patch -p0 < stdint.patch")
+    # Patch to allow older versions of Apple's clang to build libvpx.
+    os.system("patch -p3 < apple-clang.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:

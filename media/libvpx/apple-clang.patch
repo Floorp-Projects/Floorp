@@ -1,0 +1,29 @@
+diff --git a/media/libvpx/vp9/common/x86/vp9_subpixel_8t_intrin_avx2.c b/media/libvpx/vp9/common/x86/vp9_subpixel_8t_intrin_avx2.c
+--- a/media/libvpx/vp9/common/x86/vp9_subpixel_8t_intrin_avx2.c
++++ b/media/libvpx/vp9/common/x86/vp9_subpixel_8t_intrin_avx2.c
+@@ -27,21 +27,24 @@ DECLARE_ALIGNED(32, static const uint8_t
+   4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12
+ };
+ 
+ DECLARE_ALIGNED(32, static const uint8_t, filt4_global_avx2[32]) = {
+   6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14,
+   6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14
+ };
+ 
+ #if defined(__clang__)
+ # if __clang_major__ < 3 || (__clang_major__ == 3 && __clang_minor__ <= 3) || \
+-      (defined(__APPLE__) && __clang_major__ == 5 && __clang_minor__ == 0)
++      (defined(__APPLE__) && \
++          (__clang_major__ == 4 && __clang_minor__ >= 0 && \
++              __clang_minor__ <= 2) || \
++          (__clang_major__ == 5 && __clang_minor__ == 0))
+ #  define MM256_BROADCASTSI128_SI256(x) \
+        _mm_broadcastsi128_si256((__m128i const *)&(x))
+ # else  // clang > 3.3, and not 5.0 on macosx.
+ #  define MM256_BROADCASTSI128_SI256(x) _mm256_broadcastsi128_si256(x)
+ # endif  // clang <= 3.3
+ #elif defined(__GNUC__)
+ # if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ <= 6)
+ #  define MM256_BROADCASTSI128_SI256(x) \
+        _mm_broadcastsi128_si256((__m128i const *)&(x))
+ # elif __GNUC__ == 4 && __GNUC_MINOR__ == 7
