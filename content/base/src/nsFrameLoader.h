@@ -131,6 +131,10 @@ public:
                                nsRefPtr<nsFrameLoader>& aFirstToSwap,
                                nsRefPtr<nsFrameLoader>& aSecondToSwap);
 
+  nsresult SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
+                                     nsRefPtr<nsFrameLoader>& aFirstToSwap,
+                                     nsRefPtr<nsFrameLoader>& aSecondToSwap);
+
   // When IPC is enabled, destroy any associated child process.
   void DestroyChild();
 

@@ -42,6 +42,12 @@ public:
   // LayerComposite Implementation
   virtual Layer* GetLayer() MOZ_OVERRIDE { return this; }
 
+  virtual void SetLayerManager(LayerManagerComposite* aManager) MOZ_OVERRIDE
+  {
+    LayerComposite::SetLayerManager(aManager);
+    mManager = aManager;
+  }
+
   virtual void Destroy() MOZ_OVERRIDE { mDestroyed = true; }
 
   virtual void RenderLayer(const nsIntRect& aClipRect) MOZ_OVERRIDE;

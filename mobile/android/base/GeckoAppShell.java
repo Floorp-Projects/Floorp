@@ -14,8 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
@@ -60,7 +58,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.DownloadManager;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -93,8 +90,6 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.media.MediaScannerConnection;
-import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -132,19 +127,71 @@ public class GeckoAppShell
     // We have static members only.
     private GeckoAppShell() { }
 
-    private static Thread.UncaughtExceptionHandler systemUncaughtHandler;
     private static boolean restartScheduled;
     private static GeckoEditableListener editableListener;
 
+    private static final CrashHandler CRASH_HANDLER = new CrashHandler() {
+        @Override
+        protected String getAppPackageName() {
+            return AppConstants.ANDROID_PACKAGE_NAME;
+        }
+
+        @Override
+        protected Bundle getCrashExtras(final Thread thread, final Throwable exc,
+                                        final Context appContext) {
+            final Bundle extras = super.getCrashExtras(
+                thread, exc, sContextGetter != null ? getContext() : null);
+
+            extras.putString("ProductName", AppConstants.MOZ_APP_BASENAME);
+            extras.putString("ProductID", AppConstants.MOZ_APP_ID);
+            extras.putString("Version", AppConstants.MOZ_APP_VERSION);
+            extras.putString("BuildID", AppConstants.MOZ_APP_BUILDID);
+            extras.putString("Vendor", AppConstants.MOZ_APP_VENDOR);
+            extras.putString("ReleaseChannel", AppConstants.MOZ_UPDATE_CHANNEL);
+            return extras;
+        }
+
+        @Override
+        public void uncaughtException(final Thread thread, final Throwable exc) {
+            if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoExited)) {
+                // We've called System.exit. All exceptions after this point are Android
+                // berating us for being nasty to it.
+                return;
+            }
+
+            super.uncaughtException(thread, exc);
+        }
+
+        @Override
+        public boolean reportException(final Thread thread, final Throwable exc) {
+            try {
+                if (exc instanceof OutOfMemoryError) {
+                    SharedPreferences prefs = getSharedPreferences();
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
+
+                    // Synchronously write to disk so we know it's done before we
+                    // shutdown
+                    editor.commit();
+                }
+
+                reportJavaCrash(getExceptionStackTrace(exc));
+
+            } catch (final Throwable e) {
+            }
+
+            // reportJavaCrash should have caused us to hard crash. If we're still here,
+            // it probably means Gecko is not loaded, and we should do something else.
+            if (AppConstants.MOZ_CRASHREPORTER && AppConstants.MOZILLA_OFFICIAL) {
+                // Only use Java crash reporter if enabled on official build.
+                return super.reportException(thread, exc);
+            }
+            return false;
+        }
+    };
+
     private static final Queue<GeckoEvent> PENDING_EVENTS = new ConcurrentLinkedQueue<GeckoEvent>();
     private static final Map<String, String> ALERT_COOKIES = new ConcurrentHashMap<String, String>();
-
-    @SuppressWarnings("serial")
-    private static final List<String> UNKNOWN_MIME_TYPES = new ArrayList<String>(3) {{
-        add("unknown/unknown"); // This will be used as a default mime type for unknown files
-        add("application/unknown");
-        add("application/octet-stream"); // Github uses this for APK files
-    }};
 
     private static volatile boolean locationHighAccuracyEnabled;
 
@@ -216,27 +263,6 @@ public class GeckoAppShell
     public static native void onSurfaceTextureFrameAvailable(Object surfaceTexture, int id);
     public static native void dispatchMemoryPressure();
 
-    public static void registerGlobalExceptionHandler() {
-        if (systemUncaughtHandler == null) {
-            systemUncaughtHandler = Thread.getDefaultUncaughtExceptionHandler();
-        }
-
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread thread, Throwable e) {
-                handleUncaughtException(thread, e);
-            }
-        });
-    }
-
-    private static String getStackTraceString(Throwable e) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        e.printStackTrace(pw);
-        pw.flush();
-        return sw.toString();
-    }
-
     private static native void reportJavaCrash(String stackTrace);
 
     public static void notifyUriVisited(String uri) {
@@ -273,36 +299,6 @@ public class GeckoAppShell
         @Override
         public void onFaviconLoaded(String pageUrl, String faviconURL, Bitmap favicon) {
             GeckoAppShell.createShortcut(title, url, favicon);
-        }
-    }
-
-    private static final class GeckoMediaScannerClient implements MediaScannerConnectionClient {
-        private final String mFile;
-        private final String mMimeType;
-        private MediaScannerConnection mScanner;
-
-        public static void startScan(Context context, String file, String mimeType) {
-            new GeckoMediaScannerClient(context, file, mimeType);
-        }
-
-        private GeckoMediaScannerClient(Context context, String file, String mimeType) {
-            mFile = file;
-            mMimeType = mimeType;
-            mScanner = new MediaScannerConnection(context, this);
-            mScanner.connect();
-        }
-
-        @Override
-        public void onMediaScannerConnected() {
-            mScanner.scanFile(mFile, mMimeType);
-        }
-
-        @Override
-        public void onScanCompleted(String path, Uri uri) {
-            if(path.equals(mFile)) {
-                mScanner.disconnect();
-                mScanner = null;
-            }
         }
     }
 
@@ -455,57 +451,7 @@ public class GeckoAppShell
 
     @WrapElementForJNI(allowMultithread = true, noThrow = true)
     public static void handleUncaughtException(Thread thread, Throwable e) {
-        if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoExited)) {
-            // We've called System.exit. All exceptions after this point are Android
-            // berating us for being nasty to it.
-            return;
-        }
-
-        if (thread == null) {
-            thread = Thread.currentThread();
-        }
-        // If the uncaught exception was rethrown, walk the exception `cause` chain to find
-        // the original exception so Socorro can correctly collate related crash reports.
-        Throwable cause;
-        while ((cause = e.getCause()) != null) {
-            e = cause;
-        }
-
-        try {
-            Log.e(LOGTAG, ">>> REPORTING UNCAUGHT EXCEPTION FROM THREAD "
-                          + thread.getId() + " (\"" + thread.getName() + "\")", e);
-
-            Thread mainThread = ThreadUtils.getUiThread();
-            if (mainThread != null && thread != mainThread) {
-                Log.e(LOGTAG, "Main thread stack:");
-                for (StackTraceElement ste : mainThread.getStackTrace()) {
-                    Log.e(LOGTAG, ste.toString());
-                }
-            }
-
-            if (e instanceof OutOfMemoryError) {
-                SharedPreferences prefs = getSharedPreferences();
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
-
-                // Synchronously write to disk so we know it's done before we
-                // shutdown
-                editor.commit();
-            }
-        } catch (final Throwable exc) {
-            // Report the Java crash below, even if we encounter an exception here.
-        }
-
-        try {
-            reportJavaCrash(getStackTraceString(e));
-        } finally {
-            // reportJavaCrash should have caused us to hard crash. If we're still here,
-            // it probably means Gecko is not loaded, and we should do something else.
-            // Bring up the app crashed dialog so we don't crash silently.
-            if (systemUncaughtHandler != null) {
-                systemUncaughtHandler.uncaughtException(thread, e);
-            }
-        }
+        CRASH_HANDLER.uncaughtException(thread, e);
     }
 
     @WrapElementForJNI
@@ -1800,49 +1746,6 @@ public class GeckoAppShell
         } catch (Exception e) { }
     }
 
-    @WrapElementForJNI
-    public static void scanMedia(final String aFile, String aMimeType) {
-        String mimeType = aMimeType;
-        if (UNKNOWN_MIME_TYPES.contains(mimeType)) {
-            // If this is a generic undefined mimetype, erase it so that we can try to determine
-            // one from the file extension below.
-            mimeType = "";
-        }
-
-        // If the platform didn't give us a mimetype, try to guess one from the filename
-        if (TextUtils.isEmpty(mimeType)) {
-            int extPosition = aFile.lastIndexOf(".");
-            if (extPosition > 0 && extPosition < aFile.length() - 1) {
-                mimeType = getMimeTypeFromExtension(aFile.substring(extPosition+1));
-            }
-        }
-
-        // addCompletedDownload will throw if it received any null parameters. Use aMimeType or a default
-        // if we still don't have one.
-        if (TextUtils.isEmpty(mimeType)) {
-            if (TextUtils.isEmpty(aMimeType)) {
-                mimeType = UNKNOWN_MIME_TYPES.get(0);
-            } else {
-                mimeType = aMimeType;
-            }
-        }
-
-        if (AppConstants.ANDROID_DOWNLOADS_INTEGRATION) {
-            final File f = new File(aFile);
-            final DownloadManager dm = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-            dm.addCompletedDownload(f.getName(),
-                                    f.getName(),
-                                    true, // Media scanner should scan this
-                                    mimeType,
-                                    f.getAbsolutePath(),
-                                    Math.max(1, f.length()), // Some versions of Android require downloads to be at least length 1
-                                    false); // Don't show a notification.
-        } else {
-            Context context = getContext();
-            GeckoMediaScannerClient.startScan(context, aFile, mimeType);
-        }
-    }
-
     @WrapElementForJNI(stubName = "GetIconForExtensionWrapper")
     public static byte[] getIconForExtension(String aExt, int iconSize) {
         try {
@@ -1874,7 +1777,7 @@ public class GeckoAppShell
         }
     }
 
-    private static String getMimeTypeFromExtension(String ext) {
+    public static String getMimeTypeFromExtension(String ext) {
         final MimeTypeMap mtm = MimeTypeMap.getSingleton();
         return mtm.getMimeTypeFromExtension(ext);
     }

@@ -22,6 +22,7 @@ chrome.jar:
   content/aboutReader.html             (content/aboutReader.html)
   content/aboutReader.js               (content/aboutReader.js)
   content/Readability.js               (content/Readability.js)
+  content/Reader.js                    (content/Reader.js)
   content/JSDOMParser.js               (content/JSDOMParser.js)
   content/readerWorker.js              (content/readerWorker.js)
   content/aboutHome.xhtml              (content/aboutHome.xhtml)

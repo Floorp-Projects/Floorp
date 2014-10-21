@@ -11,6 +11,36 @@
 namespace mozilla {
 namespace widget {
 namespace android {
+jclass DownloadsIntegration::mDownloadsIntegrationClass = 0;
+jmethodID DownloadsIntegration::jScanMedia = 0;
+void DownloadsIntegration::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mDownloadsIntegrationClass = getClassGlobalRef("org/mozilla/gecko/DownloadsIntegration");
+    jScanMedia = getStaticMethod("scanMedia", "(Ljava/lang/String;Ljava/lang/String;)V");
+}
+
+DownloadsIntegration* DownloadsIntegration::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+    DownloadsIntegration* ret = new DownloadsIntegration(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+void DownloadsIntegration::ScanMedia(const nsAString& a0, const nsAString& a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (env->PushLocalFrame(2) != 0) {
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_CRASH("Exception should have caused crash.");
+    }
+
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
+    jstring j1 = AndroidBridge::NewJavaString(env, a1);
+
+    env->CallStaticVoidMethod(mDownloadsIntegrationClass, jScanMedia, j0, j1);
+    AndroidBridge::HandleUncaughtException(env);
+    env->PopLocalFrame(nullptr);
+}
 jclass GeckoAppShell::mGeckoAppShellClass = 0;
 jmethodID GeckoAppShell::jAcknowledgeEvent = 0;
 jmethodID GeckoAppShell::jAddPluginViewWrapper = 0;
@@ -80,7 +110,6 @@ jmethodID GeckoAppShell::jPumpMessageLoop = 0;
 jmethodID GeckoAppShell::jRegisterSurfaceTextureFrameListener = 0;
 jmethodID GeckoAppShell::jRemovePluginView = 0;
 jmethodID GeckoAppShell::jRequestUiThreadCallback = 0;
-jmethodID GeckoAppShell::jScanMedia = 0;
 jmethodID GeckoAppShell::jScheduleRestart = 0;
 jmethodID GeckoAppShell::jSendMessageWrapper = 0;
 jmethodID GeckoAppShell::jSetFullScreen = 0;
@@ -167,7 +196,6 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jRegisterSurfaceTextureFrameListener = getStaticMethod("registerSurfaceTextureFrameListener", "(Ljava/lang/Object;I)V");
     jRemovePluginView = getStaticMethod("removePluginView", "(Landroid/view/View;Z)V");
     jRequestUiThreadCallback = getStaticMethod("requestUiThreadCallback", "(J)V");
-    jScanMedia = getStaticMethod("scanMedia", "(Ljava/lang/String;Ljava/lang/String;)V");
     jScheduleRestart = getStaticMethod("scheduleRestart", "()V");
     jSendMessageWrapper = getStaticMethod("sendMessage", "(Ljava/lang/String;Ljava/lang/String;I)V");
     jSetFullScreen = getStaticMethod("setFullScreen", "(Z)V");
@@ -1119,21 +1147,6 @@ void GeckoAppShell::RequestUiThreadCallback(int64_t a0) {
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jRequestUiThreadCallback, a0);
-    AndroidBridge::HandleUncaughtException(env);
-    env->PopLocalFrame(nullptr);
-}
-
-void GeckoAppShell::ScanMedia(const nsAString& a0, const nsAString& a1) {
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (env->PushLocalFrame(2) != 0) {
-        AndroidBridge::HandleUncaughtException(env);
-        MOZ_CRASH("Exception should have caused crash.");
-    }
-
-    jstring j0 = AndroidBridge::NewJavaString(env, a0);
-    jstring j1 = AndroidBridge::NewJavaString(env, a1);
-
-    env->CallStaticVoidMethod(mGeckoAppShellClass, jScanMedia, j0, j1);
     AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
@@ -2478,6 +2491,7 @@ void Clipboard::SetClipboardText(const nsAString& a0) {
 }
 
 void InitStubs(JNIEnv *jEnv) {
+    DownloadsIntegration::InitStubs(jEnv);
     GeckoAppShell::InitStubs(jEnv);
     GeckoJavaSampler::InitStubs(jEnv);
     RestrictedProfiles::InitStubs(jEnv);

@@ -351,6 +351,7 @@
 
 #if MOZ_CRASHREPORTER
   <activity android:name="org.mozilla.gecko.CrashReporter"
+            android:process="@ANDROID_PACKAGE_NAME@.CrashReporter"
             android:label="@string/crash_reporter_title"
             android:icon="@drawable/crash_reporter"
             android:theme="@style/Gecko"

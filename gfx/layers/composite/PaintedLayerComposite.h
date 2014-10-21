@@ -53,6 +53,8 @@ public:
 
   virtual Layer* GetLayer() MOZ_OVERRIDE;
 
+  virtual void SetLayerManager(LayerManagerComposite* aManager) MOZ_OVERRIDE;
+
   virtual TiledLayerComposer* GetTiledLayerComposer() MOZ_OVERRIDE;
 
   virtual void RenderLayer(const nsIntRect& aClipRect) MOZ_OVERRIDE;
