@@ -144,11 +144,8 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
   if (floatCount == 0 ||
       (mFloats[floatCount-1].mLeftBEnd <= blockStart &&
        mFloats[floatCount-1].mRightBEnd <= blockStart)) {
-    //XXX temporary!
-    LogicalRect rect(aWM, aContentArea.IStart(aWM), aBOffset,
-                     aContentArea.ISize(aWM), aBSize);
-    nsRect phys = rect.GetPhysicalRect(aWM, aContainerWidth);
-    return nsFlowAreaRect(phys.x, phys.y, phys.width, phys.height, false);
+    return nsFlowAreaRect(aWM, aContentArea.IStart(aWM), aBOffset,
+                          aContentArea.ISize(aWM), aBSize, false);
   }
 
   nscoord blockEnd;
@@ -238,14 +235,11 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
     }
   }
 
-  nscoord height = (blockEnd == nscoord_MAX) ?
-                    nscoord_MAX : (blockEnd - blockStart);
-  //XXX temporary!
-  LogicalRect rect(aWM,
-                   inlineStart - origin.I(aWM), blockStart - origin.B(aWM),
-                   inlineEnd - inlineStart, height);
-  nsRect phys = rect.GetPhysicalRect(aWM, aContainerWidth);
-  return nsFlowAreaRect(phys.x, phys.y, phys.width, phys.height, haveFloats);
+  nscoord blockSize = (blockEnd == nscoord_MAX) ?
+                       nscoord_MAX : (blockEnd - blockStart);
+  return nsFlowAreaRect(aWM,
+                        inlineStart - origin.I(aWM), blockStart - origin.B(aWM),
+                        inlineEnd - inlineStart, blockSize, haveFloats);
 }
 
 nsresult
