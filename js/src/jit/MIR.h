@@ -4215,6 +4215,11 @@ class MToFloat32
     bool canConsumeFloat32(MUse *use) const { return true; }
     bool canProduceFloat32() const { return true; }
 
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return true;
+    }
+
     ALLOW_CLONE(MToFloat32)
 };
 
