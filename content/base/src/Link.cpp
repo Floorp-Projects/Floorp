@@ -361,13 +361,7 @@ Link::GetHostname(nsAString &_hostname, ErrorResult& aError)
     return;
   }
 
-  nsAutoCString host;
-  nsresult rv = uri->GetHost(host);
-  // Note that failure to get the host from the URI is not necessarily a bad
-  // thing.  Some URIs do not have a host.
-  if (NS_SUCCEEDED(rv)) {
-    CopyUTF8toUTF16(host, _hostname);
-  }
+  nsContentUtils::GetHostOrIPv6WithBrackets(uri, _hostname);
 }
 
 void

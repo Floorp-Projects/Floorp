@@ -6929,6 +6929,10 @@ BCVerticalSeg::Paint(BCPaintBorderIterator& aIter,
   uint8_t style = NS_STYLE_BORDER_STYLE_SOLID;
   nscolor color = 0xFFFFFFFF;
 
+  // All the tables frames have the same presContext, so we just use any one
+  // that exists here:
+  int32_t appUnitsPerDevPixel = col->PresContext()->AppUnitsPerDevPixel();
+
   switch (mOwner) {
     case eTableOwner:
       owner = aIter.mTable;
@@ -6989,6 +6993,7 @@ BCVerticalSeg::Paint(BCPaintBorderIterator& aIter,
                          NS_SIDE_RIGHT : NS_SIDE_LEFT;
   nsCSSRendering::DrawTableBorderSegment(aRenderingContext, style, color,
                                          aIter.mTableBgColor, segRect,
+                                         appUnitsPerDevPixel,
                                          nsPresContext::AppUnitsPerCSSPixel(),
                                          topBevelSide, mTopBevelOffset,
                                          bottomBevelSide, bottomBevelOffset);
@@ -7109,6 +7114,10 @@ BCHorizontalSeg::Paint(BCPaintBorderIterator& aIter,
   nsIFrame* col;
   nsIFrame* owner = nullptr;
 
+  // All the tables frames have the same presContext, so we just use any one
+  // that exists here:
+  int32_t appUnitsPerDevPixel = row->PresContext()->AppUnitsPerDevPixel();
+
   uint8_t style = NS_STYLE_BORDER_STYLE_SOLID;
   nscolor color = 0xFFFFFFFF;
 
@@ -7171,6 +7180,7 @@ BCHorizontalSeg::Paint(BCPaintBorderIterator& aIter,
   if (aIter.mTableIsLTR) {
     nsCSSRendering::DrawTableBorderSegment(aRenderingContext, style, color,
                                            aIter.mTableBgColor, segRect,
+                                           appUnitsPerDevPixel,
                                            nsPresContext::AppUnitsPerCSSPixel(),
                                            mLeftBevelSide,
                                            nsPresContext::CSSPixelsToAppUnits(mLeftBevelOffset),
@@ -7180,6 +7190,7 @@ BCHorizontalSeg::Paint(BCPaintBorderIterator& aIter,
     segRect.x -= segRect.width;
     nsCSSRendering::DrawTableBorderSegment(aRenderingContext, style, color,
                                            aIter.mTableBgColor, segRect,
+                                           appUnitsPerDevPixel,
                                            nsPresContext::AppUnitsPerCSSPixel(),
                                            mRightBevelSide, mRightBevelOffset,
                                            mLeftBevelSide,
