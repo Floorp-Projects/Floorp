@@ -94,16 +94,16 @@ UnixSocketRawData::Send(int aFd)
 }
 
 //
-// SocketConsumerBase
+// SocketBase
 //
 
-SocketConsumerBase::~SocketConsumerBase()
+SocketBase::~SocketBase()
 {
   MOZ_ASSERT(mConnectionStatus == SOCKET_DISCONNECTED);
 }
 
 SocketConnectionStatus
-SocketConsumerBase::GetConnectionStatus() const
+SocketBase::GetConnectionStatus() const
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -111,7 +111,7 @@ SocketConsumerBase::GetConnectionStatus() const
 }
 
 int
-SocketConsumerBase::GetSuggestedConnectDelayMs() const
+SocketBase::GetSuggestedConnectDelayMs() const
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -119,7 +119,7 @@ SocketConsumerBase::GetSuggestedConnectDelayMs() const
 }
 
 void
-SocketConsumerBase::NotifySuccess()
+SocketBase::NotifySuccess()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -129,7 +129,7 @@ SocketConsumerBase::NotifySuccess()
 }
 
 void
-SocketConsumerBase::NotifyError()
+SocketBase::NotifyError()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -140,7 +140,7 @@ SocketConsumerBase::NotifyError()
 }
 
 void
-SocketConsumerBase::NotifyDisconnect()
+SocketBase::NotifyDisconnect()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -151,7 +151,7 @@ SocketConsumerBase::NotifyDisconnect()
 }
 
 uint32_t
-SocketConsumerBase::CalculateConnectDelayMs() const
+SocketBase::CalculateConnectDelayMs() const
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -170,18 +170,24 @@ SocketConsumerBase::CalculateConnectDelayMs() const
   return connectDelayMs;
 }
 
-SocketConsumerBase::SocketConsumerBase()
+SocketBase::SocketBase()
 : mConnectionStatus(SOCKET_DISCONNECTED)
 , mConnectTimestamp(0)
 , mConnectDelayMs(0)
 { }
 
 void
-SocketConsumerBase::SetConnectionStatus(
-  SocketConnectionStatus aConnectionStatus)
+SocketBase::SetConnectionStatus(SocketConnectionStatus aConnectionStatus)
 {
   mConnectionStatus = aConnectionStatus;
 }
+
+//
+// SocketConsumerBase
+//
+
+SocketConsumerBase::~SocketConsumerBase()
+{ }
 
 //
 // SocketIOBase

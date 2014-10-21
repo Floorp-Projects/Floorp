@@ -31,6 +31,7 @@ public:
 
   void                GetSocketAddr(nsAString& aAddrStr) const;
   SocketConsumerBase* GetConsumer();
+  SocketBase*         GetSocketBase();
 
   // Shutdown state
   //
@@ -155,6 +156,12 @@ SocketConsumerBase*
 UnixSocketConsumerIO::GetConsumer()
 {
   return mConsumer.get();
+}
+
+SocketBase*
+UnixSocketConsumerIO::GetSocketBase()
+{
+  return GetConsumer();
 }
 
 bool
