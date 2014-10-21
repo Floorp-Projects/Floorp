@@ -2339,7 +2339,7 @@ NS_IMETHODIMP
 nsLocalFile::InitWithCFURL(CFURLRef aCFURL)
 {
   UInt8 path[PATH_MAX];
-  if (::CFURLGetFileSystemRepresentation(aCFURL, false, path, PATH_MAX)) {
+  if (::CFURLGetFileSystemRepresentation(aCFURL, true, path, PATH_MAX)) {
     nsDependentCString nativePath((char*)path);
     return InitWithNativePath(nativePath);
   }
