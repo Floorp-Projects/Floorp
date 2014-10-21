@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 1010538, instant scrolling expected</title>
+    <style type="text/css">
+
+        html,body {
+            color: black;
+            background-color: white;
+            font-size: 16px;
+            padding: 0;
+            margin: 0;
+        }
+
+        .a_box {
+            position: relative;
+            left: 0px;
+            top: 0px;
+            width: 20px;
+            height: 20px;
+            background: blue;
+        }
+
+        .another_box {
+            position: relative;
+            left: 2000px;
+            top: 2000px;
+            width: 20px;
+            height: 20px;
+            background: green;
+        }
+
+        .scroll_box {
+            width: 50px;
+            height: 50px;
+            overflow: scroll;
+        }
+
+        #scroll_2, #scroll_6, #scroll_9, #scroll_12 {
+            scroll-behavior: auto;
+        }
+
+        #scroll_1, #scroll_5, #scroll_8, #scroll_11 {
+            scroll-behavior: instant;
+        }
+
+        #scroll_4 {
+            scroll-behavior: smooth;
+        }
+
+    </style>
+</head>
+<body>
+  <div id="scroll_1" class="scroll_box">
+    <div id="box1a" class="a_box"></div>
+    <div id="box1b" class="another_box"></div>
+  </div>
+  <div id="scroll_2" class="scroll_box">
+    <div id="box2a" class="a_box"></div>
+    <div id="box2b" class="another_box"></div>
+  </div>
+  <div id="scroll_3" class="scroll_box">
+    <div id="box3a" class="a_box"></div>
+    <div id="box3b" class="another_box"></div>
+  </div>
+  <div id="scroll_4" class="scroll_box">
+    <div id="box4a" class="a_box"></div>
+    <div id="box4b" class="another_box"></div>
+  </div>
+  <div id="scroll_5" class="scroll_box">
+    <div id="box5a" class="a_box"></div>
+    <div id="box5b" class="another_box"></div>
+  </div>
+  <div id="scroll_6" class="scroll_box">
+    <div id="box6a" class="a_box"></div>
+    <div id="box6b" class="another_box"></div>
+  </div>
+  <div id="scroll_7" class="scroll_box">
+    <div id="box7a" class="a_box"></div>
+    <div id="box7b" class="another_box"></div>
+  </div>
+  <div id="scroll_8" class="scroll_box">
+    <div id="box8a" class="a_box"></div>
+    <div id="box8b" class="another_box"></div>
+  </div>
+  <div id="scroll_9" class="scroll_box">
+    <div id="box9a" class="a_box"></div>
+    <div id="box9b" class="another_box"></div>
+  </div>
+  <div id="scroll_10" class="scroll_box">
+    <div id="box10a" class="a_box"></div>
+    <div id="box10b" class="another_box"></div>
+  </div>
+  <div id="scroll_11" class="scroll_box">
+    <div id="box11a" class="a_box"></div>
+    <div id="box11b" class="another_box"></div>
+  </div>
+  <div id="scroll_12" class="scroll_box">
+    <div id="box12a" class="a_box"></div>
+    <div id="box12b" class="another_box"></div>
+  </div>
+  <div id="scroll_13" class="scroll_box">
+    <div id="box13a" class="a_box"></div>
+    <div id="box13b" class="another_box"></div>
+  </div>
+  <div id="scroll_14" class="scroll_box">
+    <div id="box14a" class="a_box"></div>
+    <div id="box14b" class="another_box"></div>
+  </div>
+<script>
+  function doTest() {
+    if (document.location.search != '?ref') {
+      document.getElementById("box1b").scrollIntoView({block: "end"});
+      document.getElementById("box2b").scrollIntoView({block: "end"});
+      document.getElementById("box3b").scrollIntoView({block: "end"});
+      document.getElementById("box4b").scrollIntoView({block: "end", behavior: "instant"});
+      document.getElementById("box5b").scrollIntoView({block: "end", behavior: "instant"});
+      document.getElementById("box6b").scrollIntoView({block: "end", behavior: "instant"});
+      document.getElementById("box7b").scrollIntoView({block: "end", behavior: "instant"});
+      document.getElementById("box8b").scrollIntoView({block: "end", behavior: "auto"});
+      document.getElementById("box9b").scrollIntoView({block: "end", behavior: "auto"});
+      document.getElementById("box10b").scrollIntoView({block: "end", behavior: "auto"});
+      document.getElementById("box11b").scrollIntoView(false);
+      document.getElementById("box12b").scrollIntoView(false);
+      document.getElementById("box13b").scrollIntoView(false);
+
+      // Scroll_14 is a control, expected to scroll smoothly
+      document.getElementById("box14b").scrollIntoView({block: "end", behavior: "smooth"});
+
+      // Interrupt any smooth scrolling
+      for (var i=1; i <= 14; i++) {
+        document.getElementById("scroll_" + i).scrollLeft
+          = document.getElementById("scroll_" + i).scrollLeft;
+        document.getElementById("scroll_" + i).scrollTop
+          = document.getElementById("scroll_" + i).scrollTop;
+      }
+    } else {
+      // Scroll all boxes except box 14
+      for (var i=1; i <= 13; i++) {
+        document.getElementById("box" + i + "b").scrollIntoView({block: "end", behavior: "instant"});
+      }
+    }
+    document.documentElement.removeAttribute("class");
+  }
+
+  for (var i=1; i <= 14; i++) {
+    document.getElementById("box" + i + "a")
+      .scrollIntoView({block: "start", behavior: "instant"});
+  }
+
+  window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

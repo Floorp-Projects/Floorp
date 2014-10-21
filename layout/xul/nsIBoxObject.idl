@@ -7,7 +7,7 @@
 
 interface nsIDOMElement;
 
-[uuid(ce572460-b0f2-4650-a9e7-c53a99d3b6ad)]
+[scriptable, uuid(ce572460-b0f2-4650-a9e7-c53a99d3b6ad)]
 interface nsIBoxObject : nsISupports
 {
   readonly attribute nsIDOMElement element;

@@ -76,6 +76,7 @@ interface DOMMatrixReadOnly {
     DOMPoint                   transformPoint(optional DOMPointInit point);
     [Throws] Float32Array      toFloat32Array();
     [Throws] Float64Array      toFloat64Array();
+                               stringifier;
 };
 
 [Pref="layout.css.DOMMatrix.enabled",

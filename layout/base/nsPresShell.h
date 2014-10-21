@@ -123,7 +123,8 @@ public:
 
   virtual void ClearFrameRefs(nsIFrame* aFrame) MOZ_OVERRIDE;
   virtual already_AddRefed<nsRenderingContext> CreateReferenceRenderingContext();
-  virtual nsresult GoToAnchor(const nsAString& aAnchorName, bool aScroll) MOZ_OVERRIDE;
+  virtual nsresult GoToAnchor(const nsAString& aAnchorName, bool aScroll,
+                              uint32_t aAdditionalScrollFlags = 0) MOZ_OVERRIDE;
   virtual nsresult ScrollToAnchor() MOZ_OVERRIDE;
 
   virtual nsresult ScrollContentIntoView(nsIContent* aContent,

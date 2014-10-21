@@ -57,6 +57,14 @@ class nsGlobalWindow;
 class nsICSSDeclaration;
 class nsISMILAttr;
 
+namespace mozilla {
+namespace dom {
+  struct ScrollIntoViewOptions;
+  struct ScrollToOptions;
+} // namespace dom
+} // namespace mozilla
+
+
 already_AddRefed<nsContentList>
 NS_GetContentList(nsINode* aRootNode,
                   int32_t  aMatchNameSpaceId,
@@ -737,38 +745,23 @@ public:
   already_AddRefed<DestinationInsertionPointList> GetDestinationInsertionPoints();
 
   void ScrollIntoView();
-  void ScrollIntoView(bool aTop, const ScrollOptions &aOptions);
-  int32_t ScrollTop()
-  {
-    nsIScrollableFrame* sf = GetScrollFrame();
-    return sf ? sf->GetScrollPositionCSSPixels().y : 0;
-  }
-  void SetScrollTop(int32_t aScrollTop)
-  {
-    nsIScrollableFrame* sf = GetScrollFrame();
-    if (sf) {
-      sf->ScrollToCSSPixels(CSSIntPoint(sf->GetScrollPositionCSSPixels().x,
-                                        aScrollTop));
-    }
-  }
-  int32_t ScrollLeft()
-  {
-    nsIScrollableFrame* sf = GetScrollFrame();
-    return sf ? sf->GetScrollPositionCSSPixels().x : 0;
-  }
-  void SetScrollLeft(int32_t aScrollLeft)
-  {
-    nsIScrollableFrame* sf = GetScrollFrame();
-    if (sf) {
-      sf->ScrollToCSSPixels(CSSIntPoint(aScrollLeft,
-                                        sf->GetScrollPositionCSSPixels().y));
-    }
-  }
+  void ScrollIntoView(bool aTop);
+  void ScrollIntoView(const ScrollIntoViewOptions &aOptions);
+  void Scroll(double aXScroll, double aYScroll);
+  void Scroll(const ScrollToOptions& aOptions);
+  void ScrollTo(double aXScroll, double aYScroll);
+  void ScrollTo(const ScrollToOptions& aOptions);
+  void ScrollBy(double aXScrollDif, double aYScrollDif);
+  void ScrollBy(const ScrollToOptions& aOptions);
   /* Scrolls without flushing the layout.
    * aDx is the x offset, aDy the y offset in CSS pixels.
    * Returns true if we actually scrolled.
    */
   bool ScrollByNoFlush(int32_t aDx, int32_t aDy);
+  int32_t ScrollTop();
+  void SetScrollTop(int32_t aScrollTop);
+  int32_t ScrollLeft();
+  void SetScrollLeft(int32_t aScrollLeft);
   int32_t ScrollWidth();
   int32_t ScrollHeight();
   int32_t ClientTop()
@@ -1114,6 +1107,17 @@ protected:
                             bool aFireMutation,
                             bool aNotify,
                             bool aCallAfterSetAttr);
+
+  /**
+   * Scroll to a new position using behavior evaluated from CSS and
+   * a CSSOM-View DOM method ScrollOptions dictionary.  The scrolling may
+   * be performed asynchronously or synchronously depending on the resolved
+   * scroll-behavior.
+   *
+   * @param aScroll       Destination of scroll, in CSS pixels
+   * @param aOptions      Dictionary of options to be evaluated
+   */
+  void Scroll(const CSSIntPoint& aScroll, const ScrollOptions& aOptions);
 
   /**
    * Convert an attribute string value to attribute type based on the type of

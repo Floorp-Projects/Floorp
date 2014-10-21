@@ -86,7 +86,7 @@ FileImplSnapshot::AssertSanity()
 
 #endif // DEBUG
 
-NS_IMPL_ISUPPORTS_INHERITED0(FileImplSnapshot, FileImpl)
+NS_IMPL_ISUPPORTS_INHERITED(FileImplSnapshot, FileImpl, PIFileImplSnapshot)
 
 void
 FileImplSnapshot::Unlink()

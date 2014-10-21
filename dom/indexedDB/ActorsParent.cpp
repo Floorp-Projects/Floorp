@@ -3061,7 +3061,6 @@ public:
   ClearInputStream()
   {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(mBlobImpl);
 
     mBlobImpl = nullptr;
   }

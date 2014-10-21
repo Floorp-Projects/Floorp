@@ -286,6 +286,23 @@ DOMMatrixReadOnly::ToFloat64Array(JSContext* aCx, JS::MutableHandle<JSObject*> a
   aResult.set(&value.toObject());
 }
 
+void
+DOMMatrixReadOnly::Stringify(nsAString& aResult)
+{
+  nsAutoString matrixStr;
+  if (mMatrix3D) {
+    matrixStr.AppendPrintf("matrix3d(%g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g)",
+      M11(), M12(), M13(), M14(),
+      M21(), M22(), M23(), M24(),
+      M31(), M32(), M33(), M34(),
+      M41(), M42(), M43(), M44());
+  } else {
+    matrixStr.AppendPrintf("matrix(%g, %g, %g, %g, %g, %g)", A(), B(), C(), D(), E(), F());
+  }
+
+  aResult = matrixStr;
+}
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMMatrix, mParent)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMMatrix, AddRef)
