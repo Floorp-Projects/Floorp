@@ -35,7 +35,7 @@
             android:paddingTop="6dip" >
 
             <TextView
-                android:id="@+android:id/account_server_title"
+                android:id="@+id/account_server_title"
                 style="@style/FxAccountTextItem"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
@@ -46,7 +46,7 @@
             </TextView>
 
             <TextView
-                android:id="@+android:id/account_server_summary"
+                android:id="@+id/account_server_summary"
                 style="@style/FxAccountTextItem"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -88,7 +88,7 @@
             android:paddingTop="6dip" >
 
             <TextView
-                android:id="@+android:id/sync_server_title"
+                android:id="@+id/sync_server_title"
                 style="@style/FxAccountTextItem"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
@@ -99,7 +99,7 @@
             </TextView>
 
             <TextView
-                android:id="@+android:id/sync_server_summary"
+                android:id="@+id/sync_server_summary"
                 style="@style/FxAccountTextItem"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

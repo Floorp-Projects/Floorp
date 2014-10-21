@@ -248,6 +248,7 @@ ContactManager.prototype = {
     let type = "contacts-" + access;
     let permValue =
       Services.perms.testExactPermissionFromPrincipal(principal, type);
+    DEBUG && debug("Existing permission " + permValue);
     if (permValue == Ci.nsIPermissionManager.ALLOW_ACTION) {
       if (aAllowCallback) {
         aAllowCallback();
@@ -256,7 +257,7 @@ ContactManager.prototype = {
     } else if (permValue == Ci.nsIPermissionManager.DENY_ACTION ||
                permValue == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
       if (aCancelCallback) {
-        aCancelCallback();
+        aCancelCallback("PERMISSION_DENIED");
       }
       return;
     }
@@ -276,16 +277,14 @@ ContactManager.prototype = {
       types: typeArray,
       principal: principal,
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionRequest]),
-      allow: aAllowCallback ||
-             function() {
-               if (DEBUG)
-                 debug("Default allow contacts callback. " + access +"\n");
-             },
-      cancel: aCancelCallback ||
-              function() {
-                if (DEBUG)
-                  debug("Default cancel contacts callback. " + access +"\n");
-              },
+      allow: function() {
+        aAllowCallback && aAllowCallback();
+        DEBUG && debug("Permission granted. Access " + access +"\n");
+      },
+      cancel: function() {
+        aCancelCallback && aCancelCallback("PERMISSION_DENIED");
+        DEBUG && debug("Permission denied. Access " + access +"\n");
+      },
       window: this._window
     };
 
@@ -336,9 +335,17 @@ ContactManager.prototype = {
 
     let options = { contact: newContact, reason: reason };
     let allowCallback = function() {
-      cpmm.sendAsyncMessage("Contact:Save", {requestID: requestID, options: options});
-    }.bind(this)
-    this.askPermission(reason, request, allowCallback);
+      cpmm.sendAsyncMessage("Contact:Save", {
+        requestID: requestID,
+        options: options
+      });
+    }.bind(this);
+
+    let cancelCallback = function(reason) {
+      Services.DOMRequest.fireErrorAsync(request, reason);
+    };
+
+    this.askPermission(reason, request, allowCallback, cancelCallback);
     return request;
   },
 
@@ -346,10 +353,19 @@ ContactManager.prototype = {
     if (DEBUG) debug("find! " + JSON.stringify(aOptions));
     let request = this.createRequest();
     let options = { findOptions: aOptions };
+
     let allowCallback = function() {
-      cpmm.sendAsyncMessage("Contacts:Find", {requestID: this.getRequestId({request: request, reason: "find"}), options: options});
-    }.bind(this)
-    this.askPermission("find", request, allowCallback);
+      cpmm.sendAsyncMessage("Contacts:Find", {
+        requestID: this.getRequestId({request: request, reason: "find"}),
+        options: options
+      });
+    }.bind(this);
+
+    let cancelCallback = function(reason) {
+      Services.DOMRequest.fireErrorAsync(request, reason);
+    };
+
+    this.askPermission("find", request, allowCallback, cancelCallback);
     return request;
   },
 
@@ -369,11 +385,19 @@ ContactManager.prototype = {
   getAll: function CM_getAll(aOptions) {
     if (DEBUG) debug("getAll: " + JSON.stringify(aOptions));
     let [cursorId, cursor] = this.createCursor();
+
     let allowCallback = function() {
       cpmm.sendAsyncMessage("Contacts:GetAll", {
-        cursorId: cursorId, findOptions: aOptions});
+        cursorId: cursorId,
+        findOptions: aOptions
+      });
     }.bind(this);
-    this.askPermission("find", cursor, allowCallback);
+
+    let cancelCallback = function(reason) {
+      Services.DOMRequest.fireErrorAsync(cursor, reason);
+    };
+
+    this.askPermission("find", cursor, allowCallback, cancelCallback);
     return cursor;
   },
 
@@ -412,10 +436,19 @@ ContactManager.prototype = {
     }
 
     let options = { id: id };
+
     let allowCallback = function() {
-      cpmm.sendAsyncMessage("Contact:Remove", {requestID: this.getRequestId({request: request, reason: "remove"}), options: options});
+      cpmm.sendAsyncMessage("Contact:Remove", {
+        requestID: this.getRequestId({request: request, reason: "remove"}),
+        options: options
+      });
     }.bind(this);
-    this.askPermission("remove", request, allowCallback);
+
+    let cancelCallback = function(reason) {
+      Services.DOMRequest.fireErrorAsync(request, reason);
+    };
+
+    this.askPermission("remove", request, allowCallback, cancelCallback);
     return request;
   },
 
@@ -423,10 +456,19 @@ ContactManager.prototype = {
     if (DEBUG) debug("clear");
     let request = this.createRequest();
     let options = {};
+
     let allowCallback = function() {
-      cpmm.sendAsyncMessage("Contacts:Clear", {requestID: this.getRequestId({request: request, reason: "remove"}), options: options});
+      cpmm.sendAsyncMessage("Contacts:Clear", {
+        requestID: this.getRequestId({request: request, reason: "remove"}),
+        options: options
+      });
     }.bind(this);
-    this.askPermission("remove", request, allowCallback);
+
+    let cancelCallback = function(reason) {
+      Services.DOMRequest.fireErrorAsync(request, reason);
+    };
+
+    this.askPermission("remove", request, allowCallback, cancelCallback);
     return request;
   },
 
@@ -439,8 +481,8 @@ ContactManager.prototype = {
       });
     }.bind(this);
 
-    let cancelCallback = function() {
-      Services.DOMRequest.fireError(request, "");
+    let cancelCallback = function(reason) {
+      Services.DOMRequest.fireErrorAsync(request, reason);
     };
 
     this.askPermission("revision", request, allowCallback, cancelCallback);
@@ -456,8 +498,8 @@ ContactManager.prototype = {
       });
     }.bind(this);
 
-    let cancelCallback = function() {
-      Services.DOMRequest.fireError(request, "");
+    let cancelCallback = function(reason) {
+      Services.DOMRequest.fireErrorAsync(request, reason);
     };
 
     this.askPermission("count", request, allowCallback, cancelCallback);
