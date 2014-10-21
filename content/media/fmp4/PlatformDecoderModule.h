@@ -131,6 +131,8 @@ protected:
   static bool sUseBlankDecoder;
   static bool sFFmpegDecoderEnabled;
   static bool sGonkDecoderEnabled;
+  static bool sAndroidMCDecoderPreferred;
+  static bool sAndroidMCDecoderEnabled;
 };
 
 // A callback used by MediaDataDecoder to return output/errors to the
