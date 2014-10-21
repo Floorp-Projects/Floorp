@@ -555,7 +555,8 @@ UnixSocketConsumer::SendSocketData(UnixSocketRawData* aData)
 
   MOZ_ASSERT(!mIO->IsShutdownOnMainThread());
   XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE, new SocketIOSendTask<UnixSocketConsumerIO>(mIO, aData));
+    FROM_HERE,
+    new SocketIOSendTask<UnixSocketConsumerIO, UnixSocketRawData>(mIO, aData));
 
   return true;
 }
