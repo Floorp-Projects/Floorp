@@ -6,8 +6,6 @@
 const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
 const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
 let gAppInfo;
-let gOldAppInfo = Components.classes[XULAPPINFO_CONTRACTID]
-                            .getService(Components.interfaces.nsIXULRuntime);
 
 function createAppInfo(id, name, version, platformVersion) {
   gAppInfo = {
@@ -41,8 +39,6 @@ function createAppInfo(id, name, version, platformVersion) {
                                            Ci.nsICrashReporter,
                                            Ci.nsISupports])
   };
-
-  Object.setPrototypeOf(gAppInfo, gOldAppInfo);
 
   var XULAppInfoFactory = {
     createInstance: function (outer, iid) {
