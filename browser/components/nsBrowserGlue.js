@@ -808,7 +808,7 @@ BrowserGlue.prototype = {
 
       if (shouldCheck && !isDefault && !willRecoverSession) {
         Services.tm.mainThread.dispatch(function() {
-          DefaultBrowserCheck.prompt(this.getMostRecentBrowserWindow());
+          DefaultBrowserCheck.prompt(this.getMostRecentBrowserWindow(), shouldCheck);
         }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
       }
     }
@@ -2143,14 +2143,6 @@ ContentPermissionPrompt.prototype = {
 };
 
 let DefaultBrowserCheck = {
-  get OPTIONPOPUP() { return "defaultBrowserNotificationPopup" },
-
-  closePrompt: function(aNode) {
-    if (this._notification) {
-      this._notification.close();
-    }
-  },
-
   setAsDefault: function() {
     let claimAllTypes = true;
 #ifdef XP_WIN
@@ -2168,96 +2160,32 @@ let DefaultBrowserCheck = {
     } catch (ex) {
       Cu.reportError(ex);
     }
-    this.closePrompt();
   },
 
-  _createPopup: function(win, bundle) {
-    let doc = win.document;
-    let popup = doc.createElement("menupopup");
-    popup.id = this.OPTIONPOPUP;
-
-    let notNowItem = doc.createElement("menuitem");
-    notNowItem.id = "defaultBrowserNotNow";
-    let label = bundle.getString("setDefaultBrowserNotNow.label");
-    notNowItem.setAttribute("label", label);
-    let accesskey = bundle.getString("setDefaultBrowserNotNow.accesskey");
-    notNowItem.setAttribute("accesskey", accesskey);
-    popup.appendChild(notNowItem);
-
-    let neverItem = doc.createElement("menuitem");
-    neverItem.id = "defaultBrowserNever";
-    label = bundle.getString("setDefaultBrowserNever.label");
-    neverItem.setAttribute("label", label);
-    accesskey = bundle.getString("setDefaultBrowserNever.accesskey");
-    neverItem.setAttribute("accesskey", accesskey);
-    popup.appendChild(neverItem);
-
-    popup.addEventListener("command", this);
-
-    let popupset = doc.getElementById("mainPopupSet");
-    popupset.appendChild(popup);
-  },
-
-  handleEvent: function(event) {
-    if (event.type == "command") {
-      if (event.target.id == "defaultBrowserNever") {
-        ShellService.shouldCheckDefaultBrowser = false;
-      }
-      this.closePrompt();
-    }
-  },
-
-  prompt: function(win) {
+  prompt: function(win, shouldCheck) {
     let brandBundle = win.document.getElementById("bundle_brand");
     let shellBundle = win.document.getElementById("bundle_shell");
 
     let brandShortName = brandBundle.getString("brandShortName");
     let promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage2",
                                                        [brandShortName]);
+    let checkboxLabel = shellBundle.getString("setDefaultBrowserNever.label");
 
-    let confirmMessage = shellBundle.getFormattedString("setDefaultBrowserConfirm.label",
-                                                        [brandShortName]);
-    let confirmKey = shellBundle.getString("setDefaultBrowserConfirm.accesskey");
+    let yesLabel = shellBundle.getFormattedString("setDefaultBrowserConfirm.label",
+                                                  [brandShortName]);
+    let notNowLabel = shellBundle.getString("setDefaultBrowserNotNow.label");
 
-    let optionsMessage = shellBundle.getString("setDefaultBrowserOptions.label");
-    let optionsKey = shellBundle.getString("setDefaultBrowserOptions.accesskey");
-
-    let selectedBrowser = win.gBrowser.selectedBrowser;
-    let notificationBox = win.document.getElementById("high-priority-global-notificationbox");
-
-    this._createPopup(win, shellBundle);
-
-    let buttons = [
-      {
-        label: confirmMessage,
-        accessKey: confirmKey,
-        callback: this.setAsDefault.bind(this)
-      },
-      {
-        label: optionsMessage,
-        accessKey: optionsKey,
-        popup: this.OPTIONPOPUP
-      }
-    ];
-
-
-    let iconPixels = win.devicePixelRatio > 1 ? "32" : "16";
-    let iconURL = "chrome://branding/content/icon" + iconPixels + ".png";
-    const priority = notificationBox.PRIORITY_WARNING_HIGH;
-    let callback = this._onNotificationEvent.bind(this);
-    this._notification = notificationBox.appendNotification(promptMessage, "default-browser",
-                                                            iconURL, priority, buttons,
-                                                            callback);
-    this._notification.persistence = -1;
-  },
-
-  _onNotificationEvent: function(eventType) {
-    if (eventType == "removed") {
-      let doc = this._notification.ownerDocument;
-      let popup = doc.getElementById(this.OPTIONPOPUP);
-      popup.removeEventListener("command", this);
-      popup.remove();
-      delete this._notification;
+    let ps = Services.prompt;
+    let dontAskAgain = { value: !shouldCheck };
+    let buttonFlags = (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0) +
+                      (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_1) +
+                      ps.BUTTON_POS_0_DEFAULT;
+    let rv = ps.confirmEx(win, null, promptMessage, buttonFlags,
+                          yesLabel, notNowLabel, null, checkboxLabel, dontAskAgain);
+    if (rv == 0) {
+      this.setAsDefault();
+    } else if (dontAskAgain.value) {
+      ShellService.shouldCheckDefaultBrowser = false;
     }
   },
 };
