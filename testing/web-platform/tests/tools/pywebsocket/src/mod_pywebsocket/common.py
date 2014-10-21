@@ -102,7 +102,6 @@ SEC_WEBSOCKET_LOCATION_HEADER = 'Sec-WebSocket-Location'
 
 # Extensions
 DEFLATE_FRAME_EXTENSION = 'deflate-frame'
-PERFRAME_COMPRESSION_EXTENSION = 'perframe-compress'
 PERMESSAGE_COMPRESSION_EXTENSION = 'permessage-compress'
 PERMESSAGE_DEFLATE_EXTENSION = 'permessage-deflate'
 X_WEBKIT_DEFLATE_FRAME_EXTENSION = 'x-webkit-deflate-frame'
@@ -195,7 +194,7 @@ class ExtensionParsingException(Exception):
         super(ExtensionParsingException, self).__init__(name)
 
 
-def _parse_extension_param(state, definition, allow_quoted_string):
+def _parse_extension_param(state, definition):
     param_name = http_header_util.consume_token(state)
 
     if param_name is None:
@@ -209,11 +208,8 @@ def _parse_extension_param(state, definition, allow_quoted_string):
 
     http_header_util.consume_lwses(state)
 
-    if allow_quoted_string:
-        # TODO(toyoshim): Add code to validate that parsed param_value is token
-        param_value = http_header_util.consume_token_or_quoted_string(state)
-    else:
-        param_value = http_header_util.consume_token(state)
+    # TODO(tyoshino): Add code to validate that parsed param_value is token
+    param_value = http_header_util.consume_token_or_quoted_string(state)
     if param_value is None:
         raise ExtensionParsingException(
             'No valid parameter value found on the right-hand side of '
@@ -222,7 +218,7 @@ def _parse_extension_param(state, definition, allow_quoted_string):
     definition.add_parameter(param_name, param_value)
 
 
-def _parse_extension(state, allow_quoted_string):
+def _parse_extension(state):
     extension_token = http_header_util.consume_token(state)
     if extension_token is None:
         return None
@@ -238,7 +234,7 @@ def _parse_extension(state, allow_quoted_string):
         http_header_util.consume_lwses(state)
 
         try:
-            _parse_extension_param(state, extension, allow_quoted_string)
+            _parse_extension_param(state, extension)
         except ExtensionParsingException, e:
             raise ExtensionParsingException(
                 'Failed to parse parameter for %r (%r)' %
@@ -247,7 +243,7 @@ def _parse_extension(state, allow_quoted_string):
     return extension
 
 
-def parse_extensions(data, allow_quoted_string=False):
+def parse_extensions(data):
     """Parses Sec-WebSocket-Extensions header value returns a list of
     ExtensionParameter objects.
 
@@ -258,7 +254,7 @@ def parse_extensions(data, allow_quoted_string=False):
 
     extension_list = []
     while True:
-        extension = _parse_extension(state, allow_quoted_string)
+        extension = _parse_extension(state)
         if extension is not None:
             extension_list.append(extension)
 

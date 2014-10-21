@@ -59,6 +59,7 @@
                 on_event(captureButton, 'pointerdown', function(e) {
                     if(isPointerCapture == false) {
                         sPointerCapture(e);
+                        isPointerCapture = true;
                     }
                 });
 

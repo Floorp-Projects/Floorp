@@ -222,6 +222,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool visitSimdExtractElementI(LSimdExtractElementI *ins) { MOZ_CRASH("NYI"); }
     bool visitSimdExtractElementF(LSimdExtractElementF *ins) { MOZ_CRASH("NYI"); }
     bool visitSimdSignMaskX4(LSimdSignMaskX4 *ins) { MOZ_CRASH("NYI"); }
+    bool visitSimdSwizzleI(LSimdSwizzleI *lir) { MOZ_CRASH("NYI"); }
+    bool visitSimdSwizzleF(LSimdSwizzleF *lir) { MOZ_CRASH("NYI"); }
     bool visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *lir) { MOZ_CRASH("NYI"); }
     bool visitSimdBinaryCompFx4(LSimdBinaryCompFx4 *lir) { MOZ_CRASH("NYI"); }
     bool visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *lir) { MOZ_CRASH("NYI"); }

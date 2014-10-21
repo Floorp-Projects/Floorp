@@ -4105,9 +4105,12 @@ nsTreeBodyFrame::ScrollInternal(const ScrollParts& aParts, int32_t aRow)
   if (!mView) {
     return NS_OK;
   }
-  int32_t maxTopRowIndex = std::max(0, mRowCount - mPageLength);
-  MOZ_ASSERT(mTopRowIndex == mozilla::clamped(mTopRowIndex, 0, maxTopRowIndex));
 
+  // Note that we may be "over scrolled" at this point; that is the
+  // current mTopRowIndex may be larger than mRowCount - mPageLength.
+  // This can happen when items are removed for example. (bug 1085050)
+
+  int32_t maxTopRowIndex = std::max(0, mRowCount - mPageLength);
   aRow = mozilla::clamped(aRow, 0, maxTopRowIndex);
   if (aRow == mTopRowIndex) {
     return NS_OK;

@@ -25,7 +25,7 @@ class ServoTestharnessExecutor(ProcessTestExecutor):
         self.result_data = None
         self.result_flag = threading.Event()
 
-        self.command = [self.binary, "--hard-fail",
+        self.command = [self.binary, "--cpu", "--hard-fail",
                         urlparse.urljoin(self.http_server_url, test.url)]
 
         if self.debug_args:

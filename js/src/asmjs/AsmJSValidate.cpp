@@ -2576,6 +2576,28 @@ class FunctionCompiler
         return ins;
     }
 
+    MDefinition *swizzleSimd(MDefinition *vector, int32_t X, int32_t Y, int32_t Z, int32_t W,
+                             MIRType type)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        MSimdSwizzle *ins = MSimdSwizzle::NewAsmJS(alloc(), vector, type, X, Y, Z, W);
+        curBlock_->add(ins);
+        return ins;
+    }
+
+    MDefinition *shuffleSimd(MDefinition *lhs, MDefinition *rhs, int32_t X, int32_t Y,
+                             int32_t Z, int32_t W, MIRType type)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        MInstruction *ins = MSimdShuffle::NewAsmJS(alloc(), lhs, rhs, type, X, Y, Z, W);
+        curBlock_->add(ins);
+        return ins;
+    }
+
     MDefinition *insertElementSimd(MDefinition *vec, MDefinition *val, SimdLane lane, MIRType type)
     {
         if (inDeadCode())
@@ -5103,6 +5125,71 @@ CheckSimdCast(FunctionCompiler &f, ParseNode *call, Type fromType, Type toType, 
 }
 
 static bool
+CheckSimdShuffleSelectors(FunctionCompiler &f, ParseNode *lane, int32_t lanes[4], uint32_t maxLane)
+{
+    for (unsigned i = 0; i < 4; i++, lane = NextNode(lane)) {
+        uint32_t u32;
+        if (!IsLiteralInt(f.m(), lane, &u32))
+            return f.failf(lane, "lane selector should be a constant integer literal");
+        if (u32 >= maxLane)
+            return f.failf(lane, "lane selector should be less than %u", maxLane);
+        lanes[i] = int32_t(u32);
+    }
+    return true;
+}
+
+static bool
+CheckSimdSwizzle(FunctionCompiler &f, ParseNode *call, Type retType, MDefinition **def, Type *type)
+{
+    unsigned numArgs = CallArgListLength(call);
+    if (numArgs != 5)
+        return f.failf(call, "expected 5 arguments to SIMD swizzle, got %u", numArgs);
+
+    ParseNode *vec = CallArgList(call);
+    MDefinition *vecDef;
+    Type vecType;
+    if (!CheckExpr(f, vec, &vecDef, &vecType))
+        return false;
+    if (!(vecType <= retType))
+        return f.failf(vec, "%s is not a subtype of %s", vecType.toChars(), retType.toChars());
+
+    int32_t lanes[4];
+    if (!CheckSimdShuffleSelectors(f, NextNode(vec), lanes, 4))
+        return false;
+
+    *def = f.swizzleSimd(vecDef, lanes[0], lanes[1], lanes[2], lanes[3], retType.toMIRType());
+    *type = retType;
+    return true;
+}
+
+static bool
+CheckSimdShuffle(FunctionCompiler &f, ParseNode *call, Type retType, MDefinition **def, Type *type)
+{
+    unsigned numArgs = CallArgListLength(call);
+    if (numArgs != 6)
+        return f.failf(call, "expected 6 arguments to SIMD shuffle, got %u", numArgs);
+
+    ParseNode *arg = CallArgList(call);
+    MDefinition *vecs[2];
+    for (unsigned i = 0; i < 2; i++, arg = NextNode(arg)) {
+        Type type;
+        if (!CheckExpr(f, arg, &vecs[i], &type))
+            return false;
+        if (!(type <= retType))
+            return f.failf(arg, "%s is not a subtype of %s", type.toChars(), retType.toChars());
+    }
+
+    int32_t lanes[4];
+    if (!CheckSimdShuffleSelectors(f, arg, lanes, 8))
+        return false;
+
+    *def = f.shuffleSimd(vecs[0], vecs[1], lanes[0], lanes[1], lanes[2], lanes[3],
+                         retType.toMIRType());
+    *type = retType;
+    return true;
+}
+
+static bool
 CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Global *global,
                        MDefinition **def, Type *type)
 {
@@ -5181,6 +5268,11 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
         return CheckSimdUnary(f, call, retType, MSimdUnaryArith::reciprocal, def, type);
       case AsmJSSimdOperation_reciprocalSqrt:
         return CheckSimdUnary(f, call, retType, MSimdUnaryArith::reciprocalSqrt, def, type);
+
+      case AsmJSSimdOperation_swizzle:
+        return CheckSimdSwizzle(f, call, retType, def, type);
+      case AsmJSSimdOperation_shuffle:
+        return CheckSimdShuffle(f, call, retType, def, type);
 
       case AsmJSSimdOperation_splat: {
         DefinitionVector defs;

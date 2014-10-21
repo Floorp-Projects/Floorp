@@ -75,7 +75,7 @@
         assert_equals(document.defaultView.getComputedStyle(document.getElementById("ABCD"), false).zIndex, "2");
     }, "Association for CSS is exact and therefore case-sensitive.");
 
-    test(function() {  
+    test(function() {
         assert_equals(document.defaultView.getComputedStyle(document.getElementById("a b"), false).zIndex, "3");
     }, "Spaces are allowed in an id and still make an association.");
 

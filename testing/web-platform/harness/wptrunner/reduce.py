@@ -55,6 +55,7 @@ class Reducer(object):
         test_filter = wptrunner.TestFilter(include=kwargs["include"])
         self.test_loader = wptrunner.TestLoader(kwargs["tests_root"],
                                                 kwargs["metadata_root"],
+                                                [self.test_type],
                                                 test_filter,
                                                 run_info)
         if kwargs["repeat"] == 1:
@@ -176,8 +177,7 @@ class Reducer(object):
     def get_initial_tests(self):
         # Need to pass in arguments
 
-        all_tests = self.test_loader.load_tests([self.test_type],
-                                                "none", 1, 1)[self.test_type]
+        all_tests = self.test_loader.tests[self.test_type]
         tests = []
         for item in all_tests:
             tests.append(item)

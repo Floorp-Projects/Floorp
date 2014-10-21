@@ -3809,6 +3809,50 @@ LIRGenerator::visitSimdSignMask(MSimdSignMask *ins)
 }
 
 bool
+LIRGenerator::visitSimdSwizzle(MSimdSwizzle *ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->input()->type()));
+    MOZ_ASSERT(IsSimdType(ins->type()));
+
+    if (ins->input()->type() == MIRType_Int32x4) {
+        LUse use = useRegisterAtStart(ins->input());
+        LSimdSwizzleI *lir = new (alloc()) LSimdSwizzleI(use);
+        return define(lir, ins);
+    }
+
+    if (ins->input()->type() == MIRType_Float32x4) {
+        LUse use = useRegisterAtStart(ins->input());
+        LSimdSwizzleF *lir = new (alloc()) LSimdSwizzleF(use);
+        return define(lir, ins);
+    }
+
+    MOZ_CRASH("Unknown SIMD kind when getting lane");
+    return false;
+}
+
+bool
+LIRGenerator::visitSimdShuffle(MSimdShuffle *ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->type()));
+    MOZ_ASSERT(ins->type() == MIRType_Int32x4 || ins->type() == MIRType_Float32x4);
+
+    bool zFromLHS = ins->laneZ() < 4;
+    bool wFromLHS = ins->laneW() < 4;
+    uint32_t lanesFromLHS = (ins->laneX() < 4) + (ins->laneY() < 4) + zFromLHS + wFromLHS;
+
+    LUse lhs = useRegisterAtStart(ins->lhs());
+    LUse rhs = useRegister(ins->rhs());
+
+    // See codegen for requirements details.
+    LDefinition temp = (lanesFromLHS == 3) ? tempCopy(ins->rhs(), 1) : LDefinition::BogusTemp();
+
+    LSimdShuffle *lir = new (alloc()) LSimdShuffle(lhs, rhs, temp);
+    return defineReuseInput(lir, ins, 0);
+}
+
+bool
 LIRGenerator::visitSimdUnaryArith(MSimdUnaryArith *ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));

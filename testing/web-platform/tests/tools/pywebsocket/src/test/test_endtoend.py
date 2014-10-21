@@ -430,7 +430,7 @@ class EndToEndHyBiTest(EndToEndTestBase):
                 response_checker,
                 test_function)
 
-    def test_echo_permessage_deflate_two_msgs_s2c_no_context_takeover(self):
+    def test_echo_permessage_deflate_two_msgs_server_no_context_takeover(self):
         def test_function(client):
             # From the examples in the spec.
             client._stream.send_data(
@@ -455,11 +455,11 @@ class EndToEndHyBiTest(EndToEndTestBase):
 
         def response_checker(parameter):
             self.assertEquals('permessage-deflate', parameter.name())
-            self.assertEquals([('s2c_no_context_takeover', None)],
+            self.assertEquals([('server_no_context_takeover', None)],
                               parameter.get_parameters())
 
         self._run_permessage_deflate_test(
-                ['permessage-deflate; s2c_no_context_takeover'],
+                ['permessage-deflate; server_no_context_takeover'],
                 response_checker,
                 test_function)
 
@@ -506,17 +506,17 @@ class EndToEndHyBiTest(EndToEndTestBase):
 
         def response_checker(parameter):
             self.assertEquals('permessage-deflate', parameter.name())
-            self.assertEquals([('s2c_max_window_bits', '10'),
-                               ('s2c_no_context_takeover', None)],
+            self.assertEquals([('server_max_window_bits', '10'),
+                               ('server_no_context_takeover', None)],
                               parameter.get_parameters())
 
         self._run_permessage_deflate_test(
-                ['permessage-deflate; s2c_max_window_bits=10; '
-                 's2c_no_context_takeover'],
+                ['permessage-deflate; server_max_window_bits=10; '
+                 'server_no_context_takeover'],
                 response_checker,
                 test_function)
 
-    def test_echo_permessage_deflate_with_bad_s2c_max_window_bits(self):
+    def test_echo_permessage_deflate_with_bad_server_max_window_bits(self):
         def test_function(client):
             client.send_close()
             client.assert_receive_close()
@@ -525,11 +525,11 @@ class EndToEndHyBiTest(EndToEndTestBase):
             raise Exception('Unexpected acceptance of permessage-deflate')
 
         self._run_permessage_deflate_test(
-                ['permessage-deflate; s2c_max_window_bits=3000000'],
+                ['permessage-deflate; server_max_window_bits=3000000'],
                 response_checker,
                 test_function)
 
-    def test_echo_permessage_deflate_with_bad_s2c_max_window_bits(self):
+    def test_echo_permessage_deflate_with_bad_server_max_window_bits(self):
         def test_function(client):
             client.send_close()
             client.assert_receive_close()
@@ -538,7 +538,7 @@ class EndToEndHyBiTest(EndToEndTestBase):
             raise Exception('Unexpected acceptance of permessage-deflate')
 
         self._run_permessage_deflate_test(
-                ['permessage-deflate; s2c_max_window_bits=3000000'],
+                ['permessage-deflate; server_max_window_bits=3000000'],
                 response_checker,
                 test_function)
 

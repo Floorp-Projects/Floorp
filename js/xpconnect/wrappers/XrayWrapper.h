@@ -80,8 +80,8 @@ public:
 
     virtual void preserveWrapper(JSObject *target) = 0;
 
-    JSObject* getExpandoObject(JSContext *cx, JS::HandleObject target,
-                               JS::HandleObject consumer);
+    bool getExpandoObject(JSContext *cx, JS::HandleObject target,
+                          JS::HandleObject consumer, JS::MutableHandleObject expandObject);
     JSObject* ensureExpandoObject(JSContext *cx, JS::HandleObject wrapper,
                                   JS::HandleObject target);
 
@@ -97,9 +97,9 @@ private:
     bool expandoObjectMatchesConsumer(JSContext *cx, JS::HandleObject expandoObject,
                                       nsIPrincipal *consumerOrigin,
                                       JS::HandleObject exclusiveGlobal);
-    JSObject* getExpandoObjectInternal(JSContext *cx, JS::HandleObject target,
-                                       nsIPrincipal *origin,
-                                       JSObject *exclusiveGlobal);
+    bool getExpandoObjectInternal(JSContext *cx, JS::HandleObject target,
+                                  nsIPrincipal *origin, JSObject *exclusiveGlobal,
+                                  JS::MutableHandleObject expandoObject);
     JSObject* attachExpandoObject(JSContext *cx, JS::HandleObject target,
                                   nsIPrincipal *origin,
                                   JS::HandleObject exclusiveGlobal);

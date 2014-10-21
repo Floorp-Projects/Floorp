@@ -338,50 +338,50 @@ class ClientHandshakeBase(object):
 
 def _get_permessage_deflate_framer(extension_response):
     """Validate the response and return a framer object using the parameters in
-    the response. This method doesn't accept the s2c_.* parameters.
+    the response. This method doesn't accept the server_.* parameters.
     """
 
-    c2s_max_window_bits = None
-    c2s_no_context_takeover = None
+    client_max_window_bits = None
+    client_no_context_takeover = None
 
-    c2s_max_window_bits_name = (
+    client_max_window_bits_name = (
             PerMessageDeflateExtensionProcessor.
-                    _C2S_MAX_WINDOW_BITS_PARAM)
-    c2s_no_context_takeover_name = (
+                    _CLIENT_MAX_WINDOW_BITS_PARAM)
+    client_no_context_takeover_name = (
             PerMessageDeflateExtensionProcessor.
-                    _C2S_NO_CONTEXT_TAKEOVER_PARAM)
+                    _CLIENT_NO_CONTEXT_TAKEOVER_PARAM)
 
-    # We didn't send any s2c_.* parameter. Handle those parameters as invalid
-    # if found in the response.
+    # We didn't send any server_.* parameter.
+    # Handle those parameters as invalid if found in the response.
 
     for param_name, param_value in extension_response.get_parameters():
-        if param_name == c2s_max_window_bits_name:
-            if c2s_max_window_bits is not None:
+        if param_name == client_max_window_bits_name:
+            if client_max_window_bits is not None:
                 raise ClientHandshakeError(
-                        'Multiple %s found' % c2s_max_window_bits_name)
+                        'Multiple %s found' % client_max_window_bits_name)
 
             parsed_value = _parse_window_bits(param_value)
             if parsed_value is None:
                 raise ClientHandshakeError(
                         'Bad %s: %r' %
-                        (c2s_max_window_bits_name, param_value))
-            c2s_max_window_bits = parsed_value
-        elif param_name == c2s_no_context_takeover_name:
-            if c2s_no_context_takeover is not None:
+                        (client_max_window_bits_name, param_value))
+            client_max_window_bits = parsed_value
+        elif param_name == client_no_context_takeover_name:
+            if client_no_context_takeover is not None:
                 raise ClientHandshakeError(
-                        'Multiple %s found' % c2s_no_context_takeover_name)
+                        'Multiple %s found' % client_no_context_takeover_name)
 
             if param_value is not None:
                 raise ClientHandshakeError(
                         'Bad %s: Has value %r' %
-                        (c2s_no_context_takeover_name, param_value))
-            c2s_no_context_takeover = True
+                        (client_no_context_takeover_name, param_value))
+            client_no_context_takeover = True
 
-    if c2s_no_context_takeover is None:
-        c2s_no_context_takeover = False
+    if client_no_context_takeover is None:
+        client_no_context_takeover = False
 
-    return _PerMessageDeflateFramer(c2s_max_window_bits,
-                                    c2s_no_context_takeover)
+    return _PerMessageDeflateFramer(client_max_window_bits,
+                                    client_no_context_takeover)
 
 
 class ClientHandshakeProcessor(ClientHandshakeBase):
@@ -454,10 +454,10 @@ class ClientHandshakeProcessor(ClientHandshakeBase):
         if self._options.use_permessage_deflate:
             extension = common.ExtensionParameter(
                     common.PERMESSAGE_DEFLATE_EXTENSION)
-            # Accept the c2s_max_window_bits extension parameter by default.
+            # Accept the client_max_window_bits extension parameter by default.
             extension.add_parameter(
                     PerMessageDeflateExtensionProcessor.
-                            _C2S_MAX_WINDOW_BITS_PARAM,
+                            _CLIENT_MAX_WINDOW_BITS_PARAM,
                     None)
             extensions_to_request.append(extension)
 
@@ -1005,7 +1005,7 @@ def main():
                       'to use')
     parser.add_option('--tls-module', '--tls_module', dest='tls_module',
                       type='choice',
-                      choices = [_TLS_BY_STANDARD_MODULE, _TLS_BY_PYOPENSSL],
+                      choices=[_TLS_BY_STANDARD_MODULE, _TLS_BY_PYOPENSSL],
                       help='Use ssl module if "%s" is specified. '
                       'Use pyOpenSSL module if "%s" is specified' %
                       (_TLS_BY_STANDARD_MODULE, _TLS_BY_PYOPENSSL))

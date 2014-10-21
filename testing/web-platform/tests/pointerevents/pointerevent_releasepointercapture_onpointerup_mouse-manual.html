@@ -38,6 +38,7 @@
                 on_event(captureButton, 'pointerdown', function(e) {
                     detected_pointertypes[e.pointerType] = true;
                     if(isPointerCapture == false) {
+                        isPointerCapture = true;
                         sPointerCapture(e);
                         pointerupGot = false;
                     }

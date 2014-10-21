@@ -67,7 +67,9 @@ def parse_whitelist_file(filename):
         for file_match, whitelist_errors in data.iteritems():
             if fnmatch.fnmatch(path, file_match):
                 for i, (error_type, msg, line) in enumerate(errors):
-                    if error_type in whitelist_errors:
+                    if "*" in whitelist_errors:
+                        whitelisted[i] = True
+                    elif error_type in whitelist_errors:
                         allowed_lines = whitelist_errors[error_type]
                         if None in allowed_lines or line in allowed_lines:
                             whitelisted[i] = True
