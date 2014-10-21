@@ -666,7 +666,7 @@ BluetoothSocket::SendSocketData(UnixSocketRawData* aData)
   MOZ_ASSERT(!mImpl->IsShutdownOnMainThread());
 
   XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE, new SocketIOSendTask<DroidSocketImpl>(mImpl, aData));
+    FROM_HERE, new SocketIOSendTask<DroidSocketImpl, UnixSocketRawData>(mImpl, aData));
 
   return true;
 }
