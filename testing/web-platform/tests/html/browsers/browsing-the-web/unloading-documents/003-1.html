@@ -11,11 +11,11 @@
    document.close(); // has no effect (no script-created parser)
    localStorage.test6564729 += '4';
  })
- 
+
  onload=t.step_func(function() {localStorage.test6564729 = '0'; setTimeout(t.step_func(function() {document.links[0].click()}), 100)})
 
 </script>
-<body 
+<body
       onbeforeunload="do_test()"
       onpagehide="localStorage.test6564729 += '6'"
       onunload="localStorage.test6564729 += '7'">

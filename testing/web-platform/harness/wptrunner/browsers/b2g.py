@@ -12,6 +12,9 @@ import gaiatest
 import mozdevice
 import moznetwork
 import mozrunner
+from marionette import expected
+from marionette.by import By
+from marionette.wait import Wait
 from mozprofile import FirefoxProfile, Preferences
 
 from .base import get_free_port, BrowserError, Browser, ExecutorBrowser
@@ -175,7 +178,7 @@ class B2GBrowser(Browser):
         self.device.reboot(wait=True)
 
     def pid(self):
-        return "Remote"
+        return None
 
     def is_alive(self):
         return True
@@ -191,9 +194,9 @@ class B2GExecutorBrowser(ExecutorBrowser):
 
         import sys, subprocess
 
-        self.dm = mozdevice.DeviceManagerADB()
-        self.dm.forward("tcp:%s" % self.marionette_port,
-                        "tcp:2828")
+        self.device = mozdevice.ADBDevice()
+        self.device.forward("tcp:%s" % self.marionette_port,
+                            "tcp:2828")
         self.executor = None
         self.marionette = None
         self.gaia_device = None
@@ -231,26 +234,10 @@ class B2GExecutorBrowser(ExecutorBrowser):
         self.gaia_apps.launch("CertTest App")
 
     def wait_for_homescreen(self, timeout):
-        self.executor.logger.info("Waiting for homescreen")
-        self.marionette.execute_async_script("""
-let manager = window.wrappedJSObject.appWindowManager || window.wrappedJSObject.AppWindowManager;
-let app = null;
-if (manager) {
-  app = ('getActiveApp' in manager) ? manager.getActiveApp() : manager.getCurrentDisplayedApp();
-}
-if (app) {
-  log('Already loaded home screen');
-  marionetteScriptFinished();
-} else {
-  log('waiting for mozbrowserloadend');
-  window.addEventListener('mozbrowserloadend', function loaded(aEvent) {
-    log('received mozbrowserloadend for ' + aEvent.target.src);
-    if (aEvent.target.src.indexOf('ftu') != -1 || aEvent.target.src.indexOf('homescreen') != -1) {
-      window.removeEventListener('mozbrowserloadend', loaded);
-      marionetteScriptFinished();
-    }
-  });
-}""", script_timeout=1000 * timeout)
+        self.executor.logger.info("Waiting for home screen to load")
+        Wait(self.marionette, timeout).until(expected.element_present(
+            By.CSS_SELECTOR, '#homescreen[loading-state=false]'))
+
 
 class B2GMarionetteTestharnessExecutor(MarionetteTestharnessExecutor):
     def after_connect(self):
