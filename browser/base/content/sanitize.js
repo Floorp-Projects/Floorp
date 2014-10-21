@@ -504,6 +504,20 @@ Sanitizer.prototype = {
         let features = "chrome,all,dialog=no," + this.privateStateForNewWindow;
         let newWindow = existingWindow.openDialog("chrome://browser/content/", "_blank",
                                                   features, defaultArgs);
+#ifdef XP_MACOSX
+        function onFullScreen(e) {
+          newWindow.removeEventListener("fullscreen", onFullScreen);
+          let docEl = newWindow.document.documentElement;
+          let sizemode = docEl.getAttribute("sizemode");
+          if (!newWindow.fullScreen && sizemode == "fullscreen") {
+            docEl.setAttribute("sizemode", "normal");
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+        }
+        newWindow.addEventListener("fullscreen", onFullScreen);
+#endif
 
         // Window creation and destruction is asynchronous. We need to wait
         // until all existing windows are fully closed, and the new window is
@@ -517,6 +531,9 @@ Sanitizer.prototype = {
             return;
 
           Services.obs.removeObserver(onWindowOpened, "browser-delayed-startup-finished");
+#ifdef XP_MACOSX
+          newWindow.removeEventListener("fullscreen", onFullScreen);
+#endif
           newWindowOpened = true;
           // If we're the last thing to happen, invoke callback.
           if (numWindowsClosing == 0)
