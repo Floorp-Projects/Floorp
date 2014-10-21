@@ -3,6 +3,7 @@
 function test() {
   Harness.downloadFailedCallback = download_failed;
   Harness.installsCompletedCallback = finish_test;
+  Harness.finalContentEvent = "InstallComplete";
   Harness.setup();
 
   var pm = Services.perms;

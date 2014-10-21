@@ -39,7 +39,7 @@ describe("loop.conversation", function() {
         return "en-US";
       },
       setLoopCharPref: sinon.stub(),
-      getLoopCharPref: sinon.stub().returns(null),
+      getLoopCharPref: sinon.stub().returns("http://fakeurl"),
       getLoopBoolPref: sinon.stub(),
       getCallData: sinon.stub(),
       releaseCallData: sinon.stub(),
@@ -410,6 +410,8 @@ describe("loop.conversation", function() {
         describe("WebSocket Events", function() {
           describe("Call cancelled or timed out before acceptance", function() {
             beforeEach(function() {
+              // Mounting the test component automatically calls the required
+              // setup functions
               icView = mountTestComponent();
               promise = new Promise(function(resolve, reject) {
                 resolve();
@@ -539,6 +541,22 @@ describe("loop.conversation", function() {
                 });
               });
             });
+
+            describe("progress - terminated - timeout (previousState not init" +
+                     " nor alerting)",
+              function() {
+                it("should set the state to end", function(done) {
+                  promise.then(function() {
+                    icView._websocket.trigger("progress", {
+                      state: "terminated",
+                      reason: "timeout"
+                    }, "connecting");
+
+                    expect(icView.state.callStatus).eql("end");
+                    done();
+                  });
+                });
+              });
           });
         });
       });

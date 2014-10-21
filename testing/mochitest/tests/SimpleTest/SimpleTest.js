@@ -680,7 +680,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
             !SimpleTest.waitForFocus_started) {
             SimpleTest._pendingWaitForFocusCount--;
             SimpleTest.waitForFocus_started = true;
-            setTimeout(callback, 0, targetWindow);
+            SimpleTest.executeSoon(function() { callback(targetWindow) });
         }
     }
 

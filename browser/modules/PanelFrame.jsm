@@ -50,7 +50,7 @@ let PanelFrameInternal = {
     let notificationFrameId = aOrigin ? aType + "-status-" + aOrigin : aType;
     let frame = aWindow.document.getElementById(notificationFrameId);
 
-    // If the button was customized to a new location, we we'll destroy the
+    // If the button was customized to a new location, destroy the
     // iframe and start fresh.
     if (frame && frame.parentNode != aParent) {
       SharedFrame.forgetGroup(frame.id);
@@ -157,11 +157,6 @@ let PanelFrame = {
     panel.addEventListener("popupshown", function onpopupshown() {
       panel.removeEventListener("popupshown", onpopupshown);
       SharedFrame.setOwner(notificationFrameId, notificationFrame);
-      // This attribute is needed on both the button and the
-      // containing toolbaritem since the buttons on OS X have
-      // moz-appearance:none, while their container gets
-      // moz-appearance:toolbarbutton due to the way that toolbar buttons
-      // get combined on OS X.
       let initFrameShow = () => {
         notificationFrame.docShell.isActive = true;
         notificationFrame.docShell.isAppTab = true;
@@ -169,6 +164,11 @@ let PanelFrame = {
           dynamicResizer.start(panel, notificationFrame);
         dispatchPanelEvent(aType + "FrameShow");
       };
+      // This attribute is needed on both the button and the
+      // containing toolbaritem since the buttons on OS X have
+      // moz-appearance:none, while their container gets
+      // moz-appearance:toolbarbutton due to the way that toolbar buttons
+      // get combined on OS X.
       anchorBtn.setAttribute("open", "true");
       if (notificationFrame.contentDocument &&
           notificationFrame.contentDocument.readyState == "complete") {

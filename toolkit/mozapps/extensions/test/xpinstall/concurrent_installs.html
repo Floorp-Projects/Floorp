@@ -8,8 +8,11 @@
 <title>Concurrent InstallTrigger tests</title>
 <script type="text/javascript">
 function installCallback(url, status) {
-  window.installTriggerCallback({loc: location.href, xpi: url});
   document.getElementById("status").textContent = status;
+
+  dump("Sending InstallComplete\n");
+  var event = new CustomEvent("InstallComplete", {detail: {loc: location.href, xpi: url}});
+  window.dispatchEvent(event);
 }
 
 function startInstall() {

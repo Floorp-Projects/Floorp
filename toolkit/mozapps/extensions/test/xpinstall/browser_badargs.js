@@ -11,7 +11,11 @@ function test() {
     // Allow the in-page load handler to run first
     executeSoon(page_loaded);
   }, true);
-  expectUncaughtException();
+
+  // In non-e10s the exception in the content page would trigger a test failure
+  if (!gMultiProcessBrowser)
+    expectUncaughtException();
+
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 
