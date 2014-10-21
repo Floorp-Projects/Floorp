@@ -23,10 +23,152 @@ namespace mozilla {
 namespace ipc {
 
 //
+// UnixSocketIOBuffer
+//
+
+class UnixSocketIOBuffer
+{
+public:
+  const uint8_t* GetData() const
+  {
+    return mData + mOffset;
+  }
+
+  size_t GetSize() const
+  {
+    return mSize - mOffset;
+  }
+
+  const uint8_t* Consume(size_t aLen);
+
+  nsresult Read(void* aValue, size_t aLen);
+
+  nsresult Read(int8_t& aValue)
+  {
+    return Read(&aValue, sizeof(aValue));
+  }
+
+  nsresult Read(uint8_t& aValue)
+  {
+    return Read(&aValue, sizeof(aValue));
+  }
+
+  nsresult Read(int16_t& aValue)
+  {
+    return Read(&aValue, sizeof(aValue));
+  }
+
+  nsresult Read(uint16_t& aValue)
+  {
+    return Read(&aValue, sizeof(aValue));
+  }
+
+  nsresult Read(int32_t& aValue)
+  {
+    return Read(&aValue, sizeof(aValue));
+  }
+
+  nsresult Read(uint32_t& aValue)
+  {
+    return Read(&aValue, sizeof(aValue));
+  }
+
+  uint8_t* Append(size_t aLen);
+
+  nsresult Write(const void* aValue, size_t aLen);
+
+  nsresult Write(int8_t aValue)
+  {
+    return Write(&aValue, sizeof(aValue));
+  }
+
+  nsresult Write(uint8_t aValue)
+  {
+    return Write(&aValue, sizeof(aValue));
+  }
+
+  nsresult Write(int16_t aValue)
+  {
+    return Write(&aValue, sizeof(aValue));
+  }
+
+  nsresult Write(uint16_t aValue)
+  {
+    return Write(&aValue, sizeof(aValue));
+  }
+
+  nsresult Write(int32_t aValue)
+  {
+    return Write(&aValue, sizeof(aValue));
+  }
+
+  nsresult Write(uint32_t aValue)
+  {
+    return Write(&aValue, sizeof(aValue));
+  }
+
+protected:
+
+  /* This constructor copies aData of aSize bytes length into the
+   * new instance of |UnixSocketIOBuffer|.
+   */
+  UnixSocketIOBuffer(const void* aData, size_t aSize);
+
+  /* This constructor reserves aAvailableSpace bytes of space.
+   */
+  UnixSocketIOBuffer(size_t aAvailableSpace);
+
+  ~UnixSocketIOBuffer();
+
+  size_t GetLeadingSpace() const
+  {
+    return mOffset;
+  }
+
+  size_t GetTrailingSpace() const
+  {
+    return mAvailableSpace - mSize;
+  }
+
+  size_t GetAvailableSpace() const
+  {
+    return mAvailableSpace;
+  }
+
+  void* GetTrailingBytes()
+  {
+    return mData + mSize;
+  }
+
+  uint8_t* GetData(size_t aOffset)
+  {
+    MOZ_ASSERT(aOffset <= mSize);
+
+    return mData + aOffset;
+  }
+
+  void SetRange(size_t aOffset, size_t aSize)
+  {
+    MOZ_ASSERT((aOffset + aSize) <= mAvailableSpace);
+
+    mOffset = aOffset;
+    mSize = mOffset + aSize;
+  }
+
+  void CleanupLeadingSpace();
+
+private:
+  size_t mSize;
+  size_t mOffset;
+  size_t mAvailableSpace;
+  nsAutoArrayPtr<uint8_t> mData;
+};
+
+//
 // UnixSocketRawData
 //
 
-class UnixSocketRawData
+class UnixSocketRawData MOZ_FINAL : public UnixSocketIOBuffer
 {
 public:
   /* This constructor copies aData of aSize bytes length into the
@@ -51,51 +193,6 @@ public:
    * is the number of bytes written, or a negative value on error.
    */
   ssize_t Send(int aFd);
-
-  const uint8_t* GetData() const
-  {
-    return mData + mOffset;
-  }
-
-  size_t GetSize() const
-  {
-    return mSize;
-  }
-
-  void Consume(size_t aSize)
-  {
-    MOZ_ASSERT(aSize <= mSize);
-
-    mSize -= aSize;
-    mOffset += aSize;
-  }
-
-protected:
-  size_t GetLeadingSpace() const
-  {
-    return mOffset;
-  }
-
-  size_t GetTrailingSpace() const
-  {
-    return mAvailableSpace - (mOffset + mSize);
-  }
-
-  size_t GetAvailableSpace() const
-  {
-    return mAvailableSpace;
-  }
-
-  void* GetTrailingBytes()
-  {
-    return mData + mOffset + mSize;
-  }
-
-private:
-  size_t mSize;
-  size_t mOffset;
-  size_t mAvailableSpace;
-  nsAutoArrayPtr<uint8_t> mData;
 };
 
 enum SocketConnectionStatus {
