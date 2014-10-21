@@ -5,13 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBlob;
-include InputStreamParams;
 
 using struct mozilla::void_t
   from "ipc/IPCMessageUtils.h";
 
 using struct mozilla::SerializedStructuredCloneBuffer
   from "ipc/IPCMessageUtils.h";
+
+using struct nsID
+  from "nsID.h";
 
 namespace mozilla {
 namespace dom {
@@ -28,10 +30,35 @@ struct ClonedMessageData
   PBlob[] blobs;
 };
 
+union BlobData
+{
+  // For remote blobs.
+  nsID;
+
+  // For memory-backed blobs.
+  uint8_t[];
+
+  // For file snapshots, this is an nsIInputStream.
+  intptr_t;
+
+  // For multiplex blobs.
+  BlobData[];
+};
+
+union OptionalBlobData
+{
+  BlobData;
+  void_t;
+};
+
 struct NormalBlobConstructorParams
 {
   nsString contentType;
   uint64_t length;
+
+  // This must be of type BlobData in a child->parent message, and will always
+  // be of type void_t in a parent->child message.
+  OptionalBlobData optionalBlobData;
 };
 
 struct FileBlobConstructorParams
@@ -40,6 +67,10 @@ struct FileBlobConstructorParams
   nsString contentType;
   uint64_t length;
   uint64_t modDate;
+
+  // This must be of type BlobData in a child->parent message, and will always
+  // be of type void_t in a parent->child message.
+  OptionalBlobData optionalBlobData;
 };
 
 struct SlicedBlobConstructorParams
@@ -61,11 +92,20 @@ struct KnownBlobConstructorParams
   nsID id;
 };
 
+// This may only be used for same-process inter-thread communication!
+struct SameProcessBlobConstructorParams
+{
+  // This member should be reinterpret_cast'd to mozilla::dom::FileImpl. It
+  // carries a reference.
+  intptr_t addRefedFileImpl;
+};
+
 union AnyBlobConstructorParams
 {
   // These types may be sent to/from parent and child.
   NormalBlobConstructorParams;
   FileBlobConstructorParams;
+  SameProcessBlobConstructorParams;
 
   // This type may only be sent from parent to child.
   MysteryBlobConstructorParams;
@@ -87,14 +127,6 @@ struct ParentBlobConstructorParams
 {
   // May not be MysteryBlobConstructorParams.
   AnyBlobConstructorParams blobParams;
-
-  // This must be of type void_t for:
-  //   - SlicedBlobConstructorParams
-  //   - KnownBlobConstructorParams
-  // This must be of type InputStreamParams for:
-  //   - NormalBlobConstructorParams
-  //   - FileBlobConstructorParams
-  OptionalInputStreamParams optionalInputStreamParams;
 };
 
 union BlobConstructorParams

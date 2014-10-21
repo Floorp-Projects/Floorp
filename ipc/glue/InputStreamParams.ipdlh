@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 include protocol PBlob;
 include protocol PFileDescriptorSet;
 
-using struct nsID
-  from "nsID.h";
+include DOMTypes;
+
+using struct mozilla::void_t
+  from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace ipc {
