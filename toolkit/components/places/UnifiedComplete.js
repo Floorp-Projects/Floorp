@@ -743,8 +743,8 @@ Search.prototype = {
     for (let [query, params] of queries) {
       let hasResult = yield conn.executeCached(query, params, this._onResultRow.bind(this));
 
-      if (this.pending && params.query_type == QUERYTYPE_AUTOFILL_URL &&
-          !hasResult) {
+      if (this.pending && this._enableActions && !hasResult &&
+          params.query_type == QUERYTYPE_AUTOFILL_URL) {
         // If we predicted that our URL autofill query might have gotten a
         // result, but it didn't, then we need to recover.
         yield this._matchHeuristicFallback();

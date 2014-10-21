@@ -8,8 +8,6 @@
 
 // This file is only loaded on Gonk to manage ADB state
 
-const { utils: Cu } = Components;
-
 const DEBUG = false;
 var debug = function(str) {
   dump("AdbController: " + str + "\n");

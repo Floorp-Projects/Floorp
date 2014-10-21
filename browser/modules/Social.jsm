@@ -421,13 +421,17 @@ function sizeSocialPanelToContent(panel, iframe) {
     let computedWidth = parseInt(cs.marginLeft) + body.offsetWidth + parseInt(cs.marginRight);
     width = Math.max(computedWidth, width);
   }
-  // add extra space the panel needs if any
-  width += panel.boxObject.width - iframe.boxObject.width;
-  height += panel.boxObject.height - iframe.boxObject.height;
+
+  // only add the extra space if the iframe has been loaded
+  if (iframe.boxObject.width && iframe.boxObject.height) {
+    // add extra space the panel needs if any
+    width += panel.boxObject.width - iframe.boxObject.width;
+    height += panel.boxObject.height - iframe.boxObject.height;
+  }
 
   // when size is computed, we want to be sure changes are "significant" since
   // some sites will resize when the iframe is resized by a small amount, making
-  // the panel slowely shrink to some minimum.
+  // the panel slowly shrink to some minimum.
   if (Math.abs(panel.boxObject.width - width) > 2 || Math.abs(panel.boxObject.height - height) > 2) {
     panel.sizeTo(width, height);
   }
