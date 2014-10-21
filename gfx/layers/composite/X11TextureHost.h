@@ -45,7 +45,7 @@ public:
 #endif
 
 protected:
-  RefPtr<Compositor> mCompositor;
+  Compositor* mCompositor;
   RefPtr<TextureSource> mTextureSource;
   RefPtr<gfxXlibSurface> mSurface;
 };

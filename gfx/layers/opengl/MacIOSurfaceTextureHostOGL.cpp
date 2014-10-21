@@ -5,6 +5,7 @@
 
 #include "MacIOSurfaceTextureHostOGL.h"
 #include "mozilla/gfx/MacIOSurface.h"
+#include "mozilla/layers/CompositorOGL.h"
 #include "GLContextCGL.h"
 
 namespace mozilla {
