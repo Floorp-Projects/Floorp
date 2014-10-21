@@ -74,10 +74,8 @@ function run_test() {
 
   // Send the needed startup notifications to the datareporting service
   // to ensure that it has been initialized.
-  if ("@mozilla.org/datareporting/service;1" in Cc) {
-    gDatareportingService.observe(null, "app-startup", null);
-    gDatareportingService.observe(null, "profile-after-change", null);
-  }
+  gDatareportingService.observe(null, "app-startup", null);
+  gDatareportingService.observe(null, "profile-after-change", null);
 
   run_next_test();
 }
