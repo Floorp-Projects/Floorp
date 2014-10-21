@@ -293,7 +293,23 @@ ElementManager.prototype = {
     }
     let found = all ? this.findElements(values.using, values.value, win.document, startNode) :
                       this.findElement(values.using, values.value, win.document, startNode);
-    if (found) {
+    if (found == null || found.length <= 0) {
+      if (!searchTimeout || new Date().getTime() - startTime > searchTimeout) {
+        if (all) {
+          on_success([], command_id); // findElements should return empty list
+        } else {
+          on_error("Unable to locate element: " + values.value, 7, null, command_id);
+        }
+      } else {
+        values.time = startTime;
+        this.timer.initWithCallback(this.find.bind(this, win, values,
+                                                   searchTimeout,
+                                                   on_success, on_error, all,
+                                                   command_id),
+                                    100,
+                                    Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+      }
+    } else {
       let type = Object.prototype.toString.call(found);
       if ((type == '[object Array]') || (type == '[object HTMLCollection]') || (type == '[object NodeList]')) {
         let ids = []
@@ -307,18 +323,6 @@ ElementManager.prototype = {
         on_success({'ELEMENT':id}, command_id);
       }
       return;
-    } else {
-      if (!searchTimeout || new Date().getTime() - startTime > searchTimeout) {
-        on_error("Unable to locate element: " + values.value, 7, null, command_id);
-      } else {
-        values.time = startTime;
-        this.timer.initWithCallback(this.find.bind(this, win, values,
-                                                   searchTimeout,
-                                                   on_success, on_error, all,
-                                                   command_id),
-                                    100,
-                                    Components.interfaces.nsITimer.TYPE_ONE_SHOT);
-      }
     }
   },
 
