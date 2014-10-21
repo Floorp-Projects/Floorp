@@ -1585,7 +1585,7 @@ class MSimdShuffleBase
     uint32_t laneMask_;
     uint32_t arity_;
 
-    MSimdShuffleBase(int32_t laneX, int32_t laneY, int32_t laneZ, int32_t laneW, MIRType type)
+    MSimdShuffleBase(uint32_t laneX, uint32_t laneY, uint32_t laneZ, uint32_t laneW, MIRType type)
     {
         MOZ_ASSERT(SimdTypeToLength(type) == 4);
         MOZ_ASSERT(IsSimdType(type));
@@ -1600,10 +1600,14 @@ class MSimdShuffleBase
   public:
     // For now, these formulas are fine for x4 types. They'll need to be
     // generalized for other SIMD type lengths.
-    int32_t laneX() const { MOZ_ASSERT(arity_ == 4); return laneMask_ & 7; }
-    int32_t laneY() const { MOZ_ASSERT(arity_ == 4); return (laneMask_ >> 3) & 7; }
-    int32_t laneZ() const { MOZ_ASSERT(arity_ == 4); return (laneMask_ >> 6) & 7; }
-    int32_t laneW() const { MOZ_ASSERT(arity_ == 4); return (laneMask_ >> 9) & 7; }
+    uint32_t laneX() const { MOZ_ASSERT(arity_ == 4); return laneMask_ & 7; }
+    uint32_t laneY() const { MOZ_ASSERT(arity_ == 4); return (laneMask_ >> 3) & 7; }
+    uint32_t laneZ() const { MOZ_ASSERT(arity_ == 4); return (laneMask_ >> 6) & 7; }
+    uint32_t laneW() const { MOZ_ASSERT(arity_ == 4); return (laneMask_ >> 9) & 7; }
+
+    bool lanesMatch(uint32_t x, uint32_t y, uint32_t z, uint32_t w) const {
+        return ((x << 0) | (y << 3) | (z << 6) | (w << 9)) == laneMask_;
+    }
 };
 
 // Applies a shuffle operation to the input, putting the input lanes as
@@ -1613,7 +1617,7 @@ class MSimdSwizzle : public MUnaryInstruction, public MSimdShuffleBase
 {
   protected:
     MSimdSwizzle(MDefinition *obj, MIRType type,
-                 int32_t laneX, int32_t laneY, int32_t laneZ, int32_t laneW)
+                 uint32_t laneX, uint32_t laneY, uint32_t laneZ, uint32_t laneW)
       : MUnaryInstruction(obj), MSimdShuffleBase(laneX, laneY, laneZ, laneW, type)
     {
         MOZ_ASSERT(laneX < 4 && laneY < 4 && laneZ < 4 && laneW < 4);
@@ -1628,7 +1632,7 @@ class MSimdSwizzle : public MUnaryInstruction, public MSimdShuffleBase
     INSTRUCTION_HEADER(SimdSwizzle);
 
     static MSimdSwizzle *NewAsmJS(TempAllocator &alloc, MDefinition *obj, MIRType type,
-                                  int32_t laneX, int32_t laneY, int32_t laneZ, int32_t laneW)
+                                  uint32_t laneX, uint32_t laneY, uint32_t laneZ, uint32_t laneW)
     {
         return new(alloc) MSimdSwizzle(obj, type, laneX, laneY, laneZ, laneW);
     }
@@ -1644,6 +1648,8 @@ class MSimdSwizzle : public MUnaryInstruction, public MSimdShuffleBase
         return AliasSet::None();
     }
 
+    MDefinition *foldsTo(TempAllocator &alloc);
+
     ALLOW_CLONE(MSimdSwizzle)
 };
 
@@ -1653,7 +1659,7 @@ class MSimdSwizzle : public MUnaryInstruction, public MSimdShuffleBase
 class MSimdShuffle : public MBinaryInstruction, public MSimdShuffleBase
 {
     MSimdShuffle(MDefinition *lhs, MDefinition *rhs, MIRType type,
-                 int32_t laneX, int32_t laneY, int32_t laneZ, int32_t laneW)
+                 uint32_t laneX, uint32_t laneY, uint32_t laneZ, uint32_t laneW)
       : MBinaryInstruction(lhs, rhs), MSimdShuffleBase(laneX, laneY, laneZ, laneW, lhs->type())
     {
         MOZ_ASSERT(laneX < 8 && laneY < 8 && laneZ < 8 && laneW < 8);
@@ -1670,8 +1676,8 @@ class MSimdShuffle : public MBinaryInstruction, public MSimdShuffleBase
     INSTRUCTION_HEADER(SimdShuffle);
 
     static MInstruction *NewAsmJS(TempAllocator &alloc, MDefinition *lhs, MDefinition *rhs,
-                                  MIRType type, int32_t laneX, int32_t laneY, int32_t laneZ,
-                                  int32_t laneW)
+                                  MIRType type, uint32_t laneX, uint32_t laneY, uint32_t laneZ,
+                                  uint32_t laneW)
     {
         // Swap operands so that new lanes come from LHS in majority.
         // In the balanced case, swap operands if needs be, in order to be able

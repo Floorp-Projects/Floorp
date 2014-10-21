@@ -295,6 +295,8 @@ private:
         OP2_MOVPS_WpsVps    = 0x11,
         OP2_MOVHLPS_VqUq    = 0x12,
         OP2_UNPCKLPS_VsdWsd = 0x14,
+        OP2_UNPCKHPS_VsdWsd = 0x15,
+        OP2_MOVLHPS_VqUq    = 0x16,
         OP2_MOVAPD_VsdWsd   = 0x28,
         OP2_MOVAPS_VsdWsd   = 0x28,
         OP2_MOVAPS_WsdVsd   = 0x29,
@@ -2921,6 +2923,13 @@ public:
         m_formatter.twoByteOp(OP2_UNPCKLPS_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
 
+    void unpckhps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("unpckhps   %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_UNPCKHPS_VsdWsd, (RegisterID)dst, (RegisterID)src);
+    }
+
     void movd_rr(RegisterID src, XMMRegisterID dst)
     {
         spew("movd       %s, %s",
@@ -2979,6 +2988,13 @@ public:
         spew("movhlps     %s, %s",
              nameFPReg(src), nameFPReg(dst));
         m_formatter.twoByteOp(OP2_MOVHLPS_VqUq, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void movlhps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("movlhps     %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MOVLHPS_VqUq, (RegisterID)dst, (RegisterID)src);
     }
 
     void psrldq_ir(int shift, XMMRegisterID dest)
