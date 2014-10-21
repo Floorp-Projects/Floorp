@@ -32,4 +32,7 @@ export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
 
 GAIADIR=$topsrcdir/gaia
 
+# Include Firefox OS fonts.
+MOZTTDIR=$topsrcdir/moztt
+
 . "$topsrcdir/b2g/config/mozconfigs/common.override"
