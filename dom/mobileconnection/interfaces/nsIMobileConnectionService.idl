@@ -234,7 +234,7 @@ already_AddRefed<nsIMobileConnectionService>
 NS_CreateMobileConnectionService();
 %}
 
-[scriptable, uuid(1b76ccbf-dbc2-4b74-a62a-73ea91599afa)]
+[scriptable, uuid(bde83c1d-1335-43b6-8268-ec7e320167f0)]
 interface nsIMobileConnection : nsISupports
 {
   /*
@@ -295,6 +295,13 @@ interface nsIMobileConnection : nsISupports
   const long CLIR_INVOCATION  = 1;
   const long CLIR_SUPPRESSION = 2;
 
+  /**
+   * Network selection mode.
+   */
+  const long NETWORK_SELECTION_MODE_UNKNOWN   = -1; // not available
+  const long NETWORK_SELECTION_MODE_AUTOMATIC = 0;
+  const long NETWORK_SELECTION_MODE_MANUAL    = 1;
+
   readonly attribute unsigned long serviceId;
 
   /**
@@ -332,10 +339,10 @@ interface nsIMobileConnection : nsISupports
   readonly attribute DOMString iccId;
 
   /**
-   * The selection mode of the voice and data networks. Possible values are
-   * 'automatic', 'manual', null (unknown).
+   * The selection mode of the voice and data networks. One of the
+   * nsIMobileConnection.NETWORK_SELECTION_MODE_* values.
    */
-  readonly attribute DOMString networkSelectionMode;
+  readonly attribute long networkSelectionMode;
 
   /**
    * Current radio state. Possible values are 'enabling', 'enabled',
