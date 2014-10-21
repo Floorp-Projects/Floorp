@@ -391,7 +391,7 @@ void TestSetTargetZeroTimeConstant()
   ErrorResultMock rv;
 
   timeline.SetTargetAtTime(20.0f, 1.0, 0.0, rv);
-  is(timeline.GetValueAtTime(10.), 20.f, "Should get the correct value with timeConstant == 0");
+  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
 }
 
 void TestExponentialInvalidPreviousZeroValue()
