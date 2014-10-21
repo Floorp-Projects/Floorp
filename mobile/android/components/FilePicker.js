@@ -10,6 +10,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
+Cu.importGlobalProperties(['File']);
+
 function FilePicker() {
 }
 
@@ -143,12 +145,22 @@ FilePicker.prototype = {
     if (!f) {
         return null;
     }
-    return File(f);
+
+    if (this._domWin) {
+      return new this._domWin.File(f);
+    }
+
+    return new File(f);
   },
 
   get domfiles() {
+    let win = this._domWin;
     return this.getEnumerator([this.file], function(file) {
-      return File(file);
+      if (win) {
+        return new win.File(file);
+      }
+
+      return new File(file);
     });
   },
 
