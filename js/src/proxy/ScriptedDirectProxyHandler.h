@@ -27,8 +27,6 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
                                  AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props) const MOZ_OVERRIDE;
-    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const MOZ_OVERRIDE;
 
     /* These two are standard internal methods but aren't implemented to spec yet. */
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
@@ -38,6 +36,9 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
     /* Non-standard, but needed to handle revoked proxies. */
     virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy,
                                        bool *succeeded) const MOZ_OVERRIDE;
+
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const MOZ_OVERRIDE;
+    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;
 
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,

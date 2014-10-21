@@ -224,6 +224,45 @@ Proxy::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
                         AppendUnique(cx, props, protoProps));
 }
 
+/* static */ bool
+Proxy::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject proto)
+{
+    MOZ_ASSERT(proxy->hasLazyPrototype());
+    JS_CHECK_RECURSION(cx, return false);
+    return proxy->as<ProxyObject>().handler()->getPrototypeOf(cx, proxy, proto);
+}
+
+/* static */ bool
+Proxy::setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp)
+{
+    MOZ_ASSERT(proxy->hasLazyPrototype());
+    JS_CHECK_RECURSION(cx, return false);
+    return proxy->as<ProxyObject>().handler()->setPrototypeOf(cx, proxy, proto, bp);
+}
+
+/* static */ bool
+Proxy::setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    return handler->setImmutablePrototype(cx, proxy, succeeded);
+}
+
+/* static */ bool
+Proxy::preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    return handler->preventExtensions(cx, proxy, succeeded);
+}
+
+/* static */ bool
+Proxy::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    return proxy->as<ProxyObject>().handler()->isExtensible(cx, proxy, extensible);
+}
+
 bool
 Proxy::has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
@@ -380,21 +419,6 @@ Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleV
 }
 
 bool
-Proxy::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible)
-{
-    JS_CHECK_RECURSION(cx, return false);
-    return proxy->as<ProxyObject>().handler()->isExtensible(cx, proxy, extensible);
-}
-
-bool
-Proxy::preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded)
-{
-    JS_CHECK_RECURSION(cx, return false);
-    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    return handler->preventExtensions(cx, proxy, succeeded);
-}
-
-bool
 Proxy::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     JS_CHECK_RECURSION(cx, return false);
@@ -516,30 +540,6 @@ Proxy::defaultValue(JSContext *cx, HandleObject proxy, JSType hint, MutableHandl
 }
 
 JSObject * const TaggedProto::LazyProto = reinterpret_cast<JSObject *>(0x1);
-
-/* static */ bool
-Proxy::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject proto)
-{
-    MOZ_ASSERT(proxy->hasLazyPrototype());
-    JS_CHECK_RECURSION(cx, return false);
-    return proxy->as<ProxyObject>().handler()->getPrototypeOf(cx, proxy, proto);
-}
-
-/* static */ bool
-Proxy::setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp)
-{
-    MOZ_ASSERT(proxy->hasLazyPrototype());
-    JS_CHECK_RECURSION(cx, return false);
-    return proxy->as<ProxyObject>().handler()->setPrototypeOf(cx, proxy, proto, bp);
-}
-
-/* static */ bool
-Proxy::setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded)
-{
-    JS_CHECK_RECURSION(cx, return false);
-    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    return handler->setImmutablePrototype(cx, proxy, succeeded);
-}
 
 /* static */ bool
 Proxy::watch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, JS::HandleObject callable)
