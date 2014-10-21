@@ -82,6 +82,11 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
     // list, with a pref to disable.
     {
       bool addToRecentDocs = Preferences::GetBool(PREF_BDM_ADDTORECENTDOCS);
+#ifdef MOZ_WIDGET_ANDROID
+      if (addToRecentDocs) {
+        mozilla::widget::android::DownloadsIntegration::ScanMedia(path, NS_ConvertUTF8toUTF16(aContentType));
+      }
+#else
       if (addToRecentDocs && !aIsPrivate) {
 #ifdef XP_WIN
         ::SHAddToRecentDocs(SHARD_PATHW, path.get());
@@ -94,10 +99,9 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
           gtk_recent_manager_add_item(manager, uri);
           g_free(uri);
         }
-#elif MOZ_WIDGET_ANDROID
-        mozilla::widget::android::GeckoAppShell::ScanMedia(path, NS_ConvertUTF8toUTF16(aContentType));
 #endif
       }
+#endif
 #ifdef MOZ_ENABLE_GIO
       // Use GIO to store the source URI for later display in the file manager.
       GFile* gio_file = g_file_new_for_path(NS_ConvertUTF16toUTF8(path).get());
@@ -115,6 +119,7 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
 #endif
     }
 #endif
+
 #ifdef XP_MACOSX
     // On OS X, make the downloads stack bounce.
     CFStringRef observedObject = ::CFStringCreateWithCString(kCFAllocatorDefault,

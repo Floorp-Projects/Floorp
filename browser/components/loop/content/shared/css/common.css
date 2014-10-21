@@ -114,22 +114,22 @@ p {
 .btn-accept,
 .btn-success,
 .btn-accept + .btn-chevron {
-  background-color: #74bf43;
-  border: 1px solid #74bf43;
+  background-color: #5bc0a4;
+  border: 1px solid #5bc0a4;
 }
 
   .btn-accept:hover,
   .btn-success:hover,
   .btn-accept + .btn-chevron:hover {
-    background-color: #6cb23e;
-    border: 1px solid #6cb23e;
+    background-color: #47b396;
+    border: 1px solid #47b396;
   }
 
   .btn-accept:active,
   .btn-success:active,
   .btn-accept + .btn-chevron:active {
-    background-color: #64a43a;
-    border: 1px solid #64a43a;
+    background-color: #3aa689;
+    border: 1px solid #3aa689;
   }
 
 .btn-warning {
@@ -153,7 +153,7 @@ p {
   .btn-decline + .btn-chevron:hover,
   .btn-error + .btn-chevron:hover {
     background-color: #c53436;
-    border: 1px solid #c53436;
+    border-color: #c53436;
   }
 
   .btn-cancel:active,
@@ -163,7 +163,7 @@ p {
   .btn-decline + .btn-chevron:active,
   .btn-error + .btn-chevron:active {
     background-color: #ae2325;
-    border: 1px solid #ae2325;
+    border-color: #ae2325;
   }
 
 .btn-chevron {

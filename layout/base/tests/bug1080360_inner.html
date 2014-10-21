@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1080360
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1080360</title>
+  <meta name="author" content="Maksim Lebedev" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #target, #listener { background: yellow; padding: 10px; }
+  </style>
+  <script type="application/javascript">
+    var target = undefined;
+    var listener = undefined;
+    var test_target = false;
+    var test_listener_got = false;
+    var test_listener_lost = false;
+    var test_document = false;
+
+    function TargetHandler(event) {
+      logger("Target receive event: " + event.type);
+      listener.setPointerCapture(event.pointerId);
+      test_target = true;
+    }
+    function ListenerHandler(event) {
+      logger("Listener receive event: " + event.type);
+      if(event.type == "gotpointercapture") {
+        test_listener_got = true;
+        listener.parentNode.removeChild(listener);
+      }
+      if(event.type == "lostpointercapture")
+        test_listener_lost = true;
+    }
+    function DocumentHandler(event) {
+      logger("Document receive event: " + event.type);
+      if(event.type == "lostpointercapture")
+        test_document = true;
+    }
+    function logger(message) {
+      console.log(message);
+      var log = document.getElementById('log');
+      log.innerHTML = message + "<br>" + log.innerHTML;
+    }
+
+    function prepareTest() {
+      parent.turnOnPointerEvents(executeTest);
+    }
+    function executeTest()
+    {
+      logger("executeTest");
+      target = document.getElementById("target");
+      listener = document.getElementById("listener");
+      target.addEventListener("pointerdown",          TargetHandler,    false);
+      listener.addEventListener("gotpointercapture",  ListenerHandler,  false);
+      listener.addEventListener("lostpointercapture", ListenerHandler,  false);
+      document.addEventListener("lostpointercapture", DocumentHandler,  false);
+      var rect = target.getBoundingClientRect();
+      synthesizePointer(target, rect.width/2, rect.height/2,  {type: "pointerdown"});
+      synthesizePointer(target, rect.width/2, rect.height/2,  {type: "pointermove"});
+      synthesizePointer(target, rect.width/2, rect.height/2,  {type: "pointerup"});
+      finishTest();
+    }
+    function finishTest() {
+      parent.is(test_target,        true,   "pointerdown event should be received by target");
+      parent.is(test_listener_got,  true,   "gotpointercapture event should be received by listener");
+      parent.is(test_listener_lost, false,  "listener should not receive lostpointercapture event");
+      parent.is(test_document,      true,   "document should receive lostpointercapture event");
+      logger("finishTest");
+      parent.finishTest();
+    }
+  </script>
+</head>
+<body onload="prepareTest()">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1080360">Mozilla Bug 1080360</a>
+  <div id="target">div id=target</div>
+  <div id="listener">div id=listener</div>
+  <pre id="log"></pre>
+</body>
+</html>

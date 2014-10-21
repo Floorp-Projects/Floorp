@@ -243,20 +243,20 @@ body {
 }
 
 .button.button-accept {
-  background-color: #74bf43;
-  border-color: #74bf43;
+  background-color: #5bc0a4;
+  border-color: #5bc0a4;
   color: #fff;
 }
 
 .button.button-accept:hover {
-  background-color: #6cb23e;
-  border-color: #6cb23e;
+  background-color: #47b396;
+  border-color: #47b396;
   color: #fff;
 }
 
 .button.button-accept:hover:active {
-  background-color: #64a43a;
-  border-color: #64a43a;
+  background-color: #3aa689;
+  border-color: #3aa689;
   color: #fff;
 }
 

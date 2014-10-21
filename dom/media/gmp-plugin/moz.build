@@ -6,7 +6,9 @@
 
 NO_DIST_INSTALL = True
 SOURCES += [
-        'gmp-fake.cpp'
+        'gmp-fake.cpp',
+        'gmp-test-decryptor.cpp',
+        'gmp-test-storage.cpp',
 ]
 
 SharedLibrary("fake")

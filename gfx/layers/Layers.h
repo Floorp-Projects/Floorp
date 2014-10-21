@@ -2226,7 +2226,15 @@ public:
   {
     MOZ_ASSERT(!mFirstChild && !mLastChild);
     MOZ_ASSERT(!aLayer->GetParent());
-    MOZ_ASSERT(aLayer->Manager() == Manager());
+    if (aLayer->Manager() != Manager()) {
+      // This can happen when e.g. rendering while dragging tabs
+      // between windows - aLayer's manager may be the manager for the
+      // old window's tab.  In that case, it will be changed before the
+      // next render (see SetLayerManager).  It is simply easier to
+      // ignore the rendering here than it is to pause it.
+      NS_WARNING("ConnectReferentLayer failed - Incorrect LayerManager");
+      return;
+    }
 
     mFirstChild = mLastChild = aLayer;
     aLayer->SetParent(this);
@@ -2238,9 +2246,6 @@ public:
    */
   void DetachReferentLayer(Layer* aLayer)
   {
-    MOZ_ASSERT(aLayer == mFirstChild && mFirstChild == mLastChild);
-    MOZ_ASSERT(aLayer->GetParent() == this);
-
     mFirstChild = mLastChild = nullptr;
     aLayer->SetParent(nullptr);
   }
