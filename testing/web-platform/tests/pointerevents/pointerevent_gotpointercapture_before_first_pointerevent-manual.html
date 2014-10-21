@@ -24,7 +24,7 @@
             var pointerdown_event;
             var detected_pointerEvents = new Array();
             var eventRcvd = false;
-            var isAsync = false;
+            var isWaiting = false;
 
 
             function run() {
@@ -39,7 +39,8 @@
                             check_PointerEvent(event);
 
                             // TA: 10.2
-                            assert_true(isAsync, "gotpointercapture must be fired asynchronously");
+                            assert_true(isWaiting, "gotpointercapture must be fired asynchronously");
+                            isWaiting = false;
 
                             // if any events have been received with same pointerId before gotpointercapture, then fail
                             var eventsRcvd_str = "";
@@ -55,12 +56,13 @@
                             });
 
                             detected_pointertypes[event.pointerType] = true;
-                            test_pointerEvent.done(); // complete test
                         }
                         else {
                             if (pointerdown_event.pointerId === event.pointerId) {
+                                assert_false(isWaiting, event.type + " must be fired after gotpointercapture");
                                 detected_pointerEvents.push(event.type);
                                 eventRcvd = true;
+                                test_pointerEvent.done(); // complete test
                             }
                         }
                     });
@@ -70,9 +72,7 @@
                 on_event(target0, "pointerdown", function (event) {
                     pointerdown_event = event;
                     listener.setPointerCapture(event.pointerId);
-                    setTimeout(function() {
-                        isAsync = true;
-                    });
+                    isWaiting = true;
                 });
             }
         </script>
