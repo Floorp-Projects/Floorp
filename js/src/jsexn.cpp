@@ -40,7 +40,6 @@ using namespace js::types;
 
 using mozilla::ArrayLength;
 using mozilla::PodArrayZero;
-using mozilla::PodZero;
 
 static void
 exn_finalize(FreeOp *fop, JSObject *obj);
@@ -813,7 +812,7 @@ ErrorReport::init(JSContext *cx, HandleValue exn)
         }
 
         reportp = &ownedReport;
-        PodZero(&ownedReport);
+        new (reportp) JSErrorReport();
         ownedReport.filename = filename.ptr();
         ownedReport.lineno = lineno;
         ownedReport.exnType = int16_t(JSEXN_NONE);
@@ -865,7 +864,7 @@ ErrorReport::populateUncaughtExceptionReport(JSContext *cx, ...)
 void
 ErrorReport::populateUncaughtExceptionReportVA(JSContext *cx, va_list ap)
 {
-    PodZero(&ownedReport);
+    new (&ownedReport) JSErrorReport();
     ownedReport.flags = JSREPORT_ERROR;
     ownedReport.errorNumber = JSMSG_UNCAUGHT_EXCEPTION;
     // XXXbz this assumes the stack we have right now is still

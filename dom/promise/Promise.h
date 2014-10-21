@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
@@ -322,6 +323,12 @@ private:
   // console before the worker's context is deleted. This feature is used for
   // that purpose.
   nsAutoPtr<PromiseReportRejectFeature> mFeature;
+
+  // The time when this promise was created.
+  TimeStamp mCreationTimestamp;
+
+  // The time when this promise transitioned out of the pending state.
+  TimeStamp mSettlementTimestamp;
 };
 
 } // namespace dom

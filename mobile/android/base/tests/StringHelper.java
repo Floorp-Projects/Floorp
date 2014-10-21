@@ -98,6 +98,7 @@ public class StringHelper {
     public static final String ROBOCOP_BOXES_URL = "/robocop/robocop_boxes.html";
     public static final String ROBOCOP_GEOLOCATION_URL = "/robocop/robocop_geolocation.html";
     public static final String ROBOCOP_LOGIN_URL = "/robocop/robocop_login.html";
+    public static final String ROBOCOP_POPUP_URL = "/robocop/robocop_popup.html";
     public static final String ROBOCOP_OFFLINE_STORAGE_URL = "/robocop/robocop_offline_storage.html";
     public static final String ROBOCOP_PICTURE_LINK_URL = "/robocop/robocop_picture_link.html";
     public static final String ROBOCOP_SEARCH_URL = "/robocop/robocop_search.html";

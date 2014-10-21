@@ -8,6 +8,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/widget/AudioSession.h"
+#include "mozilla/ipc/WindowsMessageLoop.h"
 
 #include "nsIObserverService.h"
 #include "nsIAppStartup.h"
@@ -72,6 +73,8 @@ MetroAppShell::Init()
 
   WNDCLASSW wc;
   HINSTANCE module = GetModuleHandle(nullptr);
+
+  mozilla::ipc::windows::InitUIThread();
 
   const char16_t *const kWindowClass = L"nsAppShell:EventWindowClass";
   if (!GetClassInfoW(module, kWindowClass, &wc)) {

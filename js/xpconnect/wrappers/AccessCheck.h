@@ -39,8 +39,6 @@ enum CrossOriginObjectType {
 CrossOriginObjectType IdentifyCrossOriginObject(JSObject *obj);
 
 struct Policy {
-    static const bool AllowGetPrototypeOf = false;
-
     static bool checkCall(JSContext *cx, JS::HandleObject wrapper, const JS::CallArgs &args) {
         MOZ_CRASH("As a rule, filtering wrappers are non-callable");
     }
@@ -95,12 +93,6 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
 // This policy only permits access to properties if they appear in the
 // objects exposed properties list.
 struct ExposedPropertiesOnly : public Policy {
-
-    // COWs are the only type of filtering wrapper that allow access to the
-    // prototype, because the standard prototypes are remapped into the
-    // wrapper's compartment.
-    static const bool AllowGetPrototypeOf = true;
-
     static bool check(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id, js::Wrapper::Action act);
 
     static bool deny(js::Wrapper::Action act, JS::HandleId id);

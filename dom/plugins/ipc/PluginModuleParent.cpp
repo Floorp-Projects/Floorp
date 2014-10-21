@@ -28,7 +28,6 @@
 #include "nsIObserverService.h"
 #include "nsNPAPIPlugin.h"
 #include "nsPrintfCString.h"
-#include "PluginIdentifierParent.h"
 #include "prsystem.h"
 #include "GeckoProfiler.h"
 
@@ -779,37 +778,6 @@ PluginModuleParent::NotifyPluginCrashed()
         mPlugin->PluginCrashed(mPluginDumpID, mBrowserDumpID);
 }
 
-PPluginIdentifierParent*
-PluginModuleParent::AllocPPluginIdentifierParent(const nsCString& aString,
-                                                 const int32_t& aInt,
-                                                 const bool& aTemporary)
-{
-    if (aTemporary) {
-        NS_ERROR("Plugins don't create temporary identifiers.");
-        return nullptr; // should abort the plugin
-    }
-
-    NPIdentifier npident = aString.IsVoid() ?
-        mozilla::plugins::parent::_getintidentifier(aInt) :
-        mozilla::plugins::parent::_getstringidentifier(aString.get());
-
-    if (!npident) {
-        NS_WARNING("Failed to get identifier!");
-        return nullptr;
-    }
-
-    PluginIdentifierParent* ident = new PluginIdentifierParent(npident, false);
-    mIdentifiers.Put(npident, ident);
-    return ident;
-}
-
-bool
-PluginModuleParent::DeallocPPluginIdentifierParent(PPluginIdentifierParent* aActor)
-{
-    delete aActor;
-    return true;
-}
-
 PPluginInstanceParent*
 PluginModuleParent::AllocPPluginInstanceParent(const nsCString& aMimeType,
                                                const uint16_t& aMode,
@@ -1049,44 +1017,6 @@ PluginModuleParent::AnswerNPN_UserAgent(nsCString* userAgent)
 {
     *userAgent = NullableString(mNPNIface->uagent(nullptr));
     return true;
-}
-
-PluginIdentifierParent*
-PluginModuleParent::GetIdentifierForNPIdentifier(NPP npp, NPIdentifier aIdentifier)
-{
-    PluginIdentifierParent* ident;
-    if (mIdentifiers.Get(aIdentifier, &ident)) {
-        if (ident->IsTemporary()) {
-            ident->AddTemporaryRef();
-        }
-        return ident;
-    }
-
-    nsCString string;
-    int32_t intval = -1;
-    bool temporary = false;
-    if (mozilla::plugins::parent::_identifierisstring(aIdentifier)) {
-        NPUTF8* chars =
-            mozilla::plugins::parent::_utf8fromidentifier(aIdentifier);
-        if (!chars) {
-            return nullptr;
-        }
-        string.Adopt(chars);
-        temporary = !NPStringIdentifierIsPermanent(npp, aIdentifier);
-    }
-    else {
-        intval = mozilla::plugins::parent::_intfromidentifier(aIdentifier);
-        string.SetIsVoid(true);
-    }
-
-    ident = new PluginIdentifierParent(aIdentifier, temporary);
-    if (!SendPPluginIdentifierConstructor(ident, string, intval, temporary))
-        return nullptr;
-
-    if (!temporary) {
-        mIdentifiers.Put(aIdentifier, ident);
-    }
-    return ident;
 }
 
 PluginInstanceParent*

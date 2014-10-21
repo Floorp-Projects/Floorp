@@ -79,20 +79,6 @@ HasBitInInterfacesBitmap(JSObject *obj, uint32_t interfaceBit)
     return (clasp->interfacesBitmap & (1 << interfaceBit)) != 0;
 }
 
-static void
-PointerFinalize(JSFreeOp *fop, JSObject *obj)
-{
-    JSPropertyOp *popp = static_cast<JSPropertyOp *>(JS_GetPrivate(obj));
-    delete popp;
-}
-
-const JSClass
-PointerHolderClass = {
-    "Pointer", JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, PointerFinalize
-};
-
 bool
 xpc_qsDefineQuickStubs(JSContext *cx, JSObject *protoArg, unsigned flags,
                        uint32_t ifacec, const nsIID **interfaces,

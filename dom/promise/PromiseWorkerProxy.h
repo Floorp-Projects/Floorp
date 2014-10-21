@@ -5,6 +5,8 @@
 #ifndef mozilla_dom_PromiseWorkerProxy_h
 #define mozilla_dom_PromiseWorkerProxy_h
 
+// Required for Promise::PromiseTaskSync.
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/workers/bindings/WorkerFeature.h"
 #include "nsProxyRelease.h"
@@ -43,6 +45,16 @@ class WorkerPrivate;
 //   4. Then the Promise results returned by ResolvedCallback/RejectedCallback
 //      will be dispatched as a WorkerRunnable to the worker thread to
 //      resolve/reject the Promise created at #1.
+//
+// PromiseWorkerProxy can also be used in situations where there is no main
+// thread Promise, or where special handling is required on the worker thread
+// for promise resolution. Create a PromiseWorkerProxy as in steps 1 and
+// 2 above. When the main thread is ready to resolve the worker thread promise,
+// dispatch a runnable to the worker. Use GetWorkerPrivate() to acquire the
+// worker. This might be null! In the WorkerRunnable's WorkerRun() use
+// GetWorkerPromise() to access the Promise and resolve/reject it. Then call
+// CleanUp() on the worker
+// thread.
 
 class PromiseWorkerProxy : public PromiseNativeHandler,
                            public workers::WorkerFeature
