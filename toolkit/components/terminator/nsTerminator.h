@@ -22,10 +22,17 @@ public:
 private:
   nsresult SelfInit();
   void Start();
+  void StartWatchdog();
+  void StartWriter();
+
+  void UpdateHeartbeat(const char* aTopic);
+  void UpdateTelemetry();
+  void UpdateCrashReport(const char* aTopic);
 
   ~nsTerminator() {}
 
   bool mInitialized;
+  int32_t mCurrentStep;
 };
 
 }
