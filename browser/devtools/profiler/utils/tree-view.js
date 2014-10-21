@@ -37,6 +37,10 @@ exports.CallView = CallView;
  * Every instance of a `CallView` represents a row in the call tree. The same
  * parent node is used for all rows.
  *
+ * @param number autoExpandDepth [optional]
+ *        The depth to which the tree should automatically expand. Defualts to
+ *        the caller's autoExpandDepth if a caller exists, otherwise defaults to
+ *        CALL_TREE_AUTO_EXPAND.
  * @param CallView caller
  *        The CallView considered the "caller" frame. This instance will be
  *        represent the "callee". Should be null for root nodes.
@@ -44,12 +48,31 @@ exports.CallView = CallView;
  *        Details about this function, like { samples, duration, calls } etc.
  * @param number level
  *        The indentation level in the call tree. The root node is at level 0.
+ * @param boolean hidden [optional]
+ *        Whether this node should be hidden and not contribute to depth/level
+ *        calculations. Defaults to false.
+ * @param boolean inverted [optional]
+ *        Whether the call tree has been inverted (bottom up, rather than
+ *        top-down). Defaults to false.
  */
-function CallView({ caller, frame, level }) {
-  AbstractTreeItem.call(this, { parent: caller, level: level });
+function CallView({ autoExpandDepth, caller, frame, level, hidden, inverted }) {
+  level = level || 0;
+  if (hidden) {
+    level--;
+  }
 
-  this.autoExpandDepth = caller ? caller.autoExpandDepth : CALL_TREE_AUTO_EXPAND;
+  AbstractTreeItem.call(this, {
+    parent: caller,
+    level
+  });
+
+  this.caller = caller;
+  this.autoExpandDepth = autoExpandDepth != null
+    ? autoExpandDepth
+    : caller ? caller.autoExpandDepth : CALL_TREE_AUTO_EXPAND;
   this.frame = frame;
+  this.hidden = hidden;
+  this.inverted = inverted;
 
   this._onUrlClick = this._onUrlClick.bind(this);
   this._onZoomClick = this._onZoomClick.bind(this);
@@ -67,11 +90,26 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
 
     let frameInfo = this.frame.getInfo();
     let framePercentage = this._getPercentage(this.frame.samples);
-    let childrenPercentage = sum([this._getPercentage(c.samples)
+
+    let selfPercentage;
+    let selfDuration;
+    if (!this._getChildCalls().length) {
+      selfPercentage = framePercentage;
+      selfDuration = this.frame.duration;
+    } else {
+      let childrenPercentage = sum([this._getPercentage(c.samples)
+                                    for (c of this._getChildCalls())]);
+      selfPercentage = clamp(framePercentage - childrenPercentage, 0, 100);
+
+      let childrenDuration = sum([c.duration
                                   for (c of this._getChildCalls())]);
-    let selfPercentage = clamp(framePercentage - childrenPercentage, 0, 100);
-    let selfDuration = this.frame.duration - sum([c.duration
-                                                  for (c of this._getChildCalls())]);
+      selfDuration = this.frame.duration - childrenDuration;
+
+      if (this.inverted) {
+        selfPercentage = framePercentage - selfPercentage;
+        selfDuration = this.frame.duration - selfDuration;
+      }
+    }
 
     let durationCell = this._createTimeCell(this.frame.duration);
     let selfDurationCell = this._createTimeCell(selfDuration, true);
@@ -85,6 +123,9 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     targetNode.setAttribute("origin", frameInfo.isContent ? "content" : "chrome");
     targetNode.setAttribute("category", frameInfo.categoryData.abbrev || "");
     targetNode.setAttribute("tooltiptext", this.frame.location || "");
+    if (this.hidden) {
+      targetNode.style.display = "none";
+    }
 
     let isRoot = frameInfo.nodeType == "Thread";
     if (isRoot) {
@@ -93,8 +134,8 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     }
 
     targetNode.appendChild(durationCell);
-    targetNode.appendChild(selfDurationCell);
     targetNode.appendChild(percentageCell);
+    targetNode.appendChild(selfDurationCell);
     targetNode.appendChild(selfPercentageCell);
     targetNode.appendChild(samplesCell);
     targetNode.appendChild(functionCell);
@@ -105,14 +146,14 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
   /**
    * Calculate what percentage of all samples the given number of samples is.
    */
-  _getPercentage: function (samples) {
+  _getPercentage: function(samples) {
     return samples / this.root.frame.samples * 100;
   },
 
   /**
    * Return an array of this frame's child calls.
    */
-  _getChildCalls: function () {
+  _getChildCalls: function() {
     return Object.keys(this.frame.calls).map(k => this.frame.calls[k]);
   },
 
@@ -128,7 +169,8 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
       children.push(new CallView({
         caller: this,
         frame: newFrame,
-        level: newLevel
+        level: newLevel,
+        inverted: this.inverted
       }));
     }
 
