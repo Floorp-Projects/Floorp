@@ -1759,7 +1759,9 @@ var AddonManagerInternal = {
       nextObject: function getInstallsByTypes_nextObject(aCaller, aProvider) {
         callProviderAsync(aProvider, "getInstallsByTypes", aTypes,
                           function getInstallsByTypes_safeCall(aProviderInstalls) {
-          installs = installs.concat(aProviderInstalls);
+          if (aProviderInstalls) {
+            installs = installs.concat(aProviderInstalls);
+          }
           aCaller.callNext();
         });
       },
@@ -2131,7 +2133,9 @@ var AddonManagerInternal = {
       nextObject: function getAddonsByTypes_nextObject(aCaller, aProvider) {
         callProviderAsync(aProvider, "getAddonsByTypes", aTypes,
                           function getAddonsByTypes_concatAddons(aProviderAddons) {
-          addons = addons.concat(aProviderAddons);
+          if (aProviderAddons) {
+            addons = addons.concat(aProviderAddons);
+          }
           aCaller.callNext();
         });
       },
@@ -2192,7 +2196,9 @@ var AddonManagerInternal = {
         callProviderAsync(aProvider, "getAddonsWithOperationsByTypes", aTypes,
                           function getAddonsWithOperationsByTypes_concatAddons
                                    (aProviderAddons) {
-          addons = addons.concat(aProviderAddons);
+          if (aProviderAddons) {
+            addons = addons.concat(aProviderAddons);
+          }
           aCaller.callNext();
         });
       },
