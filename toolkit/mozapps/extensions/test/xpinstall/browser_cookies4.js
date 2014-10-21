@@ -10,7 +10,7 @@ function test() {
 
   var cm = Components.classes["@mozilla.org/cookiemanager;1"]
                      .getService(Components.interfaces.nsICookieManager2);
-  cm.add("example.com", "/browser/" + RELATIVE_DIR, "xpinstall", "true", false,
+  cm.add("example.org", "/browser/" + RELATIVE_DIR, "xpinstall", "true", false,
          false, true, (Date.now() / 1000) + 60);
 
   var pm = Services.perms;
@@ -33,7 +33,7 @@ function finish_test(count) {
   is(count, 0, "No add-ons should have been installed");
   var cm = Components.classes["@mozilla.org/cookiemanager;1"]
                      .getService(Components.interfaces.nsICookieManager2);
-  cm.remove("example.com", "xpinstall", "/browser/" + RELATIVE_DIR, false);
+  cm.remove("example.org", "xpinstall", "/browser/" + RELATIVE_DIR, false);
 
   Services.prefs.clearUserPref("network.cookie.cookieBehavior");
   Services.perms.remove("example.com", "install");
