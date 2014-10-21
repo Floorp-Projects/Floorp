@@ -1673,6 +1673,18 @@ class MSimdShuffle : public MBinaryInstruction, public MSimdShuffleBase
                                   MIRType type, int32_t laneX, int32_t laneY, int32_t laneZ,
                                   int32_t laneW)
     {
+        // Swap operands so that new lanes come from LHS in majority.
+        // In the balanced case, swap operands if needs be, in order to be able
+        // to do only one shufps on x86.
+        unsigned lanesFromLHS = (laneX < 4) + (laneY < 4) + (laneZ < 4) + (laneW < 4);
+        if (lanesFromLHS < 2 || (lanesFromLHS == 2 && laneX >= 4 && laneY >=4)) {
+            laneX = (laneX + 4) % 8;
+            laneY = (laneY + 4) % 8;
+            laneZ = (laneZ + 4) % 8;
+            laneW = (laneW + 4) % 8;
+            mozilla::Swap(lhs, rhs);
+        }
+
         return new(alloc) MSimdShuffle(lhs, rhs, type, laneX, laneY, laneZ, laneW);
     }
 
