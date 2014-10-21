@@ -28,6 +28,8 @@ namespace gmp {
 
 class GMPParent;
 
+#define GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT 3000
+
 class GeckoMediaPluginService MOZ_FINAL : public mozIGeckoMediaPluginService
                                         , public nsIObserver
 {
@@ -44,6 +46,8 @@ public:
   void AsyncShutdownNeeded(GMPParent* aParent);
   void AsyncShutdownComplete(GMPParent* aParent);
   void AbortAsyncShutdown();
+
+  int32_t AsyncShutdownTimeoutMs();
 
 private:
   ~GeckoMediaPluginService();
@@ -122,7 +126,6 @@ private:
   MainThreadOnly<bool> mWaitingForPluginsAsyncShutdown;
 
   nsTArray<nsRefPtr<GMPParent>> mAsyncShutdownPlugins; // GMP Thread only.
-  nsCOMPtr<nsITimer> mAsyncShutdownTimeout; // GMP Thread only.
 
 #ifndef MOZ_WIDGET_GONK
   nsCOMPtr<nsIFile> mStorageBaseDir;
