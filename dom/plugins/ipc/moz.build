@@ -21,8 +21,6 @@ EXPORTS.mozilla.plugins += [
     'NPEventOSX.h',
     'NPEventUnix.h',
     'NPEventWindows.h',
-    'PluginIdentifierChild.h',
-    'PluginIdentifierParent.h',
     'PluginInstanceChild.h',
     'PluginInstanceParent.h',
     'PluginMessageUtils.h',
@@ -79,8 +77,6 @@ UNIFIED_SOURCES += [
     'ChildAsyncCall.cpp',
     'ChildTimer.cpp',
     'PluginBackgroundDestroyer.cpp',
-    'PluginIdentifierChild.cpp',
-    'PluginIdentifierParent.cpp',
     'PluginInstanceParent.cpp',
     'PluginMessageUtils.cpp',
     'PluginModuleParent.cpp',
@@ -105,8 +101,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 IPDL_SOURCES += [
     'PBrowserStream.ipdl',
+    'PluginTypes.ipdlh',
     'PPluginBackgroundDestroyer.ipdl',
-    'PPluginIdentifier.ipdl',
     'PPluginInstance.ipdl',
     'PPluginModule.ipdl',
     'PPluginScriptableObject.ipdl',
