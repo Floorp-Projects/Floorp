@@ -743,32 +743,19 @@ let SettingsRequestManager = {
     }
   },
 
-  removeMessageManager: function(aMsgMgr, aPrincipal) {
+  removeMessageManager: function(aMsgMgr){
     if (DEBUG) debug("Removing message manager");
     this.removeObserver(aMsgMgr);
     let closedLockIDs = [];
     let lockIDs = Object.keys(this.lockInfo);
     for (let i in lockIDs) {
-      let lock = this.lockInfo[lockIDs[i]];
-      if (lock._mm == aMsgMgr) {
-        let is_finalizing = false;
-        for (let task_index in lock.tasks) {
-          if (lock.tasks[task_index].operation === "finalize") {
-            is_finalizing = true;
-            break;
-          }
-        }
-        if (!is_finalizing) {
-          this.queueTask("finalize", {lockID: lockIDs[i]}, aPrincipal).then(
-            function() {
-              if (DEBUG) debug("Lock " + lockIDs[i] + " with dead message manager finalized");
-            },
-            function(error) {
-              if (DEBUG) debug("Lock " + lockIDs[i] + " with dead message manager NOT FINALIZED due to error: " + error);
-            }
-          );
-        }
+      if (this.lockInfo[lockIDs[i]]._mm == aMsgMgr) {
+      	if (DEBUG) debug("Removing lock " + lockIDs[i] + " due to process close/crash");
+        closedLockIDs.push(lockIDs[i]);
       }
+    }
+    for (let i in closedLockIDs) {
+      this.removeLock(closedLockIDs[i]);
     }
   },
 
@@ -825,7 +812,7 @@ let SettingsRequestManager = {
     switch (aMessage.name) {
       case "child-process-shutdown":
         if (DEBUG) debug("Child process shutdown received.");
-        this.removeMessageManager(mm, aMessage.principal);
+        this.removeMessageManager(mm);
         break;
       case "Settings:RegisterForMessages":
         if (!SettingsPermissions.hasSomeReadPermission(aMessage.principal)) {
