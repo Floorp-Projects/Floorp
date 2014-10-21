@@ -15,10 +15,10 @@ namespace mozilla {
 namespace ipc {
 
 //
-// UnixSocketRawData
+// UnixSocketIOBuffer
 //
 
-UnixSocketRawData::UnixSocketRawData(const void* aData, size_t aSize)
+UnixSocketIOBuffer::UnixSocketIOBuffer(const void* aData, size_t aSize)
 : mSize(aSize)
 , mOffset(0)
 , mAvailableSpace(aSize)
@@ -29,13 +29,89 @@ UnixSocketRawData::UnixSocketRawData(const void* aData, size_t aSize)
   memcpy(mData, aData, mSize);
 }
 
-UnixSocketRawData::UnixSocketRawData(size_t aSize)
+UnixSocketIOBuffer::UnixSocketIOBuffer(size_t aAvailableSpace)
 : mSize(0)
 , mOffset(0)
-, mAvailableSpace(aSize)
+, mAvailableSpace(aAvailableSpace)
 {
   mData = new uint8_t[mAvailableSpace];
 }
+
+UnixSocketIOBuffer::~UnixSocketIOBuffer()
+{ }
+
+const uint8_t*
+UnixSocketIOBuffer::Consume(size_t aLen)
+{
+  if (NS_WARN_IF(GetSize() < aLen)) {
+    return nullptr;
+  }
+  uint8_t* data = mData + mOffset;
+  mOffset += aLen;
+  return data;
+}
+
+nsresult
+UnixSocketIOBuffer::Read(void* aValue, size_t aLen)
+{
+  const uint8_t* data = Consume(aLen);
+  if (!data) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  memcpy(aValue, data, aLen);
+  return NS_OK;
+}
+
+uint8_t*
+UnixSocketIOBuffer::Append(size_t aLen)
+{
+  if (((mAvailableSpace - mSize) < aLen)) {
+    size_t availableSpace = mAvailableSpace + std::max(mAvailableSpace, aLen);
+    uint8_t* data = new uint8_t[availableSpace];
+    memcpy(data, mData, mSize);
+    mData = data;
+    mAvailableSpace = availableSpace;
+  }
+  uint8_t* data = mData + mSize;
+  mSize += aLen;
+  return data;
+}
+
+nsresult
+UnixSocketIOBuffer::Write(const void* aValue, size_t aLen)
+{
+  uint8_t* data = Append(aLen);
+  if (!data) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  memcpy(data, aValue, aLen);
+  return NS_OK;
+}
+
+void
+UnixSocketIOBuffer::CleanupLeadingSpace()
+{
+  if (GetLeadingSpace()) {
+    if (GetSize() <= GetLeadingSpace()) {
+      memcpy(mData, GetData(), GetSize());
+    } else {
+      memmove(mData, GetData(), GetSize());
+    }
+    mOffset = 0;
+  }
+}
+
+//
+// UnixSocketRawData
+//
+
+UnixSocketRawData::UnixSocketRawData(const void* aData, size_t aSize)
+: UnixSocketIOBuffer(aData, aSize)
+{ }
+
+UnixSocketRawData::UnixSocketRawData(size_t aSize)
+: UnixSocketIOBuffer(aSize)
+{ }
 
 ssize_t
 UnixSocketRawData::Receive(int aFd)
@@ -45,12 +121,7 @@ UnixSocketRawData::Receive(int aFd)
       return -1; /* buffer is full */
     }
     /* free up space at the end of data buffer */
-    if (GetSize() <= GetLeadingSpace()) {
-      memcpy(mData, GetData(), GetSize());
-    } else {
-      memmove(mData, GetData(), GetSize());
-    }
-    mOffset = 0;
+    CleanupLeadingSpace();
   }
 
   ssize_t res =
@@ -64,7 +135,7 @@ UnixSocketRawData::Receive(int aFd)
     return 0;
   }
 
-  mSize += res;
+  Append(res); /* mark read data as 'valid' */
 
   return res;
 }
