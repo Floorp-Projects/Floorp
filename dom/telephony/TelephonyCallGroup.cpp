@@ -277,28 +277,6 @@ TelephonyCallGroup::Remove(TelephonyCall& aCall, ErrorResult& aRv)
   }
 }
 
-already_AddRefed<Promise>
-TelephonyCallGroup::HangUp(ErrorResult& aRv)
-{
-  MOZ_ASSERT(!mCalls.IsEmpty());
-
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  if (!global) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
-  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
-
-  nsCOMPtr<nsITelephonyCallback> callback = new TelephonyCallback(promise);
-  aRv = mTelephony->Service()->HangUpConference(mCalls[0]->ServiceId(),
-                                                callback);
-  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
-
-  return promise.forget();
-}
-
 void
 TelephonyCallGroup::Hold(ErrorResult& aRv)
 {
