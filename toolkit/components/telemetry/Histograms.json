@@ -6382,6 +6382,11 @@
     "n_values": 64,
     "description": "TLS/SSL version intolerance was falsely detected, server rejected handshake"
   },
+  "SSL_WEAK_CIPHERS_FALLBACK": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Fallback attempted when server did not support any strong cipher suites"
+  },
   "SSL_CIPHER_SUITE_FULL": {
     "expires_in_version": "never",
     "kind": "enumerated",
