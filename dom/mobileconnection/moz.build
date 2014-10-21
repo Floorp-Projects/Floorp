@@ -33,6 +33,7 @@ XPIDL_SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'Assertions.cpp',
     'DOMMMIError.cpp',
     'ipc/MobileConnectionChild.cpp',
     'ipc/MobileConnectionIPCService.cpp',
