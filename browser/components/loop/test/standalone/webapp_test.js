@@ -308,12 +308,24 @@ describe("loop.webapp", function() {
       });
 
       describe("session:ended", function() {
-        it("should set display the StartConversationView", function() {
+        it("should display the StartConversationView", function() {
           conversation.trigger("session:ended");
 
           TestUtils.findRenderedComponentWithType(ocView,
             loop.webapp.EndedConversationView);
         });
+
+        it("should display the FailedConversationView if callStatus is failure",
+          function() {
+            ocView.setState({
+              callStatus: "failure"
+            });
+            conversation.trigger("session:ended");
+
+            var failedView = TestUtils.findRenderedComponentWithType(ocView,
+                loop.webapp.FailedConversationView);
+            expect(failedView).to.not.equal(null);
+          });
       });
 
       describe("session:peer-hungup", function() {

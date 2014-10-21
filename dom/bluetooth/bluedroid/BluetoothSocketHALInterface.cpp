@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include "BluetoothHALHelpers.h"
+#include "mozilla/FileUtils.h"
 #include "nsClassHashtable.h"
 #include "nsXULAppAPI.h"
 
@@ -485,6 +486,10 @@ public:
 
   void Proceed(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
+    if ((aStatus != STATUS_SUCCESS) && (GetClientFd() != -1)) {
+      mozilla::ScopedClose(GetClientFd()); // Close received socket fd on error
+    }
+
     DispatchBluetoothSocketHALResult(
       GetResultHandler(), &BluetoothSocketResultHandler::Accept,
       GetClientFd(), GetBdAddress(), GetConnectionStatus(), aStatus);

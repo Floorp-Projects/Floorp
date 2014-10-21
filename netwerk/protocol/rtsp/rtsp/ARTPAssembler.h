@@ -44,7 +44,7 @@ protected:
     virtual AssemblyStatus assembleMore(const sp<ARTPSource> &source) = 0;
     virtual void packetLost() = 0;
 
-    static void CopyTimes(const sp<ABuffer> &to, const sp<ABuffer> &from);
+    static bool CopyTimes(const sp<ABuffer> &to, const sp<ABuffer> &from);
 
 private:
     int64_t mFirstFailureTimeUs;

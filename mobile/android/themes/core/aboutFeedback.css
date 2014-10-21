@@ -184,7 +184,6 @@ footer {
   padding: 15px;
   font-size: 16px;
   width: 100%;
-  background-color: #0092DB;
   border-radius: 4px;
   border-width: 0;
   color: #fff;
@@ -193,6 +192,14 @@ footer {
 .link {
   color: #222;
   text-decoration: underline;
+}
+
+.description:invalid ~ .send-feedback {
+  background-color: #8698A8;
+}
+
+.description:valid ~ .send-feedback {
+  background-color: #0092DB;
 }
 
 @media screen and (max-height: 400px) {

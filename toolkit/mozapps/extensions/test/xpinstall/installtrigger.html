@@ -10,16 +10,26 @@
 <script type="text/javascript">
 function installCallback(url, status) {
   document.getElementById("status").textContent = status;
+
+  dump("Sending InstallComplete\n");
+  var event = new CustomEvent("InstallComplete");
+  var target = window.parent ? window.parent : window;
+  target.dispatchEvent(event);
 }
 
 function startInstall() {
+  var event = new CustomEvent("InstallTriggered");
   var text = decodeURIComponent(document.location.search.substring(1));
   var triggers = JSON.parse(text);
   try {
     document.getElementById("return").textContent = InstallTrigger.install(triggers, installCallback);
+    dump("Sending InstallTriggered\n");
+    window.dispatchEvent(event);
   }
   catch (e) {
     document.getElementById("return").textContent = "exception";
+    dump("Sending InstallTriggered\n");
+    window.dispatchEvent(event);
     throw e;
   }
 }

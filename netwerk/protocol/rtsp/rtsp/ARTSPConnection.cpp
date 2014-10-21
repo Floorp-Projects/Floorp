@@ -748,8 +748,9 @@ bool ARTSPConnection::receiveRTSPResponse() {
         if (mAuthType == NONE && mUser.size() > 0
                 && parseAuthMethod(response)) {
             ssize_t i;
-            CHECK_EQ((status_t)OK, findPendingRequest(response, &i));
-            CHECK_GE(i, 0);
+            if ((status_t)OK != findPendingRequest(response, &i) || i < 0) {
+                return false;
+            }
 
             sp<AMessage> reply = mPendingRequests.valueAt(i);
             mPendingRequests.removeItemsAt(i);
@@ -779,7 +780,9 @@ bool ARTSPConnection::handleServerRequest(const sp<ARTSPResponse> &request) {
     // support the method.
 
     ssize_t space1 = request->mStatusLine.find(" ");
-    CHECK_GE(space1, 0);
+    if (space1 < 0) {
+        return false;
+    }
 
     AString response;
     response.append("RTSP/1.0 501 Not Implemented\r\n");
@@ -909,15 +912,19 @@ bool ARTSPConnection::parseAuthMethod(const sp<ARTSPResponse> &response) {
     if (!strncmp(value.c_str(), "Basic", 5)) {
         mAuthType = BASIC;
     } else {
-
-        CHECK(!strncmp(value.c_str(), "Digest", 6));
+        if (strncmp(value.c_str(), "Digest", 6)) {
+            return false;
+        }
         mAuthType = DIGEST;
 
         i = value.find("nonce=");
-        CHECK_GE(i, 0);
-        CHECK_EQ(value.c_str()[i + 6], '\"');
+        if (i < 0 || value.c_str()[i + 6] != '\"') {
+            return false;
+        }
         ssize_t j = value.find("\"", i + 7);
-        CHECK_GE(j, 0);
+        if (j < 0) {
+            return false;
+        }
 
         mNonce.setTo(value, i + 7, j - i - 7);
     }
@@ -983,16 +990,21 @@ static void H(const AString &s, AString *out) {
     }
 }
 
-static void GetMethodAndURL(
+static bool GetMethodAndURL(
         const AString &request, AString *method, AString *url) {
     ssize_t space1 = request.find(" ");
-    CHECK_GE(space1, 0);
+    if (space1 < 0) {
+        return false;
+    }
 
     ssize_t space2 = request.find(" ", space1 + 1);
-    CHECK_GE(space2, 0);
+    if (space2 < 0) {
+        return false;
+    }
 
     method->setTo(request, 0, space1);
     url->setTo(request, space1 + 1, space2 - space1);
+    return true;
 }
 
 void ARTSPConnection::addAuthentication(AString *request) {
@@ -1002,7 +1014,10 @@ void ARTSPConnection::addAuthentication(AString *request) {
 
     // Find the boundary between headers and the body.
     ssize_t i = request->find("\r\n\r\n");
-    CHECK_GE(i, 0);
+    if (i < 0) {
+        LOGE("Failed to find the boundary between headers and the body");
+        return;
+    }
 
     if (mAuthType == BASIC) {
         AString tmp;
@@ -1026,7 +1041,10 @@ void ARTSPConnection::addAuthentication(AString *request) {
     CHECK_EQ((int)mAuthType, (int)DIGEST);
 
     AString method, url;
-    GetMethodAndURL(*request, &method, &url);
+    if (!GetMethodAndURL(*request, &method, &url)) {
+        LOGE("Fail to get method and url");
+        return;
+    }
 
     AString A1;
     A1.append(mUser);
@@ -1076,7 +1094,9 @@ void ARTSPConnection::addAuthentication(AString *request) {
 void ARTSPConnection::addUserAgent(AString *request) const {
     // Find the boundary between headers and the body.
     ssize_t i = request->find("\r\n\r\n");
-    CHECK_GE(i, 0);
+    if (i < 0) {
+        LOGE("Failed to find the boundary between headers and the body");
+    }
 
     request->insert(mUserAgent, i + 2);
 }
