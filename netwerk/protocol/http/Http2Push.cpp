@@ -16,11 +16,44 @@
 #include <algorithm>
 
 #include "Http2Push.h"
-
-#include "nsDependentString.h"
+#include "nsHttpChannel.h"
+#include "nsIHttpPushListener.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace net {
+
+class CallChannelOnPush MOZ_FINAL : public nsRunnable {
+  public:
+  CallChannelOnPush(nsIHttpChannelInternal *associatedChannel,
+                    const nsACString &pushedURI,
+                    Http2PushedStream *pushStream)
+    : mAssociatedChannel(associatedChannel)
+    , mPushedURI(pushedURI)
+    , mPushedStream(pushStream)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsRefPtr<nsHttpChannel> channel;
+    CallQueryInterface(mAssociatedChannel, channel.StartAssignment());
+    MOZ_ASSERT(channel);
+    if (channel && NS_SUCCEEDED(channel->OnPush(mPushedURI, mPushedStream))) {
+      return NS_OK;
+    }
+
+    LOG3(("Http2PushedStream Orphan %p failed OnPush\n", this));
+    mPushedStream->OnPushFailed();
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIHttpChannelInternal> mAssociatedChannel;
+  const nsCString mPushedURI;
+  Http2PushedStream *mPushedStream;
+};
 
 //////////////////////////////////////////
 // Http2PushedStream
@@ -32,10 +65,13 @@ Http2PushedStream::Http2PushedStream(Http2PushTransactionBuffer *aTransaction,
                                      uint32_t aID)
   :Http2Stream(aTransaction, aSession, 0)
   , mConsumerStream(nullptr)
+  , mAssociatedTransaction(aAssociatedStream->Transaction())
   , mBufferedPush(aTransaction)
   , mStatus(NS_OK)
   , mPushCompleted(false)
   , mDeferCleanupOnSuccess(true)
+  , mDeferCleanupOnPush(false)
+  , mOnPushFailed(false)
 {
   LOG3(("Http2PushedStream ctor this=%p 0x%X\n", this, aID));
   mStreamID = aID;
@@ -70,6 +106,51 @@ Http2PushedStream::WriteSegments(nsAHttpSegmentWriter *writer,
   return rv;
 }
 
+bool
+Http2PushedStream::DeferCleanup(nsresult status)
+{
+  LOG3(("Http2PushedStream::DeferCleanup Query %p %x\n", this, status));
+
+  if (NS_SUCCEEDED(status) && mDeferCleanupOnSuccess) {
+    LOG3(("Http2PushedStream::DeferCleanup %p %x defer on success\n", this, status));
+    return true;
+  }
+  if (mDeferCleanupOnPush) {
+    LOG3(("Http2PushedStream::DeferCleanup %p %x defer onPush ref\n", this, status));
+    return true;
+  }
+  if (mConsumerStream) {
+    LOG3(("Http2PushedStream::DeferCleanup %p %x defer active consumer\n", this, status));
+    return true;
+  }
+  LOG3(("Http2PushedStream::DeferCleanup Query %p %x not deferred\n", this, status));
+  return false;
+}
+
+// return true if channel implements nsIHttpPushListener
+bool
+Http2PushedStream::TryOnPush()
+{
+  nsHttpTransaction *trans = mAssociatedTransaction->QueryHttpTransaction();
+  if (!trans) {
+    return false;
+  }
+
+  nsCOMPtr<nsIHttpChannelInternal> associatedChannel = do_QueryInterface(trans->HttpChannel());
+  if (!associatedChannel) {
+    return false;
+  }
+
+  if (!(trans->Caps() & NS_HTTP_ONPUSH_LISTENER)) {
+    return false;
+  }
+
+  mDeferCleanupOnPush = true;
+  nsCString uri = Origin() + Path();
+  NS_DispatchToMainThread(new CallChannelOnPush(associatedChannel, uri, this));
+  return true;
+}
+
 nsresult
 Http2PushedStream::ReadSegments(nsAHttpSegmentReader *,
                                 uint32_t, uint32_t *count)
@@ -89,6 +170,13 @@ Http2PushedStream::ReadSegments(nsAHttpSegmentReader *,
   Http2Stream::ChangeState(UPSTREAM_COMPLETE);
   *count = 0;
   return NS_OK;
+}
+
+void
+Http2PushedStream::SetConsumerStream(Http2Stream *consumer)
+{
+  mConsumerStream = consumer;
+  mDeferCleanupOnPush = false;
 }
 
 bool
@@ -115,8 +203,13 @@ Http2PushedStream::IsOrphaned(TimeStamp now)
   // if session is not transmitting, and is also not connected to a consumer
   // stream, and its been like that for too long then it is oprhaned
 
-  if (mConsumerStream)
+  if (mConsumerStream || mDeferCleanupOnPush) {
     return false;
+  }
+
+  if (mOnPushFailed) {
+    return true;
+  }
 
   bool rv = ((now - mLastRead).ToSeconds() > 30.0);
   if (rv) {
