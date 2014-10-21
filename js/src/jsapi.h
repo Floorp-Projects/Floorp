@@ -2794,6 +2794,13 @@ JS_DeepFreezeObject(JSContext *cx, JS::Handle<JSObject*> obj);
 extern JS_PUBLIC_API(bool)
 JS_FreezeObject(JSContext *cx, JS::Handle<JSObject*> obj);
 
+/*
+ * Attempt to make |obj| non-extensible.  If an error occurs while making the
+ * attempt, return false (with a pending exception set, depending upon the
+ * nature of the error).  If no error occurs, return true with |*succeeded| set
+ * to indicate whether the attempt successfully set the [[Extensible]] property
+ * to false.
+ */
 extern JS_PUBLIC_API(bool)
 JS_PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded);
 
