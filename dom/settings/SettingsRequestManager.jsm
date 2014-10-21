@@ -10,7 +10,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-this.EXPORTED_SYMBOLS = ["SettingsRequestManager"];
+this.EXPORTED_SYMBOLS = [];
 
 Cu.import("resource://gre/modules/SettingsDB.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
