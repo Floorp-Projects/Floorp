@@ -40,8 +40,8 @@ class WrapperOwner : public virtual JavaScriptShared
     bool ownPropertyKeys(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
     bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
     bool enumerate(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
-    bool isExtensible(JSContext *cx, JS::HandleObject proxy, bool *extensible);
     bool preventExtensions(JSContext *cx, JS::HandleObject proxy, bool *succeeded);
+    bool isExtensible(JSContext *cx, JS::HandleObject proxy, bool *extensible);
     bool has(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
     bool get(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
              JS::HandleId id, JS::MutableHandleValue vp);
