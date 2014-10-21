@@ -132,7 +132,15 @@ function download(filename) {
     throw("ERROR: problem downloading '" + filename + "': status " +
           req.status);
   }
-  return req.responseText;
+
+  var resultDecoded;
+  try {
+    resultDecoded = atob(req.responseText);
+  }
+  catch (e) {
+    throw "ERROR: could not decode data as base64 from '" + filename + "': " + e;
+  }
+  return resultDecoded;
 }
 
 function downloadAsJson(filename) {
