@@ -1,0 +1,21 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="blur">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+  <!-- Background consists of a white rect and a black rect. -->
+  <rect x="0" y="0" width="100" height="50" fill="#fff"/>
+  <rect x="0" y="50" width="100" height="50" fill="#000"/>
+  <!--
+    Foreground consists of a blurred green square, blended with the background
+    using the darken blend mode. Green should overwrite the white rect, while
+    the black rect should show through.
+  -->
+  <rect x="0" y="0" width="100" height="100" fill="#0f0" filter="url(#blur)"
+        style="mix-blend-mode: darken;"/>
+</svg>

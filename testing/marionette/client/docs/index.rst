@@ -152,21 +152,10 @@ Debugging
 Querying and Modifying Document Content
 ---------------------------------------
 .. autoclass:: HTMLElement
-.. autoattribute:: HTMLElement.text
-.. autoattribute:: HTMLElement.location
-.. autoattribute:: HTMLElement.size
-.. autoattribute:: HTMLElement.tag_name
-.. automethod:: HTMLElement.send_keys
-.. automethod:: HTMLElement.clear
-.. automethod:: HTMLElement.click
-.. automethod:: HTMLElement.is_selected
-.. automethod:: HTMLElement.is_enabled
-.. automethod:: HTMLElement.is_displayed
-.. automethod:: HTMLElement.value_of_css_property
+   :members:
 
 .. autoclass:: DateTimeValue
-.. autoattribute:: DateTimeValue.date
-.. autoattribute:: DateTimeValue.time
+   :members:
 
 Action Objects
 --------------
@@ -174,23 +163,12 @@ Action Objects
 Action Sequences
 ^^^^^^^^^^^^^^^^
 .. autoclass:: Actions
-.. automethod:: Actions.press
-.. automethod:: Actions.release
-.. automethod:: Actions.move
-.. automethod:: Actions.move_by_offset
-.. automethod:: Actions.wait
-.. automethod:: Actions.cancel
-.. automethod:: Actions.long_press
-.. automethod:: Actions.flick
-.. automethod:: Actions.tap
-.. automethod:: Actions.double_tap
-.. automethod:: Actions.perform
+   :members:
 
 Multi-action Sequences
 ^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: MultiActions
-.. automethod:: MultiActions.add
-.. automethod:: MultiActions.perform
+   :members:
 
 Explicit Waiting and Expected Conditions
 ----------------------------------------

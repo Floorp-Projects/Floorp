@@ -2,7 +2,8 @@
   {
     "events": [
       {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
-      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}],
+       "removeConsecutiveGestureDelay": true }
     ],
     "expectedGestures": [{ "type": "tap" }]
   },
@@ -11,7 +12,8 @@
       {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
       {"type": "pointermove",
         "points": [{"x": 1.03, "y": 1.03, "identifier": 1}]},
-      {"type": "pointerup", "points": [{"x": 1.03, "y": 1.03, "identifier": 1}]}
+      {"type": "pointerup", "points": [{"x": 1.03, "y": 1.03, "identifier": 1}],
+       "removeConsecutiveGestureDelay": true }
     ],
     "expectedGestures": [{ "type": "tap" }]
   },
@@ -34,9 +36,10 @@
       {"type": "pointermove",
         "points": [{"x": 0.97, "y": 1.01, "identifier": 1}]},
       {"type": "pointerup",
-        "points": [{"x": 0.97, "y": 1.01, "identifier": 1}]}
+        "points": [{"x": 0.97, "y": 1.01, "identifier": 1}],
+        "removeConsecutiveGestureDelay": true }
     ],
-    "expectedGestures": [{ "type": "tap" }, { "type": "doubletap" }]
+    "expectedGestures": [{ "type": "doubletap" }]
   },
   {
     "events": [
@@ -45,9 +48,10 @@
       {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]},
       {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
-      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
+      {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}],
+       "removeConsecutiveGestureDelay": true }
     ],
-    "expectedGestures": [{ "type": "tap" }, { "type": "doubletap" }, { "type": "tripletap" }]
+    "expectedGestures": [{ "type": "tripletap" }]
   },
   {
     "events": [
@@ -59,8 +63,8 @@
         "removeDwellThreshold": true},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": [{ "type": "tap" }, { "type": "doubletap" },
-      { "type": "doubletaphold" }, { "type": "doubletapholdend" }]
+    "expectedGestures": [{ "type": "doubletaphold" },
+      { "type": "doubletapholdend" }]
   },
   {
     "events": [
@@ -70,8 +74,7 @@
         "removeDwellThreshold": true},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": [{ "type": "tap" }, { "type": "taphold" },
-      { "type": "tapholdend" }]
+    "expectedGestures": [{ "type": "taphold" }, { "type": "tapholdend" }]
   },
   {
     "events": [
