@@ -268,5 +268,61 @@ InternalHeaders::Fill(const MozMap<nsCString>& aInit, ErrorResult& aRv)
     Append(NS_ConvertUTF16toUTF8(keys[i]), aInit.Get(keys[i]), aRv);
   }
 }
+
+bool
+InternalHeaders::HasOnlySimpleHeaders() const
+{
+  for (uint32_t i = 0; i < mList.Length(); ++i) {
+    if (!IsSimpleHeader(mList[i].mName, mList[i].mValue)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// static
+already_AddRefed<InternalHeaders>
+InternalHeaders::BasicHeaders(InternalHeaders* aHeaders)
+{
+  nsRefPtr<InternalHeaders> basic = new InternalHeaders(*aHeaders);
+  ErrorResult result;
+  // The Set-Cookie headers cannot be invalid mutable headers, so the Delete
+  // must succeed.
+  basic->Delete(NS_LITERAL_CSTRING("Set-Cookie"), result);
+  MOZ_ASSERT(!result.Failed());
+  basic->Delete(NS_LITERAL_CSTRING("Set-Cookie2"), result);
+  MOZ_ASSERT(!result.Failed());
+  return basic.forget();
+}
+
+// static
+already_AddRefed<InternalHeaders>
+InternalHeaders::CORSHeaders(InternalHeaders* aHeaders)
+{
+  nsRefPtr<InternalHeaders> cors = new InternalHeaders(aHeaders->mGuard);
+  ErrorResult result;
+
+  nsAutoTArray<nsCString, 1> acExposedNames;
+  aHeaders->GetAll(NS_LITERAL_CSTRING("Access-Control-Expose-Headers"), acExposedNames, result);
+  MOZ_ASSERT(!result.Failed());
+
+  nsCaseInsensitiveCStringArrayComparator comp;
+  for (uint32_t i = 0; i < aHeaders->mList.Length(); ++i) {
+    const Entry& entry = aHeaders->mList[i];
+    if (entry.mName.EqualsASCII("cache-control") ||
+        entry.mName.EqualsASCII("content-language") ||
+        entry.mName.EqualsASCII("content-type") ||
+        entry.mName.EqualsASCII("expires") ||
+        entry.mName.EqualsASCII("last-modified") ||
+        entry.mName.EqualsASCII("pragma") ||
+        acExposedNames.Contains(entry.mName, comp)) {
+      cors->Append(entry.mName, entry.mValue, result);
+      MOZ_ASSERT(!result.Failed());
+    }
+  }
+
+  return cors.forget();
+}
 } // namespace dom
 } // namespace mozilla

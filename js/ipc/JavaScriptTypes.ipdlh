@@ -62,6 +62,12 @@ union SymbolVariant
 struct UndefinedVariant {};
 struct NullVariant {};
 
+union ObjectOrNullVariant
+{
+    ObjectVariant;
+    NullVariant;
+};
+
 union JSVariant
 {
     UndefinedVariant;
@@ -115,7 +121,7 @@ union GetterSetter
 
 struct PPropertyDescriptor
 {
-    ObjectVariant obj;
+    ObjectOrNullVariant obj;
     uint32_t attrs;
     JSVariant value;
 

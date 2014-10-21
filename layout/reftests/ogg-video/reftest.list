@@ -1,13 +1,14 @@
-fails-if(Android||B2G) HTTP(..) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html # bug 773482
-fails-if(Android||B2G) HTTP(..) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html # bug 773482
-fails-if(Android||B2G) skip-if(gtk2Widget) HTTP(..) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html # bug 773482
-fails-if(Android||B2G) skip-if(gtk2Widget) HTTP(..) == aspect-ratio-2b.xhtml aspect-ratio-2-ref.html # bug 773482
+# NOTE: bug 1084564 covers "fails"/"skip" annotations for b2g/android below:
+fails-if(Android||B2G) HTTP(..) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
+fails-if(Android||B2G) HTTP(..) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
+fails-if(Android||B2G) skip-if(gtk2Widget) HTTP(..) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
+fails-if(Android||B2G) skip-if(gtk2Widget) HTTP(..) == aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
 HTTP(..) == aspect-ratio-3a.xhtml aspect-ratio-3-ref.xhtml
 HTTP(..) == aspect-ratio-3b.xhtml aspect-ratio-3-ref.xhtml
-fails-if(Android||B2G) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu))  == encoded-aspect-ratio-1.html encoded-aspect-ratio-1-ref.html # bug 623460 for WinXP # bug 773482
-fails-if(Android||B2G) HTTP(..) == basic-1.xhtml basic-1-ref.html # bug 773482
-skip-if(Android||B2G) HTTP(..) == canvas-1a.xhtml basic-1-ref.html # bug 773482
-fails-if(Android||B2G) HTTP(..) == canvas-1b.xhtml basic-1-ref.html # bug 773482
+fails-if(Android||B2G) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu))  == encoded-aspect-ratio-1.html encoded-aspect-ratio-1-ref.html # bug 623460 for WinXP
+fails-if(Android||B2G) HTTP(..) == basic-1.xhtml basic-1-ref.html
+skip-if(Android||B2G) HTTP(..) == canvas-1a.xhtml basic-1-ref.html
+fails-if(Android||B2G) HTTP(..) == canvas-1b.xhtml basic-1-ref.html
 == clipping-1a.html clipping-1-ref.html
 == empty-1a.html empty-1-ref.html
 == empty-1b.html empty-1-ref.html

@@ -111,9 +111,6 @@ WrapperAnswer::RecvGetPropertyDescriptor(const ObjectId &objId, const JSIDVarian
     if (!JS_GetPropertyDescriptorById(cx, obj, id, &desc))
         return fail(cx, rs);
 
-    if (!desc.object())
-        return ok(rs);
-
     if (!fromDescriptor(cx, desc, out))
         return fail(cx, rs);
 
@@ -142,11 +139,8 @@ WrapperAnswer::RecvGetOwnPropertyDescriptor(const ObjectId &objId, const JSIDVar
         return fail(cx, rs);
 
     Rooted<JSPropertyDescriptor> desc(cx);
-    if (!JS_GetPropertyDescriptorById(cx, obj, id, &desc))
+    if (!JS_GetOwnPropertyDescriptorById(cx, obj, id, &desc))
         return fail(cx, rs);
-
-    if (desc.object() != obj)
-        return ok(rs);
 
     if (!fromDescriptor(cx, desc, out))
         return fail(cx, rs);
