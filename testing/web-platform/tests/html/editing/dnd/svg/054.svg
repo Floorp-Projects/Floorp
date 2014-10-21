@@ -7,7 +7,7 @@
 	</circle>
 </a>
 <textArea x="10" y="100" width="480" height="200" font-size="30">
-Drag green circle above and drop it in the gray box below.
+Drag green circle above and drop it in the gray box below. 
 Size of feedback image should match size of circle
 and gray box should turn green.</textArea>
 <rect x="10" y="300" width="480" height="190" fill="gray"/>

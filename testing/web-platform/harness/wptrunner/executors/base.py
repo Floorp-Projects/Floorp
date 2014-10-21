@@ -49,7 +49,8 @@ class TestExecutor(object):
 
     convert_result = None
 
-    def __init__(self, browser, http_server_url, timeout_multiplier=1):
+    def __init__(self, browser, http_server_url, timeout_multiplier=1,
+                 http_server_override=None):
         """Abstract Base class for object that actually executes the tests in a
         specific browser. Typically there will be a different TestExecutor
         subclass for each test type and method of executing tests.
@@ -60,7 +61,15 @@ class TestExecutor(object):
                                 are running.
         :param timeout_multiplier: Multiplier relative to base timeout to use
                                    when setting test timeout.
+        :param http_server_override: Server location to use in place of the
+                                     server-supplied default. This is primarily
+                                     useful when using a proxy to reroute requests
+                                     form e.g. web-platform.test to localhost.
         """
+
+        if http_server_override is not None:
+            http_server_url = http_server_override
+
         self.runner = None
         self.browser = browser
         self.http_server_url = http_server_url

@@ -13,23 +13,23 @@
 
   <body>
 
-
+  
   		<h1>Search Input</h1>
   		<input type="search" style="display:none" placeholder="Search..." />
 
     <div id="log">
     </div>
-
+	
 	<script type="text/javascript">
-
+		
 
 		test(function() {assert_equals(document.getElementsByTagName("input")[0].type, "search")}, "search type support on input element", {
 		  "help" : "http://www.w3.org/TR/html5/the-input-element.html#dom-input-type" });
 		test(function() {assert_equals(document.getElementsByTagName("input")[0].placeholder, "Search...")}, "placeholder attribute support on input element", {
 		  "help" : "http://www.w3.org/TR/html5/the-input-element.html#dom-input-placeholder" });
-
+		  
 	</script>
-
+	
   </body>
-
+  
 </html>

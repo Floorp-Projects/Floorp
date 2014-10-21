@@ -271,6 +271,20 @@ class HandshakerTest(unittest.TestCase):
         self.assertEqual(common.PERMESSAGE_COMPRESSION_EXTENSION,
                          request.ws_extension_processors[0].name())
 
+    def test_do_handshake_with_perframe_compress(self):
+        request_def = _create_good_request_def()
+        request_def.headers['Sec-WebSocket-Extensions'] = (
+            'perframe-compress; method=deflate')
+        request = _create_request(request_def)
+        handshaker = _create_handshaker(request)
+        handshaker.do_handshake()
+        self.assertEqual(1, len(request.ws_extensions))
+        self.assertEqual(common.PERFRAME_COMPRESSION_EXTENSION,
+                         request.ws_extensions[0].name())
+        self.assertEqual(1, len(request.ws_extension_processors))
+        self.assertEqual(common.PERFRAME_COMPRESSION_EXTENSION,
+                         request.ws_extension_processors[0].name())
+
     def test_do_handshake_with_permessage_compress(self):
         request_def = _create_good_request_def()
         request_def.headers['Sec-WebSocket-Extensions'] = (

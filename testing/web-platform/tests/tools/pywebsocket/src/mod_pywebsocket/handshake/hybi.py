@@ -69,10 +69,13 @@ from mod_pywebsocket import util
 _SEC_WEBSOCKET_KEY_REGEX = re.compile('^[+/0-9A-Za-z]{21}[AQgw]==$')
 
 # Defining aliases for values used frequently.
+_VERSION_HYBI08 = common.VERSION_HYBI08
+_VERSION_HYBI08_STRING = str(_VERSION_HYBI08)
 _VERSION_LATEST = common.VERSION_HYBI_LATEST
 _VERSION_LATEST_STRING = str(_VERSION_LATEST)
 _SUPPORTED_VERSIONS = [
     _VERSION_LATEST,
+    _VERSION_HYBI08,
 ]
 
 
@@ -147,6 +150,9 @@ class Handshaker(object):
 
         self._request.ws_version = self._check_version()
 
+        # This handshake must be based on latest hybi. We are responsible to
+        # fallback to HTTP on handshake failure as latest hybi handshake
+        # specifies.
         try:
             self._get_origin()
             self._set_protocol()
@@ -280,7 +286,10 @@ class Handshaker(object):
             raise e
 
     def _get_origin(self):
-        origin_header = common.ORIGIN_HEADER
+        if self._request.ws_version is _VERSION_HYBI08:
+            origin_header = common.SEC_WEBSOCKET_ORIGIN_HEADER
+        else:
+            origin_header = common.ORIGIN_HEADER
         origin = self._request.headers_in.get(origin_header)
         if origin is None:
             self._logger.debug('Client request does not have origin header')
@@ -289,6 +298,8 @@ class Handshaker(object):
     def _check_version(self):
         version = get_mandatory_header(self._request,
                                        common.SEC_WEBSOCKET_VERSION_HEADER)
+        if version == _VERSION_HYBI08_STRING:
+            return _VERSION_HYBI08
         if version == _VERSION_LATEST_STRING:
             return _VERSION_LATEST
 
@@ -324,9 +335,13 @@ class Handshaker(object):
             self._request.ws_requested_extensions = None
             return
 
+        if self._request.ws_version is common.VERSION_HYBI08:
+            allow_quoted_string=False
+        else:
+            allow_quoted_string=True
         try:
             self._request.ws_requested_extensions = common.parse_extensions(
-                extensions_header)
+                extensions_header, allow_quoted_string=allow_quoted_string)
         except common.ExtensionParsingException, e:
             raise HandshakeException(
                 'Failed to parse Sec-WebSocket-Extensions header: %r' % e)

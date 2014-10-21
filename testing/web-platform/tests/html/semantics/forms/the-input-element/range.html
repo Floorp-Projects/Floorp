@@ -14,7 +14,7 @@
 
   <body>
 
-
+    
     <h1>Input Range</h1>
     <div style="display:none">
       <input type="range" id="range_basic" min=0 max=5 />
@@ -38,9 +38,9 @@
 
     <div id="log">
     </div>
-
+    
     <script type="text/javascript">
-
+      
       test(
         function() {
           assert_equals(document.getElementById('range_basic').type, "range");
@@ -65,7 +65,7 @@
         function() {
           assert_equals(document.getElementById('range_basic').max, "5")
         },
-        "max attribute support on input element",
+        "max attribute support on input element", 
         {
           "help" : "http://www.w3.org/TR/html5/the-input-element.html#dom-input-max"
         }
@@ -87,7 +87,7 @@
         function() {
           assert_equals(document.getElementById('illegal_min_and_max').max, "100")
         },
-        "Illegal value of max attribute",
+        "Illegal value of max attribute", 
         { "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)" }
       );
 
@@ -112,8 +112,8 @@
       test(
         function() {
           assert_equals(document.getElementById('value_smaller_than_min').value, "0")
-        },
-        "the value is set to min when a smaller value than min attribute is given",
+        }, 
+        "the value is set to min when a smaller value than min attribute is given", 
         {
           "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)"
         }
@@ -141,7 +141,7 @@
         function() {
           assert_equals(document.getElementById('empty_attributes').max, "100")
         },
-        "default value of max attribute in input type=range",
+        "default value of max attribute in input type=range", 
         {
           "help" : "http://www.w3.org/TR/html5/the-input-element.html#dom-input-max"
         }
@@ -174,7 +174,7 @@
         },
         "default value when both min and max attributes are given, while min > max",
         {
-          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)"
+          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)" 
         }
       );
 
@@ -203,7 +203,7 @@
         },
         "The default scale factor is 1 even if step attribute is explicitly set to non-integer value, unless min attribute has non-integer value",
         {
-          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)"
+          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)" 
         }
       );
 
@@ -270,7 +270,7 @@
       );
 
     </script>
-
+    
   </body>
-
+  
 </html>

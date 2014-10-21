@@ -8,7 +8,6 @@ import socket
 import sys
 import threading
 import time
-import traceback
 import urllib2
 import uuid
 from collections import defaultdict
@@ -68,20 +67,16 @@ class ServerProc(object):
         self.daemon = None
         self.stop = Event()
 
-    def start(self, init_func, host, port, paths, bind_hostname, external_config):
-        self.proc = Process(target=self.create_daemon,
-                            args=(init_func, host, port, paths, bind_hostname, external_config))
+    def start(self, init_func, config, paths, port, bind_hostname):
+        self.proc = Process(target=self.create_daemon, args=(init_func, config, paths, port, bind_hostname))
         self.proc.daemon = True
         self.proc.start()
 
-    def create_daemon(self, init_func, host, port, paths, bind_hostname, external_config):
+    def create_daemon(self, init_func, config, paths, port, bind_hostname):
         try:
-            self.daemon = init_func(host, port, paths, bind_hostname, external_config)
+            self.daemon = init_func(config, paths, port, bind_hostname)
         except socket.error:
             print >> sys.stderr, "Socket error on port %s" % port
-            raise
-        except:
-            print >> sys.stderr, traceback.format_exc()
             raise
 
         if self.daemon:
@@ -103,24 +98,22 @@ class ServerProc(object):
     def is_alive(self):
         return self.proc.is_alive()
 
-def check_subdomains(host, paths, bind_hostname):
+def check_subdomains(config, paths, subdomains, bind_hostname):
     port = get_port()
-    subdomains = get_subdomains(host)
-
     wrapper = ServerProc()
-    wrapper.start(start_http_server, host, port, paths, bind_hostname, None)
+    wrapper.start(start_http_server, config, paths, port, bind_hostname)
 
     connected = False
     for i in range(10):
         try:
-            urllib2.urlopen("http://%s:%d/" % (host, port))
+            urllib2.urlopen("http://%s:%d/" % (config["host"], port))
             connected = True
             break
         except urllib2.URLError:
             time.sleep(1)
 
     if not connected:
-        logger.critical("Failed to connect to test server on http://%s:%s You may need to edit /etc/hosts or similar" % (host, port))
+        logger.critical("Failed to connect to test server on http://%s:%s You may need to edit /etc/hosts or similar" % (config["host"], port))
         sys.exit(1)
 
     for subdomain, (punycode, host) in subdomains.iteritems():
@@ -133,13 +126,16 @@ def check_subdomains(host, paths, bind_hostname):
 
     wrapper.wait()
 
-def get_subdomains(host):
+def get_subdomains(config):
     #This assumes that the tld is ascii-only or already in punycode
+    host = config["host"]
     return {subdomain: (subdomain.encode("idna"), host)
             for subdomain in subdomains}
 
-def start_servers(host, ports, paths, bind_hostname, external_config):
+def start_servers(config, paths, ports, bind_hostname):
     servers = defaultdict(list)
+
+    host = config["host"]
 
     for scheme, ports in ports.iteritems():
         assert len(ports) == {"http":2}.get(scheme, 1)
@@ -151,23 +147,23 @@ def start_servers(host, ports, paths, bind_hostname, external_config):
                          "wss":start_wss_server}[scheme]
 
             server_proc = ServerProc()
-            server_proc.start(init_func, host, port, paths, bind_hostname, external_config)
+            server_proc.start(init_func, config, paths, port, bind_hostname)
             servers[scheme].append((port, server_proc))
 
     return servers
 
-def start_http_server(host, port, paths, bind_hostname, external_config):
-    return wptserve.WebTestHttpd(host=host,
+def start_http_server(config, paths, port, bind_hostname):
+    return wptserve.WebTestHttpd(host=config["host"],
                                  port=port,
                                  doc_root=paths["doc_root"],
                                  routes=routes,
                                  rewrites=rewrites,
                                  bind_hostname=bind_hostname,
-                                 config=external_config,
+                                 config=config,
                                  use_ssl=False,
                                  certificate=None)
 
-def start_https_server(host, port, paths, bind_hostname):
+def start_https_server(config, paths, port, bind_hostname):
     return
 
 class WebSocketDaemon(object):
@@ -215,15 +211,15 @@ class WebSocketDaemon(object):
             self.started = False
         self.server = None
 
-def start_ws_server(host, port, paths, bind_hostname, external_config):
-    return WebSocketDaemon(host,
+def start_ws_server(config, paths, port, bind_hostname):
+    return WebSocketDaemon(config["host"],
                            str(port),
                            repo_root,
                            paths["ws_doc_root"],
                            "debug",
                            bind_hostname)
 
-def start_wss_server(host, port, path, bind_hostname, external_config):
+def start_wss_server(config, paths, port, bind_hostname):
     return
 
 def get_ports(config):
@@ -237,40 +233,38 @@ def get_ports(config):
             rv[scheme].append(port)
     return rv
 
-def normalise_config(config, ports):
-    host = config["external_host"] if config["external_host"] else config["host"]
-    domains = get_subdomains(host)
-
-    for key, value in domains.iteritems():
-        domains[key] = ".".join(value)
-
-    domains[""] = host
-
+def normalise_config(config, domains, ports):
     ports_ = {}
     for scheme, ports_used in ports.iteritems():
         ports_[scheme] = ports_used
 
-    return {"host": host,
-            "domains": domains,
+    domains_ = domains.copy()
+
+    for key, value in domains_.iteritems():
+        domains_[key] = ".".join(value)
+
+    domains_[""] = config["host"]
+
+    return {"host":config["host"],
+            "domains":domains_,
             "ports": ports_}
 
 def start(config):
-    host = config["host"]
-    domains = get_subdomains(host)
     ports = get_ports(config)
+    domains = get_subdomains(config)
     bind_hostname = config["bind_hostname"]
 
     paths = {"doc_root": config["doc_root"],
              "ws_doc_root": config["ws_doc_root"]}
 
     if config["check_subdomains"]:
-        check_subdomains(host, paths, bind_hostname)
+        check_subdomains(config, paths, domains, bind_hostname)
 
-    external_config = normalise_config(config, ports)
+    config_ = normalise_config(config, domains, ports)
 
-    servers = start_servers(host, ports, paths, bind_hostname, external_config)
+    servers = start_servers(config_, paths, ports, bind_hostname)
 
-    return external_config, servers
+    return config_, servers
 
 
 def iter_procs(servers):

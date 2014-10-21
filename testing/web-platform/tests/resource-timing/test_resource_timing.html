@@ -5,20 +5,357 @@
         <title>window.performance Resource Timing Entries exist</title>
         <link rel="author" title="Microsoft" href="http://www.microsoft.com/" />
         <link rel="help" href="https://w3c.github.io/web-performance/specs/ResourceTiming/Overview.html"/>
+
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
-        <script src="test_resource_timing.js"></script>
+        <script src="resources/webperftestharness.js"></script>
+
+        <script>
+        var index = window.location.pathname.lastIndexOf('/');
+        var pathname = window.location.pathname.substring(0, index) + '/';
+
+        var URL_PREFIX = pathname + "resources/";
+        var TEST_TIMEOUT = 30 * 1000;   //Test will timeout in 30 seconds
+        var TEST_ALLOWED_TIMING_DELTA = 20;
+
+        var waitTimer;
+        var expectedEntries = new Array();
+
+        var initiatorTypes = ["iframe", "img", "link", "script", "xmlhttprequest"];
+
+        setup({timeout:TEST_TIMEOUT + 1000, explicit_done: true});
+
+        test_namespace();
+
+        /*=====================================================================
+        // Object entry
+        // Object representing an expected entry on the page.
+        =====================================================================*/
+        function entry(name, startTime, initiatorType)
+        {
+            this.name = name;
+            this.startTime = startTime;
+            this.initiatorType = initiatorType;
+        };
+
+        /*=====================================================================
+        // function get_now()
+        // Returns a (high-res if possible) timestamp as a delta from
+        // navigationStart
+        =====================================================================*/
+        function get_now()
+        {
+            if (window.performance.now !== undefined)
+            {
+                return window.performance.now();
+            }
+            else
+            {
+                return (new Date() - window.performance.timing.navigationStart);
+            }
+        }
+
+        /*=====================================================================
+        // function onload_test
+        // Main entry point to test.  This will add all of the test resources
+        // to the page.  For resources which will not fire an onload event,
+        // an entry object is created here.
+        =====================================================================*/
+        function onload_test()
+        {
+            // check that the Performance Timeline API exists
+            test_true(window.performance.getEntriesByName !== undefined,
+                      "window.performance.getEntriesByName() is defined");
+            test_true(window.performance.getEntriesByType !== undefined,
+                      "window.performance.getEntriesByType() is defined");
+            test_true(window.performance.getEntries !== undefined,
+                      "window.performance.getEntries() is defined");
+
+            //Early bail out if Performance Timeline APIs do not exist
+            if (window.performance.getEntriesByName == undefined ||
+                window.performance.getEntriesByType == undefined ||
+                window.performance.getEntries == undefined)
+            {
+	        done();
+                return;
+            }
+            else
+            {
+                // initialize expected entries array
+                expectedEntries = new Array();
+
+                // add elements to the page.  We do this here so that we can
+                // control the start time for validation later
+                for (var type in initiatorTypes)
+                {
+                    var startTime = get_now();
+                    var element = document.createElement(initiatorTypes[type]);
+
+                    switch (initiatorTypes[type])
+                    {
+                        case "iframe":
+                            element.src = URL_PREFIX + "resource_timing_test0.html";
+                            break;
+                        case "img":
+                            element.src = URL_PREFIX + "resource_timing_test0.png";
+                            break;
+                        case "link":
+                            element.rel = "Stylesheet";
+                            element.type = "text/css";
+                            element.href = URL_PREFIX + "resource_timing_test0.css";
+                            break;
+                        case "script":
+                            element.type = "text/javascript";
+                            element.src = URL_PREFIX + "resource_timing_test0.js";
+                            break;
+                        case "xmlhttprequest":
+                            element = document.createElement("div");
+                            element.innerHTML = "";
+                            var xmlhttp = new XMLHttpRequest();
+                            xmlhttp.open('GET', URL_PREFIX + "resource_timing_test0.xml", false);
+                            xmlhttp.send();
+                            element.innerText = xmlhttp.responseText;
+                            expectedEntries.push(new entry(URL_PREFIX + "resource_timing_test0.xml",
+                                                 startTime,
+                                                 "xmlhttprequest"));
+                            document.getElementById("xmlhttprequest").appendChild(element);
+                            break;
+                    }
+
+                    element.setAttribute("onload", "resource_load(event, " + startTime + ")");
+                    document.getElementById(initiatorTypes[type]).appendChild(element);
+                }
+            }
+        }
+
+        /*=====================================================================
+        // function resource_load()
+        // Onload event handler for added test resources.
+        // This will create a new entry object for validation.
+        =====================================================================*/
+        function resource_load(event, startTime)
+        {
+            var x = event.target || event.srcElement;
+            var type;
+            switch (x.localName)
+            {
+                case "css":
+                    type = "link";
+                    break;
+                case "iframe":
+                    type = "subdocument";
+                    break;
+                default:
+                    type = x.localName
+            }
+            expectedEntries.push(new entry((x.href || x.src),
+                                (startTime == undefined ? 0 : startTime), //use earliest possible time if not defined
+                                 type));
+
+            //Check if we have loaded all of our defined initiators.
+            //Validate the test if they are all present, otherwise set the
+            //test timeout timer.
+            if (expectedEntries.length == initiatorTypes.length)
+            {
+                clearTimeout(waitTimer);
+                validate();
+                done();
+            }
+            else
+            {
+                clearTimeout(waitTimer);
+                waitTimer = setTimeout(timeout_test, TEST_TIMEOUT);
+            }
+        }
+
+        /*=====================================================================
+        // function timeout_test()
+        // If TEST_TIMEOUT time has elapsed since the last onload event handler
+        // has fired, then we will fail the rest of the test to avoid appearing
+        // hung.
+        =====================================================================*/
+        function timeout_test()
+        {
+            test_true(false, "All expected resources did not load within a " +
+                             "test timeout of " + TEST_TIMEOUT + "ms" +
+                             "Only a subset of the tests will execute.");
+            done();
+        }
+
+        /*=====================================================================
+        // function validate()
+        // Verifies that each of the expected entry objects are discoverable
+        // in the Performance Timeline via getEntriesByName('name') and
+        // getEntriesByName('name', 'resource') and that their data is correct.
+        =====================================================================*/
+        function validate()
+        {
+            for (var i in expectedEntries)
+            {
+                var name = expectedEntries[i].name;
+                var entriesByName = window.performance.getEntriesByName(name);
+                test_equals(entriesByName.length, 1,
+                            "window.performance.getEntriesByName(\"" +
+                            name.replace(URL_PREFIX, "http://.../") + "\") " +
+                            "returns a PerformanceEntry object");
+
+                if (entriesByName.length == 1)
+                {
+                    test_entry(expectedEntries[i], entriesByName[0]);
+
+                    var entriesByNameWithType = window.performance.getEntriesByName(name, "resource");
+                    test_true(is_same_object(entriesByName[0], entriesByNameWithType[0]),
+                              "PerformanceEntry object is the same when calling via getEntriesByName(\"" +
+                              name.replace(URL_PREFIX, "http://.../") + "\") and getEntriesByName(\"" +
+                              name.replace(URL_PREFIX, "http://.../") + "\", 'resource')");
+                }
+            }
+        }
+
+        /*=====================================================================
+        // function is_same_object()
+        // Validates whether obj1 has the same property values as obj2.
+        =====================================================================*/
+        function is_same_object(obj1, obj2)
+        {
+             for (var prop in obj1)
+             {
+                 if (obj1[prop] != obj2[prop])
+                 {
+                     return false;
+                 }
+             }
+             return true;
+        }
+
+        /*=====================================================================
+        // function test_entry
+        // Validates an expected entry object against a recorded Performance
+        // Entry object; This checks that the name and initiatorType match,
+        // that the entryType is "resource", the startTime is within
+        // TEST_ALLOWED_TIMING_DELTA of the expected startTime, the duration
+        // is calculated from responseEnd to startTime, invalid timing
+        // properties are either 0 or undefined, and the timing attributes are
+        // in the correct order.
+        =====================================================================*/
+        function test_entry(expectedEntry, actualEntry)
+        {
+            var entryDetails =  "Name: Expected= '" + expectedEntry.name +
+                                "' | Actual= '" + actualEntry.name + "'<br/>" +
+                                "InitiatorType: Expected= '" + expectedEntry.initiatorType +
+                                "' | Actual= '" + actualEntry.initiatorType + "'<br/>" +
+                                "EntryType: Expected= 'resource'" +
+                                "' | Actual= '" + actualEntry.entryType + "'<br/>" +
+                                "StartTime: Expected= " + expectedEntry.startTime +
+                                " | Actual= " + actualEntry.startTime + "<br/>" +
+                                "Duration: Expected= " + (actualEntry.responseEnd - actualEntry.startTime) +
+                                " | Actual= " + actualEntry.duration + "<br/>";
+
+            var pass =  (expectedEntry.name == actualEntry.name) &&
+                        (expectedEntry.initiatorType == actualEntry.initiatorType) &&
+                        (actualEntry.entryType == "resource") &&
+                        (Math.abs(actualEntry.startTime - expectedEntry.startTime) < TEST_ALLOWED_TIMING_DELTA) &&
+                        (actualEntry.duration == (actualEntry.responseEnd - actualEntry.startTime));
+
+            (pass) ? test_true(true,
+                               "PerformanceEntry returned by window.performance.getEntriesByName(\"" +
+                               actualEntry.name.replace(URL_PREFIX, "http://.../") + "\") has correct name, " +
+                               "initiatorType, startTime, and duration.")
+                     :
+                     test_true(false,
+                               "PerformanceEntry returned by window.performance.getEntriesByName(\"" +
+                               actualEntry.name.replace(URL_PREFIX, "http://.../") + "\") has correct name, " +
+                               "initiatorType, startTime, and duration.<br/>" +
+                               entryDetails);
+
+            // validate timeline
+            var timelineDetails =   "domainLookupStart >= fetchStart: " +
+                                    actualEntry.domainLookupStart + " >= " + actualEntry.fetchStart + "<br/>" +
+                                    "domainLookupEnd >= domainLookupStart: " +
+                                    actualEntry.domainLookupEnd + " >= " + actualEntry.domainLookupStart + "<br/>" +
+                                    "connectStart >= domainLookupEnd: " +
+                                    actualEntry.connectStart + " >= " + actualEntry.domainLookupEnd + "<br/>" +
+                                    "connectEnd >= connectStart: " +
+                                    actualEntry.connectEnd + " >= " + actualEntry.connectStart + "<br/>" +
+                                    "requestStart >= connectEnd: " +
+                                    actualEntry.requestStart + " >= " + actualEntry.connectEnd + "<br/>" +
+                                    "responseStart >= requestStart: " +
+                                    actualEntry.responseStart + " >= " + actualEntry.requestStart + "<br/>" +
+                                    "responseEnd >= responseStart: " +
+                                    actualEntry.responseEnd + " >= " + actualEntry.responseStart + "<br/>";
+
+            pass =  (actualEntry.redirectStart == 0) &&
+                    (actualEntry.redirectEnd == 0) &&
+                    (actualEntry.secureConnectionStart == undefined ||
+                     actualEntry.secureConnectionStart == 0) &&
+                    validate_timeline(actualEntry);
+
+            (pass) ? test_true(true,
+                               "PerformanceEntry returned by window.performance.getEntriesByName(\"" +
+                               actualEntry.name.replace(URL_PREFIX, "http://.../") + "\") has correct order of " +
+                               "timing attributes.")
+                     :
+                     test_true(false,
+                               "PerformanceEntry has correct name, initiatorType, " +
+                               actualEntry.name.replace(URL_PREFIX, "http://.../") + "\") has correct order of " +
+                               "timing attributes.<br/>" +
+                               timelineDetails);
+        }
+
+        /*=====================================================================
+        // function validate_timeline
+        // Verifies that the timing attributes of the test entry are in the
+        // correct order.
+        =====================================================================*/
+        function validate_timeline(entry)
+        {
+            return ((entry.domainLookupStart >= entry.fetchStart) &&
+                    (entry.domainLookupEnd >= entry.domainLookupStart) &&
+                    (entry.connectStart >= entry.domainLookupEnd) &&
+                    (entry.connectEnd >= entry.connectStart) &&
+                    (entry.requestStart >= entry.connectEnd) &&
+                    (entry.responseStart >= entry.requestStart) &&
+                    (entry.responseEnd >= entry.responseStart));
+        }
+    </script>
+
     </head>
-    <body>
+    <body onload="onload_test();">
         <h1>Description</h1>
-        <p>
+        <p>This test validates that Resource Timing entries for resources
+           loaded on a page exist in the Performance Timeline.
+           <br />
+           Resources for the following initiators are used: iframe, img, link, script, xml.
+           <br />
            NOTE: Due to caching behavior in the browser, it is possible that when revisiting this page, some resources
            may not have to be fetched from the network.  As a result, the performance timeline will not contain entries
            for these resources. This test will fail if any entries are missing to ensure that all resources are fetched
            from the network and entries for these resources exist in the Performance Timeline.  If revisiting this page,
-           please either perform a full reload of the page or clear the cache between visits.
+           please either perform a full reload of the page or clear the cache between visits.  In Internet Explorer 10,
+           a full reload is performed via the keyboard shortcut: ctrl + F5.
         </p>
 
         <div id="log"></div>
+
+        <div style="visibility:hidden">
+        <table id="resources">
+            <thead>
+                <tr>
+                    <th>iframe</th>
+                    <th>img</th>
+                    <th>link</th>
+                    <th>script</th>
+                    <th>XMLHttpRequest</th>
+                </tr>
+            </thead>
+            <tr>
+                <td id="iframe"></td>
+                <td id="img"></td>
+                <td id="link"><div id="resource_link_css">div with test css</div></td>
+                <td id="script"></td>
+                <td id="xmlhttprequest"></td>
+            </tr>
+        </table>
+        </div>
     </body>
 </html>

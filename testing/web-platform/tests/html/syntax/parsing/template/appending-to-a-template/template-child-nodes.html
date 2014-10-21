@@ -103,7 +103,7 @@ testInIFrame('../../resources/template-contents-nested.html', function(context) 
     assert_not_equals(nestedTemplate, null,
             'Element is absent in the template content');
 
-    assert_equals(nestedTemplate.childNodes.length, 0,
+    assert_equals(nestedTemplate.childNodes.length, 0, 
             'Wrong number of template child nodes');
 
     assert_not_equals(nestedTemplate.content.querySelector('div'), null,

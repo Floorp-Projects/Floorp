@@ -13,22 +13,22 @@
 
   <body>
 
-
+  
   		<h1>Pattern Attribute</h1>
   		<div style="display: none">
   		<input pattern="[a-z]{3}" value="abcd" title="three letters max"/>
 		</div>
-
+		
     <div id="log">
     </div>
-
+	
 	<script type="text/javascript">
 
 
 		test(function() {assert_equals(document.getElementsByTagName("input")[0].getAttribute("pattern"), "[a-z]{3}")}, "pattern attribute support on input element");
 
 	</script>
-
+	
   </body>
-
+  
 </html>

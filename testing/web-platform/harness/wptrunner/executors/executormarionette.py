@@ -38,10 +38,12 @@ class MarionetteTestExecutor(TestExecutor):
                  browser,
                  http_server_url,
                  timeout_multiplier=1,
-                 close_after_done=True):
+                 close_after_done=True,
+                 http_server_override=None):
         do_delayed_imports()
 
-        TestExecutor.__init__(self, browser, http_server_url, timeout_multiplier)
+        TestExecutor.__init__(self, browser, http_server_url, timeout_multiplier,
+                              http_server_override)
         self.marionette_port = browser.marionette_port
         self.marionette = None
 

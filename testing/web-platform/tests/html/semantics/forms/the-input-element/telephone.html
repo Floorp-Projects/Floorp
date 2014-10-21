@@ -15,7 +15,7 @@
 	<input type="tel" id="value_with_CRLF" value="0&#x000A;&#x000D;1" />
 	<div id="log">
 	</div>
-
+	
 	<script type="text/javascript">
 		var element = document.getElementById('novalue');
 		test(function(){
@@ -41,7 +41,7 @@
 		}, 'The value attribute, if specified, must have a value that contains no "CR" (U+000D)');
 
 		test(function(){
-			element = document.getElementById('novalue');
+			element = document.getElementById('novalue');			
 			element.value = '0\u000D\u000A1';
 			assert_equals(element.value, '01');
 
@@ -73,7 +73,7 @@
 		test(function(){
 			element.value = ' 1234 ';
 			assert_equals(element.value, ' 1234 ');
-		}, 'Element can accept the phone number with leading & following whitespaces');
+		}, 'Element can accept the phone number with leading & following whitespaces');		
 		test(function(){
 			element.value = '(03)12345678';
 			assert_equals(element.value, '(03)12345678');
