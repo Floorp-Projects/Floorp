@@ -32,7 +32,7 @@ child:
   NotifyClirModeChanged(uint32_t aMode);
   NotifyLastNetworkChanged(nsString aNetwork);
   NotifyLastHomeNetworkChanged(nsString aNetwork);
-  NotifyNetworkSelectionModeChanged(nsString aMode);
+  NotifyNetworkSelectionModeChanged(int32_t aMode);
 
 parent:
   /**
@@ -51,7 +51,7 @@ parent:
   sync Init()
     returns (nsMobileConnectionInfo aVoice, nsMobileConnectionInfo aData,
              nsString aLastKnownNetwork, nsString aLastKnownHomeNetwork,
-             nsString aIccId, nsString aNetworkSelectionMode,
+             nsString aIccId, int32_t aNetworkSelectionMode,
              nsString aRadioState, nsString[] aSupportedNetworkTypes);
 };
 
