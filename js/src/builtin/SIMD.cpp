@@ -466,7 +466,7 @@ namespace js {
 // Unary SIMD operators
 template<typename T>
 struct Abs {
-    static inline T apply(T x) { return x < 0 ? -1 * x : x; }
+    static inline T apply(T x) { return mozilla::Abs(x); }
 };
 template<typename T>
 struct Neg {
