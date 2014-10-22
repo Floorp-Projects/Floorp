@@ -7,7 +7,6 @@
 #include "builtin/Object.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/UniquePtr.h"
 
 #include "jscntxt.h"
 
@@ -23,7 +22,7 @@ using namespace js::types;
 
 using js::frontend::IsIdentifier;
 using mozilla::ArrayLength;
-using mozilla::UniquePtr;
+
 
 bool
 js::obj_construct(JSContext *cx, unsigned argc, Value *vp)
@@ -610,12 +609,7 @@ obj_setPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 7. */
     if (!success) {
-        UniquePtr<char[], JS::FreePolicy> bytes(DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
-                                                                        args[0], NullPtr()));
-        if (!bytes)
-            return false;
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
-                             bytes.get());
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_OBJECT_NOT_EXTENSIBLE, "object");
         return false;
     }
 
