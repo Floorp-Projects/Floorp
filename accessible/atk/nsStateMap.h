@@ -8,7 +8,7 @@
 #include "AccessibleWrap.h"
 
 /******************************************************************************
-The following nsIAccessible states aren't translated, just ignored:
+The following accessible states aren't translated, just ignored:
   STATE_READONLY:        Supported indirectly via EXT_STATE_EDITABLE
   STATE_HOTTRACKED:      No ATK equivalent.  No known use case.
                          The nsIAccessible state is not currently supported.
@@ -24,9 +24,11 @@ The following nsIAccessible states aren't translated, just ignored:
   STATE_PROTECTED:       The object is a password-protected edit control.
                          Supported via ATK_ROLE_PASSWORD_TEXT
   STATE_HASPOPUP:        Object displays a pop-up menu or window when invoked.
-                         No ATK equivalent.  The nsIAccessible state is not currently supported.
-  STATE_PINNED:          The object is pinned, usually indicating it is fixed in place and has permanence.
-                         No ATK equivalent.  The nsIAccessible state is not currently supported.
+                         No ATK equivalent. The accessible state is not
+                         currently supported.
+  STATE_PINNED:          The object is pinned, usually indicating it is fixed in
+                         place and has permanence. No ATK equivalent. The
+                         accessible state is not currently supported.
 
 The following ATK states are not supported:
   ATK_STATE_ARMED:       No clear use case, used briefly when button is activated

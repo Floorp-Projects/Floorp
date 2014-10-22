@@ -21,17 +21,17 @@ class nsINode;
 // Value constants
 
 /**
- * Used to define if role requires to expose nsIAccessibleValue.
+ * Used to define if role requires to expose Value interface.
  */
 enum EValueRule
 {
   /**
-   * nsIAccessibleValue isn't exposed.
+   * Value interface isn't exposed.
    */
   eNoValue,
 
   /**
-   * nsIAccessibleValue is implemented, supports value, min and max from
+   * Value interface is implemented, supports value, min and max from
    * aria-valuenow, aria-valuemin and aria-valuemax.
    */
   eHasValueMinMax
@@ -150,16 +150,16 @@ struct nsRoleMapEntry
   // ARIA role: string representation such as "button"
   nsIAtom** roleAtom;
 
-  // Role mapping rule: maps to this nsIAccessibleRole
+  // Role mapping rule: maps to enum Role
   mozilla::a11y::role role;
-  
+
   // Role rule: whether to use mapped role or native semantics
   bool roleRule;
-  
-  // Value mapping rule: how to compute nsIAccessible value
+
+  // Value mapping rule: how to compute accessible value
   EValueRule valueRule;
 
-  // Action mapping rule, how to expose nsIAccessible action
+  // Action mapping rule, how to expose accessible action
   EActionRule actionRule;
 
   // 'live' and 'container-live' object attributes mapping rule: how to expose
@@ -169,11 +169,11 @@ struct nsRoleMapEntry
   // Accessible types this role belongs to.
   uint32_t accTypes;
 
-  // Automatic state mapping rule: always include in nsIAccessibleStates
-  uint64_t state;   // or kNoReqStates if no nsIAccessibleStates are automatic for this role.
+  // Automatic state mapping rule: always include in states
+  uint64_t state; // or kNoReqStates if no default state for this role
 
-  // ARIA properties supported for this role
-  // (in other words, the aria-foo attribute to nsIAccessibleStates mapping rules)
+  // ARIA properties supported for this role (in other words, the aria-foo
+  // attribute to accessible states mapping rules).
   // Currently you cannot have unlimited mappings, because
   // a variable sized array would not allow the use of
   // C++'s struct initialization feature.
