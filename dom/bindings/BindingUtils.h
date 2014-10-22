@@ -41,7 +41,7 @@ class nsPIDOMWindow;
 
 extern nsresult
 xpc_qsUnwrapArgImpl(JSContext* cx, JS::Handle<JSObject*> src, const nsIID& iid, void** ppArg,
-                    nsISupports** ppArgRef, JS::MutableHandle<JS::Value> vp);
+                    nsISupports** ppArgRef);
 
 namespace mozilla {
 namespace dom {
@@ -60,12 +60,11 @@ struct SelfRef
 template <class Interface, class StrongRefType>
 inline nsresult
 UnwrapArg(JSContext* cx, JS::Handle<JSObject*> src, Interface** ppArg,
-          StrongRefType** ppArgRef, JS::MutableHandle<JS::Value> vp)
+          StrongRefType** ppArgRef)
 {
   nsISupports* argRef = *ppArgRef;
   nsresult rv = xpc_qsUnwrapArgImpl(cx, src, NS_GET_TEMPLATE_IID(Interface),
-                                    reinterpret_cast<void**>(ppArg), &argRef,
-                                    vp);
+                                    reinterpret_cast<void**>(ppArg), &argRef);
   *ppArgRef = static_cast<StrongRefType*>(argRef);
   return rv;
 }
