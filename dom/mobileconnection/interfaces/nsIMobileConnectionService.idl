@@ -4,10 +4,12 @@
 
 #include "nsISupports.idl"
 
+interface nsICellInfoListCallback;
 interface nsIMobileCallForwardingOptions;
 interface nsIMobileConnection;
 interface nsIMobileConnectionInfo;
 interface nsIMobileNetworkInfo;
+interface nsINeighboringCellIdsCallback;
 interface nsIVariant;
 
 [scriptable, uuid(823d935e-8262-47ed-8429-8203096b2ff4)]
@@ -234,7 +236,7 @@ already_AddRefed<nsIMobileConnectionService>
 NS_CreateMobileConnectionService();
 %}
 
-[scriptable, uuid(bde83c1d-1335-43b6-8268-ec7e320167f0)]
+[scriptable, uuid(cfc7d15b-d2c2-4f28-ad9f-b250030c3073)]
 interface nsIMobileConnection : nsISupports
 {
   /*
@@ -764,4 +766,23 @@ interface nsIMobileConnection : nsISupports
    */
   void setRadioEnabled(in bool enabled,
                        in nsIMobileConnectionCallback requestCallback);
+
+  /**
+   * Request neighboring cell ids in GSM/UMTS network.
+   *
+   * @param callback
+   *        Called when request is finished. See nsINeighboringCellIdsCallback
+   *        for details.
+   */
+  void getNeighboringCellIds(in nsINeighboringCellIdsCallback callback);
+
+  /**
+   * Request all of the current cell information known to the radio, including
+   * neighboring cells.
+   *
+   * @param callback
+   *        Called when request is finished. See nsICellInfoListCallback
+   *        for details.
+   */
+  void getCellInfoList(in nsICellInfoListCallback callback);
 };
