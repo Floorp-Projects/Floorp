@@ -60,4 +60,5 @@ function assertSnapshots(s1, s2, expected, s1name, s2name) {
     }
     dump(report);
   }
+  return correct;
 }
