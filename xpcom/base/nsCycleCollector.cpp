@@ -3622,7 +3622,9 @@ nsCycleCollector::Collect(ccType aCCType,
         break;
     }
     if (continueSlice) {
-      continueSlice = !aBudget.checkOverBudget();
+      // Force SliceBudget::isOverBudget to check the time.
+      aBudget.step(SliceBudget::CounterReset);
+      continueSlice = !aBudget.isOverBudget();
     }
   } while (continueSlice);
 
@@ -4199,7 +4201,7 @@ nsCycleCollector_collectSlice(int64_t aSliceTime)
 
   SliceBudget budget;
   if (aSliceTime >= 0) {
-    budget = SliceBudget(SliceBudget::TimeBudget(aSliceTime));
+    budget = SliceBudget(js::TimeBudget(aSliceTime));
   }
   data->mCollector->Collect(SliceCC, budget, nullptr);
 }
@@ -4218,7 +4220,7 @@ nsCycleCollector_collectSliceWork(int64_t aSliceWork)
 
   SliceBudget budget;
   if (aSliceWork >= 0) {
-    budget = SliceBudget(SliceBudget::WorkBudget(aSliceWork));
+    budget = SliceBudget(js::WorkBudget(aSliceWork));
   }
   data->mCollector->Collect(SliceCC, budget, nullptr);
 }
