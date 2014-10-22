@@ -34,7 +34,7 @@ let AboutReader = function(doc, win) {
 
   Services.obs.addObserver(this, "Reader:FaviconReturn", false);
   Services.obs.addObserver(this, "Reader:Added", false);
-  Services.obs.addObserver(this, "Reader:Remove", false);
+  Services.obs.addObserver(this, "Reader:Removed", false);
   Services.obs.addObserver(this, "Reader:ListStatusReturn", false);
   Services.obs.addObserver(this, "Gesture:DoubleTap", false);
 
@@ -200,9 +200,9 @@ AboutReader.prototype = {
         }
         break;
       }
-      case "Reader:Remove": {
-        let args = JSON.parse(aData);
-        if (args.url == this._article.url) {
+
+      case "Reader:Removed": {
+        if (aData == this._article.url) {
           if (this._isReadingListItem != 0) {
             this._isReadingListItem = 0;
             this._updateToggleButton();
@@ -280,7 +280,7 @@ AboutReader.prototype = {
 
       case "unload":
         Services.obs.removeObserver(this, "Reader:Added");
-        Services.obs.removeObserver(this, "Reader:Remove");
+        Services.obs.removeObserver(this, "Reader:Removed");
         Services.obs.removeObserver(this, "Reader:ListStatusReturn");
         Services.obs.removeObserver(this, "Gesture:DoubleTap");
         break;
@@ -340,11 +340,10 @@ AboutReader.prototype = {
         });
       }.bind(this));
     } else {
-      // In addition to removing the article from the cache (handled in
-      // browser.js), sending this message will cause the toggle button to be
-      // updated (handled in this file).
-      let json = JSON.stringify({ url: this._article.url, notify: true });
-      Services.obs.notifyObservers(null, "Reader:Remove", json);
+      Messaging.sendRequest({
+        type: "Reader:RemoveFromList",
+        url: this._article.url
+      });
 
       UITelemetry.addEvent("unsave.1", "button", null, "reader");
     }
