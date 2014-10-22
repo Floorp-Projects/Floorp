@@ -8,7 +8,6 @@ extern crate uuid;
 
 use getopts::{usage,optflag, getopts, OptGroup};
 use httpserver::start;
-use std::fmt;
 use std::io::net::ip::SocketAddr;
 use std::io;
 use std::os;

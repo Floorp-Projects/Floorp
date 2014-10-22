@@ -1,6 +1,5 @@
 use serialize::json::ToJson;
 use serialize::json;
-use std::collections::TreeMap;
 use std::io::{IoResult, TcpStream, IoError};
 
 use uuid::Uuid;
@@ -99,8 +98,10 @@ impl MarionetteConnection {
     pub fn connect(&mut self) -> Result<(), IoError> {
         try!(self.read_resp());
         //Would get traits and application type here
-        self.send_message(&WebDriverMessage::new(GetMarionetteId, None));
-        Ok(())
+        match self.send_message(&WebDriverMessage::new(GetMarionetteId, None)) {
+            Ok(_) => Ok(()),
+            Err(_) => fail!("Failed to connect to marionette")
+        }
     }
 
     fn encode_msg(&self, msg: &WebDriverMessage) -> String {

@@ -1,16 +1,10 @@
 use std::io::net::ip::IpAddr;
-use regex::Regex;
 
-use serialize::json;
-
-use hyper;
-use hyper::status::StatusCode;
 use hyper::header::common::ContentLength;
 use hyper::method::Post;
 use hyper::server::{Server, Incoming};
 use hyper::uri::AbsolutePath;
 
-use common::WebDriverResult;
 use response::WebDriverResponse;
 use messagebuilder::{get_builder};
 use marionette::MarionetteConnection;
@@ -48,7 +42,7 @@ fn handle(mut incoming: Incoming) {
                 };
                 let body = format!("{}\n", resp_data.to_json().to_string());
                 {
-                    let mut status_code = resp.status_mut();
+                    let status_code = resp.status_mut();
                     *status_code = FromPrimitive::from_int(status).unwrap();
                 }
                 resp.headers_mut().set(ContentLength(body.len()));
