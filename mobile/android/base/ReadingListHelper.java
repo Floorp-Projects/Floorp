@@ -40,14 +40,14 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
             "Reader:AddToList", "Reader:FaviconRequest");
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
-            "Reader:ListStatusRequest", "Reader:Removed");
+            "Reader:ListStatusRequest", "Reader:RemoveFromList");
     }
 
     public void uninit() {
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
             "Reader:AddToList", "Reader:FaviconRequest");
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
-            "Reader:ListStatusRequest", "Reader:Removed");
+            "Reader:ListStatusRequest", "Reader:RemoveFromList");
     }
 
     @Override
@@ -69,8 +69,8 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
     public void handleMessage(final String event, final NativeJSObject message,
                               final EventCallback callback) {
         switch(event) {
-            case "Reader:Removed": {
-                handleReadingListRemoved(message.getString("url"));
+            case "Reader:RemoveFromList": {
+                handleRemoveFromList(message.getString("url"));
                 break;
             }
 
@@ -149,11 +149,12 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
      * A page can be removed from the ReadingList by panel context menu,
      * or by tapping the readinglist-remove icon in the ReaderMode banner.
      */
-    private void handleReadingListRemoved(final String url) {
+    private void handleRemoveFromList(final String url) {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 BrowserDB.removeReadingListItemWithURL(context.getContentResolver(), url);
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Removed", url));
                 showToast(R.string.page_removed, Toast.LENGTH_SHORT);
             }
         });
