@@ -263,10 +263,10 @@ NfcMessageHandler::TechDiscoveredNotification(const Parcel& aParcel, EventOption
 
   int32_t ndefInfo = aParcel.readInt32();
   if (ndefInfo) {
-    NdefType type = static_cast<NdefType>(aParcel.readInt32());
-    int32_t maxSupportLength = aParcel.readInt32();
-    int32_t isReadOnly = aParcel.readInt32();
-    int32_t isFormatable = aParcel.readInt32();
+    aOptions.mTagType = aParcel.readInt32();
+    aOptions.mMaxNDEFSize = aParcel.readInt32();
+    aOptions.mIsReadOnly = aParcel.readInt32();
+    aOptions.mIsFormatable = aParcel.readInt32();
   }
 
   return true;
