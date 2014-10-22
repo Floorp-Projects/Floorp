@@ -124,12 +124,6 @@ bool profiler_is_active()
 }
 
 static inline
-bool profiler_feature_active(const char* aName)
-{
-  return mozilla_sampler_feature_active(aName);
-}
-
-static inline
 void profiler_responsiveness(const mozilla::TimeStamp& aTime)
 {
   mozilla_sampler_responsiveness(aTime);
