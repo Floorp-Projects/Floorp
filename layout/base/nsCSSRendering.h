@@ -139,6 +139,29 @@ public:
   mozilla::CSSSizeOrRatio ComputeIntrinsicSize();
 
   /**
+   * Computes the placement of a background image.
+   *
+   * @param aPos the CSS <position> value that specify's the image's position.
+   * @param aOriginBounds is the box to which the tiling position should be
+   * relative. This should correspond to 'background-origin' for the frame,
+   * except when painting on the canvas, in which case the origin bounds
+   * should be the bounds of the root element's frame.
+   * @param aTopLeft the top-left corner where an image tile should be drawn.
+   * @param aAnchorPoint a point which should be pixel-aligned by
+   * nsLayoutUtils::DrawImage. This is the same as aTopLeft, unless CSS
+   * specifies a percentage (including 'right' or 'bottom'), in which case
+   * it's that percentage within of aOriginBounds. So 'right' would set
+   * aAnchorPoint.x to aOriginBounds.XMost().
+   *
+   * Points are returned relative to aOriginBounds.
+   */
+  static void ComputeObjectAnchorPoint(const nsStyleBackground::Position& aPos,
+                                       const nsSize& aOriginBounds,
+                                       const nsSize& aImageSize,
+                                       nsPoint* aTopLeft,
+                                       nsPoint* aAnchorPoint);
+
+  /**
    * Compute the size of the rendered image using either the 'cover' or
    * 'contain' constraints (aFitType).
    * aIntrinsicRatio may be an invalid ratio, that is one or both of its
