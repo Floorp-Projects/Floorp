@@ -20,7 +20,7 @@ function checkEventStatus(aEvent, aServiceId, aHasMessages, aMessageCount,
   compareVoicemailStatus(voicemail.getStatus(), status);
 }
 
-function testLevel2DiscardActive(aActive) {
+function testLevel2Discard(aActive) {
   log("    Active: " + aActive);
 
   let sender = "+15125551235";
@@ -32,15 +32,14 @@ function testLevel2DiscardActive(aActive) {
 }
 
 // Tests for Level 3 MWI with a message count in the User Data Header
-function testLevel3DiscardActive(aMessageCount) {
-  log("    Message Count: " + aMessageCount);
+function testLevel3Discard(aMessageCount, aBody) {
+  log("    Message Count: " + aMessageCount + ", Body: " + aBody);
 
   let sender = "+15125551236";
-  let body = aMessageCount + " voicemails";
-  let pdu = PDUBuilder.buildLevel3DiscardMwi(aMessageCount, sender, body);
+  let pdu = PDUBuilder.buildLevel3DiscardMwi(aMessageCount, sender, aBody);
   return sendIndicatorPDUAndWait(pdu)
     .then((aResults) => checkEventStatus(aResults[0], 0, !!aMessageCount,
-                                         aMessageCount, sender, body));
+                                         aMessageCount, sender, aBody));
 }
 
 startTestCommon(function() {
@@ -49,12 +48,14 @@ startTestCommon(function() {
     .then(() => log("Testing Message Waiting Indication Group"))
     // Level 2 discarded active/inactive MWI.
     .then(() => log("  Discard Message"))
-    .then(() => testLevel2DiscardActive(true))
-    .then(() => testLevel2DiscardActive(false))
+    .then(() => testLevel2Discard(true))
+    .then(() => testLevel2Discard(false))
 
     .then(() => log("Testing Special SMS Message Indication"))
     .then(() => log("  Discard Message"))
     // Level 3 discarded active/inactive MWI.
-    .then(() => testLevel3DiscardActive(3))
-    .then(() => testLevel3DiscardActive(0));
+    .then(() => testLevel3Discard(3, "3 voicemails"))
+    .then(() => testLevel3Discard(0, "0 voicemail"))
+    .then(() => testLevel3Discard(3, null))
+    .then(() => testLevel3Discard(0, null));
 });

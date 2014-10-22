@@ -1485,10 +1485,12 @@
             // Restore the progress listener.
             aBrowser.webProgress.addProgressListener(filter, Ci.nsIWebProgress.NOTIFY_ALL);
 
-            if (aShouldBeRemote)
+            if (aShouldBeRemote) {
               tab.setAttribute("remote", "true");
-            else
+            } else {
               tab.removeAttribute("remote");
+              aBrowser.messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: tab.pinned })
+            }
 
             if (wasActive)
               aBrowser.focus();
@@ -3099,6 +3101,13 @@
               window.focus();
               break;
             }
+            case "Browser:Init": {
+              let tab = this.getTabForBrowser(browser);
+              if (!tab)
+                return;
+              browser.messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: tab.pinned })
+              break;
+            }
           }
         ]]></body>
       </method>
@@ -3156,6 +3165,7 @@
             messageManager.addMessageListener("DOMTitleChanged", this);
             messageManager.addMessageListener("DOMWindowClose", this);
             messageManager.addMessageListener("contextmenu", this);
+            messageManager.addMessageListener("Browser:Init", this);
 
             // If this window has remote tabs, switch to our tabpanels fork
             // which does asynchronous tab switching.

@@ -108,16 +108,16 @@ function promiseWaitForCondition(aConditionFn) {
   return deferred.promise;
 }
 
-function promiseWaitForEvent(object, eventName, capturing = false) {
+function promiseWaitForEvent(object, eventName, capturing = false, chrome = false) {
   return new Promise((resolve) => {
     function listener(event) {
       info("Saw " + eventName);
-      object.removeEventListener(eventName, listener, capturing);
+      object.removeEventListener(eventName, listener, capturing, chrome);
       resolve(event);
     }
 
     info("Waiting for " + eventName);
-    object.addEventListener(eventName, listener, capturing);
+    object.addEventListener(eventName, listener, capturing, chrome);
   });
 }
 

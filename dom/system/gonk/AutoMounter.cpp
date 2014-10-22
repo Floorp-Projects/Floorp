@@ -80,10 +80,13 @@ USING_MTP_NAMESPACE
 #define USE_DEBUG 0
 
 #undef LOG
+#undef LOGW
+#undef ERR
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO,  "AutoMounter", ## args)
 #define LOGW(args...) __android_log_print(ANDROID_LOG_WARN,  "AutoMounter", ## args)
 #define ERR(args...)  __android_log_print(ANDROID_LOG_ERROR, "AutoMounter", ## args)
 
+#undef DBG
 #if USE_DEBUG
 #define DBG(args...)  __android_log_print(ANDROID_LOG_DEBUG, "AutoMounter" , ## args)
 #else
@@ -270,7 +273,7 @@ public:
 
   void ConfigureUsbFunction(const char* aUsbFunc);
 
-  void StartMtpServer();
+  bool StartMtpServer();
   void StopMtpServer();
 
   void StartUmsSharing();
@@ -582,16 +585,33 @@ SetUsbFunction(const char* aUsbFunc)
   property_set(SYS_USB_CONFIG, newSysUsbConfig);
 }
 
-void
+bool
 AutoMounter::StartMtpServer()
 {
   if (sMozMtpServer) {
     // Mtp Server is already running - nothing to do
-    return;
+    return true;
   }
   LOG("Starting MtpServer");
+
+  // For debugging, Change the #if 0 to #if 1, and then attach gdb during
+  // the 5 second interval below. Otherwise, configuring MTP will cause adb
+  // (and thus gdb) to get bounced.
+#if 0
+  LOG("Sleeping");
+  PRTime now = PR_Now();
+  PRTime stopTime = now + 5000000;
+  while (PR_Now() < stopTime) {
+    LOG("Sleeping...");
+    sleep(1);
+  }
+  LOG("Sleep done");
+#endif
+
   sMozMtpServer = new MozMtpServer();
-  sMozMtpServer->Run();
+  if (!sMozMtpServer->Init()) {
+    return false;
+  }
 
   VolumeArray::index_type volIndex;
   VolumeArray::size_type  numVolumes = VolumeManager::NumVolumes();
@@ -600,6 +620,9 @@ AutoMounter::StartMtpServer()
     nsRefPtr<MozMtpStorage> storage = new MozMtpStorage(vol, sMozMtpServer);
     mMozMtpStorage.AppendElement(storage);
   }
+
+  sMozMtpServer->Run();
+  return true;
 }
 
 void
@@ -736,8 +759,13 @@ AutoMounter::UpdateState()
           // and start the MTP server. This particular codepath will not
           // normally be taken, but it could happen if you stop and restart
           // b2g while sys.usb.config is set to enable mtp.
-          StartMtpServer();
-          SetState(STATE_MTP_STARTED);
+          if (StartMtpServer()) {
+            SetState(STATE_MTP_STARTED);
+          } else {
+            // Unable to start MTP. Go back to UMS.
+            SetUsbFunction(USB_FUNC_UMS);
+            SetState(STATE_UMS_CONFIGURING);
+          }
         } else {
           // We need to configure USB to use mtp. Wait for it to be configured
           // before we start the MTP server.
@@ -763,8 +791,13 @@ AutoMounter::UpdateState()
       if (mtpEnabled && mtpConfigured) {
         // The USB layer has been configured. Now we can go ahead and start
         // the MTP server.
-        StartMtpServer();
-        SetState(STATE_MTP_STARTED);
+        if (StartMtpServer()) {
+          SetState(STATE_MTP_STARTED);
+        } else {
+          // Unable to start MTP. Go back to UMS.
+          SetUsbFunction(USB_FUNC_UMS);
+          SetState(STATE_UMS_CONFIGURING);
+        }
         break;
       }
       if (rndisConfigured) {
