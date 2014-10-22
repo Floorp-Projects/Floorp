@@ -60,20 +60,6 @@ nsresult
 xpc_qsUnwrapArgImpl(JSContext *cx, JS::HandleValue v, const nsIID &iid, void **ppArg,
                     nsISupports **ppArgRef, JS::MutableHandleValue vp);
 
-/** Convert a jsval to an XPCOM pointer. */
-template <class Interface, class StrongRefType>
-inline nsresult
-xpc_qsUnwrapArg(JSContext *cx, JS::HandleValue v, Interface **ppArg,
-                StrongRefType **ppArgRef, JS::MutableHandleValue vp)
-{
-    nsISupports* argRef = *ppArgRef;
-    nsresult rv = xpc_qsUnwrapArgImpl(cx, v, NS_GET_TEMPLATE_IID(Interface),
-                                      reinterpret_cast<void **>(ppArg), &argRef,
-                                      vp);
-    *ppArgRef = static_cast<StrongRefType*>(argRef);
-    return rv;
-}
-
 MOZ_ALWAYS_INLINE nsISupports*
 castNativeArgFromWrapper(JSContext *cx,
                          jsval v,
