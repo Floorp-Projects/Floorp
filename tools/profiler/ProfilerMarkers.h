@@ -8,7 +8,6 @@
 
 #include "JSStreamWriter.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
 #include "Units.h"    // For ScreenIntPoint
 
@@ -52,8 +51,6 @@ public:
   void StreamPayload(JSStreamWriter& b) {
     return streamPayload(b);
   }
-
-  mozilla::TimeStamp GetStartTime() const { return mStartTime; }
 
 protected:
   /**
@@ -187,28 +184,6 @@ protected:
 private:
   void streamPayloadImpl(JSStreamWriter& b);
   mozilla::TimeStamp mVsyncTimestamp;
-};
-
-class GPUMarkerPayload : public ProfilerMarkerPayload
-{
-public:
-  GPUMarkerPayload(const mozilla::TimeStamp& aCpuTimeStart,
-                   const mozilla::TimeStamp& aCpuTimeEnd,
-                   uint64_t aGpuTimeStart,
-                   uint64_t aGpuTimeEnd);
-  ~GPUMarkerPayload() {}
-
-protected:
-  virtual void
-  streamPayload(JSStreamWriter& b) MOZ_OVERRIDE { return streamPayloadImp(b); }
-
-private:
-  void streamPayloadImp(JSStreamWriter& b);
-
-  mozilla::TimeStamp mCpuTimeStart;
-  mozilla::TimeStamp mCpuTimeEnd;
-  uint64_t mGpuTimeStart;
-  uint64_t mGpuTimeEnd;
 };
 
 #endif // PROFILER_MARKERS_H

@@ -44,8 +44,6 @@ void mozilla_sampler_free_backtrace(ProfilerBacktrace* aBacktrace);
 
 bool mozilla_sampler_is_active();
 
-bool mozilla_sampler_feature_active(const char* aName);
-
 void mozilla_sampler_responsiveness(const mozilla::TimeStamp& time);
 
 void mozilla_sampler_frame_number(int frameNumber);

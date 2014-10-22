@@ -44,7 +44,6 @@ int         sFrameNumber = 0;
 int         sLastFrameNumber = 0;
 int         sInitCount = 0; // Each init must have a matched shutdown.
 static bool sIsProfiling = false; // is raced on
-static bool sIsGPUProfiling = false; // is raced on
 
 // env variables to control the profiler
 const char* PROFILER_MODE = "MOZ_PROFILER_MODE";
@@ -682,8 +681,6 @@ const char** mozilla_sampler_get_features()
     // Tell the JS engine to emmit pseudostack entries in the
     // pro/epilogue.
     "js",
-    // GPU Profiling (may not be supported by the GL)
-    "gpu",
     // Profile the registered secondary threads.
     "threads",
     // Do not include user-identifiable information
@@ -785,7 +782,6 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
   }
 
   sIsProfiling = true;
-  sIsGPUProfiling = t->ProfileGPU();
 
   if (Sampler::CanNotifyObservers()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -867,19 +863,6 @@ void mozilla_sampler_resume() {
   if (Sampler::GetActiveSampler()) {
     Sampler::GetActiveSampler()->SetPaused(false);
   }
-}
-
-bool mozilla_sampler_feature_active(const char* aName)
-{
-  if (!profiler_is_active()) {
-    return false;
-  }
-
-  if (strcmp(aName, "gpu") == 0) {
-    return sIsGPUProfiling;
-  }
-
-  return false;
 }
 
 bool mozilla_sampler_is_active()
@@ -1058,10 +1041,7 @@ void mozilla_sampler_add_marker(const char *aMarker, ProfilerMarkerPayload *aPay
   if (!stack) {
     return;
   }
-
-  TimeStamp origin = (aPayload && !aPayload->GetStartTime().IsNull()) ?
-                     aPayload->GetStartTime() : mozilla::TimeStamp::Now();
-  mozilla::TimeDuration delta = origin - sStartTime;
+  mozilla::TimeDuration delta = mozilla::TimeStamp::Now() - sStartTime;
   stack->addMarker(aMarker, payload.forget(), static_cast<float>(delta.ToMilliseconds()));
 }
 
