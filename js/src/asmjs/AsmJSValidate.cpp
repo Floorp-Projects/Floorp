@@ -4538,15 +4538,14 @@ CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, MDefinition **def, boo
     } else if (firstType.isMaybeFloat()) {
         *type = MathRetType::Float;
         firstType = Type::MaybeFloat;
-    } else if (firstType.isInt()) {
+    } else if (firstType.isSigned()) {
         *type = MathRetType::Signed;
-        firstType = Type::Int;
+        firstType = Type::Signed;
     } else {
         return f.failf(firstArg, "%s is not a subtype of double?, float? or int",
                        firstType.toChars());
     }
 
-    MIRType opType = firstType.toMIRType();
     MDefinition *lastDef = firstDef;
     ParseNode *nextArg = NextNode(firstArg);
     for (unsigned i = 1; i < CallArgListLength(callNode); i++, nextArg = NextNode(nextArg)) {
@@ -4558,7 +4557,7 @@ CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, MDefinition **def, boo
         if (!(nextType <= firstType))
             return f.failf(nextArg, "%s is not a subtype of %s", nextType.toChars(), firstType.toChars());
 
-        lastDef = f.minMax(lastDef, nextDef, opType, isMax);
+        lastDef = f.minMax(lastDef, nextDef, firstType.toMIRType(), isMax);
     }
 
     *def = lastDef;
