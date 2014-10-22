@@ -11,8 +11,6 @@
 
 using namespace mozilla::dom::mobilemessage;
 
-DOMCI_DATA(MozSmsMessage, mozilla::dom::SmsMessage)
-
 namespace mozilla {
 namespace dom {
 
