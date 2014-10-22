@@ -2,7 +2,7 @@ use std::collections::{TreeMap, HashMap};
 use regex::{Regex, Captures};
 use serialize::json;
 
-use hyper::method::{Method, Get, Post};
+use hyper::method::{Method, Get, Post, Delete};
 
 use command::{WebDriverMessage, WebDriverCommand};
 use common::{WebDriverResult, WebDriverError, UnknownCommand};
@@ -15,7 +15,10 @@ pub enum MatchType {
     MatchGoBack,
     MatchGoForward,
     MatchRefresh,
-    MatchGetTitle
+    MatchGetTitle,
+    MatchGetWindowHandle,
+    MatchGetWindowHandles,
+    MatchClose
 }
 
 #[deriving(Clone)]
@@ -109,7 +112,11 @@ pub fn get_builder() -> MessageBuilder {
                         (Post, "/session/{sessionId}/back", MatchGoBack),
                         (Post, "/session/{sessionId}/forward", MatchGoForward),
                         (Post, "/session/{sessionId}/refresh", MatchRefresh),
-                        (Get, "/session/{sessionId}/title", MatchGetTitle)];
+                        (Get, "/session/{sessionId}/title", MatchGetTitle),
+                        (Get, "/session/{sessionId}/window_handle", MatchGetWindowHandle),
+                        (Get, "/session/{sessionId}/window_handles", MatchGetWindowHandles),
+                        (Delete, "/session/{sessionId}/window_handle", MatchClose)
+                        ];
     for &(ref method, ref url, ref match_type) in matchers.iter() {
         println!("{} {}", method, url);
         builder.add(method.clone(), *url, *match_type);
