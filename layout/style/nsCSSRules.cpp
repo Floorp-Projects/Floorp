@@ -204,18 +204,9 @@ GroupRuleRuleList::IndexedGetter(uint32_t aIndex, bool& aFound)
   return nullptr;
 }
 
-} // namespace css
-} // namespace mozilla
-
 // -------------------------------------------
 // CharsetRule
 //
-
-// Must be outside namespace
-DOMCI_DATA(CSSCharsetRule, css::CharsetRule)
-
-namespace mozilla {
-namespace css {
 
 CharsetRule::CharsetRule(const nsAString& aEncoding,
                          uint32_t aLineNumber, uint32_t aColumnNumber)
@@ -519,15 +510,6 @@ ImportRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   // - mMedia, because it is measured via CSSStyleSheet::mMedia
   // - mChildSheet, because it is measured via CSSStyleSheetInner::mSheets
 }
-
-} // namespace css
-} // namespace mozilla
-
-// must be outside the namespace
-DOMCI_DATA(CSSImportRule, css::ImportRule)
-
-namespace mozilla {
-namespace css {
 
 GroupRule::GroupRule(uint32_t aLineNumber, uint32_t aColumnNumber)
   : Rule(aLineNumber, aColumnNumber)
@@ -993,15 +975,6 @@ MediaRule::AppendConditionText(nsAString& aOutput)
   }
 }
 
-} // namespace css
-} // namespace mozilla
-
-// Must be outside namespace
-DOMCI_DATA(CSSMediaRule, css::MediaRule)
-
-namespace mozilla {
-namespace css {
-
 DocumentRule::DocumentRule(uint32_t aLineNumber, uint32_t aColumnNumber)
   : GroupRule(aLineNumber, aColumnNumber)
 {
@@ -1246,18 +1219,9 @@ DocumentRule::AppendConditionText(nsAString& aCssText)
   aCssText.Truncate(aCssText.Length() - 2); // remove last ", "
 }
 
-} // namespace css
-} // namespace mozilla
-
-// Must be outside namespace
-DOMCI_DATA(CSSMozDocumentRule, css::DocumentRule)
-
 // -------------------------------------------
 // NameSpaceRule
 //
-
-namespace mozilla {
-namespace css {
 
 NameSpaceRule::NameSpaceRule(nsIAtom* aPrefix, const nsString& aURLSpec,
                              uint32_t aLineNumber, uint32_t aColumnNumber)
@@ -1390,9 +1354,6 @@ NameSpaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
 } // namespace css
 } // namespace mozilla
-
-// Must be outside namespace
-DOMCI_DATA(CSSNameSpaceRule, css::NameSpaceRule)
 
 // -------------------------------------------
 // nsCSSFontFaceStyleDecl and related routines
@@ -1728,8 +1689,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSFontFaceRule)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-DOMCI_DATA(CSSFontFaceRule, nsCSSFontFaceRule)
-
 // QueryInterface implementation for nsCSSFontFaceRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSFontFaceRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
@@ -1874,8 +1833,6 @@ nsCSSFontFeatureValuesRule::Clone() const
 
 NS_IMPL_ADDREF(nsCSSFontFeatureValuesRule)
 NS_IMPL_RELEASE(nsCSSFontFeatureValuesRule)
-
-DOMCI_DATA(CSSFontFeatureValuesRule, nsCSSFontFeatureValuesRule)
 
 // QueryInterface implementation for nsCSSFontFeatureValuesRule
 NS_INTERFACE_MAP_BEGIN(nsCSSFontFeatureValuesRule)
@@ -2209,8 +2166,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSKeyframeRule)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMDeclaration)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-DOMCI_DATA(MozCSSKeyframeRule, nsCSSKeyframeRule)
-
 // QueryInterface implementation for nsCSSKeyframeRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSKeyframeRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
@@ -2427,8 +2382,6 @@ nsCSSKeyframesRule::Clone() const
 
 NS_IMPL_ADDREF_INHERITED(nsCSSKeyframesRule, css::GroupRule)
 NS_IMPL_RELEASE_INHERITED(nsCSSKeyframesRule, css::GroupRule)
-
-DOMCI_DATA(MozCSSKeyframesRule, nsCSSKeyframesRule)
 
 // QueryInterface implementation for nsCSSKeyframesRule
 NS_INTERFACE_MAP_BEGIN(nsCSSKeyframesRule)
@@ -2761,8 +2714,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSPageRule)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMDeclaration)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-DOMCI_DATA(CSSPageRule, nsCSSPageRule)
-
 // QueryInterface implementation for nsCSSPageRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSPageRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
@@ -3038,9 +2989,6 @@ CSSSupportsRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
 } // namespace mozilla
 
-// Must be outside namespace
-DOMCI_DATA(CSSSupportsRule, mozilla::CSSSupportsRule)
-
 // -------------------------------------------
 // nsCSSCounterStyleRule
 //
@@ -3075,8 +3023,6 @@ nsCSSCounterStyleRule::kGetters[] = {
 
 NS_IMPL_ADDREF(nsCSSCounterStyleRule)
 NS_IMPL_RELEASE(nsCSSCounterStyleRule)
-
-DOMCI_DATA(CSSCounterStyleRule, nsCSSCounterStyleRule)
 
 // QueryInterface implementation for nsCSSCounterStyleRule
 NS_INTERFACE_MAP_BEGIN(nsCSSCounterStyleRule)
