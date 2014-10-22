@@ -312,32 +312,19 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     if (evalCaller && evalCaller->strict())
         globalsc.strict = true;
 
-    if (options.compileAndGo) {
-        if (source) {
-            /*
-             * Save eval program source in script->atoms[0] for the
-             * eval cache (see EvalCacheLookup in jsobj.cpp).
-             */
-            JSAtom *atom = AtomizeString(cx, source);
-            jsatomid _;
-            if (!atom || !bce.makeAtomIndex(atom, &_))
-                return nullptr;
-        }
-
-        if (evalCaller && evalCaller->functionOrCallerFunction()) {
-            /*
-             * An eval script in a caller frame needs to have its enclosing
-             * function captured in case it refers to an upvar, and someone
-             * wishes to decompile it while it's running.
-             */
-            JSFunction *fun = evalCaller->functionOrCallerFunction();
-            Directives directives(/* strict = */ fun->strict());
-            ObjectBox *funbox = parser.newFunctionBox(/* fn = */ nullptr, fun, pc.ptr(),
-                                                      directives, fun->generatorKind());
-            if (!funbox)
-                return nullptr;
-            bce.objectList.add(funbox);
-        }
+    if (options.compileAndGo && evalCaller && evalCaller->functionOrCallerFunction()) {
+        /*
+         * An eval script in a caller frame needs to have its enclosing
+         * function captured in case it refers to an upvar, and someone
+         * wishes to decompile it while it's running.
+         */
+        JSFunction *fun = evalCaller->functionOrCallerFunction();
+        Directives directives(/* strict = */ fun->strict());
+        ObjectBox *funbox = parser.newFunctionBox(/* fn = */ nullptr, fun, pc.ptr(),
+                                                  directives, fun->generatorKind());
+        if (!funbox)
+            return nullptr;
+        bce.objectList.add(funbox);
     }
 
     bool canHaveDirectives = true;

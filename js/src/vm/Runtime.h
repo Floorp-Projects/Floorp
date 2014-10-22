@@ -131,6 +131,7 @@ typedef Vector<ScriptAndCounts, 0, SystemAllocPolicy> ScriptAndCountsVector;
 
 struct EvalCacheEntry
 {
+    JSLinearString *str;
     JSScript *script;
     JSScript *callerScript;
     jsbytecode *pc;
