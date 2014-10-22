@@ -19,7 +19,7 @@
 == bc_dyn_table2.html bc_dyn_table2_ref.html
 == bc_dyn_table3.html bc_dyn_table3_ref.html
 == bc_borderoffset1.html bc_borderoffset1_ref.html
-fails-if(cocoaWidget) == bc_borderoffset2.html bc_borderoffset2_ref.html # bug 477504 
+== bc_borderoffset2.html bc_borderoffset2_ref.html
 == frame_above_rules_all.html frame_above_rules_all_ref.html
 == frame_above_rules_cols.html frame_above_rules_cols_ref.html
 == frame_above_rules_groups.html frame_above_rules_groups_ref.html
