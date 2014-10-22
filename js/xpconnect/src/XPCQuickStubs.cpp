@@ -21,15 +21,12 @@ using namespace JS;
 
 nsresult
 xpc_qsUnwrapArgImpl(JSContext *cx,
-                    HandleValue v,
+                    HandleObject src,
                     const nsIID &iid,
                     void **ppArg,
                     nsISupports **ppArgRef,
                     MutableHandleValue vp)
 {
-    MOZ_ASSERT(v.isObject());
-    RootedObject src(cx, &v.toObject());
-
     nsISupports *iface = xpc::UnwrapReflectorToISupports(src);
     if (iface) {
         if (NS_FAILED(iface->QueryInterface(iid, ppArg))) {

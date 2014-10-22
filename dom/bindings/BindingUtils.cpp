@@ -818,7 +818,8 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
   // Get the object. It might be a security wrapper, in which case we do a checked
   // unwrap.
   JS::Rooted<JSObject*> origObj(cx, &thisv.toObject());
-  JSObject* obj = js::CheckedUnwrap(origObj, /* stopAtOuter = */ false);
+  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(origObj,
+                                                  /* stopAtOuter = */ false));
   if (!obj) {
       JS_ReportError(cx, "Permission denied to access object");
       return false;
@@ -826,12 +827,12 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
 
   // Switch this to UnwrapDOMObjectToISupports once our global objects are
   // using new bindings.
-  JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*obj));
+  JS::Rooted<JS::Value> unusedVal(cx);
   nsISupports* native = nullptr;
   nsCOMPtr<nsISupports> nativeRef;
-  UnwrapArg<nsISupports>(cx, val, &native,
+  UnwrapArg<nsISupports>(cx, obj, &native,
                          static_cast<nsISupports**>(getter_AddRefs(nativeRef)),
-                         &val);
+                         &unusedVal);
   if (!native) {
     return Throw(cx, NS_ERROR_FAILURE);
   }
@@ -846,7 +847,8 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
 
   nsIJSID* iid;
   SelfRef iidRef;
-  if (NS_FAILED(UnwrapArg<nsIJSID>(cx, args[0], &iid, &iidRef.ptr, args[0]))) {
+  obj = &args[0].toObject();
+  if (NS_FAILED(UnwrapArg<nsIJSID>(cx, obj, &iid, &iidRef.ptr, &unusedVal))) {
     return Throw(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
   }
   MOZ_ASSERT(iid);
