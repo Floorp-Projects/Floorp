@@ -146,11 +146,6 @@ static inline void profiler_free_backtrace(ProfilerBacktrace* aBacktrace) {}
 
 static inline bool profiler_is_active() { return false; }
 
-// Check if an external profiler feature is active.
-// Supported:
-//  * gpu
-static inline bool profiler_feature_active(const char*) { return false; }
-
 // Internal-only. Used by the event tracer.
 static inline void profiler_responsiveness(const mozilla::TimeStamp& aTime) {}
 
