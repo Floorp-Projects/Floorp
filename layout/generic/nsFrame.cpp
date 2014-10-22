@@ -1930,6 +1930,10 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     return;
   }
 
+  if (disp->mWillChangeBitField != 0) {
+    aBuilder->AddToWillChangeBudget(this, GetSize());
+  }
+
   nsRect dirtyRect = aDirtyRect;
 
   bool inTransform = aBuilder->IsInTransform();

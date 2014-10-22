@@ -9,6 +9,7 @@
 
 class nsIFrame;
 class nsIContent;
+class nsDisplayListBuilder;
 
 namespace mozilla {
 
@@ -59,7 +60,8 @@ public:
    * Return true if aFrame's aProperty style should be considered as being animated
    * for constructing active layers.
    */
-  static bool IsStyleAnimated(nsIFrame* aFrame, nsCSSProperty aProperty);
+  static bool IsStyleAnimated(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                              nsCSSProperty aProperty);
   /**
    * Return true if any of aFrame's offset property styles should be considered
    * as being animated for constructing active layers.
