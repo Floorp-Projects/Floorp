@@ -284,8 +284,12 @@ public:
   nscoord GetNondisappearingScrollbarWidth(nsBoxLayoutState* aState);
   bool IsLTR() const;
   bool IsScrollbarOnRight() const;
-  bool IsScrollingActive() const
+  bool IsScrollingActive(nsDisplayListBuilder* aBuilder) const
   {
+    const nsStyleDisplay* disp = mOuter->StyleDisplay();
+    if (disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL)) {
+      return true;
+    }
     return mHasBeenScrolledRecently ||
         IsAlwaysActive() || mShouldBuildScrollableLayer;
   }
@@ -696,8 +700,8 @@ public:
     mHelper.PostScrolledAreaEvent();
     return NS_OK;
   }
-  virtual bool IsScrollingActive() MOZ_OVERRIDE {
-    return mHelper.IsScrollingActive();
+  virtual bool IsScrollingActive(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE {
+    return mHelper.IsScrollingActive(aBuilder);
   }
   virtual bool IsProcessingAsyncScroll() MOZ_OVERRIDE {
     return mHelper.IsProcessingAsyncScroll();
@@ -1054,8 +1058,8 @@ public:
     mHelper.PostScrolledAreaEvent();
     return NS_OK;
   }
-  virtual bool IsScrollingActive() MOZ_OVERRIDE {
-    return mHelper.IsScrollingActive();
+  virtual bool IsScrollingActive(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE {
+    return mHelper.IsScrollingActive(aBuilder);
   }
   virtual bool IsProcessingAsyncScroll() MOZ_OVERRIDE {
     return mHelper.IsProcessingAsyncScroll();
