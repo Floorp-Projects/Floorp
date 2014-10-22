@@ -73,16 +73,22 @@ class SelectionManager(object):
 
         self.element.marionette.execute_script(cmd, script_args=[self.element])
 
-    def selection_rect_list(self):
-        '''Return the selection's DOMRectList object.
+    def selection_rect_list(self, idx):
+        '''Return the selection's DOMRectList object for the range at given idx.
 
-        If the element is either <input> or <textarea>, return the selection's
-        DOMRectList within the element. Otherwise, return the DOMRectList of the
-        current selection.
+        If the element is either <input> or <textarea>, return the DOMRectList of
+        the range at given idx of the selection within the element. Otherwise,
+        return the DOMRectList of the of the range at given idx of current selection.
 
         '''
         cmd = self.js_selection_cmd() +\
-            '''return sel.getRangeAt(0).getClientRects();'''
+            '''return sel.getRangeAt(%d).getClientRects();''' % idx
+        return self.element.marionette.execute_script(cmd, script_args=[self.element])
+
+    def range_count(self):
+        '''Get selection's range count'''
+        cmd = self.js_selection_cmd() +\
+            '''return sel.rangeCount;'''
         return self.element.marionette.execute_script(cmd, script_args=[self.element])
 
     def _selection_location_helper(self, location_type):
@@ -94,9 +100,11 @@ class SelectionManager(object):
         considered.
 
         '''
-        rect_list = self.selection_rect_list()
-        list_length = rect_list['length']
-        first_rect, last_rect = rect_list['0'], rect_list[str(list_length - 1)]
+        range_count = self.range_count();
+        first_rect_list = self.selection_rect_list(0)
+        last_rect_list = self.selection_rect_list(range_count - 1)
+        last_list_length = last_rect_list['length']
+        first_rect, last_rect = first_rect_list['0'], last_rect_list[str(last_list_length - 1)]
         origin_x, origin_y = self.element.location['x'], self.element.location['y']
 
         if self.element.get_attribute('dir') == 'rtl':  # such as Arabic
