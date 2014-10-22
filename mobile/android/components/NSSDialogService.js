@@ -200,7 +200,7 @@ NSSDialogs.prototype = {
         continue;
       } else if (response.button == 0) {
         canceled.value = false;
-        if (response.rememberBox == "true") {
+        if (response.rememberBox == true) {
           aCtx.QueryInterface(Ci.nsIClientAuthUserDecision).rememberClientAuthCertificate = true;
         }
         return true;
