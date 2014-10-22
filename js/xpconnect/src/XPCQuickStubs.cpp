@@ -34,12 +34,6 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
         return NS_OK;
     }
 
-    // Create the ccx needed for quick stubs.
-    XPCCallContext ccx(JS_CALLER, cx);
-    if (!ccx.IsValid()) {
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
-    }
-
     nsRefPtr<nsXPCWrappedJS> wrappedJS;
     nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, iid, getter_AddRefs(wrappedJS));
     if (NS_FAILED(rv) || !wrappedJS) {
