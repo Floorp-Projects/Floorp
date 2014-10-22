@@ -37,7 +37,9 @@ loop.webapp = (function($, _, OT, mozL10n) {
     render: function() {
       var useLatestFF = mozL10n.get("use_latest_firefox", {
         "firefoxBrandNameLink": React.renderComponentToStaticMarkup(
-          React.DOM.a({target: "_blank", href: mozL10n.get("brand_website")}, mozL10n.get("brandShortname"))
+          React.DOM.a({target: "_blank", href: loop.config.brandWebsiteUrl}, 
+            mozL10n.get("brandShortname")
+          )
         )
       });
       return (
@@ -82,8 +84,10 @@ loop.webapp = (function($, _, OT, mozL10n) {
           React.DOM.h3(null, mozL10n.get("promote_firefox_hello_heading", {brandShortname: mozL10n.get("brandShortname")})), 
           React.DOM.p(null, 
             React.DOM.a({className: "btn btn-large btn-accept", 
-               href: mozL10n.get("brand_website")}, 
-              mozL10n.get("get_firefox_button", {brandShortname: mozL10n.get("brandShortname")})
+               href: loop.config.brandWebsiteUrl}, 
+              mozL10n.get("get_firefox_button", {
+                brandShortname: mozL10n.get("brandShortname")
+              })
             )
           )
         )
@@ -462,10 +466,10 @@ loop.webapp = (function($, _, OT, mozL10n) {
       var tosHTML = mozL10n.get("legal_text_and_links", {
         "clientShortname": mozL10n.get("clientShortname2"),
         "terms_of_use_url": "<a target=_blank href='" +
-          mozL10n.get("legal_website") + "'>" +
+          loop.config.legalWebsiteUrl + "'>" +
           tosLinkName + "</a>",
         "privacy_notice_url": "<a target=_blank href='" +
-          mozL10n.get("privacy_website") + "'>" + privacyNoticeName + "</a>"
+          loop.config.privacyWebsiteUrl + "'>" + privacyNoticeName + "</a>"
       });
 
       var tosClasses = React.addons.classSet({
