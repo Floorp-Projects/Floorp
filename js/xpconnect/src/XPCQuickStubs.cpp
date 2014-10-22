@@ -24,8 +24,7 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
                     HandleObject src,
                     const nsIID &iid,
                     void **ppArg,
-                    nsISupports **ppArgRef,
-                    MutableHandleValue vp)
+                    nsISupports **ppArgRef)
 {
     nsISupports *iface = xpc::UnwrapReflectorToISupports(src);
     if (iface) {
@@ -59,7 +58,6 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     rv = wrappedJS->QueryInterface(iid, ppArg);
     if (NS_SUCCEEDED(rv)) {
         *ppArgRef = static_cast<nsISupports*>(*ppArg);
-        vp.setObjectOrNull(wrappedJS->GetJSObject());
     }
     return rv;
 }

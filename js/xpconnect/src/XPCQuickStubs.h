@@ -13,6 +13,6 @@
 
 nsresult
 xpc_qsUnwrapArgImpl(JSContext *cx, JS::HandleObject src, const nsIID &iid, void **ppArg,
-                    nsISupports **ppArgRef, JS::MutableHandleValue vp);
+                    nsISupports **ppArgRef);
 
 #endif /* xpcquickstubs_h___ */

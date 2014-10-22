@@ -827,12 +827,10 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
 
   // Switch this to UnwrapDOMObjectToISupports once our global objects are
   // using new bindings.
-  JS::Rooted<JS::Value> unusedVal(cx);
   nsISupports* native = nullptr;
   nsCOMPtr<nsISupports> nativeRef;
   UnwrapArg<nsISupports>(cx, obj, &native,
-                         static_cast<nsISupports**>(getter_AddRefs(nativeRef)),
-                         &unusedVal);
+                         static_cast<nsISupports**>(getter_AddRefs(nativeRef)));
   if (!native) {
     return Throw(cx, NS_ERROR_FAILURE);
   }
@@ -848,7 +846,7 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
   nsIJSID* iid;
   SelfRef iidRef;
   obj = &args[0].toObject();
-  if (NS_FAILED(UnwrapArg<nsIJSID>(cx, obj, &iid, &iidRef.ptr, &unusedVal))) {
+  if (NS_FAILED(UnwrapArg<nsIJSID>(cx, obj, &iid, &iidRef.ptr))) {
     return Throw(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
   }
   MOZ_ASSERT(iid);
