@@ -65,13 +65,16 @@ NEW_BINDING(mozilla::dom::MouseEvent, MouseEvent);
 NEW_BINDING(nsGlobalWindow, Window);
 
 #define DEFINE_UNWRAP_CAST(_interface, _base, _bit)                           \
+namespace mozilla {                                                           \
+namespace dom {                                                               \
+                                                                              \
 template <>                                                                   \
 MOZ_ALWAYS_INLINE nsresult                                                    \
-xpc_qsUnwrapArg<_interface>(JSContext *cx,                                    \
-                            JS::HandleValue v,                                \
-                            _interface **ppArg,                               \
-                            nsISupports **ppArgRef,                           \
-                            JS::MutableHandleValue vp)                        \
+UnwrapArg<_interface>(JSContext *cx,                                          \
+                      JS::HandleValue v,                                      \
+                      _interface **ppArg,                                     \
+                      nsISupports **ppArgRef,                                 \
+                      JS::MutableHandleValue vp)                              \
 {                                                                             \
     nsresult rv;                                                              \
     nsISupports *native =                                                     \
@@ -86,41 +89,16 @@ xpc_qsUnwrapArg<_interface>(JSContext *cx,                                    \
                                                                               \
 template <>                                                                   \
 inline nsresult                                                               \
-xpc_qsUnwrapArg<_interface>(JSContext *cx,                                    \
-                            JS::HandleValue v,                                \
-                            _interface **ppArg,                               \
-                            _interface **ppArgRef,                            \
-                            JS::MutableHandleValue vp)                        \
-{                                                                             \
-    nsISupports* argRef = static_cast<_base*>(*ppArgRef);                     \
-    nsresult rv = xpc_qsUnwrapArg<_interface>(cx, v, ppArg, &argRef, vp);     \
-    *ppArgRef = static_cast<_interface*>(static_cast<_base*>(argRef));        \
-    return rv;                                                                \
-}                                                                             \
-                                                                              \
-namespace mozilla {                                                           \
-namespace dom {                                                               \
-                                                                              \
-template <>                                                                   \
-MOZ_ALWAYS_INLINE nsresult                                                    \
-UnwrapArg<_interface>(JSContext *cx,                                          \
-                      JS::HandleValue v,                                      \
-                      _interface **ppArg,                                     \
-                      nsISupports **ppArgRef,                                 \
-                      JS::MutableHandleValue vp)                              \
-{                                                                             \
-  return xpc_qsUnwrapArg<_interface>(cx, v, ppArg, ppArgRef, vp);             \
-}                                                                             \
-                                                                              \
-template <>                                                                   \
-inline nsresult                                                               \
 UnwrapArg<_interface>(JSContext *cx,                                          \
                       JS::HandleValue v,                                      \
                       _interface **ppArg,                                     \
                       _interface **ppArgRef,                                  \
                       JS::MutableHandleValue vp)                              \
 {                                                                             \
-  return xpc_qsUnwrapArg<_interface>(cx, v, ppArg, ppArgRef, vp);             \
+    nsISupports* argRef = static_cast<_base*>(*ppArgRef);                     \
+    nsresult rv = UnwrapArg<_interface>(cx, v, ppArg, &argRef, vp);           \
+    *ppArgRef = static_cast<_interface*>(static_cast<_base*>(argRef));        \
+    return rv;                                                                \
 }                                                                             \
                                                                               \
 } /* namespace dom */                                                         \
@@ -147,7 +125,7 @@ xpc_qsUnwrapArg_HTMLElement(JSContext *cx,
     nsGenericHTMLElement *elem;
     JS::RootedValue val(cx);
     nsresult rv =
-        xpc_qsUnwrapArg<nsGenericHTMLElement>(cx, v, &elem, ppArgRef, &val);
+        UnwrapArg<nsGenericHTMLElement>(cx, v, &elem, ppArgRef, &val);
     if (NS_SUCCEEDED(rv)) {
         if (elem->IsHTML(aTag)) {
             *ppArg = elem;
@@ -160,33 +138,6 @@ xpc_qsUnwrapArg_HTMLElement(JSContext *cx,
 }
 
 #define DEFINE_UNWRAP_CAST_HTML(_tag, _clazz)                                 \
-template <>                                                                   \
-inline nsresult                                                               \
-xpc_qsUnwrapArg<_clazz>(JSContext *cx,                                        \
-                        JS::HandleValue v,                                    \
-                        _clazz **ppArg,                                       \
-                        nsISupports **ppArgRef,                               \
-                        JS::MutableHandleValue vp)                            \
-{                                                                             \
-    nsIContent *elem;                                                         \
-    nsresult rv = xpc_qsUnwrapArg_HTMLElement(cx, v, nsGkAtoms::_tag, &elem,  \
-                                              ppArgRef, vp);                  \
-    if (NS_SUCCEEDED(rv))                                                     \
-        *ppArg = static_cast<_clazz*>(elem);                                  \
-    return rv;                                                                \
-}                                                                             \
-                                                                              \
-template <>                                                                   \
-inline nsresult                                                               \
-xpc_qsUnwrapArg<_clazz>(JSContext *cx, JS::HandleValue v, _clazz **ppArg,     \
-                        _clazz **ppArgRef, JS::MutableHandleValue vp)         \
-{                                                                             \
-    nsISupports* argRef = static_cast<nsIContent*>(*ppArgRef);                \
-    nsresult rv = xpc_qsUnwrapArg<_clazz>(cx, v, ppArg, &argRef, vp);         \
-    *ppArgRef = static_cast<_clazz*>(static_cast<nsIContent*>(argRef));       \
-    return rv;                                                                \
-}                                                                             \
-                                                                              \
 namespace mozilla {                                                           \
 namespace dom {                                                               \
                                                                               \
@@ -198,7 +149,12 @@ UnwrapArg<_clazz>(JSContext *cx,                                              \
                   nsISupports **ppArgRef,                                     \
                   JS::MutableHandleValue vp)                                  \
 {                                                                             \
-    return xpc_qsUnwrapArg<_clazz>(cx, v, ppArg, ppArgRef, vp);               \
+    nsIContent *elem;                                                         \
+    nsresult rv = xpc_qsUnwrapArg_HTMLElement(cx, v, nsGkAtoms::_tag, &elem,  \
+                                              ppArgRef, vp);                  \
+    if (NS_SUCCEEDED(rv))                                                     \
+        *ppArg = static_cast<_clazz*>(elem);                                  \
+    return rv;                                                                \
 }                                                                             \
                                                                               \
 template <>                                                                   \
@@ -206,7 +162,10 @@ inline nsresult                                                               \
 UnwrapArg<_clazz>(JSContext *cx, JS::HandleValue v, _clazz **ppArg,           \
                   _clazz **ppArgRef, JS::MutableHandleValue vp)               \
 {                                                                             \
-    return xpc_qsUnwrapArg<_clazz>(cx, v, ppArg, ppArgRef, vp);               \
+    nsISupports* argRef = static_cast<nsIContent*>(*ppArgRef);                \
+    nsresult rv = UnwrapArg<_clazz>(cx, v, ppArg, &argRef, vp);               \
+    *ppArgRef = static_cast<_clazz*>(static_cast<nsIContent*>(argRef));       \
+    return rv;                                                                \
 }                                                                             \
                                                                               \
 } /* namespace dom */                                                         \
