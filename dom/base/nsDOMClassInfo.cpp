@@ -1183,19 +1183,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 NS_IMETHODIMP
 nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
 {
-  uint32_t flags = (mData->mScriptableFlags & DONT_ENUM_STATIC_PROPS)
-                   ? 0
-                   : JSPROP_ENUMERATE;
-
-  uint32_t count = 0;
-  while (mData->mInterfaces[count]) {
-    count++;
-  }
-
   JS::Rooted<JSObject*> proto(cx, aProto);
-  if (!xpc::DOM_DefineQuickStubs(cx, proto, flags, count, mData->mInterfaces)) {
-    JS_ClearPendingException(cx);
-  }
 
   // This is called before any other location that requires
   // sObjectClass, so compute it here. We assume that nobody has had a
