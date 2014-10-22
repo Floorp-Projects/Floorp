@@ -37,16 +37,13 @@
             overflow: scroll;
         }
 
-        #scroll_1, #scroll_2, #scroll_3, #scroll_7 {
+        #scroll_1, #scroll_2, #scroll_3, #scroll_6 {
             scroll-behavior: smooth;
         }
 
         #scroll_4 {
-            scroll-behavior: instant;
-        }
-
-        #scroll_5 {
             scroll-behavior: auto;
+        }
 	}
 
     </style>
@@ -76,10 +73,6 @@
     <div id="box6a" class="a_box"></div>
     <div id="box6b" class="another_box"></div>
   </div>
-  <div id="scroll_7" class="scroll_box">
-    <div id="box7a" class="a_box"></div>
-    <div id="box7b" class="another_box"></div>
-  </div>
 <script>
   function doTest() {
     if (document.location.search != '?ref') {
@@ -88,11 +81,10 @@
       document.getElementById("box3b").scrollIntoView({block: "end", behavior: "smooth"});
       document.getElementById("box4b").scrollIntoView({block: "end", behavior: "smooth"});
       document.getElementById("box5b").scrollIntoView({block: "end", behavior: "smooth"});
-      document.getElementById("box6b").scrollIntoView({block: "end", behavior: "smooth"});
-      document.getElementById("box7b").scrollIntoView(false);
+      document.getElementById("box6b").scrollIntoView(false);
 
       // Interrupt any smooth scrolling
-      for (var i=1; i <= 7; i++) {
+      for (var i=1; i <= 6; i++) {
         document.getElementById("scroll_" + i).scrollLeft
           = document.getElementById("scroll_" + i).scrollLeft;
         document.getElementById("scroll_" + i).scrollTop
@@ -101,7 +93,7 @@
     }
     document.documentElement.removeAttribute("class");
   }
-  for (var i=1; i <= 7; i++) {
+  for (var i=1; i <= 6; i++) {
     document.getElementById("box" + i + "a")
       .scrollIntoView({block: "start", behavior: "instant"});
   }
