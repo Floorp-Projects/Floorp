@@ -1,14 +1,11 @@
 use std::collections::TreeMap;
 use serialize::json;
-use serialize::{Decodable, Encodable};
+use serialize::{Encodable};
 use serialize::json::{ToJson};
 use regex::Captures;
 
-use hyper::method;
-use hyper::method::Method;
-
-use common::{WebDriverResult, WebDriverError, Status, UnknownError};
-use messagebuilder::{MessageBuilder, MatchType, MatchNewSession, MatchGet,
+use common::{WebDriverResult, WebDriverError, UnknownError};
+use messagebuilder::{MatchType, MatchNewSession, MatchGet,
                      MatchGetCurrentUrl, MatchGoBack, MatchGoForward, MatchRefresh,
                      MatchGetTitle, MatchGetWindowHandle, MatchGetWindowHandles,
                      MatchClose};

@@ -1,6 +1,6 @@
 use std::collections::TreeMap;
 use serialize::json;
-use serialize::json::{decode, ToJson, Builder};
+use serialize::json::{ToJson};
 
 use command::{WebDriverMessage, GetMarionetteId, NewSession, Get, GetCurrentUrl,
               GoBack, GoForward, Refresh, GetTitle, GetWindowHandle, GetWindowHandles,
@@ -29,7 +29,7 @@ impl WebDriverResponse {
                      data: &str) -> Option<WebDriverResponse> {
         let decoded = match json::from_str(data) {
             Ok(data) => data,
-            Err(msg) => {
+            Err(_) => {
                 let error = WebDriverError::new(Some(session.id()),
                                                 UnknownError,
                                                 "Failed to decode marionette data as json");
