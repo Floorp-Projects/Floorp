@@ -79,22 +79,8 @@ let Reader = {
 
   observe: function(aMessage, aTopic, aData) {
     switch(aTopic) {
-      case "Reader:Remove": {
-        let args = JSON.parse(aData);
-
-        if (!("url" in args)) {
-          throw new Error("Reader:Remove requires URL as an argument");
-        }
-
-        this.removeArticleFromCache(args.url, function(success) {
-          this.log("Reader:Remove success=" + success + ", url=" + args.url);
-          if (success && args.notify) {
-            Messaging.sendRequest({
-              type: "Reader:Removed",
-              url: args.url
-            });
-          }
-        }.bind(this));
+      case "Reader:Removed": {
+        this.removeArticleFromCache(aData);
         break;
       }
 
@@ -299,10 +285,9 @@ let Reader = {
     }.bind(this));
   },
 
-  removeArticleFromCache: function Reader_removeArticleFromCache(url, callback) {
+  removeArticleFromCache: function Reader_removeArticleFromCache(url) {
     this._getCacheDB(function(cacheDB) {
       if (!cacheDB) {
-        callback(false);
         return;
       }
 
@@ -313,12 +298,10 @@ let Reader = {
 
       request.onerror = function(event) {
         this.log("Error removing article from the cache DB: " + url);
-        callback(false);
       }.bind(this);
 
       request.onsuccess = function(event) {
         this.log("Removed article from the cache DB: " + url);
-        callback(true);
       }.bind(this);
     }.bind(this));
   },
@@ -326,7 +309,7 @@ let Reader = {
   uninit: function Reader_uninit() {
     Services.prefs.removeObserver("reader.parse-on-load.", this);
 
-    Services.obs.removeObserver(this, "Reader:Remove");
+    Services.obs.removeObserver(this, "Reader:Removed");
 
     let requests = this._requests;
     for (let url in requests) {
