@@ -7,7 +7,6 @@
 #define mozilla_a11y_ImageAccessible_h__
 
 #include "BaseAccessibles.h"
-#include "xpcAccessibleImage.h"
 
 class nsGenericHTMLElement;
 
@@ -19,14 +18,10 @@ namespace a11y {
  * - gets name, role
  * - support basic state
  */
-class ImageAccessible : public LinkableAccessible,
-                        public xpcAccessibleImage
+class ImageAccessible : public LinkableAccessible
 {
 public:
   ImageAccessible(nsIContent* aContent, DocAccessible* aDoc);
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
   virtual a11y::role NativeRole() MOZ_OVERRIDE;

@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "xpcAccessible.h"
-
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
 #include "nsIAccessibleRelation.h"
@@ -14,6 +12,7 @@
 #include "Relation.h"
 #include "Role.h"
 #include "RootAccessible.h"
+#include "xpcAccessibleDocument.h"
 
 #include "nsIMutableArray.h"
 #include "nsIPersistentProperties2.h"
@@ -24,10 +23,10 @@ NS_IMETHODIMP
 xpcAccessible::GetParent(nsIAccessible** aParent)
 {
   NS_ENSURE_ARG_POINTER(aParent);
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aParent = static_cast<Accessible*>(this)->Parent());
+  NS_IF_ADDREF(*aParent = ToXPC(Intl()->Parent()));
   return NS_OK;
 }
 
@@ -37,11 +36,11 @@ xpcAccessible::GetNextSibling(nsIAccessible** aNextSibling)
   NS_ENSURE_ARG_POINTER(aNextSibling);
   *aNextSibling = nullptr;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
-  NS_IF_ADDREF(*aNextSibling = static_cast<Accessible*>(this)->GetSiblingAtOffset(1, &rv));
+  NS_IF_ADDREF(*aNextSibling = ToXPC(Intl()->GetSiblingAtOffset(1, &rv)));
   return rv;
 }
 
@@ -51,11 +50,11 @@ xpcAccessible::GetPreviousSibling(nsIAccessible** aPreviousSibling)
   NS_ENSURE_ARG_POINTER(aPreviousSibling);
   *aPreviousSibling = nullptr;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
-  NS_IF_ADDREF(*aPreviousSibling = static_cast<Accessible*>(this)->GetSiblingAtOffset(-1, &rv));
+  NS_IF_ADDREF(*aPreviousSibling = ToXPC(Intl()->GetSiblingAtOffset(-1, &rv)));
   return rv;
 }
 
@@ -65,10 +64,10 @@ xpcAccessible::GetFirstChild(nsIAccessible** aFirstChild)
   NS_ENSURE_ARG_POINTER(aFirstChild);
   *aFirstChild = nullptr;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aFirstChild = static_cast<Accessible*>(this)->FirstChild());
+  NS_IF_ADDREF(*aFirstChild = ToXPC(Intl()->FirstChild()));
   return NS_OK;
 }
 
@@ -78,10 +77,10 @@ xpcAccessible::GetLastChild(nsIAccessible** aLastChild)
   NS_ENSURE_ARG_POINTER(aLastChild);
   *aLastChild = nullptr;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aLastChild = static_cast<Accessible*>(this)->LastChild());
+  NS_IF_ADDREF(*aLastChild = ToXPC(Intl()->LastChild()));
   return NS_OK;
 }
 
@@ -90,32 +89,32 @@ xpcAccessible::GetChildCount(int32_t* aChildCount)
 {
   NS_ENSURE_ARG_POINTER(aChildCount);
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aChildCount = static_cast<Accessible*>(this)->ChildCount();
+  *aChildCount = Intl()->ChildCount();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessible::ScriptableGetChildAt(int32_t aChildIndex, nsIAccessible** aChild)
+xpcAccessible::GetChildAt(int32_t aChildIndex, nsIAccessible** aChild)
 {
   NS_ENSURE_ARG_POINTER(aChild);
   *aChild = nullptr;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   // If child index is negative, then return last child.
   // XXX: do we really need this?
   if (aChildIndex < 0)
-    aChildIndex = static_cast<Accessible*>(this)->ChildCount() - 1;
+    aChildIndex = Intl()->ChildCount() - 1;
 
-  Accessible* child = static_cast<Accessible*>(this)->GetChildAt(aChildIndex);
+  Accessible* child = Intl()->GetChildAt(aChildIndex);
   if (!child)
     return NS_ERROR_INVALID_ARG;
 
-  NS_ADDREF(*aChild = child);
+  NS_ADDREF(*aChild = ToXPC(child));
   return NS_OK;
 }
 
@@ -125,7 +124,7 @@ xpcAccessible::GetChildren(nsIArray** aChildren)
   NS_ENSURE_ARG_POINTER(aChildren);
   *aChildren = nullptr;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
@@ -133,10 +132,10 @@ xpcAccessible::GetChildren(nsIArray** aChildren)
     do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  uint32_t childCount = static_cast<Accessible*>(this)->ChildCount();
+  uint32_t childCount = Intl()->ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
-    nsIAccessible* child = static_cast<Accessible*>(this)->GetChildAt(childIdx);
-    children->AppendElement(child, false);
+    Accessible* child = Intl()->GetChildAt(childIdx);
+    children->AppendElement(static_cast<nsIAccessible*>(ToXPC(child)), false);
   }
 
   NS_ADDREF(*aChildren = children);
@@ -148,7 +147,7 @@ xpcAccessible::GetIndexInParent(int32_t* aIndexInParent)
 {
   NS_ENSURE_ARG_POINTER(aIndexInParent);
 
-  *aIndexInParent = static_cast<Accessible*>(this)->IndexInParent();
+  *aIndexInParent = Intl()->IndexInParent();
   return *aIndexInParent != -1 ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -158,7 +157,7 @@ xpcAccessible::GetDOMNode(nsIDOMNode** aDOMNode)
   NS_ENSURE_ARG_POINTER(aDOMNode);
   *aDOMNode = nullptr;
 
-  nsINode *node = static_cast<Accessible*>(this)->GetNode();
+  nsINode* node = Intl()->GetNode();
   if (node)
     CallQueryInterface(node, aDOMNode);
 
@@ -170,7 +169,7 @@ xpcAccessible::GetDocument(nsIAccessibleDocument** aDocument)
 {
   NS_ENSURE_ARG_POINTER(aDocument);
 
-  NS_IF_ADDREF(*aDocument = static_cast<Accessible*>(this)->Document());
+  NS_IF_ADDREF(*aDocument = ToXPCDocument(Intl()->Document()));
   return NS_OK;
 }
 
@@ -179,7 +178,7 @@ xpcAccessible::GetRootDocument(nsIAccessibleDocument** aRootDocument)
 {
   NS_ENSURE_ARG_POINTER(aRootDocument);
 
-  NS_IF_ADDREF(*aRootDocument = static_cast<Accessible*>(this)->RootAccessible());
+  NS_IF_ADDREF(*aRootDocument = ToXPCDocument(Intl()->RootAccessible()));
   return NS_OK;
 }
 
@@ -189,10 +188,10 @@ xpcAccessible::GetRole(uint32_t* aRole)
   NS_ENSURE_ARG_POINTER(aRole);
   *aRole = nsIAccessibleRole::ROLE_NOTHING;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aRole = static_cast<Accessible*>(this)->Role();
+  *aRole = Intl()->Role();
   return NS_OK;
 }
 
@@ -201,8 +200,7 @@ xpcAccessible::GetState(uint32_t* aState, uint32_t* aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
-  nsAccUtils::To32States(static_cast<Accessible*>(this)->State(),
-                         aState, aExtraState);
+  nsAccUtils::To32States(Intl()->State(), aState, aExtraState);
   return NS_OK;
 }
 
@@ -211,11 +209,11 @@ xpcAccessible::GetName(nsAString& aName)
 {
   aName.Truncate();
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   nsAutoString name;
-  static_cast<Accessible*>(this)->Name(name);
+  Intl()->Name(name);
   aName.Assign(name);
 
   return NS_OK;
@@ -224,11 +222,11 @@ xpcAccessible::GetName(nsAString& aName)
 NS_IMETHODIMP
 xpcAccessible::GetDescription(nsAString& aDescription)
 {
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   nsAutoString desc;
-  static_cast<Accessible*>(this)->Description(desc);
+  Intl()->Description(desc);
   aDescription.Assign(desc);
 
   return NS_OK;
@@ -237,21 +235,21 @@ xpcAccessible::GetDescription(nsAString& aDescription)
 NS_IMETHODIMP
 xpcAccessible::GetLanguage(nsAString& aLanguage)
 {
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  static_cast<Accessible*>(this)->Language(aLanguage);
+  Intl()->Language(aLanguage);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessible::GetValue(nsAString& aValue)
 {
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   nsAutoString value;
-  static_cast<Accessible*>(this)->Value(value);
+  Intl()->Value(value);
   aValue.Assign(value);
 
   return NS_OK;
@@ -260,7 +258,14 @@ xpcAccessible::GetValue(nsAString& aValue)
 NS_IMETHODIMP
 xpcAccessible::GetHelp(nsAString& aHelp)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!Intl())
+    return NS_ERROR_FAILURE;
+
+  nsAutoString help;
+  Intl()->Help(help);
+  aHelp.Assign(help);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -268,10 +273,10 @@ xpcAccessible::GetAccessKey(nsAString& aAccessKey)
 {
   aAccessKey.Truncate();
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  static_cast<Accessible*>(this)->AccessKey().ToString(aAccessKey);
+  Intl()->AccessKey().ToString(aAccessKey);
   return NS_OK;
 }
 
@@ -279,10 +284,10 @@ NS_IMETHODIMP
 xpcAccessible::GetKeyboardShortcut(nsAString& aKeyBinding)
 {
   aKeyBinding.Truncate();
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  static_cast<Accessible*>(this)->KeyboardShortcut().ToString(aKeyBinding);
+  Intl()->KeyboardShortcut().ToString(aKeyBinding);
   return NS_OK;
 }
 
@@ -292,11 +297,10 @@ xpcAccessible::GetAttributes(nsIPersistentProperties** aAttributes)
   NS_ENSURE_ARG_POINTER(aAttributes);
   *aAttributes = nullptr;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPersistentProperties> attributes =
-    static_cast<Accessible*>(this)->Attributes();
+  nsCOMPtr<nsIPersistentProperties> attributes = Intl()->Attributes();
   attributes.swap(*aAttributes);
 
   return NS_OK;
@@ -315,10 +319,10 @@ xpcAccessible::GetBounds(int32_t* aX, int32_t* aY,
   NS_ENSURE_ARG_POINTER(aHeight);
   *aHeight = 0;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  nsIntRect rect = static_cast<Accessible*>(this)->Bounds();
+  nsIntRect rect = Intl()->Bounds();
   *aX = rect.x;
   *aY = rect.y;
   *aWidth = rect.width;
@@ -328,9 +332,9 @@ xpcAccessible::GetBounds(int32_t* aX, int32_t* aY,
 }
 
 NS_IMETHODIMP
-xpcAccessible::ScriptableGroupPosition(int32_t* aGroupLevel,
-                                       int32_t* aSimilarItemsInGroup,
-                                       int32_t* aPositionInGroup)
+xpcAccessible::GroupPosition(int32_t* aGroupLevel,
+                             int32_t* aSimilarItemsInGroup,
+                             int32_t* aPositionInGroup)
 {
   NS_ENSURE_ARG_POINTER(aGroupLevel);
   *aGroupLevel = 0;
@@ -341,10 +345,10 @@ xpcAccessible::ScriptableGroupPosition(int32_t* aGroupLevel,
   NS_ENSURE_ARG_POINTER(aPositionInGroup);
   *aPositionInGroup = 0;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  GroupPos groupPos = static_cast<Accessible*>(this)->GroupPosition();
+  GroupPos groupPos = Intl()->GroupPosition();
 
   *aGroupLevel = groupPos.level;
   *aSimilarItemsInGroup = groupPos.setSize;
@@ -362,10 +366,10 @@ xpcAccessible::GetRelationByType(uint32_t aType,
 
   NS_ENSURE_ARG(aType <= static_cast<uint32_t>(RelationType::LAST));
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  Relation rel = static_cast<Accessible*>(this)->RelationByType(static_cast<RelationType>(aType));
+  Relation rel = Intl()->RelationByType(static_cast<RelationType>(aType));
   NS_ADDREF(*aRelation = new nsAccessibleRelation(aType, &rel));
   return *aRelation ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -376,7 +380,7 @@ xpcAccessible::GetRelations(nsIArray** aRelations)
   NS_ENSURE_ARG_POINTER(aRelations);
   *aRelations = nullptr;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIMutableArray> relations = do_CreateInstance(NS_ARRAY_CONTRACTID);
@@ -427,10 +431,10 @@ xpcAccessible::GetFocusedChild(nsIAccessible** aChild)
   NS_ENSURE_ARG_POINTER(aChild);
   *aChild = nullptr;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aChild = static_cast<Accessible*>(this)->FocusedChild());
+  NS_IF_ADDREF(*aChild = ToXPC(Intl()->FocusedChild()));
   return NS_OK;
 }
 
@@ -441,12 +445,11 @@ xpcAccessible::GetChildAtPoint(int32_t aX, int32_t aY,
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nullptr;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   NS_IF_ADDREF(*aAccessible =
-               static_cast<Accessible*>(this)->ChildAtPoint(aX, aY,
-                                                            Accessible::eDirectChild));
+               ToXPC(Intl()->ChildAtPoint(aX, aY, Accessible::eDirectChild)));
   return NS_OK;
 }
 
@@ -457,48 +460,51 @@ xpcAccessible::GetDeepestChildAtPoint(int32_t aX, int32_t aY,
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nullptr;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   NS_IF_ADDREF(*aAccessible =
-               static_cast<Accessible*>(this)->ChildAtPoint(aX, aY,
-                                                            Accessible::eDeepestChild));
+               ToXPC(Intl()->ChildAtPoint(aX, aY, Accessible::eDeepestChild)));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessible::ScriptableSetSelected(bool aSelect)
+xpcAccessible::SetSelected(bool aSelect)
 {
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  static_cast<Accessible*>(this)->SetSelected(aSelect);
+  Intl()->SetSelected(aSelect);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessible::ExtendSelection()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-xpcAccessible::ScriptableTakeSelection()
-{
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  static_cast<Accessible*>(this)->TakeSelection();
+  Intl()->ExtendSelection();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessible::ScriptableTakeFocus()
+xpcAccessible::TakeSelection()
 {
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  static_cast<Accessible*>(this)->TakeFocus();
+  Intl()->TakeSelection();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessible::TakeFocus()
+{
+  if (!Intl())
+    return NS_ERROR_FAILURE;
+
+  Intl()->TakeFocus();
   return NS_OK;
 }
 
@@ -507,66 +513,65 @@ xpcAccessible::GetActionCount(uint8_t* aActionCount)
 {
   NS_ENSURE_ARG_POINTER(aActionCount);
   *aActionCount = 0;
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aActionCount = static_cast<Accessible*>(this)->ActionCount();
+  *aActionCount = Intl()->ActionCount();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
 {
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  if (aIndex >= static_cast<Accessible*>(this)->ActionCount())
+  if (aIndex >= Intl()->ActionCount())
     return NS_ERROR_INVALID_ARG;
 
-  static_cast<Accessible*>(this)->ActionNameAt(aIndex, aName);
+  Intl()->ActionNameAt(aIndex, aName);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessible::GetActionDescription(uint8_t aIndex, nsAString& aDescription)
 {
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  if (aIndex >= static_cast<Accessible*>(this)->ActionCount())
+  if (aIndex >= Intl()->ActionCount())
     return NS_ERROR_INVALID_ARG;
 
-  static_cast<Accessible*>(this)->ActionDescriptionAt(aIndex, aDescription);
+  Intl()->ActionDescriptionAt(aIndex, aDescription);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessible::ScriptableDoAction(uint8_t aIndex)
+xpcAccessible::DoAction(uint8_t aIndex)
 {
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  return static_cast<Accessible*>(this)->DoAction(aIndex) ?
+  return Intl()->DoAction(aIndex) ?
     NS_OK : NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP
-xpcAccessible::ScriptableScrollTo(uint32_t aHow)
+xpcAccessible::ScrollTo(uint32_t aHow)
 {
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  static_cast<Accessible*>(this)->ScrollTo(aHow);
+  Intl()->ScrollTo(aHow);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessible::ScriptableScrollToPoint(uint32_t aCoordinateType,
-                                       int32_t aX, int32_t aY)
+xpcAccessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX, int32_t aY)
 {
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  static_cast<Accessible*>(this)->ScrollToPoint(aCoordinateType, aX, aY);
+  Intl()->ScrollToPoint(aCoordinateType, aX, aY);
   return NS_OK;
 }

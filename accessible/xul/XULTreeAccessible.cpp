@@ -248,21 +248,16 @@ XULTreeAccessible::SetCurrentItem(Accessible* aItem)
   NS_ERROR("XULTreeAccessible::SetCurrentItem not implemented");
 }
 
-already_AddRefed<nsIArray>
-XULTreeAccessible::SelectedItems()
+void
+XULTreeAccessible::SelectedItems(nsTArray<Accessible*>* aItems)
 {
   if (!mTreeView)
-    return nullptr;
+    return;
 
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (!selection)
-    return nullptr;
-
-  nsCOMPtr<nsIMutableArray> selectedItems =
-    do_CreateInstance(NS_ARRAY_CONTRACTID);
-  if (!selectedItems)
-    return nullptr;
+    return;
 
   int32_t rangeCount = 0;
   selection->GetRangeCount(&rangeCount);
@@ -270,13 +265,11 @@ XULTreeAccessible::SelectedItems()
     int32_t firstIdx = 0, lastIdx = -1;
     selection->GetRangeAt(rangeIdx, &firstIdx, &lastIdx);
     for (int32_t rowIdx = firstIdx; rowIdx <= lastIdx; rowIdx++) {
-      nsIAccessible* item = GetTreeItemAccessible(rowIdx);
+      Accessible* item = GetTreeItemAccessible(rowIdx);
       if (item)
-        selectedItems->AppendElement(item, false);
+        aItems->AppendElement(item);
     }
   }
-
-  return selectedItems.forget();
 }
 
 uint32_t
@@ -725,7 +718,7 @@ NS_IMPL_ADDREF_INHERITED(XULTreeItemAccessibleBase, Accessible)
 NS_IMPL_RELEASE_INHERITED(XULTreeItemAccessibleBase, Accessible)
 
 ////////////////////////////////////////////////////////////////////////////////
-// XULTreeItemAccessibleBase: nsIAccessible implementation
+// XULTreeItemAccessibleBase: Accessible
 
 Accessible*
 XULTreeItemAccessibleBase::FocusedChild()

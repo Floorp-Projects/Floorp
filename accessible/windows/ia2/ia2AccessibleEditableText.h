@@ -9,7 +9,6 @@
 #define _ACCESSIBLE_EDITABLETEXT_H
 
 #include "nsISupports.h"
-#include "nsIAccessibleEditableText.h"
 
 #include "AccessibleEditableText.h"
 

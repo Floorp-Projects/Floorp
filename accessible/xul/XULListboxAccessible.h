@@ -7,7 +7,6 @@
 #define mozilla_a11y_XULListboxAccessible_h__
 
 #include "BaseAccessibles.h"
-#include "nsIAccessibleTable.h"
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
 #include "xpcAccessibleTable.h"
@@ -59,17 +58,10 @@ public:
  * A class the represents the XUL Listbox widget.
  */
 class XULListboxAccessible : public XULSelectControlAccessible,
-                             public xpcAccessibleTable,
-                             public nsIAccessibleTable,
                              public TableAccessible
 {
 public:
   XULListboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIAccessibleTable
-  NS_FORWARD_NSIACCESSIBLETABLE(xpcAccessibleTable::)
 
   // TableAccessible
   virtual uint32_t ColCount();
@@ -90,7 +82,6 @@ public:
   virtual Accessible* AsAccessible() { return this; }
 
   // Accessible
-  virtual void Shutdown();
   virtual void Value(nsString& aValue);
   virtual TableAccessible* AsTable() { return this; }
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
@@ -106,7 +97,7 @@ public:
 protected:
   virtual ~XULListboxAccessible() {}
 
-  bool IsMulticolumn();
+  bool IsMulticolumn() { return ColCount() > 1; }
 };
 
 /**
@@ -155,9 +146,7 @@ private:
  * Class represents xul:listcell.
  */
 class XULListCellAccessible : public HyperTextAccessibleWrap,
-                              public nsIAccessibleTableCell,
-                              public TableCellAccessible,
-                              public xpcAccessibleTableCell
+                              public TableCellAccessible
 {
 public:
   XULListCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -165,12 +154,8 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIAccessibleTableCell
-  NS_FORWARD_NSIACCESSIBLETABLECELL(xpcAccessibleTableCell::)
-
   // Accessible
   virtual TableCellAccessible* AsTableCell() { return this; }
-  virtual void Shutdown();
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
 
