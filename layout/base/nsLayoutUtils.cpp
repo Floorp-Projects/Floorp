@@ -1716,7 +1716,8 @@ IsScrollbarThumbLayerized(nsIFrame* aThumbFrame)
 }
 
 nsIFrame*
-nsLayoutUtils::GetAnimatedGeometryRootForFrame(nsIFrame* aFrame,
+nsLayoutUtils::GetAnimatedGeometryRootForFrame(nsDisplayListBuilder* aBuilder,
+                                               nsIFrame* aFrame,
                                                const nsIFrame* aStopAtAncestor)
 {
   nsIFrame* f = aFrame;
@@ -1750,7 +1751,7 @@ nsLayoutUtils::GetAnimatedGeometryRootForFrame(nsIFrame* aFrame,
     }
     if (parentType == nsGkAtoms::scrollFrame) {
       nsIScrollableFrame* sf = do_QueryFrame(parent);
-      if (sf->IsScrollingActive() && sf->GetScrolledFrame() == f) {
+      if (sf->IsScrollingActive(aBuilder) && sf->GetScrolledFrame() == f) {
         // If we found a sticky frame inside this active scroll frame,
         // then use that. Otherwise use the scroll frame.
         if (stickyFrame) {
@@ -1780,7 +1781,7 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
     nsDisplayScrollLayer* scrollLayerItem =
       static_cast<nsDisplayScrollLayer*>(aItem);
     nsIFrame* scrolledFrame = scrollLayerItem->GetScrolledFrame();
-    return GetAnimatedGeometryRootForFrame(scrolledFrame,
+    return GetAnimatedGeometryRootForFrame(aBuilder, scrolledFrame,
         aBuilder->FindReferenceFrameFor(scrolledFrame));
   }
   if (aItem->ShouldFixToViewport(aManager)) {
@@ -1791,10 +1792,10 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
     nsIFrame* viewportFrame =
       nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame);
     NS_ASSERTION(viewportFrame, "no viewport???");
-    return GetAnimatedGeometryRootForFrame(viewportFrame,
+    return GetAnimatedGeometryRootForFrame(aBuilder, viewportFrame,
         aBuilder->FindReferenceFrameFor(viewportFrame));
   }
-  return GetAnimatedGeometryRootForFrame(f, aItem->ReferenceFrame());
+  return GetAnimatedGeometryRootForFrame(aBuilder, f, aItem->ReferenceFrame());
 }
 
 // static

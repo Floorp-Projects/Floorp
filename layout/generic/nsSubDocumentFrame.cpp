@@ -445,7 +445,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   bool constructZoomItem = subdocRootFrame && parentAPD != subdocAPD;
   bool needsOwnLayer = constructResolutionItem || constructZoomItem ||
     haveDisplayPort ||
-    presContext->IsRootContentDocument() || (sf && sf->IsScrollingActive());
+    presContext->IsRootContentDocument() || (sf && sf->IsScrollingActive(aBuilder));
 
   nsDisplayList childItems;
 

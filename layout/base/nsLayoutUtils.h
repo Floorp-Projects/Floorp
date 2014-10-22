@@ -511,7 +511,8 @@ public:
    * will have) "animated geometry". This could be aFrame. Returns
    * aStopAtAncestor if no closer ancestor is found.
    */
-  static nsIFrame* GetAnimatedGeometryRootForFrame(nsIFrame* aFrame,
+  static nsIFrame* GetAnimatedGeometryRootForFrame(nsDisplayListBuilder* aBuilder,
+                                                   nsIFrame* aFrame,
                                                    const nsIFrame* aStopAtAncestor);
 
   /**
