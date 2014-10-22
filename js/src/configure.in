@@ -1073,12 +1073,6 @@ MOZ_ARG_ENABLE_BOOL(address-sanitizer,
     MOZ_ASAN= )
 if test -n "$MOZ_ASAN"; then
     MOZ_LLVM_HACKS=1
-    if test -z "$CLANG_CL"; then
-        # We link through the compiler only on non-Windows.
-        LDFLAGS="$LDFLAGS -fsanitize=address"
-    fi
-    CFLAGS="$CFLAGS -fsanitize=address"
-    CXXFLAGS="$CXXFLAGS -fsanitize=address"
     AC_DEFINE(MOZ_ASAN)
     MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
 fi
