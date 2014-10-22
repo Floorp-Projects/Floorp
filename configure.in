@@ -4005,7 +4005,7 @@ else
   # Support comm-central.
   if test -n "$EXTERNAL_SOURCE_DIR" ; then
     MOZ_BUILD_APP="$EXTERNAL_SOURCE_DIR/$MOZ_BUILD_APP"
-    MOZ_BUILD_APP=`${PYTHON} -c "import os.path; print(os.path.relpath(\"${MOZ_BUILD_APP}\", \"${srcdir}\"))"`
+    MOZ_BUILD_APP=`${PYTHON} -c "import mozpack.path as mozpath; print(mozpath.relpath(\"${MOZ_BUILD_APP}\", \"${srcdir}\"))"`
   fi
   # We have a valid application only if it has a build.mk file in its top
   # directory.
