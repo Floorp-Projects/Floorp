@@ -11,6 +11,8 @@ sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])
 import traceback
 from remotexpcshelltests import RemoteXPCShellTestThread, XPCShellRemote, RemoteXPCShellOptions
 from mozdevice import devicemanagerADB, DMError
+from mozlog import structured
+from mozlog.structured import commandline
 
 DEVICE_TEST_ROOT = '/data/local/tests'
 
@@ -153,7 +155,7 @@ class B2GOptions(RemoteXPCShellOptions):
             self.error("You must specify --emulator if you specify --logdir")
         return RemoteXPCShellOptions.verifyRemoteOptions(self, options)
 
-def run_remote_xpcshell(parser, options, args):
+def run_remote_xpcshell(parser, options, args, log):
     options = parser.verifyRemoteOptions(options)
 
     # Create the Marionette instance
@@ -194,7 +196,7 @@ def run_remote_xpcshell(parser, options, args):
 
     if not options.remoteTestRoot:
         options.remoteTestRoot = dm.deviceRoot
-    xpcsh = B2GXPCShellRemote(dm, options, args)
+    xpcsh = B2GXPCShellRemote(dm, options, args, log)
 
     # we don't run concurrent tests on mobile
     options.sequential = True
@@ -212,17 +214,16 @@ def run_remote_xpcshell(parser, options, args):
 
 def main():
     parser = B2GOptions()
+    structured.commandline.add_logging_group(parser)
     options, args = parser.parse_args()
-
-    run_remote_xpcshell(parser, options, args)
+    log = commandline.setup_logging("Remote XPCShell",
+                                    options,
+                                    {"tbpl": sys.stdout})
+    run_remote_xpcshell(parser, options, args, log)
 
 # You usually run this like :
 # python runtestsb2g.py --emulator arm --b2gpath $B2GPATH --manifest $MANIFEST [--xre-path $MOZ_HOST_BIN
 #                                                                               --adbpath $ADB_PATH
 #                                                                               ...]
-#
-# For xUnit output you should also pass in --tests-root-dir ..objdir-gecko/_tests
-#                                          --xunit-file ..objdir_gecko/_tests/results.xml
-#                                          --xunit-suite-name xpcshell-tests
 if __name__ == '__main__':
     main()

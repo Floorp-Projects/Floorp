@@ -9,8 +9,8 @@ import sys, os, unittest, tempfile, shutil
 import mozinfo
 
 from StringIO import StringIO
-from xml.etree.ElementTree import ElementTree
 
+from mozlog import structured
 from mozbuild.base import MozbuildObject
 os.environ.pop('MOZ_OBJDIR', None)
 build_obj = MozbuildObject.from_environment()
@@ -28,6 +28,9 @@ else:
   xpcshellBin = os.path.join(objdir, "dist", "bin", "xpcshell")
   if sys.platform == "win32":
     xpcshellBin += ".exe"
+
+TEST_PASS_STRING = "TEST-PASS"
+TEST_FAIL_STRING = "TEST-UNEXPECTED-FAIL"
 
 SIMPLE_PASSING_TEST = "function run_test() { do_check_true(true); }"
 SIMPLE_FAILING_TEST = "function run_test() { do_check_true(false); }"
@@ -74,9 +77,26 @@ function run_test () { run_next_test(); }
 add_test(function test_child_simple () {
   do_test_pending("hang test");
   do_load_child_test_harness();
-  sendCommand("_log('child_test_start', {_message: 'CHILD-TEST-STARTED'}); " +
+  sendCommand("_testLogger.info('CHILD-TEST-STARTED'); " +
               + "const _TEST_FILE=['test_pass.js']; _execute_test(); ",
               do_test_finished);
+  run_next_test();
+});
+'''
+
+SIMPLE_LOOPING_TEST = '''
+function run_test () { run_next_test(); }
+
+add_test(function test_loop () {
+  do_test_pending()
+});
+'''
+
+PASSING_TEST_UNICODE = '''
+function run_test () { run_next_test(); }
+
+add_test(function test_unicode_print () {
+  do_check_eq("\u201c\u201d", "\u201c\u201d");
   run_next_test();
 });
 '''
@@ -264,7 +284,11 @@ class XPCShellTestsTests(unittest.TestCase):
     def setUp(self):
         self.log = StringIO()
         self.tempdir = tempfile.mkdtemp()
-        self.x = XPCShellTests(log=self.log)
+        logger = structured.commandline.setup_logging("selftest%s" % id(self),
+                                                      {},
+                                                      {"tbpl": self.log})
+        self.x = XPCShellTests(logger)
+        self.x.harness_timeout = 15
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -300,7 +324,7 @@ tail =
 
 """ + "\n".join(testlines))
 
-    def assertTestResult(self, expected, shuffle=False, xunitFilename=None, verbose=False):
+    def assertTestResult(self, expected, shuffle=False, verbose=False):
         """
         Assert that self.x.runTests with manifest=self.manifest
         returns |expected|.
@@ -312,7 +336,6 @@ tail =
                                           shuffle=shuffle,
                                           testsRootDir=self.tempdir,
                                           verbose=verbose,
-                                          xunitFilename=xunitFilename,
                                           sequential=True),
                           msg="""Tests should have %s, log:
 ========
@@ -352,8 +375,8 @@ tail =
         self.assertEquals(1, self.x.passCount)
         self.assertEquals(0, self.x.failCount)
         self.assertEquals(0, self.x.todoCount)
-        self.assertInLog("TEST-PASS")
-        self.assertNotInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog(TEST_PASS_STRING)
+        self.assertNotInLog(TEST_FAIL_STRING)
 
     def testFail(self):
         """
@@ -367,8 +390,8 @@ tail =
         self.assertEquals(0, self.x.passCount)
         self.assertEquals(1, self.x.failCount)
         self.assertEquals(0, self.x.todoCount)
-        self.assertInLog("TEST-UNEXPECTED-FAIL")
-        self.assertNotInLog("TEST-PASS")
+        self.assertInLog(TEST_FAIL_STRING)
+        self.assertNotInLog(TEST_PASS_STRING)
 
     @unittest.skipIf(build_obj.defines.get('MOZ_B2G'),
                      'selftests with child processes fail on b2g desktop builds')
@@ -385,10 +408,10 @@ tail =
         self.assertEquals(1, self.x.passCount)
         self.assertEquals(0, self.x.failCount)
         self.assertEquals(0, self.x.todoCount)
-        self.assertInLog("TEST-PASS")
+        self.assertInLog(TEST_PASS_STRING)
         self.assertInLog("CHILD-TEST-STARTED")
         self.assertInLog("CHILD-TEST-COMPLETED")
-        self.assertNotInLog("TEST-UNEXPECTED-FAIL")
+        self.assertNotInLog(TEST_FAIL_STRING)
 
 
     @unittest.skipIf(build_obj.defines.get('MOZ_B2G'),
@@ -406,10 +429,10 @@ tail =
         self.assertEquals(0, self.x.passCount)
         self.assertEquals(1, self.x.failCount)
         self.assertEquals(0, self.x.todoCount)
-        self.assertInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog(TEST_FAIL_STRING)
         self.assertInLog("CHILD-TEST-STARTED")
         self.assertInLog("CHILD-TEST-COMPLETED")
-        self.assertNotInLog("TEST-PASS")
+        self.assertNotInLog(TEST_PASS_STRING)
 
     @unittest.skipIf(build_obj.defines.get('MOZ_B2G'),
                      'selftests with child processes fail on b2g desktop builds')
@@ -427,10 +450,10 @@ tail =
         self.assertEquals(0, self.x.passCount)
         self.assertEquals(1, self.x.failCount)
         self.assertEquals(0, self.x.todoCount)
-        self.assertInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog(TEST_FAIL_STRING)
         self.assertInLog("CHILD-TEST-STARTED")
         self.assertNotInLog("CHILD-TEST-COMPLETED")
-        self.assertNotInLog("TEST-PASS")
+        self.assertNotInLog(TEST_PASS_STRING)
 
     def testSyntaxError(self):
         """
@@ -445,8 +468,36 @@ tail =
         self.assertEquals(0, self.x.passCount)
         self.assertEquals(1, self.x.failCount)
         self.assertEquals(0, self.x.todoCount)
-        self.assertInLog("TEST-UNEXPECTED-FAIL")
-        self.assertNotInLog("TEST-PASS")
+        self.assertInLog(TEST_FAIL_STRING)
+        self.assertNotInLog(TEST_PASS_STRING)
+
+    def testUnicodeInAssertMethods(self):
+        """
+        Check that passing unicode characters through an assertion method works.
+        """
+        self.writeFile("test_unicode_assert.js", PASSING_TEST_UNICODE)
+        self.writeManifest(["test_unicode_assert.js"])
+
+        self.assertTestResult(True, verbose=True)
+
+    def testHangingTimeout(self):
+        """
+        Check that a test that never finishes results in the correct error log.
+        """
+        self.writeFile("test_loop.js", SIMPLE_LOOPING_TEST)
+        self.writeManifest(["test_loop.js"])
+
+        old_timeout = self.x.harness_timeout
+        self.x.harness_timeout = 1
+
+        self.assertTestResult(False)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.failCount)
+        self.assertEquals(0, self.x.passCount)
+        self.assertEquals(0, self.x.todoCount)
+        self.assertInLog("TEST-UNEXPECTED-TIMEOUT")
+
+        self.x.harness_timeout = old_timeout
 
     def testPassFail(self):
         """
@@ -461,8 +512,8 @@ tail =
         self.assertEquals(1, self.x.passCount)
         self.assertEquals(1, self.x.failCount)
         self.assertEquals(0, self.x.todoCount)
-        self.assertInLog("TEST-PASS")
-        self.assertInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog(TEST_PASS_STRING)
+        self.assertInLog(TEST_FAIL_STRING)
 
     def testSkip(self):
         """
@@ -476,8 +527,8 @@ tail =
         self.assertEquals(0, self.x.passCount)
         self.assertEquals(0, self.x.failCount)
         self.assertEquals(0, self.x.todoCount)
-        self.assertNotInLog("TEST-UNEXPECTED-FAIL")
-        self.assertNotInLog("TEST-PASS")
+        self.assertNotInLog(TEST_FAIL_STRING)
+        self.assertNotInLog(TEST_PASS_STRING)
 
     def testKnownFail(self):
         """
@@ -491,11 +542,11 @@ tail =
         self.assertEquals(0, self.x.passCount)
         self.assertEquals(0, self.x.failCount)
         self.assertEquals(1, self.x.todoCount)
-        self.assertInLog("TEST-KNOWN-FAIL")
+        self.assertInLog("TEST-FAIL")
         # This should be suppressed because the harness doesn't include
         # the full log from the xpcshell run when things pass.
-        self.assertNotInLog("TEST-UNEXPECTED-FAIL")
-        self.assertNotInLog("TEST-PASS")
+        self.assertNotInLog(TEST_FAIL_STRING)
+        self.assertNotInLog(TEST_PASS_STRING)
 
     def testUnexpectedPass(self):
         """
@@ -512,8 +563,6 @@ tail =
         # From the outer (Python) harness
         self.assertInLog("TEST-UNEXPECTED-PASS")
         self.assertNotInLog("TEST-KNOWN-FAIL")
-        # From the inner (JS) harness
-        self.assertInLog("TEST-PASS")
 
     def testReturnNonzero(self):
         """
@@ -527,8 +576,8 @@ tail =
         self.assertEquals(0, self.x.passCount)
         self.assertEquals(1, self.x.failCount)
         self.assertEquals(0, self.x.todoCount)
-        self.assertInLog("TEST-UNEXPECTED-FAIL")
-        self.assertNotInLog("TEST-PASS")
+        self.assertInLog(TEST_FAIL_STRING)
+        self.assertNotInLog(TEST_PASS_STRING)
 
     def testAddTestSimple(self):
         """
@@ -712,50 +761,6 @@ tail =
         self.assertEquals(10, self.x.testCount)
         self.assertEquals(10, self.x.passCount)
 
-    def testXunitOutput(self):
-        """
-        Check that Xunit XML files are written.
-        """
-        self.writeFile("test_00.js", SIMPLE_PASSING_TEST)
-        self.writeFile("test_01.js", SIMPLE_FAILING_TEST)
-        self.writeFile("test_02.js", SIMPLE_PASSING_TEST)
-
-        manifest = [
-            "test_00.js",
-            "test_01.js",
-            ("test_02.js", "skip-if = true")
-        ]
-
-        self.writeManifest(manifest)
-
-        filename = os.path.join(self.tempdir, "xunit.xml")
-
-        self.assertTestResult(False, xunitFilename=filename)
-
-        self.assertTrue(os.path.exists(filename))
-        self.assertTrue(os.path.getsize(filename) > 0)
-
-        tree = ElementTree()
-        tree.parse(filename)
-        suite = tree.getroot()
-
-        self.assertTrue(suite is not None)
-        self.assertEqual(suite.get("tests"), "3")
-        self.assertEqual(suite.get("failures"), "1")
-        self.assertEqual(suite.get("skip"), "1")
-
-        testcases = suite.findall("testcase")
-        self.assertEqual(len(testcases), 3)
-
-        for testcase in testcases:
-            attributes = testcase.keys()
-            self.assertTrue("classname" in attributes)
-            self.assertTrue("name" in attributes)
-            self.assertTrue("time" in attributes)
-
-        self.assertTrue(testcases[1].find("failure") is not None)
-        self.assertTrue(testcases[2].find("skipped") is not None)
-
     def testDoThrowString(self):
         """
         Check that do_throw produces reasonable messages when the
@@ -765,9 +770,9 @@ tail =
         self.writeManifest(["test_error.js"])
 
         self.assertTestResult(False)
-        self.assertInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog(TEST_FAIL_STRING)
         self.assertInLog("Passing a string to do_throw")
-        self.assertNotInLog("TEST-PASS")
+        self.assertNotInLog(TEST_PASS_STRING)
 
     def testDoThrowForeignObject(self):
         """
@@ -779,11 +784,11 @@ tail =
         self.writeManifest(["test_error.js"])
 
         self.assertTestResult(False)
-        self.assertInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog(TEST_FAIL_STRING)
         self.assertInLog("failure.js")
         self.assertInLog("Error object")
         self.assertInLog("ERROR STACK")
-        self.assertNotInLog("TEST-PASS")
+        self.assertNotInLog(TEST_PASS_STRING)
 
     def testDoReportForeignObject(self):
         """
@@ -795,11 +800,11 @@ tail =
         self.writeManifest(["test_error.js"])
 
         self.assertTestResult(False)
-        self.assertInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog(TEST_FAIL_STRING)
         self.assertInLog("failure.js")
         self.assertInLog("Error object")
         self.assertInLog("ERROR STACK")
-        self.assertNotInLog("TEST-PASS")
+        self.assertNotInLog(TEST_PASS_STRING)
 
     def testDoReportRefError(self):
         """
@@ -810,11 +815,11 @@ tail =
         self.writeManifest(["test_error.js"])
 
         self.assertTestResult(False)
-        self.assertInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog(TEST_FAIL_STRING)
         self.assertInLog("test_error.js")
         self.assertInLog("obj.noSuchFunction is not a function")
         self.assertInLog("run_test@")
-        self.assertNotInLog("TEST-PASS")
+        self.assertNotInLog(TEST_PASS_STRING)
 
     def testDoReportSyntaxError(self):
         """
@@ -825,12 +830,9 @@ tail =
         self.writeManifest(["test_error.js"])
 
         self.assertTestResult(False)
-        self.assertInLog("TEST-UNEXPECTED-FAIL")
-        self.assertInLog("test_error.js")
-        self.assertInLog("test_error.js contains SyntaxError")
-        self.assertInLog("Diagnostic: SyntaxError: missing formal parameter at")
+        self.assertInLog(TEST_FAIL_STRING)
         self.assertInLog("test_error.js:3")
-        self.assertNotInLog("TEST-PASS")
+        self.assertNotInLog(TEST_PASS_STRING)
 
     def testDoReportNonSyntaxError(self):
         """
@@ -841,10 +843,10 @@ tail =
         self.writeManifest(["test_error.js"])
 
         self.assertTestResult(False)
-        self.assertInLog("TEST-UNEXPECTED-FAIL")
-        self.assertInLog("Diagnostic: TypeError: generator function run_test returns a value at")
+        self.assertInLog(TEST_FAIL_STRING)
+        self.assertInLog("TypeError: generator function run_test returns a value at")
         self.assertInLog("test_error.js:4")
-        self.assertNotInLog("TEST-PASS")
+        self.assertNotInLog(TEST_PASS_STRING)
 
     def testAsyncCleanup(self):
         """
