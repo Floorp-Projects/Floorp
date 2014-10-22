@@ -21,6 +21,8 @@
 
 class GMPEncryptedBufferMetadata {
 public:
+  virtual ~GMPEncryptedBufferMetadata() {}
+
   // Key ID to identify the decryption key.
   virtual const uint8_t* KeyId() const = 0;
 
@@ -94,6 +96,8 @@ typedef int64_t GMPTimestamp;
 // Callbacks to be called from the CDM. Threadsafe.
 class GMPDecryptorCallback {
 public:
+  virtual ~GMPDecryptorCallback() {}
+
   // Resolves a promise for a session created.
   // Passes the session id to be exposed to JavaScript.
   // Must be called before SessionMessage().
@@ -182,6 +186,7 @@ public:
 // Host interface, passed to GetAPIFunc(), with "decrypt".
 class GMPDecryptorHost {
 public:
+  virtual ~GMPDecryptorHost() {}
 
   // Returns an origin specific string uniquely identifying the device.
   // The node id contains a random component, and is consistent between
@@ -213,6 +218,7 @@ enum GMPSessionType {
 // Host API: GMPDecryptorHost
 class GMPDecryptor {
 public:
+  virtual ~GMPDecryptor() {}
 
   // Sets the callback to use with the decryptor to return results
   // to Gecko.
