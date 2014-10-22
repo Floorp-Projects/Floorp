@@ -696,8 +696,7 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
         XPC_WN_JSOp_Enumerate,
         XPC_WN_JSOp_ThisObject,
     }
-  },
-  0 // interfacesBitmap
+  }
 };
 
 
@@ -1077,8 +1076,7 @@ XPCNativeScriptableInfo::Construct(const XPCNativeScriptableCreateInfo* sci)
 
     XPCJSRuntime* rt = XPCJSRuntime::Get();
     XPCNativeScriptableSharedMap* map = rt->GetNativeScriptableSharedMap();
-    success = map->GetNewOrUsed(sci->GetFlags(), name,
-                                sci->GetInterfacesBitmap(), newObj);
+    success = map->GetNewOrUsed(sci->GetFlags(), name, newObj);
 
     if (!success) {
         delete newObj;

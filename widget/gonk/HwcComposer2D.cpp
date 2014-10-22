@@ -218,7 +218,7 @@ HwcComposer2D::RegisterHwcEventCallback()
     device->registerProcs(device, &sHWCProcs);
     mHasHWVsync = true;
 
-    if (!gfxPrefs::FrameUniformityHWVsyncEnabled()) {
+    if (!gfxPrefs::HardwareVsyncEnabled()) {
         device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, false);
         mHasHWVsync = false;
     }

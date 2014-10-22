@@ -511,7 +511,8 @@ public:
    * will have) "animated geometry". This could be aFrame. Returns
    * aStopAtAncestor if no closer ancestor is found.
    */
-  static nsIFrame* GetAnimatedGeometryRootForFrame(nsIFrame* aFrame,
+  static nsIFrame* GetAnimatedGeometryRootForFrame(nsDisplayListBuilder* aBuilder,
+                                                   nsIFrame* aFrame,
                                                    const nsIFrame* aStopAtAncestor);
 
   /**
@@ -2422,8 +2423,8 @@ gfx::Rect NSRectToRect(const nsRect& aRect, double aAppUnitsPerPixel);
  * MaybeSnapToDevicePixels helper, which this function calls to do any
  * snapping).
  */
-gfx::Rect NSRectToRect(const nsRect& aRect, double aAppUnitsPerPixel,
-                       const gfx::DrawTarget& aSnapDT);
+gfx::Rect NSRectToSnappedRect(const nsRect& aRect, double aAppUnitsPerPixel,
+                              const gfx::DrawTarget& aSnapDT);
 
 void StrokeLineWithSnapping(const nsPoint& aP1, const nsPoint& aP2,
                             int32_t aAppUnitsPerDevPixel,

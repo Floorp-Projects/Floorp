@@ -7,9 +7,14 @@
 if CONFIG['MOZ_X11']:
     DIRS += ['x11']
 
+EXPORTS.mozilla += [
+    'VsyncDispatcher.h',
+]
+
 UNIFIED_SOURCES += [
     'nsShmImage.cpp',
     'SharedWidgetUtils.cpp',
+    'VsyncDispatcher.cpp',
     'WidgetEventImpl.cpp',
 ]
 

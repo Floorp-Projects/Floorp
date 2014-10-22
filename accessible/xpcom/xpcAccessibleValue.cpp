@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "xpcAccessibleValue.h"
+#include "xpcAccessibleGeneric.h"
 #include "Accessible.h"
 
 using namespace mozilla;
@@ -16,11 +16,10 @@ xpcAccessibleValue::GetMaximumValue(double* aValue)
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  Accessible* acc = static_cast<Accessible*>(this);
-  if (acc->IsDefunct())
+  if (Intl()->IsDefunct())
     return NS_ERROR_FAILURE;
 
-  double value = acc->MaxValue();
+  double value = Intl()->MaxValue();
   if (!IsNaN(value))
     *aValue = value;
 
@@ -33,11 +32,10 @@ xpcAccessibleValue::GetMinimumValue(double* aValue)
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  Accessible* acc = static_cast<Accessible*>(this);
-  if (acc->IsDefunct())
+  if (Intl()->IsDefunct())
     return NS_ERROR_FAILURE;
 
-  double value = acc->MinValue();
+  double value = Intl()->MinValue();
   if (!IsNaN(value))
     *aValue = value;
 
@@ -50,11 +48,10 @@ xpcAccessibleValue::GetCurrentValue(double* aValue)
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  Accessible* acc = static_cast<Accessible*>(this);
-  if (acc->IsDefunct())
+  if (Intl()->IsDefunct())
     return NS_ERROR_FAILURE;
 
-  double value = acc->CurValue();
+  double value = Intl()->CurValue();
   if (!IsNaN(value))
     *aValue = value;
 
@@ -64,11 +61,10 @@ xpcAccessibleValue::GetCurrentValue(double* aValue)
 NS_IMETHODIMP
 xpcAccessibleValue::SetCurrentValue(double aValue)
 {
-  Accessible* acc = static_cast<Accessible*>(this);
-  if (acc->IsDefunct())
+  if (Intl()->IsDefunct())
     return NS_ERROR_FAILURE;
 
-  acc->SetCurValue(aValue);
+  Intl()->SetCurValue(aValue);
   return NS_OK;
 }
 
@@ -78,11 +74,10 @@ xpcAccessibleValue::GetMinimumIncrement(double* aValue)
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
 
-  Accessible* acc = static_cast<Accessible*>(this);
-  if (acc->IsDefunct())
+  if (Intl()->IsDefunct())
     return NS_ERROR_FAILURE;
 
-  double value = acc->Step();
+  double value = Intl()->Step();
   if (!IsNaN(value))
     *aValue = value;
 

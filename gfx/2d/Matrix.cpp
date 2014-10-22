@@ -134,8 +134,8 @@ Rect Matrix4x4::ProjectRectBounds(const Rect& aRect) const
 
   points[0] = ProjectPoint(aRect.TopLeft());
   points[1] = ProjectPoint(aRect.TopRight());
-  points[2] = ProjectPoint(aRect.BottomLeft());
-  points[3] = ProjectPoint(aRect.BottomRight());
+  points[2] = ProjectPoint(aRect.BottomRight());
+  points[3] = ProjectPoint(aRect.BottomLeft());
 
   Float min_x = std::numeric_limits<Float>::max();
   Float min_y = std::numeric_limits<Float>::max();

@@ -1225,8 +1225,8 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
 
   // Clip so we don't render outside the inner rect
   gfx->Save();
-  gfx->Clip(NSRectToRect(inner, PresContext()->AppUnitsPerDevPixel(),
-                         *drawTarget));
+  gfx->Clip(NSRectToSnappedRect(inner, PresContext()->AppUnitsPerDevPixel(),
+                                *drawTarget));
 
   // Check if we should display image placeholders
   if (gIconLoad->mPrefShowPlaceholders) {

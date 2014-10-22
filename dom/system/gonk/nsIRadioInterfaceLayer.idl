@@ -5,11 +5,9 @@
 #include "nsISupports.idl"
 #include "nsINetworkManager.idl"
 
-interface nsICellInfoListCallback;
 interface nsIIccInfo;
 interface nsIMobileConnectionInfo;
 interface nsIMobileMessageCallback;
-interface nsINeighboringCellIdsCallback;
 
 [scriptable, uuid(6e0f45b8-410e-11e3-8c8e-b715b2cd0128)]
 interface nsIRilNetworkInterface : nsINetworkInterface
@@ -42,7 +40,7 @@ interface nsIRilSendWorkerMessageCallback : nsISupports
   boolean handleResponse(in jsval response);
 };
 
-[scriptable, uuid(c13a8890-797b-4557-b92f-6b959f56c1d8)]
+[scriptable, uuid(622e8809-1a89-45f7-9b35-7e49b5aaa69f)]
 interface nsIRadioInterface : nsISupports
 {
   readonly attribute nsIRilContext rilContext;
@@ -72,17 +70,6 @@ interface nsIRadioInterface : nsISupports
               [optional] in nsIRilSendWorkerMessageCallback callback);
 
   void getSmscAddress(in nsIMobileMessageCallback request);
-
-  /**
-   * Request neighboring cell ids in GSM/UMTS network.
-   */
-  void getNeighboringCellIds(in nsINeighboringCellIdsCallback callback);
-
-  /**
-   * Request all of the current cell information known to the radio, including
-   * neighboring cells.
-   */
-  void getCellInfoList(in nsICellInfoListCallback callback);
 };
 
 [scriptable, uuid(78b65e8c-68e7-4510-9a05-65bba12b283e)]

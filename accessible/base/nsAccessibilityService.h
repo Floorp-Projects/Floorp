@@ -22,6 +22,7 @@ namespace mozilla {
 namespace a11y {
 
 class ApplicationAccessible;
+class xpcAccessibleApplication;
 
 /**
  * Return focus manager.
@@ -37,6 +38,7 @@ SelectionManager* SelectionMgr();
  * Returns the application accessible.
  */
 ApplicationAccessible* ApplicationAcc();
+xpcAccessibleApplication* XPCApplicationAcc();
 
 } // namespace a11y
 } // namespace mozilla
@@ -73,6 +75,9 @@ public:
   virtual Accessible* AddNativeRootAccessible(void* aAtkAccessible);
   virtual void RemoveNativeRootAccessible(Accessible* aRootAccessible);
 
+  virtual bool HasAccessible(nsIDOMNode* aDOMNode) MOZ_OVERRIDE;
+
+  // nsAccesibilityService
   /**
    * Notification used to update the accessible tree when deck panel is
    * switched.
@@ -215,6 +220,7 @@ private:
    * Reference for application accessible instance.
    */
   static mozilla::a11y::ApplicationAccessible* gApplicationAccessible;
+  static mozilla::a11y::xpcAccessibleApplication* gXPCApplicationAccessible;
 
   /**
    * Indicates whether accessibility service was shutdown.
@@ -225,6 +231,7 @@ private:
   friend mozilla::a11y::FocusManager* mozilla::a11y::FocusMgr();
   friend mozilla::a11y::SelectionManager* mozilla::a11y::SelectionMgr();
   friend mozilla::a11y::ApplicationAccessible* mozilla::a11y::ApplicationAcc();
+  friend mozilla::a11y::xpcAccessibleApplication* mozilla::a11y::XPCApplicationAcc();
 
   friend nsresult NS_GetAccessibilityService(nsIAccessibilityService** aResult);
 };

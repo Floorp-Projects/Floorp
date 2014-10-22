@@ -89,24 +89,23 @@ ApplicationAccessibleWrap::Name(nsString& aName)
   return eNameOK;
 }
 
-NS_IMETHODIMP
+void
 ApplicationAccessibleWrap::GetNativeInterface(void** aOutAccessible)
 {
-    *aOutAccessible = nullptr;
+  *aOutAccessible = nullptr;
 
-    if (!mAtkObject) {
-        mAtkObject =
-            reinterpret_cast<AtkObject *>
-                            (g_object_new(MAI_TYPE_ATK_OBJECT, nullptr));
-        NS_ENSURE_TRUE(mAtkObject, NS_ERROR_OUT_OF_MEMORY);
+  if (!mAtkObject) {
+    mAtkObject =
+      reinterpret_cast<AtkObject*>(g_object_new(MAI_TYPE_ATK_OBJECT, nullptr));
+    if (!mAtkObject)
+      return;
 
-        atk_object_initialize(mAtkObject, this);
-        mAtkObject->role = ATK_ROLE_INVALID;
-        mAtkObject->layer = ATK_LAYER_INVALID;
-    }
+    atk_object_initialize(mAtkObject, this);
+    mAtkObject->role = ATK_ROLE_INVALID;
+    mAtkObject->layer = ATK_LAYER_INVALID;
+  }
 
-    *aOutAccessible = mAtkObject;
-    return NS_OK;
+  *aOutAccessible = mAtkObject;
 }
 
 struct AtkRootAccessibleAddedEvent {

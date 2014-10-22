@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US" class="reftest-wait">
+<head>
+	<title>Reftest, bug 1062963</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+
+	<style type="text/css">
+	html, body { margin: 0; }
+
+	.rtl { direction: rtl; }
+
+	.contain {
+		background: aqua; color: black;
+		height: 40px; margin: 1px 50px;
+		padding-top: 0.1px; /* needed for some reason (XXX WHY?) */
+	}
+
+	.fl, .fr { height: 20px; }
+	.fl { float: left; width: 56px; }
+	.fr { float: right; width: 73px; }
+
+	.t { background: blue; height: 10px; width: 100px; border-spacing: 0; }
+	.t caption { background: purple; height: 10px; width: 100px; }
+	.t td { padding: 0; }
+
+    #test {
+        width: 700px;
+    }
+	</style>
+
+    <script type="text/javascript">
+    function run() {
+        var test = document.getElementById("test");
+        test.style.width = "699px";
+        document.documentElement.removeAttribute("class");
+    }
+    </script>
+
+</head>
+
+<body onload="run()">
+
+<div id="test">
+
+<div style="width: 676px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 100px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 674px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 100px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+<div style="width: 672px">
+	<div class="contain rtl">
+		<div class="fl"></div>
+		<div class="fr"></div>
+		<table class="t" style="margin: 0 74px 0 100px; caption-side: right">
+			<caption style="margin: 0 100px 0 100px"></caption>
+			<tr><td></td></tr>
+		</table>
+	</div>
+</div>
+
+</div>
+
+</body>
+</html>

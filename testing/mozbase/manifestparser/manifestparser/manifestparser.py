@@ -1156,7 +1156,7 @@ class TestManifest(ManifestParser):
         # Look for conditional subsuites, and replace them with the subsuite itself
         # (if the condition is true), or nothing.
         for test in tests:
-            subsuite = test.get('subsuite')
+            subsuite = test.get('subsuite', '')
             if ',' in subsuite:
                 try:
                     subsuite, condition = subsuite.split(',')
@@ -1172,7 +1172,7 @@ class TestManifest(ManifestParser):
 
         # Filter on current subsuite
         if options:
-            if  options.subsuite:
+            if hasattr(options, 'subsuite') and options.subsuite:
                 tests = [test for test in tests if options.subsuite == test['subsuite']]
             else:
                 tests = [test for test in tests if not test['subsuite']]

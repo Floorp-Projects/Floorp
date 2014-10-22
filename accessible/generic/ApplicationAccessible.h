@@ -9,7 +9,6 @@
 #define mozilla_a11y_ApplicationAccessible_h__
 
 #include "AccessibleWrap.h"
-#include "xpcAccessibleApplication.h"
 
 #include "nsIMutableArray.h"
 #include "nsIXULAppInfo.h"
@@ -27,14 +26,12 @@ namespace a11y {
  * the ApplicationAccessible instance.
  */
 
-class ApplicationAccessible : public AccessibleWrap,
-                              public xpcAccessibleApplication
+class ApplicationAccessible : public AccessibleWrap
 {
 public:
 
   ApplicationAccessible();
 
-  // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
@@ -98,6 +95,12 @@ protected:
 private:
   nsCOMPtr<nsIXULAppInfo> mAppInfo;
 };
+
+inline ApplicationAccessible*
+Accessible::AsApplication()
+{
+  return IsApplication() ? static_cast<ApplicationAccessible*>(this) : nullptr;
+}
 
 } // namespace a11y
 } // namespace mozilla

@@ -26,7 +26,7 @@ public:
   /**
    * Return the atk object for app root accessible.
    */
-  NS_IMETHOD GetNativeInterface(void** aOutAccessible);
+  virtual void GetNativeInterface(void** aOutAccessible) MOZ_OVERRIDE;
 };
 
 } // namespace a11y

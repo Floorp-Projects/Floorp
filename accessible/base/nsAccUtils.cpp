@@ -368,14 +368,7 @@ nsAccUtils::IsTextInterfaceSupportCorrect(Accessible* aAccessible)
     }
   }
 
-  if (foundText) {
-    // found text child node
-    nsCOMPtr<nsIAccessibleText> text = do_QueryObject(aAccessible);
-    if (!text)
-      return false;
-  }
-
-  return true;
+  return !foundText || aAccessible->IsHyperText();
 }
 #endif
 

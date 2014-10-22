@@ -14,6 +14,12 @@ class nsIAccessible;
 namespace mozilla {
 namespace a11y {
 
+class Accessible;
+
+/**
+ * XPCOM nsIAccessibleHyperLink implementation, used by xpcAccessibleGeneric
+ * class.
+ */
 class xpcAccessibleHyperLink : public nsIAccessibleHyperLink
 {
 public:
@@ -24,12 +30,15 @@ public:
   NS_IMETHOD GetAnchor(int32_t aIndex, nsIAccessible** aAccessible) MOZ_FINAL;
   NS_IMETHOD GetValid(bool* aValid) MOZ_FINAL;
 
-private:
+protected:
   xpcAccessibleHyperLink() { }
-  friend class Accessible;
+  virtual ~xpcAccessibleHyperLink() {}
 
+private:
   xpcAccessibleHyperLink(const xpcAccessibleHyperLink&) MOZ_DELETE;
   xpcAccessibleHyperLink& operator =(const xpcAccessibleHyperLink&) MOZ_DELETE;
+
+  Accessible* Intl();
 };
 
 } // namespace a11y

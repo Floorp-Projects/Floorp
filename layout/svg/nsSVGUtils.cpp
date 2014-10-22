@@ -589,9 +589,9 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
         // GetCanvasTM().
         overflowRect = overflowRect + aFrame->GetPosition();
       }
-      gfx->Clip(NSRectToRect(overflowRect,
-                             aFrame->PresContext()->AppUnitsPerDevPixel(),
-                             *drawTarget));
+      gfx->Clip(NSRectToSnappedRect(overflowRect,
+                                    aFrame->PresContext()->AppUnitsPerDevPixel(),
+                                    *drawTarget));
     }
     gfx->PushGroup(gfxContentType::COLOR_ALPHA);
   }

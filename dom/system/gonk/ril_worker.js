@@ -215,6 +215,7 @@ const TELEPHONY_REQUESTS = [
   REQUEST_DIAL,
   REQUEST_DIAL_EMERGENCY_CALL,
   REQUEST_HANGUP,
+  REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND,
   REQUEST_HANGUP_WAITING_OR_BACKGROUND,
   REQUEST_SEPARATE_CONNECTION,
   REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE,
@@ -1779,13 +1780,25 @@ RilObject.prototype = {
     Buf.sendParcel();
   },
 
-  sendHangUpBackgroundRequest: function() {
-    this.telephonyRequestQueue.push(REQUEST_HANGUP_WAITING_OR_BACKGROUND,
-                                   this.sendRilRequestHangUpWaiting, null);
+  sendHangUpForegroundRequest: function(options) {
+    this.telephonyRequestQueue.push(REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND,
+                                    this.sendRilRequestHangUpForeground,
+                                    options);
   },
 
-  sendRilRequestHangUpWaiting: function() {
-    this.context.Buf.simpleRequest(REQUEST_HANGUP_WAITING_OR_BACKGROUND);
+  sendRilRequestHangUpForeground: function(options) {
+    this.context.Buf.simpleRequest(REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND,
+                                   options);
+  },
+
+  sendHangUpBackgroundRequest: function(options) {
+    this.telephonyRequestQueue.push(REQUEST_HANGUP_WAITING_OR_BACKGROUND,
+                                    this.sendRilRequestHangUpWaiting, options);
+  },
+
+  sendRilRequestHangUpWaiting: function(options) {
+    this.context.Buf.simpleRequest(REQUEST_HANGUP_WAITING_OR_BACKGROUND,
+                                   options);
   },
 
   /**
@@ -1959,6 +1972,27 @@ RilObject.prototype = {
     Buf.writeInt32(1);
     Buf.writeInt32(options.callIndex);
     Buf.sendParcel();
+  },
+
+  hangUpConference: function(options) {
+    if (this._isCdma) {
+      // In cdma, ril only maintains one call index.
+      let call = this.currentCalls[1];
+      if (!call) {
+        options.success = false;
+        options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+        this.sendChromeMessage(options);
+        return;
+      }
+      call.hangUpLocal = true;
+      this.sendHangUpRequest(1);
+    } else {
+      if (this.currentConference.state === CALL_STATE_ACTIVE) {
+        this.sendHangUpForegroundRequest(options);
+      } else {
+        this.sendHangUpBackgroundRequest(options);
+      }
+    }
   },
 
   holdConference: function() {
@@ -5430,26 +5464,19 @@ RilObject.prototype[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length, option
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_HANGUP] = function REQUEST_HANGUP(length, options) {
-  if (options.rilRequestError) {
-    return;
-  }
+  options.success = options.rilRequestError === 0;
+  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  this.sendChromeMessage(options);
 
-  this.getCurrentCalls();
+  if (options.success) {
+    this.getCurrentCalls();
+  }
 };
 RilObject.prototype[REQUEST_HANGUP_WAITING_OR_BACKGROUND] = function REQUEST_HANGUP_WAITING_OR_BACKGROUND(length, options) {
-  if (options.rilRequestError) {
-    return;
-  }
-
-  this.getCurrentCalls();
+  RilObject.prototype[REQUEST_HANGUP].call(this, length, options);
 };
-// TODO Bug 1012599: This one is not used.
 RilObject.prototype[REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND] = function REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND(length, options) {
-  if (options.rilRequestError) {
-    return;
-  }
-
-  this.getCurrentCalls();
+  RilObject.prototype[REQUEST_HANGUP].call(this, length, options);
 };
 RilObject.prototype[REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE] = function REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE(length, options) {
   if (options.rilRequestError) {
@@ -7844,6 +7871,12 @@ GsmPDUHelperObject.prototype = {
 
     msg.body = null;
     msg.data = null;
+
+    if (length <= 0) {
+      // No data to read.
+      return;
+    }
+
     switch (msg.encoding) {
       case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
         // 7 bit encoding allows 140 octets, which means 160 characters

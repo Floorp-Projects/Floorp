@@ -1700,7 +1700,8 @@ void nsDisplayFramesetBlank::Paint(nsDisplayListBuilder* aBuilder,
 {
   DrawTarget* drawTarget = aCtx->GetDrawTarget();
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-  Rect rect = NSRectToRect(mVisibleRect, appUnitsPerDevPixel, *drawTarget);
+  Rect rect =
+    NSRectToSnappedRect(mVisibleRect, appUnitsPerDevPixel, *drawTarget);
   ColorPattern white(ToDeviceColor(Color(1.f, 1.f, 1.f, 1.f)));
   drawTarget->FillRect(rect, white);
 }

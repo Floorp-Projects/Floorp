@@ -299,24 +299,33 @@ struct MaybeReadFallback
         NoGC_MagicOptimizedOut
     };
 
+    enum FallbackConsequence {
+        Fallback_Invalidate,
+        Fallback_DoNothing
+    };
+
     JSContext *maybeCx;
     JitActivation *activation;
     JitFrameIterator *frame;
     const NoGCValue unreadablePlaceholder_;
+    const FallbackConsequence consequence;
 
     MaybeReadFallback(const Value &placeholder = UndefinedValue())
       : maybeCx(nullptr),
         activation(nullptr),
         frame(nullptr),
-        unreadablePlaceholder_(noGCPlaceholder(placeholder))
+        unreadablePlaceholder_(noGCPlaceholder(placeholder)),
+        consequence(Fallback_Invalidate)
     {
     }
 
-    MaybeReadFallback(JSContext *cx, JitActivation *activation, JitFrameIterator *frame)
+    MaybeReadFallback(JSContext *cx, JitActivation *activation, JitFrameIterator *frame,
+                      FallbackConsequence consequence = Fallback_Invalidate)
       : maybeCx(cx),
         activation(activation),
         frame(frame),
-        unreadablePlaceholder_(NoGC_UndefinedValue)
+        unreadablePlaceholder_(NoGC_UndefinedValue),
+        consequence(consequence)
     {
     }
 
@@ -379,6 +388,7 @@ class SnapshotIterator
 
     Value allocationValue(const RValueAllocation &a);
     bool allocationReadable(const RValueAllocation &a);
+    void writeAllocationValuePayload(const RValueAllocation &a, Value v);
     void warnUnreadableAllocation();
 
   public:
@@ -492,6 +502,8 @@ class SnapshotIterator
 
         return fallback.unreadablePlaceholder();
     }
+
+    void traceAllocation(JSTracer *trc);
 
     void readCommonFrameSlots(Value *scopeChain, Value *rval) {
         if (scopeChain)

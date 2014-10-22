@@ -6,8 +6,10 @@
 
 #include "xpcAccessibleHyperText.h"
 
+#include "Accessible-inl.h"
 #include "HyperTextAccessible-inl.h"
 #include "TextRange.h"
+#include "xpcAccessibleDocument.h"
 #include "xpcAccessibleTextRange.h"
 
 #include "nsIPersistentProperties2.h"
@@ -18,27 +20,17 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-nsresult
-xpcAccessibleHyperText::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  *aInstancePtr = nullptr;
+NS_INTERFACE_MAP_BEGIN(xpcAccessibleHyperText)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAccessibleText,
+                                     mSupportedIfaces & eText)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAccessibleEditableText,
+                                     mSupportedIfaces & eText)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAccessibleHyperText,
+                                     mSupportedIfaces & eText)
+NS_INTERFACE_MAP_END_INHERITING(xpcAccessibleGeneric)
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (!text->IsTextRole())
-    return NS_ERROR_NO_INTERFACE;
-
-  if (aIID.Equals(NS_GET_IID(nsIAccessibleText)))
-    *aInstancePtr = static_cast<nsIAccessibleText*>(text);
-  else if (aIID.Equals(NS_GET_IID(nsIAccessibleEditableText)))
-    *aInstancePtr = static_cast<nsIAccessibleEditableText*>(text);
-  else if (aIID.Equals(NS_GET_IID(nsIAccessibleHyperText)))
-    *aInstancePtr = static_cast<nsIAccessibleHyperText*>(text);
-  else
-    return NS_ERROR_NO_INTERFACE;
-
-  NS_ADDREF(text);
-  return NS_OK;
-}
+NS_IMPL_ADDREF_INHERITED(xpcAccessibleHyperText, xpcAccessibleGeneric)
+NS_IMPL_RELEASE_INHERITED(xpcAccessibleHyperText, xpcAccessibleGeneric)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibleText
@@ -49,11 +41,10 @@ xpcAccessibleHyperText::GetCharacterCount(int32_t* aCharacterCount)
   NS_ENSURE_ARG_POINTER(aCharacterCount);
   *aCharacterCount = 0;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aCharacterCount = text->CharacterCount();
+  *aCharacterCount = Intl()->CharacterCount();
   return NS_OK;
 }
 
@@ -63,11 +54,10 @@ xpcAccessibleHyperText::GetText(int32_t aStartOffset, int32_t aEndOffset,
 {
   aText.Truncate();
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->TextSubstring(aStartOffset, aEndOffset, aText);
+  Intl()->TextSubstring(aStartOffset, aEndOffset, aText);
   return NS_OK;
 }
 
@@ -83,11 +73,10 @@ xpcAccessibleHyperText::GetTextBeforeOffset(int32_t aOffset,
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->TextBeforeOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
+  Intl()->TextBeforeOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
   return NS_OK;
 }
 
@@ -102,11 +91,10 @@ xpcAccessibleHyperText::GetTextAtOffset(int32_t aOffset,
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->TextAtOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
+  Intl()->TextAtOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
   return NS_OK;
 }
 
@@ -121,11 +109,10 @@ xpcAccessibleHyperText::GetTextAfterOffset(int32_t aOffset,
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->TextAfterOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
+  Intl()->TextAfterOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
   return NS_OK;
 }
 
@@ -136,11 +123,10 @@ xpcAccessibleHyperText::GetCharacterAtOffset(int32_t aOffset,
   NS_ENSURE_ARG_POINTER(aCharacter);
   *aCharacter = L'\0';
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aCharacter = text->CharAt(aOffset);
+  *aCharacter = Intl()->CharAt(aOffset);
   return NS_OK;
 }
 
@@ -157,12 +143,11 @@ xpcAccessibleHyperText::GetTextAttributes(bool aIncludeDefAttrs,
   *aStartOffset = *aEndOffset = 0;
   *aAttributes = nullptr;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPersistentProperties> attrs =
-   text->TextAttributes(aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
+   Intl()->TextAttributes(aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
   attrs.swap(*aAttributes);
 
   return NS_OK;
@@ -174,11 +159,10 @@ xpcAccessibleHyperText::GetDefaultTextAttributes(nsIPersistentProperties** aAttr
   NS_ENSURE_ARG_POINTER(aAttributes);
   *aAttributes = nullptr;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPersistentProperties> attrs = text->DefaultTextAttributes();
+  nsCOMPtr<nsIPersistentProperties> attrs = Intl()->DefaultTextAttributes();
   attrs.swap(*aAttributes);
   return NS_OK;
 }
@@ -195,11 +179,10 @@ xpcAccessibleHyperText::GetCharacterExtents(int32_t aOffset,
   NS_ENSURE_ARG_POINTER(aHeight);
   *aX = *aY = *aWidth = *aHeight;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  nsIntRect rect = text->CharBounds(aOffset, aCoordType);
+  nsIntRect rect = Intl()->CharBounds(aOffset, aCoordType);
   *aX = rect.x; *aY = rect.y;
   *aWidth = rect.width; *aHeight = rect.height;
   return NS_OK;
@@ -217,11 +200,10 @@ xpcAccessibleHyperText::GetRangeExtents(int32_t aStartOffset, int32_t aEndOffset
   NS_ENSURE_ARG_POINTER(aHeight);
   *aX = *aY = *aWidth = *aHeight = 0;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  nsIntRect rect = text->TextBounds(aStartOffset, aEndOffset, aCoordType);
+  nsIntRect rect = Intl()->TextBounds(aStartOffset, aEndOffset, aCoordType);
   *aX = rect.x; *aY = rect.y;
   *aWidth = rect.width; *aHeight = rect.height;
   return NS_OK;
@@ -234,36 +216,33 @@ xpcAccessibleHyperText::GetOffsetAtPoint(int32_t aX, int32_t aY,
   NS_ENSURE_ARG_POINTER(aOffset);
   *aOffset = -1;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aOffset = text->OffsetAtPoint(aX, aY, aCoordType);
+  *aOffset = Intl()->OffsetAtPoint(aX, aY, aCoordType);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperText::GetScriptableCaretOffset(int32_t* aCaretOffset)
+xpcAccessibleHyperText::GetCaretOffset(int32_t* aCaretOffset)
 {
   NS_ENSURE_ARG_POINTER(aCaretOffset);
   *aCaretOffset = -1;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aCaretOffset = text->CaretOffset();
+  *aCaretOffset = Intl()->CaretOffset();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperText::SetScriptableCaretOffset(int32_t aCaretOffset)
+xpcAccessibleHyperText::SetCaretOffset(int32_t aCaretOffset)
 {
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->SetCaretOffset(aCaretOffset);
+  Intl()->SetCaretOffset(aCaretOffset);
   return NS_OK;
 }
 
@@ -273,11 +252,10 @@ xpcAccessibleHyperText::GetSelectionCount(int32_t* aSelectionCount)
   NS_ENSURE_ARG_POINTER(aSelectionCount);
   *aSelectionCount = 0;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aSelectionCount = text->SelectionCount();
+  *aSelectionCount = Intl()->SelectionCount();
   return NS_OK;
 }
 
@@ -290,14 +268,13 @@ xpcAccessibleHyperText::GetSelectionBounds(int32_t aSelectionNum,
   NS_ENSURE_ARG_POINTER(aEndOffset);
   *aStartOffset = *aEndOffset = 0;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  if (aSelectionNum < 0 || aSelectionNum >= text->SelectionCount())
+  if (aSelectionNum < 0 || aSelectionNum >= Intl()->SelectionCount())
     return NS_ERROR_INVALID_ARG;
 
-  text->SelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
+  Intl()->SelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
   return NS_OK;
 }
 
@@ -306,12 +283,11 @@ xpcAccessibleHyperText::SetSelectionBounds(int32_t aSelectionNum,
                                            int32_t aStartOffset,
                                            int32_t aEndOffset)
 {
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   if (aSelectionNum < 0 ||
-      !text->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset))
+      !Intl()->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset))
     return NS_ERROR_INVALID_ARG;
 
   return NS_OK;
@@ -320,49 +296,45 @@ xpcAccessibleHyperText::SetSelectionBounds(int32_t aSelectionNum,
 NS_IMETHODIMP
 xpcAccessibleHyperText::AddSelection(int32_t aStartOffset, int32_t aEndOffset)
 {
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->AddToSelection(aStartOffset, aEndOffset);
+  Intl()->AddToSelection(aStartOffset, aEndOffset);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessibleHyperText::RemoveSelection(int32_t aSelectionNum)
 {
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->RemoveFromSelection(aSelectionNum);
+  Intl()->RemoveFromSelection(aSelectionNum);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperText::ScriptableScrollSubstringTo(int32_t aStartOffset,
-                                                    int32_t aEndOffset,
-                                                    uint32_t aScrollType)
+xpcAccessibleHyperText::ScrollSubstringTo(int32_t aStartOffset,
+                                          int32_t aEndOffset,
+                                          uint32_t aScrollType)
 {
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->ScrollSubstringTo(aStartOffset, aEndOffset, aScrollType);
+  Intl()->ScrollSubstringTo(aStartOffset, aEndOffset, aScrollType);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperText::ScriptableScrollSubstringToPoint(int32_t aStartOffset,
-                                                         int32_t aEndOffset,
-                                                         uint32_t aCoordinateType,
-                                                         int32_t aX, int32_t aY)
+xpcAccessibleHyperText::ScrollSubstringToPoint(int32_t aStartOffset,
+                                               int32_t aEndOffset,
+                                               uint32_t aCoordinateType,
+                                               int32_t aX, int32_t aY)
 {
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->ScrollSubstringToPoint(aStartOffset, aEndOffset, aCoordinateType, aX, aY);
+  Intl()->ScrollSubstringToPoint(aStartOffset, aEndOffset, aCoordinateType, aX, aY);
   return NS_OK;
 }
 
@@ -372,12 +344,11 @@ xpcAccessibleHyperText::GetEnclosingRange(nsIAccessibleTextRange** aRange)
   NS_ENSURE_ARG_POINTER(aRange);
   *aRange = nullptr;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   nsRefPtr<xpcAccessibleTextRange> range = new xpcAccessibleTextRange;
-  text->EnclosingRange(range->mRange);
+  Intl()->EnclosingRange(range->mRange);
   NS_ASSERTION(range->mRange.IsValid(),
                "Should always have an enclosing range!");
 
@@ -392,8 +363,7 @@ xpcAccessibleHyperText::GetSelectionRanges(nsIArray** aRanges)
   NS_ENSURE_ARG_POINTER(aRanges);
   *aRanges = nullptr;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
@@ -402,7 +372,7 @@ xpcAccessibleHyperText::GetSelectionRanges(nsIArray** aRanges)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoTArray<TextRange, 1> ranges;
-  text->SelectionRanges(&ranges);
+  Intl()->SelectionRanges(&ranges);
   uint32_t len = ranges.Length();
   for (uint32_t idx = 0; idx < len; idx++)
     xpcRanges->AppendElement(new xpcAccessibleTextRange(Move(ranges[idx])),
@@ -418,8 +388,7 @@ xpcAccessibleHyperText::GetVisibleRanges(nsIArray** aRanges)
   NS_ENSURE_ARG_POINTER(aRanges);
   *aRanges = nullptr;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
@@ -428,7 +397,7 @@ xpcAccessibleHyperText::GetVisibleRanges(nsIArray** aRanges)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsTArray<TextRange> ranges;
-  text->VisibleRanges(&ranges);
+  Intl()->VisibleRanges(&ranges);
   uint32_t len = ranges.Length();
   for (uint32_t idx = 0; idx < len; idx++)
     xpcRanges->AppendElement(new xpcAccessibleTextRange(Move(ranges[idx])),
@@ -445,14 +414,13 @@ xpcAccessibleHyperText::GetRangeByChild(nsIAccessible* aChild,
   NS_ENSURE_ARG_POINTER(aRange);
   *aRange = nullptr;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  nsRefPtr<Accessible> child = do_QueryObject(aChild);
+  Accessible* child = aChild->ToInternalAccessible();
   if (child) {
     nsRefPtr<xpcAccessibleTextRange> range = new xpcAccessibleTextRange;
-    text->RangeByChild(child, range->mRange);
+    Intl()->RangeByChild(child, range->mRange);
     if (range->mRange.IsValid())
       range.forget(aRange);
   }
@@ -467,12 +435,11 @@ xpcAccessibleHyperText::GetRangeAtPoint(int32_t aX, int32_t aY,
   NS_ENSURE_ARG_POINTER(aRange);
   *aRange = nullptr;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
   nsRefPtr<xpcAccessibleTextRange> range = new xpcAccessibleTextRange;
-  text->RangeAtPoint(aX, aY, range->mRange);
+  Intl()->RangeAtPoint(aX, aY, range->mRange);
   if (range->mRange.IsValid())
     range.forget(aRange);
 
@@ -485,70 +452,60 @@ xpcAccessibleHyperText::GetRangeAtPoint(int32_t aX, int32_t aY,
 NS_IMETHODIMP
 xpcAccessibleHyperText::SetTextContents(const nsAString& aText)
 {
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->ReplaceText(aText);
+  Intl()->ReplaceText(aText);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperText::ScriptableInsertText(const nsAString& aText,
-                                             int32_t aOffset)
+xpcAccessibleHyperText::InsertText(const nsAString& aText, int32_t aOffset)
 {
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->InsertText(aText, aOffset);
+  Intl()->InsertText(aText, aOffset);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperText::ScriptableCopyText(int32_t aStartOffset,
-                                           int32_t aEndOffset)
+xpcAccessibleHyperText::CopyText(int32_t aStartOffset, int32_t aEndOffset)
 {
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->CopyText(aStartOffset, aEndOffset);
+  Intl()->CopyText(aStartOffset, aEndOffset);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperText::ScriptableCutText(int32_t aStartOffset,
-                                          int32_t aEndOffset)
+xpcAccessibleHyperText::CutText(int32_t aStartOffset, int32_t aEndOffset)
 {
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->CutText(aStartOffset, aEndOffset);
+  Intl()->CutText(aStartOffset, aEndOffset);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperText::ScriptableDeleteText(int32_t aStartOffset,
-                                             int32_t aEndOffset)
+xpcAccessibleHyperText::DeleteText(int32_t aStartOffset, int32_t aEndOffset)
 {
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->DeleteText(aStartOffset, aEndOffset);
+  Intl()->DeleteText(aStartOffset, aEndOffset);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperText::ScriptablePasteText(int32_t aOffset)
+xpcAccessibleHyperText::PasteText(int32_t aOffset)
 {
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  text->PasteText(aOffset);
+  Intl()->PasteText(aOffset);
   return NS_OK;
 }
 
@@ -561,11 +518,10 @@ xpcAccessibleHyperText::GetLinkCount(int32_t* aLinkCount)
   NS_ENSURE_ARG_POINTER(aLinkCount);
   *aLinkCount = 0;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aLinkCount = text->LinkCount();
+  *aLinkCount = Intl()->LinkCount();
   return NS_OK;
 }
 
@@ -575,13 +531,10 @@ xpcAccessibleHyperText::GetLinkAt(int32_t aIndex, nsIAccessibleHyperLink** aLink
   NS_ENSURE_ARG_POINTER(aLink);
   *aLink = nullptr;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIAccessibleHyperLink> link = text->LinkAt(aIndex);
-  link.forget(aLink);
-
+  NS_IF_ADDREF(*aLink = ToXPC(Intl()->LinkAt(aIndex)));
   return NS_OK;
 }
 
@@ -593,12 +546,14 @@ xpcAccessibleHyperText::GetLinkIndex(nsIAccessibleHyperLink* aLink,
   NS_ENSURE_ARG_POINTER(aIndex);
   *aIndex = -1;
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  nsRefPtr<Accessible> link(do_QueryObject(aLink));
-  *aIndex = text->LinkIndexOf(link);
+  nsCOMPtr<nsIAccessible> xpcLink(do_QueryInterface(aLink));
+  Accessible* link = xpcLink->ToInternalAccessible();
+  if (link)
+    *aIndex = Intl()->LinkIndexOf(link);
+
   return NS_OK;
 }
 
@@ -609,10 +564,9 @@ xpcAccessibleHyperText::GetLinkIndexAtOffset(int32_t aOffset,
   NS_ENSURE_ARG_POINTER(aLinkIndex);
   *aLinkIndex = -1; // API says this magic value means 'not found'
 
-  HyperTextAccessible* text = static_cast<HyperTextAccessible*>(this);
-  if (text->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aLinkIndex = text->LinkIndexAtOffset(aOffset);
+  *aLinkIndex = Intl()->LinkIndexAtOffset(aOffset);
   return NS_OK;
 }

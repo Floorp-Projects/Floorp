@@ -1497,6 +1497,51 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   return rv;
 }
 
+void
+nsExternalAppHandler::MaybeApplyDecodingForExtension(nsIRequest *aRequest)
+{
+  MOZ_ASSERT(aRequest);
+
+  nsCOMPtr<nsIEncodedChannel> encChannel = do_QueryInterface(aRequest);
+  if (!encChannel) {
+    return;
+  }
+
+  // Turn off content encoding conversions if needed
+  bool applyConversion = true;
+
+  nsCOMPtr<nsIURL> sourceURL(do_QueryInterface(mSourceUrl));
+  if (sourceURL)
+  {
+    nsAutoCString extension;
+    sourceURL->GetFileExtension(extension);
+    if (!extension.IsEmpty())
+    {
+      nsCOMPtr<nsIUTF8StringEnumerator> encEnum;
+      encChannel->GetContentEncodings(getter_AddRefs(encEnum));
+      if (encEnum)
+      {
+        bool hasMore;
+        nsresult rv = encEnum->HasMore(&hasMore);
+        if (NS_SUCCEEDED(rv) && hasMore)
+        {
+          nsAutoCString encType;
+          rv = encEnum->GetNext(encType);
+          if (NS_SUCCEEDED(rv) && !encType.IsEmpty())
+          {
+            MOZ_ASSERT(mExtProtSvc);
+            mExtProtSvc->ApplyDecodingForExtension(extension, encType,
+                                                   &applyConversion);
+          }
+        }
+      }
+    }
+  }
+
+  encChannel->SetApplyConversion( applyConversion );
+  return;
+}
+
 NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISupports * aCtxt)
 {
   NS_PRECONDITION(request, "OnStartRequest without request?");
@@ -1559,35 +1604,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   // Con: Uncompressed data means more IPC overhead.
   // Pros: ExternalHelperAppParent doesn't need to implement nsIEncodedChannel.
   //       Parent process doesn't need to expect CPU time on decompression.
-  nsCOMPtr<nsIEncodedChannel> encChannel = do_QueryInterface( aChannel );
-  if (encChannel) {
-    // Turn off content encoding conversions if needed
-    bool applyConversion = true;
-
-    nsCOMPtr<nsIURL> sourceURL(do_QueryInterface(mSourceUrl));
-    if (sourceURL) {
-      nsAutoCString extension;
-      sourceURL->GetFileExtension(extension);
-      if (!extension.IsEmpty()) {
-        nsCOMPtr<nsIUTF8StringEnumerator> encEnum;
-        encChannel->GetContentEncodings(getter_AddRefs(encEnum));
-        if (encEnum) {
-          bool hasMore;
-          rv = encEnum->HasMore(&hasMore);
-          if (NS_SUCCEEDED(rv) && hasMore) {
-            nsAutoCString encType;
-            rv = encEnum->GetNext(encType);
-            if (NS_SUCCEEDED(rv) && !encType.IsEmpty()) {
-              mExtProtSvc->ApplyDecodingForExtension(extension, encType,
-                                                     &applyConversion);
-            }
-          }
-        }
-      }    
-    }
-
-    encChannel->SetApplyConversion( applyConversion );
-  }
+  MaybeApplyDecodingForExtension(aChannel);
 
   // At this point, the child process has done everything it can usefully do
   // for OnStartRequest.

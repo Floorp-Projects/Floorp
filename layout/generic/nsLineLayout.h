@@ -62,7 +62,8 @@ public:
    * space rectangle, relative to the containing block.
    * @param aFloatFrame the float frame that was placed.
    */
-  void UpdateBand(const nsRect& aNewAvailableSpace,
+  void UpdateBand(mozilla::WritingMode aWM,
+                  const mozilla::LogicalRect& aNewAvailableSpace,
                   nsIFrame* aFloatFrame);
 
   void BeginSpan(nsIFrame* aFrame, const nsHTMLReflowState* aSpanReflowState,
@@ -150,13 +151,13 @@ public:
   //----------------------------------------
   // Inform the line-layout about the presence of a floating frame
   // XXX get rid of this: use get-frame-type?
-  bool AddFloat(nsIFrame* aFloat, nscoord aAvailableWidth)
+  bool AddFloat(nsIFrame* aFloat, nscoord aAvailableISize)
   {
-    return mBlockRS->AddFloat(this, aFloat, aAvailableWidth);
+    return mBlockRS->AddFloat(this, aFloat, aAvailableISize);
   }
 
-  void SetTrimmableWidth(nscoord aTrimmableWidth) {
-    mTrimmableWidth = aTrimmableWidth;
+  void SetTrimmableISize(nscoord aTrimmableISize) {
+    mTrimmableISize = aTrimmableISize;
   }
 
   //----------------------------------------
@@ -476,6 +477,16 @@ protected:
   PerSpanData* mRootSpan;
   PerSpanData* mCurrentSpan;
 
+  // The container width to use when converting between logical and
+  // physical coordinates for frames in this span. For the root span
+  // this is the width of the block cached in mContainerWidth; for
+  // child spans it's the width of the root span
+  nscoord ContainerWidthForSpan(PerSpanData* aPSD) {
+    return (aPSD == mRootSpan)
+      ? mContainerWidth
+      : aPSD->mFrame->mBounds.Width(mRootSpan->mWritingMode);
+  }
+
   gfxBreakPriority mLastOptionalBreakPriority;
   int32_t     mLastOptionalBreakContentOffset;
   int32_t     mForceBreakContentOffset;
@@ -504,8 +515,9 @@ protected:
   // the block has been called.
   nscoord mFinalLineBSize;
   
-  // Amount of trimmable whitespace width for the trailing text frame, if any
-  nscoord mTrimmableWidth;
+  // Amount of trimmable whitespace inline size for the trailing text
+  // frame, if any
+  nscoord mTrimmableISize;
 
   nscoord mContainerWidth;
 

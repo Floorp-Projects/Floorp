@@ -29,12 +29,26 @@ const MOBILECALLFORWARDINGOPTIONS_CID =
   Components.ID("{e0cf4463-ee63-4b05-ab2e-d94bf764836c}");
 const TELEPHONYDIALCALLBACK_CID =
   Components.ID("{c2af1a5d-3649-44ef-a1ff-18e9ac1dec51}");
+const NEIGHBORINGCELLINFO_CID =
+  Components.ID("{6078cbf1-f34c-44fa-96f8-11a88d4bfdd3}");
+const GSMCELLINFO_CID =
+  Components.ID("{e3cf3aa0-f992-48fe-967b-ec98a28c8535}");
+const WCDMACELLINFO_CID =
+  Components.ID("{62e2c83c-b535-4068-9762-8039fac48106}");
+const CDMACELLINFO_CID =
+  Components.ID("{40f491f0-dd8b-42fd-af32-aef5b002749a}");
+const LTECELLINFO_CID =
+  Components.ID("{715e2c76-3b08-41e4-8ea5-e60c5ce6393e}");
+
 
 const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID  = "nsPref:changed";
 const NS_NETWORK_ACTIVE_CHANGED_TOPIC_ID = "network-active-changed";
 
 const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
+
+const INT32_MAX = 2147483647;
+const UNKNOWN_RSSI = 99;
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
                                    "@mozilla.org/system-message-internal;1",
@@ -137,6 +151,134 @@ MobileCallForwardingOptions.prototype = {
   timeSeconds: -1,
   serviceClass: Ci.nsIMobileConnection.ICC_SERVICE_CLASS_NONE
 }
+
+function NeighboringCellInfo() {}
+NeighboringCellInfo.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINeighboringCellInfo]),
+  classID:        NEIGHBORINGCELLINFO_CID,
+  classInfo:      XPCOMUtils.generateCI({
+    classID:          NEIGHBORINGCELLINFO_CID,
+    classDescription: "NeighboringCellInfo",
+    interfaces:       [Ci.nsINeighboringCellInfo]
+  }),
+
+  // nsINeighboringCellInfo
+
+  networkType: null,
+  gsmLocationAreaCode: -1,
+  gsmCellId: -1,
+  wcdmaPsc: -1,
+  signalStrength: UNKNOWN_RSSI
+};
+
+function CellInfo() {}
+CellInfo.prototype = {
+
+  // nsICellInfo
+
+  type: null,
+  registered: false,
+  timestampType: Ci.nsICellInfo.TIMESTAMP_TYPE_UNKNOWN,
+  timestamp: 0
+};
+
+function GsmCellInfo() {}
+GsmCellInfo.prototype = {
+  __proto__: CellInfo.prototype,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsICellInfo,
+                                         Ci.nsIGsmCellInfo]),
+  classID: GSMCELLINFO_CID,
+  classInfo: XPCOMUtils.generateCI({
+    classID:          GSMCELLINFO_CID,
+    classDescription: "GsmCellInfo",
+    interfaces:       [Ci.nsIGsmCellInfo]
+  }),
+
+  // nsIGsmCellInfo
+
+  mcc: INT32_MAX,
+  mnc: INT32_MAX,
+  lac: INT32_MAX,
+  cid: INT32_MAX,
+  signalStrength: UNKNOWN_RSSI,
+  bitErrorRate: UNKNOWN_RSSI
+};
+
+function WcdmaCellInfo() {}
+WcdmaCellInfo.prototype = {
+  __proto__: CellInfo.prototype,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsICellInfo,
+                                         Ci.nsIWcdmaCellInfo]),
+  classID: WCDMACELLINFO_CID,
+  classInfo: XPCOMUtils.generateCI({
+    classID:          WCDMACELLINFO_CID,
+    classDescription: "WcdmaCellInfo",
+    interfaces:       [Ci.nsIWcdmaCellInfo]
+  }),
+
+  // nsIWcdmaCellInfo
+
+  mcc: INT32_MAX,
+  mnc: INT32_MAX,
+  lac: INT32_MAX,
+  cid: INT32_MAX,
+  psc: INT32_MAX,
+  signalStrength: UNKNOWN_RSSI,
+  bitErrorRate: UNKNOWN_RSSI
+};
+
+function LteCellInfo() {}
+LteCellInfo.prototype = {
+  __proto__: CellInfo.prototype,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsICellInfo,
+                                         Ci.nsILteCellInfo]),
+  classID: LTECELLINFO_CID,
+  classInfo: XPCOMUtils.generateCI({
+    classID:          LTECELLINFO_CID,
+    classDescription: "LteCellInfo",
+    interfaces:       [Ci.nsILteCellInfo]
+  }),
+
+  // nsILteCellInfo
+
+  mcc: INT32_MAX,
+  mnc: INT32_MAX,
+  cid: INT32_MAX,
+  pcid: INT32_MAX,
+  tac: INT32_MAX,
+  signalStrength: UNKNOWN_RSSI,
+  rsrp: INT32_MAX,
+  rsrq: INT32_MAX,
+  rssnr: INT32_MAX,
+  cqi: INT32_MAX,
+  timingAdvance: INT32_MAX
+};
+
+function CdmaCellInfo() {}
+CdmaCellInfo.prototype = {
+  __proto__: CellInfo.prototype,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsICellInfo,
+                                         Ci.nsICdmaCellInfo]),
+  classID: CDMACELLINFO_CID,
+  classInfo: XPCOMUtils.generateCI({
+    classID:          CDMACELLINFO_CID,
+    classDescription: "CdmaCellInfo",
+    interfaces:       [Ci.nsICdmaCellInfo]
+  }),
+
+  // nsICdmaCellInfo
+
+  networkId: INT32_MAX,
+  systemId: INT32_MAX,
+  baseStationId: INT32_MAX,
+  longitude: INT32_MAX,
+  latitude: INT32_MAX,
+  cdmaDbm: INT32_MAX,
+  cdmaEcio: INT32_MAX,
+  evdoDbm: INT32_MAX,
+  evdoEcio: INT32_MAX,
+  evdoSnr: INT32_MAX
+};
 
 /**
  * Wrap a MobileConnectionCallback to a TelephonyDialCallback.
@@ -903,6 +1045,67 @@ MobileConnectionProvider.prototype = {
       aCallback.notifySuccess();
       return true;
     }).bind(this));
+  },
+
+  getCellInfoList: function(aCallback) {
+    this._radioInterface.sendWorkerMessage("getCellInfoList",
+                                           null,
+                                           function(aResponse) {
+      if (aResponse.errorMsg) {
+        aCallback.notifyGetCellInfoListFailed(aResponse.errorMsg);
+        return;
+      }
+
+      let cellInfoList = [];
+      let count = aResponse.result.length;
+      for (let i = 0; i < count; i++) {
+        let srcCellInfo = aResponse.result[i];
+        let cellInfo;
+        switch (srcCellInfo.type) {
+          case RIL.CELL_INFO_TYPE_GSM:
+            cellInfo = new GsmCellInfo();
+            break;
+          case RIL.CELL_INFO_TYPE_WCDMA:
+            cellInfo = new WcdmaCellInfo();
+            break;
+          case RIL.CELL_INFO_TYPE_LTE:
+            cellInfo = new LteCellInfo();
+            break;
+          case RIL.CELL_INFO_TYPE_CDMA:
+            cellInfo = new CdmaCellInfo();
+            break;
+        }
+
+        if (!cellInfo) {
+          continue;
+        }
+        this._updateInfo(cellInfo, srcCellInfo);
+        cellInfoList.push(cellInfo);
+      }
+      aCallback.notifyGetCellInfoList(count, cellInfoList);
+    }.bind(this));
+  },
+
+  getNeighboringCellIds: function(aCallback) {
+    this._radioInterface.sendWorkerMessage("getNeighboringCellIds",
+                                           null,
+                                           function(aResponse) {
+      if (aResponse.errorMsg) {
+        aCallback.notifyGetNeighboringCellIdsFailed(aResponse.errorMsg);
+        return;
+      }
+
+      let neighboringCellIds = [];
+      let count = aResponse.result.length;
+      for (let i = 0; i < count; i++) {
+        let srcCellInfo = aResponse.result[i];
+        let cellInfo = new NeighboringCellInfo();
+        this._updateInfo(cellInfo, srcCellInfo);
+        neighboringCellIds.push(cellInfo);
+      }
+      aCallback.notifyGetNeighboringCellIds(count, neighboringCellIds);
+
+    }.bind(this));
   },
 };
 

@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_telephony_telephonycallgroup_h__
 #define mozilla_dom_telephony_telephonycallgroup_h__
 
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/telephony/TelephonyCommon.h"
 
 namespace mozilla {
@@ -51,6 +52,9 @@ public:
 
   void
   Remove(TelephonyCall& aCall, ErrorResult& aRv);
+
+  already_AddRefed<Promise>
+  HangUp(ErrorResult& aRv);
 
   void
   Hold(ErrorResult& aRv);
