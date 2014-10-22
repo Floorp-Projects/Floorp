@@ -339,6 +339,7 @@ const PanelUI = {
                                  viewNode.querySelector(".panel-subview-footer"));
 
       let multiView = document.createElement("panelmultiview");
+      multiView.setAttribute("id", "customizationui-widget-multiview");
       multiView.setAttribute("nosubviews", "true");
       tempPanel.appendChild(multiView);
       multiView.setAttribute("mainViewIsSubView", "true");

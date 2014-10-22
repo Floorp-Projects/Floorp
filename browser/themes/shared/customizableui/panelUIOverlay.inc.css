@@ -1105,6 +1105,14 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   visibility: hidden;
 }
 
+.panel-mainview[panelid=customizationui-widget-panel],
+#customizationui-widget-multiview > .panel-viewcontainer,
+#customizationui-widget-multiview > .panel-viewcontainer > .panel-viewstack,
+#PanelUI-panicView > .panel-subview-body,
+#PanelUI-panicView {
+  overflow: visible;
+}
+
 #PanelUI-panicView.cui-widget-panelview {
   min-width: 280px;
 }
