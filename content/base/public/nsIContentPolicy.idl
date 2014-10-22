@@ -24,7 +24,7 @@ typedef unsigned long nsContentPolicyType;
  * by launching a dialog to prompt the user for something).
  */
 
-[scriptable,uuid(b6a71698-c117-441d-86b9-480cf06e3952)]
+[scriptable,uuid(8afe3e5c-f916-48fd-8075-9579d3502e1d)]
 interface nsIContentPolicy : nsISupports
 {
   /**
@@ -149,6 +149,12 @@ interface nsIContentPolicy : nsISupports
    * Indicates a beacon post.
    */
   const nsContentPolicyType TYPE_BEACON = 19;
+
+  /**
+   * Indicates a load initiated by the fetch() function from the Fetch
+   * specification.
+   */
+  const nsContentPolicyType TYPE_FETCH = 20;
 
   /* When adding new content types, please update nsContentBlocker,
    * NS_CP_ContentTypeName, nsCSPContext, all nsIContentPolicy

@@ -6,6 +6,7 @@
 #include "Accessible-inl.h"
 #include "AccIterator.h"
 #include "DocAccessible-inl.h"
+#include "DocAccessibleChild.h"
 #include "HTMLImageMapAccessible.h"
 #include "nsAccCache.h"
 #include "nsAccessiblePivot.h"
@@ -83,7 +84,7 @@ DocAccessible::
   mScrollPositionChangedTicks(0),
   mLoadState(eTreeConstructionPending), mDocFlags(0), mLoadEventType(0),
   mVirtualCursor(nullptr),
-  mPresShell(aPresShell)
+  mPresShell(aPresShell), mIPCDoc(nullptr)
 {
   mGenericTypes |= eDocument;
   mStateFlags |= eNotNodeMapEntry;
@@ -472,6 +473,12 @@ DocAccessible::Shutdown()
     mChildDocuments[idx]->Shutdown();
 
   mChildDocuments.Clear();
+
+  // XXX thinking about ordering?
+  if (IPCAccessibilityActive()) {
+    DocAccessibleChild::Send__delete__(mIPCDoc);
+    MOZ_ASSERT(!mIPCDoc);
+  }
 
   if (mVirtualCursor) {
     mVirtualCursor->RemoveObserver(this);
@@ -1445,6 +1452,13 @@ DocAccessible::DoInitialUpdate()
   if (!IsRoot()) {
     nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(Parent());
     ParentDocument()->FireDelayedEvent(reorderEvent);
+  }
+
+  uint32_t childCount = ChildCount();
+  for (uint32_t i = 0; i < childCount; i++) {
+    Accessible* child = GetChildAt(i);
+    nsRefPtr<AccShowEvent> event = new AccShowEvent(child, child->GetContent());
+  FireDelayedEvent(event);
   }
 }
 

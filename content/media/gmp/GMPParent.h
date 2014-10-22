@@ -170,6 +170,8 @@ private:
   virtual bool RecvAsyncShutdownComplete() MOZ_OVERRIDE;
   virtual bool RecvAsyncShutdownRequired() MOZ_OVERRIDE;
 
+  nsresult EnsureAsyncShutdownTimeoutSet();
+
   GMPState mState;
   nsCOMPtr<nsIFile> mDirectory; // plugin directory on disk
   nsString mName; // base name of plugin on disk, UTF-16 because used for paths
@@ -188,6 +190,7 @@ private:
   nsTArray<nsRefPtr<GMPTimerParent>> mTimers;
   nsTArray<nsRefPtr<GMPStorageParent>> mStorage;
   nsCOMPtr<nsIThread> mGMPThread;
+  nsCOMPtr<nsITimer> mAsyncShutdownTimeout; // GMP Thread only.
   // NodeId the plugin is assigned to, or empty if the the plugin is not
   // assigned to a NodeId.
   nsAutoCString mNodeId;

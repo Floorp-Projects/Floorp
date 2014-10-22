@@ -8,6 +8,7 @@
 #include "Accessible-inl.h"
 #include "nsEventShell.h"
 #include "DocAccessible.h"
+#include "DocAccessibleChild.h"
 #include "nsAccessibilityService.h"
 #include "nsTextEquivUtils.h"
 #ifdef A11Y_LOG
@@ -555,5 +556,15 @@ EventQueue::ProcessEventQueue()
 
     if (!mDocument)
       return;
+
+    if (IPCAccessibilityActive()) {
+    DocAccessibleChild* ipcDoc = mDocument->IPCDoc();
+      if (event->mEventType == nsIAccessibleEvent::EVENT_SHOW)
+        ipcDoc->ShowEvent(downcast_accEvent(event));
+      else if (event->mEventType == nsIAccessibleEvent::EVENT_HIDE)
+        ipcDoc->SendHideEvent(reinterpret_cast<uintptr_t>(event->GetAccessible()));
+      else
+        ipcDoc->SendEvent(event->GetEventType());
+    }
   }
 }

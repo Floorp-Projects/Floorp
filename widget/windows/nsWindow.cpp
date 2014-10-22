@@ -3132,20 +3132,12 @@ NS_METHOD nsWindow::EnableDragDrop(bool aEnable)
 
 NS_METHOD nsWindow::CaptureMouse(bool aCapture)
 {
-  TRACKMOUSEEVENT mTrack;
-  mTrack.cbSize = sizeof(TRACKMOUSEEVENT);
-  mTrack.dwFlags = TME_LEAVE;
-  mTrack.dwHoverTime = 0;
   if (aCapture) {
-    mTrack.hwndTrack = mWnd;
     ::SetCapture(mWnd);
   } else {
-    mTrack.hwndTrack = nullptr;
     ::ReleaseCapture();
   }
   sIsInMouseCapture = aCapture;
-  // Requests WM_MOUSELEAVE events for this window.
-  TrackMouseEvent(&mTrack);
   return NS_OK;
 }
 
@@ -4865,6 +4857,15 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_MOUSEMOVE:
     {
+      if (!mMousePresent) {
+        TRACKMOUSEEVENT tme;
+        tme.cbSize = sizeof(TRACKMOUSEEVENT);
+        tme.dwFlags =  TME_LEAVE;
+        tme.hwndTrack = mWnd;
+        // Request WM_MOUSELEAVE events for this window.
+        TrackMouseEvent(&tme);
+      }
+
       mMousePresent = true;
 
       // Suppress dispatch of pending events
@@ -4930,6 +4931,12 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       DispatchMouseEvent(NS_MOUSE_EXIT, mouseState, pos, false,
                          WidgetMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
     }
+    break;
+
+    case WM_NCMOUSELEAVE:
+      // If upon mouse leave event, only WM_NCMOUSELEAVE message is sent, sending WM_MOUSELEAVE message
+      // makes the event being properly handled.
+      SendMessage(mWnd, WM_MOUSELEAVE, 0, 0);
     break;
 
     case WM_CONTEXTMENU:

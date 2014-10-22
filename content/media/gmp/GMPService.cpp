@@ -136,8 +136,8 @@ GeckoMediaPluginService::GetGeckoMediaPluginService()
 
 NS_IMPL_ISUPPORTS(GeckoMediaPluginService, mozIGeckoMediaPluginService, nsIObserver)
 
-#define GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT 3000
 static int32_t sMaxAsyncShutdownWaitMs = 0;
+static bool sHaveSetTimeoutPrefCache = false;
 
 GeckoMediaPluginService::GeckoMediaPluginService()
   : mMutex("GeckoMediaPluginService::mMutex")
@@ -147,9 +147,8 @@ GeckoMediaPluginService::GeckoMediaPluginService()
   , mWaitingForPluginsAsyncShutdown(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  static bool setTimeoutPrefCache = false;
-  if (!setTimeoutPrefCache) {
-    setTimeoutPrefCache = true;
+  if (!sHaveSetTimeoutPrefCache) {
+    sHaveSetTimeoutPrefCache = true;
     Preferences::AddIntVarCache(&sMaxAsyncShutdownWaitMs,
                                 "media.gmp.async-shutdown-timeout",
                                 GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT);
@@ -160,6 +159,13 @@ GeckoMediaPluginService::~GeckoMediaPluginService()
 {
   MOZ_ASSERT(mPlugins.IsEmpty());
   MOZ_ASSERT(mAsyncShutdownPlugins.IsEmpty());
+}
+
+int32_t
+GeckoMediaPluginService::AsyncShutdownTimeoutMs()
+{
+  MOZ_ASSERT(sHaveSetTimeoutPrefCache);
+  return sMaxAsyncShutdownWaitMs;
 }
 
 nsresult
@@ -203,16 +209,6 @@ GeckoMediaPluginService::Init()
   // Kick off scanning for plugins
   nsCOMPtr<nsIThread> thread;
   return GetThread(getter_AddRefs(thread));
-}
-
-void
-AbortWaitingForGMPAsyncShutdown(nsITimer* aTimer, void* aClosure)
-{
-  NS_WARNING("Timed out waiting for GMP async shutdown!");
-  nsRefPtr<GeckoMediaPluginService> service = sSingletonService.get();
-  if (service) {
-    service->AbortAsyncShutdown();
-  }
 }
 
 NS_IMETHODIMP
@@ -533,9 +529,11 @@ GeckoMediaPluginService::AsyncShutdownComplete(GMPParent* aParent)
 
   mAsyncShutdownPlugins.RemoveElement(aParent);
   if (mAsyncShutdownPlugins.IsEmpty() && mShuttingDownOnGMPThread) {
-    // The main thread is waiting for async shutdown of plugins,
+    // The main thread may be waiting for async shutdown of plugins,
     // which has completed. Break the main thread out of its waiting loop.
-    AbortAsyncShutdown();
+    nsRefPtr<nsIRunnable> task(NS_NewRunnableMethod(
+      this, &GeckoMediaPluginService::SetAsyncShutdownComplete));
+    NS_DispatchToMainThread(task);
   }
 }
 
@@ -544,47 +542,6 @@ GeckoMediaPluginService::SetAsyncShutdownComplete()
 {
   MOZ_ASSERT(NS_IsMainThread());
   mWaitingForPluginsAsyncShutdown = false;
-}
-
-void
-GeckoMediaPluginService::AbortAsyncShutdown()
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-  for (size_t i = 0; i < mAsyncShutdownPlugins.Length(); i++) {
-    mAsyncShutdownPlugins[i]->AbortAsyncShutdown();
-  }
-  mAsyncShutdownPlugins.Clear();
-  if (mAsyncShutdownTimeout) {
-    mAsyncShutdownTimeout->Cancel();
-    mAsyncShutdownTimeout = nullptr;
-  }
-  nsRefPtr<nsIRunnable> task(NS_NewRunnableMethod(
-    this, &GeckoMediaPluginService::SetAsyncShutdownComplete));
-  NS_DispatchToMainThread(task);
-}
-
-nsresult
-GeckoMediaPluginService::SetAsyncShutdownTimeout()
-{
-  MOZ_ASSERT(!mAsyncShutdownTimeout);
-
-  nsresult rv;
-  mAsyncShutdownTimeout = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to create timer for async GMP shutdown");
-    return NS_OK;
-  }
-
-  // Set timer to abort waiting for plugins to shutdown if they take
-  // too long.
-  rv = mAsyncShutdownTimeout->SetTarget(mGMPThread);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-   return rv;
-  }
-
-  return mAsyncShutdownTimeout->InitWithFuncCallback(
-    &AbortWaitingForGMPAsyncShutdown, nullptr, sMaxAsyncShutdownWaitMs,
-    nsITimer::TYPE_ONE_SHOT);
 }
 
 void
@@ -607,16 +564,7 @@ GeckoMediaPluginService::UnloadPlugins()
     mPlugins.Clear();
   }
 
-  if (!mAsyncShutdownPlugins.IsEmpty()) {
-    // We have plugins that require async shutdown. Set a timer to abort
-    // waiting if they take too long to shutdown.
-    if (NS_FAILED(SetAsyncShutdownTimeout())) {
-      mAsyncShutdownPlugins.Clear();
-    }
-  }
-
   if (mAsyncShutdownPlugins.IsEmpty()) {
-    mAsyncShutdownPlugins.Clear();
     nsRefPtr<nsIRunnable> task(NS_NewRunnableMethod(
       this, &GeckoMediaPluginService::SetAsyncShutdownComplete));
     NS_DispatchToMainThread(task);

@@ -239,6 +239,19 @@ GetAccService()
 }
 
 /**
+ * Return true if we're in a content process and not B2G.
+ */
+inline bool
+IPCAccessibilityActive()
+{
+#ifdef MOZ_B2G
+  return false;
+#else
+  return XRE_GetProcessType() != GeckoProcessType_Default;
+#endif
+}
+
+/**
  * Map nsIAccessibleEvents constants to strings. Used by
  * nsIAccessibleRetrieval::getStringEventType() method.
  */

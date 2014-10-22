@@ -36,15 +36,15 @@
   V(add, (BinaryFunc<Float32x4, Add, Float32x4>), 2, 0)                             \
   V(and, (CoercedBinaryFunc<Float32x4, Int32x4, And, Float32x4>), 2, 0)             \
   V(div, (BinaryFunc<Float32x4, Div, Float32x4>), 2, 0)                             \
-  V(equal, (BinaryFunc<Float32x4, Equal, Int32x4>), 2, 0)                           \
-  V(greaterThan, (BinaryFunc<Float32x4, GreaterThan, Int32x4>), 2, 0)               \
-  V(greaterThanOrEqual, (BinaryFunc<Float32x4, GreaterThanOrEqual, Int32x4>), 2, 0) \
-  V(lessThan, (BinaryFunc<Float32x4, LessThan, Int32x4>), 2, 0)                     \
-  V(lessThanOrEqual, (BinaryFunc<Float32x4, LessThanOrEqual, Int32x4>), 2, 0)       \
+  V(equal, (CompareFunc<Float32x4, Equal>), 2, 0)                                   \
+  V(greaterThan, (CompareFunc<Float32x4, GreaterThan>), 2, 0)                       \
+  V(greaterThanOrEqual, (CompareFunc<Float32x4, GreaterThanOrEqual>), 2, 0)         \
+  V(lessThan, (CompareFunc<Float32x4, LessThan>), 2, 0)                             \
+  V(lessThanOrEqual, (CompareFunc<Float32x4, LessThanOrEqual>), 2, 0)               \
   V(max, (BinaryFunc<Float32x4, Maximum, Float32x4>), 2, 0)                         \
   V(min, (BinaryFunc<Float32x4, Minimum, Float32x4>), 2, 0)                         \
   V(mul, (BinaryFunc<Float32x4, Mul, Float32x4>), 2, 0)                             \
-  V(notEqual, (BinaryFunc<Float32x4, NotEqual, Int32x4>), 2, 0)                     \
+  V(notEqual, (CompareFunc<Float32x4, NotEqual>), 2, 0)                             \
   V(or, (CoercedBinaryFunc<Float32x4, Int32x4, Or, Float32x4>), 2, 0)               \
   V(scale, (FuncWith<Float32x4, Scale>), 2, 0)                                      \
   V(sub, (BinaryFunc<Float32x4, Sub, Float32x4>), 2, 0)                             \
@@ -82,9 +82,9 @@
 #define INT32X4_BINARY_FUNCTION_LIST(V)                                             \
   V(add, (BinaryFunc<Int32x4, Add, Int32x4>), 2, 0)                                 \
   V(and, (BinaryFunc<Int32x4, And, Int32x4>), 2, 0)                                 \
-  V(equal, (BinaryFunc<Int32x4, Equal, Int32x4>), 2, 0)                             \
-  V(greaterThan, (BinaryFunc<Int32x4, GreaterThan, Int32x4>), 2, 0)                 \
-  V(lessThan, (BinaryFunc<Int32x4, LessThan, Int32x4>), 2, 0)                       \
+  V(equal, (CompareFunc<Int32x4, Equal>), 2, 0)                                     \
+  V(greaterThan, (CompareFunc<Int32x4, GreaterThan>), 2, 0)                         \
+  V(lessThan, (CompareFunc<Int32x4, LessThan>), 2, 0)                               \
   V(mul, (BinaryFunc<Int32x4, Mul, Int32x4>), 2, 0)                                 \
   V(or, (BinaryFunc<Int32x4, Or, Int32x4>), 2, 0)                                   \
   V(sub, (BinaryFunc<Int32x4, Sub, Int32x4>), 2, 0)                                 \
