@@ -66,28 +66,6 @@ NEW_BINDING(nsGlobalWindow, Window);
 
 #define DEFINE_UNWRAP_CAST(_interface, _base, _bit)                           \
 template <>                                                                   \
-MOZ_ALWAYS_INLINE bool                                                        \
-xpc_qsUnwrapThis<_interface>(JSContext *cx,                                   \
-                             JS::HandleObject obj,                            \
-                             _interface **ppThis,                             \
-                             nsISupports **pThisRef,                          \
-                             JS::MutableHandleValue pThisVal,                 \
-                             bool failureFatal)                               \
-{                                                                             \
-    nsresult rv;                                                              \
-    nsISupports *native =                                                     \
-        castNativeFromWrapper(cx, obj, _bit,                                  \
-                              ProtoIDAndDepth<_interface>::PrototypeID,       \
-                              ProtoIDAndDepth<_interface>::Depth,             \
-                              pThisRef, pThisVal, &rv);                       \
-    *ppThis = nullptr;  /* avoids uninitialized warnings in callers */        \
-    if (failureFatal && !native)                                              \
-        return xpc_qsThrow(cx, rv);                                           \
-    *ppThis = static_cast<_interface*>(static_cast<_base*>(native));          \
-    return true;                                                              \
-}                                                                             \
-                                                                              \
-template <>                                                                   \
 MOZ_ALWAYS_INLINE nsresult                                                    \
 xpc_qsUnwrapArg<_interface>(JSContext *cx,                                    \
                             JS::HandleValue v,                                \
