@@ -2,3 +2,4 @@
 # It should not be included in layout/reftests/reftest.list until vertical layout
 # is turned on
 == 1082844.html 1082844-ref.html
+== 1083748.html 1083748-ref.html
