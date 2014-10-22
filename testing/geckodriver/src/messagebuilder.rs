@@ -1,10 +1,8 @@
-use std::collections::{TreeMap, HashMap};
 use regex::{Regex, Captures};
-use serialize::json;
 
 use hyper::method::{Method, Get, Post, Delete};
 
-use command::{WebDriverMessage, WebDriverCommand};
+use command::{WebDriverMessage};
 use common::{WebDriverResult, WebDriverError, UnknownCommand};
 
 #[deriving(Clone)]
