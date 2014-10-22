@@ -571,18 +571,17 @@
     background-color: rgba(0,0,0,.2)
   }
 
+/* Force full height on all parents up to the video elements
+ * this way we can ensure the aspect ratio and use height 100%
+ * on the video element
+ * */
+html, .fx-embedded, #main,
+.video-layout-wrapper,
+.conversation {
+  height: 100%;
+}
+
 @media screen and (min-width:640px) {
-
-  /* Force full height on all parents up to the video elements
-   * this way we can ensure the aspect ratio and use height 100%
-   * on the video element
-   * */
-  html, body, #main,
-  .video-layout-wrapper,
-  .conversation {
-    height: 100%;
-  }
-
   .standalone .conversation-toolbar {
     position: absolute;
     bottom: 0;
