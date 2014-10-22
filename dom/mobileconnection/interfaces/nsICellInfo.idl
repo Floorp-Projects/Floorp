@@ -4,13 +4,17 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(1aed4c36-979e-4d20-9fa0-55139da8301e)]
+interface nsICellInfo;
+
+[scriptable, uuid(d8fae631-7ade-4024-b288-7efe75e6b091)]
 interface nsICellInfoListCallback : nsISupports
 {
   /**
-   * result is an array of nsICellInfo.
+   * result is an array of nsICellInfo, which could be instances of
+   * nsIGsmCellInfo, nsIWcdmaCellInfo, nsICdmaCellInfo or nsILteCellInfo.
    */
-  void notifyGetCellInfoList(in jsval result);
+  void notifyGetCellInfoList(in uint32_t count,
+                             [array, size_is(count)] in nsICellInfo result);
 
   /**
    * Callback function with error message.
