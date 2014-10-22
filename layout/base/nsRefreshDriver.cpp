@@ -1362,6 +1362,10 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
                                                       TRACING_INTERVAL_END);
     }
     profiler_tracing("Paint", "DisplayList", TRACING_INTERVAL_END);
+
+    if (nsContentUtils::XPConnect()) {
+      nsContentUtils::XPConnect()->NotifyDidPaint();
+    }
   }
 
   for (uint32_t i = 0; i < mPostRefreshObservers.Length(); ++i) {
