@@ -251,10 +251,10 @@ DirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool *extens
 }
 
 bool
-DirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const
+DirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::preventExtensions(cx, target, succeeded);
+    return JSObject::preventExtensions(cx, target);
 }
 
 bool

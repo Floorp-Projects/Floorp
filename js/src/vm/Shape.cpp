@@ -1345,15 +1345,13 @@ Shape::setObjectMetadata(JSContext *cx, JSObject *metadata, TaggedProto proto, S
 }
 
 /* static */ bool
-JSObject::preventExtensions(JSContext *cx, HandleObject obj, bool *succeeded)
+JSObject::preventExtensions(JSContext *cx, HandleObject obj)
 {
     if (obj->is<ProxyObject>())
-        return js::Proxy::preventExtensions(cx, obj, succeeded);
+        return js::Proxy::preventExtensions(cx, obj);
 
-    if (!obj->nonProxyIsExtensible()) {
-        *succeeded = true;
+    if (!obj->nonProxyIsExtensible())
         return true;
-    }
 
     /*
      * Force lazy properties to be resolved by iterating over the objects' own
@@ -1372,7 +1370,6 @@ JSObject::preventExtensions(JSContext *cx, HandleObject obj, bool *succeeded)
     if (obj->isNative() && !NativeObject::sparsifyDenseElements(cx, obj.as<NativeObject>()))
         return false;
 
-    *succeeded = true;
     return obj->setFlag(cx, BaseShape::NOT_EXTENSIBLE, GENERATE_SHAPE);
 }
 

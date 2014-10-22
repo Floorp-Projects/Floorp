@@ -35,10 +35,8 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
 
     /*** IPC handlers ***/
 
-    bool RecvPreventExtensions(const uint64_t &objId, ReturnStatus *rs,
-                               bool *succeeded) {
-        return Answer::RecvPreventExtensions(ObjectId::deserialize(objId), rs,
-                                             succeeded);
+    bool RecvPreventExtensions(const uint64_t &objId, ReturnStatus *rs) {
+        return Answer::RecvPreventExtensions(ObjectId::deserialize(objId), rs);
     }
     bool RecvGetPropertyDescriptor(const uint64_t &objId, const JSIDVariant &id,
                                      ReturnStatus *rs,
@@ -133,9 +131,8 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     bool SendDropObject(const ObjectId &objId) {
         return Base::SendDropObject(objId.serialize());
     }
-    bool SendPreventExtensions(const ObjectId &objId, ReturnStatus *rs,
-                               bool *succeeded) {
-        return Base::SendPreventExtensions(objId.serialize(), rs, succeeded);
+    bool SendPreventExtensions(const ObjectId &objId, ReturnStatus *rs) {
+        return Base::SendPreventExtensions(objId.serialize(), rs);
     }
     bool SendGetPropertyDescriptor(const ObjectId &objId, const JSIDVariant &id,
                                      ReturnStatus *rs,
