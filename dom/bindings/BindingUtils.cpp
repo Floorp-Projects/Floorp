@@ -1866,24 +1866,44 @@ GlobalObject::GetAsSupports() const
     return mGlobalObject;
   }
 
-  if (!NS_IsMainThread()) {
-    mGlobalObject = UnwrapDOMObjectToISupports(mGlobalJSObject);
+  MOZ_ASSERT(!js::IsWrapper(mGlobalJSObject));
+
+  // Most of our globals are DOM objects.  Try that first.  Note that this
+  // assumes that either the first nsISupports in the object is the canonical
+  // one or that we don't care about the canonical nsISupports here.
+  mGlobalObject = UnwrapDOMObjectToISupports(mGlobalJSObject);
+  if (mGlobalObject) {
     return mGlobalObject;
   }
 
-  JS::Rooted<JS::Value> val(mCx, JS::ObjectValue(*mGlobalJSObject));
+  MOZ_ASSERT(NS_IsMainThread(), "All our worker globals are DOM objects");
 
-  // Switch this to UnwrapDOMObjectToISupports once our global objects are
-  // using new bindings.
-  nsresult rv = UnwrapArg<nsISupports>(mCx, val, &mGlobalObject,
-                                       static_cast<nsISupports**>(getter_AddRefs(mGlobalObjectRef)),
-                                       &val);
-  if (NS_FAILED(rv)) {
-    mGlobalObject = nullptr;
-    Throw(mCx, NS_ERROR_XPC_BAD_CONVERT_JS);
+  // Remove everything below here once all our global objects are using new
+  // bindings.  If that ever happens; it would need to include Sandbox and
+  // BackstagePass.
+
+  // See whether mGlobalJSObject is an XPCWrappedNative.  This will redo the
+  // IsWrapper bit above and the UnwrapDOMObjectToISupports in the case when
+  // we're not actually an XPCWrappedNative, but this should be a rare-ish case
+  // anyway.
+  mGlobalObject = xpc::UnwrapReflectorToISupports(mGlobalJSObject);
+  if (mGlobalObject) {
+    return mGlobalObject;
   }
 
-  return mGlobalObject;
+  // And now a final hack.  Sandbox is not a reflector, but it does have an
+  // nsIGlobalObject hanging out in its private slot.  Handle that case here,
+  // (though again, this will do the useless UnwrapDOMObjectToISupports if we
+  // got here for something that is somehow not a DOM object, not an
+  // XPCWrappedNative _and_ not a Sandbox).
+  if (XPCConvert::GetISupportsFromJSObject(mGlobalJSObject, &mGlobalObject)) {
+    return mGlobalObject;
+  }
+
+  MOZ_ASSERT(!mGlobalObject);
+
+  Throw(mCx, NS_ERROR_XPC_BAD_CONVERT_JS);
+  return nullptr;
 }
 
 bool
