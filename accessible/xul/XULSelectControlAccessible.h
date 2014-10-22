@@ -26,7 +26,7 @@ public:
   virtual void Shutdown();
 
   // SelectAccessible
-  virtual already_AddRefed<nsIArray> SelectedItems();
+  virtual void SelectedItems(nsTArray<Accessible*>* aItems) MOZ_OVERRIDE;
   virtual uint32_t SelectedItemCount();
   virtual Accessible* GetSelectedItem(uint32_t aIndex);
   virtual bool IsItemSelected(uint32_t aIndex);
