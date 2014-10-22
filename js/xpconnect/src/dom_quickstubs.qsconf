@@ -50,7 +50,4 @@ customIncludes = [
     ]
 
 newBindingProperties = {
-    # Once the last entry here goes away, we can make the sNativePropertyHooks
-    # of bindings static.
-    'nsIDOMEventTarget': '&mozilla::dom::EventTargetBinding::sNativePropertyHooks->mNativeProperties',
     }
