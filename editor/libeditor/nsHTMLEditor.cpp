@@ -1622,6 +1622,13 @@ nsHTMLEditor::InsertNodeAtPoint(nsIDOMNode *aNode,
     // Get the next parent
     parent->GetParentNode(getter_AddRefs(tmp));
     NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
+    if (!IsEditable(tmp)) {
+      // There's no suitable place to put the node in this editing host.  Maybe
+      // someone is trying to put block content in a span.  So just put it
+      // where we were originally asked.
+      parent = topChild = *ioParent;
+      break;
+    }
     topChild = parent;
     parent = tmp;
   }
