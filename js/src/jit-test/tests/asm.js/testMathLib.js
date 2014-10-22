@@ -64,11 +64,13 @@ for (n of [-Math.pow(2,31)-1, -Math.pow(2,31), -Math.pow(2,31)+1, -1, 0, 1, Math
 var f = asmLink(asmCompile('glob', USE_ASM + 'var clz32=glob.Math.clz32; function f(i) { i=i|0; return clz32(i)|0 } return f'), this);
 for (n of [0, 1, 2, 15, 16, Math.pow(2,31)-1, Math.pow(2,31), Math.pow(2,31)+1, Math.pow(2,32)-1, Math.pow(2,32), Math.pow(2,32)+1])
     assertEq(f(n), Math.clz32(n|0));
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var clz32=glob.Math.clz32; function f(i, j) { i=i|0;j=j|0; return (clz32(i) < (j|0))|0 } return f'), this)(0x1, 30), 0);
+assertEq(asmLink(asmCompile('glob', USE_ASM + 'var clz32=glob.Math.clz32; function f(i, j) { i=i|0;j=j|0; return (clz32(i) < (j>>>0))|0 } return f'), this)(0x1, 30), 0);
 
 var doubleNumbers = [NaN, Infinity, -Infinity, -10000, -3.4, -0, 0, 3.4, 10000];
 var floatNumbers = [];
 for (var x of doubleNumbers) floatNumbers.push(Math.fround(x));
-var intNumbers = [-Math.pow(2,31), -10000, -3, -1, 0, 3, 10000, Math.pow(2,31)];
+var intNumbers = [-Math.pow(2,31), -10000, -3, -1, 0, 3, 10000, Math.pow(2,31), Math.pow(2,31)+1];
 
 function testBinary(f, g, numbers) {
     for (n of numbers)
