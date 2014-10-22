@@ -3794,8 +3794,7 @@ nsTreeBodyFrame::PaintProgressMeter(int32_t              aRowIndex,
       int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
       Rect rect =
         NSRectToSnappedRect(meterRect, appUnitsPerDevPixel, *drawTarget);
-      ColorPattern color(ToDeviceColor(
-                           GetVisitedDependentColor(eCSSProperty_color)));
+      ColorPattern color(ToDeviceColor(meterContext->StyleColor()->mColor));
       drawTarget->FillRect(rect, color);
     }
   }
