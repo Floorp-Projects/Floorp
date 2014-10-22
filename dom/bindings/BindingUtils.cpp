@@ -829,9 +829,9 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
   JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*obj));
   nsISupports* native = nullptr;
   nsCOMPtr<nsISupports> nativeRef;
-  xpc_qsUnwrapArg<nsISupports>(cx, val, &native,
-                               static_cast<nsISupports**>(getter_AddRefs(nativeRef)),
-                               &val);
+  UnwrapArg<nsISupports>(cx, val, &native,
+                         static_cast<nsISupports**>(getter_AddRefs(nativeRef)),
+                         &val);
   if (!native) {
     return Throw(cx, NS_ERROR_FAILURE);
   }
@@ -846,8 +846,7 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
 
   nsIJSID* iid;
   SelfRef iidRef;
-  if (NS_FAILED(xpc_qsUnwrapArg<nsIJSID>(cx, args[0], &iid, &iidRef.ptr,
-                                         args[0]))) {
+  if (NS_FAILED(UnwrapArg<nsIJSID>(cx, args[0], &iid, &iidRef.ptr, args[0]))) {
     return Throw(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
   }
   MOZ_ASSERT(iid);
@@ -1876,9 +1875,9 @@ GlobalObject::GetAsSupports() const
 
   // Switch this to UnwrapDOMObjectToISupports once our global objects are
   // using new bindings.
-  nsresult rv = xpc_qsUnwrapArg<nsISupports>(mCx, val, &mGlobalObject,
-                                             static_cast<nsISupports**>(getter_AddRefs(mGlobalObjectRef)),
-                                             &val);
+  nsresult rv = UnwrapArg<nsISupports>(mCx, val, &mGlobalObject,
+                                       static_cast<nsISupports**>(getter_AddRefs(mGlobalObjectRef)),
+                                       &val);
   if (NS_FAILED(rv)) {
     mGlobalObject = nullptr;
     Throw(mCx, NS_ERROR_XPC_BAD_CONVERT_JS);
