@@ -7049,8 +7049,8 @@ Rect NSRectToRect(const nsRect& aRect, double aAppUnitsPerPixel)
               Float(aRect.height / aAppUnitsPerPixel));
 }
 
-Rect NSRectToRect(const nsRect& aRect, double aAppUnitsPerPixel,
-                  const gfx::DrawTarget& aSnapDT)
+Rect NSRectToSnappedRect(const nsRect& aRect, double aAppUnitsPerPixel,
+                         const gfx::DrawTarget& aSnapDT)
 {
   // Note that by making aAppUnitsPerPixel a double we're doing floating-point
   // division using a larger type and avoiding rounding error.
