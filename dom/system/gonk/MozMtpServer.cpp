@@ -20,7 +20,6 @@
 
 #include "base/message_loop.h"
 #include "DeviceStorage.h"
-#include "mozilla/FileUtils.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/Services.h"
