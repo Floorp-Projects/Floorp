@@ -77,7 +77,7 @@ function Test(gl, prog) {
 
   //////////////////
 
-  debug('clear(R,G,B,0)');
+  ok(true, 'clear(R,G,B,0)');
 
   Reset(gl);
 
@@ -102,7 +102,7 @@ function Test(gl, prog) {
 
   //////////////////
 
-  debug('mask(R,G,B,0), clear(R,G,B,1)');
+  ok(true, 'mask(R,G,B,0), clear(R,G,B,1)');
 
   Reset(gl);
 
@@ -129,6 +129,7 @@ function Test(gl, prog) {
      'toDataURL should be unchanged after blending.');
 
   ok(true, 'Test complete.');
+  SimpleTest.finish();
 }
 
 (function(){
@@ -146,6 +147,7 @@ function Test(gl, prog) {
   ok(prog, 'Program should link.');
   prog.aPosCoord = gl.getAttribLocation(prog, 'aPosCoord');
 
+  SimpleTest.waitForExplicitFinish();
   setTimeout(function(){ Test(gl, prog); }, 500);
 })();
 
