@@ -19,27 +19,6 @@ class XPCCallContext;
 bool
 xpc_qsThrow(JSContext *cx, nsresult rv);
 
-/**
- * Fail after an XPCOM method returned rv.
- */
-bool
-xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp);
-
-/**
- * Fail after converting a method argument fails.
- */
-void
-xpc_qsThrowBadArg(JSContext *cx, nsresult rv, jsval *vp, unsigned paramnum);
-
-void
-xpc_qsThrowBadArgWithCcx(XPCCallContext &ccx, nsresult rv, unsigned paramnum);
-
-void
-xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, unsigned paramnum,
-                             const char *ifaceName, const char *memberName);
-
-bool
-xpc_qsGetterOnlyNativeStub(JSContext *cx, unsigned argc, jsval *vp);
 
 /* Functions for converting values between COM and JS. */
 
