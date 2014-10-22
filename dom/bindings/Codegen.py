@@ -3675,20 +3675,24 @@ class CastableObjectUnwrapper():
                 nsresult rv;
                 { // Scope for the JSAutoCompartment, because we only
                   // want to be in that compartment for the UnwrapArg call.
+                  JS::Rooted<JSObject*> source(cx, ${source});
                   JSAutoCompartment ac(cx, ${source});
-                  rv = UnwrapArg<${type}>(cx, val, &objPtr, &objRef.ptr, &val);
+                  JS::Rooted<JS::Value> unused(cx);
+                  rv = UnwrapArg<${type}>(cx, source, &objPtr, &objRef.ptr, &unused);
                 }
                 """)
         else:
             self.substitution["uncheckedObjDecl"] = ""
             self.substitution["source"] = source
-            xpconnectUnwrap = "nsresult rv = UnwrapArg<${type}>(cx, val, &objPtr, &objRef.ptr, &val);\n"
+            xpconnectUnwrap = (
+                "JS::Rooted<JSObject*> source(cx, ${source});\n"
+                "JS::Rooted<JS::Value> unused(cx);\n"
+                "nsresult rv = UnwrapArg<${type}>(cx, source, &objPtr, &objRef.ptr, &unused);\n")
 
         if descriptor.hasXPConnectImpls:
             self.substitution["codeOnFailure"] = string.Template(
                 "${type} *objPtr;\n"
-                "SelfRef objRef;\n"
-                "JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*${source}));\n" +
+                "SelfRef objRef;\n" +
                 xpconnectUnwrap +
                 "if (NS_FAILED(rv)) {\n"
                 "${indentedCodeOnFailure}"
@@ -4763,9 +4767,10 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             else:
                 holderType = "nsRefPtr<" + typeName + ">"
             templateBody += (
-                "JS::Rooted<JS::Value> tmpVal(cx, ${val});\n" +
+                "JS::Rooted<JSObject*> source(cx, &${val}.toObject());\n"
+                "JS::Rooted<JS::Value> tmpVal(cx);\n" +
                 typePtr + " tmp;\n"
-                "if (NS_FAILED(UnwrapArg<" + typeName + ">(cx, ${val}, &tmp, static_cast<" + typeName + "**>(getter_AddRefs(${holderName})), &tmpVal))) {\n")
+                "if (NS_FAILED(UnwrapArg<" + typeName + ">(cx, source, &tmp, static_cast<" + typeName + "**>(getter_AddRefs(${holderName})), &tmpVal))) {\n")
             templateBody += CGIndenter(onFailureBadType(failureCode,
                                                         descriptor.interface.identifier.name)).define()
             templateBody += ("}\n"
