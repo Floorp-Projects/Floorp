@@ -1813,7 +1813,7 @@ public:
 
   virtual void NotifyExpired(ScrollFrameHelper *aObject) {
     RemoveObject(aObject);
-    aObject->MarkInactive();
+    aObject->MarkNotRecentlyScrolled();
   }
 };
 
@@ -1863,20 +1863,19 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mPostedReflowCallback(false)
   , mMayHaveDirtyFixedChildren(false)
   , mUpdateScrollbarAttributes(false)
+  , mHasBeenScrolledRecently(false)
   , mCollapsedResizer(false)
   , mShouldBuildScrollableLayer(false)
   , mHasBeenScrolled(false)
   , mIsResolutionSet(false)
 {
-  mScrollingActive = IsAlwaysActive();
-
   if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
     mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(aOuter));
   }
 
   EnsureImageVisPrefsCached();
 
-  if (mScrollingActive &&
+  if (IsAlwaysActive() &&
       gfxPlatform::GetPlatform()->UseTiling() &&
       !nsLayoutUtils::UsesAsyncScrolling() &&
       mOuter->GetContent()) {
@@ -2220,18 +2219,18 @@ bool ScrollFrameHelper::IsAlwaysActive() const
           styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN);
 }
 
-void ScrollFrameHelper::MarkInactive()
+void ScrollFrameHelper::MarkNotRecentlyScrolled()
 {
-  if (IsAlwaysActive() || !mScrollingActive)
+  if (!mHasBeenScrolledRecently)
     return;
 
-  mScrollingActive = false;
+  mHasBeenScrolledRecently = false;
   mOuter->SchedulePaint();
 }
 
-void ScrollFrameHelper::MarkActive()
+void ScrollFrameHelper::MarkRecentlyScrolled()
 {
-  mScrollingActive = true;
+  mHasBeenScrolledRecently = true;
   if (IsAlwaysActive())
     return;
 
@@ -2249,7 +2248,7 @@ void ScrollFrameHelper::ScrollVisual(nsPoint aOldScrolledFramePos)
 {
   // Mark this frame as having been scrolled. If this is the root
   // scroll frame of a content document, then IsAlwaysActive()
-  // will return true from now on and MarkInactive() won't
+  // will return true from now on and MarkNotRecentlyScrolled() won't
   // have any effect.
   mHasBeenScrolled = true;
 
@@ -2259,10 +2258,10 @@ void ScrollFrameHelper::ScrollVisual(nsPoint aOldScrolledFramePos)
   bool needToInvalidateOnScroll = NeedToInvalidateOnScroll(mOuter);
   mOuter->RemoveStateBits(NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL);
   if (IsScrollingActive() && needToInvalidateOnScroll) {
-    MarkInactive();
+    MarkNotRecentlyScrolled();
   }
   if (!needToInvalidateOnScroll) {
-    MarkActive();
+    MarkRecentlyScrolled();
   }
 
   mOuter->SchedulePaint();
@@ -2773,7 +2772,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (aBuilder->IsPaintingToWindow()) {
     mScrollPosAtLastPaint = GetScrollPosition();
     if (IsScrollingActive() && NeedToInvalidateOnScroll(mOuter)) {
-      MarkInactive();
+      MarkNotRecentlyScrolled();
     }
     if (IsScrollingActive()) {
       if (mScrollPosForLayerPixelAlignment == nsPoint(-1,-1)) {
