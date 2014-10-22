@@ -29,7 +29,6 @@ EXPORTS += [
     'nsIDOMClassInfo.h',
     'nsIDOMScriptObjectFactory.h',
     'nsIGlobalObject.h',
-    'nsIJSNativeInitializer.h',
     'nsIScriptContext.h',
     'nsIScriptGlobalObject.h',
     'nsIScriptNameSpaceManager.h',

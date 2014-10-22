@@ -120,6 +120,9 @@ BINPATH = bin
 endif
 DEFINES += -DBINPATH=$(BINPATH)
 
+AB = $(firstword $(subst -, ,$(AB_CD)))
+DEFINES += -DAB=$(AB)
+
 DEFINES += -DMOZ_ICU_VERSION=$(MOZ_ICU_VERSION)
 ifdef MOZ_NATIVE_ICU
 DEFINES += -DMOZ_NATIVE_ICU
