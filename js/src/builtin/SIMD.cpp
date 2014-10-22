@@ -159,7 +159,7 @@ static bool SignMask(JSContext *cx, unsigned argc, Value *vp)
 
 #define SIGN_MASK(type) \
 static bool type##SignMask(JSContext *cx, unsigned argc, Value *vp) { \
-    return SignMask<Int32x4>(cx, argc, vp); \
+    return SignMask<type>(cx, argc, vp); \
 }
     SIGN_MASK(Float32x4);
     SIGN_MASK(Int32x4);
@@ -782,6 +782,25 @@ Int32x4BinaryScalar(JSContext *cx, unsigned argc, Value *vp)
 
     for (unsigned i = 0; i < 4; i++)
         result[i] = Op::apply(val[i], bits);
+    return StoreResult<Int32x4>(cx, args, result);
+}
+
+template<typename In, template<typename C> class Op>
+static bool
+CompareFunc(JSContext *cx, unsigned argc, Value *vp)
+{
+    typedef typename In::Elem InElem;
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 2 || !IsVectorObject<In>(args[0]) || !IsVectorObject<In>(args[1]))
+        return ErrorBadArgs(cx);
+
+    int32_t result[Int32x4::lanes];
+    InElem *left = TypedObjectMemory<InElem *>(args[0]);
+    InElem *right = TypedObjectMemory<InElem *>(args[1]);
+    for (unsigned i = 0; i < Int32x4::lanes; i++)
+        result[i] = Op<InElem>::apply(left[i], right[i]);
+
     return StoreResult<Int32x4>(cx, args, result);
 }
 
