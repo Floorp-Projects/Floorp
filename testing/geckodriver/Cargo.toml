@@ -3,6 +3,7 @@
 name = "wires"
 version = "0.0.1"
 authors = ["James Graham <james@hoppipolla.co.uk>"]
+build = "make"
 
 [dependencies.hyper]
 git = "https://github.com/hyperium/hyper.git"
