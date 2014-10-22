@@ -511,16 +511,8 @@ IsAboutToBeFinalizedFromAnyThread(T **thingp)
 
     Zone *zone = thing->asTenured().zoneFromAnyThread();
     if (zone->isGCSweeping()) {
-        /*
-         * We should return false for things that have been allocated during
-         * incremental sweeping, but this possibility doesn't occur at the moment
-         * because this function is only called at the very start of the sweeping a
-         * compartment group and during minor gc. Rather than do the extra check,
-         * we just assert that it's not necessary.
-         */
-        MOZ_ASSERT_IF(!rt->isHeapMinorCollecting(),
-                      !thing->asTenured().arenaHeader()->allocatedDuringIncremental);
-
+        if (thing->asTenured().arenaHeader()->allocatedDuringIncremental)
+            return false;
         return !thing->asTenured().isMarked();
     }
 #ifdef JSGC_COMPACTING

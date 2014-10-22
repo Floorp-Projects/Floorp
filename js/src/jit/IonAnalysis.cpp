@@ -2850,7 +2850,7 @@ jit::AnalyzeNewScriptDefiniteProperties(JSContext *cx, JSFunction *fun,
                                         types::TypeObject *type, HandleNativeObject baseobj,
                                         Vector<types::TypeNewScript::Initializer> *initializerList)
 {
-    MOZ_ASSERT(cx->compartment()->activeAnalysis);
+    MOZ_ASSERT(cx->zone()->types.activeAnalysis);
 
     // When invoking 'new' on the specified script, try to find some properties
     // which will definitely be added to the created object before it has a

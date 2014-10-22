@@ -2846,7 +2846,7 @@ jit::InvalidateAll(FreeOp *fop, Zone *zone)
 
 void
 jit::Invalidate(types::TypeZone &types, FreeOp *fop,
-                const Vector<types::RecompileInfo> &invalid, bool resetUses,
+                const types::RecompileInfoVector &invalid, bool resetUses,
                 bool cancelOffThread)
 {
     JitSpew(JitSpew_IonInvalidate, "Start invalidation.");
@@ -2855,23 +2855,24 @@ jit::Invalidate(types::TypeZone &types, FreeOp *fop,
     // to the traversal which frames have been invalidated.
     size_t numInvalidations = 0;
     for (size_t i = 0; i < invalid.length(); i++) {
-        const types::CompilerOutput &co = *invalid[i].compilerOutput(types);
-        if (!co.isValid())
+        const types::CompilerOutput *co = invalid[i].compilerOutput(types);
+        if (!co)
             continue;
+        MOZ_ASSERT(co->isValid());
 
         if (cancelOffThread)
-            CancelOffThreadIonCompile(co.script()->compartment(), co.script());
+            CancelOffThreadIonCompile(co->script()->compartment(), co->script());
 
-        if (!co.ion())
+        if (!co->ion())
             continue;
 
         JitSpew(JitSpew_IonInvalidate, " Invalidate %s:%u, IonScript %p",
-                co.script()->filename(), co.script()->lineno(), co.ion());
+                co->script()->filename(), co->script()->lineno(), co->ion());
 
         // Keep the ion script alive during the invalidation and flag this
         // ionScript as being invalidated.  This increment is removed by the
         // loop after the calls to InvalidateActivation.
-        co.ion()->incref();
+        co->ion()->incref();
         numInvalidations++;
     }
 
@@ -2887,19 +2888,20 @@ jit::Invalidate(types::TypeZone &types, FreeOp *fop,
     // IonScript will be immediately destroyed. Otherwise, it will be held live
     // until its last invalidated frame is destroyed.
     for (size_t i = 0; i < invalid.length(); i++) {
-        types::CompilerOutput &co = *invalid[i].compilerOutput(types);
-        if (!co.isValid())
+        types::CompilerOutput *co = invalid[i].compilerOutput(types);
+        if (!co)
             continue;
+        MOZ_ASSERT(co->isValid());
 
-        ExecutionMode executionMode = co.mode();
-        JSScript *script = co.script();
-        IonScript *ionScript = co.ion();
+        ExecutionMode executionMode = co->mode();
+        JSScript *script = co->script();
+        IonScript *ionScript = co->ion();
         if (!ionScript)
             continue;
 
         SetIonScript(nullptr, script, executionMode, nullptr);
         ionScript->decref(fop);
-        co.invalidate();
+        co->invalidate();
         numInvalidations--;
 
         // Wait for the scripts to get warm again before doing another
@@ -2923,7 +2925,7 @@ jit::Invalidate(types::TypeZone &types, FreeOp *fop,
 }
 
 void
-jit::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses,
+jit::Invalidate(JSContext *cx, const types::RecompileInfoVector &invalid, bool resetUses,
                 bool cancelOffThread)
 {
     jit::Invalidate(cx->zone()->types, cx->runtime()->defaultFreeOp(), invalid, resetUses,
@@ -2934,7 +2936,7 @@ bool
 jit::IonScript::invalidate(JSContext *cx, bool resetUses, const char *reason)
 {
     JitSpew(JitSpew_IonInvalidate, " Invalidate IonScript %p: %s", this, reason);
-    Vector<types::RecompileInfo> list(cx);
+    types::RecompileInfoVector list;
     if (!list.append(recompileInfo()))
         return false;
     Invalidate(cx, list, resetUses, true);
@@ -2968,7 +2970,7 @@ jit::Invalidate(JSContext *cx, JSScript *script, ExecutionMode mode, bool resetU
         js_free(buf);
     }
 
-    Vector<types::RecompileInfo> scripts(cx);
+    types::RecompileInfoVector scripts;
 
     switch (mode) {
       case SequentialExecution:

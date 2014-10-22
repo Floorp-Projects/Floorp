@@ -227,6 +227,7 @@ class LifoAlloc
     // Steal allocated chunks from |other|.
     void steal(LifoAlloc *other) {
         MOZ_ASSERT(!other->markCount);
+        MOZ_ASSERT(!latest);
 
         // Copy everything from |other| to |this| except for |peakSize_|, which
         // requires some care.

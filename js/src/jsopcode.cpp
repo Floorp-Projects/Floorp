@@ -1001,7 +1001,7 @@ js_Disassemble1(JSContext *cx, HandleScript script, jsbytecode *pc,
 
       case JOF_OBJECT: {
         /* Don't call obj.toSource if analysis/inference is active. */
-        if (script->compartment()->activeAnalysis) {
+        if (script->zone()->types.activeAnalysis) {
             Sprint(sp, " object");
             break;
         }
@@ -2051,7 +2051,7 @@ js::StopPCCountProfiling(JSContext *cx)
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         for (ZoneCellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
-            if (script->hasScriptCounts() && script->types) {
+            if (script->hasScriptCounts() && script->types()) {
                 ScriptAndCounts sac;
                 sac.script = script;
                 sac.scriptCounts.set(script->releaseScriptCounts());
