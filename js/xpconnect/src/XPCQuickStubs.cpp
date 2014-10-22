@@ -52,8 +52,7 @@ static nsresult
 getWrapper(JSContext *cx,
            JSObject *obj,
            XPCWrappedNative **wrapper,
-           JSObject **cur,
-           XPCWrappedNativeTearOff **tearoff)
+           JSObject **cur)
 {
     // We can have at most three layers in need of unwrapping here:
     // * A (possible) security wrapper
@@ -78,7 +77,6 @@ getWrapper(JSContext *cx,
     // Start with sane values.
     *wrapper = nullptr;
     *cur = nullptr;
-    *tearoff = nullptr;
 
     if (dom::IsDOMObject(obj)) {
         *cur = obj;
@@ -90,12 +88,12 @@ getWrapper(JSContext *cx,
     //
     // If |obj| is of the tearoff class, that means we're dealing with a JS
     // object reflection of a particular interface (ie, |foo.nsIBar|). These
-    // JS objects are parented to their wrapper, so we snag the tearoff object
-    // along the way (if desired), and then set |obj| to its parent.
+    // JS objects are parented to their wrapper, so we set |obj| to its parent.
     const js::Class* clasp = js::GetObjectClass(obj);
     if (clasp == &XPC_WN_Tearoff_JSClass) {
-        *tearoff = (XPCWrappedNativeTearOff*) js::GetObjectPrivate(obj);
         obj = js::GetObjectParent(obj);
+        // XXXbz don't we need to reget clasp here?  Otherwise, we
+        // won't set *wrapper right, will we?
     }
 
     // If we've got a WN, store things the way callers expect. Otherwise, leave
@@ -110,7 +108,6 @@ static nsresult
 castNative(JSContext *cx,
            XPCWrappedNative *wrapper,
            JSObject *curArg,
-           XPCWrappedNativeTearOff *tearoff,
            const nsIID &iid,
            void **ppThis,
            nsISupports **pThisRef,
@@ -151,13 +148,12 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     RootedObject src(cx, &v.toObject());
 
     XPCWrappedNative *wrapper;
-    XPCWrappedNativeTearOff *tearoff;
     JSObject *obj2;
-    nsresult rv = getWrapper(cx, src, &wrapper, &obj2, &tearoff);
+    nsresult rv = getWrapper(cx, src, &wrapper, &obj2);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (wrapper || obj2) {
-        if (NS_FAILED(castNative(cx, wrapper, obj2, tearoff, iid, ppArg,
+        if (NS_FAILED(castNative(cx, wrapper, obj2, iid, ppArg,
                                  ppArgRef, vp)))
             return NS_ERROR_XPC_BAD_CONVERT_JS;
         return NS_OK;
