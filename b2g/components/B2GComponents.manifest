@@ -58,10 +58,6 @@ contract @mozilla.org/network/protocol;1?name=sms {81ca20cb-0dad-4e32-8566-979c8
 component {50777e53-0331-4366-a191-900999be386c} MailtoProtocolHandler.js
 contract @mozilla.org/network/protocol;1?name=mailto {50777e53-0331-4366-a191-900999be386c}
 
-# YoutubeProtocolHandler.js
-component {c3f1b945-7e71-49c8-95c7-5ae9cc9e2bad} YoutubeProtocolHandler.js
-contract @mozilla.org/network/protocol;1?name=vnd.youtube {c3f1b945-7e71-49c8-95c7-5ae9cc9e2bad}
-
 # RecoveryService.js
 component {b3caca5d-0bb0-48c6-912b-6be6cbf08832} RecoveryService.js
 contract @mozilla.org/recovery-service;1 {b3caca5d-0bb0-48c6-912b-6be6cbf08832}

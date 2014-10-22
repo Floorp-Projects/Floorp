@@ -843,7 +843,6 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/ProcessGlobal.js
 @BINPATH@/components/OMAContentHandler.js
 @BINPATH@/components/PaymentGlue.js
-@BINPATH@/components/YoutubeProtocolHandler.js
 @BINPATH@/components/RecoveryService.js
 @BINPATH@/components/MailtoProtocolHandler.js
 @BINPATH@/components/SmsProtocolHandler.js
