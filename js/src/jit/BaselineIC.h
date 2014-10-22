@@ -6072,10 +6072,10 @@ class ICCall_StringSplit : public ICMonitoredStub
     uint32_t pcOffset_;
     HeapPtrString expectedThis_;
     HeapPtrString expectedArg_;
-    HeapPtrObject templateObject_;
+    HeapPtrNativeObject templateObject_;
 
     ICCall_StringSplit(JitCode *stubCode, ICStub *firstMonitorStub, uint32_t pcOffset, HandleString thisString,
-                       HandleString argString, HandleObject templateObject)
+                       HandleString argString, HandleNativeObject templateObject)
       : ICMonitoredStub(ICStub::Call_StringSplit, stubCode, firstMonitorStub),
         pcOffset_(pcOffset), expectedThis_(thisString), expectedArg_(argString),
         templateObject_(templateObject)
@@ -6084,7 +6084,7 @@ class ICCall_StringSplit : public ICMonitoredStub
   public:
     static inline ICCall_StringSplit *New(ICStubSpace *space, JitCode *code,
                                           ICStub *firstMonitorStub, uint32_t pcOffset, HandleString thisString,
-                                          HandleString argString, HandleObject templateObject)
+                                          HandleString argString, HandleNativeObject templateObject)
     {
         if (!code)
             return nullptr;
@@ -6112,7 +6112,7 @@ class ICCall_StringSplit : public ICMonitoredStub
         return expectedArg_;
     }
 
-    HeapPtrObject &templateObject() {
+    HeapPtrNativeObject &templateObject() {
         return templateObject_;
     }
 
@@ -6122,7 +6122,7 @@ class ICCall_StringSplit : public ICMonitoredStub
         uint32_t pcOffset_;
         RootedString expectedThis_;
         RootedString expectedArg_;
-        RootedObject templateObject_;
+        RootedNativeObject templateObject_;
 
         bool generateStubCode(MacroAssembler &masm);
 
@@ -6138,7 +6138,7 @@ class ICCall_StringSplit : public ICMonitoredStub
             pcOffset_(pcOffset),
             expectedThis_(cx, thisString),
             expectedArg_(cx, argString),
-            templateObject_(cx, &templateObject.toObject())
+            templateObject_(cx, &templateObject.toObject().as<NativeObject>())
         { }
 
         ICStub *getStub(ICStubSpace *space) {
