@@ -477,6 +477,16 @@ protected:
   PerSpanData* mRootSpan;
   PerSpanData* mCurrentSpan;
 
+  // The container width to use when converting between logical and
+  // physical coordinates for frames in this span. For the root span
+  // this is the width of the block cached in mContainerWidth; for
+  // child spans it's the width of the root span
+  nscoord ContainerWidthForSpan(PerSpanData* aPSD) {
+    return (aPSD == mRootSpan)
+      ? mContainerWidth
+      : aPSD->mFrame->mBounds.Width(mRootSpan->mWritingMode);
+  }
+
   gfxBreakPriority mLastOptionalBreakPriority;
   int32_t     mLastOptionalBreakContentOffset;
   int32_t     mForceBreakContentOffset;
