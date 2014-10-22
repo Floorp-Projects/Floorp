@@ -17,6 +17,7 @@
 #include "WebAudioUtils.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsWeakReference.h"
+#include "SelfRef.h"
 
 namespace mozilla {
 
@@ -27,36 +28,6 @@ class AudioBufferSourceNode;
 class AudioParam;
 class AudioParamTimeline;
 struct ThreeDPoint;
-
-template<class T>
-class SelfReference {
-public:
-  SelfReference() : mHeld(false) {}
-  ~SelfReference()
-  {
-    NS_ASSERTION(!mHeld, "Forgot to drop the self reference?");
-  }
-
-  void Take(T* t)
-  {
-    if (!mHeld) {
-      mHeld = true;
-      t->AddRef();
-    }
-  }
-  void Drop(T* t)
-  {
-    if (mHeld) {
-      mHeld = false;
-      t->Release();
-    }
-  }
-
-  operator bool() const { return mHeld; }
-
-private:
-  bool mHeld;
-};
 
 /**
  * The DOM object representing a Web Audio AudioNode.
