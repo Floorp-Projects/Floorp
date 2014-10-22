@@ -299,24 +299,33 @@ struct MaybeReadFallback
         NoGC_MagicOptimizedOut
     };
 
+    enum FallbackConsequence {
+        Fallback_Invalidate,
+        Fallback_DoNothing
+    };
+
     JSContext *maybeCx;
     JitActivation *activation;
     JitFrameIterator *frame;
     const NoGCValue unreadablePlaceholder_;
+    const FallbackConsequence consequence;
 
     MaybeReadFallback(const Value &placeholder = UndefinedValue())
       : maybeCx(nullptr),
         activation(nullptr),
         frame(nullptr),
-        unreadablePlaceholder_(noGCPlaceholder(placeholder))
+        unreadablePlaceholder_(noGCPlaceholder(placeholder)),
+        consequence(Fallback_Invalidate)
     {
     }
 
-    MaybeReadFallback(JSContext *cx, JitActivation *activation, JitFrameIterator *frame)
+    MaybeReadFallback(JSContext *cx, JitActivation *activation, JitFrameIterator *frame,
+                      FallbackConsequence consequence = Fallback_Invalidate)
       : maybeCx(cx),
         activation(activation),
         frame(frame),
-        unreadablePlaceholder_(NoGC_UndefinedValue)
+        unreadablePlaceholder_(NoGC_UndefinedValue),
+        consequence(consequence)
     {
     }
 
