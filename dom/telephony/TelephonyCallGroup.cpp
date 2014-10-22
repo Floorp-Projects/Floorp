@@ -5,14 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TelephonyCallGroup.h"
-#include "mozilla/dom/TelephonyCallGroupBinding.h"
 
 #include "CallsList.h"
+#include "Telephony.h"
 #include "mozilla/dom/CallEvent.h"
 #include "mozilla/dom/CallGroupErrorEvent.h"
-#include "Telephony.h"
+#include "mozilla/dom/TelephonyCallGroupBinding.h"
+#include "mozilla/dom/telephony/TelephonyCallback.h"
 
 using namespace mozilla::dom;
+using namespace mozilla::dom::telephony;
 using mozilla::ErrorResult;
 
 TelephonyCallGroup::TelephonyCallGroup(nsPIDOMWindow* aOwner)
@@ -275,6 +277,28 @@ TelephonyCallGroup::Remove(TelephonyCall& aCall, ErrorResult& aRv)
   } else {
     NS_WARNING("Didn't have this call. Ignore!");
   }
+}
+
+already_AddRefed<Promise>
+TelephonyCallGroup::HangUp(ErrorResult& aRv)
+{
+  MOZ_ASSERT(!mCalls.IsEmpty());
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  nsCOMPtr<nsITelephonyCallback> callback = new TelephonyCallback(promise);
+  aRv = mTelephony->Service()->HangUpConference(mCalls[0]->ServiceId(),
+                                                callback);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  return promise.forget();
 }
 
 void

@@ -4,13 +4,16 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(909f5972-c74e-44dd-b72a-7ddb62aae617)]
+interface nsINeighboringCellInfo;
+
+[scriptable, uuid(0941cb79-36e5-41e0-b05f-cdb854c53f03)]
 interface nsINeighboringCellIdsCallback : nsISupports
 {
   /**
    * result is an array of nsINeighboringCellInfo.
    */
-  void notifyGetNeighboringCellIds(in jsval result);
+  void notifyGetNeighboringCellIds(in uint32_t count,
+                                   [array, size_is(count)] in nsINeighboringCellInfo result);
 
   /**
    * Callback function with error message.

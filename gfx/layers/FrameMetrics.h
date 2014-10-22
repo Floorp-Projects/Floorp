@@ -359,9 +359,6 @@ public:
   // Whether or not this frame may have touch listeners.
   bool mMayHaveTouchListeners;
 
-  // Whether or not this frame may have touch caret.
-  bool mMayHaveTouchCaret;
-
 public:
   void SetIsRoot(bool aIsRoot)
   {
@@ -530,9 +527,22 @@ public:
     mContentDescription = aContentDescription;
   }
 
+  bool GetMayHaveTouchCaret() const
+  {
+    return mMayHaveTouchCaret;
+  }
+
+  void SetMayHaveTouchCaret(bool aMayHaveTouchCaret)
+  {
+    mMayHaveTouchCaret = aMayHaveTouchCaret;
+  }
+
 private:
   // New fields from now on should be made private and old fields should
   // be refactored to be private.
+
+  // Whether or not this frame may have a touch caret.
+  bool mMayHaveTouchCaret;
 
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRoot;
