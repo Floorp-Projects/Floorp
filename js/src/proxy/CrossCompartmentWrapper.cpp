@@ -431,15 +431,6 @@ CrossCompartmentWrapper::setPrototypeOf(JSContext *cx, HandleObject wrapper,
            NOTHING);
 }
 
-bool
-CrossCompartmentWrapper::setImmutablePrototype(JSContext *cx, HandleObject wrapper, bool *succeeded) const
-{
-    PIERCE(cx, wrapper,
-           NOTHING,
-           Wrapper::setImmutablePrototype(cx, wrapper, succeeded),
-           NOTHING);
-}
-
 const CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
 
 bool
