@@ -14,7 +14,6 @@
 #include "XPCWrapper.h"
 #include "XPCJSMemoryReporter.h"
 #include "WrapperFactory.h"
-#include "dom_quickstubs.h"
 #include "mozJSComponentLoader.h"
 
 #include "nsIMemoryInfoDumper.h"
