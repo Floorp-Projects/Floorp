@@ -24,12 +24,11 @@ SecurityWrapper<Base>::isExtensible(JSContext *cx, HandleObject wrapper, bool *e
 
 template <class Base>
 bool
-SecurityWrapper<Base>::preventExtensions(JSContext *cx, HandleObject wrapper,
-                                         bool *succeeded) const
+SecurityWrapper<Base>::preventExtensions(JSContext *cx, HandleObject wrapper) const
 {
     // See above.
-    *succeeded = false;
-    return true;
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
+    return false;
 }
 
 template <class Base>
