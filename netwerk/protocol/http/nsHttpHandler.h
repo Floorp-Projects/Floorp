@@ -450,6 +450,7 @@ private:
 
     // For broadcasting tracking preference
     bool           mDoNotTrackEnabled;
+    uint8_t        mDoNotTrackValue;
 
     // for broadcasting safe hint;
     bool           mSafeHintEnabled;
