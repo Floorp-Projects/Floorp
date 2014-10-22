@@ -293,9 +293,7 @@ ElementManager.prototype = {
     }
     let found = all ? this.findElements(values.using, values.value, win.document, startNode) :
                       this.findElement(values.using, values.value, win.document, startNode);
-    let type = Object.prototype.toString.call(found);
-    let isArrayLike = ((type == '[object Array]') || (type == '[object HTMLCollection]') || (type == '[object NodeList]'));
-    if (found == null || (isArrayLike && found.length <= 0)) {
+    if (found == null || found.length <= 0) {
       if (!searchTimeout || new Date().getTime() - startTime > searchTimeout) {
         if (all) {
           on_success([], command_id); // findElements should return empty list
@@ -312,7 +310,8 @@ ElementManager.prototype = {
                                     Components.interfaces.nsITimer.TYPE_ONE_SHOT);
       }
     } else {
-      if (isArrayLike) {
+      let type = Object.prototype.toString.call(found);
+      if ((type == '[object Array]') || (type == '[object HTMLCollection]') || (type == '[object NodeList]')) {
         let ids = []
         for (let i = 0 ; i < found.length ; i++) {
           ids.push(this.addToKnownElements(found[i]));
