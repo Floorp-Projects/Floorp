@@ -2481,22 +2481,6 @@ XPCWrappedNative::HasNativeMember(HandleId name)
     return GetSet()->FindMember(name, &member, &ignored) && !!member;
 }
 
-/* void finishInitForWrappedGlobal (); */
-NS_IMETHODIMP XPCWrappedNative::FinishInitForWrappedGlobal()
-{
-    // We can only be called under certain conditions.
-    MOZ_ASSERT(mScriptableInfo);
-    MOZ_ASSERT(mScriptableInfo->GetFlags().IsGlobalObject());
-    MOZ_ASSERT(HasProto());
-
-    // Call PostCreateProrotype.
-    bool success = GetProto()->CallPostCreatePrototype();
-    if (!success)
-        return NS_ERROR_FAILURE;
-
-    return NS_OK;
-}
-
 /* void debugDump (in short depth); */
 NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth)
 {
