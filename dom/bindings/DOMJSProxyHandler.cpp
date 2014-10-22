@@ -141,18 +141,18 @@ DOMProxyHandler::EnsureExpandoObject(JSContext* cx, JS::Handle<JSObject*> obj)
 }
 
 bool
-DOMProxyHandler::preventExtensions(JSContext *cx, JS::Handle<JSObject*> proxy,
-                                   bool *succeeded) const
+DOMProxyHandler::isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible) const
 {
   // always extensible per WebIDL
-  *succeeded = false;
+  *extensible = true;
   return true;
 }
 
 bool
-DOMProxyHandler::isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible) const
+DOMProxyHandler::preventExtensions(JSContext *cx, JS::Handle<JSObject*> proxy,
+                                   bool *succeeded) const
 {
-  *extensible = true;
+  *succeeded = false;
   return true;
 }
 
