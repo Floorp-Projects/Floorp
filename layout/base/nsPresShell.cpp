@@ -8474,10 +8474,6 @@ PresShell::DidPaintWindow()
     // about compositing of popups.
     return;
   }
-
-  if (nsContentUtils::XPConnect()) {
-    nsContentUtils::XPConnect()->NotifyDidPaint();
-  }
 }
 
 bool
