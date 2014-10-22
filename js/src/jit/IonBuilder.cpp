@@ -4271,11 +4271,10 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
 
     // Improve type information of |this| when not set.
     if (callInfo.constructing() &&
-        !callInfo.thisArg()->resultTypeSet() &&
-        calleeScript->types)
+        !callInfo.thisArg()->resultTypeSet())
     {
         types::StackTypeSet *types = types::TypeScript::ThisTypes(calleeScript);
-        if (!types->unknown()) {
+        if (types && !types->unknown()) {
             types::TemporaryTypeSet *clonedTypes = types->clone(alloc_->lifoAlloc());
             if (!clonedTypes)
                 return oom();
@@ -5207,9 +5206,8 @@ IonBuilder::createThisScriptedSingleton(JSFunction *target, MDefinition *callee)
     if (!templateObject->hasTenuredProto() || templateObject->getProto() != proto)
         return nullptr;
 
-    if (!target->nonLazyScript()->types)
-        return nullptr;
-    if (!types::TypeScript::ThisTypes(target->nonLazyScript())->hasType(types::Type::ObjectType(templateObject)))
+    types::StackTypeSet *thisTypes = types::TypeScript::ThisTypes(target->nonLazyScript());
+    if (!thisTypes || !thisTypes->hasType(types::Type::ObjectType(templateObject)))
         return nullptr;
 
     // Generate an inline path to create a new |this| object with
@@ -5580,6 +5578,9 @@ IonBuilder::testShouldDOMCall(types::TypeSet *inTypes,
 static bool
 ArgumentTypesMatch(MDefinition *def, types::StackTypeSet *calleeTypes)
 {
+    if (!calleeTypes)
+        return false;
+
     if (def->resultTypeSet()) {
         MOZ_ASSERT(def->type() == MIRType_Value || def->mightBeType(def->type()));
         return def->resultTypeSet()->isSubset(calleeTypes);
@@ -5604,9 +5605,6 @@ IonBuilder::testNeedsArgumentCheck(JSFunction *target, CallInfo &callInfo)
         return true;
 
     JSScript *targetScript = target->nonLazyScript();
-
-    if (!targetScript->types)
-        return true;
 
     if (!ArgumentTypesMatch(callInfo.thisArg(), types::TypeScript::ThisTypes(targetScript)))
         return true;
