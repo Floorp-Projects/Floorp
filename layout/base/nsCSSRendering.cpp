@@ -947,14 +947,41 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
 //----------------------------------------------------------------------
 
 /**
+ * Helper for ComputeBackgroundAnchorPoint; parameters are the same as for
+ * that function, except they're for a single coordinate / a single size
+ * dimension. (so, x/width vs. y/height)
+ */
+typedef nsStyleBackground::Position::PositionCoord PositionCoord;
+static void
+ComputeBackgroundAnchorCoord(const PositionCoord& aCoord,
+                             const nscoord aOriginBounds,
+                             const nscoord aImageSize,
+                             nscoord* aTopLeftCoord,
+                             nscoord* aAnchorPointCoord)
+{
+  *aAnchorPointCoord = aCoord.mLength;
+  *aTopLeftCoord = aCoord.mLength;
+
+  if (aCoord.mHasPercent) {
+    // Adjust aTopLeftCoord by the specified % of the extra space.
+    nscoord extraSpace = aOriginBounds - aImageSize;
+    *aTopLeftCoord += NSToCoordRound(aCoord.mPercent * extraSpace);
+
+    // The anchor-point doesn't care about our image's size; just the size
+    // of the region we're rendering into.
+    *aAnchorPointCoord += NSToCoordRound(aCoord.mPercent * aOriginBounds);
+  }
+}
+
+/**
  * Computes the placement of a background image.
  *
+ * @param aPos the CSS <position> value that specify's the image's position.
  * @param aOriginBounds is the box to which the tiling position should be
- * relative
- * This should correspond to 'background-origin' for the frame,
+ * relative. This should correspond to 'background-origin' for the frame,
  * except when painting on the canvas, in which case the origin bounds
  * should be the bounds of the root element's frame.
- * @param aTopLeft the top-left corner where an image tile should be drawn
+ * @param aTopLeft the top-left corner where an image tile should be drawn.
  * @param aAnchorPoint a point which should be pixel-aligned by
  * nsLayoutUtils::DrawImage. This is the same as aTopLeft, unless CSS
  * specifies a percentage (including 'right' or 'bottom'), in which case
@@ -964,23 +991,19 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
  * Points are returned relative to aOriginBounds.
  */
 static void
-ComputeBackgroundAnchorPoint(const nsStyleBackground::Layer& aLayer,
+ComputeBackgroundAnchorPoint(const nsStyleBackground::Position& aPos,
                              const nsSize& aOriginBounds,
                              const nsSize& aImageSize,
                              nsPoint* aTopLeft,
                              nsPoint* aAnchorPoint)
 {
-  double percentX = aLayer.mPosition.mXPosition.mPercent;
-  nscoord lengthX = aLayer.mPosition.mXPosition.mLength;
-  aAnchorPoint->x = lengthX + NSToCoordRound(percentX*aOriginBounds.width);
-  aTopLeft->x = lengthX +
-    NSToCoordRound(percentX*(aOriginBounds.width - aImageSize.width));
+  ComputeBackgroundAnchorCoord(aPos.mXPosition,
+                               aOriginBounds.width, aImageSize.width,
+                               &aTopLeft->x, &aAnchorPoint->x);
 
-  double percentY = aLayer.mPosition.mYPosition.mPercent;
-  nscoord lengthY = aLayer.mPosition.mYPosition.mLength;
-  aAnchorPoint->y = lengthY + NSToCoordRound(percentY*aOriginBounds.height);
-  aTopLeft->y = lengthY +
-    NSToCoordRound(percentY*(aOriginBounds.height - aImageSize.height));
+  ComputeBackgroundAnchorCoord(aPos.mYPosition,
+                               aOriginBounds.height, aImageSize.height,
+                               &aTopLeft->y, &aAnchorPoint->y);
 }
 
 nsIFrame*
@@ -3167,7 +3190,7 @@ nsCSSRendering::PrepareBackgroundLayer(nsPresContext* aPresContext,
 
   // Compute the position of the background now that the background's size is
   // determined.
-  ComputeBackgroundAnchorPoint(aLayer, bgPositionSize, imageSize,
+  ComputeBackgroundAnchorPoint(aLayer.mPosition, bgPositionSize, imageSize,
                                &imageTopLeft, &state.mAnchor);
   imageTopLeft += bgPositioningArea.TopLeft();
   state.mAnchor += bgPositioningArea.TopLeft();
