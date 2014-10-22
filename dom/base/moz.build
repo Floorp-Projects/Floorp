@@ -157,6 +157,7 @@ LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/html/document/src',
     '/content/xul/document/src',
+    '/docshell/base',
     '/dom/geolocation',
     '/dom/storage',
     '/layout/base',
