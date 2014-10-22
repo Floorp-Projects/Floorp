@@ -28,29 +28,14 @@ using namespace mozilla::a11y;
 
 ARIAGridAccessible::
   ARIAGridAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  AccessibleWrap(aContent, aDoc), xpcAccessibleTable(this)
+  AccessibleWrap(aContent, aDoc)
 {
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsISupports
-
-NS_IMPL_ISUPPORTS_INHERITED(ARIAGridAccessible,
-                            Accessible,
-                            nsIAccessibleTable)
+NS_IMPL_ISUPPORTS_INHERITED0(ARIAGridAccessible, Accessible)
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accessible
-
-void
-ARIAGridAccessible::Shutdown()
-{
-  mTable = nullptr;
-  AccessibleWrap::Shutdown();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIAccessibleTable
+// Table
 
 uint32_t
 ARIAGridAccessible::ColCount()
@@ -405,28 +390,6 @@ ARIAGridAccessible::UnselectCol(uint32_t aColIdx)
 ////////////////////////////////////////////////////////////////////////////////
 // Protected
 
-bool
-ARIAGridAccessible::IsValidRow(int32_t aRow)
-{
-  if (aRow < 0)
-    return false;
-  
-  int32_t rowCount = 0;
-  GetRowCount(&rowCount);
-  return aRow < rowCount;
-}
-
-bool
-ARIAGridAccessible::IsValidColumn(int32_t aColumn)
-{
-  if (aColumn < 0)
-    return false;
-
-  int32_t colCount = 0;
-  GetColumnCount(&colCount);
-  return aColumn < colCount;
-}
-
 Accessible*
 ARIAGridAccessible::GetRowAt(int32_t aRow)
 {
@@ -532,20 +495,15 @@ ARIAGridAccessible::SetARIASelected(Accessible* aAccessible,
 
 ARIAGridCellAccessible::
   ARIAGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  HyperTextAccessibleWrap(aContent, aDoc), xpcAccessibleTableCell(this)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
   mGenericTypes |= eTableCell;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsISupports
-
-NS_IMPL_ISUPPORTS_INHERITED(ARIAGridCellAccessible,
-                            HyperTextAccessible,
-                            nsIAccessibleTableCell)
+NS_IMPL_ISUPPORTS_INHERITED0(ARIAGridCellAccessible, HyperTextAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIAccessibleTableCell
+// TableCell
 
 TableAccessible*
 ARIAGridCellAccessible::Table() const
@@ -647,11 +605,4 @@ ARIAGridCellAccessible::NativeAttributes()
   nsAccUtils::SetAccAttr(attributes, nsGkAtoms::tableCellIndex, stringIdx);
 
   return attributes.forget();
-}
-
-void
-ARIAGridCellAccessible::Shutdown()
-{
-  mTableCell = nullptr;
-  HyperTextAccessibleWrap::Shutdown();
 }

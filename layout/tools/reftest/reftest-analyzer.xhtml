@@ -321,15 +321,23 @@ function get_image_data(src, whenReady) {
   var img = new Image();
   img.onload = function() {
     var canvas = document.createElement("canvas");
-    canvas.width = 800;
-    canvas.height = 1000;
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
 
     var ctx = canvas.getContext("2d");
     ctx.drawImage(img, 0, 0);
 
-    whenReady(ctx.getImageData(0, 0, 800, 1000));
+    whenReady(ctx.getImageData(0, 0, img.naturalWidth, img.naturalHeight));
   };
   img.src = src;
+}
+
+function sync_svg_size(imageData) {
+  // We need the size of the 'svg' and its 'image' elements to match the size
+  // of the ImageData objects that we're going to read pixels from or else our
+  // magnify() function will be very broken.
+  ID("svg").setAttribute("width", imageData.width);
+  ID("svg").setAttribute("height", imageData.height);
 }
 
 function show_images(i) {
@@ -359,7 +367,7 @@ function show_images(i) {
 
   cell.style.display = "";
 
-  get_image_data(item.images[0], function(data) { gImage1Data = data });
+  get_image_data(item.images[0], function(data) { gImage1Data = data; sync_svg_size(gImage1Data); });
   get_image_data(item.images[1], function(data) { gImage2Data = data });
 }
 
@@ -441,7 +449,9 @@ function magnify(evt) {
       var py = y + j;
       var p1 = gMagPixPaths[i + dx_hi][j + dy_hi][0];
       var p2 = gMagPixPaths[i + dx_hi][j + dy_hi][1];
-      if (px < 0 || py < 0 || px >= 800 || py >= 1000) {
+      // Here we just use the dimensions of gImage1Data since we expect test
+      // and reference to have the same dimensions.
+      if (px < 0 || py < 0 || px >= gImage1Data.width || py >= gImage1Data.height) {
         p1.setAttribute("fill", "#aaa");
         p2.setAttribute("fill", "#888");
       } else {
@@ -529,7 +539,7 @@ function show_pixelinfo(x, y, pix1rgb, pix1hex, pix2rgb, pix2hex) {
     <input id="radio2" type="radio" name="which" value="1" onchange="show_image(2)"                   /><label id="label2" title="2" for="radio2">Image 2</label>
     <label><input type="checkbox" onchange="show_differences(this)" />Circle differences</label>
     </form>
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800px" height="1000px" viewBox="0 0 800 1000" id="svg">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800" height="1000" id="svg">
       <defs>
         <!-- use sRGB to avoid loss of data -->
         <filter id="showDifferences" x="0%" y="0%" width="100%" height="100%"

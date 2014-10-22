@@ -13,7 +13,6 @@
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsIAccessibleEvent.h"
-#include "nsIAccessibleRelation.h"
 #include "nsWinUtils.h"
 #include "ServiceProvider.h"
 #include "Relation.h"
@@ -365,7 +364,7 @@ AccessibleWrap::get_accRole(
 
 #ifdef DEBUG
   NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(xpAccessible),
-               "Does not support nsIAccessibleText when it should");
+               "Does not support Text when it should");
 #endif
 
   a11y::role geckoRole = xpAccessible->Role();
@@ -588,12 +587,15 @@ AccessibleWrap::get_accFocus(
   A11Y_TRYBLOCK_END
 }
 
-// This helper class implements IEnumVARIANT for a nsIArray containing nsIAccessible objects.
-
+/**
+ * This helper class implements IEnumVARIANT for a nsTArray containing
+ * accessible objects.
+ */
 class AccessibleEnumerator MOZ_FINAL : public IEnumVARIANT
 {
 public:
-  AccessibleEnumerator(nsIArray* aArray) : mArray(aArray), mCurIndex(0) { }
+  AccessibleEnumerator(const nsTArray<Accessible*>& aArray) :
+    mArray(aArray), mCurIndex(0) { }
   AccessibleEnumerator(const AccessibleEnumerator& toCopy) :
     mArray(toCopy.mArray), mCurIndex(toCopy.mCurIndex) { }
   ~AccessibleEnumerator() { }
@@ -612,7 +614,7 @@ public:
   STDMETHODIMP Clone(IEnumVARIANT FAR* FAR* ppenum);
 
 private:
-  nsCOMPtr<nsIArray> mArray;
+  nsTArray<Accessible*> mArray;
   uint32_t mCurIndex;
 };
 
@@ -643,9 +645,7 @@ AccessibleEnumerator::Next(unsigned long celt, VARIANT FAR* rgvar, unsigned long
 {
   A11Y_TRYBLOCK_BEGIN
 
-  uint32_t length = 0;
-  mArray->GetLength(&length);
-
+  uint32_t length = mArray.Length();
   HRESULT hr = S_OK;
 
   // Can't get more elements than there are...
@@ -654,15 +654,10 @@ AccessibleEnumerator::Next(unsigned long celt, VARIANT FAR* rgvar, unsigned long
     celt = length - mCurIndex;
   }
 
+  // Copy the elements of the array into rgvar.
   for (uint32_t i = 0; i < celt; ++i, ++mCurIndex) {
-    // Copy the elements of the array into rgvar
-    nsCOMPtr<nsIAccessible> accel(do_QueryElementAt(mArray, mCurIndex));
-    NS_ASSERTION(accel, "Invalid pointer in mArray");
-
-    if (accel) {
-      rgvar[i].vt = VT_DISPATCH;
-      rgvar[i].pdispVal = AccessibleWrap::NativeAccessible(accel);
-    }
+    rgvar[i].vt = VT_DISPATCH;
+    rgvar[i].pdispVal = AccessibleWrap::NativeAccessible(mArray[mCurIndex]);
   }
 
   if (pceltFetched)
@@ -692,8 +687,7 @@ AccessibleEnumerator::Skip(unsigned long celt)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  uint32_t length = 0;
-  mArray->GetLength(&length);
+  uint32_t length = mArray.Length();
   // Check if we can skip the requested number of elements
   if (celt > length - mCurIndex) {
     mCurIndex = length;
@@ -708,7 +702,7 @@ AccessibleEnumerator::Skip(unsigned long celt)
 /**
   * This method is called when a client wants to know which children of a node
   *  are selected. Note that this method can only find selected children for
-  *  nsIAccessible object which implement SelectAccessible.
+  *  accessible object which implement SelectAccessible.
   *
   * The VARIANT return value arguement is expected to either contain a single IAccessible
   *  or an IEnumVARIANT of IAccessibles. We return the IEnumVARIANT regardless of the number
@@ -737,18 +731,13 @@ AccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
     return CO_E_OBJNOTCONNECTED;
 
   if (IsSelect()) {
-    nsCOMPtr<nsIArray> selectedItems = SelectedItems();
-    if (selectedItems) {
-      // 1) Create and initialize the enumeration
-      nsRefPtr<AccessibleEnumerator> pEnum =
-        new AccessibleEnumerator(selectedItems);
+    nsAutoTArray<Accessible*, 10> selectedItems;
+    SelectedItems(&selectedItems);
 
-      // 2) Put the enumerator in the VARIANT
-      if (!pEnum)
-        return E_OUTOFMEMORY;
-      pvarChildren->vt = VT_UNKNOWN;    // this must be VT_UNKNOWN for an IEnumVARIANT
-      NS_ADDREF(pvarChildren->punkVal = pEnum);
-    }
+    // 1) Create and initialize the enumeration
+    nsRefPtr<AccessibleEnumerator> pEnum = new AccessibleEnumerator(selectedItems);
+    pvarChildren->vt = VT_UNKNOWN;    // this must be VT_UNKNOWN for an IEnumVARIANT
+    NS_ADDREF(pvarChildren->punkVal = pEnum);
   }
   return S_OK;
 
@@ -1081,14 +1070,11 @@ AccessibleWrap::Invoke(DISPID dispIdMember, REFIID riid,
                           puArgErr);
 }
 
-
-// nsIAccessible method
-NS_IMETHODIMP
-AccessibleWrap::GetNativeInterface(void **aOutAccessible)
+void
+AccessibleWrap::GetNativeInterface(void** aOutAccessible)
 {
   *aOutAccessible = static_cast<IAccessible*>(this);
   NS_ADDREF_THIS();
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1222,11 +1208,11 @@ AccessibleWrap::GetHWNDFor(Accessible* aAccessible)
 }
 
 IDispatch*
-AccessibleWrap::NativeAccessible(nsIAccessible* aAccessible)
+AccessibleWrap::NativeAccessible(Accessible* aAccessible)
 {
   if (!aAccessible) {
-   NS_WARNING("Not passing in an aAccessible");
-   return nullptr;
+    NS_WARNING("Not passing in an aAccessible");
+    return nullptr;
   }
 
   IAccessible* msaaAccessible = nullptr;

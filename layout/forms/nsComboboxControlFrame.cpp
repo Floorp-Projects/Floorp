@@ -1509,9 +1509,9 @@ void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
 
   gfx->Save();
   nsRect clipRect = mDisplayFrame->GetRect() + aPt;
-  gfx->Clip(NSRectToRect(clipRect,
-                         PresContext()->AppUnitsPerDevPixel(),
-                         *aRenderingContext.GetDrawTarget()));
+  gfx->Clip(NSRectToSnappedRect(clipRect,
+                                PresContext()->AppUnitsPerDevPixel(),
+                                *aRenderingContext.GetDrawTarget()));
 
   // REVIEW: Why does the old code paint mDisplayFrame again? We've
   // already painted it in the children above. So clipping it here won't do

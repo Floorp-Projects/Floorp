@@ -14,17 +14,23 @@ class nsIAccessible;
 namespace mozilla {
 namespace a11y {
 
+class Accessible;
+
+/**
+ * XPCOM nsIAccessible interface implementation, used by xpcAccessibleGeneric
+ * class.
+ */
 class xpcAccessible : public nsIAccessible
 {
 public:
+  // nsIAccessible
   NS_IMETHOD GetParent(nsIAccessible** aParent) MOZ_FINAL;
   NS_IMETHOD GetNextSibling(nsIAccessible** aNextSibling) MOZ_FINAL;
   NS_IMETHOD GetPreviousSibling(nsIAccessible** aPreviousSibling) MOZ_FINAL;
   NS_IMETHOD GetFirstChild(nsIAccessible** aFirstChild) MOZ_FINAL;
   NS_IMETHOD GetLastChild(nsIAccessible** aLastChild) MOZ_FINAL;
   NS_IMETHOD GetChildCount(int32_t* aChildCount) MOZ_FINAL;
-  NS_IMETHOD ScriptableGetChildAt(int32_t aChildIndex,
-                                  nsIAccessible** aChild) MOZ_FINAL;
+  NS_IMETHOD GetChildAt(int32_t aChildIndex, nsIAccessible** aChild) MOZ_FINAL;
   NS_IMETHOD GetChildren(nsIArray** aChildren) MOZ_FINAL;
   NS_IMETHOD GetIndexInParent(int32_t* aIndexInParent) MOZ_FINAL;
 
@@ -47,9 +53,8 @@ public:
   NS_IMETHOD GetAttributes(nsIPersistentProperties** aAttributes) MOZ_FINAL;
   NS_IMETHOD GetBounds(int32_t* aX, int32_t* aY,
                        int32_t* aWidth, int32_t* aHeight) MOZ_FINAL;
-  NS_IMETHOD ScriptableGroupPosition(int32_t* aGroupLevel,
-                                     int32_t* aSimilarItemsInGroup,
-                                     int32_t* aPositionInGroup) MOZ_FINAL;
+  NS_IMETHOD GroupPosition(int32_t* aGroupLevel, int32_t* aSimilarItemsInGroup,
+                           int32_t* aPositionInGroup) MOZ_FINAL;
   NS_IMETHOD GetRelationByType(uint32_t aType,
                                nsIAccessibleRelation** aRelation) MOZ_FINAL;
   NS_IMETHOD GetRelations(nsIArray** aRelations) MOZ_FINAL;
@@ -60,23 +65,26 @@ public:
   NS_IMETHOD GetDeepestChildAtPoint(int32_t aX, int32_t aY,
                                     nsIAccessible** aAccessible) MOZ_FINAL;
 
-  NS_IMETHOD ScriptableSetSelected(bool aSelect) MOZ_FINAL;
+  NS_IMETHOD SetSelected(bool aSelect) MOZ_FINAL;
   NS_IMETHOD ExtendSelection() MOZ_FINAL;
-  NS_IMETHOD ScriptableTakeSelection() MOZ_FINAL;
-  NS_IMETHOD ScriptableTakeFocus() MOZ_FINAL;
+  NS_IMETHOD TakeSelection() MOZ_FINAL;
+  NS_IMETHOD TakeFocus() MOZ_FINAL;
 
   NS_IMETHOD GetActionCount(uint8_t* aActionCount) MOZ_FINAL;
   NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName) MOZ_FINAL;
   NS_IMETHOD GetActionDescription(uint8_t aIndex, nsAString& aDescription) MOZ_FINAL;
-  NS_IMETHOD ScriptableDoAction(uint8_t aIndex) MOZ_FINAL;
+  NS_IMETHOD DoAction(uint8_t aIndex) MOZ_FINAL;
 
-  NS_IMETHOD ScriptableScrollTo(uint32_t aHow) MOZ_FINAL;
-  NS_IMETHOD ScriptableScrollToPoint(uint32_t aCoordinateType,
-                                     int32_t aX, int32_t aY) MOZ_FINAL;
+  NS_IMETHOD ScrollTo(uint32_t aHow) MOZ_FINAL;
+  NS_IMETHOD ScrollToPoint(uint32_t aCoordinateType,
+                           int32_t aX, int32_t aY) MOZ_FINAL;
+
+protected:
+  xpcAccessible() { }
+  virtual ~xpcAccessible() {}
 
 private:
-  xpcAccessible() { }
-  friend class Accessible;
+  Accessible* Intl();
 
   xpcAccessible(const xpcAccessible&) MOZ_DELETE;
   xpcAccessible& operator =(const xpcAccessible&) MOZ_DELETE;

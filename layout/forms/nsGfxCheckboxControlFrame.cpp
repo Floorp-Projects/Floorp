@@ -70,7 +70,7 @@ PaintIndeterminateMark(nsIFrame* aFrame,
   rect.y += (rect.height - rect.height/4) / 2;
   rect.height /= 4;
 
-  Rect devPxRect = NSRectToRect(rect, appUnitsPerDevPixel, *drawTarget);
+  Rect devPxRect = NSRectToSnappedRect(rect, appUnitsPerDevPixel, *drawTarget);
 
   drawTarget->FillRect(devPxRect,
                     ColorPattern(ToDeviceColor(aFrame->StyleColor()->mColor)));

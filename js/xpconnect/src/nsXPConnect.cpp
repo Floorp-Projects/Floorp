@@ -1199,12 +1199,10 @@ Base64Encode(JSContext *cx, HandleValue val, MutableHandleValue out)
 {
     MOZ_ASSERT(cx);
 
-    JS::RootedValue root(cx, val);
-    xpc_qsACString encodedString(cx, root, &root, false,
-                                 xpc_qsACString::eStringify,
-                                 xpc_qsACString::eStringify);
-    if (!encodedString.IsValid())
+    nsAutoCString encodedString;
+    if (!ConvertJSValueToByteString(cx, val, false, encodedString)) {
         return false;
+    }
 
     nsAutoCString result;
     if (NS_FAILED(mozilla::Base64Encode(encodedString, result))) {
@@ -1225,12 +1223,10 @@ Base64Decode(JSContext *cx, HandleValue val, MutableHandleValue out)
 {
     MOZ_ASSERT(cx);
 
-    JS::RootedValue root(cx, val);
-    xpc_qsACString encodedString(cx, root, &root, false,
-                                 xpc_qsACString::eStringify,
-                                 xpc_qsACString::eStringify);
-    if (!encodedString.IsValid())
+    nsAutoCString encodedString;
+    if (!ConvertJSValueToByteString(cx, val, false, encodedString)) {
         return false;
+    }
 
     nsAutoCString result;
     if (NS_FAILED(mozilla::Base64Decode(encodedString, result))) {

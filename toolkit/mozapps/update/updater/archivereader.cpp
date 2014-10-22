@@ -15,6 +15,14 @@
 #include "updatehelper.h"
 #endif
 
+#ifdef XP_WIN
+// These are generated at compile time based on the DER file for the channel
+// being used
+#include "primaryCert.h"
+#include "secondaryCert.h"
+#include "xpcshellCert.h"
+#endif
+
 #define UPDATER_NO_STRING_GLUE_STL
 #include "nsVersionComparator.cpp"
 #undef UPDATER_NO_STRING_GLUE_STL
@@ -34,61 +42,19 @@ static char *outbuf = nullptr;
 #include "resource.h"
 
 /**
- * Obtains the data of the specified resource name and type.
- *
- * @param  name The name ID of the resource
- * @param  type The type ID of the resource
- * @param  data Out parameter which sets the pointer to a buffer containing
- *                  the needed data.
- * @param  size Out parameter which sets the size of the returned data buffer 
- * @return TRUE on success
-*/
-BOOL
-LoadFileInResource(int name, int type, const uint8_t *&data, uint32_t& size)
-{
-  HMODULE handle = GetModuleHandle(nullptr);
-  if (!handle) {
-    return FALSE;
-  }
-
-  HRSRC resourceInfoBlockHandle = FindResource(handle, 
-                                               MAKEINTRESOURCE(name),
-                                               MAKEINTRESOURCE(type));
-  if (!resourceInfoBlockHandle) {
-    FreeLibrary(handle);
-    return FALSE;
-  }
-
-  HGLOBAL resourceHandle = LoadResource(handle, resourceInfoBlockHandle);
-  if (!resourceHandle) {
-    FreeLibrary(handle);
-    return FALSE;
-  }
-
-  size = SizeofResource(handle, resourceInfoBlockHandle);
-  data = static_cast<const uint8_t*>(::LockResource(resourceHandle));
-  FreeLibrary(handle);
-  return TRUE;
-}
-
-/**
  * Performs a verification on the opened MAR file with the passed in
  * certificate name ID and type ID.
  *
- * @param  archive   The MAR file to verify the signature on
- * @param  name      The name ID of the resource
- * @param  type      THe type ID of the resource
- * @return OK on success, CERT_LOAD_ERROR or CERT_VERIFY_ERROR on failure.
+ * @param  archive   The MAR file to verify the signature on.
+ * @param  certData  The certificate data.
+ * @return OK on success, CERT_VERIFY_ERROR on failure.
 */
+template<uint32_t SIZE>
 int
-VerifyLoadedCert(MarFile *archive, int name, int type)
+VerifyLoadedCert(MarFile *archive, const uint8_t (&certData)[SIZE])
 {
-  uint32_t size = 0;
-  const uint8_t *data = nullptr;
-  if (!LoadFileInResource(name, type, data, size) || !data || !size) {
-    return CERT_LOAD_ERROR;
-  }
-
+  const uint32_t size = SIZE;
+  const uint8_t * const data = &certData[0];
   if (mar_verify_signaturesW(archive, &data, &size, 1)) {
     return CERT_VERIFY_ERROR;
   }
@@ -118,11 +84,11 @@ ArchiveReader::VerifySignature()
   // use the XPCShell specific cert for the signed MAR.
   int rv;
   if (DoesFallbackKeyExist()) {
-    rv = VerifyLoadedCert(mArchive, IDR_XPCSHELL_CERT, TYPE_CERT);
+    rv = VerifyLoadedCert(mArchive, xpcshellCertData);
   } else {
-    rv = VerifyLoadedCert(mArchive, IDR_PRIMARY_CERT, TYPE_CERT);
+    rv = VerifyLoadedCert(mArchive, primaryCertData);
     if (rv != OK) {
-      rv = VerifyLoadedCert(mArchive, IDR_BACKUP_CERT, TYPE_CERT);
+      rv = VerifyLoadedCert(mArchive, secondaryCertData);
     }
   }
   return rv;

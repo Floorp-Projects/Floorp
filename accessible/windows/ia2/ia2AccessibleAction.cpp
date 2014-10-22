@@ -77,7 +77,6 @@ ia2AccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
 
   if (!aDescription)
     return E_INVALIDARG;
-
   *aDescription = nullptr;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
@@ -86,10 +85,7 @@ ia2AccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
 
   nsAutoString description;
   uint8_t index = static_cast<uint8_t>(aActionIndex);
-  nsresult rv = acc->GetActionDescription(index, description);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
+  acc->ActionDescriptionAt(index, description);
   if (description.IsEmpty())
     return S_FALSE;
 

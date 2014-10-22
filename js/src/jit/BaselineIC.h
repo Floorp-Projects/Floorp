@@ -4421,6 +4421,7 @@ class ICGetPropNativeCompiler : public ICStubCompiler
     HandlePropertyName propName_;
     bool isFixedSlot_;
     uint32_t offset_;
+    bool inputDefinitelyObject_;
 
     bool generateStubCode(MacroAssembler &masm);
 
@@ -4429,16 +4430,20 @@ class ICGetPropNativeCompiler : public ICStubCompiler
 #if JS_HAS_NO_SUCH_METHOD
         return static_cast<int32_t>(kind) |
                (static_cast<int32_t>(isCallProp_) << 16) |
-               (static_cast<int32_t>(isFixedSlot_) << 17);
+               (static_cast<int32_t>(isFixedSlot_) << 17) |
+               (static_cast<int32_t>(inputDefinitelyObject_) << 18);
 #else
-        return static_cast<int32_t>(kind) | (static_cast<int32_t>(isFixedSlot_) << 16);
+        return static_cast<int32_t>(kind) |
+               (static_cast<int32_t>(isFixedSlot_) << 16) |
+               (static_cast<int32_t>(inputDefinitelyObject_) << 17);
 #endif
     }
 
   public:
     ICGetPropNativeCompiler(JSContext *cx, ICStub::Kind kind, bool isCallProp,
                             ICStub *firstMonitorStub, HandleObject obj, HandleObject holder,
-                            HandlePropertyName propName, bool isFixedSlot, uint32_t offset)
+                            HandlePropertyName propName, bool isFixedSlot, uint32_t offset,
+                            bool inputDefinitelyObject = false)
       : ICStubCompiler(cx, kind),
         isCallProp_(isCallProp),
         firstMonitorStub_(firstMonitorStub),
@@ -4446,7 +4451,8 @@ class ICGetPropNativeCompiler : public ICStubCompiler
         holder_(holder),
         propName_(propName),
         isFixedSlot_(isFixedSlot),
-        offset_(offset)
+        offset_(offset),
+        inputDefinitelyObject_(inputDefinitelyObject)
     {}
 
     ICGetPropNativeStub *getStub(ICStubSpace *space) {
@@ -4806,15 +4812,23 @@ class ICGetProp_CallNativePrototype : public ICGetPropCallPrototypeGetter
                                                 ICGetProp_CallNativePrototype &other);
 
     class Compiler : public ICGetPropCallPrototypeGetter::Compiler {
+        bool inputDefinitelyObject_;
       protected:
         bool generateStubCode(MacroAssembler &masm);
 
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) |
+                   (static_cast<int32_t>(inputDefinitelyObject_) << 16);
+        }
+
       public:
         Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleObject obj,
-                 HandleObject holder, HandleFunction getter, uint32_t pcOffset)
+                 HandleObject holder, HandleFunction getter, uint32_t pcOffset,
+                 bool inputDefinitelyObject = false)
           : ICGetPropCallPrototypeGetter::Compiler(cx, ICStub::GetProp_CallNativePrototype,
                                                    firstMonitorStub, obj, holder,
-                                                   getter, pcOffset)
+                                                   getter, pcOffset),
+            inputDefinitelyObject_(inputDefinitelyObject)
         {}
 
         ICStub *getStub(ICStubSpace *space) {

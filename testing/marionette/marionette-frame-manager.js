@@ -140,12 +140,13 @@ FrameManager.prototype = {
     // If we get here, then we need to load the frame script in this frame,
     // and set the frame's ChromeMessageSender as the active message manager the server will listen to
     this.addMessageManagerListeners(mm);
-    logger.info("frame-manager load script: " + mm.toString());
-    mm.loadFrameScript(FRAME_SCRIPT, true, true);
     let aFrame = new MarionetteRemoteFrame(message.json.win, message.json.frame);
     aFrame.messageManager = Cu.getWeakReference(mm);
     remoteFrames.push(aFrame);
     this.currentRemoteFrame = aFrame;
+
+    logger.info("frame-manager load script: " + mm.toString());
+    mm.loadFrameScript(FRAME_SCRIPT, true, true);
 
     aFrame.specialPowersObserver = new specialpowers.SpecialPowersObserver();
     aFrame.specialPowersObserver.init(mm);

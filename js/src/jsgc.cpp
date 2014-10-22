@@ -353,22 +353,6 @@ struct js::gc::FinalizePhase
 #define PHASE(x, p) { ArrayLength(x), x, p }
 
 /*
- * Finalization order for foreground non-incrementally swept things.
- */
-static const AllocKind ImmediatePhaseObjects[] = {
-    FINALIZE_OBJECT0,
-    FINALIZE_OBJECT2,
-    FINALIZE_OBJECT4,
-    FINALIZE_OBJECT8,
-    FINALIZE_OBJECT12,
-    FINALIZE_OBJECT16
-};
-
-static const FinalizePhase ImmediateFinalizePhases[] = {
-    PHASE(ImmediatePhaseObjects, gcstats::PHASE_SWEEP_OBJECT)
-};
-
-/*
  * Finalization order for incrementally swept things.
  */
 
@@ -566,11 +550,13 @@ FinalizeTypedArenas(FreeOp *fop,
                     ArenaHeader **src,
                     SortedArenaList &dest,
                     AllocKind thingKind,
-                    SliceBudget &budget)
+                    SliceBudget &budget,
+                    ArenaLists::KeepArenasEnum keepArenas)
 {
     /*
-     * Finalize arenas from src list, releasing empty arenas and inserting the
-     * others into the appropriate destination size bins.
+     * Finalize arenas from src list, releasing empty arenas if keepArenas
+     * wasn't specified and inserting the others into the appropriate
+     * destination size bins.
      */
 
     /*
@@ -578,7 +564,7 @@ FinalizeTypedArenas(FreeOp *fop,
      * but in that case, we want to hold on to the memory in our arena
      * lists, not offer it up for reuse.
      */
-    bool releaseArenas = !InParallelSection();
+    MOZ_ASSERT_IF(InParallelSection(), keepArenas);
 
     size_t thingSize = Arena::thingSize(thingKind);
     size_t thingsPerArena = Arena::thingsPerArena(thingSize);
@@ -590,10 +576,10 @@ FinalizeTypedArenas(FreeOp *fop,
 
         if (nmarked)
             dest.insertAt(aheader, nfree);
-        else if (releaseArenas)
-            aheader->chunk()->releaseArena(aheader);
-        else
+        else if (keepArenas)
             aheader->chunk()->recycleArena(aheader, dest, thingKind, thingsPerArena);
+        else
+            aheader->chunk()->releaseArena(aheader);
 
         budget.step(thingsPerArena);
         if (budget.isOverBudget())
@@ -612,7 +598,8 @@ FinalizeArenas(FreeOp *fop,
                ArenaHeader **src,
                SortedArenaList &dest,
                AllocKind thingKind,
-               SliceBudget &budget)
+               SliceBudget &budget,
+               ArenaLists::KeepArenasEnum keepArenas)
 {
     switch (thingKind) {
       case FINALIZE_OBJECT0:
@@ -627,33 +614,33 @@ FinalizeArenas(FreeOp *fop,
       case FINALIZE_OBJECT12_BACKGROUND:
       case FINALIZE_OBJECT16:
       case FINALIZE_OBJECT16_BACKGROUND:
-        return FinalizeTypedArenas<JSObject>(fop, src, dest, thingKind, budget);
+        return FinalizeTypedArenas<JSObject>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_SCRIPT:
-        return FinalizeTypedArenas<JSScript>(fop, src, dest, thingKind, budget);
+        return FinalizeTypedArenas<JSScript>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_LAZY_SCRIPT:
-        return FinalizeTypedArenas<LazyScript>(fop, src, dest, thingKind, budget);
+        return FinalizeTypedArenas<LazyScript>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_SHAPE:
-        return FinalizeTypedArenas<Shape>(fop, src, dest, thingKind, budget);
+        return FinalizeTypedArenas<Shape>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_ACCESSOR_SHAPE:
-        return FinalizeTypedArenas<AccessorShape>(fop, src, dest, thingKind, budget);
+        return FinalizeTypedArenas<AccessorShape>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_BASE_SHAPE:
-        return FinalizeTypedArenas<BaseShape>(fop, src, dest, thingKind, budget);
+        return FinalizeTypedArenas<BaseShape>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_TYPE_OBJECT:
-        return FinalizeTypedArenas<types::TypeObject>(fop, src, dest, thingKind, budget);
+        return FinalizeTypedArenas<types::TypeObject>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_STRING:
-        return FinalizeTypedArenas<JSString>(fop, src, dest, thingKind, budget);
+        return FinalizeTypedArenas<JSString>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_FAT_INLINE_STRING:
-        return FinalizeTypedArenas<JSFatInlineString>(fop, src, dest, thingKind, budget);
+        return FinalizeTypedArenas<JSFatInlineString>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_EXTERNAL_STRING:
-        return FinalizeTypedArenas<JSExternalString>(fop, src, dest, thingKind, budget);
+        return FinalizeTypedArenas<JSExternalString>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_SYMBOL:
-        return FinalizeTypedArenas<JS::Symbol>(fop, src, dest, thingKind, budget);
+        return FinalizeTypedArenas<JS::Symbol>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_JITCODE:
       {
         // JitCode finalization may release references on an executable
         // allocator that is accessed when requesting interrupts.
         JSRuntime::AutoLockForInterrupt lock(fop->runtime());
-        return FinalizeTypedArenas<jit::JitCode>(fop, src, dest, thingKind, budget);
+        return FinalizeTypedArenas<jit::JitCode>(fop, src, dest, thingKind, budget, keepArenas);
       }
       default:
         MOZ_CRASH("Invalid alloc kind");
@@ -2054,7 +2041,7 @@ ArenaLists::wipeDuringParallelExecution(JSRuntime *rt)
 
         if (!arenaLists[i].isEmpty()) {
             purge(thingKind);
-            forceFinalizeNow(&fop, thingKind);
+            forceFinalizeNow(&fop, thingKind, KEEP_ARENAS);
         }
     }
 }
@@ -2506,18 +2493,18 @@ ArenaLists::finalizeNow(FreeOp *fop, const FinalizePhase& phase)
 {
     gcstats::AutoPhase ap(fop->runtime()->gc.stats, phase.statsPhase);
     for (unsigned i = 0; i < phase.length; ++i)
-        finalizeNow(fop, phase.kinds[i]);
+        finalizeNow(fop, phase.kinds[i], RELEASE_ARENAS, nullptr);
 }
 
 void
-ArenaLists::finalizeNow(FreeOp *fop, AllocKind thingKind)
+ArenaLists::finalizeNow(FreeOp *fop, AllocKind thingKind, KeepArenasEnum keepArenas, ArenaHeader **empty)
 {
     MOZ_ASSERT(!IsBackgroundFinalized(thingKind));
-    forceFinalizeNow(fop, thingKind);
+    forceFinalizeNow(fop, thingKind, keepArenas, empty);
 }
 
 void
-ArenaLists::forceFinalizeNow(FreeOp *fop, AllocKind thingKind)
+ArenaLists::forceFinalizeNow(FreeOp *fop, AllocKind thingKind, KeepArenasEnum keepArenas, ArenaHeader **empty)
 {
     MOZ_ASSERT(backgroundFinalizeState[thingKind] == BFS_DONE);
 
@@ -2530,8 +2517,13 @@ ArenaLists::forceFinalizeNow(FreeOp *fop, AllocKind thingKind)
     SortedArenaList finalizedSorted(thingsPerArena);
 
     SliceBudget budget;
-    FinalizeArenas(fop, &arenas, finalizedSorted, thingKind, budget);
+    FinalizeArenas(fop, &arenas, finalizedSorted, thingKind, budget, keepArenas);
     MOZ_ASSERT(!arenas);
+
+    if (empty) {
+        MOZ_ASSERT(keepArenas == KEEP_ARENAS);
+        finalizedSorted.extractEmpty(empty);
+    }
 
     arenaLists[thingKind] = finalizedSorted.toArenaList();
 }
@@ -2586,6 +2578,8 @@ ArenaLists::queueForBackgroundSweep(FreeOp *fop, AllocKind thingKind)
 ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead)
 {
     MOZ_ASSERT(listHead);
+    MOZ_ASSERT(!InParallelSection());
+
     AllocKind thingKind = listHead->getAllocKind();
     Zone *zone = listHead->zone;
 
@@ -2593,7 +2587,7 @@ ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead)
     SortedArenaList finalizedSorted(thingsPerArena);
 
     SliceBudget budget;
-    FinalizeArenas(fop, &listHead, finalizedSorted, thingKind, budget);
+    FinalizeArenas(fop, &listHead, finalizedSorted, thingKind, budget, RELEASE_ARENAS);
     MOZ_ASSERT(!listHead);
 
     // When arenas are queued for background finalization, all arenas are moved
@@ -2622,6 +2616,72 @@ ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead)
     }
 
     lists->backgroundFinalizeState[thingKind] = BFS_DONE;
+}
+
+void
+ArenaLists::queueForegroundObjectsForSweep(FreeOp *fop)
+{
+    gcstats::AutoPhase ap(fop->runtime()->gc.stats, gcstats::PHASE_SWEEP_OBJECT);
+
+#ifdef DEBUG
+    for (size_t i = 0; i < FINALIZE_OBJECT_LIMIT; i++)
+        MOZ_ASSERT(savedObjectArenas[i].isEmpty());
+    MOZ_ASSERT(savedEmptyObjectArenas == nullptr);
+#endif
+
+    // Foreground finalized objects must be finalized at the beginning of the
+    // sweep phase, before control can return to the mutator. Otherwise,
+    // mutator behavior can resurrect certain objects whose references would
+    // otherwise have been erased by the finalizer.
+    finalizeNow(fop, FINALIZE_OBJECT0, KEEP_ARENAS, &savedEmptyObjectArenas);
+    finalizeNow(fop, FINALIZE_OBJECT2, KEEP_ARENAS, &savedEmptyObjectArenas);
+    finalizeNow(fop, FINALIZE_OBJECT4, KEEP_ARENAS, &savedEmptyObjectArenas);
+    finalizeNow(fop, FINALIZE_OBJECT8, KEEP_ARENAS, &savedEmptyObjectArenas);
+    finalizeNow(fop, FINALIZE_OBJECT12, KEEP_ARENAS, &savedEmptyObjectArenas);
+    finalizeNow(fop, FINALIZE_OBJECT16, KEEP_ARENAS, &savedEmptyObjectArenas);
+
+    // Prevent the arenas from having new objects allocated into them. We need
+    // to know which objects are marked while we incrementally sweep dead
+    // references from type information.
+    savedObjectArenas[FINALIZE_OBJECT0] = arenaLists[FINALIZE_OBJECT0].copyAndClear();
+    savedObjectArenas[FINALIZE_OBJECT2] = arenaLists[FINALIZE_OBJECT2].copyAndClear();
+    savedObjectArenas[FINALIZE_OBJECT4] = arenaLists[FINALIZE_OBJECT4].copyAndClear();
+    savedObjectArenas[FINALIZE_OBJECT8] = arenaLists[FINALIZE_OBJECT8].copyAndClear();
+    savedObjectArenas[FINALIZE_OBJECT12] = arenaLists[FINALIZE_OBJECT12].copyAndClear();
+    savedObjectArenas[FINALIZE_OBJECT16] = arenaLists[FINALIZE_OBJECT16].copyAndClear();
+}
+
+void
+ArenaLists::mergeForegroundSweptObjectArenas()
+{
+    ReleaseArenaList(savedEmptyObjectArenas);
+    savedEmptyObjectArenas = nullptr;
+
+    mergeSweptArenas(FINALIZE_OBJECT0);
+    mergeSweptArenas(FINALIZE_OBJECT2);
+    mergeSweptArenas(FINALIZE_OBJECT4);
+    mergeSweptArenas(FINALIZE_OBJECT8);
+    mergeSweptArenas(FINALIZE_OBJECT12);
+    mergeSweptArenas(FINALIZE_OBJECT16);
+}
+
+inline void
+ArenaLists::mergeSweptArenas(AllocKind thingKind)
+{
+    ArenaList *al = &arenaLists[thingKind];
+    ArenaList *saved = &savedObjectArenas[thingKind];
+
+    *al = saved->insertListWithCursorAtEnd(*al);
+    saved->clear();
+}
+
+void
+ArenaLists::queueForegroundThingsForSweep(FreeOp *fop)
+{
+    gcShapeArenasToUpdate = arenaListsToSweep[FINALIZE_SHAPE];
+    gcAccessorShapeArenasToUpdate = arenaListsToSweep[FINALIZE_ACCESSOR_SHAPE];
+    gcTypeObjectArenasToUpdate = arenaListsToSweep[FINALIZE_TYPE_OBJECT];
+    gcScriptArenasToUpdate = arenaListsToSweep[FINALIZE_SCRIPT];
 }
 
 static void *
@@ -4749,9 +4809,10 @@ GCRuntime::beginSweepingZoneGroup()
         }
 
         {
-            gcstats::AutoPhase ap(stats, gcstats::PHASE_DISCARD_ANALYSIS);
+            gcstats::AutoPhase ap1(stats, gcstats::PHASE_SWEEP_TYPES);
+            gcstats::AutoPhase ap2(stats, gcstats::PHASE_SWEEP_TYPES_BEGIN);
             for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-                zone->sweepAnalysis(&fop, releaseObservedTypes && !zone->isPreservingCode());
+                zone->beginSweepTypes(&fop, releaseObservedTypes && !zone->isPreservingCode());
             }
         }
 
@@ -4799,8 +4860,7 @@ GCRuntime::beginSweepingZoneGroup()
 
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         gcstats::AutoSCC scc(stats, zoneGroupIndex);
-        for (unsigned i = 0; i < ArrayLength(ImmediateFinalizePhases); ++i)
-            zone->allocator.arenas.finalizeNow(&fop, ImmediateFinalizePhases[i]);
+        zone->allocator.arenas.queueForegroundObjectsForSweep(&fop);
     }
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         gcstats::AutoSCC scc(stats, zoneGroupIndex);
@@ -4814,11 +4874,10 @@ GCRuntime::beginSweepingZoneGroup()
     }
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         gcstats::AutoSCC scc(stats, zoneGroupIndex);
-        zone->allocator.arenas.gcShapeArenasToSweep =
-            zone->allocator.arenas.arenaListsToSweep[FINALIZE_SHAPE];
-        zone->allocator.arenas.gcAccessorShapeArenasToSweep =
-            zone->allocator.arenas.arenaListsToSweep[FINALIZE_ACCESSOR_SHAPE];
+        zone->allocator.arenas.queueForegroundThingsForSweep(&fop);
     }
+
+    sweepingTypes = true;
 
     finalizePhase = 0;
     sweepZone = currentZoneGroup;
@@ -4888,10 +4947,14 @@ bool
 ArenaLists::foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sliceBudget,
                                SortedArenaList &sweepList)
 {
+    MOZ_ASSERT(!InParallelSection());
+
     if (!arenaListsToSweep[thingKind] && incrementalSweptArenas.isEmpty())
         return true;
 
-    if (!FinalizeArenas(fop, &arenaListsToSweep[thingKind], sweepList, thingKind, sliceBudget)) {
+    if (!FinalizeArenas(fop, &arenaListsToSweep[thingKind], sweepList,
+                        thingKind, sliceBudget, RELEASE_ARENAS))
+    {
         incrementalSweptArenaKind = thingKind;
         incrementalSweptArenas = sweepList.toArenaList();
         return false;
@@ -4915,8 +4978,18 @@ GCRuntime::drainMarkStack(SliceBudget &sliceBudget, gcstats::Phase phase)
     return marker.drainMarkStack(sliceBudget);
 }
 
+// Advance to the next entry in a list of arenas, returning false if the
+// mutator should resume running.
 static bool
-SweepShapes(ArenaHeader **arenasToSweep, size_t thingsPerArena, SliceBudget &sliceBudget)
+AdvanceArenaList(ArenaHeader **list, AllocKind kind, SliceBudget &sliceBudget)
+{
+    *list = (*list)->next;
+    sliceBudget.step(Arena::thingsPerArena(Arena::thingSize(kind)));
+    return !sliceBudget.isOverBudget();
+}
+
+static bool
+SweepShapes(ArenaHeader **arenasToSweep, AllocKind kind, SliceBudget &sliceBudget)
 {
     while (ArenaHeader *arena = *arenasToSweep) {
         for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
@@ -4925,10 +4998,8 @@ SweepShapes(ArenaHeader **arenasToSweep, size_t thingsPerArena, SliceBudget &sli
                 shape->sweep();
         }
 
-        *arenasToSweep = arena->next;
-        sliceBudget.step(thingsPerArena);
-        if (sliceBudget.isOverBudget())
-            return false;  /* Yield to the mutator. */
+        if (!AdvanceArenaList(arenasToSweep, kind, sliceBudget))
+            return false;
     }
 
     return true;
@@ -4945,6 +5016,64 @@ GCRuntime::sweepPhase(SliceBudget &sliceBudget)
         return false;
 
     for (;;) {
+        // Sweep dead type information stored in scripts and type objects, but
+        // don't finalize them yet. We have to sweep dead information from both
+        // live and dead scripts and type objects, so that no dead references
+        // remain in them. Type inference can end up crawling these zones
+        // again, such as for TypeCompartment::markSetsUnknown, and if this
+        // happens after sweeping for the zone group finishes we won't be able
+        // to determine which things in the zone are live.
+        if (sweepingTypes) {
+            gcstats::AutoPhase ap1(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
+            gcstats::AutoPhase ap2(stats, gcstats::PHASE_SWEEP_TYPES);
+
+            for (; sweepZone; sweepZone = sweepZone->nextNodeInGroup()) {
+                ArenaLists &al = sweepZone->allocator.arenas;
+
+                types::AutoClearTypeInferenceStateOnOOM oom(sweepZone);
+
+                while (ArenaHeader *arena = al.gcScriptArenasToUpdate) {
+                    for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
+                        JSScript *script = i.get<JSScript>();
+                        script->maybeSweepTypes(&oom);
+                    }
+
+                    if (!AdvanceArenaList(&al.gcScriptArenasToUpdate,
+                                          FINALIZE_SCRIPT, sliceBudget))
+                    {
+                        return false;
+                    }
+                }
+
+                while (ArenaHeader *arena = al.gcTypeObjectArenasToUpdate) {
+                    for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
+                        types::TypeObject *object = i.get<types::TypeObject>();
+                        object->maybeSweep(&oom);
+                    }
+
+                    if (!AdvanceArenaList(&al.gcTypeObjectArenasToUpdate,
+                                          FINALIZE_TYPE_OBJECT, sliceBudget))
+                    {
+                        return false;
+                    }
+                }
+
+                // Finish sweeping type information in the zone.
+                {
+                    gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_TYPES_END);
+                    sweepZone->types.endSweep(rt);
+                }
+
+                // Foreground finalized objects have already been finalized,
+                // and now their arenas can be reclaimed by freeing empty ones
+                // and making non-empty ones available for allocation.
+                al.mergeForegroundSweptObjectArenas();
+            }
+
+            sweepZone = currentZoneGroup;
+            sweepingTypes = false;
+        }
+
         /* Finalize foreground finalized things. */
         for (; finalizePhase < ArrayLength(IncrementalFinalizePhases) ; ++finalizePhase) {
             gcstats::AutoPhase ap(stats, IncrementalFinalizePhases[finalizePhase].statsPhase);
@@ -4979,15 +5108,13 @@ GCRuntime::sweepPhase(SliceBudget &sliceBudget)
 
             for (; sweepZone; sweepZone = sweepZone->nextNodeInGroup()) {
                 Zone *zone = sweepZone;
-                if (!SweepShapes(&zone->allocator.arenas.gcShapeArenasToSweep,
-                                 Arena::thingsPerArena(Arena::thingSize(FINALIZE_SHAPE)),
-                                 sliceBudget))
+                if (!SweepShapes(&zone->allocator.arenas.gcShapeArenasToUpdate,
+                                 FINALIZE_SHAPE, sliceBudget))
                 {
                     return false;  /* Yield to the mutator. */
                 }
-                if (!SweepShapes(&zone->allocator.arenas.gcAccessorShapeArenasToSweep,
-                                 Arena::thingsPerArena(Arena::thingSize(FINALIZE_ACCESSOR_SHAPE)),
-                                 sliceBudget))
+                if (!SweepShapes(&zone->allocator.arenas.gcAccessorShapeArenasToUpdate,
+                                 FINALIZE_ACCESSOR_SHAPE, sliceBudget))
                 {
                     return false;  /* Yield to the mutator. */
                 }
@@ -6107,18 +6234,25 @@ gc::MergeCompartments(JSCompartment *source, JSCompartment *target)
 
     source->clearTables();
 
-    // Fixup compartment pointers in source to refer to target.
+    // Fixup compartment pointers in source to refer to target, and make sure
+    // type information generations are in sync.
 
     for (ZoneCellIter iter(source->zone(), FINALIZE_SCRIPT); !iter.done(); iter.next()) {
         JSScript *script = iter.get<JSScript>();
         MOZ_ASSERT(script->compartment() == source);
         script->compartment_ = target;
+        script->setTypesGeneration(target->zone()->types.generation);
     }
 
     for (ZoneCellIter iter(source->zone(), FINALIZE_BASE_SHAPE); !iter.done(); iter.next()) {
         BaseShape *base = iter.get<BaseShape>();
         MOZ_ASSERT(base->compartment() == source);
         base->compartment_ = target;
+    }
+
+    for (ZoneCellIter iter(source->zone(), FINALIZE_TYPE_OBJECT); !iter.done(); iter.next()) {
+        types::TypeObject *type = iter.get<types::TypeObject>();
+        type->setGeneration(target->zone()->types.generation);
     }
 
     // Fixup zone pointers in source's zone to refer to target's zone.

@@ -28,15 +28,15 @@ public:
                        const nsHTMLReflowState& aParentRS);
   ~nsBlockReflowContext() { }
 
-  void ReflowBlock(const nsRect&       aSpace,
-                   bool                aApplyBStartMargin,
-                   nsCollapsingMargin& aPrevMargin,
-                   nscoord             aClearance,
-                   bool                aIsAdjacentWithBStart,
-                   nsLineBox*          aLine,
-                   nsHTMLReflowState&  aReflowState,
-                   nsReflowStatus&     aReflowStatus,
-                   nsBlockReflowState& aState);
+  void ReflowBlock(const mozilla::LogicalRect& aSpace,
+                   bool                        aApplyBStartMargin,
+                   nsCollapsingMargin&         aPrevMargin,
+                   nscoord                     aClearance,
+                   bool                        aIsAdjacentWithBStart,
+                   nsLineBox*                  aLine,
+                   nsHTMLReflowState&          aReflowState,
+                   nsReflowStatus&             aReflowStatus,
+                   nsBlockReflowState&         aState);
 
   bool PlaceBlock(const nsHTMLReflowState& aReflowState,
                   bool                     aForceFit,

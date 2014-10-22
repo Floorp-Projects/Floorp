@@ -449,7 +449,7 @@ bool
 js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
 {
     MOZ_ASSERT(args.length() <= ARGS_LENGTH_MAX);
-    MOZ_ASSERT(!cx->compartment()->activeAnalysis);
+    MOZ_ASSERT(!cx->zone()->types.activeAnalysis);
 
     /* Perform GC if necessary on exit from the function. */
     AutoGCIfNeeded gcIfNeeded(cx);
@@ -1441,7 +1441,7 @@ Interpret(JSContext *cx, RunState &state)
     JS_END_MACRO
 
     gc::MaybeVerifyBarriers(cx, true);
-    MOZ_ASSERT(!cx->compartment()->activeAnalysis);
+    MOZ_ASSERT(!cx->zone()->types.activeAnalysis);
 
     InterpreterFrame *entryFrame = state.pushInterpreterFrame(cx);
     if (!entryFrame)

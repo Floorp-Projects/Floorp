@@ -63,6 +63,7 @@
 #ifdef MOZ_ENABLE_PROFILER_SPS
 #include "ProfilerMarkers.h"
 #endif
+#include "mozilla/VsyncDispatcher.h"
 
 namespace mozilla {
 namespace layers {
@@ -190,6 +191,117 @@ static void SetThreadPriority()
   hal::SetCurrentThreadPriority(hal::THREAD_PRIORITY_COMPOSITOR);
 }
 
+CompositorVsyncObserver::CompositorVsyncObserver(CompositorParent* aCompositorParent)
+  : mNeedsComposite(false)
+  , mIsObservingVsync(false)
+  , mCompositorParent(aCompositorParent)
+  , mCurrentCompositeTaskMonitor("CurrentCompositeTaskMonitor")
+  , mCurrentCompositeTask(nullptr)
+{
+
+}
+
+CompositorVsyncObserver::~CompositorVsyncObserver()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  UnobserveVsync();
+  mCompositorParent = nullptr;
+  mNeedsComposite = false;
+  CancelCurrentCompositeTask();
+}
+
+/**
+ * TODO Potential performance heuristics:
+ * If a composite takes 17 ms, do we composite ASAP or wait until next vsync?
+ * If a layer transaction comes after vsync, do we composite ASAP or wait until
+ * next vsync?
+ * How many skipped vsync events until we stop listening to vsync events?
+ */
+void
+CompositorVsyncObserver::SetNeedsComposite(bool aNeedsComposite)
+{
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+  mNeedsComposite = aNeedsComposite;
+
+  if (!mIsObservingVsync && mNeedsComposite) {
+    ObserveVsync();
+  }
+}
+
+bool
+CompositorVsyncObserver::NotifyVsync(TimeStamp aVsyncTimestamp)
+{
+  // Called from the vsync dispatch thread
+  MOZ_ASSERT(!CompositorParent::IsInCompositorThread());
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  MonitorAutoLock lock(mCurrentCompositeTaskMonitor);
+  if (mCurrentCompositeTask == nullptr) {
+    mCurrentCompositeTask = NewRunnableMethod(this,
+                                              &CompositorVsyncObserver::Composite,
+                                              aVsyncTimestamp);
+    CompositorParent::CompositorLoop()->PostTask(FROM_HERE, mCurrentCompositeTask);
+  }
+  return true;
+}
+
+void
+CompositorVsyncObserver::CancelCurrentCompositeTask()
+{
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread() || NS_IsMainThread());
+  MonitorAutoLock lock(mCurrentCompositeTaskMonitor);
+  if (mCurrentCompositeTask) {
+    mCurrentCompositeTask->Cancel();
+    mCurrentCompositeTask = nullptr;
+  }
+}
+
+void
+CompositorVsyncObserver::Composite(TimeStamp aVsyncTimestamp)
+{
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+  {
+    MonitorAutoLock lock(mCurrentCompositeTaskMonitor);
+    mCurrentCompositeTask = nullptr;
+  }
+
+  if (mNeedsComposite && mCompositorParent) {
+    mNeedsComposite = false;
+    mCompositorParent->CompositeCallback(aVsyncTimestamp);
+  } else {
+    // We're getting vsync notifications but we don't need to composite so
+    // unregister the vsync.
+    UnobserveVsync();
+  }
+}
+
+bool
+CompositorVsyncObserver::NeedsComposite()
+{
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+  return mNeedsComposite;
+}
+
+/**
+ * Since the vsync thread has its own locks before notifying us of vsync
+ * we can't register/unregister from the vsync thread. Any other thread is fine
+ */
+void
+CompositorVsyncObserver::ObserveVsync()
+{
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+  VsyncDispatcher::GetInstance()->AddCompositorVsyncObserver(this);
+  mIsObservingVsync = true;
+}
+
+void
+CompositorVsyncObserver::UnobserveVsync()
+{
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread() || NS_IsMainThread());
+  VsyncDispatcher::GetInstance()->RemoveCompositorVsyncObserver(this);
+  mIsObservingVsync = false;
+}
+
 void CompositorParent::StartUp()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on the main Thread!");
@@ -254,6 +366,10 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   if (gfxPrefs::AsyncPanZoomEnabled()) {
     mApzcTreeManager = new APZCTreeManager();
   }
+
+  if (gfxPrefs::VsyncAlignedCompositor()) {
+    mCompositorVsyncObserver = new CompositorVsyncObserver(this);
+  }
 }
 
 bool
@@ -293,6 +409,7 @@ CompositorParent::Destroy()
     mApzcTreeManager = nullptr;
   }
   sIndirectLayerTrees.erase(mRootLayerTreeID);
+  mCompositorVsyncObserver = nullptr;
 }
 
 void
@@ -374,12 +491,17 @@ CompositorParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
 bool
 CompositorParent::RecvFlushRendering()
 {
-  // If we're waiting to do a composite, then cancel it
-  // and do it immediately instead.
-  if (mCurrentCompositeTask) {
+  if (gfxPrefs::VsyncAlignedCompositor() && mCompositorVsyncObserver->NeedsComposite()) {
+    mCompositorVsyncObserver->SetNeedsComposite(false);
+    CancelCurrentCompositeTask();
+    ForceComposeToTarget(nullptr);
+  } else if (mCurrentCompositeTask) {
+    // If we're waiting to do a composite, then cancel it
+    // and do it immediately instead.
     CancelCurrentCompositeTask();
     ForceComposeToTarget(nullptr);
   }
+
   return true;
 }
 
@@ -497,7 +619,9 @@ CompositorParent::ForceComposition()
 void
 CompositorParent::CancelCurrentCompositeTask()
 {
-  if (mCurrentCompositeTask) {
+  if (gfxPrefs::VsyncAlignedCompositor()) {
+    mCompositorVsyncObserver->CancelCurrentCompositeTask();
+  } else if (mCurrentCompositeTask) {
     mCurrentCompositeTask->Cancel();
     mCurrentCompositeTask = nullptr;
   }
@@ -604,8 +728,10 @@ CalculateCompositionFrameRate()
 }
 
 void
-CompositorParent::ScheduleComposition()
+CompositorParent::ScheduleSoftwareTimerComposition()
 {
+  MOZ_ASSERT(!gfxPrefs::VsyncAlignedCompositor());
+
   if (mCurrentCompositeTask || mPaused) {
     return;
   }
@@ -621,8 +747,9 @@ CompositorParent::ScheduleComposition()
   TimeDuration minFrameDelta = TimeDuration::FromMilliseconds(
     rate == 0 ? 0.0 : std::max(0.0, 1000.0 / rate));
 
-
-  mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::CompositeCallback);
+  mCurrentCompositeTask = NewRunnableMethod(this,
+                                            &CompositorParent::CompositeCallback,
+                                            TimeStamp::Now());
 
   if (!initialComposition && delta < minFrameDelta) {
     TimeDuration delay = minFrameDelta - delta;
@@ -639,8 +766,28 @@ CompositorParent::ScheduleComposition()
 }
 
 void
-CompositorParent::CompositeCallback()
+CompositorParent::ScheduleComposition()
 {
+  MOZ_ASSERT(IsInCompositorThread());
+  if (gfxPrefs::VsyncAlignedCompositor()) {
+    mCompositorVsyncObserver->SetNeedsComposite(true);
+  } else {
+    ScheduleSoftwareTimerComposition();
+  }
+}
+
+void
+CompositorParent::CompositeCallback(TimeStamp aScheduleTime)
+{
+  if (gfxPrefs::VsyncAlignedCompositor()) {
+    // Align OMTA to vsync time.
+    // TODO: ensure it aligns with the refresh / start time of
+    // animations
+    mLastCompose = aScheduleTime;
+  } else {
+    mLastCompose = TimeStamp::Now();
+  }
+
   mCurrentCompositeTask = nullptr;
   CompositeToTarget(nullptr);
 }
@@ -683,8 +830,6 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const nsIntRect* aRect)
                   scheduleDelta.ToMilliseconds());
   }
 #endif
-
-  mLastCompose = TimeStamp::Now();
 
   if (!CanComposite()) {
     DidComposite();
@@ -838,14 +983,18 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
     // However, we only do this update when a composite operation is already
     // scheduled in order to better match the behavior under regular sampling
     // conditions.
-    if (mIsTesting && root && mCurrentCompositeTask) {
+    bool needTestComposite = mIsTesting && root &&
+                             (mCurrentCompositeTask ||
+                             (gfxPrefs::VsyncAlignedCompositor() &&
+                              mCompositorVsyncObserver->NeedsComposite()));
+    if (needTestComposite) {
       AutoResolveRefLayers resolve(mCompositionManager);
       SetShadowProperties(mLayerManager->GetRoot());
       bool requestNextFrame =
         mCompositionManager->TransformShadowTree(mTestTime);
       if (!requestNextFrame) {
         CancelCurrentCompositeTask();
-        // Pretend we composited in case someone is wating for this event.
+        // Pretend we composited in case someone is waiting for this event.
         DidComposite();
       }
     }
@@ -870,8 +1019,12 @@ CompositorParent::SetTestSampleTime(LayerTransactionParent* aLayerTree,
   mIsTesting = true;
   mTestTime = aTime;
 
+  bool testComposite = mCompositionManager && (mCurrentCompositeTask ||
+                                               (gfxPrefs::VsyncAlignedCompositor()
+                                               && mCompositorVsyncObserver->NeedsComposite()));
+
   // Update but only if we were already scheduled to animate
-  if (mCompositionManager && mCurrentCompositeTask) {
+  if (testComposite) {
     AutoResolveRefLayers resolve(mCompositionManager);
     SetShadowProperties(mLayerManager->GetRoot());
     bool requestNextFrame = mCompositionManager->TransformShadowTree(aTime);

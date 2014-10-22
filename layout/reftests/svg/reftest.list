@@ -214,7 +214,7 @@ pref(layout.css.masking.enabled,true) fuzzy-if(d2d,1,6400) == mask-type-03.svg m
 pref(layout.css.masking.enabled,true) fuzzy-if(d2d,1,6400) == mask-type-04.svg mask-type-01-ref.svg
 == nested-viewBox-01.svg pass.svg
 == nesting-invalid-01.svg nesting-invalid-01-ref.svg
-== non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg
+fuzzy-if(d2d&&/^Windows\x20NT\x206\.1/.test(http.oscpu),1,168) fuzzy-if(azureQuartz&&OSX=="10.8",1,122) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg # bug 1074161 for Win7 and OSX 10.8
 fuzzy-if(Android||B2G,1,99) fuzzy-if(!contentSameGfxBackendAsCanvas,9,99) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
 == non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg
 == objectBoundingBox-and-clipPath.svg pass.svg
@@ -263,6 +263,7 @@ pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03-ref.svg
 == pattern-scale-01c.svg pattern-scale-01-ref.svg
 == pattern-transform-presence-01.svg pattern-transform-presence-01-ref.svg
 == pattern-transformed-01.svg pattern-transformed-01-ref.svg
+== polygon-01.svg polygon-01-ref.svg
 == polygon-marker-01.svg pass.svg
 == polygon-points-negative-01.svg pass.svg
 == polyline-points-invalid-01.svg pass.svg

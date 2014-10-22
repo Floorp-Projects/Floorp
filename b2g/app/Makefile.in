@@ -20,6 +20,14 @@ INSTALL_TARGETS += UA_UPDATE
 # Make sure the standalone glue doesn't try to get libxpcom.so from b2g/app.
 NSDISTMODE = copy
 
+# Copy the Firefox OS fonts if available
+ifdef MOZTTDIR
+include $(MOZTTDIR)/fonts.mk
+MOZTT_DEST = $(FINAL_TARGET)/fonts
+MOZTT_FILES = $(patsubst external/moztt/%,$(MOZTTDIR)/%,$(filter external/moztt/%,$(subst :, ,$(PRODUCT_COPY_FILES))))
+INSTALL_TARGETS += MOZTT
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 APP_ICON = b2g
