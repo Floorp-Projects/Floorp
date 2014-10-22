@@ -100,16 +100,6 @@ public:
                 ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-  IccOpenChannel(const nsAString& aAid, ErrorResult& aRv);
-
-  already_AddRefed<DOMRequest>
-  IccExchangeAPDU(const JSContext* aCx, int32_t aChannel,
-                  JS::Handle<JS::Value> aApdu, ErrorResult& aRv);
-
-  already_AddRefed<DOMRequest>
-  IccCloseChannel(int32_t aChannel, ErrorResult& aRv);
-
-  already_AddRefed<DOMRequest>
   MatchMvno(const nsAString& aMvnoType, const nsAString& aMatchData,
             ErrorResult& aRv);
 
