@@ -897,6 +897,21 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           this._normalMaxRows = this.mInput.maxRows;
         }
 
+        // Set an attribute for styling the popup based on the input.
+        let inputID = "";
+        if (this.mInput && this.mInput.ownerDocument &&
+            this.mInput.ownerDocument.documentURIObject.schemeIs("chrome")) {
+          inputID = this.mInput.id;
+          // Take care of elements with no id that are inside xbl bindings
+          if (!inputID) {
+            let bindingParent = this.mInput.ownerDocument.getBindingParent(this.mInput);
+            if (bindingParent) {
+              inputID = bindingParent.id;
+            }
+          }
+        }
+        this.setAttribute("autocompleteinput", inputID);
+
         this.mPopupOpen = true;
       ]]></handler>
 
@@ -907,6 +922,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
         controller.stopSearch();
 
+        this.removeAttribute("autocompleteinput");
         this.mPopupOpen = false;
 
         // Reset the maxRows property to the cached "normal" value, and reset
