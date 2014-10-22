@@ -149,60 +149,6 @@ castNative(JSContext *cx,
     return NS_ERROR_XPC_BAD_OP_ON_WN_PROTO;
 }
 
-nsISupports*
-castNativeFromWrapper(JSContext *cx,
-                      JSObject *obj,
-                      uint32_t interfaceBit,
-                      uint32_t protoID,
-                      int32_t protoDepth,
-                      nsISupports **pRef,
-                      MutableHandleValue pVal,
-                      nsresult *rv)
-{
-    XPCWrappedNative *wrapper;
-    XPCWrappedNativeTearOff *tearoff;
-    JSObject *cur;
-
-    if (IS_WN_REFLECTOR(obj)) {
-        cur = obj;
-        wrapper = XPCWrappedNative::Get(obj);
-        tearoff = nullptr;
-    } else {
-        *rv = getWrapper(cx, obj, &wrapper, &cur, &tearoff);
-        if (NS_FAILED(*rv))
-            return nullptr;
-    }
-
-    nsISupports *native;
-    if (wrapper) {
-        native = wrapper->GetIdentityObject();
-        cur = wrapper->GetFlatJSObject();
-        if (!native || !HasBitInInterfacesBitmap(cur, interfaceBit)) {
-            native = nullptr;
-        }
-    } else if (cur && protoDepth >= 0) {
-        const mozilla::dom::DOMJSClass* domClass =
-            mozilla::dom::GetDOMClass(cur);
-        native = mozilla::dom::UnwrapDOMObject<nsISupports>(cur);
-        if (native &&
-            (uint32_t)domClass->mInterfaceChain[protoDepth] != protoID) {
-            native = nullptr;
-        }
-    } else {
-        native = nullptr;
-    }
-
-    if (native) {
-        *pRef = nullptr;
-        pVal.setObjectOrNull(cur);
-        *rv = NS_OK;
-    } else {
-        *rv = NS_ERROR_XPC_BAD_CONVERT_JS;
-    }
-
-    return native;
-}
-
 nsresult
 xpc_qsUnwrapArgImpl(JSContext *cx,
                     HandleValue v,

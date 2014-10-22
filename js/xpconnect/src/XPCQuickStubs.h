@@ -28,16 +28,6 @@ castNative(JSContext *cx,
            nsISupports **ppThisRef,
            JS::MutableHandleValue vp);
 
-nsISupports*
-castNativeFromWrapper(JSContext *cx,
-                      JSObject *obj,
-                      uint32_t interfaceBit,
-                      uint32_t protoID,
-                      int32_t protoDepth,
-                      nsISupports **pRef,
-                      JS::MutableHandleValue pVal,
-                      nsresult *rv);
-
 MOZ_ALWAYS_INLINE JSObject*
 xpc_qsUnwrapObj(jsval v, nsISupports **ppArgRef, nsresult *rv)
 {
@@ -59,22 +49,5 @@ xpc_qsUnwrapObj(jsval v, nsISupports **ppArgRef, nsresult *rv)
 nsresult
 xpc_qsUnwrapArgImpl(JSContext *cx, JS::HandleValue v, const nsIID &iid, void **ppArg,
                     nsISupports **ppArgRef, JS::MutableHandleValue vp);
-
-MOZ_ALWAYS_INLINE nsISupports*
-castNativeArgFromWrapper(JSContext *cx,
-                         jsval v,
-                         uint32_t bit,
-                         uint32_t protoID,
-                         int32_t protoDepth,
-                         nsISupports **pArgRef,
-                         JS::MutableHandleValue vp,
-                         nsresult *rv)
-{
-    JSObject *src = xpc_qsUnwrapObj(v, pArgRef, rv);
-    if (!src)
-        return nullptr;
-
-    return castNativeFromWrapper(cx, src, bit, protoID, protoDepth, pArgRef, vp, rv);
-}
 
 #endif /* xpcquickstubs_h___ */
