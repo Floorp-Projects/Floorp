@@ -141,6 +141,15 @@ class APZCTreeManager;
 // format since at least OS X 10.5.
 - (void)_tileTitlebarAndRedisplay:(BOOL)redisplay;
 
+// The following undocumented methods are used to work around bug 1069658,
+// which is an Apple bug or design flaw that effects Yosemite.  None of them
+// were present prior to Yosemite (OS X 10.10).
+- (NSView *)titlebarView; // Method of NSThemeFrame
+- (NSView *)titlebarContainerView; // Method of NSThemeFrame
+- (BOOL)transparent; // Method of NSTitlebarView and NSTitlebarContainerView
+- (void)setTransparent:(BOOL)transparent; // Method of NSTitlebarView and
+                                          // NSTitlebarContainerView
+
 @end
 
 #if !defined(MAC_OS_X_VERSION_10_6) || \
