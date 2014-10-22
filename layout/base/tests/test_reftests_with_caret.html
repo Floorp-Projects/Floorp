@@ -30,7 +30,7 @@ function callbackTestIframe(iframe)
   // Using assertSnapshots is important to get the data-URIs of failing tests
   // dumped into the log in a format that reftest-analyzer.xhtml can process. 
   var passed = assertSnapshots(result.snapshot, reference.snapshot, true,
-                               result.src, reference.src);
+                               null /*no fuzz*/, result.src, reference.src);
 
   // Remove the iframes if the test was successful
   if (passed) {
