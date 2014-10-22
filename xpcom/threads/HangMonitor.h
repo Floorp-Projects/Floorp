@@ -7,6 +7,9 @@
 #ifndef mozilla_HangMonitor_h
 #define mozilla_HangMonitor_h
 
+#include "mozilla/MemoryReporting.h"
+#include "nsString.h"
+
 namespace mozilla {
 namespace HangMonitor {
 
@@ -37,6 +40,57 @@ void Startup();
  * Stop monitoring hangs and join the thread.
  */
 void Shutdown();
+
+/**
+ * This class declares an abstraction for a data type that encapsulates all
+ * of the annotations being reported by a registered hang Annotator.
+ */
+class HangAnnotations
+{
+public:
+  virtual ~HangAnnotations() {}
+
+  virtual void AddAnnotation(const nsAString& aName, const int32_t aData) = 0;
+  virtual void AddAnnotation(const nsAString& aName, const double aData) = 0;
+  virtual void AddAnnotation(const nsAString& aName, const nsAString& aData) = 0;
+  virtual void AddAnnotation(const nsAString& aName, const nsACString& aData) = 0;
+  virtual void AddAnnotation(const nsAString& aName, const bool aData) = 0;
+
+  class Enumerator
+  {
+  public:
+    virtual ~Enumerator() {}
+    virtual bool Next(nsAString& aOutName, nsAString& aOutValue) = 0;
+  };
+
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+  virtual bool IsEmpty() const = 0;
+  virtual bool GetEnumerator(Enumerator **aOutEnum) = 0;
+};
+
+class Annotator
+{
+public:
+  /**
+   * NB: This function is always called by the HangMonitor thread.
+   *     Plan accordingly.
+   */
+  virtual void AnnotateHang(HangAnnotations& aAnnotations) = 0;
+};
+
+/**
+ * Registers an Annotator to be called when a hang is detected.
+ * @param aAnnotator Reference to an object that implements the
+ * HangMonitor::Annotator interface.
+ */
+void RegisterAnnotator(Annotator& aAnnotator);
+
+/**
+ * Registers an Annotator that was previously registered via RegisterAnnotator.
+ * @param aAnnotator Reference to an object that implements the
+ * HangMonitor::Annotator interface.
+ */
+void UnregisterAnnotator(Annotator& aAnnotator);
 
 /**
  * Notify the hang monitor of activity which will reset its internal timer.
