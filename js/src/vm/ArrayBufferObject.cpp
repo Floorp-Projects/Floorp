@@ -52,6 +52,7 @@
 #include "vm/Shape-inl.h"
 
 using mozilla::DebugOnly;
+using mozilla::UniquePtr;
 
 using namespace js;
 using namespace js::gc;
@@ -396,11 +397,10 @@ ArrayBufferObject::fun_transfer(JSContext *cx, unsigned argc, Value *vp)
         newByteLength = size_t(i32);
     }
 
-    uint8_t *newData;
+    UniquePtr<uint8_t, JS::FreePolicy> newData;
     if (!newByteLength) {
         if (!ArrayBufferObject::neuter(cx, oldBuffer, oldBuffer->contents()))
             return false;
-        newData = nullptr;
     } else {
 # ifdef JS_CPU_X64
         // With a 4gb mapped asm.js buffer, we can simply enable/disable access
@@ -412,31 +412,43 @@ ArrayBufferObject::fun_transfer(JSContext *cx, unsigned argc, Value *vp)
         // Since we try to realloc below, only allow stealing malloc'd buffers.
         // If !hasMallocedContents, stealContents will malloc a copy which we
         // can then realloc.
-        ArrayBufferObject::BufferContents stolen =
-            ArrayBufferObject::stealContents(cx, oldBuffer, oldBuffer->hasMallocedContents());
-        if (!stolen)
+        bool steal = oldBuffer->hasMallocedContents();
+        auto stolenContents = ArrayBufferObject::stealContents(cx, oldBuffer, steal);
+        if (!stolenContents)
             return false;
 
-        if (newByteLength != oldByteLength) {
-            newData = cx->runtime()->pod_reallocCanGC<uint8_t>(stolen.data(), oldByteLength, newByteLength);
-            if (!newData) {
-                js_free(stolen.data());
-                js_ReportOutOfMemory(cx);
-                return false;
+        UniquePtr<uint8_t, JS::FreePolicy> oldData(stolenContents.data());
+        if (newByteLength > oldByteLength) {
+            // In theory, realloc+memset(0) can be optimized to avoid touching
+            // any pages (by using OS page mapping tricks). However, in
+            // practice, we don't seem to get this optimization in Firefox with
+            // jemalloc so calloc+memcpy are faster.
+            newData.reset(cx->runtime()->pod_callocCanGC<uint8_t>(newByteLength));
+            if (newData) {
+                memcpy(newData.get(), oldData.get(), oldByteLength);
+            } else {
+                // Try malloc before giving up since it might be able to succed
+                // by resizing oldData in-place.
+                newData.reset(cx->pod_realloc(oldData.get(), oldByteLength, newByteLength));
+                if (!newData)
+                    return false;
+                oldData.release();
+                memset(newData.get() + oldByteLength, 0, newByteLength - oldByteLength);
             }
-
-            if (newByteLength > oldByteLength)
-                memset(newData + oldByteLength, 0, newByteLength - oldByteLength);
+        } else if (newByteLength < oldByteLength) {
+            newData.reset(cx->pod_realloc(oldData.get(), oldByteLength, newByteLength));
+            if (!newData)
+                return false;
+            oldData.release();
         } else {
-            newData = stolen.data();
+            newData = Move(oldData);
         }
     }
 
-    RootedObject newBuffer(cx, JS_NewArrayBufferWithContents(cx, newByteLength, newData));
-    if (!newBuffer) {
-        js_free(newData);
+    RootedObject newBuffer(cx, JS_NewArrayBufferWithContents(cx, newByteLength, newData.get()));
+    if (!newBuffer)
         return false;
-    }
+    newData.release();
 
     args.rval().setObject(*newBuffer);
     return true;
