@@ -48,7 +48,7 @@ getNativeFromWrapper(JSContext *cx,
 }
 
 
-nsresult
+static nsresult
 getWrapper(JSContext *cx,
            JSObject *obj,
            XPCWrappedNative **wrapper,
@@ -106,7 +106,7 @@ getWrapper(JSContext *cx,
     return NS_OK;
 }
 
-nsresult
+static nsresult
 castNative(JSContext *cx,
            XPCWrappedNative *wrapper,
            JSObject *curArg,
@@ -147,18 +147,13 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
                     nsISupports **ppArgRef,
                     MutableHandleValue vp)
 {
-    nsresult rv;
-    RootedObject src(cx, xpc_qsUnwrapObj(v, ppArgRef, &rv));
-    if (!src) {
-        *ppArg = nullptr;
-
-        return rv;
-    }
+    MOZ_ASSERT(v.isObject());
+    RootedObject src(cx, &v.toObject());
 
     XPCWrappedNative *wrapper;
     XPCWrappedNativeTearOff *tearoff;
     JSObject *obj2;
-    rv = getWrapper(cx, src, &wrapper, &obj2, &tearoff);
+    nsresult rv = getWrapper(cx, src, &wrapper, &obj2, &tearoff);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (wrapper || obj2) {
