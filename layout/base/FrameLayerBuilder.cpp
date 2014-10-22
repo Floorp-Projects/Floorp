@@ -3798,7 +3798,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
       // jaggies. It also ensures we never scale down by more than a factor of 2,
       // avoiding bad downscaling quality.
       Matrix frameTransform;
-      if (ActiveLayerTracker::IsStyleAnimated(aContainerFrame, eCSSProperty_transform) &&
+      if (ActiveLayerTracker::IsStyleAnimated(aDisplayListBuilder, aContainerFrame, eCSSProperty_transform) &&
           aTransform &&
           (!aTransform->Is2D(&frameTransform) || frameTransform.HasNonTranslationOrFlip())) {
         // Don't clamp the scale factor when the new desired scale factor matches the old one
@@ -3845,7 +3845,8 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     ContainerLayerParameters(scale.width, scale.height, -offset, aIncomingScale);
   if (aTransform) {
     aOutgoingScale.mInTransformedSubtree = true;
-    if (ActiveLayerTracker::IsStyleAnimated(aContainerFrame, eCSSProperty_transform)) {
+    if (ActiveLayerTracker::IsStyleAnimated(aDisplayListBuilder, aContainerFrame,
+                                            eCSSProperty_transform)) {
       aOutgoingScale.mInActiveTransformedSubtree = true;
     }
   }

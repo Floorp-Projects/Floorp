@@ -26,8 +26,10 @@
 #include "LayerState.h"
 #include "FrameMetrics.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/gfx/UserData.h"
 
 #include <stdint.h>
+#include "nsTHashtable.h"
 
 #include <stdlib.h>
 #include <algorithm>
@@ -719,6 +721,17 @@ public:
 
   DisplayListClipState& ClipState() { return mClipState; }
 
+  /**
+   * The will-change budget is calculated during the display list building
+   * phase for all the frames that want will change on a per-document basis.
+   * The cost should be fully calculated during the layer building phase
+   * and a decission to allow or disallow will-change for all frames of
+   * that document will be made by IsInWillChangeBudget.
+   */
+  void AddToWillChangeBudget(nsIFrame* aFrame, const nsSize& aSize);
+
+  bool IsInWillChangeBudget(nsIFrame* aFrame) const;
+
 private:
   void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                     const nsRect& aDirtyRect);
@@ -730,11 +743,20 @@ private:
     uint32_t      mFirstFrameMarkedForDisplay;
     bool          mIsBackgroundOnly;
   };
+
   PresShellState* CurrentPresShellState() {
     NS_ASSERTION(mPresShellStates.Length() > 0,
                  "Someone forgot to enter a presshell");
     return &mPresShellStates[mPresShellStates.Length() - 1];
   }
+
+  struct DocumentWillChangeBudget {
+    DocumentWillChangeBudget()
+      : mBudget(0)
+    {}
+
+    uint32_t mBudget;
+  };
 
   nsIFrame*                      mReferenceFrame;
   nsIFrame*                      mIgnoreScrollFrame;
@@ -753,6 +775,9 @@ private:
   const nsIFrame*                mCurrentReferenceFrame;
   // The offset from mCurrentFrame to mCurrentReferenceFrame.
   nsPoint                        mCurrentOffsetToReferenceFrame;
+  // will-change budget tracker
+  nsDataHashtable<nsPtrHashKey<nsPresContext>, DocumentWillChangeBudget>
+                                 mWillChangeBudget;
   // Relative to mCurrentFrame.
   nsRect                         mDirtyRect;
   nsRegion                       mWindowOpaqueRegion;
@@ -2738,7 +2763,7 @@ public:
                             float aOpacity,
                             const DisplayItemClip* aClip) MOZ_OVERRIDE;
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
-  bool NeedsActiveLayer();
+  bool NeedsActiveLayer(nsDisplayListBuilder* aBuilder);
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
 #ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(nsACString& aTo) MOZ_OVERRIDE;
