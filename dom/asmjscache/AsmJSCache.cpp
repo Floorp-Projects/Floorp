@@ -375,7 +375,7 @@ public:
     }
   };
 
-  bool
+  JS::AsmJSCacheResult
   BlockUntilOpen(AutoClose* aCloser)
   {
     MOZ_ASSERT(!mWaiting, "Can only call BlockUntilOpen once");
@@ -384,7 +384,9 @@ public:
     mWaiting = true;
 
     nsresult rv = NS_DispatchToMainThread(this);
-    NS_ENSURE_SUCCESS(rv, false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return JS::AsmJSCache_InternalError;
+    }
 
     {
       MutexAutoLock lock(mMutex);
@@ -394,7 +396,7 @@ public:
     }
 
     if (!mOpened) {
-      return false;
+      return mResult;
     }
 
     // Now that we're open, we're guarnateed a Close() call. However, we are
@@ -402,7 +404,7 @@ public:
     // is closed, so we do that ourselves and Release() in OnClose().
     aCloser->Init(this);
     AddRef();
-    return true;
+    return JS::AsmJSCache_Success;
   }
 
   // This method must be called if BlockUntilOpen returns 'true'. AutoClose
@@ -416,7 +418,8 @@ protected:
   : mMutex("File::mMutex"),
     mCondVar(mMutex, "File::mCondVar"),
     mWaiting(false),
-    mOpened(false)
+    mOpened(false),
+    mResult(JS::AsmJSCache_InternalError)
   { }
 
   ~File()
@@ -428,15 +431,16 @@ protected:
   void
   OnOpen()
   {
-    Notify(true);
+    Notify(JS::AsmJSCache_Success);
   }
 
   void
-  OnFailure()
+  OnFailure(JS::AsmJSCacheResult aResult)
   {
-    FileDescriptorHolder::Finish();
+    MOZ_ASSERT(aResult != JS::AsmJSCache_Success);
 
-    Notify(false);
+    FileDescriptorHolder::Finish();
+    Notify(aResult);
   }
 
   void
@@ -455,7 +459,7 @@ protected:
 
 private:
   void
-  Notify(bool aSuccess)
+  Notify(JS::AsmJSCacheResult aResult)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -463,7 +467,8 @@ private:
     MOZ_ASSERT(mWaiting);
 
     mWaiting = false;
-    mOpened = aSuccess;
+    mOpened = aResult == JS::AsmJSCache_Success;
+    mResult = aResult;
     mCondVar.Notify();
   }
 
@@ -471,6 +476,7 @@ private:
   CondVar mCondVar;
   bool mWaiting;
   bool mOpened;
+  JS::AsmJSCacheResult mResult;
 };
 
 // MainProcessRunnable is a base class shared by (Single|Parent)ProcessRunnable
@@ -493,6 +499,7 @@ public:
     mNeedAllowNextSynchronizedOp(false),
     mPersistence(quota::PERSISTENCE_TYPE_INVALID),
     mState(eInitial),
+    mResult(JS::AsmJSCache_InternalError),
     mIsApp(false),
     mHasUnlimStoragePerm(false),
     mEnforcingQuota(true)
@@ -582,7 +589,7 @@ protected:
   // This method may be overridden, but it must be called from the overrider.
   // Called by MainProcessRunnable on the main thread after a call to Fail():
   virtual void
-  OnFailure()
+  OnFailure(JS::AsmJSCacheResult aResult)
   {
     FinishOnMainThread();
   }
@@ -665,6 +672,7 @@ private:
     eFinished, // Terminal state
   };
   State mState;
+  JS::AsmJSCacheResult mResult;
 
   bool mIsApp;
   bool mHasUnlimStoragePerm;
@@ -850,6 +858,7 @@ MainProcessRunnable::OpenCacheFileForWrite()
       // enough space.
       EvictEntries(mDirectory, mGroup, mOrigin, mWriteParams.mSize, mMetadata);
       if (!mQuotaObject->MaybeAllocateMoreSpace(0, mWriteParams.mSize)) {
+        mResult = JS::AsmJSCache_QuotaExceeded;
         return NS_ERROR_FAILURE;
       }
     }
@@ -1048,7 +1057,7 @@ MainProcessRunnable::Run()
       MOZ_ASSERT(NS_IsMainThread());
 
       mState = eFinished;
-      OnFailure();
+      OnFailure(mResult);
       return NS_OK;
     }
 
@@ -1168,10 +1177,10 @@ private:
   }
 
   void
-  OnFailure() MOZ_OVERRIDE
+  OnFailure(JS::AsmJSCacheResult aResult) MOZ_OVERRIDE
   {
-    MainProcessRunnable::OnFailure();
-    File::OnFailure();
+    MainProcessRunnable::OnFailure(aResult);
+    File::OnFailure(aResult);
   }
 
   void
@@ -1225,7 +1234,7 @@ private:
   }
 
   bool
-  Recv__delete__() MOZ_OVERRIDE
+  Recv__delete__(const JS::AsmJSCacheResult& aResult) MOZ_OVERRIDE
   {
     MOZ_ASSERT(!mFinished);
     mFinished = true;
@@ -1267,7 +1276,7 @@ private:
     MOZ_ASSERT(NS_IsMainThread());
 
     if (!SendOnOpenMetadataForRead(aMetadata)) {
-      unused << Send__delete__(this);
+      unused << Send__delete__(this, JS::AsmJSCache_InternalError);
     }
   }
 
@@ -1296,7 +1305,7 @@ private:
     FileDescriptor::PlatformHandleType handle =
       FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(mFileDesc));
     if (!SendOnOpenCacheFile(mFileSize, FileDescriptor(handle))) {
-      unused << Send__delete__(this);
+      unused << Send__delete__(this, JS::AsmJSCache_InternalError);
     }
   }
 
@@ -1316,17 +1325,17 @@ private:
   }
 
   void
-  OnFailure() MOZ_OVERRIDE
+  OnFailure(JS::AsmJSCacheResult aResult) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!mOpened);
 
     mFinished = true;
 
-    MainProcessRunnable::OnFailure();
+    MainProcessRunnable::OnFailure(aResult);
 
     if (!mActorDestroyed) {
-      unused << Send__delete__(this);
+      unused << Send__delete__(this, aResult);
     }
 
     mPrincipalHolder = nullptr;
@@ -1435,12 +1444,12 @@ private:
   }
 
   bool
-  Recv__delete__() MOZ_OVERRIDE
+  Recv__delete__(const JS::AsmJSCacheResult& aResult) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mState == eOpening);
 
-    Fail();
+    Fail(aResult);
     return true;
   }
 
@@ -1462,13 +1471,13 @@ private:
 
 private:
   void
-  Fail()
+  Fail(JS::AsmJSCacheResult aResult)
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mState == eInitial || mState == eOpening);
 
     mState = eFinished;
-    File::OnFailure();
+    File::OnFailure(aResult);
   }
 
   nsIPrincipal* const mPrincipal;
@@ -1507,7 +1516,7 @@ ChildProcessRunnable::Run()
         // 'this' alive until returning to the event loop.
         Release();
 
-        Fail();
+        Fail(JS::AsmJSCache_InternalError);
         return NS_OK;
       }
 
@@ -1524,7 +1533,7 @@ ChildProcessRunnable::Run()
       File::OnClose();
 
       if (!mActorDestroyed) {
-        unused << Send__delete__(this);
+        unused << Send__delete__(this, JS::AsmJSCache_Success);
       }
 
       mState = eFinished;
@@ -1553,7 +1562,7 @@ DeallocEntryChild(PAsmJSCacheEntryChild* aActor)
 
 namespace {
 
-bool
+JS::AsmJSCacheResult
 OpenFile(nsIPrincipal* aPrincipal,
          OpenMode aOpenMode,
          WriteParams aWriteParams,
@@ -1576,7 +1585,7 @@ OpenFile(nsIPrincipal* aPrincipal,
   // in the middle of running JS (eval()) and nested event loops can be
   // semantically observable.
   if (NS_IsMainThread()) {
-    return false;
+    return JS::AsmJSCache_SynchronousScript;
   }
 
   // If we are in a child process, we need to synchronously call into the
@@ -1591,11 +1600,16 @@ OpenFile(nsIPrincipal* aPrincipal,
                                     aReadParams);
   }
 
-  if (!file->BlockUntilOpen(aFile)) {
-    return false;
+  JS::AsmJSCacheResult openResult = file->BlockUntilOpen(aFile);
+  if (openResult != JS::AsmJSCache_Success) {
+    return openResult;
   }
 
-  return file->MapMemory(aOpenMode);
+  if (!file->MapMemory(aOpenMode)) {
+    return JS::AsmJSCache_InternalError;
+  }
+
+  return JS::AsmJSCache_Success;
 }
 
 } // anonymous namespace
@@ -1621,7 +1635,9 @@ OpenEntryForRead(nsIPrincipal* aPrincipal,
 
   File::AutoClose file;
   WriteParams notAWrite;
-  if (!OpenFile(aPrincipal, eOpenForRead, notAWrite, readParams, &file)) {
+  JS::AsmJSCacheResult openResult =
+    OpenFile(aPrincipal, eOpenForRead, notAWrite, readParams, &file);
+  if (openResult != JS::AsmJSCache_Success) {
     return false;
   }
 
@@ -1661,7 +1677,7 @@ CloseEntryForRead(size_t aSize,
   MOZ_ASSERT(aMemory - sizeof(AsmJSCookieType) == file->MappedMemory());
 }
 
-bool
+JS::AsmJSCacheResult
 OpenEntryForWrite(nsIPrincipal* aPrincipal,
                   bool aInstalled,
                   const char16_t* aBegin,
@@ -1671,7 +1687,7 @@ OpenEntryForWrite(nsIPrincipal* aPrincipal,
                   intptr_t* aFile)
 {
   if (size_t(aEnd - aBegin) < sMinCachedModuleLength) {
-    return false;
+    return JS::AsmJSCache_ModuleTooSmall;
   }
 
   // Add extra space for the AsmJSCookieType (see OpenEntryForRead).
@@ -1688,8 +1704,10 @@ OpenEntryForWrite(nsIPrincipal* aPrincipal,
 
   File::AutoClose file;
   ReadParams notARead;
-  if (!OpenFile(aPrincipal, eOpenForWrite, writeParams, notARead, &file)) {
-    return false;
+  JS::AsmJSCacheResult openResult =
+    OpenFile(aPrincipal, eOpenForWrite, writeParams, notARead, &file);
+  if (openResult != JS::AsmJSCache_Success) {
+    return openResult;
   }
 
   // Strip off the AsmJSCookieType from the buffer returned to the caller,
@@ -1700,7 +1718,7 @@ OpenEntryForWrite(nsIPrincipal* aPrincipal,
   // The caller guarnatees a call to CloseEntryForWrite (on success or
   // failure) at which point the file will be closed
   file.Forget(reinterpret_cast<File**>(aFile));
-  return true;
+  return JS::AsmJSCache_Success;
 }
 
 void
