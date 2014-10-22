@@ -1840,7 +1840,8 @@ nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
 {
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   DrawTarget* drawTarget = aCtx->GetDrawTarget();
-  Rect rect = NSRectToRect(mVisibleRect, appUnitsPerDevPixel, *drawTarget);
+  Rect rect =
+    NSRectToSnappedRect(mVisibleRect, appUnitsPerDevPixel, *drawTarget);
   drawTarget->FillRect(rect, ColorPattern(ToDeviceColor(mColor)));
 }
 
@@ -3118,7 +3119,7 @@ nsDisplayBoxShadowInner::Paint(nsDisplayListBuilder* aBuilder,
 
   for (uint32_t i = 0; i < rects.Length(); ++i) {
     gfx->Save();
-    gfx->Clip(NSRectToRect(rects[i], appUnitsPerDevPixel, *drawTarget));
+    gfx->Clip(NSRectToSnappedRect(rects[i], appUnitsPerDevPixel, *drawTarget));
     nsCSSRendering::PaintBoxShadowInner(presContext, *aCtx, mFrame,
                                         borderRect, rects[i]);
     gfx->Restore();

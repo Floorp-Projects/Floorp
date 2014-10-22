@@ -382,8 +382,8 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
 
     // set up new clip and draw the text
     gfx->Save();
-    gfx->Clip(NSRectToRect(aRect, PresContext()->AppUnitsPerDevPixel(),
-                           *drawTarget));
+    gfx->Clip(NSRectToSnappedRect(aRect, PresContext()->AppUnitsPerDevPixel(),
+                                  *drawTarget));
     aRenderingContext.ThebesContext()->SetColor(NS_RGB(0,0,0));
     nsLayoutUtils::DrawString(this, &aRenderingContext, str.get(), str.Length(), nsPoint(x, y + aAscent));
     gfx->Restore();

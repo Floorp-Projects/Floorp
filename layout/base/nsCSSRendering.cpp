@@ -684,9 +684,9 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
       // We're drawing borders around the joined continuation boxes so we need
       // to clip that to the slice that we want for this frame.
       aRenderingContext.ThebesContext()->
-        Clip(NSRectToRect(aBorderArea,
-                          aForFrame->PresContext()->AppUnitsPerDevPixel(),
-                          *aRenderingContext.GetDrawTarget()));
+        Clip(NSRectToSnappedRect(aBorderArea,
+                                 aForFrame->PresContext()->AppUnitsPerDevPixel(),
+                                 *aRenderingContext.GetDrawTarget()));
     }
   } else {
     MOZ_ASSERT(joinedBorderArea.IsEqualEdges(aBorderArea),
@@ -1372,9 +1372,9 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
         }
       }
       aRenderingContext.ThebesContext()->
-        Clip(NSRectToRect(fragmentClip,
-                          aForFrame->PresContext()->AppUnitsPerDevPixel(),
-                          *aRenderingContext.GetDrawTarget()));
+        Clip(NSRectToSnappedRect(fragmentClip,
+                                 aForFrame->PresContext()->AppUnitsPerDevPixel(),
+                                 *aRenderingContext.GetDrawTarget()));
 
       gfxCornerSizes clipRectRadii;
       if (hasBorderRadius) {
@@ -3293,8 +3293,9 @@ DrawBorderImage(nsPresContext*       aPresContext,
       clip.Inflate(imageOutset);
       autoSR.EnsureSaved(aRenderingContext.ThebesContext());
       aRenderingContext.ThebesContext()->
-        Clip(NSRectToRect(clip, aForFrame->PresContext()->AppUnitsPerDevPixel(),
-                          *aRenderingContext.GetDrawTarget()));
+        Clip(NSRectToSnappedRect(clip,
+                                 aForFrame->PresContext()->AppUnitsPerDevPixel(),
+                                 *aRenderingContext.GetDrawTarget()));
     }
   } else {
     borderImgArea = aBorderArea;
@@ -3598,7 +3599,8 @@ DrawSolidBorderSegment(nsRenderingContext& aContext,
                                aAppUnitsPerDevPixel, *drawTarget,
                                color, StrokeOptions(), drawOptions);
       else
-        drawTarget->FillRect(NSRectToRect(aRect, aAppUnitsPerDevPixel, *drawTarget),
+        drawTarget->FillRect(NSRectToSnappedRect(aRect, aAppUnitsPerDevPixel,
+                                                 *drawTarget),
                              color, drawOptions);
     }
     else {
@@ -3607,14 +3609,16 @@ DrawSolidBorderSegment(nsRenderingContext& aContext,
                                aAppUnitsPerDevPixel, *drawTarget,
                                color, StrokeOptions(), drawOptions);
       else
-        drawTarget->FillRect(NSRectToRect(aRect, aAppUnitsPerDevPixel, *drawTarget),
+        drawTarget->FillRect(NSRectToSnappedRect(aRect, aAppUnitsPerDevPixel,
+                                                 *drawTarget),
                              color, drawOptions);
     }
   }
   else {
     // polygon with beveling
     Point poly[4];
-    SetPoly(NSRectToRect(aRect, aAppUnitsPerDevPixel, *drawTarget), poly);
+    SetPoly(NSRectToSnappedRect(aRect, aAppUnitsPerDevPixel, *drawTarget),
+            poly);
 
     Float startBevelOffset =
       NSAppUnitsToFloatPixels(aStartBevelOffset, aAppUnitsPerDevPixel);
