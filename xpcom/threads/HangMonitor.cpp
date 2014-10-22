@@ -5,15 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/HangMonitor.h"
+
+#include <set>
+
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ProcessedStack.h"
 #include "mozilla/Atomics.h"
-#include "nsXULAppAPI.h"
-#include "nsThreadUtils.h"
+#include "mozilla/StaticPtr.h"
+#include "nsAutoPtr.h"
+#include "nsReadableUtils.h"
 #include "nsStackWalk.h"
+#include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -68,6 +74,9 @@ static const int32_t DEFAULT_CHROME_HANG_INTERVAL = 5;
 
 // Maximum number of PCs to gather from the stack
 static const int32_t MAX_CALL_STACK_PCS = 400;
+
+// Chrome hang annotators
+static StaticAutoPtr<std::set<Annotator*>> gAnnotators;
 #endif
 
 // PrefChangedFunc
@@ -113,6 +122,162 @@ Crash()
 }
 
 #ifdef REPORT_CHROME_HANGS
+class ChromeHangAnnotations : public HangAnnotations
+{
+public:
+  ChromeHangAnnotations();
+  ~ChromeHangAnnotations();
+
+  void AddAnnotation(const nsAString& aName, const int32_t aData) MOZ_OVERRIDE;
+  void AddAnnotation(const nsAString& aName, const double aData) MOZ_OVERRIDE;
+  void AddAnnotation(const nsAString& aName, const nsAString& aData) MOZ_OVERRIDE;
+  void AddAnnotation(const nsAString& aName, const nsACString& aData) MOZ_OVERRIDE;
+  void AddAnnotation(const nsAString& aName, const bool aData) MOZ_OVERRIDE;
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  bool IsEmpty() const MOZ_OVERRIDE;
+  bool GetEnumerator(Enumerator** aOutEnum) MOZ_OVERRIDE;
+
+  typedef std::pair<nsString, nsString> AnnotationType;
+  typedef std::vector<AnnotationType> VectorType;
+  typedef VectorType::const_iterator IteratorType;
+
+private:
+  VectorType  mAnnotations;
+};
+
+ChromeHangAnnotations::ChromeHangAnnotations()
+{
+  MOZ_COUNT_CTOR(ChromeHangAnnotations);
+}
+
+ChromeHangAnnotations::~ChromeHangAnnotations()
+{
+  MOZ_COUNT_DTOR(ChromeHangAnnotations);
+}
+
+void
+ChromeHangAnnotations::AddAnnotation(const nsAString& aName, const int32_t aData)
+{
+  nsString dataString;
+  dataString.AppendInt(aData);
+  AnnotationType annotation = std::make_pair(nsString(aName), dataString);
+  mAnnotations.push_back(annotation);
+}
+
+void
+ChromeHangAnnotations::AddAnnotation(const nsAString& aName, const double aData)
+{
+  nsString dataString;
+  dataString.AppendFloat(aData);
+  AnnotationType annotation = std::make_pair(nsString(aName), dataString);
+  mAnnotations.push_back(annotation);
+}
+
+void
+ChromeHangAnnotations::AddAnnotation(const nsAString& aName, const nsAString& aData)
+{
+  AnnotationType annotation = std::make_pair(nsString(aName), nsString(aData));
+  mAnnotations.push_back(annotation);
+}
+
+void
+ChromeHangAnnotations::AddAnnotation(const nsAString& aName, const nsACString& aData)
+{
+  nsString dataString;
+  AppendUTF8toUTF16(aData, dataString);
+  AnnotationType annotation = std::make_pair(nsString(aName), dataString);
+  mAnnotations.push_back(annotation);
+}
+
+void
+ChromeHangAnnotations::AddAnnotation(const nsAString& aName, const bool aData)
+{
+  nsString dataString;
+  dataString += aData ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false");
+  AnnotationType annotation = std::make_pair(nsString(aName), dataString);
+  mAnnotations.push_back(annotation);
+}
+
+/**
+ * This class itself does not use synchronization but it (and its parent object)
+ * should be protected by mutual exclusion in some way. In Telemetry the chrome
+ * hang data is protected via TelemetryImpl::mHangReportsMutex.
+ */
+class ChromeHangAnnotationEnumerator : public HangAnnotations::Enumerator
+{
+public:
+  ChromeHangAnnotationEnumerator(const ChromeHangAnnotations::VectorType& aAnnotations);
+  ~ChromeHangAnnotationEnumerator();
+
+  virtual bool Next(nsAString& aOutName, nsAString& aOutValue);
+
+private:
+  ChromeHangAnnotations::IteratorType mIterator;
+  ChromeHangAnnotations::IteratorType mEnd;
+};
+
+ChromeHangAnnotationEnumerator::ChromeHangAnnotationEnumerator(
+                          const ChromeHangAnnotations::VectorType& aAnnotations)
+  : mIterator(aAnnotations.begin())
+  , mEnd(aAnnotations.end())
+{
+  MOZ_COUNT_CTOR(ChromeHangAnnotationEnumerator);
+}
+
+ChromeHangAnnotationEnumerator::~ChromeHangAnnotationEnumerator()
+{
+  MOZ_COUNT_DTOR(ChromeHangAnnotationEnumerator);
+}
+
+bool
+ChromeHangAnnotationEnumerator::Next(nsAString& aOutName, nsAString& aOutValue)
+{
+  aOutName.Truncate();
+  aOutValue.Truncate();
+  if (mIterator == mEnd) {
+    return false;
+  }
+  aOutName = mIterator->first;
+  aOutValue = mIterator->second;
+  ++mIterator;
+  return true;
+}
+
+bool
+ChromeHangAnnotations::IsEmpty() const
+{
+  return mAnnotations.empty();
+}
+
+size_t
+ChromeHangAnnotations::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t result = sizeof(mAnnotations) +
+                  mAnnotations.capacity() * sizeof(AnnotationType);
+  for (IteratorType i = mAnnotations.begin(), e = mAnnotations.end(); i != e;
+       ++i) {
+    result += i->first.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    result += i->second.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  }
+
+  return result;
+}
+
+bool
+ChromeHangAnnotations::GetEnumerator(HangAnnotations::Enumerator** aOutEnum)
+{
+  if (!aOutEnum) {
+    return false;
+  }
+  *aOutEnum = nullptr;
+  if (mAnnotations.empty()) {
+    return false;
+  }
+  *aOutEnum = new ChromeHangAnnotationEnumerator(mAnnotations);
+  return true;
+}
+
 static void
 ChromeStackWalker(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
 {
@@ -163,6 +328,22 @@ GetChromeHangReport(Telemetry::ProcessedStack& aStack,
     aFirefoxUptime = -1;
   }
 }
+
+static void
+ChromeHangAnnotatorCallout(ChromeHangAnnotations& aAnnotations)
+{
+  gMonitor->AssertCurrentThreadOwns();
+  MOZ_ASSERT(gAnnotators);
+  if (!gAnnotators) {
+    return;
+  }
+  for (std::set<Annotator*>::iterator i = gAnnotators->begin(),
+                                      e = gAnnotators->end();
+       i != e; ++i) {
+    (*i)->AnnotateHang(aAnnotations);
+  }
+}
+
 #endif
 
 void
@@ -182,6 +363,7 @@ ThreadMain(void*)
   Telemetry::ProcessedStack stack;
   int32_t systemUptime = -1;
   int32_t firefoxUptime = -1;
+  nsAutoPtr<ChromeHangAnnotations> annotations = new ChromeHangAnnotations();
 #endif
 
   while (true) {
@@ -209,6 +391,7 @@ ThreadMain(void*)
       // the minimum hang duration has been reached (not when the hang ends)
       if (waitCount == 2) {
         GetChromeHangReport(stack, systemUptime, firefoxUptime);
+        ChromeHangAnnotatorCallout(*annotations);
       }
 #else
       // This is the crash-on-hang feature.
@@ -226,9 +409,11 @@ ThreadMain(void*)
 #ifdef REPORT_CHROME_HANGS
       if (waitCount >= 2) {
         uint32_t hangDuration = PR_IntervalToSeconds(now - lastTimestamp);
-        Telemetry::RecordChromeHang(hangDuration, stack,
-                                    systemUptime, firefoxUptime);
+        Telemetry::RecordChromeHang(hangDuration, stack, systemUptime,
+                                    firefoxUptime, annotations->IsEmpty() ?
+                                    nullptr : annotations.forget());
         stack.Clear();
+        annotations = new ChromeHangAnnotations();
       }
 #endif
       lastTimestamp = timestamp;
@@ -268,6 +453,7 @@ Startup()
   if (!winMainThreadHandle) {
     return;
   }
+  gAnnotators = new std::set<Annotator*>();
 #endif
 
   // Don't actually start measuring hangs until we hit the main event loop.
@@ -306,6 +492,11 @@ Shutdown()
 
   delete gMonitor;
   gMonitor = nullptr;
+
+#ifdef REPORT_CHROME_HANGS
+  // gAnnotators is a StaticAutoPtr, so we just need to null it out.
+  gAnnotators = nullptr;
+#endif
 }
 
 static bool
@@ -392,6 +583,26 @@ Suspend()
   if (gThread && !gShutdown) {
     mozilla::BackgroundHangMonitor().NotifyWait();
   }
+}
+
+void
+RegisterAnnotator(Annotator& aAnnotator)
+{
+#ifdef REPORT_CHROME_HANGS
+  MonitorAutoLock lock(*gMonitor);
+  MOZ_ASSERT(gAnnotators);
+  gAnnotators->insert(&aAnnotator);
+#endif
+}
+
+void
+UnregisterAnnotator(Annotator& aAnnotator)
+{
+#ifdef REPORT_CHROME_HANGS
+  MonitorAutoLock lock(*gMonitor);
+  MOZ_ASSERT(gAnnotators);
+  gAnnotators->erase(&aAnnotator);
+#endif
 }
 
 } // namespace HangMonitor

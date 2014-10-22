@@ -671,7 +671,6 @@ pref("full-screen-api.ignore-widgets", true);
 // image visibility prefs.
 // image visibility tries to only keep images near the viewport decoded instead
 // of keeping all images decoded.
-pref("layout.imagevisibility.enabled", true);
 pref("layout.imagevisibility.numscrollportwidths", 1);
 pref("layout.imagevisibility.numscrollportheights", 1);
 

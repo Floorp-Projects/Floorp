@@ -86,7 +86,7 @@ addEventListener("blur", function(event) {
 });
 
 if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-  addEventListener("contextmenu", function (event) {
+  let handleContentContextMenu = function (event) {
     let defaultPrevented = event.defaultPrevented;
     if (!Services.prefs.getBoolPref("dom.event.contextmenu.enabled")) {
       let plugin = null;
@@ -112,7 +112,12 @@ if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
 
       sendSyncMessage("contextmenu", { editFlags, spellInfo }, { event });
     }
-  }, false);
+  }
+
+  Cc["@mozilla.org/eventlistenerservice;1"]
+    .getService(Ci.nsIEventListenerService)
+    .addSystemEventListener(global, "contextmenu", handleContentContextMenu, true);
+
 } else {
   addEventListener("mozUITour", function(event) {
     if (!Services.prefs.getBoolPref("browser.uitour.enabled"))
