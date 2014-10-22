@@ -10,6 +10,8 @@
 #include "MozMtpCommon.h"
 #include "MozMtpDatabase.h"
 
+#include "mozilla/FileUtils.h"
+
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIThread.h"
