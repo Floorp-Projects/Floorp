@@ -761,7 +761,7 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
         metrics.mMayHaveTouchListeners = innerWin->HasTouchEventListeners();
       }
     }
-    metrics.mMayHaveTouchCaret = presShell->MayHaveTouchCaret();
+    metrics.SetMayHaveTouchCaret(presShell->MayHaveTouchCaret());
   }
 
   LayoutDeviceToParentLayerScale layoutToParentLayerScale =

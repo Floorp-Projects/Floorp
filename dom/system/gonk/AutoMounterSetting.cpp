@@ -24,6 +24,7 @@
 #include "mozilla/dom/SettingChangeNotificationBinding.h"
 
 #undef LOG
+#undef ERR
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "AutoMounterSetting" , ## args)
 #define ERR(args...)  __android_log_print(ANDROID_LOG_ERROR, "AutoMounterSetting" , ## args)
 
