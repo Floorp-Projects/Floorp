@@ -210,7 +210,7 @@ class ForkJoinOperation
     TrafficLight appendCallTargetsToWorklist(uint32_t index, ExecutionStatus *status);
     TrafficLight appendCallTargetToWorklist(HandleScript script, ExecutionStatus *status);
     bool addToWorklist(HandleScript script);
-    inline bool hasScript(Vector<types::RecompileInfo> &scripts, JSScript *script);
+    inline bool hasScript(const types::RecompileInfoVector &scripts, JSScript *script);
 }; // class ForkJoinOperation
 
 class ForkJoinShared : public ParallelJob, public Monitor
@@ -1155,7 +1155,7 @@ ForkJoinOperation::reportBailoutWarnings()
 bool
 ForkJoinOperation::invalidateBailedOutScripts()
 {
-    Vector<types::RecompileInfo> invalid(cx_);
+    types::RecompileInfoVector invalid;
     for (uint32_t i = 0; i < bailoutRecords_.length(); i++) {
         switch (bailoutRecords_[i].cause) {
           // No bailout.
@@ -1312,10 +1312,10 @@ ForkJoinOperation::recoverFromBailout(ExecutionStatus *status)
 }
 
 bool
-ForkJoinOperation::hasScript(Vector<types::RecompileInfo> &scripts, JSScript *script)
+ForkJoinOperation::hasScript(const types::RecompileInfoVector &invalid, JSScript *script)
 {
-    for (uint32_t i = 0; i < scripts.length(); i++) {
-        if (scripts[i] == script->parallelIonScript()->recompileInfo())
+    for (uint32_t i = 0; i < invalid.length(); i++) {
+        if (invalid[i].compilerOutput(cx_)->script() == script)
             return true;
     }
     return false;

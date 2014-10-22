@@ -105,27 +105,15 @@ Zone::onTooMuchMalloc()
 }
 
 void
-Zone::sweepAnalysis(FreeOp *fop, bool releaseTypes)
+Zone::beginSweepTypes(FreeOp *fop, bool releaseTypes)
 {
     // Periodically release observed types for all scripts. This is safe to
     // do when there are no frames for the zone on the stack.
     if (active)
         releaseTypes = false;
 
-    bool oom = false;
-    types.sweep(fop, releaseTypes, &oom);
-
-    // If there was an OOM while sweeping types, the type information needs to
-    // be deoptimized so that it will still correct (i.e.  overapproximates the
-    // possible types in the zone), but the constraints might not have been
-    // triggered on the deoptimization or even copied over completely. In this
-    // case, destroy all JIT code and new script information in the zone, the
-    // only things whose correctness depends on the type constraints.
-    if (oom) {
-        setPreservingCode(false);
-        discardJitCode(fop);
-        types.clearAllNewScriptsOnOOM();
-    }
+    types::AutoClearTypeInferenceStateOnOOM oom(this);
+    types.beginSweep(fop, releaseTypes, oom);
 }
 
 void
