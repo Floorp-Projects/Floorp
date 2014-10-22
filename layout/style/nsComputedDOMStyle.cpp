@@ -1928,13 +1928,19 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
     if (needSep) {
       aString.AppendLiteral(", ");
     }
-    SetToRGBAColor(tmpVal, aGradient->mStops[i].mColor);
-    tmpVal->GetCssText(tokenString);
-    aString.Append(tokenString);
 
-    if (aGradient->mStops[i].mLocation.GetUnit() != eStyleUnit_None) {
-      aString.Append(' ');
-      AppendCSSGradientLength(aGradient->mStops[i].mLocation, tmpVal, aString);
+    const auto& stop = aGradient->mStops[i];
+    if (!stop.mIsInterpolationHint) {
+      SetToRGBAColor(tmpVal, stop.mColor);
+      tmpVal->GetCssText(tokenString);
+      aString.Append(tokenString);
+    }
+
+    if (stop.mLocation.GetUnit() != eStyleUnit_None) {
+      if (!stop.mIsInterpolationHint) {
+        aString.Append(' ');
+      }
+      AppendCSSGradientLength(stop.mLocation, tmpVal, aString);
     }
     needSep = true;
   }
