@@ -262,7 +262,8 @@ function doTest(aTest)
         aTest.decoration.style == kDecorationStyleWavy) {
       todo(false, "Rendering of" + description);
     } else {
-      assertSnapshots(result.snapshot, reference.snapshot, true, description, "");
+      assertSnapshots(result.snapshot, reference.snapshot, true,
+                      null /*no fuzz*/, description, "");
     }
 
     canvases = [];
