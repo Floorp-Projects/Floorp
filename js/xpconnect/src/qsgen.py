@@ -330,12 +330,6 @@ def writeHeaderFile(filename, name):
                 "bool " + name + "_DefineQuickStubs("
                 "JSContext *cx, JSObject *proto, unsigned flags, "
                 "uint32_t count, const nsID **iids);\n\n"
-                "void " + name + "_MarkInterfaces();\n\n"
-                "void " + name + "_ClearInterfaces();\n\n"
-                "inline void " + name + "_InitInterfaces()\n"
-                "{\n"
-                "  " + name + "_ClearInterfaces();\n"
-                "}\n\n"
                 "#endif\n")
     finally:
         f.close()
@@ -1055,29 +1049,8 @@ def hashIID(iid):
 uuid_re = re.compile(r'^([0-9a-f]{8})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{12})$')
 
 def writeResultXPCInterfacesArray(f, conf, resulttypes):
-    f.write("// === XPCNativeInterface cache \n\n")
     count = len(resulttypes)
-    if count > 0:
-        f.write("static XPCNativeInterface* interfaces[%d];\n\n" % count)
-    f.write("void %s_MarkInterfaces()\n"
-            "{\n" % conf.name)
-    if count > 0:
-        f.write("    for (uint32_t i = 0; i < %d; ++i)\n"
-                "        if (interfaces[i])\n"
-                "            interfaces[i]->Mark();\n" % count)
-    f.write("}\n")
-    f.write("void %s_ClearInterfaces()\n"
-            "{\n" % conf.name)
-    if count > 0:
-        f.write("    memset(interfaces, 0, %d * "
-                "sizeof(XPCNativeInterface*));\n" % count)
-    f.write("}\n\n")
-    i = 0
-    for type in resulttypes:
-        f.write("static const uint32_t k_%s = %d;\n" % (type, i))
-        i += 1
-    if count > 0:
-        f.write("\n\n")
+    assert count == 0
 
 def writeSpecs(f, elementType, varname, spec_type, spec_indices, interfaces):
     index = 0
