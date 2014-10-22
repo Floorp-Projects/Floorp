@@ -1229,13 +1229,8 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
     assertSameCompartment(cx, obj);
     MOZ_ASSERT(it == SEAL || it == FREEZE);
 
-    bool succeeded;
-    if (!JSObject::preventExtensions(cx, obj, &succeeded))
+    if (!JSObject::preventExtensions(cx, obj))
         return false;
-    if (!succeeded) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
-        return false;
-    }
 
     AutoIdVector props(cx);
     if (!GetPropertyKeys(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY | JSITER_SYMBOLS, &props))

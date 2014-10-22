@@ -20,11 +20,12 @@ public:
   {
   }
   virtual bool
-  preventExtensions(JSContext* aCx, JS::Handle<JSObject*> aProxy,
-                    bool *succeeded) const MOZ_OVERRIDE
+  preventExtensions(JSContext* aCx, JS::Handle<JSObject*> aProxy) const MOZ_OVERRIDE
   {
-    *succeeded = false;
-    return true;
+    // Throw a TypeError, per WebIDL.
+    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
+                         JSMSG_CANT_CHANGE_EXTENSIBILITY);
+    return false;
   }
   virtual bool
   getOwnPropDescriptor(JSContext* aCx, JS::Handle<JSObject*> aProxy,

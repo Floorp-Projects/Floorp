@@ -1012,7 +1012,7 @@ obj_isExtensible(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-// ES6 20141014 draft 19.1.2.15 Object.preventExtensions(O)
+// ES6 draft rev27 (2014/08/24) 19.1.2.15 Object.preventExtensions(O)
 static bool
 obj_preventExtensions(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -1023,21 +1023,10 @@ obj_preventExtensions(JSContext *cx, unsigned argc, Value *vp)
     if (!args.get(0).isObject())
         return true;
 
-    // Steps 2-3.
+    // Steps 2-5.
     RootedObject obj(cx, &args.get(0).toObject());
 
-    bool status;
-    if (!JSObject::preventExtensions(cx, obj, &status))
-        return false;
-
-    // Step 4.
-    if (!status) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
-        return false;
-    }
-
-    // Step 5.
-    return true;
+    return JSObject::preventExtensions(cx, obj);
 }
 
 // ES6 draft rev27 (2014/08/24) 19.1.2.5 Object.freeze(O)

@@ -273,31 +273,32 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
     return true;
 }
 
-// ES6 20141014 9.5.4 Proxy.[[PreventExtensions]]()
+// ES6 (22 May, 2014) 9.5.4 Proxy.[[PreventExtensions]]()
 bool
-ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy,
-                                              bool *succeeded) const
+ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy) const
 {
-    // Steps 1-3.
+    // step 1
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+
+    // step 2
     if (!handler) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
-    // Step 4.
+    // step 3
     RootedObject target(cx, proxy->as<ProxyObject>().target());
 
-    // Steps 5-6.
+    // step 4-5
     RootedValue trap(cx);
     if (!JSObject::getProperty(cx, handler, handler, cx->names().preventExtensions, &trap))
         return false;
 
-    // Step 7.
+    // step 6
     if (trap.isUndefined())
-        return DirectProxyHandler::preventExtensions(cx, proxy, succeeded);
+        return DirectProxyHandler::preventExtensions(cx, proxy);
 
-    // Steps 8, 10.
+    // step 7, 9
     Value argv[] = {
         ObjectValue(*target)
     };
@@ -305,11 +306,10 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy,
     if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
-    // Step 9.
-    bool booleanTrapResult = ToBoolean(trapResult);
-
-    // Step 11.
-    if (booleanTrapResult) {
+    // step 8
+    bool success = ToBoolean(trapResult);
+    if (success) {
+        // step 10
         bool extensible;
         if (!JSObject::isExtensible(cx, target, &extensible))
             return false;
@@ -317,11 +317,15 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy,
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_AS_NON_EXTENSIBLE);
             return false;
         }
+        // step 11 "return true"
+        return true;
     }
 
-    // Step 12.
-    *succeeded = booleanTrapResult;
-    return true;
+    // step 11 "return false"
+    // This actually corresponds to 19.1.2.5 step 4. We cannot pass the failure back, so throw here
+    // directly instead.
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
+    return false;
 }
 
 // ES6 implements both getPrototypeOf and setPrototypeOf traps. We don't have them yet (see bug

@@ -140,11 +140,11 @@ ScriptedIndirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy,
 }
 
 bool
-ScriptedIndirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const
+ScriptedIndirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy) const
 {
     // See above.
-    *succeeded = false;
-    return true;
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
+    return false;
 }
 
 static bool
