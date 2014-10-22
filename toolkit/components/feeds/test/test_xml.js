@@ -35,7 +35,7 @@ FeedListener.prototype = {
   handleResult: function(result) {
     var feed = result.doc;
     try {
-      do_print(true, "Testing feed " + this.testcase.file.path);
+      do_print("Testing feed " + this.testcase.file.path);
       Assert.ok(isIID(feed, Ci.nsIFeed), "Has feed interface");
 
       if (!eval(this.testcase.expect)) {
