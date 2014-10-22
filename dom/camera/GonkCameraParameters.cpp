@@ -352,7 +352,7 @@ GonkCameraParameters::SetTranslated(uint32_t aKey, const ICameraControl::Size& a
   if (aSize.width > INT_MAX || aSize.height > INT_MAX) {
     // AOSP can only handle signed ints.
     DOM_CAMERA_LOGE("Camera parameter aKey=%d out of bounds (width=%u, height=%u)\n",
-      aSize.width, aSize.height);
+      aKey, aSize.width, aSize.height);
     return NS_ERROR_INVALID_ARG;
   }
 

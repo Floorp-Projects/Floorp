@@ -226,6 +226,11 @@ private:
     MatchParentFormat,
   };
 
+  bool IsValidHandle(MtpObjectHandle aHandle)
+  {
+    return aHandle > 0 && aHandle < mDb.Length();
+  }
+
   void AddEntry(DbEntry* aEntry);
   void AddEntryAndNotify(DbEntry* aEntr, RefCountedMtpServer* aMtpServer);
   void DumpEntries(const char* aLabel);
