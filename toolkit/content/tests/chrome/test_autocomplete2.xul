@@ -109,6 +109,9 @@ function startTest() {
   is(autocomplete.highlightNonMatches, false,
      "highlight non matches getter returned false correctly");
 
+  ok(!autocomplete.popup.hasAttribute("autocompleteinput"),
+     "autocompleteinput on popup not set by default");
+
   check();
 }
 
@@ -146,6 +149,9 @@ function checkResult() {
     isnot(style.getPropertyCSSValue("color").cssText, "rgb(255, 0, 0)",
           "not nomatch and not highlightNonMatches - should not be red");
 
+    is (autocomplete.popup.getAttribute("autocompleteinput"), "autocomplete",
+      "The popup's autocompleteinput attribute is set to the ID of the textbox");
+
     setTimeout(check, 0);
   }
   else {
@@ -164,6 +170,9 @@ function checkResult() {
 
     isnot(style.getPropertyCSSValue("color").cssText, "rgb(255, 0, 0)",
           "nomatch and not highlightNonMatches - should not be red");
+
+    ok(!autocomplete.popup.hasAttribute("autocompleteinput"),
+       "autocompleteinput on popup not set when closed");
 
     setTimeout(function() {
       // Unregister the factory so that we don't get in the way of other tests
