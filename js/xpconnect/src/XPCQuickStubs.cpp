@@ -19,16 +19,6 @@
 using namespace mozilla;
 using namespace JS;
 
-static MOZ_ALWAYS_INLINE bool
-HasBitInInterfacesBitmap(JSObject *obj, uint32_t interfaceBit)
-{
-    MOZ_ASSERT(IS_WN_REFLECTOR(obj), "Not a wrapper?");
-
-    const XPCWrappedNativeJSClass *clasp =
-      (const XPCWrappedNativeJSClass*)js::GetObjectClass(obj);
-    return (clasp->interfacesBitmap & (1 << interfaceBit)) != 0;
-}
-
 static nsresult
 getNative(nsISupports *idobj,
           HandleObject obj,

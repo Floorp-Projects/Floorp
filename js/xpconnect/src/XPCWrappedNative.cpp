@@ -681,7 +681,6 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
         uint32_t flags = classInfoHelper->GetScriptableFlags();
         sciProto.SetCallback(helper.forget());
         sciProto.SetFlags(XPCNativeScriptableFlags(flags));
-        sciProto.SetInterfacesBitmap(classInfoHelper->GetInterfacesBitmap());
 
         return;
     }
