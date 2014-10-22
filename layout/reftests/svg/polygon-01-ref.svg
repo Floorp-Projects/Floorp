@@ -1,0 +1,12 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Reference for stroking of close section of polygon</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=1085092 -->
+
+  <rect fill="none" stroke="blue" stroke-width="10"
+        x="100" y="100" width="100" height="100"/>
+</svg>
