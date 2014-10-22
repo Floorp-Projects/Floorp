@@ -940,8 +940,11 @@ pref("content.sink.pending_event_mode", 0);
 //   2 = openAbused
 pref("privacy.popups.disable_from_plugins", 2);
 
-// send "do not track" HTTP header, disabled by default
+// "do not track" HTTP header, disabled by default
 pref("privacy.donottrackheader.enabled",    false);
+//   0 = tracking is acceptable
+//   1 = tracking is unacceptable
+pref("privacy.donottrackheader.value",      1);
 // Enforce tracking protection
 pref("privacy.trackingprotection.enabled",  false);
 
