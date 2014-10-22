@@ -25,17 +25,37 @@ XPCOMUtils.defineLazyServiceGetter(this,
 
 /**
  * NFCTag
+ *
+ * @param window  global window object.
+ * @param sessionToken  session token received from parent process.
+ * @parem event   type of nsINfcTagEvent received from parent process.
  */
-function MozNFCTag(aWindow, aSessionToken) {
+function MozNFCTag(window, sessionToken, event) {
   debug("In MozNFCTag Constructor");
   this._nfcContentHelper = Cc["@mozilla.org/nfc/content-helper;1"]
                              .getService(Ci.nsINfcContentHelper);
-  this._window = aWindow;
-  this.session = aSessionToken;
+  this._window = window;
+  this.session = sessionToken;
+  this.techList = event.techList;
+  this.type = event.tagType || null;
+  this.maxNDEFSize = event.maxNDEFSize || null;
+  this.isReadOnly = event.isReadOnly || null;
+  this.isFormatable = event.isFormatable || null;
+  this.canBeMadeReadOnly = this.type ?
+                             (this.type == "type1" || this.type == "type2" ||
+                              this.type == "mifare_classic") :
+                             null;
 }
 MozNFCTag.prototype = {
   _nfcContentHelper: null,
   _window: null,
+  session: null,
+  techList: null,
+  type: null,
+  maxNDEFSize: 0,
+  isReadOnly: false,
+  isFormatable: false,
+  canBeMadeReadOnly: false,
 
   // NFCTag interface:
   readNDEF: function readNDEF() {
@@ -219,7 +239,7 @@ mozNfc.prototype = {
       return;
     }
 
-    let tag = new MozNFCTag(this._window, sessionToken);
+    let tag = new MozNFCTag(this._window, sessionToken, event);
     let tagContentObj = this._window.MozNFCTag._create(this._window, tag);
 
     let length = records ? records.length : 0;
