@@ -20,6 +20,7 @@
 #include "WorkerRunnable.h"
 #include "xpcprivate.h"
 #include "nsContentUtils.h"
+#include "nsDocShell.h"
 
 #include "nsIConsoleAPIStorage.h"
 #include "nsIDOMWindowUtils.h"
@@ -922,6 +923,29 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
       }
 
       callData->mMonotonicTimer = performance->Now();
+
+      // 'time' and 'timeEnd' are displayed in the devtools timeline if active.
+      // Marked as "ConsoleTime:ARG1".
+      bool isTimelineRecording = false;
+      nsDocShell* docShell = static_cast<nsDocShell*>(mWindow->GetDocShell());
+      if (docShell) {
+        docShell->GetRecordProfileTimelineMarkers(&isTimelineRecording);
+      }
+
+      if (isTimelineRecording && aData.Length() == 1) {
+        JS::Rooted<JS::Value> value(aCx, aData[0]);
+        JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
+        if (jsString) {
+          nsAutoJSString key;
+          if (key.init(aCx, jsString)) {
+            nsCString str("ConsoleTime:");
+            AppendUTF16toUTF8(key, str);
+            docShell->AddProfileTimelineMarker(str.get(),
+              aMethodName == MethodTime ? TRACING_INTERVAL_START : TRACING_INTERVAL_END);
+          }
+        }
+      }
+
     } else {
       WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
       MOZ_ASSERT(workerPrivate);
