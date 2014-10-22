@@ -1101,6 +1101,17 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   visibility: hidden;
 }
 
+#customizationui-widget-multiview[mainViewId="PanelUI-panicView"] > .panel-viewcontainer,
+#customizationui-widget-multiview[mainViewId="PanelUI-panicView"] > .panel-viewcontainer > .panel-viewstack,
+#customizationui-widget-multiview[mainViewId="PanelUI-panicView"] > .panel-viewcontainer > .panel-viewstack > .panel-mainview,
+/* NB: currentsubview attribute is temporary as a safe workaround for a layout problem with this
+ * panel. Do not rely on it, it *will* go away again. */
+#PanelUI-multiView[currentsubview="PanelUI-panicView"] > .panel-viewcontainer > .panel-viewstack > .panel-subviews,
+#PanelUI-panicView > .panel-subview-body,
+#PanelUI-panicView {
+  overflow: visible;
+}
+
 #PanelUI-panicView.cui-widget-panelview {
   min-width: 280px;
 }
