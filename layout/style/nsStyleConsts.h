@@ -1071,8 +1071,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 
 // See nsStyleDisplay::mScrollBehavior
 #define NS_STYLE_SCROLL_BEHAVIOR_AUTO       0
-#define NS_STYLE_SCROLL_BEHAVIOR_INSTANT    1
-#define NS_STYLE_SCROLL_BEHAVIOR_SMOOTH     2
+#define NS_STYLE_SCROLL_BEHAVIOR_SMOOTH     1
 
 /*****************************************************************************
  * Constants for media features.                                             *

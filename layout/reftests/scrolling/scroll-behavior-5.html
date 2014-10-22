@@ -37,15 +37,11 @@
             overflow: scroll;
         }
 
-        #scroll_2, #scroll_5 {
+        #scroll_2, #scroll_4 {
             scroll-behavior: auto;
         }
 
-        #scroll_3, #scroll_6 {
-            scroll-behavior: instant;
-        }
-
-        #scroll_7, #scroll_8 {
+        #scroll_5, #scroll_6 {
             scroll-behavior: smooth;
         }
 
@@ -74,15 +70,7 @@
   </div>
   <div id="scroll_6" class="scroll_box">
     <div id="box6a" class="a_box"></div>
-    <div id="box6b" class="another_box"></div>
-  </div>
-  <div id="scroll_7" class="scroll_box">
-    <div id="box7a" class="a_box"></div>
-    <div id="box7b" class="another_box"></div>
-  </div>
-  <div id="scroll_8" class="scroll_box">
-    <div id="box8a" class="a_box"></div>
-   <div id="box8b" class="another_box"></div>
+   <div id="box6b" class="another_box"></div>
   </div>
 <script>
   function doTest() {
@@ -90,29 +78,27 @@
       // Expect instantaneous scroll:
       document.getElementById("scroll_1").scrollTo({left: 0, top: 0});
       document.getElementById("scroll_2").scrollTo({left: 0, top: 0});
-      document.getElementById("scroll_3").scrollTo({left: 0, top: 0});
+      document.getElementById("scroll_3").scrollTo(0, 0);
       document.getElementById("scroll_4").scrollTo(0, 0);
-      document.getElementById("scroll_5").scrollTo(0, 0);
-      document.getElementById("scroll_6").scrollTo(0, 0);
 
       // Expect smooth scroll:
-      document.getElementById("scroll_7").scrollTo({left: 0, top: 0});
-      document.getElementById("scroll_8").scrollTo(0, 0);
+      document.getElementById("scroll_5").scrollTo({left: 0, top: 0});
+      document.getElementById("scroll_6").scrollTo(0, 0);
 
       // Interrupt any smooth scrolling
-      for (var i=1; i <= 8; i++) {
+      for (var i=1; i <= 6; i++) {
         document.getElementById("scroll_" + i).scrollTo();
       }
     } else {
-      // Scroll all boxes except for box7a and box8a
-      for (var i=1; i <= 6; i++) {
+      // Scroll all boxes except for box5a and box6a
+      for (var i=1; i <= 4; i++) {
         document.getElementById("box" + i + "a").scrollIntoView({block: "end", behavior: "instant"});
       }
     }
     document.documentElement.removeAttribute("class");
   }
 
-  for (var i=1; i <= 8; i++) {
+  for (var i=1; i <= 6; i++) {
     document.getElementById("box" + i + "b")
       .scrollIntoView({block: "start", behavior: "instant"});
   }
