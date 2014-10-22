@@ -1147,31 +1147,64 @@ IonBuilder::inlineMathFRound(CallInfo &callInfo)
 IonBuilder::InliningStatus
 IonBuilder::inlineMathMinMax(CallInfo &callInfo, bool max)
 {
-    if (callInfo.argc() < 2 || callInfo.constructing())
+    if (callInfo.argc() < 1 || callInfo.constructing())
         return InliningStatus_NotInlined;
 
     MIRType returnType = getInlineReturnType();
     if (!IsNumberType(returnType))
         return InliningStatus_NotInlined;
 
+    MDefinitionVector int32_cases(alloc());
     for (unsigned i = 0; i < callInfo.argc(); i++) {
-        MIRType argType = callInfo.getArg(i)->type();
-        if (!IsNumberType(argType))
-            return InliningStatus_NotInlined;
+        MDefinition *arg = callInfo.getArg(i);
 
-        // When one of the arguments is double, do a double MMinMax.
-        if (returnType == MIRType_Int32 && IsFloatingPointType(argType))
+        switch (arg->type()) {
+          case MIRType_Int32:
+            if (!int32_cases.append(arg))
+                return InliningStatus_Error;
+            break;
+          case MIRType_Double:
+          case MIRType_Float32:
+            // Don't force a double MMinMax for arguments that would be a NOP
+            // when doing an integer MMinMax.
+            if (arg->isConstant()) {
+                double cte = arg->toConstant()->value().toDouble();
+                // min(int32, cte >= INT32_MAX) = int32
+                if (cte >= INT32_MAX && !max)
+                    break;
+                // max(int32, cte <= INT32_MIN) = int32
+                if (cte <= INT32_MIN && max)
+                    break;
+            }
+
+            // Force double MMinMax if argument is a "effectfull" double.
             returnType = MIRType_Double;
+            break;
+          default:
+            return InliningStatus_NotInlined;
+        }
     }
+
+    if (int32_cases.length() == 0)
+        returnType = MIRType_Double;
 
     callInfo.setImplicitlyUsedUnchecked();
 
+    MDefinitionVector &cases = (returnType == MIRType_Int32) ? int32_cases : callInfo.argv();
+
+    if (cases.length() == 1) {
+        MLimitedTruncate *limit = MLimitedTruncate::New(alloc(), cases[0], MDefinition::NoTruncate);
+        current->add(limit);
+        current->push(limit);
+        return InliningStatus_Inlined;
+    }
+
     // Chain N-1 MMinMax instructions to compute the MinMax.
-    MMinMax *last = MMinMax::New(alloc(), callInfo.getArg(0), callInfo.getArg(1), returnType, max);
+    MMinMax *last = MMinMax::New(alloc(), cases[0], cases[1], returnType, max);
     current->add(last);
 
-    for (unsigned i = 2; i < callInfo.argc(); i++) {
-        MMinMax *ins = MMinMax::New(alloc(), last, callInfo.getArg(i), returnType, max);
+    for (unsigned i = 2; i < cases.length(); i++) {
+        MMinMax *ins = MMinMax::New(alloc(), last, cases[2], returnType, max);
         current->add(ins);
         last = ins;
     }
