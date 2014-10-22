@@ -16,16 +16,16 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var canvases = [];
-function callbackTestCanvas(canvas)
+var iframes = [];
+function callbackTestIframe(iframe)
 {
-  canvases.push(canvas);
+  iframes.push(iframe);
 
-  if (canvases.length != 2)
+  if (iframes.length != 2)
     return;
 
-  var result = canvases[0];
-  var reference = canvases[1];
+  var result = iframes[0];
+  var reference = iframes[1];
 
   var ret = compareSnapshots(result.snapshot, reference.snapshot, true);
   ok(ret[0], "Reftest " + result.src +
@@ -39,13 +39,13 @@ function callbackTestCanvas(canvas)
     reference.parentNode.removeChild(reference);
   }
 
-  canvases = [];
+  iframes = [];
   SimpleTest.waitForFocus(nextTest);
 }
 
 function doSnapShot(iframe) {
   iframe.snapshot = snapshotWindow(iframe.contentWindow, true);
-  callbackTestCanvas(iframe);
+  callbackTestIframe(iframe);
 };
 
 function remotePageLoaded(callback) {
