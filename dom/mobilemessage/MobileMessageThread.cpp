@@ -13,8 +13,6 @@
 
 using namespace mozilla::dom::mobilemessage;
 
-DOMCI_DATA(MozMobileMessageThread, mozilla::dom::MobileMessageThread)
-
 namespace mozilla {
 namespace dom {
 

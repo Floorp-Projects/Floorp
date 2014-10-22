@@ -118,14 +118,17 @@ protected:
 class DummyAccessible : public AccessibleWrap
 {
 public:
-  DummyAccessible() : AccessibleWrap(nullptr, nullptr) { }
-  virtual ~DummyAccessible() { }
+  DummyAccessible(DocAccessible* aDocument = nullptr) :
+    AccessibleWrap(nullptr, aDocument) { }
 
   virtual uint64_t NativeState() MOZ_OVERRIDE MOZ_FINAL;
   virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE MOZ_FINAL;
   virtual uint64_t NativeLinkState() const MOZ_OVERRIDE MOZ_FINAL;
   virtual bool NativelyUnavailable() const MOZ_OVERRIDE MOZ_FINAL;
   virtual void ApplyARIAState(uint64_t* aState) const MOZ_OVERRIDE MOZ_FINAL;
+
+protected:
+  virtual ~DummyAccessible() { }
 };
 
 } // namespace a11y

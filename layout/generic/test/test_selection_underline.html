@@ -20,13 +20,6 @@ var RemoteCanvas = function(aIFrame, aTest) {
 RemoteCanvas.CANVAS_WIDTH = 200;
 RemoteCanvas.CANVAS_HEIGHT = 100;
 
-RemoteCanvas.prototype.compare = function(otherCanvas, expected) {
-  var ret = compareSnapshots(this.snapshot, otherCanvas.snapshot, expected);
-  this.snapshotDataURL = ret[1];
-  otherCanvas.snapshotDataURL = ret[2];
-  return ret[0];
-}
-
 RemoteCanvas.prototype.isReference = function() {
   return this.iframe && (this.iframe.id == "reference");
 }
@@ -256,26 +249,21 @@ function doTest(aTest)
     var result = !canvases[0].isReference() ? canvases[0] : canvases[1];
     var reference = canvases[0].isReference() ? canvases[0] : canvases[1];
 
-    var description = "Rendering of reftest (" +
-                        "selection: " + aTest.selection.typeName +
-                        ", style: " + aTest.decoration.styleName +
-                        ", relativeSize: " + aTest.decoration.relativeSize +
-                        ", font: " + aTest.font.family +
-                        ", default font size: " + aTest.font.defaultSize +
-                        ") is different\n" +
-                        "RESULT=" + result.snapshotDataURL + "\n" +
-                        "REFERENCE=" + reference.snapshotDataURL + "\n";
+    var description = "(selection: " + aTest.selection.typeName +
+                      ", style: " + aTest.decoration.styleName +
+                      ", relativeSize: " + aTest.decoration.relativeSize +
+                      ", font: " + aTest.font.family +
+                      ", default font size: " + aTest.font.defaultSize + ")";
 
-    if (result.compare(reference, true)) {
-      ok(true, description);
     // If the decoration line is thick and the descender of the text isn't
     // enough for containing it, selection underline may be painted lower
     // if it's possible.  Then, we cannot test it with CSS3 text-decoration.
-    } else if (aTest.decoration.style == kDecorationStyleDouble ||
-               aTest.decoration.style == kDecorationStyleWavy) {
-      todo(false, description);
+    if (aTest.decoration.style == kDecorationStyleDouble ||
+        aTest.decoration.style == kDecorationStyleWavy) {
+      todo(false, "Rendering of" + description);
     } else {
-      ok(false, description);
+      assertSnapshots(result.snapshot, reference.snapshot, true,
+                      null /*no fuzz*/, description, "");
     }
 
     canvases = [];

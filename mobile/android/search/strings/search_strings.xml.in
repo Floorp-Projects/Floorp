@@ -3,7 +3,7 @@
     <string name="search_app_name">&search_app_name;</string>
     <string name="search_bar_hint">&search_bar_hint;</string>
 
-    <string name="search_empty_title">&search_empty_title;</string>
+    <string name="search_empty_title">&search_empty_title2;</string>
     <string name="search_empty_message">&search_empty_message;</string>
 
     <string name="search_pref_title">&search_pref_title;</string>

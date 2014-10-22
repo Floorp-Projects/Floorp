@@ -196,8 +196,6 @@ struct JSCompartment
      */
     void adoptWorkerAllocator(js::Allocator *workerAllocator);
 
-    bool                         activeAnalysis;
-
     /* Type information about the scripts and objects in this compartment. */
     js::types::TypeCompartment   types;
 

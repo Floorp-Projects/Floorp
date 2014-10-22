@@ -4,9 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "xpcAccessibleHyperLink.h"
-
 #include "Accessible-inl.h"
+#include "xpcAccessibleDocument.h"
 
 using namespace mozilla::a11y;
 
@@ -16,10 +15,10 @@ xpcAccessibleHyperLink::GetStartIndex(int32_t* aStartIndex)
   NS_ENSURE_ARG_POINTER(aStartIndex);
   *aStartIndex = 0;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aStartIndex = static_cast<Accessible*>(this)->StartOffset();
+  *aStartIndex = Intl()->StartOffset();
   return NS_OK;
 }
 
@@ -29,10 +28,10 @@ xpcAccessibleHyperLink::GetEndIndex(int32_t* aEndIndex)
   NS_ENSURE_ARG_POINTER(aEndIndex);
   *aEndIndex = 0;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aEndIndex = static_cast<Accessible*>(this)->EndOffset();
+  *aEndIndex = Intl()->EndOffset();
   return NS_OK;
 }
 
@@ -42,10 +41,10 @@ xpcAccessibleHyperLink::GetAnchorCount(int32_t* aAnchorCount)
   NS_ENSURE_ARG_POINTER(aAnchorCount);
   *aAnchorCount = 0;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aAnchorCount = static_cast<Accessible*>(this)->AnchorCount();
+  *aAnchorCount = Intl()->AnchorCount();
   return NS_OK;
 }
 
@@ -54,14 +53,13 @@ xpcAccessibleHyperLink::GetURI(int32_t aIndex, nsIURI** aURI)
 {
   NS_ENSURE_ARG_POINTER(aURI);
 
-  Accessible* thisAcc = static_cast<Accessible*>(this);
-  if (thisAcc->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  if (aIndex < 0 || aIndex >= static_cast<int32_t>(thisAcc->AnchorCount()))
+  if (aIndex < 0 || aIndex >= static_cast<int32_t>(Intl()->AnchorCount()))
     return NS_ERROR_INVALID_ARG;
 
-  nsRefPtr<nsIURI>(thisAcc->AnchorURIAt(aIndex)).forget(aURI);
+  nsRefPtr<nsIURI>(Intl()->AnchorURIAt(aIndex)).forget(aURI);
   return NS_OK;
 }
 
@@ -72,14 +70,13 @@ xpcAccessibleHyperLink::GetAnchor(int32_t aIndex, nsIAccessible** aAccessible)
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nullptr;
 
-  Accessible* thisAcc = static_cast<Accessible*>(this);
-  if (thisAcc->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  if (aIndex < 0 || aIndex >= static_cast<int32_t>(thisAcc->AnchorCount()))
+  if (aIndex < 0 || aIndex >= static_cast<int32_t>(Intl()->AnchorCount()))
     return NS_ERROR_INVALID_ARG;
 
-  NS_IF_ADDREF(*aAccessible = thisAcc->AnchorAt(aIndex));
+  NS_IF_ADDREF(*aAccessible = ToXPC(Intl()->AnchorAt(aIndex)));
   return NS_OK;
 }
 
@@ -89,9 +86,9 @@ xpcAccessibleHyperLink::GetValid(bool* aValid)
   NS_ENSURE_ARG_POINTER(aValid);
   *aValid = false;
 
-  if (static_cast<Accessible*>(this)->IsDefunct())
+  if (!Intl())
     return NS_ERROR_FAILURE;
 
-  *aValid = static_cast<Accessible*>(this)->IsLinkValid();
+  *aValid = Intl()->IsLinkValid();
   return NS_OK;
 }

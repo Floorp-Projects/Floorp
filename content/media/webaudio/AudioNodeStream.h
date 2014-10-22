@@ -139,13 +139,13 @@ public:
   TrackRate SampleRate() const { return mSampleRate; }
 
   /**
-   * Convert a time in seconds on the destination stream to seconds
-   * on this stream.
+   * Convert a time in seconds on the destination stream to ticks
+   * on this stream, including fractional position between ticks.
    */
-  double TimeFromDestinationTime(AudioNodeStream* aDestination,
-                                 double aSeconds);
+  double FractionalTicksFromDestinationTime(AudioNodeStream* aDestination,
+                                            double aSeconds);
   /**
-   * Convert a time in seconds on the destination stream to TrackTicks
+   * Convert a time in seconds on the destination stream to nearest TrackTicks
    * on this stream.
    */
   TrackTicks TicksFromDestinationTime(MediaStream* aDestination,

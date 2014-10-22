@@ -209,7 +209,7 @@ class HTMLComboboxListAccessible : public HTMLSelectListAccessible
 {
 public:
 
-  HTMLComboboxListAccessible(nsIAccessible* aParent, nsIContent* aContent,
+  HTMLComboboxListAccessible(Accessible* aParent, nsIContent* aContent,
                              DocAccessible* aDoc);
   virtual ~HTMLComboboxListAccessible() {}
 

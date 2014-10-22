@@ -685,11 +685,6 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
   nsSVGPathGeometryElement* element =
     static_cast<nsSVGPathGeometryElement*>(mContent);
 
-  RefPtr<Path> path = element->GetOrBuildPath(*drawTarget, fillRule);
-  if (!path) {
-    return;
-  }
-
   AntialiasMode aaMode =
     (StyleSVG()->mShapeRendering == NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED ||
      StyleSVG()->mShapeRendering == NS_STYLE_SHAPE_RENDERING_CRISPEDGES) ?
@@ -702,10 +697,26 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
   aContext->SetMatrix(aNewTransform);
 
   if (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) {
-    ColorPattern white(ToDeviceColor(Color(1.0f, 1.0f, 1.0f, 1.0f)));
-    drawTarget->Fill(path, white,
-                     DrawOptions(1.0f, CompositionOp::OP_OVER, aaMode));
+    // We don't complicate this code with GetAsSimplePath since the cost of
+    // masking will dwarf Path creation overhead anyway.
+    RefPtr<Path> path = element->GetOrBuildPath(*drawTarget, fillRule);
+    if (path) {
+      ColorPattern white(ToDeviceColor(Color(1.0f, 1.0f, 1.0f, 1.0f)));
+      drawTarget->Fill(path, white,
+                       DrawOptions(1.0f, CompositionOp::OP_OVER, aaMode));
+    }
     return;
+  }
+
+  nsSVGPathGeometryElement::SimplePath simplePath;
+  RefPtr<Path> path;
+
+  element->GetAsSimplePath(&simplePath);
+  if (!simplePath.IsPath()) {
+    path = element->GetOrBuildPath(*drawTarget, fillRule);
+    if (!path) {
+      return;
+    }
   }
 
   gfxTextContextPaint *contextPaint =
@@ -716,8 +727,12 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
     GeneralPattern fillPattern;
     nsSVGUtils::MakeFillPatternFor(this, aContext, &fillPattern, contextPaint);
     if (fillPattern.GetPattern()) {
-      drawTarget->Fill(path, fillPattern,
-                       DrawOptions(1.0f, CompositionOp::OP_OVER, aaMode));
+      DrawOptions drawOptions(1.0f, CompositionOp::OP_OVER, aaMode);
+      if (simplePath.IsRect()) {
+        drawTarget->FillRect(simplePath.AsRect(), fillPattern, drawOptions);
+      } else if (path) {
+        drawTarget->Fill(path, fillPattern, drawOptions);
+      }
     }
   }
 
@@ -726,6 +741,15 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
     // Account for vector-effect:non-scaling-stroke:
     gfxMatrix userToOuterSVG;
     if (nsSVGUtils::GetNonScalingStrokeTransform(this, &userToOuterSVG)) {
+      // A simple Rect can't be transformed with rotate/skew, so let's switch
+      // to using a real path:
+      if (!path) {
+        path = element->GetOrBuildPath(*drawTarget, fillRule);
+        if (!path) {
+          return;
+        }
+        simplePath.Reset();
+      }
       // We need to transform the path back into the appropriate ancestor
       // coordinate system, and paint it it that coordinate system, in order
       // for non-scaled stroke to paint correctly.
@@ -747,8 +771,16 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
       if (strokeOptions.mLineWidth <= 0) {
         return;
       }
-      drawTarget->Stroke(path, strokePattern, strokeOptions,
-                         DrawOptions(1.0f, CompositionOp::OP_OVER, aaMode));
+      DrawOptions drawOptions(1.0f, CompositionOp::OP_OVER, aaMode);
+      if (simplePath.IsRect()) {
+        drawTarget->StrokeRect(simplePath.AsRect(), strokePattern,
+                               strokeOptions, drawOptions);
+      } else if (simplePath.IsLine()) {
+        drawTarget->StrokeLine(simplePath.Point1(), simplePath.Point2(),
+                               strokePattern, strokeOptions, drawOptions);
+      } else {
+        drawTarget->Stroke(path, strokePattern, strokeOptions, drawOptions);
+      }
     }
   }
 }

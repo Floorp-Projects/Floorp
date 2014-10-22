@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(93d0ba57-0d20-49d1-aede-8fde6699855d)]
+[scriptable, uuid(28915cca-3366-4034-ba1d-b7afb9b37639)]
 interface nsIAccessibleEditableText : nsISupports
 {
   /**
@@ -20,7 +20,6 @@ interface nsIAccessibleEditableText : nsISupports
    * @param text - text that is inserted.
    * @param position - index at which to insert the text.
    */
-  [binaryname(ScriptableInsertText)]
   void insertText(in AString text, in long position);
 
   /**
@@ -29,7 +28,6 @@ interface nsIAccessibleEditableText : nsISupports
    * @param startPos - start index of the text to moved into the clipboard.
    * @param endPos - end index of the text to moved into the clipboard.
    */
-  [binaryname(ScriptableCopyText)]
   void copyText(in long startPos, in long endPos);
 
   /**
@@ -38,7 +36,6 @@ interface nsIAccessibleEditableText : nsISupports
    * @param startPos - start index of the text to be deleted.
    * @param endOffset - end index of the text to be deleted.
    */
-  [binaryname(ScriptableCutText)]
   void cutText(in long startPos, in long endPos);
 
   /**
@@ -47,7 +44,6 @@ interface nsIAccessibleEditableText : nsISupports
    * @param startPos - start index of the text to be deleted.
    * @param endPos - end index of the text to be deleted.
    */
-  [binaryname(ScriptableDeleteText)]
   void deleteText(in long startPos, in long endPos);
 
   /**
@@ -56,6 +52,5 @@ interface nsIAccessibleEditableText : nsISupports
    * @param position - index at which to insert the text from the system
    *                   clipboard into the text represented by this object.
    */
-  [binaryname(ScriptablePasteText)]
   void pasteText(in long position);
 };

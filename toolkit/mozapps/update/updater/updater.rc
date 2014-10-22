@@ -42,25 +42,6 @@ IDI_DIALOG ICON "updater.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Embedded certificates for allowed MARs
-//
-
-#if defined(MAR_SIGNING_RELEASE_BETA)
-IDR_PRIMARY_CERT TYPE_CERT "release_primary.der"
-IDR_BACKUP_CERT TYPE_CERT  "release_secondary.der"
-#elif defined(MAR_SIGNING_AURORA_NIGHTLY)
-IDR_PRIMARY_CERT TYPE_CERT "nightly_aurora_level3_primary.der"
-IDR_BACKUP_CERT TYPE_CERT  "nightly_aurora_level3_secondary.der"
-#else
-IDR_PRIMARY_CERT TYPE_CERT "dep1.der"
-IDR_BACKUP_CERT TYPE_CERT  "dep2.der"
-#endif
-
-IDR_XPCSHELL_CERT TYPE_CERT "xpcshellCertificate.der"
- 
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Embedded an identifier to uniquely identiy this as a Mozilla updater.
 //
 

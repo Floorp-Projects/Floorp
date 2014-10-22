@@ -71,6 +71,7 @@ if (win != null)
                 self.fail("There were no windows that appeared when we clicked earlier")
             else:
                 time.sleep(1)
+            count += 1
 
         self.marionette.switch_to_window(window_handles[0])
         self.assertEqual(self.marionette.title, "We Arrive Here")

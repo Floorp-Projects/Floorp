@@ -48,9 +48,20 @@ CompilerOutput::ion() const
 inline CompilerOutput*
 RecompileInfo::compilerOutput(TypeZone &types) const
 {
+    if (generation != types.generation) {
+        if (!types.sweepCompilerOutputs || outputIndex >= types.sweepCompilerOutputs->length())
+            return nullptr;
+        CompilerOutput *output = &(*types.sweepCompilerOutputs)[outputIndex];
+        if (!output->isValid())
+            return nullptr;
+        output = &(*types.compilerOutputs)[output->sweepIndex()];
+        return output->isValid() ? output : nullptr;
+    }
+
     if (!types.compilerOutputs || outputIndex >= types.compilerOutputs->length())
         return nullptr;
-    return &(*types.compilerOutputs)[outputIndex];
+    CompilerOutput *output = &(*types.compilerOutputs)[outputIndex];
+    return output->isValid() ? output : nullptr;
 }
 
 inline CompilerOutput*
@@ -66,8 +77,14 @@ RecompileInfo::shouldSweep(TypeZone &types)
     if (!output || !output->isValid())
         return true;
 
-    // Update this info for the output's new index in the zone's compiler outputs.
-    outputIndex = output->sweepIndex();
+    // If this info is for a compilation that occurred after sweeping started,
+    // the index is already correct.
+    MOZ_ASSERT_IF(generation == types.generation,
+                  outputIndex == output - types.compilerOutputs->begin());
+
+    // Update this info for the output's index in the zone's compiler outputs.
+    outputIndex = output - types.compilerOutputs->begin();
+    generation = types.generation;
     return false;
 }
 
@@ -241,44 +258,45 @@ struct AutoEnterAnalysis
     /* Prevent GC activity in the middle of analysis. */
     gc::AutoSuppressGC suppressGC;
 
+    // Allow clearing inference info on OOM during incremental sweeping.
+    AutoClearTypeInferenceStateOnOOM oom;
+
+    // Pending recompilations to perform before execution of JIT code can resume.
+    RecompileInfoVector pendingRecompiles;
+
     FreeOp *freeOp;
-    JSCompartment *compartment;
-    bool oldActiveAnalysis;
+    Zone *zone;
 
     explicit AutoEnterAnalysis(ExclusiveContext *cx)
-      : suppressGC(cx)
+      : suppressGC(cx), oom(cx->zone())
     {
-        init(cx->defaultFreeOp(), cx->compartment());
+        init(cx->defaultFreeOp(), cx->zone());
     }
 
-    AutoEnterAnalysis(FreeOp *fop, JSCompartment *comp)
-      : suppressGC(comp)
+    AutoEnterAnalysis(FreeOp *fop, Zone *zone)
+      : suppressGC(zone->runtimeFromMainThread()), oom(zone)
     {
-        init(fop, comp);
+        init(fop, zone);
     }
 
     ~AutoEnterAnalysis()
     {
-        compartment->activeAnalysis = oldActiveAnalysis;
+        if (this != zone->types.activeAnalysis)
+            return;
 
-        /*
-         * If there are no more type inference activations on the stack,
-         * process any triggered recompilations. Note that we should not be
-         * invoking any scripted code while type inference is running.
-         */
-        if (!compartment->activeAnalysis) {
-            TypeZone &types = compartment->zone()->types;
-            if (types.pendingRecompiles)
-                types.processPendingRecompiles(freeOp);
-        }
+        zone->types.activeAnalysis = nullptr;
+
+        if (!pendingRecompiles.empty())
+            zone->types.processPendingRecompiles(freeOp, pendingRecompiles);
     }
 
   private:
-    void init(FreeOp *fop, JSCompartment *comp) {
-        freeOp = fop;
-        compartment = comp;
-        oldActiveAnalysis = compartment->activeAnalysis;
-        compartment->activeAnalysis = true;
+    void init(FreeOp *fop, Zone *zone) {
+        this->freeOp = fop;
+        this->zone = zone;
+
+        if (!zone->types.activeAnalysis)
+            zone->types.activeAnalysis = this;
     }
 };
 
@@ -380,7 +398,7 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 {
     if (args.callee().is<JSFunction>()) {
         JSFunction *fun = &args.callee().as<JSFunction>();
-        if (fun->isInterpreted() && fun->nonLazyScript()->types)
+        if (fun->isInterpreted() && fun->nonLazyScript()->types())
             TypeMonitorCallSlow(cx, &args.callee(), args, constructing);
     }
 }
@@ -580,7 +598,8 @@ TypeScript::NumTypeSets(JSScript *script)
 /* static */ inline StackTypeSet *
 TypeScript::ThisTypes(JSScript *script)
 {
-    return script->types->typeArray() + script->nTypeSets();
+    TypeScript *types = script->types();
+    return types ? types->typeArray() + script->nTypeSets() : nullptr;
 }
 
 /*
@@ -593,7 +612,8 @@ TypeScript::ThisTypes(JSScript *script)
 TypeScript::ArgTypes(JSScript *script, unsigned i)
 {
     MOZ_ASSERT(i < script->functionNonDelazifying()->nargs());
-    return script->types->typeArray() + script->nTypeSets() + 1 + i;
+    TypeScript *types = script->types();
+    return types ? types->typeArray() + script->nTypeSets() + 1 + i : nullptr;
 }
 
 template <typename TYPESET>
@@ -641,9 +661,12 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc, uint32_t *bytecodeMa
 TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc)
 {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(script->runtimeFromMainThread()));
+    TypeScript *types = script->types();
+    if (!types)
+        return nullptr;
     uint32_t *hint = script->baselineScript()->bytecodeTypeMap() + script->nTypeSets();
     return BytecodeTypes(script, pc, script->baselineScript()->bytecodeTypeMap(),
-                         hint, script->types->typeArray());
+                         hint, types->typeArray());
 }
 
 struct AllocationSiteKey : public DefaultHasher<AllocationSiteKey> {
@@ -767,15 +790,16 @@ TypeScript::MonitorAssign(JSContext *cx, HandleObject obj, jsid id)
 /* static */ inline void
 TypeScript::SetThis(JSContext *cx, JSScript *script, Type type)
 {
-    if (!script->types)
+    StackTypeSet *types = ThisTypes(script);
+    if (!types)
         return;
 
-    if (!ThisTypes(script)->hasType(type)) {
+    if (!types->hasType(type)) {
         AutoEnterAnalysis enter(cx);
 
         InferSpew(ISpewOps, "externalType: setThis #%u: %s",
                   script->id(), TypeString(type));
-        ThisTypes(script)->addType(cx, type);
+        types->addType(cx, type);
     }
 }
 
@@ -788,15 +812,16 @@ TypeScript::SetThis(JSContext *cx, JSScript *script, const js::Value &value)
 /* static */ inline void
 TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, Type type)
 {
-    if (!script->types)
+    StackTypeSet *types = ArgTypes(script, arg);
+    if (!types)
         return;
 
-    if (!ArgTypes(script, arg)->hasType(type)) {
+    if (!types->hasType(type)) {
         AutoEnterAnalysis enter(cx);
 
         InferSpew(ISpewOps, "externalType: setArg #%u %u: %s",
                   script->id(), arg, TypeString(type));
-        ArgTypes(script, arg)->addType(cx, type);
+        types->addType(cx, type);
     }
 }
 
@@ -1173,11 +1198,19 @@ inline TypeObject::TypeObject(const Class *clasp, TaggedProto proto, TypeObjectF
     this->proto_ = proto.raw();
     this->flags_ = initialFlags;
 
+    setGeneration(zone()->types.generation);
+
     InferSpew(ISpewOps, "newObject: %s", TypeObjectString(this));
 }
 
+inline void
+TypeObject::finalize(FreeOp *fop)
+{
+    fop->delete_(newScript_.get());
+}
+
 inline uint32_t
-TypeObject::basePropertyCount() const
+TypeObject::basePropertyCount()
 {
     return (flags() & OBJECT_FLAG_PROPERTY_COUNT_MASK) >> OBJECT_FLAG_PROPERTY_COUNT_SHIFT;
 }
@@ -1194,8 +1227,6 @@ TypeObject::setBasePropertyCount(uint32_t count)
 inline HeapTypeSet *
 TypeObject::getProperty(ExclusiveContext *cx, jsid id)
 {
-    MOZ_ASSERT(cx->compartment()->activeAnalysis);
-
     MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
     MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
     MOZ_ASSERT(!unknownProperties());
@@ -1282,10 +1313,17 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
 
 } } /* namespace js::types */
 
+inline js::types::TypeScript *
+JSScript::types()
+{
+    maybeSweepTypes(nullptr);
+    return types_;
+}
+
 inline bool
 JSScript::ensureHasTypes(JSContext *cx)
 {
-    return types || makeTypes(cx);
+    return types() || makeTypes(cx);
 }
 
 namespace js {

@@ -10,6 +10,7 @@
 #include "nsThreadUtils.h"
 #include "MediaEncoder.h"
 #include "VideoUtils.h"
+#include "GeckoProfiler.h"
 
 #undef LOG
 #ifdef MOZ_WIDGET_GONK
@@ -82,6 +83,8 @@ nsresult
 ISOMediaWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
                                   uint32_t aFlags)
 {
+  PROFILER_LABEL("ISOMediaWriter", "WriteEncodedTrack",
+    js::ProfileEntry::Category::OTHER);
   // Muxing complete, it doesn't allowed to reentry again.
   if (mState == MUXING_DONE) {
     MOZ_ASSERT(false);
@@ -191,6 +194,8 @@ nsresult
 ISOMediaWriter::GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
                                  uint32_t aFlags)
 {
+  PROFILER_LABEL("ISOMediaWriter", "GetContainerData",
+    js::ProfileEntry::Category::OTHER);
   if (mBlobReady) {
     if (mState == MUXING_DONE) {
       mIsWritingComplete = true;
@@ -204,6 +209,8 @@ ISOMediaWriter::GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
 nsresult
 ISOMediaWriter::SetMetadata(TrackMetadataBase* aMetadata)
 {
+  PROFILER_LABEL("ISOMediaWriter", "SetMetadata",
+    js::ProfileEntry::Category::OTHER);
   if (aMetadata->GetKind() == TrackMetadataBase::METADATA_AAC ||
       aMetadata->GetKind() == TrackMetadataBase::METADATA_AMR) {
     mControl->SetMetadata(aMetadata);

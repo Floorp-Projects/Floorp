@@ -311,12 +311,11 @@ class MOZ_STACK_CLASS nsWSRunObject
     void     GetRuns();
     void     ClearRuns();
     void     MakeSingleWSRun(WSType aType);
-    nsresult GetPreviousWSNode(::DOMPoint aPoint,
-                               nsINode* aBlockParent,
-                               nsCOMPtr<nsINode>* aPriorNode);
-    nsresult GetNextWSNode(::DOMPoint aPoint,
-                           nsINode* aBlockParent,
-                           nsCOMPtr<nsINode>* aNextNode);
+    nsIContent* GetPreviousWSNodeInner(nsINode* aStartNode,
+                                       nsINode* aBlockParent);
+    nsIContent* GetPreviousWSNode(::DOMPoint aPoint, nsINode* aBlockParent);
+    nsIContent* GetNextWSNodeInner(nsINode* aStartNode, nsINode* aBlockParent);
+    nsIContent* GetNextWSNode(::DOMPoint aPoint, nsINode* aBlockParent);
     nsresult PrepareToDeleteRangePriv(nsWSRunObject* aEndObject);
     nsresult PrepareToSplitAcrossBlocksPriv();
     nsresult DeleteChars(nsINode* aStartNode, int32_t aStartOffset,
@@ -345,10 +344,6 @@ class MOZ_STACK_CLASS nsWSRunObject
                               int32_t aOffset);
     
     nsresult Scrub();
-    nsresult GetPreviousWSNodeInner(nsINode* aStartNode, nsINode* aBlockParent,
-                                    nsCOMPtr<nsINode>* aPriorNode);
-    nsresult GetNextWSNodeInner(nsINode* aStartNode, nsINode* aBlockParent,
-                                nsCOMPtr<nsINode>* aNextNode);
     
     // member variables ---------------------------------------------------------
     

@@ -12,6 +12,14 @@ interface nsIDOMNode;
 interface nsIAccessibleDocument;
 interface nsIAccessibleRelation;
 
+%{C++
+namespace mozilla {
+namespace a11y {
+class Accessible;
+}
+}
+%}
+
 /**
  * A cross-platform interface that supports platform-specific 
  * accessibility APIs like MSAA and ATK. Contains the sum of what's needed
@@ -166,7 +174,6 @@ interface nsIAccessible : nsISupports
    *                              inclusive of the current item
    * @param positionInGroup - 1-based, similar to ARIA 'posinset' property
    */
-  [binaryname(ScriptableGroupPosition)]
   void groupPosition(out long aGroupLevel, out long aSimilarItemsInGroup,
                      out long aPositionInGroup);
 
@@ -198,7 +205,6 @@ interface nsIAccessible : nsISupports
   /**
    * Nth accessible child using zero-based index or last child if index less than zero
    */
-  [binaryname(ScriptableGetChildAt)]
   nsIAccessible getChildAt(in long aChildIndex);
 
   /**
@@ -221,7 +227,6 @@ interface nsIAccessible : nsISupports
   /**
    * Add or remove this accessible to the current selection
    */
-  [binaryname(ScriptableSetSelected)]
   void setSelected(in boolean isSelected);
 
   /**
@@ -233,7 +238,6 @@ interface nsIAccessible : nsISupports
   /**
    * Select this accessible node only
    */
-  [binaryname(ScriptableTakeSelection)]
   void takeSelection();
 
   /**
@@ -241,10 +245,9 @@ interface nsIAccessible : nsISupports
    * The state STATE_FOCUSABLE indicates whether this node is normally focusable.
    * It is the callers responsibility to determine whether this node is focusable.
    * accTakeFocus on a node that is not normally focusable (such as a table),
-   * will still set focus on that node, although normally that will not be visually 
+   * will still set focus on that node, although normally that will not be visually
    * indicated in most style sheets.
    */
-  [binaryname(ScriptableTakeFocus)]
   void takeFocus();
 
   /**
@@ -266,7 +269,6 @@ interface nsIAccessible : nsISupports
    * Perform the accessible action at the given zero-based index
    * Action number 0 is the default action
    */
-  [binaryname(ScriptableDoAction)]
   void doAction(in uint8_t index);
 
   /**
@@ -276,7 +278,6 @@ interface nsIAccessible : nsISupports
    *                     the screen (see nsIAccessibleScrollType for
    *                     available constants).
    */
-  [binaryname(ScriptableScrollTo)]
   void scrollTo(in unsigned long aScrollType);
 
   /**
@@ -288,13 +289,11 @@ interface nsIAccessible : nsISupports
    * @param x [in] - defines the x coordinate
    * @param y [in] - defines the y coordinate
   */
-  [binaryname(ScriptableScrollToPoint)]
   void scrollToPoint(in unsigned long coordinateType, in long x, in long y);
 
-  /**
-   * Get a pointer to accessibility interface for this node, which is specific 
-   * to the OS/accessibility toolkit we're running on.
-   */
-  [noscript] void getNativeInterface(out voidPtr aOutAccessible);
+  %{C++
+  virtual mozilla::a11y::Accessible* ToInternalAccessible() const = 0;
+  %}
+
 };
 

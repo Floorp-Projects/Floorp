@@ -27,14 +27,7 @@ XULTreeGridAccessible::~XULTreeGridAccessible()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// XULTreeGridAccessible: nsISupports implementation
-
-NS_IMPL_ISUPPORTS_INHERITED(XULTreeGridAccessible,
-                            XULTreeAccessible,
-                            nsIAccessibleTable)
-
-////////////////////////////////////////////////////////////////////////////////
-// XULTreeGridAccessible: nsIAccessibleTable implementation
+// XULTreeGridAccessible: Table
 
 uint32_t
 XULTreeGridAccessible::ColCount()
@@ -124,7 +117,7 @@ XULTreeGridAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows)
 
 Accessible*
 XULTreeGridAccessible::CellAt(uint32_t aRowIndex, uint32_t aColumnIndex)
-{ 
+{
   Accessible* row = GetTreeItemAccessible(aRowIndex);
   if (!row)
     return nullptr;
@@ -211,13 +204,6 @@ XULTreeGridAccessible::UnselectRow(uint32_t aRowIdx)
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridAccessible: Accessible implementation
-
-void
-XULTreeGridAccessible::Shutdown()
-{
-  mTable = nullptr;
-  XULTreeAccessible::Shutdown();
-}
 
 role
 XULTreeGridAccessible::NativeRole()
@@ -439,7 +425,7 @@ XULTreeGridCellAccessible::
                             XULTreeGridRowAccessible* aRowAcc,
                             nsITreeBoxObject* aTree, nsITreeView* aTreeView,
                             int32_t aRow, nsITreeColumn* aColumn) :
-  LeafAccessible(aContent, aDoc), xpcAccessibleTableCell(this), mTree(aTree),
+  LeafAccessible(aContent, aDoc), mTree(aTree),
   mTreeView(aTreeView), mRow(aRow), mColumn(aColumn)
 {
   mParent = aRowAcc;
@@ -468,21 +454,13 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(XULTreeGridCellAccessible, LeafAccessible,
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XULTreeGridCellAccessible)
   NS_INTERFACE_TABLE_INHERITED(XULTreeGridCellAccessible,
-                               nsIAccessibleTableCell,
                                XULTreeGridCellAccessible)
 NS_INTERFACE_TABLE_TAIL_INHERITING(LeafAccessible)
 NS_IMPL_ADDREF_INHERITED(XULTreeGridCellAccessible, LeafAccessible)
 NS_IMPL_RELEASE_INHERITED(XULTreeGridCellAccessible, LeafAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
-// XULTreeGridCellAccessible: nsIAccessible implementation
-
-void
-XULTreeGridCellAccessible::Shutdown()
-{
-  mTableCell = nullptr;
-  LeafAccessible::Shutdown();
-}
+// XULTreeGridCellAccessible: Accessible
 
 Accessible*
 XULTreeGridCellAccessible::FocusedChild()
@@ -607,7 +585,7 @@ XULTreeGridCellAccessible::DoAction(uint8_t aIndex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// XULTreeGridCellAccessible: nsIAccessibleTableCell implementation
+// XULTreeGridCellAccessible: TableCell
 
 TableAccessible*
 XULTreeGridCellAccessible::Table() const

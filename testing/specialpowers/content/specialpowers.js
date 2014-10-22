@@ -71,7 +71,7 @@ SpecialPowers.prototype.registerProcessCrashObservers = function() {
 };
 
 SpecialPowers.prototype.unregisterProcessCrashObservers = function() {
-  addMessageListener("SPProcessCrashService", this._messageListener);
+  removeMessageListener("SPProcessCrashService", this._messageListener);
   sendSyncMessage("SPProcessCrashService", { op: "unregister-observer" });
 };
 
