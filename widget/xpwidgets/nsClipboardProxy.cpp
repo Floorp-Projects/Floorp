@@ -10,17 +10,18 @@
 #include "nsXULAppAPI.h"
 
 using namespace mozilla;
-using mozilla::dom::ContentChild;
+using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS(nsClipboardProxy, nsIClipboard)
+NS_IMPL_ISUPPORTS(nsClipboardProxy, nsIClipboard, nsIClipboardProxy)
 
 nsClipboardProxy::nsClipboardProxy()
+  : mClipboardCaps(false, false)
 {
 }
 
 NS_IMETHODIMP
 nsClipboardProxy::SetData(nsITransferable *aTransferable,
-			  nsIClipboardOwner *anOwner, int32_t aWhichClipboard)
+                          nsIClipboardOwner *anOwner, int32_t aWhichClipboard)
 {
   nsCOMPtr<nsISupports> tmp;
   uint32_t len;
@@ -36,7 +37,7 @@ nsClipboardProxy::SetData(nsITransferable *aTransferable,
   bool isPrivateData = false;
   aTransferable->GetIsPrivateData(&isPrivateData);
   ContentChild::GetSingleton()->SendSetClipboardText(buffer, isPrivateData,
-						     aWhichClipboard);
+                                                     aWhichClipboard);
 
   return NS_OK;
 }
@@ -87,7 +88,7 @@ nsClipboardProxy::HasDataMatchingFlavors(const char **aFlavorList,
 NS_IMETHODIMP
 nsClipboardProxy::SupportsSelectionClipboard(bool *aIsSupported)
 {
-  *aIsSupported = false;
+  *aIsSupported = mClipboardCaps.supportsSelectionClipboard();
   return NS_OK;
 }
 
@@ -95,6 +96,12 @@ nsClipboardProxy::SupportsSelectionClipboard(bool *aIsSupported)
 NS_IMETHODIMP
 nsClipboardProxy::SupportsFindClipboard(bool *aIsSupported)
 {
-  *aIsSupported = false;
+  *aIsSupported = mClipboardCaps.supportsFindClipboard();
   return NS_OK;
+}
+
+void
+nsClipboardProxy::SetCapabilities(const ClipboardCapabilities& aClipboardCaps)
+{
+  mClipboardCaps = aClipboardCaps;
 }
