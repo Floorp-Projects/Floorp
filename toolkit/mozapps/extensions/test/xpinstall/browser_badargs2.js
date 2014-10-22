@@ -10,11 +10,13 @@ function test() {
     }
   }));
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-    // Allow the in-page load handler to run first
-    executeSoon(page_loaded);
-  }, true);
+
+  function loadListener() {
+    gBrowser.selectedBrowser.removeEventListener("load", loadListener, true);
+    gBrowser.contentWindow.addEventListener("InstallTriggered", page_loaded, false);
+  }
+
+  gBrowser.selectedBrowser.addEventListener("load", loadListener, true);
 
   // In non-e10s the exception in the content page would trigger a test failure
   if (!gMultiProcessBrowser)
@@ -24,9 +26,16 @@ function test() {
 }
 
 function page_loaded() {
+  gBrowser.contentWindow.removeEventListener("InstallTriggered", page_loaded, false);
   var doc = gBrowser.contentDocument;
   is(doc.getElementById("return").textContent, "exception", "installTrigger should have failed");
-  gBrowser.removeCurrentTab();
-  finish();
+
+  // In non-e10s the exception from the page is thrown after the event so we
+  // have to spin the event loop to make sure it arrives so expectUncaughtException
+  // sees it.
+  executeSoon(() => {
+    gBrowser.removeCurrentTab();
+    finish();
+  });
 }
 // ----------------------------------------------------------------------------

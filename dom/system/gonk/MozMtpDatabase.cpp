@@ -171,9 +171,29 @@ void
 MozMtpDatabase::RemoveEntry(MtpObjectHandle aHandle)
 {
   MutexAutoLock lock(mMutex);
+  if (!IsValidHandle(aHandle)) {
+    return;
+  }
 
-  if (aHandle > 0 && aHandle < mDb.Length()) {
-    mDb[aHandle] = nullptr;
+  RefPtr<DbEntry> removedEntry = mDb[aHandle];
+  mDb[aHandle] = nullptr;
+  MTP_DBG("0x%08x removed", aHandle);
+  // if the entry is not a folder, just return.
+  if (removedEntry->mObjectFormat != MTP_FORMAT_ASSOCIATION) {
+    return;
+  }
+
+  // Find out and remove the children of aHandle.
+  // Since the index for a directory will always be less than the index of any of its children,
+  // we can remove the entire subtree in one pass.
+  ProtectedDbArray::size_type numEntries = mDb.Length();
+  ProtectedDbArray::index_type entryIndex;
+  for (entryIndex = aHandle+1; entryIndex < numEntries; entryIndex++) {
+    RefPtr<DbEntry> entry = mDb[entryIndex];
+    if (entry && IsValidHandle(entry->mParent) && !mDb[entry->mParent]) {
+      mDb[entryIndex] = nullptr;
+      MTP_DBG("0x%08x removed", aHandle);
+    }
   }
 }
 
