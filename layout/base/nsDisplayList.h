@@ -14,6 +14,7 @@
 #define NSDISPLAYLIST_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
 #include "nsPoint.h"
@@ -778,6 +779,8 @@ private:
   // will-change budget tracker
   nsDataHashtable<nsPtrHashKey<nsPresContext>, DocumentWillChangeBudget>
                                  mWillChangeBudget;
+  // Assert that we never check the budget before its fully calculated.
+  mutable mozilla::DebugOnly<bool> mWillChangeBudgetCalculated;
   // Relative to mCurrentFrame.
   nsRect                         mDirtyRect;
   nsRegion                       mWindowOpaqueRegion;
@@ -3464,7 +3467,16 @@ public:
                                                 bool aLogAnimations = false);
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
 
-  bool ShouldPrerender() const { return mPrerender; }
+  /**
+   * This will return if it's possible for this element to be prerendered.
+   * This should never return false if we're going to prerender.
+   */
+  bool MaybePrerender() const { return mMaybePrerender; }
+  /**
+   * Check if this element will be prerendered. This must be done after the
+   * display list has been fully built.
+   */
+  bool ShouldPrerender(nsDisplayListBuilder* aBuilder);
 
 #ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(nsACString& aTo) MOZ_OVERRIDE;
@@ -3486,7 +3498,9 @@ private:
   ComputeTransformFunction mTransformGetter;
   nsRect mChildrenVisibleRect;
   uint32_t mIndex;
-  bool mPrerender;
+  // We wont know if we pre-render until the layer building phase where we can
+  // check layers will-change budget.
+  bool mMaybePrerender;
 };
 
 /**
