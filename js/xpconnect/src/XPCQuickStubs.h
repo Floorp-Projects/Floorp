@@ -10,51 +10,10 @@
 #include "XPCForwards.h"
 
 class qsObjectHelper;
-namespace mozilla {
-namespace dom {
-struct NativePropertiesHolder;
-}
-}
 
 /* XPCQuickStubs.h - Support functions used only by quick stubs. */
 
 class XPCCallContext;
-
-#define XPC_QS_NULL_INDEX  ((uint16_t) -1)
-
-struct xpc_qsPropertySpec {
-    uint16_t name_index;
-    JSNative getter;
-    JSNative setter;
-};
-
-struct xpc_qsFunctionSpec {
-    uint16_t name_index;
-    uint16_t arity;
-    JSNative native;
-};
-
-/** A table mapping interfaces to quick stubs. */
-struct xpc_qsHashEntry {
-    nsID iid;
-    uint16_t prop_index;
-    uint16_t n_props;
-    uint16_t func_index;
-    uint16_t n_funcs;
-    const mozilla::dom::NativePropertiesHolder* newBindingProperties;
-    // These last two fields index to other entries in the same table.
-    // XPC_QS_NULL_ENTRY indicates there are no more entries in the chain.
-    uint16_t parentInterface;
-    uint16_t chain;
-};
-
-bool
-xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, unsigned extraFlags,
-                       uint32_t ifacec, const nsIID **interfaces,
-                       uint32_t tableSize, const xpc_qsHashEntry *table,
-                       const xpc_qsPropertySpec *propspecs,
-                       const xpc_qsFunctionSpec *funcspecs,
-                       const char *stringTable);
 
 /** Raise an exception on @a cx and return false. */
 bool

@@ -19,54 +19,6 @@
 using namespace mozilla;
 using namespace JS;
 
-static const xpc_qsHashEntry *
-LookupEntry(uint32_t tableSize, const xpc_qsHashEntry *table, const nsID &iid)
-{
-    size_t i;
-    const xpc_qsHashEntry *p;
-
-    i = iid.m0 % tableSize;
-    do
-    {
-        p = table + i;
-        if (p->iid.Equals(iid))
-            return p;
-        i = p->chain;
-    } while (i != XPC_QS_NULL_INDEX);
-    return nullptr;
-}
-
-static const xpc_qsHashEntry *
-LookupInterfaceOrAncestor(uint32_t tableSize, const xpc_qsHashEntry *table,
-                          const nsID &iid)
-{
-    const xpc_qsHashEntry *entry = LookupEntry(tableSize, table, iid);
-    if (!entry) {
-        /*
-         * On a miss, we have to search for every interface the object
-         * supports, including ancestors.
-         */
-        nsCOMPtr<nsIInterfaceInfo> info;
-        if (NS_FAILED(nsXPConnect::XPConnect()->GetInfoForIID(&iid, getter_AddRefs(info))))
-            return nullptr;
-
-        const nsIID *piid;
-        for (;;) {
-            nsCOMPtr<nsIInterfaceInfo> parent;
-            if (NS_FAILED(info->GetParent(getter_AddRefs(parent))) ||
-                !parent ||
-                NS_FAILED(parent->GetIIDShared(&piid))) {
-                break;
-            }
-            entry = LookupEntry(tableSize, table, *piid);
-            if (entry)
-                break;
-            info.swap(parent);
-        }
-    }
-    return entry;
-}
-
 static MOZ_ALWAYS_INLINE bool
 HasBitInInterfacesBitmap(JSObject *obj, uint32_t interfaceBit)
 {
@@ -75,75 +27,6 @@ HasBitInInterfacesBitmap(JSObject *obj, uint32_t interfaceBit)
     const XPCWrappedNativeJSClass *clasp =
       (const XPCWrappedNativeJSClass*)js::GetObjectClass(obj);
     return (clasp->interfacesBitmap & (1 << interfaceBit)) != 0;
-}
-
-bool
-xpc_qsDefineQuickStubs(JSContext *cx, JSObject *protoArg, unsigned flags,
-                       uint32_t ifacec, const nsIID **interfaces,
-                       uint32_t tableSize, const xpc_qsHashEntry *table,
-                       const xpc_qsPropertySpec *propspecs,
-                       const xpc_qsFunctionSpec *funcspecs,
-                       const char *stringTable)
-{
-    /*
-     * Walk interfaces in reverse order to behave like XPConnect when a
-     * feature is defined in more than one of the interfaces.
-     *
-     * XPCNativeSet::FindMethod returns the first matching feature it finds,
-     * searching the interfaces forward.  Here, definitions toward the
-     * front of 'interfaces' overwrite those toward the back.
-     */
-    RootedObject proto(cx, protoArg);
-    for (uint32_t i = ifacec; i-- != 0;) {
-        const nsID &iid = *interfaces[i];
-        const xpc_qsHashEntry *entry =
-            LookupInterfaceOrAncestor(tableSize, table, iid);
-
-        if (entry) {
-            for (;;) {
-                // Define quick stubs for attributes.
-                const xpc_qsPropertySpec *ps = propspecs + entry->prop_index;
-                const xpc_qsPropertySpec *ps_end = ps + entry->n_props;
-                for ( ; ps < ps_end; ++ps) {
-                    if (!JS_DefineProperty(cx, proto,
-                                           stringTable + ps->name_index,
-                                           JS::UndefinedHandleValue,
-                                           flags | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS,
-                                           (JSPropertyOp)ps->getter,
-                                           (JSStrictPropertyOp)ps->setter))
-                        return false;
-                }
-
-                // Define quick stubs for methods.
-                const xpc_qsFunctionSpec *fs = funcspecs + entry->func_index;
-                const xpc_qsFunctionSpec *fs_end = fs + entry->n_funcs;
-                for ( ; fs < fs_end; ++fs) {
-                    if (!JS_DefineFunction(cx, proto,
-                                           stringTable + fs->name_index,
-                                           reinterpret_cast<JSNative>(fs->native),
-                                           fs->arity, flags))
-                        return false;
-                }
-
-                if (entry->newBindingProperties) {
-                    if (entry->newBindingProperties->regular) {
-                        mozilla::dom::DefineWebIDLBindingPropertiesOnXPCObject(cx, proto, entry->newBindingProperties->regular);
-                    }
-                    if (entry->newBindingProperties->chromeOnly &&
-                        xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
-                        mozilla::dom::DefineWebIDLBindingPropertiesOnXPCObject(cx, proto, entry->newBindingProperties->chromeOnly);
-                    }
-                }
-                // Next.
-                size_t j = entry->parentInterface;
-                if (j == XPC_QS_NULL_INDEX)
-                    break;
-                entry = table + j;
-            }
-        }
-    }
-
-    return true;
 }
 
 bool
