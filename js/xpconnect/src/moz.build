@@ -51,10 +51,6 @@ SOURCES += [
     'XPCComponents.cpp',
 ]
 
-GENERATED_SOURCES += [
-    'dom_quickstubs.cpp',
-]
-
 FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True
@@ -62,10 +58,6 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
-
-GENERATED_FILES = [
-    'dom_quickstubs.h',
-]
 
 LOCAL_INCLUDES += [
     '../loader',
