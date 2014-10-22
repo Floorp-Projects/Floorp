@@ -38,14 +38,14 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
         this.context = context;
 
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
-            "Reader:Added", "Reader:FaviconRequest");
+            "Reader:AddToList", "Reader:FaviconRequest");
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
             "Reader:ListStatusRequest", "Reader:Removed");
     }
 
     public void uninit() {
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
-            "Reader:Added", "Reader:FaviconRequest");
+            "Reader:AddToList", "Reader:FaviconRequest");
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
             "Reader:ListStatusRequest", "Reader:Removed");
     }
@@ -53,8 +53,8 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
     @Override
     public void handleMessage(String event, JSONObject message) {
         switch(event) {
-            case "Reader:Added": {
-                handleReadingListAdded(message);
+            case "Reader:AddToList": {
+                handleAddToList(message);
                 break;
             }
 
@@ -85,7 +85,7 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
      * A page can be added to the ReadingList by long-tap of the page-action
      * icon, or by tapping the readinglist-add icon in the ReaderMode banner.
      */
-    private void handleReadingListAdded(JSONObject message) {
+    private void handleAddToList(JSONObject message) {
         final int result = message.optInt("result", READER_ADD_FAILED);
         if (result != READER_ADD_SUCCESS) {
             if (result == READER_ADD_FAILED) {
@@ -97,7 +97,9 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
         }
 
         final ContentValues values = new ContentValues();
-        values.put(ReadingListItems.URL, message.optString("url"));
+        final String url = message.optString("url");
+
+        values.put(ReadingListItems.URL, url);
         values.put(ReadingListItems.TITLE, message.optString("title"));
         values.put(ReadingListItems.LENGTH, message.optInt("length"));
         values.put(ReadingListItems.EXCERPT, message.optString("excerpt"));
@@ -109,6 +111,8 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
                 showToast(R.string.reading_list_added, Toast.LENGTH_SHORT);
             }
         });
+
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Added", url));
     }
 
     /**

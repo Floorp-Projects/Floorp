@@ -33,7 +33,7 @@ let AboutReader = function(doc, win) {
   this._winRef = Cu.getWeakReference(win);
 
   Services.obs.addObserver(this, "Reader:FaviconReturn", false);
-  Services.obs.addObserver(this, "Reader:Add", false);
+  Services.obs.addObserver(this, "Reader:Added", false);
   Services.obs.addObserver(this, "Reader:Remove", false);
   Services.obs.addObserver(this, "Reader:ListStatusReturn", false);
   Services.obs.addObserver(this, "Gesture:DoubleTap", false);
@@ -190,10 +190,9 @@ AboutReader.prototype = {
         break;
       }
 
-      case "Reader:Add": {
+      case "Reader:Added": {
         // Page can be added by long-press pageAction, or by tap on banner icon.
-        let args = JSON.parse(aData);
-        if (args.url == this._article.url) {
+        if (aData == this._article.url) {
           if (this._isReadingListItem != 1) {
             this._isReadingListItem = 1;
             this._updateToggleButton();
@@ -280,7 +279,7 @@ AboutReader.prototype = {
         break;
 
       case "unload":
-        Services.obs.removeObserver(this, "Reader:Add");
+        Services.obs.removeObserver(this, "Reader:Added");
         Services.obs.removeObserver(this, "Reader:Remove");
         Services.obs.removeObserver(this, "Reader:ListStatusReturn");
         Services.obs.removeObserver(this, "Gesture:DoubleTap");
@@ -320,14 +319,9 @@ AboutReader.prototype = {
     if (!this._article)
       return;
 
-    this._isReadingListItem = (this._isReadingListItem == 1) ? 0 : 1;
-    this._updateToggleButton();
-
-    if (this._isReadingListItem == 1) {
+    if (this._isReadingListItem == 0) {
       let uptime = UITelemetry.uptimeMillis();
       gChromeWin.Reader.storeArticleInCache(this._article, function(success) {
-        dump("Reader:Add (in reader) success=" + success);
-
         let result = gChromeWin.Reader.READER_ADD_FAILED;
         if (success) {
           result = gChromeWin.Reader.READER_ADD_SUCCESS;
@@ -335,10 +329,9 @@ AboutReader.prototype = {
         }
 
         let json = JSON.stringify({ fromAboutReader: true, url: this._article.url });
-        Services.obs.notifyObservers(null, "Reader:Add", json);
 
         Messaging.sendRequest({
-          type: "Reader:Added",
+          type: "Reader:AddToList",
           result: result,
           title: this._article.title,
           url: this._article.url,
