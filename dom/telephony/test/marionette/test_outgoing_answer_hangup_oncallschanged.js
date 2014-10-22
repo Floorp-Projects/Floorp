@@ -13,10 +13,8 @@ function dial() {
   telephony.oncallschanged = function oncallschanged(event) {
     log("Received 'callschanged' call event.");
 
-    if (!event.call) {
-      log("Notifying calls array is loaded. No call information accompanies.");
-      return;
-    }
+    // Check whether the 'calls' array has changed
+    ok(event.call, "undesired callschanged event");
 
     let expected_states = ["dialing", "disconnected"];
     ok(expected_states.indexOf(event.call.state) != -1,
