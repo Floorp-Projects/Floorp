@@ -32,8 +32,6 @@ enum nsDOMClassInfoID {
 
 #ifdef MOZILLA_INTERNAL_API
 
-#define DOMCI_DATA(_dom_class, _class) /* nothing */
-
 class nsIClassInfo;
 class nsXPCClassInfo;
 
