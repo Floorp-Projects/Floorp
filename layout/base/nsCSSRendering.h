@@ -139,19 +139,23 @@ public:
   mozilla::CSSSizeOrRatio ComputeIntrinsicSize();
 
   /**
-   * Computes the placement of a background image.
+   * Computes the placement for a background image, or for the image data
+   * inside of a replaced element.
    *
-   * @param aPos the CSS <position> value that specify's the image's position.
-   * @param aOriginBounds is the box to which the tiling position should be
-   * relative. This should correspond to 'background-origin' for the frame,
-   * except when painting on the canvas, in which case the origin bounds
-   * should be the bounds of the root element's frame.
-   * @param aTopLeft the top-left corner where an image tile should be drawn.
-   * @param aAnchorPoint a point which should be pixel-aligned by
-   * nsLayoutUtils::DrawImage. This is the same as aTopLeft, unless CSS
-   * specifies a percentage (including 'right' or 'bottom'), in which case
-   * it's that percentage within of aOriginBounds. So 'right' would set
-   * aAnchorPoint.x to aOriginBounds.XMost().
+   * @param aPos The CSS <position> value that specifies the image's position.
+   * @param aOriginBounds The box to which the tiling position should be
+   *          relative. For background images, this should correspond to
+   *          'background-origin' for the frame, except when painting on the
+   *          canvas, in which case the origin bounds should be the bounds
+   *          of the root element's frame. For a replaced element, this should
+   *          be the element's content-box.
+   * @param aTopLeft [out] The top-left corner where an image tile should be
+   *          drawn.
+   * @param aAnchorPoint [out] A point which should be pixel-aligned by
+   *          nsLayoutUtils::DrawImage. This is the same as aTopLeft, unless
+   *          CSS specifies a percentage (including 'right' or 'bottom'), in
+   *          which case it's that percentage within of aOriginBounds. So
+   *          'right' would set aAnchorPoint.x to aOriginBounds.XMost().
    *
    * Points are returned relative to aOriginBounds.
    */
