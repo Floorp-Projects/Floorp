@@ -19,8 +19,6 @@
 using namespace mozilla;
 using namespace JS;
 
-extern const char* xpc_qsStringTable;
-
 static const xpc_qsHashEntry *
 LookupEntry(uint32_t tableSize, const xpc_qsHashEntry *table, const nsID &iid)
 {
@@ -254,37 +252,6 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
 }
 
 bool
-xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
-                              jsid memberIdArg)
-{
-    RootedId memberId(cx, memberIdArg);
-    const char *ifaceName;
-    GetMemberInfo(obj, memberId, &ifaceName);
-    return ThrowCallFailed(cx, rv, ifaceName, memberId, nullptr);
-}
-
-bool
-xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *objArg,
-                              const char* memberName)
-{
-    RootedObject obj(cx, objArg);
-    JSString *str = JS_InternString(cx, memberName);
-    if (!str) {
-        return false;
-    }
-    return xpc_qsThrowGetterSetterFailed(cx, rv, obj,
-                                         INTERNED_STRING_TO_JSID(cx, str));
-}
-
-bool
-xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
-                              uint16_t memberIndex)
-{
-    return xpc_qsThrowGetterSetterFailed(cx, rv, obj,
-                                         xpc_qsStringTable + memberIndex);
-}
-
-bool
 xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp)
 {
     const char *ifaceName;
@@ -342,35 +309,6 @@ xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, unsigned paramnum,
                              const char *ifaceName, const char *memberName)
 {
     ThrowBadArg(cx, rv, ifaceName, JSID_VOID, memberName, paramnum);
-}
-
-void
-xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
-                          JSObject *obj, jsid propIdArg)
-{
-    RootedId propId(cx, propIdArg);
-    const char *ifaceName;
-    GetMemberInfo(obj, propId, &ifaceName);
-    ThrowBadArg(cx, rv, ifaceName, propId, nullptr, 0);
-}
-
-void
-xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
-                          JSObject *objArg, const char* propName)
-{
-    RootedObject obj(cx, objArg);
-    JSString *str = JS_InternString(cx, propName);
-    if (!str) {
-        return;
-    }
-    xpc_qsThrowBadSetterValue(cx, rv, obj, INTERNED_STRING_TO_JSID(cx, str));
-}
-
-void
-xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
-                          uint16_t name_index)
-{
-    xpc_qsThrowBadSetterValue(cx, rv, obj, xpc_qsStringTable + name_index);
 }
 
 bool
