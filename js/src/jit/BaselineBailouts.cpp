@@ -525,6 +525,10 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                 jsbytecode **callPC, const ExceptionBailoutInfo *excInfo,
                 bool *poppedLastSPSFrameOut)
 {
+    // The Baseline frames we will reconstruct on the heap are not rooted, so GC
+    // must be suppressed here.
+    MOZ_ASSERT(cx->mainThread().suppressGC);
+
     MOZ_ASSERT(script->hasBaselineScript());
     MOZ_ASSERT(poppedLastSPSFrameOut);
     MOZ_ASSERT(!*poppedLastSPSFrameOut);
@@ -1308,10 +1312,6 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIter
                           bool invalidate, BaselineBailoutInfo **bailoutInfo,
                           const ExceptionBailoutInfo *excInfo, bool *poppedLastSPSFrameOut)
 {
-    // The Baseline frames we will reconstruct on the heap are not rooted, so GC
-    // must be suppressed here.
-    MOZ_ASSERT(cx->mainThread().suppressGC);
-
     MOZ_ASSERT(bailoutInfo != nullptr);
     MOZ_ASSERT(*bailoutInfo == nullptr);
 
@@ -1423,6 +1423,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIter
 
     RootedScript topCaller(cx);
     jsbytecode *topCallerPC = nullptr;
+
+    gc::AutoSuppressGC suppress(cx);
 
     while (true) {
         // Skip recover instructions as they are already recovered by |initInstructionResults|.
