@@ -122,6 +122,9 @@ public class GeckoView extends LayerView
     }
 
     private void init(Context context, String url, boolean doInit) {
+        // Perform common initialization for Fennec/GeckoView.
+        GeckoAppShell.setLayerView(this);
+
         // TODO: Fennec currently takes care of its own initialization, so this
         // flag is a hack used in Fennec to prevent GeckoView initialization.
         // This should go away once Fennec also uses GeckoView for
@@ -185,7 +188,6 @@ public class GeckoView extends LayerView
             GeckoProfile profile = GeckoProfile.get(context).forceCreate();
             BrowserDB.initialize(profile.getName());
 
-            GeckoAppShell.setLayerView(this);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createObjectEvent(
                 GeckoEvent.ACTION_OBJECT_LAYER_CLIENT, getLayerClientObject()));
             GeckoThread.createAndStart();
