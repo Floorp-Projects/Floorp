@@ -513,23 +513,6 @@ public class Tab {
         });
     }
 
-    public void addToReadingList() {
-        if (!mReaderEnabled)
-            return;
-
-        JSONObject json = new JSONObject();
-        try {
-            json.put("tabID", String.valueOf(getId()));
-            json.put("url", getURL());
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "JSON error - failing to add to reading list", e);
-            return;
-        }
-
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Add", json.toString());
-        GeckoAppShell.sendEventToGecko(e);
-    }
-
     public void toggleReaderMode() {
         if (AboutPages.isAboutReader(mUrl)) {
             Tabs.getInstance().loadUrl(ReaderModeUtils.getUrlFromAboutReader(mUrl));

@@ -111,8 +111,7 @@ public class Tabs implements GeckoEventListener {
             "Tab:ViewportMetadata",
             "Tab:StreamStart",
             "Tab:StreamStop",
-            "Reader:Click",
-            "Reader:LongClick");
+            "Reader:Toggle");
 
     }
 
@@ -539,10 +538,8 @@ public class Tabs implements GeckoEventListener {
             } else if (event.equals("Tab:StreamStop")) {
                 tab.setRecording(false);
                 notifyListeners(tab, TabEvents.RECORDING_CHANGE);
-            } else if (event.equals("Reader:Click")) {
+            } else if (event.equals("Reader:Toggle")) {
                 tab.toggleReaderMode();
-            } else if (event.equals("Reader:LongClick")) {
-                tab.addToReadingList();
             }
 
         } catch (Exception e) {
