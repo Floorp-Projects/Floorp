@@ -24,6 +24,9 @@ protected:
   friend nsresult (::NS_NewSVGPolylineElement(nsIContent **aResult,
                                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
+  // nsSVGPathGeometryElement methods:
+  virtual mozilla::TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) MOZ_OVERRIDE;
+
 public:
   // nsIContent interface
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const;
