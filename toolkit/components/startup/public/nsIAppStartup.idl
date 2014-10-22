@@ -36,6 +36,11 @@ interface nsIAppStartup : nsISupports
      *             This return code indicates that the application should be
      *             restarted in metro because quit was called with the
      *             eRestartTouchEnviroment flag.
+
+     * @returnCode NS_SUCCESS_RESTART_APP_NOT_SAME_PROFILE
+     *             This return code indicates that the application should be
+     *             restarted without necessarily using the same profile because
+     *             quit was called with the eRestartNotSameProfile flag.
      */
     void run();
 
@@ -133,6 +138,13 @@ interface nsIAppStartup : nsISupports
      * and an empty command line.
      */
     const uint32_t eRestartTouchEnvironment = 0x80;
+
+    /**
+     * Restart the application after quitting.  The application will be
+     * restarted with an empty command line and the normal profile selection
+     * process will take place on startup.
+     */
+    const uint32_t eRestartNotSameProfile = 0x100;
 
     /**
      * Exit the event loop, and shut down the app.
