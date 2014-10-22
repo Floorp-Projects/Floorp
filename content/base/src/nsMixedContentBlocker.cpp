@@ -383,6 +383,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     // purposes and to avoid the assertion and warning for the default case.
     case TYPE_CSP_REPORT:
     case TYPE_DTD:
+    case TYPE_FETCH:
     case TYPE_FONT:
     case TYPE_OBJECT:
     case TYPE_SCRIPT:

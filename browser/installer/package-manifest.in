@@ -25,7 +25,7 @@
 @APPNAME@/Contents/PkgInfo
 @APPNAME@/Contents/Resources/firefox.icns
 @APPNAME@/Contents/Resources/document.icns
-@APPNAME@/Contents/Resources/en.lproj/*
+@APPNAME@/Contents/Resources/@AB@.lproj/*
 #endif
 
 [@AB_CD@]
