@@ -12,7 +12,7 @@
 /* XPCQuickStubs.h - Support functions used only by Web IDL bindings, for now. */
 
 nsresult
-xpc_qsUnwrapArgImpl(JSContext *cx, JS::HandleObject src, const nsIID &iid, void **ppArg,
-                    nsISupports **ppArgRef);
+xpc_qsUnwrapArgImpl(JSContext *cx, JS::HandleObject src, const nsIID &iid,
+                    void **ppArg);
 
 #endif /* xpcquickstubs_h___ */
