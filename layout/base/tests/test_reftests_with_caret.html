@@ -16,36 +16,35 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var canvases = [];
-function callbackTestCanvas(canvas)
+var iframes = [];
+function callbackTestIframe(iframe)
 {
-  canvases.push(canvas);
+  iframes.push(iframe);
 
-  if (canvases.length != 2)
+  if (iframes.length != 2)
     return;
 
-  var result = canvases[0];
-  var reference = canvases[1];
+  var result = iframes[0];
+  var reference = iframes[1];
 
-  var ret = compareSnapshots(result.snapshot, reference.snapshot, true);
-  ok(ret[0], "Reftest " + result.src +
-             (ret[0] ? "" : (" FAILED\n" +
-              "RESULT=" + ret[1] + "\n" +
-              "REFERENCE=" + ret[2] + "\n")));
+  // Using assertSnapshots is important to get the data-URIs of failing tests
+  // dumped into the log in a format that reftest-analyzer.xhtml can process. 
+  var passed = assertSnapshots(result.snapshot, reference.snapshot, true,
+                               null /*no fuzz*/, result.src, reference.src);
 
   // Remove the iframes if the test was successful
-  if (ret[0]) {
+  if (passed) {
     result.parentNode.removeChild(result);
     reference.parentNode.removeChild(reference);
   }
 
-  canvases = [];
+  iframes = [];
   SimpleTest.waitForFocus(nextTest);
 }
 
 function doSnapShot(iframe) {
   iframe.snapshot = snapshotWindow(iframe.contentWindow, true);
-  callbackTestCanvas(iframe);
+  callbackTestIframe(iframe);
 };
 
 function remotePageLoaded(callback) {

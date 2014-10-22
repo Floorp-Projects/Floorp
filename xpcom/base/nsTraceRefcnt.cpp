@@ -107,7 +107,6 @@ static nsrefcnt gInitCount;
 static FILE* gBloatLog = nullptr;
 static FILE* gRefcntsLog = nullptr;
 static FILE* gAllocLog = nullptr;
-static FILE* gLeakyLog = nullptr;
 static FILE* gCOMPtrLog = nullptr;
 
 struct serialNumberRecord
@@ -916,7 +915,7 @@ InitTraceLog()
   }
 
 
-  if (gBloatLog || gRefcntsLog || gAllocLog || gLeakyLog || gCOMPtrLog) {
+  if (gBloatLog || gRefcntsLog || gAllocLog || gCOMPtrLog) {
     gLogging = true;
   }
 
@@ -1389,7 +1388,6 @@ nsTraceRefcnt::Shutdown()
   maybeUnregisterAndCloseFile(gBloatLog);
   maybeUnregisterAndCloseFile(gRefcntsLog);
   maybeUnregisterAndCloseFile(gAllocLog);
-  maybeUnregisterAndCloseFile(gLeakyLog);
   maybeUnregisterAndCloseFile(gCOMPtrLog);
 #endif
 }

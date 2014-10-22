@@ -7,8 +7,8 @@
 #define mozilla_a11y_HyperTextAccessible_h__
 
 #include "AccessibleWrap.h"
+#include "nsIAccessibleText.h"
 #include "nsIAccessibleTypes.h"
-#include "xpcAccessibleHyperText.h"
 #include "nsDirection.h"
 #include "WordMovementType.h"
 #include "nsIFrame.h"
@@ -37,7 +37,7 @@ struct DOMPoint {
   int32_t idx;
 };
 
-// This character marks where in the text returned via nsIAccessibleText(),
+// This character marks where in the text returned via Text interface,
 // that embedded object characters exist
 const char16_t kEmbeddedObjectChar = 0xfffc;
 const char16_t kImaginaryEmbeddedObjectChar = ' ';
@@ -46,8 +46,7 @@ const char16_t kForcedNewLineChar = '\n';
 /**
   * Special Accessible that knows how contain both text and embedded objects
   */
-class HyperTextAccessible : public AccessibleWrap,
-                            public xpcAccessibleHyperText
+class HyperTextAccessible : public AccessibleWrap
 {
 public:
   HyperTextAccessible(nsIContent* aContent, DocAccessible* aDoc);

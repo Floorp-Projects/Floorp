@@ -439,8 +439,7 @@ MarionetteServerConnection.prototype = {
    * Start a new session in a new browser.
    *
    * If newSession is true, we will switch focus to the start frame
-   * when it registers. Also, if it is in desktop, then a new tab
-   * with the start page uri (about:blank) will be opened.
+   * when it registers.
    *
    * @param nsIDOMWindow win
    *        Window whose browser we need to access
@@ -532,9 +531,6 @@ MarionetteServerConnection.prototype = {
 
   /**
    * Create a new session. This creates a new BrowserObj.
-   *
-   * In a desktop environment, this opens a new browser with
-   * "about:blank" which subsequent commands will be sent to.
    *
    * This will send a hash map of supported capabilities to the client
    * as part of the Marionette:register IPC command in the
@@ -1180,7 +1176,7 @@ MarionetteServerConnection.prototype = {
         this.sendResponse(this.curBrowser
                               .tab
                               .linkedBrowser
-                              .contentWindow.location.href, this.command_id);
+                              .contentWindowAsCPOW.location.href, this.command_id);
       }
     }
   },
@@ -2223,7 +2219,7 @@ MarionetteServerConnection.prototype = {
   /**
    * Deletes the session.
    *
-   * If it is a desktop environment, it will close the session's tab and close all listeners
+   * If it is a desktop environment, it will close all listeners
    *
    * If it is a B2G environment, it will make the main content listener sleep, and close
    * all other listeners. The main content listener persists after disconnect (it's the homescreen),
@@ -2241,7 +2237,6 @@ MarionetteServerConnection.prototype = {
         //don't set this pref for B2G since the framescript can be safely reused
         Services.prefs.setBoolPref("marionette.contentListener", false);
       }
-      this.curBrowser.closeTab();
       //delete session in each frame in each browser
       for (let win in this.browsers) {
         for (let i in this.browsers[win].knownFrames) {
@@ -2660,9 +2655,9 @@ MarionetteServerConnection.prototype = {
                             Services.wm.getOuterWindowWithId(message.json.value);
 
         //go in here if we're already in a remote frame.
-        if ((!listenerWindow || (listenerWindow.location &&
-                                listenerWindow.location.href != message.json.href)) &&
-                (this.curBrowser.frameManager.currentRemoteFrame !== null)) {
+        if (this.curBrowser.frameManager.currentRemoteFrame !== null &&
+            (!listenerWindow ||
+             this.messageManager == this.curBrowser.frameManager.currentRemoteFrame.messageManager.get())) {
           // The outerWindowID from an OOP frame will not be meaningful to
           // the parent process here, since each process maintains its own
           // independent window list.  So, it will either be null (!listenerWindow)
@@ -2688,8 +2683,8 @@ MarionetteServerConnection.prototype = {
         let mainContent = (this.curBrowser.mainContentId == null);
         if (!browserType || browserType != "content") {
           //curBrowser holds all the registered frames in knownFrames
-          reg.id = this.curBrowser.register(this.generateFrameId(message.json.value),
-                                            listenerWindow);
+          let listenerId = message.json.value;
+          reg.id = this.curBrowser.register(this.generateFrameId(listenerId), listenerId);
         }
         // set to true if we updated mainContentId
         mainContent = ((mainContent == true) && (this.curBrowser.mainContentId != null));
@@ -2852,37 +2847,15 @@ BrowserObj.prototype = {
   },
   /**
    * Called when we start a session with this browser.
-   *
-   * In a desktop environment, if newTab is true, it will start
-   * a new 'about:blank' tab and change focus to this tab.
-   *
-   * This will also set the active messagemanager for this object
-   *
-   * @param boolean newTab
-   *        If true, create new tab
    */
-  startSession: function BO_startSession(newTab, win, callback) {
-    if (appName != "Firefox") {
-      callback(win, newTab);
-    }
-    else if (newTab) {
-      this.tab = this.addTab(this.startPage);
-      //if we have a new tab, make it the selected tab
-      this.browser.selectedTab = this.tab;
-      let newTabBrowser = this.browser.getBrowserForTab(this.tab);
-      // wait for tab to be loaded
-      newTabBrowser.addEventListener("load", function onLoad() {
-        newTabBrowser.removeEventListener("load", onLoad, true);
-        callback(win, newTab);
-      }, true);
-    }
-    else {
+  startSession: function BO_startSession(newSession, win, callback) {
+    if (appName == "Firefox") {
       //set this.tab to the currently focused tab
       if (this.browser != undefined && this.browser.selectedTab != undefined) {
         this.tab = this.browser.selectedTab;
       }
-      callback(win, newTab);
     }
+    callback(win, newSession);
   },
 
   /**
@@ -2926,19 +2899,26 @@ BrowserObj.prototype = {
    * or b) we're starting a new session and it is the right start frame.
    *
    * @param string uid
-   *        frame uid
-   * @param object frameWindow
-   *        the DOMWindow object of the frame that's being registered
+   *        frame uid for use by marionette
+   * @param number id
+   *        incoming window id assigned by gecko
    */
-  register: function BO_register(uid, frameWindow) {
+  register: function BO_register(uid, id) {
     if (this.curFrameId == null) {
-      // If we're setting up a new session on Firefox, we only process the
-      // registration for this frame if it belongs to the tab we've just
-      // created.
+      let currWinId = null;
+      if (this.browser) {
+        // If we're setting up a new session on Firefox, we only process the
+        // registration for this frame if it belongs to the tab we've just
+        // created.
+        let winAsCPOW = this.browser.getBrowserForTab(this.tab).contentWindowAsCPOW;
+        currWinId = winAsCPOW.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils)
+                             .outerWindowID;
+      }
       if ((!this.newSession) ||
           (this.newSession &&
             ((appName != "Firefox") ||
-             frameWindow == this.browser.getBrowserForTab(this.tab).contentWindow))) {
+             id === currWinId))) {
         this.curFrameId = uid;
         this.mainContentId = uid;
       }

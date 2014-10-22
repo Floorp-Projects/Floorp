@@ -35,7 +35,9 @@ protected:
   typedef mozilla::gfx::FillRule FillRule;
   typedef mozilla::gfx::Float Float;
   typedef mozilla::gfx::Path Path;
+  typedef mozilla::gfx::Point Point;
   typedef mozilla::gfx::PathBuilder PathBuilder;
+  typedef mozilla::gfx::Rect Rect;
 
 public:
   explicit nsSVGPathGeometryElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
@@ -66,6 +68,65 @@ public:
 
   virtual bool IsMarkable();
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
+
+  /**
+   * For use with GetAsSimplePath.
+   */
+  class SimplePath
+  {
+  public:
+    SimplePath()
+      : mType(NONE)
+    {}
+    bool IsPath() const {
+      return mType != NONE;
+    }
+    void SetRect(Float x, Float y, Float width, Float height) {
+      mX = x; mY = y, mWidthOrX2 = width, mHeightOrY2 = height;
+      mType = RECT;
+    }
+    Rect AsRect() const {
+      MOZ_ASSERT(mType == RECT);
+      return Rect(mX, mY, mWidthOrX2, mHeightOrY2);
+    }
+    bool IsRect() const {
+      return mType == RECT;
+    }
+    void SetLine(Float x1, Float y1, Float x2, Float y2) {
+      mX = x1, mY = y1, mWidthOrX2 = x2, mHeightOrY2 = y2;
+      mType = LINE;
+    }
+    Point Point1() const {
+      MOZ_ASSERT(mType == LINE);
+      return Point(mX, mY);
+    }
+    Point Point2() const {
+      MOZ_ASSERT(mType == LINE);
+      return Point(mWidthOrX2, mHeightOrY2);
+    }
+    bool IsLine() const {
+      return mType == LINE;
+    }
+    void Reset() {
+      mType = NONE;
+    }
+  private:
+    enum Type {
+      NONE, RECT, LINE
+    };
+    Float mX, mY, mWidthOrX2, mHeightOrY2;
+    Type mType;
+  };
+
+  /**
+   * For some platforms there is significant overhead to creating and painting
+   * a Moz2D Path object. For Rects and lines it is better to get the path data
+   * using this method and then use the optimized DrawTarget methods for
+   * filling/stroking rects and lines.
+   */
+  virtual void GetAsSimplePath(SimplePath* aSimplePath) {
+    aSimplePath->Reset();
+  }
 
   /**
    * Returns a Path that can be used to paint, hit-test or calculate bounds for

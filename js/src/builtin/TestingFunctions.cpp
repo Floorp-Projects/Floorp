@@ -39,7 +39,6 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-using namespace JS;
 
 using mozilla::ArrayLength;
 using mozilla::Move;
@@ -251,12 +250,12 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
     if (compartment)
         PrepareForDebugGC(cx->runtime());
     else
-        PrepareForFullGC(cx->runtime());
+        JS::PrepareForFullGC(cx->runtime());
 
     if (shrinking)
-        ShrinkingGC(cx->runtime(), gcreason::API);
+        JS::ShrinkingGC(cx->runtime(), JS::gcreason::API);
     else
-        GCForReason(cx->runtime(), gcreason::API);
+        JS::GCForReason(cx->runtime(), JS::gcreason::API);
 
     char buf[256] = { '\0' };
 #ifndef JS_MORE_DETERMINISTIC
@@ -278,7 +277,7 @@ MinorGC(JSContext *cx, unsigned argc, jsval *vp)
     if (args.get(0) == BooleanValue(true))
         cx->runtime()->gc.storeBuffer.setAboutToOverflow();
 
-    cx->minorGC(gcreason::API);
+    cx->minorGC(JS::gcreason::API);
 #endif
     args.rval().setUndefined();
     return true;
@@ -349,7 +348,7 @@ GCParameter(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    if (param == JSGC_MARK_STACK_LIMIT && IsIncrementalGCInProgress(cx->runtime())) {
+    if (param == JSGC_MARK_STACK_LIMIT && JS::IsIncrementalGCInProgress(cx->runtime())) {
         JS_ReportError(cx, "attempt to set markStackLimit while a GC is in progress");
         return false;
     }

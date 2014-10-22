@@ -93,7 +93,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   mLineNumber = 0;
   mTotalPlacedFrames = 0;
   mBStartEdge = 0;
-  mTrimmableWidth = 0;
+  mTrimmableISize = 0;
 
   mInflationMinFontSize =
     nsLayoutUtils::InflationMinFontSizeFor(aOuterReflowState->frame);
@@ -270,13 +270,17 @@ nsLineLayout::EndLineReflow()
 // per-span mIStart?
 
 void
-nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
+nsLineLayout::UpdateBand(WritingMode aWM,
+                         const LogicalRect& aNewAvailSpace,
                          nsIFrame* aFloatFrame)
 {
   WritingMode lineWM = mRootSpan->mWritingMode;
-  LogicalRect availSpace(lineWM, aNewAvailSpace, mContainerWidth);
+  // need to convert to our writing mode, because we might have a different
+  // mode from the caller due to dir: auto
+  LogicalRect availSpace = aNewAvailSpace.ConvertTo(lineWM, aWM,
+                                                    mContainerWidth);
 #ifdef REALLY_NOISY_REFLOW
-  printf("nsLL::UpdateBand %d, %d, %d, %d, (logical %d, %d, %d, %d); frame=%p\n  will set mImpacted to true\n",
+  printf("nsLL::UpdateBand %d, %d, %d, %d, (converted to %d, %d, %d, %d); frame=%p\n  will set mImpacted to true\n",
          aNewAvailSpace.x, aNewAvailSpace.y,
          aNewAvailSpace.width, aNewAvailSpace.height,
          availSpace.IStart(lineWM), availSpace.BStart(lineWM),
@@ -300,21 +304,22 @@ nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
 
   // Compute the difference between last times width and the new width
   NS_WARN_IF_FALSE(mRootSpan->mIEnd != NS_UNCONSTRAINEDSIZE &&
-                   aNewAvailSpace.width != NS_UNCONSTRAINEDSIZE,
-                   "have unconstrained width; this should only result from "
-                   "very large sizes, not attempts at intrinsic width "
+                   availSpace.ISize(lineWM) != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained inline size; this should only result "
+                   "from very large sizes, not attempts at intrinsic width "
                    "calculation");
   // The root span's mIStart moves to aICoord
   nscoord deltaICoord = availSpace.IStart(lineWM) - mRootSpan->mIStart;
-  // The width of all spans changes by this much (the root span's
-  // mIEnd moves to aICoord + aISize, its new width is aISize)
+  // The inline size of all spans changes by this much (the root span's
+  // mIEnd moves to aICoord + aISize, its new inline size is aISize)
   nscoord deltaISize = availSpace.ISize(lineWM) -
                        (mRootSpan->mIEnd - mRootSpan->mIStart);
 #ifdef NOISY_REFLOW
   nsFrame::ListTag(stdout, mBlockReflowState->frame);
   printf(": UpdateBand: %d,%d,%d,%d deltaISize=%d deltaICoord=%d\n",
-         aNewAvailSpace.IStart(lineWM), aNewAvailSpace.BStart(lineWM),
-         aNewAvailSpace.ISize(lineWM), aNewAvailSpace.BSize(lineWM), deltaISize, deltaICoord);
+         availSpace.IStart(lineWM), availSpace.BStart(lineWM),
+         availSpace.ISize(lineWM), availSpace.BSize(lineWM),
+         deltaISize, deltaICoord);
 #endif
 
   // Update the root span position
@@ -843,10 +848,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   metrics.ISize(lineWM) = nscoord(0xdeadbeef);
   metrics.BSize(lineWM) = nscoord(0xdeadbeef);
 #endif
-  nsRect physicalBounds = pfd->mBounds.GetPhysicalRect(lineWM, mContainerWidth);
-  nscoord tx = physicalBounds.x;
-  nscoord ty = physicalBounds.y;
-  mFloatManager->Translate(tx, ty);
+  LogicalPoint tPt = pfd->mBounds.Origin(lineWM);
+  WritingMode oldWM = mFloatManager->Translate(lineWM, tPt, mContainerWidth);
 
   int32_t savedOptionalBreakOffset;
   gfxBreakPriority savedOptionalBreakPriority;
@@ -878,10 +881,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       pfd->SetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE, true);
       nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
-        // Add mTrimmableWidth to the available width since if the line ends
+        // Add mTrimmableISize to the available width since if the line ends
         // here, the width of the inline content will be reduced by
-        // mTrimmableWidth.
-        nscoord availableWidth = psd->mIEnd - (psd->mICoord - mTrimmableWidth);
+        // mTrimmableISize.
+        nscoord availableISize = psd->mIEnd - (psd->mICoord - mTrimmableISize);
         if (psd->mNoWrap) {
           // If we place floats after inline content where there's
           // no break opportunity, we don't know how much additional
@@ -892,9 +895,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
           // but hopefully rare. Fixing it will require significant
           // restructuring of line layout.
           // We might as well allow zero-width floats to be placed, though.
-          availableWidth = 0;
+          availableISize = 0;
         }
-        placedFloat = AddFloat(outOfFlowFrame, availableWidth);
+        placedFloat = AddFloat(outOfFlowFrame, availableISize);
         NS_ASSERTION(!(outOfFlowFrame->GetType() == nsGkAtoms::letterFrame &&
                        GetFirstLetterStyleOK()),
                     "FirstLetterStyle set on line with floating first letter");
@@ -931,7 +934,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     }
   }
 
-  mFloatManager->Translate(-tx, -ty);
+  mFloatManager->Untranslate(oldWM, tPt, mContainerWidth);
 
   NS_ASSERTION(metrics.ISize(lineWM) >= 0, "bad inline size");
   NS_ASSERTION(metrics.BSize(lineWM) >= 0,"bad block size");
@@ -972,7 +975,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   pfd->mBounds.BSize(lineWM) = metrics.BSize(lineWM);
 
   // Size the frame, but |RelativePositionFrames| will size the view.
-  aFrame->SetRect(lineWM, pfd->mBounds, mContainerWidth);
+  aFrame->SetRect(lineWM, pfd->mBounds, ContainerWidthForSpan(psd));
 
   // Tell the frame that we're done reflowing it
   aFrame->DidReflow(mPresContext,
@@ -1003,9 +1006,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     // runs (hence return false here) except for text frames and inline containers.
     bool continuingTextRun = aFrame->CanContinueTextRun();
     
-    // Clear any residual mTrimmableWidth if this isn't a text frame
+    // Clear any residual mTrimmableISize if this isn't a text frame
     if (!continuingTextRun && !pfd->GetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE)) {
-      mTrimmableWidth = 0;
+      mTrimmableISize = 0;
     }
 
     // See if we can place the frame. If we can't fit it, then we
@@ -1204,7 +1207,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
   // Set outside to true if the result of the reflow leads to the
   // frame sticking outside of our available area.
-  bool outside = pfd->mBounds.IEnd(lineWM) - mTrimmableWidth + endMargin >
+  bool outside = pfd->mBounds.IEnd(lineWM) - mTrimmableISize + endMargin >
                  psd->mIEnd;
   if (!outside) {
     // If it fits, it fits
@@ -1506,6 +1509,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
 #endif
     WritingMode frameWM = pfd->mFrame->GetWritingMode();
     WritingMode lineWM = mRootSpan->mWritingMode;
+    nscoord containerWidth = ContainerWidthForSpan(psd);
     switch (pfd->mBlockDirAlign) {
       case VALIGN_TOP:
         if (span) {
@@ -1515,7 +1519,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
           pfd->mBounds.BStart(lineWM) =
             -aDistanceFromStart + pfd->mMargin.BStart(frameWM);
         }
-        pfd->mFrame->SetRect(lineWM, pfd->mBounds, mContainerWidth);
+        pfd->mFrame->SetRect(lineWM, pfd->mBounds, containerWidth);
 #ifdef NOISY_BLOCKDIR_ALIGN
         printf("    ");
         nsFrame::ListTag(stdout, pfd->mFrame);
@@ -1535,7 +1539,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
           pfd->mBounds.BStart(lineWM) = -aDistanceFromStart + aLineBSize -
             pfd->mMargin.BEnd(frameWM) - pfd->mBounds.BSize(lineWM);
         }
-        pfd->mFrame->SetRect(lineWM, pfd->mBounds, mContainerWidth);
+        pfd->mFrame->SetRect(lineWM, pfd->mBounds, containerWidth);
 #ifdef NOISY_BLOCKDIR_ALIGN
         printf("    ");
         nsFrame::ListTag(stdout, pfd->mFrame);
@@ -2057,7 +2061,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 #endif
       }
       if (psd != mRootSpan) {
-        frame->SetRect(lineWM, pfd->mBounds, mContainerWidth);
+        frame->SetRect(lineWM, pfd->mBounds, ContainerWidthForSpan(psd));
       }
     }
     pfd = pfd->mNext;
@@ -2219,7 +2223,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       while (nullptr != pfd) {
         pfd->mBounds.BStart(lineWM) -= minBCoord; // move all the children
                                                   // back up
-        pfd->mFrame->SetRect(lineWM, pfd->mBounds, mContainerWidth);
+        pfd->mFrame->SetRect(lineWM, pfd->mBounds, ContainerWidthForSpan(psd));
         pfd = pfd->mNext;
       }
       maxBCoord -= minBCoord; // since minBCoord is in the frame's own
@@ -2299,10 +2303,11 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
             // that are direct children of the block will be updated
             // later, however, because the VerticalAlignFrames method
             // will be run after this method.
+            nscoord containerWidth = ContainerWidthForSpan(childSpan);
             nsIFrame* f = pfd->mFrame;
-            LogicalRect r(lineWM, f->GetRect(), mContainerWidth);
+            LogicalRect r(lineWM, f->GetRect(), containerWidth);
             r.ISize(lineWM) -= deltaISize;
-            f->SetRect(lineWM, r, mContainerWidth);
+            f->SetRect(lineWM, r, containerWidth);
           }
 
           // Adjust the inline end edge of the span that contains the child span
@@ -2365,7 +2370,8 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
         if (psd != mRootSpan) {
           // The frame was already placed during psd's
           // reflow. Update the frames rectangle now.
-          pfd->mFrame->SetRect(lineWM, pfd->mBounds, mContainerWidth);
+          pfd->mFrame->SetRect(lineWM, pfd->mBounds,
+                               ContainerWidthForSpan(psd));
         }
 
         // Adjust containing span's right edge
@@ -2499,7 +2505,7 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD, FrameJustificationState
       pfd->mBounds.ISize(lineWM) += dw;
 
       deltaICoord += dw;
-      pfd->mFrame->SetRect(lineWM, pfd->mBounds, mContainerWidth);
+      pfd->mFrame->SetRect(lineWM, pfd->mBounds, ContainerWidthForSpan(aPSD));
     }
   }
   return deltaICoord;
@@ -2566,7 +2572,7 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
           // Apply the justification, and make sure to update our linebox
           // width to account for it.
           aLine->ExpandBy(ApplyFrameJustification(psd, &state),
-                          mContainerWidth);
+                          ContainerWidthForSpan(psd));
           break;
         }
         // Fall through to the default case if we could not justify to fill
@@ -2613,7 +2619,7 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
   } else if (dx) {
     for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
       pfd->mBounds.IStart(lineWM) += dx;
-      pfd->mFrame->SetRect(lineWM, pfd->mBounds, mContainerWidth);
+      pfd->mFrame->SetRect(lineWM, pfd->mBounds, ContainerWidthForSpan(psd));
     }
     aLine->IndentBy(dx, mContainerWidth);
   }

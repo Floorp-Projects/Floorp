@@ -13,7 +13,7 @@ interface nsIArray;
 interface nsIPersistentProperties;
 interface nsIAccessibleTextRange;
 
-[scriptable, uuid(88789f40-54c9-494a-846d-3acaaf4cf46a)]
+[scriptable, uuid(93ad2ca1-f12b-4ab9-a793-95d9fa9d1774)]
 interface nsIAccessibleText : nsISupports
 {
   // In parameters for character offsets:
@@ -34,7 +34,6 @@ interface nsIAccessibleText : nsISupports
    * The current current caret offset.
    * If set < 0 then caret will be placed  at the end of the text
    */
-  [binaryname(ScriptableCaretOffset)]
   attribute long caretOffset;
 
   readonly attribute long characterCount;
@@ -171,7 +170,6 @@ interface nsIAccessibleText : nsISupports
    * @param scrollType  defines how to scroll (see nsIAccessibleScrollType for
    *                    available constants)
    */
-  [binaryname(ScriptableScrollSubstringTo)]
   void scrollSubstringTo(in long startIndex, in long endIndex,
                          in unsigned long scrollType);
 
@@ -187,7 +185,6 @@ interface nsIAccessibleText : nsISupports
    * @param x               defines the x coordinate
    * @param y               defines the y coordinate
    */
-  [binaryname(ScriptableScrollSubstringToPoint)]
   void scrollSubstringToPoint(in long startIndex, in long endIndex,
                               in unsigned long coordinateType,
                               in long x, in long y);

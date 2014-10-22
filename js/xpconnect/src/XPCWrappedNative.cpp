@@ -681,7 +681,6 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
         uint32_t flags = classInfoHelper->GetScriptableFlags();
         sciProto.SetCallback(helper.forget());
         sciProto.SetFlags(XPCNativeScriptableFlags(flags));
-        sciProto.SetInterfacesBitmap(classInfoHelper->GetInterfacesBitmap());
 
         return;
     }
@@ -2479,22 +2478,6 @@ XPCWrappedNative::HasNativeMember(HandleId name)
     XPCNativeMember *member = nullptr;
     uint16_t ignored;
     return GetSet()->FindMember(name, &member, &ignored) && !!member;
-}
-
-/* void finishInitForWrappedGlobal (); */
-NS_IMETHODIMP XPCWrappedNative::FinishInitForWrappedGlobal()
-{
-    // We can only be called under certain conditions.
-    MOZ_ASSERT(mScriptableInfo);
-    MOZ_ASSERT(mScriptableInfo->GetFlags().IsGlobalObject());
-    MOZ_ASSERT(HasProto());
-
-    // Call PostCreateProrotype.
-    bool success = GetProto()->CallPostCreatePrototype();
-    if (!success)
-        return NS_ERROR_FAILURE;
-
-    return NS_OK;
 }
 
 /* void debugDump (in short depth); */

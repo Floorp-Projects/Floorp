@@ -71,6 +71,8 @@ class Fake_MediaStream {
  public:
   Fake_MediaStream () : mListeners(), mMutex("Fake MediaStream") {}
 
+  uint32_t GraphRate() { return 16000; }
+
   void AddListener(Fake_MediaStreamListener *aListener) {
     mozilla::MutexAutoLock lock(mMutex);
     mListeners.insert(aListener);

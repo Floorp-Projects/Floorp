@@ -1,0 +1,60 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1086996
+-->
+<head>
+  <bindings xmlns="http://www.mozilla.org/xbl"
+            xmlns:html="http://www.w3.org/1999/xhtml">
+    <binding id="handlerBinding">
+      <implementation>
+        <constructor>
+          <![CDATA[XPCNativeWrapper.unwrap(window).constructedHandlerBinding();]]>
+        </constructor>
+      </implementation>
+      <handlers>
+        <handler event="testevent" action="XPCNativeWrapper.unwrap(window).gotEvent();" allowuntrusted="true"/>
+      </handlers>
+    </binding>
+    <binding id="mainBinding">
+      <content>
+        <html:p id="acWithBinding" style="-moz-binding: url(#handlerBinding)"> Anonymous Content</html:p>
+      </content>
+      <implementation>
+        <method name="doEventDispatch" exposeToUntrustedContent="true">
+          <body>
+            <![CDATA[document.getAnonymousNodes(this)[0].dispatchEvent(new CustomEvent('testevent'));]]>
+          </body>
+        </method>
+      </implementation>
+    </binding>
+  </bindings>
+  <title>Test for Bug 1086996</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1086996">Mozilla Bug 1086996</a>
+<div id="boundContent" style="-moz-binding: url(#mainBinding)"></div>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 1086996 **/
+SimpleTest.waitForExplicitFinish();
+function constructedHandlerBinding() {
+  ok(true, "Constructed handler binding!");
+  setTimeout(function() { $('boundContent').doEventDispatch(); }, 0);
+}
+
+function gotEvent() {
+  ok(true, "Successfully triggered event handler");
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+</pre>
+</body>
+</html>

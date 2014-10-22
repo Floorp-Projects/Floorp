@@ -169,8 +169,7 @@ already_AddRefed<nsIURI>
 LinkableAccessible::AnchorURIAt(uint32_t aAnchorIndex)
 {
   if (mIsLink) {
-    NS_ASSERTION(mActionAcc->IsLink(),
-                 "nsIAccessibleHyperLink isn't implemented.");
+    NS_ASSERTION(mActionAcc->IsLink(), "HyperLink isn't implemented.");
 
     if (mActionAcc->IsLink())
       return mActionAcc->AnchorURIAt(aAnchorIndex);

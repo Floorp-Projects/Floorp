@@ -85,8 +85,6 @@ class XULLinkAccessible : public XULLabelAccessible
 public:
   XULLinkAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  NS_DECL_ISUPPORTS_INHERITED
-
   // Accessible
   virtual void Value(nsString& aValue);
   virtual a11y::role NativeRole() MOZ_OVERRIDE;

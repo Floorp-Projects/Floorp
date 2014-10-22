@@ -113,16 +113,16 @@ public:
   // Caller must have called GetAvailableSpace for the correct position
   // (which need not be the current mBCoord).
   void ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
-                                            const nsRect& aFloatAvailableSpace,
-                                            nscoord& aLeftResult,
-                                            nscoord& aRightResult);
+                          const mozilla::LogicalRect& aFloatAvailableSpace,
+                                            nscoord&  aIStartResult,
+                                            nscoord&  aIEndResult);
 
   // Caller must have called GetAvailableSpace for the current mBCoord
   void ComputeBlockAvailSpace(nsIFrame* aFrame,
                               const nsStyleDisplay* aDisplay,
                               const nsFlowAreaRect& aFloatAvailableSpace,
                               bool aBlockAvoidsFloats,
-                              nsRect& aResult);
+                              mozilla::LogicalRect& aResult);
 
 protected:
   void RecoverFloats(nsLineList::iterator aLine, nscoord aDeltaBCoord);
@@ -157,7 +157,8 @@ public:
   // padding. This, therefore, represents the inner "content area" (in
   // spacemanager coordinates) where child frames will be placed,
   // including child blocks and floats.
-  nscoord mFloatManagerX, mFloatManagerY;
+  mozilla::WritingMode mFloatManagerWM;
+  mozilla::LogicalPoint mFloatManagerOrigin;
 
   // XXX get rid of this
   nsReflowStatus mReflowStatus;
