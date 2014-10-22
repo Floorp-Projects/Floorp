@@ -2195,11 +2195,6 @@ bool ScrollFrameHelper::IsAlwaysActive() const
     return true;
   }
 
-  const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  if (disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL)) {
-    return true;
-  }
-
   // Unless this is the root scrollframe for a non-chrome document
   // which is the direct child of a chrome document, we default to not
   // being "active".
@@ -2257,10 +2252,9 @@ void ScrollFrameHelper::ScrollVisual(nsPoint aOldScrolledFramePos)
   // to be consistent with the frame hierarchy.
   bool needToInvalidateOnScroll = NeedToInvalidateOnScroll(mOuter);
   mOuter->RemoveStateBits(NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL);
-  if (IsScrollingActive() && needToInvalidateOnScroll) {
+  if (needToInvalidateOnScroll) {
     MarkNotRecentlyScrolled();
-  }
-  if (!needToInvalidateOnScroll) {
+  } else {
     MarkRecentlyScrolled();
   }
 
@@ -2552,7 +2546,7 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     return;
   }
 
-  mozilla::layers::FrameMetrics::ViewID scrollTargetId = IsScrollingActive()
+  mozilla::layers::FrameMetrics::ViewID scrollTargetId = IsScrollingActive(aBuilder)
     ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
     : mozilla::layers::FrameMetrics::NULL_SCROLL_ID;
 
@@ -2771,10 +2765,10 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (aBuilder->IsPaintingToWindow()) {
     mScrollPosAtLastPaint = GetScrollPosition();
-    if (IsScrollingActive() && NeedToInvalidateOnScroll(mOuter)) {
+    if (IsScrollingActive(aBuilder) && NeedToInvalidateOnScroll(mOuter)) {
       MarkNotRecentlyScrolled();
     }
-    if (IsScrollingActive()) {
+    if (IsScrollingActive(aBuilder)) {
       if (mScrollPosForLayerPixelAlignment == nsPoint(-1,-1)) {
         mScrollPosForLayerPixelAlignment = mScrollPosAtLastPaint;
       }
@@ -2902,6 +2896,10 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // info layer to make a ComputeFrameMetrics call for us as
       // nsDisplayList::PaintForFrame already calls ComputeFrameMetrics for us.
       (!mIsRoot || aBuilder->RootReferenceFrame()->PresContext() != mOuter->PresContext());
+
+    const nsStyleDisplay* disp = mOuter->StyleDisplay();
+    bool willScroll = disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL);
+    shouldBuildLayer |= willScroll;
   }
 
   mScrollParentID = aBuilder->GetCurrentScrollParentId();
