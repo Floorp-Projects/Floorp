@@ -62,7 +62,8 @@ private:
   bool mInterrupted;    // Was startup interrupted by an interactive prompt?
   bool mIsSafeModeNecessary;       // Whether safe mode is necessary
   bool mStartupCrashTrackingEnded; // Whether startup crash tracking has already ended
-  bool mRestartTouchEnvironment; // Quit (eRestartTouchEnvironment)
+  bool mRestartTouchEnvironment;   // Quit (eRestartTouchEnvironment)
+  bool mRestartNotSameProfile;     // Quit(eRestartNotSameProfile)
 
 #if defined(XP_WIN)
   //Interaction with OS-provided profiling probes

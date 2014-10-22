@@ -906,6 +906,7 @@
    * case in which nsIAppStartup::Quit was called with the eRestart flag. */
   ERROR(NS_SUCCESS_RESTART_APP,          SUCCESS(1)),
   ERROR(NS_SUCCESS_RESTART_METRO_APP,    SUCCESS(2)),
+  ERROR(NS_SUCCESS_RESTART_APP_NOT_SAME_PROFILE,    SUCCESS(3)),
   ERROR(NS_SUCCESS_UNORM_NOTFOUND,  SUCCESS(17)),
 
 

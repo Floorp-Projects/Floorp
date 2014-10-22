@@ -143,7 +143,8 @@ nsAppStartup::nsAppStartup() :
   mInterrupted(false),
   mIsSafeModeNecessary(false),
   mStartupCrashTrackingEnded(false),
-  mRestartTouchEnvironment(false)
+  mRestartTouchEnvironment(false),
+  mRestartNotSameProfile(false)
 { }
 
 
@@ -287,6 +288,8 @@ nsAppStartup::Run(void)
     retval = NS_SUCCESS_RESTART_METRO_APP;
   } else if (mRestart) {
     retval = NS_SUCCESS_RESTART_APP;
+  } else if (mRestartNotSameProfile) {
+    retval = NS_SUCCESS_RESTART_APP_NOT_SAME_PROFILE;
   }
 
   return retval;
@@ -386,7 +389,12 @@ nsAppStartup::Quit(uint32_t aMode)
       gRestartMode = (aMode & 0xF0);
     }
 
-    if (mRestart || mRestartTouchEnvironment) {
+    if (!mRestartNotSameProfile) {
+      mRestartNotSameProfile = (aMode & eRestartNotSameProfile) != 0;
+      gRestartMode = (aMode & 0xF0);
+    }
+
+    if (mRestart || mRestartTouchEnvironment || mRestartNotSameProfile) {
       // Mark the next startup as a restart.
       PR_SetEnv("MOZ_APP_RESTART=1");
 
@@ -456,7 +464,7 @@ nsAppStartup::Quit(uint32_t aMode)
       NS_NAMED_LITERAL_STRING(shutdownStr, "shutdown");
       NS_NAMED_LITERAL_STRING(restartStr, "restart");
       obsService->NotifyObservers(nullptr, "quit-application",
-        (mRestart || mRestartTouchEnvironment) ?
+        (mRestart || mRestartTouchEnvironment || mRestartNotSameProfile) ?
          restartStr.get() : shutdownStr.get());
     }
 
