@@ -1853,8 +1853,8 @@
       </method>
       <method name="enableMixedContentProtection">
         <body><![CDATA[
-          let docShell = gBrowser.webNavigation.QueryInterface(Ci.nsIDocShell);
-          docShell.mixedContentChannel = null;
+          gBrowser.selectedBrowser.messageManager.sendAsyncMessage(
+            "MixedContent:ReenableProtection", {});
           BrowserReload();
         ]]></body>
       </method>
