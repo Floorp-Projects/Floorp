@@ -80,7 +80,18 @@ void GraphDriver::SetGraphTime(GraphDriver* aPreviousDriver,
 
 void GraphDriver::SwitchAtNextIteration(GraphDriver* aNextDriver)
 {
-
+  // This is the situation where `mPreviousDriver` is an AudioCallbackDriver
+  // that is switching device, and the graph has found the current driver is not
+  // an AudioCallbackDriver, but tries to switch to a _new_ AudioCallbackDriver
+  // because it found audio has to be output. In this case, simply ignore the
+  // request to switch, since we know we will switch back to the old
+  // AudioCallbackDriver when it has recovered from the device switching.
+  if (aNextDriver->AsAudioCallbackDriver() &&
+      mPreviousDriver &&
+      mPreviousDriver->AsAudioCallbackDriver()->IsSwitchingDevice() &&
+      mPreviousDriver != aNextDriver) {
+    return;
+  }
   LIFECYCLE_LOG("Switching to new driver: %p (%s)",
       aNextDriver, aNextDriver->AsAudioCallbackDriver() ?
       "AudioCallbackDriver" : "SystemClockDriver");
@@ -188,11 +199,15 @@ public:
                     mDriver->mPreviousDriver.get(),
                     mDriver->GraphImpl());
       MOZ_ASSERT(!mDriver->AsAudioCallbackDriver());
-      // Stop and release the previous driver off-main-thread.
-      nsRefPtr<AsyncCubebTask> releaseEvent =
-        new AsyncCubebTask(mDriver->mPreviousDriver->AsAudioCallbackDriver(), AsyncCubebTask::SHUTDOWN);
-      mDriver->mPreviousDriver = nullptr;
-      releaseEvent->Dispatch();
+      // Stop and release the previous driver off-main-thread, but only if we're
+      // not in the situation where we've fallen back to a system clock driver
+      // because the osx audio stack is currently switching output device.
+      if (!mDriver->mPreviousDriver->AsAudioCallbackDriver()->IsSwitchingDevice()) {
+        nsRefPtr<AsyncCubebTask> releaseEvent =
+          new AsyncCubebTask(mDriver->mPreviousDriver->AsAudioCallbackDriver(), AsyncCubebTask::SHUTDOWN);
+        mDriver->mPreviousDriver = nullptr;
+        releaseEvent->Dispatch();
+      }
     } else {
       MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
       MOZ_ASSERT(mDriver->mGraphImpl->MessagesQueued(), "Don't start a graph without messages queued.");
@@ -536,6 +551,9 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl, dom::
   , mAudioChannel(aChannel)
   , mInCallback(false)
   , mPauseRequested(false)
+#ifdef XP_MACOSX
+  , mCallbackReceivedWhileSwitching(0)
+#endif
 {
   STREAM_LOG(PR_LOG_DEBUG, ("AudioCallbackDriver ctor for graph %p", aGraphImpl));
 }
@@ -768,6 +786,38 @@ AudioCallbackDriver::AutoInCallback::~AutoInCallback() {
   mDriver->mInCallback = false;
 }
 
+#ifdef XP_MACOSX
+bool
+AudioCallbackDriver::OSXDeviceSwitchingWorkaround()
+{
+  MonitorAutoLock mon(GraphImpl()->GetMonitor());
+  if (mSelfReference) {
+    // Apparently, depending on the osx version, on device switch, the
+    // callback is called "some" number of times, and then stops being called,
+    // and then gets called again. 10 is to be safe, it's a low-enough number
+    // of milliseconds anyways (< 100ms)
+    if (mCallbackReceivedWhileSwitching++ >= 10) {
+      // If we have a self reference, we have fallen back temporarily on a
+      // system clock driver, but we just got called back, that means the osx
+      // audio backend has switched to the new device.
+      // Ask the graph to switch back to the previous AudioCallbackDriver
+      // (`this`), and when the graph has effectively switched, we can drop
+      // the self reference and unref the SystemClockDriver we fallen back on.
+      if (GraphImpl()->CurrentDriver() == this) {
+        mSelfReference.Drop(this);
+        mNextDriver = nullptr;
+      } else {
+        GraphImpl()->CurrentDriver()->SwitchAtNextIteration(this);
+      }
+
+    }
+    return true;
+  }
+
+  return false;
+}
+#endif // XP_MACOSX
+
 long
 AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
 {
@@ -777,6 +827,13 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
     PodZero(aBuffer, aFrames * mGraphImpl->AudioChannelCount());
     return aFrames;
   }
+
+#ifdef XP_MACOSX
+  if (OSXDeviceSwitchingWorkaround()) {
+    PodZero(aBuffer, aFrames * mGraphImpl->AudioChannelCount());
+    return aFrames;
+  }
+#endif
 
 #ifdef DEBUG
   // DebugOnly<> doesn't work here... it forces an initialization that will cause
@@ -958,6 +1015,31 @@ void
 AudioCallbackDriver::DeviceChangedCallback() {
   MonitorAutoLock mon(mGraphImpl->GetMonitor());
   PanOutputIfNeeded(mMicrophoneActive);
+  // On OSX, changing the output device causes the audio thread to no call the
+  // audio callback, so we're unable to process real-time input data, and this
+  // results in latency building up.
+  // We switch to a system driver until audio callbacks are called again, so we
+  // still pull from the input stream, so that everything works apart from the
+  // audio output.
+#ifdef XP_MACOSX
+  // Don't bother doing the device switching dance if the graph is not RUNNING
+  // (starting up, shutting down), because we haven't started pulling from the
+  // SourceMediaStream.
+  if (!GraphImpl()->Running()) {
+    return;
+  }
+
+  if (mSelfReference) {
+    return;
+  }
+  mSelfReference.Take(this);
+  mCallbackReceivedWhileSwitching = 0;
+  mNextDriver = new SystemClockDriver(GraphImpl());
+  mNextDriver->SetGraphTime(this, mIterationStart, mIterationEnd,
+                            mStateComputedTime, mNextStateComputedTime);
+  mGraphImpl->SetCurrentDriver(mNextDriver);
+  mNextDriver->Start();
+#endif
 }
 
 void
