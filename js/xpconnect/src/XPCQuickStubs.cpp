@@ -29,80 +29,6 @@ HasBitInInterfacesBitmap(JSObject *obj, uint32_t interfaceBit)
     return (clasp->interfacesBitmap & (1 << interfaceBit)) != 0;
 }
 
-bool
-xpc_qsThrow(JSContext *cx, nsresult rv)
-{
-    XPCThrower::Throw(rv, cx);
-    return false;
-}
-
-xpc_qsDOMString::xpc_qsDOMString(JSContext *cx, HandleValue v,
-                                 MutableHandleValue pval, bool notpassed,
-                                 StringificationBehavior nullBehavior,
-                                 StringificationBehavior undefinedBehavior)
-{
-    typedef implementation_type::char_traits traits;
-    // From the T_DOMSTRING case in XPCConvert::JSData2Native.
-    JSString *s = InitOrStringify<traits>(cx, v,
-                                          pval, notpassed,
-                                          nullBehavior,
-                                          undefinedBehavior);
-    if (!s)
-        return;
-
-    nsAutoString *str = new(mBuf) implementation_type();
-
-    mValid = AssignJSString(cx, *str, s);
-}
-
-xpc_qsACString::xpc_qsACString(JSContext *cx, HandleValue v,
-                               MutableHandleValue pval, bool notpassed,
-                               StringificationBehavior nullBehavior,
-                               StringificationBehavior undefinedBehavior)
-{
-    typedef implementation_type::char_traits traits;
-    // From the T_CSTRING case in XPCConvert::JSData2Native.
-    JSString *s = InitOrStringify<traits>(cx, v,
-                                          pval, notpassed,
-                                          nullBehavior,
-                                          undefinedBehavior);
-    if (!s)
-        return;
-
-    size_t len = JS_GetStringEncodingLength(cx, s);
-    if (len == size_t(-1)) {
-        mValid = false;
-        return;
-    }
-
-    JSAutoByteString bytes(cx, s);
-    if (!bytes) {
-        mValid = false;
-        return;
-    }
-
-    new(mBuf) implementation_type(bytes.ptr(), len);
-    mValid = true;
-}
-
-xpc_qsAUTF8String::xpc_qsAUTF8String(JSContext *cx, HandleValue v, MutableHandleValue pval, bool notpassed)
-{
-    typedef nsCharTraits<char16_t> traits;
-    // From the T_UTF8STRING  case in XPCConvert::JSData2Native.
-    JSString *s = InitOrStringify<traits>(cx, v, pval, notpassed, eNull, eNull);
-    if (!s)
-        return;
-
-    nsAutoJSString str;
-    if (!str.init(cx, s)) {
-        mValid = false;
-        return;
-    }
-
-    new(mBuf) implementation_type(str);
-    mValid = true;
-}
-
 static nsresult
 getNative(nsISupports *idobj,
           HandleObject obj,
@@ -346,20 +272,6 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     return rv;
 }
 
-bool
-xpc_qsJsvalToCharStr(JSContext *cx, HandleValue v, JSAutoByteString *bytes)
-{
-    MOZ_ASSERT(!bytes->ptr());
-
-    if (v.isNullOrUndefined())
-      return true;
-
-    JSString *str = ToString(cx, v);
-    if (!str)
-      return false;
-    return !!bytes->encodeLatin1(cx, str);
-}
-
 namespace xpc {
 
 bool
@@ -379,65 +291,3 @@ NonVoidStringToJsval(JSContext *cx, nsAString &str, MutableHandleValue rval)
 
 } // namespace xpc
 
-bool
-xpc_qsXPCOMObjectToJsval(JSContext *cx, qsObjectHelper &aHelper,
-                         const nsIID *iid, XPCNativeInterface **iface,
-                         MutableHandleValue rval)
-{
-    NS_PRECONDITION(iface, "Who did that and why?");
-
-    // From the T_INTERFACE case in XPCConvert::NativeData2JS.
-    // This is one of the slowest things quick stubs do.
-
-    nsresult rv;
-    if (!XPCConvert::NativeInterface2JSObject(rval, nullptr,
-                                              aHelper, iid, iface,
-                                              true, &rv)) {
-        // I can't tell if NativeInterface2JSObject throws JS exceptions
-        // or not.  This is a sloppy stab at the right semantics; the
-        // method really ought to be fixed to behave consistently.
-        if (!JS_IsExceptionPending(cx))
-            xpc_qsThrow(cx, NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED);
-        return false;
-    }
-
-#ifdef DEBUG
-    JSObject* jsobj = rval.toObjectOrNull();
-    if (jsobj && !js::GetObjectParent(jsobj))
-        MOZ_ASSERT(js::GetObjectClass(jsobj)->flags & JSCLASS_IS_GLOBAL,
-                   "Why did we recreate this wrapper?");
-#endif
-
-    return true;
-}
-
-bool
-xpc_qsVariantToJsval(JSContext *aCx,
-                     nsIVariant *p,
-                     MutableHandleValue rval)
-{
-    // From the T_INTERFACE case in XPCConvert::NativeData2JS.
-    // Error handling is in XPCWrappedNative::CallMethod.
-    if (p) {
-        nsresult rv;
-        bool ok = XPCVariant::VariantDataToJS(p, &rv, rval);
-        if (!ok)
-            xpc_qsThrow(aCx, rv);
-        return ok;
-    }
-    rval.setNull();
-    return true;
-}
-
-#ifdef DEBUG
-void
-xpc_qsAssertContextOK(JSContext *cx)
-{
-    XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
-
-    JSContext *topJSContext = stack->Peek();
-
-    // This is what we're actually trying to assert here.
-    MOZ_ASSERT(cx == topJSContext, "wrong context on XPCJSContextStack!");
-}
-#endif

@@ -3692,9 +3692,6 @@ class CastableObjectUnwrapper():
             xpconnectUnwrap = "nsresult rv = UnwrapArg<${type}>(cx, val, &objPtr, &objRef.ptr, &val);\n"
 
         if descriptor.hasXPConnectImpls:
-            # We don't use xpc_qsUnwrapThis because it will always throw on
-            # unwrap failure, whereas we want to control whether we throw or
-            # not.
             self.substitution["codeOnFailure"] = string.Template(
                 "${type} *objPtr;\n"
                 "SelfRef objRef;\n"
