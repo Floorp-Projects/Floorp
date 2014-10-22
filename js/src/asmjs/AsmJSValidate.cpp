@@ -4424,7 +4424,7 @@ CheckMathClz32(FunctionCompiler &f, ParseNode *call, MDefinition **def, Type *ty
         return f.failf(arg, "%s is not a subtype of intish", argType.toChars());
 
     *def = f.unary<MClz>(argDef);
-    *type = Type::Signed;
+    *type = Type::Fixnum;
     return true;
 }
 
