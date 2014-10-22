@@ -61,41 +61,13 @@ bool
 xpc_qsThrow(JSContext *cx, nsresult rv);
 
 /**
- * Fail after an XPCOM getter or setter returned rv.
- *
- * NOTE: Here @a obj must be the JSObject whose private data field points to an
- * XPCWrappedNative, not merely an object that has an XPCWrappedNative
- * somewhere along the prototype chain!  The same applies to @a obj in
- * xpc_qsThrowBadSetterValue and <code>vp[1]</code> in xpc_qsThrowMethodFailed
- * and xpc_qsThrowBadArg.
- *
- * This is one reason the UnwrapThis functions below have an out parameter that
- * receives the wrapper JSObject.  (The other reason is to help the caller keep
- * that JSObject GC-reachable.)
- */
-bool
-xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv,
-                              JSObject *obj, jsid memberId);
-// And variants using strings and string tables
-bool
-xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv,
-                              JSObject *obj, const char* memberName);
-bool
-xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv,
-                              JSObject *obj, uint16_t memberIndex);
-
-/**
  * Fail after an XPCOM method returned rv.
- *
- * See NOTE at xpc_qsThrowGetterSetterFailed.
  */
 bool
 xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp);
 
 /**
  * Fail after converting a method argument fails.
- *
- * See NOTE at xpc_qsThrowGetterSetterFailed.
  */
 void
 xpc_qsThrowBadArg(JSContext *cx, nsresult rv, jsval *vp, unsigned paramnum);
@@ -106,23 +78,6 @@ xpc_qsThrowBadArgWithCcx(XPCCallContext &ccx, nsresult rv, unsigned paramnum);
 void
 xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, unsigned paramnum,
                              const char *ifaceName, const char *memberName);
-
-/**
- * Fail after converting a setter argument fails.
- *
- * See NOTE at xpc_qsThrowGetterSetterFailed.
- */
-void
-xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
-                          jsid propId);
-// And variants using strings and string tables
-void
-xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
-                          const char* propName);
-void
-xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
-                          uint16_t name_index);
-
 
 bool
 xpc_qsGetterOnlyNativeStub(JSContext *cx, unsigned argc, jsval *vp);
