@@ -284,15 +284,7 @@ public:
   nscoord GetNondisappearingScrollbarWidth(nsBoxLayoutState* aState);
   bool IsLTR() const;
   bool IsScrollbarOnRight() const;
-  bool IsScrollingActive(nsDisplayListBuilder* aBuilder) const
-  {
-    const nsStyleDisplay* disp = mOuter->StyleDisplay();
-    if (disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL)) {
-      return true;
-    }
-    return mHasBeenScrolledRecently ||
-        IsAlwaysActive() || mShouldBuildScrollableLayer;
-  }
+  bool IsScrollingActive(nsDisplayListBuilder* aBuilder) const;
   bool IsProcessingAsyncScroll() const {
     return mAsyncScroll != nullptr || mAsyncSmoothMSDScroll != nullptr;
   }

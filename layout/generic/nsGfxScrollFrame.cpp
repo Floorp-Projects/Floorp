@@ -2898,7 +2898,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       (!mIsRoot || aBuilder->RootReferenceFrame()->PresContext() != mOuter->PresContext());
 
     const nsStyleDisplay* disp = mOuter->StyleDisplay();
-    bool willScroll = disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL);
+    bool willScroll = disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL) &&
+                      aBuilder->IsInWillChangeBudget(mOuter);
     shouldBuildLayer |= willScroll;
   }
 
@@ -4122,6 +4123,20 @@ ScrollFrameHelper::IsScrollbarOnRight() const
     case 3: // Always left
       return false;
   }
+}
+
+bool
+ScrollFrameHelper::IsScrollingActive(nsDisplayListBuilder* aBuilder) const
+{
+  const nsStyleDisplay* disp = mOuter->StyleDisplay();
+  if (disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL) &&
+    aBuilder->IsInWillChangeBudget(mOuter)) {
+    return true;
+  }
+
+  return mHasBeenScrolledRecently ||
+      IsAlwaysActive() ||
+      mShouldBuildScrollableLayer;
 }
 
 /**

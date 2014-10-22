@@ -1109,6 +1109,47 @@ nsDisplayListBuilder::AdjustWindowDraggingRegion(nsIFrame* aFrame)
   }
 }
 
+void
+nsDisplayListBuilder::AddToWillChangeBudget(nsIFrame* aFrame, const nsSize& aRect) {
+  DocumentWillChangeBudget budget;
+
+  nsPresContext* key = aFrame->PresContext();
+  if (mWillChangeBudget.Contains(key)) {
+    mWillChangeBudget.Get(key, &budget);
+  }
+
+  // There's significant overhead for each layer created from Gecko
+  // (IPC+Shared Objects) and from the backend (like an OpenGL texture).
+  // Therefore we set a minimum cost threshold of a 64x64 area.
+  int minBudgetCost = 64 * 64;
+
+  budget.mBudget +=
+    std::max(minBudgetCost,
+      nsPresContext::AppUnitsToIntCSSPixels(aRect.width) *
+      nsPresContext::AppUnitsToIntCSSPixels(aRect.height));
+
+  mWillChangeBudget.Put(key, budget);
+}
+
+bool
+nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame) const {
+  nsPresContext* key = aFrame->PresContext();
+  if (!mWillChangeBudget.Contains(key)) {
+    MOZ_ASSERT(false, "If we added nothing to our budget then this "
+                      "shouldn't be called.");
+    return false;
+  }
+
+  DocumentWillChangeBudget budget;
+  mWillChangeBudget.Get(key, &budget);
+
+  nsRect area = aFrame->PresContext()->GetVisibleArea();
+  uint32_t budgetLimit = nsPresContext::AppUnitsToIntCSSPixels(area.width) *
+    nsPresContext::AppUnitsToIntCSSPixels(area.height);
+
+  return budget.mBudget / 3 < budgetLimit;
+}
+
 void nsDisplayListSet::MoveTo(const nsDisplayListSet& aDestination) const
 {
   aDestination.BorderBackground()->AppendToTop(BorderBackground());
@@ -3418,9 +3459,9 @@ IsItemTooSmallForActiveLayer(nsDisplayItem* aItem)
 }
 
 bool
-nsDisplayOpacity::NeedsActiveLayer()
+nsDisplayOpacity::NeedsActiveLayer(nsDisplayListBuilder* aBuilder)
 {
-  if (ActiveLayerTracker::IsStyleAnimated(mFrame, eCSSProperty_opacity) &&
+  if (ActiveLayerTracker::IsStyleAnimated(aBuilder, mFrame, eCSSProperty_opacity) &&
       !IsItemTooSmallForActiveLayer(this))
     return true;
   if (mFrame->GetContent()) {
@@ -3447,7 +3488,7 @@ nsDisplayOpacity::ApplyOpacity(nsDisplayListBuilder* aBuilder,
 bool
 nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
 {
-  if (NeedsActiveLayer())
+  if (NeedsActiveLayer(aBuilder))
     return false;
 
   nsDisplayItem* child = mList.GetBottom();
@@ -3465,7 +3506,7 @@ nsDisplayItem::LayerState
 nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager,
                                 const ContainerLayerParameters& aParameters) {
-  if (NeedsActiveLayer())
+  if (NeedsActiveLayer(aBuilder))
     return LAYER_ACTIVE;
 
   return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList,
@@ -4851,7 +4892,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
 bool
 nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
 {
-  if (ActiveLayerTracker::IsStyleAnimated(mFrame, eCSSProperty_opacity)) {
+  if (ActiveLayerTracker::IsStyleAnimated(aBuilder, mFrame, eCSSProperty_opacity)) {
     return true;
   }
 
@@ -4884,7 +4925,7 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
   // have a compositor-animated transform, can be prerendered. An element
   // might have only just had its transform animated in which case
   // the ActiveLayerManager may not have been notified yet.
-  if (!ActiveLayerTracker::IsStyleAnimated(aFrame, eCSSProperty_transform) &&
+  if (!ActiveLayerTracker::IsStyleAnimated(aBuilder, aFrame, eCSSProperty_transform) &&
       (!aFrame->GetContent() ||
        !nsLayoutUtils::HasAnimationsForCompositor(aFrame->GetContent(),
                                                   eCSSProperty_transform))) {
@@ -5039,7 +5080,7 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
   }
   // Here we check if the *post-transform* bounds of this item are big enough
   // to justify an active layer.
-  if (ActiveLayerTracker::IsStyleAnimated(mFrame, eCSSProperty_transform) &&
+  if (ActiveLayerTracker::IsStyleAnimated(aBuilder, mFrame, eCSSProperty_transform) &&
       !IsItemTooSmallForActiveLayer(this))
     return LAYER_ACTIVE;
   if (mFrame->GetContent()) {
