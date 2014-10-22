@@ -2850,7 +2850,7 @@ jit::AnalyzeNewScriptDefiniteProperties(JSContext *cx, JSFunction *fun,
                                         types::TypeObject *type, HandleNativeObject baseobj,
                                         Vector<types::TypeNewScript::Initializer> *initializerList)
 {
-    MOZ_ASSERT(cx->compartment()->activeAnalysis);
+    MOZ_ASSERT(cx->zone()->types.activeAnalysis);
 
     // When invoking 'new' on the specified script, try to find some properties
     // which will definitely be added to the created object before it has a
@@ -2869,8 +2869,7 @@ jit::AnalyzeNewScriptDefiniteProperties(JSContext *cx, JSFunction *fun,
 
     Vector<PropertyName *> accessedProperties(cx);
 
-    LifoAlloc alloc(types::TypeZone::TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-
+    LifoAlloc alloc(TempAllocator::PreferredLifoChunkSize);
     TempAllocator temp(&alloc);
     IonContext ictx(cx, &temp);
 
@@ -3109,8 +3108,7 @@ jit::AnalyzeArgumentsUsage(JSContext *cx, JSScript *scriptArg)
     if (!script->ensureHasTypes(cx))
         return false;
 
-    LifoAlloc alloc(types::TypeZone::TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-
+    LifoAlloc alloc(TempAllocator::PreferredLifoChunkSize);
     TempAllocator temp(&alloc);
     IonContext ictx(cx, &temp);
 

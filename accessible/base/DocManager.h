@@ -17,6 +17,7 @@ namespace a11y {
 
 class Accessible;
 class DocAccessible;
+class xpcAccessibleDocument;
 class DocAccessibleParent;
 
 /**
@@ -60,11 +61,15 @@ public:
   /**
    * Called by document accessible when it gets shutdown.
    */
-  inline void NotifyOfDocumentShutdown(nsIDocument* aDocument)
-  {
-    mDocAccessibleCache.Remove(aDocument);
-    RemoveListeners(aDocument);
-  }
+  void NotifyOfDocumentShutdown(DocAccessible* aDocument,
+                                nsIDocument* aDOMDocument);
+
+  /**
+   * Return XPCOM accessible document.
+   */
+  xpcAccessibleDocument* GetXPCDocument(DocAccessible* aDocument);
+  xpcAccessibleDocument* GetCachedXPCDocument(DocAccessible* aDocument) const
+    { return mXPCDocumentCache.GetWeak(aDocument); }
 
   /*
    * Notification that a top level document in a content process has gone away.
@@ -130,9 +135,6 @@ private:
    */
   DocAccessible* CreateDocOrRootAccessible(nsIDocument* aDocument);
 
-  typedef nsRefPtrHashtable<nsPtrHashKey<const nsIDocument>, DocAccessible>
-    DocAccessibleHashtable;
-
   /**
    * Get first entry of the document accessible from cache.
    */
@@ -163,7 +165,13 @@ private:
                             DocAccessible* aDocAccessible, void* aUserArg);
 #endif
 
+  typedef nsRefPtrHashtable<nsPtrHashKey<const nsIDocument>, DocAccessible>
+    DocAccessibleHashtable;
   DocAccessibleHashtable mDocAccessibleCache;
+
+  typedef nsRefPtrHashtable<nsPtrHashKey<const DocAccessible>, xpcAccessibleDocument>
+    XPCDocumentHashtable;
+  XPCDocumentHashtable mXPCDocumentCache;
 
   /*
    * The list of remote top level documents.

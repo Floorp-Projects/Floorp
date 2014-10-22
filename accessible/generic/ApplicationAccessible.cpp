@@ -30,11 +30,7 @@ ApplicationAccessible::ApplicationAccessible() :
   mAppInfo = do_GetService("@mozilla.org/xre/app-info;1");
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsISupports
-
-NS_IMPL_ISUPPORTS_INHERITED(ApplicationAccessible, Accessible,
-                            nsIAccessibleApplication)
+NS_IMPL_ISUPPORTS_INHERITED0(ApplicationAccessible, Accessible)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible

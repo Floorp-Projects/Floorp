@@ -2642,7 +2642,7 @@ JSScript::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const
 size_t
 JSScript::sizeOfTypeScript(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    return types->sizeOfIncludingThis(mallocSizeOf);
+    return types_->sizeOfIncludingThis(mallocSizeOf);
 }
 
 /*
@@ -2675,8 +2675,8 @@ JSScript::finalize(FreeOp *fop)
 
     fop->runtime()->spsProfiler.onScriptFinalized(this);
 
-    if (types)
-        types->destroy();
+    if (types_)
+        types_->destroy();
 
     jit::DestroyIonScripts(fop, this);
 

@@ -28,6 +28,7 @@ protected:
 public:
   // nsSVGPathGeometryElement methods:
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) MOZ_OVERRIDE;
+  virtual mozilla::TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) MOZ_OVERRIDE;
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const;
 };

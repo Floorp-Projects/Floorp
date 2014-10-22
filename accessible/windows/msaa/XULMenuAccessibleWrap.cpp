@@ -21,12 +21,12 @@ XULMenuitemAccessibleWrap::
 ENameValueFlag
 XULMenuitemAccessibleWrap::Name(nsString& aName)
 {
-  // XXX This should be done in get_accName() so that nsIAccessible::GetName()]
+  // XXX This should be done in MSAA's get_accName() so that Accessible::Name()]
   // provides the same results on all platforms
   XULMenuitemAccessible::Name(aName);
   if (aName.IsEmpty())
     return eNameOK;
-  
+
   nsAutoString accel;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, accel);
   if (!accel.IsEmpty())

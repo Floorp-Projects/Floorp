@@ -113,7 +113,7 @@ var PeerConnection = React.createClass({
   getPCInfo: function(report) {
     return {
       id: report.pcid.match(/id=(\S+)/)[1],
-      url: report.pcid.match(/http[^)]+/)[0],
+      url: report.pcid.match(/url=([^)]+)/)[1],
       closed: report.closed
     };
   },

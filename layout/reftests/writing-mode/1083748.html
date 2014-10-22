@@ -1,0 +1,41 @@
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body > div {
+  width:410px;
+  height:610px;
+  float:left;
+  border:1px solid green;
+  margin:5px;
+}
+body > div > div {
+  width:200px;
+  height:200px;
+  border:1px solid red;
+  line-height:20px;
+  text-transform:full-width;
+  float:left;
+}
+
+.v-lr { writing-mode:vertical-lr; text-orientation:upright }
+
+b {
+  background-color: rgb(224,255,224);
+}
+i {
+  background-color: rgb(255,224,224);
+}
+
+</style>
+
+</head>
+
+<body>
+<div>
+ <div class="v-lr">
+  The <i>quick</i> brown fox jumps over the <b>lazy</b> dog.
+ </div>
+</div>
+</body>
+</html>

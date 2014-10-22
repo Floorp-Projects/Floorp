@@ -105,6 +105,10 @@ LOCAL_INCLUDES += [
     'system/core/include',
 ]
 
+TEST_DIRS += [
+    'gtest',
+]
+
 FINAL_LIBRARY = 'xul'
 
 # Suppress warnings in third-party code.

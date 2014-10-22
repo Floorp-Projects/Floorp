@@ -314,19 +314,19 @@ public:
   static bool BlockCanIntersectFloats(nsIFrame* aFrame);
 
   /**
-   * Returns the width that needs to be cleared past floats for blocks
-   * that cannot intersect floats.  aState must already have
-   * GetAvailableSpace called on it for the vertical position that we
-   * care about (which need not be its current mY)
+   * Returns the inline size that needs to be cleared past floats for
+   * blocks that cannot intersect floats.  aState must already have
+   * GetAvailableSpace called on it for the block-dir position that we
+   * care about (which need not be its current mBCoord)
    */
-  struct ReplacedElementWidthToClear {
-    nscoord marginLeft, borderBoxWidth, marginRight;
-    nscoord MarginBoxWidth() const
-      { return marginLeft + borderBoxWidth + marginRight; }
+  struct ReplacedElementISizeToClear {
+    nscoord marginIStart, borderBoxISize, marginIEnd;
+    nscoord MarginBoxISize() const
+      { return marginIStart + borderBoxISize + marginIEnd; }
   };
-  static ReplacedElementWidthToClear
-    WidthToClearPastFloats(nsBlockReflowState& aState,
-                           const nsRect& aFloatAvailableSpace,
+  static ReplacedElementISizeToClear
+    ISizeToClearPastFloats(nsBlockReflowState& aState,
+                           const mozilla::LogicalRect& aFloatAvailableSpace,
                            nsIFrame* aFrame);
 
   /**
@@ -476,8 +476,10 @@ public:
    *  assumes float manager is in aFrame's parent's coord system.
    *  Safe to call on non-blocks (does nothing).
    */
-  static void RecoverFloatsFor(nsIFrame*       aFrame,
-                               nsFloatManager& aFloatManager);
+  static void RecoverFloatsFor(nsIFrame*            aFrame,
+                               nsFloatManager&      aFloatManager,
+                               mozilla::WritingMode aWM,
+                               nscoord              aContainerWidth);
 
   /**
    * Determine if we have any pushed floats from a previous continuation.
@@ -541,7 +543,9 @@ protected:
   /** Load all our floats into the float manager (without reflowing them).
    *  Assumes float manager is in our own coordinate system.
    */
-  void RecoverFloats(nsFloatManager& aFloatManager);
+  void RecoverFloats(nsFloatManager&      aFloatManager,
+                     mozilla::WritingMode aWM,
+                     nscoord              aContainerWidth);
 
   /** Reflow pushed floats
    */
@@ -601,13 +605,13 @@ protected:
   // Return false if it needs another reflow because of reduced space
   // between floats that are next to it (but not next to its top), and
   // return true otherwise.
-  bool PlaceLine(nsBlockReflowState& aState,
-                   nsLineLayout&       aLineLayout,
-                   line_iterator       aLine,
+  bool PlaceLine(nsBlockReflowState&           aState,
+                   nsLineLayout&               aLineLayout,
+                   line_iterator               aLine,
                    nsFloatManager::SavedState* aFloatStateBeforeLine,
-                   nsRect&             aFloatAvailableSpace, /* in-out */
-                   nscoord&            aAvailableSpaceHeight, /* in-out */
-                   bool*             aKeepReflowGoing);
+                   mozilla::LogicalRect&       aFloatAvailableSpace, //in-out
+                   nscoord&                    aAvailableSpaceHeight, // in-out
+                   bool*                       aKeepReflowGoing);
 
   /**
     * If NS_BLOCK_LOOK_FOR_DIRTY_FRAMES is set, call MarkLineDirty
@@ -665,28 +669,29 @@ protected:
                          nsIFrame* aFrame,
                          LineReflowStatus* aLineReflowStatus);
 
-  // Compute the available width for a float. 
-  nsRect AdjustFloatAvailableSpace(nsBlockReflowState& aState,
-                                   const nsRect&       aFloatAvailableSpace,
-                                   nsIFrame*           aFloatFrame);
-  // Computes the border-box width of the float
-  nscoord ComputeFloatWidth(nsBlockReflowState& aState,
-                            const nsRect&       aFloatAvailableSpace,
-                            nsIFrame*           aFloat);
+  // Compute the available inline size for a float.
+  mozilla::LogicalRect AdjustFloatAvailableSpace(
+                         nsBlockReflowState&         aState,
+                         const mozilla::LogicalRect& aFloatAvailableSpace,
+                         nsIFrame*                   aFloatFrame);
+  // Computes the border-box inline size of the float
+  nscoord ComputeFloatISize(nsBlockReflowState&         aState,
+                            const mozilla::LogicalRect& aFloatAvailableSpace,
+                            nsIFrame*                   aFloat);
   // An incomplete aReflowStatus indicates the float should be split
   // but only if the available height is constrained.
   // aAdjustedAvailableSpace is the result of calling
   // nsBlockFrame::AdjustFloatAvailableSpace.
-  void ReflowFloat(nsBlockReflowState& aState,
-                   const nsRect&       aAdjustedAvailableSpace,
-                   nsIFrame*           aFloat,
-                   nsMargin&           aFloatMargin,
-                   nsMargin&           aFloatOffsets,
+  void ReflowFloat(nsBlockReflowState&         aState,
+                   const mozilla::LogicalRect& aAdjustedAvailableSpace,
+                   nsIFrame*                   aFloat,
+                   mozilla::LogicalMargin&     aFloatMargin,
+                   mozilla::LogicalMargin&     aFloatOffsets,
                    // Whether the float's position
                    // (aAdjustedAvailableSpace) has been pushed down
                    // due to the presence of other floats.
-                   bool                aFloatPushedDown,
-                   nsReflowStatus&     aReflowStatus);
+                   bool                        aFloatPushedDown,
+                   nsReflowStatus&             aReflowStatus);
 
   //----------------------------------------
   // Methods for pushing/pulling lines/frames
@@ -752,7 +757,7 @@ protected:
 
   void PropagateFloatDamage(nsBlockReflowState& aState,
                             nsLineBox* aLine,
-                            nscoord aDeltaY);
+                            nscoord aDeltaBCoord);
 
   void CheckFloats(nsBlockReflowState& aState);
 

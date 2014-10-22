@@ -23,7 +23,7 @@ public:
   // Mozilla tree, and returns null for previous and next sibling. This would
   // have the effect of cutting off all content after the plugin.
   HTMLWin32ObjectOwnerAccessible(nsIContent* aContent,
-                                   DocAccessible* aDoc, void* aHwnd);
+                                 DocAccessible* aDoc, void* aHwnd);
   virtual ~HTMLWin32ObjectOwnerAccessible() {}
 
   // Accessible
@@ -44,7 +44,7 @@ protected:
   * This class is used only internally, we never! send out an IAccessible linked
   *   back to this object. This class is used to represent a plugin object when
   *   referenced as a child or sibling of another Accessible node. We need only
-  *   a limited portion of the nsIAccessible interface implemented here. The
+  *   a limited portion of the Accessible interface implemented here. The
   *   in depth accessible information will be returned by the actual IAccessible
   *   object returned by us in Accessible::NewAccessible() that gets the IAccessible
   *   from the windows system from the window handle.
@@ -52,10 +52,10 @@ protected:
 class HTMLWin32ObjectAccessible : public DummyAccessible
 {
 public:
-  HTMLWin32ObjectAccessible(void* aHwnd);
+  HTMLWin32ObjectAccessible(void* aHwnd, DocAccessible* aDoc);
   virtual ~HTMLWin32ObjectAccessible() {}
 
-  NS_IMETHOD GetNativeInterface(void** aNativeAccessible) MOZ_OVERRIDE;
+  virtual void GetNativeInterface(void** aNativeAccessible) MOZ_OVERRIDE;
 
 protected:
   void* mHwnd;

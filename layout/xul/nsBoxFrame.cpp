@@ -1612,10 +1612,10 @@ nsBoxFrame::DrawLine(DrawTarget& aDrawTarget, bool aHorizontal, nscoord x1, nsco
 void
 nsBoxFrame::FillRect(DrawTarget& aDrawTarget, bool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height)
 {
-    Rect rect = NSRectToRect(aHorizontal ? nsRect(x, y, width, height) :
-                                           nsRect(y, x, height, width),
-                             PresContext()->AppUnitsPerDevPixel(),
-                             aDrawTarget);
+    Rect rect = NSRectToSnappedRect(aHorizontal ? nsRect(x, y, width, height) :
+                                                  nsRect(y, x, height, width),
+                                    PresContext()->AppUnitsPerDevPixel(),
+                                    aDrawTarget);
     ColorPattern white(ToDeviceColor(Color(1.f, 1.f, 1.f, 1.f)));
     aDrawTarget.FillRect(rect, white);
 }

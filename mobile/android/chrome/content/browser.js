@@ -137,7 +137,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences",
   ["SelectionHandler", ["TextSelection:Get"], "chrome://browser/content/SelectionHandler.js"],
   ["Notifications", ["Notification:Event"], "chrome://browser/content/Notifications.jsm"],
   ["EmbedRT", ["GeckoView:ImportScript"], "chrome://browser/content/EmbedRT.js"],
-  ["Reader", ["Reader:Add", "Reader:Remove"], "chrome://browser/content/Reader.js"],
+  ["Reader", ["Reader:Removed"], "chrome://browser/content/Reader.js"],
 ].forEach(function (aScript) {
   let [name, notifications, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -3991,7 +3991,8 @@ Tab.prototype = {
             type: "Link:Favicon",
             tabID: this.id,
             href: resolveGeckoURI(target.href),
-            size: maxSize
+            size: maxSize,
+            mime: target.getAttribute("type") || ""
           };
           Messaging.sendRequest(json);
         } else if (list.indexOf("[alternate]") != -1 && aEvent.type == "DOMLinkAdded") {

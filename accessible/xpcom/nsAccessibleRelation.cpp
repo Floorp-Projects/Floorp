@@ -7,6 +7,7 @@
 
 #include "Relation.h"
 #include "Accessible.h"
+#include "xpcAccessibleDocument.h"
 
 #include "nsArrayUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -18,9 +19,9 @@ nsAccessibleRelation::nsAccessibleRelation(uint32_t aType,
   mType(aType)
 {
   mTargets = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  nsIAccessible* targetAcc = nullptr;
+  Accessible* targetAcc = nullptr;
   while ((targetAcc = aRel->Next()))
-    mTargets->AppendElement(targetAcc, false);
+    mTargets->AppendElement(static_cast<nsIAccessible*>(ToXPC(targetAcc)), false);
 }
 
 nsAccessibleRelation::~nsAccessibleRelation()

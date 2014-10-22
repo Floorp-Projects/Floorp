@@ -10133,7 +10133,8 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       }
 
       nsRect rect(0,0, width+15, height+15);
-      Rect devPxRect = NSRectToRect(rect, appUnitsPerDevPixel, *drawTarget);
+      Rect devPxRect =
+        NSRectToSnappedRect(rect, appUnitsPerDevPixel, *drawTarget);
       ColorPattern black(ToDeviceColor(Color(0.f, 0.f, 0.f, 1.f)));
       drawTarget->FillRect(devPxRect, black);
 

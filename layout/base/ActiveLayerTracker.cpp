@@ -12,6 +12,7 @@
 #include "nsIDocument.h"
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
+#include "nsDisplayList.h"
 
 namespace mozilla {
 
@@ -259,15 +260,24 @@ ActiveLayerTracker::NotifyInlineStyleRuleModified(nsIFrame* aFrame,
 }
 
 /* static */ bool
-ActiveLayerTracker::IsStyleAnimated(nsIFrame* aFrame, nsCSSProperty aProperty)
+ActiveLayerTracker::IsStyleMaybeAnimated(nsIFrame* aFrame, nsCSSProperty aProperty)
+{
+  return IsStyleAnimated(nullptr, aFrame, aProperty);
+}
+
+/* static */ bool
+ActiveLayerTracker::IsStyleAnimated(nsDisplayListBuilder* aBuilder,
+                                    nsIFrame* aFrame, nsCSSProperty aProperty)
 {
   // TODO: Add some abuse restrictions
   if ((aFrame->StyleDisplay()->mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM) &&
-      aProperty == eCSSProperty_transform) {
+      aProperty == eCSSProperty_transform &&
+      (!aBuilder || aBuilder->IsInWillChangeBudget(aFrame))) {
     return true;
   }
   if ((aFrame->StyleDisplay()->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) &&
-      aProperty == eCSSProperty_opacity) {
+      aProperty == eCSSProperty_opacity &&
+      (!aBuilder || aBuilder->IsInWillChangeBudget(aFrame))) {
     return true;
   }
 
@@ -278,7 +288,7 @@ ActiveLayerTracker::IsStyleAnimated(nsIFrame* aFrame, nsCSSProperty aProperty)
     }
   }
   if (aProperty == eCSSProperty_transform && aFrame->Preserves3D()) {
-    return IsStyleAnimated(aFrame->GetParent(), aProperty);
+    return IsStyleAnimated(aBuilder, aFrame->GetParent(), aProperty);
   }
   nsIContent* content = aFrame->GetContent();
   if (content) {

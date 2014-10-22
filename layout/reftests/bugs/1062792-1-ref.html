@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait" style="overflow: hidden;">
+<head>
+  <script>
+  function scroll() {
+    document.getElementById("thediv").scrollTop = 400;
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+</head>
+<body onload="scroll();" style="overflow: hidden;">
+  <div style="background: white; position: absolute; top: 0; left: 0; bottom: 0; right: 0;">
+    <div style="background: yellow; height: 10%;"></div>
+    <div style="overflow: scroll; height: 90%;"
+         id="thediv">
+      <div style="background: purple; height: 4000px;"><div style="height: 500px; width: 100px; background: orange;"></div>
+    </div>
+  </div>
+</body>
+</html>

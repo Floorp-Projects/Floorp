@@ -522,9 +522,9 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
     gfx->Save();
     nsRect clipRect =
       aFrame->GetVisualOverflowRectRelativeToSelf() + toUserSpace;
-    gfx->Clip(NSRectToRect(clipRect,
-                           aFrame->PresContext()->AppUnitsPerDevPixel(),
-                           *drawTarget));
+    gfx->Clip(NSRectToSnappedRect(clipRect,
+                                  aFrame->PresContext()->AppUnitsPerDevPixel(),
+                                  *drawTarget));
     gfx->PushGroup(gfxContentType::COLOR_ALPHA);
   }
 

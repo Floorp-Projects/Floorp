@@ -108,6 +108,28 @@ SVGRectElement::GetLengthInfo()
 //----------------------------------------------------------------------
 // nsSVGPathGeometryElement methods
 
+void
+SVGRectElement::GetAsSimplePath(SimplePath* aSimplePath)
+{
+  float x, y, width, height, rx, ry;
+  GetAnimatedLengthValues(&x, &y, &width, &height, &rx, &ry, nullptr);
+
+  if (width <= 0 || height <= 0) {
+    aSimplePath->Reset();
+    return;
+  }
+
+  rx = std::max(rx, 0.0f);
+  ry = std::max(ry, 0.0f);
+
+  if (rx != 0 || ry != 0) {
+    aSimplePath->Reset();
+    return;
+  }
+
+  aSimplePath->SetRect(x, y, width, height);
+}
+
 TemporaryRef<Path>
 SVGRectElement::BuildPath(PathBuilder* aBuilder)
 {

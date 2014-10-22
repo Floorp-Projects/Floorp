@@ -14,7 +14,6 @@
 #include "XPCWrapper.h"
 #include "XPCJSMemoryReporter.h"
 #include "WrapperFactory.h"
-#include "dom_quickstubs.h"
 #include "mozJSComponentLoader.h"
 
 #include "nsIMemoryInfoDumper.h"
@@ -822,8 +821,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop,
             self->mDetachedWrappedNativeProtoMap->
                 Enumerate(DetachedWrappedNativeProtoMarker, nullptr);
 
-            DOM_MarkInterfaces();
-
             // Mark the sets used in the call contexts. There is a small
             // chance that a wrapper's set will change *while* a call is
             // happening which uses that wrapper's old interfface set. So,
@@ -1470,8 +1467,6 @@ void XPCJSRuntime::DestroyJSContextStack()
 
 void XPCJSRuntime::SystemIsBeingShutDown()
 {
-    DOM_ClearInterfaces();
-
     if (mDetachedWrappedNativeProtoMap)
         mDetachedWrappedNativeProtoMap->
             Enumerate(DetachedWrappedNativeProtoShutdownMarker, nullptr);
@@ -3150,8 +3145,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mCompilationScope(MOZ_THIS_IN_INITIALIZER_LIST()->Runtime(), nullptr),
    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite())
 {
-    DOM_InitInterfaces();
-
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = JSID_VOID;
 

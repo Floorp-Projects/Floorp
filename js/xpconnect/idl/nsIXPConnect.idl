@@ -59,7 +59,7 @@ interface nsIXPConnectJSObjectHolder : nsISupports
     [notxpcom, nostdcall] JSObjectPtr GetJSObject();
 };
 
-[uuid(675b01ba-397b-472a-9b80-5716376a2ec6)]
+[uuid(cf6b00de-8ff4-443a-932c-b72ff341367a)]
 interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
@@ -75,14 +75,6 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
     [notxpcom] bool HasNativeMember(in JSHandleId name);
 
     void debugDump(in short depth);
-
-    /*
-     * This finishes initializing a wrapped global, doing the parts that we
-     * couldn't do while the global and window were being simultaneously
-     * bootstrapped. This should be called exactly once, and only for wrapped
-     * globals.
-     */
-    void finishInitForWrappedGlobal();
 
     /*
      * NOTE: Add new IDL methods _before_ the C++ block below if you
