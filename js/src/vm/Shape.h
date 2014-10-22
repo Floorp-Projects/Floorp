@@ -335,7 +335,6 @@ class BaseShape : public gc::TenuredCell
         ITERATED_SINGLETON  =  0x200,
         NEW_TYPE_UNKNOWN    =  0x400,
         UNCACHEABLE_PROTO   =  0x800,
-        IMMUTABLE_PROTOTYPE = 0x1000,
 
         // These two flags control which scope a new variables ends up on in the
         // scope chain. If the variable is "qualified" (i.e., if it was defined
@@ -345,10 +344,10 @@ class BaseShape : public gc::TenuredCell
         // incidentally is an error in strict mode) then it goes on the lowest
         // scope in the chain with the UNQUALIFIED_VAROBJ flag set (which is
         // typically the global).
-        QUALIFIED_VAROBJ    = 0x2000,
-        UNQUALIFIED_VAROBJ  = 0x4000,
+        QUALIFIED_VAROBJ    = 0x1000,
+        UNQUALIFIED_VAROBJ  = 0x2000,
 
-        OBJECT_FLAG_MASK    = 0x7ff8
+        OBJECT_FLAG_MASK    = 0x3ff8
     };
 
   private:
