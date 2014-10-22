@@ -3677,8 +3677,7 @@ class CastableObjectUnwrapper():
                   // want to be in that compartment for the UnwrapArg call.
                   JS::Rooted<JSObject*> source(cx, ${source});
                   JSAutoCompartment ac(cx, ${source});
-                  JS::Rooted<JS::Value> unused(cx);
-                  rv = UnwrapArg<${type}>(cx, source, &objPtr, &objRef.ptr, &unused);
+                  rv = UnwrapArg<${type}>(cx, source, &objPtr, &objRef.ptr);
                 }
                 """)
         else:
@@ -3686,8 +3685,7 @@ class CastableObjectUnwrapper():
             self.substitution["source"] = source
             xpconnectUnwrap = (
                 "JS::Rooted<JSObject*> source(cx, ${source});\n"
-                "JS::Rooted<JS::Value> unused(cx);\n"
-                "nsresult rv = UnwrapArg<${type}>(cx, source, &objPtr, &objRef.ptr, &unused);\n")
+                "nsresult rv = UnwrapArg<${type}>(cx, source, &objPtr, &objRef.ptr);\n")
 
         if descriptor.hasXPConnectImpls:
             self.substitution["codeOnFailure"] = string.Template(
@@ -4767,24 +4765,18 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             else:
                 holderType = "nsRefPtr<" + typeName + ">"
             templateBody += (
-                "JS::Rooted<JSObject*> source(cx, &${val}.toObject());\n"
-                "JS::Rooted<JS::Value> tmpVal(cx);\n" +
+                "JS::Rooted<JSObject*> source(cx, &${val}.toObject());\n" +
                 typePtr + " tmp;\n"
-                "if (NS_FAILED(UnwrapArg<" + typeName + ">(cx, source, &tmp, static_cast<" + typeName + "**>(getter_AddRefs(${holderName})), &tmpVal))) {\n")
+                "if (NS_FAILED(UnwrapArg<" + typeName + ">(cx, source, &tmp, static_cast<" + typeName + "**>(getter_AddRefs(${holderName}))))) {\n")
             templateBody += CGIndenter(onFailureBadType(failureCode,
                                                         descriptor.interface.identifier.name)).define()
             templateBody += ("}\n"
                              "MOZ_ASSERT(tmp);\n")
 
             if not isDefinitelyObject and not forceOwningType:
-                # Our tmpVal will go out of scope, so we can't rely on it
-                # for rooting
                 templateBody += dedent("""
-                    if (tmpVal != ${val} && !${holderName}) {
-                      // We have to have a strong ref, because we got this off
-                      // some random object that might get GCed
-                      ${holderName} = tmp;
-                    }
+                    // UnwrapArg never sets **ppArg without also setting *ppArgRef
+                    MOZ_ASSERT(${holderName});
                     """)
 
             # And store our tmp, before it goes out of scope.
