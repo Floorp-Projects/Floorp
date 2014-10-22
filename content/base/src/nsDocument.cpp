@@ -9627,11 +9627,12 @@ nsDocument::GetTemplateContentsOwner()
     NS_ENSURE_TRUE(mTemplateContentsOwner, nullptr);
 
     nsDocument* doc = static_cast<nsDocument*>(mTemplateContentsOwner.get());
-    doc->mHasHadScriptHandlingObject = hasHadScriptObject;
 
     if (!scriptObject) {
       mTemplateContentsOwner->SetScopeObject(GetScopeObject());
     }
+
+    doc->mHasHadScriptHandlingObject = hasHadScriptObject;
 
     // Set |doc| as the template contents owner of itself so that
     // |doc| is the template contents owner of template elements created

@@ -6,7 +6,6 @@
 #ifndef mozilla_a11y_DocAccessible_h__
 #define mozilla_a11y_DocAccessible_h__
 
-#include "xpcAccessibleDocument.h"
 #include "nsIAccessiblePivot.h"
 
 #include "AccEvent.h"
@@ -39,7 +38,6 @@ template<class Class, class Arg>
 class TNotification;
 
 class DocAccessible : public HyperTextAccessibleWrap,
-                      public xpcAccessibleDocument,
                       public nsIDocumentObserver,
                       public nsIObserver,
                       public nsIScrollPositionListener,
@@ -50,7 +48,6 @@ class DocAccessible : public HyperTextAccessibleWrap,
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocAccessible, Accessible)
 
   NS_DECL_NSIOBSERVER
-
   NS_DECL_NSIACCESSIBLEPIVOTOBSERVER
 
 public:

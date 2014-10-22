@@ -101,8 +101,9 @@ void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
   nsPoint pt = ToReferenceFrame();
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   DrawTarget* drawTarget = aCtx->GetDrawTarget();
-  Rect rect = NSRectToRect(nsRect(pt, mFrame->GetSize()), appUnitsPerDevPixel,
-                           *drawTarget);
+  Rect rect = NSRectToSnappedRect(nsRect(pt, mFrame->GetSize()),
+                                  appUnitsPerDevPixel,
+                                  *drawTarget);
   ColorPattern red(ToDeviceColor(Color(1.f, 0.f, 0.f, 1.f)));
   drawTarget->FillRect(rect, red);
 

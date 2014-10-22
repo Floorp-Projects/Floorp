@@ -11,7 +11,6 @@
 #include <OAIdl.h>
 
 #include "nsIAccessibleEvent.h"
-#include "nsIAccessibleEditableText.h"
 #include "nsIPersistentProperties2.h"
 
 // generated

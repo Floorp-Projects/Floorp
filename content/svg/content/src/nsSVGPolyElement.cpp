@@ -119,20 +119,3 @@ nsSVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
   aMarks->LastElement().angle = prevAngle;
   aMarks->LastElement().type = nsSVGMark::eEnd;
 }
-
-TemporaryRef<Path>
-nsSVGPolyElement::BuildPath(PathBuilder* aBuilder)
-{
-  const SVGPointList &points = mPoints.GetAnimValue();
-
-  if (points.IsEmpty()) {
-    return nullptr;
-  }
-
-  aBuilder->MoveTo(points[0]);
-  for (uint32_t i = 1; i < points.Length(); ++i) {
-    aBuilder->LineTo(points[i]);
-  }
-
-  return aBuilder->Finish();
-}

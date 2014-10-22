@@ -348,7 +348,8 @@ nsTableCellFrame::DecorateForSelection(nsRenderingContext& aRenderingContext,
         //middle
         nsRect r(onePixel, onePixel,
                  mRect.width - onePixel, mRect.height - onePixel);
-        Rect devPixelRect = NSRectToRect(r, appUnitsPerDevPixel, *drawTarget);
+        Rect devPixelRect =
+          NSRectToSnappedRect(r, appUnitsPerDevPixel, *drawTarget);
         drawTarget->StrokeRect(devPixelRect, color);
         //shading
         StrokeLineWithSnapping(nsPoint(2*onePixel, mRect.height-2*onePixel),

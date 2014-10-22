@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=426082
     }
   </style>
 </head>
-<body onload="runTests()">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=426082">Mozilla Bug 426082</a>
 <p id="display"></p>
 <div id="content" style="display: none">
@@ -38,6 +38,8 @@ function runTests() {
   outside = $("outside");
   SimpleTest.executeSoon(executeTests);
 }
+
+SimpleTest.waitForFocus(runTests);
 
 function isRectContainedInRectFromRegion(rect, region) {
   return Array.some(region, function (r) {

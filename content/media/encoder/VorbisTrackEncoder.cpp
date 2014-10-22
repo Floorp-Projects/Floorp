@@ -6,6 +6,7 @@
 #include <ogg/ogg.h>
 #include <vorbis/vorbisenc.h>
 #include "WebMWriter.h"
+#include "GeckoProfiler.h"
 
 // One actually used: Encoding using a VBR quality mode. The usable range is -.1
 // (lowest quality, smallest file) to 1. (highest quality, largest file).
@@ -90,6 +91,8 @@ void VorbisTrackEncoder::WriteLacing(nsTArray<uint8_t> *aOutput, int32_t aLacing
 already_AddRefed<TrackMetadataBase>
 VorbisTrackEncoder::GetMetadata()
 {
+  PROFILER_LABEL("VorbisTrackEncoder", "GetMetadata",
+    js::ProfileEntry::Category::OTHER);
   {
     // Wait if encoder is not initialized.
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
@@ -159,6 +162,9 @@ VorbisTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
   if (mEosSetInEncoder) {
     return NS_OK;
   }
+
+  PROFILER_LABEL("VorbisTrackEncoder", "GetEncodedTrack",
+    js::ProfileEntry::Category::OTHER);
 
   nsAutoPtr<AudioSegment> sourceSegment;
   sourceSegment = new AudioSegment();

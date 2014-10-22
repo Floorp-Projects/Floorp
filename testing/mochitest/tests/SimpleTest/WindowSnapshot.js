@@ -15,7 +15,7 @@ function snapshotWindow(win, withCaret) {
 // If the two snapshots don't compare as expected (true for equal, false for
 // unequal), returns their serializations as data URIs.  In all cases, returns
 // whether the comparison was as expected.
-function compareSnapshots(s1, s2, expected) {
+function compareSnapshots(s1, s2, expected, fuzz) {
   var s1Str, s2Str;
   var correct = false;
   if (gWindowUtils) {
@@ -25,7 +25,14 @@ function compareSnapshots(s1, s2, expected) {
       equal = false;
     } else {
       try {
-        equal = (gWindowUtils.compareCanvases(s1, s2, {}) == 0);
+        var maxDifference = {};
+        var numDifferentPixels = gWindowUtils.compareCanvases(s1, s2, maxDifference);
+        if (!fuzz) {
+          equal = (numDifferentPixels == 0);
+        } else {
+          equal = (numDifferentPixels <= fuzz.numDifferentPixels &&
+                   maxDifference.value <= fuzz.maxDifference);
+        }
       } catch (e) {
         equal = false;
         ok(false, "Exception thrown from compareCanvases: " + e);
@@ -46,8 +53,8 @@ function compareSnapshots(s1, s2, expected) {
   return [correct, s1Str, s2Str];
 }
 
-function assertSnapshots(s1, s2, expected, s1name, s2name) {
-  var [correct, s1Str, s2Str] = compareSnapshots(s1, s2, expected);
+function assertSnapshots(s1, s2, expected, fuzz, s1name, s2name) {
+  var [correct, s1Str, s2Str] = compareSnapshots(s1, s2, expected, fuzz);
   var sym = expected ? "==" : "!=";
   ok(correct, "reftest comparison: " + sym + " " + s1name + " " + s2name);
   if (!correct) {
@@ -60,4 +67,5 @@ function assertSnapshots(s1, s2, expected, s1name, s2name) {
     }
     dump(report);
   }
+  return correct;
 }

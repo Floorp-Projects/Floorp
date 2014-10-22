@@ -24,7 +24,7 @@ GetObjectOrRepresentedView(id <mozAccessible> aObject)
 }
 
 inline mozAccessible*
-GetNativeFromGeckoAccessible(nsIAccessible* aAccessible)
+GetNativeFromGeckoAccessible(mozilla::a11y::Accessible* aAccessible)
 {
   mozAccessible* native = nil;
   aAccessible->GetNativeInterface((void**)&native);
@@ -49,7 +49,7 @@ GetNativeFromGeckoAccessible(nsIAccessible* aAccessible)
   mozAccessible* mParent;
 
   /**
-   * The nsIAccessible role of our gecko accessible.
+   * The role of our gecko accessible.
    */
   mozilla::a11y::role        mRole;
 }

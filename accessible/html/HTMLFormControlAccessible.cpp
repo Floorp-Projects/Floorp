@@ -15,7 +15,6 @@
 
 #include "nsContentList.h"
 #include "mozilla/dom/HTMLInputElement.h"
-#include "nsIAccessibleRelation.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIEditor.h"
@@ -284,10 +283,8 @@ HTMLTextFieldAccessible::
   mType = eHTMLTextFieldType;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLTextFieldAccessible,
-                            Accessible,
-                            nsIAccessibleText,
-                            nsIAccessibleEditableText)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLTextFieldAccessible,
+                             HyperTextAccessible)
 
 role
 HTMLTextFieldAccessible::NativeRole()

@@ -2804,7 +2804,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
     nsDisplayItem::Type itemType = item->GetType();
     bool prerenderedTransform = itemType == nsDisplayItem::TYPE_TRANSFORM &&
-        static_cast<nsDisplayTransform*>(item)->ShouldPrerender();
+        static_cast<nsDisplayTransform*>(item)->ShouldPrerender(mBuilder);
     nsIntRect clipRect;
     const DisplayItemClip& itemClip = item->GetClip();
     if (itemClip.HasClip()) {
@@ -3492,7 +3492,7 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
   nsIFrame* fParent;
   for (const nsIFrame* f = aEntry->mAnimatedGeometryRoot;
        f != mContainerAnimatedGeometryRoot;
-       f = nsLayoutUtils::GetAnimatedGeometryRootForFrame(
+       f = nsLayoutUtils::GetAnimatedGeometryRootForFrame(this->mBuilder,
            fParent, mContainerAnimatedGeometryRoot)) {
     fParent = nsLayoutUtils::GetCrossDocParentFrame(f);
     if (!fParent) {
@@ -3575,7 +3575,7 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
     if (!e->mOpaqueRegion.IsEmpty()) {
       const nsIFrame* animatedGeometryRootToCover = animatedGeometryRootForOpaqueness;
       if (e->mOpaqueForAnimatedGeometryRootParent &&
-          nsLayoutUtils::GetAnimatedGeometryRootForFrame(e->mAnimatedGeometryRoot->GetParent(),
+          nsLayoutUtils::GetAnimatedGeometryRootForFrame(mBuilder, e->mAnimatedGeometryRoot->GetParent(),
                                                          mContainerAnimatedGeometryRoot)
             == mContainerAnimatedGeometryRoot) {
         animatedGeometryRootToCover = mContainerAnimatedGeometryRoot;
@@ -3593,7 +3593,13 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
         data->mAnimatedGeometryRoot = animatedGeometryRootToCover;
         data->mFixedPosFrameForLayerData = e->mFixedPosFrameForLayerData;
       }
-      data->mOpaqueRegion.Or(data->mOpaqueRegion, e->mOpaqueRegion);
+
+      nsIntRegion clippedOpaque = e->mOpaqueRegion;
+      const nsIntRect* clipRect = e->mLayer->GetClipRect();
+      if (clipRect) {
+        clippedOpaque.AndWith(*clipRect);
+      }
+      data->mOpaqueRegion.Or(data->mOpaqueRegion, clippedOpaque);
       if (e->mHideAllLayersBelow) {
         hideAll = true;
       }
@@ -3792,7 +3798,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
       // jaggies. It also ensures we never scale down by more than a factor of 2,
       // avoiding bad downscaling quality.
       Matrix frameTransform;
-      if (ActiveLayerTracker::IsStyleAnimated(aContainerFrame, eCSSProperty_transform) &&
+      if (ActiveLayerTracker::IsStyleAnimated(aDisplayListBuilder, aContainerFrame, eCSSProperty_transform) &&
           aTransform &&
           (!aTransform->Is2D(&frameTransform) || frameTransform.HasNonTranslationOrFlip())) {
         // Don't clamp the scale factor when the new desired scale factor matches the old one
@@ -3839,7 +3845,8 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     ContainerLayerParameters(scale.width, scale.height, -offset, aIncomingScale);
   if (aTransform) {
     aOutgoingScale.mInTransformedSubtree = true;
-    if (ActiveLayerTracker::IsStyleAnimated(aContainerFrame, eCSSProperty_transform)) {
+    if (ActiveLayerTracker::IsStyleAnimated(aDisplayListBuilder, aContainerFrame,
+                                            eCSSProperty_transform)) {
       aOutgoingScale.mInActiveTransformedSubtree = true;
     }
   }

@@ -26,11 +26,14 @@ def get_dm(marionette=None,**kwargs):
 
 
 def get_b2g_pid(dm):
-    b2g_output = dm.shellCheckOutput(['b2g-ps'])
-    pid_re = re.compile(r"""b2g[\s]+0[\s]+root\s+([\d]+).*/system/b2g/b2g""")
-    pid = pid_re.match(b2g_output)
-    if pid:
-        return pid.group(1)
+    b2g_output = dm.shellCheckOutput(['b2g-ps']).split('\n')
+    first_line = b2g_output[0].split()
+    app_index = first_line.index('APPLICATION')
+    pid_index = first_line.index('PID')
+    for line in b2g_output:
+        split_line = line.split()
+        if split_line[app_index] == 'b2g':
+            return split_line[pid_index]
 
 
 class B2GTestCaseMixin(object):

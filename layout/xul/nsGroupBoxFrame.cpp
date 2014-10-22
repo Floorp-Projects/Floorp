@@ -173,7 +173,7 @@ nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     clipRect.height = border.top;
 
     gfx->Save();
-    gfx->Clip(NSRectToRect(clipRect, appUnitsPerDevPixel, *drawTarget));
+    gfx->Clip(NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext, skipSides);
     gfx->Restore();
@@ -185,7 +185,7 @@ nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     clipRect.height = border.top;
 
     gfx->Save();
-    gfx->Clip(NSRectToRect(clipRect, appUnitsPerDevPixel, *drawTarget));
+    gfx->Clip(NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext, skipSides);
     gfx->Restore();
@@ -197,7 +197,7 @@ nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     clipRect.height = mRect.height - (yoff + border.top);
   
     gfx->Save();
-    gfx->Clip(NSRectToRect(clipRect, appUnitsPerDevPixel, *drawTarget));
+    gfx->Clip(NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext, skipSides);
     gfx->Restore();

@@ -385,26 +385,33 @@ struct BaselineStackBuilder
 // ahead of the bailout.
 class SnapshotIteratorForBailout : public SnapshotIterator
 {
-    RInstructionResults results_;
-  public:
+    JitActivation *activation_;
+    JitFrameIterator &iter_;
 
-    SnapshotIteratorForBailout(const JitFrameIterator &iter)
+  public:
+    SnapshotIteratorForBailout(JitActivation *activation, JitFrameIterator &iter)
       : SnapshotIterator(iter),
-        results_(iter.jsFrame())
+        activation_(activation),
+        iter_(iter)
     {
         MOZ_ASSERT(iter.isBailoutJS());
     }
 
+    ~SnapshotIteratorForBailout() {
+        // The bailout is complete, we no longer need the recover instruction
+        // results.
+        activation_->removeIonFrameRecovery(fp_);
+    }
+
     // Take previously computed result out of the activation, or compute the
     // results of all recover instructions contained in the snapshot.
-    bool init(JSContext *cx, JitActivation *activation) {
-        activation->maybeTakeIonFrameRecovery(fp_, &results_);
-        if (!results_.isInitialized() && !computeInstructionResults(cx, &results_))
-            return false;
+    bool init(JSContext *cx) {
 
-        MOZ_ASSERT(results_.isInitialized());
-        instructionResults_ = &results_;
-        return true;
+        // Under a bailout, there is no need to invalidate the frame after
+        // evaluating the recover instruction, as the invalidation is only
+        // needed to cause of the frame which has been introspected.
+        MaybeReadFallback recoverBailout(cx, activation_, &iter_, MaybeReadFallback::Fallback_DoNothing);
+        return initInstructionResults(recoverBailout);
     }
 };
 
@@ -518,6 +525,10 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                 jsbytecode **callPC, const ExceptionBailoutInfo *excInfo,
                 bool *poppedLastSPSFrameOut)
 {
+    // The Baseline frames we will reconstruct on the heap are not rooted, so GC
+    // must be suppressed here.
+    MOZ_ASSERT(cx->mainThread().suppressGC);
+
     MOZ_ASSERT(script->hasBaselineScript());
     MOZ_ASSERT(poppedLastSPSFrameOut);
     MOZ_ASSERT(!*poppedLastSPSFrameOut);
@@ -1301,10 +1312,6 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIter
                           bool invalidate, BaselineBailoutInfo **bailoutInfo,
                           const ExceptionBailoutInfo *excInfo, bool *poppedLastSPSFrameOut)
 {
-    // The Baseline frames we will reconstruct on the heap are not rooted, so GC
-    // must be suppressed here.
-    MOZ_ASSERT(cx->mainThread().suppressGC);
-
     MOZ_ASSERT(bailoutInfo != nullptr);
     MOZ_ASSERT(*bailoutInfo == nullptr);
 
@@ -1383,8 +1390,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIter
         return BAILOUT_RETURN_FATAL_ERROR;
     JitSpew(JitSpew_BaselineBailouts, "  Incoming frame ptr = %p", builder.startFrame());
 
-    SnapshotIteratorForBailout snapIter(iter);
-    if (!snapIter.init(cx, activation))
+    SnapshotIteratorForBailout snapIter(activation, iter);
+    if (!snapIter.init(cx))
         return BAILOUT_RETURN_FATAL_ERROR;
 
 #ifdef TRACK_SNAPSHOTS
@@ -1416,6 +1423,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIter
 
     RootedScript topCaller(cx);
     jsbytecode *topCallerPC = nullptr;
+
+    gc::AutoSuppressGC suppress(cx);
 
     while (true) {
         // Skip recover instructions as they are already recovered by |initInstructionResults|.

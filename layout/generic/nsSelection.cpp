@@ -4039,7 +4039,10 @@ Selection::selectFrames(nsPresContext* aPresContext, nsRange* aRange,
   // Loop through the content iterator for each content node; for each text
   // node, call SetSelected on it:
   nsCOMPtr<nsIContent> content = do_QueryInterface(aRange->GetStartParent());
-  NS_ENSURE_STATE(content);
+  if (!content) {
+    // Don't warn, bug 1055722
+    return NS_ERROR_UNEXPECTED;
+  }
 
   // We must call first one explicitly
   if (content->IsNodeOfType(nsINode::eTEXT)) {

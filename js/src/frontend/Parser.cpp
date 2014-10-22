@@ -2995,7 +2995,7 @@ LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename ContextT::Stmt
          * can potentially override any static bindings introduced by statements
          * further up the stack, we have to abort the search.
          */
-        if (stmt->type == STMT_WITH)
+        if (stmt->type == STMT_WITH && atom != ct->sc->context->names().dotGenerator)
             break;
 
         // Skip statements that do not introduce a new scope
@@ -5206,7 +5206,8 @@ Parser<FullParseHandler>::withStatement()
     for (AtomDefnRange r = pc->lexdeps->all(); !r.empty(); r.popFront()) {
         DefinitionNode defn = r.front().value().get<FullParseHandler>();
         DefinitionNode lexdep = handler.resolve(defn);
-        handler.deoptimizeUsesWithin(lexdep, TokenPos(begin, pos().begin));
+        if (lexdep->name() != context->names().dotGenerator)
+            handler.deoptimizeUsesWithin(lexdep, TokenPos(begin, pos().begin));
     }
 
     ObjectBox *staticWithBox = newObjectBox(staticWith);

@@ -11,7 +11,7 @@ interface nsIArray;
 /**
  * An accessibility interface for selectable widgets.
  */
-[scriptable, uuid(3e507fc4-4fcc-4223-a674-a095f591eba1)]
+[scriptable, uuid(8efb03d4-1354-4875-94cf-261336057626)]
 interface nsIAccessibleSelectable : nsISupports
 {
   /**
@@ -32,19 +32,16 @@ interface nsIAccessibleSelectable : nsISupports
   /**
    * Return true if the given item is selected.
    */
-  [binaryname(ScriptableIsItemSelected)]
   boolean isItemSelected(in unsigned long index);
 
   /**
    * Adds the specified item to the widget's selection.
    */
-  [binaryname(ScriptableAddItemToSelection)]
   void addItemToSelection(in unsigned long index);
 
   /**
    * Removes the specified item from the widget's selection.
    */
-  [binaryname(ScriptableRemoveItemFromSelection)]
   void removeItemFromSelection(in unsigned long index);
 
   /**
@@ -53,12 +50,10 @@ interface nsIAccessibleSelectable : nsISupports
    * @return false if the object does not accept multiple selection,
    *         otherwise true.
    */
-  [binaryname(ScriptableSelectAll)]
   boolean selectAll();
 
   /**
    * Unselect all items.
    */
-  [binaryname(ScriptableUnselectAll)]
   void unselectAll();
 };

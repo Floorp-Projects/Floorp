@@ -625,6 +625,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_mov(imm, ScratchRegister);
         ma_push(ScratchRegister);
     }
+    void push(ImmMaybeNurseryPtr imm) {
+        push(noteMaybeNurseryPtr(imm));
+    }
     void push(const Address &address) {
         ma_ldr(Operand(address.base, address.offset), ScratchRegister);
         ma_push(ScratchRegister);
@@ -1048,6 +1051,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_cmp(secondScratchReg_, ptr);
         ma_b(label, cond);
     }
+    void branchPtr(Condition cond, Address addr, ImmMaybeNurseryPtr ptr, Label *label) {
+        branchPtr(cond, addr, noteMaybeNurseryPtr(ptr), label);
+    }
     void branchPtr(Condition cond, Address addr, ImmWord ptr, Label *label) {
         ma_ldr(addr, secondScratchReg_);
         ma_cmp(secondScratchReg_, ptr);
@@ -1171,7 +1177,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         jsval_layout jv = JSVAL_TO_IMPL(val);
         push(Imm32(jv.s.tag));
         if (val.isMarkable())
-            push(ImmGCPtr(reinterpret_cast<gc::Cell *>(val.toGCThing())));
+            push(ImmMaybeNurseryPtr(reinterpret_cast<gc::Cell *>(val.toGCThing())));
         else
             push(Imm32(jv.s.payload.i32));
     }
@@ -1322,6 +1328,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void movePtr(ImmPtr imm, Register dest);
     void movePtr(AsmJSImmPtr imm, Register dest);
     void movePtr(ImmGCPtr imm, Register dest);
+    void movePtr(ImmMaybeNurseryPtr imm, Register dest);
 
     void load8SignExtend(const Address &address, Register dest);
     void load8SignExtend(const BaseIndex &src, Register dest);

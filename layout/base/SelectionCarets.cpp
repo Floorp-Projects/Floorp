@@ -448,11 +448,8 @@ SelectionCarets::UpdateSelectionCarets()
   // rect's rightmost position, otherwise, put it to last rect's leftmost.
   ReduceRectToVerticalEdge(collector.mLastRect, !endFrameIsRTL);
 
-  nsLayoutUtils::TransformRect(rootFrame, canvasFrame, collector.mFirstRect);
-  nsLayoutUtils::TransformRect(rootFrame, canvasFrame, collector.mLastRect);
-
   nsAutoTArray<nsIFrame*, 16> hitFramesInFirstRect;
-  nsLayoutUtils::GetFramesForArea(canvasFrame,
+  nsLayoutUtils::GetFramesForArea(rootFrame,
     collector.mFirstRect,
     hitFramesInFirstRect,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
@@ -460,7 +457,7 @@ SelectionCarets::UpdateSelectionCarets()
       nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
 
   nsAutoTArray<nsIFrame*, 16> hitFramesInLastRect;
-  nsLayoutUtils::GetFramesForArea(canvasFrame,
+  nsLayoutUtils::GetFramesForArea(rootFrame,
     collector.mLastRect,
     hitFramesInLastRect,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
@@ -469,6 +466,9 @@ SelectionCarets::UpdateSelectionCarets()
 
   SetStartFrameVisibility(hitFramesInFirstRect.Contains(startFrame));
   SetEndFrameVisibility(hitFramesInLastRect.Contains(endFrame));
+
+  nsLayoutUtils::TransformRect(rootFrame, canvasFrame, collector.mFirstRect);
+  nsLayoutUtils::TransformRect(rootFrame, canvasFrame, collector.mLastRect);
 
   SetStartFramePos(collector.mFirstRect.BottomLeft());
   SetEndFramePos(collector.mLastRect.BottomRight());
@@ -524,13 +524,14 @@ SelectionCarets::SelectWord()
     return NS_OK;
   }
 
+  nsIFrame* rootFrame = mPresShell->GetRootFrame();
   nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
-  if (!canvasFrame) {
+  if (!rootFrame || !canvasFrame) {
     return NS_OK;
   }
 
   // Find content offsets for mouse down point
-  nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(canvasFrame, mDownPoint,
+  nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, mDownPoint,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC);
   if (!ptFrame) {
     return NS_OK;
@@ -650,13 +651,14 @@ CompareRangeWithContentOffset(nsRange* aRange,
 nsEventStatus
 SelectionCarets::DragSelection(const nsPoint &movePoint)
 {
+  nsIFrame* rootFrame = mPresShell->GetRootFrame();
   nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
-  if (!canvasFrame) {
+  if (!rootFrame || !canvasFrame) {
     return nsEventStatus_eConsumeNoDefault;
   }
 
   // Find out which content we point to
-  nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(canvasFrame, movePoint,
+  nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, movePoint,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC);
   if (!ptFrame) {
     return nsEventStatus_eConsumeNoDefault;

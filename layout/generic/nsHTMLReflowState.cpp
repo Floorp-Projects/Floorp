@@ -1470,11 +1470,11 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
     AutoMaybeDisableFontInflation an(frame);
 
     WritingMode wm = GetWritingMode();
+    // Size of the containing block in our writing mode
+    LogicalSize cbSize(wm, nsSize(containingBlockWidth, containingBlockHeight));
     LogicalSize size =
-      frame->ComputeSize(rendContext, wm,
-                         LogicalSize(wm, nsSize(containingBlockWidth,
-                                containingBlockHeight)),
-                         containingBlockWidth, // XXX or mAvailableWidth?
+      frame->ComputeSize(rendContext, wm, cbSize,
+                         cbSize.ISize(wm), // XXX or AvailableISize()?
                          ComputedLogicalMargin().Size(wm) +
                            ComputedLogicalOffsets().Size(wm),
                          ComputedLogicalBorderPadding().Size(wm) -
@@ -2149,7 +2149,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
         frame->ComputeSize(rendContext, wm,
                            LogicalSize(wm, nsSize(aContainingBlockWidth,
                                                   aContainingBlockHeight)),
-                           AvailableWidth(),
+                           AvailableISize(),
                            ComputedLogicalMargin().Size(wm),
                            ComputedLogicalBorderPadding().Size(wm) -
                              ComputedLogicalPadding().Size(wm),

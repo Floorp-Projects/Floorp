@@ -419,8 +419,8 @@ ia2AccessibleTable::get_summary(IUnknown** aAccessible)
 
   // Neither html:table nor xul:tree nor ARIA grid/tree have an ability to
   // link an accessible object to specify a summary. There is closes method
-  // in nsIAccessibleTable::summary to get a summary as a string which is not
-  // mapped directly to IAccessible2.
+  // in Table::summary to get a summary as a string which is not mapped
+  // directly to IAccessible2.
 
   *aAccessible = nullptr;
   return S_FALSE;

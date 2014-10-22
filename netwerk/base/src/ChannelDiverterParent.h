@@ -24,7 +24,7 @@ public:
   ChannelDiverterParent();
   virtual ~ChannelDiverterParent();
 
-  bool Init(const ChannelDiverterArgs& aChannel);
+  bool Init(const ChannelDiverterArgs& aArgs);
 
   void DivertTo(nsIStreamListener* newListener);
 

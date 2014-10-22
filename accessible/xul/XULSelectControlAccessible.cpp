@@ -48,14 +48,9 @@ XULSelectControlAccessible::Shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // XULSelectControlAccessible: SelectAccessible
 
-already_AddRefed<nsIArray>
-XULSelectControlAccessible::SelectedItems()
+void
+XULSelectControlAccessible::SelectedItems(nsTArray<Accessible*>* aItems)
 {
-  nsCOMPtr<nsIMutableArray> selectedItems =
-    do_CreateInstance(NS_ARRAY_CONTRACTID);
-  if (!selectedItems || !mDoc)
-    return nullptr;
-
   // For XUL multi-select control
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> xulMultiSelect =
     do_QueryInterface(mSelectControl);
@@ -68,8 +63,7 @@ XULSelectControlAccessible::SelectedItems()
       nsCOMPtr<nsINode> itemNode(do_QueryInterface(itemElm));
       Accessible* item = mDoc->GetAccessible(itemNode);
       if (item)
-        selectedItems->AppendElement(static_cast<nsIAccessible*>(item),
-                                     false);
+        aItems->AppendElement(item);
     }
   } else {  // Single select?
     nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm;
@@ -78,12 +72,9 @@ XULSelectControlAccessible::SelectedItems()
     if (itemNode) {
       Accessible* item = mDoc->GetAccessible(itemNode);
       if (item)
-        selectedItems->AppendElement(static_cast<nsIAccessible*>(item),
-                                   false);
+        aItems->AppendElement(item);
     }
   }
-
-  return selectedItems.forget();
 }
 
 Accessible*

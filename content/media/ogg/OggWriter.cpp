@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "OggWriter.h"
 #include "prtime.h"
+#include "GeckoProfiler.h"
 
 #undef LOG
 #ifdef MOZ_WIDGET_GONK
@@ -57,6 +58,9 @@ nsresult
 OggWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
                              uint32_t aFlags)
 {
+  PROFILER_LABEL("OggWriter", "WriteEncodedTrack",
+    js::ProfileEntry::Category::OTHER);
+
   for (uint32_t i = 0; i < aData.GetEncodedFrames().Length(); i++) {
     if (aData.GetEncodedFrames()[i]->GetFrameType() != EncodedFrame::OPUS_AUDIO_FRAME) {
       LOG("[OggWriter] wrong encoded data type!");
@@ -133,6 +137,8 @@ OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
                             uint32_t aFlags)
 {
   int rc = -1;
+  PROFILER_LABEL("OggWriter", "GetContainerData",
+    js::ProfileEntry::Category::OTHER);
   // Generate the oggOpus Header
   if (aFlags & ContainerWriter::GET_HEADER) {
     OpusMetadata* meta = static_cast<OpusMetadata*>(mMetadata.get());
@@ -180,6 +186,10 @@ nsresult
 OggWriter::SetMetadata(TrackMetadataBase* aMetadata)
 {
   MOZ_ASSERT(aMetadata);
+
+  PROFILER_LABEL("OggWriter", "SetMetadata",
+    js::ProfileEntry::Category::OTHER);
+
   if (aMetadata->GetKind() != TrackMetadataBase::METADATA_OPUS) {
     LOG("wrong meta data type!");
     return NS_ERROR_FAILURE;

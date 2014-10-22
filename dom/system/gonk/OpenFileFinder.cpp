@@ -13,10 +13,13 @@
 #define USE_DEBUG 0
 
 #undef LOG
+#undef LOGW
+#undef ERR
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO,  "OpenFileFinder", ## args)
 #define LOGW(args...) __android_log_print(ANDROID_LOG_WARN,  "OpenFileFinder", ## args)
 #define ERR(args...)  __android_log_print(ANDROID_LOG_ERROR, "OpenFileFinder", ## args)
 
+#undef DBG
 #if USE_DEBUG
 #define DBG(args...)  __android_log_print(ANDROID_LOG_DEBUG, "OpenFileFinder" , ## args)
 #else

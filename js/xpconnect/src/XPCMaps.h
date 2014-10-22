@@ -559,8 +559,7 @@ public:
 
     static XPCNativeScriptableSharedMap* newMap(int length);
 
-    bool GetNewOrUsed(uint32_t flags, char* name, uint32_t interfacesBitmap,
-                      XPCNativeScriptableInfo* si);
+    bool GetNewOrUsed(uint32_t flags, char* name, XPCNativeScriptableInfo* si);
 
     inline uint32_t Count() { return mTable->EntryCount(); }
     inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)

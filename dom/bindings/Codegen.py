@@ -1376,13 +1376,6 @@ def UnionConversions(unionTypes, config):
                             headers.add(typeDesc.headerFile)
                     else:
                         headers.add(CGHeaders.getDeclarationFilename(f.inner))
-                    # Check for whether we have a possibly-XPConnect-implemented
-                    # interface.  If we do, the right descriptor will come from
-                    # providers[0], because that would be the non-worker
-                    # descriptor provider, if we have one at all.
-                    if (f.isGeckoInterface() and
-                        providers[0].getDescriptor(f.inner.identifier.name).hasXPConnectImpls):
-                        headers.add("nsDOMQS.h")
                 elif f.isDictionary():
                     headers.add(CGHeaders.getDeclarationFilename(f.inner))
                 elif f.isPrimitive():
@@ -3682,30 +3675,26 @@ class CastableObjectUnwrapper():
                 nsresult rv;
                 { // Scope for the JSAutoCompartment, because we only
                   // want to be in that compartment for the UnwrapArg call.
+                  JS::Rooted<JSObject*> source(cx, ${source});
                   JSAutoCompartment ac(cx, ${source});
-                  rv = UnwrapArg<${type}>(cx, val, &objPtr, &objRef.ptr, &val);
+                  rv = UnwrapArg<${type}>(cx, source, getter_AddRefs(objPtr));
                 }
                 """)
         else:
             self.substitution["uncheckedObjDecl"] = ""
             self.substitution["source"] = source
-            xpconnectUnwrap = "nsresult rv = UnwrapArg<${type}>(cx, val, &objPtr, &objRef.ptr, &val);\n"
+            xpconnectUnwrap = (
+                "JS::Rooted<JSObject*> source(cx, ${source});\n"
+                "nsresult rv = UnwrapArg<${type}>(cx, source, getter_AddRefs(objPtr));\n")
 
         if descriptor.hasXPConnectImpls:
-            # We don't use xpc_qsUnwrapThis because it will always throw on
-            # unwrap failure, whereas we want to control whether we throw or
-            # not.
             self.substitution["codeOnFailure"] = string.Template(
-                "${type} *objPtr;\n"
-                "SelfRef objRef;\n"
-                "JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*${source}));\n" +
+                "nsRefPtr<${type}> objPtr;\n" +
                 xpconnectUnwrap +
                 "if (NS_FAILED(rv)) {\n"
                 "${indentedCodeOnFailure}"
                 "}\n"
-                "// We should be castable!\n"
-                "MOZ_ASSERT(!objRef.ptr);\n"
-                "// We should have an object, too!\n"
+                "// We should have an object\n"
                 "MOZ_ASSERT(objPtr);\n"
                 "${target} = objPtr;\n"
             ).substitute(self.substitution,
@@ -4773,27 +4762,15 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             else:
                 holderType = "nsRefPtr<" + typeName + ">"
             templateBody += (
-                "JS::Rooted<JS::Value> tmpVal(cx, ${val});\n" +
-                typePtr + " tmp;\n"
-                "if (NS_FAILED(UnwrapArg<" + typeName + ">(cx, ${val}, &tmp, static_cast<" + typeName + "**>(getter_AddRefs(${holderName})), &tmpVal))) {\n")
+                "JS::Rooted<JSObject*> source(cx, &${val}.toObject());\n" +
+                "if (NS_FAILED(UnwrapArg<" + typeName + ">(cx, source, getter_AddRefs(${holderName})))) {\n")
             templateBody += CGIndenter(onFailureBadType(failureCode,
                                                         descriptor.interface.identifier.name)).define()
             templateBody += ("}\n"
-                             "MOZ_ASSERT(tmp);\n")
+                             "MOZ_ASSERT(${holderName});\n")
 
-            if not isDefinitelyObject and not forceOwningType:
-                # Our tmpVal will go out of scope, so we can't rely on it
-                # for rooting
-                templateBody += dedent("""
-                    if (tmpVal != ${val} && !${holderName}) {
-                      // We have to have a strong ref, because we got this off
-                      // some random object that might get GCed
-                      ${holderName} = tmp;
-                    }
-                    """)
-
-            # And store our tmp, before it goes out of scope.
-            templateBody += "${declName} = tmp;\n"
+            # And store our value in ${declName}
+            templateBody += "${declName} = ${holderName};\n"
 
         # Just pass failureCode, not onFailureBadType, here, so we'll report the
         # thing as not an object as opposed to not implementing whatever our
@@ -6344,7 +6321,7 @@ class CGCallGenerator(CGThing):
         if isFallible:
             self.cgRoot.prepend(CGGeneric("ErrorResult rv;\n"))
             self.cgRoot.append(CGGeneric("rv.WouldReportJSException();\n"))
-            self.cgRoot.append(CGGeneric("if (rv.Failed()) {\n"))
+            self.cgRoot.append(CGGeneric("if (MOZ_UNLIKELY(rv.Failed())) {\n"))
             self.cgRoot.append(CGIndenter(errorReport))
             self.cgRoot.append(CGGeneric("}\n"))
 
@@ -6900,7 +6877,7 @@ class CGMethodCall(CGThing):
             if requiredArgs > 0:
                 code = fill(
                     """
-                    if (args.length() < ${requiredArgs}) {
+                    if (MOZ_UNLIKELY(args.length() < ${requiredArgs})) {
                       return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "${methodName}");
                     }
                     """,
@@ -12281,23 +12258,8 @@ class CGBindingRoot(CGThing):
                                     dictionaries,
                                     mainCallbacks + workerCallbacks))))
 
-        bindingHeaders["nsDOMQS.h"] = any(d.hasXPConnectImpls for d in descriptors)
         # Only mainthread things can have hasXPConnectImpls
         provider = config.getDescriptorProvider(False)
-
-        def checkForXPConnectImpls(typeInfo):
-            type, _, _ = typeInfo
-            type = type.unroll()
-            while type.isMozMap():
-                type = type.inner.unroll()
-            if not type.isInterface() or not type.isGeckoInterface():
-                return False
-            try:
-                typeDesc = provider.getDescriptor(type.inner.identifier.name)
-            except NoSuchDescriptorError:
-                return False
-            return typeDesc.hasXPConnectImpls
-        addHeaderBasedOnTypes("nsDOMQS.h", checkForXPConnectImpls)
 
         def descriptorClearsPropsInSlots(descriptor):
             if not descriptor.wrapperCache:
@@ -15075,7 +15037,6 @@ class CGEventRoot(CGThing):
                                   "%s.h" % interfaceName,
                                   "js/GCAPI.h",
                                   'mozilla/dom/Nullable.h',
-                                  'nsDOMQS.h'
                               ],
                               "", self.root, config)
 

@@ -294,15 +294,14 @@ enum CheckboxValue {
 {
   if (!mGeckoAccessible)
     return nil;
-    
+
   Accessible* accessible = mGeckoAccessible->GetSelectedItem(0);
   if (!accessible)
     return nil;
 
   mozAccessible* nativeAcc = nil;
-  nsresult rv = accessible->GetNativeInterface((void**)&nativeAcc);
-  NS_ENSURE_SUCCESS(rv, nil);
-  
+  accessible->GetNativeInterface((void**)&nativeAcc);
+
   return nativeAcc;
 }
 

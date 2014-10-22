@@ -55,10 +55,7 @@ ia2AccessibleImage::get_description(BSTR* aDescription)
     return CO_E_OBJNOTCONNECTED;
 
   nsAutoString description;
-  nsresult rv = acc->GetName(description);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
+  acc->Name(description);
   if (description.IsEmpty())
     return S_FALSE;
 
@@ -88,14 +85,10 @@ ia2AccessibleImage::get_imagePosition(enum IA2CoordinateType aCoordType,
   uint32_t geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
     nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
     nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
-  int32_t x = 0, y = 0;
 
-  nsresult rv = imageAcc->GetImagePosition(geckoCoordType, &x, &y);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  *aX = x;
-  *aY = y;
+  nsIntPoint pos = imageAcc->Position(geckoCoordType);
+  *aX = pos.x;
+  *aY = pos.y;
   return S_OK;
 
   A11Y_TRYBLOCK_END
@@ -116,13 +109,9 @@ ia2AccessibleImage::get_imageSize(long* aHeight, long* aWidth)
   if (imageAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  int32_t width = 0, height = 0;
-  nsresult rv = imageAcc->GetImageSize(&width, &height);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  *aHeight = width;
-  *aWidth = height;
+  nsIntSize size = imageAcc->Size();
+  *aHeight = size.width;
+  *aWidth = size.height;
   return S_OK;
 
   A11Y_TRYBLOCK_END

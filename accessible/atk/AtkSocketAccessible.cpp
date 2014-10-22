@@ -136,11 +136,10 @@ AtkSocketAccessible::AtkSocketAccessible(nsIContent* aContent,
   }
 }
 
-NS_IMETHODIMP
+void
 AtkSocketAccessible::GetNativeInterface(void** aOutAccessible)
 {
   *aOutAccessible = mAtkObject;
-  return NS_OK;
 }
 
 void

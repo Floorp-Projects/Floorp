@@ -93,7 +93,6 @@ protected:
   JS::Rooted<JSObject*> mGlobalJSObject;
   JSContext* mCx;
   mutable nsISupports* mGlobalObject;
-  mutable nsCOMPtr<nsISupports> mGlobalObjectRef;
 };
 
 // Class for representing optional arguments.

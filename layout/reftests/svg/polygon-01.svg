@@ -1,0 +1,13 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Test stroking of close section of polygon</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=1085092 -->
+
+  <polygon fill="none" stroke="blue" stroke-width="10"
+           transform="translate(50,50)"
+           points="50,50 150,50 150,150 50,150"/>
+</svg>

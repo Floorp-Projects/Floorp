@@ -446,6 +446,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           expectedUtterance: [[{"string": "stateSelected"}, "5"],
                               ["5", {"string": "stateSelected"}]],
           expectedBraille: [["5"], ["5"]],
+        }, {
+          accOrElmOrID: "frequency",
+          expectedUtterance: [[{"string": "stateCollapsed"},
+            {"string": "stateHasPopup"}, {"string": "combobox"}, "15 min"], [
+            "15 min", {"string": "stateCollapsed"}, {"string": "stateHasPopup"},
+            {"string": "combobox"}]],
+          expectedBraille: [[{"string": "comboboxAbbr"}, "15 min"], ["15 min",
+            {"string": "comboboxAbbr"}]]
+        }, {
+          accOrElmOrID: "selected-combobox-option",
+          oldAccOrElmOrID: "frequency",
+          expectedUtterance: [[{"string": "stateSelected"},
+            {"string": "comboboxoption"}, "15 min"], ["15 min",
+            {"string": "stateSelected"}, {"string": "comboboxoption"}]],
+          expectedBraille: [[{"string": "comboboxoptionAbbr"}, "15 min"], [
+            "15 min", {"string": "comboboxoptionAbbr"}]]
+        }, {
+          accOrElmOrID: "combobox-option",
+          oldAccOrElmOrID: "frequency",
+          expectedUtterance: [[{"string": "comboboxoption"}, "30 min"], [
+            "30 min", {"string": "comboboxoption"}]],
+          expectedBraille: [[{"string": "comboboxoptionAbbr"}, "30 min"], [
+            "30 min", {"string": "comboboxoptionAbbr"}]]
+        }, {
+          accOrElmOrID: "labelled-combobox",
+          expectedUtterance: [[{"string": "stateCollapsed"},
+            {"string": "stateHasPopup"}, {"string": "combobox"}, "Never",
+            "Intervals"], ["Intervals", "Never", {"string": "stateCollapsed"},
+            {"string": "stateHasPopup"}, {"string": "combobox"}]],
+          expectedBraille: [[{"string": "comboboxAbbr"}, "Never", "Intervals"],
+            ["Intervals", "Never", {"string": "comboboxAbbr"}]]
         }];
 
         // Test all possible utterance order preference values.
@@ -591,6 +622,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           <li role="gridcell">6</li>
         </ol>
       </section>
+      <select id="frequency">
+        <option id="selected-combobox-option" value="15">15 min</option>
+        <option id="combobox-option" value="30">30 min</option>
+        <option value="null">Manual</option>
+      </select>
+      <select id="labelled-combobox" aria-label="Intervals">
+        <option value="15">Every 15 min</option>
+        <option value="30">Every 30 min</option>
+        <option value="null" selected>Never</option>
+      </select>
     </div>
   </body>
 </html>

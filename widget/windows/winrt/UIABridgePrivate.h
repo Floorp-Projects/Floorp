@@ -133,7 +133,7 @@ public:
 
 private:
   int mIndexID;
-  nsCOMPtr<nsIAccessible> mAccessItem;
+  nsRefPtr<Accessible> mAccessItem;
 };
 
 } } }

@@ -92,9 +92,15 @@ union FTPChannelCreationArgs
   FTPChannelConnectArgs;   // Used for redirected-to channels
 };
 
+struct HttpChannelDiverterArgs
+{
+  PHttpChannel mChannel;
+  bool mApplyConversion;
+};
+
 union ChannelDiverterArgs
 {
-  PHttpChannel;
+  HttpChannelDiverterArgs;
   PFTPChannel;
 };
 

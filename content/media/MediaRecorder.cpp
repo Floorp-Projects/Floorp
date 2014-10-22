@@ -24,6 +24,7 @@
 #include "nsMimeTypes.h"
 #include "nsProxyRelease.h"
 #include "nsTArray.h"
+#include "GeckoProfiler.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaRecorderLog;
@@ -242,6 +243,8 @@ class MediaRecorder::Session: public nsIObserver
       } else {
         // Flush out remaining encoded data.
         mSession->Extract(true);
+        if (mSession->mIsRegisterProfiler)
+           profiler_unregister_thread();
         if (NS_FAILED(NS_DispatchToMainThread(
                         new DestroyRunnable(mSession)))) {
           MOZ_ASSERT(false, "NS_DispatchToMainThread DestroyRunnable failed");
@@ -339,7 +342,8 @@ public:
     : mRecorder(aRecorder),
       mTimeSlice(aTimeSlice),
       mStopIssued(false),
-      mCanRetrieveData(false)
+      mCanRetrieveData(false),
+      mIsRegisterProfiler(false)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -438,6 +442,15 @@ private:
     MOZ_ASSERT(NS_GetCurrentThread() == mReadThread);
     LOG(PR_LOG_DEBUG, ("Session.Extract %p", this));
 
+    if (!mIsRegisterProfiler) {
+      char aLocal;
+      profiler_register_thread("Media_Encoder", &aLocal);
+      mIsRegisterProfiler = true;
+    }
+
+    PROFILER_LABEL("MediaRecorder", "Session Extract",
+      js::ProfileEntry::Category::OTHER);
+
     // Pull encoded media data from MediaEncoder
     nsTArray<nsTArray<uint8_t> > encodedBuf;
     mEncoder->GetEncodedData(&encodedBuf, mMimeType);
@@ -534,7 +547,7 @@ private:
     mTrackUnionStream->AddListener(mEncoder);
     // Create a thread to read encode media data from MediaEncoder.
     if (!mReadThread) {
-      nsresult rv = NS_NewNamedThread("Media Encoder", getter_AddRefs(mReadThread));
+      nsresult rv = NS_NewNamedThread("Media_Encoder", getter_AddRefs(mReadThread));
       if (NS_FAILED(rv)) {
         DoSessionEndTask(rv);
         return;
@@ -636,6 +649,8 @@ private:
   bool mStopIssued;
   // Indicate session has encoded data. This can be changed in recording thread.
   bool mCanRetrieveData;
+  // The register flag for "Media_Encoder" thread to profiler
+  bool mIsRegisterProfiler;
 };
 
 NS_IMPL_ISUPPORTS(MediaRecorder::Session, nsIObserver)

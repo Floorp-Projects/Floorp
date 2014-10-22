@@ -30,12 +30,12 @@ static const uint32_t kGenericAccType = 0;
  *
  *  Definition of nsRoleMapEntry contains comments explaining this table.
  *
- *  When no nsIAccessibleRole enum mapping exists for an ARIA role, the
- *  role will be exposed via the object attribute "xml-roles".
- *  In addition, in MSAA, the unmapped role will also be exposed as a BSTR string role.
+ *  When no Role enum mapping exists for an ARIA role, the role will be exposed
+ *  via the object attribute "xml-roles".
  *
- *  There are no nsIAccessibleRole enums for the following landmark roles:
- *    banner, contentinfo, main, navigation, note, search, secondary, seealso, breadcrumbs
+ *  There are no Role enums for the following landmark roles:
+ *    banner, contentinfo, main, navigation, note, search, secondary,
+ *    seealso, breadcrumbs.
  */
 
 static nsRoleMapEntry sWAIRoleMaps[] =

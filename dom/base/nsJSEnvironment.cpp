@@ -282,7 +282,8 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                      nsJSContext::NonIncrementalGC,
                                      nsJSContext::ShrinkingGC);
     }
-  } else if (!nsCRT::strcmp(aTopic, "quit-application")) {
+  } else if (!nsCRT::strcmp(aTopic, "quit-application") ||
+             !nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     sShuttingDown = true;
     KillTimers();
   }
@@ -2848,6 +2849,7 @@ nsJSContext::EnsureStatics()
   nsIObserver* observer = new nsJSEnvironmentObserver();
   obs->AddObserver(observer, "memory-pressure", false);
   obs->AddObserver(observer, "quit-application", false);
+  obs->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
   // Bug 907848 - We need to explicitly get the nsIDOMScriptObjectFactory
   // service in order to force its constructor to run, which registers a

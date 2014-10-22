@@ -10,5 +10,12 @@
 "digest": "5520f53fc10fcb569f235aff5c78ea5b69c878a8439b95aa758de2b83fc9f09bd4758c5fd701d84c58776386e210f3f30e5c9da6fdd8358d7dd371c764179339",
 "algorithm": "sha512",
 "filename": "sccache.tar.bz2"
+},
+{
+"size": 31057326,
+"digest": "b844c3e52be493d2cacafa58c4a924b89c9be8d2dcc2a7c71aed58c253d8035fba4d51df309f73e3c4342a1f3c3898a9a25c4815e2112888d1280f43c41c8e51",
+"algorithm": "sha512",
+"filename": "moztt.tar.bz2",
+"unpack": "True"
 }
 ]

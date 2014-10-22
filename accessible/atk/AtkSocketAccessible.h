@@ -47,8 +47,7 @@ public:
 
   virtual void Shutdown();
 
-  // nsIAccessible
-  NS_IMETHODIMP GetNativeInterface(void** aOutAccessible);
+  virtual void GetNativeInterface(void** aOutAccessible) MOZ_OVERRIDE;
 };
 
 } // namespace a11y

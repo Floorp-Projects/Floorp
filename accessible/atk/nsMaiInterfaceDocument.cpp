@@ -83,7 +83,7 @@ getDocumentAttributesCB(AtkDocument *aDocument)
   attributes = prependToList(attributes, kDocUrlName, aURL);
 
   nsAutoString aW3CDocType;
-  document->GetDocType(aW3CDocType);
+  document->DocType(aW3CDocType);
   attributes = prependToList(attributes, kDocTypeName, aW3CDocType);
 
   nsAutoString aMimeType;
@@ -102,10 +102,9 @@ getDocumentAttributeValueCB(AtkDocument *aDocument,
     return nullptr;
 
   DocAccessible* document = accWrap->AsDoc();
-  nsresult rv;
   nsAutoString attrValue;
   if (!strcasecmp(aAttrName, kDocTypeName))
-    rv = document->GetDocType(attrValue);
+    document->DocType(attrValue);
   else if (!strcasecmp(aAttrName, kDocUrlName))
     document->URL(attrValue);
   else if (!strcasecmp(aAttrName, kMimeTypeName))
@@ -113,7 +112,6 @@ getDocumentAttributeValueCB(AtkDocument *aDocument,
   else
     return nullptr;
 
-  NS_ENSURE_SUCCESS(rv, nullptr);
   return attrValue.IsEmpty() ? nullptr : AccessibleWrap::ReturnString(attrValue);
 }
 }

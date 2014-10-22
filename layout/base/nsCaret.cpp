@@ -532,9 +532,9 @@ void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
   ComputeCaretRects(frame, contentOffset, &caretRect, &hookRect);
 
   Rect devPxCaretRect =
-    NSRectToRect(caretRect + aOffset, appUnitsPerDevPixel, *drawTarget);
+    NSRectToSnappedRect(caretRect + aOffset, appUnitsPerDevPixel, *drawTarget);
   Rect devPxHookRect =
-    NSRectToRect(hookRect + aOffset, appUnitsPerDevPixel, *drawTarget);
+    NSRectToSnappedRect(hookRect + aOffset, appUnitsPerDevPixel, *drawTarget);
   ColorPattern color(ToDeviceColor(frame->GetCaretColorAt(contentOffset)));
 
   drawTarget->FillRect(devPxCaretRect, color);

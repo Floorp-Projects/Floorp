@@ -561,7 +561,8 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
                aTextRect.y + mAccessKeyInfo->mAccessOffset,
                mAccessKeyInfo->mAccessWidth,
                mAccessKeyInfo->mAccessUnderlineSize);
-      Rect devPxRect = NSRectToRect(r, appUnitsPerDevPixel, *drawTarget);
+      Rect devPxRect =
+        NSRectToSnappedRect(r, appUnitsPerDevPixel, *drawTarget);
       drawTarget->FillRect(devPxRect, color);
     }
 

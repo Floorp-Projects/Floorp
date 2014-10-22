@@ -784,10 +784,10 @@ class JSScript : public js::gc::TenuredCell
 
     JSCompartment   *compartment_;
 
-    /* Persistent type information retained across GCs. */
-    js::types::TypeScript *types;
-
   private:
+    /* Persistent type information retained across GCs. */
+    js::types::TypeScript *types_;
+
     // This script's ScriptSourceObject, or a CCW thereof.
     //
     // (When we clone a JSScript into a new compartment, we don't clone its
@@ -969,6 +969,13 @@ class JSScript : public js::gc::TenuredCell
     bool argsHasVarBinding_:1;
     bool needsArgsAnalysis_:1;
     bool needsArgsObj_:1;
+
+    // Generation for this script's TypeScript. If out of sync with the
+    // TypeZone's generation, the TypeScript needs to be swept.
+    //
+    // This should be a uint32 but is instead a bool so that MSVC packs it
+    // correctly.
+    bool typesGeneration_:1;
 
     //
     // End of fields.  Start methods.
@@ -1199,7 +1206,6 @@ class JSScript : public js::gc::TenuredCell
 
     bool hasFreezeConstraints() const { return hasFreezeConstraints_; }
     void setHasFreezeConstraints() { hasFreezeConstraints_ = true; }
-    void clearHasFreezeConstraints() { hasFreezeConstraints_ = false; }
 
     bool warnedAboutUndefinedProp() const { return warnedAboutUndefinedProp_; }
     void setWarnedAboutUndefinedProp() { warnedAboutUndefinedProp_ = true; }
@@ -1257,6 +1263,15 @@ class JSScript : public js::gc::TenuredCell
      */
     bool argsObjAliasesFormals() const {
         return needsArgsObj() && !strict();
+    }
+
+    uint32_t typesGeneration() const {
+        return (uint32_t) typesGeneration_;
+    }
+
+    void setTypesGeneration(uint32_t generation) {
+        MOZ_ASSERT(generation <= 1);
+        typesGeneration_ = (bool) generation;
     }
 
     bool hasAnyIonScript() const {
@@ -1428,6 +1443,10 @@ class JSScript : public js::gc::TenuredCell
 
     /* Ensure the script has a TypeScript. */
     inline bool ensureHasTypes(JSContext *cx);
+
+    inline js::types::TypeScript *types();
+
+    void maybeSweepTypes(js::types::AutoClearTypeInferenceStateOnOOM *oom);
 
     inline js::GlobalObject &global() const;
     js::GlobalObject &uninlinedGlobal() const;

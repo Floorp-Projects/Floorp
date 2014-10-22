@@ -102,13 +102,15 @@ function registerSelf() {
 
   if (register[0]) {
     listenerId = register[0][0].id;
-    // check if we're the main process
-    if (register[0][1] == true) {
-      addMessageListener("MarionetteMainListener:emitTouchEvent", emitTouchEventForIFrame);
+    if (typeof listenerId != "undefined") {
+      // check if we're the main process
+      if (register[0][1] == true) {
+        addMessageListener("MarionetteMainListener:emitTouchEvent", emitTouchEventForIFrame);
+      }
+      importedScripts = FileUtils.getDir('TmpD', [], false);
+      importedScripts.append('marionetteContentScripts');
+      startListeners();
     }
-    importedScripts = FileUtils.getDir('TmpD', [], false);
-    importedScripts.append('marionetteContentScripts');
-    startListeners();
   }
 }
 
@@ -264,6 +266,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getActiveElement", getActiveElement);
   removeMessageListenerId("Marionette:clickElement", clickElement);
   removeMessageListenerId("Marionette:getElementAttribute", getElementAttribute);
+  removeMessageListenerId("Marionette:getElementText", getElementText);
   removeMessageListenerId("Marionette:getElementTagName", getElementTagName);
   removeMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
   removeMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssProperty);
@@ -1827,8 +1830,15 @@ function addCookie(msg) {
   if (!document || !document.contentType.match(/html/i)) {
     sendError('You may only set cookies on html documents', 25, null, msg.json.command_id);
   }
-  var cookieManager = Cc['@mozilla.org/cookiemanager;1'].
-                        getService(Ci.nsICookieManager2);
+  let cookieManager;
+  try {
+    // Retrieving the cookie manager fails with e10s enabled.
+    cookieManager = Cc['@mozilla.org/cookiemanager;1'].
+                      getService(Ci.nsICookieManager2);
+  } catch (ex) {
+    sendError("Error retrieving cookie manager: " + ex, 13, null, msg.json.command_id);
+    return;
+  }
   cookieManager.add(cookie.domain, cookie.path, cookie.name, cookie.value,
                    cookie.secure, false, false, cookie.expiry);
   sendOk(msg.json.command_id);
@@ -1840,6 +1850,10 @@ function addCookie(msg) {
 function getCookies(msg) {
   var toReturn = [];
   var cookies = getVisibleCookies(curFrame.location);
+  if (typeof cookies == "undefined") {
+    sendError("Error retrieving cookie manager", 13, null, msg.json.command_id);
+    return;
+  }
   for (var i = 0; i < cookies.length; i++) {
     var cookie = cookies[i];
     var expires = cookie.expires;
@@ -1866,8 +1880,16 @@ function getCookies(msg) {
  */
 function deleteCookie(msg) {
   var toDelete = msg.json.name;
-  var cookieManager = Cc['@mozilla.org/cookiemanager;1'].
-                        getService(Ci.nsICookieManager);
+
+  let cookieManager;
+  try {
+    // Retrieving the cookie manager fails with e10s enabled.
+    cookieManager = Cc['@mozilla.org/cookiemanager;1'].
+                      getService(Ci.nsICookieManager);
+  } catch (ex) {
+    sendError("Error retrieving cookie manager: " + ex, 13, null, msg.json.command_id);
+    return;
+  }
 
   var cookies = getVisibleCookies(curFrame.location);
   for (var i = 0; i < cookies.length; i++) {
@@ -1884,8 +1906,15 @@ function deleteCookie(msg) {
  * Delete all the visibile cookies on a page
  */
 function deleteAllCookies(msg) {
-  let cookieManager = Cc['@mozilla.org/cookiemanager;1'].
-                        getService(Ci.nsICookieManager);
+  let cookieManager;
+  try {
+    // Retrieving the cookie manager fails with e10s enabled.
+    cookieManager = Cc['@mozilla.org/cookiemanager;1'].
+                      getService(Ci.nsICookieManager);
+  } catch (ex) {
+    sendError("Error retrieving cookie manager: " + ex, 13, null, msg.json.command_id);
+    return;
+  }
   let cookies = getVisibleCookies(curFrame.location);
   for (let i = 0; i < cookies.length; i++) {
     let cookie = cookies[i];
@@ -1905,8 +1934,15 @@ function getVisibleCookies(location) {
     return currentPath.indexOf(aPath) != -1;
   }
 
-  let cookieManager = Cc['@mozilla.org/cookiemanager;1'].
-                        getService(Ci.nsICookieManager);
+  let cookieManager;
+  try {
+    // Retrieving the cookie manager fails with e10s enabled.
+    cookieManager = Cc['@mozilla.org/cookiemanager;1'].
+                      getService(Ci.nsICookieManager);
+  } catch (ex) {
+    return;
+  }
+
   let enumerator = cookieManager.enumerator;
   while (enumerator.hasMoreElements()) {
     let cookie = enumerator.getNext().QueryInterface(Ci['nsICookie']);

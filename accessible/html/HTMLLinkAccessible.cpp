@@ -27,9 +27,7 @@ HTMLLinkAccessible::
 {
 }
 
-// Expose nsIAccessibleHyperLink unconditionally
-NS_IMPL_ISUPPORTS_INHERITED(HTMLLinkAccessible, HyperTextAccessibleWrap,
-                            nsIAccessibleHyperLink)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLLinkAccessible, HyperTextAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible

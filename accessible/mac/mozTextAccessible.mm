@@ -59,7 +59,6 @@ ToNSString(id aValue)
 
   if ((self = [super initWithAccessible:accessible])) {
     mGeckoTextAccessible = accessible->AsHyperText();
-    CallQueryInterface(accessible, &mGeckoEditableTextAccessible);
   }
   return self;
 
@@ -309,7 +308,6 @@ ToNSString(id aValue)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mGeckoTextAccessible = nullptr;
-  NS_IF_RELEASE(mGeckoEditableTextAccessible);
   [super expire];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -323,8 +321,8 @@ ToNSString(id aValue)
 
   if ([[self role] isEqualToString:NSAccessibilityStaticTextRole])
     return YES;
-    
-  if (mGeckoEditableTextAccessible)
+
+  if (mGeckoTextAccessible)
     return (mGeckoAccessible->State() & states::READONLY) == 0;
 
   return NO;
@@ -344,10 +342,10 @@ ToNSString(id aValue)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (mGeckoEditableTextAccessible) {
+  if (mGeckoTextAccessible) {
     nsString text;
     nsCocoaUtils::GetStringForNSString(aNewString, text);
-    mGeckoEditableTextAccessible->SetTextContents(text);
+    mGeckoTextAccessible->ReplaceText(text);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;

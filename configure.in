@@ -183,6 +183,15 @@ if test -n "$FXOS_SIMULATOR" ; then
     AC_SUBST(FXOS_SIMULATOR)
 fi
 
+if test -n "$MOZTTDIR" -a ! -d "$MOZTTDIR" ; then
+    AC_MSG_ERROR([MOZTTDIR '$MOZTTDIR' isn't a valid directory])
+fi
+
+AC_SUBST(MOZTTDIR)
+if test -n "$MOZTTDIR" ; then
+    AC_DEFINE(PACKAGE_MOZTT)
+fi
+
 MOZ_ARG_WITH_STRING(gonk,
 [  --with-gonk=DIR
                location of gonk dir],

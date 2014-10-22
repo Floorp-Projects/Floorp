@@ -124,6 +124,9 @@ public:
   NS_IMETHOD GetApplyConversion(bool *value);
   NS_IMETHOD SetApplyConversion(bool value);
   NS_IMETHOD GetContentEncodings(nsIUTF8StringEnumerator** aEncodings);
+  NS_IMETHOD DoApplyContentConversions(nsIStreamListener *aNextListener,
+                                       nsIStreamListener **aNewNextListener,
+                                       nsISupports *aCtxt);
 
   // HttpBaseChannel::nsIHttpChannel
   NS_IMETHOD GetRequestMethod(nsACString& aMethod);
@@ -236,6 +239,11 @@ public: /* Necko internal use only... */
     static bool ShouldRewriteRedirectToGET(uint32_t httpStatus,
                                            nsHttpRequestHead::ParsedMethodType method);
 
+    // Like nsIEncodedChannel::DoApplyConversions except context is set to
+    // mListenerContext.
+    nsresult DoApplyContentConversions(nsIStreamListener *aNextListener,
+                                       nsIStreamListener **aNewNextListener);
+
 protected:
   nsCOMArray<nsISecurityConsoleMessage> mSecurityConsoleMessages;
 
@@ -247,10 +255,6 @@ protected:
   void ReleaseListeners();
 
   nsPerformance* GetPerformance();
-
-  NS_IMETHOD DoApplyContentConversions(nsIStreamListener *aNextListener,
-                                     nsIStreamListener **aNewNextListener,
-                                     nsISupports *aCtxt);
 
   void AddCookiesToRequest();
   virtual nsresult SetupReplacementChannel(nsIURI *,

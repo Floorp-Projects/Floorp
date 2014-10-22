@@ -629,38 +629,40 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
   if (outLeftNode)  *outLeftNode  = nullptr;
   if (outRightNode) *outRightNode = nullptr;
   // split any matching style nodes above the node/offset
-  nsCOMPtr<nsIDOMNode> parent, tmp = *aNode;
+  nsCOMPtr<nsIContent> node = do_QueryInterface(*aNode);
+  NS_ENSURE_STATE(node);
   int32_t offset;
 
   bool useCSS = IsCSSEnabled();
 
   bool isSet;
-  while (tmp && !IsBlockNode(tmp))
-  {
+  while (node && !IsBlockNode(node) && node->GetParentNode() &&
+         IsEditable(node->GetParentNode())) {
     isSet = false;
-    if (useCSS && mHTMLCSSUtils->IsCSSEditableProperty(tmp, aProperty, aAttribute)) {
+    if (useCSS && mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty, aAttribute)) {
       // the HTML style defined by aProperty/aAttribute has a CSS equivalence
-      // in this implementation for the node tmp; let's check if it carries those css styles
+      // in this implementation for the node; let's check if it carries those css styles
       nsAutoString firstValue;
-      mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(tmp, aProperty,
-        aAttribute, isSet, firstValue, nsHTMLCSSUtils::eSpecified);
+      mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(GetAsDOMNode(node),
+        aProperty, aAttribute, isSet, firstValue, nsHTMLCSSUtils::eSpecified);
     }
-    if ( (aProperty && NodeIsType(tmp, aProperty)) ||   // node is the correct inline prop
-         (aProperty == nsGkAtoms::href && nsHTMLEditUtils::IsLink(tmp)) ||
-                                                        // node is href - test if really <a href=...
-         (!aProperty && NodeIsProperty(tmp)) ||         // or node is any prop, and we asked to split them all
-         isSet)                                         // or the style is specified in the style attribute
-    {
+    if (// node is the correct inline prop
+        (aProperty && node->Tag() == aProperty) ||
+        // node is href - test if really <a href=...
+        (aProperty == nsGkAtoms::href && nsHTMLEditUtils::IsLink(node)) ||
+        // or node is any prop, and we asked to split them all
+        (!aProperty && NodeIsProperty(GetAsDOMNode(node))) ||
+        // or the style is specified in the style attribute
+        isSet) {
       // found a style node we need to split
-      nsresult rv = SplitNodeDeep(tmp, *aNode, *aOffset, &offset, false,
-                                  outLeftNode, outRightNode);
+      nsresult rv = SplitNodeDeep(GetAsDOMNode(node), *aNode, *aOffset,
+                                  &offset, false, outLeftNode, outRightNode);
       NS_ENSURE_SUCCESS(rv, rv);
       // reset startNode/startOffset
-      tmp->GetParentNode(getter_AddRefs(*aNode));
+      *aNode = GetAsDOMNode(node->GetParent());
       *aOffset = offset;
     }
-    tmp->GetParentNode(getter_AddRefs(parent));
-    tmp = parent;
+    node = node->GetParent();
   }
   return NS_OK;
 }

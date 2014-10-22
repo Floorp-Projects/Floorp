@@ -19,7 +19,7 @@ interface nsIDOMWindow;
  * the root node of a document or you can get one from
  * nsIAccessible::GetDocument().
  */
-[scriptable, uuid(c80f6600-3210-4893-8f71-fde381ca39c9)]
+[scriptable, uuid(2be938df-0210-4609-9ece-26b197a517e5)]
 interface nsIAccessibleDocument : nsISupports
 {
   /**
@@ -70,6 +70,5 @@ interface nsIAccessibleDocument : nsISupports
   /**
    * Return the child document accessible at the given index.
    */
-  [binaryname(ScriptableGetChildDocumentAt)]
   nsIAccessibleDocument getChildDocumentAt(in unsigned long index);
 };

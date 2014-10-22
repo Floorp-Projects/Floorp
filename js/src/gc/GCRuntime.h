@@ -672,6 +672,7 @@ class GCRuntime
      */
     JS::Zone              *zoneGroups;
     JS::Zone              *currentZoneGroup;
+    bool                  sweepingTypes;
     unsigned              finalizePhase;
     JS::Zone              *sweepZone;
     unsigned              sweepKindIndex;

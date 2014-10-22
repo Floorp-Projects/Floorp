@@ -11,7 +11,7 @@ function testMap() {
     print(m.mode+" "+m.expect);
     nums.mapPar(function (v) {
       var x = [];
-      for (var i = 0; i < 45000; i++) {
+      for (var i = 0; i < 20000; i++) {
         x[i] = {from: v};
       }
       return x;

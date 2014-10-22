@@ -46,7 +46,6 @@ struct nsDOMClassInfoData
   const nsIID **mInterfaces;
   uint32_t mScriptableFlags : 31; // flags must not use more than 31 bits!
   uint32_t mHasClassInterface : 1;
-  uint32_t mInterfacesBitmap;
   bool mChromeOnly : 1;
   bool mAllowXBL : 1;
   bool mDisabled : 1;
@@ -135,11 +134,6 @@ protected:
 
   virtual void PreserveWrapper(nsISupports *aNative) MOZ_OVERRIDE
   {
-  }
-
-  virtual uint32_t GetInterfacesBitmap() MOZ_OVERRIDE
-  {
-    return mData->mInterfacesBitmap;
   }
 
   static nsresult RegisterClassProtos(int32_t aDOMClassInfoID);
