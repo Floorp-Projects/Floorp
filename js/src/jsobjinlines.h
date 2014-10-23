@@ -801,6 +801,8 @@ Unbox(JSContext *cx, HandleObject obj, MutableHandleValue vp)
         vp.setNumber(obj->as<NumberObject>().unbox());
     else if (obj->is<StringObject>())
         vp.setString(obj->as<StringObject>().unbox());
+    else if (obj->is<DateObject>())
+        vp.set(obj->as<DateObject>().UTCTime());
     else
         vp.setUndefined();
 
