@@ -13,6 +13,12 @@ SOURCES += [
 ]
 
 have_progressui = 0
+
+if CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
+    USE_LIBS += [
+        'verifymar',
+    ]
+
 if CONFIG['OS_ARCH'] == 'WINNT':
     have_progressui = 1
     SOURCES += [
@@ -32,7 +38,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
     USE_LIBS += [
         'updatecommon-standalone',
-        'verifymar',
     ]
     OS_LIBS += [
         'comctl32',
@@ -42,15 +47,18 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'crypt32',
         'advapi32',
     ]
-else:
+elif CONFIG['OS_ARCH'] == 'Linux':
     USE_LIBS += [
         'updatecommon',
         '/modules/libmar/sign/signmar',
-        '/modules/libmar/sign/verifymar',
         '/security/nss/lib/nss/nss3',
         '/security/nss/lib/util/nssutil3',
     ]
     OS_LIBS += CONFIG['NSPR_LIBS']
+else:
+    USE_LIBS += [
+        'updatecommon',
+    ]
 
 USE_LIBS += [
     'mar',

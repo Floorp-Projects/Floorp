@@ -47,11 +47,16 @@ template<uint32_t SIZE>
 int
 VerifyLoadedCert(MarFile *archive, const uint8_t (&certData)[SIZE])
 {
+  (void)archive;
+  (void)certData;
+
+#ifdef MOZ_VERIFY_MAR_SIGNATURE
   const uint32_t size = SIZE;
   const uint8_t* const data = &certData[0];
   if (mar_verify_signatures(archive, &data, &size, 1)) {
     return CERT_VERIFY_ERROR;
   }
+#endif
 
   return OK;
 }

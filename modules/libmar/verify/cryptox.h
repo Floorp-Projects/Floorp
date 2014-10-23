@@ -74,6 +74,7 @@ CryptoX_Result CryptoMac_VerifyBegin(CryptoX_SignatureHandle* aInputData);
 CryptoX_Result CryptoMac_VerifyUpdate(CryptoX_SignatureHandle* aInputData,
                                       void* aBuf, unsigned int aLen);
 CryptoX_Result CryptoMac_LoadPublicKey(const unsigned char* aCertData,
+                                       unsigned int aDataSize,
                                        CryptoX_PublicKey* aPublicKey);
 CryptoX_Result CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
                                          CryptoX_PublicKey* aPublicKey,
@@ -93,7 +94,7 @@ void CryptoMac_FreePublicKey(CryptoX_PublicKey* aPublicKey);
   CryptoMac_VerifyUpdate(aInputData, aBuf, aLen)
 #define CryptoX_LoadPublicKey(aProviderHandle, aCertData, aDataSize, \
                               aPublicKey) \
-  CryptoMac_LoadPublicKey(aCertData, aPublicKey)
+  CryptoMac_LoadPublicKey(aCertData, aDataSize, aPublicKey)
 #define CryptoX_VerifySignature(aInputData, aPublicKey, aSignature, \
                                 aSignatureLen) \
   CryptoMac_VerifySignature(aInputData, aPublicKey, aSignature, aSignatureLen)
