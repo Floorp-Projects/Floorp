@@ -96,6 +96,11 @@
                   android:visible="false"
                   android:title="@string/new_guest_session"/>
 
+            <item android:id="@+id/exit_guest_session"
+                  android:icon="@drawable/ic_menu_guest"
+                  android:visible="false"
+                  android:title="@string/exit_guest_session"/>
+
         </menu>
 
     </item>
@@ -112,8 +117,4 @@
     <item android:id="@+id/help"
           android:title="@string/help_menu" />
 
-    <item android:id="@+id/exit_guest_session"
-          android:icon="@drawable/ic_menu_guest"
-          android:visible="false"
-          android:title="@string/exit_guest_session"/>
 </menu>
