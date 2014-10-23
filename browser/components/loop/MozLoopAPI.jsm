@@ -11,6 +11,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/loop/LoopCalls.jsm");
 Cu.import("resource:///modules/loop/MozLoopService.jsm");
+Cu.import("resource:///modules/loop/LoopRooms.jsm");
+Cu.import("resource:///modules/loop/LoopContacts.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoopContacts",
                                         "resource:///modules/loop/LoopContacts.jsm");
@@ -124,6 +126,7 @@ function injectLoopAPI(targetWindow) {
   let ringerStopper;
   let appVersionInfo;
   let contactsAPI;
+  let roomsAPI;
 
   let api = {
     /**
@@ -242,6 +245,21 @@ function injectLoopAPI(targetWindow) {
           LoopStorage.switchDatabase(profile.uid);
         }
         return contactsAPI = injectObjectAPI(LoopContacts, targetWindow);
+      }
+    },
+
+    /**
+     * Returns the rooms API.
+     *
+     * @returns {Object} The rooms API object
+     */
+    rooms: {
+      enumerable: true,
+      get: function() {
+        if (roomsAPI) {
+          return roomsAPI;
+        }
+        return roomsAPI = injectObjectAPI(LoopRooms, targetWindow);
       }
     },
 

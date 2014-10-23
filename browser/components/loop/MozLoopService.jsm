@@ -71,6 +71,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoopCalls",
 XPCOMUtils.defineLazyModuleGetter(this, "LoopRooms",
                                   "resource:///modules/loop/LoopRooms.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "roomsPushNotification",
+                                  "resource:///modules/loop/LoopRooms.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "MozLoopPushHandler",
                                   "resource:///modules/loop/MozLoopPushHandler.jsm");
 
@@ -342,17 +345,18 @@ let MozLoopServiceInternal = {
     let options = mockWebSocket ? {mockWebSocket: mockWebSocket} : {};
     gPushHandler.initialize(options);
 
-    let callsRegGuest = registerForNotification(LoopCalls.channelIDs.Guest,
+    let callsRegGuest = registerForNotification(MozLoopService.channelIDs.callsGuest,
                                                 LoopCalls.onNotification);
-
-    let roomsRegGuest = registerForNotification(LoopRooms.channelIDs.Guest,
-                                                LoopRooms.onNotification);
-
-    let callsRegFxA = registerForNotification(LoopCalls.channelIDs.FxA,
+ 
+    let roomsRegGuest = registerForNotification(MozLoopService.channelIDs.roomsGuest,
+                                                roomsPushNotification);
+ 
+    let callsRegFxA = registerForNotification(MozLoopService.channelIDs.callsFxA,
                                               LoopCalls.onNotification);
+ 
+    let roomsRegFxA = registerForNotification(MozLoopService.channelIDs.roomsFxA,
+                                              roomsPushNotification);
 
-    let roomsRegFxA = registerForNotification(LoopRooms.channelIDs.FxA,
-                                              LoopRooms.onNotification);
     Promise.all([callsRegGuest, roomsRegGuest, callsRegFxA, roomsRegFxA])
     .then((pushUrls) => {
       return this.registerWithLoopServer(LOOP_SESSION_TYPE.GUEST,
@@ -880,8 +884,8 @@ let gInitializeTimerFunc = (deferredInitialization, mockPushHandler, mockWebSock
       let registeredPromise =
             MozLoopServiceInternal.registerWithLoopServer(
               LOOP_SESSION_TYPE.FXA, {
-                calls: gPushHandler.registeredChannels[LoopCalls.channelIDs.FxA],
-                rooms: gPushHandler.registeredChannels[LoopRooms.channelIDs.FxA]
+                calls: gPushHandler.registeredChannels[MozLoopService.channelIDs.callsFxA],
+                rooms: gPushHandler.registeredChannels[MozLoopService.channelIDs.roomsFxA]
               });
       registeredPromise.then(() => {
         deferredInitialization.resolve("initialized to logged-in status");
@@ -904,6 +908,17 @@ let gInitializeTimerFunc = (deferredInitialization, mockPushHandler, mockWebSock
  */
 this.MozLoopService = {
   _DNSService: gDNSService,
+
+  get channelIDs() {
+    // Channel ids that will be registered with the PushServer for notifications
+    return {
+      callsFxA: "25389583-921f-4169-a426-a4673658944b",
+      callsGuest: "801f754b-686b-43ec-bd83-1419bbf58388",
+      roomsFxA: "6add272a-d316-477c-8335-f00f73dfde71",
+      roomsGuest: "19d3f799-a8f3-4328-9822-b7cd02765832",
+    };
+  },
+
 
   set initializeTimerFunc(value) {
     gInitializeTimerFunc = value;
@@ -1127,6 +1142,21 @@ this.MozLoopService = {
   },
 
   /**
+   * Returns a new non-global id
+   *
+   * @param {Function} notUnique [optional] This function will be
+   *                   applied to test the generated id for uniqueness
+   *                   in the callers domain.
+   */
+  generateLocalID: function(notUnique = ((id) => {return false})) {
+    do {
+      var id = Date.now().toString(36) + Math.floor((Math.random() * 4096)).toString(16);
+    }
+    while (notUnique(id));
+    return id;
+  },
+
+  /**
    * Retrieves MozLoopService "do not disturb" value.
    *
    * @return {Boolean}
@@ -1264,8 +1294,8 @@ this.MozLoopService = {
       return tokenData;
     }).then(tokenData => {
       return gRegisteredDeferred.promise.then(Task.async(function*() {
-        let callsUrl = gPushHandler.registeredChannels[LoopCalls.channelIDs.FxA],
-            roomsUrl = gPushHandler.registeredChannels[LoopRooms.channelIDs.FxA];
+        let callsUrl = gPushHandler.registeredChannels[MozLoopService.channelIDs.callsFxA],
+            roomsUrl = gPushHandler.registeredChannels[MozLoopService.channelIDs.roomsFxA];
         if (callsUrl && roomsUrl) {
           yield MozLoopServiceInternal.registerWithLoopServer(
             LOOP_SESSION_TYPE.FXA, {calls: callsUrl, rooms: roomsUrl});
@@ -1313,8 +1343,8 @@ this.MozLoopService = {
     log.debug("logOutFromFxA");
     let callsPushUrl, roomsPushUrl;
     if (gPushHandler) {
-      callsPushUrl = gPushHandler.registeredChannels[LoopCalls.channelIDs.FxA];
-      roomsPushUrl = gPushHandler.registeredChannels[LoopRooms.channelIDs.FxA];
+      callsPushUrl = gPushHandler.registeredChannels[MozLoopService.channelIDs.callsFxA];
+      roomsPushUrl = gPushHandler.registeredChannels[MozLoopService.channelIDs.roomsFxA];
     }
     try {
       if (callsPushUrl) {

@@ -16,7 +16,7 @@ add_test(function test_openChatWindow_on_notification() {
       opened = true;
     };
 
-    mockPushHandler.notify(1, LoopCalls.channelIDs.Guest);
+    mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
 
     waitForCondition(function() opened).then(() => {
       do_check_true(opened, "should open a chat window");
