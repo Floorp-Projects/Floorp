@@ -520,7 +520,13 @@ let MozLoopServiceInternal = {
    * @return {Promise}
    */
   registerWithLoopServer: function(sessionType, pushUrls, retry = true) {
-    return this.hawkRequest(sessionType, "/registration", "POST", { simplePushURLs: pushUrls})
+    // create a registration payload with a backwards compatible attribute (simplePushURL)
+    // that will register only the calls notification.
+    let msg = {
+        simplePushURL: pushUrls.calls,
+        simplePushURLs: pushUrls
+    };
+    return this.hawkRequest(sessionType, "/registration", "POST", msg)
       .then((response) => {
         // If this failed we got an invalid token. storeSessionToken rejects
         // the gRegisteredDeferred promise for us, so here we just need to
