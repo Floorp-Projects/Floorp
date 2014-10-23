@@ -622,6 +622,12 @@ class ReftestOptions(OptionParser):
     self.add_option("--appname",
                     action = "store", type = "string", dest = "app",
                     help = "absolute path to application, overriding default")
+    # Certain paths do not make sense when we're cross compiling Fennec.  This
+    # logic is cribbed from the example in
+    # python/mozbuild/mozbuild/mach_commands.py.
+    defaults['appname'] = build_obj.get_binary_path() if \
+        build_obj and build_obj.substs['MOZ_BUILD_APP'] != 'mobile/android' else None
+
     self.add_option("--extra-profile-file",
                     action = "append", dest = "extraProfileFiles",
                     default = [],
@@ -641,6 +647,8 @@ class ReftestOptions(OptionParser):
                     action = "store", type = "string", dest = "utilityPath",
                     help = "absolute path to directory containing utility "
                            "programs (xpcshell, ssltunnel, certutil)")
+    defaults["utilityPath"] = build_obj.bindir if \
+        build_obj and build_obj.substs['MOZ_BUILD_APP'] != 'mobile/android' else None
 
     self.add_option("--total-chunks",
                     type = "int", dest = "totalChunks",
@@ -721,14 +729,6 @@ class ReftestOptions(OptionParser):
                     default = [],
                     dest = "extraPrefs", metavar = "PREF=VALUE",
                     help = "defines an extra user preference")
-
-
-    # Certain paths do not make sense when we're cross compiling Fennec.  This
-    # logic is cribbed from the example in
-    # python/mozbuild/mozbuild/mach_commands.py.
-    if build_obj and build_obj.substs['MOZ_BUILD_APP'] != 'mobile/android':
-        defaults['appname'] = build_obj.get_binary_path() if build_obj else None
-        defaults["utilityPath"] = build_obj.bindir if build_obj else None
 
     self.set_defaults(**defaults)
 
