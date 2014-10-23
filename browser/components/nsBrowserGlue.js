@@ -1369,7 +1369,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 24;
+    const UI_VERSION = 25;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
     let currentUIVersion = 0;
     try {
@@ -1615,6 +1615,20 @@ BrowserGlue.prototype = {
                   /^https?:\/\/(www\.)?google\.[a-z.]+\/firefox/i.test(uri))) {
         Services.prefs.clearUserPref(HOMEPAGE_PREF);
       }
+    }
+
+    if (currentUIVersion < 25) {
+      // Make sure the doNotTrack value conforms to the conversion from
+      // three-state to two-state. (This reverts a setting of "please track me"
+      // to the default "don't say anything").
+      try {
+        if (Services.prefs.getBoolPref("privacy.donottrackheader.enabled") &&
+            Services.prefs.getIntPref("privacy.donottrackheader.value") != 1) {
+          Services.prefs.clearUserPref("privacy.donottrackheader.enabled");
+          Services.prefs.clearUserPref("privacy.donottrackheader.value");
+        }
+      }
+      catch (ex) {}
     }
 
     // Update the migration version.
