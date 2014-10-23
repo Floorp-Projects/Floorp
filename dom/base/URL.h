@@ -6,7 +6,6 @@
 #define URL_h___
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/URLSearchParams.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
@@ -32,7 +31,7 @@ namespace workers {
 class URLProxy;
 }
 
-class URL MOZ_FINAL : public URLSearchParamsObserver
+class URL MOZ_FINAL : public nsISupports
 {
   ~URL() {}
 
@@ -109,10 +108,6 @@ public:
 
   void SetSearch(const nsAString& aArg, ErrorResult& aRv);
 
-  URLSearchParams* SearchParams();
-
-  void SetSearchParams(URLSearchParams& aSearchParams);
-
   void GetHash(nsString& aRetval, ErrorResult& aRv) const;
 
   void SetHash(const nsAString& aArg, ErrorResult& aRv);
@@ -122,20 +117,11 @@ public:
     GetHref(aRetval, aRv);
   }
 
-  // URLSearchParamsObserver
-  void URLSearchParamsUpdated(URLSearchParams* aSearchParams) MOZ_OVERRIDE;
-
 private:
   nsIURI* GetURI() const
   {
     return mURI;
   }
-
-  void CreateSearchParamsIfNeeded();
-
-  void SetSearchInternal(const nsAString& aSearch);
-
-  void UpdateURLSearchParams();
 
   static void CreateObjectURLInternal(const GlobalObject& aGlobal,
                                       nsISupports* aObject,
@@ -145,7 +131,6 @@ private:
                                       ErrorResult& aError);
 
   nsCOMPtr<nsIURI> mURI;
-  nsRefPtr<URLSearchParams> mSearchParams;
 
   friend class mozilla::dom::workers::URLProxy;
 };
