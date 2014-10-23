@@ -20,8 +20,9 @@ const TRANSITION_DOWNLOAD = Ci.nsINavHistoryService.TRANSITION_DOWNLOAD;
 
 const TITLE_LENGTH_MAX = 4096;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.importGlobalProperties(["URL"]);
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -549,7 +550,9 @@ function check_JSON_backup(aIsAutomaticBackup) {
  */
 function frecencyForUrl(aURI)
 {
-  let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
+  let url = aURI instanceof Ci.nsIURI ? aURI.spec
+                                      : aURI instanceof URL ? aURI.href
+                                                            : aURI;
   let stmt = DBConn().createStatement(
     "SELECT frecency FROM moz_places WHERE url = ?1"
   );
@@ -966,4 +969,14 @@ function promiseSetIconForPage(aPageURI, aIconURI) {
     PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
     () => { deferred.resolve(); });
   return deferred.promise;
+}
+
+function checkBookmarkObject(info) {
+  do_check_valid_places_guid(info.guid);
+  do_check_valid_places_guid(info.parentGuid);
+  Assert.ok(typeof info.index == "number", "index should be a number");
+  Assert.ok(info.dateAdded.constructor.name == "Date", "dateAdded should be a Date");
+  Assert.ok(info.lastModified.constructor.name == "Date", "lastModified should be a Date");
+  Assert.ok(info.lastModified >= info.dateAdded, "lastModified should never be smaller than dateAdded");
+  Assert.ok(typeof info.type == "number", "type should be a number");
 }
