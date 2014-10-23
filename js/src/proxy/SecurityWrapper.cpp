@@ -13,26 +13,6 @@ using namespace js;
 
 template <class Base>
 bool
-SecurityWrapper<Base>::isExtensible(JSContext *cx, HandleObject wrapper, bool *extensible) const
-{
-    // Just like BaseProxyHandler, SecurityWrappers claim by default to always
-    // be extensible, so as not to leak information about the state of the
-    // underlying wrapped thing.
-    *extensible = true;
-    return true;
-}
-
-template <class Base>
-bool
-SecurityWrapper<Base>::preventExtensions(JSContext *cx, HandleObject wrapper) const
-{
-    // See above.
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
-    return false;
-}
-
-template <class Base>
-bool
 SecurityWrapper<Base>::enter(JSContext *cx, HandleObject wrapper, HandleId id,
                              Wrapper::Action act, bool *bp) const
 {
@@ -57,6 +37,36 @@ SecurityWrapper<Base>::setPrototypeOf(JSContext *cx, HandleObject wrapper,
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     return false;
+}
+
+template <class Base>
+bool
+SecurityWrapper<Base>::setImmutablePrototype(JSContext *cx, HandleObject wrapper,
+                                             bool *succeeded) const
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
+    return false;
+}
+
+template <class Base>
+bool
+SecurityWrapper<Base>::preventExtensions(JSContext *cx, HandleObject wrapper,
+                                         bool *succeeded) const
+{
+    // Just like BaseProxyHandler, SecurityWrappers claim by default to always
+    // be extensible, so as not to leak information about the state of the
+    // underlying wrapped thing.
+    *succeeded = false;
+    return true;
+}
+
+template <class Base>
+bool
+SecurityWrapper<Base>::isExtensible(JSContext *cx, HandleObject wrapper, bool *extensible) const
+{
+    // See above.
+    *extensible = true;
+    return true;
 }
 
 // For security wrappers, we run the DefaultValue algorithm on the wrapper

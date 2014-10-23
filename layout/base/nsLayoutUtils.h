@@ -1613,6 +1613,10 @@ public:
                                          const nsRect& aImageSourceArea,
                                          const nsRect& aDestArea);
 
+  static nsRect GetWholeImageDestination(const nsSize& aWholeImageSize,
+                                         const nsRect& aImageSourceArea,
+                                         const nsRect& aDestArea);
+
   /**
    * Given an image container and an orientation, returns an image container
    * that contains the same image, reoriented appropriately. May return the

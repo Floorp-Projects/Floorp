@@ -256,8 +256,6 @@ class JS_FRIEND_API(BaseProxyHandler)
                                  AutoIdVector &props) const = 0;
     virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const = 0;
     virtual bool enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props) const = 0;
-    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const = 0;
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy) const = 0;
 
     /*
      * These methods are standard, but the engine does not normally call them.
@@ -267,6 +265,12 @@ class JS_FRIEND_API(BaseProxyHandler)
      */
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const;
     virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp) const;
+
+    /* Non-standard but conceptual kin to {g,s}etPrototypeOf, so lives here. */
+    virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded) const;
+
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const = 0;
+    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const = 0;
 
     /*
      * These standard internal methods are implemented, as a convenience, so
@@ -365,12 +369,14 @@ class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
                          bool *bp) const MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, HandleObject proxy,
                            AutoIdVector &props) const MOZ_OVERRIDE;
-    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE;
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
                                 MutableHandleObject protop) const MOZ_OVERRIDE;
     virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto,
                                 bool *bp) const MOZ_OVERRIDE;
+    virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy,
+                                       bool *succeeded) const MOZ_OVERRIDE;
+    virtual bool preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const MOZ_OVERRIDE;
+    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const MOZ_OVERRIDE;
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id,
                      bool *bp) const MOZ_OVERRIDE;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
