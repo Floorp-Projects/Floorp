@@ -32,6 +32,7 @@ interface DOMApplication : EventTarget {
   readonly attribute DOMString installOrigin;
   readonly attribute DOMTimeStamp installTime;
   readonly attribute boolean removable;
+  readonly attribute boolean enabled;
 
   [Cached, Pure]
   readonly attribute sequence<DOMString> receipts;
@@ -96,6 +97,9 @@ interface DOMApplicationsManager : EventTarget {
   Promise<DOMApplication> import(Blob blob);
   Promise<any> extractManifest(Blob blob);
 
+  void setEnabled(DOMApplication app, boolean state);
+
   attribute EventHandler oninstall;
   attribute EventHandler onuninstall;
+  attribute EventHandler onenabledstatechange;
 };
