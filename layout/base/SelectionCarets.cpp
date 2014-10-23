@@ -384,21 +384,24 @@ SelectionCarets::UpdateSelectionCarets()
     return;
   }
 
-  if (selection->GetRangeCount() <= 0) {
+  if (selection->IsCollapsed()) {
     SetVisibility(false);
     return;
   }
 
-  nsRefPtr<nsRange> range = selection->GetRangeAt(0);
-  if (range->Collapsed()) {
-    SetVisibility(false);
-    return;
-  }
+  int32_t rangeCount = selection->GetRangeCount();
+  nsRefPtr<nsRange> firstRange = selection->GetRangeAt(0);
+  nsRefPtr<nsRange> lastRange = selection->GetRangeAt(rangeCount - 1);
 
-  nsLayoutUtils::FirstAndLastRectCollector collector;
-  nsRange::CollectClientRects(&collector, range,
-                              range->GetStartParent(), range->StartOffset(),
-                              range->GetEndParent(), range->EndOffset(), true, true);
+  nsLayoutUtils::FirstAndLastRectCollector collectorStart;
+  nsRange::CollectClientRects(&collectorStart, firstRange,
+                              firstRange->GetStartParent(), firstRange->StartOffset(),
+                              firstRange->GetEndParent(), firstRange->EndOffset(), true, true);
+
+  nsLayoutUtils::FirstAndLastRectCollector collectorEnd;
+  nsRange::CollectClientRects(&collectorEnd, lastRange,
+                              lastRange->GetStartParent(), lastRange->StartOffset(),
+                              lastRange->GetEndParent(), lastRange->EndOffset(), true, true);
 
   nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
   nsIFrame* rootFrame = mPresShell->GetRootFrame();
@@ -412,11 +415,11 @@ SelectionCarets::UpdateSelectionCarets()
   nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   int32_t startOffset;
   nsIFrame* startFrame = FindFirstNodeWithFrame(mPresShell->GetDocument(),
-                                                range, fs, false, startOffset);
+                                                firstRange, fs, false, startOffset);
 
   int32_t endOffset;
   nsIFrame* endFrame = FindFirstNodeWithFrame(mPresShell->GetDocument(),
-                                              range, fs, true, endOffset);
+                                              lastRange, fs, true, endOffset);
 
   if (!startFrame || !endFrame) {
     SetVisibility(false);
@@ -442,15 +445,15 @@ SelectionCarets::UpdateSelectionCarets()
 
   // If start frame is LTR, then place start caret in first rect's leftmost
   // otherwise put it to first rect's rightmost.
-  ReduceRectToVerticalEdge(collector.mFirstRect, startFrameIsRTL);
+  ReduceRectToVerticalEdge(collectorStart.mFirstRect, startFrameIsRTL);
 
   // Contrary to start frame, if end frame is LTR, put end caret to last
   // rect's rightmost position, otherwise, put it to last rect's leftmost.
-  ReduceRectToVerticalEdge(collector.mLastRect, !endFrameIsRTL);
+  ReduceRectToVerticalEdge(collectorEnd.mLastRect, !endFrameIsRTL);
 
   nsAutoTArray<nsIFrame*, 16> hitFramesInFirstRect;
   nsLayoutUtils::GetFramesForArea(rootFrame,
-    collector.mFirstRect,
+    collectorStart.mFirstRect,
     hitFramesInFirstRect,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
       nsLayoutUtils::IGNORE_CROSS_DOC |
@@ -458,7 +461,7 @@ SelectionCarets::UpdateSelectionCarets()
 
   nsAutoTArray<nsIFrame*, 16> hitFramesInLastRect;
   nsLayoutUtils::GetFramesForArea(rootFrame,
-    collector.mLastRect,
+    collectorEnd.mLastRect,
     hitFramesInLastRect,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
       nsLayoutUtils::IGNORE_CROSS_DOC |
@@ -467,11 +470,11 @@ SelectionCarets::UpdateSelectionCarets()
   SetStartFrameVisibility(hitFramesInFirstRect.Contains(startFrame));
   SetEndFrameVisibility(hitFramesInLastRect.Contains(endFrame));
 
-  nsLayoutUtils::TransformRect(rootFrame, canvasFrame, collector.mFirstRect);
-  nsLayoutUtils::TransformRect(rootFrame, canvasFrame, collector.mLastRect);
+  nsLayoutUtils::TransformRect(rootFrame, canvasFrame, collectorStart.mFirstRect);
+  nsLayoutUtils::TransformRect(rootFrame, canvasFrame, collectorEnd.mLastRect);
 
-  SetStartFramePos(collector.mFirstRect.BottomLeft());
-  SetEndFramePos(collector.mLastRect.BottomRight());
+  SetStartFramePos(collectorStart.mFirstRect.BottomLeft());
+  SetEndFramePos(collectorEnd.mLastRect.BottomRight());
   SetVisibility(true);
 
   // If range select only one character, append tilt class name to it.
@@ -689,11 +692,13 @@ SelectionCarets::DragSelection(const nsPoint &movePoint)
   }
 
   nsRefPtr<dom::Selection> selection = GetSelection();
-  if (selection->GetRangeCount() <= 0) {
+  int32_t rangeCount = selection->GetRangeCount();
+  if (rangeCount <= 0) {
     return nsEventStatus_eConsumeNoDefault;
   }
 
-  nsRefPtr<nsRange> range = selection->GetRangeAt(0);
+  nsRefPtr<nsRange> range = mDragMode == START_FRAME ?
+    selection->GetRangeAt(0) : selection->GetRangeAt(rangeCount - 1);
   if (!CompareRangeWithContentOffset(range, fs, offsets, mDragMode)) {
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -737,20 +742,22 @@ SelectionCarets::GetCaretYCenterPosition()
   }
 
   nsRefPtr<dom::Selection> selection = GetSelection();
-  if (selection->GetRangeCount() <= 0) {
+  int32_t rangeCount = selection->GetRangeCount();
+  if (rangeCount <= 0) {
     return 0;
   }
 
-  nsRefPtr<nsRange> range = selection->GetRangeAt(0);
   nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
 
   MOZ_ASSERT(mDragMode != NONE);
   nsCOMPtr<nsIContent> node;
   uint32_t nodeOffset;
   if (mDragMode == START_FRAME) {
+    nsRefPtr<nsRange> range = selection->GetRangeAt(0);
     node = do_QueryInterface(range->GetStartParent());
     nodeOffset = range->StartOffset();
   } else {
+    nsRefPtr<nsRange> range = selection->GetRangeAt(rangeCount - 1);
     node = do_QueryInterface(range->GetEndParent());
     nodeOffset = range->EndOffset();
   }
@@ -885,12 +892,6 @@ SelectionCarets::NotifySelectionChanged(nsIDOMDocument* aDoc,
                                        nsISelection* aSel,
                                        int16_t aReason)
 {
-  bool isCollapsed;
-  aSel->GetIsCollapsed(&isCollapsed);
-  if (isCollapsed) {
-    SetVisibility(false);
-    return NS_OK;
-  }
   if (!aReason || (aReason & (nsISelectionListener::DRAG_REASON |
                                nsISelectionListener::KEYPRESS_REASON |
                                nsISelectionListener::MOUSEDOWN_REASON))) {
