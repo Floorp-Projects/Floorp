@@ -135,7 +135,7 @@ this.PluralForm = {
       // Check for array out of bounds or empty strings
       if ((ret == undefined) || (ret == "")) {
         // Report the caller to help figure out who is causing badness
-        let caller = PluralForm.get.caller ? PluralForm.get.caller.name : "top";
+        let caller = Components.stack.caller ? Components.stack.caller.name : "top";
 
         // Display a message in the error console
         log(["Index #", index, " of '", aWords, "' for value ", aNum,
