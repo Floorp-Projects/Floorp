@@ -115,6 +115,7 @@ IccInfo.prototype = {
 
 function GsmIccInfo() {}
 GsmIccInfo.prototype = {
+  __proto__: IccInfo.prototype,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIGsmIccInfo,
                                          Ci.nsIIccInfo]),
 
@@ -125,6 +126,7 @@ GsmIccInfo.prototype = {
 
 function CdmaIccInfo() {}
 CdmaIccInfo.prototype = {
+  __proto__: IccInfo.prototype,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICdmaIccInfo,
                                          Ci.nsIIccInfo]),
 
@@ -208,8 +210,6 @@ RILContentHelper.prototype = {
         rilContext.iccInfo = new IccInfo();
       }
     }
-    let changed = (rilContext.iccInfo.iccid != newInfo.iccid) ?
-      true : false;
 
     this.updateInfo(newInfo, rilContext.iccInfo);
   },

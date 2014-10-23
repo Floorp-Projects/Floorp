@@ -176,7 +176,7 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
   }
 })();
 
-// =================== DevTools HUD ====================
+// =================== DevTools ====================
 
 let developerHUD;
 SettingsListener.observe('devtools.overlay', false, (value) => {
@@ -282,6 +282,36 @@ function setUpdateTrackingId() {
 }
 setUpdateTrackingId();
 
+(function syncUpdatePrefs() {
+  // The update service reads the prefs from the default branch. This is by
+  // design, as explained in bug 302721 comment 43. If we are to successfully
+  // modify them, that's where we need to make our changes.
+  let defaultBranch = Services.prefs.getDefaultBranch(null);
+
+  function syncCharPref(prefName) {
+    SettingsListener.observe(prefName, null, function(value) {
+      // If set, propagate setting value to pref.
+      if (value) {
+        defaultBranch.setCharPref(prefName, value);
+        return;
+      }
+      // If unset, initialize setting to pref value.
+      try {
+        let value = defaultBranch.getCharPref(prefName);
+        if (value) {
+          let setting = {};
+          setting[prefName] = value;
+          window.navigator.mozSettings.createLock().set(setting);
+        }
+      } catch(e) {
+        console.log('Unable to read pref ' + prefName + ': ' + e);
+      }
+    });
+  }
+
+  syncCharPref('app.update.url');
+  syncCharPref('app.update.channel');
+})();
 
 // ================ Debug ================
 (function Composer2DSettingToPref() {
@@ -467,13 +497,7 @@ let settingsToObserve = {
     resetToPref: true,
     defaultValue: 0
   },
-  'app.update.channel': {
-    resetToPref: true
-  },
   'app.update.interval': 86400,
-  'app.update.url': {
-    resetToPref: true
-  },
   'apz.force-enable': {
     prefName: 'dom.browser_frames.useAsyncPanZoom',
     defaultValue: false
