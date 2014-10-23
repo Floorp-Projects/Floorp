@@ -12,6 +12,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/URL.h"
 #include "mozilla/dom/URLBinding.h"
+#include "mozilla/dom/URLSearchParams.h"
 #include "nsGlobalWindow.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsNetCID.h"
@@ -459,7 +460,7 @@ private:
   mozilla::ErrorResult& mRv;
 };
 
-NS_IMPL_CYCLE_COLLECTION_0(URL)
+NS_IMPL_CYCLE_COLLECTION(URL, mSearchParams)
 
 // The reason for using worker::URL is to have different refcnt logging than
 // for main thread URL.
@@ -570,6 +571,8 @@ URL::SetHref(const nsAString& aHref, ErrorResult& aRv)
   if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
     JS_ReportPendingException(mWorkerPrivate->GetJSContext());
   }
+
+  UpdateURLSearchParams();
 }
 
 void
@@ -774,6 +777,13 @@ URL::GetSearch(nsString& aSearch, ErrorResult& aRv) const
 void
 URL::SetSearch(const nsAString& aSearch, ErrorResult& aRv)
 {
+  SetSearchInternal(aSearch);
+  UpdateURLSearchParams();
+}
+
+void
+URL::SetSearchInternal(const nsAString& aSearch)
+{
   ErrorResult rv;
   nsRefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterSearch,
@@ -782,6 +792,28 @@ URL::SetSearch(const nsAString& aSearch, ErrorResult& aRv)
   if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
     JS_ReportPendingException(mWorkerPrivate->GetJSContext());
   }
+}
+
+mozilla::dom::URLSearchParams*
+URL::SearchParams()
+{
+  CreateSearchParamsIfNeeded();
+  return mSearchParams;
+}
+
+void
+URL::SetSearchParams(URLSearchParams& aSearchParams)
+{
+  if (mSearchParams) {
+    mSearchParams->RemoveObserver(this);
+  }
+
+  mSearchParams = &aSearchParams;
+  mSearchParams->AddObserver(this);
+
+  nsString search;
+  mSearchParams->Serialize(search);
+  SetSearchInternal(search);
 }
 
 void
@@ -851,6 +883,38 @@ URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl)
 
   if (!runnable->Dispatch(cx)) {
     JS_ReportPendingException(cx);
+  }
+}
+
+void
+URL::URLSearchParamsUpdated(URLSearchParams* aSearchParams)
+{
+  MOZ_ASSERT(mSearchParams);
+  MOZ_ASSERT(mSearchParams == aSearchParams);
+
+  nsString search;
+  mSearchParams->Serialize(search);
+  SetSearchInternal(search);
+}
+
+void
+URL::UpdateURLSearchParams()
+{
+  if (mSearchParams) {
+    nsString search;
+    ErrorResult rv;
+    GetSearch(search, rv);
+    mSearchParams->ParseInput(NS_ConvertUTF16toUTF8(Substring(search, 1)), this);
+  }
+}
+
+void
+URL::CreateSearchParamsIfNeeded()
+{
+  if (!mSearchParams) {
+    mSearchParams = new URLSearchParams();
+    mSearchParams->AddObserver(this);
+    UpdateURLSearchParams();
   }
 }
 

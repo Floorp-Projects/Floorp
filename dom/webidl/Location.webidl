@@ -21,5 +21,5 @@ interface Location {
   [Throws]
   void reload(optional boolean forceget = false);
 };
-
+// No support for .searchParams on Location yet.  See bug 1037715.
 Location implements URLUtils;
