@@ -837,7 +837,9 @@ nsBulletFrame::GetSpokenText(nsAString& aText)
   bool isBullet;
   style->GetSpokenCounterText(mOrdinal, GetWritingMode(), aText, isBullet);
   if (isBullet) {
-    aText.Append(' ');
+    if (!style->IsNone()) {
+      aText.Append(' ');
+    }
   } else {
     nsAutoString prefix, suffix;
     style->GetPrefix(prefix);
