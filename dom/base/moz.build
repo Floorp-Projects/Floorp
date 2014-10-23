@@ -163,6 +163,7 @@ LOCAL_INCLUDES += [
     '/layout/generic',
     '/layout/style',
     '/layout/xul',
+    '/widget',
     '/widget/shared',
 ]
 
