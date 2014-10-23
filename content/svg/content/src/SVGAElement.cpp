@@ -48,12 +48,10 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(SVGAElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SVGAElement,
                                                   SVGAElementBase)
-  tmp->Link::Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGAElement,
                                                 SVGAElementBase)
-  tmp->Link::Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(SVGAElement, SVGAElementBase)
