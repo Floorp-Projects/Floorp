@@ -1987,7 +1987,7 @@ RilObject.prototype = {
       call.hangUpLocal = true;
       this.sendHangUpRequest(1);
     } else {
-      if (this.currentConference.state === CALL_STATE_ACTIVE) {
+      if (this.currentConferenceState === CALL_STATE_ACTIVE) {
         this.sendHangUpForegroundRequest(options);
       } else {
         this.sendHangUpBackgroundRequest(options);
