@@ -33,9 +33,8 @@ MaybeFinish()
   }
 }
 
-FakeDecryptor::FakeDecryptor(GMPDecryptorHost* aHost)
-  : mHost(aHost)
-  , mCallback(nullptr)
+FakeDecryptor::FakeDecryptor()
+  : mCallback(nullptr)
 {
   assert(!sInstance);
   sInstance = this;
@@ -80,8 +79,8 @@ public:
   void Destroy() MOZ_OVERRIDE {
     delete this;
   }
-  ReadContinuation* mThen;
   string mId;
+  ReadContinuation* mThen;
 };
 
 class TestEmptyContinuation : public ReadContinuation {
@@ -178,7 +177,7 @@ public:
       return;
     }
 
-    auto err = GMPOpenRecord(OpenAgainRecordId, new OpenedSecondTimeContinuation(aRecord));
+    GMPOpenRecord(OpenAgainRecordId, new OpenedSecondTimeContinuation(aRecord));
 
     delete this;
   }
@@ -268,6 +267,31 @@ public:
   string mRecordId;
 };
 
+class ReportReadRecordContinuation : public ReadContinuation {
+public:
+  ReportReadRecordContinuation(const string& aRecordId)
+    : mRecordId(aRecordId)
+  {}
+  void ReadComplete(GMPErr aErr, const std::string& aData) MOZ_OVERRIDE {
+    if (GMP_FAILED(aErr)) {
+      FakeDecryptor::Message("retrieved " + mRecordId + " failed");
+    } else {
+      FakeDecryptor::Message("retrieved " + mRecordId + " " + aData);
+    }
+    delete this;
+  }
+  string mRecordId;
+};
+
+enum ShutdownMode {
+  ShutdownNormal,
+  ShutdownTimeout,
+  ShutdownStoreToken
+};
+
+static ShutdownMode sShutdownMode = ShutdownNormal;
+static string sShutdownToken = "";
+
 void
 FakeDecryptor::UpdateSession(uint32_t aPromiseId,
                              const char* aSessionId,
@@ -290,5 +314,48 @@ FakeDecryptor::UpdateSession(uint32_t aPromiseId,
   } else if (task == "retrieve") {
     const string& id = tokens[1];
     ReadRecord(id, new ReportReadStatusContinuation(id));
+  } else if (task == "shutdown-mode") {
+    const string& mode = tokens[1];
+    if (mode == "timeout") {
+      sShutdownMode = ShutdownTimeout;
+    } else if (mode == "token") {
+      sShutdownMode = ShutdownStoreToken;
+      sShutdownToken = tokens[2];
+      Message("shutdown-token received " + sShutdownToken);
+    }
+  } else if (task == "retrieve-shutdown-token") {
+    ReadRecord("shutdown-token", new ReportReadRecordContinuation("shutdown-token"));
+  }
+}
+
+class CompleteShutdownTask : public GMPTask {
+public:
+  CompleteShutdownTask(GMPAsyncShutdownHost* aHost)
+    : mHost(aHost)
+  {
+  }
+  virtual void Run() {
+    mHost->ShutdownComplete();
+  }
+  virtual void Destroy() { delete this; }
+  GMPAsyncShutdownHost* mHost;
+};
+
+void
+TestAsyncShutdown::BeginShutdown() {
+  switch (sShutdownMode) {
+    case ShutdownNormal:
+      mHost->ShutdownComplete();
+      break;
+    case ShutdownTimeout:
+      // Don't do anything; wait for timeout, Gecko should kill
+      // the plugin and recover.
+      break;
+    case ShutdownStoreToken:
+      // Store message, then shutdown.
+      WriteRecord("shutdown-token",
+                  sShutdownToken,
+                  new CompleteShutdownTask(mHost));
+      break;
   }
 }
