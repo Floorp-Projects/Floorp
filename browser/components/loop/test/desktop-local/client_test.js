@@ -272,7 +272,23 @@ describe("loop.Client", function() {
           mozLoop.LOOP_SESSION_TYPE.FXA,
           "/calls",
           "POST",
-          { calleeId: calleeIds, callType: callType }
+          { calleeId: calleeIds, callType: callType, channel: "unknown" }
+        );
+      });
+
+      it("should include the channel when defined", function() {
+        mozLoop.appVersionInfo = {
+          channel: "beta"
+        };
+
+        client.setupOutgoingCall(calleeIds, callType);
+
+        sinon.assert.calledOnce(hawkRequestStub);
+        sinon.assert.calledWith(hawkRequestStub,
+          mozLoop.LOOP_SESSION_TYPE.FXA,
+          "/calls",
+          "POST",
+          { calleeId: calleeIds, callType: callType, channel: "beta" }
         );
       });
 
