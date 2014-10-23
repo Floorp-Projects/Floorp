@@ -37,7 +37,7 @@ add_test(function test_do_not_disturb_disabled_should_open_chat_window() {
       opened = true;
     };
 
-    mockPushHandler.notify(1);
+    mockPushHandler.notify(1, LoopCalls.channelIDs.Guest);
 
     waitForCondition(function() opened).then(() => {
       run_next_test();
@@ -56,7 +56,7 @@ add_test(function test_do_not_disturb_enabled_shouldnt_open_chat_window() {
     opened = true;
   };
 
-  mockPushHandler.notify(1);
+  mockPushHandler.notify(1, LoopCalls.channelIDs.Guest);
 
   do_timeout(500, function() {
     do_check_false(opened, "should not open a chat window");
