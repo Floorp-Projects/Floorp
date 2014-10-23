@@ -12,6 +12,12 @@
 class nsPresContext;
 class nsIPresShell;
 
+namespace mozilla {
+namespace dom {
+class URLSearchParams;
+}
+}
+
 %}
 
 /**
@@ -20,6 +26,7 @@ class nsIPresShell;
 
 [ptr] native nsPresContext(nsPresContext);
 [ptr] native nsIPresShell(nsIPresShell);
+[ptr] native URLSearchParams(mozilla::dom::URLSearchParams);
 
 interface nsIURI;
 interface nsIChannel;
@@ -47,7 +54,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(cecf29f4-3eee-41ff-a76b-b36c73e271b1)]
+[scriptable, builtinclass, uuid(da8f78f1-8f20-4d6d-be56-fe53e177b630)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -1015,6 +1022,9 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [noscript,notxpcom,nostdcall] void setOpenedRemote(in nsITabParent aOpenedRemote);
   [noscript,notxpcom,nostdcall] nsITabParent getOpenedRemote();
+
+  // URLSearchParams for the window.location is owned by the docShell.
+  [noscript,notxpcom] URLSearchParams getURLSearchParams();
 
   /**
    * This attribute determines whether a document which is not about:blank has

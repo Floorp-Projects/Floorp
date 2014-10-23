@@ -215,6 +215,13 @@ Link::SetPathname(const nsAString &aPathname, ErrorResult& aError)
 void
 Link::SetSearch(const nsAString& aSearch, ErrorResult& aError)
 {
+  SetSearchInternal(aSearch);
+  UpdateURLSearchParams();
+}
+
+void
+Link::SetSearchInternal(const nsAString& aSearch)
+{
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (!url) {
@@ -471,6 +478,7 @@ Link::ResetLinkState(bool aNotify, bool aHasHref)
 
   // If we've cached the URI, reset always invalidates it.
   mCachedURI = nullptr;
+  UpdateURLSearchParams();
 
   // Update our state back to the default.
   mLinkState = defaultState;
@@ -557,6 +565,85 @@ Link::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   // - mHistory, because it is non-owning
 
   return n;
+}
+
+URLSearchParams*
+Link::SearchParams()
+{
+  CreateSearchParamsIfNeeded();
+  return mSearchParams;
+}
+
+void
+Link::SetSearchParams(URLSearchParams& aSearchParams)
+{
+  if (mSearchParams) {
+    mSearchParams->RemoveObserver(this);
+  }
+
+  mSearchParams = &aSearchParams;
+  mSearchParams->AddObserver(this);
+
+  nsAutoString search;
+  mSearchParams->Serialize(search);
+  SetSearchInternal(search);
+}
+
+void
+Link::URLSearchParamsUpdated(URLSearchParams* aSearchParams)
+{
+  MOZ_ASSERT(mSearchParams);
+  MOZ_ASSERT(mSearchParams == aSearchParams);
+
+  nsString search;
+  mSearchParams->Serialize(search);
+  SetSearchInternal(search);
+}
+
+void
+Link::UpdateURLSearchParams()
+{
+  if (!mSearchParams) {
+    return;
+  }
+
+  nsAutoCString search;
+  nsCOMPtr<nsIURI> uri(GetURI());
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+  if (url) {
+    nsresult rv = url->GetQuery(search);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to get the query from a nsIURL.");
+    }
+  }
+
+  mSearchParams->ParseInput(search, this);
+}
+
+void
+Link::CreateSearchParamsIfNeeded()
+{
+  if (!mSearchParams) {
+    mSearchParams = new URLSearchParams();
+    mSearchParams->AddObserver(this);
+    UpdateURLSearchParams();
+  }
+}
+
+void
+Link::Unlink()
+{
+  if (mSearchParams) {
+    mSearchParams->RemoveObserver(this);
+    mSearchParams = nullptr;
+  }
+}
+
+void
+Link::Traverse(nsCycleCollectionTraversalCallback &cb)
+{
+  Link* tmp = this;
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSearchParams);
 }
 
 } // namespace dom

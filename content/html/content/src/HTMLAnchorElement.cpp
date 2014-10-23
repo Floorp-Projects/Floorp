@@ -56,11 +56,13 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLAnchorElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLAnchorElement,
                                                   nsGenericHTMLElement)
+  tmp->Link::Traverse(cb);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRelList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLAnchorElement,
                                                 nsGenericHTMLElement)
+  tmp->Link::Unlink();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRelList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 

@@ -40,7 +40,7 @@ interface URLUtils {
   [Throws]
            attribute ScalarValueString search;
 
-   // Bug 1082734 - attribute URLSearchParams searchParams;
+           attribute URLSearchParams searchParams;
 
   [Throws]
            attribute ScalarValueString hash;
