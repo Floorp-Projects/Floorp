@@ -314,9 +314,8 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     UpdateRenderMode();
 
     if (gfxPrefs::Direct2DUse1_1()) {
-      InitD3D11Devices();
+      GetD3D11Device();
     }
-
     RegisterStrongMemoryReporter(new GPUAdapterReporter());
 }
 
@@ -391,7 +390,10 @@ gfxWindowsPlatform::UpdateRenderMode()
         tryD2D = false;
     }
 
-    if (isVistaOrHigher  && !safeMode && tryD2D) {
+    ID3D11Device *device = GetD3D11Device();
+    if (isVistaOrHigher && !safeMode && tryD2D && device &&
+        DoesD3D11DeviceSupportResourceSharing(device)) {
+
         VerifyD2DDevice(d2dForceEnabled);
         if (mD2DDevice) {
             mRenderMode = RENDER_DIRECT2D;
@@ -1500,9 +1502,67 @@ gfxWindowsPlatform::GetDXGIAdapter()
   return mAdapter;
 }
 
+// See bug 1083071. On some drivers, Direct3D 11 CreateShaderResourceView fails
+// with E_OUTOFMEMORY.
+bool DoesD3D11DeviceSupportResourceSharing(ID3D11Device *device)
+{
+  RefPtr<ID3D11Texture2D> texture;
+  D3D11_TEXTURE2D_DESC desc;
+  desc.Width = 32;
+  desc.Height = 32;
+  desc.MipLevels = 1;
+  desc.ArraySize = 1;
+  desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+  desc.SampleDesc.Count = 1;
+  desc.SampleDesc.Quality = 0;
+  desc.Usage = D3D11_USAGE_DEFAULT;
+  desc.CPUAccessFlags = 0;
+  desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+  desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+  if (FAILED(device->CreateTexture2D(&desc, NULL, byRef(texture)))) {
+    return false;
+  }
+
+  HANDLE shareHandle;
+  nsRefPtr<IDXGIResource> otherResource;
+  if (FAILED(texture->QueryInterface(__uuidof(IDXGIResource),
+                                     getter_AddRefs(otherResource))))
+  {
+    return false;
+  }
+
+  if (FAILED(otherResource->GetSharedHandle(&shareHandle))) {
+    return false;
+  }
+
+  nsRefPtr<ID3D11Resource> sharedResource;
+  nsRefPtr<ID3D11Texture2D> sharedTexture;
+  if (FAILED(device->OpenSharedResource(shareHandle, __uuidof(ID3D11Resource),
+                                        getter_AddRefs(sharedResource))))
+  {
+    return false;
+  }
+
+  if (FAILED(sharedResource->QueryInterface(__uuidof(ID3D11Texture2D),
+                                            getter_AddRefs(sharedTexture))))
+  {
+    return false;
+  }
+
+  RefPtr<ID3D11ShaderResourceView> sharedView;
+
+  // This if(FAILED()) is the one that actually fails on systems affected by bug 1083071.
+  if (FAILED(device->CreateShaderResourceView(sharedTexture, NULL, byRef(sharedView)))) {
+    return false;
+  }
+
+  return true;
+}
+
 void
 gfxWindowsPlatform::InitD3D11Devices()
 {
+  MOZ_ASSERT(!mD3D11DeviceInitialized);
   mD3D11DeviceInitialized = true;
 
   nsModuleHandle d3d11Module(LoadLibrarySystem32(L"d3d11.dll"));
