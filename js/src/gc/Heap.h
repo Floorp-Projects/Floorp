@@ -730,63 +730,11 @@ struct ChunkTrailer
 static_assert(sizeof(ChunkTrailer) == 2 * sizeof(uintptr_t) + sizeof(uint64_t),
               "ChunkTrailer size is incorrect.");
 
-class ChunkPool
-{
-    Chunk *head_;
-    Chunk *tail_;
-    size_t count_;
-
-  public:
-    ChunkPool() : head_(nullptr), tail_(nullptr), count_(0) {}
-
-    size_t count() const { return count_; }
-    inline Chunk *pop();
-    inline Chunk *head() const { return head_; }
-    inline void push(Chunk *chunk);
-    inline void remove(Chunk *chunk);
-
-    class Iter {
-      public:
-        explicit Iter(ChunkPool &pool) : pool_(pool), current_(pool.head_) {}
-        bool done() const { return !current_; }
-        inline void next();
-        Chunk *get() const { return current_; }
-        operator Chunk *() const { return get(); }
-        Chunk *operator->() const { return get(); }
-      private:
-        ChunkPool &pool_;
-        Chunk *current_;
-    };
-
-    class ReverseIter {
-      public:
-        explicit ReverseIter(ChunkPool &pool) : pool_(pool), current_(pool.tail_) {}
-        bool done() const { return !current_; }
-        inline void prev();
-        inline void reset();
-        Chunk *get() const { return current_; }
-        operator Chunk *() const { return get(); }
-        Chunk *operator->() const { return get(); }
-      private:
-        ChunkPool &pool_;
-        Chunk *current_;
-    };
-};
-
 /* The chunk header (located at the end of the chunk to preserve arena alignment). */
-class ChunkInfo
+struct ChunkInfo
 {
-    friend class ChunkPool;
-    Chunk *next;
-    Chunk *prev;
-
-  public:
-    bool belongsToAnyPool() const { return next || prev; }
-    void init() {
-        next = nullptr;
-        prev = nullptr;
-        age = 0;
-    }
+    Chunk           *next;
+    Chunk           **prevp;
 
     /* Free arenas are linked together with aheader.next. */
     ArenaHeader     *freeArenasHead;
@@ -999,6 +947,22 @@ struct Chunk
 
     void decommitAllArenas(JSRuntime *rt);
 
+    /*
+     * Assuming that the info.prevp points to the next field of the previous
+     * chunk in a doubly-linked list, get that chunk.
+     */
+    Chunk *getPrevious() {
+        MOZ_ASSERT(info.prevp);
+        return fromPointerToNext(info.prevp);
+    }
+
+    /* Get the chunk from a pointer to its info.next field. */
+    static Chunk *fromPointerToNext(Chunk **nextFieldPtr) {
+        uintptr_t addr = reinterpret_cast<uintptr_t>(nextFieldPtr);
+        MOZ_ASSERT((addr & ChunkMask) == offsetof(Chunk, info.next));
+        return reinterpret_cast<Chunk *>(addr - offsetof(Chunk, info.next));
+    }
+
   private:
     inline void init(JSRuntime *rt);
 
@@ -1025,12 +989,6 @@ static_assert(js::gc::ChunkLocationOffset == offsetof(Chunk, info) +
                                              offsetof(ChunkInfo, trailer) +
                                              offsetof(ChunkTrailer, location),
               "The hardcoded API location offset must match the actual offset.");
-
-inline void
-ChunkPool::Iter::next()
-{
-    current_ = current_->info.next;
-}
 
 /*
  * Tracks the used sizes for owned heap data and automatically maintains the
