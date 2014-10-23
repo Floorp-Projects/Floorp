@@ -42,11 +42,11 @@ class Version(object):
     def _parse_ini_file(self, fp, type, section):
         config = ConfigParser.RawConfigParser()
         config.readfp(fp)
-        name_map = {'CodeName': 'display_name',
-                    'SourceRepository': 'repository',
-                    'SourceStamp': 'changeset'}
-        for key in ('BuildID', 'Name', 'CodeName', 'Version',
-                    'SourceRepository', 'SourceStamp'):
+        name_map = {'codename': 'display_name',
+                    'milestone': 'version',
+                    'sourcerepository': 'repository',
+                    'sourcestamp': 'changeset'}
+        for key, value in config.items(section):
             name = name_map.get(key, key).lower()
             self._info['%s_%s' % (type, name)] = config.has_option(
                 section, key) and config.get(section, key) or None
