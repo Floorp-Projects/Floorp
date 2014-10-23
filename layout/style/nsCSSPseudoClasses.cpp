@@ -15,25 +15,25 @@
 using namespace mozilla;
 
 // define storage for all atoms
-#define CSS_PSEUDO_CLASS(_name, _value, _pref) \
+#define CSS_PSEUDO_CLASS(_name, _value, _flags, _pref) \
   static nsIAtom* sPseudoClass_##_name;
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 
-#define CSS_PSEUDO_CLASS(name_, value_, pref_)  \
+#define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
   NS_STATIC_ATOM_BUFFER(name_##_pseudo_class_buffer, value_)
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 
 static const nsStaticAtom CSSPseudoClasses_info[] = {
-#define CSS_PSEUDO_CLASS(name_, value_, pref_)            \
+#define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
   NS_STATIC_ATOM(name_##_pseudo_class_buffer, &sPseudoClass_##name_),
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 };
 
 static bool sPseudoClassEnabled[] = {
-#define CSS_PSEUDO_CLASS(name_, value_, pref_)            \
+#define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
   true,
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
@@ -43,7 +43,7 @@ void nsCSSPseudoClasses::AddRefAtoms()
 {
   NS_RegisterStaticAtoms(CSSPseudoClasses_info);
   
-#define CSS_PSEUDO_CLASS(name_, value_, pref_)                               \
+#define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_)                       \
   if (pref_[0]) {                                                            \
     Preferences::AddBoolVarCache(&sPseudoClassEnabled[ePseudoClass_##name_], \
                                  pref_);                                     \
