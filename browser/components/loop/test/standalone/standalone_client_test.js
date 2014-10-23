@@ -128,7 +128,7 @@ describe("loop.StandaloneClient", function() {
         expect(requests).to.have.length.of(1);
         expect(requests[0].url).to.be.equal("http://fake.api/calls/fake");
         expect(requests[0].method).to.be.equal("POST");
-        expect(requests[0].requestBody).to.be.equal('{"callType":"audio"}');
+        expect(requests[0].requestBody).to.be.equal('{"callType":"audio","channel":"standalone"}');
       });
 
       it("should receive call data for the given call", function() {
