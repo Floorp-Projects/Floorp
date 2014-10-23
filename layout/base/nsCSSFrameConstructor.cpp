@@ -9033,6 +9033,19 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent*  aContent,
   return rv;
 }
 
+void
+nsCSSFrameConstructor::DestroyFramesFor(nsIContent*  aContent,
+                                        nsIContent** aDestroyedFramesFor)
+{
+  MOZ_ASSERT(aContent && aContent->GetParentNode());
+
+  bool didReconstruct;
+  nsIContent* nextSibling =
+    aContent->IsRootOfAnonymousSubtree() ? nullptr : aContent->GetNextSibling();
+  ContentRemoved(aContent->GetParent(), aContent, nextSibling,
+                 REMOVE_DESTROY_FRAMES, &didReconstruct, aDestroyedFramesFor);
+}
+
 //////////////////////////////////////////////////////////////////////
 
 // Block frame construction code

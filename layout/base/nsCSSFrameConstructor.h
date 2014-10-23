@@ -246,6 +246,17 @@ public:
   // when we tear down our frame tree to reconstruct it
   void WillDestroyFrameTree();
 
+  /**
+   * Destroy the frames for aContent.  Note that this may destroy frames
+   * for an ancestor instead - aDestroyedFramesFor contains the content node
+   * where frames were actually destroyed (which should be used in the
+   * ContentInserted call to recreate frames).  The frame tree state
+   * is captured before the frames are destroyed and can be retrieved using
+   * GetLastCapturedLayoutHistoryState().
+   */
+  void DestroyFramesFor(nsIContent*  aContent,
+                        nsIContent** aDestroyedFramesFor);
+
   // Request to create a continuing frame.  This method never returns null.
   nsIFrame* CreateContinuingFrame(nsPresContext*    aPresContext,
                                   nsIFrame*         aFrame,
@@ -281,6 +292,15 @@ public:
   // Get the frame that is the parent of the root element.
   nsContainerFrame* GetDocElementContainingBlock()
     { return mDocElementContainingBlock; }
+
+  /**
+   * Return the layout history state that was captured in the last
+   * ContentRemoved / RecreateFramesForContent call.
+   */
+  nsILayoutHistoryState* GetLastCapturedLayoutHistoryState()
+  {
+    return mTempFrameTreeState;
+  }
 
 private:
   struct FrameConstructionItem;
