@@ -5827,7 +5827,8 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy()
     /* nothing to do */
     return NS_OK;
   }
-  return RecreateFramesForContent(rootElement, false);
+  return RecreateFramesForContent(rootElement, false, REMOVE_FOR_RECONSTRUCTION,
+                                  nullptr);
 }
 
 nsContainerFrame*
@@ -6750,7 +6751,8 @@ nsCSSFrameConstructor::MaybeRecreateForFrameset(nsIFrame* aParentFrame,
          cur = cur->GetNextSibling()) {
       if (IsSpecialFramesetChild(cur)) {
         // Just reframe the parent, since framesets are weird like that.
-        RecreateFramesForContent(aParentFrame->GetContent(), false);
+        RecreateFramesForContent(aParentFrame->GetContent(), false,
+                                 REMOVE_FOR_RECONSTRUCTION, nullptr);
         return true;
       }
     }
@@ -6815,7 +6817,8 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     //XXXsmaug This is super unefficient!
     nsIContent* bindingParent = aContainer->GetBindingParent();
     LAYOUT_PHASE_TEMP_EXIT();
-    nsresult rv = RecreateFramesForContent(bindingParent, false);
+    nsresult rv = RecreateFramesForContent(bindingParent, false,
+                                           REMOVE_FOR_RECONSTRUCTION, nullptr);
     LAYOUT_PHASE_TEMP_REENTER();
     return rv;
   }
@@ -6858,7 +6861,8 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 
   if (parentFrame->IsFrameOfType(nsIFrame::eMathML)) {
     LAYOUT_PHASE_TEMP_EXIT();
-    nsresult rv = RecreateFramesForContent(parentFrame->GetContent(), false);
+    nsresult rv = RecreateFramesForContent(parentFrame->GetContent(), false,
+                                           REMOVE_FOR_RECONSTRUCTION, nullptr);
     LAYOUT_PHASE_TEMP_REENTER();
     return rv;
   }
@@ -7253,7 +7257,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     //XXXsmaug This is super unefficient!
     nsIContent* bindingParent = aContainer->GetBindingParent();
     LAYOUT_PHASE_TEMP_EXIT();
-    nsresult rv = RecreateFramesForContent(bindingParent, false);
+    nsresult rv = RecreateFramesForContent(bindingParent, false,
+                                           REMOVE_FOR_RECONSTRUCTION, nullptr);
     LAYOUT_PHASE_TEMP_REENTER();
     return rv;
   }
@@ -7330,7 +7335,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     // and if so, proceed. But we'd have to extend nsFieldSetFrame
     // to locate this legend in the inserted frames and extract it.
     LAYOUT_PHASE_TEMP_EXIT();
-    nsresult rv = RecreateFramesForContent(parentFrame->GetContent(), false);
+    nsresult rv = RecreateFramesForContent(parentFrame->GetContent(), false,
+                                           REMOVE_FOR_RECONSTRUCTION, nullptr);
     LAYOUT_PHASE_TEMP_REENTER();
     return rv;
   }
@@ -7344,7 +7350,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
 
   if (parentFrame->IsFrameOfType(nsIFrame::eMathML)) {
     LAYOUT_PHASE_TEMP_EXIT();
-    nsresult rv = RecreateFramesForContent(parentFrame->GetContent(), false);
+    nsresult rv = RecreateFramesForContent(parentFrame->GetContent(), false,
+                                           REMOVE_FOR_RECONSTRUCTION, nullptr);
     LAYOUT_PHASE_TEMP_REENTER();
     return rv;
   }
@@ -8042,7 +8049,8 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
                  "Bit should never be set on generated content");
 #endif
     LAYOUT_PHASE_TEMP_EXIT();
-    nsresult rv = RecreateFramesForContent(aContent, false);
+    nsresult rv = RecreateFramesForContent(aContent, false,
+                                           REMOVE_FOR_RECONSTRUCTION, nullptr);
     LAYOUT_PHASE_TEMP_REENTER();
     return rv;
   }
@@ -8678,7 +8686,8 @@ nsCSSFrameConstructor::MaybeRecreateFramesForElement(Element* aElement)
     }
   }
 
-  return RecreateFramesForContent(aElement, false);
+  return RecreateFramesForContent(aElement, false, REMOVE_FOR_RECONSTRUCTION,
+                                  nullptr);
 }
 
 static nsIFrame*
@@ -11189,7 +11198,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   if (aFrame->IsBoxFrame() &&
       !(aFrame->GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK) &&
       aItems.AnyItemsNeedBlockParent()) {
-    RecreateFramesForContent(aFrame->GetContent(), true);
+    RecreateFramesForContent(aFrame->GetContent(), true,
+                             REMOVE_FOR_RECONSTRUCTION, nullptr);
     return true;
   }
 
@@ -11205,7 +11215,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     // anonymous flex or grid item (which would need to absorb this content).
     if (aPrevSibling && IsAnonymousFlexOrGridItem(aPrevSibling) &&
         iter.item().NeedsAnonFlexOrGridItem(aState)) {
-      RecreateFramesForContent(aFrame->GetContent(), true);
+      RecreateFramesForContent(aFrame->GetContent(), true,
+                               REMOVE_FOR_RECONSTRUCTION, nullptr);
       return true;
     }
 
@@ -11216,7 +11227,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
       iter.SetToEnd();
       iter.Prev();
       if (iter.item().NeedsAnonFlexOrGridItem(aState)) {
-        RecreateFramesForContent(aFrame->GetContent(), true);
+        RecreateFramesForContent(aFrame->GetContent(), true,
+                                 REMOVE_FOR_RECONSTRUCTION, nullptr);
         return true;
       }
     }
@@ -11243,7 +11255,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
       // We hit something that _doesn't_ need an anonymous flex item!
       // Rebuild the flex container to bust it out.
       nsIFrame* containerFrame = aFrame->GetParent();
-      RecreateFramesForContent(containerFrame->GetContent(), true);
+      RecreateFramesForContent(containerFrame->GetContent(), true,
+                               REMOVE_FOR_RECONSTRUCTION, nullptr);
       return true;
     }
 
@@ -11413,7 +11426,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     if (!aItems.AllWantParentType(parentType)) {
       // Reframing aFrame->GetContent() is good enough, since the content of
       // table pseudo-frames is the ancestor content.
-      RecreateFramesForContent(aFrame->GetContent(), true);
+      RecreateFramesForContent(aFrame->GetContent(), true,
+                               REMOVE_FOR_RECONSTRUCTION, nullptr);
       return true;
     }
   }
@@ -11501,7 +11515,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
            static_cast<void*>(blockContent));
   }
 #endif
-  RecreateFramesForContent(blockContent, true);
+  RecreateFramesForContent(blockContent, true, REMOVE_FOR_RECONSTRUCTION,
+                           nullptr);
   return true;
 }
 
@@ -11557,7 +11572,7 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame*    aFrame,
 
   // If we get here, we're screwed!
   return RecreateFramesForContent(mPresShell->GetDocument()->GetRootElement(),
-                                  true, aFlags);
+                                  true, aFlags, nullptr);
 }
 
 nsresult
