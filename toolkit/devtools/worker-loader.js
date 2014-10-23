@@ -320,7 +320,8 @@ if (typeof Components === "object") {
       "promise": Promise,
       "Debugger": Debugger,
       "xpcInspector": xpcInspector,
-      "Timer": Object.create(Timer)
+      "Timer": Object.create(Timer),
+      "PromiseDebugging": PromiseDebugging
     },
     paths: {
       "": "resource://gre/modules/commonjs/",
