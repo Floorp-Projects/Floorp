@@ -127,6 +127,27 @@ DirectProxyHandler::setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObje
 }
 
 bool
+DirectProxyHandler::setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded) const
+{
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    return JSObject::setImmutablePrototype(cx, target, succeeded);
+}
+
+bool
+DirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const
+{
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    return JSObject::preventExtensions(cx, target, succeeded);
+}
+
+bool
+DirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const
+{
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    return JSObject::isExtensible(cx, target, extensible);
+}
+
+bool
 DirectProxyHandler::objectClassIs(HandleObject proxy, ESClassValue classValue,
                                   JSContext *cx) const
 {
@@ -234,20 +255,6 @@ DirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
     MOZ_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     return GetIterator(cx, target, flags, vp);
-}
-
-bool
-DirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const
-{
-    RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::isExtensible(cx, target, extensible);
-}
-
-bool
-DirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy) const
-{
-    RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::preventExtensions(cx, target);
 }
 
 bool

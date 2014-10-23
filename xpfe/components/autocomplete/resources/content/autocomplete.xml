@@ -13,7 +13,7 @@
   <binding id="autocomplete" role="xul:combobox"
            extends="chrome://global/content/bindings/textbox.xml#textbox">
     <resources>
-      <stylesheet src="chrome://global/content/autocomplete.css"/>
+      <stylesheet src="chrome://communicator/content/autocomplete.css"/>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 

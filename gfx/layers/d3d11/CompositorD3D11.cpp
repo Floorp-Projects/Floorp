@@ -414,9 +414,8 @@ CompositorD3D11::CreateRenderTarget(const gfx::IntRect& aRect,
                              D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
 
   RefPtr<ID3D11Texture2D> texture;
-  mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
-  NS_ASSERTION(texture, "Could not create texture");
-  if (!texture) {
+  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
+  if (Failed(hr) || !texture) {
     return nullptr;
   }
 
@@ -447,9 +446,9 @@ CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
                              D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
 
   RefPtr<ID3D11Texture2D> texture;
-  mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
+  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
   NS_ASSERTION(texture, "Could not create texture");
-  if (!texture) {
+  if (Failed(hr) || !texture) {
     return nullptr;
   }
 
@@ -601,7 +600,12 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
     }
 
     RefPtr<ID3D11ShaderResourceView> view;
-    mDevice->CreateShaderResourceView(source->GetD3D11Texture(), nullptr, byRef(view));
+    HRESULT hr = mDevice->CreateShaderResourceView(source->GetD3D11Texture(), nullptr, byRef(view));
+    if (Failed(hr)) {
+      // XXX - There's a chance we won't be able to render anything, should we
+      // just crash release builds?
+      return;
+    }
 
     ID3D11ShaderResourceView* srView = view;
     mContext->PSSetShaderResources(3, 1, &srView);
@@ -654,7 +658,12 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
       SetPSForEffect(aEffectChain.mPrimaryEffect, maskType, texturedEffect->mTexture->GetFormat());
 
       RefPtr<ID3D11ShaderResourceView> view;
-      mDevice->CreateShaderResourceView(source->GetD3D11Texture(), nullptr, byRef(view));
+      HRESULT hr = mDevice->CreateShaderResourceView(source->GetD3D11Texture(), nullptr, byRef(view));
+      if (Failed(hr)) {
+        // XXX - There's a chance we won't be able to render anything, should we
+        // just crash release builds?
+        return;
+      }
 
       ID3D11ShaderResourceView* srView = view;
       mContext->PSSetShaderResources(0, 1, &srView);
@@ -695,13 +704,27 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
       TextureSourceD3D11* sourceCb = source->GetSubSource(Cb)->AsSourceD3D11();
       TextureSourceD3D11* sourceCr = source->GetSubSource(Cr)->AsSourceD3D11();
 
+      HRESULT hr;
+
       RefPtr<ID3D11ShaderResourceView> views[3];
-      mDevice->CreateShaderResourceView(sourceY->GetD3D11Texture(),
-                                        nullptr, byRef(views[0]));
-      mDevice->CreateShaderResourceView(sourceCb->GetD3D11Texture(),
-                                        nullptr, byRef(views[1]));
-      mDevice->CreateShaderResourceView(sourceCr->GetD3D11Texture(),
-                                        nullptr, byRef(views[2]));
+
+      hr = mDevice->CreateShaderResourceView(sourceY->GetD3D11Texture(),
+                                             nullptr, byRef(views[0]));
+      if (Failed(hr)) {
+        return;
+      }
+
+      hr = mDevice->CreateShaderResourceView(sourceCb->GetD3D11Texture(),
+                                             nullptr, byRef(views[1]));
+      if (Failed(hr)) {
+        return;
+      }
+
+      hr = mDevice->CreateShaderResourceView(sourceCr->GetD3D11Texture(),
+                                             nullptr, byRef(views[2]));
+      if (Failed(hr)) {
+        return;
+      }
 
       ID3D11ShaderResourceView* srViews[3] = { views[0], views[1], views[2] };
       mContext->PSSetShaderResources(0, 3, srViews);
@@ -728,8 +751,17 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
 
       mVSConstants.textureCoords = effectComponentAlpha->mTextureCoords;
       RefPtr<ID3D11ShaderResourceView> views[2];
-      mDevice->CreateShaderResourceView(sourceOnBlack->GetD3D11Texture(), nullptr, byRef(views[0]));
-      mDevice->CreateShaderResourceView(sourceOnWhite->GetD3D11Texture(), nullptr, byRef(views[1]));
+
+      HRESULT hr;
+
+      hr = mDevice->CreateShaderResourceView(sourceOnBlack->GetD3D11Texture(), nullptr, byRef(views[0]));
+      if (Failed(hr)) {
+        return;
+      }
+      hr = mDevice->CreateShaderResourceView(sourceOnWhite->GetD3D11Texture(), nullptr, byRef(views[1]));
+      if (Failed(hr)) {
+        return;
+      }
 
       ID3D11ShaderResourceView* srViews[2] = { views[0], views[1] };
       mContext->PSSetShaderResources(0, 2, srViews);
@@ -905,7 +937,7 @@ CompositorD3D11::UpdateRenderTarget()
   nsRefPtr<ID3D11Texture2D> backBuf;
 
   hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuf.StartAssignment());
-  if (FAILED(hr)) {
+  if (Failed(hr)) {
     return;
   }
 
@@ -972,29 +1004,6 @@ CompositorD3D11::CreateShaders()
   return true;
 }
 
-static
-bool ShouldRecoverFromMapFailure(HRESULT hr, ID3D11Device* device)
-{
-  // XXX - it would be nice to use gfxCriticalError, but it needs to
-  // be made to work off the main thread first.
-  if (SUCCEEDED(hr)) {
-    return true;
-  }
-  if (hr == DXGI_ERROR_DEVICE_REMOVED) {
-    switch (device->GetDeviceRemovedReason()) {
-      case DXGI_ERROR_DEVICE_HUNG:
-      case DXGI_ERROR_DEVICE_REMOVED:
-      case DXGI_ERROR_DEVICE_RESET:
-      case DXGI_ERROR_DRIVER_INTERNAL_ERROR:
-        return true;
-      case DXGI_ERROR_INVALID_CALL:
-      default:
-        return false;
-    }
-  }
-  return false;
-}
-
 bool
 CompositorD3D11::UpdateConstantBuffers()
 {
@@ -1002,21 +1011,15 @@ CompositorD3D11::UpdateConstantBuffers()
   D3D11_MAPPED_SUBRESOURCE resource;
 
   hr = mContext->Map(mAttachments->mVSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
-  if (FAILED(hr)) {
-    if (ShouldRecoverFromMapFailure(hr, GetDevice())) {
-      return false;
-    }
-    MOZ_CRASH();
+  if (Failed(hr)) {
+    return false;
   }
   *(VertexShaderConstants*)resource.pData = mVSConstants;
   mContext->Unmap(mAttachments->mVSConstantBuffer, 0);
 
   hr = mContext->Map(mAttachments->mPSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
-  if (FAILED(hr)) {
-    if (ShouldRecoverFromMapFailure(hr, GetDevice())) {
-      return false;
-    }
-    MOZ_CRASH();
+  if (Failed(hr)) {
+    return false;
   }
   *(PixelShaderConstants*)resource.pData = mPSConstants;
   mContext->Unmap(mAttachments->mPSConstantBuffer, 0);
@@ -1080,6 +1083,47 @@ CompositorD3D11::PaintToTarget()
                        IntPoint(-mTargetBounds.x, -mTargetBounds.y));
   mTarget->Flush();
   mContext->Unmap(readTexture, 0);
+}
+
+void
+CompositorD3D11::HandleError(HRESULT hr, Severity aSeverity)
+{
+  // XXX - It would be nice to use gfxCriticalError, but it needs to
+  // be made to work off the main thread first.
+  MOZ_ASSERT(aSeverity != DebugAssert);
+
+  if (aSeverity == Critical) {
+    MOZ_CRASH("Unrecoverable D3D11 error");
+  }
+
+  if (mDevice && hr == DXGI_ERROR_DEVICE_REMOVED) {
+    hr = mDevice->GetDeviceRemovedReason();
+  }
+
+  // Always crash if we are making invalid calls
+  if (hr == DXGI_ERROR_INVALID_CALL) {
+    MOZ_CRASH("Invalid D3D11 api call");
+  }
+
+  if (aSeverity == Recoverable) {
+    NS_WARNING("Encountered a recoverable D3D11 error");
+  }
+}
+
+bool
+CompositorD3D11::Failed(HRESULT hr, Severity aSeverity)
+{
+  if (FAILED(hr)) {
+    HandleError(hr, aSeverity);
+    return true;
+  }
+  return false;
+}
+
+bool
+CompositorD3D11::Succeeded(HRESULT hr, Severity aSeverity)
+{
+  return !Failed(hr, aSeverity);
 }
 
 }

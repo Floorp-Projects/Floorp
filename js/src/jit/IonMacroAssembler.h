@@ -22,6 +22,7 @@
 #else
 # error "Unknown architecture!"
 #endif
+#include "jit/AtomicOp.h"
 #include "jit/IonInstrumentation.h"
 #include "jit/JitCompartment.h"
 #include "jit/VMFunctions.h"
@@ -738,6 +739,14 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
     }
 
+    template<typename T>
+    void compareExchangeToTypedIntArray(Scalar::Type arrayType, const T &mem, Register oldval, Register newval,
+                                        Register temp, AnyRegister output);
+
+    template<typename S, typename T>
+    void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S &value,
+                                    const T &mem, Register temp1, Register temp2, AnyRegister output);
+
     void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const BaseIndex &dest);
     void storeToTypedFloatArray(Scalar::Type arrayType, FloatRegister value, const Address &dest);
 
@@ -938,6 +947,15 @@ class MacroAssembler : public MacroAssemblerSpecific
     uint32_t callIon(Register callee) {
         leaveSPSFrame();
         MacroAssemblerSpecific::callIon(callee);
+        uint32_t ret = currentOffset();
+        reenterSPSFrame();
+        return ret;
+    }
+
+    // see above comment for what is returned
+    uint32_t callWithExitFrame(Label *target) {
+        leaveSPSFrame();
+        MacroAssemblerSpecific::callWithExitFrame(target);
         uint32_t ret = currentOffset();
         reenterSPSFrame();
         return ret;

@@ -20,14 +20,6 @@ public:
   {
   }
   virtual bool
-  preventExtensions(JSContext* aCx, JS::Handle<JSObject*> aProxy) const MOZ_OVERRIDE
-  {
-    // Throw a TypeError, per WebIDL.
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
-                         JSMSG_CANT_CHANGE_EXTENSIBILITY);
-    return false;
-  }
-  virtual bool
   getOwnPropDescriptor(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                        JS::Handle<jsid> aId,
                        bool /* unused */,
@@ -43,6 +35,13 @@ public:
   virtual bool
   delete_(JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
           bool* aBp) const MOZ_OVERRIDE;
+  virtual bool
+  preventExtensions(JSContext* aCx, JS::Handle<JSObject*> aProxy,
+                    bool *succeeded) const MOZ_OVERRIDE
+  {
+    *succeeded = false;
+    return true;
+  }
   virtual bool
   isExtensible(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                bool* aIsExtensible) const MOZ_OVERRIDE

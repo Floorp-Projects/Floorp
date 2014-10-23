@@ -11,6 +11,7 @@
 
 #include "builtin/TypedObject.h"
 #include "gc/GCTrace.h"
+#include "jit/AtomicOp.h"
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
@@ -396,6 +397,211 @@ template void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const A
                                                  bool allowDouble, Register temp, Label *fail);
 template void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const BaseIndex &src, const ValueOperand &dest,
                                                  bool allowDouble, Register temp, Label *fail);
+
+template<typename T>
+void
+MacroAssembler::compareExchangeToTypedIntArray(Scalar::Type arrayType, const T &mem,
+                                               Register oldval, Register newval,
+                                               Register temp, AnyRegister output)
+{
+    switch (arrayType) {
+      case Scalar::Int8:
+        compareExchange8SignExtend(mem, oldval, newval, output.gpr());
+        break;
+      case Scalar::Uint8:
+        compareExchange8ZeroExtend(mem, oldval, newval, output.gpr());
+        break;
+      case Scalar::Uint8Clamped:
+        compareExchange8ZeroExtend(mem, oldval, newval, output.gpr());
+        break;
+      case Scalar::Int16:
+        compareExchange16SignExtend(mem, oldval, newval, output.gpr());
+        break;
+      case Scalar::Uint16:
+        compareExchange16ZeroExtend(mem, oldval, newval, output.gpr());
+        break;
+      case Scalar::Int32:
+        compareExchange32(mem, oldval, newval, output.gpr());
+        break;
+      case Scalar::Uint32:
+        // At the moment, the code in MCallOptimize.cpp requires the output
+        // type to be double for uint32 arrays.  See bug 1077305.
+        MOZ_ASSERT(output.isFloat());
+        compareExchange32(mem, oldval, newval, temp);
+        convertUInt32ToDouble(temp, output.fpu());
+        break;
+      default:
+        MOZ_CRASH("Invalid typed array type");
+    }
+}
+
+template void
+MacroAssembler::compareExchangeToTypedIntArray(Scalar::Type arrayType, const Address &mem,
+                                               Register oldval, Register newval, Register temp,
+                                               AnyRegister output);
+template void
+MacroAssembler::compareExchangeToTypedIntArray(Scalar::Type arrayType, const BaseIndex &mem,
+                                               Register oldval, Register newval, Register temp,
+                                               AnyRegister output);
+
+template<typename S, typename T>
+void
+MacroAssembler::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S &value,
+                                           const T &mem, Register temp1, Register temp2, AnyRegister output)
+{
+    // Uint8Clamped is explicitly not supported here
+    switch (arrayType) {
+      case Scalar::Int8:
+        switch (op) {
+          case AtomicFetchAddOp:
+            atomicFetchAdd8SignExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchSubOp:
+            atomicFetchSub8SignExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchAndOp:
+            atomicFetchAnd8SignExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchOrOp:
+            atomicFetchOr8SignExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchXorOp:
+            atomicFetchXor8SignExtend(value, mem, temp1, output.gpr());
+            break;
+          default:
+            MOZ_CRASH("Invalid typed array atomic operation");
+        }
+        break;
+      case Scalar::Uint8:
+        switch (op) {
+          case AtomicFetchAddOp:
+            atomicFetchAdd8ZeroExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchSubOp:
+            atomicFetchSub8ZeroExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchAndOp:
+            atomicFetchAnd8ZeroExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchOrOp:
+            atomicFetchOr8ZeroExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchXorOp:
+            atomicFetchXor8ZeroExtend(value, mem, temp1, output.gpr());
+            break;
+          default:
+            MOZ_CRASH("Invalid typed array atomic operation");
+        }
+        break;
+      case Scalar::Int16:
+        switch (op) {
+          case AtomicFetchAddOp:
+            atomicFetchAdd16SignExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchSubOp:
+            atomicFetchSub16SignExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchAndOp:
+            atomicFetchAnd16SignExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchOrOp:
+            atomicFetchOr16SignExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchXorOp:
+            atomicFetchXor16SignExtend(value, mem, temp1, output.gpr());
+            break;
+          default:
+            MOZ_CRASH("Invalid typed array atomic operation");
+        }
+        break;
+      case Scalar::Uint16:
+        switch (op) {
+          case AtomicFetchAddOp:
+            atomicFetchAdd16ZeroExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchSubOp:
+            atomicFetchSub16ZeroExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchAndOp:
+            atomicFetchAnd16ZeroExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchOrOp:
+            atomicFetchOr16ZeroExtend(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchXorOp:
+            atomicFetchXor16ZeroExtend(value, mem, temp1, output.gpr());
+            break;
+          default:
+            MOZ_CRASH("Invalid typed array atomic operation");
+        }
+        break;
+      case Scalar::Int32:
+        switch (op) {
+          case AtomicFetchAddOp:
+            atomicFetchAdd32(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchSubOp:
+            atomicFetchSub32(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchAndOp:
+            atomicFetchAnd32(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchOrOp:
+            atomicFetchOr32(value, mem, temp1, output.gpr());
+            break;
+          case AtomicFetchXorOp:
+            atomicFetchXor32(value, mem, temp1, output.gpr());
+            break;
+          default:
+            MOZ_CRASH("Invalid typed array atomic operation");
+        }
+        break;
+      case Scalar::Uint32:
+        // At the moment, the code in MCallOptimize.cpp requires the output
+        // type to be double for uint32 arrays.  See bug 1077305.
+        MOZ_ASSERT(output.isFloat());
+        switch (op) {
+          case AtomicFetchAddOp:
+            atomicFetchAdd32(value, mem, InvalidReg, temp1);
+            break;
+          case AtomicFetchSubOp:
+            atomicFetchSub32(value, mem, InvalidReg, temp1);
+            break;
+          case AtomicFetchAndOp:
+            atomicFetchAnd32(value, mem, temp2, temp1);
+            break;
+          case AtomicFetchOrOp:
+            atomicFetchOr32(value, mem, temp2, temp1);
+            break;
+          case AtomicFetchXorOp:
+            atomicFetchXor32(value, mem, temp2, temp1);
+            break;
+          default:
+            MOZ_CRASH("Invalid typed array atomic operation");
+        }
+        convertUInt32ToDouble(temp1, output.fpu());
+        break;
+      default:
+        MOZ_CRASH("Invalid typed array type");
+    }
+}
+
+template void
+MacroAssembler::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType,
+                                           const Imm32 &value, const Address &mem,
+                                           Register temp1, Register temp2, AnyRegister output);
+template void
+MacroAssembler::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType,
+                                           const Imm32 &value, const BaseIndex &mem,
+                                           Register temp1, Register temp2, AnyRegister output);
+template void
+MacroAssembler::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType,
+                                           const Register &value, const Address &mem,
+                                           Register temp1, Register temp2, AnyRegister output);
+template void
+MacroAssembler::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType,
+                                           const Register &value, const BaseIndex &mem,
+                                           Register temp1, Register temp2, AnyRegister output);
 
 // Inlined version of gc::CheckAllocatorState that checks the bare essentials
 // and bails for anything that cannot be handled with our jit allocators.
