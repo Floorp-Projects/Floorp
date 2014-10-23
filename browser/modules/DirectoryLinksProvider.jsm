@@ -137,8 +137,7 @@ let DirectoryLinksProvider = {
       let enhanced = true;
       try {
         // Default to not enhanced if DNT is set to tell websites to not track
-        if (Services.prefs.getBoolPref("privacy.donottrackheader.enabled") &&
-            Services.prefs.getIntPref("privacy.donottrackheader.value") == 1) {
+        if (Services.prefs.getBoolPref("privacy.donottrackheader.enabled")) {
           enhanced = false;
         }
       }
