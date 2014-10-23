@@ -34,26 +34,43 @@ function getConfigFile(req, res) {
 }
 
 app.get('/content/config.js', getConfigFile);
+app.get('/content/c/config.js', getConfigFile);
 
-// This lets /test/ be mapped to the right place for running tests
-app.use('/', express.static(__dirname + '/../'));
+// Various mappings to let us end up with:
+// /test - for the test files
+// /ui - for the ui showcase
+// /content - for the standalone files.
 
-// Magic so that the legal content works both in the standalone server
-// and as static content in the loop-client repo
-app.use('/', express.static(__dirname + '/content/'));
-app.use('/shared', express.static(__dirname + '/../content/shared/'));
-app.get('/config.js', getConfigFile);
+app.use('/test', express.static(__dirname + '/../test'));
+app.use('/ui', express.static(__dirname + '/../ui'));
 
-// This lets /content/ be mapped right for the static contents.
-app.use('/', express.static(__dirname + '/'));
-// This lets standalone components load images into the UI showcase
-app.use('/standalone/content', express.static(__dirname + '/../content'));
+// This exists exclusively for the unit tests. They are served the
+// whole loop/ directory structure and expect some files in the standalone directory.
+app.use('/standalone/content', express.static(__dirname + '/content'));
+
+// We load /content this from  both /content *and* /../content. The first one
+// does what we need for running in the github loop-client context, the second one
+// handles running in the hg repo under mozilla-central and is used so that the shared
+// files are in the right location.
+app.use('/content', express.static(__dirname + '/content'));
+app.use('/content', express.static(__dirname + '/../content'));
+// These two are based on the above, but handle call urls, that have a /c/ in them.
+app.use('/content/c', express.static(__dirname + '/content'));
+app.use('/content/c', express.static(__dirname + '/../content'));
+
+// As we don't have hashes on the urls, the best way to serve the index files
+// appears to be to be to closely filter the url and match appropriately.
+function serveIndex(req, res) {
+  return res.sendfile(__dirname + '/content/index.html');
+}
+
+app.get(/^\/content\/[\w\-]+$/, serveIndex);
+app.get(/^\/content\/c\/[\w\-]+$/, serveIndex);
 
 var server = app.listen(port);
 
 var baseUrl = "http://localhost:" + port + "/";
 
-console.log("Serving repository root over HTTP at " + baseUrl);
 console.log("Static contents are available at " + baseUrl + "content/");
 console.log("Tests are viewable at " + baseUrl + "test/");
 console.log("Use this for development only.");
