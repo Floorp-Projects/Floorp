@@ -10,7 +10,7 @@
 #include "mozilla/Types.h"
 
 /* Override some jemalloc defaults */
-MFBT_DATA const char * je_(malloc_conf) = "narenas:1,lg_chunk:20";
+MFBT_DATA const char * je_(malloc_conf) = "narenas:1,lg_chunk:20,tcache:false";
 
 #ifdef ANDROID
 #include <android/log.h>
