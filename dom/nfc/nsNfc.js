@@ -167,14 +167,6 @@ mozNfc.prototype = {
     return this._nfcContentHelper.powerOff(this._window);
   },
 
-  getNFCTag: function getNFCTag(sessionToken) {
-    let obj = new MozNFCTag(this._window, sessionToken);
-    if (this._nfcContentHelper.checkSessionToken(sessionToken)) {
-      return this._window.MozNFCTag._create(this._window, obj);
-    }
-    return null;
-  },
-
   getNFCPeer: function getNFCPeer(sessionToken) {
     if (!sessionToken || !this._nfcContentHelper.checkSessionToken(sessionToken)) {
       return null;
