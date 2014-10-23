@@ -35,7 +35,7 @@ add_test(function test_busy_2guest_calls() {
       opened++;
     };
 
-    mockPushHandler.notify(1, LoopCalls.channelIDs.Guest);
+    mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
 
     waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
       do_check_true(opened === 1, "should open only one chat window");
@@ -58,8 +58,8 @@ add_test(function test_busy_1fxa_1guest_calls() {
       opened++;
     };
 
-    mockPushHandler.notify(1, LoopCalls.channelIDs.FxA);
-    mockPushHandler.notify(1, LoopCalls.channelIDs.Guest);
+    mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
+    mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
 
     waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
       do_check_true(opened === 1, "should open only one chat window");
@@ -82,7 +82,7 @@ add_test(function test_busy_2fxa_calls() {
       opened++;
     };
 
-    mockPushHandler.notify(1, LoopCalls.channelIDs.FxA);
+    mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
 
     waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
       do_check_true(opened === 1, "should open only one chat window");
@@ -105,8 +105,8 @@ add_test(function test_busy_1guest_1fxa_calls() {
       opened++;
     };
 
-    mockPushHandler.notify(1, LoopCalls.channelIDs.Guest);
-    mockPushHandler.notify(1, LoopCalls.channelIDs.FxA);
+    mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
+    mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
 
     waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
       do_check_true(opened === 1, "should open only one chat window");
