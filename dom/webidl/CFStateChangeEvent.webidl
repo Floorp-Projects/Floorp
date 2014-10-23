@@ -9,11 +9,6 @@
 interface CFStateChangeEvent : Event
 {
   /**
-   * Indicates about errors while setting up the Call forwarding rule.
-   */
-  readonly attribute boolean success;
-
-  /**
    * Indicates what to do with the rule.
    *
    * One of the CALL_FORWARD_ACTION_* constants. It will be either disable (0),
@@ -56,7 +51,6 @@ interface CFStateChangeEvent : Event
 
 dictionary CFStateChangeEventInit : EventInit
 {
-  boolean success = false;
   unsigned short action = 0;
   unsigned short reason = 0;
   DOMString number = "";
