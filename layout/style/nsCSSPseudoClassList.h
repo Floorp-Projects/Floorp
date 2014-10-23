@@ -90,6 +90,12 @@ CSS_PSEUDO_CLASS(nthLastOfType, ":nth-last-of-type", 0, "")
 // Match nodes that are HTML but not XHTML
 CSS_PSEUDO_CLASS(mozIsHTML, ":-moz-is-html", 0, "")
 
+// Matches nodes that are in a native-anonymous subtree (i.e., nodes in
+// a subtree of C++ anonymous content constructed by Gecko for its own
+// purposes).
+CSS_PSEUDO_CLASS(mozNativeAnonymous, ":-moz-native-anonymous",
+                 CSS_PSEUDO_CLASS_UA_SHEET_ONLY, "")
+
 // Matches anything when the specified look-and-feel metric is set
 CSS_PSEUDO_CLASS(mozSystemMetric, ":-moz-system-metric", 0, "")
 

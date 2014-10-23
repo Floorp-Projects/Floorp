@@ -1019,6 +1019,9 @@ function run() {
     test_parseable(":-moz-handler-blocked");
     test_parseable(":-moz-handler-crashed");
 
+    // We're not in a UA sheet, so this should be invalid.
+    test_balanced_unparseable(":-moz-native-anonymous");
+
     // Case sensitivity of tag selectors
     function setup_cased_spans(body) {
       var data = [
