@@ -45,12 +45,13 @@ class MarionetteTestResult(StructuredTestResult, TestResultCollection):
         self.testsRun = 0
         self.result_modifiers = [] # used by mixins to modify the result
         pid = kwargs.pop('b2g_pid')
+        logcat_stdout = kwargs.pop('logcat_stdout')
         if pid:
             if B2GTestResultMixin not in self.__class__.__bases__:
                 bases = [b for b in self.__class__.__bases__]
                 bases.append(B2GTestResultMixin)
                 self.__class__.__bases__ = tuple(bases)
-            B2GTestResultMixin.__init__(self, b2g_pid=pid)
+            B2GTestResultMixin.__init__(self, b2g_pid=pid, logcat_stdout=logcat_stdout)
         StructuredTestResult.__init__(self, *args, **kwargs)
 
     @property
@@ -202,6 +203,7 @@ class MarionetteTextTestRunner(StructuredTestRunner):
         self.capabilities = kwargs.pop('capabilities')
         self.pre_run_functions = []
         self.b2g_pid = None
+        self.logcat_stdout = kwargs.pop('logcat_stdout')
 
         if self.capabilities["device"] != "desktop" and self.capabilities["browserName"] == "B2G":
             def b2g_pre_run():
@@ -219,7 +221,8 @@ class MarionetteTextTestRunner(StructuredTestRunner):
                                 self.verbosity,
                                 marionette=self.marionette,
                                 b2g_pid=self.b2g_pid,
-                                logger=self.logger)
+                                logger=self.logger,
+                                logcat_stdout=self.logcat_stdout)
 
     def run(self, test):
         "Run the given test case or test suite."
@@ -271,6 +274,11 @@ class BaseMarionetteOptions(OptionParser):
                         dest='logdir',
                         action='store',
                         help='directory to store logcat dump files')
+        self.add_option('--logcat-stdout',
+                        action='store_true',
+                        dest='logcat_stdout',
+                        default=False,
+                        help='dump adb logcat to stdout')
         self.add_option('--address',
                         dest='address',
                         action='store',
@@ -437,8 +445,8 @@ class BaseMarionetteTestRunner(object):
     def __init__(self, address=None, emulator=None, emulator_binary=None,
                  emulator_img=None, emulator_res='480x800', homedir=None,
                  app=None, app_args=None, binary=None, profile=None,
-                 logger=None, no_window=False, logdir=None, xml_output=None,
-                 repeat=0, testvars=None, tree=None, type=None,
+                 logger=None, no_window=False, logdir=None, logcat_stdout=False,
+                 xml_output=None, repeat=0, testvars=None, tree=None, type=None,
                  device_serial=None, symbols_path=None, timeout=None,
                  shuffle=False, shuffle_seed=random.randint(0, sys.maxint),
                  sdcard=None, this_chunk=1, total_chunks=1, sources=None,
@@ -458,6 +466,7 @@ class BaseMarionetteTestRunner(object):
         self.httpd = None
         self.marionette = None
         self.logdir = logdir
+        self.logcat_stdout = logcat_stdout
         self.xml_output = xml_output
         self.repeat = repeat
         self.testvars = {}
@@ -779,7 +788,9 @@ class BaseMarionetteTestRunner(object):
         if suite.countTestCases():
             runner = self.textrunnerclass(logger=self.logger,
                                           marionette=self.marionette,
-                                          capabilities=self.capabilities)
+                                          capabilities=self.capabilities,
+                                          logcat_stdout=self.logcat_stdout)
+
             results = runner.run(suite)
             self.results.append(results)
 

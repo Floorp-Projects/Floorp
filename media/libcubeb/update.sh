@@ -13,16 +13,18 @@ cp $1/src/cubeb_opensl.c src
 cp $1/src/cubeb_audiotrack.c src
 cp $1/src/cubeb_wasapi.cpp src
 cp $1/src/cubeb-speex-resampler.h src
+cp $1/src/cubeb_panner.h src
+cp $1/src/cubeb_panner.cpp src
 cp $1/src/android/audiotrack_definitions.h src/android
 cp $1/src/android/sles_definitions.h src/android
 cp $1/LICENSE .
-cp $1/README .
+cp $1/README.md .
 cp $1/AUTHORS .
 cp $1/test/common.h tests/common.h
-cp $1/test/test_audio.c tests/test_audio.cpp
-cp $1/test/test_tone.c tests/test_tone.cpp
-cp $1/test/test_sanity.c tests/test_sanity.cpp
-cp $1/test/test_latency.c tests/test_latency.cpp
+cp $1/test/test_audio.cpp tests/test_audio.cpp
+cp $1/test/test_tone.cpp tests/test_tone.cpp
+cp $1/test/test_sanity.cpp tests/test_sanity.cpp
+cp $1/test/test_latency.cpp tests/test_latency.cpp
 
 if [ -d $1/.git ]; then
   rev=$(cd $1 && git rev-parse --verify HEAD)

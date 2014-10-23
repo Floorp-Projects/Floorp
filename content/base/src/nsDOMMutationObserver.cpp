@@ -453,16 +453,57 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
                                mozilla::ErrorResult& aRv)
 {
 
-  if (!(aOptions.mChildList || aOptions.mAttributes || aOptions.mCharacterData)) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+  bool childList = aOptions.mChildList;
+  bool attributes =
+    aOptions.mAttributes.WasPassed() &&
+    aOptions.mAttributes.Value();
+  bool characterData =
+    aOptions.mCharacterData.WasPassed() &&
+    aOptions.mCharacterData.Value();
+  bool subtree = aOptions.mSubtree;
+  bool attributeOldValue =
+    aOptions.mAttributeOldValue.WasPassed() &&
+    aOptions.mAttributeOldValue.Value();
+  bool characterDataOldValue =
+    aOptions.mCharacterDataOldValue.WasPassed() &&
+    aOptions.mCharacterDataOldValue.Value();
+
+  if (!aOptions.mAttributes.WasPassed() &&
+      (aOptions.mAttributeOldValue.WasPassed() ||
+       aOptions.mAttributeFilter.WasPassed())) {
+    attributes = true;
+  }
+
+  if (!aOptions.mCharacterData.WasPassed() &&
+      aOptions.mCharacterDataOldValue.WasPassed()) {
+    characterData = true;
+  }
+
+  if (!(childList || attributes || characterData)) {
+    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;
   }
-  if (aOptions.mAttributeOldValue && !aOptions.mAttributes) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+
+  if (aOptions.mAttributeOldValue.WasPassed() &&
+      aOptions.mAttributeOldValue.Value() &&
+      aOptions.mAttributes.WasPassed() &&
+      !aOptions.mAttributes.Value()) {
+    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;
   }
-  if (aOptions.mCharacterDataOldValue && !aOptions.mCharacterData) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+
+  if (aOptions.mAttributeFilter.WasPassed() &&
+      aOptions.mAttributes.WasPassed() &&
+      !aOptions.mAttributes.Value()) {
+    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+    return;
+  }
+
+  if (aOptions.mCharacterDataOldValue.WasPassed() &&
+      aOptions.mCharacterDataOldValue.Value() &&
+      aOptions.mCharacterData.WasPassed() &&
+      !aOptions.mCharacterData.Value()) {
+    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;
   }
 
@@ -473,11 +514,6 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
     const mozilla::dom::Sequence<nsString>& filtersAsString =
       aOptions.mAttributeFilter.Value();
     uint32_t len = filtersAsString.Length();
-
-    if (len != 0 && !aOptions.mAttributes) {
-      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-      return;
-    }
     filters.SetCapacity(len);
 
     for (uint32_t i = 0; i < len; ++i) {
@@ -487,12 +523,12 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
   }
 
   nsMutationReceiver* r = GetReceiverFor(&aTarget, true);
-  r->SetChildList(aOptions.mChildList);
-  r->SetAttributes(aOptions.mAttributes);
-  r->SetCharacterData(aOptions.mCharacterData);
-  r->SetSubtree(aOptions.mSubtree);
-  r->SetAttributeOldValue(aOptions.mAttributeOldValue);
-  r->SetCharacterDataOldValue(aOptions.mCharacterDataOldValue);
+  r->SetChildList(childList);
+  r->SetAttributes(attributes);
+  r->SetCharacterData(characterData);
+  r->SetSubtree(subtree);
+  r->SetAttributeOldValue(attributeOldValue);
+  r->SetCharacterDataOldValue(characterDataOldValue);
   r->SetAttributeFilter(filters);
   r->SetAllAttributes(allAttrs);
   r->RemoveClones();
@@ -541,11 +577,11 @@ nsDOMMutationObserver::GetObservingInfo(nsTArray<Nullable<MutationObservingInfo>
     MutationObservingInfo& info = aResult.AppendElement()->SetValue();
     nsMutationReceiver* mr = mReceivers[i];
     info.mChildList = mr->ChildList();
-    info.mAttributes = mr->Attributes();
-    info.mCharacterData = mr->CharacterData();
+    info.mAttributes.Construct(mr->Attributes());
+    info.mCharacterData.Construct(mr->CharacterData());
     info.mSubtree = mr->Subtree();
-    info.mAttributeOldValue = mr->AttributeOldValue();
-    info.mCharacterDataOldValue = mr->CharacterDataOldValue();
+    info.mAttributeOldValue.Construct(mr->AttributeOldValue());
+    info.mCharacterDataOldValue.Construct(mr->CharacterDataOldValue());
     nsCOMArray<nsIAtom>& filters = mr->AttributeFilter();
     if (filters.Count()) {
       info.mAttributeFilter.Construct();

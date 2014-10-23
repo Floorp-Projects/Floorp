@@ -3081,5 +3081,13 @@ JitRuntime::generateForkJoinGetSliceStub(JSContext *cx)
     return code;
 }
 
+bool
+CodeGeneratorX86Shared::visitMemoryBarrier(LMemoryBarrier *ins)
+{
+    if (ins->type() & MembarStoreLoad)
+        masm.storeLoadFence();
+    return true;
+}
+
 } // namespace jit
 } // namespace js

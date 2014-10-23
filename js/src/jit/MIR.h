@@ -15,6 +15,7 @@
 #include "mozilla/Array.h"
 #include "mozilla/DebugOnly.h"
 
+#include "jit/AtomicOp.h"
 #include "jit/FixedList.h"
 #include "jit/InlineList.h"
 #include "jit/IonAllocPolicy.h"
@@ -8037,17 +8038,33 @@ class MArrayJoin
     MDefinition *foldsTo(TempAllocator &alloc);
 };
 
+// See comments above MMemoryBarrier, below.
+
+enum MemoryBarrierRequirement
+{
+    DoesNotRequireMemoryBarrier,
+    DoesRequireMemoryBarrier
+};
+
+// Also see comments above MMemoryBarrier, below.
+
 class MLoadTypedArrayElement
   : public MBinaryInstruction
 {
     Scalar::Type arrayType_;
+    bool requiresBarrier_;
 
     MLoadTypedArrayElement(MDefinition *elements, MDefinition *index,
-                           Scalar::Type arrayType)
-      : MBinaryInstruction(elements, index), arrayType_(arrayType)
+                           Scalar::Type arrayType, MemoryBarrierRequirement requiresBarrier)
+      : MBinaryInstruction(elements, index),
+        arrayType_(arrayType),
+        requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier)
     {
         setResultType(MIRType_Value);
-        setMovable();
+        if (requiresBarrier_)
+            setGuard();         // Not removable or movable
+        else
+            setMovable();
         MOZ_ASSERT(elements->type() == MIRType_Elements);
         MOZ_ASSERT(index->type() == MIRType_Int32);
         MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
@@ -8057,9 +8074,10 @@ class MLoadTypedArrayElement
     INSTRUCTION_HEADER(LoadTypedArrayElement)
 
     static MLoadTypedArrayElement *New(TempAllocator &alloc, MDefinition *elements, MDefinition *index,
-                                       Scalar::Type arrayType)
+                                       Scalar::Type arrayType,
+                                       MemoryBarrierRequirement requiresBarrier=DoesNotRequireMemoryBarrier)
     {
-        return new(alloc) MLoadTypedArrayElement(elements, index, arrayType);
+        return new(alloc) MLoadTypedArrayElement(elements, index, arrayType, requiresBarrier);
     }
 
     Scalar::Type arrayType() const {
@@ -8069,6 +8087,9 @@ class MLoadTypedArrayElement
         // Bailout if the result does not fit in an int32.
         return arrayType_ == Scalar::Uint32 && type() == MIRType_Int32;
     }
+    bool requiresMemoryBarrier() const {
+        return requiresBarrier_;
+    }
     MDefinition *elements() const {
         return getOperand(0);
     }
@@ -8076,10 +8097,16 @@ class MLoadTypedArrayElement
         return getOperand(1);
     }
     AliasSet getAliasSet() const {
+        // When a barrier is needed make the instruction effectful by
+        // giving it a "store" effect.
+        if (requiresBarrier_)
+            return AliasSet::Store(AliasSet::TypedArrayElement);
         return AliasSet::Load(AliasSet::TypedArrayElement);
     }
 
     bool congruentTo(const MDefinition *ins) const {
+        if (requiresBarrier_)
+            return false;
         if (!ins->isLoadTypedArrayElement())
             return false;
         const MLoadTypedArrayElement *other = ins->toLoadTypedArrayElement();
@@ -8214,15 +8241,22 @@ class MStoreTypedArrayElement
     public StoreTypedArrayPolicy::Data
 {
     Scalar::Type arrayType_;
+    bool requiresBarrier_;
 
     // See note in MStoreElementCommon.
     bool racy_;
 
     MStoreTypedArrayElement(MDefinition *elements, MDefinition *index, MDefinition *value,
-                            Scalar::Type arrayType)
-      : MTernaryInstruction(elements, index, value), arrayType_(arrayType), racy_(false)
+                            Scalar::Type arrayType, MemoryBarrierRequirement requiresBarrier)
+      : MTernaryInstruction(elements, index, value),
+        arrayType_(arrayType),
+        requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier),
+        racy_(false)
     {
-        setMovable();
+        if (requiresBarrier_)
+            setGuard();         // Not removable or movable
+        else
+            setMovable();
         MOZ_ASSERT(elements->type() == MIRType_Elements);
         MOZ_ASSERT(index->type() == MIRType_Int32);
         MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
@@ -8232,9 +8266,11 @@ class MStoreTypedArrayElement
     INSTRUCTION_HEADER(StoreTypedArrayElement)
 
     static MStoreTypedArrayElement *New(TempAllocator &alloc, MDefinition *elements, MDefinition *index,
-                                        MDefinition *value, Scalar::Type arrayType)
+                                        MDefinition *value, Scalar::Type arrayType,
+                                        MemoryBarrierRequirement requiresBarrier = DoesNotRequireMemoryBarrier)
     {
-        return new(alloc) MStoreTypedArrayElement(elements, index, value, arrayType);
+        return new(alloc) MStoreTypedArrayElement(elements, index, value, arrayType,
+                                                  requiresBarrier);
     }
 
     Scalar::Type arrayType() const {
@@ -8260,6 +8296,9 @@ class MStoreTypedArrayElement
     }
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::TypedArrayElement);
+    }
+    bool requiresMemoryBarrier() const {
+        return requiresBarrier_;
     }
     bool racy() const {
         return racy_;
@@ -11449,6 +11488,159 @@ class MRecompileCheck : public MNullaryInstruction
 
     AliasSet getAliasSet() const {
         return AliasSet::None();
+    }
+};
+
+// All barriered operations - MMemoryBarrier, MCompareExchangeTypedArrayElement,
+// and MAtomicTypedArrayElementBinop, as well as MLoadTypedArrayElement and
+// MStoreTypedArrayElement when they are marked as requiring a memory barrer - have
+// the following attributes:
+//
+// - Not movable
+// - Not removable
+// - Not congruent with any other instruction
+// - Effectful (they alias every TypedArray store)
+//
+// The intended effect of those constraints is to prevent all loads
+// and stores preceding the barriered operation from being moved to
+// after the barriered operation, and vice versa, and to prevent the
+// barriered operation from being removed or hoisted.
+
+class MMemoryBarrier
+  : public MNullaryInstruction
+{
+    // The type is a combination of the memory barrier types in AtomicOp.h.
+    const int type_;
+
+    explicit MMemoryBarrier(int type)
+      : type_(type)
+    {
+        MOZ_ASSERT((type_ & ~MembarAllbits) == 0);
+        setGuard();             // Not removable
+    }
+
+  public:
+    INSTRUCTION_HEADER(MemoryBarrier);
+
+    static MMemoryBarrier *New(TempAllocator &alloc, int type=MembarFull) {
+        return new(alloc) MMemoryBarrier(type);
+    }
+    int type() const {
+        return type_;
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::TypedArrayElement);
+    }
+};
+
+class MCompareExchangeTypedArrayElement
+  : public MAryInstruction<4>,
+    public MixPolicy< MixPolicy<ObjectPolicy<0>, IntPolicy<1> >, MixPolicy<IntPolicy<2>, IntPolicy<3> > >
+{
+    Scalar::Type arrayType_;
+
+    explicit MCompareExchangeTypedArrayElement(MDefinition *elements, MDefinition *index,
+                                               Scalar::Type arrayType, MDefinition *oldval,
+                                               MDefinition *newval)
+      : arrayType_(arrayType)
+    {
+        initOperand(0, elements);
+        initOperand(1, index);
+        initOperand(2, oldval);
+        initOperand(3, newval);
+        setGuard();             // Not removable
+    }
+
+  public:
+    INSTRUCTION_HEADER(CompareExchangeTypedArrayElement);
+
+    static MCompareExchangeTypedArrayElement *New(TempAllocator &alloc, MDefinition *elements,
+                                                  MDefinition *index, Scalar::Type arrayType,
+                                                  MDefinition *oldval, MDefinition *newval)
+    {
+        return new(alloc) MCompareExchangeTypedArrayElement(elements, index, arrayType, oldval, newval);
+    }
+    bool isByteArray() const {
+        return (arrayType_ == Scalar::Int8 ||
+                arrayType_ == Scalar::Uint8 ||
+                arrayType_ == Scalar::Uint8Clamped);
+    }
+    MDefinition *elements() {
+        return getOperand(0);
+    }
+    MDefinition *index() {
+        return getOperand(1);
+    }
+    MDefinition *oldval() {
+        return getOperand(2);
+    }
+    int oldvalOperand() {
+        return 2;
+    }
+    MDefinition *newval() {
+        return getOperand(3);
+    }
+    Scalar::Type arrayType() const {
+        return arrayType_;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::TypedArrayElement);
+    }
+};
+
+class MAtomicTypedArrayElementBinop
+    : public MAryInstruction<3>,
+      public Mix3Policy< ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2> >
+{
+  private:
+    AtomicOp op_;
+    Scalar::Type arrayType_;
+
+  protected:
+    explicit MAtomicTypedArrayElementBinop(AtomicOp op, MDefinition *elements, MDefinition *index,
+                                           Scalar::Type arrayType, MDefinition *value)
+      : op_(op),
+        arrayType_(arrayType)
+    {
+        initOperand(0, elements);
+        initOperand(1, index);
+        initOperand(2, value);
+        setGuard();             // Not removable
+    }
+
+  public:
+    INSTRUCTION_HEADER(AtomicTypedArrayElementBinop);
+
+    static MAtomicTypedArrayElementBinop *New(TempAllocator &alloc, AtomicOp op,
+                                              MDefinition *elements, MDefinition *index,
+                                              Scalar::Type arrayType, MDefinition *value)
+    {
+        return new(alloc) MAtomicTypedArrayElementBinop(op, elements, index, arrayType, value);
+    }
+
+    bool isByteArray() const {
+        return (arrayType_ == Scalar::Int8 ||
+                arrayType_ == Scalar::Uint8 ||
+                arrayType_ == Scalar::Uint8Clamped);
+    }
+    AtomicOp operation() const {
+        return op_;
+    }
+    Scalar::Type arrayType() const {
+        return arrayType_;
+    }
+    MDefinition *elements() {
+        return getOperand(0);
+    }
+    MDefinition *index() {
+        return getOperand(1);
+    }
+    MDefinition *value() {
+        return getOperand(2);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::TypedArrayElement);
     }
 };
 

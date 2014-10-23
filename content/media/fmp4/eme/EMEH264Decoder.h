@@ -99,7 +99,6 @@ private:
   GMPVideoHost* mHost;
 
   VideoInfo mVideoInfo;
-  nsIntRect mPictureRegion;
   const mp4_demuxer::VideoDecoderConfig& mConfig;
   nsRefPtr<layers::ImageContainer> mImageContainer;
   nsRefPtr<MediaTaskQueue> mTaskQueue;

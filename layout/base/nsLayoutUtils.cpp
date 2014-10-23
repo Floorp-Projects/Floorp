@@ -5310,31 +5310,39 @@ nsLayoutUtils::DrawSingleImage(nsRenderingContext*    aRenderingContext,
                                uint32_t               aImageFlags,
                                const nsRect*          aSourceArea)
 {
-  nsIntSize imageSize(ComputeSizeForDrawingWithFallback(aImage, aDest.Size()));
-  NS_ENSURE_TRUE(imageSize.width > 0 && imageSize.height > 0, NS_ERROR_FAILURE);
+  nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
+  nsIntSize pixelImageSize(ComputeSizeForDrawingWithFallback(aImage, aDest.Size()));
+  NS_ENSURE_TRUE(pixelImageSize.width > 0 && pixelImageSize.height > 0, NS_ERROR_FAILURE);
+  nsSize imageSize(pixelImageSize.width * appUnitsPerCSSPixel,
+                   pixelImageSize.height * appUnitsPerCSSPixel);
 
   nsRect source;
   nsCOMPtr<imgIContainer> image;
   if (aSourceArea) {
     source = *aSourceArea;
     nsIntRect subRect(source.x, source.y, source.width, source.height);
-    subRect.ScaleInverseRoundOut(nsDeviceContext::AppUnitsPerCSSPixel());
+    subRect.ScaleInverseRoundOut(appUnitsPerCSSPixel);
     image = ImageOps::Clip(aImage, subRect);
+
+    nsRect imageRect;
+    imageRect.SizeTo(imageSize);
+    nsRect clippedSource = imageRect.Intersect(source);
+
+    source -= clippedSource.TopLeft();
+    imageSize = clippedSource.Size();
   } else {
-    nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
-    source.SizeTo(imageSize.width*appUnitsPerCSSPixel,
-                  imageSize.height*appUnitsPerCSSPixel);
+    source.SizeTo(imageSize);
     image = aImage;
   }
 
-  nsRect dest = nsLayoutUtils::GetWholeImageDestination(imageSize, source,
-                                                        aDest);
+  nsRect dest = GetWholeImageDestination(imageSize, source, aDest);
+
   // Ensure that only a single image tile is drawn. If aSourceArea extends
   // outside the image bounds, we want to honor the aSourceArea-to-aDest
   // transform but we don't want to actually tile the image.
   nsRect fill;
   fill.IntersectRect(aDest, dest);
-  return DrawImageInternal(aRenderingContext, aPresContext, aImage,
+  return DrawImageInternal(aRenderingContext, aPresContext, image,
                            aGraphicsFilter, dest, fill, fill.TopLeft(),
                            aDirty, aSVGContext, aImageFlags);
 }
@@ -5445,7 +5453,7 @@ nsLayoutUtils::DrawImage(nsRenderingContext* aRenderingContext,
 }
 
 /* static */ nsRect
-nsLayoutUtils::GetWholeImageDestination(const nsIntSize& aWholeImageSize,
+nsLayoutUtils::GetWholeImageDestination(const nsSize& aWholeImageSize,
                                         const nsRect& aImageSourceArea,
                                         const nsRect& aDestArea)
 {
@@ -5453,11 +5461,22 @@ nsLayoutUtils::GetWholeImageDestination(const nsIntSize& aWholeImageSize,
   double scaleY = double(aDestArea.height)/aImageSourceArea.height;
   nscoord destOffsetX = NSToCoordRound(aImageSourceArea.x*scaleX);
   nscoord destOffsetY = NSToCoordRound(aImageSourceArea.y*scaleY);
-  nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
-  nscoord wholeSizeX = NSToCoordRound(aWholeImageSize.width*appUnitsPerCSSPixel*scaleX);
-  nscoord wholeSizeY = NSToCoordRound(aWholeImageSize.height*appUnitsPerCSSPixel*scaleY);
+  nscoord wholeSizeX = NSToCoordRound(aWholeImageSize.width*scaleX);
+  nscoord wholeSizeY = NSToCoordRound(aWholeImageSize.height*scaleY);
   return nsRect(aDestArea.TopLeft() - nsPoint(destOffsetX, destOffsetY),
                 nsSize(wholeSizeX, wholeSizeY));
+}
+
+/* static */ nsRect
+nsLayoutUtils::GetWholeImageDestination(const nsIntSize& aWholeImageSize,
+                                        const nsRect& aImageSourceArea,
+                                        const nsRect& aDestArea)
+{
+  nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
+  return GetWholeImageDestination(nsSize(aWholeImageSize.width * appUnitsPerCSSPixel,
+                                         aWholeImageSize.height * appUnitsPerCSSPixel),
+                                  aImageSourceArea,
+                                  aDestArea);
 }
 
 /* static */ already_AddRefed<imgIContainer>

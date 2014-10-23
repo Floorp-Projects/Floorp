@@ -8804,12 +8804,15 @@ CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
 {
   nsCSSValueGradientStop* stop = aGradient->mStops.AppendElement();
   if (!ParseVariant(stop->mColor, VARIANT_COLOR, nullptr)) {
-    return false;
+    stop->mIsInterpolationHint = true;
   }
 
   // Stop positions do not have to fall between the starting-point and
   // ending-point, so we don't use ParseNonNegativeVariant.
   if (!ParseVariant(stop->mLocation, VARIANT_LP | VARIANT_CALC, nullptr)) {
+    if (stop->mIsInterpolationHint) {
+      return false;
+    }
     stop->mLocation.SetNoneValue();
   }
   return true;
@@ -9154,6 +9157,20 @@ CSSParserImpl::ParseGradientColorStops(nsCSSValueGradient* aGradient,
 
   if (!ExpectSymbol(')', true)) {
     SkipUntil(')');
+    return false;
+  }
+
+  // Check if interpolation hints are in the correct location
+  bool previousPointWasInterpolationHint = true;
+  for (size_t x = 0; x < aGradient->mStops.Length(); x++) {
+    bool isInterpolationHint = aGradient->mStops[x].mIsInterpolationHint;
+    if (isInterpolationHint && previousPointWasInterpolationHint) {
+      return false;
+    }
+    previousPointWasInterpolationHint = isInterpolationHint;
+  }
+
+  if (previousPointWasInterpolationHint) {
     return false;
   }
 

@@ -352,13 +352,53 @@ class JSObject : public js::gc::Cell
     js::TaggedProto getTaggedProto() const {
         return type_->proto();
     }
+
     bool hasTenuredProto() const;
 
     bool uninlinedIsProxy() const;
+
     JSObject *getProto() const {
         MOZ_ASSERT(!uninlinedIsProxy());
         return getTaggedProto().toObjectOrNull();
     }
+
+    // Normal objects and a subset of proxies have uninteresting [[Prototype]].
+    // For such objects the [[Prototype]] is just a value returned when needed
+    // for accesses, or modified in response to requests.  These objects store
+    // the [[Prototype]] directly within |obj->type_|.
+    //
+    // Proxies that don't have such a simple [[Prototype]] instead have a
+    // "lazy" [[Prototype]].  Accessing the [[Prototype]] of such an object
+    // requires going through the proxy handler {get,set}PrototypeOf and
+    // setImmutablePrototype methods.  This is most commonly useful for proxies
+    // that are wrappers around other objects.  If the [[Prototype]] of the
+    // underlying object changes, the [[Prototype]] of the wrapper must also
+    // simultaneously change.  We implement this by having the handler methods
+    // simply delegate to the wrapped object, forwarding its response to the
+    // caller.
+    //
+    // This method returns true if this object has a non-simple [[Prototype]]
+    // as described above, or false otherwise.
+    bool hasLazyPrototype() const {
+        bool lazy = getTaggedProto().isLazy();
+        MOZ_ASSERT_IF(lazy, uninlinedIsProxy());
+        return lazy;
+    }
+
+    // True iff this object's [[Prototype]] is immutable.  Must not be called
+    // on proxies with lazy [[Prototype]]!
+    bool nonLazyPrototypeIsImmutable() const {
+        MOZ_ASSERT(!hasLazyPrototype());
+        return lastProperty()->hasObjectFlag(js::BaseShape::IMMUTABLE_PROTOTYPE);
+    }
+
+    // Attempt to make |obj|'s [[Prototype]] immutable, such that subsequently
+    // trying to change it will not work.  If an internal error occurred,
+    // returns false.  Otherwise, |*succeeded| is set to true iff |obj|'s
+    // [[Prototype]] is now immutable.
+    static bool
+    setImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj, bool *succeeded);
+
     static inline bool getProto(JSContext *cx, js::HandleObject obj,
                                 js::MutableHandleObject protop);
     // Returns false on error, success of operation in outparam.
@@ -474,10 +514,11 @@ class JSObject : public js::gc::Cell
         return !lastProperty()->hasObjectFlag(js::BaseShape::NOT_EXTENSIBLE);
     }
 
-    // Attempt to change the [[Extensible]] bit on |obj| to false.  Callers
-    // must ensure that |obj| is currently extensible before calling this!
+    // Attempt to change the [[Extensible]] bit on |obj| to false.  Indicate
+    // success or failure through the |*succeeded| outparam, or actual error
+    // through the return value.
     static bool
-    preventExtensions(JSContext *cx, js::HandleObject obj);
+    preventExtensions(JSContext *cx, js::HandleObject obj, bool *succeeded);
 
   private:
     enum ImmutabilityType { SEAL, FREEZE };

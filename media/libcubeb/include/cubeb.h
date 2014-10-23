@@ -204,7 +204,7 @@ int cubeb_get_max_channel_count(cubeb * context, uint32_t * max_channels);
     @param context
     @param params On some backends, the minimum achievable latency depends on
                   the characteristics of the stream.
-    @param latency The latency value, in ms, to pass to cubeb_stream_init.
+    @param latency_ms The latency value, in ms, to pass to cubeb_stream_init.
     @retval CUBEB_ERROR_INVALID_PARAMETER
     @retval CUBEB_OK */
 int cubeb_get_min_latency(cubeb * context, cubeb_stream_params params, uint32_t * latency_ms);
@@ -212,7 +212,7 @@ int cubeb_get_min_latency(cubeb * context, cubeb_stream_params params, uint32_t 
 /** Get the preferred sample rate for this backend: this is hardware and platform
    dependant, and can avoid resampling, and/or trigger fastpaths.
    @param context
-   @param samplerate The samplerate (in Hz) the current configuration prefers.
+   @param rate The samplerate (in Hz) the current configuration prefers.
    @return CUBEB_ERROR_INVALID_PARAMETER
    @return CUBEB_OK */
 int cubeb_get_preferred_sample_rate(cubeb * context, uint32_t * rate);
@@ -275,7 +275,7 @@ int cubeb_stream_get_latency(cubeb_stream * stream, uint32_t * latency);
 /**
  * Set the volume for a stream.
  * @param stream the stream for which to adjust the volume.
- * @param volumes a float between 0.0 (muted) and 1.0 (maximum volumes)
+ * @param volume a float between 0.0 (muted) and 1.0 (maximum volume)
  * @return CUBEB_ERROR_INVALID_PARAMETER if volume is outside [0.0; 1.0]
  * @return CUBEB_ERROR_INVALID_PARAMETER if stream is an invalid pointer
  * @return CUBEB_OK otherwise

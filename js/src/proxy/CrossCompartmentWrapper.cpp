@@ -28,24 +28,6 @@ using namespace js;
 #define NOTHING (true)
 
 bool
-CrossCompartmentWrapper::isExtensible(JSContext *cx, HandleObject wrapper, bool *extensible) const
-{
-    PIERCE(cx, wrapper,
-           NOTHING,
-           Wrapper::isExtensible(cx, wrapper, extensible),
-           NOTHING);
-}
-
-bool
-CrossCompartmentWrapper::preventExtensions(JSContext *cx, HandleObject wrapper) const
-{
-    PIERCE(cx, wrapper,
-           NOTHING,
-           Wrapper::preventExtensions(cx, wrapper),
-           NOTHING);
-}
-
-bool
 CrossCompartmentWrapper::getPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
                                                MutableHandle<PropertyDescriptor> desc) const
 {
@@ -101,6 +83,61 @@ CrossCompartmentWrapper::enumerate(JSContext *cx, HandleObject wrapper, AutoIdVe
     PIERCE(cx, wrapper,
            NOTHING,
            Wrapper::enumerate(cx, wrapper, props),
+           NOTHING);
+}
+
+bool
+CrossCompartmentWrapper::getPrototypeOf(JSContext *cx, HandleObject wrapper,
+                                        MutableHandleObject protop) const
+{
+    {
+        RootedObject wrapped(cx, wrappedObject(wrapper));
+        AutoCompartment call(cx, wrapped);
+        if (!JSObject::getProto(cx, wrapped, protop))
+            return false;
+        if (protop)
+            protop->setDelegate(cx);
+    }
+
+    return cx->compartment()->wrap(cx, protop);
+}
+
+bool
+CrossCompartmentWrapper::setPrototypeOf(JSContext *cx, HandleObject wrapper,
+                                        HandleObject proto, bool *bp) const
+{
+    RootedObject protoCopy(cx, proto);
+    PIERCE(cx, wrapper,
+           cx->compartment()->wrap(cx, &protoCopy),
+           Wrapper::setPrototypeOf(cx, wrapper, protoCopy, bp),
+           NOTHING);
+}
+
+bool
+CrossCompartmentWrapper::setImmutablePrototype(JSContext *cx, HandleObject wrapper, bool *succeeded) const
+{
+    PIERCE(cx, wrapper,
+           NOTHING,
+           Wrapper::setImmutablePrototype(cx, wrapper, succeeded),
+           NOTHING);
+}
+
+bool
+CrossCompartmentWrapper::preventExtensions(JSContext *cx, HandleObject wrapper,
+                                           bool *succeeded) const
+{
+    PIERCE(cx, wrapper,
+           NOTHING,
+           Wrapper::preventExtensions(cx, wrapper, succeeded),
+           NOTHING);
+}
+
+bool
+CrossCompartmentWrapper::isExtensible(JSContext *cx, HandleObject wrapper, bool *extensible) const
+{
+    PIERCE(cx, wrapper,
+           NOTHING,
+           Wrapper::isExtensible(cx, wrapper, extensible),
            NOTHING);
 }
 
@@ -402,33 +439,6 @@ CrossCompartmentWrapper::defaultValue(JSContext *cx, HandleObject wrapper, JSTyp
            NOTHING,
            Wrapper::defaultValue(cx, wrapper, hint, vp),
            cx->compartment()->wrap(cx, vp));
-}
-
-bool
-CrossCompartmentWrapper::getPrototypeOf(JSContext *cx, HandleObject wrapper,
-                                        MutableHandleObject protop) const
-{
-    {
-        RootedObject wrapped(cx, wrappedObject(wrapper));
-        AutoCompartment call(cx, wrapped);
-        if (!JSObject::getProto(cx, wrapped, protop))
-            return false;
-        if (protop)
-            protop->setDelegate(cx);
-    }
-
-    return cx->compartment()->wrap(cx, protop);
-}
-
-bool
-CrossCompartmentWrapper::setPrototypeOf(JSContext *cx, HandleObject wrapper,
-                                        HandleObject proto, bool *bp) const
-{
-    RootedObject protoCopy(cx, proto);
-    PIERCE(cx, wrapper,
-           cx->compartment()->wrap(cx, &protoCopy),
-           Wrapper::setPrototypeOf(cx, wrapper, protoCopy, bp),
-           NOTHING);
 }
 
 const CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
