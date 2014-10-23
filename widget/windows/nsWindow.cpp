@@ -6733,10 +6733,18 @@ nsWindow::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
     if (prefs.mPreferOpenGL) {
       aHints.AppendElement(LayersBackend::LAYERS_OPENGL);
     }
-    if (!prefs.mPreferD3D9) {
-      aHints.AppendElement(LayersBackend::LAYERS_D3D11);
+
+    ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
+    if (device && !DoesD3D11DeviceSupportResourceSharing(device))
+    {
+      // bug 1083071 - bad things - fall back to basic layers
     }
-    aHints.AppendElement(LayersBackend::LAYERS_D3D9);
+    else {
+      if (!prefs.mPreferD3D9) {
+        aHints.AppendElement(LayersBackend::LAYERS_D3D11);
+      }
+      aHints.AppendElement(LayersBackend::LAYERS_D3D9);
+    }
   }
   aHints.AppendElement(LayersBackend::LAYERS_BASIC);
 }
