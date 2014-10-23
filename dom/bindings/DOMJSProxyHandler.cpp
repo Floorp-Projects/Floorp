@@ -7,7 +7,6 @@
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "xpcpublic.h"
 #include "xpcprivate.h"
-#include "XPCQuickStubs.h"
 #include "XPCWrapper.h"
 #include "WrapperFactory.h"
 #include "nsDOMClassInfo.h"
