@@ -717,8 +717,11 @@ loop.panel = (function(_, mozL10n) {
               <UserIdentity displayName={displayName} />
               <AvailabilityDropdown />
             </div>
-            <AuthLink />
-            <SettingsDropdown />
+            <div className="signin-details">
+              <AuthLink />
+              <div className="footer-signin-separator" />
+              <SettingsDropdown />
+            </div>
           </div>
         </div>
       );
