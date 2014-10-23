@@ -150,9 +150,9 @@ DumpChildInfo(nsRefPtr<Accessible>& aChild)
     return;
   }
   nsString str;
-  aChild->GetName(str);
+  aChild->Name(str);
   BridgeLog("name: %ls", str.BeginReading());
-  aChild->GetDescription(str);
+  aChild->Description(str);
   BridgeLog("description: %ls", str.BeginReading());
 #endif
 }
@@ -557,15 +557,14 @@ UIATextElement::get_BoundingRectangle(UiaRect * retVal)
   }
 
   // bounds are in physical pixels
-  int32_t docX = 0, docY = 0, docWidth = 0, docHeight = 0;
-  mAccessItem->GetBounds(&docX, &docY, &docWidth, &docHeight);
-  
-  retVal->left = (float)docX;
-  retVal->top = (float)docY;
-  retVal->width = (float)docWidth;
-  retVal->height = (float)docHeight;
+  nsIntRect rect = mAccessItem->Bounds();
 
-  BridgeLog("get_BoundingRectangle: left=%d top=%d right=%d bottom=%d", docX, docY, docX + docWidth, docY + docHeight);
+  retVal->left = rect.x;
+  retVal->top = rect.y;
+  retVal->width = rect.width;
+  retVal->height = rect.height;
+
+  BridgeLog("get_BoundingRectangle: left=%d top=%d right=%d bottom=%d", rect.x, rect.y, rect.x + rect.width, rect.y + rect.height);
   return S_OK;
 }
 
@@ -696,7 +695,6 @@ UIATextElement::GetPropertyValue(PROPERTYID idProp, VARIANT * pRetVal)
     case UIA_HasKeyboardFocusPropertyId:
     {
       if (mAccessItem) {
-        uint32_t state, extraState;
         if (mAccessItem->NativeState() & mozilla::a11y::states::FOCUSED) {
           pRetVal->vt = VT_BOOL;
           pRetVal->boolVal = VARIANT_TRUE;
