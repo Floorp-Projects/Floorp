@@ -348,11 +348,14 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     UNSAFE_OP(AsmJSParameter)
     UNSAFE_OP(AsmJSCall)
     DROP_OP(RecompileCheck)
+    UNSAFE_OP(CompareExchangeTypedArrayElement)
+    UNSAFE_OP(AtomicTypedArrayElementBinop)
+    UNSAFE_OP(MemoryBarrier)
     UNSAFE_OP(UnknownValue)
     UNSAFE_OP(LexicalCheck)
     UNSAFE_OP(ThrowUninitializedLexical)
 
-    // It looks like this could easily be made safe:
+    // It looks like these could easily be made safe:
     UNSAFE_OP(ConvertElementsToDoubles)
     UNSAFE_OP(MaybeCopyElementsForWrite)
 };

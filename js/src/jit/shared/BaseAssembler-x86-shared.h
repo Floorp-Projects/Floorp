@@ -216,16 +216,21 @@ public:
 
 private:
     typedef enum {
+        OP_ADD_EbGb                     = 0x00,
         OP_ADD_EvGv                     = 0x01,
         OP_ADD_GvEv                     = 0x03,
+        OP_OR_EbGb                      = 0x08,
         OP_OR_EvGv                      = 0x09,
         OP_OR_GvEv                      = 0x0B,
         OP_2BYTE_ESCAPE                 = 0x0F,
+        OP_AND_EbGb                     = 0x20,
         OP_AND_EvGv                     = 0x21,
         OP_AND_GvEv                     = 0x23,
+        OP_SUB_EbGb                     = 0x28,
         OP_SUB_EvGv                     = 0x29,
         OP_SUB_GvEv                     = 0x2B,
         PRE_PREDICT_BRANCH_NOT_TAKEN    = 0x2E,
+        OP_XOR_EbGb                     = 0x30,
         OP_XOR_EvGv                     = 0x31,
         OP_XOR_GvEv                     = 0x33,
         OP_CMP_EvGv                     = 0x39,
@@ -255,6 +260,7 @@ private:
         OP_XCHG_EvGv                    = 0x87,
         OP_MOV_EbGv                     = 0x88,
         OP_MOV_EvGv                     = 0x89,
+        OP_MOV_GvEb                     = 0x8A,
         OP_MOV_GvEv                     = 0x8B,
         OP_LEA                          = 0x8D,
         OP_GROUP1A_Ev                   = 0x8F,
@@ -349,13 +355,16 @@ private:
         OP2_MOVDQ_WdqVdq    = 0x7F,
         OP2_JCC_rel32       = 0x80,
         OP_SETCC            = 0x90,
+        OP_FENCE            = 0xAE,
         OP2_IMUL_GvEv       = 0xAF,
+        OP2_CMPXCHG_GvEb    = 0xB0,
         OP2_CMPXCHG_GvEw    = 0xB1,
         OP2_BSR_GvEv        = 0xBD,
         OP2_MOVSX_GvEb      = 0xBE,
         OP2_MOVSX_GvEw      = 0xBF,
         OP2_MOVZX_GvEb      = 0xB6,
         OP2_MOVZX_GvEw      = 0xB7,
+        OP2_XADD_EbGb       = 0xC0,
         OP2_XADD_EvGv       = 0xC1,
         OP2_CMPPS_VpsWps    = 0xC2,
         OP2_PEXTRW_GdUdIb   = 0xC5,
@@ -683,7 +692,24 @@ public:
         }
     }
 
-    void xaddl_rm(RegisterID srcdest, int offset, RegisterID base)
+    void lock_xaddb_rm(RegisterID srcdest, int offset, RegisterID base)
+    {
+        spew("lock xaddl %s, %s0x%x(%s)",
+            nameIReg(1, srcdest), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.oneByteOp(PRE_LOCK);
+        m_formatter.twoByteOp(OP2_XADD_EbGb, srcdest, base, offset);
+    }
+
+    void lock_xaddb_rm(RegisterID srcdest, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("lock xaddl %s, %s0x%x(%s,%s,%d)",
+            nameIReg(1, srcdest), PRETTY_PRINT_OFFSET(offset),
+            nameIReg(base), nameIReg(index), 1<<scale);
+        m_formatter.oneByteOp(PRE_LOCK);
+        m_formatter.twoByteOp(OP2_XADD_EbGb, srcdest, base, index, scale, offset);
+    }
+
+    void lock_xaddl_rm(RegisterID srcdest, int offset, RegisterID base)
     {
         spew("lock xaddl %s, %s0x%x(%s)",
             nameIReg(4,srcdest), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
@@ -691,7 +717,7 @@ public:
         m_formatter.twoByteOp(OP2_XADD_EvGv, srcdest, base, offset);
     }
 
-    void xaddl_rm(RegisterID srcdest, int offset, RegisterID base, RegisterID index, int scale)
+    void lock_xaddl_rm(RegisterID srcdest, int offset, RegisterID base, RegisterID index, int scale)
     {
         spew("lock xaddl %s, %s0x%x(%s,%s,%d)",
             nameIReg(4, srcdest), PRETTY_PRINT_OFFSET(offset),
@@ -1427,6 +1453,11 @@ public:
         m_formatter.oneByteOp(PRE_LOCK);
     }
 
+    void prefix_16_for_32()
+    {
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+    }
+
     void incl_m32(int offset, RegisterID base)
     {
         spew("incl       %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
@@ -1439,14 +1470,48 @@ public:
         m_formatter.oneByteOp(OP_GROUP5_Ev, GROUP5_OP_DEC, base, offset);
     }
 
+    // Note that CMPXCHG performs comparison against REG = %al/%ax/%eax.
+    // If %REG == [%base+offset], then %src -> [%base+offset].
+    // Otherwise, [%base+offset] -> %REG.
+    // For the 8-bit operations src must also be an 8-bit register.
+
+    void cmpxchg8(RegisterID src, int offset, RegisterID base)
+    {
+        spew("cmpxchg8    %s, %s0x%x(%s)",
+             nameIReg(src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.twoByteOp(OP2_CMPXCHG_GvEb, src, base, offset);
+    }
+    void cmpxchg8(RegisterID src, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("cmpxchg8    %s, %s0x%x(%s,%s,%d)",
+             nameIReg(src), PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(index), 1<<scale);
+        m_formatter.twoByteOp(OP2_CMPXCHG_GvEb, src, base, index, scale, offset);
+    }
+    void cmpxchg16(RegisterID src, int offset, RegisterID base)
+    {
+        spew("cmpxchg16    %s, %s0x%x(%s)",
+             nameIReg(src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.twoByteOp(OP2_CMPXCHG_GvEw, src, base, offset);
+    }
+    void cmpxchg16(RegisterID src, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("cmpxchg16    %s, %s0x%x(%s,%s,%d)",
+             nameIReg(src), PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(index), 1<<scale);
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.twoByteOp(OP2_CMPXCHG_GvEw, src, base, index, scale, offset);
+    }
     void cmpxchg32(RegisterID src, int offset, RegisterID base)
     {
-        // Note that 32-bit CMPXCHG performs comparison against %eax.
-        // If %eax == [%base+offset], then %src -> [%base+offset].
-        // Otherwise, [%base+offset] -> %eax.
-        spew("cmpxchg    %s, %s0x%x(%s)",
+        spew("cmpxchg32    %s, %s0x%x(%s)",
              nameIReg(src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.twoByteOp(OP2_CMPXCHG_GvEw, src, base, offset);
+    }
+    void cmpxchg32(RegisterID src, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("cmpxchg32    %s, %s0x%x(%s,%s,%d)",
+             nameIReg(src), PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(index), 1<<scale);
+        m_formatter.twoByteOp(OP2_CMPXCHG_GvEw, src, base, index, scale, offset);
     }
 
 
@@ -1985,6 +2050,14 @@ public:
         m_formatter.immediate32(imm);
     }
 
+    void movb_i8r(int imm, RegisterID reg)
+    {
+        spew("movb       $0x%x, %s",
+             imm, nameIReg(1, reg));
+        m_formatter.oneByteOp(OP_MOV_EbGv, reg);
+        m_formatter.immediate8(imm);
+    }
+
     void movb_i8m(int imm, int offset, RegisterID base)
     {
         spew("movb       $0x%x, %s0x%x(%s)",
@@ -2275,6 +2348,20 @@ public:
         m_formatter.oneByteOp8(OP_MOV_EbGv, src, addr);
     }
 
+    void movb_mr(int offset, RegisterID base, RegisterID dst)
+    {
+        spew("movb       %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(1, dst));
+        m_formatter.oneByteOp(OP_MOV_GvEb, dst, base, offset);
+    }
+
+    void movb_mr(int offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        spew("movb       %d(%s,%s,%d), %s",
+             offset, nameIReg(base), nameIReg(index), 1<<scale, nameIReg(1, dst));
+        m_formatter.oneByteOp(OP_MOV_GvEb, dst, base, index, scale, offset);
+    }
+
     void movzbl_mr(int offset, RegisterID base, RegisterID dst)
     {
         spew("movzbl     %s0x%x(%s), %s",
@@ -2301,6 +2388,13 @@ public:
         spew("movzbl     %p, %s",
              addr, nameIReg(dst));
         m_formatter.twoByteOp(OP2_MOVZX_GvEb, dst, addr);
+    }
+
+    void movsbl_rr(RegisterID src, RegisterID dst)
+    {
+        spew("movsbl     %s, %s",
+             nameIReg(1,src), nameIReg(4,dst));
+        m_formatter.twoByteOp8_movx(OP2_MOVSX_GvEb, dst, src);
     }
 
     void movsbl_mr(int offset, RegisterID base, RegisterID dst)
@@ -2364,6 +2458,13 @@ public:
         spew("movzwl     %p, %s",
              addr, nameIReg(4, dst));
         m_formatter.twoByteOp(OP2_MOVZX_GvEw, dst, addr);
+    }
+
+    void movswl_rr(RegisterID src, RegisterID dst)
+    {
+        spew("movswl     %s, %s",
+             nameIReg(2, src), nameIReg(4, dst));
+        m_formatter.twoByteOp(OP2_MOVSX_GvEw, dst, src);
     }
 
     void movswl_mr(int offset, RegisterID base, RegisterID dst)
@@ -3902,6 +4003,11 @@ public:
         m_formatter.oneByteOp(OP_POPA);
     }
 #endif
+
+    void mfence() {
+        spew("mfence");
+        m_formatter.twoByteOp(OP_FENCE, (int)6, (RegisterID)0);
+    }
 
     // Assembler admin methods:
 
