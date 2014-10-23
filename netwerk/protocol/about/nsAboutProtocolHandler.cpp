@@ -140,7 +140,7 @@ nsAboutProtocolHandler::NewChannel2(nsIURI* uri,
 
     if (NS_SUCCEEDED(rv)) {
         // The standard return case:
-        rv = aboutMod->NewChannel(uri, result);
+        rv = aboutMod->NewChannel(uri, aLoadInfo, result);
         if (NS_SUCCEEDED(rv)) {
             // If this URI is safe for untrusted content, enforce that its
             // principal be based on the channel's originalURI by setting the
