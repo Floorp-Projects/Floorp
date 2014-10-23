@@ -10,6 +10,7 @@ import java.util.EnumSet;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
@@ -20,6 +21,7 @@ import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.util.EventCallback;
 
 import android.app.AlertDialog;
 import android.content.ContentResolver;
@@ -265,7 +267,14 @@ public class HistoryPanel extends HomeFragment {
         final ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(View widget) {
-                // TODO Open menu and highlight private tab item.
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.HOMESCREEN, "hint-private-browsing");
+                try {
+                    final JSONObject json = new JSONObject();
+                    json.put("type", "Menu:Open");
+                    EventDispatcher.getInstance().dispatchEvent(json, null);
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "Error forming JSON for Private Browsing contextual hint", e);
+                }
             }
         };
 
