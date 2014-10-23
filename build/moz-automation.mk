@@ -20,7 +20,6 @@ AUTOMATION_UPLOAD_OUTPUT = $(DIST)/automation-upload.txt
 # Helper variables to convert from MOZ_AUTOMATION_* variables to the
 # corresponding the make target
 tier_BUILD_SYMBOLS = buildsymbols
-tier_CHECK = check
 tier_L10N_CHECK = l10n-check
 tier_PRETTY_L10N_CHECK = pretty-l10n-check
 tier_INSTALLER = installer
@@ -49,7 +48,6 @@ moz_automation_symbols = \
   PRETTY_INSTALLER \
   UPDATE_PACKAGING \
   PRETTY_UPDATE_PACKAGING \
-  CHECK \
   L10N_CHECK \
   PRETTY_L10N_CHECK \
   UPLOAD \
@@ -74,11 +72,10 @@ automation/upload: automation/package-tests
 automation/upload: automation/buildsymbols
 automation/upload: automation/update-packaging
 
-# automation/{pretty-}package and automation/check should depend on build (which is
-# implicit due to the way client.mk invokes automation/build), but buildsymbols
-# changes the binaries/libs, and that's what we package/test.
+# automation/{pretty-}package should depend on build (which is implicit due to
+# the way client.mk invokes automation/build), but buildsymbols changes the
+# binaries/libs, and that's what we package/test.
 automation/pretty-package: automation/buildsymbols
-automation/check: automation/buildsymbols
 
 # The 'pretty' versions of targets run before the regular ones to avoid
 # conflicts in writing to the same files.
@@ -90,9 +87,6 @@ automation/update-packaging: automation/pretty-update-packaging
 
 automation/build: $(addprefix automation/,$(MOZ_AUTOMATION_TIERS))
 	$(PYTHON) $(topsrcdir)/build/gen_mach_buildprops.py --complete-mar-file $(DIST)/$(COMPLETE_MAR) --upload-output $(AUTOMATION_UPLOAD_OUTPUT)
-
-# make check runs with the keep-going flag so we can see all the failures
-AUTOMATION_EXTRA_CMDLINE-check = -k
 
 # We need the log from make upload to grep it for urls in order to set
 # properties.
