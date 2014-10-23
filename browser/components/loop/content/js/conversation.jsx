@@ -657,8 +657,6 @@ loop.conversation = (function(mozL10n) {
       navigator.mozLoop.releaseCallData(callId);
     });
 
-    document.body.classList.add(loop.shared.utils.getTargetPlatform());
-
     React.renderComponent(<AppControllerView
       localRoomStore={localRoomStore}
       store={conversationStore}
