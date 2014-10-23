@@ -37,6 +37,15 @@ public:
 
   // Should only be used on types other than Count and NotPseudoClass
   static void PseudoTypeToString(Type aType, nsAString& aString);
+
+private:
+  static uint32_t FlagsForPseudoClass(const Type aType);
+
+  // Does the given pseudo-class have all of the flags given?
+  static bool PseudoClassHasFlags(const Type aType, uint32_t aFlags)
+  {
+    return (FlagsForPseudoClass(aType) & aFlags) == aFlags;
+  }
 };
 
 #endif /* nsCSSPseudoClasses_h___ */
