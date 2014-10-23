@@ -16,29 +16,32 @@
 /** 
  * Loads the public key for the specified cert name from the NSS store.
  * 
- * @param certName The cert name to find.
+ * @param certData  The DER-encoded X509 certificate to extract the key from.
+ * @param certDataSize The size of certData.
  * @param publicKey Out parameter for the public key to use.
- * @param cert      Out parameter for the certificate to use.
  * @return CryptoX_Success on success, CryptoX_Error on error.
 */
 CryptoX_Result
-NSS_LoadPublicKey(const char *certNickname, 
-                  SECKEYPublicKey **publicKey, 
-                  CERTCertificate **cert)
+NSS_LoadPublicKey(const unsigned char *certData, unsigned int certDataSize,
+                  SECKEYPublicKey **publicKey)
 {
-  secuPWData pwdata = { PW_NONE, 0 };
-  if (!cert || !publicKey || !cert) {
+  CERTCertificate * cert;
+  SECItem certDataItem = { siBuffer, (unsigned char*) certData, certDataSize };
+
+  if (!certData || !publicKey) {
     return CryptoX_Error;
   }
 
+  cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &certDataItem, NULL,
+                                 PR_FALSE, PR_TRUE);
   /* Get the cert and embedded public key out of the database */
-  *cert = PK11_FindCertFromNickname(certNickname, &pwdata);
-  if (!*cert) {
+  if (!cert) {
     return CryptoX_Error;
   }
-  *publicKey = CERT_ExtractPublicKey(*cert);
+  *publicKey = CERT_ExtractPublicKey(cert);
+  CERT_DestroyCertificate(cert);
+
   if (!*publicKey) {
-    CERT_DestroyCertificate(*cert);
     return CryptoX_Error;
   }
   return CryptoX_Success;
@@ -150,12 +153,11 @@ CryptoX_Result
 CryptoAPI_LoadPublicKey(HCRYPTPROV provider, 
                         BYTE *certData,
                         DWORD sizeOfCertData,
-                        HCRYPTKEY *publicKey,
-                        HCERTSTORE *certStore)
+                        HCRYPTKEY *publicKey)
 {
   CRYPT_DATA_BLOB blob;
   CERT_CONTEXT *context;
-  if (!provider || !certData || !publicKey || !certStore) {
+  if (!provider || !certData || !publicKey) {
     return CryptoX_Error;
   }
 
@@ -165,7 +167,7 @@ CryptoAPI_LoadPublicKey(HCRYPTPROV provider,
                         CERT_QUERY_CONTENT_FLAG_CERT, 
                         CERT_QUERY_FORMAT_FLAG_BINARY, 
                         0, NULL, NULL, NULL, 
-                        certStore, NULL, (const void **)&context)) {
+                        NULL, NULL, (const void **)&context)) {
     return CryptoX_Error;
   }
 
