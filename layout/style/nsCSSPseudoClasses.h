@@ -18,7 +18,7 @@ public:
   static void AddRefAtoms();
 
   enum Type {
-#define CSS_PSEUDO_CLASS(_name, _value, _pref)        \
+#define CSS_PSEUDO_CLASS(_name, _value, _flags, _pref) \
     ePseudoClass_##_name,
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
