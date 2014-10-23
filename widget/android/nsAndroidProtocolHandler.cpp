@@ -163,12 +163,20 @@ nsAndroidProtocolHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsAndroidProtocolHandler::NewChannel(nsIURI* aURI,
-                                     nsIChannel* *aResult)
+nsAndroidProtocolHandler::NewChannel2(nsIURI* aURI,
+                                      nsILoadInfo* aLoadInfo,
+                                      nsIChannel** aResult)
 {
     nsCOMPtr<nsIChannel> channel = AndroidChannel::CreateChannel(aURI);
     if (!channel)
         return NS_ERROR_FAILURE;
     NS_ADDREF(*aResult = channel);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAndroidProtocolHandler::NewChannel(nsIURI* aURI,
+                                     nsIChannel* *aResult)
+{
+    return NewChannel2(aURI, nullptr, aResult);
 }
