@@ -2656,8 +2656,10 @@ ToLocaleFormatHelper(JSContext *cx, HandleObject obj, const char *format, Mutabl
             /* ...but not if starts with 4-digit year, like 2022/3/11. */
             !(isdigit(buf[0]) && isdigit(buf[1]) &&
               isdigit(buf[2]) && isdigit(buf[3]))) {
+            double localtime = obj->as<DateObject>().cachedLocalTime(&cx->runtime()->dateTimeInfo);
+            int year = IsNaN(localtime) ? 0 : (int) YearFromTime(localtime);
             JS_snprintf(buf + (result_len - 2), (sizeof buf) - (result_len - 2),
-                        "%d", js_DateGetYear(cx, obj));
+                        "%d", year);
         }
 
     }
@@ -3063,74 +3065,6 @@ JS_FRIEND_API(bool)
 js_DateIsValid(JSObject *obj)
 {
     return obj->is<DateObject>() && !IsNaN(obj->as<DateObject>().UTCTime().toNumber());
-}
-
-JS_FRIEND_API(int)
-js_DateGetYear(JSContext *cx, JSObject *obj)
-{
-    /* Preserve legacy API behavior of returning 0 for invalid dates. */
-    MOZ_ASSERT(obj);
-    double localtime = obj->as<DateObject>().cachedLocalTime(&cx->runtime()->dateTimeInfo);
-    if (IsNaN(localtime))
-        return 0;
-
-    return (int) YearFromTime(localtime);
-}
-
-JS_FRIEND_API(int)
-js_DateGetMonth(JSContext *cx, JSObject *obj)
-{
-    MOZ_ASSERT(obj);
-    double localtime = obj->as<DateObject>().cachedLocalTime(&cx->runtime()->dateTimeInfo);
-    if (IsNaN(localtime))
-        return 0;
-
-    return (int) MonthFromTime(localtime);
-}
-
-JS_FRIEND_API(int)
-js_DateGetDate(JSContext *cx, JSObject *obj)
-{
-    MOZ_ASSERT(obj);
-    double localtime = obj->as<DateObject>().cachedLocalTime(&cx->runtime()->dateTimeInfo);
-    if (IsNaN(localtime))
-        return 0;
-
-    return (int) DateFromTime(localtime);
-}
-
-JS_FRIEND_API(int)
-js_DateGetHours(JSContext *cx, JSObject *obj)
-{
-    MOZ_ASSERT(obj);
-    double localtime = obj->as<DateObject>().cachedLocalTime(&cx->runtime()->dateTimeInfo);
-    if (IsNaN(localtime))
-        return 0;
-
-    return (int) HourFromTime(localtime);
-}
-
-JS_FRIEND_API(int)
-js_DateGetMinutes(JSContext *cx, JSObject *obj)
-{
-    MOZ_ASSERT(obj);
-    double localtime = obj->as<DateObject>().cachedLocalTime(&cx->runtime()->dateTimeInfo);
-    if (IsNaN(localtime))
-        return 0;
-
-    return (int) MinFromTime(localtime);
-}
-
-JS_FRIEND_API(int)
-js_DateGetSeconds(JSObject *obj)
-{
-    if (!obj->is<DateObject>())
-        return 0;
-
-    double utctime = obj->as<DateObject>().UTCTime().toNumber();
-    if (IsNaN(utctime))
-        return 0;
-    return (int) SecFromTime(utctime);
 }
 
 JS_FRIEND_API(double)
