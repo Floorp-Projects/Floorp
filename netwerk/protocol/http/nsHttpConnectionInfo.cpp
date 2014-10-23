@@ -112,8 +112,9 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, int32_t port)
     // byte 2 is A/. A is for an anonymous channel (no cookies, etc..)
     // byte 3 is P/. P is for a private browising channel
     // byte 4 is R/. R is for 'relaxed' unauthed TLS for http:// uris
+    // byte 5 is X/. X is for disallow_spdy flag
 
-    mHashKey.AssignLiteral(".....");
+    mHashKey.AssignLiteral("......");
     mHashKey.Append(keyHost);
     mHashKey.Append(':');
     mHashKey.AppendInt(keyPort);
@@ -185,6 +186,7 @@ nsHttpConnectionInfo::Clone() const
     clone->SetAnonymous(GetAnonymous());
     clone->SetPrivate(GetPrivate());
     clone->SetRelaxed(GetRelaxed());
+    clone->SetNoSpdy(GetNoSpdy());
     MOZ_ASSERT(clone->Equals(this));
 
     return clone;
@@ -205,6 +207,7 @@ nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo **outCI)
     clone->SetAnonymous(GetAnonymous());
     clone->SetPrivate(GetPrivate());
     clone->SetRelaxed(GetRelaxed());
+    clone->SetNoSpdy(GetNoSpdy());
     clone.forget(outCI);
 }
 

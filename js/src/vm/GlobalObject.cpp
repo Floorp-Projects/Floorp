@@ -15,6 +15,7 @@
 #include "jsprototypes.h"
 #include "jsweakmap.h"
 
+#include "builtin/AtomicsObject.h"
 #include "builtin/Eval.h"
 #if EXPOSE_INTL_API
 # include "builtin/Intl.h"

@@ -199,7 +199,7 @@ private:
   DispatchCallEvent(const nsAString& aType, TelephonyCall* aCall);
 
   void
-  EnqueueEnumerationAck(const nsAString& aType);
+  EnqueueEnumerationAck();
 
   already_AddRefed<TelephonyCall>
   GetCall(uint32_t aServiceId, uint32_t aCallIndex);

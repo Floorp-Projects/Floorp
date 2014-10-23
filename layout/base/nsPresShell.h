@@ -109,6 +109,9 @@ public:
   virtual bool IsSafeToFlush() const MOZ_OVERRIDE;
   virtual void FlushPendingNotifications(mozFlushType aType) MOZ_OVERRIDE;
   virtual void FlushPendingNotifications(mozilla::ChangesToFlush aType) MOZ_OVERRIDE;
+  virtual void DestroyFramesFor(nsIContent*  aContent,
+                                nsIContent** aDestroyedFramesFor) MOZ_OVERRIDE;
+  virtual void CreateFramesFor(nsIContent* aContent) MOZ_OVERRIDE;
 
   /**
    * Recreates the frames for a node

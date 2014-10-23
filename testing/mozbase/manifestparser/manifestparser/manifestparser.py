@@ -420,7 +420,7 @@ class ManifestParser(object):
 
     ### methods for reading manifests
 
-    def _read(self, root, filename, defaults, defaults_only=False):
+    def _read(self, root, filename, defaults, defaults_only=False, parentmanifest=None):
         """
         Internal recursive method for reading and parsing manifests.
         Stores all found tests in self.tests
@@ -492,7 +492,7 @@ class ManifestParser(object):
                 include_file = read_file('include:')
                 if include_file:
                     include_defaults = data.copy()
-                    self._read(root, include_file, include_defaults)
+                    self._read(root, include_file, include_defaults, parentmanifest=filename)
                 continue
 
             # otherwise an item
@@ -533,6 +533,13 @@ class ManifestParser(object):
             test['subsuite'] = subsuite
             test['path'] = path
             test['relpath'] = _relpath
+
+            if parentmanifest is not None:
+                # If a test was included by a parent manifest we may need to
+                # indicate that in the test object for the sake of identifying
+                # a test, particularly in the case a test file is included by
+                # multiple manifests.
+                test['ancestor-manifest'] = parentmanifest
 
             # append the item
             self.tests.append(test)
@@ -765,7 +772,7 @@ class ManifestParser(object):
             print >> fp, '[%s]' % path
 
             # reserved keywords:
-            reserved = ['path', 'name', 'here', 'manifest', 'relpath']
+            reserved = ['path', 'name', 'here', 'manifest', 'relpath', 'ancestor-manifest']
             for key in sorted(test.keys()):
                 if key in reserved:
                     continue

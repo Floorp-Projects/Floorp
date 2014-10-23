@@ -27,6 +27,7 @@ interface nsIProxyInfo : nsISupports
    * Some special values for this attribute include (but are not limited to)
    * the following:
    *   "http"     HTTP proxy (or SSL CONNECT for HTTPS)
+   *   "https"    HTTP proxying over TLS connection to proxy
    *   "socks"    SOCKS v5 proxy
    *   "socks4"   SOCKS v4 proxy
    *   "direct"   no proxy

@@ -727,6 +727,13 @@ class IonBuilder
     InliningStatus inlineRegExpExec(CallInfo &callInfo);
     InliningStatus inlineRegExpTest(CallInfo &callInfo);
 
+    // Atomics natives.
+    InliningStatus inlineAtomicsCompareExchange(CallInfo &callInfo);
+    InliningStatus inlineAtomicsLoad(CallInfo &callInfo);
+    InliningStatus inlineAtomicsStore(CallInfo &callInfo);
+    InliningStatus inlineAtomicsFence(CallInfo &callInfo);
+    InliningStatus inlineAtomicsBinop(CallInfo &callInfo, JSFunction *target);
+
     // Array intrinsics.
     InliningStatus inlineUnsafePutElements(CallInfo &callInfo);
     bool inlineUnsafeSetDenseArrayElement(CallInfo &callInfo, uint32_t base);
@@ -790,6 +797,9 @@ class IonBuilder
     bool inlineTypeObjectFallback(CallInfo &callInfo, MBasicBlock *dispatchBlock,
                                   MTypeObjectDispatch *dispatch, MGetPropertyCache *cache,
                                   MBasicBlock **fallbackTarget);
+
+    bool atomicsMeetsPreconditions(CallInfo &callInfo, Scalar::Type *arrayElementType);
+    void atomicsCheckBounds(CallInfo &callInfo, MInstruction **elements, MDefinition **index);
 
     bool testNeedsArgumentCheck(JSFunction *target, CallInfo &callInfo);
 

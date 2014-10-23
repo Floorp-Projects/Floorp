@@ -138,9 +138,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
+// 79c0f49f-77f1-4cc5-80d1-6552e85ccb0c
 #define NS_IPRESSHELL_IID \
-		{ 0x42e9a352, 0x76f3, 0x4ba3, \
-		  { 0x94, 0x0b, 0x78, 0x9e, 0x58, 0x38, 0x73, 0x4f } }
+  { 0x79c0f49f, 0x77f1, 0x4cc5, \
+    { 0x80, 0xd1, 0x65, 0x52, 0xe8, 0x5c, 0xcb, 0x0c } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -535,6 +536,22 @@ public:
   virtual void CancelAllPendingReflows() = 0;
 
   virtual void NotifyCounterStylesAreDirty() = 0;
+
+  /**
+   * Destroy the frames for aContent.  Note that this may destroy frames
+   * for an ancestor instead - aDestroyedFramesFor contains the content node
+   * where frames were actually destroyed (which should be used in the
+   * CreateFramesFor call).  The frame tree state will be captured before
+   * the frames are destroyed in the frame constructor.
+   */
+  virtual void DestroyFramesFor(nsIContent*  aContent,
+                                nsIContent** aDestroyedFramesFor) = 0;
+  /**
+   * Create new frames for aContent.  It will use the last captured layout
+   * history state captured in the frame constructor to restore the state
+   * in the new frame tree.
+   */
+  virtual void CreateFramesFor(nsIContent* aContent) = 0;
 
   /**
    * Recreates the frames for a node

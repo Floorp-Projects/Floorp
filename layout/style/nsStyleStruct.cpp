@@ -1766,8 +1766,11 @@ nsStyleGradient::operator==(const nsStyleGradient& aOther) const
     return false;
 
   for (uint32_t i = 0; i < mStops.Length(); i++) {
-    if (mStops[i].mLocation != aOther.mStops[i].mLocation ||
-        mStops[i].mColor != aOther.mStops[i].mColor)
+    const auto& stop1 = mStops[i];
+    const auto& stop2 = aOther.mStops[i];
+    if (stop1.mLocation != stop2.mLocation ||
+        stop1.mIsInterpolationHint != stop2.mIsInterpolationHint ||
+        (!stop1.mIsInterpolationHint && stop1.mColor != stop2.mColor))
       return false;
   }
 

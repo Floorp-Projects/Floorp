@@ -2502,8 +2502,13 @@ ContentParent::RecvAddNewProcess(const uint32_t& aPid,
     // Update offline settings.
     bool isOffline;
     InfallibleTArray<nsString> unusedDictionaries;
-    RecvGetXPCOMProcessAttributes(&isOffline, &unusedDictionaries);
+    ClipboardCapabilities clipboardCaps;
+    RecvGetXPCOMProcessAttributes(&isOffline, &unusedDictionaries,
+                                  &clipboardCaps);
     content->SendSetOffline(isOffline);
+    MOZ_ASSERT(!clipboardCaps.supportsSelectionClipboard() &&
+               !clipboardCaps.supportsFindClipboard(),
+               "Unexpected values");
 
     PreallocatedProcessManager::PublishSpareProcess(content);
     return true;
@@ -2787,7 +2792,8 @@ ContentParent::RecvGetProcessAttributes(uint64_t* aId,
 
 bool
 ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
-                                             InfallibleTArray<nsString>* dictionaries)
+                                             InfallibleTArray<nsString>* dictionaries,
+                                             ClipboardCapabilities* clipboardCaps)
 {
     nsCOMPtr<nsIIOService> io(do_GetIOService());
     MOZ_ASSERT(io, "No IO service?");
@@ -2798,6 +2804,15 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
     MOZ_ASSERT(spellChecker, "No spell checker?");
 
     spellChecker->GetDictionaryList(dictionaries);
+
+    nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1"));
+    MOZ_ASSERT(clipboard, "No clipboard?");
+
+    rv = clipboard->SupportsSelectionClipboard(&clipboardCaps->supportsSelectionClipboard());
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    rv = clipboard->SupportsFindClipboard(&clipboardCaps->supportsFindClipboard());
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     return true;
 }

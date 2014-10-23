@@ -26,20 +26,16 @@ XPCOMUtils.defineLazyServiceGetter(this,
 /**
  * NFCTag
  */
-function MozNFCTag() {
+function MozNFCTag(aWindow, aSessionToken) {
   debug("In MozNFCTag Constructor");
   this._nfcContentHelper = Cc["@mozilla.org/nfc/content-helper;1"]
                              .getService(Ci.nsINfcContentHelper);
-  this.session = null;
+  this._window = aWindow;
+  this.session = aSessionToken;
 }
 MozNFCTag.prototype = {
   _nfcContentHelper: null,
   _window: null,
-
-  initialize: function(aWindow, aSessionToken) {
-    this._window = aWindow;
-    this.session = aSessionToken;
-  },
 
   // NFCTag interface:
   readNDEF: function readNDEF() {
@@ -61,21 +57,18 @@ MozNFCTag.prototype = {
 /**
  * NFCPeer
  */
-function MozNFCPeer() {
+function MozNFCPeer(aWindow, aSessionToken) {
   debug("In MozNFCPeer Constructor");
   this._nfcContentHelper = Cc["@mozilla.org/nfc/content-helper;1"]
                              .getService(Ci.nsINfcContentHelper);
-  this.session = null;
+
+  this._window = aWindow;
+  this.session = aSessionToken;
 }
 MozNFCPeer.prototype = {
   _nfcContentHelper: null,
   _window: null,
   _isLost: false,
-
-  initialize: function(aWindow, aSessionToken) {
-    this._window = aWindow;
-    this.session = aSessionToken;
-  },
 
   // NFCPeer interface:
   sendNDEF: function sendNDEF(records) {
@@ -170,8 +163,7 @@ mozNfc.prototype = {
   },
 
   getNFCTag: function getNFCTag(sessionToken) {
-    let obj = new MozNFCTag();
-    obj.initialize(this._window, sessionToken);
+    let obj = new MozNFCTag(this._window, sessionToken);
     if (this._nfcContentHelper.checkSessionToken(sessionToken)) {
       return this._window.MozNFCTag._create(this._window, obj);
     }
@@ -184,8 +176,7 @@ mozNfc.prototype = {
     }
 
     if (!this.nfcObject || this.nfcObject.session != sessionToken) {
-      let obj = new MozNFCPeer();
-      obj.initialize(this._window, sessionToken);
+      let obj = new MozNFCPeer(this._window, sessionToken);
       this.nfcObject = obj;
       this.nfcObject.contentObject = this._window.MozNFCPeer._create(this._window, obj);
     }

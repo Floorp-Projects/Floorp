@@ -799,6 +799,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Default JSVersion. */
     JSVersion defaultVersion_;
 
+    /* Futex API, if installed */
+    JS::PerRuntimeFutexAPI *futexAPI_;
+
   private:
     /* See comment for JS_AbortIfWrongThread in jsapi.h. */
     void *ownerThread_;
