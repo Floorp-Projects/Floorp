@@ -90,7 +90,9 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsViewSourceHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
+nsViewSourceHandler::NewChannel2(nsIURI* uri,
+                                 nsILoadInfo* aLoadInfo,
+                                 nsIChannel** result)
 {
     NS_ENSURE_ARG_POINTER(uri);
     nsViewSourceChannel *channel = new nsViewSourceChannel();
@@ -106,6 +108,12 @@ nsViewSourceHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 
     *result = static_cast<nsIViewSourceChannel*>(channel);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewSourceHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
+{
+    return NewChannel2(uri, nullptr, result);
 }
 
 nsresult

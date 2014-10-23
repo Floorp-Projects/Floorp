@@ -7,11 +7,12 @@
 
 interface nsIURI;
 interface nsIChannel;
+interface nsILoadInfo;
 
 /**
  * nsIProtocolHandler
  */
-[scriptable, uuid(f5753fec-a051-4ddc-8891-11f1f1575072)]
+[scriptable, uuid(a7aad716-e72c-435d-82f1-7582dffae661)]
 interface nsIProtocolHandler : nsISupports
 {
     /**
@@ -61,7 +62,13 @@ interface nsIProtocolHandler : nsISupports
                   in nsIURI aBaseURI);
 
     /**
-     * Constructs a new channel from the given URI for this protocol handler. 
+     * Constructs a new channel from the given URI for this protocol handler and
+     * sets the loadInfo for the constructed channel.
+     */
+    nsIChannel newChannel2(in nsIURI aURI, in nsILoadInfo aLoadinfo);
+
+    /**
+     * Constructs a new channel from the given URI for this protocol handler.
      */
     nsIChannel newChannel(in nsIURI aURI);
 
