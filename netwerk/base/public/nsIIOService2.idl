@@ -7,10 +7,13 @@
 
 #include "nsIIOService.idl"
 
+interface nsIDOMNode;
+interface nsIPrincipal;
+
 /**
  * nsIIOService2 extends nsIIOService
  */
-[scriptable, uuid(9a7dc724-0b5c-4b78-9722-1037074c02de)]
+[scriptable, uuid(52c5804b-0d3c-4d4f-8654-1c36fd310e69)]
 interface nsIIOService2 : nsIIOService
 {
   /**
@@ -26,6 +29,25 @@ interface nsIIOService2 : nsIIOService
    * this management.
    */
   attribute boolean manageOfflineStatus;
+
+  /**
+   * Creates a channel for a given URI.
+   *
+   * @param aURI nsIURI from which to make a channel
+   * @param aProxyURI nsIURI to use for proxy resolution. Can be null in which
+   *        case aURI is used
+   * @param aProxyFlags flags from nsIProtocolProxyService to use
+   *        when resolving proxies for this new channel
+   * @return reference to the new nsIChannel object
+   */
+  nsIChannel newChannelFromURIWithProxyFlags2(in nsIURI aURI,
+                                              in nsIURI aProxyURI,
+                                              in unsigned long aProxyFlags,
+                                              in nsIDOMNode aLoadingNode,
+                                              in nsIPrincipal aLoadingPrincipal,
+                                              in nsIPrincipal aTriggeringPrincipal,
+                                              in unsigned long aSecurityFlags,
+                                              in unsigned long aContentPolicyType);
 
   /**
    * Creates a channel for a given URI.
