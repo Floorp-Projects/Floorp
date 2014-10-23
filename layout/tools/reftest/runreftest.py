@@ -19,7 +19,7 @@ import sys
 import tempfile
 import threading
 
-SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
+SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIRECTORY)
 
 from automationutils import (
