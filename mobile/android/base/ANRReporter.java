@@ -19,6 +19,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.json.JSONObject;
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.BroadcastReceiver;
@@ -134,6 +135,13 @@ public final class ANRReporter extends BroadcastReceiver
 
     // Return the "traces.txt" file, or null if there is no such file
     private static File getTracesFile() {
+        // Check most common location first.
+        File tracesFile = new File("/data/anr/traces.txt");
+        if (tracesFile.isFile() && tracesFile.canRead()) {
+            return tracesFile;
+        }
+
+        // Find the traces file name if we can.
         try {
             // getprop [prop-name [default-value]]
             Process propProc = (new ProcessBuilder())
@@ -150,7 +158,7 @@ public final class ANRReporter extends BroadcastReceiver
                 // getprop can return empty string when the prop value is empty
                 // or prop is undefined, treat both cases the same way
                 if (propVal != null && propVal.length() != 0) {
-                    File tracesFile = new File(propVal);
+                    tracesFile = new File(propVal);
                     if (tracesFile.isFile() && tracesFile.canRead()) {
                         return tracesFile;
                     } else if (DEBUG) {
@@ -166,11 +174,6 @@ public final class ANRReporter extends BroadcastReceiver
             Log.w(LOGTAG, e);
         } catch (ClassCastException e) {
             Log.w(LOGTAG, e); // Bug 975436
-        }
-        // Check most common location one last time just in case
-        File tracesFile = new File("/data/anr/traces.txt");
-        if (tracesFile.isFile() && tracesFile.canRead()) {
-            return tracesFile;
         }
         return null;
     }
@@ -407,14 +410,11 @@ public final class ANRReporter extends BroadcastReceiver
         return total;
     }
 
-    private static void fillPingFooter(OutputStream ping,
-                                       boolean haveNativeStack)
-            throws IOException {
-
-        // We are at the end of ANR data
-
-        int total = writePingPayload(ping, ("\"," +
-                "\"androidLogcat\":\""));
+    private static void fillLogcat(final OutputStream ping) {
+        if (Versions.preJB) {
+            // Logcat retrieval is not supported on pre-JB devices.
+            return;
+        }
 
         try {
             // get the last 200 lines of logcat
@@ -435,6 +435,17 @@ public final class ANRReporter extends BroadcastReceiver
             // ignore because logcat is not essential
             Log.w(LOGTAG, e);
         }
+    }
+
+    private static void fillPingFooter(OutputStream ping,
+                                       boolean haveNativeStack)
+            throws IOException {
+
+        // We are at the end of ANR data
+
+        int total = writePingPayload(ping, ("\"," +
+                "\"androidLogcat\":\""));
+        fillLogcat(ping);
 
         if (haveNativeStack) {
             total += writePingPayload(ping, ("\"," +
