@@ -45,7 +45,12 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 else:
     USE_LIBS += [
         'updatecommon',
+        '/modules/libmar/sign/signmar',
+        '/modules/libmar/sign/verifymar',
+        '/security/nss/lib/nss/nss3',
+        '/security/nss/lib/util/nssutil3',
     ]
+    OS_LIBS += CONFIG['NSPR_LIBS']
 
 USE_LIBS += [
     'mar',
@@ -70,7 +75,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'launchchild_osx.mm',
         'progressui_osx.mm',
     ]
-    OS_LIBS += ['-framework Cocoa']
+    OS_LIBS += ['-framework Cocoa -framework Security']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     have_progressui = 1
     SOURCES += [
