@@ -5,7 +5,9 @@
 
 #include "ContextStateTracker.h"
 #include "GLContext.h"
+#ifdef MOZ_ENABLE_PROFILER_SPS
 #include "ProfilerMarkers.h"
+#endif
 
 namespace mozilla {
 
@@ -108,12 +110,14 @@ ContextStateTrackerOGL::Flush(GLContext* aGL)
 
     aGL->fDeleteQueries(1, &handle);
 
+#ifdef MOZ_ENABLE_PROFILER_SPS
     PROFILER_MARKER_PAYLOAD("gpu_timer_query", new GPUMarkerPayload(
       mCompletedSections[0].mCpuTimeStart,
       mCompletedSections[0].mCpuTimeEnd,
       0,
       gpuTime
     ));
+#endif
 
     mCompletedSections.RemoveElementAt(0);
   }
