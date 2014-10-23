@@ -72,7 +72,6 @@ LOCAL_INCLUDES += [
     '/gfx/skia/trunk/include/config',
     '/gfx/skia/trunk/include/core',
     '/widget',
-    '/widget/shared',
 ]
 
 DEFINES['HAVE_OFF64_T'] = True

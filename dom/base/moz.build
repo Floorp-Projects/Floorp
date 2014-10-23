@@ -164,7 +164,6 @@ LOCAL_INCLUDES += [
     '/layout/style',
     '/layout/xul',
     '/widget',
-    '/widget/shared',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':

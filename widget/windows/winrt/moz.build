@@ -36,7 +36,6 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../',
-    '../../shared',
     '/layout/generic',
     '/layout/xul',
     '/toolkit/xre',

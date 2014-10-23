@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['shared']
-
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
 if toolkit in ('cocoa', 'qt', 'android', 'gonk'):
@@ -120,6 +118,7 @@ EXPORTS.mozilla += [
     'TextEvents.h',
     'TextRange.h',
     'TouchEvents.h',
+    'VsyncDispatcher.h',
     'WidgetUtils.h',
 ]
 
@@ -146,11 +145,14 @@ UNIFIED_SOURCES += [
     'nsPrintSession.cpp',
     'nsPrintSettingsImpl.cpp',
     'nsScreenManagerProxy.cpp',
+    'nsShmImage.cpp',
     'nsTransferable.cpp',
     'nsXPLookAndFeel.cpp',
     'PuppetWidget.cpp',
     'ScreenProxy.cpp',
     'SharedWidgetUtils.cpp',
+    'VsyncDispatcher.cpp',
+    'WidgetEventImpl.cpp',
     'WidgetUtils.cpp',
 ]
 
@@ -167,6 +169,7 @@ if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
 EXPORTS.ipc = ['nsGUIEventIPC.h']
 
 if CONFIG['MOZ_X11']:
+    DIRS += ['x11']
     UNIFIED_SOURCES += [
         'GfxInfoX11.cpp'
     ]
@@ -202,7 +205,7 @@ LOCAL_INCLUDES += [
     '/layout/generic',
     '/layout/xul',
     '/view',
-    '/widget/shared',
+    '/widget',
 ]
 
 widget_dir = toolkit
