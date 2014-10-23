@@ -5571,9 +5571,11 @@ CodeGenerator::visitIsNullOrLikeUndefined(LIsNullOrLikeUndefined *lir)
         }
 
         Register tag = masm.splitTagForTest(value);
-
-        masm.branchTestNull(Assembler::Equal, tag, nullOrLikeUndefined);
-        masm.branchTestUndefined(Assembler::Equal, tag, nullOrLikeUndefined);
+        MDefinition *input = lir->mir()->lhs();
+        if (input->mightBeType(MIRType_Null))
+            masm.branchTestNull(Assembler::Equal, tag, nullOrLikeUndefined);
+        if (input->mightBeType(MIRType_Undefined))
+            masm.branchTestUndefined(Assembler::Equal, tag, nullOrLikeUndefined);
 
         if (ool) {
             // Check whether it's a truthy object or a falsy object that emulates
@@ -5652,8 +5654,11 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBran
         Label *ifTrueLabel = getJumpLabelForBranch(ifTrue);
         Label *ifFalseLabel = getJumpLabelForBranch(ifFalse);
 
-        masm.branchTestNull(Assembler::Equal, tag, ifTrueLabel);
-        masm.branchTestUndefined(Assembler::Equal, tag, ifTrueLabel);
+        MDefinition *input = lir->cmpMir()->lhs();
+        if (input->mightBeType(MIRType_Null))
+            masm.branchTestNull(Assembler::Equal, tag, ifTrueLabel);
+        if (input->mightBeType(MIRType_Undefined))
+            masm.branchTestUndefined(Assembler::Equal, tag, ifTrueLabel);
 
         if (ool) {
             masm.branchTestObject(Assembler::NotEqual, tag, ifFalseLabel);

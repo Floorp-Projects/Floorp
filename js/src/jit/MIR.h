@@ -3643,7 +3643,7 @@ class MCompare
                               CompareType compareType);
 
     bool tryFold(bool *result);
-    bool evaluateConstantOperands(bool *result);
+    bool evaluateConstantOperands(TempAllocator &alloc, bool *result);
     MDefinition *foldsTo(TempAllocator &alloc);
     void filtersUndefinedOrNull(bool trueBranch, MDefinition **subject, bool *filtersUndefined,
                                 bool *filtersNull);
@@ -5008,6 +5008,7 @@ class MMinMax
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+    MDefinition *foldsTo(TempAllocator &alloc);
     void computeRange(TempAllocator &alloc);
     bool writeRecoverData(CompactBufferWriter &writer) const;
     bool canRecoverOnBailout() const {
