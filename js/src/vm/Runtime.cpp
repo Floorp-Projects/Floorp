@@ -149,6 +149,7 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     localeCallbacks(nullptr),
     defaultLocale(nullptr),
     defaultVersion_(JSVERSION_DEFAULT),
+    futexAPI_(nullptr),
     ownerThread_(nullptr),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     freeLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
@@ -338,6 +339,9 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
 JSRuntime::~JSRuntime()
 {
     MOZ_ASSERT(!isHeapBusy());
+
+    delete futexAPI_;
+    futexAPI_ = nullptr;
 
     if (gcInitialized) {
         /* Free source hook early, as its destructor may want to delete roots. */

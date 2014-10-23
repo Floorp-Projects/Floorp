@@ -60,6 +60,10 @@ class TestManifestParser(unittest.TestCase):
         self.assertEqual([(test['name'], os.path.basename(test['manifest'])) for test in parser.tests],
                          [('crash-handling', 'bar.ini'), ('fleem', 'include-example.ini'), ('flowers', 'foo.ini')])
 
+        # The including manifest is always reported as a part of the generated test object.
+        self.assertTrue(all([t['ancestor-manifest'] == include_example
+                             for t in parser.tests if t['name'] != 'fleem']))
+
 
         # The manifests should be there too:
         self.assertEqual(len(parser.manifests()), 3)

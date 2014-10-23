@@ -518,6 +518,7 @@ GeckoMediaPluginService::AsyncShutdownNeeded(GMPParent* aParent)
   LOGD(("%s::%s %p", __CLASS__, __FUNCTION__, aParent));
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
 
+  MOZ_ASSERT(!mAsyncShutdownPlugins.Contains(aParent));
   mAsyncShutdownPlugins.AppendElement(aParent);
 }
 
