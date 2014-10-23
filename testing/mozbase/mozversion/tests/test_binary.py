@@ -17,15 +17,18 @@ class BinaryTest(unittest.TestCase):
     """test getting application version information from a binary path"""
 
     application_ini = """[App]
+ID = AppID
 Name = AppName
 CodeName = AppCodeName
 Version = AppVersion
 BuildID = AppBuildID
 SourceRepository = AppSourceRepo
 SourceStamp = AppSourceStamp
+Vendor = AppVendor
 """
     platform_ini = """[Build]
 BuildID = PlatformBuildID
+Milestone = PlatformMilestone
 SourceStamp = PlatformSourceStamp
 SourceRepository = PlatformSourceRepo
 """
@@ -114,22 +117,26 @@ SourceRepository = PlatformSourceRepo
                 f.writelines(self.platform_ini)
 
     def _check_version(self, version):
+        self.assertEqual(version.get('application_id'), 'AppID')
         self.assertEqual(version.get('application_name'), 'AppName')
-        self.assertEqual(version.get('application_display_name'), 'AppCodeName')
+        self.assertEqual(
+            version.get('application_display_name'), 'AppCodeName')
         self.assertEqual(version.get('application_version'), 'AppVersion')
         self.assertEqual(version.get('application_buildid'), 'AppBuildID')
         self.assertEqual(
             version.get('application_repository'), 'AppSourceRepo')
         self.assertEqual(
             version.get('application_changeset'), 'AppSourceStamp')
+        self.assertEqual(version.get('application_vendor'), 'AppVendor')
         self.assertIsNone(version.get('platform_name'))
-        self.assertIsNone(version.get('platform_version'))
         self.assertEqual(version.get('platform_buildid'), 'PlatformBuildID')
         self.assertEqual(
             version.get('platform_repository'), 'PlatformSourceRepo')
         self.assertEqual(
             version.get('platform_changeset'), 'PlatformSourceStamp')
         self.assertIsNone(version.get('invalid_key'))
+        self.assertEqual(
+            version.get('platform_version'), 'PlatformMilestone')
 
 
 if __name__ == '__main__':
