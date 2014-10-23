@@ -7,6 +7,19 @@ function run_test() {
   run_next_test();
 }
 
+function readFile(file) {
+  let stream = Cc['@mozilla.org/network/file-input-stream;1']
+               .createInstance(Ci.nsIFileInputStream);
+  stream.init(file, -1, -1, Ci.nsIFileInputStream.CLOSE_ON_EOF);
+
+  let sis = Cc["@mozilla.org/scriptableinputstream;1"]
+            .createInstance(Ci.nsIScriptableInputStream);
+  sis.init(stream);
+  let contents = sis.read(file.fileSize);
+  sis.close();
+  return contents;
+}
+
 function checkDirectoryContains(dir, files) {
   print("checking " + dir.path + " - should contain " + Object.keys(files));
   let seen = new Set();
@@ -25,16 +38,7 @@ function checkDirectoryContains(dir, files) {
       checkDirectoryContains(newDir, expectedContents);
     } else {
       Assert.ok(!file.isDirectory(), "should be a regular file");
-      let stream = Cc['@mozilla.org/network/file-input-stream;1']
-                   .createInstance(Ci.nsIFileInputStream);
-      stream.init(file, -1, -1, Ci.nsIFileInputStream.CLOSE_ON_EOF);
-
-      let sis = Cc["@mozilla.org/scriptableinputstream;1"]
-                .createInstance(Ci.nsIScriptableInputStream);
-      sis.init(stream);
-      let contents = sis.read(file.fileSize);
-      sis.close();
-
+      let contents = readFile(file);
       Assert.equal(contents, expectedContents);
     }
     seen.add(file.leafName);
@@ -68,19 +72,23 @@ function writeToFile(dir, leafName, contents) {
   outputStream.close();
 }
 
-function promiseFHRMigrator(srcDir, targetDir) {
+function promiseMigrator(name, srcDir, targetDir) {
   let migrator = Cc["@mozilla.org/profile/migrator;1?app=browser&type=firefox"]
                  .createInstance(Ci.nsISupports)
                  .wrappedJSObject;
   let migrators = migrator._getResourcesInternal(srcDir, targetDir);
   for (let m of migrators) {
-    if (m.name == "healthreporter") {
+    if (m.name == name) {
       return new Promise((resolve, reject) => {
         m.migrate(resolve);
       });
     }
   }
-  throw new Error("failed to find the fhr migrator");
+  throw new Error("failed to find the " + name + " migrator");
+}
+
+function promiseFHRMigrator(srcDir, targetDir) {
+  return promiseMigrator("healthreporter", srcDir, targetDir);
 }
 
 add_task(function* test_empty() {
@@ -225,4 +233,26 @@ add_task(function* test_datareporting_many() {
       "state.json": "should be copied",
     }
   });
+});
+
+add_task(function* test_times_migration() {
+  let [srcDir, targetDir] = getTestDirs();
+
+  // create a times.json in the source directory.
+  let contents = JSON.stringify({created: 1234});
+  writeToFile(srcDir, "times.json", contents);
+
+  let earliest = Date.now();
+  let ok = yield promiseMigrator("times", srcDir, targetDir);
+  Assert.ok(ok, "callback should have been true");
+  let latest = Date.now();
+
+  let timesFile = targetDir.clone();
+  timesFile.append("times.json");
+
+  let raw = readFile(timesFile);
+  let times = JSON.parse(raw);
+  Assert.ok(times.reset >= earliest && times.reset <= latest);
+  // and it should have left the creation time alone.
+  Assert.equal(times.created, 1234);
 });
