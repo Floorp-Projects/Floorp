@@ -28,7 +28,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTELEMENT_IID)
 
   explicit nsIScriptElement(mozilla::dom::FromParser aFromParser)
-    : mLineNumber(1),
+    : mLineNumber(0),
       mAlreadyStarted(false),
       mMalformed(false),
       mDoneAddingChildren(aFromParser == mozilla::dom::NOT_FROM_PARSER ||
