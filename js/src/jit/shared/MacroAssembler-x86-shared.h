@@ -193,10 +193,293 @@ class MacroAssemblerX86Shared : public Assembler
     void atomic_dec32(const Operand &addr) {
         lock_decl(addr);
     }
-    void atomic_cmpxchg32(Register src, const Operand &addr, Register dest) {
+    void atomic_cmpxchg8(Register newval, const Operand &addr, Register oldval_and_result) {
         // %eax must be explicitly provided for calling clarity.
-        MOZ_ASSERT(dest.code() == X86Registers::eax);
-        lock_cmpxchg32(src, addr);
+        MOZ_ASSERT(oldval_and_result.code() == X86Registers::eax);
+        lock_cmpxchg8(newval, addr);
+    }
+    void atomic_cmpxchg16(Register newval, const Operand &addr, Register oldval_and_result) {
+        // %eax must be explicitly provided for calling clarity.
+        MOZ_ASSERT(oldval_and_result.code() == X86Registers::eax);
+        lock_cmpxchg16(newval, addr);
+    }
+    void atomic_cmpxchg32(Register newval, const Operand &addr, Register oldval_and_result) {
+        // %eax must be explicitly provided for calling clarity.
+        MOZ_ASSERT(oldval_and_result.code() == X86Registers::eax);
+        lock_cmpxchg32(newval, addr);
+    }
+
+    template <typename T>
+    void atomicFetchAdd8SignExtend(Register src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(output == eax);
+        if (src != output)
+            movl(src, output);
+        lock_xaddb(output, Operand(mem));
+        movsbl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchAdd8ZeroExtend(Register src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(output == eax);
+        MOZ_ASSERT(temp == InvalidReg);
+        if (src != output)
+            movl(src, output);
+        lock_xaddb(output, Operand(mem));
+        movzbl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchAdd8SignExtend(Imm32 src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(output == eax);
+        MOZ_ASSERT(temp == InvalidReg);
+        movb(src, output);
+        lock_xaddb(output, Operand(mem));
+        movsbl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchAdd8ZeroExtend(Imm32 src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(output == eax);
+        MOZ_ASSERT(temp == InvalidReg);
+        movb(src, output);
+        lock_xaddb(output, Operand(mem));
+        movzbl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchAdd16SignExtend(Register src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(temp == InvalidReg);
+        if (src != output)
+            movl(src, output);
+        lock_xaddw(output, Operand(mem));
+        movswl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchAdd16ZeroExtend(Register src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(temp == InvalidReg);
+        if (src != output)
+            movl(src, output);
+        lock_xaddw(output, Operand(mem));
+        movzwl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchAdd16SignExtend(Imm32 src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(temp == InvalidReg);
+        movl(src, output);
+        lock_xaddw(output, Operand(mem));
+        movswl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchAdd16ZeroExtend(Imm32 src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(temp == InvalidReg);
+        movl(src, output);
+        lock_xaddw(output, Operand(mem));
+        movzwl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchAdd32(Register src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(temp == InvalidReg);
+        if (src != output)
+            movl(src, output);
+        lock_xaddl(output, Operand(mem));
+    }
+
+    template <typename T>
+    void atomicFetchAdd32(Imm32 src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(temp == InvalidReg);
+        movl(src, output);
+        lock_xaddl(output, Operand(mem));
+    }
+
+    template <typename T>
+    void atomicFetchSub8SignExtend(Register src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(output == eax);
+        MOZ_ASSERT(temp == InvalidReg);
+        if (src != output)
+            movl(src, output);
+        negl(output);
+        lock_xaddb(output, Operand(mem));
+        movsbl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchSub8ZeroExtend(Register src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(output == eax);
+        MOZ_ASSERT(temp == InvalidReg);
+        if (src != output)
+            movl(src, output);
+        negl(output);
+        lock_xaddb(output, Operand(mem));
+        movzbl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchSub8SignExtend(Imm32 src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(output == eax);
+        MOZ_ASSERT(temp == InvalidReg);
+        movb(Imm32(-src.value), output);
+        lock_xaddb(output, Operand(mem));
+        movsbl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchSub8ZeroExtend(Imm32 src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(output == eax);
+        MOZ_ASSERT(temp == InvalidReg);
+        movb(Imm32(-src.value), output);
+        lock_xaddb(output, Operand(mem));
+        movzbl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchSub16SignExtend(Register src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(temp == InvalidReg);
+        if (src != output)
+            movl(src, output);
+        negl(output);
+        lock_xaddw(output, Operand(mem));
+        movswl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchSub16ZeroExtend(Register src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(temp == InvalidReg);
+        if (src != output)
+            movl(src, output);
+        negl(output);
+        lock_xaddw(output, Operand(mem));
+        movzwl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchSub16SignExtend(Imm32 src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(temp == InvalidReg);
+        movl(Imm32(-src.value), output);
+        lock_xaddw(output, Operand(mem));
+        movswl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchSub16ZeroExtend(Imm32 src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(temp == InvalidReg);
+        movl(Imm32(-src.value), output);
+        lock_xaddw(output, Operand(mem));
+        movzwl(output, output);
+    }
+
+    template <typename T>
+    void atomicFetchSub32(Register src, const T &mem, Register temp, Register output) {
+        MOZ_ASSERT(temp == InvalidReg);
+        if (src != output)
+            movl(src, output);
+        negl(output);
+        lock_xaddl(output, Operand(mem));
+    }
+
+    template <typename T>
+    void atomicFetchSub32(Imm32 src, const T &mem, Register temp, Register output) {
+        movl(Imm32(-src.value), output);
+        lock_xaddl(output, Operand(mem));
+    }
+
+    // requires output == eax
+#define ATOMIC_BITOP_BODY(LOAD, OP, LOCK_CMPXCHG)        \
+        MOZ_ASSERT(output == eax); \
+        LOAD(Operand(mem), eax);  \
+        Label again;              \
+        bind(&again);             \
+        movl(eax, temp);          \
+        OP(src, temp);            \
+        LOCK_CMPXCHG(temp, Operand(mem)); \
+        j(NonZero, &again);
+
+    template <typename S, typename T>
+    void atomicFetchAnd8SignExtend(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movb, andl, lock_cmpxchg8)
+        movsbl(eax, eax);
+    }
+    template <typename S, typename T>
+    void atomicFetchAnd8ZeroExtend(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movb, andl, lock_cmpxchg8)
+        movzbl(eax, eax);
+    }
+    template <typename S, typename T>
+    void atomicFetchAnd16SignExtend(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movw, andl, lock_cmpxchg16)
+        movswl(eax, eax);
+    }
+    template <typename S, typename T>
+    void atomicFetchAnd16ZeroExtend(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movw, andl, lock_cmpxchg16)
+        movzwl(eax, eax);
+    }
+    template <typename S, typename T>
+    void atomicFetchAnd32(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movl, andl, lock_cmpxchg32)
+    }
+
+    template <typename S, typename T>
+    void atomicFetchOr8SignExtend(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movb, orl, lock_cmpxchg8)
+        movsbl(eax, eax);
+    }
+    template <typename S, typename T>
+    void atomicFetchOr8ZeroExtend(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movb, orl, lock_cmpxchg8)
+        movzbl(eax, eax);
+    }
+    template <typename S, typename T>
+    void atomicFetchOr16SignExtend(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movw, orl, lock_cmpxchg16)
+        movswl(eax, eax);
+    }
+    template <typename S, typename T>
+    void atomicFetchOr16ZeroExtend(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movw, orl, lock_cmpxchg16)
+        movzwl(eax, eax);
+    }
+    template <typename S, typename T>
+    void atomicFetchOr32(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movl, orl, lock_cmpxchg32)
+    }
+
+    template <typename S, typename T>
+    void atomicFetchXor8SignExtend(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movb, xorl, lock_cmpxchg8)
+        movsbl(eax, eax);
+    }
+    template <typename S, typename T>
+    void atomicFetchXor8ZeroExtend(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movb, xorl, lock_cmpxchg8)
+        movzbl(eax, eax);
+    }
+    template <typename S, typename T>
+    void atomicFetchXor16SignExtend(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movw, xorl, lock_cmpxchg16)
+        movswl(eax, eax);
+    }
+    template <typename S, typename T>
+    void atomicFetchXor16ZeroExtend(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movw, xorl, lock_cmpxchg16)
+        movzwl(eax, eax);
+    }
+    template <typename S, typename T>
+    void atomicFetchXor32(const S &src, const T &mem, Register temp, Register output) {
+        ATOMIC_BITOP_BODY(movl, xorl, lock_cmpxchg32)
+    }
+
+#undef ATOMIC_BITOP_BODY
+
+    void storeLoadFence() {
+        // This implementation follows Linux.
+        if (HasSSE2())
+            masm.mfence();
+        else
+            lock_addl(Imm32(0), Operand(Address(esp, 0)));
     }
 
     void branch16(Condition cond, Register lhs, Register rhs, Label *label) {
@@ -362,6 +645,24 @@ class MacroAssemblerX86Shared : public Assembler
     void store8(const S &src, const T &dest) {
         movb(src, Operand(dest));
     }
+    template <typename T>
+    void compareExchange8ZeroExtend(const T &mem, Register oldval, Register newval, Register output) {
+        MOZ_ASSERT(output == eax);
+        MOZ_ASSERT(newval == ebx || newval == ecx || newval == edx);
+        if (oldval != output)
+            movl(oldval, output);
+        lock_cmpxchg8(newval, Operand(mem));
+        movzbl(output, output);
+    }
+    template <typename T>
+    void compareExchange8SignExtend(const T &mem, Register oldval, Register newval, Register output) {
+        MOZ_ASSERT(output == eax);
+        MOZ_ASSERT(newval == ebx || newval == ecx || newval == edx);
+        if (oldval != output)
+            movl(oldval, output);
+        lock_cmpxchg8(newval, Operand(mem));
+        movsbl(output, output);
+    }
     void load16ZeroExtend(const Address &src, Register dest) {
         movzwl(Operand(src), dest);
     }
@@ -371,6 +672,22 @@ class MacroAssemblerX86Shared : public Assembler
     template <typename S, typename T>
     void store16(const S &src, const T &dest) {
         movw(src, Operand(dest));
+    }
+    template <typename T>
+    void compareExchange16ZeroExtend(const T &mem, Register oldval, Register newval, Register output) {
+        MOZ_ASSERT(output == eax);
+        if (oldval != output)
+            movl(oldval, output);
+        lock_cmpxchg16(newval, Operand(mem));
+        movzwl(output, output);
+    }
+    template <typename T>
+    void compareExchange16SignExtend(const T &mem, Register oldval, Register newval, Register output) {
+        MOZ_ASSERT(output == eax);
+        if (oldval != output)
+            movl(oldval, output);
+        lock_cmpxchg16(newval, Operand(mem));
+        movswl(output, output);
     }
     void load16SignExtend(const Address &src, Register dest) {
         movswl(Operand(src), dest);
@@ -390,6 +707,13 @@ class MacroAssemblerX86Shared : public Assembler
     template <typename S, typename T>
     void store32(const S &src, const T &dest) {
         movl(src, Operand(dest));
+    }
+    template <typename T>
+    void compareExchange32(const T &mem, Register oldval, Register newval, Register output) {
+        MOZ_ASSERT(output == eax);
+        if (oldval != output)
+            movl(oldval, output);
+        lock_cmpxchg32(newval, Operand(mem));
     }
     template <typename S, typename T>
     void store32_NoSecondScratch(const S &src, const T &dest) {

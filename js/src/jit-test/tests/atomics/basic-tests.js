@@ -312,6 +312,20 @@ function testInt16Extremes(a) {
     assertEq(a[11], 0);
 }
 
+function testUint32(a) {
+    var k = 0;
+    for ( var i=0 ; i < 20 ; i++ ) {
+	a[i] = i+5;
+	k += a[i];
+    }
+
+    var sum = 0;
+    for ( var i=0 ; i < 20 ; i++ )
+	sum += Atomics.add(a, i, 1);
+
+    assertEq(sum, k);
+}
+
 function isLittleEndian() {
     var xxx = new ArrayBuffer(2);
     var xxa = new Int16Array(xxx);
@@ -395,6 +409,7 @@ function runTests() {
     testInt8Extremes(new SharedInt8Array(sab));
     testUint8Extremes(new SharedUint8Array(sab));
     testInt16Extremes(new SharedInt16Array(sab));
+    testUint32(new SharedUint32Array(sab));
 }
 
 if (this.Atomics && this.SharedArrayBuffer && this.SharedInt32Array)

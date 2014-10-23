@@ -184,6 +184,8 @@ namespace jit {
     _(StoreTypedArrayElement)                                               \
     _(StoreTypedArrayElementHole)                                           \
     _(StoreTypedArrayElementStatic)                                         \
+    _(CompareExchangeTypedArrayElement)                                     \
+    _(AtomicTypedArrayElementBinop)                                         \
     _(EffectiveAddress)                                                     \
     _(ClampToUint8)                                                         \
     _(LoadFixedSlot)                                                        \
@@ -251,6 +253,7 @@ namespace jit {
     _(GuardThreadExclusive)                                                 \
     _(InterruptCheckPar)                                                    \
     _(RecompileCheck)                                                       \
+    _(MemoryBarrier)                                                        \
     _(UnknownValue)                                                         \
     _(LexicalCheck)                                                         \
     _(ThrowUninitializedLexical)
