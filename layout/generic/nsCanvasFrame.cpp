@@ -76,11 +76,6 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     NS_ENSURE_SUCCESS(rv, rv);
     aElements.AppendElement(mTouchCaretElement);
 
-    // Add a _moz_anonclass attribute as touch caret selector.
-    mTouchCaretElement->SetAttribute(NS_LITERAL_STRING("_moz_anonclass"),
-                                     NS_LITERAL_STRING("mozTouchCaret"), er);
-    NS_ENSURE_SUCCESS(er.ErrorCode(), er.ErrorCode());
-
     // Set touch caret to visibility: hidden by default.
     nsAutoString classValue;
     classValue.AppendLiteral("moz-touchcaret hidden");
@@ -97,15 +92,11 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     mSelectionCaretsEndElement = doc->CreateHTMLElement(nsGkAtoms::div);
     aElements.AppendElement(mSelectionCaretsEndElement);
 
-    mSelectionCaretsStartElement->SetAttribute(NS_LITERAL_STRING("_moz_anonclass"),
-                                               NS_LITERAL_STRING("mozTouchCaret"), er);
     rv = mSelectionCaretsStartElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                                                NS_LITERAL_STRING("moz-selectioncaret-left hidden"),
                                                true);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mSelectionCaretsEndElement->SetAttribute(NS_LITERAL_STRING("_moz_anonclass"),
-                                             NS_LITERAL_STRING("mozTouchCaret"), er);
     rv = mSelectionCaretsEndElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                                              NS_LITERAL_STRING("moz-selectioncaret-right hidden"),
                                              true);
