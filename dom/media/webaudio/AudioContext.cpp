@@ -36,6 +36,7 @@
 #include "OscillatorNode.h"
 #include "nsNetUtil.h"
 #include "AudioStream.h"
+#include "mozilla/dom/Promise.h"
 
 namespace mozilla {
 namespace dom {
@@ -438,15 +439,23 @@ AudioContext::Listener()
   return mListener;
 }
 
-void
+already_AddRefed<Promise>
 AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
-                              DecodeSuccessCallback& aSuccessCallback,
+                              const Optional<OwningNonNull<DecodeSuccessCallback> >& aSuccessCallback,
                               const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback)
 {
+  ErrorResult rv;
+  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(GetParentObject());
+  nsRefPtr<Promise> promise;
   AutoJSAPI jsapi;
   jsapi.Init();
   JSContext* cx = jsapi.cx();
   JSAutoCompartment ac(cx, aBuffer.Obj());
+
+  promise = Promise::Create(parentObject, rv);
+  if (rv.Failed()) {
+    return nullptr;
+  }
 
   aBuffer.ComputeLengthAndData();
 
@@ -462,15 +471,21 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
   NS_SniffContent(NS_DATA_SNIFFER_CATEGORY, nullptr, data, length, contentType);
 
   nsRefPtr<DecodeErrorCallback> failureCallback;
+  nsRefPtr<DecodeSuccessCallback> successCallback;
   if (aFailureCallback.WasPassed()) {
     failureCallback = &aFailureCallback.Value();
   }
+  if (aSuccessCallback.WasPassed()) {
+    successCallback = &aSuccessCallback.Value();
+  }
   nsRefPtr<WebAudioDecodeJob> job(
     new WebAudioDecodeJob(contentType, this,
-                          &aSuccessCallback, failureCallback));
+                          promise, successCallback, failureCallback));
   mDecoder.AsyncDecodeMedia(contentType.get(), data, length, *job);
   // Transfer the ownership to mDecodeJobs
   mDecodeJobs.AppendElement(job.forget());
+
+  return promise.forget();
 }
 
 void
