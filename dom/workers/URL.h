@@ -11,7 +11,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "nsCycleCollectionParticipant.h"
+#include "mozilla/dom/URLSearchParams.h"
 
 class nsIPrincipal;
 
@@ -26,8 +26,10 @@ BEGIN_WORKERS_NAMESPACE
 
 class URLProxy;
 
-class URL MOZ_FINAL : public nsISupports
+class URL MOZ_FINAL : public mozilla::dom::URLSearchParamsObserver
 {
+  typedef mozilla::dom::URLSearchParams URLSearchParams;
+
   ~URL();
 
 public:
@@ -106,6 +108,10 @@ public:
 
   void SetSearch(const nsAString& aSearch, ErrorResult& aRv);
 
+  URLSearchParams* SearchParams();
+
+  void SetSearchParams(URLSearchParams& aSearchParams);
+
   void GetHash(nsString& aHost, ErrorResult& aRv) const;
 
   void SetHash(const nsAString& aHash, ErrorResult& aRv);
@@ -115,14 +121,24 @@ public:
     GetHref(aRetval, aRv);
   }
 
+  // IURLSearchParamsObserver
+  void URLSearchParamsUpdated(URLSearchParams* aSearchParams) MOZ_OVERRIDE;
+
 private:
   URLProxy* GetURLProxy() const
   {
     return mURLProxy;
   }
 
+  void CreateSearchParamsIfNeeded();
+
+  void SetSearchInternal(const nsAString& aSearch);
+
+  void UpdateURLSearchParams();
+
   WorkerPrivate* mWorkerPrivate;
   nsRefPtr<URLProxy> mURLProxy;
+  nsRefPtr<URLSearchParams> mSearchParams;
 };
 
 END_WORKERS_NAMESPACE

@@ -11,7 +11,7 @@ const REQUIRED_PARAMS = ["client_id", "content_uri", "oauth_uri", "profile_uri",
 const HAWK_TOKEN_LENGTH = 64;
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
-Components.utils.importGlobalProperties(["URL", "URLSearchParams"]);
+Components.utils.importGlobalProperties(["URL"]);
 
 /**
  * Entry point for HTTP requests.
@@ -225,8 +225,7 @@ function delete_registration(request, response) {
   // registering endpoints at the root of the hostname e.g. /registration.
   let url = new URL(request.queryString.replace(/%3F.*/,""), "http://www.example.com");
   let registration = JSON.parse(getSharedState("/registration"));
-  let searchParams = new URLSearchParams(url.search.substr(1));
-  if (registration.simplePushURL == searchParams.get("simplePushURL")) {
+  if (registration.simplePushURL == url.searchParams.get("simplePushURL")) {
     setSharedState("/registration", "");
   } else {
     response.setStatusLine(request.httpVersion, 400, "Bad Request");

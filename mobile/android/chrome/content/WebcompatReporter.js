@@ -7,8 +7,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.importGlobalProperties(["URL", "URLSearchParams"]);
-
 var WebcompatReporter = {
   menuItem: null,
   menuItemEnabled: null,
@@ -78,10 +76,8 @@ var WebcompatReporter = {
 
   reportIssue: function(url) {
     let webcompatURL = new URL("http://webcompat.com/");
-    let searchParams = new URLSearchParams();
-    searchParams.append("open", "1");
-    searchParams.append("url", url);
-    webcompatURL.search = searchParams.toString();
+    webcompatURL.searchParams.append("open", "1");
+    webcompatURL.searchParams.append("url", url);
     BrowserApp.addTab(webcompatURL.href);
   }
 };
