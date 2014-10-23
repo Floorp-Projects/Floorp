@@ -1212,6 +1212,7 @@ public:
   {
     mFormat = aFormat;
     mDataIsSet = false;
+    mDataIsJwk = false;
 
     // Get the current global object from the context
     nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
@@ -1280,6 +1281,7 @@ public:
       ClearException ce(aCx);
       JS::RootedValue value(aCx, JS::ObjectValue(*aKeyData));
       if (!mJwk.Init(aCx, value)) {
+        mEarlyRv = NS_ERROR_DOM_DATA_ERR;
         return;
       }
       mDataIsJwk = true;
@@ -1358,6 +1360,7 @@ public:
     }
 
     SetKeyData(aCx, aKeyData);
+    NS_ENSURE_SUCCESS_VOID(mEarlyRv);
     if (mDataIsJwk && !mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
       mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
       return;
@@ -1504,6 +1507,7 @@ public:
     }
 
     SetKeyData(aCx, aKeyData);
+    NS_ENSURE_SUCCESS_VOID(mEarlyRv);
     if (mDataIsJwk && !mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
       mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
       return;
@@ -1658,6 +1662,7 @@ public:
     }
 
     SetKeyData(aCx, aKeyData);
+    NS_ENSURE_SUCCESS_VOID(mEarlyRv);
   }
 
 private:
@@ -1772,6 +1777,7 @@ public:
     Init(aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
     if (NS_SUCCEEDED(mEarlyRv)) {
       SetKeyData(aCx, aKeyData);
+      NS_ENSURE_SUCCESS_VOID(mEarlyRv);
     }
   }
 
