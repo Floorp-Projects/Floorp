@@ -153,7 +153,7 @@ TestArray.addTest(
   function () {
     var that = this;
     var alg = "AES-GCM";
-    var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ" };
+    var jwk = { k: "c2l4dGVlbiBieXRlIGtleQ", kty: "oct" };
 
     function doExport(k) {
       return crypto.subtle.exportKey("jwk", k);
