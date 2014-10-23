@@ -1506,16 +1506,18 @@ private:
 
   /**
    * Recreate frames for aContent.
-   * If aAsyncInsert is true then a restyle event will be posted to handle the
-   * required ContentInserted call instead of doing it immediately.
-   * aDestroyedFramesFor contains the content that was reframed - it may be
-   * different than aContent.
+   * @param aContent the content to recreate frames for
+   * @param aAsyncInsert if true then a restyle event will be posted to handle
+   *   the required ContentInserted call instead of doing it immediately.
+   * @param aFlags normally you want to pass REMOVE_FOR_RECONSTRUCTION here
+   * @param aDestroyedFramesFor if non-null, it will contain the content that
+   *   was actually reframed - it may be different than aContent.
    */
   nsresult
   RecreateFramesForContent(nsIContent*  aContent,
                            bool         aAsyncInsert,
-                           RemoveFlags  aFlags = REMOVE_FOR_RECONSTRUCTION,
-                           nsIContent** aDestroyedFramesFor = nullptr);
+                           RemoveFlags  aFlags,
+                           nsIContent** aDestroyedFramesFor);
 
   // If removal of aFrame from the frame tree requires reconstruction of some
   // containing block (either of aFrame or of its parent) due to {ib} splits or
