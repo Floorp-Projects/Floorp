@@ -17,7 +17,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 XPCOMUtils.defineLazyModuleGetter(this, "WebChannel",
                                   "resource://gre/modules/WebChannel.jsm");
-Cu.importGlobalProperties(["URL"]);
+Cu.importGlobalProperties(["URL", "URLSearchParams"]);
 
 /**
  * Create a new FxAccountsOAuthClient for browser some service.
@@ -54,13 +54,13 @@ this.FxAccountsOAuthClient = function(options) {
     throw new Error("Invalid OAuth Url");
   }
 
-  let params = this._fxaOAuthStartUrl.searchParams;
+  let params = new URLSearchParams(this._fxaOAuthStartUrl.search.substr(1));
   params.append("client_id", this.parameters.client_id);
   params.append("state", this.parameters.state);
   params.append("scope", this.parameters.scope || "");
   params.append("action", this.parameters.action || "signin");
   params.append("webChannelId", this._webChannelId);
-
+  this._fxaOAuthStartUrl.search = params;
 };
 
 this.FxAccountsOAuthClient.prototype = {
