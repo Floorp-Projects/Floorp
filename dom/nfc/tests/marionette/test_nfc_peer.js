@@ -191,18 +191,6 @@ function testPeerInvalidToken() {
   runNextTest();
 }
 
-/**
- * Added for completeness in Bug 1042651,
- * TODO: remove once Bug 963531 lands
- */
-function testTagInvalidToken() {
-  log("testTagInvalidToken");
-  let tag = nfc.getNFCTag("fakeSessionToken");
-  is(tag, null, "NFCTag should be null on wrong session token");
-
-  runNextTest();
-}
-
 let tests = [
   testPeerReady,
   testGetNFCPeer,
@@ -210,8 +198,7 @@ let tests = [
   testPeerLostShouldBeCalled,
   testPeerLostShouldNotBeCalled,
   testPeerShouldThrow,
-  testPeerInvalidToken,
-  testTagInvalidToken
+  testPeerInvalidToken
 ];
 
 SpecialPowers.pushPermissions(

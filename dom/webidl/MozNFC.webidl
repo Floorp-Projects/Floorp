@@ -54,11 +54,6 @@ interface MozNFCManager {
  AvailableIn="CertifiedApps"]
 interface MozNFC : EventTarget {
   /**
-   * Returns MozNFCTag object or null in case of invalid sessionToken
-   */
-  MozNFCTag? getNFCTag(DOMString sessionToken);
-
-  /**
    * Returns MozNFCPeer object or null in case of invalid sessionToken
    */
   MozNFCPeer? getNFCPeer(DOMString sessionToken);
