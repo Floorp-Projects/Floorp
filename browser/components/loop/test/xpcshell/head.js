@@ -74,21 +74,30 @@ let mockPushHandler = {
   // This sets the registration result to be returned when initialize
   // is called. By default, it is equivalent to success.
   registrationResult: null,
-  registrationPushURL: undefined,
+  registrationPushURL: null,
+  notificationCallback: {},
+  registeredChannels: {},
 
   /**
    * MozLoopPushHandler API
    */
-  initialize: function(registerCallback, notificationCallback) {
-    registerCallback(this.registrationResult, this.registrationPushURL);
-    this._notificationCallback = notificationCallback;
+  initialize: function(options = {}) {
+    if ("mockWebSocket" in options) {
+      this._mockWebSocket = options.mockWebSocket;
+    }
+  },
+
+  register: function(channelId, registerCallback, notificationCallback) {
+    this.notificationCallback[channelId] = notificationCallback;
+    this.registeredChannels[channelId] = this.registrationPushURL;
+    registerCallback(this.registrationResult, this.registrationPushURL, channelId);
   },
 
   /**
    * Test-only API to simplify notifying a push notification result.
    */
-  notify: function(version) {
-    this._notificationCallback(version);
+  notify: function(version, chanId) {
+    this.notificationCallback[chanId](version, chanId);
   }
 };
 
@@ -97,9 +106,8 @@ let mockPushHandler = {
  * enables us to check parameters and return messages similar to the push
  * server.
  */
-let MockWebSocketChannel = function(options) {
-  let _options = options || {};
-  this.defaultMsgHandler = _options.defaultMsgHandler;
+let MockWebSocketChannel = function(options = {}) {
+  this.defaultMsgHandler = options.defaultMsgHandler;
 };
 
 MockWebSocketChannel.prototype = {

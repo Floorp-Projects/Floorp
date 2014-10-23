@@ -31,6 +31,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/FxAccountsOAuthClient.jsm");
+
 Cu.importGlobalProperties(["URL"]);
 
 this.EXPORTED_SYMBOLS = ["MozLoopService", "LOOP_SESSION_TYPE"];
@@ -63,6 +64,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoopContacts",
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoopStorage",
                                   "resource:///modules/loop/LoopStorage.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "LoopCalls",
+                                  "resource:///modules/loop/LoopCalls.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "LoopRooms",
+                                  "resource:///modules/loop/LoopRooms.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "MozLoopPushHandler",
                                   "resource:///modules/loop/MozLoopPushHandler.jsm");
@@ -108,160 +115,6 @@ let gFxAOAuthClientPromise = null;
 let gFxAOAuthClient = null;
 let gErrors = new Map();
 
- /**
- * Attempts to open a websocket.
- *
- * A new websocket interface is used each time. If an onStop callback
- * was received, calling asyncOpen() on the same interface will
- * trigger a "alreay open socket" exception even though the channel
- * is logically closed.
- */
-function CallProgressSocket(progressUrl, callId, token) {
-  if (!progressUrl || !callId || !token) {
-    throw new Error("missing required arguments");
-  }
-
-  this._progressUrl = progressUrl;
-  this._callId = callId;
-  this._token = token;
-}
-
-CallProgressSocket.prototype = {
-  /**
-   * Open websocket and run hello exchange.
-   * Sends a hello message to the server.
-   *
-   * @param {function} Callback used after a successful handshake
-   *                   over the progressUrl.
-   * @param {function} Callback used if an error is encountered
-   */
-  connect: function(onSuccess, onError) {
-    this._onSuccess = onSuccess;
-    this._onError = onError ||
-      (reason => {log.warn("MozLoopService::callProgessSocket - ", reason);});
-
-    if (!onSuccess) {
-      this._onError("missing onSuccess argument");
-      return;
-    }
-
-    if (Services.io.offline) {
-      this._onError("IO offline");
-      return;
-    }
-
-    let uri = Services.io.newURI(this._progressUrl, null, null);
-
-    // Allow _websocket to be set for testing.
-    this._websocket = this._websocket ||
-      Cc["@mozilla.org/network/protocol;1?name=" + uri.scheme]
-        .createInstance(Ci.nsIWebSocketChannel);
-
-    this._websocket.asyncOpen(uri, this._progressUrl, this, null);
-  },
-
-  /**
-   * Listener method, handles the start of the websocket stream.
-   * Sends a hello message to the server.
-   *
-   * @param {nsISupports} aContext Not used
-   */
-  onStart: function() {
-    let helloMsg = {
-      messageType: "hello",
-      callId: this._callId,
-      auth: this._token,
-    };
-    try { // in case websocket has closed before this handler is run
-      this._websocket.sendMsg(JSON.stringify(helloMsg));
-    }
-    catch (error) {
-      this._onError(error);
-    }
-  },
-
-  /**
-   * Listener method, called when the websocket is closed.
-   *
-   * @param {nsISupports} aContext Not used
-   * @param {nsresult} aStatusCode Reason for stopping (NS_OK = successful)
-   */
-  onStop: function(aContext, aStatusCode) {
-    if (!this._handshakeComplete) {
-      this._onError("[" + aStatusCode + "]");
-    }
-  },
-
-  /**
-   * Listener method, called when the websocket is closed by the server.
-   * If there are errors, onStop may be called without ever calling this
-   * method.
-   *
-   * @param {nsISupports} aContext Not used
-   * @param {integer} aCode the websocket closing handshake close code
-   * @param {String} aReason the websocket closing handshake close reason
-   */
-  onServerClose: function(aContext, aCode, aReason) {
-    if (!this._handshakeComplete) {
-      this._onError("[" + aCode + "]" + aReason);
-    }
-  },
-
-  /**
-   * Listener method, called when the websocket receives a message.
-   *
-   * @param {nsISupports} aContext Not used
-   * @param {String} aMsg The message data
-   */
-  onMessageAvailable: function(aContext, aMsg) {
-    let msg = {};
-    try {
-      msg = JSON.parse(aMsg);
-    }
-    catch (error) {
-      log.error("MozLoopService: error parsing progress message - ", error);
-      return;
-    }
-
-    if (msg.messageType && msg.messageType === 'hello') {
-      this._handshakeComplete = true;
-      this._onSuccess();
-    }
-  },
-
-
-  /**
-   * Create a JSON message payload and send on websocket.
-   *
-   * @param {Object} aMsg Message to send.
-   */
-  _send: function(aMsg) {
-    if (!this._handshakeComplete) {
-      log.warn("MozLoopService::_send error - handshake not complete");
-      return;
-    }
-
-    try {
-      this._websocket.sendMsg(JSON.stringify(aMsg));
-    }
-    catch (error) {
-      this._onError(error);
-    }
-  },
-
-  /**
-   * Notifies the server that the user has declined the call
-   * with a reason of busy.
-   */
-  sendBusy: function() {
-    this._send({
-      messageType: "action",
-      event: "terminate",
-      reason: "busy"
-    });
-  },
-};
-
 /**
  * Internal helper methods and state
  *
@@ -270,7 +123,6 @@ CallProgressSocket.prototype = {
  * and register with the Loop server.
  */
 let MozLoopServiceInternal = {
-  callsData: {inUse: false},
   _mocks: {webSocket: undefined},
 
   // The uri of the Loop server.
@@ -454,15 +306,32 @@ let MozLoopServiceInternal = {
    *
    * @param {Object} mockPushHandler Optional, test-only mock push handler. Used
    *                                 to allow mocking of the MozLoopPushHandler.
+   * @param {Object} mockWebSocket Optional, test-only mock webSocket. To be passed
+   *                               through to MozLoopPushHandler.
    * @returns {Promise} a promise that is resolved with no params on completion, or
    *          rejected with an error code or string.
    */
   promiseRegisteredWithServers: function(mockPushHandler, mockWebSocket) {
-    this._mocks.webSocket = mockWebSocket;
-
     if (gRegisteredDeferred) {
       return gRegisteredDeferred.promise;
     }
+
+    this._mocks.webSocket = mockWebSocket;
+    this._mocks.pushHandler = mockPushHandler;
+
+    // Wrap push notification registration call-back in a Promise.
+    let registerForNotification = function(channelID, onNotification) {
+      return new Promise((resolve, reject) => {
+        let onRegistered = (error, pushUrl) => {
+          if (error) {
+            reject(Error(error));
+          } else {
+            resolve(pushUrl);
+          }
+        };
+        gPushHandler.register(channelID, onRegistered, onNotification);
+      });
+    };
 
     gRegisteredDeferred = Promise.defer();
     // We grab the promise early in case .initialize or its results sets
@@ -470,8 +339,40 @@ let MozLoopServiceInternal = {
     let result = gRegisteredDeferred.promise;
 
     gPushHandler = mockPushHandler || MozLoopPushHandler;
-    gPushHandler.initialize(this.onPushRegistered.bind(this),
-                            this.onHandleNotification.bind(this));
+    let options = mockWebSocket ? {mockWebSocket: mockWebSocket} : {};
+    gPushHandler.initialize(options);
+
+    let callsRegGuest = registerForNotification(LoopCalls.channelIDs.Guest,
+                                                LoopCalls.onNotification);
+
+    let roomsRegGuest = registerForNotification(LoopRooms.channelIDs.Guest,
+                                                LoopRooms.onNotification);
+
+    let callsRegFxA = registerForNotification(LoopCalls.channelIDs.FxA,
+                                              LoopCalls.onNotification);
+
+    let roomsRegFxA = registerForNotification(LoopRooms.channelIDs.FxA,
+                                              LoopRooms.onNotification);
+    Promise.all([callsRegGuest, roomsRegGuest, callsRegFxA, roomsRegFxA])
+    .then((pushUrls) => {
+      return this.registerWithLoopServer(LOOP_SESSION_TYPE.GUEST,
+                                         {calls: pushUrls[0], rooms: pushUrls[1]}) })
+    .then(() => {
+      // storeSessionToken could have rejected and nulled the promise if the token was malformed.
+      if (!gRegisteredDeferred) {
+        return;
+      }
+      gRegisteredDeferred.resolve("registered to guest status");
+      // No need to clear the promise here, everything was good, so we don't need
+      // to re-register.
+    }, error => {
+      log.error("Failed to register with Loop server: ", error);
+      // registerWithLoopServer may have already made this null.
+      if (gRegisteredDeferred) {
+        gRegisteredDeferred.reject(error);
+      }
+      gRegisteredDeferred = null;
+    });
 
     return result;
   },
@@ -607,52 +508,22 @@ let MozLoopServiceInternal = {
   },
 
   /**
-   * Callback from MozLoopPushHandler - The push server has been registered
-   * and has given us a push url.
-   *
-   * @param {String} pushUrl The push url given by the push server.
-   */
-  onPushRegistered: function(err, pushUrl) {
-    if (err) {
-      gRegisteredDeferred.reject(err);
-      gRegisteredDeferred = null;
-      return;
-    }
-
-    this.registerWithLoopServer(LOOP_SESSION_TYPE.GUEST, pushUrl).then(() => {
-      // storeSessionToken could have rejected and nulled the promise if the token was malformed.
-      if (!gRegisteredDeferred) {
-        return;
-      }
-      gRegisteredDeferred.resolve("registered to guest status");
-      // No need to clear the promise here, everything was good, so we don't need
-      // to re-register.
-    }, error => {
-      log.error("Failed to register with Loop server: ", error);
-      // registerWithLoopServer may have already made this null.
-      if (gRegisteredDeferred) {
-        gRegisteredDeferred.reject(error);
-      }
-      gRegisteredDeferred = null;
-    });
-  },
-
-  /**
    * Registers with the Loop server either as a guest or a FxA user.
    *
    * @param {LOOP_SESSION_TYPE} sessionType The type of session e.g. guest or FxA
-   * @param {String} pushUrl The push url given by the push server.
+   * @param {String} pushUrls The push url given by the push server.
    * @param {Boolean} [retry=true] Whether to retry if authentication fails.
    * @return {Promise}
    */
-  registerWithLoopServer: function(sessionType, pushUrl, retry = true) {
-    return this.hawkRequest(sessionType, "/registration", "POST", { simplePushURL: pushUrl})
+  registerWithLoopServer: function(sessionType, pushUrls, retry = true) {
+    return this.hawkRequest(sessionType, "/registration", "POST", { simplePushURLs: pushUrls})
       .then((response) => {
         // If this failed we got an invalid token. storeSessionToken rejects
         // the gRegisteredDeferred promise for us, so here we just need to
         // early return.
-        if (!this.storeSessionToken(sessionType, response.headers))
+        if (!this.storeSessionToken(sessionType, response.headers)) {
           return;
+        }
 
         log.debug("Successfully registered with server for sessionType", sessionType);
         this.clearError("registration");
@@ -662,7 +533,7 @@ let MozLoopServiceInternal = {
         if (error.code === 401) {
           // Authorization failed, invalid token, we need to try again with a new token.
           if (retry) {
-            return this.registerWithLoopServer(sessionType, pushUrl, false);
+            return this.registerWithLoopServer(sessionType, pushUrls, false);
           }
         }
 
@@ -681,8 +552,12 @@ let MozLoopServiceInternal = {
    * This is normally only wanted for FxA users as we normally want to keep the
    * guest session with the device.
    *
+   * NOTE: It is the responsibiliy of the caller the clear the session token
+   * after all of the notification classes: calls and rooms, for either
+   * Guest or FxA have been unregistered with the LoopServer.
+   *
    * @param {LOOP_SESSION_TYPE} sessionType The type of session e.g. guest or FxA
-   * @param {String} pushURL The push URL previously given by the push server.
+   * @param {String} pushURLs The push URL previously given by the push server.
    *                         This may not be necessary to unregister in the future.
    * @return {Promise} resolving when the unregistration request finishes
    */
@@ -696,11 +571,8 @@ let MozLoopServiceInternal = {
     return this.hawkRequest(sessionType, unregisterURL, "DELETE")
       .then(() => {
         log.debug("Successfully unregistered from server for sessionType", sessionType);
-        MozLoopServiceInternal.clearSessionToken(sessionType);
       },
       error => {
-        // Always clear the registration token regardless of whether the server acknowledges the logout.
-        MozLoopServiceInternal.clearSessionToken(sessionType);
         if (error.code === 401) {
           // Authorization failed, invalid token. This is fine since it may mean we already logged out.
           return;
@@ -709,168 +581,6 @@ let MozLoopServiceInternal = {
         log.error("Failed to unregister with the loop server. Error: ", error);
         throw error;
       });
-  },
-
-  /**
-   * Callback from MozLoopPushHandler - A push notification has been received from
-   * the server.
-   *
-   * @param {String} version The version information from the server.
-   */
-  onHandleNotification: function(version) {
-    if (this.doNotDisturb) {
-      return;
-    }
-
-    // We set this here as it is assumed that once the user receives an incoming
-    // call, they'll have had enough time to see the terms of service. See
-    // bug 1046039 for background.
-    Services.prefs.setCharPref("loop.seenToS", "seen");
-
-    // Request the information on the new call(s) associated with this version.
-    // The registered FxA session is checked first, then the anonymous session.
-    // Make the call to get the GUEST session regardless of whether the FXA
-    // request fails.
-
-    if (MozLoopService.userProfile) {
-      this._getCalls(LOOP_SESSION_TYPE.FXA, version).catch(() => {});
-    }
-    this._getCalls(LOOP_SESSION_TYPE.GUEST, version).catch(
-      error => {this._hawkRequestError(error);});
-  },
-
-  /**
-   * Make a hawkRequest to GET/calls?=version for this session type.
-   *
-   * @param {LOOP_SESSION_TYPE} sessionType - type of hawk token used
-   *        for the GET operation.
-   * @param {Object} version - LoopPushService notification version
-   *
-   * @returns {Promise}
-   *
-   */
-
-  _getCalls: function(sessionType, version) {
-    return this.hawkRequest(sessionType, "/calls?version=" + version, "GET").then(
-      response => {this._processCalls(response, sessionType);}
-    );
-  },
-
-  /**
-   * Process the calls array returned from a GET/calls?version request.
-   * Only one active call is permitted at this time.
-   *
-   * @param {Object} response - response payload from GET
-   *
-   * @param {LOOP_SESSION_TYPE} sessionType - type of hawk token used
-   *        for the GET operation.
-   *
-   */
-
-  _processCalls: function(response, sessionType) {
-    try {
-      let respData = JSON.parse(response.body);
-      if (respData.calls && Array.isArray(respData.calls)) {
-        respData.calls.forEach((callData) => {
-          if (!this.callsData.inUse) {
-            callData.sessionType = sessionType;
-            this._startCall(callData, "incoming");
-          } else {
-            this._returnBusy(callData);
-          }
-        });
-      } else {
-        log.warn("Error: missing calls[] in response");
-      }
-    } catch (err) {
-      log.warn("Error parsing calls info", err);
-    }
-  },
-
-  /**
-   * Starts a call, saves the call data, and opens a chat window.
-   *
-   * @param {Object} callData The data associated with the call including an id.
-   * @param {String} conversationType Whether or not the call is "incoming"
-   *                                  or "outgoing"
-   */
-  _startCall: function(callData, conversationType) {
-    const openChat = () => {
-      this.callsData.inUse = true;
-      this.callsData.data = callData;
-
-      this.openChatWindow(
-        null,
-        // No title, let the page set that, to avoid flickering.
-        "",
-        "about:loopconversation#" + conversationType + "/" + callData.callId);
-    };
-
-    if (conversationType == "incoming" && ("callerId" in callData) &&
-        EMAIL_OR_PHONE_RE.test(callData.callerId)) {
-      LoopContacts.search({
-        q: callData.callerId,
-        field: callData.callerId.contains("@") ? "email" : "tel"
-      }, (err, contacts) => {
-        if (err) {
-          // Database error, helas!
-          openChat();
-          return;
-        }
-
-        for (let contact of contacts) {
-          if (contact.blocked) {
-            // Blocked! Send a busy signal back to the caller.
-            this._returnBusy(callData);
-            return;
-          }
-        }
-
-        openChat();
-      })
-    } else {
-      openChat();
-    }
-  },
-
-  /**
-   * Starts a direct call to the contact addresses.
-   *
-   * @param {Object} contact The contact to call
-   * @param {String} callType The type of call, e.g. "audio-video" or "audio-only"
-   * @return true if the call is opened, false if it is not opened (i.e. busy)
-   */
-  startDirectCall: function(contact, callType) {
-    if (this.callsData.inUse)
-      return false;
-
-    var callData = {
-      contact: contact,
-      callType: callType,
-      // XXX Really we shouldn't be using random numbers, bug 1090209 will fix this.
-      callId: Math.floor((Math.random() * 100000000))
-    };
-
-    this._startCall(callData, "outgoing");
-    return true;
-  },
-
-   /**
-   * Open call progress websocket and terminate with a reason of busy
-   * the server.
-   *
-   * @param {callData} Must contain the progressURL, callId and websocketToken
-   *                   returned by the LoopService.
-   */
-  _returnBusy: function(callData) {
-    let callProgress = new CallProgressSocket(
-      callData.progressURL,
-      callData.callId,
-      callData.websocketToken);
-    callProgress._websocket = this._mocks.webSocket;
-    // This instance of CallProgressSocket should stay alive until the underlying
-    // websocket is closed since it is passed to the websocket as the nsIWebSocketListener.
-    callProgress.connect(() => {callProgress.sendBusy();});
   },
 
   /**
@@ -1168,8 +878,11 @@ let gInitializeTimerFunc = (deferredInitialization, mockPushHandler, mockWebSock
 
       log.debug("MozLoopService: Initializing with already logged-in account");
       let registeredPromise =
-            MozLoopServiceInternal.registerWithLoopServer(LOOP_SESSION_TYPE.FXA,
-                                                          gPushHandler.pushUrl);
+            MozLoopServiceInternal.registerWithLoopServer(
+              LOOP_SESSION_TYPE.FXA, {
+                calls: gPushHandler.registeredChannels[LoopCalls.channelIDs.FxA],
+                rooms: gPushHandler.registeredChannels[LoopRooms.channelIDs.FxA]
+              });
       registeredPromise.then(() => {
         deferredInitialization.resolve("initialized to logged-in status");
       }, error => {
@@ -1241,6 +954,18 @@ this.MozLoopService = {
       throw error;
     });
   }),
+
+  /**
+   * Opens the chat window
+   *
+   * @param {Object} contentWindow The window to open the chat window in, may
+   *                               be null.
+   * @param {String} title The title of the chat window.
+   * @param {String} url The page to load in the chat window.
+   */
+  openChatWindow: function(contentWindow, title, url) {
+    MozLoopServiceInternal.openChatWindow(contentWindow, title, url);
+  },
 
   /**
    * If we're operating the service in "soft start" mode, and this browser
@@ -1458,39 +1183,6 @@ this.MozLoopService = {
   },
 
   /**
-   * Returns the callData for a specific loopCallId
-   *
-   * The data was retrieved from the LoopServer via a GET/calls/<version> request
-   * triggered by an incoming message from the LoopPushServer.
-   *
-   * @param {int} loopCallId
-   * @return {callData} The callData or undefined if error.
-   */
-  getCallData: function(loopCallId) {
-    if (MozLoopServiceInternal.callsData.data &&
-        MozLoopServiceInternal.callsData.data.callId == loopCallId) {
-      return MozLoopServiceInternal.callsData.data;
-    } else {
-      return undefined;
-    }
-  },
-
-  /**
-   * Releases the callData for a specific loopCallId
-   *
-   * The result of this call will be a free call session slot.
-   *
-   * @param {int} loopCallId
-   */
-  releaseCallData: function(loopCallId) {
-    if (MozLoopServiceInternal.callsData.data &&
-        MozLoopServiceInternal.callsData.data.callId == loopCallId) {
-      MozLoopServiceInternal.callsData.data = undefined;
-      MozLoopServiceInternal.callsData.inUse = false;
-    }
-  },
-
-  /**
    * Set any character preference under "loop.".
    *
    * @param {String} prefName The name of the pref without the preceding "loop."
@@ -1565,7 +1257,6 @@ this.MozLoopService = {
     if (MozLoopServiceInternal.fxAOAuthTokenData) {
       return Promise.resolve(MozLoopServiceInternal.fxAOAuthTokenData);
     }
-
     return MozLoopServiceInternal.promiseFxAOAuthAuthorization().then(response => {
       return MozLoopServiceInternal.promiseFxAOAuthToken(response.code, response.state);
     }).then(tokenData => {
@@ -1573,10 +1264,13 @@ this.MozLoopService = {
       return tokenData;
     }).then(tokenData => {
       return gRegisteredDeferred.promise.then(Task.async(function*() {
-        if (gPushHandler.pushUrl) {
-          yield MozLoopServiceInternal.registerWithLoopServer(LOOP_SESSION_TYPE.FXA, gPushHandler.pushUrl);
+        let callsUrl = gPushHandler.registeredChannels[LoopCalls.channelIDs.FxA],
+            roomsUrl = gPushHandler.registeredChannels[LoopRooms.channelIDs.FxA];
+        if (callsUrl && roomsUrl) {
+          yield MozLoopServiceInternal.registerWithLoopServer(
+            LOOP_SESSION_TYPE.FXA, {calls: callsUrl, rooms: roomsUrl});
         } else {
-          throw new Error("No pushUrl for FxA registration");
+          throw new Error("No pushUrls for FxA registration");
         }
         MozLoopServiceInternal.clearError("login");
         MozLoopServiceInternal.clearError("profile");
@@ -1617,10 +1311,23 @@ this.MozLoopService = {
    */
   logOutFromFxA: Task.async(function*() {
     log.debug("logOutFromFxA");
-    if (gPushHandler && gPushHandler.pushUrl) {
-      yield MozLoopServiceInternal.unregisterFromLoopServer(LOOP_SESSION_TYPE.FXA,
-                                                            gPushHandler.pushUrl);
-    } else {
+    let callsPushUrl, roomsPushUrl;
+    if (gPushHandler) {
+      callsPushUrl = gPushHandler.registeredChannels[LoopCalls.channelIDs.FxA];
+      roomsPushUrl = gPushHandler.registeredChannels[LoopRooms.channelIDs.FxA];
+    }
+    try {
+      if (callsPushUrl) {
+        yield MozLoopServiceInternal.unregisterFromLoopServer(
+          LOOP_SESSION_TYPE.FXA, callsPushUrl);
+      }
+      if (roomsPushUrl) {
+        yield MozLoopServiceInternal.unregisterFromLoopServer(
+          LOOP_SESSION_TYPE.FXA, roomsPushUrl);
+      }
+    }
+    catch (error) {throw error}
+    finally {
       MozLoopServiceInternal.clearSessionToken(LOOP_SESSION_TYPE.FXA);
     }
 
@@ -1646,7 +1353,6 @@ this.MozLoopService = {
         log.error("Could not get the OAuth client");
         return;
       }
-
       let url = new URL("/settings", fxAOAuthClient.parameters.content_uri);
       let win = Services.wm.getMostRecentWindow("navigator:browser");
       win.switchToTabHavingURI(url.toString(), true);
@@ -1673,16 +1379,5 @@ this.MozLoopService = {
   hawkRequest: function(sessionType, path, method, payloadObj) {
     return MozLoopServiceInternal.hawkRequest(sessionType, path, method, payloadObj).catch(
       error => {MozLoopServiceInternal._hawkRequestError(error);});
-  },
-
-    /**
-     * Starts a direct call to the contact addresses.
-     *
-     * @param {Object} contact The contact to call
-     * @param {String} callType The type of call, e.g. "audio-video" or "audio-only"
-     * @return true if the call is opened, false if it is not opened (i.e. busy)
-     */
-  startDirectCall: function(contact, callType) {
-    MozLoopServiceInternal.startDirectCall(contact, callType);
   },
 };

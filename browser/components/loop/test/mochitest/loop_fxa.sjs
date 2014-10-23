@@ -197,9 +197,11 @@ function registration(request, response) {
   let body = NetUtil.readInputStreamToString(request.bodyInputStream,
                                              request.bodyInputStream.available());
   let payload = JSON.parse(body);
-  if (payload.simplePushURL == "https://localhost/pushUrl/fxa" &&
-       (!request.hasHeader("Authorization") ||
-        !request.getHeader("Authorization").startsWith("Hawk"))) {
+  if ((payload.simplePushURL == "https://localhost/pushUrl/fxa" ||
+       payload.simplePushURLs.calls == "https://localhost/pushUrl/fxa-calls" ||
+       payload.simplePushURLs.rooms == "https://localhost/pushUrl/fxa-rooms") &&
+      (!request.hasHeader("Authorization") ||
+       !request.getHeader("Authorization").startsWith("Hawk"))) {
     response.setStatusLine(request.httpVersion, 401, "Missing Hawk");
     response.write("401 Missing Hawk Authorization header");
     return;
@@ -224,11 +226,14 @@ function delete_registration(request, response) {
   // making the path become a query parameter. This is because we aren't actually
   // registering endpoints at the root of the hostname e.g. /registration.
   let url = new URL(request.queryString.replace(/%3F.*/,""), "http://www.example.com");
-  let registration = JSON.parse(getSharedState("/registration"));
-  if (registration.simplePushURL == url.searchParams.get("simplePushURL")) {
-    setSharedState("/registration", "");
-  } else {
-    response.setStatusLine(request.httpVersion, 400, "Bad Request");
+  let state = getSharedState("/registration");
+  if (state != "") { //Already set to empty value on a successful channel unregsitration.
+    let registration = JSON.parse(state);
+    if (registration.simplePushURLs.calls == url.searchParams.get("simplePushURL")) {
+      setSharedState("/registration", "");
+    } else {
+      response.setStatusLine(request.httpVersion, 400, "Bad Request");
+    }
   }
 }
 
