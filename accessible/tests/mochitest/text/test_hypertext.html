@@ -6,6 +6,9 @@
         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
   <style>
+    #listitemnone {
+      list-style-type: none;
+    }
     h6.gencontent:before {
       content: "aga"
     }
@@ -67,12 +70,16 @@
       //////////////////////////////////////////////////////////////////////////
 
       IDs = [ "list" ];
-      testCharacterCount(IDs, 1);
-      testText(IDs, 0, 1, kEmbedChar);
+      testCharacterCount(IDs, 2);
+      testText(IDs, 0, 2, kEmbedChar + kEmbedChar);
 
       IDs = [ "listitem" ];
       testCharacterCount(IDs, 6);
       testText(IDs, 0, 6, "1. foo");
+
+      IDs = [ "listitemnone" ];
+      testCharacterCount(IDs, 3);
+      testText(IDs, 0, 3, "bar");
 
       testText(["testbr"], 0, 3, "foo");
 
@@ -117,7 +124,10 @@
 
   <div id="hypertext">hello <a>friend</a> see <img></div>
   <div id="hypertext2">hello <a>friend</a> see <input></div>
-  <ol id="list"><li id="listitem">foo</li></ol>
+  <ol id="list">
+    <li id="listitem">foo</li>
+    <li id="listitemnone">bar</li>
+  </ol>
 
   <div id="hypertext3">line
 <!-- haha -->
