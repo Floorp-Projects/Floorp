@@ -93,6 +93,7 @@
 #include "nsICycleCollectorListener.h"
 #include "nsIDocument.h"
 #include "nsIDOMGeoGeolocation.h"
+#include "nsIDOMGeoPositionError.h"
 #include "mozilla/dom/WakeLock.h"
 #include "nsIDOMWindow.h"
 #include "nsIExternalProtocolService.h"
@@ -2590,6 +2591,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ContentParent)
   NS_INTERFACE_MAP_ENTRY(nsIContentParent)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionErrorCallback)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
 NS_INTERFACE_MAP_END
 
@@ -3689,7 +3691,7 @@ ContentParent::RecvFilePathUpdateNotify(const nsString& aType,
 }
 
 static int32_t
-AddGeolocationListener(nsIDOMGeoPositionCallback* watcher, bool highAccuracy)
+AddGeolocationListener(nsIDOMGeoPositionCallback* watcher, nsIDOMGeoPositionErrorCallback* errorCallBack, bool highAccuracy)
 {
     nsCOMPtr<nsIDOMGeoGeolocation> geo = do_GetService("@mozilla.org/geolocation;1");
     if (!geo) {
@@ -3701,7 +3703,7 @@ AddGeolocationListener(nsIDOMGeoPositionCallback* watcher, bool highAccuracy)
     options->mMaximumAge = 0;
     options->mEnableHighAccuracy = highAccuracy;
     int32_t retval = 1;
-    geo->WatchPosition(watcher, nullptr, options, &retval);
+    geo->WatchPosition(watcher, errorCallBack, options, &retval);
     return retval;
 }
 
@@ -3722,7 +3724,7 @@ ContentParent::RecvAddGeolocationListener(const IPC::Principal& aPrincipal,
     // To ensure no geolocation updates are skipped, we always force the
     // creation of a new listener.
     RecvRemoveGeolocationListener();
-    mGeolocationWatchID = AddGeolocationListener(this, aHighAccuracy);
+    mGeolocationWatchID = AddGeolocationListener(this, this, aHighAccuracy);
     return true;
 }
 
@@ -3747,7 +3749,7 @@ ContentParent::RecvSetGeolocationHigherAccuracy(const bool& aEnable)
     // so this check allows us to forgo securing privileges.
     if (mGeolocationWatchID != -1) {
         RecvRemoveGeolocationListener();
-        mGeolocationWatchID = AddGeolocationListener(this, aEnable);
+        mGeolocationWatchID = AddGeolocationListener(this, this, aEnable);
     }
     return true;
 }
@@ -3756,6 +3758,17 @@ NS_IMETHODIMP
 ContentParent::HandleEvent(nsIDOMGeoPosition* postion)
 {
     unused << SendGeolocationUpdate(GeoPosition(postion));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ContentParent::HandleEvent(nsIDOMGeoPositionError* postionError)
+{
+    int16_t errorCode;
+    nsresult rv;
+    rv = postionError->GetCode(&errorCode);
+    NS_ENSURE_SUCCESS(rv,rv);
+    unused << SendGeolocationError(errorCode);
     return NS_OK;
 }
 
