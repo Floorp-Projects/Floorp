@@ -165,8 +165,13 @@ VibrancyManager::CreateEffectView(VibrancyType aType, NSRect aRect)
 static bool
 ComputeSystemSupportsVibrancy()
 {
+#ifdef __x86_64__
   return NSClassFromString(@"NSAppearance") &&
       NSClassFromString(@"NSVisualEffectView");
+#else
+  // objc_allocateClassPair doesn't work in 32 bit mode, so turn off vibrancy.
+  return false;
+#endif
 }
 
 /* static */ bool
