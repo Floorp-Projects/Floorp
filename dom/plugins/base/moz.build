@@ -100,8 +100,8 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/layout/generic',
     '/layout/xul',
+    '/widget',
     '/widget/android',
-    '/widget/xpwidgets',
     '/xpcom/base',
 ]
 

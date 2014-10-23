@@ -82,10 +82,10 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../shared',
-    '../xpwidgets',
     '/layout/generic',
     '/layout/xul',
     '/other-licenses/atk-1.0',
+    '/widget',
 ]
 
 if CONFIG['MOZ_X11']:

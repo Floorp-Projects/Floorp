@@ -75,10 +75,10 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../shared',
-    '../xpwidgets',
     '/layout/forms',
     '/layout/generic',
     '/layout/xul',
+    '/widget',
 ]
 
 RESOURCE_FILES.cursors += [
