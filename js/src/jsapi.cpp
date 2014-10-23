@@ -46,6 +46,7 @@
 #include "prmjtime.h"
 
 #include "asmjs/AsmJSLink.h"
+#include "builtin/AtomicsObject.h"
 #include "builtin/Eval.h"
 #include "builtin/Intl.h"
 #include "builtin/MapObject.h"
@@ -672,6 +673,18 @@ JS_SetRuntimePrivate(JSRuntime *rt, void *data)
     rt->data = data;
 }
 
+JS_PUBLIC_API(JS::PerRuntimeFutexAPI *)
+JS::GetRuntimeFutexAPI(JSRuntime *rt)
+{
+    return rt->futexAPI_;
+}
+
+JS_PUBLIC_API(void)
+JS::SetRuntimeFutexAPI(JSRuntime *rt, JS::PerRuntimeFutexAPI *fx)
+{
+    rt->futexAPI_ = fx;
+}
+
 static void
 StartRequest(JSContext *cx)
 {
@@ -1209,6 +1222,7 @@ static const JSStdName builtin_property_names[] = {
     { EAGER_ATOM(SIMD), JSProto_SIMD },
     { EAGER_ATOM(TypedObject), JSProto_TypedObject },
 #endif
+    { EAGER_ATOM(Atomics), JSProto_Atomics },
 
     { 0, JSProto_LIMIT }
 };
