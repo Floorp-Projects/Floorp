@@ -6160,9 +6160,7 @@ JitRuntime::generateLazyLinkStub(JSContext *cx)
     GeneralRegisterSet regs = GeneralRegisterSet::Volatile();
     Register temp0 = regs.takeAny();
 
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS);
-    masm.Push(Imm32(descriptor));
-    masm.call(&call);
+    masm.callWithExitFrame(&call);
     masm.jump(ReturnReg);
 
     masm.bind(&call);

@@ -1490,6 +1490,15 @@ MacroAssemblerMIPSCompat::buildOOLFakeExitFrame(void *fakeReturnAddr)
 }
 
 void
+MacroAssemblerMIPSCompat::callWithExitFrame(Label *target)
+{
+    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    Push(Imm32(descriptor)); // descriptor
+
+    ma_callIonHalfPush(target);
+}
+
+void
 MacroAssemblerMIPSCompat::callWithExitFrame(JitCode *target)
 {
     uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
@@ -3086,6 +3095,17 @@ MacroAssemblerMIPS::ma_callIonHalfPush(const Register r)
     as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
     as_jalr(r);
     as_sw(ra, StackPointer, 0);
+}
+
+// This macrosintruction calls the ion code and pushes the return address to
+// the stack in the case when stack is not alligned.
+void
+MacroAssemblerMIPS::ma_callIonHalfPush(Label *label)
+{
+    // This is a MIPS hack to push return address during jalr delay slot.
+    as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
+    // TODO
+    // TODO
 }
 
 void
