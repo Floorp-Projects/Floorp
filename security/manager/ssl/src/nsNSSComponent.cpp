@@ -1049,20 +1049,6 @@ nsNSSComponent::InitializeNSS()
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsICertOverrideService> overrideService(
-    do_GetService(NS_CERTOVERRIDE_CONTRACTID));
-  if (!overrideService) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Failed to initialize cert override service\n"));
-    return NS_ERROR_FAILURE;
-  }
-
-  uint32_t overrideCount = 0;
-  rv = overrideService->GetPermanentOverrideCount(&overrideCount);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  Telemetry::Accumulate(Telemetry::SSL_PERMANENT_CERT_ERROR_OVERRIDES,
-                        overrideCount);
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
   return NS_OK;
