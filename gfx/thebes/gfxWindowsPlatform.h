@@ -305,4 +305,6 @@ private:
     nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<gfxFontEntry> > > mPrefFonts;
 };
 
+bool DoesD3D11DeviceSupportResourceSharing(ID3D11Device *device);
+
 #endif /* GFX_WINDOWS_PLATFORM_H */
