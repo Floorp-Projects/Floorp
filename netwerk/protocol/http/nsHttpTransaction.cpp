@@ -1450,10 +1450,8 @@ nsHttpTransaction::HandleContentStart()
                 LOG(("Not Authoritative.\n"));
                 gHttpHandler->ConnMgr()->
                     ClearHostMapping(mConnInfo->GetHost(), mConnInfo->Port());
+                mForceRestart = true;
             }
-            // retry on a new connection - just in case
-            mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
-            mForceRestart = true; // force restart has built in loop protection
             break;
         }
 
