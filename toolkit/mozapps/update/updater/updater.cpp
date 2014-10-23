@@ -116,7 +116,7 @@ static bool sUseHardLinks = true;
 # define MAYBE_USE_HARD_LINKS 0
 #endif
 
-#if defined(MOZ_VERIFY_MAR_SIGNATURE) && !defined(XP_WIN)
+#if defined(MOZ_VERIFY_MAR_SIGNATURE) && !defined(XP_WIN) && !defined(XP_MACOSX)
 #include "nss.h"
 #include "prerror.h"
 #endif
@@ -2285,9 +2285,9 @@ int NS_main(int argc, NS_tchar **argv)
   }
 #endif
 
-#if defined(MOZ_VERIFY_MAR_SIGNATURE) && !defined(XP_WIN)
-  // On Windows we rely on CyrptoAPI to do verifications so we don't need to
-  // initialize NSS at all there.
+#if defined(MOZ_VERIFY_MAR_SIGNATURE) && !defined(XP_WIN) && !defined(XP_MACOSX)
+  // On Windows and Mac we rely on native APIs to do verifications so we don't
+  // need to initialize NSS at all there.
   // Otherwise, minimize the amount of NSS we depend on by avoiding all the NSS
   // databases.
   if (NSS_NoDB_Init(NULL) != SECSuccess) {
