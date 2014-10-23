@@ -7,7 +7,7 @@
 #include "mozilla/dom/Date.h"
 
 #include "jsapi.h" // for JS_ObjectIsDate, JS_NewDateObjectMsec
-#include "jsfriendapi.h" // for js_DateGetMsecSinceEpoch
+#include "jsfriendapi.h" // for DateGetMsecSinceEpoch
 #include "js/RootingAPI.h" // for Rooted, MutableHandle
 #include "js/Value.h" // for Value
 #include "jswrapper.h" // for CheckedUnwrap
@@ -39,7 +39,7 @@ Date::SetTimeStamp(JSContext* aCx, JSObject* aObject)
     return false;
   }
 
-  mMsecSinceEpoch = js_DateGetMsecSinceEpoch(obj);
+  mMsecSinceEpoch = js::DateGetMsecSinceEpoch(aCx, obj);
   return true;
 }
 

@@ -3062,13 +3062,13 @@ js_NewDateObject(JSContext *cx, int year, int mon, int mday,
 }
 
 JS_FRIEND_API(bool)
-js_DateIsValid(JSObject *obj)
+js::DateIsValid(JSContext *cx, JSObject *obj)
 {
     return obj->is<DateObject>() && !IsNaN(obj->as<DateObject>().UTCTime().toNumber());
 }
 
 JS_FRIEND_API(double)
-js_DateGetMsecSinceEpoch(JSObject *obj)
+js::DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj)
 {
     obj = CheckedUnwrap(obj);
     if (!obj || !obj->is<DateObject>())
