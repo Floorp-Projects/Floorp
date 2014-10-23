@@ -356,9 +356,6 @@ public:
   // resolution.
   CSSToLayoutDeviceScale mDevPixelsPerCSSPixel;
 
-  // Whether or not this frame may have touch listeners.
-  bool mMayHaveTouchListeners;
-
 public:
   void SetIsRoot(bool aIsRoot)
   {
@@ -537,9 +534,22 @@ public:
     mMayHaveTouchCaret = aMayHaveTouchCaret;
   }
 
+  bool GetMayHaveTouchListeners() const
+  {
+    return mMayHaveTouchListeners;
+  }
+
+  void SetMayHaveTouchListeners(bool aMayHaveTouchListeners)
+  {
+    mMayHaveTouchListeners = aMayHaveTouchListeners;
+  }
+
 private:
   // New fields from now on should be made private and old fields should
   // be refactored to be private.
+
+  // Whether or not this frame may have a touch listeners.
+  bool mMayHaveTouchListeners;
 
   // Whether or not this frame may have a touch caret.
   bool mMayHaveTouchCaret;
