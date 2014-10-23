@@ -614,18 +614,13 @@ add_task(function test_DirectoryLinksProvider_setDefaultEnhanced() {
     do_check_eq(Services.prefs.getBoolPref(kNewtabEnhancedPref), expected);
   }
 
-  // Use the default donottrack prefs (enabled = false, value = 1)
+  // Use the default donottrack prefs (enabled = false)
   Services.prefs.clearUserPref("privacy.donottrackheader.enabled");
-  Services.prefs.clearUserPref("privacy.donottrackheader.value");
   checkDefault(true);
 
   // Turn on DNT - no track
   Services.prefs.setBoolPref("privacy.donottrackheader.enabled", true);
   checkDefault(false);
-
-  // Set DNT - do track
-  Services.prefs.setIntPref("privacy.donottrackheader.value", 0);
-  checkDefault(true);
 
   // Turn off DNT header
   Services.prefs.clearUserPref("privacy.donottrackheader.enabled");
