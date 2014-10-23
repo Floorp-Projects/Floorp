@@ -268,7 +268,7 @@ body {
 
 .dropdown-menu {
   position: absolute;
-  top: -28px;
+  bottom: 0;
   left: 0;
   background-color: #fdfdfd;
   box-shadow: 0 1px 3px rgba(0,0,0,.3);
@@ -345,6 +345,10 @@ body[dir=rtl] .dropdown-menu-item {
 .dnd-status {
   border: 1px solid transparent;
   padding: 2px 4px;
+  margin: 0;
+  /* Undo the start border + padding so that unhovered dnd-status is aligned
+     as if there was no additional spacing. */
+  -moz-margin-start: calc(-1px + -4px);
   font-size: .9em;
   cursor: pointer;
   border-radius: 3px;
@@ -377,10 +381,7 @@ body[dir=rtl] .dropdown-menu-item {
 
 .signin-link {
   flex: 2 1 auto;
-  margin-top: 14px;
-  border-right: 1px solid #aaa;
-  padding-right: 1em;
-  margin-right: 1em;
+  margin: 0;
   text-align: right;
 }
 
@@ -388,6 +389,12 @@ body[dir=rtl] .dropdown-menu-item {
   font-size: .9em;
   text-decoration: none;
   color: #888;
+}
+
+.footer-signin-separator {
+  border-right: 1px solid #aaa;
+  height: 16px;
+  margin: 0 1em;
 }
 
 /* Settings (gear) menu */
@@ -413,7 +420,6 @@ body[dir=rtl] .dropdown-menu-item {
 }
 
 .footer .button-settings {
-  margin-top: 17px; /* used to align the gear icon with the availability dropdown menu inner text */
   opacity: .6;      /* used to "grey" the icon a little */
 }
 
@@ -459,10 +465,22 @@ body[dir=rtl] .dropdown-menu-item {
   flex-wrap: nowrap;
   justify-content: space-between;
   align-content: stretch;
-  align-items: flex-start;
+  align-items: center;
   font-size: 1em;
   border-top: 1px solid #D1D1D1;
   background-color: #eaeaea;
   color: #7f7f7f;
   padding: 14px;
+}
+
+.footer .signin-details {
+  align-items: center;
+  display: flex;
+  -moz-margin-start: 5px;
+}
+
+.footer .user-identity {
+  color: #000;
+  font-weight: bold;
+  margin: 0;
 }

@@ -717,8 +717,11 @@ loop.panel = (function(_, mozL10n) {
               UserIdentity({displayName: displayName}), 
               AvailabilityDropdown(null)
             ), 
-            AuthLink(null), 
-            SettingsDropdown(null)
+            React.DOM.div({className: "signin-details"}, 
+              AuthLink(null), 
+              React.DOM.div({className: "footer-signin-separator"}), 
+              SettingsDropdown(null)
+            )
           )
         )
       );

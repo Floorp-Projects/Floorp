@@ -3,6 +3,7 @@ body {
   margin-top: 2em;
   font: message-box;
   font-size: 100%;
+  min-height: 200px;
 }
 
 p {
