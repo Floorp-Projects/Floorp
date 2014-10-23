@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={1XXXXXX}
+-->
+<head>
+  <title>Test for Bug {1072090}</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={1072090}">Mozilla Bug {1072090}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+var gManifestURL = "http://test/tests/dom/apps/tests/file_app.sjs?apptype=hosted&getmanifest=true";
+var gGenerator = runTest();
+
+function go() {
+  SpecialPowers.pushPermissions(
+    [{ "type": "webapps-manage", "allow": 1, "context": document }],
+    function() { gGenerator.next() });
+}
+
+function continueTest() {
+  try {
+    gGenerator.next();
+  } catch (e if e instanceof StopIteration) {
+    finish();
+  }
+}
+
+function finish() {
+  SimpleTest.finish();
+}
+
+function cbError(aEvent) {
+  ok(false, "Error callback invoked " +
+            aEvent.target.error.name + " " + aEvent.target.error.message);
+  finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+/**
+  * Flip the `enabled` state of an app back and forth.
+  */
+function runTest() {
+  SpecialPowers.setAllAppsLaunchable(true);
+
+  SpecialPowers.autoConfirmAppInstall(continueTest);
+  yield undefined;
+
+  SpecialPowers.autoConfirmAppUninstall(continueTest);
+  yield undefined;
+
+  request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  var initialAppsCount = request.result.length;
+  info("Starting with " + initialAppsCount + " apps installed.");
+
+  var request = navigator.mozApps.install(gManifestURL, { });
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+
+  var app = request.result;
+  ok(app, "App  is non-null");
+  is(app.manifestURL, gManifestURL, "App manifest url is correct.");
+  is(app.enabled, true, "App is enabled by default after install.");
+
+  // Switch the app to disabled.
+  navigator.mozApps.mgmt.onenabledstatechange = function(event) {
+    ok(true, "onenabledstatechange received");
+    is(event.application.enabled, false, "Application is disabled");
+    is(app.enabled, false, "Application is disabled");
+    continueTest();
+  }
+
+  navigator.mozApps.mgmt.setEnabled(app, false);
+  yield undefined;
+
+  // Re-enable the app.
+  navigator.mozApps.mgmt.onenabledstatechange = function(event) {
+    ok(true, "onenabledstatechange received");
+    is(event.application.enabled, true, "Application is enabled");
+    is(app.enabled, true, "Application is enabled");
+    continueTest();
+  }
+
+  navigator.mozApps.mgmt.setEnabled(app, true);
+  yield undefined;
+
+  navigator.mozApps.mgmt.onuninstall = function(event) {
+    var app = event.application;
+    is(app.manifestURL, gManifestURL, "App uninstall event ok.");
+    is(app.manifest.name, "Really Rapid Release (hosted)",
+       "App uninstall manifest ok.");
+    continueTest();
+  }
+  request = navigator.mozApps.mgmt.uninstall(app);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  yield undefined;
+  is(request.result, gManifestURL, "App uninstalled.");
+  navigator.mozApps.mgmt.onuninstall = null;
+
+  request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  is(request.result.length, initialAppsCount, "All apps are uninstalled.");
+}
+
+addLoadEvent(go);
+
+</script>
+</pre>
+</body>
+</html>
