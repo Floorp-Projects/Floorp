@@ -134,6 +134,26 @@ int mar_create(const char *dest,
  */
 int mar_extract(const char *path);
 
+#define MAR_MAX_CERT_SIZE (16*1024) // Way larger than necessary
+
+/* Read the entire file (not a MAR file) into a newly-allocated buffer.
+ * This function does not write to stderr. Instead, the caller should
+ * write whatever error messages it sees fit. The caller must free the returned
+ * buffer using free().
+ *
+ * @param filePath The path to the file that should be read.
+ * @param maxSize  The maximum valid file size.
+ * @param data     On success, *data will point to a newly-allocated buffer
+ *                 with the file's contents in it.
+ * @param size     On success, *size will be the size of the created buffer.
+ * 
+ * @return 0 on success, -1 on error
+ */
+int mar_read_entire_file(const char * filePath,
+                         uint32_t maxSize,
+                         /*out*/ const uint8_t * *data,
+                         /*out*/ uint32_t *size);
+
 /**
  * Verifies a MAR file by verifying each signature with the corresponding
  * certificate. That is, the first signature will be verified using the first
@@ -154,12 +174,10 @@ int mar_extract(const char *path);
  *         a negative number if there was an error
  *         a positive number if the signature does not verify
  */
-#ifdef XP_WIN
-int mar_verify_signaturesW(MarFile *mar,
-                           const uint8_t * const *certData,
-                           const uint32_t *certDataSizes,
-                           uint32_t certCount);
-#endif
+int mar_verify_signatures(MarFile *mar,
+                          const uint8_t * const *certData,
+                          const uint32_t *certDataSizes,
+                          uint32_t certCount);
 
 /** 
  * Reads the product info block from the MAR file's additional block section.
