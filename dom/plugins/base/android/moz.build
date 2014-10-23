@@ -31,8 +31,8 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/dom/plugins/base',
     '/gfx/gl',
+    '/widget',
     '/widget/android',
-    '/widget/xpwidgets',
 ]
 
 DEFINES['MOZ_APP_NAME'] = '"%s"' % CONFIG['MOZ_APP_NAME']

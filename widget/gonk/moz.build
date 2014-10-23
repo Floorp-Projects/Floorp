@@ -71,8 +71,8 @@ LOCAL_INCLUDES += [
     '/dom/system/android',
     '/gfx/skia/trunk/include/config',
     '/gfx/skia/trunk/include/core',
+    '/widget',
     '/widget/shared',
-    '/widget/xpwidgets',
 ]
 
 DEFINES['HAVE_OFF64_T'] = True
