@@ -165,6 +165,11 @@ loop.shared.models = (function(l10n) {
       if (!this.isSessionReady()) {
         throw new Error("Can't start session as it's not ready");
       }
+      this.set({
+        publishedStream: false,
+        subscribedStream: false
+      });
+
       this.session = this.sdk.initSession(this.get("sessionId"));
       this.listenTo(this.session, "streamCreated", this._streamCreated);
       this.listenTo(this.session, "connectionDestroyed",
@@ -182,8 +187,11 @@ loop.shared.models = (function(l10n) {
      */
     endSession: function() {
       this.session.disconnect();
-      this.set("ongoing", false)
-          .once("session:ended", this.stopListening, this);
+      this.set({
+        publishedStream: false,
+        subscribedStream: false,
+        ongoing: false
+      }).once("session:ended", this.stopListening, this);
     },
 
     /**
