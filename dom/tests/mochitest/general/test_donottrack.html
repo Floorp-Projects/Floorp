@@ -14,7 +14,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=629535
 <script type="application/javascript">
 
 const dntPref = 'privacy.donottrackheader.enabled';
-const dntValuePref = 'privacy.donottrackheader.value';
 
 SimpleTest.waitForExplicitFinish();
 
@@ -39,8 +38,6 @@ tests.push(function testDefaultValues() {
      'DNT should be disabled by default');
   is(navigator.doNotTrack, 'unspecified',
      'navigator.doNotTrack should initially be "unspecified".');
-  is(SpecialPowers.getIntPref(dntValuePref), isB2G ? -1 : 1,
-     'DNT value should be "1" by default');
 
   nextTest();
 });
@@ -55,34 +52,6 @@ tests.push(function clearedEnabled() {
 tests.push(function setEnabled() {
   SpecialPowers.pushPrefEnv({"set": [[dntPref, true]]}, function() {
     is(navigator.doNotTrack, "1", 'after setting pref to true');
-    nextTest();
-  });
-});
-
-tests.push(function clearedValue() {
-  SpecialPowers.pushPrefEnv({"clear": [[dntValuePref]]}, function() {
-    is(navigator.doNotTrack, "1", 'after clearing value pref');
-    nextTest();
-  });
-});
-
-tests.push(function setValue0() {
-  SpecialPowers.pushPrefEnv({"set": [[dntValuePref, 0]]}, function() {
-    is(navigator.doNotTrack, "0", 'after setting value pref');
-    nextTest();
-  });
-});
-
-tests.push(function setValue42() {
-  SpecialPowers.pushPrefEnv({"set": [[dntValuePref, 42]]}, function() {
-    is(navigator.doNotTrack, "1", 'after setting value pref');
-    nextTest();
-  });
-});
-
-tests.push(function clearValueAgain() {
-  SpecialPowers.pushPrefEnv({"clear": [[dntValuePref]]}, function() {
-    is(navigator.doNotTrack, "1", 'after clearing value pref');
     nextTest();
   });
 });

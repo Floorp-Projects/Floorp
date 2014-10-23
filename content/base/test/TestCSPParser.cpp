@@ -438,9 +438,9 @@ nsresult TestSimplePolicies() {
   return runTestSuite(policies, policyCount, 1);
 }
 
-// ============================= TestPoliciesThatLogWarning ========================
+// ============================= TestPoliciesWithInvalidSrc ========================
 
-nsresult TestPoliciesThatLogWarning() {
+nsresult TestPoliciesWithInvalidSrc() {
 
   static const PolicyTest policies[] =
   {
@@ -448,6 +448,50 @@ nsresult TestPoliciesThatLogWarning() {
       "script-src http://www.selfuri.com" },
     { "script-src 'none' test.com; script-src example.com",
       "script-src http://test.com" },
+    { "default-src **",
+      "default-src 'none'" },
+    { "default-src 'self",
+      "default-src 'none'" },
+    { "default-src 'unsafe-inlin' ",
+      "default-src 'none'" },
+    { "default-src */",
+      "default-src 'none'" },
+    { "default-src",
+      "default-src 'none'" },
+    { "default-src 'unsafe-inlin' ",
+      "default-src 'none'" },
+    { "default-src :88",
+      "default-src 'none'" },
+    { "script-src abc::::::88",
+      "script-src 'none'" },
+    { "script-src *.*:*",
+      "script-src 'none'" },
+    { "img-src *::88",
+      "img-src 'none'" },
+    { "object-src http://localhost:",
+      "object-src 'none'" },
+    { "script-src test..com",
+      "script-src 'none'" },
+    { "script-src sub1.sub2.example+",
+      "script-src 'none'" },
+    { "script-src http://www.example.com//",
+      "script-src 'none'" },
+    { "script-src http://www.example.com:88path-1/",
+      "script-src 'none'" },
+    { "script-src http://www.example.com:88//",
+      "script-src 'none'" },
+    { "script-src http://www.example.com:88//path-1",
+      "script-src 'none'" },
+    { "script-src http://www.example.com:88//path-1",
+      "script-src 'none'" },
+    { "script-src http://www.example.com:88/.js",
+      "script-src 'none'" },
+    { "script-src http://www.example.com:88.js",
+      "script-src 'none'" },
+    { "script-src http://www.example.com:*.js",
+      "script-src 'none'" },
+    { "script-src http://www.example.com:*.",
+      "script-src 'none'" },
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
@@ -460,34 +504,12 @@ nsresult TestBadPolicies() {
 
   static const PolicyTest policies[] =
   {
-    { "default-src **", "" },
-    { "default-src 'self", "" },
     { "script-sr 'self", "" },
-    { "default-src 'unsafe-inlin' ", "" },
-    { "default-src */", "" },
-    { "default-src", "" },
     { "", "" },
     { "; ; ; ; ; ; ;", "" },
     { "defaut-src asdf", "" },
     { "default-src: aaa", "" },
-    { "default-src 'unsafe-inlin' ", "" },
-    { "default-src :88", "" },
-    { "script-src abc::::::88", "" },
     { "asdf http://test.com", ""},
-    { "script-src *.*:*", "" },
-    { "img-src *::88", "" },
-    { "object-src http://localhost:", "" },
-    { "script-src test..com", "" },
-    { "script-src sub1.sub2.example+", "" },
-    { "script-src http://www.example.com//", "" },
-    { "script-src http://www.example.com:88path-1/", "" },
-    { "script-src http://www.example.com:88//", "" },
-    { "script-src http://www.example.com:88//path-1", "" },
-    { "script-src http://www.example.com:88//path-1", "" },
-    { "script-src http://www.example.com:88/.js", "" },
-    { "script-src http://www.example.com:88.js", "" },
-    { "script-src http://www.example.com:*.js", "" },
-    { "script-src http://www.example.com:*.", "" },
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
@@ -748,8 +770,6 @@ nsresult TestBadGeneratedPolicies() {
     { "http://other:pass1@self.com/foo", ""},
     { "http://user1:pass1@self.com/foo", ""},
     { "http://username:password@self.com/bar", ""},
-    { "default-src ", ""},
-    { "img-src ", ""}
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
@@ -884,17 +904,24 @@ nsresult TestBadGeneratedPoliciesForPathHandling() {
 
   static const PolicyTest policies[] =
   {
-    { "img-src test1.example.com:88path-1/", "" },
-    { "img-src test1.example.com:80.js", "" },
-    { "img-src test1.example.com:*.js", "" },
-    { "img-src test1.example.com:*.", "" },
-    { "img-src http://test1.example.com//", "" },
-    { "img-src http://test1.example.com:80//", "" },
-    { "img-src http://test1.example.com:80abc", "" },
+    { "img-src test1.example.com:88path-1/",
+      "img-src 'none'" },
+    { "img-src test1.example.com:80.js",
+      "img-src 'none'" },
+    { "img-src test1.example.com:*.js",
+      "img-src 'none'" },
+    { "img-src test1.example.com:*.",
+      "img-src 'none'" },
+    { "img-src http://test1.example.com//",
+      "img-src 'none'" },
+    { "img-src http://test1.example.com:80//",
+      "img-src 'none'" },
+    { "img-src http://test1.example.com:80abc",
+      "img-src 'none'" },
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
-  return runTestSuite(policies, policyCount, 0);
+  return runTestSuite(policies, policyCount, 1);
 }
 
 // ============================= TestFuzzyPolicies ========================
@@ -1058,7 +1085,7 @@ int main(int argc, char** argv) {
   if (NS_FAILED(TestIgnoreUpperLowerCasePolicies()))         { return 1; }
   if (NS_FAILED(TestIgnorePaths()))                          { return 1; }
   if (NS_FAILED(TestSimplePolicies()))                       { return 1; }
-  if (NS_FAILED(TestPoliciesThatLogWarning()))               { return 1; }
+  if (NS_FAILED(TestPoliciesWithInvalidSrc()))               { return 1; }
   if (NS_FAILED(TestBadPolicies()))                          { return 1; }
   if (NS_FAILED(TestGoodGeneratedPolicies()))                { return 1; }
   if (NS_FAILED(TestBadGeneratedPolicies()))                 { return 1; }
