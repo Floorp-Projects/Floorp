@@ -1,6 +1,9 @@
-This is sqlite 3.8.6
+This is sqlite 3.8.6.1
 
--- Ryan VanderMeulen <ryanvm@gmail.com>, 08/2014
+NB: We did not update SQLITE_VERSION in configure.in for this.  See bug 1088143
+    for the rationale.
+
+-- Kyle Huey <khuey@kylehuey.com>, 10/23/2014
 
 See http://www.sqlite.org/ for more info.
 
