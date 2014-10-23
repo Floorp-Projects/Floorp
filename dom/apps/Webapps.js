@@ -424,6 +424,10 @@ WebappsApplication.prototype = {
     return new this._window.DOMError(this._proxy.downloadError);
   },
 
+  get enabled() {
+    return this._proxy.enabled;
+  },
+
   download: function() {
     cpmm.sendAsyncMessage("Webapps:Download",
                           { manifestURL: this.manifestURL });
@@ -613,7 +617,7 @@ WebappsApplication.prototype = {
       case "Webapps:Launch:Return:KO":
         this.removeMessageListeners(["Webapps:Launch:Return:OK",
                                      "Webapps:Launch:Return:KO"]);
-        Services.DOMRequest.fireError(req, "APP_INSTALL_PENDING");
+        Services.DOMRequest.fireError(req, msg.error);
         break;
       case "Webapps:Launch:Return:OK":
         this.removeMessageListeners(["Webapps:Launch:Return:OK",
@@ -722,12 +726,14 @@ WebappsApplicationMgmt.prototype = {
                                         "Webapps:Install:Return:OK",
                                         "Webapps:GetNotInstalled:Return:OK",
                                         "Webapps:Import:Return",
-                                        "Webapps:ExtractManifest:Return"]);
+                                        "Webapps:ExtractManifest:Return",
+                                        "Webapps:SetEnabled:Return"]);
     cpmm.sendAsyncMessage("Webapps:RegisterForMessages",
                           {
                             messages: ["Webapps:Install:Return:OK",
                                        "Webapps:Uninstall:Return:OK",
-                                       "Webapps:Uninstall:Broadcast:Return:OK"]
+                                       "Webapps:Uninstall:Broadcast:Return:OK",
+                                       "Webapps:SetEnabled:Return"]
                           }
                          );
   },
@@ -736,7 +742,8 @@ WebappsApplicationMgmt.prototype = {
     cpmm.sendAsyncMessage("Webapps:UnregisterForMessages",
                           ["Webapps:Install:Return:OK",
                            "Webapps:Uninstall:Return:OK",
-                           "Webapps:Uninstall:Broadcast:Return:OK"]);
+                           "Webapps:Uninstall:Broadcast:Return:OK",
+                           "Webapps:SetEnabled:Return"]);
   },
 
   applyDownload: function(aApp) {
@@ -804,12 +811,22 @@ WebappsApplicationMgmt.prototype = {
     });
   },
 
+  setEnabled: function(aApp, aValue) {
+    cpmm.sendAsyncMessage("Webapps:SetEnabled",
+                          { manifestURL: aApp.manifestURL,
+                            enabled: aValue });
+  },
+
   get oninstall() {
     return this.__DOM_IMPL__.getEventHandler("oninstall");
   },
 
   get onuninstall() {
     return this.__DOM_IMPL__.getEventHandler("onuninstall");
+  },
+
+  get onenabledstatechange() {
+    return this.__DOM_IMPL__.getEventHandler("onenabledstatechange");
   },
 
   set oninstall(aCallback) {
@@ -820,9 +837,14 @@ WebappsApplicationMgmt.prototype = {
     this.__DOM_IMPL__.setEventHandler("onuninstall", aCallback);
   },
 
+  set onenabledstatechange(aCallback) {
+    this.__DOM_IMPL__.setEventHandler("onenabledstatechange", aCallback);
+  },
+
   receiveMessage: function(aMessage) {
     let msg = aMessage.data;
     let req;
+
     if (["Webapps:Import:Return",
          "Webapps:ExtractManifest:Return"]
          .indexOf(aMessage.name) != -1) {
@@ -831,11 +853,13 @@ WebappsApplicationMgmt.prototype = {
       req = this.getRequest(msg.requestID);
     }
 
-    // We want Webapps:Install:Return:OK and Webapps:Uninstall:Broadcast:Return:OK
+    // We want Webapps:Install:Return:OK, Webapps:Uninstall:Broadcast:Return:OK
+    // and Webapps:SetEnabled:Return
     // to be broadcasted to all instances of mozApps.mgmt.
     if (!((msg.oid == this._id && req) ||
           aMessage.name == "Webapps:Install:Return:OK" ||
-          aMessage.name == "Webapps:Uninstall:Broadcast:Return:OK")) {
+          aMessage.name == "Webapps:Uninstall:Broadcast:Return:OK" ||
+          aMessage.name == "Webapps:SetEnabled:Return")) {
       return;
     }
 
@@ -877,6 +901,14 @@ WebappsApplicationMgmt.prototype = {
           req.resolve(Cu.cloneInto(msg.manifest, this._window));
         } else {
           req.reject(new this._window.DOMError(msg.error || ""));
+        }
+        break;
+      case "Webapps:SetEnabled:Return":
+        {
+          let app = createContentApplicationObject(this._window, msg);
+          let event =
+            new this._window.MozApplicationEvent("enabledstatechange", { application : app });
+          this.__DOM_IMPL__.dispatchEvent(event);
         }
         break;
     }
