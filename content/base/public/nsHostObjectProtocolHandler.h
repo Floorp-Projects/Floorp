@@ -39,6 +39,7 @@ public:
   NS_IMETHOD GetDefaultPort(int32_t *aDefaultPort) MOZ_OVERRIDE;
   NS_IMETHOD GetProtocolFlags(uint32_t *aProtocolFlags) MOZ_OVERRIDE;
   NS_IMETHOD NewURI(const nsACString & aSpec, const char * aOriginCharset, nsIURI *aBaseURI, nsIURI * *_retval) MOZ_OVERRIDE;
+  NS_IMETHOD NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadinfo, nsIChannel * *_retval) MOZ_OVERRIDE;
   NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel * *_retval) MOZ_OVERRIDE;
   NS_IMETHOD AllowPort(int32_t port, const char * scheme, bool *_retval) MOZ_OVERRIDE;
 

@@ -118,7 +118,9 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
+nsAboutProtocolHandler::NewChannel2(nsIURI* uri,
+                                    nsILoadInfo* aLoadInfo,
+                                    nsIChannel** result)
 {
     NS_ENSURE_ARG_POINTER(uri);
 
@@ -174,6 +176,12 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     }
 
     return rv;
+}
+
+NS_IMETHODIMP
+nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
+{
+    return NewChannel2(uri, nullptr, result);
 }
 
 NS_IMETHODIMP 
@@ -233,6 +241,15 @@ nsSafeAboutProtocolHandler::NewURI(const nsACString &aSpec,
     *result = nullptr;
     url.swap(*result);
     return rv;
+}
+
+NS_IMETHODIMP
+nsSafeAboutProtocolHandler::NewChannel2(nsIURI* uri,
+                                        nsILoadInfo* aLoadInfo,
+                                        nsIChannel** result)
+{
+    *result = nullptr;
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP

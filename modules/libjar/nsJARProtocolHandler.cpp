@@ -208,7 +208,9 @@ nsJARProtocolHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsJARProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result)
+nsJARProtocolHandler::NewChannel2(nsIURI* uri,
+                                  nsILoadInfo* aLoadInfo,
+                                  nsIChannel** result)
 {
     nsJARChannel *chan = new nsJARChannel();
     if (!chan)
@@ -223,6 +225,12 @@ nsJARProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result)
 
     *result = chan;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result)
+{
+    return NewChannel2(uri, nullptr, result);
 }
 
 
