@@ -194,11 +194,12 @@ public:
                                 bool                   aAllowLazyConstruction);
 
   enum RemoveFlags { REMOVE_CONTENT, REMOVE_FOR_RECONSTRUCTION };
-  nsresult ContentRemoved(nsIContent* aContainer,
-                          nsIContent* aChild,
-                          nsIContent* aOldNextSibling,
-                          RemoveFlags aFlags,
-                          bool*     aDidReconstruct);
+  nsresult ContentRemoved(nsIContent*  aContainer,
+                          nsIContent*  aChild,
+                          nsIContent*  aOldNextSibling,
+                          RemoveFlags  aFlags,
+                          bool*        aDidReconstruct,
+                          nsIContent** aDestroyedFramesFor = nullptr);
 
   nsresult CharacterDataChanged(nsIContent* aContent,
                                 CharacterDataChangeInfo* aInfo);
@@ -1466,9 +1467,18 @@ private:
 
   nsresult MaybeRecreateFramesForElement(Element* aElement);
 
-  // If aAsyncInsert is true then a restyle event will be posted to handle the
-  // required ContentInserted call instead of doing it immediately.
-  nsresult RecreateFramesForContent(nsIContent* aContent, bool aAsyncInsert);
+  /**
+   * Recreate frames for aContent.
+   * If aAsyncInsert is true then a restyle event will be posted to handle the
+   * required ContentInserted call instead of doing it immediately.
+   * aDestroyedFramesFor contains the content that was reframed - it may be
+   * different than aContent.
+   */
+  nsresult
+  RecreateFramesForContent(nsIContent*  aContent,
+                           bool         aAsyncInsert,
+                           RemoveFlags  aFlags = REMOVE_FOR_RECONSTRUCTION,
+                           nsIContent** aDestroyedFramesFor = nullptr);
 
   // If removal of aFrame from the frame tree requires reconstruction of some
   // containing block (either of aFrame or of its parent) due to {ib} splits or
@@ -1478,9 +1488,12 @@ private:
   // this method returns false, the value of *aResult is not affected.  aFrame
   // and aResult must not be null.  aFrame must be the result of a
   // GetPrimaryFrame() call on a content node (which means its parent is also
-  // not null).
-  bool MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
-                                               nsresult* aResult);
+  // not null).   If this method returns true, aDestroyedFramesFor contains the
+  // content that was reframed.
+  bool MaybeRecreateContainerForFrameRemoval(nsIFrame*    aFrame,
+                                             RemoveFlags  aFlags,
+                                             nsresult*    aResult,
+                                             nsIContent** aDestroyedFramesFor);
 
   nsIFrame* CreateContinuingOuterTableFrame(nsIPresShell*     aPresShell,
                                             nsPresContext*    aPresContext,
@@ -1606,7 +1619,9 @@ private:
                              bool                     aIsAppend,
                              nsIFrame*                aPrevSibling);
 
-  nsresult ReframeContainingBlock(nsIFrame* aFrame);
+  nsresult ReframeContainingBlock(nsIFrame*    aFrame,
+                                  RemoveFlags  aFlags,
+                                  nsIContent** aReframeContent);
 
   //----------------------------------------
 
