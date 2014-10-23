@@ -24,6 +24,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ProfileTimesAccessor",
+                                  "resource://gre/modules/services/healthreport/profile.jsm");
 
 
 function FirefoxProfileMigrator() {
@@ -132,7 +134,22 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileD
   }
 
   // FHR related migrations.
-  let times = getFileResource(types.OTHERDATA, ["times.json"]);
+  let times = {
+    name: "times", // name is used only by tests.
+    type: types.OTHERDATA,
+    migrate: aCallback => {
+      let file = this._getFileObject(sourceProfileDir, "times.json");
+      if (file) {
+        file.copyTo(currentProfileDir, "");
+      }
+      // And record the fact a migration (ie, a reset) happened.
+      let timesAccessor = new ProfileTimesAccessor(currentProfileDir.path);
+      timesAccessor.recordProfileReset().then(
+        () => aCallback(true),
+        () => aCallback(false)
+      );
+    }
+  };
   let healthReporter = {
     name: "healthreporter", // name is used only by tests...
     type: types.OTHERDATA,
