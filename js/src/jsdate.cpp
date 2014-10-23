@@ -3062,16 +3062,37 @@ js_NewDateObject(JSContext *cx, int year, int mon, int mday,
 }
 
 JS_FRIEND_API(bool)
-js::DateIsValid(JSContext *cx, JSObject *obj)
+js::DateIsValid(JSContext *cx, JSObject *objArg)
 {
-    return obj->is<DateObject>() && !IsNaN(obj->as<DateObject>().UTCTime().toNumber());
+    RootedObject obj(cx, objArg);
+    if (!ObjectClassIs(obj, ESClass_Date, cx))
+        return false;
+
+    RootedValue unboxed(cx);
+    if (!Unbox(cx, obj, &unboxed)) {
+        // This can't actually happen, so we don't force consumers to deal with
+        // a clunky out-param API. Do something sane-ish if it does happen.
+        cx->clearPendingException();
+        return false;
+    }
+
+    return !IsNaN(unboxed.toNumber());
 }
 
 JS_FRIEND_API(double)
-js::DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj)
+js::DateGetMsecSinceEpoch(JSContext *cx, JSObject *objArg)
 {
-    obj = CheckedUnwrap(obj);
-    if (!obj || !obj->is<DateObject>())
+    RootedObject obj(cx, objArg);
+    if (!ObjectClassIs(obj, ESClass_Date, cx))
         return 0;
-    return obj->as<DateObject>().UTCTime().toNumber();
+
+    RootedValue unboxed(cx);
+    if (!Unbox(cx, obj, &unboxed)) {
+        // This can't actually happen, so we don't force consumers to deal with
+        // a clunky out-param API. Do something sane-ish if it does happen.
+        cx->clearPendingException();
+        return 0;
+    }
+
+    return unboxed.toNumber();
 }
