@@ -47,11 +47,11 @@ callback MutationCallback = void (sequence<MutationRecord> mutations, MutationOb
 
 dictionary MutationObserverInit {
   boolean childList = false;
-  boolean attributes = false;
-  boolean characterData = false;
+  boolean attributes;
+  boolean characterData;
   boolean subtree = false;
-  boolean attributeOldValue = false;
-  boolean characterDataOldValue = false;
+  boolean attributeOldValue;
+  boolean characterDataOldValue;
   sequence<DOMString> attributeFilter;
 };
 
