@@ -1322,109 +1322,168 @@ WebGLContext::ValidateAttribArraySetter(const char* name, uint32_t cnt, uint32_t
     return true;
 }
 
-bool
-WebGLContext::ValidateUniformArraySetter(const char* name, uint32_t expectedElemSize, WebGLUniformLocation *location_object,
-                                         GLint& location, uint32_t& numElementsToUpload, uint32_t arrayLength)
+static bool
+IsUniformSetterTypeValid(GLenum setterType, GLenum uniformType)
 {
-    if (IsContextLost())
-        return false;
-    if (!ValidateUniformLocation(name, location_object))
-        return false;
-    location = location_object->Location();
-    uint32_t uniformElemSize = location_object->ElementSize();
-    if (expectedElemSize != uniformElemSize) {
-        ErrorInvalidOperation("%s: this function expected a uniform of element size %d,"
-                              " got a uniform of element size %d", name,
-                              expectedElemSize,
-                              uniformElemSize);
+    switch (uniformType) {
+    case LOCAL_GL_BOOL:
+    case LOCAL_GL_BOOL_VEC2:
+    case LOCAL_GL_BOOL_VEC3:
+    case LOCAL_GL_BOOL_VEC4:
+        return true; // GLfloat(0.0) sets a bool to false.
+
+    case LOCAL_GL_INT:
+    case LOCAL_GL_SAMPLER_2D:
+    case LOCAL_GL_SAMPLER_CUBE:
+    case LOCAL_GL_INT_VEC2:
+    case LOCAL_GL_INT_VEC3:
+    case LOCAL_GL_INT_VEC4:
+        return setterType == LOCAL_GL_INT;
+
+    case LOCAL_GL_FLOAT:
+    case LOCAL_GL_FLOAT_VEC2:
+    case LOCAL_GL_FLOAT_VEC3:
+    case LOCAL_GL_FLOAT_VEC4:
+    case LOCAL_GL_FLOAT_MAT2:
+    case LOCAL_GL_FLOAT_MAT3:
+    case LOCAL_GL_FLOAT_MAT4:
+        return setterType == LOCAL_GL_FLOAT;
+
+    default:
+        MOZ_ASSERT(false); // should never get here
         return false;
     }
-    if (arrayLength == 0 ||
-        arrayLength % expectedElemSize)
+}
+
+static bool
+CheckUniformSizeAndType(WebGLContext& webgl, WebGLUniformLocation* loc,
+                        uint8_t setterElemSize, GLenum setterType,
+                        const char* info)
+{
+    if (setterElemSize != loc->ElementSize()) {
+        webgl.ErrorInvalidOperation("%s: Bad uniform size: %i", info,
+                                    loc->ElementSize());
+        return false;
+    }
+
+    if (!IsUniformSetterTypeValid(setterType, loc->Info().type)) {
+        webgl.ErrorInvalidOperation("%s: Bad uniform type: %i", info,
+                                    loc->Info().type);
+        return false;
+    }
+
+    return true;
+}
+
+static bool
+CheckUniformArrayLength(WebGLContext& webgl, WebGLUniformLocation* loc,
+                        uint8_t setterElemSize, size_t setterArraySize,
+                        const char* info)
+{
+    if (setterArraySize == 0 ||
+        setterArraySize % setterElemSize)
     {
-        ErrorInvalidValue("%s: expected an array of length a multiple"
-                          " of %d, got an array of length %d", name,
-                          expectedElemSize,
-                          arrayLength);
+        webgl.ErrorInvalidValue("%s: expected an array of length a multiple of"
+                                " %d, got an array of length %d.", info,
+                                setterElemSize, setterArraySize);
         return false;
     }
-    const WebGLUniformInfo& info = location_object->Info();
-    if (!info.isArray &&
-        arrayLength != expectedElemSize) {
-        ErrorInvalidOperation("%s: expected an array of length exactly"
-                              " %d (since this uniform is not an array"
-                              " uniform), got an array of length %d", name,
-                              expectedElemSize,
-                              arrayLength);
-        return false;
-    }
-    numElementsToUpload =
-        std::min(info.arraySize, arrayLength / expectedElemSize);
-    return true;
-}
 
-bool
-WebGLContext::ValidateUniformMatrixArraySetter(const char* name, int dim, WebGLUniformLocation *location_object,
-                                              GLint& location, uint32_t& numElementsToUpload, uint32_t arrayLength,
-                                              WebGLboolean aTranspose)
-{
-    uint32_t expectedElemSize = (dim)*(dim);
-    if (IsContextLost())
-        return false;
-    if (!ValidateUniformLocation(name, location_object))
-        return false;
-    location = location_object->Location();
-    uint32_t uniformElemSize = location_object->ElementSize();
-    if (expectedElemSize != uniformElemSize) {
-        ErrorInvalidOperation("%s: this function expected a uniform of element size %d,"
-                              " got a uniform of element size %d", name,
-                              expectedElemSize,
-                              uniformElemSize);
-        return false;
-    }
-    if (arrayLength == 0 ||
-        arrayLength % expectedElemSize)
+    if (!loc->Info().isArray &&
+        setterArraySize != setterElemSize)
     {
-        ErrorInvalidValue("%s: expected an array of length a multiple"
-                          " of %d, got an array of length %d", name,
-                          expectedElemSize,
-                          arrayLength);
+        webgl.ErrorInvalidOperation("%s: expected an array of length exactly %d"
+                                    " (since this uniform is not an array"
+                                    " uniform), got an array of length %d.",
+                                    info, setterElemSize, setterArraySize);
         return false;
     }
-    const WebGLUniformInfo& info = location_object->Info();
-    if (!info.isArray &&
-        arrayLength != expectedElemSize) {
-        ErrorInvalidOperation("%s: expected an array of length exactly"
-                              " %d (since this uniform is not an array"
-                              " uniform), got an array of length %d", name,
-                              expectedElemSize,
-                              arrayLength);
-        return false;
-    }
-    if (aTranspose) {
-        ErrorInvalidValue("%s: transpose must be FALSE as per the "
-                          "OpenGL ES 2.0 spec", name);
-        return false;
-    }
-    numElementsToUpload =
-        std::min(info.arraySize, arrayLength / (expectedElemSize));
+
     return true;
 }
 
 bool
-WebGLContext::ValidateUniformSetter(const char* name, WebGLUniformLocation *location_object, GLint& location)
+WebGLContext::ValidateUniformSetter(WebGLUniformLocation* loc,
+                                    uint8_t setterElemSize, GLenum setterType,
+                                    const char* info, GLuint* out_rawLoc)
 {
     if (IsContextLost())
         return false;
-    if (!ValidateUniformLocation(name, location_object))
+
+    if (!ValidateUniformLocation(info, loc))
         return false;
-    location = location_object->Location();
+
+    if (!CheckUniformSizeAndType(*this, loc, setterElemSize, setterType, info))
+        return false;
+
+    *out_rawLoc = loc->Location();
     return true;
 }
 
-bool WebGLContext::ValidateAttribIndex(GLuint index, const char *info)
+bool
+WebGLContext::ValidateUniformArraySetter(WebGLUniformLocation* loc,
+                                         uint8_t setterElemSize, GLenum setterType,
+                                         size_t setterArraySize,
+                                         const char* info, GLuint* out_rawLoc,
+                                         GLsizei* out_numElementsToUpload)
 {
-    return mBoundVertexArray->EnsureAttrib(index, info);
+    if (IsContextLost())
+        return false;
+
+    if (!ValidateUniformLocation(info, loc))
+        return false;
+
+    if (!CheckUniformSizeAndType(*this, loc, setterElemSize, setterType, info))
+        return false;
+
+    if (!CheckUniformArrayLength(*this, loc, setterElemSize, setterArraySize,
+                                 info))
+    {
+        return false;
+    }
+
+    *out_rawLoc = loc->Location();
+    *out_numElementsToUpload = std::min((size_t)loc->Info().arraySize,
+                                        setterArraySize / setterElemSize);
+    return true;
+}
+
+bool
+WebGLContext::ValidateUniformMatrixArraySetter(WebGLUniformLocation* loc,
+                                               uint8_t setterDims,
+                                               GLenum setterType,
+                                               size_t setterArraySize,
+                                               bool setterTranspose,
+                                               const char* info,
+                                               GLuint* out_rawLoc,
+                                               GLsizei* out_numElementsToUpload)
+{
+    uint8_t setterElemSize = setterDims * setterDims;
+
+    if (IsContextLost())
+        return false;
+
+    if (!ValidateUniformLocation(info, loc))
+        return false;
+
+    if (!CheckUniformSizeAndType(*this, loc, setterElemSize, setterType, info))
+        return false;
+
+    if (!CheckUniformArrayLength(*this, loc, setterElemSize, setterArraySize,
+                                 info))
+    {
+        return false;
+    }
+
+    if (setterTranspose) {
+        ErrorInvalidValue("%s: `transpose` must be false.", info);
+        return false;
+    }
+
+    *out_rawLoc = loc->Location();
+    *out_numElementsToUpload = std::min((size_t)loc->Info().arraySize,
+                                        setterArraySize / setterElemSize);
+    return true;
 }
 
 bool WebGLContext::ValidateStencilParamsForDrawCall()
