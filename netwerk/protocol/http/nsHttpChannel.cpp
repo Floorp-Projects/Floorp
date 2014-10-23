@@ -316,6 +316,7 @@ nsHttpChannel::Connect()
     // Finalize ConnectionInfo flags before SpeculativeConnect
     mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
     mConnectionInfo->SetPrivate(mPrivateBrowsing);
+    mConnectionInfo->SetNoSpdy(mCaps & NS_HTTP_DISALLOW_SPDY);
 
     // Consider opening a TCP connection right away
     RetrieveSSLOptions();
@@ -1246,7 +1247,7 @@ nsHttpChannel::ProcessAltService()
     // protocol-id   = token ; percent-encoded ALPN protocol identifier
     // alt-authority = quoted-string ;  containing [ uri-host ] ":" port
 
-    if (!gHttpHandler->AllowAltSvc()) {
+    if (!gHttpHandler->AllowAltSvc() || (mCaps & NS_HTTP_DISALLOW_SPDY)) {
         return;
     }
 
@@ -4897,8 +4898,7 @@ nsHttpChannel::BeginConnect()
         if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
             gHttpHandler->ConnMgr()->DoShiftReloadConnectionCleanup(mConnectionInfo);
         }
-        // each sub resource gets a fresh connection
-        mCaps &= ~(NS_HTTP_ALLOW_KEEPALIVE | NS_HTTP_ALLOW_PIPELINING);
+        mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
     }
 
     // We may have been cancelled already, either by on-modify-request

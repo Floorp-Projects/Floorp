@@ -181,11 +181,16 @@ class StructuredLogger(object):
         return all_data
 
     @log_action(List("tests", Unicode),
-                Dict("run_info", default=None, optional=True))
+                Dict("run_info", default=None, optional=True),
+                Dict("version_info", default=None, optional=True),
+                Dict("device_info", default=None, optional=True))
     def suite_start(self, data):
         """Log a suite_start message
 
-        :param tests: List of test identifiers that will be run in the suite.
+        :param list tests: Test identifiers that will be run in the suite.
+        :param dict run_info: Optional information typically provided by mozinfo.
+        :param dict version_info: Optional target application version information provided by mozversion.
+        :param dict device_info: Optional target device information provided by mozdevice.
         """
         if self._state.suite_started:
             self.error("Got second suite_start message before suite_end. Logged with data %s" %

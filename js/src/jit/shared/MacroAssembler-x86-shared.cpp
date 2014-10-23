@@ -166,6 +166,14 @@ MacroAssemblerX86Shared::buildFakeExitFrame(Register scratch, uint32_t *offset)
 }
 
 void
+MacroAssemblerX86Shared::callWithExitFrame(Label *target)
+{
+    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    Push(Imm32(descriptor));
+    call(target);
+}
+
+void
 MacroAssemblerX86Shared::callWithExitFrame(JitCode *target)
 {
     uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);

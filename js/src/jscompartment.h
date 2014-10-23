@@ -72,22 +72,41 @@ struct CrossCompartmentKey
     JSObject *debugger;
     js::gc::Cell *wrapped;
 
-    CrossCompartmentKey()
-      : kind(ObjectWrapper), debugger(nullptr), wrapped(nullptr) {}
     explicit CrossCompartmentKey(JSObject *wrapped)
-      : kind(ObjectWrapper), debugger(nullptr), wrapped(wrapped) {}
+      : kind(ObjectWrapper), debugger(nullptr), wrapped(wrapped)
+    {
+        MOZ_RELEASE_ASSERT(wrapped);
+    }
     explicit CrossCompartmentKey(JSString *wrapped)
-      : kind(StringWrapper), debugger(nullptr), wrapped(wrapped) {}
-    explicit CrossCompartmentKey(Value wrapped)
-      : kind(wrapped.isString() ? StringWrapper : ObjectWrapper),
+      : kind(StringWrapper), debugger(nullptr), wrapped(wrapped)
+    {
+        MOZ_RELEASE_ASSERT(wrapped);
+    }
+    explicit CrossCompartmentKey(Value wrappedArg)
+      : kind(wrappedArg.isString() ? StringWrapper : ObjectWrapper),
         debugger(nullptr),
-        wrapped((js::gc::Cell *)wrapped.toGCThing()) {}
-    explicit CrossCompartmentKey(const RootedValue &wrapped)
-      : kind(wrapped.get().isString() ? StringWrapper : ObjectWrapper),
+        wrapped((js::gc::Cell *)wrappedArg.toGCThing())
+    {
+        MOZ_RELEASE_ASSERT(wrappedArg.isString() || wrappedArg.isObject());
+        MOZ_RELEASE_ASSERT(wrapped);
+    }
+    explicit CrossCompartmentKey(const RootedValue &wrappedArg)
+      : kind(wrappedArg.get().isString() ? StringWrapper : ObjectWrapper),
         debugger(nullptr),
-        wrapped((js::gc::Cell *)wrapped.get().toGCThing()) {}
+        wrapped((js::gc::Cell *)wrappedArg.get().toGCThing())
+    {
+        MOZ_RELEASE_ASSERT(wrappedArg.isString() || wrappedArg.isObject());
+        MOZ_RELEASE_ASSERT(wrapped);
+    }
     CrossCompartmentKey(Kind kind, JSObject *dbg, js::gc::Cell *wrapped)
-      : kind(kind), debugger(dbg), wrapped(wrapped) {}
+      : kind(kind), debugger(dbg), wrapped(wrapped)
+    {
+        MOZ_RELEASE_ASSERT(dbg);
+        MOZ_RELEASE_ASSERT(wrapped);
+    }
+
+  private:
+    CrossCompartmentKey() MOZ_DELETE;
 };
 
 struct WrapperHasher : public DefaultHasher<CrossCompartmentKey>

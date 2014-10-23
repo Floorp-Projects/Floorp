@@ -197,6 +197,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitEffectiveAddress(LEffectiveAddress *ins);
     virtual bool visitUDivOrMod(LUDivOrMod *ins);
     virtual bool visitAsmJSPassStackArg(LAsmJSPassStackArg *ins);
+    virtual bool visitMemoryBarrier(LMemoryBarrier *ins);
 
     bool visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool);
 

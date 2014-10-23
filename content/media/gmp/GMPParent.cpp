@@ -359,6 +359,24 @@ GMPParent::Shutdown()
   MOZ_ASSERT(mState == GMPStateNotLoaded);
 }
 
+class NotifyGMPShutdownTask : public nsRunnable {
+public:
+  NotifyGMPShutdownTask(const nsAString& aNodeId)
+    : mNodeId(aNodeId)
+  {
+  }
+  NS_IMETHOD Run() {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
+    MOZ_ASSERT(obsService);
+    if (obsService) {
+      obsService->NotifyObservers(nullptr, "gmp-shutdown", mNodeId.get());
+    }
+    return NS_OK;
+  }
+  nsString mNodeId;
+};
+
 void
 GMPParent::DeleteProcess()
 {
@@ -374,6 +392,11 @@ GMPParent::DeleteProcess()
   LOGD(("%s::%s: Shut down process %p", __CLASS__, __FUNCTION__, (void *) mProcess));
   mProcess = nullptr;
   mState = GMPStateNotLoaded;
+
+  NS_DispatchToMainThread(
+    new NotifyGMPShutdownTask(NS_ConvertUTF8toUTF16(mNodeId)),
+    NS_DISPATCH_NORMAL);
+
 }
 
 void
@@ -984,6 +1007,10 @@ bool
 GMPParent::RecvAsyncShutdownRequired()
 {
   LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
+  if (mAsyncShutdownRequired) {
+    NS_WARNING("Received AsyncShutdownRequired message more than once!");
+    return true;
+  }
   mAsyncShutdownRequired = true;
   mService->AsyncShutdownNeeded(this);
   return true;

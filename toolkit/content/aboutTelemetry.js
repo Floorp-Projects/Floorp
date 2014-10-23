@@ -108,6 +108,48 @@ let observer = {
   }
 };
 
+let GeneralData = {
+  /**
+   * Renders the general data
+   */
+  render: function() {
+    setHasData("general-data-section", true);
+
+    let table = document.createElement("table");
+
+    let caption = document.createElement("caption");
+    caption.appendChild(document.createTextNode("General data\n"));
+    table.appendChild(caption);
+
+    let headings = document.createElement("tr");
+    this.appendColumn(headings, "th", bundle.GetStringFromName("generalDataHeadingName") + "\t");
+    this.appendColumn(headings, "th", bundle.GetStringFromName("generalDataHeadingValue") + "\t");
+    table.appendChild(headings);
+
+    let row = document.createElement("tr");
+    this.appendColumn(row, "td", "Client ID\t");
+    this.appendColumn(row, "td", TelemetryPing.clientID + "\t");
+    table.appendChild(row);
+
+    let dataDiv = document.getElementById("general-data");
+    dataDiv.appendChild(table);
+  },
+
+  /**
+   * Helper function for appending a column to the data table.
+   *
+   * @param aRowElement Parent row element
+   * @param aColType Column's tag name
+   * @param aColText Column contents
+   */
+  appendColumn: function(aRowElement, aColType, aColText) {
+    let colElement = document.createElement(aColType);
+    let colTextElement = document.createTextNode(aColText);
+    colElement.appendChild(colTextElement);
+    aRowElement.appendChild(colElement);
+  },
+};
+
 let SlowSQL = {
 
   slowSqlHits: bundle.GetStringFromName("slowSqlHits"),
@@ -925,6 +967,9 @@ function onLoad() {
 
   // Set up event listeners
   setupListeners();
+
+  // Show general data.
+  GeneralData.render();
 
   // Show slow SQL stats
   SlowSQL.render();

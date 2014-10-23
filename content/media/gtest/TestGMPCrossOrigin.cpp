@@ -106,6 +106,66 @@ GMPTestRunner::RunTestGMPCrossOrigin()
   if (encoder2) encoder2->Close();
 }
 
+static already_AddRefed<nsIThread>
+GetGMPThread()
+{
+  nsRefPtr<GeckoMediaPluginService> service =
+    GeckoMediaPluginService::GetGeckoMediaPluginService();
+  nsCOMPtr<nsIThread> thread;
+  EXPECT_TRUE(NS_SUCCEEDED(service->GetThread(getter_AddRefs(thread))));
+  return thread.forget();
+}
+
+class GMPShutdownObserver : public nsIRunnable
+                          , public nsIObserver {
+public:
+  GMPShutdownObserver(nsIRunnable* aShutdownTask,
+                      nsIRunnable* Continuation,
+                      const nsACString& aNodeId)
+    : mShutdownTask(aShutdownTask)
+    , mContinuation(Continuation)
+    , mNodeId(NS_ConvertUTF8toUTF16(aNodeId))
+  {}
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  NS_IMETHOD Run() MOZ_OVERRIDE {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    EXPECT_TRUE(observerService);
+    observerService->AddObserver(this, "gmp-shutdown", false);
+
+    nsCOMPtr<nsIThread> thread(GetGMPThread());
+    thread->Dispatch(mShutdownTask, NS_DISPATCH_NORMAL);
+    return NS_OK;
+  }
+
+  NS_IMETHOD Observe(nsISupports* aSubject,
+                     const char* aTopic,
+                     const char16_t* aSomeData) MOZ_OVERRIDE
+  {
+    if (!strcmp(aTopic, "gmp-shutdown") &&
+        mNodeId.Equals(nsDependentString(aSomeData))) {
+      nsCOMPtr<nsIObserverService> observerService =
+          mozilla::services::GetObserverService();
+      EXPECT_TRUE(observerService);
+      observerService->RemoveObserver(this, "gmp-shutdown");
+      nsCOMPtr<nsIThread> thread(GetGMPThread());
+      thread->Dispatch(mContinuation, NS_DISPATCH_NORMAL);
+    }
+    return NS_OK;
+  }
+
+private:
+  virtual ~GMPShutdownObserver() {}
+  nsRefPtr<nsIRunnable> mShutdownTask;
+  nsRefPtr<nsIRunnable> mContinuation;
+  const nsString mNodeId;
+};
+
+NS_IMPL_ISUPPORTS(GMPShutdownObserver, nsIRunnable, nsIObserver)
+
 class NotifyObserversTask : public nsRunnable {
 public:
   NotifyObserversTask(const char* aTopic)
@@ -230,15 +290,6 @@ AssertIsOnGMPThread()
   MOZ_ASSERT(currentThread == thread);
 }
 
-static already_AddRefed<nsIThread>
-GetGMPThread()
-{
-  nsRefPtr<GeckoMediaPluginService> service =
-    GeckoMediaPluginService::GetGeckoMediaPluginService();
-  nsCOMPtr<nsIThread> thread;
-  EXPECT_TRUE(NS_SUCCEEDED(service->GetThread(getter_AddRefs(thread))));
-  return thread.forget();
-}
 class GMPStorageTest : public GMPDecryptorProxyCallback
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPStorageTest)
@@ -323,15 +374,13 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
       GeckoMediaPluginService::GetGeckoMediaPluginService();
     EXPECT_TRUE(service);
 
-    const nsCString nodeId = GetNodeId(aOrigin,
-                                       aTopLevelOrigin,
-                                       aInPBMode);
-    EXPECT_TRUE(!nodeId.IsEmpty());
+    mNodeId = GetNodeId(aOrigin, aTopLevelOrigin, aInPBMode);
+    EXPECT_TRUE(!mNodeId.IsEmpty());
 
     nsTArray<nsCString> tags;
     tags.AppendElement(NS_LITERAL_CSTRING("fake"));
 
-    nsresult rv = service->GetGMPDecryptor(&tags, nodeId, &mDecryptor);
+    nsresult rv = service->GetGMPDecryptor(&tags, mNodeId, &mDecryptor);
     EXPECT_TRUE(NS_SUCCEEDED(rv));
     EXPECT_TRUE(!!mDecryptor);
 
@@ -396,7 +445,6 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   }
 
   void TestPBStorage() {
-
     // Open decryptor on one, origin, write a record, close decryptor,
     // open another, and test that record can be read, close decryptor,
     // then send pb-last-context-closed notification, then open decryptor
@@ -440,7 +488,69 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
            NS_NewRunnableMethod(this,
               &GMPStorageTest::SetFinished));
     Update(NS_LITERAL_CSTRING("retrieve pbdata"));
+  }
 
+  void CreateAsyncShutdownTimeoutGMP(const nsAString& aOrigin1,
+                                     const nsAString& aOrigin2) {
+    CreateDecryptor(aOrigin1, aOrigin2, false);
+    Update(NS_LITERAL_CSTRING("shutdown-mode timeout"));
+    Shutdown();
+  }
+
+  void TestAsyncShutdownTimeout() {
+    // Create decryptors that timeout in their async shutdown.
+    // If the gtest hangs on shutdown, test fails!
+    CreateAsyncShutdownTimeoutGMP(NS_LITERAL_STRING("example7.com"),
+                                  NS_LITERAL_STRING("example8.com"));
+    CreateAsyncShutdownTimeoutGMP(NS_LITERAL_STRING("example9.com"),
+                                  NS_LITERAL_STRING("example10.com"));
+    CreateAsyncShutdownTimeoutGMP(NS_LITERAL_STRING("example11.com"),
+                                  NS_LITERAL_STRING("example12.com"));
+    SetFinished();
+  };
+
+  void TestAsyncShutdownStorage() {
+    // Test that a GMP can write to storage during shutdown, and retrieve
+    // that written data in a subsequent session.
+    CreateDecryptor(NS_LITERAL_STRING("example13.com"),
+                    NS_LITERAL_STRING("example14.com"),
+                    false);
+
+    // Instruct the GMP to write a token (the current timestamp, so it's
+    // unique) during async shutdown, then shutdown the plugin, re-create
+    // it, and check that the token was successfully stored.
+    auto t = time(0);
+    nsCString update("shutdown-mode token ");
+    nsCString token;
+    token.AppendInt((int64_t)t);
+    update.Append(token);
+
+    // Wait for a response from the GMP, so we know it's had time to receive
+    // the token.
+    nsCString response("shutdown-token received ");
+    response.Append(token);
+    Expect(response, NS_NewRunnableMethodWithArg<nsCString>(this,
+      &GMPStorageTest::TestAsyncShutdownStorage_ReceivedShutdownToken, token));
+
+    Update(update);
+  }
+
+  void TestAsyncShutdownStorage_ReceivedShutdownToken(const nsCString& aToken) {
+    ShutdownThen(NS_NewRunnableMethodWithArg<nsCString>(this,
+      &GMPStorageTest::TestAsyncShutdownStorage_AsyncShutdownComplete, aToken));
+  }
+
+  void TestAsyncShutdownStorage_AsyncShutdownComplete(const nsCString& aToken) {
+    // Create a new instance of the plugin, retrieve the token written
+    // during shutdown and verify it is correct.
+    CreateDecryptor(NS_LITERAL_STRING("example13.com"),
+                    NS_LITERAL_STRING("example14.com"),
+                    false);
+    nsCString response("retrieved shutdown-token ");
+    response.Append(aToken);
+    Expect(response,
+           NS_NewRunnableMethod(this, &GMPStorageTest::SetFinished));
+    Update(NS_LITERAL_CSTRING("retrieve-shutdown-token"));
   }
 
   void Expect(const nsCString& aMessage, nsIRunnable* aContinuation) {
@@ -454,10 +564,23 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     mFinished = false;
   }
 
+  void ShutdownThen(nsIRunnable* aContinuation) {
+    EXPECT_TRUE(!!mDecryptor);
+    if (!mDecryptor) {
+      return;
+    }
+    EXPECT_FALSE(mNodeId.IsEmpty());
+    nsRefPtr<GMPShutdownObserver> task(
+      new GMPShutdownObserver(NS_NewRunnableMethod(this, &GMPStorageTest::Shutdown),
+                              aContinuation, mNodeId));
+    NS_DispatchToMainThread(task, NS_DISPATCH_NORMAL);
+  }
+
   void Shutdown() {
     if (mDecryptor) {
       mDecryptor->Close();
       mDecryptor = nullptr;
+      mNodeId = EmptyCString();
     }
   }
 
@@ -531,6 +654,7 @@ private:
   GMPDecryptorProxy* mDecryptor;
   Monitor mMonitor;
   Atomic<bool> mFinished;
+  nsCString mNodeId;
 };
 
 void
@@ -572,4 +696,14 @@ TEST(GeckoMediaPlugins, GMPStorageCrossOrigin) {
 TEST(GeckoMediaPlugins, GMPStoragePrivateBrowsing) {
   nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
   runner->DoTest(&GMPStorageTest::TestPBStorage);
+}
+
+TEST(GeckoMediaPlugins, GMPStorageAsyncShutdownTimeout) {
+  nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
+  runner->DoTest(&GMPStorageTest::TestAsyncShutdownTimeout);
+}
+
+TEST(GeckoMediaPlugins, GMPStorageAsyncShutdownStorage) {
+  nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
+  runner->DoTest(&GMPStorageTest::TestAsyncShutdownStorage);
 }
