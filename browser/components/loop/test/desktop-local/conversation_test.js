@@ -79,7 +79,10 @@ describe("loop.conversation", function() {
       sandbox.stub(loop.Dispatcher.prototype, "dispatch");
 
       sandbox.stub(loop.shared.utils.Helper.prototype,
-        "locationHash").returns("#incoming/42");
+        "locationData").returns({
+          hash: "#incoming/42",
+          pathname: "/"
+        });
 
       window.OT = {
         overrideGuidStorage: sinon.stub()
@@ -117,8 +120,11 @@ describe("loop.conversation", function() {
       var fakeRoomID = "32";
 
       beforeEach(function() {
-        loop.shared.utils.Helper.prototype.locationHash
-          .returns("#room/" + fakeRoomID);
+        loop.shared.utils.Helper.prototype.locationData
+          .returns({
+            hash: "#room/" + fakeRoomID,
+            pathname: ""
+          });
 
         sandbox.stub(loop.store, "LocalRoomStore");
       });
@@ -159,7 +165,10 @@ describe("loop.conversation", function() {
 
     it("should trigger an outgoing gatherCallData action for outgoing calls",
       function() {
-        loop.shared.utils.Helper.prototype.locationHash.returns("#outgoing/24");
+        loop.shared.utils.Helper.prototype.locationData.returns({
+          hash: "#outgoing/24",
+          pathname: "/"
+        });
 
         loop.conversation.init();
 
