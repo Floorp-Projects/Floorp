@@ -613,6 +613,61 @@ class HandleValueArray
     }
 };
 
+// Container for futex methods, used to implement the Atomics primitives.
+//
+// Client code calls JS_SetContextFutexAPI to install an instance of a
+// subclass of PerRuntimeFutexAPI on the runtime.  Implementations
+// of the Atomics primitives will use that object, if it is present
+// (and fail, if not).
+//
+// The API may differ among clients; for example, the APIs installed by
+// a worker and by the main window event thread are possibly different.
+
+class PerRuntimeFutexAPI
+{
+  public:
+    virtual ~PerRuntimeFutexAPI() {}
+
+    // Acquire the GLOBAL lock for all futex resources in all domains.
+    virtual void lock() = 0;
+
+    // Release the GLOBAL lock.
+    virtual void unlock() = 0;
+
+    // Return true iff the calling thread is a worker thread.  This must be
+    // used to guard calls to wait().  The lock need not be held.
+    virtual bool isOnWorkerThread() = 0;
+
+    enum WakeResult {
+        Woken,                  // Woken by futexWait
+        Timedout,               // Woken by timeout
+        InterruptForTerminate,  // Woken by a request to terminate the worker
+        ErrorTooLong            // Implementation constraint on the timer (for now)
+    };
+
+    // Block the thread.
+    //
+    // The lock must be held around this call, see lock() and unlock().
+    virtual WakeResult wait(double timeout_ns) = 0;
+
+    // Wake the thread represented by this PerRuntimeFutexAPI.
+    //
+    // The lock must be held around this call, see lock() and unlock().
+    // Since the sleeping thread also needs that lock to wake up, the
+    // thread will not actually wake up until the caller of wake()
+    // releases the lock.
+    virtual void wake() = 0;
+};
+
+JS_PUBLIC_API(JS::PerRuntimeFutexAPI *)
+GetRuntimeFutexAPI(JSRuntime *rt);
+
+// Transfers ownership of fx to rt; if rt's futexAPI field is not null when rt is
+// deleted then rt's destructor will delete that value.  If fx is null in this
+// call then ownership of a held nonnull value is transfered away from rt.
+JS_PUBLIC_API(void)
+SetRuntimeFutexAPI(JSRuntime *rt, JS::PerRuntimeFutexAPI *fx);
+
 }  /* namespace JS */
 
 /************************************************************************/
