@@ -193,7 +193,24 @@ public:
                                 nsILayoutHistoryState* aFrameState,
                                 bool                   aAllowLazyConstruction);
 
-  enum RemoveFlags { REMOVE_CONTENT, REMOVE_FOR_RECONSTRUCTION };
+  enum RemoveFlags {
+    REMOVE_CONTENT, REMOVE_FOR_RECONSTRUCTION, REMOVE_DESTROY_FRAMES };
+  /**
+   * Recreate or destroy frames for aChild in aContainer.
+   * aFlags == REMOVE_CONTENT means aChild has been removed from the document.
+   * aFlags == REMOVE_FOR_RECONSTRUCTION means the caller will reconstruct the
+   *   frames later.
+   * In both the above cases, this method will in some cases try to reconstruct
+   * the frames (aDidReconstruct is then set to true), it's just that in the
+   * former case aChild isn't in the document so no frames will be created for
+   * it.  Ancestors may have been reframed though.
+   * aFlags == REMOVE_DESTROY_FRAMES is the same as REMOVE_FOR_RECONSTRUCTION
+   * except it will never try to reconstruct frames.  Instead, the caller is
+   * responsible for doing that, on the content returned in aDestroyedFramesFor.
+   * The layout frame state is guarranted to be captured for the removed frames
+   * only when aFlags == REMOVE_DESTROY_FRAMES, otherwise it will only be
+   * captured if we reconstructed frames for an ancestor.
+   */
   nsresult ContentRemoved(nsIContent*  aContainer,
                           nsIContent*  aChild,
                           nsIContent*  aOldNextSibling,
