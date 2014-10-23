@@ -113,81 +113,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     runTest();
   }
 
-  function testURL() {
-    var url = new URL('http://www.example.net?a=b&c=d');
-    ok(url.searchParams, "URL searchParams exists!");
-    ok(url.searchParams.has('a'), "URL.searchParams.has('a')");
-    is(url.searchParams.get('a'), 'b', "URL.searchParams.get('a')");
-    ok(url.searchParams.has('c'), "URL.searchParams.has('c')");
-    is(url.searchParams.get('c'), 'd', "URL.searchParams.get('c')");
-
-    url.searchParams.set('e', 'f');
-    ok(url.href.indexOf('e=f') != 1, 'URL right');
-
-    var u = new URLSearchParams();
-    u.append('foo', 'bar');
-    url.searchParams = u;
-    is(url.searchParams, u, "URL.searchParams is the same object");
-    is(url.searchParams.get('foo'), 'bar', "URL.searchParams.get('foo')");
-    is(url.href, 'http://www.example.net/?foo=bar', 'URL right');
-
-    try {
-      url.searchParams = null;
-      ok(false, "URLSearchParams is not nullable");
-    } catch(e) {
-      ok(true, "URLSearchParams is not nullable");
-    }
-
-    var url2 = new URL('http://www.example.net?e=f');
-    url.searchParams = url2.searchParams;
-    is(url.searchParams, url2.searchParams, "URL.searchParams is not the same object");
-    is(url.searchParams.get('e'), 'f', "URL.searchParams.get('e')");
-
-    url.href = "http://www.example.net?bar=foo";
-    is(url.searchParams.get('bar'), 'foo', "URL.searchParams.get('bar')");
-
-    runTest();
-  }
-
-  function testElement(e) {
-    ok(e, 'element exists');
-    ok(e.searchParams, "e.searchParams exists!");
-    ok(e.searchParams.has('a'), "e.searchParams.has('a')");
-    is(e.searchParams.get('a'), 'b', "e.searchParams.get('a')");
-    ok(e.searchParams.has('c'), "e.searchParams.has('c')");
-    is(e.searchParams.get('c'), 'd', "e.searchParams.get('c')");
-
-    e.searchParams.set('e', 'f');
-    ok(e.href.indexOf('e=f') != 1, 'e is right');
-
-    var u = new URLSearchParams();
-    u.append('foo', 'bar');
-    e.searchParams = u;
-    is(e.searchParams, u, "e.searchParams is the same object");
-    is(e.searchParams.get('foo'), 'bar', "e.searchParams.get('foo')");
-    is(e.href, 'http://www.example.net/?foo=bar', 'e is right');
-
-    try {
-      e.searchParams = null;
-      ok(false, "URLSearchParams is not nullable");
-    } catch(e) {
-      ok(true, "URLSearchParams is not nullable");
-    }
-
-    var url2 = new URL('http://www.example.net?e=f');
-    e.searchParams = url2.searchParams;
-    is(e.searchParams, url2.searchParams, "e.searchParams is not the same object");
-    is(e.searchParams.get('e'), 'f', "e.searchParams.get('e')");
-
-    e.href = "http://www.example.net?bar=foo";
-    is(e.searchParams.get('bar'), 'foo', "e.searchParams.get('bar')");
-
-    e.setAttribute('href', "http://www.example.net?bar2=foo2");
-    is(e.searchParams.get('bar2'), 'foo2', "e.searchParams.get('bar2')");
-
-    runTest();
-  }
-
   function testEncoding() {
     var encoding = [ [ '1', '1' ],
                      [ 'a b', 'a+b' ],
@@ -197,53 +122,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     for (var i = 0; i < encoding.length; ++i) {
       var a = new URLSearchParams();
       a.set('a', encoding[i][0]);
-
-      var url = new URL('http://www.example.net');
-      url.searchParams = a;
-      is(url.href, 'http://www.example.net/?a=' + encoding[i][1]);
-
-      var url2 = new URL(url.href);
-      is(url2.searchParams.get('a'), encoding[i][0], 'a is still there');
+      is(a + "", "a=" + encoding[i][1]);
     }
-
-    runTest();
-  }
-
-  function testMultiURL() {
-    var a = new URL('http://www.example.net?a=b&c=d');
-    var b = new URL('http://www.example.net?e=f');
-    var c = document.createElement('a');
-    var d = document.createElement('area');
-    ok(a.searchParams.has('a'), "a.searchParams.has('a')");
-    ok(a.searchParams.has('c'), "a.searchParams.has('c')");
-    ok(b.searchParams.has('e'), "b.searchParams.has('e')");
-    ok(c.searchParams, "c.searchParams");
-    ok(d.searchParams, "d.searchParams");
-
-    var u = new URLSearchParams();
-    a.searchParams = b.searchParams = c.searchParams = d.searchParams = u;
-    is(a.searchParams, u, "a.searchParams === u");
-    is(b.searchParams, u, "b.searchParams === u");
-    is(c.searchParams, u, "c.searchParams === u");
-    is(d.searchParams, u, "d.searchParams === u");
-    ok(!a.searchParams.has('a'), "!a.searchParams.has('a')");
-    ok(!a.searchParams.has('c'), "!a.searchParams.has('c')");
-    ok(!b.searchParams.has('e'), "!b.searchParams.has('e')");
-
-    u.append('foo', 'bar');
-    is(a.searchParams.get('foo'), 'bar', "a has foo=bar");
-    is(b.searchParams.get('foo'), 'bar', "b has foo=bar");
-    is(c.searchParams.get('foo'), 'bar', "c has foo=bar");
-    is(d.searchParams.get('foo'), 'bar', "d has foo=bar");
-    is(a + "", b + "", "stringify a == b");
-    is(c.searchParams + "", b.searchParams + "", "stringify c.searchParams == b.searchParams");
-    is(d.searchParams + "", b.searchParams + "", "stringify d.searchParams == b.searchParams");
-
-    a.search = "?bar=foo";
-    is(a.searchParams.get('bar'), 'foo', "a has bar=foo");
-    is(b.searchParams.get('bar'), 'foo', "b has bar=foo");
-    is(c.searchParams.get('bar'), 'foo', "c has bar=foo");
-    is(d.searchParams.get('bar'), 'foo', "d has bar=foo");
 
     runTest();
   }
@@ -278,12 +158,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
   function testGetNULL() {
       
     var u = new URLSearchParams();
-    is(typeof u.get(''), "object", "typeof URL.searchParams.get('')");
-    is(u.get(''), null, "URL.searchParams.get('') should be null");
-
-    var url = new URL('http://www.example.net?a=b');
-    is(url.searchParams.get('b'), null, "URL.searchParams.get('b') should be null");
-    is(url.searchParams.get('a'), 'b', "URL.searchParams.get('a')");
+    is(typeof u.get(''), "object", "typeof searchParams.get('')");
+    is(u.get(''), null, "searchParams.get('') should be null");
 
     runTest();
   }
@@ -296,20 +172,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     u.set('o','f');
     u.set('u','g');
 
-    is(u.get('a'), 'b', "URL.searchParams.get('a') should return b");
+    is(u.get('a'), 'b', "searchParams.get('a') should return b");
     is(u.getAll('a').length, 1, "URLSearchParams.getAll('a').length should be 1");
 
     u.set('a','h1');
     u.set('a','h2');
     u.set('a','h3');
     u.set('a','h4');
-    is(u.get('a'), 'h4', "URL.searchParams.get('a') should return h4");
+    is(u.get('a'), 'h4', "searchParams.get('a') should return h4");
     is(u.getAll('a').length, 1, "URLSearchParams.getAll('a').length should be 1");
 
-    is(u.get('e'), 'c', "URL.searchParams.get('e') should return c");
-    is(u.get('i'), 'd', "URL.searchParams.get('i') should return d");
-    is(u.get('o'), 'f', "URL.searchParams.get('o') should return f");
-    is(u.get('u'), 'g', "URL.searchParams.get('u') should return g");
+    is(u.get('e'), 'c', "searchParams.get('e') should return c");
+    is(u.get('i'), 'd', "searchParams.get('i') should return d");
+    is(u.get('o'), 'f', "searchParams.get('o') should return f");
+    is(u.get('u'), 'g', "searchParams.get('u') should return g");
 
     is(u.getAll('e').length, 1, "URLSearchParams.getAll('e').length should be 1");
     is(u.getAll('i').length, 1, "URLSearchParams.getAll('i').length should be 1");
@@ -317,10 +193,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     is(u.getAll('u').length, 1, "URLSearchParams.getAll('u').length should be 1");
 
     u = new URLSearchParams("name1=value1&name1=value2&name1=value3");
-    is(u.get('name1'), 'value1', "URL.searchParams.get('name1') should return value1");
+    is(u.get('name1'), 'value1', "searchParams.get('name1') should return value1");
     is(u.getAll('name1').length, 3, "URLSearchParams.getAll('name1').length should be 3");
     u.set('name1','firstPair');
-    is(u.get('name1'), 'firstPair', "URL.searchParams.get('name1') should return firstPair");
+    is(u.get('name1'), 'firstPair', "searchParams.get('name1') should return firstPair");
     is(u.getAll('name1').length, 1, "URLSearchParams.getAll('name1').length should be 1");
 
     runTest();
@@ -330,11 +206,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     testSimpleURLSearchParams,
     testCopyURLSearchParams,
     testParserURLSearchParams,
-    testURL,
-    function() { testElement(document.getElementById('anchor')) },
-    function() { testElement(document.getElementById('area')) },
     testEncoding,
-    testMultiURL,
     testOrdering,
     testDelete,
     testGetNULL,
