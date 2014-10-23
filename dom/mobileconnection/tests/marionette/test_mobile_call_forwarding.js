@@ -29,7 +29,6 @@ function testSetCallForwardingOption(aOptions) {
 
   // Check cfstatechange event.
   promises.push(waitForManagerEvent("cfstatechange").then(function(aEvent) {
-    is(aEvent.success, true, "check success");
     is(aEvent.action, aOptions.action, "check action");
     is(aEvent.reason, aOptions.reason, "check reason");
     is(aEvent.number, aOptions.number, "check number");
