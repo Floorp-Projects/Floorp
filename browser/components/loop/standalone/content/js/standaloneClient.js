@@ -115,7 +115,7 @@ loop.StandaloneClient = (function($) {
         method:      "POST",
         contentType: "application/json",
         dataType:    "json",
-        data: JSON.stringify({callType: callType})
+        data: JSON.stringify({callType: callType, channel: "standalone"})
       });
 
       req.done(function(sessionData) {
