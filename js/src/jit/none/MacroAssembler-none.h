@@ -185,6 +185,7 @@ class MacroAssemblerNone : public Assembler
     void setupUnalignedABICall(uint32_t, Register) { MOZ_CRASH(); }
     template <typename T> void passABIArg(T, MoveOp::Type v = MoveOp::GENERAL) { MOZ_CRASH(); }
 
+    void callWithExitFrame(Label *) { MOZ_CRASH(); }
     void callWithExitFrame(JitCode *) { MOZ_CRASH(); }
     void callWithExitFrame(JitCode *, Register) { MOZ_CRASH(); }
 
