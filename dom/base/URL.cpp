@@ -24,9 +24,14 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(URL)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(URL)
+  if (tmp->mSearchParams) {
+    tmp->mSearchParams->RemoveObserver(tmp);
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mSearchParams)
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(URL)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSearchParams)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(URL)
@@ -228,6 +233,7 @@ URL::SetHref(const nsAString& aHref, ErrorResult& aRv)
   }
 
   mURI = uri;
+  UpdateURLSearchParams();
 }
 
 void
@@ -343,6 +349,36 @@ URL::SetHost(const nsAString& aHost, ErrorResult& aRv)
 }
 
 void
+URL::URLSearchParamsUpdated(URLSearchParams* aSearchParams)
+{
+  MOZ_ASSERT(mSearchParams);
+  MOZ_ASSERT(mSearchParams == aSearchParams);
+
+  nsAutoString search;
+  mSearchParams->Serialize(search);
+  SetSearchInternal(search);
+}
+
+void
+URL::UpdateURLSearchParams()
+{
+  if (!mSearchParams) {
+    return;
+  }
+
+  nsAutoCString search;
+  nsCOMPtr<nsIURL> url(do_QueryInterface(mURI));
+  if (url) {
+    nsresult rv = url->GetQuery(search);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to get the query from a nsIURL.");
+    }
+  }
+
+  mSearchParams->ParseInput(search, this);
+}
+
+void
 URL::GetHostname(nsString& aHostname, ErrorResult& aRv) const
 {
   aHostname.Truncate();
@@ -442,6 +478,13 @@ URL::GetSearch(nsString& aSearch, ErrorResult& aRv) const
 void
 URL::SetSearch(const nsAString& aSearch, ErrorResult& aRv)
 {
+  SetSearchInternal(aSearch);
+  UpdateURLSearchParams();
+}
+
+void
+URL::SetSearchInternal(const nsAString& aSearch)
+{
   nsCOMPtr<nsIURL> url(do_QueryInterface(mURI));
   if (!url) {
     // Ignore failures to be compatible with NS4.
@@ -449,6 +492,29 @@ URL::SetSearch(const nsAString& aSearch, ErrorResult& aRv)
   }
 
   url->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
+}
+
+URLSearchParams*
+URL::SearchParams()
+{
+  CreateSearchParamsIfNeeded();
+  return mSearchParams;
+}
+
+void
+URL::SetSearchParams(URLSearchParams& aSearchParams)
+{
+  if (mSearchParams) {
+    mSearchParams->RemoveObserver(this);
+  }
+
+  // the observer will be cleared using the cycle collector.
+  mSearchParams = &aSearchParams;
+  mSearchParams->AddObserver(this);
+
+  nsAutoString search;
+  mSearchParams->Serialize(search);
+  SetSearchInternal(search);
 }
 
 void
@@ -477,6 +543,16 @@ bool IsChromeURI(nsIURI* aURI)
   if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)))
       return isChrome;
   return false;
+}
+
+void
+URL::CreateSearchParamsIfNeeded()
+{
+  if (!mSearchParams) {
+    mSearchParams = new URLSearchParams();
+    mSearchParams->AddObserver(this);
+    UpdateURLSearchParams();
+  }
 }
 
 }
