@@ -1,4 +1,3 @@
-MOZ_AUTOMATION_TALOS_SENDCHANGE=0
 . $topsrcdir/build/macosx/mozconfig.common
 
 ac_add_options --enable-application=b2g/dev
