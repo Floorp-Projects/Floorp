@@ -413,7 +413,8 @@ private:
                                           bool* aIsForApp,
                                           bool* aIsForBrowser) MOZ_OVERRIDE;
     virtual bool RecvGetXPCOMProcessAttributes(bool* aIsOffline,
-                                               InfallibleTArray<nsString>* dictionaries)
+                                               InfallibleTArray<nsString>* dictionaries,
+                                               ClipboardCapabilities* clipboardCaps)
         MOZ_OVERRIDE;
 
     virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) MOZ_OVERRIDE;

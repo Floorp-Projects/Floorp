@@ -26,6 +26,10 @@ StoreBuffer::SlotsEdge::mark(JSTracer *trc)
 {
     NativeObject *obj = object();
 
+    // Beware JSObject::swap exchanging a native object for a non-native one.
+    if (!obj->isNative())
+        return;
+
     if (IsInsideNursery(obj))
         return;
 

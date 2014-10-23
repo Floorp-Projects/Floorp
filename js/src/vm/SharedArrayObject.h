@@ -20,6 +20,8 @@ typedef struct JSProperty JSProperty;
 
 namespace js {
 
+class FutexWaiter;
+
 /*
  * SharedArrayRawBuffer
  *
@@ -45,15 +47,33 @@ class SharedArrayRawBuffer
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> refcount;
     uint32_t length;
 
+    // A list of structures representing tasks waiting on some
+    // location within this buffer.
+    FutexWaiter *waiters_;
+
   protected:
     SharedArrayRawBuffer(uint8_t *buffer, uint32_t length)
-      : refcount(1), length(length)
+      : refcount(1),
+        length(length),
+        waiters_(nullptr)
     {
         MOZ_ASSERT(buffer == dataPointer());
     }
 
   public:
     static SharedArrayRawBuffer *New(uint32_t length);
+
+    // This may be called from multiple threads.  The caller must take
+    // care of mutual exclusion.
+    FutexWaiter* waiters() const {
+        return waiters_;
+    }
+
+    // This may be called from multiple threads.  The caller must take
+    // care of mutual exclusion.
+    void setWaiters(FutexWaiter *waiters) {
+        waiters_ = waiters;
+    }
 
     inline uint8_t *dataPointer() const {
         return ((uint8_t *)this) + sizeof(SharedArrayRawBuffer);

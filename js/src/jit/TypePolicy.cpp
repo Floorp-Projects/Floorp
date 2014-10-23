@@ -424,6 +424,7 @@ IntPolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def)
 template bool IntPolicy<0>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
 template bool IntPolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
 template bool IntPolicy<2>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
+template bool IntPolicy<3>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
 
 template <unsigned Op>
 bool

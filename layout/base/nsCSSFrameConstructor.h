@@ -193,12 +193,30 @@ public:
                                 nsILayoutHistoryState* aFrameState,
                                 bool                   aAllowLazyConstruction);
 
-  enum RemoveFlags { REMOVE_CONTENT, REMOVE_FOR_RECONSTRUCTION };
-  nsresult ContentRemoved(nsIContent* aContainer,
-                          nsIContent* aChild,
-                          nsIContent* aOldNextSibling,
-                          RemoveFlags aFlags,
-                          bool*     aDidReconstruct);
+  enum RemoveFlags {
+    REMOVE_CONTENT, REMOVE_FOR_RECONSTRUCTION, REMOVE_DESTROY_FRAMES };
+  /**
+   * Recreate or destroy frames for aChild in aContainer.
+   * aFlags == REMOVE_CONTENT means aChild has been removed from the document.
+   * aFlags == REMOVE_FOR_RECONSTRUCTION means the caller will reconstruct the
+   *   frames later.
+   * In both the above cases, this method will in some cases try to reconstruct
+   * the frames (aDidReconstruct is then set to true), it's just that in the
+   * former case aChild isn't in the document so no frames will be created for
+   * it.  Ancestors may have been reframed though.
+   * aFlags == REMOVE_DESTROY_FRAMES is the same as REMOVE_FOR_RECONSTRUCTION
+   * except it will never try to reconstruct frames.  Instead, the caller is
+   * responsible for doing that, on the content returned in aDestroyedFramesFor.
+   * The layout frame state is guarranted to be captured for the removed frames
+   * only when aFlags == REMOVE_DESTROY_FRAMES, otherwise it will only be
+   * captured if we reconstructed frames for an ancestor.
+   */
+  nsresult ContentRemoved(nsIContent*  aContainer,
+                          nsIContent*  aChild,
+                          nsIContent*  aOldNextSibling,
+                          RemoveFlags  aFlags,
+                          bool*        aDidReconstruct,
+                          nsIContent** aDestroyedFramesFor = nullptr);
 
   nsresult CharacterDataChanged(nsIContent* aContent,
                                 CharacterDataChangeInfo* aInfo);
@@ -227,6 +245,17 @@ public:
   // Gets called when the presshell is destroying itself and also
   // when we tear down our frame tree to reconstruct it
   void WillDestroyFrameTree();
+
+  /**
+   * Destroy the frames for aContent.  Note that this may destroy frames
+   * for an ancestor instead - aDestroyedFramesFor contains the content node
+   * where frames were actually destroyed (which should be used in the
+   * ContentInserted call to recreate frames).  The frame tree state
+   * is captured before the frames are destroyed and can be retrieved using
+   * GetLastCapturedLayoutHistoryState().
+   */
+  void DestroyFramesFor(nsIContent*  aContent,
+                        nsIContent** aDestroyedFramesFor);
 
   // Request to create a continuing frame.  This method never returns null.
   nsIFrame* CreateContinuingFrame(nsPresContext*    aPresContext,
@@ -263,6 +292,15 @@ public:
   // Get the frame that is the parent of the root element.
   nsContainerFrame* GetDocElementContainingBlock()
     { return mDocElementContainingBlock; }
+
+  /**
+   * Return the layout history state that was captured in the last
+   * ContentRemoved / RecreateFramesForContent call.
+   */
+  nsILayoutHistoryState* GetLastCapturedLayoutHistoryState()
+  {
+    return mTempFrameTreeState;
+  }
 
 private:
   struct FrameConstructionItem;
@@ -1466,9 +1504,20 @@ private:
 
   nsresult MaybeRecreateFramesForElement(Element* aElement);
 
-  // If aAsyncInsert is true then a restyle event will be posted to handle the
-  // required ContentInserted call instead of doing it immediately.
-  nsresult RecreateFramesForContent(nsIContent* aContent, bool aAsyncInsert);
+  /**
+   * Recreate frames for aContent.
+   * @param aContent the content to recreate frames for
+   * @param aAsyncInsert if true then a restyle event will be posted to handle
+   *   the required ContentInserted call instead of doing it immediately.
+   * @param aFlags normally you want to pass REMOVE_FOR_RECONSTRUCTION here
+   * @param aDestroyedFramesFor if non-null, it will contain the content that
+   *   was actually reframed - it may be different than aContent.
+   */
+  nsresult
+  RecreateFramesForContent(nsIContent*  aContent,
+                           bool         aAsyncInsert,
+                           RemoveFlags  aFlags,
+                           nsIContent** aDestroyedFramesFor);
 
   // If removal of aFrame from the frame tree requires reconstruction of some
   // containing block (either of aFrame or of its parent) due to {ib} splits or
@@ -1478,9 +1527,12 @@ private:
   // this method returns false, the value of *aResult is not affected.  aFrame
   // and aResult must not be null.  aFrame must be the result of a
   // GetPrimaryFrame() call on a content node (which means its parent is also
-  // not null).
-  bool MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
-                                               nsresult* aResult);
+  // not null).   If this method returns true, aDestroyedFramesFor contains the
+  // content that was reframed.
+  bool MaybeRecreateContainerForFrameRemoval(nsIFrame*    aFrame,
+                                             RemoveFlags  aFlags,
+                                             nsresult*    aResult,
+                                             nsIContent** aDestroyedFramesFor);
 
   nsIFrame* CreateContinuingOuterTableFrame(nsIPresShell*     aPresShell,
                                             nsPresContext*    aPresContext,
@@ -1606,7 +1658,9 @@ private:
                              bool                     aIsAppend,
                              nsIFrame*                aPrevSibling);
 
-  nsresult ReframeContainingBlock(nsIFrame* aFrame);
+  nsresult ReframeContainingBlock(nsIFrame*    aFrame,
+                                  RemoveFlags  aFlags,
+                                  nsIContent** aReframeContent);
 
   //----------------------------------------
 

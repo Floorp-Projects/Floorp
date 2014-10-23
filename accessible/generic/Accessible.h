@@ -1180,7 +1180,7 @@ private:
 class AutoTreeMutation
 {
 public:
-  AutoTreeMutation(Accessible* aRoot, bool aInvalidationRequired = true) :
+  explicit AutoTreeMutation(Accessible* aRoot, bool aInvalidationRequired = true) :
     mInvalidationRequired(aInvalidationRequired), mRoot(aRoot)
   {
     MOZ_ASSERT(!(mRoot->mStateFlags & Accessible::eSubtreeMutating));
