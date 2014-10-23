@@ -2085,6 +2085,12 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
+      case nsCSSPseudoClasses::ePseudoClass_mozNativeAnonymous:
+        if (!aElement->IsInNativeAnonymousSubtree()) {
+          return false;
+        }
+        break;
+
       case nsCSSPseudoClasses::ePseudoClass_mozSystemMetric:
         {
           nsCOMPtr<nsIAtom> metric = do_GetAtom(pseudoClass->u.mString);
