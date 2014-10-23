@@ -14,6 +14,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "js/TypeDecls.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/URLSearchParams.h"
 #include "nsPIDOMWindow.h"
 
 class nsIURI;
@@ -26,6 +27,7 @@ class nsIDocShellLoadInfo;
 
 class nsLocation MOZ_FINAL : public nsIDOMLocation
                            , public nsWrapperCache
+                           , public mozilla::dom::URLSearchParamsObserver
 {
   typedef mozilla::ErrorResult ErrorResult;
 
@@ -120,6 +122,10 @@ public:
     aError = SetSearch(aSeach);
   }
 
+  mozilla::dom::URLSearchParams* SearchParams();
+
+  void SetSearchParams(mozilla::dom::URLSearchParams& aSearchParams);
+
   void GetHash(nsAString& aHash, ErrorResult& aError)
   {
     aError = GetHash(aHash);
@@ -138,10 +144,17 @@ public:
   }
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
+  // URLSearchParamsObserver
+  void URLSearchParamsUpdated(mozilla::dom::URLSearchParams* aSearchParams) MOZ_OVERRIDE;
+
 protected:
   virtual ~nsLocation();
 
   nsresult SetSearchInternal(const nsAString& aSearch);
+  void UpdateURLSearchParams();
+  void RemoveURLSearchParams();
+
+  mozilla::dom::URLSearchParams* GetDocShellSearchParams();
 
   // In the case of jar: uris, we sometimes want the place the jar was
   // fetched from as the URI instead of the jar: uri itself.  Pass in
@@ -160,6 +173,7 @@ protected:
 
   nsString mCachedHash;
   nsCOMPtr<nsPIDOMWindow> mInnerWindow;
+  nsRefPtr<mozilla::dom::URLSearchParams> mSearchParams;
   nsWeakPtr mDocShell;
 };
 

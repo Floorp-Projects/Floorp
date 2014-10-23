@@ -18,6 +18,14 @@ namespace dom {
 
 class URLSearchParams;
 
+class URLSearchParamsObserver : public nsISupports
+{
+public:
+  virtual ~URLSearchParamsObserver() {}
+
+  virtual void URLSearchParamsUpdated(URLSearchParams* aFromThis) = 0;
+};
+
 class URLSearchParams MOZ_FINAL : public nsISupports,
                                   public nsWrapperCache
 {
@@ -46,7 +54,12 @@ public:
   Constructor(const GlobalObject& aGlobal, URLSearchParams& aInit,
               ErrorResult& aRv);
 
-  void ParseInput(const nsACString& aInput);
+  void ParseInput(const nsACString& aInput,
+                  URLSearchParamsObserver* aObserver);
+
+  void AddObserver(URLSearchParamsObserver* aObserver);
+  void RemoveObserver(URLSearchParamsObserver* aObserver);
+  void RemoveObservers();
 
   void Serialize(nsAString& aValue) const;
 
@@ -68,10 +81,14 @@ public:
   }
 
 private:
+  void AppendInternal(const nsAString& aName, const nsAString& aValue);
+
   void DeleteAll();
 
   void DecodeString(const nsACString& aInput, nsAString& aOutput);
   void ConvertString(const nsACString& aInput, nsAString& aOutput);
+
+  void NotifyObservers(URLSearchParamsObserver* aExceptObserver);
 
   struct Param
   {
@@ -81,6 +98,7 @@ private:
 
   nsTArray<Param> mSearchParams;
 
+  nsTArray<nsRefPtr<URLSearchParamsObserver>> mObservers;
   nsCOMPtr<nsIUnicodeDecoder> mDecoder;
 };
 
