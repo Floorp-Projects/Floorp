@@ -36,6 +36,7 @@
               android:visibility="gone"
               android:gravity="top|center"
               android:textAppearance="@style/TextAppearance.EmptyHint"
+              android:textColorLink="#FFA62F"
               android:layout_weight="4"/>
 
 </LinearLayout>
