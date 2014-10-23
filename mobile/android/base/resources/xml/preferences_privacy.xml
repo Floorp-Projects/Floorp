@@ -8,11 +8,11 @@
                   android:title="@string/pref_category_privacy_short"
                   android:enabled="false">
 
-    <ListPreference android:key="privacy.donottrackheader"
-                    android:title="@string/pref_donottrack_menu"
-                    android:entries="@array/pref_donottrack_entries"
-                    android:entryValues="@array/pref_donottrack_values"
-                    android:persistent="false" />
+    <CheckBoxPreference android:key="privacy.donottrackheader.enabled"
+                        android:title="@string/pref_donottrack_title"
+                        android:summary="@string/pref_donottrack_summary"
+                        android:defaultValue="false"
+                        android:persistent="false" />
 
     <ListPreference android:key="network.cookie.cookieBehavior"
                     android:title="@string/pref_cookies_menu"
