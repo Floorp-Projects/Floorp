@@ -7715,8 +7715,12 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
 
 #ifdef MOZ_XUL
   if (NotifyListBoxBody(presContext, aContainer, aChild, aOldNextSibling,
-                        mDocument, childFrame, CONTENT_REMOVED))
+                        mDocument, childFrame, CONTENT_REMOVED)) {
+    if (aFlags == REMOVE_DESTROY_FRAMES) {
+      CaptureStateForFramesOf(aChild, mTempFrameTreeState);
+    }
     return NS_OK;
+  }
 
 #endif // MOZ_XUL
 
@@ -7757,6 +7761,10 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
                                            aFlags, aDestroyedFramesFor);
     LAYOUT_PHASE_TEMP_REENTER();
     return rv;
+  }
+
+  if (aFlags == REMOVE_DESTROY_FRAMES) {
+    CaptureStateForFramesOf(aChild, mTempFrameTreeState);
   }
 
   if (childFrame) {
@@ -7916,7 +7924,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
     // eTypeBlock, though, because in that case the whitespace isn't
     // being suppressed due to us anyway.
     if (aContainer && !aChild->IsRootOfAnonymousSubtree() &&
-        aFlags != REMOVE_FOR_RECONSTRUCTION &&
+        aFlags == REMOVE_CONTENT &&
         GetParentType(parentType) == eTypeBlock) {
       // Adjacent whitespace-only text nodes might have been suppressed if
       // this node does not have inline ends. Create frames for them now
@@ -8999,13 +9007,16 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent*  aContent,
 
     // Remove the frames associated with the content object.
     bool didReconstruct;
-    rv = ContentRemoved(container, aContent,
-                        aContent->IsRootOfAnonymousSubtree() ?
-                          nullptr :
-                          aContent->GetNextSibling(),
-                        REMOVE_FOR_RECONSTRUCTION, &didReconstruct,
-                        aDestroyedFramesFor);
-    if (NS_SUCCEEDED(rv) && !didReconstruct) {
+    nsIContent* nextSibling = aContent->IsRootOfAnonymousSubtree() ?
+      nullptr : aContent->GetNextSibling();
+    const bool reconstruct = aFlags != REMOVE_DESTROY_FRAMES;
+    RemoveFlags flags = reconstruct ? REMOVE_FOR_RECONSTRUCTION : aFlags;
+    rv = ContentRemoved(container, aContent, nextSibling, flags,
+                        &didReconstruct, aDestroyedFramesFor);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (reconstruct && !didReconstruct) {
       // Now, recreate the frames associated with this content object. If
       // ContentRemoved triggered reconstruction, then we don't need to do this
       // because the frames will already have been built.
