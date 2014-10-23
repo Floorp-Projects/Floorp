@@ -316,7 +316,6 @@ nsHttpChannel::Connect()
     // Finalize ConnectionInfo flags before SpeculativeConnect
     mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
     mConnectionInfo->SetPrivate(mPrivateBrowsing);
-    mConnectionInfo->SetNoSpdy(mCaps & NS_HTTP_DISALLOW_SPDY);
 
     // Consider opening a TCP connection right away
     RetrieveSSLOptions();
@@ -1247,7 +1246,7 @@ nsHttpChannel::ProcessAltService()
     // protocol-id   = token ; percent-encoded ALPN protocol identifier
     // alt-authority = quoted-string ;  containing [ uri-host ] ":" port
 
-    if (!gHttpHandler->AllowAltSvc() || (mCaps & NS_HTTP_DISALLOW_SPDY)) {
+    if (!gHttpHandler->AllowAltSvc()) {
         return;
     }
 
