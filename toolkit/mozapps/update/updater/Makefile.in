@@ -24,13 +24,12 @@ else
 	SECONDARY_CERT = dep2.der
 endif
 
-CERT_HEADERS := primaryCert.h secondaryCert.h xpcshellCert.h
+CERT_HEADERS := primaryCert.h secondaryCert.h
 
 export:: $(CERT_HEADERS)
 
 primaryCert.h: $(PRIMARY_CERT)
 secondaryCert.h: $(SECONDARY_CERT)
-xpcshellCert.h: xpcshellCertificate.der
 
 $(CERT_HEADERS): gen_cert_header.py
 	$(PYTHON) $< $(@:.h=Data) $(filter-out $<,$^) > $@
