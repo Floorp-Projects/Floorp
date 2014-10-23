@@ -10,6 +10,9 @@
 
 #include "nsStringFwd.h"
 
+// This pseudo-element is accepted only in UA style sheets.
+#define CSS_PSEUDO_CLASS_UA_SHEET_ONLY                 (1<<0)
+
 class nsIAtom;
 
 class nsCSSPseudoClasses {
@@ -34,6 +37,10 @@ public:
     return aType == ePseudoClass_any;
   }
   static bool IsUserActionPseudoClass(Type aType);
+
+  static bool PseudoClassIsUASheetOnly(Type aType) {
+    return PseudoClassHasFlags(aType, CSS_PSEUDO_CLASS_UA_SHEET_ONLY);
+  }
 
   // Should only be used on types other than Count and NotPseudoClass
   static void PseudoTypeToString(Type aType, nsAString& aString);
