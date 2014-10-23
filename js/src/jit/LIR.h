@@ -658,7 +658,8 @@ class LNode
     virtual void setOperand(size_t index, const LAllocation &a) = 0;
 
     // Returns information about temporary registers needed. Each temporary
-    // register is an LUse with a TEMPORARY policy, or a fixed register.
+    // register is an LDefinition with a fixed or virtual register and
+    // either GENERAL, FLOAT32, or DOUBLE type.
     virtual size_t numTemps() const = 0;
     virtual LDefinition *getTemp(size_t index) = 0;
     virtual void setTemp(size_t index, const LDefinition &a) = 0;

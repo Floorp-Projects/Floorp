@@ -963,6 +963,16 @@ Element::CreateShadowRoot(ErrorResult& aError)
     return nullptr;
   }
 
+  nsIDocument* doc = GetCrossShadowCurrentDoc();
+  nsIContent* destroyedFramesFor = nullptr;
+  if (doc) {
+    nsIPresShell* shell = doc->GetShell();
+    if (shell) {
+      shell->DestroyFramesFor(this, &destroyedFramesFor);
+    }
+  }
+  MOZ_ASSERT(!GetPrimaryFrame());
+
   // Unlike for XBL, false is the default for inheriting style.
   protoBinding->SetInheritsStyle(false);
 
@@ -998,11 +1008,11 @@ Element::CreateShadowRoot(ErrorResult& aError)
 
   // Recreate the frame for the bound content because binding a ShadowRoot
   // changes how things are rendered.
-  nsIDocument* doc = GetCrossShadowCurrentDoc();
   if (doc) {
-    nsIPresShell *shell = doc->GetShell();
+    MOZ_ASSERT(doc == GetCrossShadowCurrentDoc());
+    nsIPresShell* shell = doc->GetShell();
     if (shell) {
-      shell->RecreateFramesFor(this);
+      shell->CreateFramesFor(destroyedFramesFor);
     }
   }
 

@@ -12,6 +12,7 @@
 #include "jsopcode.h"
 
 #include "jit/arm/Assembler-arm.h"
+#include "jit/AtomicOp.h"
 #include "jit/IonCaches.h"
 #include "jit/IonFrames.h"
 #include "jit/MoveResolver.h"
@@ -406,6 +407,9 @@ class MacroAssemblerARM : public Assembler
     // Calls an ion function, assuming that the stack is currently not 8 byte
     // aligned.
     void ma_callIonHalfPush(const Register reg);
+    // Calls an ion function, assuming that the stack is currently not 8 byte
+    // aligned.
+    void ma_callIonHalfPush(Label *label);
 
     void ma_call(ImmPtr dest);
 
@@ -1275,6 +1279,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // non-function. Returns offset to be passed to markSafepointAt().
     bool buildFakeExitFrame(Register scratch, uint32_t *offset);
 
+    void callWithExitFrame(Label *target);
     void callWithExitFrame(JitCode *target);
     void callWithExitFrame(JitCode *target, Register dynStack);
 
@@ -1418,6 +1423,172 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         MOZ_ASSERT(addr.offset == 0);
         uint32_t scale = Imm32::ShiftOf(addr.scale).value;
         ma_vstr(VFPRegister(src).singleOverlay(), addr.base, addr.index, scale);
+    }
+
+  private:
+    template<typename T>
+    Register computePointer(const T &src, Register r);
+
+    template<typename T>
+    void compareExchangeARMv6(int nbytes, bool signExtend, const T &mem, Register oldval,
+                              Register newval, Register output);
+
+    template<typename T>
+    void compareExchangeARMv7(int nbytes, bool signExtend, const T &mem, Register oldval,
+                              Register newval, Register output);
+
+    template<typename T>
+    void compareExchange(int nbytes, bool signExtend, const T &address, Register oldval,
+                         Register newval, Register output);
+
+    template<typename T>
+    void atomicFetchOpARMv6(int nbytes, bool signExtend, AtomicOp op, const Register &value,
+                            const T &mem, Register temp, Register output);
+
+    template<typename T>
+    void atomicFetchOpARMv7(int nbytes, bool signExtend, AtomicOp op, const Register &value,
+                            const T &mem, Register output);
+
+    template<typename T>
+    void atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Imm32 &value,
+                       const T &address, Register temp, Register output);
+
+    template<typename T>
+    void atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Register &value,
+                       const T &address, Register temp, Register output);
+
+  public:
+    // T in {Address,BaseIndex}
+    // S in {Imm32,Register}
+
+    template<typename T>
+    void compareExchange8SignExtend(const T &mem, Register oldval, Register newval, Register output)
+    {
+        compareExchange(1, true, mem, oldval, newval, output);
+    }
+    template<typename T>
+    void compareExchange8ZeroExtend(const T &mem, Register oldval, Register newval, Register output)
+    {
+        compareExchange(1, false, mem, oldval, newval, output);
+    }
+    template<typename T>
+    void compareExchange16SignExtend(const T &mem, Register oldval, Register newval, Register output)
+    {
+        compareExchange(2, true, mem, oldval, newval, output);
+    }
+    template<typename T>
+    void compareExchange16ZeroExtend(const T &mem, Register oldval, Register newval, Register output)
+    {
+        compareExchange(2, false, mem, oldval, newval, output);
+    }
+    template<typename T>
+    void compareExchange32(const T &mem, Register oldval, Register newval, Register output)  {
+        compareExchange(4, false, mem, oldval, newval, output);
+    }
+
+    template<typename T, typename S>
+    void atomicFetchAdd8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(1, true, AtomicFetchAddOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchAdd8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(1, false, AtomicFetchAddOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchAdd16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(2, true, AtomicFetchAddOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchAdd16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(2, false, AtomicFetchAddOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchAdd32(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(4, false, AtomicFetchAddOp, value, mem, temp, output);
+    }
+
+    template<typename T, typename S>
+    void atomicFetchSub8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(1, true, AtomicFetchSubOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchSub8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(1, false, AtomicFetchSubOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchSub16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(2, true, AtomicFetchSubOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchSub16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(2, false, AtomicFetchSubOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchSub32(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(4, false, AtomicFetchSubOp, value, mem, temp, output);
+    }
+
+    template<typename T, typename S>
+    void atomicFetchAnd8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(1, true, AtomicFetchAndOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchAnd8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(1, false, AtomicFetchAndOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchAnd16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(2, true, AtomicFetchAndOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchAnd16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(2, false, AtomicFetchAndOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchAnd32(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(4, false, AtomicFetchAndOp, value, mem, temp, output);
+    }
+
+    template<typename T, typename S>
+    void atomicFetchOr8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(1, true, AtomicFetchOrOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchOr8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(1, false, AtomicFetchOrOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchOr16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(2, true, AtomicFetchOrOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchOr16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(2, false, AtomicFetchOrOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchOr32(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(4, false, AtomicFetchOrOp, value, mem, temp, output);
+    }
+
+    template<typename T, typename S>
+    void atomicFetchXor8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(1, true, AtomicFetchXorOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchXor8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(1, false, AtomicFetchXorOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchXor16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(2, true, AtomicFetchXorOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchXor16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(2, false, AtomicFetchXorOp, value, mem, temp, output);
+    }
+    template<typename T, typename S>
+    void atomicFetchXor32(const S &value, const T &mem, Register temp, Register output) {
+        atomicFetchOp(4, false, AtomicFetchXorOp, value, mem, temp, output);
     }
 
     void clampIntToUint8(Register reg) {

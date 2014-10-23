@@ -758,7 +758,7 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
     if (document) {
       nsCOMPtr<nsPIDOMWindow> innerWin(document->GetInnerWindow());
       if (innerWin) {
-        metrics.mMayHaveTouchListeners = innerWin->HasTouchEventListeners();
+        metrics.SetMayHaveTouchListeners(innerWin->HasTouchEventListeners());
       }
     }
     metrics.SetMayHaveTouchCaret(presShell->MayHaveTouchCaret());

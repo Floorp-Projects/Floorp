@@ -2078,6 +2078,25 @@ ByteSize(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static bool
+SetImmutablePrototype(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.get(0).isObject()) {
+        JS_ReportError(cx, "setImmutablePrototype: object expected");
+        return false;
+    }
+
+    RootedObject obj(cx, &args[0].toObject());
+
+    bool succeeded;
+    if (!JSObject::setImmutablePrototype(cx, obj, &succeeded))
+        return false;
+
+    args.rval().setBoolean(succeeded);
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment' [, 'shrinking'])",
@@ -2399,6 +2418,14 @@ gc::ZealModeHelpText),
 "byteSize(value)",
 "  Return the size in bytes occupied by |value|, or |undefined| if value\n"
 "  is not allocated in memory.\n"),
+
+    JS_FN_HELP("setImmutablePrototype", SetImmutablePrototype, 1, 0,
+"setImmutablePrototype(obj)",
+"  Try to make obj's [[Prototype]] immutable, such that subsequent attempts to\n"
+"  change it will fail.  Return true if obj's [[Prototype]] was successfully made\n"
+"  immutable (or if it already was immutable), false otherwise.  Throws in case\n"
+"  of internal error, or if the operation doesn't even make sense (for example,\n"
+"  because the object is a revoked proxy)."),
 
     JS_FS_HELP_END
 };

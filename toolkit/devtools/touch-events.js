@@ -37,7 +37,7 @@ function TouchEventHandler (window) {
 
   let TouchEventHandler = {
     enabled: false,
-    events: ['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchend'],
+    events: ['mousedown', 'mousemove', 'mouseup'],
     start: function teh_start() {
       if (this.enabled)
         return false;
@@ -61,42 +61,17 @@ function TouchEventHandler (window) {
       }).bind(this));
     },
     handleEvent: function teh_handleEvent(evt) {
-      // The gaia system window use an hybrid system even on the device which is
-      // a mix of mouse/touch events. So let's not cancel *all* mouse events
-      // if it is the current target.
-      let content = this.getContent(evt.target);
-      let isSystemWindow = content.location.toString().indexOf("system.gaiamobile.org") != -1;
-
-      // App touchstart & touchend should also be dispatched on the system app
-      // to match on-device behavior.
-      if (evt.type.startsWith('touch') && !isSystemWindow) {
-        let sysFrame = content.realFrameElement;
-        let sysDocument = sysFrame.ownerDocument;
-        let sysWindow = sysDocument.defaultView;
-
-        let touchEvent = sysDocument.createEvent('touchevent');
-        let touch = evt.touches[0] || evt.changedTouches[0];
-        let point = sysDocument.createTouch(sysWindow, sysFrame, 0,
-                                            touch.pageX, touch.pageY,
-                                            touch.screenX, touch.screenY,
-                                            touch.clientX, touch.clientY,
-                                            1, 1, 0, 0);
-
-        let touches = sysDocument.createTouchList(point);
-        let targetTouches = touches;
-        let changedTouches = touches;
-        touchEvent.initTouchEvent(evt.type, true, true, sysWindow, 0,
-                                  false, false, false, false,
-                                  touches, targetTouches, changedTouches);
-        sysFrame.dispatchEvent(touchEvent);
-        return;
-      }
-
       // Ignore all but real mouse event coming from physical mouse
       // (especially ignore mouse event being dispatched from a touch event)
       if (evt.button || evt.mozInputSource != Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE || evt.isSynthesized) {
         return;
       }
+
+      // The gaia system window use an hybrid system even on the device which is
+      // a mix of mouse/touch events. So let's not cancel *all* mouse events
+      // if it is the current target.
+      let content = this.getContent(evt.target);
+      let isSystemWindow = content.location.toString().indexOf("system.gaiamobile.org") != -1;
 
       let eventTarget = this.target;
       let type = '';

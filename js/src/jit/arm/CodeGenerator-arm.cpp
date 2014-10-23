@@ -2247,3 +2247,24 @@ JitRuntime::generateForkJoinGetSliceStub(JSContext *cx)
 {
     MOZ_CRASH("NYI");
 }
+
+void
+CodeGeneratorARM::memoryBarrier(int barrier)
+{
+    // On ARMv6 the optional argument (BarrierST, etc) is ignored.
+    if (barrier == (MembarStoreStore|MembarSynchronizing))
+        masm.ma_dsb(masm.BarrierST);
+    else if (barrier & MembarSynchronizing)
+        masm.ma_dsb();
+    else if (barrier == MembarStoreStore)
+        masm.ma_dmb(masm.BarrierST);
+    else if (barrier)
+        masm.ma_dmb();
+}
+
+bool
+CodeGeneratorARM::visitMemoryBarrier(LMemoryBarrier *ins)
+{
+    memoryBarrier(ins->type());
+    return true;
+}

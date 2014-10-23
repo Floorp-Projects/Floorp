@@ -944,7 +944,7 @@ ContactDB.prototype = {
       if (DEBUG) debug("No object ID passed");
       return;
     }
-    this.newTxn("readwrite", SAVED_GETALL_STORE_NAME, function(txn, store) {
+    this.newTxn("readwrite", STORE_NAME, function(txn, store) {
       store.openCursor().onsuccess = function(e) {
         let cursor = e.target.result;
         if (cursor) {
@@ -958,22 +958,13 @@ ContactDB.prototype = {
           }
           cursor.continue();
         } else {
-          aCallback();
+          aCallback(txn);
         }
       }.bind(this);
     }.bind(this), null,
     function(errorMsg) {
       aFailureCb(errorMsg);
     });
-  },
-
-  // Invalidate the entire cache. It will be incrementally regenerated on demand
-  // See getCacheForQuery
-  invalidateCache: function CDB_invalidateCache(aErrorCb) {
-    if (DEBUG) debug("invalidate cache");
-    this.newTxn("readwrite", SAVED_GETALL_STORE_NAME, function (txn, store) {
-      store.clear();
-    }, null, aErrorCb);
   },
 
   incrementRevision: function CDB_incrementRevision(txn) {
@@ -985,8 +976,9 @@ ContactDB.prototype = {
 
   saveContact: function CDB_saveContact(aContact, successCb, errorCb) {
     let contact = this.makeImport(aContact);
-    this.newTxn("readwrite", STORE_NAME, function (txn, store) {
+    this.newTxn("readwrite", this.dbStoreNames, function (txn, stores) {
       if (DEBUG) debug("Going to update" + JSON.stringify(contact));
+      let store = txn.objectStore(STORE_NAME);
 
       // Look up the existing record and compare the update timestamp.
       // If no record exists, just add the new entry.
@@ -1009,7 +1001,11 @@ ContactDB.prototype = {
             store.put(contact);
           }
         }
-        this.invalidateCache(errorCb);
+        // Invalidate the entire cache. It will be incrementally regenerated on demand
+        // See getCacheForQuery
+        let (getAllStore = txn.objectStore(SAVED_GETALL_STORE_NAME)) {
+          getAllStore.clear().onerror = errorCb;
+        }
       }.bind(this);
 
       this.incrementRevision(txn);
@@ -1018,13 +1014,12 @@ ContactDB.prototype = {
 
   removeContact: function removeContact(aId, aSuccessCb, aErrorCb) {
     if (DEBUG) debug("removeContact: " + aId);
-    this.removeObjectFromCache(aId, function() {
-      this.newTxn("readwrite", STORE_NAME, function(txn, store) {
-        store.delete(aId).onsuccess = function() {
-          aSuccessCb();
-        };
-        this.incrementRevision(txn);
-      }.bind(this), null, aErrorCb);
+    this.removeObjectFromCache(aId, function(txn) {
+      let store = txn.objectStore(STORE_NAME)
+      store.delete(aId).onsuccess = function() {
+        aSuccessCb();
+      };
+      this.incrementRevision(txn);
     }.bind(this), aErrorCb);
   },
 

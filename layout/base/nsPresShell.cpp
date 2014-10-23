@@ -2994,6 +2994,63 @@ PresShell::CancelAllPendingReflows()
   ASSERT_REFLOW_SCHEDULED_STATE();
 }
 
+void
+PresShell::DestroyFramesFor(nsIContent*  aContent,
+                            nsIContent** aDestroyedFramesFor)
+{
+  MOZ_ASSERT(aContent);
+  NS_ENSURE_TRUE_VOID(mPresContext);
+  if (!mDidInitialize) {
+    return;
+  }
+
+  nsAutoScriptBlocker scriptBlocker;
+
+  // Mark ourselves as not safe to flush while we're doing frame destruction.
+  ++mChangeNestCount;
+
+  nsCSSFrameConstructor* fc = FrameConstructor();
+  fc->BeginUpdate();
+  fc->DestroyFramesFor(aContent, aDestroyedFramesFor);
+  fc->EndUpdate();
+
+  --mChangeNestCount;
+}
+
+void
+PresShell::CreateFramesFor(nsIContent* aContent)
+{
+  NS_ENSURE_TRUE_VOID(mPresContext);
+  if (!mDidInitialize) {
+    // Nothing to do here.  In fact, if we proceed and aContent is the
+    // root we will crash.
+    return;
+  }
+
+  // Don't call RecreateFramesForContent since that is not exported and we want
+  // to keep the number of entrypoints down.
+
+  NS_ASSERTION(mViewManager, "Should have view manager");
+  MOZ_ASSERT(aContent);
+
+  // Have to make sure that the content notifications are flushed before we
+  // start messing with the frame model; otherwise we can get content doubling.
+  mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
+
+  nsAutoScriptBlocker scriptBlocker;
+
+  // Mark ourselves as not safe to flush while we're doing frame construction.
+  ++mChangeNestCount;
+
+  nsCSSFrameConstructor* fc = FrameConstructor();
+  nsILayoutHistoryState* layoutState = fc->GetLastCapturedLayoutHistoryState();
+  fc->BeginUpdate();
+  fc->ContentInserted(aContent->GetParent(), aContent, layoutState, false);
+  fc->EndUpdate();
+
+  --mChangeNestCount;
+}
+
 nsresult
 PresShell::RecreateFramesFor(nsIContent* aContent)
 {

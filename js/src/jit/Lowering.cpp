@@ -2859,10 +2859,22 @@ LIRGenerator::visitLoadTypedArrayElement(MLoadTypedArrayElement *ins)
     if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type()))
         tempDef = temp();
 
+    if (ins->requiresMemoryBarrier()) {
+        LMemoryBarrier *fence = new(alloc()) LMemoryBarrier(MembarBeforeLoad);
+        if (!add(fence, ins))
+            return false;
+    }
     LLoadTypedArrayElement *lir = new(alloc()) LLoadTypedArrayElement(elements, index, tempDef);
     if (ins->fallible() && !assignSnapshot(lir, Bailout_Overflow))
         return false;
-    return define(lir, ins);
+    if (!define(lir, ins))
+        return false;
+    if (ins->requiresMemoryBarrier()) {
+        LMemoryBarrier *fence = new(alloc()) LMemoryBarrier(MembarAfterLoad);
+        if (!add(fence, ins))
+            return false;
+    }
+    return true;
 }
 
 bool
@@ -2946,7 +2958,24 @@ LIRGenerator::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
         value = useByteOpRegisterOrNonDoubleConstant(ins->value());
     else
         value = useRegisterOrNonDoubleConstant(ins->value());
-    return add(new(alloc()) LStoreTypedArrayElement(elements, index, value), ins);
+
+    // Optimization opportunity for atomics: on some platforms there
+    // is a store instruction that incorporates the necessary
+    // barriers, and we could use that instead of separate barrier and
+    // store instructions.  See bug #1077027.
+    if (ins->requiresMemoryBarrier()) {
+        LMemoryBarrier *fence = new(alloc()) LMemoryBarrier(MembarBeforeStore);
+        if (!add(fence, ins))
+            return false;
+    }
+    if (!add(new(alloc()) LStoreTypedArrayElement(elements, index, value), ins))
+        return false;
+    if (ins->requiresMemoryBarrier()) {
+        LMemoryBarrier *fence = new(alloc()) LMemoryBarrier(MembarAfterStore);
+        if (!add(fence, ins))
+            return false;
+    }
+    return true;
 }
 
 bool
@@ -3711,6 +3740,13 @@ LIRGenerator::visitRecompileCheck(MRecompileCheck *ins)
     if (!add(lir, ins))
         return false;
     return assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitMemoryBarrier(MMemoryBarrier *ins)
+{
+    LMemoryBarrier *lir = new(alloc()) LMemoryBarrier(ins->type());
+    return add(lir, ins);
 }
 
 bool
