@@ -1805,6 +1805,15 @@ MacroAssemblerARMCompat::buildOOLFakeExitFrame(void *fakeReturnAddr)
 }
 
 void
+MacroAssemblerARMCompat::callWithExitFrame(Label *target)
+{
+    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    Push(Imm32(descriptor)); // descriptor
+
+    ma_callIonHalfPush(target);
+}
+
+void
 MacroAssemblerARMCompat::callWithExitFrame(JitCode *target)
 {
     uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
@@ -3717,6 +3726,17 @@ MacroAssemblerARM::ma_callIonHalfPush(const Register r)
     AutoForbidPools afp(this, 2);
     ma_push(pc);
     as_blx(r);
+}
+
+void
+MacroAssemblerARM::ma_callIonHalfPush(Label *label)
+{
+    // The stack is unaligned by 4 bytes. We push the pc to the stack to align
+    // the stack before the call, when we return the pc is poped and the stack
+    // is restored to its unaligned state.
+    AutoForbidPools afp(this, 2);
+    ma_push(pc);
+    as_bl(label, Always);
 }
 
 void

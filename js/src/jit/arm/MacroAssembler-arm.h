@@ -407,6 +407,9 @@ class MacroAssemblerARM : public Assembler
     // Calls an ion function, assuming that the stack is currently not 8 byte
     // aligned.
     void ma_callIonHalfPush(const Register reg);
+    // Calls an ion function, assuming that the stack is currently not 8 byte
+    // aligned.
+    void ma_callIonHalfPush(Label *label);
 
     void ma_call(ImmPtr dest);
 
@@ -1276,6 +1279,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // non-function. Returns offset to be passed to markSafepointAt().
     bool buildFakeExitFrame(Register scratch, uint32_t *offset);
 
+    void callWithExitFrame(Label *target);
     void callWithExitFrame(JitCode *target);
     void callWithExitFrame(JitCode *target, Register dynStack);
 
