@@ -74,6 +74,10 @@ addMessageListener("Browser:Reload", function(message) {
   }
 });
 
+addMessageListener("MixedContent:ReenableProtection", function() {
+  docShell.mixedContentChannel = null;
+});
+
 addEventListener("DOMFormHasPassword", function(event) {
   InsecurePasswordUtils.checkForInsecurePasswords(event.target);
   LoginManagerContent.onFormPassword(event);
