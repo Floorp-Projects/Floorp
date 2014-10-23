@@ -43,7 +43,6 @@ Http2CheckListener.prototype = {
   onStartRequestFired: false,
   onDataAvailableFired: false,
   isHttp2Connection: false,
-  shouldBeHttp2 : true,
 
   onStartRequest: function testOnStartRequest(request, ctx) {
     this.onStartRequestFired = true;
@@ -67,7 +66,7 @@ Http2CheckListener.prototype = {
   onStopRequest: function testOnStopRequest(request, ctx, status) {
     do_check_true(this.onStartRequestFired);
     do_check_true(this.onDataAvailableFired);
-    do_check_true(this.isHttp2Connection == this.shouldBeHttp2);
+    do_check_true(this.isHttp2Connection);
 
     run_next_test();
     do_test_finished();
@@ -200,16 +199,6 @@ function makeChan(url) {
 function test_http2_basic() {
   var chan = makeChan("https://localhost:6944/");
   var listener = new Http2CheckListener();
-  chan.asyncOpen(listener, null);
-}
-
-// make sure we don't use h2 when disallowed
-function test_http2_nospdy() {
-  var chan = makeChan("https://localhost:6944/");
-  var listener = new Http2CheckListener();
-  var internalChannel = chan.QueryInterface(Ci.nsIHttpChannelInternal);
-  internalChannel.allowSpdy = false;
-  listener.shouldBeHttp2 = false;
   chan.asyncOpen(listener, null);
 }
 
@@ -400,7 +389,6 @@ function test_http2_altsvc() {
 // a stalled stream when a SETTINGS frame arrives
 var tests = [ test_http2_post_big
             , test_http2_basic
-            , test_http2_nospdy
             , test_http2_push1
             , test_http2_push2
             , test_http2_push3
