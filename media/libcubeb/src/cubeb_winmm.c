@@ -27,6 +27,16 @@
 #define MEMORY_ALLOCATION_ALIGNMENT 16
 #endif
 
+/**This is also missing from the MinGW headers. It  also appears to be undocumented by Microsoft.*/
+#ifndef WAVE_FORMAT_48S16
+#define WAVE_FORMAT_48S16      0x00008000       /* 48     kHz, Stereo, 16-bit */
+#endif
+
+/**Taken from winbase.h, also not in MinGW.*/
+#ifndef STACK_SIZE_PARAM_IS_A_RESERVATION
+#define STACK_SIZE_PARAM_IS_A_RESERVATION   0x00010000    // Threads only
+#endif
+
 #define CUBEB_STREAM_MAX 32
 #define NBUFS 4
 /* When cubeb_stream.soft_volume is set to this value, the device supports

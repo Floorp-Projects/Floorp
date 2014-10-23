@@ -107,6 +107,7 @@ interface nsIProtocolProxyService : nsISupports
      *        The proxy type.  This is a string value that identifies the proxy
      *        type.  Standard values include:
      *          "http"    - specifies a HTTP proxy
+     *          "https"   - specifies HTTP proxying over TLS connection to proxy
      *          "socks"   - specifies a SOCKS version 5 proxy
      *          "socks4"  - specifies a SOCKS version 4 proxy
      *          "direct"  - specifies a direct connection (useful for failover)

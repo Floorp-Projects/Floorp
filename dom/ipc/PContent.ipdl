@@ -315,6 +315,11 @@ struct VolumeInfo {
   bool isUnmounting;
 };
 
+struct ClipboardCapabilities {
+  bool supportsSelectionClipboard;
+  bool supportsFindClipboard;
+};
+
 union MaybeFileDesc {
     FileDescriptor;
     void_t;
@@ -517,7 +522,8 @@ parent:
     sync GetProcessAttributes()
         returns (uint64_t id, bool isForApp, bool isForBrowser);
     sync GetXPCOMProcessAttributes()
-        returns (bool isOffline, nsString[] dictionaries);
+        returns (bool isOffline, nsString[] dictionaries,
+                 ClipboardCapabilities clipboardCaps);
 
     sync CreateChildProcess(IPCTabContext context,
                             ProcessPriority priority)
