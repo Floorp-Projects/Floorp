@@ -5395,7 +5395,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
 
   if (!mUnsafeRulesEnabled &&
       ((pseudoElementType < nsCSSPseudoElements::ePseudo_PseudoElementCount &&
-        nsCSSPseudoElements::PseudoElementIsChromeOnly(pseudoElementType)) ||
+        nsCSSPseudoElements::PseudoElementIsUASheetOnly(pseudoElementType)) ||
        (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass &&
         nsCSSPseudoClasses::PseudoClassIsUASheetOnly(pseudoClassType)))) {
     // This pseudo-element or pseudo-class is not exposed to content.
