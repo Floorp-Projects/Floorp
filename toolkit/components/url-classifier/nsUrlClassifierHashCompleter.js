@@ -220,7 +220,12 @@ HashCompleterRequest.prototype = {
                     Ci.nsIChannel.LOAD_BYPASS_CACHE;
 
     let uri = Services.io.newURI(this.gethashUrl, null, null);
-    let channel = Services.io.newChannelFromURI(uri);
+    let channel = Services.io.newChannelFromURI2(uri,
+                                                 null,      // aLoadingNode
+                                                 Services.scriptSecurityManager.getSystemPrincipal(),
+                                                 null,      // aTriggeringPrincipal
+                                                 Ci.nsILoadInfo.SEC_NORMAL,
+                                                 Ci.nsIContentPolicy.TYPE_OTHER);
     channel.loadFlags = loadFlags;
 
     // Disable keepalive.
