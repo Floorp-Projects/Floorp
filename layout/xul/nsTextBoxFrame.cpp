@@ -544,9 +544,10 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
            // underline position by getting the text metric.
            // XXX are attribute values always two byte?
            if (mAccessKeyInfo->mAccesskeyIndex > 0)
-               mAccessKeyInfo->mBeforeWidth =
-                   refContext->GetWidth(mCroppedTitle.get(),
-                                        mAccessKeyInfo->mAccesskeyIndex);
+               mAccessKeyInfo->mBeforeWidth = nsLayoutUtils::
+                   AppUnitWidthOfString(mCroppedTitle.get(),
+                                        mAccessKeyInfo->mAccesskeyIndex,
+                                        *refContext);
            else
                mAccessKeyInfo->mBeforeWidth = 0;
        }
@@ -588,9 +589,9 @@ nsTextBoxFrame::CalculateUnderline(nsRenderingContext& aRenderingContext)
          // are the same for both BiDi and non-BiDi frames.
          const char16_t *titleString = mCroppedTitle.get();
          aRenderingContext.SetTextRunRTL(false);
-         mAccessKeyInfo->mAccessWidth =
-             aRenderingContext.GetWidth(titleString[mAccessKeyInfo->
-                                                    mAccesskeyIndex]);
+         mAccessKeyInfo->mAccessWidth = nsLayoutUtils::
+             AppUnitWidthOfString(titleString[mAccessKeyInfo->mAccesskeyIndex],
+                                  aRenderingContext);
 
          nscoord offset, baseline;
          nsFontMetrics* metrics = aRenderingContext.FontMetrics();
@@ -633,7 +634,8 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
     // see if the width is even smaller than the ellipsis
     // if so, clear the text (XXX set as many '.' as we can?).
     aRenderingContext.SetTextRunRTL(false);
-    titleWidth = aRenderingContext.GetWidth(kEllipsis);
+    titleWidth = nsLayoutUtils::AppUnitWidthOfString(kEllipsis,
+                                                     aRenderingContext);
 
     if (titleWidth > aWidth) {
         mCroppedTitle.SetLength(0);
@@ -661,7 +663,8 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             for (i = 0; i < length; ++i) {
                 char16_t ch = mTitle.CharAt(i);
                 // still in LTR mode
-                cwidth = aRenderingContext.GetWidth(ch);
+                cwidth =
+                    nsLayoutUtils::AppUnitWidthOfString(ch, aRenderingContext);
                 if (twidth + cwidth > aWidth)
                     break;
 
@@ -689,7 +692,8 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             int i;
             for (i=length-1; i >= 0; --i) {
                 char16_t ch = mTitle.CharAt(i);
-                cwidth = aRenderingContext.GetWidth(ch);
+                cwidth =
+                    nsLayoutUtils::AppUnitWidthOfString(ch, aRenderingContext);
                 if (twidth + cwidth > aWidth)
                     break;
 
@@ -731,7 +735,8 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             for (leftPos = 0; leftPos <= rightPos;) {
                 // look at the next character on the left end
                 ch = mTitle.CharAt(leftPos);
-                charWidth = aRenderingContext.GetWidth(ch);
+                charWidth =
+                    nsLayoutUtils::AppUnitWidthOfString(ch, aRenderingContext);
                 totalWidth += charWidth;
                 if (totalWidth > aWidth)
                     // greater than the allowable width
@@ -745,7 +750,9 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
                 if (rightPos > leftPos) {
                     // haven't looked at this character yet
                     ch = mTitle.CharAt(rightPos);
-                    charWidth = aRenderingContext.GetWidth(ch);
+                    charWidth =
+                        nsLayoutUtils::AppUnitWidthOfString(ch,
+                                                            aRenderingContext);
                     totalWidth += charWidth;
                     if (totalWidth > aWidth)
                         // greater than the allowable width
