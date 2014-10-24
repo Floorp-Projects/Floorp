@@ -209,7 +209,7 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 12px 0 0;
 }
 
-#runtime-panel-custom {
+#runtime-panel-other {
   margin-bottom: 12px;
 }
 
@@ -222,7 +222,7 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 #runtime-panel-installsimulator,
 .runtime-panel-item-usb,
 .runtime-panel-item-wifi,
-.runtime-panel-item-custom,
+.runtime-panel-item-other,
 .runtime-panel-item-simulator {
   list-style-image: url("icons.png");
 }
@@ -236,7 +236,7 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 #runtime-panel-installsimulator { -moz-image-region: rect(0px,438px,26px,412px) }
 .runtime-panel-item-usb         { -moz-image-region: rect(52px,438px,78px,412px) }
 .runtime-panel-item-wifi        { -moz-image-region: rect(208px,438px,234px,412px) }
-.runtime-panel-item-custom      { -moz-image-region: rect(26px,438px,52px,412px) }
+.runtime-panel-item-other       { -moz-image-region: rect(26px,438px,52px,412px) }
 .runtime-panel-item-simulator   { -moz-image-region: rect(0px,438px,26px,412px) }
 
 #runtime-actions {

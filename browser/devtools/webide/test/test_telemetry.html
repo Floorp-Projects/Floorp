@@ -16,8 +16,9 @@
 
     <script type="application/javascript;version=1.8">
       const Telemetry = require("devtools/shared/telemetry");
-      const { USBRuntime, WiFiRuntime, SimulatorRuntime, gRemoteRuntime,
-              gLocalRuntime } = require("devtools/webide/runtimes");
+      const { _DeprecatedUSBRuntime, _WiFiRuntime, _SimulatorRuntime,
+              _gRemoteRuntime, _gLocalRuntime, RuntimeTypes }
+            = require("devtools/webide/runtimes");
 
       // Because we need to gather stats for the period of time that a tool has
       // been opened we make use of setTimeout() to create tool active times.
@@ -55,7 +56,7 @@
         // We use the real runtimes here (and switch out some functionality)
         // so we can ensure that logging happens as it would in real use.
 
-        let usb = new USBRuntime("fakeUSB");
+        let usb = new _DeprecatedUSBRuntime("fakeUSB");
         // Use local pipe instead
         usb.connect = function(connection) {
           ok(connection, win.AppManager.connection, "connection is valid");
@@ -65,7 +66,7 @@
         };
         win.AppManager.runtimeList.usb.push(usb);
 
-        let wifi = new WiFiRuntime("fakeWiFi");
+        let wifi = new _WiFiRuntime("fakeWiFi");
         // Use local pipe instead
         wifi.connect = function(connection) {
           ok(connection, win.AppManager.connection, "connection is valid");
@@ -75,7 +76,7 @@
         };
         win.AppManager.runtimeList.wifi.push(wifi);
 
-        let sim = new SimulatorRuntime("fakeSimulator");
+        let sim = new _SimulatorRuntime("fakeSimulator");
         // Use local pipe instead
         sim.connect = function(connection) {
           ok(connection, win.AppManager.connection, "connection is valid");
@@ -83,12 +84,14 @@
           connection.connect();
           return promise.resolve();
         };
-        sim.getName = function() {
-          return this.version;
-        };
+        Object.defineProperty(sim, "name", {
+          get() {
+            return this.version;
+          }
+        });
         win.AppManager.runtimeList.simulator.push(sim);
 
-        let remote = gRemoteRuntime;
+        let remote = _gRemoteRuntime;
         // Use local pipe instead
         remote.connect = function(connection) {
           ok(connection, win.AppManager.connection, "connection is valid");
@@ -96,8 +99,12 @@
           connection.connect();
           return promise.resolve();
         };
-        let local = gLocalRuntime;
-        win.AppManager.runtimeList.custom = [gRemoteRuntime, gLocalRuntime];
+        let local = _gLocalRuntime;
+
+        let other = Object.create(_gLocalRuntime);
+        other.type = RuntimeTypes.OTHER;
+
+        win.AppManager.runtimeList.other = [remote, local, other];
 
         win.AppManager.update("runtimelist");
       }
@@ -164,7 +171,7 @@
 
             ok(okay, "All " + histId + " entries have time > 0");
           } else if (histId === "DEVTOOLS_WEBIDE_CONNECTION_RESULT") {
-            ok(value.length === 5, histId + " has 5 connection results");
+            ok(value.length === 6, histId + " has 6 connection results");
 
             let okay = value.every(function(element) {
               return !!element;
@@ -175,7 +182,7 @@
             ok(value.length === 1 && !!value[0],
                histId + " has 1 successful connection");
           } else if (histId === "DEVTOOLS_WEBIDE_CONNECTION_TIME_SECONDS") {
-            ok(value.length === 5, histId + " has 5 connection results");
+            ok(value.length === 6, histId + " has 6 connection results");
 
             let okay = value.every(function(element) {
               return element > 0;
@@ -183,7 +190,7 @@
 
             ok(okay, "All " + histId + " connections have time > 0");
           } else if (histId.endsWith("USED")) {
-            ok(value.length === 5, histId + " has 5 connection actions");
+            ok(value.length === 6, histId + " has 6 connection actions");
 
             let okay = value.every(function(element) {
               return !element;
@@ -239,9 +246,11 @@
           yield waitForTime(TOOL_DELAY);
           yield connectToRuntime(win, "simulator");
           yield waitForTime(TOOL_DELAY);
-          yield connectToRuntime(win, "custom", 0 /* remote */);
+          yield connectToRuntime(win, "other", 0 /* remote */);
           yield waitForTime(TOOL_DELAY);
-          yield connectToRuntime(win, "custom", 1 /* local */);
+          yield connectToRuntime(win, "other", 1 /* local */);
+          yield waitForTime(TOOL_DELAY);
+          yield connectToRuntime(win, "other", 2 /* other */);
           yield waitForTime(TOOL_DELAY);
           yield closeWebIDE(win);
 
