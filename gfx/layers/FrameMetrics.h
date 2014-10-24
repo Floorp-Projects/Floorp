@@ -97,6 +97,7 @@ public:
     , mUseDisplayPortMargins(false)
     , mPresShellId(-1)
     , mViewport(0, 0, 0, 0)
+    , mExtraResolution(1)
     , mBackgroundColor(0, 0, 0, 0)
   {
   }
@@ -126,6 +127,7 @@ public:
            mSmoothScrollOffset == aOther.mSmoothScrollOffset &&
            mHasScrollgrab == aOther.mHasScrollgrab &&
            mUpdateScrollOffset == aOther.mUpdateScrollOffset &&
+           mExtraResolution == aOther.mExtraResolution &&
            mBackgroundColor == aOther.mBackgroundColor &&
            mDoSmoothScroll == aOther.mDoSmoothScroll;
   }
@@ -150,6 +152,18 @@ public:
   bool IsScrollable() const
   {
     return mScrollId != NULL_SCROLL_ID;
+  }
+
+  CSSToScreenScale DisplayportPixelsPerCSSPixel() const
+  {
+    // Note: use 'mZoom * ScreenToLayerScale(1.0f)' as the CSS-to-Layer scale
+    // instead of LayersPixelsPerCSSPixel(), because displayport calculations
+    // are done in the context of a repaint request, where we ask Layout to
+    // repaint at a new resolution that includes any async zoom. Until this
+    // repaint request is processed, LayersPixelsPerCSSPixel() does not yet
+    // include the async zoom, but it will when the displayport is interpreted
+    // for the repaint.
+    return mZoom * ScreenToLayerScale(1.0f) / mExtraResolution;
   }
 
   CSSToLayerScale LayersPixelsPerCSSPixel() const
@@ -339,15 +353,7 @@ public:
   // This information is provided by Gecko at layout/paint time.
   LayoutDeviceToLayerScale mCumulativeResolution;
 
-  // The conversion factor between local screen pixels (the coordinate
-  // system in which APZCs receive input events) and our parent layer's
-  // layer pixels (the coordinate system of mCompositionBounds).
-  // This consists of the scale of the local CSS transform and the
-  // nontransient async transform.
-  // TODO: APZ does not currently work well if there is a CSS transform
-  //       on the layer being scrolled that's not just a scale that's
-  //       the same in both directions. When we fix this, mTransformScale
-  //       will probably need to turn into a matrix.
+  // TODO(botond): This is now always 1 and should be removed (see bug 1055741).
   ScreenToParentLayerScale mTransformScale;
 
   // The conversion factor between CSS pixels and device pixels for this frame.
@@ -464,12 +470,12 @@ public:
     return mRootCompositionSize;
   }
 
-  void SetDisplayPortMargins(const LayerMargin& aDisplayPortMargins)
+  void SetDisplayPortMargins(const ScreenMargin& aDisplayPortMargins)
   {
     mDisplayPortMargins = aDisplayPortMargins;
   }
 
-  const LayerMargin& GetDisplayPortMargins() const
+  const ScreenMargin& GetDisplayPortMargins() const
   {
     return mDisplayPortMargins;
   }
@@ -502,6 +508,16 @@ public:
   const CSSRect& GetViewport() const
   {
     return mViewport;
+  }
+
+  void SetExtraResolution(const ScreenToLayerScale& aExtraResolution)
+  {
+    mExtraResolution = aExtraResolution;
+  }
+
+  ScreenToLayerScale GetExtraResolution() const
+  {
+    return mExtraResolution;
   }
 
   const gfxRGBA& GetBackgroundColor() const
@@ -605,7 +621,7 @@ private:
 
   // A display port expressed as layer margins that apply to the rect of what
   // is drawn of the scrollable element.
-  LayerMargin mDisplayPortMargins;
+  ScreenMargin mDisplayPortMargins;
 
   // If this is true then we use the display port margins on this metrics,
   // otherwise use the display port rect.
@@ -623,6 +639,10 @@ private:
   // iframe. For layers that don't correspond to a document, this metric is
   // meaningless and invalid.
   CSSRect mViewport;
+
+  // The extra resolution at which content in this scroll frame is drawn beyond
+  // that necessary to draw one Layer pixel per Screen pixel.
+  ScreenToLayerScale mExtraResolution;
 
   // The background color to use when overscrolling.
   gfxRGBA mBackgroundColor;
