@@ -19,6 +19,7 @@ assertAsmTypeFail(USE_ASM + 'function f(){} var f=[f,f]; return f');
 assertAsmTypeFail(USE_ASM + 'function f() 0; return f');
 assertAsmTypeFail('"use strict";' + USE_ASM + 'function f() {} return f');
 assertAsmTypeFail(USE_ASM + '"use strict"; function f() {} return f');
+assertAsmTypeFail(USE_ASM + 'function f() { "use strict"; } return f');
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(){} return f'))(), undefined);
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(){;} return f'))(), undefined);
 assertAsmTypeFail(USE_ASM + 'function f(i,j){;} return f');

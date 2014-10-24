@@ -6853,11 +6853,15 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
     if (!funpc.init(tokenStream))
         return false;
 
-    if (!m.parser().functionArgsAndBodyGeneric(fn, fun, Normal, Statement))
-        return false;
+    if (!m.parser().functionArgsAndBodyGeneric(fn, fun, Normal, Statement)) {
+        if (tokenStream.hadError() || directives == newDirectives)
+            return false;
 
-    if (tokenStream.hadError() || directives != newDirectives)
-        return false;
+        return m.fail(nullptr, "encountered new directive");
+    }
+
+    MOZ_ASSERT(!tokenStream.hadError());
+    MOZ_ASSERT(directives == newDirectives);
 
     outerpc->blockidGen = funpc.blockidGen;
     fn->pn_blockid = outerpc->blockid();
