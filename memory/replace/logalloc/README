@@ -1,0 +1,107 @@
+Logalloc is a replace-malloc library for Firefox (see
+memory/build/replace_malloc.h) that dumps a log of memory allocations to a
+given file descriptor or file name. That log can then be replayed against
+Firefox's default memory allocator independently or through another
+replace-malloc library, allowing the testing of other allocators under the
+exact same workload.
+
+To get an allocation log the following environment variables need to be set
+when starting Firefox:
+- on Linux:
+  LD_PRELOAD=/path/to/liblogalloc.so
+- on Mac OSX:
+  DYLD_INSERT_LIBRARIES=/path/to/liblogalloc.dylib
+- on Windows:
+  MOZ_REPLACE_MALLOC_LIB=/path/to/logalloc.dll
+- on Android:
+  MOZ_REPLACE_MALLOC_LIB=/path/to/liblogalloc.so
+  (see https://wiki.mozilla.org/Mobile/Fennec/Android#Arguments_and_Environment_Variables
+  for how to pass environment variables to Firefox for Android)
+
+- on all platforms:
+  MALLOC_LOG=/path/to/log-file
+  or
+  MALLOC_LOG=number
+
+When MALLOC_LOG is a number below 10000, it is considered as a file
+descriptor number that is fed to Firefox when it is started. Otherwise,
+it is considered as a file name.
+
+As those allocation logs can grow large quite quickly, it can be useful
+to pipe the output to a compression tool.
+
+MALLOC_LOG=1 would send to Firefox's stdout, MALLOC_LOG=2 would send to
+its stderr. Since in both cases that could be mixed with other output
+from Firefox, it is usually better to use another file descriptor
+by shell redirections, such as:
+
+  MALLOC_LOG=3 firefox 3>&1 1>&2 | gzip -c > log.gz
+
+(3>&1 copies the `| gzip` pipe file descriptor to file descriptor #3, 1>&2
+then copies stderr to stdout. This leads to: fd1 and fd2 sending to stderr
+of the parent process (the shell), and fd3 sending to gzip.)
+
+Each line of the allocations log is formatted as follows:
+  <pid> <function>([<args>])[=<result>]
+where <args> is a comma separated list of values. The number of <args> and
+the presence of <result> depend on the <function>.
+
+Example log:
+  18545 malloc(32)=0x7f90495120e0
+  18545 calloc(1,148)=0x7f9049537480
+  18545 realloc(0x7f90495120e0,64)=0x7f9049536680
+  18545 posix_memalign(256,240)=0x7f9049583300
+  18545 jemalloc_stats()
+  18545 free(0x7f9049536680)
+
+This log can be replayed with the logalloc-replay tool in
+memory/replace/logalloc/replay. However, as the goal of that tool is to
+reproduce the recorded memory allocations, it needs to avoid as much as
+possible doing its own allocations for bookkeeping. Reading the logs as
+they are would require data structures and memory allocations. As a
+consequence, the logs need to be preprocessed beforehand.
+
+The logalloc_munge.py script is responsible for that preprocessing. It simply
+takes a raw log on its stdin, and outputs the preprocessed log on its stdout.
+It replaces pointer addresses with indexes the logalloc-replay tool can use
+in a large (almost) linear array of allocation tracking slots (prefixed with
+'#'). It also replaces the pids with numbers starting from 1 (such as the
+first seen pid number is 1, the second is 2, etc.).
+
+The above example log would become the following, once preprocessed:
+  1 malloc(32)=#1
+  1 calloc(1,148)=#2
+  1 realloc(#1,64)=#1
+  1 posix_memalign(256,240)=#3
+  1 jemalloc_stats()
+  1 free(#1)
+
+The logalloc-replay tool then takes the preprocessed log on its stdin and
+replays the allocations printed there, but will only replay those with the
+same process id as the first line (which normally is 1).
+
+As the log files are simple text files, though, it is easy to separate out
+the different processes log with e.g. grep, and feed the separate processes
+logs to logalloc-replay.
+
+The logalloc-replay program won't output anything unless jemalloc_stats
+records appears in the log. You can expect those to be recorded when going
+to about:memory in Firefox, but they can also be added after preprocessing.
+
+Here is an example of what one can do:
+
+  gunzip -c log.gz | python logalloc_munge.py | \
+  awk '$1 == "2" { print $0 } !(NR % 10000) { print "2 jemalloc_stats()" }' | \
+    ./logalloc-replay
+
+The above command replays the allocations of process #2, with some stats
+output every 10000 records.
+
+The logalloc-replay tool itself being hooked with replace-malloc, it is possible
+to set LD_PRELOAD/DYLD_INSERT_LIBRARIES/MOZ_REPLACE_MALLOC_LIB and replay a log
+through a different allocator. For example:
+
+  LD_PRELOAD=libreplace_jemalloc.so logalloc-replay < log
+
+Will replay the log against jemalloc3 (which is, as of writing, what
+libreplace_jemalloc.so contains).

@@ -1,0 +1,37 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Disable mozglue.
+WRAP_LDFLAGS 	=
+MOZ_GLUE_LDFLAGS=
+MOZ_GLUE_PROGRAM_LDFLAGS=
+
+include $(topsrcdir)/mozglue/build/replace_malloc.mk
+
+ifndef CROSS_COMPILE
+
+ifeq ($(OS_TARGET),WINNT)
+LOGALLOC = MOZ_REPLACE_MALLOC_LIB=$(CURDIR)/../logalloc.dll
+else
+ifeq ($(OS_TARGET),Darwin)
+LOGALLOC = DYLD_INSERT_LIBRARIES=$(CURDIR)/../liblogalloc.dylib
+else
+LOGALLOC = LD_PRELOAD=$(CURDIR)/../$(DLL_PREFIX)logalloc$(DLL_SUFFIX)
+endif
+endif
+
+expected_output.log: $(srcdir)/replay.log
+# The logalloc-replay program will only replay entries from the first pid,
+# so the expected output only contains entries beginning with "1 "
+	grep "^1 " $< > $@
+
+check:: $(srcdir)/replay.log expected_output.log
+# Test with MALLOC_LOG as a file descriptor number
+	MALLOC_LOG=1 $(LOGALLOC) ./$(PROGRAM) < $< | $(PYTHON) $(srcdir)/logalloc_munge.py | diff -w - expected_output.log
+# Test with MALLOC_LOG as a file name
+	$(RM) test_output.log
+	MALLOC_LOG=test_output.log $(LOGALLOC) ./$(PROGRAM) < $<
+	$(PYTHON) $(srcdir)/logalloc_munge.py < test_output.log | diff -w - expected_output.log
+
+endif
