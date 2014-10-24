@@ -89,14 +89,14 @@ PBrowserParent*
 ContentBridgeParent::SendPBrowserConstructor(PBrowserParent* aActor,
                                              const IPCTabContext& aContext,
                                              const uint32_t& aChromeFlags,
-                                             const uint64_t& aID,
+                                             const ContentParentId& aCpID,
                                              const bool& aIsForApp,
                                              const bool& aIsForBrowser)
 {
   return PContentBridgeParent::SendPBrowserConstructor(aActor,
                                                        aContext,
                                                        aChromeFlags,
-                                                       aID,
+                                                       aCpID,
                                                        aIsForApp,
                                                        aIsForBrowser);
 }
@@ -128,13 +128,13 @@ ContentBridgeParent::DeallocPJavaScriptParent(PJavaScriptParent *parent)
 PBrowserParent*
 ContentBridgeParent::AllocPBrowserParent(const IPCTabContext &aContext,
                                          const uint32_t& aChromeFlags,
-                                         const uint64_t& aID,
+                                         const ContentParentId& aCpID,
                                          const bool& aIsForApp,
                                          const bool& aIsForBrowser)
 {
   return nsIContentParent::AllocPBrowserParent(aContext,
                                                aChromeFlags,
-                                               aID,
+                                               aCpID,
                                                aIsForApp,
                                                aIsForBrowser);
 }

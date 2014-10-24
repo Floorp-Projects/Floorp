@@ -67,6 +67,7 @@ using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 using mozilla::dom::quota::PersistenceType from "mozilla/dom/quota/PersistenceType.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
 using gfxIntSize from "nsSize.h";
+using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 
 union ChromeRegistryItem
 {
@@ -386,7 +387,7 @@ both:
     //
     // Keep the last 3 attributes in sync with GetProcessAttributes!
     async PBrowser(IPCTabContext context, uint32_t chromeFlags,
-                   uint64_t id, bool isForApp, bool isForBrowser);
+                   ContentParentId cpId, bool isForApp, bool isForBrowser);
 
     async PBlob(BlobConstructorParams params);
 
@@ -520,7 +521,7 @@ parent:
      * Keep the return values in sync with PBrowser()!
      */
     sync GetProcessAttributes()
-        returns (uint64_t id, bool isForApp, bool isForBrowser);
+        returns (ContentParentId cpId, bool isForApp, bool isForBrowser);
     sync GetXPCOMProcessAttributes()
         returns (bool isOffline, nsString[] dictionaries,
                  ClipboardCapabilities clipboardCaps);
