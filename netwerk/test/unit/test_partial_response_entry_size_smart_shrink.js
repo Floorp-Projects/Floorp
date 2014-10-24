@@ -52,14 +52,19 @@ function contentHandler(metadata, response)
   }
 }
 
+var enforcePref;
+
 function run_test()
 {
+  enforcePref = Services.prefs.getBoolPref("network.http.enforce-framing.http1");
+  Services.prefs.setBoolPref("network.http.enforce-framing.http1", false);
+
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/content", contentHandler);
   httpServer.start(-1);
 
   var chan = make_channel(URL + "/content");
-  chan.asyncOpen(new ChannelListener(firstTimeThrough, null, CL_EXPECT_LATE_FAILURE), null);
+  chan.asyncOpen(new ChannelListener(firstTimeThrough, null, CL_IGNORE_CL), null);
   do_test_pending();
 }
 
@@ -75,5 +80,6 @@ function firstTimeThrough(request, buffer)
 function finish_test(request, buffer)
 {
   do_check_eq(buffer, responseBody);
+  Services.prefs.setBoolPref("network.http.enforce-framing.http1", enforcePref);
   httpServer.stop(do_test_finished);
 }
