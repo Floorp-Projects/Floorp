@@ -14,11 +14,11 @@
  * following properties:
  * - guid: (string)
  *     The globally unique id of the page.
- * - uri: (URL)
+ * - url: (URL)
  *     or (nsIURI)
  *     or (string)
  *     The full URI of the page. Note that `PageInfo` values passed as
- *     argument may hold `nsIURI` or `string` values for property `uri`,
+ *     argument may hold `nsIURI` or `string` values for property `url`,
  *     but `PageInfo` objects returned by this module always hold `URL`
  *     values.
  * - title: (string)
@@ -75,7 +75,33 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "gNotifier",
+                                   "@mozilla.org/browser/nav-history-service;1",
+                                   Ci.nsPIPlacesHistoryListenersNotifier);
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+Cu.importGlobalProperties(["URL"]);
 
+/**
+ * Shared connection
+ */
+XPCOMUtils.defineLazyGetter(this, "DBConnPromised",
+  () => new Promise((resolve) => {
+    Sqlite.wrapStorageConnection({ connection: PlacesUtils.history.DBConnection } )
+          .then(db => {
+      try {
+        Sqlite.shutdown.addBlocker("Places History.jsm: Closing database wrapper",
+                                   () => db.close());
+      } catch (ex) {
+        // It's too late to block shutdown of Sqlite, so close the connection
+        // immediately.
+        db.close();
+        throw ex;
+      }
+      resolve(db);
+    });
+  })
+);
 
 this.History = Object.freeze({
   /**
@@ -111,7 +137,7 @@ this.History = Object.freeze({
    *
    * @param infos: (PageInfo)
    *      Information on a page. This `PageInfo` MUST contain
-   *        - either a property `guid` or a property `uri`, as specified
+   *        - either a property `guid` or a property `url`, as specified
    *          by the definition of `PageInfo`;
    *        - a property `visits`, as specified by the definition of
    *          `PageInfo`, which MUST contain at least one visit.
@@ -135,14 +161,14 @@ this.History = Object.freeze({
    *       (i.e. if page entries were updated but not created).
    *
    * @throws (Error)
-   *      If the `uri` specified was for a protocol that should not be
+   *      If the `url` specified was for a protocol that should not be
    *      stored (e.g. "chrome:", "mailbox:", "about:", "imap:", "news:",
    *      "moz-anno:", "view-source:", "resource:", "data:", "wyciwyg:",
    *      "javascript:", "blob:").
    * @throws (Error)
    *      If `infos` has an unexpected type.
    * @throws (Error)
-   *      If a `PageInfo` has neither `guid` nor `uri`,
+   *      If a `PageInfo` has neither `guid` nor `url`.
    * @throws (Error)
    *      If a `guid` property provided is not a valid GUID.
    * @throws (Error)
@@ -177,12 +203,42 @@ this.History = Object.freeze({
    *      A promise resoled once the operation is complete.
    * @resolve (bool)
    *      `true` if at least one page was removed, `false` otherwise.
-   * @throws (Error)
+   * @throws (TypeError)
    *       If `pages` has an unexpected type or if a string provided
-   *       is neither a valid GUID nor a valid URI.
+   *       is neither a valid GUID nor a valid URI or if `pages`
+   *       is an empty array.
    */
-  remove: function (pages, onResult) {
-    throw new Error("Method not implemented");
+  remove: function (pages, onResult = null) {
+    // Normalize and type-check arguments
+    if (Array.isArray(pages)) {
+      if (pages.length == 0) {
+        throw new TypeError("Expected at least one page");
+      }
+    } else {
+      pages = [pages];
+    }
+
+    let guids = [];
+    let urls = [];
+    for (let page of pages) {
+      // Normalize to URL or GUID, or throw if `page` cannot
+      // be normalized.
+      let normalized = normalizeToURLOrGUID(page);
+      if (typeof normalized === "string") {
+        guids.push(normalized);
+      } else {
+        urls.push(normalized.href);
+      }
+    }
+    // At this stage, we know that either `guids` is not-empty
+    // or `urls` is not-empty.
+
+    if (onResult && typeof onResult != "function") {
+      throw new TypeError("Invalid function: " + onResult);
+    }
+
+    // Now perform queries
+    return remove({guids: guids, urls: urls}, onResult);
   },
 
   /**
@@ -257,3 +313,154 @@ this.History = Object.freeze({
   TRANSITION_FRAMED_LINK: Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK,
 });
 
+
+/**
+ * Normalize a key to either a string (if it is a valid GUID) or an
+ * instance of `URL` (if it is a `URL`, `nsIURI`, or a string
+ * representing a valid url).
+ *
+ * @throws (TypeError)
+ *         If the key is neither a valid guid nor a valid url.
+ */
+function normalizeToURLOrGUID(key) {
+  if (typeof key === "string") {
+    // A string may be a URL or a guid
+    if (/^[a-zA-Z0-9\-_]{12}$/.test(key)) {
+      return key;
+    }
+    return new URL(key);
+  }
+  if (key instanceof URL) {
+    return key;
+  }
+  if (key instanceof Ci.nsIURI) {
+    return new URL(key.spec);
+  }
+  throw new TypeError("Invalid url or guid: " + key);
+}
+
+/**
+ * Convert a list of strings or numbers to its SQL
+ * representation as a string.
+ */
+function sqlList(list) {
+  return list.map(JSON.stringify).join();
+}
+
+/**
+ * Invalidate and recompute the frecency of a list of pages,
+ * informing frecency observers.
+ *
+ * @param db: (Sqlite connection)
+ * @param idList: (Array)
+ *      The `moz_places` identifiers for the places to invalidate.
+ * @return (Promise)
+ */
+let invalidateFrecencies = Task.async(function*(db, idList) {
+  if (idList.length == 0) {
+    return;
+  }
+  let ids = sqlList(idList);
+  yield db.execute(
+    `UPDATE moz_places
+     SET frecency = NOTIFY_FRECENCY(
+       CALCULATE_FRECENCY(id), url, guid, hidden, last_visit_date
+     ) WHERE id in (${ ids })`
+  );
+  yield db.execute(
+    `UPDATE moz_places
+     SET hidden = 0
+     WHERE id in (${ ids })
+     AND frecency <> 0`
+  );
+});
+
+
+// Inner implementation of History.remove.
+let remove = Task.async(function*({guids, urls}, onResult = null) {
+  let db = yield DBConnPromised;
+
+  // 1. Find out what needs to be removed
+  let query =
+    `SELECT id, url, guid, foreign_count, title, frecency FROM moz_places
+     WHERE guid IN (${ sqlList(guids) })
+        OR url  IN (${ sqlList(urls)  })
+     `;
+
+  let pages = [];
+  let hasPagesToKeep = false;
+  let hasPagesToRemove = false;
+  yield db.execute(query, null, Task.async(function*(row) {
+    let toRemove = row.getResultByName("foreign_count") == 0;
+    if (toRemove) {
+      hasPagesToRemove = true;
+    } else {
+      hasPagesToKeep = true;
+    }
+    let id = row.getResultByName("id");
+    let guid = row.getResultByName("guid");
+    let url = row.getResultByName("url");
+    let page = {
+      id: id,
+      guid: guid,
+      toRemove: toRemove,
+      uri: NetUtil.newURI(url),
+    };
+    pages.push(page);
+    if (onResult) {
+      let pageInfo = {
+        guid: guid,
+        title: row.getResultByName("title"),
+        frecency: row.getResultByName("frecency"),
+        url: new URL(url)
+      };
+      try {
+        yield onResult(pageInfo);
+      } catch (ex) {
+        // Errors should be reported but should not stop `remove`.
+        Promise.reject(ex);
+      }
+    }
+  }));
+
+  if (pages.length == 0) {
+    // Nothing to do
+    return false;
+  }
+
+  yield db.executeTransaction(function*() {
+    // 2. Remove all visits to these pages.
+    yield db.execute(`DELETE FROM moz_historyvisits
+                      WHERE place_id IN (${ sqlList([p.id for (p of pages)]) })
+                     `);
+
+     // 3. For pages that should not be removed, invalidate frecencies.
+    if (hasPagesToKeep) {
+      yield invalidateFrecencies(db, [p.id for (p of pages) if (!p.toRemove)]);
+    }
+
+    // 4. For pages that should be removed, remove page.
+    if (hasPagesToRemove) {
+      let ids = [p.id for (p of pages) if (p.toRemove)];
+      yield db.execute(`DELETE FROM moz_places
+                        WHERE id IN (${ sqlList(ids) })
+                       `);
+    }
+
+    // 5. Notify observers.
+    for (let {guid, uri, toRemove} of pages) {
+      gNotifier.notifyOnPageExpired(
+        uri, // uri
+        0, // visitTime - There are no more visits
+        toRemove, // wholeEntry
+        guid, // guid
+        Ci.nsINavHistoryObserver.REASON_DELETED, // reason
+        -1 // transition
+      );
+    }
+  });
+
+  PlacesUtils.history.clearEmbedVisits();
+
+  return hasPagesToRemove;
+});
