@@ -6,31 +6,22 @@
 #ifndef NSRENDERINGCONTEXT__H__
 #define NSRENDERINGCONTEXT__H__
 
-#include <stdint.h>                     // for uint32_t
-#include <sys/types.h>                  // for int32_t
-#include "gfxContext.h"                 // for gfxContext
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
-#include "mozilla/gfx/2D.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsBoundingMetrics.h"          // for nsBoundingMetrics
-#include "nsColor.h"                    // for nscolor
-#include "nsCoord.h"                    // for nscoord, NSToIntRound
-#include "nsFontMetrics.h"              // for nsFontMetrics
-#include "nsISupports.h"                // for NS_INLINE_DECL_REFCOUNTING, etc
-#include "nsString.h"               // for nsString
-#include "nscore.h"                     // for char16_t
+#include "gfxContext.h"
+#include "mozilla/Attributes.h"
+#include "nsISupportsImpl.h"
+#include "nsRefPtr.h"
 
-class nsIntRegion;
-struct nsPoint;
-struct nsRect;
+namespace mozilla {
+namespace gfx {
+class DrawTarget;
+}
+}
 
 class nsRenderingContext MOZ_FINAL
 {
     typedef mozilla::gfx::DrawTarget DrawTarget;
 
 public:
-    nsRenderingContext() {}
-
     NS_INLINE_DECL_REFCOUNTING(nsRenderingContext)
 
     void Init(gfxContext* aThebesContext);
@@ -40,31 +31,11 @@ public:
     gfxContext *ThebesContext() { return mThebes; }
     DrawTarget *GetDrawTarget() { return mThebes->GetDrawTarget(); }
 
-    // Text
-
-    void SetFont(nsFontMetrics *aFontMetrics);
-    nsFontMetrics *FontMetrics() { return mFontMetrics; } // may be null
-
-    void SetTextRunRTL(bool aIsRTL);
-
-    nscoord GetWidth(char16_t aC);
-    nscoord GetWidth(const nsString& aString);
-    nscoord GetWidth(const char16_t *aString, uint32_t aLength);
-
-    nsBoundingMetrics GetBoundingMetrics(const char16_t *aString,
-                                         uint32_t aLength);
-
-    int32_t GetMaxChunkLength();
-    static int32_t FindSafeLength(const char16_t *aString, uint32_t aLength,
-                                  uint32_t aMaxChunkLength);
 private:
     // Private destructor, to discourage deletion outside of Release():
-    ~nsRenderingContext()
-    {
-    }
+    ~nsRenderingContext() {}
 
     nsRefPtr<gfxContext> mThebes;
-    nsRefPtr<nsFontMetrics> mFontMetrics;
 };
 
 #endif  // NSRENDERINGCONTEXT__H__

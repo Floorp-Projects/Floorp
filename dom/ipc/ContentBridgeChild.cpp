@@ -81,16 +81,18 @@ ContentBridgeChild::SendPBlobConstructor(PBlobChild* actor,
 
 bool
 ContentBridgeChild::SendPBrowserConstructor(PBrowserChild* aActor,
+                                            const TabId& aTabId,
                                             const IPCTabContext& aContext,
                                             const uint32_t& aChromeFlags,
-                                            const uint64_t& aID,
+                                            const ContentParentId& aCpID,
                                             const bool& aIsForApp,
                                             const bool& aIsForBrowser)
 {
   return PContentBridgeChild::SendPBrowserConstructor(aActor,
+                                                      aTabId,
                                                       aContext,
                                                       aChromeFlags,
-                                                      aID,
+                                                      aCpID,
                                                       aIsForApp,
                                                       aIsForBrowser);
 }
@@ -121,15 +123,17 @@ ContentBridgeChild::DeallocPJavaScriptChild(PJavaScriptChild *child)
 }
 
 PBrowserChild*
-ContentBridgeChild::AllocPBrowserChild(const IPCTabContext &aContext,
+ContentBridgeChild::AllocPBrowserChild(const TabId& aTabId,
+                                       const IPCTabContext &aContext,
                                        const uint32_t& aChromeFlags,
-                                       const uint64_t& aID,
+                                       const ContentParentId& aCpID,
                                        const bool& aIsForApp,
                                        const bool& aIsForBrowser)
 {
-  return nsIContentChild::AllocPBrowserChild(aContext,
+  return nsIContentChild::AllocPBrowserChild(aTabId,
+                                             aContext,
                                              aChromeFlags,
-                                             aID,
+                                             aCpID,
                                              aIsForApp,
                                              aIsForBrowser);
 }
@@ -142,16 +146,18 @@ ContentBridgeChild::DeallocPBrowserChild(PBrowserChild* aChild)
 
 bool
 ContentBridgeChild::RecvPBrowserConstructor(PBrowserChild* aActor,
+                                            const TabId& aTabId,
                                             const IPCTabContext& aContext,
                                             const uint32_t& aChromeFlags,
-                                            const uint64_t& aID,
+                                            const ContentParentId& aCpID,
                                             const bool& aIsForApp,
                                             const bool& aIsForBrowser)
 {
   return ContentChild::GetSingleton()->RecvPBrowserConstructor(aActor,
+                                                               aTabId,
                                                                aContext,
                                                                aChromeFlags,
-                                                               aID,
+                                                               aCpID,
                                                                aIsForApp,
                                                                aIsForBrowser);
 }
