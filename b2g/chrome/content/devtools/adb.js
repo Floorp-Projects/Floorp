@@ -155,9 +155,10 @@ let AdbController = {
     // If USB Mass Storage, USB tethering, or a debug session is active,
     // then we don't want to disable adb in an automatic fashion (i.e.
     // when the screen locks or due to timeout).
-    let sysUsbConfig = libcutils.property_get("sys.usb.config");
-    let rndisActive = (sysUsbConfig.split(",").indexOf("rndis") >= 0);
-    let usbFuncActive = rndisActive || this.umsActive || isDebugging;
+    let sysUsbConfig = libcutils.property_get("sys.usb.config").split(",");
+    let usbFuncActive = this.umsActive || isDebugging;
+    usbFuncActive |= (sysUsbConfig.indexOf("rndis") >= 0);
+    usbFuncActive |= (sysUsbConfig.indexOf("mtp") >= 0);
 
     let enableAdb = this.remoteDebuggerEnabled &&
       (!(this.lockEnabled && this.locked) || usbFuncActive);
@@ -216,7 +217,6 @@ let AdbController = {
       }
     }
   }
-
 };
 
 SettingsListener.observe("lockscreen.locked", false,
