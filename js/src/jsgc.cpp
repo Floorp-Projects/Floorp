@@ -2318,12 +2318,33 @@ MovingTracer::Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 }
 
 void
+GCRuntime::sweepTypesAfterCompacting(Zone *zone)
+{
+    FreeOp *fop = rt->defaultFreeOp();
+    zone->beginSweepTypes(fop, rt->gc.releaseObservedTypes && !zone->isPreservingCode());
+
+    types::AutoClearTypeInferenceStateOnOOM oom(zone);
+
+    for (ZoneCellIterUnderGC i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
+        script->maybeSweepTypes(&oom);
+    }
+
+    for (ZoneCellIterUnderGC i(zone, FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
+        types::TypeObject *object = i.get<types::TypeObject>();
+        object->maybeSweep(&oom);
+    }
+
+    zone->types.endSweep(rt);
+}
+
+void
 GCRuntime::sweepZoneAfterCompacting(Zone *zone)
 {
     MOZ_ASSERT(zone->isCollecting());
     FreeOp *fop = rt->defaultFreeOp();
     zone->discardJitCode(fop);
-    zone->sweepAnalysis(fop, rt->gc.releaseObservedTypes && !zone->isPreservingCode());
+    sweepTypesAfterCompacting(zone);
     zone->sweepBreakpoints(fop);
 
     for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
