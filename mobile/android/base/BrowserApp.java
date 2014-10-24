@@ -501,6 +501,7 @@ public class BrowserApp extends GeckoApp
         mMediaCastingBar = (MediaCastingBar) findViewById(R.id.media_casting);
 
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
+            "Menu:Open",
             "Menu:Update",
             "Search:Keyword",
             "Prompt:ShowTop",
@@ -1047,6 +1048,7 @@ public class BrowserApp extends GeckoApp
         }
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
+            "Menu:Open",
             "Menu:Update",
             "Search:Keyword",
             "Prompt:ShowTop",
@@ -1482,7 +1484,13 @@ public class BrowserApp extends GeckoApp
     @Override
     public void handleMessage(String event, JSONObject message) {
         try {
-            if (event.equals("Menu:Update")) {
+            if (event.equals("Menu:Open")) {
+                if (mBrowserToolbar.isEditing()) {
+                    mBrowserToolbar.cancelEdit();
+                }
+
+                openOptionsMenu();
+            } else if (event.equals("Menu:Update")) {
                 final int id = message.getInt("id") + ADDON_MENU_OFFSET;
                 final JSONObject options = message.getJSONObject("options");
                 ThreadUtils.postToUiThread(new Runnable() {

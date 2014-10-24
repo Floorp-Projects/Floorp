@@ -10,6 +10,7 @@ import java.util.EnumSet;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
@@ -20,15 +21,23 @@ import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.util.EventCallback;
 
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
+import android.text.SpannableStringBuilder;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.UnderlineSpan;
+import android.text.style.StyleSpan;
+import android.text.TextPaint;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -48,6 +57,10 @@ public class HistoryPanel extends HomeFragment {
 
     // Cursor loader ID for history query
     private static final int LOADER_ID_HISTORY = 0;
+
+    // String placeholders to mark formatting.
+    private final static String FORMAT_S1 = "%1$s";
+    private final static String FORMAT_S2 = "%2$s";
 
     // Adapter for the list of recent history entries.
     private HistoryAdapter mAdapter;
@@ -211,8 +224,79 @@ public class HistoryPanel extends HomeFragment {
             final TextView emptyText = (TextView) mEmptyView.findViewById(R.id.home_empty_text);
             emptyText.setText(R.string.home_most_recent_empty);
 
+            final TextView emptyHint = (TextView) mEmptyView.findViewById(R.id.home_empty_hint);
+            final String hintText = getResources().getString(R.string.home_most_recent_emptyhint);
+
+            final SpannableStringBuilder hintBuilder = formatHintText(hintText);
+            if (hintBuilder != null) {
+                emptyHint.setText(hintBuilder);
+                emptyHint.setText(hintBuilder);
+                emptyHint.setMovementMethod(LinkMovementMethod.getInstance());
+                emptyHint.setVisibility(View.VISIBLE);
+            }
+
             mList.setEmptyView(mEmptyView);
         }
+    }
+
+    /**
+     * Make Span that is clickable, italicized, and underlined
+     * between the string markers <code>FORMAT_S1</code> and
+     * <code>FORMAT_S2</code>.
+     *
+     * @param text String to format
+     * @return formatted SpannableStringBuilder, or null if there
+     * is not any text to format.
+     */
+    private SpannableStringBuilder formatHintText(String text) {
+        // Set formatting as marked by string placeholders.
+        final int underlineStart = text.indexOf(FORMAT_S1);
+        final int underlineEnd = text.indexOf(FORMAT_S2);
+
+        // Check that there is text to be formatted.
+        if (underlineStart >= underlineEnd) {
+            return null;
+        }
+
+        final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+
+        // Set italicization.
+        ssb.setSpan(new StyleSpan(Typeface.ITALIC), 0, ssb.length(), 0);
+
+        // Set clickable text.
+        final ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View widget) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.HOMESCREEN, "hint-private-browsing");
+                try {
+                    final JSONObject json = new JSONObject();
+                    json.put("type", "Menu:Open");
+                    EventDispatcher.getInstance().dispatchEvent(json, null);
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "Error forming JSON for Private Browsing contextual hint", e);
+                }
+            }
+        };
+
+        ssb.setSpan(clickableSpan, 0, text.length(), 0);
+
+        // Remove underlining set by ClickableSpan.
+        final UnderlineSpan noUnderlineSpan = new UnderlineSpan() {
+            @Override
+            public void updateDrawState(TextPaint textPaint) {
+                textPaint.setUnderlineText(false);
+            }
+        };
+
+        ssb.setSpan(noUnderlineSpan, 0, text.length(), 0);
+
+        // Add underlining for "Private Browsing".
+        ssb.setSpan(new UnderlineSpan(), underlineStart, underlineEnd, 0);
+
+        ssb.delete(underlineEnd, underlineEnd + FORMAT_S2.length());
+        ssb.delete(underlineStart, underlineStart + FORMAT_S1.length());
+
+        return ssb;
     }
 
     private static class HistoryAdapter extends MultiTypeCursorAdapter {
