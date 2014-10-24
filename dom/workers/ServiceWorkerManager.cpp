@@ -1905,10 +1905,6 @@ void
 ServiceWorkerManager::MaybeStartControlling(nsIDocument* aDoc)
 {
   AssertIsOnMainThread();
-  if (!Preferences::GetBool("dom.serviceWorkers.enabled")) {
-    return;
-  }
-
   nsRefPtr<ServiceWorkerRegistrationInfo> registration =
     GetServiceWorkerRegistrationInfo(aDoc);
   if (registration) {
@@ -1920,14 +1916,35 @@ ServiceWorkerManager::MaybeStartControlling(nsIDocument* aDoc)
   }
 }
 
+class ServiceWorkerActivateAfterUnloadingJob MOZ_FINAL : public ServiceWorkerJob
+{
+  nsRefPtr<ServiceWorkerRegistrationInfo> mRegistration;
+public:
+  ServiceWorkerActivateAfterUnloadingJob(ServiceWorkerJobQueue* aQueue,
+                                         ServiceWorkerRegistrationInfo* aReg)
+    : ServiceWorkerJob(aQueue)
+    , mRegistration(aReg)
+  { }
+
+  void
+  Start()
+  {
+    if (mRegistration->mPendingUninstall) {
+      mRegistration->Clear();
+      nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+      swm->RemoveRegistration(mRegistration);
+    } else {
+      mRegistration->TryToActivate();
+    }
+
+    Done(NS_OK);
+  }
+};
+
 void
 ServiceWorkerManager::MaybeStopControlling(nsIDocument* aDoc)
 {
   MOZ_ASSERT(aDoc);
-  if (!Preferences::GetBool("dom.serviceWorkers.enabled")) {
-    return;
-  }
-
   nsRefPtr<ServiceWorkerRegistrationInfo> registration;
   mControlledDocuments.Remove(aDoc, getter_AddRefs(registration));
   // A document which was uncontrolled does not maintain that state itself, so
@@ -1935,6 +1952,14 @@ ServiceWorkerManager::MaybeStopControlling(nsIDocument* aDoc)
   // associated registration. So this check is required.
   if (registration) {
     registration->StopControllingADocument();
+    if (!registration->IsControllingDocuments()) {
+      ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(registration->mScope);
+      // The remaining tasks touch registration->mPendingUninstall, so queue
+      // them up in a job.
+      nsRefPtr<ServiceWorkerActivateAfterUnloadingJob> job =
+        new ServiceWorkerActivateAfterUnloadingJob(queue, registration);
+      queue->Append(job);
+    }
   }
 }
 
