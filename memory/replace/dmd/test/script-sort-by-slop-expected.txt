@@ -1,5 +1,4 @@
 #-----------------------------------------------------------------
-# dmd.py --filter-stacks-for-testing -o script-sort-by-slop-actual.txt --ignore-reports --sort-by=slop script-sort-by.json.gz
 
 Invocation {
   $DMD = '1'

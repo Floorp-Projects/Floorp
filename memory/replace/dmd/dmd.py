@@ -612,12 +612,8 @@ def printDigest(args, digest):
         out('  Sample-below size = ' + str(sampleBelowSize))
         out('}\n')
 
-    # Print command line. Strip dirs so the output is deterministic, which is
-    # needed for testing.
-    out(separator, end='')
-    out('# ' + ' '.join(map(os.path.basename, sys.argv)) + '\n')
-
     # Print invocation(s).
+    out(separator)
     if type(dmdEnvVar) is not tuple:
         printInvocation('', dmdEnvVar, sampleBelowSize)
     else:

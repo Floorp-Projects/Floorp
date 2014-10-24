@@ -1,5 +1,4 @@
 #-----------------------------------------------------------------
-# dmd.py --filter-stacks-for-testing -o script-diff-options-actual.txt --ignore-reports script-diff1.json script-diff2.json
 
 Invocation 1 {
   $DMD = '--sample-below=127'
