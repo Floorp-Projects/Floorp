@@ -461,7 +461,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node templateLiteral();
     bool taggedTemplate(Node nodeList, TokenKind tt);
     bool appendToCallSiteObj(Node callSiteObj);
-    bool addExprAndGetNextTemplStrToken(Node nodeList, TokenKind &tt);
+    bool addExprAndGetNextTemplStrToken(Node nodeList, TokenKind *ttp);
 
     inline Node newName(PropertyName *name);
     inline Node newYieldExpression(uint32_t begin, Node expr, bool isYieldStar = false);
