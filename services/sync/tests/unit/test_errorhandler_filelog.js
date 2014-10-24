@@ -7,6 +7,7 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const logsdir            = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 const LOG_PREFIX_SUCCESS = "success-";
@@ -81,11 +82,16 @@ add_test(function test_logOnSuccess_false() {
 });
 
 function readFile(file, callback) {
-  NetUtil.asyncFetch(file, function (inputStream, statusCode, request) {
+  NetUtil.asyncFetch2(file, function (inputStream, statusCode, request) {
     let data = NetUtil.readInputStreamToString(inputStream,
                                                inputStream.available());
     callback(statusCode, data);
-  });
+  },
+  null,      // aLoadingNode
+  Services.scriptSecurityManager.getSystemPrincipal(),
+  null,      // aTriggeringPrincipal
+  Ci.nsILoadInfo.SEC_NORMAL,
+  Ci.nsIContentPolicy.TYPE_OTHER);
 }
 
 add_test(function test_logOnSuccess_true() {
