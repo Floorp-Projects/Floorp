@@ -226,7 +226,12 @@ SetRects(size_t n,
 static inline bool
 FuzzyEqual(float a, float b)
 {
-  return fabs(a - b) < 0.0001f;
+	return fabs(a - b) < 0.0001f;
+}
+static inline bool
+FuzzyLTE(float a, float b)
+{
+	return a <= b + 0.0001f;
 }
 #endif
 
@@ -271,8 +276,8 @@ DecomposeIntoNoRepeatRects(const gfx::Rect& aRect,
                tl.y >= 0.0f && tl.y <= 1.0f &&
                br.x >= tl.x && br.x <= 2.0f &&
                br.y >= tl.y && br.y <= 2.0f &&
-               br.x - tl.x <= 1.0f &&
-               br.y - tl.y <= 1.0f,
+               FuzzyLTE(br.x - tl.x, 1.0f) &&
+               FuzzyLTE(br.y - tl.y, 1.0f),
                "Somehow generated invalid texture coordinates");
 
   // Then check if we wrap in either the x or y axis.
