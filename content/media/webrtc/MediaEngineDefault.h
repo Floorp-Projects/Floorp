@@ -55,6 +55,11 @@ public:
                           TrackID aId,
                           StreamTime aDesiredTime,
                           TrackTicks &aLastEndTime);
+  virtual bool SatisfiesConstraintSets(
+      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets)
+  {
+    return true;
+  }
 
   virtual bool IsFake() {
     return true;

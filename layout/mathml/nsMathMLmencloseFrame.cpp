@@ -345,14 +345,14 @@ nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
 
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
-  aRenderingContext.SetFont(fm);
   GetRuleThickness(aRenderingContext, fm, mRuleThickness);
   if (mRuleThickness < onePixel) {
     mRuleThickness = onePixel;
   }
 
   char16_t one = '1';
-  nsBoundingMetrics bmOne = aRenderingContext.GetBoundingMetrics(&one, 1);
+  nsBoundingMetrics bmOne =
+    nsLayoutUtils::AppUnitBoundsOfString(&one, 1, *fm, aRenderingContext);
 
   ///////////////
   // General rules: the menclose element takes the size of the enclosed content.
