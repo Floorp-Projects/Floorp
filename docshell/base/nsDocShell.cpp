@@ -2878,7 +2878,7 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
   for (uint32_t i = 0; i < mProfileTimelineMarkers.Length(); ++i) {
     ProfilerMarkerTracing* startPayload = static_cast<ProfilerMarkerTracing*>(
       mProfileTimelineMarkers[i]->mPayload);
-    const char* startMarkerName = mProfileTimelineMarkers[i]->mName;
+    const char* startMarkerName = mProfileTimelineMarkers[i]->mName.get();
 
     bool hasSeenPaintedLayer = false;
 
@@ -2891,7 +2891,7 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
       for (uint32_t j = i + 1; j < mProfileTimelineMarkers.Length(); ++j) {
         ProfilerMarkerTracing* endPayload = static_cast<ProfilerMarkerTracing*>(
           mProfileTimelineMarkers[j]->mPayload);
-        const char* endMarkerName = mProfileTimelineMarkers[j]->mName;
+        const char* endMarkerName = mProfileTimelineMarkers[j]->mName.get();
 
         // Look for Layer markers to stream out paint markers.
         if (strcmp(endMarkerName, "Layer") == 0) {

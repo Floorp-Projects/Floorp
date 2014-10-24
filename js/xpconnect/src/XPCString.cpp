@@ -106,3 +106,22 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
     vp.setString(str);
     return true;
 }
+
+namespace xpc {
+
+bool
+NonVoidStringToJsval(JSContext *cx, nsAString &str, MutableHandleValue rval)
+{
+    nsStringBuffer* sharedBuffer;
+    if (!XPCStringConvert::ReadableToJSVal(cx, str, &sharedBuffer, rval))
+      return false;
+
+    if (sharedBuffer) {
+        // The string was shared but ReadableToJSVal didn't addref it.
+        // Move the ownership from str to jsstr.
+        str.ForgetSharedBuffer();
+    }
+    return true;
+}
+
+} // namespace xpc

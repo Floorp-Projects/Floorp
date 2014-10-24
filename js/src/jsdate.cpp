@@ -2656,8 +2656,10 @@ ToLocaleFormatHelper(JSContext *cx, HandleObject obj, const char *format, Mutabl
             /* ...but not if starts with 4-digit year, like 2022/3/11. */
             !(isdigit(buf[0]) && isdigit(buf[1]) &&
               isdigit(buf[2]) && isdigit(buf[3]))) {
+            double localtime = obj->as<DateObject>().cachedLocalTime(&cx->runtime()->dateTimeInfo);
+            int year = IsNaN(localtime) ? 0 : (int) YearFromTime(localtime);
             JS_snprintf(buf + (result_len - 2), (sizeof buf) - (result_len - 2),
-                        "%d", js_DateGetYear(cx, obj));
+                        "%d", year);
         }
 
     }
@@ -3060,84 +3062,37 @@ js_NewDateObject(JSContext *cx, int year, int mon, int mday,
 }
 
 JS_FRIEND_API(bool)
-js_DateIsValid(JSObject *obj)
+js::DateIsValid(JSContext *cx, JSObject *objArg)
 {
-    return obj->is<DateObject>() && !IsNaN(obj->as<DateObject>().UTCTime().toNumber());
-}
+    RootedObject obj(cx, objArg);
+    if (!ObjectClassIs(obj, ESClass_Date, cx))
+        return false;
 
-JS_FRIEND_API(int)
-js_DateGetYear(JSContext *cx, JSObject *obj)
-{
-    /* Preserve legacy API behavior of returning 0 for invalid dates. */
-    MOZ_ASSERT(obj);
-    double localtime = obj->as<DateObject>().cachedLocalTime(&cx->runtime()->dateTimeInfo);
-    if (IsNaN(localtime))
-        return 0;
+    RootedValue unboxed(cx);
+    if (!Unbox(cx, obj, &unboxed)) {
+        // This can't actually happen, so we don't force consumers to deal with
+        // a clunky out-param API. Do something sane-ish if it does happen.
+        cx->clearPendingException();
+        return false;
+    }
 
-    return (int) YearFromTime(localtime);
-}
-
-JS_FRIEND_API(int)
-js_DateGetMonth(JSContext *cx, JSObject *obj)
-{
-    MOZ_ASSERT(obj);
-    double localtime = obj->as<DateObject>().cachedLocalTime(&cx->runtime()->dateTimeInfo);
-    if (IsNaN(localtime))
-        return 0;
-
-    return (int) MonthFromTime(localtime);
-}
-
-JS_FRIEND_API(int)
-js_DateGetDate(JSContext *cx, JSObject *obj)
-{
-    MOZ_ASSERT(obj);
-    double localtime = obj->as<DateObject>().cachedLocalTime(&cx->runtime()->dateTimeInfo);
-    if (IsNaN(localtime))
-        return 0;
-
-    return (int) DateFromTime(localtime);
-}
-
-JS_FRIEND_API(int)
-js_DateGetHours(JSContext *cx, JSObject *obj)
-{
-    MOZ_ASSERT(obj);
-    double localtime = obj->as<DateObject>().cachedLocalTime(&cx->runtime()->dateTimeInfo);
-    if (IsNaN(localtime))
-        return 0;
-
-    return (int) HourFromTime(localtime);
-}
-
-JS_FRIEND_API(int)
-js_DateGetMinutes(JSContext *cx, JSObject *obj)
-{
-    MOZ_ASSERT(obj);
-    double localtime = obj->as<DateObject>().cachedLocalTime(&cx->runtime()->dateTimeInfo);
-    if (IsNaN(localtime))
-        return 0;
-
-    return (int) MinFromTime(localtime);
-}
-
-JS_FRIEND_API(int)
-js_DateGetSeconds(JSObject *obj)
-{
-    if (!obj->is<DateObject>())
-        return 0;
-
-    double utctime = obj->as<DateObject>().UTCTime().toNumber();
-    if (IsNaN(utctime))
-        return 0;
-    return (int) SecFromTime(utctime);
+    return !IsNaN(unboxed.toNumber());
 }
 
 JS_FRIEND_API(double)
-js_DateGetMsecSinceEpoch(JSObject *obj)
+js::DateGetMsecSinceEpoch(JSContext *cx, JSObject *objArg)
 {
-    obj = CheckedUnwrap(obj);
-    if (!obj || !obj->is<DateObject>())
+    RootedObject obj(cx, objArg);
+    if (!ObjectClassIs(obj, ESClass_Date, cx))
         return 0;
-    return obj->as<DateObject>().UTCTime().toNumber();
+
+    RootedValue unboxed(cx);
+    if (!Unbox(cx, obj, &unboxed)) {
+        // This can't actually happen, so we don't force consumers to deal with
+        // a clunky out-param API. Do something sane-ish if it does happen.
+        cx->clearPendingException();
+        return 0;
+    }
+
+    return unboxed.toNumber();
 }

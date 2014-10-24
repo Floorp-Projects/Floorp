@@ -74,13 +74,3 @@ tabpanels {
 browser[pending] {
   display: none;
 }
-
-browser[pendingpaint] {
-  opacity: 0;
-}
-
-tabbrowser[pendingpaint] {
-  background-image: url(chrome://global/skin/spinner.png);
-  background-repeat: no-repeat;
-  background-position: center center;
-}

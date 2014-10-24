@@ -10,6 +10,9 @@
 
 #include "nsStringFwd.h"
 
+// This pseudo-element is accepted only in UA style sheets.
+#define CSS_PSEUDO_CLASS_UA_SHEET_ONLY                 (1<<0)
+
 class nsIAtom;
 
 class nsCSSPseudoClasses {
@@ -18,7 +21,7 @@ public:
   static void AddRefAtoms();
 
   enum Type {
-#define CSS_PSEUDO_CLASS(_name, _value, _pref)        \
+#define CSS_PSEUDO_CLASS(_name, _value, _flags, _pref) \
     ePseudoClass_##_name,
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
@@ -35,8 +38,21 @@ public:
   }
   static bool IsUserActionPseudoClass(Type aType);
 
+  static bool PseudoClassIsUASheetOnly(Type aType) {
+    return PseudoClassHasFlags(aType, CSS_PSEUDO_CLASS_UA_SHEET_ONLY);
+  }
+
   // Should only be used on types other than Count and NotPseudoClass
   static void PseudoTypeToString(Type aType, nsAString& aString);
+
+private:
+  static uint32_t FlagsForPseudoClass(const Type aType);
+
+  // Does the given pseudo-class have all of the flags given?
+  static bool PseudoClassHasFlags(const Type aType, uint32_t aFlags)
+  {
+    return (FlagsForPseudoClass(aType) & aFlags) == aFlags;
+  }
 };
 
 #endif /* nsCSSPseudoClasses_h___ */

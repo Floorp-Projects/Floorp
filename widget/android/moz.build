@@ -55,9 +55,8 @@ LOCAL_INCLUDES += [
     '/dom/system/android',
     '/netwerk/base/src',
     '/netwerk/cache',
+    '/widget',
     '/widget/android/android',
-    '/widget/shared',
-    '/widget/xpwidgets',
 ]
 
 #DEFINES['DEBUG_WIDGETS'] = True
