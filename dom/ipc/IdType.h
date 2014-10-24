@@ -7,9 +7,16 @@
 #ifndef mozilla_dom_IdType_h
 #define mozilla_dom_IdType_h
 
+#include "ipc/IPCMessageUtils.h"
+
+namespace IPC {
+template<typename T> struct ParamTraits;
+}
+
 namespace mozilla {
 namespace dom {
 class ContentParent;
+class TabParent;
 
 
 template<typename T>
@@ -38,6 +45,7 @@ private:
   uint64_t mId;
 };
 
+typedef IdType<TabParent> TabId;
 typedef IdType<ContentParent> ContentParentId;
 
 } // namespace dom

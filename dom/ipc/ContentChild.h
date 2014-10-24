@@ -131,7 +131,8 @@ public:
     AllocPBackgroundChild(Transport* aTransport, ProcessId aOtherProcess)
                           MOZ_OVERRIDE;
 
-    virtual PBrowserChild* AllocPBrowserChild(const IPCTabContext& aContext,
+    virtual PBrowserChild* AllocPBrowserChild(const TabId& aTabId,
+                                              const IPCTabContext& aContext,
                                               const uint32_t& aChromeFlags,
                                               const ContentParentId& aCpID,
                                               const bool& aIsForApp,
@@ -370,6 +371,7 @@ public:
     DeallocPFileDescriptorSetChild(PFileDescriptorSetChild*) MOZ_OVERRIDE;
 
     virtual bool SendPBrowserConstructor(PBrowserChild* actor,
+                                         const TabId& aTabId,
                                          const IPCTabContext& context,
                                          const uint32_t& chromeFlags,
                                          const ContentParentId& aCpID,
@@ -377,6 +379,7 @@ public:
                                          const bool& aIsForBrowser) MOZ_OVERRIDE;
 
     virtual bool RecvPBrowserConstructor(PBrowserChild* aCctor,
+                                         const TabId& aTabId,
                                          const IPCTabContext& aContext,
                                          const uint32_t& aChromeFlags,
                                          const ContentParentId& aCpID,

@@ -61,6 +61,7 @@ public:
 
   virtual PBrowserParent* SendPBrowserConstructor(
     PBrowserParent* actor,
+    const TabId& aTabId,
     const IPCTabContext& context,
     const uint32_t& chromeFlags,
     const ContentParentId& aCpId,
@@ -77,7 +78,8 @@ protected: // IPDL methods
   virtual mozilla::jsipc::PJavaScriptParent* AllocPJavaScriptParent();
   virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*);
 
-  virtual PBrowserParent* AllocPBrowserParent(const IPCTabContext& aContext,
+  virtual PBrowserParent* AllocPBrowserParent(const TabId& aTabId,
+                                              const IPCTabContext& aContext,
                                               const uint32_t& aChromeFlags,
                                               const ContentParentId& aCpId,
                                               const bool& aIsForApp,
