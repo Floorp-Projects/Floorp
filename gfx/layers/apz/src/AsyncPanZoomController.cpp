@@ -1013,8 +1013,8 @@ AsyncPanZoomController::ArePointerEventsConsumable(TouchBlockState* aBlock, uint
   return true;
 }
 
-nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent) {
-  return GetInputQueue()->ReceiveInputEvent(this, aEvent);
+nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent, uint64_t* aOutInputBlockId) {
+  return GetInputQueue()->ReceiveInputEvent(this, aEvent, aOutInputBlockId);
 }
 
 nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) {
@@ -1579,8 +1579,8 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
     int32_t modifiers = WidgetModifiersToDOMModifiers(aEvent.modifiers);
     CSSPoint geckoScreenPoint;
     if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
-      GetInputQueue()->InjectNewTouchBlock(this);
-      controller->HandleLongTap(geckoScreenPoint, modifiers, GetGuid());
+      uint64_t blockId = GetInputQueue()->InjectNewTouchBlock(this);
+      controller->HandleLongTap(geckoScreenPoint, modifiers, GetGuid(), blockId);
       return nsEventStatus_eConsumeNoDefault;
     }
   }
@@ -2855,13 +2855,13 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
 }
 
 void
-AsyncPanZoomController::ContentReceivedTouch(bool aPreventDefault) {
-  GetInputQueue()->ContentReceivedTouch(aPreventDefault);
+AsyncPanZoomController::ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault) {
+  GetInputQueue()->ContentReceivedTouch(aInputBlockId, aPreventDefault);
 }
 
 void
-AsyncPanZoomController::SetAllowedTouchBehavior(const nsTArray<TouchBehaviorFlags>& aBehaviors) {
-  GetInputQueue()->SetAllowedTouchBehavior(aBehaviors);
+AsyncPanZoomController::SetAllowedTouchBehavior(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aBehaviors) {
+  GetInputQueue()->SetAllowedTouchBehavior(aInputBlockId, aBehaviors);
 }
 
 bool

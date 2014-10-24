@@ -37,6 +37,7 @@ APZCCallbackHandler::SetNativePanZoomController(jobject obj)
 
 void
 APZCCallbackHandler::NotifyDefaultPrevented(const ScrollableLayerGuid& aGuid,
+                                            uint64_t aInputBlockId,
                                             bool aDefaultPrevented)
 {
     if (!AndroidBridge::IsJavaUiThread()) {
@@ -45,14 +46,14 @@ APZCCallbackHandler::NotifyDefaultPrevented(const ScrollableLayerGuid& aGuid,
         // have to throw it onto the other thread.
         AndroidBridge::Bridge()->PostTaskToUiThread(NewRunnableMethod(
             this, &APZCCallbackHandler::NotifyDefaultPrevented,
-            aGuid, aDefaultPrevented), 0);
+            aGuid, aInputBlockId, aDefaultPrevented), 0);
         return;
     }
 
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
     APZCTreeManager* controller = nsWindow::GetAPZCTreeManager();
     if (controller) {
-        controller->ContentReceivedTouch(aGuid, aDefaultPrevented);
+        controller->ContentReceivedTouch(aGuid, aInputBlockId, aDefaultPrevented);
     }
 }
 
@@ -137,7 +138,8 @@ APZCCallbackHandler::HandleSingleTap(const CSSPoint& aPoint,
 void
 APZCCallbackHandler::HandleLongTap(const CSSPoint& aPoint,
                                    int32_t aModifiers,
-                                   const mozilla::layers::ScrollableLayerGuid& aGuid)
+                                   const mozilla::layers::ScrollableLayerGuid& aGuid,
+                                   uint64_t aInputBlockId)
 {
     // TODO send content response back to APZC
     CSSIntPoint point = RoundedToInt(aPoint);

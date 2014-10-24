@@ -31,7 +31,8 @@ public:
                                  const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
     virtual void HandleLongTap(const CSSPoint& aPoint,
                                int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
+                               const ScrollableLayerGuid& aGuid,
+                               uint64_t aInputBlockId) MOZ_OVERRIDE {}
     virtual void HandleLongTapUp(const CSSPoint& aPoint,
                                  int32_t aModifiers,
                                  const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}

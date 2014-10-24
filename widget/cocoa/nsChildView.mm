@@ -428,7 +428,8 @@ public:
   virtual void HandleSingleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
                                const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
   virtual void HandleLongTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
+                               const ScrollableLayerGuid& aGuid,
+                               uint64_t aInputBlockId) MOZ_OVERRIDE {}
   virtual void HandleLongTapUp(const CSSPoint& aPoint, int32_t aModifiers,
                                const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
   virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect,
@@ -5374,13 +5375,13 @@ static int32_t RoundUp(double aDouble)
     if (phase == NSEventPhaseMayBegin) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_MAYSTART, eventTime,
                                eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
       return;
     }
     if (phase == NSEventPhaseCancelled) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_CANCELLED, eventTime,
                                eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
       return;
     }
 
@@ -5397,34 +5398,34 @@ static int32_t RoundUp(double aDouble)
     if (phase == NSEventPhaseBegan || isLegacyScroll) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_START, eventTime,
                                eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
     }
     if (momentumPhase == NSEventPhaseNone && delta != ScreenPoint(0, 0)) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_PAN, eventTime,
                                eventTimeStamp, location, delta, 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
     }
     if (phase == NSEventPhaseEnded || isLegacyScroll) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_END, eventTime,
                                eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
     }
 
     // Any device that can dispatch momentum events supports all three momentum phases.
     if (momentumPhase == NSEventPhaseBegan) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_MOMENTUMSTART, eventTime,
                                eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
     }
     if (momentumPhase == NSEventPhaseChanged && delta != ScreenPoint(0, 0)) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_MOMENTUMPAN, eventTime,
                                eventTimeStamp, location, delta, 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
     }
     if (momentumPhase == NSEventPhaseEnded) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_MOMENTUMEND, eventTime,
                                eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
     }
   }
 }

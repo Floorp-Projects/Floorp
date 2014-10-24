@@ -15,8 +15,11 @@
 namespace mozilla {
 namespace layers {
 
+static uint64_t sBlockCounter = InputBlockState::NO_BLOCK_ID + 1;
+
 InputBlockState::InputBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc)
   : mTargetApzc(aTargetApzc)
+  , mBlockId(sBlockCounter++)
 {
   // We should never be constructed with a nullptr target.
   MOZ_ASSERT(mTargetApzc);
@@ -33,6 +36,12 @@ const nsRefPtr<const OverscrollHandoffChain>&
 InputBlockState::GetOverscrollHandoffChain() const
 {
   return mOverscrollHandoffChain;
+}
+
+uint64_t
+InputBlockState::GetBlockId() const
+{
+  return mBlockId;
 }
 
 TouchBlockState::TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc)

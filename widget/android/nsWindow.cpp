@@ -1096,7 +1096,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
         // previous block should not be default-prevented
         bool defaultPrevented = isDownEvent ? false : preventDefaultActions;
         if (ae->Type() == AndroidGeckoEvent::APZ_INPUT_EVENT) {
-            mozilla::widget::android::APZCCallbackHandler::GetInstance()->NotifyDefaultPrevented(ae->ApzGuid(), defaultPrevented);
+            mozilla::widget::android::APZCCallbackHandler::GetInstance()->NotifyDefaultPrevented(ae->ApzGuid(), ae->ApzInputBlockId(), defaultPrevented);
         } else {
             mozilla::widget::android::GeckoAppShell::NotifyDefaultPrevented(defaultPrevented);
         }
@@ -1109,7 +1109,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
     if (isDownEvent) {
         if (preventDefaultActions) {
             if (ae->Type() == AndroidGeckoEvent::APZ_INPUT_EVENT) {
-                mozilla::widget::android::APZCCallbackHandler::GetInstance()->NotifyDefaultPrevented(ae->ApzGuid(), true);
+                mozilla::widget::android::APZCCallbackHandler::GetInstance()->NotifyDefaultPrevented(ae->ApzGuid(), ae->ApzInputBlockId(), true);
             } else {
                 mozilla::widget::android::GeckoAppShell::NotifyDefaultPrevented(true);
             }
