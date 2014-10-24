@@ -609,14 +609,18 @@ LinearScanAllocator::populateSafepoints()
                     // in a register, or the payload is in a register. In
                     // both cases, we don't have a contiguous spill so we
                     // add a torn entry.
-                    if (!safepoint->addNunboxParts(*typeAlloc, *payloadAlloc))
+                    uint32_t typeVreg = type->def()->virtualRegister();
+                    if (!safepoint->addNunboxParts(typeVreg, *typeAlloc, *payloadAlloc))
                         return false;
 
                     // If the nunbox is stored in multiple places, we need to
                     // trace all of them to allow the GC to relocate objects.
                     if (payloadAlloc->isGeneralReg() && isSpilledAt(payloadInterval, inputOf(ins))) {
-                        if (!safepoint->addNunboxParts(*typeAlloc, *payload->canonicalSpill()))
+                        if (!safepoint->addNunboxParts(typeVreg, *typeAlloc,
+                                                       *payload->canonicalSpill()))
+                        {
                             return false;
+                        }
                     }
                 }
 #endif
