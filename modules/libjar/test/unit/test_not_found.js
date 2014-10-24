@@ -2,13 +2,23 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/Services.jsm");
 const path = "data/test_bug333423.zip";
 
 function run_test() {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
   var spec = "jar:" + ios.newFileURI(do_get_file(path)).spec + "!/";
-  var channel = ios.newChannel(spec + "file_that_isnt_in.archive", null, null);
+  var channel = ios.newChannel2(spec + "file_that_isnt_in.archive",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   try {
     instr = channel.open();
     do_throw("Failed to report that file doesn't exist")
