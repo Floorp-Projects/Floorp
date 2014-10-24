@@ -119,12 +119,25 @@ class CompactBufferWriter
         MOZ_ASSERT(byte <= 0xFF);
         enoughMemory_ &= buffer_.append(byte);
     }
+    void writeByteAt(uint32_t pos, uint32_t byte) {
+        MOZ_ASSERT(byte <= 0xFF);
+        buffer_[pos] = byte;
+    }
     void writeUnsigned(uint32_t value) {
         do {
             uint8_t byte = ((value & 0x7F) << 1) | (value > 0x7F);
             writeByte(byte);
             value >>= 7;
         } while (value);
+    }
+    void writeUnsignedAt(uint32_t pos, uint32_t value, uint32_t original) {
+        MOZ_ASSERT(value <= original);
+        do {
+            uint8_t byte = ((value & 0x7F) << 1) | (original > 0x7F);
+            writeByteAt(pos++, byte);
+            value >>= 7;
+            original >>= 7;
+        } while (original);
     }
     void writeSigned(int32_t v) {
         bool isNegative = v < 0;

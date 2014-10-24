@@ -275,7 +275,7 @@ class RInstructionResults
     bool initialized_;
 
   public:
-    RInstructionResults(IonJSFrameLayout *fp);
+    explicit RInstructionResults(IonJSFrameLayout *fp);
     RInstructionResults(RInstructionResults&& src);
 
     RInstructionResults& operator=(RInstructionResults&& rhs);
@@ -310,7 +310,7 @@ struct MaybeReadFallback
     const NoGCValue unreadablePlaceholder_;
     const FallbackConsequence consequence;
 
-    MaybeReadFallback(const Value &placeholder = UndefinedValue())
+    explicit MaybeReadFallback(const Value &placeholder = UndefinedValue())
       : maybeCx(nullptr),
         activation(nullptr),
         frame(nullptr),

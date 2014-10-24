@@ -179,6 +179,35 @@ loop.conversation = (function(mozL10n) {
   });
 
   /**
+   * Incoming Call failed view. Displayed when a call fails.
+   *
+   * XXX Based on CallFailedView, but built specially until we flux-ify the
+   * incoming call views (bug 1088672).
+   */
+  var IncomingCallFailedView = React.createClass({displayName: 'IncomingCallFailedView',
+    propTypes: {
+      cancelCall: React.PropTypes.func.isRequired
+    },
+
+    render: function() {
+      document.title = mozL10n.get("generic_failure_title");
+
+      return (
+        React.DOM.div({className: "call-window"}, 
+          React.DOM.h2(null, mozL10n.get("generic_failure_title")), 
+
+          React.DOM.div({className: "btn-group call-action-group"}, 
+            React.DOM.button({className: "btn btn-cancel", 
+                    onClick: this.props.cancelCall}, 
+              mozL10n.get("cancel_button")
+            )
+          )
+        )
+      );
+    }
+  });
+
+  /**
    * This view manages the incoming conversation views - from
    * call initiation through to the actual conversation and call end.
    *
@@ -254,10 +283,12 @@ loop.conversation = (function(mozL10n) {
         case "end": {
           // XXX To be handled with the "failed" view state when bug 1047410 lands
           if (this.state.callFailed) {
-            document.title = mozL10n.get("generic_failure_title");
-          } else {
-            document.title = mozL10n.get("conversation_has_ended");
+            return IncomingCallFailedView({
+              cancelCall: this.closeWindow.bind(this)}
+            )
           }
+
+          document.title = mozL10n.get("conversation_has_ended");
 
           var feebackAPIBaseUrl = navigator.mozLoop.getLoopCharPref(
             "feedback.baseUrl");
@@ -394,19 +425,25 @@ loop.conversation = (function(mozL10n) {
       if (progressData.state !== "terminated")
         return;
 
-      if (progressData.reason === "cancel" ||
-          progressData.reason === "closed") {
+      // XXX This would be nicer in the _abortIncomingCall function, but we need to stop
+      // it here for now due to server-side issues that are being fixed in bug 1088351.
+      // This is before the abort call to ensure that it happens before the window is
+      // closed.
+      navigator.mozLoop.stopAlerting();
+
+      // If we hit any of the termination reasons, and the user hasn't accepted
+      // then it seems reasonable to close the window/abort the incoming call.
+      //
+      // If the user has accepted the call, and something's happened, display
+      // the call failed view.
+      //
+      // https://wiki.mozilla.org/Loop/Architecture/MVP#Termination_Reasons
+      if (previousState === "init" || previousState === "alerting") {
         this._abortIncomingCall();
-        return;
+      } else {
+        this.setState({callFailed: true, callStatus: "end"});
       }
 
-      if (progressData.reason === "timeout") {
-        if (previousState === "init" || previousState === "alerting") {
-          this._abortIncomingCall();
-        } else {
-          this.setState({callFailed: true, callStatus: "end"});
-        }
-      }
     },
 
     /**
@@ -414,7 +451,6 @@ loop.conversation = (function(mozL10n) {
      * closes the websocket.
      */
     _abortIncomingCall: function() {
-      navigator.mozLoop.stopAlerting();
       this._websocket.close();
       // Having a timeout here lets the logging for the websocket complete and be
       // displayed on the console if both are on.
@@ -644,6 +680,7 @@ loop.conversation = (function(mozL10n) {
     AppControllerView: AppControllerView,
     IncomingConversationView: IncomingConversationView,
     IncomingCallView: IncomingCallView,
+    IncomingCallFailedView: IncomingCallFailedView,
     init: init
   };
 })(document.mozL10n);
