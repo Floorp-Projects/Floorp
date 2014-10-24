@@ -1015,8 +1015,8 @@ nsImageFrame::MeasureString(const char16_t*     aString,
                             nsRenderingContext& aContext)
 {
   nscoord totalWidth = 0;
-  aContext.SetTextRunRTL(false);
-  nscoord spaceWidth = aContext.GetWidth(' ');
+  aContext.FontMetrics()->SetTextRunRTL(false);
+  nscoord spaceWidth = aContext.FontMetrics()->SpaceWidth();
 
   aMaxFit = 0;
   while (aLength > 0) {
