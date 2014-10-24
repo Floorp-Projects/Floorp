@@ -84,9 +84,9 @@ def get_debugger_info(debugger, debuggerArgs = None, debuggerInteractive = False
     If the debugger cannot be found in the system, returns |None|.
 
     :param debugger: The name of the debugger.
-    :param debuggerArgs: If specified, it's the list of arguments to pass to the
-     debugger. A debugger specific separator arguments is appended at the end of
-     that list.
+    :param debuggerArgs: If specified, it's the arguments to pass to the debugger,
+    as a string. Any debugger-specific separator arguments are appended after these
+    arguments.
     :param debuggerInteractive: If specified, forces the debugger to be interactive.
     '''
 
@@ -118,12 +118,13 @@ def get_debugger_info(debugger, debuggerArgs = None, debuggerInteractive = False
         ['path', 'interactive', 'args', 'requiresEscapedArgs']
     )
 
-    debugger_arguments = get_debugger_info('args', [])
+    debugger_arguments = []
 
-    # Extend the default arguments for the chosen debugger with the ones passed in, if any.
     if debuggerArgs:
         # Append the provided debugger arguments at the end of the arguments list.
         debugger_arguments += debuggerArgs.split()
+
+    debugger_arguments += get_debugger_info('args', [])
 
     # Override the default debugger interactive mode if needed.
     debugger_interactive = get_debugger_info('interactive', False)
