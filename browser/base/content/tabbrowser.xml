@@ -136,10 +136,6 @@
         ""
       </field>
 
-      <field name="_contentWaitingCount">
-        0
-      </field>
-
       <property name="_numPinnedTabs" readonly="true">
         <getter><![CDATA[
           for (var i = 0; i < this.tabs.length; i++) {
@@ -3242,31 +3238,6 @@
         </body>
       </method>
 
-      <method name="_showBusySpinnerRemoteBrowser">
-        <parameter name="aBrowser"/>
-        <body><![CDATA[
-          aBrowser.setAttribute("pendingpaint", "true");
-          if (this._contentWaitingCount <= 0) {
-            // We are not currently spinning
-            this.setAttribute("pendingpaint", "true");
-            this._contentWaitingCount = 1;
-          } else {
-            this._contentWaitingCount++;
-          }
-        ]]></body>
-      </method>
-
-      <method name="_hideBusySpinnerRemoteBrowser">
-        <parameter name="aBrowser"/>
-        <body><![CDATA[
-          aBrowser.removeAttribute("pendingpaint");
-          this._contentWaitingCount--;
-          if (this._contentWaitingCount <= 0) {
-            this.removeAttribute("pendingpaint");
-          }
-        ]]></body>
-      </method>
-
       <method name="_prepareForTabSwitch">
         <parameter name="toTab"/>
         <parameter name="fromTab"/>
@@ -3305,19 +3276,16 @@
 
             let timeoutPromise = new Promise((aResolve, aReject) => {
               timeoutId = setTimeout(() => {
-                this._showBusySpinnerRemoteBrowser(toBrowser);
                 attemptTabSwitch(aResolve, aReject);
               }, kTabSwitchTimeout);
             });
 
             let paintPromise = new Promise((aResolve, aReject) => {
-              let onRemotePaint = () => {
+              toBrowser.addEventListener("MozAfterRemotePaint", function onRemotePaint() {
                 toBrowser.removeEventListener("MozAfterRemotePaint", onRemotePaint);
-                this._hideBusySpinnerRemoteBrowser(toBrowser);
                 clearTimeout(timeoutId);
                 attemptTabSwitch(aResolve, aReject);
-              };
-              toBrowser.addEventListener("MozAfterRemotePaint", onRemotePaint);
+              });
               toBrowser.QueryInterface(Ci.nsIFrameLoaderOwner)
                        .frameLoader
                        .requestNotifyAfterRemotePaint();

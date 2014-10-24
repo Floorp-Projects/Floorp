@@ -7,8 +7,10 @@
 
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/event-emitter.js");
+XPCOMUtils.defineLazyModuleGetter(this, "console", "resource://gre/modules/devtools/Console.jsm");
 
 this.EXPORTED_SYMBOLS = ["AbstractTreeItem"];
 

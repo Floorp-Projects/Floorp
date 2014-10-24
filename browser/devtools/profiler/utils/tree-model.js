@@ -50,15 +50,17 @@ exports._isContent = isContent; // used in tests
  *        @see ThreadNode.prototype.insert
  * @param number endAt [optional]
  *        @see ThreadNode.prototype.insert
+ * @param boolean invert [optional]
+ *        @see ThreadNode.prototype.insert
  */
-function ThreadNode(threadSamples, contentOnly, beginAt, endAt) {
+function ThreadNode(threadSamples, contentOnly, beginAt, endAt, invert) {
   this.samples = 0;
   this.duration = 0;
   this.calls = {};
   this._previousSampleTime = 0;
 
   for (let sample of threadSamples) {
-    this.insert(sample, contentOnly, beginAt, endAt);
+    this.insert(sample, contentOnly, beginAt, endAt, invert);
   }
 }
 
@@ -76,25 +78,39 @@ ThreadNode.prototype = {
    *        The earliest sample to start at (in milliseconds).
    * @param number endAt [optional]
    *        The latest sample to end at (in milliseconds).
+   * @param boolean inverted [optional]
+   *        Specifies if the call tree should be inverted (youngest -> oldest
+   *        frames).
    */
-  insert: function(sample, contentOnly = false, beginAt = 0, endAt = Infinity) {
+  insert: function(sample, contentOnly = false, beginAt = 0, endAt = Infinity,
+                   inverted = false) {
     let sampleTime = sample.time;
     if (!sampleTime || sampleTime < beginAt || sampleTime > endAt) {
       return;
     }
 
     let sampleFrames = sample.frames;
-    let rootIndex = 1;
 
     // Filter out platform frames if only content-related function calls
     // should be taken into consideration.
     if (contentOnly) {
-      sampleFrames = sampleFrames.filter(frame => isContent(frame));
-      rootIndex = 0;
+      sampleFrames = sampleFrames.filter(isContent);
     }
+
     if (!sampleFrames.length) {
       return;
     }
+
+    if (inverted) {
+      sampleFrames.reverse();
+      if (!contentOnly) {
+        // Remove the (root) node -- we don't want it as a leaf in the inverted
+        // tree.
+        sampleFrames.pop();
+      }
+    }
+
+    let startIndex = (inverted || contentOnly) ? 0 : 1;
 
     let sampleDuration = sampleTime - this._previousSampleTime;
     this._previousSampleTime = sampleTime;
@@ -102,7 +118,7 @@ ThreadNode.prototype = {
     this.duration += sampleDuration;
 
     FrameNode.prototype.insert(
-      sampleFrames, rootIndex, sampleTime, sampleDuration, this.calls);
+      sampleFrames, startIndex, sampleTime, sampleDuration, this.calls);
   },
 
   /**

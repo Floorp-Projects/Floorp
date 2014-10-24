@@ -116,8 +116,8 @@ static const unsigned long kKeyMapping[] = {
     0, // MEDIA_REWIND
     0, // MEDIA_FAST_FORWARD
     0, // MUTE
-    0, // PAGE_UP
-    0, // PAGE_DOWN
+    NS_VK_PAGE_UP,
+    NS_VK_PAGE_DOWN,
     0, // PICTSYMBOLS
     0, // SWITCH_CHARSET
     0, // BUTTON_A
@@ -135,7 +135,7 @@ static const unsigned long kKeyMapping[] = {
     0, // BUTTON_START
     0, // BUTTON_SELECT
     0, // BUTTON_MODE
-    0, // ESCAPE
+    NS_VK_ESCAPE,
     NS_VK_DELETE,
     0, // CTRL_LEFT
     0, // CTRL_RIGHT
@@ -186,6 +186,9 @@ static const unsigned long kKeyMapping[] = {
     NS_VK_COMMA,
     NS_VK_RETURN,
     NS_VK_EQUALS,
+    0, // NUMPAD_LEFT_PAREN
+    0, // NUMPAD_RIGHT_PAREN
+    NS_VK_VOLUME_MUTE,
     // There are more but we don't map them
 };
 

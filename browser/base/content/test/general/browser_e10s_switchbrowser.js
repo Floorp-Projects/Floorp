@@ -5,20 +5,49 @@ const gExpectedHistory = {
   entries: []
 };
 
-function check_history() {
-  let webNav = gBrowser.webNavigation;
-  let sessionHistory = webNav.sessionHistory;
+function get_remote_history(browser) {
+  function frame_script() {
+    let webNav = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+    let sessionHistory = webNav.sessionHistory;
+    let result = {
+      index: sessionHistory.index,
+      entries: []
+    };
 
-  let count = sessionHistory.count;
+    for (let i = 0; i < sessionHistory.count; i++) {
+      let entry = sessionHistory.getEntryAtIndex(i, false);
+      result.entries.push({
+        uri: entry.URI.spec,
+        title: entry.title
+      });
+    }
+
+    sendAsyncMessage("Test:History", result);
+  }
+
+  return new Promise(resolve => {
+    browser.messageManager.addMessageListener("Test:History", function listener({data}) {
+      browser.messageManager.removeMessageListener("Test:History", listener);
+      resolve(data);
+    });
+
+    browser.messageManager.loadFrameScript("data:,(" + frame_script.toString() + ")();", true);
+  });
+}
+
+let check_history = Task.async(function*() {
+  let sessionHistory = yield get_remote_history(gBrowser.selectedBrowser);
+
+  let count = sessionHistory.entries.length;
   is(count, gExpectedHistory.entries.length, "Should have the right number of history entries");
   is(sessionHistory.index, gExpectedHistory.index, "Should have the right history index");
 
   for (let i = 0; i < count; i++) {
-    let entry = sessionHistory.getEntryAtIndex(i, false);
-    is(entry.URI.spec, gExpectedHistory.entries[i].uri, "Should have the right URI");
+    let entry = sessionHistory.entries[i];
+    is(entry.uri, gExpectedHistory.entries[i].uri, "Should have the right URI");
     is(entry.title, gExpectedHistory.entries[i].title, "Should have the right title");
   }
-}
+});
 
 // Waits for a load and updates the known history
 let waitForLoad = Task.async(function*(uri) {
@@ -68,45 +97,45 @@ add_task(function*() {
   yield waitForLoad("http://example.com/" + DUMMY_PATH);
   is(gBrowser.selectedTab.getAttribute("remote"), expectedRemote, "Remote attribute should be correct");
   is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
-  check_history();
+  yield check_history();
 
   info("3");
   // Load a non-remote page
   yield waitForLoad("about:robots");
   is(gBrowser.selectedTab.getAttribute("remote"), "", "Remote attribute should be correct");
   is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
-  check_history();
+  yield check_history();
 
   info("4");
   // Load a remote page
   yield waitForLoad("http://example.org/" + DUMMY_PATH);
   is(gBrowser.selectedTab.getAttribute("remote"), expectedRemote, "Remote attribute should be correct");
   is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
-  check_history();
+  yield check_history();
 
   info("5");
   yield back();
   is(gBrowser.selectedTab.getAttribute("remote"), "", "Remote attribute should be correct");
   is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
-  check_history();
+  yield check_history();
 
   info("6");
   yield back();
   is(gBrowser.selectedTab.getAttribute("remote"), expectedRemote, "Remote attribute should be correct");
   is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
-  check_history();
+  yield check_history();
 
   info("7");
   yield forward();
   is(gBrowser.selectedTab.getAttribute("remote"), "", "Remote attribute should be correct");
   is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
-  check_history();
+  yield check_history();
 
   info("8");
   yield forward();
   is(gBrowser.selectedTab.getAttribute("remote"), expectedRemote, "Remote attribute should be correct");
   is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
-  check_history();
+  yield check_history();
 
   info("9");
   gBrowser.removeCurrentTab();
