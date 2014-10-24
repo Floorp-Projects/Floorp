@@ -308,13 +308,18 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     makeTypedInstance(JSContext *cx, uint32_t len, gc::AllocKind allocKind)
     {
         const Class *clasp = instanceClass();
-        bool largeAllocation = len * sizeof(NativeType) >= TypedArrayObject::SINGLETON_TYPE_BYTE_LENGTH;
+        if (len * sizeof(NativeType) >= TypedArrayObject::SINGLETON_TYPE_BYTE_LENGTH) {
+            JSObject *obj = NewBuiltinClassInstance(cx, clasp, allocKind, SingletonObject);
+            if (!obj)
+                return nullptr;
+            return &obj->as<TypedArrayObject>();
+        }
 
         jsbytecode *pc;
         RootedScript script(cx, cx->currentScript(&pc));
         NewObjectKind newKind = script
                                 ? UseNewTypeForInitializer(script, pc, clasp)
-                                : (largeAllocation ? SingletonObject : GenericObject);
+                                : GenericObject;
         RootedObject obj(cx, NewBuiltinClassInstance(cx, clasp, allocKind, newKind));
         if (!obj)
             return nullptr;
