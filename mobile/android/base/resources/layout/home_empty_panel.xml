@@ -28,7 +28,16 @@
               android:layout_height="0dip"
               android:gravity="top|center"
               android:textAppearance="@style/TextAppearance.EmptyMessage"
-              android:layout_weight="3"/>
+              android:layout_weight="2"/>
+
+    <TextView android:id="@+id/home_empty_hint"
+              android:layout_width="match_parent"
+              android:layout_height="0dip"
+              android:visibility="gone"
+              android:gravity="top|center"
+              android:textAppearance="@style/TextAppearance.EmptyHint"
+              android:textColorLink="#FFA62F"
+              android:layout_weight="4"/>
 
 </LinearLayout>
 
