@@ -2804,10 +2804,10 @@ ContentParent::AllocPSharedBufferManagerParent(mozilla::ipc::Transport* aTranspo
 }
 
 bool
-ContentParent::RecvGetProcessAttributes(uint64_t* aId,
+ContentParent::RecvGetProcessAttributes(ContentParentId* aCpId,
                                         bool* aIsForApp, bool* aIsForBrowser)
 {
-    *aId = mChildID;
+    *aCpId = mChildID;
     *aIsForApp = IsForApp();
     *aIsForBrowser = mIsForBrowser;
 
@@ -2857,13 +2857,13 @@ ContentParent::DeallocPJavaScriptParent(PJavaScriptParent *parent)
 PBrowserParent*
 ContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
                                    const uint32_t& aChromeFlags,
-                                   const uint64_t& aId,
+                                   const ContentParentId& aCpId,
                                    const bool& aIsForApp,
                                    const bool& aIsForBrowser)
 {
     return nsIContentParent::AllocPBrowserParent(aContext,
                                                  aChromeFlags,
-                                                 aId,
+                                                 aCpId,
                                                  aIsForApp,
                                                  aIsForBrowser);
 }
@@ -3866,14 +3866,14 @@ PBrowserParent*
 ContentParent::SendPBrowserConstructor(PBrowserParent* aActor,
                                        const IPCTabContext& aContext,
                                        const uint32_t& aChromeFlags,
-                                       const uint64_t& aId,
+                                       const ContentParentId& aCpId,
                                        const bool& aIsForApp,
                                        const bool& aIsForBrowser)
 {
     return PContentParent::SendPBrowserConstructor(aActor,
                                                    aContext,
                                                    aChromeFlags,
-                                                   aId,
+                                                   aCpId,
                                                    aIsForApp,
                                                    aIsForBrowser);
 }

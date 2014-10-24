@@ -137,7 +137,7 @@ public:
 
     virtual PBrowserChild* AllocPBrowserChild(const IPCTabContext& aContext,
                                               const uint32_t& aChromeFlags,
-                                              const uint64_t& aID,
+                                              const ContentParentId& aCpID,
                                               const bool& aIsForApp,
                                               const bool& aIsForBrowser);
     virtual bool DeallocPBrowserChild(PBrowserChild*);
@@ -361,7 +361,7 @@ public:
     // cache the value
     nsString &GetIndexedDBPath();
 
-    uint64_t GetID() { return mID; }
+    ContentParentId GetID() { return mID; }
 
     bool IsForApp() { return mIsForApp; }
     bool IsForBrowser() { return mIsForBrowser; }
@@ -379,14 +379,14 @@ public:
     virtual bool SendPBrowserConstructor(PBrowserChild* actor,
                                          const IPCTabContext& context,
                                          const uint32_t& chromeFlags,
-                                         const uint64_t& aID,
+                                         const ContentParentId& aCpID,
                                          const bool& aIsForApp,
                                          const bool& aIsForBrowser) MOZ_OVERRIDE;
 
     virtual bool RecvPBrowserConstructor(PBrowserChild* aCctor,
                                          const IPCTabContext& aContext,
                                          const uint32_t& aChromeFlags,
-                                         const uint64_t& aID,
+                                         const ContentParentId& aCpID,
                                          const bool& aIsForApp,
                                          const bool& aIsForBrowser) MOZ_OVERRIDE;
     virtual PDocAccessibleChild* AllocPDocAccessibleChild(PDocAccessibleChild*, const uint64_t&) MOZ_OVERRIDE;
@@ -419,7 +419,7 @@ private:
      * We expect our content parent to set this ID immediately after opening a
      * channel to us.
      */
-    uint64_t mID;
+    ContentParentId mID;
 
     AppInfo mAppInfo;
 
