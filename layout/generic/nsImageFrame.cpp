@@ -1123,8 +1123,11 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
                                          aRenderingContext,
                                          aRect.x, y + maxAscent);
     }
-    if (NS_FAILED(rv))
-      aRenderingContext.DrawString(str, maxFit, aRect.x, y + maxAscent);
+    if (NS_FAILED(rv)) {
+      nsLayoutUtils::DrawUniDirString(str, maxFit,
+                                      nsPoint(aRect.x, y + maxAscent),
+                                      aRenderingContext);
+    }
 
     // Move to the next line
     str += maxFit;
