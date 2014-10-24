@@ -69,11 +69,6 @@ protected:
   ~nsFrameLoader();
 
 public:
-  bool AsyncScrollEnabled() const
-  {
-    return !!(mRenderMode & RENDER_MODE_ASYNC_SCROLL);
-  }
-
   static nsFrameLoader* Create(mozilla::dom::Element* aOwner,
                                bool aNetworkCreated);
 
@@ -366,11 +361,6 @@ private:
   RenderFrameParent* mCurrentRemoteFrame;
   TabParent* mRemoteBrowser;
   uint64_t mChildID;
-
-  // See nsIFrameLoader.idl.  Short story, if !(mRenderMode &
-  // RENDER_MODE_ASYNC_SCROLL), all the fields below are ignored in
-  // favor of what content tells.
-  uint32_t mRenderMode;
 
   // See nsIFrameLoader.idl. EVENT_MODE_NORMAL_DISPATCH automatically
   // forwards some input events to out-of-process content.

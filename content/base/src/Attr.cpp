@@ -106,8 +106,6 @@ NS_INTERFACE_TABLE_HEAD(Attr)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(Attr)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
-                                 new nsNode3Tearoff(this))
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Attr)

@@ -1,0 +1,40 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SharedLibrary('logalloc')
+
+SOURCES += [
+    'FdPrintf.cpp',
+    'LogAlloc.cpp',
+]
+
+DISABLE_STL_WRAPPING = True
+USE_STATIC_LIBS = True
+DEFINES['MOZ_NO_MOZALLOC'] = True
+# Avoid Lock_impl code depending on mozilla::Logger.
+DEFINES['NDEBUG'] = True
+
+# Use locking code from the chromium stack.
+if CONFIG['OS_TARGET'] == 'WINNT':
+    SOURCES += [
+        '../../../ipc/chromium/src/base/lock_impl_win.cc',
+    ]
+else:
+    SOURCES += [
+        '../../../ipc/chromium/src/base/lock_impl_posix.cc',
+    ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+# Android doesn't have pthread_atfork, but we have our own in mozglue.
+if CONFIG['OS_TARGET'] == 'Android':
+    USE_LIBS += [
+        'mozglue',
+    ]
+
+DIRS += [
+    'replay',
+]

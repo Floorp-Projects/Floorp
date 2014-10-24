@@ -99,7 +99,6 @@
 
 #include "nsBidiUtils.h"
 
-#include "nsIDOMXPathNSResolver.h"
 #include "nsIParserService.h"
 #include "nsContentCreatorFunctions.h"
 
@@ -210,6 +209,7 @@
 #include "nsISecurityConsoleMessage.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/dom/XPathEvaluator.h"
+#include "mozilla/dom/XPathNSResolverBinding.h"
 #include "mozilla/dom/XPathResult.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDocumentActivity.h"
@@ -1778,8 +1778,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMXPathEvaluator)
   NS_INTERFACE_TABLE_END
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsDocument)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
-                                 new nsNode3Tearoff(this))
 NS_INTERFACE_MAP_END
 
 
@@ -12314,22 +12312,21 @@ nsIDocument::Constructor(const GlobalObject& aGlobal,
 
 XPathExpression*
 nsIDocument::CreateExpression(const nsAString& aExpression,
-                              nsIDOMXPathNSResolver* aResolver,
+                              XPathNSResolver* aResolver,
                               ErrorResult& rv)
 {
   return XPathEvaluator()->CreateExpression(aExpression, aResolver, rv);
 }
 
-already_AddRefed<nsIDOMXPathNSResolver>
-nsIDocument::CreateNSResolver(nsINode* aNodeResolver,
-                              ErrorResult& rv)
+nsINode*
+nsIDocument::CreateNSResolver(nsINode& aNodeResolver)
 {
-  return XPathEvaluator()->CreateNSResolver(aNodeResolver, rv);
+  return XPathEvaluator()->CreateNSResolver(aNodeResolver);
 }
 
 already_AddRefed<XPathResult>
 nsIDocument::Evaluate(JSContext* aCx, const nsAString& aExpression,
-                      nsINode* aContextNode, nsIDOMXPathNSResolver* aResolver,
+                      nsINode* aContextNode, XPathNSResolver* aResolver,
                       uint16_t aType, JS::Handle<JSObject*> aResult,
                       ErrorResult& rv)
 {
@@ -12338,15 +12335,8 @@ nsIDocument::Evaluate(JSContext* aCx, const nsAString& aExpression,
 }
 
 NS_IMETHODIMP
-nsDocument::CreateNSResolver(nsIDOMNode* aNodeResolver,
-                             nsIDOMXPathNSResolver** aResult)
-{
-  return XPathEvaluator()->CreateNSResolver(aNodeResolver, aResult);
-}
-
-NS_IMETHODIMP
 nsDocument::Evaluate(const nsAString& aExpression, nsIDOMNode* aContextNode,
-                     nsIDOMXPathNSResolver* aResolver, uint16_t aType,
+                     nsIDOMNode* aResolver, uint16_t aType,
                      nsISupports* aInResult, nsISupports** aResult)
 {
   return XPathEvaluator()->Evaluate(aExpression, aContextNode, aResolver, aType,

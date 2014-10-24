@@ -909,6 +909,11 @@ WebGLContext::SetDimensions(int32_t sWidth, int32_t sHeight)
     mViewportWidth = mWidth;
     mViewportHeight = mHeight;
 
+    // Update mOptions.
+    mOptions.depth = gl->Caps().depth;
+    mOptions.stencil = gl->Caps().stencil;
+    mOptions.antialias = gl->Caps().antialias;
+
     // Make sure that we clear this out, otherwise
     // we'll end up displaying random memory
     gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
@@ -925,9 +930,9 @@ WebGLContext::SetDimensions(int32_t sWidth, int32_t sHeight)
 
     MOZ_ASSERT(gl->Caps().color);
     MOZ_ASSERT(gl->Caps().alpha == mOptions.alpha);
-    MOZ_ASSERT(gl->Caps().depth == mOptions.depth || !gl->Caps().depth);
-    MOZ_ASSERT(gl->Caps().stencil == mOptions.stencil || !gl->Caps().stencil);
-    MOZ_ASSERT(gl->Caps().antialias == mOptions.antialias || !gl->Caps().antialias);
+    MOZ_ASSERT(gl->Caps().depth == mOptions.depth);
+    MOZ_ASSERT(gl->Caps().stencil == mOptions.stencil);
+    MOZ_ASSERT(gl->Caps().antialias == mOptions.antialias);
     MOZ_ASSERT(gl->Caps().preserve == mOptions.preserveDrawingBuffer);
 
     if (gl->WorkAroundDriverBugs() && gl->IsANGLE()) {

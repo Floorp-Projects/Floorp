@@ -15,7 +15,6 @@
 #include "nsStyleConsts.h"
 
 class gfxContext;
-class gfxPattern;
 struct gfxRGBA;
 struct nsBorderColors;
 
@@ -190,12 +189,6 @@ struct nsCSSBorderRenderer {
   // borders because they can be considered 'solid' borders of 0 width and
   // with no color effect.
   bool AllBordersSolid(bool *aHasCompositeColors);
-
-  // Create a gradient pattern that will handle the color transition for a
-  // corner.
-  already_AddRefed<gfxPattern> CreateCornerGradient(mozilla::css::Corner aCorner,
-                                                    const gfxRGBA &aFirstColor,
-                                                    const gfxRGBA &aSecondColor);
 
   // Azure variant of CreateCornerGradient.
   mozilla::TemporaryRef<mozilla::gfx::GradientStops>

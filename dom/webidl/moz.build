@@ -537,6 +537,7 @@ WEBIDL_FILES = [
     'XMLStylesheetProcessingInstruction.webidl',
     'XPathEvaluator.webidl',
     'XPathExpression.webidl',
+    'XPathNSResolver.webidl',
     'XPathResult.webidl',
     'XSLTProcessor.webidl',
     'XULCommandEvent.webidl',

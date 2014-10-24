@@ -97,7 +97,6 @@ private:
 
 class CompositorVsyncObserver MOZ_FINAL : public VsyncObserver
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorVsyncObserver)
   friend class CompositorParent;
 
 public:

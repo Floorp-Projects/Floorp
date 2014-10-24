@@ -13,7 +13,7 @@ function find(selector, elem) {
     if (!elem) {
         elem = document;
     }
-    return toArray(elem.querySelector(selector));
+    return elem.querySelector(selector);
 }
 
 function find_all(selector, elem) {
@@ -32,7 +32,7 @@ addEventListener("DOMContentLoaded", function() {
         elem.addEventListener("click",
                               function(event) {
                                   var node = elem;
-                                  while (node && !node.classList.contains('.results-table-row')) {
+                                  while (node && !node.classList.contains('results-table-row')) {
                                       node = node.parentNode;
                                   }
                                   if (node != null) {

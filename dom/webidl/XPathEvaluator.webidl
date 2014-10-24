@@ -4,16 +4,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-interface XPathNSResolver;
-
 [Constructor]
 interface XPathEvaluator {
   // Based on nsIDOMXPathEvaluator
   [NewObject, Throws]
   XPathExpression createExpression(DOMString expression,
                                    XPathNSResolver? resolver);
-  [NewObject, Throws]
-  XPathNSResolver createNSResolver(Node? nodeResolver);
+  [Pure]
+  Node createNSResolver(Node nodeResolver);
   [Throws]
   XPathResult evaluate(DOMString expression, Node? contextNode,
                        XPathNSResolver? resolver, unsigned short type,
