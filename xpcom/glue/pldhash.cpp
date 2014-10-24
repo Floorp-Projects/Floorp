@@ -191,13 +191,14 @@ PLDHashTable*
 PL_NewDHashTable(const PLDHashTableOps* aOps, void* aData, uint32_t aEntrySize,
                  uint32_t aLength)
 {
-  PLDHashTable* table = (PLDHashTable*)malloc(sizeof(*table));
+  PLDHashTable* table = (PLDHashTable*)aOps->allocTable(NULL, sizeof(*table));
+
   if (!table) {
     return nullptr;
   }
   if (!PL_DHashTableInit(table, aOps, aData, aEntrySize, fallible_t(),
                          aLength)) {
-    free(table);
+    aOps->freeTable(NULL, table);
     return nullptr;
   }
   return table;
@@ -207,7 +208,7 @@ void
 PL_DHashTableDestroy(PLDHashTable* aTable)
 {
   PL_DHashTableFinish(aTable);
-  free(aTable);
+  aTable->ops->freeTable(NULL, aTable);
 }
 
 /*
