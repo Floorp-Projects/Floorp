@@ -4461,10 +4461,15 @@ Parser<FullParseHandler>::forStatement()
     bool isForEach = false;
     unsigned iflags = 0;
 
-    if (allowsForEachIn() && tokenStream.matchContextualKeyword(context->names().each)) {
-        iflags = JSITER_FOREACH;
-        isForEach = true;
-        sawDeprecatedForEach = true;
+    if (allowsForEachIn()) {
+        bool matched;
+        if (!tokenStream.matchContextualKeyword(&matched, context->names().each))
+            return null();
+        if (matched) {
+            iflags = JSITER_FOREACH;
+            isForEach = true;
+            sawDeprecatedForEach = true;
+        }
     }
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
@@ -6612,8 +6617,13 @@ Parser<FullParseHandler>::legacyComprehensionTail(ParseNode *bodyExpr, unsigned 
 
         pn2->setOp(JSOP_ITER);
         pn2->pn_iflags = JSITER_ENUMERATE;
-        if (allowsForEachIn() && tokenStream.matchContextualKeyword(context->names().each))
-            pn2->pn_iflags |= JSITER_FOREACH;
+        if (allowsForEachIn()) {
+            bool matched;
+            if (!tokenStream.matchContextualKeyword(&matched, context->names().each))
+                return null();
+            if (matched)
+                pn2->pn_iflags |= JSITER_FOREACH;
+        }
         MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
 
         uint32_t startYieldOffset = pc->lastYieldOffset;
@@ -7015,7 +7025,10 @@ Parser<ParseHandler>::comprehensionFor(GeneratorKind comprehensionKind)
         report(ParseError, false, null(), JSMSG_LET_COMP_BINDING);
         return null();
     }
-    if (!tokenStream.matchContextualKeyword(context->names().of)) {
+    bool matched;
+    if (!tokenStream.matchContextualKeyword(&matched, context->names().of))
+        return null();
+    if (!matched) {
         report(ParseError, false, null(), JSMSG_OF_AFTER_FOR_NAME);
         return null();
     }
