@@ -34,6 +34,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "nsIWebBrowserChrome3.h"
+#include "mozilla/dom/ipc/IdType.h"
 
 class nsICachedFileDescriptorListener;
 class nsIDOMWindowUtils;
@@ -254,7 +255,7 @@ class TabChild MOZ_FINAL : public TabChildBase,
     typedef mozilla::layers::ActiveElementManager ActiveElementManager;
 
 public:
-    static std::map<uint64_t, nsRefPtr<TabChild> >& NestedTabChildMap();
+    static std::map<TabId, nsRefPtr<TabChild>>& NestedTabChildMap();
 
 public:
     /** 
@@ -266,26 +267,13 @@ public:
 
     /** Return a TabChild with the given attributes. */
     static already_AddRefed<TabChild>
-    Create(nsIContentChild* aManager, const TabContext& aContext, uint32_t aChromeFlags);
+    Create(nsIContentChild* aManager, const TabId& aTabId, const TabContext& aContext, uint32_t aChromeFlags);
 
     bool IsRootContentDocument();
 
-    const uint64_t Id() const {
-        return mUniqueId;
-    }
-
-    static uint64_t
-    GetTabChildId(TabChild* aTabChild)
-    {
-        MOZ_ASSERT(NS_IsMainThread());
-        if (aTabChild->Id() != 0) {
-            return aTabChild->Id();
-        }
-        static uint64_t sId = 0;
-        sId++;
-        aTabChild->mUniqueId = sId;
-        NestedTabChildMap()[sId] = aTabChild;
-        return sId;
+    const TabId GetTabId() const {
+      MOZ_ASSERT(mUniqueId != 0);
+      return mUniqueId;
     }
 
     NS_DECL_ISUPPORTS_INHERITED
@@ -516,7 +504,10 @@ private:
      *
      * |aIsBrowserElement| indicates whether we're a browser (but not an app).
      */
-    TabChild(nsIContentChild* aManager, const TabContext& aContext, uint32_t aChromeFlags);
+    TabChild(nsIContentChild* aManager,
+             const TabId& aTabId,
+             const TabContext& aContext,
+             uint32_t aChromeFlags);
 
     nsresult Init();
 
@@ -564,6 +555,14 @@ private:
     void SendPendingTouchPreventedResponse(bool aPreventDefault,
                                            const ScrollableLayerGuid& aGuid);
 
+    void SetTabId(const TabId& aTabId)
+    {
+      MOZ_ASSERT(mUniqueId == 0);
+
+      mUniqueId = aTabId;
+      NestedTabChildMap()[mUniqueId] = this;
+    }
+
     class CachedFileDescriptorInfo;
     class CachedFileDescriptorCallbackRunnable;
 
@@ -606,8 +605,8 @@ private:
     bool mIgnoreKeyPressEvent;
     nsRefPtr<ActiveElementManager> mActiveElementManager;
     bool mHasValidInnerSize;
-    uint64_t mUniqueId;
     bool mDestroyed;
+    TabId mUniqueId;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

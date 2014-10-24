@@ -27,12 +27,12 @@ namespace mozilla {
 
 namespace dom{
 class TabParent;
+class PBrowserOrId;
 }
 
 namespace net {
 
 class HttpChannelParentListener;
-class PBrowserOrId;
 
 class HttpChannelParent : public PHttpChannelParent
                         , public nsIParentRedirectingChannel
@@ -54,7 +54,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIAUTHPROMPTPROVIDER
 
-  HttpChannelParent(const PBrowserOrId& iframeEmbedding,
+  HttpChannelParent(const dom::PBrowserOrId& iframeEmbedding,
                     nsILoadContext* aLoadContext,
                     PBOverrideStatus aStatus);
 

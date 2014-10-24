@@ -1109,13 +1109,15 @@ ContentChild::DeallocPJavaScriptChild(PJavaScriptChild *aChild)
 }
 
 PBrowserChild*
-ContentChild::AllocPBrowserChild(const IPCTabContext& aContext,
+ContentChild::AllocPBrowserChild(const TabId& aTabId,
+                                 const IPCTabContext& aContext,
                                  const uint32_t& aChromeFlags,
                                  const ContentParentId& aCpID,
                                  const bool& aIsForApp,
                                  const bool& aIsForBrowser)
 {
-    return nsIContentChild::AllocPBrowserChild(aContext,
+    return nsIContentChild::AllocPBrowserChild(aTabId,
+                                               aContext,
                                                aChromeFlags,
                                                aCpID,
                                                aIsForApp,
@@ -1124,6 +1126,7 @@ ContentChild::AllocPBrowserChild(const IPCTabContext& aContext,
 
 bool
 ContentChild::SendPBrowserConstructor(PBrowserChild* aActor,
+                                      const TabId& aTabId,
                                       const IPCTabContext& aContext,
                                       const uint32_t& aChromeFlags,
                                       const ContentParentId& aCpID,
@@ -1131,6 +1134,7 @@ ContentChild::SendPBrowserConstructor(PBrowserChild* aActor,
                                       const bool& aIsForBrowser)
 {
     return PContentChild::SendPBrowserConstructor(aActor,
+                                                  aTabId,
                                                   aContext,
                                                   aChromeFlags,
                                                   aCpID,
@@ -1140,6 +1144,7 @@ ContentChild::SendPBrowserConstructor(PBrowserChild* aActor,
 
 bool
 ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
+                                      const TabId& aTabId,
                                       const IPCTabContext& aContext,
                                       const uint32_t& aChromeFlags,
                                       const ContentParentId& aCpID,
