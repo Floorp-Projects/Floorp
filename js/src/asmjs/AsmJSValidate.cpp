@@ -1458,7 +1458,10 @@ class MOZ_STACK_CLASS ModuleCompiler
         // Since pn is typically only null under OOM, this suppression simply forces any GC to be
         // delayed until the compilation is off the stack and more memory can be freed.
         gc::AutoSuppressGC nogc(cx_);
-        return failOffset(tokenStream().peekTokenPos().begin, str);
+        TokenPos pos;
+        if (!tokenStream().peekTokenPos(&pos))
+            return false;
+        return failOffset(pos.begin, str);
     }
 
     bool failfVA(ParseNode *pn, const char *fmt, va_list ap) {

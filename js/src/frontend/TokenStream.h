@@ -403,13 +403,15 @@ class MOZ_STACK_CLASS TokenStream
         return *ttp != TOK_ERROR;
     }
 
-    TokenPos peekTokenPos(Modifier modifier = None) {
-        if (lookahead != 0)
-            return tokens[(cursor + 1) & ntokensMask].pos;
-        getTokenInternal(modifier);
-        ungetToken();
-        MOZ_ASSERT(lookahead != 0);
-        return tokens[(cursor + 1) & ntokensMask].pos;
+    bool peekTokenPos(TokenPos *posp, Modifier modifier = None) {
+        if (lookahead == 0) {
+            getTokenInternal(modifier);
+            ungetToken();
+            MOZ_ASSERT(lookahead != 0);
+        }
+        Token token = tokens[(cursor + 1) & ntokensMask];
+        *posp = token.pos;
+        return token.type != TOK_ERROR;
     }
 
     // This is like peekToken(), with one exception:  if there is an EOL
