@@ -47,13 +47,6 @@ static int32_t FindSafeLength(const char16_t *aString, uint32_t aLength,
     return len;
 }
 
-static int32_t FindSafeLength(const char *aString, uint32_t aLength,
-                              uint32_t aMaxChunkLength)
-{
-    // Since it's ASCII, we don't need to worry about clusters or RTL
-    return std::min(aLength, aMaxChunkLength);
-}
-
 //////////////////////////////////////////////////////////////////////
 //// nsRenderingContext
 
@@ -106,26 +99,6 @@ nsRenderingContext::GetWidth(const nsString& aString)
 }
 
 nscoord
-nsRenderingContext::GetWidth(const char* aString)
-{
-    return GetWidth(aString, strlen(aString));
-}
-
-nscoord
-nsRenderingContext::GetWidth(const char* aString, uint32_t aLength)
-{
-    uint32_t maxChunkLength = GetMaxChunkLength();
-    nscoord width = 0;
-    while (aLength > 0) {
-        int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
-        width += mFontMetrics->GetWidth(aString, len, this);
-        aLength -= len;
-        aString += len;
-    }
-    return width;
-}
-
-nscoord
 nsRenderingContext::GetWidth(const char16_t *aString, uint32_t aLength)
 {
     uint32_t maxChunkLength = GetMaxChunkLength();
@@ -162,30 +135,6 @@ nsRenderingContext::GetBoundingMetrics(const char16_t* aString,
         aString += len;
     }
     return totalMetrics;
-}
-
-void
-nsRenderingContext::DrawString(const char *aString, uint32_t aLength,
-                               nscoord aX, nscoord aY)
-{
-    uint32_t maxChunkLength = GetMaxChunkLength();
-    while (aLength > 0) {
-        int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
-        mFontMetrics->DrawString(aString, len, aX, aY, this);
-        aLength -= len;
-
-        if (aLength > 0) {
-            nscoord width = mFontMetrics->GetWidth(aString, len, this);
-            aX += width;
-            aString += len;
-        }
-    }
-}
-
-void
-nsRenderingContext::DrawString(const nsString& aString, nscoord aX, nscoord aY)
-{
-    DrawString(aString.get(), aString.Length(), aX, aY);
 }
 
 void
