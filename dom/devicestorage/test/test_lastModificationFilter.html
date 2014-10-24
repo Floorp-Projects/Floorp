@@ -23,10 +23,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <script class="testbody" type="text/javascript">
 
 devicestorage_setup();
-
-var oldFiles = ["a.png", "b.png", "c.png"];
+// We put the old files in 2 levels deep. When you add a file to a directory
+// it will modify the parents last modification time, but not the parents
+// parents. So we want to make sure that even though x's timestamp is earlier
+// than the since parameter, we still pick up the later files.
+var oldFiles = ["x/y/aa.png", "x/y/ab.png", "x/y/ac.png"];
 var timeFile = "t.png";
-var newFiles = ["d.png", "e.png", "f.png"];
+var newFiles = ["x/y/ad.png", "x/y/ae.png", "x/y/af.png", // new files in old dir
+                "z/bd.png", "z/be.png", "z/bf.png"];      // new files in new dir
 
 var storage = navigator.getDeviceStorage('pictures');
 var prefix = "devicestorage/" + randomFilename(12);
