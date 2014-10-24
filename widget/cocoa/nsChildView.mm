@@ -2664,6 +2664,17 @@ nsChildView::VibrancyFillColorForWidgetType(uint8_t aWidgetType)
   return [NSColor whiteColor];
 }
 
+NSColor*
+nsChildView::VibrancyFontSmoothingBackgroundColorForWidgetType(uint8_t aWidgetType)
+{
+  if (VibrancyManager::SystemSupportsVibrancy()) {
+    return EnsureVibrancyManager().VibrancyFontSmoothingBackgroundColorForType(
+      aWidgetType == NS_THEME_MAC_VIBRANCY_LIGHT
+        ? VibrancyType::LIGHT : VibrancyType::DARK);
+  }
+  return [NSColor clearColor];
+}
+
 mozilla::VibrancyManager&
 nsChildView::EnsureVibrancyManager()
 {
@@ -3653,6 +3664,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return [NSColor whiteColor];
   }
   return mGeckoChild->VibrancyFillColorForWidgetType(aWidgetType);
+}
+
+- (NSColor*)vibrancyFontSmoothingBackgroundColorForWidgetType:(uint8_t)aWidgetType
+{
+  if (!mGeckoChild) {
+    return [NSColor clearColor];
+  }
+  return mGeckoChild->VibrancyFontSmoothingBackgroundColorForWidgetType(aWidgetType);
 }
 
 - (nsIntRegion)nativeDirtyRegionWithBoundingRect:(NSRect)aRect
