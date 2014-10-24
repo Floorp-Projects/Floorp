@@ -68,9 +68,14 @@ static const char* Get##Name##PrefName() { return Pref; }                     \
 static Type Get##Name##PrefDefault() { return Default; }                      \
 PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
 
+class PreferenceAccessImpl;
 class gfxPrefs;
 class gfxPrefs MOZ_FINAL
 {
+private:
+  /// See Logging.h.  This lets Moz2D access preference values it owns.
+  PreferenceAccessImpl* mMoz2DPrefAccess;
+
 private:
   // Enums for the update policy.
   MOZ_BEGIN_NESTED_ENUM_CLASS(UpdatePolicy)

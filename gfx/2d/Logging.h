@@ -44,6 +44,12 @@ const int LOG_DEBUG = 1;
 const int LOG_WARNING = 2;
 const int LOG_CRITICAL = 3;
 
+#if defined(DEBUG)
+const int LOG_DEFAULT = LOG_DEBUG;
+#else
+const int LOG_DEFAULT = LOG_CRITICAL;
+#endif
+
 #if defined(PR_LOGGING)
 
 inline PRLogModuleLevel PRLogLevelForLevel(int aLevel) {
@@ -52,19 +58,52 @@ inline PRLogModuleLevel PRLogLevelForLevel(int aLevel) {
     return PR_LOG_DEBUG;
   case LOG_WARNING:
     return PR_LOG_WARNING;
+  case LOG_CRITICAL:
+    return PR_LOG_ERROR;
   }
   return PR_LOG_DEBUG;
 }
 
 #endif
 
-extern GFX2D_API int sGfxLogLevel;
+class PreferenceAccess
+{
+public:
+  virtual ~PreferenceAccess();
+
+  // This should connect the variable aVar to be updated whenever a preference
+  // aName is modified.  aDefault would be used if the preference is undefined,
+  // so that we always get the valid value for aVar.
+  virtual void LivePref(const char* aName, int32_t* aVar, int32_t aDefault);
+
+public:
+  static void SetAccess(PreferenceAccess* aAccess);
+
+public:
+  // For each preference that needs to be accessed in Moz2D, add a variable
+  // to hold it, as well as the call to LivePref in the RegisterAll() method
+  // below.
+
+  // Used to choose the level of logging we get.  The higher the number,
+  // the less logging we get.  Value of zero will give you all the logging
+  // we have.  The default is LOG_DEBUG (1).
+  static int32_t sGfxLogLevel;
+
+private:
+  static void RegisterAll() {
+    // The default values (last parameter) should match the initialization
+    // values in Factory.cpp, otherwise the standalone Moz2D will get different
+    // defaults.
+    sAccess->LivePref("gfx.logging.level", &sGfxLogLevel, LOG_DEFAULT);
+  }
+  static PreferenceAccess* sAccess;
+};
 
 struct BasicLogger
 {
   static void OutputMessage(const std::string &aString, int aLevel) {
 #if defined(WIN32) && !defined(PR_LOGGING)
-    if (aLevel >= sGfxLogLevel) {
+    if (aLevel >= PreferenceAccess::sGfxLogLevel) {
       ::OutputDebugStringA(aString.c_str());
     }
 #elif defined(PR_LOGGING) && !(defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID))
@@ -72,7 +111,7 @@ struct BasicLogger
       PR_LogPrint(aString.c_str());
     }
 #else
-    if (aLevel >= sGfxLogLevel) {
+    if (aLevel >= PreferenceAccess::sGfxLogLevel) {
 #if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
       printf_stderr("%s", aString.c_str());
 #else
