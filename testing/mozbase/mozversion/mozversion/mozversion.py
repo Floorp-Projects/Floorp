@@ -77,19 +77,6 @@ class LocalVersion(Version):
 
     def __init__(self, binary, **kwargs):
         Version.__init__(self, **kwargs)
-        path = None
-
-        def find_location(path):
-            if os.path.exists(os.path.join(path, 'application.ini')):
-                return path
-
-            if sys.platform == 'darwin':
-                path = os.path.join(os.path.dirname(path), 'Resources')
-
-            if os.path.exists(os.path.join(path, 'application.ini')):
-                return path
-            else:
-                return None
 
         if binary:
             # on Windows, the binary may be specified with or without the
@@ -97,14 +84,26 @@ class LocalVersion(Version):
             if not os.path.exists(binary) and not os.path.exists(binary +
                                                                  '.exe'):
                 raise IOError('Binary path does not exist: %s' % binary)
-            path = find_location(os.path.dirname(os.path.realpath(binary)))
+            path = os.path.dirname(os.path.realpath(binary))
         else:
-            path = find_location(os.getcwd())
+            path = os.getcwd()
 
-        if not path:
-            raise errors.LocalAppNotFoundError(path)
+        if not self.check_location(path):
+            if sys.platform == 'darwin':
+                resources_path = os.path.join(os.path.dirname(path),
+                                              'Resources')
+                if self.check_location(resources_path):
+                    path = resources_path
+                else:
+                    raise errors.LocalAppNotFoundError(path)
+            else:
+                raise errors.LocalAppNotFoundError(path)
 
         self.get_gecko_info(path)
+
+    def check_location(self, path):
+        return (os.path.exists(os.path.join(path, 'application.ini'))
+                and os.path.exists(os.path.join(path, 'platform.ini')))
 
 
 class B2GVersion(Version):

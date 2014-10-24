@@ -26,6 +26,9 @@ class SourcesTest(unittest.TestCase):
         with open(os.path.join(self.tempdir, 'application.ini'), 'w') as f:
             f.writelines("""[App]\nName = B2G\n""")
 
+        with open(os.path.join(self.tempdir, 'platform.ini'), 'w') as f:
+            f.write('[Build]\nBuildID = PlatformBuildID\n')
+
     def tearDown(self):
         mozfile.remove(self.tempdir)
 
