@@ -674,7 +674,7 @@ GLenum
 WebGLContext::GetAndFlushUnderlyingGLErrors()
 {
     // Get and clear GL error in ALL cases.
-    GLenum error = gl->GetAndClearError();
+    GLenum error = gl->fGetError();
 
     // Only store in mUnderlyingGLError if is hasn't already recorded an
     // error.
