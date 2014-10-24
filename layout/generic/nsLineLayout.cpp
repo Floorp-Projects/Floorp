@@ -1101,16 +1101,16 @@ nsLineLayout::AllowForStartMargin(PerFrameData* pfd,
     // the frame we will properly avoid adding in the starting margin.
     pfd->mMargin.IStart(frameWM) = 0;
   } else {
-    NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aReflowState.AvailableWidth(),
-                     "have unconstrained width; this should only result from "
-                     "very large sizes, not attempts at intrinsic width "
-                     "calculation");
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedWidth()) {
+    NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aReflowState.AvailableISize(),
+                     "have unconstrained inline-size; this should only result "
+                     "from very large sizes, not attempts at intrinsic "
+                     "inline-size calculation");
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedISize()) {
       // For inline-ish and text-ish things (which don't compute widths
-      // in the reflow state), adjust available width to account for the
+      // in the reflow state), adjust available inline-size to account for the
       // start margin. The end margin will be accounted for when we
       // finish flowing the frame.
-      aReflowState.AvailableWidth() -= pfd->mMargin.IStart(frameWM);
+      aReflowState.AvailableISize() -= pfd->mMargin.IStart(frameWM);
     }
   }
 }
