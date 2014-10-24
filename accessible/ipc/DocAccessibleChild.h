@@ -48,6 +48,8 @@ public:
    */
   virtual bool RecvDescription(const uint64_t& aID, nsString* aDesc) MOZ_OVERRIDE;
 
+  virtual bool RecvAttributes(const uint64_t& aID, nsTArray<Attribute> *aAttributes) MOZ_OVERRIDE;
+
 private:
   DocAccessible* mDoc;
 };
