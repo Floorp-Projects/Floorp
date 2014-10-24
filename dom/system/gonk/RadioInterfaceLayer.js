@@ -504,13 +504,15 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
     },
 
     _isValidStateForSetRadioEnabled: function(radioState) {
-      return radioState == RIL.GECKO_RADIOSTATE_ENABLED ||
-             radioState == RIL.GECKO_RADIOSTATE_DISABLED;
+      return radioState == Ci.nsIMobileConnection.MOBILE_RADIO_STATE_ENABLED ||
+             radioState == Ci.nsIMobileConnection.MOBILE_RADIO_STATE_DISABLED;
     },
 
     _isDummyForSetRadioEnabled: function(radioState, data) {
-      return (radioState == RIL.GECKO_RADIOSTATE_ENABLED && data.enabled) ||
-             (radioState == RIL.GECKO_RADIOSTATE_DISABLED && !data.enabled);
+      return (radioState == Ci.nsIMobileConnection.MOBILE_RADIO_STATE_ENABLED &&
+              data.enabled) ||
+             (radioState == Ci.nsIMobileConnection.MOBILE_RADIO_STATE_DISABLED &&
+              !data.enabled);
     },
 
     _handleMessage: function(message) {
@@ -573,15 +575,15 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
       let radioInterface = _ril.getRadioInterface(clientId);
 
       this.notifyRadioStateChanged(clientId,
-                                   enabled ? RIL.GECKO_RADIOSTATE_ENABLING
-                                           : RIL.GECKO_RADIOSTATE_DISABLING);
+                                   enabled ? Ci.nsIMobileConnection.MOBILE_RADIO_STATE_ENABLING
+                                           : Ci.nsIMobileConnection.MOBILE_RADIO_STATE_DISABLING);
       radioInterface.workerMessenger.send("setRadioEnabled", message.data,
                                           (function(response) {
         if (response.errorMsg) {
           // Request fails. Rollback to the original radioState.
           this.notifyRadioStateChanged(clientId,
-                                       enabled ? RIL.GECKO_RADIOSTATE_DISABLED
-                                               : RIL.GECKO_RADIOSTATE_ENABLED);
+                                       enabled ? Ci.nsIMobileConnection.MOBILE_RADIO_STATE_DISABLED
+                                               : Ci.nsIMobileConnection.MOBILE_RADIO_STATE_ENABLED);
         }
         message.callback(response);
         return false;
@@ -1197,7 +1199,7 @@ DataConnectionHandler.prototype = {
     // This check avoids data call connection if the radio is not ready
     // yet after toggling off airplane mode.
     let radioState = connection && connection.radioState;
-    if (radioState != RIL.GECKO_RADIOSTATE_ENABLED) {
+    if (radioState != Ci.nsIMobileConnection.MOBILE_RADIO_STATE_ENABLED) {
       if (DEBUG) {
         this.debug("RIL is not ready for data connection: radio's not ready");
       }
@@ -3525,8 +3527,8 @@ RadioInterface.prototype = {
         if (DEBUG) this.debug("Error! Address is invalid when sending SMS: " +
                               options.number);
         errorCode = Ci.nsIMobileMessageCallback.INVALID_ADDRESS_ERROR;
-      } else if (radioState == null ||
-                 radioState == RIL.GECKO_RADIOSTATE_DISABLED) {
+      } else if (radioState == Ci.nsIMobileConnection.MOBILE_RADIO_STATE_UNKNOWN ||
+                 radioState == Ci.nsIMobileConnection.MOBILE_RADIO_STATE_DISABLED) {
         if (DEBUG) this.debug("Error! Radio is disabled when sending SMS.");
         errorCode = Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR;
       } else if (this.rilContext.cardState != Ci.nsIIccProvider.CARD_STATE_READY) {
