@@ -403,6 +403,7 @@ const char * V2CipherString(int cs_int)
   case 0x00009E:    cs_str = "TLS/DHE-RSA/AES128-GCM/SHA256";	break;     
 
   case 0x0000FF:    cs_str = "TLS_EMPTY_RENEGOTIATION_INFO_SCSV"; break;
+  case 0x005600:    cs_str = "TLS_FALLBACK_SCSV"; break;
 
   case 0x00C001:    cs_str = "TLS/ECDH-ECDSA/NULL/SHA";         break;
   case 0x00C002:    cs_str = "TLS/ECDH-ECDSA/RC4-128/SHA";      break;

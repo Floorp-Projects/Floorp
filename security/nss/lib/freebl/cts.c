@@ -239,7 +239,6 @@ CTS_DecryptUpdate(CTSContext *cts, unsigned char *outbuf,
 	return SECSuccess;
     }
     outbuf += fullblocks;
-    maxout -= fullblocks;
 
     /* recover the stolen text */
     PORT_Memset(lastBlock, 0, blocksize);
