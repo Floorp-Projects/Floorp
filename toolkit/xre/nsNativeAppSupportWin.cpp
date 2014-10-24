@@ -251,12 +251,12 @@ private:
  *    WWW_OpenURL topic and the params as specified in the default value of the
  *    ddeexec registry key (e.g. "%1",,0,0,,,, where '%1' is the url to open)
  *    for the verb (e.g. open).
- * 2. If the application is not running it is launched with the -requestPending
- *    and the -url argument.
- * 2.1  If the application does not need to restart and the -requestPending
+ * 2. If the application is not running it is launched with the --requestPending
+ *    and the --url argument.
+ * 2.1  If the application does not need to restart and the --requestPending
  *      argument is present the accompanying url will not be used. Instead the
  *      application will wait for the DDE message to open the url.
- * 2.2  If the application needs to restart the -requestPending argument is
+ * 2.2  If the application needs to restart the --requestPending argument is
  *      removed from the arguments used to restart the application and the url
  *      will be handled normally.
  *
@@ -278,7 +278,7 @@ public:
     // The "old" Start method (renamed).
     NS_IMETHOD StartDDE();
     // Utility function to handle a Win32-specific command line
-    // option: "-console", which dynamically creates a Windows
+    // option: "--console", which dynamically creates a Windows
     // console.
     void CheckConsole();
 
