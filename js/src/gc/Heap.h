@@ -628,6 +628,11 @@ struct ArenaHeader : public JS::shadow::ArenaHeader
     inline void unsetAllocDuringSweep();
 
     void unmarkAll();
+
+#ifdef JSGC_COMPACTING
+    size_t countUsedCells();
+    size_t countFreeCells();
+#endif
 };
 
 struct Arena
