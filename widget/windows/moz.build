@@ -92,11 +92,10 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '../shared',
-    '../xpwidgets',
     '/layout/generic',
     '/layout/xul',
     '/toolkit/xre',
+    '/widget',
     '/xpcom/base',
 ]
 

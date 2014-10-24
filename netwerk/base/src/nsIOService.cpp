@@ -574,16 +574,47 @@ nsIOService::NewFileURI(nsIFile *file, nsIURI **result)
 }
 
 NS_IMETHODIMP
-nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
+nsIOService::NewChannelFromURI2(nsIURI* aURI,
+                                nsIDOMNode* aLoadingNode,
+                                nsIPrincipal* aLoadingPrincipal,
+                                nsIPrincipal* aTriggeringPrincipal,
+                                uint32_t aSecurityFlags,
+                                uint32_t aContentPolicyType,
+                                nsIChannel** result)
 {
-    return NewChannelFromURIWithProxyFlags(aURI, nullptr, 0, result);
+    return NewChannelFromURIWithProxyFlags2(aURI,
+                                            nullptr, // aProxyURI
+                                            0,       // aProxyFlags
+                                            aLoadingNode,
+                                            aLoadingPrincipal,
+                                            aTriggeringPrincipal,
+                                            aSecurityFlags,
+                                            aContentPolicyType,
+                                            result);
 }
 
 NS_IMETHODIMP
-nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
-                                             nsIURI *aProxyURI,
-                                             uint32_t aProxyFlags,
-                                             nsIChannel **result)
+nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
+{
+  return NewChannelFromURI2(aURI,
+                            nullptr, // aLoadingNode
+                            nullptr, // aLoadingPrincipal
+                            nullptr, // aTriggeringPrincipal
+                            nsILoadInfo::SEC_NORMAL,
+                            nsIContentPolicy::TYPE_OTHER,
+                            result);
+}
+
+NS_IMETHODIMP
+nsIOService::NewChannelFromURIWithProxyFlags2(nsIURI* aURI,
+                                              nsIURI* aProxyURI,
+                                              uint32_t aProxyFlags,
+                                              nsIDOMNode* aLoadingNode,
+                                              nsIPrincipal* aLoadingPrincipal,
+                                              nsIPrincipal* aTriggeringPrincipal,
+                                              uint32_t aSecurityFlags,
+                                              uint32_t aContentPolicyType,
+                                              nsIChannel** result)
 {
     nsresult rv;
     NS_ENSURE_ARG_POINTER(aURI);
@@ -636,14 +667,59 @@ nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
 }
 
 NS_IMETHODIMP
-nsIOService::NewChannel(const nsACString &aSpec, const char *aCharset, nsIURI *aBaseURI, nsIChannel **result)
+nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
+                                             nsIURI *aProxyURI,
+                                             uint32_t aProxyFlags,
+                                             nsIChannel **result)
+{
+  return NewChannelFromURIWithProxyFlags2(aURI,
+                                          aProxyURI,
+                                          aProxyFlags,
+                                          nullptr, // aLoadingNode
+                                          nullptr, // aLoadingPrincipal
+                                          nullptr, // aTriggeringPrincipal
+                                          nsILoadInfo::SEC_NORMAL,
+                                          nsIContentPolicy::TYPE_OTHER,
+                                          result);
+}
+
+NS_IMETHODIMP
+nsIOService::NewChannel2(const nsACString& aSpec,
+                         const char* aCharset,
+                         nsIURI* aBaseURI,
+                         nsIDOMNode* aLoadingNode,
+                         nsIPrincipal* aLoadingPrincipal,
+                         nsIPrincipal* aTriggeringPrincipal,
+                         uint32_t aSecurityFlags,
+                         uint32_t aContentPolicyType,
+                         nsIChannel** result)
 {
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
     rv = NewURI(aSpec, aCharset, aBaseURI, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
-    return NewChannelFromURI(uri, result);
+    return NewChannelFromURI2(uri,
+                              aLoadingNode,
+                              aLoadingPrincipal,
+                              aTriggeringPrincipal,
+                              aSecurityFlags,
+                              aContentPolicyType,
+                              result);
+}
+
+NS_IMETHODIMP
+nsIOService::NewChannel(const nsACString &aSpec, const char *aCharset, nsIURI *aBaseURI, nsIChannel **result)
+{
+  return NewChannel2(aSpec,
+                     aCharset,
+                     aBaseURI,
+                     nullptr, // aLoadingNode
+                     nullptr, // aLoadingPrincipal
+                     nullptr, // aTriggeringPrincipal
+                     nsILoadInfo::SEC_NORMAL,
+                     nsIContentPolicy::TYPE_OTHER,
+                     result);
 }
 
 bool
