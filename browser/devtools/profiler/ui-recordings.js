@@ -202,7 +202,12 @@ let RecordingsListView = Heritage.extend(WidgetMethods, {
     yield ProfileView.addTabAndPopulate(recordingData, 0, durationMillis);
     ProfileView.showTabbedBrowser();
 
-    $("#record-button").removeAttribute("checked");
+    // Only clear the checked state if there's nothing recording.
+    if (!this.getItemForPredicate(e => e.isRecording)) {
+      $("#record-button").removeAttribute("checked");
+    }
+
+    // But don't leave it locked in any case.
     $("#record-button").removeAttribute("locked");
 
     window.emit(EVENTS.RECORDING_DISPLAYED);

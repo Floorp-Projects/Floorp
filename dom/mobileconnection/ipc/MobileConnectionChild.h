@@ -92,7 +92,7 @@ protected:
   RecvNotifyIccChanged(const nsString& aIccId) MOZ_OVERRIDE;
 
   virtual bool
-  RecvNotifyRadioStateChanged(const nsString& aRadioState) MOZ_OVERRIDE;
+  RecvNotifyRadioStateChanged(const int32_t& aRadioState) MOZ_OVERRIDE;
 
   virtual bool
   RecvNotifyClirModeChanged(const uint32_t& aMode) MOZ_OVERRIDE;
@@ -113,7 +113,7 @@ private:
   nsRefPtr<MobileConnectionInfo> mVoice;
   nsRefPtr<MobileConnectionInfo> mData;
   nsString mIccId;
-  nsString mRadioState;
+  int32_t mRadioState;
   nsString mLastNetwork;
   nsString mLastHomeNetwork;
   int32_t mNetworkSelectionMode;

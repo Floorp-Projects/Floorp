@@ -20,6 +20,14 @@ window.onload = function() {
     anchor.setAttribute("href", baseURL + "troubleshooting");
   }
 
+  // wire up click handlers for the radio buttons if they exist.
+  for (let radioId of ["radioRestoreAll", "radioRestoreChoose"]) {
+    let button = document.getElementById(radioId);
+    if (button) {
+      button.addEventListener("click", updateTabListVisibility);
+    }
+  }
+
   // the crashed session state is kept inside a textbox so that SessionStore picks it up
   // (for when the tab is closed or the session crashes right again)
   var sessionData = document.getElementById("sessionData");
@@ -40,7 +48,17 @@ window.onload = function() {
   document.getElementById("errorTryAgain").focus();
 };
 
+function isTreeViewVisible() {
+  let tabList = document.getElementById("tabList");
+  return tabList.hasAttribute("available");
+}
+
 function initTreeView() {
+  // If we aren't visible we initialize as we are made visible (and it's OK
+  // to initialize multiple times)
+  if (!isTreeViewVisible()) {
+    return;
+  }
   var tabList = document.getElementById("tabList");
   var winLabel = tabList.getAttribute("_window_label");
 
@@ -75,31 +93,42 @@ function initTreeView() {
 }
 
 // User actions
+function updateTabListVisibility() {
+  let tabList = document.getElementById("tabList");
+  if (document.getElementById("radioRestoreChoose").checked) {
+    tabList.setAttribute("available", "true");
+  } else {
+    tabList.removeAttribute("available");
+  }
+  initTreeView();
+}
 
 function restoreSession() {
   document.getElementById("errorTryAgain").disabled = true;
 
-  if (!gTreeData.some(aItem => aItem.checked)) {
-    // This should only be possible when we have no "cancel" button, and thus
-    // the "Restore session" button always remains enabled.  In that case and
-    // when nothing is selected, we just want a new session.
-    startNewSession();
-    return;
-  }
+  if (isTreeViewVisible()) {
+    if (!gTreeData.some(aItem => aItem.checked)) {
+      // This should only be possible when we have no "cancel" button, and thus
+      // the "Restore session" button always remains enabled.  In that case and
+      // when nothing is selected, we just want a new session.
+      startNewSession();
+      return;
+    }
 
-  // remove all unselected tabs from the state before restoring it
-  var ix = gStateObject.windows.length - 1;
-  for (var t = gTreeData.length - 1; t >= 0; t--) {
-    if (treeView.isContainer(t)) {
-      if (gTreeData[t].checked === 0)
-        // this window will be restored partially
-        gStateObject.windows[ix].tabs =
-          gStateObject.windows[ix].tabs.filter(function(aTabData, aIx)
-                                                 gTreeData[t].tabs[aIx].checked);
-      else if (!gTreeData[t].checked)
-        // this window won't be restored at all
-        gStateObject.windows.splice(ix, 1);
-      ix--;
+    // remove all unselected tabs from the state before restoring it
+    var ix = gStateObject.windows.length - 1;
+    for (var t = gTreeData.length - 1; t >= 0; t--) {
+      if (treeView.isContainer(t)) {
+        if (gTreeData[t].checked === 0)
+          // this window will be restored partially
+          gStateObject.windows[ix].tabs =
+            gStateObject.windows[ix].tabs.filter(function(aTabData, aIx)
+                                                   gTreeData[t].tabs[aIx].checked);
+        else if (!gTreeData[t].checked)
+          // this window won't be restored at all
+          gStateObject.windows.splice(ix, 1);
+        ix--;
+      }
     }
   }
   var stateString = JSON.stringify(gStateObject);

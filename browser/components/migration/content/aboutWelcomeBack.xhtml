@@ -52,6 +52,20 @@
 
         <!-- Short Description -->
         <div id="errorTrailerDesc">
+          <div>
+            <div class="radioRestoreContainer">
+              <input class="radioRestoreButton" id="radioRestoreAll" type="radio"
+                     name="restore" checked="checked"/>
+              <label class="radioRestoreLabel" for="radioRestoreAll">&welcomeback2.label.restoreAll;</label>
+            </div>
+
+            <div class="radioRestoreContainer">
+              <input class="radioRestoreButton" id="radioRestoreChoose" type="radio"
+                     name="restore"/>
+              <label class="radioRestoreLabel" for="radioRestoreChoose">&welcomeback2.label.restoreSome;</label>
+            </div>
+          </div>
+
           <tree xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                 id="tabList" flex="1" seltype="single" hidecolumnpicker="true"
                 onclick="onListClick(event);" onkeydown="onListKeyDown(event);"

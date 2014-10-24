@@ -35,7 +35,7 @@
         android:background="@android:color/transparent"
         android:scaleType="center"
         android:contentDescription="@string/close_tab"
-        android:src="@drawable/tab_close"
+        android:src="@drawable/new_tablet_tab_close"
         android:duplicateParentState="true"/>
 
 </merge>

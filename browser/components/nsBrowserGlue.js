@@ -9,6 +9,7 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const POLARIS_ENABLED = "browser.polaris.enabled";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -397,6 +398,13 @@ BrowserGlue.prototype = {
         Services.obs.removeObserver(this, "browser-search-service");
         this._syncSearchEngines();
         break;
+      case "nsPref:changed":
+        if (data == POLARIS_ENABLED) {
+          let enabled = Services.prefs.getBoolPref(POLARIS_ENABLED);
+          Services.prefs.setBoolPref("privacy.donottrackheader.enabled", enabled);
+          Services.prefs.setBoolPref("privacy.trackingprotection.enabled", enabled);
+          Services.prefs.setBoolPref("privacy.trackingprotection.ui.enabled", enabled);
+        }
     }
   },
 
@@ -443,6 +451,9 @@ BrowserGlue.prototype = {
 #endif
     os.addObserver(this, "browser-search-engine-modified", false);
     os.addObserver(this, "browser-search-service", false);
+#ifdef NIGHTLY_BUILD
+    Services.prefs.addObserver(POLARIS_ENABLED, this, false);
+#endif
   },
 
   // cleanup (called on application shutdown)
@@ -483,6 +494,9 @@ BrowserGlue.prototype = {
       os.removeObserver(this, "browser-search-service");
       // may have already been removed by the observer
     } catch (ex) {}
+#ifdef NIGHTLY_BUILD
+    Services.prefs.removeObserver(POLARIS_ENABLED, this);
+#endif
   },
 
   _onAppDefaults: function BG__onAppDefaults() {
