@@ -64,6 +64,11 @@ public:
                           TrackID aId,
                           StreamTime aDesiredTime,
                           TrackTicks& aLastEndTime) MOZ_OVERRIDE;
+  virtual bool SatisfiesConstraintSets(
+      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets)
+  {
+    return true;
+  }
 
   void OnHardwareStateChange(HardwareState aState);
   void GetRotation();

@@ -233,7 +233,7 @@ class LSimdSignMaskX4 : public LInstructionHelper<1, 1, 0>
 class LSimdSwizzleBase : public LInstructionHelper<1, 1, 0>
 {
   public:
-    LSimdSwizzleBase(const LAllocation &base)
+    explicit LSimdSwizzleBase(const LAllocation &base)
     {
         setOperand(0, base);
     }
@@ -257,7 +257,7 @@ class LSimdSwizzleI : public LSimdSwizzleBase
 {
   public:
     LIR_HEADER(SimdSwizzleI);
-    LSimdSwizzleI(const LAllocation &base) : LSimdSwizzleBase(base)
+    explicit LSimdSwizzleI(const LAllocation &base) : LSimdSwizzleBase(base)
     {}
 };
 // Shuffles a float32x4 into another float32x4 vector.
@@ -265,7 +265,7 @@ class LSimdSwizzleF : public LSimdSwizzleBase
 {
   public:
     LIR_HEADER(SimdSwizzleF);
-    LSimdSwizzleF(const LAllocation &base) : LSimdSwizzleBase(base)
+    explicit LSimdSwizzleF(const LAllocation &base) : LSimdSwizzleBase(base)
     {}
 };
 
@@ -4203,7 +4203,7 @@ class LTypedObjectUnsizedLength : public LInstructionHelper<1, 1, 0>
   public:
     LIR_HEADER(TypedObjectUnsizedLength)
 
-    LTypedObjectUnsizedLength(const LAllocation &object) {
+    explicit LTypedObjectUnsizedLength(const LAllocation &object) {
         setOperand(0, object);
     }
     const LAllocation *object() {

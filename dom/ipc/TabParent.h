@@ -11,6 +11,7 @@
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PFilePickerParent.h"
 #include "mozilla/dom/TabContext.h"
+#include "mozilla/dom/ipc/IdType.h"
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIBrowserDOMWindow.h"
@@ -28,6 +29,7 @@ class nsIURI;
 class nsIWidget;
 class nsILoadContext;
 class CpowHolder;
+class nsIDocShell;
 
 namespace mozilla {
 
@@ -67,7 +69,10 @@ public:
     // nsITabParent
     NS_DECL_NSITABPARENT
 
-    TabParent(nsIContentParent* aManager, const TabContext& aContext, uint32_t aChromeFlags);
+    TabParent(nsIContentParent* aManager,
+              const TabId& aTabId,
+              const TabContext& aContext,
+              uint32_t aChromeFlags);
     Element* GetOwnerElement() const { return mFrameElement; }
     void SetOwnerElement(Element* aElement);
 
@@ -322,6 +327,7 @@ public:
 
     static TabParent* GetFrom(nsFrameLoader* aFrameLoader);
     static TabParent* GetFrom(nsIContent* aContent);
+    static TabId GetTabIdFrom(nsIDocShell* docshell);
 
     nsIContentParent* Manager() { return mManager; }
 
@@ -332,6 +338,11 @@ public:
     bool IsDestroyed() const { return mIsDestroyed; }
 
     already_AddRefed<nsIWidget> GetWidget() const;
+
+    const TabId GetTabId() const
+    {
+      return mTabId;
+    }
 
 protected:
     bool ReceiveMessage(const nsString& aMessage,
@@ -435,6 +446,8 @@ private:
     uint32_t mChromeFlags;
 
     nsCOMPtr<nsILoadContext> mLoadContext;
+
+    TabId mTabId;
 };
 
 } // namespace dom

@@ -28,6 +28,7 @@ public:
     , mInitDone(false)
     , mHasDirectListeners(false)
     , mCaptureIndex(aIndex)
+    , mTrackID(0)
     , mFps(-1)
   {}
 
@@ -60,6 +61,12 @@ public:
 protected:
   ~MediaEngineCameraVideoSource() {}
 
+  // guts for appending data to the MSG track
+  virtual bool AppendToTrack(SourceMediaStream* aSource,
+                             layers::Image* aImage,
+                             TrackID aID,
+                             TrackTicks delta);
+
   static bool IsWithin(int32_t n, const dom::ConstrainLongRange& aRange);
   static bool IsWithin(double n, const dom::ConstrainDoubleRange& aRange);
   static int32_t Clamp(int32_t n, const dom::ConstrainLongRange& aRange);
@@ -87,6 +94,7 @@ protected:
   bool mInitDone;
   bool mHasDirectListeners;
   int mCaptureIndex;
+  TrackID mTrackID;
   int mFps; // Track rate (30 fps by default)
 
   webrtc::CaptureCapability mCapability; // Doesn't work on OS X.

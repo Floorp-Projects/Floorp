@@ -173,7 +173,11 @@ class DroidADB(DeviceManagerADB, DroidMixin):
             if m:
                 package = m.group(1)
         if not package:
-            raise DMError("unable to find focused app")
+            # On some Android 4.4 devices, when the home screen is displayed,
+            # dumpsys reports "mFocusedApp=null". Guard against this case and
+            # others where the focused app can not be determined by returning
+            # an empty string -- same as sutagent.
+            package = ""
         return package
 
     def getAppRoot(self, packageName):

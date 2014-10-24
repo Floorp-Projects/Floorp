@@ -12,6 +12,7 @@
 #include "nsCaret.h"
 #include "nsContentUtils.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsFontMetrics.h"
 #include "nsGfxScrollFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
@@ -238,8 +239,7 @@ nsDisplayTextOverflowMarker::PaintTextToContext(nsRenderingContext* aCtx,
     nsRefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm),
       nsLayoutUtils::FontSizeInflationFor(mFrame));
-    aCtx->SetFont(fm);
-    nsLayoutUtils::DrawString(mFrame, aCtx, mStyle->mString.get(),
+    nsLayoutUtils::DrawString(mFrame, *fm, aCtx, mStyle->mString.get(),
                               mStyle->mString.Length(), pt);
   }
 }
@@ -763,8 +763,8 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
     nsRefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
       nsLayoutUtils::FontSizeInflationFor(aFrame));
-    rc->SetFont(fm);
-    mWidth = nsLayoutUtils::GetStringWidth(aFrame, rc, mStyle->mString.get(),
+    mWidth = nsLayoutUtils::GetStringWidth(aFrame, rc, *fm,
+                                           mStyle->mString.get(),
                                            mStyle->mString.Length());
   }
   mIntrinsicISize = mWidth;

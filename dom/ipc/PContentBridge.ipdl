@@ -14,6 +14,8 @@ include JavaScriptTypes;
 include PTabContext;
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
+using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
+using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 
 namespace mozilla {
 namespace dom {
@@ -41,8 +43,8 @@ parent:
 both:
     // Both the parent and the child can construct the PBrowser.
     // See the comment in PContent::PBrowser().
-    async PBrowser(IPCTabContext context, uint32_t chromeFlags,
-                   uint64_t id, bool isForApp, bool isForBrowser);
+    async PBrowser(TabId tabId, IPCTabContext context, uint32_t chromeFlags,
+                   ContentParentId cpId, bool isForApp, bool isForBrowser);
 
     async PBlob(BlobConstructorParams params);
 

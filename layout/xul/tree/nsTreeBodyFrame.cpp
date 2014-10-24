@@ -16,6 +16,7 @@
 #include "gfxUtils.h"
 #include "nsAlgorithm.h"
 #include "nsCOMPtr.h"
+#include "nsFontMetrics.h"
 #include "nsPresContext.h"
 #include "nsNameSpaceManager.h"
 
@@ -1268,8 +1269,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(int32_t aRow, nsITreeColumn* aCol, const n
     GetBorderPadding(textContext, bp);
     textRect.height += bp.top + bp.bottom;
 
-    rc->SetFont(fm);
-    AdjustForCellText(cellText, aRow, currCol, *rc, textRect);
+    AdjustForCellText(cellText, aRow, currCol, *rc, *fm, textRect);
 
     theRect = textRect;
   }
@@ -1314,12 +1314,14 @@ void
 nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
                                    int32_t aRowIndex,  nsTreeColumn* aColumn,
                                    nsRenderingContext& aRenderingContext,
+                                   nsFontMetrics& aFontMetrics,
                                    nsRect& aTextRect)
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   nscoord width =
-    nsLayoutUtils::GetStringWidth(this, &aRenderingContext, aText.get(), aText.Length());
+    nsLayoutUtils::GetStringWidth(this, &aRenderingContext, aFontMetrics,
+                                  aText.get(), aText.Length());
   nscoord maxWidth = aTextRect.width;
 
   if (aColumn->Overflow()) {
@@ -1363,8 +1365,10 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
     // See if the width is even smaller than the ellipsis
     // If so, clear the text completely.
     const nsDependentString& kEllipsis = nsContentUtils::GetLocalizedEllipsis();
-    aRenderingContext.SetTextRunRTL(false);
-    nscoord ellipsisWidth = aRenderingContext.GetWidth(kEllipsis);
+    aFontMetrics.SetTextRunRTL(false);
+    nscoord ellipsisWidth =
+      nsLayoutUtils::AppUnitWidthOfString(kEllipsis, aFontMetrics,
+                                          aRenderingContext);
 
     width = maxWidth;
     if (ellipsisWidth > width)
@@ -1389,7 +1393,8 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           for (i = 0; i < length; ++i) {
             char16_t ch = aText[i];
             // XXX this is horrible and doesn't handle clusters
-            cwidth = aRenderingContext.GetWidth(ch);
+            cwidth = nsLayoutUtils::AppUnitWidthOfString(ch, aFontMetrics,
+                                                         aRenderingContext);
             if (twidth + cwidth > width)
               break;
             twidth += cwidth;
@@ -1407,7 +1412,8 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           int32_t i;
           for (i=length-1; i >= 0; --i) {
             char16_t ch = aText[i];
-            cwidth = aRenderingContext.GetWidth(ch);
+            cwidth = nsLayoutUtils::AppUnitWidthOfString(ch, aFontMetrics,
+                                                         aRenderingContext);
             if (twidth + cwidth > width)
               break;
             twidth += cwidth;
@@ -1429,14 +1435,16 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           int32_t rightPos = length - 1;
           for (int32_t leftPos = 0; leftPos < rightPos; ++leftPos) {
             char16_t ch = aText[leftPos];
-            cwidth = aRenderingContext.GetWidth(ch);
+            cwidth = nsLayoutUtils::AppUnitWidthOfString(ch, aFontMetrics,
+                                                         aRenderingContext);
             twidth += cwidth;
             if (twidth > width)
               break;
             leftStr.Append(ch);
 
             ch = aText[rightPos];
-            cwidth = aRenderingContext.GetWidth(ch);
+            cwidth = nsLayoutUtils::AppUnitWidthOfString(ch, aFontMetrics,
+                                                         aRenderingContext);
             twidth += cwidth;
             if (twidth > width)
               break;
@@ -1451,7 +1459,9 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
       }
     }
 
-    width = nsLayoutUtils::GetStringWidth(this, &aRenderingContext, aText.get(), aText.Length());
+    width = nsLayoutUtils::GetStringWidth(this, &aRenderingContext,
+                                          aFontMetrics, aText.get(),
+                                          aText.Length());
   }
 
   switch (aColumn->GetTextAlignment()) {
@@ -1609,9 +1619,7 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForStyleContext(textContext,
                                                getter_AddRefs(fm));
-  rc->SetFont(fm);
-
-  AdjustForCellText(cellText, aRowIndex, aColumn, *rc, textRect);
+  AdjustForCellText(cellText, aRowIndex, aColumn, *rc, *fm, textRect);
 
   if (aX >= textRect.x && aX < textRect.x + textRect.width)
     return nsCSSAnonBoxes::moztreecelltext;
@@ -1739,11 +1747,10 @@ nsTreeBodyFrame::GetCellWidth(int32_t aRow, nsTreeColumn* aCol,
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForStyleContext(textContext,
                                                getter_AddRefs(fm));
-  aRenderingContext->SetFont(fm);
-
   // Get the width of the text itself
   nscoord width =
-    nsLayoutUtils::GetStringWidth(this, aRenderingContext, cellText.get(), cellText.Length());
+    nsLayoutUtils::GetStringWidth(this, aRenderingContext, *fm,
+                                  cellText.get(), cellText.Length());
   nscoord totalTextWidth = width + bp.left + bp.right;
   aDesiredSize += totalTextWidth;
   return NS_OK;
@@ -3603,9 +3610,7 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
   }
 
   // Set our font.
-  aRenderingContext.SetFont(fontMet);
-
-  AdjustForCellText(text, aRowIndex, aColumn, aRenderingContext, textRect);
+  AdjustForCellText(text, aRowIndex, aColumn, aRenderingContext, *fontMet, textRect);
   textRect.Inflate(bp);
 
   // Subtract out the remaining width.
@@ -3656,8 +3661,10 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
   }
 
   ctx->SetColor(textContext->StyleColor()->mColor);
-  nsLayoutUtils::DrawString(this, &aRenderingContext, text.get(), text.Length(),
-                            textRect.TopLeft() + nsPoint(0, baseline), cellContext);
+  nsLayoutUtils::DrawString(this, *fontMet, &aRenderingContext, text.get(),
+                            text.Length(),
+                            textRect.TopLeft() + nsPoint(0, baseline),
+                            cellContext);
 
   if (opacity != 1.0f) {
     ctx->PopGroupToSource();

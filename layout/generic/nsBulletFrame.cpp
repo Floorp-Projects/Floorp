@@ -13,6 +13,7 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/MathAlgorithms.h"
 #include "nsCOMPtr.h"
+#include "nsFontMetrics.h"
 #include "nsGkAtoms.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
@@ -428,7 +429,6 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                           GetFontSizeInflation());
     GetListItemText(text);
-    aRenderingContext.SetFont(fm);
     nscoord ascent = fm->MaxAscent();
     aPt.MoveBy(padding.left, padding.top);
     aPt.y = NSToCoordRound(nsLayoutUtils::GetSnappedBaselineY(
@@ -437,7 +437,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     if (!presContext->BidiEnabled() && HasRTLChars(text)) {
       presContext->SetBidiEnabled();
     }
-    nsLayoutUtils::DrawString(this, &aRenderingContext,
+    nsLayoutUtils::DrawString(this, *fm, &aRenderingContext,
                               text.get(), text.Length(), aPt);
     break;
   }
@@ -601,9 +601,8 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     default:
       GetListItemText(text);
       finalSize.BSize(wm) = fm->MaxHeight();
-      aRenderingContext->SetFont(fm);
       finalSize.ISize(wm) =
-        nsLayoutUtils::GetStringWidth(this, aRenderingContext,
+        nsLayoutUtils::GetStringWidth(this, aRenderingContext, *fm,
                                       text.get(), text.Length());
       aMetrics.SetBlockStartAscent(fm->MaxAscent());
       break;
@@ -862,7 +861,9 @@ nsBulletFrame::GetSpokenText(nsAString& aText)
   bool isBullet;
   style->GetSpokenCounterText(mOrdinal, GetWritingMode(), aText, isBullet);
   if (isBullet) {
-    aText.Append(' ');
+    if (!style->IsNone()) {
+      aText.Append(' ');
+    }
   } else {
     nsAutoString prefix, suffix;
     style->GetPrefix(prefix);

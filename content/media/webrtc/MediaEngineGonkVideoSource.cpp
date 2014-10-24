@@ -154,6 +154,7 @@ MediaEngineGonkVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   if (mState == kStarted) {
     return NS_OK;
   }
+  mTrackID = aID;
   mImageContainer = layers::LayerManager::CreateImageContainer();
 
   NS_DispatchToMainThread(WrapRunnable(nsRefPtr<MediaEngineGonkVideoSource>(this),
@@ -621,6 +622,21 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
 
   // implicitly releases last image
   mImage = image.forget();
+
+  // Push the frame into the MSG with a minimal duration.  This will likely
+  // mean we'll still get NotifyPull calls which will then return the same
+  // frame again with a longer duration.  However, this means we won't
+  // fail to get the frame in and drop frames.
+
+  // XXX The timestamp for the frame should be base on the Capture time,
+  // not the MSG time, and MSG should never, ever block on a (realtime)
+  // video frame (or even really for streaming - audio yes, video probably no).
+  uint32_t len = mSources.Length();
+  for (uint32_t i = 0; i < len; i++) {
+    if (mSources[i]) {
+      AppendToTrack(mSources[i], mImage, mTrackID, 1); // shortest possible duration
+    }
+  }
 }
 
 bool

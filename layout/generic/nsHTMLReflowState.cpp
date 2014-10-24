@@ -2167,7 +2167,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
           !IsSideCaption(frame, mStyleDisplay) &&
           mStyleDisplay->mDisplay != NS_STYLE_DISPLAY_INLINE_TABLE &&
           !flexContainerFrame) {
-        CalculateBlockSideMargins(AvailableWidth(), ComputedWidth(), aFrameType);
+        CalculateBlockSideMargins(AvailableISize(), ComputedISize(), aFrameType);
       }
     }
   }
@@ -2313,47 +2313,67 @@ nsCSSOffsetState::InitOffsets(nscoord aHorizontalPercentBasis,
 //
 // Note: the width unit is not auto when this is called
 void
-nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
-                                             nscoord aComputedWidth,
+nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailISize,
+                                             nscoord aComputedISize,
                                              nsIAtom* aFrameType)
 {
-  NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aComputedWidth &&
-                   NS_UNCONSTRAINEDSIZE != aAvailWidth,
-                   "have unconstrained width; this should only result from "
-                   "very large sizes, not attempts at intrinsic width "
+  NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aComputedISize &&
+                   NS_UNCONSTRAINEDSIZE != aAvailISize,
+                   "have unconstrained inline-size; this should only result from "
+                   "very large sizes, not attempts at intrinsic inline-size "
                    "calculation");
 
-  nscoord sum = ComputedPhysicalMargin().left + ComputedPhysicalBorderPadding().left +
-    aComputedWidth + ComputedPhysicalBorderPadding().right + ComputedPhysicalMargin().right;
-  if (sum == aAvailWidth)
+  nscoord sum = ComputedLogicalMargin().IStartEnd(mWritingMode) +
+    ComputedLogicalBorderPadding().IStartEnd(mWritingMode) + aComputedISize;
+  if (sum == aAvailISize) {
     // The sum is already correct
     return;
+  }
 
-  // Determine the left and right margin values. The width value
+  // Determine the start and end margin values. The isize value
   // remains constant while we do this.
 
   // Calculate how much space is available for margins
-  nscoord availMarginSpace = aAvailWidth - sum;
+  nscoord availMarginSpace = aAvailISize - sum;
+
+  LogicalMargin margin = ComputedLogicalMargin();
 
   // If the available margin space is negative, then don't follow the
   // usual overconstraint rules.
   if (availMarginSpace < 0) {
     if (mCBReflowState &&
-        mCBReflowState->mStyleVisibility->mDirection == NS_STYLE_DIRECTION_RTL) {
-      ComputedPhysicalMargin().left += availMarginSpace;
+        mCBReflowState->GetWritingMode().IsBidiLTR() !=
+          mWritingMode.IsBidiLTR()) {
+      margin.IStart(mWritingMode) += availMarginSpace;
     } else {
-      ComputedPhysicalMargin().right += availMarginSpace;
+      margin.IEnd(mWritingMode) += availMarginSpace;
     }
+    SetComputedLogicalMargin(margin);
     return;
   }
 
   // The css2 spec clearly defines how block elements should behave
   // in section 10.3.3.
-  bool isAutoLeftMargin =
-    eStyleUnit_Auto == mStyleMargin->mMargin.GetLeftUnit();
-  bool isAutoRightMargin =
-    eStyleUnit_Auto == mStyleMargin->mMargin.GetRightUnit();
-  if (!isAutoLeftMargin && !isAutoRightMargin) {
+  bool isAutoStartMargin, isAutoEndMargin;
+  const nsStyleSides& styleSides = mStyleMargin->mMargin;
+  if (mWritingMode.IsVertical()) {
+    if (mWritingMode.IsBidiLTR()) {
+      isAutoStartMargin = eStyleUnit_Auto == styleSides.GetTopUnit();
+      isAutoEndMargin = eStyleUnit_Auto == styleSides.GetBottomUnit();
+    } else {
+      isAutoStartMargin = eStyleUnit_Auto == styleSides.GetBottomUnit();
+      isAutoEndMargin = eStyleUnit_Auto == styleSides.GetTopUnit();
+    }
+  } else {
+    if (mWritingMode.IsBidiLTR()) {
+      isAutoStartMargin = eStyleUnit_Auto == styleSides.GetLeftUnit();
+      isAutoEndMargin = eStyleUnit_Auto == styleSides.GetRightUnit();
+    } else {
+      isAutoStartMargin = eStyleUnit_Auto == styleSides.GetRightUnit();
+      isAutoEndMargin = eStyleUnit_Auto == styleSides.GetLeftUnit();
+    }
+  }
+  if (!isAutoStartMargin && !isAutoEndMargin) {
     // Neither margin is 'auto' so we're over constrained. Use the
     // 'direction' property of the parent to tell which margin to
     // ignore
@@ -2370,19 +2390,27 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
         (prs->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_LEFT ||
          prs->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
          prs->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT)) {
-      isAutoLeftMargin =
-        prs->mStyleText->mTextAlign != NS_STYLE_TEXT_ALIGN_MOZ_LEFT;
-      isAutoRightMargin =
-        prs->mStyleText->mTextAlign != NS_STYLE_TEXT_ALIGN_MOZ_RIGHT;
+      if (prs->mWritingMode.IsBidiLTR()) {
+        isAutoStartMargin =
+          prs->mStyleText->mTextAlign != NS_STYLE_TEXT_ALIGN_MOZ_LEFT;
+        isAutoEndMargin =
+          prs->mStyleText->mTextAlign != NS_STYLE_TEXT_ALIGN_MOZ_RIGHT;
+      } else {
+        isAutoStartMargin =
+          prs->mStyleText->mTextAlign != NS_STYLE_TEXT_ALIGN_MOZ_RIGHT;
+        isAutoEndMargin =
+          prs->mStyleText->mTextAlign != NS_STYLE_TEXT_ALIGN_MOZ_LEFT;
+      }
     }
     // Otherwise apply the CSS rules, and ignore one margin by forcing
     // it to 'auto', depending on 'direction'.
     else if (mCBReflowState &&
-             NS_STYLE_DIRECTION_RTL == mCBReflowState->mStyleVisibility->mDirection) {
-      isAutoLeftMargin = true;
+             mCBReflowState->GetWritingMode().IsBidiLTR() !=
+               mWritingMode.IsBidiLTR()) {
+      isAutoStartMargin = true;
     }
     else {
-      isAutoRightMargin = true;
+      isAutoEndMargin = true;
     }
   }
 
@@ -2390,18 +2418,19 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
   // The computed margins need not be zero because the 'auto' could come from
   // overconstraint or from HTML alignment so values need to be accumulated
 
-  if (isAutoLeftMargin) {
-    if (isAutoRightMargin) {
+  if (isAutoStartMargin) {
+    if (isAutoEndMargin) {
       // Both margins are 'auto' so the computed addition should be equal
-      nscoord forLeft = availMarginSpace / 2;
-      ComputedPhysicalMargin().left  += forLeft;
-      ComputedPhysicalMargin().right += availMarginSpace - forLeft;
+      nscoord forStart = availMarginSpace / 2;
+      margin.IStart(mWritingMode) += forStart;
+      margin.IEnd(mWritingMode) += availMarginSpace - forStart;
     } else {
-      ComputedPhysicalMargin().left += availMarginSpace;
+      margin.IStart(mWritingMode) += availMarginSpace;
     }
-  } else if (isAutoRightMargin) {
-    ComputedPhysicalMargin().right += availMarginSpace;
+  } else if (isAutoEndMargin) {
+    margin.IEnd(mWritingMode) += availMarginSpace;
   }
+  SetComputedLogicalMargin(margin);
 }
 
 #define NORMAL_LINE_HEIGHT_FACTOR 1.2f    // in term of emHeight 

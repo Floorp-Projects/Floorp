@@ -611,7 +611,6 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
   // get the axis height;
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
-  aRenderingContext.SetFont(fm);
   nscoord axisHeight, height;
   GetAxisHeight(aRenderingContext, fm, axisHeight);
 

@@ -78,7 +78,7 @@ public:
   public:
     NS_DECL_ISUPPORTS
 
-    NestedFrameAuthPrompt(PNeckoParent* aParent, uint64_t aNestedFrameId);
+    NestedFrameAuthPrompt(PNeckoParent* aParent, TabId aNestedFrameId);
 
     NS_IMETHOD PromptAuth(nsIChannel*, uint32_t, nsIAuthInformation*, bool*)
     {
@@ -98,7 +98,7 @@ public:
 
   protected:
     PNeckoParent* mNeckoParent;
-    uint64_t mNestedFrameId;
+    TabId mNestedFrameId;
   };
 
 protected:

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bug 1086883</title>
+<!-- writing mode of #inner div should not affect its position within #outer -->
+<style>
+#outer {
+  width:400px;
+  height:300px;
+  padding:50px;
+  border:1px solid black;
+}
+#inner {
+  width:200px;
+  height:100px;
+  background:red;
+  writing-mode:vertical-lr;
+}
+</style>
+</head>
+
+<body>
+<div id="outer">
+  <div id="inner">
+  </div>
+</div>
+</body>
+
+</html>

@@ -46,6 +46,7 @@ namespace dom {
 struct MediaStreamConstraints;
 class NavigatorUserMediaSuccessCallback;
 class NavigatorUserMediaErrorCallback;
+struct MediaTrackConstraintSet;
 }
 
 #ifdef PR_LOGGING
@@ -501,9 +502,6 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEDIADEVICE
 
-  static MediaDevice* Create(MediaEngineVideoSource* source);
-  static MediaDevice* Create(MediaEngineAudioSource* source);
-
 protected:
   virtual ~MediaDevice() {}
   explicit MediaDevice(MediaEngineSource* aSource);
@@ -518,17 +516,25 @@ protected:
 class VideoDevice : public MediaDevice
 {
 public:
-  explicit VideoDevice(MediaEngineVideoSource* aSource);
+  typedef MediaEngineVideoSource Source;
+
+  explicit VideoDevice(Source* aSource);
   NS_IMETHOD GetType(nsAString& aType);
-  MediaEngineVideoSource* GetSource();
+  Source* GetSource();
+  bool SatisfiesConstraintSets(
+    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets);
 };
 
 class AudioDevice : public MediaDevice
 {
 public:
-  explicit AudioDevice(MediaEngineAudioSource* aSource);
+  typedef MediaEngineAudioSource Source;
+
+  explicit AudioDevice(Source* aSource);
   NS_IMETHOD GetType(nsAString& aType);
-  MediaEngineAudioSource* GetSource();
+  Source* GetSource();
+  bool SatisfiesConstraintSets(
+    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets);
 };
 
 // we could add MediaManager if needed
