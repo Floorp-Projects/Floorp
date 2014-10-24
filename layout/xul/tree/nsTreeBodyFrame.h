@@ -25,6 +25,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/LookAndFeel.h"
 
+class nsFontMetrics;
 class nsOverflowChecker;
 class nsTreeImageListener;
 
@@ -296,6 +297,7 @@ protected:
   void AdjustForCellText(nsAutoString& aText,
                          int32_t aRowIndex,  nsTreeColumn* aColumn,
                          nsRenderingContext& aRenderingContext,
+                         nsFontMetrics& aFontMetrics,
                          nsRect& aTextRect);
 
   // A helper used when hit testing.

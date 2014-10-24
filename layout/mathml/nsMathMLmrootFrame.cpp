@@ -235,7 +235,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   // built-in: adjust clearance psi to emulate \mathstrut using '1' (TexBook, p.131)
   char16_t one = '1';
   nsBoundingMetrics bmOne =
-    nsLayoutUtils::AppUnitBoundsOfString(&one, 1, renderingContext);
+    nsLayoutUtils::AppUnitBoundsOfString(&one, 1, *fm, renderingContext);
   if (bmOne.ascent > bmBase.ascent)
     psi += bmOne.ascent - bmBase.ascent;
 
