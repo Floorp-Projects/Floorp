@@ -240,7 +240,7 @@ nsDisplayTextOverflowMarker::PaintTextToContext(nsRenderingContext* aCtx,
     nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm),
       nsLayoutUtils::FontSizeInflationFor(mFrame));
     aCtx->SetFont(fm);
-    nsLayoutUtils::DrawString(mFrame, aCtx, mStyle->mString.get(),
+    nsLayoutUtils::DrawString(mFrame, *fm, aCtx, mStyle->mString.get(),
                               mStyle->mString.Length(), pt);
   }
 }
@@ -765,7 +765,8 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
     nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
       nsLayoutUtils::FontSizeInflationFor(aFrame));
     rc->SetFont(fm);
-    mWidth = nsLayoutUtils::GetStringWidth(aFrame, rc, mStyle->mString.get(),
+    mWidth = nsLayoutUtils::GetStringWidth(aFrame, rc, *fm,
+                                           mStyle->mString.get(),
                                            mStyle->mString.Length());
   }
   mIntrinsicISize = mWidth;

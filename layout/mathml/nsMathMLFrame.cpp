@@ -181,7 +181,8 @@ nsMathMLFrame::GetRuleThickness(nsRenderingContext& aRenderingContext,
   nscoord xHeight = aFontMetrics->XHeight();
   char16_t overBar = 0x00AF;
   nsBoundingMetrics bm =
-    nsLayoutUtils::AppUnitBoundsOfString(&overBar, 1, aRenderingContext);
+    nsLayoutUtils::AppUnitBoundsOfString(&overBar, 1, *aFontMetrics,
+                                         aRenderingContext);
   aRuleThickness = bm.ascent + bm.descent;
   if (aRuleThickness <= 0 || aRuleThickness >= xHeight) {
     // fall-back to the other version
@@ -211,7 +212,8 @@ nsMathMLFrame::GetAxisHeight(nsRenderingContext& aRenderingContext,
   nscoord xHeight = aFontMetrics->XHeight();
   char16_t minus = 0x2212; // not '-', but official Unicode minus sign
   nsBoundingMetrics bm =
-    nsLayoutUtils::AppUnitBoundsOfString(&minus, 1, aRenderingContext);
+    nsLayoutUtils::AppUnitBoundsOfString(&minus, 1, *aFontMetrics,
+                                         aRenderingContext);
   aAxisHeight = bm.ascent - (bm.ascent + bm.descent)/2;
   if (aAxisHeight <= 0 || aAxisHeight >= xHeight) {
     // fall-back to the other version

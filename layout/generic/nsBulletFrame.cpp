@@ -438,7 +438,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     if (!presContext->BidiEnabled() && HasRTLChars(text)) {
       presContext->SetBidiEnabled();
     }
-    nsLayoutUtils::DrawString(this, &aRenderingContext,
+    nsLayoutUtils::DrawString(this, *fm, &aRenderingContext,
                               text.get(), text.Length(), aPt);
     break;
   }
@@ -604,7 +604,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       finalSize.BSize(wm) = fm->MaxHeight();
       aRenderingContext->SetFont(fm);
       finalSize.ISize(wm) =
-        nsLayoutUtils::GetStringWidth(this, aRenderingContext,
+        nsLayoutUtils::GetStringWidth(this, aRenderingContext, *fm,
                                       text.get(), text.Length());
       aMetrics.SetBlockStartAscent(fm->MaxAscent());
       break;
