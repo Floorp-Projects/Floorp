@@ -396,6 +396,14 @@ void SandboxFilterImplGMP::Build() {
 
 #ifdef MOZ_ASAN
   Allow(SYSCALL(sigaltstack));
+  // ASAN's error reporter wants to know if stderr is a tty.
+  Deny(ENOTTY, SYSCALL_WITH_ARG(ioctl, 0, STDERR_FILENO));
+  // ...and before compiler-rt r209773, it will call readlink and use
+  // the cached value only if that fails:
+  Deny(ENOENT, SYSCALL(readlink));
+  // ...and if it found an external symbolizer, it will try to run it:
+  // (See also bug 1081242 comment #7.)
+  Deny(ENOENT, SYSCALL_LARGEFILE(stat, stat64));
 #endif
 
   Allow(SYSCALL(mprotect));

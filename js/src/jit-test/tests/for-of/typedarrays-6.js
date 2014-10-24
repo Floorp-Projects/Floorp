@@ -3,7 +3,7 @@
 var values = [Infinity, -Infinity, -0, NaN];
 for (var C of [Float32Array, Float64Array]) {
     var i = 0;
-    for (var v of C(values))
+    for (var v of new C(values))
         assertEq(v, values[i++]);
     assertEq(i, values.length);
 }

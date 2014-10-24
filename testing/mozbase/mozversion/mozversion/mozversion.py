@@ -42,11 +42,11 @@ class Version(object):
     def _parse_ini_file(self, fp, type, section):
         config = ConfigParser.RawConfigParser()
         config.readfp(fp)
-        name_map = {'CodeName': 'display_name',
-                    'SourceRepository': 'repository',
-                    'SourceStamp': 'changeset'}
-        for key in ('BuildID', 'Name', 'CodeName', 'Version',
-                    'SourceRepository', 'SourceStamp'):
+        name_map = {'codename': 'display_name',
+                    'milestone': 'version',
+                    'sourcerepository': 'repository',
+                    'sourcestamp': 'changeset'}
+        for key, value in config.items(section):
             name = name_map.get(key, key).lower()
             self._info['%s_%s' % (type, name)] = config.has_option(
                 section, key) and config.get(section, key) or None
@@ -77,19 +77,6 @@ class LocalVersion(Version):
 
     def __init__(self, binary, **kwargs):
         Version.__init__(self, **kwargs)
-        path = None
-
-        def find_location(path):
-            if os.path.exists(os.path.join(path, 'application.ini')):
-                return path
-
-            if sys.platform == 'darwin':
-                path = os.path.join(os.path.dirname(path), 'Resources')
-
-            if os.path.exists(os.path.join(path, 'application.ini')):
-                return path
-            else:
-                return None
 
         if binary:
             # on Windows, the binary may be specified with or without the
@@ -97,14 +84,26 @@ class LocalVersion(Version):
             if not os.path.exists(binary) and not os.path.exists(binary +
                                                                  '.exe'):
                 raise IOError('Binary path does not exist: %s' % binary)
-            path = find_location(os.path.dirname(os.path.realpath(binary)))
+            path = os.path.dirname(os.path.realpath(binary))
         else:
-            path = find_location(os.getcwd())
+            path = os.getcwd()
 
-        if not path:
-            raise errors.LocalAppNotFoundError(path)
+        if not self.check_location(path):
+            if sys.platform == 'darwin':
+                resources_path = os.path.join(os.path.dirname(path),
+                                              'Resources')
+                if self.check_location(resources_path):
+                    path = resources_path
+                else:
+                    raise errors.LocalAppNotFoundError(path)
+            else:
+                raise errors.LocalAppNotFoundError(path)
 
         self.get_gecko_info(path)
+
+    def check_location(self, path):
+        return (os.path.exists(os.path.join(path, 'application.ini'))
+                and os.path.exists(os.path.join(path, 'platform.ini')))
 
 
 class B2GVersion(Version):

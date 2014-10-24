@@ -228,7 +228,7 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath)
 }
 
 void
-GMPChild::OnChannelConnected(int32_t aPid)
+GMPChild::StartMacSandbox()
 {
   nsAutoCString pluginDirectoryPath, pluginFilePath;
   if (!GetPluginPaths(mPluginPath, pluginDirectoryPath, pluginFilePath)) {
@@ -252,13 +252,6 @@ GMPChild::OnChannelConnected(int32_t aPid)
   if (!mozilla::StartMacSandbox(info, err)) {
     NS_WARNING(err.get());
     MOZ_CRASH("sandbox_init() failed");
-  }
-
-  if (!LoadPluginLibrary(mPluginPath)) {
-    err.AppendPrintf("Failed to load GMP plugin \"%s\"",
-                     mPluginPath.c_str());
-    NS_WARNING(err.get());
-    MOZ_CRASH("Failed to load GMP plugin");
   }
 }
 #endif // XP_MACOSX && MOZ_GMP_SANDBOX
@@ -332,6 +325,8 @@ GMPChild::RecvStartPlugin()
 
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
   mozilla::SandboxTarget::Instance()->StartSandbox();
+#elif defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
+  StartMacSandbox();
 #endif
 
   return LoadPluginLibrary(mPluginPath);
