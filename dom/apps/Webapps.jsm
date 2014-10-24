@@ -173,30 +173,20 @@ this.DOMApplicationRegistry = {
   dirKey: DIRECTORY_NAME,
 
   init: function() {
-    this.messages = ["Webapps:Install",
-                     "Webapps:Uninstall",
-                     "Webapps:GetSelf",
-                     "Webapps:CheckInstalled",
-                     "Webapps:GetInstalled",
-                     "Webapps:GetNotInstalled",
+    this.messages = ["Webapps:Install", "Webapps:Uninstall",
+                     "Webapps:GetSelf", "Webapps:CheckInstalled",
+                     "Webapps:GetInstalled", "Webapps:GetNotInstalled",
                      "Webapps:Launch",
                      "Webapps:InstallPackage",
-                     "Webapps:GetList",
-                     "Webapps:RegisterForMessages",
+                     "Webapps:GetList", "Webapps:RegisterForMessages",
                      "Webapps:UnregisterForMessages",
-                     "Webapps:CancelDownload",
-                     "Webapps:CheckForUpdate",
-                     "Webapps:Download",
-                     "Webapps:ApplyDownload",
-                     "Webapps:Install:Return:Ack",
-                     "Webapps:AddReceipt",
-                     "Webapps:RemoveReceipt",
-                     "Webapps:ReplaceReceipt",
+                     "Webapps:CancelDownload", "Webapps:CheckForUpdate",
+                     "Webapps:Download", "Webapps:ApplyDownload",
+                     "Webapps:Install:Return:Ack", "Webapps:AddReceipt",
+                     "Webapps:RemoveReceipt", "Webapps:ReplaceReceipt",
                      "Webapps:RegisterBEP",
-                     "Webapps:Export",
-                     "Webapps:Import",
+                     "Webapps:Export", "Webapps:Import",
                      "Webapps:ExtractManifest",
-                     "Webapps:SetEnabled",
                      "child-process-shutdown"];
 
     this.frameMessages = ["Webapps:ClearBrowserData"];
@@ -291,10 +281,6 @@ this.DOMApplicationRegistry = {
         if (!AppsUtils.checkAppRole(app.role, app.appStatus)) {
           delete this.webapps[id];
           continue;
-        }
-
-        if (app.enabled === undefined) {
-          app.enabled = true;
         }
 
         // At startup we can't be downloading, and the $TMP directory
@@ -1195,14 +1181,13 @@ this.DOMApplicationRegistry = {
     Services.prefs.setBoolPref("dom.mozApps.used", true);
 
     // We need to check permissions for calls coming from mozApps.mgmt.
-    // These are: getNotInstalled(), applyDownload(), uninstall(), import(),
-    // extractManifest(), setEnabled().
+    // These are: getNotInstalled(), applyDownload(), uninstall(), import() and
+    // extractManifest().
     if (["Webapps:GetNotInstalled",
          "Webapps:ApplyDownload",
          "Webapps:Uninstall",
          "Webapps:Import",
-         "Webapps:ExtractManifest",
-         "Webapps:SetEnabled"].indexOf(aMessage.name) != -1) {
+         "Webapps:ExtractManifest"].indexOf(aMessage.name) != -1) {
       if (!aMessage.target.assertPermission("webapps-manage")) {
         debug("mozApps message " + aMessage.name +
         " from a content process with no 'webapps-manage' privileges.");
@@ -1336,9 +1321,6 @@ this.DOMApplicationRegistry = {
           break;
         case "Webapps:ExtractManifest":
           this.doExtractManifest(msg, mm);
-          break;
-        case "Webapps:SetEnabled":
-          this.setEnabled(msg);
           break;
       }
     });
@@ -1552,7 +1534,6 @@ this.DOMApplicationRegistry = {
         aMm.sendAsyncMessage("Webapps:Launch:Return:OK", aData);
       },
       function onfailure(reason) {
-        aData.error = reason;
         aMm.sendAsyncMessage("Webapps:Launch:Return:KO", aData);
       }
     );
@@ -4315,25 +4296,6 @@ this.DOMApplicationRegistry = {
     this._saveApps().then(() => {
       aData.receipts = app.receipts;
       aMm.sendAsyncMessage("Webapps:ReplaceReceipt:Return:OK", aData);
-    });
-  },
-
-  setEnabled: function(aData) {
-    debug("setEnabled " + aData.manifestURL + " : " + aData.enabled);
-    let id = this._appIdForManifestURL(aData.manifestURL);
-    if (!id || !this.webapps[id]) {
-      return;
-    }
-
-    debug("Enabling " + id);
-    let app = this.webapps[id];
-    app.enabled = aData.enabled;
-    this._saveApps().then(() => {
-      DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
-        app: app,
-        id: app.id
-      });
-      this.broadcastMessage("Webapps:SetEnabled:Return", app);
     });
   },
 
