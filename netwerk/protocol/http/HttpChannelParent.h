@@ -19,6 +19,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsHttpChannel.h"
 #include "nsIAuthPromptProvider.h"
+#include "mozilla/dom/ipc/IdType.h"
 
 class nsICacheEntry;
 class nsIAssociatedContentSecurity;
@@ -185,7 +186,7 @@ private:
 
   bool mSuspendedForDiversion;
 
-  uint64_t mNestedFrameId;
+  dom::TabId mNestedFrameId;
 };
 
 } // namespace net
