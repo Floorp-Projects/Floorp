@@ -488,11 +488,12 @@ class MOZ_STACK_CLASS TokenStream
         return true;
     }
 
-    bool nextTokenEndsExpr() {
+    bool nextTokenEndsExpr(bool *endsExpr) {
         TokenKind tt;
         if (!peekToken(&tt))
             return false;
-        return isExprEnding[tt];
+        *endsExpr = isExprEnding[tt];
+        return true;
     }
 
     class MOZ_STACK_CLASS Position {

@@ -6043,14 +6043,28 @@ Parser<ParseHandler>::assignExpr()
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return null();
 
-    if (tt == TOK_NAME && tokenStream.nextTokenEndsExpr())
-        return identifierName();
+    bool endsExpr;
 
-    if (tt == TOK_NUMBER && tokenStream.nextTokenEndsExpr())
-        return newNumber(tokenStream.currentToken());
+    if (tt == TOK_NAME) {
+        if (!tokenStream.nextTokenEndsExpr(&endsExpr))
+            return null();
+        if (endsExpr)
+            return identifierName();
+    }
 
-    if (tt == TOK_STRING && tokenStream.nextTokenEndsExpr())
-        return stringLiteral();
+    if (tt == TOK_NUMBER) {
+        if (!tokenStream.nextTokenEndsExpr(&endsExpr))
+            return null();
+        if (endsExpr)
+            return newNumber(tokenStream.currentToken());
+    }
+
+    if (tt == TOK_STRING) {
+        if (!tokenStream.nextTokenEndsExpr(&endsExpr))
+            return null();
+        if (endsExpr)
+            return stringLiteral();
+    }
 
     if (tt == TOK_YIELD && (versionNumber() >= JSVERSION_1_7 || pc->isGenerator()))
         return yieldExpression();
