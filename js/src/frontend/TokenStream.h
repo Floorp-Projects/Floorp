@@ -453,21 +453,24 @@ class MOZ_STACK_CLASS TokenStream
     }
 
     // Get the next token from the stream if its kind is |tt|.
-    bool matchToken(TokenKind tt, Modifier modifier = None) {
+    bool matchToken(bool *matchedp, TokenKind tt, Modifier modifier = None) {
         TokenKind token;
-        if (!getToken(&token, modifier)) {
-            ungetToken();
+        if (!getToken(&token, modifier))
             return false;
+        if (token == tt) {
+            *matchedp = true;
+        } else {
+            ungetToken();
+            *matchedp = false;
         }
-        if (token == tt)
-            return true;
-        ungetToken();
-        return false;
+        return true;
     }
 
     void consumeKnownToken(TokenKind tt) {
+        bool matched;
         MOZ_ASSERT(lookahead != 0);
-        JS_ALWAYS_TRUE(matchToken(tt));
+        MOZ_ALWAYS_TRUE(matchToken(&matched, tt));
+        MOZ_ALWAYS_TRUE(matched);
     }
 
     bool matchContextualKeyword(Handle<PropertyName*> keyword) {
