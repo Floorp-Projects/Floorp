@@ -147,6 +147,9 @@ public:
       return mTCPKeepaliveLongLivedIdleTimeS;
     }
 
+    // returns the network.http.enforce-framing.http1 preference
+    bool GetEnforceH1Framing() { return mEnforceH1Framing; }
+
     nsHttpAuthCache     *AuthCache(bool aPrivate) {
         return aPrivate ? &mPrivateAuthCache : &mAuthCache;
     }
@@ -510,6 +513,10 @@ private:
     bool mTCPKeepaliveLongLivedEnabled;
     // Time (secs) before first keepalive probe; between successful probes.
     int32_t mTCPKeepaliveLongLivedIdleTimeS;
+
+    // if true, generate NS_ERROR_PARTIAL_TRANSFER for h1 responses with
+    // incorrect content lengths or malformed chunked encodings
+    bool mEnforceH1Framing;
 
 private:
     // For Rate Pacing Certain Network Events. Only assign this pointer on
