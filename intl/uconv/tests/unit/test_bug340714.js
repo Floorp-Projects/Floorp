@@ -11,6 +11,11 @@
  * is an eight-bit character.
  */
 
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/Services.jsm");
+
 const beBOM="%FE%FF";
 const leBOM="%FF%FE";
 const sampleUTF16BE="%00%22%04%12%04%41%04%35%00%20%04%41%04%47%04%30%04%41%04%42%04%3B%04%38%04%32%04%4B%04%35%00%20%04%41%04%35%04%3C%04%4C%04%38%00%20%04%3F%04%3E%04%45%04%3E%04%36%04%38%00%20%04%34%04%40%04%43%04%33%00%20%04%3D%04%30%00%20%04%34%04%40%04%43%04%33%04%30%00%2C%00%20%04%3A%04%30%04%36%04%34%04%30%04%4F%00%20%04%3D%04%35%04%41%04%47%04%30%04%41%04%42%04%3B%04%38%04%32%04%30%04%4F%00%20%04%41%04%35%04%3C%04%4C%04%4F%00%20%04%3D%04%35%04%41%04%47%04%30%04%41%04%42%04%3B%04%38%04%32%04%30%00%20%04%3F%04%3E%00%2D%04%41%04%32%04%3E%04%35%04%3C%04%43%00%2E%00%22";
@@ -43,15 +48,21 @@ function testCase(withBOM, charset, charsetDec, decoder, bufferLength)
 			     "init");
 
   var ios = new IOService();
-  var channel = ios.newChannel(dataURI, "", null);
+  var channel = ios.newChannel2(dataURI,
+                                "",
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   var testInputStream = channel.open();
   var testConverter = new ConverterInputStream(testInputStream,
 					       decoder,
 					       bufferLength,
 					       0xFFFD);
 
-  if (!(testConverter instanceof
-	Components.interfaces.nsIUnicharLineInputStream))
+  if (!(testConverter instanceof Ci.nsIUnicharLineInputStream))
       throw "not line input stream";
 
   var outStr = "";
