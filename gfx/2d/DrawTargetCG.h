@@ -97,6 +97,7 @@ class DrawTargetCG : public DrawTarget
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetCG)
   friend class BorrowedCGContext;
+  friend class SourceSurfaceCGBitmapContext;
   DrawTargetCG();
   virtual ~DrawTargetCG();
 
