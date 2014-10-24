@@ -187,6 +187,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gCellBroadcastService",
                                    "@mozilla.org/cellbroadcast/gonkservice;1",
                                    "nsIGonkCellBroadcastService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gSmsMessenger",
+                                   "@mozilla.org/ril/system-messenger-helper;1",
+                                   "nsISmsMessenger");
+
 XPCOMUtils.defineLazyGetter(this, "WAP", function() {
   let wap = {};
   Cu.import("resource://gre/modules/WapPushManager.js", wap);
@@ -2171,6 +2175,42 @@ RadioInterface.prototype = {
                                      0, options);
   },
 
+  _convertSmsMessageClass: function(aMessageClass) {
+    let index = RIL.GECKO_SMS_MESSAGE_CLASSES.indexOf(aMessageClass);
+
+    if (index < 0) {
+      throw new Error("Invalid MessageClass: " + aMessageClass);
+    }
+
+    return index;
+  },
+
+  _convertSmsDelivery: function(aDelivery) {
+    let index = [DOM_MOBILE_MESSAGE_DELIVERY_RECEIVED,
+                 DOM_MOBILE_MESSAGE_DELIVERY_SENDING,
+                 DOM_MOBILE_MESSAGE_DELIVERY_SENT,
+                 DOM_MOBILE_MESSAGE_DELIVERY_ERROR].indexOf(aDelivery);
+
+    if (index < 0) {
+      throw new Error("Invalid Delivery: " + aDelivery);
+    }
+
+    return index;
+  },
+
+  _convertSmsDeliveryStatus: function(aDeliveryStatus) {
+    let index = [RIL.GECKO_SMS_DELIVERY_STATUS_NOT_APPLICABLE,
+                 RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS,
+                 RIL.GECKO_SMS_DELIVERY_STATUS_PENDING,
+                 RIL.GECKO_SMS_DELIVERY_STATUS_ERROR].indexOf(aDeliveryStatus);
+
+    if (index < 0) {
+      throw new Error("Invalid DeliveryStatus: " + aDeliveryStatus);
+    }
+
+    return index;
+  },
+
   /**
    * A helper to broadcast the system message to launch registered apps
    * like Costcontrol, Notification and Message app... etc.
@@ -2180,28 +2220,35 @@ RadioInterface.prototype = {
    * @param aDomMessage
    *        The nsIDOMMozSmsMessage object.
    */
-  broadcastSmsSystemMessage: function(aName, aDomMessage) {
-    if (DEBUG) this.debug("Broadcasting the SMS system message: " + aName);
+  broadcastSmsSystemMessage: function(aNotificationType, aDomMessage) {
+    if (DEBUG) this.debug("Broadcasting the SMS system message: " + aNotificationType);
 
     // Sadly we cannot directly broadcast the aDomMessage object
     // because the system message mechamism will rewrap the object
     // based on the content window, which needs to know the properties.
-    gSystemMessenger.broadcastMessage(aName, {
-      iccId:             aDomMessage.iccId,
-      type:              aDomMessage.type,
-      id:                aDomMessage.id,
-      threadId:          aDomMessage.threadId,
-      delivery:          aDomMessage.delivery,
-      deliveryStatus:    aDomMessage.deliveryStatus,
-      sender:            aDomMessage.sender,
-      receiver:          aDomMessage.receiver,
-      body:              aDomMessage.body,
-      messageClass:      aDomMessage.messageClass,
-      timestamp:         aDomMessage.timestamp,
-      sentTimestamp:     aDomMessage.sentTimestamp,
-      deliveryTimestamp: aDomMessage.deliveryTimestamp,
-      read:              aDomMessage.read
-    });
+    try {
+      gSmsMessenger.notifySms(aNotificationType,
+                              aDomMessage.id,
+                              aDomMessage.threadId,
+                              aDomMessage.iccId,
+                              this._convertSmsDelivery(
+                                aDomMessage.delivery),
+                              this._convertSmsDeliveryStatus(
+                                aDomMessage.deliveryStatus),
+                              aDomMessage.sender,
+                              aDomMessage.receiver,
+                              aDomMessage.body,
+                              this._convertSmsMessageClass(
+                                aDomMessage.messageClass),
+                              aDomMessage.timestamp,
+                              aDomMessage.sentTimestamp,
+                              aDomMessage.deliveryTimestamp,
+                              aDomMessage.read);
+    } catch (e) {
+      if (DEBUG) {
+        this.debug("Failed to broadcastSmsSystemMessage: " + e);
+      }
+    }
   },
 
   // The following attributes/functions are used for acquiring/releasing the
@@ -2546,7 +2593,8 @@ RadioInterface.prototype = {
         return;
       }
 
-      this.broadcastSmsSystemMessage(kSmsReceivedObserverTopic, domMessage);
+      this.broadcastSmsSystemMessage(
+        Ci.nsISmsMessenger.NOTIFICATION_TYPE_RECEIVED, domMessage);
       Services.obs.notifyObservers(domMessage, kSmsReceivedObserverTopic, null);
     }.bind(this);
 
@@ -3663,7 +3711,8 @@ RadioInterface.prototype = {
 
             // Broadcasting a "sms-delivery-success" system message to open apps.
             if (topic == kSmsDeliverySuccessObserverTopic) {
-              this.broadcastSmsSystemMessage(topic, domMessage);
+              this.broadcastSmsSystemMessage(
+                Ci.nsISmsMessenger.NOTIFICATION_TYPE_DELIVERY_SUCCESS, domMessage);
             }
 
             // Notifying observers the delivery status is updated.
@@ -3711,7 +3760,8 @@ RadioInterface.prototype = {
             context.sms = domMessage;
           }
 
-          this.broadcastSmsSystemMessage(kSmsSentObserverTopic, domMessage);
+          this.broadcastSmsSystemMessage(
+            Ci.nsISmsMessenger.NOTIFICATION_TYPE_SENT, domMessage);
           context.request.notifyMessageSent(domMessage);
           Services.obs.notifyObservers(domMessage, kSmsSentObserverTopic, null);
         }).bind(this));

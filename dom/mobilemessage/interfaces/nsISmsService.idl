@@ -12,9 +12,35 @@ interface nsIMobileMessageCallback;
 #define SMS_SERVICE_CONTRACTID "@mozilla.org/sms/smsservice;1"
 %}
 
-[scriptable, builtinclass, uuid(cb7d7b60-01f1-4241-a0ae-2ff035c3fbe5)]
+[scriptable, builtinclass, uuid(8f86d068-698e-11e4-9470-8f75a088b84a)]
 interface nsISmsService : nsISupports
 {
+  /**
+   * Constant definitions of predefined GSM Message Class
+   * See 3GPP TS 23.038 clause 4 SMS Data Coding Scheme
+   */
+  const unsigned short MESSAGE_CLASS_TYPE_CLASS_0 = 0;
+  const unsigned short MESSAGE_CLASS_TYPE_CLASS_1 = 1;
+  const unsigned short MESSAGE_CLASS_TYPE_CLASS_2 = 2;
+  const unsigned short MESSAGE_CLASS_TYPE_CLASS_3 = 3;
+  const unsigned short MESSAGE_CLASS_TYPE_NORMAL  = 6;
+
+  /**
+   * Constant definitions of SMS Delivery
+   */
+  const unsigned short DELIVERY_TYPE_RECEIVED = 0;
+  const unsigned short DELIVERY_TYPE_SENDING  = 1;
+  const unsigned short DELIVERY_TYPE_SENT     = 2;
+  const unsigned short DELIVERY_TYPE_ERROR    = 3;
+
+  /**
+   * Constant definitions of SMS Delivery Status
+   */
+  const unsigned short DELIVERY_STATUS_TYPE_NOT_APPLICABLE = 0;
+  const unsigned short DELIVERY_STATUS_TYPE_SUCCESS        = 1;
+  const unsigned short DELIVERY_STATUS_TYPE_PENDING        = 2;
+  const unsigned short DELIVERY_STATUS_TYPE_ERROR          = 3;
+
   readonly attribute unsigned long smsDefaultServiceId;
 
   void getSegmentInfoForText(in DOMString text,
