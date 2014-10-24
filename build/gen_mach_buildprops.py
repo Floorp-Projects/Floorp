@@ -29,14 +29,15 @@ def getFileHashAndSize(filename):
 
     return (sha512Hash, size)
 
-def getMarProperties(filename):
+def getMarProperties(filename, partial=False):
     if not os.path.exists(filename):
         return {}
-    (complete_mar_hash, complete_mar_size) = getFileHashAndSize(filename)
+    (mar_hash, mar_size) = getFileHashAndSize(filename)
+    martype = 'partial' if partial else 'complete'
     return {
-        'completeMarFilename': os.path.basename(filename),
-        'completeMarSize': complete_mar_size,
-        'completeMarHash': complete_mar_hash,
+        '%sMarFilename' % martype: os.path.basename(filename),
+        '%sMarSize' % martype: mar_size,
+        '%sMarHash' % martype: mar_hash,
     }
 
 def getUrlProperties(filename):
@@ -52,6 +53,7 @@ def getUrlProperties(filename):
         ('robocopApkUrl', lambda m: m.endswith('apk') and 'robocop' in m),
         ('jsshellUrl', lambda m: 'jsshell-' in m and m.endswith('.zip')),
         ('completeMarUrl', lambda m: m.endswith('.complete.mar')),
+        ('partialMarUrl', lambda m: m.endswith('.mar') and '.partial.' in m),
         # packageUrl must be last!
         ('packageUrl', lambda m: True),
     ]
@@ -79,12 +81,17 @@ if __name__ == '__main__':
     parser.add_argument("--complete-mar-file", required=True,
                         action="store", dest="complete_mar_file",
                         help="Path to the complete MAR file, relative to the objdir.")
+    parser.add_argument("--partial-mar-file", required=False,
+                        action="store", dest="partial_mar_file",
+                        help="Path to the partial MAR file, relative to the objdir.")
     parser.add_argument("--upload-output", required=True,
                         action="store", dest="upload_output",
                         help="Path to the text output of 'make upload'")
     args = parser.parse_args()
 
     json_data = getMarProperties(args.complete_mar_file)
+    if args.partial_mar_file:
+        json_data.update(getMarProperties(args.partial_mar_file, partial=True))
     json_data.update(getUrlProperties(args.upload_output))
 
     with open('mach_build_properties.json', 'w') as outfile:
