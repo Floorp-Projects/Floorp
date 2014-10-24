@@ -18,7 +18,6 @@ namespace mozilla {
 namespace layers {
 
 InputQueue::InputQueue()
-  : mTouchBlockBalance(0)
 {
 }
 
@@ -27,7 +26,7 @@ InputQueue::~InputQueue() {
 }
 
 nsEventStatus
-InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget, const InputData& aEvent) {
+InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget, const InputData& aEvent, uint64_t* aOutInputBlockId) {
   AsyncPanZoomController::AssertOnControllerThread();
 
   if (aEvent.mInputType != MULTITOUCH_INPUT) {
@@ -60,13 +59,12 @@ InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget, c
     if (aTarget->NeedToWaitForContent()) {
       // Content may intercept the touch events and prevent-default them. So we schedule
       // a timeout to give content time to do that.
-      ScheduleContentResponseTimeout(aTarget);
+      ScheduleContentResponseTimeout(aTarget, block->GetBlockId());
     } else {
       // Content won't prevent-default this, so we can just pretend like we scheduled
       // a timeout and it expired. Note that we will still receive a ContentReceivedTouch
       // callback for this block, and so we need to make sure we adjust the touch balance.
       INPQ_LOG("%p not waiting for content response on block %p\n", this, block);
-      mTouchBlockBalance++;
       block->TimeoutContentResponse();
     }
   } else if (mTouchBlockQueue.IsEmpty()) {
@@ -79,6 +77,9 @@ InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget, c
 
   if (!block) {
     return nsEventStatus_eIgnore;
+  }
+  if (aOutInputBlockId) {
+    *aOutInputBlockId = block->GetBlockId();
   }
 
   nsEventStatus result = aTarget->ArePointerEventsConsumable(block, aEvent.AsMultiTouchInput().mTouches.Length())
@@ -100,11 +101,14 @@ InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget, c
   return result;
 }
 
-void
+uint64_t
 InputQueue::InjectNewTouchBlock(AsyncPanZoomController* aTarget)
 {
-  StartNewTouchBlock(aTarget, true);
-  ScheduleContentResponseTimeout(aTarget);
+  TouchBlockState* block = StartNewTouchBlock(aTarget, true);
+  INPQ_LOG("%p injecting new touch block with id %llu and target %p\n",
+    this, block->GetBlockId(), aTarget);
+  ScheduleContentResponseTimeout(aTarget, block->GetBlockId());
+  return block->GetBlockId();
 }
 
 TouchBlockState*
@@ -147,76 +151,63 @@ InputQueue::HasReadyTouchBlock() const
 }
 
 void
-InputQueue::ScheduleContentResponseTimeout(const nsRefPtr<AsyncPanZoomController>& aTarget) {
+InputQueue::ScheduleContentResponseTimeout(const nsRefPtr<AsyncPanZoomController>& aTarget, uint64_t aInputBlockId) {
   INPQ_LOG("%p scheduling content response timeout for target %p\n", this, aTarget.get());
   aTarget->PostDelayedTask(
-    NewRunnableMethod(this, &InputQueue::ContentResponseTimeout),
+    NewRunnableMethod(this, &InputQueue::ContentResponseTimeout, aInputBlockId),
     gfxPrefs::APZContentResponseTimeout());
 }
 
 void
-InputQueue::ContentResponseTimeout() {
+InputQueue::ContentResponseTimeout(const uint64_t& aInputBlockId) {
   AsyncPanZoomController::AssertOnControllerThread();
 
-  mTouchBlockBalance++;
-  INPQ_LOG("%p got a content response timeout; balance %d\n", this, mTouchBlockBalance);
-  if (mTouchBlockBalance > 0) {
-    // Find the first touch block in the queue that hasn't already received
-    // the content response timeout callback, and notify it.
-    bool found = false;
-    for (size_t i = 0; i < mTouchBlockQueue.Length(); i++) {
-      if (mTouchBlockQueue[i]->TimeoutContentResponse()) {
-        found = true;
-        break;
-      }
-    }
-    if (found) {
-      ProcessPendingInputBlocks();
-    } else {
-      NS_WARNING("INPQ received more ContentResponseTimeout calls than it has unprocessed touch blocks\n");
-    }
-  }
-}
-
-void
-InputQueue::ContentReceivedTouch(bool aPreventDefault) {
-  AsyncPanZoomController::AssertOnControllerThread();
-
-  mTouchBlockBalance--;
-  INPQ_LOG("%p got a content response; balance %d\n", this, mTouchBlockBalance);
-  if (mTouchBlockBalance < 0) {
-    // Find the first touch block in the queue that hasn't already received
-    // its response from content, and notify it.
-    bool found = false;
-    for (size_t i = 0; i < mTouchBlockQueue.Length(); i++) {
-      if (mTouchBlockQueue[i]->SetContentResponse(aPreventDefault)) {
-        found = true;
-        break;
-      }
-    }
-    if (found) {
-      ProcessPendingInputBlocks();
-    } else {
-      NS_WARNING("INPQ received more ContentReceivedTouch calls than it has unprocessed touch blocks\n");
-    }
-  }
-}
-
-void
-InputQueue::SetAllowedTouchBehavior(const nsTArray<TouchBehaviorFlags>& aBehaviors) {
-  AsyncPanZoomController::AssertOnControllerThread();
-
-  bool found = false;
+  INPQ_LOG("%p got a content response timeout; block=%llu\n", this, aInputBlockId);
+  bool success = false;
   for (size_t i = 0; i < mTouchBlockQueue.Length(); i++) {
-    if (mTouchBlockQueue[i]->SetAllowedTouchBehaviors(aBehaviors)) {
-      found = true;
+    if (mTouchBlockQueue[i]->GetBlockId() == aInputBlockId) {
+      success = mTouchBlockQueue[i]->TimeoutContentResponse();
       break;
     }
   }
-  if (found) {
+  if (success) {
+    ProcessPendingInputBlocks();
+  }
+}
+
+void
+InputQueue::ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault) {
+  AsyncPanZoomController::AssertOnControllerThread();
+
+  INPQ_LOG("%p got a content response; block=%llu\n", this, aInputBlockId);
+  bool success = false;
+  for (size_t i = 0; i < mTouchBlockQueue.Length(); i++) {
+    if (mTouchBlockQueue[i]->GetBlockId() == aInputBlockId) {
+      success = mTouchBlockQueue[i]->SetContentResponse(aPreventDefault);
+      break;
+    }
+  }
+  if (success) {
+    ProcessPendingInputBlocks();
+  }
+}
+
+void
+InputQueue::SetAllowedTouchBehavior(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aBehaviors) {
+  AsyncPanZoomController::AssertOnControllerThread();
+
+  INPQ_LOG("%p got allowed touch behaviours; block=%llu\n", this, aInputBlockId);
+  bool success = false;
+  for (size_t i = 0; i < mTouchBlockQueue.Length(); i++) {
+    if (mTouchBlockQueue[i]->GetBlockId() == aInputBlockId) {
+      success = mTouchBlockQueue[i]->SetAllowedTouchBehaviors(aBehaviors);
+      break;
+    }
+  }
+  if (success) {
     ProcessPendingInputBlocks();
   } else {
-    NS_WARNING("INPQ received more SetAllowedTouchBehavior calls than it has unprocessed touch blocks\n");
+    NS_WARNING("INPQ received useless SetAllowedTouchBehavior");
   }
 }
 

@@ -159,9 +159,12 @@ public:
    * @param aEvent input event object; is modified in-place
    * @param aOutTargetGuid returns the guid of the apzc this event was
    * delivered to. May be null.
+   * @param aOutInputBlockId returns the id of the input block that this event
+   * was added to, if that was the case. May be null.
    */
   nsEventStatus ReceiveInputEvent(InputData& aEvent,
-                                  ScrollableLayerGuid* aOutTargetGuid);
+                                  ScrollableLayerGuid* aOutTargetGuid,
+                                  uint64_t* aOutInputBlockId);
 
   /**
    * WidgetInputEvent handler. Transforms |aEvent| (which is assumed to be an
@@ -175,13 +178,11 @@ public:
    * NOTE: On unix, mouse events are treated as touch and are forwarded
    * to the appropriate apz as such.
    *
-   * @param aEvent input event object; is modified in-place
-   * @param aOutTargetGuid returns the guid of the apzc this event was
-   * delivered to. May be null.
-   * @return See documentation for other ReceiveInputEvent above.
+   * See documentation for other ReceiveInputEvent above.
    */
   nsEventStatus ReceiveInputEvent(WidgetInputEvent& aEvent,
-                                  ScrollableLayerGuid* aOutTargetGuid);
+                                  ScrollableLayerGuid* aOutTargetGuid,
+                                  uint64_t* aOutInputBlockId);
 
   /**
    * A helper for transforming coordinates to gecko coordinate space.
@@ -207,6 +208,7 @@ public:
    * queue will be discarded.
    */
   void ContentReceivedTouch(const ScrollableLayerGuid& aGuid,
+                            uint64_t aInputBlockId,
                             bool aPreventDefault);
 
   /**
@@ -266,12 +268,15 @@ public:
                                nsTArray<TouchBehaviorFlags>& aOutValues);
 
   /**
-   * Sets allowed touch behavior values for current touch-session for specific apzc (determined by guid).
-   * Should be invoked by the widget. Each value of the aValues arrays corresponds to the different
-   * touch point that is currently active.
-   * Must be called after receiving the TOUCH_START event that starts the touch-session.
+   * Sets allowed touch behavior values for current touch-session for specific
+   * apzc and input block (determined by aGuid and aInputBlock).
+   * Should be invoked by the widget. Each value of the aValues arrays
+   * corresponds to the different touch point that is currently active.
+   * Must be called after receiving the TOUCH_START event that starts the
+   * touch-session.
    */
   void SetAllowedTouchBehavior(const ScrollableLayerGuid& aGuid,
+                               uint64_t aInputBlockId,
                                const nsTArray<TouchBehaviorFlags>& aValues);
 
   /**
@@ -383,9 +388,11 @@ private:
   already_AddRefed<AsyncPanZoomController> GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
                                                                   bool* aOutInOverscrolledApzc);
   nsEventStatus ProcessTouchInput(MultiTouchInput& aInput,
-                                  ScrollableLayerGuid* aOutTargetGuid);
+                                  ScrollableLayerGuid* aOutTargetGuid,
+                                  uint64_t* aOutInputBlockId);
   nsEventStatus ProcessEvent(WidgetInputEvent& inputEvent,
-                             ScrollableLayerGuid* aOutTargetGuid);
+                             ScrollableLayerGuid* aOutTargetGuid,
+                             uint64_t* aOutInputBlockId);
   void UpdateZoomConstraintsRecursively(AsyncPanZoomController* aApzc,
                                         const ZoomConstraints& aConstraints);
   void FlushRepaintsRecursively(AsyncPanZoomController* aApzc);

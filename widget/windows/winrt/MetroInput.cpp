@@ -266,7 +266,8 @@ MetroInput::MetroInput(MetroWidget* aWidget,
                        UI::Core::ICoreWindow* aWindow)
               : mWidget(aWidget),
                 mNonApzTargetForTouch(false),
-                mWindow(aWindow)
+                mWindow(aWindow),
+                mInputBlockId(0)
 {
   LogFunction();
   NS_ASSERTION(aWidget, "Attempted to create MetroInput for null widget!");
@@ -1215,7 +1216,7 @@ MetroInput::HandleTouchStartEvent(WidgetTouchEvent* aEvent)
 
   WidgetTouchEvent transformedEvent(*aEvent);
   DUMP_TOUCH_IDS("APZC(1)", aEvent);
-  nsEventStatus result = mWidget->ApzReceiveInputEvent(&transformedEvent, &mTargetAPZCGuid);
+  nsEventStatus result = mWidget->ApzReceiveInputEvent(&transformedEvent, &mTargetAPZCGuid, &mInputBlockId);
   if (result == nsEventStatus_eConsumeNoDefault) {
     // The APZ said: throw this event away entirely.
     CancelGesture();
@@ -1235,7 +1236,7 @@ MetroInput::HandleTouchStartEvent(WidgetTouchEvent* aEvent)
     // action values from. E.g. for zooming we're taking parent apzc of a few ones
     // that were touched but touch behaviors would be taken from childs.
     DUMP_ALLOWED_TOUCH_BEHAVIOR(touchBehaviors);
-    mWidget->ApzcSetAllowedTouchBehavior(mTargetAPZCGuid, touchBehaviors);
+    mWidget->ApzcSetAllowedTouchBehavior(mTargetAPZCGuid, mInputBlockId, touchBehaviors);
   }
 
   // Pass the event on to content
@@ -1245,7 +1246,7 @@ MetroInput::HandleTouchStartEvent(WidgetTouchEvent* aEvent)
   if (nsEventStatus_eConsumeNoDefault == contentStatus) {
     // Content consumed the event, so we need to notify the APZ
     // to not do anything with this touch block.
-    mWidget->ApzContentConsumingTouch(mTargetAPZCGuid);
+    mWidget->ApzContentConsumingTouch(mTargetAPZCGuid, mInputBlockId);
     mCancelable = false;
 
     // Also cancel the gesture detection.
@@ -1259,7 +1260,7 @@ MetroInput::HandleFirstTouchMoveEvent(WidgetTouchEvent* aEvent)
   // If the APZ is using this block, pass the event to it.
   WidgetTouchEvent transformedEvent(*aEvent);
   DUMP_TOUCH_IDS("APZC(2)", aEvent);
-  nsEventStatus apzcStatus = mWidget->ApzReceiveInputEvent(&transformedEvent, &mTargetAPZCGuid);
+  nsEventStatus apzcStatus = mWidget->ApzReceiveInputEvent(&transformedEvent, &mTargetAPZCGuid, &mInputBlockId);
   if (apzcStatus == nsEventStatus_eConsumeNoDefault) {
     // The APZ said: throw this event away entirely.
     CancelGesture();
@@ -1289,9 +1290,9 @@ MetroInput::HandleFirstTouchMoveEvent(WidgetTouchEvent* aEvent)
   // Let the apz know if content wants to consume touch events.
   if (mCancelable) {
     if (nsEventStatus_eConsumeNoDefault == contentStatus) {
-      mWidget->ApzContentConsumingTouch(mTargetAPZCGuid);
+      mWidget->ApzContentConsumingTouch(mTargetAPZCGuid, mInputBlockId);
     } else {
-      mWidget->ApzContentIgnoringTouch(mTargetAPZCGuid);
+      mWidget->ApzContentIgnoringTouch(mTargetAPZCGuid, mInputBlockId);
       if (apzcStatus == nsEventStatus_eConsumeDoDefault) {
         SendPointerCancelToContent(transformedEvent);
       }
@@ -1327,7 +1328,7 @@ MetroInput::SendPendingResponseToApz()
   // If this is called, content has missed its chance to consume this event block
   // so we should notify the APZ that content is ignoring this touch block.
   if (mCancelable) {
-    mWidget->ApzContentIgnoringTouch(mTargetAPZCGuid);
+    mWidget->ApzContentIgnoringTouch(mTargetAPZCGuid, mInputBlockId);
     mCancelable = false;
     return true;
   }
@@ -1373,6 +1374,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
 
     mCancelable = true;
     mTargetAPZCGuid = ScrollableLayerGuid();
+    mInputBlockId = 0;
   }
 
   // Test for non-apz vs. apz target. To do this we only use the first touch
@@ -1424,7 +1426,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
   // Normal processing of events. Send it to the APZ first for handling and
   // untransformation. then pass the untransformed event to content.
   DUMP_TOUCH_IDS("APZC(3)", event);
-  status = mWidget->ApzReceiveInputEvent(event, nullptr);
+  status = mWidget->ApzReceiveInputEvent(event, nullptr, nullptr);
   if (status == nsEventStatus_eConsumeNoDefault) {
     CancelGesture();
     return;

@@ -122,7 +122,7 @@ public:
    * See the documentation on APZCTreeManager::ReceiveInputEvent for info on
    * return values from this function.
    */
-  nsEventStatus ReceiveInputEvent(const InputData& aEvent);
+  nsEventStatus ReceiveInputEvent(const InputData& aEvent, uint64_t* aOutInputBlockId);
 
   /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
@@ -776,12 +776,12 @@ public:
   /**
    * See InputQueue::ContentReceivedTouch
    */
-  void ContentReceivedTouch(bool aPreventDefault);
+  void ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault);
 
   /**
    * See InputQueue::SetAllowedTouchBehavior
    */
-  void SetAllowedTouchBehavior(const nsTArray<TouchBehaviorFlags>& aBehaviors);
+  void SetAllowedTouchBehavior(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aBehaviors);
 
   /**
    * Flush a repaint request if one is needed, without throttling it with the
