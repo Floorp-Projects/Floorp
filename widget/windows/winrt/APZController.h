@@ -63,7 +63,7 @@ public:
   bool HitTestAPZC(mozilla::ScreenIntPoint& aPoint);
   void TransformCoordinateToGecko(const mozilla::ScreenIntPoint& aPoint,
                                   LayoutDeviceIntPoint* aRefPointOut);
-  void ContentReceivedTouch(const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId, bool aPreventDefault);
+  void ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault);
   nsEventStatus ReceiveInputEvent(mozilla::WidgetInputEvent* aEvent,
                                   ScrollableLayerGuid* aOutTargetGuid,
                                   uint64_t* aOutInputBlockId);
