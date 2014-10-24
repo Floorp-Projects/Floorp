@@ -2091,59 +2091,114 @@ CanRelocateZone(JSRuntime *rt, Zone *zone)
 }
 
 static bool
-CanRelocateArena(ArenaHeader *arena)
+CanRelocateAllocKind(AllocKind kind)
 {
-    return arena->getAllocKind() <= FINALIZE_OBJECT_LAST;
+    return kind <= FINALIZE_OBJECT_LAST;
 }
 
-static bool
-ShouldRelocateArena(ArenaHeader *arena)
-{
-#ifdef JS_GC_ZEAL
-    if (arena->zone->runtimeFromMainThread()->gc.zeal() == ZealCompactValue)
-        return true;
-#endif
 
-    /*
-     * Eventually, this will be based on brilliant heuristics that look at fill
-     * percentage and fragmentation and... stuff.
-     */
-    return arena->hasFreeThings();
+size_t ArenaHeader::countFreeCells()
+{
+    size_t count = 0;
+    size_t thingSize = getThingSize();
+    FreeSpan firstSpan(getFirstFreeSpan());
+    for (const FreeSpan *span = &firstSpan; !span->isEmpty(); span = span->nextSpan())
+        count += span->length(thingSize);
+    return count;
+}
+
+size_t ArenaHeader::countUsedCells()
+{
+    return Arena::thingsPerArena(getThingSize()) - countFreeCells();
 }
 
 /*
- * Choose some arenas to relocate all cells out of and remove them from the
- * arena list. Return the head of the list of arenas to relocate.
+ * Iterate throught the list and count the number of cells used.
+ *
+ * We may be able to precalculate this while sweeping and store the result
+ * somewhere.
+ */
+size_t ArenaList::countUsedCells()
+{
+    size_t count = 0;
+    for (ArenaHeader *arena = head_; arena; arena = arena->next)
+        count += arena->countUsedCells();
+    return count;
+}
+
+ArenaHeader *
+ArenaList::removeRemainingArenas(ArenaHeader **arenap)
+{
+    // This is only ever called to remove arenas that are after the cursor, so
+    // we don't need to update it.
+#ifdef DEBUG
+    for (ArenaHeader *arena = *arenap; arena; arena = arena->next)
+        MOZ_ASSERT(cursorp_ != &arena->next);
+#endif
+    ArenaHeader *remainingArenas = *arenap;
+    *arenap = nullptr;
+    check();
+    return remainingArenas;
+}
+
+/*
+ * Choose which arenas to relocate all cells out of and remove them from the
+ * arena list. Return the head of a list of arenas to relocate.
  */
 ArenaHeader *
 ArenaList::pickArenasToRelocate()
 {
     check();
-    ArenaHeader *head = nullptr;
-    ArenaHeader **tailp = &head;
+    if (isEmpty())
+        return nullptr;
 
-    // TODO: Only scan through the arenas with space available.
-    ArenaHeader **arenap = &head_;
+    // In zeal mode and in debug builds on 64 bit architectures, we relocate all
+    // arenas. The purpose of this is to balance test coverage of object moving
+    // with test coverage of the arena selection routine below.
+    bool relocateAll = head()->zone->runtimeFromMainThread()->gc.zeal() == ZealCompactValue;
+#if defined(DEBUG) && defined(JS_PUNBOX64)
+    relocateAll = true;
+#endif
+    if (relocateAll) {
+        ArenaHeader *allArenas = head();
+        clear();
+        return allArenas;
+    }
+
+    // Otherwise we relocate the greatest number of arenas such that the number
+    // of used cells in relocated arenas is less than or equal to the number of
+    // free cells in unrelocated arenas. In other words we only relocate cells
+    // we can move into existing arenas, and we choose the least full areans to
+    // relocate.
+    //
+    // This is made easier by the fact that the arena list has been sorted in
+    // descending order of number of used cells, so we will always relocate a
+    // tail of the arena list. All we need to do is find the point at which to
+    // start relocating.
+
+    ArenaHeader **arenap = cursorp_;               // Next arena to consider
+    size_t previousFreeCells = 0;                  // Count of free cells before
+    size_t followingUsedCells = countUsedCells();  // Count of used cells after
+    mozilla::DebugOnly<size_t> lastFreeCells(0);
+    size_t cellsPerArena = Arena::thingsPerArena((*arenap)->getThingSize());
+
     while (*arenap) {
         ArenaHeader *arena = *arenap;
-        MOZ_ASSERT(arena);
-        if (CanRelocateArena(arena) && ShouldRelocateArena(arena)) {
-            // Remove from arena list
-            if (cursorp_ == &arena->next)
-                cursorp_ = arenap;
-            *arenap = arena->next;
-            arena->next = nullptr;
-
-            // Append to relocation list
-            *tailp = arena;
-            tailp = &arena->next;
-        } else {
-            arenap = &arena->next;
-        }
+        if (followingUsedCells <= previousFreeCells)
+            return removeRemainingArenas(arenap);
+        size_t freeCells = arena->countFreeCells();
+        size_t usedCells = cellsPerArena - freeCells;
+        followingUsedCells -= usedCells;
+#ifdef DEBUG
+        MOZ_ASSERT(freeCells >= lastFreeCells);
+        lastFreeCells = freeCells;
+#endif
+        previousFreeCells += freeCells;
+        arenap = &arena->next;
     }
 
     check();
-    return head;
+    return nullptr;
 }
 
 #ifdef DEBUG
@@ -2196,7 +2251,7 @@ RelocateCell(Zone *zone, TenuredCell *src, AllocKind thingKind, size_t thingSize
     return true;
 }
 
-static bool
+static void
 RelocateArena(ArenaHeader *aheader)
 {
     MOZ_ASSERT(aheader->allocated());
@@ -2211,22 +2266,17 @@ RelocateArena(ArenaHeader *aheader)
 
     for (ArenaCellIterUnderFinalize i(aheader); !i.done(); i.next()) {
         if (!RelocateCell(zone, i.getCell(), thingKind, thingSize)) {
-            MOZ_CRASH(); // TODO: Handle failure here.
-            return false;
+            // This can only happen in zeal mode or debug builds as we don't
+            // otherwise relocate more cells than we have existing free space
+            // for.
+            CrashAtUnhandlableOOM("Could not allocate new arena while compacting");
         }
     }
-
-    return true;
 }
 
 /*
  * Relocate all arenas identified by pickArenasToRelocate: for each arena,
- * relocate each cell within it, then tack it onto a list of relocated arenas.
- * Currently, we allow the relocation to fail, in which case the arena will be
- * moved back onto the list of arenas with space available. (I did this
- * originally to test my list manipulation before implementing the actual
- * moving, with half a thought to allowing pinning (moving only a portion of
- * the cells in an arena), but now it's probably just dead weight. FIXME)
+ * relocate each cell within it, then add it to a list of relocated arenas.
  */
 ArenaHeader *
 ArenaList::relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated)
@@ -2235,19 +2285,10 @@ ArenaList::relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated)
 
     while (ArenaHeader *arena = toRelocate) {
         toRelocate = arena->next;
-
-        if (RelocateArena(arena)) {
-            // Prepend to list of relocated arenas
-            arena->next = relocated;
-            relocated = arena;
-        } else {
-            // For some reason, the arena did not end up empty. Prepend it to
-            // the portion of the list that the cursor is pointing to (the
-            // arenas with space available) so that it will be used for future
-            // allocations.
-            MOZ_ASSERT(arena->hasFreeThings());
-            insertAtCursor(arena);
-        }
+        RelocateArena(arena);
+        // Prepend to list of relocated arenas
+        arena->next = relocated;
+        relocated = arena;
     }
 
     check();
@@ -2263,10 +2304,12 @@ ArenaLists::relocateArenas(ArenaHeader *relocatedList)
     checkEmptyFreeLists();
 
     for (size_t i = 0; i < FINALIZE_LIMIT; i++) {
-        ArenaList &al = arenaLists[i];
-        ArenaHeader *toRelocate = al.pickArenasToRelocate();
-        if (toRelocate)
-            relocatedList = al.relocateArenas(toRelocate, relocatedList);
+        if (CanRelocateAllocKind(AllocKind(i))) {
+            ArenaList &al = arenaLists[i];
+            ArenaHeader *toRelocate = al.pickArenasToRelocate();
+            if (toRelocate)
+                relocatedList = al.relocateArenas(toRelocate, relocatedList);
+        }
     }
 
     /*
