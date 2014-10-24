@@ -550,28 +550,6 @@ gfxContext::UserToDevicePixelSnapped(gfxPoint& pt, bool ignoreScale) const
 }
 
 void
-gfxContext::PixelSnappedRectangleAndSetPattern(const gfxRect& rect,
-                                               gfxPattern *pattern)
-{
-  gfxRect r(rect);
-
-  // Bob attempts to pixel-snap the rectangle, and returns true if
-  // the snapping succeeds.  If it does, we need to set up an
-  // identity matrix, because the rectangle given back is in device
-  // coordinates.
-  //
-  // We then have to call a translate to dr.pos afterwards, to make
-  // sure the image lines up in the right place with our pixel
-  // snapped rectangle.
-  //
-  // If snapping wasn't successful, we just translate to where the
-  // pattern would normally start (in app coordinates) and do the
-  // same thing.
-  Rectangle(r, true);
-  SetPattern(pattern);
-}
-
-void
 gfxContext::SetAntialiasMode(AntialiasMode mode)
 {
   CurrentState().aaMode = mode;
