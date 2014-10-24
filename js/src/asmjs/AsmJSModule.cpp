@@ -308,7 +308,10 @@ AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembl
     MOZ_ASSERT(isFinishedWithFunctionBodies() && !isFinished());
 
     uint32_t endBeforeCurly = tokenStream.currentToken().pos.end;
-    uint32_t endAfterCurly = tokenStream.peekTokenPos().end;
+    TokenPos pos;
+    if (!tokenStream.peekTokenPos(&pos))
+        return false;
+    uint32_t endAfterCurly = pos.end;
     MOZ_ASSERT(endBeforeCurly >= srcBodyStart_);
     MOZ_ASSERT(endAfterCurly >= srcBodyStart_);
     pod.srcLength_ = endBeforeCurly - srcStart_;
@@ -1975,7 +1978,9 @@ class ModuleChars
     }
 
     static uint32_t endOffset(AsmJSParser &parser) {
-      return parser.tokenStream.peekTokenPos().end;
+      TokenPos pos;
+      MOZ_ALWAYS_TRUE(parser.tokenStream.peekTokenPos(&pos));
+      return pos.end;
     }
 };
 
