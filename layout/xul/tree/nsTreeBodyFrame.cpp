@@ -16,6 +16,7 @@
 #include "gfxUtils.h"
 #include "nsAlgorithm.h"
 #include "nsCOMPtr.h"
+#include "nsFontMetrics.h"
 #include "nsPresContext.h"
 #include "nsNameSpaceManager.h"
 

@@ -12,6 +12,7 @@
 
 #include "SVGTextFrame.h"
 #include "nsBlockFrame.h"
+#include "nsFontMetrics.h"
 #include "nsStyleConsts.h"
 #include "nsContainerFrame.h"
 #include "nsFloatManager.h"
