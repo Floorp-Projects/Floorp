@@ -47,6 +47,12 @@ const PREF_DIRECTORY_PING = "browser.newtabpage.directory.ping";
 // The preference that tells if newtab is enhanced
 const PREF_NEWTAB_ENHANCED = "browser.newtabpage.enhanced";
 
+// Only allow link urls that are http(s)
+const ALLOWED_LINK_SCHEMES = new Set(["http", "https"]);
+
+// Only allow link image urls that are https or data
+const ALLOWED_IMAGE_SCHEMES = new Set(["https", "data"]);
+
 // The frecency of a directory link
 const DIRECTORY_FRECENCY = 1000;
 
@@ -373,6 +379,24 @@ let DirectoryLinksProvider = {
   },
 
   /**
+   * Check if a url's scheme is in a Set of allowed schemes
+   */
+  isURLAllowed: function DirectoryLinksProvider_isURLAllowed(url, allowed) {
+    // Assume no url is an allowed url
+    if (!url) {
+      return true;
+    }
+
+    let scheme = "";
+    try {
+      // A malformed url will not be allowed
+      scheme = Services.io.newURI(url, null, null).scheme;
+    }
+    catch(ex) {}
+    return allowed.has(scheme);
+  },
+
+  /**
    * Gets the current set of directory links.
    * @param aCallback The function that the array of links is passed to.
    */
@@ -381,8 +405,12 @@ let DirectoryLinksProvider = {
       // Reset the cache of enhanced images for this new set of links
       this._enhancedLinks.clear();
 
-      // all directory links have a frecency of DIRECTORY_FRECENCY
-      return rawLinks.map((link, position) => {
+      return rawLinks.filter(link => {
+        // Make sure the link url is allowed and images too if they exist
+        return this.isURLAllowed(link.url, ALLOWED_LINK_SCHEMES) &&
+               this.isURLAllowed(link.imageURI, ALLOWED_IMAGE_SCHEMES) &&
+               this.isURLAllowed(link.enhancedImageURI, ALLOWED_IMAGE_SCHEMES);
+      }).map((link, position) => {
         // Stash the enhanced image for the site
         if (link.enhancedImageURI) {
           this._enhancedLinks.set(NewTabUtils.extractSite(link.url), link);

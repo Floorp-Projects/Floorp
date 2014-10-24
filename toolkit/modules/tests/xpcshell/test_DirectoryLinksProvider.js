@@ -559,11 +559,74 @@ add_task(function test_DirectoryLinksProvider_getLinksFromCorruptedFile() {
   yield promiseCleanDirectoryLinksProvider();
 });
 
+add_task(function test_DirectoryLinksProvider_getAllowedLinks() {
+  let data = {"en-US": [
+    {url: "ftp://example.com"},
+    {url: "http://example.net"},
+    {url: "javascript:5"},
+    {url: "https://example.com"},
+    {url: "httpJUNKjavascript:42"},
+    {url: "data:text/plain,hi"},
+    {url: "http/bork:eh"},
+  ]};
+  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+
+  let links = yield fetchData();
+  do_check_eq(links.length, 2);
+
+  // The only remaining url should be http and https
+  do_check_eq(links[0].url, data["en-US"][1].url);
+  do_check_eq(links[1].url, data["en-US"][3].url);
+});
+
+add_task(function test_DirectoryLinksProvider_getAllowedImages() {
+  let data = {"en-US": [
+    {url: "http://example.com", imageURI: "ftp://example.com"},
+    {url: "http://example.com", imageURI: "http://example.net"},
+    {url: "http://example.com", imageURI: "javascript:5"},
+    {url: "http://example.com", imageURI: "https://example.com"},
+    {url: "http://example.com", imageURI: "httpJUNKjavascript:42"},
+    {url: "http://example.com", imageURI: "data:text/plain,hi"},
+    {url: "http://example.com", imageURI: "http/bork:eh"},
+  ]};
+  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+
+  let links = yield fetchData();
+  do_check_eq(links.length, 2);
+
+  // The only remaining images should be https and data
+  do_check_eq(links[0].imageURI, data["en-US"][3].imageURI);
+  do_check_eq(links[1].imageURI, data["en-US"][5].imageURI);
+});
+
+add_task(function test_DirectoryLinksProvider_getAllowedEnhancedImages() {
+  let data = {"en-US": [
+    {url: "http://example.com", enhancedImageURI: "ftp://example.com"},
+    {url: "http://example.com", enhancedImageURI: "http://example.net"},
+    {url: "http://example.com", enhancedImageURI: "javascript:5"},
+    {url: "http://example.com", enhancedImageURI: "https://example.com"},
+    {url: "http://example.com", enhancedImageURI: "httpJUNKjavascript:42"},
+    {url: "http://example.com", enhancedImageURI: "data:text/plain,hi"},
+    {url: "http://example.com", enhancedImageURI: "http/bork:eh"},
+  ]};
+  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+
+  let links = yield fetchData();
+  do_check_eq(links.length, 2);
+
+  // The only remaining enhancedImages should be http and https and data
+  do_check_eq(links[0].enhancedImageURI, data["en-US"][3].enhancedImageURI);
+  do_check_eq(links[1].enhancedImageURI, data["en-US"][5].enhancedImageURI);
+});
+
 add_task(function test_DirectoryLinksProvider_getEnhancedLink() {
   let data = {"en-US": [
-    {url: "http://example.net", enhancedImageURI: "net1"},
-    {url: "http://example.com", enhancedImageURI: "com1"},
-    {url: "http://example.com", enhancedImageURI: "com2"},
+    {url: "http://example.net", enhancedImageURI: "data:,net1"},
+    {url: "http://example.com", enhancedImageURI: "data:,com1"},
+    {url: "http://example.com", enhancedImageURI: "data:,com2"},
   ]};
   let dataURI = 'data:application/json,' + JSON.stringify(data);
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
@@ -577,20 +640,20 @@ add_task(function test_DirectoryLinksProvider_getEnhancedLink() {
   }
 
   // Get the expected image for the same site
-  checkEnhanced("http://example.net/", "net1");
-  checkEnhanced("http://example.net/path", "net1");
-  checkEnhanced("https://www.example.net/", "net1");
-  checkEnhanced("https://www3.example.net/", "net1");
+  checkEnhanced("http://example.net/", "data:,net1");
+  checkEnhanced("http://example.net/path", "data:,net1");
+  checkEnhanced("https://www.example.net/", "data:,net1");
+  checkEnhanced("https://www3.example.net/", "data:,net1");
 
   // Get the image of the last entry
-  checkEnhanced("http://example.com", "com2");
+  checkEnhanced("http://example.com", "data:,com2");
 
   // Get the inline enhanced image
   let inline = DirectoryLinksProvider.getEnhancedLink({
     url: "http://example.com/echo",
-    enhancedImageURI: "echo",
+    enhancedImageURI: "data:,echo",
   });
-  do_check_eq(inline.enhancedImageURI, "echo");
+  do_check_eq(inline.enhancedImageURI, "data:,echo");
   do_check_eq(inline.url, "http://example.com/echo");
 
   // Undefined for not enhanced
@@ -601,14 +664,14 @@ add_task(function test_DirectoryLinksProvider_getEnhancedLink() {
 
   // Make sure old data is not cached
   data = {"en-US": [
-    {url: "http://example.com", enhancedImageURI: "fresh"},
+    {url: "http://example.com", enhancedImageURI: "data:,fresh"},
   ]};
   dataURI = 'data:application/json,' + JSON.stringify(data);
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
   links = yield fetchData();
   do_check_eq(links.length, 1);
   checkEnhanced("http://example.net", undefined);
-  checkEnhanced("http://example.com", "fresh");
+  checkEnhanced("http://example.com", "data:,fresh");
 });
 
 add_task(function test_DirectoryLinksProvider_setDefaultEnhanced() {
