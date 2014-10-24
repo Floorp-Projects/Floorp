@@ -81,6 +81,29 @@ const ANOTHER_RADIO_INTERFACE = {
   }
 };
 
+const INVALID_RADIO_INTERFACE = {
+  rilContext: {
+    iccInfo: {
+      iccid: null,
+      mcc: "",
+      mnc: "",
+      msisdn: "",
+      operator: ""
+    }
+  },
+  voice: {
+    network: {
+      shortName: ""
+    },
+    roaming: undefined
+  },
+  data: {
+    network: {
+      shortName: ""
+    }
+  }
+};
+
 const CERTIFICATE = "eyJhbGciOiJEUzI1NiJ9.eyJsYXN0QXV0aEF0IjoxNDA0NDY5NzkyODc3LCJ2ZXJpZmllZE1TSVNETiI6IiszMTYxNzgxNTc1OCIsInB1YmxpYy1rZXkiOnsiYWxnb3JpdGhtIjoiRFMiLCJ5IjoiNGE5YzkzNDY3MWZhNzQ3YmM2ZjMyNjE0YTg1MzUyZjY5NDcwMDdhNTRkMDAxMDY4OWU5ZjJjZjc0ZGUwYTEwZTRlYjlmNDk1ZGFmZTA0NGVjZmVlNDlkN2YwOGU4ODQyMDJiOTE5OGRhNWZhZWE5MGUzZjRmNzE1YzZjNGY4Yjc3MGYxZTU4YWZhNDM0NzVhYmFiN2VlZGE1MmUyNjk2YzFmNTljNzMzYjFlYzBhNGNkOTM1YWIxYzkyNzAxYjNiYTA5ZDRhM2E2MzNjNTJmZjE2NGYxMWY3OTg1YzlmZjY3ZThmZDFlYzA2NDU3MTdkMjBiNDE4YmM5M2YzYzVkNCIsInAiOiJmZjYwMDQ4M2RiNmFiZmM1YjQ1ZWFiNzg1OTRiMzUzM2Q1NTBkOWYxYmYyYTk5MmE3YThkYWE2ZGMzNGY4MDQ1YWQ0ZTZlMGM0MjlkMzM0ZWVlYWFlZmQ3ZTIzZDQ4MTBiZTAwZTRjYzE0OTJjYmEzMjViYTgxZmYyZDVhNWIzMDVhOGQxN2ViM2JmNGEwNmEzNDlkMzkyZTAwZDMyOTc0NGE1MTc5MzgwMzQ0ZTgyYTE4YzQ3OTMzNDM4Zjg5MWUyMmFlZWY4MTJkNjljOGY3NWUzMjZjYjcwZWEwMDBjM2Y3NzZkZmRiZDYwNDYzOGMyZWY3MTdmYzI2ZDAyZTE3IiwicSI6ImUyMWUwNGY5MTFkMWVkNzk5MTAwOGVjYWFiM2JmNzc1OTg0MzA5YzMiLCJnIjoiYzUyYTRhMGZmM2I3ZTYxZmRmMTg2N2NlODQxMzgzNjlhNjE1NGY0YWZhOTI5NjZlM2M4MjdlMjVjZmE2Y2Y1MDhiOTBlNWRlNDE5ZTEzMzdlMDdhMmU5ZTJhM2NkNWRlYTcwNGQxNzVmOGViZjZhZjM5N2Q2OWUxMTBiOTZhZmIxN2M3YTAzMjU5MzI5ZTQ4MjliMGQwM2JiYzc4OTZiMTViNGFkZTUzZTEzMDg1OGNjMzRkOTYyNjlhYTg5MDQxZjQwOTEzNmM3MjQyYTM4ODk1YzlkNWJjY2FkNGYzODlhZjFkN2E0YmQxMzk4YmQwNzJkZmZhODk2MjMzMzk3YSJ9LCJwcmluY2lwYWwiOiIwMzgxOTgyYS0xZTgzLTI1NjYtNjgzZS05MDRmNDA0NGM1MGRAbXNpc2RuLWRldi5zdGFnZS5tb3phd3MubmV0IiwiaWF0IjoxNDA0NDY5NzgyODc3LCJleHAiOjE0MDQ0OTEzOTI4NzcsImlzcyI6Im1zaXNkbi1kZXYuc3RhZ2UubW96YXdzLm5ldCJ9."
 
 // === Helpers ===
@@ -1423,6 +1446,90 @@ add_test(function() {
     do_check_null(MobileIdentityManager._iccIds);
 
     // And we should have unregistered all listeners for ICC change events.
+    do_check_eq(MobileIdentityManager._iccProvider._listeners.length, 0);
+
+    do_test_finished();
+    run_next_test();
+  };
+  MobileIdentityManager.ui = ui;
+
+  let credStore = new MockCredStore();
+  credStore.getByOrigin = function() {
+    // Initially the ICC caches should be null.
+    do_check_null(MobileIdentityManager._iccInfo);
+    do_check_null(MobileIdentityManager._iccIds);
+    return Promise.resolve(null);
+  };
+  MobileIdentityManager.credStore = credStore;
+
+  let client = new MockClient();
+  MobileIdentityManager.client = client;
+
+  let promiseId = Date.now();
+  let mm = {
+    sendAsyncMessage: function() {}
+  };
+
+  addPermission(Ci.nsIPermissionManager.ALLOW_ACTION);
+
+  MobileIdentityManager.receiveMessage({
+    name: GET_ASSERTION_IPC_MSG,
+    principal: PRINCIPAL,
+    target: mm,
+    json: {
+      promiseId: promiseId,
+      options: {}
+    }
+  });
+});
+
+add_test(function() {
+  do_print("= Invalid ICC Info =");
+
+  do_register_cleanup(cleanup);
+
+  do_test_pending();
+
+  let _sessionToken = Date.now();
+
+  MobileIdentityManager._iccInfo = null;
+  MobileIdentityManager._iccIds = null;
+
+  MobileIdentityManager._ril = {
+    _interfaces: [INVALID_RADIO_INTERFACE],
+    get numRadioInterfaces() {
+      return this._interfaces.length;
+    },
+
+    getRadioInterface: function(aIndex) {
+      return this._interfaces[aIndex];
+    }
+  };
+
+  MobileIdentityManager._mobileConnectionService = {
+    _interfaces: [INVALID_RADIO_INTERFACE],
+    getItemByServiceId: function(aIndex) {
+      return this._interfaces[aIndex];
+    }
+  };
+
+  MobileIdentityManager._iccProvider = {
+    _listeners: [],
+    registerIccMsg: function(aClientId, aIccListener) {
+      this._listeners.push(aIccListener);
+    },
+    unregisterIccMsg: function() {
+      this._listeners.pop();
+    }
+  };
+
+  let ui = new MockUi();
+  ui.startFlow = function() {
+    // At this point we've already built the ICC cache.
+    do_check_eq(MobileIdentityManager._iccInfo.length, 0);
+    do_check_eq(MobileIdentityManager._iccIds.length, 0);
+
+    // We should have listeners for each valid icc.
     do_check_eq(MobileIdentityManager._iccProvider._listeners.length, 0);
 
     do_test_finished();
