@@ -1852,6 +1852,11 @@ void OutputHLSL::visitSymbol(TIntermSymbol *node)
     }
 }
 
+void OutputHLSL::visitRaw(TIntermRaw *node)
+{
+    mBody << node->getRawText();
+}
+
 bool OutputHLSL::visitBinary(Visit visit, TIntermBinary *node)
 {
     TInfoSinkBase &out = mBody;

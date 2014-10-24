@@ -18,16 +18,14 @@ namespace sh
 class ElseBlockRewriter : public TIntermTraverser
 {
   public:
-      ElseBlockRewriter()
-          : TIntermTraverser(false, false, true, false)
-          , mTemporaryIndex(0)
-      {}
+    ElseBlockRewriter();
 
   protected:
     bool visitAggregate(Visit visit, TIntermAggregate *aggregate);
 
   private:
     int mTemporaryIndex;
+    const TType *mFunctionType;
 
     TIntermNode *rewriteSelection(TIntermSelection *selection);
 };
