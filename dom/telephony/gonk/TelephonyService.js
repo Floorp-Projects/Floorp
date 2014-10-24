@@ -1272,14 +1272,6 @@ TelephonyService.prototype = {
             aMessage + " (sessionEnded : " + aSessionEnded + ")");
     }
 
-    let info = {
-      serviceId: aClientId,
-      message: aMessage,
-      sessionEnded: aSessionEnded
-    };
-
-    gSystemMessenger.broadcastMessage("ussd-received", info);
-
     gGonkMobileConnectionService.notifyUssdReceived(aClientId, aMessage,
                                                     aSessionEnded);
   },
