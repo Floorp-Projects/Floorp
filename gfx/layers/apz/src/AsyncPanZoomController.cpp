@@ -1036,7 +1036,7 @@ nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent)
       block->GetOverscrollHandoffChain()->CancelAnimations();
     }
 
-    if (mFrameMetrics.GetMayHaveTouchListeners() || mFrameMetrics.GetMayHaveTouchCaret()) {
+    if (NeedToWaitForContent()) {
       // Content may intercept the touch events and prevent-default them. So we schedule
       // a timeout to give content time to do that.
       ScheduleContentResponseTimeout();
@@ -3004,14 +3004,8 @@ AsyncPanZoomController::ProcessPendingInputBlocks() {
     APZC_LOG("%p processing input block %p; preventDefault %d\n",
         this, curBlock, curBlock->IsDefaultPrevented());
     if (curBlock->IsDefaultPrevented()) {
-      SetState(NOTHING);
       curBlock->DropEvents();
-      // Also clear the state in the gesture event listener
-      nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
-      if (listener) {
-        MultiTouchInput cancel(MultiTouchInput::MULTITOUCH_CANCEL, 0, TimeStamp::Now(), 0);
-        listener->HandleInputEvent(cancel);
-      }
+      ResetInputState();
     } else {
       while (curBlock->HasEvents()) {
         HandleInputEvent(curBlock->RemoveFirstEvent());
@@ -3031,6 +3025,24 @@ AsyncPanZoomController::ProcessPendingInputBlocks() {
     // |curBlock|, so we can remove |curBlock| and try to process the next one.
     APZC_LOG("%p discarding depleted touch block %p\n", this, curBlock);
     mTouchBlockQueue.RemoveElementAt(0);
+  }
+}
+
+bool
+AsyncPanZoomController::NeedToWaitForContent() const
+{
+  return (mFrameMetrics.GetMayHaveTouchListeners() || mFrameMetrics.GetMayHaveTouchCaret());
+}
+
+void
+AsyncPanZoomController::ResetInputState()
+{
+  SetState(NOTHING);
+  // Also clear the state in the gesture event listener
+  nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
+  if (listener) {
+    MultiTouchInput cancel(MultiTouchInput::MULTITOUCH_CANCEL, 0, TimeStamp::Now(), 0);
+    listener->HandleInputEvent(cancel);
   }
 }
 

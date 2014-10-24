@@ -815,6 +815,8 @@ private:
   TouchBlockState* StartNewTouchBlock(bool aCopyAllowedTouchBehaviorFromCurrent);
   TouchBlockState* CurrentTouchBlock();
   bool HasReadyTouchBlock();
+  bool NeedToWaitForContent() const;
+  void ResetInputState();
 
 private:
   // The queue of touch blocks that have not yet been processed by this APZC.
