@@ -2,6 +2,8 @@
 //  HTTP Accept-Language header test
 //
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 var testpath = "/bug672448";
 
 function run_test() {
@@ -79,7 +81,14 @@ function test_accepted_languages() {
 
 function setupChannel(path) {
   let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  let chan = ios.newChannel("http://localhost:4444" + path, "", null);
+  let chan = ios.newChannel2("http://localhost:4444" + path,
+                             "",
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER);
   chan.QueryInterface(Ci.nsIHttpChannel);
   return chan;
 }

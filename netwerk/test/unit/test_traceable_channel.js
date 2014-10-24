@@ -4,6 +4,7 @@
 // is correctly modified.
 
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserver = new HttpServer();
 httpserver.start(-1);
@@ -132,8 +133,15 @@ function test_handler(metadata, response) {
 function make_channel(url) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
     getService(Ci.nsIIOService);
-  return ios.newChannel(url, null, null).
-    QueryInterface(Components.interfaces.nsIHttpChannel);
+  return ios.newChannel2(url,
+                         null,
+                         null,
+                         null,      // aLoadingNode
+                         Services.scriptSecurityManager.getSystemPrincipal(),
+                         null,      // aTriggeringPrincipal
+                         Ci.nsILoadInfo.SEC_NORMAL,
+                         Ci.nsIContentPolicy.TYPE_OTHER)
+            .QueryInterface(Components.interfaces.nsIHttpChannel);
 }
 
 // Check if received body is correctly modified.

@@ -17,6 +17,7 @@
 // run_myipaddress_test();
 // run_failed_script_test();
 // run_isresolvable_test();
+Cu.import("resource://gre/modules/Services.jsm");
 
 var ios = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService);
@@ -711,7 +712,14 @@ function failed_script_callback(pi)
   obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
   obs.addObserver(directFilterListener, "http-on-modify-request", false);
 
-  var chan = ios.newChannel("http://127.0.0.1:7247", "", null);
+  var chan = ios.newChannel2("http://127.0.0.1:7247",
+                             "",
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER);
   chan.asyncOpen(directFilterListener, chan);
 }
 

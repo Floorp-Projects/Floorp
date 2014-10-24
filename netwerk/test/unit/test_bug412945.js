@@ -1,4 +1,5 @@
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserv;
 
@@ -23,8 +24,15 @@ function run_test() {
   var channel =
       Components.classes["@mozilla.org/network/io-service;1"].
       getService(Components.interfaces.nsIIOService).
-      newChannel("http://localhost:" + httpserv.identity.primaryPort +
-                 "/bug412945", null, null);
+      newChannel2("http://localhost:" + httpserv.identity.primaryPort +
+                  "/bug412945",
+                  null,
+                  null,
+                  null,      // aLoadingNode
+                  Services.scriptSecurityManager.getSystemPrincipal(),
+                  null,      // aTriggeringPrincipal
+                  Ci.nsILoadInfo.SEC_NORMAL,
+                  Ci.nsIContentPolicy.TYPE_OTHER);
 
   channel.QueryInterface(Components.interfaces.nsIHttpChannel);
   channel.requestMethod = "POST";

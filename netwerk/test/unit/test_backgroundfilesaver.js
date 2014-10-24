@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 
 const BackgroundFileSaverOutputStream = Components.Constructor(
       "@mozilla.org/network/background-file-saver;1?mode=outputstream",
@@ -105,7 +107,7 @@ function toHex(str) {
  */
 function promiseVerifyContents(aFile, aExpectedContents) {
   let deferred = Promise.defer();
-  NetUtil.asyncFetch(aFile, function(aInputStream, aStatus) {
+  NetUtil.asyncFetch2(aFile, function(aInputStream, aStatus) {
     do_check_true(Components.isSuccessCode(aStatus));
     let contents = NetUtil.readInputStreamToString(aInputStream,
                                                    aInputStream.available());
@@ -117,7 +119,13 @@ function promiseVerifyContents(aFile, aExpectedContents) {
       do_check_true(contents == aExpectedContents);
     }
     deferred.resolve();
-  });
+  },
+  null,      // aLoadingNode
+  Services.scriptSecurityManager.getSystemPrincipal(),
+  null,      // aTriggeringPrincipal
+  Ci.nsILoadInfo.SEC_NORMAL,
+  Ci.nsIContentPolicy.TYPE_OTHER);
+
   return deferred.promise;
 }
 
