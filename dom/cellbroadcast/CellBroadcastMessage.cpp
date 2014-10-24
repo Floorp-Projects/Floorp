@@ -83,12 +83,14 @@ CellBroadcastMessage::CellBroadcastMessage(nsPIDOMWindow* aWindow,
                                                        aEtwsPopup)
                            : nullptr)
 {
-  if (aGsmGeographicalScope < nsICellBroadcastService::GSM_GEOGRAPHICAL_SCOPE_INVALID) {
+  if (aGsmGeographicalScope <
+      static_cast<uint32_t>(CellBroadcastGsmGeographicalScope::EndGuard_)) {
     mGsmGeographicalScope.SetValue(
       ToWebidlEnum<CellBroadcastGsmGeographicalScope>(aGsmGeographicalScope));
   }
 
-  if (aMessageClass < nsICellBroadcastService::GSM_MESSAGE_CLASS_INVALID) {
+  if (aMessageClass <
+      static_cast<uint32_t>(CellBroadcastMessageClass::EndGuard_)) {
     mMessageClass.SetValue(
       ToWebidlEnum<CellBroadcastMessageClass>(aMessageClass));
   }
@@ -134,7 +136,8 @@ CellBroadcastEtwsInfo::CellBroadcastEtwsInfo(nsPIDOMWindow* aWindow,
   , mEmergencyUserAlert(aEmergencyUserAlert)
   , mPopup(aPopup)
 {
-  if (aWarningType < nsICellBroadcastService::GSM_ETWS_WARNING_INVALID) {
+  if (aWarningType <
+      static_cast<uint32_t>(CellBroadcastEtwsWarningType::EndGuard_)) {
     mWarningType.SetValue(
       ToWebidlEnum<CellBroadcastEtwsWarningType>(aWarningType));
   }

@@ -1,0 +1,55 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsISupports.idl"
+
+[scriptable, uuid(47764f4a-5b3f-11e4-a2ec-4b99529b9288)]
+interface nsICellbroadcastMessenger : nsISupports
+{
+  /**
+   * To broadcast 'cellbroadcast-received' system message.
+   *
+   * @param aServiceId
+   *        The ID of Service where this info is notified from.
+   * @param aGsmGeographicalScope
+   *        @See nsICellBroadcastService.GSM_GEOGRAPHICAL_SCOPE_*.
+   * @param aMessageCode
+   *        The Message Code differentiates between messages from the same
+   *        source and type (e.g., with the same Message Identifier).
+   * @param aMessageId
+   *        Source and type of the message which is coded in binary.
+   * @param aLanguage
+   *        ISO-639-1 language code for this message. Null if unspecified.
+   * @param aBody
+   *        Text message carried by the message.
+   * @param aMessageClass
+   *        @See nsICellBroadcastService.GSM_MESSAGE_CLASS_*.
+   * @param aTimestamp
+   *        System time stamp at receival.
+   * @param aCdmaServiceCategory
+   *        CDMA Service Category.
+   * @param aHasEtwsInfo
+   *        True if ETWS Info is included in this message.
+   * @param aEtwsWarningType
+   *        @See nsICellBroadcastService.GSM_ETWS_WARNING_*.
+   * @param aEtwsEmergencyUserAlert
+   *        True if Emergency user alert indication is set.
+   * @param aEtwsPopup
+   *        True if Message popup indication is set.
+   */
+  void notifyCbMessageReceived(in unsigned long aServiceId,
+                               in unsigned long aGsmGeographicalScope,
+                               in unsigned short aMessageCode,
+                               in unsigned short aMessageId,
+                               in DOMString aLanguage,
+                               in DOMString aBody,
+                               in unsigned long aMessageClass,
+                               in DOMTimeStamp aTimestamp,
+                               in unsigned long aCdmaServiceCategory,
+                               in boolean aHasEtwsInfo,
+                               in unsigned long aEtwsWarningType,
+                               in boolean aEtwsEmergencyUserAlert,
+                               in boolean aEtwsPopup);
+};
