@@ -191,7 +191,14 @@ Http2PostListener.prototype.onDataAvailable = function(request, ctx, stream, off
 
 function makeChan(url) {
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var chan = ios.newChannel(url, null, null).QueryInterface(Ci.nsIHttpChannel);
+  var chan = ios.newChannel2(url,
+                             null,
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER).QueryInterface(Ci.nsIHttpChannel);
 
   return chan;
 }
@@ -355,6 +362,8 @@ function test_http2_post_big() {
 }
 
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
+
 var httpserv = null;
 var ios = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService);
@@ -372,8 +381,15 @@ var altsvcClientListener = {
     var isHttp2Connection = checkIsHttp2(request);
     if (!isHttp2Connection) {
 	// not over tls yet - retry. It's all async and transparent to client
-	var chan = ios.newChannel("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1",
-				  null, null).QueryInterface(Components.interfaces.nsIHttpChannel);
+	var chan = ios.newChannel2("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1",
+                             null,
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER)
+                .QueryInterface(Components.interfaces.nsIHttpChannel);
 	chan.asyncOpen(altsvcClientListener, null);
     } else {
         do_check_true(isHttp2Connection);
@@ -396,8 +412,15 @@ function test_http2_altsvc() {
   httpserv.registerPathHandler("/altsvc1", altsvcHttp1Server);
   httpserv.start(-1);
 
-  var chan = ios.newChannel("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1",
-			    null, null).QueryInterface(Components.interfaces.nsIHttpChannel);
+  var chan = ios.newChannel2("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1",
+                             null,
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER)
+                .QueryInterface(Components.interfaces.nsIHttpChannel);
   chan.asyncOpen(altsvcClientListener, null);
 }
 

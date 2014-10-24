@@ -1,6 +1,8 @@
 const isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 const isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 function getLinkFile()
 {
   if (isWindows) {
@@ -95,7 +97,12 @@ RequestObserver.prototype = {
 
 function test_cancel()
 {
-  var chan = ios.newChannelFromURI(linkURI);
+  var chan = ios.newChannelFromURI2(linkURI,
+                                    null,      // aLoadingNode
+                                    Services.scriptSecurityManager.getSystemPrincipal(),
+                                    null,      // aTriggeringPrincipal
+                                    Ci.nsILoadInfo.SEC_NORMAL,
+                                    Ci.nsIContentPolicy.TYPE_OTHER);
   do_check_eq(chan.URI, linkURI);
   do_check_eq(chan.originalURI, linkURI);
   chan.asyncOpen(new RequestObserver(linkURI, newURI, do_test_finished), null);
@@ -115,7 +122,12 @@ function run_test()
 
   do_test_pending();
 
-  var chan = ios.newChannelFromURI(linkURI);
+  var chan = ios.newChannelFromURI2(linkURI,
+                                    null,      // aLoadingNode
+                                    Services.scriptSecurityManager.getSystemPrincipal(),
+                                    null,      // aTriggeringPrincipal
+                                    Ci.nsILoadInfo.SEC_NORMAL,
+                                    Ci.nsIContentPolicy.TYPE_OTHER);
   do_check_eq(chan.URI, linkURI);
   do_check_eq(chan.originalURI, linkURI);
   chan.notificationCallbacks = new NotificationCallbacks(linkURI, newURI);
