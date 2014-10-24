@@ -501,9 +501,6 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
     nsRefPtr<nsRenderingContext> refContext =
         PresContext()->PresShell()->CreateReferenceRenderingContext();
 
-    aRenderingContext.SetFont(fontMet);
-    refContext->SetFont(fontMet);
-
     CalculateUnderline(*refContext, *fontMet);
 
     nscolor c = aOverrideColor ? *aOverrideColor : StyleColor()->mColor;
@@ -614,7 +611,6 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
 
     nsRefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
-    aRenderingContext.SetFont(fm);
 
     // see if the text will completely fit in the width given
     nscoord titleWidth = nsLayoutUtils::GetStringWidth(this, &aRenderingContext,
@@ -1003,7 +999,6 @@ nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext,
     nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
     aSize.height = fontMet->MaxHeight();
-    aRenderingContext.SetFont(fontMet);
     aSize.width =
       nsLayoutUtils::GetStringWidth(this, &aRenderingContext, *fontMet,
                                     aString.get(), aString.Length());

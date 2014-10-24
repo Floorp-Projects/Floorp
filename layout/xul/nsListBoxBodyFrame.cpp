@@ -725,7 +725,6 @@ nsListBoxBodyFrame::ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState)
           nsRefPtr<nsFontMetrics> fm;
           nsLayoutUtils::GetFontMetricsForStyleContext(styleContext,
                                                        getter_AddRefs(fm));
-          rendContext->SetFont(fm);
 
           nscoord textWidth =
             nsLayoutUtils::GetStringWidth(this, rendContext, *fm,

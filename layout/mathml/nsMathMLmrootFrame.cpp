@@ -225,7 +225,6 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
-  renderingContext.SetFont(fm);
 
   nscoord ruleThickness, leading, psi;
   GetRadicalParameters(fm, StyleFont()->mMathDisplay ==
