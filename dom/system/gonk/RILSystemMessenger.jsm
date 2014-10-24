@@ -106,6 +106,55 @@ RILSystemMessenger.prototype = {
       deliveryTimestamp: aDeliveryTimestamp,
       read:              aRead
     });
+  },
+
+  _convertCbGsmGeographicalScope: function(aGeographicalScope) {
+    return RIL.CB_GSM_GEOGRAPHICAL_SCOPE_NAMES[aGeographicalScope] || null;
+  },
+
+  _convertCbMessageClass: function(aMessageClass) {
+    return RIL.GECKO_SMS_MESSAGE_CLASSES[aMessageClass] || null;
+  },
+
+  _convertCbEtwsWarningType: function(aWarningType) {
+    return RIL.CB_ETWS_WARNING_TYPE_NAMES[aWarningType] || null;
+  },
+
+  /**
+   * Wrapper to send 'cellbroadcast-received' system message.
+   */
+  notifyCbMessageReceived: function(aServiceId, aGsmGeographicalScope, aMessageCode,
+                                    aMessageId, aLanguage, aBody, aMessageClass,
+                                    aTimestamp, aCdmaServiceCategory, aHasEtwsInfo,
+                                    aEtwsWarningType, aEtwsEmergencyUserAlert, aEtwsPopup) {
+    // Align the same layout to MozCellBroadcastMessage
+    let data = {
+      serviceId: aServiceId,
+      gsmGeographicalScope: this._convertCbGsmGeographicalScope(aGsmGeographicalScope),
+      messageCode: aMessageCode,
+      messageId: aMessageId,
+      language: aLanguage,
+      body: aBody,
+      messageClass: this._convertCbMessageClass(aMessageClass),
+      timestamp: aTimestamp,
+      cdmaServiceCategory: null,
+      etws: null
+    };
+
+    if (aHasEtwsInfo) {
+      data.etws = {
+        warningType: this._convertCbEtwsWarningType(aEtwsWarningType),
+        emergencyUserAlert: aEtwsEmergencyUserAlert,
+        popup: aEtwsPopup
+      };
+    }
+
+    if (aCdmaServiceCategory !=
+        Ci.nsICellBroadcastService.CDMA_SERVICE_CATEGORY_INVALID) {
+      data.cdmaServiceCategory = aCdmaServiceCategory;
+    }
+
+    this.broadcastMessage("cellbroadcast-received", data);
   }
 };
 
