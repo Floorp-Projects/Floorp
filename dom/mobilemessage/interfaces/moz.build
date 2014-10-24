@@ -21,6 +21,7 @@ XPIDL_SOURCES += [
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
     XPIDL_SOURCES += [
         'nsIRilMobileMessageDatabaseService.idl',
+        'nsISmsMessenger.idl',
     ]
 
 XPIDL_MODULE = 'dom_mobilemessage'
