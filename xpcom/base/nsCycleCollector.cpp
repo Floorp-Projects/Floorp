@@ -3263,10 +3263,10 @@ nsCycleCollector::CollectWhite()
     }
   }
 
-  uint32_t count = whiteNodes.Length();
-  MOZ_ASSERT(numWhiteGCed <= count,
+  uint32_t numWhiteNodes = whiteNodes.Length();
+  MOZ_ASSERT(numWhiteGCed <= numWhiteNodes,
              "More freed GCed nodes than total freed nodes.");
-  mResults.mFreedRefCounted += count - numWhiteGCed;
+  mResults.mFreedRefCounted += numWhiteNodes - numWhiteGCed;
   mResults.mFreedGCed += numWhiteGCed;
   mResults.mFreedJSZones += numWhiteJSZones;
 
@@ -3277,7 +3277,7 @@ nsCycleCollector::CollectWhite()
     timeLog.Checkpoint("CollectWhite::BeforeUnlinkCB");
   }
 
-  for (uint32_t i = 0; i < count; ++i) {
+  for (uint32_t i = 0; i < numWhiteNodes; ++i) {
     PtrInfo* pinfo = whiteNodes.ElementAt(i);
     MOZ_ASSERT(pinfo->mParticipant,
                "Unlink shouldn't see objects removed from graph.");
@@ -3290,7 +3290,7 @@ nsCycleCollector::CollectWhite()
   }
   timeLog.Checkpoint("CollectWhite::Unlink");
 
-  for (uint32_t i = 0; i < count; ++i) {
+  for (uint32_t i = 0; i < numWhiteNodes; ++i) {
     PtrInfo* pinfo = whiteNodes.ElementAt(i);
     MOZ_ASSERT(pinfo->mParticipant,
                "Unroot shouldn't see objects removed from graph.");
@@ -3303,7 +3303,7 @@ nsCycleCollector::CollectWhite()
 
   mIncrementalPhase = CleanupPhase;
 
-  return count > 0;
+  return numWhiteNodes > 0;
 }
 
 
