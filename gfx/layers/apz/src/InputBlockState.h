@@ -23,10 +23,13 @@ class OverscrollHandoffChain;
 class InputBlockState
 {
 public:
-  explicit InputBlockState(const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain);
+  explicit InputBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc);
 
+  const nsRefPtr<AsyncPanZoomController>& GetTargetApzc() const;
   const nsRefPtr<const OverscrollHandoffChain>& GetOverscrollHandoffChain() const;
+
 private:
+  nsRefPtr<AsyncPanZoomController> mTargetApzc;
   nsRefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
 };
 
@@ -66,7 +69,7 @@ class TouchBlockState : public InputBlockState
 public:
   typedef uint32_t TouchBehaviorFlags;
 
-  explicit TouchBlockState(const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain);
+  explicit TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc);
 
   /**
    * Record whether or not content cancelled this block of events.

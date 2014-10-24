@@ -240,6 +240,7 @@ UNIFIED_SOURCES += [
     'apz/src/Axis.cpp',
     'apz/src/GestureEventListener.cpp',
     'apz/src/InputBlockState.cpp',
+    'apz/src/InputQueue.cpp',
     'apz/src/OverscrollHandoffState.cpp',
     'apz/src/TaskThrottler.cpp',
     'apz/testutil/APZTestData.cpp',
