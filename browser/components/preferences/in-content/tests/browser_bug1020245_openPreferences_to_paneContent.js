@@ -25,28 +25,6 @@ add_task(function() {
   is(prefs.selectedPane, "paneGeneral", "General pane is selected by default");
 });
 
-function openPreferencesViaOpenPreferencesAPI(aPane, aAdvancedTab) {
-  let deferred = Promise.defer();
-  gBrowser.selectedTab = gBrowser.addTab("about:blank");
-  openPreferences(aPane, aAdvancedTab ? {advancedTab: aAdvancedTab} : undefined);
-  let newTabBrowser = gBrowser.selectedBrowser;
-
-  newTabBrowser.addEventListener("Initialized", function PrefInit() {
-    newTabBrowser.removeEventListener("Initialized", PrefInit, true);
-    newTabBrowser.contentWindow.addEventListener("load", function prefLoad() {
-      newTabBrowser.contentWindow.removeEventListener("load", prefLoad);
-      let win = gBrowser.contentWindow;
-      let selectedPane = win.history.state;
-      let doc = win.document;
-      let selectedAdvancedTab = aAdvancedTab && doc.getElementById("advancedPrefs").selectedTab.id;
-      gBrowser.removeCurrentTab();
-      deferred.resolve({selectedPane: selectedPane, selectedAdvancedTab: selectedAdvancedTab});
-    });
-  }, true);
-
-  return deferred.promise;
-}
-
 function openPreferencesViaHash(aPane) {
   let deferred = Promise.defer();
   gBrowser.selectedTab = gBrowser.addTab("about:preferences" + (aPane ? "#" + aPane : ""));
