@@ -44,7 +44,6 @@ Twice-reported {
 Unreported {
   9 blocks in heap block record 1 of 3
   1,008 bytes (900 requested / 108 slop)
-  Individual block sizes: 112 x 9
   35.49% of the heap (35.49% cumulative)
   48.84% of unreported (48.84% cumulative)
   Allocated at {
@@ -55,7 +54,6 @@ Unreported {
 Unreported {
   6 blocks in heap block record 2 of 3
   528 bytes (528 requested / 0 slop)
-  Individual block sizes: 128; 112; 96; 80; 64; 48
   18.59% of the heap (54.08% cumulative)
   25.58% of unreported (74.42% cumulative)
   Allocated at {
@@ -66,7 +64,6 @@ Unreported {
 Unreported {
   6 blocks in heap block record 3 of 3
   528 bytes (528 requested / 0 slop)
-  Individual block sizes: 128; 112; 96; 80; 64; 48
   18.59% of the heap (72.68% cumulative)
   25.58% of unreported (100.00% cumulative)
   Allocated at {
