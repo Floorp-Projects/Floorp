@@ -172,12 +172,6 @@ nsMathMLFrame::GetRuleThickness(nsRenderingContext& aRenderingContext,
                                 nsFontMetrics*      aFontMetrics,
                                 nscoord&             aRuleThickness)
 {
-  // get the bounding metrics of the overbar char, the rendering context
-  // is assumed to have been set with the font of the current style context
-  NS_ASSERTION(aRenderingContext.FontMetrics()->Font().
-               Equals(aFontMetrics->Font()),
-               "unexpected state");
-
   nscoord xHeight = aFontMetrics->XHeight();
   char16_t overBar = 0x00AF;
   nsBoundingMetrics bm =
@@ -202,12 +196,6 @@ nsMathMLFrame::GetAxisHeight(nsRenderingContext& aRenderingContext,
                                 aFontMetrics->AppUnitsPerDevPixel());
     return;
   }
-
-  // get the bounding metrics of the minus sign, the rendering context
-  // is assumed to have been set with the font of the current style context
-  NS_ASSERTION(aRenderingContext.FontMetrics()->Font().
-               Equals(aFontMetrics->Font()),
-               "unexpected state");
 
   nscoord xHeight = aFontMetrics->XHeight();
   char16_t minus = 0x2212; // not '-', but official Unicode minus sign

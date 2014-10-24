@@ -29,8 +29,6 @@ class nsRenderingContext MOZ_FINAL
     typedef mozilla::gfx::DrawTarget DrawTarget;
 
 public:
-    nsRenderingContext() {}
-
     NS_INLINE_DECL_REFCOUNTING(nsRenderingContext)
 
     void Init(gfxContext* aThebesContext);
@@ -40,21 +38,11 @@ public:
     gfxContext *ThebesContext() { return mThebes; }
     DrawTarget *GetDrawTarget() { return mThebes->GetDrawTarget(); }
 
-    // Text
-
-    void SetFont(nsFontMetrics *aFontMetrics);
-    nsFontMetrics *FontMetrics() { return mFontMetrics; } // may be null
-
-    void SetTextRunRTL(bool aIsRTL);
-
 private:
     // Private destructor, to discourage deletion outside of Release():
-    ~nsRenderingContext()
-    {
-    }
+    ~nsRenderingContext() {}
 
     nsRefPtr<gfxContext> mThebes;
-    nsRefPtr<nsFontMetrics> mFontMetrics;
 };
 
 #endif  // NSRENDERINGCONTEXT__H__

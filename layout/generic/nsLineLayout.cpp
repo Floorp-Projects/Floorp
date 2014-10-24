@@ -1590,7 +1590,6 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     GetInflationForBlockDirAlignment(spanFrame, mInflationMinFontSize);
   nsLayoutUtils::GetFontMetricsForFrame(spanFrame, getter_AddRefs(fm),
                                         inflation);
-  mBlockReflowState->rendContext->SetFont(fm);
 
   bool preMode = mStyleText->WhiteSpaceIsSignificant();
 

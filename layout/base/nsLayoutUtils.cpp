@@ -7276,7 +7276,6 @@ nsLayoutUtils::SetBSizeFromFontMetrics(const nsIFrame* aFrame,
   nsRefPtr<nsFontMetrics> fm;
   float inflation = nsLayoutUtils::FontSizeInflationFor(aFrame);
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm), inflation);
-  aReflowState.rendContext->SetFont(fm);
 
   if (fm) {
     // Compute final height of the frame.

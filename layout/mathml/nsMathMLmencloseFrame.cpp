@@ -345,7 +345,6 @@ nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
 
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
-  aRenderingContext.SetFont(fm);
   GetRuleThickness(aRenderingContext, fm, mRuleThickness);
   if (mRuleThickness < onePixel) {
     mRuleThickness = onePixel;
