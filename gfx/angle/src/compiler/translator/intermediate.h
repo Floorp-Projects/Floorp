@@ -211,6 +211,7 @@ class TIntermTyped;
 class TIntermSymbol;
 class TIntermLoop;
 class TInfoSink;
+class TIntermRaw;
 
 //
 // Base class for the tree nodes
@@ -238,6 +239,7 @@ public:
     virtual TIntermSelection* getAsSelectionNode() { return 0; }
     virtual TIntermSymbol* getAsSymbolNode() { return 0; }
     virtual TIntermLoop* getAsLoopNode() { return 0; }
+    virtual TIntermRaw* getAsRawNode() { return 0; }
 
     // Replace a child node. Return true if |original| is a child
     // node and it is replaced; otherwise, return false.
@@ -395,6 +397,29 @@ public:
 protected:
     int id;
     TString symbol;
+};
+
+// A Raw node stores raw code, that the translator will insert verbatim
+// into the output stream. Useful for transformation operations that make
+// complex code that might not fit naturally into the GLSL model.
+class TIntermRaw : public TIntermTyped {
+public:
+    TIntermRaw(const TType &t, const TString &rawTextIn)
+        : TIntermTyped(t), rawText(rawTextIn)
+    {}
+
+    virtual bool hasSideEffects() const { return false; }
+
+    TString getRawText() const { return rawText; }
+
+    virtual void traverse(TIntermTraverser*);
+
+    virtual TIntermRaw* getAsRawNode() { return this; }
+    virtual bool replaceChildNode(TIntermNode *, TIntermNode *) { return false; }
+    virtual void enqueueChildren(std::queue<TIntermNode*> *nodeQueue) const {}
+
+protected:
+    TString rawText;
 };
 
 class TIntermConstantUnion : public TIntermTyped {
@@ -619,6 +644,7 @@ public:
     virtual ~TIntermTraverser() {}
 
     virtual void visitSymbol(TIntermSymbol*) {}
+    virtual void visitRaw(TIntermRaw*) {}
     virtual void visitConstantUnion(TIntermConstantUnion*) {}
     virtual bool visitBinary(Visit visit, TIntermBinary*) {return true;}
     virtual bool visitUnary(Visit visit, TIntermUnary*) {return true;}

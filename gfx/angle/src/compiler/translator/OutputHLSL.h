@@ -55,6 +55,7 @@ class OutputHLSL : public TIntermTraverser
 
     // Visit AST nodes and output their code to the body stream
     void visitSymbol(TIntermSymbol*);
+    void visitRaw(TIntermRaw*);
     void visitConstantUnion(TIntermConstantUnion*);
     bool visitBinary(Visit visit, TIntermBinary*);
     bool visitUnary(Visit visit, TIntermUnary*);

@@ -36,11 +36,18 @@ TIntermUnary *MakeNewUnary(TOperator op, TIntermTyped *operand)
     return unary;
 }
 
+ElseBlockRewriter::ElseBlockRewriter()
+    : TIntermTraverser(true, false, true, false),
+      mTemporaryIndex(0),
+      mFunctionType(NULL)
+{}
+
 bool ElseBlockRewriter::visitAggregate(Visit visit, TIntermAggregate *node)
 {
     switch (node->getOp())
     {
       case EOpSequence:
+        if (visit == PostVisit)
         {
             for (size_t statementIndex = 0; statementIndex != node->getSequence().size(); statementIndex++)
             {
@@ -53,6 +60,11 @@ bool ElseBlockRewriter::visitAggregate(Visit visit, TIntermAggregate *node)
                 }
             }
         }
+        break;
+
+      case EOpFunction:
+        // Store the current function context (see comment below)
+        mFunctionType = ((visit == PreVisit) ? &node->getType() : NULL);
         break;
 
       default: break;
@@ -74,8 +86,22 @@ TIntermNode *ElseBlockRewriter::rewriteSelection(TIntermSelection *selection)
     TIntermBinary *storeCondition = MakeNewBinary(EOpInitialize, conditionSymbolA,
                                                   typedCondition, resultType);
     TIntermUnary *negatedCondition = MakeNewUnary(EOpLogicalNot, conditionSymbolB);
+    TIntermNode *negatedElse = NULL;
+
+    // crbug.com/346463
+    // D3D generates error messages claiming a function has no return value, when rewriting
+    // an if-else clause that returns something non-void in a function. By appending dummy
+    // returns (that are unreachable) we can silence this compile error.
+    if (mFunctionType && mFunctionType->getBasicType() != EbtVoid)
+    {
+        TString typeString = mFunctionType->getStruct() ? mFunctionType->getStruct()->name() :
+            mFunctionType->getBasicString();
+        TString rawText = "return (" + typeString + ")0";
+        negatedElse = new TIntermRaw(*mFunctionType, rawText);
+    }
+
     TIntermSelection *falseBlock = new TIntermSelection(negatedCondition,
-                                                        selection->getFalseBlock(), NULL);
+                                                        selection->getFalseBlock(), negatedElse);
     TIntermSelection *newIfElse = new TIntermSelection(conditionSymbolC,
                                                        selection->getTrueBlock(), falseBlock);
 
