@@ -105,9 +105,9 @@ struct Token
     // pointer, and it's only initialized a very few places, so having a
     // user-defined constructor won't hurt perf.)  See also bug 920318.
     Token()
-      : type(TOK_ERROR),
-        pos(0, 0)
+      : pos(0, 0)
     {
+        MOZ_MAKE_MEM_UNDEFINED(&type, sizeof(type));
     }
 
     // Mutators
@@ -347,7 +347,8 @@ class MOZ_STACK_CLASS TokenStream
         bool isEOF:1;           // Hit end of file.
         bool isDirtyLine:1;     // Non-whitespace since start of line.
         bool sawOctalEscape:1;  // Saw an octal character escape.
-        bool hadError:1;        // Returned TOK_ERROR from getToken.
+        bool hadError:1;        // Hit a syntax error, at start or during a
+                                // token.
 
         Flags()
           : isEOF(), isDirtyLine(), sawOctalEscape(), hadError()
