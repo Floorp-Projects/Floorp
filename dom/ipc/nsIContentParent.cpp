@@ -107,12 +107,11 @@ nsIContentParent::CanOpenBrowser(const IPCTabContext& aContext)
 PBrowserParent*
 nsIContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
                                       const uint32_t& aChromeFlags,
-                                      const uint64_t& aId,
+                                      const ContentParentId& aCpId,
                                       const bool& aIsForApp,
                                       const bool& aIsForBrowser)
 {
-  unused << aChromeFlags;
-  unused << aId;
+  unused << aCpId;
   unused << aIsForApp;
   unused << aIsForBrowser;
 

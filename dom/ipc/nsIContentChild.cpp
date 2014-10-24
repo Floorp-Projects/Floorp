@@ -52,7 +52,7 @@ nsIContentChild::DeallocPJavaScriptChild(PJavaScriptChild* aChild)
 PBrowserChild*
 nsIContentChild::AllocPBrowserChild(const IPCTabContext& aContext,
                                     const uint32_t& aChromeFlags,
-                                    const uint64_t& aID,
+                                    const ContentParentId& aCpID,
                                     const bool& aIsForApp,
                                     const bool& aIsForBrowser)
 {

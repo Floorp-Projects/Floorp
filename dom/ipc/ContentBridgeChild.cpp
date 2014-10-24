@@ -83,14 +83,14 @@ bool
 ContentBridgeChild::SendPBrowserConstructor(PBrowserChild* aActor,
                                             const IPCTabContext& aContext,
                                             const uint32_t& aChromeFlags,
-                                            const uint64_t& aID,
+                                            const ContentParentId& aCpID,
                                             const bool& aIsForApp,
                                             const bool& aIsForBrowser)
 {
   return PContentBridgeChild::SendPBrowserConstructor(aActor,
                                                       aContext,
                                                       aChromeFlags,
-                                                      aID,
+                                                      aCpID,
                                                       aIsForApp,
                                                       aIsForBrowser);
 }
@@ -123,13 +123,13 @@ ContentBridgeChild::DeallocPJavaScriptChild(PJavaScriptChild *child)
 PBrowserChild*
 ContentBridgeChild::AllocPBrowserChild(const IPCTabContext &aContext,
                                        const uint32_t& aChromeFlags,
-                                       const uint64_t& aID,
+                                       const ContentParentId& aCpID,
                                        const bool& aIsForApp,
                                        const bool& aIsForBrowser)
 {
   return nsIContentChild::AllocPBrowserChild(aContext,
                                              aChromeFlags,
-                                             aID,
+                                             aCpID,
                                              aIsForApp,
                                              aIsForBrowser);
 }
@@ -144,14 +144,14 @@ bool
 ContentBridgeChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                             const IPCTabContext& aContext,
                                             const uint32_t& aChromeFlags,
-                                            const uint64_t& aID,
+                                            const ContentParentId& aCpID,
                                             const bool& aIsForApp,
                                             const bool& aIsForBrowser)
 {
   return ContentChild::GetSingleton()->RecvPBrowserConstructor(aActor,
                                                                aContext,
                                                                aChromeFlags,
-                                                               aID,
+                                                               aCpID,
                                                                aIsForApp,
                                                                aIsForBrowser);
 }
