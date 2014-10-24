@@ -15,25 +15,36 @@
 using namespace mozilla;
 
 // define storage for all atoms
-#define CSS_PSEUDO_CLASS(_name, _value, _pref) \
+#define CSS_PSEUDO_CLASS(_name, _value, _flags, _pref) \
   static nsIAtom* sPseudoClass_##_name;
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 
-#define CSS_PSEUDO_CLASS(name_, value_, pref_)  \
+#define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
   NS_STATIC_ATOM_BUFFER(name_##_pseudo_class_buffer, value_)
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 
+// Array of nsStaticAtom for each of the pseudo-classes.
 static const nsStaticAtom CSSPseudoClasses_info[] = {
-#define CSS_PSEUDO_CLASS(name_, value_, pref_)            \
+#define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
   NS_STATIC_ATOM(name_##_pseudo_class_buffer, &sPseudoClass_##name_),
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 };
 
+// Flags data for each of the pseudo-classes, which must be separate
+// from the previous array since there's no place for it in
+// nsStaticAtom.
+static const uint32_t CSSPseudoClasses_flags[] = {
+#define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
+  flags_,
+#include "nsCSSPseudoClassList.h"
+#undef CSS_PSEUDO_CLASS
+};
+
 static bool sPseudoClassEnabled[] = {
-#define CSS_PSEUDO_CLASS(name_, value_, pref_)            \
+#define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
   true,
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
@@ -43,7 +54,7 @@ void nsCSSPseudoClasses::AddRefAtoms()
 {
   NS_RegisterStaticAtoms(CSSPseudoClasses_info);
   
-#define CSS_PSEUDO_CLASS(name_, value_, pref_)                               \
+#define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_)                       \
   if (pref_[0]) {                                                            \
     Preferences::AddBoolVarCache(&sPseudoClassEnabled[ePseudoClass_##name_], \
                                  pref_);                                     \
@@ -99,3 +110,13 @@ nsCSSPseudoClasses::IsUserActionPseudoClass(Type aType)
          aType == ePseudoClass_active ||
          aType == ePseudoClass_focus;
 }
+
+/* static */ uint32_t
+nsCSSPseudoClasses::FlagsForPseudoClass(const Type aType)
+{
+  size_t index = static_cast<size_t>(aType);
+  NS_ASSERTION(index < ArrayLength(CSSPseudoClasses_flags),
+               "argument must be a pseudo-class");
+  return CSSPseudoClasses_flags[index];
+}
+

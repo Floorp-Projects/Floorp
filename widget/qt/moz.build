@@ -37,8 +37,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '../shared',
-    '/widget/xpwidgets',
+    '/widget',
 ]
 
 if CONFIG['MOZ_X11']:
