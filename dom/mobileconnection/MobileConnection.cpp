@@ -368,9 +368,12 @@ MobileConnection::GetRadioState() const
     return retVal;
   }
 
-  nsAutoString state;
-  mMobileConnection->GetRadioState(state);
-  CONVERT_STRING_TO_NULLABLE_ENUM(state, MobileRadioState, retVal);
+  int32_t state = nsIMobileConnection::MOBILE_RADIO_STATE_UNKNOWN;
+  if (NS_SUCCEEDED(mMobileConnection->GetRadioState(&state)) &&
+      state != nsIMobileConnection::MOBILE_RADIO_STATE_UNKNOWN) {
+    MOZ_ASSERT(state < static_cast<int32_t>(MobileRadioState::EndGuard_));
+    retVal.SetValue(static_cast<MobileRadioState>(state));
+  }
 
   return retVal;
 }
