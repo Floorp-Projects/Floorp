@@ -605,8 +605,6 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
                                      pc->GetTextPerfMetrics(),
                                      *getter_AddRefs(fontMet));
 
-  aRenderingContext.SetFont(fontMet);
-
   nscoord ascent = 0;
   nscoord visibleHeight = 0;
   if (fontMet) {

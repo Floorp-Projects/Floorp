@@ -17,15 +17,3 @@ nsRenderingContext::Init(DrawTarget *aDrawTarget)
 {
     Init(new gfxContext(aDrawTarget));
 }
-
-void
-nsRenderingContext::SetTextRunRTL(bool aIsRTL)
-{
-    mFontMetrics->SetTextRunRTL(aIsRTL);
-}
-
-void
-nsRenderingContext::SetFont(nsFontMetrics *aFontMetrics)
-{
-    mFontMetrics = aFontMetrics;
-}

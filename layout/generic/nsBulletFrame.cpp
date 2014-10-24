@@ -429,7 +429,6 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                           GetFontSizeInflation());
     GetListItemText(text);
-    aRenderingContext.SetFont(fm);
     nscoord ascent = fm->MaxAscent();
     aPt.MoveBy(padding.left, padding.top);
     aPt.y = NSToCoordRound(nsLayoutUtils::GetSnappedBaselineY(
@@ -602,7 +601,6 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     default:
       GetListItemText(text);
       finalSize.BSize(wm) = fm->MaxHeight();
-      aRenderingContext->SetFont(fm);
       finalSize.ISize(wm) =
         nsLayoutUtils::GetStringWidth(this, aRenderingContext, *fm,
                                       text.get(), text.Length());
