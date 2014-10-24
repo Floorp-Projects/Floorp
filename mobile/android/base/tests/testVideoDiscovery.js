@@ -83,18 +83,24 @@ function execute_video_test(test) {
   let element = browser.contentDocument.getElementById(test.id);
   if (element) {
     let [x, y] = middle(element);
-    let video = chromeWin.CastingApps.getVideo(element, x, y);
-    if (video) {
-      let matchPoster = (test.poster == video.poster);
-      let matchSource = (test.source == video.source);
-      ok(matchPoster && matchSource && test.pass, test.text);
-    } else {
-      ok(!test.pass, test.text);
-    }
+    do_test_pending();
+    do_print("Starting to getVideo");
+    chromeWin.CastingApps.getVideo(element, x, y, (video) => {
+      do_print("got a Video");
+      if (video) {
+        let matchPoster = (test.poster == video.poster);
+        let matchSource = (test.source == video.source);
+        ok(matchPoster && matchSource && test.pass, test.text);
+      } else {
+        ok(!test.pass, test.text);
+      }
+      do_test_finished();
+      run_next_test();
+    });
   } else {
     ok(false, "test element not found: [" + test.id + "]");
+    run_next_test();
   }
-  run_next_test();
 }
 
 let videoTest;

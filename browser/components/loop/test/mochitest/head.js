@@ -6,6 +6,8 @@ const {
   LOOP_SESSION_TYPE,
   MozLoopServiceInternal,
 } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
+const {LoopCalls} = Cu.import("resource:///modules/loop/LoopCalls.jsm", {});
+const {LoopRooms} = Cu.import("resource:///modules/loop/LoopRooms.jsm", {});
 
 // Cache this value only once, at the beginning of a
 // test run, so that it doesn't pick up the offline=true
@@ -120,6 +122,7 @@ function* resetFxA() {
   global.gHawkClient = null;
   global.gFxAOAuthClientPromise = null;
   global.gFxAOAuthClient = null;
+  global.gRegisteredDeferred = null;
   MozLoopServiceInternal.fxAOAuthProfile = null;
   MozLoopServiceInternal.fxAOAuthTokenData = null;
   const fxASessionPref = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA);
@@ -196,21 +199,30 @@ let mockPushHandler = {
   // This sets the registration result to be returned when initialize
   // is called. By default, it is equivalent to success.
   registrationResult: null,
-  pushUrl: undefined,
+  registrationPushURL: null,
+  notificationCallback: {},
+  registeredChannels: {},
 
   /**
    * MozLoopPushHandler API
    */
-  initialize: function(registerCallback, notificationCallback) {
-    registerCallback(this.registrationResult, this.pushUrl);
-    this._notificationCallback = notificationCallback;
+  initialize: function(options = {}) {
+    if ("mockWebSocket" in options) {
+      this._mockWebSocket = options.mockWebSocket;
+    }
+  },
+
+  register: function(channelId, registerCallback, notificationCallback) {
+    this.notificationCallback[channelId] = notificationCallback;
+    this.registeredChannels[channelId] = this.registrationPushURL;
+    setTimeout(registerCallback(this.registrationResult, this.registrationPushURL, channelId), 0);
   },
 
   /**
    * Test-only API to simplify notifying a push notification result.
    */
-  notify: function(version) {
-    this._notificationCallback(version);
+  notify: function(version, chanId) {
+    this.notificationCallback[chanId](version, chanId);
   }
 };
 

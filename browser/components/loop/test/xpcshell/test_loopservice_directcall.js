@@ -21,13 +21,13 @@ add_task(function test_startDirectCall_opens_window() {
     openedUrl = url;
   };
 
-  MozLoopService.startDirectCall(contact, "audio-video");
+  LoopCalls.startDirectCall(contact, "audio-video");
 
   do_check_true(!!openedUrl, "should open a chat window");
 
   // Stop the busy kicking in for following tests.
   let callId = openedUrl.match(/about:loopconversation\#outgoing\/(.*)/)[1];
-  MozLoopService.releaseCallData(callId);
+  LoopCalls.releaseCallData(callId);
 });
 
 add_task(function test_startDirectCall_getCallData() {
@@ -36,17 +36,17 @@ add_task(function test_startDirectCall_getCallData() {
     openedUrl = url;
   };
 
-  MozLoopService.startDirectCall(contact, "audio-video");
+  LoopCalls.startDirectCall(contact, "audio-video");
 
   let callId = openedUrl.match(/about:loopconversation\#outgoing\/(.*)/)[1];
 
-  let callData = MozLoopService.getCallData(callId);
+  let callData = LoopCalls.getCallData(callId);
 
   do_check_eq(callData.callType, "audio-video", "should have the correct call type");
   do_check_eq(callData.contact, contact, "should have the contact details");
 
   // Stop the busy kicking in for following tests.
-  MozLoopService.releaseCallData(callId);
+  LoopCalls.releaseCallData(callId);
 });
 
 function run_test() {
