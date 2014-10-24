@@ -17,7 +17,6 @@ taskHelper.push(function testPinChangeFailed() {
 
   request.onerror = function onerror() {
     is(request.error.name, "IncorrectPassword");
-    is(request.error.lockType, "pin");
     // The default pin retries is 3, failed once becomes to 2
     is(request.error.retryCount, 2);
 
