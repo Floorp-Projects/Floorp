@@ -616,7 +616,7 @@ void LaunchDesktopBrowserWithParams(CStringW& aBrowserPath, CStringW& aVerb,
     params += "\"";
   }
 
-  // Tack on any extra parameters we received (for example -profilemanager)
+  // Tack on any extra parameters we received (for example --profilemanager)
   if (!aParameters.IsEmpty()) {
     params += " ";
     params += aParameters;

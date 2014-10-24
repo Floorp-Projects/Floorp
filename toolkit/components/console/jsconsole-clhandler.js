@@ -31,7 +31,7 @@ jsConsoleHandler.prototype = {
       cmdLine.preventDefault = true;
   },
 
-  helpInfo : "  -jsconsole         Open the Error console.\n",
+  helpInfo : "  --jsconsole        Open the Error console.\n",
 
   classID: Components.ID("{2cd0c310-e127-44d0-88fc-4435c9ab4d4b}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
