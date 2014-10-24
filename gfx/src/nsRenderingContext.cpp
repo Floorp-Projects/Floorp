@@ -94,16 +94,6 @@ nsRenderingContext::GetMaxChunkLength()
 }
 
 nscoord
-nsRenderingContext::GetWidth(char aC)
-{
-    if (aC == ' ') {
-        return mFontMetrics->SpaceWidth();
-    }
-
-    return GetWidth(&aC, 1);
-}
-
-nscoord
 nsRenderingContext::GetWidth(char16_t aC)
 {
     return GetWidth(&aC, 1);
