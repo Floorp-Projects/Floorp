@@ -698,8 +698,11 @@ Parser<ParseHandler>::parse(JSObject *chain)
     Node pn = statements();
     if (pn) {
         if (!tokenStream.matchToken(TOK_EOF)) {
+            TokenKind tt;
+            if (!tokenStream.peekToken(&tt))
+                return null();
             report(ParseError, false, null(), JSMSG_GARBAGE_AFTER_INPUT,
-                   "script", TokenKindToDesc(tokenStream.peekToken()));
+                   "script", TokenKindToDesc(tt));
             return null();
         }
         if (foldConstants) {
@@ -817,8 +820,11 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
         return null();
 
     if (!tokenStream.matchToken(TOK_EOF)) {
+        TokenKind tt;
+        if (!tokenStream.peekToken(&tt))
+            return null();
         report(ParseError, false, null(), JSMSG_GARBAGE_AFTER_INPUT,
-               "function body", TokenKindToDesc(tokenStream.peekToken()));
+               "function body", TokenKindToDesc(tt));
         return null();
     }
 
@@ -1523,9 +1529,14 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
     *hasRest = false;
 
     bool parenFreeArrow = false;
-    if (kind == Arrow && tokenStream.peekToken() == TOK_NAME) {
-        parenFreeArrow = true;
-    } else {
+    if (kind == Arrow) {
+        TokenKind tt;
+        if (!tokenStream.peekToken(&tt))
+            return false;
+        if (tt == TOK_NAME)
+            parenFreeArrow = true;
+    }
+    if (!parenFreeArrow) {
         if (tokenStream.getToken() != TOK_LP) {
             report(ParseError, false, null(),
                    kind == Arrow ? JSMSG_BAD_ARROW_ARGS : JSMSG_PAREN_BEFORE_FORMAL);
@@ -2711,15 +2722,14 @@ Parser<ParseHandler>::statements()
 
     bool canHaveDirectives = pc->atBodyLevel();
     for (;;) {
-        TokenKind tt = tokenStream.peekToken(TokenStream::Operand);
-        if (tt <= TOK_EOF || tt == TOK_RC) {
-            if (tt == TOK_ERROR) {
-                if (tokenStream.isEOF())
-                    isUnexpectedEOF_ = true;
-                return null();
-            }
-            break;
+        TokenKind tt;
+        if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
+            if (tokenStream.isEOF())
+                isUnexpectedEOF_ = true;
+            return null();
         }
+        if (tt == TOK_EOF || tt == TOK_RC)
+            break;
         Node next = statement(canHaveDirectives);
         if (!next) {
             if (tokenStream.isEOF())
@@ -3900,7 +3910,10 @@ Parser<FullParseHandler>::letStatement()
 
     /* Check for a let statement or let expression. */
     ParseNode *pn;
-    if (tokenStream.peekToken() == TOK_LP) {
+    TokenKind tt;
+    if (!tokenStream.peekToken(&tt))
+        return null();
+    if (tt == TOK_LP) {
         pn = letBlock(LetStatement);
         MOZ_ASSERT_IF(pn, pn->isKind(PNK_LET) || pn->isKind(PNK_SEMI));
     } else {
@@ -3959,8 +3972,7 @@ Parser<ParseHandler>::importDeclaration()
                 // Handle the forms |import {} from 'a'| and
                 // |import { ..., } from 'a'| (where ... is non empty), by
                 // escaping the loop early if the next token is }.
-                tt = tokenStream.peekToken(TokenStream::KeywordIsName);
-                if (tt == TOK_ERROR)
+                if (!tokenStream.peekToken(&tt, TokenStream::KeywordIsName))
                     return null();
                 if (tt == TOK_RC)
                     break;
@@ -4071,8 +4083,7 @@ Parser<ParseHandler>::exportDeclaration()
                 // Handle the forms |export {}| and |export { ..., }| (where ...
                 // is non empty), by escaping the loop early if the next token
                 // is }.
-                tt = tokenStream.peekToken();
-                if (tt == TOK_ERROR)
+                if (!tokenStream.peekToken(&tt))
                     return null();
                 if (tt == TOK_RC)
                     break;
@@ -4205,10 +4216,12 @@ Parser<ParseHandler>::ifStatement()
     if (!cond)
         return null();
 
-    if (tokenStream.peekToken(TokenStream::Operand) == TOK_SEMI &&
-        !report(ParseExtraWarning, false, null(), JSMSG_EMPTY_CONSEQUENT))
-    {
+    TokenKind tt;
+    if (!tokenStream.peekToken(&tt, TokenStream::Operand))
         return null();
+    if (tt == TOK_SEMI) {
+        if (!report(ParseExtraWarning, false, null(), JSMSG_EMPTY_CONSEQUENT))
+            return null();
     }
 
     StmtInfoPC stmtInfo(context);
@@ -4369,7 +4382,9 @@ Parser<FullParseHandler>::forStatement()
     ParseNode *pn1;
 
     {
-        TokenKind tt = tokenStream.peekToken(TokenStream::Operand);
+        TokenKind tt;
+        if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+            return null();
         if (tt == TOK_SEMI) {
             pn1 = nullptr;
         } else {
@@ -4394,7 +4409,9 @@ Parser<FullParseHandler>::forStatement()
             } else if (tt == TOK_LET) {
                 handler.disableSyntaxParser();
                 (void) tokenStream.getToken();
-                if (tokenStream.peekToken() == TOK_LP) {
+                if (!tokenStream.peekToken(&tt))
+                    return null();
+                if (tt == TOK_LP) {
                     pn1 = letBlock(LetExpresion);
                 } else {
                     isForDecl = true;
@@ -4602,7 +4619,10 @@ Parser<FullParseHandler>::forStatement()
 
         /* Parse the loop condition or null into pn2. */
         MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_INIT);
-        if (tokenStream.peekToken(TokenStream::Operand) == TOK_SEMI) {
+        TokenKind tt;
+        if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+            return null();
+        if (tt == TOK_SEMI) {
             pn2 = nullptr;
         } else {
             pn2 = expr();
@@ -4612,7 +4632,9 @@ Parser<FullParseHandler>::forStatement()
 
         /* Parse the update expression or null into pn3. */
         MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_COND);
-        if (tokenStream.peekToken(TokenStream::Operand) == TOK_RP) {
+        if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+            return null();
+        if (tt == TOK_RP) {
             pn3 = nullptr;
         } else {
             pn3 = expr();
@@ -4678,7 +4700,9 @@ Parser<SyntaxParseHandler>::forStatement()
 
     /* Don't parse 'for each' loops. */
     if (allowsForEachIn()) {
-        TokenKind tt = tokenStream.peekToken();
+        TokenKind tt;
+        if (!tokenStream.peekToken(&tt))
+            return null();
         // Not all "yield" tokens are names, but the ones that aren't names are
         // invalid in this context anyway.
         if (tt == TOK_NAME || tt == TOK_YIELD) {
@@ -4697,7 +4721,9 @@ Parser<SyntaxParseHandler>::forStatement()
     Node lhsNode;
 
     {
-        TokenKind tt = tokenStream.peekToken(TokenStream::Operand);
+        TokenKind tt;
+        if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+            return null();
         if (tt == TOK_SEMI) {
             lhsNode = null();
         } else {
@@ -4755,14 +4781,19 @@ Parser<SyntaxParseHandler>::forStatement()
     } else {
         /* Parse the loop condition or null. */
         MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_INIT);
-        if (tokenStream.peekToken(TokenStream::Operand) != TOK_SEMI) {
+        TokenKind tt;
+        if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+            return null();
+        if (tt != TOK_SEMI) {
             if (!expr())
                 return null();
         }
 
         /* Parse the update expression or null. */
         MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_COND);
-        if (tokenStream.peekToken(TokenStream::Operand) != TOK_RP) {
+        if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+            return null();
+        if (tt != TOK_RP) {
             if (!expr())
                 return null();
         }
@@ -4843,10 +4874,11 @@ Parser<ParseHandler>::switchStatement()
         if (!body)
             return null();
 
-        while ((tt = tokenStream.peekToken(TokenStream::Operand)) != TOK_RC &&
-               tt != TOK_CASE && tt != TOK_DEFAULT) {
-            if (tt == TOK_ERROR)
+        while (true) {
+            if (!tokenStream.peekToken(&tt, TokenStream::Operand))
                 return null();
+            if (tt == TOK_RC || tt == TOK_CASE || tt == TOK_DEFAULT)
+                break;
             Node stmt = statement();
             if (!stmt)
                 return null();
@@ -5549,18 +5581,26 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
         }
         return expressionStatement();
 
-      case TOK_YIELD:
-        if (tokenStream.peekToken() == TOK_COLON) {
+      case TOK_YIELD: {
+        TokenKind next;
+        if (!tokenStream.peekToken(&next))
+            return null();
+        if (next == TOK_COLON) {
             if (!checkYieldNameValidity())
                 return null();
             return labeledStatement();
         }
         return expressionStatement();
+      }
 
-      case TOK_NAME:
-        if (tokenStream.peekToken() == TOK_COLON)
+      case TOK_NAME: {
+        TokenKind next;
+        if (!tokenStream.peekToken(&next))
+            return null();
+        if (next == TOK_COLON)
             return labeledStatement();
         return expressionStatement();
+      }
 
       default:
         return expressionStatement();
@@ -7049,13 +7089,17 @@ Parser<ParseHandler>::argumentList(Node listNode, bool *isSpread)
         if (spread) {
             argNode = handler.newUnary(PNK_SPREAD, JSOP_NOP, begin, argNode);
             if (!argNode)
-                return null();
+                return false;
         }
 
-        if (handler.isOperationWithoutParens(argNode, PNK_YIELD) &&
-            tokenStream.peekToken() == TOK_COMMA) {
-            report(ParseError, false, argNode, JSMSG_BAD_GENERATOR_SYNTAX, js_yield_str);
-            return false;
+        if (handler.isOperationWithoutParens(argNode, PNK_YIELD)) {
+            TokenKind tt;
+            if (!tokenStream.peekToken(&tt))
+                return false;
+            if (tt == TOK_COMMA) {
+                report(ParseError, false, argNode, JSMSG_BAD_GENERATOR_SYNTAX, js_yield_str);
+                return false;
+            }
         }
 #if JS_HAS_GENERATOR_EXPRS
         if (!spread && tokenStream.matchToken(TOK_FOR)) {
@@ -7067,7 +7111,14 @@ Parser<ParseHandler>::argumentList(Node listNode, bool *isSpread)
             argNode = legacyGeneratorExpr(argNode);
             if (!argNode)
                 return false;
-            if (!arg0 || tokenStream.peekToken() == TOK_COMMA) {
+            if (!arg0) {
+                report(ParseError, false, argNode, JSMSG_BAD_GENERATOR_SYNTAX, js_generator_str);
+                return false;
+            }
+            TokenKind tt;
+            if (!tokenStream.peekToken(&tt))
+                return false;
+            if (tt == TOK_COMMA) {
                 report(ParseError, false, argNode, JSMSG_BAD_GENERATOR_SYNTAX, js_generator_str);
                 return false;
             }
@@ -7309,7 +7360,9 @@ Parser<ParseHandler>::arrayInitializer()
                 return null();
             }
 
-            TokenKind tt = tokenStream.peekToken(TokenStream::Operand);
+            TokenKind tt;
+            if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+                return null();
             if (tt == TOK_RB)
                 break;
 
@@ -7734,8 +7787,8 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
         return handler.newNullLiteral(pos());
 
       case TOK_RP: {
-        TokenKind next = tokenStream.peekToken();
-        if (next == TOK_ERROR)
+        TokenKind next;
+        if (!tokenStream.peekToken(&next))
             return null();
 
         // Not valid expression syntax, but this is valid in an arrow function
@@ -7776,8 +7829,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
             return null();
         }
 
-        next = tokenStream.peekToken();
-        if (next == TOK_ERROR)
+        if (!tokenStream.peekToken(&next))
             return null();
         if (next != TOK_ARROW) {
             report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,

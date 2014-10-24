@@ -390,12 +390,14 @@ class MOZ_STACK_CLASS TokenStream
         cursor = (cursor - 1) & ntokensMask;
     }
 
-    TokenKind peekToken(Modifier modifier = None) {
-        if (lookahead != 0)
-            return tokens[(cursor + 1) & ntokensMask].type;
-        TokenKind tt = getTokenInternal(modifier);
-        ungetToken();
-        return tt;
+    bool peekToken(TokenKind *ttp, Modifier modifier = None) {
+        if (lookahead > 0) {
+            *ttp = tokens[(cursor + 1) & ntokensMask].type;
+        } else {
+            *ttp = getTokenInternal(modifier);
+            ungetToken();
+        }
+        return *ttp != TOK_ERROR;
     }
 
     TokenPos peekTokenPos(Modifier modifier = None) {
@@ -458,7 +460,10 @@ class MOZ_STACK_CLASS TokenStream
     }
 
     bool nextTokenEndsExpr() {
-        return isExprEnding[peekToken()];
+        TokenKind tt;
+        if (!peekToken(&tt))
+            return false;
+        return isExprEnding[tt];
     }
 
     class MOZ_STACK_CLASS Position {
