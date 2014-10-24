@@ -717,8 +717,11 @@ loop.panel = (function(_, mozL10n) {
               <UserIdentity displayName={displayName} />
               <AvailabilityDropdown />
             </div>
-            <AuthLink />
-            <SettingsDropdown />
+            <div className="signin-details">
+              <AuthLink />
+              <div className="footer-signin-separator" />
+              <SettingsDropdown />
+            </div>
           </div>
         </div>
       );
@@ -748,7 +751,6 @@ loop.panel = (function(_, mozL10n) {
       dispatcher={dispatcher}
     />, document.querySelector("#main"));
 
-    document.body.classList.add(loop.shared.utils.getTargetPlatform());
     document.body.setAttribute("dir", mozL10n.getDirection());
 
     // Notify the window that we've finished initalization and initial layout
