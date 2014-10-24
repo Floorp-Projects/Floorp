@@ -1679,31 +1679,22 @@ WebGLContext::InitAndValidateGL()
             // however these constants only entered the OpenGL standard at OpenGL 3.2. So we will try reading,
             // and check OpenGL error for INVALID_ENUM.
 
-            // before we start, we check that no error already occurred, to prevent hiding it in our subsequent error handling
-            error = gl->fGetError();
-            if (error != LOCAL_GL_NO_ERROR) {
-                GenerateWarning("GL error 0x%x occurred during WebGL context initialization!", error);
-                return false;
-            }
-
             // On the public_webgl list, "problematic GetParameter pnames" thread, the following formula was given:
             //   mGLMaxVaryingVectors = min (GL_MAX_VERTEX_OUTPUT_COMPONENTS, GL_MAX_FRAGMENT_INPUT_COMPONENTS) / 4
-            GLint maxVertexOutputComponents,
-                  minFragmentInputComponents;
-            gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS, &maxVertexOutputComponents);
-            gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS, &minFragmentInputComponents);
+            GLint maxVertexOutputComponents = 0;
+            GLint maxFragmentInputComponents = 0;
 
-            error = gl->fGetError();
-            switch (error) {
-                case LOCAL_GL_NO_ERROR:
-                    mGLMaxVaryingVectors = std::min(maxVertexOutputComponents, minFragmentInputComponents) / 4;
-                    break;
-                case LOCAL_GL_INVALID_ENUM:
-                    mGLMaxVaryingVectors = 16; // = 64/4, 64 is the min value for maxVertexOutputComponents in OpenGL 3.2 spec
-                    break;
-                default:
-                    GenerateWarning("GL error 0x%x occurred during WebGL context initialization!", error);
-                    return false;
+            const bool ok = (gl->GetPotentialInteger(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS,
+                                                     &maxVertexOutputComponents) &&
+                             gl->GetPotentialInteger(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS,
+                                                     &maxFragmentInputComponents));
+
+            if (ok) {
+                mGLMaxVaryingVectors = std::min(maxVertexOutputComponents,
+                                                maxFragmentInputComponents) / 4;
+            } else {
+                mGLMaxVaryingVectors = 16;
+                // = 64/4, 64 is the min value for maxVertexOutputComponents in OpenGL 3.2 spec
             }
         }
     }
