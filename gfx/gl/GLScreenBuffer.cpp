@@ -600,7 +600,7 @@ DrawBuffer::Create(GLContext* const gl,
             pStencilRB = nullptr;
     }
 
-    GLContext::ScopedLocalErrorCheck localError(gl);
+    GLContext::LocalErrorScope localError(*gl);
 
     CreateRenderbuffersForOffscreen(gl, formats, size, caps.antialias,
                                     pColorMSRB, pDepthRB, pStencilRB);
@@ -612,7 +612,8 @@ DrawBuffer::Create(GLContext* const gl,
     UniquePtr<DrawBuffer> ret( new DrawBuffer(gl, size, fb, colorMSRB,
                                               depthRB, stencilRB) );
 
-    GLenum err = localError.GetLocalError();
+    GLenum err = localError.GetError();
+    MOZ_ASSERT_IF(err != LOCAL_GL_NO_ERROR, err == LOCAL_GL_OUT_OF_MEMORY);
     if (err || !gl->IsFramebufferComplete(fb))
         return false;
 
@@ -659,7 +660,7 @@ ReadBuffer::Create(GLContext* gl,
     GLuint* pDepthRB   = caps.depth   ? &depthRB   : nullptr;
     GLuint* pStencilRB = caps.stencil ? &stencilRB : nullptr;
 
-    GLContext::ScopedLocalErrorCheck localError(gl);
+    GLContext::LocalErrorScope localError(*gl);
 
     CreateRenderbuffersForOffscreen(gl, formats, surf->mSize, caps.antialias,
                                     nullptr, pDepthRB, pStencilRB);
@@ -689,7 +690,8 @@ ReadBuffer::Create(GLContext* gl,
     UniquePtr<ReadBuffer> ret( new ReadBuffer(gl, fb, depthRB,
                                               stencilRB, surf) );
 
-    GLenum err = localError.GetLocalError();
+    GLenum err = localError.GetError();
+    MOZ_ASSERT_IF(err != LOCAL_GL_NO_ERROR, err == LOCAL_GL_OUT_OF_MEMORY);
     if (err || !gl->IsFramebufferComplete(fb)) {
         ret = nullptr;
     }
