@@ -19,7 +19,7 @@ import sys
 import tempfile
 import threading
 
-SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
+SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIRECTORY)
 
 from automationutils import (
@@ -621,8 +621,13 @@ class ReftestOptions(OptionParser):
 
     self.add_option("--appname",
                     action = "store", type = "string", dest = "app",
-                    default = build_obj.get_binary_path() if build_obj else None,
                     help = "absolute path to application, overriding default")
+    # Certain paths do not make sense when we're cross compiling Fennec.  This
+    # logic is cribbed from the example in
+    # python/mozbuild/mozbuild/mach_commands.py.
+    defaults['appname'] = build_obj.get_binary_path() if \
+        build_obj and build_obj.substs['MOZ_BUILD_APP'] != 'mobile/android' else None
+
     self.add_option("--extra-profile-file",
                     action = "append", dest = "extraProfileFiles",
                     default = [],
@@ -642,7 +647,8 @@ class ReftestOptions(OptionParser):
                     action = "store", type = "string", dest = "utilityPath",
                     help = "absolute path to directory containing utility "
                            "programs (xpcshell, ssltunnel, certutil)")
-    defaults["utilityPath"] = build_obj.bindir if build_obj else None
+    defaults["utilityPath"] = build_obj.bindir if \
+        build_obj and build_obj.substs['MOZ_BUILD_APP'] != 'mobile/android' else None
 
     self.add_option("--total-chunks",
                     type = "int", dest = "totalChunks",

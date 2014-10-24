@@ -46,10 +46,10 @@ function test() {
     "The number of columns displayed for tree items is correct.");
   is(C.target.childNodes[0].getAttribute("type"), "duration",
     "The first column displayed for tree items is correct.");
-  is(C.target.childNodes[1].getAttribute("type"), "self-duration",
-    "The second column displayed for tree items is correct.");
-  is(C.target.childNodes[2].getAttribute("type"), "percentage",
+  is(C.target.childNodes[1].getAttribute("type"), "percentage",
     "The third column displayed for tree items is correct.");
+  is(C.target.childNodes[2].getAttribute("type"), "self-duration",
+    "The second column displayed for tree items is correct.");
   is(C.target.childNodes[3].getAttribute("type"), "self-percentage",
     "The fourth column displayed for tree items is correct.");
   is(C.target.childNodes[4].getAttribute("type"), "samples",

@@ -15,7 +15,9 @@ BROWSER_CHROME_MANIFESTS += [
 EXTRA_JS_MODULES.loop += [
     'CardDavImporter.jsm',
     'GoogleImporter.jsm',
+    'LoopCalls.jsm',
     'LoopContacts.jsm',
+    'LoopRooms.jsm',
     'LoopStorage.jsm',
     'MozLoopAPI.jsm',
     'MozLoopPushHandler.jsm',

@@ -409,7 +409,7 @@
             let containerCS = win.getComputedStyle(aContainerToCheck);
             height += parseFloat(containerCS.paddingTop) + parseFloat(containerCS.paddingBottom);
           }
-          return Math.round(height);
+          return Math.ceil(height);
         ]]></body>
       </method>
 
