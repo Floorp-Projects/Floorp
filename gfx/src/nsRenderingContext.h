@@ -47,7 +47,6 @@ public:
 
     void SetTextRunRTL(bool aIsRTL);
 
-    nscoord GetWidth(char aC);
     nscoord GetWidth(char16_t aC);
     nscoord GetWidth(const nsString& aString);
     nscoord GetWidth(const char* aString);
