@@ -18,7 +18,7 @@ function is(a, b, msg) {
 
 function checkData(response, data_head, cb) {
   ok(response, "Data is non-null");
-  var str = String.fromCharCode.apply(null, Uint8Array(response));
+  var str = String.fromCharCode.apply(null, new Uint8Array(response));
   ok(str.length == data_head.length + gPaddingSize, "Data size is correct");
   ok(str.slice(0, data_head.length) == data_head, "Data head is correct");
   ok(str.slice(data_head.length) == gPadding, "Data padding is correct");

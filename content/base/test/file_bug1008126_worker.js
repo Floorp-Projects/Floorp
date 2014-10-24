@@ -31,7 +31,7 @@ function checkData(xhr, data, mapped, cb) {
     ok(ct.indexOf("mem-mapped") == -1, "Data is not memory-mapped");
   }
   ok(xhr.response, "Data is non-null");
-  var str = String.fromCharCode.apply(null, Uint8Array(xhr.response));
+  var str = String.fromCharCode.apply(null, new Uint8Array(xhr.response));
   ok(str == data, "Data is correct");
   cb();
 }
