@@ -54,16 +54,14 @@ public:
     nsBoundingMetrics GetBoundingMetrics(const char16_t *aString,
                                          uint32_t aLength);
 
-    void DrawString(const char16_t *aString, uint32_t aLength,
-                    nscoord aX, nscoord aY);
-
+    int32_t GetMaxChunkLength();
+    static int32_t FindSafeLength(const char16_t *aString, uint32_t aLength,
+                                  uint32_t aMaxChunkLength);
 private:
     // Private destructor, to discourage deletion outside of Release():
     ~nsRenderingContext()
     {
     }
-
-    int32_t GetMaxChunkLength();
 
     nsRefPtr<gfxContext> mThebes;
     nsRefPtr<nsFontMetrics> mFontMetrics;
