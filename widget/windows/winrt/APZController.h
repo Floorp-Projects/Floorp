@@ -46,7 +46,8 @@ public:
                                const mozilla::layers::ScrollableLayerGuid& aGuid);
   virtual void HandleLongTap(const mozilla::CSSPoint& aPoint,
                              int32_t aModifiers,
-                             const mozilla::layers::ScrollableLayerGuid& aGuid);
+                             const mozilla::layers::ScrollableLayerGuid& aGuid,
+                             uint64_t aInputBlockId);
   virtual void HandleLongTapUp(const mozilla::CSSPoint& aPoint,
                                int32_t aModifiers,
                                const mozilla::layers::ScrollableLayerGuid& aGuid);
@@ -62,9 +63,10 @@ public:
   bool HitTestAPZC(mozilla::ScreenIntPoint& aPoint);
   void TransformCoordinateToGecko(const mozilla::ScreenIntPoint& aPoint,
                                   LayoutDeviceIntPoint* aRefPointOut);
-  void ContentReceivedTouch(const ScrollableLayerGuid& aGuid, bool aPreventDefault);
+  void ContentReceivedTouch(const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId, bool aPreventDefault);
   nsEventStatus ReceiveInputEvent(mozilla::WidgetInputEvent* aEvent,
-                                  ScrollableLayerGuid* aOutTargetGuid);
+                                  ScrollableLayerGuid* aOutTargetGuid,
+                                  uint64_t* aOutInputBlockId);
 
 public:
   // todo: make this a member variable as prep for multiple views

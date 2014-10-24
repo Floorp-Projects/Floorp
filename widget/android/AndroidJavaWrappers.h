@@ -487,11 +487,12 @@ public:
         return event;
     }
 
-    static AndroidGeckoEvent* MakeApzInputEvent(const MultiTouchInput& aInput, const mozilla::layers::ScrollableLayerGuid& aGuid) {
+    static AndroidGeckoEvent* MakeApzInputEvent(const MultiTouchInput& aInput, const mozilla::layers::ScrollableLayerGuid& aGuid, uint64_t aInputBlockId) {
         AndroidGeckoEvent* event = new AndroidGeckoEvent();
         event->Init(APZ_INPUT_EVENT);
         event->mApzInput = aInput;
         event->mApzGuid = aGuid;
+        event->mApzInputBlockId = aInputBlockId;
         return event;
     }
 
@@ -560,6 +561,7 @@ public:
     void UnionRect(nsIntRect const& aRect);
     nsIObserver *Observer() { return mObserver; }
     mozilla::layers::ScrollableLayerGuid ApzGuid();
+    uint64_t ApzInputBlockId();
 
 protected:
     int mAction;
@@ -602,6 +604,7 @@ protected:
     nsTArray<nsString> mPrefNames;
     MultiTouchInput mApzInput;
     mozilla::layers::ScrollableLayerGuid mApzGuid;
+    uint64_t mApzInputBlockId;
     AutoGlobalWrappedJavaObject mObject;
 
     void ReadIntArray(nsTArray<int> &aVals,

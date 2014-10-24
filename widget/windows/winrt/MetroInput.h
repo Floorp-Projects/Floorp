@@ -286,6 +286,7 @@ private:
 
   nsDeque mInputEventQueue;
   mozilla::layers::ScrollableLayerGuid mTargetAPZCGuid;
+  uint64_t mInputBlockId;
   static nsEventStatus sThrowawayStatus;
 };
 

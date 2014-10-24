@@ -39,35 +39,31 @@ public:
    * Notifies the InputQueue of a new incoming input event. The APZC that the
    * input event was targeted to should be provided in the |aTarget| parameter.
    * See the documentation on APZCTreeManager::ReceiveInputEvent for info on
-   * return values from this function.
+   * return values from this function, including |aOutInputBlockId|.
    */
-  nsEventStatus ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget, const InputData& aEvent);
+  nsEventStatus ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget, const InputData& aEvent, uint64_t* aOutInputBlockId);
   /**
    * This function should be invoked to notify the InputQueue when web content
-   * decides whether or not it wants to cancel a block of events. This
-   * automatically gets applied to the next block of events that has not yet
-   * been responded to. This function MUST be invoked exactly once for each
-   * touch block, after the touch-start event that creates the block is sent to
-   * ReceiveInputEvent.
+   * decides whether or not it wants to cancel a block of events. The block
+   * id to which this applies should be provided in |aInputBlockId|.
    */
-  void ContentReceivedTouch(bool aPreventDefault);
+  void ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault);
   /**
    * This function should be invoked to notify the InputQueue of the touch-
-   * action properties for the different touch points in an input block. This
-   * automatically gets applied to the next block of events that has not yet
-   * received a touch behaviour notification. This function MUST be invoked
-   * exactly once for each touch block, after the touch-start event that creates
-   * the block is sent to ReceiveInputEvent. If touch-action is not enabled on
-   * the platform, this function does nothing and need not be called.
+   * action properties for the different touch points in an input block. The
+   * input block this applies to should be specified by the |aInputBlockId|
+   * parameter. If touch-action is not enabled on the platform, this function
+   * does nothing and need not be called.
    */
-  void SetAllowedTouchBehavior(const nsTArray<TouchBehaviorFlags>& aBehaviors);
+  void SetAllowedTouchBehavior(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aBehaviors);
   /**
    * Adds a new touch block at the end of the input queue that has the same
    * allowed touch behaviour flags as the the touch block currently being
    * processed. This should only be called when processing of a touch block
-   * triggers the creation of a new touch block.
+   * triggers the creation of a new touch block. Returns the input block id
+   * of the the newly-created block.
    */
-  void InjectNewTouchBlock(AsyncPanZoomController* aTarget);
+  uint64_t InjectNewTouchBlock(AsyncPanZoomController* aTarget);
   /**
    * Returns the touch block at the head of the queue.
    */
@@ -81,64 +77,14 @@ public:
 private:
   ~InputQueue();
   TouchBlockState* StartNewTouchBlock(const nsRefPtr<AsyncPanZoomController>& aTarget, bool aCopyAllowedTouchBehaviorFromCurrent);
-  void ScheduleContentResponseTimeout(const nsRefPtr<AsyncPanZoomController>& aTarget);
-  void ContentResponseTimeout();
+  void ScheduleContentResponseTimeout(const nsRefPtr<AsyncPanZoomController>& aTarget, uint64_t aInputBlockId);
+  void ContentResponseTimeout(const uint64_t& aInputBlockId);
   void ProcessPendingInputBlocks();
 
 private:
   // The queue of touch blocks that have not yet been processed.
   // This member must only be accessed on the controller/UI thread.
   nsTArray<UniquePtr<TouchBlockState>> mTouchBlockQueue;
-
-  // This variable requires some explanation. Strap yourself in.
-  //
-  // For each block of events, we do two things: (1) send the events to gecko and expect
-  // exactly one call to ContentReceivedTouch in return, and (2) kick off a timeout
-  // that triggers in case we don't hear from web content in a timely fashion.
-  // Since events are constantly coming in, we need to be able to handle more than one
-  // block of input events sitting in the queue.
-  //
-  // There are ordering restrictions on events that we can take advantage of, and that
-  // we need to abide by. Blocks of events in the queue will always be in the order that
-  // the user generated them. Responses we get from content will be in the same order as
-  // as the blocks of events in the queue. The timeout callbacks that have been posted
-  // will also fire in the same order as the blocks of events in the queue.
-  // HOWEVER, we may get multiple responses from content interleaved with multiple
-  // timeout expirations, and that interleaving is not predictable.
-  //
-  // Therefore, we need to make sure that for each block of events, we process the queued
-  // events exactly once, either when we get the response from content, or when the
-  // timeout expires (whichever happens first). There is no way to associate the timeout
-  // or response from content with a particular block of events other than via ordering.
-  //
-  // So, what we do to accomplish this is to track a "touch block balance", which is the
-  // number of timeout expirations that have fired, minus the number of content responses
-  // that have been received. (Think "balance" as in teeter-totter balance). This
-  // value is:
-  // - zero when we are in a state where the next content response we expect to receive
-  //   and the next timeout expiration we expect to fire both correspond to the next
-  //   unprocessed block of events in the queue.
-  // - negative when we are in a state where we have received more content responses than
-  //   timeout expirations. This means that the next content repsonse we receive will
-  //   correspond to the first unprocessed block, but the next n timeout expirations need
-  //   to be ignored as they are for blocks we have already processed. (n is the absolute
-  //   value of the balance.)
-  // - positive when we are in a state where we have received more timeout expirations
-  //   than content responses. This means that the next timeout expiration that we will
-  //   receive will correspond to the first unprocessed block, but the next n content
-  //   responses need to be ignored as they are for blocks we have already processed.
-  //   (n is the absolute value of the balance.)
-  //
-  // Note that each touch block internally carries flags that indicate whether or not it
-  // has received a content response and/or timeout expiration. However, we cannot rely
-  // on that alone to deliver these notifications to the right input block, because
-  // once an input block has been processed, it can potentially be removed from the queue.
-  // Therefore the information in that block is lost. An alternative approach would
-  // be to keep around those blocks until they have received both the content response
-  // and timeout expiration, but that involves a higher level of memory usage.
-  //
-  // This member must only be accessed on the controller/UI thread.
-  int32_t mTouchBlockBalance;
 };
 
 }
