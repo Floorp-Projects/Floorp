@@ -327,10 +327,10 @@ int main(int argc, char *argv[])
 
   bool removeApp = false;
   for (int i = 1; i < argc; i++) {
-    if (!strcmp(argv[i], "-profile")) {
+    if (!strcmp(argv[i], "-profile") || !strcmp(argv[i], "--profile")) {
       isProfileOverridden = true;
     }
-    else if (!strcmp(argv[i], "-remove")) {
+    else if (!strcmp(argv[i], "-remove") || !strcmp(argv[i], "--remove")) {
       removeApp = true;
     }
   }

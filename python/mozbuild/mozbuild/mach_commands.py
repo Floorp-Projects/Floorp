@@ -851,7 +851,9 @@ class RunProgram(MachCommandBase):
         if not background and sys.platform == 'darwin':
             args.append('-foreground')
 
-        if '-profile' not in params and '-P' not in params and not noprofile:
+        no_profile_option_given = \
+            all(p not in params for p in ['-profile', '--profile', '-P'])
+        if no_profile_option_given and not noprofile:
             path = os.path.join(self.topobjdir, 'tmp', 'scratch_user')
             if not os.path.isdir(path):
                 os.makedirs(path)

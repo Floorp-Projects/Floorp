@@ -446,7 +446,9 @@ main(int argc, char* argv[])
 
   // Check if the runtime was executed with the "-profile" argument
   for (int i = 1; i < argc; i++) {
-    if (!strcmp(argv[i], "-profile")) {
+    if (!strcmp(argv[i], "-profile") ||
+        !strcmp(argv[i], "--profile") ||
+        !strcmp(argv[i], "/profile")) {
       isProfileOverridden = true;
       break;
     }
