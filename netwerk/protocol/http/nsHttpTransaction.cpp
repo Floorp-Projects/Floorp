@@ -890,12 +890,21 @@ nsHttpTransaction::Close(nsresult reason)
     }
 
     if ((mChunkedDecoder || (mContentLength >= int64_t(0))) &&
-        (mHttpVersion >= NS_HTTP_VERSION_1_1)) {
+        (NS_SUCCEEDED(reason) && !mResponseIsComplete)) {
 
-        if (NS_SUCCEEDED(reason) && !mResponseIsComplete) {
+        NS_WARNING("Partial transfer, incomplete HTTP response received");
+
+        if ((mHttpVersion >= NS_HTTP_VERSION_1_1) &&
+            gHttpHandler->GetEnforceH1Framing()) {
             reason = NS_ERROR_NET_PARTIAL_TRANSFER;
-            LOG(("Partial transfer, incomplete HTTP responese received: %s",
+            LOG(("Partial transfer, incomplete HTTP response received: %s",
                  mChunkedDecoder ? "broken chunk" : "c-l underrun"));
+        }
+
+        if (mConnection) {
+            // whether or not we generate an error for the transaction
+            // bad framing means we don't want a pconn
+            mConnection->DontReuse();
         }
     }
 
