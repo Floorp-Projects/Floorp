@@ -1324,7 +1324,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 23;
+    const UI_VERSION = 24;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
     let currentUIVersion = 0;
     try {
@@ -1399,15 +1399,6 @@ BrowserGlue.prototype = {
         if (toolbarIsCustomized || getToolbarFolderCount() > 3) {
           xulStore.setValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed", "false");
         }
-      }
-    }
-
-    if (currentUIVersion < 8) {
-      // Reset homepage pref for users who have it set to google.com/firefox
-      let uri = Services.prefs.getComplexValue("browser.startup.homepage",
-                                               Ci.nsIPrefLocalizedString).data;
-      if (uri && /^https?:\/\/(www\.)?google(\.\w{2,3}){1,2}\/firefox\/?$/.test(uri)) {
-        Services.prefs.clearUserPref("browser.startup.homepage");
       }
     }
 
@@ -1574,6 +1565,32 @@ BrowserGlue.prototype = {
                                                     Ci.nsIPrefLocalizedString).data;
           Services.search.currentEngine = Services.search.getEngineByName(name);
         } catch (ex) {}
+      }
+    }
+
+    if (currentUIVersion < 24) {
+      // Reset homepage pref for users who have it set to start.mozilla.org
+      // or google.com/firefox.
+      const HOMEPAGE_PREF = "browser.startup.homepage";
+      if (Services.prefs.prefHasUserValue(HOMEPAGE_PREF)) {
+        const DEFAULT =
+          Services.prefs.getDefaultBranch(HOMEPAGE_PREF)
+                        .getComplexValue("", Ci.nsIPrefLocalizedString).data;
+        let value =
+          Services.prefs.getComplexValue(HOMEPAGE_PREF, Ci.nsISupportsString);
+        let updated =
+          value.data.replace(/https?:\/\/start\.mozilla\.org[^|]*/i, DEFAULT)
+                    .replace(/https?:\/\/(www\.)?google\.[a-z.]+\/firefox[^|]*/i,
+                             DEFAULT);
+        if (updated != value.data) {
+          if (updated == DEFAULT) {
+            Services.prefs.clearUserPref(HOMEPAGE_PREF);
+          } else {
+            value.data = updated;
+            Services.prefs.setComplexValue(HOMEPAGE_PREF,
+                                           Ci.nsISupportsString, value);
+          }
+        }
       }
     }
 
