@@ -1621,7 +1621,7 @@ WebGLContext::InitAndValidateGL()
             // and check OpenGL error for INVALID_ENUM.
 
             // before we start, we check that no error already occurred, to prevent hiding it in our subsequent error handling
-            error = gl->GetAndClearError();
+            error = gl->fGetError();
             if (error != LOCAL_GL_NO_ERROR) {
                 GenerateWarning("GL error 0x%x occurred during WebGL context initialization!", error);
                 return false;
@@ -1634,7 +1634,7 @@ WebGLContext::InitAndValidateGL()
             gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS, &maxVertexOutputComponents);
             gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS, &minFragmentInputComponents);
 
-            error = gl->GetAndClearError();
+            error = gl->fGetError();
             switch (error) {
                 case LOCAL_GL_NO_ERROR:
                     mGLMaxVaryingVectors = std::min(maxVertexOutputComponents, minFragmentInputComponents) / 4;
@@ -1694,9 +1694,10 @@ WebGLContext::InitAndValidateGL()
     // Mesa can only be detected with the GL_VERSION string, of the form "2.1 Mesa 7.11.0"
     mIsMesa = strstr((const char *)(gl->fGetString(LOCAL_GL_VERSION)), "Mesa");
 
-    // notice that the point of calling GetAndClearError here is not only to check for error,
-    // it is also to reset the error flags so that a subsequent WebGL getError call will give the correct result.
-    error = gl->GetAndClearError();
+    // Notice that the point of calling fGetError here is not only to check for
+    // errors, but also to reset the error flags so that a subsequent WebGL
+    // getError call will give the correct result.
+    error = gl->fGetError();
     if (error != LOCAL_GL_NO_ERROR) {
         GenerateWarning("GL error 0x%x occurred during WebGL context initialization!", error);
         return false;

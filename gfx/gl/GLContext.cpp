@@ -292,9 +292,8 @@ GLContext::GLContext(const SurfaceCaps& caps,
     mVendor(GLVendor::Other),
     mRenderer(GLRenderer::Other),
     mHasRobustness(false),
-#ifdef MOZ_GL_DEBUG
-    mIsInLocalErrorCheck(false),
-#endif
+    mTopError(LOCAL_GL_NO_ERROR),
+    mLocalErrorScope(nullptr),
     mSharedContext(sharedContext),
     mCaps(caps),
     mScreen(nullptr),
