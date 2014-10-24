@@ -39,6 +39,40 @@ namespace mozilla {
 
 #ifdef MOZ_CHILD_PERMISSIONS
 
+static bool
+CheckAppTypeHelper(mozIApplication* aApp,
+                   AssertAppProcessType aType,
+                   const char* aCapability,
+                   bool aIsBrowserElement)
+{
+  bool aValid = false;
+
+  // isBrowser frames inherit their app descriptor to identify their
+  // data storage, but they don't inherit the capability associated
+  // with that descriptor.
+  if (aApp && (aType == ASSERT_APP_HAS_PERMISSION || !aIsBrowserElement)) {
+    switch (aType) {
+      case ASSERT_APP_HAS_PERMISSION:
+      case ASSERT_APP_PROCESS_PERMISSION:
+        if (!NS_SUCCEEDED(aApp->HasPermission(aCapability, &aValid))) {
+          aValid = false;
+        }
+        break;
+      case ASSERT_APP_PROCESS_MANIFEST_URL: {
+        nsAutoString manifestURL;
+        if (NS_SUCCEEDED(aApp->GetManifestURL(manifestURL)) &&
+            manifestURL.EqualsASCII(aCapability)) {
+          aValid = true;
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  return aValid;
+}
+
 bool
 AssertAppProcess(PBrowserParent* aActor,
                  AssertAppProcessType aType,
@@ -51,32 +85,24 @@ AssertAppProcess(PBrowserParent* aActor,
 
   TabParent* tab = static_cast<TabParent*>(aActor);
   nsCOMPtr<mozIApplication> app = tab->GetOwnOrContainingApp();
-  bool aValid = false;
 
-  // isBrowser frames inherit their app descriptor to identify their
-  // data storage, but they don't inherit the capability associated
-  // with that descriptor.
-  if (app && (aType == ASSERT_APP_HAS_PERMISSION || !tab->IsBrowserElement())) {
-    switch (aType) {
-      case ASSERT_APP_HAS_PERMISSION:
-      case ASSERT_APP_PROCESS_PERMISSION:
-        if (!NS_SUCCEEDED(app->HasPermission(aCapability, &aValid))) {
-          aValid = false;
-        }
-        break;
-      case ASSERT_APP_PROCESS_MANIFEST_URL: {
-        nsAutoString manifestURL;
-        if (NS_SUCCEEDED(app->GetManifestURL(manifestURL)) &&
-            manifestURL.EqualsASCII(aCapability)) {
-          aValid = true;
-        }
-        break;
-      }
-      default:
-        break;
+  return CheckAppTypeHelper(app, aType, aCapability, tab->IsBrowserElement());
+}
+
+static bool
+CheckAppStatusHelper(mozIApplication* aApp,
+                     unsigned short aStatus)
+{
+  bool valid = false;
+
+  if (aApp) {
+    unsigned short appStatus = 0;
+    if (NS_SUCCEEDED(aApp->GetAppStatus(&appStatus))) {
+      valid = appStatus == aStatus;
     }
   }
-  return aValid;
+
+  return valid;
 }
 
 bool
@@ -91,16 +117,26 @@ AssertAppStatus(PBrowserParent* aActor,
   TabParent* tab = static_cast<TabParent*>(aActor);
   nsCOMPtr<mozIApplication> app = tab->GetOwnOrContainingApp();
 
-  bool valid = false;
+  return CheckAppStatusHelper(app, aStatus);
+}
 
-  if (app) {
-    unsigned short appStatus = 0;
-    if (NS_SUCCEEDED(app->GetAppStatus(&appStatus))) {
-      valid = appStatus == aStatus;
-    }
-  }
+bool
+AssertAppProcess(TabContext& aContext,
+                 AssertAppProcessType aType,
+                 const char* aCapability)
+{
 
-  return valid;
+  nsCOMPtr<mozIApplication> app = aContext.GetOwnOrContainingApp();
+  return CheckAppTypeHelper(app, aType, aCapability, aContext.IsBrowserElement());
+}
+
+bool
+AssertAppStatus(TabContext& aContext,
+                unsigned short aStatus)
+{
+
+  nsCOMPtr<mozIApplication> app = aContext.GetOwnOrContainingApp();
+  return CheckAppStatusHelper(app, aStatus);
 }
 
 bool
@@ -108,10 +144,10 @@ AssertAppProcess(PContentParent* aActor,
                  AssertAppProcessType aType,
                  const char* aCapability)
 {
-  const InfallibleTArray<PBrowserParent*>& browsers =
-    aActor->ManagedPBrowserParent();
-  for (uint32_t i = 0; i < browsers.Length(); ++i) {
-    if (AssertAppProcess(browsers[i], aType, aCapability)) {
+  nsTArray<TabContext> contextArray =
+    static_cast<ContentParent*>(aActor)->GetManagedTabContext();
+  for (uint32_t i = 0; i < contextArray.Length(); ++i) {
+    if (AssertAppProcess(contextArray[i], aType, aCapability)) {
       return true;
     }
   }
@@ -130,10 +166,10 @@ bool
 AssertAppStatus(PContentParent* aActor,
                 unsigned short aStatus)
 {
-  const InfallibleTArray<PBrowserParent*>& browsers =
-    aActor->ManagedPBrowserParent();
-  for (uint32_t i = 0; i < browsers.Length(); ++i) {
-    if (AssertAppStatus(browsers[i], aStatus)) {
+  nsTArray<TabContext> contextArray =
+    static_cast<ContentParent*>(aActor)->GetManagedTabContext();
+  for (uint32_t i = 0; i < contextArray.Length(); ++i) {
+    if (AssertAppStatus(contextArray[i], aStatus)) {
       return true;
     }
   }
@@ -170,14 +206,13 @@ AssertAppPrincipal(PContentParent* aActor,
   bool inBrowserElement = aPrincipal->GetIsInBrowserElement();
 
   // Check if the permission's appId matches a child we manage.
-  const InfallibleTArray<PBrowserParent*>& browsers =
-    aActor->ManagedPBrowserParent();
-  for (uint32_t i = 0; i < browsers.Length(); ++i) {
-    TabParent* tab = static_cast<TabParent*>(browsers[i]);
-    if (tab->OwnOrContainingAppId() == principalAppId) {
+  nsTArray<TabContext> contextArray =
+    static_cast<ContentParent*>(aActor)->GetManagedTabContext();
+  for (uint32_t i = 0; i < contextArray.Length(); ++i) {
+    if (contextArray[i].OwnOrContainingAppId() == principalAppId) {
       // If the child only runs inBrowserElement content and the principal claims
       // it's not in a browser element, it's lying.
-      if (!tab->IsBrowserElement() || inBrowserElement) {
+      if (!contextArray[i].IsBrowserElement() || inBrowserElement) {
         return true;
       }
       break;
@@ -282,6 +317,21 @@ AssertAppProcess(mozilla::dom::PBrowserParent* aActor,
 
 bool
 AssertAppStatus(mozilla::dom::PBrowserParent* aActor,
+                unsigned short aStatus)
+{
+  return true;
+}
+
+bool
+AssertAppProcess(const mozilla::dom::TabContext& aContext,
+                 AssertAppProcessType aType,
+                 const char* aCapability)
+{
+  return true;
+}
+
+bool
+AssertAppStatus(const mozilla::dom::TabContext& aContext,
                 unsigned short aStatus)
 {
   return true;
