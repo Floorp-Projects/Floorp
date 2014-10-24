@@ -7008,6 +7008,31 @@ elif test -z "$_ENABLE_LOGREFCNT"; then
 fi
 
 dnl ========================================================
+dnl moz_aproximate_location
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(approximate_location,
+[ --enable-approximate-location    Enable approximate location ],
+    MOZ_APPROX_LOCATION=1,
+    MOZ_APPROX_LOCATION= )
+if test -n "$MOZ_APPROX_LOCATION"; then
+    AC_DEFINE(MOZ_APPROX_LOCATION)
+fi
+
+dnl ========================================================
+dnl moz_gps_debug
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(gps_debug,
+[ --enable-gps-debug    Enable gps specific debug messages ],
+    MOZ_GPS_DEBUG=1,
+    MOZ_GPS_DEBUG= )
+if test -n "$MOZ_GPS_DEBUG"; then
+    AC_DEFINE(MOZ_GPS_DEBUG)
+fi
+if test -n "$MOZ_DEBUG"; then
+    AC_DEFINE(MOZ_GPS_DEBUG)
+fi
+
+dnl ========================================================
 dnl moz_dump_painting
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(dump-painting,
