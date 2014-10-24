@@ -414,19 +414,24 @@ class MOZ_STACK_CLASS TokenStream
 
     // This is like peekToken(), with one exception:  if there is an EOL
     // between the end of the current token and the start of the next token, it
-    // returns TOK_EOL.  In that case, no token with TOK_EOL is actually
-    // created, just a TOK_EOL TokenKind is returned, and currentToken()
-    // shouldn't be consulted.  (This is the only place TOK_EOL is produced.)
-    MOZ_ALWAYS_INLINE TokenKind peekTokenSameLine(Modifier modifier = None) {
-       const Token &curr = currentToken();
+    // return true and store TOK_EOL in |*ttp|.  In that case, no token with
+    // TOK_EOL is actually created, just a TOK_EOL TokenKind is returned, and
+    // currentToken() shouldn't be consulted.  (This is the only place TOK_EOL
+    // is produced.)
+    MOZ_ALWAYS_INLINE bool
+    peekTokenSameLine(TokenKind *ttp, Modifier modifier = None) {
+        const Token &curr = currentToken();
 
         // If lookahead != 0, we have scanned ahead at least one token, and
         // |lineno| is the line that the furthest-scanned token ends on.  If
         // it's the same as the line that the current token ends on, that's a
         // stronger condition than what we are looking for, and we don't need
         // to return TOK_EOL.
-        if (lookahead != 0 && srcCoords.isOnThisLine(curr.pos.end, lineno))
-            return tokens[(cursor + 1) & ntokensMask].type;
+        if (lookahead != 0 && srcCoords.isOnThisLine(curr.pos.end, lineno)) {
+            TokenKind tt = tokens[(cursor + 1) & ntokensMask].type;
+            *ttp = tt;
+            return tt != TOK_ERROR;
+        }
 
         // The above check misses two cases where we don't have to return
         // TOK_EOL.
@@ -437,12 +442,14 @@ class MOZ_STACK_CLASS TokenStream
         // all others) right.
         TokenKind tmp;
         if (!getToken(&tmp, modifier))
-            return TOK_ERROR;
+            return false;
         const Token &next = currentToken();
         ungetToken();
-        return srcCoords.lineNum(curr.pos.end) == srcCoords.lineNum(next.pos.begin)
-               ? next.type
-               : TOK_EOL;
+
+        *ttp = srcCoords.lineNum(curr.pos.end) == srcCoords.lineNum(next.pos.begin)
+             ? next.type
+             : TOK_EOL;
+        return true;
     }
 
     // Get the next token from the stream if its kind is |tt|.
