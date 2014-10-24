@@ -513,6 +513,7 @@ load 826483-1.html
 asserts(1) load 826532-1.html # bug 399262
 load 827168-1.html
 load 836895.html
+load 837007.xhtml
 load 840787.html
 load 842132-1.html
 load 842166.html
