@@ -1094,6 +1094,14 @@ add_task(function test_error_source_partial()
 {
   let sourceUrl = httpUrl("shorter-than-content-length-http-1-1.txt");
 
+  let enforcePref = Services.prefs.getBoolPref("network.http.enforce-framing.http1");
+  Services.prefs.setBoolPref("network.http.enforce-framing.http1", true);
+
+  function cleanup() {
+    Services.prefs.setBoolPref("network.http.enforce-framing.http1", enforcePref);
+  }
+  do_register_cleanup(cleanup);
+
   let download;
   try {
     if (!gUseLegacySaver) {
