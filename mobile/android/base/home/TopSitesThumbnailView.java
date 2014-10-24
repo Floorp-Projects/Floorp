@@ -9,6 +9,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.ThumbnailHelper;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PorterDuff.Mode;
@@ -26,20 +27,13 @@ public class TopSitesThumbnailView extends ImageView {
     private static final int COLOR_FILTER = 0x46FFFFFF;
 
     // Default filter color for "Add a bookmark" views.
-    private static final int DEFAULT_COLOR = 0xFFECF0F3;
+    private final int mDefaultColor = getResources().getColor(R.color.top_site_default);
 
     // Stroke width for the border.
     private final float mStrokeWidth = getResources().getDisplayMetrics().density * 2;
 
     // Paint for drawing the border.
-    private static final Paint sBorderPaint;
-
-    // Initializing the static border paint.
-    static {
-        sBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        sBorderPaint.setColor(0xFFCFD9E1);
-        sBorderPaint.setStyle(Paint.Style.STROKE);
-    }
+    private final Paint mBorderPaint;
 
     public TopSitesThumbnailView(Context context) {
         this(context, null);
@@ -54,6 +48,12 @@ public class TopSitesThumbnailView extends ImageView {
 
     public TopSitesThumbnailView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+
+        // Initialize the border paint.
+        final Resources res = getResources();
+        mBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mBorderPaint.setColor(res.getColor(R.color.top_site_border));
+        mBorderPaint.setStyle(Paint.Style.STROKE);
     }
 
     /**
@@ -82,8 +82,8 @@ public class TopSitesThumbnailView extends ImageView {
         super.onDraw(canvas);
 
         if (getBackground() == null) {
-            sBorderPaint.setStrokeWidth(mStrokeWidth);
-            canvas.drawRect(0, 0, getWidth(), getHeight(), sBorderPaint);
+            mBorderPaint.setStrokeWidth(mStrokeWidth);
+            canvas.drawRect(0, 0, getWidth(), getHeight(), mBorderPaint);
         }
     }
 
@@ -104,7 +104,7 @@ public class TopSitesThumbnailView extends ImageView {
     @Override
     public void setBackgroundColor(int color) {
         if (color == 0) {
-            color = DEFAULT_COLOR;
+            color = mDefaultColor;
         }
 
         Drawable drawable = getResources().getDrawable(R.drawable.top_sites_thumbnail_bg);

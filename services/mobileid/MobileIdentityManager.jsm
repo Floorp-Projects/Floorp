@@ -163,7 +163,7 @@ this.MobileIdentityManager = {
     };
 
     // _iccInfo is a local cache containing the information about the SIM cards
-    // that it is interesting for the Mobile ID flow.
+    // that is interesting for the Mobile ID flow.
     // The index of this array does not necesarily need to match the real
     // identifier of the SIM card ("clientId" or "serviceId" in RIL language).
     this._iccInfo = [];
@@ -176,8 +176,10 @@ this.MobileIdentityManager = {
       }
 
       let info = rilContext.iccInfo;
-      if (!info) {
-        log.warn("No ICC info");
+      if (!info || !info.iccid ||
+          !info.mcc || !info.mcc.length ||
+          !info.mnc || !info.mnc.length) {
+        log.warn("Absent or invalid ICC info");
         continue;
       }
 

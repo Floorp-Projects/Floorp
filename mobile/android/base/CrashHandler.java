@@ -180,8 +180,10 @@ class CrashHandler implements Thread.UncaughtExceptionHandler {
     }
 
     protected String getAppPackageName() {
-        if (appContext != null) {
-            return appContext.getPackageName();
+        final Context context = getAppContext();
+
+        if (context != null) {
+            return context.getPackageName();
         }
 
         try {
@@ -206,6 +208,10 @@ class CrashHandler implements Thread.UncaughtExceptionHandler {
         return getJavaPackageName();
     }
 
+    protected Context getAppContext() {
+        return appContext;
+    }
+
     /**
      * Get the crash "extras" to be reported.
      *
@@ -213,8 +219,8 @@ class CrashHandler implements Thread.UncaughtExceptionHandler {
      * @param exc An exception
      * @return "Extras" in the from of a Bundle
      */
-    protected Bundle getCrashExtras(final Thread thread, final Throwable exc,
-                                    final Context appContext) {
+    protected Bundle getCrashExtras(final Thread thread, final Throwable exc) {
+        final Context context = getAppContext();
         final Bundle extras = new Bundle();
         final String pkgName = getAppPackageName();
 
@@ -222,8 +228,8 @@ class CrashHandler implements Thread.UncaughtExceptionHandler {
         extras.putLong("CrashTime", getCrashTime());
         extras.putLong("StartupTime", getStartupTime());
 
-        if (appContext != null) {
-            final PackageManager pkgMgr = appContext.getPackageManager();
+        if (context != null) {
+            final PackageManager pkgMgr = context.getPackageManager();
             try {
                 final PackageInfo pkgInfo = pkgMgr.getPackageInfo(pkgName, 0);
                 extras.putString("Version", pkgInfo.versionName);
@@ -277,17 +283,18 @@ class CrashHandler implements Thread.UncaughtExceptionHandler {
      */
     protected boolean launchCrashReporter(final String dumpFile, final String extraFile) {
         try {
+            final Context context = getAppContext();
             final String javaPkg = getJavaPackageName();
             final String pkg = getAppPackageName();
             final String component = javaPkg + ".CrashReporter";
             final String action = javaPkg + ".reportCrash";
             final ProcessBuilder pb;
 
-            if (appContext != null) {
+            if (context != null) {
                 final Intent intent = new Intent(action);
                 intent.setComponent(new ComponentName(pkg, component));
                 intent.putExtra("minidumpPath", dumpFile);
-                appContext.startActivity(intent);
+                context.startActivity(intent);
                 return true;
             }
 
@@ -329,12 +336,13 @@ class CrashHandler implements Thread.UncaughtExceptionHandler {
      * @return Whether the exception was successfully reported
      */
     protected boolean reportException(final Thread thread, final Throwable exc) {
+        final Context context = getAppContext();
         final String id = UUID.randomUUID().toString();
 
         // Use the cache directory under the app directory to store crash files.
         final File dir;
-        if (appContext != null) {
-            dir = appContext.getCacheDir();
+        if (context != null) {
+            dir = context.getCacheDir();
         } else {
             dir = new File("/data/data/" + getAppPackageName() + "/cache");
         }
@@ -366,7 +374,7 @@ class CrashHandler implements Thread.UncaughtExceptionHandler {
         try {
             // Write out crash extra file as text.
 
-            final Bundle extras = getCrashExtras(thread, exc, appContext);
+            final Bundle extras = getCrashExtras(thread, exc);
             final String url = getServerUrl(extras);
             extras.putString("ServerURL", url);
 

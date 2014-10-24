@@ -48,9 +48,6 @@ public class SuggestionsFragment extends Fragment {
     // Number of search suggestions to show.
     private static final int SUGGESTION_MAX = 5;
 
-    // Color of search term match in search suggestion
-    private static final int SUGGESTION_HIGHLIGHT_COLOR = 0xFF999999;
-
     public static final String GECKO_SEARCH_TERMS_URL_PARAM = "__searchTerms__";
 
     private AcceptsSearchQuery searchListener;
@@ -156,21 +153,21 @@ public class SuggestionsFragment extends Fragment {
 
     public static class Suggestion {
 
-        private static final ForegroundColorSpan COLOR_SPAN =
-                new ForegroundColorSpan(SUGGESTION_HIGHLIGHT_COLOR);
-
         public final String value;
         public final SpannableString display;
+        public final ForegroundColorSpan colorSpan;
 
-        public Suggestion(String value, String searchTerm) {
+        public Suggestion(String value, String searchTerm, int suggestionHighlightColor) {
             this.value = value;
 
             display = new SpannableString(value);
 
+            colorSpan = new ForegroundColorSpan(suggestionHighlightColor);
+
             // Highlight mixed-case matches.
             final int start = value.toLowerCase().indexOf(searchTerm.toLowerCase());
             if (start >= 0) {
-                display.setSpan(COLOR_SPAN, start, start + searchTerm.length(), 0);
+                display.setSpan(colorSpan, start, start + searchTerm.length(), 0);
             }
         }
     }
@@ -206,12 +203,16 @@ public class SuggestionsFragment extends Fragment {
         private final SuggestClient suggestClient;
         private final String searchTerm;
         private List<Suggestion> suggestions;
+        private final int suggestionHighlightColor;
 
         public SuggestionAsyncLoader(Context context, SuggestClient suggestClient, String searchTerm) {
             super(context);
             this.suggestClient = suggestClient;
             this.searchTerm = searchTerm;
             this.suggestions = null;
+
+            // Color of search term match in search suggestion
+            suggestionHighlightColor = context.getResources().getColor(R.color.suggestion_highlight);
         }
 
         @Override
@@ -220,7 +221,7 @@ public class SuggestionsFragment extends Fragment {
 
             final List<Suggestion> result = new ArrayList<Suggestion>(values.size());
             for (String value : values) {
-                result.add(new Suggestion(value, searchTerm));
+                result.add(new Suggestion(value, searchTerm, suggestionHighlightColor));
             }
 
             return result;
