@@ -309,15 +309,6 @@ public:
     bool UserToDevicePixelSnapped(gfxPoint& pt, bool ignoreScale = false) const;
 
     /**
-     * Attempts to pixel snap the rectangle, add it to the current
-     * path, and to set pattern as the current painting source.  This
-     * should be used for drawing filled pixel-snapped rectangles (like
-     * images), because the CTM at the time of the SetPattern call needs
-     * to have a snapped translation, or you get smeared images.
-     */
-    void PixelSnappedRectangleAndSetPattern(const gfxRect& rect, gfxPattern *pattern);
-
-    /**
      ** Painting sources
      **/
 

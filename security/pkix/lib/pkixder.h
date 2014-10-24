@@ -42,7 +42,7 @@
 
 namespace mozilla { namespace pkix { namespace der {
 
-enum Class
+enum Class : uint8_t
 {
    UNIVERSAL = 0 << 6,
 // APPLICATION = 1 << 6, // unused
@@ -67,6 +67,7 @@ enum Tag
   UTF8String = UNIVERSAL | 0x0c,
   SEQUENCE = UNIVERSAL | CONSTRUCTED | 0x10, // 0x30
   SET = UNIVERSAL | CONSTRUCTED | 0x11, // 0x31
+  PrintableString = UNIVERSAL | 0x13,
   UTCTime = UNIVERSAL | 0x17,
   GENERALIZED_TIME = UNIVERSAL | 0x18,
 };
@@ -221,6 +222,30 @@ NestedOf(Reader& input, uint8_t outerTag, uint8_t innerTag,
   } while (!inner.AtEnd());
 
   return Success;
+}
+
+// Often, a function will need to decode an Input or Reader that contains
+// DER-encoded data wrapped in a SEQUENCE (or similar) with nothing after it.
+// This function reduces the boilerplate necessary for stripping the outermost
+// SEQUENCE (or similar) and ensuring that nothing follows it.
+inline Result
+ExpectTagAndGetValueAtEnd(Reader& outer, uint8_t expectedTag,
+                          /*out*/ Reader& inner)
+{
+  Result rv = der::ExpectTagAndGetValue(outer, expectedTag, inner);
+  if (rv != Success) {
+    return rv;
+  }
+  return der::End(outer);
+}
+
+// Similar to the above, but takes an Input instead of a Reader&.
+inline Result
+ExpectTagAndGetValueAtEnd(Input outer, uint8_t expectedTag,
+                          /*out*/ Reader& inner)
+{
+  Reader outerReader(outer);
+  return ExpectTagAndGetValueAtEnd(outerReader, expectedTag, inner);
 }
 
 // Universal types

@@ -275,6 +275,7 @@ public:
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE
   {
+    *aSnap = true;
     nsStyleBorder styleBorder = *mFrame->StyleBorder();
     nsMathMLmtdFrame* frame = static_cast<nsMathMLmtdFrame*>(mFrame);
     ApplyBorderToStyle(frame, styleBorder);

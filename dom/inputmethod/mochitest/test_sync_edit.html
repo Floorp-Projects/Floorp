@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1079455
+-->
+<head>
+  <title>Sync edit of an input</title>
+  <script type="application/javascript;version=1.7" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.7" src="inputmethod_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1079455">Mozilla Bug 1079455</a>
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+inputmethod_setup(function() {
+  runTest();
+});
+
+let appFrameScript = function appFrameScript() {
+  let input = content.document.body.firstElementChild;
+
+  input.focus();
+  input.value = 'First1';
+  input.blur();
+
+  content.setTimeout(function() {
+    sendAsyncMessage('test:next', {});
+  });
+};
+
+function runTest() {
+  let im = navigator.mozInputMethod;
+
+  let i = 0;
+  im.oninputcontextchange = function() {
+    ok(false, 'Should not receive any inputcontextchange events.');
+  };
+
+  // Set current page as an input method.
+  SpecialPowers.wrap(im).setActive(true);
+
+  let iframe = document.createElement('iframe');
+  iframe.src = 'data:text/html,<html><body><input value="First"></body></html>';
+  iframe.setAttribute('mozbrowser', true);
+  document.body.appendChild(iframe);
+
+  let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+  mm.addMessageListener('test:next', function() {
+    ok(true, '\\o/');
+    inputmethod_cleanup();
+  });
+
+  iframe.addEventListener('mozbrowserloadend', function() {
+    mm.loadFrameScript('data:,(' + encodeURIComponent(appFrameScript.toString()) + ')();', false);
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>
+

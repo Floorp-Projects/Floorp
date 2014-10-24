@@ -37,6 +37,26 @@
 // See definition of SandboxDie, below.
 #include "sandbox/linux/seccomp-bpf/die.h"
 
+#ifdef MOZ_ASAN
+// Copy libsanitizer declarations to avoid depending on ASAN headers.
+// See also bug 1081242 comment #4.
+extern "C" {
+namespace __sanitizer {
+// Win64 uses long long, but this is Linux.
+typedef signed long sptr;
+} // namespace __sanitizer
+
+typedef struct {
+  int coverage_sandboxed;
+  __sanitizer::sptr coverage_fd;
+  unsigned int coverage_max_block_size;
+} __sanitizer_sandbox_arguments;
+
+MOZ_IMPORT_API void
+__sanitizer_sandbox_on_notify(__sanitizer_sandbox_arguments *args);
+} // extern "C"
+#endif // MOZ_ASAN
+
 namespace mozilla {
 
 SandboxCrashFunc gSandboxCrashFunc;
@@ -414,6 +434,14 @@ SetCurrentProcessSandbox(SandboxType aType)
   if (InstallSyscallReporter()) {
     SANDBOX_LOG_ERROR("install_syscall_reporter() failed\n");
   }
+
+#ifdef MOZ_ASAN
+  __sanitizer_sandbox_arguments asanArgs;
+  asanArgs.coverage_sandboxed = 1;
+  asanArgs.coverage_fd = -1;
+  asanArgs.coverage_max_block_size = 0;
+  __sanitizer_sandbox_on_notify(&asanArgs);
+#endif
 
   BroadcastSetThreadSandbox(aType);
 }

@@ -14,7 +14,7 @@ function makeArray(n) {
 function runner(arr, resultArray, len) {
     for (var i = 0; i < len; i++) {
         var obj = arr[i];
-        resultArray[0] += obj.foo(i);
+        resultArray[0] += new obj.foo(i);
     }
 }
 var resultArray = [0];

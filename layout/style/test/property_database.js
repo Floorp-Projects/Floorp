@@ -5647,7 +5647,7 @@ if (SpecialPowers.getBoolPref("layout.css.scroll-behavior.property-enabled")) {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "auto" ],
-    other_values: [ "instant", "smooth" ],
+    other_values: [ "smooth" ],
     invalid_values: [ "none",  "1px" ]
   };
 }

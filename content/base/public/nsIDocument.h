@@ -50,7 +50,6 @@ class nsIDOMDocumentType;
 class nsIDOMElement;
 class nsIDOMNodeFilter;
 class nsIDOMNodeList;
-class nsIDOMXPathNSResolver;
 class nsIHTMLCollection;
 class nsILayoutHistoryState;
 class nsILoadContext;
@@ -125,6 +124,7 @@ class TreeWalker;
 class UndoManager;
 class XPathEvaluator;
 class XPathExpression;
+class XPathNSResolver;
 class XPathResult;
 template<typename> class OwningNonNull;
 template<typename> class Sequence;
@@ -135,8 +135,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x42a263db, 0x6ac6, 0x40ff, \
-  { 0x89, 0xe2, 0x25, 0x12, 0xe4, 0xbc, 0x2d, 0x2d } }
+{ 0xbab5b447, 0x7e23, 0x4cdd, \
+  { 0xac, 0xe5, 0xaa, 0x04, 0x26, 0x87, 0x2b, 0x97 } }
 
 // Enum for requesting a particular type of document when creating a doc
 enum DocumentFlavor {
@@ -2318,13 +2318,12 @@ public:
   void LoadBindingDocument(const nsAString& aURI, mozilla::ErrorResult& rv);
   mozilla::dom::XPathExpression*
     CreateExpression(const nsAString& aExpression,
-                     nsIDOMXPathNSResolver* aResolver,
+                     mozilla::dom::XPathNSResolver* aResolver,
                      mozilla::ErrorResult& rv);
-  already_AddRefed<nsIDOMXPathNSResolver>
-    CreateNSResolver(nsINode* aNodeResolver, mozilla::ErrorResult& rv);
+  nsINode* CreateNSResolver(nsINode& aNodeResolver);
   already_AddRefed<mozilla::dom::XPathResult>
     Evaluate(JSContext* aCx, const nsAString& aExpression, nsINode* aContextNode,
-             nsIDOMXPathNSResolver* aResolver, uint16_t aType,
+             mozilla::dom::XPathNSResolver* aResolver, uint16_t aType,
              JS::Handle<JSObject*> aResult, mozilla::ErrorResult& rv);
   // Touch event handlers already on nsINode
   already_AddRefed<mozilla::dom::Touch>

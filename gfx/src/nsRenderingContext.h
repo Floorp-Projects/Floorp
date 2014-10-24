@@ -47,29 +47,21 @@ public:
 
     void SetTextRunRTL(bool aIsRTL);
 
-    nscoord GetWidth(char aC);
     nscoord GetWidth(char16_t aC);
     nscoord GetWidth(const nsString& aString);
-    nscoord GetWidth(const char* aString);
-    nscoord GetWidth(const char* aString, uint32_t aLength);
     nscoord GetWidth(const char16_t *aString, uint32_t aLength);
 
     nsBoundingMetrics GetBoundingMetrics(const char16_t *aString,
                                          uint32_t aLength);
 
-    void DrawString(const nsString& aString, nscoord aX, nscoord aY);
-    void DrawString(const char *aString, uint32_t aLength,
-                    nscoord aX, nscoord aY);
-    void DrawString(const char16_t *aString, uint32_t aLength,
-                    nscoord aX, nscoord aY);
-
+    int32_t GetMaxChunkLength();
+    static int32_t FindSafeLength(const char16_t *aString, uint32_t aLength,
+                                  uint32_t aMaxChunkLength);
 private:
     // Private destructor, to discourage deletion outside of Release():
     ~nsRenderingContext()
     {
     }
-
-    int32_t GetMaxChunkLength();
 
     nsRefPtr<gfxContext> mThebes;
     nsRefPtr<nsFontMetrics> mFontMetrics;

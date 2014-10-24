@@ -344,6 +344,10 @@
 
     <style name="TextAppearance.EmptyMessage" parent="TextAppearance.Large"/>
 
+    <style name="TextAppearance.EmptyHint" parent="TextAppearance.Medium">
+        <item name="android:textColor">#FFA62F</item>
+    </style>
+
     <style name="TextAppearance.Micro">
         <item name="android:textSize">12sp</item>
         <item name="android:textColor">?android:attr/textColorTertiary</item>

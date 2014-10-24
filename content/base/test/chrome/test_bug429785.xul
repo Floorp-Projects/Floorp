@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429785
     const serv = Components.classes["@mozilla.org/consoleservice;1"]
                            .getService(Components.interfaces.nsIConsoleService);
     var listener = {
-      QueryInteface : function(iid) {
+      QueryInterface : function(iid) {
         if (!iid.equals(Components.interfaces.nsISupports) &&
             !iid.equals(Components.interfaces.nsIConsoleListener)) {
 	  throw Components.results.NS_NOINTERFACE;

@@ -66,6 +66,8 @@ public:
   }
 };
 
+bool InputEqualsByteString(Input input, const ByteString& bs);
+
 // python DottedOIDToCode.py --tlv id-kp-OCSPSigning 1.3.6.1.5.5.7.3.9
 static const uint8_t tlv_id_kp_OCSPSigning[] = {
   0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x09
@@ -104,8 +106,111 @@ const ByteString md2WithRSAEncryption(alg_md2WithRSAEncryption,
 mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
                            int16_t hour, int16_t minutes, int16_t seconds);
 
-ByteString CNToDERName(const char* cn);
-bool InputEqualsByteString(Input input, const ByteString& bs);
+// e.g. YMDHMS(2016, 12, 31, 1, 23, 45) => 2016-12-31:01:23:45 (GMT)
+mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
+                           int16_t hour, int16_t minutes, int16_t seconds);
+
+ByteString TLV(uint8_t tag, const ByteString& value);
+
+ByteString CN(const ByteString&);
+
+inline ByteString
+CN(const char* value)
+{
+  return CN(ByteString(reinterpret_cast<const uint8_t*>(value),
+                       std::strlen(value)));
+}
+
+ByteString OU(const ByteString&);
+
+inline ByteString
+OU(const char* value)
+{
+  return OU(ByteString(reinterpret_cast<const uint8_t*>(value),
+                       std::strlen(value)));
+}
+
+// RelativeDistinguishedName ::=
+//   SET SIZE (1..MAX) OF AttributeTypeAndValue
+//
+ByteString RDN(const ByteString& avas);
+
+// Name ::= CHOICE { -- only one possibility for now --
+//   rdnSequence  RDNSequence }
+//
+// RDNSequence ::= SEQUENCE OF RelativeDistinguishedName
+//
+ByteString Name(const ByteString& rdns);
+
+inline ByteString
+CNToDERName(const ByteString& cn)
+{
+  return Name(RDN(CN(cn)));
+}
+
+inline ByteString
+CNToDERName(const char* cn)
+{
+  return Name(RDN(CN(cn)));
+}
+
+// GeneralName ::= CHOICE {
+//      otherName                       [0]     OtherName,
+//      rfc822Name                      [1]     IA5String,
+//      dNSName                         [2]     IA5String,
+//      x400Address                     [3]     ORAddress,
+//      directoryName                   [4]     Name,
+//      ediPartyName                    [5]     EDIPartyName,
+//      uniformResourceIdentifier       [6]     IA5String,
+//      iPAddress                       [7]     OCTET STRING,
+//      registeredID                    [8]     OBJECT IDENTIFIER }
+
+inline ByteString
+RFC822Name(const ByteString& name)
+{
+  // (2 << 6) means "context-specific", 1 is the GeneralName tag.
+  return TLV((2 << 6) | 1, name);
+}
+
+template <size_t L>
+inline ByteString
+RFC822Name(const char (&bytes)[L])
+{
+  return RFC822Name(ByteString(reinterpret_cast<const uint8_t (&)[L]>(bytes),
+                               L - 1));
+}
+
+inline ByteString
+DNSName(const ByteString& name)
+{
+  // (2 << 6) means "context-specific", 2 is the GeneralName tag.
+  return TLV((2 << 6) | 2, name);
+}
+
+template <size_t L>
+inline ByteString
+DNSName(const char (&bytes)[L])
+{
+  return DNSName(ByteString(reinterpret_cast<const uint8_t (&)[L]>(bytes),
+                            L - 1));
+}
+
+template <size_t L>
+inline ByteString
+IPAddress(const uint8_t (&bytes)[L])
+{
+  // (2 << 6) means "context-specific", 7 is the GeneralName tag.
+  return TLV((2 << 6) | 7, ByteString(bytes, L));
+}
+
+// Names should be zero or more GeneralNames, like DNSName and IPAddress return,
+// concatenated together.
+//
+// CreatedEncodedSubjectAltName(ByteString()) results in a SAN with an empty
+// sequence. CreateEmptyEncodedSubjectName() results in a SAN without any
+// sequence.
+ByteString CreateEncodedSubjectAltName(const ByteString& names);
+ByteString CreateEncodedEmptySubjectAltName();
 
 class TestKeyPair
 {

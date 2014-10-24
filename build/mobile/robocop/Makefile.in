@@ -61,6 +61,9 @@ ROBOCOP_FILES := \
   $(wildcard $(TESTPATH)/test*.js) \
   $(wildcard $(TESTPATH)/robocop*.js) \
   $(wildcard $(TESTPATH)/*.xml) \
+  $(wildcard $(TESTPATH)/*.ogg) \
+  $(wildcard $(TESTPATH)/*.mp4) \
+  $(wildcard $(TESTPATH)/*.webm) \
   $(wildcard $(TESTPATH)/*.swf) \
   $(NULL)
 

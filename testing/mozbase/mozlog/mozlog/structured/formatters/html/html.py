@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import base64
 import cgi
 from datetime import datetime
 import os
@@ -117,22 +118,19 @@ class HTMLFormatter(base.BaseFormatter):
                     html.a(html.img(src=screenshot), href="#"),
                     class_='screenshot'))
             for name, content in debug.items():
-                try:
-                    if 'screenshot' in name:
-                        href = '#'
-                    else:
-                        # use base64 to avoid that some browser (such as Firefox, Opera)
-                        # treats '#' as the start of another link if the data URL contains.
-                        # use 'charset=utf-8' to show special characters like Chinese.
-                        href = 'data:text/plain;charset=utf-8;base64,%s' % base64.b64encode(content)
-                    links_html.append(html.a(
-                        name.title(),
-                        class_=name,
-                        href=href,
-                        target='_blank'))
-                    links_html.append(' ')
-                except:
-                    pass
+                if 'screenshot' in name:
+                    href = '#'
+                else:
+                    # use base64 to avoid that some browser (such as Firefox, Opera)
+                    # treats '#' as the start of another link if the data URL contains.
+                    # use 'charset=utf-8' to show special characters like Chinese.
+                    href = 'data:text/plain;charset=utf-8;base64,%s' % base64.b64encode(content)
+                links_html.append(html.a(
+                    name.title(),
+                    class_=name,
+                    href=href,
+                    target='_blank'))
+                links_html.append(' ')
 
             log = html.div(class_='log')
             output = data.get('stack', '').splitlines()

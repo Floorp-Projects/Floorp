@@ -10,6 +10,7 @@ SOURCES += [
     'lib/pkixcert.cpp',
     'lib/pkixcheck.cpp',
     'lib/pkixder.cpp',
+    'lib/pkixnames.cpp',
     'lib/pkixnss.cpp',
     'lib/pkixocsp.cpp',
     'lib/pkixresult.cpp',
