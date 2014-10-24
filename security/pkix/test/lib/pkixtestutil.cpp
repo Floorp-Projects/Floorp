@@ -412,6 +412,21 @@ Extension(Input extnID, ExtensionCriticality criticality,
   return TLV(der::SEQUENCE, encoded);
 }
 
+static ByteString
+EmptyExtension(Input extnID, ExtensionCriticality criticality)
+{
+  ByteString encoded(extnID.UnsafeGetData(), extnID.GetLength());
+
+  if (criticality == ExtensionCriticality::Critical) {
+    ByteString critical(Boolean(true));
+    encoded.append(critical);
+  }
+
+  ByteString extnValue(TLV(der::OCTET_STRING, ByteString()));
+  encoded.append(extnValue);
+  return TLV(der::SEQUENCE, encoded);
+}
+
 void
 MaybeLogOutput(const ByteString& result, const char* suffix)
 {
@@ -569,49 +584,75 @@ TBSCertificate(long versionValue,
   return TLV(der::SEQUENCE, value);
 }
 
-ByteString
-CNToDERName(const char* cn)
+// AttributeTypeAndValue ::= SEQUENCE {
+//   type     AttributeType,
+//   value    AttributeValue }
+//
+// AttributeType ::= OBJECT IDENTIFIER
+//
+// AttributeValue ::= ANY -- DEFINED BY AttributeType
+//
+// DirectoryString ::= CHOICE {
+//       teletexString           TeletexString (SIZE (1..MAX)),
+//       printableString         PrintableString (SIZE (1..MAX)),
+//       universalString         UniversalString (SIZE (1..MAX)),
+//       utf8String              UTF8String (SIZE (1..MAX)),
+//       bmpString               BMPString (SIZE (1..MAX)) }
+template <size_t N>
+static ByteString
+AVA(const uint8_t (&type)[N], uint8_t directoryStringType,
+    const ByteString& value)
 {
-  // Name ::= CHOICE { -- only one possibility for now --
-  //   rdnSequence  RDNSequence }
-  //
-  // RDNSequence ::= SEQUENCE OF RelativeDistinguishedName
-  //
-  // RelativeDistinguishedName ::=
-  //   SET SIZE (1..MAX) OF AttributeTypeAndValue
-  //
-  // AttributeTypeAndValue ::= SEQUENCE {
-  //   type     AttributeType,
-  //   value    AttributeValue }
-  //
-  // AttributeType ::= OBJECT IDENTIFIER
-  //
-  // AttributeValue ::= ANY -- DEFINED BY AttributeType
-  //
-  // DirectoryString ::= CHOICE {
-  //       teletexString           TeletexString (SIZE (1..MAX)),
-  //       printableString         PrintableString (SIZE (1..MAX)),
-  //       universalString         UniversalString (SIZE (1..MAX)),
-  //       utf8String              UTF8String (SIZE (1..MAX)),
-  //       bmpString               BMPString (SIZE (1..MAX)) }
-  //
+  ByteString wrappedValue(TLV(directoryStringType, value));
+  ByteString ava;
+  ava.append(type, N);
+  ava.append(wrappedValue);
+  return TLV(der::SEQUENCE, ava);
+}
+
+ByteString
+CN(const ByteString& value)
+{
   // id-at OBJECT IDENTIFIER ::= { joint-iso-ccitt(2) ds(5) 4 }
   // id-at-commonName        AttributeType ::= { id-at 3 }
-
   // python DottedOIDToCode.py --tlv id-at-commonName 2.5.4.3
   static const uint8_t tlv_id_at_commonName[] = {
     0x06, 0x03, 0x55, 0x04, 0x03
   };
+  return AVA(tlv_id_at_commonName, der::UTF8String, value);
+}
 
-  ByteString value(reinterpret_cast<const ByteString::value_type*>(cn));
-  value = TLV(der::UTF8String, value);
+ByteString
+OU(const ByteString& value)
+{
+  // id-at OBJECT IDENTIFIER ::= { joint-iso-ccitt(2) ds(5) 4 }
+  // id-at-organizationalUnitName AttributeType ::= { id-at 11 }
+  // python DottedOIDToCode.py --tlv id-at-organizationalUnitName 2.5.4.11
+  static const uint8_t tlv_id_at_organizationalUnitName[] = {
+    0x06, 0x03, 0x55, 0x04, 0x0b
+  };
 
-  ByteString ava;
-  ava.append(tlv_id_at_commonName, sizeof(tlv_id_at_commonName));
-  ava.append(value);
-  ava = TLV(der::SEQUENCE, ava);
-  ByteString rdn(TLV(der::SET, ava));
-  return TLV(der::SEQUENCE, rdn);
+  return AVA(tlv_id_at_organizationalUnitName, der::UTF8String, value);
+}
+
+// RelativeDistinguishedName ::=
+//   SET SIZE (1..MAX) OF AttributeTypeAndValue
+//
+ByteString
+RDN(const ByteString& avas)
+{
+  return TLV(der::SET, avas);
+}
+
+// Name ::= CHOICE { -- only one possibility for now --
+//   rdnSequence  RDNSequence }
+//
+// RDNSequence ::= SEQUENCE OF RelativeDistinguishedName
+//
+ByteString
+Name(const ByteString& rdns)
+{
+  return TLV(der::SEQUENCE, rdns);
 }
 
 ByteString
@@ -660,6 +701,25 @@ CreateEncodedEKUExtension(Input ekuOID, ExtensionCriticality criticality)
   };
 
   return Extension(Input(tlv_id_ce_extKeyUsage), criticality, value);
+}
+
+// python DottedOIDToCode.py --tlv id-ce-subjectAltName 2.5.29.17
+static const uint8_t tlv_id_ce_subjectAltName[] = {
+  0x06, 0x03, 0x55, 0x1d, 0x11
+};
+
+ByteString
+CreateEncodedSubjectAltName(const ByteString& names)
+{
+  return Extension(Input(tlv_id_ce_subjectAltName),
+                   ExtensionCriticality::NotCritical, names);
+}
+
+ByteString
+CreateEncodedEmptySubjectAltName()
+{
+  return EmptyExtension(Input(tlv_id_ce_subjectAltName),
+                        ExtensionCriticality::NotCritical);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

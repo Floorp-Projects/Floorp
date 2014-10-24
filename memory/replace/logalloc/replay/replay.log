@@ -1,0 +1,17 @@
+1 malloc(42)=#1
+1 malloc(24)=#2
+2 malloc(42)=#1
+1 free(#1)
+1 posix_memalign(4096,1024)=#1
+1 calloc(4,42)=#3
+1 free(#2)
+1 realloc(#3,84)=#2
+1 aligned_alloc(512,1024)=#3
+1 memalign(512,1024)=#4
+1 valloc(1024)=#5
+1 jemalloc_stats()
+1 free(#5)
+1 free(#4)
+1 free(#3)
+1 free(#2)
+1 free(#1)

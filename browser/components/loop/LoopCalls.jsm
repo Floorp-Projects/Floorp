@@ -203,7 +203,7 @@ let LoopCallsInternal = {
     // Make the call to get the GUEST session regardless of whether the FXA
     // request fails.
 
-    if (channelID == LoopCalls.channelIDs.FxA && MozLoopService.userProfile) {
+    if (channelID == MozLoopService.channelIDs.callsFxA && MozLoopService.userProfile) {
       this._getCalls(LOOP_SESSION_TYPE.FXA, version);
     } else {
       this._getCalls(LOOP_SESSION_TYPE.GUEST, version);
@@ -320,12 +320,6 @@ Object.freeze(LoopCallsInternal);
  * Public API
  */
 this.LoopCalls = {
-  // Channel ids that will be registered with the PushServer for notifications
-  channelIDs: {
-    FxA: "25389583-921f-4169-a426-a4673658944b",
-    Guest: "801f754b-686b-43ec-bd83-1419bbf58388",
-  },
-
   /**
    * Callback from MozLoopPushHandler - A push notification has been received from
    * the server.

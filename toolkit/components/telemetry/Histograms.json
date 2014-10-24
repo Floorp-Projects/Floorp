@@ -6162,6 +6162,11 @@
     "kind": "boolean",
     "description": "Did WebIDE local runtime connection succeed?"
   },
+  "DEVTOOLS_WEBIDE_OTHER_CONNECTION_RESULT": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Did WebIDE other runtime connection succeed?"
+  },
   "DEVTOOLS_WEBIDE_CONNECTION_TIME_SECONDS": {
     "expires_in_version": "never",
     "kind": "exponential",

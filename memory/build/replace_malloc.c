@@ -104,17 +104,6 @@ replace_malloc_init_funcs()
  */
 
 /*
- * On OSX, MOZ_MEMORY_API is defined to nothing, because malloc functions
- * are meant to have hidden visibility. But since the functions are only
- * used locally in the zone allocator further below, we can allow the
- * compiler to optimize more by switching to static.
- */
-#ifdef XP_DARWIN
-#undef MOZ_MEMORY_API
-#define MOZ_MEMORY_API static
-#endif
-
-/*
  * Malloc implementation functions are MOZ_MEMORY_API, and jemalloc
  * specific functions MOZ_JEMALLOC_API; see mozmemory_wrap.h
  */

@@ -348,7 +348,7 @@ let FormAssistant = {
   // Implements nsIEditorObserver get notification when the text content of
   // current input field has changed.
   EditAction: function fa_editAction() {
-    if (this._editing) {
+    if (this._editing || !this.isHandlingFocus) {
       return;
     }
     this.sendInputState(this.focusedElement);

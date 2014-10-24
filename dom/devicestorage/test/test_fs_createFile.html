@@ -61,7 +61,7 @@ let gTestCases = [
   // Create with array buffer view data.
   {
     text: "Kunming is in Yunnan province of China.",
-    get data() { return Uint8Array(str2array(this.text)); },
+    get data() { return new Uint8Array(str2array(this.text)); },
     shouldPass: true,
     mode: "replace"
   },

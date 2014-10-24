@@ -1041,46 +1041,6 @@ bool IsVisible(int aStyle)
   return false;
 }
 
-already_AddRefed<gfxPattern>
-nsCSSBorderRenderer::CreateCornerGradient(mozilla::css::Corner aCorner,
-                                          const gfxRGBA &aFirstColor,
-                                          const gfxRGBA &aSecondColor)
-{
-  typedef struct { gfxFloat a, b; } twoFloats;
-
-  const twoFloats gradientCoeff[4] = { { -1, +1 },
-                                       { -1, -1 },
-                                       { +1, -1 },
-                                       { +1, +1 } };
-
-  // Sides which form the 'width' and 'height' for the calculation of the angle
-  // for our gradient.
-  const int cornerWidth[4] = { 3, 1, 1, 3 };
-  const int cornerHeight[4] = { 0, 0, 2, 2 };
-
-  gfxPoint cornerOrigin = mOuterRect.AtCorner(aCorner);
-
-  gfxPoint pat1, pat2;
-  pat1.x = cornerOrigin.x +
-    mBorderWidths[cornerHeight[aCorner]] * gradientCoeff[aCorner].a;
-  pat1.y = cornerOrigin.y +
-    mBorderWidths[cornerWidth[aCorner]]  * gradientCoeff[aCorner].b;
-  pat2.x = cornerOrigin.x -
-    mBorderWidths[cornerHeight[aCorner]] * gradientCoeff[aCorner].a;
-  pat2.y = cornerOrigin.y -
-    mBorderWidths[cornerWidth[aCorner]]  * gradientCoeff[aCorner].b;
-
-  float gradientOffset =
-    0.25 / sqrt(pow(mBorderWidths[cornerHeight[aCorner]], 2) +
-                pow(mBorderWidths[cornerHeight[aCorner]], 2));
-
-  nsRefPtr<gfxPattern> pattern = new gfxPattern(pat1.x, pat1.y, pat2.x, pat2.y);
-  pattern->AddColorStop(0.5 - gradientOffset, gfxRGBA(aFirstColor));
-  pattern->AddColorStop(0.5 + gradientOffset, gfxRGBA(aSecondColor));
-
-  return pattern.forget();
-}
-
 TemporaryRef<GradientStops>
 nsCSSBorderRenderer::CreateCornerGradient(mozilla::css::Corner aCorner,
                                           const gfxRGBA &aFirstColor,

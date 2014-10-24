@@ -8,12 +8,13 @@
 
 #include "mozilla/Attributes.h"
 
-#include "gfxContext.h"
-#include "gfxQuartzSurface.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BorrowedContext.h"
-#include "nsAutoPtr.h"
+#include "mozilla/RefPtr.h"
 
 class gfxQuartzNativeDrawing {
+    typedef mozilla::gfx::DrawTarget DrawTarget;
+    typedef mozilla::gfx::Rect Rect;
 public:
 
     /* Create native Quartz drawing for a rectangle bounded by
@@ -33,16 +34,16 @@ public:
      * aNativeRect is the size of the surface (in Quartz/Cocoa points) that
      * will be created _if_ the gfxQuartzNativeDrawing decides to create a new
      * surface and CGContext for its drawing operations, which it then
-     * composites into the target gfxContext.
+     * composites into the target DrawTarget.
      *
      * (Note that aNativeRect will be ignored if the gfxQuartzNativeDrawing
-     * uses the target gfxContext directly.)
+     * uses the target DrawTarget directly.)
      *
      * The optional aBackingScale parameter is a scaling factor that will be
      * applied when creating and rendering into such a temporary surface.
      */
-    gfxQuartzNativeDrawing(gfxContext *ctx,
-                           const gfxRect& aNativeRect);
+    gfxQuartzNativeDrawing(DrawTarget& aDrawTarget,
+                           const Rect& aNativeRect);
 
     /* Returns a CGContextRef which may be used for native drawing.  This
      * CGContextRef is valid until EndNativeDrawing is called; if it is used
@@ -58,8 +59,8 @@ private:
     const gfxQuartzNativeDrawing& operator=(const gfxQuartzNativeDrawing&) MOZ_DELETE;
 
     // Final destination context
-    nsRefPtr<gfxContext> mContext;
-    mozilla::RefPtr<mozilla::gfx::DrawTarget> mDrawTarget;
+    mozilla::RefPtr<DrawTarget> mDrawTarget;
+    mozilla::RefPtr<DrawTarget> mTempDrawTarget;
     mozilla::gfx::BorrowedCGContext mBorrowedContext;
     mozilla::gfx::Rect mNativeRect;
 

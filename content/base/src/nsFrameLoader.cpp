@@ -171,7 +171,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   , mCurrentRemoteFrame(nullptr)
   , mRemoteBrowser(nullptr)
   , mChildID(0)
-  , mRenderMode(RENDER_MODE_DEFAULT)
   , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
   , mPendingFrameSent(false)
 {
@@ -1949,24 +1948,6 @@ nsFrameLoader::UpdateBaseWindowPositionAndSize(nsSubDocumentFrame *aIFrame)
     baseWindow->SetPositionAndSize(x, y, size.width, size.height, false);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetRenderMode(uint32_t* aRenderMode)
-{
-  *aRenderMode = mRenderMode;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::SetRenderMode(uint32_t aRenderMode)
-{
-  if (aRenderMode == mRenderMode) {
-    return NS_OK;
-  }
-
-  mRenderMode = aRenderMode;
   return NS_OK;
 }
 

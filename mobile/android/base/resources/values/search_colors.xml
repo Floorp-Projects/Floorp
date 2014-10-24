@@ -26,4 +26,7 @@
     <color name="facet_button_text_color_selected">#383E42</color>
 
     <color name="network_error_link">#0092DB</color>
+
+    <!-- Suggestion highlight color -->
+    <color name="suggestion_highlight">#FF999999</color>
 </resources>
