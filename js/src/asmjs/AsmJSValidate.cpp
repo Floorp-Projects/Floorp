@@ -367,9 +367,15 @@ static TokenKind
 PeekToken(AsmJSParser &parser)
 {
     TokenStream &ts = parser.tokenStream;
-    while (ts.peekToken(TokenStream::Operand) == TOK_SEMI)
+    TokenKind tk;
+    while (true) {
+        if (!ts.peekToken(&tk, TokenStream::Operand))
+            return TOK_ERROR;
+        if (tk != TOK_SEMI)
+            break;
         ts.consumeKnownToken(TOK_SEMI);
-    return ts.peekToken(TokenStream::Operand);
+    }
+    return tk;
 }
 
 static bool
