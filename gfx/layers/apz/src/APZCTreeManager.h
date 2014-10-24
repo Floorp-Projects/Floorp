@@ -245,7 +245,7 @@ public:
    * function simply delegates to that one, so that non-layers code
    * never needs to include AsyncPanZoomController.h
    */
-  static const LayerMargin CalculatePendingDisplayPort(
+  static const ScreenMargin CalculatePendingDisplayPort(
     const FrameMetrics& aFrameMetrics,
     const ScreenPoint& aVelocity,
     double aEstimatedPaintDuration);
