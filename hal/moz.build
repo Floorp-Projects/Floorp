@@ -189,8 +189,8 @@ if CONFIG['MOZ_GAMEPAD']:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     # So that we can call nsScreenManagerGonk::GetConfiguration().
     LOCAL_INCLUDES += [
+        '/widget',
         '/widget/gonk',
-        '/widget/xpwidgets'
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':

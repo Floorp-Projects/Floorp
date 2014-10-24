@@ -25,6 +25,7 @@ using namespace mozilla;
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
+// Array of nsStaticAtom for each of the pseudo-elements.
 static const nsStaticAtom CSSPseudoElements_info[] = {
 #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
   NS_STATIC_ATOM(name_##_pseudo_element_buffer, (nsIAtom**)&nsCSSPseudoElements::name_),
@@ -32,11 +33,9 @@ static const nsStaticAtom CSSPseudoElements_info[] = {
 #undef CSS_PSEUDO_ELEMENT
 };
 
-// Separate from the array above so that we can have an array of
-// nsStaticAtom (to pass to NS_RegisterStaticAtoms and
-// nsAtomListUtils::IsMember), but with corresponding indices (so the
-// i-th element of this array is the flags for the i-th pseudo-element
-// in the previous array).
+// Flags data for each of the pseudo-elements, which must be separate
+// from the previous array since there's no place for it in
+// nsStaticAtom.
 static const uint32_t CSSPseudoElements_flags[] = {
 #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
   flags_,

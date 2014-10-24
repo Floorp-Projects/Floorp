@@ -7,16 +7,20 @@
 
 interface nsIURI;
 interface nsIChannel;
+interface nsILoadInfo;
 
-[scriptable, uuid(1d5992c3-28b0-4ec1-9dbb-f5fde7f72199)]
+[scriptable, uuid(cdef9e4e-b731-450c-871a-8015a95fa54c)]
 interface nsIAboutModule : nsISupports 
 {
+
     /**
      * Constructs a new channel for the about protocol module. 
      *
      * @param aURI the uri of the new channel
+     * @param aLoadInfo the loadinfo of the new channel
      */
-    nsIChannel newChannel(in nsIURI aURI);
+    nsIChannel newChannel(in nsIURI aURI,
+                          in nsILoadInfo aLoadInfo);
 
     /**
      * A flag that indicates whether a URI is safe for untrusted
