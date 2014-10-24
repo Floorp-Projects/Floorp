@@ -140,8 +140,7 @@
         window.onmessage = null;
         // We have to make frame navigate away, otherwise it will call
         // MaybeStopControlling() when this document is unloaded. At that point
-        // the pref has been disabled, and so MaybeStopControlling() will just
-        // return since it is currently gated.
+        // the pref has been disabled, so the ServiceWorkerManager is not available.
         frame.setAttribute("src", new URL("about:blank").href);
         resolve();
       } else if (e.data.type == "check") {
