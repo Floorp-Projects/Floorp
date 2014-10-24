@@ -47,12 +47,6 @@ public:
 
     void SetTextRunRTL(bool aIsRTL);
 
-    nsBoundingMetrics GetBoundingMetrics(const char16_t *aString,
-                                         uint32_t aLength);
-
-    int32_t GetMaxChunkLength();
-    static int32_t FindSafeLength(const char16_t *aString, uint32_t aLength,
-                                  uint32_t aMaxChunkLength);
 private:
     // Private destructor, to discourage deletion outside of Release():
     ~nsRenderingContext()

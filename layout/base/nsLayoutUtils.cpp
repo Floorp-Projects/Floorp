@@ -11,6 +11,7 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "nsCharTraits.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIDOMHTMLDocument.h"
@@ -4630,6 +4631,38 @@ nsLayoutUtils::GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
   return aContext->DeviceToUser(putativeRect.TopLeft()).y * appUnitsPerDevUnit;
 }
 
+// Hard limit substring lengths to 8000 characters ... this lets us statically
+// size the cluster buffer array in FindSafeLength
+#define MAX_GFX_TEXT_BUF_SIZE 8000
+
+static int32_t FindSafeLength(const char16_t *aString, uint32_t aLength,
+                              uint32_t aMaxChunkLength)
+{
+  if (aLength <= aMaxChunkLength)
+    return aLength;
+
+  int32_t len = aMaxChunkLength;
+
+  // Ensure that we don't break inside a surrogate pair
+  while (len > 0 && NS_IS_LOW_SURROGATE(aString[len])) {
+    len--;
+  }
+  if (len == 0) {
+    // We don't want our caller to go into an infinite loop, so don't
+    // return zero. It's hard to imagine how we could actually get here
+    // unless there are languages that allow clusters of arbitrary size.
+    // If there are and someone feeds us a 500+ character cluster, too
+    // bad.
+    return aMaxChunkLength;
+  }
+  return len;
+}
+
+static int32_t GetMaxChunkLength(nsFontMetrics& aFontMetrics)
+{
+  return std::min(aFontMetrics.GetMaxStringLength(), MAX_GFX_TEXT_BUF_SIZE);
+}
+
 nscoord
 nsLayoutUtils::AppUnitWidthOfString(const nsString& aString,
                                     nsRenderingContext& aContext)
@@ -4642,15 +4675,41 @@ nsLayoutUtils::AppUnitWidthOfString(const char16_t *aString,
                                     uint32_t aLength,
                                     nsRenderingContext& aContext)
 {
-  uint32_t maxChunkLength = aContext.GetMaxChunkLength();
+  uint32_t maxChunkLength = GetMaxChunkLength(*aContext.FontMetrics());
   nscoord width = 0;
   while (aLength > 0) {
-    int32_t len = aContext.FindSafeLength(aString, aLength, maxChunkLength);
+    int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
     width += aContext.FontMetrics()->GetWidth(aString, len, &aContext);
     aLength -= len;
     aString += len;
   }
   return width;
+}
+
+nsBoundingMetrics
+nsLayoutUtils::AppUnitBoundsOfString(const char16_t* aString,
+                                     uint32_t aLength,
+                                     nsRenderingContext& aContext)
+{
+  uint32_t maxChunkLength = GetMaxChunkLength(*aContext.FontMetrics());
+  int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
+  // Assign directly in the first iteration. This ensures that
+  // negative ascent/descent can be returned and the left bearing
+  // is properly initialized.
+  nsBoundingMetrics totalMetrics =
+    aContext.FontMetrics()->GetBoundingMetrics(aString, len, &aContext);
+  aLength -= len;
+  aString += len;
+
+  while (aLength > 0) {
+    len = FindSafeLength(aString, aLength, maxChunkLength);
+    nsBoundingMetrics metrics =
+      aContext.FontMetrics()->GetBoundingMetrics(aString, len, &aContext);
+    totalMetrics += metrics;
+    aLength -= len;
+    aString += len;
+  }
+  return totalMetrics;
 }
 
 void
@@ -4689,7 +4748,7 @@ nsLayoutUtils::DrawUniDirString(const char16_t* aString,
 
   nsFontMetrics* fm = aContext.FontMetrics();
 
-  uint32_t maxChunkLength = aContext.GetMaxChunkLength();
+  uint32_t maxChunkLength = GetMaxChunkLength(*aContext.FontMetrics());
   if (aLength <= maxChunkLength) {
     fm->DrawString(aString, aLength, x, y, &aContext, &aContext);
     return;
@@ -4703,7 +4762,7 @@ nsLayoutUtils::DrawUniDirString(const char16_t* aString,
   }
 
   while (aLength > 0) {
-    int32_t len = nsRenderingContext::FindSafeLength(aString, aLength, maxChunkLength);
+    int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
     nscoord width = fm->GetWidth(aString, len, &aContext);
     if (isRTL) {
       x -= width;
