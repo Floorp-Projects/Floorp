@@ -90,15 +90,13 @@ nsRenderingContext::SetFont(nsFontMetrics *aFontMetrics)
 int32_t
 nsRenderingContext::GetMaxChunkLength()
 {
-    if (!mFontMetrics)
-        return 1;
     return std::min(mFontMetrics->GetMaxStringLength(), MAX_GFX_TEXT_BUF_SIZE);
 }
 
 nscoord
 nsRenderingContext::GetWidth(char aC)
 {
-    if (aC == ' ' && mFontMetrics) {
+    if (aC == ' ') {
         return mFontMetrics->SpaceWidth();
     }
 
