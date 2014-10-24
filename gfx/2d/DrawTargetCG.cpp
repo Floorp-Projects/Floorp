@@ -149,7 +149,13 @@ DrawTargetCG::DrawTargetCG()
 
 DrawTargetCG::~DrawTargetCG()
 {
-  MarkChanged();
+  if (mSnapshot) {
+    if (mSnapshot->refCount() > 1) {
+      // We only need to worry about snapshots that someone else knows about
+      mSnapshot->DrawTargetWillGoAway();
+    }
+    mSnapshot = nullptr;
+  }
 
   // Both of these are OK with nullptr arguments, so we do not
   // need to check (these could be nullptr if Init fails)
