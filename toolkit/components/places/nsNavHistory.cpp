@@ -3757,6 +3757,12 @@ nsNavHistory::clearEmbedVisits() {
   mEmbedVisits.Clear();
 }
 
+NS_IMETHODIMP
+nsNavHistory::ClearEmbedVisits() {
+  clearEmbedVisits();
+  return NS_OK;
+}
+
 // nsNavHistory::CheckIsRecentEvent
 //
 //    Sees if this URL happened "recently."

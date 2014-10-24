@@ -23,7 +23,7 @@ def main(file):
     appdata = dict(("%s:%s" % (s, o), config.get(s, o)) for s in config.sections() for o in config.options(s))
     appdata['flags'] = ' | '.join(flags) if flags else '0'
     appdata['App:profile'] = '"%s"' % appdata['App:profile'] if 'App:profile' in appdata else 'NULL'
-    expected = ('App:vendor', 'App:name', 'App:version', 'App:buildid',
+    expected = ('App:vendor', 'App:name', 'App:remotingname', 'App:version', 'App:buildid',
                 'App:id', 'Gecko:minversion', 'Gecko:maxversion')
     missing = [var for var in expected if var not in appdata]
     if missing:
@@ -40,6 +40,7 @@ def main(file):
                  NULL, // directory
                  "%(App:vendor)s",
                  "%(App:name)s",
+                 "%(App:remotingname)s",
                  "%(App:version)s",
                  "%(App:buildid)s",
                  "%(App:id)s",
