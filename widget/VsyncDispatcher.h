@@ -6,20 +6,36 @@
 #ifndef mozilla_widget_VsyncDispatcher_h
 #define mozilla_widget_VsyncDispatcher_h
 
+#include "base/message_loop.h"
+#include "mozilla/Mutex.h"
 #include "nsISupportsImpl.h"
+#include "nsTArray.h"
+#include "ThreadSafeRefcountingWithMainThreadDestruction.h"
+
+typedef int64_t nsecs_t; // nano-seconds
+
+class MessageLoop;
 
 namespace mozilla {
 class TimeStamp;
 
+namespace layers {
+class CompositorVsyncObserver;
+}
+
 class VsyncObserver
 {
+  // Must be destroyed on main thread since the compositor is as well
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(VsyncObserver)
+
 public:
   // The method called when a vsync occurs. Return true if some work was done.
   // Vsync notifications will occur on the hardware vsync thread
   virtual bool NotifyVsync(TimeStamp aVsyncTimestamp) = 0;
 
 protected:
-  virtual ~VsyncObserver() { }
+  VsyncObserver() {}
+  virtual ~VsyncObserver() {}
 };
 
 // VsyncDispatcher is used to dispatch vsync events to the registered observers.
@@ -29,6 +45,8 @@ class VsyncDispatcher
 
 public:
   static VsyncDispatcher* GetInstance();
+  // Called on the vsync thread when a hardware vsync occurs
+  void NotifyVsync(TimeStamp aVsyncTimestamp, nsecs_t aAndroidVsyncTime);
 
   // Compositor vsync observers must be added/removed on the compositor thread
   void AddCompositorVsyncObserver(VsyncObserver* aVsyncObserver);
@@ -37,6 +55,14 @@ public:
 private:
   VsyncDispatcher();
   virtual ~VsyncDispatcher();
+  void DispatchTouchEvents(bool aNotifiedCompositors, nsecs_t aAndroidVSyncTime);
+
+  // Called on the vsync thread. Returns true if observers were notified
+  bool NotifyVsyncObservers(TimeStamp aVsyncTimestamp, nsTArray<nsRefPtr<VsyncObserver>>& aObservers);
+
+  // Can have multiple compositors. On desktop, this is 1 compositor per window
+  Mutex mCompositorObserverLock;
+  nsTArray<nsRefPtr<VsyncObserver>> mCompositorObservers;
 };
 
 } // namespace mozilla
