@@ -10,7 +10,6 @@ Invocation {
 Live {
   5 blocks in heap block record 1 of 3
   16,400 bytes (12,016 requested / 4,384 slop)
-  Individual block sizes: 4,096 x 4; 16
   33.35% of the heap (33.35% cumulative)
   Allocated at {
     #01: B (B.cpp:99)
@@ -20,7 +19,6 @@ Live {
 Live {
   5 blocks in heap block record 2 of 3
   16,392 bytes (16,392 requested / 0 slop)
-  Individual block sizes: 4,096 x 4; 8
   33.33% of the heap (66.68% cumulative)
   Allocated at {
     #01: A (A.cpp:99)
@@ -30,7 +28,6 @@ Live {
 Live {
   4 blocks in heap block record 3 of 3
   16,384 bytes (8,196 requested / 8,188 slop)
-  Individual block sizes: 4,096 x 4
   33.32% of the heap (100.00% cumulative)
   Allocated at {
     #01: C (C.cpp:99)
