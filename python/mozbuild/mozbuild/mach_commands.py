@@ -828,9 +828,11 @@ class RunProgram(MachCommandBase):
         help='The maximum depth of stack traces. The default and maximum is 24.')
     @CommandArgument('--show-dump-stats', action='store_true', group='DMD',
         help='Show stats when doing dumps.')
+    @CommandArgument('--mode', choices=['normal', 'test'], group='DMD',
+        help='Mode of operation. The default is normal.')
     def run(self, params, remote, background, noprofile, debug, debugger,
         debugparams, slowscript, dmd, sample_below, max_frames,
-        show_dump_stats):
+        show_dump_stats, mode):
 
         try:
             binpath = self.get_binary_path('app')
@@ -900,6 +902,8 @@ class RunProgram(MachCommandBase):
                 dmd_params.append('--max-frames=' + max_frames)
             if show_dump_stats:
                 dmd_params.append('--show-dump-stats=yes')
+            if mode:
+                dmd_params.append('--mode=' + mode)
 
             if dmd_params:
                 dmd_env_var = " ".join(dmd_params)

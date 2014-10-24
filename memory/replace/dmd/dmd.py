@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/python
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -344,17 +344,15 @@ def main():
         fmt = '    #{:02d}{:}'
 
         if args.filter_stacks_for_testing:
-            # When running SmokeDMD.cpp, every stack trace should contain at
-            # least one frame that contains 'DMD.cpp', from either |DMD.cpp| or
-            # |SmokeDMD.cpp|. (Or 'dmd.cpp' on Windows.) If we see such a
-            # frame, we replace the entire stack trace with a single,
-            # predictable frame. There is too much variation in the stack
-            # traces across different machines and platforms to do more precise
-            # matching, but this level of matching will result in failure if
-            # stack fixing fails completely.
+            # If any frame has "DMD.cpp" or "replace_malloc.c" in its
+            # description -- as should be the case for every stack trace when
+            # running DMD in test mode -- we replace the entire trace with a
+            # single, predictable frame. There is too much variation in the
+            # stack traces across different machines and platforms to do more
+            # specific matching.
             for frameKey in frameKeys:
                 frameDesc = frameTable[frameKey]
-                if 'DMD.cpp' in frameDesc or 'dmd.cpp' in frameDesc:
+                if 'DMD.cpp' in frameDesc or 'replace_malloc.c' in frameDesc:
                     out(fmt.format(1, ': ... DMD.cpp ...'))
                     return
 

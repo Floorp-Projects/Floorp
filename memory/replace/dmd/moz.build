@@ -33,5 +33,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'dbghelp',
     ]
 
-TEST_DIRS += ['test']
+XPCSHELL_TESTS_MANIFESTS += [
+    'test/xpcshell.ini',
+]
 
