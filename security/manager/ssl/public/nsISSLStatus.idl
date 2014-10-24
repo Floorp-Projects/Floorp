@@ -8,20 +8,26 @@
 
 interface nsIX509Cert;
 
-[scriptable, uuid(3f1fcd83-c5a9-4cd1-a250-7676ca7c7e34)]
+[scriptable, uuid(fa9ba95b-ca3b-498a-b889-7c79cf28fee8)]
 interface nsISSLStatus : nsISupports {
   readonly attribute nsIX509Cert serverCert;
 
-  readonly attribute string cipherName;
+  readonly attribute ACString cipherName;
   readonly attribute unsigned long keyLength;
   readonly attribute unsigned long secretKeyLength;
+
+  const short SSL_VERSION_3   = 0;
+  const short TLS_VERSION_1   = 1;
+  const short TLS_VERSION_1_1 = 2;
+  const short TLS_VERSION_1_2 = 3;
+  readonly attribute unsigned short protocolVersion;
 
   readonly attribute boolean isDomainMismatch;
   readonly attribute boolean isNotValidAtThisTime;
 
-  /* Note: To distinguish between 
+  /* Note: To distinguish between
    *         "unstrusted because missing or untrusted issuer"
-   *       and 
+   *       and
    *         "untrusted because self signed"
    *       query nsIX509Cert::isSelfSigned
    */
