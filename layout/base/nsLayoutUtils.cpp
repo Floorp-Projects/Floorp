@@ -11,6 +11,8 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "nsCharTraits.h"
+#include "nsFontMetrics.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIDOMHTMLDocument.h"
@@ -3185,6 +3187,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
  */
 bool
 nsLayoutUtils::BinarySearchForPosition(nsRenderingContext* aRendContext,
+                                       nsFontMetrics& aFontMetrics,
                         const char16_t* aText,
                         int32_t    aBaseWidth,
                         int32_t    aBaseInx,
@@ -3197,7 +3200,9 @@ nsLayoutUtils::BinarySearchForPosition(nsRenderingContext* aRendContext,
   int32_t range = aEndInx - aStartInx;
   if ((range == 1) || (range == 2 && NS_IS_HIGH_SURROGATE(aText[aStartInx]))) {
     aIndex   = aStartInx + aBaseInx;
-    aTextWidth = aRendContext->GetWidth(aText, aIndex);
+    aTextWidth = nsLayoutUtils::AppUnitWidthOfString(aText, aIndex,
+                                                     aFontMetrics,
+                                                     *aRendContext);
     return true;
   }
 
@@ -3207,7 +3212,9 @@ nsLayoutUtils::BinarySearchForPosition(nsRenderingContext* aRendContext,
   if (NS_IS_HIGH_SURROGATE(aText[inx-1]))
     inx++;
 
-  int32_t textWidth = aRendContext->GetWidth(aText, inx);
+  int32_t textWidth = nsLayoutUtils::AppUnitWidthOfString(aText, inx,
+                                                          aFontMetrics,
+                                                          *aRendContext);
 
   int32_t fullWidth = aBaseWidth + textWidth;
   if (fullWidth == aCursorPos) {
@@ -3216,12 +3223,16 @@ nsLayoutUtils::BinarySearchForPosition(nsRenderingContext* aRendContext,
     return true;
   } else if (aCursorPos < fullWidth) {
     aTextWidth = aBaseWidth;
-    if (BinarySearchForPosition(aRendContext, aText, aBaseWidth, aBaseInx, aStartInx, inx, aCursorPos, aIndex, aTextWidth)) {
+    if (BinarySearchForPosition(aRendContext, aFontMetrics, aText, aBaseWidth,
+                                aBaseInx, aStartInx, inx, aCursorPos, aIndex,
+                                aTextWidth)) {
       return true;
     }
   } else {
     aTextWidth = fullWidth;
-    if (BinarySearchForPosition(aRendContext, aText, aBaseWidth, aBaseInx, inx, aEndInx, aCursorPos, aIndex, aTextWidth)) {
+    if (BinarySearchForPosition(aRendContext, aFontMetrics, aText, aBaseWidth,
+                                aBaseInx, inx, aEndInx, aCursorPos, aIndex,
+                                aTextWidth)) {
       return true;
     }
   }
@@ -4628,8 +4639,94 @@ nsLayoutUtils::GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
   return aContext->DeviceToUser(putativeRect.TopLeft()).y * appUnitsPerDevUnit;
 }
 
+// Hard limit substring lengths to 8000 characters ... this lets us statically
+// size the cluster buffer array in FindSafeLength
+#define MAX_GFX_TEXT_BUF_SIZE 8000
+
+static int32_t FindSafeLength(const char16_t *aString, uint32_t aLength,
+                              uint32_t aMaxChunkLength)
+{
+  if (aLength <= aMaxChunkLength)
+    return aLength;
+
+  int32_t len = aMaxChunkLength;
+
+  // Ensure that we don't break inside a surrogate pair
+  while (len > 0 && NS_IS_LOW_SURROGATE(aString[len])) {
+    len--;
+  }
+  if (len == 0) {
+    // We don't want our caller to go into an infinite loop, so don't
+    // return zero. It's hard to imagine how we could actually get here
+    // unless there are languages that allow clusters of arbitrary size.
+    // If there are and someone feeds us a 500+ character cluster, too
+    // bad.
+    return aMaxChunkLength;
+  }
+  return len;
+}
+
+static int32_t GetMaxChunkLength(nsFontMetrics& aFontMetrics)
+{
+  return std::min(aFontMetrics.GetMaxStringLength(), MAX_GFX_TEXT_BUF_SIZE);
+}
+
+nscoord
+nsLayoutUtils::AppUnitWidthOfString(const nsString& aString,
+                                    nsFontMetrics& aFontMetrics,
+                                    nsRenderingContext& aContext)
+{
+  return AppUnitWidthOfString(aString.get(), aString.Length(),
+                              aFontMetrics, aContext);
+}
+
+nscoord
+nsLayoutUtils::AppUnitWidthOfString(const char16_t *aString,
+                                    uint32_t aLength,
+                                    nsFontMetrics& aFontMetrics,
+                                    nsRenderingContext& aContext)
+{
+  uint32_t maxChunkLength = GetMaxChunkLength(aFontMetrics);
+  nscoord width = 0;
+  while (aLength > 0) {
+    int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
+    width += aFontMetrics.GetWidth(aString, len, &aContext);
+    aLength -= len;
+    aString += len;
+  }
+  return width;
+}
+
+nsBoundingMetrics
+nsLayoutUtils::AppUnitBoundsOfString(const char16_t* aString,
+                                     uint32_t aLength,
+                                     nsFontMetrics& aFontMetrics,
+                                     nsRenderingContext& aContext)
+{
+  uint32_t maxChunkLength = GetMaxChunkLength(aFontMetrics);
+  int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
+  // Assign directly in the first iteration. This ensures that
+  // negative ascent/descent can be returned and the left bearing
+  // is properly initialized.
+  nsBoundingMetrics totalMetrics =
+    aFontMetrics.GetBoundingMetrics(aString, len, &aContext);
+  aLength -= len;
+  aString += len;
+
+  while (aLength > 0) {
+    len = FindSafeLength(aString, aLength, maxChunkLength);
+    nsBoundingMetrics metrics =
+      aFontMetrics.GetBoundingMetrics(aString, len, &aContext);
+    totalMetrics += metrics;
+    aLength -= len;
+    aString += len;
+  }
+  return totalMetrics;
+}
+
 void
 nsLayoutUtils::DrawString(const nsIFrame*       aFrame,
+                          nsFontMetrics&        aFontMetrics,
                           nsRenderingContext*   aContext,
                           const char16_t*      aString,
                           int32_t               aLength,
@@ -4644,12 +4741,13 @@ nsLayoutUtils::DrawString(const nsIFrame*       aFrame,
                                           aStyleContext : aFrame->StyleContext());
     rv = nsBidiPresUtils::RenderText(aString, aLength, level,
                                      presContext, *aContext, *aContext,
+                                     aFontMetrics,
                                      aPoint.x, aPoint.y);
   }
   if (NS_FAILED(rv))
   {
-    aContext->SetTextRunRTL(false);
-    DrawUniDirString(aString, aLength, aPoint, *aContext);
+    aFontMetrics.SetTextRunRTL(false);
+    DrawUniDirString(aString, aLength, aPoint, aFontMetrics, *aContext);
   }
 }
 
@@ -4657,33 +4755,33 @@ void
 nsLayoutUtils::DrawUniDirString(const char16_t* aString,
                                 uint32_t aLength,
                                 nsPoint aPoint,
+                                nsFontMetrics& aFontMetrics,
                                 nsRenderingContext& aContext)
 {
   nscoord x = aPoint.x;
   nscoord y = aPoint.y;
 
-  nsFontMetrics* fm = aContext.FontMetrics();
-
-  uint32_t maxChunkLength = aContext.GetMaxChunkLength();
+  uint32_t maxChunkLength = GetMaxChunkLength(aFontMetrics);
   if (aLength <= maxChunkLength) {
-    fm->DrawString(aString, aLength, x, y, &aContext, &aContext);
+    aFontMetrics.DrawString(aString, aLength, x, y, &aContext, &aContext);
     return;
   }
 
-  bool isRTL = fm->GetTextRunRTL();
+  bool isRTL = aFontMetrics.GetTextRunRTL();
 
   // If we're drawing right to left, we must start at the end.
   if (isRTL) {
-    x += aContext.GetWidth(aString, aLength);
+    x += nsLayoutUtils::AppUnitWidthOfString(aString, aLength, aFontMetrics,
+                                             aContext);
   }
 
   while (aLength > 0) {
-    int32_t len = nsRenderingContext::FindSafeLength(aString, aLength, maxChunkLength);
-    nscoord width = fm->GetWidth(aString, len, &aContext);
+    int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
+    nscoord width = aFontMetrics.GetWidth(aString, len, &aContext);
     if (isRTL) {
       x -= width;
     }
-    fm->DrawString(aString, len, x, y, &aContext, &aContext);
+    aFontMetrics.DrawString(aString, len, x, y, &aContext, &aContext);
     if (!isRTL) {
       x += width;
     }
@@ -4695,6 +4793,7 @@ nsLayoutUtils::DrawUniDirString(const char16_t* aString,
 nscoord
 nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
                               nsRenderingContext* aContext,
+                              nsFontMetrics&      aFontMetrics,
                               const char16_t*     aString,
                               int32_t              aLength)
 {
@@ -4703,10 +4802,12 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
     nsBidiLevel level =
       nsBidiPresUtils::BidiLevelFromStyle(aFrame->StyleContext());
     return nsBidiPresUtils::MeasureTextWidth(aString, aLength,
-                                             level, presContext, *aContext);
+                                             level, presContext, *aContext,
+                                             aFontMetrics);
   }
-  aContext->SetTextRunRTL(false);
-  return aContext->GetWidth(aString, aLength);
+  aFontMetrics.SetTextRunRTL(false);
+  return nsLayoutUtils::AppUnitWidthOfString(aString, aLength, aFontMetrics,
+                                             *aContext);
 }
 
 /* static */ void
@@ -7175,7 +7276,6 @@ nsLayoutUtils::SetBSizeFromFontMetrics(const nsIFrame* aFrame,
   nsRefPtr<nsFontMetrics> fm;
   float inflation = nsLayoutUtils::FontSizeInflationFor(aFrame);
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm), inflation);
-  aReflowState.rendContext->SetFont(fm);
 
   if (fm) {
     // Compute final height of the frame.
