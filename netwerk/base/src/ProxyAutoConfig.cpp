@@ -502,11 +502,8 @@ class JSRuntimeWrapper
  public:
   static JSRuntimeWrapper *Create()
   {
-    JSRuntime *runtime = JS_NewRuntime(sRuntimeHeapSize);
-    if (NS_WARN_IF(!runtime))
-      return nullptr;
+    JSRuntimeWrapper *entry = new JSRuntimeWrapper();
 
-    JSRuntimeWrapper *entry = new JSRuntimeWrapper(runtime);
     if (NS_FAILED(entry->Init())) {
       delete entry;
       return nullptr;
@@ -552,19 +549,22 @@ private:
 
   JSRuntime *mRuntime;
   JSContext *mContext;
-  JS::PersistentRooted<JSObject*> mGlobal;
+  JSObject  *mGlobal;
   bool      mOK;
 
   static const JSClass sGlobalClass;
 
-  JSRuntimeWrapper(JSRuntime* rt)
-     : mRuntime(rt), mContext(nullptr), mGlobal(rt, nullptr), mOK(false)
+  JSRuntimeWrapper()
+    : mRuntime(nullptr), mContext(nullptr), mGlobal(nullptr), mOK(false)
   {
       MOZ_COUNT_CTOR(JSRuntimeWrapper);
   }
 
   nsresult Init()
   {
+    mRuntime = JS_NewRuntime(sRuntimeHeapSize);
+    NS_ENSURE_TRUE(mRuntime, NS_ERROR_OUT_OF_MEMORY);
+
     /*
      * Not setting this will cause JS_CHECK_RECURSION to report false
      * positives
