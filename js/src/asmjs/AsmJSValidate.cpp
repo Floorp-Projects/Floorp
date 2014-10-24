@@ -6864,15 +6864,16 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
 {
     TokenStream &tokenStream = m.tokenStream();
 
-    DebugOnly<TokenKind> tk = tokenStream.getToken();
-    MOZ_ASSERT(tk == TOK_FUNCTION);
+    tokenStream.consumeKnownToken(TOK_FUNCTION);
 
     RootedPropertyName name(m.cx());
 
-    TokenKind tt = tokenStream.getToken();
-    if (tt == TOK_NAME) {
+    TokenKind tk;
+    if (!tokenStream.getToken(&tk))
+        return false;
+    if (tk == TOK_NAME) {
         name = tokenStream.currentName();
-    } else if (tt == TOK_YIELD) {
+    } else if (tk == TOK_YIELD) {
         if (!m.parser().checkYieldNameValidity())
             return false;
         name = m.cx()->names().yield;
