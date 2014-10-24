@@ -33,7 +33,7 @@
 // http://dev.w3.org/csswg/selectors4/#pseudo-elements.
 #define CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE  (1<<3)
 // Is content prevented from parsing selectors containing this pseudo-element?
-#define CSS_PSEUDO_ELEMENT_IS_CHROME_ONLY              (1<<4)
+#define CSS_PSEUDO_ELEMENT_UA_SHEET_ONLY               (1<<4)
 
 // Empty class derived from nsIAtom so that function signatures can
 // require an atom from this atom list.
@@ -85,9 +85,9 @@ public:
 
   static bool PseudoElementSupportsUserActionState(const Type aType);
 
-  static bool PseudoElementIsChromeOnly(const Type aType) {
+  static bool PseudoElementIsUASheetOnly(const Type aType) {
     MOZ_ASSERT(aType < ePseudo_PseudoElementCount);
-    return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_IS_CHROME_ONLY);
+    return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_UA_SHEET_ONLY);
   }
 
 private:

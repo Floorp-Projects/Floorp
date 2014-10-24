@@ -279,7 +279,9 @@ nsResProtocolHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsResProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
+nsResProtocolHandler::NewChannel2(nsIURI* uri,
+                                  nsILoadInfo* aLoadInfo,
+                                  nsIChannel** result)
 {
     NS_ENSURE_ARG_POINTER(uri);
     nsresult rv;
@@ -295,6 +297,12 @@ nsResProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     (*result)->GetLoadFlags(&loadFlags);
     (*result)->SetLoadFlags(loadFlags & ~nsIChannel::LOAD_REPLACE);
     return (*result)->SetOriginalURI(uri);
+}
+
+NS_IMETHODIMP
+nsResProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
+{
+    return NewChannel2(uri, nullptr, result);
 }
 
 NS_IMETHODIMP 

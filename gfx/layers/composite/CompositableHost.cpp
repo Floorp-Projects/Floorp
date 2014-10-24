@@ -24,14 +24,6 @@ namespace layers {
 
 class Compositor;
 
-CompositableBackendSpecificData::CompositableBackendSpecificData()
-  : mAllowSharingTextureHost(false)
-{
-  static uint64_t sNextID = 1;
-  ++sNextID;
-  mId = sNextID;
-}
-
 /**
  * IPDL actor used by CompositableHost to match with its corresponding
  * CompositableClient on the content side.
@@ -87,9 +79,6 @@ CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
 CompositableHost::~CompositableHost()
 {
   MOZ_COUNT_DTOR(CompositableHost);
-  if (mBackendData) {
-    mBackendData->ClearData();
-  }
 }
 
 PCompositableParent*
@@ -121,7 +110,6 @@ CompositableHost::UseTextureHost(TextureHost* aTexture)
     return;
   }
   aTexture->SetCompositor(GetCompositor());
-  aTexture->SetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
 }
 
 void
@@ -130,17 +118,12 @@ CompositableHost::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
 {
   MOZ_ASSERT(aTextureOnBlack && aTextureOnWhite);
   aTextureOnBlack->SetCompositor(GetCompositor());
-  aTextureOnBlack->SetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
   aTextureOnWhite->SetCompositor(GetCompositor());
-  aTextureOnWhite->SetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
 }
 
 void
 CompositableHost::RemoveTextureHost(TextureHost* aTexture)
-{
-  // Clear strong refrence to CompositableBackendSpecificData
-  aTexture->UnsetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
-}
+{}
 
 void
 CompositableHost::SetCompositor(Compositor* aCompositor)
@@ -153,7 +136,7 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
                                 const gfx::Matrix4x4& aTransform,
                                 bool aIs3D)
 {
-  RefPtr<TextureSource> source;
+  CompositableTextureSourceRef source;
   RefPtr<TextureHost> host = GetAsTextureHost();
 
   if (!host) {
@@ -166,14 +149,12 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
     return false;
   }
 
-  source = host->GetTextureSources();
-  MOZ_ASSERT(source);
-
-  if (!source) {
+  if (!host->BindTextureSource(source)) {
     NS_WARNING("The TextureHost was successfully locked but can't provide a TextureSource");
     host->Unlock();
     return false;
   }
+  MOZ_ASSERT(source);
 
   RefPtr<EffectMask> effect = new EffectMask(source,
                                              source->GetSize(),
@@ -191,9 +172,6 @@ CompositableHost::RemoveMaskEffect()
     host->Unlock();
   }
 }
-
-// implemented in TextureHostOGL.cpp
-TemporaryRef<CompositableBackendSpecificData> CreateCompositableBackendSpecificDataOGL();
 
 /* static */ TemporaryRef<CompositableHost>
 CompositableHost::Create(const TextureInfo& aTextureInfo)
@@ -226,12 +204,6 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
     break;
   default:
     NS_ERROR("Unknown CompositableType");
-  }
-  // We know that Tiled buffers don't use the compositable backend-specific
-  // data, so don't bother creating it.
-  if (result && aTextureInfo.mCompositableType != CompositableType::BUFFER_TILED) {
-    RefPtr<CompositableBackendSpecificData> data = CreateCompositableBackendSpecificDataOGL();
-    result->SetCompositableBackendSpecificData(data);
   }
   return result;
 }

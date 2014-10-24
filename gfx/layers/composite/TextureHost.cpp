@@ -144,6 +144,13 @@ TextureHost::GetIPDLActor()
   return mActor;
 }
 
+bool
+TextureHost::BindTextureSource(CompositableTextureSourceRef& texture)
+{
+  texture = GetTextureSources();
+  return !!texture;
+}
+
 FenceHandle
 TextureHost::GetAndResetReleaseFenceHandle()
 {
@@ -277,18 +284,6 @@ TextureHost::CompositorRecycle()
   static_cast<TextureParent*>(mActor)->CompositorRecycle();
 }
 
-void
-TextureHost::SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData)
-{
-  mCompositableBackendData = aBackendData;
-}
-
-void
-TextureHost::UnsetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData)
-{
-  mCompositableBackendData = nullptr;
-}
-
 TextureHost::TextureHost(TextureFlags aFlags)
     : mActor(nullptr)
     , mFlags(aFlags)
@@ -322,9 +317,11 @@ TextureHost::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 }
 
 TextureSource::TextureSource()
+: mCompositableCount(0)
 {
     MOZ_COUNT_CTOR(TextureSource);
 }
+
 TextureSource::~TextureSource()
 {
     MOZ_COUNT_DTOR(TextureSource);
@@ -844,8 +841,9 @@ SharedSurfaceToTexSource(gl::SharedSurface* abstractSurf, Compositor* compositor
 
       GLenum target = surf->ConsTextureTarget();
       GLuint tex = surf->ConsTexture(gl);
-      texSource = new GLTextureSource(compositorOGL, tex, format, target,
-                                      surf->mSize);
+      texSource = new GLTextureSource(compositorOGL, tex, target,
+                                      surf->mSize, format,
+                                      true/*externally owned*/);
       break;
     }
     case gl::SharedSurfaceType::EGLImageShare: {
@@ -860,8 +858,9 @@ SharedSurfaceToTexSource(gl::SharedSurface* abstractSurf, Compositor* compositor
       GLuint tex = 0;
       surf->AcquireConsumerTexture(gl, &tex, &target);
 
-      texSource = new GLTextureSource(compositorOGL, tex, format, target,
-                                      surf->mSize);
+      texSource = new GLTextureSource(compositorOGL, tex, target,
+                                      surf->mSize, format,
+                                      true/*externally owned*/);
       break;
     }
 #ifdef XP_MACOSX

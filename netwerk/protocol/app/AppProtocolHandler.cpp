@@ -375,10 +375,10 @@ AppProtocolHandler::NewURI(const nsACString &aSpec,
   return NS_OK;
 }
 
-// We map app://ABCDEF/path/to/file.ext to
-// jar:file:///path/to/profile/webapps/ABCDEF/application.zip!/path/to/file.ext
 NS_IMETHODIMP
-AppProtocolHandler::NewChannel(nsIURI* aUri, nsIChannel* *aResult)
+AppProtocolHandler::NewChannel2(nsIURI* aUri,
+                                nsILoadInfo* aLoadInfo,
+                                nsIChannel** aResult)
 {
   NS_ENSURE_ARG_POINTER(aUri);
   nsRefPtr<nsJARChannel> channel = new nsJARChannel();
@@ -464,6 +464,14 @@ AppProtocolHandler::NewChannel(nsIURI* aUri, nsIChannel* *aResult)
 
   channel.forget(aResult);
   return NS_OK;
+}
+
+// We map app://ABCDEF/path/to/file.ext to
+// jar:file:///path/to/profile/webapps/ABCDEF/application.zip!/path/to/file.ext
+NS_IMETHODIMP
+AppProtocolHandler::NewChannel(nsIURI* aUri, nsIChannel* *aResult)
+{
+  return NewChannel2(aUri, nullptr, aResult);
 }
 
 NS_IMETHODIMP

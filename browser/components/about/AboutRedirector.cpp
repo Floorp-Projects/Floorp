@@ -137,7 +137,9 @@ GetAboutModuleName(nsIURI *aURI)
 }
 
 NS_IMETHODIMP
-AboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
+AboutRedirector::NewChannel(nsIURI* aURI,
+                            nsILoadInfo* aLoadInfo,
+                            nsIChannel** result)
 {
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ASSERTION(result, "must not be null");

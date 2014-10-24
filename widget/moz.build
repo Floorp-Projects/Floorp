@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['shared', 'xpwidgets']
-
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
 if toolkit in ('cocoa', 'qt', 'android', 'gonk'):
@@ -94,6 +92,10 @@ if CONFIG['MOZ_METRO']:
 XPIDL_MODULE = 'widget'
 
 EXPORTS += [
+    'ContentHelper.h',
+    'GfxDriverInfo.h',
+    'GfxInfoBase.h',
+    'GfxInfoCollector.h',
     'InputData.h',
     'nsIDeviceContextSpec.h',
     'nsIPluginWidget.h',
@@ -116,7 +118,47 @@ EXPORTS.mozilla += [
     'TextEvents.h',
     'TextRange.h',
     'TouchEvents.h',
+    'VsyncDispatcher.h',
     'WidgetUtils.h',
+]
+
+UNIFIED_SOURCES += [
+    'ContentHelper.cpp',
+    'GfxDriverInfo.cpp',
+    'GfxInfoBase.cpp',
+    'GfxInfoCollector.cpp',
+    'GfxInfoWebGL.cpp',
+    'InputData.cpp',
+    'nsBaseAppShell.cpp',
+    'nsBaseDragService.cpp',
+    'nsBaseScreen.cpp',
+    'nsClipboardHelper.cpp',
+    'nsClipboardProxy.cpp',
+    'nsColorPickerProxy.cpp',
+    'nsContentProcessWidgetFactory.cpp',
+    'nsFilePickerProxy.cpp',
+    'nsHTMLFormatConverter.cpp',
+    'nsIdleService.cpp',
+    'nsIWidgetListener.cpp',
+    'nsPrimitiveHelpers.cpp',
+    'nsPrintOptionsImpl.cpp',
+    'nsPrintSession.cpp',
+    'nsPrintSettingsImpl.cpp',
+    'nsScreenManagerProxy.cpp',
+    'nsShmImage.cpp',
+    'nsTransferable.cpp',
+    'nsXPLookAndFeel.cpp',
+    'PuppetWidget.cpp',
+    'ScreenProxy.cpp',
+    'SharedWidgetUtils.cpp',
+    'VsyncDispatcher.cpp',
+    'WidgetEventImpl.cpp',
+    'WidgetUtils.cpp',
+]
+
+# nsBaseWidget.cpp needs to be built separately because of name clashes in the OS X headers
+SOURCES += [
+    'nsBaseWidget.cpp',
 ]
 
 if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
@@ -126,3 +168,57 @@ if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
 
 EXPORTS.ipc = ['nsGUIEventIPC.h']
 
+if CONFIG['MOZ_X11']:
+    DIRS += ['x11']
+    UNIFIED_SOURCES += [
+        'GfxInfoX11.cpp'
+    ]
+
+if toolkit in ('cocoa', 'windows'):
+    UNIFIED_SOURCES += [
+        'nsBaseClipboard.cpp',
+    ]
+
+if toolkit in ('qt', 'gtk2', 'gtk3', 'cocoa', 'windows',
+                                    'android', 'gonk'):
+    UNIFIED_SOURCES += [
+        'nsBaseFilePicker.cpp',
+    ]
+
+if toolkit in ('qt', 'gtk2', 'gtk3', 'windows', 'cocoa'):
+    UNIFIED_SOURCES += [
+        'nsNativeTheme.cpp',
+    ]
+
+if not CONFIG['MOZ_B2G']:
+    DEFINES['MOZ_CROSS_PROCESS_IME'] = True
+
+FAIL_ON_WARNINGS = True
+
+MSVC_ENABLE_PGO = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/layout/base',
+    '/layout/forms',
+    '/layout/generic',
+    '/layout/xul',
+    '/view',
+    '/widget',
+]
+
+widget_dir = toolkit
+if widget_dir in ('gtk3', 'gtk2'):
+    # gtk3 shares includes with gtk2
+    widget_dir = 'gtk'
+
+LOCAL_INCLUDES += [
+    '/widget/%s' % widget_dir,
+]
+FINAL_LIBRARY = 'xul'
+
+if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
+    DEFINES['MOZ_ENABLE_D3D10_LAYER'] = True
+
+CXXFLAGS += CONFIG['TK_CFLAGS']
