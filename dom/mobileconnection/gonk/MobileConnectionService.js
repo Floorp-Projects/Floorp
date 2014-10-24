@@ -379,7 +379,7 @@ MobileConnectionProvider.prototype = {
   data: null,
   iccId: null,
   networkSelectionMode: Ci.nsIMobileConnection.NETWORK_SELECTION_MODE_UNKNOWN,
-  radioState: null,
+  radioState: Ci.nsIMobileConnection.MOBILE_RADIO_STATE_UNKNOWN,
   lastKnownNetwork: null,
   lastKnownHomeNetwork: null,
   supportedNetworkTypes: null,
@@ -743,7 +743,7 @@ MobileConnectionProvider.prototype = {
   },
 
   setPreferredNetworkType: function(aType, aCallback) {
-    if (this.radioState !== RIL.GECKO_RADIOSTATE_ENABLED) {
+    if (this.radioState !== Ci.nsIMobileConnection.MOBILE_RADIO_STATE_ENABLED) {
       this._dispatchNotifyError(aCallback, RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
       return;
     }
@@ -762,7 +762,7 @@ MobileConnectionProvider.prototype = {
   },
 
   getPreferredNetworkType: function(aCallback) {
-    if (this.radioState !== RIL.GECKO_RADIOSTATE_ENABLED) {
+    if (this.radioState !== Ci.nsIMobileConnection.MOBILE_RADIO_STATE_ENABLED) {
       this._dispatchNotifyError(aCallback, RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
       return;
     }
@@ -984,7 +984,7 @@ MobileConnectionProvider.prototype = {
       return;
     }
 
-    if (this.radioState !== RIL.GECKO_RADIOSTATE_ENABLED) {
+    if (this.radioState !== Ci.nsIMobileConnection.MOBILE_RADIO_STATE_ENABLED) {
       this._dispatchNotifyError(aCallback, RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
       return;
     }
@@ -1003,7 +1003,7 @@ MobileConnectionProvider.prototype = {
   },
 
   getCallingLineIdRestriction: function(aCallback) {
-    if (this.radioState !== RIL.GECKO_RADIOSTATE_ENABLED) {
+    if (this.radioState !== Ci.nsIMobileConnection.MOBILE_RADIO_STATE_ENABLED) {
       this._dispatchNotifyError(aCallback, RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
       return;
     }
