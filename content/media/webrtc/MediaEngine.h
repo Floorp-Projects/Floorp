@@ -230,6 +230,10 @@ public:
   /* This call reserves but does not start the device. */
   virtual nsresult Allocate(const VideoTrackConstraintsN &aConstraints,
                             const MediaEnginePrefs &aPrefs) = 0;
+
+  virtual bool SatisfiesConstraintSets(
+      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets) = 0;
+
 protected:
   explicit MediaEngineVideoSource(MediaEngineState aState)
     : MediaEngineSource(aState) {}

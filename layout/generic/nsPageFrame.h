@@ -9,6 +9,7 @@
 #include "nsContainerFrame.h"
 #include "nsLeafFrame.h"
 
+class nsFontMetrics;
 class nsSharedPageData;
 
 // Page frame class used by the simple page sequence frame
@@ -65,12 +66,14 @@ protected:
     eFooter
   } nsHeaderFooterEnum;
 
-  nscoord GetXPosition(nsRenderingContext& aRenderingContext, 
+  nscoord GetXPosition(nsRenderingContext& aRenderingContext,
+                       nsFontMetrics&       aFontMetrics,
                        const nsRect&        aRect, 
                        int32_t              aJust,
                        const nsString&      aStr);
 
   void DrawHeaderFooter(nsRenderingContext& aRenderingContext,
+                        nsFontMetrics&       aFontMetrics,
                         nsHeaderFooterEnum   aHeaderFooter,
                         int32_t              aJust,
                         const nsString&      sStr,
@@ -80,6 +83,7 @@ protected:
                         nscoord              aWidth);
 
   void DrawHeaderFooter(nsRenderingContext& aRenderingContext,
+                        nsFontMetrics&       aFontMetrics,
                         nsHeaderFooterEnum   aHeaderFooter,
                         const nsString&      aStrLeft,
                         const nsString&      aStrRight,

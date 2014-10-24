@@ -27,8 +27,9 @@ class CppEclipseBackend(CommonBackend):
         CommonBackend._init(self)
 
         self._paths_to_defines = {}
+        self._project_name = 'Gecko'
         self._workspace_dir = self._get_workspace_path()
-        self._project_dir = os.path.join(self._workspace_dir, 'gecko')
+        self._project_dir = os.path.join(self._workspace_dir, self._project_name)
         self._overwriting_workspace = os.path.isdir(self._workspace_dir)
 
         self._macbundle = self.environment.substs['MOZ_MACBUNDLE_NAME']
@@ -199,7 +200,7 @@ class CppEclipseBackend(CommonBackend):
     def _write_project(self, fh):
         project = PROJECT_TEMPLATE;
 
-        project = project.replace('@PROJECT_NAME@', 'Gecko')
+        project = project.replace('@PROJECT_NAME@', self._project_name)
         project = project.replace('@PROJECT_TOPSRCDIR@', self.environment.topsrcdir)
         fh.write(project)
 

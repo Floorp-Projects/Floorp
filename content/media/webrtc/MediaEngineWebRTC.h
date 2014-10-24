@@ -110,6 +110,9 @@ public:
 
   void Refresh(int aIndex);
 
+  bool SatisfiesConstraintSets(
+      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets);
+
 protected:
   ~MediaEngineWebRTCVideoSource() { Shutdown(); }
 
@@ -128,8 +131,8 @@ private:
   int mMinFps; // Min rate we want to accept
   MediaSourceType mMediaSource; // source of media (camera | application | screen)
 
-  static bool SatisfyConstraintSet(const dom::MediaTrackConstraintSet& aConstraints,
-                                   const webrtc::CaptureCapability& aCandidate);
+  static bool SatisfiesConstraintSet(const dom::MediaTrackConstraintSet& aConstraints,
+                                     const webrtc::CaptureCapability& aCandidate);
   void ChooseCapability(const VideoTrackConstraintsN& aConstraints,
                         const MediaEnginePrefs& aPrefs);
 };

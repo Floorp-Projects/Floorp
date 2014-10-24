@@ -5,12 +5,14 @@
 
 #include "nsMathMLChar.h"
 
+#include "gfxTextRun.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "nsCOMPtr.h"
 #include "nsDeviceContext.h"
+#include "nsFontMetrics.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"

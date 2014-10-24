@@ -32,6 +32,11 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     virtual const MediaSourceType GetMediaSource() {
       return MediaSourceType::Browser;
     }
+    virtual bool SatisfiesConstraintSets(
+      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets)
+    {
+      return true;
+    }
 
     virtual nsresult TakePhoto(PhotoCallback* aCallback)
     {

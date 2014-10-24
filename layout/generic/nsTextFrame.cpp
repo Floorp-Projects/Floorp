@@ -17,6 +17,7 @@
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
 #include "nsCRT.h"
+#include "nsFontMetrics.h"
 #include "nsSplittableFrame.h"
 #include "nsLineLayout.h"
 #include "nsString.h"

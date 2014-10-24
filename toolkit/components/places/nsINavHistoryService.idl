@@ -1176,7 +1176,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   nsINavHistoryQueryOptions clone();
 };
 
-[scriptable, uuid(4b6963bf-763a-4f39-9fec-25670d354dd9)]
+[scriptable, uuid(47f7b08b-71e0-492e-a2be-9a9fbfc75250)]
 interface nsINavHistoryService : nsISupports
 {
   /**
@@ -1391,6 +1391,11 @@ interface nsINavHistoryService : nsISupports
    * history is disabled if the places.history.enabled pref is false.
    */
   readonly attribute boolean historyDisabled;
+
+  /**
+   * Clear all TRANSITION_EMBED visits.
+   */
+  void clearEmbedVisits();
 };
 
 /**

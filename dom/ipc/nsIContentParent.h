@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_nsIContentParent_h
 #define mozilla_dom_nsIContentParent_h
 
+#include "mozilla/dom/ipc/IdType.h"
+
 #include "nsFrameMessageManager.h"
 #include "nsISupports.h"
 #include "mozilla/dom/CPOWManagerGetter.h"
@@ -49,7 +51,7 @@ public:
 
   BlobParent* GetOrCreateActorForBlob(File* aBlob);
 
-  virtual uint64_t ChildID() = 0;
+  virtual ContentParentId ChildID() = 0;
   virtual bool IsForApp() = 0;
   virtual bool IsForBrowser() = 0;
 
@@ -59,9 +61,10 @@ public:
 
   virtual PBrowserParent* SendPBrowserConstructor(
     PBrowserParent* actor,
+    const TabId& aTabId,
     const IPCTabContext& context,
     const uint32_t& chromeFlags,
-    const uint64_t& aId,
+    const ContentParentId& aCpId,
     const bool& aIsForApp,
     const bool& aIsForBrowser) NS_WARN_UNUSED_RESULT = 0;
 
@@ -75,9 +78,10 @@ protected: // IPDL methods
   virtual mozilla::jsipc::PJavaScriptParent* AllocPJavaScriptParent();
   virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*);
 
-  virtual PBrowserParent* AllocPBrowserParent(const IPCTabContext& aContext,
+  virtual PBrowserParent* AllocPBrowserParent(const TabId& aTabId,
+                                              const IPCTabContext& aContext,
                                               const uint32_t& aChromeFlags,
-                                              const uint64_t& aId,
+                                              const ContentParentId& aCpId,
                                               const bool& aIsForApp,
                                               const bool& aIsForBrowser);
   virtual bool DeallocPBrowserParent(PBrowserParent* frame);

@@ -98,6 +98,22 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
   // implicitly releases last image
   mImage = image.forget();
 
+  // Push the frame into the MSG with a minimal duration.  This will likely
+  // mean we'll still get NotifyPull calls which will then return the same
+  // frame again with a longer duration.  However, this means we won't
+  // fail to get the frame in and drop frames.
+
+  // XXX The timestamp for the frame should be based on the Capture time,
+  // not the MSG time, and MSG should never, ever block on a (realtime)
+  // video frame (or even really for streaming - audio yes, video probably no).
+  // Note that MediaPipeline currently ignores the timestamps from MSG
+  uint32_t len = mSources.Length();
+  for (uint32_t i = 0; i < len; i++) {
+    if (mSources[i]) {
+      AppendToTrack(mSources[i], mImage, mTrackID, 1); // shortest possible duration
+    }
+  }
+
   return 0;
 }
 
@@ -106,7 +122,7 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
 // this means that no *real* frame can be inserted during this period.
 void
 MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
-                                         SourceMediaStream *aSource,
+                                         SourceMediaStream* aSource,
                                          TrackID aID,
                                          StreamTime aDesiredTime,
                                          TrackTicks &aLastEndTime)
@@ -118,12 +134,10 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   // So mState could be kReleased here.  We really don't care about the state,
   // though.
 
-  // Note: we're not giving up mImage here
-  nsRefPtr<layers::Image> image = mImage;
   TrackTicks target = aSource->TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
   TrackTicks delta = target - aLastEndTime;
   LOGFRAME(("NotifyPull, desired = %ld, target = %ld, delta = %ld %s", (int64_t) aDesiredTime,
-            (int64_t) target, (int64_t) delta, image ? "" : "<null>"));
+            (int64_t) target, (int64_t) delta, mImage ? "" : "<null>"));
 
   // Bug 846188 We may want to limit incoming frames to the requested frame rate
   // mFps - if you want 30FPS, and the camera gives you 60FPS, this could
@@ -137,19 +151,16 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   // Doing so means a negative delta and thus messes up handling of the graph
   if (delta > 0) {
     // nullptr images are allowed
-    IntSize size(image ? mWidth : 0, image ? mHeight : 0);
-    segment.AppendFrame(image.forget(), delta, size);
-    // This can fail if either a) we haven't added the track yet, or b)
-    // we've removed or finished the track.
-    if (aSource->AppendToTrack(aID, &(segment))) {
+    if (AppendToTrack(aSource, mImage, aID, delta)) {
       aLastEndTime = target;
     }
   }
 }
 
 /*static*/
-bool MediaEngineWebRTCVideoSource::SatisfyConstraintSet(const MediaTrackConstraintSet &aConstraints,
-                                                        const webrtc::CaptureCapability& aCandidate) {
+bool
+MediaEngineWebRTCVideoSource::SatisfiesConstraintSet(const MediaTrackConstraintSet &aConstraints,
+                                                     const webrtc::CaptureCapability& aCandidate) {
   if (!MediaEngineCameraVideoSource::IsWithin(aCandidate.width, aConstraints.mWidth) ||
       !MediaEngineCameraVideoSource::IsWithin(aCandidate.height, aConstraints.mHeight)) {
     return false;
@@ -158,6 +169,41 @@ bool MediaEngineWebRTCVideoSource::SatisfyConstraintSet(const MediaTrackConstrai
     return false;
   }
   return true;
+}
+
+typedef nsTArray<uint8_t> CapabilitySet;
+
+// SatisfiesConstraintSets (plural) answers for the capture device as a whole
+// whether it can satisfy an accumulated number of capabilitySets.
+
+bool
+MediaEngineWebRTCVideoSource::SatisfiesConstraintSets(
+    const nsTArray<const MediaTrackConstraintSet*>& aConstraintSets)
+{
+  NS_ConvertUTF16toUTF8 uniqueId(mUniqueId);
+  int num = mViECapture->NumberOfCapabilities(uniqueId.get(), kMaxUniqueIdLength);
+  if (num <= 0) {
+    return true;
+  }
+
+  CapabilitySet candidateSet;
+  for (int i = 0; i < num; i++) {
+    candidateSet.AppendElement(i);
+  }
+
+  for (size_t j = 0; j < aConstraintSets.Length(); j++) {
+    for (size_t i = 0; i < candidateSet.Length();  ) {
+      webrtc::CaptureCapability cap;
+      mViECapture->GetCaptureCapability(uniqueId.get(), kMaxUniqueIdLength,
+                                        candidateSet[i], cap);
+      if (!SatisfiesConstraintSet(*aConstraintSets[j], cap)) {
+        candidateSet.RemoveElementAt(i);
+      } else {
+        ++i;
+      }
+    }
+  }
+  return !!candidateSet.Length();
 }
 
 void
@@ -177,9 +223,7 @@ MediaEngineWebRTCVideoSource::ChooseCapability(
   LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps",
        aPrefs.mWidth, aPrefs.mHeight, aPrefs.mFPS, aPrefs.mMinFPS));
 
-  typedef nsTArray<uint8_t> SourceSet;
-
-  SourceSet candidateSet;
+  CapabilitySet candidateSet;
   for (int i = 0; i < num; i++) {
     candidateSet.AppendElement(i);
   }
@@ -190,14 +234,14 @@ MediaEngineWebRTCVideoSource::ChooseCapability(
     webrtc::CaptureCapability cap;
     mViECapture->GetCaptureCapability(uniqueId.get(), kMaxUniqueIdLength,
                                       candidateSet[i], cap);
-    if (!SatisfyConstraintSet(aConstraints.mRequired, cap)) {
+    if (!SatisfiesConstraintSet(aConstraints.mRequired, cap)) {
       candidateSet.RemoveElementAt(i);
     } else {
       ++i;
     }
   }
 
-  SourceSet tailSet;
+  CapabilitySet tailSet;
 
   // Then apply advanced (formerly known as optional) constraints.
 
@@ -205,12 +249,12 @@ MediaEngineWebRTCVideoSource::ChooseCapability(
     auto &array = aConstraints.mAdvanced.Value();
 
     for (uint32_t i = 0; i < array.Length(); i++) {
-      SourceSet rejects;
+      CapabilitySet rejects;
       for (uint32_t j = 0; j < candidateSet.Length();) {
         webrtc::CaptureCapability cap;
         mViECapture->GetCaptureCapability(uniqueId.get(), kMaxUniqueIdLength,
                                           candidateSet[j], cap);
-        if (!SatisfyConstraintSet(array[i], cap)) {
+        if (!SatisfiesConstraintSet(array[i], cap)) {
           rejects.AppendElement(candidateSet[j]);
           candidateSet.RemoveElementAt(j);
         } else {
@@ -363,6 +407,8 @@ MediaEngineWebRTCVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   mImageContainer = layers::LayerManager::CreateImageContainer();
 
   mState = kStarted;
+  mTrackID = aID;
+
   error = mViERender->AddRenderer(mCaptureIndex, webrtc::kVideoI420, (webrtc::ExternalRenderer*)this);
   if (error == -1) {
     return NS_ERROR_FAILURE;
