@@ -1,5 +1,4 @@
 #-----------------------------------------------------------------
-# dmd.py --filter-stacks-for-testing -o full-reports-unsampled1-actual.txt full-unsampled1.json
 
 Invocation {
   $DMD = '1'
