@@ -4659,7 +4659,37 @@ nsLayoutUtils::DrawUniDirString(const char16_t* aString,
                                 nsPoint aPoint,
                                 nsRenderingContext& aContext)
 {
-  aContext.DrawString(aString, aLength, aPoint.x, aPoint.y);
+  nscoord x = aPoint.x;
+  nscoord y = aPoint.y;
+
+  nsFontMetrics* fm = aContext.FontMetrics();
+
+  uint32_t maxChunkLength = aContext.GetMaxChunkLength();
+  if (aLength <= maxChunkLength) {
+    fm->DrawString(aString, aLength, x, y, &aContext, &aContext);
+    return;
+  }
+
+  bool isRTL = fm->GetTextRunRTL();
+
+  // If we're drawing right to left, we must start at the end.
+  if (isRTL) {
+    x += aContext.GetWidth(aString, aLength);
+  }
+
+  while (aLength > 0) {
+    int32_t len = nsRenderingContext::FindSafeLength(aString, aLength, maxChunkLength);
+    nscoord width = fm->GetWidth(aString, len, &aContext);
+    if (isRTL) {
+      x -= width;
+    }
+    fm->DrawString(aString, len, x, y, &aContext, &aContext);
+    if (!isRTL) {
+      x += width;
+    }
+    aLength -= len;
+    aString += len;
+  }
 }
 
 nscoord
