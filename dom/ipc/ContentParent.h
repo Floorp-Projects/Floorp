@@ -217,7 +217,7 @@ public:
      */
     void KillHard();
 
-    uint64_t ChildID() MOZ_OVERRIDE { return mChildID; }
+    ContentParentId ChildID() MOZ_OVERRIDE { return mChildID; }
     const nsString& AppManifestURL() const { return mAppManifestURL; }
 
     bool IsPreallocated();
@@ -318,7 +318,7 @@ private:
         PBrowserParent* actor,
         const IPCTabContext& context,
         const uint32_t& chromeFlags,
-        const uint64_t& aId,
+        const ContentParentId& aCpId,
         const bool& aIsForApp,
         const bool& aIsForBrowser) MOZ_OVERRIDE;
     using PContentParent::SendPTestShellConstructor;
@@ -409,7 +409,7 @@ private:
     AllocPBackgroundParent(Transport* aTransport, ProcessId aOtherProcess)
                            MOZ_OVERRIDE;
 
-    virtual bool RecvGetProcessAttributes(uint64_t* aId,
+    virtual bool RecvGetProcessAttributes(ContentParentId* aCpId,
                                           bool* aIsForApp,
                                           bool* aIsForBrowser) MOZ_OVERRIDE;
     virtual bool RecvGetXPCOMProcessAttributes(bool* aIsOffline,
@@ -422,7 +422,7 @@ private:
     virtual bool DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParent*) MOZ_OVERRIDE;
     virtual PBrowserParent* AllocPBrowserParent(const IPCTabContext& aContext,
                                                 const uint32_t& aChromeFlags,
-                                                const uint64_t& aId,
+                                                const ContentParentId& aCpId,
                                                 const bool& aIsForApp,
                                                 const bool& aIsForBrowser) MOZ_OVERRIDE;
     virtual bool DeallocPBrowserParent(PBrowserParent* frame) MOZ_OVERRIDE;
@@ -692,7 +692,7 @@ private:
     GeckoChildProcessHost* mSubprocess;
     ContentParent* mOpener;
 
-    uint64_t mChildID;
+    ContentParentId mChildID;
     int32_t mGeolocationWatchID;
 
     nsString mAppManifestURL;

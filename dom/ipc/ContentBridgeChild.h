@@ -41,7 +41,7 @@ public:
   virtual bool SendPBrowserConstructor(PBrowserChild* aActor,
                                        const IPCTabContext& aContext,
                                        const uint32_t& aChromeFlags,
-                                       const uint64_t& aID,
+                                       const ContentParentId& aCpID,
                                        const bool& aIsForApp,
                                        const bool& aIsForBrowser) MOZ_OVERRIDE;
 
@@ -50,14 +50,14 @@ protected:
 
   virtual PBrowserChild* AllocPBrowserChild(const IPCTabContext& aContext,
                                             const uint32_t& aChromeFlags,
-                                            const uint64_t& aID,
+                                            const ContentParentId& aCpID,
                                             const bool& aIsForApp,
                                             const bool& aIsForBrowser) MOZ_OVERRIDE;
   virtual bool DeallocPBrowserChild(PBrowserChild*) MOZ_OVERRIDE;
   virtual bool RecvPBrowserConstructor(PBrowserChild* aCctor,
                                        const IPCTabContext& aContext,
                                        const uint32_t& aChromeFlags,
-                                       const uint64_t& aID,
+                                       const ContentParentId& aCpID,
                                        const bool& aIsForApp,
                                        const bool& aIsForBrowser) MOZ_OVERRIDE;
 
