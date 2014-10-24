@@ -64,6 +64,11 @@ public:
   void Name(nsString& aName) const;
 
   /**
+   * Set aDesc to the description of the proxied accessible.
+   */
+  void Description(nsString& aDesc) const;
+
+  /**
    * Allow the platform to store a pointers worth of data on us.
    */
   uintptr_t GetWrapper() const { return mWrapper; }
