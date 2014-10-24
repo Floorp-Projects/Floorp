@@ -13,6 +13,7 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/MathAlgorithms.h"
 #include "nsCOMPtr.h"
+#include "nsFontMetrics.h"
 #include "nsGkAtoms.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"

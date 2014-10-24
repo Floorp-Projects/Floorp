@@ -6,6 +6,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "nsCOMPtr.h"
+#include "nsFontMetrics.h"
 #include "nsTextControlFrame.h"
 #include "nsIPlaintextEditor.h"
 #include "nsCaret.h"
