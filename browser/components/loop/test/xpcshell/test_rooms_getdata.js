@@ -94,14 +94,16 @@ add_test(function test_getAllRooms() {
       do_check_eq(rooms[2].roomName, "Third Room Name");
 
       let room = rooms[0];
-      do_check_true(room.localRoomID);
+      do_check_true(room.localRoomId);
+      do_check_false(room.currSize);
+      delete roomList[0].currSize;
       do_check_true(hasTheseProps(roomList[0], room));
       delete roomDetail.roomName;
       delete room.participants;
       delete roomDetail.participants;
       do_check_true(hasTheseProps(roomDetail, room));
 
-      LoopRooms.getRoomData(room.localRoomID, (error, roomData) => {
+      LoopRooms.getRoomData(room.localRoomId, (error, roomData) => {
         do_check_false(error);
         do_check_true(hasTheseProps(room, roomData));
 
