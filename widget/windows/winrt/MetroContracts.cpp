@@ -103,7 +103,10 @@ FrameworkView::LaunchActivated(ComPtr<ILaunchActivatedEventArgs>& aArgs, bool aS
   int argc;
   unsigned int length;
   LPWSTR* argv = CommandLineToArgvW(data.GetRawBuffer(&length), &argc);
-  if (aStartup && argc == 2 && !wcsicmp(argv[0], L"-url")) {
+  if (aStartup && argc == 2 &&
+      (!wcsicmp(argv[0], L"-url") ||
+       !wcsicmp(argv[0], L"--url") ||
+       !wcsicmp(argv[0], L"/url"))) {
     WindowsCreateString(argv[1], wcslen(argv[1]), &sActivationURI);
   } else {
     // Some other command line or this is not a startup.
