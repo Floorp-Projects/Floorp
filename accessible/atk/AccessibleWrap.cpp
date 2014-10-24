@@ -10,6 +10,7 @@
 #include "ApplicationAccessibleWrap.h"
 #include "InterfaceInitFuncs.h"
 #include "nsAccUtils.h"
+#include "mozilla/a11y/PDocAccessible.h"
 #include "ProxyAccessible.h"
 #include "RootAccessible.h"
 #include "nsMai.h"
@@ -771,7 +772,27 @@ AtkAttributeSet *
 getAttributesCB(AtkObject *aAtkObj)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  return accWrap ? GetAttributeSet(accWrap) : nullptr;
+  if (accWrap)
+    return GetAttributeSet(accWrap);
+
+  ProxyAccessible* proxy = GetProxy(aAtkObj);
+  if (!proxy)
+    return nullptr;
+
+  nsAutoTArray<Attribute, 10> attrs;
+  proxy->Attributes(&attrs);
+  if (attrs.IsEmpty())
+    return nullptr;
+
+  AtkAttributeSet* objAttributeSet = nullptr;
+  for (uint32_t i = 0; i < attrs.Length(); i++) {
+    AtkAttribute *objAttr = (AtkAttribute *)g_malloc(sizeof(AtkAttribute));
+    objAttr->name = g_strdup(attrs[i].Name().get());
+    objAttr->value = g_strdup(NS_ConvertUTF16toUTF8(attrs[i].Value()).get());
+    objAttributeSet = g_slist_prepend(objAttributeSet, objAttr);
+  }
+
+  return objAttributeSet;
 }
 
 const gchar*

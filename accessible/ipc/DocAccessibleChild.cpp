@@ -8,6 +8,9 @@
 
 #include "Accessible-inl.h"
 
+#include "nsIPersistentProperties2.h"
+#include "nsISimpleEnumerator.h"
+
 namespace mozilla {
 namespace a11y {
 
@@ -74,6 +77,44 @@ DocAccessibleChild::RecvDescription(const uint64_t& aID, nsString* aDesc)
     return true;
 
   acc->Description(*aDesc);
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAttributes(const uint64_t& aID, nsTArray<Attribute>* aAttributes)
+{
+  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  if (!acc)
+    return true;
+
+  nsCOMPtr<nsIPersistentProperties> props = acc->Attributes();
+  if (!props)
+    return true;
+
+  nsCOMPtr<nsISimpleEnumerator> propEnum;
+  nsresult rv = props->Enumerate(getter_AddRefs(propEnum));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  bool hasMore;
+  while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> sup;
+    rv = propEnum->GetNext(getter_AddRefs(sup));
+    NS_ENSURE_SUCCESS(rv, false);
+
+    nsCOMPtr<nsIPropertyElement> propElem(do_QueryInterface(sup));
+    NS_ENSURE_TRUE(propElem, false);
+
+    nsAutoCString name;
+    rv = propElem->GetKey(name);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    nsAutoString value;
+    rv = propElem->GetValue(value);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    aAttributes->AppendElement(Attribute(name, value));
+    }
+
   return true;
 }
 }
