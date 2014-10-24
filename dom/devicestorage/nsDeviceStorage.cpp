@@ -1465,20 +1465,18 @@ DeviceStorageFile::collectFilesInternal(
 
   while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(f))) && f) {
 
-    bool isFile;
-    f->IsFile(&isFile);
+    PRTime msecs;
+    f->GetLastModifiedTime(&msecs);
 
-    if (isFile) {
-      PRTime msecs;
-      f->GetLastModifiedTime(&msecs);
-
-      if (msecs < aSince) {
-        continue;
-      }
+    if (msecs < aSince) {
+      continue;
     }
 
     bool isDir;
     f->IsDirectory(&isDir);
+
+    bool isFile;
+    f->IsFile(&isFile);
 
     nsString fullpath;
     nsresult rv = f->GetPath(fullpath);
