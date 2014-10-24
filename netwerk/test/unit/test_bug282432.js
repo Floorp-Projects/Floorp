@@ -1,3 +1,5 @@
+Cu.import("resource://gre/modules/Services.jsm");
+
 function run_test() {
   do_test_pending();
 
@@ -33,6 +35,11 @@ function run_test() {
   let file = do_get_file("_NOT_EXIST_.txt", true);
   do_check_false(file.exists());
 
-  let channel = ios.newChannelFromURI(ios.newFileURI(file));
+  let channel = ios.newChannelFromURI2(ios.newFileURI(file),
+                                       null,      // aLoadingNode
+                                       Services.scriptSecurityManager.getSystemPrincipal(),
+                                       null,      // aTriggeringPrincipal
+                                       Ci.nsILoadInfo.SEC_NORMAL,
+                                       Ci.nsIContentPolicy.TYPE_OTHER);
   channel.asyncOpen(listener, null);
 }

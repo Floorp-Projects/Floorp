@@ -1,5 +1,7 @@
 /* run some tests on the file:// protocol handler */
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 const PR_RDONLY = 0x1;  // see prio.h
 
 const special_type = "application/x-our-special-type";
@@ -38,7 +40,12 @@ function new_file_channel(file) {
   var ios =
       Cc["@mozilla.org/network/io-service;1"].
       getService(Ci.nsIIOService);
-  return ios.newChannelFromURI(ios.newFileURI(file));
+  return ios.newChannelFromURI2(ios.newFileURI(file),
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
 }
 
 /*

@@ -2,6 +2,7 @@
 // https://bugzilla.mozilla.org/show_bug.cgi?id=761228
 
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
@@ -26,7 +27,14 @@ function make_uri(url) {
 
 function make_channel(url) {
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var chan = ios.newChannel(url, null, null).QueryInterface(Ci.nsIHttpChannel);
+  var chan = ios.newChannel2(url,
+                             null,
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER).QueryInterface(Ci.nsIHttpChannel);
   return chan;
 }
 

@@ -1,6 +1,7 @@
 /* Tests various aspects of nsIResumableChannel in combination with HTTP */
 
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
@@ -16,7 +17,14 @@ const rangeBody = "Body of the range request handler.\r\n";
 function make_channel(url, callback, ctx) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
-  return ios.newChannel(url, "", null);
+  return ios.newChannel2(url,
+                         "",
+                         null,
+                         null,      // aLoadingNode
+                         Services.scriptSecurityManager.getSystemPrincipal(),
+                         null,      // aTriggeringPrincipal
+                         Ci.nsILoadInfo.SEC_NORMAL,
+                         Ci.nsIContentPolicy.TYPE_OTHER);
 }
 
 function AuthPrompt2() {

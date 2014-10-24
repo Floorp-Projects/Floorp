@@ -1,6 +1,7 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 "use strict";
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserver = null;
 const noRedirectURI = "/content";
@@ -35,10 +36,15 @@ function run_test()
   prefs.setBoolPref("network.http.prompt-temp-redirect", false);
 
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var chan = ios.newChannel("http://localhost:" +
-                            httpserver.identity.primaryPort + "/redirect",
-                            "",
-                            null);
+  var chan = ios.newChannel2("http://localhost:" +
+                             httpserver.identity.primaryPort + "/redirect",
+                             "",
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER);
 
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.setRequestHeader("Accept", acceptType, false);
