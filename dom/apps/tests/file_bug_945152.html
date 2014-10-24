@@ -47,7 +47,7 @@
         }
         var data = xhr.response;
         ok(data, "Data is non-null");
-        var str = String.fromCharCode.apply(null, Uint8Array(data));
+        var str = String.fromCharCode.apply(null, new Uint8Array(data));
         is(str.length, data_head.length + gPaddingSize, "Data size is correct");
         is(str.slice(0, data_head.length), data_head, "Data head is correct");
         ok(str.slice(data_head.length) == gPadding, "Data padding is correct");
