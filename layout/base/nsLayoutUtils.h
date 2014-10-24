@@ -1324,6 +1324,11 @@ public:
                          nsPoint               aPoint,
                          nsStyleContext*       aStyleContext = nullptr);
 
+  static void DrawUniDirString(const char16_t* aString,
+                               uint32_t aLength,
+                               nsPoint aPoint,
+                               nsRenderingContext& aContext);
+
   static nscoord GetStringWidth(const nsIFrame*      aFrame,
                                 nsRenderingContext* aContext,
                                 const char16_t*     aString,

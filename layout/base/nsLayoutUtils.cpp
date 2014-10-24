@@ -4649,8 +4649,17 @@ nsLayoutUtils::DrawString(const nsIFrame*       aFrame,
   if (NS_FAILED(rv))
   {
     aContext->SetTextRunRTL(false);
-    aContext->DrawString(aString, aLength, aPoint.x, aPoint.y);
+    DrawUniDirString(aString, aLength, aPoint, *aContext);
   }
+}
+
+void
+nsLayoutUtils::DrawUniDirString(const char16_t* aString,
+                                uint32_t aLength,
+                                nsPoint aPoint,
+                                nsRenderingContext& aContext)
+{
+  aContext.DrawString(aString, aLength, aPoint.x, aPoint.y);
 }
 
 nscoord
