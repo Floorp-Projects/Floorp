@@ -339,7 +339,6 @@ class MOZ_STACK_CLASS TokenStream
     bool reportStrictModeError(unsigned errorNumber, ...);
     bool strictMode() const { return strictModeGetter && strictModeGetter->strictMode(); }
 
-    void onError();
     static JSAtom *atomize(ExclusiveContext *cx, CharBuffer &cb);
     bool putIdentInTokenbuf(const char16_t *identStart);
 
@@ -373,17 +372,16 @@ class MOZ_STACK_CLASS TokenStream
     bool getToken(TokenKind *ttp, Modifier modifier = None) {
         // Check for a pushed-back token resulting from mismatching lookahead.
         if (lookahead != 0) {
+            MOZ_ASSERT(!flags.hadError);
             lookahead--;
             cursor = (cursor + 1) & ntokensMask;
             TokenKind tt = currentToken().type;
             MOZ_ASSERT(tt != TOK_EOL);
             *ttp = tt;
-            return tt != TOK_ERROR;
+            return true;
         }
 
-        TokenKind tt = getTokenInternal(modifier);
-        *ttp = tt;
-        return tt != TOK_ERROR;
+        return getTokenInternal(ttp, modifier);
     }
 
     // Push the last scanned token back into the stream.
@@ -395,23 +393,28 @@ class MOZ_STACK_CLASS TokenStream
 
     bool peekToken(TokenKind *ttp, Modifier modifier = None) {
         if (lookahead > 0) {
+            MOZ_ASSERT(!flags.hadError);
             *ttp = tokens[(cursor + 1) & ntokensMask].type;
-        } else {
-            *ttp = getTokenInternal(modifier);
-            ungetToken();
+            return true;
         }
-        return *ttp != TOK_ERROR;
+        if (!getTokenInternal(ttp, modifier))
+            return false;
+        ungetToken();
+        return true;
     }
 
     bool peekTokenPos(TokenPos *posp, Modifier modifier = None) {
         if (lookahead == 0) {
-            getTokenInternal(modifier);
+            TokenKind tt;
+            if (!getTokenInternal(&tt, modifier))
+                return false;
             ungetToken();
             MOZ_ASSERT(lookahead != 0);
+        } else {
+            MOZ_ASSERT(!flags.hadError);
         }
-        Token token = tokens[(cursor + 1) & ntokensMask];
-        *posp = token.pos;
-        return token.type != TOK_ERROR;
+        *posp = tokens[(cursor + 1) & ntokensMask].pos;
+        return true;
     }
 
     // This is like peekToken(), with one exception:  if there is an EOL
@@ -430,9 +433,9 @@ class MOZ_STACK_CLASS TokenStream
         // stronger condition than what we are looking for, and we don't need
         // to return TOK_EOL.
         if (lookahead != 0 && srcCoords.isOnThisLine(curr.pos.end, lineno)) {
-            TokenKind tt = tokens[(cursor + 1) & ntokensMask].type;
-            *ttp = tt;
-            return tt != TOK_ERROR;
+            MOZ_ASSERT(!flags.hadError);
+            *ttp = tokens[(cursor + 1) & ntokensMask].type;
+            return true;
         }
 
         // The above check misses two cases where we don't have to return
@@ -734,7 +737,7 @@ class MOZ_STACK_CLASS TokenStream
         const char16_t *ptr;            // next char to get
     };
 
-    TokenKind getTokenInternal(Modifier modifier);
+    bool getTokenInternal(TokenKind *ttp, Modifier modifier);
 
     bool getStringOrTemplateToken(int qc, Token **tp);
 
