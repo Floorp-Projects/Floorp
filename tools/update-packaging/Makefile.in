@@ -31,7 +31,7 @@ MAR_BIN	= $(LIBXUL_DIST)/host/bin/mar$(HOST_BIN_SUFFIX)
 MBSDIFF_BIN	= $(LIBXUL_DIST)/host/bin/mbsdiff$(HOST_BIN_SUFFIX)
 
 OVERRIDE_DEFAULT_GOAL := full-update
-full-update:: complete-patch
+full-update:: complete-patch $(if $(MOZ_AUTOMATION_UPDATE_PACKAGING),automation-partial-patch)
 
 ifeq ($(OS_TARGET), WINNT)
 MOZ_PKG_FORMAT	:= SFX7Z
@@ -61,10 +61,10 @@ ifeq ($(OS_TARGET), WINNT)
 endif
 	MAR=$(MAR_BIN) \
 	  $(srcdir)/make_full_update.sh \
-	  '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).complete.mar' \
+	  '$(DIST)/$(COMPLETE_MAR)' \
 	  '$(PACKAGE_DIR)'
 ifdef MOZ_SIGN_CMD
-	$(MOZ_SIGN_CMD) -f mar '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).complete.mar'
+	$(MOZ_SIGN_CMD) -f mar '$(DIST)/$(COMPLETE_MAR)'
 endif
 
 partial-patch:: $(dir-stage)
@@ -77,3 +77,25 @@ partial-patch:: $(dir-stage)
 ifdef MOZ_SIGN_CMD
 	$(MOZ_SIGN_CMD) -f mar '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar'
 endif
+
+automation-partial-patch: complete-patch
+	rm -rf current current.work previous
+	mkdir current previous
+	latestmar=$$(ssh -l $(UPLOAD_USER) -i $(UPLOAD_SSH_KEY) $(UPLOAD_HOST) 'ls -1t $(LATEST_MAR_DIR) | grep $(MOZ_PKG_PLATFORM).complete.mar$$ | head -n 1'); \
+	  if test -n "$$latestmar"; then \
+	    wget -O $(STAGE_DIR)/previous.mar http://$(UPLOAD_HOST)/$(LATEST_MAR_DIR)/$$latestmar && \
+	    (cd previous; \
+	      MAR=$(MAR_BIN) perl $(topsrcdir)/tools/update-packaging/unwrap_full_update.pl '../$(STAGE_DIR)/previous.mar') && \
+	    (cd current; \
+	      MAR=$(MAR_BIN) perl $(topsrcdir)/tools/update-packaging/unwrap_full_update.pl '../$(DIST)/$(COMPLETE_MAR)') && \
+	    find current -name \*.pgc -print -delete && \
+	    find previous -name \*.pgc -print -delete && \
+	    rm -f $(STAGE_DIR)/*.partial.*.mar && \
+	    SRC_BUILD_ID=$$(python $(topsrcdir)/config/printconfigsetting.py $$(find previous -maxdepth 4 -type f -name application.ini) App BuildID) \
+	    DST_BUILD_ID=$$(cat $(DEPTH)/config/buildid) \
+	    SRC_BUILD=previous DST_BUILD=current \
+	      $(MAKE) partial-patch && \
+	    rm -f $(STAGE_DIR)/previous.mar; \
+	  else \
+	    echo "No previous MAR found; not creating a partial MAR"; \
+	  fi
