@@ -1929,7 +1929,12 @@ this.XPIProvider = {
 
         let chan;
         try {
-          chan = Services.io.newChannelFromURI(aURI);
+          chan = Services.io.newChannelFromURI2(aURI,
+                                                null,      // aLoadingNode
+                                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                                null,      // aTriggeringPrincipal
+                                                Ci.nsILoadInfo.SEC_NORMAL,
+                                                Ci.nsIContentPolicy.TYPE_OTHER);
         }
         catch (ex) {
           return null;
@@ -5400,7 +5405,14 @@ AddonInstall.prototype = {
       let requireBuiltIn = Preferences.get(PREF_INSTALL_REQUIREBUILTINCERTS, true);
       this.badCertHandler = new BadCertHandler(!requireBuiltIn);
 
-      this.channel = NetUtil.newChannel(this.sourceURI);
+      this.channel = NetUtil.newChannel2(this.sourceURI,
+                                         null,
+                                         null,
+                                         null,      // aLoadingNode
+                                         Services.scriptSecurityManager.getSystemPrincipal(),
+                                         null,      // aTriggeringPrincipal
+                                         Ci.nsILoadInfo.SEC_NORMAL,
+                                         Ci.nsIContentPolicy.TYPE_OTHER);
       this.channel.notificationCallbacks = this;
       if (this.channel instanceof Ci.nsIHttpChannel) {
         this.channel.setRequestHeader("Moz-XPI-Update", "1", true);
