@@ -3252,21 +3252,20 @@ nsCycleCollector::CollectWhite()
   while (!etor.IsDone()) {
     PtrInfo* pinfo = etor.GetNext();
     if (pinfo->mColor == white && pinfo->mParticipant) {
-      whiteNodes.AppendElement(pinfo);
-      pinfo->mParticipant->Root(pinfo->mPointer);
       if (pinfo->IsGrayJS()) {
         ++numWhiteGCed;
         if (MOZ_UNLIKELY(pinfo->mParticipant == zoneParticipant)) {
           ++numWhiteJSZones;
         }
+      } else {
+        whiteNodes.AppendElement(pinfo);
+        pinfo->mParticipant->Root(pinfo->mPointer);
       }
     }
   }
 
   uint32_t numWhiteNodes = whiteNodes.Length();
-  MOZ_ASSERT(numWhiteGCed <= numWhiteNodes,
-             "More freed GCed nodes than total freed nodes.");
-  mResults.mFreedRefCounted += numWhiteNodes - numWhiteGCed;
+  mResults.mFreedRefCounted += numWhiteNodes;
   mResults.mFreedGCed += numWhiteGCed;
   mResults.mFreedJSZones += numWhiteJSZones;
 
@@ -3276,6 +3275,9 @@ nsCycleCollector::CollectWhite()
     mBeforeUnlinkCB();
     timeLog.Checkpoint("CollectWhite::BeforeUnlinkCB");
   }
+
+  // Unlink() can trigger a GC, so do not touch any JS or anything
+  // else not in whiteNodes after here.
 
   for (uint32_t i = 0; i < numWhiteNodes; ++i) {
     PtrInfo* pinfo = whiteNodes.ElementAt(i);
@@ -3303,7 +3305,7 @@ nsCycleCollector::CollectWhite()
 
   mIncrementalPhase = CleanupPhase;
 
-  return numWhiteNodes > 0;
+  return numWhiteNodes > 0 || numWhiteGCed > 0 || numWhiteJSZones > 0;
 }
 
 
