@@ -767,101 +767,87 @@ private:
 void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
                               nsRenderingContext* aCtx)
 {
-  // get the gfxRect
+  DrawTarget& aDrawTarget = *aCtx->GetDrawTarget();
   nsPresContext* presContext = mFrame->PresContext();
-  gfxRect rect = presContext->AppUnitsToGfxUnits(mRect + ToReferenceFrame());
 
-  // paint the frame with the current text color
+  Float strokeWidth = presContext->AppUnitsToGfxUnits(mThickness);
+
+  Rect rect = NSRectToRect(mRect + ToReferenceFrame(),
+                           presContext->AppUnitsPerDevPixel());
+  rect.Deflate(strokeWidth / 2.f);
+
   ColorPattern color(ToDeviceColor(
                        mFrame->GetVisitedDependentColor(eCSSProperty_color)));
-  aCtx->ThebesContext()->SetColor(
-          mFrame->GetVisitedDependentColor(eCSSProperty_color));
 
-  DrawTarget* drawTarget = aCtx->GetDrawTarget();
-
-  // change line width to mThickness
-  gfxContext *gfxCtx = aCtx->ThebesContext();
-  gfxFloat e = presContext->AppUnitsToGfxUnits(mThickness);
-  gfxCtx->Save();
-  gfxCtx->SetLineWidth(e);
-
-  rect.Deflate(e / 2.0);
+  StrokeOptions strokeOptions(strokeWidth);
 
   switch(mType)
   {
     case NOTATION_CIRCLE: {
-      RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
-      AppendEllipseToPath(builder, ToPoint(rect.Center()), ToSize(rect.Size()));
-      RefPtr<Path> ellipse = builder->Finish();
-      drawTarget->Stroke(ellipse, color);
-      break;
+      RefPtr<Path> ellipse =
+        MakePathForEllipse(aDrawTarget, rect.Center(), rect.Size());
+      aDrawTarget.Stroke(ellipse, color, strokeOptions);
+      return;
     }
-
-    case NOTATION_ROUNDEDBOX:
-      gfxCtx->NewPath();
-      gfxCtx->RoundedRectangle(rect, gfxCornerSizes(3 * e), true);
-      gfxCtx->Stroke();
-      break;
-
-    case NOTATION_UPDIAGONALSTRIKE:
-      gfxCtx->NewPath();
-      gfxCtx->Line(rect.BottomLeft(), rect.TopRight());
-      gfxCtx->Stroke();
-      break;
-
-    case NOTATION_DOWNDIAGONALSTRIKE:
-      gfxCtx->NewPath();
-      gfxCtx->Line(rect.TopLeft(), rect.BottomRight());
-      gfxCtx->Stroke();
-      break;
-
+    case NOTATION_ROUNDEDBOX: {
+      Float radius = 3 * strokeWidth;
+      Size cornerRadii(radius, radius);
+      Size radii[] = { cornerRadii, cornerRadii, cornerRadii, cornerRadii };
+      RefPtr<Path> roundedRect =
+        MakePathForRoundedRect(aDrawTarget, rect, radii, true);
+      aDrawTarget.Stroke(roundedRect, color, strokeOptions);
+      return;
+    }
+    case NOTATION_UPDIAGONALSTRIKE: {
+      aDrawTarget.StrokeLine(rect.BottomLeft(), rect.TopRight(),
+                             color, strokeOptions);
+      return;
+    }
+    case NOTATION_DOWNDIAGONALSTRIKE: {
+      aDrawTarget.StrokeLine(rect.TopLeft(), rect.BottomRight(),
+                             color, strokeOptions);
+      return;
+    }
     case NOTATION_UPDIAGONALARROW: {
       // Compute some parameters to draw the updiagonalarrow. The values below
       // are taken from MathJax's HTML-CSS output.
-      gfxFloat W = rect.Width(); gfxFloat H = rect.Height();
-      gfxFloat l = sqrt(W*W + H*H);
-      gfxFloat f = gfxFloat(kArrowHeadSize) * e / l;
-      gfxFloat w = W * f; gfxFloat h = H * f;
+      Float W = rect.Width(); gfxFloat H = rect.Height();
+      Float l = sqrt(W*W + H*H);
+      Float f = Float(kArrowHeadSize) * strokeWidth / l;
+      Float w = W * f; gfxFloat h = H * f;
 
       // Draw the arrow shaft
-      gfxCtx->NewPath();
-      gfxCtx->Line(rect.BottomLeft(), rect.TopRight() + gfxPoint(-.7*w, .7*h));
-      gfxCtx->Stroke();
+      aDrawTarget.StrokeLine(rect.BottomLeft(),
+                             rect.TopRight() + Point(-.7*w, .7*h),
+                             color, strokeOptions);
 
       // Draw the arrow head
-      gfxCtx->NewPath();
-      gfxPoint p[] = {
-        rect.TopRight(),
-        rect.TopRight() + gfxPoint(-w -.4*h, std::max(-e / 2.0, h - .4*w)),
-        rect.TopRight() + gfxPoint(-.7*w, .7*h),
-        rect.TopRight() + gfxPoint(std::min(e / 2.0, -w + .4*h), h + .4*w),
-        rect.TopRight()
-      };
-      gfxCtx->Polygon(p, MOZ_ARRAY_LENGTH(p));
-      gfxCtx->Fill();
+      RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
+      builder->MoveTo(rect.TopRight());
+      builder->LineTo(rect.TopRight() + Point(-w -.4*h, std::max(-strokeWidth / 2.0, h - .4*w)));
+      builder->LineTo(rect.TopRight() + Point(-.7*w, .7*h));
+      builder->LineTo(rect.TopRight() + Point(std::min(strokeWidth / 2.0, -w + .4*h), h + .4*w));
+      builder->Close();
+      RefPtr<Path> path = builder->Finish();
+      aDrawTarget.Fill(path, color);
+      return;
     }
-      break;
-
     case NOTATION_PHASORANGLE: {
       // Compute some parameters to draw the angled line,
       // that uses a slope of 2 (angle = tan^-1(2)).
       // H = w * tan(angle) = w * 2
-      gfxFloat w = gfxFloat(kPhasorangleWidth) * e;
-      gfxFloat H = 2 * w;
+      Float w = Float(kPhasorangleWidth) * strokeWidth;
+      Float H = 2 * w;
 
       // Draw the angled line
-      gfxCtx->NewPath();
-      gfxCtx->Line(rect.BottomLeft(), rect.BottomLeft() + gfxPoint(w, -H));
-      gfxCtx->Stroke();
-      break;
+      aDrawTarget.StrokeLine(rect.BottomLeft(),
+                             rect.BottomLeft() + Point(w, -H),
+                             color, strokeOptions);
+      return;
     }
-
     default:
       NS_NOTREACHED("This notation can not be drawn using nsDisplayNotation");
-      break;
   }
-
-  gfxCtx->Restore();
 }
 
 void

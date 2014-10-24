@@ -42,11 +42,7 @@
             scroll-behavior: auto;
         }
 
-        #scroll_1, #scroll_5, #scroll_8 {
-            scroll-behavior: instant;
-        }
-
-        #scroll_4 {
+        #scroll_3 {
             scroll-behavior: smooth;
         }
 
@@ -65,37 +61,33 @@
     <div id="box3a" class="a_box"></div>
     <a name="test_anchor_3" id="box3b" class="another_box"></a>
   </div>
-  <div id="scroll_4" class="scroll_box">
-    <div id="box4a" class="a_box"></div>
-    <a name="test_anchor_4" id="box4b" class="another_box"></a>
-  </div>
 <script>
   function doTest() {
     if (document.location.search != '?ref') {
-      // Scroll_1 to Scroll_3 are expected to scroll instantly
+      // Scroll_1 to Scroll_2 are expected to scroll instantly
       window.location.hash = "test_anchor_1";
       window.location.hash = "test_anchor_2";
-      window.location.hash = "test_anchor_3";
 
-      // Scroll_4 is expected to scroll smoothly
-      document.getElementById("box4b").scrollIntoView({block: "end", behavior: "smooth"});
+      // Scroll_3 is expected to scroll smoothly
+      document.getElementById("box3b").scrollIntoView({block: "end", behavior: "smooth"});
 
       // Interrupt any smooth scrolling
-      for (var i=1; i <= 4; i++) {
+      for (var i=1; i <= 3; i++) {
         document.getElementById("scroll_" + i).scrollLeft
           = document.getElementById("scroll_" + i).scrollLeft;
         document.getElementById("scroll_" + i).scrollTop
           = document.getElementById("scroll_" + i).scrollTop;
       }
     } else {
-      for (var i=1; i <= 3; i++) {
+      // Scroll all boxes except for Scroll_3
+      for (var i=1; i <= 2; i++) {
         document.getElementById("box" + i + "b").scrollIntoView({block: "end", behavior: "instant"});
       }
     }
     document.documentElement.removeAttribute("class");
   }
 
-  for (var i=1; i <= 4; i++) {
+  for (var i=1; i <= 3; i++) {
     document.getElementById("box" + i + "a")
       .scrollIntoView({block: "start", behavior: "instant"});
   }

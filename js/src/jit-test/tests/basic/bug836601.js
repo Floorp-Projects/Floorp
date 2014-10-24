@@ -2,7 +2,7 @@
 let k
 Proxy.createFunction(function() {
     return {
-        get: Uint32Array
+        get: (n) => new Uint32Array(n)
     }
 }(), decodeURIComponent) & k
 

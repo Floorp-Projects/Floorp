@@ -16,7 +16,7 @@ interface nsIDOMElement;
 interface nsITabParent;
 interface nsILoadContext;
 
-[scriptable, builtinclass, uuid(55a772b8-855a-4c5f-b4a1-284b6b3bec28)]
+[scriptable, builtinclass, uuid(7600aa92-88dc-491c-896d-0564159b6a66)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -115,24 +115,6 @@ interface nsIFrameLoader : nsISupports
    * to the window.
    */
   void requestNotifyAfterRemotePaint();
-
-  /** 
-   * The default rendering mode is synchronous scrolling.  In this
-   * mode, it's an error to try to set a target viewport.
-   */
-  const unsigned long RENDER_MODE_DEFAULT        = 0x00000000;
-
-  /**
-   * When asynchronous scrolling is enabled, a target viewport can be
-   * set to transform content pixels wrt its CSS viewport.
-   *
-   * NB: when async scrolling is enabled, it's the *user's*
-   * responsibility to update the target scroll offset.  In effect,
-   * the platform hands over control of scroll offset to the user.
-   */
-  const unsigned long RENDER_MODE_ASYNC_SCROLL   = 0x00000001;
-
-  attribute unsigned long renderMode;
 
   /**
    * The default event mode automatically forwards the events

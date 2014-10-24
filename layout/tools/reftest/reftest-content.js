@@ -227,7 +227,6 @@ function setupDisplayport(contentRootElement) {
     }
 
     if (contentRootElement.hasAttribute("reftest-async-scroll")) {
-        SendEnableAsyncScroll();
         setupDisplayportForElementSubtree(contentRootElement);
     } else {
         setupDisplayportForElement(contentRootElement);
@@ -863,11 +862,6 @@ function SendFailedLoad(why)
 function SendFailedNoPaint()
 {
     sendAsyncMessage("reftest:FailedNoPaint");
-}
-
-function SendEnableAsyncScroll()
-{
-    sendAsyncMessage("reftest:EnableAsyncScroll");
 }
 
 // Return true if a snapshot was taken.

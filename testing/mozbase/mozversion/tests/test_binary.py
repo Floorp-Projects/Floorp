@@ -5,7 +5,9 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import sys
 import tempfile
+import shutil
 import unittest
 
 import mozfile
@@ -17,15 +19,18 @@ class BinaryTest(unittest.TestCase):
     """test getting application version information from a binary path"""
 
     application_ini = """[App]
+ID = AppID
 Name = AppName
 CodeName = AppCodeName
 Version = AppVersion
 BuildID = AppBuildID
 SourceRepository = AppSourceRepo
 SourceStamp = AppSourceStamp
+Vendor = AppVendor
 """
     platform_ini = """[Build]
 BuildID = PlatformBuildID
+Milestone = PlatformMilestone
 SourceStamp = PlatformSourceStamp
 SourceRepository = PlatformSourceRepo
 """
@@ -76,6 +81,33 @@ SourceRepository = PlatformSourceRepo
         os.chdir(self.tempdir)
         self._check_version(get_version())
 
+    def test_with_ini_files_on_osx(self):
+        self._write_ini_files()
+
+        platform = sys.platform
+        sys.platform = 'darwin'
+        try:
+            # get_version is working with ini files next to the binary
+            self._check_version(get_version(binary=self.binary))
+
+            # or if they are in the Resources dir
+            # in this case the binary must be in a Contents dir, next
+            # to the Resources dir
+            contents_dir = os.path.join(self.tempdir, 'Contents')
+            os.mkdir(contents_dir)
+            moved_binary = os.path.join(contents_dir,
+                                        os.path.basename(self.binary))
+            shutil.move(self.binary, moved_binary)
+
+            resources_dir = os.path.join(self.tempdir, 'Resources')
+            os.mkdir(resources_dir)
+            for ini_file in ('application.ini', 'platform.ini'):
+                shutil.move(os.path.join(self.tempdir, ini_file), resources_dir)
+
+            self._check_version(get_version(binary=moved_binary))
+        finally:
+            sys.platform = platform
+
     def test_invalid_binary_path(self):
         self.assertRaises(IOError, get_version,
                           os.path.join(self.tempdir, 'invalid'))
@@ -85,12 +117,17 @@ SourceRepository = PlatformSourceRepo
         self.assertRaises(errors.AppNotFoundError, get_version,
                           self.binary)
 
-    def test_without_platform_file(self):
-        """With a missing platform file no exception should be thrown"""
+    def test_without_platform_ini_file(self):
+        """With a missing platform.ini file an exception should be thrown"""
         self._write_ini_files(platform=False)
+        self.assertRaises(errors.AppNotFoundError, get_version,
+                          self.binary)
 
-        v = get_version(self.binary)
-        self.assertTrue(isinstance(v, dict))
+    def test_without_application_ini_file(self):
+        """With a missing application.ini file an exception should be thrown"""
+        self._write_ini_files(application=False)
+        self.assertRaises(errors.AppNotFoundError, get_version,
+                          self.binary)
 
     def test_with_exe(self):
         """Test that we can resolve .exe files"""
@@ -114,22 +151,26 @@ SourceRepository = PlatformSourceRepo
                 f.writelines(self.platform_ini)
 
     def _check_version(self, version):
+        self.assertEqual(version.get('application_id'), 'AppID')
         self.assertEqual(version.get('application_name'), 'AppName')
-        self.assertEqual(version.get('application_display_name'), 'AppCodeName')
+        self.assertEqual(
+            version.get('application_display_name'), 'AppCodeName')
         self.assertEqual(version.get('application_version'), 'AppVersion')
         self.assertEqual(version.get('application_buildid'), 'AppBuildID')
         self.assertEqual(
             version.get('application_repository'), 'AppSourceRepo')
         self.assertEqual(
             version.get('application_changeset'), 'AppSourceStamp')
+        self.assertEqual(version.get('application_vendor'), 'AppVendor')
         self.assertIsNone(version.get('platform_name'))
-        self.assertIsNone(version.get('platform_version'))
         self.assertEqual(version.get('platform_buildid'), 'PlatformBuildID')
         self.assertEqual(
             version.get('platform_repository'), 'PlatformSourceRepo')
         self.assertEqual(
             version.get('platform_changeset'), 'PlatformSourceStamp')
         self.assertIsNone(version.get('invalid_key'))
+        self.assertEqual(
+            version.get('platform_version'), 'PlatformMilestone')
 
 
 if __name__ == '__main__':
