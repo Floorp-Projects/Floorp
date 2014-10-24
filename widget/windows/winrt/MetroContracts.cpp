@@ -97,7 +97,7 @@ FrameworkView::LaunchActivated(ComPtr<ILaunchActivatedEventArgs>& aArgs, bool aS
   if (WindowsIsStringEmpty(data.Get()))
     return;
 
-  // If we're being launched from a secondary tile then we have a 2nd command line param of -url
+  // If we're being launched from a secondary tile then we have a 2nd command line param of --url
   // and a third of the secondary tile.  We want it in sActivationURI so that browser.js will
   // load it in without showing the start UI.
   int argc;

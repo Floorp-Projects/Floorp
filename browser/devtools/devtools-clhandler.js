@@ -67,8 +67,8 @@ devtoolsCommandlineHandler.prototype = {
     }
   },
 
-  helpInfo : "  -jsconsole         Open the Browser Console.\n" +
-             "  -jsdebugger        Open the Browser Toolbox.\n",
+  helpInfo : "  --jsconsole        Open the Browser Console.\n" +
+             "  --jsdebugger       Open the Browser Toolbox.\n",
 
   classID: Components.ID("{9e9a9283-0ce9-4e4a-8f1c-ba129a032c32}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
