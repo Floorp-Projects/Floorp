@@ -6,6 +6,7 @@
 
 #include "InputBlockState.h"
 #include "mozilla/layers/APZCTreeManager.h" // for AllowedTouchBehavior
+#include "AsyncPanZoomController.h"         // for AsyncPanZoomController
 #include "gfxPrefs.h"                       // for gfxPrefs
 #include "OverscrollHandoffState.h"
 
