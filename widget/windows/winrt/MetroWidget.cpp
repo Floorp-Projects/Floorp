@@ -1073,35 +1073,34 @@ MetroWidget::ApzcGetAllowedTouchBehavior(WidgetInputEvent* aTransformedEvent,
 }
 
 void
-MetroWidget::ApzcSetAllowedTouchBehavior(const ScrollableLayerGuid& aGuid,
-                                         uint64_t aInputBlockId,
+MetroWidget::ApzcSetAllowedTouchBehavior(uint64_t aInputBlockId,
                                          nsTArray<TouchBehaviorFlags>& aBehaviors)
 {
   LogFunction();
   if (!APZController::sAPZC) {
     return;
   }
-  APZController::sAPZC->SetAllowedTouchBehavior(aGuid, aInputBlockId, aBehaviors);
+  APZController::sAPZC->SetAllowedTouchBehavior(aInputBlockId, aBehaviors);
 }
 
 void
-MetroWidget::ApzContentConsumingTouch(const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId)
+MetroWidget::ApzContentConsumingTouch(uint64_t aInputBlockId)
 {
   LogFunction();
   if (!mController) {
     return;
   }
-  mController->ContentReceivedTouch(aGuid, aInputBlockId, true);
+  mController->ContentReceivedTouch(aInputBlockId, true);
 }
 
 void
-MetroWidget::ApzContentIgnoringTouch(const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId)
+MetroWidget::ApzContentIgnoringTouch(uint64_t aInputBlockId)
 {
   LogFunction();
   if (!mController) {
     return;
   }
-  mController->ContentReceivedTouch(aGuid, aInputBlockId, false);
+  mController->ContentReceivedTouch(aInputBlockId, false);
 }
 
 bool
