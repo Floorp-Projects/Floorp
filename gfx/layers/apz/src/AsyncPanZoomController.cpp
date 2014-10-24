@@ -1011,10 +1011,6 @@ AsyncPanZoomController::ArePointerEventsConsumable(TouchBlockState* aBlock, uint
   return true;
 }
 
-nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent, uint64_t* aOutInputBlockId) {
-  return GetInputQueue()->ReceiveInputEvent(this, aEvent, aOutInputBlockId);
-}
-
 nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) {
   AssertOnControllerThread();
 
@@ -2850,16 +2846,6 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
     // animation finishes.
     RequestContentRepaint(endZoomToMetrics);
   }
-}
-
-void
-AsyncPanZoomController::ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault) {
-  GetInputQueue()->ContentReceivedTouch(aInputBlockId, aPreventDefault);
-}
-
-void
-AsyncPanZoomController::SetAllowedTouchBehavior(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aBehaviors) {
-  GetInputQueue()->SetAllowedTouchBehavior(aInputBlockId, aBehaviors);
 }
 
 bool
