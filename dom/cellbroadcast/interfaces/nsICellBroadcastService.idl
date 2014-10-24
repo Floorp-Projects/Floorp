@@ -36,7 +36,7 @@ interface nsICellBroadcastListener : nsISupports
 /**
  * XPCOM component that provides the cell broadcast information.
  */
-[scriptable, uuid(eed283f6-44a8-11e4-b364-afb894b7a283)]
+[scriptable, uuid(906cda5a-6b18-11e4-973b-5ff3fc075b6b)]
 interface nsICellBroadcastService : nsISupports
 {
   /**
@@ -47,11 +47,13 @@ interface nsICellBroadcastService : nsISupports
   const unsigned short GSM_GEOGRAPHICAL_SCOPE_PLMN           = 1;
   const unsigned short GSM_GEOGRAPHICAL_SCOPE_LOCATION_AREA  = 2;
   const unsigned short GSM_GEOGRAPHICAL_SCOPE_CELL           = 3;
-  const unsigned short GSM_GEOGRAPHICAL_SCOPE_INVALID        = 4;
+  const unsigned short GSM_GEOGRAPHICAL_SCOPE_INVALID        = 0xFFFF;
 
   /**
    * Constant definitions of predefined GSM Message Class
    * See 3GPP TS 23.038 clause 5 CBS Data Coding Scheme
+   *
+   * Set to GSM_MESSAGE_CLASS_NORMAL if no message class is specified.
    */
   const unsigned short GSM_MESSAGE_CLASS_0       = 0;
   const unsigned short GSM_MESSAGE_CLASS_1       = 1;
@@ -60,7 +62,6 @@ interface nsICellBroadcastService : nsISupports
   const unsigned short GSM_MESSAGE_CLASS_USER_1  = 4;
   const unsigned short GSM_MESSAGE_CLASS_USER_2  = 5;
   const unsigned short GSM_MESSAGE_CLASS_NORMAL  = 6;
-  const unsigned short GSM_MESSAGE_CLASS_INVALID = 7;
 
   /**
    * Constant definitions of predefined GSM ETWS Warning Types
@@ -71,7 +72,7 @@ interface nsICellBroadcastService : nsISupports
   const unsigned short GSM_ETWS_WARNING_EARTHQUAKE_TSUNAMI = 2;
   const unsigned short GSM_ETWS_WARNING_TEST               = 3;
   const unsigned short GSM_ETWS_WARNING_OTHER              = 4;
-  const unsigned short GSM_ETWS_WARNING_INVALID            = 5;
+  const unsigned short GSM_ETWS_WARNING_INVALID            = 0xFFFF;
 
   /**
    * Attribute CdmaServiceCategory is only valid in CDMA network.
