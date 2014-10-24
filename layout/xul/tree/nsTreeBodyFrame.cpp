@@ -1364,7 +1364,8 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
     // If so, clear the text completely.
     const nsDependentString& kEllipsis = nsContentUtils::GetLocalizedEllipsis();
     aRenderingContext.SetTextRunRTL(false);
-    nscoord ellipsisWidth = aRenderingContext.GetWidth(kEllipsis);
+    nscoord ellipsisWidth =
+      nsLayoutUtils::AppUnitWidthOfString(kEllipsis, aRenderingContext);
 
     width = maxWidth;
     if (ellipsisWidth > width)
@@ -1389,7 +1390,8 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           for (i = 0; i < length; ++i) {
             char16_t ch = aText[i];
             // XXX this is horrible and doesn't handle clusters
-            cwidth = aRenderingContext.GetWidth(ch);
+            cwidth =
+              nsLayoutUtils::AppUnitWidthOfString(ch, aRenderingContext);
             if (twidth + cwidth > width)
               break;
             twidth += cwidth;
@@ -1407,7 +1409,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           int32_t i;
           for (i=length-1; i >= 0; --i) {
             char16_t ch = aText[i];
-            cwidth = aRenderingContext.GetWidth(ch);
+            cwidth = nsLayoutUtils::AppUnitWidthOfString(ch, aRenderingContext);
             if (twidth + cwidth > width)
               break;
             twidth += cwidth;
@@ -1429,14 +1431,14 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           int32_t rightPos = length - 1;
           for (int32_t leftPos = 0; leftPos < rightPos; ++leftPos) {
             char16_t ch = aText[leftPos];
-            cwidth = aRenderingContext.GetWidth(ch);
+            cwidth = nsLayoutUtils::AppUnitWidthOfString(ch, aRenderingContext);
             twidth += cwidth;
             if (twidth > width)
               break;
             leftStr.Append(ch);
 
             ch = aText[rightPos];
-            cwidth = aRenderingContext.GetWidth(ch);
+            cwidth = nsLayoutUtils::AppUnitWidthOfString(ch, aRenderingContext);
             twidth += cwidth;
             if (twidth > width)
               break;

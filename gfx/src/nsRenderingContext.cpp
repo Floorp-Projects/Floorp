@@ -87,32 +87,6 @@ nsRenderingContext::GetMaxChunkLength()
     return std::min(mFontMetrics->GetMaxStringLength(), MAX_GFX_TEXT_BUF_SIZE);
 }
 
-nscoord
-nsRenderingContext::GetWidth(char16_t aC)
-{
-    return GetWidth(&aC, 1);
-}
-
-nscoord
-nsRenderingContext::GetWidth(const nsString& aString)
-{
-    return GetWidth(aString.get(), aString.Length());
-}
-
-nscoord
-nsRenderingContext::GetWidth(const char16_t *aString, uint32_t aLength)
-{
-    uint32_t maxChunkLength = GetMaxChunkLength();
-    nscoord width = 0;
-    while (aLength > 0) {
-        int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
-        width += mFontMetrics->GetWidth(aString, len, this);
-        aLength -= len;
-        aString += len;
-    }
-    return width;
-}
-
 nsBoundingMetrics
 nsRenderingContext::GetBoundingMetrics(const char16_t* aString,
                                        uint32_t aLength)
