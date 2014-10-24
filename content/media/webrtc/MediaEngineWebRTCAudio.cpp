@@ -39,8 +39,10 @@ namespace mozilla {
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG(msg) PR_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
+#define LOG_FRAMES(msg) PR_LOG(GetMediaManagerLog(), 6, msg)
 #else
 #define LOG(msg)
+#define LOG_FRAMES(msg)
 #endif
 
 /**
@@ -401,7 +403,7 @@ MediaEngineWebRTCAudioSource::NotifyPull(MediaStreamGraph* aGraph,
 #ifdef DEBUG
   TrackTicks target = aSource->TimeToTicksRoundUp(SAMPLE_FREQUENCY, aDesiredTime);
   TrackTicks delta = target - aLastEndTime;
-  LOG(("Audio: NotifyPull: aDesiredTime %ld, target %ld, delta %ld",(int64_t) aDesiredTime, (int64_t) target, (int64_t) delta));
+  LOG_FRAMES(("Audio: NotifyPull: aDesiredTime %ld, target %ld, delta %ld",(int64_t) aDesiredTime, (int64_t) target, (int64_t) delta));
   aLastEndTime = target;
 #endif
 }
