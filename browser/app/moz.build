@@ -30,10 +30,11 @@ LOCAL_INCLUDES += [
     '/xpcom/build',
 ]
 
-DELAYLOAD_DLLS += [
-    'mozglue.dll',
-]
-USE_STATIC_LIBS = True
+if not CONFIG['MOZ_METRO']:
+  DELAYLOAD_DLLS += [
+      'mozglue.dll',
+  ]
+  USE_STATIC_LIBS = True
 
 if CONFIG['_MSC_VER']:
     # Always enter a Windows program through wmain, whether or not we're
@@ -55,7 +56,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
     LDFLAGS += ['/HEAP:0x40000']
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['MOZ_METRO']:
     USE_LIBS += [
         'mozglue',
         'xpcomglue_staticruntime',

@@ -53,19 +53,19 @@ CSS_PSEUDO_ELEMENT(mozMathAnonymous, ":-moz-math-anonymous", 0)
 // HTML5 Forms pseudo elements
 CSS_PSEUDO_ELEMENT(mozNumberWrapper, ":-moz-number-wrapper",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
-                   CSS_PSEUDO_ELEMENT_IS_CHROME_ONLY)
+                   CSS_PSEUDO_ELEMENT_UA_SHEET_ONLY)
 CSS_PSEUDO_ELEMENT(mozNumberText, ":-moz-number-text",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
-                   CSS_PSEUDO_ELEMENT_IS_CHROME_ONLY)
+                   CSS_PSEUDO_ELEMENT_UA_SHEET_ONLY)
 CSS_PSEUDO_ELEMENT(mozNumberSpinBox, ":-moz-number-spin-box",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
-                   CSS_PSEUDO_ELEMENT_IS_CHROME_ONLY)
+                   CSS_PSEUDO_ELEMENT_UA_SHEET_ONLY)
 CSS_PSEUDO_ELEMENT(mozNumberSpinUp, ":-moz-number-spin-up",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
-                   CSS_PSEUDO_ELEMENT_IS_CHROME_ONLY)
+                   CSS_PSEUDO_ELEMENT_UA_SHEET_ONLY)
 CSS_PSEUDO_ELEMENT(mozNumberSpinDown, ":-moz-number-spin-down",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
-                   CSS_PSEUDO_ELEMENT_IS_CHROME_ONLY)
+                   CSS_PSEUDO_ELEMENT_UA_SHEET_ONLY)
 CSS_PSEUDO_ELEMENT(mozProgressBar, ":-moz-progress-bar",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)
 CSS_PSEUDO_ELEMENT(mozRangeTrack, ":-moz-range-track",

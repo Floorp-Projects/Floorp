@@ -30,7 +30,6 @@ UNIFIED_SOURCES += [
     'XPCLog.cpp',
     'XPCMaps.cpp',
     'XPCModule.cpp',
-    'XPCQuickStubs.cpp',
     'XPCRuntimeService.cpp',
     'XPCShellImpl.cpp',
     'XPCString.cpp',

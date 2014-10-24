@@ -241,6 +241,15 @@ BaseWebSocketChannel::NewURI(const nsACString & aSpec, const char *aOriginCharse
 }
 
 NS_IMETHODIMP
+BaseWebSocketChannel::NewChannel2(nsIURI* aURI,
+                                  nsILoadInfo* aLoadInfo,
+                                  nsIChannel** outChannel)
+{
+  LOG(("BaseWebSocketChannel::NewChannel2() %p\n", this));
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 BaseWebSocketChannel::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
   LOG(("BaseWebSocketChannel::NewChannel() %p\n", this));

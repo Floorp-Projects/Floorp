@@ -2715,6 +2715,136 @@ js::array_concat(JSContext *cx, unsigned argc, Value *vp)
     return SetLengthProperty(cx, narr, length);
 }
 
+struct SortComparatorIndexes
+{
+    bool operator()(uint32_t a, uint32_t b, bool *lessOrEqualp) {
+        *lessOrEqualp = (a <= b);
+        return true;
+    }
+};
+
+// Returns all indexed properties in the range [begin, end) found on |obj| or
+// its proto chain. This function does not handle proxies, objects with
+// resolve/lookupGeneric hooks or indexed getters, as those can introduce
+// new properties. In those cases, *success is set to |false|.
+static bool
+GetIndexedPropertiesInRange(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end,
+                            Vector<uint32_t> &indexes, bool *success)
+{
+    *success = false;
+
+    // First, look for proxies or class hooks that can introduce extra
+    // properties.
+    JSObject *pobj = obj;
+    do {
+        if (!pobj->isNative() ||
+            pobj->getClass()->resolve != JS_ResolveStub ||
+            pobj->getOps()->lookupGeneric)
+        {
+            return true;
+        }
+    } while ((pobj = pobj->getProto()));
+
+    // Collect indexed property names.
+    pobj = obj;
+    do {
+        // Append dense elements.
+        NativeObject *nativeObj = &pobj->as<NativeObject>();
+        uint32_t initLen = nativeObj->getDenseInitializedLength();
+        for (uint32_t i = begin; i < initLen && i < end; i++) {
+            if (nativeObj->getDenseElement(i).isMagic(JS_ELEMENTS_HOLE))
+                continue;
+            if (!indexes.append(i))
+                return false;
+        }
+
+        // Append typed array elements.
+        if (IsAnyTypedArray(pobj)) {
+            uint32_t len = AnyTypedArrayLength(pobj);
+            for (uint32_t i = begin; i < len && i < end; i++) {
+                if (!indexes.append(i))
+                    return false;
+            }
+        }
+
+        // Append sparse elements.
+        if (pobj->isIndexed()) {
+            Shape::Range<NoGC> r(pobj->lastProperty());
+            for (; !r.empty(); r.popFront()) {
+                Shape &shape = r.front();
+                jsid id = shape.propid();
+                if (!JSID_IS_INT(id))
+                    continue;
+
+                uint32_t i = uint32_t(JSID_TO_INT(id));
+                if (!(begin <= i && i < end))
+                    continue;
+
+                // Watch out for getters, they can add new properties.
+                if (!shape.hasDefaultGetter())
+                    return true;
+
+                if (!indexes.append(i))
+                    return false;
+            }
+        }
+    } while ((pobj = pobj->getProto()));
+
+    // Sort the indexes.
+    Vector<uint32_t> tmp(cx);
+    size_t n = indexes.length();
+    if (!tmp.resize(n))
+        return false;
+    if (!MergeSort(indexes.begin(), n, tmp.begin(), SortComparatorIndexes()))
+        return false;
+
+    // Remove duplicates.
+    if (!indexes.empty()) {
+        uint32_t last = 0;
+        for (size_t i = 1, len = indexes.length(); i < len; i++) {
+            uint32_t elem = indexes[i];
+            if (indexes[last] != elem) {
+                last++;
+                indexes[last] = elem;
+            }
+        }
+        if (!indexes.resize(last + 1))
+            return false;
+    }
+
+    *success = true;
+    return true;
+}
+
+static bool
+SliceSparse(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end, HandleObject result)
+{
+    MOZ_ASSERT(begin <= end);
+
+    Vector<uint32_t> indexes(cx);
+    bool success;
+    if (!GetIndexedPropertiesInRange(cx, obj, begin, end, indexes, &success))
+        return false;
+
+    if (!success)
+        return SliceSlowly(cx, obj, obj, begin, end, result);
+
+    RootedValue value(cx);
+    for (size_t i = 0, len = indexes.length(); i < len; i++) {
+        uint32_t index = indexes[i];
+        MOZ_ASSERT(begin <= index && index < end);
+
+        bool hole;
+        if (!GetElement(cx, obj, obj, index, &hole, &value))
+            return false;
+
+        if (!hole && !JSObject::defineElement(cx, result, index - begin, value))
+            return false;
+    }
+
+    return true;
+}
+
 bool
 js::array_slice(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -2761,12 +2891,13 @@ js::array_slice(JSContext *cx, unsigned argc, Value *vp)
         begin = end;
 
     Rooted<ArrayObject*> narr(cx);
-    narr = NewDenseFullyAllocatedArray(cx, end - begin);
-    if (!narr)
-        return false;
-    TryReuseArrayType(obj, narr);
 
     if (obj->is<ArrayObject>() && !ObjectMayHaveExtraIndexedProperties(obj)) {
+        narr = NewDenseFullyAllocatedArray(cx, end - begin);
+        if (!narr)
+            return false;
+        TryReuseArrayType(obj, narr);
+
         ArrayObject *aobj = &obj->as<ArrayObject>();
         if (aobj->getDenseInitializedLength() > begin) {
             uint32_t numSourceElements = aobj->getDenseInitializedLength() - begin;
@@ -2777,6 +2908,11 @@ js::array_slice(JSContext *cx, unsigned argc, Value *vp)
         args.rval().setObject(*narr);
         return true;
     }
+
+    narr = NewDensePartlyAllocatedArray(cx, end - begin);
+    if (!narr)
+        return false;
+    TryReuseArrayType(obj, narr);
 
     if (js::SliceOp op = obj->getOps()->slice) {
         // Ensure that we have dense elements, so that DOM can use js::UnsafeDefineElement.
@@ -2796,9 +2932,13 @@ js::array_slice(JSContext *cx, unsigned argc, Value *vp)
         MOZ_ASSERT(result == NativeObject::ED_SPARSE);
     }
 
-
-    if (!SliceSlowly(cx, obj, obj, begin, end, narr))
-        return false;
+    if (obj->isNative() && obj->isIndexed() && end - begin > 1000) {
+        if (!SliceSparse(cx, obj, begin, end, narr))
+            return false;
+    } else {
+        if (!SliceSlowly(cx, obj, obj, begin, end, narr))
+            return false;
+    }
 
     args.rval().setObject(*narr);
     return true;

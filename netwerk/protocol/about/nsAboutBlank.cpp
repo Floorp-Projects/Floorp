@@ -12,7 +12,9 @@
 NS_IMPL_ISUPPORTS(nsAboutBlank, nsIAboutModule)
 
 NS_IMETHODIMP
-nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)
+nsAboutBlank::NewChannel(nsIURI* aURI,
+                         nsILoadInfo* aLoadInfo,
+                         nsIChannel** result)
 {
     NS_ENSURE_ARG_POINTER(aURI);
 

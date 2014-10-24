@@ -9,6 +9,8 @@ interface nsIProtocolHandler;
 interface nsIChannel;
 interface nsIURI;
 interface nsIFile;
+interface nsIDOMNode;
+interface nsIPrincipal;
 
 /**
  * nsIIOService provides a set of network utility functions.  This interface
@@ -19,7 +21,7 @@ interface nsIFile;
  * as a convenience to the programmer and in some cases to improve performance
  * by eliminating intermediate data structures and interfaces.
  */
-[scriptable, uuid(2d19475d-7557-43f7-9682-0c44417b6c0f)]
+[scriptable, uuid(d8555f58-203a-465a-a33e-442ae4c6c4cf)]
 interface nsIIOService : nsISupports
 {
     /**
@@ -68,7 +70,32 @@ interface nsIIOService : nsISupports
      * @param aURI nsIURI from which to make a channel
      * @return reference to the new nsIChannel object
      */
+    nsIChannel newChannelFromURI2(in nsIURI aURI,
+                                  in nsIDOMNode aLoadingNode,
+                                  in nsIPrincipal aLoadingPrincipal,
+                                  in nsIPrincipal aTriggeringPrincipal,
+                                  in unsigned long aSecurityFlags,
+                                  in unsigned long aContentPolicyType);
+
+    /**
+     * Creates a channel for a given URI.
+     *
+     * @param aURI nsIURI from which to make a channel
+     * @return reference to the new nsIChannel object
+     */
     nsIChannel newChannelFromURI(in nsIURI aURI);
+
+    /**
+     * Equivalent to newChannelFromURI(newURI(...))
+     */
+    nsIChannel newChannel2(in AUTF8String aSpec,
+                           in string aOriginCharset,
+                           in nsIURI aBaseURI,
+                           in nsIDOMNode aLoadingNode,
+                           in nsIPrincipal aLoadingPrincipal,
+                           in nsIPrincipal aTriggeringPrincipal,
+                           in unsigned long aSecurityFlags,
+                           in unsigned long aContentPolicyType);
 
     /**
      * Equivalent to newChannelFromURI(newURI(...))
