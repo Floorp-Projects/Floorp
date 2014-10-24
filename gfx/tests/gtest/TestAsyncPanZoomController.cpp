@@ -134,6 +134,18 @@ public:
     : AsyncPanZoomController(aLayersId, aTreeManager, aTreeManager->GetInputQueue(), aMcc, aBehavior)
   {}
 
+  nsEventStatus ReceiveInputEvent(const InputData& aEvent, uint64_t* aOutInputBlockId) {
+    return GetInputQueue()->ReceiveInputEvent(this, aEvent, aOutInputBlockId);
+  }
+
+  void ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault) {
+    GetInputQueue()->ContentReceivedTouch(aInputBlockId, aPreventDefault);
+  }
+  
+  void SetAllowedTouchBehavior(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aBehaviors) {
+    GetInputQueue()->SetAllowedTouchBehavior(aInputBlockId, aBehaviors);
+  }
+
   void SetFrameMetrics(const FrameMetrics& metrics) {
     ReentrantMonitorAutoEnter lock(mMonitor);
     mFrameMetrics = metrics;
@@ -247,7 +259,7 @@ public:
 };
 
 static nsEventStatus
-ApzcDown(AsyncPanZoomController* apzc, int aX, int aY, int aTime, uint64_t* aOutInputBlockId = nullptr)
+ApzcDown(TestAsyncPanZoomController* apzc, int aX, int aY, int aTime, uint64_t* aOutInputBlockId = nullptr)
 {
   MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, aTime, TimeStamp(), 0);
   mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(aX, aY), ScreenSize(0, 0), 0, 0));
@@ -255,7 +267,7 @@ ApzcDown(AsyncPanZoomController* apzc, int aX, int aY, int aTime, uint64_t* aOut
 }
 
 static nsEventStatus
-ApzcUp(AsyncPanZoomController* apzc, int aX, int aY, int aTime)
+ApzcUp(TestAsyncPanZoomController* apzc, int aX, int aY, int aTime)
 {
   MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, aTime, TimeStamp(), 0);
   mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(aX, aY), ScreenSize(0, 0), 0, 0));
@@ -263,7 +275,7 @@ ApzcUp(AsyncPanZoomController* apzc, int aX, int aY, int aTime)
 }
 
 static void
-ApzcTap(AsyncPanZoomController* aApzc, int aX, int aY, int& aTime, int aTapLength,
+ApzcTap(TestAsyncPanZoomController* aApzc, int aX, int aY, int& aTime, int aTapLength,
         nsEventStatus (*aOutEventStatuses)[2] = nullptr)
 {
   nsEventStatus status = ApzcDown(aApzc, aX, aY, aTime);
@@ -278,7 +290,7 @@ ApzcTap(AsyncPanZoomController* aApzc, int aX, int aY, int& aTime, int aTapLengt
 }
 
 static void
-ApzcTapAndCheckStatus(AsyncPanZoomController* aApzc, int aX, int aY, int& aTime, int aTapLength)
+ApzcTapAndCheckStatus(TestAsyncPanZoomController* aApzc, int aX, int aY, int& aTime, int aTapLength)
 {
   nsEventStatus statuses[2];
   ApzcTap(aApzc, aX, aY, aTime, aTapLength, &statuses);
@@ -287,7 +299,7 @@ ApzcTapAndCheckStatus(AsyncPanZoomController* aApzc, int aX, int aY, int& aTime,
 }
 
 static void
-ApzcPan(AsyncPanZoomController* aApzc,
+ApzcPan(TestAsyncPanZoomController* aApzc,
         int& aTime,
         int aTouchStartY,
         int aTouchEndY,
@@ -354,7 +366,7 @@ ApzcPan(AsyncPanZoomController* aApzc,
  * consumed them and triggered scrolling behavior.
  */
 static void
-ApzcPanAndCheckStatus(AsyncPanZoomController* aApzc,
+ApzcPanAndCheckStatus(TestAsyncPanZoomController* aApzc,
                       int& aTime,
                       int aTouchStartY,
                       int aTouchEndY,
@@ -378,7 +390,7 @@ ApzcPanAndCheckStatus(AsyncPanZoomController* aApzc,
 }
 
 static void
-ApzcPanNoFling(AsyncPanZoomController* aApzc,
+ApzcPanNoFling(TestAsyncPanZoomController* aApzc,
                int& aTime,
                int aTouchStartY,
                int aTouchEndY,
@@ -389,7 +401,7 @@ ApzcPanNoFling(AsyncPanZoomController* aApzc,
 }
 
 static void
-ApzcPinchWithPinchInput(AsyncPanZoomController* aApzc,
+ApzcPinchWithPinchInput(TestAsyncPanZoomController* aApzc,
                         int aFocusX, int aFocusY, float aScale,
                         nsEventStatus (*aOutEventStatuses)[3] = nullptr)
 {
@@ -419,7 +431,7 @@ ApzcPinchWithPinchInput(AsyncPanZoomController* aApzc,
 }
 
 static void
-ApzcPinchWithPinchInputAndCheckStatus(AsyncPanZoomController* aApzc,
+ApzcPinchWithPinchInputAndCheckStatus(TestAsyncPanZoomController* aApzc,
                                       int aFocusX, int aFocusY, float aScale,
                                       bool aShouldTriggerPinch)
 {
@@ -434,7 +446,7 @@ ApzcPinchWithPinchInputAndCheckStatus(AsyncPanZoomController* aApzc,
 }
 
 static void
-ApzcPinchWithTouchInput(AsyncPanZoomController* aApzc,
+ApzcPinchWithTouchInput(TestAsyncPanZoomController* aApzc,
                         int aFocusX, int aFocusY, float aScale,
                         int& inputId,
                         nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
@@ -493,7 +505,7 @@ ApzcPinchWithTouchInput(AsyncPanZoomController* aApzc,
 }
 
 static void
-ApzcPinchWithTouchInputAndCheckStatus(AsyncPanZoomController* aApzc,
+ApzcPinchWithTouchInputAndCheckStatus(TestAsyncPanZoomController* aApzc,
                                       int aFocusX, int aFocusY, float aScale,
                                       int& inputId, bool aShouldTriggerPinch,
                                       nsTArray<uint32_t>* aAllowedTouchBehaviors)
@@ -1396,7 +1408,7 @@ TEST_F(APZCLongPressTester, LongPressPreventDefaultWithTouchAction) {
 }
 
 static void
-ApzcDoubleTap(AsyncPanZoomController* aApzc, int aX, int aY, int& aTime,
+ApzcDoubleTap(TestAsyncPanZoomController* aApzc, int aX, int aY, int& aTime,
               nsEventStatus (*aOutEventStatuses)[4] = nullptr,
               uint64_t (*aOutInputBlockIds)[2] = nullptr)
 {
@@ -1429,7 +1441,7 @@ ApzcDoubleTap(AsyncPanZoomController* aApzc, int aX, int aY, int& aTime,
 }
 
 static void
-ApzcDoubleTapAndCheckStatus(AsyncPanZoomController* aApzc, int aX, int aY, int& aTime, uint64_t (*aOutInputBlockIds)[2] = nullptr)
+ApzcDoubleTapAndCheckStatus(TestAsyncPanZoomController* aApzc, int aX, int aY, int& aTime, uint64_t (*aOutInputBlockIds)[2] = nullptr)
 {
   nsEventStatus statuses[4];
   ApzcDoubleTap(aApzc, aX, aY, aTime, &statuses, aOutInputBlockIds);
@@ -1786,7 +1798,7 @@ TEST_F(APZHitTestingTester, HitTesting1) {
 
   // No APZC attached so hit testing will return no APZC at (20,20)
   nsRefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(20, 20));
-  AsyncPanZoomController* nullAPZC = nullptr;
+  TestAsyncPanZoomController* nullAPZC = nullptr;
   EXPECT_EQ(nullAPZC, hit.get());
   EXPECT_EQ(Matrix4x4(), transformToApzc);
   EXPECT_EQ(Matrix4x4(), transformToGecko);
@@ -1857,9 +1869,9 @@ TEST_F(APZHitTestingTester, HitTesting2) {
   // layers[2] has content from (20,60)-(100,100). no clipping as it's not a scrollable layer
   // layers[3] has content from (20,60)-(180,140), clipped by composition bounds (20,60)-(100,100)
 
-  AsyncPanZoomController* apzcroot = ApzcOf(root);
-  AsyncPanZoomController* apzc1 = ApzcOf(layers[1]);
-  AsyncPanZoomController* apzc3 = ApzcOf(layers[3]);
+  TestAsyncPanZoomController* apzcroot = ApzcOf(root);
+  TestAsyncPanZoomController* apzc1 = ApzcOf(layers[1]);
+  TestAsyncPanZoomController* apzc3 = ApzcOf(layers[3]);
 
   // Hit an area that's clearly on the root layer but not any of the child layers.
   nsRefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(75, 25));
@@ -1967,7 +1979,7 @@ TEST_F(APZCTreeManagerTester, ScrollablePaintedLayers) {
   SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
 
-  AsyncPanZoomController* nullAPZC = nullptr;
+  TestAsyncPanZoomController* nullAPZC = nullptr;
   // so they should have the same APZC
   EXPECT_FALSE(layers[0]->HasScrollableFrameMetrics());
   EXPECT_NE(nullAPZC, ApzcOf(layers[1]));
@@ -2008,7 +2020,7 @@ TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
   ScopedLayerTreeRegistration registration(0, root, mcc);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
 
-  AsyncPanZoomController* nullAPZC = nullptr;
+  TestAsyncPanZoomController* nullAPZC = nullptr;
   // Ensure all the scrollable layers have an APZC
   EXPECT_FALSE(layers[0]->HasScrollableFrameMetrics());
   EXPECT_NE(nullAPZC, ApzcOf(layers[1]));
@@ -2033,10 +2045,10 @@ TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
   EXPECT_NE(ApzcOf(layers[7]), ApzcOf(layers[9]));
 
   // Ensure the shape of the APZC tree is as expected
-  AsyncPanZoomController* layers1_2 = ApzcOf(layers[1]);
-  AsyncPanZoomController* layers4_6_8 = ApzcOf(layers[4]);
-  AsyncPanZoomController* layer7 = ApzcOf(layers[7]);
-  AsyncPanZoomController* layer9 = ApzcOf(layers[9]);
+  TestAsyncPanZoomController* layers1_2 = ApzcOf(layers[1]);
+  TestAsyncPanZoomController* layers4_6_8 = ApzcOf(layers[4]);
+  TestAsyncPanZoomController* layer7 = ApzcOf(layers[7]);
+  TestAsyncPanZoomController* layer9 = ApzcOf(layers[9]);
   EXPECT_EQ(nullptr, layers1_2->GetParent());
   EXPECT_EQ(nullptr, layers4_6_8->GetParent());
   EXPECT_EQ(layers4_6_8, layer7->GetParent());
@@ -2063,7 +2075,7 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
   CreateSimpleScrollingLayer();
   ScopedLayerTreeRegistration registration(0, root, mcc);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
-  AsyncPanZoomController* apzcroot = ApzcOf(root);
+  TestAsyncPanZoomController* apzcroot = ApzcOf(root);
 
   // At this point, the following holds (all coordinates in screen pixels):
   // layers[0] has content from (0,0)-(500,500), clipped by composition bounds (0,0)-(200,200)

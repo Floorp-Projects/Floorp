@@ -116,16 +116,6 @@ public:
   //
 
   /**
-   * General handler for incoming input events. Manipulates the frame metrics
-   * based on what type of input it is. For example, a PinchGestureEvent will
-   * cause scaling. This should only be called externally to this class.
-   * HandleInputEvent() should be used internally.
-   * See the documentation on APZCTreeManager::ReceiveInputEvent for info on
-   * return values from this function.
-   */
-  nsEventStatus ReceiveInputEvent(const InputData& aEvent, uint64_t* aOutInputBlockId);
-
-  /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
    * in. The actual animation is done on the compositor thread after being set
    * up.
@@ -578,6 +568,11 @@ protected:
   APZCTreeManager* GetApzcTreeManager() const;
 
   /**
+   * Gets a ref to the input queue that is shared across the entire tree manager.
+   */
+  const nsRefPtr<InputQueue>& GetInputQueue() const;
+
+  /**
    * Timeout function for mozbrowserasyncscroll event. Because we throttle
    * mozbrowserasyncscroll events in some conditions, this function ensures
    * that the last mozbrowserasyncscroll event will be fired after a period of
@@ -631,7 +626,6 @@ protected:
   /* Utility functions that return a addrefed pointer to the corresponding fields. */
   already_AddRefed<GeckoContentController> GetGeckoContentController() const;
   already_AddRefed<GestureEventListener> GetGestureEventListener() const;
-  const nsRefPtr<InputQueue>& GetInputQueue() const;
 
   // If we are sharing our frame metrics with content across processes
   bool mSharingFrameMetricsAcrossProcesses;
@@ -774,16 +768,6 @@ private:
    * listeners.
    */
 public:
-  /**
-   * See InputQueue::ContentReceivedTouch
-   */
-  void ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault);
-
-  /**
-   * See InputQueue::SetAllowedTouchBehavior
-   */
-  void SetAllowedTouchBehavior(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aBehaviors);
-
   /**
    * Flush a repaint request if one is needed, without throttling it with the
    * paint throttler.
