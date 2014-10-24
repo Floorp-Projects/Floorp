@@ -3708,6 +3708,38 @@ nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(uint8_t aWidgetType)
   }
 }
 
+static nscolor ConvertNSColor(NSColor* aColor)
+{
+  NSColor* deviceColor = [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
+  return NS_RGBA((unsigned int)([deviceColor redComponent] * 255.0),
+                 (unsigned int)([deviceColor greenComponent] * 255.0),
+                 (unsigned int)([deviceColor blueComponent] * 255.0),
+                 (unsigned int)([deviceColor alphaComponent] * 255.0));
+}
+
+bool
+nsNativeThemeCocoa::WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame,
+                                                               uint8_t aWidgetType,
+                                                               nscolor* aColor)
+{
+  switch (aWidgetType) {
+    case NS_THEME_MAC_VIBRANCY_LIGHT:
+    case NS_THEME_MAC_VIBRANCY_DARK:
+    {
+      NSWindow* win = NativeWindowForFrame(aFrame);
+      if ([win isKindOfClass:[ToolbarWindow class]]) {
+        ChildView* childView = [(ToolbarWindow*)win mainChildView];
+        NSColor* color = [childView vibrancyFontSmoothingBackgroundColorForWidgetType:aWidgetType];
+        *aColor = ConvertNSColor(color);
+        return true;
+      }
+      return false;
+    }
+    default:
+      return false;
+  }
+}
+
 nsITheme::Transparency
 nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
 {
