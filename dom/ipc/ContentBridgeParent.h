@@ -34,6 +34,7 @@ public:
 
   virtual PBrowserParent*
   SendPBrowserConstructor(PBrowserParent* aActor,
+                          const TabId& aTabId,
                           const IPCTabContext& aContext,
                           const uint32_t& aChromeFlags,
                           const ContentParentId& aCpID,
@@ -87,7 +88,8 @@ protected:
   DeallocPJavaScriptParent(jsipc::PJavaScriptParent*) MOZ_OVERRIDE;
 
   virtual PBrowserParent*
-  AllocPBrowserParent(const IPCTabContext &aContext,
+  AllocPBrowserParent(const TabId& aTabId,
+                      const IPCTabContext &aContext,
                       const uint32_t& aChromeFlags,
                       const ContentParentId& aCpID,
                       const bool& aIsForApp,

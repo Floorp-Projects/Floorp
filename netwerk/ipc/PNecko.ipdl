@@ -26,17 +26,12 @@ include protocol PRtspChannel;
 include URIParams;
 include InputStreamParams;
 include NeckoChannelParams;
-
+include PBrowserOrId;
 
 using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 
 namespace mozilla {
 namespace net {
-
-union PBrowserOrId {
-  nullable PBrowser;
-  uint64_t;
-};
 
 //-------------------------------------------------------------------
 sync protocol PNecko

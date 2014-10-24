@@ -54,6 +54,7 @@ public:
 
   virtual bool
   SendPBrowserConstructor(PBrowserChild* aActor,
+                          const TabId& aTabId,
                           const IPCTabContext& aContext,
                           const uint32_t& aChromeFlags,
                           const ContentParentId& aCpID,
@@ -63,7 +64,8 @@ protected:
   virtual jsipc::PJavaScriptChild* AllocPJavaScriptChild();
   virtual bool DeallocPJavaScriptChild(jsipc::PJavaScriptChild*);
 
-  virtual PBrowserChild* AllocPBrowserChild(const IPCTabContext& aContext,
+  virtual PBrowserChild* AllocPBrowserChild(const TabId& aTabId,
+                                            const IPCTabContext& aContext,
                                             const uint32_t& aChromeFlags,
                                             const ContentParentId& aCpId,
                                             const bool& aIsForApp,
