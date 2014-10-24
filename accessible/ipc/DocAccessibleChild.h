@@ -43,6 +43,11 @@ public:
    */
   virtual bool RecvName(const uint64_t& aID, nsString* aName) MOZ_OVERRIDE;
 
+  /*
+   * Get the description for the accessible with given id.
+   */
+  virtual bool RecvDescription(const uint64_t& aID, nsString* aDesc) MOZ_OVERRIDE;
+
 private:
   DocAccessible* mDoc;
 };

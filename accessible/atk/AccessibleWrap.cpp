@@ -644,13 +644,18 @@ MaybeFireNameChange(AtkObject* aAtkObj, const nsString& aNewName)
 const gchar *
 getDescriptionCB(AtkObject *aAtkObj)
 {
-    AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-    if (!accWrap || accWrap->IsDefunct())
-        return nullptr;
+  nsAutoString uniDesc;
+  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
+  if (accWrap) {
+    if (accWrap->IsDefunct())
+      return nullptr;
 
-    /* nsIAccessible is responsible for the nonnull description */
-    nsAutoString uniDesc;
     accWrap->Description(uniDesc);
+  } else if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
+    proxy->Description(uniDesc);
+  } else {
+    return nullptr;
+  }
 
     NS_ConvertUTF8toUTF16 objDesc(aAtkObj->description);
     if (!uniDesc.Equals(objDesc))
