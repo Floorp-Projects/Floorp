@@ -1207,7 +1207,9 @@ nsJSProtocolHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsJSProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
+nsJSProtocolHandler::NewChannel2(nsIURI* uri,
+                                 nsILoadInfo* aLoadInfo,
+                                 nsIChannel** result)
 {
     nsresult rv;
     nsJSChannel * channel;
@@ -1227,6 +1229,12 @@ nsJSProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     }
     NS_RELEASE(channel);
     return rv;
+}
+
+NS_IMETHODIMP
+nsJSProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
+{
+    return NewChannel2(uri, nullptr, result);
 }
 
 NS_IMETHODIMP 

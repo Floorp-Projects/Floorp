@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { LoopCallsInternal } = Cu.import("resource:///modules/loop/LoopCalls.jsm", {});
+
 XPCOMUtils.defineLazyModuleGetter(this, "Chat",
                                   "resource:///modules/Chat.jsm");
 
@@ -10,20 +12,22 @@ let openChatOrig = Chat.open;
 const firstCallId = 4444333221;
 const secondCallId = 1001100101;
 
-function test_send_busy_on_call() {
-  let actionReceived = false;
+let msgHandler = function(msg) {
+  if (msg.messageType &&
+      msg.messageType === "action" &&
+      msg.event === "terminate" &&
+      msg.reason === "busy") {
+    actionReceived = true;
+  }
+}
 
-  let msgHandler = function(msg) {
-    if (msg.messageType &&
-        msg.messageType === "action" &&
-        msg.event === "terminate" &&
-        msg.reason === "busy") {
-      actionReceived = true;
-    }
-  };
+let mockWebSocket = new MockWebSocketChannel({defaultMsgHandler: msgHandler});
+LoopCallsInternal._mocks.webSocket = mockWebSocket;
 
-  let mockWebSocket = new MockWebSocketChannel({defaultMsgHandler: msgHandler});
-  Services.io.offline = false;
+Services.io.offline = false;
+
+add_test(function test_busy_2guest_calls() {
+  actionReceived = false;
 
   MozLoopService.register(mockPushHandler, mockWebSocket).then(() => {
     let opened = 0;
@@ -31,22 +35,90 @@ function test_send_busy_on_call() {
       opened++;
     };
 
-    mockPushHandler.notify(1);
+    mockPushHandler.notify(1, LoopCalls.channelIDs.Guest);
 
     waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
       do_check_true(opened === 1, "should open only one chat window");
       do_check_true(actionReceived, "should respond with busy/reject to second call");
-      MozLoopService.releaseCallData(firstCallId);
+      LoopCalls.releaseCallData(firstCallId);
       run_next_test();
     }, () => {
       do_throw("should have opened a chat window for first call and rejected second call");
     });
 
   });
-}
+});
 
-add_test(test_send_busy_on_call); //FXA call accepted, Guest call rejected
-add_test(test_send_busy_on_call); //No FXA call, first Guest call accepted, second rejected
+add_test(function test_busy_1fxa_1guest_calls() {
+  actionReceived = false;
+
+  MozLoopService.register(mockPushHandler, mockWebSocket).then(() => {
+    let opened = 0;
+    Chat.open = function() {
+      opened++;
+    };
+
+    mockPushHandler.notify(1, LoopCalls.channelIDs.FxA);
+    mockPushHandler.notify(1, LoopCalls.channelIDs.Guest);
+
+    waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
+      do_check_true(opened === 1, "should open only one chat window");
+      do_check_true(actionReceived, "should respond with busy/reject to second call");
+      LoopCalls.releaseCallData(firstCallId);
+      run_next_test();
+    }, () => {
+      do_throw("should have opened a chat window for first call and rejected second call");
+    });
+
+  });
+});
+
+add_test(function test_busy_2fxa_calls() {
+  actionReceived = false;
+
+  MozLoopService.register(mockPushHandler, mockWebSocket).then(() => {
+    let opened = 0;
+    Chat.open = function() {
+      opened++;
+    };
+
+    mockPushHandler.notify(1, LoopCalls.channelIDs.FxA);
+
+    waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
+      do_check_true(opened === 1, "should open only one chat window");
+      do_check_true(actionReceived, "should respond with busy/reject to second call");
+      LoopCalls.releaseCallData(firstCallId);
+      run_next_test();
+    }, () => {
+      do_throw("should have opened a chat window for first call and rejected second call");
+    });
+
+  });
+});
+
+add_test(function test_busy_1guest_1fxa_calls() {
+  actionReceived = false;
+
+  MozLoopService.register(mockPushHandler, mockWebSocket).then(() => {
+    let opened = 0;
+    Chat.open = function() {
+      opened++;
+    };
+
+    mockPushHandler.notify(1, LoopCalls.channelIDs.Guest);
+    mockPushHandler.notify(1, LoopCalls.channelIDs.FxA);
+
+    waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
+      do_check_true(opened === 1, "should open only one chat window");
+      do_check_true(actionReceived, "should respond with busy/reject to second call");
+      LoopCalls.releaseCallData(firstCallId);
+      run_next_test();
+    }, () => {
+      do_throw("should have opened a chat window for first call and rejected second call");
+    });
+
+  });
+});
 
 function run_test()
 {
@@ -66,16 +138,14 @@ function run_test()
   let callsResponses = [
     {calls: [{callId: firstCallId,
               websocketToken: "0deadbeef0",
-              progressURL: "wss://localhost:5000/websocket"}]},
-    {calls: [{callId: secondCallId,
-              websocketToken: "1deadbeef1",
-              progressURL: "wss://localhost:5000/websocket"}]},
-
-    {calls: []},
-    {calls: [{callId: firstCallId,
-              websocketToken: "0deadbeef0",
               progressURL: "wss://localhost:5000/websocket"},
              {callId: secondCallId,
+              websocketToken: "1deadbeef1",
+              progressURL: "wss://localhost:5000/websocket"}]},
+    {calls: [{callId: firstCallId,
+              websocketToken: "0deadbeef0",
+              progressURL: "wss://localhost:5000/websocket"}]},
+    {calls: [{callId: secondCallId,
               websocketToken: "1deadbeef1",
               progressURL: "wss://localhost:5000/websocket"}]},
   ];
@@ -107,6 +177,8 @@ function run_test()
 
     // clear test pref
     Services.prefs.clearUserPref("loop.seenToS");
+
+    LoopCallsInternal._mocks.webSocket = undefined;
   });
 
   run_next_test();

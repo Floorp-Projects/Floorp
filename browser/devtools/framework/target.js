@@ -109,23 +109,13 @@ exports.TargetFactory = {
  * The 'version' property allows the developer tools equivalent of browser
  * detection. Browser detection is evil, however while we don't know what we
  * will need to detect in the future, it is an easy way to postpone work.
- * We should be looking to use 'supports()' in place of version where
- * possible.
+ * We should be looking to use the support features added in bug 1069673
+ * in place of version where possible.
  */
 function getVersion() {
   // FIXME: return something better
   return 20;
 }
-
-/**
- * A better way to support feature detection, but we're not yet at a place
- * where we have the features well enough defined for this to make lots of
- * sense.
- */
-function supports(feature) {
-  // FIXME: return something better
-  return false;
-};
 
 /**
  * A Target represents something that we can debug. Targets are generally
@@ -150,12 +140,6 @@ function supports(feature) {
  * - will-navigate: The target window will navigate to a different URL
  * - hidden: The target is not visible anymore (for TargetTab, another tab is selected)
  * - visible: The target is visible (for TargetTab, tab is selected)
- *
- * Target also supports 2 functions to help allow 2 different versions of
- * Firefox debug each other. The 'version' property is the equivalent of
- * browser detection - simple and easy to implement but gets fragile when things
- * are not quite what they seem. The 'supports' property is the equivalent of
- * feature detection - harder to setup, but more robust long-term.
  *
  * Comparing Targets: 2 instances of a Target object can point at the same
  * thing, so t1 !== t2 and t1 != t2 even when they represent the same object.
@@ -196,7 +180,109 @@ function TabTarget(tab) {
 TabTarget.prototype = {
   _webProgressListener: null,
 
-  supports: supports,
+  /**
+   * Returns a promise for the protocol description from the root actor.
+   * Used internally with `target.actorHasMethod`. Takes advantage of
+   * caching if definition was fetched previously with the corresponding
+   * actor information. Must be a remote target.
+   *
+   * @return {Promise}
+   * {
+   *   "category": "actor",
+   *   "typeName": "longstractor",
+   *   "methods": [{
+   *     "name": "substring",
+   *     "request": {
+   *       "type": "substring",
+   *       "start": {
+   *         "_arg": 0,
+   *         "type": "primitive"
+   *       },
+   *       "end": {
+   *         "_arg": 1,
+   *         "type": "primitive"
+   *       }
+   *     },
+   *     "response": {
+   *       "substring": {
+   *         "_retval": "primitive"
+   *       }
+   *     }
+   *   }],
+   *  "events": {}
+   * }
+   */
+  getActorDescription: function (actorName) {
+    if (!this.client) {
+      throw new Error("TabTarget#getActorDescription() can only be called on remote tabs.");
+    }
+
+    let deferred = promise.defer();
+
+    if (this._protocolDescription && this._protocolDescription.types[actorName]) {
+      deferred.resolve(this._protocolDescription.types[actorName]);
+    } else {
+      this.client.mainRoot.protocolDescription(description => {
+        this._protocolDescription = description;
+        deferred.resolve(description.types[actorName]);
+      });
+    }
+
+    return deferred.promise;
+  },
+
+  /**
+   * Returns a boolean indicating whether or not the specific actor
+   * type exists. Must be a remote target.
+   *
+   * @param {String} actorName
+   * @return {Boolean}
+   */
+  hasActor: function (actorName) {
+    if (!this.client) {
+      throw new Error("TabTarget#hasActor() can only be called on remote tabs.");
+    }
+    if (this.form) {
+      return !!this.form[actorName + "Actor"];
+    }
+    return false;
+  },
+
+  /**
+   * Queries the protocol description to see if an actor has
+   * an available method. The actor must already be lazily-loaded,
+   * so this is for use inside of tool. Returns a promise that
+   * resolves to a boolean. Must be a remote target.
+   *
+   * @param {String} actorName
+   * @param {String} methodName
+   * @return {Promise}
+   */
+  actorHasMethod: function (actorName, methodName) {
+    if (!this.client) {
+      throw new Error("TabTarget#actorHasMethod() can only be called on remote tabs.");
+    }
+    return this.getActorDescription(actorName).then(desc => {
+      if (desc && desc.methods) {
+        return !!desc.methods.find(method => method.name === methodName);
+      }
+      return false;
+    });
+  },
+
+  /**
+   * Returns a trait from the root actor.
+   *
+   * @param {String} traitName
+   * @return {Mixed}
+   */
+  getTrait: function (traitName) {
+    if (!this.client) {
+      throw new Error("TabTarget#getTrait() can only be called on remote tabs.");
+    }
+    return this.client.traits[traitName];
+  },
+
   get version() { return getVersion(); },
 
   get tab() {
@@ -609,7 +695,6 @@ function WindowTarget(window) {
 }
 
 WindowTarget.prototype = {
-  supports: supports,
   get version() { return getVersion(); },
 
   get window() {

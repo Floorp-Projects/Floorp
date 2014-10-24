@@ -20,8 +20,6 @@
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
 
-#include "XPCQuickStubs.h"
-
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/PromiseBinding.h"

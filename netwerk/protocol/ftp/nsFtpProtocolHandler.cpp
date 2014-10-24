@@ -203,16 +203,25 @@ nsFtpProtocolHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
+nsFtpProtocolHandler::NewChannel2(nsIURI* url,
+                                  nsILoadInfo* aLoadInfo,
+                                  nsIChannel** result)
 {
     return NewProxiedChannel(url, nullptr, 0, nullptr, result);
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* proxyInfo,
-                                        uint32_t proxyResolveFlags,
-                                        nsIURI *proxyURI,
-                                        nsIChannel* *result)
+nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
+{
+    return NewChannel2(url, nullptr, result);
+}
+
+NS_IMETHODIMP
+nsFtpProtocolHandler::NewProxiedChannel2(nsIURI* uri, nsIProxyInfo* proxyInfo,
+                                         uint32_t proxyResolveFlags,
+                                         nsIURI *proxyURI,
+                                         nsILoadInfo* aLoadInfo,
+                                         nsIChannel* *result)
 {
     NS_ENSURE_ARG_POINTER(uri);
     nsRefPtr<nsBaseChannel> channel;
@@ -228,6 +237,17 @@ nsFtpProtocolHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* proxyInfo,
     
     channel.forget(result);
     return rv;
+}
+
+NS_IMETHODIMP
+nsFtpProtocolHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* proxyInfo,
+                                        uint32_t proxyResolveFlags,
+                                        nsIURI *proxyURI,
+                                        nsIChannel* *result)
+{
+  return NewProxiedChannel2(uri, proxyInfo, proxyResolveFlags,
+                            proxyURI, nullptr /*loadinfo*/,
+                            result);
 }
 
 NS_IMETHODIMP 

@@ -1630,9 +1630,9 @@ checkGenericEmptyMatches(Element* aElement,
 
 // Arrays of the states that are relevant for various pseudoclasses.
 static const EventStates sPseudoClassStateDependences[] = {
-#define CSS_PSEUDO_CLASS(_name, _value, _pref)  \
+#define CSS_PSEUDO_CLASS(_name, _value, _flags, _pref) \
   EventStates(),
-#define CSS_STATE_DEPENDENT_PSEUDO_CLASS(_name, _value, _pref, _states)  \
+#define CSS_STATE_DEPENDENT_PSEUDO_CLASS(_name, _value, _flags, _pref, _states) \
   _states,
 #include "nsCSSPseudoClassList.h"
 #undef CSS_STATE_DEPENDENT_PSEUDO_CLASS
@@ -1644,9 +1644,9 @@ static const EventStates sPseudoClassStateDependences[] = {
 };
 
 static const EventStates sPseudoClassStates[] = {
-#define CSS_PSEUDO_CLASS(_name, _value, _pref)  \
+#define CSS_PSEUDO_CLASS(_name, _value, _flags, _pref) \
   EventStates(),
-#define CSS_STATE_PSEUDO_CLASS(_name, _value, _pref, _states) \
+#define CSS_STATE_PSEUDO_CLASS(_name, _value, _flags, _pref, _states) \
   _states,
 #include "nsCSSPseudoClassList.h"
 #undef CSS_STATE_PSEUDO_CLASS
@@ -2081,6 +2081,12 @@ static bool SelectorMatches(Element* aElement,
 
       case nsCSSPseudoClasses::ePseudoClass_mozIsHTML:
         if (!aTreeMatchContext.mIsHTMLDocument || !aElement->IsHTML()) {
+          return false;
+        }
+        break;
+
+      case nsCSSPseudoClasses::ePseudoClass_mozNativeAnonymous:
+        if (!aElement->IsInNativeAnonymousSubtree()) {
           return false;
         }
         break;

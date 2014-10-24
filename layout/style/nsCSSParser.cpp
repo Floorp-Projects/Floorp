@@ -5394,9 +5394,11 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
     nsCSSPseudoClasses::IsUserActionPseudoClass(pseudoClassType);
 
   if (!mUnsafeRulesEnabled &&
-      pseudoElementType < nsCSSPseudoElements::ePseudo_PseudoElementCount &&
-      nsCSSPseudoElements::PseudoElementIsChromeOnly(pseudoElementType)) {
-    // This pseudo-element is not exposed to content.
+      ((pseudoElementType < nsCSSPseudoElements::ePseudo_PseudoElementCount &&
+        nsCSSPseudoElements::PseudoElementIsUASheetOnly(pseudoElementType)) ||
+       (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass &&
+        nsCSSPseudoClasses::PseudoClassIsUASheetOnly(pseudoClassType)))) {
+    // This pseudo-element or pseudo-class is not exposed to content.
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
     UngetToken();
     return eSelectorParsingStatus_Error;

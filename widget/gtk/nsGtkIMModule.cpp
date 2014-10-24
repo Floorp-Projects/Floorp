@@ -583,6 +583,17 @@ nsGtkIMModule::GetContext()
 }
 
 bool
+nsGtkIMModule::IsValidContext(GtkIMContext* aContext) const
+{
+    if (!aContext) {
+        return false;
+    }
+    return aContext == mContext ||
+           aContext == mSimpleContext ||
+           aContext == mDummyContext;
+}
+
+bool
 nsGtkIMModule::IsEnabled()
 {
     return mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
@@ -725,7 +736,9 @@ nsGtkIMModule::OnEndCompositionNative(GtkIMContext *aContext)
          this, aContext));
 
     // See bug 472635, we should do nothing if IM context doesn't match.
-    if (GetContext() != aContext) {
+    // Note that if this is called after focus move, the context may different
+    // from the result of GetContext().
+    if (!IsValidContext(aContext)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, given context doesn't match, GetContext()=%p",
              GetContext()));
@@ -757,7 +770,9 @@ nsGtkIMModule::OnChangeCompositionNative(GtkIMContext *aContext)
          this, aContext));
 
     // See bug 472635, we should do nothing if IM context doesn't match.
-    if (GetContext() != aContext) {
+    // Note that if this is called after focus move, the context may different
+    // from the result of GetContext().
+    if (!IsValidContext(aContext)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, given context doesn't match, GetContext()=%p",
              GetContext()));
@@ -765,7 +780,7 @@ nsGtkIMModule::OnChangeCompositionNative(GtkIMContext *aContext)
     }
 
     nsAutoString compositionString;
-    GetCompositionString(compositionString);
+    GetCompositionString(aContext, compositionString);
     if (!IsComposing() && compositionString.IsEmpty()) {
         mDispatchedCompositionString.Truncate();
         return; // Don't start the composition with empty string.
@@ -927,12 +942,13 @@ nsGtkIMModule::CommitCompositionBy(const nsAString& aString)
 }
 
 void
-nsGtkIMModule::GetCompositionString(nsAString &aCompositionString)
+nsGtkIMModule::GetCompositionString(GtkIMContext* aContext,
+                                    nsAString& aCompositionString)
 {
     gchar *preedit_string;
     gint cursor_pos;
     PangoAttrList *feedback_list;
-    gtk_im_context_get_preedit_string(GetContext(), &preedit_string,
+    gtk_im_context_get_preedit_string(aContext, &preedit_string,
                                       &feedback_list, &cursor_pos);
     if (preedit_string && *preedit_string) {
         CopyUTF8toUTF16(preedit_string, aCompositionString);
@@ -1446,7 +1462,7 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
     if (wasComposing) {
         selOffset = mCompositionStart;
         if (editorHadCompositionString &&
-            !DispatchCompositionChangeEvent(mSelectedString, false)) {
+            !DispatchCompositionChangeEvent(mSelectedString, true)) {
             PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
                 ("    FAILED, quitting from DeletText"));
             return NS_ERROR_FAILURE;
@@ -1572,8 +1588,8 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
     }
 
     nsAutoString compositionString;
-    GetCompositionString(compositionString);
-    if (!DispatchCompositionChangeEvent(compositionString, true)) {
+    GetCompositionString(GetContext(), compositionString);
+    if (!DispatchCompositionChangeEvent(compositionString, false)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, restoring composition string"));
         return NS_ERROR_FAILURE;
