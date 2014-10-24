@@ -58,72 +58,13 @@ allocatorFns = [
 ]
 
 class Record(object):
-    '''A record is an aggregation of heap blocks that have identical stack
-    traces. It can also be used to represent the difference between two
-    records.'''
-
     def __init__(self):
         self.numBlocks = 0
         self.reqSize = 0
         self.slopSize = 0
         self.usableSize = 0
         self.isSampled = False
-        self.allocatedAtDesc = None
-        self.reportedAtDescs = []
         self.usableSizes = collections.defaultdict(int)
-
-    def isZero(self, args):
-        return self.numBlocks == 0 and \
-               self.reqSize == 0 and \
-               self.slopSize == 0 and \
-               self.usableSize == 0 and \
-               (not args.show_all_block_sizes or len(self.usableSizes) == 0)
-
-    def negate(self):
-        self.numBlocks = -self.numBlocks
-        self.reqSize = -self.reqSize
-        self.slopSize = -self.slopSize
-        self.usableSize = -self.usableSize
-
-        negatedUsableSizes = collections.defaultdict(int)
-        for (usableSize, isSampled), count in self.usableSizes.items():
-            negatedUsableSizes[(-usableSize, isSampled)] = count
-        self.usableSizes = negatedUsableSizes
-
-    def subtract(self, r):
-        # We should only be calling this on records with matching stack traces.
-        # Check this.
-        assert self.allocatedAtDesc == r.allocatedAtDesc
-        assert self.reportedAtDescs == r.reportedAtDescs
-
-        self.numBlocks -= r.numBlocks
-        self.reqSize -= r.reqSize
-        self.slopSize -= r.slopSize
-        self.usableSize -= r.usableSize
-        self.isSampled = self.isSampled or r.isSampled
-
-        usableSizes1 = self.usableSizes
-        usableSizes2 = r.usableSizes
-        usableSizes3 = collections.defaultdict(int)
-        for usableSize, isSampled in usableSizes1:
-            counts1 = usableSizes1[usableSize, isSampled]
-            if (usableSize, isSampled) in usableSizes2:
-                counts2 = usableSizes2[usableSize, isSampled]
-                del usableSizes2[usableSize, isSampled]
-                counts3 = counts1 - counts2
-                if counts3 != 0:
-                    if counts3 < 0:
-                        usableSize = -usableSize
-                        counts3 = -counts3
-                    usableSizes3[usableSize, isSampled] = counts3
-            else:
-                usableSizes3[usableSize, isSampled] = counts1
-
-        for usableSize, isSampled in usableSizes2:
-            usableSizes3[-usableSize, isSampled] = \
-                usableSizes2[usableSize, isSampled]
-
-        self.usableSizes = usableSizes3
 
     @staticmethod
     def cmpByIsSampled(r1, r2):
@@ -133,20 +74,17 @@ class Record(object):
     @staticmethod
     def cmpByUsableSize(r1, r2):
         # Sort by usable size, then req size, then by isSampled.
-        return cmp(abs(r1.usableSize), abs(r2.usableSize)) or \
-               Record.cmpByReqSize(r1, r2)
+        return cmp(r1.usableSize, r2.usableSize) or Record.cmpByReqSize(r1, r2)
 
     @staticmethod
     def cmpByReqSize(r1, r2):
         # Sort by req size, then by isSampled.
-        return cmp(abs(r1.reqSize), abs(r2.reqSize)) or \
-               Record.cmpByIsSampled(r1, r2)
+        return cmp(r1.reqSize, r2.reqSize) or Record.cmpByIsSampled(r1, r2)
 
     @staticmethod
     def cmpBySlopSize(r1, r2):
         # Sort by slop size, then by isSampled.
-        return cmp(abs(r1.slopSize), abs(r2.slopSize)) or \
-               Record.cmpByIsSampled(r1, r2)
+        return cmp(r1.slopSize, r2.slopSize) or Record.cmpByIsSampled(r1, r2)
 
 
 sortByChoices = {
@@ -167,9 +105,7 @@ def parseCommandLine():
 
     description = '''
 Analyze heap data produced by DMD.
-If one file is specified, analyze it; if two files are specified, analyze the
-difference.
-Input files can be gzipped.
+If no files are specified, read from stdin; input can be gzipped.
 Write to stdout unless -o/--output is specified.
 Stack traces are fixed to show function names, filenames and line numbers
 unless --no-fix-stacks is specified; stack fixing modifies the original file
@@ -204,11 +140,7 @@ variable is used to find breakpad symbols for stack fixing.
     p.add_argument('--filter-stacks-for-testing', action='store_true',
                    help='filter stack traces; only useful for testing purposes')
 
-    p.add_argument('input_file',
-                   help='a file produced by DMD')
-
-    p.add_argument('input_file2', nargs='?',
-                   help='a file produced by DMD; if present, it is diff\'d with input_file')
+    p.add_argument('input_file')
 
     return p.parse_args(sys.argv[1:])
 
@@ -263,16 +195,18 @@ def fixStackTraces(inputFilename, isZipped, opener):
         shutil.move(tmpFilename, inputFilename)
 
 
-def getDigestFromFile(args, inputFile):
+def main():
+    args = parseCommandLine()
+
     # Handle gzipped input if necessary.
-    isZipped = inputFile.endswith('.gz')
+    isZipped = args.input_file.endswith('.gz')
     opener = gzip.open if isZipped else open
 
     # Fix stack traces unless otherwise instructed.
     if not args.no_fix_stacks:
-        fixStackTraces(inputFile, isZipped, opener)
+        fixStackTraces(args.input_file, isZipped, opener)
 
-    with opener(inputFile, 'rb') as f:
+    with opener(args.input_file, 'rb') as f:
         j = json.load(f)
 
     if j['version'] != outputVersion:
@@ -311,31 +245,6 @@ def getDigestFromFile(args, inputFile):
         if len(frameKeys) > args.max_frames:
             traceTable[traceKey] = frameKeys[:args.max_frames]
 
-    def buildTraceDescription(traceTable, frameTable, traceKey):
-        frameKeys = traceTable[traceKey]
-        fmt = '    #{:02d}{:}'
-
-        if args.filter_stacks_for_testing:
-            # When running SmokeDMD.cpp, every stack trace should contain at
-            # least one frame that contains 'DMD.cpp', from either |DMD.cpp| or
-            # |SmokeDMD.cpp|. (Or 'dmd.cpp' on Windows.) If we see such a
-            # frame, we replace the entire stack trace with a single,
-            # predictable frame. There is too much variation in the stack
-            # traces across different machines and platforms to do more precise
-            # matching, but this level of matching will result in failure if
-            # stack fixing fails completely.
-            for frameKey in frameKeys:
-                frameDesc = frameTable[frameKey]
-                if 'DMD.cpp' in frameDesc or 'dmd.cpp' in frameDesc:
-                    return [fmt.format(1, ': ... DMD.cpp ...')]
-
-        # The frame number is always '#00' (see DMD.h for why), so we have to
-        # replace that with the correct frame number.
-        desc = []
-        for n, frameKey in enumerate(traceTable[traceKey], start=1):
-            desc.append(fmt.format(n, frameTable[frameKey][3:]))
-        return desc
-
     # Aggregate blocks into records. All sufficiently similar blocks go into a
     # single record.
 
@@ -355,33 +264,24 @@ def getDigestFromFile(args, inputFile):
         # derived from the block's 'alloc' and 'reps' (if present) stack
         # traces.
         #
-        # We use frame descriptions (e.g. "#00: foo (X.cpp:99)") when comparing
-        # traces for equality. We can't use trace keys or frame keys because
-        # they're not comparable across different DMD runs (which is relevant
-        # when doing diffs).
-        #
-        # Using frame descriptions also fits in with the stack trimming done
-        # for --max-frames, which requires that stack traces with common
-        # beginnings but different endings to be considered equivalent. E.g. if
-        # we have distinct traces T1:[A:D1,B:D2,C:D3] and T2:[X:D1,Y:D2,Z:D4]
-        # and we trim the final frame of each they should be considered
-        # equivalent because the untrimmed frame descriptions (D1 and D2)
-        # match.
-        def makeRecordKeyPart(traceKey):
-            return str(map(lambda frameKey: frameTable[frameKey],
-                           traceTable[traceKey]))
-
-        allocatedAtTraceKey = block['alloc']
+        # Each stack trace has a key in the JSON file. But we don't use that
+        # key to construct |recordKey|; instead we use the frame keys.
+        # This is because the stack trimming done for --max-frames can cause
+        # stack traces with distinct trace keys to end up with the same frame
+        # keys, and these should be considered equivalent. E.g. if we have
+        # distinct traces T1:[A,B,C] and T2:[A,B,D] and we trim the final frame
+        # of each they should be considered equivalent.
+        allocatedAt = block['alloc']
         if args.ignore_reports:
-            recordKey = makeRecordKeyPart(allocatedAtTraceKey)
+            recordKey = str(traceTable[allocatedAt])
             records = liveRecords
         else:
-            recordKey = makeRecordKeyPart(allocatedAtTraceKey)
+            recordKey = str(traceTable[allocatedAt])
             if 'reps' in block:
-                reportedAtTraceKeys = block['reps']
-                for reportedAtTraceKey in reportedAtTraceKeys:
-                    recordKey += makeRecordKeyPart(reportedAtTraceKey)
-                if len(reportedAtTraceKeys) == 1:
+                reportedAts = block['reps']
+                for reportedAt in reportedAts:
+                    recordKey += str(traceTable[reportedAt])
+                if len(reportedAts) == 1:
                     records = onceReportedRecords
                 else:
                     records = twiceReportedRecords
@@ -412,92 +312,15 @@ def getDigestFromFile(args, inputFile):
         record.slopSize   += slopSize
         record.usableSize += usableSize
         record.isSampled   = record.isSampled or isSampled
-        if record.allocatedAtDesc == None:
-            record.allocatedAtDesc = \
-                buildTraceDescription(traceTable, frameTable,
-                                      allocatedAtTraceKey)
-
+        record.allocatedAt = block['alloc']
         if args.ignore_reports:
             pass
         else:
-            if 'reps' in block and record.reportedAtDescs == []:
-                f = lambda k: buildTraceDescription(traceTable, frameTable, k)
-                record.reportedAtDescs = map(f, reportedAtTraceKeys)
+            if 'reps' in block:
+                record.reportedAts = block['reps']
         record.usableSizes[(usableSize, isSampled)] += 1
 
-    # All the processed data for a single DMD file is called a "digest".
-    digest = {}
-    digest['dmdEnvVar'] = dmdEnvVar
-    digest['sampleBelowSize'] = sampleBelowSize
-    digest['heapUsableSize'] = heapUsableSize
-    digest['heapBlocks'] = heapBlocks
-    digest['heapIsSampled'] = heapIsSampled
-    if args.ignore_reports:
-        digest['liveRecords'] = liveRecords
-    else:
-        digest['unreportedRecords'] = unreportedRecords
-        digest['onceReportedRecords'] = onceReportedRecords
-        digest['twiceReportedRecords'] = twiceReportedRecords
-    return digest
-
-
-def diffRecords(args, records1, records2):
-    records3 = {}
-
-    # Process records1.
-    for k in records1:
-        r1 = records1[k]
-        if k in records2:
-            # This record is present in both records1 and records2.
-            r2 = records2[k]
-            del records2[k]
-            r2.subtract(r1)
-            if not r2.isZero(args):
-                records3[k] = r2
-        else:
-            # This record is present only in records1.
-            r1.negate()
-            records3[k] = r1
-
-    for k in records2:
-        # This record is present only in records2.
-        records3[k] = records2[k]
-
-    return records3
-
-
-def diffDigests(args, d1, d2):
-    d3 = {}
-    d3['dmdEnvVar'] = (d1['dmdEnvVar'], d2['dmdEnvVar'])
-    d3['sampleBelowSize'] = (d1['sampleBelowSize'], d2['sampleBelowSize'])
-    d3['heapUsableSize'] = d2['heapUsableSize'] - d1['heapUsableSize']
-    d3['heapBlocks']     = d2['heapBlocks']     - d1['heapBlocks']
-    d3['heapIsSampled']  = d2['heapIsSampled'] or d1['heapIsSampled']
-    if args.ignore_reports:
-        d3['liveRecords'] = diffRecords(args, d1['liveRecords'],
-                                              d2['liveRecords'])
-    else:
-        d3['unreportedRecords']    = diffRecords(args, d1['unreportedRecords'],
-                                                       d2['unreportedRecords'])
-        d3['onceReportedRecords']  = diffRecords(args, d1['onceReportedRecords'],
-                                                       d2['onceReportedRecords'])
-        d3['twiceReportedRecords'] = diffRecords(args, d1['twiceReportedRecords'],
-                                                       d2['twiceReportedRecords'])
-    return d3
-
-
-def printDigest(args, digest):
-    dmdEnvVar       = digest['dmdEnvVar']
-    sampleBelowSize = digest['sampleBelowSize']
-    heapUsableSize  = digest['heapUsableSize']
-    heapIsSampled   = digest['heapIsSampled']
-    heapBlocks      = digest['heapBlocks']
-    if args.ignore_reports:
-        liveRecords = digest['liveRecords']
-    else:
-        unreportedRecords    = digest['unreportedRecords']
-        onceReportedRecords  = digest['onceReportedRecords']
-        twiceReportedRecords = digest['twiceReportedRecords']
+    # Print records.
 
     separator = '#' + '-' * 65 + '\n'
 
@@ -516,9 +339,29 @@ def printDigest(args, digest):
     def out(*arguments, **kwargs):
         print(*arguments, file=args.output, **kwargs)
 
-    def printStack(traceDesc):
-        for frameDesc in traceDesc:
-            out(frameDesc)
+    def printStack(traceTable, frameTable, traceKey):
+        frameKeys = traceTable[traceKey]
+        fmt = '    #{:02d}{:}'
+
+        if args.filter_stacks_for_testing:
+            # When running SmokeDMD.cpp, every stack trace should contain at
+            # least one frame that contains 'DMD.cpp', from either |DMD.cpp| or
+            # |SmokeDMD.cpp|. (Or 'dmd.cpp' on Windows.) If we see such a
+            # frame, we replace the entire stack trace with a single,
+            # predictable frame. There is too much variation in the stack
+            # traces across different machines and platforms to do more precise
+            # matching, but this level of matching will result in failure if
+            # stack fixing fails completely.
+            for frameKey in frameKeys:
+                frameDesc = frameTable[frameKey]
+                if 'DMD.cpp' in frameDesc or 'dmd.cpp' in frameDesc:
+                    out(fmt.format(1, ': ... DMD.cpp ...'))
+                    return
+
+        # The frame number is always '#00' (see DMD.h for why), so we have to
+        # replace that with the correct frame number.
+        for n, frameKey in enumerate(traceTable[traceKey], start=1):
+            out(fmt.format(n, frameTable[frameKey][3:]))
 
     def printRecords(recordKind, records, heapUsableSize):
         RecordKind = recordKind.capitalize()
@@ -571,55 +414,42 @@ def printDigest(args, digest):
                            perc(kindCumulativeUsableSize, kindUsableSize)))
 
             if args.show_all_block_sizes:
-                abscmp = lambda ((usableSize1, _1a), _1b), \
-                                ((usableSize2, _2a), _2b): \
-                                cmp(abs(usableSize1), abs(usableSize2))
-                usableSizes = sorted(record.usableSizes.items(), cmp=abscmp,
-                                     reverse=True)
+                usableSizes = sorted(record.usableSizes.items(), reverse=True)
 
                 out('  Individual block sizes: ', end='')
-                if len(usableSizes) == 0:
-                    out('(no change)', end='')
-                else:
-                    isFirst = True
-                    for (usableSize, isSampled), count in usableSizes:
-                        if not isFirst:
-                            out('; ', end='')
-                        out('{:}'.format(number(usableSize, isSampled)), end='')
-                        if count > 1:
-                            out(' x {:,d}'.format(count), end='')
-                        isFirst = False
+                isFirst = True
+                for (usableSize, isSampled), count in usableSizes:
+                    if not isFirst:
+                        out('; ', end='')
+                    out('{:}'.format(number(usableSize, isSampled)), end='')
+                    if count > 1:
+                        out(' x {:,d}'.format(count), end='')
+                    isFirst = False
                 out()
 
             out('  Allocated at {')
-            printStack(record.allocatedAtDesc)
+            printStack(traceTable, frameTable, record.allocatedAt)
             out('  }')
             if args.ignore_reports:
                 pass
             else:
-                for n, reportedAtDesc in enumerate(record.reportedAtDescs):
-                    again = 'again ' if n > 0 else ''
-                    out('  Reported {:}at {{'.format(again))
-                    printStack(reportedAtDesc)
-                    out('  }')
+                if hasattr(record, 'reportedAts'):
+                    for n, reportedAt in enumerate(record.reportedAts):
+                        again = 'again ' if n > 0 else ''
+                        out('  Reported {:}at {{'.format(again))
+                        printStack(traceTable, frameTable, reportedAt)
+                        out('  }')
             out('}\n')
 
         return (kindUsableSize, kindBlocks)
 
 
-    def printInvocation(n, dmdEnvVar, sampleBelowSize):
-        out('Invocation{:} {{'.format(n))
-        out('  $DMD = \'' + dmdEnvVar + '\'')
-        out('  Sample-below size = ' + str(sampleBelowSize))
-        out('}\n')
-
-    # Print invocation(s).
+    # Print header.
     out(separator)
-    if type(dmdEnvVar) is not tuple:
-        printInvocation('', dmdEnvVar, sampleBelowSize)
-    else:
-        printInvocation(' 1', dmdEnvVar[0], sampleBelowSize[0])
-        printInvocation(' 2', dmdEnvVar[1], sampleBelowSize[1])
+    out('Invocation {')
+    out('  $DMD = \'' + dmdEnvVar + '\'')
+    out('  Sample-below size = ' + str(sampleBelowSize))
+    out('}\n')
 
     # Print records.
     if args.ignore_reports:
@@ -630,10 +460,10 @@ def printDigest(args, digest):
             printRecords('twice-reported', twiceReportedRecords, heapUsableSize)
 
         unreportedUsableSize, unreportedBlocks = \
-            printRecords('unreported', unreportedRecords, heapUsableSize)
+            printRecords('unreported',     unreportedRecords, heapUsableSize)
 
         onceReportedUsableSize, onceReportedBlocks = \
-            printRecords('once-reported', onceReportedRecords, heapUsableSize)
+            printRecords('once-reported',  onceReportedRecords, heapUsableSize)
 
     # Print summary.
     out(separator)
@@ -671,15 +501,5 @@ def printDigest(args, digest):
     out('}\n')
 
 
-def main():
-    args = parseCommandLine()
-    digest = getDigestFromFile(args, args.input_file)
-    if args.input_file2:
-        digest2 = getDigestFromFile(args, args.input_file2)
-        digest = diffDigests(args, digest, digest2)
-    printDigest(args, digest)
-
-
 if __name__ == '__main__':
     main()
-
