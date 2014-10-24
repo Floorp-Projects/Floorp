@@ -180,7 +180,7 @@ static void PrintUsageHeader(const char *progName)
     fprintf(stderr, 
 "Usage:  %s -h host [-a 1st_hs_name ] [-a 2nd_hs_name ] [-p port]\n"
                     "[-d certdir] [-n nickname] [-Bafosvx] [-c ciphers] [-Y]\n"
-                    "[-V [min-version]:[max-version]] [-T]\n"
+                    "[-V [min-version]:[max-version]] [-K] [-T]\n"
                     "[-r N] [-w passwd] [-W pwfile] [-q [-t seconds]]\n", 
             progName);
 }
@@ -206,6 +206,7 @@ static void PrintParameterUsage(void)
             "%-20s Possible values for min/max: ssl2 ssl3 tls1.0 tls1.1 tls1.2\n"
             "%-20s Example: \"-V ssl3:\" enables SSL 3 and newer.\n",
             "-V [min]:[max]", "", "", "");
+    fprintf(stderr, "%-20s Send TLS_FALLBACK_SCSV\n", "-K");
     fprintf(stderr, "%-20s Prints only payload data. Skips HTTP header.\n", "-S");
     fprintf(stderr, "%-20s Client speaks first. \n", "-f");
     fprintf(stderr, "%-20s Use synchronous certificate validation "
@@ -807,6 +808,7 @@ int main(int argc, char **argv)
     int                enableCompression = 0;
     int                enableFalseStart = 0;
     int                enableCertStatus = 0;
+    int                forceFallbackSCSV = 0;
     PRSocketOptionData opt;
     PRNetAddr          addr;
     PRPollDesc         pollset[2];
@@ -852,7 +854,7 @@ int main(int argc, char **argv)
     SSL_VersionRangeGetSupported(ssl_variant_stream, &enabledVersions);
 
     optstate = PL_CreateOptState(argc, argv,
-                                 "46BFM:OSTV:W:Ya:c:d:fgh:m:n:op:qr:st:uvw:xz");
+                                 "46BFKM:OSTV:W:Ya:c:d:fgh:m:n:op:qr:st:uvw:xz");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
@@ -873,6 +875,8 @@ int main(int argc, char **argv)
 	  case 'I': /* reserved for OCSP multi-stapling */ break;
 
           case 'O': serverCertAuth.shouldPause = PR_FALSE; break;
+
+          case 'K': forceFallbackSCSV = PR_TRUE; break;
 
           case 'M': switch (atoi(optstate->value)) {
                       case 1:
@@ -1216,6 +1220,14 @@ int main(int argc, char **argv)
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "error enabling false start");
 	return 1;
+    }
+
+    if (forceFallbackSCSV) {
+        rv = SSL_OptionSet(s, SSL_ENABLE_FALLBACK_SCSV, PR_TRUE);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "error forcing fallback scsv");
+            return 1;
+        }
     }
 
     /* enable cert status (OCSP stapling). */

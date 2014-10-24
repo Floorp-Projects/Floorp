@@ -291,6 +291,9 @@ secu_InitSlotPassword(PK11SlotInfo *slot, PRBool retry, void *arg)
     output = fopen(consoleName, "w");
     if (output == NULL) {
 	PR_fprintf(PR_STDERR, "Error opening output terminal for write\n");
+#ifndef _WINDOWS
+	fclose(input);
+#endif
 	return NULL;
     }
 

@@ -5116,7 +5116,6 @@ ssl3_SendClientHello(sslSocket *ss, PRBool resending)
 	    if (sid->u.ssl3.lock) { PR_RWLock_Unlock(sid->u.ssl3.lock); }
 	    return SECFailure;
 	}
-	maxBytes        -= extLen;
 	total_exten_len += extLen;
 
 	if (total_exten_len > 0)
