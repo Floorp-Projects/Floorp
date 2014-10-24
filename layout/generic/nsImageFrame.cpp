@@ -17,6 +17,7 @@
 #include "mozilla/MouseEvents.h"
 
 #include "nsCOMPtr.h"
+#include "nsFontMetrics.h"
 #include "nsIImageLoadingContent.h"
 #include "nsString.h"
 #include "nsPrintfCString.h"

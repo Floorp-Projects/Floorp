@@ -7,6 +7,7 @@
 
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "nsFontMetrics.h"
 #include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"

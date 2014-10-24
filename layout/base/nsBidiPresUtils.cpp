@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsBidiPresUtils.h"
+#include "nsFontMetrics.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"

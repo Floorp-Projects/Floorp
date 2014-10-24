@@ -18,6 +18,7 @@
 #include "nsBlockReflowContext.h"
 #include "nsBlockReflowState.h"
 #include "nsBulletFrame.h"
+#include "nsFontMetrics.h"
 #include "nsLineBox.h"
 #include "nsLineLayout.h"
 #include "nsPlaceholderFrame.h"
