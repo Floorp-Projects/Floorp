@@ -360,6 +360,24 @@ SourceSurfaceCGBitmapContext::DrawTargetWillChange()
   }
 }
 
+void
+SourceSurfaceCGBitmapContext::DrawTargetWillGoAway()
+{
+  if (mDrawTarget) {
+    if (mDrawTarget->mData != CGBitmapContextGetData(mCg)) {
+      DrawTargetWillChange();
+      return;
+    }
+
+    // Instead of copying the data over, we can just swap it.
+    mDataHolder.Swap(mDrawTarget->mData);
+    mData = mDataHolder;
+    mCg = nullptr;
+    mDrawTarget = nullptr;
+    // mImage is still valid because it still points to the same data.
+  }
+}
+
 SourceSurfaceCGBitmapContext::~SourceSurfaceCGBitmapContext()
 {
   if (mImage)
