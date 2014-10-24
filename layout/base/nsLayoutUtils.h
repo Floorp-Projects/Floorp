@@ -1324,6 +1324,9 @@ public:
                          nsPoint               aPoint,
                          nsStyleContext*       aStyleContext = nullptr);
 
+  /**
+   * Supports only LTR or RTL. Bidi (mixed direction) is not supported.
+   */
   static void DrawUniDirString(const char16_t* aString,
                                uint32_t aLength,
                                nsPoint aPoint,
