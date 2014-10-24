@@ -6,6 +6,7 @@
 
 namespace mozilla {
 
+using namespace mozilla::gfx;
 using dom::ConstrainLongRange;
 using dom::ConstrainDoubleRange;
 using dom::MediaTrackConstraintSet;
@@ -45,6 +46,26 @@ MediaEngineCameraVideoSource::Intersect(ConstrainLongRange& aA, const ConstrainL
   aA.mMin = std::max(aA.mMin, aB.mMin);
   aA.mMax = std::min(aA.mMax, aB.mMax);
   return true;
+}
+
+// guts for appending data to the MSG track
+bool MediaEngineCameraVideoSource::AppendToTrack(SourceMediaStream* aSource,
+                                                 layers::Image* aImage,
+                                                 TrackID aID,
+                                                 TrackTicks delta)
+{
+  MOZ_ASSERT(aSource);
+
+  VideoSegment segment;
+  nsRefPtr<layers::Image> image = aImage;
+  IntSize size(image ? mWidth : 0, image ? mHeight : 0);
+  segment.AppendFrame(image.forget(), delta, size);
+
+  // This is safe from any thread, and is safe if the track is Finished
+  // or Destroyed.
+  // This can fail if either a) we haven't added the track yet, or b)
+  // we've removed or finished the track.
+  return aSource->AppendToTrack(aID, &(segment));
 }
 
 // A special version of the algorithm for cameras that don't list capabilities.
