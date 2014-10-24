@@ -32,24 +32,22 @@ public:
   /* public for initilization in this file */
   nsCOMPtr<nsIX509Cert> mServerCert;
 
-  uint32_t mKeyLength;
-  uint32_t mSecretKeyLength;
-  nsXPIDLCString mCipherName;
+  uint16_t mCipherSuite;
+  uint16_t mProtocolVersion;
 
   bool mIsDomainMismatch;
   bool mIsNotValidAtThisTime;
   bool mIsUntrusted;
 
-  bool mHaveKeyLengthAndCipher;
+  bool mHaveCipherSuiteAndProtocol;
 
   /* mHaveCertErrrorBits is relied on to determine whether or not a SPDY
      connection is eligible for joining in nsNSSSocketInfo::JoinConnection() */
   bool mHaveCertErrorBits;
 };
 
-// 2c3837af-8b85-4a68-b0d8-0aed88985b32
 #define NS_SSLSTATUS_CID \
-{ 0x2c3837af, 0x8b85, 0x4a68, \
-  { 0xb0, 0xd8, 0x0a, 0xed, 0x88, 0x98, 0x5b, 0x32 } }
+{ 0x61f69c85, 0x0fed, 0x44fb, \
+  { 0x89, 0x8f, 0xa4, 0xb1, 0x3c, 0x33, 0x3c, 0x8d } }
 
 #endif
