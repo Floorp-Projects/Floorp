@@ -47,10 +47,6 @@ public:
 
     void SetTextRunRTL(bool aIsRTL);
 
-    nscoord GetWidth(char16_t aC);
-    nscoord GetWidth(const nsString& aString);
-    nscoord GetWidth(const char16_t *aString, uint32_t aLength);
-
     nsBoundingMetrics GetBoundingMetrics(const char16_t *aString,
                                          uint32_t aLength);
 

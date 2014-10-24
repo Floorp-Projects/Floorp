@@ -2077,7 +2077,8 @@ public:
 
   virtual nscoord GetWidth() MOZ_OVERRIDE
   {
-    return mTextRunConstructionContext->GetWidth(mText, mLength);
+    return nsLayoutUtils::AppUnitWidthOfString(mText, mLength,
+                                               *mTextRunConstructionContext);
   }
 
   virtual void DrawText(nscoord aXOffset,

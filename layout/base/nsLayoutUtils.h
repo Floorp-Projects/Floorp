@@ -1317,6 +1317,16 @@ public:
   static gfxFloat GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
                                       nscoord aY, nscoord aAscent);
 
+  static nscoord AppUnitWidthOfString(char16_t aC,
+                                      nsRenderingContext& aContext) {
+    return AppUnitWidthOfString(&aC, 1, aContext);
+  }
+  static nscoord AppUnitWidthOfString(const nsString& aString,
+                                      nsRenderingContext& aContext);
+  static nscoord AppUnitWidthOfString(const char16_t *aString,
+                                      uint32_t aLength,
+                                      nsRenderingContext& aContext);
+
   static void DrawString(const nsIFrame*       aFrame,
                          nsRenderingContext*   aContext,
                          const char16_t*      aString,

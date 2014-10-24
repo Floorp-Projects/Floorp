@@ -3197,7 +3197,8 @@ nsLayoutUtils::BinarySearchForPosition(nsRenderingContext* aRendContext,
   int32_t range = aEndInx - aStartInx;
   if ((range == 1) || (range == 2 && NS_IS_HIGH_SURROGATE(aText[aStartInx]))) {
     aIndex   = aStartInx + aBaseInx;
-    aTextWidth = aRendContext->GetWidth(aText, aIndex);
+    aTextWidth = nsLayoutUtils::AppUnitWidthOfString(aText, aIndex,
+                                                     *aRendContext);
     return true;
   }
 
@@ -3207,7 +3208,8 @@ nsLayoutUtils::BinarySearchForPosition(nsRenderingContext* aRendContext,
   if (NS_IS_HIGH_SURROGATE(aText[inx-1]))
     inx++;
 
-  int32_t textWidth = aRendContext->GetWidth(aText, inx);
+  int32_t textWidth = nsLayoutUtils::AppUnitWidthOfString(aText, inx,
+                                                          *aRendContext);
 
   int32_t fullWidth = aBaseWidth + textWidth;
   if (fullWidth == aCursorPos) {
@@ -4628,6 +4630,29 @@ nsLayoutUtils::GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
   return aContext->DeviceToUser(putativeRect.TopLeft()).y * appUnitsPerDevUnit;
 }
 
+nscoord
+nsLayoutUtils::AppUnitWidthOfString(const nsString& aString,
+                                    nsRenderingContext& aContext)
+{
+  return AppUnitWidthOfString(aString.get(), aString.Length(), aContext);
+}
+
+nscoord
+nsLayoutUtils::AppUnitWidthOfString(const char16_t *aString,
+                                    uint32_t aLength,
+                                    nsRenderingContext& aContext)
+{
+  uint32_t maxChunkLength = aContext.GetMaxChunkLength();
+  nscoord width = 0;
+  while (aLength > 0) {
+    int32_t len = aContext.FindSafeLength(aString, aLength, maxChunkLength);
+    width += aContext.FontMetrics()->GetWidth(aString, len, &aContext);
+    aLength -= len;
+    aString += len;
+  }
+  return width;
+}
+
 void
 nsLayoutUtils::DrawString(const nsIFrame*       aFrame,
                           nsRenderingContext*   aContext,
@@ -4674,7 +4699,7 @@ nsLayoutUtils::DrawUniDirString(const char16_t* aString,
 
   // If we're drawing right to left, we must start at the end.
   if (isRTL) {
-    x += aContext.GetWidth(aString, aLength);
+    x += nsLayoutUtils::AppUnitWidthOfString(aString, aLength, aContext);
   }
 
   while (aLength > 0) {
@@ -4706,7 +4731,7 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
                                              level, presContext, *aContext);
   }
   aContext->SetTextRunRTL(false);
-  return aContext->GetWidth(aString, aLength);
+  return nsLayoutUtils::AppUnitWidthOfString(aString, aLength, *aContext);
 }
 
 /* static */ void
