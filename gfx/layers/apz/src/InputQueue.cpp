@@ -105,7 +105,7 @@ uint64_t
 InputQueue::InjectNewTouchBlock(AsyncPanZoomController* aTarget)
 {
   TouchBlockState* block = StartNewTouchBlock(aTarget, true);
-  INPQ_LOG("%p injecting new touch block with id %llu and target %p\n",
+  INPQ_LOG("%p injecting new touch block with id %" PRIu64 " and target %p\n",
     this, block->GetBlockId(), aTarget);
   ScheduleContentResponseTimeout(aTarget, block->GetBlockId());
   return block->GetBlockId();
@@ -162,7 +162,7 @@ void
 InputQueue::ContentResponseTimeout(const uint64_t& aInputBlockId) {
   AsyncPanZoomController::AssertOnControllerThread();
 
-  INPQ_LOG("got a content response timeout; block=%llu\n", aInputBlockId);
+  INPQ_LOG("got a content response timeout; block=%" PRIu64 "\n", aInputBlockId);
   bool success = false;
   for (size_t i = 0; i < mTouchBlockQueue.Length(); i++) {
     if (mTouchBlockQueue[i]->GetBlockId() == aInputBlockId) {
@@ -179,7 +179,7 @@ void
 InputQueue::ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault) {
   AsyncPanZoomController::AssertOnControllerThread();
 
-  INPQ_LOG("got a content response; block=%llu\n", aInputBlockId);
+  INPQ_LOG("got a content response; block=%" PRIu64 "\n", aInputBlockId);
   bool success = false;
   for (size_t i = 0; i < mTouchBlockQueue.Length(); i++) {
     if (mTouchBlockQueue[i]->GetBlockId() == aInputBlockId) {
@@ -196,7 +196,7 @@ void
 InputQueue::SetAllowedTouchBehavior(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aBehaviors) {
   AsyncPanZoomController::AssertOnControllerThread();
 
-  INPQ_LOG("got allowed touch behaviours; block=%llu\n", aInputBlockId);
+  INPQ_LOG("got allowed touch behaviours; block=%" PRIu64 "\n", aInputBlockId);
   bool success = false;
   for (size_t i = 0; i < mTouchBlockQueue.Length(); i++) {
     if (mTouchBlockQueue[i]->GetBlockId() == aInputBlockId) {

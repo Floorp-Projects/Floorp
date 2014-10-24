@@ -1521,7 +1521,6 @@ TEST_F(APZCGestureDetectorTester, DoubleTapPreventDefaultBoth) {
   int time = 0;
   uint64_t blockIds[2];
   ApzcDoubleTapAndCheckStatus(apzc, 10, 10, time, &blockIds);
-printf_stderr("blockids %llu %llu\n", blockIds[0], blockIds[1]);
 
   // responses to the two touchstarts
   apzc->ContentReceivedTouch(blockIds[0], true);
