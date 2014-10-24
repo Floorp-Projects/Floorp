@@ -4733,7 +4733,6 @@ nsslowcert_FindCertByIssuerAndSN(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssue
     SECItem *sn = &issuerAndSN->serialNumber;
     SECItem *issuer = &issuerAndSN->derIssuer;
     NSSLOWCERTCertificate *cert;
-    int data_left = sn->len-1;
     int data_len = sn->len;
     int index = 0;
 
@@ -4743,7 +4742,7 @@ nsslowcert_FindCertByIssuerAndSN(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssue
     if ((sn->len >= 3) && (sn->data[0] == 0x2)) {
 	/* remove the der encoding of the serial number before generating the
 	 * key.. */
-	data_left = sn->len-2;
+	int data_left = sn->len-2;
 	data_len = sn->data[1];
 	index = 2;
 
@@ -4818,7 +4817,6 @@ nsslowcert_FindTrustByIssuerAndSN(NSSLOWCERTCertDBHandle *handle,
     SECItem *issuer = &issuerAndSN->derIssuer;
     NSSLOWCERTTrust *trust;
     unsigned char keyBuf[512];
-    int data_left = sn->len-1;
     int data_len = sn->len;
     int index = 0;
     int len;
@@ -4829,7 +4827,7 @@ nsslowcert_FindTrustByIssuerAndSN(NSSLOWCERTCertDBHandle *handle,
     if ((sn->len >= 3) && (sn->data[0] == 0x2)) {
 	/* remove the der encoding of the serial number before generating the
 	 * key.. */
-	data_left = sn->len-2;
+	int data_left = sn->len-2;
 	data_len = sn->data[1];
 	index = 2;
 
