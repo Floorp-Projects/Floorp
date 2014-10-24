@@ -2827,7 +2827,7 @@ RadioInterface.prototype = {
     let index = RIL.GECKO_SMS_MESSAGE_CLASSES.indexOf(aMessageClass);
     return (index != -1)
       ? index
-      : Ci.nsICellBroadcastService.GSM_MESSAGE_CLASS_INVALID;
+      : Ci.nsICellBroadcastService.GSM_MESSAGE_CLASS_NORMAL;
   },
 
   _convertCbEtwsWarningType: function(aWarningType) {

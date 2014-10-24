@@ -20,9 +20,9 @@ const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
 const kSettingsCellBroadcastDisabled = "ril.cellbroadcast.disabled";
 const kSettingsCellBroadcastSearchList = "ril.cellbroadcast.searchlist";
 
-XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
-                                   "@mozilla.org/system-message-internal;1",
-                                   "nsISystemMessagesInternal");
+XPCOMUtils.defineLazyServiceGetter(this, "gCellbroadcastMessenger",
+                                   "@mozilla.org/ril/system-messenger-helper;1",
+                                   "nsICellbroadcastMessenger");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
@@ -110,24 +110,6 @@ CellBroadcastService.prototype = {
       DEBUG = RIL.DEBUG_RIL ||
               Services.prefs.getBoolPref(kPrefRilDebuggingEnabled);
     } catch (e) {}
-  },
-
-  _convertCbGsmGeographicalScope: function(aGeographicalScope) {
-    return (aGeographicalScope >= Ci.nsICellBroadcastService.GSM_GEOGRAPHICAL_SCOPE_INVALID)
-      ? null
-      : RIL.CB_GSM_GEOGRAPHICAL_SCOPE_NAMES[aGeographicalScope];
-  },
-
-  _convertCbMessageClass: function(aMessageClass) {
-    return (aMessageClass >= Ci.nsICellBroadcastService.GSM_MESSAGE_CLASS)
-      ? null
-      : RIL.GECKO_SMS_MESSAGE_CLASSES[aMessageClass];
-  },
-
-  _convertCbEtwsWarningType: function(aWarningType) {
-    return (aWarningType >= Ci.nsICellBroadcastService.GSM_ETWS_WARNING_INVALID)
-      ? null
-      : RIL.CB_ETWS_WARNING_TYPE_NAMES[aWarningType];
   },
 
   _retrieveSettingValueByClient: function(aClientId, aSettings) {
@@ -236,38 +218,19 @@ CellBroadcastService.prototype = {
                                   aEtwsEmergencyUserAlert,
                                   aEtwsPopup) {
     // Broadcast CBS System message
-    // Align the same layout to MozCellBroadcastMessage
-    let systemMessage = {
-      serviceId: aServiceId,
-      gsmGeographicalScope: this._convertCbGsmGeographicalScope(aGsmGeographicalScope),
-      messageCode: aMessageCode,
-      messageId: aMessageId,
-      language: aLanguage,
-      body: aBody,
-      messageClass: this._convertCbMessageClass(aMessageClass),
-      timestamp: aTimestamp,
-      cdmaServiceCategory: null,
-      etws: null
-    };
-
-    if (aHasEtwsInfo) {
-      systemMessage.etws = {
-        warningType: this._convertCbEtwsWarningType(aEtwsWarningType),
-        emergencyUserAlert: aEtwsEmergencyUserAlert,
-        popup: aEtwsPopup
-      };
-    }
-
-    if (aCdmaServiceCategory !=
-        Ci.nsICellBroadcastService.CDMA_SERVICE_CATEGORY_INVALID) {
-      systemMessage.cdmaServiceCategory = aCdmaServiceCategory;
-    }
-
-    if (DEBUG) {
-      debug("CBS system message to be broadcasted: " + JSON.stringify(systemMessage));
-    }
-
-    gSystemMessenger.broadcastMessage("cellbroadcast-received", systemMessage);
+    gCellbroadcastMessenger.notifyCbMessageReceived(aServiceId,
+                                                    aGsmGeographicalScope,
+                                                    aMessageCode,
+                                                    aMessageId,
+                                                    aLanguage,
+                                                    aBody,
+                                                    aMessageClass,
+                                                    aTimestamp,
+                                                    aCdmaServiceCategory,
+                                                    aHasEtwsInfo,
+                                                    aEtwsWarningType,
+                                                    aEtwsEmergencyUserAlert,
+                                                    aEtwsPopup);
 
     // Notify received message to registered listener
     for (let listener of this._listeners) {
