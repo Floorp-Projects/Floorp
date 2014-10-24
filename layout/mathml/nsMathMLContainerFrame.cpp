@@ -59,7 +59,7 @@ nsMathMLContainerFrame::ReflowError(nsRenderingContext& aRenderingContext,
   nsAutoString errorMsg; errorMsg.AssignLiteral("invalid-markup");
   mBoundingMetrics =
     nsLayoutUtils::AppUnitBoundsOfString(errorMsg.get(), errorMsg.Length(),
-                                         aRenderingContext);
+                                         *fm, aRenderingContext);
 
   // reflow metrics
   WritingMode wm = aDesiredSize.GetWritingMode();
@@ -109,12 +109,10 @@ void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
   drawTarget->FillRect(rect, red);
 
   aCtx->ThebesContext()->SetColor(NS_RGB(255,255,255));
-  nscoord ascent = aCtx->FontMetrics()->MaxAscent();
+  nscoord ascent = fm->MaxAscent();
   NS_NAMED_LITERAL_STRING(errorMsg, "invalid-markup");
-  nsLayoutUtils::DrawUniDirString(errorMsg.get(),
-                                  uint32_t(errorMsg.Length()),
-                                  nsPoint(pt.x, pt.y + ascent),
-                                  *aCtx);
+  nsLayoutUtils::DrawUniDirString(errorMsg.get(), uint32_t(errorMsg.Length()),
+                                  nsPoint(pt.x, pt.y + ascent), *fm, *aCtx);
 }
 
 /* /////////////

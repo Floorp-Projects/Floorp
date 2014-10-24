@@ -18,6 +18,7 @@
 
 struct BidiParagraphData;
 struct BidiLineData;
+class nsFontMetrics;
 class nsIFrame;
 class nsBlockFrame;
 class nsPresContext;
@@ -206,24 +207,29 @@ public:
                              nsPresContext*         aPresContext,
                              nsRenderingContext&    aRenderingContext,
                              nsRenderingContext&    aTextRunConstructionContext,
+                             nsFontMetrics&         aFontMetrics,
                              nscoord                aX,
                              nscoord                aY,
                              nsBidiPositionResolve* aPosResolve = nullptr,
                              int32_t                aPosResolveCount = 0)
   {
     return ProcessTextForRenderingContext(aText, aLength, aBaseLevel, aPresContext, aRenderingContext,
-                                          aTextRunConstructionContext, MODE_DRAW, aX, aY, aPosResolve, aPosResolveCount, nullptr);
+                                          aTextRunConstructionContext,
+                                          aFontMetrics,
+                                          MODE_DRAW, aX, aY, aPosResolve, aPosResolveCount, nullptr);
   }
   
   static nscoord MeasureTextWidth(const char16_t*     aText,
                                   int32_t              aLength,
                                   nsBidiLevel          aBaseLevel,
                                   nsPresContext*       aPresContext,
-                                  nsRenderingContext&  aRenderingContext)
+                                  nsRenderingContext&  aRenderingContext,
+                                  nsFontMetrics&       aFontMetrics)
   {
     nscoord length;
     nsresult rv = ProcessTextForRenderingContext(aText, aLength, aBaseLevel, aPresContext,
                                                  aRenderingContext, aRenderingContext,
+                                                 aFontMetrics,
                                                  MODE_MEASURE, 0, 0, nullptr, 0, &length);
     return NS_SUCCEEDED(rv) ? length : 0;
   }
@@ -360,6 +366,7 @@ private:
                                  nsPresContext*         aPresContext,
                                  nsRenderingContext&    aRenderingContext,
                                  nsRenderingContext&    aTextRunConstructionContext,
+                                 nsFontMetrics&         aFontMetrics,
                                  Mode                   aMode,
                                  nscoord                aX, // DRAW only
                                  nscoord                aY, // DRAW only

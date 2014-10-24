@@ -959,6 +959,7 @@ public:
    */
   static bool
   BinarySearchForPosition(nsRenderingContext* acx,
+                          nsFontMetrics& aFontMetrics,
                           const char16_t* aText,
                           int32_t    aBaseWidth,
                           int32_t    aBaseInx,
@@ -1319,19 +1320,24 @@ public:
                                       nscoord aY, nscoord aAscent);
 
   static nscoord AppUnitWidthOfString(char16_t aC,
+                                      nsFontMetrics& aFontMetrics,
                                       nsRenderingContext& aContext) {
-    return AppUnitWidthOfString(&aC, 1, aContext);
+    return AppUnitWidthOfString(&aC, 1, aFontMetrics, aContext);
   }
   static nscoord AppUnitWidthOfString(const nsString& aString,
+                                      nsFontMetrics& aFontMetrics,
                                       nsRenderingContext& aContext);
   static nscoord AppUnitWidthOfString(const char16_t *aString,
                                       uint32_t aLength,
+                                      nsFontMetrics& aFontMetrics,
                                       nsRenderingContext& aContext);
   static nsBoundingMetrics AppUnitBoundsOfString(const char16_t* aString,
                                                  uint32_t aLength,
+                                                 nsFontMetrics& aFontMetrics,
                                                  nsRenderingContext& aContext);
 
   static void DrawString(const nsIFrame*       aFrame,
+                         nsFontMetrics&        aFontMetrics,
                          nsRenderingContext*   aContext,
                          const char16_t*      aString,
                          int32_t               aLength,
@@ -1344,10 +1350,12 @@ public:
   static void DrawUniDirString(const char16_t* aString,
                                uint32_t aLength,
                                nsPoint aPoint,
+                               nsFontMetrics& aFontMetrics,
                                nsRenderingContext& aContext);
 
   static nscoord GetStringWidth(const nsIFrame*      aFrame,
                                 nsRenderingContext* aContext,
+                                nsFontMetrics&      aFontMetrics,
                                 const char16_t*     aString,
                                 int32_t              aLength);
 
