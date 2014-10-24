@@ -60,61 +60,6 @@
     let modules = new Map();
 
     /**
-     * Mapping from object urls to module paths.
-     */
-    let paths = {
-      /**
-       * @keys {string} The object url holding a module.
-       * @values {string} The absolute path to that module.
-       */
-      _map: new Map(),
-      /**
-       * A regexp that may be used to search for all mapped paths.
-       */
-      get regexp() {
-        if (this._regexp) {
-          return this._regexp;
-        }
-        let objectURLs = [];
-        for (let [objectURL, _] of this._map) {
-          objectURLs.push(objectURL);
-        }
-        return this._regexp = new RegExp(objectURLs.join("|"), "g");
-      },
-      _regexp: null,
-      /**
-       * Add a mapping from an object url to a path.
-       */
-      set: function(url, path) {
-        this._regexp = null; // invalidate regexp
-        this._map.set(url, path);
-      },
-      /**
-       * Get a mapping from an object url to a path.
-       */
-      get: function(url) {
-        return this._map.get(url);
-      },
-      /**
-       * Transform a string by replacing all the instances of objectURLs
-       * appearing in that string with the corresponding module path.
-       *
-       * This is used typically to translate exception stacks.
-       *
-       * @param {string} source A source string.
-       * @return {string} The same string as |source|, in which every occurrence
-       * of an objectURL registered in this object has been replaced with the
-       * corresponding module path.
-       */
-      substitute: function(source) {
-        let map = this._map;
-        return source.replace(this.regexp, function(url) {
-          return map.get(url) || url;
-        }, "g");
-      }
-    };
-
-    /**
      * A human-readable version of |stack|.
      *
      * @type {string}
@@ -122,7 +67,7 @@
     Object.defineProperty(Error.prototype, "moduleStack",
     {
       get: function() {
-        return paths.substitute(this.stack);
+        return this.stack;
       }
     });
     /**
@@ -133,7 +78,11 @@
     Object.defineProperty(Error.prototype, "moduleName",
     {
       get: function() {
-        return paths.substitute(this.fileName);
+        let match = this.stack.match(/\@(.*):.*:/);
+        if (match) {
+          return match[1];
+        }
+        return "(unknown module)";
       }
     });
 
@@ -187,36 +136,15 @@
           // There doesn't seem to be a better way to detect that the file couldn't be found
           throw new Error("Could not find module " + path);
         }
-        // From the source, build a function and an object URL. We
-        // avoid any newline at the start of the file to ensure that
-        // we do not mess up with line numbers. However, using object URLs
-        // messes up with stack traces in instances of Error().
-        source = "require._tmpModules[\"" + name + "\"] = " +
-          "function(exports, require, module) {" +
-          source +
-        "\n}\n";
-        let blob = new Blob(
-          [
-            (new TextEncoder()).encode(source)
-          ], {
-            type: "application/javascript"
-          });
-        objectURL = URL.createObjectURL(blob);
-        paths.set(objectURL, path);
-        importScripts(objectURL);
-        require._tmpModules[name].call(null, exports, require, module);
-
+        let code = new Function("exports", "require", "module",
+          source + "\n//# sourceURL=" + uri + "\n"
+        );
+        code(exports, require, module);
       } catch (ex) {
         // Module loading has failed, exports should not be made available
         // after all.
         modules.delete(path);
         throw ex;
-      } finally {
-        if (objectURL) {
-          // Clean up the object url as soon as possible. It will not be needed.
-          URL.revokeObjectURL(objectURL);
-        }
-        delete require._tmpModules[name];
       }
 
       Object.freeze(module.exports);
@@ -225,14 +153,6 @@
     };
   })();
 
-  /**
-   * An object used to hold temporarily the module constructors
-   * while they are being loaded.
-   *
-   * @keys {string} The path to the module, prefixed with ":".
-   * @values {function} A function wrapping the module.
-   */
-  require._tmpModules = Object.create(null);
   Object.freeze(require);
 
   Object.defineProperty(exports, "require", {
