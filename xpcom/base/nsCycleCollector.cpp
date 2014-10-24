@@ -3673,7 +3673,10 @@ nsCycleCollector::FinishAnyCurrentCollection()
   PrintPhase("FinishAnyCurrentCollection");
   // Use SliceCC because we only want to finish the CC in progress.
   Collect(SliceCC, unlimitedBudget, nullptr);
-  MOZ_ASSERT(mIncrementalPhase == IdlePhase);
+
+  MOZ_ASSERT(mIncrementalPhase == IdlePhase ||
+             (mIncrementalPhase == ScanAndCollectWhitePhase && mActivelyCollecting),
+             "FinishAnyCurrentCollection should finish the collection, unless we've reentered the CC during unlinking");
 }
 
 // Don't merge too many times in a row, and do at least a minimum
