@@ -468,16 +468,16 @@ public class Favicons {
             throw new IllegalStateException("Null default favicon was returned from the resources system!");
         }
 
-        // TODO: Remove this branch when old tablet is removed.
-        final int defaultFaviconSizeDimenID =
-                isNewTabletEnabled ? R.dimen.new_tablet_tab_strip_favicon_size : R.dimen.favicon_bg;
-        defaultFaviconSize = res.getDimensionPixelSize(defaultFaviconSizeDimenID);
+        defaultFaviconSize = res.getDimensionPixelSize(R.dimen.favicon_bg);
 
         // Screen-density-adjusted upper limit on favicon size. Favicons larger than this are
         // downscaled to this size or discarded.
-        largestFaviconSize = context.getResources().getDimensionPixelSize(R.dimen.favicon_largest_interesting_size);
+        largestFaviconSize = res.getDimensionPixelSize(R.dimen.favicon_largest_interesting_size);
 
-        browserToolbarFaviconSize = context.getResources().getDimensionPixelSize(R.dimen.browser_toolbar_favicon_size);
+        // TODO: Remove this branch when old tablet is removed.
+        final int browserToolbarFaviconSizeDimenID = NewTabletUI.isEnabled(context) ?
+                R.dimen.new_tablet_tab_strip_favicon_size : R.dimen.browser_toolbar_favicon_size;
+        browserToolbarFaviconSize = res.getDimensionPixelSize(browserToolbarFaviconSizeDimenID);
 
         faviconsCache = new FaviconCache(FAVICON_CACHE_SIZE_BYTES, largestFaviconSize);
 
