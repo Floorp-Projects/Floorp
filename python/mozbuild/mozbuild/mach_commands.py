@@ -794,14 +794,14 @@ class RunProgram(MachCommandBase):
     @Command('run', category='post-build',
         description='Run the compiled program, possibly under a debugger or DMD.')
     @CommandArgument('params', nargs='...', group=prog_group,
-        help='Command-line arguments to be passed through to the program. Not specifying a -profile or -P option will result in a temporary profile being used.')
+        help='Command-line arguments to be passed through to the program. Not specifying a --profile or -P option will result in a temporary profile being used.')
     @CommandArgumentGroup(prog_group)
-    @CommandArgument('-remote', '-r', action='store_true', group=prog_group,
-        help='Do not pass the -no-remote argument by default.')
-    @CommandArgument('-background', '-b', action='store_true', group=prog_group,
-        help='Do not pass the -foreground argument by default on Mac.')
-    @CommandArgument('-noprofile', '-n', action='store_true', group=prog_group,
-        help='Do not pass the -profile argument by default.')
+    @CommandArgument('--remote', '-r', action='store_true', group=prog_group,
+        help='Do not pass the --no-remote argument by default.')
+    @CommandArgument('--background', '-b', action='store_true', group=prog_group,
+        help='Do not pass the --foreground argument by default on Mac.')
+    @CommandArgument('--noprofile', '-n', action='store_true', group=prog_group,
+        help='Do not pass the --profile argument by default.')
 
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
