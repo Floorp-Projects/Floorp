@@ -394,19 +394,25 @@ loop.conversation = (function(mozL10n) {
       if (progressData.state !== "terminated")
         return;
 
-      if (progressData.reason === "cancel" ||
-          progressData.reason === "closed") {
+      // XXX This would be nicer in the _abortIncomingCall function, but we need to stop
+      // it here for now due to server-side issues that are being fixed in bug 1088351.
+      // This is before the abort call to ensure that it happens before the window is
+      // closed.
+      navigator.mozLoop.stopAlerting();
+
+      // If we hit any of the termination reasons, and the user hasn't accepted
+      // then it seems reasonable to close the window/abort the incoming call.
+      //
+      // If the user has accepted the call, and something's happened, display
+      // the call failed view.
+      //
+      // https://wiki.mozilla.org/Loop/Architecture/MVP#Termination_Reasons
+      if (previousState === "init" || previousState === "alerting") {
         this._abortIncomingCall();
-        return;
+      } else {
+        this.setState({callFailed: true, callStatus: "end"});
       }
 
-      if (progressData.reason === "timeout") {
-        if (previousState === "init" || previousState === "alerting") {
-          this._abortIncomingCall();
-        } else {
-          this.setState({callFailed: true, callStatus: "end"});
-        }
-      }
     },
 
     /**
@@ -414,7 +420,6 @@ loop.conversation = (function(mozL10n) {
      * closes the websocket.
      */
     _abortIncomingCall: function() {
-      navigator.mozLoop.stopAlerting();
       this._websocket.close();
       // Having a timeout here lets the logging for the websocket complete and be
       // displayed on the console if both are on.
