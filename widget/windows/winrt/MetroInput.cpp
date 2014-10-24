@@ -1236,7 +1236,7 @@ MetroInput::HandleTouchStartEvent(WidgetTouchEvent* aEvent)
     // action values from. E.g. for zooming we're taking parent apzc of a few ones
     // that were touched but touch behaviors would be taken from childs.
     DUMP_ALLOWED_TOUCH_BEHAVIOR(touchBehaviors);
-    mWidget->ApzcSetAllowedTouchBehavior(mTargetAPZCGuid, mInputBlockId, touchBehaviors);
+    mWidget->ApzcSetAllowedTouchBehavior(mInputBlockId, touchBehaviors);
   }
 
   // Pass the event on to content
@@ -1246,7 +1246,7 @@ MetroInput::HandleTouchStartEvent(WidgetTouchEvent* aEvent)
   if (nsEventStatus_eConsumeNoDefault == contentStatus) {
     // Content consumed the event, so we need to notify the APZ
     // to not do anything with this touch block.
-    mWidget->ApzContentConsumingTouch(mTargetAPZCGuid, mInputBlockId);
+    mWidget->ApzContentConsumingTouch(mInputBlockId);
     mCancelable = false;
 
     // Also cancel the gesture detection.
@@ -1290,9 +1290,9 @@ MetroInput::HandleFirstTouchMoveEvent(WidgetTouchEvent* aEvent)
   // Let the apz know if content wants to consume touch events.
   if (mCancelable) {
     if (nsEventStatus_eConsumeNoDefault == contentStatus) {
-      mWidget->ApzContentConsumingTouch(mTargetAPZCGuid, mInputBlockId);
+      mWidget->ApzContentConsumingTouch(mInputBlockId);
     } else {
-      mWidget->ApzContentIgnoringTouch(mTargetAPZCGuid, mInputBlockId);
+      mWidget->ApzContentIgnoringTouch(mInputBlockId);
       if (apzcStatus == nsEventStatus_eConsumeDoDefault) {
         SendPointerCancelToContent(transformedEvent);
       }
@@ -1328,7 +1328,7 @@ MetroInput::SendPendingResponseToApz()
   // If this is called, content has missed its chance to consume this event block
   // so we should notify the APZ that content is ignoring this touch block.
   if (mCancelable) {
-    mWidget->ApzContentIgnoringTouch(mTargetAPZCGuid, mInputBlockId);
+    mWidget->ApzContentIgnoringTouch(mInputBlockId);
     mCancelable = false;
     return true;
   }

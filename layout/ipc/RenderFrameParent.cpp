@@ -540,7 +540,7 @@ RenderFrameParent::ContentReceivedTouch(const ScrollableLayerGuid& aGuid,
     return;
   }
   if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->ContentReceivedTouch(aGuid, aInputBlockId, aPreventDefault);
+    GetApzcTreeManager()->ContentReceivedTouch(aInputBlockId, aPreventDefault);
   }
 }
 

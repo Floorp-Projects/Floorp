@@ -867,6 +867,7 @@ AsyncPanZoomController::InitializeGlobalState()
 
 AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
                                                APZCTreeManager* aTreeManager,
+                                               const nsRefPtr<InputQueue>& aInputQueue,
                                                GeckoContentController* aGeckoContentController,
                                                GestureBehavior aGestures)
   :  mLayersId(aLayersId),
@@ -886,7 +887,7 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mAsyncScrollTimeoutTask(nullptr),
      mState(NOTHING),
      mNotificationBlockers(0),
-     mInputQueue(new InputQueue()),
+     mInputQueue(aInputQueue),
      mTreeManager(aTreeManager),
      mAPZCId(sAsyncPanZoomControllerCount++),
      mSharedLock(nullptr),
@@ -927,10 +928,8 @@ AsyncPanZoomController::GetGestureEventListener() const {
   return listener.forget();
 }
 
-nsRefPtr<InputQueue>
+const nsRefPtr<InputQueue>&
 AsyncPanZoomController::GetInputQueue() const {
-  MonitorAutoLock lock(mRefPtrMonitor);
-  MOZ_ASSERT(mInputQueue);
   return mInputQueue;
 }
 
@@ -945,7 +944,6 @@ AsyncPanZoomController::Destroy()
     MonitorAutoLock lock(mRefPtrMonitor);
     mGeckoContentController = nullptr;
     mGestureEventListener = nullptr;
-    mInputQueue = nullptr;  // XXX this is temporary and will be removed in a future patch
   }
   mPrevSibling = nullptr;
   mLastChild = nullptr;

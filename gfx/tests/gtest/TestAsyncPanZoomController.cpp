@@ -119,12 +119,19 @@ private:
   nsTArray<Task*> mTaskQueue;
 };
 
+class TestAPZCTreeManager : public APZCTreeManager {
+public:
+  nsRefPtr<InputQueue> GetInputQueue() const {
+    return mInputQueue;
+  }
+};
+
 class TestAsyncPanZoomController : public AsyncPanZoomController {
 public:
   TestAsyncPanZoomController(uint64_t aLayersId, MockContentController* aMcc,
-                             APZCTreeManager* aTreeManager = nullptr,
+                             TestAPZCTreeManager* aTreeManager,
                              GestureBehavior aBehavior = DEFAULT_GESTURES)
-    : AsyncPanZoomController(aLayersId, aTreeManager, aMcc, aBehavior)
+    : AsyncPanZoomController(aLayersId, aTreeManager, aTreeManager->GetInputQueue(), aMcc, aBehavior)
   {}
 
   void SetFrameMetrics(const FrameMetrics& metrics) {
@@ -167,9 +174,6 @@ public:
       aOutTransform, aScrollOffset);
     return ret;
   }
-};
-
-class TestAPZCTreeManager : public APZCTreeManager {
 };
 
 static FrameMetrics

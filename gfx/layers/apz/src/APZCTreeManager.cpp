@@ -72,7 +72,8 @@ APZCTreeManager::CalculatePendingDisplayPort(
 }
 
 APZCTreeManager::APZCTreeManager()
-    : mTreeLock("APZCTreeLock"),
+    : mInputQueue(new InputQueue()),
+      mTreeLock("APZCTreeLock"),
       mInOverscrolledApzc(false),
       mRetainedTouchIdentifier(-1),
       mTouchCount(0),
@@ -110,14 +111,10 @@ APZCTreeManager::GetAllowedTouchBehavior(WidgetInputEvent* aEvent,
 }
 
 void
-APZCTreeManager::SetAllowedTouchBehavior(const ScrollableLayerGuid& aGuid,
-                                         uint64_t aInputBlockId,
+APZCTreeManager::SetAllowedTouchBehavior(uint64_t aInputBlockId,
                                          const nsTArray<TouchBehaviorFlags> &aValues)
 {
-  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
-  if (apzc) {
-    apzc->SetAllowedTouchBehavior(aInputBlockId, aValues);
-  }
+  mInputQueue->SetAllowedTouchBehavior(aInputBlockId, aValues);
 }
 
 /* Flatten the tree of APZC instances into the given nsTArray */
@@ -302,7 +299,7 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
     // a new one.
     bool newApzc = (apzc == nullptr || apzc->IsDestroyed());
     if (newApzc) {
-      apzc = new AsyncPanZoomController(aLayersId, this, state->mController,
+      apzc = new AsyncPanZoomController(aLayersId, this, mInputQueue, state->mController,
                                         AsyncPanZoomController::USE_GESTURE_DETECTOR);
       apzc->SetCompositorParent(aState.mCompositor);
       if (state->mCrossProcessParent != nullptr) {
@@ -546,7 +543,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         PanGestureInput inputForApzc(panInput);
         transformToApzc = GetScreenToApzcTransform(apzc);
         ApplyTransform(&(inputForApzc.mPanStartPoint), transformToApzc);
-        result = apzc->ReceiveInputEvent(inputForApzc, aOutInputBlockId);
+        result = mInputQueue->ReceiveInputEvent(apzc, inputForApzc, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
@@ -564,7 +561,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         PinchGestureInput inputForApzc(pinchInput);
         transformToApzc = GetScreenToApzcTransform(apzc);
         ApplyTransform(&(inputForApzc.mFocusPoint), transformToApzc);
-        result = apzc->ReceiveInputEvent(inputForApzc, aOutInputBlockId);
+        result = mInputQueue->ReceiveInputEvent(apzc, inputForApzc, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
@@ -582,7 +579,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         TapGestureInput inputForApzc(tapInput);
         transformToApzc = GetScreenToApzcTransform(apzc);
         ApplyTransform(&(inputForApzc.mPoint), transformToApzc);
-        result = apzc->ReceiveInputEvent(inputForApzc, aOutInputBlockId);
+        result = mInputQueue->ReceiveInputEvent(apzc, inputForApzc, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
@@ -662,7 +659,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
       // in the middle of a panning touch block (for example) and not clean up properly.
       if (mApzcForInputBlock) {
         MultiTouchInput cancel(MultiTouchInput::MULTITOUCH_CANCEL, 0, TimeStamp::Now(), 0);
-        mApzcForInputBlock->ReceiveInputEvent(cancel, nullptr);
+        mInputQueue->ReceiveInputEvent(mApzcForInputBlock, cancel, nullptr);
       }
       mApzcForInputBlock = apzc;
     }
@@ -711,7 +708,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     for (size_t i = 0; i < inputForApzc.mTouches.Length(); i++) {
       ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
     }
-    result = mApzcForInputBlock->ReceiveInputEvent(inputForApzc, aOutInputBlockId);
+    result = mInputQueue->ReceiveInputEvent(mApzcForInputBlock, inputForApzc, aOutInputBlockId);
 
     // For computing the event to pass back to Gecko, use the up-to-date transforms.
     // This ensures that transformToApzc and transformToGecko are in sync
@@ -840,14 +837,10 @@ APZCTreeManager::ZoomToRect(const ScrollableLayerGuid& aGuid,
 }
 
 void
-APZCTreeManager::ContentReceivedTouch(const ScrollableLayerGuid& aGuid,
-                                      uint64_t aInputBlockId,
+APZCTreeManager::ContentReceivedTouch(uint64_t aInputBlockId,
                                       bool aPreventDefault)
 {
-  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
-  if (apzc) {
-    apzc->ContentReceivedTouch(aInputBlockId, aPreventDefault);
-  }
+  mInputQueue->ContentReceivedTouch(aInputBlockId, aPreventDefault);
 }
 
 void

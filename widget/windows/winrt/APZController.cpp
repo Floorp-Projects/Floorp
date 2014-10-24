@@ -86,12 +86,12 @@ APZController::SetPendingResponseFlusher(APZPendingResponseFlusher* aFlusher)
 }
 
 void
-APZController::ContentReceivedTouch(const ScrollableLayerGuid& aGuid, const uint64_t aInputBlockId, bool aPreventDefault)
+APZController::ContentReceivedTouch(const uint64_t aInputBlockId, bool aPreventDefault)
 {
   if (!sAPZC) {
     return;
   }
-  sAPZC->ContentReceivedTouch(aGuid, aInputBlockId, aPreventDefault);
+  sAPZC->ContentReceivedTouch(aInputBlockId, aPreventDefault);
 }
 
 bool
@@ -215,13 +215,13 @@ APZController::HandleSingleTap(const CSSPoint& aPoint,
 void
 APZController::HandleLongTap(const CSSPoint& aPoint,
                              int32_t aModifiers,
-                             const ScrollableLayerGuid& aGuid,
+                             const mozilla::layers::ScrollableLayerGuid& aGuid,
                              uint64_t aInputBlockId)
 {
   if (mFlusher) {
     mFlusher->FlushPendingContentResponse();
   }
-  ContentReceivedTouch(aGuid, aInputBlockId, false);
+  ContentReceivedTouch(aInputBlockId, false);
 }
 
 void
