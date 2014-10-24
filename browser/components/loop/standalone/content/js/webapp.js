@@ -915,10 +915,23 @@ loop.webapp = (function($, _, OT, mozL10n) {
         url: document.location.origin
       });
 
-    // Obtain the loopToken and pass it to the conversation
-    var locationHash = helper.locationHash();
-    if (locationHash) {
-      conversation.set("loopToken", locationHash.match(/\#call\/(.*)/)[1]);
+    // Obtain the loopToken
+
+    var match;
+
+    // locationHash supports the old format urls.
+    var locationData = helper.locationData();
+    if (locationData.hash) {
+      match = locationData.hash.match(/\#call\/(.*)/);
+    } else if (locationData.pathname) {
+      // Otherwise, we're expecting a url such as /c/<token> for calls.
+      match = locationData.pathname.match(/\/c\/([\w\-]+)/);
+    }
+    // XXX Supporting '/\/([\w\-]+)/' is for rooms which are to be implemented
+    // in bug 1074701.
+
+    if (match && match[1]) {
+      conversation.set({loopToken: match[1]});
     }
 
     React.renderComponent(WebappRootView({

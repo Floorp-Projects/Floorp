@@ -164,6 +164,16 @@ protected:
                     eCompositionState_CompositionChangeEventDispatched);
     }
 
+    /**
+     * Checks if aContext is valid context for handling composition.
+     *
+     * @param aContext          An IM context which is specified by native
+     *                          composition events.
+     * @return                  true if the context is valid context for
+     *                          handling composition.  Otherwise, false.
+     */
+    bool IsValidContext(GtkIMContext* aContext) const;
+
 #ifdef PR_LOGGING
     const char* GetCompositionStateName()
     {
@@ -264,7 +274,8 @@ protected:
     void ResetIME();
 
     // Gets the current composition string by the native APIs.
-    void GetCompositionString(nsAString &aCompositionString);
+    void GetCompositionString(GtkIMContext* aContext,
+                              nsAString& aCompositionString);
 
     // Generates our text range array from current composition string.
     already_AddRefed<mozilla::TextRangeArray> CreateTextRangeArray();

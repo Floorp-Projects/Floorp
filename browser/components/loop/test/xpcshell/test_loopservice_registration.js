@@ -11,36 +11,18 @@ Cu.import("resource://services-common/utils.js");
  */
 
 /**
- * Tests reported failures when we're in offline mode.
- */
-add_test(function test_register_offline() {
-  mockPushHandler.registrationResult = "offline";
-
-  // It should callback with failure if in offline mode
-  Services.io.offline = true;
-
-  MozLoopService.register(mockPushHandler).then(() => {
-    do_throw("should not succeed when offline");
-  }, err => {
-    Assert.equal(err, "offline", "should reject with 'offline' when offline");
-    Services.io.offline = false;
-    run_next_test();
-  });
-});
-
-/**
  * Test that the websocket can be fully registered, and that a Loop server
  * failure is reported.
  */
 add_test(function test_register_websocket_success_loop_server_fail() {
-  mockPushHandler.registrationResult = null;
+  mockPushHandler.registrationResult = "404";
 
   MozLoopService.register(mockPushHandler).then(() => {
     do_throw("should not succeed when loop server registration fails");
-  }, err => {
+  }, (err) => {
     // 404 is an expected failure indicated by the lack of route being set
     // up on the Loop server mock. This is added in the next test.
-    Assert.equal(err.errno, 404, "Expected no errors in websocket registration");
+    Assert.equal(err.message, "404", "Expected no errors in websocket registration");
 
     run_next_test();
   });
@@ -50,14 +32,18 @@ add_test(function test_register_websocket_success_loop_server_fail() {
  * Tests that we get a success response when both websocket and Loop server
  * registration are complete.
  */
+
 add_test(function test_register_success() {
   mockPushHandler.registrationPushURL = kEndPointUrl;
+  mockPushHandler.registrationResult = null;
 
   loopServer.registerPathHandler("/registration", (request, response) => {
     let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);
     let data = JSON.parse(body);
-    Assert.equal(data.simplePushURL, kEndPointUrl,
-                 "Should send correct push url");
+    Assert.equal(data.simplePushURLs.calls, kEndPointUrl,
+                 "Should send correct calls push url");
+    Assert.equal(data.simplePushURLs.rooms, kEndPointUrl,
+                 "Should send correct rooms push url");
 
     response.setStatusLine(null, 200, "OK");
     response.processAsync();

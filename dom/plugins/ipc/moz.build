@@ -54,7 +54,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
     DEFINES['MOZ_HANGUI_PROCESS_NAME'] = '"plugin-hang-ui%s"' % CONFIG['BIN_SUFFIX']
     LOCAL_INCLUDES += [
-        '/widget/shared',
+        '/widget',
         'hangui',
     ]
 

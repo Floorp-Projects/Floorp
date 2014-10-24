@@ -39,6 +39,11 @@
         </hbox>
       </toolbar>
       <vbox id="recordings-list" flex="1"/>
+      <splitter class="devtools-horizontal-splitter" />
+      <vbox id="profile-options" class="devtools-toolbar">
+        <checkbox id="invert-tree" label="&profilerUI.invertTree;"
+                  tooltiptext="&profilerUI.invertTree.tooltiptext;" />
+      </vbox>
     </vbox>
 
     <deck id="profile-pane"
@@ -109,13 +114,13 @@
                  crop="end"
                  value="&profilerUI.table.totalDuration;"/>
           <label class="plain call-tree-header"
-                 type="self-duration"
-                 crop="end"
-                 value="&profilerUI.table.selfDuration;"/>
-          <label class="plain call-tree-header"
                  type="percentage"
                  crop="end"
                  value="&profilerUI.table.totalPercentage;"/>
+          <label class="plain call-tree-header"
+                 type="self-duration"
+                 crop="end"
+                 value="&profilerUI.table.selfDuration;"/>
           <label class="plain call-tree-header"
                  type="self-percentage"
                  crop="end"

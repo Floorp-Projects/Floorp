@@ -584,7 +584,7 @@ loop.conversation = (function(mozL10n) {
 
     // Obtain the callId and pass it through
     var helper = new loop.shared.utils.Helper();
-    var locationHash = helper.locationHash();
+    var locationHash = helper.locationData().hash;
     var callId;
     var outgoing;
     var localRoomStore;

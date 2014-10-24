@@ -484,7 +484,9 @@ nsHostObjectProtocolHandler::NewURI(const nsACString& aSpec,
 }
 
 NS_IMETHODIMP
-nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
+nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
+                                         nsILoadInfo *aLoadinfo,
+                                         nsIChannel** result)
 {
   *result = nullptr;
 
@@ -548,6 +550,12 @@ nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
   channel.forget(result);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
+{
+  return NewChannel2(uri, nullptr, result);
 }
 
 NS_IMETHODIMP

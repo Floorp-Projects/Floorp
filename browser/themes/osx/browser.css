@@ -9,13 +9,42 @@
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-wrapper
 %define conditionalForwardWithUrlbarWidth 32
-%define spaceAboveTabbar 9px
 %define toolbarButtonPressed :hover:active:not([disabled="true"]):not([cui-areatype="menu-panel"])
 %define windowButtonMarginTop 11px
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 @namespace svg url("http://www.w3.org/2000/svg");
+
+:root {
+  --space-above-tabbar: 9px;
+
+  --tabs-toolbar-color: #333;
+  --toolbarbutton-hover-background: hsla(0,0%,100%,.1) linear-gradient(hsla(0,0%,100%,.3), hsla(0,0%,100%,.1)) padding-box;
+  --toolbarbutton-hover-bordercolor: hsla(0,0%,0%,.2);
+  --toolbarbutton-hover-boxshadow: 0 1px 0 hsla(0,0%,100%,.5),
+                                   0 1px 0 hsla(0,0%,100%,.5) inset;
+
+  --toolbarbutton-active-background: hsla(0,0%,0%,.02) linear-gradient(hsla(0,0%,0%,.12), hsla(0,0%,0%,0)) border-box;
+  --toolbarbutton-active-boxshadow: 0 1px 0 hsla(0,0%,100%,.5),
+                                    0 1px 0 hsla(0,0%,0%,.05) inset,
+                                    0 1px 1px hsla(0,0%,0%,.2) inset;
+
+  --toolbarbutton-checkedhover-backgroundcolor: hsla(0,0%,0%,.09);
+
+  --toolbarbutton-combined-boxshadow: 0 0 0 1px hsla(0,0%,100%,.15);
+  --toolbarbutton-combined-backgroundimage: linear-gradient(hsla(0,0%,0%,.15) 0, hsla(0,0%,0%,.15) 18px);
+
+  --urlbar-dropmarker-url: url("chrome://browser/skin/urlbar-history-dropmarker.png");
+  --urlbar-dropmarker-region: rect(0, 11px, 14px, 0);
+  --urlbar-dropmarker-active-region: rect(0, 22px, 14px, 11px);
+  --urlbar-dropmarker-2x-url: url("chrome://browser/skin/urlbar-history-dropmarker@2x.png");
+  --urlbar-dropmarker-2x-region: rect(0, 22px, 28px, 0);
+  --urlbar-dropmarker-active-2x-region: rect(0, 44px, 28px, 22px);
+
+  --menupanel-list-style-image-2x: url(chrome://browser/skin/menuPanel@2x.png);
+  --menupanel-small-list-style-image-2x: url(chrome://browser/skin/menuPanel-small@2x.png);
+}
 
 #urlbar:-moz-lwtheme:not([focused="true"]),
 .searchbar-textbox:-moz-lwtheme:not([focused="true"]) {
@@ -81,7 +110,7 @@
  * tabstrip can overlap it.
  */
 #main-window[tabsintitlebar] > #titlebar {
-  min-height: calc(@tabMinHeight@ + @spaceAboveTabbar@ - @tabToolbarNavbarOverlap@);
+  min-height: calc(@tabMinHeight@ + var(--space-above-tabbar) - @tabToolbarNavbarOverlap@);
 }
 
 /**
@@ -561,15 +590,14 @@ toolbar .toolbarbutton-1[type="menu-button"]:not([disabled]) > .toolbarbutton-me
 toolbar .toolbarbutton-1[type="menu-button"]:not([disabled]):-moz-any(:hover,[open]) > .toolbarbutton-menubutton-button,
 toolbar .toolbarbutton-1[type="menu-button"]:not([disabled]):-moz-any(:hover,[open]) > .toolbarbutton-menubutton-dropmarker,
 toolbar .toolbaritem-combined-buttons:hover > .toolbarbutton-combined {
-  border-color: hsla(0,0%,0%,.2);
-  box-shadow: 0 1px 0 hsla(0,0%,100%,.5),
-              0 1px 0 hsla(0,0%,100%,.5) inset;
+  border-color: var(--toolbarbutton-hover-bordercolor);
+  box-shadow: var(--toolbarbutton-hover-boxshadow);
 }
 
 toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],[open],#back-button,#forward-button)):hover,
 toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open]))[buttonover] > .toolbarbutton-menubutton-button,
 toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open],[buttonover])):hover > .toolbarbutton-menubutton-dropmarker {
-  background: hsla(0,0%,100%,.1) linear-gradient(hsla(0,0%,100%,.3), hsla(0,0%,100%,.1)) padding-box;
+  background: var(--toolbarbutton-hover-background);
 }
 
 toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],#back-button,#forward-button)):-moz-any(:hover:active,[open],[checked]),
@@ -577,16 +605,14 @@ toolbar .toolbarbutton-1[type="menu-button"]:not([disabled]) > .toolbarbutton-me
 toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open]))[buttonover]:active > .toolbarbutton-menubutton-button,
 toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open],[buttonover])):hover:active > .toolbarbutton-menubutton-dropmarker,
 toolbar .toolbarbutton-1[type="menu-button"][open]:not([disabled]) > .toolbarbutton-menubutton-dropmarker {
-  background: hsla(0,0%,0%,.02) linear-gradient(hsla(0,0%,0%,.12), hsla(0,0%,0%,0)) border-box;
+  background: var(--toolbarbutton-active-background);
   border-color: hsla(0,0%,0%,.3);
-  box-shadow: 0 1px 0 hsla(0,0%,100%,.5),
-              0 1px 0 hsla(0,0%,0%,.05) inset,
-              0 1px 1px hsla(0,0%,0%,.2) inset;
+  box-shadow: var(--toolbarbutton-active-boxshadow);
   transition-duration: 10ms;
 }
 
 toolbar .toolbarbutton-1[checked]:not(:active):hover {
-  background-color: hsla(0,0%,0%,.09);
+  background-color: var(--toolbarbutton-checkedhover-backgroundcolor);
   transition: background-color 250ms;
 }
 
@@ -624,12 +650,12 @@ toolbar .toolbarbutton-1:not(:-moz-any([open],:hover)) > .toolbarbutton-menubutt
   width: 1px;
   height: 18px;
   -moz-margin-start: -1px;
-  background-image: linear-gradient(hsla(0,0%,0%,.15) 0, hsla(0,0%,0%,.15) 18px);
+  background-image: var(--toolbarbutton-combined-backgroundimage);
   background-clip: padding-box;
   background-position: center;
   background-repeat: no-repeat;
   background-size: 1px 18px;
-  box-shadow: 0 0 0 1px hsla(0,0%,100%,.15);
+  box-shadow: var(--toolbarbutton-combined-boxshadow);
 }
 
 toolbar .toolbaritem-combined-buttons:hover > separator {
@@ -1170,7 +1196,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
   toolbaritem[sdkstylewidget="true"] > toolbarbutton,
   :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > :-moz-any(@primaryToolbarButtons@) {
-    list-style-image: url(chrome://browser/skin/menuPanel@2x.png);
+    list-style-image: var(--menupanel-list-style-image-2x);
   }
 
   #home-button[cui-areatype="menu-panel"],
@@ -1332,7 +1358,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
   #zoom-controls@inAnyPanel@ > toolbarbutton,
   toolbarpaletteitem[place="palette"] > #edit-controls > toolbarbutton,
   toolbarpaletteitem[place="palette"] > #zoom-controls > toolbarbutton {
-    list-style-image: url(chrome://browser/skin/menuPanel-small@2x.png);
+    list-style-image: var(--menupanel-small-list-style-image-2x);
   }
 
   /* Wide items like the Cut/Copy/Paste and Zoom controls are special in that their icons
@@ -2095,25 +2121,25 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 
 .urlbar-history-dropmarker {
   padding: 0 3px;
-  list-style-image: url("chrome://browser/skin/urlbar-history-dropmarker.png");
-  -moz-image-region: rect(0px, 11px, 14px, 0px);
+  list-style-image: var(--urlbar-dropmarker-url);
+  -moz-image-region: var(--urlbar-dropmarker-region);
 }
 
 .urlbar-history-dropmarker[open="true"],
 .urlbar-history-dropmarker:hover:active {
-  -moz-image-region: rect(0px, 22px, 14px, 11px);
+  -moz-image-region: var(--urlbar-dropmarker-active-region);
   background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
 }
 
 @media (min-resolution: 2dppx) {
   .urlbar-history-dropmarker {
-    list-style-image: url("chrome://browser/skin/urlbar-history-dropmarker@2x.png");
-    -moz-image-region: rect(0px, 22px, 28px, 0px);
+    list-style-image: var(--urlbar-dropmarker-2x-url);
+    -moz-image-region: var(--urlbar-dropmarker-2x-region);
   }
 
   .urlbar-history-dropmarker[open="true"],
   .urlbar-history-dropmarker:hover:active {
-    -moz-image-region: rect(0px, 44px, 28px, 22px);
+    -moz-image-region: var(--urlbar-dropmarker-active-2x-region);
   }
 
   .urlbar-history-dropmarker > .dropmarker-icon {
@@ -3042,13 +3068,13 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #TabsToolbar:not(:-moz-lwtheme) {
-  color: #333;
+  color: var(--tabs-toolbar-color);
   text-shadow: @loweredShadow@;
 }
 
 @media (-moz-mac-lion-theme) {
   #navigator-toolbox[inFullscreen] > #TabsToolbar {
-    padding-top: @spaceAboveTabbar@;
+    padding-top: var(--space-above-tabbar);
   }
 }
 
@@ -3102,12 +3128,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   cursor: default;
 }
 
-.tab-close-button.close-icon:not([selected=true]):not(:hover):-moz-lwtheme-brighttext {
+#TabsToolbar[brighttext] .tab-close-button.close-icon:not([selected=true]):not(:hover) {
   -moz-image-region: rect(0, 64px, 16px, 48px);
 }
 
 @media (min-resolution: 2dppx) {
-  .tab-close-button.close-icon:not([selected=true]):not(:hover):-moz-lwtheme-brighttext {
+  #TabsToolbar[brighttext] .tab-close-button.close-icon:not([selected=true]):not(:hover) {
     -moz-image-region: rect(0, 128px, 32px, 96px);
   }
 }
@@ -3144,13 +3170,13 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right.png");
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(ltr):-moz-lwtheme-brighttext,
-.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl):-moz-lwtheme-brighttext {
+#TabsToolbar[brighttext] .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(ltr),
+#TabsToolbar[brighttext] .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.png");
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr):-moz-lwtheme-brighttext,
-.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl):-moz-lwtheme-brighttext {
+#TabsToolbar[brighttext] .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr),
+#TabsToolbar[brighttext] .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right-inverted.png");
 }
 
@@ -3186,13 +3212,13 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
     list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right@2x.png");
   }
 
-  .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(ltr):-moz-lwtheme-brighttext,
-  .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl):-moz-lwtheme-brighttext {
+  #TabsToolbar[brighttext] .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(ltr),
+  #TabsToolbar[brighttext] .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl) {
     list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left-inverted@2x.png");
   }
 
-  .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr):-moz-lwtheme-brighttext,
-  .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl):-moz-lwtheme-brighttext {
+  #TabsToolbar[brighttext] .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr),
+  #TabsToolbar[brighttext] .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl) {
     list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right-inverted@2x.png");
   }
 
@@ -3273,9 +3299,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-image-region: rect(0, 18px, 20px, 0);
 }
 
-.tabs-newtab-button:-moz-lwtheme-brighttext,
-#TabsToolbar > #new-tab-button:-moz-lwtheme-brighttext,
-#TabsToolbar > toolbarpaletteitem > #new-tab-button:-moz-lwtheme-brighttext {
+#TabsToolbar[brighttext] .tabs-newtab-button,
+#TabsToolbar[brighttext] > #new-tab-button,
+#TabsToolbar[brighttext] > toolbarpaletteitem > #new-tab-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted.png);
 }
 
@@ -3297,9 +3323,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
     -moz-image-region: rect(0, 36px, 40px, 0);
   }
 
-  .tabs-newtab-button:-moz-lwtheme-brighttext,
-  #TabsToolbar > #new-tab-button:-moz-lwtheme-brighttext,
-  #TabsToolbar > toolbarpaletteitem > #new-tab-button:-moz-lwtheme-brighttext {
+  #TabsToolbar[brighttext] .tabs-newtab-button,
+  #TabsToolbar[brighttext] > #new-tab-button,
+  #TabsToolbar[brighttext] > toolbarpaletteitem > #new-tab-button {
     list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted@2x.png);
   }
 
@@ -3328,7 +3354,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-image-region: rect(0, 17px, 20px, 0);
 }
 
-#alltabs-button:-moz-lwtheme-brighttext {
+#TabsToolbar[brighttext] #alltabs-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon-inverted.png);
 }
 
@@ -3347,7 +3373,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
     -moz-image-region: rect(0, 34px, 40px, 0);
   }
 
-  #alltabs-button:-moz-lwtheme-brighttext {
+  #TabsToolbar[brighttext] #alltabs-button {
     list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon-inverted@2x.png);
   }
 
@@ -4678,7 +4704,7 @@ window > chatbox {
 
 @media (-moz-mac-lion-theme) {
   #TabsToolbar > .private-browsing-indicator {
-    transform: translateY(-@spaceAboveTabbar@);
+    transform: translateY(calc(0px - var(--negative-space)));
     /* We offset by 38px for mask graphic, plus 4px to account for the
      * margin-left, which sums to 42px.
      */
