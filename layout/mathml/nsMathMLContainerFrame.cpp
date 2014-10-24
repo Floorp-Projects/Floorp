@@ -58,7 +58,8 @@ nsMathMLContainerFrame::ReflowError(nsRenderingContext& aRenderingContext,
   // bounding metrics
   nsAutoString errorMsg; errorMsg.AssignLiteral("invalid-markup");
   mBoundingMetrics =
-    aRenderingContext.GetBoundingMetrics(errorMsg.get(), errorMsg.Length());
+    nsLayoutUtils::AppUnitBoundsOfString(errorMsg.get(), errorMsg.Length(),
+                                         aRenderingContext);
 
   // reflow metrics
   WritingMode wm = aDesiredSize.GetWritingMode();
