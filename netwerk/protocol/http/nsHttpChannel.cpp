@@ -3579,6 +3579,7 @@ nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry, bool startBufferi
             LOG(("failed to parse security-info [channel=%p, entry=%p]",
                  this, cacheEntry));
             NS_WARNING("failed to parse security-info");
+            cacheEntry->AsyncDoom(nullptr);
             return rv;
         }
 
@@ -3590,6 +3591,7 @@ nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry, bool startBufferi
             LOG(("mCacheEntry->GetSecurityInfo returned success but did not "
                  "return the security info [channel=%p, entry=%p]",
                  this, cacheEntry));
+            cacheEntry->AsyncDoom(nullptr);
             return NS_ERROR_UNEXPECTED; // XXX error code
         }
     }
