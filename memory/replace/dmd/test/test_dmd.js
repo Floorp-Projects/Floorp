@@ -65,7 +65,7 @@ function runProcess(aExeFile, aArgs) {
   return process.exitValue;
 }
 
-function test(aPrefix, aArgs) {
+function test(aJsonFile, aPrefix, aOptions) {
   // DMD writes the JSON files to CurWorkD, so we do likewise here with
   // |actualFile| for consistency. It is removed once we've finished.
   let expectedFile = FileUtils.getFile("CurWorkD", [aPrefix + "-expected.txt"]);
@@ -77,7 +77,9 @@ function test(aPrefix, aArgs) {
     gDmdScriptFile.path,
     "--filter-stacks-for-testing",
     "-o", actualFile.path
-  ].concat(aArgs);
+  ];
+  args = args.concat(aOptions);
+  args.push(aJsonFile.path);
 
   runProcess(new FileUtils.File(gPythonName), args);
 
@@ -114,7 +116,7 @@ function test(aPrefix, aArgs) {
 }
 
 function run_test() {
-  let jsonFile, jsonFile2;
+  let jsonFile;
 
   // These tests do full end-to-end testing of DMD, i.e. both the C++ code that
   // generates the JSON output, and the script that post-processes that output.
@@ -132,8 +134,8 @@ function run_test() {
   for (let i = 0; i < fullTestNames.length; i++) {
       let name = fullTestNames[i];
       jsonFile = FileUtils.getFile("CurWorkD", ["full-" + name + ".json"]);
-      test("full-heap-" + name, ["--ignore-reports", jsonFile.path])
-      test("full-reports-" + name, [jsonFile.path])
+      test(jsonFile, "full-heap-" + name, ["--ignore-reports"])
+      test(jsonFile, "full-reports-" + name, [])
       jsonFile.remove(true);
   }
 
@@ -146,45 +148,27 @@ function run_test() {
   // appropriately. The number of records in the output is different for each
   // of the tested values.
   jsonFile = FileUtils.getFile("CurWorkD", ["script-max-frames.json"]);
-  test("script-max-frames-8",
-       ["--ignore-reports", "--max-frames=8", jsonFile.path]);
-  test("script-max-frames-3",
-       ["--ignore-reports", "--max-frames=3", "--no-fix-stacks",
-        jsonFile.path]);
-  test("script-max-frames-1",
-       ["--ignore-reports", "--max-frames=1", jsonFile.path]);
+  test(jsonFile, "script-max-frames-8", ["-r", "--max-frames=8"]);
+  test(jsonFile, "script-max-frames-3", ["-r", "--max-frames=3",
+                                         "--no-fix-stacks"]);
+  test(jsonFile, "script-max-frames-1", ["-r", "--max-frames=1"]);
 
-  // This file has three records that are shown in a different order for each
+  // This test has three records that are shown in a different order for each
   // of the different sort values. It also tests the handling of gzipped JSON
   // files.
   jsonFile = FileUtils.getFile("CurWorkD", ["script-sort-by.json.gz"]);
-  test("script-sort-by-usable",
-       ["--ignore-reports", "--sort-by=usable", jsonFile.path]);
-  test("script-sort-by-req",
-       ["--ignore-reports", "--sort-by=req", "--no-fix-stacks", jsonFile.path]);
-  test("script-sort-by-slop",
-       ["--ignore-reports", "--sort-by=slop", jsonFile.path]);
+  test(jsonFile, "script-sort-by-usable", ["-r", "--sort-by=usable"]);
+  test(jsonFile, "script-sort-by-req",    ["-r", "--sort-by=req",
+                                           "--no-fix-stacks"]);
+  test(jsonFile, "script-sort-by-slop",   ["-r", "--sort-by=slop"]);
 
-  // This file has several real stack traces taken from Firefox execution, each
+  // This test has several real stack traces taken from Firefox execution, each
   // of which tests a different allocator function (or functions).
   jsonFile = FileUtils.getFile("CurWorkD", ["script-ignore-alloc-fns.json"]);
-  test("script-ignore-alloc-fns",
-       ["--ignore-reports", "--ignore-alloc-fns", jsonFile.path]);
+  test(jsonFile, "script-ignore-alloc-fns", ["-r", "--ignore-alloc-fns"]);
 
-  // This file has numerous allocations of different sizes, some repeated, some
+  // This test has numerous allocations of different sizes, some repeated, some
   // sampled, that all end up in the same record.
   jsonFile = FileUtils.getFile("CurWorkD", ["script-show-all-block-sizes.json"]);
-  test("script-show-all-block-sizes",
-       ["--ignore-reports", "--show-all-block-sizes", jsonFile.path]);
-
-  // This tests diffs. The first invocation has no options, the second has
-  // several.
-  jsonFile  = FileUtils.getFile("CurWorkD", ["script-diff1.json"]);
-  jsonFile2 = FileUtils.getFile("CurWorkD", ["script-diff2.json"]);
-  test("script-diff-basic",
-       [jsonFile.path, jsonFile2.path]);
-  test("script-diff-options",
-       ["--ignore-reports", "--show-all-block-sizes",
-        jsonFile.path, jsonFile2.path]);
+  test(jsonFile, "script-show-all-block-sizes", ["-r", "--show-all-block-sizes"]);
 }
-
