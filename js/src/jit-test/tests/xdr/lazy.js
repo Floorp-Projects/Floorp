@@ -102,6 +102,10 @@ test = (function () {
 })();
 evalWithCache(test, { assertEqBytecode: true });
 
+// Extra zeal GCs can cause isRelazifiableFunction() to become true after we
+// record its value by throwing away JIT code for the function.
+gczeal(0);
+
 // Ensure that decoded functions can be relazified.
 test = "function f() { }; f();"
      + "assertEq(isLazyFunction(f), false);"
