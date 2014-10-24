@@ -415,6 +415,13 @@ AltSvcOverride::GetIgnoreIdle(bool *ignoreIdle)
 }
 
 NS_IMETHODIMP
+AltSvcOverride::GetIgnorePossibleSpdyConnections(bool *ignorePossibleSpdyConnections)
+{
+  *ignorePossibleSpdyConnections = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 AltSvcOverride::GetParallelSpeculativeConnectLimit(
   uint32_t *parallelSpeculativeConnectLimit)
 {
