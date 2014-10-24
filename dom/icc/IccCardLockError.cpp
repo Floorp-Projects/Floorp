@@ -12,7 +12,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(IccCardLockError, DOMError)
 
 /* static */ already_AddRefed<IccCardLockError>
 IccCardLockError::Constructor(const GlobalObject& aGlobal,
-                              const nsAString& aLockType,
                               const nsAString& aName,
                               int16_t aRetryCount,
                               ErrorResult& aRv)
@@ -24,16 +23,14 @@ IccCardLockError::Constructor(const GlobalObject& aGlobal,
   }
 
   nsRefPtr<IccCardLockError> result =
-    new IccCardLockError(window, aName, aLockType, aRetryCount);
+    new IccCardLockError(window, aName, aRetryCount);
   return result.forget();
 }
 
 IccCardLockError::IccCardLockError(nsPIDOMWindow* aWindow,
                                    const nsAString& aName,
-                                   const nsAString& aLockType,
                                    int16_t aRetryCount)
   : DOMError(aWindow, aName)
-  , mLockType(aLockType)
   , mRetryCount(aRetryCount)
 {
 }
