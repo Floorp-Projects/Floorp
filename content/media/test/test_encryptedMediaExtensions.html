@@ -27,7 +27,7 @@ function bail(message)
 function ArrayBufferToString(arr)
 {
   var str = '';
-  var view = Uint8Array(arr);
+  var view = new Uint8Array(arr);
   for (var i = 0; i < view.length; i++) {
     str += String.fromCharCode(view[i]);
   }
@@ -36,8 +36,8 @@ function ArrayBufferToString(arr)
 
 function StringToArrayBuffer(str)
 {
-  var arr = ArrayBuffer(str.length);
-  var view = Uint8Array(arr);
+  var arr = new ArrayBuffer(str.length);
+  var view = new Uint8Array(arr);
   for (var i = 0; i < str.length; i++) {
     view[i] = str.charCodeAt(i);
   }

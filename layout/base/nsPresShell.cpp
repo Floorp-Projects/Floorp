@@ -10162,13 +10162,12 @@ void ReflowCountMgr::PaintCount(const char*     aName,
         aPresContext->GetTextPerfMetrics(),
         *getter_AddRefs(fm));
 
-      aRenderingContext->SetFont(fm);
       char buf[16];
-      sprintf(buf, "%d", counter->mCount);
+      int len = sprintf(buf, "%d", counter->mCount);
       nscoord x = 0, y = fm->MaxAscent();
       nscoord width, height = fm->MaxHeight();
-      aRenderingContext->SetTextRunRTL(false);
-      width = aRenderingContext->GetWidth(buf);
+      fm->SetTextRunRTL(false);
+      width = fm->GetWidth(buf, len, aRenderingContext);;
 
       uint32_t color;
       uint32_t color2;
@@ -10196,9 +10195,9 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       drawTarget->FillRect(devPxRect, black);
 
       aRenderingContext->ThebesContext()->SetColor(color2);
-      aRenderingContext->DrawString(buf, strlen(buf), x+15,y+15);
+      fm->DrawString(buf, len, x+15, y+15, aRenderingContext);
       aRenderingContext->ThebesContext()->SetColor(color);
-      aRenderingContext->DrawString(buf, strlen(buf), x,y);
+      fm->DrawString(buf, len, x, y, aRenderingContext);
 
       aRenderingContext->ThebesContext()->Restore();
     }

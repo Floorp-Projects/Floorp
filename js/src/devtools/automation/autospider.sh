@@ -116,6 +116,9 @@ elif [[ "$VARIANT" = "generational" ]]; then
     # Generational is currently being used for compacting GC
     export JS_GC_ZEAL=14
 
+    # Ignore timeouts from tests that are known to take too long with this zeal mode
+    export JITTEST_EXTRA_ARGS=--ignore-timeouts=$ABSDIR/cgc-jittest-timeouts.txt
+
     # rootanalysis builds are currently only done on Linux, which should have
     # setarch, but just in case we enable them on another platform:
     if type setarch >/dev/null 2>&1; then
@@ -125,5 +128,7 @@ fi
 
 $COMMAND_PREFIX $MAKE check || exit 1
 $COMMAND_PREFIX $MAKE check-jit-test || exit 1
-$COMMAND_PREFIX $MAKE check-jstests || exit 1
+if [[ "$VARIANT" != "generational" ]]; then
+    $COMMAND_PREFIX $MAKE check-jstests || exit 1
+fi
 $COMMAND_PREFIX $OBJDIR/dist/bin/jsapi-tests || exit 1

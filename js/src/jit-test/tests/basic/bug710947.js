@@ -5,4 +5,4 @@ function startTest() {
 };
 gczeal(4);
 startTest();
-ArrayBuffer( 8192 );
+new ArrayBuffer( 8192 );

@@ -17,7 +17,6 @@
 #include "nsAttrAndChildArray.h"          // member
 #include "nsCycleCollectionParticipant.h" // NS_DECL_CYCLE_*
 #include "nsIContent.h"                   // base class
-#include "nsIDOMXPathNSResolver.h"        // base class
 #include "nsINodeList.h"                  // base class
 #include "nsIWeakReference.h"             // base class
 #include "nsNodeUtils.h"                  // class member nsNodeUtils::CloneNodeImpl
@@ -81,29 +80,6 @@ private:
 
   // The node whose children make up the list (weak reference)
   nsINode* mNode;
-};
-
-/**
- * A tearoff class for FragmentOrElement to implement additional interfaces
- */
-class nsNode3Tearoff : public nsIDOMXPathNSResolver
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsNode3Tearoff)
-
-  NS_DECL_NSIDOMXPATHNSRESOLVER
-
-  explicit nsNode3Tearoff(nsINode *aNode) : mNode(aNode)
-  {
-  }
-
-protected:
-  virtual ~nsNode3Tearoff() {}
-
-private:
-  nsCOMPtr<nsINode> mNode;
 };
 
 /**

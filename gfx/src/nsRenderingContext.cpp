@@ -24,7 +24,8 @@
 // size the cluster buffer array in FindSafeLength
 #define MAX_GFX_TEXT_BUF_SIZE 8000
 
-static int32_t FindSafeLength(const char16_t *aString, uint32_t aLength,
+/*static*/ int32_t
+nsRenderingContext::FindSafeLength(const char16_t *aString, uint32_t aLength,
                               uint32_t aMaxChunkLength)
 {
     if (aLength <= aMaxChunkLength)
@@ -45,13 +46,6 @@ static int32_t FindSafeLength(const char16_t *aString, uint32_t aLength,
         return aMaxChunkLength;
     }
     return len;
-}
-
-static int32_t FindSafeLength(const char *aString, uint32_t aLength,
-                              uint32_t aMaxChunkLength)
-{
-    // Since it's ASCII, we don't need to worry about clusters or RTL
-    return std::min(aLength, aMaxChunkLength);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -90,19 +84,7 @@ nsRenderingContext::SetFont(nsFontMetrics *aFontMetrics)
 int32_t
 nsRenderingContext::GetMaxChunkLength()
 {
-    if (!mFontMetrics)
-        return 1;
     return std::min(mFontMetrics->GetMaxStringLength(), MAX_GFX_TEXT_BUF_SIZE);
-}
-
-nscoord
-nsRenderingContext::GetWidth(char aC)
-{
-    if (aC == ' ' && mFontMetrics) {
-        return mFontMetrics->SpaceWidth();
-    }
-
-    return GetWidth(&aC, 1);
 }
 
 nscoord
@@ -115,26 +97,6 @@ nscoord
 nsRenderingContext::GetWidth(const nsString& aString)
 {
     return GetWidth(aString.get(), aString.Length());
-}
-
-nscoord
-nsRenderingContext::GetWidth(const char* aString)
-{
-    return GetWidth(aString, strlen(aString));
-}
-
-nscoord
-nsRenderingContext::GetWidth(const char* aString, uint32_t aLength)
-{
-    uint32_t maxChunkLength = GetMaxChunkLength();
-    nscoord width = 0;
-    while (aLength > 0) {
-        int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
-        width += mFontMetrics->GetWidth(aString, len, this);
-        aLength -= len;
-        aString += len;
-    }
-    return width;
 }
 
 nscoord
@@ -174,60 +136,4 @@ nsRenderingContext::GetBoundingMetrics(const char16_t* aString,
         aString += len;
     }
     return totalMetrics;
-}
-
-void
-nsRenderingContext::DrawString(const char *aString, uint32_t aLength,
-                               nscoord aX, nscoord aY)
-{
-    uint32_t maxChunkLength = GetMaxChunkLength();
-    while (aLength > 0) {
-        int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
-        mFontMetrics->DrawString(aString, len, aX, aY, this);
-        aLength -= len;
-
-        if (aLength > 0) {
-            nscoord width = mFontMetrics->GetWidth(aString, len, this);
-            aX += width;
-            aString += len;
-        }
-    }
-}
-
-void
-nsRenderingContext::DrawString(const nsString& aString, nscoord aX, nscoord aY)
-{
-    DrawString(aString.get(), aString.Length(), aX, aY);
-}
-
-void
-nsRenderingContext::DrawString(const char16_t *aString, uint32_t aLength,
-                               nscoord aX, nscoord aY)
-{
-    uint32_t maxChunkLength = GetMaxChunkLength();
-    if (aLength <= maxChunkLength) {
-        mFontMetrics->DrawString(aString, aLength, aX, aY, this, this);
-        return;
-    }
-
-    bool isRTL = mFontMetrics->GetTextRunRTL();
-
-    // If we're drawing right to left, we must start at the end.
-    if (isRTL) {
-        aX += GetWidth(aString, aLength);
-    }
-
-    while (aLength > 0) {
-        int32_t len = FindSafeLength(aString, aLength, maxChunkLength);
-        nscoord width = mFontMetrics->GetWidth(aString, len, this);
-        if (isRTL) {
-            aX -= width;
-        }
-        mFontMetrics->DrawString(aString, len, aX, aY, this, this);
-        if (!isRTL) {
-            aX += width;
-        }
-        aLength -= len;
-        aString += len;
-    }
 }

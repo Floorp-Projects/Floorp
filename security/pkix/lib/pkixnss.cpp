@@ -33,6 +33,7 @@
 #include "pkix/pkix.h"
 #include "pkix/ScopedPtr.h"
 #include "secerr.h"
+#include "sslerr.h"
 
 namespace mozilla { namespace pkix {
 
