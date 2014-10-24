@@ -59,6 +59,7 @@ load 404192.xhtml
 load 408904-1.xul
 load 412479-1.xhtml
 asserts(4) load 415394-1.xhtml # Bug 163838
+load 417509.xul
 load 420424-1.xul
 load 430356-1.xhtml
 load 431738.xhtml
