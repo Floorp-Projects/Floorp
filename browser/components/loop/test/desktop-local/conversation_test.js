@@ -693,12 +693,12 @@ describe("loop.conversation", function() {
       });
 
       describe("session:network-disconnected", function() {
-        it("should navigate to call/feedback when network disconnects",
+        it("should navigate to call failed when network disconnects",
           function() {
             conversation.trigger("session:network-disconnected");
 
               TestUtils.findRenderedComponentWithType(icView,
-                sharedView.FeedbackView);
+                loop.conversation.IncomingCallFailedView);
           });
 
         it("should update the conversation window toolbar title",
