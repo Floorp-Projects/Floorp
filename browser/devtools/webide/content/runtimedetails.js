@@ -7,8 +7,7 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 const {AppManager} = require("devtools/webide/app-manager");
 const {Connection} = require("devtools/client/connection-manager");
-const {Devices} = Cu.import("resource://gre/modules/devtools/Devices.jsm");
-const {USBRuntime} = require("devtools/webide/runtimes");
+const {RuntimeTypes} = require("devtools/webide/runtimes");
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
 window.addEventListener("load", function onLoad() {
@@ -86,8 +85,8 @@ function CheckLockState() {
       AppManager.connection.status == Connection.Status.CONNECTED) {
 
     // ADB check
-    if (AppManager.selectedRuntime instanceof USBRuntime) {
-      let device = Devices.getByName(AppManager.selectedRuntime.id);
+    if (AppManager.selectedRuntime.type === RuntimeTypes.USB) {
+      let device = AppManager.selectedRuntime.device;
       if (device && device.summonRoot) {
         device.isRoot().then(isRoot => {
           if (isRoot) {
@@ -127,16 +126,16 @@ function CheckLockState() {
 }
 
 function EnableCertApps() {
-  let device = Devices.getByName(AppManager.selectedRuntime.id);
+  let device = AppManager.selectedRuntime.device;
   device.shell(
     "stop b2g && " +
     "cd /data/b2g/mozilla/*.default/ && " +
     "echo 'user_pref(\"devtools.debugger.forbid-certified-apps\", false);' >> prefs.js && " +
     "start b2g"
-  )
+  );
 }
 
 function RootADB() {
-  let device = Devices.getByName(AppManager.selectedRuntime.id);
+  let device = AppManager.selectedRuntime.device;
   device.summonRoot().then(CheckLockState, (e) => console.error(e));
 }

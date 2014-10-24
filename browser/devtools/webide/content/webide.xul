@@ -151,17 +151,17 @@
     <!-- Runtime panel -->
     <panel id="runtime-panel" type="arrow" position="bottomcenter topright" consumeoutsideclicks="true" animate="false">
       <vbox flex="1">
-        <label class="panel-header">&runtimePanel_USBDevices;</label>
+        <label class="panel-header">&runtimePanel_usb;</label>
         <toolbarbutton class="panel-item" label="&runtimePanel_nousbdevice;" id="runtime-panel-nousbdevice" command="cmd_showTroubleShooting"/>
         <toolbarbutton class="panel-item" label="&runtimePanel_noadbhelper;" id="runtime-panel-noadbhelper" command="cmd_showAddons"/>
-        <vbox id="runtime-panel-usbruntime"></vbox>
-        <label class="panel-header" id="runtime-header-wifi-devices">&runtimePanel_WiFiDevices;</label>
-        <vbox id="runtime-panel-wifi-devices"></vbox>
-        <label class="panel-header">&runtimePanel_simulators;</label>
-        <vbox id="runtime-panel-simulators"></vbox>
+        <vbox id="runtime-panel-usb"></vbox>
+        <label class="panel-header" id="runtime-header-wifi">&runtimePanel_wifi;</label>
+        <vbox id="runtime-panel-wifi"></vbox>
+        <label class="panel-header">&runtimePanel_simulator;</label>
+        <vbox id="runtime-panel-simulator"></vbox>
         <toolbarbutton class="panel-item" label="&runtimePanel_installsimulator;" id="runtime-panel-installsimulator" command="cmd_showAddons"/>
-        <label class="panel-header">&runtimePanel_custom;</label>
-        <vbox id="runtime-panel-custom"></vbox>
+        <label class="panel-header">&runtimePanel_other;</label>
+        <vbox id="runtime-panel-other"></vbox>
         <vbox flex="1" id="runtime-actions">
           <toolbarbutton class="panel-item" id="runtime-details" command="cmd_showRuntimeDetails"/>
           <toolbarbutton class="panel-item" id="runtime-permissions" command="cmd_showPermissionsTable"/>

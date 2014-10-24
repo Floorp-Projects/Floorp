@@ -356,6 +356,7 @@
   <string name="home_last_tabs_empty">&home_last_tabs_empty;</string>
   <string name="home_open_all">&home_open_all;</string>
   <string name="home_most_recent_empty">&home_most_recent_empty;</string>
+  <string name="home_most_recent_emptyhint">&home_most_recent_emptyhint;</string>
   <string name="home_reading_list_empty">&home_reading_list_empty;</string>
   <string name="home_reading_list_hint">&home_reading_list_hint2;</string>
   <string name="home_reading_list_hint_accessible">&home_reading_list_hint_accessible;</string>

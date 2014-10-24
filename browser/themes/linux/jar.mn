@@ -187,6 +187,9 @@ browser.jar:
   skin/classic/browser/tabbrowser/tab-stroke-start.png      (tabbrowser/tab-stroke-start.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png      (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabbrowser/tab-separator.png         (tabbrowser/tab-separator.png)
+
+  skin/classic/browser/tabbrowser/pendingpaint.png          (../shared/tabbrowser/pendingpaint.png)
+
   skin/classic/browser/tabview/edit-light.png         (tabview/edit-light.png)
   skin/classic/browser/tabview/search.png             (tabview/search.png)
   skin/classic/browser/tabview/stack-expander.png     (tabview/stack-expander.png)

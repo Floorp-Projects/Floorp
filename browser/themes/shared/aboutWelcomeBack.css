@@ -4,4 +4,39 @@
 
 #errorPageContainer {
   background-image: url("chrome://global/skin/icons/information-64.png");
+  height: auto;
+}
+
+/* tablist starts out hidden, but JS may make it visible in response to
+   clicks on the radio buttons by setting an "available" attribute.
+*/
+#tabList {
+  display: none;
+}
+
+#tabList[available] {
+  display: -moz-box;
+}
+
+.radioRestoreContainer {
+  display: flex;
+}
+
+.radioRestoreButton {
+  flex: 0 0 auto;
+}
+
+.radioRestoreButton:-moz-focusring {
+  outline: 1px dotted black;
+}
+
+.radioChooseLabel {
+  flex: 1 1 auto;
+}
+
+/* We want errorTrailerDesc to have the same padding-top as errorShortDesc
+   has padding-bottom
+*/
+#errorTrailerDesc {
+  padding-top: 1em;
 }

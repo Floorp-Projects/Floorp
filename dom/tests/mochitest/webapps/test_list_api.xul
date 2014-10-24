@@ -44,11 +44,13 @@ var mgmtProps = {
   uninstall: "function",
   oninstall: "object",
   onuninstall: "object",
+  onenabledstatechange: "object",
   ownerGlobal: "object",
   removeEventListener: "function",
   setEventHandler: "function",
   extractManifest: "function",
-  import: "function"
+  import: "function",
+  setEnabled: "function"
 };
 
 isDeeply([p for (p in navigator.mozApps.mgmt)].sort(),

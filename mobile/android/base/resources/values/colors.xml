@@ -144,4 +144,11 @@
   <!-- Colour used for Find-In-Page dialog -->
   <color name="find_status_default">#AFB1B3</color>
 
+  <!-- Canvas delegate paint color -->
+  <color name="canvas_delegate_paint">#FFFF0000</color>
+
+  <!-- Top sites thumbnail colors -->
+  <color name="top_site_default">#FFECF0F3</color>
+  <color name="top_site_border">#FFCFD9E1</color>
+
 </resources>

@@ -28,7 +28,7 @@ child:
   NotifyEmergencyCbModeChanged(bool aActive, uint32_t aTimeoutMs);
   NotifyOtaStatusChanged(nsString aStatus);
   NotifyIccChanged(nsString aIccId);
-  NotifyRadioStateChanged(nsString aRadioState);
+  NotifyRadioStateChanged(int32_t aRadioState);
   NotifyClirModeChanged(uint32_t aMode);
   NotifyLastNetworkChanged(nsString aNetwork);
   NotifyLastHomeNetworkChanged(nsString aNetwork);
@@ -52,7 +52,7 @@ parent:
     returns (nsMobileConnectionInfo aVoice, nsMobileConnectionInfo aData,
              nsString aLastKnownNetwork, nsString aLastKnownHomeNetwork,
              nsString aIccId, int32_t aNetworkSelectionMode,
-             nsString aRadioState, nsString[] aSupportedNetworkTypes);
+             int32_t aRadioState, nsString[] aSupportedNetworkTypes);
 };
 
 /**

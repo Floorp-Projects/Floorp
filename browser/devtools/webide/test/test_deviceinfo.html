@@ -34,11 +34,11 @@
           yield documentIsLoaded(permIframe.contentWindow.document);
           yield documentIsLoaded(infoIframe.contentWindow.document);
 
-          win.AppManager.update("runtimelist");
+          win.AppManager._rebuildRuntimeList();
 
           let panelNode = win.document.querySelector("#runtime-panel");
-          let items = panelNode.querySelectorAll(".runtime-panel-item-custom");
-          is(items.length, 2, "Found 2 custom runtimes button");
+          let items = panelNode.querySelectorAll(".runtime-panel-item-other");
+          is(items.length, 2, "Found 2 other runtimes button");
 
           let deferred = promise.defer();
           win.AppManager.on("app-manager-update", function onUpdate(e,w) {
