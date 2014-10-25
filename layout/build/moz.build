@@ -115,7 +115,7 @@ if CONFIG['MOZ_B2G_BT']:
 
 if CONFIG['MOZ_WEBSPEECH']:
     LOCAL_INCLUDES += [
-        '/content/media/webspeech/synth',
+        '/dom/media/webspeech/synth',
     ]
 
 if CONFIG['MOZ_GSTREAMER']:

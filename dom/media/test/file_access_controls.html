@@ -1,0 +1,156 @@
+<html>
+<head>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body onload="setTimeout(load, 0);" onunload="done()">
+<script>
+
+// Page URL: http://example.org/tests/dom/media/test/file_access_controls.html
+
+var gResource = getPlayableVideo(gSmallTests).name;
+
+var gTests = [
+  {
+    // Test 0
+    url: "redirect.sjs?domain=example.com&file="+ gResource,
+    result: "error",
+    description: "Won't load when redirected to different domain",
+  },{
+    // Test 1
+    url: "redirect.sjs?domain=example.com&allowed&file=" + gResource,
+    result: "loadeddata",
+    description: "Can load when redirected to different domain with allow-origin",
+  },{
+    // Test 2
+    url: "redirect.sjs?domain=test1.example.org&file=" + gResource,
+    result: "error",
+    description: "Won't load when redirected to subdomain",
+  },{
+    // Test 3
+    url: "redirect.sjs?domain=test1.example.org&allowed&file=" + gResource,
+    result: "loadeddata",
+    description: "Can load when redirected to subdomain with allow-origin",
+  },{
+    // Test 4
+    url: "redirect.sjs?domain=example.org&file=" + gResource,
+    result: "loadeddata",
+    description: "Can load when redirected to same domain",
+  },{
+    // Test 5
+    url: "http://example.org/tests/dom/media/test/" + gResource,
+    result: "loadeddata",
+    description: "Can load from same domain"
+  },{
+    // Test 6
+    url: "http://example.org:8000/tests/dom/media/test/" + gResource,
+    result: "error",
+    description: "Won't load from different port on same domain"
+  },{
+    // Test 7
+    url: "http://example.org:8000/tests/dom/media/test/allowed.sjs?" + gResource,
+    result: "loadeddata",
+    description: "Can load from different port on same domain with allow-origin",
+  },{
+    // Test 8
+    url: "http://example.com/tests/dom/media/test/" + gResource,
+    result: "error",
+    description: "Won't load cross domain",
+  },{
+    // Test 9
+    url: "http://example.com/tests/dom/media/test/allowed.sjs?" + gResource,
+    result: "loadeddata",
+    description: "Can load cross domain with allow-origin",
+  },{
+    // Test 10
+    url: "http://test1.example.org/tests/dom/media/test/allowed.sjs?" + gResource,
+    result: "loadeddata",
+    description: "Can load from subdomain with allow-origin",
+  },{
+    // Test 11
+    url: "http://test1.example.org/tests/dom/media/test/" + gResource,
+    result: "error",
+    description: "Won't load from subdomain",
+  }
+];
+
+var gTestNum = 0;
+var gVideo = null;
+var gTestedRemoved = false;
+
+function eventHandler(event) {
+  //dump((gTestNum - 1) + ": " + event.type + "\n");
+  var video = event.target;
+  opener.postMessage({"result": (event.type == video.expectedResult),
+                      "message":  video.testDescription + (gTestedRemoved ? " (element not in document)" : " (element in document)")},
+                     "http://mochi.test:8888");
+  // Make sure any extra events cause an error
+  video.expectedResult = "<none>";
+  nextTest();
+}
+
+function createVideo() {
+  var v = document.createElement('video');
+  v.addEventListener('loadeddata', eventHandler, false);
+  v.addEventListener('error', eventHandler, false);
+  v.crossOrigin = 'anonymous';
+  return v;
+}
+
+function load() {
+  opener.postMessage({"result": (window.location.href == "http://example.org/tests/dom/media/test/file_access_controls.html"),
+                      "message":  "We must be on a example.org:80"},
+                     "http://mochi.test:8888");
+
+  nextTest();
+}
+
+function nextTest() {
+  //dump("nextTest() called, gTestNum="+gTestNum+" gTestedRemoved="+gTestedRemoved+"\n");
+  if (gTestNum == gTests.length) {
+    //dump("gTestNum == gTests.length\n");
+    if (!gTestedRemoved) {
+      // Repeat all tests with element removed from doc, should get same result.
+      gTestedRemoved = true;
+      gTestNum = 0;
+    } else {
+      //dump("Exiting...\n");
+      // We're done, exit the test.
+      window.close();
+      return;
+    }
+  }
+
+  if (gVideo && gVideo.parentNode)
+    gVideo.parentNode.removeChild(gVideo);
+
+  gVideo = null;
+  SpecialPowers.forceGC();  
+  
+  gVideo = createVideo();
+  gVideo.expectedResult = gTests[gTestNum].result;
+  gVideo.testDescription = gTests[gTestNum].description;
+  // Uniquify the resource URL to ensure that the resources loaded by earlier or subsequent tests
+  // don't overlap with the resources we load here, which are loaded with non-default preferences set.
+  // We also want to make sure that an HTTP fetch actually happens for each testcase.
+  var url = gTests[gTestNum].url;
+  var random = Math.floor(Math.random()*1000000000);
+  url += (url.search(/\?/) < 0 ? "?" : "&") + "rand=" + random;
+  gVideo.src = url;
+  //dump("Starting test " + gTestNum + " at " + gVideo.src + " expecting:" + gVideo.expectedResult + "\n");
+  if (!gTestedRemoved) {
+    document.body.appendChild(gVideo); 
+    // Will cause load() to be invoked.
+  } else {
+    gVideo.load();
+  }
+  gTestNum++;
+}
+
+function done() {
+  opener.postMessage({"done": "true"}, "http://mochi.test:8888");
+}
+
+</script>
+</body>
+</html>
+

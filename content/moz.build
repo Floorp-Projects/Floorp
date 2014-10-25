@@ -7,7 +7,6 @@
 DIRS += [
     'base',
     'html',
-    'media',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
