@@ -143,12 +143,14 @@
 
       iframe.addEventListener("mozbrowserloadend", iframeLoadFirst);
 
-      // Strip this filename and one directory level and then add "/mochitest".
+      // Strip the filename and a directory level.
       let href =  window.location.href;
       href = href.substring(0, href.lastIndexOf('/'));
       href = href.substring(0, href.lastIndexOf('/'));
-      let manifest = "tests/dom/media/tests/ipc/ipc.json";
-      iframe.src = href + "/mochitest?consoleLevel=INFO&testManifest=" + manifest;
+
+      href += "?consoleLevel=INFO" +
+              "&testManifest=tests/dom/media/tests/mochitest/ipc/ipc.json";
+      iframe.src = href;
       document.body.appendChild(iframe);
     }
 
