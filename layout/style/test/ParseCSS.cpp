@@ -6,7 +6,7 @@
 
 /*
  * This file is meant to be used with |#define CSS_REPORT_PARSE_ERRORS|
- * in mozilla/content/html/style/src/nsCSSScanner.h uncommented, and the
+ * in mozilla/dom/html/style/src/nsCSSScanner.h uncommented, and the
  * |#ifdef DEBUG| block in nsCSSScanner::OutputError (in
  * nsCSSScanner.cpp in the same directory) used (even if not a debug
  * build).

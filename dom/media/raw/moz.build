@@ -19,7 +19,7 @@ FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [
     '/content/base/src',
-    '/content/html/content/src',
+    '/dom/html',
 ]
 
 FINAL_LIBRARY = 'xul'
