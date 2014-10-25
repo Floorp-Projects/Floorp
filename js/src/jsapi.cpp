@@ -4537,7 +4537,8 @@ JS_GetFunctionScript(JSContext *cx, HandleFunction fun)
 JS_PUBLIC_API(bool)
 JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
                     const char *name, unsigned nargs, const char *const *argnames,
-                    SourceBufferHolder &srcBuf, MutableHandleFunction fun)
+                    SourceBufferHolder &srcBuf, MutableHandleFunction fun,
+                    HandleObject enclosingStaticScope)
 {
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
@@ -4564,7 +4565,8 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
     if (!fun)
         return false;
 
-    if (!frontend::CompileFunctionBody(cx, fun, options, formals, srcBuf))
+    if (!frontend::CompileFunctionBody(cx, fun, options, formals, srcBuf,
+                                       enclosingStaticScope))
         return false;
 
     if (obj && funAtom && options.defineOnScope) {
@@ -4580,10 +4582,12 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
 JS_PUBLIC_API(bool)
 JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
                     const char *name, unsigned nargs, const char *const *argnames,
-                    const char16_t *chars, size_t length, MutableHandleFunction fun)
+                    const char16_t *chars, size_t length, MutableHandleFunction fun,
+                    HandleObject enclosingStaticScope)
 {
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    return JS::CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf, fun);
+    return JS::CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf,
+                               fun, enclosingStaticScope);
 }
 
 JS_PUBLIC_API(bool)
