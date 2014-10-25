@@ -3533,13 +3533,20 @@ IsCacheableSetPropAddSlot(JSContext *cx, HandleObject obj, HandleShape oldShape,
 }
 
 static bool
-IsCacheableSetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *shape, bool *isScripted)
+IsCacheableSetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *shape, Shape* oldShape, bool *isScripted)
 {
     MOZ_ASSERT(isScripted);
 
     // Currently we only optimize setter calls for setters bound on prototypes.
     if (obj == holder)
         return false;
+
+    if (obj->lastProperty() != oldShape) {
+        // During the property set, the shape of the object changed.  Not much
+        // point caching this based on the post-set shape, since the object
+        // wouldn't have matched such an IC stub anyway.
+        return false;
+    }
 
     if (!shape || !IsCacheableProtoChain(obj, holder))
         return false;
@@ -6281,7 +6288,8 @@ StripPreliminaryObjectStubs(JSContext *cx, ICFallbackStub *stub)
 static bool
 TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
                            ICGetProp_Fallback *stub, HandlePropertyName name,
-                           HandleValue val, HandleValue res, bool *attached)
+                           HandleValue val, HandleShape oldShape,
+                           HandleValue res, bool *attached)
 {
     MOZ_ASSERT(!*attached);
 
@@ -6289,6 +6297,11 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         return true;
 
     RootedObject obj(cx, &val.toObject());
+
+    if (oldShape != obj->lastProperty()) {
+        // No point attaching anything, since we know the shape guard will fail
+        return true;
+    }
 
     bool isDOMProxy;
     bool domProxyHasGeneration;
@@ -6593,6 +6606,11 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub_
 
     MOZ_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH || op == JSOP_GETXPROP);
 
+    // Grab our old shape before it goes away.
+    RootedShape oldShape(cx);
+    if (val.isObject())
+        oldShape = val.toObject().lastProperty();
+
     // After the  Genericstub was added, we should never reach the Fallbackstub again.
     MOZ_ASSERT(!stub->hasStub(ICStub::GetProp_Generic));
 
@@ -6638,7 +6656,8 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub_
 
     RootedScript script(cx, frame->script());
 
-    if (!TryAttachNativeGetPropStub(cx, script, pc, stub, name, val, res, &attached))
+    if (!TryAttachNativeGetPropStub(cx, script, pc, stub, name, val, oldShape,
+                                    res, &attached))
         return false;
     if (attached)
         return true;
@@ -7616,6 +7635,8 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetPr
         GetFixedOrDynamicSlotOffset(&obj->as<NativeObject>(), shape->slot(), &isFixedSlot, &offset);
 
         JitSpew(JitSpew_BaselineIC, "  Generating SetProp(NativeObject.PROP) stub");
+        MOZ_ASSERT(obj->lastProperty() == oldShape,
+                   "Should this really be a SetPropWriteSlot?");
         ICSetProp_Native::Compiler compiler(cx, obj, isFixedSlot, offset);
         ICSetProp_Native *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
@@ -7634,7 +7655,7 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetPr
     }
 
     bool isScripted = false;
-    bool cacheableCall = IsCacheableSetPropCall(cx, obj, holder, shape, &isScripted);
+    bool cacheableCall = IsCacheableSetPropCall(cx, obj, holder, shape, oldShape, &isScripted);
 
     // Try handling scripted setters.
     if (cacheableCall && isScripted) {
