@@ -2007,21 +2007,20 @@ SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
  * was found anywhere on the prototype chain.
  *
  * FIXME: This should be updated to follow ES6 draft rev 28, section 9.1.9,
- * steps 4.d.i and 5. Right now it doesn't exactly follow any standard, and in
- * particular receiver should be used instead of obj throughout.
+ * steps 4.d.i and 5.
  *
  * Note that receiver is not necessarily native.
  */
 template <ExecutionMode mode>
 static bool
 SetNonexistentProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
-                       HandleObject obj, HandleObject receiver, HandleId id,
-                       baseops::QualifiedBool qualified, HandleValue v, bool strict)
+                       HandleObject receiver, HandleId id, baseops::QualifiedBool qualified,
+                       HandleValue v, bool strict)
 {
     // We should never add properties to lexical blocks.
-    MOZ_ASSERT(!obj->is<BlockObject>());
+    MOZ_ASSERT(!receiver->is<BlockObject>());
 
-    if (obj->isUnqualifiedVarObj() && !qualified) {
+    if (receiver->isUnqualifiedVarObj() && !qualified) {
         if (mode == ParallelExecution)
             return false;
 
@@ -2065,7 +2064,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
     }
 
     if (!shape)
-        return SetNonexistentProperty<mode>(cxArg, obj, receiver, id, qualified, vp, strict);
+        return SetNonexistentProperty<mode>(cxArg, receiver, id, qualified, vp, strict);
 
     if (!pobj->isNative()) {
         if (pobj->is<ProxyObject>()) {
