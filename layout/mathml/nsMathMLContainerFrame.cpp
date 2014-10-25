@@ -52,7 +52,9 @@ nsMathMLContainerFrame::ReflowError(nsRenderingContext& aRenderingContext,
   ///////////////
   // Set font
   nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
+                                        nsLayoutUtils::
+                                        FontSizeInflationFor(this));
 
   // bounding metrics
   nsAutoString errorMsg; errorMsg.AssignLiteral("invalid-markup");

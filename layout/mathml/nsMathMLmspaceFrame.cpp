@@ -35,6 +35,7 @@ void
 nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
 {
   nsAutoString value;
+  float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
 
   // width 
   //
@@ -53,7 +54,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
   if (!value.IsEmpty()) {
     ParseNumericValue(value, &mWidth,
                       nsMathMLElement::PARSE_ALLOW_NEGATIVE,
-                      aPresContext, mStyleContext);
+                      aPresContext, mStyleContext, fontSizeInflation);
   }
 
   // height
@@ -70,7 +71,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::height, value);
   if (!value.IsEmpty()) {
     ParseNumericValue(value, &mHeight, 0,
-                      aPresContext, mStyleContext);
+                      aPresContext, mStyleContext, fontSizeInflation);
   }
 
   // depth
@@ -87,7 +88,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::depth_, value);
   if (!value.IsEmpty()) {
     ParseNumericValue(value, &mDepth, 0,
-                      aPresContext, mStyleContext);
+                      aPresContext, mStyleContext, fontSizeInflation);
   }
 }
 
