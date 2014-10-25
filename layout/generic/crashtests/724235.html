@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Testcase for bug 724235</title>
+</head>
+
+<body onload="setTimeout(function(){m=document.getElementsByTagName('marquee')[0]; m.style.fontSize='72px'},0)">
+
+<a href="#">
+
+<center>                                             
+
+<marquee>This is a marquee ... </marquee>
+
+<table>
+        <tr> 
+          <td><a href="#">click me to CRASH!</a></td>
+        </tr>
+</table>
+
+<iframe></iframe>
+
+<script>document.body.offsetHeight;</script>
+
+<a href="#"></a>
+
+
+</body></html>

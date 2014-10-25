@@ -381,6 +381,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     // Active content (or content with a low value/risk-of-blocking ratio)
     // that has been explicitly evaluated; listed here for documentation
     // purposes and to avoid the assertion and warning for the default case.
+    case TYPE_IMAGESET:
     case TYPE_CSP_REPORT:
     case TYPE_DTD:
     case TYPE_FETCH:

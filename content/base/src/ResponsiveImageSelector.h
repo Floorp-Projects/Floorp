@@ -9,6 +9,7 @@
 #include "nsISupports.h"
 #include "nsIContent.h"
 #include "nsString.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsMediaQuery;
 class nsCSSValue;
@@ -18,12 +19,26 @@ namespace dom {
 
 class ResponsiveImageCandidate;
 
-class ResponsiveImageSelector : public nsISupports
+class ResponsiveImageSelector
 {
   friend class ResponsiveImageCandidate;
 public:
-  NS_DECL_ISUPPORTS
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ResponsiveImageSelector)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ResponsiveImageSelector)
+
   explicit ResponsiveImageSelector(nsIContent* aContent);
+
+  // NOTE ABOUT CURRENT SELECTION
+  //
+  // The best candidate is selected lazily when GetSelectedImage*() is
+  // called, or when SelectImage() is called explicitly. This result
+  // is then cached until either invalidated by further Set*() calls,
+  // or explicitly by replaced by SelectImage(aReselect = true).
+  //
+  // Because the selected image depends on external variants like
+  // viewport size and device pixel ratio, the time at which image
+  // selection occurs can affect the result.
+
 
   // Given a srcset string, parse and replace current candidates (does not
   // replace default source)
@@ -41,9 +56,18 @@ public:
 
   nsIContent *Content() { return mContent; }
 
-  // Get the URL for the selected best candidate
+  // Get the url and density for the selected best candidate. These
+  // implicitly cause an image to be selected if necessary.
   already_AddRefed<nsIURI> GetSelectedImageURL();
   double GetSelectedImageDensity();
+
+  // Runs image selection now if necessary. If an image has already
+  // been choosen, takes no action unless aReselect is true.
+  //
+  // aReselect - Always re-run selection, replacing the previously
+  //             choosen image.
+  // return - true if the selected image result changed.
+  bool SelectImage(bool aReselect = false);
 
 protected:
   virtual ~ResponsiveImageSelector();
