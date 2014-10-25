@@ -41,8 +41,8 @@ LOCAL_INCLUDES += [
     '/caps',
     '/content/base/src',
     '/content/html/document/src',
-    '/content/xul/content/src',
     '/dom/base',
+    '/dom/xul',
     '/layout/style',
 ]
 

@@ -97,6 +97,7 @@ DIRS += [
     'xbl',
     'xml',
     'xslt',
+    'xul',
     'resourcestats',
 ]
 

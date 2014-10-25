@@ -10,9 +10,6 @@ include ../../content/html/content/crashtests/crashtests.list
 include ../../content/html/document/crashtests/crashtests.list
 include ../../content/media/test/crashtests/crashtests.list
 include ../../content/svg/content/src/crashtests/crashtests.list
-include ../../content/xul/content/crashtests/crashtests.list
-include ../../content/xul/document/crashtests/crashtests.list
-include ../../content/xul/templates/src/crashtests/crashtests.list
 
 include ../../docshell/base/crashtests/crashtests.list
 
@@ -30,6 +27,8 @@ include ../../dom/workers/test/crashtests.list
 include ../../dom/xbl/crashtests/crashtests.list
 include ../../dom/xml/crashtests/crashtests.list
 include ../../dom/xslt/crashtests/crashtests.list
+include ../../dom/xul/crashtests/crashtests.list
+include ../../dom/xul/templates/crashtests/crashtests.list
 
 # Bug 811873 - mozRTCPeerConnection doesn't support remote browser yet
 skip-if(browserIsRemote||!webrtc) include ../../dom/media/tests/crashtests/crashtests.list
