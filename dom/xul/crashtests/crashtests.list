@@ -2,6 +2,7 @@ load 107518-1.xml
 load 252448-1.xul
 load 253479-1.xul
 load 253479-2.xul
+load 326204-1.xul
 load 326644-1.html
 load 326644-2.html
 load 326864-1.xul
@@ -9,16 +10,24 @@ load 326875-1.xul
 load 326881-1.xul
 load 329982-1.xhtml
 load 336096-1.xhtml
+load 344215-1.xul
 load 354611-1.html
 load 360078-1.xhtml
 load 363791-1.xul
 load 384740-1.xul
 load 384877-1.html
+load 386914-1.html
 load 386947-1.xul
 load 425821-1.xul
+load 428951-1.xul
 load 429085-1.xhtml
 load 431906-1.html
 load 451311-1.xul
 load 461917-1.xhtml
+load 468211-1.xul
+load 468211-2.xul
+load 468211-3.xul
+load 495635-1.xul
 load 509719-1.xul
 asserts(3) load 509719-2.xul # bug 909819
+load 583230.xul

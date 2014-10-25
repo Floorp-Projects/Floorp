@@ -157,12 +157,12 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../../content/base/src',
     '../../content/html/content/src',
-    '../../content/xul/document/src',
     '../base',
     '../generic',
     '../xul',
     '/dom/base',
     '/dom/xbl',
+    '/dom/xul',
 ]
 
 JAR_MANIFESTS += ['jar.mn']
