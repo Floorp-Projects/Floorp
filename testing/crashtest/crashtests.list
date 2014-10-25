@@ -8,7 +8,6 @@ include ../../accessible/tests/crashtests/crashtests.list
 include ../../content/base/crashtests/crashtests.list
 include ../../content/html/content/crashtests/crashtests.list
 include ../../content/html/document/crashtests/crashtests.list
-include ../../content/media/test/crashtests/crashtests.list
 
 include ../../docshell/base/crashtests/crashtests.list
 
@@ -19,6 +18,7 @@ include ../../dom/events/crashtests/crashtests.list
 include ../../dom/indexedDB/crashtests/crashtests.list
 include ../../dom/jsurl/crashtests/crashtests.list
 include ../../dom/mathml/crashtests/crashtests.list
+include ../../dom/media/test/crashtests/crashtests.list
 include ../../dom/offline/crashtests/crashtests.list
 include ../../dom/plugins/test/crashtests/crashtests.list
 include ../../dom/smil/crashtests/crashtests.list
