@@ -40,6 +40,28 @@ NS_IMPL_ISUPPORTS_INHERITED(HTMLPictureElement, nsGenericHTMLElement,
 
 NS_IMPL_ELEMENT_CLONE(HTMLPictureElement)
 
+void
+HTMLPictureElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
+{
+  // Find all img siblings after this <source> to notify them of its demise
+  nsCOMPtr<nsINode> child = GetChildAt(aIndex);
+  nsCOMPtr<nsIContent> nextSibling;
+  if (child && child->Tag() == nsGkAtoms::source) {
+    nextSibling = child->GetNextSibling();
+  }
+
+  nsGenericHTMLElement::RemoveChildAt(aIndex, aNotify);
+
+  if (nextSibling && nextSibling->GetParentNode() == this) {
+    do {
+      HTMLImageElement* img = HTMLImageElement::FromContent(nextSibling);
+      if (img) {
+        img->PictureSourceRemoved(child->AsContent());
+      }
+    } while ( (nextSibling = nextSibling->GetNextSibling()) );
+  }
+}
+
 bool
 HTMLPictureElement::IsPictureEnabled()
 {

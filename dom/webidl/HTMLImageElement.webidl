@@ -103,7 +103,7 @@ interface MozImageLoadingContent {
   [ChromeOnly,Throws]
   nsIStreamListener? loadImageWithChannel(MozChannel aChannel);
   [ChromeOnly,Throws]
-  void forceReload();
+  void forceReload(optional boolean aNotify);
   [ChromeOnly]
   void forceImageState(boolean aForce, unsigned long long aState);
 };

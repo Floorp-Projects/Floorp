@@ -22,6 +22,8 @@
 #include "nsIRequest.h"
 #include "mozilla/ErrorResult.h"
 #include "nsAutoPtr.h"
+#include "nsIContentPolicy.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 class nsIURI;
 class nsIDocument;
@@ -63,28 +65,46 @@ public:
   int32_t
     GetRequestType(imgIRequest* aRequest, mozilla::ErrorResult& aError);
   already_AddRefed<nsIURI> GetCurrentURI(mozilla::ErrorResult& aError);
+  void ForceReload(const mozilla::dom::Optional<bool>& aNotify,
+                   mozilla::ErrorResult& aError);
+
+  // XPCOM [optional] syntax helper
+  nsresult ForceReload(bool aNotify = true) {
+    return ForceReload(aNotify, 1);
+  }
+
+  /**
+   * Used to initialize content with a previously opened channel. Assumes
+   * eImageLoadType_Normal
+   */
   already_AddRefed<nsIStreamListener>
     LoadImageWithChannel(nsIChannel* aChannel, mozilla::ErrorResult& aError);
-  void ForceReload(mozilla::ErrorResult& aError);
-
-
 
 protected:
+  enum ImageLoadType {
+    // Most normal image loads
+    eImageLoadType_Normal,
+    // From a <img srcset> or <picture> context. Affects type given to content
+    // policy.
+    eImageLoadType_Imageset
+  };
+
   /**
    * LoadImage is called by subclasses when the appropriate
    * attributes (eg 'src' for <img> tags) change.  The string passed
    * in is the new uri string; this consolidates the code for getting
    * the charset, constructing URI objects, and any other incidentals
-   * into this superclass.   
+   * into this superclass.
    *
    * @param aNewURI the URI spec to be loaded (may be a relative URI)
    * @param aForce If true, make sure to load the URI.  If false, only
    *        load if the URI is different from the currently loaded URI.
    * @param aNotify If true, nsIDocumentObserver state change notifications
    *                will be sent as needed.
+   * @param aImageLoadType The ImageLoadType for this request
    */
   nsresult LoadImage(const nsAString& aNewURI, bool aForce,
-                     bool aNotify);
+                     bool aNotify, ImageLoadType aImageLoadType);
 
   /**
    * ImageState is called by subclasses that are computing their content state.
@@ -108,13 +128,14 @@ protected:
    *        load if the URI is different from the currently loaded URI.
    * @param aNotify If true, nsIDocumentObserver state change notifications
    *                will be sent as needed.
+   * @param aImageLoadType The ImageLoadType for this request
    * @param aDocument Optional parameter giving the document this node is in.
    *        This is purely a performance optimization.
    * @param aLoadFlags Optional parameter specifying load flags to use for
    *        the image load
    */
   nsresult LoadImage(nsIURI* aNewURI, bool aForce, bool aNotify,
-                     nsIDocument* aDocument = nullptr,
+                     ImageLoadType aImageLoadType, nsIDocument* aDocument = nullptr,
                      nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL);
 
   /**
@@ -158,7 +179,8 @@ protected:
    * effectively be called instead of LoadImage or LoadImageWithChannel.
    * If aNotify is true, this method will notify on state changes.
    */
-  nsresult UseAsPrimaryRequest(imgRequestProxy* aRequest, bool aNotify);
+  nsresult UseAsPrimaryRequest(imgRequestProxy* aRequest, bool aNotify,
+                               ImageLoadType aImageLoadType);
 
   /**
    * Derived classes of nsImageLoadingContent MUST call
@@ -190,6 +212,9 @@ protected:
   nsresult OnStopRequest(imgIRequest* aRequest, nsresult aStatus);
   void OnUnlockedDraw();
   nsresult OnImageIsAnimated(imgIRequest *aRequest);
+
+  // The nsContentPolicyType we would use for this ImageLoadType
+  static nsContentPolicyType PolicyTypeForLoad(ImageLoadType aImageLoadType);
 
 private:
   /**
@@ -260,8 +285,10 @@ protected:
    * a _usable_ current request (one with SIZE_AVAILABLE), this request is
    * "pending" until it becomes usable. Otherwise, this becomes the current
    * request.
+   *
+   * @param aImageLoadType The ImageLoadType for this request
    */
-   nsRefPtr<imgRequestProxy>& PrepareNextRequest();
+   nsRefPtr<imgRequestProxy>& PrepareNextRequest(ImageLoadType aImageLoadType);
 
   /**
    * Called when we would normally call PrepareNextRequest(), but the request was
@@ -275,9 +302,11 @@ protected:
    * to get rid of one of the requests, you should call
    * Clear*Request(NS_BINDING_ABORTED) instead, since it passes a more appropriate
    * aReason than Prepare*Request() does (NS_ERROR_IMAGE_SRC_CHANGED).
+   *
+   * @param aImageLoadType The ImageLoadType for this request
    */
-  nsRefPtr<imgRequestProxy>& PrepareCurrentRequest();
-  nsRefPtr<imgRequestProxy>& PreparePendingRequest();
+  nsRefPtr<imgRequestProxy>& PrepareCurrentRequest(ImageLoadType aImageLoadType);
+  nsRefPtr<imgRequestProxy>& PreparePendingRequest(ImageLoadType aImageLoadType);
 
   /**
    * Switch our pending request to be our current request.
@@ -339,7 +368,10 @@ protected:
     // Set if the request is blocking onload.
     REQUEST_BLOCKS_ONLOAD = 0x00000002U,
     // Set if the request is currently tracked with the document.
-    REQUEST_IS_TRACKED = 0x00000004U
+    REQUEST_IS_TRACKED = 0x00000004U,
+    // Set if this is an imageset request, such as from <img srcset> or
+    // <picture>
+    REQUEST_IS_IMAGESET = 0x00000008U
   };
 
   // If the image was blocked or if there was an error loading, it's nice to

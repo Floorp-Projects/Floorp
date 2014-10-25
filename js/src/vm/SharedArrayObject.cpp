@@ -74,10 +74,20 @@ MarkValidRegion(void *addr, size_t len)
 // heap but keep the heap page-aligned, allocate an extra page before the heap.
 static const uint64_t SharedArrayMappedSize = AsmJSMappedSize + AsmJSPageSize;
 static_assert(sizeof(SharedArrayRawBuffer) < AsmJSPageSize, "Page size not big enough");
+
+// If there are too many 4GB buffers live we run up against system resource
+// exhaustion (address space or number of memory map descriptors), see
+// bug 1068684, bug 1073934 for details.  The limiting case seems to be
+// Windows Vista Home 64-bit, where the per-process address space is limited
+// to 8TB.  Thus we track the number of live objects, and set a limit of
+// 1000 live objects per process; we run synchronous GC if necessary; and
+// we throw an OOM error if the per-process limit is exceeded.
+static mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> numLive;
+static const uint32_t maxLive = 1000;
 #endif
 
 SharedArrayRawBuffer *
-SharedArrayRawBuffer::New(uint32_t length)
+SharedArrayRawBuffer::New(JSContext *cx, uint32_t length)
 {
     // The value (uint32_t)-1 is used as a signal in various places,
     // so guard against it on principle.
@@ -87,14 +97,28 @@ SharedArrayRawBuffer::New(uint32_t length)
     MOZ_ASSERT(IsValidAsmJSHeapLength(length));
 
 #ifdef JS_CODEGEN_X64
+    // Test >= to guard against the case where multiple extant runtimes
+    // race to allocate.
+    if (++numLive >= maxLive) {
+        JSRuntime *rt = cx->runtime();
+        if (rt->largeAllocationFailureCallback)
+            rt->largeAllocationFailureCallback(rt->largeAllocationFailureCallbackData);
+        if (numLive >= maxLive) {
+            numLive--;
+            return nullptr;
+        }
+    }
     // Get the entire reserved region (with all pages inaccessible)
     void *p = MapMemory(SharedArrayMappedSize, false);
-    if (!p)
+    if (!p) {
+        numLive--;
         return nullptr;
+    }
 
     size_t validLength = AsmJSPageSize + length;
     if (!MarkValidRegion(p, validLength)) {
         UnmapMemory(p, SharedArrayMappedSize);
+        numLive--;
         return nullptr;
     }
 #   if defined(MOZ_VALGRIND) && defined(VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE)
@@ -134,6 +158,7 @@ SharedArrayRawBuffer::dropReference()
         uint8_t *p = this->dataPointer() - AsmJSPageSize;
         MOZ_ASSERT(uintptr_t(p) % AsmJSPageSize == 0);
 #ifdef JS_CODEGEN_X64
+        numLive--;
         UnmapMemory(p, SharedArrayMappedSize);
 #       if defined(MOZ_VALGRIND) \
            && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
@@ -226,7 +251,7 @@ SharedArrayBufferObject::New(JSContext *cx, uint32_t length)
         return nullptr;
     }
 
-    SharedArrayRawBuffer *buffer = SharedArrayRawBuffer::New(length);
+    SharedArrayRawBuffer *buffer = SharedArrayRawBuffer::New(cx, length);
     if (!buffer)
         return nullptr;
 

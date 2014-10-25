@@ -1736,13 +1736,25 @@ public:
   bool IsVisibleConsideringAncestors() const;
 
   /**
-   * Return true when this document is active, i.e., the active document
+   * Return true when this document is active, i.e., an active document
    * in a content viewer.  Note that this will return true for bfcached
    * documents, so this does NOT match the "active document" concept in
-   * the WHATWG spec.  That would correspond to GetInnerWindow() &&
-   * GetInnerWindow()->IsCurrentInnerWindow().
+   * the WHATWG spec - see IsCurrentActiveDocument.
    */
   bool IsActive() const { return mDocumentContainer && !mRemovedFromDocShell; }
+
+  /**
+   * Return true if this is the current active document for its
+   * docshell. Note that a docshell may have multiple active documents
+   * due to the bfcache -- this should be used when you need to
+   * differentiate the *current* active document from any active
+   * documents.
+   */
+  bool IsCurrentActiveDocument() const
+  {
+    nsPIDOMWindow *inner = GetInnerWindow();
+    return inner && inner->IsCurrentInnerWindow() && inner->GetDoc() == this;
+  }
 
   /**
    * Register/Unregister the ActivityObserver into mActivityObservers to listen

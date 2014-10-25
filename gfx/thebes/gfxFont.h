@@ -1413,7 +1413,8 @@ public:
 
     // Return Azure GlyphRenderingOptions for drawing this font.
     virtual mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions>
-      GetGlyphRenderingOptions() { return nullptr; }
+      GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams = nullptr)
+    { return nullptr; }
 
     gfxFloat SynthesizeSpaceWidth(uint32_t aCh);
 
@@ -2058,6 +2059,7 @@ struct TextRunDrawParams {
     gfxFont::Spacing        *spacing;
     gfxTextRunDrawCallbacks *callbacks;
     gfxTextContextPaint     *runContextPaint;
+    mozilla::gfx::Color      fontSmoothingBGColor;
     gfxFloat                 direction;
     double                   devPerApp;
     DrawMode                 drawMode;

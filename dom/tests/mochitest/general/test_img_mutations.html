@@ -1,0 +1,227 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Image srcset mutations</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+    "use strict";
+
+    // Tests the relevant mutations part of the spec for img src and srcset
+    // and that img.src still behaves by the older spec. (Bug 1076583)
+    // https://html.spec.whatwg.org/#relevant-mutations
+    SimpleTest.waitForExplicitFinish();
+
+    // 50x50 png
+    var testPNG50 = new URL("image_50.png", location).href;
+    // 100x100 png
+    var testPNG100 = new URL("image_100.png", location).href;
+    // 200x200 png
+    var testPNG200 = new URL("image_200.png", location).href;
+
+    var tests = [];
+    var img;
+    var expectingErrors = 0;
+    var expectingLoads = 0;
+    var afterExpectCallback;
+
+    function onImgLoad() {
+      ok(expectingLoads > 0, "expected load");
+      if (expectingLoads > 0) {
+        expectingLoads--;
+      }
+      if (!expectingLoads && !expectingErrors) {
+        setTimeout(afterExpectCallback, 0);
+      }
+    }
+    function onImgError() {
+      ok(expectingErrors > 0, "expected error");
+      if (expectingErrors > 0) {
+        expectingErrors--;
+      }
+      if (!expectingLoads && !expectingErrors) {
+        setTimeout(afterExpectCallback, 0);
+      }
+    }
+    function expectEvents(loads, errors, callback) {
+      if (!loads && !errors) {
+        setTimeout(callback, 0);
+      } else {
+        expectingLoads += loads;
+        expectingErrors += errors;
+        info("Waiting for " + expectingLoads + " load and " + expectingErrors + " error events");
+        afterExpectCallback = callback;
+      }
+    }
+
+    //
+    // Test that img.src still does some work synchronously per the older spec (bug 1076583)
+    //
+    tests.push(function test1() {
+      info("test 1");
+      img.src = testPNG50;
+      is(img.currentSrc, testPNG50, "Should have synchronously selected source");
+
+      img.src = "non_existent_image.404";
+      ok(img.currentSrc.endsWith("non_existent_image.404"), "Should have synchronously selected source");
+
+      img.removeAttribute("src");
+      is(img.currentSrc, null, "Should have dropped currentSrc");
+
+      // Load another image while previous load is still pending
+      img.src = testPNG200;
+      is(img.currentSrc, testPNG200, "Should have synchronously selected source");
+
+      // No events should have fired synchronously, now we should get just one load (and no 404 error)
+      expectEvents(1, 0, nextTest);
+    });
+
+
+    // Setting srcset should be async
+    tests.push(function () {
+      info("test 2");
+      img.srcset = testPNG100;
+      is(img.currentSrc, testPNG200, "Should still have testPNG200 as current request");
+
+      expectEvents(1, 0, function() {
+        is(img.currentSrc, testPNG100, "Should now have testPNG100 as current request");
+        nextTest();
+      });
+    });
+
+    // Setting srcset, even to no ultimate effect, should trigger a reload
+    tests.push(function () {
+      info("test 3");
+      img.srcset = testPNG100 + " 1x, " + testPNG200 + " 2x";
+      is(img.currentSrc, testPNG100, "Should still have testPNG100 as current request");
+
+      expectEvents(1, 0, function() {
+        is(img.currentSrc, testPNG100, "Should still have testPNG100 as current request");
+        nextTest();
+      });
+    });
+
+    // Should switch to src as 1x source
+    tests.push(function () {
+      info("test 4");
+      img.srcset = testPNG50 + " 2x";
+      is(img.currentSrc, testPNG100, "Should still have testPNG100 as current request");
+
+      expectEvents(1, 0, function() {
+        is(img.currentSrc, testPNG200, "Should now have testPNG200 as current request");
+        nextTest();
+      });
+    });
+
+    // Changing src while we have responsive attributes should not be sync
+    tests.push(function () {
+      info("test 5");
+      img.src = testPNG100;
+      is(img.currentSrc, testPNG200, "Should still have testPNG200 as current request");
+
+      expectEvents(1, 0, function() {
+        is(img.currentSrc, testPNG100, "Should now have testPNG100 as current request");
+
+        // Switch to using srcset again for next test
+        img.srcset = testPNG100;
+        expectEvents(1, 0, nextTest);
+      });
+    });
+
+    // img.src = img.src should trigger an async event even in responsive mode
+    tests.push(function () {
+      info("test 6");
+      is(img.currentSrc, testPNG100, "Should now have testPNG100 as current request");
+      img.src = img.src;
+      is(img.currentSrc, testPNG100, "Should still have testPNG100 as current request");
+
+      expectEvents(1, 0, nextTest);
+    });
+
+    // img.srcset = img.srcset should be a no-op
+    tests.push(function () {
+      info("test 7");
+      img.srcset = img.srcset;
+      is(img.currentSrc, testPNG100, "Should still have testPNG100 as current request");
+
+      expectEvents(0, 0, nextTest);
+    });
+
+    // Re-binding image to document should be a no-op
+    tests.push(function () {
+      info("test 8");
+      document.body.appendChild(img);
+      is(img.currentSrc, testPNG100, "Should still have testPNG100 as current request");
+
+      expectEvents(0, 0, nextTest);
+    });
+
+    // We should re-run our selection algorithm when any load event occurs
+    tests.push(function () {
+      info("test 9");
+      img.srcset = testPNG50 + " 1x, " + testPNG200 + " 2x";
+      is(img.currentSrc, testPNG100, "Should still have testPNG100 as current request");
+
+      expectEvents(1, 0, function() {
+        is(img.currentSrc, testPNG50, "Should now have testPNG50 as current request");
+        SpecialPowers.pushPrefEnv({'set': [ ["layout.css.devPixelsPerPx", "2.0"] ] },
+                                  function() {
+          // We don't currently dynamically switch, but doing so is
+          // up to the UA so we may in the future. In which case
+          // this test needs to be changed.
+          is(img.currentSrc, testPNG50, "Should now have testPNG50 as current request");
+          img.src = img.src;
+          is(img.currentSrc, testPNG50, "Should still have testPNG50 as current request");
+          expectEvents(1, 0, function() {
+            is(img.currentSrc, testPNG200, "Should now have testPNG200 as current request");
+            nextTest();
+          });
+        });
+      });
+    });
+
+    // Removing srcset attr should async switch back to src
+    tests.push(function () {
+      info("test 10");
+      is(img.currentSrc, testPNG200, "Should have testPNG200 as current request");
+
+      img.removeAttribute("srcset");
+      is(img.currentSrc, testPNG200, "Should still have testPNG200 as current request");
+
+      expectEvents(1, 0, function() {
+        is(img.currentSrc, testPNG100, "Should now have testPNG100 as current request");
+
+        expectEvents(0, 0, nextTest);
+      });
+    });
+
+    function nextTest() {
+      if (tests.length) {
+        // Spin event loop to make sure no unexpected image events are
+        // pending (unexpected events will assert in the handlers)
+        setTimeout(function() {
+          (tests.shift())();
+        }, 0);
+      } else {
+        SimpleTest.finish();
+      }
+    }
+
+    addEventListener("load", function() {
+      SpecialPowers.pushPrefEnv({'set': [ ["layout.css.devPixelsPerPx", "1.0"],
+                                          [ "dom.image.srcset.enabled", true ]] },
+                                function() {
+        // Create this after the pref is set, as it is guarding webIDL attributes
+        img = document.createElement("img");
+        img.addEventListener("load", onImgLoad);
+        img.addEventListener("error", onImgError);
+        document.body.appendChild(img);
+        setTimeout(nextTest, 0);
+      });
+    });
+  </script>
+</body>
+</html>

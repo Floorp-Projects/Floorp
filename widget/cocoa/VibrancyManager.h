@@ -24,7 +24,8 @@ namespace mozilla {
 
 MOZ_BEGIN_ENUM_CLASS(VibrancyType)
   LIGHT,
-  DARK
+  DARK,
+  TOOLTIP
 MOZ_END_ENUM_CLASS(VibrancyType)
 
 /**
@@ -83,6 +84,12 @@ public:
    * preference is set.
    */
   NSColor* VibrancyFillColorForType(VibrancyType aType);
+
+  /**
+   * Return the font smoothing background color that should be used for text
+   * drawn on top of the vibrant window parts.
+   */
+  NSColor* VibrancyFontSmoothingBackgroundColorForType(VibrancyType aType);
 
   /**
    * Check whether the operating system supports vibrancy at all.

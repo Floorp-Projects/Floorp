@@ -2525,6 +2525,7 @@ nsDisplayThemedBackground::nsDisplayThemedBackground(nsDisplayListBuilder* aBuil
   switch (disp->mAppearance) {
     case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
     case NS_THEME_TOOLBAR:
+    case NS_THEME_TOOLTIP:
     case NS_THEME_WINDOW_TITLEBAR:
     case NS_THEME_WINDOW_BUTTON_BOX:
     case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON:
@@ -2589,6 +2590,14 @@ nsDisplayThemedBackground::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aC
     return true;
   }
   return false;
+}
+
+bool
+nsDisplayThemedBackground::ProvidesFontSmoothingBackgroundColor(nsDisplayListBuilder* aBuilder,
+                                                                nscolor* aColor)
+{
+  nsITheme* theme = mFrame->PresContext()->GetTheme();
+  return theme->WidgetProvidesFontSmoothingBackgroundColor(mFrame, mAppearance, aColor);
 }
 
 nsRect
