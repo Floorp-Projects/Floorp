@@ -504,11 +504,11 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         uint32_t version = 0;
         ParseGLVersion(this, &version);
 
-#ifdef MOZ_GL_DEBUG
-        printf_stderr("OpenGL version detected: %u\n", version);
-        printf_stderr("OpenGL vendor: %s\n", fGetString(LOCAL_GL_VENDOR));
-        printf_stderr("OpenGL renderer: %s\n", fGetString(LOCAL_GL_RENDERER));
-#endif
+        if (ShouldSpew()) {
+            printf_stderr("OpenGL version detected: %u\n", version);
+            printf_stderr("OpenGL vendor: %s\n", fGetString(LOCAL_GL_VENDOR));
+            printf_stderr("OpenGL renderer: %s\n", fGetString(LOCAL_GL_RENDERER));
+        }
 
         if (version >= mVersion) {
             mVersion = version;
@@ -639,10 +639,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 #endif
 
     if (mInitialized) {
-#ifdef MOZ_GL_DEBUG
-        static bool firstRun = true;
-        if (firstRun && DebugMode()) {
-            const char *vendors[size_t(GLVendor::Other)] = {
+        if (ShouldSpew()) {
+            const char* vendors[size_t(GLVendor::Other)] = {
                 "Intel",
                 "NVIDIA",
                 "ATI",
@@ -657,8 +655,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 printf_stderr("OpenGL vendor ('%s') unrecognized\n", glVendorString);
             }
         }
-        firstRun = false;
-#endif
 
         InitExtensions();
         InitFeatures();
@@ -1601,14 +1597,8 @@ GLContext::InitExtensions()
     if (!extensions)
         return;
 
-#ifdef MOZ_GL_DEBUG
-    static bool firstRun = true;
-#else
-    // Non-DEBUG, so never spew.
-    const bool firstRun = false;
-#endif
-
-    InitializeExtensionsBitSet(mAvailableExtensions, extensions, sExtensionNames, firstRun && DebugMode());
+    InitializeExtensionsBitSet(mAvailableExtensions, extensions,
+                               sExtensionNames);
 
     if (WorkAroundDriverBugs() &&
         Vendor() == GLVendor::Qualcomm) {
@@ -1650,10 +1640,6 @@ GLContext::InitExtensions()
     {
         MarkExtensionUnsupported(EXT_texture_compression_s3tc);
     }
-#endif
-
-#ifdef MOZ_GL_DEBUG
-    firstRun = false;
 #endif
 }
 
@@ -2291,7 +2277,7 @@ ReportArrayContents(const char *title, const nsTArray<GLContext::NamedResource>&
 void
 GLContext::ReportOutstandingNames()
 {
-    if (!DebugMode())
+    if (!ShouldSpew())
         return;
 
     printf_stderr("== GLContext %p Outstanding ==\n", this);
@@ -2306,7 +2292,6 @@ GLContext::ReportOutstandingNames()
 }
 
 #endif /* DEBUG */
-
 
 void
 GLContext::GuaranteeResolve()
@@ -2453,6 +2438,13 @@ DoesStringMatch(const char* aString, const char *aWantedString)
         return false;
 
     return true;
+}
+
+/*static*/ bool
+GLContext::ShouldSpew()
+{
+    static bool spew = PR_GetEnv("MOZ_GL_SPEW");
+    return spew;
 }
 
 } /* namespace gl */
