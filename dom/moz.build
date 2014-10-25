@@ -60,6 +60,7 @@ DIRS += [
     'filesystem',
     'fmradio',
     'geolocation',
+    'html',
     'json',
     'jsurl',
     'asmjscache',

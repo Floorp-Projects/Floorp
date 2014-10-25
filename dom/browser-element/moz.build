@@ -26,7 +26,7 @@ FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [
     '../bluetooth',
-    '/content/html/content/src',
+    '/dom/html',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
