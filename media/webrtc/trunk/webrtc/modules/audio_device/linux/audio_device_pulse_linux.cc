@@ -2473,18 +2473,6 @@ void AudioDeviceLinuxPulse::PaStreamReadCallbackHandler()
         return;
     }
 
-    // PulseAudio record streams can have holes (for reasons not entirely clear
-    // to the PA developers themselves). Since version 4 of PA, these are passed
-    // over to the application (us), signaled by a non-zero sample data size
-    // (the size of the hole) and a NULL sample data.
-    // We handle stream holes as recommended by PulseAudio, i.e. by skipping
-    // it, which is done with a stream drop.
-    if (_tempSampleDataSize && !_tempSampleData) {
-        LATE(pa_stream_drop)(_recStream);
-        _tempSampleDataSize = 0; // reset
-        return;
-    }
-
     // Since we consume the data asynchronously on a different thread, we have
     // to temporarily disable the read callback or else Pulse will call it
     // continuously until we consume the data. We re-enable it below
