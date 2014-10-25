@@ -44,12 +44,12 @@ MSVC_ENABLE_PGO = True
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '../../content/base/src',
     '../../editor/libeditor',
     '../../editor/txmgr',
     '../base',
     '../generic',
     '../xul',
+    '/dom/base',
     '/dom/html',
 ]
 

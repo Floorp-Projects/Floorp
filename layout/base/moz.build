@@ -115,7 +115,6 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
-    '../../content/base/src',
     '../forms',
     '../generic',
     '../mathml',

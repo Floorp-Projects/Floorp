@@ -20,7 +20,7 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../hunspell/src',
-    '/content/base/src',
+    '/dom/base',
     '/editor/libeditor',
 ]
 EXPORTS.mozilla += [

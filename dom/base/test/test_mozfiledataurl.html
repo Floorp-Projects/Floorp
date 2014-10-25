@@ -1,0 +1,221 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+  <title>Test for File urls</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="gen.next()">
+<p id="display">
+<iframe id=inner></iframe>
+<iframe id=iframe></iframe>
+<img id=img onload="gen.send(event);">
+<audio id=audio onloadeddata="gen.send(event);">
+<input type=file id=fileList>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+try {
+  URL.createObjectURL(undefined);
+} catch(e) { }
+
+window.addEventListener("message", function(e) {
+  gen.send(JSON.parse(e.data));
+}, false);
+
+const innerSameSiteURI = "file_mozfiledataurl_inner.html";
+const innerCrossSiteURI = "http://example.com/tests/dom/base/test/file_mozfiledataurl_inner.html"
+
+gen = runTest();
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  inner = document.getElementById('inner');
+  img = document.getElementById('img');
+  audio = document.getElementById('audio');
+  iframe = document.getElementById('iframe');
+  inner.onload = function() { gen.send("inner loaded"); };
+
+  // Attempt to load a image in this document
+  var file = getFile("file_mozfiledataurl_img.jpg");
+  var fileurl = URL.createObjectURL(file);
+  img.src = fileurl;
+  var e = (yield);
+  is(e.type, "load", "loaded successfully");
+  is(img.width, 120, "correct width");
+  is(img.height, 90, "correct height");
+
+  // Revoke url and attempt to load a image in this document
+  img.src = "file_mozfiledataurl_img.jpg";
+  is((yield).type, "load", "successfull reset image");
+  URL.revokeObjectURL(fileurl);
+  todo(false, "urls need to act like 404s, not fail to parse");
+/*  img.src = fileurl;
+  var e = (yield);
+  is(e.type, "error", "failed successfully");
+  isnot(img.width, 120, "correct error width");
+  isnot(img.height, 90, "correct error height");
+*/
+  // Generate new fileurl and make sure it's different from the old
+  var oldFileurl = fileurl;
+  var fileurl = URL.createObjectURL(file);
+  isnot(fileurl, oldFileurl, "URL.createObjectURL generated the same url twice");
+
+  // Attempt to load an image in a different same-origin document
+  inner.src = innerSameSiteURI;
+  yield undefined;
+  inner.contentWindow.postMessage(JSON.stringify({img:fileurl}), "*");
+  var res = (yield);
+  is(res.type, "load", "loaded successfully");
+  is(res.width, 120, "correct width");
+  is(res.height, 90, "correct height");
+  
+  // Attempt to load an image in a different cross-origin document
+  inner.src = innerCrossSiteURI;
+  yield undefined;
+  inner.contentWindow.postMessage(JSON.stringify({img:fileurl}), "*");
+  var res = (yield);
+  is(res.type, "error", "failed successfully");
+  isnot(res.width, 120, "correct error width");
+  isnot(res.height, 90, "correct error height");
+
+  // Attempt to load an audio in this document
+  var file = getFile("file_mozfiledataurl_audio.ogg");
+  var fileurl = URL.createObjectURL(file);
+  audio.src = fileurl;
+  var e = (yield);
+  is(e.type, "loadeddata", "loaded successfully");
+
+  // Revoke url and attempt to load a audio in this document
+  audio.src = "file_mozfiledataurl_audio.ogg";
+  is((yield).type, "loadeddata", "successfully reset audio");
+  URL.revokeObjectURL(fileurl);
+  todo(false, "urls need to act like 404s, not fail to parse");
+/*  img.src = fileurl;
+  var e = (yield);
+  is(e.type, "error", "failed successfully");
+  isnot(img.width, 120, "correct error width");
+  isnot(img.height, 90, "correct error height");
+*/
+  // Generate new fileurl and make sure it's different from the old
+  var oldFileurl = fileurl;
+  var fileurl = URL.createObjectURL(file);
+  isnot(fileurl, oldFileurl, "URL.createObjectURL generated the same url twice");
+
+  // Attempt to load an audio in a different same-origin document
+  inner.src = innerSameSiteURI;
+  yield undefined;
+  inner.contentWindow.postMessage(JSON.stringify({audio:fileurl}), "*");
+  var res = (yield);
+  is(res.type, "loadeddata", "loaded successfully");
+  
+  // Attempt to load an audio in a different cross-origin document
+  inner.src = innerCrossSiteURI;
+  yield undefined;
+  inner.contentWindow.postMessage(JSON.stringify({audio:fileurl}), "*");
+  var res = (yield);
+  is(res.type, "error", "failed successfully");
+
+  // Attempt to load a HTML document in an iframe in this document
+  iframe.onload = function() { gen.next(); };
+  iframe.src = "file_mozfiledataurl_doc.html";
+  yield undefined;
+  is(iframe.contentDocument.getElementsByTagName("p")[0].textContent,
+     "This here is a document!",
+     "iframe loaded successfully");
+  is(iframe.contentDocument.getElementById("img").width, 120,
+     "image in iframe width");
+  is(iframe.contentDocument.getElementById("img").height, 90,
+     "image in iframe height");
+
+  // Attempt to load a HTML document in an iframe in this document, using file url
+  file = getFile("file_mozfiledataurl_doc.html");
+  fileurl = URL.createObjectURL(file);
+  iframe.src = fileurl;
+  yield undefined;
+  is(iframe.contentDocument.getElementsByTagName("p")[0].textContent,
+     "This here is a document!",
+     "iframe loaded successfully");
+  isnot(iframe.contentDocument.getElementById("img").width, 120,
+        "failed image in iframe width");
+  isnot(iframe.contentDocument.getElementById("img").height, 90,
+        "failed image in iframe height");
+
+  // Attempt to load a HTML document in an iframe in inner document
+  inner.src = innerSameSiteURI;
+  is((yield), "inner loaded", "correct gen.next()");
+  inner.contentWindow.postMessage(JSON.stringify({iframe:"file_mozfiledataurl_doc.html"}), "*");
+  var res = (yield);
+  is(res.type, "load", "loaded successfully");
+  is(res.text, "This here is a document!", "loaded successfully");
+  is(res.imgWidth, 120, "correct width");
+
+  // Attempt to load a HTML document in an iframe in inner document, using file url
+  inner.contentWindow.postMessage(JSON.stringify({iframe:fileurl}), "*");
+  var res = (yield);
+  is(res.type, "load", "loaded successfully");
+  is(res.text, "This here is a document!", "loaded successfully");
+  isnot(res.imgWidth, 120, "correct width");
+
+  // Attempt to load a HTML document in an iframe in inner cross-site document, using file url
+  inner.src = innerCrossSiteURI;
+  is((yield), "inner loaded", "correct gen.next()");
+  inner.contentWindow.postMessage(JSON.stringify({iframe:fileurl}), "*");
+  var res = (yield);
+  is(res.type, "error", "load failed successfully");
+
+  // Attempt to load file url using XHR
+  file = getFile("file_mozfiledataurl_text.txt");
+  fileurl = URL.createObjectURL(file);
+  xhr = new XMLHttpRequest;
+  xhr.onload = function() { gen.send("XHR finished"); };
+  xhr.open("GET", fileurl);
+  xhr.send();
+  is((yield), "XHR finished", "correct gen.next()");
+  xhr.responseText == "Yarr, here be plaintext file, ya landlubber\n";
+
+  // Attempt to load file url using XHR in inner document
+  inner.src = innerSameSiteURI;
+  is((yield), "inner loaded", "correct gen.next()");
+  inner.contentWindow.postMessage(JSON.stringify({xhr:fileurl}), "*");
+  var res = (yield);
+  is(res.didThrow, undefined, "load successful");
+  is(res.text, "Yarr, here be plaintext file, ya landlubber\n", "load successful");
+
+  // Attempt to load file url using XHR
+  inner.src = innerCrossSiteURI;
+  is((yield), "inner loaded", "correct gen.next()");
+  inner.contentWindow.postMessage(JSON.stringify({xhr:fileurl}), "*");
+  var res = (yield);
+  is(res.didThrow, true, "load failed successfully");
+
+  SimpleTest.finish();
+
+  yield undefined;
+}
+
+
+var basePath = "";
+function getFile(name) {
+  if (!basePath) {
+    let xhr = new XMLHttpRequest;
+    xhr.open("GET", "/dynamic/getMyDirectory.sjs", false);
+    xhr.send();
+    basePath = xhr.responseText;
+  }
+
+  var fileList = document.getElementById('fileList');
+  SpecialPowers.wrap(fileList).value = basePath + name;
+
+  return fileList.files[0];
+}
+
+</script>
+</pre>
+</body>
+</html>

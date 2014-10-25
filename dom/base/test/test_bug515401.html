@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=515401
+-->
+<head>
+  <title>Test for Bug 515401</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <base id=basehref href="base/">
+  <base id=basehref2>
+  <base id=basetarget target="def_target">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=515401">Mozilla Bug 515401</a>
+<a id=a href="dest.html">Simple link</a>
+<a id=awtarget target="a_target">Link with target</a>
+
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var a = $('a');
+var awtarget = $('awtarget');
+var head = document.documentElement.firstElementChild;
+
+// Test targets
+is(a.target, "def_target", "using default target");
+is(awtarget.target, "a_target", "specified target");
+$('basetarget').setAttribute("target", "new_def_target");
+is(a.target, "new_def_target", "using new default target");
+is(awtarget.target, "a_target", "still specified target");
+$('basetarget').removeAttribute("target");
+is(a.target, "", "no target");
+is(awtarget.target, "a_target", "yet still specified target");
+newbasetarget = document.createElement('base');
+newbasetarget.target = "new_target_elem";
+head.appendChild(newbasetarget);
+is(a.target, "new_target_elem", "new target element");
+is(awtarget.target, "a_target", "yet still specified target");
+newbasetarget.target = "new_target_elem_value";
+is(a.target, "new_target_elem_value", "new target element attribute");
+is(awtarget.target, "a_target", "yet still specified target");
+newbasetarget.target = "";
+is(a.target, "", "new target element no attribute");
+is(awtarget.target, "a_target", "yet still specified target");
+
+
+// link hrefs
+var basehref = $('basehref');
+var basehref2 = $('basehref2');
+var pre = "http://mochi.test:8888/tests/dom/base/test/";
+function verifyBase(base, test) {
+  if (base == "") {
+    is(document.baseURI, document.URL, "document base when " + test);
+    is(a.href, pre + "dest.html", "link href when " + test);
+  }
+  else {
+    is(document.baseURI, pre + base, "document base when " + test);
+    is(a.href, pre + base + "dest.html", "link href when " + test);
+  }
+}
+
+
+// In document base
+verifyBase("base/", "from markup");
+
+// Modify existing <base>
+basehref.href = "base2/";
+verifyBase("base2/", "modify existing");
+is(basehref.href, pre + "base2/", "HTMLBaseElement.href resolves correctly");
+
+// Modify existing <base> to absolute url
+basehref.href = "http://www.example.com/foo/bar.html";
+is(document.baseURI, "http://www.example.com/foo/bar.html", "document base when setting absolute url");
+is(a.href, "http://www.example.com/foo/dest.html", "link href when setting absolute url");
+is(basehref.href, "http://www.example.com/foo/bar.html",
+   "HTMLBaseElement.href resolves correctly when setting absolute url");
+
+// Remove href on existing element
+basehref.removeAttribute("href");
+verifyBase("", "remove href on existing element");
+
+// Create href on existing element
+basehref.href = "base3/";
+verifyBase("base3/", "create href on existing element");
+
+// Fall back to second after remove attr
+basehref2.href = "base4/";
+verifyBase("base3/", "add href on second base");
+basehref.removeAttribute("href");
+verifyBase("base4/", "fall back to second after remove attr");
+
+// Set href on existing again
+basehref.href = "base5/";
+verifyBase("base5/", "set href on existing again");
+
+// Unset href on second
+basehref2.removeAttribute("href");
+verifyBase("base5/", "unset href on second");
+
+// Insert base with href before existing
+var basehref0 = document.createElement("base");
+basehref0.href = "base6/";
+verifyBase("base5/", "nothing modified");
+head.insertBefore(basehref0, head.firstChild);
+verifyBase("base6/", "insert base with href before existing");
+
+// Insert base as grandchild of head
+var basehref3 = document.createElement("base");
+basehref3.href = "base7/";
+var tmp = document.createElement("head");
+tmp.appendChild(basehref3);
+head.insertBefore(tmp, head.firstChild);
+verifyBase("base7/", "inserted base as grandchild of head at the beginning of head");
+is(basehref3.parentNode.parentNode, head, "base got inserted correctly");
+
+// Remove secondary bases
+var tmp, tmp2;
+for (tmp = head.firstChild; tmp = tmp.nextSibling; tmp) {
+  if (tmp.localName == "base" && tmp != basehref0) {
+    tmp2 = tmp.previousSibling;
+    head.removeChild(tmp);
+    tmp = tmp2;
+  }
+  verifyBase("base7/", "remove unneeded base");
+}
+
+// Remove head
+document.documentElement.removeChild(head);
+verifyBase("", "removed head");
+
+// Insert base in body
+document.body.insertBefore(basehref3, document.body.firstChild);
+verifyBase("base7/", "inserted base in body");
+
+</script>
+</pre>
+</body>
+</html>
+

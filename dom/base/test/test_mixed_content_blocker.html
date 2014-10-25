@@ -1,0 +1,195 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests for Mixed Content Blocker
+https://bugzilla.mozilla.org/show_bug.cgi?id=62178
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Bug 62178</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script>
+  var ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
+                        .getService(SpecialPowers.Ci.nsIPluginHost);
+  var tags = ph.getPluginTags();
+  for (var tag of tags) {
+    if (tag.name == "Test Plug-in") {
+      tag.enabledState = SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED;;
+    }
+  }
+
+
+  var origBlockDisplay = SpecialPowers.getBoolPref("security.mixed_content.block_display_content");
+  var origBlockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
+
+  var counter = 0;
+  var settings = [ [true, true], [true, false], [false, true], [false, false] ];
+
+  var blockActive;
+  var blockDisplay;
+
+  //Cycle through 4 different preference settings.
+  function changePrefs(x) {
+    SpecialPowers.setBoolPref("security.mixed_content.block_display_content", settings[x][0]);
+    SpecialPowers.setBoolPref("security.mixed_content.block_active_content", settings[x][1]);
+    blockDisplay = SpecialPowers.getBoolPref("security.mixed_content.block_display_content");
+    blockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
+  }
+
+  //Set the first set of settings (true, true) and increment the counter.
+  changePrefs(counter);
+  counter++;
+
+  var testsToRun = {
+    iframe: false,
+    image: false,
+    imageSrcset: false,
+    imageSrcsetFallback: false,
+    imagePicture: false,
+    imageJoinPicture: false,
+    imageLeavePicture: false,
+    script: false,
+    stylesheet: false,
+    object: false,
+    media: false,
+    xhr: false,
+  };
+
+  function log(msg) {
+    document.getElementById("log").textContent += "\n" + msg;
+  }
+
+  function reloadFrame() {
+    document.getElementById('framediv').innerHTML = '<iframe id="testHarness" src="https://example.com/tests/dom/base/test/file_mixed_content_main.html"></iframe>';
+  }
+
+  function checkTestsCompleted() {
+    for (var prop in testsToRun) {
+      // some test hasn't run yet so we're not done
+      if (!testsToRun[prop])
+        return;
+    }
+    //if the testsToRun are all completed, chnage the pref and run the tests again until we have cycled through all the prefs.
+    if(counter < 4) {
+       for (var prop in testsToRun) {
+         testsToRun[prop] = false;
+       }
+      //call to change the preferences
+      changePrefs(counter);
+      counter++;
+      log("\nblockDisplay set to "+blockDisplay+", blockActive set to "+blockActive+".");
+      reloadFrame();
+    }
+    else {
+      //set the prefs back to what they were set to originally
+      SpecialPowers.setBoolPref("security.mixed_content.block_display_content", origBlockDisplay);
+      SpecialPowers.setBoolPref("security.mixed_content.block_active_content", origBlockActive);
+      SimpleTest.finish();
+    }
+  }
+
+  var firstTest = true;
+
+  // listen for a messages from the mixed content test harness
+  window.addEventListener("message", receiveMessage, false);
+  function receiveMessage(event) {
+    if(firstTest) {
+      log("blockActive set to "+blockActive+", blockDisplay set to "+blockDisplay+".");
+      firstTest = false;
+    }
+
+    log("test: "+event.data.test+", msg: "+event.data.msg + " logging message.");
+    // test that the load type matches the pref for this type of content
+    // (i.e. active vs. display)
+
+    switch(event.data.test) {
+
+      /* Mixed Script tests */
+      case "iframe":
+        ok(blockActive == (event.data.msg == "insecure iframe blocked"), "iframe did not follow block_active_content pref");
+        testsToRun["iframe"] = true;
+        break;
+
+      case "object":
+        ok(blockActive == (event.data.msg == "insecure object blocked"), "object did not follow block_active_content pref");
+        testsToRun["object"] = true;
+        break;
+
+      case "script":
+        ok(blockActive == (event.data.msg == "insecure script blocked"), "script did not follow block_active_content pref");
+        testsToRun["script"] = true;
+        break;
+
+      case "stylesheet":
+        ok(blockActive == (event.data.msg == "insecure stylesheet blocked"), "stylesheet did not follow block_active_content pref");
+        testsToRun["stylesheet"] = true;
+        break;
+
+      case "xhr":
+        ok(blockActive == (event.data.msg == "insecure xhr blocked"), "xhr did not follow block_active_content pref");
+        testsToRun["xhr"] = true;
+        break;
+
+      /* Mixed Display tests */
+      case "image":
+        //test that the image load matches the pref for display content
+        ok(blockDisplay == (event.data.msg == "insecure image blocked"), "image did not follow block_display_content pref");
+        testsToRun["image"] = true;
+        break;
+
+      case "media":
+        ok(blockDisplay == (event.data.msg == "insecure media blocked"), "media did not follow block_display_content pref");
+        testsToRun["media"] = true;
+        break;
+
+      /* Images using the "imageset" policy, from <img srcset> and <picture>, do not get the mixed display exception */
+      case "imageSrcset":
+        ok(blockActive == (event.data.msg == "insecure image blocked"), "imageSrcset did not follow block_active_content pref");
+        testsToRun["imageSrcset"] = true;
+        break;
+
+      case "imageSrcsetFallback":
+        ok(blockActive == (event.data.msg == "insecure image blocked"), "imageSrcsetFallback did not follow block_active_content pref");
+        testsToRun["imageSrcsetFallback"] = true;
+        break;
+
+      case "imagePicture":
+        ok(blockActive == (event.data.msg == "insecure image blocked"), "imagePicture did not follow block_active_content pref");
+        testsToRun["imagePicture"] = true;
+        break;
+
+      case "imageJoinPicture":
+        ok(blockActive == (event.data.msg == "insecure image blocked"), "imageJoinPicture did not follow block_active_content pref");
+        testsToRun["imageJoinPicture"] = true;
+        break;
+
+      // Should return to mixed display mode
+      case "imageLeavePicture":
+        ok(blockDisplay == (event.data.msg == "insecure image blocked"), "imageLeavePicture did not follow block_display_content pref");
+        testsToRun["imageLeavePicture"] = true;
+        break;
+
+    }
+    checkTestsCompleted();
+  }
+
+  // Enable <picture> and <img srcset> for test
+  SpecialPowers.pushPrefEnv({'set': [[ "dom.image.srcset.enabled", true ],
+                                     [ "dom.image.picture.enabled", true ]] },
+                            function() {
+    // Kick off test
+    reloadFrame();
+  });
+
+  SimpleTest.waitForExplicitFinish();
+
+  </script>
+</head>
+
+<body>
+  <div id="framediv"></div>
+  <pre id="log"></pre>
+</body>
+</html>

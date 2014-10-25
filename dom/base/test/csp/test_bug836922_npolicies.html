@@ -1,0 +1,245 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Content Security Policy multiple policy support (regular and Report-Only mode)</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<iframe style="width:200px;height:200px;" id='cspframe'></iframe>
+<script class="testbody" type="text/javascript">
+
+var path = "/tests/dom/base/test/csp/";
+
+// These are test results: verified indicates whether or not the test has run.
+// true/false is the pass/fail result.
+window.loads = {
+  css_self: {expected: true, verified: false},
+  css_examplecom: {expected: false, verified: false},
+  img_self: {expected: false, verified: false},
+  img_examplecom: {expected: false, verified: false},
+  script_self: {expected: true, verified: false},
+};
+
+window.violation_reports = {
+  css_self:
+  {expected: 0, expected_ro: 0},  /* totally fine */
+  css_examplecom:
+  {expected: 1, expected_ro: 0},  /* violates enforced CSP */
+  img_self:
+  {expected: 1, expected_ro: 0},  /* violates enforced CSP */
+  img_examplecom:
+  {expected: 1, expected_ro: 1},  /* violates both CSPs */
+  script_self:
+  {expected: 0, expected_ro: 1},  /* violates report-only */
+};
+
+// This is used to watch the blocked data bounce off CSP and allowed data
+// get sent out to the wire.  This also watches for violation reports to go out.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    var testpat = new RegExp("testid=([a-z0-9_]+)");
+
+    if (topic === "specialpowers-http-notify-request") {
+      var uri = data;
+      if (!testpat.test(uri)) return;
+      var testid = testpat.exec(uri)[1];
+
+      // violation reports don't come through here, but the requested resources do
+      // if the test has already finished, move on.  Some things throw multiple
+      // requests (preloads and such)
+      try {
+        if (window.loads[testid].verified) return;
+      } catch(e) { return; }
+
+      // these are requests that were allowed by CSP
+      var testid = testpat.exec(uri)[1];
+      window.testResult(testid, 'allowed', uri + " allowed by csp");
+    }
+
+    if(topic === "csp-on-violate-policy") {
+      // if the violated policy was report-only, the resource will still be
+      // loaded even if this topic is notified.
+      var asciiSpec = SpecialPowers.getPrivilegedProps(
+                        SpecialPowers.do_QueryInterface(subject, "nsIURI"),
+                        "asciiSpec");
+      if (!testpat.test(asciiSpec)) return;
+      var testid = testpat.exec(asciiSpec)[1];
+
+      // if the test has already finished, move on.
+      try {
+        if (window.loads[testid].verified) return;
+      } catch(e) { return; }
+
+      // record the ones that were supposed to be blocked, but don't use this
+      // as an indicator for tests that are not blocked but do generate reports.
+      // We skip recording the result if the load is expected since a
+      // report-only policy will generate a request *and* a violation note.
+      if (!window.loads[testid].expected) {
+        window.testResult(testid,
+                          'blocked',
+                          asciiSpec + " blocked by \"" + data + "\"");
+      }
+    }
+
+    // if any test is unverified, keep waiting
+    for (var v in window.loads) {
+      if(!window.loads[v].verified) {
+        return;
+      }
+    }
+
+    window.bug836922examiner.remove();
+    window.resultPoller.pollForFinish();
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+  }
+}
+window.bug836922examiner = new examiner();
+
+
+// Poll for results and see if enough reports came in.  Keep trying
+// for a few seconds before failing with lack of reports.
+// Have to do this because there's a race between the async reporting
+// and this test finishing, and we don't want to win the race.
+window.resultPoller = {
+
+  POLL_ATTEMPTS_LEFT: 14,
+
+  pollForFinish:
+  function() {
+    var vr = resultPoller.tallyReceivedReports();
+    if (resultPoller.verifyReports(vr, resultPoller.POLL_ATTEMPTS_LEFT < 1)) {
+      // report success condition.
+      resultPoller.resetReportServer();
+      SimpleTest.finish();
+    } else {
+      resultPoller.POLL_ATTEMPTS_LEFT--;
+      // try again unless we reached the threshold.
+      setTimeout(resultPoller.pollForFinish, 100);
+    }
+  },
+
+  resetReportServer:
+  function() {
+    var xhr = new XMLHttpRequest();
+    var xhr_ro = new XMLHttpRequest();
+    xhr.open("GET", "file_bug836922_npolicies_violation.sjs?reset", false);
+    xhr_ro.open("GET", "file_bug836922_npolicies_ro_violation.sjs?reset", false);
+    xhr.send(null);
+    xhr_ro.send(null);
+  },
+
+  tallyReceivedReports:
+  function() {
+    var xhr = new XMLHttpRequest();
+    var xhr_ro = new XMLHttpRequest();
+    xhr.open("GET", "file_bug836922_npolicies_violation.sjs?results", false);
+    xhr_ro.open("GET", "file_bug836922_npolicies_ro_violation.sjs?results", false);
+    xhr.send(null);
+    xhr_ro.send(null);
+
+    var received = JSON.parse(xhr.responseText);
+    var received_ro = JSON.parse(xhr_ro.responseText);
+
+    var results = {enforced: {}, reportonly: {}};
+    for (var r in window.violation_reports) {
+      results.enforced[r] = 0;
+      results.reportonly[r] = 0;
+    }
+
+    for (var r in received) {
+      results.enforced[r] += received[r];
+    }
+    for (var r in received_ro) {
+      results.reportonly[r] += received_ro[r];
+    }
+
+    return results;
+  },
+
+  verifyReports:
+  function(receivedCounts, lastAttempt) {
+    for (var r in window.violation_reports) {
+      var exp = window.violation_reports[r].expected;
+      var exp_ro = window.violation_reports[r].expected_ro;
+      var rec = receivedCounts.enforced[r];
+      var rec_ro = receivedCounts.reportonly[r];
+
+      // if this test breaks, these are helpful dumps:
+      //dump(">>> Verifying " + r + "\n");
+      //dump("  > Expected: " + exp + " / " + exp_ro + " (ro)\n");
+      //dump("  > Received: " + rec + " / " + rec_ro + " (ro) \n");
+
+      // in all cases, we're looking for *at least* the expected number of
+      // reports of each type (there could be more in some edge cases).
+      // If there are not enough, we keep waiting and poll the server again
+      // later.  If there are enough, we can successfully finish.
+
+      if (exp == 0)
+        is(rec, 0,
+          "Expected zero enforced-policy violation " +
+          "reports for " + r + ", got " + rec);
+      else if (lastAttempt)
+        ok(rec >= exp,
+          "Received (" + rec + "/" + exp + ") " +
+          "enforced-policy reports for " + r);
+      else if (rec < exp)
+        return false; // continue waiting for more
+
+      if(exp_ro == 0)
+        is(rec_ro, 0,
+          "Expected zero report-only-policy violation " +
+          "reports for " + r + ", got " + rec_ro);
+      else if (lastAttempt)
+        ok(rec_ro >= exp_ro,
+          "Received (" + rec_ro + "/" + exp_ro + ") " +
+          "report-only-policy reports for " + r);
+      else if (rec_ro < exp_ro)
+        return false; // continue waiting for more
+    }
+
+    // if we complete the loop, we've found all of the violation
+    // reports we expect.
+    if (lastAttempt) return true;
+
+    // Repeat successful tests once more to record successes via ok()
+    return resultPoller.verifyReports(receivedCounts, true);
+  }
+};
+
+window.testResult = function(testname, result, msg) {
+  // otherwise, make sure the allowed ones are expected and blocked ones are not.
+  if (window.loads[testname].expected) {
+    is(result, 'allowed', ">> " + msg);
+  } else {
+    is(result, 'blocked', ">> " + msg);
+  }
+  window.loads[testname].verified = true;
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'http://mochi.test:8888' + path + 'file_bug836922_npolicies.html';
+
+</script>
+</pre>
+</body>
+</html>
