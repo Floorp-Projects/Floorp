@@ -64,8 +64,8 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',
-    'tests/identity/mochitest.ini',
     'tests/ipc/mochitest.ini',
+    'tests/mochitest/identity/mochitest.ini',
 ]
 
 if CONFIG['MOZ_WEBRTC']:
