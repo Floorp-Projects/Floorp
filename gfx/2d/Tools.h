@@ -7,6 +7,7 @@
 #define MOZILLA_GFX_TOOLS_H_
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 #include "Types.h"
 #include "Point.h"
@@ -176,6 +177,13 @@ struct AlignedArray
     // elimination step should optimize this away.
     mPtr = new (mPtr) T[aCount];
     mCount = aCount;
+  }
+
+  void Swap(AlignedArray<T, alignment>& aOther)
+  {
+    mozilla::Swap(mPtr, aOther.mPtr);
+    mozilla::Swap(mStorage, aOther.mStorage);
+    mozilla::Swap(mCount, aOther.mCount);
   }
 
   MOZ_ALWAYS_INLINE operator T*()

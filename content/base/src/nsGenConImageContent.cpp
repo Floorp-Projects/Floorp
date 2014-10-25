@@ -35,7 +35,7 @@ public:
   nsresult Init(imgRequestProxy* aImageRequest)
   {
     // No need to notify, since we have no frame.
-    return UseAsPrimaryRequest(aImageRequest, false);
+    return UseAsPrimaryRequest(aImageRequest, false, eImageLoadType_Normal);
   }
 
   // nsIContent overrides

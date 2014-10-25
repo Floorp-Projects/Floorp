@@ -708,6 +708,12 @@ Factory::CreateDrawTargetForCairoCGContext(CGContextRef cg, const IntSize& aSize
   }
   return retVal.forget();
 }
+
+TemporaryRef<GlyphRenderingOptions>
+Factory::CreateCGGlyphRenderingOptions(const Color &aFontSmoothingBackgroundColor)
+{
+  return new GlyphRenderingOptionsCG(aFontSmoothingBackgroundColor);
+}
 #endif
 
 TemporaryRef<DataSourceSurface>

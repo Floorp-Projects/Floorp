@@ -24,6 +24,9 @@
 
 #include "nsILocalFileMac.h"
 
+#include "nsCocoaFeatures.h"
+#include "nsExceptionHandler.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -469,6 +472,22 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
       return NS_OK;
   }
 
+  // Don't load "fbplugin" (a Facebook plugin) if we're running on OS X 10.10
+  // (Yosemite) or later.  It crashes on load, in the call to LoadPlugin()
+  // below.  See bug 1086977.
+  if (nsCocoaFeatures::OnYosemiteOrLater()) {
+    if (fileName.EqualsLiteral("fbplugin")) {
+      NS_WARNING("Preventing load of fbplugin (see bug 1086977)");
+      return NS_ERROR_FAILURE;
+    }
+    // The block above assumes that "fbplugin" is the filename of the plugin
+    // to be blocked, but be don't yet know for sure if this is true.  It might
+    // also be the name of a file indirectly loaded by the plugin.  So for the
+    // time being we must record extra information in our crash logs.
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Bug 1086977"),
+                                       fileName);
+  }
+
   // It's possible that our plugin has 2 entry points that'll give us mime type
   // info. Quicktime does this to get around the need of having admin rights to
   // change mime info in the resource fork. We need to use this info instead of
@@ -476,6 +495,13 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
 
   // Sadly we have to load the library for this to work.
   rv = LoadPlugin(outLibrary);
+  if (nsCocoaFeatures::OnYosemiteOrLater()) {
+    // If we didn't crash in LoadPlugin(), change the previous annotation so we
+    // don't sow confusion.  Unfortunately there's not (yet) any way to get rid
+    // of the annotation completely.
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Bug 1086977"),
+                                       NS_LITERAL_CSTRING("Didn't crash, please ignore"));
+  }
   if (NS_FAILED(rv))
     return rv;
 

@@ -2861,7 +2861,8 @@ bool
 nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
                              nsIDocument* aLoadingDocument,
                              nsIPrincipal* aLoadingPrincipal,
-                             int16_t* aImageBlockingStatus)
+                             int16_t* aImageBlockingStatus,
+                             uint32_t aContentType)
 {
   NS_PRECONDITION(aURI, "Must have a URI");
   NS_PRECONDITION(aLoadingDocument, "Must have a document");
@@ -2904,7 +2905,7 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
 
   int16_t decision = nsIContentPolicy::ACCEPT;
 
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_IMAGE,
+  rv = NS_CheckContentLoadPolicy(aContentType,
                                  aURI,
                                  aLoadingPrincipal,
                                  aContext,
@@ -2985,7 +2986,8 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                           nsIPrincipal* aLoadingPrincipal, nsIURI* aReferrer,
                           imgINotificationObserver* aObserver, int32_t aLoadFlags,
                           const nsAString& initiatorType,
-                          imgRequestProxy** aRequest)
+                          imgRequestProxy** aRequest,
+                          uint32_t aContentPolicyType)
 {
   NS_PRECONDITION(aURI, "Must have a URI");
   NS_PRECONDITION(aLoadingDocument, "Must have a document");
@@ -3018,7 +3020,8 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                               aObserver,            /* imgINotificationObserver */
                               aLoadingDocument,     /* uniquification key */
                               aLoadFlags,           /* load flags */
-                              nullptr,               /* cache key */
+                              nullptr,              /* cache key */
+                              aContentPolicyType,   /* content policy type */
                               initiatorType,        /* the load initiator */
                               aRequest);
 }

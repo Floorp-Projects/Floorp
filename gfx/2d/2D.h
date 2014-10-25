@@ -1191,6 +1191,8 @@ public:
 
 #ifdef XP_MACOSX
   static TemporaryRef<DrawTarget> CreateDrawTargetForCairoCGContext(CGContextRef cg, const IntSize& aSize);
+  static TemporaryRef<GlyphRenderingOptions>
+    CreateCGGlyphRenderingOptions(const Color &aFontSmoothingBackgroundColor);
 #endif
 
 #ifdef WIN32

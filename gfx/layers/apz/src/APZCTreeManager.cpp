@@ -7,6 +7,7 @@
 #include "AsyncPanZoomController.h"
 #include "Compositor.h"                 // for Compositor
 #include "CompositorParent.h"           // for CompositorParent, etc
+#include "InputBlockState.h"            // for InputBlockState
 #include "InputData.h"                  // for InputData, etc
 #include "Layers.h"                     // for Layer, etc
 #include "mozilla/dom/Touch.h"          // for Touch
@@ -71,7 +72,8 @@ APZCTreeManager::CalculatePendingDisplayPort(
 }
 
 APZCTreeManager::APZCTreeManager()
-    : mTreeLock("APZCTreeLock"),
+    : mInputQueue(new InputQueue()),
+      mTreeLock("APZCTreeLock"),
       mInOverscrolledApzc(false),
       mRetainedTouchIdentifier(-1),
       mTouchCount(0),
@@ -109,13 +111,10 @@ APZCTreeManager::GetAllowedTouchBehavior(WidgetInputEvent* aEvent,
 }
 
 void
-APZCTreeManager::SetAllowedTouchBehavior(const ScrollableLayerGuid& aGuid,
+APZCTreeManager::SetAllowedTouchBehavior(uint64_t aInputBlockId,
                                          const nsTArray<TouchBehaviorFlags> &aValues)
 {
-  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
-  if (apzc) {
-    apzc->SetAllowedTouchBehavior(aValues);
-  }
+  mInputQueue->SetAllowedTouchBehavior(aInputBlockId, aValues);
 }
 
 /* Flatten the tree of APZC instances into the given nsTArray */
@@ -300,7 +299,7 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
     // a new one.
     bool newApzc = (apzc == nullptr || apzc->IsDestroyed());
     if (newApzc) {
-      apzc = new AsyncPanZoomController(aLayersId, this, state->mController,
+      apzc = new AsyncPanZoomController(aLayersId, this, mInputQueue, state->mController,
                                         AsyncPanZoomController::USE_GESTURE_DETECTOR);
       apzc->SetCompositorParent(aState.mCompositor);
       if (state->mCrossProcessParent != nullptr) {
@@ -517,15 +516,21 @@ TransformScreenToGecko(T* aPoint, AsyncPanZoomController* aApzc, APZCTreeManager
 
 nsEventStatus
 APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
-                                   ScrollableLayerGuid* aOutTargetGuid)
+                                   ScrollableLayerGuid* aOutTargetGuid,
+                                   uint64_t* aOutInputBlockId)
 {
+  // Initialize aOutInputBlockId to a sane value, and then later we overwrite
+  // it if the input event goes into a block.
+  if (aOutInputBlockId) {
+    *aOutInputBlockId = InputBlockState::NO_BLOCK_ID;
+  }
   nsEventStatus result = nsEventStatus_eIgnore;
   Matrix4x4 transformToApzc;
   bool inOverscrolledApzc = false;
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
       MultiTouchInput& touchInput = aEvent.AsMultiTouchInput();
-      result = ProcessTouchInput(touchInput, aOutTargetGuid);
+      result = ProcessTouchInput(touchInput, aOutTargetGuid, aOutInputBlockId);
       break;
     } case PANGESTURE_INPUT: {
       PanGestureInput& panInput = aEvent.AsPanGestureInput();
@@ -538,7 +543,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         PanGestureInput inputForApzc(panInput);
         transformToApzc = GetScreenToApzcTransform(apzc);
         ApplyTransform(&(inputForApzc.mPanStartPoint), transformToApzc);
-        result = apzc->ReceiveInputEvent(inputForApzc);
+        result = mInputQueue->ReceiveInputEvent(apzc, inputForApzc, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
@@ -556,7 +561,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         PinchGestureInput inputForApzc(pinchInput);
         transformToApzc = GetScreenToApzcTransform(apzc);
         ApplyTransform(&(inputForApzc.mFocusPoint), transformToApzc);
-        result = apzc->ReceiveInputEvent(inputForApzc);
+        result = mInputQueue->ReceiveInputEvent(apzc, inputForApzc, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
@@ -574,7 +579,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         TapGestureInput inputForApzc(tapInput);
         transformToApzc = GetScreenToApzcTransform(apzc);
         ApplyTransform(&(inputForApzc.mPoint), transformToApzc);
-        result = apzc->ReceiveInputEvent(inputForApzc);
+        result = mInputQueue->ReceiveInputEvent(apzc, inputForApzc, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
@@ -628,7 +633,8 @@ APZCTreeManager::GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
 
 nsEventStatus
 APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
-                                   ScrollableLayerGuid* aOutTargetGuid)
+                                   ScrollableLayerGuid* aOutTargetGuid,
+                                   uint64_t* aOutInputBlockId)
 {
   if (aInput.mType == MultiTouchInput::MULTITOUCH_START) {
     // If we are in an overscrolled state and a second finger goes down,
@@ -653,7 +659,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
       // in the middle of a panning touch block (for example) and not clean up properly.
       if (mApzcForInputBlock) {
         MultiTouchInput cancel(MultiTouchInput::MULTITOUCH_CANCEL, 0, TimeStamp::Now(), 0);
-        mApzcForInputBlock->ReceiveInputEvent(cancel);
+        mInputQueue->ReceiveInputEvent(mApzcForInputBlock, cancel, nullptr);
       }
       mApzcForInputBlock = apzc;
     }
@@ -702,7 +708,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     for (size_t i = 0; i < inputForApzc.mTouches.Length(); i++) {
       ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
     }
-    result = mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
+    result = mInputQueue->ReceiveInputEvent(mApzcForInputBlock, inputForApzc, aOutInputBlockId);
 
     // For computing the event to pass back to Gecko, use the up-to-date transforms.
     // This ensures that transformToApzc and transformToGecko are in sync
@@ -757,7 +763,8 @@ APZCTreeManager::TransformCoordinateToGecko(const ScreenIntPoint& aPoint,
 
 nsEventStatus
 APZCTreeManager::ProcessEvent(WidgetInputEvent& aEvent,
-                              ScrollableLayerGuid* aOutTargetGuid)
+                              ScrollableLayerGuid* aOutTargetGuid,
+                              uint64_t* aOutInputBlockId)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsEventStatus result = nsEventStatus_eIgnore;
@@ -782,7 +789,8 @@ APZCTreeManager::ProcessEvent(WidgetInputEvent& aEvent,
 
 nsEventStatus
 APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
-                                   ScrollableLayerGuid* aOutTargetGuid)
+                                   ScrollableLayerGuid* aOutTargetGuid,
+                                   uint64_t* aOutInputBlockId)
 {
   // This function will be removed as part of bug 930939.
   // In general it is preferable to use the version of ReceiveInputEvent
@@ -790,11 +798,17 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
 
   MOZ_ASSERT(NS_IsMainThread());
 
+  // Initialize aOutInputBlockId to a sane value, and then later we overwrite
+  // it if the input event goes into a block.
+  if (aOutInputBlockId) {
+    *aOutInputBlockId = InputBlockState::NO_BLOCK_ID;
+  }
+
   switch (aEvent.mClass) {
     case eTouchEventClass: {
       WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
       MultiTouchInput touchInput(touchEvent);
-      nsEventStatus result = ProcessTouchInput(touchInput, aOutTargetGuid);
+      nsEventStatus result = ProcessTouchInput(touchInput, aOutTargetGuid, aOutInputBlockId);
       // touchInput was modified in-place to possibly remove some
       // touch points (if we are overscrolled), and the coordinates were
       // modified using the APZ untransform. We need to copy these changes
@@ -807,7 +821,7 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
       return result;
     }
     default: {
-      return ProcessEvent(aEvent, aOutTargetGuid);
+      return ProcessEvent(aEvent, aOutTargetGuid, aOutInputBlockId);
     }
   }
 }
@@ -823,13 +837,10 @@ APZCTreeManager::ZoomToRect(const ScrollableLayerGuid& aGuid,
 }
 
 void
-APZCTreeManager::ContentReceivedTouch(const ScrollableLayerGuid& aGuid,
+APZCTreeManager::ContentReceivedTouch(uint64_t aInputBlockId,
                                       bool aPreventDefault)
 {
-  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
-  if (apzc) {
-    apzc->ContentReceivedTouch(aPreventDefault);
-  }
+  mInputQueue->ContentReceivedTouch(aInputBlockId, aPreventDefault);
 }
 
 void
