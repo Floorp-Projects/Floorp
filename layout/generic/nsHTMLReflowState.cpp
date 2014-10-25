@@ -2145,10 +2145,17 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       }
 
       WritingMode wm = GetWritingMode();
+
+      LogicalSize cbSize(wm, nsSize(aContainingBlockWidth,
+                                    aContainingBlockHeight));
+      if (cbSize.ISize(wm) == NS_UNCONSTRAINEDSIZE) {
+        // For orthogonal flows, where we found a parent orthogonal-limit
+        // for AvailableISize() in Init(), we'll use the same here as well.
+        cbSize.ISize(wm) = AvailableISize();
+      }
+
       LogicalSize size =
-        frame->ComputeSize(rendContext, wm,
-                           LogicalSize(wm, nsSize(aContainingBlockWidth,
-                                                  aContainingBlockHeight)),
+        frame->ComputeSize(rendContext, wm, cbSize,
                            AvailableISize(),
                            ComputedLogicalMargin().Size(wm),
                            ComputedLogicalBorderPadding().Size(wm) -
