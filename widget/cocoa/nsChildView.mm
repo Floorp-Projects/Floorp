@@ -428,7 +428,8 @@ public:
   virtual void HandleSingleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
                                const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
   virtual void HandleLongTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
+                               const ScrollableLayerGuid& aGuid,
+                               uint64_t aInputBlockId) MOZ_OVERRIDE {}
   virtual void HandleLongTapUp(const CSSPoint& aPoint, int32_t aModifiers,
                                const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
   virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect,
@@ -2636,12 +2637,16 @@ nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries)
     GatherThemeGeometryRegion(aThemeGeometries, NS_THEME_MAC_VIBRANCY_LIGHT);
   nsIntRegion vibrantDarkRegion =
     GatherThemeGeometryRegion(aThemeGeometries, NS_THEME_MAC_VIBRANCY_DARK);
+  nsIntRegion tooltipRegion =
+    GatherThemeGeometryRegion(aThemeGeometries, NS_THEME_TOOLTIP);
 
-  // Make light win over dark in disputed areas.
   vibrantDarkRegion.SubOut(vibrantLightRegion);
+  vibrantDarkRegion.SubOut(tooltipRegion);
+  vibrantLightRegion.SubOut(tooltipRegion);
 
   auto& vm = EnsureVibrancyManager();
   vm.UpdateVibrantRegion(VibrancyType::LIGHT, vibrantLightRegion);
+  vm.UpdateVibrantRegion(VibrancyType::TOOLTIP, tooltipRegion);
   vm.UpdateVibrantRegion(VibrancyType::DARK, vibrantDarkRegion);
 }
 
@@ -2653,15 +2658,39 @@ nsChildView::ClearVibrantAreas()
   }
 }
 
+static VibrancyType
+WidgetTypeToVibrancyType(uint8_t aWidgetType)
+{
+  switch (aWidgetType) {
+    case NS_THEME_MAC_VIBRANCY_LIGHT:
+      return VibrancyType::LIGHT;
+    case NS_THEME_MAC_VIBRANCY_DARK:
+      return VibrancyType::DARK;
+    case NS_THEME_TOOLTIP:
+      return VibrancyType::TOOLTIP;
+    default:
+      MOZ_CRASH();
+  }
+}
+
 NSColor*
 nsChildView::VibrancyFillColorForWidgetType(uint8_t aWidgetType)
 {
   if (VibrancyManager::SystemSupportsVibrancy()) {
     return EnsureVibrancyManager().VibrancyFillColorForType(
-      aWidgetType == NS_THEME_MAC_VIBRANCY_LIGHT
-        ? VibrancyType::LIGHT : VibrancyType::DARK);
+      WidgetTypeToVibrancyType(aWidgetType));
   }
   return [NSColor whiteColor];
+}
+
+NSColor*
+nsChildView::VibrancyFontSmoothingBackgroundColorForWidgetType(uint8_t aWidgetType)
+{
+  if (VibrancyManager::SystemSupportsVibrancy()) {
+    return EnsureVibrancyManager().VibrancyFontSmoothingBackgroundColorForType(
+      WidgetTypeToVibrancyType(aWidgetType));
+  }
+  return [NSColor clearColor];
 }
 
 mozilla::VibrancyManager&
@@ -3653,6 +3682,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return [NSColor whiteColor];
   }
   return mGeckoChild->VibrancyFillColorForWidgetType(aWidgetType);
+}
+
+- (NSColor*)vibrancyFontSmoothingBackgroundColorForWidgetType:(uint8_t)aWidgetType
+{
+  if (!mGeckoChild) {
+    return [NSColor clearColor];
+  }
+  return mGeckoChild->VibrancyFontSmoothingBackgroundColorForWidgetType(aWidgetType);
 }
 
 - (nsIntRegion)nativeDirtyRegionWithBoundingRect:(NSRect)aRect
@@ -5338,13 +5375,13 @@ static int32_t RoundUp(double aDouble)
     if (phase == NSEventPhaseMayBegin) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_MAYSTART, eventTime,
                                eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
       return;
     }
     if (phase == NSEventPhaseCancelled) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_CANCELLED, eventTime,
                                eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
       return;
     }
 
@@ -5361,34 +5398,34 @@ static int32_t RoundUp(double aDouble)
     if (phase == NSEventPhaseBegan || isLegacyScroll) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_START, eventTime,
                                eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
     }
     if (momentumPhase == NSEventPhaseNone && delta != ScreenPoint(0, 0)) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_PAN, eventTime,
                                eventTimeStamp, location, delta, 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
     }
     if (phase == NSEventPhaseEnded || isLegacyScroll) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_END, eventTime,
                                eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
     }
 
     // Any device that can dispatch momentum events supports all three momentum phases.
     if (momentumPhase == NSEventPhaseBegan) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_MOMENTUMSTART, eventTime,
                                eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
     }
     if (momentumPhase == NSEventPhaseChanged && delta != ScreenPoint(0, 0)) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_MOMENTUMPAN, eventTime,
                                eventTimeStamp, location, delta, 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
     }
     if (momentumPhase == NSEventPhaseEnded) {
       PanGestureInput panInput(PanGestureInput::PANGESTURE_MOMENTUMEND, eventTime,
                                eventTimeStamp, location, ScreenPoint(0, 0), 0);
-      apzctm->ReceiveInputEvent(panInput, &guid);
+      apzctm->ReceiveInputEvent(panInput, &guid, nullptr);
     }
   }
 }

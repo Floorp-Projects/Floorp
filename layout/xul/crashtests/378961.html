@@ -1,0 +1,9 @@
+<html>
+<head>
+<title>Testcase bug 378961 - Crash [@ nsSplitterFrameInner::RemoveListener] when dragging splitter and DOMAttrModified event removing window</title>
+</head>
+<body>
+<iframe src="data:application/vnd.mozilla.xul+xml;charset=utf-8,%3C%3Fxml%20version%3D%221.0%22%3F%3E%0A%3C%3Fxml-stylesheet%20href%3D%22chrome%3A//global/skin%22%20type%3D%22text/css%22%3F%3E%0A%3Cwindow%20xmlns%3D%22http%3A//www.mozilla.org/keymaster/gatekeeper/there.is.only.xul%22%20orient%3D%22horizontal%22%3E%0A%3Ctextbox/%3E%3Csplitter/%3E%3Cbox/%3E%0A%0A%3Cscript%20xmlns%3D%22http%3A//www.w3.org/1999/xhtml%22%3E%0Afunction%20doe%28%29%20%7B%0Awindow.frameElement.parentNode.removeChild%28window.frameElement%29%3B%0A%7D%0Adocument.addEventListener%28%27DOMAttrModified%27%2C%20doe%2C%20true%29%3B%0A%3C/script%3E%0A%3C/window%3E" style="width: 500px;height:200px;"></iframe>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+<html xmlns="http://www.w3.org/1999/xhtml" style="white-space: pre;">
+<head>
+<style>
+
+#f:first-letter { }
+#g:first-letter { float:left; }
+
+</style>
+<script>
+
+function boom(id)
+{
+  var text = document.getElementById(id).firstChild;
+  text.splitText(2);
+  document.documentElement.offsetHeight;
+  text.splitText(0);
+}
+
+</script>
+</head>
+<body onload="boom('f');boom('g');">
+
+
+<div id="f">
+
+X</div>
+
+<div id="g">
+
+X</div>
+
+
+</body>
+</html>

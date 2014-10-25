@@ -347,6 +347,13 @@ public:
     void SetPattern(gfxPattern *pattern);
 
     /**
+     * Set the color that text drawn on top of transparent pixels should be
+     * anti-aliased into.
+     */
+    void SetFontSmoothingBackgroundColor(const mozilla::gfx::Color& aColor);
+    mozilla::gfx::Color GetFontSmoothingBackgroundColor();
+
+    /**
      * Get the source pattern (solid color, normal pattern, surface, etc)
      */
     already_AddRefed<gfxPattern> GetPattern();
@@ -645,6 +652,7 @@ private:
     mozilla::gfx::AntialiasMode aaMode;
     bool patternTransformChanged;
     Matrix patternTransform;
+    Color fontSmoothingBackgroundColor;
     // This is used solely for using minimal intermediate surface size.
     mozilla::gfx::Point deviceOffset;
   };

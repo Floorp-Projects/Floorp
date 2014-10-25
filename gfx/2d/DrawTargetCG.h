@@ -91,12 +91,29 @@ SetStrokeOptions(CGContextRef cg, const StrokeOptions &aStrokeOptions)
   }
 }
 
+class GlyphRenderingOptionsCG : public GlyphRenderingOptions
+{
+public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphRenderingOptionsCG)
+
+  GlyphRenderingOptionsCG(const Color &aFontSmoothingBackgroundColor)
+    : mFontSmoothingBackgroundColor(aFontSmoothingBackgroundColor)
+  {}
+
+  const Color &FontSmoothingBackgroundColor() const { return mFontSmoothingBackgroundColor; }
+
+  virtual FontType GetType() const MOZ_OVERRIDE { return FontType::MAC; }
+
+private:
+  Color mFontSmoothingBackgroundColor;
+};
 
 class DrawTargetCG : public DrawTarget
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetCG)
   friend class BorrowedCGContext;
+  friend class SourceSurfaceCGBitmapContext;
   DrawTargetCG();
   virtual ~DrawTargetCG();
 
@@ -182,6 +199,7 @@ private:
   AlignedArray<uint8_t> mData;
 
   RefPtr<SourceSurfaceCGContext> mSnapshot;
+  bool mMayContainInvalidPremultipliedData;
 };
 
 }

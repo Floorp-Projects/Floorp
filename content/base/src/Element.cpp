@@ -957,7 +957,7 @@ Element::CreateShadowRoot(ErrorResult& aError)
 
   nsXBLPrototypeBinding* protoBinding = new nsXBLPrototypeBinding();
   aError = protoBinding->Init(NS_LITERAL_CSTRING("shadowroot"),
-                              docInfo, this, true);
+                              docInfo, nullptr, true);
   if (aError.Failed()) {
     delete protoBinding;
     return nullptr;
