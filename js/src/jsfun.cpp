@@ -1908,7 +1908,8 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
     if (isStarGenerator)
         ok = frontend::CompileStarGeneratorBody(cx, &fun, options, formals, srcBuf);
     else
-        ok = frontend::CompileFunctionBody(cx, &fun, options, formals, srcBuf);
+        ok = frontend::CompileFunctionBody(cx, &fun, options, formals, srcBuf,
+                                           /* enclosingScope = */ NullPtr());
     args.rval().setObject(*fun);
     return ok;
 }

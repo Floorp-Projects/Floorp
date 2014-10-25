@@ -3931,10 +3931,16 @@ CompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options,
 extern JS_PUBLIC_API(JSScript *)
 FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token);
 
+/*
+ * enclosingStaticScope is a static enclosing scope, if any (e.g. a
+ * StaticWithObject).  If the enclosing scope is the global scope, this must be
+ * null.
+ */
 extern JS_PUBLIC_API(bool)
 CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
                 const char *name, unsigned nargs, const char *const *argnames,
-                SourceBufferHolder &srcBuf, JS::MutableHandleFunction fun);
+                SourceBufferHolder &srcBuf, JS::MutableHandleFunction fun,
+                HandleObject enclosingStaticScope = NullPtr());
 
 extern JS_PUBLIC_API(bool)
 CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
@@ -3944,7 +3950,8 @@ CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOption
 extern JS_PUBLIC_API(bool)
 CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
                 const char *name, unsigned nargs, const char *const *argnames,
-                const char16_t *chars, size_t length, JS::MutableHandleFunction fun);
+                const char16_t *chars, size_t length, JS::MutableHandleFunction fun,
+                HandleObject enclosingStaticScope = NullPtr());
 
 } /* namespace JS */
 
