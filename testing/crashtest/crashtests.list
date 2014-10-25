@@ -9,7 +9,6 @@ include ../../content/base/crashtests/crashtests.list
 include ../../content/html/content/crashtests/crashtests.list
 include ../../content/html/document/crashtests/crashtests.list
 include ../../content/media/test/crashtests/crashtests.list
-include ../../content/svg/content/src/crashtests/crashtests.list
 
 include ../../docshell/base/crashtests/crashtests.list
 
@@ -23,6 +22,7 @@ include ../../dom/mathml/crashtests/crashtests.list
 include ../../dom/offline/crashtests/crashtests.list
 include ../../dom/plugins/test/crashtests/crashtests.list
 include ../../dom/smil/crashtests/crashtests.list
+include ../../dom/svg/crashtests/crashtests.list
 include ../../dom/workers/test/crashtests.list
 include ../../dom/xbl/crashtests/crashtests.list
 include ../../dom/xml/crashtests/crashtests.list

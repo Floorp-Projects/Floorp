@@ -74,6 +74,7 @@ DIRS += [
     'quota',
     'settings',
     'storage',
+    'svg',
     'mobilemessage',
     'time',
     'locales',
