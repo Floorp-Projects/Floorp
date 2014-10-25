@@ -15,10 +15,10 @@
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
   <data id="output">
-    <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Dromaius-novaehollandiae" label="(Dromaius-novaehollandiae) is a large bird"/>
-    <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Tyto-alba" label="(Tyto-alba) Barn Owl"/>
-    <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Corvus-corax" label="(Corvus-corax) Raven"/>
-    <label id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Chamaeleo-chamaelon" value="Chameleon"/>
+    <button id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Dromaius-novaehollandiae" label="(Dromaius-novaehollandiae) is a large bird"/>
+    <button id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Tyto-alba" label="(Tyto-alba) Barn Owl"/>
+    <button id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Corvus-corax" label="(Corvus-corax) Raven"/>
+    <label id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Chamaeleo-chamaelon" value="Chameleon"/>
   </data>
 
 <script src="templates_shared.js"/>

@@ -9,7 +9,6 @@ DIRS += [
     'html',
     'media',
     'svg',
-    'xul',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
