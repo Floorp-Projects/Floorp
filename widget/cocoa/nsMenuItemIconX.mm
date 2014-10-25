@@ -40,6 +40,7 @@
 #include "imgIContainer.h"
 #include "nsCocoaUtils.h"
 #include "nsContentUtils.h"
+#include "nsIContentPolicy.h"
 
 using mozilla::gfx::SourceSurface;
 using mozilla::RefPtr;
@@ -307,7 +308,8 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
 
   nsresult rv = loader->LoadImage(aIconURI, nullptr, nullptr, nullptr, loadGroup, this,
                                   nullptr, nsIRequest::LOAD_NORMAL, nullptr,
-                                  EmptyString(), getter_AddRefs(mIconRequest));
+                                  nsIContentPolicy::TYPE_IMAGE, EmptyString(),
+                                  getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv)) return rv;
 
   // We need to request the icon be decoded (bug 573583, bug 705516).

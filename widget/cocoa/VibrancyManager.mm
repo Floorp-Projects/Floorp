@@ -103,6 +103,23 @@ VibrancyManager::VibrancyFillColorForType(VibrancyType aType)
   return [NSColor whiteColor];
 }
 
+@interface NSView(FontSmoothingBackgroundColor)
+- (NSColor*)fontSmoothingBackgroundColor;
+@end
+
+NSColor*
+VibrancyManager::VibrancyFontSmoothingBackgroundColorForType(VibrancyType aType)
+{
+  const nsTArray<NSView*>& views =
+    mVibrantRegions.LookupOrAdd(uint32_t(aType))->effectViews;
+
+  if (!views.IsEmpty() &&
+      [views[0] respondsToSelector:@selector(fontSmoothingBackgroundColor)]) {
+    return [views[0] fontSmoothingBackgroundColor];
+  }
+  return [NSColor clearColor];
+}
+
 static void
 DrawRectNothing(id self, SEL _cmd, NSRect aRect)
 {
@@ -144,6 +161,7 @@ AppearanceForVibrancyType(VibrancyType aType)
   Class NSAppearanceClass = NSClassFromString(@"NSAppearance");
   switch (aType) {
     case VibrancyType::LIGHT:
+    case VibrancyType::TOOLTIP:
       return [NSAppearanceClass performSelector:@selector(appearanceNamed:)
                                      withObject:@"NSAppearanceNameVibrantLight"];
     case VibrancyType::DARK:
@@ -152,6 +170,18 @@ AppearanceForVibrancyType(VibrancyType aType)
   }
 }
 
+#if !defined(MAC_OS_X_VERSION_10_10) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_10
+enum {
+  NSVisualEffectStateFollowsWindowActiveState,
+  NSVisualEffectStateActive,
+  NSVisualEffectStateInactive
+};
+#endif
+
+@interface NSView(NSVisualEffectViewSetState)
+- (void)setState:(NSUInteger)state;
+@end
+
 NSView*
 VibrancyManager::CreateEffectView(VibrancyType aType, NSRect aRect)
 {
@@ -159,6 +189,11 @@ VibrancyManager::CreateEffectView(VibrancyType aType, NSRect aRect)
   NSView* effectView = [[EffectViewClass alloc] initWithFrame:aRect];
   [effectView performSelector:@selector(setAppearance:)
                    withObject:AppearanceForVibrancyType(aType)];
+  if (aType == VibrancyType::TOOLTIP) {
+    // Tooltip windows never become active, so we need to tell the vibrancy
+    // effect to look active regardless of window state.
+    [effectView setState:NSVisualEffectStateActive];
+  }
   return effectView;
 }
 

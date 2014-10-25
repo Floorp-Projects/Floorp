@@ -991,6 +991,23 @@ class AutoNewContext
     }
 };
 
+static void
+my_LargeAllocFailCallback(void *data)
+{
+    JSContext *cx = (JSContext*)data;
+    JSRuntime *rt = cx->runtime();
+
+    if (InParallelSection() || !cx->allowGC())
+        return;
+
+    MOZ_ASSERT(!rt->isHeapBusy());
+    MOZ_ASSERT(!rt->currentThreadHasExclusiveAccess());
+
+    JS::PrepareForFullGC(rt);
+    AutoKeepAtoms keepAtoms(cx->perThreadData);
+    rt->gc.gc(GC_NORMAL, JS::gcreason::SHARED_MEMORY_LIMIT);
+}
+
 static const uint32_t CacheEntry_SOURCE = 0;
 static const uint32_t CacheEntry_BYTECODE = 1;
 
@@ -2716,6 +2733,8 @@ WorkerMain(void *arg)
         return;
     }
 
+    JS::SetLargeAllocationFailureCallback(rt, my_LargeAllocFailCallback, (void*)cx);
+
     do {
         JSAutoRequest ar(cx);
 
@@ -2737,6 +2756,8 @@ WorkerMain(void *arg)
         RootedValue result(cx);
         JS_ExecuteScript(cx, global, script, &result);
     } while (0);
+
+    JS::SetLargeAllocationFailureCallback(rt, nullptr, nullptr);
 
     DestroyContext(cx, false);
     JS_DestroyRuntime(rt);
@@ -6133,6 +6154,8 @@ main(int argc, char **argv, char **envp)
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
 
+    JS::SetLargeAllocationFailureCallback(rt, my_LargeAllocFailCallback, (void*)cx);
+
     // Set some parameters to allow incremental GC in low memory conditions,
     // as is done for the browser, except in more-deterministic builds or when
     // disabled by command line options.
@@ -6152,6 +6175,8 @@ main(int argc, char **argv, char **envp)
     if (OOM_printAllocationCount)
         printf("OOM max count: %u\n", OOM_counter);
 #endif
+
+    JS::SetLargeAllocationFailureCallback(rt, nullptr, nullptr);
 
     DestroyContext(cx, true);
 

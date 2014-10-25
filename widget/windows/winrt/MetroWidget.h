@@ -209,7 +209,7 @@ public:
 
   // apzc controller related api
   void ApzcGetAllowedTouchBehavior(mozilla::WidgetInputEvent* aTransformedEvent, nsTArray<TouchBehaviorFlags>& aOutBehaviors);
-  void ApzcSetAllowedTouchBehavior(const ScrollableLayerGuid& aGuid, nsTArray<TouchBehaviorFlags>& aBehaviors);
+  void ApzcSetAllowedTouchBehavior(uint64_t aInputBlockId, nsTArray<TouchBehaviorFlags>& aBehaviors);
 
   // Hit test a point to see if an apzc would consume input there
   bool ApzHitTest(mozilla::ScreenIntPoint& pt);
@@ -218,11 +218,12 @@ public:
   void ApzTransformGeckoCoordinate(const mozilla::ScreenIntPoint& pt,
                                    mozilla::LayoutDeviceIntPoint* aRefPointOut);
   // send ContentRecievedTouch calls to the apz with appropriate preventDefault params
-  void ApzContentConsumingTouch(const ScrollableLayerGuid& aGuid);
-  void ApzContentIgnoringTouch(const ScrollableLayerGuid& aGuid);
+  void ApzContentConsumingTouch(uint64_t aInputBlockId);
+  void ApzContentIgnoringTouch(uint64_t aInputBlockId);
   // Input handling
   nsEventStatus ApzReceiveInputEvent(mozilla::WidgetInputEvent* aEvent,
-                                     ScrollableLayerGuid* aOutTargetGuid);
+                                     ScrollableLayerGuid* aOutTargetGuid,
+                                     uint64_t* aOutInputBlockId);
   // Callback for the APZController
   void SetApzPendingResponseFlusher(APZPendingResponseFlusher* aFlusher);
 
