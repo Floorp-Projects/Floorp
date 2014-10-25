@@ -82,7 +82,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/content/base/src',
-    '/content/html/content/src',
+    '/dom/html',
     '/ipc/chromium/src',
     'mediaresourcemanager',
 ]

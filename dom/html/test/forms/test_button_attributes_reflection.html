@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLButtonElement attributes reflection</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for HTMLButtonElement attributes reflection **/
+
+// .autofocus
+reflectBoolean({
+  element: document.createElement("button"),
+  attribute: "autofocus",
+});
+
+// .disabled
+reflectBoolean({
+  element: document.createElement("button"),
+  attribute: "disabled",
+});
+
+// TODO: formAction (URL).  But note that we currently reflect it weirdly; see
+// dom/html/test/test_bug607145.html
+
+// .formEnctype
+reflectLimitedEnumerated({
+  element: document.createElement("button"),
+  attribute: "formEnctype",
+  validValues: [
+    "application/x-www-form-urlencoded",
+    "multipart/form-data",
+    "text/plain",
+  ],
+  invalidValues: [ "text/html", "", "tulip" ],
+  defaultValue: {
+    invalid: "application/x-www-form-urlencoded",
+    missing: "",
+  }
+});
+
+// .formMethod
+reflectLimitedEnumerated({
+  element: document.createElement("button"),
+  attribute: "formMethod",
+  validValues: [ "get", "post" ],
+  invalidValues: [ "put", "", "tulip" ],
+  unsupportedValues: [ "dialog" ],
+  defaultValue: {
+    invalid: "get",
+    missing: "",
+  }
+});
+
+// .formNoValidate
+reflectBoolean({
+  element: document.createElement("button"),
+  attribute: "formNoValidate",
+});
+
+// .formTarget
+reflectString({
+  element: document.createElement("button"),
+  attribute: "formTarget",
+  otherValues: [ "_blank", "_self", "_parent", "_top" ],
+});
+
+// .name
+reflectString({
+  element: document.createElement("button"),
+  attribute: "name",
+  otherValues: [ "isindex", "_charset_" ]
+});
+
+// .type
+reflectLimitedEnumerated({
+  element: document.createElement("button"),
+  attribute: "type",
+  validValues: [ "submit", "reset", "button" ],
+  invalidValues: [ "this-is-probably-a-wrong-type", "", "tulip" ],
+  unsupportedValues: [ "menu" ],
+  defaultValue: "submit",
+});
+
+// .value
+reflectString({
+  element: document.createElement("button"),
+  attribute: "value",
+});
+
+// .willValidate
+ok("willValidate" in document.createElement("button"),
+   "willValidate should be an IDL attribute of the button element");
+is(typeof(document.createElement("button").willValidate), "boolean",
+   "button.willValidate should be a boolean");
+
+// .validity
+ok("validity" in document.createElement("button"),
+   "validity should be an IDL attribute of the button element");
+is(typeof(document.createElement("button").validity), "object",
+   "button.validity should be an object");
+ok(document.createElement("button").validity instanceof ValidityState,
+   "button.validity sohuld be an instance of ValidityState");
+
+// .validationMessage
+ok("validationMessage" in document.createElement("button"),
+   "validationMessage should be an IDL attribute of the button element");
+is(typeof(document.createElement("button").validationMessage), "string",
+   "button.validationMessage should be a string");
+
+// .checkValidity()
+ok("checkValidity" in document.createElement("button"),
+   "checkValidity() should be a method of the button element");
+is(typeof(document.createElement("button").checkValidity), "function",
+   "button.checkValidity should be a function");
+
+// .setCustomValidity()
+ok("setCustomValidity" in document.createElement("button"),
+   "setCustomValidity() should be a method of the button element");
+is(typeof(document.createElement("button").setCustomValidity), "function",
+   "button.setCustomValidity should be a function");
+
+// .labels
+todo("labels" in document.createElement("button"),
+     "button.labels isn't implemented yet");
+
+</script>
+</pre>
+</body>
+</html>

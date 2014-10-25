@@ -40,8 +40,8 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/caps',
     '/content/base/src',
-    '/content/html/document/src',
     '/dom/base',
+    '/dom/html',
     '/dom/xul',
     '/layout/style',
 ]

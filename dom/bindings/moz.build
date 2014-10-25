@@ -42,14 +42,13 @@ MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [
     '/content/base/src',
-    '/content/html/content/src',
-    '/content/html/document/src',
     '/dom/base',
     '/dom/battery',
     '/dom/bluetooth',
     '/dom/camera',
     '/dom/canvas',
     '/dom/geolocation',
+    '/dom/html',
     '/dom/indexedDB',
     '/dom/media/webaudio',
     '/dom/media/webspeech/recognition',

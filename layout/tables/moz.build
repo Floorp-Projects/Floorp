@@ -33,12 +33,12 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../../content/base/src',
-    '../../content/html/content/src',
     '../../intl/unicharutil/util',
     '../base',
     '../generic',
     '../style',
     '../xul',
+    '/dom/html',
 ]
 
 DEFINES['DEBUG_TABLE_STRATEGY_off'] = True

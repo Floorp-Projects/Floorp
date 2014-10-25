@@ -40,7 +40,7 @@ function testFile(file, contents, test) {
                          contentType: file.type || "application/octet-stream" }]);
     testHasRun();
   }
-  xhr.open("POST", "../../html/content/test/form_submit_server.sjs");
+  xhr.open("POST", "../../../dom/html/test/form_submit_server.sjs");
   var fd = new FormData;
   fd.append("hello", "world");
   fd.append("myfile", file);

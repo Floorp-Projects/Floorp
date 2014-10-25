@@ -1,0 +1,236 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=765772
+-->
+<head>
+  <title>Test for Bug 765772</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug 765772</a>
+<p id="display"></p>
+<iframe name="submit_frame" style="visibility: hidden;"></iframe>
+<div id="content">
+  <form id='f' target="submit_frame" action="foo">
+    <input name=i id="i" step='any' >
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+/*
+ * This test checks that when a user types in some input types, it will not be
+ * in a state where the value will be un-sanitized and usable (by a script).
+ */
+
+var input = document.getElementById('i');
+var form = document.getElementById('f');
+var submitFrame = document.getElementsByTagName('iframe')[0];
+var testData = [];
+var gCurrentTest = null;
+var gValidData = [];
+var gInvalidData = [];
+
+function submitForm() {
+  form.submit();
+}
+
+function sendKeyEventToSubmitForm() {
+  sendKey("return");
+}
+
+function urlify(aStr) {
+  return aStr.replace(':', '%3A', 'g');
+}
+
+function runTestsForNextInputType()
+{
+  try {
+    testRunner.next();
+  } catch (e) {
+    if (e.toString() == '[object StopIteration]') {
+      SimpleTest.finish();
+    } else {
+      throw StopIteration;
+    }
+  }
+}
+
+function checkValueSubmittedIsValid()
+{
+  is(frames['submit_frame'].location.href,
+     'http://mochi.test:8888/tests/dom/html/test/forms/foo?i='
+     + urlify(gValidData[valueIndex++]),
+     "The submitted value should not have been sanitized");
+
+  input.value = "";
+
+  if (valueIndex >= gValidData.length) {
+    if (gCurrentTest.canHaveBadInputValidityState) {
+      // Don't run the submission tests on the invalid input if submission
+      // will be blocked by invalid input.
+      runTestsForNextInputType();
+      return;
+    }
+    valueIndex = 0;
+    submitFrame.onload = checkValueSubmittedIsInvalid;
+    testData = gInvalidData;
+  }
+  testSubmissions();
+}
+
+function checkValueSubmittedIsInvalid()
+{
+  is(frames['submit_frame'].location.href,
+     'http://mochi.test:8888/tests/dom/html/test/forms/foo?i=',
+     "The submitted value should have been sanitized");
+
+  valueIndex++;
+  input.value = "";
+
+  if (valueIndex >= gInvalidData.length) {
+    if (submitMethod == sendKeyEventToSubmitForm) {
+      runTestsForNextInputType();
+      return;
+    }
+    valueIndex = 0;
+    submitMethod = sendKeyEventToSubmitForm;
+    submitFrame.onload = checkValueSubmittedIsValid;
+    testData = gValidData;
+  }
+  testSubmissions();
+}
+
+function testSubmissions() {
+  input.focus();
+  sendString(testData[valueIndex]);
+  submitMethod();
+}
+
+var valueIndex = 0;
+var submitMethod = submitForm;
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest()
+{
+  var data = [
+    {
+      type: 'number',
+      canHaveBadInputValidityState: true,
+      validData: [
+        "42",
+        "-42", // should work for negative values
+        "42.1234",
+        "123.123456789123",  // double precision
+        "1e2", // e should be usable
+        "2e1",
+        "1e-1", // value after e can be negative
+        "1E2", // E can be used instead of e
+      ],
+      invalidData: [
+        "e",
+        "e2",
+        "1e0.1",
+        "foo",
+        "42,13", // comma can't be used as a decimal separator
+      ]
+    },
+    {
+      type: 'date',
+      validData: [
+        '0001-01-01',
+        '2012-12-21',
+        '2013-01-28',
+        '100000-01-01',
+      ],
+      invalidData: [
+        '1-01-01',
+        'a',
+        '-',
+        '2012-01',
+        '2013-01-1',
+        '1011-23-21',
+        '1000-12-99',
+      ]
+    },
+    {
+      type: 'time',
+      validData: [
+        '00:00',
+        '09:09:00',
+        '08:23:23.1',
+        '21:43:56.12',
+        '23:12:45.100',
+      ],
+      invalidData: [
+        '00:',
+        '00:00:',
+        '25:00',
+        '-00:00',
+        '00:00:00.',
+        '00:60',
+        '10:58:99',
+        ':19:10',
+        '23:08:09.1012',
+      ]
+    },
+    { type: 'week', todo: true },
+    { type: 'month', todo: true },
+    { type: 'datetime', todo: true },
+    { type: 'datetime-local', todo: true },
+  ];
+
+  for (test of data) {
+    gCurrentTest = test;
+
+    if (test.todo) {
+      input.type = test.type;
+      todo_is(input.type, test.type, test.type + " is not implemented");
+      continue;
+    }
+
+    input.type = test.type;
+    gValidData = test.validData;
+    gInvalidData = test.invalidData;
+
+    for (data of gValidData) {
+      input.value = "";
+      input.focus();
+      sendString(data);
+      input.blur();
+      is(input.value, data, "valid user input should not be sanitized");
+    }
+
+    for (data of gInvalidData) {
+      input.value = "";
+      input.focus();
+      sendString(data);
+      input.blur();
+      is(input.value, "", "invalid user input should be sanitized");
+    }
+
+    input.value = '';
+
+    testData = gValidData;
+    valueIndex = 0;
+    submitFrame.onload = checkValueSubmittedIsValid;
+    testSubmissions();
+    yield undefined;
+  }
+}
+
+var testRunner = runTest();
+
+addLoadEvent(function () {
+  testRunner.next();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -121,7 +121,6 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../../content/base/src',
-    '../../content/html/content/src',
     '../../dom/base',
     '../../dom/plugins/base',
     '../base',
@@ -130,6 +129,7 @@ LOCAL_INCLUDES += [
     '../svg',
     '../tables',
     '../xul',
+    '/dom/html',
     '/dom/xul',
 ]
 

@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=392567
+-->
+<head>
+  <title>Test for Bug 392567</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=392567">Mozilla Bug 392567</a>
+<p id="display"><iframe name="testFrame" id="testFrame" style="visibility: hidden;"></iframe></p>
+<div id="content" style="display: none">
+  <form name="testForm" target="testFrame">
+    <input type="text" name="key" />
+  </form>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 392567 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests()
+{
+  if (window.location.search.match(/\?key=value/)) {
+    return;
+  }
+
+  var dataUrl = "http://mochi.test:8888/tests/dom/html/test/bug392567.jar";
+  var jarUrl = "jar:" + dataUrl + "!/index.html";
+  var httpUrl = location.href.replace(/\.html.*/, "_404");
+  var previousDir = location.href.replace(/test\/[^\/]*$/, "");
+  var documentURL = location.href.replace(/\.html.*/, "\.html");
+
+  var form = document.forms.testForm;
+  var frame = frames.testFrame;
+  document.getElementById("testFrame").onload = processTestResult;
+
+  // List of tests to run, each test consists of form action URL and expected result URL
+  var tests = [
+    [jarUrl, jarUrl + "?$PARAMS"],
+    [jarUrl + "?jarTest1=jarTest2", jarUrl + "?$PARAMS"],
+    [jarUrl + "?jarTest3=jarTest4#jarTest5", jarUrl + "?$PARAMS#jarTest5"],
+    ["data:text/html,<html></html>", "data:text/html,<html></html>?$PARAMS"],
+    ["data:text/html,<html>How%20about%20this?</html>", "data:text/html,<html>How%20about%20this?$PARAMS"],
+    [httpUrl, httpUrl + "?$PARAMS"],
+    [httpUrl + "?httpTest1=httpTest2", httpUrl + "?$PARAMS"],
+    [httpUrl + "?httpTest3=httpTest4#httpTest5", httpUrl + "?$PARAMS#httpTest5"],
+    ["", documentURL + "?$PARAMS"],
+    [" ", documentURL + "?$PARAMS"],
+    ["../", previousDir + "?$PARAMS"],
+  ];
+
+  var currentTest = -1;
+
+  runNextTest();
+
+  function runNextTest() {
+    currentTest++;
+    if (currentTest >= tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    form.setAttribute("action", tests[currentTest][0]);
+    form.key.value = "value" + currentTest;
+    form.submit();
+  }
+
+  function processTestResult() {
+    var expected = tests[currentTest][1].replace(/\$PARAMS/, "key=value" + currentTest);
+    is(frame.location.href, expected, "Submitting to " + tests[currentTest][0]);
+
+    setTimeout(runNextTest, 0);
+  }
+}
+
+addLoadEvent(runTests);
+
+</script>
+</pre>
+</body>
+</html>

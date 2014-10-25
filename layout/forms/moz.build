@@ -45,12 +45,12 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../../content/base/src',
-    '../../content/html/content/src',
     '../../editor/libeditor',
     '../../editor/txmgr',
     '../base',
     '../generic',
     '../xul',
+    '/dom/html',
 ]
 
 if CONFIG['ENABLE_INTL_API']:
