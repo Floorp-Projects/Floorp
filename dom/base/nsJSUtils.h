@@ -56,7 +56,7 @@ public:
   static void ReportPendingException(JSContext *aContext);
 
   static nsresult CompileFunction(mozilla::dom::AutoJSAPI& jsapi,
-                                  JS::Handle<JSObject*> aTarget,
+                                  JS::AutoObjectVector& aScopeChain,
                                   JS::CompileOptions& aOptions,
                                   const nsACString& aName,
                                   uint32_t aArgCount,
