@@ -37,7 +37,7 @@ STEPS TO UPDATE MOZILLA TO NEWER PYWEBSOCKET VERSION
 
 - Test and make sure the code works:
 
-    make mochitest-plain TEST_PATH=content/base/test/test_websocket.html
+    make mochitest-plain TEST_PATH=dom/base/test/test_websocket.html
 
 - If this doesn't take a look at the pywebsocket server log,
   $OBJDIR/_tests/testing/mochitest/websock.log

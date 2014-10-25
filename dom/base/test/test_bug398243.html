@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=398243
+-->
+<head>
+  <title>Test for Bug 398243</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=398243">Mozilla Bug 398243</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+ <iframe id="testframe" src="http://mochi.test:8888/tests/dom/base/test/formReset.html"></iframe>  
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 398243 **/
+const enteredText1 = "New value for text input";
+const enteredText2 = "New value for texarea";
+SimpleTest.waitForExplicitFinish();
+
+function afterLoad() {
+    var iframeDoc = $("testframe").contentDocument;
+    /* change all the form controls */
+    iframeDoc.getElementById("checkbox1").checked = true;
+    iframeDoc.getElementById("checkbox2").checked = false;
+    iframeDoc.getElementById("textinput").value = enteredText1;
+    iframeDoc.getElementById("textarea").value = enteredText2;
+
+    /* Reload the page */
+    $("testframe").setAttribute("onload", "afterReload()");
+    iframeDoc.location.reload();
+}
+
+addLoadEvent(afterLoad);
+
+function afterReload() {
+    var iframeDoc = $("testframe").contentDocument;
+    is(iframeDoc.getElementById("checkbox1").checked, true,
+       "checkbox #1 state preserved");
+    is(iframeDoc.getElementById("checkbox2").checked, false,
+       "checkbox #2 state preserved");
+    is(iframeDoc.getElementById("textinput").value, enteredText1,
+       "text preserved in <input>");
+    is(iframeDoc.getElementById("textarea").value, enteredText2,
+       "text preserved in <textarea>");
+
+    SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
+

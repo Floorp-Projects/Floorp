@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=455629
+-->
+<head>
+  <title>Test for Bug 455629</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=455629">Mozilla Bug 455629</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 455629 **/
+SimpleTest.waitForExplicitFinish();
+
+var done = 0;
+function doTest(name) {
+    var elem = $(name);
+    var doc = elem.getSVGDocument();
+    try {
+        doc.foopy = 42;
+        fail("Able to set cross origin property!");
+    } catch (e) {
+        ok(true, "unable to set non-allAccess property cross origin");
+    }
+
+    if (elem instanceof HTMLObjectElement) {
+        doc = elem.contentDocument;
+        try {
+            doc.foopy = 42;
+            fail("Able to set cross origin property!");
+        } catch (e) {
+            ok(true, "unable to set non-allAccess property cross origin");
+        }
+    }
+
+    if (++done == 2) {
+        SimpleTest.finish();
+    }
+}
+</script>
+
+<object id="obj"
+        type="image/svg+xml"
+        onload="doTest('obj')"
+        data="http://example.org/tests/dom/base/test/bug455629-helper.svg">
+</object>
+
+<embed id="emb"
+       type="image/svg+xml"
+       onload="doTest('emb')"
+       src="http://example.org/tests/dom/base/test/bug455629-helper.svg">
+</embed>
+
+</pre>
+</body>
+</html>

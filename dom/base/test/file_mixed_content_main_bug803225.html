@@ -1,0 +1,164 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests for Mixed Content Blocker - Allowed Protocols
+https://bugzilla.mozilla.org/show_bug.cgi?id=803225
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Bug 62178</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<div id="testContent"></div>
+
+<!-- Test additional schemes the Mixed Content Blocker should not block
+     "about" protocol URIs that are URI_SAFE_FOR_UNTRUSTED_CONTENT (moz-safe-about; see nsAboutProtocolHandler::NewURI
+     "data",
+     "javascript",
+     "mailto",
+     "resource",
+     "moz-icon",
+     "wss"
+-->
+
+<script>
+
+  //For tests that require setTimeout, set the timeout interval
+  var TIMEOUT_INTERVAL = 100;
+
+  var testContent = document.getElementById("testContent");
+
+  // Test 1 & 2: about and javascript protcols within an iframe
+  var data = Array(2,2);
+  var protocols = [
+                    ["about", ""], //When no source is specified, the frame gets a source of about:blank
+                    ["javascript", "javascript:document.open();document.write='<h1>SUCCESS</h1>';document.close();"],
+                  ];
+  for(var i=0; i < protocols.length; i++)
+  {
+    var generic_frame = document.createElement("iframe");
+    generic_frame.src = protocols[i][1];
+    generic_frame.name="generic_protocol";
+
+    generic_frame.onload = function(i) {
+      data = {"test": protocols[i][0], "msg": "resource with " + protocols[i][0] + " protocol loaded"};
+      parent.postMessage(data, "http://mochi.test:8888");
+    }.bind(generic_frame, i)
+
+    generic_frame.onerror = function(i) {
+      data = {"test": protocols[i][0], "msg": "resource with " + protocols[i][0] + " protocol did not load"};
+      parent.postMessage(data, "http://mochi.test:8888");
+    }.bind(generic_frame, i);
+
+    testContent.appendChild(generic_frame, i);
+  }
+
+  // Test 3: for resource within a script tag
+  // Note: the script we load throws an exception, but the script element's
+  // onload listener is called after we successfully fetch the script,
+  // independently of whether it throws an exception.
+  var resource_script=document.createElement("script");
+  resource_script.src = "resource://gre/modules/XPCOMUtils.jsm";
+  resource_script.name = "resource_protocol";
+  resource_script.onload = function() {
+    parent.postMessage({"test": "resource", "msg": "resource with resource protocol loaded"}, "http://mochi.test:8888");
+  }
+  resource_script.onerror = function() {
+    parent.postMessage({"test": "resource", "msg": "resource with resource protocol did not load"}, "http://mochi.test:8888");
+  }
+
+  testContent.appendChild(resource_script);
+
+  // Test 4: moz-icon within an img tag
+  var image=document.createElement("img");
+  image.src = "moz-icon://dummy.exe?size=16";
+  image.onload = function() {
+    parent.postMessage({"test": "mozicon", "msg": "resource with mozicon protocol loaded"}, "http://mochi.test:8888");
+  }
+  image.onerror = function() {
+    parent.postMessage({"test": "mozicon", "msg": "resource with mozicon protocol did not load"}, "http://mochi.test:8888");
+  }
+  // We don't need to append the image to the document. Doing so causes the image test to run twice.
+
+  // Test 5: about unsafe protocol within an iframe
+  var unsafe_about_frame = document.createElement("iframe");
+  unsafe_about_frame.src = "about:config";
+  unsafe_about_frame.name = "unsafe_about_protocol";
+  unsafe_about_frame.onload = function() {
+    parent.postMessage({"test": "unsafe_about", "msg": "resource with unsafe about protocol loaded"}, "http://mochi.test:8888");
+  }
+  unsafe_about_frame.onerror = function() {
+    parent.postMessage({"test": "unsafe_about", "msg": "resource with unsafe about protocol did not load"}, "http://mochi.test:8888");
+  }
+  testContent.appendChild(unsafe_about_frame);
+
+  // Test 6: data protocol within a script tag
+  var x = 2;
+  var newscript = document.createElement("script");
+  newscript.src= "data:text/javascript,var x = 4;";
+  newscript.onload = function() {
+    parent.postMessage({"test": "data_protocol", "msg": "resource with data protocol loaded"}, "http://mochi.test:8888");
+  }
+  newscript.onerror = function() {
+    parent.postMessage({"test": "data_protocol", "msg": "resource with data protocol did not load"}, "http://mochi.test:8888");
+  }
+  testContent.appendChild(newscript);
+
+  // Test 7: mailto protocol
+  var ioService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"].
+     getService(SpecialPowers.Ci.nsIIOService);
+
+  var webHandler = SpecialPowers.Cc["@mozilla.org/uriloader/web-handler-app;1"].
+                   createInstance(SpecialPowers.Ci.nsIWebHandlerApp);
+  webHandler.name = "Web Handler";
+  webHandler.uriTemplate = "http://example.com/tests/dom/base/test/bug803225_test_mailto.html?s=%";
+
+  var uri = ioService.newURI("mailto:foo@bar.com", null, null);
+  webHandler.launchWithURI(uri);
+
+  var mailto = false;
+
+  // listen for a messages from a new window
+  var os = SpecialPowers.Cc["@mozilla.org/observer-service;1"].
+     getService(SpecialPowers.Components.interfaces.nsIObserverService);
+  var observer = {
+    observe: function(subject, topic, data) {
+      if(topic == "content-document-global-created" && data =="http://example.com") {
+         parent.postMessage({"test": "mailto", "msg": "resource with mailto protocol loaded"}, "http://mochi.test:8888");
+         os.removeObserver(observer, "content-document-global-created");
+         mailto = true;
+      }
+    }
+  }
+  os.addObserver(observer, "content-document-global-created", false);
+
+  function mailtoProtocolStatus() {
+    if(!mailto) {
+      //There is no onerror event associated with the WebHandler, and hence we need a setTimeout to check the status
+      setTimeout(mailtoProtocolStatus, TIMEOUT_INTERVAL);
+    }
+  }
+
+  mailtoProtocolStatus();
+
+  // Test 8: wss protocol
+  var wss;
+  wss = new WebSocket("wss://example.com/tests/dom/base/test/file_mixed_content_main_bug803225_websocket");
+
+  var status_wss = "started";
+  wss.onopen = function(e) {
+     status_wss = "opened";
+     wss.close();
+  }
+  wss.onclose = function(e) {
+    if(status_wss == "opened") {
+      parent.postMessage({"test": "wss", "msg": "resource with wss protocol loaded"}, "http://mochi.test:8888");
+    } else {
+      parent.postMessage({"test": "wss", "msg": "resource with wss protocol did not load"}, "http://mochi.test:8888");
+    }
+  }
+
+</script>
+</body>
+</html>

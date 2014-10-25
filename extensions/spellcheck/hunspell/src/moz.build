@@ -34,7 +34,7 @@ else:
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '/content/base/src',
+    '/dom/base',
     '/editor/libeditor',
     '/extensions/spellcheck/src',
 ]

@@ -221,7 +221,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
     '/caps',
-    '/content/base/src',
     '/docshell/base',
     '/dom/base',
     '/dom/canvas',

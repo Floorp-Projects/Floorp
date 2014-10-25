@@ -1,7 +1,7 @@
 {
 "runtests": {},
 "excludetests": {
-  "content/base/test/test_copypaste.xul": "bug 904183",
+  "dom/base/test/test_copypaste.xul": "bug 904183",
   "dom/browser-element/mochitest/test_browserElement_NoWhitelist.html": "x86 only bug 936226",
   "dom/browser-element/mochitest/test_browserElement_oop_SecurityChange.html": "TIMED_OUT, bug 766586",
   "dom/canvas/test/test_2d.composite.image.source-out.html": "x86 only bug 913662",

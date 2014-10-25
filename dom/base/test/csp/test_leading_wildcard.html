@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1032303 - CSP - Keep FULL STOP when matching *.foo.com to disallow loads from foo.com</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="visibility: hidden">
+    <iframe style="width:100%;" id="testframe"></iframe>
+  </div>
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ *   We load a page with a CSP that allows scripts to be loaded from *.example.com.
+ *   On that page we try to load two scripts:
+ *     a) [allowed] leading_wildcard_allowed.js which is served from test1.example.com
+ *     b) [blocked] leading_wildcard_blocked.js which is served from example.com
+ *
+ *   We verify that only the allowed script executes by registering observers which listen
+ *   to CSP violations and http-notifications. Please note that both scripts do *not* exist
+ *   in the file system. The test just verifies that CSP blocks correctly.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+var policy =  "default-src 'none' script-src *.example.com";
+var testsExecuted = 0;
+
+function finishTest() {
+  if (++testsExecuted < 2) {
+    return;
+  }
+  window.wildCardExaminer.remove();
+  SimpleTest.finish();
+}
+
+// We use the examiner to identify requests that hit the wire and requests
+// that are blocked by CSP.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+
+   // allowed requests
+   if (topic === "specialpowers-http-notify-request") {
+      if (data.contains("leading_wildcard_allowed.js")) {
+        ok (true, "CSP should allow file_leading_wildcard_allowed.js!");
+        finishTest();
+      }
+      if (data.contains("leading_wildcard_blocked.js")) {
+        ok(false, "CSP should not allow file_leading_wildcard_blocked.js!");
+        finishTest();
+      }
+    }
+
+    // blocked requests
+    if (topic === "csp-on-violate-policy") {
+      var asciiSpec = SpecialPowers.getPrivilegedProps(
+                        SpecialPowers.do_QueryInterface(subject, "nsIURI"),
+                        "asciiSpec");
+
+      if (asciiSpec.contains("leading_wildcard_allowed.js")) {
+        ok (false, "CSP should not block file_leading_wildcard_allowed.js!");
+        finishTest();
+      }
+      if (asciiSpec.contains("leading_wildcard_blocked.js")) {
+        ok (true, "CSP should block file_leading_wildcard_blocked.js!");
+        finishTest();
+      }
+    }
+  },
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+  }
+}
+window.wildCardExaminer = new examiner();
+
+function runTest() {
+  var src = "file_csp_testserver.sjs";
+  // append the file that should be served
+  src += "?file=" + escape("tests/dom/base/test/csp/file_leading_wildcard.html");
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(policy);
+
+  document.getElementById("testframe").src = src;
+}
+
+// start running the tests
+runTest();
+
+</script>
+</body>
+</html>

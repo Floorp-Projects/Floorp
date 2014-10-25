@@ -235,7 +235,6 @@ MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [
     '/caps',
-    '/content/base/src',
     '/dom/base',
     '/dom/camera',
     '/layout/generic',

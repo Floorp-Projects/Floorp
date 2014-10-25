@@ -49,7 +49,6 @@ UNIFIED_SOURCES += [
 MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [
-    '/content/base/src',
     '/dom/base',
     '/dom/xul',
     '/layout/xul/tree/',

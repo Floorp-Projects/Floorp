@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=601803
+-->
+<head>
+  <title>Test for Bug 601803</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=601803">Mozilla Bug 601803</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="frame"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 601803 **/
+SimpleTest.waitForExplicitFinish();
+
+window.onmessage = function (event) {
+    is(event.data, false, "Shouldn't throw when adopting a node cross-compartment");
+    SimpleTest.finish();
+}
+
+document.getElementById("frame").src = "http://example.org/tests/dom/base/test/file_bug601803a.html";
+
+
+
+</script>
+</pre>
+</body>
+</html>

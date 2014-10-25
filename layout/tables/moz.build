@@ -32,12 +32,12 @@ MSVC_ENABLE_PGO = True
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '../../content/base/src',
     '../../intl/unicharutil/util',
     '../base',
     '../generic',
     '../style',
     '../xul',
+    '/dom/base',
     '/dom/html',
 ]
 

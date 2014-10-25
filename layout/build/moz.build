@@ -37,7 +37,6 @@ LOCAL_INCLUDES += [
     '../tables',
     '../xul',
     '/caps',
-    '/content/base/src',
     '/docshell/base',
     '/dom/audiochannel',
     '/dom/base',

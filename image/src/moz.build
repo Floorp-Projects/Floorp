@@ -55,7 +55,7 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     # Because SVGDocumentWrapper.cpp includes "mozilla/dom/SVGSVGElement.h"
-    '/content/base/src',
+    '/dom/base',
     '/dom/svg',
     # We need to instantiate the decoders
     '/image/decoders',

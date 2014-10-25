@@ -31,7 +31,7 @@ LOCAL_INCLUDES += [
     '/accessible/ipc',
     '/accessible/xpcom',
     '/accessible/xul',
-    '/content/base/src',
+    '/dom/base',
     '/layout/generic',
     '/layout/xul',
 ]

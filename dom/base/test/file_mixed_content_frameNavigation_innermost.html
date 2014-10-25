@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<div id="content"></div>
+<script>
+  // get the case from the query string
+  var type = location.search.substring(1);
+
+  switch (type) {
+    case "insecurePage_navigate_child":
+      document.getElementById("content").innerHTML =
+        '<a href="http://example.com/tests/dom/base/test/file_mixed_content_frameNavigation_innermost.html?insecurePage_navigate_child_response" id="link">Testing\<\/a>';
+      document.getElementById("link").click();
+      break;
+
+    case "insecurePage_navigate_child_response":
+      parent.parent.postMessage({"test": "insecurePage_navigate_child", "msg": "navigated to insecure iframe on insecure page"}, "http://mochi.test:8888");
+      document.getElementById("content").innerHTML = "Navigated from secure to insecure frame on an insecure page";
+      break;
+
+    case "insecurePage_navigate_grandchild":
+      document.getElementById("content").innerHTML =
+        '<a href="http://example.com/tests/dom/base/test/file_mixed_content_frameNavigation_innermost.html?insecurePage_navigate_grandchild_response" id="link">Testing\<\/a>';
+      document.getElementById("link").click();
+      break;
+
+    case "insecurePage_navigate_grandchild_response":
+      parent.parent.parent.postMessage({"test": "insecurePage_navigate_grandchild", "msg": "navigated to insecure grandchild iframe on insecure page"}, "http://mochi.test:8888");
+      document.getElementById("content").innerHTML = "Navigated from secure to insecure grandchild frame on an insecure page";
+      break;
+
+    case "securePage_navigate_child":
+      document.getElementById("content").innerHTML =
+        '<a href="http://example.com/tests/dom/base/test/file_mixed_content_frameNavigation_innermost.html?securePage_navigate_child_response" id="link">Testing\<\/a>';
+      document.getElementById("link").click();
+      break;
+
+    case "securePage_navigate_child_response":
+      document.getElementById("content").innerHTML = "<p>Navigated from secure to insecure frame on a secure page</p>";
+      parent.parent.postMessage({"test": "securePage_navigate_child", "msg": "navigated to insecure iframe on secure page"}, "http://mochi.test:8888");
+      break;
+
+    case "securePage_navigate_grandchild":
+      document.getElementById("content").innerHTML=
+        '<a href="http://example.com/tests/dom/base/test/file_mixed_content_frameNavigation_innermost.html?securePage_navigate_grandchild_response" id="link">Testing\<\/a>';
+      document.getElementById("link").click();
+      break;
+
+    case "securePage_navigate_grandchild_response":
+      dump("\nNavigated to grandchild iframe from secure location to insecure location.  About to post message to the top page.\n");
+      parent.parent.parent.postMessage({"test": "securePage_navigate_grandchild", "msg": "navigated to insecure grandchild iframe on secure page"}, "http://mochi.test:8888");
+      dump("\npostMessage to parent attempted.\n");
+      document.getElementById("content").innerHTML = "<p>Navigated from secure to insecure grandchild frame on a secure page</p>";
+      break;
+
+    case "blankTarget":
+      window.close();
+      break;
+
+    default:
+      document.getElementById("content").innerHTML = "Hello";
+      break;
+   }
+
+</script>
+</body>
+</html>

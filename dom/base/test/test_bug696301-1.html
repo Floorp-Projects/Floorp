@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=696301
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 696301</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=696301">Mozilla Bug 696301</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+var errorFired = false;
+var global = "";
+window.onerror = function(message, uri, line) {
+  is(message, "Script error.", "Should have empty error message");
+  is(uri,
+     "http://example.com/tests/dom/base/test/bug696301-script-1.js",
+     "Should have correct script URI");
+  is(line, 0, "Shouldn't have a line here");
+  errorFired = true;
+}
+</script>
+<script src="http://example.com/tests/dom/base/test/bug696301-script-1.js"></script>
+<script>
+  is(errorFired, true, "Should have error in different origin script");
+  is(global, "ran", "Different origin script should have run");
+</script>
+
+<script type="application/javascript">
+errorFired = false;
+global = "";
+window.onerror = function(message, uri, line) {
+  is(message, "ReferenceError: c is not defined", "Should have correct error message");
+  is(uri,
+     "http://example.com/tests/dom/base/test/bug696301-script-1.js",
+     "Should also have correct script URI");
+  is(line, 3, "Should have a line here");
+  errorFired = true;
+}
+</script>
+<script src="http://example.com/tests/dom/base/test/bug696301-script-1.js"
+        crossorigin></script>
+<script>
+  is(errorFired, true, "Should have error in different origin script with CORS");
+  is(global, "ran", "Different origin script with CORS should have run");
+</script>
+
+<script type="application/javascript">
+errorFired = false;
+global = "";
+window.addEventListener("error", function(e) {
+  is(Object.getPrototypeOf(e), Event.prototype,
+     "Object prototype should be Event");
+  var externalScripts = document.querySelectorAll("script[src]");
+  is(e.target, externalScripts[externalScripts.length - 1],
+     "Event's target should be the right <script>");
+  errorFired = true;
+}, true);
+</script>
+<script src="http://example.com/tests/dom/base/test/bug696301-script-2.js"
+        crossorigin></script>
+<script>
+  is(errorFired, true,
+     "Should have error when different origin script fails CORS check");
+  is(global, "", "Different origin script that fails CORS should not have run");
+</script>
+
+</pre>
+</body>
+</html>

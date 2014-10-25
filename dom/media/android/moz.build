@@ -20,7 +20,7 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '/content/base/src',
+    '/dom/base',
     '/dom/html',
 ]
 
