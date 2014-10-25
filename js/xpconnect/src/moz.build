@@ -62,8 +62,6 @@ LOCAL_INCLUDES += [
     '../loader',
     '../wrappers',
     '/caps',
-    '/content/base/public',
-    '/content/base/src',
     '/dom/base',
     '/dom/html',
     '/dom/svg',

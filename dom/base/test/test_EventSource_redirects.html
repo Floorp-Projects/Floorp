@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=716841
+-->
+<head>
+  <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+  <title>Test for Bug 338583</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+</head>
+<body bgColor=white>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=716841">Mozilla Bug 716841</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  function doTest(test_id) {
+    oldPrefVal = SpecialPowers.getBoolPref("dom.server-events.enabled");
+    SpecialPowers.setBoolPref("dom.server-events.enabled", true);
+
+    ok(true, "here we go");
+
+    source = new EventSource("eventsource_redirect.resource");
+    ok(source.url == "http://mochi.test:8888/tests/dom/base/test/eventsource_redirect.resource", "Test failed.");
+    ok(source.readyState == 0 || source.readyState == 1, "Test failed.");
+
+    source.onopen = function (event) {
+      ok(true, "opened");
+    };
+
+    source.onmessage = function (event) {
+      ok(true, "event received");
+      source.close();
+      SimpleTest.finish();
+    };
+
+    source.onerror = function (event) {
+      ok(false, "received onError: " + event);
+      source.close();
+      SimpleTest.finish();
+    };
+
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(doTest);
+
+</script>
+</pre>
+
+</body>
+</html>
+

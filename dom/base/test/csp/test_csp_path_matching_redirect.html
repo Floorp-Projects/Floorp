@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 808292 - Implement path-level host-source matching to CSP (redirects)</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="visibility: hidden">
+    <iframe style="width:100%;" id="testframe"></iframe>
+  </div>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * First, we try to load a script where the *path* does not match.
+ * Second, we try to load a script which is allowed by the CSPs
+ * script-src directive. The script then gets redirected to
+ * an URL where the host matches, but the path wouldn't.
+ * Since 'paths' should not be taken into account after redirects,
+ * that load should succeed. We are using a similar test setup
+ * as described in the spec, see:
+ * http://www.w3.org/TR/CSP11/#source-list-paths-and-redirects
+ */
+
+var policy = "script-src http://example.com http://test1.example.com/CSPAllowsScriptsInThatFolder";
+
+var tests = [
+  {
+    // the script in file_csp_path_matching.html
+    // <script src="http://test1.example.com/tests/dom/base/..">
+    // is not within the whitelisted path by the csp-policy
+    // hence the script is 'blocked' by CSP.
+    expected: "blocked",
+    uri: "tests/dom/base/test/csp/file_csp_path_matching.html"
+  },
+  {
+    // the script in file_csp_path_matching_redirect.html
+    // <script src="http://example.com/tests/dom/..">
+    // gets redirected to: http://test1.example.com/tests/dom
+    // where after the redirect the path of the policy is not enforced
+    // anymore and hence execution of the script is 'allowed'.
+    expected: "allowed",
+    uri: "tests/dom/base/test/csp/file_csp_path_matching_redirect.html"
+  },
+];
+
+var counter = 0;
+var curTest;
+
+function checkResult() {
+  try {
+    document.getElementById("testframe").removeEventListener('load', checkResult, false);
+    var testframe = document.getElementById("testframe");
+    var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
+    is(divcontent, curTest.expected, "should be blocked in test " + (counter - 1) + "!");
+  }
+  catch (e) {
+    ok(false, "ERROR: could not access content in test " + (counter - 1) + "!");
+  }
+  loadNextTest();
+}
+
+function loadNextTest() {
+  if (counter == tests.length) {
+    SimpleTest.finish();
+  }
+  else {
+    curTest = tests[counter++];
+    var src = "file_csp_testserver.sjs";
+    // append the file that should be served
+    src += "?file=" + escape(curTest.uri);
+    // append the CSP that should be used to serve the file
+    src += "&csp=" + escape(policy);
+
+    document.getElementById("testframe").addEventListener("load", checkResult, false);
+    document.getElementById("testframe").src = src;
+  }
+}
+
+loadNextTest();
+
+</script>
+</body>
+</html>

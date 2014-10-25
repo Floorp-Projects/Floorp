@@ -41,5 +41,5 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../../base/src',
-    '/content/base/src',
+    '/dom/base',
 ]
