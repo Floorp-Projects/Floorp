@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 828903</title>
+<script>
+function reload() {
+  this.location.reload();
+}
+// Run the test for 2 seconds
+setTimeout(function() {
+    document.documentElement.removeChild(document.body);
+    document.documentElement.className = "";
+  }, 2000);
+</script>
+</head>
+<body onload="document.body.getBoundingClientRect()">
+
+<iframe onload="this.contentWindow.setTimeout(reload,1113)" src="828903-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1233)" src="828903-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1313)" src="828903-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1433)" src="828903-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1113)" src="828903-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1233)" src="828903-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1313)" src="828903-iframe.html"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,1433)" src="828903-iframe.html"></iframe>
+
+</body>
+</html>

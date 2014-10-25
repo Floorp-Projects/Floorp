@@ -324,7 +324,8 @@ public:
     virtual bool RecvHandleSingleTap(const CSSPoint& aPoint,
                                      const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
     virtual bool RecvHandleLongTap(const CSSPoint& aPoint,
-                                   const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
+                                   const mozilla::layers::ScrollableLayerGuid& aGuid,
+                                   const uint64_t& aInputBlockId) MOZ_OVERRIDE;
     virtual bool RecvHandleLongTapUp(const CSSPoint& aPoint,
                                      const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
     virtual bool RecvNotifyAPZStateChange(const ViewID& aViewId,
@@ -344,9 +345,11 @@ public:
                                   const MaybeNativeKeyBinding& aBindings) MOZ_OVERRIDE;
     virtual bool RecvMouseWheelEvent(const mozilla::WidgetWheelEvent& event) MOZ_OVERRIDE;
     virtual bool RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
-                                    const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
+                                    const ScrollableLayerGuid& aGuid,
+                                    const uint64_t& aInputBlockId) MOZ_OVERRIDE;
     virtual bool RecvRealTouchMoveEvent(const WidgetTouchEvent& aEvent,
-                                        const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
+                                        const ScrollableLayerGuid& aGuid,
+                                        const uint64_t& aInputBlockId) MOZ_OVERRIDE;
     virtual bool RecvKeyEvent(const nsString& aType,
                               const int32_t&  aKeyCode,
                               const int32_t&  aCharCode,
@@ -597,6 +600,7 @@ private:
     bool mUpdateHitRegion;
     bool mPendingTouchPreventedResponse;
     ScrollableLayerGuid mPendingTouchPreventedGuid;
+    uint64_t mPendingTouchPreventedBlockId;
     void FireSingleTapEvent(LayoutDevicePoint aPoint);
 
     bool mTouchEndCancelled;

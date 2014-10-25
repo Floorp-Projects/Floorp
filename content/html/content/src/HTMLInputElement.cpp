@@ -1314,7 +1314,7 @@ HTMLInputElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     } else if (aNotify && aName == nsGkAtoms::src &&
                mType == NS_FORM_INPUT_IMAGE) {
       if (aValue) {
-        LoadImage(aValue->String(), true, aNotify);
+        LoadImage(aValue->String(), true, aNotify, eImageLoadType_Normal);
       } else {
         // Null value means the attr got unset; drop the image
         CancelImageRequests(aNotify);
@@ -1393,7 +1393,7 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         // whether we have an image to load;
         nsAutoString src;
         if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
-          LoadImage(src, false, aNotify);
+          LoadImage(src, false, aNotify, eImageLoadType_Normal);
         }
       }
     }
@@ -4393,7 +4393,7 @@ HTMLInputElement::MaybeLoadImage()
   nsAutoString uri;
   if (mType == NS_FORM_INPUT_IMAGE &&
       GetAttr(kNameSpaceID_None, nsGkAtoms::src, uri) &&
-      (NS_FAILED(LoadImage(uri, false, true)) ||
+      (NS_FAILED(LoadImage(uri, false, true, eImageLoadType_Normal)) ||
        !LoadingEnabled())) {
     CancelImageRequests(true);
   }

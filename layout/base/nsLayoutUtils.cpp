@@ -2764,13 +2764,22 @@ CalculateFrameMetricsForDisplayPort(nsIFrame* aScrollFrame,
   // Only the size of the composition bounds is relevant to the
   // displayport calculation, not its origin.
   nsSize compositionSize = nsLayoutUtils::CalculateCompositionSizeForFrame(aScrollFrame);
+  LayoutDeviceToParentLayerScale compBoundsScale(1.0f);
+  if (aScrollFrame == presShell->GetRootScrollFrame() && presContext->IsRootContentDocument()) {
+    if (presContext->GetParentPresContext()) {
+      gfxSize res = presContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
+      compBoundsScale = LayoutDeviceToParentLayerScale(res.width, res.height);
+    }
+  } else {
+    compBoundsScale = cumulativeResolution
+                    * LayerToScreenScale(1.0f)
+                    * ScreenToParentLayerScale(1.0f);
+  }
   metrics.mCompositionBounds
       = LayoutDeviceRect::FromAppUnits(nsRect(nsPoint(0, 0), compositionSize),
                                        presContext->AppUnitsPerDevPixel())
-      * (cumulativeResolution / resolution);
+      * compBoundsScale;
 
-  // This function is used for setting a display port for subframes, so
-  // aScrollFrame will not be the root content document's root scroll frame.
   metrics.SetRootCompositionSize(
       nsLayoutUtils::CalculateRootCompositionSize(aScrollFrame, false, metrics));
 
@@ -6988,13 +6997,12 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
     // TODO: Reuse that code here.
     nsIPresShell* rootPresShell = rootPresContext->PresShell();
     if (nsIFrame* rootFrame = rootPresShell->GetRootFrame()) {
-      LayoutDeviceToParentLayerScale parentResolution(
-        rootPresShell->GetCumulativeResolution().width
-        / rootPresShell->GetResolution().width);
+      LayoutDeviceToLayerScale cumulativeResolution(
+        rootPresShell->GetCumulativeResolution().width);
       int32_t rootAUPerDevPixel = rootPresContext->AppUnitsPerDevPixel();
-      LayerSize frameSize = ViewAs<LayerPixel>(
+      LayerSize frameSize =
         (LayoutDeviceRect::FromAppUnits(rootFrame->GetRect(), rootAUPerDevPixel)
-         * parentResolution).Size(), PixelCastJustification::ParentLayerToLayerForRootComposition);
+         * cumulativeResolution).Size();
       rootCompositionSize = frameSize;
 #ifdef MOZ_WIDGET_ANDROID
       nsIWidget* widget = rootFrame->GetNearestWidget();

@@ -6,6 +6,7 @@
 
 #include "InputBlockState.h"
 #include "mozilla/layers/APZCTreeManager.h" // for AllowedTouchBehavior
+#include "AsyncPanZoomController.h"         // for AsyncPanZoomController
 #include "gfxPrefs.h"                       // for gfxPrefs
 #include "OverscrollHandoffState.h"
 
@@ -15,11 +16,21 @@
 namespace mozilla {
 namespace layers {
 
-InputBlockState::InputBlockState(const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain)
-  : mOverscrollHandoffChain(aOverscrollHandoffChain)
+static uint64_t sBlockCounter = InputBlockState::NO_BLOCK_ID + 1;
+
+InputBlockState::InputBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc)
+  : mTargetApzc(aTargetApzc)
+  , mBlockId(sBlockCounter++)
 {
-  // We should never be constructed with a nullptr handoff chain.
-  MOZ_ASSERT(mOverscrollHandoffChain);
+  // We should never be constructed with a nullptr target.
+  MOZ_ASSERT(mTargetApzc);
+  mOverscrollHandoffChain = mTargetApzc->BuildOverscrollHandoffChain();
+}
+
+const nsRefPtr<AsyncPanZoomController>&
+InputBlockState::GetTargetApzc() const
+{
+  return mTargetApzc;
 }
 
 const nsRefPtr<const OverscrollHandoffChain>&
@@ -28,8 +39,14 @@ InputBlockState::GetOverscrollHandoffChain() const
   return mOverscrollHandoffChain;
 }
 
-TouchBlockState::TouchBlockState(const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain)
-  : InputBlockState(aOverscrollHandoffChain)
+uint64_t
+InputBlockState::GetBlockId() const
+{
+  return mBlockId;
+}
+
+TouchBlockState::TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc)
+  : InputBlockState(aTargetApzc)
   , mAllowedTouchBehaviorSet(false)
   , mPreventDefault(false)
   , mContentResponded(false)

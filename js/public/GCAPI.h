@@ -48,6 +48,7 @@ namespace JS {
     D(OUT_OF_NURSERY)                           \
     D(EVICT_NURSERY)                            \
     D(FULL_STORE_BUFFER)                        \
+    D(SHARED_MEMORY_LIMIT)                      \
                                                 \
     /* These are reserved for future use. */    \
     D(RESERVED0)                                \
@@ -69,7 +70,6 @@ namespace JS {
     D(RESERVED16)                               \
     D(RESERVED17)                               \
     D(RESERVED18)                               \
-    D(RESERVED19)                               \
                                                 \
     /* Reasons from Firefox */                  \
     D(DOM_WINDOW_UTILS)                         \
