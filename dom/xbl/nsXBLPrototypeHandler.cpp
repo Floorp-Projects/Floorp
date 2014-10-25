@@ -373,7 +373,8 @@ nsXBLPrototypeHandler::EnsureEventHandler(AutoJSAPI& jsapi, nsIAtom* aName,
          .setVersion(JSVERSION_LATEST);
 
   JS::Rooted<JSObject*> handlerFun(cx);
-  nsresult rv = nsJSUtils::CompileFunction(jsapi, JS::NullPtr(), options,
+  JS::AutoObjectVector emptyVector(cx);
+  nsresult rv = nsJSUtils::CompileFunction(jsapi, emptyVector, options,
                                            nsAtomCString(aName), argCount,
                                            argNames, handlerText,
                                            handlerFun.address());
