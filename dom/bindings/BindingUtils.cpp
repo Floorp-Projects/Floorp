@@ -459,7 +459,19 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
     }
 
     if (!JS_DefineProperty(cx, constructor, "length", ctorNargs,
-                           JSPROP_READONLY | JSPROP_PERMANENT)) {
+                           JSPROP_READONLY)) {
+      return nullptr;
+    }
+
+    // Might as well intern, since we're going to need an atomized
+    // version of name anyway when we stick our constructor on the
+    // global.
+    JS::Rooted<JSString*> nameStr(cx, JS_InternString(cx, name));
+    if (!nameStr) {
+      return nullptr;
+    }
+
+    if (!JS_DefineProperty(cx, constructor, "name", nameStr, JSPROP_READONLY)) {
       return nullptr;
     }
   }
