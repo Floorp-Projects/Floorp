@@ -375,7 +375,7 @@ parent:
      * batched and only processed for panning and zooming if content does not
      * preventDefault.
      */
-    ContentReceivedTouch(ScrollableLayerGuid aGuid, bool aPreventDefault);
+    ContentReceivedTouch(ScrollableLayerGuid aGuid, uint64_t aInputBlockId, bool aPreventDefault);
 
     /**
      * Updates the zoom constraints for a scrollable frame in this tab.
@@ -436,7 +436,7 @@ child:
     AcknowledgeScrollUpdate(ViewID aScrollId, uint32_t aScrollGeneration);
     HandleDoubleTap(CSSPoint point, ScrollableLayerGuid aGuid);
     HandleSingleTap(CSSPoint point, ScrollableLayerGuid aGuid);
-    HandleLongTap(CSSPoint point, ScrollableLayerGuid aGuid);
+    HandleLongTap(CSSPoint point, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
     HandleLongTapUp(CSSPoint point, ScrollableLayerGuid aGuid);
     NotifyAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
 
@@ -462,10 +462,10 @@ child:
     RealMouseEvent(WidgetMouseEvent event);
     RealKeyEvent(WidgetKeyboardEvent event, MaybeNativeKeyBinding keyBinding);
     MouseWheelEvent(WidgetWheelEvent event);
-    RealTouchEvent(WidgetTouchEvent aEvent, ScrollableLayerGuid aGuid);
+    RealTouchEvent(WidgetTouchEvent aEvent, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
     // We use a separate message for touchmove events only to apply
     // compression to them.
-    RealTouchMoveEvent(WidgetTouchEvent aEvent, ScrollableLayerGuid aGuid) compress;
+    RealTouchMoveEvent(WidgetTouchEvent aEvent, ScrollableLayerGuid aGuid, uint64_t aInputBlockId) compress;
 
     /**
      * @see nsIDOMWindowUtils sendKeyEvent.
