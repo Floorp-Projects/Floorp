@@ -36,6 +36,7 @@ load 374102-1.xul
 load 376137-1.html
 load 376137-2.html
 load 377592-1.svg
+load 378961.html
 load 381862.html
 load 382746-1.xul
 load 382899-1.xul
@@ -54,9 +55,11 @@ load 398326-1.xhtml
 load 399013.xul
 load 400779-1.xhtml
 load 402912-1.xhtml
+load 404192.xhtml
 load 408904-1.xul
 load 412479-1.xhtml
 asserts(4) load 415394-1.xhtml # Bug 163838
+load 417509.xul
 load 420424-1.xul
 load 430356-1.xhtml
 load 431738.xhtml

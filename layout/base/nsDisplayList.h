@@ -1105,6 +1105,10 @@ public:
   virtual bool ClearsBackground()
   { return false; }
 
+  virtual bool ProvidesFontSmoothingBackgroundColor(nsDisplayListBuilder* aBuilder,
+                                                    nscolor* aColor)
+  { return false; }
+
   /**
    * Returns true if all layers that can be active should be forced to be
    * active. Requires setting the pref layers.force-active=true.
@@ -2236,6 +2240,9 @@ public:
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) MOZ_OVERRIDE;
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) MOZ_OVERRIDE;
+  virtual bool ProvidesFontSmoothingBackgroundColor(nsDisplayListBuilder* aBuilder,
+                                                    nscolor* aColor) MOZ_OVERRIDE;
+
   /**
    * GetBounds() returns the background painting area.
    */
