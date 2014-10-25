@@ -224,9 +224,9 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   // Prepare the radical symbol and the overline bar
 
   nsRefPtr<nsFontMetrics> fm;
+  float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-                                        nsLayoutUtils::
-                                        FontSizeInflationFor(this));
+                                        fontSizeInflation);
 
   nscoord ruleThickness, leading, psi;
   GetRadicalParameters(fm, StyleFont()->mMathDisplay ==
@@ -260,6 +260,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   // height(radical) should be >= height(base) + psi + ruleThickness
   nsBoundingMetrics radicalSize;
   mSqrChar.Stretch(aPresContext, renderingContext,
+                   fontSizeInflation,
                    NS_STRETCH_DIRECTION_VERTICAL, 
                    contSize, radicalSize,
                    NS_STRETCH_LARGER,
@@ -367,19 +368,20 @@ nsMathMLmrootFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingConte
     return;
   }
 
+  float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
   nscoord baseWidth =
     nsLayoutUtils::IntrinsicForContainer(aRenderingContext, baseFrame,
                                          nsLayoutUtils::PREF_ISIZE);
   nscoord indexWidth =
     nsLayoutUtils::IntrinsicForContainer(aRenderingContext, indexFrame,
                                          nsLayoutUtils::PREF_ISIZE);
-  nscoord sqrWidth = mSqrChar.GetMaxWidth(PresContext(), *aRenderingContext);
+  nscoord sqrWidth = mSqrChar.GetMaxWidth(PresContext(), *aRenderingContext,
+                                          fontSizeInflation);
 
   nscoord dxSqr;
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-                                        nsLayoutUtils::
-                                        FontSizeInflationFor(this));
+                                        fontSizeInflation);
   GetRadicalXOffsets(indexWidth, sqrWidth, fm, nullptr, &dxSqr);
 
   nscoord width = dxSqr + sqrWidth + baseWidth;

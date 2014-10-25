@@ -615,10 +615,10 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
   nsIFrame* firstChild = mFrames.FirstChild();
 
   // get the axis height;
+  float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-                                        nsLayoutUtils::
-                                        FontSizeInflationFor(this));
+                                        fontSizeInflation);
   nscoord axisHeight, height;
   GetAxisHeight(aRenderingContext, fm, axisHeight);
 
@@ -746,6 +746,7 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
 
     // let the MathMLChar stretch itself...
     nsresult res = mMathMLChar.Stretch(PresContext(), aRenderingContext,
+                                       fontSizeInflation,
                                        aStretchDirection, container, charSize,
                                        stretchHint,
                                        StyleVisibility()->mDirection);
@@ -988,6 +989,7 @@ nsMathMLmoFrame::GetIntrinsicISizeMetrics(nsRenderingContext *aRenderingContext,
                                           StyleFont());
     aDesiredSize.Width() = mMathMLChar.
       GetMaxWidth(PresContext(), *aRenderingContext,
+                  nsLayoutUtils::FontSizeInflationFor(this),
                   stretchHint, mMaxSize,
                   NS_MATHML_OPERATOR_MAXSIZE_IS_ABSOLUTE(mFlags));
   }
