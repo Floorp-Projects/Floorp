@@ -8,6 +8,9 @@
  * because constructing an nsAttrValue from an nsAString can be expensive when
  * the buffer of the string is not shared.
  *
+ * This treats nsAttrValueOrString(nullptr) as the empty string,
+ * to help with contexts where a null pointer denotes an empty value.
+ *
  * Since a raw pointer to the passed-in string is kept, this class should only
  * be used on the stack.
  */
@@ -26,8 +29,21 @@ public:
     , mStringPtr(&aValue)
     , mCheapString(nullptr)
   { }
+
+  explicit nsAttrValueOrString(const nsAString* aValue)
+    : mAttrValue(nullptr)
+    , mStringPtr(aValue)
+    , mCheapString(nullptr)
+  { }
+
   explicit nsAttrValueOrString(const nsAttrValue& aValue)
     : mAttrValue(&aValue)
+    , mStringPtr(nullptr)
+    , mCheapString(nullptr)
+  { }
+
+  explicit nsAttrValueOrString(const nsAttrValue* aValue)
+    : mAttrValue(aValue)
     , mStringPtr(nullptr)
     , mCheapString(nullptr)
   { }

@@ -12,6 +12,11 @@ nsAttrValueOrString::String() const
     return *mStringPtr;
   }
 
+  if (!mAttrValue) {
+    mStringPtr = &mCheapString;
+    return *mStringPtr;
+  }
+
   if (mAttrValue->Type() == nsAttrValue::eString) {
     mCheapString = mAttrValue->GetStringValue();
     mStringPtr = &mCheapString;

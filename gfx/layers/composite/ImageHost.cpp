@@ -37,21 +37,28 @@ ImageHost::ImageHost(const TextureInfo& aTextureInfo)
 ImageHost::~ImageHost()
 {
   if (mFrontBuffer) {
-    mFrontBuffer->UnbindTextureSource();
+    mFrontBuffer->UnsetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
+  }
+}
+
+void
+ImageHost::SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData)
+{
+  CompositableHost::SetCompositableBackendSpecificData(aBackendData);
+  // ImageHost allows TextureHost sharing among ImageHosts.
+  if (aBackendData) {
+    aBackendData->SetAllowSharingTextureHost(true);
   }
 }
 
 void
 ImageHost::UseTextureHost(TextureHost* aTexture)
 {
-  if (mFrontBuffer && mFrontBuffer != aTexture) {
-    mFrontBuffer->UnbindTextureSource();
-  }
   CompositableHost::UseTextureHost(aTexture);
-  mFrontBuffer = aTexture;
   if (mFrontBuffer) {
-    mFrontBuffer->PrepareTextureSource(mTextureSource);
+    mFrontBuffer->UnsetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
   }
+  mFrontBuffer = aTexture;
 }
 
 void
@@ -59,8 +66,7 @@ ImageHost::RemoveTextureHost(TextureHost* aTexture)
 {
   CompositableHost::RemoveTextureHost(aTexture);
   if (aTexture && mFrontBuffer == aTexture) {
-    mFrontBuffer->UnbindTextureSource();
-    mTextureSource = nullptr;
+    aTexture->SetCompositableBackendSpecificData(nullptr);
     mFrontBuffer = nullptr;
   }
 }
@@ -91,34 +97,25 @@ ImageHost::Composite(EffectChain& aEffectChain,
 
   // Make sure the front buffer has a compositor
   mFrontBuffer->SetCompositor(GetCompositor());
+  mFrontBuffer->SetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
 
   AutoLockCompositableHost autoLock(this);
   if (autoLock.Failed()) {
     NS_WARNING("failed to lock front buffer");
     return;
   }
-
-  if (!mFrontBuffer->BindTextureSource(mTextureSource)) {
+  RefPtr<TextureSource> source = GetTextureSource();
+  if (!source) {
     return;
   }
 
-  if (!mTextureSource) {
-    // BindTextureSource above should have returned false!
-    MOZ_ASSERT(false);
-    return;
-  }
-
-  bool isAlphaPremultiplied = !(mFrontBuffer->GetFlags() & TextureFlags::NON_PREMULTIPLIED);
-  RefPtr<TexturedEffect> effect = CreateTexturedEffect(mFrontBuffer->GetFormat(),
-                                                       mTextureSource.get(),
-                                                       aFilter,
-                                                       isAlphaPremultiplied);
+  RefPtr<TexturedEffect> effect = GenEffect(aFilter);
   if (!effect) {
     return;
   }
 
   aEffectChain.mPrimaryEffect = effect;
-  IntSize textureSize = mTextureSource->GetSize();
+  IntSize textureSize = source->GetSize();
   gfx::Rect gfxPictureRect
     = mHasPictureRect ? gfx::Rect(0, 0, mPictureRect.width, mPictureRect.height)
                       : gfx::Rect(0, 0, textureSize.width, textureSize.height);
@@ -126,7 +123,7 @@ ImageHost::Composite(EffectChain& aEffectChain,
   gfx::Rect pictureRect(0, 0,
                         mPictureRect.width,
                         mPictureRect.height);
-  BigImageIterator* it = mTextureSource->AsBigImageIterator();
+  BigImageIterator* it = source->AsBigImageIterator();
   if (it) {
 
     // This iteration does not work if we have multiple texture sources here
@@ -142,7 +139,7 @@ ImageHost::Composite(EffectChain& aEffectChain,
     // the corresponding source tiles from all planes, with appropriate
     // per-plane per-tile texture coords.
     // DrawQuad currently assumes that all planes use the same texture coords.
-    MOZ_ASSERT(it->GetTileCount() == 1 || !mTextureSource->GetNextSibling(),
+    MOZ_ASSERT(it->GetTileCount() == 1 || !source->GetNextSibling(),
                "Can't handle multi-plane BigImages");
 
     it->BeginBigImageIteration();
@@ -173,7 +170,7 @@ ImageHost::Composite(EffectChain& aEffectChain,
                                      gfxPictureRect, aClipRect,
                                      aTransform, mFlashCounter);
   } else {
-    IntSize textureSize = mTextureSource->GetSize();
+    IntSize textureSize = source->GetSize();
     gfx::Rect rect;
     if (mHasPictureRect) {
       effect->mTextureCoords = Rect(Float(mPictureRect.x) / textureSize.width,
@@ -276,10 +273,18 @@ ImageHost::Unlock()
   mLocked = false;
 }
 
+TemporaryRef<TextureSource>
+ImageHost::GetTextureSource()
+{
+  MOZ_ASSERT(mLocked);
+  return mFrontBuffer->GetTextureSources();
+}
+
 TemporaryRef<TexturedEffect>
 ImageHost::GenEffect(const gfx::Filter& aFilter)
 {
-  if (!mFrontBuffer->BindTextureSource(mTextureSource)) {
+  RefPtr<TextureSource> source = GetTextureSource();
+  if (!source) {
     return nullptr;
   }
   bool isAlphaPremultiplied = true;
@@ -287,7 +292,7 @@ ImageHost::GenEffect(const gfx::Filter& aFilter)
     isAlphaPremultiplied = false;
 
   return CreateTexturedEffect(mFrontBuffer->GetFormat(),
-                              mTextureSource,
+                              source,
                               aFilter,
                               isAlphaPremultiplied);
 }

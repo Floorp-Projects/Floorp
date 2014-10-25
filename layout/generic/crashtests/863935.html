@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style id="ss">
+
+body { font-family: monospace; }
+.c { -moz-column-width: 1px; }
+.m { margin-bottom: 8px; }
+
+</style>
+<script>
+
+function boom()
+{
+  document.documentElement.offsetHeight;
+  document.getElementById('ss').textContent += '.h { height: 1px; }'
+}
+
+</script>
+</head>
+<body onload="boom();">
+<div class="c"><div class="h c"><div class="m"><div class="h m c">1 2 3 4 5 6 7 8 9</div></div><div class="c"><div class="h"></div><div class="h c"><div class="h"></div><div class="h"><div class="m"></div></div><div class="h"></div></div><div class="h"><div class="h"></div><div class="h"></div><div class="h"></div><div><div class="m"></div></div></div></div></div></div>
+</body>
+</html>

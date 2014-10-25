@@ -30,6 +30,7 @@
 #include "mozilla/dom/AutocompleteInfoBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/FloatingPoint.h"
+#include "nsIContentPolicy.h"
 
 #if defined(XP_WIN)
 // Undefine LoadImage to prevent naming conflict with Windows.
@@ -591,6 +592,8 @@ public:
    * @param aContext the context the image is loaded in (eg an element)
    * @param aLoadingDocument the document we belong to
    * @param aLoadingPrincipal the principal doing the load
+   * @param [aContentPolicyType=nsIContentPolicy::TYPE_IMAGE] (Optional)
+   *        The CP content type to use
    * @param aImageBlockingStatus the nsIContentPolicy blocking status for this
    *        image.  This will be set even if a security check fails for the
    *        image, to some reasonable REJECT_* value.  This out param will only
@@ -601,10 +604,12 @@ public:
    *         false is returned.
    */
   static bool CanLoadImage(nsIURI* aURI,
-                             nsISupports* aContext,
-                             nsIDocument* aLoadingDocument,
-                             nsIPrincipal* aLoadingPrincipal,
-                             int16_t* aImageBlockingStatus = nullptr);
+                           nsISupports* aContext,
+                           nsIDocument* aLoadingDocument,
+                           nsIPrincipal* aLoadingPrincipal,
+                           int16_t* aImageBlockingStatus = nullptr,
+                           uint32_t aContentPolicyType = nsIContentPolicy::TYPE_IMAGE);
+
   /**
    * Method to start an image load.  This does not do any security checks.
    * This method will attempt to make aURI immutable; a caller that wants to
@@ -616,6 +621,8 @@ public:
    * @param aReferrer the referrer URI
    * @param aObserver the observer for the image load
    * @param aLoadFlags the load flags to use.  See nsIRequest
+   * @param [aContentPolicyType=nsIContentPolicy::TYPE_IMAGE] (Optional)
+   *        The CP content type to use
    * @return the imgIRequest for the image load
    */
   static nsresult LoadImage(nsIURI* aURI,
@@ -625,7 +632,8 @@ public:
                             imgINotificationObserver* aObserver,
                             int32_t aLoadFlags,
                             const nsAString& initiatorType,
-                            imgRequestProxy** aRequest);
+                            imgRequestProxy** aRequest,
+                            uint32_t aContentPolicyType = nsIContentPolicy::TYPE_IMAGE);
 
   /**
    * Obtain an image loader that respects the given document/channel's privacy status.

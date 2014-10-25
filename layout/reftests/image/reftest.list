@@ -92,3 +92,26 @@ fuzzy(1,1) == image-orientation-background.html?90&flip      image-orientation-r
 != image-orientation-generated-content-ref.html?180  image-orientation-generated-content-ref.html?180&flip
 != image-orientation-generated-content-ref.html?270  image-orientation-generated-content-ref.html?270&flip
 == image-orientation-dynamic.html image-orientation-dynamic-ref.html
+
+# <img srcset> tests
+pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-0.1x.html image-srcset-basic-selection-0.1x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-2x.html image-srcset-basic-selection-2x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-0.5x.html image-srcset-basic-selection-0.5x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-0.6x.html image-srcset-basic-selection-0.6x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-1.5x.html image-srcset-basic-selection-1.5x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-1x.html image-srcset-basic-selection-1x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-width-0.5x.html image-srcset-basic-selection-width-0.5x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-width-10x.html image-srcset-basic-selection-width-10x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-width-2x.html image-srcset-basic-selection-width-2x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-basic-selection-width-1x.html image-srcset-basic-selection-width-1x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-default-2x.html image-srcset-default-2x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-default-1x.html image-srcset-default-1x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-default-src-2x.html image-srcset-default-src-2x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-default-src-1x.html image-srcset-default-src-1x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-orientation-2x.html image-srcset-orientation-2x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-orientation-1x.html image-srcset-orientation-1x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-svg-3x.html image-srcset-svg-3x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-svg-2x.html image-srcset-svg-2x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-svg-1x.html image-srcset-svg-1x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-svg-default-2x.html image-srcset-svg-default-2x-ref.html
+pref(dom.image.srcset.enabled,true) == image-srcset-svg-default-1x.html image-srcset-svg-default-1x-ref.html

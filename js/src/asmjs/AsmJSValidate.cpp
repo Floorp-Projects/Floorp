@@ -329,6 +329,21 @@ IsUseOfName(ParseNode *pn, PropertyName *name)
 }
 
 static inline bool
+IsIgnoredDirectiveName(ExclusiveContext *cx, JSAtom *atom)
+{
+    return atom != cx->names().useStrict;
+}
+
+static inline bool
+IsIgnoredDirective(ExclusiveContext *cx, ParseNode *pn)
+{
+    return pn->isKind(PNK_SEMI) &&
+           UnaryKid(pn) &&
+           UnaryKid(pn)->isKind(PNK_STRING) &&
+           IsIgnoredDirectiveName(cx, UnaryKid(pn)->pn_atom);
+}
+
+static inline bool
 IsEmptyStatement(ParseNode *pn)
 {
     return pn->isKind(PNK_SEMI) && !UnaryKid(pn);
@@ -3512,8 +3527,11 @@ CheckPrecedingStatements(ModuleCompiler &m, ParseNode *stmtList)
 {
     MOZ_ASSERT(stmtList->isKind(PNK_STATEMENTLIST));
 
-    if (ListLength(stmtList) != 0)
-        return m.fail(ListHead(stmtList), "invalid asm.js statement");
+    ParseNode *stmt = ListHead(stmtList);
+    for (unsigned i = 0, n = ListLength(stmtList); i < n; i++) {
+        if (!IsIgnoredDirective(m.cx(), stmt))
+            return m.fail(stmt, "invalid asm.js statement");
+    }
 
     return true;
 }
@@ -3841,6 +3859,22 @@ CheckModuleGlobal(ModuleCompiler &m, ParseNode *var, bool isConst)
 }
 
 static bool
+CheckModuleProcessingDirectives(ModuleCompiler &m)
+{
+    TokenStream &ts = m.parser().tokenStream;
+    while (true) {
+        if (!ts.matchToken(TOK_STRING))
+            return true;
+
+        if (!IsIgnoredDirectiveName(m.cx(), ts.currentToken().atom()))
+            return m.fail(nullptr, "unsupported processing directive");
+
+        if (!ts.matchToken(TOK_SEMI))
+            return m.fail(nullptr, "expected semicolon after string literal");
+    }
+}
+
+static bool
 CheckModuleGlobals(ModuleCompiler &m)
 {
     while (true) {
@@ -3890,6 +3924,18 @@ CheckArgumentType(FunctionCompiler &f, ParseNode *stmt, PropertyName *name, VarT
         return ArgFail(f, name, stmt);
 
     *type = VarType(coercion);
+    return true;
+}
+
+static bool
+CheckProcessingDirectives(ModuleCompiler &m, ParseNode **stmtIter)
+{
+    ParseNode *stmt = *stmtIter;
+
+    while (stmt && IsIgnoredDirective(m.cx(), stmt))
+        stmt = NextNode(stmt);
+
+    *stmtIter = stmt;
     return true;
 }
 
@@ -6853,11 +6899,15 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
     if (!funpc.init(tokenStream))
         return false;
 
-    if (!m.parser().functionArgsAndBodyGeneric(fn, fun, Normal, Statement))
-        return false;
+    if (!m.parser().functionArgsAndBodyGeneric(fn, fun, Normal, Statement)) {
+        if (tokenStream.hadError() || directives == newDirectives)
+            return false;
 
-    if (tokenStream.hadError() || directives != newDirectives)
-        return false;
+        return m.fail(nullptr, "encountered new directive");
+    }
+
+    MOZ_ASSERT(!tokenStream.hadError());
+    MOZ_ASSERT(directives == newDirectives);
 
     outerpc->blockidGen = funpc.blockidGen;
     fn->pn_blockid = outerpc->blockid();
@@ -6897,6 +6947,9 @@ CheckFunction(ModuleCompiler &m, LifoAlloc &lifo, MIRGenerator **mir, ModuleComp
         return false;
 
     ParseNode *stmtIter = ListHead(FunctionStatementList(fn));
+
+    if (!CheckProcessingDirectives(m, &stmtIter))
+        return false;
 
     VarTypeVector argTypes(m.lifo());
     if (!CheckArguments(f, &stmtIter, &argTypes))
@@ -8499,6 +8552,9 @@ CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
         return false;
 
     if (!CheckPrecedingStatements(m, stmtList))
+        return false;
+
+    if (!CheckModuleProcessingDirectives(m))
         return false;
 
     if (!CheckModuleGlobals(m))

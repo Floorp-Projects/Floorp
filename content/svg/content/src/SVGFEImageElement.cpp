@@ -85,7 +85,7 @@ SVGFEImageElement::LoadSVGImage(bool aForce, bool aNotify)
     }
   }
 
-  return LoadImage(href, aForce, aNotify);
+  return LoadImage(href, aForce, aNotify, eImageLoadType_Normal);
 }
 
 //----------------------------------------------------------------------

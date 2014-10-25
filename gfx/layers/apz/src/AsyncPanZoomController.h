@@ -19,6 +19,7 @@
 #include "mozilla/Atomics.h"
 #include "InputData.h"
 #include "Axis.h"
+#include "InputQueue.h"
 #include "TaskThrottler.h"
 #include "mozilla/gfx/Matrix.h"
 #include "nsRegion.h"
@@ -95,6 +96,7 @@ public:
 
   AsyncPanZoomController(uint64_t aLayersId,
                          APZCTreeManager* aTreeManager,
+                         const nsRefPtr<InputQueue>& aInputQueue,
                          GeckoContentController* aController,
                          GestureBehavior aGestures = DEFAULT_GESTURES);
 
@@ -112,16 +114,6 @@ public:
   // --------------------------------------------------------------------------
   // These methods must only be called on the controller/UI thread.
   //
-
-  /**
-   * General handler for incoming input events. Manipulates the frame metrics
-   * based on what type of input it is. For example, a PinchGestureEvent will
-   * cause scaling. This should only be called externally to this class.
-   * HandleInputEvent() should be used internally.
-   * See the documentation on APZCTreeManager::ReceiveInputEvent for info on
-   * return values from this function.
-   */
-  nsEventStatus ReceiveInputEvent(const InputData& aEvent);
 
   /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
@@ -576,21 +568,17 @@ protected:
   APZCTreeManager* GetApzcTreeManager() const;
 
   /**
+   * Gets a ref to the input queue that is shared across the entire tree manager.
+   */
+  const nsRefPtr<InputQueue>& GetInputQueue() const;
+
+  /**
    * Timeout function for mozbrowserasyncscroll event. Because we throttle
    * mozbrowserasyncscroll events in some conditions, this function ensures
    * that the last mozbrowserasyncscroll event will be fired after a period of
    * time.
    */
   void FireAsyncScrollOnTimeout();
-
-private:
-  /**
-   * Given the number of touch points in an input event and touch block they
-   * belong to, check if the event can result in a panning/zooming behavior.
-   * This is primarily used to figure out when to dispatch the pointercancel
-   * event for the pointer events spec.
-   */
-  bool ArePointerEventsConsumable(TouchBlockState* aBlock, uint32_t aTouchPoints);
 
   /**
    * Convert ScreenPoint relative to this APZC to CSSPoint relative
@@ -781,95 +769,34 @@ private:
    */
 public:
   /**
-   * This function is invoked by the APZCTreeManager which in turn is invoked
-   * by the widget when web content decides whether or not it wants to
-   * cancel a block of events. This automatically gets applied to the next
-   * block of events that has not yet been responded to. This function MUST
-   * be invoked exactly once for each touch block.
-   */
-  void ContentReceivedTouch(bool aPreventDefault);
-
-  /**
-   * Sets allowed touch behavior for current touch session.
-   * This method is invoked by the APZCTreeManager which in its turn invoked by
-   * the widget after performing touch-action values retrieving.
-   * Must be called after receiving the TOUCH_START even that started the
-   * touch session.
-   */
-  void SetAllowedTouchBehavior(const nsTArray<TouchBehaviorFlags>& aBehaviors);
-
-  /**
    * Flush a repaint request if one is needed, without throttling it with the
    * paint throttler.
    */
   void FlushRepaintForNewInputBlock();
 
-private:
-  void ScheduleContentResponseTimeout();
-  void ContentResponseTimeout();
   /**
-   * Processes any pending input blocks that are ready for processing. There
-   * must be at least one input block in the queue when this function is called.
+   * Given the number of touch points in an input event and touch block they
+   * belong to, check if the event can result in a panning/zooming behavior.
+   * This is primarily used to figure out when to dispatch the pointercancel
+   * event for the pointer events spec.
    */
-  void ProcessPendingInputBlocks();
-  TouchBlockState* StartNewTouchBlock(bool aCopyAllowedTouchBehaviorFromCurrent);
+  bool ArePointerEventsConsumable(TouchBlockState* aBlock, uint32_t aTouchPoints);
+
+  /**
+   * Return true if there are are touch listeners registered on content
+   * scrolled by this APZC.
+   */
+  bool NeedToWaitForContent() const;
+
+  /**
+   * Clear internal state relating to input handling.
+   */
+  void ResetInputState();
+
+private:
+  nsRefPtr<InputQueue> mInputQueue;
   TouchBlockState* CurrentTouchBlock();
   bool HasReadyTouchBlock();
-
-private:
-  // The queue of touch blocks that have not yet been processed by this APZC.
-  // This member must only be accessed on the controller/UI thread.
-  nsTArray<UniquePtr<TouchBlockState>> mTouchBlockQueue;
-
-  // This variable requires some explanation. Strap yourself in.
-  //
-  // For each block of events, we do two things: (1) send the events to gecko and expect
-  // exactly one call to ContentReceivedTouch in return, and (2) kick off a timeout
-  // that triggers in case we don't hear from web content in a timely fashion.
-  // Since events are constantly coming in, we need to be able to handle more than one
-  // block of input events sitting in the queue.
-  //
-  // There are ordering restrictions on events that we can take advantage of, and that
-  // we need to abide by. Blocks of events in the queue will always be in the order that
-  // the user generated them. Responses we get from content will be in the same order as
-  // as the blocks of events in the queue. The timeout callbacks that have been posted
-  // will also fire in the same order as the blocks of events in the queue.
-  // HOWEVER, we may get multiple responses from content interleaved with multiple
-  // timeout expirations, and that interleaving is not predictable.
-  //
-  // Therefore, we need to make sure that for each block of events, we process the queued
-  // events exactly once, either when we get the response from content, or when the
-  // timeout expires (whichever happens first). There is no way to associate the timeout
-  // or response from content with a particular block of events other than via ordering.
-  //
-  // So, what we do to accomplish this is to track a "touch block balance", which is the
-  // number of timeout expirations that have fired, minus the number of content responses
-  // that have been received. (Think "balance" as in teeter-totter balance). This
-  // value is:
-  // - zero when we are in a state where the next content response we expect to receive
-  //   and the next timeout expiration we expect to fire both correspond to the next
-  //   unprocessed block of events in the queue.
-  // - negative when we are in a state where we have received more content responses than
-  //   timeout expirations. This means that the next content repsonse we receive will
-  //   correspond to the first unprocessed block, but the next n timeout expirations need
-  //   to be ignored as they are for blocks we have already processed. (n is the absolute
-  //   value of the balance.)
-  // - positive when we are in a state where we have received more timeout expirations
-  //   than content responses. This means that the next timeout expiration that we will
-  //   receive will correspond to the first unprocessed block, but the next n content
-  //   responses need to be ignored as they are for blocks we have already processed.
-  //   (n is the absolute value of the balance.)
-  //
-  // Note that each touch block internally carries flags that indicate whether or not it
-  // has received a content response and/or timeout expiration. However, we cannot rely
-  // on that alone to deliver these notifications to the right input block, because
-  // once an input block has been processed, it can potentially be removed from the queue.
-  // Therefore the information in that block is lost. An alternative approach would
-  // be to keep around those blocks until they have received both the content response
-  // and timeout expiration, but that involves a higher level of memory usage.
-  //
-  // This member must only be accessed on the controller/UI thread.
-  int32_t mTouchBlockBalance;
 
 
   /* ===================================================================
@@ -1028,6 +955,27 @@ public:
    */
   bool SnapBackIfOverscrolled();
 
+  /**
+   * Build the chain of APZCs along which scroll will be handed off when
+   * this APZC receives input events.
+   *
+   * Notes on lifetime and const-correctness:
+   *   - The returned handoff chain is |const|, to indicate that it cannot be
+   *     changed after being built.
+   *   - When passing the chain to a function that uses it without storing it,
+   *     pass it by reference-to-const (as in |const OverscrollHandoffChain&|).
+   *   - When storing the chain, store it by RefPtr-to-const (as in
+   *     |nsRefPtr<const OverscrollHandoffChain>|). This ensures the chain is
+   *     kept alive. Note that queueing a task that uses the chain as an
+   *     argument constitutes storing, as the task may outlive its queuer.
+   *   - When passing the chain to a function that will store it, pass it as
+   *     |const nsRefPtr<const OverscrollHandoffChain>&|. This allows the
+   *     function to copy it into the |nsRefPtr<const OverscrollHandoffChain>|
+   *     that will store it, while avoiding an unnecessary copy (and thus
+   *     AddRef() and Release()) when passing it.
+   */
+  nsRefPtr<const OverscrollHandoffChain> BuildOverscrollHandoffChain();
+
 private:
   /**
    * A helper function for calling APZCTreeManager::DispatchScroll().
@@ -1054,26 +1002,6 @@ private:
    */
   bool OverscrollBy(const ScreenPoint& aOverscroll);
 
-  /**
-   * Build the chain of APZCs along which scroll will be handed off when
-   * this APZC receives input events.
-   *
-   * Notes on lifetime and const-correctness:
-   *   - The returned handoff chain is |const|, to indicate that it cannot be
-   *     changed after being built.
-   *   - When passing the chain to a function that uses it without storing it,
-   *     pass it by reference-to-const (as in |const OverscrollHandoffChain&|).
-   *   - When storing the chain, store it by RefPtr-to-const (as in
-   *     |nsRefPtr<const OverscrollHandoffChain>|). This ensures the chain is
-   *     kept alive. Note that queueing a task that uses the chain as an
-   *     argument constitutes storing, as the task may outlive its queuer.
-   *   - When passing the chain to a function that will store it, pass it as
-   *     |const nsRefPtr<const OverscrollHandoffChain>&|. This allows the
-   *     function to copy it into the |nsRefPtr<const OverscrollHandoffChain>|
-   *     that will store it, while avoiding an unnecessary copy (and thus
-   *     AddRef() and Release()) when passing it.
-   */
-  nsRefPtr<const OverscrollHandoffChain> BuildOverscrollHandoffChain();
 
   /* ===================================================================
    * The functions and members in this section are used to maintain the

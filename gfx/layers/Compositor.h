@@ -136,6 +136,17 @@ enum SurfaceInitMode
 };
 
 /**
+ * A base class for a platform-dependent helper for use by TextureHost.
+ */
+class CompositorBackendSpecificData
+{
+  NS_INLINE_DECL_REFCOUNTING(CompositorBackendSpecificData)
+
+protected:
+  virtual ~CompositorBackendSpecificData() {}
+};
+
+/**
  * Common interface for compositor backends.
  *
  * Compositor provides a cross-platform interface to a set of operations for
@@ -468,6 +479,10 @@ public:
       }
     }
     return fillRatio;
+  }
+
+  virtual CompositorBackendSpecificData* GetCompositorBackendSpecificData() {
+    return nullptr;
   }
 
   ScreenRotation GetScreenRotation() const {

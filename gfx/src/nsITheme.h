@@ -28,10 +28,10 @@ class nsIAtom;
 class nsIWidget;
 
 // IID for the nsITheme interface
-// {48f64fde-ff0e-4989-bbe3-f746573f9b7c}
+// {cc3a6c72-50c2-414d-b9f2-b778a5e0f136}
  #define NS_ITHEME_IID     \
-{ 0x48f64fde, 0xff0e, 0x4989, \
-  { 0xbb, 0xe3, 0xf7, 0x46, 0x57, 0x3f, 0x9b, 0x7c } }
+{ 0xcc3a6c72, 0x50c2, 0x414d, \
+  { 0xb9, 0xf2, 0xb7, 0x78, 0xa5, 0xe0, 0xf1, 0x36 } }
 // {0ae05515-cf7a-45a8-9e02-6556de7685b1}
 #define NS_THEMERENDERER_CID \
 { 0x0ae05515, 0xcf7a, 0x45a8, \
@@ -141,6 +141,10 @@ public:
   { return false; }
 
   virtual bool NeedToClearBackgroundBehindWidget(uint8_t aWidgetType)
+  { return false; }
+
+  virtual bool WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame,
+                                      uint8_t aWidgetType, nscolor* aColor)
   { return false; }
 
   /**
