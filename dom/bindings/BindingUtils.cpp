@@ -459,7 +459,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
     }
 
     if (!JS_DefineProperty(cx, constructor, "length", ctorNargs,
-                           JSPROP_READONLY)) {
+                           JSPROP_READONLY | JSPROP_PERMANENT)) {
       return nullptr;
     }
 
