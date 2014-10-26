@@ -1064,12 +1064,124 @@ static const uint8_t ipv6_addr_bytes_as_str[] =
 static const uint8_t ipv6_addr_str[] =
   "1122:3344:5566:7788:99aa:bbcc:ddee:ff11";
 
+static const uint8_t ipv6_other_addr_bytes[] = {
+  0xff, 0xee, 0xdd, 0xcc,
+  0xbb, 0xaa, 0x99, 0x88,
+  0x77, 0x66, 0x55, 0x44,
+  0x33, 0x22, 0x11, 0x00,
+};
+
 static const uint8_t ipv4_other_addr_bytes[] = {
   5, 6, 7, 8
 };
 static const uint8_t ipv4_other_addr_str[] = "5.6.7.8";
 static const uint8_t ipv4_other_addr_bytes_FFFFFFFF[] = {
   5, 6, 7, 8, 0xff, 0xff, 0xff, 0xff
+};
+
+static const uint8_t ipv4_addr_00000000_bytes[] = {
+  0, 0, 0, 0
+};
+static const uint8_t ipv4_addr_FFFFFFFF_bytes[] = {
+  0, 0, 0, 0
+};
+
+static const uint8_t ipv4_constraint_all_zeros_bytes[] = {
+  0, 0, 0, 0, 0, 0, 0, 0
+};
+
+static const uint8_t ipv6_addr_all_zeros_bytes[] = {
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+};
+
+static const uint8_t ipv6_constraint_all_zeros_bytes[] = {
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0
+};
+
+static const uint8_t ipv4_constraint_CIDR_16_bytes[] = {
+  1, 2, 0, 0, 0xff, 0xff, 0, 0
+};
+static const uint8_t ipv4_constraint_CIDR_17_bytes[] = {
+  1, 2, 0, 0, 0xff, 0xff, 0x80, 0
+};
+
+// The subnet is 1.2.0.0/16 but it is specified as 1.2.3.0/16
+static const uint8_t ipv4_constraint_CIDR_16_bad_addr_bytes[] = {
+  1, 2, 3, 0, 0xff, 0xff, 0, 0
+};
+
+// Masks are supposed to be of the form <ones><zeros>, but this one is of the
+// form <ones><zeros><ones><zeros>.
+static const uint8_t ipv4_constraint_bad_mask_bytes[] = {
+  1, 2, 3, 0, 0xff, 0, 0xff, 0
+};
+
+static const uint8_t ipv6_constraint_CIDR_16_bytes[] = {
+  0x11, 0x22, 0, 0, 0, 0, 0, 0,
+     0,    0, 0, 0, 0, 0, 0, 0,
+  0xff, 0xff, 0, 0, 0, 0, 0, 0,
+     0,    0, 0, 0, 0, 0, 0, 0
+};
+
+// The subnet is 1122::/16 but it is specified as 1122:3344::/16
+static const uint8_t ipv6_constraint_CIDR_16_bad_addr_bytes[] = {
+  0x11, 0x22, 0x33, 0x44, 0, 0, 0, 0,
+     0,    0,    0,    0, 0, 0, 0, 0,
+  0xff, 0xff,    0,    0, 0, 0, 0, 0,
+     0,    0,    0,    0, 0, 0, 0, 0
+};
+
+// Masks are supposed to be of the form <ones><zeros>, but this one is of the
+// form <ones><zeros><ones><zeros>.
+static const uint8_t ipv6_constraint_bad_mask_bytes[] = {
+  0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0, 0,
+     0,    0,    0,    0,    0,    0, 0, 0,
+  0xff, 0xff,    0,    0, 0xff, 0xff, 0, 0,
+     0,    0,    0,    0,    0,    0, 0, 0,
+};
+
+static const uint8_t ipv4_addr_truncated_bytes[] = {
+  1, 2, 3
+};
+static const uint8_t ipv4_addr_overlong_bytes[] = {
+  1, 2, 3, 4, 5
+};
+static const uint8_t ipv4_constraint_truncated_bytes[] = {
+  0, 0, 0, 0,
+  0, 0, 0,
+};
+static const uint8_t ipv4_constraint_overlong_bytes[] = {
+  0, 0, 0, 0,
+  0, 0, 0, 0, 0
+};
+
+static const uint8_t ipv6_addr_truncated_bytes[] = {
+  0x11, 0x22, 0x33, 0x44,
+  0x55, 0x66, 0x77, 0x88,
+  0x99, 0xaa, 0xbb, 0xcc,
+  0xdd, 0xee, 0xff
+};
+static const uint8_t ipv6_addr_overlong_bytes[] = {
+  0x11, 0x22, 0x33, 0x44,
+  0x55, 0x66, 0x77, 0x88,
+  0x99, 0xaa, 0xbb, 0xcc,
+  0xdd, 0xee, 0xff, 0x11, 0x00
+};
+static const uint8_t ipv6_constraint_truncated_bytes[] = {
+  0x11, 0x22, 0, 0, 0, 0, 0, 0,
+     0,    0, 0, 0, 0, 0, 0, 0,
+  0xff, 0xff, 0, 0, 0, 0, 0, 0,
+     0,    0, 0, 0, 0, 0, 0
+};
+static const uint8_t ipv6_constraint_overlong_bytes[] = {
+  0x11, 0x22, 0, 0, 0, 0, 0, 0,
+     0,    0, 0, 0, 0, 0, 0, 0,
+  0xff, 0xff, 0, 0, 0, 0, 0, 0,
+     0,    0, 0, 0, 0, 0, 0, 0, 0
 };
 
 // Note that, for DNSNames, these test cases in CHECK_CERT_HOSTNAME_PARAMS are
@@ -1687,6 +1799,165 @@ static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
   { ByteString(), DNSName("example.com."),
     GeneralSubtree(DNSName(".")),
     Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Basic IP Address constraints (non-CN-ID)
+
+  // The Mozilla CA Policy says this means "no IPv4 addresses allowed."
+  { ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), IPAddress(ipv4_addr_00000000_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), IPAddress(ipv4_addr_FFFFFFFF_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+
+  // The Mozilla CA Policy says this means "no IPv6 addresses allowed."
+  { ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_all_zeros_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), IPAddress(ipv6_addr_all_zeros_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_all_zeros_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+
+  // RFC 5280 doesn't partition IP address constraints into separate IPv4 and
+  // IPv6 categories, so a IPv4 permittedSubtrees constraint excludes all IPv6
+  // addresses, and vice versa.
+  { ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_all_zeros_bytes)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // IPv4 Subnets
+  { ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_CIDR_16_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_CIDR_17_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), IPAddress(ipv4_other_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_CIDR_16_bytes)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // XXX(bug 1089430): We don't reject this even though it is weird.
+    ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_CIDR_16_bad_addr_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // XXX(bug 1089430): We don't reject this even though it is weird.
+    ByteString(), IPAddress(ipv4_other_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_bad_mask_bytes)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // IPv6 Subnets
+  { ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_CIDR_16_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { ByteString(), IPAddress(ipv6_other_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_CIDR_16_bytes)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+  { // XXX(bug 1089430): We don't reject this even though it is weird.
+    ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_CIDR_16_bad_addr_bytes)),
+    Success, Result::ERROR_CERT_NOT_IN_NAME_SPACE
+  },
+  { // XXX(bug 1089430): We don't reject this even though it is weird.
+    ByteString(), IPAddress(ipv6_other_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_bad_mask_bytes)),
+    Result::ERROR_CERT_NOT_IN_NAME_SPACE, Success
+  },
+
+  // Malformed presented IP addresses and constraints
+
+  { // The presented IPv4 address is empty
+    ByteString(), IPAddress(),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv4 address is truncated
+    ByteString(), IPAddress(ipv4_addr_truncated_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv4 address is too long
+    ByteString(), IPAddress(ipv4_addr_overlong_bytes),
+    GeneralSubtree(IPAddress(ipv4_constraint_all_zeros_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv4 constraint is empty
+    ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress()),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv4 constraint is truncated
+    ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_addr_truncated_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv4 constraint is too long
+    ByteString(), IPAddress(ipv4_addr_bytes),
+    GeneralSubtree(IPAddress(ipv4_addr_overlong_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv6 address is empty
+    ByteString(), IPAddress(),
+    GeneralSubtree(IPAddress(ipv6_constraint_all_zeros_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv6 address is truncated
+    ByteString(), IPAddress(ipv6_addr_truncated_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_all_zeros_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv6 address is too long
+    ByteString(), IPAddress(ipv6_addr_overlong_bytes),
+    GeneralSubtree(IPAddress(ipv6_constraint_all_zeros_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv6 constraint is empty
+    ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress()),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv6 constraint is truncated
+    ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_addr_truncated_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { // The presented IPv6 constraint is too long
+    ByteString(), IPAddress(ipv6_addr_bytes),
+    GeneralSubtree(IPAddress(ipv6_addr_overlong_bytes)),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // XXX: We don't reject malformed name constraints when there are no names of
+  // that type.
+  { ByteString(), NO_SAN, GeneralSubtree(DNSName("!")),
+    Success, Success
+  },
+  { ByteString(), NO_SAN, GeneralSubtree(IPAddress(ipv4_addr_overlong_bytes)),
+    Success, Success
+  },
+  { ByteString(), NO_SAN, GeneralSubtree(IPAddress(ipv6_addr_overlong_bytes)),
+    Success, Success
   },
 
   /////////////////////////////////////////////////////////////////////////////
