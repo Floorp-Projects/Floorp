@@ -19,7 +19,7 @@ onmessage = function(event) {
 
   postMessage({type: 'status', status: status, msg: 'WebSocket object:' + WebSocket});
 
-  var ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_hello");
+  var ws = new WebSocket("ws://mochi.test:8888/tests/dom/base/test/file_websocket_hello");
   ws.onopen = function(e) {
     postMessage({type: 'status', status: true, msg: 'OnOpen called' });
     ws.send("data");

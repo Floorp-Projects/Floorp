@@ -93,6 +93,7 @@ public:
     bool IsHead() const { return EqualsMethod(kMethod_Head); }
     bool IsPut() const { return EqualsMethod(kMethod_Put); }
     bool IsTrace() const { return EqualsMethod(kMethod_Trace); }
+    void ParseHeaderSet(char *buffer) { mHeaders.ParseHeaderSet(buffer); }
 
 private:
     // All members must be copy-constructable and assignable

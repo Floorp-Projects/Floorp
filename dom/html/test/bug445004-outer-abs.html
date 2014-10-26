@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base href="http://example.org/tests/dom/html/test/bug445004-outer.html">
+    <script>document.domain = "example.org"</script>
+  </head>  
+  <body>
+    <iframe width="500" height="200" src="http://test1.example.org/tests/dom/html/test/bug445004-inner.html"
+            onload="window.frames[0].doIt()"></iframe>
+  </body>
+</html>

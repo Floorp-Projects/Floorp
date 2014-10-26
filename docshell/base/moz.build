@@ -73,7 +73,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../shistory/src',
-    '/content/base/src',
     '/dom/base',
     '/layout/base',
     '/layout/generic',

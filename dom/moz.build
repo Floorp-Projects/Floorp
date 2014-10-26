@@ -60,6 +60,7 @@ DIRS += [
     'filesystem',
     'fmradio',
     'geolocation',
+    'html',
     'json',
     'jsurl',
     'asmjscache',
@@ -74,6 +75,7 @@ DIRS += [
     'quota',
     'settings',
     'storage',
+    'svg',
     'mobilemessage',
     'time',
     'locales',
@@ -97,6 +99,7 @@ DIRS += [
     'xbl',
     'xml',
     'xslt',
+    'xul',
     'resourcestats',
 ]
 

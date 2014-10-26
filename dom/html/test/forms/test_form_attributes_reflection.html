@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLFormElement attributes reflection</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for HTMLFormElement attributes reflection **/
+
+// .acceptCharset
+reflectString({
+  element: document.createElement("form"),
+  attribute: { idl: "acceptCharset", content: "accept-charset" },
+  otherValues: [ "ISO-8859-1", "UTF-8" ],
+});
+
+// TODO: action (URL).  But note that we currently reflect it weirdly; see
+// dom/html/test/test_bug607145.html
+
+// .autocomplete
+reflectLimitedEnumerated({
+  element: document.createElement("form"),
+  attribute: "autocomplete",
+  validValues: [ "on", "off" ],
+  invalidValues: [ "", "foo", "tulip", "default" ],
+  defaultValue: "on",
+});
+
+// .enctype
+reflectLimitedEnumerated({
+  element: document.createElement("form"),
+  attribute: "enctype",
+  validValues: [ "application/x-www-form-urlencoded", "multipart/form-data",
+                 "text/plain" ],
+  invalidValues: [ "", "foo", "tulip", "multipart/foo" ],
+  defaultValue: "application/x-www-form-urlencoded"
+});
+
+// .encoding
+reflectLimitedEnumerated({
+  element: document.createElement("form"),
+  attribute: { idl: "encoding", content: "enctype" },
+  validValues: [ "application/x-www-form-urlencoded", "multipart/form-data",
+                 "text/plain" ],
+  invalidValues: [ "", "foo", "tulip", "multipart/foo" ],
+  defaultValue: "application/x-www-form-urlencoded"
+});
+
+// .method
+reflectLimitedEnumerated({
+  element: document.createElement("form"),
+  attribute: "method",
+  validValues: [ "get", "post" ],
+  invalidValues: [ "", "foo", "tulip" ],
+  defaultValue: "get"
+});
+
+// .name
+reflectString({
+  element: document.createElement("form"),
+  attribute: "name",
+});
+
+// .noValidate
+reflectBoolean({
+  element: document.createElement("form"),
+  attribute: "noValidate",
+});
+
+// .target
+reflectString({
+  element: document.createElement("form"),
+  attribute: "target",
+  otherValues: [ "_blank", "_self", "_parent", "_top" ],
+});
+
+</script>
+</pre>
+</body>
+</html>

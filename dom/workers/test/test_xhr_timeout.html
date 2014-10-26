@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=498998
 </div>
 <pre id="test">
 <script type="text/javascript">
-  var worker = new Worker("../../../content/base/test/test_XHR_timeout.js");
+  var worker = new Worker("../../../dom/base/test/test_XHR_timeout.js");
 
   worker.addEventListener("message", function (event) {
     if (event.data == "done") {

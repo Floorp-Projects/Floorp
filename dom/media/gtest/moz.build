@@ -1,0 +1,43 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+UNIFIED_SOURCES += [
+    'MockMediaResource.cpp',
+    'TestAudioCompactor.cpp',
+    'TestGMPCrossOrigin.cpp',
+    'TestMP4Reader.cpp',
+    'TestTrackEncoder.cpp',
+    'TestVideoSegment.cpp',
+    'TestWebMBuffered.cpp',
+]
+
+if CONFIG['MOZ_WEBM_ENCODER']:
+    UNIFIED_SOURCES += [
+        'TestVideoTrackEncoder.cpp',
+        'TestVorbisTrackEncoder.cpp',
+        'TestWebMWriter.cpp',
+    ]
+
+TEST_HARNESS_FILES.gtest += [
+    '../test/gizmo.mp4',
+    'mediasource_test.mp4',
+    'test.webm',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/dom/media',
+    '/dom/media/encoder',
+    '/dom/media/fmp4',
+    '/dom/media/gmp',
+    '/security/certverifier',
+    '/security/pkix/include',
+]
+
+FINAL_LIBRARY = 'xul-gtest'
+
+FAIL_ON_WARNINGS = True

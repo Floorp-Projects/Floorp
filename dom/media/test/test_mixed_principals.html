@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=489415
+-->
+<head>
+  <title>Test for Bug 489415</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=489415">Mozilla Bug 489415</a>
+<p id="display"></p>
+
+<video id="v1" autoplay onended="loaded('v1')"></video>
+<video id="v2" autoplay onended="loaded('v2')"></video>
+
+<pre id="test">
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var v1 = document.getElementById("v1");
+var v2 = document.getElementById("v2");
+
+var resource = getPlayableVideo(gSeekTests);
+
+if (resource != null) {
+  var count = 0;
+
+  function loaded(id) {
+    var c = document.createElement("canvas");
+    var ctx = c.getContext("2d");
+    var v = document.getElementById(id);
+    ctx.drawImage(v, 0, 0);
+    try {
+      c.toDataURL();
+      ok(false, "Failed to throw exception in toDataURL for " + id);
+    } catch (ex) {
+      ok(true, "Threw exception in toDataURL for " + id);
+    }
+    if (++count == 2) {
+      SimpleTest.finish();
+    }
+  }
+
+  // Generate a random key. The first load with that key will return
+  // data, the second and subsequent loads with that key will return a redirect
+  // to a different origin ('localhost:8888' will be redirected to 'example.org',
+  // and 'example.org' will be redirected to 'localhost:8888'). We rely on the
+  // fact that Ogg will do a seek to the end of the resource, triggering a new
+  // load with the same key which will return a same-origin resource.
+  // Loading data from two different origins should be detected by the media
+  // cache and result in a null principal so that the canvas usage above fails.
+  var key = Math.floor(Math.random()*100000000);
+
+  // In v1, try loading from same-origin first and then getting redirected to
+  // another origin.
+  v1.src = "http://mochi.test:8888/tests/dom/media/test/dynamic_redirect.sjs?key=v1_" + key + "&res=" + resource.name;
+  v1.load();
+
+  // In v2, try loading cross-origin first and then getting redirected to
+  // our origin.
+  v2.src = "http://example.org/tests/dom/media/test/dynamic_redirect.sjs?key=v2_" + key + "&res=" + resource.name;
+  v2.load();
+  
+} else {
+  todo(false, "No types supported");
+}
+</script>
+</pre>
+
+</body>
+</html>

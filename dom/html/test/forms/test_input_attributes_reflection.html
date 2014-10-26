@@ -1,0 +1,275 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLInputElement attributes reflection</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for HTMLInputElement attributes reflection **/
+
+// TODO: maybe make those reflections be tested against all input types.
+
+function testWidthHeight(attr) {
+  var element = document.createElement('input');
+  is(element[attr], 0, attr + ' always returns 0 if not type=image');
+  element.setAttribute(attr, '42');
+  is(element[attr], 0, attr + ' always returns 0 if not type=image');
+  is(element.getAttribute(attr), '42');
+  element[attr] = 0;
+  is(element.getAttribute(attr), '0', 'setting ' + attr + ' changes the content attribute');
+  element[attr] = 12;
+  is(element.getAttribute(attr), '12', 'setting ' + attr + ' changes the content attribute');
+
+  element.removeAttribute(attr);
+  ise(element.getAttribute(attr), null);
+
+  element = document.createElement('input');
+  element.type = 'image';
+  document.getElementById('content').appendChild(element);
+  isnot(element[attr], 0, attr + ' represents the dimension of the element if type=image');
+
+  element.setAttribute(attr, '42');
+  isnot(element[attr], 0, attr + ' represents the dimension of the element if type=image');
+  isnot(element[attr], 42, attr + ' represents the dimension of the element if type=image');
+  is(element.getAttribute(attr), '42');
+  element[attr] = 0;
+  is(element.getAttribute(attr), '0', 'setting ' + attr + ' changes the content attribute');
+  element[attr] = 12;
+  is(element.getAttribute(attr), '12', 'setting ' + attr + ' changes the content attribute');
+
+  element.removeAttribute(attr);
+  ise(element.getAttribute(attr), null);
+}
+
+// .accept
+reflectString({
+  element: document.createElement("input"),
+  attribute: "accept",
+  otherValues: [ "audio/*", "video/*", "image/*", "image/png",
+                 "application/msword", "appplication/pdf" ],
+});
+
+// .alt
+reflectString({
+  element: document.createElement("input"),
+  attribute: "alt",
+});
+
+// .autocomplete
+reflectLimitedEnumerated({
+  element: document.createElement("input"),
+  attribute: "autocomplete",
+  validValues: [ "on", "off" ],
+  invalidValues: [ "", "default", "foo", "tulip" ],
+});
+
+// .autofocus
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: "autofocus",
+});
+
+// .defaultChecked
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: { idl: "defaultChecked", content: "checked" },
+});
+
+// .checked doesn't reflect a content attribute.
+
+// .dirName
+todo("dirName" in document.createElement("input"),
+     "dirName isn't implemented yet");
+
+// .disabled
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: "disabled",
+});
+
+// TODO: form (HTMLFormElement)
+// TODO: files (FileList)
+// TODO: formAction (URL).  But note that we currently reflect it weirdly; see
+// dom/html/test/test_bug607145.html
+
+// .formEnctype
+reflectLimitedEnumerated({
+  element: document.createElement("input"),
+  attribute: "formEnctype",
+  validValues: [ "application/x-www-form-urlencoded", "multipart/form-data",
+                 "text/plain" ],
+  invalidValues: [ "", "foo", "tulip", "multipart/foo" ],
+  defaultValue: { invalid: "application/x-www-form-urlencoded", missing: "" }
+});
+
+// .formMethod
+reflectLimitedEnumerated({
+  element: document.createElement("input"),
+  attribute: "formMethod",
+  validValues: [ "get", "post" ],
+  invalidValues: [ "", "foo", "tulip" ],
+  defaultValue: { invalid: "get", missing: "" }
+});
+
+// .formNoValidate
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: "formNoValidate",
+});
+
+// .formTarget
+reflectString({
+  element: document.createElement("input"),
+  attribute: "formTarget",
+  otherValues: [ "_blank", "_self", "_parent", "_top" ],
+});
+
+// .height
+testWidthHeight('height');
+
+// .indeterminate doesn't reflect a content attribute.
+
+// .inputmode
+if (SpecialPowers.getBoolPref("dom.forms.inputmode")) {
+reflectLimitedEnumerated({
+  element: document.createElement("input"),
+  attribute: "inputMode",
+  validValues: [ "numeric", "digit", "uppercase", "lowercase", "titlecase", "autocapitalized", "auto" ],
+  invalidValues: [ "", "foo", "tulip" ],
+  defaultValue: "auto"
+});
+}
+
+// TODO: list (HTMLElement)
+
+// .max
+reflectString({
+  element: document.createElement('input'),
+  attribute: 'max',
+});
+
+// .maxLength
+reflectInt({
+  element: document.createElement("input"),
+  attribute: "maxLength",
+  nonNegative: true,
+});
+
+// .min
+reflectString({
+  element: document.createElement('input'),
+  attribute: 'min',
+});
+
+// .multiple
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: "multiple",
+});
+
+// .name
+reflectString({
+  element: document.createElement("input"),
+  attribute: "name",
+  otherValues: [ "isindex", "_charset_" ],
+});
+
+// .pattern
+reflectString({
+  element: document.createElement("input"),
+  attribute: "pattern",
+  otherValues: [ "[0-9][A-Z]{3}" ],
+});
+
+// .placeholder
+reflectString({
+  element: document.createElement("input"),
+  attribute: "placeholder",
+  otherValues: [ "foo\nbar", "foo\rbar", "foo\r\nbar" ],
+});
+
+// .readOnly
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: "readOnly",
+});
+
+// .required
+reflectBoolean({
+  element: document.createElement("input"),
+  attribute: "required",
+});
+
+// .size
+reflectUnsignedInt({
+  element: document.createElement("input"),
+  attribute: "size",
+  nonZero: true,
+  defaultValue: 20,
+});
+
+// .src (URL)
+reflectURL({
+  element: document.createElement('input'),
+  attribute: 'src',
+});
+
+// .step
+reflectString({
+  element: document.createElement('input'),
+  attribute: 'step',
+});
+
+// .type
+reflectLimitedEnumerated({
+  element: document.createElement("input"),
+  attribute: "type",
+  validValues: [ "hidden", "text", "search", "tel", "url", "email", "password",
+                 "checkbox", "radio", "file", "submit", "image", "reset",
+                 "button", "date", "time", "number", "range", "color" ],
+  invalidValues: [ "this-is-probably-a-wrong-type", "", "tulip" ],
+  defaultValue: "text",
+  unsupportedValues: [ "datetime", "month", "week", "datetime-local" ]
+});
+
+// .defaultValue
+reflectString({
+  element: document.createElement("input"),
+  attribute: { idl: "defaultValue", content: "value" },
+  otherValues: [ "foo\nbar", "foo\rbar", "foo\r\nbar" ],
+});
+
+// .value doesn't reflect a content attribute.
+
+// .valueAsDate
+is("valueAsDate" in document.createElement("input"), true,
+   "valueAsDate should be available");
+
+// Deeper check will be done with bug 763305.
+is('valueAsNumber' in document.createElement("input"), true,
+   "valueAsNumber should be available");
+
+// .selectedOption
+todo("selectedOption" in document.createElement("input"),
+     "selectedOption isn't implemented yet");
+
+// .width
+testWidthHeight('width');
+
+// .willValidate doesn't reflect a content attribute.
+// .validity doesn't reflect a content attribute.
+// .validationMessage doesn't reflect a content attribute.
+// .labels doesn't reflect a content attribute.
+
+</script>
+</pre>
+</body>
+</html>

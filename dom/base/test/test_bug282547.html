@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=282547
+-->
+<head>
+  <title>Test for Bug 282547</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=282547">Mozilla Bug 282547</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<script class="testbody" type="text/javascript">
+
+function xhr_userpass_sync() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'bug282547.sjs', false, 'username', 'password');
+
+  xhr.send(null);
+  ok(xhr.status == 401, "Status 401");
+
+  runTests();
+}
+
+function xhr_userpass_async() {
+  xhr = new XMLHttpRequest();
+  xhr.open('GET', 'bug282547.sjs', true, 'username', 'password');
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      ok(xhr.status == 401, "Status 401");
+      runTests();
+    }
+  }
+
+  xhr.send(null);
+}
+
+function xhr_auth_header_sync() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'bug282547.sjs', false);
+  xhr.setRequestHeader("Authorization", "42");
+
+  xhr.send(null);
+  ok(xhr.status == 401, "Status 401");
+
+  runTests();
+}
+
+function xhr_auth_header_async() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'bug282547.sjs', true);
+  xhr.setRequestHeader("Authorization", "42");
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      ok(xhr.status == 401, "Status 401");
+      runTests();
+    }
+  }
+
+  xhr.send(null);
+}
+
+function xhr_crossorigin_sync() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://example.com/tests/dom/base/test/bug282547.sjs', true);
+  xhr.withCredentials = true;
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      ok(xhr.status == 401, "Status 401");
+      runTests();
+    }
+  }
+
+  xhr.send(null);
+}
+
+var tests = [ xhr_userpass_sync,
+              xhr_userpass_async,
+              xhr_auth_header_sync,
+              xhr_auth_header_async,
+              /* Disabled: bug799540 xhr_crossorigin_sync */ ];
+function runTests() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+runTests();
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>
+

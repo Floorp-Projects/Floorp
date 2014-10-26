@@ -368,8 +368,7 @@ include ../xul/grid/reftests/reftest.list
 include z-index/reftest.list
 
 # reftest(s) to verify content bugfixes
-include ../../content/html/document/reftests/reftests.list
-include ../../content/html/content/reftests/reftest.list
+include ../../dom/html/reftests/reftest.list
 include ../../dom/imptests/reftest.list
 
 # editor/

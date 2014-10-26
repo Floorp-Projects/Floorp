@@ -37,13 +37,6 @@ LOCAL_INCLUDES += [
     '../tables',
     '../xul',
     '/caps',
-    '/content/base/src',
-    '/content/html/content/src',
-    '/content/html/document/src',
-    '/content/svg/content/src',
-    '/content/xul/content/src',
-    '/content/xul/document/src',
-    '/content/xul/templates/src',
     '/docshell/base',
     '/dom/audiochannel',
     '/dom/base',
@@ -51,18 +44,22 @@ LOCAL_INCLUDES += [
     '/dom/canvas',
     '/dom/filesystem',
     '/dom/geolocation',
+    '/dom/html',
     '/dom/json',
     '/dom/jsurl',
     '/dom/media',
     '/dom/offline',
     '/dom/speakermanager',
     '/dom/storage',
+    '/dom/svg',
     '/dom/telephony',
     '/dom/xbl',
     '/dom/xslt/base',
     '/dom/xslt/xml',
     '/dom/xslt/xpath',
     '/dom/xslt/xslt',
+    '/dom/xul',
+    '/dom/xul/templates',
     '/editor/composer',
     '/editor/libeditor',
     '/editor/txmgr',
@@ -116,7 +113,7 @@ if CONFIG['MOZ_B2G_BT']:
 
 if CONFIG['MOZ_WEBSPEECH']:
     LOCAL_INCLUDES += [
-        '/content/media/webspeech/synth',
+        '/dom/media/webspeech/synth',
     ]
 
 if CONFIG['MOZ_GSTREAMER']:

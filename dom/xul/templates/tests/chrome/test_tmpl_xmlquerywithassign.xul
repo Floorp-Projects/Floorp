@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<!--
+  xml query with assign
+-->
+
+<window title="XUL Template Tests" width="500" height="600"
+        onload="test_template();"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <data id="output">
+    <hbox id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Chamaeleo-chamaelon">
+      <button label="Chameleon"/>
+      <label value="9"/>
+    </hbox>
+    <hbox id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Dromaius-novaehollandiae">
+      <button label="Emu"/>
+      <label value="3"/>
+    </hbox>
+    <hbox id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Tyto-alba">
+      <button label="Barn Owl"/>
+      <label value="8"/>
+    </hbox>
+    <hbox id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Corvus-corax">
+      <button label="Raven"/>
+      <label value="5"/>
+    </hbox>
+  </data>
+
+<script src="templates_shared.js"/>
+
+<script>
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+var testid ="xml query with assign";
+var queryType = "xml";
+var isTreeBuilder = false;
+var needsOpen = false;
+var notWorkingYet = false;
+var notWorkingYetDynamic = false;
+var expectedOutput = document.getElementById("output");
+
+var changes = [];
+]]>
+</script>
+
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="animals.xml" querytype="xml" ref=".">
+<template>
+<query expr="class/species">
+<assign var="?length" expr="string-length(@name)"/>
+</query>
+<action>
+<hbox uri="?">
+<button label="?name"/>
+<label value="?length"/>
+</hbox>
+</action>
+</template>
+</vbox>
+
+</window>

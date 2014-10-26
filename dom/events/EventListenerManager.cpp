@@ -860,6 +860,19 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
       return rv;
     }
   }
+
+  JS::AutoObjectVector scopeChain(cx);
+  { // scope for curScope
+    // We append all the non-globals on our desired scope chain.
+    JS::Rooted<JSObject*> curScope(cx, &v.toObject());
+    while (curScope && !JS_IsGlobalObject(curScope)) {
+      if (!scopeChain.append(curScope)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      curScope = JS_GetParent(curScope);
+    }
+  }
+
   if (addonId) {
     JS::Rooted<JSObject*> vObj(cx, &v.toObject());
     JS::Rooted<JSObject*> addonScope(cx, xpc::GetAddonScope(cx, vObj, addonId));
@@ -867,6 +880,14 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
       return NS_ERROR_FAILURE;
     }
     JSAutoCompartment ac(cx, addonScope);
+    for (size_t i = 0; i < scopeChain.length(); ++i) {
+      if (!JS_WrapObject(cx, scopeChain[i])) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    // And wrap v as well, since scopeChain might be empty so we can't
+    // reliably use it to enter a compartment.
     if (!JS_WrapValue(cx, &v)) {
       return NS_ERROR_FAILURE;
     }
@@ -896,7 +917,7 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
          .setDefineOnScope(false);
 
   JS::Rooted<JSObject*> handler(cx);
-  result = nsJSUtils::CompileFunction(jsapi, target, options,
+  result = nsJSUtils::CompileFunction(jsapi, scopeChain, options,
                                       nsAtomCString(typeAtom),
                                       argCount, argNames, *body, handler.address());
   NS_ENSURE_SUCCESS(result, result);

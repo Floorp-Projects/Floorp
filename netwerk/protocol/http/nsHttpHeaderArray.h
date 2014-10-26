@@ -54,6 +54,8 @@ public:
 
     void Flatten(nsACString &, bool pruneProxyHeaders=false);
 
+    void ParseHeaderSet(char *buffer);
+
     uint32_t Count() const { return mHeaders.Length(); }
 
     const char *PeekHeaderAt(uint32_t i, nsHttpAtom &header) const;

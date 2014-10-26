@@ -9,7 +9,7 @@ onmessage = function(event) {
     return;
   }
 
-  var ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_hello");
+  var ws = new WebSocket("ws://mochi.test:8888/tests/dom/base/test/file_websocket_hello");
   ws.onopen = function(e) {
     postMessage('opened');
   }

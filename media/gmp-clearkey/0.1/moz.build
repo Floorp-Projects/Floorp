@@ -16,7 +16,7 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '/content/media/gmp',
+    '/dom/media/gmp',
 ]
 
 USE_STATIC_LIBS = True

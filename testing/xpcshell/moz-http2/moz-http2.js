@@ -75,7 +75,7 @@ var m = {
 function handleRequest(req, res) {
   var u = url.parse(req.url);
   var content = getHttpContent(u.pathname);
-  var push;
+  var push, push1, push1a, push2, push3;
 
   if (req.httpVersionMajor === 2) {
     res.setHeader('X-Connection-Http2', 'yes');
@@ -149,6 +149,54 @@ function handleRequest(req, res) {
     });
     push.end('// comments');
     content = '<head> <script src="push2.js"/></head>body text';
+  }
+
+  else if (u.pathname === "/pushapi1") {
+    push1 = res.push(
+	{ hostname: 'localhost:6944', port: 6944, path : '/pushapi1/1', method : 'GET',
+	  headers: {'x-pushed-request': 'true', 'x-foo' : 'bar'}});
+    push1.writeHead(200, {
+      'pushed' : 'yes',
+      'content-length' : 1,
+      'subresource' : '1',
+      'X-Connection-Http2': 'yes'
+      });
+    push1.end('1');
+
+    push1a = res.push(
+	{ hostname: 'localhost:6944', port: 6944, path : '/pushapi1/1', method : 'GET',
+	  headers: {'x-foo' : 'bar', 'x-pushed-request': 'true'}});
+    push1a.writeHead(200, {
+      'pushed' : 'yes',
+      'content-length' : 1,
+      'subresource' : '1a',
+      'X-Connection-Http2': 'yes'
+      });
+    push1a.end('1');
+
+    push2 = res.push(
+	{ hostname: 'localhost:6944', port: 6944, path : '/pushapi1/2', method : 'GET',
+	  headers: {'x-pushed-request': 'true'}});
+    push2.writeHead(200, {
+	  'pushed' : 'yes',
+	  'subresource' : '2',
+	  'content-length' : 1,
+	  'X-Connection-Http2': 'yes'
+      });
+    push2.end('2');
+
+    push3 = res.push(
+	{ hostname: 'localhost:6944', port: 6944, path : '/pushapi1/3', method : 'GET',
+	  headers: {'x-pushed-request': 'true'}});
+    push3.writeHead(200, {
+	  'pushed' : 'yes',
+	  'content-length' : 1,
+	  'subresource' : '3',
+	  'X-Connection-Http2': 'yes'
+      });
+     push3.end('3');
+
+    content = '0';
   }
 
   else if (u.pathname === "/big") {

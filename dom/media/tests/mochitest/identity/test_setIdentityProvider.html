@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../head.js"></script>
+  <script type="application/javascript" src="../pc.js"></script>
+  <script type="application/javascript" src="../templates.js"></script>
+  <script type="application/javascript" src="identityevent.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    title: "setIdentityProvider leads to peerIdentity and assertions in SDP"
+  });
+
+var test;
+function theTest() {
+  test = new PeerConnectionTest();
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  test.setIdentityProvider(test.pcLocal, "test1.example.com", "idp.html", "someone");
+  test.setIdentityProvider(test.pcRemote, "test2.example.com", "idp.html", "someone");
+
+  var localEvents = trapIdentityEvents(test.pcLocal._pc);
+  var remoteEvents = trapIdentityEvents(test.pcRemote._pc);
+
+  test.chain.append([
+  [
+    "PEER_IDENTITY_IS_SET_CORRECTLY",
+    function(test) {
+      var outstanding = 0;
+      // we have to wait for the identity result in order to get the actual
+      // identity information, since the call will complete before the identity
+      // provider has a chance to finish verifying... that's OK, but it makes
+      // testing more difficult
+
+      function checkOrSetupCheck(pc, pfx, idp, name) {
+        function checkIdentity() {
+          ok(pc.peerIdentity, pfx + "peerIdentity is set");
+          is(pc.peerIdentity.idp, idp, pfx + "IdP is correct");
+          is(pc.peerIdentity.name, name + "@" + idp, pfx + "identity is correct");
+        }
+        if (pc.peerIdentity) {
+          info(pfx + "peerIdentity already set");
+          checkIdentity();
+        } else {
+          ++outstanding;
+          info(pfx + "setting onpeeridentity handler");
+          pc.onpeeridentity = function checkIdentityEvent(e) {
+            info(pfx + "checking peerIdentity");
+            checkIdentity();
+            --outstanding;
+            if (outstanding <= 0) {
+              test.next();
+            }
+          };
+        }
+      }
+
+      checkOrSetupCheck(test.pcLocal._pc, "local: ", "test2.example.com", "someone");
+      checkOrSetupCheck(test.pcRemote._pc, "remote: ", "test1.example.com", "someone");
+      if (outstanding <= 0) {
+        test.next();
+      }
+    }
+  ],
+  [
+    "CHECK_IDENTITY_EVENTS",
+    function(test) {
+      ok(!localEvents.idpassertionerror , "No assertion generation errors on local");
+      ok(!remoteEvents.idpassertionerror, "No assertion generation errors on remote");
+      ok(!localEvents.idpvalidationerror, "No assertion validation errors on local");
+      ok( !remoteEvents.idpvalidationerror, "No assertion validation errors on remote");
+      ok(localEvents.identityresult, "local acquired identity assertions");
+      ok(remoteEvents.identityresult, "remote acquired identity assertions");
+      ok(localEvents.peeridentity, "local got peer identity");
+      ok(remoteEvents.peeridentity, "remote got peer identity");
+      test.next();
+    }
+  ],
+  [
+    "OFFERS_AND_ANSWERS_INCLUDE_IDENTITY",
+    function(test) {
+      ok(test.originalOffer.sdp.contains("a=identity"), "a=identity is in the offer SDP");
+      ok(test.originalAnswer.sdp.contains("a=identity"), "a=identity is in the answer SDP");
+      test.next();
+    }
+  ],
+  [
+    "DESCRIPTIONS_CONTAIN_IDENTITY",
+    function(test) {
+      ok(test.pcLocal.localDescription.sdp.contains("a=identity"),
+                         "a=identity is in the local copy of the offer");
+      ok(test.pcRemote.localDescription.sdp.contains("a=identity"),
+                         "a=identity is in the remote copy of the offer");
+      ok(test.pcLocal.remoteDescription.sdp.contains("a=identity"),
+                         "a=identity is in the local copy of the answer");
+      ok(test.pcRemote.remoteDescription.sdp.contains("a=identity"),
+                         "a=identity is in the remote copy of the answer");
+      test.next();
+    }
+  ]
+  ]);
+  test.run();
+}
+runNetworkTest(theTest);
+
+
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,5 +1,3 @@
-include ../../base/test/reftest/reftest.list # bug 920877
-
 == bug453105.html bug453105-ref.html
 == optiontext.html optiontext-ref.html
 == bug456008.xhtml bug456008-ref.html

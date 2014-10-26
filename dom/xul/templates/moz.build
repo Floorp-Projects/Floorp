@@ -1,0 +1,57 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
+
+XPIDL_SOURCES += [
+    'nsIXULBuilderListener.idl',
+    'nsIXULSortService.idl',
+    'nsIXULTemplateBuilder.idl',
+    'nsIXULTemplateQueryProcessor.idl',
+    'nsIXULTemplateResult.idl',
+    'nsIXULTemplateRuleFilter.idl',
+]
+
+XPIDL_MODULE = 'xultmpl'
+
+UNIFIED_SOURCES += [
+    'nsContentSupportMap.cpp',
+    'nsContentTestNode.cpp',
+    'nsInstantiationNode.cpp',
+    'nsRDFBinding.cpp',
+    'nsRDFConInstanceTestNode.cpp',
+    'nsRDFConMemberTestNode.cpp',
+    'nsRDFPropertyTestNode.cpp',
+    'nsRDFQuery.cpp',
+    'nsResourceSet.cpp',
+    'nsRuleNetwork.cpp',
+    'nsTemplateMatch.cpp',
+    'nsTemplateRule.cpp',
+    'nsTreeRows.cpp',
+    'nsXMLBinding.cpp',
+    'nsXULContentBuilder.cpp',
+    'nsXULContentUtils.cpp',
+    'nsXULSortService.cpp',
+    'nsXULTemplateBuilder.cpp',
+    'nsXULTemplateQueryProcessorRDF.cpp',
+    'nsXULTemplateQueryProcessorStorage.cpp',
+    'nsXULTemplateQueryProcessorXML.cpp',
+    'nsXULTemplateResultRDF.cpp',
+    'nsXULTemplateResultSetRDF.cpp',
+    'nsXULTemplateResultStorage.cpp',
+    'nsXULTemplateResultXML.cpp',
+    'nsXULTreeBuilder.cpp',
+]
+
+MSVC_ENABLE_PGO = True
+
+LOCAL_INCLUDES += [
+    '/dom/base',
+    '/dom/xul',
+    '/layout/xul/tree/',
+]
+
+FINAL_LIBRARY = 'xul'

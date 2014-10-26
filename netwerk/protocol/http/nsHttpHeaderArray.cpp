@@ -185,6 +185,25 @@ nsHttpHeaderArray::ParseHeaderLine(const char *line,
 }
 
 void
+nsHttpHeaderArray::ParseHeaderSet(char *buffer)
+{
+    nsHttpAtom hdr;
+    char *val;
+    while (buffer) {
+        char *eof = strchr(buffer, '\r');
+        if (!eof) {
+            break;
+        }
+        *eof = '\0';
+        ParseHeaderLine(buffer, &hdr, &val);
+        buffer = eof + 1;
+        if (*buffer == '\n') {
+            buffer++;
+        }
+    }
+}
+
+void
 nsHttpHeaderArray::Flatten(nsACString &buf, bool pruneProxyHeaders)
 {
     uint32_t i, count = mHeaders.Length();

@@ -86,6 +86,9 @@ typedef uint8_t nsHttpVersion;
 // weaker security profiles based on past history
 #define NS_HTTP_ALLOW_RSA_FALSESTART (1<<9)
 
+// This flag indicates the transaction should accept associated pushes
+#define NS_HTTP_ONPUSH_LISTENER      (1<<10)
+
 //-----------------------------------------------------------------------------
 // some default values
 //-----------------------------------------------------------------------------

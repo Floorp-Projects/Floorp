@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=713980
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 713980</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <!-- Load a cross-origin webfont without CORS (common pain point -->
+  <style>
+    @font-face {
+      font-family: "bad_cross_origin_webfont";
+      src: url('http://example.org/tests/dom/base/test/csp/file_CSP.sjs?testid=font_bad&type=application/octet-stream');
+    }
+    div#bad_webfont { font-family: "bad_cross_origin_webfont"; }
+  </style>
+</head>
+<body>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var tests = {
+  font : {
+    uri_test : "font_bad",
+    result : null
+  },
+  xhr : {
+    uri_test : "http://invalid",
+    result : null
+  },
+}
+
+function testsComplete() {
+  for (var testName in tests) {
+    var test = tests[testName];
+    if (test.result == null)
+      return false;
+  }
+  return true;
+}
+
+SpecialPowers.registerConsoleListener(function CORSMsgListener(aMsg) {
+  if (!/Cross-Origin Request Blocked/.test(aMsg.message))
+    return;
+
+  for (var testName in tests) {
+    var test = tests[testName];
+    if (test.result != null)
+      continue;
+
+    var testRegexp = new RegExp(test.uri_test);
+    if (testRegexp.test(aMsg.message)) {
+      test.result = true;
+      ok(true, "Got \"Cross-site request blocked\" warning message for " + testName);
+      ok(aMsg.category == "CORS", "Got warning message with category \"" + aMsg.category + "\", expected \"CORS\"");
+      // Got the message we wanted - make sure it is destined for a valid inner window
+      ok(aMsg.windowID != 0, "Valid (non-zero) windowID for the cross-site request blocked message.");
+      break;
+    }
+  }
+
+  if (testsComplete()) {
+    SimpleTest.executeSoon(cleanup);
+  }
+});
+
+function cleanup() {
+  SpecialPowers.postConsoleSentinel();
+  SimpleTest.finish();
+}
+
+// Send a cross-origin XHR request without CORS
+var xhr = new XMLHttpRequest();
+xhr.open("GET", "http://example.org/tests/dom/base/test/file_CrossSiteXHR_server.sjs?allowOrigin=http://invalid", true);
+xhr.send(null);
+
+// Create a div that triggers a cross-origin webfont request
+// We do this in Javascript in order to guarantee the console listener has
+// already been registered; otherwise, there could be a race.
+var badDiv = document.createElement('div');
+badDiv.setAttribute('id', 'bad_webfont');
+document.body.appendChild(badDiv);
+</script>
+
+</pre>
+</body>
+</html>
