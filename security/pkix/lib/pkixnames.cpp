@@ -22,18 +22,17 @@
  * limitations under the License.
  */
 
-// This code attempts to implement RFC6125 name matching.
+// This code implements RFC6125-ish name matching, RFC5280-ish name constraint
+// checking, and related things.
 //
 // In this code, identifiers are classified as either "presented" or
 // "reference" identifiers are defined in
 // http://tools.ietf.org/html/rfc6125#section-1.8. A "presented identifier" is
 // one in the subjectAltName of the certificate, or sometimes within a CN of
 // the certificate's subject. The "reference identifier" is the one we are
-// being asked to match the certificate against.
-//
-// On Windows and maybe other platforms, OS-provided IP address parsing
-// functions might fail if the protocol (IPv4 or IPv6) has been disabled, so we
-// can't rely on them.
+// being asked to match the certificate against. When checking name
+// constraints, the reference identifier is the entire encoded name constraint
+// extension value.
 
 #include "pkix/bind.h"
 #include "pkixcheck.h"
@@ -267,15 +266,21 @@ CheckNameConstraints(Input encodedNameConstraints,
 
 namespace {
 
-// SearchNames is used by CheckCertHostname and CheckNameConstraints. The
-// main benefit of using the exact same code paths for both is that we ensure
-// the consistency between name validation and name constraint enforcement
+// SearchNames is used by CheckCertHostname and CheckNameConstraints.
+//
+// When called during name constraint checking, referenceIDType is
+// GeneralNameType::nameConstraints and referenceID is the entire encoded name
+// constraints extension value.
+//
+// The main benefit of using the exact same code paths for both is that we
+// ensure consistency between name validation and name constraint enforcement
 // regarding thing like "Which CN attributes should be considered as potential
 // CN-IDs" and "Which character sets are acceptable for CN-IDs?" If the name
 // matching and the name constraint enforcement logic were out of sync on these
 // issues (e.g. if name matching were to consider all subject CN attributes,
 // but name constraints were only enforced on the most specific subject CN),
 // trivial name constraint bypasses could result.
+
 Result
 SearchNames(/*optional*/ const Input* subjectAltName,
             Input subject,
@@ -1345,6 +1350,9 @@ ReadIPv4AddressComponent(Reader& input, bool lastComponent,
 
 } // unnamed namespace
 
+// On Windows and maybe other platforms, OS-provided IP address parsing
+// functions might fail if the protocol (IPv4 or IPv6) has been disabled, so we
+// can't rely on them.
 bool
 ParseIPv4Address(Input hostname, /*out*/ uint8_t (&out)[4])
 {
@@ -1397,7 +1405,9 @@ FinishIPv6Address(/*in/out*/ uint8_t (&address)[16], int numComponents,
 
 } // unnamed namespace
 
-
+// On Windows and maybe other platforms, OS-provided IP address parsing
+// functions might fail if the protocol (IPv4 or IPv6) has been disabled, so we
+// can't rely on them.
 bool
 ParseIPv6Address(Input hostname, /*out*/ uint8_t (&out)[16])
 {
