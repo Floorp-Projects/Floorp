@@ -1062,3 +1062,9 @@ PK11_PrivDecrypt;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.18 { 	# NSS 3.18 release
+;+    global:
+PK11_SetCertificateNickname;
+;+    local:
+;+       *;
+;+};

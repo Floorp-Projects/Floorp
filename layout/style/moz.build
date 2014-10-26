@@ -155,14 +155,13 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '../../content/base/src',
-    '../../content/html/content/src',
-    '../../content/xul/document/src',
     '../base',
     '../generic',
     '../xul',
     '/dom/base',
+    '/dom/html',
     '/dom/xbl',
+    '/dom/xul',
 ]
 
 JAR_MANIFESTS += ['jar.mn']

@@ -6,7 +6,7 @@ function is(a, b, msg) {
   postMessage({ event: msg, test: 'is', a: a, b: b });
 }
 
-// This is a copy of content/base/test/test_XHR_parameters.js
+// This is a copy of dom/base/test/test_XHR_parameters.js
 var validParameters = [
   undefined,
   null,

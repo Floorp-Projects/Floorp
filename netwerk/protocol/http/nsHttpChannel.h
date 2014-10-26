@@ -32,9 +32,19 @@ class nsISSLStatus;
 
 namespace mozilla { namespace net {
 
+class Http2PushedStream;
 //-----------------------------------------------------------------------------
 // nsHttpChannel
 //-----------------------------------------------------------------------------
+
+// Use to support QI nsIChannel to nsHttpChannel
+#define NS_HTTPCHANNEL_IID                         \
+{                                                  \
+  0x301bf95b,                                      \
+  0x7bb3,                                          \
+  0x4ae1,                                          \
+  {0xa9, 0x71, 0x40, 0xbc, 0xfa, 0x81, 0xde, 0x12} \
+}
 
 class nsHttpChannel MOZ_FINAL : public HttpBaseChannel
                               , public HttpAsyncAborter<nsHttpChannel>
@@ -67,6 +77,7 @@ public:
     NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
     NS_DECL_NSITHREADRETARGETABLEREQUEST
     NS_DECL_NSIDNSLISTENER
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_HTTPCHANNEL_IID)
 
     // nsIHttpAuthenticableChannel. We can't use
     // NS_DECL_NSIHTTPAUTHENTICABLECHANNEL because it duplicates cancel() and
@@ -94,6 +105,8 @@ public:
     virtual nsresult Init(nsIURI *aURI, uint32_t aCaps, nsProxyInfo *aProxyInfo,
                           uint32_t aProxyResolveFlags,
                           nsIURI *aProxyURI);
+
+    nsresult OnPush(const nsACString &uri, Http2PushedStream *pushedStream);
 
     // Methods HttpBaseChannel didn't implement for us or that we override.
     //
@@ -345,6 +358,8 @@ private:
     nsresult OpenCacheInputStream(nsICacheEntry* cacheEntry, bool startBuffering,
                                   bool checkingAppCacheEntry);
 
+    void SetPushedStream(Http2PushedStream *stream);
+
 private:
     nsCOMPtr<nsISupports>             mSecurityInfo;
     nsCOMPtr<nsICancelable>           mProxyRequest;
@@ -438,6 +453,8 @@ private:
     // Needed for accurate DNS timing
     nsRefPtr<nsDNSPrefetch>           mDNSPrefetch;
 
+    Http2PushedStream                 *mPushedStream;
+
     nsresult WaitForRedirectCallback();
     void PushRedirectAsyncFunc(nsContinueRedirectionFunc func);
     void PopRedirectAsyncFunc(nsContinueRedirectionFunc func);
@@ -451,6 +468,7 @@ private: // cache telemetry
     bool mDidReval;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpChannel, NS_HTTPCHANNEL_IID)
 } } // namespace mozilla::net
 
 #endif // nsHttpChannel_h__

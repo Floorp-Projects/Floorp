@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../head.js"></script>
+  <script type="application/javascript" src="../pc.js"></script>
+  <script type="application/javascript" src="../templates.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    title: "getIdentityAssertion Tests"
+  });
+
+function checkIdentity(assertion, identity) {
+  // here we dig into the payload, which means we need to know something
+  // about how the IdP actually works (not good in general, but OK here)
+  var assertion = JSON.parse(atob(assertion)).assertion;
+  var user = JSON.parse(assertion).username;
+  is(user, identity, "id should be '" + identity + "' is '" + user + "'");
+}
+
+var test;
+function theTest() {
+  test = new PeerConnectionTest();
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  test.chain.removeAfter('PC_REMOTE_CHECK_INITIAL_SIGNALINGSTATE');
+  test.chain.append([
+  [
+    "GET_IDENTITY_ASSERTION_FAILS_WITHOUT_PROVIDER",
+    function(test) {
+      test.pcLocal._pc.onidpassertionerror = function(e) {
+        ok(e, "getIdentityAssertion must fail without provider");
+        test.next();
+      };
+      test.pcLocal._pc.getIdentityAssertion();
+    },
+  ],
+  [
+    "GET_IDENTITY_ASSERTION_FIRES_EVENTUALLY_AND_SUBSEQUENTLY",
+    function(test) {
+      var fired = 0;
+      test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html');
+      test.pcLocal._pc.onidentityresult = function(e) {
+        fired++;
+        if (fired == 1) {
+          ok(true, "identityresult fired");
+          checkIdentity(e.assertion, 'someone@example.com');
+        } else if (fired == 2) {
+          ok(true, "identityresult fired 2x");
+          checkIdentity(e.assertion, 'someone@example.com');
+          test.next();
+        }
+      };
+      test.pcLocal._pc.onidpassertionerror = function(e) {
+        ok(false, "error event fired");
+        test.next();
+      };
+      test.pcLocal._pc.getIdentityAssertion();
+      test.pcLocal._pc.getIdentityAssertion();
+    }
+  ],
+  [
+    "GET_IDENTITY_ASSERTION_FAILS",
+    function(test) {
+      test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html#error');
+      test.pcLocal._pc.onidentityresult = function(e) {
+        ok(false, "Should not get an identity result");
+        test.next();
+      };
+      test.pcLocal._pc.onidpassertionerror = function(err) {
+        ok(err, "Got error event from getIdentityAssertion");
+        test.next();
+      };
+      test.pcLocal._pc.getIdentityAssertion();
+    }
+  ],
+  [
+    "GET_IDENTITY_ASSERTION_IDP_NOT_READY",
+    function(test) {
+      test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html#error:ready');
+      test.pcLocal._pc.onidentityresult = function(e) {
+        ok(false, "Should not get an identity result");
+        test.next();
+      };
+      test.pcLocal._pc.onidpassertionerror = function(e) {
+        ok(e, "Got error callback from getIdentityAssertion");
+        test.next();
+      };
+      test.pcLocal._pc.getIdentityAssertion();
+    }
+  ],
+  [
+    "GET_IDENTITY_ASSERTION_WITH_SPECIFIC_NAME",
+    function(test) {
+      test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html', 'user@example.com');
+      test.pcLocal._pc.onidentityresult = function(e) {
+        checkIdentity(e.assertion, 'user@example.com');
+        test.next();
+      };
+      test.pcLocal._pc.onidpassertionerror = function(e) {
+        ok(false, "Got error callback from getIdentityAssertion");
+        test.next();
+      };
+      test.pcLocal._pc.getIdentityAssertion();
+    }
+  ]
+  ]);
+  test.run();
+}
+runNetworkTest(theTest);
+
+</script>
+</pre>
+</body>
+</html>

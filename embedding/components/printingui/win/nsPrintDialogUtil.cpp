@@ -6,7 +6,7 @@
 /* -------------------------------------------------------------------
 To Build This:
 
-  You need to add this to the the makefile.win in mozilla/content/base/src:
+  You need to add this to the the makefile.win in mozilla/dom/base:
 
 	.\$(OBJDIR)\nsFlyOwnPrintDialog.obj	\
 

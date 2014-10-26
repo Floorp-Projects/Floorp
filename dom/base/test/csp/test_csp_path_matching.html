@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 808292 - Implement path-level host-source matching to CSP</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="visibility: hidden">
+    <iframe style="width:100%;" id="testframe"></iframe>
+  </div>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We are loading the following url (including a fragment portion):
+ * http://test1.example.com/tests/dom/base/test/csp/file_csp_path_matching.js#foo
+ * using different policies and verify that the applied policy is accurately enforced.
+ */
+
+var policies = [
+  ["allowed", "*"],
+  ["allowed", "http://*"], // test for bug 1075230, enforcing scheme and wildcard
+  ["allowed", "test1.example.com"],
+  ["allowed", "test1.example.com/"],
+  ["allowed", "test1.example.com/tests/dom/base/test/csp/"],
+  ["allowed", "test1.example.com/tests/dom/base/test/csp/file_csp_path_matching.js"],
+
+  ["allowed", "test1.example.com?foo=val"],
+  ["allowed", "test1.example.com/?foo=val"],
+  ["allowed", "test1.example.com/tests/dom/base/test/csp/?foo=val"],
+  ["allowed", "test1.example.com/tests/dom/base/test/csp/file_csp_path_matching.js?foo=val"],
+
+  ["allowed", "test1.example.com#foo"],
+  ["allowed", "test1.example.com/#foo"],
+  ["allowed", "test1.example.com/tests/dom/base/test/csp/#foo"],
+  ["allowed", "test1.example.com/tests/dom/base/test/csp/file_csp_path_matching.js#foo"],
+
+  ["allowed", "*.example.com"],
+  ["allowed", "*.example.com/"],
+  ["allowed", "*.example.com/tests/dom/base/test/csp/"],
+  ["allowed", "*.example.com/tests/dom/base/test/csp/file_csp_path_matching.js"],
+
+  ["allowed", "test1.example.com:80"],
+  ["allowed", "test1.example.com:80/"],
+  ["allowed", "test1.example.com:80/tests/dom/base/test/csp/"],
+  ["allowed", "test1.example.com:80/tests/dom/base/test/csp/file_csp_path_matching.js"],
+
+  ["allowed", "test1.example.com:*"],
+  ["allowed", "test1.example.com:*/"],
+  ["allowed", "test1.example.com:*/tests/dom/base/test/csp/"],
+  ["allowed", "test1.example.com:*/tests/dom/base/test/csp/file_csp_path_matching.js"],
+
+  ["blocked", "test1.example.com/tests"],
+  ["blocked", "test1.example.com/tests/dom/base/test/csp"],
+  ["blocked", "test1.example.com/tests/dom/base/test/csp/file_csp_path_matching.py"],
+
+  ["blocked", "test1.example.com:8888/tests"],
+  ["blocked", "test1.example.com:8888/tests/dom/base/test/csp"],
+  ["blocked", "test1.example.com:8888/tests/dom/base/test/csp/file_csp_path_matching.py"],
+]
+
+var counter = 0;
+var policy;
+
+function loadNextTest() {
+  if (counter == policies.length) {
+    SimpleTest.finish();
+  }
+  else {
+    policy = policies[counter++];
+    var src = "file_csp_testserver.sjs";
+    // append the file that should be served
+    src += "?file=" + escape("tests/dom/base/test/csp/file_csp_path_matching.html");
+    // append the CSP that should be used to serve the file
+    src += "&csp=" + escape("default-src 'none'; script-src " + policy[1]);
+
+    document.getElementById("testframe").addEventListener("load", test, false);
+    document.getElementById("testframe").src = src;
+  }
+}
+
+function test() {
+  try {
+    document.getElementById("testframe").removeEventListener('load', test, false);
+    var testframe = document.getElementById("testframe");
+    var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
+    is(divcontent, policy[0], "should be " + policy[0] + " in test " + (counter - 1) + "!");
+  }
+  catch (e) {
+    ok(false, "ERROR: could not access content in test " + (counter - 1) + "!");
+  }
+  loadNextTest();
+}
+
+loadNextTest();
+
+</script>
+</body>
+</html>

@@ -22,11 +22,11 @@ dump("### SelectionPrototype.js loaded\n");
 
 /*
   http://mxr.mozilla.org/mozilla-central/source/docshell/base/nsIDocShell.idl
-  http://mxr.mozilla.org/mozilla-central/source/content/base/public/nsISelectionDisplay.idl
-  http://mxr.mozilla.org/mozilla-central/source/content/base/public/nsISelectionListener.idl
-  http://mxr.mozilla.org/mozilla-central/source/content/base/public/nsISelectionPrivate.idl
-  http://mxr.mozilla.org/mozilla-central/source/content/base/public/nsISelectionController.idl
-  http://mxr.mozilla.org/mozilla-central/source/content/base/public/nsISelection.idl
+  http://mxr.mozilla.org/mozilla-central/source/dom/base/nsISelectionDisplay.idl
+  http://mxr.mozilla.org/mozilla-central/source/dom/base/nsISelectionListener.idl
+  http://mxr.mozilla.org/mozilla-central/source/dom/base/nsISelectionPrivate.idl
+  http://mxr.mozilla.org/mozilla-central/source/dom/base/nsISelectionController.idl
+  http://mxr.mozilla.org/mozilla-central/source/dom/base/nsISelection.idl
   http://mxr.mozilla.org/mozilla-central/source/dom/interfaces/core/nsIDOMDocument.idl#372
     rangeCount
     getRangeAt

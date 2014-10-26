@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=814638
+-->
+<window title="Mozilla Bug 814638"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=814638"
+     target="_blank" id="link">Mozilla Bug 814638</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 814638 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function startTest() {
+    let hostURL = "chrome://mochitests/content/chrome/dom/base/test/chrome/host_bug814638.xul";
+    let host1 = window.open(hostURL, "_blank", "chrome");
+    let host2 = window.open(hostURL, "_blank", "chrome");
+
+    let isHost1Loaded = isHost2Loaded = false
+    host1.onload = function() {
+      isHost1Loaded = true;
+      if (isHost2Loaded) swapFrames();
+    }
+    host2.onload = function() {
+      isHost2Loaded = true;
+      if (isHost1Loaded) swapFrames();
+    }
+
+    function swapFrames() {
+      let iframe1 = host1.document.querySelector("iframe");
+      let iframe2 = host2.document.querySelector("iframe");
+      iframe2.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
+      iframe2.swapFrameLoaders(iframe1);
+      setTimeout(function() {
+        iframe2.contentWindow.receivedKeyEvent = receivedKeyEvent;
+        let innerIframe2 = iframe2.contentDocument.querySelector("iframe");
+        let e = innerIframe2.contentDocument.createEvent("KeyboardEvent");
+        e.initKeyEvent("keypress", true, true, null, true, false, false, false, 0, "t".charCodeAt(0));
+        innerIframe2.contentDocument.documentElement.dispatchEvent(e);
+        host1.close();
+        host2.close();
+      }, 0);
+    }
+  }
+
+  function receivedKeyEvent() {
+    ok(true, "Received key event");
+    SimpleTest.finish();
+  }
+
+  addLoadEvent(startTest);
+  ]]>
+  </script>
+</window>

@@ -70,7 +70,7 @@ MSVC_ENABLE_PGO = True
 LOCAL_INCLUDES += [
     '../base',
     '../system',
-    '/content/base/src',
+    '/dom/base',
     '/xpcom/build',
     '/xpcom/threads',
 ]

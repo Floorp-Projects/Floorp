@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=426308
+-->
+<head>
+  <title>Test for Bug 426308</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=426308">Mozilla Bug 426308</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 426308 **/
+
+const SJS_URL = "http://example.org:80/tests/dom/base/test/bug426308-redirect.sjs";
+
+function startTest() {
+  var req = new XMLHttpRequest({mozAnon: true, mozSystem: true});
+  req.open("GET", SJS_URL + "?" + window.location.href, false);
+  req.send(null);
+
+  is(req.status, 200, "Redirect did not happen");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+   SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], startTest);
+});
+</script>
+</pre>
+</body>
+</html>

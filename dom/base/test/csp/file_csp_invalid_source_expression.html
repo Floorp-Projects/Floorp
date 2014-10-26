@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1086612 - CSP: Let source expression be the empty set in case no valid source can be parsed</title>
+  </head>
+  <body>
+  <div id="testdiv">blocked</div>
+  <!-- Note, we reuse file_csp_path_matching.js which only updates the testdiv to 'allowed' if loaded !-->
+  <script src="http://test1.example.com/tests/dom/base/test/csp/file_csp_path_matching.js"></script>
+</body>
+</html>

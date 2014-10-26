@@ -65,7 +65,7 @@ function handleRequest(request, response) {
   // Get the output stream
   ctx.ostream = response.bodyOutputStream;
 
-  // Ugly hack, but effective - copied from content/media/test/contentDuration1.sjs
+  // Ugly hack, but effective - copied from dom/media/test/contentDuration1.sjs
   var pngFile = Components.classes["@mozilla.org/file/directory_service;1"].
                            getService(Components.interfaces.nsIProperties).
                            get("CurWorkD", Components.interfaces.nsILocalFile);

@@ -312,15 +312,32 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
     // from :scheme, :authority, :path
     nsILoadGroupConnectionInfo *loadGroupCI = mTransaction->LoadGroupConnectionInfo();
     SpdyPushCache *cache = nullptr;
-    if (loadGroupCI)
+    if (loadGroupCI) {
       loadGroupCI->GetSpdyPushCache(&cache);
+    }
 
     Http2PushedStream *pushedStream = nullptr;
+
+    // If a push stream is attached to the transaction via onPush, match only with that
+    // one. This occurs when a push was made with in conjunction with a nsIHttpPushListener
+    nsHttpTransaction *trans = mTransaction->QueryHttpTransaction();
+    if (trans && (pushedStream = trans->TakePushedStream())) {
+      if (pushedStream->mSession == mSession) {
+        LOG3(("Pushed Stream match based on OnPush correlation %p", pushedStream));
+      } else {
+        LOG3(("Pushed Stream match failed due to stream mismatch %p %d %d\n", pushedStream,
+              pushedStream->mSession->Serial(), mSession->Serial()));
+        pushedStream->OnPushFailed();
+        pushedStream = nullptr;
+      }
+    }
+
     // we remove the pushedstream from the push cache so that
     // it will not be used for another GET. This does not destroy the
     // stream itself - that is done when the transactionhash is done with it.
-    if (cache)
-      pushedStream = cache->RemovePushedStreamHttp2(hashkey);
+    if (cache && !pushedStream){
+        pushedStream = cache->RemovePushedStreamHttp2(hashkey);
+    }
 
     LOG3(("Pushed Stream Lookup "
           "session=%p key=%s loadgroupci=%p cache=%p hit=%p\n",
@@ -569,6 +586,17 @@ Http2Stream::AdjustInitialWindow()
       return;
   }
 
+  if (stream->mState == RESERVED_BY_REMOTE) {
+    // h2-14 prevents sending a window update in this state
+    return;
+  }
+
+  MOZ_ASSERT(mClientReceiveWindow <= ASpdySession::kInitialRwin);
+  uint32_t bump = ASpdySession::kInitialRwin - mClientReceiveWindow;
+  if (!bump) { // nothing to do
+    return;
+  }
+
   uint8_t *packet = mTxInlineFrame.get() + mTxInlineFrameUsed;
   EnsureBuffer(mTxInlineFrame, mTxInlineFrameUsed + Http2Session::kFrameHeaderBytes + 4,
                mTxInlineFrameUsed, mTxInlineFrameSize);
@@ -578,8 +606,6 @@ Http2Stream::AdjustInitialWindow()
                               Http2Session::FRAME_TYPE_WINDOW_UPDATE,
                               0, stream->mStreamID);
 
-  MOZ_ASSERT(mClientReceiveWindow <= ASpdySession::kInitialRwin);
-  uint32_t bump = ASpdySession::kInitialRwin - mClientReceiveWindow;
   mClientReceiveWindow += bump;
   bump = PR_htonl(bump);
   memcpy(packet + Http2Session::kFrameHeaderBytes, &bump, 4);
@@ -835,7 +861,7 @@ Http2Stream::GenerateDataFrameHeader(uint32_t dataLength, bool lastFrame)
   mTxStreamFrameSize = dataLength;
 }
 
-// ConvertHeaders is used to convert the response headers
+// ConvertResponseHeaders is used to convert the response headers
 // into HTTP/1 format and report some telemetry
 nsresult
 Http2Stream::ConvertResponseHeaders(Http2Decompressor *decompressor,
@@ -851,14 +877,14 @@ Http2Stream::ConvertResponseHeaders(Http2Decompressor *decompressor,
                                     aHeadersIn.Length(),
                                     aHeadersOut, false);
   if (NS_FAILED(rv)) {
-    LOG3(("Http2Stream::ConvertHeaders %p decode Error\n", this));
+    LOG3(("Http2Stream::ConvertResponseHeaders %p decode Error\n", this));
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
   nsAutoCString statusString;
   decompressor->GetStatus(statusString);
   if (statusString.IsEmpty()) {
-    LOG3(("Http2Stream::ConvertHeaders %p Error - no status\n", this));
+    LOG3(("Http2Stream::ConvertResponseHeaders %p Error - no status\n", this));
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -873,7 +899,7 @@ Http2Stream::ConvertResponseHeaders(Http2Decompressor *decompressor,
 
   if (httpResponseCode == 101) {
     // 8.1.1 of h2 disallows 101.. throw PROTOCOL_ERROR on stream
-    LOG3(("Http2Stream::ConvertHeaders %p Error - status == 101\n", this));
+    LOG3(("Http2Stream::ConvertResponseHeaders %p Error - status == 101\n", this));
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -901,7 +927,7 @@ Http2Stream::ConvertResponseHeaders(Http2Decompressor *decompressor,
   return NS_OK;
 }
 
-// ConvertHeaders is used to convert the response headers
+// ConvertPushHeaders is used to convert the pushed request headers
 // into HTTP/1 format and report some telemetry
 nsresult
 Http2Stream::ConvertPushHeaders(Http2Decompressor *decompressor,
@@ -909,6 +935,7 @@ Http2Stream::ConvertPushHeaders(Http2Decompressor *decompressor,
                                 nsACString &aHeadersOut)
 {
   aHeadersOut.Truncate();
+  aHeadersOut.SetCapacity(aHeadersIn.Length() + 512);
   nsresult rv =
     decompressor->DecodeHeaderBlock(reinterpret_cast<const uint8_t *>(aHeadersIn.BeginReading()),
                                     aHeadersIn.Length(),
@@ -953,6 +980,14 @@ Http2Stream::SetAllHeadersReceived()
 {
   if (mAllHeadersReceived) {
     return;
+  }
+
+  if (mState == RESERVED_BY_REMOTE) {
+    // pushed streams needs to wait until headers have
+    // arrived to open up their window
+    LOG3(("Http2Stream::SetAllHeadersReceived %p state OPEN from reserved\n", this));
+    mState = OPEN;
+    AdjustInitialWindow();
   }
 
   mAllHeadersReceived = 1;
