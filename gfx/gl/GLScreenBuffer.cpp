@@ -572,8 +572,12 @@ DrawBuffer::Create(GLContext* const gl,
         return true;
     }
 
-    if (caps.antialias && formats.samples == 0)
-        return false; // Can't create it
+    if (caps.antialias) {
+        if (formats.samples == 0)
+            return false; // Can't create it.
+
+        MOZ_ASSERT(formats.samples <= gl->MaxSamples());
+    }
 
     GLuint colorMSRB = 0;
     GLuint depthRB   = 0;
