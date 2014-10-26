@@ -45,6 +45,52 @@ class AutoRestoreTransform
   Matrix mOldTransform;
 };
 
+class AutoPopClips
+{
+public:
+  explicit AutoPopClips(DrawTarget *aTarget)
+    : mDrawTarget(aTarget)
+    , mPushCount(0)
+  {
+    MOZ_ASSERT(mDrawTarget);
+  }
+
+  ~AutoPopClips()
+  {
+    PopAll();
+  }
+
+  void PushClip(const Path *aPath)
+  {
+    mDrawTarget->PushClip(aPath);
+    ++mPushCount;
+  }
+
+  void PushClipRect(const Rect &aRect)
+  {
+    mDrawTarget->PushClipRect(aRect);
+    ++mPushCount;
+  }
+
+  void PopClip()
+  {
+    MOZ_ASSERT(mPushCount > 0);
+    mDrawTarget->PopClip();
+    --mPushCount;
+  }
+
+  void PopAll()
+  {
+    while (mPushCount-- > 0) {
+      mDrawTarget->PopClip();
+    }
+  }
+
+private:
+  RefPtr<DrawTarget> mDrawTarget;
+  int32_t mPushCount;
+};
+
 } // namespace gfx
 } // namespace mozilla
 
