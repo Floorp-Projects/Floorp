@@ -34,8 +34,10 @@ protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::FillRule FillRule;
   typedef mozilla::gfx::Float Float;
+  typedef mozilla::gfx::Matrix Matrix;
   typedef mozilla::gfx::Path Path;
   typedef mozilla::gfx::PathBuilder PathBuilder;
+  typedef mozilla::gfx::Rect Rect;
 
 public:
   explicit nsSVGPathGeometryElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
@@ -66,6 +68,11 @@ public:
 
   virtual bool IsMarkable();
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
+
+  virtual bool GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
+                                 const Matrix& aTransform) {
+    return false;
+  }
 
   /**
    * Returns a Path that can be used to paint, hit-test or calculate bounds for
