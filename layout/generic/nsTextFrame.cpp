@@ -7,7 +7,6 @@
 
 #include "nsTextFrame.h"
 
-#include "gfx2DGlue.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
@@ -89,7 +88,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::gfx;
 
 struct TabWidth {
   TabWidth(uint32_t aOffset, uint32_t aWidth)
@@ -5156,9 +5154,8 @@ PaintDecorationLine(nsIFrame* aFrame,
       aCallbacks->NotifySelectionDecorationLinePathEmitted();
     }
   } else {
-    nsCSSRendering::PaintDecorationLine(aFrame, *aCtx->GetDrawTarget(),
-                                        ToRect(aDirtyRect), lineColor,
-      aPt, Float(aICoordInFrame), aLineSize, aAscent, aOffset, aDecoration, aStyle,
+    nsCSSRendering::PaintDecorationLine(aFrame, aCtx, aDirtyRect, lineColor,
+      aPt, aICoordInFrame, aLineSize, aAscent, aOffset, aDecoration, aStyle,
       aVertical, aDescentLimit);
   }
 }

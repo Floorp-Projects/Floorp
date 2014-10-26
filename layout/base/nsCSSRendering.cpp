@@ -8,11 +8,8 @@
 
 #include <ctime>
 
-#include "gfx2DGlue.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/Helpers.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
 
@@ -4017,13 +4014,13 @@ nsCSSRendering::DrawTableBorderSegment(nsRenderingContext&     aContext,
 
 // End table border-collapsing section
 
-Rect
+gfxRect
 nsCSSRendering::ExpandPaintingRectForDecorationLine(
                   nsIFrame* aFrame,
                   const uint8_t aStyle,
-                  const Rect& aClippedRect,
-                  const Float aICoordInFrame,
-                  const Float aCycleLength,
+                  const gfxRect& aClippedRect,
+                  const gfxFloat aICoordInFrame,
+                  const gfxFloat aCycleLength,
                   bool aVertical)
 {
   switch (aStyle) {
@@ -4052,12 +4049,12 @@ nsCSSRendering::ExpandPaintingRectForDecorationLine(
   NS_ENSURE_TRUE(block, aClippedRect);
 
   nsPresContext *pc = aFrame->PresContext();
-  Float framePosInBlock = Float(pc->AppUnitsToGfxUnits(framePosInBlockAppUnits));
+  gfxFloat framePosInBlock = pc->AppUnitsToGfxUnits(framePosInBlockAppUnits);
   int32_t rectPosInBlock =
     int32_t(NS_round(framePosInBlock + aICoordInFrame));
   int32_t extraStartEdge =
     rectPosInBlock - (rectPosInBlock / int32_t(aCycleLength) * aCycleLength);
-  Rect rect(aClippedRect);
+  gfxRect rect(aClippedRect);
   if (aVertical) {
     rect.y -= extraStartEdge;
     rect.height += extraStartEdge;
@@ -4070,11 +4067,11 @@ nsCSSRendering::ExpandPaintingRectForDecorationLine(
 
 void
 nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
-                                    DrawTarget& aDrawTarget,
-                                    const Rect& aDirtyRect,
+                                    gfxContext* aGfxContext,
+                                    const gfxRect& aDirtyRect,
                                     const nscolor aColor,
                                     const gfxPoint& aPt,
-                                    const Float aICoordInFrame,
+                                    const gfxFloat aICoordInFrame,
                                     const gfxSize& aLineSize,
                                     const gfxFloat aAscent,
                                     const gfxFloat aOffset,
@@ -4085,10 +4082,10 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
 {
   NS_ASSERTION(aStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE, "aStyle is none");
 
-  Rect rect = ToRect(
+  gfxRect rect =
     GetTextDecorationRectInternal(aPt, aLineSize, aAscent, aOffset,
                                   aDecoration, aStyle, aVertical,
-                                  aDescentLimit));
+                                  aDescentLimit);
   if (rect.IsEmpty() || !rect.Intersects(aDirtyRect)) {
     return;
   }
@@ -4100,28 +4097,26 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
     return;
   }
 
-  Float lineThickness = std::max(NS_round(aLineSize.height), 1.0);
+  gfxFloat lineThickness = std::max(NS_round(aLineSize.height), 1.0);
+  bool contextIsSaved = false;
 
-  ColorPattern color(ToDeviceColor(aColor));
-  StrokeOptions strokeOptions(lineThickness);
-  DrawOptions drawOptions;
-
-  Float dash[2];
-
-  AutoPopClips autoPopClips(&aDrawTarget);
+  gfxFloat oldLineWidth;
+  nsRefPtr<gfxPattern> oldPattern;
 
   switch (aStyle) {
     case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
     case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE:
+      oldLineWidth = aGfxContext->CurrentLineWidth();
+      oldPattern = aGfxContext->GetPattern();
       break;
     case NS_STYLE_TEXT_DECORATION_STYLE_DASHED: {
-      autoPopClips.PushClipRect(rect);
-      Float dashWidth = lineThickness * DOT_LENGTH * DASH_LENGTH;
-      dash[0] = dashWidth;
-      dash[1] = dashWidth;
-      strokeOptions.mDashPattern = dash;
-      strokeOptions.mDashLength = MOZ_ARRAY_LENGTH(dash);
-      strokeOptions.mLineCap = CapStyle::BUTT;
+      aGfxContext->Save();
+      contextIsSaved = true;
+      aGfxContext->Clip(rect);
+      gfxFloat dashWidth = lineThickness * DOT_LENGTH * DASH_LENGTH;
+      gfxFloat dash[2] = { dashWidth, dashWidth };
+      aGfxContext->SetLineCap(gfxContext::LINE_CAP_BUTT);
+      aGfxContext->SetDash(dash, 2, 0.0);
       rect = ExpandPaintingRectForDecorationLine(aFrame, aStyle, rect,
                                                  aICoordInFrame,
                                                  dashWidth * 2,
@@ -4131,18 +4126,20 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
       break;
     }
     case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED: {
-      autoPopClips.PushClipRect(rect);
-      Float dashWidth = lineThickness * DOT_LENGTH;
+      aGfxContext->Save();
+      contextIsSaved = true;
+      aGfxContext->Clip(rect);
+      gfxFloat dashWidth = lineThickness * DOT_LENGTH;
+      gfxFloat dash[2];
       if (lineThickness > 2.0) {
-        dash[0] = 0.f;
-        dash[1] = dashWidth * 2.f;
-        strokeOptions.mLineCap = CapStyle::ROUND;
+        dash[0] = 0.0;
+        dash[1] = dashWidth * 2.0;
+        aGfxContext->SetLineCap(gfxContext::LINE_CAP_ROUND);
       } else {
         dash[0] = dashWidth;
         dash[1] = dashWidth;
       }
-      strokeOptions.mDashPattern = dash;
-      strokeOptions.mDashLength = MOZ_ARRAY_LENGTH(dash);
+      aGfxContext->SetDash(dash, 2, 0.0);
       rect = ExpandPaintingRectForDecorationLine(aFrame, aStyle, rect,
                                                  aICoordInFrame,
                                                  dashWidth * 2,
@@ -4152,14 +4149,16 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
       break;
     }
     case NS_STYLE_TEXT_DECORATION_STYLE_WAVY:
-      autoPopClips.PushClipRect(rect);
+      aGfxContext->Save();
+      contextIsSaved = true;
+      aGfxContext->Clip(rect);
       if (lineThickness > 2.0) {
-        drawOptions.mAntialiasMode = AntialiasMode::SUBPIXEL;
+        aGfxContext->SetAntialiasMode(AntialiasMode::SUBPIXEL);
       } else {
         // Don't use anti-aliasing here.  Because looks like lighter color wavy
         // line at this case.  And probably, users don't think the
         // non-anti-aliased wavy line is not pretty.
-        drawOptions.mAntialiasMode = AntialiasMode::NONE;
+        aGfxContext->SetAntialiasMode(AntialiasMode::NONE);
       }
       break;
     default:
@@ -4170,16 +4169,23 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
   // The y position should be set to the middle of the line.
   rect.y += lineThickness / 2;
 
+  aGfxContext->SetColor(gfxRGBA(aColor));
+  aGfxContext->SetLineWidth(lineThickness);
   switch (aStyle) {
     case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
     case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED:
-    case NS_STYLE_TEXT_DECORATION_STYLE_DASHED: {
-      Point p1 = rect.TopLeft();
-      Point p2 = aVertical ? rect.BottomLeft() : rect.TopRight();
-      aDrawTarget.StrokeLine(p1, p2, color, strokeOptions, drawOptions);
-      return;
-    }
-    case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE: {
+    case NS_STYLE_TEXT_DECORATION_STYLE_DASHED:
+      aGfxContext->NewPath();
+      if (aVertical) {
+        aGfxContext->MoveTo(rect.TopLeft());
+        aGfxContext->LineTo(rect.BottomLeft());
+      } else {
+        aGfxContext->MoveTo(rect.TopLeft());
+        aGfxContext->LineTo(rect.TopRight());
+      }
+      aGfxContext->Stroke();
+      break;
+    case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE:
       /**
        *  We are drawing double line as:
        *
@@ -4194,21 +4200,22 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
        * |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX| v
        * +-------------------------------------------+
        */
-      Point p1 = rect.TopLeft();
-      Point p2 = aVertical ? rect.BottomLeft() : rect.TopRight();
-      aDrawTarget.StrokeLine(p1, p2, color, strokeOptions, drawOptions);
-
+      aGfxContext->NewPath();
       if (aVertical) {
+        aGfxContext->MoveTo(rect.TopLeft());
+        aGfxContext->LineTo(rect.BottomLeft());
         rect.width -= lineThickness;
+        aGfxContext->MoveTo(rect.TopRight());
+        aGfxContext->LineTo(rect.BottomRight());
       } else {
+        aGfxContext->MoveTo(rect.TopLeft());
+        aGfxContext->LineTo(rect.TopRight());
         rect.height -= lineThickness;
+        aGfxContext->MoveTo(rect.BottomLeft());
+        aGfxContext->LineTo(rect.BottomRight());
       }
-
-      p1 = aVertical ? rect.TopRight() : rect.BottomLeft();
-      p2 = rect.BottomRight();
-      aDrawTarget.StrokeLine(p1, p2, color, strokeOptions, drawOptions);
-      return;
-    }
+      aGfxContext->Stroke();
+      break;
     case NS_STYLE_TEXT_DECORATION_STYLE_WAVY: {
       /**
        *  We are drawing wavy line as:
@@ -4242,23 +4249,23 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
        * directions in the above description.
        */
 
-      Float& rectICoord = aVertical ? rect.y : rect.x;
-      Float& rectISize = aVertical ? rect.height : rect.width;
-      const Float rectBSize = aVertical ? rect.width : rect.height;
+      gfxFloat& rectICoord = aVertical ? rect.y : rect.x;
+      gfxFloat& rectISize = aVertical ? rect.height : rect.width;
+      const gfxFloat rectBSize = aVertical ? rect.width : rect.height;
 
-      const Float adv = rectBSize - lineThickness;
-      const Float flatLengthAtVertex =
+      const gfxFloat adv = rectBSize - lineThickness;
+      const gfxFloat flatLengthAtVertex =
         std::max((lineThickness - 1.0) * 2.0, 1.0);
 
       // Align the start of wavy lines to the nearest ancestor block.
-      const Float cycleLength = 2 * (adv + flatLengthAtVertex);
+      const gfxFloat cycleLength = 2 * (adv + flatLengthAtVertex);
       rect = ExpandPaintingRectForDecorationLine(aFrame, aStyle, rect,
                                                  aICoordInFrame, cycleLength,
                                                  aVertical);
       // figure out if we can trim whole cycles from the left and right edges
       // of the line, to try and avoid creating an unnecessarily long and
       // complex path
-      const Float dirtyRectICoord = aVertical ? aDirtyRect.y : aDirtyRect.x;
+      const gfxFloat dirtyRectICoord = aVertical ? aDirtyRect.y : aDirtyRect.x;
       int32_t skipCycles = floor((dirtyRectICoord - rectICoord) / cycleLength);
       if (skipCycles > 0) {
         rectICoord += skipCycles * cycleLength;
@@ -4266,29 +4273,28 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
       }
 
       rectICoord += lineThickness / 2.0;
-      Point pt(rect.TopLeft());
-      Float& ptICoord = aVertical ? pt.y : pt.x;
-      Float& ptBCoord = aVertical ? pt.x : pt.y;
+      gfxPoint pt(rect.TopLeft());
+      gfxFloat& ptICoord = aVertical ? pt.y : pt.x;
+      gfxFloat& ptBCoord = aVertical ? pt.x : pt.y;
       if (aVertical) {
         ptBCoord += adv + lineThickness / 2.0;
       }
-      Float iCoordLimit = ptICoord + rectISize + lineThickness;
+      gfxFloat iCoordLimit = ptICoord + rectISize + lineThickness;
 
-      const Float dirtyRectIMost = aVertical ?
+      const gfxFloat dirtyRectIMost = aVertical ?
         aDirtyRect.YMost() : aDirtyRect.XMost();
       skipCycles = floor((iCoordLimit - dirtyRectIMost) / cycleLength);
       if (skipCycles > 0) {
         iCoordLimit -= skipCycles * cycleLength;
       }
 
-      RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
-      RefPtr<Path> path;
+      aGfxContext->NewPath();
 
       ptICoord -= lineThickness;
-      builder->MoveTo(pt); // 1
+      aGfxContext->MoveTo(pt); // 1
 
       ptICoord = rectICoord;
-      builder->LineTo(pt); // 2
+      aGfxContext->LineTo(pt); // 2
 
       // In vertical mode, to go "down" relative to the text we need to
       // decrease the block coordinate, whereas in horizontal we increase
@@ -4299,28 +4305,34 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
         if (++iter > 1000) {
           // stroke the current path and start again, to avoid pathological
           // behavior in cairo with huge numbers of path segments
-          path = builder->Finish();
-          aDrawTarget.Stroke(path, color, strokeOptions, drawOptions);
-          builder = aDrawTarget.CreatePathBuilder();
-          builder->MoveTo(pt);
+          aGfxContext->Stroke();
+          aGfxContext->NewPath();
+          aGfxContext->MoveTo(pt);
           iter = 0;
         }
         ptICoord += adv;
         ptBCoord += goDown ? adv : -adv;
 
-        builder->LineTo(pt); // 3 and 5
+        aGfxContext->LineTo(pt); // 3 and 5
 
         ptICoord += flatLengthAtVertex;
-        builder->LineTo(pt); // 4 and 6
+        aGfxContext->LineTo(pt); // 4 and 6
 
         goDown = !goDown;
       }
-      path = builder->Finish();
-      aDrawTarget.Stroke(path, color, strokeOptions, drawOptions);
-      return;
+      aGfxContext->Stroke();
+      break;
     }
     default:
       NS_ERROR("Invalid style value!");
+      break;
+  }
+
+  if (contextIsSaved) {
+    aGfxContext->Restore();
+  } else {
+    aGfxContext->SetPattern(oldPattern);
+    aGfxContext->SetLineWidth(oldLineWidth);
   }
 }
 

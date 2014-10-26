@@ -262,10 +262,6 @@ function doTest(aTest)
         aTest.decoration.style == kDecorationStyleWavy) {
       todo(false, "Rendering of" + description);
     } else {
-      var fuzz = null; // no fuzz
-      if (navigator.userAgent.indexOf("Windows NT 6.2") > -1) { // Win8
-        fuzz = { maxDifference: 1, numDifferentPixels: 200 };
-      }
       assertSnapshots(result.snapshot, reference.snapshot, true,
                       null /*no fuzz*/, description, "");
     }

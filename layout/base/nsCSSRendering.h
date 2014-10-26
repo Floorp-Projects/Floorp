@@ -10,7 +10,6 @@
 
 #include "gfxBlur.h"
 #include "gfxContext.h"
-#include "mozilla/gfx/Rect.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleStruct.h"
 #include "nsIFrame.h"
@@ -21,10 +20,6 @@ class nsPresContext;
 class nsRenderingContext;
 
 namespace mozilla {
-
-namespace gfx {
-class DrawTarget;
-}
 
 namespace layers {
 class ImageContainer;
@@ -316,9 +311,6 @@ struct nsBackgroundLayerState {
 };
 
 struct nsCSSRendering {
-  typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::gfx::Float Float;
-  typedef mozilla::gfx::Rect Rect;
   typedef nsIFrame::Sides Sides;
 
   /**
@@ -677,11 +669,11 @@ struct nsCSSRendering {
    *                              used for strikeout line and overline too.
    */
   static void PaintDecorationLine(nsIFrame* aFrame,
-                                  DrawTarget& aDrawTarget,
-                                  const Rect& aDirtyRect,
+                                  gfxContext* aGfxContext,
+                                  const gfxRect& aDirtyRect,
                                   const nscolor aColor,
                                   const gfxPoint& aPt,
-                                  const Float aICoordInFrame,
+                                  const gfxFloat aICoordInFrame,
                                   const gfxSize& aLineSize,
                                   const gfxFloat aAscent,
                                   const gfxFloat aOffset,
@@ -806,12 +798,12 @@ protected:
    *                              and aClippedRect.pos.
    *     @param aCycleLength      the width of one cycle of the line style.
    */
-  static Rect ExpandPaintingRectForDecorationLine(
+  static gfxRect ExpandPaintingRectForDecorationLine(
                    nsIFrame* aFrame,
                    const uint8_t aStyle,
-                   const Rect &aClippedRect,
-                   const Float aICoordInFrame,
-                   const Float aCycleLength,
+                   const gfxRect &aClippedRect,
+                   const gfxFloat aICoordInFrame,
+                   const gfxFloat aCycleLength,
                    bool aVertical);
 };
 
