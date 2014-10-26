@@ -442,6 +442,7 @@ let NetworkHelper = {
     "application/x-json": "json",
     "application/json-rpc": "json",
     "application/x-web-app-manifest+json": "json",
+    "application/manifest+json": "json"
   },
 
   /**
