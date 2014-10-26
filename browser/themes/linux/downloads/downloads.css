@@ -169,7 +169,7 @@ richlistitem[type="download"]:last-child {
   border-top: 1px solid hsla(0,0%,100%,.3);
   border-bottom: 1px solid hsla(0,0%,0%,.2);
   background-color: Highlight;
-  background-image: linear-gradient(hsla(0,0%,100%,.1), hsla(0,0%,100%,0));
+  background-image: linear-gradient(hsla(0,0%,100%,.1), transparent);
   color: HighlightText;
   cursor: pointer;
 }

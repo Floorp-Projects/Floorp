@@ -524,9 +524,9 @@
 .devtools-separator {
   margin: 0 2px;
   width: 2px;
-  background-image: linear-gradient(hsla(204,45%,98%,0), hsla(204,45%,98%,.1), hsla(204,45%,98%,0)),
-                    linear-gradient(hsla(206,37%,4%,0), hsla(206,37%,4%,.6), hsla(206,37%,4%,0)),
-                    linear-gradient(hsla(204,45%,98%,0), hsla(204,45%,98%,.1), hsla(204,45%,98%,0));
+  background-image: linear-gradient(transparent, hsla(204,45%,98%,.1), transparent),
+                    linear-gradient(transparent, hsla(206,37%,4%,.6), transparent),
+                    linear-gradient(transparent, hsla(204,45%,98%,.1), transparent);
   background-size: 1px 100%;
   background-repeat: no-repeat;
   background-position: 0, 1px, 2px;
