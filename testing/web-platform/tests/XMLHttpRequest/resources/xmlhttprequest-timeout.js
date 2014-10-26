@@ -1,5 +1,5 @@
 /* Test adapted from Alex Vincent's XHR2 timeout tests, written for Mozilla.
-   https://hg.mozilla.org/mozilla-central/file/tip/content/base/test/
+   https://hg.mozilla.org/mozilla-central/file/tip/dom/base/test/
    Released into the public domain or under BSD, according to
    https://bugzilla.mozilla.org/show_bug.cgi?id=525816#c86
 */

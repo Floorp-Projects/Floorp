@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=607145
+-->
+<head>
+  <title>Test for Bug 607145</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=607145">Mozilla Bug 607145</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 607145 **/
+
+/**
+ * This is not really reflecting an URL as the HTML5 specs want to.
+ * It's how .action is reflected in Gecko (might change later).
+ *
+ * If this changes, add reflectURL for "formAction" in
+ * dom/html/test/forms/test_input_attributes_reflection.html and
+ * "action" in
+ * dom/html/test/forms/test_form_attributes_reflection.html
+ */
+function reflectURL(aElement, aAttr)
+{
+  var idl = aAttr;
+  var attr = aAttr.toLowerCase();
+  var elmtName = aElement.tagName.toLowerCase();
+
+  ok(idl in aElement, idl + " should be available in " + elmtName);
+
+  // Default values.
+  is(aElement[idl], "", "." + idl + " default value should be the empty string");
+  is(aElement.getAttribute(attr), null,
+     "@" + attr + " default value should be null");
+
+  var previousDir = location.href.replace(/test\/[^\/]*$/, "");
+  var dir = location.href.replace(/test_bug607145.html[^\/]*$/, "");
+  var doc = location.href.replace(/\.html.*/, ".html")
+  var values = [
+    /* value to set, resolved value */
+    [ "foo.html", dir + "foo.html" ],
+    [ "data:text/html,<html></html>", "data:text/html,<html></html>" ],
+    [ "http://example.org/", "http://example.org/" ],
+    [ "//example.org/", "http://example.org/" ],
+    [ "?foo=bar", doc + "?foo=bar" ],
+    [ "#foo", location.href + "#foo" ],
+    [ "", "" ], // TODO: doesn't follow the specs, should be location.href.
+    [ " ", location.href ],
+    [ "../", previousDir ],
+    [ "...", dir + "..." ],
+    // invalid URL
+    [ "http://a b/", "http://a b/" ], // TODO: doesn't follow the specs, should be "".
+  ];
+
+  for (var value of values) {
+    aElement[idl] = value[0];
+    is(aElement[idl], value[1], "." + idl + " value should be " + value[1]);
+    is(aElement.getAttribute(attr), value[0],
+       "@" + attr + " value should be " + value[0]);
+  }
+
+  for (var value of values) {
+    aElement.setAttribute(attr, value[0]);
+    is(aElement[idl], value[1], "." + idl + " value should be " + value[1]);
+    is(aElement.getAttribute(attr), value[0],
+       "@" + attr + " value should be " + value[0]);
+  }
+}
+
+reflectURL(document.createElement("form"), "action");
+reflectURL(document.createElement("input"), "formAction");
+reflectURL(document.createElement("button"), "formAction");
+
+</script>
+</pre>
+</body>
+</html>

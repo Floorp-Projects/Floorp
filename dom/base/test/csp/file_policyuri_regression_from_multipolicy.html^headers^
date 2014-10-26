@@ -1,0 +1,1 @@
+content-security-policy-report-only: policy-uri /tests/dom/base/test/csp/file_CSP_policyuri_regression_from_multipolicy_policy

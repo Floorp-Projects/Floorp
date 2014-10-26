@@ -15,6 +15,7 @@
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "TimingStruct.h"
+#include "Http2Push.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
@@ -89,6 +90,7 @@ public:
     nsISupports           *SecurityInfo()   { return mSecurityInfo; }
 
     nsIEventTarget        *ConsumerTarget() { return mConsumerTarget; }
+    nsISupports           *HttpChannel()    { return mChannel; }
 
     void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks);
 
@@ -136,6 +138,15 @@ public:
     void RemoveDispatchedAsBlocking();
 
     nsHttpTransaction *QueryHttpTransaction() MOZ_OVERRIDE { return this; }
+
+    Http2PushedStream *GetPushedStream() { return mPushedStream; }
+    Http2PushedStream *TakePushedStream()
+    {
+        Http2PushedStream *r = mPushedStream;
+        mPushedStream = nullptr;
+        return r;
+    }
+    void SetPushedStream(Http2PushedStream *push) { mPushedStream = push; }
 
 private:
     friend class DeleteHttpTransaction;
@@ -222,7 +233,9 @@ private:
     // so far been skipped.
     uint32_t                        mInvalidResponseBytesRead;
 
-    nsHttpChunkedDecoder           *mChunkedDecoder;
+    Http2PushedStream               *mPushedStream;
+
+    nsHttpChunkedDecoder            *mChunkedDecoder;
 
     TimingStruct                    mTimings;
 

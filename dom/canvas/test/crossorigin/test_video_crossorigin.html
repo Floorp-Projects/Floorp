@@ -7,7 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=682299
   <title>Test for Bug 682299</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/content/media/test/manifest.js"></script>
+  <script type="application/javascript" src="/tests/dom/media/test/manifest.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=682299">Mozilla Bug 682299</a>
@@ -146,7 +146,7 @@ var videoFile = getPlayableVideo(gSmallTests);
 if (!videoFile) {
   SimpleTest.finish();
 }
-videoFile = "?name=tests/content/media/test/" + videoFile.name + "&type=" + videoFile.type;
+videoFile = "?name=tests/dom/media/test/" + videoFile.name + "&type=" + videoFile.type;
 
 var gl;
 try {

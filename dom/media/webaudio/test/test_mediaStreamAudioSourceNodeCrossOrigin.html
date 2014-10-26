@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<head>
+  <title>Test MediaStreamAudioSourceNode doesn't get data from cross-origin media resources</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var audio = new Audio("http://example.org:80/tests/dom/media/webaudio/test/small-shot.ogg");
+var context = new AudioContext();
+var node = context.createMediaStreamSource(audio.mozCaptureStreamUntilEnded());
+var sp = context.createScriptProcessor(2048, 1);
+node.connect(sp);
+var nonzeroSampleCount = 0;
+var complete = false;
+var iterationCount = 0;
+
+// This test ensures we receive at least expectedSampleCount nonzero samples
+function processSamples(e) {
+  if (complete) {
+    return;
+  }
+
+  if (iterationCount == 0) {
+    // Don't start playing the audio until the AudioContext stuff is connected
+    // and running.
+    audio.play();
+  }
+  ++iterationCount;
+
+  var buf = e.inputBuffer.getChannelData(0);
+  var nonzeroSamplesThisBuffer = 0;
+  for (var i = 0; i < buf.length; ++i) {
+    if (buf[i] != 0) {
+      ++nonzeroSamplesThisBuffer;
+    }
+  }
+  is(nonzeroSamplesThisBuffer, 0,
+     "Checking all samples are zero");
+  if (iterationCount >= 20) {
+    SimpleTest.finish();
+    complete = true;
+  }
+}
+
+audio.oncanplaythrough = function() {
+  sp.onaudioprocess = processSamples;
+};
+</script>
+</pre>
+</body>
+</html>

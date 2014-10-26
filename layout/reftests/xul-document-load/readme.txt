@@ -1,4 +1,4 @@
-This directory contains various XUL document (mozilla/content/xul/document) testcases for reftest.
+This directory contains various XUL document (mozilla/dom/xul/document) testcases for reftest.
 
 test001: Checks that stylesheets referenced from an overlay via an
          xml-stylesheet PI are applied to the master document appropriately.

@@ -4,15 +4,71 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['gmp-plugin']
+DIRS += [
+    'encoder',
+    'gmp',
+    'gmp-plugin',
+    'imagecapture',
+    'mediasource',
+    'ogg',
+    'systemservices',
+    'webaudio',
+    'webrtc',
+    'webspeech',
+    'webvtt',
+]
+
+if CONFIG['MOZ_RAW']:
+    DIRS += ['raw']
+
+if CONFIG['MOZ_WAVE']:
+    DIRS += ['wave']
+
+if CONFIG['MOZ_WEBM']:
+    DIRS += ['webm']
+
+if CONFIG['MOZ_GSTREAMER']:
+    DIRS += ['gstreamer']
+
+if CONFIG['MOZ_DIRECTSHOW']:
+    DIRS += ['directshow']
+
+if CONFIG['MOZ_ANDROID_OMX']:
+    DIRS += ['android']
+
+if CONFIG['MOZ_WMF']:
+    DIRS += ['wmf']
+
+if CONFIG['MOZ_FMP4']:
+    DIRS += ['fmp4']
+
+if CONFIG['MOZ_APPLEMEDIA']:
+    DIRS += ['apple']
+
 if CONFIG['MOZ_WEBRTC']:
     DIRS += ['bridge']
 
-    LOCAL_INCLUDES += [
-        '/media/webrtc/signaling/src/common',
-        '/media/webrtc/trunk',
-    ]
+if CONFIG['MOZ_OMX_DECODER']:
+    DIRS += ['omx']
+    DIRS += ['omx/mediaresourcemanager']
 
+if CONFIG['MOZ_EME']:
+    DIRS += ['eme']
+
+TEST_DIRS += [
+    'compiledtest',
+    'gtest',
+]
+
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+
+MOCHITEST_MANIFESTS += [
+    'test/mochitest.ini',
+    'tests/mochitest/identity/mochitest.ini',
+    'tests/mochitest/ipc/mochitest.ini',
+]
+
+if CONFIG['MOZ_WEBRTC']:
     MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
     WEBRTC_SIGNALLING_TEST_MANIFESTS += ['tests/mochitest/steeplechase.ini']
 
@@ -23,17 +79,144 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_media'
 
-EXPORTS.mozilla.dom += [
-    'GetUserMediaRequest.h',
+EXPORTS += [
+    'AbstractMediaDecoder.h',
+    'AudioBufferUtils.h',
+    'AudioChannelFormat.h',
+    'AudioCompactor.h',
+    'AudioMixer.h',
+    'AudioSampleFormat.h',
+    'AudioSegment.h',
+    'AudioStream.h',
+    'BufferMediaResource.h',
+    'CubebUtils.h',
+    'DecoderTraits.h',
+    'DOMMediaStream.h',
+    'EncodedBufferCache.h',
+    'FileBlockCache.h',
+    'GraphDriver.h',
+    'Latency.h',
+    'MediaCache.h',
+    'MediaData.h',
+    'MediaDataDecodedListener.h',
+    'MediaDecoder.h',
+    'MediaDecoderOwner.h',
+    'MediaDecoderReader.h',
+    'MediaDecoderStateMachine.h',
+    'MediaInfo.h',
+    'MediaMetadataManager.h',
+    'MediaQueue.h',
+    'MediaRecorder.h',
+    'MediaResource.h',
+    'MediaSegment.h',
+    'MediaStreamGraph.h',
+    'MediaTaskQueue.h',
+    'MediaTrack.h',
+    'MediaTrackList.h',
+    'MP3FrameParser.h',
+    'nsIDocumentActivity.h',
+    'RtspMediaResource.h',
+    'SelfRef.h',
+    'SharedBuffer.h',
+    'SharedThreadPool.h',
+    'StreamBuffer.h',
+    'ThreadPoolCOMListener.h',
+    'TimeVarying.h',
+    'TrackUnionStream.h',
+    'VideoFrameContainer.h',
+    'VideoSegment.h',
+    'VideoUtils.h',
+    'VorbisUtils.h',
 ]
 
 EXPORTS.mozilla += [
     'MediaManager.h',
 ]
 
+if CONFIG['MOZ_B2G']:
+    EXPORTS.mozilla += [
+        'MediaPermissionGonk.h',
+    ]
+
+EXPORTS.mozilla.dom += [
+    'AudioStreamTrack.h',
+    'AudioTrack.h',
+    'AudioTrackList.h',
+    'GetUserMediaRequest.h',
+    'MediaStreamTrack.h',
+    'TextTrack.h',
+    'TextTrackCue.h',
+    'TextTrackCueList.h',
+    'TextTrackList.h',
+    'TextTrackRegion.h',
+    'VideoPlaybackQuality.h',
+    'VideoStreamTrack.h',
+    'VideoTrack.h',
+    'VideoTrackList.h',
+]
+
 UNIFIED_SOURCES += [
+    'AudioChannelFormat.cpp',
+    'AudioCompactor.cpp',
+    'AudioSegment.cpp',
+    'AudioSink.cpp',
+    'AudioStream.cpp',
+    'AudioStreamTrack.cpp',
+    'AudioTrack.cpp',
+    'AudioTrackList.cpp',
+    'CubebUtils.cpp',
+    'DOMMediaStream.cpp',
+    'EncodedBufferCache.cpp',
+    'FileBlockCache.cpp',
     'GetUserMediaRequest.cpp',
+    'GraphDriver.cpp',
+    'Latency.cpp',
+    'MediaCache.cpp',
+    'MediaData.cpp',
+    'MediaDecoder.cpp',
+    'MediaDecoderReader.cpp',
+    'MediaDecoderStateMachine.cpp',
+    'MediaDecoderStateMachineScheduler.cpp',
     'MediaManager.cpp',
+    'MediaRecorder.cpp',
+    'MediaResource.cpp',
+    'MediaShutdownManager.cpp',
+    'MediaStreamGraph.cpp',
+    'MediaStreamTrack.cpp',
+    'MediaTaskQueue.cpp',
+    'MediaTrack.cpp',
+    'MediaTrackList.cpp',
+    'MP3FrameParser.cpp',
+    'RtspMediaResource.cpp',
+    'SharedThreadPool.cpp',
+    'StreamBuffer.cpp',
+    'TextTrack.cpp',
+    'TextTrackCue.cpp',
+    'TextTrackCueList.cpp',
+    'TextTrackList.cpp',
+    'TextTrackRegion.cpp',
+    'TrackUnionStream.cpp',
+    'VideoFrameContainer.cpp',
+    'VideoPlaybackQuality.cpp',
+    'VideoSegment.cpp',
+    'VideoStreamTrack.cpp',
+    'VideoTrack.cpp',
+    'VideoTrackList.cpp',
+    'VideoUtils.cpp',
+    'WebVTTListener.cpp',
+]
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+  SOURCES += [ 'ThreadPoolCOMListener.cpp' ]
+
+if CONFIG['MOZ_B2G']:
+    SOURCES += [
+        'MediaPermissionGonk.cpp',
+    ]
+
+# DecoderTraits.cpp needs to be built separately because of Mac OS X headers.
+SOURCES += [
+    'DecoderTraits.cpp',
 ]
 
 EXTRA_COMPONENTS += [
@@ -47,27 +230,41 @@ EXTRA_JS_MODULES.media += [
     'RTCStatsReport.jsm',
 ]
 
-if CONFIG['MOZ_B2G']:
-    EXPORTS.mozilla += [
-        'MediaPermissionGonk.h',
-    ]
-    SOURCES += [
-        'MediaPermissionGonk.cpp',
-    ]
-
 FAIL_ON_WARNINGS = True
 
+MSVC_ENABLE_PGO = True
+
 LOCAL_INCLUDES += [
-    '../base',
-    '../camera',
     '/caps',
+    '/dom/base',
+    '/dom/camera',
+    '/layout/generic',
+    '/layout/xul',
+    '/netwerk/base/src',
 ]
+
+if CONFIG['MOZ_DIRECTSHOW']:
+    LOCAL_INCLUDES += [
+        '/media/webrtc/trunk/webrtc/modules/video_capture/windows',
+    ]
+
+if CONFIG['MOZ_WEBRTC']:
+    LOCAL_INCLUDES += [
+        '/media/webrtc/signaling/src/common',
+        '/media/webrtc/trunk',
+    ]
+
+DEFINES['MOZILLA_INTERNAL_API'] = True
+
+if CONFIG['MOZ_OMX_DECODER']:
+    DEFINES['MOZ_OMX_DECODER'] = True
+
+if CONFIG['ANDROID_VERSION'] > '15':
+    DEFINES['MOZ_OMX_WEBM_DECODER'] = True
+
+CFLAGS += CONFIG['GSTREAMER_CFLAGS']
+CXXFLAGS += CONFIG['GSTREAMER_CFLAGS']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
-
-MOCHITEST_MANIFESTS += [
-    'tests/identity/mochitest.ini',
-    'tests/ipc/mochitest.ini',
-]
