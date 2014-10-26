@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1424897629315000);
+const PRTime gPreloadListExpirationTime = INT64_C(1425118239369000);
 
 class nsSTSPreload
 {
@@ -284,6 +284,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "ihrlotto.de", true },
   { "ilikerainbows.co.uk", false },
   { "imouto.my", false },
+  { "inbox.google.com", true },
   { "inertianetworks.com", true },
   { "inleaked.com", true },
   { "insouciant.org", true },
@@ -312,6 +313,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "kernel-error.de", true },
   { "kevincox.ca", true },
   { "keyerror.com", true },
+  { "khmath.com", true },
   { "kinderbuecher-kostenlos.de", true },
   { "kinogb.net", false },
   { "kinsights.com", false },
@@ -319,6 +321,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "klatschreime.de", true },
   { "klaxn.com", true },
   { "kleidertauschpartys.de", true },
+  { "knowledgehook.com", true },
   { "konklone.com", true },
   { "koop-bremen.de", true },
   { "koordinate.net", true },
@@ -394,6 +397,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "mountainmusicpromotions.com", true },
   { "mountainroseherbs.com", true },
   { "movlib.org", true },
+  { "mqas.net", true },
   { "msc-seereisen.net", true },
   { "mths.be", true },
   { "mudcrab.us", true },

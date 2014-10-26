@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={1075716}
+-->
+<head>
+  <title>Install web app from manifest with application/manifest+json MIME type</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={1075716}">Mozilla Bug {1075716}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+var gGenerator = runTest();
+
+function go() {
+  SpecialPowers.pushPermissions(
+    [{ "type": "webapps-manage", "allow": 1, "context": document }],
+    function() { gGenerator.next() });
+}
+
+function continueTest() {
+  try {
+    gGenerator.next();
+  } catch (e if e instanceof StopIteration) {
+    finish();
+  }
+}
+
+function finish() {
+  SimpleTest.finish();
+}
+
+function cbError(aEvent) {
+  ok(false, "Error callback invoked " +
+            aEvent.target.error.name + " " + aEvent.target.error.message);
+  finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+/**
+  * Install a web app from a manifest with application/manifest+json MIME type.
+  */
+function runTest() {
+  SpecialPowers.setAllAppsLaunchable(true);
+
+  var manifestURL = "http://test/tests/dom/apps/tests/file_manifest.json";
+
+  SpecialPowers.autoConfirmAppInstall(continueTest);
+  yield undefined;
+
+  SpecialPowers.autoConfirmAppUninstall(continueTest);
+  yield undefined;
+
+  var request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  var initialAppsCount = request.result.length;
+  info("Starting with " + initialAppsCount + " apps installed.");
+
+  var request = navigator.mozApps.install(manifestURL, { });
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+
+  var app = request.result;
+  ok(app, "App is non-null");
+  is(app.manifestURL, manifestURL, "App manifest url is correct.");
+
+  request = navigator.mozApps.mgmt.uninstall(app);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  is(request.result, manifestURL, "App uninstalled.");
+
+  request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  is(request.result.length, initialAppsCount, "Correct number of apps.");
+}
+
+addLoadEvent(go);
+
+</script>
+</pre>
+</body>
+</html>
