@@ -78,22 +78,6 @@ add_task(function* test_eraseEverything() {
   Assert.equal(rows.length, 0);
 });
 
-add_task(function* test_eraseEverything_roots() {
-  yield PlacesUtils.bookmarks.eraseEverything();
-
-  // Ensure the roots have not been removed.
-  let unfiledGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.unfiledBookmarksFolderId);
-  Assert.ok(yield PlacesUtils.bookmarks.fetch(unfiledGuid));
-  let toolbarGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.toolbarFolderId);
-  Assert.ok(yield PlacesUtils.bookmarks.fetch(toolbarGuid));
-  let menuGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.bookmarksMenuFolderId);
-  Assert.ok(yield PlacesUtils.bookmarks.fetch(menuGuid));
-  let tagsGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.tagsFolderId);
-  Assert.ok(yield PlacesUtils.bookmarks.fetch(tagsGuid));
-  let rootGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.placesRootId);
-  Assert.ok(yield PlacesUtils.bookmarks.fetch(rootGuid));
-});
-
 function run_test() {
   run_next_test();
 }

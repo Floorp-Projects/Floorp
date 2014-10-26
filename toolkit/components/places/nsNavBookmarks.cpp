@@ -2670,45 +2670,6 @@ nsNavBookmarks::RemoveObserver(nsINavBookmarkObserver* aObserver)
   return mObservers.RemoveWeakElement(aObserver);
 }
 
-NS_IMETHODIMP
-nsNavBookmarks::GetObservers(uint32_t* _count,
-                             nsINavBookmarkObserver*** _observers)
-{
-  NS_ENSURE_ARG_POINTER(_observers);
-  *_count = 0;
-  *_observers = nullptr;
-
-  if (!mCanNotify)
-    return NS_OK;
-
-  nsCOMArray<nsINavBookmarkObserver> observers;
-
-  // First add the category cache observers.
-  mCacheObservers.GetEntries(observers);
-
-  // Then add the other observers.
-  for (uint32_t i = 0; i < mObservers.Length(); ++i) {
-    const nsCOMPtr<nsINavBookmarkObserver> &observer = mObservers.ElementAt(i);
-    // Skip nullified weak observers.
-    if (observer)
-      observers.AppendElement(observer);
-  }
-
-  if (observers.Count() == 0)
-    return NS_OK;
-
-  *_observers = static_cast<nsINavBookmarkObserver**>
-    (nsMemory::Alloc(observers.Count() * sizeof(nsINavBookmarkObserver*)));
-  NS_ENSURE_TRUE(*_observers, NS_ERROR_OUT_OF_MEMORY);
-
-  *_count = observers.Count();
-  for (uint32_t i = 0; i < *_count; ++i) {
-    NS_ADDREF((*_observers)[i] = observers[i]);
-  }
-
-  return NS_OK;
-}
-
 void
 nsNavBookmarks::NotifyItemVisited(const ItemVisitData& aData)
 {
