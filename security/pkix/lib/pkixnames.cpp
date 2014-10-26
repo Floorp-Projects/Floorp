@@ -1125,17 +1125,26 @@ MatchPresentedIPAddressWithConstraint(Input presentedID,
   if (presentedID.GetLength() != 4 && presentedID.GetLength() != 16) {
     return Result::ERROR_BAD_DER;
   }
+  if (iPAddressConstraint.GetLength() != 8 &&
+      iPAddressConstraint.GetLength() != 32) {
+    return Result::ERROR_BAD_DER;
+  }
 
-  Reader presented(presentedID);
+  // an IPv4 address never matches an IPv6 constraint, and vice versa.
+  if (presentedID.GetLength() * 2 != iPAddressConstraint.GetLength()) {
+    foundMatch = false;
+    return Success;
+  }
+
   Reader constraint(iPAddressConstraint);
   Reader constraintAddress;
-  Result rv = constraint.Skip(presentedID.GetLength(),
+  Result rv = constraint.Skip(iPAddressConstraint.GetLength() / 2u,
                               constraintAddress);
   if (rv != Success) {
     return rv;
   }
   Reader constraintMask;
-  rv = constraint.Skip(presentedID.GetLength(), constraintMask);
+  rv = constraint.Skip(iPAddressConstraint.GetLength() / 2u, constraintMask);
   if (rv != Success) {
     return rv;
   }
@@ -1144,6 +1153,7 @@ MatchPresentedIPAddressWithConstraint(Input presentedID,
     return rv;
   }
 
+  Reader presented(presentedID);
   do {
     uint8_t presentedByte;
     rv = presented.Read(presentedByte);
