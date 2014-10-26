@@ -242,7 +242,11 @@ public:
      * This version is like gl::GLenumToStr but with out the GL_ prefix to
      * keep consistency with how errors are reported from WebGL.
      */
-    static const char *EnumName(GLenum glenum);
+
+    // Returns nullptr if glenum is unknown.
+    static const char* EnumName(GLenum glenum);
+    // Returns hex formatted version of glenum if glenum is unknown.
+    static void EnumName(GLenum glenum, nsACString* out_name);
 
     bool IsCompressedTextureFormat(GLenum format);
     bool IsTextureFormatCompressed(TexInternalFormat format);

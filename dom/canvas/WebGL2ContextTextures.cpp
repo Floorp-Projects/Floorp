@@ -73,15 +73,12 @@ WebGL2Context::ValidateSizedInternalFormat(GLenum internalformat, const char* in
         return true;
     }
 
-    if (IsCompressedTextureFormat(internalformat)) {
+    if (IsCompressedTextureFormat(internalformat))
         return true;
-    }
 
-    const char* name = EnumName(internalformat);
-    if (name && name[0] != '[')
-        ErrorInvalidEnum("%s: invalid internal format %s", info, name);
-    else
-        ErrorInvalidEnum("%s: invalid internal format 0x%04X", info, internalformat);
+    nsCString name;
+    EnumName(internalformat, &name);
+    ErrorInvalidEnum("%s: invalid internal format %s", info, name.get());
 
     return false;
 }
