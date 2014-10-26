@@ -343,14 +343,36 @@ public class LoadFaviconTask {
             return pushToCacheAndGetResult(uriBitmaps);
         }
 
-        // Attempt to get a favicon URL from somewhere if we weren't given one...
-        if (TextUtils.isEmpty(faviconURL)) {
-            faviconURL = Favicons.getFaviconURLForPageURL(context, pageUrl);
-        }
+        String storedFaviconUrl;
+        boolean isUsingDefaultURL = false;
 
-        // We failed. Can't continue without a favicon URL!
+        // Handle the case of malformed favicon URL.
+        // If favicon is empty, fall back to the stored one.
         if (TextUtils.isEmpty(faviconURL)) {
-            return null;
+            // Try to get the favicon URL from the memory cache.
+            storedFaviconUrl = Favicons.getFaviconURLForPageURLFromCache(pageUrl);
+
+            // If that failed, try to get the URL from the database.
+            if (storedFaviconUrl == null) {
+                storedFaviconUrl = Favicons.getFaviconURLForPageURL(context, pageUrl);
+                if (storedFaviconUrl != null) {
+                    // If that succeeded, cache the URL loaded from the database in memory.
+                    Favicons.putFaviconURLForPageURLInCache(pageUrl, storedFaviconUrl);
+                }
+            }
+
+            // If we found a faviconURL - use it.
+            if (storedFaviconUrl != null) {
+                faviconURL = storedFaviconUrl;
+            } else {
+                // If we don't have a stored one, fall back to the default.
+                faviconURL = Favicons.guessDefaultFaviconURL(pageUrl);
+
+                if (TextUtils.isEmpty(faviconURL)) {
+                    return null;
+                }
+                isUsingDefaultURL = true;
+            }
         }
 
         // Check if favicon has failed - if so, give up. We need this check because, sometimes, we
@@ -422,13 +444,18 @@ public class LoadFaviconTask {
             return pushToCacheAndGetResult(loadedBitmaps);
         }
 
+        if (isUsingDefaultURL) {
+            Favicons.putFaviconInFailedCache(faviconURL);
+            return null;
+        }
+
         if (isCancelled()) {
             return null;
         }
 
         // If we're not already trying the default URL, try it now.
         final String guessed = Favicons.guessDefaultFaviconURL(pageUrl);
-        if (guessed == null || guessed.equals(faviconURL)) {
+        if (guessed == null) {
             Favicons.putFaviconInFailedCache(faviconURL);
             return null;
         }

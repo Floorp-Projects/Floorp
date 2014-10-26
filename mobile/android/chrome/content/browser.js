@@ -3960,8 +3960,7 @@ Tab.prototype = {
             type: "Link:Favicon",
             tabID: this.id,
             href: resolveGeckoURI(target.href),
-            size: maxSize,
-            mime: target.getAttribute("type") || ""
+            size: maxSize
           };
           Messaging.sendRequest(json);
         } else if (list.indexOf("[alternate]") != -1 && aEvent.type == "DOMLinkAdded") {
