@@ -10,6 +10,7 @@
 
 #include "gfxBlur.h"
 #include "gfxContext.h"
+#include "mozilla/gfx/Rect.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleStruct.h"
 #include "nsIFrame.h"
@@ -20,6 +21,10 @@ class nsPresContext;
 class nsRenderingContext;
 
 namespace mozilla {
+
+namespace gfx {
+class DrawTarget;
+}
 
 namespace layers {
 class ImageContainer;
@@ -311,6 +316,9 @@ struct nsBackgroundLayerState {
 };
 
 struct nsCSSRendering {
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::Float Float;
+  typedef mozilla::gfx::Rect Rect;
   typedef nsIFrame::Sides Sides;
 
   /**
@@ -669,11 +677,11 @@ struct nsCSSRendering {
    *                              used for strikeout line and overline too.
    */
   static void PaintDecorationLine(nsIFrame* aFrame,
-                                  gfxContext* aGfxContext,
-                                  const gfxRect& aDirtyRect,
+                                  DrawTarget& aDrawTarget,
+                                  const Rect& aDirtyRect,
                                   const nscolor aColor,
                                   const gfxPoint& aPt,
-                                  const gfxFloat aICoordInFrame,
+                                  const Float aICoordInFrame,
                                   const gfxSize& aLineSize,
                                   const gfxFloat aAscent,
                                   const gfxFloat aOffset,
@@ -798,12 +806,12 @@ protected:
    *                              and aClippedRect.pos.
    *     @param aCycleLength      the width of one cycle of the line style.
    */
-  static gfxRect ExpandPaintingRectForDecorationLine(
+  static Rect ExpandPaintingRectForDecorationLine(
                    nsIFrame* aFrame,
                    const uint8_t aStyle,
-                   const gfxRect &aClippedRect,
-                   const gfxFloat aICoordInFrame,
-                   const gfxFloat aCycleLength,
+                   const Rect &aClippedRect,
+                   const Float aICoordInFrame,
+                   const Float aCycleLength,
                    bool aVertical);
 };
 
