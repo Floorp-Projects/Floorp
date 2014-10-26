@@ -73,7 +73,7 @@
 }
 
 #nav-bar {
-  background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
+  background-image: linear-gradient(@toolbarHighlight@, transparent);
   box-shadow: 0 1px 0 @toolbarHighlight@ inset;
   padding-top: 2px;
   padding-bottom: 2px;
@@ -1540,12 +1540,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #urlbar-reload-button:not([disabled]):hover {
-  background-image: radial-gradient(circle closest-side, hsla(200,100%,70%,.2), hsla(200,100%,70%,0));
+  background-image: radial-gradient(circle closest-side, hsla(200,100%,70%,.2), transparent);
   -moz-image-region: rect(14px, 14px, 28px, 0);
 }
 
 #urlbar-reload-button:not([disabled]):hover:active {
-  background-image: radial-gradient(circle closest-side, hsla(200,100%,60%,.1), hsla(200,100%,60%,0));
+  background-image: radial-gradient(circle closest-side, hsla(200,100%,60%,.1), transparent);
   -moz-image-region: rect(28px, 14px, 42px, 0);
 }
 
@@ -1558,12 +1558,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #urlbar-go-button:hover {
-  background-image: radial-gradient(circle closest-side, hsla(110,70%,50%,.2), hsla(110,70%,50%,0));
+  background-image: radial-gradient(circle closest-side, hsla(110,70%,50%,.2), transparent);
   -moz-image-region: rect(14px, 42px, 28px, 28px);
 }
 
 #urlbar-go-button:hover:active {
-  background-image: radial-gradient(circle closest-side, hsla(110,70%,50%,.1), hsla(110,70%,50%,0));
+  background-image: radial-gradient(circle closest-side, hsla(110,70%,50%,.1), transparent);
   -moz-image-region: rect(28px, 42px, 42px, 28px);
 }
 
@@ -1576,12 +1576,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #urlbar-stop-button:not([disabled]):hover {
-  background-image: radial-gradient(circle closest-side, hsla(5,100%,75%,.3), hsla(5,100%,75%,0));
+  background-image: radial-gradient(circle closest-side, hsla(5,100%,75%,.3), transparent);
   -moz-image-region: rect(14px, 28px, 28px, 14px);
 }
 
 #urlbar-stop-button:hover:active {
-  background-image: radial-gradient(circle closest-side, hsla(5,100%,75%,.1), hsla(5,100%,75%,0));
+  background-image: radial-gradient(circle closest-side, hsla(5,100%,75%,.1), transparent);
   -moz-image-region: rect(28px, 28px, 42px, 14px);
 }
 
@@ -2123,7 +2123,7 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 
 .chat-titlebar {
   background-color: #d9d9d9;
-  background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
+  background-image: linear-gradient(@toolbarHighlight@, transparent);
 }
 
 .chat-titlebar[selected] {
@@ -2133,7 +2133,7 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 .chatbar-button {
   -moz-appearance: none;
   background-color: #d9d9d9;
-  background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
+  background-image: linear-gradient(@toolbarHighlight@, transparent);
 }
 
 .chatbar-button > .toolbarbutton-icon {
@@ -2146,7 +2146,7 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 }
 
 .chatbar-button[activity] {
-  background-image: radial-gradient(circle farthest-corner at center 3px, rgb(233,242,252) 3%, rgba(172,206,255,0.75) 40%, rgba(87,151,201,0.5) 80%, rgba(87,151,201,0));
+  background-image: radial-gradient(circle farthest-corner at center 3px, rgb(233,242,252) 3%, rgba(172,206,255,0.75) 40%, rgba(87,151,201,0.5) 80%, transparent);
 }
 
 chatbox {

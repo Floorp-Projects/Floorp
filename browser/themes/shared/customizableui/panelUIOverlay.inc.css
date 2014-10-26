@@ -87,9 +87,9 @@
 }
 
 #PanelUI-button {
-  background-image: linear-gradient(to bottom, hsla(0,0%,100%,0), hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, hsla(0,0%,100%,0)),
-                    linear-gradient(to bottom, hsla(210,54%,20%,0), hsla(210,54%,20%,.3) 30%, hsla(210,54%,20%,.3) 70%, hsla(210,54%,20%,0)),
-                    linear-gradient(to bottom, hsla(0,0%,100%,0), hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, hsla(0,0%,100%,0));
+  background-image: linear-gradient(to bottom, transparent, hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, transparent),
+                    linear-gradient(to bottom, transparent, hsla(210,54%,20%,.3) 30%, hsla(210,54%,20%,.3) 70%, transparent),
+                    linear-gradient(to bottom, transparent, hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, transparent);
   background-size: 1px calc(100% - 1px), 1px calc(100% - 1px), 1px  calc(100% - 1px) !important;
   background-position: 0px 0px, 1px 0px, 2px 0px;
   background-repeat: no-repeat;
@@ -874,7 +874,7 @@ toolbarbutton[panel-multiview-anchor="true"] > .toolbarbutton-menubutton-button 
 }
 
 #PanelUI-help[panel-multiview-anchor="true"] {
-  background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
+  background-image: linear-gradient(rgba(255,255,255,0.3), transparent);
   background-position: 0;
 }
 
@@ -885,7 +885,7 @@ toolbarbutton[panel-multiview-anchor="true"] > .toolbarbutton-menubutton-button 
   height: 100%;
   width: @exitSubviewGutterWidth@;
   background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted.png),
-                    linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
+                    linear-gradient(rgba(255,255,255,0.3), transparent);
   background-repeat: no-repeat;
   background-color: Highlight;
   background-position: left 10px center, 0;
@@ -893,20 +893,20 @@ toolbarbutton[panel-multiview-anchor="true"] > .toolbarbutton-menubutton-button 
 
 #PanelUI-help[panel-multiview-anchor="true"]:-moz-locale-dir(rtl)::after {
   background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted-rtl.png),
-                    linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
+                    linear-gradient(rgba(255,255,255,0.3), transparent);
   background-position: right 10px center, 0;
 }
 
 toolbarbutton[panel-multiview-anchor="true"] {
   background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted.png),
-                    linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
+                    linear-gradient(rgba(255,255,255,0.3), transparent);
   background-position: right calc(@menuPanelButtonWidth@ / 2 - @exitSubviewGutterWidth@ + 2px) center;
   background-repeat: no-repeat, repeat;
 }
 
 toolbarbutton[panel-multiview-anchor="true"]:-moz-locale-dir(rtl) {
   background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted-rtl.png),
-                    linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
+                    linear-gradient(rgba(255,255,255,0.3), transparent);
   background-position: left calc(@menuPanelButtonWidth@ / 2 - @exitSubviewGutterWidth@ + 2px) center;
 }
 
@@ -1005,9 +1005,9 @@ toolbarpaletteitem[haswideitem][place="panel"] + toolbarpaletteitem[haswideitem]
   -moz-appearance: none;
   width: 3px;
   -moz-box-align: stretch;
-  background-image: linear-gradient(to bottom, hsla(0,0%,100%,0), hsla(0,0%,100%,.3) 40%, hsla(0,0%,100%,.3) 60%, hsla(0,0%,100%,0)),
-                    linear-gradient(to bottom, hsla(210,54%,20%,0), hsla(210,54%,20%,.15) 40%, hsla(210,54%,20%,.15) 60%, hsla(210,54%,20%,0)),
-                    linear-gradient(to bottom, hsla(0,0%,100%,0), hsla(0,0%,100%,.3) 40%, hsla(0,0%,100%,.3) 60%, hsla(0,0%,100%,0));
+  background-image: linear-gradient(to bottom, transparent, hsla(0,0%,100%,.3) 40%, hsla(0,0%,100%,.3) 60%, transparent),
+                    linear-gradient(to bottom, transparent, hsla(210,54%,20%,.15) 40%, hsla(210,54%,20%,.15) 60%, transparent),
+                    linear-gradient(to bottom, transparent, hsla(0,0%,100%,.3) 40%, hsla(0,0%,100%,.3) 60%, transparent);
   background-size: 1px, 1px, 1px;
   background-position: 0 0, 1px 0, 2px 0;
   background-repeat: no-repeat;
