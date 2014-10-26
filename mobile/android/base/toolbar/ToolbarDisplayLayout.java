@@ -19,7 +19,6 @@ import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
-import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.toolbar.BrowserToolbarTabletBase.ForwardButtonAnimation;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.ThemedLinearLayout;
@@ -179,7 +178,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
             if (Versions.feature16Plus) {
                 mFavicon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             }
-            mFaviconSize = Math.round(Favicons.browserToolbarFaviconSize);
+            mFaviconSize = Math.round(res.getDimension(R.dimen.browser_toolbar_favicon_size));
         }
 
         mSiteSecurityVisible = (mSiteSecurity.getVisibility() == View.VISIBLE);

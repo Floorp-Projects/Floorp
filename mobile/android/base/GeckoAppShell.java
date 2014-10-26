@@ -34,8 +34,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
+import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
@@ -810,24 +810,21 @@ public class GeckoAppShell
     // This is the entry point from nsIShellService.
     @WrapElementForJNI
     static void createShortcut(final String aTitle, final String aURI, final String aIconData) {
-        // We have the favicon data (base64) decoded on the background thread, callback here, then
-        // call the other createShortcut method with the decoded favicon.
-        // This is slightly contrived, but makes the images available to the favicon cache.
-        Favicons.getSizedFavicon(getContext(), aURI, aIconData, Integer.MAX_VALUE, 0,
-            new OnFaviconLoadedListener() {
-                @Override
-                public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
-                    createShortcut(aTitle, url, favicon);
-                }
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                // TODO: use the cache. Bug 961600.
+                Bitmap icon = FaviconDecoder.getMostSuitableBitmapFromDataURI(aIconData, getPreferredIconSize());
+                GeckoAppShell.doCreateShortcut(aTitle, aURI, icon);
             }
-        );
+        });
     }
 
     public static void createShortcut(final String aTitle, final String aURI, final Bitmap aBitmap) {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                doCreateShortcut(aTitle, aURI, aBitmap);
+                GeckoAppShell.doCreateShortcut(aTitle, aURI, aBitmap);
             }
         });
     }
