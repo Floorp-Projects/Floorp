@@ -373,7 +373,7 @@ WebGLFramebuffer::Attachment::FinalizeAttachment(GLContext* gl, FBAttachment att
     MOZ_ASSERT(HasImage());
 
     if (Texture()) {
-        MOZ_ASSERT(gl == Texture()->Context()->gl);
+        MOZ_ASSERT(gl == Texture()->Context()->GL());
 
         const GLenum imageTarget = ImageTarget().get();
         const GLint mipLevel = MipLevel();

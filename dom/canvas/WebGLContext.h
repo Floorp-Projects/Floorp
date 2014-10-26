@@ -15,6 +15,7 @@
 
 #include "GLDefs.h"
 #include "WebGLActiveInfo.h"
+#include "WebGLContextUnchecked.h"
 #include "WebGLObjectModel.h"
 #include "WebGLRenderbuffer.h"
 #include "WebGLTexture.h"
@@ -78,9 +79,11 @@ class WebGLQuery;
 class WebGLUniformLocation;
 class WebGLFramebuffer;
 class WebGLRenderbuffer;
+class WebGLSampler;
 class WebGLShaderPrecisionFormat;
 class WebGLTexture;
 class WebGLVertexArray;
+
 
 namespace dom {
 class ImageData;
@@ -127,10 +130,29 @@ struct WebGLContextOptions {
 // From WebGLContextUtils
 TexTarget TexImageTargetToTexTarget(TexImageTarget texImageTarget);
 
+class WebGLIntOrFloat {
+    enum {
+        Int,
+        Float
+    } mType;
+    union {
+        GLint i;
+        GLfloat f;
+    } mValue;
+
+public:
+    explicit WebGLIntOrFloat(GLint i) : mType(Int) { mValue.i = i; }
+    explicit WebGLIntOrFloat(GLfloat f) : mType(Float) { mValue.f = f; }
+
+    GLint AsInt() const { return (mType == Int) ? mValue.i : NS_lroundf(mValue.f); }
+    GLfloat AsFloat() const { return (mType == Float) ? mValue.f : GLfloat(mValue.i); }
+};
+
 class WebGLContext :
     public nsIDOMWebGLRenderingContext,
     public nsICanvasRenderingContextInternal,
     public nsSupportsWeakReference,
+    public WebGLContextUnchecked,
     public WebGLRectangleObject,
     public nsWrapperCache,
     public SupportsWeakPtr<WebGLContext>
@@ -1005,8 +1027,6 @@ protected:
         return ((x + y - 1) / y) * y;
     }
 
-    nsRefPtr<gl::GLContext> gl;
-
     CheckedUint32 mGeneration;
 
     WebGLContextOptions mOptions;
@@ -1138,6 +1158,10 @@ protected:
     bool ValidateCopyTexImage(GLenum internalformat,
                               WebGLTexImageFunc func,
                               WebGLTexDimensions dims);
+
+    bool ValidateSamplerParameterName(GLenum pname, const char* info);
+    bool ValidateSamplerParameterParams(GLenum pname, const WebGLIntOrFloat& param, const char* info);
+
     bool ValidateTexImage(TexImageTarget texImageTarget,
                           GLint level, GLenum internalFormat,
                           GLint xoffset, GLint yoffset, GLint zoffset,
@@ -1325,6 +1349,9 @@ protected:
     LinkedList<WebGLFramebuffer> mFramebuffers;
     LinkedList<WebGLVertexArray> mVertexArrays;
 
+    // TODO(djg): Does this need a rethink? Should it be WebGL2Context?
+    LinkedList<WebGLSampler> mSamplers;
+
     WebGLRefPtr<WebGLVertexArray> mDefaultVertexArray;
 
     // PixelStore parameters
@@ -1440,6 +1467,7 @@ public:
     friend class WebGLProgram;
     friend class WebGLQuery;
     friend class WebGLBuffer;
+    friend class WebGLSampler;
     friend class WebGLShader;
     friend class WebGLUniformLocation;
     friend class WebGLVertexArray;
