@@ -73,14 +73,11 @@ handlers.wifi = {
   },
 
   onPageShown: function(browser) {
-      // If we have a connection, don't bother showing the wifi toggle.
-      let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
-      if (network.isLinkUp && network.linkStatusKnown) {
-        let nodes = browser.contentDocument.querySelectorAll("#wifi");
-        for (let i = 0; i < nodes.length; i++) {
-          nodes[i].style.display = "none";
-        }
-      }
+    // Hide Wifi helper in Fx34
+    let nodes = browser.contentDocument.querySelectorAll("#wifi");
+    for (let i = 0; i < nodes.length; i++) {
+      nodes[i].style.display = "none";
+    }
   },
 
   handleClick: function(event) {
