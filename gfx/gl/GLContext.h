@@ -3467,22 +3467,7 @@ protected:
         if (!IsOffscreenSizeAllowed(size))
             return false;
 
-        SurfaceCaps tryCaps = caps;
-        if (tryCaps.antialias) {
-            // AA path
-            if (CreateScreenBufferImpl(size, tryCaps))
-                return true;
-
-            NS_WARNING("CreateScreenBuffer failed to initialize an AA context! Falling back to no AA...");
-            tryCaps.antialias = false;
-        }
-        MOZ_ASSERT(!tryCaps.antialias);
-
-        if (CreateScreenBufferImpl(size, tryCaps))
-            return true;
-
-        NS_WARNING("CreateScreenBuffer failed to initialize non-AA context!");
-        return false;
+       return CreateScreenBufferImpl(size, caps);
     }
 
     bool CreateScreenBufferImpl(const gfx::IntSize& size,
@@ -3629,6 +3614,9 @@ protected:
 
 
 public:
+    GLsizei MaxSamples() const {
+        return mMaxSamples;
+    }
 
     void fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
         if (mViewportRect[0] == x &&
