@@ -7,15 +7,16 @@
 
 #include "WebGLContextLossHandler.h"
 #include "WebGL1Context.h"
-#include "WebGLObjectModel.h"
-#include "WebGLExtensions.h"
-#include "WebGLContextUtils.h"
 #include "WebGLBuffer.h"
-#include "WebGLVertexAttribData.h"
-#include "WebGLMemoryTracker.h"
+#include "WebGLContextUtils.h"
+#include "WebGLExtensions.h"
 #include "WebGLFramebuffer.h"
-#include "WebGLVertexArray.h"
+#include "WebGLMemoryTracker.h"
+#include "WebGLObjectModel.h"
 #include "WebGLQuery.h"
+#include "WebGLSampler.h"
+#include "WebGLVertexArray.h"
+#include "WebGLVertexAttribData.h"
 
 #include "GLBlitHelper.h"
 #include "AccessCheck.h"
@@ -226,7 +227,7 @@ WebGLContextOptions::WebGLContextOptions()
 }
 
 WebGLContext::WebGLContext()
-    : gl(nullptr)
+    : WebGLContextUnchecked(nullptr)
     , mNeedsFakeNoAlpha(false)
 {
     mGeneration = 0;
@@ -371,6 +372,8 @@ WebGLContext::DestroyResourcesAndContext()
         mPrograms.getLast()->DeleteOnce();
     while (!mQueries.isEmpty())
         mQueries.getLast()->DeleteOnce();
+    while (!mSamplers.isEmpty())
+        mSamplers.getLast()->DeleteOnce();
 
     mBlackOpaqueTexture2D = nullptr;
     mBlackOpaqueTextureCubeMap = nullptr;
