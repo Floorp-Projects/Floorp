@@ -797,7 +797,7 @@
 
 #detail-screenshot[loading] {
   background-image: url("chrome://global/skin/icons/loading_16.png"),
-                    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+                    linear-gradient(rgba(255, 255, 255, 0.5), transparent);
   background-position: 50% 50%;
   background-repeat: no-repeat;
   border-radius: 3px;
@@ -805,7 +805,7 @@
 
 #detail-screenshot[loading="error"] {
   background-image: url("chrome://global/skin/media/error.png"),
-                    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+                    linear-gradient(rgba(255, 255, 255, 0.5), transparent);
 }
 
 #detail-desc-container {
@@ -1152,7 +1152,7 @@ button.button-link:not([disabled="true"]):active:hover {
   border: 1px solid rgba(60,73,97,0.5);
   border-radius: @toolbarbuttonCornerRadius@;
   box-shadow: inset 0 1px rgba(255,255,255,0.25), 0 1px rgba(255,255,255,0.25);
-  background: linear-gradient(rgba(255,255,255,0.45), rgba(255,255,255,0));
+  background: linear-gradient(rgba(255,255,255,0.45), transparent);
   background-clip: padding-box;
 }
 
@@ -1168,7 +1168,7 @@ button.button-link:not([disabled="true"]):active:hover {
 .header-button[open="true"] {
   border-color: rgba(45,54,71,0.7);
   box-shadow: inset 0 0 4px rgb(45,54,71), 0 1px rgba(255,255,255,0.25);
-  background-image: linear-gradient(rgba(45,54,71,0.6), rgba(45,54,71,0));
+  background-image: linear-gradient(rgba(45,54,71,0.6), transparent);
 }
 
 /*** telemetry experiments ***/
