@@ -32,7 +32,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -66,9 +65,6 @@ public class Favicons {
     // The density-adjusted maximum Favicon dimensions.
     public static int largestFaviconSize;
 
-    // The density-adjusted desired size for a browser-toolbar favicon.
-    public static int browserToolbarFaviconSize;
-
     // Used to prevent multiple-initialisation.
     public static final AtomicBoolean isInitialized = new AtomicBoolean(false);
 
@@ -80,57 +76,6 @@ public class Favicons {
     // Cache to hold mappings between page URLs and Favicon URLs. Used to avoid going to the DB when
     // doing so is not necessary.
     private static final NonEvictingLruCache<String, String> pageURLMappings = new NonEvictingLruCache<>(NUM_PAGE_URL_MAPPINGS_TO_STORE);
-
-    // Mime types of things we are capable of decoding.
-    private static final HashSet<String> sDecodableMimeTypes = new HashSet<>();
-
-    // Mime types of things we are both capable of decoding and are container formats (May contain
-    // multiple different sizes of image)
-    private static final HashSet<String> sContainerMimeTypes = new HashSet<>();
-    static {
-        // MIME types extracted from http://filext.com - ostensibly all in-use mime types for the
-        // corresponding formats.
-        // ICO
-        sContainerMimeTypes.add("image/vnd.microsoft.icon");
-        sContainerMimeTypes.add("image/ico");
-        sContainerMimeTypes.add("image/icon");
-        sContainerMimeTypes.add("image/x-icon");
-        sContainerMimeTypes.add("text/ico");
-        sContainerMimeTypes.add("application/ico");
-
-        // Add supported container types to the set of supported types.
-        sDecodableMimeTypes.addAll(sContainerMimeTypes);
-
-        // PNG
-        sDecodableMimeTypes.add("image/png");
-        sDecodableMimeTypes.add("application/png");
-        sDecodableMimeTypes.add("application/x-png");
-
-        // GIF
-        sDecodableMimeTypes.add("image/gif");
-
-        // JPEG
-        sDecodableMimeTypes.add("image/jpeg");
-        sDecodableMimeTypes.add("image/jpg");
-        sDecodableMimeTypes.add("image/pipeg");
-        sDecodableMimeTypes.add("image/vnd.swiftview-jpeg");
-        sDecodableMimeTypes.add("application/jpg");
-        sDecodableMimeTypes.add("application/x-jpg");
-
-        // BMP
-        sDecodableMimeTypes.add("application/bmp");
-        sDecodableMimeTypes.add("application/x-bmp");
-        sDecodableMimeTypes.add("application/x-win-bitmap");
-        sDecodableMimeTypes.add("image/bmp");
-        sDecodableMimeTypes.add("image/x-bmp");
-        sDecodableMimeTypes.add("image/x-bitmap");
-        sDecodableMimeTypes.add("image/x-xbitmap");
-        sDecodableMimeTypes.add("image/x-win-bitmap");
-        sDecodableMimeTypes.add("image/x-windows-bitmap");
-        sDecodableMimeTypes.add("image/x-ms-bitmap");
-        sDecodableMimeTypes.add("image/x-ms-bmp");
-        sDecodableMimeTypes.add("image/ms-bmp");
-    }
 
     public static String getFaviconURLForPageURLFromCache(String pageURL) {
         return pageURLMappings.get(pageURL);
@@ -304,14 +249,9 @@ public class Favicons {
      *         or a somewhat educated guess.
      */
     public static String getFaviconURLForPageURL(Context context, String pageURL) {
-        // Query the URL cache.
-        String targetURL = getFaviconURLForPageURLFromCache(pageURL);
-        if (targetURL != null) {
-            return targetURL;
-        }
-
         // Attempt to determine the Favicon URL from the Tabs datastructure. Can dodge having to use
         // the database sometimes by doing this.
+        String targetURL;
         Tab theTab = Tabs.getInstance().getFirstTabForUrl(pageURL);
         if (theTab != null) {
             targetURL = theTab.getFaviconURL();
@@ -324,7 +264,6 @@ public class Favicons {
         final ContentResolver resolver = context.getContentResolver();
         targetURL = BrowserDB.getFaviconURLFromPageURL(resolver, pageURL);
         if (targetURL != null) {
-            putFaviconURLForPageURLInCache(pageURL, targetURL);
             return targetURL;
         }
 
@@ -477,7 +416,6 @@ public class Favicons {
         // TODO: Remove this branch when old tablet is removed.
         final int browserToolbarFaviconSizeDimenID = NewTabletUI.isEnabled(context) ?
                 R.dimen.new_tablet_tab_strip_favicon_size : R.dimen.browser_toolbar_favicon_size;
-        browserToolbarFaviconSize = res.getDimensionPixelSize(browserToolbarFaviconSizeDimenID);
 
         faviconsCache = new FaviconCache(FAVICON_CACHE_SIZE_BYTES, largestFaviconSize);
 
@@ -544,25 +482,6 @@ public class Favicons {
             Log.e(LOGTAG, "URISyntaxException getting default favicon URL", e);
             return null;
         }
-    }
-
-    /**
-     * Helper function to determine if we can decode a particular mime type.
-     * @param imgType Mime type to check for decodability.
-     * @return false if the given mime type is certainly not decodable, true if it might be.
-     */
-    public static boolean canDecodeType(String imgType) {
-        return "".equals(imgType) || sDecodableMimeTypes.contains(imgType);
-    }
-
-    /**
-     * Helper function to determine if the provided mime type is that of a format that can contain
-     * multiple image types. At time of writing, the only such type is ICO.
-     * @param mimeType Mime type to check.
-     * @return true if the given mime type is a container type, false otherwise.
-     */
-    public static boolean isContainerType(String mimeType) {
-        return sDecodableMimeTypes.contains(mimeType);
     }
 
     public static void removeLoadTask(int taskId) {
