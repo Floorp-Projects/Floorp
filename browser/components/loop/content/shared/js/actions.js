@@ -135,6 +135,22 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * An error occured while trying to fetch the room list.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    GetAllRoomsError: Action.define("getAllRoomsError", {
+      error: String
+    }),
+
+    /**
+     * Updates room list.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    UpdateRoomList: Action.define("updateRoomList", {
+      roomList: Array
+    }),
+
+    /**
      * Primes localRoomStore with roomLocalId, which triggers the EmptyRoomView
      * to do any necessary setup.
      *

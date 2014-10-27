@@ -59,7 +59,7 @@
   var dispatcher = new loop.Dispatcher();
   var roomListStore = new loop.store.RoomListStore({
     dispatcher: dispatcher,
-    mozLoop: {}
+    mozLoop: navigator.mozLoop
   });
 
   // Local mocks
