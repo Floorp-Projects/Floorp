@@ -25,8 +25,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluginContent",
   "resource:///modules/PluginContent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UITour",
-  "resource:///modules/UITour.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormSubmitObserver",
   "resource:///modules/FormSubmitObserver.jsm");
 
@@ -122,15 +120,6 @@ if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
     .getService(Ci.nsIEventListenerService)
     .addSystemEventListener(global, "contextmenu", handleContentContextMenu, true);
 
-} else {
-  addEventListener("mozUITour", function(event) {
-    if (!Services.prefs.getBoolPref("browser.uitour.enabled"))
-      return;
-
-    let handled = UITour.onPageEvent(event);
-    if (handled)
-      addEventListener("pagehide", UITour);
-  }, false, true);
 }
 
 let AboutHomeListener = {

@@ -4704,7 +4704,7 @@ window > chatbox {
 
 @media (-moz-mac-lion-theme) {
   #TabsToolbar > .private-browsing-indicator {
-    transform: translateY(calc(0px - var(--negative-space)));
+    transform: translateY(calc(0px - var(--space-above-tabbar)));
     /* We offset by 38px for mask graphic, plus 4px to account for the
      * margin-left, which sums to 42px.
      */
