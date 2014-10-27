@@ -736,7 +736,7 @@ int WebRtcAec_GetDelayMetricsCore(AecCore* self, int* median, int* std) {
 
   // Calculate the L1 norm, with median value as central moment.
   for (i = 0; i < kHistorySizeBlocks; i++) {
-    l1_norm += (float)(fabs(i - my_median) * self->delay_histogram[i]);
+    l1_norm += (float)abs(i - my_median) * self->delay_histogram[i];
   }
   *std = (int)(l1_norm / (float)num_delay_values + 0.5f) * kMsPerBlock;
 

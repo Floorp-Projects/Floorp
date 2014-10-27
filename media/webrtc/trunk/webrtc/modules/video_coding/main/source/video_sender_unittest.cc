@@ -52,7 +52,7 @@ struct Vp8StreamInfo {
 MATCHER_P(MatchesVp8StreamInfo, expected, "") {
   bool res = true;
   for (int tl = 0; tl < kMaxNumberOfTemporalLayers; ++tl) {
-    if (abs(expected.framerate_fps[tl] - arg.framerate_fps[tl]) > 0.5) {
+    if (fabs(expected.framerate_fps[tl] - arg.framerate_fps[tl]) > 0.5) {
       *result_listener << " framerate_fps[" << tl
                        << "] = " << arg.framerate_fps[tl] << " (expected "
                        << expected.framerate_fps[tl] << ") ";

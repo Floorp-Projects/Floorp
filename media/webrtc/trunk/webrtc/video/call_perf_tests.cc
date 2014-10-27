@@ -184,7 +184,7 @@ class VideoRtcpAndSyncObserver : public SyncRtcpObserver, public VideoRenderer {
     // estimated as being synchronized. We don't want to trigger on those.
     if (time_since_creation < kStartupTimeMs)
       return;
-    if (abs(latest_audio_ntp - latest_video_ntp) < kInSyncThresholdMs) {
+    if (std::abs(latest_audio_ntp - latest_video_ntp) < kInSyncThresholdMs) {
       if (first_time_in_sync_ == -1) {
         first_time_in_sync_ = now_ms;
         webrtc::test::PrintResult("sync_convergence_time",
