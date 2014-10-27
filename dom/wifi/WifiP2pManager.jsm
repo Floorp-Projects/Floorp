@@ -1330,7 +1330,7 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
         debug('Stop DHCP server result: ' + success);
         aP2pCommand.p2pDisable(function(success) {
           debug('P2P function disabled');
-          aP2pCommand.closeSupplicantConnection(function (status) {
+          closeSupplicantConnectionIfNeeded(function() {
             debug('Supplicant connection closed');
             gNetworkService.disableInterface(P2P_INTERFACE_NAME, function (success){
               debug('Disabled interface: ' + P2P_INTERFACE_NAME);
@@ -1340,6 +1340,15 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
           });
         });
       });
+
+      function closeSupplicantConnectionIfNeeded(callback) {
+        // No need to connect to supplicant on KK. Call back directly.
+        if (aP2pCommand.getSdkVersion() >= 19) {
+          callback();
+          return;
+        }
+        aP2pCommand.closeSupplicantConnection(callback);
+      }
     },
 
     handleEvent: function(aEvent) {
