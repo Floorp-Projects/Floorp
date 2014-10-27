@@ -23,7 +23,7 @@
 
     <content>
       <xul:button label="&print.label;" accesskey="&print.accesskey;"
-        oncommand="this.parentNode.print();" icon="print"/>
+        oncommand="PrintUtils.print();" icon="print"/>
 
       <xul:button label="&pageSetup.label;" accesskey="&pageSetup.accesskey;"
         oncommand="this.parentNode.doPageSetup();"/>
@@ -93,7 +93,7 @@
       <xul:data value="&customPrompt.title;"/>
     </content>
 
-    <implementation implements="nsIMessageListener">
+    <implementation>
       <field name="mPrintButton">
         document.getAnonymousNodes(this)[0]
       </field>
@@ -125,24 +125,16 @@
       </field>
       <field name="mWebProgress">
       </field>
-      <field name="mPPBrowser">
-        null
-      </field>
-      <field name="mMessageManager">
-        null
-      </field>
+     
+      <constructor>
+      <![CDATA[
+        var print = PrintUtils.getPrintPreview();
+        this.mTotalPages.value = print.printPreviewNumPages;
+        this.mPageTextBox.max = print.printPreviewNumPages;
 
-      <method name="initialize">
-        <parameter name="aPPBrowser"/>
-        <body>
-        <![CDATA[
-          this.mPPBrowser = aPPBrowser;
-          this.mMessageManager = aPPBrowser.messageManager;
-          this.mMessageManager.addMessageListener("Printing:Preview:UpdatePageCount", this);
-          this.updateToolbar();
-        ]]>
-        </body>
-      </method>
+        this.updateToolbar();
+      ]]>
+      </constructor>
 
       <method name="doPageSetup">
         <body>
@@ -164,47 +156,38 @@
         <parameter name="aPageNum"/>
         <parameter name="aHomeOrEnd"/>
         <body>
-        <![CDATA[
-          const nsIWebBrowserPrint = Components.interfaces.nsIWebBrowserPrint;
-          let navType, pageNum;
+        <![CDATA[          
+          var print = PrintUtils.getPrintPreview();
 
           // we use only one of aHomeOrEnd, aDirection, or aPageNum
-          if (aHomeOrEnd) {
-            // We're going to either the very first page ("home"), or the
-            // very last page ("end").
-            if (aHomeOrEnd == "home") {
-              navType = nsIWebBrowserPrint.PRINTPREVIEW_HOME;
-              this.mPageTextBox.value = 1;
-            } else {
-              navType = nsIWebBrowserPrint.PRINTPREVIEW_END;
-              this.mPageTextBox.value = this.mPageTextBox.max;
+          if (aHomeOrEnd)
+          {
+            var homeOrEnd;
+            if (aHomeOrEnd == "home")
+            {
+              homeOrEnd = print.PRINTPREVIEW_HOME;
+              this.mPageTextBox.value = 1;  
             }
-            pageNum = 0;
-          } else if (aDirection) {
-            // aDirection is either +1 or -1, and allows us to increment
-            // or decrement our currently viewed page.
-            this.mPageTextBox.valueNumber += aDirection;
-            navType = nsIWebBrowserPrint.PRINTPREVIEW_GOTO_PAGENUM;
-            pageNum = this.mPageTextBox.value;  // TODO: back to valueNumber?
-          } else {
-            // We're going to a specific page (aPageNum)
-            navType = nsIWebBrowserPrint.PRINTPREVIEW_GOTO_PAGENUM;
-            pageNum = aPageNum;
+            else
+            {
+              homeOrEnd = print.PRINTPREVIEW_END;
+              this.mPageTextBox.value = print.printPreviewNumPages;
+            }
+            
+            print.printPreviewNavigate(homeOrEnd, 0);
           }
-
-          this.mMessageManager.sendAsyncMessage("Printing:Preview:Navigate", {
-            navType: navType,
-            pageNum: pageNum,
-          });
-        ]]>
-        </body>
-      </method>
-
-      <method name="print">
-        <body>
-        <![CDATA[
-          let contentWindow = this.mPPBrowser.contentWindowAsCPOW;
-          PrintUtils.print(contentWindow, this.mPPBrowser);
+          else if (aDirection)
+          {
+            this.mPageTextBox.valueNumber += aDirection;
+            print.printPreviewNavigate(
+              print.PRINTPREVIEW_GOTO_PAGENUM,
+              this.mPageTextBox.valueNumber);
+          }
+          else 
+          {
+            print.printPreviewNavigate(
+              print.PRINTPREVIEW_GOTO_PAGENUM, aPageNum);
+          }
         ]]>
         </body>
       </method>
@@ -307,6 +290,7 @@
       <method name="updateToolbar">
         <body>
         <![CDATA[
+          var print = PrintUtils.getPrintPreview();
           var settings = PrintUtils.getPrintSettings();
 
           var isPortrait = settings.orientation == Components.interfaces.nsIPrintSettings.kPortraitOrientation;
@@ -320,9 +304,9 @@
             this.setScaleCombobox(settings.scaling);
           }
 
+          this.mTotalPages.value = print.printPreviewNumPages;
+          this.mPageTextBox.max = print.printPreviewNumPages;
           this.mPageTextBox.value = 1;
-
-          this.mMessageManager.sendAsyncMessage("Printing:Preview:UpdatePageCount");
         ]]>
         </body>
       </method>
@@ -335,20 +319,6 @@
                                 .getService(Components.interfaces.nsIPrintSettingsService);
           PSSVC.savePrintSettingsToPrefs(settings, true, flags);
         ]]></body>
-      </method>
-
-      <!-- nsIMessageListener -->
-      <method name="receiveMessage">
-        <parameter name="message"/>
-        <body>
-        <![CDATA[
-          if (message.name == "Printing:Preview:UpdatePageCount") {
-            let numPages = message.data.numPages;
-            this.mTotalPages.value = numPages;
-            this.mPageTextBox.max = numPages;
-          }
-        ]]>
-        </body>
       </method>
     </implementation>
   </binding>
