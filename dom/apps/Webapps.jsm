@@ -3070,12 +3070,6 @@ this.DOMApplicationRegistry = {
       }
     }
 
-    this.broadcastMessage("Webapps:UpdateState", {
-      app: app,
-      manifest: aManifest,
-      manifestURL: aNewApp.manifestURL
-    });
-
     // Check if we have asm.js code to preload for this application.
     yield ScriptPreloader.preload(aNewApp, aManifest);
 
