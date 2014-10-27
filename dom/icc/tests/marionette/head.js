@@ -138,6 +138,158 @@ function getMozIcc(aIccId) {
 }
 
 /**
+ * Get MozMobileConnection by ServiceId
+ *
+ * @param aServiceId [optional]
+ *        A numeric DSDS service id. Default: 0 if not indicated.
+ *
+ * @return A MozMobileConnection.
+ */
+function getMozMobileConnectionByServiceId(aServiceId) {
+  aServiceId = aServiceId || 0;
+  return workingFrame.contentWindow.navigator.mozMobileConnections[aServiceId];
+}
+
+/**
+ * Set radio enabling state.
+ *
+ * Resolve no matter the request succeeds or fails. Never reject.
+ *
+ * Fulfill params: (none)
+ *
+ * @param aEnabled
+ *        A boolean state.
+ * @param aServiceId [optional]
+ *        A numeric DSDS service id.
+ *
+ * @return A deferred promise.
+ */
+function setRadioEnabled(aEnabled, aServiceId) {
+  return getMozMobileConnectionByServiceId(aServiceId).setRadioEnabled(aEnabled)
+    .then(() => {
+      ok(true, "setRadioEnabled " + aEnabled + " on " + aServiceId + " success.");
+    }, (aError) => {
+      ok(false, "setRadioEnabled " + aEnabled + " on " + aServiceId + " " +
+         aError.name);
+    });
+}
+
+/**
+ * Wait for one named event.
+ *
+ * Resolve if that named event occurs.  Never reject.
+ *
+ * Fulfill params: the DOMEvent passed.
+ *
+ * @param aEventTarget
+ *        An EventTarget object.
+ * @param aEventName
+ *        A string event name.
+ * @param aMatchFun [optional]
+ *        A matching function returns true or false to filter the event.
+ *
+ * @return A deferred promise.
+ */
+function waitForTargetEvent(aEventTarget, aEventName, aMatchFun) {
+  let deferred = Promise.defer();
+
+  aEventTarget.addEventListener(aEventName, function onevent(aEvent) {
+    if (!aMatchFun || aMatchFun(aEvent)) {
+      aEventTarget.removeEventListener(aEventName, onevent);
+      ok(true, "Event '" + aEventName + "' got.");
+      deferred.resolve(aEvent);
+    }
+  });
+
+  return deferred.promise;
+}
+
+/**
+ * Set radio enabling state and wait for "radiostatechange" event.
+ *
+ * Resolve if radio state changed to the expected one. Never reject.
+ *
+ * Fulfill params: (none)
+ *
+ * @param aEnabled
+ *        A boolean state.
+ * @param aServiceId [optional]
+ *        A numeric DSDS service id. Default: the one indicated in
+ *        start*TestCommon() or 0 if not indicated.
+ *
+ * @return A deferred promise.
+ */
+function setRadioEnabledAndWait(aEnabled, aServiceId) {
+  let mobileConn = getMozMobileConnectionByServiceId(aServiceId);
+  let promises = [];
+
+  promises.push(waitForTargetEvent(mobileConn, "radiostatechange", function() {
+    // To ignore some transient states, we only resolve that deferred promise
+    // when |radioState| equals to the expected one.
+    return mobileConn.radioState === (aEnabled ? "enabled" : "disabled");
+  }));
+  promises.push(setRadioEnabled(aEnabled, aServiceId));
+
+  return Promise.all(promises);
+}
+
+/**
+ * Restart radio and wait card state changes to expected one.
+ *
+ * Resolve if card state changed to the expected one. Never reject.
+ *
+ * Fulfill params: (none)
+ *
+ * @param aCardState
+ *        Expected card state.
+ *
+ * @return A deferred promise.
+ */
+function restartRadioAndWait(aCardState) {
+  return setRadioEnabledAndWait(false).then(() => {
+    let promises = [];
+
+    promises.push(waitForTargetEvent(iccManager, "iccdetected")
+      .then((aEvent) => {
+        let icc = getMozIcc(aEvent.iccId);
+        if (icc.cardState !== aCardState) {
+          return waitForTargetEvent(icc, "cardstatechange", function() {
+            return icc.cardState === aCardState;
+          });
+        }
+      }));
+    promises.push(setRadioEnabledAndWait(true));
+
+    return Promise.all(promises);
+  });
+}
+
+/**
+ * Enable/Disable PIN-lock.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   An object contains error name and remaining retry count.
+ *   @see IccCardLockError
+ *
+ * @param aIcc
+ *        A MozIcc object.
+ * @param aEnabled
+ *        A boolean state.
+ *
+ * @return A deferred promise.
+ */
+function setPinLockEnabled(aIcc, aEnabled) {
+  let options = {
+    lockType: "pin",
+    enabled: aEnabled,
+    pin: DEFAULT_PIN
+  };
+
+  return aIcc.setCardLock(options);
+}
+
+/**
  * Wait for pending emulator transactions and call |finish()|.
  */
 function cleanUp() {
