@@ -4259,7 +4259,7 @@ nsBrowserAccess.prototype = {
     var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
 
     if (isExternal && aURI && aURI.schemeIs("chrome")) {
-      dump("use -chrome command-line option to load external chrome urls\n");
+      dump("use --chrome command-line option to load external chrome urls\n");
       return null;
     }
 

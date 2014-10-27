@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=811701
   is(math.outerHTML, "<math><mtext>test</mtext></math>",
      "<math> should have innerHTML");
   math.innerHTML = "<mo>+</mo>";
-  is(math.firstChild.namespaceURI, "http://www.w3.org/1999/xhtml",
+  is(math.firstChild.namespaceURI, "http://www.w3.org/1998/Math/MathML",
      "Should have the right namespace after setting innerHTML on <math>");
 
   var polygon = document.querySelector("polygon");
@@ -41,8 +41,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=811701
 
   var svg = document.querySelector("svg");
   svg.innerHTML = "<rect/>";
-  is(svg.firstChild.namespaceURI, "http://www.w3.org/1999/xhtml",
-     "Should have the right namespace after setting innerHTML on <math>");
+  is(svg.firstChild.namespaceURI, "http://www.w3.org/2000/svg",
+     "Should have the right namespace after setting innerHTML on <svg>");
   </script>
 </body>
 </html>

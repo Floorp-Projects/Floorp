@@ -763,9 +763,8 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
     nsRefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
       nsLayoutUtils::FontSizeInflationFor(aFrame));
-    mWidth = nsLayoutUtils::GetStringWidth(aFrame, rc, *fm,
-                                           mStyle->mString.get(),
-                                           mStyle->mString.Length());
+    mWidth = nsLayoutUtils::AppUnitWidthOfStringBidi(mStyle->mString, aFrame,
+                                                     *fm, *rc);
   }
   mIntrinsicISize = mWidth;
   mInitialized = true;

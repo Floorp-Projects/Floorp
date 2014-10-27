@@ -100,10 +100,8 @@ nsSubDocumentFrame::Init(nsIContent*       aContent,
                          nsIFrame*         aPrevInFlow)
 {
   // determine if we are a <frame> or <iframe>
-  if (aContent) {
-    nsCOMPtr<nsIDOMHTMLFrameElement> frameElem = do_QueryInterface(aContent);
-    mIsInline = frameElem ? false : true;
-  }
+  nsCOMPtr<nsIDOMHTMLFrameElement> frameElem = do_QueryInterface(aContent);
+  mIsInline = frameElem ? false : true;
 
   nsLeafFrame::Init(aContent, aParent, aPrevInFlow);
 

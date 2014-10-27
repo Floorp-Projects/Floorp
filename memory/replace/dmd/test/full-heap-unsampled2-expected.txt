@@ -1,7 +1,8 @@
 #-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o full-heap-unsampled2-actual.txt --ignore-reports full-unsampled2.json
 
 Invocation {
-  $DMD = '--mode=test'
+  $DMD = '1'
   Sample-below size = 1
 }
 
@@ -10,6 +11,7 @@ Invocation {
 Live {
   9 blocks in heap block record 1 of 9
   1,008 bytes (900 requested / 108 slop)
+  Individual block sizes: 112 x 9
   35.49% of the heap (35.49% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
@@ -19,6 +21,7 @@ Live {
 Live {
   6 blocks in heap block record 2 of 9
   528 bytes (528 requested / 0 slop)
+  Individual block sizes: 128; 112; 96; 80; 64; 48
   18.59% of the heap (54.08% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
@@ -28,6 +31,7 @@ Live {
 Live {
   6 blocks in heap block record 3 of 9
   528 bytes (528 requested / 0 slop)
+  Individual block sizes: 128; 112; 96; 80; 64; 48
   18.59% of the heap (72.68% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...

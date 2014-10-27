@@ -1326,11 +1326,28 @@ public:
   }
   static nscoord AppUnitWidthOfString(const nsString& aString,
                                       nsFontMetrics& aFontMetrics,
-                                      nsRenderingContext& aContext);
+                                      nsRenderingContext& aContext) {
+    return nsLayoutUtils::AppUnitWidthOfString(aString.get(), aString.Length(),
+                                               aFontMetrics, aContext);
+  }
   static nscoord AppUnitWidthOfString(const char16_t *aString,
                                       uint32_t aLength,
                                       nsFontMetrics& aFontMetrics,
                                       nsRenderingContext& aContext);
+  static nscoord AppUnitWidthOfStringBidi(const nsString& aString,
+                                          const nsIFrame* aFrame,
+                                          nsFontMetrics& aFontMetrics,
+                                          nsRenderingContext& aContext) {
+    return nsLayoutUtils::AppUnitWidthOfStringBidi(aString.get(),
+                                                   aString.Length(), aFrame,
+                                                   aFontMetrics, aContext);
+  }
+  static nscoord AppUnitWidthOfStringBidi(const char16_t* aString,
+                                          uint32_t aLength,
+                                          const nsIFrame* aFrame,
+                                          nsFontMetrics& aFontMetrics,
+                                          nsRenderingContext& aContext);
+
   static nsBoundingMetrics AppUnitBoundsOfString(const char16_t* aString,
                                                  uint32_t aLength,
                                                  nsFontMetrics& aFontMetrics,
@@ -1352,12 +1369,6 @@ public:
                                nsPoint aPoint,
                                nsFontMetrics& aFontMetrics,
                                nsRenderingContext& aContext);
-
-  static nscoord GetStringWidth(const nsIFrame*      aFrame,
-                                nsRenderingContext* aContext,
-                                nsFontMetrics&      aFontMetrics,
-                                const char16_t*     aString,
-                                int32_t              aLength);
 
   /**
    * Helper function for drawing text-shadow. The callback's job

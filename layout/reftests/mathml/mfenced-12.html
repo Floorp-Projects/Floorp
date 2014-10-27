@@ -1,0 +1,35 @@
+<!doctype html>
+<html class="reftest-wait">
+
+<math style="font-size:25px; position: absolute; top: 10px; left:10px;">
+  <mfenced id="outer" separators="&amp;">
+      <mn id="a" style="visibility:hidden;">a</mn>
+      <mn id="c" style="visibility:hidden;">c</mn>
+  </mfenced>
+</math>
+
+<!-- Implementation kludge.  <mfenced> renders the position of the ampersand in
+     a slightly different position compared to <mo>+<mrow>.
+     In this test we are only concerned about the size of the fences "(" and
+     ")", so the ampersand gets redacted. -->
+<div id="div" style="position: absolute; background:black; top: 0px;
+                     height: 120px;"></div>
+
+<script>
+  function doTest()
+  {
+    a = document.getElementById("a");
+    c = document.getElementById("c");
+    div = document.getElementById("div");
+    outer = document.getElementById("outer");
+
+    left = a.getBoundingClientRect().left;  // div's left
+    div.style.left = left + 'px';
+    div.style.width = (c.getBoundingClientRect().right - left ) + 'px';
+
+    document.documentElement.removeAttribute("class");
+   }
+   window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+
+</html>
