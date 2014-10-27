@@ -264,6 +264,7 @@ WEBIDL_FILES = [
     'MediaStream.webidl',
     'MediaStreamAudioDestinationNode.webidl',
     'MediaStreamAudioSourceNode.webidl',
+    'MediaStreamError.webidl',
     'MediaStreamTrack.webidl',
     'MediaTrackConstraintSet.webidl',
     'MenuBoxObject.webidl',

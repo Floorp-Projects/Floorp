@@ -23,6 +23,11 @@
 
 #include <algorithm>
 
+// Undo the windows.h damage
+#if defined(XP_WIN) && defined(GetMessage)
+#undef GetMessage
+#endif
+
 namespace mozilla {
 namespace dom {
 
