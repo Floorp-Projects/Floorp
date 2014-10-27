@@ -2121,7 +2121,7 @@ pref("layout.css.box-decoration-break.enabled", true);
 pref("layout.css.outline-style-auto.enabled", false);
 
 // Is CSSOM-View scroll-behavior and its MSD smooth scrolling enabled?
-pref("layout.css.scroll-behavior.enabled", false);
+pref("layout.css.scroll-behavior.enabled", true);
 
 // Is the CSSOM-View scroll-behavior CSS property enabled?
 pref("layout.css.scroll-behavior.property-enabled", false);
@@ -3297,6 +3297,9 @@ pref("print.print_paper_size", 0);
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 0); // twips
+
+// CSSOM-View scroll-behavior smooth scrolling requires the C++ APZC
+pref("layout.css.scroll-behavior.enabled", false);
 
 # ANDROID
 #endif
