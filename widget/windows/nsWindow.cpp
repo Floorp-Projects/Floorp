@@ -180,6 +180,8 @@
 
 #include "npapi.h"
 
+#include <d3d11.h>
+
 #if !defined(SM_CONVERTIBLESLATEMODE)
 #define SM_CONVERTIBLESLATEMODE 0x2003
 #endif
@@ -6742,7 +6744,9 @@ nsWindow::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
     }
 
     ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
-    if (device && !DoesD3D11DeviceSupportResourceSharing(device)) {
+    if (device &&
+        device->GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_0 &&
+        !DoesD3D11DeviceSupportResourceSharing(device)) {
       // bug 1083071 - bad things - fall back to basic layers
       // This should not happen aside from driver bugs, and in particular
       // should not happen on our test machines, so let's NS_ERROR to ensure
