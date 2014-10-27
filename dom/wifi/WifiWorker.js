@@ -1215,6 +1215,12 @@ var WifiManager = (function() {
         if (value !== null) {
           if (fieldType === "integer") {
             config[fieldName] = parseInt(value, 10);
+          } else if ( fieldName == "ssid" && value[0] != '"' ) {
+            // SET_NETWORK will set a quoted ssid to wpa_supplicant.
+            // But if ssid contains non-ascii char, it will be converted into utf-8.
+            // For example: "Test的wifi" --> 54657374e79a8477696669
+            // When GET_NETWORK receive a un-quoted utf-8 ssid, it must be decoded and quoted.
+            config[fieldName] = quote(decodeURIComponent(value.replace(/[0-9a-f]{2}/g, '%$&')));
           } else {
             // value is string type by default.
             config[fieldName] = value;
