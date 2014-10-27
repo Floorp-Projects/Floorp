@@ -84,6 +84,26 @@ let inputTests = [
     inspectable: true,
     variablesViewLabel: "String[5]"
   },
+
+  // 9
+  {
+    // XXX: Can't test fulfilled and rejected promises, because promises get
+    // settled on the next tick of the event loop.
+    input: "new Promise(function () {})",
+    output: 'Promise { <state>: "pending" }',
+    printOutput: "[object Promise]",
+    inspectable: true,
+    variablesViewLabel: "Promise"
+  },
+
+  // 10
+  {
+    input: "(function () { var p = new Promise(function () {}); p.foo = 1; return p; }())",
+    output: 'Promise { <state>: "pending", foo: 1 }',
+    printOutput: "[object Promise]",
+    inspectable: true,
+    variablesViewLabel: "Promise"
+  }
 ];
 
 function test() {

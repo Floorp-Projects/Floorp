@@ -194,12 +194,16 @@ function TouchEventHandler (window) {
             this.cancelClick = true;
           }
         }
+        function clone(obj) {
+          return Cu.cloneInto(obj, target);
+        }
         let unwraped = XPCNativeWrapper.unwrap(target);
-        unwraped.sendTouchEvent(name, [0],                    // event type, id
-                                [evt.clientX], [evt.clientY], // x, y
-                                [1], [1],                     // rx, ry
-                                [0], [0],                     // rotation, force
-                                1);                           // count
+        unwraped.sendTouchEvent(name, clone([0]),       // event type, id
+                                clone([evt.clientX]),   // x
+                                clone([evt.clientY]),   // y
+                                clone([1]), clone([1]), // rx, ry
+                                clone([0]), clone([0]), // rotation, force
+                                1);                     // count
         return;
       }
       let document = target.ownerDocument;
