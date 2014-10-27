@@ -33,6 +33,7 @@
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "Performance.h"
+#include "ServiceWorkerClients.h"
 
 #define UNWRAP_WORKER_OBJECT(Interface, obj, value)                           \
   UnwrapObject<prototypes::id::Interface##_workers,                           \
@@ -374,6 +375,10 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WorkerPrivate* aWorkerPrivate
 {
 }
 
+ServiceWorkerGlobalScope::~ServiceWorkerGlobalScope()
+{
+}
+
 JSObject*
 ServiceWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
 {
@@ -386,6 +391,16 @@ ServiceWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
   return ServiceWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this, options,
                                                        GetWorkerPrincipal(),
                                                        true);
+}
+
+ServiceWorkerClients*
+ServiceWorkerGlobalScope::Clients()
+{
+  if (!mClients) {
+    mClients = new ServiceWorkerClients(this);
+  }
+
+  return mClients;
 }
 
 bool
