@@ -37,8 +37,11 @@ function setupFakeLoopServer() {
   Services.prefs.setCharPref("loop.server",
     "http://localhost:" + loopServer.identity.primaryPort);
 
+  MozLoopServiceInternal.mocks.pushHandler = mockPushHandler;
+
   do_register_cleanup(function() {
     loopServer.stop(function() {});
+    MozLoopServiceInternal.mocks.pushHandler = undefined;
   });
 }
 
