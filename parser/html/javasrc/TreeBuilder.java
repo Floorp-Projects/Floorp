@@ -1694,20 +1694,17 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case P:
                         case PRE_OR_LISTING:
                         case TABLE:
-                            errHtmlStartTagInForeignContext(name);
-                            while (!isSpecialParentInForeign(stack[currentPtr])) {
-                                pop();
-                            }
-                            continue starttagloop;
                         case FONT:
-                            if (attributes.contains(AttributeName.COLOR)
-                                    || attributes.contains(AttributeName.FACE)
-                                    || attributes.contains(AttributeName.SIZE)) {
+                            // re-check FONT to deal with the special case
+                            if (!(group == FONT && !(attributes.contains(AttributeName.COLOR)
+                                    || attributes.contains(AttributeName.FACE) || attributes.contains(AttributeName.SIZE)))) {
                                 errHtmlStartTagInForeignContext(name);
-                                while (!isSpecialParentInForeign(stack[currentPtr])) {
-                                    pop();
-                                }
-                                continue starttagloop;
+                                if (!fragment) {
+                                    while (!isSpecialParentInForeign(stack[currentPtr])) {
+                                        pop();
+                                    }
+                                    continue starttagloop;
+                                } // else fall thru
                             }
                             // else fall thru
                         default:
