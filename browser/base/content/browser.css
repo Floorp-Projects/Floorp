@@ -22,12 +22,8 @@ searchbar {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar");
 }
 
-.browserStack > browser {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-browser");
-}
-
 .browserStack > browser[remote="true"] {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-remote-browser");
+  -moz-binding: url("chrome://global/content/bindings/remote-browser.xml#remote-browser");
 }
 
 toolbar[customizable="true"] {
