@@ -1,0 +1,127 @@
+#-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o script-diff-basic-actual.txt script-diff1.json script-diff2.json
+
+Invocation 1 {
+  $DMD = '--sample-below=127'
+  Sample-below size = 127
+}
+
+Invocation 2 {
+  $DMD = '--sample-below=63'
+  Sample-below size = 63
+}
+
+#-----------------------------------------------------------------
+
+Twice-reported {
+  ~-1 blocks in heap block record 1 of 1
+  ~-1,088 bytes (~-1,064 requested / ~-24 slop)
+  Individual block sizes: -1,024; ~-127; ~63
+  15.46% of the heap (15.46% cumulative)
+  100.00% of twice-reported (100.00% cumulative)
+  Allocated at {
+    #01: F (F.cpp:99)
+  }
+  Reported at {
+    #01: R1 (R1.cpp:99)
+  }
+  Reported again at {
+    #01: R2 (R2.cpp:99)
+  }
+}
+
+#-----------------------------------------------------------------
+
+Unreported {
+  4 blocks in heap block record 1 of 5
+  16,384 bytes (16,384 requested / 0 slop)
+  Individual block sizes: 4,096 x 4
+  -232.76% of the heap (-232.76% cumulative)
+  371.01% of unreported (371.01% cumulative)
+  Allocated at {
+    #01: E (E.cpp:99)
+  }
+}
+
+Unreported {
+  ~7 blocks in heap block record 2 of 5
+  ~-11,968 bytes (~-12,016 requested / ~48 slop)
+  Individual block sizes: -15,360; 2,048; 512 x 2; 128; ~-127; 64 x 4; ~63
+  170.02% of the heap (-62.74% cumulative)
+  -271.01% of unreported (100.00% cumulative)
+  Allocated at {
+    #01: F (F.cpp:99)
+  }
+}
+
+Unreported {
+  0 blocks in heap block record 3 of 5
+  0 bytes (-384 requested / 384 slop)
+  Individual block sizes: (no change)
+  -0.00% of the heap (-62.74% cumulative)
+  0.00% of unreported (100.00% cumulative)
+  Allocated at {
+    #01: C (C.cpp:99)
+  }
+}
+
+Unreported {
+  -2 blocks in heap block record 4 of 5
+  0 bytes (0 requested / 0 slop)
+  Individual block sizes: 8,192 x 2; -4,096 x 4
+  -0.00% of the heap (-62.74% cumulative)
+  0.00% of unreported (100.00% cumulative)
+  Allocated at {
+    #01: B (B.cpp:99)
+  }
+}
+
+Unreported {
+  0 blocks in heap block record 5 of 5
+  0 bytes (0 requested / 0 slop)
+  Individual block sizes: 20,480; -16,384; -8,192; 4,096
+  -0.00% of the heap (-62.74% cumulative)
+  0.00% of unreported (100.00% cumulative)
+  Allocated at {
+    #01: G (G.cpp:99)
+  }
+}
+
+#-----------------------------------------------------------------
+
+Once-reported {
+  -3 blocks in heap block record 1 of 2
+  -10,240 bytes (-10,192 requested / -48 slop)
+  Individual block sizes: -4,096 x 2; -2,048
+  145.48% of the heap (145.48% cumulative)
+  98.77% of once-reported (98.77% cumulative)
+  Allocated at {
+    #01: D (D.cpp:99)
+  }
+  Reported at {
+    #01: R1 (R1.cpp:99)
+  }
+}
+
+Once-reported {
+  ~-1 blocks in heap block record 2 of 2
+  ~-127 bytes (~-151 requested / ~24 slop)
+  1.80% of the heap (147.28% cumulative)
+  1.23% of once-reported (100.00% cumulative)
+  Allocated at {
+    #01: F (F.cpp:99)
+  }
+  Reported at {
+    #01: R1 (R1.cpp:99)
+  }
+}
+
+#-----------------------------------------------------------------
+
+Summary {
+  Total:               ~-7,039 bytes (100.00%) in      ~4 blocks (100.00%)
+  Unreported:           ~4,416 bytes (-62.74%) in      ~9 blocks (225.00%)
+  Once-reported:      ~-10,367 bytes (147.28%) in     ~-4 blocks (-100.00%)
+  Twice-reported:      ~-1,088 bytes ( 15.46%) in     ~-1 blocks (-25.00%)
+}
+

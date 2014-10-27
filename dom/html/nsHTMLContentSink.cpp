@@ -173,10 +173,6 @@ protected:
   // yet.  We want to make sure to only do this once.
   bool mNotifiedRootInsertion;
 
-  uint8_t mScriptEnabled : 1;
-  uint8_t mFramesEnabled : 1;
-  uint8_t unused : 6;  // bits available if someone needs one
-
   mozilla::dom::NodeInfo* mNodeInfoCache[NS_HTML_TAG_MAX + 1];
 
   nsresult FlushTags();
@@ -724,25 +720,6 @@ NS_INTERFACE_TABLE_TAIL_INHERITING(nsContentSink)
 NS_IMPL_ADDREF_INHERITED(HTMLContentSink, nsContentSink)
 NS_IMPL_RELEASE_INHERITED(HTMLContentSink, nsContentSink)
 
-static bool
-IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
-{
-  NS_ENSURE_TRUE(aDoc && aContainer, true);
-
-  nsCOMPtr<nsIScriptGlobalObject> globalObject =
-    do_QueryInterface(aDoc->GetInnerWindow());
-
-  // Getting context is tricky if the document hasn't had its
-  // GlobalObject set yet
-  if (!globalObject) {
-    globalObject = aContainer->GetScriptGlobalObject();
-  }
-
-  NS_ENSURE_TRUE(globalObject && globalObject->GetGlobalJSObject(), true);
-  return nsContentUtils::GetSecurityManager()->
-           ScriptAllowed(globalObject->GetGlobalJSObject());
-}
-
 nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
                       nsIURI* aURI,
@@ -761,21 +738,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mHTMLDocument = do_QueryInterface(aDoc);
 
   NS_ASSERTION(mDocShell, "oops no docshell!");
-
-  // Find out if subframes are enabled
-  if (mDocShell) {
-    bool subFramesEnabled = true;
-    mDocShell->GetAllowSubframes(&subFramesEnabled);
-    if (subFramesEnabled) {
-      mFramesEnabled = true;
-    }
-  }
-
-  // Find out if scripts are enabled, if not, show <noscript> content
-  if (IsScriptEnabled(aDoc, mDocShell)) {
-    mScriptEnabled = true;
-  }
-
 
   // Changed from 8192 to greatly improve page loading performance on
   // large pages.  See bugzilla bug 77540.
