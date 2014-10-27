@@ -7,6 +7,8 @@ const PREF_KEY_RIL_DEBUGGING_ENABLED = "ril.debugging.enabled";
 
 // The pin code hard coded in emulator is "0000".
 const DEFAULT_PIN = "0000";
+// The puk code hard coded in emulator is "12345678".
+const DEFAULT_PUK = "12345678";
 
 // Emulate Promise.jsm semantics.
 Promise.defer = function() { return new Deferred(); }
