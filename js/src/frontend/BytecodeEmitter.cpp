@@ -160,6 +160,7 @@ EmitCheck(ExclusiveContext *cx, BytecodeEmitter *bce, ptrdiff_t delta)
     ptrdiff_t offset = bce->code().length();
 
     // Start it off moderately large to avoid repeated resizings early on.
+    // ~98% of cases fit within 1024 bytes.
     if (bce->code().capacity() == 0 && !bce->code().reserve(1024))
         return -1;
 
@@ -7082,7 +7083,8 @@ static int
 AllocSrcNote(ExclusiveContext *cx, SrcNotesVector &notes)
 {
     // Start it off moderately large to avoid repeated resizings early on.
-    if (notes.capacity() == 0 && !notes.reserve(1024))
+    // ~99% of cases fit within 256 bytes.
+    if (notes.capacity() == 0 && !notes.reserve(256))
         return -1;
 
     jssrcnote dummy = 0;
