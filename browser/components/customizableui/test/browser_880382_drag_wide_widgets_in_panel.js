@@ -23,6 +23,7 @@ add_task(function() {
                              "preferences-button",
                              "add-ons-button",
                              "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterMove);
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, printButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -49,6 +50,7 @@ add_task(function() {
                              "preferences-button",
                              "add-ons-button",
                              "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterMove);
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, savePageButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -73,6 +75,7 @@ add_task(function() {
                              "preferences-button",
                              "add-ons-button",
                              "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterMove);
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, newWindowButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -96,6 +99,7 @@ add_task(function() {
                              "preferences-button",
                              "add-ons-button",
                              "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterMove);
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, historyPanelMenu);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -123,6 +127,7 @@ add_task(function() {
                              "preferences-button",
                              "add-ons-button",
                              "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterMove);
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, preferencesButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -150,6 +155,7 @@ add_task(function() {
                                "preferences-button",
                                "add-ons-button",
                                "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterInsert);
   addSwitchToMetroButtonInWindows8(placementsAfterInsert);
   simulateItemDrag(openFileButton, zoomControls);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterInsert);
@@ -189,6 +195,7 @@ add_task(function() {
                                "preferences-button",
                                "add-ons-button",
                                "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterInsert);
   addSwitchToMetroButtonInWindows8(placementsAfterInsert);
   simulateItemDrag(openFileButton, editControls);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterInsert);
@@ -225,6 +232,7 @@ add_task(function() {
                              "preferences-button",
                              "add-ons-button",
                              "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterMove);
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, zoomControls);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -249,6 +257,7 @@ add_task(function() {
                              "preferences-button",
                              "add-ons-button",
                              "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterMove);
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, newWindowButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -276,6 +285,7 @@ add_task(function() {
                              "preferences-button",
                              "add-ons-button",
                              "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterMove);
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, privateBrowsingButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -303,6 +313,7 @@ add_task(function() {
                              "preferences-button",
                              "add-ons-button",
                              "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterMove);
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, savePageButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -329,6 +340,7 @@ add_task(function() {
                              "add-ons-button",
                              "edit-controls",
                              "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterMove);
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, panel);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -354,6 +366,7 @@ add_task(function() {
                              "preferences-button",
                              "add-ons-button",
                              "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterMove);
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   let paletteChildElementCount = palette.childElementCount;
   simulateItemDrag(editControls, palette);
@@ -394,6 +407,7 @@ add_task(function() {
                                "add-ons-button",
                                "edit-controls",
                                "developer-button"];
+    removeDeveloperButtonIfDevEdition(placementsAfterMove);
     addSwitchToMetroButtonInWindows8(placementsAfterMove);
     simulateItemDrag(editControls, placeholder);
     assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -436,6 +450,7 @@ add_task(function() {
                              "add-ons-button",
                              "edit-controls",
                              "developer-button"];
+  removeDeveloperButtonIfDevEdition(placementsAfterMove);
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, target);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);

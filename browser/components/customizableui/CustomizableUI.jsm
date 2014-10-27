@@ -168,7 +168,9 @@ let CustomizableUIInternal = {
       "find-button",
       "preferences-button",
       "add-ons-button",
+#ifndef MOZ_DEV_EDITION
       "developer-button",
+#endif
     ];
 
     if (gPalette.has("switch-to-metro-button")) {
@@ -202,6 +204,9 @@ let CustomizableUIInternal = {
     let navbarPlacements = [
       "urlbar-container",
       "search-container",
+#ifdef MOZ_DEV_EDITION
+      "developer-button",
+#endif
       "bookmarks-menu-button",
       "downloads-button",
       "home-button",
