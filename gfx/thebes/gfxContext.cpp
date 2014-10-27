@@ -325,22 +325,6 @@ gfxContext::QuadraticCurveTo(const gfxPoint& pt1, const gfxPoint& pt2)
 }
 
 void
-gfxContext::Arc(const gfxPoint& center, gfxFloat radius,
-                gfxFloat angle1, gfxFloat angle2)
-{
-  EnsurePathBuilder();
-  mPathBuilder->Arc(ToPoint(center), Float(radius), Float(angle1), Float(angle2));
-}
-
-void
-gfxContext::NegativeArc(const gfxPoint& center, gfxFloat radius,
-                        gfxFloat angle1, gfxFloat angle2)
-{
-  EnsurePathBuilder();
-  mPathBuilder->Arc(ToPoint(center), Float(radius), Float(angle2), Float(angle1));
-}
-
-void
 gfxContext::Line(const gfxPoint& start, const gfxPoint& end)
 {
   EnsurePathBuilder();
