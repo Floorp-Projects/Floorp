@@ -102,6 +102,7 @@ GetMediaManagerLog()
 using dom::MediaStreamConstraints;         // Outside API (contains JSObject)
 using dom::MediaTrackConstraintSet;        // Mandatory or optional constraints
 using dom::MediaTrackConstraints;          // Raw mMandatory (as JSObject)
+using dom::MediaStreamError;
 using dom::GetUserMediaRequest;
 using dom::Sequence;
 using dom::OwningBooleanOrMediaTrackConstraints;
@@ -196,8 +197,9 @@ HostHasPermission(nsIURI &docURI)
 ErrorCallbackRunnable::ErrorCallbackRunnable(
   nsCOMPtr<nsIDOMGetUserMediaSuccessCallback>& aOnSuccess,
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aOnFailure,
-  const nsAString& aErrorMsg, uint64_t aWindowID)
-  : mErrorMsg(aErrorMsg)
+  MediaMgrError& aError,
+  uint64_t aWindowID)
+  : mError(&aError)
   , mWindowID(aWindowID)
   , mManager(MediaManager::GetInstance())
 {
@@ -224,7 +226,11 @@ ErrorCallbackRunnable::Run()
   }
   // This is safe since we're on main-thread, and the windowlist can only
   // be invalidated from the main-thread (see OnNavigation)
-  onFailure->OnError(mErrorMsg);
+  nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
+  if (window) {
+    nsRefPtr<MediaStreamError> error = new MediaStreamError(window, *mError);
+    onFailure->OnError(error);
+  }
   return NS_OK;
 }
 
@@ -315,7 +321,12 @@ public:
       // We should in the future return an empty array, and dynamically add
       // devices to the dropdowns if things are hotplugged while the
       // requester is up.
-      mOnFailure->OnError(NS_LITERAL_STRING("NO_DEVICES_FOUND"));
+      nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
+      if (window) {
+        nsRefPtr<MediaStreamError> error = new MediaStreamError(window,
+            NS_LITERAL_STRING("NotFoundError"));
+        mOnFailure->OnError(error);
+      }
       return NS_OK;
     }
 
@@ -830,9 +841,16 @@ public:
       nsDOMUserMediaStream::CreateTrackUnionStream(window, mListener,
                                                    mAudioSource, mVideoSource);
     if (!trackunion) {
-      nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error = mOnFailure.forget();
+      nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure = mOnFailure.forget();
       LOG(("Returning error for getUserMedia() - no stream"));
-      error->OnError(NS_LITERAL_STRING("NO_STREAM"));
+
+      nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
+      if (window) {
+        nsRefPtr<MediaStreamError> error = new MediaStreamError(window,
+            NS_LITERAL_STRING("InternalError"),
+            NS_LITERAL_STRING("No stream."));
+        onFailure->OnError(error);
+      }
       return NS_OK;
     }
     trackunion->AudioConfig(aec_on, (uint32_t) aec,
@@ -1097,9 +1115,11 @@ public:
   }
 
   void
-  Fail(const nsAString& aMessage) {
+  Fail(const nsAString& aName,
+       const nsAString& aMessage = EmptyString()) {
+    nsRefPtr<MediaMgrError> error = new MediaMgrError(aName, aMessage);
     nsRefPtr<ErrorCallbackRunnable> runnable =
-      new ErrorCallbackRunnable(mOnSuccess, mOnFailure, aMessage, mWindowID);
+      new ErrorCallbackRunnable(mOnSuccess, mOnFailure, *error, mWindowID);
     // These should be empty now
     MOZ_ASSERT(!mOnSuccess);
     MOZ_ASSERT(!mOnFailure);
@@ -1136,7 +1156,8 @@ public:
   }
 
   nsresult
-  Denied(const nsAString& aErrorMsg)
+  Denied(const nsAString& aName,
+         const nsAString& aMessage = EmptyString())
   {
     MOZ_ASSERT(mOnSuccess);
     MOZ_ASSERT(mOnFailure);
@@ -1148,15 +1169,20 @@ public:
       // be invalidated from the main-thread (see OnNavigation)
       nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onSuccess = mOnSuccess.forget();
       nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure = mOnFailure.forget();
-      onFailure->OnError(aErrorMsg);
 
+      nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
+      if (window) {
+        nsRefPtr<MediaStreamError> error = new MediaStreamError(window,
+                                                                aName, aMessage);
+        onFailure->OnError(error);
+      }
       // Should happen *after* error runs for consistency, but may not matter
       nsRefPtr<MediaManager> manager(MediaManager::GetInstance());
       manager->RemoveFromWindowList(mWindowID, mListener);
     } else {
       // This will re-check the window being alive on main-thread
       // Note: we must remove the listener on MainThread as well
-      Fail(aErrorMsg);
+      Fail(aName, aMessage);
 
       // MUST happen after ErrorCallbackRunnable Run()s, as it checks the active window list
       NS_DispatchToMainThread(new GetUserMediaListenerRemove(mWindowID, mListener));
@@ -1202,7 +1228,7 @@ public:
       GetSources(backend, constraints, &MediaEngine::EnumerateVideoDevices, sources);
 
       if (!sources.Length()) {
-        Fail(NS_LITERAL_STRING("NO_DEVICES_FOUND"));
+        Fail(NS_LITERAL_STRING("NotFoundError"));
         return NS_ERROR_FAILURE;
       }
       // Pick the first available device.
@@ -1215,7 +1241,7 @@ public:
       GetSources(backend, constraints, &MediaEngine::EnumerateAudioDevices, sources);
 
       if (!sources.Length()) {
-        Fail(NS_LITERAL_STRING("NO_DEVICES_FOUND"));
+        Fail(NS_LITERAL_STRING("NotFoundError"));
         return NS_ERROR_FAILURE;
       }
       // Pick the first available device.
@@ -1241,7 +1267,8 @@ public:
       rv = aAudioSource->Allocate(GetInvariant(mConstraints.mAudio), mPrefs);
       if (NS_FAILED(rv)) {
         LOG(("Failed to allocate audiosource %d",rv));
-        Fail(NS_LITERAL_STRING("HARDWARE_UNAVAILABLE"));
+        Fail(NS_LITERAL_STRING("SourceUnavailableError"),
+             NS_LITERAL_STRING("Failed to allocate audiosource"));
         return;
       }
     }
@@ -1252,7 +1279,8 @@ public:
         if (aAudioSource) {
           aAudioSource->Deallocate();
         }
-        Fail(NS_LITERAL_STRING("HARDWARE_UNAVAILABLE"));
+        Fail(NS_LITERAL_STRING("SourceUnavailableError"),
+             NS_LITERAL_STRING("Failed to allocate videosource"));
         return;
       }
     }
@@ -1655,10 +1683,10 @@ MediaManager::GetUserMedia(
     if (tc.mMediaSource != dom::MediaSourceEnum::Camera) {
       if (tc.mMediaSource == dom::MediaSourceEnum::Browser) {
         if (!Preferences::GetBool("media.getusermedia.browser.enabled", false)) {
-          return task->Denied(NS_LITERAL_STRING("PERMISSION_DENIED"));
+          return task->Denied(NS_LITERAL_STRING("PermissionDeniedError"));
         }
       } else if (!Preferences::GetBool("media.getusermedia.screensharing.enabled", false)) {
-        return task->Denied(NS_LITERAL_STRING("PERMISSION_DENIED"));
+        return task->Denied(NS_LITERAL_STRING("PermissionDeniedError"));
       }
       /* Deny screensharing if the requesting document is not from a host
        on the whitelist. */
@@ -1676,7 +1704,7 @@ MediaManager::GetUserMedia(
            ) ||
 #endif
           (!privileged && !HostHasPermission(*docURI))) {
-        return task->Denied(NS_LITERAL_STRING("PERMISSION_DENIED"));
+        return task->Denied(NS_LITERAL_STRING("PermissionDeniedError"));
       }
     }
   }
@@ -1730,7 +1758,7 @@ MediaManager::GetUserMedia(
 
     if ((!IsOn(c.mAudio) || audioPerm == nsIPermissionManager::DENY_ACTION) &&
         (!IsOn(c.mVideo) || videoPerm == nsIPermissionManager::DENY_ACTION)) {
-      return task->Denied(NS_LITERAL_STRING("PERMISSION_DENIED"));
+      return task->Denied(NS_LITERAL_STRING("PermissionDeniedError"));
     }
 
     // Ask for user permission, and dispatch task (or not) when a response
@@ -2020,7 +2048,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       MOZ_ASSERT(len);
       if (!len) {
         // neither audio nor video were selected
-        task->Denied(NS_LITERAL_STRING("PERMISSION_DENIED"));
+        task->Denied(NS_LITERAL_STRING("PermissionDeniedError"));
         return NS_OK;
       }
       for (uint32_t i = 0; i < len; i++) {
@@ -2047,14 +2075,14 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
 
   } else if (!strcmp(aTopic, "getUserMedia:response:deny")) {
-    nsString errorMessage(NS_LITERAL_STRING("PERMISSION_DENIED"));
+    nsString errorMessage(NS_LITERAL_STRING("PermissionDeniedError"));
 
     if (aSubject) {
       nsCOMPtr<nsISupportsString> msg(do_QueryInterface(aSubject));
       MOZ_ASSERT(msg);
       msg->GetData(errorMessage);
       if (errorMessage.IsEmpty())
-        errorMessage.AssignLiteral(MOZ_UTF16("UNKNOWN_ERROR"));
+        errorMessage.AssignLiteral(MOZ_UTF16("InternalError"));
     }
 
     nsString key(aData);

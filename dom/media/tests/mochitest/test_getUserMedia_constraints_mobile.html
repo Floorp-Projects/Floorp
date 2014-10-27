@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=882145
 var mobile_tests = [
   { message: "legacy facingMode overconstrains video (mobile)",
     constraints: { video: { mandatory: { facingMode:'left' } }, fake: true },
-    error: "NO_DEVICES_FOUND" },
+    error: "NotFoundError" },
 ];
 
 runTest(function () {
