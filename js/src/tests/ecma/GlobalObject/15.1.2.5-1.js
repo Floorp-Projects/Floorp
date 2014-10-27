@@ -58,6 +58,8 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 new TestCase( SECTION, "unescape.length",       1,               unescape.length );
 new TestCase( SECTION, "unescape.length = null; unescape.length",   1,      eval("unescape.length=null; unescape.length") );
+new TestCase( SECTION, "delete unescape.length",                    false,  delete unescape.length );
+new TestCase( SECTION, "delete unescape.length; unescape.length",   1,      eval("delete unescape.length; unescape.length") );
 new TestCase( SECTION, "var MYPROPS=''; for ( var p in unescape ) { MYPROPS+= p }; MYPROPS",    "", eval("var MYPROPS=''; for ( var p in unescape ) { MYPROPS+= p }; MYPROPS") );
 
 new TestCase( SECTION, "unescape()",              "undefined",    unescape() );

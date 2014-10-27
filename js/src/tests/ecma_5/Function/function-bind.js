@@ -212,14 +212,14 @@ var len1Desc =
 assertEq(len1Desc.value, 3);
 assertEq(len1Desc.writable, false);
 assertEq(len1Desc.enumerable, false);
-assertEq(len1Desc.configurable, true);
+assertEq(len1Desc.configurable, false);
 
 var len2Desc =
   Object.getOwnPropertyDescriptor(function(a, b, c){}.bind(null, 2), "length");
 assertEq(len2Desc.value, 2);
 assertEq(len2Desc.writable, false);
 assertEq(len2Desc.enumerable, false);
-assertEq(len2Desc.configurable, true);
+assertEq(len2Desc.configurable, false);
 
 
 /*

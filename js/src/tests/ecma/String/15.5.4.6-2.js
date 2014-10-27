@@ -72,6 +72,8 @@ new TestCase( SECTION,
 
 new TestCase( SECTION, "String.prototype.indexOf.length",                                               1,     String.prototype.indexOf.length );
 new TestCase( SECTION, "String.prototype.indexOf.length = null; String.prototype.indexOf.length",       1,     eval("String.prototype.indexOf.length = null; String.prototype.indexOf.length") );
+new TestCase( SECTION, "delete String.prototype.indexOf.length",                                        false,  delete String.prototype.indexOf.length );
+new TestCase( SECTION, "delete String.prototype.indexOf.length; String.prototype.indexOf.length",       1,      eval("delete String.prototype.indexOf.length; String.prototype.indexOf.length") );
 
 new TestCase( SECTION,
               "var s = new String(); s.indexOf()",    
