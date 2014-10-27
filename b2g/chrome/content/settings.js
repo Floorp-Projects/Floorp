@@ -11,6 +11,11 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+// The load order is important here SettingsRequestManager _must_ be loaded
+// prior to using SettingsListener otherwise there is a race in acquiring the
+// lock and fulfilling it. If we ever move SettingsListener or this file down in
+// the load order of shell.html things will likely break.
+Cu.import('resource://gre/modules/SettingsRequestManager.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 
