@@ -87,7 +87,7 @@ var gMainPane = {
   separateProfileModeChange: function ()
   {
     function quitApp() {
-      Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit |  Ci.nsIAppStartup.eRestart);
+      Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit |  Ci.nsIAppStartup.eRestartNotSameProfile);
     }
     function revertCheckbox(error) {
       separateProfileModeCheckbox.checked = !separateProfileModeCheckbox.checked;
