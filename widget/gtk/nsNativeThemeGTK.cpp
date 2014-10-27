@@ -34,6 +34,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeGTK, nsNativeTheme, nsITheme,
                                                              nsIObserver)
@@ -880,10 +881,10 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
 
   renderer.Draw(ctx, drawingRect.Size(), rendererFlags, colormap);
 #else 
-  cairo_t *ctx =
-    (cairo_t*)aDrawTarget->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT); 
-  MOZ_ASSERT(ctx);
-  moz_gtk_widget_paint(gtkWidgetType, ctx, &gdk_rect, 
+  cairo_t *cairo_ctx =
+    (cairo_t*)aDrawTarget.GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT); 
+  MOZ_ASSERT(cairo_ctx);
+  moz_gtk_widget_paint(gtkWidgetType, cairo_ctx, &gdk_rect, 
                        &state, flags, direction);
 #endif
 
