@@ -613,11 +613,28 @@ nsCertOverrideService::ClearValidityOverride(const nsACString & aHostName, int32
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCertOverrideService::GetAllOverrideHostsWithPorts(uint32_t *aCount, 
-                                                        char16_t ***aHostsWithPortsArray)
+static PLDHashOperator
+CountPermanentEntriesCallback(nsCertOverrideEntry* aEntry, void* aArg)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  uint32_t* overrideCount = reinterpret_cast<uint32_t*>(aArg);
+  if (aEntry && !aEntry->mSettings.mIsTemporary) {
+    *overrideCount = *overrideCount + 1;
+    return PL_DHASH_NEXT;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+NS_IMETHODIMP
+nsCertOverrideService::GetPermanentOverrideCount(uint32_t* aOverrideCount)
+{
+  NS_ENSURE_ARG(aOverrideCount);
+  *aOverrideCount = 0;
+
+  ReentrantMonitorAutoEnter lock(monitor);
+  mSettingsTable.EnumerateEntries(CountPermanentEntriesCallback, aOverrideCount);
+
+  return NS_OK;
 }
 
 static bool
