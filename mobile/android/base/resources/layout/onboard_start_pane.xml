@@ -5,10 +5,10 @@
 
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              style="@style/OnboardStartLayout"
+              android:layout_height="match_parent"
+              android:layout_width="wrap_content"
               android:orientation="vertical"
-              android:background="@color/onboard_start"
-              android:windowIsFloating="true">
+              android:background="@color/onboard_start">
 
     <ScrollView android:id="@+id/onboard_content"
                 android:layout_width="match_parent"
@@ -25,8 +25,8 @@
                   android:layout_height="0dp"
                   android:layout_weight="1"/>
 
-            <RelativeLayout android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+            <RelativeLayout android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
                             android:paddingTop="15dp">
 
                 <ImageView android:id="@+id/image_shield"
@@ -59,34 +59,35 @@
                 <ImageView android:id="@+id/image_sync"
                            android:layout_width="wrap_content"
                            android:layout_height="wrap_content"
+                           android:layout_centerHorizontal="true"
                            android:layout_below="@id/image_shield"
-                           android:layout_toLeftOf="@id/image_logo"
-                           android:layout_marginRight="30dp"
+                           android:paddingRight="200dp"
                            android:src="@drawable/onboard_start_sync"
                            android:contentDescription="@string/onboard_empty_contentDescription"/>
 
                 <ImageView android:id="@+id/image_addon"
                            android:layout_width="wrap_content"
                            android:layout_height="wrap_content"
-                           android:layout_below="@id/image_private"
-                           android:layout_toRightOf="@id/image_logo"
-                           android:layout_marginLeft="30dp"
+                           android:layout_centerHorizontal="true"
+                           android:layout_below="@id/image_shield"
+                           android:paddingLeft="200dp"
                            android:src="@drawable/onboard_start_addon"
                            android:contentDescription="@string/onboard_empty_contentDescription"/>
 
                 <TextView android:id="@+id/text_message"
-                          android:layout_width="wrap_content"
+                          android:layout_width="match_parent"
                           android:layout_height="wrap_content"
                           android:layout_below="@id/image_logo"
                           android:layout_centerHorizontal="true"
                           android:layout_marginTop="30dp"
+                          android:gravity="center"
                           android:padding="10sp"
                           android:text="@string/onboard_start_message"
                           android:textAppearance="@style/OnboardStartTextAppearance"
                           android:textSize="23sp" />
 
                 <TextView android:layout_width="295dp"
-                          android:layout_height="wrap_content"
+                          android:layout_height="match_parent"
                           android:layout_gravity="center"
                           android:gravity="center"
                           android:layout_below="@id/text_message"
