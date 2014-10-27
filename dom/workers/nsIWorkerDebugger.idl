@@ -1,0 +1,9 @@
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(0833b363-bffe-4cdb-ad50-1c4563e0C8ff)]
+interface nsIWorkerDebugger : nsISupports
+{
+  readonly attribute bool isClosed;
+
+  readonly attribute DOMString url;
+};
