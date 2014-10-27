@@ -97,7 +97,58 @@ loop.shared.mixins = (function() {
     }
   };
 
+  /**
+   * Audio mixin. Allows playing a single audio file and ensuring it
+   * is stopped when the component is unmounted.
+   */
+  var AudioMixin = {
+    audio: null,
+
+    _isLoopDesktop: function() {
+      return typeof rootObject.navigator.mozLoop === "object";
+    },
+
+    /**
+     * Starts playing an audio file, stopping any audio that is already in progress.
+     *
+     * @param {String} filename The filename to play (excluding the extension).
+     */
+    play: function(filename, options) {
+      if (this._isLoopDesktop()) {
+        // XXX: We need navigator.mozLoop.playSound(name), see Bug 1089585.
+        return;
+      }
+
+      options = options || {};
+      options.loop = options.loop || false;
+
+      this._ensureAudioStopped();
+      this.audio = new Audio('shared/sounds/' + filename + ".ogg");
+      this.audio.loop = options.loop;
+      this.audio.play();
+    },
+
+    /**
+     * Ensures audio is stopped playing, and removes the object from memory.
+     */
+    _ensureAudioStopped: function() {
+      if (this.audio) {
+        this.audio.pause();
+        this.audio.removeAttribute("src");
+        delete this.audio;
+      }
+    },
+
+    /**
+     * Ensures audio is stopped when the component is unmounted.
+     */
+    componentWillUnmount: function() {
+      this._ensureAudioStopped();
+    }
+  };
+
   return {
+    AudioMixin: AudioMixin,
     setRootObject: setRootObject,
     DropdownMenuMixin: DropdownMenuMixin,
     DocumentVisibilityMixin: DocumentVisibilityMixin
