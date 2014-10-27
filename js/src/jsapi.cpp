@@ -1936,8 +1936,7 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
 JS_PUBLIC_API(uint32_t)
 JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
 {
-    AutoLockGC lock(rt);
-    return rt->gc.getParameter(key, lock);
+    return rt->gc.getParameter(key);
 }
 
 JS_PUBLIC_API(void)
