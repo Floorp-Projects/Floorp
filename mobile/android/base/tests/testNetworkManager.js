@@ -14,11 +14,13 @@ function ok(passed, text) {
 }
 
 add_test(function check_linktype() {
+  // Let's exercise the interface. Even if the network is not up, we can make sure nothing blows up.
   let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
-  do_print("LinkUp = " + network.isLinkUp);
-  do_print("LinkStatus = " + network.linkStatusKnown);
-  do_print("Linktype = " + network.linkType);
-  ok(network.linkType != Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN, "LinkType is not UNKNOWN");
+  if (network.isLinkUp) {
+    ok(network.linkType != Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN, "LinkType is not UNKNOWN");
+  } else {
+    ok(network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN, "LinkType is UNKNOWN");
+  }
 
   run_next_test();
 });
