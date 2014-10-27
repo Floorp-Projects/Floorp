@@ -630,20 +630,16 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           case NS_HTML5TREE_BUILDER_NOBR:
           case NS_HTML5TREE_BUILDER_P:
           case NS_HTML5TREE_BUILDER_PRE_OR_LISTING:
-          case NS_HTML5TREE_BUILDER_TABLE: {
-            errHtmlStartTagInForeignContext(name);
-            while (!isSpecialParentInForeign(stack[currentPtr])) {
-              pop();
-            }
-            NS_HTML5_CONTINUE(starttagloop);
-          }
+          case NS_HTML5TREE_BUILDER_TABLE:
           case NS_HTML5TREE_BUILDER_FONT: {
-            if (attributes->contains(nsHtml5AttributeName::ATTR_COLOR) || attributes->contains(nsHtml5AttributeName::ATTR_FACE) || attributes->contains(nsHtml5AttributeName::ATTR_SIZE)) {
+            if (!(group == NS_HTML5TREE_BUILDER_FONT && !(attributes->contains(nsHtml5AttributeName::ATTR_COLOR) || attributes->contains(nsHtml5AttributeName::ATTR_FACE) || attributes->contains(nsHtml5AttributeName::ATTR_SIZE)))) {
               errHtmlStartTagInForeignContext(name);
-              while (!isSpecialParentInForeign(stack[currentPtr])) {
-                pop();
+              if (!fragment) {
+                while (!isSpecialParentInForeign(stack[currentPtr])) {
+                  pop();
+                }
+                NS_HTML5_CONTINUE(starttagloop);
               }
-              NS_HTML5_CONTINUE(starttagloop);
             }
           }
           default: {
