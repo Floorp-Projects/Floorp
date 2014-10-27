@@ -152,7 +152,6 @@ let test = maketest("Main", function main(test) {
     yield test_stat();
     yield test_debug();
     yield test_info_features_detect();
-    yield test_read_write();
     yield test_position();
     yield test_iter();
     yield test_exists();
@@ -221,62 +220,6 @@ let test_info_features_detect = maketest("features_detect", function features_de
 });
 
 /**
- * Test OS.File.prototype.{read, readTo, write}
- */
-let test_read_write = maketest("read_write", function read_write(test) {
-  return Task.spawn(function() {
-    // Test readTo/write
-    let currentDir = yield OS.File.getCurrentDirectory();
-    let pathSource = OS.Path.join(currentDir, EXISTING_FILE);
-    let pathDest = OS.Path.join(OS.Constants.Path.tmpDir,
-      "osfile async test.tmp");
-
-    let fileSource = yield OS.File.open(pathSource);
-    test.info("Input file opened");
-    let fileDest = yield OS.File.open(pathDest,
-      { truncate: true, read: true, write: true});
-    test.info("Output file opened");
-
-    let stat = yield fileSource.stat();
-    test.info("Input stat worked");
-    let size = stat.size;
-    let array = new Uint8Array(size);
-
-    try {
-      test.info("Now calling readTo");
-      let readLength = yield fileSource.readTo(array);
-      test.info("ReadTo worked");
-      test.is(readLength, size, "ReadTo got all bytes");
-      let writeLength = yield fileDest.write(array);
-      test.info("Write worked");
-      test.is(writeLength, size, "Write wrote all bytes");
-
-      // Test read
-      yield fileSource.setPosition(0);
-      let readAllResult = yield fileSource.read();
-      test.info("ReadAll worked");
-      test.is(readAllResult.length, size, "ReadAll read all bytes");
-      test.is(Array.prototype.join.call(readAllResult),
-              Array.prototype.join.call(array),
-              "ReadAll result is correct");
-    } finally {
-      // Close stuff
-      yield fileSource.close();
-      yield fileDest.close();
-      test.info("Files are closed");
-    }
-
-    stat = yield OS.File.stat(pathDest);
-    test.is(stat.size, size, "Both files have the same size");
-    yield reference_compare_files(pathSource, pathDest, test);
-
-    // Cleanup.
-    OS.File.remove(pathDest);
-  });
-});
-
-
-/**
  * Test file.{getPosition, setPosition}
  */
 let test_position = maketest("position", function position(test) {
@@ -284,13 +227,8 @@ let test_position = maketest("position", function position(test) {
     let file = yield OS.File.open(EXISTING_FILE);
 
     try {
-      let stat = yield file.stat();
-      test.info("Obtained file length");
-
-      let view = new Uint8Array(stat.size);
-      yield file.readTo(view);
+      let view = yield file.read();
       test.info("First batch of content read");
-
       let CHUNK_SIZE = 178;// An arbitrary number of bytes to read from the file
       let pos = yield file.getPosition();
       test.info("Obtained position");
@@ -299,8 +237,7 @@ let test_position = maketest("position", function position(test) {
       test.info("Changed position");
       test.is(pos, view.byteLength - CHUNK_SIZE, "setPosition returned the correct position");
 
-      let view2 = new Uint8Array(CHUNK_SIZE);
-      yield file.readTo(view2);
+      let view2 = yield file.read();
       test.info("Read the end of the file");
       for (let i = 0; i < CHUNK_SIZE; ++i) {
         if (view2[i] != view[i + view.byteLength - CHUNK_SIZE]) {
