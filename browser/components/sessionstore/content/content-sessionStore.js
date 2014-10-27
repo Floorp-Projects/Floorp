@@ -145,7 +145,7 @@ let MessageListener = {
         };
 
         // We need to pass the value of didStartLoad back to SessionStore.jsm.
-        let didStartLoad = gContentRestore.restoreTabContent(data.loadArguments, finishCallback);
+        let didStartLoad = gContentRestore.restoreTabContent(finishCallback);
 
         sendAsyncMessage("SessionStore:restoreTabContentStarted", {epoch: epoch});
 

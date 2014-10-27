@@ -51,11 +51,8 @@ this.E10SUtils = {
     let sessionHistory = aDocShell.getInterface(Ci.nsIWebNavigation).sessionHistory;
 
     messageManager.sendAsyncMessage("Browser:LoadURI", {
-      loadOptions: {
-        uri: aURI.spec,
-        flags: Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-        referrer: aReferrer ? aReferrer.spec : null,
-      },
+      uri: aURI.spec,
+      referrer: aReferrer ? aReferrer.spec : null,
       historyIndex: sessionHistory.requestedIndex,
     });
     return false;

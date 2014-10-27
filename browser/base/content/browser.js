@@ -799,62 +799,34 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
   }
 }
 
-// A shared function used by both remote and non-remote browser XBL bindings to
-// load a URI or redirect it to the correct process.
-function _loadURIWithFlags(browser, uri, flags, referrer, charset, postdata) {
-  if (!uri) {
-    uri = "about:blank";
-  }
-
-  if (!(flags & browser.webNavigation.LOAD_FLAGS_FROM_EXTERNAL)) {
-    browser.userTypedClear++;
-  }
-
-  try {
-    let shouldBeRemote = gMultiProcessBrowser &&
-                         E10SUtils.shouldBrowserBeRemote(uri);
-    if (browser.isRemoteBrowser == shouldBeRemote) {
-      browser.webNavigation.loadURI(uri, flags, referrer, postdata, null);
-    } else {
-      LoadInOtherProcess(browser, {
-        uri: uri,
-        flags: flags,
-        referrer: referrer ? referrer.spec : null,
-      });
-    }
-  } finally {
-    if (browser.userTypedClear) {
-      browser.userTypedClear--;
-    }
-  }
-}
-
-// Starts a new load in the browser first switching the browser to the correct
-// process
-function LoadInOtherProcess(browser, loadOptions, historyIndex = -1) {
+// Called when a docshell has attempted to load a page in an incorrect process.
+// This function is responsible for loading the page in the correct process.
+function RedirectLoad({ target: browser, data }) {
   let tab = gBrowser.getTabForBrowser(browser);
   // Flush the tab state before getting it
   TabState.flush(browser);
   let tabState = JSON.parse(SessionStore.getTabState(tab));
 
-  if (historyIndex < 0) {
+  if (data.historyIndex < 0) {
+    // Add a pseudo-history state for the new url to load
+    let newEntry = {
+      url: data.uri,
+      referrer: data.referrer,
+    };
+
+    tabState.entries = tabState.entries.slice(0, tabState.index);
+    tabState.entries.push(newEntry);
+    tabState.index++;
     tabState.userTypedValue = null;
-    // Tell session history the new page to load
-    SessionStore._restoreTabAndLoad(tab, JSON.stringify(tabState), loadOptions);
   }
   else {
     // Update the history state to point to the requested index
-    tabState.index = historyIndex + 1;
-    // SessionStore takes care of setting the browser remoteness before restoring
-    // history into it.
-    SessionStore.setTabState(tab, JSON.stringify(tabState));
+    tabState.index = data.historyIndex + 1;
   }
-}
 
-// Called when a docshell has attempted to load a page in an incorrect process.
-// This function is responsible for loading the page in the correct process.
-function RedirectLoad({ target: browser, data }) {
-  LoadInOtherProcess(browser, data.loadOptions, data.historyIndex);
+  // SessionStore takes care of setting the browser remoteness before restoring
+  // history into it.
+  SessionStore.setTabState(tab, JSON.stringify(tabState));
 }
 
 var gBrowserInit = {

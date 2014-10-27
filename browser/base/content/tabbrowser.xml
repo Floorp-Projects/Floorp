@@ -5377,42 +5377,4 @@
     </implementation>
   </binding>
 
-  <binding id="tabbrowser-browser"
-           extends="chrome://global/content/bindings/browser.xml#browser">
-    <implementation>
-      <!-- throws exception for unknown schemes -->
-      <method name="loadURIWithFlags">
-        <parameter name="aURI"/>
-        <parameter name="aFlags"/>
-        <parameter name="aReferrerURI"/>
-        <parameter name="aCharset"/>
-        <parameter name="aPostData"/>
-        <body>
-          <![CDATA[
-            _loadURIWithFlags(this, aURI, aFlags, aReferrerURI, aCharset, aPostData);
-          ]]>
-        </body>
-      </method>
-    </implementation>
-  </binding>
-
-  <binding id="tabbrowser-remote-browser"
-           extends="chrome://global/content/bindings/remote-browser.xml#remote-browser">
-    <implementation>
-      <!-- throws exception for unknown schemes -->
-      <method name="loadURIWithFlags">
-        <parameter name="aURI"/>
-        <parameter name="aFlags"/>
-        <parameter name="aReferrerURI"/>
-        <parameter name="aCharset"/>
-        <parameter name="aPostData"/>
-        <body>
-          <![CDATA[
-            _loadURIWithFlags(this, aURI, aFlags, aReferrerURI, aCharset, aPostData);
-          ]]>
-        </body>
-      </method>
-    </implementation>
-  </binding>
-
 </bindings>
