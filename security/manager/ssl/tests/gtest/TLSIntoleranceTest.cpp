@@ -241,3 +241,65 @@ TEST_F(TLSIntoleranceTest, Test_Intolerance_Reason_Cleared)
   helpers.rememberTolerantAtVersion(HOST, 1, SSL_LIBRARY_VERSION_TLS_1_2);
   ASSERT_EQ(0, helpers.getIntoleranceReason(HOST, 1));
 }
+
+TEST_F(TLSIntoleranceTest, TLS_Forget_Intolerance)
+{
+  {
+    ASSERT_TRUE(helpers.rememberIntolerantAtVersion(HOST, PORT,
+                                                    SSL_LIBRARY_VERSION_3_0,
+                                                    SSL_LIBRARY_VERSION_TLS_1_2,
+                                                    0));
+
+    SSLVersionRange range = { SSL_LIBRARY_VERSION_3_0,
+                              SSL_LIBRARY_VERSION_TLS_1_2 };
+    helpers.adjustForTLSIntolerance(HOST, PORT, range);
+    ASSERT_EQ(SSL_LIBRARY_VERSION_3_0, range.min);
+    ASSERT_EQ(SSL_LIBRARY_VERSION_TLS_1_1, range.max);
+  }
+
+  {
+    helpers.forgetIntolerance(HOST, PORT);
+
+    SSLVersionRange range = { SSL_LIBRARY_VERSION_3_0,
+                              SSL_LIBRARY_VERSION_TLS_1_2 };
+    helpers.adjustForTLSIntolerance(HOST, PORT, range);
+    ASSERT_EQ(SSL_LIBRARY_VERSION_3_0, range.min);
+    ASSERT_EQ(SSL_LIBRARY_VERSION_TLS_1_2, range.max);
+  }
+}
+
+TEST_F(TLSIntoleranceTest, TLS_Dont_Forget_Tolerance)
+{
+  {
+    helpers.rememberTolerantAtVersion(HOST, 1, SSL_LIBRARY_VERSION_TLS_1_1);
+
+    SSLVersionRange range = { SSL_LIBRARY_VERSION_3_0,
+                              SSL_LIBRARY_VERSION_TLS_1_2 };
+    helpers.adjustForTLSIntolerance(HOST, PORT, range);
+    ASSERT_EQ(SSL_LIBRARY_VERSION_3_0, range.min);
+    ASSERT_EQ(SSL_LIBRARY_VERSION_TLS_1_2, range.max);
+  }
+
+  {
+    ASSERT_TRUE(helpers.rememberIntolerantAtVersion(HOST, PORT,
+                                                    SSL_LIBRARY_VERSION_3_0,
+                                                    SSL_LIBRARY_VERSION_TLS_1_2,
+                                                    0));
+
+    SSLVersionRange range = { SSL_LIBRARY_VERSION_3_0,
+                              SSL_LIBRARY_VERSION_TLS_1_2 };
+    helpers.adjustForTLSIntolerance(HOST, PORT, range);
+    ASSERT_EQ(SSL_LIBRARY_VERSION_3_0, range.min);
+    ASSERT_EQ(SSL_LIBRARY_VERSION_TLS_1_1, range.max);
+  }
+
+  {
+    helpers.forgetIntolerance(HOST, PORT);
+
+    SSLVersionRange range = { SSL_LIBRARY_VERSION_3_0,
+                              SSL_LIBRARY_VERSION_TLS_1_2 };
+    helpers.adjustForTLSIntolerance(HOST, PORT, range);
+    ASSERT_EQ(SSL_LIBRARY_VERSION_3_0, range.min);
+    ASSERT_EQ(SSL_LIBRARY_VERSION_TLS_1_2, range.max);
+  }
+}
