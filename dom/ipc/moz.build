@@ -11,7 +11,6 @@ EXPORTS += [
 EXPORTS.mozilla.dom.ipc += [
     'BlobChild.h',
     'BlobParent.h',
-    'IdType.h',
     'nsIRemoteBlob.h',
 ]
 
@@ -21,7 +20,6 @@ EXPORTS.mozilla.dom += [
     'ContentChild.h',
     'ContentParent.h',
     'ContentProcess.h',
-    'ContentProcessManager.h',
     'CPOWManagerGetter.h',
     'CrashReporterChild.h',
     'CrashReporterParent.h',
@@ -49,7 +47,6 @@ UNIFIED_SOURCES += [
     'ContentBridgeParent.cpp',
     'ContentParent.cpp',
     'ContentProcess.cpp',
-    'ContentProcessManager.cpp',
     'CrashReporterParent.cpp',
     'FilePickerParent.cpp',
     'nsIContentChild.cpp',
@@ -80,7 +77,6 @@ IPDL_SOURCES += [
     'PBlob.ipdl',
     'PBlobStream.ipdl',
     'PBrowser.ipdl',
-    'PBrowserOrId.ipdlh',
     'PColorPicker.ipdl',
     'PContent.ipdl',
     'PContentBridge.ipdl',
