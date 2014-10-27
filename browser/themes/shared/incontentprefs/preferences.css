@@ -110,6 +110,15 @@ treecol {
 
 /* General Pane */
 
+#useFirefoxSync  {
+  font-size: 90%;
+  -moz-margin-end: 8px !important;
+}
+
+#getStarted {
+  font-size: 90%;
+}
+
 #isNotDefaultLabel {
   font-weight: bold;
 }

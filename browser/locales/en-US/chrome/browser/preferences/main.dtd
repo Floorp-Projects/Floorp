@@ -31,10 +31,13 @@
 <!ENTITY alwaysAsk.label "Always ask me where to save files">
 <!ENTITY alwaysAsk.accesskey "A">
 
-<!ENTITY alwaysCheckDefault.label         "Always check to see if &brandShortName; is the default browser on startup">
+<!ENTITY alwaysCheckDefault2.label        "Always check if &brandShortName; is your default browser">
 <!ENTITY alwaysCheckDefault2.accesskey    "w">
-<!ENTITY setAsMyDefaultBrowser.label      "Make &brandShortName; My Default Browser">
-<!ENTITY setAsMyDefaultBrowser.accesskey  "D">
+<!ENTITY setAsMyDefaultBrowser2.label     "Make Default">
+<!ENTITY setAsMyDefaultBrowser2.accesskey "D">
 <!ENTITY isDefault.label                  "&brandShortName; is currently your default browser">
 <!ENTITY isNotDefault.label               "&brandShortName; is not your default browser">
 
+<!ENTITY separateProfileMode.label        "Allow &brandShortName; and Firefox to run at the same time">
+<!ENTITY useFirefoxSync.label             "Tip: This uses separate profiles. Use Sync to share data between them.">
+<!ENTITY getStarted.label                 "Start using Sync…">
