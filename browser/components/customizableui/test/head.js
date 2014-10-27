@@ -113,6 +113,20 @@ function resetCustomization() {
   return CustomizableUI.reset();
 }
 
+XPCOMUtils.defineLazyGetter(this, 'gDeveloperButtonInNavbar', function() {
+  return getAreaWidgetIds(CustomizableUI.AREA_NAVBAR).indexOf("developer-button") != -1;
+});
+
+function isInDevEdition() {
+  return gDeveloperButtonInNavbar;
+}
+
+function removeDeveloperButtonIfDevEdition(areaPanelPlacements) {
+  if (isInDevEdition()) {
+    areaPanelPlacements.splice(areaPanelPlacements.indexOf("developer-button"), 1);
+  }
+}
+
 function isInWin8() {
   if (!Services.metro)
     return false;
