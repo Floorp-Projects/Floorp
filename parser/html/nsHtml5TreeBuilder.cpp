@@ -97,24 +97,48 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
     } else {
       elt = createHtmlElementSetAsRoot(tokenizer->emptyAttributes());
     }
-    nsHtml5StackNode* node = new nsHtml5StackNode(nsHtml5ElementName::ELT_HTML, elt);
-    currentPtr++;
-    stack[currentPtr] = node;
-    if (nsHtml5Atoms::template_ == contextName) {
-      pushTemplateMode(NS_HTML5TREE_BUILDER_IN_TEMPLATE);
-    }
-    resetTheInsertionMode();
-    formPointer = getFormPointerForContext(contextNode);
-    if (nsHtml5Atoms::title == contextName || nsHtml5Atoms::textarea == contextName) {
-      tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RCDATA, contextName);
-    } else if (nsHtml5Atoms::style == contextName || nsHtml5Atoms::xmp == contextName || nsHtml5Atoms::iframe == contextName || nsHtml5Atoms::noembed == contextName || nsHtml5Atoms::noframes == contextName || (scriptingEnabled && nsHtml5Atoms::noscript == contextName)) {
-      tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, contextName);
-    } else if (nsHtml5Atoms::plaintext == contextName) {
-      tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_PLAINTEXT, contextName);
-    } else if (nsHtml5Atoms::script == contextName) {
-      tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_SCRIPT_DATA, contextName);
-    } else {
+    if (contextNamespace == kNameSpaceID_SVG) {
+      nsHtml5ElementName* elementName = nsHtml5ElementName::ELT_SVG;
+      if (nsHtml5Atoms::title == contextName || nsHtml5Atoms::desc == contextName || nsHtml5Atoms::foreignObject == contextName) {
+        elementName = nsHtml5ElementName::ELT_FOREIGNOBJECT;
+      }
+      nsHtml5StackNode* node = new nsHtml5StackNode(elementName, elementName->camelCaseName, elt);
+      currentPtr++;
+      stack[currentPtr] = node;
       tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_DATA, contextName);
+      mode = NS_HTML5TREE_BUILDER_FRAMESET_OK;
+    } else if (contextNamespace == kNameSpaceID_MathML) {
+      nsHtml5ElementName* elementName = nsHtml5ElementName::ELT_MATH;
+      if (nsHtml5Atoms::mi == contextName || nsHtml5Atoms::mo == contextName || nsHtml5Atoms::mn == contextName || nsHtml5Atoms::ms == contextName || nsHtml5Atoms::mtext == contextName) {
+        elementName = nsHtml5ElementName::ELT_MTEXT;
+      } else if (nsHtml5Atoms::annotation_xml == contextName) {
+        elementName = nsHtml5ElementName::ELT_ANNOTATION_XML;
+      }
+      nsHtml5StackNode* node = new nsHtml5StackNode(elementName, elt, elementName->name, false);
+      currentPtr++;
+      stack[currentPtr] = node;
+      tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_DATA, contextName);
+      mode = NS_HTML5TREE_BUILDER_FRAMESET_OK;
+    } else {
+      nsHtml5StackNode* node = new nsHtml5StackNode(nsHtml5ElementName::ELT_HTML, elt);
+      currentPtr++;
+      stack[currentPtr] = node;
+      if (nsHtml5Atoms::template_ == contextName) {
+        pushTemplateMode(NS_HTML5TREE_BUILDER_IN_TEMPLATE);
+      }
+      resetTheInsertionMode();
+      formPointer = getFormPointerForContext(contextNode);
+      if (nsHtml5Atoms::title == contextName || nsHtml5Atoms::textarea == contextName) {
+        tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RCDATA, contextName);
+      } else if (nsHtml5Atoms::style == contextName || nsHtml5Atoms::xmp == contextName || nsHtml5Atoms::iframe == contextName || nsHtml5Atoms::noembed == contextName || nsHtml5Atoms::noframes == contextName || (scriptingEnabled && nsHtml5Atoms::noscript == contextName)) {
+        tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, contextName);
+      } else if (nsHtml5Atoms::plaintext == contextName) {
+        tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_PLAINTEXT, contextName);
+      } else if (nsHtml5Atoms::script == contextName) {
+        tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_SCRIPT_DATA, contextName);
+      } else {
+        tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_DATA, contextName);
+      }
     }
     contextName = nullptr;
     contextNode = nullptr;
@@ -2202,10 +2226,18 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
   for (; ; ) {
     if (isInForeign()) {
       if (stack[currentPtr]->name != name) {
-        errEndTagDidNotMatchCurrentOpenElement(name, stack[currentPtr]->popName);
+        if (!currentPtr) {
+          errStrayEndTag(name);
+        } else {
+          errEndTagDidNotMatchCurrentOpenElement(name, stack[currentPtr]->popName);
+        }
       }
       eltPos = currentPtr;
       for (; ; ) {
+        if (!eltPos) {
+          MOZ_ASSERT(fragment, "We can get this close to the root of the stack in foreign content only in the fragment case.");
+          NS_HTML5_BREAK(endtagloop);
+        }
         if (stack[eltPos]->name == name) {
           while (currentPtr >= eltPos) {
             pop();
@@ -2574,7 +2606,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
               errNoElementToCloseButEndTagSeen(nsHtml5Atoms::p);
               if (isInForeign()) {
                 errHtmlStartTagInForeignContext(name);
-                while (stack[currentPtr]->ns != kNameSpaceID_XHTML) {
+                while (currentPtr >= 0 && stack[currentPtr]->ns != kNameSpaceID_XHTML) {
                   pop();
                 }
               }
@@ -2657,7 +2689,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             errEndTagBr();
             if (isInForeign()) {
               errHtmlStartTagInForeignContext(name);
-              while (stack[currentPtr]->ns != kNameSpaceID_XHTML) {
+              while (currentPtr >= 0 && stack[currentPtr]->ns != kNameSpaceID_XHTML) {
                 pop();
               }
             }
