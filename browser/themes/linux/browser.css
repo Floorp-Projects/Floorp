@@ -1590,11 +1590,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://browser/skin/Info.png");
 }
 
-/* Loop */
-#loop-call-button {
-  list-style-image: url("chrome://global/skin/loop/loop-call.png");
-}
-
 /* social share panel */
 
 .social-share-frame {
