@@ -3957,7 +3957,6 @@ NSS_NO_LIBPKIX=
 MOZ_CONTENT_SANDBOX=
 MOZ_GMP_SANDBOX=
 MOZ_SANDBOX=1
-JSGC_GENERATIONAL=
 
 case "$target_os" in
     mingw*)
@@ -7299,61 +7298,6 @@ if test -n "$JS_CRASH_DIAGNOSTICS"; then
 fi
 
 dnl ========================================================
-dnl = Use incremental GC
-dnl ========================================================
-JSGC_INCREMENTAL=1
-MOZ_ARG_DISABLE_BOOL(gcincremental,
-[  --disable-gcincremental Disable incremental GC],
-    JSGC_INCREMENTAL= )
-if test -n "$JSGC_INCREMENTAL"; then
-    AC_DEFINE(JSGC_INCREMENTAL)
-fi
-
-dnl ========================================================
-dnl = Use generational GC
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(gcgenerational,
-[  --disable-gcgenerational Disable generational GC],
-    JSGC_GENERATIONAL= ,
-    JSGC_GENERATIONAL=1 )
-if test -n "$JSGC_GENERATIONAL"; then
-    AC_DEFINE(JSGC_GENERATIONAL)
-fi
-
-dnl ========================================================
-dnl = Use compacting GC
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(gccompacting,
-[  --enable-gccompacting   Compact the JS heap by moving GC things],
-    JS_GCCOMPACTING=1,
-    JS_GCCOMPACTING= )
-if test -n "$JS_GCCOMPACTING"; then
-    AC_DEFINE(JS_GCCOMPACTING)
-fi
-
-dnl ========================================================
-dnl = Use a smaller chunk size for GC chunks
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(small-chunk-size,
-[  --enable-small-chunk-size  Allocate memory for JS GC things in smaller chunks],
-    JS_GC_SMALL_CHUNK_SIZE=1,
-    JS_GC_SMALL_CHUNK_SIZE= )
-if test -n "$JS_GC_SMALL_CHUNK_SIZE"; then
-    AC_DEFINE(JS_GC_SMALL_CHUNK_SIZE)
-fi
-
-dnl ========================================================
-dnl Zealous JavaScript GC
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(gczeal,
-[  --enable-gczeal         Enable zealous JavaScript GCing],
-    JS_GC_ZEAL=1,
-    JS_GC_ZEAL= )
-if test -n "$JS_GC_ZEAL" -o -n "$MOZ_DEBUG"; then
-    AC_DEFINE(JS_GC_ZEAL)
-fi
-
-dnl ========================================================
 dnl = Enable static checking using gcc-dehydra
 dnl ========================================================
 
@@ -9291,15 +9235,6 @@ if test -z "$JS_SHARED_LIBRARY" ; then
     if test -n "$MOZ_DISABLE_EXPORT_JS"; then
         ac_configure_args="$ac_configure_args --disable-export-js"
     fi
-fi
-if test -z "$JSGC_GENERATIONAL" ; then
-    ac_configure_args="$ac_configure_args --disable-gcgenerational"
-fi
-if test -n "$JS_GCCOMPACTING" ; then
-    ac_configure_args="$ac_configure_args --enable-gccompacting"
-fi
-if test -n "$JS_GC_SMALL_CHUNK_SIZE" ; then
-    ac_configure_args="$ac_configure_args --enable-small-chunk-size"
 fi
 if test -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
     ac_configure_args="$ac_configure_args --with-nspr-cflags='$NSPR_CFLAGS'"
