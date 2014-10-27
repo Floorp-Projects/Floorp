@@ -63,7 +63,10 @@ endif
 endif
 
 ifdef MOZ_DMD
-TEST_HARNESS_BINS += dmd.py
+TEST_HARNESS_BINS += \
+  dmd.py \
+  SmokeDMD$(BIN_SUFFIX) \
+  $(NULL)
 endif
 
 # Components / typelibs that don't get packaged with

@@ -463,113 +463,132 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
   nsSVGPathGeometryElement* element =
     static_cast<nsSVGPathGeometryElement*>(mContent);
 
-  RefPtr<DrawTarget> tmpDT;
+  bool getFill = (aFlags & nsSVGUtils::eBBoxIncludeFillGeometry) ||
+                 ((aFlags & nsSVGUtils::eBBoxIncludeFill) &&
+                  StyleSVG()->mFill.mType != eStyleSVGPaintType_None);
+
+  bool getStroke = (aFlags & nsSVGUtils::eBBoxIncludeStrokeGeometry) ||
+                   ((aFlags & nsSVGUtils::eBBoxIncludeStroke) &&
+                    nsSVGUtils::HasStroke(this));
+
+  bool gotSimpleBounds = false;
+  if (!StyleSVGReset()->HasNonScalingStroke()) {
+    Float strokeWidth = getStroke ? nsSVGUtils::GetStrokeWidth(this) : 0.f;
+    Rect simpleBounds;
+    gotSimpleBounds = element->GetGeometryBounds(&simpleBounds, strokeWidth,
+                                                 aToBBoxUserspace);
+    if (gotSimpleBounds) {
+      bbox = simpleBounds;
+    }
+  }
+
+  if (!gotSimpleBounds) {
+    // Get the bounds using a Moz2D Path object (more expensive):
+    RefPtr<DrawTarget> tmpDT;
 #ifdef XP_WIN
-  // Unfortunately D2D backed DrawTarget produces bounds with rounding errors
-  // when whole number results are expected, even in the case of trivial
-  // calculations. To avoid that and meet the expectations of web content we
-  // have to use a CAIRO DrawTarget. The most efficient way to do that is to
-  // wrap the cached cairo_surface_t from ScreenReferenceSurface():
-  nsRefPtr<gfxASurface> refSurf =
-    gfxPlatform::GetPlatform()->ScreenReferenceSurface();
-  tmpDT = gfxPlatform::GetPlatform()->
-    CreateDrawTargetForSurface(refSurf, IntSize(1, 1));
+    // Unfortunately D2D backed DrawTarget produces bounds with rounding errors
+    // when whole number results are expected, even in the case of trivial
+    // calculations. To avoid that and meet the expectations of web content we
+    // have to use a CAIRO DrawTarget. The most efficient way to do that is to
+    // wrap the cached cairo_surface_t from ScreenReferenceSurface():
+    nsRefPtr<gfxASurface> refSurf =
+      gfxPlatform::GetPlatform()->ScreenReferenceSurface();
+    tmpDT = gfxPlatform::GetPlatform()->
+      CreateDrawTargetForSurface(refSurf, IntSize(1, 1));
 #else
-  tmpDT = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+    tmpDT = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
 #endif
 
-  FillRule fillRule = nsSVGUtils::ToFillRule(StyleSVG()->mFillRule);
-  RefPtr<Path> pathInUserSpace = element->GetOrBuildPath(*tmpDT, fillRule);
-  if (!pathInUserSpace) {
-    return bbox;
-  }
-  RefPtr<Path> pathInBBoxSpace;
-  if (aToBBoxUserspace.IsIdentity()) {
-    pathInBBoxSpace = pathInUserSpace;
-  } else {
-    RefPtr<PathBuilder> builder =
-      pathInUserSpace->TransformedCopyToBuilder(aToBBoxUserspace, fillRule);
-    pathInBBoxSpace = builder->Finish();
-    if (!pathInBBoxSpace) {
+    FillRule fillRule = nsSVGUtils::ToFillRule(StyleSVG()->mFillRule);
+    RefPtr<Path> pathInUserSpace = element->GetOrBuildPath(*tmpDT, fillRule);
+    if (!pathInUserSpace) {
       return bbox;
     }
-  }
-
-  // Be careful when replacing the following logic to get the fill and stroke
-  // extents independently (instead of computing the stroke extents from the
-  // path extents). You may think that you can just use the stroke extents if
-  // there is both a fill and a stroke. In reality it's necessary to calculate
-  // both the fill and stroke extents, and take the union of the two. There are
-  // two reasons for this:
-  //
-  // # Due to stroke dashing, in certain cases the fill extents could actually
-  //   extend outside the stroke extents.
-  // # If the stroke is very thin, cairo won't paint any stroke, and so the
-  //   stroke bounds that it will return will be empty.
-
-  Rect pathBBoxExtents = pathInBBoxSpace->GetBounds();
-  if (!pathBBoxExtents.IsFinite()) {
-    // This can happen in the case that we only have a move-to command in the
-    // path commands, in which case we know nothing gets rendered.
-    return bbox;
-  }
-
-  // Account for fill:
-  if ((aFlags & nsSVGUtils::eBBoxIncludeFillGeometry) ||
-      ((aFlags & nsSVGUtils::eBBoxIncludeFill) &&
-       StyleSVG()->mFill.mType != eStyleSVGPaintType_None)) {
-    bbox = pathBBoxExtents;
-  }
-
-  // Account for stroke:
-  if ((aFlags & nsSVGUtils::eBBoxIncludeStrokeGeometry) ||
-      ((aFlags & nsSVGUtils::eBBoxIncludeStroke) &&
-       nsSVGUtils::HasStroke(this))) {
-#if 0
-    // This disabled code is how we would calculate the stroke bounds using
-    // Moz2D Path::GetStrokedBounds(). Unfortunately at the time of writing it
-    // there are two problems that prevent us from using it.
-    //
-    // First, it seems that some of the Moz2D backends are really dumb. Not
-    // only do some GetStrokeOptions() implementations sometimes significantly
-    // overestimate the stroke bounds, but if an argument is passed for the
-    // aTransform parameter then they just return bounds-of-transformed-bounds.
-    // These two things combined can lead the bounds to be unacceptably
-    // oversized, leading to massive over-invalidation.
-    //
-    // Second, the way we account for non-scaling-stroke by transforming the
-    // path using the transform to the outer-<svg> element is not compatible
-    // with the way that nsSVGPathGeometryFrame::Reflow() inserts a scale into
-    // aToBBoxUserspace and then scales the bounds that we return.
-    SVGContentUtils::AutoStrokeOptions strokeOptions;
-    SVGContentUtils::GetStrokeOptions(&strokeOptions, element, StyleContext(),
-                                      nullptr, SVGContentUtils::eIgnoreStrokeDashing);
-    Rect strokeBBoxExtents;
-    gfxMatrix userToOuterSVG;
-    if (nsSVGUtils::GetNonScalingStrokeTransform(this, &userToOuterSVG)) {
-      Matrix outerSVGToUser = ToMatrix(userToOuterSVG);
-      outerSVGToUser.Invert();
-      Matrix outerSVGToBBox = aToBBoxUserspace * outerSVGToUser;
-      RefPtr<PathBuilder> builder =
-        pathInUserSpace->TransformedCopyToBuilder(ToMatrix(userToOuterSVG));
-      RefPtr<Path> pathInOuterSVGSpace = builder->Finish();
-      strokeBBoxExtents =
-        pathInOuterSVGSpace->GetStrokedBounds(strokeOptions, outerSVGToBBox);
+    RefPtr<Path> pathInBBoxSpace;
+    if (aToBBoxUserspace.IsIdentity()) {
+      pathInBBoxSpace = pathInUserSpace;
     } else {
-      strokeBBoxExtents =
-        pathInUserSpace->GetStrokedBounds(strokeOptions, aToBBoxUserspace);
+      RefPtr<PathBuilder> builder =
+        pathInUserSpace->TransformedCopyToBuilder(aToBBoxUserspace, fillRule);
+      pathInBBoxSpace = builder->Finish();
+      if (!pathInBBoxSpace) {
+        return bbox;
+      }
     }
-    MOZ_ASSERT(strokeBBoxExtents.IsFinite(), "bbox is about to go bad");
-    bbox.UnionEdges(strokeBBoxExtents);
+
+    // Be careful when replacing the following logic to get the fill and stroke
+    // extents independently (instead of computing the stroke extents from the
+    // path extents). You may think that you can just use the stroke extents if
+    // there is both a fill and a stroke. In reality it's necessary to
+    // calculate both the fill and stroke extents, and take the union of the
+    // two. There are two reasons for this:
+    //
+    // # Due to stroke dashing, in certain cases the fill extents could
+    //   actually extend outside the stroke extents.
+    // # If the stroke is very thin, cairo won't paint any stroke, and so the
+    //   stroke bounds that it will return will be empty.
+
+    Rect pathBBoxExtents = pathInBBoxSpace->GetBounds();
+    if (!pathBBoxExtents.IsFinite()) {
+      // This can happen in the case that we only have a move-to command in the
+      // path commands, in which case we know nothing gets rendered.
+      return bbox;
+    }
+
+    // Account for fill:
+    if (getFill) {
+      bbox = pathBBoxExtents;
+    }
+
+    // Account for stroke:
+    if (getStroke) {
+#if 0
+      // This disabled code is how we would calculate the stroke bounds using
+      // Moz2D Path::GetStrokedBounds(). Unfortunately at the time of writing
+      // it there are two problems that prevent us from using it.
+      //
+      // First, it seems that some of the Moz2D backends are really dumb. Not
+      // only do some GetStrokeOptions() implementations sometimes
+      // significantly overestimate the stroke bounds, but if an argument is
+      // passed for the aTransform parameter then they just return bounds-of-
+      // transformed-bounds.  These two things combined can lead the bounds to
+      // be unacceptably oversized, leading to massive over-invalidation.
+      //
+      // Second, the way we account for non-scaling-stroke by transforming the
+      // path using the transform to the outer-<svg> element is not compatible
+      // with the way that nsSVGPathGeometryFrame::Reflow() inserts a scale
+      // into aToBBoxUserspace and then scales the bounds that we return.
+      SVGContentUtils::AutoStrokeOptions strokeOptions;
+      SVGContentUtils::GetStrokeOptions(&strokeOptions, element,
+                                        StyleContext(), nullptr,
+                                        SVGContentUtils::eIgnoreStrokeDashing);
+      Rect strokeBBoxExtents;
+      gfxMatrix userToOuterSVG;
+      if (nsSVGUtils::GetNonScalingStrokeTransform(this, &userToOuterSVG)) {
+        Matrix outerSVGToUser = ToMatrix(userToOuterSVG);
+        outerSVGToUser.Invert();
+        Matrix outerSVGToBBox = aToBBoxUserspace * outerSVGToUser;
+        RefPtr<PathBuilder> builder =
+          pathInUserSpace->TransformedCopyToBuilder(ToMatrix(userToOuterSVG));
+        RefPtr<Path> pathInOuterSVGSpace = builder->Finish();
+        strokeBBoxExtents =
+          pathInOuterSVGSpace->GetStrokedBounds(strokeOptions, outerSVGToBBox);
+      } else {
+        strokeBBoxExtents =
+          pathInUserSpace->GetStrokedBounds(strokeOptions, aToBBoxUserspace);
+      }
+      MOZ_ASSERT(strokeBBoxExtents.IsFinite(), "bbox is about to go bad");
+      bbox.UnionEdges(strokeBBoxExtents);
 #else
     // For now we just use nsSVGUtils::PathExtentsToMaxStrokeExtents:
-    gfxRect strokeBBoxExtents =
-      nsSVGUtils::PathExtentsToMaxStrokeExtents(ThebesRect(pathBBoxExtents),
-                                                this,
-                                                ThebesMatrix(aToBBoxUserspace));
-    MOZ_ASSERT(ToRect(strokeBBoxExtents).IsFinite(), "bbox is about to go bad");
-    bbox.UnionEdges(strokeBBoxExtents);
+      gfxRect strokeBBoxExtents =
+        nsSVGUtils::PathExtentsToMaxStrokeExtents(ThebesRect(pathBBoxExtents),
+                                                  this,
+                                                  ThebesMatrix(aToBBoxUserspace));
+      MOZ_ASSERT(ToRect(strokeBBoxExtents).IsFinite(), "bbox is about to go bad");
+      bbox.UnionEdges(strokeBBoxExtents);
 #endif
+    }
   }
 
   // Account for markers:

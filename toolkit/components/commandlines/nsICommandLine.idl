@@ -16,7 +16,7 @@ interface nsIDOMWindow;
  * DEFINITIONS:
  * "arguments" are any values found on the command line.
  * "flags" are switches. In normalized form they are preceded by a single dash.
- * Some flags may take "parameters", e.g. "-url <param>" or "-install-xpi <param>"
+ * Some flags may take "parameters", e.g. "--url <param>".
  */
 
 [scriptable, uuid(bc3173bd-aa46-46a0-9d25-d9867a9659b6)]

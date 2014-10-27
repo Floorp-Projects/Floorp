@@ -34,6 +34,7 @@ protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::FillRule FillRule;
   typedef mozilla::gfx::Float Float;
+  typedef mozilla::gfx::Matrix Matrix;
   typedef mozilla::gfx::Path Path;
   typedef mozilla::gfx::Point Point;
   typedef mozilla::gfx::PathBuilder PathBuilder;
@@ -68,6 +69,11 @@ public:
 
   virtual bool IsMarkable();
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
+
+  virtual bool GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
+                                 const Matrix& aTransform) {
+    return false;
+  }
 
   /**
    * For use with GetAsSimplePath.

@@ -8,7 +8,7 @@ var summary = 'float32x4 notEqual';
 function test() {
   print(BUGNUMBER + ": " + summary);
 
-  // FIXME -- Bug 948379: Amend to check for correctness of border cases.
+  // FIXME -- Bug 1081697: Amend to check for correctness of NaN/-0/Infinity/-Infinity border cases.
 
   var a = float32x4(1, 20, 30, 40);
   var b = float32x4(10, 20, 30, 4);
@@ -17,6 +17,14 @@ function test() {
   assertEq(c.y, 0);
   assertEq(c.z, 0);
   assertEq(c.w, -1);
+
+  var d = float32x4(9.98, 20.65, 30.14, 4.235);
+  var e = float32x4(9.99, 20.65, Math.fround(30.14), 4.23);
+  var f = SIMD.float32x4.notEqual(d, e);
+  assertEq(f.x, -1);
+  assertEq(f.y, 0);
+  assertEq(f.z, 0);
+  assertEq(f.w, -1);
 
   if (typeof reportCompare === "function")
     reportCompare(true, true);

@@ -227,18 +227,6 @@ InfallibleAllocPolicy::ExitOnFailure(const void* aP)
   }
 }
 
-class FpWriteFunc : public JSONWriteFunc
-{
-public:
-  explicit FpWriteFunc(FILE* aFp) : mFp(aFp) {}
-  ~FpWriteFunc() { fclose(mFp); }
-
-  void Write(const char* aStr) { fputs(aStr, mFp); }
-
-private:
-  FILE* mFp;
-};
-
 static double
 Percent(size_t part, size_t whole)
 {
@@ -289,17 +277,11 @@ class Options
     {}
   };
 
-  enum Mode {
-    Normal,   // run normally
-    Test      // do some basic correctness tests
-  };
-
   char* mDMDEnvVar;   // a saved copy, for later printing
 
   NumOption<size_t>   mSampleBelowSize;
   NumOption<uint32_t> mMaxFrames;
   bool mShowDumpStats;
-  Mode mMode;
 
   void BadArg(const char* aArg);
   static const char* ValueIfMatch(const char* aArg, const char* aOptionName);
@@ -316,9 +298,7 @@ public:
   size_t MaxFrames()       const { return mMaxFrames.mActual; }
   size_t ShowDumpStats()   const { return mShowDumpStats; }
 
-  void SetSampleBelowSize(size_t aN) { mSampleBelowSize.mActual = aN; }
-
-  bool IsTestMode()   const { return mMode == Test; }
+  void SetSampleBelowSize(size_t aSize) { mSampleBelowSize.mActual = aSize; }
 };
 
 static Options *gOptions;
@@ -338,25 +318,11 @@ class MutexBase
   DISALLOW_COPY_AND_ASSIGN(MutexBase);
 
 public:
-  MutexBase()
-  {
-    InitializeCriticalSection(&mCS);
-  }
+  MutexBase()  { InitializeCriticalSection(&mCS); }
+  ~MutexBase() { DeleteCriticalSection(&mCS); }
 
-  ~MutexBase()
-  {
-    DeleteCriticalSection(&mCS);
-  }
-
-  void Lock()
-  {
-    EnterCriticalSection(&mCS);
-  }
-
-  void Unlock()
-  {
-    LeaveCriticalSection(&mCS);
-  }
+  void Lock()   { EnterCriticalSection(&mCS); }
+  void Unlock() { LeaveCriticalSection(&mCS); }
 };
 
 #else
@@ -371,20 +337,10 @@ class MutexBase
   DISALLOW_COPY_AND_ASSIGN(MutexBase);
 
 public:
-  MutexBase()
-  {
-    pthread_mutex_init(&mMutex, nullptr);
-  }
+  MutexBase() { pthread_mutex_init(&mMutex, nullptr); }
 
-  void Lock()
-  {
-    pthread_mutex_lock(&mMutex);
-  }
-
-  void Unlock()
-  {
-    pthread_mutex_unlock(&mMutex);
-  }
+  void Lock()   { pthread_mutex_lock(&mMutex); }
+  void Unlock() { pthread_mutex_unlock(&mMutex); }
 };
 
 #endif
@@ -414,10 +370,7 @@ public:
     MutexBase::Unlock();
   }
 
-  bool IsLocked()
-  {
-    return mIsLocked;
-  }
+  bool IsLocked() { return mIsLocked; }
 };
 
 // This lock must be held while manipulating global state, such as
@@ -429,14 +382,8 @@ class AutoLockState
   DISALLOW_COPY_AND_ASSIGN(AutoLockState);
 
 public:
-  AutoLockState()
-  {
-    gStateLock->Lock();
-  }
-  ~AutoLockState()
-  {
-    gStateLock->Unlock();
-  }
+  AutoLockState()  { gStateLock->Lock(); }
+  ~AutoLockState() { gStateLock->Unlock(); }
 };
 
 class AutoUnlockState
@@ -444,14 +391,8 @@ class AutoUnlockState
   DISALLOW_COPY_AND_ASSIGN(AutoUnlockState);
 
 public:
-  AutoUnlockState()
-  {
-    gStateLock->Unlock();
-  }
-  ~AutoUnlockState()
-  {
-    gStateLock->Lock();
-  }
+  AutoUnlockState()  { gStateLock->Unlock(); }
+  ~AutoUnlockState() { gStateLock->Lock(); }
 };
 
 //---------------------------------------------------------------------------
@@ -514,10 +455,7 @@ public:
     return mBlockIntercepts = false;
   }
 
-  bool InterceptsAreBlocked() const
-  {
-    return mBlockIntercepts;
-  }
+  bool InterceptsAreBlocked() const { return mBlockIntercepts; }
 };
 
 /* static */ Thread*
@@ -563,10 +501,7 @@ public:
 class StringTable
 {
 public:
-  StringTable()
-  {
-    (void)mSet.init(64);
-  }
+  StringTable() { (void)mSet.init(64); }
 
   const char*
   Intern(const char* aString)
@@ -618,13 +553,11 @@ private:
 class StringAlloc
 {
 public:
-  static char*
-  copy(const char* aString)
+  static char* copy(const char* aString)
   {
     return InfallibleAllocPolicy::strdup_(aString);
   }
-  static void
-  free(char* aString)
+  static void free(char* aString)
   {
     InfallibleAllocPolicy::free_(aString);
   }
@@ -1278,8 +1211,7 @@ Options::Options(const char* aDMDEnvVar)
   : mDMDEnvVar(InfallibleAllocPolicy::strdup_(aDMDEnvVar)),
     mSampleBelowSize(4093, 100 * 100 * 1000),
     mMaxFrames(StackTrace::MaxFrames, StackTrace::MaxFrames),
-    mShowDumpStats(false),
-    mMode(Normal)
+    mShowDumpStats(false)
 {
   char* e = mDMDEnvVar;
   if (strcmp(e, "1") != 0) {
@@ -1313,11 +1245,6 @@ Options::Options(const char* aDMDEnvVar)
 
       } else if (GetBool(arg, "--show-dump-stats", &myBool)) {
         mShowDumpStats = myBool;
-
-      } else if (strcmp(arg, "--mode=normal") == 0) {
-        mMode = Options::Normal;
-      } else if (strcmp(arg, "--mode=test")   == 0) {
-        mMode = Options::Test;
 
       } else if (strcmp(arg, "") == 0) {
         // This can only happen if there is trailing whitespace.  Ignore.
@@ -1354,7 +1281,6 @@ Options::BadArg(const char* aArg)
             int(mMaxFrames.mMax),
             int(mMaxFrames.mDefault));
   StatusMsg("  --show-dump-stats=<yes|no>   Show stats about dumps? [no]\n");
-  StatusMsg("  --mode=<normal|test>         Mode of operation [normal]\n");
   StatusMsg("\n");
   exit(1);
 }
@@ -1370,21 +1296,6 @@ NopStackWalkCallback(uint32_t aFrameNumber, void* aPc, void* aSp,
 {
 }
 #endif
-
-// Note that fopen() can allocate.
-static FILE*
-OpenOutputFile(const char* aFilename)
-{
-  FILE* fp = fopen(aFilename, "w");
-  if (!fp) {
-    StatusMsg("can't create %s file: %s\n", aFilename, strerror(errno));
-    exit(1);
-  }
-  return fp;
-}
-
-static void RunTestMode(UniquePtr<FpWriteFunc> aF1, UniquePtr<FpWriteFunc> aF2,
-                        UniquePtr<FpWriteFunc> aF3, UniquePtr<FpWriteFunc> aF4);
 
 // WARNING: this function runs *very* early -- before all static initializers
 // have run.  For this reason, non-scalar globals such as gStateLock and
@@ -1439,31 +1350,7 @@ Init(const malloc_table_t* aMallocTable)
     gBlockTable->init(8192);
   }
 
-  if (gOptions->IsTestMode()) {
-    // Do all necessary allocations before setting gIsDMDRunning so those
-    // allocations don't show up in our results.  Once gIsDMDRunning is set we
-    // are intercepting malloc et al. in earnest.
-    //
-    // These files are written to $CWD. It would probably be better to write
-    // them to "TmpD" using the directory service, but that would require
-    // linking DMD with XPCOM.
-    auto f1 = MakeUnique<FpWriteFunc>(OpenOutputFile("full-empty.json"));
-    auto f2 = MakeUnique<FpWriteFunc>(OpenOutputFile("full-unsampled1.json"));
-    auto f3 = MakeUnique<FpWriteFunc>(OpenOutputFile("full-unsampled2.json"));
-    auto f4 = MakeUnique<FpWriteFunc>(OpenOutputFile("full-sampled.json"));
-    gIsDMDRunning = true;
-
-    StatusMsg("running test mode...\n");
-    RunTestMode(Move(f1), Move(f2), Move(f3), Move(f4));
-    StatusMsg("finished test mode; DMD is now disabled again\n");
-
-    // Continue running so that the xpcshell test can complete, but DMD no
-    // longer needs to be running.
-    gIsDMDRunning = false;
-
-  } else {
-    gIsDMDRunning = true;
-  }
+  gIsDMDRunning = true;
 }
 
 //---------------------------------------------------------------------------
@@ -1850,260 +1737,17 @@ AnalyzeReports(JSONWriter& aWriter)
 // Testing
 //---------------------------------------------------------------------------
 
-// This function checks that heap blocks that have the same stack trace but
-// different (or no) reporters get aggregated separately.
-void Foo(int aSeven)
+MOZ_EXPORT void
+SetSampleBelowSize(size_t aSize)
 {
-  char* a[6];
-  for (int i = 0; i < aSeven - 1; i++) {
-    a[i] = (char*) replace_malloc(128 - 16*i);
-  }
-
-  for (int i = 0; i < aSeven - 5; i++) {
-    Report(a[i]);                   // reported
-  }
-  Report(a[2]);                     // reported
-  Report(a[3]);                     // reported
-  // a[4], a[5] unreported
+  gOptions->SetSampleBelowSize(aSize);
 }
 
-// This stops otherwise-unused variables from being optimized away.
-static void
-UseItOrLoseIt(void* aPtr, int aSeven)
+MOZ_EXPORT void
+ClearBlocks()
 {
-  char buf[64];
-  int n = sprintf(buf, "%p\n", aPtr);
-  if (n == 20 + aSeven) {
-    fprintf(stderr, "well, that is surprising");
-  }
-}
-
-// The output from this function feeds into DMD's xpcshell test.
-static void
-RunTestMode(UniquePtr<FpWriteFunc> aF1, UniquePtr<FpWriteFunc> aF2,
-            UniquePtr<FpWriteFunc> aF3, UniquePtr<FpWriteFunc> aF4)
-{
-  // This test relies on the compiler not doing various optimizations, such as
-  // eliding unused replace_malloc() calls or unrolling loops with fixed
-  // iteration counts. So we want a constant value that the compiler can't
-  // determine statically, and we use that in various ways to prevent the above
-  // optimizations from happening.
-  //
-  // This code always sets |seven| to the value 7. It works because we know
-  // that "--mode=test" must be within the DMD environment variable if we reach
-  // here, but the compiler almost certainly does not.
-  //
-  char* env = getenv("DMD");
-  char* p1 = strstr(env, "--mode=t");
-  char* p2 = strstr(p1, "test");
-  int seven = p2 - p1;
-
-  // The first part of this test requires sampling to be disabled.
-  gOptions->SetSampleBelowSize(1);
-
-  //---------
-
-  // AnalyzeReports 1.  Zero for everything.
-  JSONWriter writer1(Move(aF1));
-  AnalyzeReports(writer1);
-
-  //---------
-
-  // AnalyzeReports 2: 1 freed, 9 out of 10 unreported.
-  // AnalyzeReports 3: still present and unreported.
-  int i;
-  char* a = nullptr;
-  for (i = 0; i < seven + 3; i++) {
-      a = (char*) replace_malloc(100);
-      UseItOrLoseIt(a, seven);
-  }
-  replace_free(a);
-
-  // Note: 8 bytes is the smallest requested size that gives consistent
-  // behaviour across all platforms with jemalloc.
-  // AnalyzeReports 2: reported.
-  // AnalyzeReports 3: thrice-reported.
-  char* a2 = (char*) replace_malloc(8);
-  Report(a2);
-
-  // AnalyzeReports 2: reported.
-  // AnalyzeReports 3: reportedness carries over, due to ReportOnAlloc.
-  char* b = (char*) replace_malloc(10);
-  ReportOnAlloc(b);
-
-  // ReportOnAlloc, then freed.
-  // AnalyzeReports 2: freed, irrelevant.
-  // AnalyzeReports 3: freed, irrelevant.
-  char* b2 = (char*) replace_malloc(1);
-  ReportOnAlloc(b2);
-  replace_free(b2);
-
-  // AnalyzeReports 2: reported 4 times.
-  // AnalyzeReports 3: freed, irrelevant.
-  char* c = (char*) replace_calloc(10, 3);
-  Report(c);
-  for (int i = 0; i < seven - 4; i++) {
-    Report(c);
-  }
-
-  // AnalyzeReports 2: ignored.
-  // AnalyzeReports 3: irrelevant.
-  Report((void*)(intptr_t)i);
-
-  // jemalloc rounds this up to 8192.
-  // AnalyzeReports 2: reported.
-  // AnalyzeReports 3: freed.
-  char* e = (char*) replace_malloc(4096);
-  e = (char*) replace_realloc(e, 4097);
-  Report(e);
-
-  // First realloc is like malloc;  second realloc is shrinking.
-  // AnalyzeReports 2: reported.
-  // AnalyzeReports 3: re-reported.
-  char* e2 = (char*) replace_realloc(nullptr, 1024);
-  e2 = (char*) replace_realloc(e2, 512);
-  Report(e2);
-
-  // First realloc is like malloc;  second realloc creates a min-sized block.
-  // XXX: on Windows, second realloc frees the block.
-  // AnalyzeReports 2: reported.
-  // AnalyzeReports 3: freed, irrelevant.
-  char* e3 = (char*) replace_realloc(nullptr, 1023);
-//e3 = (char*) replace_realloc(e3, 0);
-  MOZ_ASSERT(e3);
-  Report(e3);
-
-  // AnalyzeReports 2: freed, irrelevant.
-  // AnalyzeReports 3: freed, irrelevant.
-  char* f = (char*) replace_malloc(64);
-  replace_free(f);
-
-  // AnalyzeReports 2: ignored.
-  // AnalyzeReports 3: irrelevant.
-  Report((void*)(intptr_t)0x0);
-
-  // AnalyzeReports 2: mixture of reported and unreported.
-  // AnalyzeReports 3: all unreported.
-  Foo(seven);
-  Foo(seven);
-
-  // AnalyzeReports 2: twice-reported.
-  // AnalyzeReports 3: twice-reported.
-  char* g1 = (char*) replace_malloc(77);
-  ReportOnAlloc(g1);
-  ReportOnAlloc(g1);
-
-  // AnalyzeReports 2: twice-reported.
-  // AnalyzeReports 3: once-reported.
-  char* g2 = (char*) replace_malloc(78);
-  Report(g2);
-  ReportOnAlloc(g2);
-
-  // AnalyzeReports 2: twice-reported.
-  // AnalyzeReports 3: once-reported.
-  char* g3 = (char*) replace_malloc(79);
-  ReportOnAlloc(g3);
-  Report(g3);
-
-  // All the odd-ball ones.
-  // AnalyzeReports 2: all unreported.
-  // AnalyzeReports 3: all freed, irrelevant.
-  // XXX: no memalign on Mac
-//void* x = memalign(64, 65);           // rounds up to 128
-//UseItOrLoseIt(x, seven);
-  // XXX: posix_memalign doesn't work on B2G
-//void* y;
-//posix_memalign(&y, 128, 129);         // rounds up to 256
-//UseItOrLoseIt(y, seven);
-  // XXX: valloc doesn't work on Windows.
-//void* z = valloc(1);                  // rounds up to 4096
-//UseItOrLoseIt(z, seven);
-//aligned_alloc(64, 256);               // XXX: C11 only
-
-  // AnalyzeReports 2.
-  JSONWriter writer2(Move(aF2));
-  AnalyzeReports(writer2);
-
-  //---------
-
-  Report(a2);
-  Report(a2);
-  replace_free(c);
-  replace_free(e);
-  Report(e2);
-  replace_free(e3);
-//replace_free(x);
-//replace_free(y);
-//replace_free(z);
-
-  // AnalyzeReports 3.
-  JSONWriter writer3(Move(aF3));
-  AnalyzeReports(writer3);
-
-  //---------
-
-  // Clear all knowledge of existing blocks to give us a clean slate.
   gBlockTable->clear();
-
-  gOptions->SetSampleBelowSize(128);
-
-  char* s;
-
-  // This equals the sample size, and so is reported exactly.  It should be
-  // listed before records of the same size that are sampled.
-  s = (char*) replace_malloc(128);
-  UseItOrLoseIt(s, seven);
-
-  // This exceeds the sample size, and so is reported exactly.
-  s = (char*) replace_malloc(144);
-  UseItOrLoseIt(s, seven);
-
-  // These together constitute exactly one sample.
-  for (int i = 0; i < seven + 9; i++) {
-    s = (char*) replace_malloc(8);
-    UseItOrLoseIt(s, seven);
-  }
-  MOZ_ASSERT(gSmallBlockActualSizeCounter == 0);
-
-  // These fall 8 bytes short of a full sample.
-  for (int i = 0; i < seven + 8; i++) {
-    s = (char*) replace_malloc(8);
-    UseItOrLoseIt(s, seven);
-  }
-  MOZ_ASSERT(gSmallBlockActualSizeCounter == 120);
-
-  // This exceeds the sample size, and so is recorded exactly.
-  s = (char*) replace_malloc(256);
-  UseItOrLoseIt(s, seven);
-  MOZ_ASSERT(gSmallBlockActualSizeCounter == 120);
-
-  // This gets more than to a full sample from the |i < 15| loop above.
-  s = (char*) replace_malloc(96);
-  UseItOrLoseIt(s, seven);
-  MOZ_ASSERT(gSmallBlockActualSizeCounter == 88);
-
-  // This gets to another full sample.
-  for (int i = 0; i < seven - 2; i++) {
-    s = (char*) replace_malloc(8);
-    UseItOrLoseIt(s, seven);
-  }
-  MOZ_ASSERT(gSmallBlockActualSizeCounter == 0);
-
-  // This allocates 16, 32, ..., 128 bytes, which results in a heap block
-  // record that contains a mix of sample and non-sampled blocks, and so should
-  // be printed with '~' signs.
-  for (int i = 1; i <= seven + 1; i++) {
-    s = (char*) replace_malloc(i * 16);
-    UseItOrLoseIt(s, seven);
-  }
-  MOZ_ASSERT(gSmallBlockActualSizeCounter == 64);
-
-  // At the end we're 64 bytes into the current sample so we report ~1,424
-  // bytes of allocation overall, which is 64 less than the real value 1,488.
-
-  // AnalyzeReports 4.
-  JSONWriter writer4(Move(aF4));
-  AnalyzeReports(writer4);
+  gSmallBlockActualSizeCounter = 0;
 }
 
 }   // namespace dmd
