@@ -80,5 +80,5 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
 
 if CONFIG['MOZ_UPDATE_CHANNEL'] in ('beta', 'release', 'esr'):
     DEFINES['MAR_SIGNING_RELEASE_BETA'] = '1'
-elif CONFIG['MOZ_UPDATE_CHANNEL'] in ('nightly', 'aurora', 'nightly-elm', 'nightly-profiling', 'nightly-oak', 'nightly-ux'):
+elif CONFIG['MOZ_UPDATE_CHANNEL'] in ('nightly', 'aurora', 'nightly-elm', 'nightly-profiling', 'nightly-oak', 'nightly-ux', 'nightly-alder'):
     DEFINES['MAR_SIGNING_AURORA_NIGHTLY'] = '1'
