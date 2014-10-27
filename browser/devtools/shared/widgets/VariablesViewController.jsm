@@ -170,6 +170,16 @@ VariablesViewController.prototype = {
   _populateFromObject: function(aTarget, aGrip) {
     let deferred = promise.defer();
 
+    if (aGrip.class === "Promise" && aGrip.promiseState) {
+      const { state, value, reason } = aGrip.promiseState;
+      aTarget.addItem("<state>", { value: state });
+      if (state === "fulfilled") {
+        this.addExpander(aTarget.addItem("<value>", { value }), value);
+      } else if (state === "rejected") {
+        this.addExpander(aTarget.addItem("<reason>", { value: reason }), reason);
+      }
+    }
+
     let objectClient = this._getObjectClient(aGrip);
     objectClient.getPrototypeAndProperties(aResponse => {
       let { ownProperties, prototype } = aResponse;

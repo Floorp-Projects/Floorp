@@ -17,6 +17,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHome",
                                   "resource:///modules/AboutHome.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "UITour",
+                                  "resource:///modules/UITour.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 
@@ -2553,3 +2556,12 @@ let E10SUINotification = {
 
 var components = [BrowserGlue, ContentPermissionPrompt];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+
+
+// Listen for UITour messages.
+// Do it here instead of the UITour module itself so that the UITour module is lazy loaded
+// when the first message is received.
+let globalMM = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
+globalMM.addMessageListener("UITour:onPageEvent", function(aMessage) {
+  UITour.onPageEvent(aMessage, aMessage.data);
+});

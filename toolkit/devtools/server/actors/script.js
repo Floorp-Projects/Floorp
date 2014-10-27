@@ -14,6 +14,7 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dbg_assert, dumpn, update } = DevToolsUtils;
 const { SourceMapConsumer, SourceMapGenerator } = require("source-map");
 const promise = require("promise");
+const PromiseDebugging = require("PromiseDebugging");
 const Debugger = require("Debugger");
 const xpcInspector = require("xpcInspector");
 const mapURIToAddonID = require("./utils/map-uri-to-addon-id");
@@ -32,6 +33,33 @@ let TYPED_ARRAY_CLASSES = ["Uint8Array", "Uint8ClampedArray", "Uint16Array",
 // Number of items to preview in objects, arrays, maps, sets, lists,
 // collections, etc.
 let OBJECT_PREVIEW_MAX_ITEMS = 10;
+
+/**
+ * Call PromiseDebugging.getState on this Debugger.Object's referent and wrap
+ * the resulting `value` or `reason` properties in a Debugger.Object instance.
+ *
+ * See dom/webidl/PromiseDebugging.webidl
+ *
+ * @returns Object
+ *          An object of one of the following forms:
+ *          - { state: "pending" }
+ *          - { state: "fulfilled", value }
+ *          - { state: "rejected", reason }
+ */
+Debugger.Object.prototype.getPromiseState = function () {
+  if (this.class != "Promise") {
+    throw new Error(
+      "Can't call `getPromiseState` on `Debugger.Object`s that don't " +
+      "refer to Promise objects.");
+  }
+
+  const state = PromiseDebugging.getState(this.unsafeDereference());
+  return {
+    state: state.state,
+    value: this.makeDebuggeeValue(state.value),
+    reason: this.makeDebuggeeValue(state.reason)
+  };
+};
 
 /**
  * BreakpointStore objects keep track of all breakpoints that get set so that we
@@ -2986,8 +3014,15 @@ function stringify(aObj) {
     DevToolsUtils.reportException("stringify", error);
     return "<dead object>";
   }
+
   const stringifier = stringifiers[aObj.class] || stringifiers.Object;
-  return stringifier(aObj);
+
+  try {
+    return stringifier(aObj);
+  } catch (e) {
+    DevToolsUtils.reportException("stringify", e);
+    return "<failed to stringify object>";
+  }
 }
 
 // Used to prevent infinite recursion when an array is found inside itself.
@@ -3056,7 +3091,18 @@ let stringifiers = {
     return '[Exception... "' + message + '" ' +
            'code: "' + code +'" ' +
            'nsresult: "0x' + result + ' (' + name + ')"]';
-  }
+  },
+  Promise: obj => {
+    const { state, value, reason } = obj.getPromiseState();
+    let statePreview = state;
+    if (state != "pending") {
+      const settledValue = state === "fulfilled" ? value : reason;
+      statePreview += ": " + (typeof settledValue === "object" && settledValue !== null
+                                ? stringify(settledValue)
+                                : settledValue);
+    }
+    return "Promise (" + statePreview + ")";
+  },
 };
 
 /**
@@ -3093,6 +3139,17 @@ ObjectActor.prototype = {
     };
 
     if (this.obj.class != "DeadObject") {
+      // Expose internal Promise state.
+      if (this.obj.class == "Promise") {
+        const { state, value, reason } = this.obj.getPromiseState();
+        g.promiseState = { state };
+        if (state == "fulfilled") {
+          g.promiseState.value = this.threadActor.createValueGrip(value);
+        } else if (state == "rejected") {
+          g.promiseState.reason = this.threadActor.createValueGrip(reason);
+        }
+      }
+
       let raw = this.obj.unsafeDereference();
 
       // If Cu is not defined, we are running on a worker thread, where xrays
@@ -3787,6 +3844,7 @@ DebuggerServer.ObjectActorPreviewers = {
 
     return true;
   }], // DOMStringMap
+
 }; // DebuggerServer.ObjectActorPreviewers
 
 /**
