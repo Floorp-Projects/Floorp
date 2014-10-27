@@ -9,7 +9,7 @@ function run_test() {
 }
 
 /**
- * Test to ensure that {bytes:} in options to |readTo| and |write| are correctly
+ * Test to ensure that {bytes:} in options to |write| is correctly
  * preserved.
  */
 add_task(function* test_bytes() {
@@ -23,12 +23,7 @@ add_task(function* test_bytes() {
       yield file.write(new Uint8Array(2048), {bytes: 1024});
       do_check_eq((yield file.stat()).size, 1024);
 
-      // 2. Test same for |readTo|.
-      yield file.setPosition(0, OS.File.POS_START);
-      let read = yield file.readTo(new Uint8Array(1024), {bytes: 512});
-      do_check_eq(read, 512);
-
-      // 3. Test that passing nullish values for |options| still works.
+      // 2. Test that passing nullish values for |options| still works.
       yield file.setPosition(0, OS.File.POS_END);
       yield file.write(new Uint8Array(1024), null);
       yield file.write(new Uint8Array(1024), undefined);
