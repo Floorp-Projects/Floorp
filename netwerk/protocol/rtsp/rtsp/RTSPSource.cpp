@@ -691,7 +691,7 @@ void RTSPSource::onTrackDataAvailable(size_t trackIndex)
 
     status_t err = dequeueAccessUnit(info->mIsAudio, &accessUnit);
 
-    if (err == -EWOULDBLOCK) {
+    if (err == -EWOULDBLOCK || err == ERROR_END_OF_STREAM) {
         return;
     } else if (err == INFO_DISCONTINUITY) {
         nsRefPtr<nsIStreamingProtocolMetaData> meta;
