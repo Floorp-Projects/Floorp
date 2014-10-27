@@ -262,9 +262,12 @@ loop.webapp = (function($, _, OT, mozL10n) {
   });
 
   var PendingConversationView = React.createClass({
+    mixins: [sharedMixins.AudioMixin],
+
+
     getInitialState: function() {
       return {
-        callState: this.props.callState || "connecting"
+        callState: "connecting"
       };
     },
 
@@ -274,11 +277,13 @@ loop.webapp = (function($, _, OT, mozL10n) {
     },
 
     componentDidMount: function() {
+      this.play("connecting", {loop: true});
       this.props.websocket.listenTo(this.props.websocket, "progress:alerting",
                                     this._handleRingingProgress);
     },
 
     _handleRingingProgress: function() {
+      this.play("ringing", {loop: true});
       this.setState({callState: "ringing"});
     },
 
@@ -514,12 +519,18 @@ loop.webapp = (function($, _, OT, mozL10n) {
    * Ended conversation view.
    */
   var EndedConversationView = React.createClass({
+    mixins: [sharedMixins.AudioMixin],
+
     propTypes: {
       conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
                          .isRequired,
       sdk: React.PropTypes.object.isRequired,
       feedbackApiClient: React.PropTypes.object.isRequired,
       onAfterFeedbackReceived: React.PropTypes.func.isRequired
+    },
+
+    componentDidMount: function() {
+      this.play("terminated");
     },
 
     render: function() {
