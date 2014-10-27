@@ -19,17 +19,12 @@ let msgHandler = function(msg) {
       msg.reason === "busy") {
     actionReceived = true;
   }
-}
-
-let mockWebSocket = new MockWebSocketChannel({defaultMsgHandler: msgHandler});
-LoopCallsInternal._mocks.webSocket = mockWebSocket;
-
-Services.io.offline = false;
+};
 
 add_test(function test_busy_2guest_calls() {
   actionReceived = false;
 
-  MozLoopService.register(mockPushHandler, mockWebSocket).then(() => {
+  MozLoopService.register().then(() => {
     let opened = 0;
     Chat.open = function() {
       opened++;
@@ -52,7 +47,7 @@ add_test(function test_busy_2guest_calls() {
 add_test(function test_busy_1fxa_1guest_calls() {
   actionReceived = false;
 
-  MozLoopService.register(mockPushHandler, mockWebSocket).then(() => {
+  MozLoopService.register().then(() => {
     let opened = 0;
     Chat.open = function() {
       opened++;
@@ -76,7 +71,7 @@ add_test(function test_busy_1fxa_1guest_calls() {
 add_test(function test_busy_2fxa_calls() {
   actionReceived = false;
 
-  MozLoopService.register(mockPushHandler, mockWebSocket).then(() => {
+  MozLoopService.register().then(() => {
     let opened = 0;
     Chat.open = function() {
       opened++;
@@ -99,7 +94,7 @@ add_test(function test_busy_2fxa_calls() {
 add_test(function test_busy_1guest_1fxa_calls() {
   actionReceived = false;
 
-  MozLoopService.register(mockPushHandler, mockWebSocket).then(() => {
+  MozLoopService.register().then(() => {
     let opened = 0;
     Chat.open = function() {
       opened++;
@@ -120,14 +115,18 @@ add_test(function test_busy_1guest_1fxa_calls() {
   });
 });
 
-function run_test()
-{
+function run_test() {
   setupFakeLoopServer();
 
   // Setup fake login state so we get FxA requests.
   const MozLoopServiceInternal = Cu.import("resource:///modules/loop/MozLoopService.jsm", {}).MozLoopServiceInternal;
   MozLoopServiceInternal.fxAOAuthTokenData = {token_type:"bearer",access_token:"1bad3e44b12f77a88fe09f016f6a37c42e40f974bc7a8b432bb0d2f0e37e1752",scope:"profile"};
   MozLoopServiceInternal.fxAOAuthProfile = {email: "test@example.com", uid: "abcd1234"};
+
+  let mockWebSocket = new MockWebSocketChannel({defaultMsgHandler: msgHandler});
+  LoopCallsInternal.mocks.webSocket = mockWebSocket;
+
+  Services.io.offline = false;
 
   // For each notification received from the PushServer, MozLoopService will first query
   // for any pending calls on the FxA hawk session and then again using the guest session.
@@ -178,7 +177,7 @@ function run_test()
     // clear test pref
     Services.prefs.clearUserPref("loop.seenToS");
 
-    LoopCallsInternal._mocks.webSocket = undefined;
+    LoopCallsInternal.mocks.webSocket = undefined;
   });
 
   run_next_test();
