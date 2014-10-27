@@ -1107,6 +1107,15 @@ if test -n "$MOZ_LLVM_HACKS"; then
 fi
 
 dnl ========================================================
+dnl = Enable treating compiler warnings as errors
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(warnings-as-errors,
+[  --enable-warnings-as-errors
+                          Enable treating warnings as errors],
+    MOZ_ENABLE_WARNINGS_AS_ERRORS=1,
+    MOZ_ENABLE_WARNINGS_AS_ERRORS=)
+
+dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
 if test "$GNU_CC"; then
@@ -1198,28 +1207,30 @@ if test "$GNU_CC"; then
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wsign-compare"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wtype-limits"
 
-    # Treat some warnings as errors:
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=address"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=char-subscripts"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=comment"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=empty-body"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=endif-labels"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=enum-compare"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=ignored-qualifiers"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=implicit-function-declaration"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=int-to-pointer-cast"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=missing-braces"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=multichar"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=nonnull"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=pointer-arith"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=pointer-sign"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=pointer-to-int-cast"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=return-type"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=sequence-point"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=switch"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=trigraphs"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=unknown-pragmas"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=write-strings"
+    # Treat some warnings as errors if --enable-warnings-as-errors:
+    if test "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=address"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=char-subscripts"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=comment"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=empty-body"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=endif-labels"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=enum-compare"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=ignored-qualifiers"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=implicit-function-declaration"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=int-to-pointer-cast"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=missing-braces"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=multichar"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=nonnull"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=pointer-arith"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=pointer-sign"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=pointer-to-int-cast"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=return-type"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=sequence-point"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=switch"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=trigraphs"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=unknown-pragmas"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=write-strings"
+    fi
 
     # Turn off the following warnings that -Wall turns on:
     # -Wno-unused - lots of violations in third-party code
@@ -1297,27 +1308,28 @@ if test "$GNU_CXX"; then
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wsign-compare"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wtype-limits"
 
-    # Treat some warnings as errors:
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=char-subscripts"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=comment"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=empty-body"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=endif-labels"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=ignored-qualifiers"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=int-to-pointer-cast"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=missing-braces"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=overloaded-virtual"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=pointer-arith"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=reorder"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=return-type"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=sequence-point"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=switch"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=trigraphs"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=unknown-pragmas"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=unused-label"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=unused-value"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=write-strings"
+    # Treat some warnings as errors if --enable-warnings-as-errors:
+    if test "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=char-subscripts"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=comment"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=endif-labels"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=ignored-qualifiers"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=int-to-pointer-cast"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=missing-braces"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=overloaded-virtual"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=pointer-arith"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=reorder"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=return-type"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=sequence-point"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=switch"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=trigraphs"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=unknown-pragmas"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=unused-label"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=unused-value"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=write-strings"
 
-    MOZ_CXX_SUPPORTS_WARNING(-Werror=, conversion-null, ac_cxx_has_werror_conversion_null)
+        MOZ_CXX_SUPPORTS_WARNING(-Werror=, conversion-null, ac_cxx_has_werror_conversion_null)
+    fi
 
     # Turn off the following warnings that -Wall turns on:
     # -Wno-invalid-offsetof - we use offsetof on non-POD types frequently
@@ -2996,13 +3008,8 @@ if test "$ENABLE_TRACE_LOGGING"; then
 fi
 
 dnl ========================================================
-dnl = Enable any treating of compile warnings as errors
+dnl = Disable treating compiler warnings as errors
 dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(warnings-as-errors,
-[  --enable-warnings-as-errors
-                          Enable treating of warnings as errors],
-    MOZ_ENABLE_WARNINGS_AS_ERRORS=1,
-    MOZ_ENABLE_WARNINGS_AS_ERRORS=)
 if test -z "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
    WARNINGS_AS_ERRORS=''
 elif test "$GNU_CC"; then
