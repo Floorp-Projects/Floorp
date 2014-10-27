@@ -55,6 +55,11 @@ label.small {
 }
 
 /* General Pane */
+#useFirefoxSync,
+#getStarted {
+  font-size: 90%;
+}
+
 #isNotDefaultLabel {
   font-weight: bold;
 }

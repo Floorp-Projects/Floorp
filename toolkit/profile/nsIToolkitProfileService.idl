@@ -29,6 +29,12 @@ interface nsIToolkitProfileService : nsISupports
      * browser if no other profile is specified at runtime). This is the profile
      * marked with Default=1 in profiles.ini and is usually the same as
      * selectedProfile, except on Developer Edition.
+     *
+     * Developer Edition uses a profile named "dev-edition-default" as the
+     * default profile (which it creates if it doesn't exist), unless a special
+     * empty file named "ignore-dev-edition-profile" is present next to
+     * profiles.ini. In that case Developer Edition behaves the same as any
+     * other build of Firefox.
      */
     attribute nsIToolkitProfile defaultProfile;
 
