@@ -105,7 +105,7 @@ RefTestCmdLineHandler.prototype =
     cmdLine.preventDefault = true;
   },
 
-  helpInfo : "  -reftest <file>    Run layout acceptance tests on given manifest.\n"
+  helpInfo : "  --reftest <file>   Run layout acceptance tests on given manifest.\n"
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RefTestCmdLineHandler]);

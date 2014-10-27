@@ -19,8 +19,6 @@ var andf = (function() {
 function test() {
   print(BUGNUMBER + ": " + summary);
 
-  // FIXME -- Bug 948379: Amend to check for correctness of border cases.
-
   var a = float32x4(1, 2, 3, 4);
   var b = float32x4(10, 20, 30, 40);
   var c = SIMD.float32x4.and(a, b);
@@ -28,6 +26,22 @@ function test() {
   assertEq(c.y, andf(2, 20));
   assertEq(c.z, andf(3, 30));
   assertEq(c.w, andf(4, 40));
+
+  var d = float32x4(1.51, 2.98, 3.65, 4.34);
+  var e = float32x4(10.29, 20.12, 30.79, 40.41);
+  var f = SIMD.float32x4.and(d, e);
+  assertEq(f.x, andf(1.51, 10.29));
+  assertEq(f.y, andf(2.98, 20.12));
+  assertEq(f.z, andf(3.65, 30.79));
+  assertEq(f.w, andf(4.34, 40.41));
+
+  var g = float32x4(NaN, -0, Infinity, -Infinity);
+  var h = float32x4(NaN, -0, -Infinity, Infinity);
+  var i = SIMD.float32x4.and(g, h);
+  assertEq(i.x, NaN);
+  assertEq(i.y, -0);
+  assertEq(i.z, Infinity);
+  assertEq(i.w, Infinity);
 
   if (typeof reportCompare === "function")
     reportCompare(true, true);

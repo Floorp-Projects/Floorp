@@ -97,13 +97,16 @@ FrameworkView::LaunchActivated(ComPtr<ILaunchActivatedEventArgs>& aArgs, bool aS
   if (WindowsIsStringEmpty(data.Get()))
     return;
 
-  // If we're being launched from a secondary tile then we have a 2nd command line param of -url
+  // If we're being launched from a secondary tile then we have a 2nd command line param of --url
   // and a third of the secondary tile.  We want it in sActivationURI so that browser.js will
   // load it in without showing the start UI.
   int argc;
   unsigned int length;
   LPWSTR* argv = CommandLineToArgvW(data.GetRawBuffer(&length), &argc);
-  if (aStartup && argc == 2 && !wcsicmp(argv[0], L"-url")) {
+  if (aStartup && argc == 2 &&
+      (!wcsicmp(argv[0], L"-url") ||
+       !wcsicmp(argv[0], L"--url") ||
+       !wcsicmp(argv[0], L"/url"))) {
     WindowsCreateString(argv[1], wcslen(argv[1]), &sActivationURI);
   } else {
     // Some other command line or this is not a startup.

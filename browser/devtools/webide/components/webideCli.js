@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
 
 /**
- * Handles -webide command line option.
+ * Handles --webide command line option.
  */
 
 function webideCli() { }
@@ -23,10 +23,10 @@ webideCli.prototype = {
       return;
     }
 
-    // If -webide is used remotely, we don't want to open
+    // If --webide is used remotely, we don't want to open
     // a new tab.
     //
-    // If -webide is used for a new Firefox instance, we
+    // If --webide is used for a new Firefox instance, we
     // want to open webide only.
     cmdLine.preventDefault = true;
 
