@@ -7,12 +7,12 @@ let test1Complete = false;
 let test2Complete = false;
 
 function executeWithTimeout() {
-  let deferred = Promise.defer();
-  executeSoon(function() {
-    ok(true, "we get here after a timeout");
-    deferred.resolve();
-  });
-  return deferred.promise;
+  return new Promise(resolve =>
+    executeSoon(function() {
+      ok(true, "we get here after a timeout");
+      resolve();
+    })
+  );
 }
 
 add_task(function asyncTest_no1() {
