@@ -11,47 +11,23 @@ loop.store = loop.store || {};
   "use strict";
 
   /**
+   * Shared actions.
+   * @type {Object}
+   */
+  var sharedActions = loop.shared.actions;
+
+  /**
    * Room validation schema. See validate.js.
    * @type {Object}
    */
   var roomSchema = {
-    roomToken: String,
-    roomUrl:   String,
-    roomName:  String,
-    maxSize:   Number,
-    currSize:  Number,
-    ctime:     Number
+    roomToken:    String,
+    roomUrl:      String,
+    roomName:     String,
+    maxSize:      Number,
+    participants: Array,
+    ctime:        Number
   };
-
-  /**
-   * Temporary sample raw room list data.
-   * XXX Should be removed when we plug the real mozLoop API for rooms.
-   *     See bug 1074664.
-   * @type {Array}
-   */
-  var temporaryRawRoomList = [{
-    roomToken: "_nxD4V4FflQ",
-    roomUrl: "http://sample/_nxD4V4FflQ",
-    roomName: "First Room Name",
-    maxSize: 2,
-    currSize: 0,
-    ctime: 1405517546
-  }, {
-    roomToken: "QzBbvGmIZWU",
-    roomUrl: "http://sample/QzBbvGmIZWU",
-    roomName: "Second Room Name",
-    maxSize: 2,
-    currSize: 0,
-    ctime: 1405517418
-  }, {
-    roomToken: "3jKS_Els9IU",
-    roomUrl: "http://sample/3jKS_Els9IU",
-    roomName: "Third Room Name",
-    maxSize: 3,
-    clientMaxSize: 2,
-    currSize: 1,
-    ctime: 1405518241
-  }];
 
   /**
    * Room type. Basically acts as a typed object constructor.
@@ -95,7 +71,9 @@ loop.store = loop.store || {};
 
     this.dispatcher.register(this, [
       "getAllRooms",
-      "openRoom"
+      "getAllRoomsError",
+      "openRoom",
+      "updateRoomList"
     ]);
   }
 
@@ -117,21 +95,6 @@ loop.store = loop.store || {};
     setStoreState: function(state) {
       this.storeState = state;
       this.trigger("change");
-    },
-
-    /**
-     * Proxy to navigator.mozLoop.rooms.getAll.
-     * XXX Could probably be removed when bug 1074664 lands.
-     *
-     * @param  {Function} cb Callback(error, roomList)
-     */
-    _fetchRoomList: function(cb) {
-      // Faking this.mozLoop.rooms until it's available; bug 1074664.
-      if (!this.mozLoop.hasOwnProperty("rooms")) {
-        cb(null, temporaryRawRoomList);
-        return;
-      }
-      this.mozLoop.rooms.getAll(cb);
     },
 
     /**
@@ -158,13 +121,37 @@ loop.store = loop.store || {};
      * Gather the list of all available rooms from the MozLoop API.
      */
     getAllRooms: function() {
-      this._fetchRoomList(function(err, rawRoomList) {
-        this.setStoreState({
-          error: err,
-          rooms: this._processRawRoomList(rawRoomList)
-        });
+      this.mozLoop.rooms.getAll(function(err, rawRoomList) {
+        var action;
+        if (err) {
+          action = new sharedActions.GetAllRoomsError({error: err});
+        } else {
+          action = new sharedActions.UpdateRoomList({roomList: rawRoomList});
+        }
+        this.dispatcher.dispatch(action);
       }.bind(this));
-    }
+    },
+
+    /**
+     * Updates current error state in case getAllRooms failed.
+     *
+     * @param {sharedActions.UpdateRoomListError} actionData The action data.
+     */
+    getAllRoomsError: function(actionData) {
+      this.setStoreState({error: actionData.error});
+    },
+
+    /**
+     * Updates current room list.
+     *
+     * @param {sharedActions.UpdateRoomList} actionData The action data.
+     */
+    updateRoomList: function(actionData) {
+      this.setStoreState({
+        error: undefined,
+        rooms: this._processRawRoomList(actionData.roomList)
+      });
+    },
   }, Backbone.Events);
 
   loop.store.RoomListStore = RoomListStore;

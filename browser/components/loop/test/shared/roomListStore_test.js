@@ -50,14 +50,14 @@ describe("loop.store.RoomListStore", function () {
       roomUrl: "http://sample/_nxD4V4FflQ",
       roomName: "First Room Name",
       maxSize: 2,
-      currSize: 0,
+      participants: [],
       ctime: 1405517546
     }, {
       roomToken: "QzBbvGmIZWU",
       roomUrl: "http://sample/QzBbvGmIZWU",
       roomName: "Second Room Name",
       maxSize: 2,
-      currSize: 0,
+      participants: [],
       ctime: 1405517418
     }, {
       roomToken: "3jKS_Els9IU",
@@ -65,7 +65,7 @@ describe("loop.store.RoomListStore", function () {
       roomName: "Third Room Name",
       maxSize: 3,
       clientMaxSize: 2,
-      currSize: 1,
+      participants: [],
       ctime: 1405518241
     }];
 
@@ -93,7 +93,7 @@ describe("loop.store.RoomListStore", function () {
 
     it("should fetch the room list from the mozLoop API", function(done) {
       store.once("change", function() {
-        expect(store.getStoreState().error).to.be.a.null;
+        expect(store.getStoreState().error).to.be.a.undefined;
         expect(store.getStoreState().rooms).to.have.length.of(3);
         done();
       });
@@ -104,7 +104,7 @@ describe("loop.store.RoomListStore", function () {
     it("should order the room list using ctime desc", function(done) {
       store.once("change", function() {
         var storeState = store.getStoreState();
-        expect(storeState.error).to.be.a.null;
+        expect(storeState.error).to.be.a.undefined;
         expect(storeState.rooms[0].ctime).eql(1405518241);
         expect(storeState.rooms[1].ctime).eql(1405517546);
         expect(storeState.rooms[2].ctime).eql(1405517418);
