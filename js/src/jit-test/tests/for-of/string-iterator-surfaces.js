@@ -41,7 +41,7 @@ function assertBuiltinFunction(o, name, arity) {
         value: arity,
         writable: false,
         enumerable: false,
-        configurable: true
+        configurable: false,
     });
 }
 

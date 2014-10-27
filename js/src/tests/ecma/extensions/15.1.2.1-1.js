@@ -23,6 +23,7 @@ startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 new TestCase( SECTION,      "eval.length",              1,              eval.length );
+new TestCase( SECTION,      "delete eval.length",       false,          delete eval.length );
 new TestCase( SECTION,      "var PROPS = ''; for ( p in eval ) { PROPS += p }; PROPS",  "", eval("var PROPS = ''; for ( p in eval ) { PROPS += p }; PROPS") );
 new TestCase( SECTION,      "eval.length = null; eval.length",       1, eval( "eval.length = null; eval.length") );
 //     new TestCase( SECTION,     "eval.__proto__",                       Function.prototype,            eval.__proto__ );
