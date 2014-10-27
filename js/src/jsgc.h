@@ -24,8 +24,6 @@
 
 namespace js {
 
-class AutoLockGC;
-
 namespace gc {
 class ForkJoinNursery;
 }
@@ -1047,7 +1045,7 @@ class GCHelperState
     }
 
     /* Must be called with the GC lock taken. */
-    void doSweep(const AutoLockGC &lock);
+    void doSweep();
 
   public:
     explicit GCHelperState(JSRuntime *rt)
@@ -1163,6 +1161,8 @@ struct GCChunkHasher {
         return k == l;
     }
 };
+
+typedef HashSet<js::gc::Chunk *, GCChunkHasher, SystemAllocPolicy> GCChunkSet;
 
 struct GrayRoot {
     void *thing;
