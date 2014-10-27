@@ -67,7 +67,7 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
   if (iframeEmbedding.type() == PBrowserOrId::TPBrowserParent) {
     mTabParent = static_cast<dom::TabParent*>(iframeEmbedding.get_PBrowserParent());
   } else {
-    mNestedFrameId = iframeEmbedding.get_TabId();
+    mNestedFrameId = iframeEmbedding.get_uint64_t();
   }
 
   mObserver = new OfflineObserver(this);
