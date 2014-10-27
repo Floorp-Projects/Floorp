@@ -234,7 +234,7 @@ expected =
     value: 0,
     writable: false,
     enumerable: false,
-    configurable: true
+    configurable: false
   };
 
 expectDescriptor(pd, expected);
@@ -258,7 +258,7 @@ expected =
     value: 1,
     writable: false,
     enumerable: false,
-    configurable: true
+    configurable: false
   };
 
 expectDescriptor(pd, expected);

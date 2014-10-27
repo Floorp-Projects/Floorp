@@ -520,6 +520,8 @@ function mapTestDescriptors(filter)
 var ALL_DESCRIPTORS = mapTestDescriptors(function(d) { return true; });
 var VALID_DESCRIPTORS = mapTestDescriptors(isValidDescriptor);
 
+var SKIP_FULL_FUNCTION_LENGTH_TESTS = true;
+
 function TestRunner()
 {
   this._logLines = [];
@@ -533,11 +535,20 @@ TestRunner.prototype =
       var self = this;
       function functionLengthTests()
       {
-        self._fullFunctionLengthTests(() => Function("one", "/* body */"), 1);
-        self._fullFunctionLengthTests(() => function(one, two, three=null) { }, 2);
-        self._fullFunctionLengthTests(() => (one, two, ...etc) => 0, 2);
-        self._fullFunctionLengthTests(() => ({method(){}}.method), 0);
-        self._fullFunctionLengthTests(() => Object.getOwnPropertyDescriptor({set x(v){}}, "x").set, 1);
+        if (SKIP_FULL_FUNCTION_LENGTH_TESTS)
+        {
+          print("Skipping full tests for redefining Function.length for now " +
+                "because we don't support redefinition of properties with " +
+                "native getter or setter...");
+          self._simpleFunctionLengthTests();
+        }
+        else
+        {
+          self._simpleFunctionLengthTests();
+          self._fullFunctionLengthTests(function() { }, 0);
+          self._fullFunctionLengthTests(function(one) { }, 1);
+          self._fullFunctionLengthTests(function(one, two) { }, 2);
+        }
       }
 
       this._runTestSet(functionLengthTests, "Function length tests completed!");
@@ -726,15 +737,39 @@ TestRunner.prototype =
       if (errorCount > 0)
         throw errorCount + " errors detected, FAIL";
     },
-    _fullFunctionLengthTests: function _fullFunctionLengthTests(funFactory, len)
+    _simpleFunctionLengthTests: function _simpleFunctionLengthTests(fun)
     {
-      print("Running Function.length (" + funFactory + ") tests now...");
+      print("Running simple Function.length tests now..");
 
-      for (var i = 0, sz = VALID_DESCRIPTORS.length; i < sz; i++)
+      function expectThrowTypeError(o, p, desc)
       {
-        var desc = VALID_DESCRIPTORS[i];
-        this._runSingleFunctionLengthTest(funFactory(), len, desc);
+        var err = "<none>", passed = false;
+        try
+        {
+          Object.defineProperty(o, p, desc);
+        }
+        catch (e)
+        {
+          err = e;
+          passed = e instanceof TypeError;
+        }
+        assertEq(passed, true, fun + " didn't throw TypeError when called: " + err);
       }
+
+      expectThrowTypeError(function a() { }, "length", { value: 1 });
+      expectThrowTypeError(function a() { }, "length", { enumerable: true });
+      expectThrowTypeError(function a() { }, "length", { configurable: true });
+      expectThrowTypeError(function a() { }, "length", { writable: true });
+    },
+    _fullFunctionLengthTests: function _fullFunctionLengthTests(fun)
+    {
+      var len = fun.length;
+      print("Running Function.length (" + len + ") tests now...");
+
+      var desc;
+      var gen = new DescriptorState();
+      while ((desc = gen.nextDescriptor()))
+        this._runSingleFunctionLengthTest(fun, len, desc);
     },
     _log: function _log(v)
     {
@@ -947,7 +982,7 @@ TestRunner.prototype =
       {
         value: len,
         enumerable: false,
-        configurable: true,
+        configurable: false,
         writable: false
       });
 

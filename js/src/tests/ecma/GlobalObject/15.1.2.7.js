@@ -27,6 +27,8 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 new TestCase( SECTION, "isFinite.length",      1,                  isFinite.length );
 new TestCase( SECTION, "isFinite.length = null; isFinite.length",   1,      eval("isFinite.length=null; isFinite.length") );
+new TestCase( SECTION, "delete isFinite.length",                    false,  delete isFinite.length );
+new TestCase( SECTION, "delete isFinite.length; isFinite.length",   1,      eval("delete isFinite.length; isFinite.length") );
 new TestCase( SECTION, "var MYPROPS=''; for ( p in isFinite ) { MYPROPS+= p }; MYPROPS",    "", eval("var MYPROPS=''; for ( p in isFinite ) { MYPROPS += p }; MYPROPS") );
 
 new TestCase( SECTION,  "isFinite()",           false,              isFinite() );
