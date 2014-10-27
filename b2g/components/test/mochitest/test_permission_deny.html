@@ -43,7 +43,7 @@ function runNext() {
       ok(false, 'unexpected success, permission request should be denied');
       runNext();
     }, function failure(err) {
-      is(err.toLowerCase(), 'permission denied', 'expected permission denied');
+      is(err.name, 'PermissionDeniedError', 'expected permission denied');
       runNext();
     });
   } else {

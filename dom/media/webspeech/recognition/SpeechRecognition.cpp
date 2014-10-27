@@ -11,6 +11,7 @@
 
 #include "mozilla/dom/SpeechRecognitionBinding.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
+#include "mozilla/dom/MediaStreamError.h"
 #include "mozilla/MediaManager.h"
 #include "mozilla/Services.h"
 
@@ -950,19 +951,26 @@ SpeechRecognition::GetUserMediaSuccessCallback::OnSuccess(nsISupports* aStream)
 NS_IMPL_ISUPPORTS(SpeechRecognition::GetUserMediaErrorCallback, nsIDOMGetUserMediaErrorCallback)
 
 NS_IMETHODIMP
-SpeechRecognition::GetUserMediaErrorCallback::OnError(const nsAString& aError)
+SpeechRecognition::GetUserMediaErrorCallback::OnError(nsISupports* aError)
 {
+  nsRefPtr<MediaStreamError> error = do_QueryObject(aError);
+  if (!error) {
+    return NS_OK;
+  }
   SpeechRecognitionErrorCode errorCode;
 
-  if (aError.EqualsLiteral("PERMISSION_DENIED")) {
+  nsString name;
+  error->GetName(name);
+  if (name.EqualsLiteral("PERMISSION_DENIED")) {
     errorCode = SpeechRecognitionErrorCode::Not_allowed;
   } else {
     errorCode = SpeechRecognitionErrorCode::Audio_capture;
   }
 
+  nsString message;
+  error->GetMessage(message);
   mRecognition->DispatchError(SpeechRecognition::EVENT_AUDIO_ERROR, errorCode,
-                              aError);
-
+                              message);
   return NS_OK;
 }
 
