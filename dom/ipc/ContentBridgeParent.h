@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/PContentBridgeParent.h"
 #include "mozilla/dom/nsIContentParent.h"
-#include "mozilla/dom/ipc/IdType.h"
 
 namespace mozilla {
 namespace dom {
@@ -34,16 +33,15 @@ public:
 
   virtual PBrowserParent*
   SendPBrowserConstructor(PBrowserParent* aActor,
-                          const TabId& aTabId,
                           const IPCTabContext& aContext,
                           const uint32_t& aChromeFlags,
-                          const ContentParentId& aCpID,
+                          const uint64_t& aID,
                           const bool& aIsForApp,
                           const bool& aIsForBrowser) MOZ_OVERRIDE;
 
   jsipc::JavaScriptShared* GetCPOWManager() MOZ_OVERRIDE;
 
-  virtual ContentParentId ChildID() MOZ_OVERRIDE
+  virtual uint64_t ChildID() MOZ_OVERRIDE
   {
     return mChildID;
   }
@@ -59,7 +57,7 @@ public:
 protected:
   virtual ~ContentBridgeParent();
 
-  void SetChildID(ContentParentId aId)
+  void SetChildID(uint64_t aId)
   {
     mChildID = aId;
   }
@@ -88,10 +86,9 @@ protected:
   DeallocPJavaScriptParent(jsipc::PJavaScriptParent*) MOZ_OVERRIDE;
 
   virtual PBrowserParent*
-  AllocPBrowserParent(const TabId& aTabId,
-                      const IPCTabContext &aContext,
+  AllocPBrowserParent(const IPCTabContext &aContext,
                       const uint32_t& aChromeFlags,
-                      const ContentParentId& aCpID,
+                      const uint64_t& aID,
                       const bool& aIsForApp,
                       const bool& aIsForBrowser) MOZ_OVERRIDE;
   virtual bool DeallocPBrowserParent(PBrowserParent*) MOZ_OVERRIDE;
@@ -106,7 +103,7 @@ protected:
 protected: // members
   nsRefPtr<ContentBridgeParent> mSelfRef;
   Transport* mTransport; // owned
-  ContentParentId mChildID;
+  uint64_t mChildID;
   bool mIsForApp;
   bool mIsForBrowser;
 

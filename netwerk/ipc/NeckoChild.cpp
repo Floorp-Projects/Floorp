@@ -303,7 +303,7 @@ NeckoChild::DeallocPChannelDiverterChild(PChannelDiverterChild* child)
 }
 
 bool
-NeckoChild::RecvAsyncAuthPromptForNestedFrame(const TabId& aNestedFrameId,
+NeckoChild::RecvAsyncAuthPromptForNestedFrame(const uint64_t& aNestedFrameId,
                                               const nsCString& aUri,
                                               const nsString& aRealm,
                                               const uint64_t& aCallbackId)
