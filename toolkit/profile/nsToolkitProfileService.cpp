@@ -424,6 +424,22 @@ nsToolkitProfileService::Init()
 
     nsToolkitProfile* currentProfile = nullptr;
 
+#ifdef MOZ_DEV_EDITION
+    nsCOMPtr<nsIFile> ignoreSeparateProfile;
+    rv = mAppData->Clone(getter_AddRefs(ignoreSeparateProfile));
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = ignoreSeparateProfile->AppendNative(NS_LITERAL_CSTRING("ignore-dev-edition-profile"));
+    if (NS_FAILED(rv))
+        return rv;
+
+    bool shouldIgnoreSeparateProfile;
+    rv = ignoreSeparateProfile->Exists(&shouldIgnoreSeparateProfile);
+    if (NS_FAILED(rv))
+        return rv;
+#endif
+
     unsigned int c = 0;
     bool foundAuroraDefault = false;
     for (c = 0; true; ++c) {
@@ -485,8 +501,9 @@ nsToolkitProfileService::Init()
             this->SetDefaultProfile(currentProfile);
         }
 #ifdef MOZ_DEV_EDITION
-        // Use the dev-edition-default profile if this is an Aurora build.
-        if (name.EqualsLiteral("dev-edition-default")) {
+        // Use the dev-edition-default profile if this is an Aurora build and
+        // ignore-dev-edition-profile is not present.
+        if (name.EqualsLiteral("dev-edition-default") && !shouldIgnoreSeparateProfile) {
             mChosen = currentProfile;
             foundAuroraDefault = true;
         }
@@ -498,7 +515,7 @@ nsToolkitProfileService::Init()
     // on webapprt.
     bool isFirefox = strcmp(gAppData->ID,
                             "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}") == 0;
-    if (!foundAuroraDefault && isFirefox) {
+    if (!foundAuroraDefault && isFirefox && !shouldIgnoreSeparateProfile) {
         // If a single profile exists, it may not be already marked as default.
         // Do it now to avoid problems when we create the dev-edition-default profile.
         if (!mChosen && mFirst && !mFirst->mNext)
