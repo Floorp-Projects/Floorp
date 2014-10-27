@@ -708,9 +708,8 @@ ChunkPool::Enum::removeAndPopFront()
     --pool.count_;
 }
 
-/* Must be called either during the GC or with the GC lock taken. */
 Chunk *
-GCRuntime::expireChunkPool(bool shrinkBuffers, bool releaseAll)
+GCRuntime::expireEmptyChunkPool(bool shrinkBuffers, const AutoLockGC &lock)
 {
     /*
      * Return old empty chunks to the system while preserving the order of
@@ -720,11 +719,11 @@ GCRuntime::expireChunkPool(bool shrinkBuffers, bool releaseAll)
      */
     Chunk *freeList = nullptr;
     unsigned freeChunkCount = 0;
-    for (ChunkPool::Enum e(emptyChunks); !e.empty(); ) {
+    for (ChunkPool::Enum e(emptyChunks(lock)); !e.empty(); ) {
         Chunk *chunk = e.front();
         MOZ_ASSERT(chunk->unused());
         MOZ_ASSERT(!chunkSet.has(chunk));
-        if (releaseAll || freeChunkCount >= tunables.maxEmptyChunkCount() ||
+        if (freeChunkCount >= tunables.maxEmptyChunkCount() ||
             (freeChunkCount >= tunables.minEmptyChunkCount() &&
              (shrinkBuffers || chunk->info.age == MAX_EMPTY_CHUNK_AGE)))
         {
@@ -739,10 +738,20 @@ GCRuntime::expireChunkPool(bool shrinkBuffers, bool releaseAll)
             e.popFront();
         }
     }
-    MOZ_ASSERT(emptyChunks.count() <= tunables.maxEmptyChunkCount());
-    MOZ_ASSERT_IF(shrinkBuffers, emptyChunks.count() <= tunables.minEmptyChunkCount());
-    MOZ_ASSERT_IF(releaseAll, emptyChunks.count() == 0);
+    MOZ_ASSERT(emptyChunks(lock).count() <= tunables.maxEmptyChunkCount());
+    MOZ_ASSERT_IF(shrinkBuffers, emptyChunks(lock).count() <= tunables.minEmptyChunkCount());
     return freeList;
+}
+
+void
+GCRuntime::freeEmptyChunks(JSRuntime *rt)
+{
+    for (ChunkPool::Enum e(emptyChunks_); !e.empty();) {
+        Chunk *chunk = e.front();
+        e.removeAndPopFront();
+        MOZ_ASSERT(!chunk->info.numArenasFreeCommitted);
+        FreeChunk(rt, chunk);
+    }
 }
 
 void
@@ -753,12 +762,6 @@ GCRuntime::freeChunkList(Chunk *chunkListHead)
         chunkListHead = chunk->info.next;
         FreeChunk(rt, chunk);
     }
-}
-
-void
-GCRuntime::expireAndFreeChunkPool(bool releaseAll)
-{
-    freeChunkList(expireChunkPool(true, releaseAll));
 }
 
 /* static */ Chunk *
@@ -1052,20 +1055,22 @@ Chunk::releaseArena(ArenaHeader *aheader)
     } else if (!unused()) {
         MOZ_ASSERT(info.prevp);
     } else {
+        if (maybeLock.isNothing())
+            maybeLock.emplace(rt);
         MOZ_ASSERT(unused());
         removeFromAvailableList();
         decommitAllArenas(rt);
-        rt->gc.moveChunkToFreePool(this);
+        rt->gc.moveChunkToFreePool(this, maybeLock.ref());
     }
 }
 
 void
-GCRuntime::moveChunkToFreePool(Chunk *chunk)
+GCRuntime::moveChunkToFreePool(Chunk *chunk, const AutoLockGC &lock)
 {
     MOZ_ASSERT(chunk->unused());
     MOZ_ASSERT(chunkSet.has(chunk));
     chunkSet.remove(chunk);
-    emptyChunks.put(chunk);
+    emptyChunks(lock).put(chunk);
 }
 
 inline bool
@@ -1075,7 +1080,7 @@ GCRuntime::wantBackgroundAllocation(const AutoLockGC &lock) const
     // allocation if we already have some empty chunks or when the runtime has
     // a small heap size (and therefore likely has a small growth rate).
     return allocTask.enabled() &&
-           emptyChunks.count() < tunables.minEmptyChunkCount() &&
+           emptyChunks(lock).count() < tunables.minEmptyChunkCount() &&
            chunkSet.count() >= 4;
 }
 
@@ -1124,7 +1129,7 @@ GCRuntime::pickChunk(const AutoLockGC &lock, Zone *zone,
     if (chunk)
         return chunk;
 
-    chunk = emptyChunks.get(rt);
+    chunk = emptyChunks(lock).get(rt);
     if (!chunk) {
         chunk = Chunk::allocate(rt);
         if (!chunk)
@@ -1241,7 +1246,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
 #endif
     lock(nullptr),
     lockOwner(nullptr),
-    allocTask(rt, emptyChunks),
+    allocTask(rt, emptyChunks_),
     helperState(rt)
 {
     setGCMode(JSGC_MODE_GLOBAL);
@@ -1419,7 +1424,7 @@ GCRuntime::finish()
         chunkSet.clear();
     }
 
-    expireAndFreeChunkPool(true);
+    freeEmptyChunks(rt);
 
     if (rootsHash.initialized())
         rootsHash.clear();
@@ -1535,7 +1540,7 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value)
 }
 
 uint32_t
-GCRuntime::getParameter(JSGCParamKey key)
+GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC &lock)
 {
     switch (key) {
       case JSGC_MAX_BYTES:
@@ -1547,9 +1552,9 @@ GCRuntime::getParameter(JSGCParamKey key)
       case JSGC_MODE:
         return uint32_t(mode);
       case JSGC_UNUSED_CHUNKS:
-        return uint32_t(emptyChunks.count());
+        return uint32_t(emptyChunks(lock).count());
       case JSGC_TOTAL_CHUNKS:
-        return uint32_t(chunkSet.count() + emptyChunks.count());
+        return uint32_t(chunkSet.count() + emptyChunks(lock).count());
       case JSGC_SLICE_TIME_BUDGET:
         return uint32_t(sliceBudget > 0 ? sliceBudget / PRMJ_USEC_PER_MSEC : 0);
       case JSGC_MARK_STACK_LIMIT:
@@ -2553,7 +2558,7 @@ GCRuntime::releaseRelocatedArenas(ArenaHeader *relocatedList)
     }
 
     AutoLockGC lock(rt);
-    expireChunksAndArenas(true);
+    expireChunksAndArenas(true, lock);
 }
 
 #endif // JSGC_COMPACTING
@@ -3216,15 +3221,14 @@ GCRuntime::decommitArenas()
     decommitArenasFromAvailableList(&userAvailableChunkListHead);
 }
 
-/* Must be called with the GC lock taken. */
 void
-GCRuntime::expireChunksAndArenas(bool shouldShrink)
+GCRuntime::expireChunksAndArenas(bool shouldShrink, const AutoLockGC &lock)
 {
 #ifdef JSGC_FJGENERATIONAL
     rt->threadPool.pruneChunkCache();
 #endif
 
-    if (Chunk *toFree = expireChunkPool(shouldShrink, false)) {
+    if (Chunk *toFree = expireEmptyChunkPool(shouldShrink, lock)) {
         AutoUnlockGC unlock(rt);
         freeChunkList(toFree);
     }
@@ -3372,7 +3376,7 @@ GCHelperState::work()
 
       case SWEEPING: {
         AutoTraceLog logSweeping(logger, TraceLogger::GCSweeping);
-        doSweep();
+        doSweep(lock);
         MOZ_ASSERT(state() == SWEEPING);
         break;
       }
@@ -3454,9 +3458,8 @@ GCHelperState::waitBackgroundSweepEnd()
         rt->gc.assertBackgroundSweepingFinished();
 }
 
-/* Must be called with the GC lock taken. */
 void
-GCHelperState::doSweep()
+GCHelperState::doSweep(const AutoLockGC &lock)
 {
     if (sweepFlag) {
         sweepFlag = false;
@@ -3468,7 +3471,7 @@ GCHelperState::doSweep()
     }
 
     bool shrinking = shrinkFlag;
-    rt->gc.expireChunksAndArenas(shrinking);
+    rt->gc.expireChunksAndArenas(shrinking, lock);
 
     /*
      * The main thread may have called ShrinkGCBuffers while
@@ -3477,7 +3480,7 @@ GCHelperState::doSweep()
      */
     if (!shrinking && shrinkFlag) {
         shrinkFlag = false;
-        rt->gc.expireChunksAndArenas(true);
+        rt->gc.expireChunksAndArenas(true, lock);
     }
 }
 
@@ -5255,7 +5258,7 @@ GCRuntime::endSweepPhase(bool lastGC)
              * Expire needs to unlock it for other callers.
              */
             AutoLockGC lock(rt);
-            expireChunksAndArenas(invocationKind == GC_SHRINK);
+            expireChunksAndArenas(invocationKind == GC_SHRINK, lock);
         }
     }
 
@@ -6141,7 +6144,7 @@ GCRuntime::shrinkBuffers()
     if (CanUseExtraThreads())
         helperState.startBackgroundShrink();
     else
-        expireChunksAndArenas(true);
+        expireChunksAndArenas(true, lock);
 }
 
 void

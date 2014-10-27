@@ -249,7 +249,7 @@ class GCRuntime
     void setMarkStackLimit(size_t limit);
 
     void setParameter(JSGCParamKey key, uint32_t value);
-    uint32_t getParameter(JSGCParamKey key);
+    uint32_t getParameter(JSGCParamKey key, const AutoLockGC &lock);
 
     bool isHeapBusy() { return heapState != js::Idle; }
     bool isHeapMajorCollecting() { return heapState == js::MajorCollecting; }
@@ -456,8 +456,10 @@ class GCRuntime
 
     GCChunkSet::Range allChunks() { return chunkSet.all(); }
     inline Chunk **getAvailableChunkList(Zone *zone);
-    void moveChunkToFreePool(Chunk *chunk);
+    void moveChunkToFreePool(Chunk *chunk, const AutoLockGC &lock);
     bool hasChunk(Chunk *chunk) { return chunkSet.has(chunk); }
+    ChunkPool &emptyChunks(const AutoLockGC &lock) { return emptyChunks_; }
+    const ChunkPool &emptyChunks(const AutoLockGC &lock) const { return emptyChunks_; }
 
 #ifdef JS_GC_ZEAL
     void startVerifyPreBarriers();
@@ -490,8 +492,8 @@ class GCRuntime
      * Return the list of chunks that can be released outside the GC lock.
      * Must be called either during the GC or with the GC lock taken.
      */
-    Chunk *expireChunkPool(bool shrinkBuffers, bool releaseAll);
-    void expireAndFreeChunkPool(bool releaseAll);
+    Chunk *expireEmptyChunkPool(bool shrinkBuffers, const AutoLockGC &lock);
+    void freeEmptyChunks(JSRuntime *rt);
     void freeChunkList(Chunk *chunkListHead);
     void prepareToFreeChunk(ChunkInfo &info);
     void releaseChunk(Chunk *chunk);
@@ -537,7 +539,7 @@ class GCRuntime
     void sweepZones(FreeOp *fop, bool lastGC);
     void decommitArenasFromAvailableList(Chunk **availableListHeadp);
     void decommitArenas();
-    void expireChunksAndArenas(bool shouldShrink);
+    void expireChunksAndArenas(bool shouldShrink, const AutoLockGC &lock);
     void sweepBackgroundThings();
     void assertBackgroundSweepingFinished();
     bool shouldCompact();
@@ -606,7 +608,7 @@ class GCRuntime
      */
     js::gc::Chunk         *systemAvailableChunkListHead;
     js::gc::Chunk         *userAvailableChunkListHead;
-    js::gc::ChunkPool     emptyChunks;
+    js::gc::ChunkPool     emptyChunks_;
 
     js::RootedValueMap    rootsHash;
 

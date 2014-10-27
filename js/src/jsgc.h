@@ -24,6 +24,8 @@
 
 namespace js {
 
+class AutoLockGC;
+
 namespace gc {
 class ForkJoinNursery;
 }
@@ -1041,7 +1043,7 @@ class GCHelperState
     }
 
     /* Must be called with the GC lock taken. */
-    void doSweep();
+    void doSweep(const AutoLockGC &lock);
 
   public:
     explicit GCHelperState(JSRuntime *rt)
