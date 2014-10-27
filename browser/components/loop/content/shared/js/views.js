@@ -135,7 +135,7 @@ loop.shared.views = (function(_, OT, l10n) {
    * Conversation view.
    */
   var ConversationView = React.createClass({displayName: 'ConversationView',
-    mixins: [Backbone.Events],
+    mixins: [Backbone.Events, sharedMixins.AudioMixin],
 
     propTypes: {
       sdk: React.PropTypes.object.isRequired,
@@ -183,7 +183,7 @@ loop.shared.views = (function(_, OT, l10n) {
     componentDidMount: function() {
       if (this.props.initiate) {
         this.listenTo(this.props.model, "session:connected",
-                                        this.startPublishing);
+                                        this._onSessionConnected);
         this.listenTo(this.props.model, "session:stream-created",
                                         this._streamCreated);
         this.listenTo(this.props.model, ["session:peer-hungup",
@@ -223,6 +223,11 @@ loop.shared.views = (function(_, OT, l10n) {
     hangup: function() {
       this.stopPublishing();
       this.props.model.endSession();
+    },
+
+    _onSessionConnected: function(event) {
+      this.startPublishing(event);
+      this.play("connected");
     },
 
     /**
