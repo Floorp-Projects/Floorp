@@ -12,7 +12,7 @@ interface nsIMobileNetworkInfo;
 interface nsINeighboringCellIdsCallback;
 interface nsIVariant;
 
-[scriptable, uuid(823d935e-8262-47ed-8429-8203096b2ff4)]
+[scriptable, uuid(c00abd30-5b2e-11e4-8ed6-0800200c9a66)]
 interface nsIMobileConnectionListener : nsISupports
 {
   /**
@@ -47,8 +47,6 @@ interface nsIMobileConnectionListener : nsISupports
   /**
    * Notify when call forwarding state is changed.
    *
-   * @param success
-   *        Indicates whether the set call forwarding request is success.
    * @param action
    *        One of the nsIMobileConnection.CALL_FORWARD_ACTION_* values.
    * @param reason
@@ -60,8 +58,7 @@ interface nsIMobileConnectionListener : nsISupports
    * @param serviceClass
    *        One of the nsIMobileConnection.ICC_SERVICE_CLASS_* values.
    */
-  void notifyCFStateChanged(in boolean success,
-                            in unsigned short action,
+  void notifyCFStateChanged(in unsigned short action,
                             in unsigned short reason,
                             in DOMString number,
                             in unsigned short timeSeconds,

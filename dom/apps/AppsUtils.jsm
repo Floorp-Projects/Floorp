@@ -108,6 +108,7 @@ function _setAppProperties(aObj, aApp) {
   aObj.widgetPages = aApp.widgetPages || [];
   aObj.kind = aApp.kind;
   aObj.enabled = aApp.enabled !== undefined ? aApp.enabled : true;
+  aObj.sideloaded = aApp.sideloaded;
 }
 
 this.AppsUtils = {
