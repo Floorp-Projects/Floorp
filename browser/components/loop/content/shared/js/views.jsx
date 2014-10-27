@@ -397,8 +397,9 @@ loop.shared.views = (function(_, OT, l10n) {
       var categories = this._getCategories();
       return Object.keys(categories).map(function(category, key) {
         return (
-          <label key={key}>
+          <label key={key} className="feedback-category-label">
             <input type="radio" ref="category" name="category"
+                   className="feedback-category-radio"
                    value={category}
                    onChange={this.handleCategoryChange}
                    checked={this.state.category === category} />
@@ -466,6 +467,7 @@ loop.shared.views = (function(_, OT, l10n) {
             {this._getCategoryFields()}
             <p>
               <input type="text" ref="description" name="description"
+                className="feedback-description"
                 onChange={this.handleDescriptionFieldChange}
                 onFocus={this.handleDescriptionFieldFocus}
                 value={descriptionDisplayValue}

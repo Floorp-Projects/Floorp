@@ -185,6 +185,7 @@ p.standalone-btn-label {
 
 .btn-pending-cancel-group > .btn-cancel {
   flex: 2 1 auto;
+  border-radius: 2px;
 }
 
 .btn-large {
