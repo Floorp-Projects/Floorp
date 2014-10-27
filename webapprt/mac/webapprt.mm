@@ -259,7 +259,7 @@ main(int argc, char **argv)
 
         NSString *profile = [args objectForKey:@"profile"];
         if (profile) {
-          NSLog(@"Profile specified with -profile: %@", profile);
+          NSLog(@"Profile specified with --profile: %@", profile);
         }
         else {
           nsINIParser parser;

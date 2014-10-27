@@ -213,7 +213,9 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDropVideoUntilNextDiscontinuity(false),
   mDecodeToSeekTarget(false),
   mCurrentTimeBeforeSeek(0),
-  mLastFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED)
+  mLastFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED),
+  mDecodingFrozenAtStateMetadata(false),
+  mDecodingFrozenAtStateDecoding(false)
 {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -1356,8 +1358,9 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
     SetState(DECODER_STATE_DORMANT);
     mDecoder->GetReentrantMonitor().NotifyAll();
   } else if ((aDormant != true) && (mState == DECODER_STATE_DORMANT)) {
+    mDecodingFrozenAtStateMetadata = true;
+    mDecodingFrozenAtStateDecoding = true;
     ScheduleStateMachine();
-    mStartTime = 0;
     mCurrentFrameTime = 0;
     SetState(DECODER_STATE_DECODING_NONE);
     mDecoder->GetReentrantMonitor().NotifyAll();
@@ -1454,6 +1457,10 @@ void MediaDecoderStateMachine::Play()
     SetState(DECODER_STATE_DECODING);
     mDecodeStartTime = TimeStamp::Now();
   }
+  if (mDecodingFrozenAtStateDecoding) {
+    mDecodingFrozenAtStateDecoding = false;
+    DispatchDecodeTasksIfNeeded();
+  }
   // Once we start playing, we don't want to minimize our prerolling, as we
   // assume the user is likely to want to keep playing in future.
   mMinimizePreroll = false;
@@ -1514,6 +1521,8 @@ void MediaDecoderStateMachine::Seek(const SeekTarget& aTarget)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
+  mDecodingFrozenAtStateDecoding = false;
 
   if (mState == DECODER_STATE_SHUTDOWN) {
     return;
@@ -1622,6 +1631,11 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
     return;
   }
 
+  if (mState == DECODER_STATE_DECODING && mDecodingFrozenAtStateDecoding) {
+    DECODER_LOG("DispatchDecodeTasksIfNeeded return due to "
+                "mFreezeDecodingAtStateDecoding");
+    return;
+  }
   // NeedToDecodeAudio() can go from false to true while we hold the
   // monitor, but it can't go from true to false. This can happen because
   // NeedToDecodeAudio() takes into account the amount of decoded audio
@@ -1972,6 +1986,10 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
     SetStartTime(0);
     res = FinishDecodeMetadata();
     NS_ENSURE_SUCCESS(res, res);
+  } else if (mDecodingFrozenAtStateMetadata) {
+    SetStartTime(mStartTime);
+    res = FinishDecodeMetadata();
+    NS_ENSURE_SUCCESS(res, res);
   } else {
     if (HasAudio()) {
       ReentrantMonitorAutoExit unlock(mDecoder->GetReentrantMonitor());
@@ -1997,7 +2015,7 @@ MediaDecoderStateMachine::FinishDecodeMetadata()
     return NS_ERROR_FAILURE;
   }
 
-  if (!mScheduler->IsRealTime()) {
+  if (!mScheduler->IsRealTime() && !mDecodingFrozenAtStateMetadata) {
 
     const VideoData* v = VideoQueue().PeekFront();
     const AudioData* a = AudioQueue().PeekFront();
@@ -2028,6 +2046,8 @@ MediaDecoderStateMachine::FinishDecodeMetadata()
               "transportSeekable=%d, mediaSeekable=%d",
               mStartTime, mEndTime, GetDuration(),
               mDecoder->IsTransportSeekable(), mDecoder->IsMediaSeekable());
+
+  mDecodingFrozenAtStateMetadata = false;
 
   if (HasAudio() && !HasVideo()) {
     // We're playing audio only. We don't need to worry about slow video

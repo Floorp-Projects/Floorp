@@ -611,32 +611,104 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             } else {
                 elt = createHtmlElementSetAsRoot(tokenizer.emptyAttributes());
             }
-            StackNode<T> node = new StackNode<T>(ElementName.HTML, elt
-            // [NOCPP[
-                    , errorHandler == null ? null : new TaintableLocatorImpl(tokenizer)
-            // ]NOCPP]
-            );
-            currentPtr++;
-            stack[currentPtr] = node;
-            if ("template" == contextName) {
-                pushTemplateMode(IN_TEMPLATE);
-            }
-            resetTheInsertionMode();
-            formPointer = getFormPointerForContext(contextNode);
-            if ("title" == contextName || "textarea" == contextName) {
-                tokenizer.setStateAndEndTagExpectation(Tokenizer.RCDATA, contextName);
-            } else if ("style" == contextName || "xmp" == contextName
-                    || "iframe" == contextName || "noembed" == contextName
-                    || "noframes" == contextName
-                    || (scriptingEnabled && "noscript" == contextName)) {
-                tokenizer.setStateAndEndTagExpectation(Tokenizer.RAWTEXT, contextName);
-            } else if ("plaintext" == contextName) {
-                tokenizer.setStateAndEndTagExpectation(Tokenizer.PLAINTEXT, contextName);
-            } else if ("script" == contextName) {
-                tokenizer.setStateAndEndTagExpectation(Tokenizer.SCRIPT_DATA,
+            // When the context node is not in the HTML namespace, contrary
+            // to the spec, the first node on the stack is not set to "html"
+            // in the HTML namespace. Instead, it is set to a node that has
+            // the characteristics of the appropriate "adjusted current node".
+            // This way, there is no need to perform "adjusted current node"
+            // checks during tree construction. Instead, it's sufficient to
+            // just look at the current node. However, this also means that it
+            // is not safe to treat "html" in the HTML namespace as a sentinel
+            // that ends stack popping. Instead, stack popping loops that are
+            // meant not to pop the first element on the stack need to check
+            // for currentPos becoming zero.
+            if (contextNamespace == "http://www.w3.org/2000/svg") {
+                ElementName elementName = ElementName.SVG;
+                if ("title" == contextName || "desc" == contextName
+                        || "foreignObject" == contextName) {
+                    // These elements are all alike and we don't care about
+                    // the exact name.
+                    elementName = ElementName.FOREIGNOBJECT;
+                }
+                // This is the SVG variant of the StackNode constructor.
+                StackNode<T> node = new StackNode<T>(elementName,
+                        elementName.camelCaseName, elt
+                        // [NOCPP[
+                        , errorHandler == null ? null
+                                : new TaintableLocatorImpl(tokenizer)
+                // ]NOCPP]
+                );
+                currentPtr++;
+                stack[currentPtr] = node;
+                tokenizer.setStateAndEndTagExpectation(Tokenizer.DATA,
                         contextName);
-            } else {
-                tokenizer.setStateAndEndTagExpectation(Tokenizer.DATA, contextName);
+                // The frameset-ok flag is set even though <frameset> never
+                // ends up being allowed as HTML frameset in the fragment case.
+                mode = FRAMESET_OK;
+            } else if (contextNamespace == "http://www.w3.org/1998/Math/MathML") {
+                ElementName elementName = ElementName.MATH;
+                if ("mi" == contextName || "mo" == contextName
+                        || "mn" == contextName || "ms" == contextName
+                        || "mtext" == contextName) {
+                    // These elements are all alike and we don't care about
+                    // the exact name.
+                    elementName = ElementName.MTEXT;
+                } else if ("annotation-xml" == contextName) {
+                    elementName = ElementName.ANNOTATION_XML;
+                    // Blink does not check the encoding attribute of the
+                    // annotation-xml element innerHTML is being set on.
+                    // Let's do the same at least until
+                    // https://www.w3.org/Bugs/Public/show_bug.cgi?id=26783
+                    // is resolved.
+                }
+                // This is the MathML variant of the StackNode constructor.
+                StackNode<T> node = new StackNode<T>(elementName, elt,
+                        elementName.name, false
+                        // [NOCPP[
+                        , errorHandler == null ? null
+                                : new TaintableLocatorImpl(tokenizer)
+                // ]NOCPP]
+                );
+                currentPtr++;
+                stack[currentPtr] = node;
+                tokenizer.setStateAndEndTagExpectation(Tokenizer.DATA,
+                        contextName);
+                // The frameset-ok flag is set even though <frameset> never
+                // ends up being allowed as HTML frameset in the fragment case.
+                mode = FRAMESET_OK;
+            } else { // html
+                StackNode<T> node = new StackNode<T>(ElementName.HTML, elt
+                // [NOCPP[
+                        , errorHandler == null ? null
+                                : new TaintableLocatorImpl(tokenizer)
+                // ]NOCPP]
+                );
+                currentPtr++;
+                stack[currentPtr] = node;
+                if ("template" == contextName) {
+                    pushTemplateMode(IN_TEMPLATE);
+                }
+                resetTheInsertionMode();
+                formPointer = getFormPointerForContext(contextNode);
+                if ("title" == contextName || "textarea" == contextName) {
+                    tokenizer.setStateAndEndTagExpectation(Tokenizer.RCDATA,
+                            contextName);
+                } else if ("style" == contextName || "xmp" == contextName
+                        || "iframe" == contextName || "noembed" == contextName
+                        || "noframes" == contextName
+                        || (scriptingEnabled && "noscript" == contextName)) {
+                    tokenizer.setStateAndEndTagExpectation(Tokenizer.RAWTEXT,
+                            contextName);
+                } else if ("plaintext" == contextName) {
+                    tokenizer.setStateAndEndTagExpectation(Tokenizer.PLAINTEXT,
+                            contextName);
+                } else if ("script" == contextName) {
+                    tokenizer.setStateAndEndTagExpectation(
+                            Tokenizer.SCRIPT_DATA, contextName);
+                } else {
+                    tokenizer.setStateAndEndTagExpectation(Tokenizer.DATA,
+                            contextName);
+                }
             }
             contextName = null;
             contextNode = null;
@@ -1454,7 +1526,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 case IN_CELL:
                 case IN_BODY:
                     // [NOCPP[
-                    openelementloop: for (int i = currentPtr; i >= 0; i--) {
+                    // i > 0 to stop in time in the foreign fragment case.
+                    openelementloop: for (int i = currentPtr; i > 0; i--) {
                         int group = stack[i].getGroup();
                         switch (group) {
                             case DD_OR_DT:
@@ -1621,20 +1694,17 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case P:
                         case PRE_OR_LISTING:
                         case TABLE:
-                            errHtmlStartTagInForeignContext(name);
-                            while (!isSpecialParentInForeign(stack[currentPtr])) {
-                                pop();
-                            }
-                            continue starttagloop;
                         case FONT:
-                            if (attributes.contains(AttributeName.COLOR)
-                                    || attributes.contains(AttributeName.FACE)
-                                    || attributes.contains(AttributeName.SIZE)) {
+                            // re-check FONT to deal with the special case
+                            if (!(group == FONT && !(attributes.contains(AttributeName.COLOR)
+                                    || attributes.contains(AttributeName.FACE) || attributes.contains(AttributeName.SIZE)))) {
                                 errHtmlStartTagInForeignContext(name);
-                                while (!isSpecialParentInForeign(stack[currentPtr])) {
-                                    pop();
-                                }
-                                continue starttagloop;
+                                if (!fragment) {
+                                    while (!isSpecialParentInForeign(stack[currentPtr])) {
+                                        pop();
+                                    }
+                                    continue starttagloop;
+                                } // else fall thru
                             }
                             // else fall thru
                         default:
@@ -3308,10 +3378,18 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         endtagloop: for (;;) {
             if (isInForeign()) {
                 if (stack[currentPtr].name != name) {
-                    errEndTagDidNotMatchCurrentOpenElement(name, stack[currentPtr].popName);
+                    if (currentPtr == 0) {
+                        errStrayEndTag(name);
+                    } else {
+                        errEndTagDidNotMatchCurrentOpenElement(name, stack[currentPtr].popName);
+                    }
                 }
                 eltPos = currentPtr;
                 for (;;) {
+                    if (eltPos == 0) {
+                        assert fragment: "We can get this close to the root of the stack in foreign content only in the fragment case.";
+                        break endtagloop;
+                    }
                     if (stack[eltPos].name == name) {
                         while (currentPtr >= eltPos) {
                             pop();
@@ -3649,7 +3727,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 // XXX Can the 'in foreign' case happen anymore?
                                 if (isInForeign()) {
                                     errHtmlStartTagInForeignContext(name);
-                                    while (stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
+                                    // Check for currentPtr for the fragment
+                                    // case.
+                                    while (currentPtr >= 0 && stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
                                         pop();
                                     }
                                 }
@@ -3730,8 +3810,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case BR:
                             errEndTagBr();
                             if (isInForeign()) {
+                                // XXX can this happen anymore?
                                 errHtmlStartTagInForeignContext(name);
-                                while (stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
+                                // Check for currentPtr for the fragment
+                                // case.
+                                while (currentPtr >= 0 && stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
                                     pop();
                                 }
                             }
