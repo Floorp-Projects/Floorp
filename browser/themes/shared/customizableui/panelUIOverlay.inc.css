@@ -1100,3 +1100,188 @@ toolbaritem[overflowedItem=true],
 menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   visibility: hidden;
 }
+
+#PanelUI-panicView.cui-widget-panelview {
+  min-width: 280px;
+}
+
+#PanelUI-panic-timeframe {
+  padding: 15px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+#panic-button-success-icon,
+#PanelUI-panic-timeframe-icon,
+#PanelUI-panic-timeframe-icon-small {
+  background-color: transparent;
+  -moz-margin-end: 10px;
+}
+
+#panic-button-success-icon,
+#PanelUI-panic-timeframe-icon {
+  list-style-image: url(chrome://browser/skin/panic-panel/header.png);
+  max-height: 48px;
+  width: 48px;
+}
+
+#PanelUI-panic-timeframe-icon-small {
+  list-style-image: url(chrome://browser/skin/panic-panel/header-small.png);
+  max-height: 32px;
+  width: 32px;
+}
+
+/* current attribute is only set when in use as a subview instead of a main view */
+#PanelUI-panicView[current] #PanelUI-panic-timeframe-icon {
+  display: none;
+}
+
+#PanelUI-panicView.cui-widget-panelview #PanelUI-panic-timeframe-icon-small {
+  display: none;
+}
+
+#panic-button-success-header,
+#PanelUI-panic-header {
+  -moz-box-align: center;
+  margin-bottom: 5px;
+}
+
+#PanelUI-panicView.cui-widget-panelview #PanelUI-panic-header {
+  margin-bottom: 0;
+}
+
+#PanelUI-panic-timeframe-icon-small:-moz-locale-dir(rtl),
+#PanelUI-panic-timeframe-icon:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
+.subviewradio {
+  -moz-binding: url(chrome://global/content/bindings/radio.xml#radio);
+  -moz-appearance: none;
+  -moz-box-align: center;
+  padding: 1px;
+  margin: 0 0 2px;
+  background-color: hsla(210,4%,10%,0);
+  border-radius: 2px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: hsla(210,4%,10%,0);
+}
+
+.subviewradio@buttonStateHover@ {
+  background-color: hsla(210,4%,10%,.08);
+  border-color: hsla(210,4%,10%,.11);
+}
+
+.subviewradio[selected],
+.subviewradio[selected]:hover,
+.subviewradio@buttonStateActive@ {
+  background-color: hsla(210,4%,10%,.12);
+  border-color: hsla(210,4%,10%,.14);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
+}
+
+.subviewradio > .radio-check {
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #e7e7e7;
+  border-radius: 50%;
+  margin: 1px 5px;
+  background-color: #f1f1f1;
+}
+
+.subviewradio > .radio-check[selected] {
+  background-color: #fff;
+  border: 4px solid #177ee6;
+}
+
+#PanelUI-panic-explanations {
+  padding: 10px 10px 0;
+}
+
+#PanelUI-panic-actionlist-main-label {
+  color: GrayText;
+  font-size: 0.9em;
+}
+
+.PanelUI-panic-actionlist {
+  -moz-padding-start: 20px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  background-size: 16px 16px;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  background-position: center left;
+}
+
+.PanelUI-panic-actionlist:-moz-locale-dir(rtl) {
+  background-position: center right;
+}
+
+#PanelUI-panic-actionlist-cookies {
+  background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons.png), 0, 16, 16, 0);
+}
+
+#PanelUI-panic-actionlist-history {
+  background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons.png), 0, 32, 16, 16);
+}
+
+#PanelUI-panic-actionlist-windows {
+  background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons.png), 0, 48, 16, 32);
+}
+
+#PanelUI-panic-actionlist-newwindow {
+  background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons.png), 0, 64, 16, 48);
+}
+
+#PanelUI-panic-warning {
+  color: #C11F14;
+  text-align: center;
+  width: 100%;
+  margin-top: 20px;
+}
+
+#PanelUI-panic-view-button {
+  -moz-appearance: none;
+  background-color: #d92316;
+  color: white;
+  margin: 5px 15px 11px;
+  border: 1px solid #c92014;
+  border-radius: 3px;
+  padding: 10px;
+}
+
+#PanelUI-panic-view-button:hover {
+  background-color: #bf1f13;
+  border-color: #b81d12;
+}
+
+#PanelUI-panic-view-button:hover:active {
+  background-color: #99180f;
+  border-color: #91170f;
+}
+
+#PanelUI-panic-view-button > .toolbarbutton-text {
+  text-align: center;
+  text-shadow: none;
+}
+
+#panic-button-success-closebutton {
+  background-color: #e5e5e5;
+  color: black;
+  margin: 5px 0 0;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 10px;
+  -moz-appearance: none;
+}
+
+#panic-button-success-closebutton:hover {
+  background-color: #dedede;
+  border-color: #bbb;
+}
+
+#panic-button-success-closebutton:hover:active {
+  background-color: #d0d0d0;
+  border-color: #aaa;
+}
