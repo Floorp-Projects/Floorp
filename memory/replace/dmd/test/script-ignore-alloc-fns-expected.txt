@@ -1,4 +1,5 @@
 #-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o script-ignore-alloc-fns-actual.txt --ignore-reports --ignore-alloc-fns script-ignore-alloc-fns.json
 
 Invocation {
   $DMD = '1'

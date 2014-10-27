@@ -36,10 +36,10 @@ const options = [ [ "phase1", "PHASE_ONE", false ],
 
 // Note: You can attach search options to the url for this file to control
 // any of the options in the array above.  E.g., specifying
-// mozilla -chrome "file:///D|/mozilla/xpfe/test/winopen.xul?phase1=16&close=0"
+// mozilla --chrome "file:///D|/mozilla/xpfe/test/winopen.xul?phase1=16&close=0"
 // will run this script with PHASE_ONE=16 and AUTOCLOSE=0.
 //
-// On Win32, you must enclose the -chrome option in quotes in order pass funny Win32 shell
+// On Win32, you must enclose the --chrome option in quotes in order pass funny Win32 shell
 // characters such as '&' or '|'!
 
 var opts = window.location.search.substring(1).split( '&' );

@@ -73,11 +73,25 @@ Sanitizer.prototype = {
     if (openWindowsIndex != -1) {
       itemsToClear.splice(openWindowsIndex, 1);
       let item = this.items.openWindows;
-      if (!item.clear()) {
-        // When cancelled, reject the deferred and return the promise:
-        deferred.reject();
-        return deferred.promise;
+
+      function onWindowsCleaned() {
+        try {
+          let clearedPromise = this.sanitize(itemsToClear);
+          clearedPromise.then(deferred.resolve, deferred.reject);
+        } catch(e) {
+          let error = "Sanitizer threw after closing windows: " + e;
+          Cu.reportError(error);
+          deferred.reject(error);
+        }
       }
+
+      let ok = item.clear(onWindowsCleaned.bind(this));
+      // When cancelled, reject immediately
+      if (!ok) {
+        deferred.reject("Sanitizer canceled closing windows");
+      }
+
+      return deferred.promise;
     }
 
     // Cache the range of times to clear
@@ -465,10 +479,14 @@ Sanitizer.prototype = {
           win.getInterface(Ci.nsIDocShell).contentViewer.resetCloseWindow();
         }
       },
-      clear: function()
+      clear: function(aCallback)
       {
         // NB: this closes all *browser* windows, not other windows like the library, about window,
         // browser console, etc.
+
+        if (!aCallback) {
+          throw "Sanitizer's openWindows clear() requires a callback.";
+        }
 
         // Keep track of the time in case we get stuck in la-la-land because of onbeforeunload
         // dialogs
@@ -507,7 +525,39 @@ Sanitizer.prototype = {
         let newWindow = existingWindow.openDialog("chrome://browser/content/", "_blank",
                                                   features, defaultArgs);
 
-        // Then close all those windows we checked:
+        // Window creation and destruction is asynchronous. We need to wait
+        // until all existing windows are fully closed, and the new window is
+        // fully open, before continuing. Otherwise the rest of the sanitizer
+        // could run too early (and miss new cookies being set when a page
+        // closes) and/or run too late (and not have a fully-formed window yet
+        // in existence). See bug 1088137.
+        let newWindowOpened = false;
+        function onWindowOpened(subject, topic, data) {
+          if (subject != newWindow)
+            return;
+
+          Services.obs.removeObserver(onWindowOpened, "browser-delayed-startup-finished");
+          newWindowOpened = true;
+          // If we're the last thing to happen, invoke callback.
+          if (numWindowsClosing == 0)
+            aCallback();
+        }
+
+        let numWindowsClosing = windowList.length;
+        function onWindowClosed() {
+          numWindowsClosing--;
+          if (numWindowsClosing == 0) {
+            Services.obs.removeObserver(onWindowClosed, "xul-window-destroyed");
+            // If we're the last thing to happen, invoke callback.
+            if (newWindowOpened)
+              aCallback();
+          }
+        }
+
+        Services.obs.addObserver(onWindowOpened, "browser-delayed-startup-finished", false);
+        Services.obs.addObserver(onWindowClosed, "xul-window-destroyed", false);
+
+        // Start the process of closing windows
         while (windowList.length) {
           windowList.pop().close();
         }

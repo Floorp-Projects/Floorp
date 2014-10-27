@@ -3575,6 +3575,17 @@ VariablesView.stringifiers.byObjectKind = {
 
     let {preview} = aGrip;
     let props = [];
+
+    if (aGrip.class == "Promise" && aGrip.promiseState) {
+      let { state, value, reason } = aGrip.promiseState;
+      props.push("<state>: " + VariablesView.getString(state));
+      if (state == "fulfilled") {
+        props.push("<value>: " + VariablesView.getString(value, { concise: true }));
+      } else if (state == "rejected") {
+        props.push("<reason>: " + VariablesView.getString(reason, { concise: true }));
+      }
+    }
+
     for (let key of Object.keys(preview.ownProperties || {})) {
       let value = preview.ownProperties[key];
       let valueString = "";

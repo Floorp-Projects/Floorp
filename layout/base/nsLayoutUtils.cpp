@@ -4681,15 +4681,6 @@ static int32_t GetMaxChunkLength(nsFontMetrics& aFontMetrics)
 }
 
 nscoord
-nsLayoutUtils::AppUnitWidthOfString(const nsString& aString,
-                                    nsFontMetrics& aFontMetrics,
-                                    nsRenderingContext& aContext)
-{
-  return AppUnitWidthOfString(aString.get(), aString.Length(),
-                              aFontMetrics, aContext);
-}
-
-nscoord
 nsLayoutUtils::AppUnitWidthOfString(const char16_t *aString,
                                     uint32_t aLength,
                                     nsFontMetrics& aFontMetrics,
@@ -4704,6 +4695,26 @@ nsLayoutUtils::AppUnitWidthOfString(const char16_t *aString,
     aString += len;
   }
   return width;
+}
+
+nscoord
+nsLayoutUtils::AppUnitWidthOfStringBidi(const char16_t* aString,
+                                        uint32_t aLength,
+                                        const nsIFrame* aFrame,
+                                        nsFontMetrics& aFontMetrics,
+                                        nsRenderingContext& aContext)
+{
+  nsPresContext* presContext = aFrame->PresContext();
+  if (presContext->BidiEnabled()) {
+    nsBidiLevel level =
+      nsBidiPresUtils::BidiLevelFromStyle(aFrame->StyleContext());
+    return nsBidiPresUtils::MeasureTextWidth(aString, aLength, level,
+                                             presContext, aContext,
+                                             aFontMetrics);
+  }
+  aFontMetrics.SetTextRunRTL(false);
+  return nsLayoutUtils::AppUnitWidthOfString(aString, aLength, aFontMetrics,
+                                             aContext);
 }
 
 nsBoundingMetrics
@@ -4797,26 +4808,6 @@ nsLayoutUtils::DrawUniDirString(const char16_t* aString,
     aLength -= len;
     aString += len;
   }
-}
-
-nscoord
-nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
-                              nsRenderingContext* aContext,
-                              nsFontMetrics&      aFontMetrics,
-                              const char16_t*     aString,
-                              int32_t              aLength)
-{
-  nsPresContext* presContext = aFrame->PresContext();
-  if (presContext->BidiEnabled()) {
-    nsBidiLevel level =
-      nsBidiPresUtils::BidiLevelFromStyle(aFrame->StyleContext());
-    return nsBidiPresUtils::MeasureTextWidth(aString, aLength,
-                                             level, presContext, *aContext,
-                                             aFontMetrics);
-  }
-  aFontMetrics.SetTextRunRTL(false);
-  return nsLayoutUtils::AppUnitWidthOfString(aString, aLength, aFontMetrics,
-                                             *aContext);
 }
 
 /* static */ void

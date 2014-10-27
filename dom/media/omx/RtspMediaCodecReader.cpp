@@ -101,16 +101,4 @@ RtspMediaCodecReader::ReadMetadata(MediaInfo* aInfo,
   return rv;
 }
 
-// Called on Binder thread.
-void
-RtspMediaCodecReader::codecReserved(Track& aTrack)
-{
-  // TODO: fix me, we need a SeekTime(0) here because the
-  // MediaDecoderStateMachine will update the mStartTime after ReadMetadata.
-  MediaCodecReader::codecReserved(aTrack);
-  if (aTrack.mCodec != nullptr) {
-    mRtspResource->SeekTime(0);
-  }
-}
-
 } // namespace mozilla

@@ -921,6 +921,17 @@ protected:
   mozilla::MediaMetadataManager mMetadataManager;
 
   MediaDecoderOwner::NextFrameStatus mLastFrameStatus;
+
+  // True if we are back from DECODER_STATE_DORMANT state, and we can skip
+  // SetStartTime because the mStartTime already set before. Also we don't need
+  // to decode any audio/video since the MediaDecoder will trigger a seek
+  // operation soon.
+  // mDecodingFrozenAtStateMetadata: turn on/off at
+  //                                 SetDormant/FinishDecodeMetadata.
+  // mDecodingFrozenAtStateDecoding: turn on/off at
+  //                                 SetDormant/Seek,Play.
+  bool mDecodingFrozenAtStateMetadata;
+  bool mDecodingFrozenAtStateDecoding;
 };
 
 } // namespace mozilla;

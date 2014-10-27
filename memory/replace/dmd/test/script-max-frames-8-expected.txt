@@ -1,4 +1,5 @@
 #-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o script-max-frames-8-actual.txt --ignore-reports --max-frames=8 script-max-frames.json
 
 Invocation {
   $DMD = '1'
