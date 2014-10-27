@@ -678,7 +678,11 @@
              aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="small"
+#ifdef MOZ_DEV_EDITION
+             defaultset="urlbar-container,search-container,developer-button,bookmarks-menu-button,downloads-button,home-button,loop-call-button"
+#else
              defaultset="urlbar-container,search-container,bookmarks-menu-button,downloads-button,home-button,loop-call-button"
+#endif
              customizationtarget="nav-bar-customization-target"
              overflowable="true"
              overflowbutton="nav-bar-overflow-button"
