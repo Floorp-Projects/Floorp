@@ -1,64 +1,9 @@
+
 // -*- tab-width: 2; indent-tabs-mode: nil; js-indent-level: 2 -*-
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/**
- * PrintUtils is a utility for front-end code to trigger common print
- * operations (printing, show print preview, show page settings).
- *
- * Unfortunately, likely due to inconsistencies in how different operating
- * systems do printing natively, our XPCOM-level printing interfaces
- * are a bit confusing and the method by which we do something basic
- * like printing a page is quite circuitous.
- *
- * To compound that, we need to support remote browsers, and that means
- * kicking off the print jobs in the content process. This means we send
- * messages back and forth to that process. browser-content.js contains
- * the object that listens and responds to the messages that PrintUtils
- * sends.
- *
- * PrintUtils sends messages at different points in its implementation, but
- * their documentation is consolidated here for ease-of-access.
- *
- *
- * Messages sent:
- *
- *   Printing:Print
- *     This message is sent to kick off a print job for a particular content
- *     window (which is passed along with the message). We also pass print
- *     settings with this message - though bug 1088070 will have us gather
- *     those settings from the content process instead.
- *
- *   Printing:Preview:Enter
- *     This message is sent to put content into print preview mode. We pass
- *     the content window of the browser we're showing the preview of, and
- *     the target of the message is the browser that we'll be showing the
- *     preview in. We also pass print settings in this message, but
- *     bug 1088070 will have us gather those settings from the content process
- *     instead.
- *
- *   Printing:Preview:Exit
- *     This message is sent to take content out of print preview mode.
- *
- *
- * Messages Received
- *
- *   Printing:Preview:Entered
- *     This message is sent by the content process once it has completed
- *     putting the content into print preview mode. We must wait for that to
- *     to complete before switching the chrome UI to print preview mode,
- *     otherwise we have layout issues.
- *
- *   Printing:Preview:StateChange, Printing:Preview:ProgressChange
- *     Due to a timing issue resulting in a main-process crash, we have to
- *     manually open the progress dialog for print preview. The progress
- *     dialog is opened here in PrintUtils, and then we listen for update
- *     messages from the child. Bug 1088061 has been filed to investigate
- *     other solutions.
- *
- */
 
 var gPrintSettingsAreGlobal = false;
 var gSavePrintSettings = false;
@@ -66,28 +11,19 @@ var gFocusedElement = null;
 
 var PrintUtils = {
   bailOut: function () {
-    let pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    let allow_for_testing = false;
-    try {
-      allow_for_testing = pref.getBoolPref("print.enable_e10s_testing");
-    } catch(e) {
-      // The pref wasn't set, so I guess we're not overriding.
-    }
-    if (this.usingRemoteTabs && !allow_for_testing) {
+    let remote = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+            .getInterface(Components.interfaces.nsIWebNavigation)
+            .QueryInterface(Components.interfaces.nsILoadContext)
+            .useRemoteTabs;
+    if (remote) {
       alert("e10s printing is not implemented yet. Bug 927188.");
       return true;
     }
     return false;
   },
 
-  /**
-   * Shows the page setup dialog, and saves any settings changed in
-   * that dialog if print.save_print_settings is set to true.
-   *
-   * @return true on success, false on failure
-   */
-  showPageSetup: function () {
+  showPageSetup: function ()
+  {
     if (this.bailOut()) {
       return;
     }
@@ -109,249 +45,102 @@ var PrintUtils = {
     return true;
   },
 
-  /**
-   * Starts printing the contents of aWindow.
-   *
-   * @param aWindow
-   *        An nsIDOMWindow to initiate the printing of. If the chrome window
-   *        is not running with remote tabs, this defaults to window.content if
-   *        omitted. If running with remote tabs, the caller must pass in the
-   *        content window to be printed. This function throws if that invariant
-   *        is violated.
-   * @param aBrowser (optional for non-remote browsers)
-   *        The remote <xul:browser> that contains aWindow. This argument is
-   *        not necessary if aWindow came from a non-remote browser, but is
-   *        strictly required otherwise. This function will throw if aWindow
-   *        comes from a remote browser and aBrowser is not provided.
-   */
-  print: function (aWindow, aBrowser)
+  print: function (aWindow)
   {
     if (this.bailOut()) {
       return;
     }
-
-    if (!aWindow) {
-      // If we're using remote browsers, chances are that window.content will
-      // not be defined.
-      if (this.usingRemoteTabs) {
-        throw new Error("Windows running with remote tabs must explicitly pass " +
-                        "a content window to PrintUtils.print.");
+    var webBrowserPrint = this.getWebBrowserPrint(aWindow);
+    var printSettings = this.getPrintSettings();
+    try {
+      webBrowserPrint.print(printSettings, null);
+      if (gPrintSettingsAreGlobal && gSavePrintSettings) {
+        var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                              .getService(Components.interfaces.nsIPrintSettingsService);
+        PSSVC.savePrintSettingsToPrefs(printSettings, true,
+                                       printSettings.kInitSaveAll);
+        PSSVC.savePrintSettingsToPrefs(printSettings, false,
+                                       printSettings.kInitSavePrinterName);
       }
-      // Otherwise, we should have access to window.content.
-      aWindow = window.content;
+    } catch (e) {
+      // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
+      // causing an exception to be thrown which we catch here.
+      // Unfortunately this will also consume helpful failures, so add a
+      // dump("print: "+e+"\n"); // if you need to debug
     }
-
-    if (Cu.isCrossProcessWrapper(aWindow)) {
-      if (!aBrowser) {
-        throw new Error("PrintUtils.print expects a remote browser passed as " +
-                        "an argument if the content window is a CPOW.");
-      }
-    } else {
-      // For content windows coming from non-remote browsers, the browser can
-      // be resolved as the chromeEventHandler.
-      aBrowser = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocShell)
-                        .chromeEventHandler;
-    }
-
-    if (!aBrowser) {
-      throw new Error("PrintUtils.print could not resolve content window " +
-                      "to a browser.");
-    }
-
-    let printSettings = this.getPrintSettings();
-
-    let mm = aBrowser.messageManager;
-    mm.sendAsyncMessage("Printing:Print", null, {
-      printSettings: printSettings,
-      contentWindow: aWindow,
-    });
   },
 
-  /**
-   * Initializes print preview.
-   *
-   * @param aListenerObj
-   *        An object that defines the following functions:
-   *
-   *        getPrintPreviewBrowser:
-   *          Returns the <xul:browser> to display the print preview in.
-   *
-   *        getSourceBrowser:
-   *          Returns the <xul:browser> that contains the document being
-   *          printed.
-   *
-   *        getNavToolbox:
-   *          Returns the primary toolbox for this window.
-   *
-   *        onEnter:
-   *          Called upon entering print preview.
-   *
-   *        onExit:
-   *          Called upon exiting print preview.
-   *
-   *        These methods must be defined. printPreview can be called
-   *        with aListenerObj as null iff this window is already displaying
-   *        print preview (in which case, the previous aListenerObj passed
-   *        to it will be used).
-   */
-  printPreview: function (aListenerObj)
+  // If aCallback is not null, it must be an object which has the following methods:
+  // getPrintPreviewBrowser(), getSourceBrowser(),
+  // getNavToolbox(), onEnter() and onExit().
+  // If aCallback is null, then printPreview must previously have been called with
+  // non-null aCallback and that object will be reused.
+  printPreview: function (aCallback)
   {
     if (this.bailOut()) {
       return;
     }
-    // if we're already in PP mode, don't set the listener; chances
+    // if we're already in PP mode, don't set the callback; chances
     // are it is null because someone is calling printPreview() to
     // get us to refresh the display.
-    if (!this.inPrintPreview) {
-      this._listener = aListenerObj;
-      this._sourceBrowser = aListenerObj.getSourceBrowser();
-      this._originalTitle = this._sourceBrowser.contentTitle;
+    if (!document.getElementById("print-preview-toolbar")) {
+      this._callback = aCallback;
+      this._sourceBrowser = aCallback.getSourceBrowser();
+      this._originalTitle = this._sourceBrowser.contentDocument.title;
       this._originalURL = this._sourceBrowser.currentURI.spec;
     } else {
       // collapse the browser here -- it will be shown in
       // enterPrintPreview; this forces a reflow which fixes display
       // issues in bug 267422.
-      this._sourceBrowser = this._listener.getPrintPreviewBrowser();
+      this._sourceBrowser = this._callback.getPrintPreviewBrowser();
       this._sourceBrowser.collapsed = true;
     }
 
     this._webProgressPP = {};
-    let ppParams        = {};
-    let notifyOnOpen    = {};
-    let printSettings   = this.getPrintSettings();
+    var ppParams        = {};
+    var notifyOnOpen    = {};
+    var webBrowserPrint = this.getWebBrowserPrint();
+    var printSettings   = this.getPrintSettings();
     // Here we get the PrintingPromptService so we can display the PP Progress from script
     // For the browser implemented via XUL with the PP toolbar we cannot let it be
     // automatically opened from the print engine because the XUL scrollbars in the PP window
     // will layout before the content window and a crash will occur.
     // Doing it all from script, means it lays out before hand and we can let printing do its own thing
-    let PPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
+    var PPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
                                .getService(Components.interfaces.nsIPrintingPromptService);
-    // just in case we are already printing,
-    // an error code could be returned if the Progress Dialog is already displayed
+    // just in case we are already printing, 
+    // an error code could be returned if the Prgress Dialog is already displayed
     try {
-      PPROMPTSVC.showProgress(window, null, printSettings, this._obsPP, false,
+      PPROMPTSVC.showProgress(window, webBrowserPrint, printSettings, this._obsPP, false,
                               this._webProgressPP, ppParams, notifyOnOpen);
       if (ppParams.value) {
         ppParams.value.docTitle = this._originalTitle;
         ppParams.value.docURL   = this._originalURL;
       }
 
-      // this tells us whether we should continue on with PP or
+      // this tells us whether we should continue on with PP or 
       // wait for the callback via the observer
-      if (!notifyOnOpen.value.valueOf() || this._webProgressPP.value == null) {
+      if (!notifyOnOpen.value.valueOf() || this._webProgressPP.value == null)
         this.enterPrintPreview();
-      }
     } catch (e) {
       this.enterPrintPreview();
     }
   },
 
-  /**
-   * Returns the nsIWebBrowserPrint associated with some content window.
-   * This method is being kept here for compatibility reasons, but should not
-   * be called by code hoping to support e10s / remote browsers.
-   *
-   * @param aWindow
-   *        The window from which to get the nsIWebBrowserPrint from.
-   * @return nsIWebBrowserPrint
-   */
   getWebBrowserPrint: function (aWindow)
   {
-    let Deprecated = Components.utils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
-    let text = "getWebBrowserPrint is now deprecated, and fully unsupported for " +
-               "multi-process browsers. Please use a frame script to get " +
-               "access to nsIWebBrowserPrint from content.";
-    let url = "https://developer.mozilla.org/en-US/docs/Printing_from_a_XUL_App";
-    Deprecated.warning(text, url);
-
-    if (this.usingRemoteTabs) {
-      return {};
-    }
-
     var contentWindow = aWindow || window.content;
     return contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                         .getInterface(Components.interfaces.nsIWebBrowserPrint);
   },
 
-  /**
-   * Returns the nsIWebBrowserPrint from the print preview browser's docShell.
-   * This method is being kept here for compatibility reasons, but should not
-   * be called by code hoping to support e10s / remote browsers.
-   *
-   * @return nsIWebBrowserPrint
-   */
   getPrintPreview: function() {
-    let Deprecated = Components.utils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
-    let text = "getPrintPreview is now deprecated, and fully unsupported for " +
-               "multi-process browsers. Please use a frame script to get " +
-               "access to nsIWebBrowserPrint from content.";
-    let url = "https://developer.mozilla.org/en-US/docs/Printing_from_a_XUL_App";
-    Deprecated.warning(text, url);
-
-    if (this.usingRemoteTabs) {
-      return {};
-    }
-
-    return this._listener.getPrintPreviewBrowser().docShell.printPreview;
+    return this._callback.getPrintPreviewBrowser().docShell.printPreview;
   },
 
-  get inPrintPreview() {
-    return document.getElementById("print-preview-toolbar") != null;
-  },
-
-  ////////////////////////////////////////////////////
-  // "private" methods and members. Don't use them. //
-  ///////////////////////////////////////////////////
-
-  _listener: null,
-  _closeHandlerPP: null,
-  _webProgressPP: null,
-  _sourceBrowser: null,
-  _originalTitle: "",
-  _originalURL: "",
-
-  get usingRemoteTabs() {
-    // We memoize this, since it's highly unlikely to change over the lifetime
-    // of the window.
-    let usingRemoteTabs =
-      window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-            .getInterface(Components.interfaces.nsIWebNavigation)
-            .QueryInterface(Components.interfaces.nsILoadContext)
-            .useRemoteTabs;
-    delete this.usingRemoteTabs;
-    return this.usingRemoteTabs = usingRemoteTabs;
-  },
-
-  receiveMessage(aMessage) {
-    if (!this._webProgressPP.value) {
-      // We somehow didn't get a nsIWebProgressListener to be updated...
-      // I guess there's nothing to do.
-      return;
-    }
-
-    let listener = this._webProgressPP.value;
-    let data = aMessage.data;
-
-    switch (aMessage.name) {
-      case "Printing:Preview:ProgressChange": {
-        return listener.onProgressChange(null, null,
-                                         data.curSelfProgress,
-                                         data.maxSelfProgress,
-                                         data.curTotalProgress,
-                                         data.maxTotalProgress);
-        break;
-      }
-
-      case "Printing:Preview:StateChange": {
-        return listener.onStateChange(null, null,
-                                      data.stateFlags,
-                                      data.status);
-        break;
-      }
-    }
-  },
+  ////////////////////////////////////////
+  // "private" methods. Don't use them. //
+  ////////////////////////////////////////
 
   setPrinterDefaultsForSelectedPrinter: function (aPSSVC, aPrintSettings)
   {
@@ -389,8 +178,15 @@ var PrintUtils = {
     return printSettings;
   },
 
+  _closeHandlerPP: null,
+  _webProgressPP: null,
+  _callback: null,
+  _sourceBrowser: null,
+  _originalTitle: "",
+  _originalURL: "",
+
   // This observer is called once the progress dialog has been "opened"
-  _obsPP:
+  _obsPP: 
   {
     observe: function(aSubject, aTopic, aData)
     {
@@ -403,89 +199,84 @@ var PrintUtils = {
       if (iid.equals(Components.interfaces.nsIObserver) ||
           iid.equals(Components.interfaces.nsISupportsWeakReference) ||
           iid.equals(Components.interfaces.nsISupports))
-        return this;
+        return this;   
       throw Components.results.NS_NOINTERFACE;
     }
   },
 
   enterPrintPreview: function ()
   {
-    // Send a message to the print preview browser to initialize
-    // print preview. If we happen to have gotten a print preview
-    // progress listener from nsIPrintingPromptService.showProgress
-    // in printPreview, we add listeners to feed that progress
-    // listener.
-    let ppBrowser = this._listener.getPrintPreviewBrowser();
-    let mm = ppBrowser.messageManager;
-    let printSettings = this.getPrintSettings();
-    mm.sendAsyncMessage("Printing:Preview:Enter", null, {
-      printSettings: printSettings,
-      contentWindow: this._sourceBrowser.contentWindowAsCPOW,
-    });
+    gFocusedElement = document.commandDispatcher.focusedElement;
 
-    if (this._webProgressPP.value) {
-      mm.addMessageListener("Printing:Preview:StateChange", this);
-      mm.addMessageListener("Printing:Preview:ProgressChange", this);
+    var webBrowserPrint;
+    var printSettings  = this.getPrintSettings();
+    var originalWindow = this._sourceBrowser.contentWindow;
+
+    try {
+      webBrowserPrint = this.getPrintPreview();
+      webBrowserPrint.printPreview(printSettings, originalWindow,
+                                   this._webProgressPP.value);
+    } catch (e) {
+      // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
+      // causing an exception to be thrown which we catch here.
+      // Unfortunately this will also consume helpful failures, so add a
+      // dump(e); // if you need to debug
+
+      // Need to call enter and exit so that UI gets back to normal.
+      this._callback.onEnter();
+      this._callback.onExit();
+      return;
     }
 
-    let onEntered = (message) => {
-      mm.removeMessageListener("Printing:PrintPreview:Entered", onEntered);
-      // Stash the focused element so that we can return to it after exiting
-      // print preview.
-      gFocusedElement = document.commandDispatcher.focusedElement;
+    var printPreviewTB = document.getElementById("print-preview-toolbar");
+    if (printPreviewTB) {
+      printPreviewTB.updateToolbar();
+      var browser = this._callback.getPrintPreviewBrowser();
+      browser.collapsed = false;
+      browser.contentWindow.focus();
+      return;
+    }
 
-      let printPreviewTB = document.getElementById("print-preview-toolbar");
-      if (printPreviewTB) {
-        printPreviewTB.updateToolbar();
-        ppBrowser.collapsed = false;
-        ppBrowser.focus();
-        return;
-      }
+    // Set the original window as an active window so any mozPrintCallbacks can
+    // run without delayed setTimeouts.
+    var docShell = originalWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                 .getInterface(Components.interfaces.nsIWebNavigation)
+                                 .QueryInterface(Components.interfaces.nsIDocShell);
+    docShell.isActive = true;
 
-      // Set the original window as an active window so any mozPrintCallbacks can
-      // run without delayed setTimeouts.
-      this._sourceBrowser.docShellIsActive = true;
+    // show the toolbar after we go into print preview mode so
+    // that we can initialize the toolbar with total num pages
+    var XUL_NS =
+      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    printPreviewTB = document.createElementNS(XUL_NS, "toolbar");
+    printPreviewTB.setAttribute("printpreview", true);
+    printPreviewTB.id = "print-preview-toolbar";
+    printPreviewTB.className = "toolbar-primary";
 
-      // show the toolbar after we go into print preview mode so
-      // that we can initialize the toolbar with total num pages
-      const XUL_NS =
-        "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-      printPreviewTB = document.createElementNS(XUL_NS, "toolbar");
-      printPreviewTB.setAttribute("printpreview", true);
-      printPreviewTB.id = "print-preview-toolbar";
-      printPreviewTB.className = "toolbar-primary";
+    var navToolbox = this._callback.getNavToolbox();
+    navToolbox.parentNode.insertBefore(printPreviewTB, navToolbox);
 
-      let navToolbox = this._listener.getNavToolbox();
-      navToolbox.parentNode.insertBefore(printPreviewTB, navToolbox);
-      printPreviewTB.initialize(ppBrowser);
+    // copy the window close handler
+    if (document.documentElement.hasAttribute("onclose"))
+      this._closeHandlerPP = document.documentElement.getAttribute("onclose");
+    else
+      this._closeHandlerPP = null;
+    document.documentElement.setAttribute("onclose", "PrintUtils.exitPrintPreview(); return false;");
 
-      // copy the window close handler
-      if (document.documentElement.hasAttribute("onclose"))
-        this._closeHandlerPP = document.documentElement.getAttribute("onclose");
-      else
-        this._closeHandlerPP = null;
-      document.documentElement.setAttribute("onclose", "PrintUtils.exitPrintPreview(); return false;");
+    // disable chrome shortcuts...
+    window.addEventListener("keydown", this.onKeyDownPP, true);
+    window.addEventListener("keypress", this.onKeyPressPP, true);
 
-      // disable chrome shortcuts...
-      window.addEventListener("keydown", this.onKeyDownPP, true);
-      window.addEventListener("keypress", this.onKeyPressPP, true);
+    var browser = this._callback.getPrintPreviewBrowser();
+    browser.collapsed = false;
+    browser.contentWindow.focus();
 
-      ppBrowser.collapsed = false;
-      ppBrowser.focus();
-      // on Enter PP Call back
-      this._listener.onEnter();
-    };
-
-    mm.addMessageListener("Printing:Preview:Entered", onEntered);
+    // on Enter PP Call back
+    this._callback.onEnter();
   },
 
   exitPrintPreview: function ()
   {
-    let ppBrowser = this._listener.getPrintPreviewBrowser();
-    let browserMM = ppBrowser.messageManager;
-    browserMM.sendAsyncMessage("Printing:Preview:Exit");
-    browserMM.removeMessageListener("Printing:Preview:StateChange", this);
-    browserMM.removeMessageListener("Printing:Preview:ProgressChange", this);
     window.removeEventListener("keydown", this.onKeyDownPP, true);
     window.removeEventListener("keypress", this.onKeyPressPP, true);
 
@@ -493,11 +284,14 @@ var PrintUtils = {
     document.documentElement.setAttribute("onclose", this._closeHandlerPP);
     this._closeHandlerPP = null;
 
-    // remove the print preview toolbar
-    let printPreviewTB = document.getElementById("print-preview-toolbar");
-    this._listener.getNavToolbox().parentNode.removeChild(printPreviewTB);
+    var webBrowserPrint = this.getPrintPreview();
+    webBrowserPrint.exitPrintPreview();
 
-    let fm = Components.classes["@mozilla.org/focus-manager;1"]
+    // remove the print preview toolbar
+    var printPreviewTB = document.getElementById("print-preview-toolbar");
+    this._callback.getNavToolbox().parentNode.removeChild(printPreviewTB);
+
+    var fm = Components.classes["@mozilla.org/focus-manager;1"]
                        .getService(Components.interfaces.nsIFocusManager);
     if (gFocusedElement)
       fm.setFocus(gFocusedElement, fm.FLAG_NOSCROLL);
@@ -505,7 +299,7 @@ var PrintUtils = {
       window.content.focus();
     gFocusedElement = null;
 
-    this._listener.onExit();
+    this._callback.onExit();
   },
 
   onKeyDownPP: function (aEvent)
@@ -535,7 +329,7 @@ var PrintUtils = {
       var printKey = document.getElementById("printKb").getAttribute("key").toUpperCase();
       var pressedKey = String.fromCharCode(aEvent.charCode).toUpperCase();
       if (printKey == pressedKey) {
-        printPreviewTB.print();
+	  PrintUtils.print();
       }
     }
     // cancel shortkeys
