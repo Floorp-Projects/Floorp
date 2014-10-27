@@ -526,7 +526,7 @@ describe("loop.shared.views", function() {
           fillSadFeedbackForm(comp, "confusing");
 
           expect(comp.getDOMNode()
-                     .querySelector("form input[type='text']").value).eql("");
+                     .querySelector(".feedback-description").value).eql("");
         });
 
       it("should enable the form submit button once a predefined category is " +
