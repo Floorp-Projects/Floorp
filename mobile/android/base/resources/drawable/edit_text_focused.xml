@@ -10,12 +10,10 @@
         android:right="-3dp"
         android:left="-3dp">
         <shape>
-            <!-- Padding creates vertical space between the text and the underline,
-                 as well as right padding for search icon/clear button -->
+            <!-- Padding creates vertical space between the text and the underline -->
             <padding
                 android:top="@dimen/search_bar_padding_y"
-                android:bottom="@dimen/search_bar_padding_y"
-                android:right="@dimen/search_bar_padding_right"/>
+                android:bottom="@dimen/search_bar_padding_y"/>
             <solid android:color="@android:color/transparent"/>
             <!-- We apply a color filter to set the color for the selected search engine -->
             <stroke android:width="2dp" android:color="@android:color/white"/>
