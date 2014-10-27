@@ -16,7 +16,7 @@ add_test(function test_registration_handles_bogus_hawk_token() {
     response.finish();
   });
 
-  MozLoopService.register(mockPushHandler).then(() => {
+  MozLoopService.register().then(() => {
     do_throw("should not succeed with a bogus token");
   }, err => {
 
@@ -36,8 +36,7 @@ add_test(function test_registration_handles_bogus_hawk_token() {
   });
 });
 
-function run_test()
-{
+function run_test() {
   setupFakeLoopServer();
 
   do_register_cleanup(function() {
@@ -45,5 +44,4 @@ function run_test()
   });
 
   run_next_test();
-
 }

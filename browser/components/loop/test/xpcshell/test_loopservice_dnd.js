@@ -31,7 +31,7 @@ add_test(function test_set_do_not_disturb() {
 add_test(function test_do_not_disturb_disabled_should_open_chat_window() {
   MozLoopService.doNotDisturb = false;
 
-  MozLoopService.register(mockPushHandler).then(() => {
+  MozLoopService.register().then(() => {
     let opened = false;
     Chat.open = function() {
       opened = true;
@@ -64,8 +64,7 @@ add_test(function test_do_not_disturb_enabled_shouldnt_open_chat_window() {
   });
 });
 
-function run_test()
-{
+function run_test() {
   setupFakeLoopServer();
 
   loopServer.registerPathHandler("/registration", (request, response) => {

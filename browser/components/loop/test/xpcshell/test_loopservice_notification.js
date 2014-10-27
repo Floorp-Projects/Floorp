@@ -10,7 +10,7 @@ let openChatOrig = Chat.open;
 add_test(function test_openChatWindow_on_notification() {
   Services.prefs.setCharPref("loop.seenToS", "unseen");
 
-  MozLoopService.register(mockPushHandler).then(() => {
+  MozLoopService.register().then(() => {
     let opened = false;
     Chat.open = function() {
       opened = true;
@@ -32,8 +32,7 @@ add_test(function test_openChatWindow_on_notification() {
   });
 });
 
-function run_test()
-{
+function run_test() {
   setupFakeLoopServer();
 
   loopServer.registerPathHandler("/registration", (request, response) => {
