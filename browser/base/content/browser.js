@@ -853,6 +853,7 @@ var gBrowserInit = {
 
     let mm = window.getGroupMessageManager("browsers");
     mm.loadFrameScript("chrome://browser/content/content.js", true);
+    mm.loadFrameScript("chrome://browser/content/content-UITour.js", true);
 
     // initialize observers and listeners
     // and give C++ access to gBrowser

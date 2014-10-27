@@ -1,0 +1,30 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Debugger + Promise test page</title>
+  </head>
+
+  <body>
+    <script>
+    window.pending   = new Promise(function () {});
+    window.fulfilled = Promise.resolve({ a: 1, b: 2, c: 3 });
+    window.rejected  = Promise.reject(new Error("uh oh"));
+
+    window.doPause = function () {
+      var p = window.pending;
+      var f = window.fulfilled;
+      var r = window.rejected;
+      debugger;
+    };
+
+    // Attach an error handler so that the logs don't have a warning about an
+    // unhandled, rejected promise.
+    window.rejected.then(null, function () {});
+    </script>
+  </body>
+
+</html>
