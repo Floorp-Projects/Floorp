@@ -45,6 +45,8 @@ namespace {
 // keeping the worker alive.
 class PromiseHolder MOZ_FINAL : public WorkerFeature
 {
+  friend class GetServicedRunnable;
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PromiseHolder)
 
 public:
@@ -52,6 +54,7 @@ public:
                 Promise* aPromise)
     : mWorkerPrivate(aWorkerPrivate),
       mPromise(aPromise),
+      mCleanUpLock("promiseHolderCleanUpLock"),
       mClean(false)
   {
     MOZ_ASSERT(mWorkerPrivate);
@@ -68,7 +71,7 @@ public:
   }
 
   Promise*
-  Get() const
+  GetPromise() const
   {
     return mPromise;
   }
@@ -78,6 +81,7 @@ public:
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
+    MutexAutoLock lock(mCleanUpLock);
     if (mClean) {
       return;
     }
@@ -108,6 +112,11 @@ private:
   WorkerPrivate* mWorkerPrivate;
   nsRefPtr<Promise> mPromise;
 
+  // Used to prevent race conditions on |mClean| and to ensure that either a
+  // Notify() call or a dispatch back to the worker thread occurs before
+  // this object is released.
+  Mutex mCleanUpLock;
+
   bool mClean;
 };
 
@@ -133,7 +142,7 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
-    Promise* promise = mPromiseHolder->Get();
+    Promise* promise = mPromiseHolder->GetPromise();
     MOZ_ASSERT(promise);
 
     nsTArray<nsRefPtr<ServiceWorkerClient>> ret;
@@ -154,24 +163,30 @@ public:
 class GetServicedRunnable MOZ_FINAL : public nsRunnable
 {
   WorkerPrivate* mWorkerPrivate;
-  nsCString mScope;
   nsRefPtr<PromiseHolder> mPromiseHolder;
+  nsCString mScope;
 public:
   GetServicedRunnable(WorkerPrivate* aWorkerPrivate,
-                      Promise* aPromise,
+                      PromiseHolder* aPromiseHolder,
                       const nsCString& aScope)
     : mWorkerPrivate(aWorkerPrivate),
+      mPromiseHolder(aPromiseHolder),
       mScope(aScope)
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
-    mPromiseHolder = new PromiseHolder(aWorkerPrivate, aPromise);
   }
 
   NS_IMETHOD
   Run() MOZ_OVERRIDE
   {
     AssertIsOnMainThread();
+
+    MutexAutoLock lock(mPromiseHolder->mCleanUpLock);
+    if (mPromiseHolder->mClean) {
+      // Don't resolve the promise if it was already released.
+      return NS_OK;
+    }
 
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     nsAutoPtr<nsTArray<uint64_t>> result(new nsTArray<uint64_t>());
@@ -203,8 +218,17 @@ ServiceWorkerClients::GetServiced(ErrorResult& aRv)
     return nullptr;
   }
 
+  nsRefPtr<PromiseHolder> promiseHolder = new PromiseHolder(workerPrivate,
+                                                            promise);
+  if (!promiseHolder->GetPromise()) {
+    // Don't dispatch if adding the worker feature failed.
+    return promise.forget();
+  }
+
   nsRefPtr<GetServicedRunnable> r =
-    new GetServicedRunnable(workerPrivate, promise, NS_ConvertUTF16toUTF8(scope));
+    new GetServicedRunnable(workerPrivate,
+                            promiseHolder,
+                            NS_ConvertUTF16toUTF8(scope));
   nsresult rv = NS_DispatchToMainThread(r);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
