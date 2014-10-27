@@ -16,23 +16,29 @@
 <script class="testbody" type="text/javascript">
 
   function simpleRegister() {
-    var p = navigator.serviceWorker.register("worker.js", { scope: "./" });
+    var p = navigator.serviceWorker.register("worker.js", { scope: "./install_event" });
     return p;
   }
 
   function nextRegister(reg) {
-    var p = navigator.serviceWorker.register("install_event_worker.js", { scope: "./" });
-
-    return new Promise(function(resolve, reject) {
-      reg.onupdatefound = function(e) {
-        ok(true, "Received onupdatefound");
-        resolve();
-      };
+    ok(reg instanceof ServiceWorkerRegistration, "reg should be a ServiceWorkerRegistration");
+    var p = navigator.serviceWorker.register("install_event_worker.js", { scope: "./install_event" });
+    return p.then(function(swr) {
+      ok(reg.scope === swr.scope, "Scope for registrations should match.");
+      return new Promise(function(resolve, reject) {
+        swr.addEventListener('updatefound', function(e) {
+          ok(true, "Received onupdatefound");
+          resolve();
+        });
+      });
+    }, function(e) {
+      ok(false, "Unexpected Error in nextRegister! " + e);
     });
+
   }
 
   function unregister() {
-    return navigator.serviceWorker.getRegistration("./").then(function(reg) {
+    return navigator.serviceWorker.getRegistration("./install_event").then(function(reg) {
       return reg.unregister();
     });
   }
