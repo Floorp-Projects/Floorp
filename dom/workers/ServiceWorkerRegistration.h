@@ -55,10 +55,6 @@ public:
   Unregister(ErrorResult& aRv);
 
   // Useful methods for ServiceWorkerManager:
-
-  nsIURI*
-  GetDocumentURI() const;
-
   void
   InvalidateWorkerReference(WhichServiceWorker aWhichOnes);
 

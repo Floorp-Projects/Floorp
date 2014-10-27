@@ -19,7 +19,7 @@
             for (var i = 0; i < a.length; ++i) {
               window.parent.postMessage({ type: "check", status: a[i] instanceof ServiceWorkerRegistration,
                                           msg: "getRegistrations returns an array of ServiceWorkerRegistration objects" }, "*");
-              if (a[i].scope.match(/simpleregister\/\*/)) {
+              if (a[i].scope.match(/simpleregister\//)) {
                 a[i].onupdatefound = function(e) {
                   eventReceived();
                 }

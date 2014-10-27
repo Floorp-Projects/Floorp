@@ -271,7 +271,7 @@ ServiceWorkerRegistration::StartListeningForEvents()
 {
   nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
   if (swm) {
-    swm->AddRegistrationEventListener(GetDocumentURI(), this);
+    swm->AddRegistrationEventListener(mScope, this);
     mListeningForEvents = true;
   }
 }
@@ -285,16 +285,9 @@ ServiceWorkerRegistration::StopListeningForEvents()
 
   nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
   if (swm) {
-    swm->RemoveRegistrationEventListener(GetDocumentURI(), this);
+    swm->RemoveRegistrationEventListener(mScope, this);
     mListeningForEvents = false;
   }
-}
-
-nsIURI*
-ServiceWorkerRegistration::GetDocumentURI() const
-{
-  MOZ_ASSERT(GetOwner());
-  return GetOwner()->GetDocumentURI();
 }
 
 } // dom namespace
