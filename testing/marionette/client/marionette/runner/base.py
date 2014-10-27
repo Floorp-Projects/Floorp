@@ -20,6 +20,7 @@ from manifestparser import TestManifest
 from marionette import Marionette
 from mixins.b2g import B2GTestResultMixin, get_b2g_pid, get_dm
 from mozhttpd import MozHttpd
+from mozlog.structured.structuredlog import get_default_logger
 from moztest.adapters.unit import StructuredTestRunner, StructuredTestResult
 from moztest.results import TestResultCollection, TestResult, relevant_line
 
@@ -222,7 +223,8 @@ class MarionetteTextTestRunner(StructuredTestRunner):
                                 marionette=self.marionette,
                                 b2g_pid=self.b2g_pid,
                                 logger=self.logger,
-                                logcat_stdout=self.logcat_stdout)
+                                logcat_stdout=self.logcat_stdout,
+                                result_callbacks=self.result_callbacks)
 
     def run(self, test):
         "Run the given test case or test suite."
@@ -450,7 +452,8 @@ class BaseMarionetteTestRunner(object):
                  device_serial=None, symbols_path=None, timeout=None,
                  shuffle=False, shuffle_seed=random.randint(0, sys.maxint),
                  sdcard=None, this_chunk=1, total_chunks=1, sources=None,
-                 server_root=None, gecko_log=None, **kwargs):
+                 server_root=None, gecko_log=None, result_callbacks=None,
+                 **kwargs):
         self.address = address
         self.emulator = emulator
         self.emulator_binary = emulator_binary
@@ -490,6 +493,22 @@ class BaseMarionetteTestRunner(object):
         self.mixin_run_tests = []
         self.manifest_skipped_tests = []
         self.tests = []
+        self.result_callbacks = result_callbacks if result_callbacks is not None else []
+
+        def gather_debug(test, status):
+            rv = {}
+            marionette = test._marionette_weakref()
+            try:
+                marionette.set_context(marionette.CONTEXT_CHROME)
+                rv['screenshot'] = marionette.screenshot()
+                marionette.set_context(marionette.CONTEXT_CONTENT)
+                rv['source'] = marionette.page_source
+            except:
+                logger = get_default_logger()
+                logger.warning('Failed to gather test failure debug.', exc_info=True)
+            return rv
+
+        self.result_callbacks.append(gather_debug)
 
         if testvars:
             if not os.path.exists(testvars):
@@ -789,7 +808,8 @@ class BaseMarionetteTestRunner(object):
             runner = self.textrunnerclass(logger=self.logger,
                                           marionette=self.marionette,
                                           capabilities=self.capabilities,
-                                          logcat_stdout=self.logcat_stdout)
+                                          logcat_stdout=self.logcat_stdout,
+                                          result_callbacks=self.result_callbacks)
 
             results = runner.run(suite)
             self.results.append(results)
