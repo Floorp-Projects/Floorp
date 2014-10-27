@@ -619,39 +619,6 @@ File.prototype = {
   },
 
   /**
-   * Read a number of bytes from the file and into a buffer.
-   *
-   * @param {Typed array | C pointer} buffer This buffer will be
-   * modified by another thread. Using this buffer before the |read|
-   * operation has completed is a BAD IDEA.
-   * @param {JSON} options
-   *
-   * @return {promise}
-   * @resolves {number} The number of bytes effectively read.
-   * @rejects {OS.File.Error}
-   */
-  readTo: function readTo(buffer, options = {}) {
-    // If |buffer| is a typed array and there is no |bytes| options, we
-    // need to extract the |byteLength| now, as it will be lost by
-    // communication.
-    // Options might be a nullish value, so better check for that before using
-    // the |in| operator.
-    if (isTypedArray(buffer) && !(options && "bytes" in options)) {
-      // Preserve reference to option |outExecutionDuration|, if it is passed.
-      options = clone(options, ["outExecutionDuration"]);
-      options.bytes = buffer.byteLength;
-    }
-    // Note: Type.void_t.out_ptr.toMsg ensures that
-    // - the buffer is effectively shared (not neutered) between both
-    //   threads;
-    // - we take care of any |byteOffset|.
-    return Scheduler.post("File_prototype_readTo",
-      [this._fdmsg,
-       Type.void_t.out_ptr.toMsg(buffer),
-       options],
-       buffer/*Ensure that |buffer| is not gc-ed*/);
-  },
-  /**
    * Write bytes from a buffer to this file.
    *
    * Note that, by default, this function may perform several I/O
