@@ -211,8 +211,8 @@ static void Shutdown();
 #ifdef MOZ_GAMEPAD
 #include "mozilla/dom/GamepadService.h"
 #endif
-#include "nsCSPService.h"
-#include "nsCSPContext.h"
+#include "mozilla/dom/nsCSPService.h"
+#include "mozilla/dom/nsCSPContext.h"
 #include "nsICellBroadcastService.h"
 #include "nsISmsService.h"
 #include "nsIMmsService.h"

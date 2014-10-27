@@ -6,7 +6,7 @@
 #ifndef nsCSPContext_h___
 #define nsCSPContext_h___
 
-#include "nsCSPUtils.h"
+#include "mozilla/dom/nsCSPUtils.h"
 #include "nsDataHashtable.h"
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
