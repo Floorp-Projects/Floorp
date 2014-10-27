@@ -52,7 +52,8 @@ RILSystemMessengerHelper.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITelephonyMessenger,
                                          Ci.nsISmsMessenger,
                                          Ci.nsICellbroadcastMessenger,
-                                         Ci.nsIMobileConnectionMessenger]),
+                                         Ci.nsIMobileConnectionMessenger,
+                                         Ci.nsIIccMessenger]),
 
   /**
    * RILSystemMessenger instance.
@@ -147,6 +148,13 @@ RILSystemMessengerHelper.prototype = {
 
   notifyCdmaInfoRecAudioControl: function(aServiceId, aUpLink, aDownLink) {
     this.messenger.notifyCdmaInfoRecAudioControl(aServiceId, aUpLink, aDownLink);
+  },
+
+  /**
+   * nsIIccMessenger API
+   */
+  notifyStkProactiveCommand: function(aIccId, aCommand) {
+    this.messenger.notifyStkProactiveCommand(aIccId, aCommand);
   }
 };
 
