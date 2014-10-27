@@ -457,14 +457,6 @@ struct ParseTask
     // Rooted pointer to the global object used by 'cx'.
     PersistentRootedObject exclusiveContextGlobal;
 
-    // Saved GC-managed CompileOptions fields that will populate slots in
-    // the ScriptSourceObject. We create the ScriptSourceObject in the
-    // compilation's temporary compartment, so storing these values there
-    // at that point would create cross-compartment references. Instead we
-    // hold them here, and install them after merging the compartments.
-    PersistentRootedObject optionsElement;
-    PersistentRootedScript optionsIntroductionScript;
-
     // Callback invoked off the main thread when the parse finishes.
     JS::OffThreadCompileCallback callback;
     void *callbackData;
