@@ -7,6 +7,8 @@
 #include "nsGkAtoms.h"
 #include "mozilla/dom/SVGRectElementBinding.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Matrix.h"
+#include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include <algorithm>
 
@@ -107,6 +109,36 @@ SVGRectElement::GetLengthInfo()
 
 //----------------------------------------------------------------------
 // nsSVGPathGeometryElement methods
+
+bool
+SVGRectElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
+                                  const Matrix& aTransform)
+{
+  Rect r;
+  Float rx, ry;
+  GetAnimatedLengthValues(&r.x, &r.y, &r.width, &r.height, &rx, &ry, nullptr);
+
+  if (r.IsEmpty()) {
+    // Rendering of the element disabled
+    r.SetEmpty(); // make sure width/height are actually zero
+    *aBounds = r;
+    return true;
+  }
+
+  rx = std::max(rx, 0.0f);
+  ry = std::max(ry, 0.0f);
+
+  if (rx != 0 || ry != 0) {
+    return false;
+  }
+
+  if (aStrokeWidth > 0.f) {
+    r.Inflate(aStrokeWidth / 2.f);
+  }
+
+  *aBounds = aTransform.TransformBounds(r);
+  return true;
+}
 
 void
 SVGRectElement::GetAsSimplePath(SimplePath* aSimplePath)

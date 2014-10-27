@@ -147,6 +147,14 @@ StatusMsg(const char* aFmt, ...);
 MOZ_EXPORT bool
 IsRunning();
 
+// Sets the sample-below size. Only used for testing purposes.
+MOZ_EXPORT void
+SetSampleBelowSize(size_t aSize);
+
+// Clears all records of live allocations. Only used for testing purposes.
+MOZ_EXPORT void
+ClearBlocks();
+
 } // namespace mozilla
 } // namespace dmd
 

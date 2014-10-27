@@ -72,9 +72,9 @@ TPSCmdLineHandler.prototype = {
     //cmdLine.preventDefault = true;
   },
 
-  helpInfo : "  -tps <file>               Run TPS tests with the given test file.\n" +
-             "  -tpsphase <phase>         Run the specified phase in the TPS test.\n" +
-             "  -tpslogfile <file>        Logfile for TPS output.\n" +
+  helpInfo : "  --tps <file>              Run TPS tests with the given test file.\n" +
+             "  --tpsphase <phase>        Run the specified phase in the TPS test.\n" +
+             "  --tpslogfile <file>       Logfile for TPS output.\n" +
              "  --ignore-unused-engines   Don't load engines not used in tests.\n",
 };
 

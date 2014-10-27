@@ -1,7 +1,8 @@
 #-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o full-reports-empty-actual.txt full-empty.json
 
 Invocation {
-  $DMD = '--mode=test'
+  $DMD = '1'
   Sample-below size = 1
 }
 

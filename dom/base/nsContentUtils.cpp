@@ -4141,11 +4141,6 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
 
   while (content && content->IsElement()) {
     nsString& tagName = *tagStack.AppendElement();
-    if (!&tagName) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return nullptr;
-    }
-
     tagName = content->NodeInfo()->QualifiedName();
 
     // see if we need to add xmlns declarations

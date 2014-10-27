@@ -35,9 +35,11 @@ int main(int argc, char* argv[], char* envp[]){
     sprintf(full_path, "%s/%s", cwd, B2G_NAME);
     sprintf(full_profile_path, "%s/%s", cwd, GAIA_PATH);
     free(cwd);
-    printf("Running: %s -profile %s\n", full_path, full_profile_path);
+    printf("Running: %s --profile %s\n", full_path, full_profile_path);
     fflush(stdout);
     fflush(stderr);
+    // XXX: yes, the printf above says --profile and this execle uses -profile.
+    // Bug 1088430 will change the execle to use --profile.
     execle(full_path, full_path, "-profile", full_profile_path, NULL, envp);
     error("unable to start");
     perror(argv[0]);

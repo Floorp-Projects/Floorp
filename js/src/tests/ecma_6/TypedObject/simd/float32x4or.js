@@ -19,8 +19,6 @@ var orf = (function() {
 function test() {
   print(BUGNUMBER + ": " + summary);
 
-  // FIXME -- Bug 948379: Amend to check for correctness of border cases.
-
   var a = float32x4(1, 2, 3, 4);
   var b = float32x4(10, 20, 30, 40);
   var c = SIMD.float32x4.or(a, b);
@@ -28,6 +26,22 @@ function test() {
   assertEq(c.y, orf(2, 20));
   assertEq(c.z, orf(3, 30));
   assertEq(c.w, orf(4, 40));
+
+  var d = float32x4(1.12, 2.39, 3.83, 4.57);
+  var e = float32x4(10.76, 20.41, 30.96, 40.23);
+  var f = SIMD.float32x4.or(d, e);
+  assertEq(f.x, orf(1.12, 10.76));
+  assertEq(f.y, orf(2.39, 20.41));
+  assertEq(f.z, orf(3.83, 30.96));
+  assertEq(f.w, orf(4.57, 40.23));
+
+  var g = float32x4(NaN, -0, Infinity, -Infinity);
+  var h = float32x4(5, 5, -Infinity, Infinity);
+  var i = SIMD.float32x4.or(g, h);
+  assertEq(i.x, orf(NaN, 5));
+  assertEq(i.y, orf(-0, 5));
+  assertEq(i.z, orf(Infinity, -Infinity));
+  assertEq(i.w, orf(-Infinity, Infinity));
 
   if (typeof reportCompare === "function")
     reportCompare(true, true);

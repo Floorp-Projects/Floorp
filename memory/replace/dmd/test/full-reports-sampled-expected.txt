@@ -1,7 +1,8 @@
 #-----------------------------------------------------------------
+# dmd.py --filter-stacks-for-testing -o full-reports-sampled-actual.txt full-sampled.json
 
 Invocation {
-  $DMD = '--mode=test'
+  $DMD = '1'
   Sample-below size = 128
 }
 
@@ -14,6 +15,7 @@ Invocation {
 Unreported {
   ~4 blocks in heap block record 1 of 7
   ~512 bytes (~512 requested / ~0 slop)
+  Individual block sizes: ~128 x 3; 128
   35.96% of the heap (35.96% cumulative)
   35.96% of unreported (35.96% cumulative)
   Allocated at {
