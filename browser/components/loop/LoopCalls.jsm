@@ -179,8 +179,13 @@ CallProgressSocket.prototype = {
  * and register with the Loop server.
  */
 let LoopCallsInternal = {
-  callsData: {inUse: false},
-  _mocks: {webSocket: undefined},
+  callsData: {
+    inUse: false,
+  },
+
+  mocks: {
+    webSocket: undefined,
+  },
 
   /**
    * Callback from MozLoopPushHandler - A push notification has been received from
@@ -308,7 +313,9 @@ let LoopCallsInternal = {
       callData.progressURL,
       callData.callId,
       callData.websocketToken);
-    callProgress._websocket = this._mocks.webSocket;
+    if (this.mocks.webSocket) {
+      callProgress._websocket = this.mocks.webSocket;
+    }
     // This instance of CallProgressSocket should stay alive until the underlying
     // websocket is closed since it is passed to the websocket as the nsIWebSocketListener.
     callProgress.connect(() => {callProgress.sendBusy();});
