@@ -21,14 +21,27 @@ final newline (on the last line) removed.
 Then there must be a line that says "\#errors". It must be followed by
 one line per parse error that a conformant checker would return. It
 doesn't matter what those lines are, although they can't be
-"\#document-fragment", "\#document", or empty, the only thing that
-matters is that there be the right number of parse errors.
+"\#document-fragment", "\#document", "\#script-off", "\#script-on", or
+empty, the only thing that matters is that there be the right number
+of parse errors.
 
 Then there \*may\* be a line that says "\#document-fragment", which must
 be followed by a newline (LF), followed by a string of characters that
-indicates the context element, followed by a newline (LF). If this line
-is present the "\#data" must be parsed using the HTML fragment parsing
-algorithm with the context element as context.
+indicates the context element, followed by a newline (LF). If the string 
+of characters starts with "svg ", the context element is in the SVG
+namespace and the substring after "svg " is the local name. If the
+string of characters starts with "math ", the context element is in the
+MathML namespace and the substring after "math " is the local name.
+Otherwise, the context element is in the HTML namespace and the string
+is the local name. If this line is present the "\#data" must be parsed
+using the HTML fragment parsing algorithm with the context element as
+context.
+
+Then there \*may\* be a line that says "\#script-off" or
+"\#script-in". If a line that says "\#script-off" is present, the
+parser must set the scripting flag to disabled. If a line that says
+"\#script-on" is present, it must set it to enabled. Otherwise, the
+test should be run in both modes.
 
 Then there must be a line that says "\#document", which must be followed
 by a dump of the tree of the parsed DOM. Each node must be represented
@@ -53,6 +66,8 @@ per parent node that the node has before the root document node.
     space, then the data and then "`>`". (The HTML parser cannot emit
     processing instructions, but scripts can, and the WebVTT to DOM
     rules can emit them.)
+-   Template contents are represented by the string "content" with the
+    children below it.
 
 The *tag name string* is the local name prefixed by a namespace
 designator. For the HTML namespace, the namespace designator is the
