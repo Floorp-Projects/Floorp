@@ -342,7 +342,6 @@ public:
   void
   FinishFetch(ServiceWorkerRegistrationInfo* aRegistration);
 
-
   void
   HandleError(JSContext* aCx,
               const nsACString& aScope,
