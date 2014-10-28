@@ -9,7 +9,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsWrapperCache.h"
-#include "mozilla/dom/WorkerScope.h"
 
 namespace mozilla {
 
@@ -20,6 +19,8 @@ namespace dom {
 class Promise;
 
 namespace workers {
+
+class ServiceWorkerGlobalScope;
 
 class ServiceWorkerClients MOZ_FINAL : public nsISupports,
                                        public nsWrapperCache
