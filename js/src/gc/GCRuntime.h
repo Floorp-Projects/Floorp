@@ -277,7 +277,7 @@ class GCRuntime
     void minorGC(JS::gcreason::Reason reason);
     void minorGC(JSContext *cx, JS::gcreason::Reason reason);
     void evictNursery(JS::gcreason::Reason reason = JS::gcreason::EVICT_NURSERY) { minorGC(reason); }
-    void gcIfNeeded(JSContext *cx);
+    bool gcIfNeeded(JSContext *cx = nullptr);
     void gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
     void gcSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
     void gcFinalSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
@@ -325,6 +325,10 @@ class GCRuntime
         helperState.waitBackgroundSweepEnd();
         allocTask.cancel(GCParallelTask::CancelAndWait);
     }
+
+#ifdef JSGC_GENERATIONAL
+    void requestMinorGC(JS::gcreason::Reason reason);
+#endif
 
 #ifdef DEBUG
 
@@ -436,7 +440,7 @@ class GCRuntime
     bool areGrayBitsValid() { return grayBitsValid; }
     void setGrayBitsInvalid() { grayBitsValid = false; }
 
-    bool isGcNeeded() { return isNeeded; }
+    bool isGcNeeded() { return minorGCRequested || majorGCRequested; }
 
     double computeHeapGrowthFactor(size_t lastBytes);
     size_t computeTriggerBytes(double growthFactor, size_t lastBytes);
@@ -498,7 +502,7 @@ class GCRuntime
     void startBackgroundAllocTaskIfIdle();
 
     bool initZeal();
-    void requestInterrupt(JS::gcreason::Reason reason);
+    void requestMajorGC(JS::gcreason::Reason reason);
     void collect(bool incremental, int64_t budget, JSGCInvocationKind gckind,
                  JS::gcreason::Reason reason);
     bool gcCycle(bool incremental, int64_t budget, JSGCInvocationKind gckind,
@@ -631,12 +635,13 @@ class GCRuntime
      */
     bool                  grayBitsValid;
 
-    /*
-     * These flags must be kept separate so that a thread requesting a
-     * compartment GC doesn't cancel another thread's concurrent request for a
-     * full GC.
-     */
-    volatile uintptr_t    isNeeded;
+    volatile uintptr_t    majorGCRequested;
+    JS::gcreason::Reason  majorGCTriggerReason;
+
+#ifdef JSGC_GENERATIONAL
+    bool                  minorGCRequested;
+    JS::gcreason::Reason  minorGCTriggerReason;
+#endif
 
     /* Incremented at the start of every major GC. */
     uint64_t              majorGCNumber;
@@ -658,9 +663,6 @@ class GCRuntime
 
     /* The invocation kind of the current GC, taken from the first slice. */
     JSGCInvocationKind    invocationKind;
-
-    /* The reason that an interrupt-triggered GC should be called. */
-    JS::gcreason::Reason  triggerReason;
 
     /*
      * If this is 0, all cross-compartment proxies must be registered in the
