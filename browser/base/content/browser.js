@@ -188,12 +188,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "FormValidationHandler",
 XPCOMUtils.defineLazyModuleGetter(this, "UITour",
   "resource:///modules/UITour.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "CastingApps",
-  "resource:///modules/CastingApps.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "SimpleServiceDiscovery",
-  "resource://gre/modules/SimpleServiceDiscovery.jsm");
-
 let gInitialPages = [
   "about:blank",
   "about:newtab",

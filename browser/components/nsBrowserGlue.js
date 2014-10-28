@@ -99,9 +99,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
                                   "resource://gre/modules/LoginManagerParent.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "SimpleServiceDiscovery",
-                                  "resource://gre/modules/SimpleServiceDiscovery.jsm");
-
 #ifdef NIGHTLY_BUILD
 XPCOMUtils.defineLazyModuleGetter(this, "SignInToWebsiteUX",
                                   "resource:///modules/SignInToWebsite.jsm");
@@ -750,30 +747,8 @@ BrowserGlue.prototype = {
     FormValidationHandler.uninit();
   },
 
-  _initServiceDiscovery: function () {
-    var rokuDevice = {
-      id: "roku:ecp",
-      target: "roku:ecp",
-      factory: function(aService) {
-        Cu.import("resource://gre/modules/RokuApp.jsm");
-        return new RokuApp(aService);
-      },
-      mirror: false,
-      types: ["video/mp4"],
-      extensions: ["mp4"]
-    };
-
-    // Register targets
-    SimpleServiceDiscovery.registerDevice(rokuDevice);
-
-    // Search for devices continuously every 120 seconds
-    SimpleServiceDiscovery.search(120 * 1000);
-  },
-
   // All initial windows have opened.
   _onWindowsRestored: function BG__onWindowsRestored() {
-    this._initServiceDiscovery();
-
     // Show update notification, if needed.
     if (Services.prefs.prefHasUserValue("app.update.postupdate"))
       this._showUpdateNotification();

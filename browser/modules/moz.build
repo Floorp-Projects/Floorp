@@ -14,7 +14,6 @@ XPCSHELL_TESTS_MANIFESTS += [
 EXTRA_JS_MODULES += [
     'BrowserNewTabPreloader.jsm',
     'BrowserUITelemetry.jsm',
-    'CastingApps.jsm',
     'Chat.jsm',
     'ContentClick.jsm',
     'ContentLinkHandler.jsm',
