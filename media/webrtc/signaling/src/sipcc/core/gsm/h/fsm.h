@@ -225,7 +225,7 @@ typedef struct fsmdef_media_t_ {
     /*
      * Data Channel properties
      */
-#define WEBRTC_DATACHANNEL_STREAMS_DEFAULT 16
+#define WEBRTC_DATACHANNEL_STREAMS_DEFAULT 256
     uint32         datachannel_streams;
     char           datachannel_protocol[SDP_MAX_STRING_LEN + 1];
 
