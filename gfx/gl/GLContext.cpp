@@ -1585,7 +1585,7 @@ GLContext::DebugCallback(GLenum source,
         break;
     }
 
-    printf_stderr("[KHR_debug: 0x%" PRIxPTR "] ID %u: %s %s %s:\n    %s",
+    printf_stderr("[KHR_debug: 0x%" PRIxPTR "] ID %u: %s, %s, %s:\n    %s\n",
                   (uintptr_t)this,
                   id,
                   sourceStr.BeginReading(),
@@ -2395,20 +2395,21 @@ GLContext::CleanDirtyScreen()
 void
 GLContext::EmptyTexGarbageBin()
 {
-   TexGarbageBin()->EmptyGarbage();
+    TexGarbageBin()->EmptyGarbage();
 }
 
 bool
-GLContext::IsOffscreenSizeAllowed(const IntSize& aSize) const {
-  int32_t biggerDimension = std::max(aSize.width, aSize.height);
-  int32_t maxAllowed = std::min(mMaxRenderbufferSize, mMaxTextureSize);
-  return biggerDimension <= maxAllowed;
+GLContext::IsOffscreenSizeAllowed(const IntSize& aSize) const
+{
+    int32_t biggerDimension = std::max(aSize.width, aSize.height);
+    int32_t maxAllowed = std::min(mMaxRenderbufferSize, mMaxTextureSize);
+    return biggerDimension <= maxAllowed;
 }
 
 bool
 GLContext::IsOwningThreadCurrent()
 {
-  return PlatformThread::CurrentId() == mOwningThreadId;
+    return PlatformThread::CurrentId() == mOwningThreadId;
 }
 
 GLBlitHelper*
