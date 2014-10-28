@@ -680,6 +680,15 @@ DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj,
     return DefineNativeProperty(cx, obj, id, value, getter, setter, attrs);
 }
 
+inline bool
+WarnIfNotConstructing(JSContext *cx, const CallArgs &args, const char *builtinName)
+{
+    if (args.isConstructing())
+        return true;
+    return JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage, nullptr,
+                                        JSMSG_BUILTIN_CTOR_NO_NEW, builtinName);
+}
+
 } // namespace js
 
 #endif /* vm_NativeObject_inl_h */

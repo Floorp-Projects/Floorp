@@ -5,7 +5,7 @@
 
 #include "VsyncDispatcher.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "CompositorParent.h"
+#include "mozilla/layers/CompositorParent.h"
 #include "gfxPrefs.h"
 
 #ifdef MOZ_WIDGET_GONK

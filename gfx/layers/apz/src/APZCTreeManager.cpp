@@ -6,13 +6,13 @@
 #include "APZCTreeManager.h"
 #include "AsyncPanZoomController.h"
 #include "Compositor.h"                 // for Compositor
-#include "CompositorParent.h"           // for CompositorParent, etc
 #include "InputBlockState.h"            // for InputBlockState
 #include "InputData.h"                  // for InputData, etc
 #include "Layers.h"                     // for Layer, etc
 #include "mozilla/dom/Touch.h"          // for Touch
 #include "mozilla/gfx/Point.h"          // for Point
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
+#include "mozilla/layers/CompositorParent.h" // for CompositorParent, etc
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/mozalloc.h"           // for operator new

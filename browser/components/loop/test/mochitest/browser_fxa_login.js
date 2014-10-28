@@ -40,11 +40,13 @@ function* checkFxA401() {
 add_task(function* setup() {
   Services.prefs.setCharPref("loop.server", BASE_URL);
   Services.prefs.setCharPref("services.push.serverURL", "ws://localhost/");
+  MozLoopServiceInternal.mocks.pushHandler = mockPushHandler;
   registerCleanupFunction(function* () {
     info("cleanup time");
     yield promiseDeletedOAuthParams(BASE_URL);
     Services.prefs.clearUserPref("loop.server");
     Services.prefs.clearUserPref("services.push.serverURL");
+    MozLoopServiceInternal.mocks.pushHandler = undefined;
     yield resetFxA();
     Services.prefs.clearUserPref(MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.GUEST));
   });
@@ -251,7 +253,7 @@ add_task(function* basicAuthorizationAndRegistration() {
   mockPushHandler.registrationPushURL = "https://localhost/pushUrl/guest";
   // Notification observed due to the error being cleared upon successful registration.
   let statusChangedPromise = promiseObserverNotified("loop-status-changed");
-  yield MozLoopService.register(mockPushHandler);
+  yield MozLoopService.register();
   yield statusChangedPromise;
 
   // Normally the same pushUrl would be registered but we change it in the test
@@ -316,7 +318,7 @@ add_task(function* loginWithParams401() {
     test_error: "params_401",
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
-  yield MozLoopService.register(mockPushHandler);
+  yield MozLoopService.register();
 
   let loginPromise = MozLoopService.logInToFxA();
   yield loginPromise.then(tokenData => {

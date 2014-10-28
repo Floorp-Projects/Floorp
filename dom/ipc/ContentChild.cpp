@@ -1109,45 +1109,40 @@ ContentChild::DeallocPJavaScriptChild(PJavaScriptChild *aChild)
 }
 
 PBrowserChild*
-ContentChild::AllocPBrowserChild(const TabId& aTabId,
-                                 const IPCTabContext& aContext,
+ContentChild::AllocPBrowserChild(const IPCTabContext& aContext,
                                  const uint32_t& aChromeFlags,
-                                 const ContentParentId& aCpID,
+                                 const uint64_t& aID,
                                  const bool& aIsForApp,
                                  const bool& aIsForBrowser)
 {
-    return nsIContentChild::AllocPBrowserChild(aTabId,
-                                               aContext,
+    return nsIContentChild::AllocPBrowserChild(aContext,
                                                aChromeFlags,
-                                               aCpID,
+                                               aID,
                                                aIsForApp,
                                                aIsForBrowser);
 }
 
 bool
 ContentChild::SendPBrowserConstructor(PBrowserChild* aActor,
-                                      const TabId& aTabId,
                                       const IPCTabContext& aContext,
                                       const uint32_t& aChromeFlags,
-                                      const ContentParentId& aCpID,
+                                      const uint64_t& aID,
                                       const bool& aIsForApp,
                                       const bool& aIsForBrowser)
 {
     return PContentChild::SendPBrowserConstructor(aActor,
-                                                  aTabId,
                                                   aContext,
                                                   aChromeFlags,
-                                                  aCpID,
+                                                  aID,
                                                   aIsForApp,
                                                   aIsForBrowser);
 }
 
 bool
 ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
-                                      const TabId& aTabId,
                                       const IPCTabContext& aContext,
                                       const uint32_t& aChromeFlags,
-                                      const ContentParentId& aCpID,
+                                      const uint64_t& aID,
                                       const bool& aIsForApp,
                                       const bool& aIsForBrowser)
 {
@@ -1171,7 +1166,7 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
 
         // Redo InitProcessAttributes() when the app or browser is really
         // launching so the attributes will be correct.
-        mID = aCpID;
+        mID = aID;
         mIsForApp = aIsForApp;
         mIsForBrowser = aIsForBrowser;
         InitProcessAttributes();
