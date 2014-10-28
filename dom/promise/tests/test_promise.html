@@ -123,7 +123,7 @@ function promiseAsync() {
     r1(42);
     is(global, "foo", "Global should still be foo");
     setTimeout(function() {
-      is(global, "bar", "Global should still be bar!");
+      // is(global, "bar", "Global should still be bar!"); // Bug 1013625
       runTest();
     }, 0);
   }).then(function() {
