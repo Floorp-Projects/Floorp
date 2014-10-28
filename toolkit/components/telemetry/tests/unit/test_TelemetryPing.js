@@ -85,7 +85,7 @@ function registerPingHandler(handler) {
 }
 
 function setupTestData() {
-  Telemetry.newHistogram(IGNORE_HISTOGRAM, "never", 1, 2, 3, Telemetry.HISTOGRAM_BOOLEAN);
+  Telemetry.newHistogram(IGNORE_HISTOGRAM, "never", Telemetry.HISTOGRAM_BOOLEAN);
   Telemetry.histogramFrom(IGNORE_CLONED_HISTOGRAM, IGNORE_HISTOGRAM_TO_CLONE);
   Services.startup.interrupted = true;
   Telemetry.registerAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM, 1, 5, 6,
@@ -471,7 +471,7 @@ add_task(function* test_overwritePing() {
 // Ensures that expired histograms are not part of the payload.
 add_task(function* test_expiredHistogram() {
   let histogram_id = "FOOBAR";
-  let dummy = Telemetry.newHistogram(histogram_id, "30", 1, 2, 3, Telemetry.HISTOGRAM_EXPONENTIAL);
+  let dummy = Telemetry.newHistogram(histogram_id, "30", Telemetry.HISTOGRAM_EXPONENTIAL, 1, 2, 3);
 
   dummy.add(1);
 
