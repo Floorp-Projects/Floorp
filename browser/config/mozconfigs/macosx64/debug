@@ -10,7 +10,7 @@ ac_add_options --with-google-oauth-api-keyfile=/builds/google-oauth-api.key
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 
-if test "${MOZ_UPDATE_CHANNEL}" = "nightly" -o "${MOZ_UPDATE_CHANNEL}" = "aurora"; then
+if test "${MOZ_UPDATE_CHANNEL}" = "nightly"; then
 ac_add_options --with-macbundlename-prefix=Firefox
 fi
 
