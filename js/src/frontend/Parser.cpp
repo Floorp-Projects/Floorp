@@ -1222,8 +1222,8 @@ Parser<ParseHandler>::newFunction(GenericParseContext *pc, HandleAtom atom,
 static bool
 MatchOrInsertSemicolon(TokenStream &ts)
 {
-    TokenKind tt;
-    if (!ts.peekTokenSameLine(&tt, TokenStream::Operand))
+    TokenKind tt = ts.peekTokenSameLine(TokenStream::Operand);
+    if (tt == TOK_ERROR)
         return false;
     if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
         /* Advance the scanner for proper error location reporting. */
@@ -2790,8 +2790,8 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::matchLabel(MutableHandle<PropertyName*> label)
 {
-    TokenKind tt;
-    if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
+    TokenKind tt = tokenStream.peekTokenSameLine(TokenStream::Operand);
+    if (tt == TOK_ERROR)
         return false;
     if (tt == TOK_NAME) {
         tokenStream.consumeKnownToken(TOK_NAME);
@@ -5043,10 +5043,9 @@ Parser<ParseHandler>::returnStatement()
     //
     // This is ugly, but we don't want to require a semicolon.
     Node exprNode;
-    TokenKind tt;
-    if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
+    switch (tokenStream.peekTokenSameLine(TokenStream::Operand)) {
+      case TOK_ERROR:
         return null();
-    switch (tt) {
       case TOK_EOF:
       case TOK_EOL:
       case TOK_SEMI:
@@ -5110,10 +5109,9 @@ Parser<ParseHandler>::yieldExpression()
 
         Node exprNode;
         ParseNodeKind kind = PNK_YIELD;
-        TokenKind tt;
-        if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
+        switch (tokenStream.peekTokenSameLine(TokenStream::Operand)) {
+          case TOK_ERROR:
             return null();
-        switch (tt) {
           // TOK_EOL is special; it implements the [no LineTerminator here]
           // quirk in the grammar.
           case TOK_EOL:
@@ -5178,10 +5176,9 @@ Parser<ParseHandler>::yieldExpression()
 
         // Legacy generators do not require a value.
         Node exprNode;
-        TokenKind tt;
-        if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
+        switch (tokenStream.peekTokenSameLine(TokenStream::Operand)) {
+          case TOK_ERROR:
             return null();
-        switch (tt) {
           case TOK_EOF:
           case TOK_EOL:
           case TOK_SEMI:
@@ -5318,8 +5315,8 @@ Parser<ParseHandler>::throwStatement()
     uint32_t begin = pos().begin;
 
     /* ECMA-262 Edition 3 says 'throw [no LineTerminator here] Expr'. */
-    TokenKind tt;
-    if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
+    TokenKind tt = tokenStream.peekTokenSameLine(TokenStream::Operand);
+    if (tt == TOK_ERROR)
         return null();
     if (tt == TOK_EOF || tt == TOK_SEMI || tt == TOK_RC) {
         report(ParseError, false, null(), JSMSG_MISSING_EXPR_AFTER_THROW);
@@ -6124,8 +6121,7 @@ Parser<ParseHandler>::unaryExpr()
             return null();
 
         /* Don't look across a newline boundary for a postfix incop. */
-        if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
-            return null();
+        tt = tokenStream.peekTokenSameLine(TokenStream::Operand);
         if (tt == TOK_INC || tt == TOK_DEC) {
             tokenStream.consumeKnownToken(tt);
             if (!checkAndMarkAsIncOperand(pn, tt, false))
