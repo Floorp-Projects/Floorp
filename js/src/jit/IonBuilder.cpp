@@ -1639,9 +1639,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_INITELEM_SETTER:
         return jsop_initelem_getter_setter();
 
-      case JSOP_ENDINIT:
-        return true;
-
       case JSOP_FUNCALL:
         return jsop_funcall(GET_ARGC(pc));
 

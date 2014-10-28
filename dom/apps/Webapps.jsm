@@ -730,6 +730,11 @@ this.DOMApplicationRegistry = {
   },
 
   updateDataStore: function(aId, aOrigin, aManifestURL, aManifest) {
+    if (!aManifest) {
+      debug("updateDataStore: no manifest for " + aOrigin);
+      return;
+    }
+
     let uri = Services.io.newURI(aOrigin, null, null);
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
                    .getService(Ci.nsIScriptSecurityManager);

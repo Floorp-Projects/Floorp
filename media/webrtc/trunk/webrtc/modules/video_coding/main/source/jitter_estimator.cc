@@ -162,7 +162,7 @@ VCMJitterEstimator::UpdateEstimate(int64_t frameDelayMS, uint32_t frameSizeBytes
     // deviation is probably due to an incorrect line slope.
     double deviation = DeviationFromExpectedDelay(frameDelayMS, deltaFS);
 
-    if (abs(deviation) < _numStdDevDelayOutlier * sqrt(_varNoise) ||
+    if (fabs(deviation) < _numStdDevDelayOutlier * sqrt(_varNoise) ||
         frameSizeBytes > _avgFrameSize + _numStdDevFrameSizeOutlier * sqrt(_varFrameSize))
     {
         // Update the variance of the deviation from the
@@ -257,7 +257,7 @@ VCMJitterEstimator::KalmanEstimateChannel(int64_t frameDelayMS,
     {
         return;
     }
-    double sigma = (300.0 * exp(-abs(static_cast<double>(deltaFSBytes)) /
+    double sigma = (300.0 * exp(-fabs(static_cast<double>(deltaFSBytes)) /
                    (1e0 * _maxFrameSize)) + 1) * sqrt(_varNoise);
     if (sigma < 1.0)
     {

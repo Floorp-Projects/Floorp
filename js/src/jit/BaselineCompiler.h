@@ -104,7 +104,6 @@ namespace jit {
     _(JSOP_INITPROP)           \
     _(JSOP_INITPROP_GETTER)    \
     _(JSOP_INITPROP_SETTER)    \
-    _(JSOP_ENDINIT)            \
     _(JSOP_ARRAYPUSH)          \
     _(JSOP_GETELEM)            \
     _(JSOP_SETELEM)            \
