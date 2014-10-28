@@ -600,12 +600,14 @@ finalizeCB(GObject *aObj)
 const gchar*
 getNameCB(AtkObject* aAtkObj)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (!accWrap)
-    return nullptr;
-
   nsAutoString name;
-  accWrap->Name(name);
+  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
+  if (accWrap)
+    accWrap->Name(name);
+  else if (ProxyAccessible* proxy = GetProxy(aAtkObj))
+    proxy->Name(name);
+  else
+    return nullptr;
 
   // XXX Firing an event from here does not seem right
   MaybeFireNameChange(aAtkObj, name);
@@ -642,13 +644,18 @@ MaybeFireNameChange(AtkObject* aAtkObj, const nsString& aNewName)
 const gchar *
 getDescriptionCB(AtkObject *aAtkObj)
 {
-    AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-    if (!accWrap || accWrap->IsDefunct())
-        return nullptr;
+  nsAutoString uniDesc;
+  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
+  if (accWrap) {
+    if (accWrap->IsDefunct())
+      return nullptr;
 
-    /* nsIAccessible is responsible for the nonnull description */
-    nsAutoString uniDesc;
     accWrap->Description(uniDesc);
+  } else if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
+    proxy->Description(uniDesc);
+  } else {
+    return nullptr;
+  }
 
     NS_ConvertUTF8toUTF16 objDesc(aAtkObj->description);
     if (!uniDesc.Equals(objDesc))
@@ -782,19 +789,21 @@ GetLocaleCB(AtkObject* aAtkObj)
 AtkObject *
 getParentCB(AtkObject *aAtkObj)
 {
-  if (!aAtkObj->accessible_parent) {
-    AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-    if (!accWrap)
-      return nullptr;
+  if (aAtkObj->accessible_parent)
+    return aAtkObj->accessible_parent;
 
-    Accessible* accParent = accWrap->Parent();
-    if (!accParent)
-      return nullptr;
-
-    AtkObject* parent = AccessibleWrap::GetAtkObject(accParent);
-    if (parent)
-      atk_object_set_parent(aAtkObj, parent);
+  AtkObject* atkParent = nullptr;
+  if (AccessibleWrap* wrapper = GetAccessibleWrap(aAtkObj)) {
+    Accessible* parent = wrapper->Parent();
+    atkParent = parent ? AccessibleWrap::GetAtkObject(parent) : nullptr;
+  } else if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
+    ProxyAccessible* parent = proxy->Parent();
+    atkParent = parent ? GetWrapperFor(parent) : nullptr;
   }
+
+  if (atkParent)
+    atk_object_set_parent(aAtkObj, atkParent);
+
   return aAtkObj->accessible_parent;
 }
 
@@ -980,6 +989,12 @@ GetProxy(AtkObject* aObj)
 
   return reinterpret_cast<ProxyAccessible*>(MAI_ATK_OBJECT(aObj)->accWrap
       & ~IS_PROXY);
+}
+
+AtkObject*
+GetWrapperFor(ProxyAccessible* aProxy)
+{
+  return reinterpret_cast<AtkObject*>(aProxy->GetWrapper() & ~IS_PROXY);
 }
 
 static uint16_t

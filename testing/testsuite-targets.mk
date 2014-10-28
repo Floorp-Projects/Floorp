@@ -311,8 +311,6 @@ xpcshell-tests:
 	  --test-plugin-path='$(DIST)/plugins' \
 	  --tests-root-dir=$(abspath _tests/xpcshell) \
 	  --testing-modules-dir=$(abspath _tests/modules) \
-	  --xunit-file=$(abspath _tests/xpcshell/results.xml) \
-	  --xunit-suite-name=xpcshell \
           $(SYMBOLS_PATH) \
 	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS) \
 	  $(xpcshell_path)

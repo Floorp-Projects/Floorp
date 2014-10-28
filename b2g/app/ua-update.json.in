@@ -11,16 +11,12 @@
   "linkedin.com": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 826353, itau.com.br
   "itau.com.br": "\\(Mobile#(Android; Mobile",
-  // bug 826504, orkut.com.br
-  "orkut.com.br": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 826510, r7.com
   "r7.com": "\\(Mobile#(Android; Mobile",
   // bug 826514, estadao.com.br
   "estadao.com.br": "\\(Mobile#(Android; Mobile",
   // bug 826711, bb.com.br
   "bb.com.br": "\\(Mobile#(Android; Mobile",
-  // bug 826712, orkut.com
-  "orkut.com": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 827622, bing.com
   "bing.com": "\\(Mobile#(Android; Mobile",
   // bug 827626, magazineluiza.com.br
@@ -39,8 +35,6 @@
   "marca.com": "\\(Mobile#(Android; Mobile",
   // bug 828371, ingbank.pl
   "ingbank.pl": "\\(Mobile#(Android; Mobile",
-  // bug 828399, antena3.com
-  "antena3.com": "\\(Mobile#(Android; Mobile",
   // bug 828416, loteriasyapuestas.es
   "loteriasyapuestas.es": "\\(Mobile#(Android; Mobile",
   // bug 828418, bbva.es
@@ -49,8 +43,6 @@
   "publico.es": "\\(Mobile#(Android; Mobile",
   // bug 828439, movistar.com.ve
   "movistar.com.ve": "\\(Mobile#(Android; Mobile",
-  // bug 843126, es.playstation.com
-  "es.playstation.com": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 843129, 11870.com
   "iphonejuegosgratis.com": "\\(Mobile#(Android; Mobile",
   // bug 843132, comunio.es

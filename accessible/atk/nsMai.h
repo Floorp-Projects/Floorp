@@ -36,6 +36,7 @@ GType mai_atk_object_get_type(void);
 GType mai_util_get_type();
 mozilla::a11y::AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj);
 mozilla::a11y::ProxyAccessible* GetProxy(AtkObject* aAtkObj);
+AtkObject* GetWrapperFor(mozilla::a11y::ProxyAccessible* aProxy);
 
 extern int atkMajorVersion, atkMinorVersion;
 

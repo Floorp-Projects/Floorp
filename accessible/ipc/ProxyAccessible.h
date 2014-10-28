@@ -21,9 +21,8 @@ class ProxyAccessible
 public:
 
   ProxyAccessible(uint64_t aID, ProxyAccessible* aParent,
-                  DocAccessibleParent* aDoc, role aRole,
-                  const nsString& aName) :
-     mParent(aParent), mDoc(aDoc), mID(aID), mRole(aRole), mOuterDoc(false), mName(aName)
+                  DocAccessibleParent* aDoc, role aRole) :
+     mParent(aParent), mDoc(aDoc), mID(aID), mRole(aRole), mOuterDoc(false)
   {
     MOZ_COUNT_CTOR(ProxyAccessible);
   }
@@ -59,6 +58,16 @@ public:
    */
   uint64_t State() const;
 
+  /*
+   * Set aName to the name of the proxied accessible.
+   */
+  void Name(nsString& aName) const;
+
+  /**
+   * Set aDesc to the description of the proxied accessible.
+   */
+  void Description(nsString& aDesc) const;
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */
@@ -85,7 +94,6 @@ private:
   uint64_t mID;
   role mRole : 31;
   bool mOuterDoc : 1;
-  nsString mName;
 };
 
 }

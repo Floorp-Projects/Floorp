@@ -638,6 +638,53 @@ class BaseMarionetteTestRunner(object):
     def start_marionette(self):
         self.marionette = Marionette(**self._build_kwargs())
 
+    def launch_test_container(self):
+        if self.marionette.session is None:
+            self.marionette.start_session()
+        self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
+
+        result = self.marionette.execute_async_script("""
+if((navigator.mozSettings == undefined) || (navigator.mozSettings == null) || (navigator.mozApps == undefined) || (navigator.mozApps == null)) {
+    marionetteScriptFinished(false);
+    return;
+}
+let setReq = navigator.mozSettings.createLock().set({'lockscreen.enabled': false});
+setReq.onsuccess = function() {
+    let appName = 'Test Container';
+    let activeApp = window.wrappedJSObject.System.currentApp;
+
+    // if the Test Container is already open then do nothing
+    if(activeApp.name === appName){
+        marionetteScriptFinished(true);
+    }
+
+    let appsReq = navigator.mozApps.mgmt.getAll();
+    appsReq.onsuccess = function() {
+        let apps = appsReq.result;
+        for (let i = 0; i < apps.length; i++) {
+            let app = apps[i];
+            if (app.manifest.name === appName) {
+                app.launch();
+                window.addEventListener('appopen', function apploadtime(){
+                    window.removeEventListener('appopen', apploadtime);
+                    marionetteScriptFinished(true);
+                });
+                return;
+            }
+        }
+        marionetteScriptFinished(false);
+    }
+    appsReq.onerror = function() {
+        marionetteScriptFinished(false);
+    }
+}
+setReq.onerror = function() {
+    marionetteScriptFinished(false);
+}""", script_timeout=60000)
+
+        if not result:
+            raise Exception("Could not launch test container app")
+
     def run_tests(self, tests):
         self.reset_test_stats()
         self.start_time = time.time()
@@ -724,7 +771,7 @@ class BaseMarionetteTestRunner(object):
 
         self.logger.suite_end()
 
-    def add_test(self, test, expected='pass', test_container=False):
+    def add_test(self, test, expected='pass', test_container=None):
         filepath = os.path.abspath(test)
 
         if os.path.isdir(filepath):
@@ -778,9 +825,13 @@ class BaseMarionetteTestRunner(object):
                     raise IOError("test file: %s does not exist" % i["path"])
 
                 file_ext = os.path.splitext(os.path.split(i['path'])[-1])[-1]
-                test_container = False
-                if i.get('test_container') and i.get('test_container') == 'true' and testarg_b2g:
-                    test_container = True
+                test_container = None
+                if i.get('test_container') and testarg_b2g:
+                    if i.get('test_container') == "true":
+                        test_container = True
+                    elif i.get('test_container') == "false":
+                        test_container = False
+
                 self.add_test(i["path"], i["expected"], test_container)
             return
 
@@ -810,6 +861,9 @@ class BaseMarionetteTestRunner(object):
                                           capabilities=self.capabilities,
                                           logcat_stdout=self.logcat_stdout,
                                           result_callbacks=self.result_callbacks)
+
+            if test_container:
+                self.launch_test_container()
 
             results = runner.run(suite)
             self.results.append(results)
