@@ -473,17 +473,16 @@ class MOZ_STACK_CLASS TokenStream
         MOZ_ALWAYS_TRUE(matched);
     }
 
-    bool matchContextualKeyword(bool *matchedp, Handle<PropertyName*> keyword) {
+    bool matchContextualKeyword(Handle<PropertyName*> keyword) {
         TokenKind token;
-        if (!getToken(&token))
-            return false;
-        if (token == TOK_NAME && currentToken().name() == keyword) {
-            *matchedp = true;
-        } else {
-            *matchedp = false;
+        if (!getToken(&token)) {
             ungetToken();
+            return false;
         }
-        return true;
+        if (token == TOK_NAME && currentToken().name() == keyword)
+            return true;
+        ungetToken();
+        return false;
     }
 
     bool nextTokenEndsExpr() {
