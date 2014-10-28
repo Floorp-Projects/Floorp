@@ -2800,6 +2800,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     mOuter->PresContext()->IsRootContentDocument();
 
   if (aBuilder->GetIgnoreScrollFrame() == mOuter || IsIgnoringViewportClipping()) {
+    mAddClipRectToLayer = false;
 
     // If we are a root scroll frame that has a display port we want to add
     // scrollbars, they will be children of the scrollable layer, but they get
@@ -2828,6 +2829,9 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     return;
   }
+
+  mAddClipRectToLayer =
+    !(mIsRoot && mOuter->PresContext()->PresShell()->GetIsViewportOverridden());
 
   // Overflow clipping can never clip frames outside our subtree, so there
   // is no need to worry about whether we are a moving frame that might clip
@@ -3049,7 +3053,9 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
 {
   nsRect scrollport = mScrollPort +
     mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
-  if (!(mIsRoot && mOuter->PresContext()->PresShell()->GetIsViewportOverridden())) {
+  // Root scrollframes have FrameMetrics and clipping on their container layers,
+  // so don't also apply clipping here.
+  if (mAddClipRectToLayer) {
     *aClipRect = scrollport;
   }
 
