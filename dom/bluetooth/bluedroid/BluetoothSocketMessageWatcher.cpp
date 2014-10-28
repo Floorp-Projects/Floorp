@@ -203,7 +203,7 @@ SocketMessageWatcher::RecvMsg2()
   iv.iov_len = MSG2_SIZE;
 
   struct msghdr msg;
-  struct cmsghdr cmsgbuf[2 * sizeof(cmsghdr) + 0x100];
+  struct cmsghdr cmsgbuf[CMSG_SPACE(sizeof(int))];
   memset(&msg, 0, sizeof(msg));
   msg.msg_iov = &iv;
   msg.msg_iovlen = 1;
