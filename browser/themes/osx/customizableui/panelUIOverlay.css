@@ -12,14 +12,14 @@
   #PanelUI-help[panel-multiview-anchor="true"]::after,
   toolbarbutton[panel-multiview-anchor="true"] {
     background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted@2x.png),
-                      linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
+                      linear-gradient(rgba(255,255,255,0.3), transparent);
     background-size: 16px, auto;
   }
 
   #PanelUI-help[panel-multiview-anchor="true"]:-moz-locale-dir(rtl)::after,
   toolbarbutton[panel-multiview-anchor="true"]:-moz-locale-dir(rtl) {
     background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted-rtl@2x.png),
-                      linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
+                      linear-gradient(rgba(255,255,255,0.3), transparent);
   }
 
   #PanelUI-fxa-status {
