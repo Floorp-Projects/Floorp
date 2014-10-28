@@ -10,8 +10,6 @@ UNIFIED_SOURCES += [
     'minidump_descriptor.cc',
 ]
 
-XPI_NAME = 'crashreporter'
-
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['OS_TARGET'] == 'Android':

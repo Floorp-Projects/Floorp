@@ -201,9 +201,9 @@
         <vbox id="PanelUI-panic-explanations">
           <label id="PanelUI-panic-actionlist-main-label">&panicButton.view.mainActionDesc;</label>
 
+          <label id="PanelUI-panic-actionlist-windows" class="PanelUI-panic-actionlist">&panicButton.view.deleteTabsAndWindows;</label>
           <label id="PanelUI-panic-actionlist-cookies" class="PanelUI-panic-actionlist">&panicButton.view.deleteCookies;</label>
           <label id="PanelUI-panic-actionlist-history" class="PanelUI-panic-actionlist">&panicButton.view.deleteHistory;</label>
-          <label id="PanelUI-panic-actionlist-windows" class="PanelUI-panic-actionlist">&panicButton.view.deleteTabsAndWindows;</label>
           <label id="PanelUI-panic-actionlist-newwindow" class="PanelUI-panic-actionlist">&panicButton.view.openNewWindow;</label>
 
           <label id="PanelUI-panic-warning">&panicButton.view.undoWarning;</label>

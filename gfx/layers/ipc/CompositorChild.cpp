@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CompositorChild.h"
+#include "mozilla/layers/CompositorChild.h"
 #include <stddef.h>                     // for size_t
 #include "ClientLayerManager.h"         // for ClientLayerManager
 #include "base/message_loop.h"          // for MessageLoop
