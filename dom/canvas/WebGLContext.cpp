@@ -1252,10 +1252,12 @@ WebGLContext::GetContextAttributes(Nullable<dom::WebGLContextAttributes> &retval
 
     dom::WebGLContextAttributes& result = retval.SetValue();
 
-    result.mAlpha.Construct(mOptions.alpha);
-    result.mDepth = mOptions.depth;
-    result.mStencil = mOptions.stencil;
-    result.mAntialias = mOptions.antialias;
+    const PixelBufferFormat& format = gl->GetPixelFormat();
+
+    result.mAlpha.Construct(format.alpha > 0);
+    result.mDepth = format.depth > 0;
+    result.mStencil = format.stencil > 0;
+    result.mAntialias = format.samples > 1;
     result.mPremultipliedAlpha = mOptions.premultipliedAlpha;
     result.mPreserveDrawingBuffer = mOptions.preserveDrawingBuffer;
 }
