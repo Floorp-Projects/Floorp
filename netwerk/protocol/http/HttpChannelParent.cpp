@@ -101,8 +101,8 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.requestMethod(), a.uploadStream(),
                        a.uploadStreamHasHeaders(), a.priority(),
                        a.redirectionLimit(), a.allowPipelining(), a.allowSTS(),
-                       a.forceAllowThirdPartyCookie(), a.resumeAt(),
-                       a.startPos(), a.entityID(), a.chooseApplicationCache(),
+                       a.thirdPartyFlags(), a.resumeAt(), a.startPos(),
+                       a.entityID(), a.chooseApplicationCache(),
                        a.appCacheClientID(), a.allowSpdy(), a.fds(),
                        a.requestingPrincipalInfo(), a.securityFlags(),
                        a.contentPolicyType());
@@ -176,12 +176,12 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const RequestHeaderTuples& requestHeaders,
                                  const nsCString&           requestMethod,
                                  const OptionalInputStreamParams& uploadStream,
-                                 const bool&              uploadStreamHasHeaders,
+                                 const bool&                uploadStreamHasHeaders,
                                  const uint16_t&            priority,
                                  const uint8_t&             redirectionLimit,
-                                 const bool&              allowPipelining,
-                                 const bool&              allowSTS,
-                                 const bool&              forceAllowThirdPartyCookie,
+                                 const bool&                allowPipelining,
+                                 const bool&                allowSTS,
+                                 const uint32_t&            thirdPartyFlags,
                                  const bool&                doResumeAt,
                                  const uint64_t&            startPos,
                                  const nsCString&           entityID,
@@ -304,7 +304,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   mChannel->SetRedirectionLimit(redirectionLimit);
   mChannel->SetAllowPipelining(allowPipelining);
   mChannel->SetAllowSTS(allowSTS);
-  mChannel->SetForceAllowThirdPartyCookie(forceAllowThirdPartyCookie);
+  mChannel->SetThirdPartyFlags(thirdPartyFlags);
   mChannel->SetAllowSpdy(allowSpdy);
 
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChan =

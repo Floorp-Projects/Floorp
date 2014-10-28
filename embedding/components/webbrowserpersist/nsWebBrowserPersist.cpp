@@ -1236,7 +1236,7 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
         nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
                 do_QueryInterface(inputChannel);
         if (httpChannelInternal)
-            httpChannelInternal->SetForceAllowThirdPartyCookie(true);
+            httpChannelInternal->SetThirdPartyFlags(nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
     }
 
     // Set the referrer, post data and headers if any
