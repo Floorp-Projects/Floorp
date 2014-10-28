@@ -311,6 +311,14 @@ nsDOMCameraManager::GetCamera(const nsAString& aCamera,
   }
 
   nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
+  // If we are a CERTIFIED app, we can short-circuit the permission check,
+  // which gets us a performance win.
+  uint16_t status = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+  principal->GetAppStatus(&status);
+  if (status == nsIPrincipal::APP_STATUS_CERTIFIED && CheckPermission(mWindow)) {
+    PermissionAllowed(cameraId, aInitialConfig, successCallback, errorCallback, promise);
+    return promise.forget();
+  }
 
   nsCOMPtr<nsIRunnable> permissionRequest =
     new CameraPermissionRequest(principal, mWindow, this, cameraId, aInitialConfig,
