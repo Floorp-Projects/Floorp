@@ -419,8 +419,12 @@ endif # FAIL_ON_WARNINGS_DEBUG
 
 # Check for normal version of flag, and add WARNINGS_AS_ERRORS if it's set to 1.
 ifdef FAIL_ON_WARNINGS
+# Never treat warnings as errors in clang-cl, because it warns about many more
+# things than MSVC does.
+ifndef CLANG_CL
 CXXFLAGS += $(WARNINGS_AS_ERRORS)
 CFLAGS   += $(WARNINGS_AS_ERRORS)
+endif # CLANG_CL
 endif # FAIL_ON_WARNINGS
 
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)

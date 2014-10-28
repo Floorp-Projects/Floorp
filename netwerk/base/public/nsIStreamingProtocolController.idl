@@ -45,7 +45,7 @@ interface nsIStreamingProtocolMetaData : nsISupports
     attribute unsigned long height;
 
     /**
-     * The duration of the media stream.
+     * The duration of the media stream in units of microseconds.
      */
     attribute unsigned long long duration;
 
