@@ -37,6 +37,7 @@
 #include "nsPresContext.h"
 #include "nsPresState.h"
 #include "nsReadableUtils.h"
+#include "nsRuleData.h"
 #include "nsStyleConsts.h"
 #include "nsTextEditorState.h"
 #include "nsIController.h"
@@ -407,6 +408,18 @@ void
 HTMLTextAreaElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                            nsRuleData* aData)
 {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
+    // wrap=off
+    nsCSSValue* whiteSpace = aData->ValueForWhiteSpace();
+    if (whiteSpace->GetUnit() == eCSSUnit_Null) {
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::wrap);
+      if (value && value->Type() == nsAttrValue::eString &&
+          value->Equals(nsGkAtoms::OFF, eIgnoreCase)) {
+        whiteSpace->SetIntValue(NS_STYLE_WHITESPACE_PRE, eCSSUnit_Enumerated);
+      }
+    }
+  }
+
   nsGenericHTMLFormElementWithState::MapDivAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aData);
 }
@@ -431,7 +444,13 @@ HTMLTextAreaElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 NS_IMETHODIMP_(bool)
 HTMLTextAreaElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
+  static const MappedAttributeEntry attributes[] {
+    { &nsGkAtoms::wrap },
+    { nullptr }
+  };
+
   static const MappedAttributeEntry* const map[] = {
+    attributes,
     sDivAlignAttributeMap,
     sCommonAttributeMap,
   };
