@@ -306,6 +306,9 @@ def main():
     if test_dir not in ('', '.'):
         os.chdir(test_dir)
 
+    # Force Pacific time zone to avoid failures in Date tests.
+    os.environ['TZ'] = 'PST8PDT'
+
     results = None
     try:
         results = ResultsSink(options, len(skip_list) + len(test_list))
