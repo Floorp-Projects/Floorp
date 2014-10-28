@@ -45,7 +45,8 @@ const RILCONTENTHELPER_CID =
 const RIL_IPC_MSG_NAMES = [
   "RIL:CardStateChanged",
   "RIL:IccInfoChanged",
-  "RIL:CardLockResult",
+  "RIL:GetCardLockResult",
+  "RIL:SetUnlockCardLockResult",
   "RIL:CardLockRetryCount",
   "RIL:StkCommand",
   "RIL:StkSessionEnd",
@@ -672,33 +673,44 @@ RILContentHelper.prototype = {
                            "notifyIccInfoChanged",
                            null);
         break;
-      case "RIL:CardLockResult": {
+      case "RIL:GetCardLockResult": {
         let requestId = data.requestId;
         let requestWindow = this._windowsMap[requestId];
         delete this._windowsMap[requestId];
 
-        if (data.success) {
-          let result = new MobileIccCardLockResult(data);
-          this.fireRequestSuccess(requestId, result);
-        } else {
-          if (data.rilMessageType == "iccSetCardLock" ||
-              data.rilMessageType == "iccUnlockCardLock") {
-            let cardLockError = new requestWindow.IccCardLockError(data.errorMsg,
-                                                                   data.retryCount);
-            this.fireRequestDetailedError(requestId, cardLockError);
-          } else {
-            this.fireRequestError(requestId, data.errorMsg);
-          }
+        if (data.errorMsg) {
+          this.fireRequestError(requestId, data.errorMsg);
+          break;
         }
+
+        let result = new MobileIccCardLockResult(data);
+        this.fireRequestSuccess(requestId, result);
+        break;
+      }
+      case "RIL:SetUnlockCardLockResult": {
+        let requestId = data.requestId;
+        let requestWindow = this._windowsMap[requestId];
+        delete this._windowsMap[requestId];
+
+        if (data.errorMsg) {
+          let cardLockError = new requestWindow.IccCardLockError(data.errorMsg,
+                                                                 data.retryCount);
+          this.fireRequestDetailedError(requestId, cardLockError);
+          break;
+        }
+
+        let result = new MobileIccCardLockResult(data);
+        this.fireRequestSuccess(requestId, result);
         break;
       }
       case "RIL:CardLockRetryCount":
-        if (data.success) {
-          let result = new MobileIccCardLockRetryCount(data);
-          this.fireRequestSuccess(data.requestId, result);
-        } else {
+        if (data.errorMsg) {
           this.fireRequestError(data.requestId, data.errorMsg);
+          break;
         }
+
+        let result = new MobileIccCardLockRetryCount(data);
+        this.fireRequestSuccess(data.requestId, result);
         break;
       case "RIL:StkCommand":
         this._deliverEvent(clientId, "_iccListeners", "notifyStkCommand",
