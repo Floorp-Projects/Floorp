@@ -668,7 +668,15 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
           return true;
         }
         int32_t keepFrames = frames - skipFrames;
+        if (keepFrames < 0) {
+          NS_WARNING("Int overflow in keepFrames");
+          return false;
+	}
         int samples = keepFrames * channels;
+	if (samples < 0) {
+          NS_WARNING("Int overflow in samples");
+          return false;
+	}
         nsAutoArrayPtr<AudioDataValue> trimBuffer(new AudioDataValue[samples]);
         for (int i = 0; i < samples; i++)
           trimBuffer[i] = buffer[skipFrames*channels + i];
@@ -691,6 +699,10 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
         int32_t keepFrames = frames - discardFrames.value();
         if (keepFrames > 0) {
           int samples = keepFrames * channels;
+          if (samples < 0) {
+            NS_WARNING("Int overflow in samples");
+            return false;
+          }
           nsAutoArrayPtr<AudioDataValue> trimBuffer(new AudioDataValue[samples]);
           for (int i = 0; i < samples; i++)
             trimBuffer[i] = buffer[i];
