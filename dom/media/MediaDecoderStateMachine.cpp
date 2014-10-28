@@ -2016,7 +2016,18 @@ MediaDecoderStateMachine::FinishDecodeMetadata()
   }
 
   if (!mScheduler->IsRealTime() && !mDecodingFrozenAtStateMetadata) {
-    SetStartTime(mReader->ComputeStartTime());
+
+    const VideoData* v = VideoQueue().PeekFront();
+    const AudioData* a = AudioQueue().PeekFront();
+
+    int64_t startTime = std::min<int64_t>(a ? a->mTime : INT64_MAX,
+                                          v ? v->mTime : INT64_MAX);
+    if (startTime == INT64_MAX) {
+      startTime = 0;
+    }
+    DECODER_LOG("DecodeMetadata first video frame start %lld", v ? v->mTime : -1);
+    DECODER_LOG("DecodeMetadata first audio frame start %lld", a ? a->mTime : -1);
+    SetStartTime(startTime);
     if (VideoQueue().GetSize()) {
       ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
       RenderVideoFrame(VideoQueue().PeekFront(), TimeStamp::Now());
