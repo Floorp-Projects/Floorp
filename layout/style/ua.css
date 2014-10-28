@@ -390,3 +390,17 @@ div:-moz-native-anonymous.moz-selectioncaret-right.hidden {
   margin: 0px;
   visibility: hidden;
 }
+
+/* Custom content container in the CanvasFrame, fixed positioned on top of
+   everything else, not reacting to pointer events. */
+div:-moz-native-anonymous.moz-custom-content-container {
+  pointer-events: none;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  z-index: 2147483648;
+}

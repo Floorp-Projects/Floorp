@@ -382,9 +382,10 @@ permissions.forEach(function (perm) {
             self.marionette.timeouts(self.marionette.TIMEOUT_PAGE, self.marionette.timeout)
         else:
             self.marionette.timeouts(self.marionette.TIMEOUT_PAGE, 30000)
+
         if hasattr(self, 'test_container') and self.test_container:
             self.switch_into_test_container()
-        else:
+        elif hasattr(self, 'test_container') and self.test_container is False:
             if self.marionette.session_capabilities.has_key('b2g') \
             and self.marionette.session_capabilities['b2g'] == True:
                 self.close_test_container()
@@ -416,56 +417,18 @@ permissions.forEach(function (perm) {
         self.marionette = None
 
     def switch_into_test_container(self):
-        self.marionette.set_context("content")
-        frame = None
-        try:
-            frame = self.marionette.find_element(
-                'css selector',
-                'iframe[src*="app://test-container.gaiamobile.org/index.html"]'
-            )
-        except NoSuchElementException:
-            result = self.marionette.execute_async_script("""
-if((navigator.mozSettings == undefined) || (navigator.mozSettings == null) || (navigator.mozApps == undefined) || (navigator.mozApps == null)) {
-    marionetteScriptFinished(false);
-    return;
-}
-let setReq = navigator.mozSettings.createLock().set({'lockscreen.enabled': false});
-setReq.onsuccess = function() {
-    let appsReq = navigator.mozApps.mgmt.getAll();
-    appsReq.onsuccess = function() {
-        let apps = appsReq.result;
-        for (let i = 0; i < apps.length; i++) {
-            let app = apps[i];
-            if (app.manifest.name === 'Test Container') {
-                app.launch();
-                window.addEventListener('apploadtime', function apploadtime(){
-                    window.removeEventListener('apploadtime', apploadtime);
-                    marionetteScriptFinished(true);
-                });
-                return;
-            }
-        }
-        marionetteScriptFinished(false);
-    }
-    appsReq.onerror = function() {
-        marionetteScriptFinished(false);
-    }
-}
-setReq.onerror = function() {
-    marionetteScriptFinished(false);
-}""", script_timeout=60000)
+        self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
 
-            self.assertTrue(result)
-            frame = Wait(self.marionette, timeout=10, interval=0.2).until(element_present(
-                'css selector',
-                'iframe[src*="app://test-container.gaiamobile.org/index.html"]'
-            ))
+        frame = Wait(self.marionette, timeout=10, interval=0.2).until(element_present(
+            'css selector',
+            'iframe[src*="app://test-container.gaiamobile.org/index.html"]'
+        ))
 
         self.marionette.switch_to_frame(frame)
 
     def close_test_container(self):
-        self.marionette.set_context("content")
-        self.marionette.switch_to_frame()
+        self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
+
         result = self.marionette.execute_async_script("""
 if((navigator.mozSettings == undefined) || (navigator.mozSettings == null) || (navigator.mozApps == undefined) || (navigator.mozApps == null)) {
     marionetteScriptFinished(false);
@@ -499,7 +462,10 @@ setReq.onerror = function() {
     marionetteScriptFinished(false);
 }""", script_timeout=60000)
 
-        frame = Wait(self.marionette, timeout=10, interval=0.2).until(element_not_present(
+        if not result:
+            raise Exception('Failed to close Test Container app')
+
+        Wait(self.marionette, timeout=10, interval=0.2).until(element_not_present(
             'css selector',
             'iframe[src*="app://test-container.gaiamobile.org/index.html"]'
         ))
@@ -517,7 +483,7 @@ class MarionetteTestCase(CommonTestCase):
         self.methodName = methodName
         self.filepath = filepath
         self.testvars = kwargs.pop('testvars', None)
-        self.test_container = kwargs.pop('test_container', False)
+        self.test_container = kwargs.pop('test_container', None)
         CommonTestCase.__init__(self, methodName, **kwargs)
 
     @classmethod
@@ -588,7 +554,7 @@ class MarionetteJSTestCase(CommonTestCase):
         self.jsFile = jsFile
         self._marionette_weakref = marionette_weakref
         self.marionette = None
-        self.test_container = kwargs.pop('test_container', False)
+        self.test_container = kwargs.pop('test_container', None)
         CommonTestCase.__init__(self, methodName)
 
     @classmethod

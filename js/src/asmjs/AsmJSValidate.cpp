@@ -363,19 +363,28 @@ NextNonEmptyStatement(ParseNode *pn)
     return SkipEmptyStatements(pn->pn_next);
 }
 
-static TokenKind
-PeekToken(AsmJSParser &parser)
+static bool
+PeekToken(AsmJSParser &parser, TokenKind *tkp)
 {
     TokenStream &ts = parser.tokenStream;
-    while (ts.peekToken(TokenStream::Operand) == TOK_SEMI)
+    TokenKind tk;
+    while (true) {
+        if (!ts.peekToken(&tk, TokenStream::Operand))
+            return false;
+        if (tk != TOK_SEMI)
+            break;
         ts.consumeKnownToken(TOK_SEMI);
-    return ts.peekToken(TokenStream::Operand);
+    }
+    *tkp = tk;
+    return true;
 }
 
 static bool
 ParseVarOrConstStatement(AsmJSParser &parser, ParseNode **var)
 {
-    TokenKind tk = PeekToken(parser);
+    TokenKind tk;
+    if (!PeekToken(parser, &tk))
+        return false;
     if (tk != TOK_VAR && tk != TOK_CONST) {
         *var = nullptr;
         return true;
@@ -1452,7 +1461,10 @@ class MOZ_STACK_CLASS ModuleCompiler
         // Since pn is typically only null under OOM, this suppression simply forces any GC to be
         // delayed until the compilation is off the stack and more memory can be freed.
         gc::AutoSuppressGC nogc(cx_);
-        return failOffset(tokenStream().peekTokenPos().begin, str);
+        TokenPos pos;
+        if (!tokenStream().peekTokenPos(&pos))
+            return false;
+        return failOffset(pos.begin, str);
     }
 
     bool failfVA(ParseNode *pn, const char *fmt, va_list ap) {
@@ -3863,13 +3875,18 @@ CheckModuleProcessingDirectives(ModuleCompiler &m)
 {
     TokenStream &ts = m.parser().tokenStream;
     while (true) {
-        if (!ts.matchToken(TOK_STRING))
+        bool matched;
+        if (!ts.matchToken(&matched, TOK_STRING))
+            return false;
+        if (!matched)
             return true;
 
         if (!IsIgnoredDirectiveName(m.cx(), ts.currentToken().atom()))
             return m.fail(nullptr, "unsupported processing directive");
 
-        if (!ts.matchToken(TOK_SEMI))
+        if (!ts.matchToken(&matched, TOK_SEMI))
+            return false;
+        if (!matched)
             return m.fail(nullptr, "expected semicolon after string literal");
     }
 }
@@ -6858,15 +6875,16 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
 {
     TokenStream &tokenStream = m.tokenStream();
 
-    DebugOnly<TokenKind> tk = tokenStream.getToken();
-    MOZ_ASSERT(tk == TOK_FUNCTION);
+    tokenStream.consumeKnownToken(TOK_FUNCTION);
 
     RootedPropertyName name(m.cx());
 
-    TokenKind tt = tokenStream.getToken();
-    if (tt == TOK_NAME) {
+    TokenKind tk;
+    if (!tokenStream.getToken(&tk))
+        return false;
+    if (tk == TOK_NAME) {
         name = tokenStream.currentName();
-    } else if (tt == TOK_YIELD) {
+    } else if (tk == TOK_YIELD) {
         if (!m.parser().checkYieldNameValidity())
             return false;
         name = m.cx()->names().yield;
@@ -7046,7 +7064,13 @@ CheckFunctionsSequential(ModuleCompiler &m)
     // function by the LifoAllocScope inside the loop.
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
 
-    while (PeekToken(m.parser()) == TOK_FUNCTION) {
+    while (true) {
+        TokenKind tk;
+        if (!PeekToken(m.parser(), &tk))
+            return false;
+        if (tk != TOK_FUNCTION)
+            break;
+
         LifoAllocScope scope(&lifo);
 
         MIRGenerator *mir;
@@ -7208,7 +7232,13 @@ CheckFunctionsParallel(ModuleCompiler &m, ParallelGroupState &group)
     HelperThreadState().resetAsmJSFailureState();
 
     AsmJSParallelTask *task = nullptr;
-    for (unsigned i = 0; PeekToken(m.parser()) == TOK_FUNCTION; i++) {
+    for (unsigned i = 0;; i++) {
+        TokenKind tk;
+        if (!PeekToken(m.parser(), &tk))
+            return false;
+        if (tk != TOK_FUNCTION)
+            break;
+
         if (!task && !GetUnusedTask(group, i, &task) && !GetUsedTask(m, group, &task))
             return false;
 
@@ -7460,8 +7490,10 @@ CheckModuleExportObject(ModuleCompiler &m, ParseNode *object)
 static bool
 CheckModuleReturn(ModuleCompiler &m)
 {
-    if (PeekToken(m.parser()) != TOK_RETURN) {
-        TokenKind tk = PeekToken(m.parser());
+    TokenKind tk;
+    if (!PeekToken(m.parser(), &tk))
+        return false;
+    if (tk != TOK_RETURN) {
         if (tk == TOK_RC || tk == TOK_EOF)
             return m.fail(nullptr, "expecting return statement");
         return m.fail(nullptr, "invalid asm.js statement");
@@ -8573,7 +8605,9 @@ CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
     if (!CheckModuleReturn(m))
         return false;
 
-    TokenKind tk = PeekToken(m.parser());
+    TokenKind tk;
+    if (!PeekToken(m.parser(), &tk))
+        return false;
     if (tk != TOK_EOF && tk != TOK_RC)
         return m.fail(nullptr, "top-level export (return) must be the last statement");
 

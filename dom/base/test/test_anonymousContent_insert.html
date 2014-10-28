@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1020244
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1020244 - Insert content using the AnonymousContent API, several times, and don't remove it</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1020244">Mozilla Bug 1020244</a>
+<div>
+  <div id="id" class="test">text content</div>
+</div>
+  <script type="application/javascript;version=1.8">
+  const INSERTED_NB = 5;
+
+  // Insert the same content several times
+  let chromeDocument = SpecialPowers.wrap(document);
+  let testElement = document.querySelector("div");
+
+  let anonymousContents = [];
+  for (let i = 0; i < INSERTED_NB; i ++) {
+    let content = chromeDocument.insertAnonymousContent(testElement);
+    // Adding an expando pointing to the document to make sure this doesn't
+    // cause leaks.
+    content.dummyExpando = testElement.ownerDocument;
+    anonymousContents.push(content);
+  }
+
+  // Make sure that modifying one of the inserted elements does not modify the
+  // other ones.
+  anonymousContents[0].setAttributeForElement("id", "class", "updated");
+  for (let i = 1; i < INSERTED_NB; i ++) {
+    is(anonymousContents[i].getAttributeForElement("id", "class"),
+       "test",
+       "Element " + i + " didn't change when element 0 was changed");
+  }
+
+  // Do not remove inserted elements on purpose to test for potential leaks too.
+  </script>
+</body>
+</html>

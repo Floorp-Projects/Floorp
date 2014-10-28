@@ -351,6 +351,13 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
                                  placeholderStyleContext))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    if (!IsSingleLineTextControl()) {
+      // For textareas, UpdateValueDisplay doesn't initialize the visibility
+      // status of the placeholder because it returns early, so we have to
+      // do that manually here.
+      txtCtrl->UpdatePlaceholderVisibility(true);
+    }
   }
 
   rv = UpdateValueDisplay(false);

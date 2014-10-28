@@ -688,14 +688,14 @@ RtspMediaResource::OnConnected(uint8_t aTrackIdx,
     NS_DispatchToMainThread(event);
     return NS_ERROR_FAILURE;
   }
-  uint64_t duration = 0;
+  uint64_t durationUs = 0;
   for (int i = 0; i < tracks; ++i) {
     nsCString rtspTrackId("RtspTrack");
     rtspTrackId.AppendInt(i);
     nsCOMPtr<nsIStreamingProtocolMetaData> trackMeta;
     mMediaStreamController->GetTrackMetaData(i, getter_AddRefs(trackMeta));
     MOZ_ASSERT(trackMeta);
-    trackMeta->GetDuration(&duration);
+    trackMeta->GetDuration(&durationUs);
 
     // Here is a heuristic to estimate the slot size.
     // For video track, calculate the width*height.
@@ -716,12 +716,12 @@ RtspMediaResource::OnConnected(uint8_t aTrackIdx,
     return NS_ERROR_FAILURE;
   }
 
-  // If the duration is 0, imply the stream is live stream.
-  if (duration) {
+  // If the durationUs is 0, imply the stream is live stream.
+  if (durationUs) {
     // Not live stream.
     mRealTime = false;
     mDecoder->SetInfinite(false);
-    mDecoder->SetDuration(duration);
+    mDecoder->SetDuration((double)(durationUs) / USECS_PER_S);
   } else {
     // Live stream.
     // Check the preference "media.realtime_decoder.enabled".

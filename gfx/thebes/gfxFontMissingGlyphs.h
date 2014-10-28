@@ -6,35 +6,50 @@
 #ifndef GFX_FONTMISSINGGLYPHS_H
 #define GFX_FONTMISSINGGLYPHS_H
 
-#include "gfxTypes.h"
-#include "gfxRect.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/gfx/Rect.h"
 
-class gfxContext;
+namespace mozilla {
+namespace gfx {
+class DrawTarget;
+class Pattern;
+}
+}
 
 /**
  * This class should not be instantiated. It's just a container
  * for some helper functions.
  */
-class gfxFontMissingGlyphs {
+class gfxFontMissingGlyphs MOZ_FINAL
+{
+    typedef mozilla::gfx::DrawTarget DrawTarget;
+    typedef mozilla::gfx::Float Float;
+    typedef mozilla::gfx::Pattern Pattern;
+    typedef mozilla::gfx::Rect Rect;
+
+    gfxFontMissingGlyphs() MOZ_DELETE; // prevent instantiation
+
 public:
     /**
      * Draw hexboxes for a missing glyph.
-     * @param aContext the context to draw to
-     * @param aRect the glyph-box for the glyph that is missing
      * @param aChar the UTF16 codepoint for the character
+     * @param aRect the glyph-box for the glyph that is missing
+     * @param aDrawTarget the DrawTarget to draw to
+     * @param aPattern the pattern currently being used to paint
      * @param aAppUnitsPerDevPixel the appUnits to devPixel ratio we're using,
      *                             (so we can scale glyphs to a sensible size)
      */
-    static void DrawMissingGlyph(gfxContext    *aContext,
-                                 const gfxRect& aRect,
-                                 uint32_t       aChar,
-                                 uint32_t       aAppUnitsPerDevPixel);
+    static void DrawMissingGlyph(uint32_t aChar,
+                                 const Rect& aRect,
+                                 DrawTarget& aDrawTarget,
+                                 const Pattern& aPattern,
+                                 uint32_t aAppUnitsPerDevPixel);
     /**
      * @return the desired minimum width for a glyph-box that will allow
      * the hexboxes to be drawn reasonably.
      */
-    static gfxFloat GetDesiredMinWidth(uint32_t aChar,
-                                       uint32_t aAppUnitsPerDevUnit);
+    static Float GetDesiredMinWidth(uint32_t aChar,
+                                    uint32_t aAppUnitsPerDevUnit);
 };
 
 #endif

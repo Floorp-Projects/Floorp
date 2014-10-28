@@ -142,6 +142,7 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'AnonymousContent.h',
     'Attr.h',
     'BarProps.h',
     'BlobSet.h',
@@ -196,6 +197,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'AnonymousContent.cpp',
     'Attr.cpp',
     'BarProps.cpp',
     'ChildIterator.cpp',

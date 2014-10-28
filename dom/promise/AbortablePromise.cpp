@@ -100,7 +100,7 @@ AbortablePromise::Abort()
 
   nsCOMPtr<nsIRunnable> runnable =
     NS_NewRunnableMethod(this, &AbortablePromise::DoAbort);
-  Promise::DispatchToMainOrWorkerThread(runnable);
+  Promise::DispatchToMicroTask(runnable);
 }
 
 void
