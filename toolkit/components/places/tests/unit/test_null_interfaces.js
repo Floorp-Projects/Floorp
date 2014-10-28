@@ -8,40 +8,29 @@
 
 let Cr = Components.results;
 
-/**
- * Print some debug message to the console. All arguments will be printed,
- * separated by spaces.
- *
- * @param [arg0, arg1, arg2, ...]
- *        Any number of arguments to print out
- * @usage _("Hello World") -> prints "Hello World"
- * @usage _(1, 2, 3) -> prints "1 2 3"
- */
-let _ = function(some, debug, text, to) print(Array.slice(arguments).join(" "));
-
-_("Make an array of services to test, each specifying a class id, interface,",
-  "and an array of function names that don't throw when passed nulls");
+// Make an array of services to test, each specifying a class id, interface
+// and an array of function names that don't throw when passed nulls
 let testServices = [
   ["browser/nav-history-service;1", "nsINavHistoryService",
     ["queryStringToQueries", "removePagesByTimeframe", "removePagesFromHost",
      "removeVisitsByTimeframe"]],
   ["browser/nav-bookmarks-service;1","nsINavBookmarksService",
-    ["createFolder"]],
+    ["createFolder", "getObservers"]],
   ["browser/livemark-service;2","mozIAsyncLivemarks", ["reloadLivemarks"]],
   ["browser/annotation-service;1","nsIAnnotationService", []],
   ["browser/favicon-service;1","nsIFaviconService", []],
   ["browser/tagging-service;1","nsITaggingService", []],
 ];
-_(testServices.join("\n"));
+do_print(testServices.join("\n"));
 
 function run_test()
 {
-  testServices.forEach(function([cid, iface, nothrow]) {
-    _("Running test with", cid, iface, nothrow);
+  for (let [cid, iface, nothrow] of testServices) {
+    do_print(`Running test with ${cid} ${iface} ${nothrow}`);
     let s = Cc["@mozilla.org/" + cid].getService(Ci[iface]);
 
     let okName = function(name) {
-      _("Checking if function is okay to test:", name);
+      do_print(`Checking if function is okay to test: ${name}`);
       let func = s[name];
 
       let mesg = "";
@@ -52,60 +41,58 @@ function run_test()
       else if (name == "QueryInterface")
         mesg = "Ignore QI!";
 
-      if (mesg == "")
-        return true;
+      if (mesg) {
+        do_print(`${mesg} Skipping: ${name}`);
+        return false;
+      }
 
-      _(mesg, "Skipping:", name);
-      return false;
+      return true;
     }
 
-    _("Generating an array of functions to test service:", s);
-    [i for (i in s) if (okName(i))].sort().forEach(function(n) {
-      _();
-      _("Testing " + iface + " function with null args:", n);
+    do_print(`Generating an array of functions to test service: ${s}`);
+    for (let n of [i for (i in s) if (okName(i))].sort()) {
+      do_print(`\nTesting ${iface} function with null args: ${n}`);
 
       let func = s[n];
       let num = func.length;
-      _("Generating array of nulls for #args:", num);
-      let args = [];
-      for (let i = num; --i >= 0; )
-        args.push(null);
+      do_print(`Generating array of nulls for #args: ${num}`);
+      let args = Array(num).fill(null);
 
       let tryAgain = true;
       while (tryAgain == true) {
         try {
-          _("Calling with args:", JSON.stringify(args));
+          do_print(`Calling with args: ${JSON.stringify(args)}`);
           func.apply(s, args);
   
-          _("The function didn't throw! Is it one of the nothrow?", nothrow);
-          do_check_neq(nothrow.indexOf(n), -1);
+          do_print(`The function did not throw! Is it one of the nothrow? ${nothrow}`);
+          Assert.notEqual(nothrow.indexOf(n), -1);
 
-          _("Must have been an expected nothrow, so no need to try again");
+          do_print("Must have been an expected nothrow, so no need to try again");
           tryAgain = false;
         }
         catch(ex if ex.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
-          _("Caught an expected exception:", ex.name);
+          do_print(`Caught an expected exception: ${ex.name}`);
 
-          _("Moving on to the next test..");
+          do_print("Moving on to the next test..");
           tryAgain = false;
         }
         catch(ex if ex.result == Cr.NS_ERROR_XPC_NEED_OUT_OBJECT) {
           let pos = Number(ex.message.match(/object arg (\d+)/)[1]);
-          _("Function call expects an out object at", pos);
+          do_print(`Function call expects an out object at ${pos}`);
           args[pos] = {};
         }
         catch(ex if ex.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
-          _("Method not implemented exception:", ex.name);
+          do_print(`Method not implemented exception: ${ex.name}`);
 
-          _("Moving on to the next test..");
+          do_print("Moving on to the next test..");
           tryAgain = false;
         }
         catch(ex) {
-          _("Caught some unexpected exception.. dumping");
-          _([[i, ex[i]] for (i in ex)].join("\n"));
-          do_check_true(false);
+          do_print("Caught some unexpected exception.. dumping");
+          do_print([[i, ex[i]] for (i in ex)].join("\n"));
+          throw ex;
         }
       }
-    });
-  });
+    }
+  }
 }

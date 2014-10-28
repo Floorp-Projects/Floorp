@@ -223,7 +223,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(4C309044-B6DA-4511-AF57-E8940DB00045)]
+[scriptable, uuid(b0f9a80a-d7f0-4421-8513-444125f0d828)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -543,6 +543,12 @@ interface nsINavBookmarksService : nsISupports
    * Removes a bookmark observer.
    */
   void removeObserver(in nsINavBookmarkObserver observer);
+
+  /**
+   * Gets an array of registered nsINavBookmarkObserver objects.
+   */
+  void getObservers([optional] out unsigned long count,
+                    [retval, array, size_is(count)] out nsINavBookmarkObserver observers);
 
   /**
    * Runs the passed callback inside of a database transaction.
