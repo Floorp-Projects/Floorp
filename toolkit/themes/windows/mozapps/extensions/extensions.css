@@ -790,7 +790,7 @@
 
 #detail-screenshot[loading] {
   background-image: url("chrome://global/skin/icons/loading_16.png"),
-                    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+                    linear-gradient(rgba(255, 255, 255, 0.5), transparent);
   background-position: 50% 50%;
   background-repeat: no-repeat;
   border-radius: 3px;
@@ -798,7 +798,7 @@
 
 #detail-screenshot[loading="error"] {
   background-image: url("chrome://global/skin/media/error.png"),
-                    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+                    linear-gradient(rgba(255, 255, 255, 0.5), transparent);
 }
 
 #detail-desc-container {
@@ -1161,7 +1161,7 @@ button.button-link:not([disabled="true"]):active:hover {
   padding: 1px 3px;
   color: #444;
   text-shadow: 0 0 3px white;
-  background: linear-gradient(rgba(251, 252, 253, 0.95), rgba(246, 247, 248, 0) 49%, 
+  background: linear-gradient(rgba(251, 252, 253, 0.95), transparent 49%, 
                               rgba(211, 212, 213, 0.45) 51%, rgba(225, 226, 229, 0.3));
   background-clip: padding-box;
   border: 1px solid rgba(31, 64, 100, 0.4);

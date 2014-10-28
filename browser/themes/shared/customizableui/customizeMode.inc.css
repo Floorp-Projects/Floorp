@@ -352,7 +352,7 @@ toolbarpaletteitem[place="toolbar"] {
 }
 
 #customization-lwtheme-menu-footer {
-  background: linear-gradient(hsla(210,4%,10%,.05) 60%, hsla(210,4%,10%,0)) border-box;
+  background: linear-gradient(hsla(210,4%,10%,.05) 60%, transparent) border-box;
   border-top: 1px solid hsla(210,4%,10%,.05);
   margin-bottom: -10px;
 }
@@ -368,7 +368,7 @@ toolbarpaletteitem[place="toolbar"] {
 }
 
 .customization-lwtheme-menu-footeritem:hover {
-  background: linear-gradient(hsla(210,4%,10%,.08) 40%, hsla(210,4%,10%,0)) padding-box;
+  background: linear-gradient(hsla(210,4%,10%,.08) 40%, transparent) padding-box;
 }
 
 .customization-lwtheme-menu-footeritem:first-child {

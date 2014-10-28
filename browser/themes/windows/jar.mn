@@ -84,7 +84,7 @@ browser.jar:
         skin/classic/browser/Toolbar.png                             (Toolbar-XP.png)
         skin/classic/browser/Toolbar-inverted.png
         skin/classic/browser/Toolbar-lunaSilver.png
-        skin/classic/browser/toolbarbutton-dropdown-arrow.png
+        skin/classic/browser/toolbarbutton-dropdown-arrow.png        (toolbarbutton-dropdown-arrow-XPVista7.png)
         skin/classic/browser/toolbarbutton-dropdown-arrow-inverted.png
         skin/classic/browser/undoCloseTab.png                        (../shared/undoCloseTab.png)
         skin/classic/browser/undoCloseTab@2x.png                     (../shared/undoCloseTab@2x.png)
@@ -192,13 +192,13 @@ browser.jar:
         skin/classic/browser/social/chat-icons.svg                   (../shared/social/chat-icons.svg)
         skin/classic/browser/social/gear_default.png                 (../shared/social/gear_default.png)
         skin/classic/browser/social/gear_clicked.png                 (../shared/social/gear_clicked.png)
-        skin/classic/browser/tabbrowser/newtab.png                   (tabbrowser/newtab.png)
+        skin/classic/browser/tabbrowser/newtab.png                   (tabbrowser/newtab-XPVista7.png)
         skin/classic/browser/tabbrowser/newtab-inverted.png          (tabbrowser/newtab-inverted.png)
         skin/classic/browser/tabbrowser/connecting.png               (tabbrowser/connecting.png)
         skin/classic/browser/tabbrowser/loading.png                  (tabbrowser/loading.png)
         skin/classic/browser/tabbrowser/tab-active-middle.png        (tabbrowser/tab-active-middle.png)
         skin/classic/browser/tabbrowser/tab-active-middle@2x.png     (tabbrowser/tab-active-middle@2x.png)
-        skin/classic/browser/tabbrowser/tab-arrow-left.png           (tabbrowser/tab-arrow-left.png)
+        skin/classic/browser/tabbrowser/tab-arrow-left.png           (tabbrowser/tab-arrow-left-XPVista7.png)
         skin/classic/browser/tabbrowser/tab-arrow-left-inverted.png  (tabbrowser/tab-arrow-left-inverted.png)
         skin/classic/browser/tabbrowser/tab-background-start.png     (tabbrowser/tab-background-start.png)
         skin/classic/browser/tabbrowser/tab-background-start@2x.png  (tabbrowser/tab-background-start@2x.png)
@@ -516,6 +516,7 @@ browser.jar:
         skin/classic/aero/browser/Toolbar-inverted.png
         skin/classic/aero/browser/Toolbar-aero.png
         skin/classic/aero/browser/toolbarbutton-dropdown-arrow.png
+        skin/classic/aero/browser/toolbarbutton-dropdown-arrow-XPVista7.png
         skin/classic/aero/browser/toolbarbutton-dropdown-arrow-inverted.png
         skin/classic/aero/browser/undoCloseTab.png                        (../shared/undoCloseTab.png)
         skin/classic/aero/browser/undoCloseTab@2x.png                     (../shared/undoCloseTab@2x.png)
@@ -626,12 +627,14 @@ browser.jar:
         skin/classic/aero/browser/social/gear_default.png            (../shared/social/gear_default.png)
         skin/classic/aero/browser/social/gear_clicked.png            (../shared/social/gear_clicked.png)
         skin/classic/aero/browser/tabbrowser/newtab.png              (tabbrowser/newtab.png)
+        skin/classic/aero/browser/tabbrowser/newtab-XPVista7.png     (tabbrowser/newtab-XPVista7.png)
         skin/classic/aero/browser/tabbrowser/newtab-inverted.png     (tabbrowser/newtab-inverted.png)
         skin/classic/aero/browser/tabbrowser/connecting.png          (tabbrowser/connecting.png)
         skin/classic/aero/browser/tabbrowser/loading.png             (tabbrowser/loading.png)
         skin/classic/aero/browser/tabbrowser/tab-active-middle.png   (tabbrowser/tab-active-middle.png)
         skin/classic/aero/browser/tabbrowser/tab-active-middle@2x.png (tabbrowser/tab-active-middle@2x.png)
         skin/classic/aero/browser/tabbrowser/tab-arrow-left.png      (tabbrowser/tab-arrow-left.png)
+        skin/classic/aero/browser/tabbrowser/tab-arrow-left-XPVista7.png (tabbrowser/tab-arrow-left-XPVista7.png)
         skin/classic/aero/browser/tabbrowser/tab-arrow-left-inverted.png (tabbrowser/tab-arrow-left-inverted.png)
         skin/classic/aero/browser/tabbrowser/tab-background-start.png    (tabbrowser/tab-background-start.png)
         skin/classic/aero/browser/tabbrowser/tab-background-start@2x.png (tabbrowser/tab-background-start@2x.png)
@@ -874,6 +877,15 @@ browser.jar:
 
 % override chrome://browser/skin/sync-horizontalbar.png          chrome://browser/skin/sync-horizontalbar-XPVista7.png          os=WINNT osversion<6.2
 % override chrome://browser/skin/syncProgress-horizontalbar.png  chrome://browser/skin/syncProgress-horizontalbar-XPVista7.png  os=WINNT osversion<6.2
+
+% override chrome://browser/skin/toolbarbutton-dropdown-arrow.png  chrome://browser/skin/toolbarbutton-dropdown-arrow-XPVista7.png  os=WINNT osversion=6
+% override chrome://browser/skin/toolbarbutton-dropdown-arrow.png  chrome://browser/skin/toolbarbutton-dropdown-arrow-XPVista7.png  os=WINNT osversion=6.1
+
+% override chrome://browser/skin/tabbrowser/newtab.png     chrome://browser/skin/tabbrowser/newtab-XPVista7.png    os=WINNT osversion=6
+% override chrome://browser/skin/tabbrowser/newtab.png     chrome://browser/skin/tabbrowser/newtab-XPVista7.png    os=WINNT osversion=6.1
+
+% override chrome://browser/skin/tabbrowser/tab-arrow-left.png     chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7.png    os=WINNT osversion=6
+% override chrome://browser/skin/tabbrowser/tab-arrow-left.png     chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7.png    os=WINNT osversion=6.1
 
 % override chrome://browser/skin/loop/toolbar.png          chrome://browser/skin/loop/toolbar-XPVista7.png         os=WINNT osversion=6
 % override chrome://browser/skin/loop/toolbar.png          chrome://browser/skin/loop/toolbar-XPVista7.png         os=WINNT osversion=6.1
