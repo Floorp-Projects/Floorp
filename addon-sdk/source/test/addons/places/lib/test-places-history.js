@@ -36,9 +36,9 @@ exports.testEmptyQuery = function*(assert) {
     'matches url');
   assert.equal(results[1].url, 'http://simplequery-2.com/',
     'matches url');
-  assert.equal(results[0].title, 'Test visit for ' + results[0].url,
+  assert.equal(results[0].title, 'Test visit for ' + 'http://simplequery-1.com',
     'title matches');
-  assert.equal(results[1].title, 'Test visit for ' + results[1].url,
+  assert.equal(results[1].title, 'Test visit for ' + 'http://simplequery-2.com',
     'title matches');
   assert.equal(results[0].visitCount, 1, 'matches access');
   assert.equal(results[1].visitCount, 1, 'matches access');
