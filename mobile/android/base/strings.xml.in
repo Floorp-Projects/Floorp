@@ -294,8 +294,6 @@
   <string name="site_settings_no_settings">&site_settings_no_settings;</string>
 
   <string name="reading_list_added">&reading_list_added;</string>
-  <string name="reading_list_failed">&reading_list_failed;</string>
-  <string name="reading_list_duplicate">&reading_list_duplicate;</string>
   <string name="reading_list_time_minutes">&reading_list_time_minutes;</string>
   <string name="reading_list_time_over_an_hour">&reading_list_time_over_an_hour;</string>
 

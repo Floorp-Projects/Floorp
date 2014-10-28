@@ -359,8 +359,6 @@ size. -->
 <!ENTITY site_settings_no_settings  "There are no settings to clear.">
 
 <!ENTITY reading_list_added "Page added to your Reading List">
-<!ENTITY reading_list_failed "Failed to add page to your Reading List">
-<!ENTITY reading_list_duplicate "Page already in your Reading List">
 
 <!-- Localization note (reading_list_time_minutes) : This string is used in the "Reading List"
      panel on the home page to give the user an estimate of how many minutes it will take to
