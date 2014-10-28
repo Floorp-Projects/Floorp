@@ -97,7 +97,7 @@ EncodeBase64Web(vector<uint8_t> aBinary, string& aEncoded)
 
   auto out = aEncoded.begin();
   auto data = aBinary.begin();
-  for (int i = 0; i < aEncoded.length(); i++) {
+  for (string::size_type i = 0; i < aEncoded.length(); i++) {
     if (shift) {
       out[i] = (*data << (6 - shift)) & sMask;
       data++;
