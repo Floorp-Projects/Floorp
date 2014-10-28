@@ -9,6 +9,7 @@
 #include "MediaResource.h"
 #include "mozilla/Monitor.h"
 #include "nsITimer.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 

@@ -2410,7 +2410,7 @@ public:
   virtual nsresult PeekOffset(nsPeekOffsetStruct *aPos);
 
   /**
-   *  called to find the previous/next selectable leaf frame.
+   *  called to find the previous/next non-anonymous selectable leaf frame.
    *  @param aDirection [in] the direction to move in (eDirPrevious or eDirNext)
    *  @param aVisual [in] whether bidi caret behavior is visual (true) or logical (false)
    *  @param aJumpLines [in] whether to allow jumping across line boundaries

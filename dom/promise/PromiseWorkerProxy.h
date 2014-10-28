@@ -91,8 +91,7 @@ private:
 
   // Function pointer for calling Promise::{ResolveInternal,RejectInternal}.
   typedef void (Promise::*RunCallbackFunc)(JSContext*,
-                                           JS::Handle<JS::Value>,
-                                           Promise::PromiseTaskSync);
+                                           JS::Handle<JS::Value>);
 
   void RunCallback(JSContext* aCx,
                    JS::Handle<JS::Value> aValue,

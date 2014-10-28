@@ -56,7 +56,7 @@
     <popupnotification id="pointerLock-notification" hidden="true">
       <popupnotificationcontent orient="vertical" align="start">
         <separator class="thin"/>
-        <label id="pointerLock-cancel" value="&pointerLock.notification.message;"/>
+        <label id="pointerLock-cancel">&pointerLock.notification.message;</label>
       </popupnotificationcontent>
     </popupnotification>
 
