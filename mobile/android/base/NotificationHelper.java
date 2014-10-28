@@ -5,26 +5,23 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.util.GeckoEventListener;
-import org.mozilla.gecko.util.StringUtils;
+import java.util.HashMap;
+import java.util.Iterator;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
+import org.mozilla.gecko.util.GeckoEventListener;
 
-import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.IntentFilter;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-
-import java.util.Iterator;
-import java.util.HashMap;
 
 public final class NotificationHelper implements GeckoEventListener {
     public static final String HELPER_BROADCAST_ACTION = AppConstants.ANDROID_PACKAGE_NAME + ".helperBroadcastAction";
@@ -110,7 +107,7 @@ public final class NotificationHelper implements GeckoEventListener {
         return i.getBooleanExtra(HELPER_NOTIFICATION, false);
     }
 
-    public void handleNotificationIntent(Intent i) {
+    public void handleNotificationIntent(SafeIntent i) {
         final Uri data = i.getData();
         if (data == null) {
             Log.e(LOGTAG, "handleNotificationEvent: empty data");
@@ -137,7 +134,7 @@ public final class NotificationHelper implements GeckoEventListener {
 
         // The handler and cookie parameters are optional.
         final String handler = data.getQueryParameter(HANDLER_ATTR);
-        final String cookie = StringUtils.getStringExtra(i, COOKIE_ATTR);
+        final String cookie = i.getStringExtra(COOKIE_ATTR);
 
         try {
             args.put(ID_ATTR, id);
