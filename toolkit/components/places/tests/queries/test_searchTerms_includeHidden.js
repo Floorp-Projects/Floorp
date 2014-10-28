@@ -76,6 +76,6 @@ add_task(function* test_searchTerms_includeHidden() {
     do_check_eq(cc, data.expectedResults);
     do_check_eq(cc_update, data.expectedResults + (data.includeHidden ? 1 : 0));
 
-    PlacesUtils.bhistory.removePage(uri("http://hidden.example.com/"));
+    yield PlacesUtils.history.remove("http://hidden.example.com/");
   }
 });
