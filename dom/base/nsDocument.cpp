@@ -68,6 +68,7 @@
 #include "nsIServiceManager.h"
 #include "nsIServiceWorkerManager.h"
 
+#include "nsCanvasFrame.h"
 #include "nsContentCID.h"
 #include "nsError.h"
 #include "nsPresShell.h"
@@ -182,6 +183,7 @@
 #include "nsWrapperCacheInlines.h"
 #include "nsSandboxFlags.h"
 #include "nsIAppsService.h"
+#include "mozilla/dom/AnonymousContent.h"
 #include "mozilla/dom/AnimationTimeline.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DocumentFragment.h"
@@ -1986,6 +1988,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTemplateContentsOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildrenCollection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRegistry)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnonymousContents)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
@@ -5138,6 +5141,78 @@ nsDocument::StyleRuleRemoved(nsIStyleSheet* aSheet,
 
 #undef DO_STYLESHEET_NOTIFICATION
 
+already_AddRefed<AnonymousContent>
+nsIDocument::InsertAnonymousContent(Element& aElement, ErrorResult& aRv)
+{
+  nsIPresShell* shell = GetShell();
+  if (!shell || !shell->GetCanvasFrame()) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsCOMPtr<Element> container = shell->GetCanvasFrame()
+                                     ->GetCustomContentContainer();
+  if (!container) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  // Clone the node to avoid returning a direct reference
+  nsCOMPtr<nsINode> clonedElement = aElement.CloneNode(true, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Insert the element into the container
+  nsresult rv;
+  rv = container->AppendChildTo(clonedElement->AsContent(), true);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  nsRefPtr<AnonymousContent> anonymousContent =
+    new AnonymousContent(clonedElement->AsElement());
+  mAnonymousContents.AppendElement(anonymousContent);
+
+  return anonymousContent.forget();
+}
+
+void
+nsIDocument::RemoveAnonymousContent(AnonymousContent& aContent,
+                                    ErrorResult& aRv)
+{
+  nsIPresShell* shell = GetShell();
+  if (!shell) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  nsCOMPtr<Element> container = shell->GetCanvasFrame()
+                                     ->GetCustomContentContainer();
+  if (!container) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  // Iterate over know customContents to get and remove the right one
+  for (int32_t i = mAnonymousContents.Length() - 1; i >= 0; --i) {
+    if (mAnonymousContents[i] == &aContent) {
+      // Get the node from the customContent
+      nsCOMPtr<Element> node = aContent.GetContentNode();
+
+      // Remove the entry in mAnonymousContents
+      mAnonymousContents.RemoveElementAt(i);
+
+      // Remove the node from its container
+      container->RemoveChild(*node, aRv);
+      if (aRv.Failed()) {
+        return;
+      }
+
+      break;
+    }
+  }
+}
 
 //
 // nsIDOMDocument interface

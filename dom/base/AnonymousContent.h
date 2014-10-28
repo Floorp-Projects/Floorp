@@ -26,6 +26,7 @@ public:
 
   explicit AnonymousContent(Element* aContentNode);
   nsCOMPtr<Element> GetContentNode();
+  void SetContentNode(Element* aContentNode);
   JSObject* WrapObject(JSContext* aCx);
 
   // WebIDL methods

@@ -34,6 +34,12 @@ AnonymousContent::GetContentNode()
 }
 
 void
+AnonymousContent::SetContentNode(Element* aContentNode)
+{
+  mContentNode = aContentNode;
+}
+
+void
 AnonymousContent::SetTextContentForElement(const nsAString& aElementId,
                                            const nsAString& aText,
                                            ErrorResult& aRv)
