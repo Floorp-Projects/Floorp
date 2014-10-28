@@ -172,7 +172,7 @@ cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel)
 {
   switch(aChannel) {
     case dom::AudioChannel::Normal:
-      return CUBEB_STREAM_TYPE_SYSTEM;
+      /* FALLTHROUGH */
     case dom::AudioChannel::Content:
       return CUBEB_STREAM_TYPE_MUSIC;
     case dom::AudioChannel::Notification:

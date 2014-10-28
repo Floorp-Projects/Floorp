@@ -60,6 +60,7 @@ if CONFIG['MOZ_B2G_BT']:
                 'bluedroid/BluetoothServiceBluedroid.cpp',
                 'bluedroid/BluetoothSocket.cpp',
                 'bluedroid/BluetoothSocketHALInterface.cpp',
+                'bluedroid/BluetoothSocketMessageWatcher.cpp',
                 'bluedroid/BluetoothUtils.cpp',
             ]
             LOCAL_INCLUDES += [

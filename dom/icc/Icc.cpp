@@ -338,64 +338,6 @@ Icc::UpdateContact(const JSContext* aCx, const nsAString& aContactType,
 }
 
 already_AddRefed<DOMRequest>
-Icc::IccOpenChannel(const nsAString& aAid, ErrorResult& aRv)
-{
-  if (!mProvider) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsRefPtr<nsIDOMDOMRequest> request;
-  nsresult rv = mProvider->IccOpenChannel(mClientId, GetOwner(), aAid,
-                                          getter_AddRefs(request));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  return request.forget().downcast<DOMRequest>();
-}
-
-already_AddRefed<DOMRequest>
-Icc::IccExchangeAPDU(const JSContext* aCx, int32_t aChannel,
-                     JS::Handle<JS::Value> aApdu, ErrorResult& aRv)
-{
-  if (!mProvider) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsRefPtr<nsIDOMDOMRequest> request;
-  nsresult rv = mProvider->IccExchangeAPDU(mClientId, GetOwner(), aChannel,
-                                           aApdu, getter_AddRefs(request));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  return request.forget().downcast<DOMRequest>();
-}
-
-already_AddRefed<DOMRequest>
-Icc::IccCloseChannel(int32_t aChannel, ErrorResult& aRv)
-{
-  if (!mProvider) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsRefPtr<nsIDOMDOMRequest> request;
-  nsresult rv = mProvider->IccCloseChannel(mClientId, GetOwner(), aChannel,
-                                           getter_AddRefs(request));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  return request.forget().downcast<DOMRequest>();
-}
-
-already_AddRefed<DOMRequest>
 Icc::MatchMvno(const nsAString& aMvnoType,
                const nsAString& aMvnoData,
                ErrorResult& aRv)

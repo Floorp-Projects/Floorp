@@ -69,12 +69,14 @@ NetUtils::NetUtils()
 int32_t NetUtils::do_ifc_enable(const char *ifname)
 {
   USE_DLFUNC(ifc_enable)
+  mozilla::MutexAutoLock lock(mIfcMutex);
   return ifc_enable(ifname);
 }
 
 int32_t NetUtils::do_ifc_disable(const char *ifname)
 {
   USE_DLFUNC(ifc_disable)
+  mozilla::MutexAutoLock lock(mIfcMutex);
   return ifc_disable(ifname);
 }
 
