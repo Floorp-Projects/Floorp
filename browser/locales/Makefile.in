@@ -71,7 +71,7 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT) $(DIST_SUBDIR),windows metro)
 SEARCHPLUGINS_NAMES = $(shell cat $(call MERGE_FILE,/searchplugins/metrolist.txt))
 else
-SEARCHPLUGINS_NAMES = $(shell cat $(call MERGE_FILE,/searchplugins/list.txt))
+SEARCHPLUGINS_NAMES = $(shell cat $(call MERGE_FILE,/searchplugins/list.txt)) ddg
 endif
 SEARCHPLUGINS_PATH := $(FINAL_TARGET)/searchplugins
 # metro build call a searchplugins target for search engine plugins
