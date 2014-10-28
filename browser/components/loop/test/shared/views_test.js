@@ -161,13 +161,20 @@ describe("loop.shared.views", function() {
   });
 
   describe("ConversationView", function() {
-    var fakeSDK, fakeSessionData, fakeSession, fakePublisher, model;
+    var fakeSDK, fakeSessionData, fakeSession, fakePublisher, model, fakeAudio;
 
     function mountTestComponent(props) {
       return TestUtils.renderIntoDocument(sharedViews.ConversationView(props));
     }
 
     beforeEach(function() {
+      fakeAudio = {
+        play: sinon.spy(),
+        pause: sinon.spy(),
+        removeAttribute: sinon.spy()
+      };
+      sandbox.stub(window, "Audio").returns(fakeAudio);
+
       fakeSessionData = {
         sessionId:    "sessionId",
         sessionToken: "sessionToken",
@@ -350,46 +357,69 @@ describe("loop.shared.views", function() {
       });
 
       describe("Model events", function() {
-        it("should start streaming on session:connected", function() {
-          model.trigger("session:connected");
 
-          sinon.assert.calledOnce(fakeSDK.initPublisher);
-        });
+        describe("for standalone", function() {
 
-        it("should publish remote stream on session:stream-created",
-          function() {
-            var s1 = {connection: {connectionId: 42}};
-
-            model.trigger("session:stream-created", {stream: s1});
-
-            sinon.assert.calledOnce(fakeSession.subscribe);
-            sinon.assert.calledWith(fakeSession.subscribe, s1);
+          beforeEach(function() {
+            // In standalone, navigator.mozLoop does not exists
+            if (navigator.hasOwnProperty("mozLoop"))
+              sandbox.stub(navigator, "mozLoop", undefined);
           });
 
-        it("should unpublish local stream on session:ended", function() {
-          comp.startPublishing();
+          it("should play a connected sound, once, on session:connected",
+             function() {
+               model.trigger("session:connected");
 
-          model.trigger("session:ended");
-
-          sinon.assert.calledOnce(fakeSession.unpublish);
+               sinon.assert.calledOnce(window.Audio);
+               sinon.assert.calledWithExactly(
+                 window.Audio, "shared/sounds/connected.ogg");
+               expect(fakeAudio.loop).to.not.equal(true);
+             });
         });
 
-        it("should unpublish local stream on session:peer-hungup", function() {
-          comp.startPublishing();
+        describe("for both (standalone and desktop)", function() {
+          it("should start streaming on session:connected", function() {
+            model.trigger("session:connected");
 
-          model.trigger("session:peer-hungup");
+            sinon.assert.calledOnce(fakeSDK.initPublisher);
+          });
 
-          sinon.assert.calledOnce(fakeSession.unpublish);
-        });
+          it("should publish remote stream on session:stream-created",
+             function() {
+               var s1 = {connection: {connectionId: 42}};
 
-        it("should unpublish local stream on session:network-disconnected",
-          function() {
+               model.trigger("session:stream-created", {stream: s1});
+
+               sinon.assert.calledOnce(fakeSession.subscribe);
+               sinon.assert.calledWith(fakeSession.subscribe, s1);
+             });
+
+          it("should unpublish local stream on session:ended", function() {
             comp.startPublishing();
 
-            model.trigger("session:network-disconnected");
+            model.trigger("session:ended");
 
             sinon.assert.calledOnce(fakeSession.unpublish);
           });
+
+          it("should unpublish local stream on session:peer-hungup", function() {
+            comp.startPublishing();
+
+            model.trigger("session:peer-hungup");
+
+            sinon.assert.calledOnce(fakeSession.unpublish);
+          });
+
+          it("should unpublish local stream on session:network-disconnected",
+             function() {
+               comp.startPublishing();
+
+               model.trigger("session:network-disconnected");
+
+               sinon.assert.calledOnce(fakeSession.unpublish);
+             });
+        });
+
       });
 
       describe("Publisher events", function() {
@@ -526,7 +556,7 @@ describe("loop.shared.views", function() {
           fillSadFeedbackForm(comp, "confusing");
 
           expect(comp.getDOMNode()
-                     .querySelector("form input[type='text']").value).eql("");
+                     .querySelector(".feedback-description").value).eql("");
         });
 
       it("should enable the form submit button once a predefined category is " +
