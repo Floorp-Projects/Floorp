@@ -39,7 +39,8 @@ var WebcompatReporter = {
     } else if (topic === "DesktopMode:Change") {
       let args = JSON.parse(data);
       let tab = BrowserApp.getTabForId(args.tabId);
-      if (args.desktopMode && tab !== null) {
+      let currentURI = tab.browser.currentURI.spec;
+      if (args.desktopMode && this.isReportableUrl(currentURI)) {
         this.reportDesktopModePrompt();
       }
     }
@@ -57,10 +58,10 @@ var WebcompatReporter = {
   },
 
   isReportableUrl: function(url) {
-    return url !== null && !(url.startsWith("about") ||
-                             url.startsWith("chrome") ||
-                             url.startsWith("file") ||
-                             url.startsWith("resource"));
+    return url && !(url.startsWith("about") ||
+                    url.startsWith("chrome") ||
+                    url.startsWith("file") ||
+                    url.startsWith("resource"));
   },
 
   reportDesktopModePrompt: function() {
