@@ -606,7 +606,7 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
 bool
 MessageChannel::Send(Message* aMsg, Message* aReply)
 {
-    // See comment in DispatchUrgentMessage.
+    // See comment in DispatchSyncMessage.
     MaybeScriptBlocker scriptBlocker(this);
 
     // Sanity checks.
@@ -1120,14 +1120,13 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg)
 {
     AssertWorkerThread();
 
-    Message *reply = nullptr;
+    nsAutoPtr<Message> reply;
 
     mDispatchingSyncMessage = true;
-    Result rv = mListener->OnMessageReceived(aMsg, reply);
+    Result rv = mListener->OnMessageReceived(aMsg, *getter_Transfers(reply));
     mDispatchingSyncMessage = false;
 
     if (!MaybeHandleError(rv, aMsg, "DispatchSyncMessage")) {
-        delete reply;
         reply = new Message();
         reply->set_sync();
         reply->set_reply();
@@ -1136,8 +1135,9 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg)
     reply->set_seqno(aMsg.seqno());
 
     MonitorAutoLock lock(*mMonitor);
-    if (ChannelConnected == mChannelState)
-        mLink->SendMessage(reply);
+    if (ChannelConnected == mChannelState) {
+        mLink->SendMessage(reply.forget());
+    }
 }
 
 void
@@ -1292,14 +1292,13 @@ MessageChannel::DispatchInterruptMessage(const Message& aMsg, size_t stackDepth)
     SyncStackFrame frame(this, true);
 #endif
 
-    Message* reply = nullptr;
+    nsAutoPtr<Message> reply;
 
     ++mRemoteStackDepthGuess;
-    Result rv = mListener->OnCallReceived(aMsg, reply);
+    Result rv = mListener->OnCallReceived(aMsg, *getter_Transfers(reply));
     --mRemoteStackDepthGuess;
 
     if (!MaybeHandleError(rv, aMsg, "DispatchInterruptMessage")) {
-        delete reply;
         reply = new Message();
         reply->set_interrupt();
         reply->set_reply();
@@ -1308,8 +1307,9 @@ MessageChannel::DispatchInterruptMessage(const Message& aMsg, size_t stackDepth)
     reply->set_seqno(aMsg.seqno());
 
     MonitorAutoLock lock(*mMonitor);
-    if (ChannelConnected == mChannelState)
-        mLink->SendMessage(reply);
+    if (ChannelConnected == mChannelState) {
+        mLink->SendMessage(reply.forget());
+    }
 }
 
 void
