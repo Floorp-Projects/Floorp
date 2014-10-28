@@ -104,7 +104,7 @@ namespace gl {
 class GLLibraryEGL
 {
 public:
-    GLLibraryEGL() 
+    GLLibraryEGL()
         : mInitialized(false),
           mEGLLibrary(nullptr),
           mIsANGLE(false)
@@ -152,6 +152,14 @@ public:
         EGLDisplay disp = mSymbols.fGetDisplay(display_id);
         AFTER_GL_CALL;
         return disp;
+    }
+
+    EGLBoolean fTerminate(EGLDisplay display)
+    {
+        BEFORE_GL_CALL;
+        EGLBoolean ret = mSymbols.fTerminate(display);
+        AFTER_GL_CALL;
+        return ret;
     }
 
     EGLSurface fGetCurrentSurface(EGLint id)
@@ -469,6 +477,8 @@ public:
     struct {
         typedef EGLDisplay (GLAPIENTRY * pfnGetDisplay)(void *display_id);
         pfnGetDisplay fGetDisplay;
+        typedef EGLBoolean (GLAPIENTRY * pfnTerminate)(EGLDisplay dpy);
+        pfnTerminate fTerminate;
         typedef EGLSurface (GLAPIENTRY * pfnGetCurrentSurface)(EGLint);
         pfnGetCurrentSurface fGetCurrentSurface;
         typedef EGLContext (GLAPIENTRY * pfnGetCurrentContext)(void);

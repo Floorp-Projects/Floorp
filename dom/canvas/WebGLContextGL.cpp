@@ -2104,6 +2104,58 @@ WebGLContext::PixelStorei(GLenum pname, GLint param)
     }
 }
 
+// `width` in pixels.
+// `stride` in bytes.
+static bool
+SetFullAlpha(void* data, GLenum format, GLenum type, size_t width,
+             size_t height, size_t stride)
+{
+    if (format == LOCAL_GL_ALPHA && type == LOCAL_GL_UNSIGNED_BYTE) {
+        // Just memset the rows.
+        for (size_t j = 0; j < height; ++j) {
+            uint8_t* row = static_cast<uint8_t*>(data) + j*stride;
+            memset(row, 0xff, width);
+            row += stride;
+        }
+
+        return true;
+    }
+
+    if (format == LOCAL_GL_RGBA && type == LOCAL_GL_UNSIGNED_BYTE) {
+        for (size_t j = 0; j < height; ++j) {
+            uint8_t* row = static_cast<uint8_t*>(data) + j*stride;
+
+            uint8_t* pAlpha = row + 3;
+            uint8_t* pAlphaEnd = pAlpha + 4*width;
+            while (pAlpha != pAlphaEnd) {
+                *pAlpha = 0xff;
+                pAlpha += 4;
+            }
+        }
+
+        return true;
+    }
+
+    if (format == LOCAL_GL_RGBA && type == LOCAL_GL_FLOAT) {
+        for (size_t j = 0; j < height; ++j) {
+            uint8_t* rowBytes = static_cast<uint8_t*>(data) + j*stride;
+            float* row = reinterpret_cast<float*>(rowBytes);
+
+            float* pAlpha = row + 3;
+            float* pAlphaEnd = pAlpha + 4*width;
+            while (pAlpha != pAlphaEnd) {
+                *pAlpha = 1.0f;
+                pAlpha += 4;
+            }
+        }
+
+        return true;
+    }
+
+    MOZ_ASSERT(false, "Unhandled case, how'd we get here?");
+    return false;
+}
+
 void
 WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
                          GLsizei height, GLenum format,
@@ -2347,61 +2399,25 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
 
     // if we're reading alpha, we may need to do fixup.  Note that we don't allow
     // GL_ALPHA to readpixels currently, but we had the code written for it already.
-    if (format == LOCAL_GL_ALPHA ||
-        format == LOCAL_GL_RGBA)
-    {
-        bool needAlphaFixup;
-        if (mBoundFramebuffer) {
-            needAlphaFixup = !mBoundFramebuffer->ColorAttachment(0).HasAlpha();
-        } else {
-            needAlphaFixup = gl->GetPixelFormat().alpha == 0;
-        }
 
-        if (needAlphaFixup) {
-            if (format == LOCAL_GL_ALPHA && type == LOCAL_GL_UNSIGNED_BYTE) {
-                // this is easy; it's an 0xff memset per row
-                uint8_t *row = static_cast<uint8_t*>(data);
-                for (GLint j = 0; j < height; ++j) {
-                    memset(row, 0xff, checked_plainRowSize.value());
-                    row += checked_alignedRowSize.value();
-                }
-            } else if (format == LOCAL_GL_RGBA && type == LOCAL_GL_UNSIGNED_BYTE) {
-                // this is harder, we need to just set the alpha byte here
-                uint8_t *row = static_cast<uint8_t*>(data);
-                for (GLint j = 0; j < height; ++j) {
-                    uint8_t *rowp = row;
-#if MOZ_LITTLE_ENDIAN
-                    // offset to get the alpha byte; we're always going to
-                    // move by 4 bytes
-                    rowp += 3;
-#endif
-                    uint8_t *endrowp = rowp + 4 * width;
-                    while (rowp != endrowp) {
-                        *rowp = 0xff;
-                        rowp += 4;
-                    }
+    const bool formatHasAlpha = format == LOCAL_GL_ALPHA ||
+                                format == LOCAL_GL_RGBA;
+    if (!formatHasAlpha)
+        return;
 
-                    row += checked_alignedRowSize.value();
-                }
-            } else if (format == LOCAL_GL_RGBA && type == LOCAL_GL_FLOAT) {
-                float* row = static_cast<float*>(data);
+    bool needAlphaFilled;
+    if (mBoundFramebuffer) {
+        needAlphaFilled = !mBoundFramebuffer->ColorAttachment(0).HasAlpha();
+    } else {
+        needAlphaFilled = !mOptions.alpha;
+    }
 
-                for (GLint j = 0; j < height; ++j) {
-                    float* pAlpha = row + 3;
-                    float* pAlphaEnd = pAlpha + 4*width;
+    if (!needAlphaFilled)
+        return;
 
-                    while (pAlpha != pAlphaEnd) {
-                        *pAlpha = 1.0f;
-                        pAlpha += 4;
-                    }
-
-                    row += checked_alignedRowSize.value();
-                }
-            } else {
-                NS_WARNING("Unhandled case, how'd we get here?");
-                return rv.Throw(NS_ERROR_FAILURE);
-            }
-        }
+    size_t stride = checked_alignedRowSize.value(); // In bytes!
+    if (!SetFullAlpha(data, format, type, width, height, stride)) {
+        return rv.Throw(NS_ERROR_FAILURE);
     }
 }
 
