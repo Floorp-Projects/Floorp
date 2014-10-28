@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1068144 - Test getting the timestamps for allocations.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Memory monitoring actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="memory-helpers.js" type="application/javascript;version=1.8"></script>
+<script>
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  Task.spawn(function* () {
+    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+    yield memory.attach();
+
+    var allocs = [];
+    function allocator() {
+      allocs.push(new Object);
+    }
+
+    // Using setTimeout results in wildly varying delays that make it hard to
+    // test our timestamps and results in intermittent failures. Instead, we
+    // actually spin an empty loop for a whole millisecond.
+    function actuallyWaitOneWholeMillisecond() {
+      var start = window.performance.now();
+      while (window.performance.now() - start < 1.000) ;
+    }
+
+    yield memory.startRecordingAllocations();
+
+    allocator();
+    actuallyWaitOneWholeMillisecond();
+    allocator();
+    actuallyWaitOneWholeMillisecond();
+    allocator();
+
+    var response = yield memory.getAllocations();
+    yield memory.stopRecordingAllocations();
+
+    ok(response.allocationsTimestamps, "The response should have timestamps.");
+    is(response.allocationsTimestamps.length, response.allocations.length,
+       "There should be a timestamp for every allocation.");
+
+    var allocatorIndices = response.allocations
+      .map(function (a, idx) {
+        var frame = response.frames[a];
+        if (frame && frame.functionDisplayName === "allocator") {
+          return idx;
+        }
+      })
+      .filter(function (idx) {
+        return idx !== undefined;
+      });
+
+    is(allocatorIndices.length, 3, "Should have our 3 allocations from the `allocator` timeouts.");
+
+    var lastTimestamp;
+    for (var i = 0; i < 3; i++) {
+      var timestamp = response.allocationsTimestamps[allocatorIndices[i]];
+      info("timestamp", timestamp);
+      ok(timestamp, "We should have a timestamp for the `allocator` allocation.");
+
+      if (lastTimestamp) {
+        var delta = timestamp - lastTimestamp;
+        info("delta since last timestamp", delta);
+        ok(delta >= 1000 /* 1 ms */,
+           "The timestamp should be about 1 ms after the last timestamp.");
+      }
+
+      lastTimestamp = timestamp;
+    }
+
+    yield memory.detach();
+    destroyServerAndFinish(client);
+  });
+};
+</script>
+</pre>
+</body>
+</html>
