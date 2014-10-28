@@ -84,7 +84,7 @@ ResolvePromiseCallback::Call(JSContext* aCx,
     return;
   }
 
-  mPromise->ResolveInternal(aCx, value, Promise::SyncTask);
+  mPromise->ResolveInternal(aCx, value);
 }
 
 // RejectPromiseCallback
@@ -143,7 +143,7 @@ RejectPromiseCallback::Call(JSContext* aCx,
   }
 
 
-  mPromise->RejectInternal(aCx, value, Promise::SyncTask);
+  mPromise->RejectInternal(aCx, value);
 }
 
 // WrapperPromiseCallback
@@ -279,7 +279,7 @@ WrapperPromiseCallback::Call(JSContext* aCx,
         return;
       }
 
-      mNextPromise->RejectInternal(aCx, typeError, Promise::SyncTask);
+      mNextPromise->RejectInternal(aCx, typeError);
       return;
     }
   }
