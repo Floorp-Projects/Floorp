@@ -32,7 +32,11 @@ toolbar[brighttext] #downloads-button:not([attention]) > #downloads-indicator-an
 }
 
 #downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
-  background-image: url("chrome://browser/skin/downloads/download-glow.png");
+  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 18, 198, 36, 180);
+}
+
+toolbar[brighttext] #downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
+  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 18, 198, 36, 180);
 }
 
 #downloads-button[cui-areatype="menu-panel"][attention] {
@@ -44,10 +48,6 @@ toolbar[brighttext] #downloads-button:not([attention]) > #downloads-indicator-an
 @media (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {
 %endif
-  #downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
-    background-image: url("chrome://browser/skin/downloads/download-glow-XPVista7.png");
-  }
-
   #downloads-button[cui-areatype="menu-panel"][attention] {
     list-style-image: url("chrome://browser/skin/downloads/download-glow-menuPanel-XPVista7.png");
   }
@@ -69,7 +69,11 @@ toolbar[brighttext] #downloads-button:not([counter]):not([attention]) > #downloa
 }
 
 #downloads-button:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-  background-image: url("chrome://browser/skin/downloads/download-glow.png");
+  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 18, 198, 36, 180);
+}
+
+toolbar[brighttext] #downloads-button:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
+  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 18, 198, 36, 180);
 }
 
 /*** Download notifications ***/

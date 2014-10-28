@@ -34,7 +34,11 @@ toolbar[brighttext] #downloads-indicator-icon {
 }
 
 #downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
-  background-image: url("chrome://browser/skin/downloads/download-glow.png");
+  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 36, 198, 54, 180);
+}
+
+toolbar[brighttext] #downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
+  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 36, 198, 54, 180);
 }
 
 #downloads-button[cui-areatype="menu-panel"][attention] {
@@ -56,7 +60,11 @@ toolbar[brighttext] #downloads-button:not([counter]):not([attention]) > #downloa
 }
 
 #downloads-button:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-  background-image: url("chrome://browser/skin/downloads/download-glow.png");
+  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 36, 198, 54, 180);
+}
+
+toolbar[brighttext] #downloads-button:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
+  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 36, 198, 54, 180);
 }
 
 @media (min-resolution: 2dppx) {
@@ -79,7 +87,11 @@ toolbar[brighttext] #downloads-button:not([counter]):not([attention]) > #downloa
   }
 
   #downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
-    background-image: url("chrome://browser/skin/downloads/download-glow@2x.png");
+    background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 72, 396, 108, 360);
+  }
+
+  toolbar[brighttext] #downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
+    background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted@2x.png"), 72, 396, 108, 360);
   }
 
   #downloads-button[cui-areatype="menu-panel"][attention] {
@@ -87,7 +99,11 @@ toolbar[brighttext] #downloads-button:not([counter]):not([attention]) > #downloa
   }
 
   #downloads-button:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-    background-image: url("chrome://browser/skin/downloads/download-glow@2x.png");
+    background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 72, 396, 108, 360);
+  }
+
+  toolbar[brighttext] #downloads-button:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
+    background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted@2x.png"), 72, 396, 108, 360);
   }
 }
 
