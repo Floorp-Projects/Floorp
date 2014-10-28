@@ -72,8 +72,7 @@ SeekableZStream::DecompressChunk(void *where, size_t chunk, size_t length)
 
   DEBUG_LOG("DecompressChunk #%" PRIdSize " @%p (%" PRIdSize "/% " PRIdSize ")",
         chunk, where, length, chunkLen);
-  z_stream zStream;
-  memset(&zStream, 0, sizeof(zStream));
+  zxx_stream zStream;
   zStream.avail_in = (isLastChunk ? totalSize : uint32_t(offsetTable[chunk + 1]))
                      - uint32_t(offsetTable[chunk]);
   zStream.next_in = const_cast<Bytef *>(buffer + uint32_t(offsetTable[chunk]));
