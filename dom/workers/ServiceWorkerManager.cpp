@@ -19,9 +19,11 @@
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/InstallEventBinding.h"
+#include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 
 #include "nsContentUtils.h"
+#include "nsGlobalWindow.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsTArray.h"
@@ -29,6 +31,7 @@
 #include "RuntimeService.h"
 #include "ServiceWorker.h"
 #include "ServiceWorkerClient.h"
+#include "ServiceWorkerContainer.h"
 #include "ServiceWorkerRegistration.h"
 #include "ServiceWorkerEvents.h"
 #include "WorkerInlines.h"
@@ -2087,6 +2090,45 @@ EnumControlledDocuments(nsISupports* aKey,
   return PL_DHASH_NEXT;
 }
 
+static PLDHashOperator
+FireControllerChangeOnMatchingDocument(nsISupports* aKey,
+                                       ServiceWorkerRegistrationInfo* aValue,
+                                       void* aData)
+{
+  AssertIsOnMainThread();
+
+  ServiceWorkerRegistrationInfo* contextReg = static_cast<ServiceWorkerRegistrationInfo*>(aData);
+  if (aValue != contextReg) {
+    return PL_DHASH_NEXT;
+  }
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aKey);
+  if (NS_WARN_IF(!doc)) {
+    return PL_DHASH_NEXT;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> w = doc->GetWindow();
+  MOZ_ASSERT(w);
+  auto* window = static_cast<nsGlobalWindow*>(w.get());
+  if (NS_WARN_IF(!window)) {
+    NS_WARNING("No valid nsGlobalWindow");
+    return PL_DHASH_NEXT;
+  }
+
+  ErrorResult result;
+  dom::Navigator* navigator = window->GetNavigator(result);
+  if (NS_WARN_IF(result.Failed())) {
+    return PL_DHASH_NEXT;
+  }
+
+  nsRefPtr<ServiceWorkerContainer> container = navigator->ServiceWorker();
+  result = container->DispatchTrustedEvent(NS_LITERAL_STRING("controllerchange"));
+  if (result.Failed()) {
+    NS_WARNING("Failed to dispatch controllerchange event");
+  }
+
+  return PL_DHASH_NEXT;
+}
 } // anonymous namespace
 
 void
@@ -2111,6 +2153,9 @@ ServiceWorkerManager::GetServicedClients(const nsCString& aScope,
 void
 ServiceWorkerManager::FireControllerChange(ServiceWorkerRegistrationInfo* aRegistration)
 {
-  // FIXME(nsm): Fill this out.
+  nsRefPtr<ServiceWorkerDomainInfo> domainInfo = GetDomainInfo(aRegistration->mScope);
+  MOZ_ASSERT(domainInfo);
+  domainInfo->mControlledDocuments.EnumerateRead(FireControllerChangeOnMatchingDocument,
+                                                 aRegistration);
 }
 END_WORKERS_NAMESPACE
