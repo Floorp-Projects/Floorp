@@ -13,7 +13,7 @@ function test_expired_histogram() {
   var histogram_id = "FOOBAR";
   var test_expired_id = "TELEMETRY_TEST_EXPIRED";
   var clone_id = "ExpiredClone";
-  var dummy = Telemetry.newHistogram(histogram_id, "28.0a1", 1, 2, 3, Telemetry.HISTOGRAM_EXPONENTIAL);
+  var dummy = Telemetry.newHistogram(histogram_id, "28.0a1", Telemetry.HISTOGRAM_EXPONENTIAL, 1, 2, 3);
   var dummy_clone = Telemetry.histogramFrom(clone_id, test_expired_id);
   var rh = Telemetry.registeredHistograms([]);
 
@@ -28,7 +28,7 @@ function test_expired_histogram() {
 }
 
 function test_histogram(histogram_type, name, min, max, bucket_count) {
-  var h = Telemetry.newHistogram(name, "never", min, max, bucket_count, histogram_type);
+  var h = Telemetry.newHistogram(name, "never", histogram_type, min, max, bucket_count);
   var r = h.snapshot().ranges;
   var sum = 0;
   var log_sum = 0;
@@ -126,7 +126,7 @@ function expect_success(f) {
 
 function test_boolean_histogram()
 {
-  var h = Telemetry.newHistogram("test::boolean histogram", "never", 99,1,4, Telemetry.HISTOGRAM_BOOLEAN);
+  var h = Telemetry.newHistogram("test::boolean histogram", "never", Telemetry.HISTOGRAM_BOOLEAN);
   var r = h.snapshot().ranges;
   // boolean histograms ignore numeric parameters
   do_check_eq(uneval(r), uneval([0, 1, 2]))
@@ -148,7 +148,7 @@ function test_boolean_histogram()
 
 function test_flag_histogram()
 {
-  var h = Telemetry.newHistogram("test::flag histogram", "never", 130, 4, 5, Telemetry.HISTOGRAM_FLAG);
+  var h = Telemetry.newHistogram("test::flag histogram", "never", Telemetry.HISTOGRAM_FLAG);
   var r = h.snapshot().ranges;
   // Flag histograms ignore numeric parameters.
   do_check_eq(uneval(r), uneval([0, 1, 2]));
@@ -174,7 +174,7 @@ function test_flag_histogram()
 
 function test_count_histogram()
 {
-  let h = Telemetry.newHistogram("test::count histogram", "never", 1, 2, 3, Telemetry.HISTOGRAM_COUNT);
+  let h = Telemetry.newHistogram("test::count histogram", "never", Telemetry.HISTOGRAM_COUNT, 1, 2, 3);
   let s = h.snapshot();
   do_check_eq(uneval(s.ranges), uneval([0, 1, 2]));
   do_check_eq(uneval(s.counts), uneval([0, 0, 0]));
@@ -352,7 +352,7 @@ function test_addons() {
 
 // Check that telemetry doesn't record in private mode
 function test_privateMode() {
-  var h = Telemetry.newHistogram("test::private_mode_boolean", "never", 1,2,3, Telemetry.HISTOGRAM_BOOLEAN);
+  var h = Telemetry.newHistogram("test::private_mode_boolean", "never", Telemetry.HISTOGRAM_BOOLEAN);
   var orig = h.snapshot();
   Telemetry.canRecord = false;
   h.add(1);
@@ -391,8 +391,8 @@ function run_test()
     test_histogram(histogram_type, "test::"+histogram_type, min, max, bucket_count);
 
     const nh = Telemetry.newHistogram;
-    expect_fail(function () nh("test::min", "never", 0, max, bucket_count, histogram_type));
-    expect_fail(function () nh("test::bucket_count", "never", min, max, 1, histogram_type));
+    expect_fail(function () nh("test::min", "never", histogram_type, 0, max, bucket_count));
+    expect_fail(function () nh("test::bucket_count", "never", histogram_type, min, max, 1));
   }
 
   // Instantiate the storage for this histogram and make sure it doesn't
