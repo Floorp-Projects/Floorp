@@ -514,7 +514,8 @@ describe("loop.webapp", function() {
         notifications: notifications,
         sdk: sdk,
         conversation: conversationModel,
-        feedbackApiClient: feedbackApiClient
+        feedbackApiClient: feedbackApiClient,
+        onUrlHashChange: sandbox.stub()
       }));
     }
 

@@ -845,6 +845,10 @@ loop.webapp = (function($, _, OT, mozL10n) {
    * of the webapp page.
    */
   var WebappRootView = React.createClass({displayName: 'WebappRootView',
+
+    mixins: [sharedMixins.UrlHashChangeMixin,
+             sharedMixins.DocumentLocationMixin],
+
     propTypes: {
       client: React.PropTypes.instanceOf(loop.StandaloneClient).isRequired,
       conversation: React.PropTypes.oneOfType([
@@ -863,6 +867,10 @@ loop.webapp = (function($, _, OT, mozL10n) {
         unsupportedDevice: this.props.helper.isIOS(navigator.platform),
         unsupportedBrowser: !this.props.sdk.checkSystemRequirements(),
       };
+    },
+
+    onUrlHashChange: function() {
+      this.locationReload();
     },
 
     render: function() {
