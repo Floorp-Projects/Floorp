@@ -914,10 +914,12 @@ DataChannelConnection::RequestMoreStreams(int32_t aNeeded)
   uint32_t outStreamsNeeded;
   socklen_t len;
 
-  if (aNeeded + mStreams.Length() > MAX_NUM_STREAMS)
+  if (aNeeded + mStreams.Length() > MAX_NUM_STREAMS) {
     aNeeded = MAX_NUM_STREAMS - mStreams.Length();
-  if (aNeeded <= 0)
+  }
+  if (aNeeded <= 0) {
     return false;
+  }
 
   len = (socklen_t)sizeof(struct sctp_status);
   if (usrsctp_getsockopt(mMasterSocket, IPPROTO_SCTP, SCTP_STATUS, &status, &len) < 0) {
@@ -926,19 +928,25 @@ DataChannelConnection::RequestMoreStreams(int32_t aNeeded)
   }
   outStreamsNeeded = aNeeded; // number to add
 
-  memset(&sas, 0, sizeof(struct sctp_add_streams));
+  // Note: if multiple channel opens happen when we don't have enough space,
+  // we'll call RequestMoreStreams() multiple times
+  memset(&sas, 0, sizeof(sas));
   sas.sas_instrms = 0;
   sas.sas_outstrms = (uint16_t)outStreamsNeeded; /* XXX error handling */
   // Doesn't block, we get an event when it succeeds or fails
   if (usrsctp_setsockopt(mMasterSocket, IPPROTO_SCTP, SCTP_ADD_STREAMS, &sas,
                          (socklen_t) sizeof(struct sctp_add_streams)) < 0) {
-    if (errno == EALREADY)
+    if (errno == EALREADY) {
+      LOG(("Already have %u output streams", outStreamsNeeded));
       return true;
+    }
 
     LOG(("***failed: setsockopt ADD errno=%d", errno));
     return false;
   }
   LOG(("Requested %u more streams", outStreamsNeeded));
+  // We add to mStreams when we get a SCTP_STREAM_CHANGE_EVENT and the
+  // values are larger than mStreams.Length()
   return true;
 }
 
@@ -1054,6 +1062,13 @@ DataChannelConnection::SendDeferredMessages()
                                  channel->mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED,
                                  channel->mPrPolicy, channel->mPrValue)) {
         channel->mFlags &= ~DATA_CHANNEL_FLAGS_SEND_REQ;
+
+        channel->mState = OPEN;
+        channel->mReady = true;
+        LOG(("%s: sending ON_CHANNEL_OPEN for %p", __FUNCTION__, channel.get()));
+        NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
+                                  DataChannelOnMessageAvailable::ON_CHANNEL_OPEN, this,
+                                  channel));
         sent = true;
       } else {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -1181,6 +1196,7 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
       prPolicy = SCTP_PR_SCTP_TTL;
       break;
     default:
+      LOG(("Unknown channel type", req->channel_type));
       /* XXX error handling */
       return;
   }
@@ -1207,6 +1223,10 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
     }
     return;
   }
+  if (stream >= mStreams.Length()) {
+    LOG(("%s: stream %u out of bounds (%u)", __FUNCTION__, stream, mStreams.Length()));
+    return;
+  }
 
   nsCString label(nsDependentCSubstring(&req->label[0], ntohs(req->label_length)));
   nsCString protocol(nsDependentCSubstring(&req->label[ntohs(req->label_length)],
@@ -1224,8 +1244,8 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
 
   channel->mState = DataChannel::WAITING_TO_OPEN;
 
-  LOG(("%s: sending ON_CHANNEL_CREATED for %s/%s: %u", __FUNCTION__,
-       channel->mLabel.get(), channel->mProtocol.get(), stream));
+  LOG(("%s: sending ON_CHANNEL_CREATED for %s/%s: %u (state %u)", __FUNCTION__,
+       channel->mLabel.get(), channel->mProtocol.get(), stream, channel->mState));
   NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
                             DataChannelOnMessageAvailable::ON_CHANNEL_CREATED,
                             this, channel));
@@ -1733,13 +1753,14 @@ DataChannelConnection::HandleStreamResetEvent(const struct sctp_stream_reset_eve
           // 2. We sent our own reset (CLOSING); either they crossed on the
           //    wire, or this is a response to our Reset.
           //    Go to CLOSED
-          // 3. We've sent a open but haven't gotten a response yet (OPENING)
+          // 3. We've sent a open but haven't gotten a response yet (CONNECTING)
           //    I believe this is impossible, as we don't have an input stream yet.
 
           LOG(("Incoming: Channel %u  closed, state %d",
                channel->mStream, channel->mState));
           ASSERT_WEBRTC(channel->mState == DataChannel::OPEN ||
                         channel->mState == DataChannel::CLOSING ||
+                        channel->mState == DataChannel::CONNECTING ||
                         channel->mState == DataChannel::WAITING_TO_OPEN);
           if (channel->mState == DataChannel::OPEN ||
               channel->mState == DataChannel::WAITING_TO_OPEN) {
@@ -1785,20 +1806,21 @@ DataChannelConnection::HandleStreamChangeEvent(const struct sctp_stream_change_e
     return;
   } else {
     if (strchg->strchange_instrms > mStreams.Length()) {
-      LOG(("Other side increased streamds from %u to %u",
+      LOG(("Other side increased streams from %u to %u",
            mStreams.Length(), strchg->strchange_instrms));
     }
-    if (strchg->strchange_outstrms > mStreams.Length()) {
+    if (strchg->strchange_outstrms > mStreams.Length() ||
+        strchg->strchange_instrms > mStreams.Length()) {
       uint16_t old_len = mStreams.Length();
+      uint16_t new_len = std::max(strchg->strchange_outstrms,
+                                  strchg->strchange_instrms);
       LOG(("Increasing number of streams from %u to %u - adding %u (in: %u)",
-           old_len,
-           strchg->strchange_outstrms,
-           strchg->strchange_outstrms - old_len,
+           old_len, new_len, new_len - old_len,
            strchg->strchange_instrms));
       // make sure both are the same length
-      mStreams.AppendElements(strchg->strchange_outstrms - old_len);
+      mStreams.AppendElements(new_len - old_len);
       LOG(("New length = %d (was %d)", mStreams.Length(), old_len));
-      for (uint32_t i = old_len; i < mStreams.Length(); ++i) {
+      for (size_t i = old_len; i < mStreams.Length(); ++i) {
         mStreams[i] = nullptr;
       }
       // Re-process any channels waiting for streams.
@@ -1809,13 +1831,17 @@ DataChannelConnection::HandleStreamChangeEvent(const struct sctp_stream_change_e
       // Could make a more complex API for OpenXxxFinish() and avoid this loop
       int32_t num_needed = mPending.GetSize();
       LOG(("%d of %d new streams already needed", num_needed,
-           strchg->strchange_outstrms - old_len));
-      num_needed -= (strchg->strchange_outstrms - old_len); // number we added
+           new_len - old_len));
+      num_needed -= (new_len - old_len); // number we added
       if (num_needed > 0) {
         if (num_needed < 16)
           num_needed = 16;
         LOG(("Not enough new streams, asking for %d more", num_needed));
         RequestMoreStreams(num_needed);
+      } else if (strchg->strchange_outstrms < strchg->strchange_instrms) {
+        LOG(("Requesting %d output streams to match partner",
+             strchg->strchange_instrms - strchg->strchange_outstrms));
+        RequestMoreStreams(strchg->strchange_instrms - strchg->strchange_outstrms);
       }
 
       ProcessQueuedOpens();
