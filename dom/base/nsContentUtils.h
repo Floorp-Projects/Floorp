@@ -1542,6 +1542,8 @@ public:
   static uint32_t MicroTaskLevel();
   static void SetMicroTaskLevel(uint32_t aLevel);
 
+  static void PerformMainThreadMicroTaskCheckpoint();
+
   /* Process viewport META data. This gives us information for the scale
    * and zoom of a page on mobile devices. We stick the information in
    * the document header and use it later on after rendering.

@@ -354,6 +354,23 @@ Promise::MaybeReject(JSContext* aCx,
   MaybeRejectInternal(aCx, aValue);
 }
 
+void
+Promise::PerformMicroTaskCheckpoint()
+{
+  CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
+  nsTArray<nsRefPtr<nsIRunnable>>& microtaskQueue =
+    runtime->GetPromiseMicroTaskQueue();
+
+  while (!microtaskQueue.IsEmpty()) {
+    nsRefPtr<nsIRunnable> runnable = microtaskQueue.ElementAt(0);
+    MOZ_ASSERT(runnable);
+
+    // This function can re-enter, so we remove the element before calling.
+    microtaskQueue.RemoveElementAt(0);
+    runnable->Run();
+  }
+}
+
 /* static */ bool
 Promise::JSCallback(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 {
@@ -954,17 +971,15 @@ private:
 };
 
 /* static */ void
-Promise::DispatchToMainOrWorkerThread(nsIRunnable* aRunnable)
+Promise::DispatchToMicroTask(nsIRunnable* aRunnable)
 {
   MOZ_ASSERT(aRunnable);
-  if (NS_IsMainThread()) {
-    NS_DispatchToCurrentThread(aRunnable);
-    return;
-  }
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(worker);
-  nsRefPtr<WrappedWorkerRunnable> task = new WrappedWorkerRunnable(worker, aRunnable);
-  task->Dispatch(worker->GetJSContext());
+
+  CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
+  nsTArray<nsRefPtr<nsIRunnable>>& microtaskQueue =
+    runtime->GetPromiseMicroTaskQueue();
+
+  microtaskQueue.AppendElement(aRunnable);
 }
 
 void
@@ -1068,7 +1083,7 @@ Promise::ResolveInternal(JSContext* aCx,
         new PromiseInit(thenObj, mozilla::dom::GetIncumbentGlobal());
       nsRefPtr<ThenableResolverTask> task =
         new ThenableResolverTask(this, valueObj, thenCallback);
-      DispatchToMainOrWorkerThread(task);
+      DispatchToMicroTask(task);
       return;
     }
   }
@@ -1134,7 +1149,7 @@ Promise::EnqueueCallbackTasks()
   for (uint32_t i = 0; i < callbacks.Length(); ++i) {
     nsRefPtr<PromiseCallbackTask> task =
       new PromiseCallbackTask(this, callbacks[i], mResult);
-    DispatchToMainOrWorkerThread(task);
+    DispatchToMicroTask(task);
   }
 }
 

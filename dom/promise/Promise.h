@@ -111,6 +111,9 @@ public:
                                            // specializations in the .cpp for
                                            // the T values we support.
 
+  // Called by DOM to let us execute our callbacks.  May be called recursively.
+  static void PerformMicroTaskCheckpoint();
+
   // WebIDL
 
   nsIGlobalObject* GetParentObject() const
@@ -165,9 +168,9 @@ protected:
 
   virtual ~Promise();
 
-  // Queue an async task to current main or worker thread.
+  // Queue an async microtask to current main or worker thread.
   static void
-  DispatchToMainOrWorkerThread(nsIRunnable* aRunnable);
+  DispatchToMicroTask(nsIRunnable* aRunnable);
 
   // Do JS-wrapping after Promise creation.
   void CreateWrapper(ErrorResult& aRv);

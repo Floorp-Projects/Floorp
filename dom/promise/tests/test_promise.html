@@ -116,20 +116,57 @@ function promiseGC() {
   resolve(42);
 }
 
-function promiseAsync() {
-  var global = "foo";
-  var f = new Promise(function(r1, r2) {
-    is(global, "foo", "Global should be foo");
-    r1(42);
-    is(global, "foo", "Global should still be foo");
-    setTimeout(function() {
-      // is(global, "bar", "Global should still be bar!"); // Bug 1013625
-      runTest();
-    }, 0);
-  }).then(function() {
-    global = "bar";
+function promiseAsync_TimeoutResolveThen() {
+  var handlerExecuted = false;
+
+  setTimeout(function() {
+    ok(handlerExecuted, "Handler should have been called before the timeout.");
+
+    // Allow other assertions to run so the test could fail before the next one.
+    setTimeout(runTest, 0);
+  }, 0);
+
+  Promise.resolve().then(function() {
+    handlerExecuted = true;
   });
-  is(global, "foo", "Global should still be foo (2)");
+
+  ok(!handlerExecuted, "Handlers are not called before 'then' returns.");
+}
+
+function promiseAsync_ResolveTimeoutThen() {
+  var handlerExecuted = false;
+
+  var promise = Promise.resolve();
+
+  setTimeout(function() {
+    ok(handlerExecuted, "Handler should have been called before the timeout.");
+
+    // Allow other assertions to run so the test could fail before the next one.
+    setTimeout(runTest, 0);
+  }, 0);
+
+  promise.then(function() {
+    handlerExecuted = true;
+  });
+
+  ok(!handlerExecuted, "Handlers are not called before 'then' returns.");
+}
+
+function promiseAsync_ResolveThenTimeout() {
+  var handlerExecuted = false;
+
+  Promise.resolve().then(function() {
+    handlerExecuted = true;
+  });
+
+  setTimeout(function() {
+    ok(handlerExecuted, "Handler should have been called before the timeout.");
+
+    // Allow other assertions to run so the test could fail before the next one.
+    setTimeout(runTest, 0);
+  }, 0);
+
+  ok(!handlerExecuted, "Handlers are not called before 'then' returns.");
 }
 
 function promiseDoubleThen() {
@@ -715,7 +752,10 @@ function promiseWrapperAsyncResolution()
 }
 
 var tests = [ promiseResolve, promiseReject,
-              promiseException, promiseGC, promiseAsync,
+              promiseException, promiseGC,
+              promiseAsync_TimeoutResolveThen,
+              promiseAsync_ResolveTimeoutThen,
+              promiseAsync_ResolveThenTimeout,
               promiseDoubleThen, promiseThenException,
               promiseThenCatchThen, promiseRejectThenCatchThen,
               promiseRejectThenCatchThen2,

@@ -49,6 +49,7 @@
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MessagePortList.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StructuredClone.h"
 #include "mozilla/dom/WorkerBinding.h"
@@ -4111,6 +4112,10 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
 
     // Process a single runnable from the main queue.
     MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(mThread, false));
+
+    // Only perform the Promise microtask checkpoint on the outermost event
+    // loop.  Don't run it, for example, during sync XHR or importScripts.
+    Promise::PerformMicroTaskCheckpoint();
 
     if (NS_HasPendingEvents(mThread)) {
       // Now *might* be a good time to GC. Let the JS engine make the decision.
