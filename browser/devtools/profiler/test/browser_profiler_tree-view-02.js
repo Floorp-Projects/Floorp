@@ -27,11 +27,11 @@ function test() {
   is(container.childNodes[0].className, "call-tree-item",
     "The root node in the tree has the correct class name.");
 
-  is($$dur(0).getAttribute("value"), "18",
+  is($$dur(0).getAttribute("value"), "15",
     "The root's duration cell displays the correct value.");
   is($$perc(0).getAttribute("value"), "100%",
     "The root's percentage cell displays the correct value.");
-  is($$sampl(0).getAttribute("value"), "3",
+  is($$sampl(0).getAttribute("value"), "4",
     "The root's samples cell displays the correct value.");
   is($$fun(".call-tree-name")[0].getAttribute("value"), "(root)",
     "The root's function cell displays the correct name.");
@@ -53,11 +53,11 @@ function test() {
   is(container.childNodes[1].className, "call-tree-item",
     "The .A node in the tree has the correct class name.");
 
-  is($$dur(1).getAttribute("value"), "18",
+  is($$dur(1).getAttribute("value"), "15",
     "The .A node's duration cell displays the correct value.");
   is($$perc(1).getAttribute("value"), "100%",
     "The .A node's percentage cell displays the correct value.");
-  is($$sampl(1).getAttribute("value"), "3",
+  is($$sampl(1).getAttribute("value"), "4",
     "The .A node's samples cell displays the correct value.");
   is($$fun(".call-tree-name")[1].getAttribute("value"), "A",
     "The .A node's function cell displays the correct name.");
@@ -82,11 +82,11 @@ function test() {
   is(container.childNodes[3].className, "call-tree-item",
     "The .E node in the tree has the correct class name.");
 
-  is($$dur(2).getAttribute("value"), "11",
+  is($$dur(2).getAttribute("value"), "8",
     "The .A.B node's duration cell displays the correct value.");
-  is($$perc(2).getAttribute("value"), "66.66%",
+  is($$perc(2).getAttribute("value"), "75%",
     "The .A.B node's percentage cell displays the correct value.");
-  is($$sampl(2).getAttribute("value"), "2",
+  is($$sampl(2).getAttribute("value"), "3",
     "The .A.B node's samples cell displays the correct value.");
   is($$fun(".call-tree-name")[2].getAttribute("value"), "B",
     "The .A.B node's function cell displays the correct name.");
@@ -103,7 +103,7 @@ function test() {
 
   is($$dur(3).getAttribute("value"), "7",
     "The .A.E node's duration cell displays the correct value.");
-  is($$perc(3).getAttribute("value"), "33.33%",
+  is($$perc(3).getAttribute("value"), "25%",
     "The .A.E node's percentage cell displays the correct value.");
   is($$sampl(3).getAttribute("value"), "1",
     "The .A.E node's samples cell displays the correct value.");
@@ -132,7 +132,7 @@ let gSamples = [{
     { category: 32, location: "C (http://foo/bar/baz:56)" }
   ]
 }, {
-  time: 5 + 6,
+  time: 5 + 1,
   frames: [
     { category: 8,  location: "(root)" },
     { category: 8,  location: "A (http://foo/bar/baz:12)" },
@@ -140,7 +140,15 @@ let gSamples = [{
     { category: 64, location: "D (http://foo/bar/baz:78)" }
   ]
 }, {
-  time: 5 + 6 + 7,
+  time: 5 + 1 + 2,
+  frames: [
+    { category: 8,  location: "(root)" },
+    { category: 8,  location: "A (http://foo/bar/baz:12)" },
+    { category: 16, location: "B (http://foo/bar/baz:34)" },
+    { category: 64, location: "D (http://foo/bar/baz:78)" }
+  ]
+}, {
+  time: 5 + 1 + 2 + 7,
   frames: [
     { category: 8,   location: "(root)" },
     { category: 8,   location: "A (http://foo/bar/baz:12)" },
