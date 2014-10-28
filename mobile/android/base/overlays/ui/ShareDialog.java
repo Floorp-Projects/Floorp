@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.overlays.OverlayConstants;
 import org.mozilla.gecko.overlays.service.OverlayActionService;
 import org.mozilla.gecko.overlays.service.sharemethods.ParcelableClientRecord;
@@ -30,7 +31,6 @@ import org.mozilla.gecko.overlays.service.sharemethods.SendTab;
 import org.mozilla.gecko.overlays.service.sharemethods.ShareMethod;
 import org.mozilla.gecko.LocaleAware;
 import org.mozilla.gecko.sync.setup.activities.WebURLFinder;
-import org.mozilla.gecko.util.StringUtils;
 
 /**
  * A transparent activity that displays the share overlay.
@@ -107,7 +107,7 @@ public class ShareDialog extends LocaleAware.LocaleAwareActivity implements Send
         Intent intent = getIntent();
 
         // The URL is usually hiding somewhere in the extra text. Extract it.
-        final String extraText = StringUtils.getStringExtra(intent, Intent.EXTRA_TEXT);
+        final String extraText = ContextUtils.getStringExtra(intent, Intent.EXTRA_TEXT);
         if (TextUtils.isEmpty(extraText)) {
             abortDueToNoURL();
             return;
