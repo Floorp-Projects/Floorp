@@ -31,7 +31,7 @@ add_test(function test_registration_invalid_token() {
     response.finish();
   });
 
-  MozLoopService.register(mockPushHandler).then(() => {
+  MozLoopService.register().then(() => {
     // Due to the way the time stamp checking code works in hawkclient, we expect a couple
     // of authorization requests before we reset the token.
     Assert.equal(authorizationAttempts, 2);
@@ -43,8 +43,7 @@ add_test(function test_registration_invalid_token() {
 });
 
 
-function run_test()
-{
+function run_test() {
   setupFakeLoopServer();
 
   do_register_cleanup(function() {
