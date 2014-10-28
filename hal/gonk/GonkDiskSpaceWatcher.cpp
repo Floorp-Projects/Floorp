@@ -169,6 +169,9 @@ GonkDiskSpaceWatcher::DoStart()
     NS_WARNING("Error calling inotify_init()");
     if (errno == ENOSYS) {
       NS_WARNING("Warning: No fanotify support in this device's kernel.\n");
+#if ANDROID_VERSION >= 19
+      MOZ_CRASH("Fanotify support must be enabled in the kernel.");
+#endif
     }
     return;
   }
