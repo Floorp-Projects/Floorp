@@ -222,7 +222,7 @@ static void Shutdown();
 #include "nsIPowerManagerService.h"
 #include "nsIAlarmHalService.h"
 #include "nsIMediaManager.h"
-#include "nsMixedContentBlocker.h"
+#include "mozilla/dom/nsMixedContentBlocker.h"
 
 #include "AudioChannelService.h"
 

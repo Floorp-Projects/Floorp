@@ -8,6 +8,7 @@ EXPORTS.mozilla.dom += [
     'nsCSPContext.h',
     'nsCSPService.h',
     'nsCSPUtils.h',
+    'nsMixedContentBlocker.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -15,6 +16,7 @@ UNIFIED_SOURCES += [
     'nsCSPParser.cpp',
     'nsCSPService.cpp',
     'nsCSPUtils.cpp',
+    'nsMixedContentBlocker.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
@@ -22,4 +24,5 @@ FAIL_ON_WARNINGS = True
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/caps',
+    '/netwerk/base/src',
 ]
