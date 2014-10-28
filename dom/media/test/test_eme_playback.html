@@ -13,7 +13,7 @@
 var manager = new MediaTestManager;
 
 
-function KeysChangeFunc(session, keys) {
+function KeysChangeFunc(session, keys, token) {
   session.keyIdsReceived = [];
   for (var keyid in keys) {
     info("Set " + keyid + " to false in session.keyIdsReceived");
@@ -25,7 +25,7 @@ function KeysChangeFunc(session, keys) {
     session.getUsableKeyIds().then(function(keyIds) {
       for (var k = 0; k < keyIds.length; k++) {
         var kid = Base64ToHex(window.btoa(ArrayBufferToString(keyIds[k])));
-        ok(kid in session.keyIdsReceived, "session.keyIdsReceived contained " + kid + " as expected.");
+        ok(kid in session.keyIdsReceived, token + " session.keyIdsReceived contained " + kid + " as expected.");
         session.keyIdsReceived[kid] = true;
       }
     }, bail("Failed to get keyIds"));
@@ -34,7 +34,7 @@ function KeysChangeFunc(session, keys) {
 
 function startTest(test, token)
 {
-  manager.started(test._token);
+  manager.started(token);
 
   var sessions = [];
 
@@ -42,11 +42,11 @@ function startTest(test, token)
     {
       onsessioncreated: function(session) {
         sessions.push(session);
-        session.addEventListener("keyschange", KeysChangeFunc(session, test.keys), false);
+        session.addEventListener("keyschange", KeysChangeFunc(session, test.keys, token), false);
       }
     }
   );
-  
+
   var gotEncrypted = false;
   var gotPlaying = false;
 
@@ -60,7 +60,7 @@ function startTest(test, token)
 
   v.addEventListener("ended", function(ev) {
     ok(true, token + " got ended event");
-    manager.finished(test._token);
+    manager.finished(token);
 
     ok(gotEncrypted, token + " encrypted event should have fired");
     ok(gotPlaying, token + " playing event should have fired");
@@ -75,9 +75,9 @@ function startTest(test, token)
     is(sessions.length, 1, "should have 1 session");
     for (var i = 0; i < sessions.length; i++) {
       var session = sessions[i];
-      ok(session.gotKeysChanged, "Should have received at least one keychange event");
+      ok(session.gotKeysChanged, token + " should have received at least one keychange event");
       for (var kid in session.keyIdsReceived) {
-        ok(session.keyIdsReceived[kid], "key with id " + kid + " was usable as expected");
+        ok(session.keyIdsReceived[kid], token + " key with id " + kid + " was usable as expected");
       }
     }
 
