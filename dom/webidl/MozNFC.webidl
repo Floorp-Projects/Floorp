@@ -82,6 +82,7 @@ interface MozNFC : EventTarget {
   /**
    * This event will be fired if the tag detected in ontagfound has been removed.
    */
+  [CheckPermissions="nfc-read nfc-write"]
   attribute EventHandler ontaglost;
 };
 

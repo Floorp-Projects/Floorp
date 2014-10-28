@@ -224,6 +224,10 @@ mozNfc.prototype = {
       return;
     }
 
+    if (!this.checkPermissions(["nfc-read", "nfc-write"])) {
+      return;
+    }
+
     let tag = new MozNFCTag(this._window, sessionToken);
     let tagContentObj = this._window.MozNFCTag._create(this._window, tag);
 
@@ -250,6 +254,10 @@ mozNfc.prototype = {
   notifyTagLost: function notifyTagLost(sessionToken) {
     if (this.hasDeadWrapper()) {
       dump("this._window or this.__DOM_IMPL__ is a dead wrapper.");
+      return;
+    }
+
+    if (!this.checkPermissions(["nfc-read", "nfc-write"])) {
       return;
     }
 
@@ -295,6 +303,21 @@ mozNfc.prototype = {
     debug("fire onpeerlost");
     let event = new this._window.Event("peerlost");
     this.__DOM_IMPL__.dispatchEvent(event);
+  },
+
+  checkPermissions: function checkPermissions(perms) {
+    let principal = this._window.document.nodePrincipal;
+    for (let perm of perms) {
+      let permValue =
+        Services.perms.testExactPermissionFromPrincipal(principal, perm);
+      if (permValue == Ci.nsIPermissionManager.ALLOW_ACTION) {
+        return true;
+      } else {
+        debug("doesn't have " + perm + " permission.");
+      }
+    }
+
+    return false;
   },
 
   hasDeadWrapper: function hasDeadWrapper() {
