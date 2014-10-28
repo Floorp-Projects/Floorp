@@ -150,6 +150,10 @@ function SetupEME(test, token, params)
 {
   var v = document.createElement("video");
 
+  var onSetKeysFail = (params && params.onSetKeysFail)
+    ? params.onSetKeysFail
+    : bail(token + " Failed to set MediaKeys on <video> element");
+  
   v.addEventListener("encrypted", function(ev) {
     info(token + " got encrypted event");
     MediaKeys.create(KEYSYSTEM_TYPE).then(function(mediaKeys) {
@@ -167,7 +171,7 @@ function SetupEME(test, token, params)
       session.generateRequest(ev.initDataType, ev.initData).then(function() {
       }, bail(token + " Failed to initialise MediaKeySession"));
 
-    }, bail(token + " Failed to set MediaKeys on <video> element"));
+    }, onSetKeysFail);
   });
 
   return v;
