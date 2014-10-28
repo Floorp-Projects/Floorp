@@ -847,7 +847,8 @@ let MozLoopServiceInternal = {
     var callData = {
       contact: contact,
       callType: callType,
-      callId: Math.floor((Math.random() * 10))
+      // XXX Really we shouldn't be using random numbers, bug 1090209 will fix this.
+      callId: Math.floor((Math.random() * 100000000))
     };
 
     this._startCall(callData, "outgoing");
