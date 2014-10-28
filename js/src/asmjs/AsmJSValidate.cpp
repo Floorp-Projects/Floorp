@@ -3875,13 +3875,18 @@ CheckModuleProcessingDirectives(ModuleCompiler &m)
 {
     TokenStream &ts = m.parser().tokenStream;
     while (true) {
-        if (!ts.matchToken(TOK_STRING))
+        bool matched;
+        if (!ts.matchToken(&matched, TOK_STRING))
+            return false;
+        if (!matched)
             return true;
 
         if (!IsIgnoredDirectiveName(m.cx(), ts.currentToken().atom()))
             return m.fail(nullptr, "unsupported processing directive");
 
-        if (!ts.matchToken(TOK_SEMI))
+        if (!ts.matchToken(&matched, TOK_SEMI))
+            return false;
+        if (!matched)
             return m.fail(nullptr, "expected semicolon after string literal");
     }
 }
