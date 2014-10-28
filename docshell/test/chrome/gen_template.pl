@@ -1,14 +1,16 @@
 #!/usr/bin/perl
+
+# This script makes docshell test case templates. It takes one argument:
 #
-#  gen_template.pl
-#  Makes docshell test case templates.
-#  Takes one argument:
+#   -b: a bugnumber
 #
-#  -b : a bugnumber
+# For example, this command:
 #
-#  e.g.: perl gen_template.pl -b 303267
+#   perl gen_template.pl -b 303267
 #
-#  Writes test case template files for bug 303267 to the current directory.
+# Writes test case template files test_bug303267.xul and bug303267_window.xul
+# to the current directory.
+
 use FindBin;
 use Getopt::Long;
 GetOptions("b=i"=> \$bug_number);
