@@ -844,4 +844,25 @@ private:
     bool mSubpixelAntialiasingEnabled;
 };
 
+/* This class lives on the stack and allows gfxContext users to easily, and
+ * performantly get a gfx::Pattern to use for drawing in their current context.
+ */
+class PatternFromState
+{
+public:
+  explicit PatternFromState(gfxContext *aContext) : mContext(aContext), mPattern(nullptr) {}
+  ~PatternFromState() { if (mPattern) { mPattern->~Pattern(); } }
+
+  operator mozilla::gfx::Pattern&();
+
+private:
+  union {
+    mozilla::AlignedStorage2<mozilla::gfx::ColorPattern> mColorPattern;
+    mozilla::AlignedStorage2<mozilla::gfx::SurfacePattern> mSurfacePattern;
+  };
+
+  gfxContext *mContext;
+  mozilla::gfx::Pattern *mPattern;
+};
+
 #endif /* GFX_CONTEXT_H */
