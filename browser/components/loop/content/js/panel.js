@@ -539,11 +539,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     _onRoomListChanged: function() {
-      var storeState = this.props.store.getStoreState();
-      this.setState({
-        error: storeState.error,
-        rooms: storeState.rooms
-      });
+      this.setState(this.props.store.getStoreState());
     },
 
     _getListHeading: function() {

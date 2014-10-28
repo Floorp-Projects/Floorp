@@ -212,8 +212,7 @@ MobileConnectionParent::NotifyDataError(const nsAString& aMessage)
 }
 
 NS_IMETHODIMP
-MobileConnectionParent::NotifyCFStateChanged(bool aSuccess,
-                                             uint16_t aAction,
+MobileConnectionParent::NotifyCFStateChanged(uint16_t aAction,
                                              uint16_t aReason,
                                              const nsAString &aNumber,
                                              uint16_t aTimeSeconds,
@@ -221,9 +220,8 @@ MobileConnectionParent::NotifyCFStateChanged(bool aSuccess,
 {
   NS_ENSURE_TRUE(mLive, NS_ERROR_FAILURE);
 
-  return SendNotifyCFStateChanged(aSuccess, aAction, aReason,
-                                  nsAutoString(aNumber), aTimeSeconds,
-                                  aServiceClass) ? NS_OK : NS_ERROR_FAILURE;
+  return SendNotifyCFStateChanged(aAction, aReason, nsAutoString(aNumber),
+                                  aTimeSeconds, aServiceClass) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

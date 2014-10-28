@@ -270,6 +270,22 @@ add_test(function testCheckHostedApp() {
   });
 });
 
+add_test(function testInstallOverrideSystem() {
+  let appId = "actor-test"; // Match app.zip id
+
+  // Make the test app non-removable, like system apps
+  DOMApplicationRegistry.webapps[appId].removable = false;
+
+  let packageFile = do_get_file("data/app.zip");
+  gActorFront.installPackaged(packageFile.path, appId)
+    .then(function ({ appId }) {
+      do_throw("Override of a non-removable app has been accepted.");
+    }, function (e) {
+      do_check_eq(e.message, "The application " + appId + " can't be overridden.");
+      run_next_test();
+    });
+});
+
 function run_test() {
   setup();
 

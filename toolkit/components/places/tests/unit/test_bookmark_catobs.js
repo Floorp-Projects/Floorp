@@ -1,49 +1,57 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-// Get services.
-let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-         getService(Ci.nsINavBookmarksService);
-let os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
-
-let gDummyCreated = false;
-let gDummyAdded = false;
-
-let observer = {
-  observe: function(subject, topic, data) {
-    if (topic == "dummy-observer-created")
-      gDummyCreated = true;
-    else if (topic == "dummy-observer-item-added")
-      gDummyAdded = true;
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
-  ])
-};
-
-function verify() {
-  do_check_true(gDummyCreated);
-  do_check_true(gDummyAdded);
-  do_test_finished();
+function run_test() {
+  run_next_test()
 }
 
-// main
-function run_test() {
+add_task(function* test_observers() {
   do_load_manifest("nsDummyObserver.manifest");
 
-  os.addObserver(observer, "dummy-observer-created", true);
-  os.addObserver(observer, "dummy-observer-item-added", true);
+  let dummyCreated = false;
+  let dummyReceivedOnItemAdded = false;
+
+  Services.obs.addObserver(function created() {
+    Services.obs.removeObserver(created, "dummy-observer-created");
+    dummyCreated = true;
+  }, "dummy-observer-created", false);
+  Services.obs.addObserver(function added() {
+    Services.obs.removeObserver(added, "dummy-observer-item-added");
+    dummyReceivedOnItemAdded = true;
+  }, "dummy-observer-item-added", false);
+
+  let initialObservers = PlacesUtils.bookmarks.getObservers();
+
+  // Add a common observer, it should be invoked after the category observer.
+  let notificationsPromised = new Promise((resolve, reject) => {  
+    PlacesUtils.bookmarks.addObserver( {
+      __proto__: NavBookmarkObserver.prototype,
+      onItemAdded() {
+        let observers = PlacesUtils.bookmarks.getObservers();
+        Assert.equal(observers.length, initialObservers.length + 1);
+
+        // Check the common observer is the last one.
+        for (let i = 0; i < initialObservers.length; ++i) {
+          Assert.equal(initialObservers[i], observers[i]);
+        }
+
+        PlacesUtils.bookmarks.removeObserver(this);
+        observers = PlacesUtils.bookmarks.getObservers();
+        Assert.equal(observers.length, initialObservers.length);
+
+        // Check the category observer has been invoked before this one.
+        Assert.ok(dummyCreated);
+        Assert.ok(dummyReceivedOnItemAdded);
+        resolve();
+      }
+    }, false);
+  });
 
   // Add a bookmark
-  bs.insertBookmark(bs.unfiledBookmarksFolder, uri("http://typed.mozilla.org"),
-                    bs.DEFAULT_INDEX, "bookmark");
+  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                       uri("http://typed.mozilla.org"),
+                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                       "bookmark");
 
-  do_test_pending();
-  do_timeout(1000, verify);
-}
+  yield notificationsPromised;
+});

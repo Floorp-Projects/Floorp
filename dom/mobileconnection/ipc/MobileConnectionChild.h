@@ -77,9 +77,9 @@ protected:
   RecvNotifyDataError(const nsString& aMessage) MOZ_OVERRIDE;
 
   virtual bool
-  RecvNotifyCFStateChanged(const bool& aSuccess, const uint16_t& aAction,
-                           const uint16_t& aReason, const nsString& aNumber,
-                           const uint16_t& aTimeSeconds, const uint16_t& aServiceClass) MOZ_OVERRIDE;
+  RecvNotifyCFStateChanged(const uint16_t& aAction, const uint16_t& aReason,
+                           const nsString& aNumber, const uint16_t& aTimeSeconds,
+                           const uint16_t& aServiceClass) MOZ_OVERRIDE;
 
   virtual bool
   RecvNotifyEmergencyCbModeChanged(const bool& aActive,

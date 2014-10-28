@@ -60,11 +60,86 @@ var gMainPane = {
 
     this.updateBrowserStartupLastSession();
 
+#ifdef MOZ_DEV_EDITION
+    let separateProfileModeCheckbox = document.getElementById("separateProfileMode");
+    let listener = gMainPane.separateProfileModeChange.bind(gMainPane);
+    separateProfileModeCheckbox.addEventListener("command", listener);
+
+    let getStartedLink = document.getElementById("getStarted");
+    let syncListener = gMainPane.onGetStarted.bind(gMainPane);
+    getStartedLink.addEventListener("click", syncListener);
+
+    Cu.import("resource://gre/modules/osfile.jsm");
+    let uAppData = OS.Constants.Path.userApplicationDataDir;
+    let ignoreSeparateProfile = OS.Path.join(uAppData, "ignore-dev-edition-profile");
+
+    OS.File.stat(ignoreSeparateProfile).then(() => separateProfileModeCheckbox.checked = false,
+                                             () => separateProfileModeCheckbox.checked = true);
+#endif
+
     // Notify observers that the UI is now ready
     Components.classes["@mozilla.org/observer-service;1"]
               .getService(Components.interfaces.nsIObserverService)
               .notifyObservers(window, "main-pane-loaded", null);
   },
+
+#ifdef MOZ_DEV_EDITION
+  separateProfileModeChange: function ()
+  {
+    function quitApp() {
+      Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit |  Ci.nsIAppStartup.eRestartNotSameProfile);
+    }
+    function revertCheckbox(error) {
+      separateProfileModeCheckbox.checked = !separateProfileModeCheckbox.checked;
+      if (error) {
+        Cu.reportError("Failed to toggle separate profile mode: " + error);
+      }
+    }
+
+    let separateProfileModeCheckbox = document.getElementById("separateProfileMode");
+    let brandName = document.getElementById("bundleBrand").getString("brandShortName");
+    let bundle = document.getElementById("bundlePreferences");
+    let msg = bundle.getFormattedString(separateProfileModeCheckbox.checked ?
+                                        "featureEnableRequiresRestart" : "featureDisableRequiresRestart",
+                                        [brandName]);
+    let title = bundle.getFormattedString("shouldRestartTitle", [brandName]);
+    let shouldProceed = Services.prompt.confirm(window, title, msg)
+    if (shouldProceed) {
+      let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
+                         .createInstance(Ci.nsISupportsPRBool);
+      Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
+                                   "restart");
+      shouldProceed = !cancelQuit.data;
+
+      if (shouldProceed) {
+        Cu.import("resource://gre/modules/osfile.jsm");
+        let uAppData = OS.Constants.Path.userApplicationDataDir;
+        let ignoreSeparateProfile = OS.Path.join(uAppData, "ignore-dev-edition-profile");
+
+        if (separateProfileModeCheckbox.checked) {
+          OS.File.remove(ignoreSeparateProfile).then(quitApp, revertCheckbox);
+        } else {
+          OS.File.writeAtomic(ignoreSeparateProfile, new Uint8Array()).then(quitApp, revertCheckbox);
+        }
+      }
+    }
+
+    // Revert the checkbox in case we didn't quit
+    revertCheckbox();
+  },
+
+  onGetStarted: function (aEvent) {
+    const Cc = Components.classes, Ci = Components.interfaces;
+    let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+               .getService(Ci.nsIWindowMediator);
+    let win = wm.getMostRecentWindow("navigator:browser");
+
+    if (win) {
+      let accountsTab = win.gBrowser.addTab("about:accounts?action=migrateToDevEdition");
+      win.gBrowser.selectedTab = accountsTab;
+    }
+  },
+#endif
 
   // HOME PAGE
 
