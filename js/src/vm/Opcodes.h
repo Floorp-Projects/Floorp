@@ -770,17 +770,9 @@
      *   Stack: => obj
      */ \
     macro(JSOP_NEWOBJECT, 91, "newobject",  NULL,         5,  0,  1, JOF_OBJECT) \
-    /*
-     * A no-operation bytecode.
-     *
-     * Indicates the end of object/array initialization, and used for
-     * Type-Inference, decompile, etc.
-     *   Category: Literals
-     *   Type: Object
-     *   Operands:
-     *   Stack: =>
-     */ \
-    macro(JSOP_ENDINIT,   92, "endinit",    NULL,         1,  0,  0, JOF_BYTE) \
+    \
+    macro(JSOP_UNUSED92,  92, "unused92",   NULL,         1,  0,  0, JOF_BYTE) \
+    \
     /*
      * Initialize a named property in an object literal, like '{a: x}'.
      *

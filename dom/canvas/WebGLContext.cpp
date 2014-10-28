@@ -669,6 +669,12 @@ CreateOffscreen(GLContext* gl,
     if (!baseCaps.alpha)
         baseCaps.premultAlpha = true;
 
+    if (gl->IsANGLE()) {
+        // We can't use no-alpha formats on ANGLE yet because of:
+        // https://code.google.com/p/angleproject/issues/detail?id=764
+        baseCaps.alpha = true;
+    }
+
     // we should really have this behind a
     // |gfxPlatform::GetPlatform()->GetScreenDepth() == 16| check, but
     // for now it's just behind a pref for testing/evaluation.
@@ -903,16 +909,23 @@ WebGLContext::SetDimensions(int32_t sWidth, int32_t sHeight)
     // increment the generation number
     ++mGeneration;
 
-    MakeContextCurrent();
-
-    gl->fViewport(0, 0, mWidth, mHeight);
-    mViewportWidth = mWidth;
-    mViewportHeight = mHeight;
+    // Update our internal stuff:
+    if (gl->WorkAroundDriverBugs()) {
+        if (!mOptions.alpha && gl->Caps().alpha) {
+            mNeedsFakeNoAlpha = true;
+        }
+    }
 
     // Update mOptions.
     mOptions.depth = gl->Caps().depth;
     mOptions.stencil = gl->Caps().stencil;
     mOptions.antialias = gl->Caps().antialias;
+
+    MakeContextCurrent();
+
+    gl->fViewport(0, 0, mWidth, mHeight);
+    mViewportWidth = mWidth;
+    mViewportHeight = mHeight;
 
     // Make sure that we clear this out, otherwise
     // we'll end up displaying random memory
@@ -929,17 +942,12 @@ WebGLContext::SetDimensions(int32_t sWidth, int32_t sHeight)
     mShouldPresent = true;
 
     MOZ_ASSERT(gl->Caps().color);
-    MOZ_ASSERT(gl->Caps().alpha == mOptions.alpha);
+    MOZ_ASSERT_IF(!mNeedsFakeNoAlpha, gl->Caps().alpha == mOptions.alpha);
+    MOZ_ASSERT_IF(mNeedsFakeNoAlpha, !mOptions.alpha && gl->Caps().alpha);
     MOZ_ASSERT(gl->Caps().depth == mOptions.depth);
     MOZ_ASSERT(gl->Caps().stencil == mOptions.stencil);
     MOZ_ASSERT(gl->Caps().antialias == mOptions.antialias);
     MOZ_ASSERT(gl->Caps().preserve == mOptions.preserveDrawingBuffer);
-
-    if (gl->WorkAroundDriverBugs() && gl->IsANGLE()) {
-        if (!mOptions.alpha) {
-            mNeedsFakeNoAlpha = true;
-        }
-    }
 
     AssertCachedBindings();
     AssertCachedState();
@@ -1252,12 +1260,10 @@ WebGLContext::GetContextAttributes(Nullable<dom::WebGLContextAttributes> &retval
 
     dom::WebGLContextAttributes& result = retval.SetValue();
 
-    const PixelBufferFormat& format = gl->GetPixelFormat();
-
-    result.mAlpha.Construct(format.alpha > 0);
-    result.mDepth = format.depth > 0;
-    result.mStencil = format.stencil > 0;
-    result.mAntialias = format.samples > 1;
+    result.mAlpha.Construct(mOptions.alpha);
+    result.mDepth = mOptions.depth;
+    result.mStencil = mOptions.stencil;
+    result.mAntialias = mOptions.antialias;
     result.mPremultipliedAlpha = mOptions.premultipliedAlpha;
     result.mPreserveDrawingBuffer = mOptions.preserveDrawingBuffer;
 }
@@ -1844,7 +1850,6 @@ bool WebGLContext::TexImageFromVideoElement(const TexImageTarget texImageTarget,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
 
 WebGLContext::ScopedMaskWorkaround::ScopedMaskWorkaround(WebGLContext& webgl)
     : mWebGL(webgl)
