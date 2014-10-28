@@ -439,16 +439,15 @@ MobileConnectionChild::RecvNotifyDataError(const nsString& aMessage)
 }
 
 bool
-MobileConnectionChild::RecvNotifyCFStateChanged(const bool& aSuccess,
-                                                const uint16_t& aAction,
+MobileConnectionChild::RecvNotifyCFStateChanged(const uint16_t& aAction,
                                                 const uint16_t& aReason,
                                                 const nsString& aNumber,
                                                 const uint16_t& aTimeSeconds,
                                                 const uint16_t& aServiceClass)
 {
   for (int32_t i = 0; i < mListeners.Count(); i++) {
-    mListeners[i]->NotifyCFStateChanged(aSuccess, aAction, aReason, aNumber,
-                                        aTimeSeconds, aServiceClass);
+    mListeners[i]->NotifyCFStateChanged(aAction, aReason, aNumber, aTimeSeconds,
+                                        aServiceClass);
   }
 
   return true;

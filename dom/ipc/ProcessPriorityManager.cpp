@@ -472,15 +472,14 @@ ProcessPriorityManagerImpl::GetParticularProcessPriorityManager(
   ContentParent* aContentParent)
 {
   nsRefPtr<ParticularProcessPriorityManager> pppm;
-  uint64_t cpId = aContentParent->ChildID();
-  mParticularManagers.Get(cpId, &pppm);
+  mParticularManagers.Get(aContentParent->ChildID(), &pppm);
   if (!pppm) {
     pppm = new ParticularProcessPriorityManager(aContentParent);
     pppm->Init();
-    mParticularManagers.Put(cpId, pppm);
+    mParticularManagers.Put(aContentParent->ChildID(), pppm);
 
     FireTestOnlyObserverNotification("process-created",
-      nsPrintfCString("%lld", cpId));
+      nsPrintfCString("%lld", aContentParent->ChildID()));
   }
 
   return pppm.forget();

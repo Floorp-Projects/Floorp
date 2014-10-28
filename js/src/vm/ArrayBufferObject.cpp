@@ -461,8 +461,12 @@ ArrayBufferObject::fun_transfer(JSContext *cx, unsigned argc, Value *vp)
 bool
 ArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
 {
-    int32_t nbytes = 0;
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!WarnIfNotConstructing(cx, args, "ArrayBuffer"))
+        return false;
+
+    int32_t nbytes = 0;
     if (argc > 0 && !ToInt32(cx, args[0], &nbytes))
         return false;
 

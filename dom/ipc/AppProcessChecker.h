@@ -15,7 +15,6 @@ class nsIPrincipal;
 namespace mozilla {
 
 namespace dom {
-class TabContext;
 class PBrowserParent;
 class PContentParent;
 }
@@ -46,24 +45,6 @@ AssertAppProcess(mozilla::dom::PBrowserParent* aActor,
  */
 bool
 AssertAppStatus(mozilla::dom::PBrowserParent* aActor,
-                unsigned short aStatus);
-
-/**
- * Return true if the specified browser has the specified capability.
- * If this returns false, the browser didn't have the capability and
- * will be killed.
- */
-bool
-AssertAppProcess(const mozilla::dom::TabContext& aContext,
-                 AssertAppProcessType aType,
-                 const char* aCapability);
-
-/**
- * Return true if the specified app has the specified status.
- * If this returns false, the browser will be killed.
- */
-bool
-AssertAppStatus(const mozilla::dom::TabContext& aContext,
                 unsigned short aStatus);
 
 /**
