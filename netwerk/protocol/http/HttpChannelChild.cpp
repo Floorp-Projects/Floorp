@@ -31,6 +31,7 @@
 #include "nsInputStreamPump.h"
 #include "InterceptedChannel.h"
 #include "nsPerformance.h"
+#include "mozIThirdPartyUtil.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -1484,6 +1485,21 @@ HttpChannelChild::ContinueAsyncOpen()
     optionalFDs = mozilla::void_t();
   }
 
+  nsCOMPtr<mozIThirdPartyUtil> util(do_GetService(THIRDPARTYUTIL_CONTRACTID));
+  if (util) {
+    bool thirdParty;
+    nsresult rv = util->IsThirdPartyChannel(this, nullptr, &thirdParty);
+    if (NS_FAILED(rv)) {
+      // If we couldn't compute whether this is a third-party load, assume that
+      // it is.
+      thirdParty = true;
+    }
+
+    mThirdPartyFlags |= thirdParty ?
+      nsIHttpChannelInternal::THIRD_PARTY_PARENT_IS_THIRD_PARTY :
+      nsIHttpChannelInternal::THIRD_PARTY_PARENT_IS_SAME_PARTY;
+  }
+
   openArgs.fds() = optionalFDs;
 
   openArgs.uploadStreamHasHeaders() = mUploadStreamHasHeaders;
@@ -1491,7 +1507,7 @@ HttpChannelChild::ContinueAsyncOpen()
   openArgs.redirectionLimit() = mRedirectionLimit;
   openArgs.allowPipelining() = mAllowPipelining;
   openArgs.allowSTS() = mAllowSTS;
-  openArgs.forceAllowThirdPartyCookie() = mForceAllowThirdPartyCookie;
+  openArgs.thirdPartyFlags() = mThirdPartyFlags;
   openArgs.resumeAt() = mSendResumeAt;
   openArgs.startPos() = mStartPos;
   openArgs.entityID() = mEntityID;
