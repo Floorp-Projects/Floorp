@@ -1581,6 +1581,13 @@ Object.defineProperty(BrowserTabActor.prototype, "docShell", {
 
 Object.defineProperty(BrowserTabActor.prototype, "title", {
   get: function() {
+    // On Fennec, we can check the session store data for zombie tabs
+    if (this._browser.__SS_restore) {
+      let sessionStore = this._browser.__SS_data;
+      // Get the last selected entry
+      let entry = sessionStore.entries[sessionStore.index - 1];
+      return entry.title;
+    }
     let title = this.contentDocument.title || this._browser.contentTitle;
     // If contentTitle is empty (e.g. on a not-yet-restored tab), but there is a
     // tabbrowser (i.e. desktop Firefox, but not Fennec), we can use the label
@@ -1595,6 +1602,24 @@ Object.defineProperty(BrowserTabActor.prototype, "title", {
   },
   enumerable: true,
   configurable: false
+});
+
+Object.defineProperty(BrowserTabActor.prototype, "url", {
+  get: function() {
+    // On Fennec, we can check the session store data for zombie tabs
+    if (this._browser.__SS_restore) {
+      let sessionStore = this._browser.__SS_data;
+      // Get the last selected entry
+      let entry = sessionStore.entries[sessionStore.index - 1];
+      return entry.url;
+    }
+    if (this.webNavigation.currentURI) {
+      return this.webNavigation.currentURI.spec;
+    }
+    return null;
+  },
+  enumerable: true,
+  configurable: true
 });
 
 Object.defineProperty(BrowserTabActor.prototype, "browser", {
