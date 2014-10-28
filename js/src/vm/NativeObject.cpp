@@ -2029,11 +2029,6 @@ SetNonexistentProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
             return false;
     }
 
-    if (obj->is<ArrayObject>() && id == NameToId(cxArg->names().length)) {
-        Rooted<ArrayObject*> arr(cxArg, &obj->as<ArrayObject>());
-        return ArraySetLength<mode>(cxArg, arr, id, JSPROP_ENUMERATE, v, strict);
-    }
-
     return SetPropertyByDefining<mode>(cxArg, receiver, id, v, strict);
 }
 
