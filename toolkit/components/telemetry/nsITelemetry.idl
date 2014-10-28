@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(df355bbf-437d-4332-80e6-a8a54db959f3)]
+[scriptable, uuid(4c7ba1fc-8253-4bb6-b434-325e51c26109)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -138,22 +138,26 @@ interface nsITelemetry : nsISupports
   void registeredHistograms(out uint32_t count,
                             [retval, array, size_is(count)] out string histograms);
 
-  /** 
+  /**
    * Create and return a histogram.  Parameters:
    *
    * @param name Unique histogram name
    * @param expiration Expiration version
+   * @param type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR or HISTOGRAM_BOOLEAN
    * @param min - Minimal bucket size
    * @param max - Maximum bucket size
    * @param bucket_count - number of buckets in the histogram.
-   * @param type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, HISTOGRAM_BOOLEAN or HISTOGRAM_COUNT
    * The returned object has the following functions:
    *   add(int) - Adds an int value to the appropriate bucket
    *   snapshot() - Returns a snapshot of the histogram with the same data fields as in histogramSnapshots()
    *   clear() - Zeros out the histogram's buckets and sum
    */
-  [implicit_jscontext]
-  jsval newHistogram(in ACString name, in ACString expiration, in uint32_t min, in uint32_t max, in uint32_t bucket_count, in unsigned long histogram_type);
+  [implicit_jscontext, optional_argc]
+  jsval newHistogram(in ACString name, in ACString expiration,
+                     in unsigned long histogram_type,
+                     [optional] in uint32_t min,
+                     [optional] in uint32_t max,
+                     [optional] in uint32_t bucket_count);
 
   /**
    * Create a histogram using the current state of an existing histogram.  The
