@@ -27,7 +27,7 @@ class BaseRunner(object):
     output_timeout = None
 
     def __init__(self, app_ctx=None, profile=None, clean_profile=True, env=None,
-                 process_class=None, process_args=None, symbols_path=None):
+                 process_class=None, process_args=None, symbols_path=None, dump_save_path=None):
         self.app_ctx = app_ctx or DefaultContext()
 
         if isinstance(profile, basestring):
@@ -45,6 +45,7 @@ class BaseRunner(object):
         self.process_class = process_class or ProcessHandler
         self.process_args = process_args or {}
         self.symbols_path = symbols_path
+        self.dump_save_path = dump_save_path
 
         self.crashed = 0
 
@@ -180,6 +181,9 @@ class BaseRunner(object):
         """
         if not dump_directory:
             dump_directory = os.path.join(self.profile.profile, 'minidumps')
+
+        if not dump_save_path:
+            dump_save_path = self.dump_save_path
 
         try:
             logger = get_default_logger()
