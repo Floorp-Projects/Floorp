@@ -539,7 +539,7 @@ test-pref(layout.css.sticky.enabled,true) load 914891.html
 test-pref(layout.css.sticky.enabled,true) load 915475.xhtml
 load 927558.html
 load 943509-1.html
-asserts(3-6) load 944909-1.html
+asserts(3-8) load 944909-1.html
 load 946167-1.html
 test-pref(layout.css.sticky.enabled,true) load 949932.html
 load 973701-1.xhtml
