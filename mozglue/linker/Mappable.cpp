@@ -104,7 +104,7 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
       return nullptr;
     }
 
-    z_stream zStream = stream->GetZStream(buffer);
+    zxx_stream zStream = stream->GetZStream(buffer);
 
     /* Decompress */
     if (inflateInit2(&zStream, -MAX_WBITS) != Z_OK) {
