@@ -723,13 +723,22 @@ IsExpired(const Histogram *histogram){
   return histogram->histogram_name() == EXPIRED_ID;
 }
 
+/*
+ * min, max & bucketCount are optional for boolean, flag & count histograms.
+ * haveOptArgs has to be set if the caller provides them.
+ */
 nsresult
-HistogramGet(const char *name, const char *expiration, uint32_t min, uint32_t max,
-             uint32_t bucketCount, uint32_t histogramType, Histogram **result)
+HistogramGet(const char *name, const char *expiration, uint32_t histogramType,
+             uint32_t min, uint32_t max, uint32_t bucketCount, bool haveOptArgs,
+             Histogram **result)
 {
   if (histogramType != nsITelemetry::HISTOGRAM_BOOLEAN
       && histogramType != nsITelemetry::HISTOGRAM_FLAG
       && histogramType != nsITelemetry::HISTOGRAM_COUNT) {
+    // The min, max & bucketCount arguments are not optional for this type.
+    if (!haveOptArgs)
+      return NS_ERROR_ILLEGAL_VALUE;
+
     // Sanity checks for histogram parameters.
     if (min >= max)
       return NS_ERROR_ILLEGAL_VALUE;
@@ -783,7 +792,8 @@ GetHistogramByEnumId(Telemetry::ID id, Histogram **ret)
   }
 
   const TelemetryHistogram &p = gHistograms[id];
-  nsresult rv = HistogramGet(p.id(), p.expiration(), p.min, p.max, p.bucketCount, p.histogramType, &h);
+  nsresult rv = HistogramGet(p.id(), p.expiration(), p.histogramType,
+                             p.min, p.max, p.bucketCount, true, &h);
   if (NS_FAILED(rv))
     return rv;
 
@@ -1281,13 +1291,13 @@ TelemetryImpl::InitMemoryReporter() {
 }
 
 NS_IMETHODIMP
-TelemetryImpl::NewHistogram(const nsACString &name, const nsACString &expiration, uint32_t min,
-                            uint32_t max, uint32_t bucketCount, uint32_t histogramType,
-                            JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryImpl::NewHistogram(const nsACString &name, const nsACString &expiration, uint32_t histogramType,
+                            uint32_t min, uint32_t max, uint32_t bucketCount, JSContext *cx,
+                            uint8_t optArgCount, JS::MutableHandle<JS::Value> ret)
 {
   Histogram *h;
   nsresult rv = HistogramGet(PromiseFlatCString(name).get(), PromiseFlatCString(expiration).get(),
-                             min, max, bucketCount, histogramType, &h);
+                             histogramType, min, max, bucketCount, optArgCount == 3, &h);
   if (NS_FAILED(rv))
     return rv;
   h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
@@ -1415,8 +1425,9 @@ TelemetryImpl::HistogramFrom(const nsACString &name, const nsACString &existing_
 
   Histogram *clone;
   rv = HistogramGet(PromiseFlatCString(name).get(), p.expiration(),
-                    existing->declared_min(), existing->declared_max(),
-                    existing->bucket_count(), p.histogramType, &clone);
+                    p.histogramType, existing->declared_min(),
+                    existing->declared_max(), existing->bucket_count(),
+                    true, &clone);
   if (NS_FAILED(rv))
     return rv;
 
@@ -1650,8 +1661,8 @@ TelemetryImpl::CreateHistogramForAddon(const nsACString &name,
 {
   Histogram *h;
   nsresult rv = HistogramGet(PromiseFlatCString(name).get(), "never",
-                             info.min, info.max, info.bucketCount,
-                             info.histogramType, &h);
+                             info.histogramType, info.min, info.max,
+                             info.bucketCount, true, &h);
   if (NS_FAILED(rv)) {
     return false;
   }
