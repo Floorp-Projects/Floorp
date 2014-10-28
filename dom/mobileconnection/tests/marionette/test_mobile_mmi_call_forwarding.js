@@ -60,7 +60,6 @@ function testSetCallForwarding(aData) {
   let promises = [];
   // Check cfstatechange event.
   promises.push(waitForManagerEvent("cfstatechange").then(function(aEvent) {
-    is(aEvent.success, true, "check success");
     is(aEvent.action, MozMobileConnection.CALL_FORWARD_ACTION_REGISTRATION,
        "check action");
     is(aEvent.reason, aData.reason, "check reason");

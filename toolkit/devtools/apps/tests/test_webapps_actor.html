@@ -65,6 +65,7 @@ const PACKAGED_APP_MANIFEST = PACKAGED_APP_ORIGIN + "/manifest.webapp";
 const CERTIFIED_APP_ID = "test-certified-id";
 const CERTIFIED_APP_ORIGIN = "app://" + CERTIFIED_APP_ID;
 const CERTIFIED_APP_MANIFEST = CERTIFIED_APP_ORIGIN + "/manifest.webapp";
+const SYSTEM_APP_ID = "test-system-id";
 
 var steps = [
   function() {
@@ -96,26 +97,31 @@ var steps = [
     installTestApp = function (url, appId, callback) {
       let installResponse, appObject;
       let installedEvent = false;
-      mm.addMessageListener("installed", function onInstalled(aResponse) {
-        mm.removeMessageListener("installed", onInstalled);
+      function onInstalled(aResponse) {
         ok(true, "install request replied");
         installResponse = aResponse;
         checkEnd();
-      });
-      mm.addMessageListener("installed-event", function onInstalledEvent(aResponse) {
-        mm.removeMessageListener("installed-event", onInstalledEvent);
+      }
+      mm.addMessageListener("installed", onInstalled);
+      function onInstalledEvent(aResponse) {
         ok(true, "received appInstall actor event");
         installedEvent = true;
         checkEnd();
-      });
+      }
+      mm.addMessageListener("installed-event", onInstalledEvent);
       navigator.mozApps.mgmt.oninstall = function(evt) {
         appObject = evt.application;
         ok(true, "mozApps.mgmt install event fired");
         checkEnd();
       };
       function checkEnd() {
-        if (appObject && installResponse && installedEvent)
+        if ( (appObject && installResponse && installedEvent) ||
+             (installResponse && installResponse.error) ) {
+          mm.removeMessageListener("installed", onInstalled);
+          mm.removeMessageListener("installed-event", onInstalledEvent);
+          navigator.mozApps.mgmt.oninstall = null;
           callback(installResponse, appObject);
+        }
       }
       mm.sendAsyncMessage("install", {url: url, appId: appId});
     };
@@ -179,8 +185,39 @@ var steps = [
     );
   },
   function() {
+    info("== TEST == Try overloading non-removable app");
+    let url = SimpleTest.getTestFileURL("data/app-overload.zip");
+    installTestApp(url, CERTIFIED_APP_ID,
+      function (aResponse, aApp) {
+        // First time we install the app, it works just fine
+        ok(true, "Installed");
+        is(aResponse.appId, "overload.gaiamobile.org", "Got overloaded app id");
+        if ("error" in aResponse) {
+          ok(false, "Error: " + aResponse.error);
+        }
+        if ("message" in aResponse) {
+          ok(false, "Error message: " + aResponse.message);
+        }
+        ok(!("error" in aResponse), "app installed without any error");
+        is(aApp.manifest.name, "System app", "app name is correct");
+
+        // Then use some magic to make it non-removable
+        mm.sendAsyncMessage("tweak-app-object", {appId: CERTIFIED_APP_ID, removable: false});
+
+        // Then when trying to install it again, it will be rejected
+        installTestApp(url, CERTIFIED_APP_ID,
+          function (aResponse, aApp) {
+            is(aResponse.error, "installationFailed", "Overloading non-removable app without the pref is rejected");
+            is(aResponse.message, "The application " + CERTIFIED_APP_ID + " can't be overridden.");
+            next();
+          });
+
+      }
+    );
+  },
+  function() {
     info("== TEST == Get all apps");
-    getAll(false);
+    getAll(true);
   },
   function() {
     info("== TEST == Get packaged app");
@@ -194,7 +231,7 @@ var steps = [
     getApp({
       id: CERTIFIED_APP_ID,
       manifestURL: CERTIFIED_APP_MANIFEST
-    }, false);
+    }, true);
   },
   function() {
     info("== SETUP == Enable certified app access");
@@ -221,6 +258,25 @@ var steps = [
     }, true);
   },
   function() {
+    info("== TEST == Overload of non-removable apps is allowed with CERTIFIED ENABLE");
+    let url = SimpleTest.getTestFileURL("data/app-overload.zip");
+    installTestApp(url, SYSTEM_APP_ID,
+      function (aResponse, aApp) {
+        ok(true, "Installed");
+        is(aResponse.appId, "overload.gaiamobile.org", "Got overloaded app id");
+        if ("error" in aResponse) {
+          ok(false, "Error: " + aResponse.error);
+        }
+        if ("message" in aResponse) {
+          ok(false, "Error message: " + aResponse.message);
+        }
+        ok(!("error" in aResponse), "app installed without any error");
+        is(aApp.manifest.name, "System app", "app name is correct");
+        next();
+      }
+    );
+  },
+  function() {
     info("== SETUP == Disable certified app access");
     SpecialPowers.popPrefEnv(next);
   },
@@ -245,7 +301,19 @@ var steps = [
   },
   function() {
     info("== TEST == Uninstall certified app");
-    uninstall(CERTIFIED_APP_MANIFEST);
+    // Make the app removable again, but make it appear as a regular app (not being pushed via devtools)
+    mm.sendAsyncMessage("tweak-app-object", {appId: CERTIFIED_APP_ID, removable: true, sideloaded: false});
+
+    mm.addMessageListener("appActorResponse", function onResponse(response) {
+      mm.removeMessageListener("appActorResponse", onResponse);
+      is(response.error, "forbidden", "Uninstalling apps that have not being sideloaded is forbidden");
+      next();
+    });
+
+    mm.sendAsyncMessage("appActorRequest", {
+      type: "uninstall",
+      manifestURL: CERTIFIED_APP_MANIFEST
+    });
   },
   function() {
     ok(true, "all done!\n");

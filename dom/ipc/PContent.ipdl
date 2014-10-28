@@ -67,8 +67,6 @@ using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 using mozilla::dom::quota::PersistenceType from "mozilla/dom/quota/PersistenceType.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
 using gfxIntSize from "nsSize.h";
-using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
-using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 
 union ChromeRegistryItem
 {
@@ -387,8 +385,8 @@ both:
     // access to (in the form of a TabChild).
     //
     // Keep the last 3 attributes in sync with GetProcessAttributes!
-    async PBrowser(TabId tabId, IPCTabContext context, uint32_t chromeFlags,
-                   ContentParentId cpId, bool isForApp, bool isForBrowser);
+    async PBrowser(IPCTabContext context, uint32_t chromeFlags,
+                   uint64_t id, bool isForApp, bool isForBrowser);
 
     async PBlob(BlobConstructorParams params);
 
@@ -522,16 +520,15 @@ parent:
      * Keep the return values in sync with PBrowser()!
      */
     sync GetProcessAttributes()
-        returns (ContentParentId cpId, bool isForApp, bool isForBrowser);
+        returns (uint64_t id, bool isForApp, bool isForBrowser);
     sync GetXPCOMProcessAttributes()
         returns (bool isOffline, nsString[] dictionaries,
                  ClipboardCapabilities clipboardCaps);
 
     sync CreateChildProcess(IPCTabContext context,
-                            ProcessPriority priority,
-                            TabId openerTabId)
-        returns (ContentParentId cpId, bool isForApp, bool isForBrowser, TabId tabId);
-    intr BridgeToChildProcess(ContentParentId cpId);
+                            ProcessPriority priority)
+        returns (uint64_t id, bool isForApp, bool isForBrowser);
+    intr BridgeToChildProcess(uint64_t id);
 
     async PJavaScript();
 
@@ -745,14 +742,6 @@ parent:
                            int64_t fileId)
       returns (int32_t refCnt, int32_t dBRefCnt, int32_t sliceRefCnt,
                bool result);
-
-    /**
-     * Tell the chrome process there is an creation of PBrowser.
-     * return a system-wise unique Id.
-     */
-    sync AllocateTabId(TabId openerTabId, IPCTabContext context, ContentParentId cpId)
-        returns (TabId tabId);
-    async DeallocateTabId(TabId tabId);
 
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,

@@ -117,6 +117,17 @@
           hidden="true">
   <caption><label>&startup.label;</label></caption>
 
+#ifdef MOZ_DEV_EDITION
+  <vbox id="separateProfileBox">
+    <checkbox id="separateProfileMode"
+              label="&separateProfileMode.label;"/>
+    <hbox align="center" class="indent">
+      <label id="useFirefoxSync">&useFirefoxSync.label;</label>
+      <label id="getStarted" class="text-link">&getStarted.label;</label>
+    </hbox>
+  </vbox>
+#endif
+
 #ifdef E10S_TESTING_ONLY
   <checkbox id="e10sAutoStart"
             label="Enable E10S (multi-process)"/>
@@ -126,13 +137,13 @@
   <vbox id="defaultBrowserBox">
     <hbox align="center">
       <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
-                label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault2.accesskey;"/>
+                label="&alwaysCheckDefault2.label;" accesskey="&alwaysCheckDefault2.accesskey;"/>
     </hbox>
     <deck id="setDefaultPane">
       <hbox align="center" class="indent">
         <label id="isNotDefaultLabel" flex="1">&isNotDefault.label;</label>
         <button id="setDefaultButton"
-                label="&setAsMyDefaultBrowser.label;" accesskey="&setAsMyDefaultBrowser.accesskey;"
+                label="&setAsMyDefaultBrowser2.label;" accesskey="&setAsMyDefaultBrowser2.accesskey;"
                 preference="pref.general.disable_button.default_browser"/>
       </hbox>
       <hbox align="center" class="indent">

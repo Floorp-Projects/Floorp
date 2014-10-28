@@ -22,9 +22,8 @@ child:
   NotifyDataInfoChanged(nsMobileConnectionInfo aInfo);
   NotifyUssdReceived(nsString aMessage, bool aSessionEnd);
   NotifyDataError(nsString aMessage);
-  NotifyCFStateChanged(bool aSuccess, uint16_t aAction, uint16_t aReason,
-                       nsString aNumber, uint16_t aTimeSeconds,
-                       uint16_t aServiceClass);
+  NotifyCFStateChanged(uint16_t aAction, uint16_t aReason, nsString aNumber,
+                       uint16_t aTimeSeconds, uint16_t aServiceClass);
   NotifyEmergencyCbModeChanged(bool aActive, uint32_t aTimeoutMs);
   NotifyOtaStatusChanged(nsString aStatus);
   NotifyIccChanged(nsString aIccId);
