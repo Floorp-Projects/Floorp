@@ -936,10 +936,7 @@ js::FindBody(JSContext *cx, HandleFunction fun, HandleLinearString src, size_t *
     bool onward = true;
     // Skip arguments list.
     do {
-        TokenKind tt;
-        if (!ts.getToken(&tt))
-            return false;
-        switch (tt) {
+        switch (ts.getToken()) {
           case TOK_NAME:
           case TOK_YIELD:
             if (nest == 0)
@@ -952,17 +949,18 @@ js::FindBody(JSContext *cx, HandleFunction fun, HandleLinearString src, size_t *
             if (--nest == 0)
                 onward = false;
             break;
+          case TOK_ERROR:
+            // Must be memory.
+            return false;
           default:
             break;
         }
     } while (onward);
-    TokenKind tt;
-    if (!ts.getToken(&tt))
+    TokenKind tt = ts.getToken();
+    if (tt == TOK_ARROW)
+        tt = ts.getToken();
+    if (tt == TOK_ERROR)
         return false;
-    if (tt == TOK_ARROW) {
-        if (!ts.getToken(&tt))
-            return false;
-    }
     bool braced = tt == TOK_LC;
     MOZ_ASSERT_IF(fun->isExprClosure(), !braced);
     *bodyStart = ts.currentToken().pos.begin;
@@ -1662,9 +1660,12 @@ js_fun_bind(JSContext *cx, HandleObject target, HandleValue thisArg,
  * error was already reported.
  */
 static bool
-OnBadFormal(JSContext *cx)
+OnBadFormal(JSContext *cx, TokenKind tt)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_FORMAL);
+    if (tt != TOK_ERROR)
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_FORMAL);
+    else
+        MOZ_ASSERT(cx->isExceptionPending());
     return false;
 }
 
@@ -1805,12 +1806,13 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
         bool yieldIsValidName = ts.versionNumber() < JSVERSION_1_7 && !isStarGenerator;
 
         /* The argument string may be empty or contain no tokens. */
-        TokenKind tt;
-        if (!ts.getToken(&tt))
-            return false;
+        TokenKind tt = ts.getToken();
         if (tt != TOK_EOF) {
             for (;;) {
-                /* Check that it's a name. */
+                /*
+                 * Check that it's a name.  This also implicitly guards against
+                 * TOK_ERROR, which was already reported.
+                 */
                 if (hasRest) {
                     ts.reportError(JSMSG_PARAMETER_AFTER_REST);
                     return false;
@@ -1822,16 +1824,16 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
                 if (tt != TOK_NAME) {
                     if (tt == TOK_TRIPLEDOT) {
                         hasRest = true;
-                        if (!ts.getToken(&tt))
-                            return false;
+                        tt = ts.getToken();
                         if (tt == TOK_YIELD && yieldIsValidName)
                             tt = TOK_NAME;
                         if (tt != TOK_NAME) {
-                            ts.reportError(JSMSG_NO_REST_NAME);
+                            if (tt != TOK_ERROR)
+                                ts.reportError(JSMSG_NO_REST_NAME);
                             return false;
                         }
                     } else {
-                        return OnBadFormal(cx);
+                        return OnBadFormal(cx, tt);
                     }
                 }
 
@@ -1842,14 +1844,12 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
                  * Get the next token.  Stop on end of stream.  Otherwise
                  * insist on a comma, get another name, and iterate.
                  */
-                if (!ts.getToken(&tt))
-                    return false;
+                tt = ts.getToken();
                 if (tt == TOK_EOF)
                     break;
                 if (tt != TOK_COMMA)
-                    return OnBadFormal(cx);
-                if (!ts.getToken(&tt))
-                    return false;
+                    return OnBadFormal(cx, tt);
+                tt = ts.getToken();
             }
         }
     }
