@@ -20,10 +20,15 @@ namespace mozilla {
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
-#define DECODER_LOG(x, ...) \
-  PR_LOG(gMediaDecoderLog, PR_LOG_DEBUG, ("Decoder=%p " x, mDecoder, ##__VA_ARGS__))
+#define DECODER_LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
+#ifdef SEEK_LOGGING
+#define SEEK_LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
 #else
-#define DECODER_LOG(x, ...)
+#define SEEK_LOG(type, msg)
+#endif
+#else
+#define DECODER_LOG(type, msg)
+#define SEEK_LOG(type, msg)
 #endif
 
 class VideoQueueMemoryFunctor : public nsDequeFunctor {
@@ -132,22 +137,6 @@ MediaDecoderReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered,
   }
   GetEstimatedBufferedTimeRanges(stream, durationUs, aBuffered);
   return NS_OK;
-}
-
-int64_t
-MediaDecoderReader::ComputeStartTime()
-{
-  const VideoData* v = VideoQueue().PeekFront();
-  const AudioData* a = AudioQueue().PeekFront();
-
-  int64_t startTime = std::min<int64_t>(a ? a->mTime : INT64_MAX,
-                                        v ? v->mTime : INT64_MAX);
-  if (startTime == INT64_MAX) {
-    startTime = 0;
-  }
-  DECODER_LOG("ComputeStartTime first video frame start %lld", v ? v->mTime : -1);
-  DECODER_LOG("ComputeStartTime first audio frame start %lld", a ? a->mTime : -1);
-  return startTime;
 }
 
 class RequestVideoWithSkipTask : public nsRunnable {
