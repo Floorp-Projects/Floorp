@@ -1093,8 +1093,8 @@ static const uint8_t firstCharKinds[] = {
 static_assert(LastCharKind < (1 << (sizeof(firstCharKinds[0]) * 8)),
               "Elements of firstCharKinds[] are too small");
 
-bool
-TokenStream::getTokenInternal(TokenKind *ttp, Modifier modifier)
+TokenKind
+TokenStream::getTokenInternal(Modifier modifier)
 {
     int c, qc;
     Token *tp;
@@ -1625,26 +1625,15 @@ TokenStream::getTokenInternal(TokenKind *ttp, Modifier modifier)
     flags.isDirtyLine = true;
     tp->pos.end = userbuf.addressOfNextRawChar() - userbuf.base();
     MOZ_ASSERT(IsTokenSane(tp));
-    *ttp = tp->type;
-    return true;
+    return tp->type;
 
   error:
     flags.isDirtyLine = true;
     tp->pos.end = userbuf.addressOfNextRawChar() - userbuf.base();
     tp->type = TOK_ERROR;
-    flags.hadError = true;
-#ifdef DEBUG
-    // Poisoning userbuf on error establishes an invariant: once an erroneous
-    // token has been seen, userbuf will not be consulted again.  This is true
-    // because the parser will either (a) deal with the TOK_ERROR token by
-    // aborting parsing immediately; or (b) if the TOK_ERROR token doesn't
-    // match what it expected, it will unget the token, and the next getToken()
-    // call will immediately return the just-gotten TOK_ERROR token again
-    // without consulting userbuf, thanks to the lookahead buffer.
-    userbuf.poison();
-#endif
-    *ttp = TOK_ERROR;
-    return false;
+    MOZ_ASSERT(IsTokenSane(tp));
+    onError();
+    return TOK_ERROR;
 }
 
 bool TokenStream::getStringOrTemplateToken(int qc, Token **tp)
@@ -1772,6 +1761,22 @@ bool TokenStream::getStringOrTemplateToken(int qc, Token **tp)
     }
     (*tp)->setAtom(atom);
     return true;
+}
+
+void
+TokenStream::onError()
+{
+    flags.hadError = true;
+#ifdef DEBUG
+    // Poisoning userbuf on error establishes an invariant: once an erroneous
+    // token has been seen, userbuf will not be consulted again.  This is true
+    // because the parser will either (a) deal with the TOK_ERROR token by
+    // aborting parsing immediately; or (b) if the TOK_ERROR token doesn't
+    // match what it expected, it will unget the token, and the next getToken()
+    // call will immediately return the just-gotten TOK_ERROR token again
+    // without consulting userbuf, thanks to the lookahead buffer.
+    userbuf.poison();
+#endif
 }
 
 JS_FRIEND_API(int)
