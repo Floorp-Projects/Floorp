@@ -83,11 +83,7 @@ add_task(function* test_moz_hosts_update() {
 });
 
 add_task(function* test_remove_places() {
-  for (let idx in urls) {
-    PlacesUtils.history.removePage(urls[idx].uri);
-  }
-
-  yield PlacesTestUtils.clearHistory();
+  yield PlacesUtils.history.remove(urls.map(x => x.uri));
 
   for (let idx in urls) {
     do_check_false(isHostInMozHosts(urls[idx].uri, urls[idx].typed, urls[idx].prefix));
@@ -156,7 +152,7 @@ add_task(function* test_moz_hosts_www_remove() {
     print("removing " + aURIToRemove.spec + " keeping " + aURIToKeep);
     dump_table("moz_hosts");
     dump_table("moz_places");
-    PlacesUtils.history.removePage(aURIToRemove);
+    yield PlacesUtils.history.remove(aURIToRemove);
     let prefix = /www/.test(aURIToKeep.spec) ? "www." : null;
     dump_table("moz_hosts");
     dump_table("moz_places");

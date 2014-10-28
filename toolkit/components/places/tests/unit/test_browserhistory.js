@@ -13,7 +13,7 @@ add_task(function* test_addPage() {
 });
 
 add_task(function* test_removePage() {
-  PlacesUtils.bhistory.removePage(TEST_URI);
+  yield PlacesUtils.history.remove(TEST_URI);
   do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
 });
 
@@ -40,7 +40,7 @@ add_task(function* test_removePages() {
                                             ANNO_NAME, ANNO_VALUE, 0,
                                             Ci.nsIAnnotationService.EXPIRE_NEVER);
 
-  PlacesUtils.bhistory.removePages(pages, pages.length);
+  yield PlacesUtils.history.remove(pages);
   do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
 
   // Check that the bookmark and its annotation still exist.
