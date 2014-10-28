@@ -92,6 +92,7 @@ class ImageLoader;
 
 namespace dom {
 class AnimationTimeline;
+class AnonymousContent;
 class Attr;
 class BoxObject;
 class CDATASection;
@@ -713,6 +714,15 @@ public:
 
   bool DidDocumentOpen() {
     return mDidDocumentOpen;
+  }
+
+  already_AddRefed<mozilla::dom::AnonymousContent>
+  InsertAnonymousContent(mozilla::dom::Element& aElement,
+                         mozilla::ErrorResult& aError);
+  void RemoveAnonymousContent(mozilla::dom::AnonymousContent& aContent,
+                              mozilla::ErrorResult& aError);
+  nsTArray<nsRefPtr<mozilla::dom::AnonymousContent>>& GetAnonymousContents() {
+    return mAnonymousContents;
   }
 
 protected:
@@ -2746,6 +2756,8 @@ protected:
   uint32_t mInSyncOperationCount;
 
   nsRefPtr<mozilla::dom::XPathEvaluator> mXPathEvaluator;
+
+  nsTArray<nsRefPtr<mozilla::dom::AnonymousContent>> mAnonymousContents;
 
   uint32_t mBlockDOMContentLoaded;
   bool mDidFireDOMContentLoaded:1;
