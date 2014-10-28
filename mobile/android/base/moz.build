@@ -27,6 +27,7 @@ resjar.javac_flags += ['-Xlint:all']
 mgjar = add_java_jar('gecko-mozglue')
 mgjar.sources += [
     'mozglue/ByteBufferInputStream.java',
+    'mozglue/ContextUtils.java',
     'mozglue/DirectBufferAllocator.java',
     'mozglue/generatorannotations/OptionalGeneratedParameter.java',
     'mozglue/generatorannotations/WrapElementForJNI.java',
