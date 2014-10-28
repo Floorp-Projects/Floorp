@@ -264,7 +264,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
   var PendingConversationView = React.createClass({
     mixins: [sharedMixins.AudioMixin],
 
-
     getInitialState: function() {
       return {
         callState: "connecting"
@@ -563,6 +562,12 @@ loop.webapp = (function($, _, OT, mozL10n) {
   });
 
   var FailedConversationView = React.createClass({
+    mixins: [sharedMixins.AudioMixin],
+
+    componentDidMount: function() {
+      this.play("failure");
+    },
+
     render: function() {
       return this.transferPropsTo(
         <InitiateConversationView
