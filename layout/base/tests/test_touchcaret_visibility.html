@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1059165
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1070851</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <style>
+  /* Eliminate the blue glow when focusing an element. */
+  input, textarea, div {
+    background: none;
+    border: none;
+    outline: none;
+  }
+  </style>
+
+  <script type="application/javascript;version=1.7">
+
+  /** Test for Bug 1059165 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function replaceContent(aElement, aTextToReplace)
+  {
+    // The element is an input or a textarea.
+    if (typeof aElement.value != "undefined") {
+      aElement.value = aTextToReplace;
+    } else {
+      aElement.innerHTML = aTextToReplace;
+    }
+  }
+
+  function runTest(aSelector, aTextToReplace)
+  {
+    let snapshotCaret = true;
+
+    let element = document.querySelector(aSelector);
+
+    // Reset the content in the element.
+    replaceContent(element, "");
+
+    element.focus();
+    let noTouchCaret = snapshotWindow(window, snapshotCaret);
+
+    // Insert content with a space to the element so that it makes no difference
+    // visually in the snapshots.
+    replaceContent(element, aTextToReplace);
+
+    // Move caret to the front so that the caret position is the same as in the
+    // first snapshot.
+    sendKey('LEFT');
+
+    element.blur();
+    element.focus();
+    let hasTouchCaret = snapshotWindow(window, snapshotCaret);
+
+    // If touch caret is enabled, the two snapshots should be different.
+    let expected = !SpecialPowers.getBoolPref("touchcaret.enabled");
+    let [result, first, second] = compareSnapshots(noTouchCaret, hasTouchCaret,
+                                                   expected);
+
+    let message = "First snapshot of " + aSelector + " shouldn't have touch caret.  " +
+                  "Second snapshot of " + aSelector + " with content \'" +
+                   aTextToReplace + "\' should have touch caret.\n";
+
+    if(!result) {
+      message += "First snapshot: " + first + "\nSecond snapshot: " + second;
+    }
+
+    ok(result, message);
+
+    element.blur();
+  }
+
+  SimpleTest.waitForFocus(function() {
+    runTest('input', " ");
+    runTest('textarea', " ");
+    runTest('div', "&nbsp;");
+    runTest('div', "<span>&nbsp;</span>");
+
+    SimpleTest.finish();
+  })
+  </script>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1059165">Mozilla Bug 1059165</a>
+  <input>
+  <textarea></textarea>
+  <div contenteditable="true"></div>
+</body>
+</html>
