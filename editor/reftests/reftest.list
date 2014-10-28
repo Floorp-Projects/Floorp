@@ -127,3 +127,4 @@ needs-focus == spellcheck-contenteditable-focused-reframe.html spellcheck-conten
 == spellcheck-contenteditable-property-dynamic-override-inherit.html spellcheck-contenteditable-disabled-ref.html
 needs-focus == 969773.html 969773-ref.html
 == 997805.html 997805-ref.html
+== 1088158.html 1088158-ref.html

@@ -461,7 +461,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node templateLiteral();
     bool taggedTemplate(Node nodeList, TokenKind tt);
     bool appendToCallSiteObj(Node callSiteObj);
-    bool addExprAndGetNextTemplStrToken(Node nodeList, TokenKind &tt);
+    bool addExprAndGetNextTemplStrToken(Node nodeList, TokenKind *ttp);
 
     inline Node newName(PropertyName *name);
     inline Node newYieldExpression(uint32_t begin, Node expr, bool isYieldStar = false);
@@ -622,7 +622,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     };
 
     bool checkAndMarkAsAssignmentLhs(Node pn, AssignmentFlavor flavor);
-    bool matchInOrOf(bool *isForOfp);
+    bool matchInOrOf(bool *isForInp, bool *isForOfp);
 
     bool checkFunctionArguments();
     bool makeDefIntoUse(Definition *dn, Node pn, JSAtom *atom, bool *pbodyLevelHoistedUse);
