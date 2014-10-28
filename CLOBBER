@@ -22,4 +22,7 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 946065 needs a CLOBBER
+Updating CLOBBER for Bug 1084342
+
+There are some refactored files in in dom/bluetooth. Updating CLOBBER to not
+leave artifacts from older builds.
