@@ -450,8 +450,6 @@ BaselineInspector::getTemplateObjectForNative(jsbytecode *pc, Native native)
     for (ICStub *stub = entry.firstStub(); stub; stub = stub->next()) {
         if (stub->isCall_Native() && stub->toCall_Native()->callee()->native() == native)
             return stub->toCall_Native()->templateObject();
-        if (stub->isCall_StringSplit() && native == js::str_split)
-            return stub->toCall_StringSplit()->templateObject();
     }
 
     return nullptr;
