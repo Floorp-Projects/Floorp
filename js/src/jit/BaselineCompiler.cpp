@@ -1854,12 +1854,6 @@ BaselineCompiler::emit_JSOP_INITPROP()
     return emitOpIC(compiler.getStub(&stubSpace_));
 }
 
-bool
-BaselineCompiler::emit_JSOP_ENDINIT()
-{
-    return true;
-}
-
 typedef bool (*NewbornArrayPushFn)(JSContext *, HandleObject, const Value &);
 static const VMFunction NewbornArrayPushInfo = FunctionInfo<NewbornArrayPushFn>(NewbornArrayPush);
 
