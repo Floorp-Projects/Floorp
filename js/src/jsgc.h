@@ -1005,9 +1005,7 @@ class GCHelperState
 {
     enum State {
         IDLE,
-        SWEEPING,
-        ALLOCATING,
-        CANCEL_ALLOCATION
+        SWEEPING
     };
 
     // Associated runtime.
@@ -1033,8 +1031,6 @@ class GCHelperState
     bool              sweepFlag;
     bool              shrinkFlag;
 
-    bool              backgroundAllocation;
-
     friend class js::gc::ArenaLists;
 
     static void freeElementsAndArray(void **array, void **end) {
@@ -1054,8 +1050,7 @@ class GCHelperState
         state_(IDLE),
         thread(nullptr),
         sweepFlag(false),
-        shrinkFlag(false),
-        backgroundAllocation(true)
+        shrinkFlag(false)
     { }
 
     bool init();
@@ -1071,20 +1066,6 @@ class GCHelperState
 
     /* Must be called without the GC lock taken. */
     void waitBackgroundSweepEnd();
-
-    /* Must be called without the GC lock taken. */
-    void waitBackgroundSweepOrAllocEnd();
-
-    /* Must be called with the GC lock taken. */
-    void startBackgroundAllocationIfIdle();
-
-    bool canBackgroundAllocate() const {
-        return backgroundAllocation;
-    }
-
-    void disableBackgroundAllocation() {
-        backgroundAllocation = false;
-    }
 
     bool onBackgroundThread();
 
@@ -1118,11 +1099,15 @@ class GCParallelTask
     uint64_t duration_;
 
   protected:
+    // A flag to signal a request for early completion of the off-thread task.
+    mozilla::Atomic<bool> cancel_;
+
     virtual void run() = 0;
 
   public:
     GCParallelTask() : state(NotStarted), duration_(0) {}
 
+    // Time spent in the most recent invocation of this task.
     int64_t duration() const { return duration_; }
 
     // The simple interface to a parallel task works exactly like pthreads.
@@ -1136,6 +1121,17 @@ class GCParallelTask
 
     // Instead of dispatching to a helper, run the task on the main thread.
     void runFromMainThread(JSRuntime *rt);
+
+    // Dispatch a cancelation request.
+    enum CancelMode { CancelNoWait, CancelAndWait};
+    void cancel(CancelMode mode = CancelNoWait) {
+        cancel_ = true;
+        if (mode == CancelAndWait)
+            join();
+    }
+
+    // Check if a task is actively running.
+    bool isRunning() const;
 
     // This should be friended to HelperThread, but cannot be because it
     // would introduce several circular dependencies.

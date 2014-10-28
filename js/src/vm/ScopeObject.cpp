@@ -1846,23 +1846,8 @@ DebugScopes::proxiedScopesPostWriteBarrier(JSRuntime *rt, ObjectWeakMap *map,
                                            const PreBarrieredObject &key)
 {
 #ifdef JSGC_GENERATIONAL
-    /*
-     * Strip the barriers from the type before inserting into the store buffer.
-     * This will automatically ensure that barriers do not fire during GC.
-     *
-     * Some compilers complain about instantiating the WeakMap class for
-     * unbarriered type arguments, so we cast to a HashMap instead.  Because of
-     * WeakMap's multiple inheritace, We need to do this in two stages, first to
-     * the HashMap base class and then to the unbarriered version.
-     */
-    ObjectWeakMap::Base *baseHashMap = static_cast<ObjectWeakMap::Base *>(map);
-
-    typedef HashMap<JSObject *, JSObject *> UnbarrieredMap;
-    UnbarrieredMap *unbarrieredMap = reinterpret_cast<UnbarrieredMap *>(baseHashMap);
-
-    typedef gc::HashKeyRef<UnbarrieredMap, JSObject *> Ref;
     if (key && IsInsideNursery(key))
-        rt->gc.storeBuffer.putGeneric(Ref(unbarrieredMap, key.get()));
+        rt->gc.storeBuffer.putGeneric(UnbarrieredRef(map, key.get()));
 #endif
 }
 

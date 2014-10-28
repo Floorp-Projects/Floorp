@@ -126,7 +126,7 @@ chatbar > chatbox > .chat-titlebar > .chat-swap-button {
 }
 
 .chat-titlebar[activity] {
-  background-image: radial-gradient(ellipse closest-side at center, rgb(255,255,255), rgba(255,255,255,0));
+  background-image: radial-gradient(ellipse closest-side at center, rgb(255,255,255), transparent);
   background-repeat: no-repeat;
   background-size: 100% 20px;
   background-position: 0 -10px;

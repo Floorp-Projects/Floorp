@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+
+function KeysChangeFunc(session, keys, token) {
+  session.keyIdsReceived = [];
+  for (var keyid in keys) {
+    info("Set " + keyid + " to false in session.keyIdsReceived");
+    session.keyIdsReceived[keyid] = false;
+  }
+  return function(ev) {
+    var session = ev.target;
+    session.gotKeysChanged = true;
+    session.getUsableKeyIds().then(function(keyIds) {
+      for (var k = 0; k < keyIds.length; k++) {
+        var kid = Base64ToHex(window.btoa(ArrayBufferToString(keyIds[k])));
+        ok(kid in session.keyIdsReceived, token + " session.keyIdsReceived contained " + kid + " as expected.");
+        session.keyIdsReceived[kid] = true;
+      }
+    }, bail("Failed to get keyIds"));
+  }
+}
+
+function startTest(test, token)
+{
+  manager.started(token);
+
+  var sessions = [];
+
+  var v = SetupEME(test, token,
+    {
+      onsessioncreated: function(session) {
+        sessions.push(session);
+        session.addEventListener("keyschange", KeysChangeFunc(session, test.keys, token), false);
+      }
+    }
+  );
+
+  var gotEncrypted = false;
+  var gotPlaying = false;
+
+  v.addEventListener("encrypted", function(ev) {
+    ok(MediaKeys.isTypeSupported(KEYSYSTEM_TYPE, ev.initDataType, test.type),
+       token + " MediaKeys should support this keysystem");
+    gotEncrypted = true;
+  });
+
+  v.addEventListener("playing", function () { gotPlaying = true; });
+
+  v.addEventListener("ended", function(ev) {
+    ok(true, token + " got ended event");
+    manager.finished(token);
+
+    ok(gotEncrypted, token + " encrypted event should have fired");
+    ok(gotPlaying, token + " playing event should have fired");
+
+    ok(Math.abs(test.duration - v.duration) < 0.1,
+       token + " Duration of video should be corrrect");
+    ok(Math.abs(test.duration - v.currentTime) < 0.1,
+       token + " Current time should be same as duration");
+
+    // Verify all sessions had all keys went sent the to the CDM usable, and thus
+    // that we received keyschange event(s).
+    is(sessions.length, 1, "should have 1 session");
+    for (var i = 0; i < sessions.length; i++) {
+      var session = sessions[i];
+      ok(session.gotKeysChanged, token + " should have received at least one keychange event");
+      for (var kid in session.keyIdsReceived) {
+        ok(session.keyIdsReceived[kid], token + " key with id " + kid + " was usable as expected");
+      }
+    }
+
+   });
+
+  v.addEventListener("error", bail(token + " got error event"));
+
+  LoadTest(test, v).then(function(){v.play();}, bail(token + " failed to load"));
+}
+
+function testIsTypeSupported()
+{
+  var t = MediaKeys.isTypeSupported;
+  const clearkey = "org.w3.clearkey";
+  ok(!t("bogus", "bogon", "video/bogus"), "Invalid type.");
+  ok(t(clearkey), "ClearKey supported.");
+  ok(!t(clearkey, "bogus"), "ClearKey bogus initDataType not supported.");
+  ok(t(clearkey, "cenc"), "ClearKey/cenc should be supported.");
+  ok(!t(clearkey, "cenc", "bogus"), "ClearKey/cenc bogus content type should be supported.");
+  ok(t(clearkey, "cenc", 'video/mp4'), "ClearKey/cenc video/mp4 supported.");
+  ok(t(clearkey, "cenc", 'video/mp4; codecs="avc1.4d4015,mp4a.40.2"'), "ClearKey/cenc H.264/AAC supported.");
+  ok(t(clearkey, "cenc", 'audio/mp4'), "ClearKey/cenc audio/mp4 supported.");
+  ok(t(clearkey, "cenc", 'audio/mp4; codecs="mp4a.40.2"'), "ClearKey/cenc AAC LC supported.");
+}
+
+function beginTest() {
+  testIsTypeSupported();
+  manager.runTests(gEMETests, startTest);
+}
+
+var prefs = [
+  [ "media.mediasource.enabled", true ],
+  [ "media.mediasource.ignore_codecs", true ],
+];
+
+if (/Linux/.test(navigator.userAgent) ||
+    !document.createElement('video').canPlayType("video/mp4")) {
+  // XXX remove once we have mp4 PlatformDecoderModules on all platforms.
+  prefs.push([ "media.fragmented-mp4.exposed", true ]);
+  prefs.push([ "media.fragmented-mp4.use-blank-decoder", true ]);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ "set" : prefs }, beginTest);
+</script>
+</pre>
+</body>
+</html>
