@@ -27,6 +27,37 @@ loop.shared.mixins = (function() {
   }
 
   /**
+   * window.location mixin. Handles changes in the call url.
+   * Forces a reload of the page to ensure proper state of the webapp
+   *
+   * @type {Object}
+   */
+  var UrlHashChangeMixin = {
+    propTypes: {
+      onUrlHashChange: React.PropTypes.func.isRequired
+    },
+
+    componentDidMount: function() {
+      rootObject.addEventListener("hashchange", this.onUrlHashChange, false);
+    },
+
+    componentWillUnmount: function() {
+      rootObject.removeEventListener("hashchange", this.onUrlHashChange, false);
+    }
+  };
+
+  /**
+   * Document location mixin.
+   *
+   * @type {Object}
+   */
+  var DocumentLocationMixin = {
+    locationReload: function() {
+      rootObject.location.reload();
+    }
+  };
+
+  /**
    * Dropdown menu mixin.
    * @type {Object}
    */
@@ -151,6 +182,8 @@ loop.shared.mixins = (function() {
     AudioMixin: AudioMixin,
     setRootObject: setRootObject,
     DropdownMenuMixin: DropdownMenuMixin,
-    DocumentVisibilityMixin: DocumentVisibilityMixin
+    DocumentVisibilityMixin: DocumentVisibilityMixin,
+    DocumentLocationMixin: DocumentLocationMixin,
+    UrlHashChangeMixin: UrlHashChangeMixin
   };
 })();
