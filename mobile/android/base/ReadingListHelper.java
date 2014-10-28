@@ -27,12 +27,7 @@ import android.widget.Toast;
 public final class ReadingListHelper implements GeckoEventListener, NativeEventListener {
     private static final String LOGTAG = "ReadingListHelper";
 
-    private static final int READER_ADD_SUCCESS = 0;
-    private static final int READER_ADD_FAILED = 1;
-    private static final int READER_ADD_DUPLICATE = 2;
-
     protected final Context context;
-
 
     public ReadingListHelper(Context context) {
         this.context = context;
@@ -86,16 +81,6 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
      * icon, or by tapping the readinglist-add icon in the ReaderMode banner.
      */
     private void handleAddToList(JSONObject message) {
-        final int result = message.optInt("result", READER_ADD_FAILED);
-        if (result != READER_ADD_SUCCESS) {
-            if (result == READER_ADD_FAILED) {
-                showToast(R.string.reading_list_failed, Toast.LENGTH_SHORT);
-            } else if (result == READER_ADD_DUPLICATE) {
-                showToast(R.string.reading_list_duplicate, Toast.LENGTH_SHORT);
-            }
-            return;
-        }
-
         final ContentValues values = new ContentValues();
         final String url = message.optString("url");
 

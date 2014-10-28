@@ -312,10 +312,16 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_RED_BITS:
         case LOCAL_GL_GREEN_BITS:
         case LOCAL_GL_BLUE_BITS:
-        case LOCAL_GL_ALPHA_BITS:
         case LOCAL_GL_DEPTH_BITS: {
             GLint i = 0;
             gl->fGetIntegerv(pname, &i);
+            return JS::Int32Value(i);
+        }
+        case LOCAL_GL_ALPHA_BITS: {
+            GLint i = 0;
+            if (!mNeedsFakeNoAlpha) {
+                gl->fGetIntegerv(pname, &i);
+            }
             return JS::Int32Value(i);
         }
         case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT: {

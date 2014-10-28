@@ -1069,16 +1069,27 @@ GCRuntime::moveChunkToFreePool(Chunk *chunk)
 }
 
 inline bool
-GCRuntime::wantBackgroundAllocation() const
+GCRuntime::wantBackgroundAllocation(const AutoLockGC &lock) const
 {
-    /*
-     * To minimize memory waste we do not want to run the background chunk
-     * allocation if we have empty chunks or when the runtime needs just few
-     * of them.
-     */
-    return helperState.canBackgroundAllocate() &&
+    // To minimize memory waste, we do not want to run the background chunk
+    // allocation if we already have some empty chunks or when the runtime has
+    // a small heap size (and therefore likely has a small growth rate).
+    return allocTask.enabled() &&
            emptyChunks.count() < tunables.minEmptyChunkCount() &&
            chunkSet.count() >= 4;
+}
+
+void
+GCRuntime::startBackgroundAllocTaskIfIdle()
+{
+    AutoLockHelperThreadState helperLock;
+    if (allocTask.isRunning())
+        return;
+
+    // Join the previous invocation of the task. This will return immediately
+    // if the thread has never been started.
+    allocTask.joinWithLockHeld();
+    allocTask.startWithLockHeld();
 }
 
 class js::gc::AutoMaybeStartBackgroundAllocation
@@ -1099,17 +1110,14 @@ class js::gc::AutoMaybeStartBackgroundAllocation
     }
 
     ~AutoMaybeStartBackgroundAllocation() {
-        if (runtime && !runtime->currentThreadOwnsInterruptLock()) {
-            AutoLockHelperThreadState helperLock;
-            AutoLockGC lock(runtime);
-            runtime->gc.startBackgroundAllocationIfIdle();
-        }
+        if (runtime && !runtime->currentThreadOwnsInterruptLock())
+            runtime->gc.startBackgroundAllocTaskIfIdle();
     }
 };
 
-/* The caller must hold the GC lock. */
 Chunk *
-GCRuntime::pickChunk(Zone *zone, AutoMaybeStartBackgroundAllocation &maybeStartBackgroundAllocation)
+GCRuntime::pickChunk(const AutoLockGC &lock, Zone *zone,
+                     AutoMaybeStartBackgroundAllocation &maybeStartBackgroundAllocation)
 {
     Chunk **listHeadp = getAvailableChunkList(zone);
     Chunk *chunk = *listHeadp;
@@ -1127,7 +1135,7 @@ GCRuntime::pickChunk(Zone *zone, AutoMaybeStartBackgroundAllocation &maybeStartB
     MOZ_ASSERT(chunk->unused());
     MOZ_ASSERT(!chunkSet.has(chunk));
 
-    if (wantBackgroundAllocation())
+    if (wantBackgroundAllocation(lock))
         maybeStartBackgroundAllocation.tryToStartBackgroundAllocation(rt);
 
     chunkAllocationSinceLastGC = true;
@@ -1173,13 +1181,17 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     decommitThreshold(32 * 1024 * 1024),
     cleanUpEverything(false),
     grayBitsValid(false),
-    isNeeded(0),
+    majorGCRequested(0),
+    majorGCTriggerReason(JS::gcreason::NO_REASON),
+#ifdef JSGC_GENERATIONAL
+    minorGCRequested(false),
+    minorGCTriggerReason(JS::gcreason::NO_REASON),
+#endif
     majorGCNumber(0),
     jitReleaseNumber(0),
     number(0),
     startNumber(0),
     isFull(false),
-    triggerReason(JS::gcreason::NO_REASON),
 #ifdef DEBUG
     disableStrictProxyCheckingCount(0),
 #endif
@@ -1229,6 +1241,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
 #endif
     lock(nullptr),
     lockOwner(nullptr),
+    allocTask(rt, emptyChunks),
     helperState(rt)
 {
     setGCMode(JSGC_MODE_GLOBAL);
@@ -1970,7 +1983,7 @@ ArenaLists::allocateFromArena(JS::Zone *zone, AllocKind thingKind,
     if (maybeLock.isNothing())
         maybeLock.emplace(rt);
 
-    Chunk *chunk = rt->gc.pickChunk(zone, maybeStartBGAlloc);
+    Chunk *chunk = rt->gc.pickChunk(maybeLock.ref(), zone, maybeStartBGAlloc);
     if (!chunk)
         return nullptr;
 
@@ -2937,13 +2950,25 @@ js::MarkCompartmentActive(InterpreterFrame *fp)
 }
 
 void
-GCRuntime::requestInterrupt(JS::gcreason::Reason reason)
+GCRuntime::requestMajorGC(JS::gcreason::Reason reason)
 {
-    if (isNeeded)
+    if (majorGCRequested)
         return;
 
-    isNeeded = true;
-    triggerReason = reason;
+    majorGCRequested = true;
+    majorGCTriggerReason = reason;
+    rt->requestInterrupt(JSRuntime::RequestInterruptMainThread);
+}
+
+void
+GCRuntime::requestMinorGC(JS::gcreason::Reason reason)
+{
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+    if (minorGCRequested)
+        return;
+
+    minorGCRequested = true;
+    minorGCTriggerReason = reason;
     rt->requestInterrupt(JSRuntime::RequestInterruptMainThread);
 }
 
@@ -2972,7 +2997,7 @@ GCRuntime::triggerGC(JS::gcreason::Reason reason)
         return false;
 
     JS::PrepareForFullGC(rt);
-    requestInterrupt(reason);
+    requestMajorGC(reason);
     return true;
 }
 
@@ -3014,7 +3039,7 @@ GCRuntime::triggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
     }
 
     PrepareZoneForGC(zone);
-    requestInterrupt(reason);
+    requestMajorGC(reason);
     return true;
 }
 
@@ -3031,10 +3056,8 @@ GCRuntime::maybeGC(Zone *zone)
     }
 #endif
 
-    if (isNeeded) {
-        gcSlice(GC_NORMAL, JS::gcreason::MAYBEGC);
+    if (gcIfNeeded())
         return true;
-    }
 
     double factor = schedulingState.inHighFrequencyGCMode() ? 0.85 : 0.9;
     if (zone->usage.gcBytes() > 1024 * 1024 &&
@@ -3269,12 +3292,8 @@ GCHelperState::init()
     if (!(done = PR_NewCondVar(rt->gc.lock)))
         return false;
 
-    if (CanUseExtraThreads()) {
-        backgroundAllocation = (GetCPUCount() >= 2);
+    if (CanUseExtraThreads())
         HelperThreadState().ensureInitialized();
-    } else {
-        backgroundAllocation = false;
-    }
 
     return true;
 }
@@ -3358,34 +3377,38 @@ GCHelperState::work()
         break;
       }
 
-      case ALLOCATING: {
-        AutoTraceLog logAllocation(logger, TraceLogger::GCAllocation);
-        do {
-            Chunk *chunk;
-            {
-                AutoUnlockGC unlock(rt);
-                chunk = Chunk::allocate(rt);
-            }
-
-            /* OOM stops the background allocation. */
-            if (!chunk)
-                break;
-            MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
-            rt->gc.emptyChunks.put(chunk);
-        } while (state() == ALLOCATING && rt->gc.wantBackgroundAllocation());
-
-        MOZ_ASSERT(state() == ALLOCATING || state() == CANCEL_ALLOCATION);
-        break;
-      }
-
-      case CANCEL_ALLOCATION:
-        break;
     }
 
     setState(IDLE);
     thread = nullptr;
 
     PR_NotifyAllCondVar(done);
+}
+
+BackgroundAllocTask::BackgroundAllocTask(JSRuntime *rt, ChunkPool &pool)
+  : runtime(rt),
+    chunkPool_(pool),
+    enabled_(CanUseExtraThreads() && GetCPUCount() >= 2)
+{
+}
+
+/* virtual */ void
+BackgroundAllocTask::run()
+{
+    TraceLogger *logger = TraceLoggerForCurrentThread();
+    AutoTraceLog logAllocation(logger, TraceLogger::GCAllocation);
+
+    AutoLockGC lock(runtime);
+    while (!cancel_ && runtime->gc.wantBackgroundAllocation(lock)) {
+        Chunk *chunk;
+        {
+            AutoUnlockGC unlock(runtime);
+            chunk = Chunk::allocate(runtime);
+            if (!chunk)
+                break;
+        }
+        chunkPool_.put(chunk);
+    }
 }
 
 void
@@ -3416,13 +3439,8 @@ GCHelperState::startBackgroundShrink()
       case SWEEPING:
         shrinkFlag = true;
         break;
-      case ALLOCATING:
-      case CANCEL_ALLOCATION:
-        /*
-         * If we have started background allocation there is nothing to
-         * shrink.
-         */
-        break;
+      default:
+        MOZ_CRASH("Invalid GC helper thread state.");
     }
 }
 
@@ -3434,26 +3452,6 @@ GCHelperState::waitBackgroundSweepEnd()
         waitForBackgroundThread();
     if (rt->gc.incrementalState == NO_INCREMENTAL)
         rt->gc.assertBackgroundSweepingFinished();
-}
-
-void
-GCHelperState::waitBackgroundSweepOrAllocEnd()
-{
-    AutoLockGC lock(rt);
-    if (state() == ALLOCATING)
-        setState(CANCEL_ALLOCATION);
-    while (state() == SWEEPING || state() == CANCEL_ALLOCATION)
-        waitForBackgroundThread();
-    if (rt->gc.incrementalState == NO_INCREMENTAL)
-        rt->gc.assertBackgroundSweepingFinished();
-}
-
-/* Must be called with the GC lock taken. */
-inline void
-GCHelperState::startBackgroundAllocationIfIdle()
-{
-    if (state_ == IDLE)
-        startBackgroundThread(ALLOCATING);
 }
 
 /* Must be called with the GC lock taken. */
@@ -5814,7 +5812,7 @@ GCRuntime::gcCycle(bool incremental, int64_t budget, JSGCInvocationKind gckind,
 
     AutoTraceSession session(rt, MajorCollecting);
 
-    isNeeded = false;
+    majorGCRequested = false;
     interFrameGC = true;
 
     number++;
@@ -5828,15 +5826,20 @@ GCRuntime::gcCycle(bool incremental, int64_t budget, JSGCInvocationKind gckind,
     // Assert if this is a GC unsafe region.
     JS::AutoAssertOnGC::VerifyIsSafeToGC(rt);
 
-    /*
-     * As we about to purge caches and clear the mark bits we must wait for
-     * any background finalization to finish. We must also wait for the
-     * background allocation to finish so we can avoid taking the GC lock
-     * when manipulating the chunks during the GC.
-     */
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
-        waitBackgroundSweepOrAllocEnd();
+
+        // As we are about to purge caches and clear the mark bits, wait for
+        // background finalization to finish. It cannot run between slices
+        // so we only need to wait on the first slice.
+        if (incrementalState == NO_INCREMENTAL)
+            waitBackgroundSweepEnd();
+
+        // We must also wait for background allocation to finish so we can
+        // avoid taking the GC lock when manipulating the chunks during the GC.
+        // The background alloc task can run between slices, so we must wait
+        // for it at the start of every slice.
+        allocTask.cancel(GCParallelTask::CancelAndWait);
     }
 
     State prevState = incrementalState;
@@ -6145,6 +6148,7 @@ void
 GCRuntime::minorGC(JS::gcreason::Reason reason)
 {
 #ifdef JSGC_GENERATIONAL
+    minorGCRequested = false;
     TraceLogger *logger = TraceLoggerForMainThread(rt);
     AutoTraceLog logMinorGC(logger, TraceLogger::MinorGC);
     nursery.collect(rt, reason, nullptr);
@@ -6158,6 +6162,7 @@ GCRuntime::minorGC(JSContext *cx, JS::gcreason::Reason reason)
     // Alternate to the runtime-taking form above which allows marking type
     // objects as needing pretenuring.
 #ifdef JSGC_GENERATIONAL
+    minorGCRequested = false;
     TraceLogger *logger = TraceLoggerForMainThread(rt);
     AutoTraceLog logMinorGC(logger, TraceLogger::MinorGC);
     Nursery::TypeObjectList pretenureTypes;
@@ -6196,20 +6201,26 @@ GCRuntime::enableGenerationalGC()
 #endif
 }
 
-void
-GCRuntime::gcIfNeeded(JSContext *cx)
+bool
+GCRuntime::gcIfNeeded(JSContext *cx /* = nullptr */)
 {
+    // This method returns whether a major GC was performed.
+
 #ifdef JSGC_GENERATIONAL
-    /*
-     * In case of store buffer overflow perform minor GC first so that the
-     * correct reason is seen in the logs.
-     */
-    if (storeBuffer.isAboutToOverflow())
-        minorGC(cx, JS::gcreason::FULL_STORE_BUFFER);
+    if (minorGCRequested) {
+        if (cx)
+            minorGC(cx, minorGCTriggerReason);
+        else
+            minorGC(minorGCTriggerReason);
+    }
 #endif
 
-    if (isNeeded)
-        gcSlice(GC_NORMAL, rt->gc.triggerReason, 0);
+    if (majorGCRequested) {
+        gcSlice(GC_NORMAL, rt->gc.majorGCTriggerReason);
+        return true;
+    }
+
+    return false;
 }
 
 AutoFinishGC::AutoFinishGC(JSRuntime *rt)

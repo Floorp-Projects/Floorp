@@ -1201,7 +1201,10 @@ GeckoMediaPluginService::ClearStorage()
     return;
   }
 
-  if (NS_FAILED(path->Remove(true))) {
+  bool exists = false;
+  if (NS_SUCCEEDED(path->Exists(&exists)) &&
+      exists &&
+      NS_FAILED(path->Remove(true))) {
     NS_WARNING("Failed to delete GMP storage directory");
   }
   NS_DispatchToMainThread(new StorageClearedTask(), NS_DISPATCH_NORMAL);

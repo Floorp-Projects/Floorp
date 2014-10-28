@@ -26,17 +26,7 @@ typedef enum JSOp {
 FOR_EACH_OPCODE(ENUMERATE_OPCODE)
 #undef ENUMERATE_OPCODE
 
-    JSOP_LIMIT,
-
-    /*
-     * These pseudo-ops help js_DecompileValueGenerator decompile JSOP_SETPROP,
-     * JSOP_SETELEM, and comprehension-tails, respectively.  They are never
-     * stored in bytecode, so they don't preempt valid opcodes.
-     */
-    JSOP_GETPROP2 = JSOP_LIMIT,
-    JSOP_GETELEM2 = JSOP_LIMIT + 1,
-    JSOP_FORLOCAL = JSOP_LIMIT + 2,
-    JSOP_FAKE_LIMIT = JSOP_FORLOCAL
+    JSOP_LIMIT
 } JSOp;
 
 /*

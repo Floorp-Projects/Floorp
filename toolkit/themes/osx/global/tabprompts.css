@@ -36,7 +36,7 @@ button {
   border-radius: 2px;
   color: black !important;
   background-color: hsl(0,0%,90%);
-  background-image: linear-gradient(hsla(0,0%,100%,.7), hsla(0,0%,100%,0));
+  background-image: linear-gradient(hsla(0,0%,100%,.7), transparent);
   background-clip: padding-box;
   border: 1px solid;
   border-color: hsl(0,0%,65%) hsl(0,0%,60%) hsl(0,0%,50%);
@@ -54,7 +54,7 @@ button:hover {
 }
 
 button:hover:active {
-  background-image: linear-gradient(hsla(0,0%,100%,.2), hsla(0,0%,100%,0));
+  background-image: linear-gradient(hsla(0,0%,100%,.2), transparent);
   background-color: hsl(0,0%,70%);
   box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,
               0 1px 3px hsla(0,0%,0%,.2);

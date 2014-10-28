@@ -1528,7 +1528,7 @@ class CGAbstractClassHook(CGAbstractStaticMethod):
                                         args)
 
     def definition_body_prologue(self):
-        return ("%s* self = UnwrapDOMObject<%s>(obj);\n" %
+        return ("%s* self = UnwrapPossiblyNotInitializedDOMObject<%s>(obj);\n" %
                 (self.descriptor.nativeType, self.descriptor.nativeType))
 
     def definition_body(self):

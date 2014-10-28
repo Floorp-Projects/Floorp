@@ -189,8 +189,8 @@ ParseTask::ParseTask(ExclusiveContext *cx, JSObject *exclusiveContextGlobal, JSC
                      JS::OffThreadCompileCallback callback, void *callbackData)
   : cx(cx), options(initCx), chars(chars), length(length),
     alloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    exclusiveContextGlobal(initCx, exclusiveContextGlobal), optionsElement(initCx),
-    optionsIntroductionScript(initCx), callback(callback), callbackData(callbackData),
+    exclusiveContextGlobal(initCx, exclusiveContextGlobal),
+    callback(callback), callbackData(callbackData),
     script(nullptr), errors(cx), overRecursed(false)
 {
 }
@@ -761,6 +761,7 @@ js::GCParallelTask::joinWithLockHeld()
     while (state != Finished)
         HelperThreadState().wait(GlobalHelperThreadState::CONSUMER);
     state = NotStarted;
+    cancel_ = false;
 }
 
 void
@@ -794,6 +795,13 @@ js::GCParallelTask::runFromHelperThread()
 
     state = Finished;
     HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER);
+}
+
+bool
+js::GCParallelTask::isRunning() const
+{
+    MOZ_ASSERT(HelperThreadState().isLocked());
+    return state == Dispatched;
 }
 
 void
