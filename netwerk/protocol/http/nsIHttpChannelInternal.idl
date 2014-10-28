@@ -38,7 +38,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(a95e45c1-b145-487c-b2a9-4e96e814a1b5)]
+[scriptable, uuid(2677e555-8c48-4147-b883-5c2a673f65d5)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -78,8 +78,36 @@ interface nsIHttpChannelInternal : nsISupports
     void setupFallbackChannel(in string aFallbackKey);
 
     /**
-     * Force relevant cookies to be sent with this load even if normally they
-     * wouldn't be.
+     * This flag is set to force relevant cookies to be sent with this load
+     * even if normally they wouldn't be.
+     */
+    const unsigned long THIRD_PARTY_FORCE_ALLOW = 1 << 0;
+
+    /**
+     * This flag is set in the parent if the child has already computed that
+     * it originates from a 3rd party frame (i.e. a 3rd party iframe).
+     */
+    const unsigned long THIRD_PARTY_PARENT_IS_THIRD_PARTY = 1 << 1;
+
+    /**
+     * This flag is set in the parent if the child has already computed that
+     * it is not a 3rd party request due to iframe parentage. However, if
+     * someone calls mozIThirdPartyUtil::IsThirdPartyChannel with a 3rd-party
+     * URI, the result would be true if the URI is third-party from this
+     * channel's URI.
+     */
+    const unsigned long THIRD_PARTY_PARENT_IS_SAME_PARTY = 1 << 2;
+
+    /**
+     * When set, these flags modify the algorithm used to decide whether to
+     * send 3rd party cookies for a given channel.
+     */
+    attribute unsigned long thirdPartyFlags;
+
+    /**
+     * This attribute was added before the "flags" above and is retained here
+     * for compatibility. When set to true, has the same effect as
+     * THIRD_PARTY_FORCE_ALLOW, described above.
      */
     attribute boolean forceAllowThirdPartyCookie;
 
