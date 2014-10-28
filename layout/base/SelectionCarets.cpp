@@ -159,13 +159,13 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
     movePoint = LayoutDeviceIntPoint::ToUntyped(mouseEvent->AsGUIEvent()->refPoint);
   }
 
-  // Get event coordinate relative to canvas frame
-  nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
-  if (!canvasFrame) {
+  // Get event coordinate relative to root frame
+  nsIFrame* rootFrame = mPresShell->GetRootFrame();
+  if (!rootFrame) {
     return nsEventStatus_eIgnore;
   }
-  nsPoint ptInCanvas =
-    nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, movePoint, canvasFrame);
+  nsPoint ptInRoot =
+    nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, movePoint, rootFrame);
 
   if (aEvent->message == NS_TOUCH_START ||
       (aEvent->message == NS_MOUSE_BUTTON_DOWN &&
@@ -176,16 +176,16 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
     }
 
     mActiveTouchId = nowTouchId;
-    mDownPoint = ptInCanvas;
-    if (IsOnStartFrame(ptInCanvas)) {
+    mDownPoint = ptInRoot;
+    if (IsOnStartFrame(ptInRoot)) {
       mDragMode = START_FRAME;
-      mCaretCenterToDownPointOffsetY = GetCaretYCenterPosition() - ptInCanvas.y;
+      mCaretCenterToDownPointOffsetY = GetCaretYCenterPosition() - ptInRoot.y;
       SetSelectionDirection(false);
       SetSelectionDragState(true);
       return nsEventStatus_eConsumeNoDefault;
-    } else if (IsOnEndFrame(ptInCanvas)) {
+    } else if (IsOnEndFrame(ptInRoot)) {
       mDragMode = END_FRAME;
-      mCaretCenterToDownPointOffsetY = GetCaretYCenterPosition() - ptInCanvas.y;
+      mCaretCenterToDownPointOffsetY = GetCaretYCenterPosition() - ptInRoot.y;
       SetSelectionDirection(true);
       SetSelectionDragState(true);
       return nsEventStatus_eConsumeNoDefault;
@@ -212,14 +212,14 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
              aEvent->message == NS_MOUSE_MOVE) {
     if (mDragMode == START_FRAME || mDragMode == END_FRAME) {
       if (mActiveTouchId == nowTouchId) {
-        ptInCanvas.y += mCaretCenterToDownPointOffsetY;
-        return DragSelection(ptInCanvas);
+        ptInRoot.y += mCaretCenterToDownPointOffsetY;
+        return DragSelection(ptInRoot);
       }
 
       return nsEventStatus_eConsumeNoDefault;
     }
 
-    nsPoint delta = mDownPoint - ptInCanvas;
+    nsPoint delta = mDownPoint - ptInRoot;
     if (NS_hypot(delta.x, delta.y) >
           nsPresContext::AppUnitsPerCSSPixel() * kMoveStartTolerancePx) {
       CancelLongTapDetector();
@@ -573,8 +573,7 @@ SelectionCarets::SelectWord()
   }
 
   nsIFrame* rootFrame = mPresShell->GetRootFrame();
-  nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
-  if (!rootFrame || !canvasFrame) {
+  if (!rootFrame) {
     return NS_OK;
   }
 
@@ -592,7 +591,7 @@ SelectionCarets::SelectWord()
   }
 
   nsPoint ptInFrame = mDownPoint;
-  nsLayoutUtils::TransformPoint(canvasFrame, ptFrame, ptInFrame);
+  nsLayoutUtils::TransformPoint(rootFrame, ptFrame, ptInFrame);
 
   // If target frame is editable, we should move focus to targe frame. If
   // target frame isn't editable and our focus content is editable, we should
@@ -708,8 +707,7 @@ nsEventStatus
 SelectionCarets::DragSelection(const nsPoint &movePoint)
 {
   nsIFrame* rootFrame = mPresShell->GetRootFrame();
-  nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
-  if (!rootFrame || !canvasFrame) {
+  if (!rootFrame) {
     return nsEventStatus_eConsumeNoDefault;
   }
 
@@ -726,7 +724,7 @@ SelectionCarets::DragSelection(const nsPoint &movePoint)
   nsIFrame *newFrame = nullptr;
   nsPoint newPoint;
   nsPoint ptInFrame = movePoint;
-  nsLayoutUtils::TransformPoint(canvasFrame, ptFrame, ptInFrame);
+  nsLayoutUtils::TransformPoint(rootFrame, ptFrame, ptInFrame);
   result = fs->ConstrainFrameAndPointToAnchorSubtree(ptFrame, ptInFrame, &newFrame, newPoint);
   if (NS_FAILED(result) || !newFrame) {
     return nsEventStatus_eConsumeNoDefault;
@@ -779,7 +777,7 @@ SelectionCarets::DragSelection(const nsPoint &movePoint)
   nsIScrollableFrame *saf = do_QueryFrame(scrollable);
   nsIFrame *capturingFrame = saf->GetScrolledFrame();
   nsPoint ptInScrolled = movePoint;
-  nsLayoutUtils::TransformPoint(canvasFrame, capturingFrame, ptInScrolled);
+  nsLayoutUtils::TransformPoint(rootFrame, capturingFrame, ptInScrolled);
   fs->StartAutoScrollTimer(capturingFrame, ptInScrolled, TouchCaret::sAutoScrollTimerDelay);
   UpdateSelectionCarets();
   return nsEventStatus_eConsumeNoDefault;
@@ -788,9 +786,9 @@ SelectionCarets::DragSelection(const nsPoint &movePoint)
 nscoord
 SelectionCarets::GetCaretYCenterPosition()
 {
-  nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
+  nsIFrame* rootFrame = mPresShell->GetRootFrame();
 
-  if (!canvasFrame) {
+  if (!rootFrame) {
     return 0;
   }
 
@@ -825,7 +823,7 @@ SelectionCarets::GetCaretYCenterPosition()
     return 0;
   }
   nsRect frameRect = theFrame->GetRectRelativeToSelf();
-  nsLayoutUtils::TransformRect(theFrame, canvasFrame, frameRect);
+  nsLayoutUtils::TransformRect(theFrame, rootFrame, frameRect);
   return frameRect.Center().y;
 }
 
@@ -897,16 +895,16 @@ nsRect
 SelectionCarets::GetStartFrameRect()
 {
   dom::Element* element = mPresShell->GetSelectionCaretsStartElement();
-  nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
-  return nsLayoutUtils::GetRectRelativeToFrame(element, canvasFrame);
+  nsIFrame* rootFrame = mPresShell->GetRootFrame();
+  return nsLayoutUtils::GetRectRelativeToFrame(element, rootFrame);
 }
 
 nsRect
 SelectionCarets::GetEndFrameRect()
 {
   dom::Element* element = mPresShell->GetSelectionCaretsEndElement();
-  nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
-  return nsLayoutUtils::GetRectRelativeToFrame(element, canvasFrame);
+  nsIFrame* rootFrame = mPresShell->GetRootFrame();
+  return nsLayoutUtils::GetRectRelativeToFrame(element, rootFrame);
 }
 
 nsIContent*
