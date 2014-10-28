@@ -25,7 +25,7 @@
   --toolbarbutton-hover-boxshadow: 0 1px 0 hsla(0,0%,100%,.5),
                                    0 1px 0 hsla(0,0%,100%,.5) inset;
 
-  --toolbarbutton-active-background: hsla(0,0%,0%,.02) linear-gradient(hsla(0,0%,0%,.12), hsla(0,0%,0%,0)) border-box;
+  --toolbarbutton-active-background: hsla(0,0%,0%,.02) linear-gradient(hsla(0,0%,0%,.12), transparent) border-box;
   --toolbarbutton-active-boxshadow: 0 1px 0 hsla(0,0%,100%,.5),
                                     0 1px 0 hsla(0,0%,0%,.05) inset,
                                     0 1px 1px hsla(0,0%,0%,.2) inset;
@@ -2128,7 +2128,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 .urlbar-history-dropmarker[open="true"],
 .urlbar-history-dropmarker:hover:active {
   -moz-image-region: var(--urlbar-dropmarker-active-region);
-  background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
+  background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), transparent);
 }
 
 @media (min-resolution: 2dppx) {
@@ -2157,7 +2157,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 
 .urlbar-icon[open="true"],
 .urlbar-icon:hover:active {
-  background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
+  background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), transparent);
 }
 
 #urlbar-search-splitter {
@@ -2373,7 +2373,7 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
 }
 
 #urlbar > toolbarbutton:not([disabled]):hover:active {
-  background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), hsla(205,100%,70%,0));
+  background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), transparent);
 }
 
 #urlbar-go-button {
@@ -4523,7 +4523,7 @@ menulist.translate-infobar-element > .menulist-dropmarker {
 
 .chat-titlebar {
   background-color: #d9d9d9;
-  background-image: linear-gradient(rgba(255,255,255,.43), rgba(255,255,255,0));
+  background-image: linear-gradient(rgba(255,255,255,.43), transparent);
 }
 
 .chat-titlebar[selected] {
@@ -4532,7 +4532,7 @@ menulist.translate-infobar-element > .menulist-dropmarker {
 
 .chatbar-button {
   background-color: #d9d9d9;
-  background-image: linear-gradient(rgba(255,255,255,.43), rgba(255,255,255,0));
+  background-image: linear-gradient(rgba(255,255,255,.43), transparent);
   border-top-left-radius: @toolbarbuttonCornerRadius@;
   border-top-right-radius: @toolbarbuttonCornerRadius@;
 }
