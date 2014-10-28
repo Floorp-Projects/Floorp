@@ -50,10 +50,9 @@ nsIContentChild::DeallocPJavaScriptChild(PJavaScriptChild* aChild)
 }
 
 PBrowserChild*
-nsIContentChild::AllocPBrowserChild(const TabId& aTabId,
-                                    const IPCTabContext& aContext,
+nsIContentChild::AllocPBrowserChild(const IPCTabContext& aContext,
                                     const uint32_t& aChromeFlags,
-                                    const ContentParentId& aCpID,
+                                    const uint64_t& aID,
                                     const bool& aIsForApp,
                                     const bool& aIsForBrowser)
 {
@@ -70,7 +69,7 @@ nsIContentChild::AllocPBrowserChild(const TabId& aTabId,
   }
 
   nsRefPtr<TabChild> child =
-    TabChild::Create(this, aTabId, tc.GetTabContext(), aChromeFlags);
+    TabChild::Create(this, tc.GetTabContext(), aChromeFlags);
 
   // The ref here is released in DeallocPBrowserChild.
   return child.forget().take();

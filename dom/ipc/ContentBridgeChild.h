@@ -39,28 +39,25 @@ public:
   jsipc::JavaScriptShared* GetCPOWManager() MOZ_OVERRIDE;
 
   virtual bool SendPBrowserConstructor(PBrowserChild* aActor,
-                                       const TabId& aTabId,
                                        const IPCTabContext& aContext,
                                        const uint32_t& aChromeFlags,
-                                       const ContentParentId& aCpID,
+                                       const uint64_t& aID,
                                        const bool& aIsForApp,
                                        const bool& aIsForBrowser) MOZ_OVERRIDE;
 
 protected:
   virtual ~ContentBridgeChild();
 
-  virtual PBrowserChild* AllocPBrowserChild(const TabId& aTabId,
-                                            const IPCTabContext& aContext,
+  virtual PBrowserChild* AllocPBrowserChild(const IPCTabContext& aContext,
                                             const uint32_t& aChromeFlags,
-                                            const ContentParentId& aCpID,
+                                            const uint64_t& aID,
                                             const bool& aIsForApp,
                                             const bool& aIsForBrowser) MOZ_OVERRIDE;
   virtual bool DeallocPBrowserChild(PBrowserChild*) MOZ_OVERRIDE;
   virtual bool RecvPBrowserConstructor(PBrowserChild* aCctor,
-                                       const TabId& aTabId,
                                        const IPCTabContext& aContext,
                                        const uint32_t& aChromeFlags,
-                                       const ContentParentId& aCpID,
+                                       const uint64_t& aID,
                                        const bool& aIsForApp,
                                        const bool& aIsForBrowser) MOZ_OVERRIDE;
 

@@ -11,6 +11,8 @@ import runxpcshelltests as xpcshell
 import tempfile
 from automationutils import replaceBackSlashes
 from zipfile import ZipFile
+from mozlog import structured
+from mozlog.structured import commandline
 import shutil
 import mozdevice
 import mozfile
@@ -63,20 +65,20 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         pluginsDir = remoteJoin(self.remoteTmpDir, "plugins")
         self.device.pushDir(self.pluginsPath, pluginsDir)
         if self.interactive:
-            self.log.info("TEST-INFO | plugins dir is %s" % pluginsDir)
+            self.log.info("plugins dir is %s" % pluginsDir)
         return pluginsDir
 
     def setupProfileDir(self):
         self.device.removeDir(self.profileDir)
         self.device.mkDir(self.profileDir)
         if self.interactive or self.singleFile:
-            self.log.info("TEST-INFO | profile dir is %s" % self.profileDir)
+            self.log.info("profile dir is %s" % self.profileDir)
         return self.profileDir
 
     def logCommand(self, name, completeCmd, testdir):
-        self.log.info("TEST-INFO | %s | full command: %r" % (name, completeCmd))
-        self.log.info("TEST-INFO | %s | current directory: %r" % (name, self.remoteHere))
-        self.log.info("TEST-INFO | %s | environment: %s" % (name, self.env))
+        self.log.info("%s | full command: %r" % (name, completeCmd))
+        self.log.info("%s | current directory: %r" % (name, self.remoteHere))
+        self.log.info("%s | environment: %s" % (name, self.env))
 
     def getHeadAndTailFiles(self, test):
         """Override parent method to find files on remote device."""
@@ -120,10 +122,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
               self.remoteDebuggerArgs,
               self.xpcsCmd]
 
-    def testTimeout(self, test_file, proc):
-        self.timedout = True
-        if not self.retry:
-            self.log.error("TEST-UNEXPECTED-FAIL | %s | Test timed out" % test_file)
+    def killTimeout(self, proc):
         self.kill(proc)
 
     def launchProcess(self, cmd, stdout, stderr, env, cwd, timeout=None):
@@ -211,7 +210,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
 # via devicemanager.
 class XPCShellRemote(xpcshell.XPCShellTests, object):
 
-    def __init__(self, devmgr, options, args, log=None):
+    def __init__(self, devmgr, options, args, log):
         xpcshell.XPCShellTests.__init__(self, log)
 
         # Add Android version (SDK level) to mozinfo so that manifest entries
@@ -575,6 +574,7 @@ def main():
         sys.exit(1)
 
     parser = RemoteXPCShellOptions()
+    structured.commandline.add_logging_group(parser)
     options, args = parser.parse_args()
     if not options.localAPK:
         for file in os.listdir(os.path.join(options.objdir, "dist")):
@@ -588,6 +588,9 @@ def main():
             sys.exit(1)
 
     options = parser.verifyRemoteOptions(options)
+    log = commandline.setup_logging("Remote XPCShell",
+                                    options,
+                                    {"tbpl": sys.stdout})
 
     if len(args) < 1 and options.manifest is None:
         print >>sys.stderr, """Usage: %s <test dirs>
@@ -609,7 +612,7 @@ def main():
         print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
         sys.exit(1)
 
-    xpcsh = XPCShellRemote(dm, options, args)
+    xpcsh = XPCShellRemote(dm, options, args, log)
 
     # we don't run concurrent tests on mobile
     options.sequential = True

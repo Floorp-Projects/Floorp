@@ -16,6 +16,7 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.dom.workers += [
     'ServiceWorkerManager.h',
+    'WorkerDebuggerManager.h',
     'Workers.h',
 ]
 
@@ -34,6 +35,13 @@ EXPORTS.mozilla.dom.workers.bindings += [
     'WorkerFeature.h',
     'XMLHttpRequest.h',
     'XMLHttpRequestUpload.h',
+]
+
+XPIDL_MODULE = 'dom_workers'
+
+XPIDL_SOURCES += [
+    'nsIWorkerDebugger.idl',
+    'nsIWorkerDebuggerManager.idl',
 ]
 
 UNIFIED_SOURCES += [
@@ -56,6 +64,7 @@ UNIFIED_SOURCES += [
     'ServiceWorkerRegistration.cpp',
     'SharedWorker.cpp',
     'URL.cpp',
+    'WorkerDebuggerManager.cpp',
     'WorkerPrivate.cpp',
     'WorkerRunnable.cpp',
     'WorkerScope.cpp',
