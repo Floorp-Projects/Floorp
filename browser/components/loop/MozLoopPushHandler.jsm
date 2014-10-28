@@ -109,20 +109,25 @@ let MozLoopPushHandler = {
                       + (onRegistered ? "" : " onRegistered")
                       + (onNotification ? "" : " onNotification"));
     }
-    // Only register new channels
-    if (!(channelID in this.channels)) {
-      this.channels[channelID] = {
-        onRegistered: onRegistered,
-        onNotification: onNotification
-      };
 
-      // If registration is in progress, simply add to the work list.
-      // Else, re-start a registration cycle.
-      if (this._registrationID) {
-        this._channelsToRegister.push(channelID);
-      } else {
-        this._registerChannels();
-      }
+    // If the channel is already registered, callback with an error immediately
+    // so we don't leave code hanging waiting for an onRegistered callback.
+    if (channelID in this.channels) {
+      onRegistered("error: channel already registered: " + channelID);
+      return;
+    }
+
+    this.channels[channelID] = {
+      onRegistered: onRegistered,
+      onNotification: onNotification
+    };
+
+    // If registration is in progress, simply add to the work list.
+    // Else, re-start a registration cycle.
+    if (this._registrationID) {
+      this._channelsToRegister.push(channelID);
+    } else {
+      this._registerChannels();
     }
   },
 
