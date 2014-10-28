@@ -6,6 +6,7 @@
 "use strict";
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
+const { PerformanceFront, getPerformanceActorsConnection } = require("devtools/performance/front");
 
 Cu.import("resource://gre/modules/Task.jsm");
 
@@ -27,16 +28,17 @@ PerformancePanel.prototype = {
    * Open is effectively an asynchronous constructor.
    *
    * @return object
-   *         A promise that is resolved when the Profiler completes opening.
+   *         A promise that is resolved when the Performance tool
+   *         completes opening.
    */
   open: Task.async(function*() {
     this.panelWin.gToolbox = this._toolbox;
     this.panelWin.gTarget = this.target;
 
-    // Mock Front for now
-    let gFront = {};
-    EventEmitter.decorate(gFront);
-    this.panelWin.gFront = gFront;
+    this._connection = getPerformanceActorsConnection(this.target);
+    yield this._connection.open();
+
+    this.panelWin.gFront = new PerformanceFront(this._connection);
 
     yield this.panelWin.startupPerformance();
 
@@ -54,6 +56,9 @@ PerformancePanel.prototype = {
     if (this._destroyed) {
       return;
     }
+
+    // Destroy the connection to ensure packet handlers are removed from client.
+    this._connection.destroy();
 
     yield this.panelWin.shutdownPerformance();
     this.emit("destroyed");

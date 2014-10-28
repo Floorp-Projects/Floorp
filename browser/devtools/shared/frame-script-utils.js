@@ -17,6 +17,11 @@ addMessageListener("devtools:test:reload", function ({ data }) {
   content.location.reload(data.forceget);
 });
 
+addMessageListener("devtools:test:console", function ({ data }) {
+  let method = data.shift();
+  content.console[method].apply(content.console, data);
+});
+
 addEventListener("load", function() {
   sendAsyncMessage("devtools:test:load");
 }, true);
