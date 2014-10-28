@@ -148,6 +148,8 @@ public:
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered,
                                int64_t aStartTime);
 
+  virtual int64_t ComputeStartTime();
+
   // Returns the number of bytes of memory allocated by structures/frames in
   // the video queue.
   size_t SizeOfVideoQueueInBytes() const;
