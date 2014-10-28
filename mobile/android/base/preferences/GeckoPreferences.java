@@ -296,6 +296,9 @@ OnSharedPreferenceChangeListener
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Make sure RestrictedProfiles is ready.
+        RestrictedProfiles.initWithProfile(GeckoProfile.get(this));
+
         // Apply the current user-selected locale, if necessary.
         checkLocale();
 
@@ -718,7 +721,7 @@ OnSharedPreferenceChangeListener
                     listPref.setSummary(selectedEntry);
                     continue;
                 } else if (PREFS_SYNC.equals(key) &&
-                           !RestrictedProfiles.isAllowed(RestrictedProfiles.Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
+                           !RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
                     // Don't show sync prefs while in guest mode.
                     preferences.removePreference(pref);
                     i--;
