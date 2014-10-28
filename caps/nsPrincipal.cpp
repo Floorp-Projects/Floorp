@@ -346,18 +346,6 @@ nsPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPrinc
     }
   }
 
-  // See if aURI is something like a Blob URI that is actually associated with
-  // a principal.
-  nsCOMPtr<nsIURIWithPrincipal> uriWithPrin = do_QueryInterface(aURI);
-  if (uriWithPrin) {
-    nsCOMPtr<nsIPrincipal> uriPrin;
-    uriWithPrin->GetPrincipal(getter_AddRefs(uriPrin));
-    MOZ_ASSERT(uriPrin);
-    if (nsIPrincipal::Subsumes(uriPrin)) {
-        return NS_OK;
-    }
-  }
-
   if (nsScriptSecurityManager::SecurityCompareURIs(mCodebase, aURI)) {
     return NS_OK;
   }

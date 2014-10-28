@@ -19,7 +19,7 @@ interface nsILoadContext;
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSObjectPtr(JSObject);
 
-[scriptable, uuid(f649959d-dae3-4027-83fd-5b7f8c8a8815)]
+[scriptable, uuid(3b021962-975e-43b5-8a93-9fc2d20346e9)]
 interface nsIScriptSecurityManager : nsISupports
 {
     /**
@@ -177,6 +177,13 @@ interface nsIScriptSecurityManager : nsISupports
      * @deprecated use getNoAppCodebasePrincipal instead.
      */
     [deprecated] nsIPrincipal getCodebasePrincipal(in nsIURI uri);
+
+    /**
+     * Returns OK if aJSContext and target have the same "origin"
+     * (scheme, host, and port).
+     */
+    [noscript] void checkSameOrigin(in JSContextPtr aJSContext,
+                                    in nsIURI aTargetURI);
 
     /**
      * Returns OK if aSourceURI and target have the same "origin"
