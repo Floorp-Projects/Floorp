@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <algorithm>
-#include <assert.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -43,7 +42,7 @@ static void
 IncrementIV(vector<uint8_t>& aIV) {
   using mozilla::BigEndian;
 
-  assert(aIV.size() == 16);
+  MOZ_ASSERT(aIV.size() == 16);
   BigEndian::writeUint64(&aIV[8], BigEndian::readUint64(&aIV[8]) + 1);
 }
 
@@ -51,8 +50,8 @@ IncrementIV(vector<uint8_t>& aIV) {
 ClearKeyUtils::DecryptAES(const vector<uint8_t>& aKey,
                           vector<uint8_t>& aData, vector<uint8_t>& aIV)
 {
-  assert(aIV.size() == CLEARKEY_KEY_LEN);
-  assert(aKey.size() == CLEARKEY_KEY_LEN);
+  MOZ_ASSERT(aIV.size() == CLEARKEY_KEY_LEN);
+  MOZ_ASSERT(aKey.size() == CLEARKEY_KEY_LEN);
 
   OAES_CTX* aes = oaes_alloc();
   oaes_key_import_data(aes, &aKey[0], aKey.size());
@@ -65,7 +64,7 @@ ClearKeyUtils::DecryptAES(const vector<uint8_t>& aKey,
     vector<uint8_t> enc(encLen);
     oaes_encrypt(aes, &aIV[0], CLEARKEY_KEY_LEN, &enc[0], &encLen);
 
-    assert(encLen >= 2 * OAES_BLOCK_SIZE + CLEARKEY_KEY_LEN);
+    MOZ_ASSERT(encLen >= 2 * OAES_BLOCK_SIZE + CLEARKEY_KEY_LEN);
     size_t blockLen = std::min(aData.size() - i, CLEARKEY_KEY_LEN);
     for (size_t j = 0; j < blockLen; j++) {
       aData[i + j] ^= enc[2 * OAES_BLOCK_SIZE + j];
