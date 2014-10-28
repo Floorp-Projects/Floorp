@@ -53,6 +53,7 @@ import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
+import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.prompts.Prompt;
@@ -465,7 +466,7 @@ public class BrowserApp extends GeckoApp
 
         final Intent intent = getIntent();
 
-        String args = StringUtils.getStringExtra(intent, "args");
+        String args = ContextUtils.getStringExtra(intent, "args");
         if (args != null && args.contains(GUEST_BROWSING_ARG)) {
             mProfile = GeckoProfile.createGuestProfile(this);
         } else {
