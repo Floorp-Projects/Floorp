@@ -501,6 +501,41 @@ describe("loop.webapp", function() {
         });
       });
     });
+
+    describe("FailedConversationView", function() {
+      var view, conversation, client, fakeAudio;
+
+      beforeEach(function() {
+        fakeAudio = {
+          play: sinon.spy(),
+          pause: sinon.spy(),
+          removeAttribute: sinon.spy()
+        };
+        sandbox.stub(window, "Audio").returns(fakeAudio);
+
+        client = new loop.StandaloneClient({
+          baseServerUrl: "http://fake.example.com"
+        });
+        conversation = new sharedModels.ConversationModel({}, {
+          sdk: {}
+        });
+        conversation.set("loopToken", "fakeToken");
+
+        view = React.addons.TestUtils.renderIntoDocument(
+          loop.webapp.FailedConversationView({
+            conversation: conversation,
+            client: client,
+            notifications: notifications
+          }));
+      });
+
+      it("should play a failure sound, once", function() {
+        sinon.assert.calledOnce(window.Audio);
+        sinon.assert.calledWithExactly(window.Audio,
+                                       "shared/sounds/failure.ogg");
+        expect(fakeAudio.loop).to.equal(false);
+      });
+    });
   });
 
   describe("WebappRootView", function() {
