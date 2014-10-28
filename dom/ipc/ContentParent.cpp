@@ -1411,6 +1411,13 @@ ContentParent::ShutDownProcess(bool aCloseWithError)
         // sequence.
         mCalledClose = true;
         Close();
+#ifdef MOZ_NUWA_PROCESS
+        // Kill Nuwa process forcibly to break its IPC channels and finalize
+        // corresponding parents.
+        if (IsNuwaProcess()) {
+            KillHard();
+        }
+#endif
     }
 
     if (aCloseWithError && !mCalledCloseWithError) {
@@ -2931,17 +2938,13 @@ ContentParent::KillHard()
     if (!KillProcess(OtherProcess(), 1, false)) {
         NS_WARNING("failed to kill subprocess!");
     }
-    mSubprocess->SetAlreadyDead();
+    if (mSubprocess) {
+        mSubprocess->SetAlreadyDead();
+    }
     XRE_GetIOMessageLoop()->PostTask(
         FROM_HERE,
         NewRunnableFunction(&ProcessWatcher::EnsureProcessTerminated,
                             OtherProcess(), /*force=*/true));
-    //We do clean-up here
-    MessageLoop::current()->PostDelayedTask(
-        FROM_HERE,
-        NewRunnableMethod(this, &ContentParent::ShutDownProcess,
-                          /* closeWithError */ true),
-        3000);
     // We've now closed the OtherProcess() handle, so must set it to null to
     // prevent our dtor closing it twice.
     SetOtherProcess(0);

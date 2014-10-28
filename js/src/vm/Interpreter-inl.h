@@ -570,19 +570,19 @@ InitArrayElemOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t
     MOZ_ASSERT(obj->is<ArrayObject>());
 
     /*
-     * If val is a hole, do not call JSObject::defineElement. In this case,
-     * if the current op is the last element initialiser, set the array length
-     * to one greater than id.
+     * If val is a hole, do not call JSObject::defineElement.
      *
-     * If val is a hole and current op is JSOP_INITELEM_INC, always call
+     * Furthermore, if the current op is JSOP_INITELEM_INC, always call
      * SetLengthProperty even if it is not the last element initialiser,
      * because it may be followed by JSOP_SPREAD, which will not set the array
-     * length if nothing is spreaded.
+     * length if nothing is spread.
+     *
+     * Alternatively, if the current op is JSOP_INITELEM_ARRAY, the length will
+     * have already been set by the earlier JSOP_NEWARRAY; JSOP_INITELEM_ARRAY
+     * cannot follow JSOP_SPREAD.
      */
     if (val.isMagic(JS_ELEMENTS_HOLE)) {
-        JSOp next = JSOp(*GetNextPc(pc));
-
-        if ((op == JSOP_INITELEM_ARRAY && next == JSOP_ENDINIT) || op == JSOP_INITELEM_INC) {
+        if (op == JSOP_INITELEM_INC) {
             if (!SetLengthProperty(cx, obj, index + 1))
                 return false;
         }

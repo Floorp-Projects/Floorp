@@ -249,10 +249,10 @@ void OveruseDetector::UpdateKalman(int64_t t_delta,
   const double residual = t_ts_delta - slope_*h[0] - offset_;
 
   const bool stable_state =
-      (BWE_MIN(num_of_deltas_, 60) * fabsf(offset_) < threshold_);
+      (BWE_MIN(num_of_deltas_, 60) * fabs(offset_) < threshold_);
   // We try to filter out very late frames. For instance periodic key
   // frames doesn't fit the Gaussian model well.
-  if (fabsf(residual) < 3 * sqrt(var_noise_)) {
+  if (fabs(residual) < 3 * sqrt(var_noise_)) {
     UpdateNoiseEstimate(residual, min_frame_period, stable_state);
   } else {
     UpdateNoiseEstimate(3 * sqrt(var_noise_), min_frame_period, stable_state);
@@ -358,7 +358,7 @@ BandwidthUsage OveruseDetector::Detect(double ts_delta) {
     return kBwNormal;
   }
   const double T = BWE_MIN(num_of_deltas_, 60) * offset_;
-  if (fabsf(T) > threshold_) {
+  if (fabs(T) > threshold_) {
     if (offset_ > 0) {
       if (time_over_using_ == -1) {
         // Initialize the timer. Assume that we've been

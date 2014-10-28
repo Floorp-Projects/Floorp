@@ -212,7 +212,7 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
 
     if (withMemory) {
       this._memoryActor = new MemoryActor(this.conn, this.tabActor);
-      events.emit(this, "memory", Date.now(), this._memoryActor.measure());
+      events.emit(this, "memory", this._startTime, this._memoryActor.measure());
     }
     if (withTicks) {
       this._framerateActor = new FramerateActor(this.conn, this.tabActor);
