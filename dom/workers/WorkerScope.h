@@ -11,6 +11,8 @@
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/RequestBinding.h"
 
+#include "ServiceWorkerClients.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -24,7 +26,6 @@ class RequestOrScalarValueString;
 
 BEGIN_WORKERS_NAMESPACE
 
-class ServiceWorkerClients;
 class WorkerPrivate;
 class WorkerLocation;
 class WorkerNavigator;
@@ -173,7 +174,7 @@ class ServiceWorkerGlobalScope MOZ_FINAL : public WorkerGlobalScope
   const nsString mScope;
   nsRefPtr<ServiceWorkerClients> mClients;
 
-  ~ServiceWorkerGlobalScope();
+  ~ServiceWorkerGlobalScope() { }
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -207,7 +208,13 @@ public:
   Unregister(ErrorResult& aRv);
 
   ServiceWorkerClients*
-  Clients();
+  Clients() {
+    if (!mClients) {
+      mClients = new ServiceWorkerClients(this);
+    }
+
+    return mClients;
+  }
 
   IMPL_EVENT_HANDLER(activate)
   IMPL_EVENT_HANDLER(beforeevicted)
@@ -221,11 +228,5 @@ JSObject*
 CreateGlobalScope(JSContext* aCx);
 
 END_WORKERS_NAMESPACE
-
-inline nsISupports*
-ToSupports(mozilla::dom::workers::WorkerGlobalScope* aScope)
-{
-  return static_cast<nsIDOMEventTarget*>(aScope);
-}
 
 #endif /* mozilla_dom_workerscope_h__ */
