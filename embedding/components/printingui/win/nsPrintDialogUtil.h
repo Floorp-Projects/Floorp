@@ -9,4 +9,6 @@ nsresult NativeShowPrintDialog(HWND                aHWnd,
                                nsIWebBrowserPrint* aWebBrowserPrint,
                                nsIPrintSettings*   aPrintSettings);
 
+HGLOBAL CreateGlobalDevModeAndInit(const nsXPIDLString& aPrintName, nsIPrintSettings* aPS);
+
 #endif /* nsFlyOwnDialog_h___ */
