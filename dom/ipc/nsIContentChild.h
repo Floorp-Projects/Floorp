@@ -7,8 +7,6 @@
 #ifndef mozilla_dom_nsIContentChild_h
 #define mozilla_dom_nsIContentChild_h
 
-#include "mozilla/dom/ipc/IdType.h"
-
 #include "nsISupports.h"
 #include "nsTArrayForwardDeclare.h"
 #include "mozilla/dom/CPOWManagerGetter.h"
@@ -54,20 +52,18 @@ public:
 
   virtual bool
   SendPBrowserConstructor(PBrowserChild* aActor,
-                          const TabId& aTabId,
                           const IPCTabContext& aContext,
                           const uint32_t& aChromeFlags,
-                          const ContentParentId& aCpID,
+                          const uint64_t& aID,
                           const bool& aIsForApp,
                           const bool& aIsForBrowser) = 0;
 protected:
   virtual jsipc::PJavaScriptChild* AllocPJavaScriptChild();
   virtual bool DeallocPJavaScriptChild(jsipc::PJavaScriptChild*);
 
-  virtual PBrowserChild* AllocPBrowserChild(const TabId& aTabId,
-                                            const IPCTabContext& aContext,
+  virtual PBrowserChild* AllocPBrowserChild(const IPCTabContext& aContext,
                                             const uint32_t& aChromeFlags,
-                                            const ContentParentId& aCpId,
+                                            const uint64_t& aID,
                                             const bool& aIsForApp,
                                             const bool& aIsForBrowser);
   virtual bool DeallocPBrowserChild(PBrowserChild*);

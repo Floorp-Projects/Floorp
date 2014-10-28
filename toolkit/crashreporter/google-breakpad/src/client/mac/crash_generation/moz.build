@@ -9,8 +9,6 @@ UNIFIED_SOURCES += [
     'crash_generation_server.cc',
 ]
 
-XPI_NAME = 'crashreporter'
-
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

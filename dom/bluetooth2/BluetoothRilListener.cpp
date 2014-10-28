@@ -115,8 +115,7 @@ MobileConnectionListener::NotifyDataError(const nsAString & message)
 }
 
 NS_IMETHODIMP
-MobileConnectionListener::NotifyCFStateChanged(bool success,
-                                               uint16_t action,
+MobileConnectionListener::NotifyCFStateChanged(uint16_t action,
                                                uint16_t reason,
                                                const nsAString& number,
                                                uint16_t timeSeconds,
