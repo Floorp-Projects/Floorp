@@ -13,8 +13,6 @@
 var _quit = false;
 var _passed = true;
 var _tests_pending = 0;
-var _passedChecks = 0, _falsePassedChecks = 0;
-var _todoChecks = 0;
 var _cleanupFunctions = [];
 var _pendingTimers = [];
 var _profileInitialized = false;
@@ -36,23 +34,19 @@ let Assert = new AssertCls(function(err, message, stack) {
   }
 });
 
-let _log = function (action, params) {
+
+let _add_params = function (params) {
   if (typeof _XPCSHELL_PROCESS != "undefined") {
-    params.process = _XPCSHELL_PROCESS;
+    params.xpcshell_process = _XPCSHELL_PROCESS;
   }
-  params.action = action;
-  params._time = Date.now();
-  dump("\n" + JSON.stringify(params) + "\n");
+};
+
+let _dumpLog = function (raw_msg) {
+  dump("\n" + raw_msg + "\n");
 }
 
-function _dump(str) {
-  let start = /^TEST-/.test(str) ? "\n" : "";
-  if (typeof _XPCSHELL_PROCESS == "undefined") {
-    dump(start + str);
-  } else {
-    dump(start + _XPCSHELL_PROCESS + ": " + str);
-  }
-}
+let _LoggerClass = Components.utils.import("resource://testing-common/StructuredLog.jsm", null).StructuredLogger;
+let _testLogger = new _LoggerClass("xpcshell/head.js", _dumpLog, [_add_params]);
 
 // Disable automatic network detection, so tests work correctly when
 // not connected to a network.
@@ -181,8 +175,7 @@ function _do_main() {
   if (_quit)
     return;
 
-  _log("test_info",
-       {_message: "TEST-INFO | (xpcshell/head.js) | running event loop\n"});
+  _testLogger.info("running event loop");
 
   var thr = Components.classes["@mozilla.org/thread-manager;1"]
                       .getService().currentThread;
@@ -195,38 +188,9 @@ function _do_main() {
 }
 
 function _do_quit() {
-  _log("test_info",
-       {_message: "TEST-INFO | (xpcshell/head.js) | exiting test\n"});
+  _testLogger.info("exiting test");
   _Promise.Debugging.flushUncaughtErrors();
   _quit = true;
-}
-
-function _format_exception_stack(stack) {
-  if (typeof stack == "object" && stack.caller) {
-    let frame = stack;
-    let strStack = "";
-    while (frame != null) {
-      strStack += frame + "\n";
-      frame = frame.caller;
-    }
-    stack = strStack;
-  }
-  // frame is of the form "fname@file:line"
-  let frame_regexp = new RegExp("(.*)@(.*):(\\d*)", "g");
-  return stack.split("\n").reduce(function(stack_msg, frame) {
-    if (frame) {
-      let parts = frame_regexp.exec(frame);
-      if (parts) {
-        let [ _, func, file, line ] = parts;
-        return stack_msg + "JS frame :: " + file + " :: " +
-          (func || "anonymous") + " :: line " + line + "\n";
-      }
-      else { /* Could be a -e (command line string) style location. */
-        return stack_msg + "JS frame :: " + frame + "\n";
-      }
-    }
-    return stack_msg;
-  }, "");
 }
 
 /**
@@ -383,8 +347,11 @@ function _execute_test() {
   _Promise.Debugging.addUncaughtErrorObserver(function observer({message, date, fileName, stack, lineNumber}) {
     let text = " A promise chain failed to handle a rejection: " +
         message + " - rejection date: " + date;
-    _log_message_with_stack("test_unexpected_fail",
-                            text, stack, fileName);
+    _testLogger.error(text,
+                      {
+                        stack: _format_stack(stack),
+                        source_file: fileName
+                      });
   });
 
   // _HEAD_FILES is dynamically defined by <runxpcshelltests.py>.
@@ -411,21 +378,20 @@ function _execute_test() {
     // possible that this will mask an NS_ERROR_ABORT that happens after a
     // do_check failure though.
     if (!_quit || e != Components.results.NS_ERROR_ABORT) {
-      let msgObject = {};
+      let extra = {};
       if (e.fileName) {
-        msgObject.source_file = e.fileName;
+        extra.source_file = e.fileName;
         if (e.lineNumber) {
-          msgObject.line_number = e.lineNumber;
+          extra.line_number = e.lineNumber;
         }
       } else {
-        msgObject.source_file = "xpcshell/head.js";
+        extra.source_file = "xpcshell/head.js";
       }
-      msgObject.diagnostic = _exception_message(e);
+      let message = _exception_message(e);
       if (e.stack) {
-        msgObject.diagnostic += " - See following stack:\n";
-        msgObject.stack = _format_exception_stack(e.stack);
+        extra.stack = _format_stack(e.stack);
       }
-      _log("test_unexpected_fail", msgObject);
+      _testLogger.error(message, extra);
     }
   }
 
@@ -445,8 +411,11 @@ function _execute_test() {
     } else if (ex.fileName) {
       filename = ex.fileName;
     }
-    _log_message_with_stack("test_unexpected_fail",
-                            ex, stack, filename);
+    _testLogger.error(_exception_message(ex),
+                      {
+                        stack: _format_stack(stack),
+                        source_file: filename
+                      });
   };
 
   let func;
@@ -477,26 +446,6 @@ function _execute_test() {
 
   if (!_passed)
     return;
-
-  var truePassedChecks = _passedChecks - _falsePassedChecks;
-  if (truePassedChecks > 0) {
-    _log("test_pass",
-         {_message: "TEST-PASS | (xpcshell/head.js) | " + truePassedChecks + " (+ " +
-                    _falsePassedChecks + ") check(s) passed\n",
-          source_file: _TEST_FILE,
-          passed_checks: truePassedChecks});
-    _log("test_info",
-         {_message: "TEST-INFO | (xpcshell/head.js) | " + _todoChecks +
-                    " check(s) todo\n",
-          source_file: _TEST_FILE,
-          todo_checks: _todoChecks});
-  } else {
-    // ToDo: switch to TEST-UNEXPECTED-FAIL when all tests have been updated. (Bug 496443)
-    _log("test_info",
-         {_message: "TEST-INFO | (xpcshell/head.js) | No (+ " + _falsePassedChecks +
-                    ") checks actually run\n",
-         source_file: _TEST_FILE});
-  }
 }
 
 /**
@@ -505,25 +454,21 @@ function _execute_test() {
  * @param aFiles Array of files to load.
  */
 function _load_files(aFiles) {
-  function loadTailFile(element, index, array) {
+  function load_file(element, index, array) {
     try {
       load(element);
-    } catch (e if e instanceof SyntaxError) {
-      _log("javascript_error",
-           {_message: "TEST-UNEXPECTED-FAIL | (xpcshell/head.js) | Source file " + element + " contains SyntaxError",
-            diagnostic: _exception_message(e),
-            source_file: element,
-            stack: _format_exception_stack(e.stack)});
     } catch (e) {
-      _log("javascript_error",
-           {_message: "TEST-UNEXPECTED-FAIL | (xpcshell/head.js) | Source file " + element + " contains an error",
-            diagnostic: _exception_message(e),
-            source_file: element,
-            stack: e.stack ? _format_exception_stack(e.stack) : null});
+      let extra = {
+        source_file: element
+      }
+      if (e.stack) {
+        extra.stack = _format_stack(e.stack);
+      }
+      _testLogger.error(_exception_message(e), extra);
     }
   }
 
-  aFiles.forEach(loadTailFile);
+  aFiles.forEach(load_file);
 }
 
 function _wrap_with_quotes_if_necessary(val) {
@@ -535,13 +480,10 @@ function _wrap_with_quotes_if_necessary(val) {
 /**
  * Prints a message to the output log.
  */
-function do_print(msg) {
-  var caller_stack = Components.stack.caller;
+function do_print(msg, data) {
   msg = _wrap_with_quotes_if_necessary(msg);
-  _log("test_info",
-       {source_file: caller_stack.filename,
-        diagnostic: msg});
-
+  data = data ? data : null;
+  _testLogger.info(msg, data);
 }
 
 /**
@@ -575,16 +517,13 @@ function do_execute_soon(callback, aName) {
         // possible that this will mask an NS_ERROR_ABORT that happens after a
         // do_check failure though.
         if (!_quit || e != Components.results.NS_ERROR_ABORT) {
-          if (e.stack) {
-            _log("javascript_error",
-                 {source_file: "xpcshell/head.js",
-                  diagnostic: _exception_message(e) + " - See following stack:",
-                  stack: _format_exception_stack(e.stack)});
-          } else {
-            _log("javascript_error",
-                 {source_file: "xpcshell/head.js",
-                  diagnostic: _exception_message(e)});
-          }
+          let stack = e.stack ? _format_stack(e.stack) : null;
+          _testLogger.testStatus(_TEST_NAME,
+                                 funcName,
+                                 'ERROR',
+                                 'OK',
+                                 _exception_message(e),
+                                 stack);
           _do_quit();
         }
       }
@@ -613,9 +552,16 @@ function do_throw(error, stack) {
   else if (error.fileName)
     filename = error.fileName;
 
-  _log_message_with_stack("test_unexpected_fail",
-                          error, stack, filename);
+  _testLogger.error(_exception_message(error),
+                    {
+                      source_file: filename,
+                      stack: _format_stack(stack)
+                    });
+  _abort_failed_test();
+}
 
+function _abort_failed_test() {
+  // Called to abort the test run after all failures are logged.
   _passed = false;
   _do_quit();
   throw Components.results.NS_ERROR_ABORT;
@@ -633,17 +579,6 @@ function _format_stack(stack) {
     normalized = "" + stack;
   }
   return _Task.Debugging.generateReadableStack(normalized, "    ");
-}
-
-function do_throw_todo(text, stack) {
-  if (!stack)
-    stack = Components.stack.caller;
-
-  _passed = false;
-  _log_message_with_stack("test_unexpected_pass",
-                          text, stack, stack.filename);
-  _do_quit();
-  throw Components.results.NS_ERROR_ABORT;
 }
 
 // Make a nice display string from an object that behaves
@@ -669,39 +604,27 @@ function _exception_message(ex) {
   return "" + ex;
 }
 
-function _log_message_with_stack(action, ex, stack, filename, text) {
-  if (stack) {
-    _log(action,
-         {diagnostic: (text ? text : "") +
-                      _exception_message(ex) +
-                      " - See following stack:",
-          source_file: filename,
-          stack: _format_stack(stack)});
-  } else {
-    _log(action,
-         {diagnostic: (text ? text : "") +
-                      _exception_message(ex),
-          source_file: filename});
-  }
-}
-
 function do_report_unexpected_exception(ex, text) {
-  var caller_stack = Components.stack.caller;
+  let filename = Components.stack.caller.filename;
   text = text ? text + " - " : "";
 
   _passed = false;
-  _log_message_with_stack("test_unexpected_fail", ex, ex.stack || "",
-                          caller_stack.filename, text + "Unexpected exception ");
+  _testLogger.error(text + "Unexpected exception " + _exception_message(ex),
+                    {
+                      source_file: filename,
+                      stack: _format_stack(ex.stack)
+                    });
   _do_quit();
   throw Components.results.NS_ERROR_ABORT;
 }
 
 function do_note_exception(ex, text) {
-  var caller_stack = Components.stack.caller;
-  text = text ? text + " - " : "";
-
-  _log_message_with_stack("test_info", ex, ex.stack,
-                          caller_stack.filename, text + "Swallowed exception ");
+  let filename = Components.stack.caller.filename;
+  _testLogger.info(text + "Swallowed exception " + _exception_message(ex),
+                   {
+                     source_file: filename,
+                     stack: _format_stack(ex.stack)
+                   });
 }
 
 function _do_check_neq(left, right, stack, todo) {
@@ -726,29 +649,46 @@ function do_report_result(passed, text, stack, todo) {
   while (stack.filename.contains("head.js") && stack.caller) {
     stack = stack.caller;
   }
+
+  let name = _gRunningTest ? _gRunningTest.name : stack.name;
+  let message;
+  if (name) {
+     message = "[" + name + " : " + stack.lineNumber + "] " + text;
+  } else {
+    message = text;
+  }
+
   if (passed) {
     if (todo) {
-      do_throw_todo(text, stack);
+      _testLogger.testStatus(_TEST_NAME,
+                             name,
+                             "PASS",
+                             "FAIL",
+                             message,
+                             _format_stack(stack));
+      _abort_failed_test();
     } else {
-      ++_passedChecks;
-      _log("test_pass",
-           {source_file: stack.filename,
-            test_name: stack.name,
-            line_number: stack.lineNumber,
-            diagnostic: "[" + stack.name + " : " + stack.lineNumber + "] " +
-                        text + "\n"});
+      _testLogger.testStatus(_TEST_NAME,
+                             name,
+                             "PASS",
+                             "PASS",
+                             message);
     }
   } else {
     if (todo) {
-      ++_todoChecks;
-      _log("test_known_fail",
-           {source_file: stack.filename,
-            test_name: stack.name,
-            line_number: stack.lineNumber,
-            diagnostic: "[" + stack.name + " : " + stack.lineNumber + "] " +
-                        text + "\n"});
+      _testLogger.testStatus(_TEST_NAME,
+                             name,
+                             "FAIL",
+                             "FAIL",
+                             message);
     } else {
-      do_throw(text, stack);
+      _testLogger.testStatus(_TEST_NAME,
+                             name,
+                             "FAIL",
+                             "PASS",
+                             message,
+                             _format_stack(stack));
+      _abort_failed_test();
     }
   }
 }
@@ -878,17 +818,15 @@ function todo_check_instanceof(value, constructor,
 function do_test_pending(aName) {
   ++_tests_pending;
 
-  _log("test_pending",
-       {_message: "TEST-INFO | (xpcshell/head.js) | test" +
-                  (aName ? " " + aName : "") +
-                  " pending (" + _tests_pending + ")\n"});
+  _testLogger.info("(xpcshell/head.js) | test" +
+                   (aName ? " " + aName : "") +
+                   " pending (" + _tests_pending + ")");
 }
 
 function do_test_finished(aName) {
-  _log("test_finish",
-       {_message: "TEST-INFO | (xpcshell/head.js) | test" +
-                  (aName ? " " + aName : "") +
-                  " finished (" + _tests_pending + ")\n"});
+  _testLogger.info("(xpcshell/head.js) | test" +
+                   (aName ? " " + aName : "") +
+                   " finished (" + _tests_pending + ")");
   if (--_tests_pending == 0)
     _do_quit();
 }
@@ -913,12 +851,8 @@ function do_get_file(path, allowNonexistent) {
       // Not using do_throw(): caller will continue.
       _passed = false;
       var stack = Components.stack.caller;
-      _log("test_unexpected_fail",
-           {source_file: stack.filename,
-            test_name: stack.name,
-            line_number: stack.lineNumber,
-            diagnostic: "[" + stack.name + " : " + stack.lineNumber + "] " +
-                        lf.path + " does not exist\n"});
+      _testLogger.error("[" + stack.name + " : " + stack.lineNumber + "] " +
+                        lf.path + " does not exist");
     }
 
     return lf;
@@ -940,7 +874,6 @@ function do_load_manifest(path) {
   const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
   do_check_true(Components.manager instanceof nsIComponentRegistrar);
   // Previous do_check_true() is not a test check.
-  ++_falsePassedChecks;
   Components.manager.autoRegister(lf);
 }
 
@@ -1038,9 +971,7 @@ function do_get_minidumpdir() {
  */
 function do_get_profile() {
   if (!runningInParent) {
-    _log("test_info",
-         {_message: "TEST-INFO | (xpcshell/head.js) | Ignoring profile creation from child process.\n"});
-
+    _testLogger.info("Ignoring profile creation from child process.");
     return null;
   }
 
@@ -1171,9 +1102,11 @@ function run_test_in_child(testFile, optionalCallback)
 
   var testPath = do_get_file(testFile).path.replace(/\\/g, "/");
   do_test_pending("run in child");
-  sendCommand("_log('child_test_start', {_message: 'CHILD-TEST-STARTED'}); "
-              + "const _TEST_FILE=['" + testPath + "']; _execute_test(); "
-              + "_log('child_test_end', {_message: 'CHILD-TEST-COMPLETED'});",
+  sendCommand("_testLogger.info('CHILD-TEST-STARTED'); "
+              + "const _TEST_FILE=['" + testPath + "']; "
+              + "const _TEST_NAME=" + uneval(_TEST_NAME) + "; "
+              + "_execute_test(); "
+              + "_testLogger.info('CHILD-TEST-COMPLETED');",
               callback);
 }
 
@@ -1300,7 +1233,7 @@ function run_next_test()
       _Promise.Debugging.flushUncaughtErrors();
       let _isTask;
       [_isTask, _gRunningTest] = _gTests[_gTestIndex++];
-      print("TEST-INFO | " + _TEST_FILE + " | Starting " + _gRunningTest.name);
+      _testLogger.info(_TEST_NAME + " | Starting " + _gRunningTest.name);
       do_test_pending(_gRunningTest.name);
 
       if (_isTask) {

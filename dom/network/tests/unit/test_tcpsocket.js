@@ -91,7 +91,7 @@ function is_content() {
  */
 function TestServer() {
   this.listener = ServerSocket(-1, true, -1);
-  do_print('server: listening on', this.listener.port);
+  do_print('server: listening on ' + this.listener.port);
   this.listener.asyncListen(this);
 
   this.binaryInput = null;

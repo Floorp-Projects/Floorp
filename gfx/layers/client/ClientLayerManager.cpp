@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ClientLayerManager.h"
-#include "CompositorChild.h"            // for CompositorChild
 #include "GeckoProfiler.h"              // for PROFILER_LABEL
 #include "gfxPrefs.h"                   // for gfxPrefs::LayersTile...
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
@@ -13,6 +12,7 @@
 #include "mozilla/dom/TabChild.h"       // for TabChild
 #include "mozilla/hal_sandbox/PHal.h"   // for ScreenConfiguration
 #include "mozilla/layers/CompositableClient.h"
+#include "mozilla/layers/CompositorChild.h" // for CompositorChild
 #include "mozilla/layers/ContentClient.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/LayersMessages.h"  // for EditReply, etc

@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test for WorkerDebuggerManager"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    const PARENT_WORKER_URL = "WorkerDebuggerManager_parentWorker.js";
+    const CHILD_WORKER_URL = "WorkerDebuggerManager_childWorker.js";
+
+    function test() {
+      Task.spawn(function* () {
+        SimpleTest.waitForExplicitFinish();
+
+        ok(!findDebugger((dbg) => dbg.url === PARENT_WORKER_URL),
+           "debugger for parent worker should not be enumerated before it is " +
+           "registered");
+        ok(!findDebugger((dbg) => dbg.url === CHILD_WORKER_URL),
+           "debugger for child worker should not be enumerated before it is " +
+           "registered");
+
+        let promise = waitForMultiple([
+          waitForRegister((dbg) => dbg.url === PARENT_WORKER_URL),
+          waitForRegister((dbg) => dbg.url === CHILD_WORKER_URL),
+        ]);
+        let worker = new Worker(PARENT_WORKER_URL);
+        let dbgs = yield promise;
+        is(dbgs[0].isClosed, false,
+           "debugger for parent worker should not be closed after it is " +
+           "registered");
+        is(dbgs[1].isClosed, false,
+           "debugger for child worker should not be closed after it is " +
+            "registered");
+
+        ok(findDebugger((dbg) => dbg.url === PARENT_WORKER_URL),
+           "debugger for parent worker should be enumerated after it is " +
+           "registered");
+        ok(findDebugger((dbg) => dbg.url === CHILD_WORKER_URL),
+           "debugger for child worker should be enumerated after it is " +
+           "registered");
+
+        promise = waitForMultiple([
+          waitForUnregister((dbg) => dbg.url === CHILD_WORKER_URL),
+          waitForUnregister((dbg) => dbg.url === PARENT_WORKER_URL),
+        ]);
+        worker.terminate();
+        dbgs = yield promise;
+        is(dbgs[0].isClosed, true,
+           "debugger for parent worker should be closed after it is " +
+           "unregistered");
+        is(dbgs[1].isClosed, true,
+           "debugger for child worker should be closed after it is " +
+           "unregistered");
+        assertThrows(() => dbgs[0].url,
+                     "accessing debugger for parent worker should throw " +
+                     "after it is closed");
+        assertThrows(() => dbgs[0].url,
+                     "accessing debugger for child worker should throw after " +
+                     "it is closed");
+
+        ok(!findDebugger((dbg) => dbg.url === PARENT_WORKER_URL),
+           "debugger for parent worker should not be enumerated after it is " +
+           "unregistered");
+        ok(!findDebugger((dbg) => dbg.url === CHILD_WORKER_URL),
+           "debugger for child worker should not be enumerated after it is " +
+           "unregistered");
+
+        SimpleTest.finish();
+      });
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>
