@@ -613,7 +613,7 @@ class MochitestOptions(optparse.OptionParser):
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,
             "tab": 2000000, # See dependencies of bug 1051230.
-            "geckomediaplugin": 1000, # GMP rarely gets a log, but when it does, it leaks a little.
+            "geckomediaplugin": 20000, # GMP rarely gets a log, but when it does, it leaks a little.
         }
 
         # Bug 1051230 - Leak logging does not yet work for tab processes on desktop.
