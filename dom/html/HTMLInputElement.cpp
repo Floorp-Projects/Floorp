@@ -7269,6 +7269,8 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
   nsTArray<nsFilePickerFilter> filters;
   nsString allExtensionsList;
 
+  bool allFiltersAreValid = true;
+
   // Retrieve all filters
   while (tokenizer.hasMoreTokens()) {
     const nsDependentSubstring& token = tokenizer.nextToken();
@@ -7302,6 +7304,7 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
                       EmptyCString(), // No extension
                       getter_AddRefs(mimeInfo))) ||
           !mimeInfo) {
+        allFiltersAreValid =  false;
         continue;
       }
 
@@ -7334,6 +7337,7 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
 
     if (!filterMask && (extensionListStr.IsEmpty() || filterName.IsEmpty())) {
       // No valid filter found
+      allFiltersAreValid = false;
       continue;
     }
 
@@ -7363,8 +7367,7 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
     filePicker->AppendFilter(title, allExtensionsList);
   }
 
-  // Add each filter, and check if all filters are trusted
-  bool allFilterAreTrusted = true;
+  // Add each filter
   for (uint32_t i = 0; i < filters.Length(); ++i) {
     const nsFilePickerFilter& filter = filters[i];
     if (filter.mFilterMask) {
@@ -7372,12 +7375,11 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
     } else {
       filePicker->AppendFilter(filter.mTitle, filter.mFilter);
     }
-    allFilterAreTrusted &= filter.mIsTrusted;
   }
 
-  // If all filters are trusted, select the first filter as default;
+  // If all filters are known/valid, select the first filter as default;
   // otherwise filterAll will remain the default filter
-  if (filters.Length() >= 1 && allFilterAreTrusted) {
+  if (filters.Length() >= 1 && allFiltersAreValid) {
     // |filterAll| will always use index=0 so we need to set index=1 as the
     // current filter.
     filePicker->SetFilterIndex(1);
