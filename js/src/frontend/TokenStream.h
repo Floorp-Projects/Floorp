@@ -368,22 +368,19 @@ class MOZ_STACK_CLASS TokenStream
         TemplateTail,   // Treat next characters as part of a template string
     };
 
-    // Advance to the next token.  If the token stream encountered an error,
-    // return false.  Otherwise return true and store the token kind in |*ttp|.
-    bool getToken(TokenKind *ttp, Modifier modifier = None) {
+    // Get the next token from the stream, make it the current token, and
+    // return its kind.
+    TokenKind getToken(Modifier modifier = None) {
         // Check for a pushed-back token resulting from mismatching lookahead.
         if (lookahead != 0) {
             lookahead--;
             cursor = (cursor + 1) & ntokensMask;
             TokenKind tt = currentToken().type;
             MOZ_ASSERT(tt != TOK_EOL);
-            *ttp = tt;
-            return tt != TOK_ERROR;
+            return tt;
         }
 
-        TokenKind tt = getTokenInternal(modifier);
-        *ttp = tt;
-        return tt != TOK_ERROR;
+        return getTokenInternal(modifier);
     }
 
     // Push the last scanned token back into the stream.
@@ -435,9 +432,7 @@ class MOZ_STACK_CLASS TokenStream
         //   is a newline between the next token and the one after that.
         // The following test is somewhat expensive but gets these cases (and
         // all others) right.
-        TokenKind tmp;
-        if (!getToken(&tmp, modifier))
-            return TOK_ERROR;
+        (void)getToken(modifier);
         const Token &next = currentToken();
         ungetToken();
         return srcCoords.lineNum(curr.pos.end) == srcCoords.lineNum(next.pos.begin)
@@ -447,29 +442,18 @@ class MOZ_STACK_CLASS TokenStream
 
     // Get the next token from the stream if its kind is |tt|.
     bool matchToken(TokenKind tt, Modifier modifier = None) {
-        TokenKind token;
-        if (!getToken(&token, modifier)) {
-            ungetToken();
-            return false;
-        }
-        if (token == tt)
+        if (getToken(modifier) == tt)
             return true;
         ungetToken();
         return false;
     }
 
     void consumeKnownToken(TokenKind tt) {
-        MOZ_ASSERT(lookahead != 0);
         JS_ALWAYS_TRUE(matchToken(tt));
     }
 
     bool matchContextualKeyword(Handle<PropertyName*> keyword) {
-        TokenKind token;
-        if (!getToken(&token)) {
-            ungetToken();
-            return false;
-        }
-        if (token == TOK_NAME && currentToken().name() == keyword)
+        if (getToken() == TOK_NAME && currentToken().name() == keyword)
             return true;
         ungetToken();
         return false;
