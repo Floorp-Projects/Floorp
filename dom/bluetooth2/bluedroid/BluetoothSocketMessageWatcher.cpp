@@ -232,7 +232,7 @@ SocketMessageWatcher::RecvMsg2()
         TEMP_FAILURE_RETRY(close(mClientFd));
       }
       // retrieve sent client fd
-      mClientFd = *(static_cast<int*>(CMSG_DATA(cmsgptr)));
+      memcpy(&mClientFd, CMSG_DATA(cmsgptr), sizeof(mClientFd));
     }
   }
 
