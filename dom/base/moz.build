@@ -283,7 +283,6 @@ UNIFIED_SOURCES += [
     'nsMappedAttributeElement.cpp',
     'nsMappedAttributes.cpp',
     'nsMimeTypeArray.cpp',
-    'nsMixedContentBlocker.cpp',
     'nsNameSpaceManager.cpp',
     'nsNoDataProtocolContentPolicy.cpp',
     'nsNodeInfoManager.cpp',
