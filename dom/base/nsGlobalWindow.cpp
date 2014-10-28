@@ -2551,6 +2551,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       JS::Rooted<JSObject*> obj(cx, GetWrapperPreserveColor());
 
       js::SetProxyExtra(obj, 0, js::PrivateValue(nullptr));
+      js::SetProxyExtra(outerObject, 0, js::PrivateValue(nullptr));
 
       outerObject = xpc::TransplantObject(cx, obj, outerObject);
       if (!outerObject) {
