@@ -9355,30 +9355,21 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, in
     SelectionChangeEventInit init;
     init.mBubbles = true;
     if (aSel) {
-      Selection* selection = static_cast<Selection*>(aSel);
-      int32_t rangeCount = selection->GetRangeCount();
-      nsLayoutUtils::RectAccumulator accumulator;
-      for (int32_t idx = 0; idx < rangeCount; ++idx) {
-        nsRange* range = selection->GetRangeAt(idx);
-        nsRange::CollectClientRects(&accumulator, range,
-                                    range->GetStartParent(), range->StartOffset(),
-                                    range->GetEndParent(), range->EndOffset(),
-                                    true, false);
-      }
-      nsRect rect = accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect :
-        accumulator.mResultRect;
-      nsRefPtr<DOMRect> domRect = new DOMRect(ToSupports(this));
-      domRect->SetLayoutRect(rect);
-      init.mBoundingClientRect = domRect;
+      nsCOMPtr<nsIDOMRange> range;
+      nsresult rv = aSel->GetRangeAt(0, getter_AddRefs(range));
+      if (NS_SUCCEEDED(rv) && range) {
+        nsRefPtr<nsRange> nsrange = static_cast<nsRange*>(range.get());
+        init.mBoundingClientRect = nsrange->GetBoundingClientRect(true, false);
+        range->ToString(init.mSelectedText);
 
-      selection->Stringify(init.mSelectedText);
-      for (uint32_t reasonType = 0;
-           reasonType < static_cast<uint32_t>(SelectionChangeReason::EndGuard_);
-           ++reasonType) {
-        SelectionChangeReason strongReasonType =
-          static_cast<SelectionChangeReason>(reasonType);
-        if (CheckReason(aReason, strongReasonType)) {
-          init.mReasons.AppendElement(strongReasonType);
+        for (uint32_t reasonType = 0;
+             reasonType < static_cast<uint32_t>(SelectionChangeReason::EndGuard_);
+             ++reasonType) {
+          SelectionChangeReason strongReasonType =
+            static_cast<SelectionChangeReason>(reasonType);
+          if (CheckReason(aReason, strongReasonType)) {
+            init.mReasons.AppendElement(strongReasonType);
+          }
         }
       }
 
