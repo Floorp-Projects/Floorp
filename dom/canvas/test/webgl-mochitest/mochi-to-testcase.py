@@ -48,11 +48,6 @@ function todo(val, text) {
                    : 'Test <font color=\\'blue\\'  >todo</font>: ';
   debug(status + text);
 }
-
-SimpleTest = {
-  waitForExplicitFinish: function() {},
-  finish: function() {},
-};
 </script>
 <div id='mochi-to-testcase-output'></div>
 \n'''
