@@ -4,5 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES.devtools.performance += [
+    'modules/front.js',
     'panel.js'
 ]
+
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

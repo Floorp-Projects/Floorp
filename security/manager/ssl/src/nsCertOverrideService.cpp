@@ -6,23 +6,29 @@
 
 #include "nsCertOverrideService.h"
 
+#include "pkix/pkixtypes.h"
+#include "nsIX509Cert.h"
 #include "NSSCertDBTrustDomain.h"
-#include "ScopedNSSTypes.h"
-#include "SharedSSLState.h"
-#include "nsAppDirectoryServiceDefs.h"
+#include "nsNSSCertificate.h"
+#include "nsNSSCertHelper.h"
 #include "nsCRT.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsStreamUtils.h"
+#include "nsNetUtil.h"
 #include "nsILineInputStream.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIX509Cert.h"
-#include "nsNSSCertHelper.h"
-#include "nsNSSCertificate.h"
-#include "nsNSSComponent.h"
-#include "nsNetUtil.h"
+#include "nsISupportsPrimitives.h"
 #include "nsPromiseFlatString.h"
-#include "nsStreamUtils.h"
-#include "nsStringBuffer.h"
 #include "nsThreadUtils.h"
+#include "nsStringBuffer.h"
+#include "ScopedNSSTypes.h"
+#include "SharedSSLState.h"
+
+#include "nspr.h"
+#include "pk11pub.h"
+#include "certdb.h"
+#include "sechash.h"
 #include "ssl.h" // For SSL_ClearSessionCache
 
 using namespace mozilla;
@@ -100,11 +106,18 @@ nsCertOverrideService::Init()
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  // Note that the names of these variables would seem to indicate that at one
-  // point another hash algorithm was used and is still supported for backwards
-  // compatibility. This is not the case. It has always been SHA256.
   mOidTagForStoringNewHashes = SEC_OID_SHA256;
-  mDottedOidForStoringNewHashes.Assign("OID.2.16.840.1.101.3.4.2.1");
+
+  SECOidData *od = SECOID_FindOIDByTag(mOidTagForStoringNewHashes);
+  if (!od)
+    return NS_ERROR_FAILURE;
+
+  char *dotted_oid = CERT_GetOidString(&od->oid);
+  if (!dotted_oid)
+    return NS_ERROR_FAILURE;
+
+  mDottedOidForStoringNewHashes = dotted_oid;
+  PR_smprintf_free(dotted_oid);
 
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
@@ -385,6 +398,42 @@ GetCertFingerprintByOidTag(nsIX509Cert *aCert,
   return GetCertFingerprintByOidTag(nsscert.get(), aOidTag, fp);
 }
 
+static nsresult
+GetCertFingerprintByDottedOidString(CERTCertificate* nsscert,
+                                    const nsCString &dottedOid, 
+                                    nsCString &fp)
+{
+  SECItem oid;
+  oid.data = nullptr;
+  oid.len = 0;
+  SECStatus srv = SEC_StringToOID(nullptr, &oid, 
+                    dottedOid.get(), dottedOid.Length());
+  if (srv != SECSuccess)
+    return NS_ERROR_FAILURE;
+
+  SECOidTag oid_tag = SECOID_FindOIDTag(&oid);
+  SECITEM_FreeItem(&oid, false);
+
+  if (oid_tag == SEC_OID_UNKNOWN)
+    return NS_ERROR_FAILURE;
+
+  return GetCertFingerprintByOidTag(nsscert, oid_tag, fp);
+}
+
+static nsresult
+GetCertFingerprintByDottedOidString(nsIX509Cert *aCert,
+                                    const nsCString &dottedOid,
+                                    nsCString &fp)
+{
+
+  ScopedCERTCertificate nsscert(aCert->GetCert());
+  if (!nsscert) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return GetCertFingerprintByDottedOidString(nsscert.get(), dottedOid, fp);
+}
+
 NS_IMETHODIMP
 nsCertOverrideService::RememberValidityOverride(const nsACString& aHostName,
                                                 int32_t aPort,
@@ -497,17 +546,14 @@ nsCertOverrideService::HasMatchingOverride(const nsACString & aHostName, int32_t
   nsAutoCString fpStr;
   nsresult rv;
 
-  // This code was originally written in a way that suggested that other hash
-  // algorithms are supported for backwards compatibility. However, this was
-  // always unnecessary, because only SHA256 has ever been used here.
   if (settings.mFingerprintAlgOID.Equals(mDottedOidForStoringNewHashes)) {
     rv = GetCertFingerprintByOidTag(aCert, mOidTagForStoringNewHashes, fpStr);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  } else {
-    return NS_ERROR_UNEXPECTED;
   }
+  else {
+    rv = GetCertFingerprintByDottedOidString(aCert, settings.mFingerprintAlgOID, fpStr);
+  }
+  if (NS_FAILED(rv))
+    return rv;
 
   *_retval = settings.mFingerprint.Equals(fpStr);
   return NS_OK;
@@ -603,38 +649,15 @@ nsCertOverrideService::ClearValidityOverride(const nsACString & aHostName, int32
     mSettingsTable.RemoveEntry(hostPort.get());
     Write();
   }
-
-  if (EnsureNSSInitialized(nssEnsure)) {
-    SSL_ClearSessionCache();
-  } else {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
+  SSL_ClearSessionCache();
   return NS_OK;
-}
-
-static PLDHashOperator
-CountPermanentEntriesCallback(nsCertOverrideEntry* aEntry, void* aArg)
-{
-  uint32_t* overrideCount = reinterpret_cast<uint32_t*>(aArg);
-  if (aEntry && !aEntry->mSettings.mIsTemporary) {
-    *overrideCount = *overrideCount + 1;
-    return PL_DHASH_NEXT;
-  }
-
-  return PL_DHASH_NEXT;
 }
 
 NS_IMETHODIMP
-nsCertOverrideService::GetPermanentOverrideCount(uint32_t* aOverrideCount)
+nsCertOverrideService::GetAllOverrideHostsWithPorts(uint32_t *aCount, 
+                                                        char16_t ***aHostsWithPortsArray)
 {
-  NS_ENSURE_ARG(aOverrideCount);
-  *aOverrideCount = 0;
-
-  ReentrantMonitorAutoEnter lock(monitor);
-  mSettingsTable.EnumerateEntries(CountPermanentEntriesCallback, aOverrideCount);
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 static bool
@@ -715,10 +738,14 @@ FindMatchingCertCallback(nsCertOverrideEntry *aEntry,
 
     if (still_ok && matchesDBKey(cai->cert, settings.mDBKey.get())) {
       nsAutoCString cert_fingerprint;
-      nsresult rv = NS_ERROR_UNEXPECTED;
+      nsresult rv;
       if (settings.mFingerprintAlgOID.Equals(cai->mDottedOidForStoringNewHashes)) {
         rv = GetCertFingerprintByOidTag(cai->cert,
                cai->mOidTagForStoringNewHashes, cert_fingerprint);
+      }
+      else {
+        rv = GetCertFingerprintByDottedOidString(cai->cert,
+               settings.mFingerprintAlgOID, cert_fingerprint);
       }
       if (NS_SUCCEEDED(rv) &&
           settings.mFingerprint.Equals(cert_fingerprint)) {
@@ -781,10 +808,14 @@ EnumerateCertOverridesCallback(nsCertOverrideEntry *aEntry,
     else {
       if (matchesDBKey(capac->cert, settings.mDBKey.get())) {
         nsAutoCString cert_fingerprint;
-        nsresult rv = NS_ERROR_UNEXPECTED;
+        nsresult rv;
         if (settings.mFingerprintAlgOID.Equals(capac->mDottedOidForStoringNewHashes)) {
           rv = GetCertFingerprintByOidTag(capac->cert,
                  capac->mOidTagForStoringNewHashes, cert_fingerprint);
+        }
+        else {
+          rv = GetCertFingerprintByDottedOidString(capac->cert,
+                 settings.mFingerprintAlgOID, cert_fingerprint);
         }
         if (NS_SUCCEEDED(rv) &&
             settings.mFingerprint.Equals(cert_fingerprint)) {
@@ -829,3 +860,4 @@ nsCertOverrideService::GetHostWithPort(const nsACString & aHostName, int32_t aPo
   }
   _retval.Assign(hostPort);
 }
+
