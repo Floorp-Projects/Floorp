@@ -351,7 +351,11 @@ struct ClassExtension
      *
      * There may exist weak pointers to an object that are not traced through
      * when the normal trace APIs are used, for example objects in the wrapper
-     * cache.  This hook allows these pointers to be updated.
+     * cache. This hook allows these pointers to be updated.
+     *
+     * Note that this hook can be called before JS_NewObject() returns if a GC
+     * is triggered during construction of the object. This can happen for
+     * global objects for example.
      */
     JSObjectMovedOp objectMovedOp;
 };

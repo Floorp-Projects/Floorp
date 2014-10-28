@@ -540,6 +540,13 @@ private:
 
 };
 
+// Returns the number of rects. (Up to 4)
+typedef gfx::Rect decomposedRectArrayT[4];
+size_t DecomposeIntoNoRepeatRects(const gfx::Rect& aRect,
+                                  const gfx::Rect& aTexCoordRect,
+                                  decomposedRectArrayT* aLayerRects,
+                                  decomposedRectArrayT* aTextureRects);
+
 } // namespace layers
 } // namespace mozilla
 

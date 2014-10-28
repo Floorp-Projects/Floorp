@@ -38,7 +38,7 @@ AppleATDecoder::AppleATDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
   , mFlushed(false)
 {
   MOZ_COUNT_CTOR(AppleATDecoder);
-  LOG("Creating Apple AudioToolbox Audio decoder");
+  LOG("Creating Apple AudioToolbox decoder");
   LOG("Audio Decoder configuration: %s %d Hz %d channels %d bits per channel",
       mConfig.mime_type,
       mConfig.samples_per_second,
@@ -92,7 +92,7 @@ AppleATDecoder::Init()
     NS_ERROR("Non recognised format");
     return NS_ERROR_FAILURE;
   }
-  LOG("Initializing Apple AudioToolbox Audio decoder");
+  LOG("Initializing Apple AudioToolbox decoder");
   OSStatus rv = AudioFileStreamOpen(this,
                                     _MetadataCallback,
                                     _SampleCallback,
@@ -315,10 +315,10 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
 void
 AppleATDecoder::SetupDecoder()
 {
-  AudioStreamBasicDescription inputFormat;
-
+  LOG("Setting up Apple AudioToolbox decoder.");
   mHaveOutput = false;
 
+  AudioStreamBasicDescription inputFormat;
   nsresult rv = AppleUtils::GetRichestDecodableFormat(mStream, inputFormat);
   if (NS_FAILED(rv)) {
     mCallback->Error();

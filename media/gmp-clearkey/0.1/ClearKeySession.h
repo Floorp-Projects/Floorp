@@ -21,7 +21,7 @@ class ClearKeySession
 {
 public:
   ClearKeySession(const std::string& aSessionId,
-                  GMPDecryptorHost* aHost, GMPDecryptorCallback *aCallback);
+                  GMPDecryptorCallback* aCallback);
 
   ~ClearKeySession();
 
@@ -34,7 +34,6 @@ private:
   std::vector<KeyId> mKeyIds;
 
   GMPDecryptorCallback* mCallback;
-  GMPDecryptorHost* mHost;
 };
 
 #endif // __ClearKeySession_h__
