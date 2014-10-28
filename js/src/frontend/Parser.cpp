@@ -2025,14 +2025,13 @@ Parser<SyntaxParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::addExprAndGetNextTemplStrToken(Node nodeList, TokenKind *ttp)
+Parser<ParseHandler>::addExprAndGetNextTemplStrToken(Node nodeList, TokenKind &tt)
 {
     Node pn = expr();
     if (!pn)
         return false;
     handler.addList(nodeList, pn);
 
-    TokenKind tt;
     if (!tokenStream.getToken(&tt))
         return false;
     if (tt != TOK_RC) {
@@ -2040,7 +2039,7 @@ Parser<ParseHandler>::addExprAndGetNextTemplStrToken(Node nodeList, TokenKind *t
         return false;
     }
 
-    return tokenStream.getToken(ttp, TokenStream::TemplateTail);
+    return tokenStream.getToken(&tt, TokenStream::TemplateTail);
 }
 
 template <typename ParseHandler>
@@ -2058,7 +2057,7 @@ Parser<ParseHandler>::taggedTemplate(Node nodeList, TokenKind tt)
         if (tt != TOK_TEMPLATE_HEAD)
             break;
 
-        if (!addExprAndGetNextTemplStrToken(nodeList, &tt))
+        if (!addExprAndGetNextTemplStrToken(nodeList, tt))
             return false;
     }
     handler.setEndPosition(nodeList, callSiteObjNode);
@@ -2076,7 +2075,7 @@ Parser<ParseHandler>::templateLiteral()
 
     TokenKind tt;
     do {
-        if (!addExprAndGetNextTemplStrToken(nodeList, &tt))
+        if (!addExprAndGetNextTemplStrToken(nodeList, tt))
             return null();
 
         pn = noSubstitutionTemplate();
