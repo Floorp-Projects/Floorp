@@ -95,20 +95,81 @@ function promiseException() {
   });
 }
 
-function promiseAsync() {
-  var global = "foo";
-  var f = new Promise(function(r1, r2) {
-    is(global, "foo", "Global should be foo");
-    r1(42);
-    is(global, "foo", "Global should still be foo");
-    setTimeout(function() {
-      is(global, "bar", "Global should still be bar!");
-      runTest();
-    }, 0);
-  }).then(function() {
-    global = "bar";
+function promiseAsync_TimeoutResolveThen() {
+  var handlerExecuted = false;
+
+  setTimeout(function() {
+    ok(handlerExecuted, "Handler should have been called before the timeout.");
+
+    // Allow other assertions to run so the test could fail before the next one.
+    setTimeout(runTest, 0);
+  }, 0);
+
+  Promise.resolve().then(function() {
+    handlerExecuted = true;
   });
-  is(global, "foo", "Global should still be foo (2)");
+
+  ok(!handlerExecuted, "Handlers are not called before 'then' returns.");
+}
+
+function promiseAsync_ResolveTimeoutThen() {
+  var handlerExecuted = false;
+
+  var promise = Promise.resolve();
+
+  setTimeout(function() {
+    ok(handlerExecuted, "Handler should have been called before the timeout.");
+
+    // Allow other assertions to run so the test could fail before the next one.
+    setTimeout(runTest, 0);
+  }, 0);
+
+  promise.then(function() {
+    handlerExecuted = true;
+  });
+
+  ok(!handlerExecuted, "Handlers are not called before 'then' returns.");
+}
+
+function promiseAsync_ResolveThenTimeout() {
+  var handlerExecuted = false;
+
+  Promise.resolve().then(function() {
+    handlerExecuted = true;
+  });
+
+  setTimeout(function() {
+    ok(handlerExecuted, "Handler should have been called before the timeout.");
+
+    // Allow other assertions to run so the test could fail before the next one.
+    setTimeout(runTest, 0);
+  }, 0);
+
+  ok(!handlerExecuted, "Handlers are not called before 'then' returns.");
+}
+
+function promiseAsync_SyncHXRAndImportScripts()
+{
+  var handlerExecuted = false;
+
+  Promise.resolve().then(function() {
+    handlerExecuted = true;
+
+    // Allow other assertions to run so the test could fail before the next one.
+    setTimeout(runTest, 0);
+  });
+
+  ok(!handlerExecuted, "Handlers are not called until the next microtask.");
+
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "testXHR.txt", false);
+  xhr.send(null);
+
+  ok(!handlerExecuted, "Sync XHR should not trigger microtask execution.");
+
+  importScripts("relativeLoad_import.js");
+
+  ok(!handlerExecuted, "importScripts should not trigger microtask execution.");
 }
 
 function promiseDoubleThen() {
@@ -683,11 +744,53 @@ function promiseResolveThenableCleanStack() {
   },1000);
 }
 
+// Bug 1062323
+function promiseWrapperAsyncResolution()
+{
+  var p = new Promise(function(resolve, reject){
+    resolve();
+  });
+
+  var results = [];
+  var q = p.then(function () {
+    results.push("1-1");
+  }).then(function () {
+    results.push("1-2");
+  }).then(function () {
+    results.push("1-3");
+  });
+
+  var r = p.then(function () {
+    results.push("2-1");
+  }).then(function () {
+    results.push("2-2");
+  }).then(function () {
+    results.push("2-3");
+  });
+
+  Promise.all([q, r]).then(function() {
+    var match = results[0] == "1-1" &&
+                results[1] == "2-1" &&
+                results[2] == "1-2" &&
+                results[3] == "2-2" &&
+                results[4] == "1-3" &&
+                results[5] == "2-3";
+    ok(match, "Chained promises should resolve asynchronously.");
+    runTest();
+  }, function() {
+    ok(false, "promiseWrapperAsyncResolution: One of the promises failed.");
+    runTest();
+  });
+}
+
 var tests = [
     promiseResolve,
     promiseReject,
     promiseException,
-    promiseAsync,
+    promiseAsync_TimeoutResolveThen,
+    promiseAsync_ResolveTimeoutThen,
+    promiseAsync_ResolveThenTimeout,
+    promiseAsync_SyncHXRAndImportScripts,
     promiseDoubleThen,
     promiseThenException,
     promiseThenCatchThen,
@@ -729,6 +832,8 @@ var tests = [
     promiseResolvePromise,
 
     promiseResolveThenableCleanStack,
+
+    promiseWrapperAsyncResolution,
 ];
 
 function runTest() {
