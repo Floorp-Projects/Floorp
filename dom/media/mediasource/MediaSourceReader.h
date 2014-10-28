@@ -70,6 +70,11 @@ public:
     return mInfo.HasAudio();
   }
 
+  // We can't compute a proper start time since we won't necessarily
+  // have the first frame of the resource available. This does the same
+  // as chrome/blink and assumes that we always start at t=0.
+  virtual int64_t ComputeStartTime() MOZ_OVERRIDE { return 0; }
+
   bool IsMediaSeekable() { return true; }
 
   nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) MOZ_OVERRIDE;
