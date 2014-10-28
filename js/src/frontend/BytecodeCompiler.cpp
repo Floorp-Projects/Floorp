@@ -329,11 +329,13 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
 
     bool canHaveDirectives = true;
     for (;;) {
-        TokenKind tt;
-        if (!parser.tokenStream.peekToken(&tt, TokenStream::Operand))
+        TokenKind tt = parser.tokenStream.peekToken(TokenStream::Operand);
+        if (tt <= TOK_EOF) {
+            if (tt == TOK_EOF)
+                break;
+            MOZ_ASSERT(tt == TOK_ERROR);
             return nullptr;
-        if (tt == TOK_EOF)
-            break;
+        }
 
         TokenStream::Position pos(parser.keepAtoms);
         parser.tokenStream.tell(&pos);
