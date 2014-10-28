@@ -79,8 +79,7 @@ private:
 };
 
 
-ClearKeyDecryptionManager::ClearKeyDecryptionManager(GMPDecryptorHost* aHost)
-  : mHost(aHost)
+ClearKeyDecryptionManager::ClearKeyDecryptionManager()
 {
   CK_LOGD("ClearKeyDecryptionManager ctor");
 }
@@ -132,7 +131,7 @@ ClearKeyDecryptionManager::CreateSession(uint32_t aPromiseId,
   string sessionId = GetNewSessionId();
   assert(mSessions.find(sessionId) == mSessions.end());
 
-  ClearKeySession* session = new ClearKeySession(sessionId, mHost, mCallback);
+  ClearKeySession* session = new ClearKeySession(sessionId, mCallback);
   session->Init(aPromiseId, aInitData, aInitDataSize);
   mSessions[sessionId] = session;
 

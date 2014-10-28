@@ -35,7 +35,7 @@ GMPGetAPI(const char* aApiName, void* aHostAPI, void** aPluginAPI)
     return GMPNotImplementedErr;
   }
 
-  *aPluginAPI = new ClearKeyDecryptionManager(static_cast<GMPDecryptorHost*>(aHostAPI));
+  *aPluginAPI = new ClearKeyDecryptionManager();
 
   return GMPNoErr;
 }

@@ -54,8 +54,9 @@ if (!window.todo) {
 }
 if (!window.SimpleTest) {
   window.SimpleTest = {
-    waitForExplicitFinish: function(){},
     finish: function(){},
+    requestLongerTimeout: function(){},
+    waitForExplicitFinish: function(){},
   };
 }
 
@@ -242,6 +243,13 @@ function OnTestComplete() {
 // Begin execution
 
 SimpleTest.waitForExplicitFinish();
+
+var isAndroid2_3 = (DriverInfo.getOS() == DriverInfo.OS.ANDROID &&
+                    DriverInfo.getOSVersion() < OS_VERSION_ANDROID_ICS);
+if (isAndroid2_3) {
+  var timeoutLengthMultiplier = 2.0;
+  SimpleTest.requestLongerTimeout(timeoutLengthMultiplier);
+}
 
 do {
   var arg = location.search.substr(1);

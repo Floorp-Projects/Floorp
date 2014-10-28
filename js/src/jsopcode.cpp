@@ -804,6 +804,10 @@ js_DumpPC(JSContext *cx)
     if (!sprinter.init())
         return false;
     ScriptFrameIter iter(cx);
+    if (iter.done()) {
+        fprintf(stdout, "Empty stack.\n");
+        return true;
+    }
     RootedScript script(cx, iter.script());
     bool ok = js_DisassembleAtPC(cx, script, true, iter.pc(), false, &sprinter);
     fprintf(stdout, "%s", sprinter.string());
