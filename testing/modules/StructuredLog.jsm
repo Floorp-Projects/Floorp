@@ -105,7 +105,9 @@ StructuredLogger.prototype.suiteEnd = function () {
 };
 
 /**
- * Unstructured logging functions
+ * Unstructured logging functions. The "extra" parameter can always by used to
+ * log suite specific data. If a "stack" field is provided it is logged at the
+ * top level of the data object for the benefit of mozlog's formatters.
  */
 StructuredLogger.prototype.log = function (level, message, extra=null) {
   let data = {
@@ -115,6 +117,9 @@ StructuredLogger.prototype.log = function (level, message, extra=null) {
 
   if (extra !== null) {
     data.extra = extra;
+    if ("stack" in extra) {
+      data.stack = extra.stack;
+    }
   }
 
   this._logData("log", data);

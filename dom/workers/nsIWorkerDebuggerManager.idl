@@ -1,0 +1,22 @@
+#include "nsISupports.idl"
+
+interface nsISimpleEnumerator;
+interface nsIWorkerDebugger;
+
+[scriptable, uuid(d2aa74ee-6b98-4d5d-8173-4e23422daf1e)]
+interface nsIWorkerDebuggerManagerListener : nsISupports
+{
+  void onRegister(in nsIWorkerDebugger debugger);
+
+  void onUnregister(in nsIWorkerDebugger debugger);
+};
+
+[scriptable, builtinclass, uuid(056d7918-dc86-452a-b4e6-86da3405f015)]
+interface nsIWorkerDebuggerManager : nsISupports
+{
+  nsISimpleEnumerator getWorkerDebuggerEnumerator();
+
+  void addListener(in nsIWorkerDebuggerManagerListener listener);
+
+  void removeListener(in nsIWorkerDebuggerManagerListener listener);
+};
