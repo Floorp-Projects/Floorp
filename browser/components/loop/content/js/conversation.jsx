@@ -352,7 +352,7 @@ loop.conversation = (function(mozL10n) {
     setupIncomingCall: function() {
       navigator.mozLoop.startAlerting();
 
-      var callData = navigator.mozLoop.getCallData(this.props.conversation.get("callId"));
+      var callData = navigator.mozLoop.getCallData(this.props.conversation.get("windowId"));
       if (!callData) {
         // XXX Not the ideal response, but bug 1047410 will be replacing
         // this by better "call failed" UI.
@@ -374,7 +374,7 @@ loop.conversation = (function(mozL10n) {
      * Moves the call to the end state
      */
     endCall: function() {
-      navigator.mozLoop.releaseCallData(this.props.conversation.get("callId"));
+      navigator.mozLoop.releaseCallData(this.props.conversation.get("windowId"));
       this.setState({callStatus: "end"});
     },
 
@@ -475,7 +475,7 @@ loop.conversation = (function(mozL10n) {
      */
     _declineCall: function() {
       this._websocket.decline();
-      navigator.mozLoop.releaseCallData(this.props.conversation.get("callId"));
+      navigator.mozLoop.releaseCallData(this.props.conversation.get("windowId"));
       this._websocket.close();
       // Having a timeout here lets the logging for the websocket complete and be
       // displayed on the console if both are on.
@@ -620,10 +620,10 @@ loop.conversation = (function(mozL10n) {
       {sdk: window.OT}   // Model dependencies
     );
 
-    // Obtain the callId and pass it through
+    // Obtain the windowId and pass it through
     var helper = new loop.shared.utils.Helper();
     var locationHash = helper.locationData().hash;
-    var callId;
+    var windowId;
     var outgoing;
     var localRoomStore;
 
@@ -635,7 +635,7 @@ loop.conversation = (function(mozL10n) {
 
     var hash = locationHash.match(/#incoming\/(.*)/);
     if (hash) {
-      callId = hash[1];
+      windowId = hash[1];
       outgoing = false;
     } else if (hash = locationHash.match(/#room\/(.*)/)) {
       localRoomStore = new loop.store.LocalRoomStore({
@@ -645,16 +645,16 @@ loop.conversation = (function(mozL10n) {
     } else {
       hash = locationHash.match(/#outgoing\/(.*)/);
       if (hash) {
-        callId = hash[1];
+        windowId = hash[1];
         outgoing = true;
       }
     }
 
-    conversation.set({callId: callId});
+    conversation.set({windowId: windowId});
 
     window.addEventListener("unload", function(event) {
       // Handle direct close of dialog box via [x] control.
-      navigator.mozLoop.releaseCallData(callId);
+      navigator.mozLoop.releaseCallData(windowId);
     });
 
     React.renderComponent(<AppControllerView
@@ -673,7 +673,7 @@ loop.conversation = (function(mozL10n) {
     }
 
     dispatcher.dispatch(new loop.shared.actions.GatherCallData({
-      callId: callId,
+      windowId: windowId,
       outgoing: outgoing
     }));
   }

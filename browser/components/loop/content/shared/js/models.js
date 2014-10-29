@@ -22,6 +22,7 @@ loop.shared.models = (function(l10n) {
       sessionToken: undefined,     // OT session token
       sessionType:  undefined,     // Hawk session type
       apiKey:       undefined,     // OT api key
+      windowId:     undefined,     // The window id
       callId:       undefined,     // The callId on the server
       progressURL:  undefined,     // The websocket url to use for progress
       websocketToken: undefined,   // The token to use for websocket auth, this is
