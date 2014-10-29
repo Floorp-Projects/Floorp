@@ -749,27 +749,11 @@ ChunkPool::verify() const
 }
 #endif
 
-Chunk *
-ChunkPool::Enum::front()
-{
-    Chunk *chunk = *chunkp;
-    MOZ_ASSERT_IF(chunk, pool.count() != 0);
-    return chunk;
-}
-
 void
-ChunkPool::Enum::popFront()
+ChunkPool::Iter::next()
 {
-    MOZ_ASSERT(!empty());
-    chunkp = &front()->info.next;
-}
-
-void
-ChunkPool::Enum::removeAndPopFront()
-{
-    MOZ_ASSERT(!empty());
-    *chunkp = front()->info.next;
-    --pool.count_;
+    MOZ_ASSERT(!done());
+    current_ = current_->info.next;
 }
 
 Chunk *
@@ -783,15 +767,17 @@ GCRuntime::expireEmptyChunkPool(bool shrinkBuffers, const AutoLockGC &lock)
      */
     Chunk *freeList = nullptr;
     unsigned freeChunkCount = 0;
-    for (ChunkPool::Enum e(emptyChunks(lock)); !e.empty(); ) {
-        Chunk *chunk = e.front();
+    for (ChunkPool::Iter iter(emptyChunks(lock)); !iter.done();) {
+        Chunk *chunk = iter.get();
+        iter.next();
+
         MOZ_ASSERT(chunk->unused());
         MOZ_ASSERT(!chunkSet.has(chunk));
         if (freeChunkCount >= tunables.maxEmptyChunkCount() ||
             (freeChunkCount >= tunables.minEmptyChunkCount() &&
              (shrinkBuffers || chunk->info.age == MAX_EMPTY_CHUNK_AGE)))
         {
-            e.removeAndPopFront();
+            emptyChunks(lock).remove(chunk);
             prepareToFreeChunk(chunk->info);
             chunk->info.next = freeList;
             freeList = chunk;
@@ -799,7 +785,6 @@ GCRuntime::expireEmptyChunkPool(bool shrinkBuffers, const AutoLockGC &lock)
             /* Keep the chunk but increase its age. */
             ++freeChunkCount;
             ++chunk->info.age;
-            e.popFront();
         }
     }
     MOZ_ASSERT(emptyChunks(lock).count() <= tunables.maxEmptyChunkCount());
@@ -810,9 +795,10 @@ GCRuntime::expireEmptyChunkPool(bool shrinkBuffers, const AutoLockGC &lock)
 static void
 FreeChunkPool(JSRuntime *rt, ChunkPool &pool)
 {
-    for (ChunkPool::Enum e(pool); !e.empty();) {
-        Chunk *chunk = e.front();
-        e.removeAndPopFront();
+    for (ChunkPool::Iter iter(pool); !iter.done();) {
+        Chunk *chunk = iter.get();
+        iter.next();
+        pool.remove(chunk);
         MOZ_ASSERT(!chunk->info.numArenasFreeCommitted);
         FreeChunk(rt, chunk);
     }
@@ -3486,8 +3472,8 @@ void
 GCRuntime::decommitArenas(const AutoLockGC &lock)
 {
     // Verify that all entries in the empty chunks pool are decommitted.
-    for (ChunkPool::Enum e(emptyChunks(lock)); !e.empty(); e.popFront())
-        MOZ_ASSERT(e.front()->info.numArenasFreeCommitted == 0);
+    for (ChunkPool::Iter chunk(emptyChunks(lock)); !chunk.done(); chunk.next())
+        MOZ_ASSERT(!chunk->info.numArenasFreeCommitted);
 
     // Build a Vector of all current available Chunks. Since we release the
     // gc lock while doing the decommit syscall, it is dangerous to iterate
