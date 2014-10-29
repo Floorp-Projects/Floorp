@@ -4,6 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+interface WindowProxy;
+
 [Func="mozilla::dom::TouchEvent::PrefEnabled"]
 interface TouchEvent : UIEvent {
   readonly attribute TouchList touches;
@@ -19,7 +21,7 @@ interface TouchEvent : UIEvent {
   void initTouchEvent(DOMString type,
                       boolean canBubble,
                       boolean cancelable,
-                      Window? view,
+                      WindowProxy? view,
                       long detail,
                       boolean ctrlKey,
                       boolean altKey,
