@@ -69,7 +69,7 @@ public:
     return MediaCodecDataDecoder::Input(aSample);
   }
 
-  virtual nsresult PostOutput(BufferInfo* aInfo, MediaFormat* aFormat, Microseconds aDuration) MOZ_OVERRIDE {
+  virtual nsresult PostOutput(BufferInfo* aInfo, Microseconds aDuration) MOZ_OVERRIDE {
     VideoInfo videoInfo;
     videoInfo.mDisplay = nsIntSize(mConfig.display_width, mConfig.display_height);
 
@@ -106,16 +106,18 @@ protected:
 
 class AudioDataDecoder : public MediaCodecDataDecoder {
 public:
-  AudioDataDecoder(const char* aMimeType, MediaFormat* aFormat, MediaDataDecoderCallback* aCallback)
-  : MediaCodecDataDecoder(MediaData::Type::AUDIO_SAMPLES, aMimeType, aFormat, aCallback)
+  AudioDataDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+                   MediaFormat* aFormat, MediaDataDecoderCallback* aCallback)
+  : MediaCodecDataDecoder(MediaData::Type::AUDIO_SAMPLES, aConfig.mime_type, aFormat, aCallback)
+  , mConfig(aConfig)
   {
+    MOZ_ASSERT(mConfig.bits_per_sample == 16, "We only support 16-bit audio");
   }
 
-  nsresult Output(BufferInfo* aInfo, void* aBuffer, MediaFormat* aFormat, Microseconds aDuration) {
+  nsresult Output(BufferInfo* aInfo, void* aBuffer, Microseconds aDuration) {
     // The output on Android is always 16-bit signed
 
-    uint32_t numChannels = aFormat->GetInteger(NS_LITERAL_STRING("channel-count"));
-    uint32_t sampleRate = aFormat->GetInteger(NS_LITERAL_STRING("sample-rate"));
+    uint32_t numChannels = mConfig.channel_count;
     uint32_t numFrames = (aInfo->getSize() / numChannels) / 2;
 
     AudioDataValue* audio = new AudioDataValue[aInfo->getSize()];
@@ -126,9 +128,12 @@ public:
                                     numFrames,
                                     audio,
                                     numChannels,
-                                    sampleRate));
+                                    mConfig.samples_per_second));
     return NS_OK;
   }
+
+protected:
+  const mp4_demuxer::AudioDecoderConfig& mConfig;
 };
 
 
@@ -176,7 +181,6 @@ AndroidDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& 
                                          MediaTaskQueue* aAudioTaskQueue,
                                          MediaDataDecoderCallback* aCallback)
 {
-  MOZ_ASSERT(aCallback.bits_per_sample == 16, "We only handle 16-bit audio!");
 
   nsAutoString mimeType;
   mimeType.AssignASCII(aConfig.mime_type);
@@ -212,7 +216,7 @@ AndroidDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& 
   }
 
   nsRefPtr<MediaDataDecoder> decoder =
-    new AudioDataDecoder(aConfig.mime_type, format, aCallback);
+    new AudioDataDecoder(aConfig, format, aCallback);
 
   return decoder.forget();
 
@@ -298,8 +302,6 @@ void MediaCodecDataDecoder::DecoderLoop()
   JNIEnv* env = GetJNIForThread();
   mp4_demuxer::MP4Sample* sample = nullptr;
 
-  nsAutoPtr<MediaFormat> outputFormat;
-
   for (;;) {
     {
       MonitorAutoLock lock(mMonitor);
@@ -368,7 +370,7 @@ void MediaCodecDataDecoder::DecoderLoop()
       } else if (outputStatus == MediaCodec::getINFO_OUTPUT_BUFFERS_CHANGED()) {
         ResetOutputBuffers();
       } else if (outputStatus == MediaCodec::getINFO_OUTPUT_FORMAT_CHANGED()) {
-        outputFormat = new MediaFormat(mDecoder->GetOutputFormat(), GetJNIForThread());
+        // Don't care, we use SurfaceTexture for video
       } else if (outputStatus < 0) {
         printf_stderr("unknown error from decoder! %d\n", outputStatus);
         mCallback->Error();
@@ -390,13 +392,13 @@ void MediaCodecDataDecoder::DecoderLoop()
         if (buffer) {
           // The buffer will be null on Android L if we are decoding to a Surface
           void* directBuffer = env->GetDirectBufferAddress(buffer);
-          Output(&bufferInfo, directBuffer, outputFormat, duration);
+          Output(&bufferInfo, directBuffer, duration);
         }
 
         // The Surface will be updated at this point (for video)
         mDecoder->ReleaseOutputBuffer(outputStatus, true);
 
-        PostOutput(&bufferInfo, outputFormat, duration);
+        PostOutput(&bufferInfo, duration);
 
         if (buffer) {
           env->DeleteLocalRef(buffer);
