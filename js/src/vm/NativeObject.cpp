@@ -2170,12 +2170,12 @@ template <ExecutionMode mode>
 static bool
 SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
                     HandleNativeObject obj, HandleObject receiver, HandleId id,
-                    HandleObject pobj, HandleShape shape, MutableHandleValue vp, bool strict)
+                    HandleNativeObject pobj, HandleShape shape, MutableHandleValue vp, bool strict)
 {
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         /* ES5 8.12.4 [[Put]] step 2, for a dense data property on pobj. */
         if (pobj == receiver)
-            return SetDenseOrTypedArrayElement<mode>(cxArg, obj, JSID_TO_INT(id), vp, strict);
+            return SetDenseOrTypedArrayElement<mode>(cxArg, pobj, JSID_TO_INT(id), vp, strict);
     } else {
         /* ES5 8.12.4 [[Put]] step 2. */
         if (shape->isAccessorDescriptor()) {
@@ -2270,8 +2270,10 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
     if (!shape)
         return SetNonexistentProperty<mode>(cxArg, receiver, id, qualified, vp, strict);
 
-    if (pobj->isNative())
-        return SetExistingProperty<mode>(cxArg, obj, receiver, id, pobj, shape, vp, strict);
+    if (pobj->isNative()) {
+        RootedNativeObject nativePObj(cxArg, &pobj->as<NativeObject>());
+        return SetExistingProperty<mode>(cxArg, obj, receiver, id, nativePObj, shape, vp, strict);
+    }
 
     if (pobj->is<ProxyObject>()) {
         if (mode == ParallelExecution)
