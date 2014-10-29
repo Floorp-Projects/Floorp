@@ -74,10 +74,17 @@ let WindowMessageHandler = {
     let isImageDocument = (content.document instanceof Ci.nsIImageDocument);
 
     sendAsyncMessage(cx.name, {isImageDocument: isImageDocument});
-  }
+  },
+
+  waitForDocumentLoad: function WMH_waitForDocumentLoad() {
+    addEventListener("load", function listener() {
+      removeEventListener("load", listener, true);
+      sendAsyncMessage("Panorama:documentLoaded");
+    }, true);
+  },
 };
 
 // add message listeners
 addMessageListener("Panorama:isDocumentLoaded", WindowMessageHandler.isDocumentLoaded);
 addMessageListener("Panorama:isImageDocument", WindowMessageHandler.isImageDocument);
-
+addMessageListener("Panorama:waitForDocumentLoad", WindowMessageHandler.waitForDocumentLoad);
