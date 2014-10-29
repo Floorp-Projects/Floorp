@@ -2102,11 +2102,62 @@ SetNonexistentProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
     return SetPropertyByDefining<mode>(cxArg, receiver, id, v, strict);
 }
 
+/*
+ * Set an existing own property obj[index] that's a dense element or typed
+ * array element.
+ */
 template <ExecutionMode mode>
 static bool
 SetDenseOrTypedArrayElement(typename ExecutionModeTraits<mode>::ContextType cxArg,
                             HandleNativeObject obj, uint32_t index, MutableHandleValue vp,
-                            bool strict);
+                            bool strict)
+{
+    if (IsAnyTypedArray(obj)) {
+        double d;
+        if (mode == ParallelExecution) {
+            // Bail if converting the value might invoke user-defined
+            // conversions.
+            if (vp.isObject())
+                return false;
+            if (!NonObjectToNumber(cxArg, vp, &d))
+                return false;
+        } else {
+            if (!ToNumber(cxArg->asJSContext(), vp, &d))
+                return false;
+        }
+
+        // Silently do nothing for out-of-bounds sets, for consistency with
+        // current behavior.  (ES6 currently says to throw for this in
+        // strict mode code, so we may eventually need to change.)
+        uint32_t len = AnyTypedArrayLength(obj);
+        if (index < len) {
+            if (obj->is<TypedArrayObject>())
+                TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
+            else
+                SharedTypedArrayObject::setElement(obj->as<SharedTypedArrayObject>(), index, d);
+        }
+        return true;
+    }
+
+    bool definesPast;
+    if (!WouldDefinePastNonwritableLength(cxArg, obj, index, strict, &definesPast))
+        return false;
+    if (definesPast) {
+        /* Bail out of parallel execution if we are strict to throw. */
+        if (mode == ParallelExecution)
+            return !strict;
+        return true;
+    }
+
+    if (!obj->maybeCopyElementsForWrite(cxArg))
+        return false;
+
+    if (mode == ParallelExecution)
+        return obj->setDenseElementIfHasType(index, vp);
+
+    obj->setDenseElementWithType(cxArg->asJSContext(), index, vp);
+    return true;
+}
 
 /*
  * Implement "the rest of" assignment to receiver[id] when an existing property
@@ -2192,59 +2243,6 @@ SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
         return NativeSet<mode>(cxArg, obj, receiver, shape, strict, vp);
     }
     return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
-}
-
-template <ExecutionMode mode>
-static bool
-SetDenseOrTypedArrayElement(typename ExecutionModeTraits<mode>::ContextType cxArg,
-                            HandleNativeObject obj, uint32_t index, MutableHandleValue vp,
-                            bool strict)
-{
-    if (IsAnyTypedArray(obj)) {
-        double d;
-        if (mode == ParallelExecution) {
-            // Bail if converting the value might invoke user-defined
-            // conversions.
-            if (vp.isObject())
-                return false;
-            if (!NonObjectToNumber(cxArg, vp, &d))
-                return false;
-        } else {
-            if (!ToNumber(cxArg->asJSContext(), vp, &d))
-                return false;
-        }
-
-        // Silently do nothing for out-of-bounds sets, for consistency with
-        // current behavior.  (ES6 currently says to throw for this in
-        // strict mode code, so we may eventually need to change.)
-        uint32_t len = AnyTypedArrayLength(obj);
-        if (index < len) {
-            if (obj->is<TypedArrayObject>())
-                TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
-            else
-                SharedTypedArrayObject::setElement(obj->as<SharedTypedArrayObject>(), index, d);
-        }
-        return true;
-    }
-
-    bool definesPast;
-    if (!WouldDefinePastNonwritableLength(cxArg, obj, index, strict, &definesPast))
-        return false;
-    if (definesPast) {
-        /* Bail out of parallel execution if we are strict to throw. */
-        if (mode == ParallelExecution)
-            return !strict;
-        return true;
-    }
-
-    if (!obj->maybeCopyElementsForWrite(cxArg))
-        return false;
-
-    if (mode == ParallelExecution)
-        return obj->setDenseElementIfHasType(index, vp);
-
-    obj->setDenseElementWithType(cxArg->asJSContext(), index, vp);
-    return true;
 }
 
 template <ExecutionMode mode>
