@@ -82,6 +82,12 @@ skip-if(B2G) == 28811-2a.html 28811-2-ref.html
 == 68061-2.xml 68061-2-ref.xml
 == 76331-1.html 76331-1-ref.html
 == 81947-1.html 81947-ref.html
+== 82711-1.html 82711-1-ref.html
+== 82711-2.html 82711-2-ref.html
+== 82711-3.html 82711-3-ref.html
+!= 82711-1-ref.html 82711-2-ref.html
+!= 82711-1-ref.html 82711-3-ref.html
+!= 82711-2-ref.html 82711-3-ref.html
 == 84400-1.html 84400-1-ref.html
 == 84400-2.html 84400-2-ref.html
 == 97777-1.html 97777-1-ref.html

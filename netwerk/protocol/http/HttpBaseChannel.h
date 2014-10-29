@@ -160,6 +160,8 @@ public:
   NS_IMETHOD GetRequestVersion(uint32_t *major, uint32_t *minor);
   NS_IMETHOD GetResponseVersion(uint32_t *major, uint32_t *minor);
   NS_IMETHOD SetCookie(const char *aCookieHeader);
+  NS_IMETHOD GetThirdPartyFlags(uint32_t *aForce);
+  NS_IMETHOD SetThirdPartyFlags(uint32_t aForce);
   NS_IMETHOD GetForceAllowThirdPartyCookie(bool *aForce);
   NS_IMETHOD SetForceAllowThirdPartyCookie(bool aForce);
   NS_IMETHOD GetCanceled(bool *aCanceled);
@@ -341,7 +343,7 @@ protected:
   uint32_t                          mResponseHeadersModified    : 1;
   uint32_t                          mAllowPipelining            : 1;
   uint32_t                          mAllowSTS                   : 1;
-  uint32_t                          mForceAllowThirdPartyCookie : 1;
+  uint32_t                          mThirdPartyFlags            : 3;
   uint32_t                          mUploadStreamHasHeaders     : 1;
   uint32_t                          mInheritApplicationCache    : 1;
   uint32_t                          mChooseApplicationCache     : 1;
