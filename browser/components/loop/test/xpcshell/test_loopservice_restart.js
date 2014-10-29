@@ -75,12 +75,17 @@ add_task(function test_initialize_with_invalid_fxa_token() {
                  "FXA pref should be cleared if token was invalid");
     Assert.equal(Services.prefs.getCharPref(LOOP_FXA_PROFILE_PREF), "",
                  "FXA profile pref should be cleared if token was invalid");
+    Assert.ok(MozLoopServiceInternal.errors.has("login"),
+              "Initialization error should have been reported to UI");
   });
 });
 
 add_task(function test_initialize_with_fxa_token() {
   Services.prefs.setCharPref(LOOP_FXA_PROFILE_PREF, FAKE_FXA_PROFILE);
   Services.prefs.setCharPref(LOOP_FXA_TOKEN_PREF, FAKE_FXA_TOKEN_DATA);
+
+  MozLoopService.errors.clear();
+
   loopServer.registerPathHandler("/registration", (request, response) => {
     response.setStatusLine(null, 200, "OK");
   });
@@ -90,6 +95,7 @@ add_task(function test_initialize_with_fxa_token() {
                  "FXA pref should still be set after initialization");
     Assert.equal(Services.prefs.getCharPref(LOOP_FXA_PROFILE_PREF), FAKE_FXA_PROFILE,
                  "FXA profile should still be set after initialization");
+    Assert.ok(!MozLoopServiceInternal.errors.has("login"), "Initialization error should not exist");
   });
 });
 

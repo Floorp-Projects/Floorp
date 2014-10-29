@@ -24,7 +24,7 @@ let msgHandler = function(msg) {
 add_test(function test_busy_2guest_calls() {
   actionReceived = false;
 
-  MozLoopService.register().then(() => {
+  MozLoopService.promiseRegisteredWithServers().then(() => {
     let opened = 0;
     Chat.open = function() {
       opened++;
@@ -47,7 +47,7 @@ add_test(function test_busy_2guest_calls() {
 add_test(function test_busy_1fxa_1guest_calls() {
   actionReceived = false;
 
-  MozLoopService.register().then(() => {
+  MozLoopService.promiseRegisteredWithServers().then(() => {
     let opened = 0;
     Chat.open = function() {
       opened++;
@@ -71,7 +71,7 @@ add_test(function test_busy_1fxa_1guest_calls() {
 add_test(function test_busy_2fxa_calls() {
   actionReceived = false;
 
-  MozLoopService.register().then(() => {
+  MozLoopService.promiseRegisteredWithServers().then(() => {
     let opened = 0;
     Chat.open = function() {
       opened++;
@@ -94,7 +94,7 @@ add_test(function test_busy_2fxa_calls() {
 add_test(function test_busy_1guest_1fxa_calls() {
   actionReceived = false;
 
-  MozLoopService.register().then(() => {
+  MozLoopService.promiseRegisteredWithServers().then(() => {
     let opened = 0;
     Chat.open = function() {
       opened++;
