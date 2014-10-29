@@ -1806,6 +1806,12 @@ MacroAssemblerMIPSCompat::movePtr(ImmGCPtr imm, Register dest)
 {
     ma_li(dest, imm);
 }
+
+void
+MacroAssemblerMIPSCompat::movePtr(ImmMaybeNurseryPtr imm, Register dest)
+{
+    movePtr(noteMaybeNurseryPtr(imm), dest);
+}
 void
 MacroAssemblerMIPSCompat::movePtr(ImmPtr imm, Register dest)
 {
