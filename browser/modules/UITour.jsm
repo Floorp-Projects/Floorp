@@ -838,7 +838,17 @@ this.UITour = {
       highlighter.parentElement.setAttribute("targetName", aTarget.targetName);
       highlighter.parentElement.hidden = false;
 
-      let targetRect = aTarget.node.getBoundingClientRect();
+      let highlightAnchor;
+      // If the target is in the overflow panel, just highlight the overflow button.
+      if (aTarget.node.getAttribute("overflowedItem")) {
+        let doc = aTarget.node.ownerDocument;
+        let placement = CustomizableUI.getPlacementOfWidget(aTarget.widgetName || aTarget.node.id);
+        let areaNode = doc.getElementById(placement.area);
+        highlightAnchor = areaNode.overflowable._chevron;
+      } else {
+        highlightAnchor = aTarget.node;
+      }
+      let targetRect = highlightAnchor.getBoundingClientRect();
       let highlightHeight = targetRect.height;
       let highlightWidth = targetRect.width;
       let minDimension = Math.min(highlightHeight, highlightWidth);
@@ -874,7 +884,7 @@ this.UITour = {
       let offsetY = paddingLeftPx
                       - (Math.max(0, highlightHeightWithMin - targetRect.height) / 2);
       this._addAnnotationPanelMutationObserver(highlighter.parentElement);
-      highlighter.parentElement.openPopup(aTarget.node, "overlap", offsetX, offsetY);
+      highlighter.parentElement.openPopup(highlightAnchor, "overlap", offsetX, offsetY);
     }
 
     // Prevent showing a panel at an undefined position.
