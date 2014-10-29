@@ -2,9 +2,6 @@
 
 import tempfile, os, sys
 import random
-import pexpect
-import subprocess
-import shutil
 
 libpath = os.path.abspath('../psm_common_py')
 
@@ -39,34 +36,10 @@ anypolicy_policy = ("certificatePolicies = @v3_ca_ev_cp\n\n" +
 
 
 def import_untrusted_cert(certfile, nickname):
-    os.system("certutil -A -d . -n " + nickname + " -i " + certfile +
-              " -t ',,'")
-
-def import_cert_and_pkcs12(certfile, pkcs12file, nickname, trustflags):
-    os.system(" certutil -A -d . -n " + nickname + " -i " + certfile + " -t '" +
-              trustflags + "'")
-    child = pexpect.spawn("pk12util -i " + pkcs12file + "  -d .")
-    child.expect('Enter password for PKCS12 file:')
-    child.sendline('')
-    child.expect(pexpect.EOF)
-
-def init_nss_db():
-    nss_db_files = [ "cert8.db", "key3.db", "secmod.db" ]
-    for file in nss_db_files:
-        if os.path.isfile(file):
-            os.remove(file)
-    #now create DB
-    child = pexpect.spawn("certutil -N -d .")
-    child.expect("Enter new password:")
-    child.sendline('')
-    child.expect('Re-enter password:')
-    child.sendline('')
-    child.expect(pexpect.EOF)
-    import_cert_and_pkcs12("evroot.der", "evroot.p12", "evroot", "C,C,C")
-
+    os.system('certutil -A -d sql:%s -n %s -i %s -t ",,"' %
+              (srcdir, nickname, certfile))
 
 def generate_certs():
-    init_nss_db()
     ca_cert = 'evroot.der'
     ca_key = 'evroot.key'
     prefix = "ev-valid"
@@ -75,6 +48,11 @@ def generate_certs():
                    endentity_crl + mozilla_testing_ev_policy)
     int_ext_text = (CA_extensions + aia_prefix + "int-" + prefix + aia_suffix +
                     intermediate_crl + mozilla_testing_ev_policy)
+
+    CertUtils.init_nss_db(srcdir)
+    CertUtils.import_cert_and_pkcs12(srcdir, ca_cert, 'evroot.p12', 'evroot',
+                                     'C,C,C')
+
     [int_key, int_cert, ee_key, ee_cert] = CertUtils.generate_int_and_ee(db,
                                              srcdir,
                                              ca_key,
@@ -83,9 +61,10 @@ def generate_certs():
                                              int_ext_text,
                                              ee_ext_text,
                                              key_type)
-    pk12file = CertUtils.generate_pkcs12(db, srcdir, int_cert, int_key,
+    pk12file = CertUtils.generate_pkcs12(db, db, int_cert, int_key,
                                          "int-" + prefix)
-    import_cert_and_pkcs12(int_cert, pk12file, "int-" + prefix, ",,")
+    CertUtils.import_cert_and_pkcs12(srcdir, int_cert, pk12file,
+                                     'int-' + prefix, ',,')
     import_untrusted_cert(ee_cert, prefix)
 
     # now we generate an end entity cert with an AIA with no OCSP URL
@@ -116,9 +95,10 @@ def generate_certs():
                                              int_ext_text,
                                              ee_ext_text,
                                              key_type)
-    pk12file = CertUtils.generate_pkcs12(db, srcdir, int_cert, int_key,
+    pk12file = CertUtils.generate_pkcs12(db, db, int_cert, int_key,
                                          "int-" + prefix)
-    import_cert_and_pkcs12(int_cert, pk12file, "int-" + prefix, ",,")
+    CertUtils.import_cert_and_pkcs12(srcdir, int_cert, pk12file,
+                                     'int-' + prefix, ',,')
     import_untrusted_cert(ee_cert, prefix)
 
 
@@ -128,9 +108,10 @@ def generate_certs():
                                       'rsa',
                                       'non-evroot-ca',
                                       CA_extensions)
-    pk12file =  CertUtils.generate_pkcs12(db, srcdir, bad_ca_cert, bad_ca_key,
+    pk12file =  CertUtils.generate_pkcs12(db, db, bad_ca_cert, bad_ca_key,
                                           "non-evroot-ca")
-    import_cert_and_pkcs12(bad_ca_cert, pk12file, "non-evroot-ca", "C,C,C")
+    CertUtils.import_cert_and_pkcs12(srcdir, bad_ca_cert, pk12file,
+                                     'non-evroot-ca', 'C,C,C')
     prefix = "non-ev-root"
     ee_ext_text = (aia_prefix + prefix  + aia_suffix +
                    endentity_crl + mozilla_testing_ev_policy)
@@ -144,11 +125,10 @@ def generate_certs():
                                       int_ext_text,
                                       ee_ext_text,
                                       key_type)
-    pk12file =  CertUtils.generate_pkcs12(db, srcdir, int_cert, int_key,
+    pk12file =  CertUtils.generate_pkcs12(db, db, int_cert, int_key,
                                           "int-" + prefix)
-    import_cert_and_pkcs12(int_cert, pk12file, "int-" + prefix, ",,")
+    CertUtils.import_cert_and_pkcs12(srcdir, int_cert, pk12file,
+                                     'int-' + prefix, ',,')
     import_untrusted_cert(ee_cert, prefix)
-
-
 
 generate_certs()
