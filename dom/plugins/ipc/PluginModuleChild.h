@@ -157,17 +157,6 @@ public:
 
     static PluginModuleChild* current();
 
-    bool RegisterActorForNPObject(NPObject* aObject,
-                                  PluginScriptableObjectChild* aActor);
-
-    void UnregisterActorForNPObject(NPObject* aObject);
-
-    PluginScriptableObjectChild* GetActorForNPObject(NPObject* aObject);
-
-#ifdef DEBUG
-    bool NPObjectIsRegistered(NPObject* aObject);
-#endif
-
     /**
      * The child implementation of NPN_CreateObject.
      */
@@ -353,26 +342,6 @@ private:
     NestedLoopTimer *mNestedLoopTimerObject;
 #endif
 
-    struct NPObjectData : public nsPtrHashKey<NPObject>
-    {
-        explicit NPObjectData(const NPObject* key)
-            : nsPtrHashKey<NPObject>(key)
-            , instance(nullptr)
-            , actor(nullptr)
-        { }
-
-        // never nullptr
-        PluginInstanceChild* instance;
-
-        // sometimes nullptr (no actor associated with an NPObject)
-        PluginScriptableObjectChild* actor;
-    };
-    /**
-     * mObjectMap contains all the currently active NPObjects (from NPN_CreateObject until the
-     * final release/dealloc, whether or not an actor is currently associated with the object.
-     */
-    nsTHashtable<NPObjectData> mObjectMap;
-
 public: // called by PluginInstanceChild
     /**
      * Dealloc an NPObject after last-release or when the associated instance
@@ -384,15 +353,7 @@ public: // called by PluginInstanceChild
         return mFunctions.destroy(instance->GetNPP(), 0);
     }
 
-    /**
-     * Fill PluginInstanceChild.mDeletingHash with all the remaining NPObjects
-     * associated with that instance.
-     */
-    void FindNPObjectsForInstance(PluginInstanceChild* instance);
-
 private:
-    static PLDHashOperator CollectForInstance(NPObjectData* d, void* userArg);
-
 #if defined(OS_WIN)
     virtual void EnteredCall() MOZ_OVERRIDE;
     virtual void ExitedCall() MOZ_OVERRIDE;
