@@ -211,7 +211,6 @@
     _(PostWriteBarrierV)            \
     _(InitializedLength)            \
     _(SetInitializedLength)         \
-    _(NeuterCheck)                  \
     _(BoundsCheck)                  \
     _(BoundsCheckRange)             \
     _(BoundsCheckLower)             \
