@@ -33,6 +33,7 @@ namespace jit {
     _(TableSwitch)                                                          \
     _(Goto)                                                                 \
     _(Test)                                                                 \
+    _(GotoWithFake)                                                         \
     _(TypeObjectDispatch)                                                   \
     _(FunctionDispatch)                                                     \
     _(Compare)                                                              \
