@@ -2591,16 +2591,6 @@ LIRGenerator::visitNot(MNot *ins)
 }
 
 bool
-LIRGenerator::visitNeuterCheck(MNeuterCheck *ins)
-{
-    LNeuterCheck *chk = new(alloc()) LNeuterCheck(useRegister(ins->object()),
-                                                  temp());
-    if (!assignSnapshot(chk, Bailout_Neutered))
-        return false;
-    return redefine(ins, ins->input()) && add(chk, ins);
-}
-
-bool
 LIRGenerator::visitBoundsCheck(MBoundsCheck *ins)
 {
     LInstruction *check;

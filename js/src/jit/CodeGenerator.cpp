@@ -5008,28 +5008,6 @@ CodeGenerator::visitTypedArrayElements(LTypedArrayElements *lir)
 }
 
 bool
-CodeGenerator::visitNeuterCheck(LNeuterCheck *lir)
-{
-    Register obj = ToRegister(lir->object());
-    Register temp = ToRegister(lir->temp());
-
-    Label inlineObject;
-    masm.loadObjClass(obj, temp);
-    masm.branchPtr(Assembler::Equal, temp, ImmPtr(&InlineOpaqueTypedObject::class_), &inlineObject);
-
-    masm.loadPtr(Address(obj, OutlineTypedObject::offsetOfOwner()), temp);
-    masm.unboxInt32(Address(temp, ArrayBufferObject::offsetOfFlagsSlot()), temp);
-
-    Imm32 flag(ArrayBufferObject::neuteredFlag());
-    if (!bailoutTest32(Assembler::NonZero, temp, flag, lir->snapshot()))
-        return false;
-
-    masm.bind(&inlineObject);
-
-    return true;
-}
-
-bool
 CodeGenerator::visitTypedObjectProto(LTypedObjectProto *lir)
 {
     Register obj = ToRegister(lir->object());
@@ -5065,12 +5043,13 @@ CodeGenerator::visitTypedObjectElements(LTypedObjectElements *lir)
     Label inlineObject, done;
     masm.loadObjClass(obj, out);
     masm.branchPtr(Assembler::Equal, out, ImmPtr(&InlineOpaqueTypedObject::class_), &inlineObject);
+    masm.branchPtr(Assembler::Equal, out, ImmPtr(&InlineTransparentTypedObject::class_), &inlineObject);
 
     masm.loadPtr(Address(obj, OutlineTypedObject::offsetOfData()), out);
     masm.jump(&done);
 
     masm.bind(&inlineObject);
-    masm.computeEffectiveAddress(Address(obj, InlineOpaqueTypedObject::offsetOfDataStart()), out);
+    masm.computeEffectiveAddress(Address(obj, InlineTypedObject::offsetOfDataStart()), out);
     masm.bind(&done);
 
     return true;
@@ -5090,12 +5069,13 @@ CodeGenerator::visitSetTypedObjectOffset(LSetTypedObjectOffset *lir)
     Label inlineObject, done;
     masm.loadObjClass(temp0, temp1);
     masm.branchPtr(Assembler::Equal, temp1, ImmPtr(&InlineOpaqueTypedObject::class_), &inlineObject);
+    masm.branchPtr(Assembler::Equal, temp1, ImmPtr(&InlineTransparentTypedObject::class_), &inlineObject);
 
     masm.loadPrivate(Address(temp0, ArrayBufferObject::offsetOfDataSlot()), temp0);
     masm.jump(&done);
 
     masm.bind(&inlineObject);
-    masm.addPtr(ImmWord(InlineOpaqueTypedObject::offsetOfDataStart()), temp0);
+    masm.addPtr(ImmWord(InlineTypedObject::offsetOfDataStart()), temp0);
 
     masm.bind(&done);
 

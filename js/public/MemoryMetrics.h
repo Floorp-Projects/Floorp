@@ -539,6 +539,7 @@ struct CompartmentStats
     macro(Other,   NotLiveGCThing, compartmentObject) \
     macro(Other,   NotLiveGCThing, compartmentTables) \
     macro(Other,   NotLiveGCThing, innerViewsTable) \
+    macro(Other,   NotLiveGCThing, lazyArrayBuffersTable) \
     macro(Other,   NotLiveGCThing, crossCompartmentWrappersTable) \
     macro(Other,   NotLiveGCThing, regexpCompartment) \
     macro(Other,   NotLiveGCThing, savedStacksSet)
