@@ -288,8 +288,9 @@ DefineHelpProperty(JSContext *cx, HandleObject obj, const char *prop, const char
     RootedAtom atom(cx, Atomize(cx, value, strlen(value)));
     if (!atom)
         return false;
-    return JS_DefineProperty(cx, obj, prop, atom, JSPROP_READONLY | JSPROP_PERMANENT,
-                             JS_PropertyStub, JS_StrictPropertyStub);
+    return JS_DefineProperty(cx, obj, prop, atom,
+                             JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_PROPOP_ACCESSORS,
+                             JS_STUBGETTER, JS_STUBSETTER);
 }
 
 JS_FRIEND_API(bool)

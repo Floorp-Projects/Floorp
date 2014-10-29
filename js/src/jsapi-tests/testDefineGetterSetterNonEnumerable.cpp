@@ -36,14 +36,14 @@ BEGIN_TEST(testDefineGetterSetterNonEnumerable)
     CHECK(JS_DefineProperty(cx, vObject, PROPERTY_NAME,
                             JS::UndefinedHandleValue,
                             JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED | JSPROP_ENUMERATE,
-                            JS_DATA_TO_FUNC_PTR(JSPropertyOp, (JSObject*) funGetObj),
-                            JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, (JSObject*) funSetObj)));
+                            JS_DATA_TO_FUNC_PTR(JSNative, (JSObject*) funGetObj),
+                            JS_DATA_TO_FUNC_PTR(JSNative, (JSObject*) funSetObj)));
 
     CHECK(JS_DefineProperty(cx, vObject, PROPERTY_NAME,
                             JS::UndefinedHandleValue,
                             JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED | JSPROP_PERMANENT,
-                            JS_DATA_TO_FUNC_PTR(JSPropertyOp, (JSObject*) funGetObj),
-                            JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, (JSObject*) funSetObj)));
+                            JS_DATA_TO_FUNC_PTR(JSNative, (JSObject*) funGetObj),
+                            JS_DATA_TO_FUNC_PTR(JSNative, (JSObject*) funSetObj)));
 
     JS::Rooted<JSPropertyDescriptor> desc(cx);
     CHECK(JS_GetOwnPropertyDescriptor(cx, vObject, PROPERTY_NAME, &desc));

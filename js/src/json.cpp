@@ -913,8 +913,9 @@ js_InitJSONClass(JSContext *cx, HandleObject obj)
     if (!JSON)
         return nullptr;
 
-    if (!JS_DefineProperty(cx, global, js_JSON_str, JSON, 0,
-                           JS_PropertyStub, JS_StrictPropertyStub))
+    if (!JS_DefineProperty(cx, global, js_JSON_str, JSON,
+                           JSPROP_PROPOP_ACCESSORS,
+                           JS_STUBGETTER, JS_STUBSETTER))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, JSON, json_static_methods))

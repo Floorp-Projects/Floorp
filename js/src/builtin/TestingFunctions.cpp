@@ -1184,14 +1184,15 @@ ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
     static int createdIndex = 0;
     createdIndex++;
 
-    if (!JS_DefineProperty(cx, obj, "index", createdIndex, 0,
-                           JS_PropertyStub, JS_StrictPropertyStub))
+    if (!JS_DefineProperty(cx, obj, "index", createdIndex,
+                           JSPROP_PROPOP_ACCESSORS,
+                           JS_STUBGETTER, JS_STUBSETTER))
     {
         return false;
     }
 
-    if (!JS_DefineProperty(cx, obj, "stack", stack, 0,
-                           JS_PropertyStub, JS_StrictPropertyStub))
+    if (!JS_DefineProperty(cx, obj, "stack", stack, JSPROP_PROPOP_ACCESSORS,
+                           JS_STUBGETTER, JS_STUBSETTER))
     {
         return false;
     }
@@ -1203,8 +1204,9 @@ ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
         if (iter.isFunctionFrame() && iter.compartment() == cx->compartment()) {
             id = INT_TO_JSID(stackIndex);
             RootedObject callee(cx, iter.callee());
-            if (!JS_DefinePropertyById(cx, stack, id, callee, 0,
-                                       JS_PropertyStub, JS_StrictPropertyStub))
+            if (!JS_DefinePropertyById(cx, stack, id, callee,
+                                       JSPROP_PROPOP_ACCESSORS,
+                                       JS_STUBGETTER, JS_STUBSETTER))
             {
                 return false;
             }

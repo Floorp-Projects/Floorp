@@ -118,8 +118,8 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
     // Define it as a property on the scopeObject, using the same name used on
     // the content side.
     bool ok = JS_DefineProperty(cx, scopeObject, className, propertyHolder,
-                                JSPROP_PERMANENT | JSPROP_READONLY,
-                                JS_PropertyStub, JS_StrictPropertyStub);
+                                JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_PROPOP_ACCESSORS,
+                                JS_STUBGETTER, JS_STUBSETTER);
     NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
   } else {
     propertyHolder = targetClassObject;
