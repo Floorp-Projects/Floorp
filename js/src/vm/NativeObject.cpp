@@ -2071,76 +2071,6 @@ SetNonexistentProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
     return SetPropertyByDefining<mode>(cxArg, receiver, id, v, strict);
 }
 
-template <ExecutionMode mode>
-static bool
-SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
-                    HandleNativeObject obj, HandleObject receiver, HandleId id,
-                    HandleObject pobj, HandleShape foundShape, MutableHandleValue vp, bool strict);
-
-template <ExecutionMode mode>
-bool
-baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg,
-                           HandleNativeObject obj, HandleObject receiver, HandleId id,
-                           QualifiedBool qualified, MutableHandleValue vp, bool strict)
-{
-    MOZ_ASSERT(cxArg->isThreadLocal(obj));
-
-    if (MOZ_UNLIKELY(obj->watched())) {
-        if (mode == ParallelExecution)
-            return false;
-
-        /* Fire watchpoints, if any. */
-        JSContext *cx = cxArg->asJSContext();
-        WatchpointMap *wpmap = cx->compartment()->watchpointMap;
-        if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, vp))
-            return false;
-    }
-
-    RootedObject pobj(cxArg);
-    RootedShape shape(cxArg);
-    if (mode == ParallelExecution) {
-        NativeObject *npobj;
-        if (!LookupPropertyPure(cxArg, obj, id, &npobj, shape.address()))
-            return false;
-        pobj = npobj;
-    } else {
-        JSContext *cx = cxArg->asJSContext();
-        if (!LookupNativeProperty(cx, obj, id, &pobj, &shape))
-            return false;
-    }
-
-    if (!shape)
-        return SetNonexistentProperty<mode>(cxArg, receiver, id, qualified, vp, strict);
-
-    if (pobj->isNative())
-        return SetExistingProperty<mode>(cxArg, obj, receiver, id, pobj, shape, vp, strict);
-
-    if (pobj->is<ProxyObject>()) {
-        if (mode == ParallelExecution)
-            return false;
-
-        JSContext *cx = cxArg->asJSContext();
-        Rooted<PropertyDescriptor> pd(cx);
-        if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd))
-            return false;
-
-        if ((pd.attributes() & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
-            return !pd.setter() ||
-                   CallSetter(cx, receiver, id, pd.setter(), pd.attributes(), strict, vp);
-        }
-
-        if (pd.isReadonly()) {
-            if (strict)
-                return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
-            if (cx->compartment()->options().extraWarnings(cx))
-                return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
-            return true;
-        }
-    }
-
-    return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
-}
-
 /*
  * Implement "the rest of" assignment to receiver[id] when an existing property
  * (foundShape) has been found on a native object (pobj).
@@ -2271,6 +2201,70 @@ SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
         return NativeSet<mode>(cxArg, obj, receiver, shape, strict, vp);
 
     MOZ_ASSERT(attrs == JSPROP_ENUMERATE);
+    return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
+}
+
+template <ExecutionMode mode>
+bool
+baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg,
+                           HandleNativeObject obj, HandleObject receiver, HandleId id,
+                           QualifiedBool qualified, MutableHandleValue vp, bool strict)
+{
+    MOZ_ASSERT(cxArg->isThreadLocal(obj));
+
+    if (MOZ_UNLIKELY(obj->watched())) {
+        if (mode == ParallelExecution)
+            return false;
+
+        /* Fire watchpoints, if any. */
+        JSContext *cx = cxArg->asJSContext();
+        WatchpointMap *wpmap = cx->compartment()->watchpointMap;
+        if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, vp))
+            return false;
+    }
+
+    RootedObject pobj(cxArg);
+    RootedShape shape(cxArg);
+    if (mode == ParallelExecution) {
+        NativeObject *npobj;
+        if (!LookupPropertyPure(cxArg, obj, id, &npobj, shape.address()))
+            return false;
+        pobj = npobj;
+    } else {
+        JSContext *cx = cxArg->asJSContext();
+        if (!LookupNativeProperty(cx, obj, id, &pobj, &shape))
+            return false;
+    }
+
+    if (!shape)
+        return SetNonexistentProperty<mode>(cxArg, receiver, id, qualified, vp, strict);
+
+    if (pobj->isNative())
+        return SetExistingProperty<mode>(cxArg, obj, receiver, id, pobj, shape, vp, strict);
+
+    if (pobj->is<ProxyObject>()) {
+        if (mode == ParallelExecution)
+            return false;
+
+        JSContext *cx = cxArg->asJSContext();
+        Rooted<PropertyDescriptor> pd(cx);
+        if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd))
+            return false;
+
+        if ((pd.attributes() & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
+            return !pd.setter() ||
+                   CallSetter(cx, receiver, id, pd.setter(), pd.attributes(), strict, vp);
+        }
+
+        if (pd.isReadonly()) {
+            if (strict)
+                return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
+            if (cx->compartment()->options().extraWarnings(cx))
+                return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+            return true;
+        }
+    }
+
     return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
 }
 
