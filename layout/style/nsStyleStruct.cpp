@@ -2677,19 +2677,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       || (mFloats == NS_STYLE_FLOAT_NONE) != (aOther.mFloats == NS_STYLE_FLOAT_NONE)
       || mOverflowX != aOther.mOverflowX
       || mOverflowY != aOther.mOverflowY
-      || mScrollBehavior != aOther.mScrollBehavior
       || mResize != aOther.mResize)
     NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
-
-  /* Note: When mScrollBehavior is changed, the nsChangeHint_NeutralChange is
-   * not sufficient to enter nsCSSFrameConstructor::PropagateScrollToViewport.
-   * By using the same hint as used when the overflow css property changes,
-   * nsChangeHint_ReconstructFrame, PropagateScrollToViewport will be called.
-   *
-   * The scroll-behavior css property is not expected to change often (the
-   * CSSOM-View DOM methods are likely to be used in those cases); however,
-   * if this does become common perhaps a faster-path might be worth while.
-   */
 
   if ((mAppearance == NS_THEME_TEXTFIELD &&
        aOther.mAppearance != NS_THEME_TEXTFIELD) ||
@@ -2860,7 +2849,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
        mAnimationDirectionCount != aOther.mAnimationDirectionCount ||
        mAnimationFillModeCount != aOther.mAnimationFillModeCount ||
        mAnimationPlayStateCount != aOther.mAnimationPlayStateCount ||
-       mAnimationIterationCountCount != aOther.mAnimationIterationCountCount)) {
+       mAnimationIterationCountCount != aOther.mAnimationIterationCountCount ||
+       mScrollBehavior != aOther.mScrollBehavior)) {
     NS_UpdateHint(hint, nsChangeHint_NeutralChange);
   }
 
