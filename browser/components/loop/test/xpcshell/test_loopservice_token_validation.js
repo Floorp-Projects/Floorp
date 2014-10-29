@@ -16,7 +16,7 @@ add_test(function test_registration_handles_bogus_hawk_token() {
     response.finish();
   });
 
-  MozLoopService.register().then(() => {
+  MozLoopService.promiseRegisteredWithServers().then(() => {
     do_throw("should not succeed with a bogus token");
   }, err => {
 
