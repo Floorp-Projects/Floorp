@@ -196,34 +196,34 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
-     * Returns the callData for a specific callDataId
+     * Returns the callData for a specific conversation window id.
      *
      * The data was retrieved from the LoopServer via a GET/calls/<version> request
      * triggered by an incoming message from the LoopPushServer.
      *
-     * @param {int} loopCallId
+     * @param {Number} conversationWindowId
      * @returns {callData} The callData or undefined if error.
      */
     getCallData: {
       enumerable: true,
       writable: true,
-      value: function(loopCallId) {
-        return Cu.cloneInto(LoopCalls.getCallData(loopCallId), targetWindow);
+      value: function(conversationWindowId) {
+        return Cu.cloneInto(LoopCalls.getCallData(conversationWindowId), targetWindow);
       }
     },
 
     /**
-     * Releases the callData for a specific loopCallId
+     * Releases the callData for a specific conversation window id.
      *
      * The result of this call will be a free call session slot.
      *
-     * @param {int} loopCallId
+     * @param {Number} conversationWindowId
      */
     releaseCallData: {
       enumerable: true,
       writable: true,
-      value: function(loopCallId) {
-        LoopCalls.releaseCallData(loopCallId);
+      value: function(conversationWindowId) {
+        LoopCalls.releaseCallData(conversationWindowId);
       }
     },
 
