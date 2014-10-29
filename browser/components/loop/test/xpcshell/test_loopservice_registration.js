@@ -17,7 +17,7 @@ Cu.import("resource://services-common/utils.js");
 add_test(function test_register_websocket_success_loop_server_fail() {
   mockPushHandler.registrationResult = "404";
 
-  MozLoopService.register().then(() => {
+  MozLoopService.promiseRegisteredWithServers().then(() => {
     do_throw("should not succeed when loop server registration fails");
   }, (err) => {
     // 404 is an expected failure indicated by the lack of route being set
@@ -49,7 +49,7 @@ add_test(function test_register_success() {
     response.processAsync();
     response.finish();
   });
-  MozLoopService.register().then(() => {
+  MozLoopService.promiseRegisteredWithServers().then(() => {
     run_next_test();
   }, err => {
     do_throw("shouldn't error on a successful request");
