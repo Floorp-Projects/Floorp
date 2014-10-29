@@ -10918,7 +10918,7 @@ IonBuilder::typedObjectPrediction(types::TemporaryTypeSet *types)
         MOZ_ASSERT(proto.isObject() && proto.toObject()->is<TypedProto>());
 
         TypedProto &typedProto = proto.toObject()->as<TypedProto>();
-        out.addProto(typedProto);
+        out.addDescr(typedProto.typeDescr());
     }
 
     return out;
