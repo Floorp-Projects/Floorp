@@ -325,11 +325,19 @@ WebSocketImpl::PrintErrorOnConsole(const char *aBundleURI,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = errorObject->InitWithWindowID(message,
-                                     NS_ConvertUTF8toUTF16(mScriptFile),
-                                     EmptyString(), mScriptLine, 0,
-                                     nsIScriptError::errorFlag, "Web Socket",
-                                     mInnerWindowID);
+  if (mInnerWindowID) {
+    rv = errorObject->InitWithWindowID(message,
+                                       NS_ConvertUTF8toUTF16(mScriptFile),
+                                       EmptyString(), mScriptLine, 0,
+                                       nsIScriptError::errorFlag, "Web Socket",
+                                       mInnerWindowID);
+  } else {
+    rv = errorObject->Init(message,
+                           NS_ConvertUTF8toUTF16(mScriptFile),
+                           EmptyString(), mScriptLine, 0,
+                           nsIScriptError::errorFlag, "Web Socket");
+  }
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   // print the error message directly to the JS console
@@ -866,20 +874,25 @@ public:
     }
 
     nsPIDOMWindow* window = wp->GetWindow();
-    if (!window) {
-      mRv.Throw(NS_ERROR_FAILURE);
-      return true;
+    if (window) {
+      return InitWithWindow(window);
     }
 
+    return InitWindowless();
+  }
+
+private:
+  bool InitWithWindow(nsPIDOMWindow* aWindow)
+  {
     AutoJSAPI jsapi;
-    if (NS_WARN_IF(!jsapi.Init(window))) {
+    if (NS_WARN_IF(!jsapi.Init(aWindow))) {
       mRv.Throw(NS_ERROR_FAILURE);
       return true;
     }
 
     ClearException ce(jsapi.cx());
 
-    nsIDocument* doc = window->GetExtantDoc();
+    nsIDocument* doc = aWindow->GetExtantDoc();
     if (!doc) {
       mRv.Throw(NS_ERROR_FAILURE);
       return true;
@@ -896,7 +909,22 @@ public:
     return true;
   }
 
-private:
+  bool InitWindowless()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    WorkerPrivate* wp = mWorkerPrivate;
+    while (wp->GetParent()) {
+      wp = wp->GetParent();
+    }
+
+    MOZ_ASSERT(!wp->GetWindow());
+
+    mImpl->Init(nullptr, wp->GetPrincipal(), mURL, mProtocolArray, mScriptFile,
+                mScriptLine, mRv, mConnectionFailed);
+    return true;
+  }
+
   // Raw pointer. This worker runs synchronously.
   WebSocketImpl* mImpl;
 
@@ -1202,6 +1230,8 @@ WebSocketImpl::Init(JSContext* aCx,
     mScriptFile = aScriptFile;
     mScriptLine = aScriptLine;
   } else {
+    MOZ_ASSERT(aCx);
+
     unsigned lineno;
     JS::AutoFilename file;
     if (JS::DescribeScriptedCaller(aCx, &file, &lineno)) {
@@ -1210,8 +1240,12 @@ WebSocketImpl::Init(JSContext* aCx,
     }
   }
 
-  // Get WindowID
-  mInnerWindowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(aCx);
+  // If we don't have aCx, we are window-less, so we don't have a
+  // inner-windowID. This can happen in sharedWorkers and ServiceWorkers or in
+  // DedicateWorkers created by JSM.
+  if (aCx) {
+    mInnerWindowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(aCx);
+  }
 
   // parses the url
   aRv = ParseURL(PromiseFlatString(aURL));
