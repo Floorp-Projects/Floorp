@@ -1349,10 +1349,10 @@ class DebugScopeProxy : public BaseProxyHandler
                 return true;
 
             if (bi->kind() == Binding::VARIABLE || bi->kind() == Binding::CONSTANT) {
-                uint32_t i = bi.frameIndex();
-                if (script->bodyLevelLocalIsAliased(i))
+                if (script->bodyLevelLocalIsAliased(bi.localIndex()))
                     return true;
 
+                uint32_t i = bi.frameIndex();
                 if (maybeLiveScope) {
                     AbstractFramePtr frame = maybeLiveScope->frame();
                     if (action == GET)
@@ -1373,7 +1373,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 }
             } else {
                 MOZ_ASSERT(bi->kind() == Binding::ARGUMENT);
-                unsigned i = bi.frameIndex();
+                unsigned i = bi.argIndex();
                 if (script->formalIsAliased(i))
                     return true;
 
