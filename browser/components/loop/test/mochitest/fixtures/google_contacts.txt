@@ -34,6 +34,7 @@
     </gd:name>
     <gd:email address="john.smith@example.com" primary="true" rel="http://schemas.google.com/g/2005#other"/>
     <gContact:website href="http://www.google.com/profiles/109576547678240773721" rel="profile"/>
+    <gContact:groupMembershipInfo deleted="false" href="http://www.google.com/m8/feeds/groups/tester%40mochi.com/base/6"/>
   </entry>
   <entry gd:etag="&quot;R3YyejRVLit7I2A9WhJWEkkNQwc.&quot;">
     <id>http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/1</id>
@@ -51,6 +52,7 @@
     </gd:name>
     <gd:email address="jane.smith@example.com" primary="true" rel="http://schemas.google.com/g/2005#other"/>
     <gContact:website href="http://www.google.com/profiles/112886528199784431028" rel="profile"/>
+    <gContact:groupMembershipInfo deleted="false" href="http://www.google.com/m8/feeds/groups/tester%40mochi.com/base/6"/>
   </entry>
   <entry gd:etag="&quot;R3YyejRVLit7I2A9WhJWEkkNQwc.&quot;">
     <id>http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/2</id>
@@ -68,6 +70,7 @@
     </gd:name>
     <gd:email address="davy.jones@example.com" primary="true" rel="http://schemas.google.com/g/2005#other"/>
     <gContact:website href="http://www.google.com/profiles/109710625881478599011" rel="profile"/>
+    <gContact:groupMembershipInfo deleted="false" href="http://www.google.com/m8/feeds/groups/tester%40mochi.com/base/6"/>
   </entry>
   <entry gd:etag="&quot;Q3w7ezVSLit7I2A9WB5WGUkNRgE.&quot;">
     <id>http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/3</id>
@@ -79,6 +82,7 @@
     <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/3" rel="self" type="application/atom+xml"/>
     <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/3" rel="edit" type="application/atom+xml"/>
     <gd:email address="noname@example.com" primary="true" rel="http://schemas.google.com/g/2005#other"/>
+    <gContact:groupMembershipInfo deleted="false" href="http://www.google.com/m8/feeds/groups/tester%40mochi.com/base/6"/>
   </entry>
   <entry gd:etag="&quot;Q3w7ezVSLit7I2A9WB5WGUkNRgE.&quot;">
     <id>http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/7</id>
@@ -90,6 +94,7 @@
     <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/7" rel="self" type="application/atom+xml"/>
     <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/7" rel="edit" type="application/atom+xml"/>
     <gd:email address="lycnix" primary="true" rel="http://schemas.google.com/g/2005#other"/>
+    <gContact:groupMembershipInfo deleted="false" href="http://www.google.com/m8/feeds/groups/tester%40mochi.com/base/6"/>
   </entry>
   <entry gd:etag="&quot;RXkzfjVSLit7I2A9XRdRGUgITgA.&quot;">
     <id>http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/8</id>
@@ -101,6 +106,7 @@
     <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/8" rel="self" type="application/atom+xml"/>
     <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/8" rel="edit" type="application/atom+xml"/>
     <gd:phoneNumber rel="http://schemas.google.com/g/2005#mobile" uri="tel:+31-6-12345678">0612345678</gd:phoneNumber>
+    <gContact:groupMembershipInfo deleted="false" href="http://www.google.com/m8/feeds/groups/tester%40mochi.com/base/6"/>
   </entry>
   <entry gd:etag="&quot;SX8-ejVSLit7I2A9XRdQFUkDRgY.&quot;">
     <id>http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/6</id>
@@ -113,5 +119,22 @@
     <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/6" rel="edit" type="application/atom+xml"/>
     <gd:phoneNumber rel="http://schemas.google.com/g/2005#mobile">215234523452345</gd:phoneNumber>
     <gContact:groupMembershipInfo deleted="false" href="http://www.google.com/m8/feeds/groups/tester%40mochi.com/base/6"/>
+  </entry>
+  <entry gd:etag="&quot;Rn8zejVSLit7I2A9WhVRFUQOQQc.&quot;">
+    <id>http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/9</id>
+    <updated>2012-03-24T13:10:37.182Z</updated>
+    <app:edited xmlns:app="http://www.w3.org/2007/app">2012-03-24T13:10:37.182Z</app:edited>
+    <category scheme="http://schemas.google.com/g/2005#kind" term="http://schemas.google.com/contact/2008#contact"/>
+    <title>Little Smith</title>
+    <link href="https://www.google.com/m8/feeds/photos/media/tester%40mochi.com/9" rel="http://schemas.google.com/contacts/2008/rel#photo" type="image/*"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/9" rel="self" type="application/atom+xml"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/9" rel="edit" type="application/atom+xml"/>
+    <gd:name>
+      <gd:fullName>Little Smith</gd:fullName>
+      <gd:givenName>Little</gd:givenName>
+      <gd:familyName>Smith</gd:familyName>
+    </gd:name>
+    <gd:email address="littlebabysmith@example.com" primary="true" rel="http://schemas.google.com/g/2005#other"/>
+    <gContact:website href="http://www.google.com/profiles/111456826635924971693" rel="profile"/>
   </entry>
 </feed>
