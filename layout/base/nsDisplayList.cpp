@@ -2900,7 +2900,7 @@ nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
                       nsRenderingContext* aCtx) {
   // Note: Because we exist, we know that the caret is visible, so we don't
   // need to check for the caret's visibility.
-  mCaret->PaintCaret(aBuilder, aCtx, mFrame, ToReferenceFrame());
+  mCaret->PaintCaret(aBuilder, *aCtx->GetDrawTarget(), mFrame, ToReferenceFrame());
 }
 
 bool
