@@ -610,6 +610,13 @@ public:
    */
   bool mPostedRunInStableStateEvent;
 
+  /**
+   * Used to flush any accumulated data when the output streams
+   * may have stalled (on Mac after an output device change)
+   */
+  bool mFlushSourcesNow;
+  bool mFlushSourcesOnNextIteration;
+
   // Main thread only
 
   /**
