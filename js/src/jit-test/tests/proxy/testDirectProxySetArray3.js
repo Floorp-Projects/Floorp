@@ -1,8 +1,8 @@
-// Assigning to a proxy with no set handler calls the defineProperty handler
-// when an existing own data property already exists on the target.
+// Assigning to the length property of a proxy to an array
+// calls the proxy's defineProperty handler.
 
-var t = {x: 1};
-var p = new Proxy(t, {
+var a = [0, 1, 2, 3];
+var p = new Proxy(a, {
     defineProperty(t, id, desc) {
         hits++;
 
@@ -10,10 +10,11 @@ var p = new Proxy(t, {
         // Since the property already exists, the system only changes
         // the value. desc is otherwise empty.
         assertEq(Object.getOwnPropertyNames(desc).join(","), "value");
-        assertEq(desc.value, 42);
+        assertEq(desc.value, 2);
     }
 });
 var hits = 0;
-p.x = 42;
+p.length = 2;
 assertEq(hits, 1);
-assertEq(t.x, 1);
+assertEq(a.length, 4);
+assertEq(a[2], 2);
