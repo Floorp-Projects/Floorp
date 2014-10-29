@@ -1663,7 +1663,8 @@ function HandleAppCommandEvent(evt) {
     BrowserOpenFileWindow();
     break;
   case "Print":
-    PrintUtils.print();
+    PrintUtils.print(gBrowser.selectedBrowser.contentWindowAsCPOW,
+                     gBrowser.selectedBrowser);
     break;
   case "Save":
     saveDocument(window.content.document);

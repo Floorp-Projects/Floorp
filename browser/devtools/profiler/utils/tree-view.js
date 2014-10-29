@@ -174,8 +174,8 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
       }));
     }
 
-    // Sort the "callees" asc. by duration, before inserting them in the tree.
-    children.sort((a, b) => a.frame.duration < b.frame.duration ? 1 : -1);
+    // Sort the "callees" asc. by samples, before inserting them in the tree.
+    children.sort((a, b) => a.frame.samples < b.frame.samples ? 1 : -1);
   },
 
   /**

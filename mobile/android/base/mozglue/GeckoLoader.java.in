@@ -22,6 +22,8 @@ import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
+import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
+
 public final class GeckoLoader {
     private static final String LOGTAG = "GeckoLoader";
 
@@ -29,7 +31,7 @@ public final class GeckoLoader {
     private static final String ANDROID_PACKAGE_NAME = "@ANDROID_PACKAGE_NAME@";
     private static final String MOZ_APP_ABI = "@MOZ_APP_ABI@";
 
-    private static volatile Intent sIntent;
+    private static volatile SafeIntent sIntent;
     private static File sCacheFile;
     private static File sGREDir;
 
@@ -123,14 +125,14 @@ public final class GeckoLoader {
         return tmpDir;
     }
 
-    public static void setLastIntent(Intent intent) {
+    public static void setLastIntent(SafeIntent intent) {
         sIntent = intent;
     }
 
     public static void setupGeckoEnvironment(Context context, String[] pluginDirs, String profilePath) {
         // if we have an intent (we're being launched by an activity)
         // read in any environmental variables from it here
-        final Intent intent = sIntent;
+        final SafeIntent intent = sIntent;
         if (intent != null) {
             String env = intent.getStringExtra("env0");
             Log.d(LOGTAG, "Gecko environment env0: " + env);
