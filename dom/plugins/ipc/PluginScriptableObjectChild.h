@@ -217,6 +217,22 @@ public:
 
   static void ClearIdentifiers();
 
+  bool RegisterActor(NPObject* aObject);
+  void UnregisterActor(NPObject* aObject);
+
+  static PluginScriptableObjectChild* GetActorForNPObject(NPObject* aObject);
+
+  static void RegisterObject(NPObject* aObject, PluginInstanceChild* aInstance);
+  static void UnregisterObject(NPObject* aObject);
+
+  static PluginInstanceChild* GetInstanceForNPObject(NPObject* aObject);
+
+  /**
+   * Fill PluginInstanceChild.mDeletingHash with all the remaining NPObjects
+   * associated with that instance.
+   */
+  static void NotifyOfInstanceShutdown(PluginInstanceChild* aInstance);
+
 private:
   static NPObject*
   ScriptableAllocate(NPP aInstance,
@@ -297,6 +313,29 @@ private:
 
   typedef nsDataHashtable<nsCStringHashKey, nsRefPtr<StoredIdentifier>> IdentifierTable;
   static IdentifierTable sIdentifiers;
+
+  struct NPObjectData : public nsPtrHashKey<NPObject>
+  {
+    explicit NPObjectData(const NPObject* key)
+    : nsPtrHashKey<NPObject>(key),
+      instance(nullptr),
+      actor(nullptr)
+    { }
+
+    // never nullptr
+    PluginInstanceChild* instance;
+
+    // sometimes nullptr (no actor associated with an NPObject)
+    PluginScriptableObjectChild* actor;
+  };
+
+  static PLDHashOperator CollectForInstance(NPObjectData* d, void* userArg);
+
+  /**
+   * mObjectMap contains all the currently active NPObjects (from NPN_CreateObject until the
+   * final release/dealloc, whether or not an actor is currently associated with the object.
+   */
+  static nsTHashtable<NPObjectData>* sObjectMap;
 };
 
 } /* namespace plugins */

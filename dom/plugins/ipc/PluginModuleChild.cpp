@@ -732,59 +732,6 @@ PluginModuleChild::GetUserAgent()
     return NullableStringGet(mUserAgent);
 }
 
-bool
-PluginModuleChild::RegisterActorForNPObject(NPObject* aObject,
-                                            PluginScriptableObjectChild* aActor)
-{
-    AssertPluginThread();
-    NS_ASSERTION(aObject && aActor, "Null pointer!");
-
-    NPObjectData* d = mObjectMap.GetEntry(aObject);
-    if (!d) {
-        NS_ERROR("NPObject not in object table");
-        return false;
-    }
-
-    d->actor = aActor;
-    return true;
-}
-
-void
-PluginModuleChild::UnregisterActorForNPObject(NPObject* aObject)
-{
-    AssertPluginThread();
-    NS_ASSERTION(aObject, "Null pointer!");
-
-    NPObjectData* d = mObjectMap.GetEntry(aObject);
-    NS_ASSERTION(d, "NPObject not in object table");
-    if (d) {
-        d->actor = nullptr;
-    }
-}
-
-PluginScriptableObjectChild*
-PluginModuleChild::GetActorForNPObject(NPObject* aObject)
-{
-    AssertPluginThread();
-    NS_ASSERTION(aObject, "Null pointer!");
-
-    NPObjectData* d = mObjectMap.GetEntry(aObject);
-    if (!d) {
-        NS_ERROR("Plugin using object not created with NPN_CreateObject?");
-        return nullptr;
-    }
-
-    return d->actor;
-}
-
-#ifdef DEBUG
-bool
-PluginModuleChild::NPObjectIsRegistered(NPObject* aObject)
-{
-    return !!mObjectMap.GetEntry(aObject);
-}
-#endif
-
 //-----------------------------------------------------------------------------
 // FIXME/cjones: just getting this out of the way for the moment ...
 
@@ -1549,7 +1496,7 @@ _setexception(NPObject* aNPObj,
     PluginModuleChild* self = PluginModuleChild::current();
     PluginScriptableObjectChild* actor = nullptr;
     if (aNPObj) {
-        actor = self->GetActorForNPObject(aNPObj);
+        actor = PluginScriptableObjectChild::GetActorForNPObject(aNPObj);
         if (!actor) {
             NS_ERROR("Failed to get actor!");
             return;
@@ -2050,10 +1997,7 @@ PluginModuleChild::NPN_CreateObject(NPP aNPP, NPClass* aClass)
         NS_LOG_ADDREF(newObject, 1, "NPObject", sizeof(NPObject));
     }
 
-    NPObjectData* d = static_cast<PluginModuleChild*>(i->Manager())
-        ->mObjectMap.PutEntry(newObject);
-    NS_ASSERTION(!d->instance, "New NPObject already mapped?");
-    d->instance = i;
+    PluginScriptableObjectChild::RegisterObject(newObject, i);
 
     return newObject;
 }
@@ -2077,15 +2021,15 @@ PluginModuleChild::NPN_ReleaseObject(NPObject* aNPObj)
 {
     AssertPluginThread();
 
-    NPObjectData* d = current()->mObjectMap.GetEntry(aNPObj);
-    if (!d) {
+    PluginInstanceChild* instance = PluginScriptableObjectChild::GetInstanceForNPObject(aNPObj);
+    if (!instance) {
         NS_ERROR("Releasing object not in mObjectMap?");
         return;
     }
 
     DeletingObjectEntry* doe = nullptr;
-    if (d->instance->mDeletingHash) {
-        doe = d->instance->mDeletingHash->GetEntry(aNPObj);
+    if (instance->mDeletingHash) {
+        doe = instance->mDeletingHash->GetEntry(aNPObj);
         if (!doe) {
             NS_ERROR("An object for a destroyed instance isn't in the instance deletion hash");
             return;
@@ -2114,29 +2058,11 @@ PluginModuleChild::DeallocNPObject(NPObject* aNPObj)
         child::_memfree(aNPObj);
     }
 
-    NPObjectData* d = current()->mObjectMap.GetEntry(aNPObj);
-    if (d->actor)
-        d->actor->NPObjectDestroyed();
+    PluginScriptableObjectChild* actor = PluginScriptableObjectChild::GetActorForNPObject(aNPObj);
+    if (actor)
+        actor->NPObjectDestroyed();
 
-    current()->mObjectMap.RemoveEntry(aNPObj);
-}
-
-void
-PluginModuleChild::FindNPObjectsForInstance(PluginInstanceChild* instance)
-{
-    NS_ASSERTION(instance->mDeletingHash, "filling null mDeletingHash?");
-    mObjectMap.EnumerateEntries(CollectForInstance, instance);
-}
-
-PLDHashOperator
-PluginModuleChild::CollectForInstance(NPObjectData* d, void* userArg)
-{
-    PluginInstanceChild* instance = static_cast<PluginInstanceChild*>(userArg);
-    if (d->instance == instance) {
-        NPObject* o = d->GetKey();
-        instance->mDeletingHash->PutEntry(o);
-    }
-    return PL_DHASH_NEXT;
+    PluginScriptableObjectChild::UnregisterObject(aNPObj);
 }
 
 NPIdentifier
