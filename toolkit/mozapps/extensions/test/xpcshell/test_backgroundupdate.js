@@ -44,7 +44,8 @@ function run_test_1() {
       do_execute_soon(run_test_2);
     }, "addons-background-update-complete", false);
 
-    AddonManagerPrivate.backgroundUpdateCheck();
+    // Trigger the background update timer handler
+    gInternalManager.notify(null);
   });
 }
 
@@ -120,5 +121,6 @@ function run_test_2() {
     }
   });
 
-  AddonManagerPrivate.backgroundUpdateCheck();
+  // Trigger the background update timer handler
+  gInternalManager.notify(null);
 }
