@@ -2160,7 +2160,7 @@ SetDenseOrTypedArrayElement(typename ExecutionModeTraits<mode>::ContextType cxAr
 
 /*
  * Implement "the rest of" assignment to receiver[id] when an existing property
- * (foundShape) has been found on a native object (pobj).
+ * (shape) has been found on a native object (pobj).
  *
  * It is necessary to pass both id and shape because shape could be an implicit
  * dense or typed array element (i.e. not actually a pointer to a Shape).
@@ -2169,13 +2169,12 @@ template <ExecutionMode mode>
 static bool
 SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
                     HandleNativeObject obj, HandleObject receiver, HandleId id,
-                    HandleObject pobj, HandleShape foundShape, MutableHandleValue vp, bool strict)
+                    HandleObject pobj, HandleShape shape, MutableHandleValue vp, bool strict)
 {
-    RootedShape shape(cxArg, foundShape);
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         /* ES5 8.12.4 [[Put]] step 2, for a dense data property on pobj. */
-        if (pobj != receiver)
-            shape = nullptr;
+        if (pobj == receiver)
+            return SetDenseOrTypedArrayElement<mode>(cxArg, obj, JSID_TO_INT(id), vp, strict);
     } else {
         /* ES5 8.12.4 [[Put]] step 2. */
         if (shape->isAccessorDescriptor()) {
@@ -2208,39 +2207,30 @@ SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
             }
         }
 
-        if (pobj != receiver) {
-            // pobj[id] is not an own property of receiver.
-
-            if (!shape->shadowable() &&
-                !(pobj->is<ArrayObject>() && id == NameToId(cxArg->names().length)))
-            {
-                // Weird special case: slotless property with default setter.
-                if (shape->hasDefaultSetter() && !shape->hasGetterValue())
-                    return true;
-
-                // We're setting an accessor property.
-                if (mode == ParallelExecution)
-                    return false;
-                return shape->set(cxArg->asJSContext(), obj, receiver, strict, vp);
+        if (pobj == receiver) {
+            if (pobj->is<ArrayObject>() && id == NameToId(cxArg->names().length)) {
+                Rooted<ArrayObject*> arr(cxArg, &pobj->as<ArrayObject>());
+                return ArraySetLength<mode>(cxArg, arr, id, shape->attributes(), vp, strict);
             }
+            return NativeSet<mode>(cxArg, obj, receiver, shape, strict, vp);
+        }
 
-            // Forget about pobj[id]: we're going to shadow it by defining a new
-            // data property receiver[id].
-            shape = nullptr;
+        // pobj[id] is not an own property of receiver. Call the setter or shadow it.
+        if (!shape->shadowable() &&
+            !(pobj->is<ArrayObject>() && id == NameToId(cxArg->names().length)))
+        {
+            // Weird special case: slotless property with default setter.
+            if (shape->hasDefaultSetter() && !shape->hasGetterValue())
+                return true;
+
+            // We're setting an accessor property.
+            if (mode == ParallelExecution)
+                return false;
+            return shape->set(cxArg->asJSContext(), obj, receiver, strict, vp);
         }
     }
 
-    if (IsImplicitDenseOrTypedArrayElement(shape))
-        return SetDenseOrTypedArrayElement<mode>(cxArg, obj, JSID_TO_INT(id), vp, strict);
-
-    if (shape) {
-        if (obj->is<ArrayObject>() && id == NameToId(cxArg->names().length)) {
-            Rooted<ArrayObject*> arr(cxArg, &obj->as<ArrayObject>());
-            return ArraySetLength<mode>(cxArg, arr, id, shape->attributes(), vp, strict);
-        }
-
-        return NativeSet<mode>(cxArg, obj, receiver, shape, strict, vp);
-    }
+    // Shadow pobj[id] by defining a new data property receiver[id].
     return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
 }
 
