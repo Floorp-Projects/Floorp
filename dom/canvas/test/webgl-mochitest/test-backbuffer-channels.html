@@ -8,7 +8,7 @@
 <script>
 
 function TestAttribs(attribs) {
-  ok(true, 'Testing attribs: ' + JSON.stringify(attribs));
+  debug('Testing attribs: ' + JSON.stringify(attribs));
   var canvas = document.createElement('canvas');
   var gl = canvas.getContext('experimental-webgl', attribs);
   ok(gl, 'No tested attribs should result in failure to create a context');
