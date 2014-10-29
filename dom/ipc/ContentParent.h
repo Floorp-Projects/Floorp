@@ -143,10 +143,12 @@ public:
 
     virtual bool RecvCreateChildProcess(const IPCTabContext& aContext,
                                         const hal::ProcessPriority& aPriority,
-                                        uint64_t* aId,
+                                        const TabId& aOpenerTabId,
+                                        ContentParentId* aCpId,
                                         bool* aIsForApp,
-                                        bool* aIsForBrowser) MOZ_OVERRIDE;
-    virtual bool AnswerBridgeToChildProcess(const uint64_t& id) MOZ_OVERRIDE;
+                                        bool* aIsForBrowser,
+                                        TabId* aTabId) MOZ_OVERRIDE;
+    virtual bool AnswerBridgeToChildProcess(const ContentParentId& aCpId) MOZ_OVERRIDE;
 
     virtual bool AnswerLoadPlugin(const uint32_t& aPluginId) MOZ_OVERRIDE;
     virtual bool RecvFindPlugins(const uint32_t& aPluginEpoch,
@@ -183,6 +185,13 @@ public:
     bool DestroyTestShell(TestShellParent* aTestShell);
     TestShellParent* GetTestShellSingleton();
     jsipc::JavaScriptShared* GetCPOWManager() MOZ_OVERRIDE;
+
+    static TabId
+    AllocateTabId(const TabId& aOpenerTabId,
+                  const IPCTabContext& aContext,
+                  const ContentParentId& aCpId);
+    static void
+    DeallocateTabId(const TabId& aTabId, const ContentParentId& aCpId);
 
     void ReportChildAlreadyBlocked();
     bool RequestRunToCompletion();
@@ -291,6 +300,14 @@ public:
         PBlobParent* aActor,
         const BlobConstructorParams& aParams) MOZ_OVERRIDE;
 
+    virtual bool RecvAllocateTabId(const TabId& aOpenerTabId,
+                                   const IPCTabContext& aContext,
+                                   const ContentParentId& aCpId,
+                                   TabId* aTabId) MOZ_OVERRIDE;
+
+    virtual bool RecvDeallocateTabId(const TabId& aTabId) MOZ_OVERRIDE;
+
+    nsTArray<TabContext> GetManagedTabContext();
 protected:
     void OnChannelConnected(int32_t pid) MOZ_OVERRIDE;
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
@@ -319,12 +336,15 @@ private:
     static hal::ProcessPriority GetInitialProcessPriority(Element* aFrameElement);
 
     static ContentBridgeParent* CreateContentBridgeParent(const TabContext& aContext,
-                                                          const hal::ProcessPriority& aPriority);
+                                                          const hal::ProcessPriority& aPriority,
+                                                          const TabId& aOpenerTabId,
+                                                          /*out*/ TabId* aTabId);
 
     // Hide the raw constructor methods since we don't want client code
     // using them.
     virtual PBrowserParent* SendPBrowserConstructor(
         PBrowserParent* actor,
+        const TabId& aTabId,
         const IPCTabContext& context,
         const uint32_t& chromeFlags,
         const ContentParentId& aCpId,
@@ -429,7 +449,8 @@ private:
     virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) MOZ_OVERRIDE;
 
     virtual bool DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParent*) MOZ_OVERRIDE;
-    virtual PBrowserParent* AllocPBrowserParent(const IPCTabContext& aContext,
+    virtual PBrowserParent* AllocPBrowserParent(const TabId& aTabId,
+                                                const IPCTabContext& aContext,
                                                 const uint32_t& aChromeFlags,
                                                 const ContentParentId& aCpId,
                                                 const bool& aIsForApp,
