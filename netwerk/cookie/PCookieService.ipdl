@@ -27,7 +27,7 @@ namespace net {
  * @see nsICookiePermission
  */
 
-sync protocol PCookieService
+prio(normal upto urgent) sync protocol PCookieService
 {
   manager PNecko;
 
@@ -60,10 +60,10 @@ parent:
    *
    * @return the resulting cookie string.
    */
-  sync GetCookieString(URIParams host,
-                       bool isForeign,
-                       bool fromHttp,
-                       SerializedLoadContext loadContext)
+  prio(urgent) sync GetCookieString(URIParams host,
+                                    bool isForeign,
+                                    bool fromHttp,
+                                    SerializedLoadContext loadContext)
        returns (nsCString result);
 
   /*
@@ -95,12 +95,12 @@ parent:
    * @see nsICookieService.setCookieStringFromHttp
    * @see mozIThirdPartyUtil.isThirdPartyChannel
    */
-  SetCookieString(URIParams host,
-                  bool isForeign,
-                  nsCString cookieString,
-                  nsCString serverTime,
-                  bool fromHttp,
-                  SerializedLoadContext loadContext);
+  prio(urgent) async SetCookieString(URIParams host,
+                                     bool isForeign,
+                                     nsCString cookieString,
+                                     nsCString serverTime,
+                                     bool fromHttp,
+                                     SerializedLoadContext loadContext);
 
   __delete__();
 };
