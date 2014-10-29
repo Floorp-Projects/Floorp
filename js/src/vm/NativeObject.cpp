@@ -2110,7 +2110,6 @@ SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
                     HandleObject pobj, HandleShape foundShape, MutableHandleValue vp, bool strict)
 {
     RootedShape shape(cxArg, foundShape);
-    unsigned attrs = JSPROP_ENUMERATE;
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         /* ES5 8.12.4 [[Put]] step 2, for a dense data property on pobj. */
         if (pobj != obj)
@@ -2147,22 +2146,24 @@ SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
             }
         }
 
-        if (pobj == receiver) {
-            attrs = shape->attributes();
-        } else {
-            // We found id in a prototype object: prepare to share or shadow.
+        if (pobj != receiver) {
+            // pobj[id] is not an own property of receiver.
 
-            if (!shape->shadowable()) {
+            if (!shape->shadowable() &&
+                !(pobj->is<ArrayObject>() && id == NameToId(cxArg->names().length)))
+            {
+                // Weird special case: slotless property with default setter.
                 if (shape->hasDefaultSetter() && !shape->hasGetterValue())
                     return true;
 
+                // We're setting an accessor property.
                 if (mode == ParallelExecution)
                     return false;
-
                 return shape->set(cxArg->asJSContext(), obj, receiver, strict, vp);
             }
 
-            // Forget we found the proto-property since we're shadowing it.
+            // Forget about pobj[id]: we're going to shadow it by defining a new
+            // data property receiver[id].
             shape = nullptr;
         }
     }
@@ -2217,15 +2218,14 @@ SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
         return true;
     }
 
-    if (obj->is<ArrayObject>() && id == NameToId(cxArg->names().length)) {
-        Rooted<ArrayObject*> arr(cxArg, &obj->as<ArrayObject>());
-        return ArraySetLength<mode>(cxArg, arr, id, attrs, vp, strict);
-    }
+    if (shape) {
+        if (obj->is<ArrayObject>() && id == NameToId(cxArg->names().length)) {
+            Rooted<ArrayObject*> arr(cxArg, &obj->as<ArrayObject>());
+            return ArraySetLength<mode>(cxArg, arr, id, shape->attributes(), vp, strict);
+        }
 
-    if (shape)
         return NativeSet<mode>(cxArg, obj, receiver, shape, strict, vp);
-
-    MOZ_ASSERT(attrs == JSPROP_ENUMERATE);
+    }
     return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
 }
 
