@@ -222,6 +222,18 @@ AutoRooterGetterSetter::AutoRooterGetterSetter(ThreadSafeContext *cx, uint8_t at
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
+inline
+AutoRooterGetterSetter::AutoRooterGetterSetter(ThreadSafeContext *cx, uint8_t attrs,
+                                               JSNative *pgetter, JSNative *psetter
+                                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+{
+    if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+        inner.emplace(cx, attrs, reinterpret_cast<PropertyOp *>(pgetter),
+                      reinterpret_cast<StrictPropertyOp *>(psetter));
+    }
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+}
+
 static inline uint8_t
 GetShapeAttributes(JSObject *obj, Shape *shape)
 {

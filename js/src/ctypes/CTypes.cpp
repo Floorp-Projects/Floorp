@@ -1378,8 +1378,9 @@ JS_InitCTypesClass(JSContext* cx, HandleObject global)
   if (!ctypes)
     return false;
 
-  if (!JS_DefineProperty(cx, global, "ctypes", ctypes, JSPROP_READONLY | JSPROP_PERMANENT,
-                         JS_PropertyStub, JS_StrictPropertyStub)){
+  if (!JS_DefineProperty(cx, global, "ctypes", ctypes,
+                         JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_PROPOP_ACCESSORS,
+                         JS_STUBGETTER, JS_STUBSETTER)){
     return false;
   }
 
@@ -4897,8 +4898,9 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
 
       if (!JS_DefineUCProperty(cx, prototype,
              nameChars.twoByteChars(), name->length(), UndefinedHandleValue,
-             JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT,
-             StructType::FieldGetter, StructType::FieldSetter))
+             JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_PROPOP_ACCESSORS,
+             JS_PROPERTYOP_GETTER(StructType::FieldGetter),
+             JS_PROPERTYOP_SETTER(StructType::FieldSetter)))
         return false;
 
       size_t fieldSize = CType::GetSize(fieldType);

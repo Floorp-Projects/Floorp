@@ -1503,8 +1503,8 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
                 gWorkingDirectory = &workingDirectory;
 
             JS_DefineProperty(cx, glob, "__LOCATION__", JS::UndefinedHandleValue,
-                              JSPROP_NATIVE_ACCESSORS | JSPROP_SHARED,
-                              JS_CAST_NATIVE_TO(GetLocationProperty, JSPropertyOp),
+                              JSPROP_SHARED,
+                              GetLocationProperty,
                               nullptr);
 
             // We are almost certainly going to run script here, so we need an

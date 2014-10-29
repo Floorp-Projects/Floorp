@@ -501,16 +501,15 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
     }
     if (psMatch) {
         desc.value().setUndefined();
-        // Note that this is also kind of an abuse of JSPROP_NATIVE_ACCESSORS.
-        // See bug 992977.
         RootedFunction getterObj(cx);
         RootedFunction setterObj(cx);
         unsigned flags = psMatch->flags;
-        if (flags & JSPROP_NATIVE_ACCESSORS) {
-            desc.setGetter(psMatch->getter.propertyOp.op);
-            desc.setSetter(psMatch->setter.propertyOp.op);
+        if (!psMatch->isSelfHosted()) {
+            desc.setGetter(JS_CAST_NATIVE_TO(psMatch->getter.native.op,
+                                             JSPropertyOp));
+            desc.setSetter(JS_CAST_NATIVE_TO(psMatch->setter.native.op,
+                                             JSStrictPropertyOp));
         } else {
-            MOZ_ASSERT(flags & JSPROP_GETTER);
             getterObj = JS::GetSelfHostedFunction(cx, psMatch->getter.selfHosted.funname, id, 0);
             if (!getterObj)
                 return false;
@@ -534,8 +533,14 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
         // pass along JITInfo. It's probably ok though, since Xrays are already
         // pretty slow.
         return JS_DefinePropertyById(cx, holder, id,
-                                     UndefinedHandleValue, desc.attributes(),
-                                     desc.getter(), desc.setter()) &&
+                                     UndefinedHandleValue,
+                                     // This particular descriptor, unlike most,
+                                     // actually stores JSNatives directly,
+                                     // since we just set it up.  Do NOT pass
+                                     // JSPROP_PROPOP_ACCESSORS here!
+                                     desc.attributes(),
+                                     JS_PROPERTYOP_GETTER(desc.getter()),
+                                     JS_PROPERTYOP_SETTER(desc.setter())) &&
                JS_GetPropertyDescriptorById(cx, holder, id, desc);
     }
 
@@ -613,8 +618,9 @@ JSXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
 
         JSAutoCompartment ac(cx, target);
         if (!JS_WrapPropertyDescriptor(cx, desc) ||
-            !JS_DefinePropertyById(cx, target, id, desc.value(), desc.attributes(),
-                                   JS_PropertyStub, JS_StrictPropertyStub))
+            !JS_DefinePropertyById(cx, target, id, desc.value(),
+                                   desc.attributes() | JSPROP_PROPOP_ACCESSORS,
+                                   JS_STUBGETTER, JS_STUBSETTER))
         {
             return false;
         }
@@ -726,7 +732,7 @@ JSXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags
         // to be any self-hosted accessors anywhere in SpiderMonkey, let alone in on an
         // Xrayable class, so we can't test it. Assert against it to make sure that we get
         // test coverage in test_XrayToJS.xul when the time comes.
-        MOZ_ASSERT(ps->flags & JSPROP_NATIVE_ACCESSORS,
+        MOZ_ASSERT(!ps->isSelfHosted(),
                    "Self-hosted accessor added to Xrayable class - ping the XPConnect "
                    "module owner about adding test coverage");
 
@@ -1181,8 +1187,13 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
         FillPropertyDescriptor(desc, wrapper, 0,
                                ObjectValue(*JS_GetFunctionObject(toString)));
 
-        return JS_DefinePropertyById(cx, holder, id, desc.value(), desc.attributes(),
-                                     desc.getter(), desc.setter()) &&
+        return JS_DefinePropertyById(cx, holder, id, desc.value(),
+                                     // Descriptors never store JSNatives for
+                                     // accessors: they have either JSFunctions
+                                     // or JSPropertyOps.
+                                     desc.attributes() | JSPROP_PROPOP_ACCESSORS,
+                                     JS_PROPERTYOP_GETTER(desc.getter()),
+                                     JS_PROPERTYOP_SETTER(desc.setter())) &&
                JS_GetPropertyDescriptorById(cx, holder, id, desc);
     }
 
@@ -1238,8 +1249,13 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
         desc.setSetterObject(&fval.toObject());
 
     // Define the property.
-    return JS_DefinePropertyById(cx, holder, id, desc.value(), desc.attributes(),
-                                 desc.getter(), desc.setter());
+    return JS_DefinePropertyById(cx, holder, id, desc.value(),
+                                 // Descriptors never store JSNatives for
+                                 // accessors: they have either JSFunctions or
+                                 // JSPropertyOps.
+                                 desc.attributes() | JSPROP_PROPOP_ACCESSORS,
+                                 JS_PROPERTYOP_GETTER(desc.getter()),
+                                 JS_PROPERTYOP_SETTER(desc.setter()));
 }
 
 static bool
@@ -1320,10 +1336,8 @@ XrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
         if (!JS_AlreadyHasOwnPropertyById(cx, holder, id, &found))
             return false;
         if (!found && !JS_DefinePropertyById(cx, holder, id, UndefinedHandleValue,
-                                             JSPROP_ENUMERATE | JSPROP_SHARED |
-                                             JSPROP_NATIVE_ACCESSORS,
-                                             JS_CAST_NATIVE_TO(wrappedJSObject_getter,
-                                                               JSPropertyOp))) {
+                                             JSPROP_ENUMERATE | JSPROP_SHARED,
+                                             wrappedJSObject_getter)) {
             return false;
         }
         if (!JS_GetPropertyDescriptorById(cx, holder, id, desc))
@@ -1534,8 +1548,13 @@ DOMXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper, Handl
     if (!desc.object() || !cacheOnHolder)
         return true;
 
-    return JS_DefinePropertyById(cx, holder, id, desc.value(), desc.attributes(),
-                                 desc.getter(), desc.setter()) &&
+    return JS_DefinePropertyById(cx, holder, id, desc.value(),
+                                 // Descriptors never store JSNatives for
+                                 // accessors: they have either JSFunctions or
+                                 // JSPropertyOps.
+                                 desc.attributes() | JSPROP_PROPOP_ACCESSORS,
+                                 JS_PROPERTYOP_GETTER(desc.getter()),
+                                 JS_PROPERTYOP_SETTER(desc.setter())) &&
            JS_GetPropertyDescriptorById(cx, holder, id, desc);
 }
 
@@ -1854,8 +1873,13 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
     if (!desc.object())
         return true;
 
-    if (!JS_DefinePropertyById(cx, holder, id, desc.value(), desc.attributes(),
-                               desc.getter(), desc.setter()) ||
+    if (!JS_DefinePropertyById(cx, holder, id, desc.value(),
+                               // Descriptors never store JSNatives for
+                               // accessors: they have either JSFunctions or
+                               // JSPropertyOps.
+                               desc.attributes() | JSPROP_PROPOP_ACCESSORS,
+                               JS_PROPERTYOP_GETTER(desc.getter()),
+                               JS_PROPERTYOP_SETTER(desc.setter())) ||
         !JS_GetPropertyDescriptorById(cx, holder, id, desc))
     {
         return false;
@@ -2001,8 +2025,12 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
         return false;
 
     return JS_DefinePropertyById(cx, expandoObject, id, wrappedDesc.value(),
-                                 wrappedDesc.get().attrs,
-                                 wrappedDesc.getter(), wrappedDesc.setter());
+                                 // Descriptors never store JSNatives for
+                                 // accessors: they have either JSFunctions
+                                 // or JSPropertyOps.
+                                 wrappedDesc.get().attrs | JSPROP_PROPOP_ACCESSORS,
+                                 JS_PROPERTYOP_GETTER(wrappedDesc.getter()),
+                                 JS_PROPERTYOP_SETTER(wrappedDesc.setter()));
 }
 
 template <typename Base, typename Traits>
