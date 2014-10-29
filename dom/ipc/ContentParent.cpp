@@ -57,6 +57,7 @@
 #include "mozilla/dom/telephony/TelephonyParent.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "mozilla/dom/voicemail/VoicemailParent.h"
+#include "mozilla/embedding/printingui/PrintingParent.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -208,6 +209,7 @@ using namespace mozilla::dom::mobileconnection;
 using namespace mozilla::dom::mobilemessage;
 using namespace mozilla::dom::telephony;
 using namespace mozilla::dom::voicemail;
+using namespace mozilla::embedding;
 using namespace mozilla::hal;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
@@ -3113,6 +3115,25 @@ bool
 ContentParent::DeallocPNeckoParent(PNeckoParent* necko)
 {
     delete necko;
+    return true;
+}
+
+PPrintingParent*
+ContentParent::AllocPPrintingParent()
+{
+    return new PrintingParent();
+}
+
+bool
+ContentParent::RecvPPrintingConstructor(PPrintingParent* aActor)
+{
+    return true;
+}
+
+bool
+ContentParent::DeallocPPrintingParent(PPrintingParent* printing)
+{
+    delete printing;
     return true;
 }
 

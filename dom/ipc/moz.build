@@ -110,6 +110,7 @@ LOCAL_INCLUDES += [
     '/dom/mobilemessage/ipc',
     '/dom/storage',
     '/editor/libeditor',
+    '/embedding/components/printingui/ipc',
     '/extensions/cookie',
     '/extensions/spellcheck/src',
     '/hal/sandbox',

@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/embedding/PPrinting.h"
 #include "nsPrintOptionsImpl.h"
 #include "nsReadableUtils.h"
 #include "nsPrintSettingsImpl.h"
@@ -22,8 +23,10 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Preferences.h"
 #include "nsPrintfCString.h"
+#include "nsIWebBrowserPrint.h"
 
 using namespace mozilla;
+using namespace mozilla::embedding;
 
 NS_IMPL_ISUPPORTS(nsPrintOptions, nsIPrintOptions, nsIPrintSettingsService)
 
@@ -96,6 +99,221 @@ nsPrintOptions::Init()
 {
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
+                                     nsIWebBrowserPrint* aWBP,
+                                     PrintData* data)
+{
+  aSettings->GetStartPageRange(&data->startPageRange());
+  aSettings->GetEndPageRange(&data->endPageRange());
+
+  aSettings->GetEdgeTop(&data->edgeTop());
+  aSettings->GetEdgeLeft(&data->edgeLeft());
+  aSettings->GetEdgeBottom(&data->edgeBottom());
+  aSettings->GetEdgeRight(&data->edgeRight());
+
+  aSettings->GetMarginTop(&data->marginTop());
+  aSettings->GetMarginLeft(&data->marginLeft());
+  aSettings->GetMarginBottom(&data->marginBottom());
+  aSettings->GetMarginRight(&data->marginRight());
+  aSettings->GetUnwriteableMarginTop(&data->unwriteableMarginTop());
+  aSettings->GetUnwriteableMarginLeft(&data->unwriteableMarginLeft());
+  aSettings->GetUnwriteableMarginBottom(&data->unwriteableMarginBottom());
+  aSettings->GetUnwriteableMarginRight(&data->unwriteableMarginRight());
+
+  aSettings->GetScaling(&data->scaling());
+
+  aSettings->GetPrintBGColors(&data->printBGColors());
+  aSettings->GetPrintBGImages(&data->printBGImages());
+  aSettings->GetPrintRange(&data->printRange());
+
+  // I have no idea if I'm doing this string copying correctly...
+  nsXPIDLString title;
+  aSettings->GetTitle(getter_Copies(title));
+  data->title() = title;
+
+  nsXPIDLString docURL;
+  aSettings->GetDocURL(getter_Copies(docURL));
+  data->docURL() = docURL;
+
+  // Header strings...
+  nsXPIDLString headerStrLeft;
+  aSettings->GetHeaderStrLeft(getter_Copies(headerStrLeft));
+  data->headerStrLeft() = headerStrLeft;
+
+  nsXPIDLString headerStrCenter;
+  aSettings->GetHeaderStrCenter(getter_Copies(headerStrCenter));
+  data->headerStrCenter() = headerStrCenter;
+
+  nsXPIDLString headerStrRight;
+  aSettings->GetHeaderStrRight(getter_Copies(headerStrRight));
+  data->headerStrRight() = headerStrRight;
+
+  // Footer strings...
+  nsXPIDLString footerStrLeft;
+  aSettings->GetFooterStrLeft(getter_Copies(footerStrLeft));
+  data->footerStrLeft() = footerStrLeft;
+
+  nsXPIDLString footerStrCenter;
+  aSettings->GetFooterStrCenter(getter_Copies(footerStrCenter));
+  data->footerStrCenter() = footerStrCenter;
+
+  nsXPIDLString footerStrRight;
+  aSettings->GetFooterStrRight(getter_Copies(footerStrRight));
+  data->footerStrRight() = footerStrRight;
+
+  aSettings->GetHowToEnableFrameUI(&data->howToEnableFrameUI());
+  aSettings->GetIsCancelled(&data->isCancelled());
+  aSettings->GetPrintFrameTypeUsage(&data->printFrameTypeUsage());
+  aSettings->GetPrintFrameType(&data->printFrameType());
+  aSettings->GetPrintSilent(&data->printSilent());
+  aSettings->GetShrinkToFit(&data->shrinkToFit());
+  aSettings->GetShowPrintProgress(&data->showPrintProgress());
+
+  nsXPIDLString paperName;
+  aSettings->GetPaperName(getter_Copies(paperName));
+  data->paperName() = paperName;
+
+  aSettings->GetPaperSizeType(&data->paperSizeType());
+  aSettings->GetPaperData(&data->paperData());
+  aSettings->GetPaperWidth(&data->paperWidth());
+  aSettings->GetPaperHeight(&data->paperHeight());
+  aSettings->GetPaperSizeUnit(&data->paperSizeUnit());
+
+  nsXPIDLString plexName;
+  aSettings->GetPlexName(getter_Copies(plexName));
+  data->plexName() = plexName;
+
+  nsXPIDLString colorspace;
+  aSettings->GetColorspace(getter_Copies(colorspace));
+  data->colorspace() = colorspace;
+
+  nsXPIDLString resolutionName;
+  aSettings->GetResolutionName(getter_Copies(resolutionName));
+  data->resolutionName() = resolutionName;
+
+  aSettings->GetDownloadFonts(&data->downloadFonts());
+  aSettings->GetPrintReversed(&data->printReversed());
+  aSettings->GetPrintInColor(&data->printInColor());
+  aSettings->GetOrientation(&data->orientation());
+
+  nsXPIDLString printCommand;
+  aSettings->GetPrintCommand(getter_Copies(printCommand));
+  data->printCommand() = printCommand;
+
+  aSettings->GetNumCopies(&data->numCopies());
+
+  nsXPIDLString printerName;
+  aSettings->GetPrinterName(getter_Copies(printerName));
+  data->printerName() = printerName;
+
+  aSettings->GetPrintToFile(&data->printToFile());
+
+  nsXPIDLString toFileName;
+  aSettings->GetToFileName(getter_Copies(toFileName));
+  data->toFileName() = toFileName;
+
+  aSettings->GetOutputFormat(&data->outputFormat());
+  aSettings->GetPrintPageDelay(&data->printPageDelay());
+  aSettings->GetResolution(&data->resolution());
+  aSettings->GetDuplex(&data->duplex());
+  aSettings->GetIsInitializedFromPrinter(&data->isInitializedFromPrinter());
+  aSettings->GetIsInitializedFromPrefs(&data->isInitializedFromPrefs());
+  aSettings->GetPersistMarginBoxSettings(&data->persistMarginBoxSettings());
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrintOptions::DeserializeToPrintSettings(const PrintData& data,
+                                           nsIPrintSettings* settings)
+{
+  settings->SetStartPageRange(data.startPageRange());
+  settings->SetEndPageRange(data.endPageRange());
+
+  settings->SetEdgeTop(data.edgeTop());
+  settings->SetEdgeLeft(data.edgeLeft());
+  settings->SetEdgeBottom(data.edgeBottom());
+  settings->SetEdgeRight(data.edgeRight());
+
+  settings->SetMarginTop(data.marginTop());
+  settings->SetMarginLeft(data.marginLeft());
+  settings->SetMarginBottom(data.marginBottom());
+  settings->SetMarginRight(data.marginRight());
+  settings->SetUnwriteableMarginTop(data.unwriteableMarginTop());
+  settings->SetUnwriteableMarginLeft(data.unwriteableMarginLeft());
+  settings->SetUnwriteableMarginBottom(data.unwriteableMarginBottom());
+  settings->SetUnwriteableMarginRight(data.unwriteableMarginRight());
+
+  settings->SetScaling(data.scaling());
+
+  settings->SetPrintBGColors(data.printBGColors());
+  settings->SetPrintBGImages(data.printBGImages());
+  settings->SetPrintRange(data.printRange());
+
+  // I have no idea if I'm doing this string copying correctly...
+  settings->SetTitle(data.title().get());
+  settings->SetDocURL(data.docURL().get());
+
+  // Header strings...
+  settings->SetHeaderStrLeft(data.headerStrLeft().get());
+  settings->SetHeaderStrCenter(data.headerStrCenter().get());
+  settings->SetHeaderStrRight(data.headerStrRight().get());
+
+  // Footer strings...
+  settings->SetFooterStrLeft(data.footerStrLeft().get());
+  settings->SetFooterStrCenter(data.footerStrCenter().get());
+  settings->SetFooterStrRight(data.footerStrRight().get());
+
+  settings->SetHowToEnableFrameUI(data.howToEnableFrameUI());
+  settings->SetIsCancelled(data.isCancelled());
+  settings->SetPrintFrameTypeUsage(data.printFrameTypeUsage());
+  settings->SetPrintFrameType(data.printFrameType());
+  settings->SetPrintSilent(data.printSilent());
+  settings->SetShrinkToFit(data.shrinkToFit());
+  settings->SetShowPrintProgress(data.showPrintProgress());
+
+  settings->SetPaperName(data.paperName().get());
+
+  settings->SetPaperSizeType(data.paperSizeType());
+  settings->SetPaperData(data.paperData());
+  settings->SetPaperWidth(data.paperWidth());
+  settings->SetPaperHeight(data.paperHeight());
+  settings->SetPaperSizeUnit(data.paperSizeUnit());
+
+  settings->SetPlexName(data.plexName().get());
+
+  settings->SetColorspace(data.colorspace().get());
+
+  settings->SetResolutionName(data.resolutionName().get());
+
+  settings->SetDownloadFonts(data.downloadFonts());
+  settings->SetPrintReversed(data.printReversed());
+  settings->SetPrintInColor(data.printInColor());
+  settings->SetOrientation(data.orientation());
+
+  settings->SetPrintCommand(data.printCommand().get());
+
+  settings->SetNumCopies(data.numCopies());
+
+  settings->SetPrinterName(data.printerName().get());
+
+  settings->SetPrintToFile(data.printToFile());
+
+  settings->SetToFileName(data.toFileName().get());
+
+  settings->SetOutputFormat(data.outputFormat());
+  settings->SetPrintPageDelay(data.printPageDelay());
+  settings->SetResolution(data.resolution());
+  settings->SetDuplex(data.duplex());
+  settings->SetIsInitializedFromPrinter(data.isInitializedFromPrinter());
+  settings->SetIsInitializedFromPrefs(data.isInitializedFromPrefs());
+  settings->SetPersistMarginBoxSettings(data.persistMarginBoxSettings());
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsPrintOptions::ShowPrintSetupDialog(nsIPrintSettings *aPS)
