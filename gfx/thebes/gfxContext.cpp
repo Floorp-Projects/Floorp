@@ -282,13 +282,6 @@ gfxContext::MoveTo(const gfxPoint& pt)
 }
 
 void
-gfxContext::NewSubPath()
-{
-    // XXX - This has no users, we should kill it, it should be equivelant to a
-    // MoveTo to the path's current point.
-}
-
-void
 gfxContext::LineTo(const gfxPoint& pt)
 {
   EnsurePathBuilder();
