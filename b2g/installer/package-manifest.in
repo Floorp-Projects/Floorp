@@ -197,6 +197,7 @@
 @BINPATH@/components/dom_telephony.xpt
 @BINPATH@/components/dom_threads.xpt
 @BINPATH@/components/dom_traversal.xpt
+@BINPATH@/components/dom_tv.xpt
 @BINPATH@/components/dom_views.xpt
 @BINPATH@/components/dom_voicemail.xpt
 #ifdef MOZ_WEBSPEECH

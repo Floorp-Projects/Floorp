@@ -250,6 +250,8 @@ let LoopCallsInternal = {
         respData.calls.forEach((callData) => {
           if (!this.callsData.inUse) {
             callData.sessionType = sessionType;
+            // XXX Bug 1090209 will transiton into a better window id.
+            callData.windowId = callData.callId;
             this._startCall(callData, "incoming");
           } else {
             this._returnBusy(callData);
@@ -277,7 +279,7 @@ let LoopCallsInternal = {
       null,
       // No title, let the page set that, to avoid flickering.
       "",
-      "about:loopconversation#" + conversationType + "/" + callData.callId);
+      "about:loopconversation#" + conversationType + "/" + callData.windowId);
   },
 
   /**
@@ -295,7 +297,7 @@ let LoopCallsInternal = {
       contact: contact,
       callType: callType,
       // XXX Really we shouldn't be using random numbers, bug 1090209 will fix this.
-      callId: Math.floor((Math.random() * 100000000))
+      windowId: Math.floor((Math.random() * 100000000))
     };
 
     this._startCall(callData, "outgoing");
@@ -339,17 +341,17 @@ this.LoopCalls = {
   },
 
   /**
-   * Returns the callData for a specific loopCallId
+   * Returns the callData for a specific conversation window id.
    *
    * The data was retrieved from the LoopServer via a GET/calls/<version> request
    * triggered by an incoming message from the LoopPushServer.
    *
-   * @param {int} loopCallId
+   * @param {Number} conversationWindowId
    * @return {callData} The callData or undefined if error.
    */
-  getCallData: function(loopCallId) {
+  getCallData: function(conversationWindowId) {
     if (LoopCallsInternal.callsData.data &&
-        LoopCallsInternal.callsData.data.callId == loopCallId) {
+        LoopCallsInternal.callsData.data.windowId == conversationWindowId) {
       return LoopCallsInternal.callsData.data;
     } else {
       return undefined;
@@ -357,15 +359,15 @@ this.LoopCalls = {
   },
 
   /**
-   * Releases the callData for a specific loopCallId
+   * Releases the callData for a specific conversation window id.
    *
    * The result of this call will be a free call session slot.
    *
-   * @param {int} loopCallId
+   * @param {Number} conversationWindowId
    */
-  releaseCallData: function(loopCallId) {
+  releaseCallData: function(conversationWindowId) {
     if (LoopCallsInternal.callsData.data &&
-        LoopCallsInternal.callsData.data.callId == loopCallId) {
+        LoopCallsInternal.callsData.data.windowId == conversationWindowId) {
       LoopCallsInternal.callsData.data = undefined;
       LoopCallsInternal.callsData.inUse = false;
     }
