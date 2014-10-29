@@ -545,7 +545,7 @@ bool NSCursorInfo::GetNativeCursorsSupported()
 {
   if (mNativeCursorsSupported == -1) {
     AssertPluginThread();
-    PluginModuleChild *pmc = PluginModuleChild::current();
+    PluginModuleChild *pmc = PluginModuleChild::GetChrome();
     if (pmc) {
       bool result = pmc->GetNativeCursorsSupported();
       if (result) {
@@ -691,7 +691,7 @@ void NotifyBrowserOfPluginShowWindow(uint32_t window_id, CGRect bounds,
                                      bool modal) {
   AssertPluginThread();
 
-  PluginModuleChild *pmc = PluginModuleChild::current();
+  PluginModuleChild *pmc = PluginModuleChild::GetChrome();
   if (pmc)
     pmc->PluginShowWindow(window_id, modal, bounds);
 }
@@ -699,7 +699,7 @@ void NotifyBrowserOfPluginShowWindow(uint32_t window_id, CGRect bounds,
 void NotifyBrowserOfPluginHideWindow(uint32_t window_id, CGRect bounds) {
   AssertPluginThread();
 
-  PluginModuleChild *pmc = PluginModuleChild::current();
+  PluginModuleChild *pmc = PluginModuleChild::GetChrome();
   if (pmc)
     pmc->PluginHideWindow(window_id);
 }
@@ -707,7 +707,7 @@ void NotifyBrowserOfPluginHideWindow(uint32_t window_id, CGRect bounds) {
 void NotifyBrowserOfSetCursor(NSCursorInfo& aCursorInfo)
 {
   AssertPluginThread();
-  PluginModuleChild *pmc = PluginModuleChild::current();
+  PluginModuleChild *pmc = PluginModuleChild::GetChrome();
   if (pmc) {
     pmc->SetCursor(aCursorInfo);
   }
@@ -716,7 +716,7 @@ void NotifyBrowserOfSetCursor(NSCursorInfo& aCursorInfo)
 void NotifyBrowserOfShowCursor(bool show)
 {
   AssertPluginThread();
-  PluginModuleChild *pmc = PluginModuleChild::current();
+  PluginModuleChild *pmc = PluginModuleChild::GetChrome();
   if (pmc) {
     pmc->ShowCursor(show);
   }
@@ -725,7 +725,7 @@ void NotifyBrowserOfShowCursor(bool show)
 void NotifyBrowserOfPushCursor(NSCursorInfo& aCursorInfo)
 {
   AssertPluginThread();
-  PluginModuleChild *pmc = PluginModuleChild::current();
+  PluginModuleChild *pmc = PluginModuleChild::GetChrome();
   if (pmc) {
     pmc->PushCursor(aCursorInfo);
   }
@@ -734,7 +734,7 @@ void NotifyBrowserOfPushCursor(NSCursorInfo& aCursorInfo)
 void NotifyBrowserOfPopCursor()
 {
   AssertPluginThread();
-  PluginModuleChild *pmc = PluginModuleChild::current();
+  PluginModuleChild *pmc = PluginModuleChild::GetChrome();
   if (pmc) {
     pmc->PopCursor();
   }

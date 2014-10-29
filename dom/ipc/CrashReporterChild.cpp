@@ -25,7 +25,7 @@ CrashReporterChild::GetCrashReporter()
       break;
     }
     case GeckoProcessType_Plugin: {
-      PluginModuleChild* child = PluginModuleChild::current();
+      PluginModuleChild* child = PluginModuleChild::GetChrome();
       reporters = &child->ManagedPCrashReporterChild();
       break;
     }
