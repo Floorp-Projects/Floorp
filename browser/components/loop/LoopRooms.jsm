@@ -88,7 +88,6 @@ let LoopRoomsInternal = {
       // Next, request the detailed information for each room. If the request
       // fails the room data will not be added to the map.
       for (let room of roomsList) {
-        let eventName = this.rooms.has(room.roomToken) ? "update" : "add";
         this.rooms.set(room.roomToken, room);
         yield LoopRooms.promise("get", room.roomToken);
       }
