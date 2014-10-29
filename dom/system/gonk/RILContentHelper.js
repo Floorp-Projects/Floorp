@@ -81,23 +81,12 @@ function MobileIccCardLockResult(options) {
   this.retryCount = options.retryCount;
   this.success = options.success;
 }
-MobileIccCardLockResult.prototype = {
-  __exposedProps__ : {lockType: 'r',
-                      enabled: 'r',
-                      retryCount: 'r',
-                      success: 'r'}
-};
 
 function MobileIccCardLockRetryCount(options) {
   this.lockType = options.lockType;
   this.retryCount = options.retryCount;
   this.success = options.success;
 }
-MobileIccCardLockRetryCount.prototype = {
-  __exposedProps__ : {lockType: 'r',
-                      retryCount: 'r',
-                      success: 'r'}
-};
 
 function IccInfo() {}
 IccInfo.prototype = {
@@ -333,6 +322,8 @@ RILContentHelper.prototype = {
     }
     let request = Services.DOMRequest.createRequest(window);
     let requestId = this.getRequestId(request);
+    this._windowsMap[requestId] = window;
+
     cpmm.sendAsyncMessage("RIL:GetCardLockRetryCount", {
       clientId: clientId,
       data: {
@@ -684,7 +675,7 @@ RILContentHelper.prototype = {
         }
 
         let result = new MobileIccCardLockResult(data);
-        this.fireRequestSuccess(requestId, result);
+        this.fireRequestSuccess(requestId, Cu.cloneInto(result, requestWindow));
         break;
       }
       case "RIL:SetUnlockCardLockResult": {
@@ -700,18 +691,23 @@ RILContentHelper.prototype = {
         }
 
         let result = new MobileIccCardLockResult(data);
-        this.fireRequestSuccess(requestId, result);
+        this.fireRequestSuccess(requestId, Cu.cloneInto(result, requestWindow));
         break;
       }
-      case "RIL:CardLockRetryCount":
+      case "RIL:CardLockRetryCount": {
+        let requestId = data.requestId;
+        let requestWindow = this._windowsMap[requestId];
+        delete this._windowsMap[requestId];
+
         if (data.errorMsg) {
           this.fireRequestError(data.requestId, data.errorMsg);
           break;
         }
 
         let result = new MobileIccCardLockRetryCount(data);
-        this.fireRequestSuccess(data.requestId, result);
+        this.fireRequestSuccess(data.requestId, Cu.cloneInto(result, requestWindow));
         break;
+      }
       case "RIL:StkCommand":
         this._deliverEvent(clientId, "_iccListeners", "notifyStkCommand",
                            [JSON.stringify(data)]);
