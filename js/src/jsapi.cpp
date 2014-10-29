@@ -2831,7 +2831,24 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
     // than JSNatives. However, we might be pulling this property descriptor off
     // of something with JSNative property descriptors. If we are, wrap them in
     // JS Function objects.
-    if (!(attrs & JSPROP_PROPOP_ACCESSORS)) {
+    //
+    // But skip doing this if our accessors are the well-known stub
+    // accessors, since those are known to be JSPropertyOps.  Assert
+    // some sanity about it, though.
+    MOZ_ASSERT_IF(getter == JS_PropertyStub,
+                  setter == JS_StrictPropertyStub || (attrs & JSPROP_PROPOP_ACCESSORS));
+    MOZ_ASSERT_IF(setter == JS_StrictPropertyStub,
+                  getter == JS_PropertyStub || (attrs & JSPROP_PROPOP_ACCESSORS));
+
+
+    // If !(attrs & JSPROP_PROPOP_ACCESSORS), then either getter/setter are both
+    // possibly-null JSNatives (or possibly-null JSFunction* if JSPROP_GETTER or
+    // JSPROP_SETTER is appropriately set), or both are the well-known property
+    // stubs.  The subsequent block must handle only the first of these cases,
+    // so carefully exclude the latter case.
+    if (!(attrs & JSPROP_PROPOP_ACCESSORS) &&
+        getter != JS_PropertyStub && setter != JS_StrictPropertyStub)
+    {
         JSFunction::Flags zeroFlags = JSAPIToJSFunctionFlags(0);
 
         RootedAtom atom(cx, JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : nullptr);

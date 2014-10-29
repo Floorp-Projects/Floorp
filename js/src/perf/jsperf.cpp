@@ -231,8 +231,7 @@ namespace JS {
 JSObject*
 RegisterPerfMeasurement(JSContext *cx, HandleObject globalArg)
 {
-    static const uint8_t PM_CATTRS =
-        JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_PERMANENT|JSPROP_PROPOP_ACCESSORS;
+    static const uint8_t PM_CATTRS = JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_PERMANENT;
 
     RootedObject global(cx, globalArg);
     RootedObject prototype(cx);

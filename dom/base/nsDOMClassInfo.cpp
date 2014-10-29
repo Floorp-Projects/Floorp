@@ -1035,7 +1035,7 @@ nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *aObj,
 
     JS::Rooted<jsid> id(cx, sConstructor_id);
     if (!::JS_DefinePropertyById(cx, obj, id, val,
-                                 JSPROP_ENUMERATE | JSPROP_PROPOP_ACCESSORS,
+                                 JSPROP_ENUMERATE,
                                  JS_STUBGETTER, JS_STUBSETTER)) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -1456,8 +1456,7 @@ DefineInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsIID *
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv), rv);
 
     if (!::JS_DefineProperty(cx, obj, name, v,
-                             JSPROP_ENUMERATE | JSPROP_READONLY |
-                             JSPROP_PERMANENT | JSPROP_PROPOP_ACCESSORS,
+                             JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT,
                              JS_STUBGETTER, JS_STUBSETTER)) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -2055,8 +2054,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
   // Per ECMA, the prototype property is {DontEnum, DontDelete, ReadOnly}
   if (!JS_WrapValue(cx, &v) ||
       !JS_DefineProperty(cx, class_obj, "prototype", v,
-                         JSPROP_PERMANENT | JSPROP_READONLY |
-                         JSPROP_PROPOP_ACCESSORS,
+                         JSPROP_PERMANENT | JSPROP_READONLY,
                          JS_STUBGETTER, JS_STUBSETTER)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -2515,8 +2513,7 @@ LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
   NS_ENSURE_TRUE(interfaces, NS_ERROR_OUT_OF_MEMORY);
   bool ok =
     JS_DefineProperty(cx, components, "interfaces", interfaces,
-                      JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY |
-                      JSPROP_PROPOP_ACCESSORS,
+                      JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY,
                       JS_STUBGETTER, JS_STUBSETTER);
   NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2539,8 +2536,7 @@ LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
 
     // Define the shim on the interfaces object.
     ok = JS_DefineProperty(cx, interfaces, geckoName, v,
-                           JSPROP_ENUMERATE | JSPROP_PERMANENT |
-                           JSPROP_READONLY | JSPROP_PROPOP_ACCESSORS,
+                           JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY,
                            JS_STUBGETTER, JS_STUBSETTER);
     NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
   }

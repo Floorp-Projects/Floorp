@@ -1379,7 +1379,7 @@ JS_InitCTypesClass(JSContext* cx, HandleObject global)
     return false;
 
   if (!JS_DefineProperty(cx, global, "ctypes", ctypes,
-                         JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_PROPOP_ACCESSORS,
+                         JSPROP_READONLY | JSPROP_PERMANENT,
                          JS_STUBGETTER, JS_STUBSETTER)){
     return false;
   }
