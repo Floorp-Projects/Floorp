@@ -5984,7 +5984,7 @@ GCRuntime::collect(bool incremental, int64_t budget, JSGCInvocationKind gckind,
     AutoStopVerifyingBarriers av(rt, reason == JS::gcreason::SHUTDOWN_CC ||
                                      reason == JS::gcreason::DESTROY_RUNTIME);
 
-    gcstats::AutoGCSlice agc(stats, scanZonesBeforeGC(), reason);
+    gcstats::AutoGCSlice agc(stats, scanZonesBeforeGC(), gckind, reason);
 
     cleanUpEverything = ShouldCleanUpEverything(reason, gckind);
 
