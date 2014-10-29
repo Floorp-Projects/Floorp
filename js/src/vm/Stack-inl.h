@@ -118,12 +118,9 @@ InterpreterFrame::unaliasedVar(uint32_t i, MaybeCheckAliasing checkAliasing)
 }
 
 inline Value &
-InterpreterFrame::unaliasedLocal(uint32_t i, MaybeCheckAliasing checkAliasing)
+InterpreterFrame::unaliasedLocal(uint32_t i)
 {
     MOZ_ASSERT(i < script()->nfixed());
-#ifdef DEBUG
-    CheckLocalUnaliased(checkAliasing, script(), i);
-#endif
     return slots()[i];
 }
 
@@ -502,13 +499,13 @@ AbstractFramePtr::unaliasedVar(uint32_t i, MaybeCheckAliasing checkAliasing)
 }
 
 inline Value &
-AbstractFramePtr::unaliasedLocal(uint32_t i, MaybeCheckAliasing checkAliasing)
+AbstractFramePtr::unaliasedLocal(uint32_t i)
 {
     if (isInterpreterFrame())
-        return asInterpreterFrame()->unaliasedLocal(i, checkAliasing);
+        return asInterpreterFrame()->unaliasedLocal(i);
     if (isBaselineFrame())
-        return asBaselineFrame()->unaliasedLocal(i, checkAliasing);
-    return asRematerializedFrame()->unaliasedLocal(i, checkAliasing);
+        return asBaselineFrame()->unaliasedLocal(i);
+    return asRematerializedFrame()->unaliasedLocal(i);
 }
 
 inline Value &
