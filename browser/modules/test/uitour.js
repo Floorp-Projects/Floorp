@@ -2,15 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Copied from the proposed JS library for Bedrock (ie, www.mozilla.org).
-
 // create namespace
 if (typeof Mozilla == 'undefined') {
 	var Mozilla = {};
 }
 
-(function($) {
-  'use strict';
+;(function($) {
+	'use strict';
 
 	// create namespace
 	if (typeof Mozilla.UITour == 'undefined') {
@@ -60,6 +58,9 @@ if (typeof Mozilla == 'undefined') {
 
 	Mozilla.UITour.DEFAULT_THEME_CYCLE_DELAY = 10 * 1000;
 
+	Mozilla.UITour.CONFIGNAME_SYNC = "sync";
+	Mozilla.UITour.CONFIGNAME_AVAILABLETARGETS = "availableTargets";
+
 	Mozilla.UITour.registerPageID = function(pageID) {
 		_sendEvent('registerPageID', {
 			pageID: pageID
@@ -86,7 +87,7 @@ if (typeof Mozilla == 'undefined') {
 					icon: buttons[i].icon,
 					style: buttons[i].style,
 					callbackID: _waitForCallback(buttons[i].callback)
-			});
+				});
 			}
 		}
 
@@ -156,9 +157,14 @@ if (typeof Mozilla == 'undefined') {
 		_sendEvent('removePinnedTab');
 	};
 
-	Mozilla.UITour.showMenu = function(name) {
+	Mozilla.UITour.showMenu = function(name, callback) {
+		var showCallbackID;
+		if (callback)
+			showCallbackID = _waitForCallback(callback);
+
 		_sendEvent('showMenu', {
-			name: name
+			name: name,
+			showCallbackID: showCallbackID,
 		});
 	};
 
@@ -166,6 +172,17 @@ if (typeof Mozilla == 'undefined') {
 		_sendEvent('hideMenu', {
 			name: name
 		});
+	};
+
+	Mozilla.UITour.startUrlbarCapture = function(text, url) {
+		_sendEvent('startUrlbarCapture', {
+			text: text,
+			url: url
+		});
+	};
+
+	Mozilla.UITour.endUrlbarCapture = function() {
+		_sendEvent('endUrlbarCapture');
 	};
 
 	Mozilla.UITour.getConfiguration = function(configName, callback) {
@@ -177,6 +194,13 @@ if (typeof Mozilla == 'undefined') {
 
 	Mozilla.UITour.showFirefoxAccounts = function() {
 		_sendEvent('showFirefoxAccounts');
+	};
+
+	Mozilla.UITour.addNavBarWidget = function(name, callback) {
+		_sendEvent('addNavBarWidget', {
+			name: name,
+			callbackID: _waitForCallback(callback),
+		});
 	};
 
 })();
