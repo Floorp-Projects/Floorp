@@ -273,12 +273,14 @@ this.ContentSearch = {
   }),
 
   _onMessageAddFormHistoryEntry: function (msg, entry) {
-    // There are some tests that use about:home and newtab that trigger a search
-    // and then immediately close the tab.  In those cases, the browser may have
-    // been destroyed by the time we receive this message, and as a result
-    // contentWindow is undefined.
-    if (!msg.target.contentWindow ||
-        PrivateBrowsingUtils.isBrowserPrivate(msg.target)) {
+    let isPrivate = true;
+    try {
+      // isBrowserPrivate assumes that the passed-in browser has all the normal
+      // properties, which won't be true if the browser has been destroyed.
+      // That may be the case here due to the asynchronous nature of messaging.
+      isPrivate = PrivateBrowsingUtils.isBrowserPrivate(msg.target);
+    } catch (err) {}
+    if (isPrivate || entry === "") {
       return Promise.resolve();
     }
     let browserData = this._suggestionDataForBrowser(msg.target, true);

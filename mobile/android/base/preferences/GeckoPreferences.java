@@ -296,6 +296,9 @@ OnSharedPreferenceChangeListener
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Make sure RestrictedProfiles is ready.
+        RestrictedProfiles.initWithProfile(GeckoProfile.get(this));
+
         if (GeckoProfile.get(this).inGuestMode()) {
             GuestSession.configureWindow(getWindow());
         }
@@ -700,7 +703,7 @@ OnSharedPreferenceChangeListener
                     i--;
                     continue;
                 } else if (PREFS_DEVTOOLS_REMOTE_ENABLED.equals(key)) {
-                    if (!RestrictedProfiles.isAllowed(RestrictedProfiles.Restriction.DISALLOW_REMOTE_DEBUGGING)) {
+                    if (!RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_REMOTE_DEBUGGING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -728,7 +731,7 @@ OnSharedPreferenceChangeListener
                     listPref.setSummary(selectedEntry);
                     continue;
                 } else if (PREFS_SYNC.equals(key) &&
-                           !RestrictedProfiles.isAllowed(RestrictedProfiles.Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
+                           !RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
                     // Don't show sync prefs while in guest mode.
                     preferences.removePreference(pref);
                     i--;

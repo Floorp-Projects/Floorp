@@ -55,13 +55,13 @@ function test() {
   is($$name(6).getAttribute("value"), "F",
     "The .A.E.F node's function cell displays the correct name.");
 
-  is($$duration(0).getAttribute("value"), "18",
+  is($$duration(0).getAttribute("value"), "15",
     "The root node's function cell displays the correct duration.");
-  is($$duration(1).getAttribute("value"), "18",
+  is($$duration(1).getAttribute("value"), "15",
     "The .A node's function cell displays the correct duration.");
-  is($$duration(2).getAttribute("value"), "11",
+  is($$duration(2).getAttribute("value"), "8",
     "The .A.B node's function cell displays the correct duration.");
-  is($$duration(3).getAttribute("value"), "6",
+  is($$duration(3).getAttribute("value"), "3",
     "The .A.B.D node's function cell displays the correct duration.");
   is($$duration(4).getAttribute("value"), "5",
     "The .A.B.C node's function cell displays the correct duration.");
@@ -82,7 +82,7 @@ let gSamples = [{
     { category: 32, location: "C (http://foo/bar/baz:56)" }
   ]
 }, {
-  time: 5 + 6,
+  time: 5 + 1,
   frames: [
     { category: 8,  location: "(root)" },
     { category: 8,  location: "A (http://foo/bar/baz:12)" },
@@ -90,7 +90,15 @@ let gSamples = [{
     { category: 64, location: "D (http://foo/bar/baz:78)" }
   ]
 }, {
-  time: 5 + 6 + 7,
+  time: 5 + 1 + 2,
+  frames: [
+    { category: 8,  location: "(root)" },
+    { category: 8,  location: "A (http://foo/bar/baz:12)" },
+    { category: 16, location: "B (http://foo/bar/baz:34)" },
+    { category: 64, location: "D (http://foo/bar/baz:78)" }
+  ]
+}, {
+  time: 5 + 1 + 2 + 7,
   frames: [
     { category: 8,   location: "(root)" },
     { category: 8,   location: "A (http://foo/bar/baz:12)" },

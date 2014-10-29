@@ -8,14 +8,23 @@
 
 %{ C++
 struct nsFont;
+
+namespace mozilla {
+namespace embedding {
+  class PrintData;
+}
+}
 %}
 
 interface nsIStringEnumerator;
+interface nsIWebBrowserPrint;
 
 /**
  * Native types
  */
 [ref] native nsNativeFontRef(nsFont);
+[ref] native PrintDataRef(const mozilla::embedding::PrintData);
+[ptr] native PrintDataPtr(mozilla::embedding::PrintData);
 
 /**
  * Print options interface
@@ -24,7 +33,7 @@ interface nsIStringEnumerator;
  * John Keiser <jkeiser@netscape.com> and Roland Mainz
  * <roland.mainz@informatik.med.uni-giessen.de> for futher details.
  */
-[scriptable, uuid(92597c2b-109b-40bb-8f93-9b9acfa31de8)]
+[scriptable, uuid(2ac74034-700e-40fd-8059-81d33223af58)]
 
 interface nsIPrintOptions : nsISupports
 {
@@ -57,6 +66,39 @@ interface nsIPrintOptions : nsISupports
   const short kNativeDataPrintRecord        = 0;
 
   [noscript] voidPtr GetNativeData(in short aDataType);
+
+  /**
+   * Given some nsIPrintSettings and (optionally) an nsIWebBrowserPrint, populates
+   * a PrintData representing them which can be sent over IPC. Values are only
+   * ever read from aSettings and aWBP.
+   *
+   * @param aSettings
+   *        An nsIPrintSettings for a print job.
+   * @param aWBP (optional)
+   *        The nsIWebBrowserPrint for the print job.
+   * @param data
+   *        Pointer to a pre-existing PrintData to populate.
+   *
+   * @return nsresult
+   */
+  [noscript] void SerializeToPrintData(in nsIPrintSettings aPrintSettings,
+                                       in nsIWebBrowserPrint aWebBrowserPrint,
+                                       in PrintDataPtr data);
+
+  /**
+   * This function is the opposite of SerializeToPrintData, in that it takes
+   * a PrintData, and populates a pre-existing nsIPrintSettings with the data
+   * from PrintData.
+   *
+   * @param PrintData
+   *        Printing information sent through IPC.
+   * @param settings
+   *        A pre-existing nsIPrintSettings to populate with the PrintData.
+   *
+   * @return nsresult
+   */
+  [noscript] void DeserializeToPrintSettings(in PrintDataRef data,
+                                             in nsIPrintSettings aPrintSettings);
 };
 
 [scriptable, uuid(5e738fff-404c-4c94-9189-e8f2cce93e94)]
