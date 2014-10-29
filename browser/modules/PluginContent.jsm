@@ -125,6 +125,14 @@ PluginContent.prototype = {
       pluginTag = pluginHost.getPluginTagForType(pluginElement.actualType);
       pluginName = BrowserUtils.makeNicePluginName(pluginTag.name);
 
+      // Convert this from nsIPluginTag so it can be serialized.
+      let properties = ["name", "description", "filename", "version", "enabledState"];
+      let pluginTagCopy = {};
+      for (let prop of properties) {
+        pluginTagCopy[prop] = pluginTag[prop];
+      }
+      pluginTag = pluginTagCopy;
+
       permissionString = pluginHost.getPermissionStringForType(pluginElement.actualType);
       fallbackType = pluginElement.defaultFallbackType;
       blocklistState = pluginHost.getBlocklistStateForType(pluginElement.actualType);
