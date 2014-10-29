@@ -4282,13 +4282,12 @@ this.XPIProvider = {
 
     let principal = Cc["@mozilla.org/systemprincipal;1"].
                     createInstance(Ci.nsIPrincipal);
-#ifdef NIGHTLY_BUILD
-    if (!aMultiprocessCompatible) {
+
+    if (!aMultiprocessCompatible && Services.appinfo.browserTabsRemoteAutostart) {
       let interposition = Cc["@mozilla.org/addons/multiprocess-shims;1"].
         getService(Ci.nsIAddonInterposition);
       Cu.setAddonInterposition(aId, interposition);
     }
-#endif
 
     if (!aFile.exists()) {
       this.bootstrapScopes[aId] =
