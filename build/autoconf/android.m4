@@ -240,7 +240,6 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
             fi
         else
             STLPORT_CPPFLAGS="-isystem $_topsrcdir/build/stlport/stlport -isystem $_topsrcdir/build/stlport/overrides -isystem $android_ndk/sources/cxx-stl/system/include"
-            STLPORT_LIBS="$_objdir/build/stlport/libstlport_static.a -static-libstdc++"
         fi
     fi
     CXXFLAGS="$CXXFLAGS $STLPORT_CPPFLAGS"

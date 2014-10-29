@@ -5,11 +5,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 @template
-def StdCppCompat():
-    '''Template for libstdc++ compatibility for target binaries.'''
+def Binary():
+    '''Generic template for target binaries. Meant to be used by other
+    templates.'''
 
     if CONFIG['MOZ_LIBSTDCXX_TARGET_VERSION']:
         USE_LIBS += ['stdc++compat']
+
+    # Ideally, we'd support not adding this to the LIB_IS_C_ONLY case,
+    # but that variable is actually only set in db/sqlite/src, which
+    # doesn't build a shared library on the relevant platforms anyways.
+    # Eventually, though, we should detect LIB_IS_C_ONLY based on the
+    # associated SOURCES (and there might actually be places where we
+    # haven't set it but should have).
+    if CONFIG['STLPORT_LIBS']:
+        OS_LIBS += [CONFIG['STLPORT_LIBS']]
+    elif CONFIG['OS_TARGET'] == 'Android':
+        USE_LIBS += ['stlport']
 
 
 @template
@@ -17,7 +29,7 @@ def Program(name):
     '''Template for program executables.'''
     PROGRAM = name
 
-    StdCppCompat()
+    Binary()
 
 
 @template
@@ -29,7 +41,7 @@ def SimplePrograms(names, ext='.cpp'):
     SIMPLE_PROGRAMS += names
     SOURCES += ['%s%s' % (name, ext) for name in names]
 
-    StdCppCompat()
+    Binary()
 
 
 @template
@@ -41,7 +53,7 @@ def CppUnitTests(names, ext='.cpp'):
     CPP_UNIT_TESTS += names
     SOURCES += ['%s%s' % (name, ext) for name in names]
 
-    StdCppCompat()
+    Binary()
 
 
 @template
@@ -57,7 +69,7 @@ def SharedLibrary(name):
 
     FORCE_SHARED_LIB = True
 
-    StdCppCompat()
+    Binary()
 
 
 @template
