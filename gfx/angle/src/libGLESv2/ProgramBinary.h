@@ -86,6 +86,14 @@ struct LinkedVarying
     unsigned int semanticIndexCount;
 };
 
+struct LinkResult
+{
+    bool linkSuccess;
+    Error error;
+
+    LinkResult(bool linkSuccess, const Error &error);
+};
+
 // This is the result of linking a program. It is the state that would be passed to ProgramBinary.
 class ProgramBinary : public RefCountObject
 {
@@ -138,12 +146,13 @@ class ProgramBinary : public RefCountObject
     Error applyUniforms();
     Error applyUniformBuffers(const std::vector<Buffer*> boundBuffers, const Caps &caps);
 
-    bool load(InfoLog &infoLog, GLenum binaryFormat, const void *binary, GLsizei length);
-    bool save(GLenum *binaryFormat, void *binary, GLsizei bufSize, GLsizei *length);
+    LinkResult load(InfoLog &infoLog, GLenum binaryFormat, const void *binary, GLsizei length);
+    Error save(GLenum *binaryFormat, void *binary, GLsizei bufSize, GLsizei *length);
     GLint getLength();
 
-    bool link(InfoLog &infoLog, const AttributeBindings &attributeBindings, Shader *fragmentShader, Shader *vertexShader,
-              const std::vector<std::string>& transformFeedbackVaryings, GLenum transformFeedbackBufferMode, const Caps &caps);
+    LinkResult link(InfoLog &infoLog, const AttributeBindings &attributeBindings, Shader *fragmentShader, Shader *vertexShader,
+                    const std::vector<std::string>& transformFeedbackVaryings, GLenum transformFeedbackBufferMode,
+                    const Caps &caps);
     void getAttachedShaders(GLsizei maxCount, GLsizei *count, GLuint *shaders);
 
     void getActiveAttribute(GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, GLchar *name) const;

@@ -9,7 +9,6 @@
 
 #include "mozilla/StaticMutex.h"
 #include "mozilla/ThreadLocal.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/unused.h"
 
 #include "nsString.h"
@@ -27,6 +26,8 @@ static pid_t gettid()
 }
 #endif
 
+using mozilla::TimeStamp;
+
 namespace mozilla {
 namespace tasktracer {
 
@@ -34,6 +35,8 @@ static mozilla::ThreadLocal<TraceInfo*>* sTraceInfoTLS = nullptr;
 static mozilla::StaticMutex sMutex;
 static nsTArray<nsAutoPtr<TraceInfo>>* sTraceInfos = nullptr;
 static bool sIsLoggingStarted = false;
+
+static TimeStamp sStartTime;
 
 namespace {
 
@@ -151,6 +154,12 @@ IsStartLogging(TraceInfo* aInfo)
   return aInfo ? aInfo->mStartLogging : false;
 }
 
+static PRInt64
+DurationFromStart()
+{
+  return static_cast<PRInt64>((TimeStamp::Now() - sStartTime).ToMilliseconds());
+}
+
 } // namespace anonymous
 
 nsCString*
@@ -264,8 +273,8 @@ LogDispatch(uint64_t aTaskId, uint64_t aParentTaskId, uint64_t aSourceEventId,
   nsCString* log = info->AppendLog();
   if (log) {
     log->AppendPrintf("%d %lld %lld %lld %d %lld",
-                      ACTION_DISPATCH, aTaskId, PR_Now(), aSourceEventId,
-                      aSourceEventType, aParentTaskId);
+                      ACTION_DISPATCH, aTaskId, DurationFromStart(),
+                      aSourceEventId, aSourceEventType, aParentTaskId);
   }
 }
 
@@ -282,7 +291,7 @@ LogBegin(uint64_t aTaskId, uint64_t aSourceEventId)
   nsCString* log = info->AppendLog();
   if (log) {
     log->AppendPrintf("%d %lld %lld %d %d",
-                      ACTION_BEGIN, aTaskId, PR_Now(), getpid(), gettid());
+                      ACTION_BEGIN, aTaskId, DurationFromStart(), getpid(), gettid());
   }
 }
 
@@ -298,7 +307,8 @@ LogEnd(uint64_t aTaskId, uint64_t aSourceEventId)
   // [2 taskId endTime]
   nsCString* log = info->AppendLog();
   if (log) {
-    log->AppendPrintf("%d %lld %lld", ACTION_END, aTaskId, PR_Now());
+    log->AppendPrintf("%d %lld %lld", ACTION_END, aTaskId,
+                      DurationFromStart());
   }
 }
 
@@ -358,15 +368,16 @@ void AddLabel(const char* aFormat, ...)
   nsCString* log = info->AppendLog();
   if (log) {
     log->AppendPrintf("%d %lld %lld \"%s\"", ACTION_ADD_LABEL, info->mCurTaskId,
-                      PR_Now(), buffer.get());
+                      DurationFromStart(), buffer.get());
   }
 }
 
 // Functions used by GeckoProfiler.
 
 void
-StartLogging()
+StartLogging(TimeStamp aStartTime)
 {
+  sStartTime = aStartTime;
   SetLogStarted(true);
 }
 

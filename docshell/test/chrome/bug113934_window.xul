@@ -53,8 +53,9 @@
       var s2 = snapshotWindow($("f2").contentWindow);
       var s3 = snapshotWindow($("f3").contentWindow);
 
-      ok(!compareSnapshots(s2, s3, true)[0],
-         "Should look different due to different sizing");
+      // This test is broken - see bug 1090274
+      //ok(!compareSnapshots(s2, s3, true)[0],
+      //   "Should look different due to different sizing");
 
       function getDOM(id) {
         return $(id).contentDocument.documentElement.innerHTML;
