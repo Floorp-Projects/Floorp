@@ -202,6 +202,49 @@ body {
   text-decoration: underline;
 }
 
+.room-list > .room-entry > h2 > .copy-link {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: none;
+  margin: .1em .5em; /* relative to _this_ line's font, not the document's */
+  background-color: transparent;  /* override browser default for button tags */
+}
+
+@keyframes drop-and-fade-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 100; transform: translateY(0); }
+}
+
+.room-list > .room-entry:hover > h2 > .copy-link {
+  background: transparent url(../img/svg/copy-16x16.svg);
+  cursor: pointer;
+  animation: drop-and-fade-in 0.4s;
+  animation-fill-mode: forwards;
+}
+
+/* scale this up to 1.1x and then back to the original size */
+@keyframes pulse {
+  0%, 100% { transform: scale(1.0); }
+  50% { transform: scale(1.1); }
+}
+
+.room-list > .room-entry > h2 > .copy-link.checked {
+  background: transparent url(../img/svg/checkmark-16x16.svg);
+  animation: pulse .250s;
+  animation-timing-function: ease-in-out;
+}
+
+.room-list > .room-entry > h2 {
+  display: inline-block;
+}
+
+/* keep the various room-entry row pieces aligned with each other */
+.room-list > .room-entry > h2 > button,
+.room-list > .room-entry > h2 > span {
+  vertical-align: middle;
+}
+
 /* Buttons */
 
 .button-group {

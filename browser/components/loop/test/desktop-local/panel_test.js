@@ -637,6 +637,72 @@ describe("loop.panel", function() {
     });
   });
 
+  describe("loop.panel.RoomEntry", function() {
+    var buttonNode, roomData, roomEntry, roomStore, dispatcher;
+
+    beforeEach(function() {
+      dispatcher = new loop.Dispatcher();
+      roomData = {
+        roomToken: "QzBbvGmIZWU",
+        roomUrl: "http://sample/QzBbvGmIZWU",
+        roomName: "Second Room Name",
+        maxSize: 2,
+        participants: [
+          { displayName: "Alexis", account: "alexis@example.com",
+            roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb" },
+          { displayName: "Adam",
+            roomConnectionId: "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7" }
+        ],
+        ctime: 1405517418
+      };
+      roomStore = new loop.store.Room(roomData);
+      roomEntry = mountRoomEntry();
+      buttonNode = roomEntry.getDOMNode().querySelector("button.copy-link");
+    });
+
+    function mountRoomEntry() {
+      return TestUtils.renderIntoDocument(loop.panel.RoomEntry({
+        openRoom: sandbox.stub(),
+        room: roomStore
+      }));
+    }
+
+    it("should not display copy-link button by default", function() {
+      expect(buttonNode).to.not.equal(null);
+    });
+
+    it("should copy the URL when the click event fires", function() {
+      TestUtils.Simulate.click(buttonNode);
+
+      sinon.assert.calledOnce(navigator.mozLoop.copyString);
+      sinon.assert.calledWithExactly(navigator.mozLoop.copyString,
+        roomData.roomUrl);
+    });
+
+    it("should set state.urlCopied when the click event fires", function() {
+      TestUtils.Simulate.click(buttonNode);
+
+      expect(roomEntry.state.urlCopied).to.equal(true);
+    });
+
+    it("should switch to displaying a check icon when the URL has been copied",
+      function() {
+        TestUtils.Simulate.click(buttonNode);
+
+        expect(buttonNode.classList.contains("checked")).eql(true);
+      });
+
+    it("should not display a check icon after mouse leaves the entry",
+      function() {
+        var roomNode = roomEntry.getDOMNode();
+        TestUtils.Simulate.click(buttonNode);
+
+        TestUtils.SimulateNative.mouseOut(roomNode);
+
+        expect(buttonNode.classList.contains("checked")).eql(false);
+      });
+  });
+
   describe("loop.panel.RoomList", function() {
     var roomListStore, dispatcher;
 

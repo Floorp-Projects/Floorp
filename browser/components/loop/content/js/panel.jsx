@@ -471,13 +471,28 @@ loop.panel = (function(_, mozL10n) {
       room:     React.PropTypes.instanceOf(loop.store.Room).isRequired
     },
 
+    getInitialState: function() {
+      return { urlCopied: false };
+    },
+
     shouldComponentUpdate: function(nextProps, nextState) {
-      return nextProps.room.ctime > this.props.room.ctime;
+      return (nextProps.room.ctime > this.props.room.ctime) ||
+        (nextState.urlCopied !== this.state.urlCopied);
     },
 
     handleClickRoom: function(event) {
       event.preventDefault();
       this.props.openRoom(this.props.room);
+    },
+
+    handleCopyButtonClick: function(event) {
+      event.preventDefault();
+      navigator.mozLoop.copyString(this.props.room.roomUrl);
+      this.setState({urlCopied: true});
+    },
+
+    handleMouseLeave: function(event) {
+      this.setState({urlCopied: false});
     },
 
     _isActive: function() {
@@ -491,12 +506,18 @@ loop.panel = (function(_, mozL10n) {
         "room-entry": true,
         "room-active": this._isActive()
       });
+      var copyButtonClasses = React.addons.classSet({
+        'copy-link': true,
+        'checked': this.state.urlCopied
+      });
 
       return (
-        <div className={roomClasses}>
+        <div className={roomClasses} onMouseLeave={this.handleMouseLeave}>
           <h2>
             <span className="room-notification" />
-            {room.roomName}
+              {room.roomName}
+            <button className={copyButtonClasses}
+              onClick={this.handleCopyButtonClick}/>
           </h2>
           <p>
             <a ref="room" href="#" onClick={this.handleClickRoom}>
@@ -762,6 +783,7 @@ loop.panel = (function(_, mozL10n) {
     AvailabilityDropdown: AvailabilityDropdown,
     CallUrlResult: CallUrlResult,
     PanelView: PanelView,
+    RoomEntry: RoomEntry,
     RoomList: RoomList,
     SettingsDropdown: SettingsDropdown,
     ToSView: ToSView
