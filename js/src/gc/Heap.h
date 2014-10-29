@@ -945,10 +945,6 @@ struct Chunk
         return info.numArenasFree != 0;
     }
 
-    inline void addToAvailableList(JSRuntime *rt);
-    inline void insertToAvailableList(Chunk **insertPoint);
-    inline void removeFromAvailableList();
-
     ArenaHeader *allocateArena(JSRuntime *rt, JS::Zone *zone, AllocKind kind,
                                const AutoLockGC &lock);
 
