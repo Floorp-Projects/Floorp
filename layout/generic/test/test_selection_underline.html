@@ -195,6 +195,18 @@ const kDecorations = [
 
 ];
 
+function getFuzz(test) {
+  // Only failing on Windows 8, and only for 16 permutations.
+  if (navigator.userAgent.indexOf("Windows NT 6.2") > -1 &&
+      test.decoration.styleName == "solid" &&
+      test.decoration.relativeSize == "1" &&
+      test.font.family == "mplusTest" &&
+      test.selection.typeName != "SpellCheck") {
+    return { numDifferentPixels: 194, maxDifference: 1 };
+  }
+  return null;
+}
+
 function run()
 {
   if (++gSelectionIndex == kSelections.length) {
@@ -263,7 +275,7 @@ function doTest(aTest)
       todo(false, "Rendering of" + description);
     } else {
       assertSnapshots(result.snapshot, reference.snapshot, true,
-                      null /*no fuzz*/, description, "");
+                      getFuzz(aTest), description, "");
     }
 
     canvases = [];

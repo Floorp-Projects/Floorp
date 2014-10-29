@@ -26,6 +26,7 @@
 #include <sys/resource.h>
 #include <unistd.h>
 #include <stdlib.h> // atoi
+#include <sys/prctl.h>
 #ifndef ANDROID // no Android impl
 #  include <ucontext.h>
 #endif
@@ -42,6 +43,13 @@ static unsigned int _gdb_sleep_duration = 300;
 #if defined(LINUX) && defined(DEBUG) && \
       (defined(__i386) || defined(__x86_64) || defined(PPC))
 #define CRAWL_STACK_ON_SIGSEGV
+#endif
+
+#ifndef PR_SET_PTRACER
+#define PR_SET_PTRACER 0x59616d61
+#endif
+#ifndef PR_SET_PTRACER_ANY
+#define PR_SET_PTRACER_ANY ((unsigned long)-1)
 #endif
 
 #if defined(CRAWL_STACK_ON_SIGSEGV)
@@ -86,6 +94,9 @@ ah_crap_handler(int signum)
   printf("Type 'gdb %s %d' to attach your debugger to this thread.\n",
          _progname,
          getpid());
+
+  // Allow us to be ptraced by gdb on Linux with Yama restrictions enabled.
+  prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY);
 
   sleep(_gdb_sleep_duration);
 

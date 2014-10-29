@@ -50,8 +50,8 @@ expect =  0;
 addTestCase();
 
 // Date.parse is accurate to the second;  valueOf() to the millisecond  -
-status = "Math.abs(Date.parse(now.toLocaleString()) - now.valueOf()) < 1000";  
-actual =   Math.abs(Date.parse(now.toLocaleString()) -  now.valueOf()) < 1000;
+status = "Math.abs(Date.parse(now.toLocaleString('en-US')) - now.valueOf()) < 1000";
+actual =   Math.abs(Date.parse(now.toLocaleString('en-US')) -  now.valueOf()) < 1000;
 expect = true;
 addTestCase();
 
@@ -103,8 +103,8 @@ function addDateTestCase(date_given_in_milliseconds)
 {
   var givenDate = new Date(date_given_in_milliseconds);
 
-  status = 'Date.parse('   +   givenDate   +   ').toLocaleString())';  
-  actual =  Date.parse(givenDate.toLocaleString());
+  status = 'Date.parse('   +   givenDate   +   ').toLocaleString("en-US"))';
+  actual =  Date.parse(givenDate.toLocaleString("en-US"));
   expect = date_given_in_milliseconds;
   addTestCase();
 }

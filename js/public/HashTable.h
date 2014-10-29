@@ -536,11 +536,14 @@ struct PointerHasher
     static HashNumber hash(const Lookup &l) {
         MOZ_ASSERT(!JS::IsPoisonedPtr(l));
         size_t word = reinterpret_cast<size_t>(l) >> zeroBits;
-        JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
+        static_assert(sizeof(HashNumber) == 4,
+                      "subsequent code assumes a four-byte hash");
 #if JS_BITS_PER_WORD == 32
         return HashNumber(word);
 #else
-        JS_STATIC_ASSERT(sizeof word == 8);
+        static_assert(sizeof(word) == 8,
+                      "unexpected word size, new hashing strategy required to "
+                      "properly incorporate all bits");
         return HashNumber((word >> 32) ^ word);
 #endif
     }
@@ -587,7 +590,8 @@ struct DefaultHasher<double>
 {
     typedef double Lookup;
     static HashNumber hash(double d) {
-        JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
+        static_assert(sizeof(HashNumber) == 4,
+                      "subsequent code assumes a four-byte hash");
         uint64_t u = mozilla::BitwiseCast<uint64_t>(d);
         return HashNumber(u ^ (u >> 32));
     }
@@ -601,7 +605,8 @@ struct DefaultHasher<float>
 {
     typedef float Lookup;
     static HashNumber hash(float f) {
-        JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
+        static_assert(sizeof(HashNumber) == 4,
+                      "subsequent code assumes a four-byte hash");
         return HashNumber(mozilla::BitwiseCast<uint32_t>(f));
     }
     static bool match(float lhs, float rhs) {

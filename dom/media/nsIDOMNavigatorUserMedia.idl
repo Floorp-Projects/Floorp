@@ -34,5 +34,5 @@ interface nsIDOMGetUserMediaSuccessCallback : nsISupports
 [scriptable, function, uuid(2614bbcf-85cc-43e5-8740-964f52bdc7ca)]
 interface nsIDOMGetUserMediaErrorCallback : nsISupports
 {
-  void onError(in DOMString error);
+  void onError(in nsISupports error);
 };
