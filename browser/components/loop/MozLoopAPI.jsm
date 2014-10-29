@@ -77,7 +77,7 @@ const cloneValueInto = function(value, targetWindow) {
 
   // Strip Function properties, since they can not be cloned across boundaries
   // like this.
-  for (let prop of value) {
+  for (let prop of Object.getOwnPropertyNames(value)) {
     if (typeof value[prop] == "function") {
       delete value[prop];
     }
