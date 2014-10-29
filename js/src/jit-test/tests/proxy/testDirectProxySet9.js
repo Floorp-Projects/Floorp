@@ -5,9 +5,7 @@ var t = {x: 1};
 var p = new Proxy(t, {
     defineProperty(t, id, desc) {
         hits++;
-        assertEq(desc.enumerable, true);
-        assertEq(desc.configurable, true);
-        assertEq(desc.writable, true);
+        assertEq(Object.getOwnPropertyNames(desc).join(","), "value");
         assertEq(desc.value, 42);
     }
 });
