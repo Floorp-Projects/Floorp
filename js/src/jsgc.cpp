@@ -664,32 +664,92 @@ FreeChunk(JSRuntime *rt, Chunk *p)
 }
 
 /* Must be called with the GC lock taken. */
-inline Chunk *
-ChunkPool::get(JSRuntime *rt)
+Chunk *
+ChunkPool::pop()
 {
-    Chunk *chunk = head_;
-    if (!chunk) {
-        MOZ_ASSERT(!count_);
+    MOZ_ASSERT(bool(head_) == bool(count_));
+    if (!count_)
         return nullptr;
-    }
-
-    MOZ_ASSERT(count_);
-    head_ = chunk->info.next;
-    --count_;
-    return chunk;
+    return remove(head_);
 }
 
 /* Must be called either during the GC or with the GC lock taken. */
-inline void
-ChunkPool::put(Chunk *chunk)
+void
+ChunkPool::push(Chunk *chunk)
 {
+    MOZ_ASSERT(!chunk->info.next);
+    MOZ_ASSERT(!chunk->info.prevp);
+    MOZ_ASSERT_IF(head_, head_->info.prevp == &head_);
+
     chunk->info.age = 0;
     chunk->info.next = head_;
+    chunk->info.prevp = &head_;
+    if (head_)
+        head_->info.prevp = &chunk->info.next;
     head_ = chunk;
-    count_++;
+    ++count_;
+
+    MOZ_ASSERT(verify());
 }
 
-inline Chunk *
+/* Must be called with the GC lock taken. */
+Chunk *
+ChunkPool::remove(Chunk *chunk)
+{
+    MOZ_ASSERT(count_ > 0);
+    MOZ_ASSERT(contains(chunk));
+
+    *chunk->info.prevp = chunk->info.next;
+    if (chunk->info.next) {
+        MOZ_ASSERT(chunk->info.next->info.prevp == &chunk->info.next);
+        chunk->info.next->info.prevp = chunk->info.prevp;
+    }
+    chunk->info.next = nullptr;
+    chunk->info.prevp = nullptr;
+    --count_;
+
+    MOZ_ASSERT(count_ >= 0);
+    MOZ_ASSERT(verify());
+    return chunk;
+}
+
+#ifdef DEBUG
+bool
+ChunkPool::contains(Chunk *chunk) const
+{
+    Chunk *const *prevp = &head_;
+    Chunk *cursor = head_;
+    while (cursor) {
+        MOZ_ASSERT(cursor->info.prevp == prevp);
+        if (cursor == chunk)
+            return true;
+        prevp = &cursor->info.next;
+        cursor = cursor->info.next;
+    }
+    return false;
+}
+
+bool
+ChunkPool::verify() const
+{
+    uint32_t count = 0;
+    Chunk *const *expected_prevp = &head_;
+    Chunk *cursor = head_;
+    while (cursor) {
+        MOZ_ASSERT(cursor->info.prevp);
+        MOZ_ASSERT(cursor->info.prevp == expected_prevp);
+        MOZ_ASSERT(*cursor->info.prevp == cursor);
+        MOZ_ASSERT_IF(cursor->info.next, cursor->info.next->info.prevp == &cursor->info.next);
+        expected_prevp = &cursor->info.next;
+        cursor = cursor->info.next;
+        ++count;
+    }
+    MOZ_ASSERT(count_ == count);
+    return true;
+}
+#endif
+
+Chunk *
 ChunkPool::Enum::front()
 {
     Chunk *chunk = *chunkp;
@@ -697,14 +757,14 @@ ChunkPool::Enum::front()
     return chunk;
 }
 
-inline void
+void
 ChunkPool::Enum::popFront()
 {
     MOZ_ASSERT(!empty());
     chunkp = &front()->info.next;
 }
 
-inline void
+void
 ChunkPool::Enum::removeAndPopFront()
 {
     MOZ_ASSERT(!empty());
@@ -787,7 +847,7 @@ Chunk::allocate(JSRuntime *rt)
 }
 
 /* Must be called with the GC lock taken. */
-inline void
+void
 GCRuntime::releaseChunk(Chunk *chunk)
 {
     MOZ_ASSERT(chunk);
@@ -840,6 +900,8 @@ Chunk::init(JSRuntime *rt)
 
     /* Initialize the chunk info. */
     info.age = 0;
+    info.next = nullptr;
+    info.prevp = nullptr;
     info.trailer.storeBuffer = nullptr;
     info.trailer.location = ChunkLocationBitTenuredHeap;
     info.trailer.runtime = rt;
@@ -1025,7 +1087,7 @@ GCRuntime::moveChunkToFreePool(Chunk *chunk, const AutoLockGC &lock)
     MOZ_ASSERT(chunk->unused());
     MOZ_ASSERT(chunkSet.has(chunk));
     chunkSet.remove(chunk);
-    emptyChunks(lock).put(chunk);
+    emptyChunks(lock).push(chunk);
 }
 
 inline bool
@@ -1084,7 +1146,7 @@ GCRuntime::pickChunk(const AutoLockGC &lock,
     if (chunk)
         return chunk;
 
-    chunk = emptyChunks(lock).get(rt);
+    chunk = emptyChunks(lock).pop();
     if (!chunk) {
         chunk = Chunk::allocate(rt);
         if (!chunk)
@@ -3654,7 +3716,7 @@ BackgroundAllocTask::run()
             if (!chunk)
                 break;
         }
-        chunkPool_.put(chunk);
+        chunkPool_.push(chunk);
     }
 }
 
