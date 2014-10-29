@@ -25,6 +25,7 @@ include protocol PImageBridge;
 include protocol PMemoryReportRequest;
 include protocol PMobileConnection;
 include protocol PNecko;
+include protocol PPluginModule;
 include protocol PPrinting;
 include protocol PScreenManager;
 include protocol PSharedBufferManager;
@@ -41,6 +42,7 @@ include JavaScriptTypes;
 include InputStreamParams;
 include PTabContext;
 include URIParams;
+include PluginTypes;
 include ProtocolTypes;
 
 // Workaround to prevent error if PContentChild.cpp & PContentBridgeParent.cpp
@@ -328,6 +330,8 @@ union MaybeFileDesc {
 
 prio(normal upto high) intr protocol PContent
 {
+    parent spawns PPluginModule;
+
     parent opens PCompositor;
     parent opens PSharedBufferManager;
     parent opens PImageBridge;
@@ -531,6 +535,29 @@ parent:
                             ProcessPriority priority)
         returns (uint64_t id, bool isForApp, bool isForBrowser);
     intr BridgeToChildProcess(uint64_t id);
+
+    /**
+     * This call connects the content process to a plugin process. While this
+     * call runs, a new PluginModuleParent will be created in the ContentChild
+     * via bridging. The corresponding PluginModuleChild will live in the plugin
+     * process. We use intr semantics here to ensure that the PluginModuleParent
+     * allocation message is dispatched before LoadPlugin returns.
+     */
+    intr LoadPlugin(uint32_t pluginId);
+
+    /**
+     * This call returns the set of plugins loaded in the chrome
+     * process. However, in many cases this set will not have changed since the
+     * last FindPlugins message. Consequently, the chrome process increments an
+     * epoch number every time the set of plugins changes. The content process
+     * sends up the last epoch it observed. If the epochs are the same, the
+     * chrome process returns no plugins. Otherwise it returns a complete list.
+     *
+     * |pluginEpoch| is the epoch last observed by the content
+     * process. |newPluginEpoch| is the current epoch in the chrome process. If
+     * |pluginEpoch == newPluginEpoch|, then |plugins| will be left empty.
+     */
+    sync FindPlugins(uint32_t pluginEpoch) returns (PluginTag[] plugins, uint32_t newPluginEpoch);
 
     async PJavaScript();
 

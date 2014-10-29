@@ -80,7 +80,8 @@ using mozilla::PluginLibrary;
 using mozilla::PluginPRLibrary;
 
 #include "mozilla/plugins/PluginModuleParent.h"
-using mozilla::plugins::PluginModuleParent;
+using mozilla::plugins::PluginModuleChromeParent;
+using mozilla::plugins::PluginModuleContentParent;
 
 #ifdef MOZ_X11
 #include "mozilla/X11Util.h"
@@ -247,6 +248,10 @@ nsNPAPIPlugin::PluginCrashed(const nsAString& pluginDumpID,
 bool
 nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
 {
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return true;
+  }
+
 #if (MOZ_WIDGET_GTK == 3)
   // We force OOP on Linux/GTK3 because some plugins use GTK2 and both GTK
   // libraries can't be loaded in the same process.
@@ -388,8 +393,12 @@ GetNewPluginLibrary(nsPluginTag *aPluginTag)
     return nullptr;
   }
 
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return PluginModuleContentParent::LoadModule(aPluginTag->mId);
+  }
+
   if (nsNPAPIPlugin::RunPluginOOP(aPluginTag)) {
-    return PluginModuleParent::LoadModule(aPluginTag->mFullPath.get());
+    return PluginModuleChromeParent::LoadModule(aPluginTag->mFullPath.get(), aPluginTag->mId);
   }
   return new PluginPRLibrary(aPluginTag->mFullPath.get(), aPluginTag->mLibrary);
 }
