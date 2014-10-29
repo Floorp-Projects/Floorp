@@ -76,7 +76,7 @@ var WebcompatReporter = {
   },
 
   reportIssue: function(url) {
-    let webcompatURL = new URL("http://webcompat.com/");
+    let webcompatURL = new URL("https://webcompat.com/");
     webcompatURL.searchParams.append("open", "1");
     webcompatURL.searchParams.append("url", url);
     if (PrivateBrowsingUtils.isBrowserPrivate(BrowserApp.selectedTab.browser)) {

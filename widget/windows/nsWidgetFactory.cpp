@@ -244,12 +244,9 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
 #endif
 #ifdef NS_PRINTING
   { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintOptionsWinConstructor },
-  { &kNS_PRINTER_ENUMERATOR_CID, false, nullptr, nsPrinterEnumeratorWinConstructor,
-    Module::MAIN_PROCESS_ONLY },
-  { &kNS_PRINTSESSION_CID, false, nullptr, nsPrintSessionConstructor,
-    Module::MAIN_PROCESS_ONLY },
-  { &kNS_DEVICE_CONTEXT_SPEC_CID, false, nullptr, nsDeviceContextSpecWinConstructor,
-    Module::MAIN_PROCESS_ONLY },
+  { &kNS_PRINTER_ENUMERATOR_CID, false, nullptr, nsPrinterEnumeratorWinConstructor },
+  { &kNS_PRINTSESSION_CID, false, nullptr, nsPrintSessionConstructor },
+  { &kNS_DEVICE_CONTEXT_SPEC_CID, false, nullptr, nsDeviceContextSpecWinConstructor },
 #endif
   { nullptr }
 };
@@ -282,12 +279,9 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 #endif
 #ifdef NS_PRINTING
   { "@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID },
-  { "@mozilla.org/gfx/printerenumerator;1", &kNS_PRINTER_ENUMERATOR_CID,
-    Module::MAIN_PROCESS_ONLY },
-  { "@mozilla.org/gfx/printsession;1", &kNS_PRINTSESSION_CID,
-    Module::MAIN_PROCESS_ONLY },
-  { "@mozilla.org/gfx/devicecontextspec;1", &kNS_DEVICE_CONTEXT_SPEC_CID,
-    Module::MAIN_PROCESS_ONLY },
+  { "@mozilla.org/gfx/printerenumerator;1", &kNS_PRINTER_ENUMERATOR_CID },
+  { "@mozilla.org/gfx/printsession;1", &kNS_PRINTSESSION_CID },
+  { "@mozilla.org/gfx/devicecontextspec;1", &kNS_DEVICE_CONTEXT_SPEC_CID },
 #endif
   { nullptr }
 };
