@@ -945,8 +945,8 @@ SelectionCarets::GetFrameSelection()
 
 nsresult
 SelectionCarets::NotifySelectionChanged(nsIDOMDocument* aDoc,
-                                       nsISelection* aSel,
-                                       int16_t aReason)
+                                        nsISelection* aSel,
+                                        int16_t aReason)
 {
   SELECTIONCARETS_LOG("aSel (%p), Reason=%d", aSel, aReason);
   if (!aReason || (aReason & (nsISelectionListener::DRAG_REASON |
