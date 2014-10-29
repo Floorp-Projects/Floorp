@@ -12,8 +12,7 @@ BEGIN_TEST(testSetProperty_NativeGetterStubSetter)
     JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
     CHECK(obj);
 
-    CHECK(JS_DefineProperty(cx, global, "globalProp", obj,
-                            JSPROP_ENUMERATE | JSPROP_PROPOP_ACCESSORS,
+    CHECK(JS_DefineProperty(cx, global, "globalProp", obj, JSPROP_ENUMERATE,
                             JS_STUBGETTER, JS_STUBSETTER));
 
     CHECK(JS_DefineProperty(cx, obj, "prop", JS::UndefinedHandleValue,

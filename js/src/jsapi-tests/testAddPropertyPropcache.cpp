@@ -47,7 +47,7 @@ BEGIN_TEST(testAddPropertyHook)
     JS::RootedValue arr(cx, OBJECT_TO_JSVAL(obj));
 
     CHECK(JS_DefineProperty(cx, global, "arr", arr,
-                            JSPROP_ENUMERATE | JSPROP_PROPOP_ACCESSORS,
+                            JSPROP_ENUMERATE,
                             JS_STUBGETTER, JS_STUBSETTER));
 
     JS::RootedObject arrObj(cx, &arr.toObject());
@@ -55,7 +55,7 @@ BEGIN_TEST(testAddPropertyHook)
         obj = JS_NewObject(cx, &AddPropertyClass, JS::NullPtr(), JS::NullPtr());
         CHECK(obj);
         CHECK(JS_DefineElement(cx, arrObj, i, obj,
-                               JSPROP_ENUMERATE | JSPROP_PROPOP_ACCESSORS,
+                               JSPROP_ENUMERATE,
                                JS_STUBGETTER, JS_STUBSETTER));
     }
 

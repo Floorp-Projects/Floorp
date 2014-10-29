@@ -425,7 +425,7 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
         // the target.
         if (!JSID_IS_VOID(options.defineAs)) {
             if (!JS_DefinePropertyById(cx, targetScope, id, rval,
-                                       JSPROP_ENUMERATE | JSPROP_PROPOP_ACCESSORS,
+                                       JSPROP_ENUMERATE,
                                        JS_STUBGETTER, JS_STUBSETTER)) {
                 return false;
             }
@@ -470,7 +470,7 @@ CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &options,
 
         if (define) {
             if (!JS_DefinePropertyById(cx, scope, options.defineAs, obj,
-                                       JSPROP_ENUMERATE | JSPROP_PROPOP_ACCESSORS,
+                                       JSPROP_ENUMERATE,
                                        JS_STUBGETTER, JS_STUBSETTER))
                 return false;
         }

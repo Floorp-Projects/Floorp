@@ -619,7 +619,7 @@ JSXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
         JSAutoCompartment ac(cx, target);
         if (!JS_WrapPropertyDescriptor(cx, desc) ||
             !JS_DefinePropertyById(cx, target, id, desc.value(),
-                                   desc.attributes() | JSPROP_PROPOP_ACCESSORS,
+                                   desc.attributes(),
                                    JS_STUBGETTER, JS_STUBSETTER))
         {
             return false;
