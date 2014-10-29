@@ -563,7 +563,9 @@ class RefTest(object):
     return status
 
   def runSerialTests(self, testPath, options, cmdlineArgs = None):
-    debuggerInfo = mozdebug.get_debugger_info(options.debugger, options.debuggerArgs,
+    debuggerInfo = None
+    if options.debugger:
+      debuggerInfo = mozdebug.get_debugger_info(options.debugger, options.debuggerArgs,
         options.debuggerInteractive);
 
     profileDir = None

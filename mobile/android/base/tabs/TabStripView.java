@@ -13,6 +13,8 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.ViewTreeObserver.OnPreDrawListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,7 +75,19 @@ public class TabStripView extends TwoWayView {
         final int selected = getPositionForSelectedTab();
         if (selected != -1) {
             updateSelectedStyle(selected);
+            ensurePositionIsVisible(selected);
         }
+    }
+
+    private void ensurePositionIsVisible(final int position) {
+        getViewTreeObserver().addOnPreDrawListener(new OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                getViewTreeObserver().removeOnPreDrawListener(this);
+                smoothScrollToPosition(position);
+                return true;
+            }
+        });
     }
 
     private int getCheckedIndex(int childCount) {

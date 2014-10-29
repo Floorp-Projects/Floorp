@@ -2885,6 +2885,11 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
     if (startPayload->GetMetaData() == TRACING_INTERVAL_START) {
       bool hasSeenEnd = false;
 
+      // DOM events can be nested, so we must take care when searching
+      // for the matching end.  It doesn't hurt to apply this logic to
+      // all event types.
+      uint32_t markerDepth = 0;
+
       // The assumption is that the devtools timeline flushes markers frequently
       // enough for the amount of markers to always be small enough that the
       // nested for loop isn't going to be a performance problem.
@@ -2898,24 +2903,32 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
           hasSeenPaintedLayer = true;
         }
 
-        bool isSameMarkerType = strcmp(startMarkerName, endMarkerName) == 0;
+        if (strcmp(startMarkerName, endMarkerName) != 0) {
+          continue;
+        }
         bool isPaint = strcmp(startMarkerName, "Paint") == 0;
 
         // Pair start and end markers.
-        if (endPayload->GetMetaData() == TRACING_INTERVAL_END && isSameMarkerType) {
-          // But ignore paint start/end if no layer has been painted.
-          if (!isPaint || (isPaint && hasSeenPaintedLayer)) {
-            mozilla::dom::ProfileTimelineMarker marker;
-            marker.mName = NS_ConvertUTF8toUTF16(startMarkerName);
-            marker.mStart = mProfileTimelineMarkers[i]->mTime;
-            marker.mEnd = mProfileTimelineMarkers[j]->mTime;
-            profileTimelineMarkers.AppendElement(marker);
+        if (endPayload->GetMetaData() == TRACING_INTERVAL_START) {
+          ++markerDepth;
+        } else if (endPayload->GetMetaData() == TRACING_INTERVAL_END) {
+          if (markerDepth > 0) {
+            --markerDepth;
+          } else {
+            // But ignore paint start/end if no layer has been painted.
+            if (!isPaint || (isPaint && hasSeenPaintedLayer)) {
+              mozilla::dom::ProfileTimelineMarker marker;
+              marker.mName = NS_ConvertUTF8toUTF16(startMarkerName);
+              marker.mStart = mProfileTimelineMarkers[i]->mTime;
+              marker.mEnd = mProfileTimelineMarkers[j]->mTime;
+              profileTimelineMarkers.AppendElement(marker);
+            }
+
+            // We want the start to be dropped either way.
+            hasSeenEnd = true;
+
+            break;
           }
-
-          // We want the start to be dropped either way.
-          hasSeenEnd = true;
-
-          break;
         }
       }
 
@@ -3114,6 +3127,15 @@ nsDocShell::NotifyAsyncPanZoomStarted(const mozilla::CSSIntPoint aScrollPos)
             mScrollObservers.RemoveElement(ref);
         }
     }
+
+    // Also notify child docshell
+    for (uint32_t i = 0; i < mChildList.Length(); ++i) {
+        nsCOMPtr<nsIDocShell> kid = do_QueryInterface(ChildAt(i));
+        if (kid) {
+            nsDocShell* docShell = static_cast<nsDocShell*>(kid.get());
+            docShell->NotifyAsyncPanZoomStarted(aScrollPos);
+        }
+    }
 }
 
 void
@@ -3127,6 +3149,15 @@ nsDocShell::NotifyAsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos)
             obs->AsyncPanZoomStopped(aScrollPos);
         } else {
             mScrollObservers.RemoveElement(ref);
+        }
+    }
+
+    // Also notify child docshell
+    for (uint32_t i = 0; i < mChildList.Length(); ++i) {
+        nsCOMPtr<nsIDocShell> kid = do_QueryInterface(ChildAt(i));
+        if (kid) {
+            nsDocShell* docShell = static_cast<nsDocShell*>(kid.get());
+            docShell->NotifyAsyncPanZoomStopped(aScrollPos);
         }
     }
 }
@@ -10378,8 +10409,8 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal(do_QueryInterface(channel));
     if (httpChannelInternal) {
       if (aForceAllowCookies) {
-        httpChannelInternal->SetForceAllowThirdPartyCookie(true);
-      } 
+        httpChannelInternal->SetThirdPartyFlags(nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
+      }
       if (aFirstParty) {
         httpChannelInternal->SetDocumentURI(aURI);
       } else {

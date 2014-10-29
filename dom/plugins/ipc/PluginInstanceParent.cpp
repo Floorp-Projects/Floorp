@@ -1778,7 +1778,7 @@ PluginInstanceParent::SharedSurfaceSetWindow(const NPWindow* aWindow,
     mSharedSize = newPort;
 
     base::SharedMemoryHandle handle;
-    if (NS_FAILED(mSharedSurfaceDib.ShareToProcess(mParent->ChildProcessHandle(), &handle)))
+    if (NS_FAILED(mSharedSurfaceDib.ShareToProcess(OtherProcess(), &handle)))
       return false;
 
     aRemoteWindow.surfaceHandle = handle;

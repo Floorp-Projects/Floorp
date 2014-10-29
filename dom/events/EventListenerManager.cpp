@@ -9,6 +9,7 @@
 #include "mozilla/AddonPathService.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #ifdef MOZ_B2G
@@ -26,6 +27,7 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "nsDocShell.h"
 #include "nsDOMCID.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
@@ -977,6 +979,47 @@ EventListenerManager::HandleEventSubType(Listener* aListener,
   return result;
 }
 
+nsIDocShell*
+EventListenerManager::GetDocShellForTarget()
+{
+  nsCOMPtr<nsINode> node(do_QueryInterface(mTarget));
+  nsIDocument* doc = nullptr;
+  nsIDocShell* docShell = nullptr;
+
+  if (node) {
+    doc = node->OwnerDoc();
+    if (!doc->GetDocShell()) {
+      bool ignore;
+      nsCOMPtr<nsPIDOMWindow> window =
+        do_QueryInterface(doc->GetScriptHandlingObject(ignore));
+      if (window) {
+        doc = window->GetExtantDoc();
+      }
+    }
+  } else {
+    nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
+    if (window) {
+      doc = window->GetExtantDoc();
+    }
+  }
+
+  if (!doc) {
+    nsCOMPtr<DOMEventTargetHelper> helper(do_QueryInterface(mTarget));
+    if (helper) {
+      nsPIDOMWindow* window = helper->GetOwner();
+      if (window) {
+        doc = window->GetExtantDoc();
+      }
+    }
+  }
+
+  if (doc) {
+    docShell = doc->GetDocShell();
+  }
+
+  return docShell;
+}
+
 /**
 * Causes a check for event listeners and processing by them if they exist.
 * @param an event listener
@@ -1028,9 +1071,27 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
             }
           }
 
+          // Maybe add a marker to the docshell's timeline, but only
+          // bother with all the logic if some docshell is recording.
+          nsCOMPtr<nsIDocShell> docShell;
+          if (mIsMainThreadELM &&
+              nsDocShell::gProfileTimelineRecordingsCount > 0 &&
+              listener->mListenerType != Listener::eNativeListener) {
+            docShell = GetDocShellForTarget();
+            if (docShell) {
+              nsDocShell* ds = static_cast<nsDocShell*>(docShell.get());
+              ds->AddProfileTimelineMarker("DOMEvent", TRACING_INTERVAL_START);
+            }
+          }
+
           if (NS_FAILED(HandleEventSubType(listener, *aDOMEvent,
                                            aCurrentTarget))) {
             aEvent->mFlags.mExceptionHasBeenRisen = true;
+          }
+
+          if (docShell) {
+            nsDocShell* ds = static_cast<nsDocShell*>(docShell.get());
+            ds->AddProfileTimelineMarker("DOMEvent", TRACING_INTERVAL_END);
           }
         }
       }

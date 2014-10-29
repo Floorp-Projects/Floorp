@@ -14,27 +14,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=804875
 <a target="_blank"
 href="https://bugzilla.mozilla.org/show_bug.cgi?id=804875">Mozilla Bug 804875</a>
 
-<video style="border: 4px solid red" controls></video>
 <canvas></canvas>
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+var manager = new MediaTestManager;
+
+function finish(v) {
+  removeNodeAndSource(v);
+  manager.finished(v.token);
+}
+
 function onLoadedMetadata_Audio(e) {
   var t = e.target;
-  is(t.videoHeight, 0, "videoHeight should be zero when there is no video.");
-  is(t.videoWidth, 0, "videoWidth should be zero when there is no video.");
-  is(t.mozPaintedFrames, 0, "mozPaintedFrames should be zero when there is no video.");
-  is(t.mozFrameDelay, 0, "mozFrameDelay should be zero when there is no video.");
+  is(t.videoHeight, 0, t.name + ": videoHeight should be zero when there is no video.");
+  is(t.videoWidth, 0, t.name + ": videoWidth should be zero when there is no video.");
+  is(t.mozPaintedFrames, 0, t.name + ": mozPaintedFrames should be zero when there is no video.");
+  is(t.mozFrameDelay, 0, t.name + ": mozFrameDelay should be zero when there is no video.");
   var c = document.getElementsByTagName("canvas")[0].getContext("2d");
   try {
     c.drawImage(t, 0, 0, t.videoHeight, t.videoWidth);
   } catch (e) {
-    ok(true, "Trying to draw to a canvas should throw, since we don't have a frame anymore");
-    SimpleTest.finish();
+    ok(true, t.name + ": Trying to draw to a canvas should throw, since we don't have a frame anymore");
+    finish(t);
     return;
   }
-  ok(false, "We should not succeed to draw a video frame on the canvas.");
+  ok(false, t.name + ": We should not succeed to draw a video frame on the canvas.");
 }
 
 function onTimeUpdate_Video(e) {
@@ -43,17 +49,17 @@ function onTimeUpdate_Video(e) {
     return;
   }
   t.removeEventListener("timeupdate", onTimeUpdate_Video);
-  ok(t.mozPaintedFrames > 0, "mozPaintedFrames should be positive, is " + t.mozPaintedFrames + ".");
-  ok(t.mozFrameDelay >= 0, "mozFrameDelay should be positive or zero, is " + t.mozFrameDelay + ".");
+  ok(t.mozPaintedFrames > 0, t.name + ": mozPaintedFrames should be positive, is " + t.mozPaintedFrames + ".");
+  ok(t.mozFrameDelay >= 0, t.name + ": mozFrameDelay should be positive or zero, is " + t.mozFrameDelay + ".");
 
-  if (v._firstTime) {
+  if (t._firstTime) {
     t.src = t.src;
-    v._firstTime = false;
+    t._firstTime = false;
   } else {
     var source = getPlayableAudio(gPlayTests);
     if (!source) {
       todo("No audio file available.")
-      SimpleTest.finish();
+      finish(t);
     } else {
       t.removeEventListener("loadedmetadata", onLoadedMetadata_Video);
       t.addEventListener("loadedmetadata", onLoadedMetadata_Audio);
@@ -64,22 +70,25 @@ function onTimeUpdate_Video(e) {
 
 function onLoadedMetadata_Video(e) {
   var t = e.target;
-  ok(t.videoHeight != 0, "We should have a videoHeight.");
-  ok(t.videoWidth != 0, "We should have a videoWidth.");
+  isnot(t.videoHeight, 0, t.name + ": We should have a videoHeight.");
+  isnot(t.videoWidth, 0, t.name + ": We should have a videoWidth.");
   t.addEventListener("timeupdate", onTimeUpdate_Video);
   t.play();
 }
 
-var v = document.getElementsByTagName("video")[0];
-v._firstTime = true;
-var source = getPlayableVideo(gPlayTests);
-if (!source) {
-  todo("No video file available.");
-} else {
+function startTest(test, token) {
+  var v = document.createElement('video');
+  document.body.appendChild(v);
+  v.preload = "metadata";
+  v._firstTime = true;
   v.addEventListener("loadedmetadata", onLoadedMetadata_Video);
-  v.src = source.name;
-  SimpleTest.waitForExplicitFinish();
+  v.src = test.name;
+  v.token = token;
+  v.name = test.name;
+  manager.started(token);
 }
+
+manager.runTests(getPlayableVideos(gSmallTests.concat(gSeekTests)), startTest);
 </script>
 </pre>
 </body>

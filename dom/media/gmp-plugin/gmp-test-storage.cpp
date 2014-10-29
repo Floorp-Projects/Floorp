@@ -5,7 +5,8 @@
 
 #include "gmp-test-storage.h"
 #include <vector>
-#include <assert.h>
+
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
 class WriteRecordClient : public GMPRecordClient {
@@ -119,7 +120,7 @@ GMPErr
 ReadRecord(const std::string& aRecordName,
            ReadContinuation* aContinuation)
 {
-  assert(aContinuation);
+  MOZ_ASSERT(aContinuation);
   GMPRecord* record;
   ReadRecordClient* client = new ReadRecordClient();
   auto err = GMPOpenRecord(aRecordName.c_str(),
@@ -140,14 +141,14 @@ GMPOpenRecord(const char* aName,
               GMPRecord** aOutRecord,
               GMPRecordClient* aClient)
 {
-  assert(g_platform_api);
+  MOZ_ASSERT(g_platform_api);
   return g_platform_api->createrecord(aName, aNameLength, aOutRecord, aClient);
 }
 
 GMPErr
 GMPRunOnMainThread(GMPTask* aTask)
 {
-  assert(g_platform_api);
+  MOZ_ASSERT(g_platform_api);
   return g_platform_api->runonmainthread(aTask);
 }
 
@@ -180,7 +181,7 @@ GMPErr
 GMPOpenRecord(const std::string& aRecordName,
               OpenContinuation* aContinuation)
 {
-  assert(aContinuation);
+  MOZ_ASSERT(aContinuation);
   GMPRecord* record;
   OpenRecordClient* client = new OpenRecordClient();
   auto err = GMPOpenRecord(aRecordName.c_str(),

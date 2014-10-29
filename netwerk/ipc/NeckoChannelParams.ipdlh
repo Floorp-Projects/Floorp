@@ -42,7 +42,7 @@ struct HttpChannelOpenArgs
   uint8_t                     redirectionLimit;
   bool                        allowPipelining;
   bool                        allowSTS;
-  bool                        forceAllowThirdPartyCookie;
+  uint32_t                    thirdPartyFlags;
   bool                        resumeAt;
   uint64_t                    startPos;
   nsCString                   entityID;

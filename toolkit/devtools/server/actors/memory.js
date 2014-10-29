@@ -209,7 +209,12 @@ let MemoryActor = protocol.ActorClass({
    *          An object of the form:
    *
    *            {
-   *              allocations: [<index into "frames" below> ...],
+   *              allocations: [<index into "frames" below>, ...],
+   *              allocationsTimestamps: [
+   *                <timestamp for allocations[0]>,
+   *                <timestamp for allocations[1]>,
+   *                ...
+   *              ],
    *              frames: [
    *                {
    *                  line: <line number for this frame>,
@@ -217,7 +222,7 @@ let MemoryActor = protocol.ActorClass({
    *                  source: <filename string for this frame>,
    *                  functionDisplayName: <this frame's inferred function name function or null>,
    *                  parent: <index into "frames">
-   *                }
+   *                },
    *                ...
    *              ],
    *              counts: [
@@ -227,6 +232,8 @@ let MemoryActor = protocol.ActorClass({
    *                ...
    *              ]
    *            }
+   *
+   *          The timestamps' unit is microseconds since the epoch.
    *
    *          Subsequent `getAllocations` request within the same recording and
    *          tab navigation will always place the same stack frames at the same
@@ -255,10 +262,11 @@ let MemoryActor = protocol.ActorClass({
   getAllocations: method(expectState("attached", function() {
     const allocations = this.dbg.memory.drainAllocationsLog()
     const packet = {
-      allocations: []
+      allocations: [],
+      allocationsTimestamps: []
     };
 
-    for (let { frame: stack } of allocations) {
+    for (let { frame: stack, timestamp } of allocations) {
       if (stack && Cu.isDeadWrapper(stack)) {
         continue;
       }
@@ -275,6 +283,7 @@ let MemoryActor = protocol.ActorClass({
       this._countFrame(waived);
 
       packet.allocations.push(this._framesToIndices.get(waived));
+      packet.allocationsTimestamps.push(timestamp);
     }
 
     // Now that we are guaranteed to have a form for every frame, we know the

@@ -122,7 +122,7 @@ private:
   nsEventStatus DragSelection(const nsPoint &movePoint);
 
   /**
-   * Get the vertical center position of selection caret relative to canvas
+   * Get the vertical center position of selection caret relative to root
    * frame.
    */
   nscoord GetCaretYCenterPosition();
@@ -151,7 +151,7 @@ private:
    * Check if aPosition is on the start or end frame of the
    * selection carets.
    *
-   * @param aPosition should be relative to document's canvas frame
+   * @param aPosition should be relative to document's root frame
    * in app units
    */
   bool IsOnStartFrame(const nsPoint& aPosition);
@@ -159,13 +159,13 @@ private:
 
   /**
    * Get rect of selection caret's start frame relative
-   * to document's canvas frame, in app units.
+   * to document's root frame, in app units.
    */
   nsRect GetStartFrameRect();
 
   /**
    * Get rect of selection caret's end frame relative
-   * to document's canvas frame, in app units.
+   * to document's root frame, in app units.
    */
   nsRect GetEndFrameRect();
 

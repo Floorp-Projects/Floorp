@@ -2539,7 +2539,8 @@ public class BrowserApp extends GeckoApp
     @Override
     public void openOptionsMenu() {
         // Disable menu access (for hardware buttons) when the software menu button is inaccessible.
-        if (mBrowserToolbar.isEditing()) {
+        // Note that the software button is always accessible on new tablet.
+        if (mBrowserToolbar.isEditing() && !NewTabletUI.isEnabled(this)) {
             return;
         }
 

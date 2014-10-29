@@ -85,6 +85,7 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
       this._messageManager.addMessageListener("SPLoadChromeScript", this);
       this._messageManager.addMessageListener("SPChromeScriptMessage", this);
       this._messageManager.addMessageListener("SPQuotaManager", this);
+      this._messageManager.addMessageListener("SPSetTestPluginEnabledState", this);
 
       this._messageManager.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
       this._messageManager.loadFrameScript(CHILD_SCRIPT_API, true);

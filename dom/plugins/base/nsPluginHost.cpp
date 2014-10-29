@@ -48,7 +48,10 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsICategoryManager.h"
 #include "nsPluginStreamListenerPeer.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/plugins/PluginBridge.h"
+#include "mozilla/plugins/PluginTypes.h"
 #include "mozilla/Preferences.h"
 
 #include "nsEnumeratorUtils.h"
@@ -106,6 +109,7 @@
 
 using namespace mozilla;
 using mozilla::TimeStamp;
+using mozilla::plugins::PluginTag;
 
 // Null out a strong ref to a linked list iteratively to avoid
 // exhausting the stack (bug 486349).
@@ -307,6 +311,10 @@ bool nsPluginHost::IsRunningPlugin(nsPluginTag * aPluginTag)
 {
   if (!aPluginTag || !aPluginTag->mPlugin) {
     return false;
+  }
+
+  if (aPluginTag->mContentProcessRunningCount) {
+    return true;
   }
 
   for (uint32_t i = 0; i < mInstances.Length(); i++) {
@@ -1272,6 +1280,76 @@ nsresult nsPluginHost::EnsurePluginLoaded(nsPluginTag* aPluginTag)
   return NS_OK;
 }
 
+nsresult
+nsPluginHost::GetPluginForContentProcess(uint32_t aPluginId, nsNPAPIPlugin** aPlugin)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
+  // If plugins haven't been scanned yet, do so now
+  LoadPlugins();
+
+  nsPluginTag* pluginTag = PluginWithId(aPluginId);
+  if (pluginTag) {
+    nsresult rv = EnsurePluginLoaded(pluginTag);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // We only get here if a content process doesn't have a PluginModuleParent
+    // for the given plugin already. Therefore, this counter is counting the
+    // number of outstanding PluginModuleParents for the plugin, excluding the
+    // one from the chrome process.
+    pluginTag->mContentProcessRunningCount++;
+    NS_ADDREF(*aPlugin = pluginTag->mPlugin);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+class nsPluginUnloadRunnable : public nsRunnable
+{
+public:
+  explicit nsPluginUnloadRunnable(uint32_t aPluginId) : mPluginId(aPluginId) {}
+
+  NS_IMETHOD Run()
+  {
+    nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+    if (!host) {
+      return NS_OK;
+    }
+    nsPluginTag* pluginTag = host->PluginWithId(mPluginId);
+    if (!pluginTag) {
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(pluginTag->mContentProcessRunningCount > 0);
+    pluginTag->mContentProcessRunningCount--;
+
+    if (!pluginTag->mContentProcessRunningCount) {
+      if (!host->IsRunningPlugin(pluginTag)) {
+        pluginTag->TryUnloadPlugin(false);
+      }
+    }
+    return NS_OK;
+  }
+
+protected:
+  uint32_t mPluginId;
+};
+
+void
+nsPluginHost::NotifyContentModuleDestroyed(uint32_t aPluginId)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
+  // This is called in response to a message from the plugin. Don't unload the
+  // plugin until the message handler is off the stack.
+  nsRefPtr<nsPluginUnloadRunnable> runnable =
+    new nsPluginUnloadRunnable(aPluginId);
+  NS_DispatchToMainThread(runnable);
+}
+
 nsresult nsPluginHost::GetPlugin(const char *aMimeType, nsNPAPIPlugin** aPlugin)
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -1614,6 +1692,17 @@ nsPluginHost::FirstPluginWithPath(const nsCString& path)
   return nullptr;
 }
 
+nsPluginTag*
+nsPluginHost::PluginWithId(uint32_t aId)
+{
+  for (nsPluginTag* tag = mPlugins; tag; tag = tag->mNext) {
+    if (tag->mId == aId) {
+      return tag;
+    }
+  }
+  return nullptr;
+}
+
 namespace {
 
 int64_t GetPluginLastModifiedTime(const nsCOMPtr<nsIFile>& localfile)
@@ -1700,12 +1789,32 @@ struct CompareFilesByTime
 
 } // anonymous namespace
 
+void
+nsPluginHost::AddPluginTag(nsPluginTag* aPluginTag)
+{
+  aPluginTag->mNext = mPlugins;
+  mPlugins = aPluginTag;
+
+  if (aPluginTag->IsActive()) {
+    nsAdoptingCString disableFullPage =
+      Preferences::GetCString(kPrefDisableFullPage);
+    for (uint32_t i = 0; i < aPluginTag->mMimeTypes.Length(); i++) {
+      if (!IsTypeInList(aPluginTag->mMimeTypes[i], disableFullPage)) {
+        RegisterWithCategoryManager(aPluginTag->mMimeTypes[i],
+                                    ePluginRegister);
+      }
+    }
+  }
+}
+
 typedef NS_NPAPIPLUGIN_CALLBACK(char *, NP_GETMIMEDESCRIPTION)(void);
 
 nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
                                             bool aCreatePluginList,
                                             bool *aPluginsChanged)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
   NS_ENSURE_ARG_POINTER(aPluginsChanged);
   nsresult rv;
 
@@ -1895,42 +2004,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
       return NS_OK;
     }
 
-    // Add plugin tags such that the list is ordered by modification date,
-    // newest to oldest. This is ugly, it'd be easier with just about anything
-    // other than a single-directional linked list.
-    if (mPlugins) {
-      nsPluginTag *prev = nullptr;
-      nsPluginTag *next = mPlugins;
-      while (next) {
-        if (pluginTag->mLastModifiedTime >= next->mLastModifiedTime) {
-          pluginTag->mNext = next;
-          if (prev) {
-            prev->mNext = pluginTag;
-          } else {
-            mPlugins = pluginTag;
-          }
-          break;
-        }
-        prev = next;
-        next = prev->mNext;
-        if (!next) {
-          prev->mNext = pluginTag;
-        }
-      }
-    } else {
-      mPlugins = pluginTag;
-    }
-
-    if (pluginTag->IsActive()) {
-      nsAdoptingCString disableFullPage =
-        Preferences::GetCString(kPrefDisableFullPage);
-      for (uint32_t i = 0; i < pluginTag->mMimeTypes.Length(); i++) {
-        if (!IsTypeInList(pluginTag->mMimeTypes[i], disableFullPage)) {
-          RegisterWithCategoryManager(pluginTag->mMimeTypes[i],
-                                      ePluginRegister);
-        }
-      }
-    }
+    AddPluginTag(pluginTag);
   }
 
   if (warnOutdated) {
@@ -1944,6 +2018,8 @@ nsresult nsPluginHost::ScanPluginsDirectoryList(nsISimpleEnumerator *dirEnum,
                                                 bool aCreatePluginList,
                                                 bool *aPluginsChanged)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
     bool hasMore;
     while (NS_SUCCEEDED(dirEnum->HasMoreElements(&hasMore)) && hasMore) {
       nsCOMPtr<nsISupports> supports;
@@ -1968,6 +2044,34 @@ nsresult nsPluginHost::ScanPluginsDirectoryList(nsISimpleEnumerator *dirEnum,
     return NS_OK;
 }
 
+void
+nsPluginHost::IncrementChromeEpoch()
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  mPluginEpoch++;
+}
+
+uint32_t
+nsPluginHost::ChromeEpoch()
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  return mPluginEpoch;
+}
+
+uint32_t
+nsPluginHost::ChromeEpochForContent()
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Content);
+  return mPluginEpoch;
+}
+
+void
+nsPluginHost::SetChromeEpochForContent(uint32_t aEpoch)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Content);
+  mPluginEpoch = aEpoch;
+}
+
 nsresult nsPluginHost::LoadPlugins()
 {
 #ifdef ANDROID
@@ -1990,12 +2094,64 @@ nsresult nsPluginHost::LoadPlugins()
 
   // only if plugins have changed will we notify plugin-change observers
   if (pluginschanged) {
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      IncrementChromeEpoch();
+    }
+
     nsCOMPtr<nsIObserverService> obsService =
       mozilla::services::GetObserverService();
     if (obsService)
       obsService->NotifyObservers(nullptr, "plugins-list-updated", nullptr);
   }
 
+  return NS_OK;
+}
+
+nsresult
+nsPluginHost::FindPluginsInContent(bool aCreatePluginList, bool* aPluginsChanged)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Content);
+
+  dom::ContentChild* cp = dom::ContentChild::GetSingleton();
+  nsTArray<PluginTag> plugins;
+  uint32_t parentEpoch;
+  if (!cp->SendFindPlugins(ChromeEpochForContent(), &plugins, &parentEpoch)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (parentEpoch != ChromeEpochForContent()) {
+    SetChromeEpochForContent(parentEpoch);
+    *aPluginsChanged = true;
+    if (!aCreatePluginList) {
+      return NS_OK;
+    }
+
+    for (size_t i = 0; i < plugins.Length(); i++) {
+      PluginTag& tag = plugins[i];
+
+      // Don't add the same plugin again.
+      if (PluginWithId(tag.id())) {
+        continue;
+      }
+
+      nsPluginTag *pluginTag = new nsPluginTag(tag.id(),
+                                               tag.name().get(),
+                                               tag.description().get(),
+                                               tag.filename().get(),
+                                               "", // aFullPath
+                                               tag.version().get(),
+                                               nsTArray<nsCString>(tag.mimeTypes()),
+                                               nsTArray<nsCString>(tag.mimeDescriptions()),
+                                               nsTArray<nsCString>(tag.extensions()),
+                                               tag.isJavaPlugin(),
+                                               tag.isFlashPlugin(),
+                                               tag.lastModifiedTime(),
+                                               tag.isFromExtension());
+      AddPluginTag(pluginTag);
+    }
+  }
+
+  mPluginsLoaded = true;
   return NS_OK;
 }
 
@@ -2009,6 +2165,11 @@ nsresult nsPluginHost::FindPlugins(bool aCreatePluginList, bool * aPluginsChange
   NS_ENSURE_ARG_POINTER(aPluginsChanged);
 
   *aPluginsChanged = false;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return FindPluginsInContent(aCreatePluginList, aPluginsChanged);
+  }
+
   nsresult rv;
 
   // Read cached plugins info. If the profile isn't yet available then don't
@@ -2167,9 +2328,58 @@ nsresult nsPluginHost::FindPlugins(bool aCreatePluginList, bool * aPluginsChange
   return NS_OK;
 }
 
+bool
+mozilla::plugins::FindPluginsForContent(uint32_t aPluginEpoch,
+                                        nsTArray<PluginTag>* aPlugins,
+                                        uint32_t* aNewPluginEpoch)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
+  nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+  host->FindPluginsForContent(aPluginEpoch, aPlugins, aNewPluginEpoch);
+  return true;
+}
+
+void
+nsPluginHost::FindPluginsForContent(uint32_t aPluginEpoch,
+                                    nsTArray<PluginTag>* aPlugins,
+                                    uint32_t* aNewPluginEpoch)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
+  // Load plugins so that the epoch is correct.
+  LoadPlugins();
+
+  *aNewPluginEpoch = ChromeEpoch();
+  if (aPluginEpoch == ChromeEpoch()) {
+    return;
+  }
+
+  nsTArray<nsRefPtr<nsPluginTag>> plugins;
+  GetPlugins(plugins);
+
+  for (size_t i = 0; i < plugins.Length(); i++) {
+    nsRefPtr<nsPluginTag> tag = plugins[i];
+    aPlugins->AppendElement(PluginTag(tag->mId,
+                                      tag->mName,
+                                      tag->mDescription,
+                                      tag->mMimeTypes,
+                                      tag->mMimeDescriptions,
+                                      tag->mExtensions,
+                                      tag->mIsJavaPlugin,
+                                      tag->mIsFlashPlugin,
+                                      tag->mFileName,
+                                      tag->mVersion,
+                                      tag->mLastModifiedTime,
+                                      tag->IsFromExtension()));
+  }
+}
+
 nsresult
 nsPluginHost::UpdatePluginInfo(nsPluginTag* aPluginTag)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
   ReadPluginInfo();
   WritePluginInfo();
   NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsPluginTag>, mCachedPlugins, mNext);
@@ -2261,6 +2471,7 @@ nsPluginHost::RegisterWithCategoryManager(nsCString &aMimeType,
 nsresult
 nsPluginHost::WritePluginInfo()
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID,&rv));
@@ -2405,6 +2616,8 @@ nsPluginHost::WritePluginInfo()
 nsresult
 nsPluginHost::ReadPluginInfo()
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
   const long PLUGIN_REG_MIMETYPES_ARRAY_SIZE = 12;
   const long PLUGIN_REG_MAX_MIMETYPES = 1000;
 
@@ -3542,6 +3755,7 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin,
   // instance of this plugin we reload it (launch a new plugin process).
 
   crashedPluginTag->mPlugin = nullptr;
+  crashedPluginTag->mContentProcessRunningCount = 0;
 
 #ifdef XP_WIN
   CheckForDisabledWindows();

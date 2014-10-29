@@ -391,7 +391,7 @@ TrackBuffer::BreakCycles()
   MOZ_ASSERT(NS_IsMainThread());
 
   for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
-    mDecoders[i]->BreakCycles();
+    mDecoders[i]->GetReader()->BreakCycles();
   }
   mDecoders.Clear();
 

@@ -21,6 +21,7 @@ EXPORTS.mozilla.plugins += [
     'NPEventOSX.h',
     'NPEventUnix.h',
     'NPEventWindows.h',
+    'PluginBridge.h',
     'PluginInstanceChild.h',
     'PluginInstanceParent.h',
     'PluginMessageUtils.h',

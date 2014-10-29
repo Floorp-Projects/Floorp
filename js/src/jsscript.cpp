@@ -64,19 +64,25 @@ using mozilla::RotateLeft;
 typedef Rooted<GlobalObject *> RootedGlobalObject;
 
 /* static */ uint32_t
-Bindings::argumentsVarIndex(ExclusiveContext *cx, InternalBindingsHandle bindings)
+Bindings::argumentsVarIndex(ExclusiveContext *cx, InternalBindingsHandle bindings,
+                            uint32_t *unaliasedSlot)
 {
     HandlePropertyName arguments = cx->names().arguments;
     BindingIter bi(bindings);
     while (bi->name() != arguments)
         bi++;
-    return bi.frameIndex();
+
+    if (unaliasedSlot)
+        *unaliasedSlot = bi->aliased() ? UINT32_MAX : bi.frameIndex();
+
+    return bi.localIndex();
 }
 
 bool
 Bindings::initWithTemporaryStorage(ExclusiveContext *cx, InternalBindingsHandle self,
                                    uint32_t numArgs, uint32_t numVars,
                                    uint32_t numBodyLevelLexicals, uint32_t numBlockScoped,
+                                   uint32_t numUnaliasedVars, uint32_t numUnaliasedBodyLevelLexicals,
                                    Binding *bindingArray)
 {
     MOZ_ASSERT(!self->callObjShape_);
@@ -92,11 +98,16 @@ Bindings::initWithTemporaryStorage(ExclusiveContext *cx, InternalBindingsHandle 
     MOZ_ASSERT(totalSlots <= LOCALNO_LIMIT);
     MOZ_ASSERT(UINT32_MAX - numArgs >= totalSlots);
 
+    MOZ_ASSERT(numUnaliasedVars <= numVars);
+    MOZ_ASSERT(numUnaliasedBodyLevelLexicals <= numBodyLevelLexicals);
+
     self->bindingArrayAndFlag_ = uintptr_t(bindingArray) | TEMPORARY_STORAGE_BIT;
     self->numArgs_ = numArgs;
     self->numVars_ = numVars;
     self->numBodyLevelLexicals_ = numBodyLevelLexicals;
     self->numBlockScoped_ = numBlockScoped;
+    self->numUnaliasedVars_ = numUnaliasedVars;
+    self->numUnaliasedBodyLevelLexicals_ = numUnaliasedBodyLevelLexicals;
 
     // Get the initial shape to use when creating CallObjects for this script.
     // After creation, a CallObject's shape may change completely (via direct eval() or
@@ -123,7 +134,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext *cx, InternalBindingsHandle 
             if (numBodyLevelLexicals > 0 &&
                 nslots < aliasedBodyLevelLexicalBegin &&
                 bi->kind() == Binding::VARIABLE &&
-                bi.frameIndex() >= numVars)
+                bi.localIndex() >= numVars)
             {
                 aliasedBodyLevelLexicalBegin = nslots;
             }
@@ -215,7 +226,10 @@ Bindings::clone(JSContext *cx, InternalBindingsHandle self,
      * the source's bindingArray directly.
      */
     if (!initWithTemporaryStorage(cx, self, src.numArgs(), src.numVars(),
-                                  src.numBodyLevelLexicals(), src.numBlockScoped(),
+                                  src.numBodyLevelLexicals(),
+                                  src.numBlockScoped(),
+                                  src.numUnaliasedVars(),
+                                  src.numUnaliasedBodyLevelLexicals(),
                                   src.bindingArray()))
     {
         return false;
@@ -234,7 +248,9 @@ GCMethods<Bindings>::initial()
 template<XDRMode mode>
 static bool
 XDRScriptBindings(XDRState<mode> *xdr, LifoAllocScope &las, uint16_t numArgs, uint32_t numVars,
-                  uint16_t numBodyLevelLexicals, uint16_t numBlockScoped, HandleScript script)
+                  uint16_t numBodyLevelLexicals, uint16_t numBlockScoped,
+                  uint32_t numUnaliasedVars, uint16_t numUnaliasedBodyLevelLexicals,
+                  HandleScript script)
 {
     JSContext *cx = xdr->cx();
 
@@ -281,6 +297,7 @@ XDRScriptBindings(XDRState<mode> *xdr, LifoAllocScope &las, uint16_t numArgs, ui
         InternalBindingsHandle bindings(script, &script->bindings);
         if (!Bindings::initWithTemporaryStorage(cx, bindings, numArgs, numVars,
                                                 numBodyLevelLexicals, numBlockScoped,
+                                                numUnaliasedVars, numUnaliasedBodyLevelLexicals,
                                                 bindingArray))
         {
             return false;
@@ -599,6 +616,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     uint16_t nblocklocals = 0;
     uint16_t nbodylevellexicals = 0;
     uint32_t nvars = 0;
+    uint32_t nunaliasedvars = 0;
+    uint16_t nunaliasedbodylevellexicals = 0;
     if (mode == XDR_ENCODE) {
         script = scriptp.get();
         MOZ_ASSERT_IF(enclosingScript, enclosingScript->compartment() == script->compartment());
@@ -607,6 +626,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         nblocklocals = script->bindings.numBlockScoped();
         nbodylevellexicals = script->bindings.numBodyLevelLexicals();
         nvars = script->bindings.numVars();
+        nunaliasedvars = script->bindings.numUnaliasedVars();
+        nunaliasedbodylevellexicals = script->bindings.numUnaliasedBodyLevelLexicals();
     }
     if (!xdr->codeUint16(&nargs))
         return false;
@@ -615,6 +636,10 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     if (!xdr->codeUint16(&nbodylevellexicals))
         return false;
     if (!xdr->codeUint32(&nvars))
+        return false;
+    if (!xdr->codeUint32(&nunaliasedvars))
+        return false;
+    if (!xdr->codeUint16(&nunaliasedbodylevellexicals))
         return false;
 
     if (mode == XDR_ENCODE)
@@ -759,7 +784,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
 
     /* JSScript::partiallyInit assumes script->bindings is fully initialized. */
     LifoAllocScope las(&cx->tempLifoAlloc());
-    if (!XDRScriptBindings(xdr, las, nargs, nvars, nbodylevellexicals, nblocklocals, script))
+    if (!XDRScriptBindings(xdr, las, nargs, nvars, nbodylevellexicals, nblocklocals,
+                           nunaliasedvars, nunaliasedbodylevellexicals, script))
         return false;
 
     if (mode == XDR_DECODE) {
@@ -3518,7 +3544,8 @@ js::SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
      */
 
     InternalBindingsHandle bindings(script, &script->bindings);
-    const uint32_t var = Bindings::argumentsVarIndex(cx, bindings);
+    uint32_t unaliasedSlot;
+    const uint32_t var = Bindings::argumentsVarIndex(cx, bindings, &unaliasedSlot);
 
     if (script->varIsAliased(var)) {
         /*
@@ -3537,8 +3564,8 @@ js::SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
         if (IsOptimizedPlaceholderMagicValue(frame.callObj().as<ScopeObject>().aliasedVar(ScopeCoordinate(pc))))
             frame.callObj().as<ScopeObject>().setAliasedVar(cx, ScopeCoordinate(pc), cx->names().arguments, ObjectValue(*argsobj));
     } else {
-        if (IsOptimizedPlaceholderMagicValue(frame.unaliasedLocal(var)))
-            frame.unaliasedLocal(var) = ObjectValue(*argsobj);
+        if (IsOptimizedPlaceholderMagicValue(frame.unaliasedLocal(unaliasedSlot)))
+            frame.unaliasedLocal(unaliasedSlot) = ObjectValue(*argsobj);
     }
 }
 
