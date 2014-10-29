@@ -67,6 +67,20 @@ function parseKeyValuePairsFromFile(file) {
   return parseKeyValuePairs(contents);
 }
 
+function getTestPlugin(pluginName) {
+  var ph = Cc["@mozilla.org/plugin/host;1"]
+    .getService(Ci.nsIPluginHost);
+  var tags = ph.getPluginTags();
+  var name = pluginName || "Test Plug-in";
+  for (var tag of tags) {
+    if (tag.name == name) {
+      return tag;
+    }
+  }
+
+  return null;
+}
+
 SpecialPowersObserverAPI.prototype = {
 
   _observe: function(aSubject, aTopic, aData) {
@@ -319,6 +333,16 @@ SpecialPowersObserverAPI.prototype = {
                                              "SPPermissionManager");
         }
         return undefined;	// See comment at the beginning of this function.
+      }
+
+      case "SPSetTestPluginEnabledState": {
+        var plugin = getTestPlugin(aMessage.data.pluginName);
+        if (!plugin) {
+          return undefined;
+        }
+        var oldEnabledState = plugin.enabledState;
+        plugin.enabledState = aMessage.data.newEnabledState;
+        return oldEnabledState;
       }
 
       case "SPWebAppService": {
