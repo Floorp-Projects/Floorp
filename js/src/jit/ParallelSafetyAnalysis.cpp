@@ -134,6 +134,7 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     SAFE_OP(TableSwitch)
     SAFE_OP(Goto)
     SAFE_OP(Test)
+    SAFE_OP(GotoWithFake)
     SAFE_OP(Compare)
     SAFE_OP(Phi)
     SAFE_OP(Beta)
