@@ -130,8 +130,8 @@ class Context
     void bindPixelPackBuffer(GLuint buffer);
     void bindPixelUnpackBuffer(GLuint buffer);
     void useProgram(GLuint program);
-    void linkProgram(GLuint program);
-    void setProgramBinary(GLuint program, GLenum binaryFormat, const void *binary, GLint length);
+    Error linkProgram(GLuint program);
+    Error setProgramBinary(GLuint program, GLenum binaryFormat, const void *binary, GLint length);
     void bindTransformFeedback(GLuint transformFeedback);
 
     Error beginQuery(GLenum target, GLuint query);

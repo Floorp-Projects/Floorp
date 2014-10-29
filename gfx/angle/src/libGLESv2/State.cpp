@@ -22,6 +22,8 @@ namespace gl
 
 State::State()
 {
+    mMaxDrawBuffers = 0;
+    mMaxCombinedTextureImageUnits = 0;
 }
 
 State::~State()
@@ -31,7 +33,8 @@ State::~State()
 
 void State::initialize(const Caps& caps, GLuint clientVersion)
 {
-    mContext = NULL;
+    mMaxDrawBuffers = caps.maxDrawBuffers;
+    mMaxCombinedTextureImageUnits = caps.maxCombinedTextureImageUnits;
 
     setClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -111,10 +114,14 @@ void State::initialize(const Caps& caps, GLuint clientVersion)
     mActiveSampler = 0;
 
     const GLfloat defaultFloatValues[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    for (int attribIndex = 0; attribIndex < MAX_VERTEX_ATTRIBS; attribIndex++)
+    mVertexAttribCurrentValues.resize(caps.maxVertexAttributes);
+    for (size_t attribIndex = 0; attribIndex < mVertexAttribCurrentValues.size(); ++attribIndex)
     {
         mVertexAttribCurrentValues[attribIndex].setFloatValues(defaultFloatValues);
     }
+
+    mUniformBuffers.resize(caps.maxCombinedUniformBlocks);
+    mTransformFeedbackBuffers.resize(caps.maxTransformFeedbackSeparateAttributes);
 
     mSamplerTextures[GL_TEXTURE_2D].resize(caps.maxCombinedTextureImageUnits);
     mSamplerTextures[GL_TEXTURE_CUBE_MAP].resize(caps.maxCombinedTextureImageUnits);
@@ -153,12 +160,6 @@ void State::reset()
         mSamplers[samplerIdx].set(NULL);
     }
 
-    const GLfloat defaultFloatValues[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    for (int attribIndex = 0; attribIndex < MAX_VERTEX_ATTRIBS; attribIndex++)
-    {
-        mVertexAttribCurrentValues[attribIndex].setFloatValues(defaultFloatValues);
-    }
-
     mArrayBuffer.set(NULL);
     mRenderbuffer.set(NULL);
 
@@ -170,15 +171,15 @@ void State::reset()
     }
 
     mGenericUniformBuffer.set(NULL);
-    for (int i = 0; i < IMPLEMENTATION_MAX_COMBINED_SHADER_UNIFORM_BUFFERS; i++)
+    mGenericTransformFeedbackBuffer.set(NULL);
+    for (BufferVector::iterator bufItr = mUniformBuffers.begin(); bufItr != mUniformBuffers.end(); ++bufItr)
     {
-        mUniformBuffers[i].set(NULL);
+        bufItr->set(NULL);
     }
 
-    mGenericTransformFeedbackBuffer.set(NULL);
-    for (int i = 0; i < IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS; i++)
+    for (BufferVector::iterator bufItr = mTransformFeedbackBuffers.begin(); bufItr != mTransformFeedbackBuffers.end(); ++bufItr)
     {
-        mTransformFeedbackBuffers[i].set(NULL);
+        bufItr->set(NULL);
     }
 
     mCopyReadBuffer.set(NULL);
@@ -947,14 +948,14 @@ void State::setIndexedUniformBufferBinding(GLuint index, Buffer *buffer, GLintpt
 
 GLuint State::getIndexedUniformBufferId(GLuint index) const
 {
-    ASSERT(index < IMPLEMENTATION_MAX_COMBINED_SHADER_UNIFORM_BUFFERS);
+    ASSERT(static_cast<size_t>(index) < mUniformBuffers.size());
 
     return mUniformBuffers[index].id();
 }
 
 Buffer *State::getIndexedUniformBuffer(GLuint index) const
 {
-    ASSERT(index < IMPLEMENTATION_MAX_COMBINED_SHADER_UNIFORM_BUFFERS);
+    ASSERT(static_cast<size_t>(index) < mUniformBuffers.size());
 
     return mUniformBuffers[index].get();
 }
@@ -971,23 +972,28 @@ void State::setIndexedTransformFeedbackBufferBinding(GLuint index, Buffer *buffe
 
 GLuint State::getIndexedTransformFeedbackBufferId(GLuint index) const
 {
-    ASSERT(index < IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS);
+    ASSERT(static_cast<size_t>(index) < mTransformFeedbackBuffers.size());
 
     return mTransformFeedbackBuffers[index].id();
 }
 
 Buffer *State::getIndexedTransformFeedbackBuffer(GLuint index) const
 {
-    ASSERT(index < IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS);
+    ASSERT(static_cast<size_t>(index) < mTransformFeedbackBuffers.size());
 
     return mTransformFeedbackBuffers[index].get();
 }
 
 GLuint State::getIndexedTransformFeedbackBufferOffset(GLuint index) const
 {
-    ASSERT(index < IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS);
+    ASSERT(static_cast<size_t>(index) < mTransformFeedbackBuffers.size());
 
     return mTransformFeedbackBuffers[index].getOffset();
+}
+
+size_t State::getTransformFeedbackBufferIndexRange() const
+{
+    return mTransformFeedbackBuffers.size();
 }
 
 void State::setCopyReadBufferBinding(Buffer *buffer)
@@ -1033,19 +1039,19 @@ void State::setEnableVertexAttribArray(unsigned int attribNum, bool enabled)
 
 void State::setVertexAttribf(GLuint index, const GLfloat values[4])
 {
-    ASSERT(index < gl::MAX_VERTEX_ATTRIBS);
+    ASSERT(static_cast<size_t>(index) < mVertexAttribCurrentValues.size());
     mVertexAttribCurrentValues[index].setFloatValues(values);
 }
 
 void State::setVertexAttribu(GLuint index, const GLuint values[4])
 {
-    ASSERT(index < gl::MAX_VERTEX_ATTRIBS);
+    ASSERT(static_cast<size_t>(index) < mVertexAttribCurrentValues.size());
     mVertexAttribCurrentValues[index].setUnsignedIntValues(values);
 }
 
 void State::setVertexAttribi(GLuint index, const GLint values[4])
 {
-    ASSERT(index < gl::MAX_VERTEX_ATTRIBS);
+    ASSERT(static_cast<size_t>(index) < mVertexAttribCurrentValues.size());
     mVertexAttribCurrentValues[index].setIntValues(values);
 }
 
@@ -1062,13 +1068,8 @@ const VertexAttribute &State::getVertexAttribState(unsigned int attribNum) const
 
 const VertexAttribCurrentValueData &State::getVertexAttribCurrentValue(unsigned int attribNum) const
 {
-    ASSERT(attribNum < MAX_VERTEX_ATTRIBS);
+    ASSERT(static_cast<size_t>(attribNum) < mVertexAttribCurrentValues.size());
     return mVertexAttribCurrentValues[attribNum];
-}
-
-const VertexAttribCurrentValueData *State::getVertexAttribCurrentValues() const
-{
-    return mVertexAttribCurrentValues;
 }
 
 const void *State::getVertexAttribPointer(unsigned int attribNum) const
@@ -1185,7 +1186,7 @@ void State::getIntegerv(GLenum pname, GLint *params)
     if (pname >= GL_DRAW_BUFFER0_EXT && pname <= GL_DRAW_BUFFER15_EXT)
     {
         unsigned int colorAttachment = (pname - GL_DRAW_BUFFER0_EXT);
-        ASSERT(colorAttachment < mContext->getCaps().maxDrawBuffers);
+        ASSERT(colorAttachment < mMaxDrawBuffers);
         Framebuffer *framebuffer = mDrawFramebuffer;
         *params = framebuffer->getDrawBufferState(colorAttachment);
         return;
@@ -1332,19 +1333,19 @@ void State::getIntegerv(GLenum pname, GLint *params)
         }
         break;
       case GL_TEXTURE_BINDING_2D:
-        ASSERT(mActiveSampler < mContext->getCaps().maxCombinedTextureImageUnits);
+        ASSERT(mActiveSampler < mMaxCombinedTextureImageUnits);
         *params = mSamplerTextures.at(GL_TEXTURE_2D)[mActiveSampler].id();
         break;
       case GL_TEXTURE_BINDING_CUBE_MAP:
-        ASSERT(mActiveSampler < mContext->getCaps().maxCombinedTextureImageUnits);
+        ASSERT(mActiveSampler < mMaxCombinedTextureImageUnits);
         *params = mSamplerTextures.at(GL_TEXTURE_CUBE_MAP)[mActiveSampler].id();
         break;
       case GL_TEXTURE_BINDING_3D:
-        ASSERT(mActiveSampler <mContext->getCaps().maxCombinedTextureImageUnits);
+        ASSERT(mActiveSampler < mMaxCombinedTextureImageUnits);
         *params = mSamplerTextures.at(GL_TEXTURE_3D)[mActiveSampler].id();
         break;
       case GL_TEXTURE_BINDING_2D_ARRAY:
-        ASSERT(mActiveSampler < mContext->getCaps().maxCombinedTextureImageUnits);
+        ASSERT(mActiveSampler < mMaxCombinedTextureImageUnits);
         *params = mSamplerTextures.at(GL_TEXTURE_2D_ARRAY)[mActiveSampler].id();
         break;
       case GL_UNIFORM_BUFFER_BINDING:
@@ -1376,13 +1377,13 @@ bool State::getIndexedIntegerv(GLenum target, GLuint index, GLint *data)
     switch (target)
     {
       case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
-        if (index < IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS)
+        if (static_cast<size_t>(index) < mTransformFeedbackBuffers.size())
         {
             *data = mTransformFeedbackBuffers[index].id();
         }
         break;
       case GL_UNIFORM_BUFFER_BINDING:
-        if (index < IMPLEMENTATION_MAX_COMBINED_SHADER_UNIFORM_BUFFERS)
+        if (static_cast<size_t>(index) < mUniformBuffers.size())
         {
             *data = mUniformBuffers[index].id();
         }
@@ -1399,25 +1400,25 @@ bool State::getIndexedInteger64v(GLenum target, GLuint index, GLint64 *data)
     switch (target)
     {
       case GL_TRANSFORM_FEEDBACK_BUFFER_START:
-        if (index < IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS)
+        if (static_cast<size_t>(index) < mTransformFeedbackBuffers.size())
         {
             *data = mTransformFeedbackBuffers[index].getOffset();
         }
         break;
       case GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
-        if (index < IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS)
+        if (static_cast<size_t>(index) < mTransformFeedbackBuffers.size())
         {
             *data = mTransformFeedbackBuffers[index].getSize();
         }
         break;
       case GL_UNIFORM_BUFFER_START:
-        if (index < IMPLEMENTATION_MAX_COMBINED_SHADER_UNIFORM_BUFFERS)
+        if (static_cast<size_t>(index) < mUniformBuffers.size())
         {
             *data = mUniformBuffers[index].getOffset();
         }
         break;
       case GL_UNIFORM_BUFFER_SIZE:
-        if (index < IMPLEMENTATION_MAX_COMBINED_SHADER_UNIFORM_BUFFERS)
+        if (static_cast<size_t>(index) < mUniformBuffers.size())
         {
             *data = mUniformBuffers[index].getSize();
         }
@@ -1433,9 +1434,9 @@ bool State::hasMappedBuffer(GLenum target) const
 {
     if (target == GL_ARRAY_BUFFER)
     {
-        for (unsigned int attribIndex = 0; attribIndex < gl::MAX_VERTEX_ATTRIBS; attribIndex++)
+        for (size_t attribIndex = 0; attribIndex < mVertexAttribCurrentValues.size(); attribIndex++)
         {
-            const gl::VertexAttribute &vertexAttrib = getVertexAttribState(attribIndex);
+            const gl::VertexAttribute &vertexAttrib = getVertexAttribState(static_cast<unsigned int>(attribIndex));
             gl::Buffer *boundBuffer = vertexAttrib.buffer.get();
             if (vertexAttrib.enabled && boundBuffer && boundBuffer->isMapped())
             {

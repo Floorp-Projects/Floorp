@@ -32,16 +32,16 @@ public:
     virtual sh::Attribute *getShaderAttributes() = 0;
 
     virtual GLenum getBinaryFormat() = 0;
-    virtual bool load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream) = 0;
-    virtual bool save(gl::BinaryOutputStream *stream) = 0;
+    virtual gl::LinkResult load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream) = 0;
+    virtual gl::Error save(gl::BinaryOutputStream *stream) = 0;
 
-    virtual bool compileProgramExecutables(gl::InfoLog &infoLog, gl::Shader *fragmentShader, gl::Shader *vertexShader,
-                                           int registers) = 0;
+    virtual gl::LinkResult compileProgramExecutables(gl::InfoLog &infoLog, gl::Shader *fragmentShader, gl::Shader *vertexShader,
+                                                     int registers) = 0;
 
-    virtual bool link(gl::InfoLog &infoLog, gl::Shader *fragmentShader, gl::Shader *vertexShader,
-                      const std::vector<std::string> &transformFeedbackVaryings, GLenum transformFeedbackBufferMode,
-                      int *registers, std::vector<gl::LinkedVarying> *linkedVaryings,
-                      std::map<int, gl::VariableLocation> *outputVariables, const gl::Caps &caps) = 0;
+    virtual gl::LinkResult link(gl::InfoLog &infoLog, gl::Shader *fragmentShader, gl::Shader *vertexShader,
+                                const std::vector<std::string> &transformFeedbackVaryings, GLenum transformFeedbackBufferMode,
+                                int *registers, std::vector<gl::LinkedVarying> *linkedVaryings,
+                                std::map<int, gl::VariableLocation> *outputVariables, const gl::Caps &caps) = 0;
 
     virtual void initializeUniformStorage(const std::vector<gl::LinkedUniform*> &uniforms) = 0;
 

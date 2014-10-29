@@ -63,7 +63,7 @@ class TextureD3D : public TextureImpl
     Image *getBaseLevelImage() const;
 
   protected:
-    gl::Error setImage(const gl::PixelUnpackState &unpack, GLenum type, const void *pixels, Image *image);
+    gl::Error setImage(const gl::PixelUnpackState &unpack, GLenum type, const void *pixels, const gl::ImageIndex &index);
     gl::Error subImage(GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
                        GLenum format, GLenum type, const gl::PixelUnpackState &unpack, const void *pixels, const gl::ImageIndex &index);
     gl::Error setCompressedImage(GLsizei imageSize, const void *pixels, Image *image);
@@ -82,6 +82,7 @@ class TextureD3D : public TextureImpl
 
     virtual TextureStorage *createCompleteStorage(bool renderTarget) const = 0;
     virtual void setCompleteTexStorage(TextureStorage *newCompleteTexStorage) = 0;
+    virtual gl::Error commitRegion(const gl::ImageIndex &index, const gl::Box &region) = 0;
 
     Renderer *mRenderer;
 
@@ -139,6 +140,7 @@ class TextureD3D_2D : public TextureD3D
     virtual void initializeStorage(bool renderTarget);
     virtual TextureStorage *createCompleteStorage(bool renderTarget) const;
     virtual void setCompleteTexStorage(TextureStorage *newCompleteTexStorage);
+    gl::Error commitRegion(const gl::ImageIndex &index, const gl::Box &region);
 
     virtual void updateStorage();
     virtual void initMipmapsImages();
@@ -149,7 +151,6 @@ class TextureD3D_2D : public TextureD3D
     void updateStorageLevel(int level);
 
     void redefineImage(GLint level, GLenum internalformat, GLsizei width, GLsizei height);
-    gl::Error commitRect(GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
 
     ImageD3D *mImageArray[gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS];
 };
@@ -194,6 +195,7 @@ class TextureD3D_Cube : public TextureD3D
     virtual void initializeStorage(bool renderTarget);
     virtual TextureStorage *createCompleteStorage(bool renderTarget) const;
     virtual void setCompleteTexStorage(TextureStorage *newCompleteTexStorage);
+    virtual gl::Error commitRegion(const gl::ImageIndex &index, const gl::Box &region);
 
     virtual void updateStorage();
     virtual void initMipmapsImages();
@@ -204,7 +206,6 @@ class TextureD3D_Cube : public TextureD3D
     void updateStorageFaceLevel(int faceIndex, int level);
 
     void redefineImage(int faceIndex, GLint level, GLenum internalformat, GLsizei width, GLsizei height);
-    gl::Error commitRect(int faceIndex, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
 
     ImageD3D *mImageArray[6][gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS];
 };
@@ -248,6 +249,7 @@ class TextureD3D_3D : public TextureD3D
     virtual void initializeStorage(bool renderTarget);
     virtual TextureStorage *createCompleteStorage(bool renderTarget) const;
     virtual void setCompleteTexStorage(TextureStorage *newCompleteTexStorage);
+    virtual gl::Error commitRegion(const gl::ImageIndex &index, const gl::Box &region);
 
     virtual void updateStorage();
     virtual void initMipmapsImages();
@@ -257,7 +259,6 @@ class TextureD3D_3D : public TextureD3D
     void updateStorageLevel(int level);
 
     void redefineImage(GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth);
-    gl::Error commitRect(GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth);
 
     ImageD3D *mImageArray[gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS];
 };
@@ -300,6 +301,7 @@ class TextureD3D_2DArray : public TextureD3D
     virtual void initializeStorage(bool renderTarget);
     virtual TextureStorage *createCompleteStorage(bool renderTarget) const;
     virtual void setCompleteTexStorage(TextureStorage *newCompleteTexStorage);
+    virtual gl::Error commitRegion(const gl::ImageIndex &index, const gl::Box &region);
 
     virtual void updateStorage();
     virtual void initMipmapsImages();
@@ -310,7 +312,6 @@ class TextureD3D_2DArray : public TextureD3D
 
     void deleteImages();
     void redefineImage(GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth);
-    gl::Error commitRect(GLint level, GLint xoffset, GLint yoffset, GLint layerTarget, GLsizei width, GLsizei height);
 
     // Storing images as an array of single depth textures since D3D11 treats each array level of a
     // Texture2D object as a separate subresource.  Each layer would have to be looped over

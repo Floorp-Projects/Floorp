@@ -91,13 +91,13 @@ Context::Context(int clientVersion, const gl::Context *shareContext, rx::Rendere
     bindRenderbuffer(0);
 
     bindGenericUniformBuffer(0);
-    for (int i = 0; i < IMPLEMENTATION_MAX_COMBINED_SHADER_UNIFORM_BUFFERS; i++)
+    for (unsigned int i = 0; i < mCaps.maxCombinedUniformBlocks; i++)
     {
         bindIndexedUniformBuffer(0, i, 0, -1);
     }
 
     bindGenericTransformFeedbackBuffer(0);
-    for (int i = 0; i < IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS; i++)
+    for (unsigned int i = 0; i < mCaps.maxTransformFeedbackSeparateAttributes; i++)
     {
         bindIndexedTransformFeedbackBuffer(0, i, 0, -1);
     }
@@ -119,8 +119,6 @@ Context::Context(int clientVersion, const gl::Context *shareContext, rx::Rendere
     mResetStatus = GL_NO_ERROR;
     mResetStrategy = (notifyResets ? GL_LOSE_CONTEXT_ON_RESET_EXT : GL_NO_RESET_NOTIFICATION_EXT);
     mRobustAccess = robustAccess;
-
-    mState.setContext(this);
 }
 
 Context::~Context()
@@ -640,33 +638,44 @@ void Context::useProgram(GLuint program)
     }
 }
 
-void Context::linkProgram(GLuint program)
+Error Context::linkProgram(GLuint program)
 {
     Program *programObject = mResourceManager->getProgram(program);
 
-    bool linked = programObject->link(getCaps());
+    Error error = programObject->link(getCaps());
+    if (error.isError())
+    {
+        return error;
+    }
 
     // if the current program was relinked successfully we
     // need to install the new executables
-    if (linked && program == mState.getCurrentProgramId())
+    if (programObject->isLinked() && program == mState.getCurrentProgramId())
     {
         mState.setCurrentProgramBinary(programObject->getProgramBinary());
     }
+
+    return Error(GL_NO_ERROR);
 }
 
-void Context::setProgramBinary(GLuint program, GLenum binaryFormat, const void *binary, GLint length)
+Error Context::setProgramBinary(GLuint program, GLenum binaryFormat, const void *binary, GLint length)
 {
     Program *programObject = mResourceManager->getProgram(program);
 
-    bool loaded = programObject->setProgramBinary(binaryFormat, binary, length);
+    Error error = programObject->setProgramBinary(binaryFormat, binary, length);
+    if (error.isError())
+    {
+        return error;
+    }
 
     // if the current program was reloaded successfully we
     // need to install the new executables
-    if (loaded && program == mState.getCurrentProgramId())
+    if (programObject->isLinked() && program == mState.getCurrentProgramId())
     {
         mState.setCurrentProgramBinary(programObject->getProgramBinary());
     }
 
+    return Error(GL_NO_ERROR);
 }
 
 void Context::bindTransformFeedback(GLuint transformFeedback)
@@ -1398,10 +1407,8 @@ Error Context::applyState(GLenum drawMode)
 // Applies the shaders and shader constants to the Direct3D 9 device
 Error Context::applyShaders(ProgramBinary *programBinary, bool transformFeedbackActive)
 {
-    const VertexAttribute *vertexAttributes = mState.getVertexArray()->getVertexAttributes();
-
     VertexFormat inputLayout[MAX_VERTEX_ATTRIBS];
-    VertexFormat::GetInputLayout(inputLayout, programBinary, vertexAttributes, mState.getVertexAttribCurrentValues());
+    VertexFormat::GetInputLayout(inputLayout, programBinary, mState);
 
     const Framebuffer *fbo = mState.getDrawFramebuffer();
 
@@ -1584,14 +1591,7 @@ bool Context::applyTransformFeedbackBuffers()
     TransformFeedback *curTransformFeedback = mState.getCurrentTransformFeedback();
     if (curTransformFeedback && curTransformFeedback->isStarted() && !curTransformFeedback->isPaused())
     {
-        Buffer *transformFeedbackBuffers[IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS];
-        GLintptr transformFeedbackOffsets[IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS];
-        for (size_t i = 0; i < IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS; i++)
-        {
-            transformFeedbackBuffers[i] = mState.getIndexedTransformFeedbackBuffer(i);
-            transformFeedbackOffsets[i] = mState.getIndexedTransformFeedbackBufferOffset(i);
-        }
-        mRenderer->applyTransformFeedbackBuffers(transformFeedbackBuffers, transformFeedbackOffsets);
+        mRenderer->applyTransformFeedbackBuffers(mState);
         return true;
     }
     else
@@ -1602,7 +1602,7 @@ bool Context::applyTransformFeedbackBuffers()
 
 void Context::markTransformFeedbackUsage()
 {
-    for (size_t i = 0; i < IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS; i++)
+    for (size_t i = 0; i < mCaps.maxTransformFeedbackSeparateAttributes; i++)
     {
         Buffer *buffer = mState.getIndexedTransformFeedbackBuffer(i);
         if (buffer)
@@ -1771,7 +1771,7 @@ Error Context::drawArrays(GLenum mode, GLint first, GLsizei count, GLsizei insta
         return error;
     }
 
-    error = mRenderer->applyVertexBuffer(programBinary, mState.getVertexArray()->getVertexAttributes(), mState.getVertexAttribCurrentValues(), first, count, instances);
+    error = mRenderer->applyVertexBuffer(mState, first, count, instances);
     if (error.isError())
     {
         return error;
@@ -1856,9 +1856,7 @@ Error Context::drawElements(GLenum mode, GLsizei count, GLenum type,
     }
 
     GLsizei vertexCount = indexInfo.indexRange.length() + 1;
-    error = mRenderer->applyVertexBuffer(programBinary, vao->getVertexAttributes(),
-                                         mState.getVertexAttribCurrentValues(),
-                                         indexInfo.indexRange.start, vertexCount, instances);
+    error = mRenderer->applyVertexBuffer(mState, indexInfo.indexRange.start, vertexCount, instances);
     if (error.isError())
     {
         return error;
