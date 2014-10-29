@@ -148,5 +148,5 @@ fuzzy-if(d2d,47,400) == linear-onestopposition-1.html linear-onestopposition-1-r
 == bug-916535-background-repeat-linear.html bug-916535-background-repeat-linear-ref.html
 fuzzy(1,800000) == large-gradient-1.html large-gradient-1-ref.html
 == large-gradient-2.html large-gradient-2-ref.html
-fuzzy(1,800000) == large-gradient-3.html large-gradient-3-ref.html
-== large-gradient-4.html large-gradient-4-ref.html
+fail-if(browserIsRemote) fuzzy(1,800000) == large-gradient-3.html large-gradient-3-ref.html
+fail-if(browserIsRemote) == large-gradient-4.html large-gradient-4-ref.html
