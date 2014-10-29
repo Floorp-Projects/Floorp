@@ -112,7 +112,7 @@ ReleaseRemoteVariant(Variant& aVariant)
     }
 
     case Variant::TPPluginScriptableObjectChild: {
-      NS_ASSERTION(PluginModuleChild::current(),
+      NS_ASSERTION(XRE_GetProcessType() == GeckoProcessType_Plugin,
                    "Should only be running in the child!");
       PluginScriptableObjectChild* actor =
         const_cast<PluginScriptableObjectChild*>(

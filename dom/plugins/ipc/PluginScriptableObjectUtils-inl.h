@@ -90,7 +90,7 @@ mozilla::plugins::ConvertToVariant(const Variant& aRemoteVariant,
 
     case Variant::TPPluginScriptableObjectChild: {
       NS_ASSERTION(!aInstance, "No instance should be given!");
-      NS_ASSERTION(PluginModuleChild::current(),
+      NS_ASSERTION(XRE_GetProcessType() == GeckoProcessType_Plugin,
                    "Should be running on child only!");
 
       NPObject* object = NPObjectFromVariant(aRemoteVariant);

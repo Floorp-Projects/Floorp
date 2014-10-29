@@ -69,7 +69,7 @@ private:
 namespace mozilla {
 namespace plugins {
 
-PluginHangUIParent::PluginHangUIParent(PluginModuleParent* aModule,
+PluginHangUIParent::PluginHangUIParent(PluginModuleChromeParent* aModule,
                                        const int32_t aHangUITimeoutPref,
                                        const int32_t aChildTimeoutPref)
   : mMutex("mozilla::plugins::PluginHangUIParent::mMutex"),
