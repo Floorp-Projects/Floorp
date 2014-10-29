@@ -1,0 +1,382 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+
+%{C++
+#define TV_TUNER_DATA_CID \
+  { 0x1f36be28, 0xf9fe, 0x2dc3, { 0xbf, 0x2a, 0x17, 0x97, 0x93, 0x40, 0xff, 0xe1 } }
+#define TV_TUNER_DATA_CONTRACTID \
+  "@mozilla.org/tv/tvtunerdata;1"
+%}
+
+/**
+ * XPCOM component which acts as the container for tuner data.
+ *
+ * NOTE: Use do_CreateInstance() to create the Gecko provided implementation,
+ * and then uses the setter functions to adjust the properties of the object
+ * before passing it.
+ */
+[scriptable, builtinclass, uuid(608d3f7e-f9f1-4b3c-82c2-3eb60b1d3de8)]
+interface nsITVTunerData : nsISupports
+{
+  attribute DOMString id;
+
+  /**
+   * Get the supported source types of the tuner. Please refer to
+   * http://seanyhlin.github.io/TV-Manager-API/ for available values.
+   *
+   * @param count       The number of supported source types.
+   * @param sourceTypes An array of supported source types.
+   */
+  void getSupportedSourceTypes([optional] out unsigned long count,
+                               [retval, array, size_is(count)] out string sourceTypes);
+
+  /**
+   * Set the supported source types of the tuner. Please refer to
+   * http://seanyhlin.github.io/TV-Manager-API/ for available values.
+   *
+   * @param count       The number of supported source types.
+   * @param sourceTypes An array of supported source types.
+   */
+  void setSupportedSourceTypes(in unsigned long count,
+                               [array, size_is(count)] in string sourceTypes);
+};
+
+%{C++
+#define TV_CHANNEL_DATA_CID \
+  { 0xdafe6881, 0x0964, 0xdb5b, { 0x59, 0xc6, 0x20, 0x0b, 0xa6, 0x59, 0xe6, 0x68 } }
+#define TV_CHANNEL_DATA_CONTRACTID \
+  "@mozilla.org/tv/tvchanneldata;1"
+%}
+
+/**
+ * XPCOM component which acts as the container for channel data.
+ *
+ * NOTE: Use do_CreateInstance() to create the Gecko provided implementation,
+ * and then uses the setter functions to adjust the properties of the object
+ * before passing it.
+ */
+[scriptable, builtinclass, uuid(5d01ea74-2db6-11e4-9dba-74d02b97e723)]
+interface nsITVChannelData : nsISupports
+{
+  attribute DOMString networkId;
+  attribute DOMString transportStreamId;
+  attribute DOMString serviceId;
+  attribute DOMString type;
+  attribute DOMString number;
+  attribute DOMString name;
+  [infallible] attribute boolean isEmergency;
+  [infallible] attribute boolean isFree;
+};
+
+%{C++
+#define TV_PROGRAM_DATA_CID \
+  { 0x11415eeb, 0x27a6, 0x1c04, { 0x91, 0x33, 0x3e, 0x0a, 0xdd, 0x48, 0x5d, 0xb3 } }
+#define TV_PROGRAM_DATA_CONTRACTID \
+  "@mozilla.org/tv/tvprogramdata;1"
+%}
+
+/**
+ * XPCOM component which acts as the container for program data.
+ *
+ * NOTE: Use do_CreateInstance() to create the Gecko provided implementation,
+ * and then uses the setter functions to adjust the properties of the object
+ * before passing it.
+ */
+[scriptable, builtinclass, uuid(ed65422e-2d97-11e4-89d6-74d02b97e723)]
+interface nsITVProgramData : nsISupports
+{
+  attribute DOMString eventId;
+  attribute DOMString title;
+  [infallible] attribute unsigned long long startTime;
+  [infallible] attribute unsigned long long duration;
+  attribute DOMString description;
+  attribute DOMString rating;
+
+  /**
+   * Get the audio languages of the program. Please refer to
+   * http://seanyhlin.github.io/TV-Manager-API/ for available values.
+   *
+   * @param count     The number of languages.
+   * @param languages An array of languages.
+   */
+  void getAudioLanguages([optional] out unsigned long count,
+                         [retval, array, size_is(count)] out string languages);
+
+  /**
+   * Set the audio languages of the program. Please refer to
+   * http://seanyhlin.github.io/TV-Manager-API/ for available values.
+   *
+   * @param count     The number of languages.
+   * @param languages An array of languages.
+   */
+  void setAudioLanguages(in unsigned long count,
+                         [array, size_is(count)] in string languages);
+
+  /**
+   * Get the subtitle languages of the program. Please refer to
+   * http://seanyhlin.github.io/TV-Manager-API/ for available values.
+   *
+   * @param count     The number of languages.
+   * @param languages An array of languages.
+   */
+  void getSubtitleLanguages([optional] out unsigned long count,
+                            [retval, array, size_is(count)] out string languages);
+
+  /**
+   * Set the subtitle languages of the program. Please refer to
+   * http://seanyhlin.github.io/TV-Manager-API/ for available values.
+   *
+   * @param count     The number of languages.
+   * @param languages An array of languages.
+   */
+  void setSubtitleLanguages(in unsigned long count,
+                            [array, size_is(count)] in string languages);
+};
+
+[builtinclass, uuid(c3fd7a8c-21e4-11e4-97e8-74d02b97e723)]
+interface nsITVSourceListener : nsISupports
+{
+  /**
+   * Called when a channel is detected through scanning (after
+   * |nsITVService::startScanningChannels()| is invoked and probably before
+   * |nsITVService::stopScanningChannels()|, if any, is invoked).
+   *
+   * @param tunerId     The ID of the tuner which the source belongs to.
+   * @param sourceType  The type of the source which the channel belongs to.
+   *                    Please refer to http://seanyhlin.github.io/TV-Manager-API/
+   *                    for available values.
+   * @param channelData The data of the added channel.
+   */
+  void notifyChannelScanned(in DOMString tunerId,
+                            in DOMString sourceType,
+                            in nsITVChannelData channelData);
+
+  /**
+   * Called when the operation of channel scanning is complete (after
+   * |nsITVService::startScanningChannels()| is invoked).
+   *
+   * @param tunerId     The ID of the tuner which the source belongs to.
+   * @param sourceType  The type of the source which the channel belongs to.
+   *                    Please refer to http://seanyhlin.github.io/TV-Manager-API/
+   *                    for available values.
+   */
+  void notifyChannelScanComplete(in DOMString tunerId,
+                                 in DOMString sourceType);
+
+  /**
+   * Called when the operation of channel scanning is forced to stop due to
+   * something wrong during scanning.
+   *
+   * @param tunerId     The ID of the tuner which the source belongs to.
+   * @param sourceType  The type of the source which the channel belongs to.
+   *                    Please refer to http://seanyhlin.github.io/TV-Manager-API/
+   *                    for available values.
+   */
+  void notifyChannelScanStopped(in DOMString tunerId,
+                                in DOMString sourceType);
+
+  /**
+   * Called when a new EIT is broadcasted.
+   *
+   * @param tunerId         The ID of the tuner which the source belongs to.
+   * @param sourceType      The type of the source which the channel belongs to.
+   *                        Please refer to http://seanyhlin.github.io/TV-Manager-API/
+   *                        for available values.
+   * @param channelData     The channel data which the programs belong to.
+   * @param programDataList An array of correspondent program data.
+   * @param count           The number of programs.
+   */
+  void notifyEITBroadcasted(in DOMString tunerId,
+                            in DOMString sourceType,
+                            in nsITVChannelData channelData,
+                            [array, size_is(count)] in nsITVProgramData programDataList,
+                            in unsigned long count);
+};
+
+[builtinclass, uuid(a19e6e7e-2293-11e4-b335-74d02b97e723)]
+interface nsITVServiceCallback : nsISupports
+{
+  const unsigned short TV_ERROR_OK = 0;
+  const unsigned short TV_ERROR_FAILURE = 1;
+  const unsigned short TV_ERROR_INVALID_ARG = 2;
+  const unsigned short TV_ERROR_NO_SIGNAL = 3;
+  const unsigned short TV_ERROR_NOT_SUPPORTED = 4;
+
+  /**
+   * Called when something wrong happens.
+   *
+   * @param errorCode Error code listed above from the underlying layer.
+   */
+  void notifyError(in unsigned short errorCode);
+
+  /**
+   * Called when the operation succeeds.
+   *
+   * @param dataList A list of data.
+   *                 An array of |nsITVTunerData| when used for |getTuners()|.
+   *                 An array of |nsITVChannelData| ordered by the LCN (Logical
+   *                 Channel Number) when used for |getChannels()|.
+   *                 An array of |nsITVProgramData| ordered by the start time
+   *                 for |getPrograms()|.
+   *                 An array of |nsITVChannelData| with only one element for
+   *                 |setChannel()|.
+   *                 An array of |nsISupportsString| with only one element for
+   *                 |getOverlayId()|.
+   *
+   * NOTE: |nsIArray| is adopted to prevent this interface from being split into
+   * multiple interfaces with different |notifySuccess|. Though the
+   * implementation of TV service may need |nsIMutableArray| to fill in the
+   * array, it doesn't seem necessary for other places to use the mutable one.
+   */
+  void notifySuccess([optional] in nsIArray dataList);
+};
+
+%{C++
+#define TV_SERVICE_CONTRACTID \
+  "@mozilla.org/tv/tvservice;1"
+%}
+
+/**
+ * XPCOM component which interacts with the underlying TV components.
+ *
+ * NOTE: The implementation is expected to be done by TV vendors to cooperate
+ * with their own TV stack. The methods should not be called on any thread
+ * except for the XPCOM main thread.
+ *
+ * NOTE: The callbacks passing in the methods must be called asynchronously. In
+ * the implementation, actual runnable objects may need to be created and call
+ * the callback off of the runnables, after the function returns.
+ * TVServiceRunnables.h provides some ready-made runnables and could be used in
+ * the following way.
+ *
+ * nsCOMPtr<nsIRunnable> runnable =
+ *   new TVServiceNotifyRunnable(callback, dataList, optional errorCode);
+ * return NS_DispatchToCurrentThread(runnable);
+ */
+[uuid(1b17e3cc-1c84-11e4-a4d4-74d02b97e723)]
+interface nsITVService : nsISupports
+{
+  attribute nsITVSourceListener sourceListener;
+
+  /**
+   * Get all tuners.
+   *
+   * @param callback   The callback object where either |notifyError| or
+   *                   |notifySuccess|, which takes an array of
+   *                   |nsITVTunerData|, is expected.
+   */
+  void getTuners(in nsITVServiceCallback callback);
+
+  /**
+   * Set the source type to be used by the given tuner.
+   *
+   * @param tunerId    The ID of the tuner.
+   * @param sourceType The source type to be used.
+   * @param callback   The callback object where either |notifyError| or
+   *                   |notifySuccess| is expected.
+   */
+  void setSource(in DOMString tunerId,
+                 in DOMString sourceType,
+                 in nsITVServiceCallback callback);
+
+  /**
+   * Start scanning channels on the given tuner.
+   *
+   * Once the operation successfully starts, a series of |notifyChannelScanned|
+   * from |nsITVSourceListener| are expected, and followed by one of either
+   * |notifyChannelScanComplete| or |notifyChannelScanStopped|.
+   *
+   * @param tunerId     The ID of the tuner.
+   * @param sourceType  The source type to be used.
+   * @param callback    The callback object where either |notifyError| or
+   *                    |notifySuccess| is expected.
+   */
+  void startScanningChannels(in DOMString tunerId,
+                             in DOMString sourceType,
+                             in nsITVServiceCallback callback);
+
+  /**
+   * Stop scanning channels on the given tuner.
+   *
+   * Once the operation succeeds, a call of |notifyChannelScanStopped| from
+   * |nsITVSourceListener| should be expected.
+   *
+   * @param tunerId    The ID of the tuner.
+   * @param sourceType The source type to be used.
+   * @param callback   The callback object where either |notifyError| or
+   *                   |notifySuccess| is expected.
+   */
+  void stopScanningChannels(in DOMString tunerId,
+                            in DOMString sourceType,
+                            in nsITVServiceCallback callback);
+
+  /**
+   * Clear the cache for scanned channels, if any, from the underlying layer.
+   */
+  void clearScannedChannelsCache();
+
+  /**
+   * Set the channel to be used by the tuner.
+   *
+   * @param tunerId       The ID of the tuner.
+   * @param sourceType    The source type to be used.
+   * @param channelNumber The LCN (Logical Channel Number) of the channel.
+   * @param callback      The callback object where either |notifyError| or
+   *                      |notifySuccess| is expected.
+   */
+  void setChannel(in DOMString tunerId,
+                  in DOMString sourceType,
+                  in DOMString channelNumber,
+                  in nsITVServiceCallback callback);
+
+  /**
+   * Get the channels, ordered by the LCN (Logical Channel Number), of a given
+   * source type.
+   *
+   * @param tunerId       The ID of the tuner.
+   * @param sourceType    The source type to be used.
+   * @param callback      The callback object where either |notifyError| or
+   *                      |notifySuccess|, which takes an array of
+   *                      |nsITVChannelData| ordered by the LCN (Logical Channel
+   *                      Number), is expected.
+   */
+  void getChannels(in DOMString tunerId,
+                   in DOMString sourceType,
+                   in nsITVServiceCallback callback);
+
+  /**
+   * Get the programs, ordered by the start time, of a given channel.
+   *
+   * @param tunerId       The ID of the tuner.
+   * @param sourceType    The source type to be used.
+   * @param channelNumber The LCN (Logical Channel Number) of the channel.
+   * @param startTime     The begining of the searching time frame for programs.
+   * @param endTime       The end of the searching time frame for programs.
+   * @param callback      The callback object where either |notifyError| or
+   *                      |notifySuccess|, which takes an array of
+   *                      |nsITVProgramData| ordered by the start time, is
+   *                      expected.
+   */
+  void getPrograms(in DOMString tunerId,
+                   in DOMString sourceType,
+                   in DOMString channelNumber,
+                   in unsigned long long startTime,
+                   in unsigned long long endTime,
+                   in nsITVServiceCallback callback);
+
+  /**
+   * Get the overlay ID of a given tuner.
+   *
+   * @param tunerId       The ID of the tuner.
+   * @param callback      The callback object where either |notifyError| or
+   *                      |notifySuccess|, which takes an array of
+   *                      |nsISupportsString| with only one element, is expected.
+   */
+  void getOverlayId(in DOMString tunerId,
+                    in nsITVServiceCallback callback);
+};

@@ -93,6 +93,7 @@ class PowerManager;
 class CellBroadcast;
 class Telephony;
 class Voicemail;
+class TVManager;
 
 namespace time {
 class TimeManager;
@@ -223,6 +224,7 @@ public:
   MobileMessageManager* GetMozMobileMessage();
   Telephony* GetMozTelephony(ErrorResult& aRv);
   Voicemail* GetMozVoicemail(ErrorResult& aRv);
+  TVManager* GetTv();
   network::Connection* GetConnection(ErrorResult& aRv);
   nsDOMCameraManager* GetMozCameras(ErrorResult& aRv);
   MediaDevices* GetMediaDevices(ErrorResult& aRv);
@@ -305,6 +307,8 @@ public:
   static bool HasMobileIdSupport(JSContext* aCx, JSObject* aGlobal);
 #endif
 
+  static bool HasTVSupport(JSContext* aCx, JSObject* aGlobal);
+
   nsPIDOMWindow* GetParentObject() const
   {
     return GetWindow();
@@ -334,6 +338,7 @@ private:
   nsRefPtr<MobileMessageManager> mMobileMessageManager;
   nsRefPtr<Telephony> mTelephony;
   nsRefPtr<Voicemail> mVoicemail;
+  nsRefPtr<TVManager> mTVManager;
   nsRefPtr<network::Connection> mConnection;
 #ifdef MOZ_B2G_RIL
   nsRefPtr<MobileConnectionArray> mMobileConnections;

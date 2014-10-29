@@ -23,12 +23,24 @@ function* testPrefs(test) {
   }
 }
 
+function isNightly() {
+  return Services.appinfo.version.contains("a1");
+}
+
 add_task(function* test_default_values() {
+  if (!isNightly()) {
+    ok(true, "Skipping test, not Nightly")
+    return;
+  }
   Assert.ok(!Services.prefs.getBoolPref(POLARIS_ENABLED), POLARIS_ENABLED + " is disabled by default.");
   Assert.ok(!Services.prefs.getBoolPref(PREF_TPUI), PREF_TPUI + "is disabled by default.");
 });
 
 add_task(function* test_changing_pref_changes_tracking() {
+  if (!isNightly()) {
+    ok(true, "Skipping test, not Nightly")
+    return;
+  }
   function* testPref(pref) {
     Services.prefs.setBoolPref(POLARIS_ENABLED, true);
     yield assertPref(pref, true);
@@ -41,6 +53,10 @@ add_task(function* test_changing_pref_changes_tracking() {
 });
 
 add_task(function* test_prefs_can_be_changed_individually() {
+  if (!isNightly()) {
+    ok(true, "Skipping test, not Nightly")
+    return;
+  }
   function* testPref(pref) {
     Services.prefs.setBoolPref(POLARIS_ENABLED, true);
     yield assertPref(pref, true);

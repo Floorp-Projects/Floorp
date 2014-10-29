@@ -1042,3 +1042,6 @@ pref("dom.mapped_arraybuffer.enabled", true);
 
 // UDPSocket API
 pref("dom.udpsocket.enabled", true);
+
+// Enable TV Manager API
+pref("dom.tv.enabled", true);

@@ -533,6 +533,10 @@ this.ICC_EF_MWIS   = 0x6fca;
 this.ICC_EF_CFIS   = 0x6fcb;
 this.ICC_EF_SPDI   = 0x6fcd;
 
+// CPHS files to be supported
+this.ICC_EF_CPHS_INFO = 0x6f16; // CPHS Information
+this.ICC_EF_CPHS_MBN  = 0x6f17; // Mailbox Numbers
+
 // CSIM files
 this.ICC_EF_CSIM_IMSI_M   = 0x6f22;
 this.ICC_EF_CSIM_CDMAHOME = 0x6f28;
@@ -1309,6 +1313,18 @@ this.GECKO_ICC_SERVICES = {
     ENHANCED_PHONEBOOK: 6,
     SPN: 17,
     SDN: 18
+  },
+  // @see B.3.1.1 CPHS Information in CPHS Phase 2:
+  // Indicates which of the CPHS 'optional' data-fields are present in the SIM card:
+  //   EF_CPHS_CSP, EF_CPHS_SST, EF_CPHS_MBN, EF_CPHS_ONSF, EF_CPHS_INFO_NUM
+  // Note: Mandatory EFs are: (B.3.1 Enhanced SIM Requirements)
+  //   EF_CPHS_CFF, EF_CPHS_VMI, EF_CPHS_ONS, EF_CPHS_INFO
+  cphs: {
+    CSP: 1,
+    SST: 2,
+    MBN: 3,
+    ONSF: 4,
+    INFO_NUM: 5
   }
 };
 

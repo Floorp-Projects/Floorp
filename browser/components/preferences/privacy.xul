@@ -26,6 +26,9 @@
       <preference id="privacy.donottrackheader.enabled"
                   name="privacy.donottrackheader.enabled"
                   type="bool"/>
+      <preference id="privacy.trackingprotection.enabled"
+                  name="privacy.trackingprotection.enabled"
+                  type="bool"/>
 
       <!-- XXX button prefs -->
       <preference id="pref.privacy.disable_button.cookie_exceptions"
@@ -81,6 +84,19 @@
     <!-- Tracking -->
     <groupbox id="trackingGroup" align="start">
       <caption label="&tracking.label;"/>
+      <vbox id="trackingprotectionbox" hidden="true">
+        <hbox align="center">
+          <checkbox id="trackingProtection"
+                    preference="privacy.trackingprotection.enabled"
+                    accesskey="&trackingProtection.accesskey;"
+                    label="&trackingProtection.label;" />
+          <image id="trackingProtectionImage" src="chrome://browser/skin/bad-content-blocked-16.png"/>
+        </hbox>
+        <label id="trackingProtectionLearnMore"
+               class="text-link"
+               value="&trackingProtectionLearnMore.label;"/>
+        <separator/>
+      </vbox>
       <checkbox id="privacyDoNotTrackCheckbox"
                 label="&dntTrackingNotOkay.label2;"
                 accesskey="&dntTrackingNotOkay.accesskey;"

@@ -93,6 +93,7 @@ DIRS += [
     'promise',
     'smil',
     'telephony',
+    'tv',
     'voicemail',
     'inputmethod',
     'webidl',

@@ -296,3 +296,31 @@ add_test(function test_get_network_name_from_icc() {
 
   run_next_test();
 });
+
+/**
+ * Verify ICCUtilsHelper.isCphsServiceAvailable.
+ */
+add_test(function test_is_cphs_service_available() {
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let ICCUtilsHelper = context.ICCUtilsHelper;
+  let RIL = context.RIL;
+  RIL.iccInfoPrivate.cphsSt = Uint8Array(2);
+
+  function test_table(cphsSt, geckoService) {
+    RIL.iccInfoPrivate.cphsSt.set(cphsSt);
+
+    for (let service in GECKO_ICC_SERVICES.cphs) {
+      do_check_eq(ICCUtilsHelper.isCphsServiceAvailable(service),
+                  geckoService == service);
+    }
+  }
+
+  test_table([0x03, 0x00], "CSP");
+  test_table([0x0C, 0x00], "SST");
+  test_table([0x30, 0x00], "MBN");
+  test_table([0xC0, 0x00], "ONSF");
+  test_table([0x00, 0x03], "INFO_NUM");
+
+  run_next_test();
+});

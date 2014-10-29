@@ -61,7 +61,7 @@ public:
   static int32_t SdkVersion();
 
 private:
-  mozilla::Mutex mIfcMutex;
+  static mozilla::Mutex sIfcMutex;
 };
 
 // Defines a function type with the right arguments and return type.

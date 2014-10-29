@@ -14,6 +14,24 @@ var gPrivacyPane = {
    */
   _shouldPromptForRestart: true,
 
+#ifdef NIGHTLY_BUILD
+  /**
+   * Show the Tracking Protection UI depending on the
+   * privacy.trackingprotection.ui.enabled pref, and linkify its Learn More link
+   */
+  _initTrackingProtection: function () {
+    if (!Services.prefs.getBoolPref("privacy.trackingprotection.ui.enabled")) {
+      return;
+    }
+
+    let link = document.getElementById("trackingProtectionLearnMore");
+    let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "tracking-protection";
+    link.setAttribute("href", url);
+
+    document.getElementById("trackingprotectionbox").hidden = false;
+  },
+#endif
+
   /**
    * Sets up the UI for the number of days of history to keep, and updates the
    * label of the "Clear Now..." button.
@@ -31,6 +49,9 @@ var gPrivacyPane = {
     this.updateHistoryModePane();
     this.updatePrivacyMicroControls();
     this.initAutoStartPrivateBrowsingReverter();
+#ifdef NIGHTLY_BUILD
+    this._initTrackingProtection();
+#endif
 
     setEventListener("browser.urlbar.default.behavior", "change",
       document.getElementById('browser.urlbar.autocomplete.enabled')
