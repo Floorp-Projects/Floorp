@@ -75,19 +75,6 @@ XPCOMUtils.defineLazyGetter(this, "gNumRadioInterfaces", function() {
   return Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);
 });
 
-function MobileIccCardLockResult(options) {
-  this.lockType = options.lockType;
-  this.enabled = options.enabled;
-  this.retryCount = options.retryCount;
-  this.success = options.success;
-}
-
-function MobileIccCardLockRetryCount(options) {
-  this.lockType = options.lockType;
-  this.retryCount = options.retryCount;
-  this.success = options.success;
-}
-
 function IccInfo() {}
 IccInfo.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIIccInfo]),
@@ -674,8 +661,9 @@ RILContentHelper.prototype = {
           break;
         }
 
-        let result = new MobileIccCardLockResult(data);
-        this.fireRequestSuccess(requestId, Cu.cloneInto(result, requestWindow));
+        this.fireRequestSuccess(requestId,
+                                Cu.cloneInto({ enabled: data.enabled },
+                                             requestWindow));
         break;
       }
       case "RIL:SetUnlockCardLockResult": {
@@ -690,8 +678,7 @@ RILContentHelper.prototype = {
           break;
         }
 
-        let result = new MobileIccCardLockResult(data);
-        this.fireRequestSuccess(requestId, Cu.cloneInto(result, requestWindow));
+        this.fireRequestSuccess(requestId, null);
         break;
       }
       case "RIL:CardLockRetryCount": {
@@ -704,8 +691,9 @@ RILContentHelper.prototype = {
           break;
         }
 
-        let result = new MobileIccCardLockRetryCount(data);
-        this.fireRequestSuccess(data.requestId, Cu.cloneInto(result, requestWindow));
+        this.fireRequestSuccess(data.requestId,
+                                Cu.cloneInto({ retryCount: data.retryCount },
+                                             requestWindow));
         break;
       }
       case "RIL:StkCommand":
