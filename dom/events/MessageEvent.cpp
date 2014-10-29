@@ -141,8 +141,8 @@ MessageEvent::Constructor(const GlobalObject& aGlobal,
   }
 
   if (!aParam.mSource.IsNull()) {
-    if (aParam.mSource.Value().IsWindowProxy()) {
-      event->mWindowSource = aParam.mSource.Value().GetAsWindowProxy();
+    if (aParam.mSource.Value().IsWindow()) {
+      event->mWindowSource = aParam.mSource.Value().GetAsWindow();
     } else {
       event->mPortSource = aParam.mSource.Value().GetAsMessagePort();
     }
