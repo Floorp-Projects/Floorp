@@ -878,6 +878,12 @@ LIRGenerator::visitTest(MTest *test)
 }
 
 bool
+LIRGenerator::visitGotoWithFake(MGotoWithFake *gotoWithFake)
+{
+    return add(new(alloc()) LGoto(gotoWithFake->target()));
+}
+
+bool
 LIRGenerator::visitFunctionDispatch(MFunctionDispatch *ins)
 {
     LFunctionDispatch *lir = new(alloc()) LFunctionDispatch(useRegister(ins->input()));
