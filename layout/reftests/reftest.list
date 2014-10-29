@@ -248,10 +248,10 @@ include outline/reftest.list
 include object/reftest.list
 
 # ogg-video/
-include ogg-video/reftest.list
+skip-if(browserIsRemote) include ogg-video/reftest.list
 
 # webm-video/
-include webm-video/reftest.list
+skip-if(browserIsRemote) include webm-video/reftest.list
 
 # parser/
 include ../../parser/htmlparser/tests/reftest/reftest.list
