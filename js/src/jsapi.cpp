@@ -3317,17 +3317,17 @@ JS_DefineProperties(JSContext *cx, HandleObject obj, const JSPropertySpec *ps)
         if (!PropertySpecNameToId(cx, ps->name, &id))
             return false;
 
-        if (!ps->isSelfHosted()) {
-            if (!DefinePropertyById(cx, obj, id, JS::UndefinedHandleValue,
-                                    ps->getter.native, ps->setter.native, ps->flags, 0))
-            {
-                return false;
-            }
-        } else {
+        if (ps->isSelfHosted()) {
             if (!DefineSelfHostedProperty(cx, obj, id,
                                           ps->getter.selfHosted.funname,
                                           ps->setter.selfHosted.funname,
                                           ps->flags, 0))
+            {
+                return false;
+            }
+        } else {
+            if (!DefinePropertyById(cx, obj, id, JS::UndefinedHandleValue,
+                                    ps->getter.native, ps->setter.native, ps->flags, 0))
             {
                 return false;
             }
