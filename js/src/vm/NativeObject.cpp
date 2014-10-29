@@ -1707,67 +1707,6 @@ js::NativeGet(JSContext *cx, HandleObject obj, HandleNativeObject pobj, HandleSh
     return NativeGetInline<CanGC>(cx, obj, obj, pobj, shape, vp);
 }
 
-template <ExecutionMode mode>
-static bool
-NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg, HandleNativeObject obj,
-          HandleObject receiver, HandleShape shape, bool strict, MutableHandleValue vp)
-{
-    MOZ_ASSERT(cxArg->isThreadLocal(obj));
-    MOZ_ASSERT(obj->isNative());
-
-    if (shape->hasSlot()) {
-        /* If shape has a stub setter, just store vp. */
-        if (shape->hasDefaultSetter()) {
-            if (mode == ParallelExecution) {
-                if (!obj->setSlotIfHasType(shape, vp))
-                    return false;
-            } else {
-                // Global properties declared with 'var' will be initially
-                // defined with an undefined value, so don't treat the initial
-                // assignments to such properties as overwrites.
-                bool overwriting = !obj->is<GlobalObject>() || !obj->getSlot(shape->slot()).isUndefined();
-                obj->setSlotWithType(cxArg->asExclusiveContext(), shape, vp, overwriting);
-            }
-
-            return true;
-        }
-    }
-
-    if (mode == ParallelExecution)
-        return false;
-    JSContext *cx = cxArg->asJSContext();
-
-    if (!shape->hasSlot()) {
-        /*
-         * Allow API consumers to create shared properties with stub setters.
-         * Such properties effectively function as data descriptors which are
-         * not writable, so attempting to set such a property should do nothing
-         * or throw if we're in strict mode.
-         */
-        if (!shape->hasGetterValue() && shape->hasDefaultSetter())
-            return js_ReportGetterOnlyAssignment(cx, strict);
-    }
-
-    RootedValue ovp(cx, vp);
-
-    uint32_t sample = cx->runtime()->propertyRemovals;
-    if (!shape->set(cx, obj, receiver, strict, vp))
-        return false;
-
-    /*
-     * Update any slot for the shape with the value produced by the setter,
-     * unless the setter deleted the shape.
-     */
-    if (shape->hasSlot() &&
-        (MOZ_LIKELY(cx->runtime()->propertyRemovals == sample) ||
-         obj->contains(cx, shape)))
-    {
-        obj->setSlot(shape->slot(), vp);
-    }
-
-    return true;
-}
-
 /*
  * Given pc pointing after a property accessing bytecode, return true if the
  * access is "object-detecting" in the sense used by web scripts, e.g., when
@@ -1980,6 +1919,9 @@ MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
                                         JSMSG_UNDECLARED_VAR, bytes.ptr());
 }
 
+
+/*** [[Set]] *************************************************************************************/
+
 /*
  * When a [[Set]] operation finds no existing property with the given id
  * or finds a writable data property on the prototype chain, we end up here.
@@ -2156,6 +2098,71 @@ SetDenseOrTypedArrayElement(typename ExecutionModeTraits<mode>::ContextType cxAr
         return obj->setDenseElementIfHasType(index, vp);
 
     obj->setDenseElementWithType(cxArg->asJSContext(), index, vp);
+    return true;
+}
+
+/*
+ * Finish assignment to a shapeful property of a native object obj. This
+ * conforms to no standard and there is a lot of legacy baggage here.
+ */
+template <ExecutionMode mode>
+static bool
+NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg, HandleNativeObject obj,
+          HandleObject receiver, HandleShape shape, bool strict, MutableHandleValue vp)
+{
+    MOZ_ASSERT(cxArg->isThreadLocal(obj));
+    MOZ_ASSERT(obj->isNative());
+
+    if (shape->hasSlot()) {
+        /* If shape has a stub setter, just store vp. */
+        if (shape->hasDefaultSetter()) {
+            if (mode == ParallelExecution) {
+                if (!obj->setSlotIfHasType(shape, vp))
+                    return false;
+            } else {
+                // Global properties declared with 'var' will be initially
+                // defined with an undefined value, so don't treat the initial
+                // assignments to such properties as overwrites.
+                bool overwriting = !obj->is<GlobalObject>() || !obj->getSlot(shape->slot()).isUndefined();
+                obj->setSlotWithType(cxArg->asExclusiveContext(), shape, vp, overwriting);
+            }
+
+            return true;
+        }
+    }
+
+    if (mode == ParallelExecution)
+        return false;
+    JSContext *cx = cxArg->asJSContext();
+
+    if (!shape->hasSlot()) {
+        /*
+         * Allow API consumers to create shared properties with stub setters.
+         * Such properties effectively function as data descriptors which are
+         * not writable, so attempting to set such a property should do nothing
+         * or throw if we're in strict mode.
+         */
+        if (!shape->hasGetterValue() && shape->hasDefaultSetter())
+            return js_ReportGetterOnlyAssignment(cx, strict);
+    }
+
+    RootedValue ovp(cx, vp);
+
+    uint32_t sample = cx->runtime()->propertyRemovals;
+    if (!shape->set(cx, obj, receiver, strict, vp))
+        return false;
+
+    /*
+     * Update any slot for the shape with the value produced by the setter,
+     * unless the setter deleted the shape.
+     */
+    if (shape->hasSlot() &&
+        (MOZ_LIKELY(cx->runtime()->propertyRemovals == sample) ||
+         obj->contains(cx, shape)))
+    {
+        obj->setSlot(shape->slot(), vp);
+    }
+
     return true;
 }
 
