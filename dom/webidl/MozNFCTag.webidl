@@ -66,8 +66,13 @@ interface MozNFCTag {
    */
   readonly attribute boolean? canBeMadeReadOnly;
 
+  [Throws]
   DOMRequest readNDEF();
+
+  [Throws]
   DOMRequest writeNDEF(sequence<MozNDEFRecord> records);
+
+  [Throws]
   DOMRequest makeReadOnlyNDEF();
 };
 
@@ -75,4 +80,9 @@ interface MozNFCTag {
 partial interface MozNFCTag {
   [ChromeOnly]
   attribute DOMString session;
+
+  /**
+   * Indicate if this tag is already lost.
+   */
+  readonly attribute boolean isLost;
 };
