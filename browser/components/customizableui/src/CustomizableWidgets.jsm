@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
   "resource://gre/modules/ShortcutUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
   "resource://gre/modules/CharsetMenu.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "CharsetBundle", function() {
   const kCharsetBundle = "chrome://global/locale/charsetMenu.properties";
@@ -923,6 +925,84 @@ if (Services.metro && Services.metro.supported) {
 }
 #endif
 #endif
+
+let isPanicButtonEnabled = Services.prefs.getBoolPref("privacy.panicButton.enabled");
+#ifndef NIGHTLY_BUILD
+if (Services.prefs.getBoolPref("privacy.panicButton.useLocaleList")) {
+  let chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                       .getService(Ci.nsIXULChromeRegistry);
+  let browserLocale = chromeRegistry.getSelectedLocale("browser");
+  let enabledLocales = [];
+  try {
+    enabledLocales = Services.prefs.getCharPref("privacy.panicButton.enabledLocales").split(' ');
+  } catch (ex) {
+    Cu.reportError(ex);
+  }
+  isPanicButtonEnabled = isPanicButtonEnabled && enabledLocales.indexOf(browserLocale) != -1;
+}
+#endif
+if (isPanicButtonEnabled) {
+  CustomizableWidgets.push({
+    id: "panic-button",
+    type: "view",
+    viewId: "PanelUI-panicView",
+    _sanitizer: null,
+    _ensureSanitizer: function() {
+      if (!this.sanitizer) {
+        let scope = {};
+        Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js",
+                                            scope);
+        this._Sanitizer = scope.Sanitizer;
+        this._sanitizer = new scope.Sanitizer();
+        this._sanitizer.ignoreTimespan = false;
+      }
+    },
+    _getSanitizeRange: function(aDocument) {
+      let group = aDocument.getElementById("PanelUI-panic-timeSpan");
+      return this._Sanitizer.getClearRange(+group.value);
+    },
+    forgetButtonCalled: function(aEvent) {
+      let doc = aEvent.target.ownerDocument;
+      this._ensureSanitizer();
+      this._sanitizer.range = this._getSanitizeRange(doc);
+      let group = doc.getElementById("PanelUI-panic-timeSpan");
+      group.selectedItem = doc.getElementById("PanelUI-panic-5min");
+      let itemsToClear = [
+        "cookies", "history", "openWindows", "formdata", "sessions", "cache", "downloads"
+      ];
+      let newWindowPrivateState = PrivateBrowsingUtils.isWindowPrivate(doc.defaultView) ?
+                                  "private" : "non-private";
+      this._sanitizer.items.openWindows.privateStateForNewWindow = newWindowPrivateState;
+      let promise = this._sanitizer.sanitize(itemsToClear);
+      promise.then(function() {
+        let otherWindow = Services.wm.getMostRecentWindow("navigator:browser");
+        if (otherWindow.closed) {
+          Cu.reportError("Got a closed window!");
+        }
+        if (otherWindow.PanicButtonNotifier) {
+          otherWindow.PanicButtonNotifier.notify();
+        } else {
+          otherWindow.PanicButtonNotifierShouldNotify = true;
+        }
+      });
+    },
+    handleEvent: function(aEvent) {
+      switch (aEvent.type) {
+        case "command":
+          this.forgetButtonCalled(aEvent);
+          break;
+      }
+    },
+    onViewShowing: function(aEvent) {
+      let forgetButton = aEvent.target.querySelector("#PanelUI-panic-view-button");
+      forgetButton.addEventListener("command", this);
+    },
+    onViewHiding: function(aEvent) {
+      let forgetButton = aEvent.target.querySelector("#PanelUI-panic-view-button");
+      forgetButton.removeEventListener("command", this);
+    },
+  });
+}
 
 #ifdef E10S_TESTING_ONLY
 /**
