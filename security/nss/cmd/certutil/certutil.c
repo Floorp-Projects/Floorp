@@ -2367,7 +2367,7 @@ secuCommandFlag options_init[] =
                                                    "keyAttrFlags"},
 	{ /* opt_EmptyPassword       */  0,   PR_FALSE, 0, PR_FALSE, 
                                                    "empty-password"},
-        { /* opt_CertVersion         */  0,   PR_FALSE, 0, PR_FALSE,
+        { /* opt_CertVersion         */  0,   PR_TRUE, 0, PR_FALSE,
                                                    "certVersion"},
 	{ /* opt_AddSubjectAltExt    */  0,   PR_TRUE,  0, PR_FALSE, "extSAN"},
 	{ /* opt_DumpExtensionValue  */  0,   PR_TRUE, 0, PR_FALSE, 
