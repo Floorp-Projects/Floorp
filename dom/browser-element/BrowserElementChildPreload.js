@@ -95,6 +95,7 @@ function getErrorClass(errorCode) {
     case SSL_ERROR_BAD_CERT_DOMAIN:
     case SEC_ERROR_EXPIRED_CERTIFICATE:
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
+    case SEC_ERROR_CA_CERT_INVALID:
     case MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY:
       return Ci.nsINSSErrorsService.ERROR_CLASS_BAD_CERT;
     default:
