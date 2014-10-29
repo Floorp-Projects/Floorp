@@ -1,0 +1,101 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PBrowser;
+
+namespace mozilla {
+namespace embedding {
+
+struct PrintData {
+  int32_t startPageRange;
+  int32_t endPageRange;
+  double edgeTop;
+  double edgeLeft;
+  double edgeBottom;
+  double edgeRight;
+  double marginTop;
+  double marginLeft;
+  double marginBottom;
+  double marginRight;
+  double unwriteableMarginTop;
+  double unwriteableMarginLeft;
+  double unwriteableMarginBottom;
+  double unwriteableMarginRight;
+  double scaling;
+  bool printBGColors;
+  bool printBGImages;
+  short printRange;
+  nsString title;
+  nsString docURL;
+  nsString headerStrLeft;
+  nsString headerStrCenter;
+  nsString headerStrRight;
+  nsString footerStrLeft;
+  nsString footerStrCenter;
+  nsString footerStrRight;
+
+  short  howToEnableFrameUI;
+  bool isCancelled;
+  short printFrameTypeUsage;
+  short  printFrameType;
+  bool printSilent;
+  bool shrinkToFit;
+  bool showPrintProgress;
+
+  nsString paperName;
+  short paperSizeType;
+  short paperData;
+  double paperWidth;
+  double paperHeight;
+  short paperSizeUnit;
+  nsString plexName;
+  nsString colorspace;
+  nsString resolutionName;
+  bool downloadFonts;
+  bool printReversed;
+  bool printInColor;
+  int32_t orientation;
+  nsString printCommand;
+  int32_t numCopies;
+  nsString printerName;
+  bool printToFile;
+  nsString toFileName;
+  short outputFormat;
+  int32_t printPageDelay;
+  int32_t resolution;
+  int32_t duplex;
+  bool isInitializedFromPrinter;
+  bool isInitializedFromPrefs;
+  bool persistMarginBoxSettings;
+
+  /* Windows-specific things */
+  nsString driverName;
+  nsString deviceName;
+  bool isFramesetDocument;
+  bool isFramesetFrameSelected;
+  bool isIFrameSelected;
+  bool isRangeSelection;
+
+  /* TODO: OS X specific things - specifically, an array of names for the
+   * document to be supplied by nsIWebBrowserPrint::enumerateDocumentNames
+   */
+};
+
+sync protocol PPrinting
+{
+  manager PContent;
+
+parent:
+  sync ShowProgress(PBrowser browser, bool isForPrinting);
+  sync ShowPrintDialog(PBrowser browser, PrintData settings)
+    returns(PrintData modifiedSettings, bool success);
+
+child:
+  __delete__();
+};
+
+} // namespace embedding
+} // namespace mozilla
