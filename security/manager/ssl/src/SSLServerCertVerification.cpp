@@ -96,7 +96,7 @@
 
 #include <cstring>
 
-#include "pkix/pkix.h"
+#include "pkix/pkixtypes.h"
 #include "pkix/pkixnss.h"
 #include "pkix/ScopedPtr.h"
 #include "CertVerifier.h"
@@ -328,7 +328,7 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
   MOZ_ASSERT(errorCodeExpired == 0);
 
   // Assumes the error prioritization described in mozilla::pkix's
-  // BuildForward function. Also assumes that CheckCertHostname was only
+  // BuildForward function. Also assumes that CERT_VerifyCertName was only
   // called if CertVerifier::VerifyCert succeeded.
   switch (defaultErrorCodeToReport) {
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
@@ -373,25 +373,14 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
   }
 
   if (defaultErrorCodeToReport != SSL_ERROR_BAD_CERT_DOMAIN) {
-    Input certInput;
-    if (certInput.Init(cert->derCert.data, cert->derCert.len) != Success) {
-      PR_SetError(SEC_ERROR_BAD_DER, 0);
-      return SECFailure;
-    }
-    Input hostnameInput;
-    Result result = hostnameInput.Init(uint8_t_ptr_cast(hostName),
-                                       strlen(hostName));
-    if (result != Success) {
-      PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
-      return SECFailure;
-    }
-    result = CheckCertHostname(certInput, hostnameInput);
-    if (result == Result::ERROR_BAD_CERT_DOMAIN) {
+    if (CERT_VerifyCertName(cert, hostName) != SECSuccess) {
+      if (PR_GetError() != SSL_ERROR_BAD_CERT_DOMAIN) {
+        PR_SetError(defaultErrorCodeToReport, 0);
+        return SECFailure;
+      }
+
       collectedErrors |= nsICertOverrideService::ERROR_MISMATCH;
       errorCodeMismatch = SSL_ERROR_BAD_CERT_DOMAIN;
-    } else if (result != Success) {
-      PR_SetError(defaultErrorCodeToReport, 0);
-      return SECFailure;
     }
   }
 
