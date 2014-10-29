@@ -447,7 +447,10 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     // Do not compose any layer below full-screen Opaque layer
     // Note: It can be generalized to non-fullscreen Opaque layers.
     bool isOpaque = (opacity == 0xFF) && (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE);
-    if (current && isOpaque) {
+    // Currently we perform opacity calculation using the *bounds* of the layer.
+    // We can only make this assumption if we're not dealing with a complex visible region.
+    bool isSimpleVisibleRegion = visibleRegion.GetNumRects() == 1;
+    if (current && isOpaque && isSimpleVisibleRegion) {
         nsIntRect displayRect = nsIntRect(displayFrame.left, displayFrame.top,
             displayFrame.right - displayFrame.left, displayFrame.bottom - displayFrame.top);
         if (displayRect.Contains(mScreenRect)) {
