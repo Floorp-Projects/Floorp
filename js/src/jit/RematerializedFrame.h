@@ -149,11 +149,8 @@ class RematerializedFrame
         MOZ_ASSERT(i < script()->nfixed());
         return locals()[i];
     }
-    Value &unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
+    Value &unaliasedLocal(unsigned i) {
         MOZ_ASSERT(i < script()->nfixed());
-#ifdef DEBUG
-        CheckLocalUnaliased(checkAliasing, script(), i);
-#endif
         return locals()[i];
     }
     Value &unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {

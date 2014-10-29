@@ -5,6 +5,9 @@ include toblob-todataurl/reftest.list
 skip-if(B2G) == 41464-1a.html 41464-1-ref.html
 skip-if(B2G) == 41464-1b.html 41464-1-ref.html
 == 52019-1.html 52019-1-ref.html
+== 82711-1.html 82711-1-ref.html
+== 82711-2.html 82711-2-ref.html
+!= 82711-1-ref.html 82711-2-ref.html
 != 468263-1a.html about:blank
 != 468263-1b.html about:blank
 != 468263-1c.html about:blank

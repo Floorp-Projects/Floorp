@@ -124,7 +124,7 @@ var gPlayTests = [
   // With first frame a "duplicate" (empty) frame.
   { name:"bug500311.ogv", type:"video/ogg", duration:1.96 },
   // Small audio file
-  { name:"small-shot.ogg", type:"video/ogg", duration:0.276 },
+  { name:"small-shot.ogg", type:"audio/ogg", duration:0.276 },
   // More audio in file than video.
   { name:"short-video.ogv", type:"video/ogg", duration:1.081 },
   // First Theora data packet is zero bytes.
@@ -679,11 +679,15 @@ function checkMetadata(msg, e, test) {
 // Returns the first test from candidates array which we can play with the
 // installed video backends.
 function getPlayableVideo(candidates) {
-  var v = document.createElement("video");
-  var resources = candidates.filter(function(x){return /^video/.test(x.type) && v.canPlayType(x.type);});
+  var resources = getPlayableVideos(candidates);
   if (resources.length > 0)
     return resources[0];
   return null;
+}
+
+function getPlayableVideos(candidates) {
+  var v = document.createElement("video");
+  return candidates.filter(function(x){return /^video/.test(x.type) && v.canPlayType(x.type);});
 }
 
 function getPlayableAudio(candidates) {

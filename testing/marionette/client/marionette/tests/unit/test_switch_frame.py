@@ -4,6 +4,7 @@
 
 from marionette_test import MarionetteTestCase
 from errors import JavascriptException
+from errors import NoSuchFrameException
 
 
 class TestSwitchFrame(MarionetteTestCase):
@@ -114,3 +115,12 @@ class TestSwitchFrame(MarionetteTestCase):
 
         element = self.marionette.find_element("id", "email")
         self.assertEquals("email", element.get_attribute("type"))
+
+    def test_switch_to_frame_with_out_of_bounds_index(self):
+        self.marionette.navigate(self.marionette.absolute_url("test_iframe.html"))
+        count = self.marionette.execute_script("return window.frames.length;")
+        self.assertRaises(NoSuchFrameException, self.marionette.switch_to_frame, count)
+
+    def test_switch_to_frame_with_negative_index(self):
+        self.marionette.navigate(self.marionette.absolute_url("test_iframe.html"))
+        self.assertRaises(NoSuchFrameException, self.marionette.switch_to_frame, -1)
