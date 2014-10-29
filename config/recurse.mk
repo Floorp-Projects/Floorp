@@ -156,7 +156,7 @@ ldap/target: config/external/nss/target mozglue/build/target
 toolkit/library/target: ldap/target
 endif
 ifeq ($(MOZ_REPLACE_MALLOC_LINKAGE),dummy library)
-mozglue/build/target: memory/replace/dummy/target
+mozglue/build/target memory/replace/logalloc/replay/target: memory/replace/dummy/target
 endif
 
 endif
