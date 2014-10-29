@@ -2072,6 +2072,12 @@ SetNonexistentProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
 }
 
 template <ExecutionMode mode>
+static bool
+SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
+                    HandleNativeObject obj, HandleObject receiver, HandleId id,
+                    HandleObject pobj, HandleShape foundShape, MutableHandleValue vp, bool strict);
+
+template <ExecutionMode mode>
 bool
 baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg,
                            HandleNativeObject obj, HandleObject receiver, HandleId id,
@@ -2106,34 +2112,49 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
     if (!shape)
         return SetNonexistentProperty<mode>(cxArg, receiver, id, qualified, vp, strict);
 
-    if (!pobj->isNative()) {
-        if (pobj->is<ProxyObject>()) {
-            if (mode == ParallelExecution)
-                return false;
+    if (pobj->isNative())
+        return SetExistingProperty<mode>(cxArg, obj, receiver, id, pobj, shape, vp, strict);
 
-            JSContext *cx = cxArg->asJSContext();
-            Rooted<PropertyDescriptor> pd(cx);
-            if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd))
-                return false;
+    if (pobj->is<ProxyObject>()) {
+        if (mode == ParallelExecution)
+            return false;
 
-            if ((pd.attributes() & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
-                return !pd.setter() ||
-                       CallSetter(cx, receiver, id, pd.setter(), pd.attributes(), strict, vp);
-            }
+        JSContext *cx = cxArg->asJSContext();
+        Rooted<PropertyDescriptor> pd(cx);
+        if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd))
+            return false;
 
-            if (pd.isReadonly()) {
-                if (strict)
-                    return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
-                if (cx->compartment()->options().extraWarnings(cx))
-                    return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
-                return true;
-            }
+        if ((pd.attributes() & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
+            return !pd.setter() ||
+                   CallSetter(cx, receiver, id, pd.setter(), pd.attributes(), strict, vp);
         }
 
-        return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
+        if (pd.isReadonly()) {
+            if (strict)
+                return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
+            if (cx->compartment()->options().extraWarnings(cx))
+                return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+            return true;
+        }
     }
 
-    /* Now shape is non-null and obj[id] was found directly in pobj, which is native. */
+    return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
+}
+
+/*
+ * Implement "the rest of" assignment to receiver[id] when an existing property
+ * (foundShape) has been found on a native object (pobj).
+ *
+ * It is necessary to pass both id and shape because shape could be an implicit
+ * dense or typed array element (i.e. not actually a pointer to a Shape).
+ */
+template <ExecutionMode mode>
+static bool
+SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
+                    HandleNativeObject obj, HandleObject receiver, HandleId id,
+                    HandleObject pobj, HandleShape foundShape, MutableHandleValue vp, bool strict)
+{
+    RootedShape shape(cxArg, foundShape);
     unsigned attrs = JSPROP_ENUMERATE;
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         /* ES5 8.12.4 [[Put]] step 2, for a dense data property on pobj. */
