@@ -47,21 +47,21 @@ class ProgramD3D : public ProgramImpl
     bool usesGeometryShader() const;
 
     GLenum getBinaryFormat() { return GL_PROGRAM_BINARY_ANGLE; }
-    bool load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream);
-    bool save(gl::BinaryOutputStream *stream);
+    gl::LinkResult load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream);
+    gl::Error save(gl::BinaryOutputStream *stream);
 
-    ShaderExecutable *getPixelExecutableForFramebuffer(const gl::Framebuffer *fbo);
-    ShaderExecutable *getPixelExecutableForOutputLayout(const std::vector<GLenum> &outputLayout);
-    ShaderExecutable *getVertexExecutableForInputLayout(const gl::VertexFormat inputLayout[gl::MAX_VERTEX_ATTRIBS]);
+    gl::Error getPixelExecutableForFramebuffer(const gl::Framebuffer *fbo, ShaderExecutable **outExectuable);
+    gl::Error getPixelExecutableForOutputLayout(const std::vector<GLenum> &outputLayout, ShaderExecutable **outExectuable);
+    gl::Error getVertexExecutableForInputLayout(const gl::VertexFormat inputLayout[gl::MAX_VERTEX_ATTRIBS], ShaderExecutable **outExectuable);
     ShaderExecutable *getGeometryExecutable() const { return mGeometryExecutable; }
 
-    bool compileProgramExecutables(gl::InfoLog &infoLog, gl::Shader *fragmentShader, gl::Shader *vertexShader,
-                                   int registers);
+    gl::LinkResult compileProgramExecutables(gl::InfoLog &infoLog, gl::Shader *fragmentShader, gl::Shader *vertexShader,
+                                             int registers);
 
-    bool link(gl::InfoLog &infoLog, gl::Shader *fragmentShader, gl::Shader *vertexShader,
-              const std::vector<std::string> &transformFeedbackVaryings, GLenum transformFeedbackBufferMode,
-              int *registers, std::vector<gl::LinkedVarying> *linkedVaryings,
-              std::map<int, gl::VariableLocation> *outputVariables, const gl::Caps &caps);
+    gl::LinkResult link(gl::InfoLog &infoLog, gl::Shader *fragmentShader, gl::Shader *vertexShader,
+                        const std::vector<std::string> &transformFeedbackVaryings, GLenum transformFeedbackBufferMode,
+                        int *registers, std::vector<gl::LinkedVarying> *linkedVaryings,
+                        std::map<int, gl::VariableLocation> *outputVariables, const gl::Caps &caps);
 
     void getInputLayoutSignature(const gl::VertexFormat inputLayout[], GLenum signature[]) const;
 

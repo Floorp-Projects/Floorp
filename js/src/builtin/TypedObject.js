@@ -556,6 +556,9 @@ function StorageOfTypedObject(obj) {
       return null;
 
     if (ObjectIsTransparentTypedObject(obj)) {
+      if (!TypedObjectIsAttached(obj))
+          ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
+
       var descr = TypedObjectTypeDescr(obj);
       var byteLength;
       if (DESCR_KIND(descr) == JS_TYPEREPR_UNSIZED_ARRAY_KIND)
@@ -1143,6 +1146,9 @@ function MapTypedParImplDepth1(inArray, inArrayType, outArrayType, func) {
          "DoMapTypedParDepth1: invalid outArrayType");
   assert(IsObject(inArray) && ObjectIsTypedObject(inArray),
          "DoMapTypedParDepth1: invalid inArray");
+
+  if (!TypedObjectIsAttached(inArray))
+    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
   // Determine the grain types of the input and output.
   const inGrainType = inArrayType.elementType;

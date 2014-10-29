@@ -26,7 +26,7 @@ function theTest() {
       config.peerIdentity = 'user@example.com';
     }
     info('getting media with constraints: ' + JSON.stringify(config));
-    navigator.mozGetUserMedia(config, function(stream) {
+    navigator.mediaDevices.getUserMedia(config).then(function(stream) {
       var oneDone = false;
       function checkDone() {
         if (oneDone) {
@@ -38,7 +38,8 @@ function theTest() {
       var cancelVideoCheck = videoIsBlack(withConstraint, stream, checkDone);
       setTimeout(cancelAudioCheck, 3*60*1000);
       setTimeout(cancelVideoCheck, 3*60*1000);
-    }, function(e) {
+    })
+    .catch(function(e) {
       ok(false, 'gUM error: ' + e);
     });
   };

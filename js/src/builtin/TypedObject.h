@@ -245,17 +245,26 @@ class ScalarTypeDescr : public SimpleTypeDescr
         // the Scalar::Type enum. We don't define Scalar::Type directly in
         // terms of these constants to avoid making TypedObjectConstants.h a
         // public header file.
-        JS_STATIC_ASSERT(Scalar::Int8 == JS_SCALARTYPEREPR_INT8);
-        JS_STATIC_ASSERT(Scalar::Uint8 == JS_SCALARTYPEREPR_UINT8);
-        JS_STATIC_ASSERT(Scalar::Int16 == JS_SCALARTYPEREPR_INT16);
-        JS_STATIC_ASSERT(Scalar::Uint16 == JS_SCALARTYPEREPR_UINT16);
-        JS_STATIC_ASSERT(Scalar::Int32 == JS_SCALARTYPEREPR_INT32);
-        JS_STATIC_ASSERT(Scalar::Uint32 == JS_SCALARTYPEREPR_UINT32);
-        JS_STATIC_ASSERT(Scalar::Float32 == JS_SCALARTYPEREPR_FLOAT32);
-        JS_STATIC_ASSERT(Scalar::Float64 == JS_SCALARTYPEREPR_FLOAT64);
-        JS_STATIC_ASSERT(Scalar::Uint8Clamped == JS_SCALARTYPEREPR_UINT8_CLAMPED);
+        static_assert(Scalar::Int8 == JS_SCALARTYPEREPR_INT8,
+                      "TypedObjectConstants.h must be consistent with Scalar::Type");
+        static_assert(Scalar::Uint8 == JS_SCALARTYPEREPR_UINT8,
+                      "TypedObjectConstants.h must be consistent with Scalar::Type");
+        static_assert(Scalar::Int16 == JS_SCALARTYPEREPR_INT16,
+                      "TypedObjectConstants.h must be consistent with Scalar::Type");
+        static_assert(Scalar::Uint16 == JS_SCALARTYPEREPR_UINT16,
+                      "TypedObjectConstants.h must be consistent with Scalar::Type");
+        static_assert(Scalar::Int32 == JS_SCALARTYPEREPR_INT32,
+                      "TypedObjectConstants.h must be consistent with Scalar::Type");
+        static_assert(Scalar::Uint32 == JS_SCALARTYPEREPR_UINT32,
+                      "TypedObjectConstants.h must be consistent with Scalar::Type");
+        static_assert(Scalar::Float32 == JS_SCALARTYPEREPR_FLOAT32,
+                      "TypedObjectConstants.h must be consistent with Scalar::Type");
+        static_assert(Scalar::Float64 == JS_SCALARTYPEREPR_FLOAT64,
+                      "TypedObjectConstants.h must be consistent with Scalar::Type");
+        static_assert(Scalar::Uint8Clamped == JS_SCALARTYPEREPR_UINT8_CLAMPED,
+                      "TypedObjectConstants.h must be consistent with Scalar::Type");
 
-        return (Type) getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32();
+        return Type(getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32());
     }
 
     static bool call(JSContext *cx, unsigned argc, Value *vp);
