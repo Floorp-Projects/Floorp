@@ -33,6 +33,7 @@
 #include "libGLESv2/FramebufferAttachment.h"
 #include "libGLESv2/Renderbuffer.h"
 #include "libGLESv2/ProgramBinary.h"
+#include "libGLESv2/State.h"
 #include "libGLESv2/angletypes.h"
 
 #include "libEGL/Display.h"
@@ -565,14 +566,14 @@ void Renderer9::freeEventQuery(IDirect3DQuery9* query)
     }
 }
 
-IDirect3DVertexShader9 *Renderer9::createVertexShader(const DWORD *function, size_t length)
+gl::Error Renderer9::createVertexShader(const DWORD *function, size_t length, IDirect3DVertexShader9 **outShader)
 {
-    return mVertexShaderCache.create(function, length);
+    return mVertexShaderCache.create(function, length, outShader);
 }
 
-IDirect3DPixelShader9 *Renderer9::createPixelShader(const DWORD *function, size_t length)
+gl::Error Renderer9::createPixelShader(const DWORD *function, size_t length, IDirect3DPixelShader9 **outShader)
 {
-    return mPixelShaderCache.create(function, length);
+    return mPixelShaderCache.create(function, length, outShader);
 }
 
 HRESULT Renderer9::createVertexBuffer(UINT Length, DWORD Usage, IDirect3DVertexBuffer9 **ppVertexBuffer)
@@ -1268,17 +1269,16 @@ gl::Error Renderer9::applyRenderTarget(gl::Framebuffer *framebuffer)
     return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error Renderer9::applyVertexBuffer(gl::ProgramBinary *programBinary, const gl::VertexAttribute vertexAttributes[], const gl::VertexAttribCurrentValueData currentValues[],
-                                       GLint first, GLsizei count, GLsizei instances)
+gl::Error Renderer9::applyVertexBuffer(const gl::State &state, GLint first, GLsizei count, GLsizei instances)
 {
     TranslatedAttribute attributes[gl::MAX_VERTEX_ATTRIBS];
-    gl::Error error = mVertexDataManager->prepareVertexData(vertexAttributes, currentValues, programBinary, first, count, attributes, instances);
+    gl::Error error = mVertexDataManager->prepareVertexData(state, first, count, attributes, instances);
     if (error.isError())
     {
         return error;
     }
 
-    return mVertexDeclarationCache.applyDeclaration(mDevice, attributes, programBinary, instances, &mRepeatDraw);
+    return mVertexDeclarationCache.applyDeclaration(mDevice, attributes, state.getCurrentProgramBinary(), instances, &mRepeatDraw);
 }
 
 // Applies the indices and element array bindings to the Direct3D 9 device
@@ -1304,7 +1304,7 @@ gl::Error Renderer9::applyIndexBuffer(const GLvoid *indices, gl::Buffer *element
     return gl::Error(GL_NO_ERROR);
 }
 
-void Renderer9::applyTransformFeedbackBuffers(gl::Buffer *transformFeedbackBuffers[], GLintptr offsets[])
+void Renderer9::applyTransformFeedbackBuffers(const gl::State& state)
 {
     UNREACHABLE();
 }
@@ -1671,8 +1671,20 @@ gl::Error Renderer9::applyShaders(gl::ProgramBinary *programBinary, const gl::Ve
     ASSERT(!rasterizerDiscard);
 
     ProgramD3D *programD3D = ProgramD3D::makeProgramD3D(programBinary->getImplementation());
-    ShaderExecutable *vertexExe = programD3D->getVertexExecutableForInputLayout(inputLayout);
-    ShaderExecutable *pixelExe = programD3D->getPixelExecutableForFramebuffer(framebuffer);
+
+    ShaderExecutable *vertexExe = NULL;
+    gl::Error error = programD3D->getVertexExecutableForInputLayout(inputLayout, &vertexExe);
+    if (error.isError())
+    {
+        return error;
+    }
+
+    ShaderExecutable *pixelExe = NULL;
+    error = programD3D->getPixelExecutableForFramebuffer(framebuffer, &pixelExe);
+    if (error.isError())
+    {
+        return error;
+    }
 
     IDirect3DVertexShader9 *vertexShader = (vertexExe ? ShaderExecutable9::makeShaderExecutable9(vertexExe)->getVertexShader() : NULL);
     IDirect3DPixelShader9 *pixelShader = (pixelExe ? ShaderExecutable9::makeShaderExecutable9(pixelExe)->getPixelShader() : NULL);
@@ -2791,46 +2803,49 @@ void Renderer9::releaseShaderCompiler()
     ShaderD3D::releaseCompiler();
 }
 
-ShaderExecutable *Renderer9::loadExecutable(const void *function, size_t length, rx::ShaderType type,
-                                            const std::vector<gl::LinkedVarying> &transformFeedbackVaryings,
-                                            bool separatedOutputBuffers)
+gl::Error Renderer9::loadExecutable(const void *function, size_t length, rx::ShaderType type,
+                                    const std::vector<gl::LinkedVarying> &transformFeedbackVaryings,
+                                    bool separatedOutputBuffers, ShaderExecutable **outExecutable)
 {
     // Transform feedback is not supported in ES2 or D3D9
     ASSERT(transformFeedbackVaryings.size() == 0);
-
-    ShaderExecutable9 *executable = NULL;
 
     switch (type)
     {
       case rx::SHADER_VERTEX:
         {
-            IDirect3DVertexShader9 *vshader = createVertexShader((DWORD*)function, length);
-            if (vshader)
+            IDirect3DVertexShader9 *vshader = NULL;
+            gl::Error error = createVertexShader((DWORD*)function, length, &vshader);
+            if (error.isError())
             {
-                executable = new ShaderExecutable9(function, length, vshader);
+                return error;
             }
+            *outExecutable = new ShaderExecutable9(function, length, vshader);
         }
         break;
       case rx::SHADER_PIXEL:
         {
-            IDirect3DPixelShader9 *pshader = createPixelShader((DWORD*)function, length);
-            if (pshader)
+            IDirect3DPixelShader9 *pshader = NULL;
+            gl::Error error = createPixelShader((DWORD*)function, length, &pshader);
+            if (error.isError())
             {
-                executable = new ShaderExecutable9(function, length, pshader);
+                return error;
             }
+            *outExecutable = new ShaderExecutable9(function, length, pshader);
         }
         break;
       default:
         UNREACHABLE();
-        break;
+        return gl::Error(GL_INVALID_OPERATION);
     }
 
-    return executable;
+    return gl::Error(GL_NO_ERROR);
 }
 
-ShaderExecutable *Renderer9::compileToExecutable(gl::InfoLog &infoLog, const std::string &shaderHLSL, rx::ShaderType type,
-                                                 const std::vector<gl::LinkedVarying> &transformFeedbackVaryings,
-                                                 bool separatedOutputBuffers, D3DWorkaroundType workaround)
+gl::Error Renderer9::compileToExecutable(gl::InfoLog &infoLog, const std::string &shaderHLSL, rx::ShaderType type,
+                                         const std::vector<gl::LinkedVarying> &transformFeedbackVaryings,
+                                         bool separatedOutputBuffers, D3DWorkaroundType workaround,
+                                         ShaderExecutable **outExectuable)
 {
     // Transform feedback is not supported in ES2 or D3D9
     ASSERT(transformFeedbackVaryings.size() == 0);
@@ -2846,7 +2861,7 @@ ShaderExecutable *Renderer9::compileToExecutable(gl::InfoLog &infoLog, const std
         break;
       default:
         UNREACHABLE();
-        return NULL;
+        return gl::Error(GL_INVALID_OPERATION);
     }
     unsigned int profileMajorVersion = (getMajorShaderModel() >= 3) ? 3 : 2;
     unsigned int profileMinorVersion = 0;
@@ -2880,17 +2895,30 @@ ShaderExecutable *Renderer9::compileToExecutable(gl::InfoLog &infoLog, const std
     configs.push_back(CompileConfig(flags | D3DCOMPILE_AVOID_FLOW_CONTROL,  "avoid flow control" ));
     configs.push_back(CompileConfig(flags | D3DCOMPILE_PREFER_FLOW_CONTROL, "prefer flow control"));
 
-    ID3DBlob *binary = mCompiler.compileToBinary(infoLog, shaderHLSL, profile, configs);
-    if (!binary)
+    ID3DBlob *binary = NULL;
+    gl::Error error = mCompiler.compileToBinary(infoLog, shaderHLSL, profile, configs, &binary);
+    if (error.isError())
     {
-        return NULL;
+        return error;
     }
 
-    ShaderExecutable *executable = loadExecutable(binary->GetBufferPointer(), binary->GetBufferSize(), type,
-                                                  transformFeedbackVaryings, separatedOutputBuffers);
-    SafeRelease(binary);
+    // It's possible that binary is NULL if the compiler failed in all configurations.  Set the executable to NULL
+    // and return GL_NO_ERROR to signify that there was a link error but the internal state is still OK.
+    if (!binary)
+    {
+        *outExectuable = NULL;
+        return gl::Error(GL_NO_ERROR);
+    }
 
-    return executable;
+    error = loadExecutable(binary->GetBufferPointer(), binary->GetBufferSize(), type,
+                           transformFeedbackVaryings, separatedOutputBuffers, outExectuable);
+    SafeRelease(binary);
+    if (error.isError())
+    {
+        return error;
+    }
+
+    return gl::Error(GL_NO_ERROR);
 }
 
 rx::UniformStorage *Renderer9::createUniformStorage(size_t storageSize)

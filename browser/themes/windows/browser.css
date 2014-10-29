@@ -17,6 +17,28 @@
 %define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-wrapper
 %define conditionalForwardWithUrlbarWidth 30
 
+:root {
+  --toolbarbutton-hover-background: hsla(210,4%,10%,.08);
+  --toolbarbutton-hover-bordercolor: hsla(210,4%,10%,.1);
+  --toolbarbutton-hover-boxshadow: none;
+
+  --toolbarbutton-active-background: hsla(210,4%,10%,.12);
+  --toolbarbutton-active-bordercolor: hsla(210,4%,10%,.2) transparent transparent;
+  --toolbarbutton-active-boxshadow: 0 1px 0 0 hsla(210,4%,10%,.1) inset;
+
+  --toolbarbutton-checkedhover-backgroundcolor: hsla(210,4%,10%,.12);
+
+  --toolbarbutton-combined-boxshadow: none;
+  --toolbarbutton-combined-backgroundimage: linear-gradient(hsla(210,54%,20%,.2) 0, hsla(210,54%,20%,.2) 16px);
+
+  --verified-identity-box-backgroundcolor: #FFF;
+
+  --urlbar-dropmarker-url: url("chrome://browser/skin/urlbar-history-dropmarker.png");
+  --urlbar-dropmarker-region: rect(0px, 11px, 14px, 0px);
+  --urlbar-dropmarker-hover-region: rect(0px, 22px, 14px, 11px);
+  --urlbar-dropmarker-active-region: rect(0px, 33px, 14px, 22px);
+}
+
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
 }
@@ -663,6 +685,27 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
        (-moz-os-version: windows-win7) {
 %endif
   /* < Win8 */
+  :root {
+    --toolbarbutton-hover-background: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+    --toolbarbutton-hover-bordercolor: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
+    --toolbarbutton-hover-boxshadow: 0 1px hsla(0,0%,100%,.3) inset,
+                                     0 1px hsla(210,54%,20%,.03),
+                                     0 0 2px hsla(210,54%,20%,.1);
+
+    --toolbarbutton-active-background: hsla(210,54%,20%,.15) linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+    --toolbarbutton-active-bordercolor: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
+    --toolbarbutton-active-boxshadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
+                                      0 0 1px hsla(210,54%,20%,.2) inset,
+/* allows keyhole-forward-clip-path to be used for non-hover as well as hover: */
+                                      0 1px 0 hsla(210,54%,20%,0),
+                                      0 0 2px hsla(210,54%,20%,0);
+
+    --toolbarbutton-checkedhover-backgroundcolor: rgba(90%,90%,90%,.4);
+
+    --toolbarbutton-combined-backgroundimage: linear-gradient(hsla(210,54%,20%,.2) 0, hsla(210,54%,20%,.2) 18px);
+    --toolbarbutton-combined-boxshadow: 0 0 0 1px hsla(0,0%,100%,.2);
+  }
+
   #nav-bar .toolbarbutton-1 > .toolbarbutton-icon,
   #nav-bar .toolbarbutton-1 > .toolbarbutton-text,
   #nav-bar .toolbarbutton-1 > .toolbarbutton-badge-container,
@@ -732,7 +775,8 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   width: 1px;
   height: 16px;
   -moz-margin-end: -1px;
-  background-image: linear-gradient(hsla(210,54%,20%,.2) 0, hsla(210,54%,20%,.2) 16px);
+  background-image: var(--toolbarbutton-combined-backgroundimage);
+  box-shadow: var(--toolbarbutton-combined-boxshadow);
   background-clip: padding-box;
   background-position: center;
   background-repeat: no-repeat;
@@ -751,8 +795,9 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 #nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-badge-container,
 @conditionalForwardWithUrlbar@ > #forward-button:not([open]):not(:active):not([disabled]):hover > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1:not([buttonover]):not([open]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled]) > .dropmarker-icon {
-  background-color: hsla(210,4%,10%,.08);
-  border-color: hsla(210,4%,10%,.1);
+  background: var(--toolbarbutton-hover-background);
+  border-color: var(--toolbarbutton-hover-bordercolor);
+  box-shadow: var(--toolbarbutton-hover-boxshadow);
 }
 
 %ifdef WINDOWS_AERO
@@ -762,17 +807,8 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   /* < Win8 */
   #nav-bar .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before,
   #nav-bar .toolbaritem-combined-buttons > .toolbarbutton-1:-moz-any(:not(:hover):not([open]),[disabled]) + .toolbarbutton-1:-moz-any(:not(:hover):not([open]),[disabled])::before {
-    content: "";
-    display: -moz-box;
-    width: 1px;
     height: 18px;
-    -moz-margin-end: -1px;
-    background-image: linear-gradient(hsla(210,54%,20%,.2) 0, hsla(210,54%,20%,.2) 18px);
-    background-clip: padding-box;
-    background-position: center;
-    background-repeat: no-repeat;
     background-size: 1px 18px;
-    box-shadow: 0 0 0 1px hsla(0,0%,100%,.2);
   }
 
   #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon:-moz-locale-dir(ltr),
@@ -785,21 +821,6 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:-moz-locale-dir(ltr) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
-  }
-
-  #nav-bar .toolbarbutton-1:not([disabled=true]) > .toolbarbutton-menubutton-button[open] + .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
-  #nav-bar .toolbarbutton-1:not([disabled]):-moz-any(:hover,[open]) > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-  #nav-bar .toolbarbutton-1:not([disabled]):hover > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
-  #nav-bar .toolbarbutton-1:not([disabled]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-icon,
-  #nav-bar .toolbarbutton-1:not([disabled]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-text,
-  #nav-bar .toolbarbutton-1:not([disabled]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-badge-container,
-  @conditionalForwardWithUrlbar@ > .toolbarbutton-1:-moz-any([disabled],:not([open]):not([disabled]):not(:active)) > .toolbarbutton-icon {
-    background-image: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
-    background-color: transparent;
-    border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
-    box-shadow: 0 1px hsla(0,0%,100%,.3) inset,
-                0 1px hsla(210,54%,20%,.03),
-                0 0 2px hsla(210,54%,20%,.1);
   }
 
   #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled]):not([open]):not(:active):hover > .toolbarbutton-icon,
@@ -819,9 +840,9 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-text,
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-container {
-  background-color: hsla(210,4%,10%,.12);
-  border-top-color: hsla(210,4%,10%,.2);
-  box-shadow: 0 1px 0 0 hsla(210,4%,10%,.1) inset;
+  background: var(--toolbarbutton-active-background);
+  border-color: var(--toolbarbutton-active-bordercolor);
+  box-shadow: var(--toolbarbutton-active-boxshadow);
   transition-duration: 10ms;
 }
 
@@ -835,14 +856,6 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   #nav-bar .toolbarbutton-1:not([disabled]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-icon,
   #nav-bar .toolbarbutton-1:not([disabled]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-text,
   #nav-bar .toolbarbutton-1:not([disabled]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-container {
-    background-image: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
-    background-color: hsla(210,54%,20%,.15);
-    border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
-    box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
-                0 0 1px hsla(210,54%,20%,.2) inset,
-                /* allows keyhole-forward-clip-path to be used for non-hover as well as hover: */
-                0 1px 0 hsla(210,54%,20%,0),
-                0 0 2px hsla(210,54%,20%,0);
     text-shadow: none;
     transition: none;
   }
@@ -852,7 +865,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   }
 
   #nav-bar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
-    background-color: rgba(90%,90%,90%,.4);
+    background-color: var(--toolbarbutton-checkedhover-backgroundcolor);
     transition: background-color .4s;
   }
 %ifdef WINDOWS_AERO
@@ -1317,7 +1330,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 }
 
 #identity-box.verifiedIdentity:not(:-moz-lwtheme) {
-  background-color: #fff;
+  background-color: var(--verified-identity-box-backgroundcolor);
 }
 
 #identity-box:-moz-focusring {
@@ -1338,19 +1351,19 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   background-color: transparent;
   border: none;
   width: auto;
-  list-style-image: url("chrome://browser/skin/urlbar-history-dropmarker.png");
-  -moz-image-region: rect(0px, 11px, 14px, 0px);
+  list-style-image: var(--urlbar-dropmarker-url);
+  -moz-image-region: var(--urlbar-dropmarker-region);
 }
 
 .urlbar-history-dropmarker:hover {
   background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), transparent);
-  -moz-image-region: rect(0px, 22px, 14px, 11px);
+  -moz-image-region: var(--urlbar-dropmarker-hover-region);
 }
 
 .urlbar-history-dropmarker:hover:active,
 .urlbar-history-dropmarker[open="true"] {
   background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.1), transparent);
-  -moz-image-region: rect(0px, 33px, 14px, 22px);
+  -moz-image-region: var(--urlbar-dropmarker-active-region);
 }
 
 /* page proxy icon */

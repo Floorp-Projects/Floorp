@@ -391,8 +391,9 @@ void GenerateCaps(IDirect3D9 *d3d9, IDirect3DDevice9 *device, D3DDEVTYPE deviceT
 
     caps->maxVertexUniformBlocks = 0;
 
-    const size_t MAX_VERTEX_OUTPUT_VECTORS_SM3 = 10;
-    const size_t MAX_VERTEX_OUTPUT_VECTORS_SM2 = 8;
+    // SM3 only supports 11 output variables, with a special 12th register for PSIZE.
+    const size_t MAX_VERTEX_OUTPUT_VECTORS_SM3 = 9;
+    const size_t MAX_VERTEX_OUTPUT_VECTORS_SM2 = 7;
     caps->maxVertexOutputComponents = ((deviceCaps.VertexShaderVersion >= D3DVS_VERSION(3, 0)) ? MAX_VERTEX_OUTPUT_VECTORS_SM3
                                                                                                : MAX_VERTEX_OUTPUT_VECTORS_SM2) * 4;
 
@@ -542,6 +543,7 @@ Workarounds GenerateWorkarounds()
 {
     Workarounds workarounds;
     workarounds.mrtPerfWorkaround = true;
+    workarounds.setDataFasterThanImageUpload = false;
     return workarounds;
 }
 

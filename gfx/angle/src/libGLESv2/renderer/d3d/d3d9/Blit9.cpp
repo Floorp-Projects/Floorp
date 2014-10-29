@@ -114,7 +114,7 @@ void Blit9::initGeometry()
 
 template <class D3DShaderType>
 gl::Error Blit9::setShader(ShaderId source, const char *profile,
-                           D3DShaderType *(rx::Renderer9::*createShader)(const DWORD *, size_t length),
+                           gl::Error (Renderer9::*createShader)(const DWORD *, size_t length, D3DShaderType **outShader),
                            HRESULT (WINAPI IDirect3DDevice9::*setShader)(D3DShaderType*))
 {
     IDirect3DDevice9 *device = mRenderer->getDevice();
@@ -130,10 +130,10 @@ gl::Error Blit9::setShader(ShaderId source, const char *profile,
         const BYTE* shaderCode = g_shaderCode[source];
         size_t shaderSize = g_shaderSize[source];
 
-        shader = (mRenderer->*createShader)(reinterpret_cast<const DWORD*>(shaderCode), shaderSize);
-        if (!shader)
+        gl::Error error = (mRenderer->*createShader)(reinterpret_cast<const DWORD*>(shaderCode), shaderSize, &shader);
+        if (error.isError())
         {
-            return gl::Error(GL_OUT_OF_MEMORY, "Failed to create internal shader for blit operation");
+            return error;
         }
 
         mCompiledShaders[source] = shader;

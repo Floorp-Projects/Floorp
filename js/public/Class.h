@@ -529,21 +529,36 @@ struct Class
     static size_t offsetOfFlags() { return offsetof(Class, flags); }
 };
 
-JS_STATIC_ASSERT(offsetof(JSClass, name) == offsetof(Class, name));
-JS_STATIC_ASSERT(offsetof(JSClass, flags) == offsetof(Class, flags));
-JS_STATIC_ASSERT(offsetof(JSClass, addProperty) == offsetof(Class, addProperty));
-JS_STATIC_ASSERT(offsetof(JSClass, delProperty) == offsetof(Class, delProperty));
-JS_STATIC_ASSERT(offsetof(JSClass, getProperty) == offsetof(Class, getProperty));
-JS_STATIC_ASSERT(offsetof(JSClass, setProperty) == offsetof(Class, setProperty));
-JS_STATIC_ASSERT(offsetof(JSClass, enumerate) == offsetof(Class, enumerate));
-JS_STATIC_ASSERT(offsetof(JSClass, resolve) == offsetof(Class, resolve));
-JS_STATIC_ASSERT(offsetof(JSClass, convert) == offsetof(Class, convert));
-JS_STATIC_ASSERT(offsetof(JSClass, finalize) == offsetof(Class, finalize));
-JS_STATIC_ASSERT(offsetof(JSClass, call) == offsetof(Class, call));
-JS_STATIC_ASSERT(offsetof(JSClass, construct) == offsetof(Class, construct));
-JS_STATIC_ASSERT(offsetof(JSClass, hasInstance) == offsetof(Class, hasInstance));
-JS_STATIC_ASSERT(offsetof(JSClass, trace) == offsetof(Class, trace));
-JS_STATIC_ASSERT(sizeof(JSClass) == sizeof(Class));
+static_assert(offsetof(JSClass, name) == offsetof(Class, name),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, flags) == offsetof(Class, flags),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, addProperty) == offsetof(Class, addProperty),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, delProperty) == offsetof(Class, delProperty),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, getProperty) == offsetof(Class, getProperty),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, setProperty) == offsetof(Class, setProperty),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, enumerate) == offsetof(Class, enumerate),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, resolve) == offsetof(Class, resolve),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, convert) == offsetof(Class, convert),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, finalize) == offsetof(Class, finalize),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, call) == offsetof(Class, call),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, construct) == offsetof(Class, construct),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, hasInstance) == offsetof(Class, hasInstance),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, trace) == offsetof(Class, trace),
+              "Class and JSClass must be consistent");
+static_assert(sizeof(JSClass) == sizeof(Class),
+              "Class and JSClass must be consistent");
 
 static MOZ_ALWAYS_INLINE const JSClass *
 Jsvalify(const Class *c)

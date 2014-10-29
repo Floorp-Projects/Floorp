@@ -1166,13 +1166,6 @@ INSTALL_TARGETS += %(prefix)s
             if obj.config.substs.get('MOZ_MEMORY'):
                 self._compile_graph[build_target].add('memory/build/target')
 
-        # Until STLPORT_LIBS are properly handled in moz.build world, assume
-        # any program or shared library we build depends on it.
-        if obj.KIND == 'target' and not isinstance(obj, StaticLibrary) and \
-                build_target != 'build/stlport/target' and \
-                'stlport' in obj.config.substs.get('STLPORT_LIBS'):
-            self._compile_graph[build_target].add('build/stlport/target')
-
         for lib in obj.linked_libraries:
             if not isinstance(lib, ExternalLibrary):
                 self._compile_graph[build_target].add(
