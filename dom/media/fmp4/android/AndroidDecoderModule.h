@@ -94,8 +94,8 @@ protected:
 
   virtual nsresult InitDecoder(jobject aSurface = nullptr);
 
-  virtual nsresult Output(mozilla::widget::android::BufferInfo* aInfo, void* aBuffer, mozilla::widget::android::MediaFormat* aFormat, Microseconds aDuration) { return NS_OK; }
-  virtual nsresult PostOutput(mozilla::widget::android::BufferInfo* aInfo, mozilla::widget::android::MediaFormat* aFormat, Microseconds aDuration) { return NS_OK; }
+  virtual nsresult Output(mozilla::widget::android::BufferInfo* aInfo, void* aBuffer, Microseconds aDuration) { return NS_OK; }
+  virtual nsresult PostOutput(mozilla::widget::android::BufferInfo* aInfo, Microseconds aDuration) { return NS_OK; }
 
   void ResetInputBuffers();
   void ResetOutputBuffers();
