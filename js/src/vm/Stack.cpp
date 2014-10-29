@@ -368,7 +368,7 @@ InterpreterFrame::markValues(JSTracer *trc, Value *sp, jsbytecode *pc)
 
         // Clear dead block-scoped locals.
         while (nfixed > nlivefixed)
-            unaliasedLocal(--nfixed, DONT_CHECK_ALIASING).setMagic(JS_UNINITIALIZED_LEXICAL);
+            unaliasedLocal(--nfixed).setMagic(JS_UNINITIALIZED_LEXICAL);
 
         // Mark live locals.
         markValues(trc, 0, nlivefixed);
@@ -1347,23 +1347,6 @@ AbstractFramePtr::hasPushedSPSFrame() const
         return asInterpreterFrame()->hasPushedSPSFrame();
     return asBaselineFrame()->hasPushedSPSFrame();
 }
-
-#ifdef DEBUG
-void
-js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script, uint32_t i)
-{
-    if (!checkAliasing)
-        return;
-
-    MOZ_ASSERT(i < script->nfixed());
-    if (i < script->bindings.numVars()) {
-        MOZ_ASSERT(!script->varIsAliased(i));
-    } else {
-        // FIXME: The callers of this function do not easily have the PC of the
-        // current frame, and so they do not know the block scope.
-    }
-}
-#endif
 
 jit::JitActivation::JitActivation(JSContext *cx, bool active)
   : Activation(cx, Jit),

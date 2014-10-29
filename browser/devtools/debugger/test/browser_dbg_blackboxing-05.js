@@ -8,13 +8,12 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_binary_search.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 let gDeck;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gDeck = gDebugger.document.getElementById("editor-deck");
@@ -64,7 +63,6 @@ function getEditorBlackboxMessageButton() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
   gDeck = null;

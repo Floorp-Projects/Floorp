@@ -99,7 +99,7 @@ protected:
                    const uint8_t&             redirectionLimit,
                    const bool&                allowPipelining,
                    const bool&                allowSTS,
-                   const bool&                forceAllowThirdPartyCookie,
+                   const uint32_t&            thirdPartyFlags,
                    const bool&                doResumeAt,
                    const uint64_t&            startPos,
                    const nsCString&           entityID,

@@ -6,6 +6,22 @@
 namespace mozilla {
 namespace plugins {
 
+struct PluginTag
+{
+  uint32_t id;
+  nsCString name;
+  nsCString description;
+  nsCString[] mimeTypes;
+  nsCString[] mimeDescriptions;
+  nsCString[] extensions;
+  bool isJavaPlugin;
+  bool isFlashPlugin;
+  nsCString filename;
+  nsCString version;
+  int64_t lastModifiedTime;
+  bool isFromExtension;
+};
+
 union PluginIdentifier
 {
   nsCString;
