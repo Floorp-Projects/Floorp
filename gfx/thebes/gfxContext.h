@@ -145,12 +145,6 @@ public:
     void MoveTo(const gfxPoint& pt);
 
     /**
-     * Creates a new subpath starting at the current point.
-     * Equivalent to MoveTo(CurrentPoint()).
-     */
-    void NewSubPath();
-
-    /**
      * Returns the current point in the current path.
      */
     gfxPoint CurrentPoint();

@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
 <head>
+  <!-- NOTE: This bug was triggered by scrollbar opacity-fading, so this
+       testcase needs to be loaded with this pref...
+           layout.testing.overlay-scrollbars.always-visible
+       ...set to *false* in order to have a chance to trigger the bug.
+
+       We don't have to worry about this producing any screenshots of
+       unpredictable partially-faded-scrollbars in our reftest snapshot,
+       because our scrollbars don't actually paint here, since the
+       scrollable element has "overflow:auto" and doesn't overflow
+       (because it's auto-sized to fit its content). -->
   <style>
     .container {
       display: flex;

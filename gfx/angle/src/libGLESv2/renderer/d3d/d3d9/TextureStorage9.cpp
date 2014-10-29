@@ -87,6 +87,13 @@ int TextureStorage9::getLevelCount() const
     return getBaseTexture() ? (getBaseTexture()->GetLevelCount() - getTopLevel()) : 0;
 }
 
+gl::Error TextureStorage9::setData(const gl::ImageIndex &index, const gl::Box &sourceBox, GLenum internalFormat, GLenum type,
+                                   const gl::PixelUnpackState &unpack, const uint8_t *pixelData)
+{
+    UNREACHABLE();
+    return gl::Error(GL_INVALID_OPERATION);
+}
+
 TextureStorage9_2D::TextureStorage9_2D(Renderer *renderer, SwapChain9 *swapchain)
     : TextureStorage9(renderer, D3DUSAGE_RENDERTARGET)
 {

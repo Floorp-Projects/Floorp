@@ -44,17 +44,19 @@ class Image9 : public ImageD3D
 
     virtual void setManagedSurface2D(TextureStorage *storage, int level);
     virtual void setManagedSurfaceCube(TextureStorage *storage, int face, int level);
-    virtual gl::Error copyToStorage2D(TextureStorage *storage, int level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
-    virtual gl::Error copyToStorageCube(TextureStorage *storage, int face, int level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height);
-    virtual gl::Error copyToStorage3D(TextureStorage *storage, int level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth);
-    virtual gl::Error copyToStorage2DArray(TextureStorage *storage, int level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height);
+    virtual gl::Error copyToStorage2D(TextureStorage *storage, const gl::ImageIndex &index, const gl::Box &region);
+    virtual gl::Error copyToStorageCube(TextureStorage *storage, const gl::ImageIndex &index, const gl::Box &region);
+    virtual gl::Error copyToStorage3D(TextureStorage *storage, const gl::ImageIndex &index, const gl::Box &region);
+    virtual gl::Error copyToStorage2DArray(TextureStorage *storage, const gl::ImageIndex &index, const gl::Box &region);
 
     virtual gl::Error loadData(GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
                                GLint unpackAlignment, GLenum type, const void *input);
     virtual gl::Error loadCompressedData(GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
                                          const void *input);
 
-    virtual void copy(GLint xoffset, GLint yoffset, GLint zoffset,GLint x, GLint y, GLsizei width, GLsizei height, gl::Framebuffer *source);
+    virtual void copy(GLint xoffset, GLint yoffset, GLint zoffset, const gl::Rectangle &sourceArea, RenderTarget *source);
+    virtual void copy(GLint xoffset, GLint yoffset, GLint zoffset, const gl::Rectangle &sourceArea,
+                      const gl::ImageIndex &sourceIndex, TextureStorage *source);
 
   private:
     DISALLOW_COPY_AND_ASSIGN(Image9);

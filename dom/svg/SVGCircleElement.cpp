@@ -81,6 +81,34 @@ SVGCircleElement::GetLengthInfo()
 //----------------------------------------------------------------------
 // nsSVGPathGeometryElement methods
 
+bool
+SVGCircleElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
+                                    const Matrix& aTransform)
+{
+  float x, y, r;
+  GetAnimatedLengthValues(&x, &y, &r, nullptr);
+
+  if (r <= 0.f) {
+    // Rendering of the element is disabled
+    aBounds->MoveTo(x, y);
+    aBounds->SetEmpty();
+    return true;
+  }
+
+  if (aTransform.IsRectilinear()) {
+    // Optimize the case where we can treat the circle as a rectangle and
+    // still get tight bounds.
+    if (aStrokeWidth > 0.f) {
+      r += aStrokeWidth / 2.f;
+    }
+    Rect rect(x - r, y - r, 2 * r, 2 * r);
+    *aBounds = aTransform.TransformBounds(rect);
+    return true;
+  }
+
+  return false;
+}
+
 TemporaryRef<Path>
 SVGCircleElement::BuildPath(PathBuilder* aBuilder)
 {

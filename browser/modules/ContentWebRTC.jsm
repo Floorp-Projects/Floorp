@@ -64,7 +64,7 @@ function handleRequest(aSubject, aTopic, aData) {
              constraints, devices, secure);
     },
     function (error) {
-      // bug 827146 -- In the future, the UI should catch NO_DEVICES_FOUND
+      // bug 827146 -- In the future, the UI should catch NotFoundError
       // and allow the user to plug in a device, instead of immediately failing.
       denyRequest({callID: aSubject.callID}, error);
     },
@@ -108,7 +108,7 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
     requestTypes.push("Microphone");
 
   if (!requestTypes.length) {
-    denyRequest({callID: aCallID}, "NO_DEVICES_FOUND");
+    denyRequest({callID: aCallID}, "NotFoundError");
     return;
   }
 

@@ -37,23 +37,23 @@
         var track = stream.getVideoTracks()[0];
         var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, track);
         ok(sender, "track has a sender");
-        navigator.mozGetUserMedia({video:true, fake: true}, function(newStream) {
+        navigator.mediaDevices.getUserMedia({video:true, fake: true})
+        .then(function(newStream) {
           var newtrack = newStream.getVideoTracks()[0];
-          sender.replaceTrack(newtrack,
-            function() {
-              ok(true, "replaceTrack success callback is called");
-              is(sender.track, newtrack, "sender.track has been replaced");
-              test.next();
-            },
-            function(err) {
-              ok(false, "replaceTrack failed with error = " + err);
-              test.next();
-            });
-        },
-        function(err) {
-          ok(false, "mozGetUserMedia failed. error = " + err);
-          test.next();
-        });
+          return new Promise(function(resolve, reject) {
+            sender.replaceTrack(newtrack, function() {
+              resolve(newtrack);
+            }, reject);
+          });
+        })
+        .then(function(newtrack) {
+          ok(true, "replaceTrack success callback is called");
+          is(sender.track, newtrack, "sender.track has been replaced");
+        })
+        .catch(function(reason) {
+          ok(false, "unexpected error = " + reason.message);
+        })
+        .then(test.next.bind(test));
       }
     ]]);
     test.chain.append(flowtest);

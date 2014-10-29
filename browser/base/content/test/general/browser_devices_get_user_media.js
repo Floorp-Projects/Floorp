@@ -223,6 +223,8 @@ function checkNotSharing() {
   assertWebRTCIndicatorStatus(null);
 }
 
+const permissionError = "error: PermissionDeniedError: The user did not grant permission for the operation.";
+
 let gTests = [
 
 {
@@ -381,7 +383,7 @@ let gTests = [
     enableDevice("Camera", false);
     enableDevice("Microphone", false);
 
-    yield promiseMessage("error: PERMISSION_DENIED", () => {
+    yield promiseMessage(permissionError, () => {
       PopupNotifications.panel.firstChild.button.click();
     });
 
@@ -405,7 +407,7 @@ let gTests = [
     expectObserverCalled("getUserMedia:request");
     checkDeviceSelectors(true, true);
 
-    yield promiseMessage("error: PERMISSION_DENIED", () => {
+    yield promiseMessage(permissionError, () => {
       activateSecondaryAction(kActionDeny);
     });
 
@@ -482,7 +484,7 @@ let gTests = [
         enableDevice("Camera", aAllowVideo || aNever);
 
       let expectedMessage =
-        (aAllowVideo || aAllowAudio) ? "ok" : "error: PERMISSION_DENIED";
+        (aAllowVideo || aAllowAudio) ? "ok" : permissionError;
       yield promiseMessage(expectedMessage, () => {
         activateSecondaryAction(aNever ? kActionNever : kActionAlways);
       });
@@ -587,14 +589,14 @@ let gTests = [
         expectObserverCalled("getUserMedia:request");
 
         // Deny the request to cleanup...
-        yield promiseMessage("error: PERMISSION_DENIED", () => {
+        yield promiseMessage(permissionError, () => {
           activateSecondaryAction(kActionDeny);
         });
         expectObserverCalled("getUserMedia:response:deny");
         expectObserverCalled("recording-window-ended");
       }
       else {
-        let expectedMessage = aExpectStream ? "ok" : "error: PERMISSION_DENIED";
+        let expectedMessage = aExpectStream ? "ok" : permissionError;
         yield promiseMessage(expectedMessage, gum);
 
         if (expectedMessage == "ok") {

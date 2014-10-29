@@ -848,7 +848,7 @@ AsyncDeleteFileRunnable::Run()
   nsresult rv;
   int64_t fileSize;
 
-  if (mFileManager->Privilege() != Chrome) {
+  if (mFileManager->EnforcingQuota()) {
     rv = file->GetFileSize(&fileSize);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   }
@@ -856,7 +856,7 @@ AsyncDeleteFileRunnable::Run()
   rv = file->Remove(false);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-  if (mFileManager->Privilege() != Chrome) {
+  if (mFileManager->EnforcingQuota()) {
     QuotaManager* quotaManager = QuotaManager::Get();
     NS_ASSERTION(quotaManager, "Shouldn't be null!");
 
