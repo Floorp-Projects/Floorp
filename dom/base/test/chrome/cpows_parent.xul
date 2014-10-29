@@ -58,14 +58,9 @@
       ok(data.s === "hello", "string property");
       ok(data.x.i === 10, "nested property");
       ok(data.f() === 99, "function call");
-      is(Object.getOwnPropertyDescriptor(data, "doesn't exist"), undefined,
-         "getOwnPropertyDescriptor returns undefined for non-existant properties");
-      ok(Object.getOwnPropertyDescriptor(data, "i").value, 5,
-         "getOwnPropertyDescriptor.value works");
       let obj = new data.ctor();
       ok(obj.a === 3, "constructor call");
       ok(document.title === "Hello, Kitty", "document node");
-      is(typeof document.cookie, "string", "can get document.cookie");
 
       data.i = 6;
       data.b = false;
