@@ -231,6 +231,7 @@
 @BINPATH@/components/dom_stylesheets.xpt
 @BINPATH@/components/dom_telephony.xpt
 @BINPATH@/components/dom_traversal.xpt
+@BINPATH@/components/dom_tv.xpt
 @BINPATH@/components/dom_voicemail.xpt
 #ifdef MOZ_WEBSPEECH
 @BINPATH@/components/dom_webspeechrecognition.xpt

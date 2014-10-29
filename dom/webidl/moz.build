@@ -504,6 +504,11 @@ WEBIDL_FILES = [
     'TreeColumn.webidl',
     'TreeColumns.webidl',
     'TreeWalker.webidl',
+    'TVChannel.webidl',
+    'TVManager.webidl',
+    'TVProgram.webidl',
+    'TVSource.webidl',
+    'TVTuner.webidl',
     'UDPMessageEvent.webidl',
     'UDPSocket.webidl',
     'UIEvent.webidl',
@@ -719,6 +724,10 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'StyleSheetApplicableStateChangeEvent.webidl',
     'StyleSheetChangeEvent.webidl',
     'TrackEvent.webidl',
+    'TVCurrentChannelChangedEvent.webidl',
+    'TVCurrentSourceChangedEvent.webidl',
+    'TVEITBroadcastedEvent.webidl',
+    'TVScanningStateChangedEvent.webidl',
     'UDPMessageEvent.webidl',
     'UserProximityEvent.webidl',
     'USSDReceivedEvent.webidl',
@@ -765,6 +774,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
 if CONFIG['MOZ_NFC']:
     GENERATED_EVENTS_WEBIDL_FILES += [
         'MozNFCPeerEvent.webidl',
+        'MozNFCTagEvent.webidl',
     ]
 
 if CONFIG['MOZ_BUILD_APP'] in ['browser', 'xulrunner']:

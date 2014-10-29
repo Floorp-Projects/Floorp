@@ -119,9 +119,9 @@ PluginProcessChild::Init()
       return false;
     }
 
-    return mPlugin.Init(pluginFilename, ParentHandle(),
-                        IOThreadChild::message_loop(),
-                        IOThreadChild::channel());
+    return mPlugin.InitForChrome(pluginFilename, ParentHandle(),
+                                 IOThreadChild::message_loop(),
+                                 IOThreadChild::channel());
 }
 
 void

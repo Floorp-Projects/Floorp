@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 sts=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -166,11 +168,16 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel,
 
   nsresult rv;
   bool doForce = false;
+  bool checkWindowChain = true;
+  bool parentIsThird = false;
   nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
     do_QueryInterface(aChannel);
   if (httpChannelInternal) {
-    rv = httpChannelInternal->GetForceAllowThirdPartyCookie(&doForce);
+    uint32_t flags;
+    rv = httpChannelInternal->GetThirdPartyFlags(&flags);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    doForce = (flags & nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
 
     // If aURI was not supplied, and we're forcing, then we're by definition
     // not foreign. If aURI was supplied, we still want to check whether it's
@@ -179,6 +186,28 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel,
     if (doForce && !aURI) {
       *aResult = false;
       return NS_OK;
+    }
+
+    if (flags & nsIHttpChannelInternal::THIRD_PARTY_PARENT_IS_THIRD_PARTY) {
+      // Check that the two PARENT_IS_{THIRD,SAME}_PARTY are mutually exclusive.
+      MOZ_ASSERT(!(flags & nsIHttpChannelInternal::THIRD_PARTY_PARENT_IS_SAME_PARTY));
+
+      // If we're not forcing and we know that the window chain of the channel
+      // is third party, then we know now that we're third party.
+      if (!doForce) {
+        *aResult = true;
+        return NS_OK;
+      }
+
+      checkWindowChain = false;
+      parentIsThird = true;
+    } else {
+      // In e10s, we can't check the parent chain in the parent, so we do so
+      // in the child and send the result to the parent.
+      // Note that we only check the window chain if neither
+      // THIRD_PARTY_PARENT_IS_* flag is set.
+      checkWindowChain = !(flags & nsIHttpChannelInternal::THIRD_PARTY_PARENT_IS_SAME_PARTY);
+      parentIsThird = false;
     }
   }
 
@@ -204,6 +233,12 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel,
       *aResult = result;
       return NS_OK;
     }
+  }
+
+  // If we've already computed this in the child process, we're done.
+  if (!checkWindowChain) {
+    *aResult = parentIsThird;
+    return NS_OK;
   }
 
   // Find the associated window and its parent window.
