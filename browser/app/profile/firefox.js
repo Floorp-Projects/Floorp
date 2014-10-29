@@ -1764,8 +1764,10 @@ pref("media.gmp-gmpopenh264.provider.enabled", true);
 
 pref("browser.apps.URL", "https://marketplace.firefox.com/discovery/");
 
+#ifdef NIGHTLY_BUILD
 pref("browser.polaris.enabled", false);
 pref("privacy.trackingprotection.ui.enabled", false);
+#endif
 
 // Temporary pref to allow printing in e10s windows on some platforms.
 #ifdef UNIX_BUT_NOT_MAC

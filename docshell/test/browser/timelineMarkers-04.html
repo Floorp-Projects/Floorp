@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"></meta>
+  <title>markers test</title>
+</head>
+<body>
+
+  <p>Test page</p>
+
+  <script>
+    function do_xhr() {
+      const theURL = "timelineMarkers-04.html";
+
+      xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        // Nothing.
+      };
+      xhr.open("get", theURL, true);
+      xhr.send();
+    }
+
+    window.addEventListener("dog", do_xhr, true);
+  </script>
+
+</body>
+</html>
+

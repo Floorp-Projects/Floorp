@@ -158,7 +158,7 @@ describe("loop.conversation", function() {
       sinon.assert.calledOnce(loop.Dispatcher.prototype.dispatch);
       sinon.assert.calledWithExactly(loop.Dispatcher.prototype.dispatch,
         new loop.shared.actions.GatherCallData({
-          callId: "42",
+          windowId: "42",
           outgoing: false
         }));
     });
@@ -175,7 +175,7 @@ describe("loop.conversation", function() {
         sinon.assert.calledOnce(loop.Dispatcher.prototype.dispatch);
         sinon.assert.calledWithExactly(loop.Dispatcher.prototype.dispatch,
           new loop.shared.actions.GatherCallData({
-            callId: "24",
+            windowId: "24",
             outgoing: true
           }));
       });
@@ -276,7 +276,7 @@ describe("loop.conversation", function() {
       conversation = new loop.shared.models.ConversationModel({}, {
         sdk: {}
       });
-      conversation.set({callId: 42});
+      conversation.set({windowId: 42});
       sandbox.stub(conversation, "setOutgoingSessionData");
     });
 
@@ -547,8 +547,10 @@ describe("loop.conversation", function() {
             decline: sinon.stub(),
             close: sinon.stub()
           };
+          conversation.set({
+            windowId: "8699"
+          });
           conversation.setIncomingSessionData({
-            callId:         8699,
             websocketToken: 123
           });
         });
@@ -571,7 +573,7 @@ describe("loop.conversation", function() {
           icView.decline();
 
           sinon.assert.calledOnce(navigator.mozLoop.releaseCallData);
-          sinon.assert.calledWithExactly(navigator.mozLoop.releaseCallData, 8699);
+          sinon.assert.calledWithExactly(navigator.mozLoop.releaseCallData, "8699");
         });
       });
 
@@ -610,7 +612,7 @@ describe("loop.conversation", function() {
 
           sinon.assert.calledTwice(conversation.get);
           sinon.assert.calledWithExactly(conversation.get, "callToken");
-          sinon.assert.calledWithExactly(conversation.get, "callId");
+          sinon.assert.calledWithExactly(conversation.get, "windowId");
         });
 
         it("should trigger error handling in case of error", function() {

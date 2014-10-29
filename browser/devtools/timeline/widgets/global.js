@@ -44,8 +44,14 @@ const TIMELINE_BLUEPRINT = {
     stroke: "hsl(39,82%,49%)",
     label: L10N.getStr("timeline.label.paint")
   },
-  "ConsoleTime": {
+  "DOMEvent": {
     group: 3,
+    fill: "hsl(219,82%,69%)",
+    stroke: "hsl(219,82%,69%)",
+    label: L10N.getStr("timeline.label.domevent")
+  },
+  "ConsoleTime": {
+    group: 4,
     fill: "hsl(0,0%,80%)",
     stroke: "hsl(0,0%,60%)",
     label: L10N.getStr("timeline.label.consoleTime")
