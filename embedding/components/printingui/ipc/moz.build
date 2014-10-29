@@ -4,16 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-UNIFIED_SOURCES += [
-    'nsPrintDialogUtil.cpp',
-    'nsPrintingPromptService.cpp',
-    'nsPrintProgress.cpp',
-    'nsPrintProgressParams.cpp',
+EXPORTS.mozilla.embedding.printingui += [
+    'PrintingParent.h',
 ]
 
-EXPORTS += [
-    'nsPrintDialogUtil.h',
+UNIFIED_SOURCES += [
+    'nsPrintingPromptServiceProxy.cpp',
+    'PrintDataUtils.cpp',
+    'PrintingParent.cpp',
 ]
+
+IPDL_SOURCES += [
+    'PPrinting.ipdl',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FAIL_ON_WARNINGS = True
 

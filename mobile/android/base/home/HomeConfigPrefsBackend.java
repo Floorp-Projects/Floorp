@@ -85,7 +85,7 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
 
         // We disable Synced Tabs for guest mode profiles.
         final PanelConfig remoteTabsEntry;
-        if (RestrictedProfiles.isAllowed(RestrictedProfiles.Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
+        if (RestrictedProfiles.isAllowed(mContext, RestrictedProfiles.Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
             remoteTabsEntry = createBuiltinPanelConfig(mContext, PanelType.REMOTE_TABS);
         } else {
             remoteTabsEntry = null;

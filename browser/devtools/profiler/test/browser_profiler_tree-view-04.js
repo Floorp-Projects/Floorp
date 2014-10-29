@@ -29,35 +29,35 @@ function test() {
 
   let A = treeRoot.getChild();
   let B = A.getChild();
-  let C = B.getChild();
+  let D = B.getChild();
 
-  is(C.target.getAttribute("origin"), "chrome",
-    "The .A.B.C node's 'origin' attribute is correct.");
-  is(C.target.getAttribute("category"), "gc",
-    "The .A.B.C node's 'category' attribute is correct.");
-  is(C.target.getAttribute("tooltiptext"), "D (http://foo/bar/baz:78)",
-    "The .A.B.C node's 'tooltiptext' attribute is correct.");
+  is(D.target.getAttribute("origin"), "chrome",
+    "The .A.B.D node's 'origin' attribute is correct.");
+  is(D.target.getAttribute("category"), "gc",
+    "The .A.B.D node's 'category' attribute is correct.");
+  is(D.target.getAttribute("tooltiptext"), "D (http://foo/bar/baz:78)",
+    "The .A.B.D node's 'tooltiptext' attribute is correct.");
   ok(!A.target.querySelector(".call-tree-zoom").hidden,
-    "The .A.B.C node's zoom button cell should not be hidden.");
+    "The .A.B.D node's zoom button cell should not be hidden.");
   ok(!A.target.querySelector(".call-tree-category").hidden,
-    "The .A.B.C node's category label cell should not be hidden.");
+    "The .A.B.D node's category label cell should not be hidden.");
 
-  is(C.target.childNodes.length, 6,
+  is(D.target.childNodes.length, 6,
     "The number of columns displayed for tree items is correct.");
-  is(C.target.childNodes[0].getAttribute("type"), "duration",
+  is(D.target.childNodes[0].getAttribute("type"), "duration",
     "The first column displayed for tree items is correct.");
-  is(C.target.childNodes[1].getAttribute("type"), "percentage",
+  is(D.target.childNodes[1].getAttribute("type"), "percentage",
     "The third column displayed for tree items is correct.");
-  is(C.target.childNodes[2].getAttribute("type"), "self-duration",
+  is(D.target.childNodes[2].getAttribute("type"), "self-duration",
     "The second column displayed for tree items is correct.");
-  is(C.target.childNodes[3].getAttribute("type"), "self-percentage",
+  is(D.target.childNodes[3].getAttribute("type"), "self-percentage",
     "The fourth column displayed for tree items is correct.");
-  is(C.target.childNodes[4].getAttribute("type"), "samples",
+  is(D.target.childNodes[4].getAttribute("type"), "samples",
     "The fifth column displayed for tree items is correct.");
-  is(C.target.childNodes[5].getAttribute("type"), "function",
+  is(D.target.childNodes[5].getAttribute("type"), "function",
     "The sixth column displayed for tree items is correct.");
 
-  let functionCell = C.target.childNodes[5];
+  let functionCell = D.target.childNodes[5];
 
   is(functionCell.childNodes.length, 8,
     "The number of columns displayed for function cells is correct.");
@@ -90,7 +90,7 @@ let gSamples = [{
     { category: 32, location: "C (http://foo/bar/baz:56)" }
   ]
 }, {
-  time: 5 + 6,
+  time: 5 + 1,
   frames: [
     { category: 8,  location: "(root)" },
     { category: 8,  location: "A (http://foo/bar/baz:12)" },
@@ -98,7 +98,15 @@ let gSamples = [{
     { category: 64, location: "D (http://foo/bar/baz:78)" }
   ]
 }, {
-  time: 5 + 6 + 7,
+  time: 5 + 1 + 2,
+  frames: [
+    { category: 8,  location: "(root)" },
+    { category: 8,  location: "A (http://foo/bar/baz:12)" },
+    { category: 16, location: "B (http://foo/bar/baz:34)" },
+    { category: 64, location: "D (http://foo/bar/baz:78)" }
+  ]
+}, {
+  time: 5 + 1 + 2 + 7,
   frames: [
     { category: 8,   location: "(root)" },
     { category: 8,   location: "A (http://foo/bar/baz:12)" },
