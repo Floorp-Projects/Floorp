@@ -3857,6 +3857,56 @@ bool CanvasRenderingContext2D::IsPointInStroke(const CanvasPath& mPath, double x
   return tempPath->StrokeContainsPoint(strokeOptions, Point(x, y), mTarget->GetTransform());
 }
 
+// Acts like nsLayoutUtils::SurfaceFromElement, but it'll attempt
+// to pull a SourceSurface from our cache. This allows us to avoid
+// reoptimizing surfaces if content and canvas backends are different.
+nsLayoutUtils::SurfaceFromElementResult
+CanvasRenderingContext2D::CachedSurfaceFromElement(Element* aElement)
+{
+  nsLayoutUtils::SurfaceFromElementResult res;
+
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(aElement);
+  if (!imageLoader) {
+    return res;
+  }
+
+  nsCOMPtr<imgIRequest> imgRequest;
+  imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                          getter_AddRefs(imgRequest));
+  if (!imgRequest) {
+    return res;
+  }
+
+  uint32_t status;
+  if (NS_FAILED(imgRequest->GetImageStatus(&status)) ||
+      !(status & imgIRequest::STATUS_LOAD_COMPLETE)) {
+    return res;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+  if (NS_FAILED(imgRequest->GetImagePrincipal(getter_AddRefs(principal))) ||
+      !principal) {
+    return res;
+  }
+
+  res.mSourceSurface = CanvasImageCache::SimpleLookup(aElement);
+  if (!res.mSourceSurface) {
+    return res;
+  }
+
+  int32_t corsmode = imgIRequest::CORS_NONE;
+  if (NS_SUCCEEDED(imgRequest->GetCORSMode(&corsmode))) {
+    res.mCORSUsed = corsmode != imgIRequest::CORS_NONE;
+  }
+
+  res.mSize = ThebesIntSize(res.mSourceSurface->GetSize());
+  res.mPrincipal = principal.forget();
+  res.mIsWriteOnly = false;
+  res.mImageRequest = imgRequest.forget();
+
+  return res;
+}
+
 //
 // image
 //
@@ -3917,8 +3967,15 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
     // of animated images. We also don't want to rasterize vector images.
     uint32_t sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME |
                         nsLayoutUtils::SFE_NO_RASTERIZING_VECTORS;
+    // The cache lookup can miss even if the image is already in the cache
+    // if the image is coming from a different element or cached for a
+    // different canvas. This covers the case when we miss due to caching
+    // for a different canvas, but CanvasImageCache should be fixed if we
+    // see misses due to different elements drawing the same image.
     nsLayoutUtils::SurfaceFromElementResult res =
-      nsLayoutUtils::SurfaceFromElement(element, sfeFlags, mTarget);
+      CachedSurfaceFromElement(element);
+    if (!res.mSourceSurface)
+      res = nsLayoutUtils::SurfaceFromElement(element, sfeFlags, mTarget);
 
     if (!res.mSourceSurface && !res.mDrawInfo.mImgContainer) {
       // Spec says to silently do nothing if the element is still loading.
