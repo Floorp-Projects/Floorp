@@ -40,7 +40,7 @@ let gSamples = [{
     { category: 32, location: "C (http://foo/bar/baz:56)" }
   ]
 }, {
-  time: 5 + 6,
+  time: 5 + 1,
   frames: [
     { category: 8,  location: "(root)" },
     { category: 8,  location: "A (http://foo/bar/baz:12)" },
@@ -48,7 +48,15 @@ let gSamples = [{
     { category: 64, location: "D (http://foo/bar/baz:78)" }
   ]
 }, {
-  time: 5 + 6 + 7,
+  time: 5 + 1 + 2,
+  frames: [
+    { category: 8,  location: "(root)" },
+    { category: 8,  location: "A (http://foo/bar/baz:12)" },
+    { category: 16, location: "B (http://foo/bar/baz:34)" },
+    { category: 64, location: "D (http://foo/bar/baz:78)" }
+  ]
+}, {
+  time: 5 + 1 + 2 + 7,
   frames: [
     { category: 8,   location: "(root)" },
     { category: 8,   location: "A (http://foo/bar/baz:12)" },
