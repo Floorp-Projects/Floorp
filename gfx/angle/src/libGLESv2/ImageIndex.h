@@ -31,6 +31,7 @@ struct ImageIndex
     static ImageIndex MakeCube(GLenum target, GLint mipIndex);
     static ImageIndex Make2DArray(GLint mipIndex, GLint layerIndex);
     static ImageIndex Make3D(GLint mipIndex, GLint layerIndex = ENTIRE_LEVEL);
+    static ImageIndex MakeInvalid();
 
     static const GLint ENTIRE_LEVEL = static_cast<GLint>(-1);
 };

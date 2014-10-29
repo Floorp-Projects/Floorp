@@ -244,7 +244,7 @@ void Program::bindAttributeLocation(GLuint index, const char *name)
 // Links the HLSL code of the vertex and pixel shader by matching up their varyings,
 // compiling them into binaries, determining the attribute mappings, and collecting
 // a list of uniforms
-bool Program::link(const Caps &caps)
+Error Program::link(const Caps &caps)
 {
     unlink(false);
 
@@ -252,10 +252,15 @@ bool Program::link(const Caps &caps)
     resetUniformBlockBindings();
 
     mProgramBinary.set(new ProgramBinary(mRenderer->createProgram()));
-    mLinked = mProgramBinary->link(mInfoLog, mAttributeBindings, mFragmentShader, mVertexShader,
-                                   mTransformFeedbackVaryings, mTransformFeedbackBufferMode, caps);
+    LinkResult result = mProgramBinary->link(mInfoLog, mAttributeBindings, mFragmentShader, mVertexShader,
+                                             mTransformFeedbackVaryings, mTransformFeedbackBufferMode, caps);
+    if (result.error.isError())
+    {
+        return result.error;
+    }
 
-    return mLinked;
+    mLinked = result.linkSuccess;
+    return gl::Error(GL_NO_ERROR);
 }
 
 int AttributeBindings::getAttributeBinding(const std::string &name) const
@@ -303,21 +308,22 @@ ProgramBinary* Program::getProgramBinary() const
     return mProgramBinary.get();
 }
 
-bool Program::setProgramBinary(GLenum binaryFormat, const void *binary, GLsizei length)
+Error Program::setProgramBinary(GLenum binaryFormat, const void *binary, GLsizei length)
 {
     unlink(false);
 
     mInfoLog.reset();
 
     mProgramBinary.set(new ProgramBinary(mRenderer->createProgram()));
-    mLinked = mProgramBinary->load(mInfoLog, binaryFormat, binary, length);
-
-    if (!mLinked)
+    LinkResult result = mProgramBinary->load(mInfoLog, binaryFormat, binary, length);
+    if (result.error.isError())
     {
         mProgramBinary.set(NULL);
+        return result.error;
     }
 
-    return mLinked;
+    mLinked = result.linkSuccess;
+    return Error(GL_NO_ERROR);
 }
 
 void Program::release()

@@ -50,8 +50,8 @@ addTestCase();
 
 /* Date.parse is accurate to the second;  valueOf() to the millisecond.
    Here we expect them to coincide, as we expect a time of exactly midnight -  */
-status = "(Date.parse(now.toLocaleDateString()) - (midnight(now)).valueOf()) == 0";  
-actual =   (Date.parse(now.toLocaleDateString()) - (midnight(now)).valueOf()) == 0;
+status = "(Date.parse(now.toLocaleDateString('en-US')) - (midnight(now)).valueOf()) == 0";
+actual =   (Date.parse(now.toLocaleDateString('en-US')) - (midnight(now)).valueOf()) == 0;
 expect = true;
 addTestCase();
 
@@ -104,8 +104,8 @@ function addDateTestCase(date_given_in_milliseconds)
 {
   var givenDate = new Date(date_given_in_milliseconds);
 
-  status = 'Date.parse('   +   givenDate   +   ').toLocaleDateString())';  
-  actual =  Date.parse(givenDate.toLocaleDateString());
+  status = 'Date.parse('   +   givenDate   +   ').toLocaleDateString("en-US"))';
+  actual =  Date.parse(givenDate.toLocaleDateString("en-US"));
   expect = Date.parse(midnight(givenDate));
   addTestCase();
 }

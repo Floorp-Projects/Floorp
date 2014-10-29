@@ -27,6 +27,7 @@ self.onmessage = function onmessage_start(msg) {
     test_open_non_existing_file();
     test_flush_open_file();
     test_copy_existing_file();
+    test_readall_writeall_file();
     test_position();
     test_move_file();
     test_iter_dir();
@@ -181,6 +182,190 @@ function compare_files(test, sourcePath, destPath, prefix)
     dest.close();
   }
   info(test + ": Comparison complete");
+}
+
+function test_readall_writeall_file()
+{
+  let src_file_name =
+    OS.Path.join("chrome", "toolkit", "components", "osfile", "tests", "mochi",
+                 "worker_test_osfile_front.js");
+  let tmp_file_name =
+    OS.Path.join(OS.Constants.Path.tmpDir, "test_osfile_front.tmp");
+  info("Starting test_readall_writeall_file");
+
+  // read, ArrayBuffer
+
+  let source = OS.File.open(src_file_name);
+  let dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
+  let size = source.stat().size;
+
+  let buf = new Uint8Array(size);
+  let readResult = source.readTo(buf);
+  is(readResult, size, "test_readall_writeall_file: read the right number of bytes");
+
+  dest.write(buf);
+
+  info("test_readall_writeall_file: copy complete (manual allocation)");
+  source.close();
+  dest.close();
+
+  compare_files("test_readall_writeall_file (manual allocation)", src_file_name, tmp_file_name);
+  OS.File.remove(tmp_file_name);
+
+  // read, C buffer
+  source = OS.File.open(src_file_name);
+  dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
+  buf = new ArrayBuffer(size);
+  let ptr = OS.Shared.Type.voidptr_t.implementation(buf);
+  readResult = source.readTo(ptr, {bytes: size});
+  is(readResult, size, "test_readall_writeall_file: read the right number of bytes (C buffer)");
+
+  dest.write(ptr, {bytes: size});
+
+  info("test_readall_writeall_file: copy complete (C buffer)");
+  source.close();
+  dest.close();
+
+  compare_files("test_readall_writeall_file (C buffer)", src_file_name, tmp_file_name);
+  OS.File.remove(tmp_file_name);
+
+  // read/write, C buffer, missing |bytes| option
+  source = OS.File.open(src_file_name);
+  dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
+  let exn = should_throw(function() { source.readTo(ptr); });
+  ok(exn != null && exn instanceof TypeError, "test_readall_writeall_file: read with C pointer and without bytes fails with the correct error");
+  exn = should_throw(function() { dest.write(ptr); });
+  ok(exn != null && exn instanceof TypeError, "test_readall_writeall_file: write with C pointer and without bytes fails with the correct error");
+
+  source.close();
+  dest.close();
+
+  // readTo, ArrayBuffer + offset
+  let OFFSET = 12;
+  let LEFT = size - OFFSET;
+  buf = new ArrayBuffer(size);
+  let offset_view = new Uint8Array(buf, OFFSET);
+  source = OS.File.open(src_file_name);
+  dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
+
+  readResult = source.readTo(offset_view);
+  is(readResult, LEFT, "test_readall_writeall_file: read the right number of bytes (with offset)");
+
+  dest.write(offset_view);
+  is(dest.stat().size, LEFT, "test_readall_writeall_file: wrote the right number of bytes (with offset)");
+
+  info("test_readall_writeall_file: copy complete (with offset)");
+  source.close();
+  dest.close();
+
+  compare_files("test_readall_writeall_file (with offset)", src_file_name, tmp_file_name, LEFT);
+  OS.File.remove(tmp_file_name);
+
+  // read
+  buf = new Uint8Array(size);
+  source = OS.File.open(src_file_name);
+  dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
+
+  readResult = source.read();
+  is(readResult.length, size, "test_readall_writeall_file: read the right number of bytes (auto allocation)");
+
+  dest.write(readResult);
+
+  info("test_readall_writeall_file: copy complete (auto allocation)");
+  source.close();
+  dest.close();
+
+  compare_files("test_readall_writeall_file (auto allocation)", src_file_name, tmp_file_name);
+  OS.File.remove(tmp_file_name);
+
+  // File.readAll
+  readResult = OS.File.read(src_file_name);
+  is(readResult.length, size, "test_readall_writeall_file: read the right number of bytes (OS.File.readAll)");
+ 
+  // File.writeAtomic on top of nothing
+  OS.File.writeAtomic(tmp_file_name, readResult,
+    {tmpPath: tmp_file_name + ".tmp"});
+  try {
+    let stat = OS.File.stat(tmp_file_name);
+    info("readAll + writeAtomic created a file");
+    is(stat.size, size, "readAll + writeAtomic created a file of the right size");
+  } catch (x) {
+    ok(false, "readAll + writeAtomic somehow failed");
+    if(x.becauseNoSuchFile) {
+      ok(false, "readAll + writeAtomic did not create file");
+    }
+  }
+  compare_files("test_readall_writeall_file (OS.File.readAll + writeAtomic)",
+                src_file_name, tmp_file_name);
+  exn = null;
+  try {
+    let stat = OS.File.stat(tmp_file_name + ".tmp");
+  } catch (x) {
+    exn = x;
+  }
+  ok(!!exn, "readAll + writeAtomic cleaned up after itself");
+
+  // File.writeAtomic on top of existing file
+  // Remove content and set arbitrary size, to avoid potential false negatives
+  dest = OS.File.open(tmp_file_name, {write: true, trunc:true});
+  dest.setPosition(1234);
+  dest.close();
+
+  OS.File.writeAtomic(tmp_file_name, readResult,
+    {tmpPath: tmp_file_name + ".tmp"});
+  compare_files("test_readall_writeall_file (OS.File.readAll + writeAtomic 2)",
+                src_file_name, tmp_file_name);
+
+  // File.writeAtomic on top of existing file but without overwritten the file
+  exn = null;
+  try {
+    let view = new Uint8Array(readResult.buffer, 10, 200);
+    OS.File.writeAtomic(tmp_file_name, view,
+      { tmpPath: tmp_file_name + ".tmp", noOverwrite: true});
+  } catch (x) {
+    exn = x;
+  }
+  ok(exn && exn instanceof OS.File.Error && exn.becauseExists, "writeAtomic fails if file already exists with noOverwrite option");
+  // Check file was not overwritten.
+  compare_files("test_readall_writeall_file (OS.File.readAll + writeAtomic check file was not overwritten)",
+                src_file_name, tmp_file_name);
+
+  // Ensure that File.writeAtomic fails if no temporary file name is provided
+  // (FIXME: Remove this test as part of bug 793660)
+
+  exn = null;
+  try {
+    OS.File.writeAtomic(tmp_file_name, readResult.buffer,
+      {bytes: readResult.length});
+  } catch (x) {
+    exn = x;
+  }
+  ok(!!exn && exn instanceof TypeError, "writeAtomic fails if tmpPath is not provided");
+
+  // Check that writeAtomic fails when destination path is undefined
+  exn = null;
+  try {
+    let path = undefined;
+    let options = {tmpPath: tmp_file_name};
+    OS.File.writeAtomic(path, readResult.buffer, options);
+  } catch (x) {
+    exn = x;
+  }
+  ok(!!exn && exn instanceof TypeError, "writeAtomic fails if path is undefined");
+
+  // Check that writeAtomic fails when destination path is an empty string
+  exn = null;
+  try {
+    let path = "";
+    let options = {tmpPath: tmp_file_name};
+    OS.File.writeAtomic(path, readResult.buffer, options);
+  } catch (x) {
+    exn = x;
+  }
+  ok(!!exn && exn instanceof TypeError, "writeAtomic fails if path is an empty string");
+
+  // Cleanup.
+  OS.File.remove(tmp_file_name);
 }
 
 /**

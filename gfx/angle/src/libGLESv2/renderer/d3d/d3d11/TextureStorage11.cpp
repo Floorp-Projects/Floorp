@@ -15,6 +15,7 @@
 #include "libGLESv2/renderer/d3d/d3d11/Blit11.h"
 #include "libGLESv2/renderer/d3d/d3d11/formatutils11.h"
 #include "libGLESv2/renderer/d3d/d3d11/Image11.h"
+#include "libGLESv2/renderer/d3d/MemoryBuffer.h"
 #include "libGLESv2/renderer/d3d/TextureD3D.h"
 #include "libGLESv2/main.h"
 #include "libGLESv2/ImageIndex.h"
@@ -183,14 +184,17 @@ int TextureStorage11::getLevelDepth(int mipLevel) const
     return std::max(static_cast<int>(mTextureDepth) >> mipLevel, 1);
 }
 
-UINT TextureStorage11::getSubresourceIndex(int mipLevel, int layerTarget) const
+UINT TextureStorage11::getSubresourceIndex(const gl::ImageIndex &index) const
 {
-    UINT index = 0;
+    UINT subresource = 0;
     if (getResource())
     {
-        index = D3D11CalcSubresource(mipLevel, layerTarget, mMipLevels);
+        UINT mipSlice = static_cast<UINT>(index.mipIndex + mTopLevel);
+        UINT arraySlice = static_cast<UINT>(index.hasLayer() ? index.layerIndex : 0);
+        subresource = D3D11CalcSubresource(mipSlice, arraySlice, mMipLevels);
+        ASSERT(subresource != std::numeric_limits<UINT>::max());
     }
-    return index;
+    return subresource;
 }
 
 ID3D11ShaderResourceView *TextureStorage11::getSRV(const gl::SamplerState &samplerState)
@@ -288,15 +292,15 @@ void TextureStorage11::invalidateSwizzleCache()
 }
 
 gl::Error TextureStorage11::updateSubresourceLevel(ID3D11Resource *srcTexture, unsigned int sourceSubresource,
-                                                   int level, int layerTarget, GLint xoffset, GLint yoffset, GLint zoffset,
-                                                   GLsizei width, GLsizei height, GLsizei depth)
+                                                   const gl::ImageIndex &index, const gl::Box &copyArea)
 {
     ASSERT(srcTexture);
+
+    GLint level = index.mipIndex;
 
     invalidateSwizzleCacheLevel(level);
 
     gl::Extents texSize(getLevelWidth(level), getLevelHeight(level), getLevelDepth(level));
-    gl::Box copyArea(xoffset, yoffset, zoffset, width, height, depth);
 
     bool fullCopy = copyArea.x == 0 &&
                     copyArea.y == 0 &&
@@ -306,7 +310,7 @@ gl::Error TextureStorage11::updateSubresourceLevel(ID3D11Resource *srcTexture, u
                     copyArea.depth  == texSize.depth;
 
     ID3D11Resource *dstTexture = getResource();
-    unsigned int dstSubresource = getSubresourceIndex(level + mTopLevel, layerTarget);
+    unsigned int dstSubresource = getSubresourceIndex(index);
 
     ASSERT(dstTexture);
 
@@ -327,8 +331,8 @@ gl::Error TextureStorage11::updateSubresourceLevel(ID3D11Resource *srcTexture, u
         D3D11_BOX srcBox;
         srcBox.left = copyArea.x;
         srcBox.top = copyArea.y;
-        srcBox.right = copyArea.x + roundUp((unsigned int)width, dxgiFormatInfo.blockWidth);
-        srcBox.bottom = copyArea.y + roundUp((unsigned int)height, dxgiFormatInfo.blockHeight);
+        srcBox.right = copyArea.x + roundUp(static_cast<UINT>(copyArea.width), dxgiFormatInfo.blockWidth);
+        srcBox.bottom = copyArea.y + roundUp(static_cast<UINT>(copyArea.height), dxgiFormatInfo.blockHeight);
         srcBox.front = copyArea.z;
         srcBox.back = copyArea.z + copyArea.depth;
 
@@ -341,19 +345,18 @@ gl::Error TextureStorage11::updateSubresourceLevel(ID3D11Resource *srcTexture, u
 }
 
 bool TextureStorage11::copySubresourceLevel(ID3D11Resource* dstTexture, unsigned int dstSubresource,
-                                            int level, int layerTarget, GLint xoffset, GLint yoffset, GLint zoffset,
-                                            GLsizei width, GLsizei height, GLsizei depth)
+                                            const gl::ImageIndex &index, const gl::Box &region)
 {
     if (dstTexture)
     {
         ID3D11Resource *srcTexture = getResource();
-        unsigned int srcSubresource = getSubresourceIndex(level + mTopLevel, layerTarget);
+        unsigned int srcSubresource = getSubresourceIndex(index);
 
         ASSERT(srcTexture);
 
         ID3D11DeviceContext *context = mRenderer->getDeviceContext();
 
-        context->CopySubresourceRegion(dstTexture, dstSubresource, xoffset, yoffset, zoffset,
+        context->CopySubresourceRegion(dstTexture, dstSubresource, region.x, region.y, region.z,
                                        srcTexture, srcSubresource, NULL);
         return true;
     }
@@ -410,6 +413,61 @@ gl::Error TextureStorage11::copyToStorage(TextureStorage *destStorage)
     immediateContext->CopyResource(dest11->getResource(), getResource());
 
     dest11->invalidateSwizzleCache();
+
+    return gl::Error(GL_NO_ERROR);
+}
+
+gl::Error TextureStorage11::setData(const gl::ImageIndex &index, const gl::Box &destBox, GLenum internalFormat, GLenum type,
+                                    const gl::PixelUnpackState &unpack, const uint8_t *pixelData)
+{
+    ID3D11Resource *resource = getResource();
+    ASSERT(resource);
+
+    UINT destSubresource = getSubresourceIndex(index);
+
+    const gl::InternalFormat &internalFormatInfo = gl::GetInternalFormatInfo(internalFormat);
+
+    // TODO(jmadill): Handle compressed formats
+    // Compressed formats have different load syntax, so we'll have to handle them with slightly
+    // different logic. Will implemnent this in a follow-up patch, and ensure we do not use SetData
+    // with compressed formats in the calling logic.
+    ASSERT(!internalFormatInfo.compressed);
+
+    UINT srcRowPitch = internalFormatInfo.computeRowPitch(type, destBox.width, unpack.alignment);
+    UINT srcDepthPitch = internalFormatInfo.computeDepthPitch(type, destBox.width, destBox.height, unpack.alignment);
+
+    D3D11_BOX destD3DBox;
+    destD3DBox.left = destBox.x;
+    destD3DBox.right = destBox.x + destBox.width;
+    destD3DBox.top = destBox.y;
+    destD3DBox.bottom = destBox.y + destBox.height;
+    destD3DBox.front = 0;
+    destD3DBox.back = 1;
+
+    const d3d11::TextureFormat &d3d11Format = d3d11::GetTextureFormatInfo(internalFormat);
+    const d3d11::DXGIFormat &dxgiFormatInfo = d3d11::GetDXGIFormatInfo(d3d11Format.texFormat);
+
+    size_t outputPixelSize = dxgiFormatInfo.pixelBytes;
+
+    UINT bufferRowPitch = outputPixelSize * destBox.width;
+    UINT bufferDepthPitch = bufferRowPitch * destBox.height;
+
+    MemoryBuffer conversionBuffer;
+    if (!conversionBuffer.resize(bufferDepthPitch * destBox.depth))
+    {
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to allocate internal buffer.");
+    }
+
+    // TODO: fast path
+    LoadImageFunction loadFunction = d3d11Format.loadFunctions.at(type);
+    loadFunction(destBox.width, destBox.height, destBox.depth,
+                 pixelData, srcRowPitch, srcDepthPitch,
+                 conversionBuffer.data(), bufferRowPitch, bufferDepthPitch);
+
+    ID3D11DeviceContext *immediateContext = mRenderer->getDeviceContext();
+    immediateContext->UpdateSubresource(resource, destSubresource,
+                                        &destD3DBox, conversionBuffer.data(),
+                                        bufferRowPitch, bufferDepthPitch);
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -560,8 +618,10 @@ TextureStorage11_2D *TextureStorage11_2D::makeTextureStorage11_2D(TextureStorage
     return static_cast<TextureStorage11_2D*>(storage);
 }
 
-void TextureStorage11_2D::associateImage(Image11* image, int level, int layerTarget)
+void TextureStorage11_2D::associateImage(Image11* image, const gl::ImageIndex &index)
 {
+    GLint level = index.mipIndex;
+
     ASSERT(0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS);
 
     if (0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS)
@@ -570,8 +630,10 @@ void TextureStorage11_2D::associateImage(Image11* image, int level, int layerTar
     }
 }
 
-bool TextureStorage11_2D::isAssociatedImageValid(int level, int layerTarget, Image11* expectedImage)
+bool TextureStorage11_2D::isAssociatedImageValid(const gl::ImageIndex &index, Image11* expectedImage)
 {
+    GLint level = index.mipIndex;
+
     if (0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS)
     {
         // This validation check should never return false. It means the Image/TextureStorage association is broken.
@@ -584,8 +646,10 @@ bool TextureStorage11_2D::isAssociatedImageValid(int level, int layerTarget, Ima
 }
 
 // disassociateImage allows an Image to end its association with a Storage.
-void TextureStorage11_2D::disassociateImage(int level, int layerTarget, Image11* expectedImage)
+void TextureStorage11_2D::disassociateImage(const gl::ImageIndex &index, Image11* expectedImage)
 {
+    GLint level = index.mipIndex;
+
     ASSERT(0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS);
 
     if (0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS)
@@ -600,8 +664,10 @@ void TextureStorage11_2D::disassociateImage(int level, int layerTarget, Image11*
 }
 
 // releaseAssociatedImage prepares the Storage for a new Image association. It lets the old Image recover its data before ending the association.
-void TextureStorage11_2D::releaseAssociatedImage(int level, int layerTarget, Image11* incomingImage)
+void TextureStorage11_2D::releaseAssociatedImage(const gl::ImageIndex &index, Image11* incomingImage)
 {
+    GLint level = index.mipIndex;
+
     ASSERT(0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS);
 
     if (0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS)
@@ -903,8 +969,11 @@ TextureStorage11_Cube *TextureStorage11_Cube::makeTextureStorage11_Cube(TextureS
     return static_cast<TextureStorage11_Cube*>(storage);
 }
 
-void TextureStorage11_Cube::associateImage(Image11* image, int level, int layerTarget)
+void TextureStorage11_Cube::associateImage(Image11* image, const gl::ImageIndex &index)
 {
+    GLint level = index.mipIndex;
+    GLint layerTarget = index.layerIndex;
+
     ASSERT(0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS);
     ASSERT(0 <= layerTarget && layerTarget < 6);
 
@@ -917,8 +986,11 @@ void TextureStorage11_Cube::associateImage(Image11* image, int level, int layerT
     }
 }
 
-bool TextureStorage11_Cube::isAssociatedImageValid(int level, int layerTarget, Image11* expectedImage)
+bool TextureStorage11_Cube::isAssociatedImageValid(const gl::ImageIndex &index, Image11* expectedImage)
 {
+    GLint level = index.mipIndex;
+    GLint layerTarget = index.layerIndex;
+
     if (0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS)
     {
         if (0 <= layerTarget && layerTarget < 6)
@@ -934,8 +1006,11 @@ bool TextureStorage11_Cube::isAssociatedImageValid(int level, int layerTarget, I
 }
 
 // disassociateImage allows an Image to end its association with a Storage.
-void TextureStorage11_Cube::disassociateImage(int level, int layerTarget, Image11* expectedImage)
+void TextureStorage11_Cube::disassociateImage(const gl::ImageIndex &index, Image11* expectedImage)
 {
+    GLint level = index.mipIndex;
+    GLint layerTarget = index.layerIndex;
+
     ASSERT(0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS);
     ASSERT(0 <= layerTarget && layerTarget < 6);
 
@@ -954,8 +1029,11 @@ void TextureStorage11_Cube::disassociateImage(int level, int layerTarget, Image1
 }
 
 // releaseAssociatedImage prepares the Storage for a new Image association. It lets the old Image recover its data before ending the association.
-void TextureStorage11_Cube::releaseAssociatedImage(int level, int layerTarget, Image11* incomingImage)
+void TextureStorage11_Cube::releaseAssociatedImage(const gl::ImageIndex &index, Image11* incomingImage)
 {
+    GLint level = index.mipIndex;
+    GLint layerTarget = index.layerIndex;
+
     ASSERT(0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS);
     ASSERT(0 <= layerTarget && layerTarget < 6);
 
@@ -1294,8 +1372,10 @@ TextureStorage11_3D *TextureStorage11_3D::makeTextureStorage11_3D(TextureStorage
     return static_cast<TextureStorage11_3D*>(storage);
 }
 
-void TextureStorage11_3D::associateImage(Image11* image, int level, int layerTarget)
+void TextureStorage11_3D::associateImage(Image11* image, const gl::ImageIndex &index)
 {
+    GLint level = index.mipIndex;
+
     ASSERT(0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS);
 
     if (0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS)
@@ -1304,8 +1384,10 @@ void TextureStorage11_3D::associateImage(Image11* image, int level, int layerTar
     }
 }
 
-bool TextureStorage11_3D::isAssociatedImageValid(int level, int layerTarget, Image11* expectedImage)
+bool TextureStorage11_3D::isAssociatedImageValid(const gl::ImageIndex &index, Image11* expectedImage)
 {
+    GLint level = index.mipIndex;
+
     if (0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS)
     {
         // This validation check should never return false. It means the Image/TextureStorage association is broken.
@@ -1318,8 +1400,10 @@ bool TextureStorage11_3D::isAssociatedImageValid(int level, int layerTarget, Ima
 }
 
 // disassociateImage allows an Image to end its association with a Storage.
-void TextureStorage11_3D::disassociateImage(int level, int layerTarget, Image11* expectedImage)
+void TextureStorage11_3D::disassociateImage(const gl::ImageIndex &index, Image11* expectedImage)
 {
+    GLint level = index.mipIndex;
+
     ASSERT(0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS);
 
     if (0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS)
@@ -1334,8 +1418,10 @@ void TextureStorage11_3D::disassociateImage(int level, int layerTarget, Image11*
 }
 
 // releaseAssociatedImage prepares the Storage for a new Image association. It lets the old Image recover its data before ending the association.
-void TextureStorage11_3D::releaseAssociatedImage(int level, int layerTarget, Image11* incomingImage)
+void TextureStorage11_3D::releaseAssociatedImage(const gl::ImageIndex &index, Image11* incomingImage)
 {
+    GLint level = index.mipIndex;
+
     ASSERT((0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS));
 
     if (0 <= level && level < gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS)
@@ -1646,8 +1732,11 @@ TextureStorage11_2DArray *TextureStorage11_2DArray::makeTextureStorage11_2DArray
     return static_cast<TextureStorage11_2DArray*>(storage);
 }
 
-void TextureStorage11_2DArray::associateImage(Image11* image, int level, int layerTarget)
+void TextureStorage11_2DArray::associateImage(Image11* image, const gl::ImageIndex &index)
 {
+    GLint level = index.mipIndex;
+    GLint layerTarget = index.layerIndex;
+
     ASSERT(0 <= level && level < getLevelCount());
 
     if (0 <= level && level < getLevelCount())
@@ -1657,8 +1746,11 @@ void TextureStorage11_2DArray::associateImage(Image11* image, int level, int lay
     }
 }
 
-bool TextureStorage11_2DArray::isAssociatedImageValid(int level, int layerTarget, Image11* expectedImage)
+bool TextureStorage11_2DArray::isAssociatedImageValid(const gl::ImageIndex &index, Image11* expectedImage)
 {
+    GLint level = index.mipIndex;
+    GLint layerTarget = index.layerIndex;
+
     LevelLayerKey key(level, layerTarget);
 
     // This validation check should never return false. It means the Image/TextureStorage association is broken.
@@ -1668,8 +1760,11 @@ bool TextureStorage11_2DArray::isAssociatedImageValid(int level, int layerTarget
 }
 
 // disassociateImage allows an Image to end its association with a Storage.
-void TextureStorage11_2DArray::disassociateImage(int level, int layerTarget, Image11* expectedImage)
+void TextureStorage11_2DArray::disassociateImage(const gl::ImageIndex &index, Image11* expectedImage)
 {
+    GLint level = index.mipIndex;
+    GLint layerTarget = index.layerIndex;
+
     LevelLayerKey key(level, layerTarget);
 
     bool imageAssociationCorrect = (mAssociatedImages.find(key) != mAssociatedImages.end() && (mAssociatedImages[key] == expectedImage));
@@ -1682,8 +1777,11 @@ void TextureStorage11_2DArray::disassociateImage(int level, int layerTarget, Ima
 }
 
 // releaseAssociatedImage prepares the Storage for a new Image association. It lets the old Image recover its data before ending the association.
-void TextureStorage11_2DArray::releaseAssociatedImage(int level, int layerTarget, Image11* incomingImage)
+void TextureStorage11_2DArray::releaseAssociatedImage(const gl::ImageIndex &index, Image11* incomingImage)
 {
+    GLint level = index.mipIndex;
+    GLint layerTarget = index.layerIndex;
+
     LevelLayerKey key(level, layerTarget);
 
     ASSERT(mAssociatedImages.find(key) != mAssociatedImages.end());

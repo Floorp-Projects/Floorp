@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/quota/PersistenceType.h"
-#include "mozilla/dom/quota/StoragePrivilege.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsISupportsImpl.h"
@@ -29,12 +28,10 @@ class FileManager MOZ_FINAL
   friend class FileInfo;
 
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
-  typedef mozilla::dom::quota::StoragePrivilege StoragePrivilege;
 
   PersistenceType mPersistenceType;
   nsCString mGroup;
   nsCString mOrigin;
-  StoragePrivilege mPrivilege;
   nsString mDatabaseName;
 
   nsString mDirectoryPath;
@@ -45,6 +42,7 @@ class FileManager MOZ_FINAL
   // Protected by IndexedDatabaseManager::FileMutex()
   nsDataHashtable<nsUint64HashKey, FileInfo*> mFileInfos;
 
+  const bool mEnforcingQuota;
   bool mInvalidated;
 
 public:
@@ -64,8 +62,8 @@ public:
   FileManager(PersistenceType aPersistenceType,
               const nsACString& aGroup,
               const nsACString& aOrigin,
-              StoragePrivilege aPrivilege,
-              const nsAString& aDatabaseName);
+              const nsAString& aDatabaseName,
+              bool aEnforcingQuota);
 
   PersistenceType
   Type() const
@@ -85,16 +83,16 @@ public:
     return mOrigin;
   }
 
-  const StoragePrivilege&
-  Privilege() const
-  {
-    return mPrivilege;
-  }
-
   const nsAString&
   DatabaseName() const
   {
     return mDatabaseName;
+  }
+
+  bool
+  EnforcingQuota() const
+  {
+    return mEnforcingQuota;
   }
 
   bool

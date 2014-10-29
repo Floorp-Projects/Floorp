@@ -147,7 +147,7 @@ bool ProgramD3D::usesGeometryShader() const
     return usesPointSpriteEmulation();
 }
 
-bool ProgramD3D::load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream)
+gl::LinkResult ProgramD3D::load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream)
 {
     stream->readInt(&mShaderVersion);
 
@@ -201,14 +201,22 @@ bool ProgramD3D::load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream)
 
         unsigned int vertexShaderSize = stream->readInt<unsigned int>();
         const unsigned char *vertexShaderFunction = binary + stream->offset();
-        ShaderExecutable *shaderExecutable = mRenderer->loadExecutable(vertexShaderFunction, vertexShaderSize,
-                                                                       SHADER_VERTEX,
-                                                                       mTransformFeedbackLinkedVaryings,
-                                                                       (mTransformFeedbackBufferMode == GL_SEPARATE_ATTRIBS));
+
+        ShaderExecutable *shaderExecutable = NULL;
+        gl::Error error = mRenderer->loadExecutable(vertexShaderFunction, vertexShaderSize,
+                                                    SHADER_VERTEX,
+                                                    mTransformFeedbackLinkedVaryings,
+                                                    (mTransformFeedbackBufferMode == GL_SEPARATE_ATTRIBS),
+                                                    &shaderExecutable);
+        if (error.isError())
+        {
+            return gl::LinkResult(false, error);
+        }
+
         if (!shaderExecutable)
         {
             infoLog.append("Could not create vertex shader.");
-            return false;
+            return gl::LinkResult(false, gl::Error(GL_NO_ERROR));
         }
 
         // generated converted input layout
@@ -233,15 +241,20 @@ bool ProgramD3D::load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream)
 
         const size_t pixelShaderSize = stream->readInt<unsigned int>();
         const unsigned char *pixelShaderFunction = binary + stream->offset();
-        ShaderExecutable *shaderExecutable = mRenderer->loadExecutable(pixelShaderFunction, pixelShaderSize,
-                                                                       SHADER_PIXEL,
-                                                                       mTransformFeedbackLinkedVaryings,
-                                                                       (mTransformFeedbackBufferMode == GL_SEPARATE_ATTRIBS));
+        ShaderExecutable *shaderExecutable = NULL;
+        gl::Error error = mRenderer->loadExecutable(pixelShaderFunction, pixelShaderSize, SHADER_PIXEL,
+                                                    mTransformFeedbackLinkedVaryings,
+                                                    (mTransformFeedbackBufferMode == GL_SEPARATE_ATTRIBS),
+                                                    &shaderExecutable);
+        if (error.isError())
+        {
+            return gl::LinkResult(false, error);
+        }
 
         if (!shaderExecutable)
         {
             infoLog.append("Could not create pixel shader.");
-            return false;
+            return gl::LinkResult(false, gl::Error(GL_NO_ERROR));
         }
 
         // add new binary
@@ -255,15 +268,19 @@ bool ProgramD3D::load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream)
     if (geometryShaderSize > 0)
     {
         const unsigned char *geometryShaderFunction = binary + stream->offset();
-        mGeometryExecutable = mRenderer->loadExecutable(geometryShaderFunction, geometryShaderSize,
-                                                        SHADER_GEOMETRY,
-                                                        mTransformFeedbackLinkedVaryings,
-                                                        (mTransformFeedbackBufferMode == GL_SEPARATE_ATTRIBS));
+        gl::Error error = mRenderer->loadExecutable(geometryShaderFunction, geometryShaderSize, SHADER_GEOMETRY,
+                                                    mTransformFeedbackLinkedVaryings,
+                                                    (mTransformFeedbackBufferMode == GL_SEPARATE_ATTRIBS),
+                                                    &mGeometryExecutable);
+        if (error.isError())
+        {
+            return gl::LinkResult(false, error);
+        }
 
         if (!mGeometryExecutable)
         {
             infoLog.append("Could not create geometry shader.");
-            return false;
+            return gl::LinkResult(false, gl::Error(GL_NO_ERROR));
         }
         stream->skip(geometryShaderSize);
     }
@@ -275,13 +292,13 @@ bool ProgramD3D::load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream)
     if (memcmp(&identifier, &binaryIdentifier, sizeof(GUID)) != 0)
     {
         infoLog.append("Invalid program binary.");
-        return false;
+        return gl::LinkResult(false, gl::Error(GL_NO_ERROR));
     }
 
-    return true;
+    return gl::LinkResult(true, gl::Error(GL_NO_ERROR));
 }
 
-bool ProgramD3D::save(gl::BinaryOutputStream *stream)
+gl::Error ProgramD3D::save(gl::BinaryOutputStream *stream)
 {
     stream->writeInt(mShaderVersion);
 
@@ -367,12 +384,12 @@ bool ProgramD3D::save(gl::BinaryOutputStream *stream)
     }
 
     GUID binaryIdentifier = mRenderer->getAdapterIdentifier();
-    stream->writeBytes(reinterpret_cast<unsigned char*>(&binaryIdentifier),  sizeof(GUID));
+    stream->writeBytes(reinterpret_cast<unsigned char*>(&binaryIdentifier), sizeof(GUID));
 
-    return true;
+    return gl::Error(GL_NO_ERROR);
 }
 
-ShaderExecutable *ProgramD3D::getPixelExecutableForFramebuffer(const gl::Framebuffer *fbo)
+gl::Error ProgramD3D::getPixelExecutableForFramebuffer(const gl::Framebuffer *fbo, ShaderExecutable **outExecutable)
 {
     std::vector<GLenum> outputs;
 
@@ -392,16 +409,17 @@ ShaderExecutable *ProgramD3D::getPixelExecutableForFramebuffer(const gl::Framebu
         }
     }
 
-    return getPixelExecutableForOutputLayout(outputs);
+    return getPixelExecutableForOutputLayout(outputs, outExecutable);
 }
 
-ShaderExecutable *ProgramD3D::getPixelExecutableForOutputLayout(const std::vector<GLenum> &outputSignature)
+gl::Error ProgramD3D::getPixelExecutableForOutputLayout(const std::vector<GLenum> &outputSignature, ShaderExecutable **outExectuable)
 {
     for (size_t executableIndex = 0; executableIndex < mPixelExecutables.size(); executableIndex++)
     {
         if (mPixelExecutables[executableIndex]->matchesSignature(outputSignature))
         {
-            return mPixelExecutables[executableIndex]->shaderExecutable();
+            *outExectuable = mPixelExecutables[executableIndex]->shaderExecutable();
+            return gl::Error(GL_NO_ERROR);
         }
     }
 
@@ -410,10 +428,15 @@ ShaderExecutable *ProgramD3D::getPixelExecutableForOutputLayout(const std::vecto
 
     // Generate new pixel executable
     gl::InfoLog tempInfoLog;
-    ShaderExecutable *pixelExecutable = mRenderer->compileToExecutable(tempInfoLog, finalPixelHLSL, SHADER_PIXEL,
-                                                                       mTransformFeedbackLinkedVaryings,
-                                                                       (mTransformFeedbackBufferMode == GL_SEPARATE_ATTRIBS),
-                                                                       mPixelWorkarounds);
+    ShaderExecutable *pixelExecutable = NULL;
+    gl::Error error = mRenderer->compileToExecutable(tempInfoLog, finalPixelHLSL, SHADER_PIXEL,
+                                                     mTransformFeedbackLinkedVaryings,
+                                                     (mTransformFeedbackBufferMode == GL_SEPARATE_ATTRIBS),
+                                                     mPixelWorkarounds, &pixelExecutable);
+    if (error.isError())
+    {
+        return error;
+    }
 
     if (!pixelExecutable)
     {
@@ -426,10 +449,11 @@ ShaderExecutable *ProgramD3D::getPixelExecutableForOutputLayout(const std::vecto
         mPixelExecutables.push_back(new PixelExecutable(outputSignature, pixelExecutable));
     }
 
-    return pixelExecutable;
+    *outExectuable = pixelExecutable;
+    return gl::Error(GL_NO_ERROR);
 }
 
-ShaderExecutable *ProgramD3D::getVertexExecutableForInputLayout(const gl::VertexFormat inputLayout[gl::MAX_VERTEX_ATTRIBS])
+gl::Error ProgramD3D::getVertexExecutableForInputLayout(const gl::VertexFormat inputLayout[gl::MAX_VERTEX_ATTRIBS], ShaderExecutable **outExectuable)
 {
     GLenum signature[gl::MAX_VERTEX_ATTRIBS];
     getInputLayoutSignature(inputLayout, signature);
@@ -438,7 +462,8 @@ ShaderExecutable *ProgramD3D::getVertexExecutableForInputLayout(const gl::Vertex
     {
         if (mVertexExecutables[executableIndex]->matchesSignature(signature))
         {
-            return mVertexExecutables[executableIndex]->shaderExecutable();
+            *outExectuable = mVertexExecutables[executableIndex]->shaderExecutable();
+            return gl::Error(GL_NO_ERROR);
         }
     }
 
@@ -447,11 +472,16 @@ ShaderExecutable *ProgramD3D::getVertexExecutableForInputLayout(const gl::Vertex
 
     // Generate new vertex executable
     gl::InfoLog tempInfoLog;
-    ShaderExecutable *vertexExecutable = mRenderer->compileToExecutable(tempInfoLog, finalVertexHLSL,
-                                                                        SHADER_VERTEX,
-                                                                        mTransformFeedbackLinkedVaryings,
-                                                                        (mTransformFeedbackBufferMode == GL_SEPARATE_ATTRIBS),
-                                                                        mVertexWorkarounds);
+    ShaderExecutable *vertexExecutable = NULL;
+    gl::Error error = mRenderer->compileToExecutable(tempInfoLog, finalVertexHLSL, SHADER_VERTEX,
+                                                     mTransformFeedbackLinkedVaryings,
+                                                     (mTransformFeedbackBufferMode == GL_SEPARATE_ATTRIBS),
+                                                     mVertexWorkarounds, &vertexExecutable);
+    if (error.isError())
+    {
+        return error;
+    }
+
     if (!vertexExecutable)
     {
         std::vector<char> tempCharBuffer(tempInfoLog.getLength()+3);
@@ -463,39 +493,55 @@ ShaderExecutable *ProgramD3D::getVertexExecutableForInputLayout(const gl::Vertex
         mVertexExecutables.push_back(new VertexExecutable(inputLayout, signature, vertexExecutable));
     }
 
-    return vertexExecutable;
+    *outExectuable = vertexExecutable;
+    return gl::Error(GL_NO_ERROR);
 }
 
-bool ProgramD3D::compileProgramExecutables(gl::InfoLog &infoLog, gl::Shader *fragmentShader, gl::Shader *vertexShader,
-                                           int registers)
+gl::LinkResult ProgramD3D::compileProgramExecutables(gl::InfoLog &infoLog, gl::Shader *fragmentShader, gl::Shader *vertexShader,
+                                                     int registers)
 {
     ShaderD3D *vertexShaderD3D = ShaderD3D::makeShaderD3D(vertexShader->getImplementation());
     ShaderD3D *fragmentShaderD3D = ShaderD3D::makeShaderD3D(fragmentShader->getImplementation());
 
     gl::VertexFormat defaultInputLayout[gl::MAX_VERTEX_ATTRIBS];
     GetDefaultInputLayoutFromShader(vertexShader->getActiveAttributes(), defaultInputLayout);
-    ShaderExecutable *defaultVertexExecutable = getVertexExecutableForInputLayout(defaultInputLayout);
+    ShaderExecutable *defaultVertexExecutable = NULL;
+    gl::Error error = getVertexExecutableForInputLayout(defaultInputLayout, &defaultVertexExecutable);
+    if (error.isError())
+    {
+        return gl::LinkResult(false, error);
+    }
 
     std::vector<GLenum> defaultPixelOutput = GetDefaultOutputLayoutFromShader(getPixelShaderKey());
-    ShaderExecutable *defaultPixelExecutable = getPixelExecutableForOutputLayout(defaultPixelOutput);
+    ShaderExecutable *defaultPixelExecutable = NULL;
+    error = getPixelExecutableForOutputLayout(defaultPixelOutput, &defaultPixelExecutable);
+    if (error.isError())
+    {
+        return gl::LinkResult(false, error);
+    }
 
     if (usesGeometryShader())
     {
         std::string geometryHLSL = mDynamicHLSL->generateGeometryShaderHLSL(registers, fragmentShaderD3D, vertexShaderD3D);
 
-        mGeometryExecutable = mRenderer->compileToExecutable(infoLog, geometryHLSL,
-                                                             SHADER_GEOMETRY, mTransformFeedbackLinkedVaryings,
-                                                             (mTransformFeedbackBufferMode == GL_SEPARATE_ATTRIBS),
-                                                             ANGLE_D3D_WORKAROUND_NONE);
+
+        error = mRenderer->compileToExecutable(infoLog, geometryHLSL, SHADER_GEOMETRY, mTransformFeedbackLinkedVaryings,
+                                               (mTransformFeedbackBufferMode == GL_SEPARATE_ATTRIBS),
+                                               ANGLE_D3D_WORKAROUND_NONE, &mGeometryExecutable);
+        if (error.isError())
+        {
+            return gl::LinkResult(false, error);
+        }
     }
 
-    return (defaultVertexExecutable && defaultPixelExecutable && (!usesGeometryShader() || mGeometryExecutable));
+    bool linkSuccess = (defaultVertexExecutable && defaultPixelExecutable && (!usesGeometryShader() || mGeometryExecutable));
+    return gl::LinkResult(linkSuccess, gl::Error(GL_NO_ERROR));
 }
 
-bool ProgramD3D::link(gl::InfoLog &infoLog, gl::Shader *fragmentShader, gl::Shader *vertexShader,
-                      const std::vector<std::string> &transformFeedbackVaryings, GLenum transformFeedbackBufferMode,
-                      int *registers, std::vector<gl::LinkedVarying> *linkedVaryings,
-                      std::map<int, gl::VariableLocation> *outputVariables, const gl::Caps &caps)
+gl::LinkResult ProgramD3D::link(gl::InfoLog &infoLog, gl::Shader *fragmentShader, gl::Shader *vertexShader,
+                                const std::vector<std::string> &transformFeedbackVaryings, GLenum transformFeedbackBufferMode,
+                                int *registers, std::vector<gl::LinkedVarying> *linkedVaryings,
+                                std::map<int, gl::VariableLocation> *outputVariables, const gl::Caps &caps)
 {
     ShaderD3D *vertexShaderD3D = ShaderD3D::makeShaderD3D(vertexShader->getImplementation());
     ShaderD3D *fragmentShaderD3D = ShaderD3D::makeShaderD3D(fragmentShader->getImplementation());
@@ -515,24 +561,24 @@ bool ProgramD3D::link(gl::InfoLog &infoLog, gl::Shader *fragmentShader, gl::Shad
 
     if (*registers < 0)
     {
-        return false;
+        return gl::LinkResult(false, gl::Error(GL_NO_ERROR));
     }
 
     if (!gl::ProgramBinary::linkVaryings(infoLog, fragmentShader, vertexShader))
     {
-        return false;
+        return gl::LinkResult(false, gl::Error(GL_NO_ERROR));
     }
 
     if (!mDynamicHLSL->generateShaderLinkHLSL(infoLog, *registers, packing, mPixelHLSL, mVertexHLSL,
                                               fragmentShaderD3D, vertexShaderD3D, transformFeedbackVaryings,
                                               linkedVaryings, outputVariables, &mPixelShaderKey, &mUsesFragDepth))
     {
-        return false;
+        return gl::LinkResult(false, gl::Error(GL_NO_ERROR));
     }
 
     mUsesPointSize = vertexShaderD3D->usesPointSize();
 
-    return true;
+    return gl::LinkResult(true, gl::Error(GL_NO_ERROR));
 }
 
 void ProgramD3D::getInputLayoutSignature(const gl::VertexFormat inputLayout[], GLenum signature[]) const

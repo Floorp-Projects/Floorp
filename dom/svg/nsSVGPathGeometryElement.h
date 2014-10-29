@@ -70,6 +70,12 @@ public:
   virtual bool IsMarkable();
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
 
+  /**
+   * A method that can be faster than using a Moz2D Path and calling GetBounds/
+   * GetStrokedBounds on it.  It also helps us avoid rounding error for simple
+   * shapes and simple transforms where the Moz2D Path backends can fail to
+   * produce the clean integer bounds that content authors expect in some cases.
+   */
   virtual bool GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
                                  const Matrix& aTransform) {
     return false;

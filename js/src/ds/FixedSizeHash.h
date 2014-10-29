@@ -43,13 +43,14 @@ class FixedSizeHashSet
 
     static const size_t NumHashes = HashPolicy::NumHashes;
 
+    static_assert(Capacity > 0, "an empty fixed-size hash set is meaningless");
+
   public:
     typedef typename HashPolicy::Lookup Lookup;
 
     FixedSizeHashSet()
       : entries(), lastOperations(), numOperations(0)
     {
-        JS_STATIC_ASSERT(Capacity > 0);
         MOZ_ASSERT(HashPolicy::isCleared(entries[0]));
     }
 

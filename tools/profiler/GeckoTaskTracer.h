@@ -8,6 +8,7 @@
 #define GECKO_TASK_TRACER_H
 
 #include "nsCOMPtr.h"
+#include "mozilla/TimeStamp.h"
 
 /**
  * TaskTracer provides a way to trace the correlation between different tasks
@@ -63,7 +64,7 @@ public:
 // followed by corresponding parameters.
 void AddLabel(const char* aFormat, ...);
 
-void StartLogging();
+void StartLogging(mozilla::TimeStamp aStartTime);
 void StopLogging();
 nsTArray<nsCString>* GetLoggedData(TimeStamp aStartTime);
 
