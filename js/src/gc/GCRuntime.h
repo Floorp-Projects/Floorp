@@ -53,22 +53,36 @@ class ChunkPool
     size_t count() const { return count_; }
 
     /* Must be called with the GC lock taken. */
-    inline Chunk *get(JSRuntime *rt);
+    Chunk *pop();
 
     /* Must be called either during the GC or with the GC lock taken. */
-    inline void put(Chunk *chunk);
+    void push(Chunk *chunk);
+
+    /* Must be called with the GC lock taken. */
+    Chunk *remove(Chunk *chunk);
+
+#ifdef DEBUG
+    bool contains(Chunk *chunk) const;
+    bool verify() const;
+#endif
 
     class Enum {
       public:
         explicit Enum(ChunkPool &pool) : pool(pool), chunkp(&pool.head_) {}
         bool empty() { return !*chunkp; }
         Chunk *front();
-        inline void popFront();
-        inline void removeAndPopFront();
+        void popFront();
+        void removeAndPopFront();
       private:
         ChunkPool &pool;
         Chunk **chunkp;
     };
+
+  private:
+    // ChunkPool controls external resources with interdependencies on the
+    // JSRuntime and related structs, so must not be copied.
+    ChunkPool(const ChunkPool &) MOZ_DELETE;
+    ChunkPool operator=(const ChunkPool &) MOZ_DELETE;
 };
 
 // Performs extra allocation off the main thread so that when memory is
