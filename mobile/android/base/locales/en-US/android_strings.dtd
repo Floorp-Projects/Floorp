@@ -360,10 +360,10 @@ size. -->
 
 <!ENTITY reading_list_added "Page added to your Reading List">
 
-<!-- Localization note (reading_list_time_minutes) : This string is used in the "Reading List"
+<!-- Localization note (reading_list_time_minutes2) : This string is used in the "Reading List"
      panel on the home page to give the user an estimate of how many minutes it will take to
      read an article. The word "minute" should be abbreviated if possible. -->
-<!ENTITY reading_list_time_minutes "&formatD;min">
+<!ENTITY reading_list_time_minutes2 "&formatD; min">
 <!ENTITY reading_list_time_over_an_hour "Over an hour">
 
 <!-- Localization note : These strings are used as alternate text for accessibility.
