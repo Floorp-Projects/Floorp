@@ -297,6 +297,10 @@ const kEventConstructors = {
                                                          return new MozNFCPeerEvent(aName, aProps);
                                                        },
                                              },
+  MozNFCTagEvent:                            { create: function (aName, aProps) {
+                                                         return new MozNFCTagEvent(aName, aProps);
+                                                       },
+                                             },
   MozOtaStatusEvent:                         { create: function (aName, aProps) {
                                                           return new MozOtaStatusEvent(aName, aProps);
                                                        },
@@ -466,6 +470,38 @@ const kEventConstructors = {
                                              },
   TransitionEvent:                           { create: function (aName, aProps) {
                                                          return new TransitionEvent(aName, aProps);
+                                                       },
+                                             },
+  TVCurrentChannelChangedEvent:              { create: function (aName, aProps) {
+                                                         return new TVCurrentChannelChangedEvent(aName, aProps);
+                                                       },
+                                             },
+  TVCurrentProgramChangedEvent:              { create: function (aName, aProps) {
+                                                         return new TVCurrentProgramChangedEvent(aName, aProps);
+                                                       },
+                                             },
+  TVCurrentSourceChangedEvent:               { create: function (aName, aProps) {
+                                                         return new TVCurrentSourceChangedEvent(aName, aProps);
+                                                       },
+                                             },
+  TVEITBroadcastedEvent:                     { create: function (aName, aProps) {
+                                                         return new TVEITBroadcastedEvent(aName, aProps);
+                                                       },
+                                             },
+  TVParentalControlChangedEvent:             { create: function (aName, aProps) {
+                                                         return new TVParentalControlChangedEvent(aName, aProps);
+                                                       },
+                                             },
+  TVProtectionStateChangedEvent:             { create: function (aName, aProps) {
+                                                         return new TVProtectionStateChangedEvent(aName, aProps);
+                                                       },
+                                             },
+  TVScanningStateChangedEvent:               { create: function (aName, aProps) {
+                                                         return new TVScanningStateChangedEvent(aName, aProps);
+                                                       },
+                                             },
+  TVTunerChangedEvent:                       { create: function (aName, aProps) {
+                                                         return new TVTunerChangedEvent(aName, aProps);
                                                        },
                                              },
   UIEvent:                                   { create: function (aName, aProps) {

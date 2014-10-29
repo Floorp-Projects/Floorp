@@ -30,6 +30,7 @@
 #include "nsDOMTokenList.h"
 #include "nsCaret.h"
 #include "mozilla/dom/CustomEvent.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 
@@ -425,11 +426,24 @@ TouchCaret::IsDisplayable()
     return false;
   }
 
+  dom::Element* editingHost = focusFrame->GetContent()->GetEditingHost();
+  if (!editingHost) {
+    TOUCHCARET_LOG("Cannot get editing host!");
+    return false;
+  }
+
+  if (!nsContentUtils::HasNonEmptyTextContent(
+         editingHost, nsContentUtils::eRecurseIntoChildren)) {
+    TOUCHCARET_LOG("The content is empty!");
+    return false;
+  }
+
   if (!IsCaretShowingInScrollFrame()) {
     TOUCHCARET_LOG("Caret does not show in the scrollable frame!");
     return false;
   }
 
+  TOUCHCARET_LOG("Touch caret is displayable!");
   return true;
 }
 

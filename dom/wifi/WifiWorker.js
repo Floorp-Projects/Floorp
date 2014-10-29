@@ -1591,15 +1591,10 @@ function getNetworkKey(network)
 }
 
 function getMode(flags) {
-  if (!flags)
-    return -1;
-
-  if (/\[ESS/.test(flags))
-    return MODE_ESS;
   if (/\[IBSS/.test(flags))
     return MODE_IBSS;
 
-  return -1;
+  return MODE_ESS;
 }
 
 function getKeyManagement(flags) {
