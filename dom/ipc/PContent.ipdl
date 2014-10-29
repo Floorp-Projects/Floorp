@@ -25,6 +25,7 @@ include protocol PImageBridge;
 include protocol PMemoryReportRequest;
 include protocol PMobileConnection;
 include protocol PNecko;
+include protocol PPrinting;
 include protocol PScreenManager;
 include protocol PSharedBufferManager;
 include protocol PSms;
@@ -349,6 +350,7 @@ prio(normal upto high) intr protocol PContent
     manages PMemoryReportRequest;
     manages PMobileConnection;
     manages PNecko;
+    manages PPrinting;
     manages PScreenManager;
     manages PSms;
     manages PSpeechSynthesis;
@@ -552,6 +554,8 @@ parent:
     PMobileConnection(uint32_t clientId);
 
     PNecko();
+
+    PPrinting();
 
     prio(high) sync PScreenManager()
         returns (uint32_t numberOfScreens,
