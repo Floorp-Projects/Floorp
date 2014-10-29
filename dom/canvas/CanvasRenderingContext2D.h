@@ -713,6 +713,9 @@ protected:
    */
   void UpdateFilter();
 
+  nsLayoutUtils::SurfaceFromElementResult
+    CachedSurfaceFromElement(Element* aElement);
+
   void DrawImage(const HTMLImageOrCanvasOrVideoElement &imgElt,
                  double sx, double sy, double sw, double sh,
                  double dx, double dy, double dw, double dh,
