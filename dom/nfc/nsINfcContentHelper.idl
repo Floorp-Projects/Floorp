@@ -7,24 +7,52 @@
 
 interface nsIVariant;
 
-[scriptable, uuid(e81cc1ac-6f0b-4581-a9fb-7ee47ed0158e)]
+[scriptable, uuid(44eb02f4-6eba-4c12-8ed1-c142513776c9)]
+interface nsINfcTagEvent : nsISupports
+{
+  readonly attribute nsIVariant techList;
+};
+
+[scriptable, uuid(8d77d653-f76a-4a21-ae3f-c4cc6074d8ec)]
 interface nsINfcDOMEventTarget : nsISupports
 {
+  /**
+   * Callback function used to notify tagfound.
+   *
+   * @param sessionToken
+   *        SessionToken received from parent process
+   * @param event
+   *        nsINfcTagFoundEvent received from parent process.
+   * @param ndefRecords
+   *        NDEF records pre-read during tag-discovered.
+   */
+  void notifyTagFound(in DOMString sessionToken,
+                      in nsINfcTagEvent event,
+                      in nsIVariant ndefRecords);
+
+  /**
+   * Callback function used to notify taglost.
+   *
+   * @param sessionToken
+   *        SessionToken received from parent process
+   */
+  void notifyTagLost(in DOMString sessionToken);
+
   /**
    * Callback function used to notify peerready.
    *
    * @param sessionToken
-   *        SessionToken received from Chrome process
+   *        SessionToken received from parent process
    */
-   void notifyPeerReady(in DOMString sessionToken);
+  void notifyPeerReady(in DOMString sessionToken);
 
   /**
    * Callback function used to notify peerlost.
    *
    * @param sessionToken
-   *        SessionToken received from Chrome process
+   *        SessionToken received from parent process
    */
-   void notifyPeerLost(in DOMString sessionToken);
+  void notifyPeerLost(in DOMString sessionToken);
 };
 
 [scriptable, uuid(cb9c934d-a7fa-422b-bcc1-4ac39741e6ec)]
@@ -44,23 +72,23 @@ interface nsINfcContentHelper : nsISupports
   nsIDOMDOMRequest connect(in nsIDOMWindow window, in unsigned long techType, in DOMString sessionToken);
   nsIDOMDOMRequest close(in nsIDOMWindow window, in DOMString sessionToken);
 
- /**
-  * Initiate Send file operation
-  *
-  * @param window
-  *        Current window
-  *
-  * @param blob
-  *        Raw data of the file to be sent. This object represents a file-like
-  *        (nsIDOMFile) object of immutable, raw data. The blob data needs
-  *        to be 'object wrapped' before calling this interface.
-  *
-  * @param sessionToken
-  *        Current token
-  *
-  * Returns DOMRequest, if initiation of send file operation is successful
-  * then 'onsuccess' is called else 'onerror'
-  */
+  /**
+   * Initiate send file operation.
+   *
+   * @param window
+   *        Current window
+   *
+   * @param blob
+   *        Raw data of the file to be sent. This object represents a file-like
+   *        (nsIDOMFile) object of immutable, raw data. The blob data needs
+   *        to be 'object wrapped' before calling this interface.
+   *
+   * @param sessionToken
+   *        Current token
+   *
+   * Returns DOMRequest, if initiation of send file operation is successful
+   * then 'onsuccess' is called else 'onerror'
+   */
   nsIDOMDOMRequest sendFile(in nsIDOMWindow window,
                             in jsval blob,
                             in DOMString sessionToken);
@@ -72,66 +100,66 @@ interface nsINfcContentHelper : nsISupports
    */
   void registerEventTarget(in nsINfcDOMEventTarget target);
 
- /**
-  * Register the given application id with Chrome process
-  *
-  * @param window
-  *        Current window
-  *
-  * @param appId
-  *        Application ID to be registered
-  */
+  /**
+   * Register the given application id with parent process
+   *
+   * @param window
+   *        Current window
+   *
+   * @param appId
+   *        Application ID to be registered
+   */
   void registerTargetForPeerReady(in nsIDOMWindow window,
                                   in unsigned long appId);
 
- /**
-  * Unregister the given application id with Chrome process
-  *
-  * @param window
-  *        Current window
-  *
-  * @param appId
-  *        Application ID to be registered
-  */
+  /**
+   * Unregister the given application id with parent process
+   *
+   * @param window
+   *        Current window
+   *
+   * @param appId
+   *        Application ID to be registered
+   */
   void unregisterTargetForPeerReady(in nsIDOMWindow window,
                                     in unsigned long appId);
 
- /**
-  * Checks if the given application's id is a registered peer target (with the Chrome process)
-  *
-  * @param window
-  *        Current window
-  *
-  * @param appId
-  *        Application ID to be updated with Chrome process
-  *
-  * Returns DOMRequest, if appId is registered then 'onsuccess' is called else 'onerror'
-  */
+  /**
+   * Checks if the given application's id is a registered peer target (with the parent process)
+   *
+   * @param window
+   *        Current window
+   *
+   * @param appId
+   *        Application ID to be updated with parent process
+   *
+   * Returns DOMRequest, if appId is registered then 'onsuccess' is called else 'onerror'
+   */
   nsIDOMDOMRequest checkP2PRegistration(in nsIDOMWindow window, in unsigned long appId);
 
- /**
-  * Notify the Chrome process that user has accepted to share nfc message on P2P UI
-  *
-  * @param window
-  *        Current window
-  *
-  * @param appId
-  *        Application ID that is capable of handling NFC_EVENT_PEER_READY event
-  */
+  /**
+   * Notify the parent process that user has accepted to share nfc message on P2P UI
+   *
+   * @param window
+   *        Current window
+   *
+   * @param appId
+   *        Application ID that is capable of handling NFC_EVENT_PEER_READY event
+   */
   void notifyUserAcceptedP2P(in nsIDOMWindow window, in unsigned long appId);
 
- /**
-  * Notify the status of sendFile operation to Chrome process
-  *
-  * @param window
-  *        Current window
-  *
-  * @param status
-  *        Status of sendFile operation
-  *
-  * @param requestId
-  *        Request ID of SendFile DOM Request
-  */
+  /**
+   * Notify the status of sendFile operation to parent process
+   *
+   * @param window
+   *        Current window
+   *
+   * @param status
+   *        Status of sendFile operation
+   *
+   * @param requestId
+   *        Request ID of SendFile DOM Request
+   */
   void notifySendFileStatus(in nsIDOMWindow window,
                             in octet status,
                             in DOMString requestId);

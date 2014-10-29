@@ -1985,6 +1985,10 @@ scriptableRemoveProperty(NPObject* npobj, NPIdentifier name)
   for (int i = 0; i < int(ARRAY_LENGTH(sPluginPropertyIdentifiers)); i++) {
     if (name == sPluginPropertyIdentifiers[i]) {
       NPN_ReleaseVariantValue(&sPluginPropertyValues[i]);
+
+      // Avoid double frees (see test_propertyAndMethod.html, which deletes a
+      // property that doesn't exist).
+      VOID_TO_NPVARIANT(sPluginPropertyValues[i]);
       return true;
     }
   }

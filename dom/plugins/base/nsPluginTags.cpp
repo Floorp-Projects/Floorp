@@ -66,10 +66,14 @@ GetStatePrefNameForPlugin(nsPluginTag* aTag)
 
 /* nsPluginTag */
 
+uint32_t nsPluginTag::sNextId;
+
 nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo,
                          int64_t aLastModifiedTime,
                          bool fromExtension)
-  : mName(aPluginInfo->fName),
+  : mId(sNextId++),
+    mContentProcessRunningCount(0),
+    mName(aPluginInfo->fName),
     mDescription(aPluginInfo->fDescription),
     mLibrary(nullptr),
     mIsJavaPlugin(false),
@@ -103,7 +107,9 @@ nsPluginTag::nsPluginTag(const char* aName,
                          int64_t aLastModifiedTime,
                          bool fromExtension,
                          bool aArgsAreUTF8)
-  : mName(aName),
+  : mId(sNextId++),
+    mContentProcessRunningCount(0),
+    mName(aName),
     mDescription(aDescription),
     mLibrary(nullptr),
     mIsJavaPlugin(false),
@@ -122,6 +128,39 @@ nsPluginTag::nsPluginTag(const char* aName,
   if (!aArgsAreUTF8)
     EnsureMembersAreUTF8();
   FixupVersion();
+}
+
+nsPluginTag::nsPluginTag(uint32_t aId,
+                         const char* aName,
+                         const char* aDescription,
+                         const char* aFileName,
+                         const char* aFullPath,
+                         const char* aVersion,
+                         nsTArray<nsCString> aMimeTypes,
+                         nsTArray<nsCString> aMimeDescriptions,
+                         nsTArray<nsCString> aExtensions,
+                         bool aIsJavaPlugin,
+                         bool aIsFlashPlugin,
+                         int64_t aLastModifiedTime,
+                         bool aFromExtension)
+  : mId(aId),
+    mContentProcessRunningCount(0),
+    mName(aName),
+    mDescription(aDescription),
+    mMimeTypes(aMimeTypes),
+    mMimeDescriptions(aMimeDescriptions),
+    mExtensions(aExtensions),
+    mLibrary(nullptr),
+    mIsJavaPlugin(aIsJavaPlugin),
+    mIsFlashPlugin(aIsFlashPlugin),
+    mFileName(aFileName),
+    mVersion(aVersion),
+    mLastModifiedTime(aLastModifiedTime),
+    mNiceFileName(),
+    mCachedBlocklistState(nsIBlocklistService::STATE_NOT_BLOCKED),
+    mCachedBlocklistStateValid(false),
+    mIsFromExtension(aFromExtension)
+{
 }
 
 nsPluginTag::~nsPluginTag()

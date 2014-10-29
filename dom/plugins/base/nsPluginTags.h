@@ -51,6 +51,19 @@ public:
               int64_t aLastModifiedTime,
               bool fromExtension,
               bool aArgsAreUTF8 = false);
+  nsPluginTag(uint32_t aId,
+              const char* aName,
+              const char* aDescription,
+              const char* aFileName,
+              const char* aFullPath,
+              const char* aVersion,
+              nsTArray<nsCString> aMimeTypes,
+              nsTArray<nsCString> aMimeDescriptions,
+              nsTArray<nsCString> aExtensions,
+              bool aIsJavaPlugin,
+              bool aIsFlashPlugin,
+              int64_t aLastModifiedTime,
+              bool aFromExtension);
 
   void TryUnloadPlugin(bool inShutdown);
 
@@ -74,6 +87,10 @@ public:
   bool IsFromExtension() const;
 
   nsRefPtr<nsPluginTag> mNext;
+  uint32_t      mId;
+
+  // Number of PluginModuleParents living in all content processes.
+  size_t        mContentProcessRunningCount;
   nsCString     mName; // UTF-8
   nsCString     mDescription; // UTF-8
   nsTArray<nsCString> mMimeTypes; // UTF-8
@@ -106,6 +123,8 @@ private:
                 uint32_t aVariantCount);
   nsresult EnsureMembersAreUTF8();
   void FixupVersion();
+
+  static uint32_t sNextId;
 };
 
 #endif // nsPluginTags_h_

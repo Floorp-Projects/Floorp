@@ -105,7 +105,6 @@ var tests = [
     [ 'bug106855-1.html' , 'bug106855-1-ref.html' ] ,
     [ 'bug106855-2.html' , 'bug106855-1-ref.html' ] ,
     [ 'bug389321-2.html' , 'bug389321-2-ref.html' ] ,
-    [ 'bug389321-3.html' , 'bug389321-3-ref.html' ] ,
     [ 'bug613807-1.html' , 'bug613807-1-ref.html' ] ,
     [ 'bug1082486-1.html', 'bug1082486-1-ref.html'] ,
     [ 'bug1082486-2.html', 'bug1082486-2-ref.html'] ,
@@ -116,6 +115,7 @@ var tests = [
     [ 'bug240933-1.html' , 'bug240933-1-ref.html' ] ,
     [ 'bug240933-2.html' , 'bug240933-1-ref.html' ] ,
     [ 'bug389321-1.html' , 'bug389321-1-ref.html' ] ,
+    [ 'bug389321-3.html' , 'bug389321-3-ref.html' ] ,
     [ 'bug482484.html'   , 'bug482484-ref.html'   ] ,
     [ 'bug585922.html'   , 'bug585922-ref.html'   ] ,
     [ 'bug597519-1.html' , 'bug597519-1-ref.html' ] ,
@@ -153,13 +153,13 @@ if (navigator.appVersion.indexOf("Android") == -1 &&
   tests.push(function() {SpecialPowers.setBoolPref("touchcaret.enabled", false);});
   tests.push([ 'bug512295-1.html' , 'bug512295-1-ref.html' ]);
   tests.push([ 'bug512295-2.html' , 'bug512295-2-ref.html' ]);
+  tests.push([ 'bug923376.html'   , 'bug923376-ref.html'   ]);
   tests.push(function() {SpecialPowers.clearUserPref("touchcaret.enabled");});
   tests.push(function() {SpecialPowers.setBoolPref("layout.css.overflow-clip-box.enabled", true);});
   tests.push([ 'bug966992-1.html' , 'bug966992-1-ref.html' ]);
   tests.push([ 'bug966992-2.html' , 'bug966992-2-ref.html' ]);
   tests.push([ 'bug966992-3.html' , 'bug966992-3-ref.html' ]);
   tests.push(function() {SpecialPowers.setBoolPref("layout.css.overflow-clip-box.enabled", false);});
-  tests.push([ 'bug923376.html'   , 'bug923376-ref.html'   ]);
 } else {
   is(SpecialPowers.getIntPref("layout.spellcheckDefault"), 0, "Spellcheck should be turned off for this platrom or this if..else check removed");
 }

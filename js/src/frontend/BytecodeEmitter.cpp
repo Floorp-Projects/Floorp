@@ -131,6 +131,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
     staticScope(sc->context),
     atomIndices(sc->context),
     firstLine(lineNum),
+    localsToFrameSlots_(sc->context),
     stackDepth(0), maxStackDepth(0),
     arrayCompDepth(0),
     emitLevel(0),
@@ -153,6 +154,41 @@ bool
 BytecodeEmitter::init()
 {
     return atomIndices.ensureMap(sc->context);
+}
+
+bool
+BytecodeEmitter::updateLocalsToFrameSlots()
+{
+    // Assign stack slots to unaliased locals (aliased locals are stored in the
+    // call object and don't need their own stack slots). We do this by filling
+    // a Vector that can be used to map a local to its stack slot.
+
+    if (localsToFrameSlots_.length() == script->bindings.numLocals()) {
+        // CompileScript calls updateNumBlockScoped to update the block scope
+        // depth. Do nothing if the depth didn't change.
+        return true;
+    }
+
+    localsToFrameSlots_.clear();
+
+    if (!localsToFrameSlots_.reserve(script->bindings.numLocals()))
+        return false;
+
+    uint32_t slot = 0;
+    for (BindingIter bi(script); !bi.done(); bi++) {
+        if (bi->kind() == Binding::ARGUMENT)
+            continue;
+
+        if (bi->aliased())
+            localsToFrameSlots_.infallibleAppend(UINT32_MAX);
+        else
+            localsToFrameSlots_.infallibleAppend(slot++);
+    }
+
+    for (size_t i = 0; i < script->bindings.numBlockScoped(); i++)
+        localsToFrameSlots_.infallibleAppend(slot++);
+
+    return true;
 }
 
 static ptrdiff_t
@@ -771,12 +807,18 @@ AllLocalsAliased(StaticBlockObject &obj)
 static bool
 ComputeAliasedSlots(ExclusiveContext *cx, BytecodeEmitter *bce, Handle<StaticBlockObject *> blockObj)
 {
+    uint32_t numAliased = bce->script->bindings.numAliasedBodyLevelLocals();
+
     for (unsigned i = 0; i < blockObj->numVariables(); i++) {
         Definition *dn = blockObj->definitionParseNode(i);
 
         MOZ_ASSERT(dn->isDefn());
+
+        // blockIndexToLocalIndex returns the frame slot following the unaliased
+        // locals. We add numAliased so that the cookie's slot value comes after
+        // all (aliased and unaliased) body level locals.
         if (!dn->pn_cookie.set(bce->parser->tokenStream, dn->pn_cookie.level(),
-                               blockObj->blockIndexToLocalIndex(dn->frameSlot())))
+                               numAliased + blockObj->blockIndexToLocalIndex(dn->frameSlot())))
         {
             return false;
         }
@@ -807,7 +849,9 @@ EmitInternedObjectOp(ExclusiveContext *cx, uint32_t index, JSOp op, BytecodeEmit
 static void
 ComputeLocalOffset(ExclusiveContext *cx, BytecodeEmitter *bce, Handle<StaticBlockObject *> blockObj)
 {
-    unsigned nbodyfixed = bce->sc->isFunctionBox() ? bce->script->bindings.numBodyLevelLocals() : 0;
+    unsigned nbodyfixed = bce->sc->isFunctionBox()
+                          ? bce->script->bindings.numUnaliasedBodyLevelLocals()
+                          : 0;
     unsigned localOffset = nbodyfixed;
 
     if (bce->staticScope) {
@@ -1093,6 +1137,12 @@ EmitUnaliasedVarOp(ExclusiveContext *cx, JSOp op, uint32_t slot, MaybeCheckLexic
     MOZ_ASSERT(JOF_OPTYPE(op) != JOF_SCOPECOORD);
 
     if (IsLocalOp(op)) {
+        // Only unaliased locals have stack slots assigned to them. Convert the
+        // var index (which includes unaliased and aliased locals) to the stack
+        // slot index.
+        MOZ_ASSERT(bce->localsToFrameSlots_[slot] <= slot);
+        slot = bce->localsToFrameSlots_[slot];
+
         if (checkLexical) {
             MOZ_ASSERT(op != JSOP_INITLEXICAL);
             if (!EmitLocalOp(cx, bce, JSOP_CHECKLEXICAL, slot))
@@ -1300,6 +1350,7 @@ EmitAliasedVarOp(ExclusiveContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *
             MOZ_ASSERT_IF(bce->sc->isFunctionBox(), local <= bceOfDef->script->bindings.numLocals());
             MOZ_ASSERT(bceOfDef->staticScope->is<StaticBlockObject>());
             Rooted<StaticBlockObject*> b(cx, &bceOfDef->staticScope->as<StaticBlockObject>());
+            local = bceOfDef->localsToFrameSlots_[local];
             while (local < b->localOffset()) {
                 if (b->needsClone())
                     skippedScopes++;
@@ -2569,7 +2620,12 @@ InitializeBlockScopedLocalsFromStack(ExclusiveContext *cx, BytecodeEmitter *bce,
             if (!EmitAliasedVarOp(cx, JSOP_INITALIASEDLEXICAL, sc, DontCheckLexical, bce))
                 return false;
         } else {
-            unsigned local = blockObj->blockIndexToLocalIndex(i - 1);
+            // blockIndexToLocalIndex returns the slot index after the unaliased
+            // locals stored in the frame. EmitUnaliasedVarOp expects the slot index
+            // to include both unaliased and aliased locals, so we have to add the
+            // number of aliased locals.
+            uint32_t numAliased = bce->script->bindings.numAliasedBodyLevelLocals();
+            unsigned local = blockObj->blockIndexToLocalIndex(i - 1) + numAliased;
             if (!EmitUnaliasedVarOp(cx, JSOP_INITLEXICAL, local, DontCheckLexical, bce))
                 return false;
         }
@@ -2949,6 +3005,9 @@ BytecodeEmitter::isRunOnceLambda()
 bool
 frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *body)
 {
+    if (!bce->updateLocalsToFrameSlots())
+        return false;
+
     /*
      * IonBuilder has assumptions about what may occur immediately after
      * script->main (e.g., in the case of destructuring params). Thus, put the
@@ -5263,7 +5322,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             bi++;
         MOZ_ASSERT(bi->kind() == Binding::VARIABLE || bi->kind() == Binding::CONSTANT ||
                    bi->kind() == Binding::ARGUMENT);
-        MOZ_ASSERT(bi.frameIndex() < JS_BIT(20));
+        MOZ_ASSERT(bi.argOrLocalIndex() < JS_BIT(20));
 #endif
         pn->pn_index = index;
         if (!EmitIndexOp(cx, JSOP_LAMBDA, index, bce))
