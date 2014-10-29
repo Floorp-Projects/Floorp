@@ -7,6 +7,7 @@
 #include <math.h>
 #include "DrawTargetCG.h"
 #include "Logging.h"
+#include "PathHelpers.h"
 
 namespace mozilla {
 namespace gfx {
@@ -68,6 +69,10 @@ void
 PathBuilderCG::Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
                  Float aEndAngle, bool aAntiClockwise)
 {
+  // Disabled for now due to a CG bug when using CGPathAddArc with stroke
+  // dashing and rotation transforms that are multiples of 90 degrees. See:
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=949661#c8
+#if 0
   // Core Graphic's initial coordinate system is y-axis up, whereas Moz2D's is
   // y-axis down. Core Graphics therefore considers "clockwise" to mean "sweep
   // in the direction of decreasing angle" whereas Moz2D considers it to mean
@@ -82,6 +87,9 @@ PathBuilderCG::Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
                aStartAngle,
                aEndAngle,
                aAntiClockwise);
+#endif
+  ArcToBezier(this, aOrigin, Size(aRadius, aRadius), aStartAngle, aEndAngle,
+              aAntiClockwise);
 }
 
 Point

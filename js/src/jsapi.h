@@ -2441,13 +2441,14 @@ struct JSPropertySpec {
         SelfHostedWrapper         selfHosted;
     } setter;
 
-private:
-    void StaticAsserts() {
-        JS_STATIC_ASSERT(sizeof(SelfHostedWrapper) == sizeof(JSPropertyOpWrapper));
-        JS_STATIC_ASSERT(sizeof(SelfHostedWrapper) == sizeof(JSStrictPropertyOpWrapper));
-        JS_STATIC_ASSERT(offsetof(SelfHostedWrapper, funname) ==
-                         offsetof(JSPropertyOpWrapper, info));
-    }
+    static_assert(sizeof(SelfHostedWrapper) == sizeof(JSPropertyOpWrapper),
+                  "JSPropertySpec::getter must be compact");
+    static_assert(sizeof(SelfHostedWrapper) == sizeof(JSStrictPropertyOpWrapper),
+                  "JSPropertySpec::setter must be compact");
+    static_assert(offsetof(SelfHostedWrapper, funname) == offsetof(JSPropertyOpWrapper, info),
+                  "JS_SELF_HOSTED* macros below require that "
+                  "SelfHostedWrapper::funname overlay "
+                  "JSPropertyOpWrapper::info");
 };
 
 namespace JS {

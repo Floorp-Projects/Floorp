@@ -272,11 +272,11 @@ class JSString : public js::gc::TenuredCell
         static_assert(sizeof(JSString) ==
                       (offsetof(JSString, d.inlineStorageLatin1) +
                        NUM_INLINE_CHARS_LATIN1 * sizeof(char)),
-                      "Inline chars must fit in a JSString");
+                      "Inline Latin1 chars must fit in a JSString");
         static_assert(sizeof(JSString) ==
                       (offsetof(JSString, d.inlineStorageTwoByte) +
                        NUM_INLINE_CHARS_TWO_BYTE * sizeof(char16_t)),
-                      "Inline chars must fit in a JSString");
+                      "Inline char16_t chars must fit in a JSString");
 
         /* Ensure js::shadow::String has the same layout. */
         using js::shadow::String;
@@ -571,7 +571,8 @@ class JSRope : public JSString
     }
 };
 
-JS_STATIC_ASSERT(sizeof(JSRope) == sizeof(JSString));
+static_assert(sizeof(JSRope) == sizeof(JSString),
+              "string subclasses must be binary-compatible with JSString");
 
 class JSLinearString : public JSString
 {
@@ -649,7 +650,8 @@ class JSLinearString : public JSString
     }
 };
 
-JS_STATIC_ASSERT(sizeof(JSLinearString) == sizeof(JSString));
+static_assert(sizeof(JSLinearString) == sizeof(JSString),
+              "string subclasses must be binary-compatible with JSString");
 
 class JSDependentString : public JSLinearString
 {
@@ -688,7 +690,8 @@ class JSDependentString : public JSLinearString
     }
 };
 
-JS_STATIC_ASSERT(sizeof(JSDependentString) == sizeof(JSString));
+static_assert(sizeof(JSDependentString) == sizeof(JSString),
+              "string subclasses must be binary-compatible with JSString");
 
 class JSFlatString : public JSLinearString
 {
@@ -748,7 +751,8 @@ class JSFlatString : public JSLinearString
     inline void finalize(js::FreeOp *fop);
 };
 
-JS_STATIC_ASSERT(sizeof(JSFlatString) == sizeof(JSString));
+static_assert(sizeof(JSFlatString) == sizeof(JSString),
+              "string subclasses must be binary-compatible with JSString");
 
 class JSExtensibleString : public JSFlatString
 {
@@ -764,7 +768,8 @@ class JSExtensibleString : public JSFlatString
     }
 };
 
-JS_STATIC_ASSERT(sizeof(JSExtensibleString) == sizeof(JSString));
+static_assert(sizeof(JSExtensibleString) == sizeof(JSString),
+              "string subclasses must be binary-compatible with JSString");
 
 /*
  * On 32-bit platforms, JSInlineString can store 7 Latin1 characters or
@@ -817,7 +822,8 @@ class JSInlineString : public JSFlatString
     }
 };
 
-JS_STATIC_ASSERT(sizeof(JSInlineString) == sizeof(JSString));
+static_assert(sizeof(JSInlineString) == sizeof(JSString),
+              "string subclasses must be binary-compatible with JSString");
 
 /*
  * On both 32-bit and 64-bit platforms, MAX_LENGTH_TWO_BYTE is 11 and
@@ -835,17 +841,6 @@ class JSFatInlineString : public JSInlineString
 {
     static const size_t INLINE_EXTENSION_CHARS_LATIN1 = 24 - NUM_INLINE_CHARS_LATIN1;
     static const size_t INLINE_EXTENSION_CHARS_TWO_BYTE = 12 - NUM_INLINE_CHARS_TWO_BYTE;
-
-    static void staticAsserts() {
-        JS_STATIC_ASSERT((INLINE_EXTENSION_CHARS_LATIN1 * sizeof(char)) % js::gc::CellSize == 0);
-        JS_STATIC_ASSERT((INLINE_EXTENSION_CHARS_TWO_BYTE * sizeof(char16_t)) % js::gc::CellSize == 0);
-        JS_STATIC_ASSERT(MAX_LENGTH_TWO_BYTE + 1 ==
-                         (sizeof(JSFatInlineString) -
-                          offsetof(JSFatInlineString, d.inlineStorageTwoByte)) / sizeof(char16_t));
-        JS_STATIC_ASSERT(MAX_LENGTH_LATIN1 + 1 ==
-                         (sizeof(JSFatInlineString) -
-                          offsetof(JSFatInlineString, d.inlineStorageLatin1)) / sizeof(char));
-    }
 
   protected: /* to fool clang into not warning this is unused */
     union {
@@ -872,9 +867,27 @@ class JSFatInlineString : public JSInlineString
     inline CharT *init(size_t length);
 
     static bool latin1LengthFits(size_t length) {
+        static_assert((INLINE_EXTENSION_CHARS_LATIN1 * sizeof(char)) % js::gc::CellSize == 0,
+                      "fat inline strings' Latin1 characters don't exactly "
+                      "fill subsequent cells and thus are wasteful");
+        static_assert(MAX_LENGTH_LATIN1 + 1 ==
+                      (sizeof(JSFatInlineString) -
+                       offsetof(JSFatInlineString, d.inlineStorageLatin1)) / sizeof(char),
+                      "MAX_LENGTH_LATIN1 must be one less than inline Latin1 "
+                      "storage count");
+
         return length <= MAX_LENGTH_LATIN1;
     }
     static bool twoByteLengthFits(size_t length) {
+        static_assert((INLINE_EXTENSION_CHARS_TWO_BYTE * sizeof(char16_t)) % js::gc::CellSize == 0,
+                      "fat inline strings' char16_t characters don't exactly "
+                      "fill subsequent cells and thus are wasteful");
+        static_assert(MAX_LENGTH_TWO_BYTE + 1 ==
+                      (sizeof(JSFatInlineString) -
+                       offsetof(JSFatInlineString, d.inlineStorageTwoByte)) / sizeof(char16_t),
+                      "MAX_LENGTH_TWO_BYTE must be one less than inline "
+                      "char16_t storage count");
+
         return length <= MAX_LENGTH_TWO_BYTE;
     }
 
@@ -886,7 +899,9 @@ class JSFatInlineString : public JSInlineString
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp *fop);
 };
 
-JS_STATIC_ASSERT(sizeof(JSFatInlineString) % js::gc::CellSize == 0);
+static_assert(sizeof(JSFatInlineString) % js::gc::CellSize == 0,
+              "fat inline strings shouldn't waste space up to the next cell "
+              "boundary");
 
 class JSExternalString : public JSFlatString
 {
@@ -918,7 +933,8 @@ class JSExternalString : public JSFlatString
     inline void finalize(js::FreeOp *fop);
 };
 
-JS_STATIC_ASSERT(sizeof(JSExternalString) == sizeof(JSString));
+static_assert(sizeof(JSExternalString) == sizeof(JSString),
+              "string subclasses must be binary-compatible with JSString");
 
 class JSUndependedString : public JSFlatString
 {
@@ -929,7 +945,8 @@ class JSUndependedString : public JSFlatString
      */
 };
 
-JS_STATIC_ASSERT(sizeof(JSUndependedString) == sizeof(JSString));
+static_assert(sizeof(JSUndependedString) == sizeof(JSString),
+              "string subclasses must be binary-compatible with JSString");
 
 class JSAtom : public JSFlatString
 {
@@ -959,7 +976,8 @@ class JSAtom : public JSFlatString
 #endif
 };
 
-JS_STATIC_ASSERT(sizeof(JSAtom) == sizeof(JSString));
+static_assert(sizeof(JSAtom) == sizeof(JSString),
+              "string subclasses must be binary-compatible with JSString");
 
 namespace js {
 
@@ -1091,7 +1109,9 @@ class StaticStrings
              * int string/length-2 string atom identity issue by giving priority to unit
              * strings for "0" through "9" and length-2 strings for "10" through "99".
              */
-            JS_STATIC_ASSERT(INT_STATIC_LIMIT <= 999);
+            static_assert(INT_STATIC_LIMIT <= 999,
+                          "static int strings assumed below to be at most "
+                          "three digits");
             if ('1' <= chars[0] && chars[0] <= '9' &&
                 '0' <= chars[1] && chars[1] <= '9' &&
                 '0' <= chars[2] && chars[2] <= '9') {
@@ -1143,7 +1163,8 @@ class StaticStrings
 class PropertyName : public JSAtom
 {};
 
-JS_STATIC_ASSERT(sizeof(PropertyName) == sizeof(JSString));
+static_assert(sizeof(PropertyName) == sizeof(JSString),
+              "string subclasses must be binary-compatible with JSString");
 
 static MOZ_ALWAYS_INLINE jsid
 NameToId(PropertyName *name)
