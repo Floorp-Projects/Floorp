@@ -12150,6 +12150,8 @@ ICCFileHelperObject.prototype = {
       case ICC_EF_OPL:
       case ICC_EF_PNN:
       case ICC_EF_GID1:
+      case ICC_EF_CPHS_INFO:
+      case ICC_EF_CPHS_MBN:
         return EF_PATH_MF_SIM + EF_PATH_DF_GSM;
       default:
         return null;
@@ -12176,6 +12178,12 @@ ICCFileHelperObject.prototype = {
       case ICC_EF_PNN:
       case ICC_EF_SMS:
       case ICC_EF_GID1:
+      // CPHS spec was provided in 1997 based on SIM requirement, there is no
+      // detailed info about how these ICC_EF_CPHS_XXX are allocated in USIM.
+      // What we can do now is to follow what has been done in AOSP to have file
+      // path equal to MF_SIM/DF_GSM.
+      case ICC_EF_CPHS_INFO:
+      case ICC_EF_CPHS_MBN:
         return EF_PATH_MF_SIM + EF_PATH_ADF_USIM;
       default:
         // The file ids in USIM phone book entries are decided by the
@@ -13101,7 +13109,18 @@ SimRecordHelperObject.prototype = {
   fetchSimRecords: function() {
     this.context.RIL.getIMSI();
     this.readAD();
-    this.readSST();
+    // CPHS was widely introduced in Europe during GSM(2G) era to provide easier
+    // access to carrier's core service like voicemail, call forwarding, manual
+    // PLMN selection, and etc.
+    // Addition EF like EF_CPHS_MBN, EF_CPHS_CPHS_CFF, EF_CPHS_VWI, etc are
+    // introduced to support these feature.
+    // In USIM, the replancement of these EFs are provided. (EF_MBDN, EF_MWIS, ...)
+    // However, some carriers in Europe still rely on these EFs.
+    this.readCphsInfo(() => this.readSST(),
+                      (aErrorMsg) => {
+                        this.context.debug("Failed to read CPHS_INFO: " + aErrorMsg);
+                        this.readSST();
+                      });
   },
 
   /**
@@ -13432,6 +13451,13 @@ SimRecordHelperObject.prototype = {
         this.readMBDN();
       } else {
         if (DEBUG) this.context.debug("MDN: MDN service is not available");
+
+        if (ICCUtilsHelper.isCphsServiceAvailable("MBN")) {
+          // read CPHS_MBN in advance if MBDN is not available.
+          this.readCphsMBN();
+        } else {
+          if (DEBUG) this.context.debug("CPHS_MBN: CPHS_MBN service is not available");
+        }
       }
 
       if (ICCUtilsHelper.isICCServiceAvailable("MWIS")) {
@@ -13504,6 +13530,15 @@ SimRecordHelperObject.prototype = {
       let RIL = this.context.RIL;
       let contact =
         this.context.ICCPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
+      if ((!contact ||
+           ((!contact.alphaId || contact.alphaId == "") &&
+            (!contact.number || contact.number == ""))) &&
+          this.context.ICCUtilsHelper.isCphsServiceAvailable("MBN")) {
+        // read CPHS_MBN in advance if MBDN is invalid or empty.
+        this.readCphsMBN();
+        return;
+      }
+
       if (!contact ||
           (RIL.iccInfoPrivate.mbdn !== undefined &&
            RIL.iccInfoPrivate.mbdn === contact.number)) {
@@ -14081,6 +14116,117 @@ SimRecordHelperObject.prototype = {
       callback: callback.bind(this)
     });
   },
+
+  /**
+   * Read CPHS Phase & Service Table from CPHS Info.
+   *
+   * @See  B.3.1.1 CPHS Information in CPHS Phase 2.
+   *
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
+  readCphsInfo: function(onsuccess, onerror) {
+    function callback() {
+      try {
+        let Buf = this.context.Buf;
+        let RIL = this.context.RIL;
+
+        let strLen = Buf.readInt32();
+        // Each octet is encoded into two chars.
+        let octetLen = strLen / 2;
+        let cphsInfo = this.context.GsmPDUHelper.readHexOctetArray(octetLen);
+        Buf.readStringDelimiter(strLen);
+        if (DEBUG) {
+          let str = "";
+          for (let i = 0; i < cphsInfo.length; i++) {
+            str += cphsInfo[i] + ", ";
+          }
+          this.context.debug("CPHS INFO: " + str);
+        }
+
+        /**
+         * CPHS INFORMATION
+         *
+         * Byte 1: CPHS Phase
+         * 01 phase 1
+         * 02 phase 2
+         * etc.
+         *
+         * Byte 2: CPHS Service Table
+         * +----+----+----+----+----+----+----+----+
+         * | b8 | b7 | b6 | b5 | b4 | b3 | b2 | b1 |
+         * +----+----+----+----+----+----+----+----+
+         * |   ONSF  |   MBN   |   SST   |   CSP   |
+         * | Phase 2 |   ALL   | Phase 1 |   All   |
+         * +----+----+----+----+----+----+----+----+
+         *
+         * Byte 3: CPHS Service Table continued
+         * +----+----+----+----+----+----+----+----+
+         * | b8 | b7 | b6 | b5 | b4 | b3 | b2 | b1 |
+         * +----+----+----+----+----+----+----+----+
+         * |   RFU   |   RFU   |   RFU   | INFO_NUM|
+         * |         |         |         | Phase 2 |
+         * +----+----+----+----+----+----+----+----+
+         */
+        let cphsPhase = cphsInfo[0];
+        if (cphsPhase == 1) {
+          // Clear 'Phase 2 only' services.
+          cphsInfo[1] &= 0x3F;
+          // We don't know whether Byte 3 is available in CPHS phase 1 or not.
+          // Add boundary check before accessing it.
+          if (cphsInfo.length > 2) {
+            cphsInfo[2] = 0x00;
+          }
+        } else if (cphsPhase == 2) {
+          // Clear 'Phase 1 only' services.
+          cphsInfo[1] &= 0xF3;
+        } else {
+          throw new Error("Unknown CPHS phase: " + cphsPhase);
+        }
+
+        RIL.iccInfoPrivate.cphsSt = cphsInfo.subarray(1);
+        onsuccess();
+      } catch(e) {
+        onerror(e.toString());
+      }
+    }
+
+    this.context.ICCIOHelper.loadTransparentEF({
+      fileId: ICC_EF_CPHS_INFO,
+      callback: callback.bind(this),
+      onerror: onerror
+    });
+  },
+
+  /**
+   * Read CPHS MBN. (Mailbox Numbers)
+   *
+   * @See B.4.2.2 Voice Message Retrieval and Indicator Clearing
+   */
+  readCphsMBN: function() {
+    function callback(options) {
+      let RIL = this.context.RIL;
+      let contact =
+        this.context.ICCPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
+      if (!contact ||
+          (RIL.iccInfoPrivate.mbdn !== undefined &&
+           RIL.iccInfoPrivate.mbdn === contact.number)) {
+        return;
+      }
+      RIL.iccInfoPrivate.mbdn = contact.number;
+      if (DEBUG) {
+        this.context.debug("CPHS_MDN, alphaId=" + contact.alphaId +
+                           " number=" + contact.number);
+      }
+      contact.rilMessageType = "iccmbdn";
+      RIL.sendChromeMessage(contact);
+    }
+
+    this.context.ICCIOHelper.loadLinearFixedEF({
+      fileId: ICC_EF_CPHS_MBN,
+      callback: callback.bind(this)
+    });
+  }
 };
 
 function RuimRecordHelperObject(aContext) {
@@ -14662,8 +14808,8 @@ ICCUtilsHelperObject.prototype = {
        *
        * b1 = 0, service not allocated.
        *      1, service allocated.
-       * b2 = 0, service not activatd.
-       *      1, service allocated.
+       * b2 = 0, service not activated.
+       *      1, service activated.
        *
        * @see 3GPP TS 51.011 10.3.7.
        */
@@ -14689,8 +14835,6 @@ ICCUtilsHelperObject.prototype = {
        *
        * b1 = 0, service not avaiable.
        *      1, service available.
-       * b2 = 0, service not avaiable.
-       *      1, service available.
        *
        * @see 3GPP TS 31.102 4.2.8.
        */
@@ -14705,6 +14849,49 @@ ICCUtilsHelperObject.prototype = {
 
     return (serviceTable !== null) &&
            (index < serviceTable.length) &&
+           ((serviceTable[index] & bitmask) !== 0);
+  },
+
+  /**
+   * Get whether specificed CPHS service is available.
+   *
+   * @param geckoService
+   *        Service name like "MDN", etc.
+   *
+   * @return true if the service is enabled, false otherwise.
+   */
+  isCphsServiceAvailable: function(geckoService) {
+    let RIL = this.context.RIL;
+    let serviceTable = RIL.iccInfoPrivate.cphsSt;
+
+    if (!(serviceTable instanceof Uint8Array)) {
+      return false;
+    }
+
+    /**
+     * Service id is valid in 1..N, and 2 bits are used to code each service.
+     *
+     * +----+--  --+----+----+
+     * | b8 | ...  | b2 | b1 |
+     * +----+--  --+----+----+
+     *
+     * b1 = 0, service not allocated.
+     *      1, service allocated.
+     * b2 = 0, service not activated.
+     *      1, service activated.
+     *
+     * @See  B.3.1.1 CPHS Information in CPHS Phase 2.
+     */
+    let cphsService  = GECKO_ICC_SERVICES.cphs[geckoService];
+
+    if (!cphsService) {
+      return false;
+    }
+    cphsService -= 1;
+    let index = Math.floor(cphsService / 4);
+    let bitmask = 2 << ((cphsService % 4) << 1);
+
+    return (index < serviceTable.length) &&
            ((serviceTable[index] & bitmask) !== 0);
   },
 

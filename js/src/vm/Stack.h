@@ -68,11 +68,6 @@ enum MaybeCheckLexical { CheckLexical = true, DontCheckLexical = false };
 
 /*****************************************************************************/
 
-#ifdef DEBUG
-extern void
-CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script, uint32_t i);
-#endif
-
 namespace jit {
     class BaselineFrame;
     class RematerializedFrame;
@@ -217,7 +212,7 @@ class AbstractFramePtr
     inline bool copyRawFrameSlots(AutoValueVector *vec) const;
 
     inline Value &unaliasedVar(uint32_t i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
-    inline Value &unaliasedLocal(uint32_t i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
+    inline Value &unaliasedLocal(uint32_t i);
     inline Value &unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
     inline Value &unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
     template <class Op> inline void unaliasedForEachActual(JSContext *cx, Op op);
@@ -517,7 +512,7 @@ class InterpreterFrame
      */
 
     inline Value &unaliasedVar(uint32_t i, MaybeCheckAliasing = CHECK_ALIASING);
-    inline Value &unaliasedLocal(uint32_t i, MaybeCheckAliasing = CHECK_ALIASING);
+    inline Value &unaliasedLocal(uint32_t i);
 
     bool hasArgs() const { return isNonEvalFunctionFrame(); }
     inline Value &unaliasedFormal(unsigned i, MaybeCheckAliasing = CHECK_ALIASING);

@@ -202,6 +202,7 @@
 #include "prrng.h"
 #include "nsSandboxFlags.h"
 #include "TimeChangeObserver.h"
+#include "TouchCaret.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/BrowserElementDictionariesBinding.h"
@@ -9356,6 +9357,24 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, in
     SelectionChangeEventInit init;
     init.mBubbles = true;
     if (aSel) {
+      bool isTouchCaretVisible = false;
+      bool isCollapsed = aSel->Collapsed();
+
+      nsIPresShell *shell = mDoc->GetShell();
+      if (shell) {
+        nsRefPtr<TouchCaret> touchCaret = shell->GetTouchCaret();
+        if (touchCaret) {
+          isTouchCaretVisible = touchCaret->GetVisibility();
+        }
+      }
+
+      // Dispatch selection change events when touch caret is visible even if selection
+      // is collapsed because it could be the shortcut mode, otherwise ignore this
+      // UpdateCommands
+      if (isCollapsed && !isTouchCaretVisible) {
+        return NS_OK;
+      }
+
       Selection* selection = static_cast<Selection*>(aSel);
       int32_t rangeCount = selection->GetRangeCount();
       nsLayoutUtils::RectAccumulator accumulator;

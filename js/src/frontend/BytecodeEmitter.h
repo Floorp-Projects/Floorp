@@ -116,6 +116,13 @@ struct BytecodeEmitter
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
     unsigned        firstLine;      /* first line, for JSScript::initFromEmitter */
 
+    /*
+     * Only unaliased locals have stack slots assigned to them. This vector is
+     * used to map a local index (which includes unaliased and aliased locals)
+     * to its stack slot index.
+     */
+    Vector<uint32_t, 16> localsToFrameSlots_;
+
     int32_t         stackDepth;     /* current stack depth in script frame */
     uint32_t        maxStackDepth;  /* maximum stack depth so far */
 
@@ -178,6 +185,7 @@ struct BytecodeEmitter
                     bool insideEval, HandleScript evalCaller, bool hasGlobalScope,
                     uint32_t lineNum, EmitterMode emitterMode = Normal);
     bool init();
+    bool updateLocalsToFrameSlots();
 
     bool isAliasedName(ParseNode *pn);
 

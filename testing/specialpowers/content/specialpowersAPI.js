@@ -846,6 +846,12 @@ SpecialPowersAPI.prototype = {
   },
 
 
+  setTestPluginEnabledState: function(newEnabledState, pluginName) {
+    return this._sendSyncMessage("SPSetTestPluginEnabledState",
+                                 { newEnabledState: newEnabledState, pluginName: pluginName })[0];
+  },
+
+
   _permissionObserver: {
     _self: null,
     _lastPermission: {},

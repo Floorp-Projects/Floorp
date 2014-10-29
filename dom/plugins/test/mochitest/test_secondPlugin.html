@@ -43,8 +43,12 @@
         // their internal arrays!
         var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"].getService(SpecialPowers.Ci.nsIPrefBranch);
         var defaultEnumerableNamesPref = prefs.getCharPref("plugins.enumerable_names");
-        prefs.setCharPref("plugins.enumerable_names", defaultEnumerableNamesPref + ",Test Plug-in");
-
+        SpecialPowers.pushPrefEnv(
+          {'set': [["plugins.enumerable_names", defaultEnumerableNamesPref + ",Test Plug-in"]]},
+          finishRun
+        );
+      }
+      function finishRun() {
         var pluginElement = document.getElementById("plugin");
         is(pluginElement.identifierToStringTest("foo"), "foo", "Should be able to call a function provided by the plugin");
 
@@ -59,9 +63,6 @@
 
         ok(findMimeType("application/x-test"), "Should have found a non-hidden MIME type named 'application/x-test'");
         ok(!findMimeType("application/x-second-test"), "Should NOT have found a MIME type named 'application/x-second-test'");
-
-        // Restore original pref to hide "Test Plug-in" and "Second Test Plug-in".
-        prefs.setCharPref("plugins.enumerable_names", defaultEnumerableNamesPref);
 
         SimpleTest.finish();
       }

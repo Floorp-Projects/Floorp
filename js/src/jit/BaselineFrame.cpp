@@ -93,7 +93,7 @@ BaselineFrame::trace(JSTracer *trc, JitFrameIterator &frameIterator)
 
         // Clear dead block-scoped locals.
         while (nfixed > nlivefixed)
-            unaliasedLocal(--nfixed, DONT_CHECK_ALIASING).setMagic(JS_UNINITIALIZED_LEXICAL);
+            unaliasedLocal(--nfixed).setMagic(JS_UNINITIALIZED_LEXICAL);
 
         // Mark live locals.
         MarkLocals(this, trc, 0, nlivefixed);

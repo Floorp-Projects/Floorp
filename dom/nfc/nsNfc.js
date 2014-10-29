@@ -125,6 +125,11 @@ mozNfc.prototype = {
   init: function init(aWindow) {
     debug("mozNfc init called");
     this._window = aWindow;
+    this.defineEventHandlerGetterSetter("ontagfound");
+    this.defineEventHandlerGetterSetter("ontaglost");
+    this.defineEventHandlerGetterSetter("onpeerready");
+    this.defineEventHandlerGetterSetter("onpeerlost");
+
     if (this._nfcContentHelper) {
       this._nfcContentHelper.init(aWindow);
     }
@@ -162,14 +167,6 @@ mozNfc.prototype = {
     return this._nfcContentHelper.powerOff(this._window);
   },
 
-  getNFCTag: function getNFCTag(sessionToken) {
-    let obj = new MozNFCTag(this._window, sessionToken);
-    if (this._nfcContentHelper.checkSessionToken(sessionToken)) {
-      return this._window.MozNFCTag._create(this._window, obj);
-    }
-    return null;
-  },
-
   getNFCPeer: function getNFCPeer(sessionToken) {
     if (!sessionToken || !this._nfcContentHelper.checkSessionToken(sessionToken)) {
       return null;
@@ -184,22 +181,15 @@ mozNfc.prototype = {
     return this.nfcObject.contentObject;
   },
 
-  // get/set onpeerready
-  get onpeerready() {
-    return this.__DOM_IMPL__.getEventHandler("onpeerready");
-  },
-
-  set onpeerready(handler) {
-    this.__DOM_IMPL__.setEventHandler("onpeerready", handler);
-  },
-
-  // get/set onpeerlost
-  get onpeerlost() {
-    return this.__DOM_IMPL__.getEventHandler("onpeerlost");
-  },
-
-  set onpeerlost(handler) {
-    this.__DOM_IMPL__.setEventHandler("onpeerlost", handler);
+  defineEventHandlerGetterSetter: function defineEventHandlerGetterSetter(name) {
+    Object.defineProperty(this, name, {
+      get: function get() {
+        return this.__DOM_IMPL__.getEventHandler(name);
+      },
+      set: function set(handler) {
+        this.__DOM_IMPL__.setEventHandler(name, handler);
+      }
+    });
   },
 
   eventListenerWasAdded: function(eventType) {
@@ -218,6 +208,54 @@ mozNfc.prototype = {
 
     let appId = this._window.document.nodePrincipal.appId;
     this._nfcContentHelper.unregisterTargetForPeerReady(this._window, appId);
+  },
+
+  notifyTagFound: function notifyTagFound(sessionToken, event, records) {
+    if (this.hasDeadWrapper()) {
+      dump("this._window or this.__DOM_IMPL__ is a dead wrapper.");
+      return;
+    }
+
+    if (!this.checkPermissions(["nfc-read", "nfc-write"])) {
+      return;
+    }
+
+    let tag = new MozNFCTag(this._window, sessionToken);
+    let tagContentObj = this._window.MozNFCTag._create(this._window, tag);
+
+    let length = records ? records.length : 0;
+    let ndefRecords = records ? [] : null;
+    for (let i = 0; i < length; i++) {
+      let record = records[i];
+      ndefRecords.push(new this._window.MozNDEFRecord({tnf: record.tnf,
+                                                       type: record.type,
+                                                       id: record.id,
+                                                       payload: record.payload}));
+    }
+
+    let eventData = {
+      "tag": tagContentObj,
+      "ndefRecords": ndefRecords
+    };
+
+    debug("fire ontagfound " + sessionToken);
+    let tagEvent = new this._window.MozNFCTagEvent("tagfound", eventData);
+    this.__DOM_IMPL__.dispatchEvent(tagEvent);
+  },
+
+  notifyTagLost: function notifyTagLost(sessionToken) {
+    if (this.hasDeadWrapper()) {
+      dump("this._window or this.__DOM_IMPL__ is a dead wrapper.");
+      return;
+    }
+
+    if (!this.checkPermissions(["nfc-read", "nfc-write"])) {
+      return;
+    }
+
+    debug("fire ontaglost " + sessionToken);
+    let event = new this._window.Event("taglost");
+    this.__DOM_IMPL__.dispatchEvent(event);
   },
 
   notifyPeerReady: function notifyPeerReady(sessionToken) {
@@ -257,6 +295,21 @@ mozNfc.prototype = {
     debug("fire onpeerlost");
     let event = new this._window.Event("peerlost");
     this.__DOM_IMPL__.dispatchEvent(event);
+  },
+
+  checkPermissions: function checkPermissions(perms) {
+    let principal = this._window.document.nodePrincipal;
+    for (let perm of perms) {
+      let permValue =
+        Services.perms.testExactPermissionFromPrincipal(principal, perm);
+      if (permValue == Ci.nsIPermissionManager.ALLOW_ACTION) {
+        return true;
+      } else {
+        debug("doesn't have " + perm + " permission.");
+      }
+    }
+
+    return false;
   },
 
   hasDeadWrapper: function hasDeadWrapper() {

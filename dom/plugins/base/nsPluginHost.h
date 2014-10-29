@@ -28,6 +28,7 @@
 #include "nsIEffectiveTLDService.h"
 #include "nsIIDNService.h"
 #include "nsCRT.h"
+#include "mozilla/plugins/PluginTypes.h"
 
 class nsNPAPIPlugin;
 class nsIComponentManager;
@@ -36,6 +37,7 @@ class nsIChannel;
 class nsPluginNativeWindow;
 class nsObjectLoadingContent;
 class nsPluginInstanceOwner;
+class nsPluginUnloadRunnable;
 class nsNPAPIPluginInstance;
 class nsNPAPIPluginStreamListener;
 class nsIPluginInstanceOwner;
@@ -88,6 +90,9 @@ public:
   nsresult IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
 
   void GetPlugins(nsTArray<nsRefPtr<nsPluginTag> >& aPluginArray);
+  void FindPluginsForContent(uint32_t aPluginEpoch,
+                             nsTArray<mozilla::plugins::PluginTag>* aPlugins,
+                             uint32_t* aNewPluginEpoch);
 
   nsresult GetURL(nsISupports* pluginInst,
                   const char* url,
@@ -191,12 +196,16 @@ public:
   nsPluginTag* TagForPlugin(nsNPAPIPlugin* aPlugin);
 
   nsresult GetPlugin(const char *aMimeType, nsNPAPIPlugin** aPlugin);
+  nsresult GetPluginForContentProcess(uint32_t aPluginId, nsNPAPIPlugin** aPlugin);
+  void NotifyContentModuleDestroyed(uint32_t aPluginId);
 
   nsresult NewPluginStreamListener(nsIURI* aURL,
                                    nsNPAPIPluginInstance* aInstance,
                                    nsIStreamListener **aStreamListener);
 
 private:
+  friend class nsPluginUnloadRunnable;
+
   nsresult
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsPluginInstanceOwner *aOwner);
 
@@ -214,6 +223,8 @@ private:
   nsresult
   FindStoppedPluginForURL(nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
 
+  nsresult FindPluginsInContent(bool aCreatePluginList, bool * aPluginsChanged);
+
   nsresult
   FindPlugins(bool aCreatePluginList, bool * aPluginsChanged);
 
@@ -221,6 +232,8 @@ private:
   // (performs no checks - see UpdateCategoryManager)
   enum nsRegisterType { ePluginRegister, ePluginUnregister };
   void RegisterWithCategoryManager(nsCString &aMimeType, nsRegisterType aType);
+
+  void AddPluginTag(nsPluginTag* aPluginTag);
 
   nsresult
   ScanPluginsDirectory(nsIFile *pluginsDir,
@@ -255,10 +268,22 @@ private:
     
   // Returns the first plugin at |path|
   nsPluginTag* FirstPluginWithPath(const nsCString& path);
+  nsPluginTag* PluginWithId(uint32_t aId);
 
   nsresult EnsurePrivateDirServiceProvider();
 
   void OnPluginInstanceDestroyed(nsPluginTag* aPluginTag);
+
+  // To be used by the chrome process whenever the set of plugins changes.
+  void IncrementChromeEpoch();
+
+  // To be used by the chrome process; returns the current epoch.
+  uint32_t ChromeEpoch();
+
+  // To be used by the content process to get/set the last observed epoch value
+  // from the chrome process.
+  uint32_t ChromeEpochForContent();
+  void SetChromeEpochForContent(uint32_t aEpoch);
 
   nsRefPtr<nsPluginTag> mPlugins;
   nsRefPtr<nsPluginTag> mCachedPlugins;
@@ -294,6 +319,12 @@ private:
                              bool firstMatchOnly);
 
   nsWeakPtr mCurrentDocument; // weak reference, we use it to id document only
+
+  // This epoch increases each time we load the list of plugins from disk.
+  // In the chrome process, this stores the actual epoch.
+  // In the content process, this stores the last epoch value observed
+  // when reading plugins from chrome.
+  uint32_t mPluginEpoch;
 
   static nsIFile *sPluginTempDir;
 
