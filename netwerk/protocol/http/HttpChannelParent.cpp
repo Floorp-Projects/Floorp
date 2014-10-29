@@ -611,8 +611,6 @@ bool
 HttpChannelParent::RecvDivertComplete()
 {
   MOZ_ASSERT(mParentListener);
-  mParentListener = nullptr;
-  mConverterListener = nullptr;
   if (NS_WARN_IF(!mDivertingFromChild)) {
     MOZ_ASSERT(mDivertingFromChild,
                "Cannot RecvDivertComplete if diverting is not set!");
@@ -626,6 +624,8 @@ HttpChannelParent::RecvDivertComplete()
     return false;
   }
 
+  mConverterListener = nullptr; 
+  mParentListener = nullptr;
   return true;
 }
 
