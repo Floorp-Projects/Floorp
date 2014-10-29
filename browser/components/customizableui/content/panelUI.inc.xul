@@ -179,6 +179,40 @@
       </vbox>
     </panelview>
 
+    <panelview id="PanelUI-panicView" flex="1">
+      <vbox class="panel-subview-body">
+        <hbox id="PanelUI-panic-timeframe">
+          <image id="PanelUI-panic-timeframe-icon" alt=""/>
+          <vbox flex="1">
+            <hbox id="PanelUI-panic-header">
+              <image id="PanelUI-panic-timeframe-icon-small" alt=""/>
+              <description id="PanelUI-panic-mainDesc" flex="1">&panicButton.view.mainTimeframeDesc;</description>
+            </hbox>
+            <radiogroup id="PanelUI-panic-timeSpan" aria-labelledby="PanelUI-panic-mainDesc" closemenu="none">
+              <radio id="PanelUI-panic-5min" label="&panicButton.view.5min;" selected="true"
+                     value="5" class="subviewradio"/>
+              <radio id="PanelUI-panic-2hr" label="&panicButton.view.2hr;"
+                     value="2" class="subviewradio"/>
+              <radio id="PanelUI-panic-day" label="&panicButton.view.day;"
+                     value="6" class="subviewradio"/>
+            </radiogroup>
+          </vbox>
+        </hbox>
+        <vbox id="PanelUI-panic-explanations">
+          <label id="PanelUI-panic-actionlist-main-label">&panicButton.view.mainActionDesc;</label>
+
+          <label id="PanelUI-panic-actionlist-windows" class="PanelUI-panic-actionlist">&panicButton.view.deleteTabsAndWindows;</label>
+          <label id="PanelUI-panic-actionlist-cookies" class="PanelUI-panic-actionlist">&panicButton.view.deleteCookies;</label>
+          <label id="PanelUI-panic-actionlist-history" class="PanelUI-panic-actionlist">&panicButton.view.deleteHistory;</label>
+          <label id="PanelUI-panic-actionlist-newwindow" class="PanelUI-panic-actionlist">&panicButton.view.openNewWindow;</label>
+
+          <label id="PanelUI-panic-warning">&panicButton.view.undoWarning;</label>
+        </vbox>
+        <button id="PanelUI-panic-view-button"
+                label="&panicButton.view.forgetButton;"/>
+      </vbox>
+    </panelview>
+
   </panelmultiview>
   <!-- These menupopups are located here to prevent flickering,
        see bug 492960 comment 20. -->
@@ -246,4 +280,22 @@
       <toolbarbutton oncommand="gCustomizeMode.hideTip()" class="close-icon"/>
     </vbox>
   </hbox>
+</panel>
+
+<panel id="panic-button-success-notification"
+       type="arrow"
+       position="bottomcenter topright"
+       hidden="true"
+       role="alert"
+       orient="vertical">
+  <hbox id="panic-button-success-header">
+    <image id="panic-button-success-icon" alt=""/>
+    <vbox>
+      <description>&panicButton.thankyou.msg1;</description>
+      <description>&panicButton.thankyou.msg2;</description>
+    </vbox>
+  </hbox>
+  <button label="&panicButton.thankyou.buttonlabel;"
+          id="panic-button-success-closebutton"
+          oncommand="PanicButtonNotifier.close()"/>
 </panel>
