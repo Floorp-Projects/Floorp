@@ -1130,7 +1130,7 @@ ForkJoinOperation::reportBailoutWarnings()
                         else
                             arg = frame->unaliasedActual(i, DONT_CHECK_ALIASING);
                     } else {
-                        arg = frame->unaliasedLocal(i - frame->numFormalArgs(), DONT_CHECK_ALIASING);
+                        arg = frame->unaliasedLocal(i - frame->numFormalArgs());
                     }
 
                     JSAutoByteString valueBytes;
