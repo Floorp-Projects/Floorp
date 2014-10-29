@@ -66,16 +66,18 @@ class ChunkPool
     bool verify() const;
 #endif
 
-    class Enum {
+    // Pool mutation does not invalidate an Iter unless the mutation
+    // is of the Chunk currently being visited by the Iter.
+    class Iter {
       public:
-        explicit Enum(ChunkPool &pool) : pool(pool), chunkp(&pool.head_) {}
-        bool empty() { return !*chunkp; }
-        Chunk *front();
-        void popFront();
-        void removeAndPopFront();
+        explicit Iter(ChunkPool &pool) : current_(pool.head_) {}
+        bool done() const { return !current_; }
+        void next();
+        Chunk *get() const { return current_; }
+        operator Chunk *() const { return get(); }
+        Chunk *operator->() const { return get(); }
       private:
-        ChunkPool &pool;
-        Chunk **chunkp;
+        Chunk *current_;
     };
 
   private:

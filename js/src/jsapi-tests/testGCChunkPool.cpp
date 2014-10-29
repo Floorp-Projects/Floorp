@@ -27,8 +27,8 @@ BEGIN_TEST(testGCChunkPool)
 
     // Iterate.
     uint32_t i = 0;
-    for (js::gc::ChunkPool::Enum e(pool); !e.empty(); e.popFront(), ++i)
-        CHECK(e.front());
+    for (js::gc::ChunkPool::Iter iter(pool); !iter.done(); iter.next(), ++i)
+        CHECK(iter.get());
     CHECK(i == pool.count());
     MOZ_ASSERT(pool.verify());
 
@@ -46,9 +46,9 @@ BEGIN_TEST(testGCChunkPool)
     // Remove.
     js::gc::Chunk *chunk = nullptr;
     int offset = N / 2;
-    for (js::gc::ChunkPool::Enum e(pool); !e.empty(); e.popFront(), --offset) {
+    for (js::gc::ChunkPool::Iter iter(pool); !iter.done(); iter.next(), --offset) {
         if (offset == 0) {
-            chunk = pool.remove(e.front());
+            chunk = pool.remove(iter.get());
             break;
         }
     }
@@ -59,9 +59,10 @@ BEGIN_TEST(testGCChunkPool)
 
     // Destruct.
     js::AutoLockGC lock(rt);
-    for (js::gc::ChunkPool::Enum e(pool); !e.empty();) {
-        js::gc::Chunk *chunk = e.front();
-        e.removeAndPopFront();
+    for (js::gc::ChunkPool::Iter iter(pool); !iter.done();) {
+        js::gc::Chunk *chunk = iter.get();
+        iter.next();
+        pool.remove(chunk);
         js::gc::UnmapPages(chunk, js::gc::ChunkSize);
     }
 
