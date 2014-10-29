@@ -2118,7 +2118,7 @@ SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
     RootedShape shape(cxArg, foundShape);
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         /* ES5 8.12.4 [[Put]] step 2, for a dense data property on pobj. */
-        if (pobj != obj)
+        if (pobj != receiver)
             shape = nullptr;
     } else {
         /* ES5 8.12.4 [[Put]] step 2. */
