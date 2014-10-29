@@ -10,11 +10,13 @@
  * liability, trademark and document use rules apply.
  */
 
+interface WindowProxy;
+
 interface TimeEvent : Event
 {
   readonly attribute long         detail;
   readonly attribute WindowProxy? view;
   void initTimeEvent(DOMString aType,
-                     Window? aView,
+                     WindowProxy? aView,
                      long aDetail);
 };

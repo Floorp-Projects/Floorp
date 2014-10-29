@@ -28,7 +28,7 @@ interface MouseEvent : UIEvent {
   void                              initMouseEvent(DOMString typeArg, 
                                                    boolean canBubbleArg, 
                                                    boolean cancelableArg, 
-                                                   Window? viewArg,
+                                                   WindowProxy? viewArg, 
                                                    long detailArg, 
                                                    long screenXArg, 
                                                    long screenYArg, 
@@ -52,7 +52,15 @@ partial interface MouseEvent
 };
 
 // Suggested initMouseEvent replacement initializer:
-dictionary MouseEventInit : UIEventInit {
+dictionary MouseEventInit {
+  // Attributes from Event:
+  boolean        bubbles       = false;
+  boolean        cancelable    = false;
+
+  // Attributes from UIEvent:
+  WindowProxy?   view          = null;
+  long           detail        = 0;
+
   // Attributes for MouseEvent:
   long           screenX       = 0;
   long           screenY       = 0;
@@ -92,7 +100,7 @@ partial interface MouseEvent
   void                initNSMouseEvent(DOMString typeArg,
                                        boolean canBubbleArg,
                                        boolean cancelableArg,
-                                       Window? viewArg,
+                                       WindowProxy? viewArg,
                                        long detailArg,
                                        long screenXArg,
                                        long screenYArg,

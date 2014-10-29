@@ -4,6 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+interface WindowProxy;
+
 interface ScrollAreaEvent : UIEvent
 {
   readonly attribute float x;
@@ -15,7 +17,7 @@ interface ScrollAreaEvent : UIEvent
   void initScrollAreaEvent(DOMString type,
                            boolean canBubble,
                            boolean cancelable,
-                           Window? view,
+                           WindowProxy? view,
                            long detail,
                            float x,
                            float y,

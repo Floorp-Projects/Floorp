@@ -4,6 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+interface WindowProxy;
+
 [Constructor(DOMString typeArg, optional KeyboardEventInit keyboardEventInitDict)]
 interface KeyboardEvent : UIEvent
 {
