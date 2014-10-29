@@ -11,19 +11,21 @@ let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 let gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
+let { generateUUID } = Cc['@mozilla.org/uuid-generator;1'].getService(Ci.nsIUUIDGenerator);
 let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
-
 let { CallWatcherFront } = devtools.require("devtools/server/actors/call-watcher");
 let { CanvasFront } = devtools.require("devtools/server/actors/canvas");
 let TiltGL = devtools.require("devtools/tilt/tilt-gl");
 let TargetFactory = devtools.TargetFactory;
 let Toolbox = devtools.Toolbox;
+let mm = null
 
+const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js";
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/canvasdebugger/test/";
 const SIMPLE_CANVAS_URL = EXAMPLE_URL + "doc_simple-canvas.html";
 const SIMPLE_BITMASKS_URL = EXAMPLE_URL + "doc_simple-canvas-bitmasks.html";
@@ -47,6 +49,15 @@ registerCleanupFunction(() => {
   info("Forcing GC after canvas debugger test.");
   Cu.forceGC();
 });
+
+/**
+ * Call manually in tests that use frame script utils after initializing
+ * the shader editor. Call after init but before navigating to different pages.
+ */
+function loadFrameScripts () {
+  mm = gBrowser.selectedBrowser.messageManager;
+  mm.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
+}
 
 function addTab(aUrl, aWindow) {
   info("Adding tab: " + aUrl);
@@ -231,4 +242,31 @@ function teardown(aPanel) {
     once(aPanel, "destroyed"),
     removeTab(aPanel.target.tab)
   ]);
+}
+
+/**
+ * Takes a string `script` and evaluates it directly in the content
+ * in potentially a different process.
+ */
+function evalInDebuggee (script) {
+  let deferred = promise.defer();
+
+  if (!mm) {
+    throw new Error("`loadFrameScripts()` must be called when using MessageManager.");
+  }
+
+  let id = generateUUID().toString();
+  mm.sendAsyncMessage("devtools:test:eval", { script: script, id: id });
+  mm.addMessageListener("devtools:test:eval:response", handler);
+
+  function handler ({ data }) {
+    if (id !== data.id) {
+      return;
+    }
+
+    mm.removeMessageListener("devtools:test:eval:response", handler);
+    deferred.resolve(data.value);
+  }
+
+  return deferred.promise;
 }
