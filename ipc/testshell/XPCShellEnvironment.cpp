@@ -559,7 +559,7 @@ XPCShellEnvironment::Init()
     JS::Rooted<Value> privateVal(cx, PrivateValue(this));
     if (!JS_DefineProperty(cx, globalObj, "__XPCShellEnvironment",
                            privateVal,
-                           JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_PROPOP_ACCESSORS,
+                           JSPROP_READONLY | JSPROP_PERMANENT,
                            JS_STUBGETTER, JS_STUBSETTER) ||
         !JS_DefineFunctions(cx, globalObj, gGlobalFunctions) ||
         !JS_DefineProfilingFunctions(cx, globalObj))

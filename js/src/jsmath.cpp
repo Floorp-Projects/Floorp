@@ -1567,7 +1567,7 @@ js_InitMathClass(JSContext *cx, HandleObject obj)
     if (!Math)
         return nullptr;
 
-    if (!JS_DefineProperty(cx, obj, js_Math_str, Math, JSPROP_PROPOP_ACCESSORS,
+    if (!JS_DefineProperty(cx, obj, js_Math_str, Math, 0,
                            JS_STUBGETTER, JS_STUBSETTER))
     {
         return nullptr;

@@ -3541,7 +3541,7 @@ JS_InitReflect(JSContext *cx, HandleObject obj)
     if (!Reflect)
         return nullptr;
 
-    if (!JS_DefineProperty(cx, obj, "Reflect", Reflect, JSPROP_PROPOP_ACCESSORS,
+    if (!JS_DefineProperty(cx, obj, "Reflect", Reflect, 0,
                            JS_STUBGETTER, JS_STUBSETTER)) {
         return nullptr;
     }
