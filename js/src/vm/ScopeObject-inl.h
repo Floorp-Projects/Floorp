@@ -57,9 +57,9 @@ inline void
 CallObject::setAliasedLexicalsToThrowOnTouch(JSScript *script)
 {
     uint32_t aliasedLexicalBegin = script->bindings.aliasedBodyLevelLexicalBegin();
-    uint32_t aliasedLexicalEnd = slotSpan();
+    uint32_t aliasedLexicalEnd = numFixedSlots();
     for (uint32_t slot = aliasedLexicalBegin; slot < aliasedLexicalEnd; slot++)
-        initSlot(slot, MagicValue(JS_UNINITIALIZED_LEXICAL));
+        initFixedSlot(slot, MagicValue(JS_UNINITIALIZED_LEXICAL));
 }
 
 template <AllowGC allowGC>
