@@ -28,6 +28,7 @@ let TargetFactory = devtools.TargetFactory;
 let Toolbox = devtools.Toolbox;
 
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/debugger/test/";
+const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";
 
 gDevTools.testing = true;
 SimpleTest.registerCleanupFunction(() => {
@@ -85,6 +86,9 @@ function addTab(aUrl, aWindow) {
   targetWindow.focus();
   let tab = targetBrowser.selectedTab = targetBrowser.addTab(aUrl);
   let linkedBrowser = tab.linkedBrowser;
+
+  info("Loading frame script with url " + FRAME_SCRIPT_URL + ".");
+  linkedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
 
   linkedBrowser.addEventListener("load", function onLoad() {
     linkedBrowser.removeEventListener("load", onLoad, true);
@@ -936,4 +940,28 @@ function popPrefs() {
   let deferred = promise.defer();
   SpecialPowers.popPrefEnv(deferred.resolve);
   return deferred.promise;
+}
+
+function sendMessageToTab(tab, name, data, objects) {
+  info("Sending message with name " + name + " to tab.");
+
+  tab.linkedBrowser.messageManager.sendAsyncMessage(name, data, objects);
+}
+
+function waitForMessageFromTab(tab, name) {
+  info("Waiting for message with name " + name + " from tab.");
+
+  return new Promise(function (resolve) {
+    let messageManager = tab.linkedBrowser.messageManager;
+    messageManager.addMessageListener(name, function listener(message) {
+      messageManager.removeMessageListener(name, listener);
+      resolve(message);
+    });
+  });
+}
+
+function callInTab(tab, name) {
+  info("Calling function with name " + name + " in tab.");
+
+  sendMessageToTab(tab, "test:call", name);
 }

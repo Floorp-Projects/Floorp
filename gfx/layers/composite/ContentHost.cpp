@@ -35,12 +35,12 @@ ContentHostBase::~ContentHostBase()
 }
 
 void
-ContentHostBase::Composite(EffectChain& aEffectChain,
-                           float aOpacity,
-                           const gfx::Matrix4x4& aTransform,
-                           const Filter& aFilter,
-                           const Rect& aClipRect,
-                           const nsIntRegion* aVisibleRegion)
+ContentHostTexture::Composite(EffectChain& aEffectChain,
+                              float aOpacity,
+                              const gfx::Matrix4x4& aTransform,
+                              const Filter& aFilter,
+                              const Rect& aClipRect,
+                              const nsIntRegion* aVisibleRegion)
 {
   NS_ASSERTION(aVisibleRegion, "Requires a visible region");
 
@@ -49,14 +49,21 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
     return;
   }
 
-  RefPtr<TextureSource> source = GetTextureSource();
-  RefPtr<TextureSource> sourceOnWhite = GetTextureSourceOnWhite();
+  if (!mTextureHost->BindTextureSource(mTextureSource)) {
+    return;
+  }
+  MOZ_ASSERT(mTextureSource.get());
 
-  if (!source) {
+  if (!mTextureHostOnWhite) {
+    mTextureSourceOnWhite = nullptr;
+  }
+  if (mTextureHostOnWhite && !mTextureHostOnWhite->BindTextureSource(mTextureSourceOnWhite)) {
     return;
   }
 
-  RefPtr<TexturedEffect> effect = GenEffect(aFilter);
+  RefPtr<TexturedEffect> effect = CreateTexturedEffect(mTextureSource.get(),
+                                                       mTextureSourceOnWhite.get(),
+                                                       aFilter, true);
   if (!effect) {
     return;
   }
@@ -81,7 +88,7 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
   region.MoveBy(-origin);
 
   // Figure out the intersecting draw region
-  gfx::IntSize texSize = source->GetSize();
+  gfx::IntSize texSize = mTextureSource->GetSize();
   nsIntRect textureRect = nsIntRect(0, 0, texSize.width, texSize.height);
   textureRect.MoveBy(region.GetBounds().TopLeft());
   nsIntRegion subregion;
@@ -105,14 +112,14 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
     regionRects.Or(regionRects, regionRect);
   }
 
-  BigImageIterator* bigImgIter = source->AsBigImageIterator();
+  BigImageIterator* bigImgIter = mTextureSource->AsBigImageIterator();
   BigImageIterator* iterOnWhite = nullptr;
   if (bigImgIter) {
     bigImgIter->BeginBigImageIteration();
   }
 
-  if (sourceOnWhite) {
-    iterOnWhite = sourceOnWhite->AsBigImageIterator();
+  if (mTextureSourceOnWhite) {
+    iterOnWhite = mTextureSourceOnWhite->AsBigImageIterator();
     MOZ_ASSERT(!bigImgIter || bigImgIter->GetTileCount() == iterOnWhite->GetTileCount(),
                "Tile count mismatch on component alpha texture");
     if (iterOnWhite) {
@@ -205,32 +212,40 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
                                    aTransform, mFlashCounter);
 }
 
-TemporaryRef<TexturedEffect>
-ContentHostBase::GenEffect(const gfx::Filter& aFilter)
-{
-  RefPtr<TextureSource> source = GetTextureSource();
-  RefPtr<TextureSource> sourceOnWhite = GetTextureSourceOnWhite();
-  if (!source) {
-    return nullptr;
-  }
-  return CreateTexturedEffect(source, sourceOnWhite, aFilter, true);
-}
-
 void
 ContentHostTexture::UseTextureHost(TextureHost* aTexture)
 {
+  if (mTextureHost && mTextureHost != aTexture) {
+    mTextureHost->UnbindTextureSource();
+  }
   ContentHostBase::UseTextureHost(aTexture);
   mTextureHost = aTexture;
   mTextureHostOnWhite = nullptr;
+  mTextureSourceOnWhite = nullptr;
+  if (mTextureHost) {
+    mTextureHost->PrepareTextureSource(mTextureSource);
+  }
 }
 
 void
 ContentHostTexture::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
                                               TextureHost* aTextureOnWhite)
 {
+  if (mTextureHost && mTextureHost != aTextureOnBlack) {
+    mTextureHost->UnbindTextureSource();
+  }
+  if (mTextureHostOnWhite && mTextureHostOnWhite != aTextureOnWhite) {
+    mTextureHostOnWhite->UnbindTextureSource();
+  }
   ContentHostBase::UseComponentAlphaTextures(aTextureOnBlack, aTextureOnWhite);
   mTextureHost = aTextureOnBlack;
   mTextureHostOnWhite = aTextureOnWhite;
+  if (mTextureHost) {
+    mTextureHost->PrepareTextureSource(mTextureSource);
+  }
+  if (mTextureHostOnWhite) {
+    mTextureHostOnWhite->PrepareTextureSource(mTextureSourceOnWhite);
+  }
 }
 
 void
@@ -418,6 +433,176 @@ ContentHostIncremental::UpdateIncremental(TextureIdentifier aTextureId,
 }
 
 void
+ContentHostIncremental::Composite(EffectChain& aEffectChain,
+                                  float aOpacity,
+                                  const gfx::Matrix4x4& aTransform,
+                                  const Filter& aFilter,
+                                  const Rect& aClipRect,
+                                  const nsIntRegion* aVisibleRegion)
+{
+  NS_ASSERTION(aVisibleRegion, "Requires a visible region");
+
+  AutoLockCompositableHost lock(this);
+  if (lock.Failed()) {
+    return;
+  }
+
+  if (!mSource) {
+    return;
+  }
+
+  RefPtr<TexturedEffect> effect = CreateTexturedEffect(mSource.get(),
+                                                       mSourceOnWhite.get(),
+                                                       aFilter, true);
+  if (!effect) {
+    return;
+  }
+
+  aEffectChain.mPrimaryEffect = effect;
+
+  nsIntRegion tmpRegion;
+  const nsIntRegion* renderRegion;
+  if (PaintWillResample()) {
+    // If we're resampling, then the texture image will contain exactly the
+    // entire visible region's bounds, and we should draw it all in one quad
+    // to avoid unexpected aliasing.
+    tmpRegion = aVisibleRegion->GetBounds();
+    renderRegion = &tmpRegion;
+  } else {
+    renderRegion = aVisibleRegion;
+  }
+
+  nsIntRegion region(*renderRegion);
+  nsIntPoint origin = GetOriginOffset();
+  // translate into TexImage space, buffer origin might not be at texture (0,0)
+  region.MoveBy(-origin);
+
+  // Figure out the intersecting draw region
+  gfx::IntSize texSize = mSource->GetSize();
+  nsIntRect textureRect = nsIntRect(0, 0, texSize.width, texSize.height);
+  textureRect.MoveBy(region.GetBounds().TopLeft());
+  nsIntRegion subregion;
+  subregion.And(region, textureRect);
+  if (subregion.IsEmpty()) {
+    // Region is empty, nothing to draw
+    return;
+  }
+
+  nsIntRegion screenRects;
+  nsIntRegion regionRects;
+
+  // Collect texture/screen coordinates for drawing
+  nsIntRegionRectIterator iter(subregion);
+  while (const nsIntRect* iterRect = iter.Next()) {
+    nsIntRect regionRect = *iterRect;
+    nsIntRect screenRect = regionRect;
+    screenRect.MoveBy(origin);
+
+    screenRects.Or(screenRects, screenRect);
+    regionRects.Or(regionRects, regionRect);
+  }
+
+  BigImageIterator* bigImgIter = mSource->AsBigImageIterator();
+  BigImageIterator* iterOnWhite = nullptr;
+  if (bigImgIter) {
+    bigImgIter->BeginBigImageIteration();
+  }
+
+  if (mSourceOnWhite) {
+    iterOnWhite = mSourceOnWhite->AsBigImageIterator();
+    MOZ_ASSERT(!bigImgIter || bigImgIter->GetTileCount() == iterOnWhite->GetTileCount(),
+               "Tile count mismatch on component alpha texture");
+    if (iterOnWhite) {
+      iterOnWhite->BeginBigImageIteration();
+    }
+  }
+
+  bool usingTiles = (bigImgIter && bigImgIter->GetTileCount() > 1);
+  do {
+    if (iterOnWhite) {
+      MOZ_ASSERT(iterOnWhite->GetTileRect() == bigImgIter->GetTileRect(),
+                 "component alpha textures should be the same size.");
+    }
+
+    nsIntRect texRect = bigImgIter ? bigImgIter->GetTileRect()
+                                   : nsIntRect(0, 0,
+                                               texSize.width,
+                                               texSize.height);
+
+    // Draw texture. If we're using tiles, we do repeating manually, as texture
+    // repeat would cause each individual tile to repeat instead of the
+    // compound texture as a whole. This involves drawing at most 4 sections,
+    // 2 for each axis that has texture repeat.
+    for (int y = 0; y < (usingTiles ? 2 : 1); y++) {
+      for (int x = 0; x < (usingTiles ? 2 : 1); x++) {
+        nsIntRect currentTileRect(texRect);
+        currentTileRect.MoveBy(x * texSize.width, y * texSize.height);
+
+        nsIntRegionRectIterator screenIter(screenRects);
+        nsIntRegionRectIterator regionIter(regionRects);
+
+        const nsIntRect* screenRect;
+        const nsIntRect* regionRect;
+        while ((screenRect = screenIter.Next()) &&
+               (regionRect = regionIter.Next())) {
+          nsIntRect tileScreenRect(*screenRect);
+          nsIntRect tileRegionRect(*regionRect);
+
+          // When we're using tiles, find the intersection between the tile
+          // rect and this region rect. Tiling is then handled by the
+          // outer for-loops and modifying the tile rect.
+          if (usingTiles) {
+            tileScreenRect.MoveBy(-origin);
+            tileScreenRect = tileScreenRect.Intersect(currentTileRect);
+            tileScreenRect.MoveBy(origin);
+
+            if (tileScreenRect.IsEmpty())
+              continue;
+
+            tileRegionRect = regionRect->Intersect(currentTileRect);
+            tileRegionRect.MoveBy(-currentTileRect.TopLeft());
+          }
+          gfx::Rect rect(tileScreenRect.x, tileScreenRect.y,
+                         tileScreenRect.width, tileScreenRect.height);
+
+          effect->mTextureCoords = Rect(Float(tileRegionRect.x) / texRect.width,
+                                        Float(tileRegionRect.y) / texRect.height,
+                                        Float(tileRegionRect.width) / texRect.width,
+                                        Float(tileRegionRect.height) / texRect.height);
+          GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain, aOpacity, aTransform);
+          if (usingTiles) {
+            DiagnosticFlags diagnostics = DiagnosticFlags::CONTENT | DiagnosticFlags::BIGIMAGE;
+            if (iterOnWhite) {
+              diagnostics |= DiagnosticFlags::COMPONENT_ALPHA;
+            }
+            GetCompositor()->DrawDiagnostics(diagnostics, rect, aClipRect,
+                                             aTransform, mFlashCounter);
+          }
+        }
+      }
+    }
+
+    if (iterOnWhite) {
+      iterOnWhite->NextTile();
+    }
+  } while (usingTiles && bigImgIter->NextTile());
+
+  if (bigImgIter) {
+    bigImgIter->EndBigImageIteration();
+  }
+  if (iterOnWhite) {
+    iterOnWhite->EndBigImageIteration();
+  }
+
+  DiagnosticFlags diagnostics = DiagnosticFlags::CONTENT;
+  if (iterOnWhite) {
+    diagnostics |= DiagnosticFlags::COMPONENT_ALPHA;
+  }
+  GetCompositor()->DrawDiagnostics(diagnostics, nsIntRegion(mBufferRect), aClipRect,
+                                   aTransform, mFlashCounter);
+}
+
+void
 ContentHostIncremental::FlushUpdateQueue()
 {
   // If we're not compositing for some reason (the window being minimized
@@ -437,20 +622,6 @@ ContentHostIncremental::ProcessTextureUpdates()
     mUpdateList[i]->Execute(this);
   }
   mUpdateList.Clear();
-}
-
-TextureSource*
-ContentHostIncremental::GetTextureSource()
-{
-  MOZ_ASSERT(mLocked);
-  return mSource;
-}
-
-TextureSource*
-ContentHostIncremental::GetTextureSourceOnWhite()
-{
-  MOZ_ASSERT(mLocked);
-  return mSourceOnWhite;
 }
 
 void
@@ -681,6 +852,35 @@ ContentHostTexture::GetRenderState()
   }
   result.SetOffset(GetOriginOffset());
   return result;
+}
+
+TemporaryRef<TexturedEffect>
+ContentHostTexture::GenEffect(const gfx::Filter& aFilter)
+{
+  if (!mTextureHost) {
+    return nullptr;
+  }
+  if (!mTextureHost->BindTextureSource(mTextureSource)) {
+    return nullptr;
+  }
+  if (!mTextureHostOnWhite) {
+    mTextureSourceOnWhite = nullptr;
+  }
+  if (mTextureHostOnWhite && !mTextureHostOnWhite->BindTextureSource(mTextureSourceOnWhite)) {
+    return nullptr;
+  }
+  return CreateTexturedEffect(mTextureSource.get(),
+                              mTextureSourceOnWhite.get(),
+                              aFilter, true);
+}
+
+TemporaryRef<TexturedEffect>
+ContentHostIncremental::GenEffect(const gfx::Filter& aFilter)
+{
+  if (!mSource) {
+    return nullptr;
+  }
+  return CreateTexturedEffect(mSource, mSourceOnWhite, aFilter, true);
 }
 
 #ifdef MOZ_DUMP_PAINTING

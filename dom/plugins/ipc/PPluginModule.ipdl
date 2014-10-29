@@ -6,6 +6,7 @@
 include protocol PPluginInstance;
 include protocol PPluginScriptableObject;
 include protocol PCrashReporter;
+include protocol PContent;
 
 using NPError from "npapi.h";
 using NPNVariable from "npapi.h";
@@ -18,6 +19,8 @@ namespace plugins {
 
 intr protocol PPluginModule
 {
+  bridges PContent, PPluginModule;
+
   manages PPluginInstance;
   manages PCrashReporter;
 
@@ -107,10 +110,14 @@ parent:
   async PopCursor();
   sync GetNativeCursorsSupported() returns (bool supported);
 
-  sync NPN_SetException(nullable PPluginScriptableObject actor,
-                        nsCString message);
+  sync NPN_SetException(nsCString message);
 
   async NPN_ReloadPlugins(bool aReloadPages);
+
+  // Notifies the chrome process that a PluginModuleChild linked to a content
+  // process was destroyed. The chrome process may choose to asynchronously shut
+  // down the plugin process in response.
+  async NotifyContentModuleDestroyed();
 };
 
 } // namespace plugins

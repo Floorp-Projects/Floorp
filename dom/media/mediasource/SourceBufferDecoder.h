@@ -84,18 +84,6 @@ public:
     mTaskQueue = aTaskQueue;
   }
 
-  void BreakCycles()
-  {
-    if (mReader) {
-      mReader->BreakCycles();
-      mReader = nullptr;
-    }
-    mTaskQueue = nullptr;
-#ifdef MOZ_EME
-    mCDMProxy = nullptr;
-#endif
-  }
-
 #ifdef MOZ_EME
   virtual nsresult SetCDMProxy(CDMProxy* aProxy)
   {

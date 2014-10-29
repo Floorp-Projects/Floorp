@@ -43,6 +43,7 @@
 #include "mozilla/layers/PCompositorChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/plugins/PluginModuleParent.h"
 
 #if defined(MOZ_CONTENT_SANDBOX)
 #if defined(XP_WIN)
@@ -930,6 +931,13 @@ ContentChild::DeallocPCycleCollectWithLogsChild(PCycleCollectWithLogsChild* /* a
     // Also, we're already in ~CycleCollectWithLogsChild (q.v.) at
     // this point, so we shouldn't touch the actor in any case.
     return true;
+}
+
+mozilla::plugins::PPluginModuleParent*
+ContentChild::AllocPPluginModuleParent(mozilla::ipc::Transport* aTransport,
+                                       base::ProcessId aOtherProcess)
+{
+    return plugins::PluginModuleContentParent::Create(aTransport, aOtherProcess);
 }
 
 PContentBridgeChild*

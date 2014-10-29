@@ -148,6 +148,11 @@ public:
                                         bool* aIsForBrowser) MOZ_OVERRIDE;
     virtual bool AnswerBridgeToChildProcess(const uint64_t& id) MOZ_OVERRIDE;
 
+    virtual bool AnswerLoadPlugin(const uint32_t& aPluginId) MOZ_OVERRIDE;
+    virtual bool RecvFindPlugins(const uint32_t& aPluginEpoch,
+                                 nsTArray<PluginTag>* aPlugins,
+                                 uint32_t* aNewPluginEpoch) MOZ_OVERRIDE;
+
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ContentParent, nsIObserver)
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS

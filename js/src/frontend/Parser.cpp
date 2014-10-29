@@ -320,7 +320,8 @@ ParseContext<ParseHandler>::popLetDecl(JSAtom *atom)
 
 template <typename ParseHandler>
 static void
-AppendPackedBindings(const ParseContext<ParseHandler> *pc, const DeclVector &vec, Binding *dst)
+AppendPackedBindings(const ParseContext<ParseHandler> *pc, const DeclVector &vec, Binding *dst,
+                     uint32_t *numUnaliased = nullptr)
 {
     for (size_t i = 0; i < vec.length(); ++i, ++dst) {
         Definition *dn = vec[i];
@@ -357,6 +358,8 @@ AppendPackedBindings(const ParseContext<ParseHandler> *pc, const DeclVector &vec
                         pc->decls().lookupFirst(name) == dn);
 
         *dst = Binding(name, kind, aliased);
+        if (!aliased && numUnaliased)
+            ++*numUnaliased;
     }
 }
 
@@ -392,13 +395,17 @@ ParseContext<ParseHandler>::generateFunctionBindings(ExclusiveContext *cx, Token
         return false;
     }
 
+    uint32_t numUnaliasedVars = 0;
+    uint32_t numUnaliasedBodyLevelLexicals = 0;
+
     AppendPackedBindings(this, args_, packedBindings);
-    AppendPackedBindings(this, vars_, packedBindings + args_.length());
+    AppendPackedBindings(this, vars_, packedBindings + args_.length(), &numUnaliasedVars);
     AppendPackedBindings(this, bodyLevelLexicals_,
-                         packedBindings + args_.length() + vars_.length());
+                         packedBindings + args_.length() + vars_.length(), &numUnaliasedBodyLevelLexicals);
 
     return Bindings::initWithTemporaryStorage(cx, bindings, args_.length(), vars_.length(),
                                               bodyLevelLexicals_.length(), blockScopeDepth,
+                                              numUnaliasedVars, numUnaliasedBodyLevelLexicals,
                                               packedBindings);
 }
 

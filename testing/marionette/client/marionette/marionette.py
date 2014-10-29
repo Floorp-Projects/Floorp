@@ -1281,14 +1281,15 @@ class Marionette(object):
         NoSuchElementException will be raised.
 
         :param method: The method to use to locate the element; one of: "id",
-         "name", "class name", "tag name", "css selector", "link text",
-         "partial link text" and "xpath". Note that the methods supported in
-         the chrome dom are only "id", "class name", "tag name" and "xpath".
+                       "name", "class name", "tag name", "css selector", "link text",
+                       "partial link text", "xpath", "anon" and "anon attribute".
+                       Note that the "name", "css selector", "link text" and
+                       "partial link test" methods are not supported in the chrome dom.
         :param target: The target of the search.  For example, if method =
-         "tag", target might equal "div".  If method = "id", target would be
-         an element id.
+                       "tag", target might equal "div".  If method = "id", target would be
+                       an element id.
         :param id: If specified, search for elements only inside the element
-         with the specified id.
+                   with the specified id.
         '''
         kwargs = { 'value': target, 'using': method }
         if id:
@@ -1307,14 +1308,15 @@ class Marionette(object):
         time set by set_search_timeout().
 
         :param method: The method to use to locate the elements; one of:
-         "id", "name", "class name", "tag name", "css selector", "link text",
-         "partial link text" and "xpath". Note that the methods supported in
-         the chrome dom are only "id", "class name", "tag name" and "xpath".
+                       "id", "name", "class name", "tag name", "css selector", "link text",
+                       "partial link text", "xpath", "anon" and "anon attribute".
+                       Note that the "name", "css selector", "link text" and
+                       "partial link test" methods are not supported in the chrome dom.
         :param target: The target of the search.  For example, if method =
-         "tag", target might equal "div".  If method = "id", target would be
-         an element id.
+                       "tag", target might equal "div".  If method = "id", target would be
+                       an element id.
         :param id: If specified, search for elements only inside the element
-         with the specified id.
+                   with the specified id.
         '''
         kwargs = { 'value': target, 'using': method }
         if id:
