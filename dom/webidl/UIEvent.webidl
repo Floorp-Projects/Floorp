@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface WindowProxy;
-
 [Constructor(DOMString type, optional UIEventInit eventInitDict)]
 interface UIEvent : Event
 {
@@ -20,7 +18,7 @@ interface UIEvent : Event
   void initUIEvent(DOMString aType,
                    boolean aCanBubble,
                    boolean aCancelable,
-                   WindowProxy? aView,
+                   Window? aView,
                    long aDetail);
 };
 
@@ -42,6 +40,6 @@ partial interface UIEvent {
 
 dictionary UIEventInit : EventInit
 {
-  WindowProxy? view = null;
-  long         detail = 0;
+  Window? view = null;
+  long    detail = 0;
 };
