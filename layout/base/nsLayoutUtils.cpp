@@ -5210,6 +5210,20 @@ TileNearRect(const nsRect& aAnyTile, const nsRect& aTargetRect)
                             distance.y / aAnyTile.height * aAnyTile.height);
 }
 
+static gfxFloat
+StableRound(gfxFloat aValue)
+{
+  // Values slightly less than 0.5 should round up like 0.5 would; we're
+  // assuming they were meant to be 0.5.
+  return floor(aValue + 0.5001);
+}
+
+static gfxPoint
+StableRound(const gfxPoint& aPoint)
+{
+  return gfxPoint(StableRound(aPoint.x), StableRound(aPoint.y));
+}
+
 /**
  * Given a set of input parameters, compute certain output parameters
  * for drawing an image with the image snapping algorithm.
@@ -5316,11 +5330,11 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
       MapToFloatImagePixels(imageSize, devPixelDest, anchorPoint);
 
     if (didSnap) {
-      imageSpaceAnchorPoint.Round();
+      imageSpaceAnchorPoint = StableRound(imageSpaceAnchorPoint);
       anchorPoint = imageSpaceAnchorPoint;
       anchorPoint = MapToFloatUserPixels(imageSize, devPixelDest, anchorPoint);
       anchorPoint = currentMatrix.Transform(anchorPoint);
-      anchorPoint.Round();
+      anchorPoint = StableRound(anchorPoint);
     }
 
     gfxRect anchoredDestRect(anchorPoint, scaledDest);
