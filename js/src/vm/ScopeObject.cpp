@@ -198,10 +198,6 @@ CallObject::createTemplateObject(JSContext *cx, HandleScript script, gc::Initial
     if (!obj)
         return nullptr;
 
-    // Set uninitialized lexicals even on template objects, as Ion will
-    // copy over the template object's slot values in the fast path.
-    obj->as<CallObject>().setAliasedLexicalsToThrowOnTouch(script);
-
     return &obj->as<CallObject>();
 }
 
@@ -221,6 +217,7 @@ CallObject::create(JSContext *cx, HandleScript script, HandleObject enclosing, H
 
     callobj->as<ScopeObject>().setEnclosingScope(enclosing);
     callobj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
+    callobj->setAliasedLexicalsToThrowOnTouch(script);
 
     if (script->treatAsRunOnce()) {
         Rooted<CallObject*> ncallobj(cx, callobj);
