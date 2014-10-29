@@ -835,13 +835,18 @@ RTCPeerConnection.prototype = {
       throw new this._win.DOMError("",
           "Invalid candidate passed to addIceCandidate!");
     }
+
+    this._queueOrRun({
+      func: this._addIceCandidate,
+      args: [cand, onSuccess, onError],
+      wait: false
+    });
+  },
+
+  _addIceCandidate: function(cand, onSuccess, onError) {
     this._onAddIceCandidateSuccess = onSuccess || null;
     this._onAddIceCandidateError = onError || null;
 
-    this._queueOrRun({ func: this._addIceCandidate, args: [cand], wait: false });
-  },
-
-  _addIceCandidate: function(cand) {
     this._impl.addIceCandidate(cand.candidate, cand.sdpMid || "",
                                (cand.sdpMLineIndex === null) ? 0 :
                                  cand.sdpMLineIndex + 1);
