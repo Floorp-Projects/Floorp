@@ -30,6 +30,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/FxAccountsOAuthClient.jsm");
 
 Cu.importGlobalProperties(["URL"]);
@@ -111,7 +112,6 @@ function getJSONPref(aName) {
 let gRegisteredDeferred = null;
 let gHawkClient = null;
 let gLocalizedStrings = null;
-let gInitializeTimer = null;
 let gFxAEnabled = true;
 let gFxAOAuthClientPromise = null;
 let gFxAOAuthClient = null;
@@ -309,7 +309,7 @@ let MozLoopServiceInternal = {
 
   /**
    * Starts registration of Loop with the push server, and then will register
-   * with the Loop server. It will return early if already registered.
+   * with the Loop server as a GUEST. It will return early if already registered.
    *
    * @returns {Promise} a promise that is resolved with no params on completion, or
    *          rejected with an error code or string.
@@ -871,41 +871,16 @@ let MozLoopServiceInternal = {
 };
 Object.freeze(MozLoopServiceInternal);
 
+
 let gInitializeTimerFunc = (deferredInitialization) => {
   // Kick off the push notification service into registering after a timeout.
   // This ensures we're not doing too much straight after the browser's finished
   // starting up.
-  gInitializeTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  gInitializeTimer.initWithCallback(Task.async(function* initializationCallback() {
-    yield MozLoopService.register().then(Task.async(function*() {
-      if (!MozLoopServiceInternal.fxAOAuthTokenData) {
-        log.debug("MozLoopService: Initialized without an already logged-in account");
-        deferredInitialization.resolve("initialized to guest status");
-        return;
-      }
 
-      log.debug("MozLoopService: Initializing with already logged-in account");
-      let registeredPromise =
-            MozLoopServiceInternal.registerWithLoopServer(
-              LOOP_SESSION_TYPE.FXA, {
-                calls: MozLoopServiceInternal.pushHandler.registeredChannels[MozLoopService.channelIDs.callsFxA],
-                rooms: MozLoopServiceInternal.pushHandler.registeredChannels[MozLoopService.channelIDs.roomsFxA]
-              });
-      registeredPromise.then(() => {
-        deferredInitialization.resolve("initialized to logged-in status");
-      }, error => {
-        log.debug("MozLoopService: error logging in using cached auth token");
-        MozLoopServiceInternal.setError("login", error);
-        deferredInitialization.reject("error logging in using cached auth token");
-      });
-    }), error => {
-      log.debug("MozLoopService: Failure of initial registration", error);
-      deferredInitialization.reject(error);
-    });
-    gInitializeTimer = null;
-  }),
-  MozLoopServiceInternal.initialRegistrationDelayMilliseconds, Ci.nsITimer.TYPE_ONE_SHOT);
+  setTimeout(MozLoopService.delayedInitialize.bind(MozLoopService, deferredInitialization),
+             MozLoopServiceInternal.initialRegistrationDelayMilliseconds);
 };
+
 
 /**
  * Public API
@@ -962,13 +937,60 @@ this.MozLoopService = {
     let deferredInitialization = Promise.defer();
     gInitializeTimerFunc(deferredInitialization);
 
-    return deferredInitialization.promise.catch(error => {
+    return deferredInitialization.promise;
+  }),
+
+  /**
+   * The core of the initialization work that happens once the browser is ready
+   * (after a timer when called during startup).
+   *
+   * Can be called more than once (e.g. if the initial setup fails at some phase).
+   * @param {Deferred} deferredInitialization
+   */
+  delayedInitialize: Task.async(function*(deferredInitialization) {
+    // Set or clear an error depending on how deferredInitialization gets resolved.
+    // We do this first so that it can handle the early returns below.
+    let completedPromise = deferredInitialization.promise.then(result => {
+      MozLoopServiceInternal.clearError("initialization");
+      return result;
+    },
+    error => {
+      // If we get a non-object then setError was already called for a different error type.
       if (typeof(error) == "object") {
-        // This never gets cleared since there is no UI to recover. Only restarting will work.
         MozLoopServiceInternal.setError("initialization", error);
       }
-      throw error;
     });
+
+    try {
+      yield this.promiseRegisteredWithServers();
+    } catch (ex) {
+      log.debug("MozLoopService: Failure of initial registration", ex);
+      deferredInitialization.reject(ex);
+      yield completedPromise;
+      return;
+    }
+
+    if (!MozLoopServiceInternal.fxAOAuthTokenData) {
+      log.debug("MozLoopService: Initialized without an already logged-in account");
+      deferredInitialization.resolve("initialized to guest status");
+      yield completedPromise;
+      return;
+    }
+
+    log.debug("MozLoopService: Initializing with already logged-in account");
+    let pushURLs = {
+      calls: MozLoopServiceInternal.pushHandler.registeredChannels[this.channelIDs.callsFxA],
+      rooms: MozLoopServiceInternal.pushHandler.registeredChannels[this.channelIDs.roomsFxA]
+    };
+
+    MozLoopServiceInternal.registerWithLoopServer(LOOP_SESSION_TYPE.FXA, pushURLs).then(() => {
+      deferredInitialization.resolve("initialized to logged-in status");
+    }, error => {
+      log.debug("MozLoopService: error logging in using cached auth token");
+      MozLoopServiceInternal.setError("login", error);
+      deferredInitialization.reject("error logging in using cached auth token");
+    });
+    yield completedPromise;
   }),
 
   /**
@@ -1081,25 +1103,10 @@ this.MozLoopService = {
                                              Services.tm.mainThread);
   },
 
-
   /**
-   * Starts registration of Loop with the push server, and then will register
-   * with the Loop server. It will return early if already registered.
-   *
-   * @returns {Promise} a promise that is resolved with no params on completion, or
-   *          rejected with an error code or string.
+   * @see MozLoopServiceInternal.promiseRegisteredWithServers
    */
-  register: function() {
-    log.debug("registering");
-    // Don't do anything if loop is not enabled.
-    if (!Services.prefs.getBoolPref("loop.enabled")) {
-      throw new Error("Loop is not enabled");
-    }
-
-    if (Services.prefs.getBoolPref("loop.throttled")) {
-      throw new Error("Loop is disabled by the soft-start mechanism");
-    }
-
+  promiseRegisteredWithServers: function() {
     return MozLoopServiceInternal.promiseRegisteredWithServers();
   },
 
