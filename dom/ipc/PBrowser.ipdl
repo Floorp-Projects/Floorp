@@ -69,7 +69,7 @@ union MaybeNativeKeyBinding
   void_t;
 };
 
-prio(normal upto urgent) intr protocol PBrowser
+prio(normal upto high) intr protocol PBrowser
 {
     manager PContent or PContentBridge;
 
@@ -141,7 +141,7 @@ parent:
      *  preference   Native widget preference for IME updates
      *  seqno        Current seqno value on the chrome side
      */
-    prio(urgent) sync NotifyIMEFocus(bool focus)
+    sync NotifyIMEFocus(bool focus)
       returns (nsIMEUpdatePreference preference, uint32_t seqno);
 
     /**
@@ -157,9 +157,8 @@ parent:
      *  for insertion, offset == end
      *  for deletion, offset == newEnd
      */
-    prio(urgent) async NotifyIMETextChange(uint32_t offset, uint32_t end,
-                                           uint32_t newEnd,
-                                           bool causedByComposition);
+    NotifyIMETextChange(uint32_t offset, uint32_t end, uint32_t newEnd,
+                        bool causedByComposition);
 
     /**
      * Notifies chrome that there is a IME compostion rect updated
@@ -169,10 +168,8 @@ parent:
      *  caretOffset  The offset of caret position
      *  caretRect    The rect of IME caret
      */
-    prio(urgent) async NotifyIMESelectedCompositionRect(uint32_t offset,
-                                                        nsIntRect[] rect,
-                                                        uint32_t caretOffset,
-                                                        nsIntRect caretRect);
+    NotifyIMESelectedCompositionRect(uint32_t offset, nsIntRect[] rect,
+                                     uint32_t caretOffset, nsIntRect caretRect);
 
     /**
      * Notifies chrome that there has been a change in selection
@@ -183,22 +180,22 @@ parent:
      *  focus        Offset where the caret is
      *  causedByComposition true if the change is caused by composition
      */
-    prio(urgent) async NotifyIMESelection(uint32_t seqno, uint32_t anchor,
-                                          uint32_t focus, bool causedByComposition);
+    NotifyIMESelection(uint32_t seqno, uint32_t anchor, uint32_t focus,
+                       bool causedByComposition);
 
     /**
      * Notifies chrome to refresh its text cache 
      *
      *  text         The entire content of the text field
      */
-    prio(urgent) async NotifyIMETextHint(nsString text);
+    NotifyIMETextHint(nsString text);
 
     /**
      * Notifies IME of mouse button event on a character in focused editor.
      *
      * Returns true if the mouse button event is consumd by IME.
      */
-    prio(urgent) sync NotifyIMEMouseButtonEvent(IMENotification notification)
+    sync NotifyIMEMouseButtonEvent(IMENotification notification)
       returns (bool consumedByIME);
 
     /**
@@ -212,7 +209,7 @@ parent:
      *  if cancel is PR_FALSE,
      *    widget should return the current composition text
      */
-    prio(urgent) sync EndIMEComposition(bool cancel) returns (nsString composition);
+    sync EndIMEComposition(bool cancel) returns (nsString composition);
 
     /**
      * Request that the parent process move focus to the browser's frame. If
@@ -220,17 +217,16 @@ parent:
      */
     RequestFocus(bool canRaise);
 
-    prio(urgent) sync GetInputContext() returns (int32_t IMEEnabled,
-                                                 int32_t IMEOpen,
-                                                 intptr_t NativeIMEContext);
+    sync GetInputContext() returns (int32_t IMEEnabled, int32_t IMEOpen,
+                                    intptr_t NativeIMEContext);
 
-    prio(urgent) async SetInputContext(int32_t IMEEnabled,
-                                       int32_t IMEOpen,
-                                       nsString type,
-                                       nsString inputmode,
-                                       nsString actionHint,
-                                       int32_t cause,
-                                       int32_t focusChange);
+    SetInputContext(int32_t IMEEnabled,
+                    int32_t IMEOpen,
+                    nsString type,
+                    nsString inputmode,
+                    nsString actionHint,
+                    int32_t cause,
+                    int32_t focusChange);
 
     sync IsParentWindowMainWidgetVisible() returns (bool visible);
 
