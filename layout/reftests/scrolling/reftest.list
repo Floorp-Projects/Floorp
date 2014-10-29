@@ -16,6 +16,8 @@ skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.s
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-5.html scroll-behavior-5.html?ref # see bug 1041833
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-6.html scroll-behavior-6.html?ref # see bug 1041833
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-7.html scroll-behavior-7.html?ref # see bug 1041833
+skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-8.html scroll-behavior-8.html?ref # see bug 1041833
+skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-9.html scroll-behavior-9.html?ref # see bug 1041833
 skip-if(B2G&&browserIsRemote) HTTP == simple-1.html simple-1.html?ref
 skip-if(B2G) HTTP == subpixel-1.html#d subpixel-1-ref.html#d
 fuzzy-if(Android,4,120) HTTP == text-1.html text-1.html?ref
