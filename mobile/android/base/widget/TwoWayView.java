@@ -141,7 +141,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         VERTICAL
     }
 
-    ListAdapter mAdapter;
+    private final Context mContext;
+
+    private ListAdapter mAdapter;
 
     private boolean mIsVertical;
 
@@ -159,16 +161,19 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
     final boolean[] mIsScrap = new boolean[1];
 
-    boolean mDataChanged;
-    int mItemCount;
-    int mOldItemCount;
-    boolean mHasStableIds;
+    private boolean mDataChanged;
+    private int mItemCount;
+    private int mOldItemCount;
+    private boolean mHasStableIds;
     private boolean mAreAllItemsSelectable;
 
-    int mFirstPosition;
+    private int mFirstPosition;
     private int mSpecificStart;
 
     private SavedState mPendingSync;
+
+    private PositionScroller mPositionScroller;
+    private Runnable mPositionScrollAfterLayout;
 
     private final int mTouchSlop;
     private final int mMaximumVelocity;
@@ -181,19 +186,19 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
     private final ArrowScrollFocusResult mArrowScrollFocusResult;
 
-    int mMotionPosition;
-    Runnable mTouchModeReset;
     private Rect mTouchFrame;
+    private int mMotionPosition;
     private CheckForTap mPendingCheckForTap;
     private CheckForLongPress mPendingCheckForLongPress;
     private CheckForKeyLongPress mPendingCheckForKeyLongPress;
     private PerformClick mPerformClick;
+    private Runnable mTouchModeReset;
     private int mResurrectToPosition;
 
     private boolean mIsChildViewEnabled;
 
-    Drawable mSelector;
     private boolean mDrawSelectorOnTop;
+    private Drawable mSelector;
     private int mSelectorPosition;
     private final Rect mSelectorRect;
 
@@ -205,17 +210,17 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
     private SelectionNotifier mSelectionNotifier;
 
-    boolean mNeedSync;
+    private boolean mNeedSync;
     private int mSyncMode;
     private int mSyncPosition;
     private long mSyncRowId;
-    private long mSyncHeight;
+    private long mSyncSize;
     private int mSelectedStart;
 
-    int mNextSelectedPosition;
-    long mNextSelectedRowId;
-    int mSelectedPosition;
-    long mSelectedRowId;
+    private int mNextSelectedPosition;
+    private long mNextSelectedRowId;
+    private int mSelectedPosition;
+    private long mSelectedRowId;
     private int mOldSelectedPosition;
     private long mOldSelectedRowId;
 
@@ -226,8 +231,8 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
     private ContextMenuInfo mContextMenuInfo;
 
-    int mLayoutMode;
-    int mTouchMode;
+    private int mLayoutMode;
+    private int mTouchMode;
     private int mLastTouchMode;
     private VelocityTracker mVelocityTracker;
     private final Scroller mScroller;
@@ -319,6 +324,8 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
     public TwoWayView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+
+        mContext = context;
 
         mLayoutMode = LAYOUT_NORMAL;
         mTouchMode = TOUCH_MODE_REST;
@@ -982,6 +989,8 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             mTouchModeReset.run();
         }
 
+        finishSmoothScrolling();
+
         mIsAttached = false;
     }
 
@@ -992,6 +1001,15 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         final int touchMode = isInTouchMode() ? TOUCH_MODE_ON : TOUCH_MODE_OFF;
 
         if (!hasWindowFocus) {
+            if (!mScroller.isFinished()) {
+                finishSmoothScrolling();
+                if (mOverScroll != 0) {
+                    mOverScroll = 0;
+                    finishEdgeGlows();
+                    invalidate();
+                }
+            }
+
             if (touchMode == TOUCH_MODE_OFF) {
                 // Remember the last selected element
                 mResurrectToPosition = mSelectedPosition;
@@ -1263,6 +1281,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             mVelocityTracker.addMovement(ev);
 
             mScroller.abortAnimation();
+            if (mPositionScroller != null) {
+                mPositionScroller.stop();
+            }
 
             final float x = ev.getX();
             final float y = ev.getY();
@@ -1276,9 +1297,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             if (mTouchMode == TOUCH_MODE_FLINGING) {
                 return true;
-            }
-
-            if (motionPosition >= 0) {
+            } else if (motionPosition >= 0) {
                 mMotionPosition = motionPosition;
                 mTouchMode = TOUCH_MODE_DOWN;
             }
@@ -1358,6 +1377,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             mVelocityTracker.clear();
             mScroller.abortAnimation();
+            if (mPositionScroller != null) {
+                mPositionScroller.stop();
+            }
 
             final float x = ev.getX();
             final float y = ev.getY();
@@ -1377,10 +1399,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                 mTouchMode = TOUCH_MODE_DRAGGING;
                 reportScrollStateChange(OnScrollListener.SCROLL_STATE_TOUCH_SCROLL);
                 motionPosition = findMotionRowOrColumn((int) mLastTouchPos);
-                return true;
-            }
-
-            if (mMotionPosition >= 0 && mAdapter.isEnabled(mMotionPosition)) {
+            } else if (mMotionPosition >= 0 && mAdapter.isEnabled(mMotionPosition)) {
                 mTouchMode = TOUCH_MODE_DOWN;
                 triggerCheckForTap();
             }
@@ -1505,7 +1524,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
                             if (mSelector != null) {
                                 Drawable d = mSelector.getCurrent();
-                                if (d instanceof TransitionDrawable) {
+                                if (d != null && d instanceof TransitionDrawable) {
                                     ((TransitionDrawable) d).resetTransition();
                                 }
                             }
@@ -1542,6 +1561,8 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                 }
 
                 mTouchMode = TOUCH_MODE_REST;
+
+                finishSmoothScrolling();
                 updateSelectorState();
 
                 break;
@@ -1630,6 +1651,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         } else {
             final int touchMode = mTouchMode;
             if (touchMode == TOUCH_MODE_OVERSCROLL) {
+                finishSmoothScrolling();
                 if (mOverScroll != 0) {
                     mOverScroll = 0;
                     finishEdgeGlows();
@@ -1711,30 +1733,16 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         switch (action) {
         case AccessibilityNodeInfo.ACTION_SCROLL_FORWARD:
             if (isEnabled() && getLastVisiblePosition() < getCount() - 1) {
-                final int viewportSize;
-                if (mIsVertical) {
-                    viewportSize = getHeight() - getPaddingTop() - getPaddingBottom();
-                } else {
-                    viewportSize = getWidth() - getPaddingLeft() - getPaddingRight();
-                }
-
                 // TODO: Use some form of smooth scroll instead
-                scrollListItemsBy(viewportSize);
+                scrollListItemsBy(getAvailableSize());
                 return true;
             }
             return false;
 
         case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD:
             if (isEnabled() && mFirstPosition > 0) {
-                final int viewportSize;
-                if (mIsVertical) {
-                    viewportSize = getHeight() - getPaddingTop() - getPaddingBottom();
-                } else {
-                    viewportSize = getWidth() - getPaddingLeft() - getPaddingRight();
-                }
-
                 // TODO: Use some form of smooth scroll instead
-                scrollListItemsBy(-viewportSize);
+                scrollListItemsBy(-getAvailableSize());
                 return true;
             }
             return false;
@@ -2025,10 +2033,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
      * @param numChildren The number of children in the view group.
      */
     private void measureAndAdjustDown(View child, int childIndex, int numChildren) {
-        int oldHeight = child.getHeight();
+        int oldSize = getChildSize(child);
         measureChild(child);
 
-        if (child.getMeasuredHeight() == oldHeight) {
+        if (getChildMeasuredSize(child) == oldSize) {
             return;
         }
 
@@ -2036,9 +2044,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         relayoutMeasuredChild(child);
 
         // adjust views below appropriately
-        final int heightDelta = child.getMeasuredHeight() - oldHeight;
+        final int sizeDelta = getChildMeasuredSize(child) - oldSize;
         for (int i = childIndex + 1; i < numChildren; i++) {
-            getChildAt(i).offsetTopAndBottom(heightDelta);
+            getChildAt(i).offsetTopAndBottom(sizeDelta);
         }
     }
 
@@ -2142,7 +2150,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
      *   an arrow event.
      */
     public int getMaxScrollAmount() {
-        return (int) (MAX_SCROLL_FACTOR * getHeight());
+        return (int) (MAX_SCROLL_FACTOR * getSize());
     }
 
     /**
@@ -2754,7 +2762,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                 (overscrollMode == ViewCompat.OVER_SCROLL_IF_CONTENT_SCROLLS && !contentFits())) {
             mTouchMode = TOUCH_MODE_OVERSCROLL;
 
-            float pull = (float) overscroll / (mIsVertical ? getHeight() : getWidth());
+            float pull = (float) overscroll / getSize();
             if (delta > 0) {
                 mStartEdge.onPull(pull);
 
@@ -2922,12 +2930,32 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         }
     }
 
+    private int getSize() {
+        return (mIsVertical ? getHeight() : getWidth());
+    }
+
+    private int getAvailableSize() {
+        if (mIsVertical) {
+            return getHeight() - getPaddingBottom() - getPaddingTop();
+        } else {
+            return getWidth() - getPaddingRight() - getPaddingLeft();
+        }
+    }
+
     private int getChildStartEdge(View child) {
         return (mIsVertical ? child.getTop() : child.getLeft());
     }
 
     private int getChildEndEdge(View child) {
         return (mIsVertical ? child.getBottom() : child.getRight());
+    }
+
+    private int getChildSize(View child) {
+        return (mIsVertical ? child.getHeight() : child.getWidth());
+    }
+
+    private int getChildMeasuredSize(View child) {
+        return (mIsVertical ? child.getMeasuredHeight() : child.getMeasuredWidth());
     }
 
     private boolean contentFits() {
@@ -2963,7 +2991,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         removeCallbacks(mPendingCheckForTap);
     }
 
-    void triggerCheckForLongPress() {
+    private void triggerCheckForLongPress() {
         if (mPendingCheckForLongPress == null) {
             mPendingCheckForLongPress = new CheckForLongPress();
         }
@@ -2992,9 +3020,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         final int lastEnd = getChildEndEdge(getChildAt(childCount - 1));
 
         final int paddingTop = getPaddingTop();
-        final int paddingBottom = getPaddingBottom();
         final int paddingLeft = getPaddingLeft();
-        final int paddingRight = getPaddingRight();
 
         final int paddingStart = (mIsVertical ? paddingTop : paddingLeft);
 
@@ -3002,12 +3028,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         final int end = getEndEdge();
         final int spaceAfter = lastEnd - end;
 
-        final int size;
-        if (mIsVertical) {
-            size = getHeight() - paddingBottom - paddingTop;
-        } else {
-            size = getWidth() - paddingRight - paddingLeft;
-        }
+        final int size = getAvailableSize();
 
         if (incrementalDelta < 0) {
             incrementalDelta = Math.max(-(size - 1), incrementalDelta);
@@ -3159,7 +3180,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                     }
                 }
 
-                mScroller.abortAnimation();
+                finishSmoothScrolling();
             }
 
             mTouchMode = TOUCH_MODE_REST;
@@ -3219,6 +3240,16 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         return needsInvalidate;
     }
 
+    private void finishSmoothScrolling() {
+        mTouchMode = TOUCH_MODE_REST;
+        reportScrollStateChange(OnScrollListener.SCROLL_STATE_IDLE);
+
+        mScroller.abortAnimation();
+        if (mPositionScroller != null) {
+            mPositionScroller.stop();
+        }
+    }
+
     private void drawSelector(Canvas canvas) {
         if (!mSelectorRect.isEmpty()) {
             final Drawable selector = mSelector;
@@ -3236,7 +3267,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         return (hasFocus() && !isInTouchMode()) || touchModeDrawsInPressedState();
     }
 
-    void positionSelector(int position, View selected) {
+    private void positionSelector(int position, View selected) {
         if (position != INVALID_POSITION) {
             mSelectorPosition = position;
         }
@@ -3346,7 +3377,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             final boolean longClickable = isLongClickable();
             final Drawable d = selector.getCurrent();
-            if (d instanceof TransitionDrawable) {
+            if (d != null && d instanceof TransitionDrawable) {
                 if (longClickable) {
                     ((TransitionDrawable) d).startTransition(
                             ViewConfiguration.getLongPressTimeout());
@@ -3406,7 +3437,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         }
     }
 
-    void fireOnSelected() {
+    private void fireOnSelected() {
         OnItemSelectedListener listener = getOnItemSelectedListener();
         if (listener == null) {
             return;
@@ -3422,7 +3453,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         }
     }
 
-    void performAccessibilityActionsOnSelected() {
+    private void performAccessibilityActionsOnSelected() {
         final int position = getSelectedItemPosition();
         if (position >= 0) {
             // We fire selection events here not in View
@@ -3661,7 +3692,107 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     }
 
     public void scrollBy(int offset) {
-        scrollListItemsBy(offset);
+        scrollListItemsBy(-offset);
+    }
+
+    /**
+     * Smoothly scroll to the specified adapter position. The view will
+     * scroll such that the indicated position is displayed.
+     * @param position Scroll to this adapter position.
+     */
+    public void smoothScrollToPosition(int position) {
+        if (mPositionScroller == null) {
+            mPositionScroller = new PositionScroller();
+        }
+        mPositionScroller.start(position);
+    }
+
+    /**
+     * Smoothly scroll to the specified adapter position. The view will scroll
+     * such that the indicated position is displayed <code>offset</code> pixels from
+     * the top/left edge of the view, according to the orientation. If this is
+     * impossible, (e.g. the offset would scroll the first or last item beyond the boundaries
+     * of the list) it will get as close as possible. The scroll will take
+     * <code>duration</code> milliseconds to complete.
+     *
+     * @param position Position to scroll to
+     * @param offset Desired distance in pixels of <code>position</code> from the top/left
+     *               of the view when scrolling is finished
+     * @param duration Number of milliseconds to use for the scroll
+     */
+    public void smoothScrollToPositionFromOffset(int position, int offset, int duration) {
+        if (mPositionScroller == null) {
+            mPositionScroller = new PositionScroller();
+        }
+        mPositionScroller.startWithOffset(position, offset, duration);
+    }
+
+    /**
+     * Smoothly scroll to the specified adapter position. The view will scroll
+     * such that the indicated position is displayed <code>offset</code> pixels from
+     * the top edge of the view. If this is impossible, (e.g. the offset would scroll
+     * the first or last item beyond the boundaries of the list) it will get as close
+     * as possible.
+     *
+     * @param position Position to scroll to
+     * @param offset Desired distance in pixels of <code>position</code> from the top
+     *               of the view when scrolling is finished
+     */
+    public void smoothScrollToPositionFromOffset(int position, int offset) {
+        if (mPositionScroller == null) {
+            mPositionScroller = new PositionScroller();
+        }
+        mPositionScroller.startWithOffset(position, offset);
+    }
+
+    /**
+     * Smoothly scroll to the specified adapter position. The view will
+     * scroll such that the indicated position is displayed, but it will
+     * stop early if scrolling further would scroll boundPosition out of
+     * view.
+     *
+     * @param position Scroll to this adapter position.
+     * @param boundPosition Do not scroll if it would move this adapter
+     *          position out of view.
+     */
+    public void smoothScrollToPosition(int position, int boundPosition) {
+        if (mPositionScroller == null) {
+            mPositionScroller = new PositionScroller();
+        }
+        mPositionScroller.start(position, boundPosition);
+    }
+
+    /**
+     * Smoothly scroll by distance pixels over duration milliseconds.
+     * @param distance Distance to scroll in pixels.
+     * @param duration Duration of the scroll animation in milliseconds.
+     */
+    public void smoothScrollBy(int distance, int duration) {
+        // No sense starting to scroll if we're not going anywhere
+        final int firstPosition = mFirstPosition;
+        final int childCount = getChildCount();
+        final int lastPosition = firstPosition + childCount;
+        final int start = getStartEdge();
+        final int end = getEndEdge();
+
+        if (distance == 0 || mItemCount == 0 || childCount == 0 ||
+                (firstPosition == 0 && getChildStartEdge(getChildAt(0)) == start && distance < 0) ||
+                (lastPosition == mItemCount &&
+                            getChildEndEdge(getChildAt(childCount - 1)) == end && distance > 0)) {
+            finishSmoothScrolling();
+        } else {
+            mScroller.startScroll(0, 0,
+                                  mIsVertical ? 0 : -distance,
+                                  mIsVertical ? -distance : 0,
+                                  duration);
+
+            mLastTouchPos = 0;
+
+            mTouchMode = TOUCH_MODE_FLINGING;
+            reportScrollStateChange(OnScrollListener.SCROLL_STATE_FLING);
+
+            ViewCompat.postInvalidateOnAnimation(this);
+        }
     }
 
     @Override
@@ -3775,7 +3906,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         }
     }
 
-    void layoutChildren() {
+    private void layoutChildren() {
         if (getWidth() == 0 || getHeight() == 0) {
             return;
         }
@@ -3853,9 +3984,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             if (mItemCount == 0) {
                 resetState();
                 return;
-            }
-
-            if (mItemCount != mAdapter.getCount()) {
+            } else if (mItemCount != mAdapter.getCount()) {
                 throw new IllegalStateException("The content of the adapter has changed but "
                         + "TwoWayView did not receive a notification. Make sure the content of "
                         + "your adapter is not modified from a background thread, but only "
@@ -4280,30 +4409,31 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                         mSyncPosition = Math.min(Math.max(0, mSyncPosition), itemCount - 1);
 
                         return;
-                    }
-                    // See if we can find a position in the new data with the same
-                    // id as the old selection. This will change mSyncPosition.
-                    newPos = findSyncPosition();
-                    if (newPos >= 0) {
-                        // Found it. Now verify that new selection is still selectable
-                        selectablePos = lookForSelectablePosition(newPos, true);
-                        if (selectablePos == newPos) {
-                            // Same row id is selected
-                            mSyncPosition = newPos;
+                    } else {
+                        // See if we can find a position in the new data with the same
+                        // id as the old selection. This will change mSyncPosition.
+                        newPos = findSyncPosition();
+                        if (newPos >= 0) {
+                            // Found it. Now verify that new selection is still selectable
+                            selectablePos = lookForSelectablePosition(newPos, true);
+                            if (selectablePos == newPos) {
+                                // Same row id is selected
+                                mSyncPosition = newPos;
 
-                            if (mSyncHeight == getHeight()) {
-                                // If we are at the same height as when we saved state, try
-                                // to restore the scroll position too.
-                                mLayoutMode = LAYOUT_SYNC;
-                            } else {
-                                // We are not the same height as when the selection was saved, so
-                                // don't try to restore the exact position
-                                mLayoutMode = LAYOUT_SET_SELECTION;
+                                if (mSyncSize == getSize()) {
+                                    // If we are at the same height as when we saved state, try
+                                    // to restore the scroll position too.
+                                    mLayoutMode = LAYOUT_SYNC;
+                                } else {
+                                    // We are not the same height as when the selection was saved, so
+                                    // don't try to restore the exact position
+                                    mLayoutMode = LAYOUT_SET_SELECTION;
+                                }
+
+                                // Restore selection
+                                setNextSelectedPositionInt(newPos);
+                                return;
                             }
-
-                            // Restore selection
-                            setNextSelectedPositionInt(newPos);
-                            return;
                         }
                     }
                     break;
@@ -4439,6 +4569,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         }
 
         mResurrectToPosition = INVALID_POSITION;
+
+        finishSmoothScrolling();
+
         mTouchMode = TOUCH_MODE_REST;
         reportScrollStateChange(OnScrollListener.SCROLL_STATE_IDLE);
 
@@ -4726,11 +4859,11 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         // Compensate item margin on the first item of the list if the item margin
         // is negative to avoid incorrect offset for the very first child.
         if (mIsVertical) {
-            top = offset - (mItemMargin < 0 && position == 0 && !flow ? mItemMargin : 0);
+            top = offset;
             left = getPaddingLeft();
         } else {
             top = getPaddingTop();
-            left = offset - (mItemMargin < 0 && position == 0 && !flow ? mItemMargin: 0);
+            left = offset;
         }
 
         if (!mDataChanged) {
@@ -4890,7 +5023,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         // Possibly changed again in fillBefore if we add rows above this one.
         mFirstPosition = position;
 
-        final int offsetBefore = getChildStartEdge(temp) + mItemMargin;
+        final int offsetBefore = getChildStartEdge(temp) - mItemMargin;
         final View before = fillBefore(position - 1, offsetBefore);
 
         // This will correct for the top of the first view not touching the top of the list
@@ -5298,7 +5431,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         invalidate();
     }
 
-    void rememberSyncState() {
+    private void rememberSyncState() {
         if (getChildCount() == 0) {
             return;
         }
@@ -5407,7 +5540,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         return super.performItemClick(view, position, id);
     }
 
-    boolean performLongPress(final View child,
+    private boolean performLongPress(final View child,
             final int longPressPosition, final long longPressId) {
         // CHOICE_MODE_MULTIPLE_MODAL takes over long press.
         boolean handled = false;
@@ -5469,7 +5602,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             ss.firstId = mPendingSync.firstId;
             ss.viewStart = mPendingSync.viewStart;
             ss.position = mPendingSync.position;
-            ss.height = mPendingSync.height;
+            ss.size = mPendingSync.size;
 
             return ss;
         }
@@ -5477,7 +5610,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         boolean haveChildren = (getChildCount() > 0 && mItemCount > 0);
         long selectedId = getSelectedItemId();
         ss.selectedId = selectedId;
-        ss.height = getHeight();
+        ss.size = getSize();
 
         if (selectedId >= 0) {
             ss.viewStart = mSelectedStart;
@@ -5537,7 +5670,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         super.onRestoreInstanceState(ss.getSuperState());
 
         mDataChanged = true;
-        mSyncHeight = ss.height;
+        mSyncSize = ss.size;
 
         if (ss.selectedId >= 0) {
             mNeedSync = true;
@@ -5658,7 +5791,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     }
 
     class RecycleBin {
-        RecyclerListener mRecyclerListener;
+        private RecyclerListener mRecyclerListener;
         private int mFirstActivePosition;
         private View[] mActiveViews = new View[0];
         private ArrayList<View>[] mScrapViews;
@@ -5792,10 +5925,11 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         View getScrapView(int position) {
             if (mViewTypeCount == 1) {
                 return retrieveFromScrap(mCurrentScrap, position);
-            }
-            int whichScrap = mAdapter.getItemViewType(position);
-            if (whichScrap >= 0 && whichScrap < mScrapViews.length) {
-                return retrieveFromScrap(mScrapViews[whichScrap], position);
+            } else {
+                int whichScrap = mAdapter.getItemViewType(position);
+                if (whichScrap >= 0 && whichScrap < mScrapViews.length) {
+                    return retrieveFromScrap(mScrapViews[whichScrap], position);
+                }
             }
 
             return null;
@@ -5991,7 +6125,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         super.setFocusableInTouchMode(focusable && !empty);
     }
 
-    void checkFocus() {
+    private void checkFocus() {
         final ListAdapter adapter = getAdapter();
         final boolean focusable = (adapter != null && adapter.getCount() > 0);
 
@@ -6035,7 +6169,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     }
 
     private class AdapterDataSetObserver extends DataSetObserver {
-        private Parcelable mInstanceState;
+        private Parcelable mInstanceState = null;
 
         @Override
         public void onChanged() {
@@ -6089,7 +6223,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         long firstId;
         int viewStart;
         int position;
-        int height;
+        int size;
         int checkedItemCount;
         SparseBooleanArray checkState;
         LongSparseArray<Integer> checkIdState;
@@ -6111,7 +6245,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             firstId = in.readLong();
             viewStart = in.readInt();
             position = in.readInt();
-            height = in.readInt();
+            size = in.readInt();
 
             checkedItemCount = in.readInt();
             checkState = in.readSparseBooleanArray();
@@ -6135,7 +6269,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             out.writeLong(firstId);
             out.writeInt(viewStart);
             out.writeInt(position);
-            out.writeInt(height);
+            out.writeInt(size);
 
             out.writeInt(checkedItemCount);
             out.writeSparseBooleanArray(checkState);
@@ -6156,7 +6290,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                     + " selectedId=" + selectedId
                     + " firstId=" + firstId
                     + " viewStart=" + viewStart
-                    + " height=" + height
+                    + " size=" + size
                     + " position=" + position
                     + " checkState=" + checkState + "}";
         }
@@ -6257,7 +6391,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                     if (mSelector != null) {
                         Drawable d = mSelector.getCurrent();
 
-                        if (d instanceof TransitionDrawable) {
+                        if (d != null && d instanceof TransitionDrawable) {
                             if (longClickable) {
                                 final int longPressTimeout = ViewConfiguration.getLongPressTimeout();
                                 ((TransitionDrawable) d).startTransition(longPressTimeout);
@@ -6305,7 +6439,6 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     }
 
     private class CheckForKeyLongPress extends WindowRunnable implements Runnable {
-        @Override
         public void run() {
             if (!isPressed() || mSelectedPosition < 0) {
                 return;
@@ -6336,7 +6469,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     }
 
     private static class ArrowScrollFocusResult {
-        int mSelectedPosition;
+        private int mSelectedPosition;
         private int mAmountToScroll;
 
         /**
@@ -6436,6 +6569,467 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             }
 
             return false;
+        }
+    }
+
+    private class PositionScroller implements Runnable {
+        private static final int SCROLL_DURATION = 200;
+
+        private static final int MOVE_AFTER_POS = 1;
+        private static final int MOVE_BEFORE_POS = 2;
+        private static final int MOVE_AFTER_BOUND = 3;
+        private static final int MOVE_BEFORE_BOUND = 4;
+        private static final int MOVE_OFFSET = 5;
+
+        private int mMode;
+        private int mTargetPosition;
+        private int mBoundPosition;
+        private int mLastSeenPosition;
+        private int mScrollDuration;
+        private final int mExtraScroll;
+
+        private int mOffsetFromStart;
+
+        PositionScroller() {
+            mExtraScroll = ViewConfiguration.get(mContext).getScaledFadingEdgeLength();
+        }
+
+        void start(final int position) {
+            stop();
+
+            if (mDataChanged) {
+                // Wait until we're back in a stable state to try this.
+                mPositionScrollAfterLayout = new Runnable() {
+                    @Override public void run() {
+                        start(position);
+                    }
+                };
+
+                return;
+            }
+
+            final int childCount = getChildCount();
+            if (childCount == 0) {
+                // Can't scroll without children.
+                return;
+            }
+
+            final int firstPosition = mFirstPosition;
+            final int lastPosition = firstPosition + childCount - 1;
+
+            final int clampedPosition = Math.max(0, Math.min(getCount() - 1, position));
+
+            final int viewTravelCount;
+            if (clampedPosition < firstPosition) {
+                viewTravelCount = firstPosition - clampedPosition + 1;
+                mMode = MOVE_BEFORE_POS;
+            } else if (clampedPosition > lastPosition) {
+                viewTravelCount = clampedPosition - lastPosition + 1;
+                mMode = MOVE_AFTER_POS;
+            } else {
+                scrollToVisible(clampedPosition, INVALID_POSITION, SCROLL_DURATION);
+                return;
+            }
+
+            if (viewTravelCount > 0) {
+                mScrollDuration = SCROLL_DURATION / viewTravelCount;
+            } else {
+                mScrollDuration = SCROLL_DURATION;
+            }
+
+            mTargetPosition = clampedPosition;
+            mBoundPosition = INVALID_POSITION;
+            mLastSeenPosition = INVALID_POSITION;
+
+            ViewCompat.postOnAnimation(TwoWayView.this, this);
+        }
+
+        void start(final int position, final int boundPosition) {
+            stop();
+
+            if (boundPosition == INVALID_POSITION) {
+                start(position);
+                return;
+            }
+
+            if (mDataChanged) {
+                // Wait until we're back in a stable state to try this.
+                mPositionScrollAfterLayout = new Runnable() {
+                    @Override public void run() {
+                        start(position, boundPosition);
+                    }
+                };
+
+                return;
+            }
+
+            final int childCount = getChildCount();
+            if (childCount == 0) {
+                // Can't scroll without children.
+                return;
+            }
+
+            final int firstPosition = mFirstPosition;
+            final int lastPosition = firstPosition + childCount - 1;
+
+            final int clampedPosition = Math.max(0, Math.min(getCount() - 1, position));
+
+            final int viewTravelCount;
+            if (clampedPosition < firstPosition) {
+                final int boundPositionFromLast = lastPosition - boundPosition;
+                if (boundPositionFromLast < 1) {
+                    // Moving would shift our bound position off the screen. Abort.
+                    return;
+                }
+
+                final int positionTravel = firstPosition - clampedPosition + 1;
+                final int boundTravel = boundPositionFromLast - 1;
+                if (boundTravel < positionTravel) {
+                    viewTravelCount = boundTravel;
+                    mMode = MOVE_BEFORE_BOUND;
+                } else {
+                    viewTravelCount = positionTravel;
+                    mMode = MOVE_BEFORE_POS;
+                }
+            } else if (clampedPosition > lastPosition) {
+                final int boundPositionFromFirst = boundPosition - firstPosition;
+                if (boundPositionFromFirst < 1) {
+                    // Moving would shift our bound position off the screen. Abort.
+                    return;
+                }
+
+                final int positionTravel = clampedPosition - lastPosition + 1;
+                final int boundTravel = boundPositionFromFirst - 1;
+                if (boundTravel < positionTravel) {
+                    viewTravelCount = boundTravel;
+                    mMode = MOVE_AFTER_BOUND;
+                } else {
+                    viewTravelCount = positionTravel;
+                    mMode = MOVE_AFTER_POS;
+                }
+            } else {
+                scrollToVisible(clampedPosition, boundPosition, SCROLL_DURATION);
+                return;
+            }
+
+            if (viewTravelCount > 0) {
+                mScrollDuration = SCROLL_DURATION / viewTravelCount;
+            } else {
+                mScrollDuration = SCROLL_DURATION;
+            }
+
+            mTargetPosition = clampedPosition;
+            mBoundPosition = boundPosition;
+            mLastSeenPosition = INVALID_POSITION;
+
+            ViewCompat.postOnAnimation(TwoWayView.this, this);
+        }
+
+        void startWithOffset(int position, int offset) {
+            startWithOffset(position, offset, SCROLL_DURATION);
+        }
+
+        void startWithOffset(final int position, int offset, final int duration) {
+            stop();
+
+            if (mDataChanged) {
+                // Wait until we're back in a stable state to try this.
+                final int postOffset = offset;
+                mPositionScrollAfterLayout = new Runnable() {
+                    @Override public void run() {
+                        startWithOffset(position, postOffset, duration);
+                    }
+                };
+
+                return;
+            }
+
+            final int childCount = getChildCount();
+            if (childCount == 0) {
+                // Can't scroll without children.
+                return;
+            }
+
+            offset += getStartEdge();
+
+            mTargetPosition = Math.max(0, Math.min(getCount() - 1, position));
+            mOffsetFromStart = offset;
+            mBoundPosition = INVALID_POSITION;
+            mLastSeenPosition = INVALID_POSITION;
+            mMode = MOVE_OFFSET;
+
+            final int firstPosition = mFirstPosition;
+            final int lastPosition = firstPosition + childCount - 1;
+
+            final int viewTravelCount;
+            if (mTargetPosition < firstPosition) {
+                viewTravelCount = firstPosition - mTargetPosition;
+            } else if (mTargetPosition > lastPosition) {
+                viewTravelCount = mTargetPosition - lastPosition;
+            } else {
+                // On-screen, just scroll.
+                final View targetView = getChildAt(mTargetPosition - firstPosition);
+                final int targetStart = getChildStartEdge(targetView);
+                smoothScrollBy(targetStart - offset, duration);
+                return;
+            }
+
+            // Estimate how many screens we should travel
+            final float screenTravelCount = (float) viewTravelCount / childCount;
+            mScrollDuration = screenTravelCount < 1 ?
+                    duration : (int) (duration / screenTravelCount);
+            mLastSeenPosition = INVALID_POSITION;
+
+            ViewCompat.postOnAnimation(TwoWayView.this, this);
+        }
+
+        /**
+         * Scroll such that targetPos is in the visible padded region without scrolling
+         * boundPos out of view. Assumes targetPos is onscreen.
+         */
+        void scrollToVisible(int targetPosition, int boundPosition, int duration) {
+            final int childCount = getChildCount();
+            final int firstPosition = mFirstPosition;
+            final int lastPosition = firstPosition + childCount - 1;
+
+            final int start = getStartEdge();
+            final int end = getEndEdge();
+
+            if (targetPosition < firstPosition || targetPosition > lastPosition) {
+                Log.w(LOGTAG, "scrollToVisible called with targetPosition " + targetPosition +
+                        " not visible [" + firstPosition + ", " + lastPosition + "]");
+            }
+
+            if (boundPosition < firstPosition || boundPosition > lastPosition) {
+                // boundPos doesn't matter, it's already offscreen.
+                boundPosition = INVALID_POSITION;
+            }
+
+            final View targetChild = getChildAt(targetPosition - firstPosition);
+            final int targetStart = getChildStartEdge(targetChild);
+            final int targetEnd = getChildEndEdge(targetChild);
+
+            int scrollBy = 0;
+            if (targetEnd > end) {
+                scrollBy = targetEnd - end;
+            }
+            if (targetStart < start) {
+                scrollBy = targetStart - start;
+            }
+
+            if (scrollBy == 0) {
+                return;
+            }
+
+            if (boundPosition >= 0) {
+                final View boundChild = getChildAt(boundPosition - firstPosition);
+                final int boundStart = getChildStartEdge(boundChild);
+                final int boundEnd = getChildEndEdge(boundChild);
+                final int absScroll = Math.abs(scrollBy);
+
+                if (scrollBy < 0 && boundEnd + absScroll > end) {
+                    // Don't scroll the bound view off the end of the screen.
+                    scrollBy = Math.max(0, boundEnd - end);
+                } else if (scrollBy > 0 && boundStart - absScroll < start) {
+                    // Don't scroll the bound view off the top of the screen.
+                    scrollBy = Math.min(0, boundStart - start);
+                }
+            }
+
+            smoothScrollBy(scrollBy, duration);
+        }
+
+        void stop() {
+            removeCallbacks(this);
+        }
+
+        @Override
+        public void run() {
+            final int size = getAvailableSize();
+            final int firstPosition = mFirstPosition;
+
+            final int startPadding = (mIsVertical ? getPaddingTop() : getPaddingLeft());
+            final int endPadding = (mIsVertical ? getPaddingBottom() : getPaddingRight());
+
+            switch (mMode) {
+                case MOVE_AFTER_POS: {
+                    final int lastViewIndex = getChildCount() - 1;
+                    if (lastViewIndex < 0) {
+                        return;
+                    }
+
+                    final int lastPosition = firstPosition + lastViewIndex;
+                    if (lastPosition == mLastSeenPosition) {
+                        // No new views, let things keep going.
+                        ViewCompat.postOnAnimation(TwoWayView.this, this);
+                        return;
+                    }
+
+                    final View lastView = getChildAt(lastViewIndex);
+                    final int lastViewSize = getChildSize(lastView);
+                    final int lastViewStart = getChildStartEdge(lastView);
+                    final int lastViewPixelsShowing = size - lastViewStart;
+                    final int extraScroll = lastPosition < mItemCount - 1 ?
+                            Math.max(endPadding, mExtraScroll) : endPadding;
+
+                    final int scrollBy = lastViewSize - lastViewPixelsShowing + extraScroll;
+                    smoothScrollBy(scrollBy, mScrollDuration);
+
+                    mLastSeenPosition = lastPosition;
+                    if (lastPosition < mTargetPosition) {
+                        ViewCompat.postOnAnimation(TwoWayView.this, this);
+                    }
+
+                    break;
+                }
+
+                case MOVE_AFTER_BOUND: {
+                    final int nextViewIndex = 1;
+                    final int childCount = getChildCount();
+                    if (firstPosition == mBoundPosition ||
+                        childCount <= nextViewIndex ||
+                        firstPosition + childCount >= mItemCount) {
+                        return;
+                    }
+
+                    final int nextPosition = firstPosition + nextViewIndex;
+
+                    if (nextPosition == mLastSeenPosition) {
+                        // No new views, let things keep going.
+                        ViewCompat.postOnAnimation(TwoWayView.this, this);
+                        return;
+                    }
+
+                    final View nextView = getChildAt(nextViewIndex);
+                    final int nextViewSize = getChildSize(nextView);
+                    final int nextViewStart = getChildStartEdge(nextView);
+                    final int extraScroll = Math.max(endPadding, mExtraScroll);
+                    if (nextPosition < mBoundPosition) {
+                        smoothScrollBy(Math.max(0, nextViewSize + nextViewStart - extraScroll),
+                                mScrollDuration);
+                        mLastSeenPosition = nextPosition;
+                        ViewCompat.postOnAnimation(TwoWayView.this, this);
+                    } else  {
+                        if (nextViewSize > extraScroll) {
+                            smoothScrollBy(nextViewSize - extraScroll, mScrollDuration);
+                        }
+                    }
+
+                    break;
+                }
+
+                case MOVE_BEFORE_POS: {
+                    if (firstPosition == mLastSeenPosition) {
+                        // No new views, let things keep going.
+                        ViewCompat.postOnAnimation(TwoWayView.this, this);
+                        return;
+                    }
+
+                    final View firstView = getChildAt(0);
+                    if (firstView == null) {
+                        return;
+                    }
+
+                    final int firstViewTop = getChildStartEdge(firstView);
+                    final int extraScroll = firstPosition > 0 ?
+                            Math.max(mExtraScroll, startPadding) : startPadding;
+
+                    smoothScrollBy(firstViewTop - extraScroll, mScrollDuration);
+                    mLastSeenPosition = firstPosition;
+
+                    if (firstPosition > mTargetPosition) {
+                        ViewCompat.postOnAnimation(TwoWayView.this, this);
+                    }
+
+                    break;
+                }
+
+                case MOVE_BEFORE_BOUND: {
+                    final int lastViewIndex = getChildCount() - 2;
+                    if (lastViewIndex < 0) {
+                        return;
+                    }
+
+                    final int lastPosition = firstPosition + lastViewIndex;
+
+                    if (lastPosition == mLastSeenPosition) {
+                        // No new views, let things keep going.
+                        ViewCompat.postOnAnimation(TwoWayView.this, this);
+                        return;
+                    }
+
+                    final View lastView = getChildAt(lastViewIndex);
+                    final int lastViewSize = getChildSize(lastView);
+                    final int lastViewStart = getChildStartEdge(lastView);
+                    final int lastViewPixelsShowing = size - lastViewStart;
+                    final int extraScroll = Math.max(startPadding, mExtraScroll);
+
+                    mLastSeenPosition = lastPosition;
+
+                    if (lastPosition > mBoundPosition) {
+                        smoothScrollBy(-(lastViewPixelsShowing - extraScroll), mScrollDuration);
+                        ViewCompat.postOnAnimation(TwoWayView.this, this);
+                    } else {
+                        final int end = size - extraScroll;
+                        final int lastViewEnd = lastViewStart + lastViewSize;
+                        if (end > lastViewEnd) {
+                            smoothScrollBy(-(end - lastViewEnd), mScrollDuration);
+                        }
+                    }
+
+                    break;
+                }
+
+                case MOVE_OFFSET: {
+                    if (mLastSeenPosition == firstPosition) {
+                        // No new views, let things keep going.
+                        ViewCompat.postOnAnimation(TwoWayView.this, this);
+                        return;
+                    }
+
+                    mLastSeenPosition = firstPosition;
+
+                    final int childCount = getChildCount();
+                    final int position = mTargetPosition;
+                    final int lastPos = firstPosition + childCount - 1;
+
+                    int viewTravelCount = 0;
+                    if (position < firstPosition) {
+                        viewTravelCount = firstPosition - position + 1;
+                    } else if (position > lastPos) {
+                        viewTravelCount = position - lastPos;
+                    }
+
+                    // Estimate how many screens we should travel
+                    final float screenTravelCount = (float) viewTravelCount / childCount;
+
+                    final float modifier = Math.min(Math.abs(screenTravelCount), 1.f);
+                    if (position < firstPosition) {
+                        final int distance = (int) (-getSize() * modifier);
+                        final int duration = (int) (mScrollDuration * modifier);
+                        smoothScrollBy(distance, duration);
+                        ViewCompat.postOnAnimation(TwoWayView.this, this);
+                    } else if (position > lastPos) {
+                        final int distance = (int) (getSize() * modifier);
+                        final int duration = (int) (mScrollDuration * modifier);
+                        smoothScrollBy(distance, duration);
+                        ViewCompat.postOnAnimation(TwoWayView.this, this);
+                    } else {
+                        // On-screen, just scroll.
+                        final View targetView = getChildAt(position - firstPosition);
+                        final int targetStart = getChildStartEdge(targetView);
+                        final int distance = targetStart - mOffsetFromStart;
+                        final int duration = (int) (mScrollDuration *
+                                ((float) Math.abs(distance) / getSize()));
+                        smoothScrollBy(distance, duration);
+                    }
+
+                    break;
+                }
+
+                default:
+                    break;
+            }
         }
     }
 }
