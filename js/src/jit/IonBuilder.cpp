@@ -3917,9 +3917,9 @@ IonBuilder::jsop_try()
     //
     // To handle this, we create two blocks: one for the try block and one
     // for the code following the try-catch statement. Both blocks are
-    // connected to the graph with an MTest instruction that always jumps to
-    // the try block. This ensures the successor block always has a predecessor
-    // and later passes will optimize this MTest to a no-op.
+    // connected to the graph with an MGotoWithFake instruction that always
+    // jumps to the try block. This ensures the successor block always has a
+    // predecessor.
     //
     // If the code after the try block is unreachable (control flow in both the
     // try and catch blocks is terminated), only create the try block, to avoid
@@ -3935,10 +3935,7 @@ IonBuilder::jsop_try()
         if (!successor)
             return false;
 
-        // Add MTest(true, tryBlock, successorBlock).
-        MConstant *true_ = MConstant::New(alloc(), BooleanValue(true));
-        current->add(true_);
-        current->end(newTest(true_, tryBlock, successor));
+        current->end(MGotoWithFake::New(alloc(), tryBlock, successor));
     } else {
         successor = nullptr;
         current->end(MGoto::New(alloc(), tryBlock));
