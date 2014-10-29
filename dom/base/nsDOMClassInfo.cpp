@@ -1034,8 +1034,9 @@ nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *aObj,
     // return the Object constructor.
 
     JS::Rooted<jsid> id(cx, sConstructor_id);
-    if (!::JS_DefinePropertyById(cx, obj, id, val, JSPROP_ENUMERATE,
-                                 JS_PropertyStub, JS_StrictPropertyStub)) {
+    if (!::JS_DefinePropertyById(cx, obj, id, val,
+                                 JSPROP_ENUMERATE | JSPROP_PROPOP_ACCESSORS,
+                                 JS_STUBGETTER, JS_STUBSETTER)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -1249,8 +1250,12 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
   if (!contentDefinedProperty && desc.object() && !desc.value().isUndefined() &&
       !JS_DefineUCProperty(cx, global, mData->mNameUTF16,
                            NS_strlen(mData->mNameUTF16),
-                           desc.value(), desc.attributes(),
-                           desc.getter(), desc.setter())) {
+                           desc.value(),
+                           // Descriptors never store JSNatives for accessors:
+                           // they have either JSFunctions or JSPropertyOps.
+                           desc.attributes() | JSPROP_PROPOP_ACCESSORS,
+                           JS_PROPERTYOP_GETTER(desc.getter()),
+                           JS_PROPERTYOP_SETTER(desc.setter()))) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -1452,8 +1457,8 @@ DefineInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsIID *
 
     if (!::JS_DefineProperty(cx, obj, name, v,
                              JSPROP_ENUMERATE | JSPROP_READONLY |
-                             JSPROP_PERMANENT,
-                             JS_PropertyStub, JS_StrictPropertyStub)) {
+                             JSPROP_PERMANENT | JSPROP_PROPOP_ACCESSORS,
+                             JS_STUBGETTER, JS_STUBSETTER)) {
       return NS_ERROR_UNEXPECTED;
     }
   }
@@ -2050,8 +2055,9 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
   // Per ECMA, the prototype property is {DontEnum, DontDelete, ReadOnly}
   if (!JS_WrapValue(cx, &v) ||
       !JS_DefineProperty(cx, class_obj, "prototype", v,
-                         JSPROP_PERMANENT | JSPROP_READONLY,
-                         JS_PropertyStub, JS_StrictPropertyStub)) {
+                         JSPROP_PERMANENT | JSPROP_READONLY |
+                         JSPROP_PROPOP_ACCESSORS,
+                         JS_STUBGETTER, JS_STUBSETTER)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -2509,8 +2515,9 @@ LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
   NS_ENSURE_TRUE(interfaces, NS_ERROR_OUT_OF_MEMORY);
   bool ok =
     JS_DefineProperty(cx, components, "interfaces", interfaces,
-                      JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY,
-                      JS_PropertyStub, JS_StrictPropertyStub);
+                      JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY |
+                      JSPROP_PROPOP_ACCESSORS,
+                      JS_STUBGETTER, JS_STUBSETTER);
   NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
 
   // Define a bunch of shims from the Ci.nsIDOMFoo to window.Foo for DOM
@@ -2532,8 +2539,9 @@ LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
 
     // Define the shim on the interfaces object.
     ok = JS_DefineProperty(cx, interfaces, geckoName, v,
-                           JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY,
-                           JS_PropertyStub, JS_StrictPropertyStub);
+                           JSPROP_ENUMERATE | JSPROP_PERMANENT |
+                           JSPROP_READONLY | JSPROP_PROPOP_ACCESSORS,
+                           JS_STUBGETTER, JS_STUBSETTER);
     NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
   }
 

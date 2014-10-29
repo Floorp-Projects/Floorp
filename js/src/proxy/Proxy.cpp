@@ -893,8 +893,8 @@ js_InitProxyClass(JSContext *cx, HandleObject obj)
 
     if (!JS_DefineFunctions(cx, ctor, static_methods))
         return nullptr;
-    if (!JS_DefineProperty(cx, obj, "Proxy", ctor, 0,
-                           JS_PropertyStub, JS_StrictPropertyStub)) {
+    if (!JS_DefineProperty(cx, obj, "Proxy", ctor, JSPROP_PROPOP_ACCESSORS,
+                           JS_STUBGETTER, JS_STUBSETTER)) {
         return nullptr;
     }
 
