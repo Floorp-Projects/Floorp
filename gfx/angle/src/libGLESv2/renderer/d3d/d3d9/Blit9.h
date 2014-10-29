@@ -76,7 +76,7 @@ class Blit9
 
     template <class D3DShaderType>
     gl::Error setShader(ShaderId source, const char *profile,
-                        D3DShaderType *(Renderer9::*createShader)(const DWORD *, size_t length),
+                        gl::Error (Renderer9::*createShader)(const DWORD *, size_t length, D3DShaderType **outShader),
                         HRESULT (WINAPI IDirect3DDevice9::*setShader)(D3DShaderType*));
 
     gl::Error setVertexShader(ShaderId shader);

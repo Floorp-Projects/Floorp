@@ -92,6 +92,35 @@ SVGEllipseElement::GetLengthInfo()
 //----------------------------------------------------------------------
 // nsSVGPathGeometryElement methods
 
+bool
+SVGEllipseElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
+                                     const Matrix& aTransform)
+{
+  float x, y, rx, ry;
+  GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
+
+  if (rx <= 0.f || ry <= 0.f) {
+    // Rendering of the element is disabled
+    aBounds->MoveTo(x, y);
+    aBounds->SetEmpty();
+    return true;
+  }
+
+  if (aTransform.IsRectilinear()) {
+    // Optimize the case where we can treat the ellipse as a rectangle and
+    // still get tight bounds.
+    if (aStrokeWidth > 0.f) {
+      rx += aStrokeWidth / 2.f;
+      ry += aStrokeWidth / 2.f;
+    }
+    Rect rect(x - rx, y - ry, 2 * rx, 2 * ry);
+    *aBounds = aTransform.TransformBounds(rect);
+    return true;
+  }
+
+  return false;
+}
+
 TemporaryRef<Path>
 SVGEllipseElement::BuildPath(PathBuilder* aBuilder)
 {

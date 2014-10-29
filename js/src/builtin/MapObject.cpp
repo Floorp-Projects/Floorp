@@ -1302,7 +1302,8 @@ MapObject::size_impl(JSContext *cx, CallArgs args)
     MOZ_ASSERT(MapObject::is(args.thisv()));
 
     ValueMap &map = extract(args);
-    JS_STATIC_ASSERT(sizeof map.count() <= sizeof(uint32_t));
+    static_assert(sizeof(map.count()) <= sizeof(uint32_t),
+                  "map count must be precisely representable as a JS number");
     args.rval().setNumber(map.count());
     return true;
 }
@@ -1832,7 +1833,8 @@ SetObject::size_impl(JSContext *cx, CallArgs args)
     MOZ_ASSERT(is(args.thisv()));
 
     ValueSet &set = extract(args);
-    JS_STATIC_ASSERT(sizeof set.count() <= sizeof(uint32_t));
+    static_assert(sizeof(set.count()) <= sizeof(uint32_t),
+                  "set count must be precisely representable as a JS number");
     args.rval().setNumber(set.count());
     return true;
 }

@@ -15,15 +15,6 @@ using namespace js::frontend;
 
 using mozilla::IsFinite;
 
-/*
- * Asserts to verify assumptions behind pn_ macros.
- */
-#define pn_offsetof(m)  offsetof(ParseNode, m)
-
-JS_STATIC_ASSERT(pn_offsetof(pn_link) == pn_offsetof(dn_uses));
-
-#undef pn_offsetof
-
 #ifdef DEBUG
 void
 ParseNode::checkListConsistency()
