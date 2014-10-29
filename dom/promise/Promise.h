@@ -29,6 +29,7 @@ namespace dom {
 
 class AnyCallback;
 class DOMError;
+class MediaStreamError;
 class PromiseCallback;
 class PromiseInit;
 class PromiseNativeHandler;
@@ -99,6 +100,9 @@ public:
     MOZ_ASSERT(NS_FAILED(aArg));
     MaybeSomething(aArg, &Promise::MaybeReject);
   }
+
+  void MaybeReject(const nsRefPtr<MediaStreamError>& aArg);
+
   // DO NOT USE MaybeRejectBrokenly with in new code.  Promises should be
   // rejected with Error instances.
   // Note: MaybeRejectBrokenly is a template so we can use it with DOMError

@@ -42,6 +42,9 @@ class TextureStorage9 : public TextureStorage
     virtual bool isManaged() const;
     virtual int getLevelCount() const;
 
+    virtual gl::Error setData(const gl::ImageIndex &index, const gl::Box &sourceBox, GLenum internalFormat, GLenum type,
+                              const gl::PixelUnpackState &unpack, const uint8_t *pixelData);
+
   protected:
     int mTopLevel;
     Renderer9 *mRenderer;
