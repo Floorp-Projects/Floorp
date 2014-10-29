@@ -201,6 +201,8 @@ void ShInitBuiltInResources(ShBuiltInResources* resources)
     resources->EXT_frag_depth = 0;
     resources->EXT_shader_texture_lod = 0;
 
+    resources->NV_draw_buffers = 0;
+
     // Disable highp precision in fragment shader by default.
     resources->FragmentPrecisionHigh = 0;
 

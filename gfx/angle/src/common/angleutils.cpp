@@ -6,6 +6,7 @@
 
 #include "common/angleutils.h"
 
+#include <stdio.h>
 #include <vector>
 
 std::string FormatString(const char *fmt, va_list vararg)

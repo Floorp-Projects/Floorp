@@ -107,6 +107,12 @@ LinkedVarying::LinkedVarying(const std::string &name, GLenum type, GLsizei size,
 {
 }
 
+LinkResult::LinkResult(bool linkSuccess, const Error &error)
+    : linkSuccess(linkSuccess),
+      error(error)
+{
+}
+
 unsigned int ProgramBinary::mCurrentSerial = 1;
 
 ProgramBinary::ProgramBinary(rx::ProgramImpl *impl)
@@ -854,10 +860,10 @@ bool ProgramBinary::linkVaryings(InfoLog &infoLog, Shader *fragmentShader, Shade
     return true;
 }
 
-bool ProgramBinary::load(InfoLog &infoLog, GLenum binaryFormat, const void *binary, GLsizei length)
+LinkResult ProgramBinary::load(InfoLog &infoLog, GLenum binaryFormat, const void *binary, GLsizei length)
 {
 #ifdef ANGLE_DISABLE_PROGRAM_BINARY_LOAD
-    return false;
+    return LinkResult(false, Error(GL_NO_ERROR));
 #else
     ASSERT(binaryFormat == mProgram->getBinaryFormat());
 
@@ -869,7 +875,7 @@ bool ProgramBinary::load(InfoLog &infoLog, GLenum binaryFormat, const void *bina
     if (format != mProgram->getBinaryFormat())
     {
         infoLog.append("Invalid program binary format.");
-        return false;
+        return LinkResult(false, Error(GL_NO_ERROR));
     }
 
     int majorVersion = stream.readInt<int>();
@@ -877,7 +883,7 @@ bool ProgramBinary::load(InfoLog &infoLog, GLenum binaryFormat, const void *bina
     if (majorVersion != ANGLE_MAJOR_VERSION || minorVersion != ANGLE_MINOR_VERSION)
     {
         infoLog.append("Invalid program binary version.");
-        return false;
+        return LinkResult(false, Error(GL_NO_ERROR));
     }
 
     unsigned char commitString[ANGLE_COMMIT_HASH_SIZE];
@@ -885,14 +891,14 @@ bool ProgramBinary::load(InfoLog &infoLog, GLenum binaryFormat, const void *bina
     if (memcmp(commitString, ANGLE_COMMIT_HASH, sizeof(unsigned char) * ANGLE_COMMIT_HASH_SIZE) != 0)
     {
         infoLog.append("Invalid program binary version.");
-        return false;
+        return LinkResult(false, Error(GL_NO_ERROR));
     }
 
     int compileFlags = stream.readInt<int>();
     if (compileFlags != ANGLE_COMPILE_OPTIMIZATION_LEVEL)
     {
         infoLog.append("Mismatched compilation flags.");
-        return false;
+        return LinkResult(false, Error(GL_NO_ERROR));
     }
 
     for (int i = 0; i < MAX_VERTEX_ATTRIBS; ++i)
@@ -932,7 +938,7 @@ bool ProgramBinary::load(InfoLog &infoLog, GLenum binaryFormat, const void *bina
     if (stream.error())
     {
         infoLog.append("Invalid program binary.");
-        return false;
+        return LinkResult(false, Error(GL_NO_ERROR));
     }
 
     mUniforms.resize(uniformCount);
@@ -965,7 +971,7 @@ bool ProgramBinary::load(InfoLog &infoLog, GLenum binaryFormat, const void *bina
     if (stream.error())
     {
         infoLog.append("Invalid program binary.");
-        return false;
+        return LinkResult(false, Error(GL_NO_ERROR));
     }
 
     mUniformBlocks.resize(uniformBlockCount);
@@ -994,7 +1000,7 @@ bool ProgramBinary::load(InfoLog &infoLog, GLenum binaryFormat, const void *bina
     if (stream.error())
     {
         infoLog.append("Invalid program binary.");
-        return false;
+        return LinkResult(false, Error(GL_NO_ERROR));
     }
 
     mUniformIndex.resize(uniformIndexCount);
@@ -1005,18 +1011,19 @@ bool ProgramBinary::load(InfoLog &infoLog, GLenum binaryFormat, const void *bina
         stream.readInt(&mUniformIndex[uniformIndexIndex].index);
     }
 
-    if (!mProgram->load(infoLog, &stream))
+    LinkResult result = mProgram->load(infoLog, &stream);
+    if (result.error.isError() || !result.linkSuccess)
     {
-        return false;
+        return result;
     }
 
     mProgram->initializeUniformStorage(mUniforms);
 
-    return true;
+    return LinkResult(true, Error(GL_NO_ERROR));
 #endif // #ifdef ANGLE_DISABLE_PROGRAM_BINARY_LOAD
 }
 
-bool ProgramBinary::save(GLenum *binaryFormat, void *binary, GLsizei bufSize, GLsizei *length)
+Error ProgramBinary::save(GLenum *binaryFormat, void *binary, GLsizei bufSize, GLsizei *length)
 {
     if (binaryFormat)
     {
@@ -1108,15 +1115,7 @@ bool ProgramBinary::save(GLenum *binaryFormat, void *binary, GLsizei bufSize, GL
         stream.writeInt(mUniformIndex[i].index);
     }
 
-    if (!mProgram->save(&stream))
-    {
-        if (length)
-        {
-            *length = 0;
-        }
-
-        return false;
-    }
+    mProgram->save(&stream);
 
     GLsizei streamLength = stream.length();
     const void *streamData = stream.data();
@@ -1128,7 +1127,10 @@ bool ProgramBinary::save(GLenum *binaryFormat, void *binary, GLsizei bufSize, GL
             *length = 0;
         }
 
-        return false;
+        // TODO: This should be moved to the validation layer but computing the size of the binary before saving
+        // it causes the save to happen twice.  It may be possible to write the binary to a separate buffer, validate
+        // sizes and then copy it.
+        return Error(GL_INVALID_OPERATION);
     }
 
     if (binary)
@@ -1146,34 +1148,33 @@ bool ProgramBinary::save(GLenum *binaryFormat, void *binary, GLsizei bufSize, GL
         *length = streamLength;
     }
 
-    return true;
+    return Error(GL_NO_ERROR);
 }
 
 GLint ProgramBinary::getLength()
 {
     GLint length;
-    if (save(NULL, NULL, INT_MAX, &length))
-    {
-        return length;
-    }
-    else
+    Error error = save(NULL, NULL, INT_MAX, &length);
+    if (error.isError())
     {
         return 0;
     }
+
+    return length;
 }
 
-bool ProgramBinary::link(InfoLog &infoLog, const AttributeBindings &attributeBindings, Shader *fragmentShader, Shader *vertexShader,
-                         const std::vector<std::string>& transformFeedbackVaryings, GLenum transformFeedbackBufferMode, const Caps &caps)
+LinkResult ProgramBinary::link(InfoLog &infoLog, const AttributeBindings &attributeBindings, Shader *fragmentShader, Shader *vertexShader,
+                               const std::vector<std::string>& transformFeedbackVaryings, GLenum transformFeedbackBufferMode, const Caps &caps)
 {
     if (!fragmentShader || !fragmentShader->isCompiled())
     {
-        return false;
+        return LinkResult(false, Error(GL_NO_ERROR));
     }
     ASSERT(fragmentShader->getType() == GL_FRAGMENT_SHADER);
 
     if (!vertexShader || !vertexShader->isCompiled())
     {
-        return false;
+        return LinkResult(false, Error(GL_NO_ERROR));
     }
     ASSERT(vertexShader->getType() == GL_VERTEX_SHADER);
 
@@ -1187,22 +1188,21 @@ bool ProgramBinary::link(InfoLog &infoLog, const AttributeBindings &attributeBin
 
     int registers;
     std::vector<LinkedVarying> linkedVaryings;
-    if (!mProgram->link(infoLog, fragmentShader, vertexShader, transformFeedbackVaryings, transformFeedbackBufferMode,
-                        &registers, &linkedVaryings, &mOutputVariables, caps))
+    LinkResult result = mProgram->link(infoLog, fragmentShader, vertexShader, transformFeedbackVaryings, transformFeedbackBufferMode,
+                                       &registers, &linkedVaryings, &mOutputVariables, caps);
+    if (result.error.isError() || !result.linkSuccess)
     {
-        return false;
+        return result;
     }
-
-    bool success = true;
 
     if (!linkAttributes(infoLog, attributeBindings, vertexShader))
     {
-        success = false;
+        return LinkResult(false, Error(GL_NO_ERROR));
     }
 
     if (!linkUniforms(infoLog, *vertexShader, *fragmentShader, caps))
     {
-        success = false;
+        return LinkResult(false, Error(GL_NO_ERROR));
     }
 
     // special case for gl_DepthRange, the only built-in uniform (also a struct)
@@ -1217,28 +1217,26 @@ bool ProgramBinary::link(InfoLog &infoLog, const AttributeBindings &attributeBin
 
     if (!linkUniformBlocks(infoLog, *vertexShader, *fragmentShader, caps))
     {
-        success = false;
+        return LinkResult(false, Error(GL_NO_ERROR));
     }
 
     if (!gatherTransformFeedbackLinkedVaryings(infoLog, linkedVaryings, transformFeedbackVaryings,
                                                transformFeedbackBufferMode, &mProgram->getTransformFeedbackLinkedVaryings(), caps))
     {
-        success = false;
+        return LinkResult(false, Error(GL_NO_ERROR));
     }
 
-    if (success)
+    // TODO: The concept of "executables" is D3D only, and as such this belongs in ProgramD3D. It must be called,
+    // however, last in this function, so it can't simply be moved to ProgramD3D::link without further shuffling.
+    result = mProgram->compileProgramExecutables(infoLog, fragmentShader, vertexShader, registers);
+    if (result.error.isError() || !result.linkSuccess)
     {
-        // TODO: The concept of "executables" is D3D only, and as such this belongs in ProgramD3D. It must be called,
-        // however, last in this function, so it can't simply be moved to ProgramD3D::link without further shuffling.
-        if (!mProgram->compileProgramExecutables(infoLog, fragmentShader, vertexShader, registers))
-        {
-            infoLog.append("Failed to create D3D shaders.");
-            success = false;
-            reset();
-        }
+        infoLog.append("Failed to create D3D shaders.");
+        reset();
+        return result;
     }
 
-    return success;
+    return LinkResult(true, Error(GL_NO_ERROR));
 }
 
 // Determines the mapping between GL attributes and Direct3D 9 vertex stream usage indices
