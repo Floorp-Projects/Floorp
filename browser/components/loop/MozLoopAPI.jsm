@@ -75,6 +75,14 @@ const cloneValueInto = function(value, targetWindow) {
     return value;
   }
 
+  // Strip Function properties, since they can not be cloned across boundaries
+  // like this.
+  for (let prop of value) {
+    if (typeof value[prop] == "function") {
+      delete value[prop];
+    }
+  }
+
   // Inspect for an error this way, because the Error object is special.
   if (value.constructor.name == "Error") {
     return cloneErrorObject(value, targetWindow);
@@ -176,8 +184,10 @@ function injectLoopAPI(targetWindow) {
           }
 
           // We have to clone the error property since it may be an Error object.
+          if (error.hasOwnProperty("toString")) {
+            delete error.toString;
+          }
           errors[type] = Cu.cloneInto(error, targetWindow);
-
         }
         return Cu.cloneInto(errors, targetWindow);
       },
