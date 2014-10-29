@@ -328,7 +328,7 @@ union MaybeFileDesc {
     void_t;
 };
 
-prio(normal upto high) intr protocol PContent
+prio(normal upto urgent) intr protocol PContent
 {
     parent spawns PPluginModule;
 

@@ -39,7 +39,7 @@ union PBrowserOrId {
 };
 
 //-------------------------------------------------------------------
-sync protocol PNecko
+prio(normal upto urgent) sync protocol PNecko
 {
   manager PContent;
   manages PHttpChannel;
@@ -59,7 +59,7 @@ sync protocol PNecko
 parent:
   __delete__();
 
-  PCookieService();
+  prio(urgent) async PCookieService();
   PHttpChannel(PBrowserOrId browser,
                SerializedLoadContext loadContext,
                HttpChannelCreationArgs args);

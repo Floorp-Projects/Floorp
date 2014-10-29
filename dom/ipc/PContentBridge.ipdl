@@ -26,7 +26,7 @@ namespace dom {
  * allocate the PContentBridgeChild.  This protocol allows these processes to
  * share PBrowsers and send messages to each other.
  */
-prio(normal upto high) intr protocol PContentBridge
+prio(normal upto urgent) intr protocol PContentBridge
 {
     bridges PContent, PContent;
 
