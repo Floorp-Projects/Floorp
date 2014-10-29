@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "prlog.h"
 #include "TouchCaret.h"
 
 #include <algorithm>
@@ -34,16 +35,25 @@
 
 using namespace mozilla;
 
-// To enable all the TOUCHCARET_LOG print statements, change the 0 to 1 in the
-// following #define.
-#define ENABLE_TOUCHCARET_LOG 0
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gTouchCaretLog;
+static const char* kTouchCaretLogModuleName = "TouchCaret";
 
-#if ENABLE_TOUCHCARET_LOG
-  #define TOUCHCARET_LOG(message, ...) \
-    printf_stderr("TouchCaret (%p): %s:%d : " message "\n", this, __func__, __LINE__, ##__VA_ARGS__);
+// To enable all the TOUCHCARET_LOG print statements, set the environment
+// variable NSPR_LOG_MODULES=TouchCaret:5
+#define TOUCHCARET_LOG(message, ...)                                           \
+  PR_LOG(gTouchCaretLog, PR_LOG_DEBUG,                                         \
+         ("TouchCaret (%p): %s:%d : " message "\n", this, __FUNCTION__,        \
+          __LINE__, ##__VA_ARGS__));
+
+#define TOUCHCARET_LOG_STATIC(message, ...)                                    \
+  PR_LOG(gTouchCaretLog, PR_LOG_DEBUG,                                         \
+         ("TouchCaret: %s:%d : " message "\n", __FUNCTION__, __LINE__,         \
+          ##__VA_ARGS__));
 #else
-  #define TOUCHCARET_LOG(message, ...)
-#endif
+#define TOUCHCARET_LOG(message, ...)
+#define TOUCHCARET_LOG_STATIC(message, ...)
+#endif // #ifdef PR_LOGGING
 
 // Click on the boundary of input/textarea will place the caret at the
 // front/end of the content. To advoid this, we need to deflate the content
@@ -62,8 +72,15 @@ TouchCaret::TouchCaret(nsIPresShell* aPresShell)
     mVisible(false),
     mIsValidTap(false)
 {
-  TOUCHCARET_LOG("Constructor, PresShell=%p", aPresShell);
   MOZ_ASSERT(NS_IsMainThread());
+
+#ifdef PR_LOGGING
+  if (!gTouchCaretLog) {
+    gTouchCaretLog = PR_NewLogModule(kTouchCaretLogModuleName);
+  }
+#endif
+
+  TOUCHCARET_LOG("Constructor, PresShell=%p", aPresShell);
 
   static bool addedTouchCaretPref = false;
   if (!addedTouchCaretPref) {
@@ -311,7 +328,7 @@ nsresult
 TouchCaret::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel,
                                    int16_t aReason)
 {
-  TOUCHCARET_LOG("Reason=%d", aReason);
+  TOUCHCARET_LOG("aSel (%p), Reason=%d", aSel, aReason);
 
   // Hide touch caret while no caret exists.
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
