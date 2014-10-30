@@ -15,6 +15,13 @@ namespace mozilla {
 namespace dom {
 namespace mobileconnection {
 
+#define CONVERT_ENUM_TO_STRING(_enumType, _enum, _string)               \
+{                                                                       \
+  uint32_t index = uint32_t(_enum);                                     \
+  _string.AssignASCII(_enumType##Values::strings[index].value,          \
+                      _enumType##Values::strings[index].length);        \
+}
+
 NS_IMPL_ISUPPORTS(MobileConnectionCallback, nsIMobileConnectionCallback)
 
 MobileConnectionCallback::MobileConnectionCallback(nsPIDOMWindow* aWindow,
@@ -347,6 +354,18 @@ MobileConnectionCallback::NotifyGetClirStatusSuccess(uint16_t aN, uint16_t aM)
   }
 
   return NotifySuccess(jsResult);
+};
+
+NS_IMETHODIMP
+MobileConnectionCallback::NotifyGetPreferredNetworkTypeSuccess(int32_t aType)
+{
+  MOZ_ASSERT(aType < static_cast<int32_t>(MobilePreferredNetworkType::EndGuard_));
+  MobilePreferredNetworkType type = static_cast<MobilePreferredNetworkType>(aType);
+
+  nsAutoString typeString;
+  CONVERT_ENUM_TO_STRING(MobilePreferredNetworkType, type, typeString);
+
+  return NotifySuccessWithString(typeString);
 };
 
 NS_IMETHODIMP
