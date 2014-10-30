@@ -4,15 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_LINKER']:
-    DIRS += ['linker']
+Library('mozcrt')
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    DIRS += ['android']
+STATIC_LIBRARY_NAME = 'mozcrt_s'
 
-DIRS += ['build']
-
-if CONFIG['MOZ_CRT']:
-    DIRS += ['crt']
-
-TEST_DIRS += ['tests']
+OS_LIBS += [
+    '-NODEFAULTLIB:msvcrt',
+    '-NODEFAULTLIB:msvcprt',
+    '-LIBPATH:%s/mozglue/crt' % TOPOBJDIR,
+    '-DEFAULTLIB:mozcrt',
+]

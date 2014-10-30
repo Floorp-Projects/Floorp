@@ -10,6 +10,12 @@ CXX_WRAPPER =
 
 default::
 
+# When MOZ_CRT is set, we get mozcrt from moz.build instead of
+# MOZ_GLUE_LDFLAGS
+ifdef MOZ_CRT
+MOZ_GLUE_LDFLAGS =
+endif
+
 include $(topsrcdir)/config/makefiles/functions.mk
 
 NSS_LIBS = \
@@ -107,11 +113,6 @@ ifneq (,$(strip $(NSPR_LIB_DIR)))
 NSPR_LIB_DIR := $(subst -L,,$(subst -L$(DIST),-L$(ABS_DIST),$(NSPR_LIB_DIR)))
 else
 NSPR_LIB_DIR = $(ABS_DIST)/lib
-endif
-# Can't pass this in DEFAULT_GMAKE_FLAGS because that overrides
-# definitions in NSS, so just export it into the sub-make's environment.
-ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_MEMORY))
-export DLLFLAGS
 endif
 
 # To get debug symbols from NSS
@@ -356,6 +357,18 @@ endif # WINNT
 endif # MOZ_FOLD_LIBS
 
 include $(topsrcdir)/config/rules.mk
+
+# Can't pass this in DEFAULT_GMAKE_FLAGS because that overrides
+# definitions in NSS, so just export it into the sub-make's environment.
+ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_MEMORY))
+ifdef MOZ_CRT
+# OS_LIBS comes from having mozcrt as a dependency in moz.build.
+DLLFLAGS := $(OS_LIBS)
+else
+DLLFLAGS := -LIBPATH:$(ABS_DIST)/lib -DEFAULTLIB:mozglue
+endif
+export DLLFLAGS
+endif
 
 ifdef MOZ_FOLD_LIBS
 # Force the linker to include everything from the static libraries.
