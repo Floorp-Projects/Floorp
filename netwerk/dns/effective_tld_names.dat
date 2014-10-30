@@ -5608,7 +5608,7 @@ mari.ru
 mari-el.ru
 marine.ru
 mordovia.ru
-mosreg.ru
+// mosreg.ru  Bug 1090800 - removed at request of Aleksey Konstantinov <konstantinovav@mosreg.ru>
 msk.ru
 murmansk.ru
 nalchik.ru
