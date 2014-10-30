@@ -133,14 +133,6 @@
             if (!aURI)
               aURI = "about:blank";
 
-            if (aCharset) {
-              try {
-                this.docShell.parentCharset = aCharset;
-              }
-              catch (e) {
-              }
-            }
-
             if (!(aFlags & this.webNavigation.LOAD_FLAGS_FROM_EXTERNAL))
               this.userTypedClear++;
 

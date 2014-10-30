@@ -193,6 +193,10 @@ function waitForTabState(aTab, aState, aCallback) {
   ss.setTabState(aTab, JSON.stringify(aState));
 }
 
+function promiseTabState(tab, state) {
+  return new Promise(resolve => waitForTabState(tab, state, resolve));
+}
+
 /**
  * Wait for a content -> chrome message.
  */

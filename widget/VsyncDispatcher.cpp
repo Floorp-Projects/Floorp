@@ -42,19 +42,19 @@ VsyncDispatcher::~VsyncDispatcher()
 }
 
 void
-VsyncDispatcher::DispatchTouchEvents(bool aNotifiedCompositors, nsecs_t aAndroidVsyncTime)
+VsyncDispatcher::DispatchTouchEvents(bool aNotifiedCompositors, TimeStamp aVsyncTime)
 {
   // Touch events can sometimes start a composite, so make sure we dispatch touches
   // even if we don't composite
 #ifdef MOZ_WIDGET_GONK
   if (!aNotifiedCompositors && gfxPrefs::TouchResampling()) {
-    GeckoTouchDispatcher::NotifyVsync(aAndroidVsyncTime);
+    GeckoTouchDispatcher::NotifyVsync(aVsyncTime);
   }
 #endif
 }
 
 void
-VsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp, nsecs_t aAndroidVsyncTime)
+VsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp)
 {
   bool notifiedCompositors = false;
   if (gfxPrefs::VsyncAlignedCompositor()) {
@@ -62,7 +62,7 @@ VsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp, nsecs_t aAndroidVsyncTim
     notifiedCompositors = NotifyVsyncObservers(aVsyncTimestamp, mCompositorObservers);
   }
 
-  DispatchTouchEvents(notifiedCompositors, aAndroidVsyncTime);
+  DispatchTouchEvents(notifiedCompositors, aVsyncTimestamp);
 }
 
 bool
@@ -72,7 +72,7 @@ VsyncDispatcher::NotifyVsyncObservers(TimeStamp aVsyncTimestamp, nsTArray<nsRefP
   for (size_t i = 0; i < aObservers.Length(); i++) {
     aObservers[i]->NotifyVsync(aVsyncTimestamp);
  }
- return aObservers.IsEmpty();
+ return !aObservers.IsEmpty();
 }
 
 void

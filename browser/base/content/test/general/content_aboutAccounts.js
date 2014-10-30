@@ -5,6 +5,8 @@
 // This file is loaded as a "content script" for browser_aboutAccounts tests
 "use strict";
 
+const {interfaces: Ci, utils: Cu} = Components;
+
 addEventListener("load", function load(event) {
   if (event.target != content.document) {
     return;
@@ -16,6 +18,10 @@ addEventListener("load", function load(event) {
 addEventListener("DOMContentLoaded", function domContentLoaded(event) {
   removeEventListener("DOMContentLoaded", domContentLoaded, true);
   let iframe = content.document.getElementById("remote");
+  if (!iframe) {
+    // at least one test initially loads about:blank - in that case, we are done.
+    return;
+  }
   iframe.addEventListener("load", function iframeLoaded(event) {
     if (iframe.contentWindow.location.href == "about:blank" ||
         event.target != iframe) {
@@ -46,3 +52,23 @@ addMessageListener("test:check-visibilities", function (message) {
   }
   sendAsyncMessage("test:check-visibilities-response", result);
 });
+
+addMessageListener("test:load-with-mocked-profile-path", function (message) {
+  addEventListener("DOMContentLoaded", function domContentLoaded(event) {
+    removeEventListener("DOMContentLoaded", domContentLoaded, true);
+    content.getDefaultProfilePath = () => message.data.profilePath;
+    // now wait for the iframe to load.
+    let iframe = content.document.getElementById("remote");
+    iframe.addEventListener("load", function iframeLoaded(event) {
+      if (iframe.contentWindow.location.href == "about:blank" ||
+          event.target != iframe) {
+        return;
+      }
+      iframe.removeEventListener("load", iframeLoaded, true);
+      sendAsyncMessage("test:load-with-mocked-profile-path-response",
+                       {url: iframe.getAttribute("src")});
+    }, true);
+  });
+  let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+  webNav.loadURI(message.data.url, webNav.LOAD_FLAGS_NONE, null, null, null);
+}, true);

@@ -61,8 +61,13 @@
     <dimen name="new_tablet_site_security_unknown_inset_top">1dp</dimen>
     <dimen name="new_tablet_site_security_unknown_inset_bottom">-1dp</dimen>
 
-    <!-- Page Row height -->
+    <!-- Regular page row on about:home -->
     <dimen name="page_row_height">64dp</dimen>
+
+    <!-- Reading list row on about:home -->
+    <dimen name="reading_list_row_height">128dp</dimen>
+    <dimen name="reading_list_row_padding_left">15dp</dimen>
+    <dimen name="reading_list_row_padding_right">10dp</dimen>
 
     <!-- Remote Tabs static view top padding. Less in landscape on phones. -->
     <dimen name="home_remote_tabs_top_padding">48dp</dimen>
