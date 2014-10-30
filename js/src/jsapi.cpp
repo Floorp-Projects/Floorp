@@ -3919,6 +3919,21 @@ JS_CloneFunctionObject(JSContext *cx, HandleObject funobj, HandleObject parentAr
     return CloneFunctionObject(cx, fun, parent, fun->getAllocKind());
 }
 
+namespace JS {
+
+JS_PUBLIC_API(JSObject *)
+CloneFunctionObject(JSContext *cx, HandleObject funobj, AutoObjectVector &scopeChain)
+{
+    RootedObject dynamicScope(cx);
+    RootedObject unusedStaticScope(cx);
+    if (!CreateScopeObjectsForScopeChain(cx, scopeChain, &dynamicScope, &unusedStaticScope))
+        return nullptr;
+
+    return JS_CloneFunctionObject(cx, funobj, dynamicScope);
+}
+
+} // namespace JS
+
 JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun)
 {
