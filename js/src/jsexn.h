@@ -86,6 +86,19 @@ js_ErrorFromException(JSContext *cx, js::HandleObject obj);
 extern JSObject *
 js_CopyErrorObject(JSContext *cx, JS::Handle<js::ErrorObject*> errobj);
 
+static_assert(JSEXN_ERR == 0 &&
+              JSProto_Error + JSEXN_INTERNALERR == JSProto_InternalError &&
+              JSProto_Error + JSEXN_EVALERR == JSProto_EvalError &&
+              JSProto_Error + JSEXN_RANGEERR == JSProto_RangeError &&
+              JSProto_Error + JSEXN_REFERENCEERR == JSProto_ReferenceError &&
+              JSProto_Error + JSEXN_SYNTAXERR == JSProto_SyntaxError &&
+              JSProto_Error + JSEXN_TYPEERR == JSProto_TypeError &&
+              JSProto_Error + JSEXN_URIERR == JSProto_URIError &&
+              JSEXN_URIERR + 1 == JSEXN_LIMIT,
+              "GetExceptionProtoKey and ExnTypeFromProtoKey require that "
+              "each corresponding JSExnType and JSProtoKey value be separated "
+              "by the same constant value");
+
 static inline JSProtoKey
 GetExceptionProtoKey(JSExnType exn)
 {
