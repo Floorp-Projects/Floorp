@@ -18,6 +18,7 @@
 #include "nsIXPConnect.h"
 #include "xpcpublic.h"
 #include "nsXBLPrototypeBinding.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla;
@@ -269,6 +270,7 @@ nsXBLProtoImplMethod::Write(nsIObjectOutputStream* aStream)
 nsresult
 nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement, JSAddonId* aAddonId)
 {
+  MOZ_ASSERT(aBoundElement->IsElement());
   NS_PRECONDITION(IsCompiled(), "Can't execute uncompiled method");
 
   if (!GetCompiledMethod()) {
@@ -295,23 +297,22 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement, JSAddonId* aAd
 
   JS::Rooted<JSObject*> globalObject(cx, global->GetGlobalJSObject());
 
-  JS::Rooted<JS::Value> v(cx);
-  nsresult rv = nsContentUtils::WrapNative(cx, aBoundElement, &v);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JS::Rooted<JSObject*> thisObject(cx, &v.toObject());
   JS::Rooted<JSObject*> scopeObject(cx, xpc::GetScopeForXBLExecution(cx, globalObject, aAddonId));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 
   JSAutoCompartment ac(cx, scopeObject);
-  if (!JS_WrapObject(cx, &thisObject))
-      return NS_ERROR_OUT_OF_MEMORY;
+  JS::AutoObjectVector scopeChain(cx);
+  if (!nsJSUtils::GetScopeChainForElement(cx, aBoundElement->AsElement(),
+                                          scopeChain)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  MOZ_ASSERT(scopeChain.length() != 0);
 
-  // Clone the function object, using thisObject as the parent so "this" is in
-  // the scope chain of the resulting function (for backwards compat to the
-  // days when this was an event handler).
+  // Clone the function object, using our scope chain (for backwards
+  // compat to the days when this was an event handler).
   JS::Rooted<JSObject*> jsMethodObject(cx, GetCompiledMethod());
-  JS::Rooted<JSObject*> method(cx, ::JS_CloneFunctionObject(cx, jsMethodObject, thisObject));
+  JS::Rooted<JSObject*> method(cx, JS::CloneFunctionObject(cx, jsMethodObject,
+                                                           scopeChain));
   if (!method)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -325,7 +326,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement, JSAddonId* aAd
   if (scriptAllowed) {
     JS::Rooted<JS::Value> retval(cx);
     JS::Rooted<JS::Value> methodVal(cx, JS::ObjectValue(*method));
-    ok = ::JS::Call(cx, thisObject, methodVal, JS::HandleValueArray::empty(), &retval);
+    ok = ::JS::Call(cx, scopeChain[0], methodVal, JS::HandleValueArray::empty(), &retval);
   }
 
   if (!ok) {
