@@ -2517,6 +2517,20 @@ js::GetDebugScopeForFrame(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
     return GetDebugScope(cx, si);
 }
 
+// See declaration and documentation in jsfriendapi.h
+JS_FRIEND_API(JSObject *)
+js::GetObjectEnvironmentObjectForFunction(JSFunction *fun)
+{
+    if (!fun->isInterpreted())
+        return fun->getParent();
+
+    JSObject *env = fun->environment();
+    if (!env || !env->is<DynamicWithObject>())
+        return fun->getParent();
+
+    return &env->as<DynamicWithObject>().object();
+}
+
 #ifdef DEBUG
 
 typedef HashSet<PropertyName *> PropertyNameSet;
