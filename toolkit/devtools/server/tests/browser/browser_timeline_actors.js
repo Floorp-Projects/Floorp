@@ -59,10 +59,11 @@ let test = asyncTest(function*() {
  */
 function waitUntil(predicate, interval = 10) {
   if (predicate()) {
-    return Promise.resolve(true);
+    return promise.resolve(true);
   }
-  return new Promise(resolve =>
-    setTimeout(function() {
-      waitUntil(predicate).then(() => resolve(true));
-    }, interval));
+  let deferred = promise.defer();
+  setTimeout(function() {
+    waitUntil(predicate).then(() => deferred.resolve(true));
+  }, interval);
+  return deferred.promise;
 }
