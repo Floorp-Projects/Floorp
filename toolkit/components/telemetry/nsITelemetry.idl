@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(4c7ba1fc-8253-4bb6-b434-325e51c26109)]
+[scriptable, uuid(080b55ca-2469-4a61-a230-fc9dac02c2c1)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -177,6 +177,53 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   jsval getHistogramById(in ACString id);
+
+  /*
+   * An object containing a snapshot from all of the currently registered keyed histograms.
+   * { name1: {histogramData1}, name2:{histogramData2}...}
+   * where the histogramData is as described in histogramSnapshots.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval keyedHistogramSnapshots;
+
+  /**
+   * Create and return a keyed histogram.  Parameters:
+   *
+   * @param name Unique histogram name
+   * @param expiration Expiration version
+   * @param type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, HISTOGRAM_BOOLEAN, HISTOGRAM_FLAG or HISTOGRAM_COUNT
+   * @param min - Minimal bucket size
+   * @param max - Maximum bucket size
+   * @param bucket_count - number of buckets in the histogram.
+   * The returned object has the following functions:
+   *   add(string key, [optional] int) - Add an int value to the histogram for that key. If no histogram for that key exists yet, it is created.
+   *   snapshot([optional] string key) - If key is provided, returns a snapshot for the histogram with that key or null. If key is not provided, returns the snapshots of all the registered keys in the form {key1: snapshot1, key2: snapshot2, ...}.
+   *   keys() - Returns an array with the string keys of the currently registered histograms
+   *   clear() - Clears the registered histograms from this.
+   */
+  [implicit_jscontext, optional_argc]
+  jsval newKeyedHistogram(in ACString name,
+                          in ACString expiration,
+                          in unsigned long histogram_type,
+                          [optional] in uint32_t min,
+                          [optional] in uint32_t max,
+                          [optional] in uint32_t bucket_count);
+
+  /**
+   * Returns an array whose values are the names of histograms defined
+   * in Histograms.json.
+   */
+  void registeredKeyedHistograms(out uint32_t count,
+                                 [retval, array, size_is(count)] out string histograms);
+
+  /**
+   * Same as newKeyedHistogram above, but for histograms registered in TelemetryHistograms.h.
+   *
+   * @param id - unique identifier from TelemetryHistograms.h
+   * The returned object has the same functions as a histogram returned from newKeyedHistogram.
+   */
+  [implicit_jscontext]
+  jsval getKeyedHistogramById(in ACString id);
 
   /**
    * Set this to false to disable gathering of telemetry statistics.
