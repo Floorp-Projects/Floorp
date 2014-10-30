@@ -36,6 +36,12 @@ function postRedirectHandler(metadata, response)
   response.bodyOutputStream.write(responseBody, responseBody.length);
 }
 
+function inChildProcess() {
+  return Cc["@mozilla.org/xre/app-info;1"]
+  .getService(Ci.nsIXULRuntime)
+  .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+}
+
 function run_test()
 {
   // Start the HTTP server.
@@ -44,9 +50,11 @@ function run_test()
   httpServer.registerPathHandler(postRedirectPath, postRedirectHandler);
   httpServer.start(-1);
 
-  // Disable third-party cookies in general.
-  Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).
-    setIntPref("network.cookie.cookieBehavior", 1);
+  if (!inChildProcess()) {
+    // Disable third-party cookies in general.
+    Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).
+      setIntPref("network.cookie.cookieBehavior", 1);
+  }
 
   var ioService = Cc["@mozilla.org/network/io-service;1"].
                   getService(Ci.nsIIOService);
