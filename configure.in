@@ -9186,9 +9186,9 @@ if test "$MOZ_TREE_FREETYPE"; then
    if ! test -e modules; then
      mkdir modules
    fi
-   # Only export CC and CXX for the subconfigure, and avoid spilling that
-   # further down the road.
-   (export CC CXX;
+   # Only export CC, CXX and RANLIB for the subconfigure, and avoid spilling
+   # that further down the road.
+   (export CC CXX RANLIB;
     AC_OUTPUT_SUBDIRS(modules/freetype2)
    ) || exit 1
 fi
