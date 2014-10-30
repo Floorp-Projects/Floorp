@@ -1906,6 +1906,12 @@ nsGenericHTMLFormElement::GetParentObject() const
   return nsGenericHTMLElement::GetParentObject();
 }
 
+nsINode*
+nsGenericHTMLFormElement::GetScopeChainParent() const
+{
+  return mForm ? mForm : nsGenericHTMLElement::GetScopeChainParent();
+}
+
 bool
 nsGenericHTMLFormElement::IsNodeOfType(uint32_t aFlags) const
 {
