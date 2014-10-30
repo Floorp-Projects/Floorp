@@ -57,7 +57,7 @@ class JSStringPtr(Common):
                     chars = d['s']['u2']['nonInlineCharsLatin1']
                 else:
                     chars = d['s']['u2']['nonInlineCharsTwoByte']
-            for i in range(length):
+            for i in range(int(length)):
                 yield chars[i]
 
     def to_string(self):

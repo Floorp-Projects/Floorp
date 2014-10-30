@@ -80,7 +80,7 @@ private:
 
 class TestAsyncShutdown : public GMPAsyncShutdown {
 public:
-  TestAsyncShutdown(GMPAsyncShutdownHost* aHost)
+  explicit TestAsyncShutdown(GMPAsyncShutdownHost* aHost)
     : mHost(aHost)
   {
   }

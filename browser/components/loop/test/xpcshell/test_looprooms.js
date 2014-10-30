@@ -135,7 +135,7 @@ const compareRooms = function(room1, room2) {
 };
 
 add_task(function* test_getAllRooms() {
-  yield MozLoopService.register(mockPushHandler);
+  yield MozLoopService.promiseRegisteredWithServers();
 
   let rooms = yield LoopRooms.promise("getAll");
   Assert.equal(rooms.length, 3);
@@ -145,7 +145,7 @@ add_task(function* test_getAllRooms() {
 });
 
 add_task(function* test_getRoom() {
-  yield MozLoopService.register(mockPushHandler);
+  yield MozLoopService.promiseRegisteredWithServers();
 
   let roomToken = "_nxD4V4FflQ";
   let room = yield LoopRooms.promise("get", roomToken);

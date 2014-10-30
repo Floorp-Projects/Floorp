@@ -9,8 +9,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface WindowProxy;
-
 interface CompositionEvent : UIEvent
 {
   readonly attribute DOMString? data;
@@ -23,7 +21,7 @@ partial interface CompositionEvent
   void initCompositionEvent(DOMString typeArg,
                             boolean canBubbleArg,
                             boolean cancelableArg,
-                            WindowProxy? viewArg,
+                            Window? viewArg,
                             DOMString? dataArg,
                             DOMString localeArg);
 };

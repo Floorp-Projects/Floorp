@@ -6,12 +6,12 @@
 
 FAIL_ON_WARNINGS = True
 
-SimplePrograms([
+GeckoSimplePrograms([
     'BadCertServer',
     'ClientAuthServer',
     'GenerateOCSPResponse',
     'OCSPStaplingServer',
-])
+], linkage=None)
 
 LOCAL_INCLUDES += [
     '../lib',

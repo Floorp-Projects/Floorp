@@ -168,7 +168,7 @@ NS_IMPL_ISUPPORTS(GMPShutdownObserver, nsIRunnable, nsIObserver)
 
 class NotifyObserversTask : public nsRunnable {
 public:
-  NotifyObserversTask(const char* aTopic)
+  explicit NotifyObserversTask(const char* aTopic)
     : mTopic(aTopic)
   {}
   NS_IMETHOD Run() {

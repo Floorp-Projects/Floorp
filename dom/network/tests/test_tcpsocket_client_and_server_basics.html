@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Core tests for TCPSocket and TCPServerSocket that replace their previous
+separate xpcshell incarnations.  This migration and cleanup occurred as part
+of bug 1084245 in order to get coverage of the tests from content.
+
+https://bugzilla.mozilla.org/show_bug.cgi?id=1084245
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1084245</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="add_task.js"></script>
+  <script type="application/javascript;version=1.7" src="test_tcpsocket_client_and_server_basics.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1084245">Mozilla Bug 1084245</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -1787,7 +1787,11 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded)
   if (!window) {
     return nullptr;
   }
-
+#ifdef MOZ_EME
+  if (ContainsRestrictedContent()) {
+    return nullptr;
+  }
+#endif
   OutputMediaStream* out = mOutputStreams.AppendElement();
 #ifdef DEBUG
   // Estimate hints based on the type of the media element
@@ -3992,10 +3996,21 @@ HTMLMediaElement::GetMediaKeys() const
   return mMediaKeys;
 }
 
+bool
+HTMLMediaElement::ContainsRestrictedContent()
+{
+  return GetMediaKeys() != nullptr;
+}
+
 already_AddRefed<Promise>
 HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
                                ErrorResult& aRv)
 {
+  if (MozAudioCaptured()) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
   nsCOMPtr<nsIGlobalObject> global =
     do_QueryInterface(OwnerDoc()->GetInnerWindow());
   if (!global) {
@@ -4030,6 +4045,8 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
     if (mDecoder) {
       mDecoder->SetCDMProxy(mMediaKeys->GetCDMProxy());
     }
+    // Update the same-origin status.
+    NotifyDecoderPrincipalChanged();
   }
   promise->MaybeResolve(JS::UndefinedHandleValue);
   return promise.forget();
