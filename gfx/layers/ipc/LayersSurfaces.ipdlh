@@ -74,6 +74,7 @@ struct NewSurfaceDescriptorGralloc {
    * Extra size member is necessary. See Bug 850566.
    */
   IntSize size;
+  bool isOpaque;
 };
 
 struct SharedSurfaceDescriptor {
