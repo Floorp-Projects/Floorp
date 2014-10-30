@@ -4,7 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <org.mozilla.gecko.home.ReadingListRow xmlns:android="http://schemas.android.com/apk/res/android"
-                                       style="@style/Widget.BookmarkItemView"
                                        android:layout_width="match_parent"
-                                       android:layout_height="wrap_content"
-                                       android:padding="10dp"/>
+                                       android:layout_height="@dimen/reading_list_row_height"
+                                       android:layout_gravity="center_vertical"/>
