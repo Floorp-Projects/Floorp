@@ -1168,7 +1168,7 @@ MacroAssembler::loadStringChar(Register str, Register index, Register output)
 void
 MacroAssembler::checkInterruptFlagPar(Register tempReg, Label *fail)
 {
-    movePtr(ImmPtr(GetIonContext()->runtime->addressOfInterruptPar()), tempReg);
+    movePtr(ImmPtr(GetIonContext()->runtime->addressOfInterruptParUint32()), tempReg);
     branch32(Assembler::NonZero, Address(tempReg, 0), Imm32(0), fail);
 }
 
