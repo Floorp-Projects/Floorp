@@ -863,18 +863,6 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
     }
   }
 
-  JS::AutoObjectVector scopeChain(cx);
-  { // scope for curScope
-    // We append all the non-globals on our desired scope chain.
-    JS::Rooted<JSObject*> curScope(cx, &v.toObject());
-    while (curScope && !JS_IsGlobalObject(curScope)) {
-      if (!scopeChain.append(curScope)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      curScope = JS_GetParent(curScope);
-    }
-  }
-
   if (addonId) {
     JS::Rooted<JSObject*> vObj(cx, &v.toObject());
     JS::Rooted<JSObject*> addonScope(cx, xpc::GetAddonScope(cx, vObj, addonId));
@@ -882,20 +870,25 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
       return NS_ERROR_FAILURE;
     }
     JSAutoCompartment ac(cx, addonScope);
-    for (size_t i = 0; i < scopeChain.length(); ++i) {
-      if (!JS_WrapObject(cx, scopeChain[i])) {
-        return NS_ERROR_FAILURE;
-      }
-    }
 
-    // And wrap v as well, since scopeChain might be empty so we can't
-    // reliably use it to enter a compartment.
+    // Wrap our event target into the addon scope, since that's where we want to
+    // do all our work.
     if (!JS_WrapValue(cx, &v)) {
       return NS_ERROR_FAILURE;
     }
   }
   JS::Rooted<JSObject*> target(cx, &v.toObject());
   JSAutoCompartment ac(cx, target);
+
+  // Now that we've entered the compartment we actually care about, create our
+  // scope chain.  Note that we start with |element|, not aElement, because
+  // mTarget is different from aElement in the <body> case, where mTarget is a
+  // Window, and in that case we do not want the scope chain to include the body
+  // or the document.
+  JS::AutoObjectVector scopeChain(cx);
+  if (!nsJSUtils::GetScopeChainForElement(cx, element, scopeChain)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   nsDependentAtomString str(attrName);
   // Most of our names are short enough that we don't even have to malloc
