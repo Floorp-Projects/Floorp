@@ -188,9 +188,9 @@ NeckoParent::CreateChannelLoadContext(const PBrowserOrId& aBrowser,
                                   appId, inBrowser);
         break;
       }
-      case PBrowserOrId::Tuint64_t:
+      case PBrowserOrId::TTabId:
       {
-        aResult = new LoadContext(aSerialized, aBrowser.get_uint64_t(),
+        aResult = new LoadContext(aSerialized, aBrowser.get_TabId(),
                                   appId, inBrowser);
         break;
       }
@@ -733,7 +733,7 @@ CallbackMap()
 NS_IMPL_ISUPPORTS(NeckoParent::NestedFrameAuthPrompt, nsIAuthPrompt2)
 
 NeckoParent::NestedFrameAuthPrompt::NestedFrameAuthPrompt(PNeckoParent* aParent,
-                                                          uint64_t aNestedFrameId)
+                                                          TabId aNestedFrameId)
   : mNeckoParent(aParent)
   , mNestedFrameId(aNestedFrameId)
 {}

@@ -529,6 +529,11 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   WheelTransaction::OnEvent(aEvent);
 
   switch (aEvent->message) {
+  case NS_CONTEXTMENU:
+    if (sIsPointerLocked) {
+      return NS_ERROR_DOM_INVALID_STATE_ERR;
+    }
+    break;
   case NS_MOUSE_BUTTON_DOWN: {
     switch (mouseEvent->button) {
     case WidgetMouseEvent::eLeftButton:
@@ -1273,8 +1278,11 @@ EventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
                                         nsIFrame* inDownFrame,
                                         WidgetGUIEvent* inMouseDownEvent)
 {
-  if (!inMouseDownEvent->mFlags.mIsTrusted || IsRemoteTarget(mGestureDownContent))
+  if (!inMouseDownEvent->mFlags.mIsTrusted ||
+      IsRemoteTarget(mGestureDownContent) ||
+      sIsPointerLocked) {
     return;
+  }
 
   // just to be anal (er, safe)
   if (mClickHoldTimer) {
@@ -1356,7 +1364,7 @@ EventStateManager::sClickHoldCallback(nsITimer* aTimer, void* aESM)
 void
 EventStateManager::FireContextClick()
 {
-  if (!mGestureDownContent || !mPresContext) {
+  if (!mGestureDownContent || !mPresContext || sIsPointerLocked) {
     return;
   }
 

@@ -1892,7 +1892,7 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     const LAllocation *ptr = ins->ptr();
 
     if (ptr->isConstant()) {
-        MOZ_ASSERT(mir->skipBoundsCheck());
+        MOZ_ASSERT(!mir->needsBoundsCheck());
         int32_t ptrImm = ptr->toConstant()->toInt32();
         MOZ_ASSERT(ptrImm >= 0);
         if (isFloat) {
@@ -1910,7 +1910,7 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 
     Register ptrReg = ToRegister(ptr);
 
-    if (mir->skipBoundsCheck()) {
+    if (!mir->needsBoundsCheck()) {
         if (isFloat) {
             VFPRegister vd(ToFloatRegister(ins->output()));
             if (size == 32)
@@ -1966,7 +1966,7 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     }
     const LAllocation *ptr = ins->ptr();
     if (ptr->isConstant()) {
-        MOZ_ASSERT(mir->skipBoundsCheck());
+        MOZ_ASSERT(!mir->needsBoundsCheck());
         int32_t ptrImm = ptr->toConstant()->toInt32();
         MOZ_ASSERT(ptrImm >= 0);
         if (isFloat) {
@@ -1984,7 +1984,7 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
 
     Register ptrReg = ToRegister(ptr);
 
-    if (mir->skipBoundsCheck()) {
+    if (!mir->needsBoundsCheck()) {
         Register ptrReg = ToRegister(ptr);
         if (isFloat) {
             VFPRegister vd(ToFloatRegister(ins->value()));

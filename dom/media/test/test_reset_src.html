@@ -41,6 +41,7 @@ function onLoadedMetadata_Audio(e) {
     return;
   }
   ok(false, t.name + ": We should not succeed to draw a video frame on the canvas.");
+  finish(t);
 }
 
 function onTimeUpdate_Video(e) {

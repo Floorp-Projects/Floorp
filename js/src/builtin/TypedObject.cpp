@@ -1636,8 +1636,7 @@ OutlineTypedObject::attach(JSContext *cx, ArrayBufferObject &buffer, int32_t off
     MOZ_ASSERT(offset >= 0);
     MOZ_ASSERT((size_t) (offset + size()) <= buffer.byteLength());
 
-    if (typeDescr().is<SizedTypeDescr>())
-        buffer.setHasSizedObjectViews();
+    buffer.setHasTypedObjectViews();
 
     if (!buffer.addView(cx, this))
         CrashAtUnhandlableOOM("TypedObject::attach");
@@ -2439,7 +2438,7 @@ InlineTransparentTypedObject::getOrCreateBuffer(JSContext *cx)
     JS_ALWAYS_TRUE(buffer->addView(cx, this));
 
     buffer->setForInlineTypedObject();
-    buffer->setHasSizedObjectViews();
+    buffer->setHasTypedObjectViews();
 
     if (!table->addBuffer(cx, this, buffer))
         return nullptr;
