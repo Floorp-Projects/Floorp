@@ -25,6 +25,7 @@ class nsIScriptGlobalObject;
 namespace mozilla {
 namespace dom {
 class AutoJSAPI;
+class Element;
 }
 }
 
@@ -119,6 +120,11 @@ public:
                                  JS::CompileOptions &aCompileOptions,
                                  void **aOffThreadToken = nullptr);
 
+  // Returns false if an exception got thrown on aCx.  Passing a null
+  // aElement is allowed; that wil produce an empty aScopeChain.
+  static bool GetScopeChainForElement(JSContext* aCx,
+                                      mozilla::dom::Element* aElement,
+                                      JS::AutoObjectVector& aScopeChain);
 };
 
 class MOZ_STACK_CLASS AutoDontReportUncaught {
