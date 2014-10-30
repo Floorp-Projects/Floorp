@@ -65,6 +65,10 @@
 #endif
 #include "mozilla/VsyncDispatcher.h"
 
+#ifdef MOZ_WIDGET_GONK
+#include "GeckoTouchDispatcher.h"
+#endif
+
 namespace mozilla {
 namespace layers {
 
@@ -273,6 +277,8 @@ CompositorVsyncObserver::Composite(TimeStamp aVsyncTimestamp)
     // unregister the vsync.
     UnobserveVsync();
   }
+
+  DispatchTouchEvents(aVsyncTimestamp);
 }
 
 bool
@@ -300,6 +306,16 @@ CompositorVsyncObserver::UnobserveVsync()
   MOZ_ASSERT(CompositorParent::IsInCompositorThread() || NS_IsMainThread());
   VsyncDispatcher::GetInstance()->RemoveCompositorVsyncObserver(this);
   mIsObservingVsync = false;
+}
+
+void
+CompositorVsyncObserver::DispatchTouchEvents(TimeStamp aVsyncTimestamp)
+{
+#ifdef MOZ_WIDGET_GONK
+  if (gfxPrefs::TouchResampling()) {
+    GeckoTouchDispatcher::NotifyVsync(aVsyncTimestamp);
+  }
+#endif
 }
 
 void CompositorParent::StartUp()
