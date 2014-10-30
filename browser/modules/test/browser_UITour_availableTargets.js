@@ -9,6 +9,8 @@ let gContentWindow;
 
 Components.utils.import("resource:///modules/UITour.jsm");
 
+let hasWebIDE = Services.prefs.getBoolPref("devtools.webide.widget.enabled");
+
 function test() {
   requestLongerTimeout(2);
   UITourTest();
@@ -34,13 +36,17 @@ let tests = [
         "help",
         "home",
         "loop",
+        "devtools",
         "pinnedTab",
         "privateWindow",
         "quit",
         "search",
         "searchProvider",
         "urlbar",
-      ].concat(searchEngineTargets()));
+        ...searchEngineTargets(),
+        ...(hasWebIDE ? ["webide"] : [])
+      ]);
+
       ok(UITour.availableTargetsCache.has(window),
          "Targets should now be cached");
       done();
@@ -60,6 +66,7 @@ let tests = [
         "customize",
         "help",
         "loop",
+        "devtools",
         "home",
         "pinnedTab",
         "privateWindow",
@@ -67,7 +74,10 @@ let tests = [
         "search",
         "searchProvider",
         "urlbar",
-      ].concat(searchEngineTargets()));
+        ...searchEngineTargets(),
+        ...(hasWebIDE ? ["webide"] : [])
+      ]);
+
       ok(UITour.availableTargetsCache.has(window),
          "Targets should now be cached again");
       CustomizableUI.reset();
@@ -93,11 +103,14 @@ let tests = [
         "help",
         "home",
         "loop",
+        "devtools",
         "pinnedTab",
         "privateWindow",
         "quit",
         "urlbar",
+        ...(hasWebIDE ? ["webide"] : [])
       ]);
+
       CustomizableUI.reset();
       done();
     });
