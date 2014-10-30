@@ -55,7 +55,9 @@ testPreserveJitCode(bool preserveJitCode, unsigned remainingIonScripts)
     JS::RootedFunction fun(cx);
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, 1);
-    CHECK(JS_CompileFunction(cx, global, "f", 0, nullptr, source, length, options, &fun));
+    JS::AutoObjectVector emptyScopeChain(cx);
+    CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "f", 0, nullptr,
+			      source, length, &fun));
 
     RootedValue value(cx);
     for (unsigned i = 0; i < 1500; ++i)

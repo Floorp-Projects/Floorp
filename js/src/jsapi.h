@@ -3587,26 +3587,6 @@ JS_GetScriptBaseLineNumber(JSContext *cx, JSScript *script);
 extern JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, JS::HandleFunction fun);
 
-/*
- * |fun| will always be set. On failure, it will be set to nullptr.
- */
-extern JS_PUBLIC_API(bool)
-JS_CompileFunction(JSContext *cx, JS::HandleObject obj, const char *name,
-                   unsigned nargs, const char *const *argnames,
-                   const char *bytes, size_t length,
-                   const JS::CompileOptions &options,
-                   JS::MutableHandleFunction fun);
-
-/*
- * |fun| will always be set. On failure, it will be set to nullptr.
- */
-extern JS_PUBLIC_API(bool)
-JS_CompileUCFunction(JSContext *cx, JS::HandleObject obj, const char *name,
-                     unsigned nargs, const char *const *argnames,
-                     const char16_t *chars, size_t length,
-                     const JS::CompileOptions &options,
-                     JS::MutableHandleFunction fun);
-
 namespace JS {
 
 /* Options for JavaScript compilation. */
@@ -3690,7 +3670,6 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
         column(0),
         compileAndGo(false),
         forEval(false),
-        defineOnScope(true),
         noScriptRval(false),
         selfHostingMode(false),
         canLazilyParse(true),
@@ -3730,7 +3709,6 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
     unsigned column;
     bool compileAndGo;
     bool forEval;
-    bool defineOnScope;
     bool noScriptRval;
     bool selfHostingMode;
     bool canLazilyParse;
@@ -3822,7 +3800,6 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
     OwningCompileOptions &setColumn(unsigned c) { column = c; return *this; }
     OwningCompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
     OwningCompileOptions &setForEval(bool eval) { forEval = eval; return *this; }
-    OwningCompileOptions &setDefineOnScope(bool define) { defineOnScope = define; return *this; }
     OwningCompileOptions &setNoScriptRval(bool nsr) { noScriptRval = nsr; return *this; }
     OwningCompileOptions &setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
     OwningCompileOptions &setCanLazilyParse(bool clp) { canLazilyParse = clp; return *this; }
@@ -3906,7 +3883,6 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
     CompileOptions &setColumn(unsigned c) { column = c; return *this; }
     CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
     CompileOptions &setForEval(bool eval) { forEval = eval; return *this; }
-    CompileOptions &setDefineOnScope(bool define) { defineOnScope = define; return *this; }
     CompileOptions &setNoScriptRval(bool nsr) { noScriptRval = nsr; return *this; }
     CompileOptions &setSelfHostingMode(bool shm) { selfHostingMode = shm; return *this; }
     CompileOptions &setCanLazilyParse(bool clp) { canLazilyParse = clp; return *this; }
@@ -3977,21 +3953,6 @@ CompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options,
 
 extern JS_PUBLIC_API(JSScript *)
 FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token);
-
-extern JS_PUBLIC_API(bool)
-CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
-                const char *name, unsigned nargs, const char *const *argnames,
-                SourceBufferHolder &srcBuf, JS::MutableHandleFunction fun);
-
-extern JS_PUBLIC_API(bool)
-CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
-                const char *name, unsigned nargs, const char *const *argnames,
-                const char *bytes, size_t length, JS::MutableHandleFunction fun);
-
-extern JS_PUBLIC_API(bool)
-CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
-                const char *name, unsigned nargs, const char *const *argnames,
-                const char16_t *chars, size_t length, JS::MutableHandleFunction fun);
 
 /**
  * Compile a function with scopeChain plus the global as its scope chain.

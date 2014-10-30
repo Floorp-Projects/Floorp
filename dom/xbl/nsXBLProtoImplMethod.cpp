@@ -200,8 +200,7 @@ nsXBLProtoImplMethod::CompileMember(AutoJSAPI& jsapi, const nsCString& aClassStr
   JS::CompileOptions options(cx);
   options.setFileAndLine(functionUri.get(),
                          uncompiledMethod->mBodyText.GetLineNumber())
-         .setVersion(JSVERSION_LATEST)
-         .setDefineOnScope(false);
+         .setVersion(JSVERSION_LATEST);
   JS::Rooted<JSObject*> methodObject(cx);
   JS::AutoObjectVector emptyVector(cx);
   nsresult rv = nsJSUtils::CompileFunction(jsapi, emptyVector, options, cname,
