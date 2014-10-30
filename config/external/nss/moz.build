@@ -36,6 +36,12 @@ elif CONFIG['MOZ_FOLD_LIBS']:
 
     if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['GCC_USE_GNU_LD']:
         LD_VERSION_SCRIPT = 'nss3.def'
+
+    # mozcrt needs at least one reference in a moz.build for the frontend
+    # not to raise an error. Here, it allows to avoid setting DLLFLAGS in
+    # configure.in.
+    if CONFIG['MOZ_CRT']:
+        USE_LIBS += ['mozcrt']
 else:
     Library('nss')
     USE_LIBS += [

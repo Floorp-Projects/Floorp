@@ -7240,11 +7240,8 @@ else
     WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
     lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
     if grep -q '__imp__\{0,1\}free' crtdll.obj; then
+      MOZ_CRT=1
       MOZ_GLUE_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcprt -DEFAULTLIB:mozcrt'
-      dnl Also pass this to NSPR/NSS
-      DLLFLAGS="$DLLFLAGS $MOZ_GLUE_LDFLAGS"
-    else
-      DLLFLAGS="$DLLFLAGS -LIBPATH:\$(DIST)/lib -DEFAULTLIB:mozglue"
     fi
     rm crtdll.obj
     ;;
@@ -7256,11 +7253,11 @@ fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_JEMALLOC3)
 AC_SUBST(MOZ_NATIVE_JEMALLOC)
+AC_SUBST(MOZ_CRT)
+export MOZ_CRT
 AC_SUBST(MOZ_GLUE_LDFLAGS)
 AC_SUBST(MOZ_GLUE_PROGRAM_LDFLAGS)
 AC_SUBST_LIST(WIN32_CRT_LIBS)
-dnl Need to set this for make because NSS doesn't have configure
-AC_SUBST(DLLFLAGS)
 
 dnl We need to wrap dlopen and related functions on Android because we use
 dnl our own linker.
