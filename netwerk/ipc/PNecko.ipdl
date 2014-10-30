@@ -26,17 +26,13 @@ include protocol PRtspChannel;
 include URIParams;
 include InputStreamParams;
 include NeckoChannelParams;
-
+include PBrowserOrId;
 
 using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
+using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 
 namespace mozilla {
 namespace net {
-
-union PBrowserOrId {
-  nullable PBrowser;
-  uint64_t;
-};
 
 //-------------------------------------------------------------------
 sync protocol PNecko
@@ -98,7 +94,7 @@ child:
    * NestedFrameId is the id corresponding to the PBrowser.  It is the same id
    * that was passed to the PBrowserOrId param in to the PHttpChannel constructor
    */
-  AsyncAuthPromptForNestedFrame(uint64_t nestedFrameId, nsCString uri,
+  AsyncAuthPromptForNestedFrame(TabId nestedFrameId, nsCString uri,
                                 nsString realm, uint64_t callbackId);
   // Notifies child that a given app is now offline (or online)
   AppOfflineStatus(uint32_t appId, bool offline);

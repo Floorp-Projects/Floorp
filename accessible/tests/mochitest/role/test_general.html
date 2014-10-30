@@ -71,6 +71,10 @@
       testRole("span2", ROLE_TEXT_CONTAINER);
       testRole("span3", ROLE_TEXT_CONTAINER);
 
+      // Test role of listbox inside combobox
+      testRole("listbox1", ROLE_COMBOBOX_LIST);
+      testRole("listbox2", ROLE_COMBOBOX_LIST);
+
       SimpleTest.finish();
     }
 
@@ -117,6 +121,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=734982"
      title="Map ARIA role FORM">
     Bug 734982
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1044431"
+     title="Listbox owned by combobox has the wrong role">
+    Mozilla Bug 1044431
   </a>
 
   <p id="display"></p>
@@ -167,5 +176,11 @@
   <span id="span1" onclick="">clickable span</span>
   <span id="span2" onmousedown="">clickable span</span>
   <span id="span3" onmouseup="">clickable span</span>
+
+  <div id="combobox1" role="combobox">
+    <div id="listbox1" role="listbox"></div>
+  </div>
+  <div id="combobox2" role="combobox" aria-owns="listbox2"></div>
+  <div id="listbox2" role="listbox"></div>
 </body>
 </html>

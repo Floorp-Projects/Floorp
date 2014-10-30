@@ -16,23 +16,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   IccCardLockError(nsPIDOMWindow* aWindow, const nsAString& aName,
-                   const nsAString& aLockType, int16_t aRetryCount);
+                   int16_t aRetryCount);
 
   static already_AddRefed<IccCardLockError>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aLockType,
-              const nsAString& aName, int16_t aRetryCount,
-              ErrorResult& aRv);
+  Constructor(const GlobalObject& aGlobal, const nsAString& aName,
+              int16_t aRetryCount, ErrorResult& aRv);
 
   virtual JSObject*
   WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   // WebIDL interface
-
-  void
-  GetLockType(nsString& aLockType) const
-  {
-    aLockType = mLockType;
-  }
 
   int16_t
   RetryCount() const
@@ -44,7 +37,6 @@ private:
   ~IccCardLockError() {}
 
 private:
-  nsString mLockType;
   int16_t mRetryCount;
 };
 
