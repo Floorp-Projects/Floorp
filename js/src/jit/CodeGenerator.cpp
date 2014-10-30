@@ -3772,7 +3772,7 @@ CodeGenerator::visitCheckOverRecursedPar(LCheckOverRecursedPar *lir)
     Register tempReg = ToRegister(lir->getTempReg());
 
     masm.loadPtr(Address(cxReg, offsetof(ForkJoinContext, perThreadData)), tempReg);
-    masm.loadPtr(Address(tempReg, offsetof(PerThreadData, jitStackLimit)), tempReg);
+    masm.loadPtr(Address(tempReg, PerThreadData::offsetOfJitStackLimit()), tempReg);
 
     // Conditional forward (unlikely) branch to failure.
     CheckOverRecursedFailure *ool = new(alloc()) CheckOverRecursedFailure(lir);
@@ -9950,7 +9950,7 @@ CodeGenerator::visitInterruptCheck(LInterruptCheck *lir)
     if (!ool)
         return false;
 
-    AbsoluteAddress interruptAddr(GetIonContext()->runtime->addressOfInterrupt());
+    AbsoluteAddress interruptAddr(GetIonContext()->runtime->addressOfInterruptUint32());
     masm.branch32(Assembler::NotEqual, interruptAddr, Imm32(0), ool->entry());
     masm.bind(ool->rejoin());
     return true;
@@ -9960,8 +9960,8 @@ bool
 CodeGenerator::visitAsmJSInterruptCheck(LAsmJSInterruptCheck *lir)
 {
     Register scratch = ToRegister(lir->scratch());
-    masm.movePtr(AsmJSImmPtr(AsmJSImm_RuntimeInterrupt), scratch);
-    masm.load8ZeroExtend(Address(scratch, 0), scratch);
+    masm.movePtr(AsmJSImmPtr(AsmJSImm_RuntimeInterruptUint32), scratch);
+    masm.load32(Address(scratch, 0), scratch);
     Label rejoin;
     masm.branch32(Assembler::Equal, scratch, Imm32(0), &rejoin);
     {
