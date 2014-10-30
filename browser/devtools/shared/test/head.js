@@ -35,8 +35,9 @@ function addTab(aURL, aCallback)
 }
 
 function promiseTab(aURL) {
-  return new Promise(resolve =>
-    addTab(aURL, resolve));
+  let deferred = Promise.defer();
+  addTab(aURL, deferred.resolve);
+  return deferred.promise;
 }
 
 registerCleanupFunction(function tearDown() {
@@ -137,11 +138,11 @@ function* createHost(type = "bottom", src = "data:text/html;charset=utf-8,") {
   let host = new Hosts[type](gBrowser.selectedTab);
   let iframe = yield host.create();
 
-  yield new Promise(resolve => {
-    let domHelper = new DOMHelpers(iframe.contentWindow);
-    iframe.setAttribute("src", src);
-    domHelper.onceDOMReady(resolve);
-  });
+  let loaded = Promise.defer();
+  let domHelper = new DOMHelpers(iframe.contentWindow);
+  iframe.setAttribute("src", src);
+  domHelper.onceDOMReady(loaded.resolve);
+  yield loaded.promise;
 
   return [host, iframe.contentWindow, iframe.contentDocument];
 }

@@ -35,6 +35,7 @@ let test = asyncTest(function*() {
 });
 
 function wait(ms) {
-  return new Promise(resolve =>
-    setTimeout(resolve, ms));
+  let def = promise.defer();
+  setTimeout(def.resolve, ms);
+  return def.promise;
 }
