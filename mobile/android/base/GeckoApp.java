@@ -56,7 +56,6 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.PrefUtils;
-import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.webapp.EventListener;
 import org.mozilla.gecko.webapp.UninstallListener;
@@ -1099,7 +1098,7 @@ public abstract class GeckoApp
                 }
                 break;
             }
-            env = StringUtils.getStringExtra(intent, "env" + i);
+            env = intent.getStringExtra("env" + i);
         }
     }
 
@@ -1490,7 +1489,7 @@ public abstract class GeckoApp
         Telemetry.HistogramAdd("FENNEC_STARTUP_GECKOAPP_ACTION", startupAction.ordinal());
 
         if (!mIsRestoringActivity) {
-            GeckoThread.setArgs(StringUtils.getStringExtra(intent, "args"));
+            GeckoThread.setArgs(intent.getStringExtra("args"));
             GeckoThread.setAction(intent.getAction());
             GeckoThread.setUri(passedUri);
         }
@@ -1917,7 +1916,7 @@ public abstract class GeckoApp
         }
 
         if ((action != null && action.startsWith(ACTION_WEBAPP_PREFIX)) || ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
-            uri = StringUtils.getStringExtra(intent, "args");
+            uri = intent.getStringExtra("args");
             if (uri != null && uri.startsWith("--url=")) {
                 uri.replace("--url=", "");
             }
