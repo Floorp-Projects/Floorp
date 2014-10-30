@@ -43,9 +43,7 @@ TCPSocketParentIntermediary.prototype = {
       return null;
 
     let socketInternal = socket.QueryInterface(Ci.nsITCPSocketInternal);
-    if (socketInternal) {
-      socketInternal.setAppId(aAppId);
-    }
+    socketInternal.setAppId(aAppId);
 
     // Handle parent's request to update buffered amount.
     socketInternal.setOnUpdateBufferedAmountHandler(
@@ -56,7 +54,7 @@ TCPSocketParentIntermediary.prototype = {
     return socket;
   },
 
-  listen: function(aTCPServerSocketParent, aLocalPort, aBacklog, aBinaryType) {
+  listen: function(aTCPServerSocketParent, aLocalPort, aBacklog, aBinaryType, aAppId) {
     let baseSocket = Cc["@mozilla.org/tcp-socket;1"].createInstance(Ci.nsIDOMTCPSocket);
     let serverSocket = baseSocket.listen(aLocalPort, { binaryType: aBinaryType }, aBacklog);
     if (!serverSocket)
@@ -68,12 +66,18 @@ TCPSocketParentIntermediary.prototype = {
       var socketParent = Cc["@mozilla.org/tcp-socket-parent;1"]
                             .createInstance(Ci.nsITCPSocketParent);
       var intermediary = new TCPSocketParentIntermediary();
+
+      let socketInternal = socket.QueryInterface(Ci.nsITCPSocketInternal);
+      socketInternal.setAppId(aAppId);
+      socketInternal.setOnUpdateBufferedAmountHandler(
+        intermediary._onUpdateBufferedAmountHandler.bind(intermediary, socketParent));
+
       // Handlers are set to the JS-implemented socket object on the parent side,
       // so that the socket parent object can communicate data
       // with the corresponding socket child object through IPC.
       intermediary._setCallbacks(socketParent, socket);
       // The members in the socket parent object are set with arguments,
-      // so that the socket parent object can communicate data 
+      // so that the socket parent object can communicate data
       // with the JS socket object on the parent side via the intermediary object.
       socketParent.setSocketAndIntermediary(socket, intermediary);
       aTCPServerSocketParent.sendCallbackAccept(socketParent);
