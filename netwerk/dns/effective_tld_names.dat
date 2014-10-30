@@ -1598,7 +1598,7 @@ jobs
 
 // jp : http://en.wikipedia.org/wiki/.jp
 // http://jprs.co.jp/en/jpdomain.html
-// Submitted by registry <info@jprs.jp> 2014-02-28
+// Submitted by registry <info@jprs.jp> 2014-10-30
 jp
 // jp organizational type names
 ac.jp
@@ -1610,7 +1610,7 @@ gr.jp
 lg.jp
 ne.jp
 or.jp
-// jp preficture type names
+// jp prefecture type names
 aichi.jp
 akita.jp
 aomori.jp
@@ -1658,6 +1658,53 @@ wakayama.jp
 yamagata.jp
 yamaguchi.jp
 yamanashi.jp
+栃木.jp
+愛知.jp
+愛媛.jp
+兵庫.jp
+熊本.jp
+茨城.jp
+北海道.jp
+千葉.jp
+和歌山.jp
+長崎.jp
+長野.jp
+新潟.jp
+青森.jp
+静岡.jp
+東京.jp
+石川.jp
+埼玉.jp
+三重.jp
+京都.jp
+佐賀.jp
+大分.jp
+大阪.jp
+奈良.jp
+宮城.jp
+宮崎.jp
+富山.jp
+山口.jp
+山形.jp
+山梨.jp
+岩手.jp
+岐阜.jp
+岡山.jp
+島根.jp
+広島.jp
+徳島.jp
+沖縄.jp
+滋賀.jp
+神奈川.jp
+福井.jp
+福岡.jp
+福島.jp
+秋田.jp
+群馬.jp
+香川.jp
+高知.jp
+鳥取.jp
+鹿児島.jp
 // jp geographic type names
 // http://jprs.jp/doc/rule/saisoku-1.html
 *.kawasaki.jp
