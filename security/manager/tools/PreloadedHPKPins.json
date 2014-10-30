@@ -189,14 +189,6 @@
         "VeriSign Universal Root Certification Authority",
         "XRamp Global CA Root"
       ]
-    },
-    {
-      "name": "facebook",
-      "sha256_hashes": [
-        "Verisign Class 3 Public Primary Certification Authority - G3",
-        "DigiCert High Assurance EV Root CA",
-        "DigiCert ECC Secure Server CA"
-      ]
     }
   ],
 
