@@ -231,24 +231,6 @@ inline TemporaryRef<Path> MakePathForRoundedRect(const DrawTarget& aDrawTarget,
   return builder->Finish();
 }
 
-inline void AppendRoundedRectToPath(PathBuilder* aPathBuilder,
-                                    const Rect& aRect,
-                                    const Size(& aCornerRadii)[4],
-                                    bool aDrawClockwise = true) {
-  RectCornerRadii radii(aCornerRadii[0], aCornerRadii[1],
-                        aCornerRadii[2], aCornerRadii[3]);
-  AppendRoundedRectToPath(aPathBuilder, aRect, radii, aDrawClockwise);
-}
-
-inline TemporaryRef<Path> MakePathForRoundedRect(const DrawTarget& aDrawTarget,
-                                                 const Rect& aRect,
-                                                 const Size(& aCornerRadii)[4],
-                                                 bool aDrawClockwise = true) {
-  RectCornerRadii radii(aCornerRadii[0], aCornerRadii[1],
-                        aCornerRadii[2], aCornerRadii[3]);
-  return MakePathForRoundedRect(aDrawTarget, aRect, radii, aDrawClockwise);
-}
-
 /**
  * Appends a path represending an ellipse to the path being built by
  * aPathBuilder.
