@@ -12,8 +12,6 @@ from datetime import datetime
 
 mozilla_dir = os.environ['MOZILLA_DIR']
 
-import mdn_theme
-
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.graphviz',
@@ -44,9 +42,14 @@ version = re.sub(r'[ab]\d+$', '', release)
 exclude_patterns = ['_build']
 pygments_style = 'sphinx'
 
-# TODO MDN theme is busted (bug 987332)
-#html_theme_path = [mdn_theme.get_theme_dir()]
-#html_theme = 'mdn'
+# Read The Docs can't import sphinx_rtd_theme, so don't import it there.
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
+if not on_rtd:
+    import sphinx_rtd_theme
+    html_theme = 'sphinx_rtd_theme'
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
 
 html_static_path = ['_static']
 htmlhelp_basename = 'MozillaTreeDocs'
