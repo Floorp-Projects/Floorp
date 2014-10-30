@@ -31,7 +31,7 @@
     <item android:state_pressed="true"
           android:state_checked="true">
         <shape>
-            <solid android:color="@color/highlight_nav" />
+            <solid android:color="@color/new_tablet_highlight" />
         </shape>
     </item>
 
@@ -43,7 +43,7 @@
 
     <item android:state_pressed="true">
         <shape>
-            <solid android:color="@color/highlight_dark" />
+            <solid android:color="@color/new_tablet_highlight_dark" />
         </shape>
     </item>
 
