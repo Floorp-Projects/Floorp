@@ -3978,16 +3978,10 @@ CompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options,
 extern JS_PUBLIC_API(JSScript *)
 FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token);
 
-/*
- * enclosingStaticScope is a static enclosing scope, if any (e.g. a
- * StaticWithObject).  If the enclosing scope is the global scope, this must be
- * null.
- */
 extern JS_PUBLIC_API(bool)
 CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
                 const char *name, unsigned nargs, const char *const *argnames,
-                SourceBufferHolder &srcBuf, JS::MutableHandleFunction fun,
-                HandleObject enclosingStaticScope = NullPtr());
+                SourceBufferHolder &srcBuf, JS::MutableHandleFunction fun);
 
 extern JS_PUBLIC_API(bool)
 CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
@@ -3997,8 +3991,7 @@ CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOption
 extern JS_PUBLIC_API(bool)
 CompileFunction(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
                 const char *name, unsigned nargs, const char *const *argnames,
-                const char16_t *chars, size_t length, JS::MutableHandleFunction fun,
-                HandleObject enclosingStaticScope = NullPtr());
+                const char16_t *chars, size_t length, JS::MutableHandleFunction fun);
 
 /**
  * Compile a function with scopeChain plus the global as its scope chain.
@@ -4012,6 +4005,24 @@ CompileFunction(JSContext *cx, AutoObjectVector &scopeChain,
                 const ReadOnlyCompileOptions &options,
                 const char *name, unsigned nargs, const char *const *argnames,
                 const char16_t *chars, size_t length, JS::MutableHandleFunction fun);
+
+/**
+ * Same as above, but taking a SourceBufferHolder for the function body.
+ */
+extern JS_PUBLIC_API(bool)
+CompileFunction(JSContext *cx, AutoObjectVector &scopeChain,
+                const ReadOnlyCompileOptions &options,
+                const char *name, unsigned nargs, const char *const *argnames,
+                SourceBufferHolder &srcBuf, JS::MutableHandleFunction fun);
+
+/**
+ * Same as above, but taking a const char * for the function body.
+ */
+extern JS_PUBLIC_API(bool)
+CompileFunction(JSContext *cx, AutoObjectVector &scopeChain,
+                const ReadOnlyCompileOptions &options,
+                const char *name, unsigned nargs, const char *const *argnames,
+                const char *bytes, size_t length, JS::MutableHandleFunction fun);
 
 } /* namespace JS */
 
