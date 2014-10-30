@@ -53,7 +53,7 @@ struct SurfaceDescriptorD3D10 {
 struct SurfaceDescriptorMacIOSurface {
   uint32_t surface;
   double scaleFactor;
-  bool hasAlpha;
+  bool isOpaque;
 };
 
 struct SurfaceTextureDescriptor {
