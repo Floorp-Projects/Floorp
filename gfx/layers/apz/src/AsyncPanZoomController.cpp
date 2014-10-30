@@ -351,7 +351,7 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
 /**
  * Computed time function used for sampling frames of a zoom to animation.
  */
-StaticAutoPtr<ComputedTimingFunction> gComputedTimingFunction;
+StaticAutoPtr<ComputedTimingFunction> gZoomAnimationFunction;
 
 /**
  * Maximum zoom amount, always used, even if a page asks for higher.
@@ -638,7 +638,7 @@ public:
 
     // Sample the zoom at the current time point.  The sampled zoom
     // will affect the final computed resolution.
-    float sampledPosition = gComputedTimingFunction->GetValue(animPosition);
+    float sampledPosition = gZoomAnimationFunction->GetValue(animPosition);
 
     // We scale the scrollOffset linearly with sampledPosition, so the zoom
     // needs to scale inversely to match.
@@ -859,10 +859,10 @@ AsyncPanZoomController::InitializeGlobalState()
     return;
   sInitialized = true;
 
-  gComputedTimingFunction = new ComputedTimingFunction();
-  gComputedTimingFunction->Init(
+  gZoomAnimationFunction = new ComputedTimingFunction();
+  gZoomAnimationFunction->Init(
     nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
-  ClearOnShutdown(&gComputedTimingFunction);
+  ClearOnShutdown(&gZoomAnimationFunction);
 }
 
 AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
