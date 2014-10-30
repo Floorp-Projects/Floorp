@@ -9,7 +9,3 @@ CLEARKEY_CDM_FILES = \
   $(SHARED_LIBRARY) \
   clearkey.info \
   $(NULL)
-
-MOZ_GLUE_LDFLAGS =
-
-include $(topsrcdir)/config/rules.mk

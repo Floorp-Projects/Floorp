@@ -6,11 +6,6 @@ ifndef MOZ_WINCONSOLE
 MOZ_WINCONSOLE = 0
 endif
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 DIST_PROGRAM = CommandExecuteHandler$(BIN_SUFFIX)
-
-# Don't link against mozglue.dll
-MOZ_GLUE_LDFLAGS =
-MOZ_GLUE_PROGRAM_LDFLAGS =
