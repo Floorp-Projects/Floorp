@@ -37,6 +37,7 @@ import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
+import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.mozglue.RobocopTarget;
@@ -46,7 +47,6 @@ import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.NativeJSContainer;
 import org.mozilla.gecko.util.ProxySelector;
-import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.webapp.Allocator;
 
@@ -2579,7 +2579,7 @@ public class GeckoAppShell
     /* Downloads the URI pointed to by a share intent, and alters the intent to point to the locally stored file.
      */
     public static void downloadImageForIntent(final Intent intent) {
-        final String src = StringUtils.getStringExtra(intent, Intent.EXTRA_TEXT);
+        final String src = ContextUtils.getStringExtra(intent, Intent.EXTRA_TEXT);
         if (src == null) {
             showImageShareFailureToast();
             return;
