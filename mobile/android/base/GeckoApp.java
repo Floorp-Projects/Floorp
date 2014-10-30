@@ -40,8 +40,6 @@ import org.mozilla.gecko.health.StubbedHealthRecorder;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.menu.MenuPanel;
-import org.mozilla.gecko.mozglue.ContextUtils;
-import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
@@ -57,6 +55,7 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.PrefUtils;
+import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.webapp.EventListener;
 import org.mozilla.gecko.webapp.UninstallListener;
@@ -1096,8 +1095,8 @@ public abstract class GeckoApp
     /**
      * Check and start the Java profiler if MOZ_PROFILER_STARTUP env var is specified.
      **/
-    protected static void earlyStartJavaSampler(SafeIntent intent) {
-        String env = intent.getStringExtra("env0");
+    protected static void earlyStartJavaSampler(Intent intent) {
+        String env = StringUtils.getStringExtra(intent, "env0");
         for (int i = 1; env != null; i++) {
             if (env.startsWith("MOZ_PROFILER_STARTUP=")) {
                 if (!env.endsWith("=")) {
@@ -1117,7 +1116,8 @@ public abstract class GeckoApp
      * and other one-shot constructions.
      **/
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState)
+    {
         GeckoAppShell.registerGlobalExceptionHandler();
 
         // Enable Android Strict Mode for developers' local builds (the "default" channel).
@@ -1129,9 +1129,9 @@ public abstract class GeckoApp
         mJavaUiStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_JAVAUI");
         mGeckoReadyStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_GECKOREADY");
 
-        final SafeIntent intent = new SafeIntent(getIntent());
+        final Intent intent = getIntent();
         final String action = intent.getAction();
-        final String args = intent.getStringExtra("args");
+        final String args = StringUtils.getStringExtra(intent, "args");
 
         earlyStartJavaSampler(intent);
 
@@ -1247,7 +1247,7 @@ public abstract class GeckoApp
             }, 1000 * 5 /* 5 seconds */);
         }
 
-        Bundle stateBundle = ContextUtils.getBundleExtra(getIntent(), EXTRA_STATE_BUNDLE);
+        Bundle stateBundle = getIntent().getBundleExtra(EXTRA_STATE_BUNDLE);
         if (stateBundle != null) {
             // Use the state bundle if it was given as an intent extra. This is
             // only intended to be used internally via Robocop, so a boolean
@@ -1451,21 +1451,18 @@ public abstract class GeckoApp
     private void initialize() {
         mInitialized = true;
 
-        final SafeIntent intent = new SafeIntent(getIntent());
-        final String action = intent.getAction();
+        Intent intent = getIntent();
+        String action = intent.getAction();
 
+        String passedUri = null;
         final String uri = getURIFromIntent(intent);
-
-        final String passedUri;
         if (!TextUtils.isEmpty(uri)) {
             passedUri = uri;
-        } else {
-            passedUri = null;
         }
 
         final boolean isExternalURL = passedUri != null &&
                                       !AboutPages.isAboutHome(passedUri);
-        final StartupAction startupAction;
+        StartupAction startupAction;
         if (isExternalURL) {
             startupAction = StartupAction.URL;
         } else {
@@ -1528,7 +1525,7 @@ public abstract class GeckoApp
         if (ACTION_LAUNCH_SETTINGS.equals(action)) {
             Intent settingsIntent = new Intent(GeckoApp.this, GeckoPreferences.class);
             // Copy extras.
-            settingsIntent.putExtras(intent.getUnsafe());
+            settingsIntent.putExtras(intent);
             startActivity(settingsIntent);
         }
 
@@ -1728,7 +1725,7 @@ public abstract class GeckoApp
     }
 
     private boolean getRestartFromIntent() {
-        return ContextUtils.getBooleanExtra(getIntent(), "didRestart", false);
+        return getIntent().getBooleanExtra("didRestart", false);
     }
 
     /**
@@ -1794,7 +1791,7 @@ public abstract class GeckoApp
                                           AppConstants.USER_AGENT_FENNEC_MOBILE;
     }
 
-    private void processAlertCallback(SafeIntent intent) {
+    private void processAlertCallback(Intent intent) {
         String alertName = "";
         String alertCookie = "";
         Uri data = intent.getData();
@@ -1810,9 +1807,7 @@ public abstract class GeckoApp
     }
 
     @Override
-    protected void onNewIntent(Intent externalIntent) {
-        final SafeIntent intent = new SafeIntent(externalIntent);
-
+    protected void onNewIntent(Intent intent) {
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoExiting)) {
             // We're exiting and shouldn't try to do anything else. In the case
             // where we are hung while exiting, we should force the process to exit.
@@ -1823,7 +1818,7 @@ public abstract class GeckoApp
         // if we were previously OOM killed, we can end up here when launching
         // from external shortcuts, so set this as the intent for initialization
         if (!mInitialized) {
-            setIntent(externalIntent);
+            setIntent(intent);
             return;
         }
 
@@ -1857,7 +1852,7 @@ public abstract class GeckoApp
             // Check if launched from data reporting notification.
             Intent settingsIntent = new Intent(GeckoApp.this, GeckoPreferences.class);
             // Copy extras.
-            settingsIntent.putExtras(intent.getUnsafe());
+            settingsIntent.putExtras(intent);
             startActivity(settingsIntent);
         }
     }
@@ -1866,7 +1861,7 @@ public abstract class GeckoApp
      * Handles getting a URI from an intent in a way that is backwards-
      * compatible with our previous implementations.
      */
-    protected String getURIFromIntent(SafeIntent intent) {
+    protected String getURIFromIntent(Intent intent) {
         final String action = intent.getAction();
         if (ACTION_ALERT_CALLBACK.equals(action) || NotificationHelper.HELPER_BROADCAST_ACTION.equals(action)) {
             return null;
