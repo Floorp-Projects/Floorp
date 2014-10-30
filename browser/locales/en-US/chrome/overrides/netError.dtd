@@ -193,5 +193,14 @@ functionality specific to firefox. -->
 <button id='exceptionDialogButton'>&securityOverride.exceptionButtonLabel;</button>
 ">
 
+<!ENTITY errorReporting.title "Report this error">
+<!ENTITY errorReporting.longDesc "Reporting the address and certificate information for <span id='hostname'></span> will help us identify and block malicious sites. Thanks for helping create a safer web!">
+<!ENTITY errorReporting.automatic "Automatically report errors in the future">
+<!ENTITY errorReporting.learnMore "Learn more…">
+<!ENTITY errorReporting.sending "Sending report">
+<!ENTITY errorReporting.sent "Report sent">
+<!ENTITY errorReporting.report "Report">
+<!ENTITY errorReporting.tryAgain "Try again">
+
 <!ENTITY remoteXUL.title "Remote XUL">
 <!ENTITY remoteXUL.longDesc "<p><ul><li>Please contact the website owners to inform them of this problem.</li></ul></p>">
