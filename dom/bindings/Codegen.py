@@ -3069,23 +3069,24 @@ class CGConstructorEnabled(CGAbstractMethod):
         return body.define()
 
 
-def CreateBindingJSObject(descriptor, properties):
+def CreateBindingJSObject(descriptor, properties, parent):
     # We don't always need to root obj, but there are a variety
     # of cases where we do, so for simplicity, just always root it.
     objDecl = "JS::Rooted<JSObject*> obj(aCx);\n"
     if descriptor.proxy:
-        create = dedent(
+        create = fill(
             """
             JS::Rooted<JS::Value> proxyPrivateVal(aCx, JS::PrivateValue(aObject));
             js::ProxyOptions options;
             options.setClass(&Class.mBase);
             obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
-                                 proxyPrivateVal, proto, global, options);
+                                 proxyPrivateVal, proto, ${parent}, options);
             if (!obj) {
               return nullptr;
             }
 
-            """)
+            """,
+            parent=parent)
         if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
             create += dedent("""
                 js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO,
@@ -3093,15 +3094,16 @@ def CreateBindingJSObject(descriptor, properties):
 
                 """)
     else:
-        create = dedent(
+        create = fill(
             """
-            obj = JS_NewObject(aCx, Class.ToJSClass(), proto, global);
+            obj = JS_NewObject(aCx, Class.ToJSClass(), proto, ${parent});
             if (!obj) {
               return nullptr;
             }
 
             js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
-            """)
+            """,
+            parent=parent)
     create = objDecl + create
 
     if descriptor.nativeOwnership == 'refcounted':
@@ -3252,7 +3254,9 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),
                        "nsISupports must be on our primary inheritance chain");
 
-            JS::Rooted<JSObject*> parent(aCx, WrapNativeParent(aCx, aObject->GetParentObject()));
+            JS::Rooted<JSObject*> parent(aCx,
+              GetRealParentObject(aObject,
+                                  WrapNativeParent(aCx, aObject->GetParentObject())));
             if (!parent) {
               return nullptr;
             }
@@ -3268,13 +3272,13 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             }
 
             JSAutoCompartment ac(aCx, parent);
-            JS::Rooted<JSObject*> global(aCx, js::GetGlobalForObjectCrossCompartment(parent));
+            JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, parent));
             JS::Handle<JSObject*> proto = GetProtoObjectHandle(aCx, global);
             if (!proto) {
               return nullptr;
             }
 
-            $*{createObject}
+            $*{parent}
 
             $*{unforgeable}
 
@@ -3283,7 +3287,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             return obj;
             """,
             assertion=AssertInheritanceChain(self.descriptor),
-            createObject=CreateBindingJSObject(self.descriptor, self.properties),
+            parent=CreateBindingJSObject(self.descriptor, self.properties,
+                                         "parent"),
             unforgeable=InitUnforgeableProperties(self.descriptor, self.properties),
             slots=InitMemberSlots(self.descriptor, True))
 
@@ -3329,7 +3334,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
               return nullptr;
             }
 
-            $*{createObject}
+            $*{global_}
 
             $*{unforgeable}
 
@@ -3337,7 +3342,8 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             return obj;
             """,
             assertions=AssertInheritanceChain(self.descriptor),
-            createObject=CreateBindingJSObject(self.descriptor, self.properties),
+            global_=CreateBindingJSObject(self.descriptor, self.properties,
+                                          "global"),
             unforgeable=InitUnforgeableProperties(self.descriptor, self.properties),
             slots=InitMemberSlots(self.descriptor, False))
 
