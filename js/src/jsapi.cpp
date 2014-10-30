@@ -4587,16 +4587,30 @@ JS_GetFunctionScript(JSContext *cx, HandleFunction fun)
     return fun->nonLazyScript();
 }
 
-JS_PUBLIC_API(bool)
-JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
-                    const char *name, unsigned nargs, const char *const *argnames,
-                    SourceBufferHolder &srcBuf, MutableHandleFunction fun,
-                    HandleObject enclosingStaticScope)
+/*
+ * enclosingStaticScope is a static enclosing scope, if any (e.g. a
+ * StaticWithObject).  If the enclosing scope is the global scope, this must be
+ * null.
+ *
+ * enclosingDynamicScope is a dynamic scope to use, if it's not the global.
+ *
+ * The function will be defined as a property on objToDefineOn if the caller
+ * requested that.
+ */
+static bool
+CompileFunction(JSContext *cx, HandleObject objToDefineOn, const ReadOnlyCompileOptions &options,
+                const char *name, unsigned nargs, const char *const *argnames,
+                SourceBufferHolder &srcBuf,
+                HandleObject enclosingDynamicScope,
+                HandleObject enclosingStaticScope,
+                MutableHandleFunction fun)
 {
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
+    assertSameCompartment(cx, objToDefineOn);
+    assertSameCompartment(cx, enclosingDynamicScope);
+    assertSameCompartment(cx, enclosingStaticScope);
     RootedAtom funAtom(cx);
     AutoLastFrameCheck lfc(cx);
 
@@ -4613,7 +4627,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
             return false;
     }
 
-    fun.set(NewFunction(cx, NullPtr(), nullptr, 0, JSFunction::INTERPRETED, obj,
+    fun.set(NewFunction(cx, NullPtr(), nullptr, 0, JSFunction::INTERPRETED, enclosingDynamicScope,
                         funAtom, JSFunction::FinalizeKind, TenuredObject));
     if (!fun)
         return false;
@@ -4622,10 +4636,11 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
                                        enclosingStaticScope))
         return false;
 
-    if (obj && funAtom && options.defineOnScope) {
+    if (objToDefineOn && funAtom && options.defineOnScope) {
         Rooted<jsid> id(cx, AtomToId(funAtom));
         RootedValue value(cx, ObjectValue(*fun));
-        if (!JSObject::defineGeneric(cx, obj, id, value, nullptr, nullptr, JSPROP_ENUMERATE))
+        if (!JSObject::defineGeneric(cx, objToDefineOn, id, value, nullptr,
+                                     nullptr, JSPROP_ENUMERATE))
             return false;
     }
 
@@ -4635,12 +4650,19 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
 JS_PUBLIC_API(bool)
 JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
                     const char *name, unsigned nargs, const char *const *argnames,
-                    const char16_t *chars, size_t length, MutableHandleFunction fun,
-                    HandleObject enclosingStaticScope)
+                    SourceBufferHolder &srcBuf, MutableHandleFunction fun)
+{
+    return CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf,
+                           obj, NullPtr(), fun);
+}
+
+JS_PUBLIC_API(bool)
+JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
+                    const char *name, unsigned nargs, const char *const *argnames,
+                    const char16_t *chars, size_t length, MutableHandleFunction fun)
 {
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    return JS::CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf,
-                               fun, enclosingStaticScope);
+    return JS::CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf, fun);
 }
 
 JS_PUBLIC_API(bool)
@@ -4663,15 +4685,26 @@ JS_PUBLIC_API(bool)
 JS::CompileFunction(JSContext *cx, AutoObjectVector &scopeChain,
                     const ReadOnlyCompileOptions &options,
                     const char *name, unsigned nargs, const char *const *argnames,
-                    const char16_t *chars, size_t length, MutableHandleFunction fun)
+                    SourceBufferHolder &srcBuf, MutableHandleFunction fun)
 {
     RootedObject dynamicScopeObj(cx);
     RootedObject staticScopeObj(cx);
     if (!CreateScopeObjectsForScopeChain(cx, scopeChain, &dynamicScopeObj, &staticScopeObj))
         return false;
 
-    return JS::CompileFunction(cx, dynamicScopeObj, options, name, nargs,
-                               argnames, chars, length, fun, staticScopeObj);
+    return CompileFunction(cx, /* objToDefineOn = */ JS::NullPtr(), options, name, nargs, argnames,
+                           srcBuf, dynamicScopeObj, staticScopeObj, fun);
+}
+
+JS_PUBLIC_API(bool)
+JS::CompileFunction(JSContext *cx, AutoObjectVector &scopeChain,
+                    const ReadOnlyCompileOptions &options,
+                    const char *name, unsigned nargs, const char *const *argnames,
+                    const char16_t *chars, size_t length, MutableHandleFunction fun)
+{
+    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
+    return CompileFunction(cx, scopeChain, options, name, nargs, argnames,
+                           srcBuf, fun);
 }
 
 JS_PUBLIC_API(bool)
@@ -4681,6 +4714,24 @@ JS_CompileUCFunction(JSContext *cx, JS::HandleObject obj, const char *name,
                      const CompileOptions &options, MutableHandleFunction fun)
 {
     return CompileFunction(cx, obj, options, name, nargs, argnames, chars, length, fun);
+}
+
+JS_PUBLIC_API(bool)
+JS::CompileFunction(JSContext *cx, AutoObjectVector &scopeChain,
+                    const ReadOnlyCompileOptions &options,
+                    const char *name, unsigned nargs, const char *const *argnames,
+                    const char *bytes, size_t length, MutableHandleFunction fun)
+{
+    mozilla::UniquePtr<char16_t, JS::FreePolicy> chars;
+    if (options.utf8)
+        chars.reset(UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
+    else
+        chars.reset(InflateString(cx, bytes, &length));
+    if (!chars)
+        return false;
+
+    return CompileFunction(cx, scopeChain, options, name, nargs, argnames,
+                           chars.get(), length, fun);
 }
 
 JS_PUBLIC_API(bool)
