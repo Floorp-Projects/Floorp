@@ -2237,20 +2237,15 @@ js::LookupAsmJSModuleInCache(ExclusiveContext *cx,
     uint32_t srcStart = parser.pc->maybeFunction->pn_body->pn_pos.begin;
     uint32_t srcBodyStart = parser.tokenStream.currentToken().pos.end;
     bool strict = parser.pc->sc->strict && !parser.pc->sc->hasExplicitUseStrict();
+
     // usesSignalHandlers will be clobbered when deserializing
     ScopedJSDeletePtr<AsmJSModule> module(
         cx->new_<AsmJSModule>(parser.ss, srcStart, srcBodyStart, strict,
                               /* usesSignalHandlers = */ false));
     if (!module)
         return false;
+
     cursor = module->deserialize(cx, cursor);
-
-    // No need to flush the instruction cache now, it will be flushed when dynamically linking.
-    AutoFlushICache afc("LookupAsmJSModuleInCache", /* inhibit= */ true);
-    // We already know the exact extent of areas that need to be patched, just make sure we
-    // flush all of them at once.
-    module->setAutoFlushICacheRange();
-
     if (!cursor)
         return false;
 
@@ -2259,9 +2254,17 @@ js::LookupAsmJSModuleInCache(ExclusiveContext *cx,
     if (!atEnd)
         return true;
 
-    module->staticallyLink(cx);
-
     parser.tokenStream.advance(module->srcEndBeforeCurly());
+
+    {
+        // No need to flush the instruction cache now, it will be flushed when
+        // dynamically linking. We already know the exact extent of areas that need
+        // to be patched, just make sure we flush all of them at once.
+        AutoFlushICache afc("LookupAsmJSModuleInCache", /* inhibit= */ true);
+        module->setAutoFlushICacheRange();
+
+        module->staticallyLink(cx);
+    }
 
     int64_t usecAfter = PRMJ_Now();
     int ms = (usecAfter - usecBefore) / PRMJ_USEC_PER_MSEC;

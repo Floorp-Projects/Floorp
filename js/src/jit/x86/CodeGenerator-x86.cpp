@@ -378,7 +378,7 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     Register ptrReg = ToRegister(ptr);
     Address srcAddr(ptrReg, 0);
 
-    if (mir->skipBoundsCheck())
+    if (!mir->needsBoundsCheck())
         return loadAndNoteViewTypeElement(vt, srcAddr, out);
 
     bool isFloat32Load = vt == Scalar::Float32;
@@ -467,7 +467,7 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     Register ptrReg = ToRegister(ptr);
     Address dstAddr(ptrReg, 0);
 
-    if (mir->skipBoundsCheck()) {
+    if (!mir->needsBoundsCheck()) {
         storeAndNoteViewTypeElement(vt, value, dstAddr);
         return true;
     }

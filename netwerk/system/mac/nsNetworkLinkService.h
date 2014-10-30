@@ -9,6 +9,7 @@
 #include "nsIObserver.h"
 
 #include <SystemConfiguration/SCNetworkReachability.h>
+#include <SystemConfiguration/SystemConfiguration.h>
 
 class nsNetworkLinkService : public nsINetworkLinkService,
                              public nsIObserver
@@ -30,14 +31,22 @@ private:
     bool mLinkUp;
     bool mStatusKnown;
 
+    // Toggles allowing the sending of network-changed event.
+    bool mAllowChangedEvent;
+
     SCNetworkReachabilityRef mReachability;
     CFRunLoopRef mCFRunLoop;
+    CFRunLoopSourceRef mRunLoopSource;
+    SCDynamicStoreRef mStoreRef;
 
     void UpdateReachability();
-    void SendEvent();
+    void SendEvent(bool aNetworkChanged);
     static void ReachabilityChanged(SCNetworkReachabilityRef target,
                                     SCNetworkConnectionFlags flags,
                                     void *info);
+    static void IPConfigChanged(SCDynamicStoreRef store,
+                                CFArrayRef changedKeys,
+                                void *info);
 };
 
 #endif /* NSNETWORKLINKSERVICEMAC_H_ */

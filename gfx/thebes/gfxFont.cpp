@@ -918,7 +918,7 @@ HasLookupRuleWithGlyphByScript(hb_face_t *aFace, hb_tag_t aTableTag,
     while (hb_set_next(defaultFeatureLookups, &index)) {
         hb_ot_layout_lookup_collect_glyphs(aFace, aTableTag, index,
                                            glyphs, glyphs, glyphs,
-                                           glyphs);
+                                           nullptr);
         if (hb_set_has(glyphs, aGlyph)) {
             aHasDefaultFeatureWithGlyph = true;
             break;
@@ -934,7 +934,7 @@ HasLookupRuleWithGlyphByScript(hb_face_t *aFace, hb_tag_t aTableTag,
         while (hb_set_next(nonDefaultFeatureLookups, &index)) {
             hb_ot_layout_lookup_collect_glyphs(aFace, aTableTag, index,
                                                glyphs, glyphs, glyphs,
-                                               glyphs);
+                                               nullptr);
             if (hb_set_has(glyphs, aGlyph)) {
                 hasNonDefaultFeatureWithGlyph = true;
                 break;
@@ -988,7 +988,7 @@ HasLookupRuleWithGlyph(hb_face_t *aFace, hb_tag_t aTableTag, bool& aHasGlyph,
     while (hb_set_next(otherLookups, &index)) {
         hb_ot_layout_lookup_collect_glyphs(aFace, aTableTag, index,
                                            glyphs, glyphs, glyphs,
-                                           glyphs);
+                                           nullptr);
         if (hb_set_has(glyphs, aGlyph)) {
             aHasGlyph = true;
             break;
@@ -1001,7 +1001,7 @@ HasLookupRuleWithGlyph(hb_face_t *aFace, hb_tag_t aTableTag, bool& aHasGlyph,
     while (hb_set_next(specificFeatureLookups, &index)) {
         hb_ot_layout_lookup_collect_glyphs(aFace, aTableTag, index,
                                            glyphs, glyphs, glyphs,
-                                           glyphs);
+                                           nullptr);
         if (hb_set_has(glyphs, aGlyph)) {
             aHasGlyphSpecific = true;
             break;

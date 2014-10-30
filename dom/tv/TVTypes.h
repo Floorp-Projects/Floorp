@@ -18,6 +18,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITVTUNERDATA
 
+  TVTunerData();
+
 private:
   ~TVTunerData();
 
@@ -32,8 +34,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITVCHANNELDATA
 
+  TVChannelData();
+
 private:
-  ~TVChannelData() {}
+  ~TVChannelData();
 
   nsString mNetworkId;
   nsString mTransportStreamId;
@@ -50,6 +54,8 @@ class TVProgramData MOZ_FINAL : public nsITVProgramData
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITVPROGRAMDATA
+
+  TVProgramData();
 
 private:
   ~TVProgramData();

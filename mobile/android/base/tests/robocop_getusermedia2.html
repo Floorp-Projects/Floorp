@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html><head>
+  <title>gUM Test Page</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" charset="utf-8">
+</head>
+<body>
+  <div id="content"></div>
+  <script type="application/javascript">
+  var video_status = false;
+  var video = document.createElement("video");
+  video.setAttribute("width", 640);
+  video.setAttribute("height", 480);
+
+  var audio_status = false;
+  var audio = document.createElement("audio");
+  audio.setAttribute("controls", true);
+
+  var content = document.getElementById("content");
+  document.title = "gUM Test Page";
+
+  startAudioVideo();
+
+  function startAudioVideo() {
+    video_status = true;
+    audio_status = true;
+    mediaConstraints = {
+      video: true,
+      audio: true
+    };
+    startMedia(mediaConstraints);
+  }
+
+  function stopMedia() {
+    if (video_status) {
+      video.mozSrcObject.stop();
+      video.mozSrcObject = null;
+      content.removeChild(video);
+      capturing = false;
+      video_status = false;
+    }
+    if (audio_status) {
+      audio.mozSrcObject.stop();
+      audio.mozSrcObject = null;
+      content.removeChild(audio);
+      audio_status = false;
+    }
+  }
+
+  function startMedia(param) {
+    try {
+      window.navigator.mozGetUserMedia(param, function(stream) {
+        if (video_status) {
+          content.appendChild(video);
+          video.mozSrcObject = stream;
+          video.play();
+        }
+        if (audio_status) {
+          content.appendChild(audio);
+          audio.mozSrcObject = stream;
+          audio.play();
+        }
+        var audioTracks = stream.getAudioTracks();
+        var videoTracks = stream.getVideoTracks();
+        document.title = "";
+        if (audioTracks.length > 0) {
+          document.title += "audio";
+        }
+        if (videoTracks.length > 0) {
+          document.title += "video";
+        }
+        document.title += " gumtest";
+        audio.mozSrcObject.stop();
+        video.mozSrcObject.stop();
+      }, function(err) {
+        document.title = "failed gumtest";
+        stopMedia();
+      });
+    } catch(e) {
+      stopMedia();
+    }
+  }
+</script>
+</body></html>
