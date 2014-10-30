@@ -34,6 +34,7 @@
         pointerLockElement = false,
         hasMovementX = false,
         hasMovementY = false;
+        gotContextMenuEvent = false;
 
       function runTests () {
         ok(hasRequestPointerLock, "Element should have mozRequestPointerLock.");
@@ -44,6 +45,7 @@
         ok(pointerLockElement, "Document should keep track of correct pointer locked element");
         ok(hasMovementX, "Mouse Event should have mozMovementX.");
         ok(hasMovementY, "Mouse Event should have mozMovementY.");
+        ok(!gotContextMenuEvent, "Shouldn't have got a contextmenu event.");
       }
 
       function mouseMoveHandler(e) {
@@ -62,6 +64,14 @@
         if (document.mozPointerLockElement) {
           pointerLocked = true;
           pointerLockElement = document.mozPointerLockElement === div;
+ 
+          window.addEventListener("contextmenu",
+                                  function() { gotContextMenuEvent = true; },
+                                  true);
+          synthesizeMouse(document.body, 4, 4,
+                          { type: "contextmenu", button: 2 },
+                          window);
+
           document.addEventListener("mousemove", mouseMoveHandler, false);
           synthesizeMouseAtCenter(div, {type: "mousemove"}, window);
         } else {
