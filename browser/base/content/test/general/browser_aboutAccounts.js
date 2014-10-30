@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+  "resource://gre/modules/FileUtils.jsm");
 
 const CHROME_BASE = "chrome://mochitests/content/browser/browser/base/content/test/general/";
 // Preference helpers.
@@ -181,6 +183,107 @@ let gTests = [
   },
 },
 {
+  desc: "Test action=migrateToDevEdition (success)",
+  teardown: function* () {
+    gBrowser.removeCurrentTab();
+    yield signOut();
+  },
+  run: function* ()
+  {
+    let fxAccountsCommon = {};
+    Cu.import("resource://gre/modules/FxAccountsCommon.js", fxAccountsCommon);
+    const pref = "identity.fxaccounts.migrateToDevEdition";
+    changedPrefs.add(pref);
+    Services.prefs.setBoolPref(pref, true);
+
+    // Create the signedInUser.json file that will be used as the source of
+    // migrated user data.
+    let signedInUser = {
+      version: 1,
+      accountData: {
+        email: "foo@example.com",
+        uid: "1234@lcip.org",
+        sessionToken: "dead",
+        verified: true
+      }
+    };
+    // We use a sub-dir of the real profile dir as the "pretend" profile dir
+    // for this test.
+    let profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    let mockDir = profD.clone();
+    mockDir.append("about-accounts-mock-profd");
+    mockDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+    let fxAccountsStorage = OS.Path.join(mockDir.path, fxAccountsCommon.DEFAULT_STORAGE_FILENAME);
+    yield OS.File.writeAtomic(fxAccountsStorage, JSON.stringify(signedInUser));
+    info("Wrote file " + fxAccountsStorage);
+
+    // this is a little subtle - we load about:blank so we get a tab, then
+    // we send a message which does both (a) load the URL we want and (b) mocks
+    // the default profile path used by about:accounts.
+    let tab = yield promiseNewTabLoadEvent("about:blank?");
+    let readyPromise = promiseOneMessage(tab, "test:load-with-mocked-profile-path-response");
+
+    let mm = tab.linkedBrowser.messageManager;
+    mm.sendAsyncMessage("test:load-with-mocked-profile-path", {
+      url: "about:accounts?action=migrateToDevEdition",
+      profilePath: mockDir.path,
+    });
+
+    let response = yield readyPromise;
+    // We are expecting the iframe to be on the "force reauth" URL
+    let expected = yield fxAccounts.promiseAccountsForceSigninURI();
+    is(response.data.url, expected);
+
+    let userData = yield fxAccounts.getSignedInUser();
+    SimpleTest.isDeeply(userData, signedInUser.accountData, "All account data were migrated");
+    // The migration pref will have been switched off by now.
+    is(Services.prefs.getBoolPref(pref), false, pref + " got the expected value");
+
+    yield OS.File.remove(fxAccountsStorage);
+    yield OS.File.removeEmptyDir(mockDir.path);
+  },
+},
+{
+  desc: "Test action=migrateToDevEdition (no user to migrate)",
+  teardown: function* () {
+    gBrowser.removeCurrentTab();
+    yield signOut();
+  },
+  run: function* ()
+  {
+    const pref = "identity.fxaccounts.migrateToDevEdition";
+    changedPrefs.add(pref);
+    Services.prefs.setBoolPref(pref, true);
+
+    let profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    let mockDir = profD.clone();
+    mockDir.append("about-accounts-mock-profd");
+    mockDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+    // but leave it empty, so we don't think a user is logged in.
+
+    let tab = yield promiseNewTabLoadEvent("about:blank?");
+    let readyPromise = promiseOneMessage(tab, "test:load-with-mocked-profile-path-response");
+
+    let mm = tab.linkedBrowser.messageManager;
+    mm.sendAsyncMessage("test:load-with-mocked-profile-path", {
+      url: "about:accounts?action=migrateToDevEdition",
+      profilePath: mockDir.path,
+    });
+
+    let response = yield readyPromise;
+    // We are expecting the iframe to be on the "signup" URL
+    let expected = fxAccounts.getAccountsSignUpURI();
+    is(response.data.url, expected);
+
+    // and expect no signed in user.
+    let userData = yield fxAccounts.getSignedInUser();
+    is(userData, null);
+    // The migration pref should have still been switched off.
+    is(Services.prefs.getBoolPref(pref), false, pref + " got the expected value");
+    yield OS.File.removeEmptyDir(mockDir.path);
+  },
+},
+{
   desc: "Test observers about:accounts",
   teardown: function() {
     gBrowser.removeCurrentTab();
@@ -323,5 +426,6 @@ function setSignedInUser(data) {
 }
 
 function signOut() {
-  return fxAccounts.signOut();
+  // we always want a "localOnly" signout here...
+  return fxAccounts.signOut(true);
 }

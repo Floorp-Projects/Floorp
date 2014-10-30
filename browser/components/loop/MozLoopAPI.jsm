@@ -369,7 +369,7 @@ function injectLoopAPI(targetWindow) {
       value: function(callback) {
         // We translate from a promise to a callback, as we can't pass promises from
         // Promise.jsm across the priv versus unpriv boundary.
-        MozLoopService.register().then(() => {
+        MozLoopService.promiseRegisteredWithServers().then(() => {
           callback(null);
         }, err => {
           callback(cloneValueInto(err, targetWindow));

@@ -765,6 +765,10 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(18px, 342px, 36px, 324px);
   }
 
+  #webide-button@toolbarButtonPressed@ {
+    -moz-image-region: rect(18px, 342px, 36px, 324px);
+  }
+
   #new-tab-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 360px, 36px, 342px);
   }
@@ -1010,6 +1014,14 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
 
   #e10s-button > .toolbarbutton-icon {
     transform: scaleY(-1);
+  }
+
+  #webide-button[cui-areatype="toolbar"] {
+    -moz-image-region: rect(0, 1476px, 36px, 1440px);
+  }
+
+  #webide-button[cui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
+    -moz-image-region: rect(36px, 1476px, 72px, 1440px);
   }
 
   #new-tab-button[cui-areatype="toolbar"] {
@@ -1279,6 +1291,11 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
   #e10s-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #e10s-button {
     -moz-image-region: rect(0px, 1024px, 64px, 960px);
+  }
+
+  #webide-button[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > #webide-button {
+    -moz-image-region: rect(0px, 1920px, 64px, 1856px);
   }
 
   #new-tab-button[cui-areatype="menu-panel"],
