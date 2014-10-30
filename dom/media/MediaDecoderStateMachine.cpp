@@ -1059,10 +1059,9 @@ MediaDecoderStateMachine::CheckIfDecodeComplete()
               ((mState == DECODER_STATE_COMPLETED) ? "" : "NOT "));
 }
 
-bool MediaDecoderStateMachine::IsPlaying()
+bool MediaDecoderStateMachine::IsPlaying() const
 {
   AssertCurrentThreadInMonitor();
-
   return !mPlayStartTime.IsNull();
 }
 
@@ -1131,7 +1130,7 @@ void MediaDecoderStateMachine::SetSyncPointForMediaStream()
   mSyncPointInDecodedStream = mStartTime + mPlayDuration;
 }
 
-int64_t MediaDecoderStateMachine::GetCurrentTimeViaMediaStreamSync()
+int64_t MediaDecoderStateMachine::GetCurrentTimeViaMediaStreamSync() const
 {
   AssertCurrentThreadInMonitor();
   NS_ASSERTION(mSyncPointInDecodedStream >= 0, "Should have set up sync point");
@@ -2577,7 +2576,7 @@ void MediaDecoderStateMachine::ResyncAudioClock()
 }
 
 int64_t
-MediaDecoderStateMachine::GetAudioClock()
+MediaDecoderStateMachine::GetAudioClock() const
 {
   // We must hold the decoder monitor while using the audio stream off the
   // audio sink to ensure that it doesn't get destroyed on the audio sink
@@ -2588,7 +2587,7 @@ MediaDecoderStateMachine::GetAudioClock()
          (mAudioSink ? mAudioSink->GetPosition() : 0);
 }
 
-int64_t MediaDecoderStateMachine::GetVideoStreamPosition()
+int64_t MediaDecoderStateMachine::GetVideoStreamPosition() const
 {
   AssertCurrentThreadInMonitor();
 
@@ -2603,7 +2602,7 @@ int64_t MediaDecoderStateMachine::GetVideoStreamPosition()
   return mStartTime + mPlayDuration + delta;
 }
 
-int64_t MediaDecoderStateMachine::GetClock()
+int64_t MediaDecoderStateMachine::GetClock() const
 {
   AssertCurrentThreadInMonitor();
 
