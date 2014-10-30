@@ -140,11 +140,11 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         // This array buffer was created lazily for a typed object with inline
         // data. This implies both that the typed object owns the buffer's data
         // and that the list of views sharing this buffer's data might be
-        // incomplete. Any missing views will be sized typed objects.
+        // incomplete. Any missing views will be typed objects.
         FOR_INLINE_TYPED_OBJECT = 0x10,
 
-        // Views of this buffer might include sized typed objects.
-        SIZED_OBJECT_VIEWS  = 0x20
+        // Views of this buffer might include typed objects.
+        TYPED_OBJECT_VIEWS  = 0x20
     };
 
   public:
@@ -325,8 +325,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     void setForInlineTypedObject() {
         setFlags(flags() | FOR_INLINE_TYPED_OBJECT);
     }
-    void setHasSizedObjectViews() {
-        setFlags(flags() | SIZED_OBJECT_VIEWS);
+    void setHasTypedObjectViews() {
+        setFlags(flags() | TYPED_OBJECT_VIEWS);
     }
 
   protected:
@@ -342,7 +342,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     }
 
     bool forInlineTypedObject() const { return flags() & FOR_INLINE_TYPED_OBJECT; }
-    bool hasSizedObjectViews() const { return flags() & SIZED_OBJECT_VIEWS; }
+    bool hasTypedObjectViews() const { return flags() & TYPED_OBJECT_VIEWS; }
 
     void setIsAsmJSMalloced() { setFlags((flags() & ~KIND_MASK) | ASMJS_MALLOCED); }
     void setIsNeutered() { setFlags(flags() | NEUTERED); }
