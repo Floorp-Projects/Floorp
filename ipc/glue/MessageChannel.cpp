@@ -692,23 +692,6 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     return true;
 }
 
-struct AutoDeferMessages
-{
-    typedef IPC::Message Message;
-
-    std::deque<Message>& mQueue;
-    mozilla::Vector<Message> mDeferred;
-
-    AutoDeferMessages(std::deque<Message>& queue) : mQueue(queue) {}
-    ~AutoDeferMessages() {
-        mQueue.insert(mQueue.begin(), mDeferred.begin(), mDeferred.end());
-    }
-
-    void Defer(Message aMsg) {
-        mDeferred.append(aMsg);
-    }
-};
-
 bool
 MessageChannel::SendAndWait(Message* aMsg, Message* aReply)
 {
@@ -728,16 +711,28 @@ MessageChannel::SendAndWait(Message* aMsg, Message* aReply)
 
     mLink->SendMessage(msg.forget());
 
-    AutoDeferMessages defer(mPending);
-
     while (true) {
-        while (!mPending.empty()) {
-            Message msg = mPending.front();
-            mPending.pop_front();
-            if (ShouldDeferMessage(msg))
-                defer.Defer(msg);
-            else
-                ProcessPendingRequest(msg);
+        // Loop until there aren't any more priority messages to process.
+        for (;;) {
+            mozilla::Vector<Message> toProcess;
+
+            for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); ) {
+                Message &msg = *it;
+                if (!ShouldDeferMessage(msg)) {
+                    toProcess.append(msg);
+                    it = mPending.erase(it);
+                    continue;
+                }
+                it++;
+            }
+
+            if (toProcess.empty())
+                break;
+
+            // Processing these messages could result in more messages, so we
+            // loop around to check for more afterwards.
+            for (auto it = toProcess.begin(); it != toProcess.end(); it++)
+                ProcessPendingRequest(*it);
         }
 
         // See if we've received a reply.
@@ -860,7 +855,7 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
         // If the message is not Interrupt, we can dispatch it as normal.
         if (!recvd.is_interrupt()) {
             {
-                AutoEnterTransaction transaction(this, &recvd);
+                AutoEnterTransaction transaction(this, recvd);
                 MonitorAutoUnlock unlock(*mMonitor);
                 CxxStackFrame frame(*this, IN_MESSAGE, &recvd);
                 DispatchMessage(recvd);
@@ -947,7 +942,7 @@ MessageChannel::InterruptEventOccurred()
 }
 
 bool
-MessageChannel::ProcessPendingRequest(Message aUrgent)
+MessageChannel::ProcessPendingRequest(const Message &aUrgent)
 {
     AssertWorkerThread();
     mMonitor->AssertCurrentThreadOwns();
@@ -965,7 +960,7 @@ MessageChannel::ProcessPendingRequest(Message aUrgent)
     {
         // In order to send the parent RPC messages and guarantee it will
         // wake up, we must re-use its transaction.
-        AutoEnterTransaction transaction(this, &aUrgent);
+        AutoEnterTransaction transaction(this, aUrgent);
 
         MonitorAutoUnlock unlock(*mMonitor);
         DispatchMessage(aUrgent);
@@ -1029,7 +1024,7 @@ MessageChannel::OnMaybeDequeueOne()
     {
         // We should not be in a transaction yet if we're not blocked.
         MOZ_ASSERT(mCurrentTransaction == 0);
-        AutoEnterTransaction transaction(this, &recvd);
+        AutoEnterTransaction transaction(this, recvd);
 
         MonitorAutoUnlock unlock(*mMonitor);
 
