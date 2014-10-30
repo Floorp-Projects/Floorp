@@ -1068,6 +1068,7 @@ CustomizeMode.prototype = {
         }
         this._removeDragHandlers(target);
       }
+      this.areas.clear();
     }.bind(this)).then(null, ERROR);
   },
 
