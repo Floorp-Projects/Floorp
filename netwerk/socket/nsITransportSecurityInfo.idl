@@ -8,10 +8,11 @@
 
 interface nsIX509CertList;
 
-[scriptable, uuid(c754ef58-853f-4870-abf7-98be325d2b97)]
+[scriptable, uuid(216112d3-28bc-4671-b057-f98cc09ba1ea)]
 interface nsITransportSecurityInfo : nsISupports {
     readonly attribute unsigned long    securityState;
     readonly attribute wstring          errorMessage;
+    readonly attribute long             errorCode; // PRErrorCode
 
     /**
      * If certificate verification failed, this will be the peer certificate
