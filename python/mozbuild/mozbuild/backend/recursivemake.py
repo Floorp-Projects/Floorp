@@ -1158,11 +1158,15 @@ INSTALL_TARGETS += %(prefix)s
         # handled in moz.build world, assume any program or shared library
         # we build depends on it.
         if obj.KIND == 'target' and not isinstance(obj, StaticLibrary) and \
-                build_target != 'mozglue/build/target' and \
+                build_target not in ('mozglue/build/target',
+                                     'mozglue/crt/target') and \
                 not obj.config.substs.get('JS_STANDALONE') and \
                 (not isinstance(obj, SharedLibrary) or
                  obj.basename != 'clang-plugin'):
-            self._compile_graph[build_target].add('mozglue/build/target')
+            if obj.config.substs.get('MOZ_CRT'):
+                self._compile_graph[build_target].add('mozglue/crt/target')
+            else:
+                self._compile_graph[build_target].add('mozglue/build/target')
             if obj.config.substs.get('MOZ_MEMORY'):
                 self._compile_graph[build_target].add('memory/build/target')
 
