@@ -43,8 +43,6 @@ public class ReadingListRow extends LinearLayout {
 
         LayoutInflater.from(context).inflate(R.layout.reading_list_row_view, this);
 
-        setOrientation(LinearLayout.VERTICAL);
-
         resources = context.getResources();
 
         title = (TextView) findViewById(R.id.title);
