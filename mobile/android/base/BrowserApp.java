@@ -52,7 +52,6 @@ import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
-import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
@@ -772,7 +771,7 @@ public class BrowserApp extends GeckoApp
     public void onResume() {
         super.onResume();
 
-        final String args = ContextUtils.getStringExtra(getIntent(), "args");
+        final String args = StringUtils.getStringExtra(getIntent(), "args");
         // If an external intent tries to start Fennec in guest mode, and it's not already
         // in guest mode, this will change modes before opening the url.
         // NOTE: OnResume is called twice sometimes when showing on the lock screen.
