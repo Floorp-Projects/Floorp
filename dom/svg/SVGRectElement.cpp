@@ -204,8 +204,7 @@ SVGRectElement::BuildPath(PathBuilder* aBuilder)
     rx = std::min(rx, width / 2);
     ry = std::min(ry, height / 2);
 
-    Size cornerRadii(rx, ry);
-    Size radii[] = { cornerRadii, cornerRadii, cornerRadii, cornerRadii };
+    RectCornerRadii radii(rx, ry);
     AppendRoundedRectToPath(aBuilder, Rect(x, y, width, height), radii);
   }
 
