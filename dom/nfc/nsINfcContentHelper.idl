@@ -55,7 +55,7 @@ interface nsINfcDOMEventTarget : nsISupports
   void notifyPeerLost(in DOMString sessionToken);
 };
 
-[scriptable, uuid(cb9c934d-a7fa-422b-bcc1-4ac39741e6ec)]
+[scriptable, uuid(45b1f45b-16fa-43f2-adb2-9a6e7232ee0a)]
 interface nsINfcContentHelper : nsISupports
 {
   const long NFC_EVENT_PEER_READY = 0x01;
@@ -65,18 +65,15 @@ interface nsINfcContentHelper : nsISupports
 
   boolean checkSessionToken(in DOMString sessionToken);
 
-  nsIDOMDOMRequest readNDEF(in nsIDOMWindow window, in DOMString sessionToken);
-  nsIDOMDOMRequest writeNDEF(in nsIDOMWindow window, in nsIVariant records, in DOMString sessionToken);
-  nsIDOMDOMRequest makeReadOnlyNDEF(in nsIDOMWindow window, in DOMString sessionToken);
+  nsIDOMDOMRequest readNDEF(in DOMString sessionToken);
+  nsIDOMDOMRequest writeNDEF(in nsIVariant records, in DOMString sessionToken);
+  nsIDOMDOMRequest makeReadOnlyNDEF(in DOMString sessionToken);
 
-  nsIDOMDOMRequest connect(in nsIDOMWindow window, in unsigned long techType, in DOMString sessionToken);
-  nsIDOMDOMRequest close(in nsIDOMWindow window, in DOMString sessionToken);
+  nsIDOMDOMRequest connect(in unsigned long techType, in DOMString sessionToken);
+  nsIDOMDOMRequest close(in DOMString sessionToken);
 
   /**
    * Initiate send file operation.
-   *
-   * @param window
-   *        Current window
    *
    * @param blob
    *        Raw data of the file to be sent. This object represents a file-like
@@ -89,8 +86,7 @@ interface nsINfcContentHelper : nsISupports
    * Returns DOMRequest, if initiation of send file operation is successful
    * then 'onsuccess' is called else 'onerror'
    */
-  nsIDOMDOMRequest sendFile(in nsIDOMWindow window,
-                            in jsval blob,
+  nsIDOMDOMRequest sendFile(in jsval blob,
                             in DOMString sessionToken);
 
   /**
@@ -103,56 +99,39 @@ interface nsINfcContentHelper : nsISupports
   /**
    * Register the given application id with parent process
    *
-   * @param window
-   *        Current window
-   *
    * @param appId
    *        Application ID to be registered
    */
-  void registerTargetForPeerReady(in nsIDOMWindow window,
-                                  in unsigned long appId);
+  void registerTargetForPeerReady(in unsigned long appId);
 
   /**
    * Unregister the given application id with parent process
    *
-   * @param window
-   *        Current window
-   *
    * @param appId
    *        Application ID to be registered
    */
-  void unregisterTargetForPeerReady(in nsIDOMWindow window,
-                                    in unsigned long appId);
+  void unregisterTargetForPeerReady(in unsigned long appId);
 
   /**
    * Checks if the given application's id is a registered peer target (with the parent process)
-   *
-   * @param window
-   *        Current window
    *
    * @param appId
    *        Application ID to be updated with parent process
    *
    * Returns DOMRequest, if appId is registered then 'onsuccess' is called else 'onerror'
    */
-  nsIDOMDOMRequest checkP2PRegistration(in nsIDOMWindow window, in unsigned long appId);
+  nsIDOMDOMRequest checkP2PRegistration(in unsigned long appId);
 
   /**
    * Notify the parent process that user has accepted to share nfc message on P2P UI
    *
-   * @param window
-   *        Current window
-   *
    * @param appId
    *        Application ID that is capable of handling NFC_EVENT_PEER_READY event
    */
-  void notifyUserAcceptedP2P(in nsIDOMWindow window, in unsigned long appId);
+  void notifyUserAcceptedP2P(in unsigned long appId);
 
   /**
    * Notify the status of sendFile operation to parent process
-   *
-   * @param window
-   *        Current window
    *
    * @param status
    *        Status of sendFile operation
@@ -160,22 +139,21 @@ interface nsINfcContentHelper : nsISupports
    * @param requestId
    *        Request ID of SendFile DOM Request
    */
-  void notifySendFileStatus(in nsIDOMWindow window,
-                            in octet status,
+  void notifySendFileStatus(in octet status,
                             in DOMString requestId);
 
   /**
    * Power on the NFC hardware and start polling for NFC tags or devices.
    */
-  nsIDOMDOMRequest startPoll(in nsIDOMWindow window);
+  nsIDOMDOMRequest startPoll();
 
   /**
    * Stop polling for NFC tags or devices. i.e. enter low power mode.
    */
-  nsIDOMDOMRequest stopPoll(in nsIDOMWindow window);
+  nsIDOMDOMRequest stopPoll();
 
   /**
    * Power off the NFC hardware.
    */
-  nsIDOMDOMRequest powerOff(in nsIDOMWindow window);
+  nsIDOMDOMRequest powerOff();
 };

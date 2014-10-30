@@ -39,13 +39,13 @@ MozNFCTag.prototype = {
 
   // NFCTag interface:
   readNDEF: function readNDEF() {
-    return this._nfcContentHelper.readNDEF(this._window, this.session);
+    return this._nfcContentHelper.readNDEF(this.session);
   },
   writeNDEF: function writeNDEF(records) {
-    return this._nfcContentHelper.writeNDEF(this._window, records, this.session);
+    return this._nfcContentHelper.writeNDEF(records, this.session);
   },
   makeReadOnlyNDEF: function makeReadOnlyNDEF() {
-    return this._nfcContentHelper.makeReadOnlyNDEF(this._window, this.session);
+    return this._nfcContentHelper.makeReadOnlyNDEF(this.session);
   },
 
   classID: Components.ID("{4e1e2e90-3137-11e3-aa6e-0800200c9a66}"),
@@ -77,7 +77,7 @@ MozNFCPeer.prototype = {
     }
 
     // Just forward sendNDEF to writeNDEF
-    return this._nfcContentHelper.writeNDEF(this._window, records, this.session);
+    return this._nfcContentHelper.writeNDEF(records, this.session);
   },
 
   sendFile: function sendFile(blob) {
@@ -88,8 +88,7 @@ MozNFCPeer.prototype = {
     let data = {
       "blob": blob
     };
-    return this._nfcContentHelper.sendFile(this._window,
-                                           Cu.cloneInto(data, this._window),
+    return this._nfcContentHelper.sendFile(Cu.cloneInto(data, this._window),
                                            this.session);
   },
 
@@ -141,30 +140,29 @@ mozNfc.prototype = {
   checkP2PRegistration: function checkP2PRegistration(manifestUrl) {
     // Get the AppID and pass it to ContentHelper
     let appID = appsService.getAppLocalIdByManifestURL(manifestUrl);
-    return this._nfcContentHelper.checkP2PRegistration(this._window, appID);
+    return this._nfcContentHelper.checkP2PRegistration(appID);
   },
 
   notifyUserAcceptedP2P: function notifyUserAcceptedP2P(manifestUrl) {
     let appID = appsService.getAppLocalIdByManifestURL(manifestUrl);
     // Notify chrome process of user's acknowledgement
-    this._nfcContentHelper.notifyUserAcceptedP2P(this._window, appID);
+    this._nfcContentHelper.notifyUserAcceptedP2P(appID);
   },
 
   notifySendFileStatus: function notifySendFileStatus(status, requestId) {
-    this._nfcContentHelper.notifySendFileStatus(this._window,
-                                                status, requestId);
+    this._nfcContentHelper.notifySendFileStatus(status, requestId);
   },
 
   startPoll: function startPoll() {
-    return this._nfcContentHelper.startPoll(this._window);
+    return this._nfcContentHelper.startPoll();
   },
 
   stopPoll: function stopPoll() {
-    return this._nfcContentHelper.stopPoll(this._window);
+    return this._nfcContentHelper.stopPoll();
   },
 
   powerOff: function powerOff() {
-    return this._nfcContentHelper.powerOff(this._window);
+    return this._nfcContentHelper.powerOff();
   },
 
   getNFCPeer: function getNFCPeer(sessionToken) {
@@ -198,7 +196,7 @@ mozNfc.prototype = {
     }
 
     let appId = this._window.document.nodePrincipal.appId;
-    this._nfcContentHelper.registerTargetForPeerReady(this._window, appId);
+    this._nfcContentHelper.registerTargetForPeerReady(appId);
   },
 
   eventListenerWasRemoved: function(eventType) {
@@ -207,7 +205,7 @@ mozNfc.prototype = {
     }
 
     let appId = this._window.document.nodePrincipal.appId;
-    this._nfcContentHelper.unregisterTargetForPeerReady(this._window, appId);
+    this._nfcContentHelper.unregisterTargetForPeerReady(appId);
   },
 
   notifyTagFound: function notifyTagFound(sessionToken, event, records) {
