@@ -18,6 +18,7 @@
   <color name="new_tablet_highlight_focused">#C0C9D0</color>
   <color name="new_tablet_highlight_pb">#222222</color>
   <color name="new_tablet_highlight_focused_pb">#363B40</color>
+  <color name="new_tablet_highlight_dark">#45494E</color>
 
   <!-- highlight on shaped button: 20% white over background_tabs -->
   <color name="highlight_shaped">#FF696D71</color>
