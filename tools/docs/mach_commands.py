@@ -28,7 +28,7 @@ class Documentation(MachCommandBase):
         help='Where to write output.')
     def build_docs(self, format=None, outdir=None):
         self._activate_virtualenv()
-        self.virtualenv_manager.install_pip_package('mdn-sphinx-theme==0.4')
+        self.virtualenv_manager.install_pip_package('sphinx_rtd_theme==0.1.6')
 
         from moztreedocs import SphinxManager
 
