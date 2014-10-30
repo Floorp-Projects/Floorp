@@ -33,6 +33,7 @@ struct HttpChannelOpenArgs
   OptionalURIParams           doc;
   OptionalURIParams           referrer;
   OptionalURIParams           apiRedirectTo;
+  OptionalURIParams           topWindowURI;
   uint32_t                    loadFlags;
   RequestHeaderTuples         requestHeaders;
   nsCString                   requestMethod;
