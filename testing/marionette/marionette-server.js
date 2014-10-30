@@ -181,6 +181,7 @@ MarionetteServerConnection.prototype = {
     // Dispatch the request
     if (this.requestTypes && this.requestTypes[aPacket.name]) {
       try {
+        this.logRequest(aPacket.name, aPacket);
         this.requestTypes[aPacket.name].bind(this)(aPacket);
       } catch(e) {
         this.conn.send({ error: ("error occurred while processing '" +
@@ -666,7 +667,6 @@ MarionetteServerConnection.prototype = {
    */
   setContext: function MDA_setContext(aRequest) {
     this.command_id = this.getCommandId();
-    this.logRequest("setContext", aRequest);
     let context = aRequest.parameters.value;
     if (context != "content" && context != "chrome") {
       this.sendError("invalid context", 500, null, this.command_id);
@@ -790,7 +790,6 @@ MarionetteServerConnection.prototype = {
     let timeout = aRequest.parameters.scriptTimeout ? aRequest.parameters.scriptTimeout : this.scriptTimeout;
     let command_id = this.command_id = this.getCommandId();
     let script;
-    this.logRequest("execute", aRequest);
     if (aRequest.parameters.newSandbox == undefined) {
       //if client does not send a value in newSandbox,
       //then they expect the same behaviour as webdriver
@@ -957,7 +956,6 @@ MarionetteServerConnection.prototype = {
     let timeout = aRequest.parameters.scriptTimeout ? aRequest.parameters.scriptTimeout : this.scriptTimeout;
     let command_id = this.command_id = this.getCommandId();
     let script;
-    this.logRequest("executeWithCallback", aRequest);
     if (aRequest.parameters.newSandbox == undefined) {
       //if client does not send a value in newSandbox,
       //then they expect the same behaviour as webdriver
@@ -1392,7 +1390,6 @@ MarionetteServerConnection.prototype = {
    */
   switchToFrame: function MDA_switchToFrame(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    this.logRequest("switchToFrame", aRequest);
     let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let curWindow = this.getCurrentWindow();
     let checkLoad = function() {
@@ -2075,7 +2072,6 @@ MarionetteServerConnection.prototype = {
    */
   setTestName: function MDA_setTestName(aRequest) {
     this.command_id = this.getCommandId();
-    this.logRequest("setTestName", aRequest);
     this.testName = aRequest.parameters.value;
     this.sendAsync("setTestName",
                    { value: aRequest.parameters.value },

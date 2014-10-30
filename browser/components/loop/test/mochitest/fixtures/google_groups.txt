@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed gd:etag="W/&quot;CEIAQngzfyt7I2A9XRdXFEQ.&quot;" xmlns="http://www.w3.org/2005/Atom" xmlns:batch="http://schemas.google.com/gdata/batch" xmlns:gContact="http://schemas.google.com/contact/2008" xmlns:gd="http://schemas.google.com/g/2005" xmlns:openSearch="http://a9.com/-/spec/opensearch/1.1/">
+  <id>tester@mochi.com</id>
+  <updated>2014-10-28T10:35:43.687Z</updated>
+  <category scheme="http://schemas.google.com/g/2005#kind" term="http://schemas.google.com/contact/2008#group"/>
+  <title>Mochi Tester's Contact Groups</title>
+  <link href="http://www.google.com/" rel="alternate" type="text/html"/>
+  <link href="https://www.google.com/m8/feeds/groups/tester%40mochi.com/full" rel="http://schemas.google.com/g/2005#feed" type="application/atom+xml"/>
+  <link href="https://www.google.com/m8/feeds/groups/tester%40mochi.com/full" rel="http://schemas.google.com/g/2005#post" type="application/atom+xml"/>
+  <link href="https://www.google.com/m8/feeds/groups/tester%40mochi.com/full/batch" rel="http://schemas.google.com/g/2005#batch" type="application/atom+xml"/>
+  <link href="https://www.google.com/m8/feeds/groups/tester%40mochi.com/full?max-results=10000000" rel="self" type="application/atom+xml"/>
+  <author>
+    <name>Mochi Tester</name>
+    <email>tester@mochi.com</email>
+  </author>
+  <generator uri="http://www.google.com/m8/feeds" version="1.0">Contacts</generator>
+  <openSearch:totalResults>4</openSearch:totalResults>
+  <openSearch:startIndex>1</openSearch:startIndex>
+  <openSearch:itemsPerPage>10000000</openSearch:itemsPerPage>
+  <entry gd:etag="&quot;YDwreyM.&quot;">
+    <id>http://www.google.com/m8/feeds/groups/tester%40mochi.com/base/6</id>
+    <updated>1970-01-01T00:00:00.000Z</updated>
+    <category scheme="http://schemas.google.com/g/2005#kind" term="http://schemas.google.com/contact/2008#group"/>
+    <title>System Group: My Contacts</title>
+    <content>System Group: My Contacts</content>
+    <link href="https://www.google.com/m8/feeds/groups/tester%40mochi.com/full/6" rel="self" type="application/atom+xml"/>
+    <gContact:systemGroup id="Contacts"/>
+  </entry>
+  <entry gd:etag="&quot;YDwreyM.&quot;">
+    <id>http://www.google.com/m8/feeds/groups/tester%40mochi.com/base/d</id>
+    <updated>1970-01-01T00:00:00.000Z</updated>
+    <category scheme="http://schemas.google.com/g/2005#kind" term="http://schemas.google.com/contact/2008#group"/>
+    <title>System Group: Friends</title>
+    <content>System Group: Friends</content>
+    <link href="https://www.google.com/m8/feeds/groups/tester%40mochi.com/full/d" rel="self" type="application/atom+xml"/>
+    <gContact:systemGroup id="Friends"/>
+  </entry>
+  <entry gd:etag="&quot;YDwreyM.&quot;">
+    <id>http://www.google.com/m8/feeds/groups/tester%40mochi.com/base/e</id>
+    <updated>1970-01-01T00:00:00.000Z</updated>
+    <category scheme="http://schemas.google.com/g/2005#kind" term="http://schemas.google.com/contact/2008#group"/>
+    <title>System Group: Family</title>
+    <content>System Group: Family</content>
+    <link href="https://www.google.com/m8/feeds/groups/tester%40mochi.com/full/e" rel="self" type="application/atom+xml"/>
+    <gContact:systemGroup id="Family"/>
+  </entry>
+  <entry gd:etag="&quot;YDwreyM.&quot;">
+    <id>http://www.google.com/m8/feeds/groups/tester%40mochi.com/base/f</id>
+    <updated>1970-01-01T00:00:00.000Z</updated>
+    <category scheme="http://schemas.google.com/g/2005#kind" term="http://schemas.google.com/contact/2008#group"/>
+    <title>System Group: Coworkers</title>
+    <content>System Group: Coworkers</content>
+    <link href="https://www.google.com/m8/feeds/groups/tester%40mochi.com/full/f" rel="self" type="application/atom+xml"/>
+    <gContact:systemGroup id="Coworkers"/>
+  </entry>
+</feed>

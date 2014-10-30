@@ -119,7 +119,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
     // the content side.
     bool ok = JS_DefineProperty(cx, scopeObject, className, propertyHolder,
                                 JSPROP_PERMANENT | JSPROP_READONLY,
-                                JS_PropertyStub, JS_StrictPropertyStub);
+                                JS_STUBGETTER, JS_STUBSETTER);
     NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
   } else {
     propertyHolder = targetClassObject;

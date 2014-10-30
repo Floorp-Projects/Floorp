@@ -61,7 +61,7 @@ public:
     // -------------------------------------------------------------------------
     // MEMBER FUNCTIONS
 
-    bool EnsureAttrib(GLuint index, const char *info);
+    void EnsureAttrib(GLuint index);
     bool HasAttrib(GLuint index) {
         return index < mAttribs.Length();
     }

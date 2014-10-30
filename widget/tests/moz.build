@@ -8,7 +8,7 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
 
-CppUnitTests([
+GeckoCppUnitTests([
     'TestAppShellSteadyState',
 ])
 
@@ -23,10 +23,3 @@ FAIL_ON_WARNINGS = True
 #     Test disabled because it requires the internal API. Re-enabling this test
 #     is bug 652123.
 #     CPP_UNIT_TESTS += ['TestChromeMargin']
-
-USE_LIBS += [
-    'mozalloc',
-    'nspr',
-    'xpcomglue_s',
-    'xul',
-]

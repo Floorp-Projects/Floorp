@@ -2240,6 +2240,10 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
         cStats.innerViewsTable,
         "The table for array buffer inner views.");
 
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("lazy-array-buffers"),
+        cStats.lazyArrayBuffersTable,
+        "The table for typed object lazy array buffers.");
+
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrapper-table"),
         cStats.crossCompartmentWrappersTable,
         "The cross-compartment wrapper table.");

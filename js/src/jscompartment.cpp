@@ -57,6 +57,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     globalWriteBarriered(false),
     propertyTree(thisForCtor()),
     selfHostingScriptSource(nullptr),
+    lazyArrayBuffers(nullptr),
     gcIncomingGrayPointers(nullptr),
     gcWeakMapList(nullptr),
     gcPreserveJitCode(options.preserveJitCode()),
@@ -83,6 +84,7 @@ JSCompartment::~JSCompartment()
     js_delete(scriptCountsMap);
     js_delete(debugScriptMap);
     js_delete(debugScopes);
+    js_delete(lazyArrayBuffers);
     js_free(enumerators);
 
     runtime_->numCompartments--;
@@ -869,6 +871,7 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                       size_t *compartmentObject,
                                       size_t *compartmentTables,
                                       size_t *innerViewsArg,
+                                      size_t *lazyArrayBuffersArg,
                                       size_t *crossCompartmentWrappersArg,
                                       size_t *regexpCompartment,
                                       size_t *savedStacksSet)
@@ -881,6 +884,8 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                         + newTypeObjects.sizeOfExcludingThis(mallocSizeOf)
                         + lazyTypeObjects.sizeOfExcludingThis(mallocSizeOf);
     *innerViewsArg += innerViews.sizeOfExcludingThis(mallocSizeOf);
+    if (lazyArrayBuffers)
+        *lazyArrayBuffersArg += lazyArrayBuffers->sizeOfIncludingThis(mallocSizeOf);
     *crossCompartmentWrappersArg += crossCompartmentWrappers.sizeOfExcludingThis(mallocSizeOf);
     *regexpCompartment += regExps.sizeOfExcludingThis(mallocSizeOf);
     *savedStacksSet += savedStacks_.sizeOfExcludingThis(mallocSizeOf);

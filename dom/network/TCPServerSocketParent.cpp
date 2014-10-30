@@ -7,6 +7,8 @@
 #include "TCPSocketParent.h"
 #include "mozilla/unused.h"
 #include "mozilla/AppProcessChecker.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/TabParent.h"
 
 namespace mozilla {
 namespace dom {
@@ -58,13 +60,27 @@ TCPServerSocketParent::Init(PNeckoParent* neckoParent, const uint16_t& aLocalPor
     return true;
   }
 
-  rv = mIntermediary->Listen(this, aLocalPort, aBacklog, aBinaryType, getter_AddRefs(mServerSocket));
+  rv = mIntermediary->Listen(this, aLocalPort, aBacklog, aBinaryType, GetAppId(),
+                             getter_AddRefs(mServerSocket));
   if (NS_FAILED(rv) || !mServerSocket) {
     FireInteralError(this, __LINE__);
     return true;
   }
   return true;
 }
+
+uint32_t
+TCPServerSocketParent::GetAppId()
+{
+  uint32_t appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
+  const PContentParent *content = Manager()->Manager();
+  const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
+  if (browsers.Length() > 0) {
+    TabParent *tab = static_cast<TabParent*>(browsers[0]);
+    appId = tab->OwnAppId();
+  }
+  return appId;
+};
 
 NS_IMETHODIMP
 TCPServerSocketParent::SendCallbackAccept(nsITCPSocketParent *socket)

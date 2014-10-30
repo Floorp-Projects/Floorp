@@ -166,6 +166,11 @@ toolbarpaletteitem[place="palette"] > #web-apps-button {
   -moz-image-region: rect(0, 928px, 32px, 896px);
 }
 
+#webide-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #webide-button {
+  -moz-image-region: rect(0px, 960px, 32px, 928px);
+}
+
 toolbaritem[sdkstylewidget="true"] > toolbarbutton {
   -moz-image-region: rect(0, 832px, 32px, 800px);
 }

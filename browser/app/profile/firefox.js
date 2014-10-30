@@ -1695,6 +1695,10 @@ pref("identity.fxaccounts.remote.signin.uri", "https://accounts.firefox.com/sign
 // "identity.fxaccounts.remote.signup.uri" pref.
 pref("identity.fxaccounts.settings.uri", "https://accounts.firefox.com/settings");
 
+// Migrate any existing Firefox Account data from the default profile to the
+// Developer Edition profile.
+pref("identity.fxaccounts.migrateToDevEdition", false);
+
 // On GTK, we now default to showing the menubar only when alt is pressed:
 #ifdef MOZ_WIDGET_GTK
 pref("ui.key.menuAccessKeyFocuses", true);

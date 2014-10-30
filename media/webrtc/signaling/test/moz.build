@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-    CppUnitTests([
+    GeckoCppUnitTests([
         'mediaconduit_unittests',
         'mediapipeline_unittest',
         'sdp_unittests',
@@ -94,14 +94,10 @@ USE_LIBS += [
     '/media/webrtc/signalingtest/signaling_sipcc/sipcc',
     '/media/webrtc/trunk/testing/gtest_gtest/gtest',
     'gkmedias',
-    'mozalloc',
     'mtransport_s',
     'nksrtp_s',
-    'nspr',
     'nss',
     'webrtc',
-    'xpcomglue_s',
-    'xul',
     'yuv',
     'zlib',
 ]

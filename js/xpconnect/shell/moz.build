@@ -6,7 +6,7 @@
 
 FAIL_ON_WARNINGS = True
 
-Program('xpcshell')
+GeckoProgram('xpcshell', linkage='dependent')
 
 SOURCES += [
     'xpcshell.cpp',
@@ -35,10 +35,3 @@ if CONFIG['_MSC_VER']:
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     RCINCLUDE = 'xpcshell.rc'
-
-USE_LIBS += [
-    'mozalloc',
-    'nspr',
-    'xpcomglue_s',
-    'xul',
-]
