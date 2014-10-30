@@ -27,8 +27,6 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 
-#include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla::dom;
@@ -314,27 +312,6 @@ nsJSUtils::EvaluateString(JSContext* aCx,
   return EvaluateString(aCx, aSrcBuf, aScopeObject, aCompileOptions,
                         options, &unused, aOffThreadToken);
 }
-
-/* static */
-bool
-nsJSUtils::GetScopeChainForElement(JSContext* aCx,
-                                   mozilla::dom::Element* aElement,
-                                   JS::AutoObjectVector& aScopeChain)
-{
-  for (nsINode* cur = aElement; cur; cur = cur->GetScopeChainParent()) {
-    JS::RootedValue val(aCx);
-    if (!WrapNewBindingObject(aCx, cur, &val)) {
-      return false;
-    }
-
-    if (!aScopeChain.append(&val.toObject())) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 
 //
 // nsDOMJSUtils.h
