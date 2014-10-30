@@ -77,12 +77,6 @@ public:
     SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
   }
 
-  ParentObject GetParentObject() {
-    Element* form = GetFormElement();
-    return form ? GetParentObjectInternal(form)
-                : nsGenericHTMLElement::GetParentObject();
-  }
-
   nsINode* GetScopeChainParent() const MOZ_OVERRIDE
   {
     Element* form = GetFormElement();
