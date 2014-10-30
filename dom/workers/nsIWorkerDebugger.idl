@@ -1,9 +1,33 @@
 #include "nsISupports.idl"
 
+interface nsIDOMWindow;
+
+[scriptable, uuid(54fd2dd3-c01b-4f71-888f-462f37a54f57)]
+interface nsIWorkerDebuggerListener : nsISupports
+{
+  void onClose();
+};
+
 [scriptable, builtinclass, uuid(0833b363-bffe-4cdb-ad50-1c4563e0C8ff)]
 interface nsIWorkerDebugger : nsISupports
 {
+  const unsigned long TYPE_DEDICATED = 0;
+  const unsigned long TYPE_SHARED = 1;
+  const unsigned long TYPE_SERVICE = 2;
+
   readonly attribute bool isClosed;
 
+  readonly attribute bool isChrome;
+
+  readonly attribute nsIWorkerDebugger parent;
+
+  readonly attribute unsigned long type;
+
   readonly attribute DOMString url;
+
+  readonly attribute nsIDOMWindow window;
+
+  void addListener(in nsIWorkerDebuggerListener listener);
+
+  void removeListener(in nsIWorkerDebuggerListener listener);
 };

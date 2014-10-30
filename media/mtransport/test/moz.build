@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-    CppUnitTests([
+    GeckoCppUnitTests([
         'buffered_stun_socket_unittest',
         'nrappkit_unittest',
         'rlogringbuffer_unittest',
@@ -19,12 +19,12 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
 
     # Bug 1037618 - Cross-tree (network related?) failures on OSX
     if CONFIG['OS_TARGET'] != 'Darwin':
-        CppUnitTests([
+        GeckoCppUnitTests([
             'ice_unittest',
         ])
 
     if CONFIG['MOZ_SCTP']:
-        CppUnitTests([
+        GeckoCppUnitTests([
             'sctp_unittest',
         ])
 
@@ -88,14 +88,10 @@ LOCAL_INCLUDES += [
 
 USE_LIBS += [
     '/media/webrtc/trunk/testing/gtest_gtest/gtest',
-    'mozalloc',
     'mtransport_s',
     'nicer',
     'nrappkit',
-    'nspr',
     'nss',
-    'xpcomglue_s',
-    'xul',
 ]
 
 if not CONFIG['MOZ_NATIVE_NSS'] and not CONFIG['MOZ_FOLD_LIBS']:

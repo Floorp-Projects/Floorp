@@ -5,15 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    Program('redit')
+    GeckoProgram('redit')
     SOURCES += [
         'redit.cpp',
     ]
-    for var in ('WIN32_LEAN_AND_MEAN', 'UNICODE', '_UNICODE', 'XPCOM_GLUE'):
+    for var in ('WIN32_LEAN_AND_MEAN', 'UNICODE', '_UNICODE'):
         DEFINES[var] = True
     if CONFIG['GNU_CC']:
         WIN32_EXE_LDFLAGS += ['-municode']
-
-    USE_LIBS += [
-        'xpcomglue',
-    ]

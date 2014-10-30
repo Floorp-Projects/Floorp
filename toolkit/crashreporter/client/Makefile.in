@@ -5,10 +5,6 @@
 
 ifneq ($(OS_TARGET),Android)
 DIST_PROGRAM = crashreporter$(BIN_SUFFIX)
-
-# Don't link the updater against libmozglue.
-MOZ_GLUE_LDFLAGS =
-MOZ_GLUE_PROGRAM_LDFLAGS =
 endif
 
 ifeq ($(OS_ARCH),WINNT)

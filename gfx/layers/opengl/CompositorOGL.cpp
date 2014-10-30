@@ -702,7 +702,7 @@ CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, bool aCopyFromSource,
                               LOCAL_GL_UNSIGNED_BYTE,
                               buf);
     }
-    GLenum error = mGLContext->GetAndClearError();
+    GLenum error = mGLContext->fGetError();
     if (error != LOCAL_GL_NO_ERROR) {
       nsAutoCString msg;
       msg.AppendPrintf("Texture initialization failed! -- error 0x%x, Source %d, Source format %d,  RGBA Compat %d",

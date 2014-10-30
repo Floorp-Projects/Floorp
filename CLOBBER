@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Backing out bug 1087560 needs a CLOBBER
+For some reason, Clobber had problems applying the changes for Android in Bug 1091118 

@@ -3,6 +3,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 STLFLAGS =
-ifdef MOZ_GLUE_PROGRAM_LDFLAGS
+ifdef MOZ_GLUE_IN_PROGRAM
 DIST_INSTALL = 1
 endif

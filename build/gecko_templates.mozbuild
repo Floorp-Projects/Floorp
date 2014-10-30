@@ -1,0 +1,155 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+@template
+def GeckoBinary(linkage='dependent', msvcrt='dynamic', mozglue=None):
+    '''Template for Gecko-related binaries.
+
+    This template is meant to be used in other templates.
+
+    `linkage` indicates the wanted xpcom linkage type. Valid values are
+    'dependent', 'standalone' or None. 'dependent' is the default. It is
+    used for e.g. XPCOM components and executables with direct dependencies
+    on libxul. Most executables should use the 'standalone' linkage, which
+    uses the standalone XPCOM glue to load libxul. None means no XPCOM glue
+    or libxul linkage at all.
+
+    `msvcrt` indicates which Microsoft Visual Studio CRT, for Windows build,
+    ought to be linked: 'static' or 'dynamic'.
+
+    `mozglue` indicates whether to link against the mozglue library, and if
+    so, what linkage to apply. Valid values are None (mozglue not linked),
+    'program' (mozglue linked to an executable program), or 'library' (mozglue
+    linked to a shared library).
+    '''
+    if msvcrt == 'dynamic' or CONFIG['OS_ARCH'] != 'WINNT':
+        xpcomglue = 'xpcomglue'
+    elif msvcrt == 'static':
+        USE_STATIC_LIBS = True
+        xpcomglue = 'xpcomglue_staticruntime'
+        if not CONFIG['GNU_CC']:
+            mozglue = None
+    else:
+        error('msvcrt must be "dynamic" or "static"')
+
+    if linkage == 'dependent':
+        USE_LIBS += [
+            'mozalloc',
+            'nspr',
+            '%s_s' % xpcomglue,
+            'xul',
+        ]
+    elif linkage == 'standalone':
+        DEFINES['XPCOM_GLUE'] = True
+
+        USE_LIBS += [
+            xpcomglue,
+        ]
+    elif linkage != None:
+        error('`linkage` must be "dependent", "standalone" or None')
+
+    if mozglue:
+        if CONFIG['JS_STANDALONE']:
+            pass
+        elif CONFIG['MOZ_CRT']:
+            if msvcrt == 'dynamic':
+                USE_LIBS += ['mozcrt']
+            elif msvcrt == 'static':
+                USE_LIBS += ['mozglue']
+            else:
+                error('`msvcrt` must be "dynamic" or "static"')
+        else:
+            LDFLAGS += CONFIG['MOZ_GLUE_WRAP_LDFLAGS']
+            if mozglue == 'program':
+                USE_LIBS += ['mozglue']
+                if CONFIG['MOZ_GLUE_IN_PROGRAM']:
+                    if CONFIG['GNU_CC']:
+                        LDFLAGS += ['-rdynamic']
+                    if CONFIG['MOZ_MEMORY']:
+                        USE_LIBS += ['memory']
+                    if CONFIG['MOZ_LINKER']:
+                        OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
+            elif mozglue == 'library':
+                if not CONFIG['MOZ_GLUE_IN_PROGRAM']:
+                    USE_LIBS += ['mozglue']
+            else:
+                error('`mozglue` must be "program" or "library"')
+
+
+@template
+def GeckoProgram(name, linkage='standalone', **kwargs):
+    '''Template for program executables related to Gecko.
+
+    `name` identifies the executable base name.
+
+    See the documentation for `GeckoBinary` for other possible arguments,
+    with the notable difference that the default for `linkage` is 'standalone'.
+    '''
+    Program(name)
+
+    GeckoBinary(linkage=linkage, mozglue='program', **kwargs)
+
+
+@template
+def GeckoSimplePrograms(names, **kwargs):
+    '''Template for simple program executables related to Gecko.
+
+    `names` identifies the executable base names for each executable.
+
+    See the documentation for `GeckoBinary` for other possible arguments.
+    '''
+    SimplePrograms(names)
+
+    GeckoBinary(mozglue='program', **kwargs)
+
+
+@template
+def GeckoCppUnitTests(names, **kwargs):
+    '''Template for C++ unit tests related to Gecko.
+
+    `names` identifies the executable base names for each executable.
+
+    See the documentation for `GeckoBinary` for other possible arguments.
+    '''
+    CppUnitTests(names)
+
+    GeckoBinary(mozglue='program', **kwargs)
+
+
+@template
+def GeckoSharedLibrary(name, **kwargs):
+    '''Template for shared libraries related to Gecko.
+
+    `name` identifies the library base name.
+    See the documentation for `GeckoBinary` for other possible arguments.
+    '''
+    SharedLibrary(name)
+
+    GeckoBinary(mozglue='library', **kwargs)
+
+
+@template
+def GeckoFramework(name, **kwargs):
+    '''Template for OSX frameworks related to Gecko.
+
+    `name` identifies the library base name.
+    See the documentation for `GeckoBinary` for other possible arguments.
+    '''
+    Framework(name)
+
+    GeckoBinary(mozglue='library', **kwargs)
+
+
+@template
+def XPCOMBinaryComponent(name):
+    '''Template defining an XPCOM binary component for Gecko.
+
+    `name` is the name of the component.
+    '''
+    GeckoSharedLibrary(name)
+
+    IS_COMPONENT = True
+

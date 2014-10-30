@@ -550,6 +550,7 @@ public:
   // in the URL bar of the browser window.
   already_AddRefed<nsIPrincipal> GetTopLevelPrincipal();
 
+  bool ContainsRestrictedContent();
 #endif // MOZ_EME
 
   bool MozAutoplayEnabled() const

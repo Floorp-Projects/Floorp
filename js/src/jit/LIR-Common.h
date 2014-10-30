@@ -4258,24 +4258,6 @@ class LSetTypedObjectOffset : public LInstructionHelper<0, 2, 2>
     }
 };
 
-// Check whether a typed object has a neutered owner buffer.
-class LNeuterCheck : public LInstructionHelper<0, 1, 1>
-{
-  public:
-    LIR_HEADER(NeuterCheck)
-
-    LNeuterCheck(const LAllocation &object, const LDefinition &temp) {
-        setOperand(0, object);
-        setTemp(0, temp);
-    }
-    const LAllocation *object() {
-        return getOperand(0);
-    }
-    const LDefinition *temp() {
-        return getTemp(0);
-    }
-};
-
 // Bailout if index >= length.
 class LBoundsCheck : public LInstructionHelper<0, 2, 0>
 {

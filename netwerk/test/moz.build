@@ -16,7 +16,7 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['unit_ipc/xpcshell.ini']
 
-SimplePrograms([
+GeckoSimplePrograms([
     'PropertiesTest',
     'ReadNTLM',
     'TestBlockingSocket',
@@ -56,13 +56,6 @@ CppUnitTests([
 RESOURCE_FILES += [
     'urlparse.dat',
     'urlparse_unx.dat',
-]
-
-USE_LIBS += [
-    'mozalloc',
-    'nspr',
-    'xpcomglue_s',
-    'xul',
 ]
 
 CXXFLAGS += CONFIG['TK_CFLAGS']
