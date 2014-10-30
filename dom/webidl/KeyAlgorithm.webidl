@@ -30,8 +30,3 @@ dictionary RsaHashedKeyAlgorithm : KeyAlgorithm {
   required KeyAlgorithm hash;
 };
 
-dictionary DhKeyAlgorithm : KeyAlgorithm {
-  required Uint8Array prime;
-  required Uint8Array generator;
-};
-
