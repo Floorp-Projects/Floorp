@@ -16,7 +16,7 @@ extern "C" void sandbox_free_error(char *errorbuf);
 
 namespace mozilla {
 
-static const char rules[] =
+static const char pluginSandboxRules[] =
   "(version 1)\n"
   "(deny default)\n"
   "(allow signal (target self))\n"
@@ -38,26 +38,34 @@ static const char rules[] =
   "    (literal \"%s\")\n"
   "    (literal \"%s\"))\n";
 
+static const char contentSandboxRules[] =
+  "(version 1)\n"
+  "(allow default)\n";
+
 bool StartMacSandbox(MacSandboxInfo aInfo, nsCString &aErrorMessage)
 {
-  if (aInfo.type != MacSandboxType_Plugin) {
+  nsAutoCString profile;
+  if (aInfo.type == MacSandboxType_Plugin) {
+    if (nsCocoaFeatures::OnLionOrLater()) {
+      profile.AppendPrintf(pluginSandboxRules, ";",
+                           aInfo.pluginInfo.pluginPath.get(),
+                           aInfo.pluginInfo.pluginBinaryPath.get(),
+                           aInfo.appPath.get(),
+                           aInfo.appBinaryPath.get());
+    } else {
+      profile.AppendPrintf(pluginSandboxRules, "",
+                           aInfo.pluginInfo.pluginPath.get(),
+                           aInfo.pluginInfo.pluginBinaryPath.get(),
+                           aInfo.appPath.get(),
+                           aInfo.appBinaryPath.get());
+    }
+  }
+  else if (aInfo.type == MacSandboxType_Content) {
+    profile.AppendPrintf(contentSandboxRules);
+  }
+  else {
     aErrorMessage.AppendPrintf("Unexpected sandbox type %u", aInfo.type);
     return false;
-  }
-
-  nsAutoCString profile;
-  if (nsCocoaFeatures::OnLionOrLater()) {
-    profile.AppendPrintf(rules, ";",
-                         aInfo.pluginInfo.pluginPath.get(),
-                         aInfo.pluginInfo.pluginBinaryPath.get(),
-                         aInfo.appPath.get(),
-                         aInfo.appBinaryPath.get());
-  } else {
-    profile.AppendPrintf(rules, "",
-                         aInfo.pluginInfo.pluginPath.get(),
-                         aInfo.pluginInfo.pluginBinaryPath.get(),
-                         aInfo.appPath.get(),
-                         aInfo.appBinaryPath.get());
   }
 
   char *errorbuf = NULL;

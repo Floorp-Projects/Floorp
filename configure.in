@@ -6559,6 +6559,9 @@ case "$OS_TARGET:$NIGHTLY_BUILD" in
 WINNT:1)
     MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
     ;;
+Darwin:1)
+    MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
+    ;;
 *)
     MOZ_ARG_ENABLE_BOOL(content-sandbox,
     [  --enable-content-sandbox        Enable sandboxing support for content-processes],
