@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Non-Permitted Application for TV API</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript" src="./head.js"></script>
+<script type="application/javascript">
+
+var tests = [
+  function() {
+    SpecialPowers.pushPrefEnv({"set": [["dom.tv.enabled", true]]}, function() {
+      SpecialPowers.pushPermissions(
+        [{ "type": "browser", "allow": true, "context": document },
+         { "type": "embed-apps", "allow": true, "context": document },
+         { "type": "webapps-manage", "allow": true, "context": document }],
+        function() {
+          SpecialPowers.setAllAppsLaunchable(true);
+          SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
+          // No confirmation needed when an app is installed and uninstalled.
+          SpecialPowers.autoConfirmAppInstall(() => {
+            SpecialPowers.autoConfirmAppUninstall(runTest);
+          });
+        });
+    });
+  },
+
+  // Installing the app
+  installApp.bind(this, "file_tv_non_permitted_app.html", "file_app.template.webapp"),
+
+  // Run tests in app
+  testApp,
+
+  // Uninstall the app
+  uninstallApp
+];
+
+SimpleTest.waitForExplicitFinish();
+runTest();
+
+</script>
+</pre>
+</body>
+</html>
