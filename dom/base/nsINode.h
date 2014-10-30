@@ -382,17 +382,6 @@ protected:
    */
   virtual JSObject* WrapNode(JSContext *aCx) = 0;
 
-  // Subclasses that wish to override the parent behavior should return the
-  // result of GetParentObjectIntenral, which handles the XBL scope stuff.
-  //
-  mozilla::dom::ParentObject GetParentObjectInternal(nsINode* aNativeParent) const {
-    mozilla::dom::ParentObject p(aNativeParent);
-    // Note that mUseXBLScope is a no-op for chrome, and other places where we
-    // don't use XBL scopes.
-    p.mUseXBLScope = IsInAnonymousSubtree() && !IsAnonymousContentInSVGUseSubtree();
-    return p;
-  }
-
 public:
   mozilla::dom::ParentObject GetParentObject() const; // Implemented in nsIDocument.h
 
