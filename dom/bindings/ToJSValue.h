@@ -261,6 +261,14 @@ ToJSValue(JSContext* aCx,
           nsresult aArgument,
           JS::MutableHandle<JS::Value> aValue);
 
+// Accept ErrorResult, for use in rejections, and create an exception
+// representing the failure.  Note, the ErrorResult must indicate a failure
+// with aArgument.Failure() returning true.
+bool
+ToJSValue(JSContext* aCx,
+          ErrorResult& aArgument,
+          JS::MutableHandle<JS::Value> aValue);
+
 // Accept pointers to other things we accept
 template <typename T>
 typename EnableIf<IsPointer<T>::value, bool>::Type
