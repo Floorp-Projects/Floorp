@@ -4,22 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# SIMPLE_PROGRAMS compiles a single .cpp file into an executable
-SimplePrograms([
+# GeckoSimplePrograms compiles a single .cpp file into an executable
+# depending on Gecko with standalone linkage.
+GeckoSimplePrograms([
     'nsTestSample'
-])
-
-# Whatever code is going to be linked with the *standalone* glue must be
-# built with the XPCOM_GLUE define set.
-DEFINES['XPCOM_GLUE'] = True
-
-# USE_LIBS specifies the in-tree  libraries to link when building an executable
-# program from this directory. We link against the "standalone glue" which does
-# not require# that the application be linked against the XPCOM dynamic library
-# or the NSPR dynamic libraries.
-USE_LIBS += [
-    'xpcomglue',
-]
+], linkage='standalone')
 
 # Need to link with CoreFoundation on Mac
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

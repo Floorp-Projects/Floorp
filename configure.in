@@ -7072,28 +7072,15 @@ if test "$NS_TRACE_MALLOC"; then
     MOZ_MEMORY=
 fi
 
-if test "${OS_TARGET}" = "Android"; then
-  dnl On Android, we use WRAP_LDFLAGS to link everything to mozglue
-  :
-elif test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin"; then
-  dnl On Windows and OSX, we want to link all our binaries against mozglue
-  MOZ_GLUE_LDFLAGS='$(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib)'
-else
-  dnl On other Unix systems, we only want to link executables against mozglue
-  MOZ_GLUE_PROGRAM_LDFLAGS='$(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib)'
-  dnl On other Unix systems, where mozglue is a static library, jemalloc is
-  dnl separated for the SDK, so we need to add it here.
-  if test "$MOZ_MEMORY" = 1 -o \( "$LIBXUL_SDK" -a -f "$LIBXUL_SDK/lib/${LIB_PREFIX}memory.${LIB_SUFFIX}" \); then
-    MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS "'$(call EXPAND_LIBNAME_PATH,memory,$(LIBXUL_DIST)/lib)'
-  fi
-  if test -n "$GNU_CC"; then
-    dnl And we need mozglue symbols to be exported.
-    MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS -rdynamic"
-  fi
-  if test "$MOZ_LINKER" = 1; then
-    MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS $MOZ_ZLIB_LIBS"
-  fi
-fi
+case "${OS_TARGET}" in
+Android|WINNT|Darwin)
+  MOZ_GLUE_IN_PROGRAM=
+  ;;
+*)
+  dnl On !Android !Windows !OSX, we only want to link executables against mozglue
+  MOZ_GLUE_IN_PROGRAM=1
+  ;;
+esac
 
 dnl ========================================================
 dnl = Enable dynamic replacement of malloc implementation
@@ -7221,7 +7208,6 @@ else
     if test -n "$gonkdir"; then
       AC_DEFINE(MOZ_MEMORY_GONK)
     fi
-    MOZ_GLUE_LDFLAGS=
     ;;
   *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
@@ -7241,7 +7227,6 @@ else
     lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
     if grep -q '__imp__\{0,1\}free' crtdll.obj; then
       MOZ_CRT=1
-      MOZ_GLUE_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcprt -DEFAULTLIB:mozcrt'
     fi
     rm crtdll.obj
     ;;
@@ -7255,19 +7240,20 @@ AC_SUBST(MOZ_JEMALLOC3)
 AC_SUBST(MOZ_NATIVE_JEMALLOC)
 AC_SUBST(MOZ_CRT)
 export MOZ_CRT
-AC_SUBST(MOZ_GLUE_LDFLAGS)
-AC_SUBST(MOZ_GLUE_PROGRAM_LDFLAGS)
+AC_SUBST(MOZ_GLUE_IN_PROGRAM)
 AC_SUBST_LIST(WIN32_CRT_LIBS)
 
 dnl We need to wrap dlopen and related functions on Android because we use
 dnl our own linker.
 if test "$OS_TARGET" = Android; then
-    WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozglue"
-    WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=PR_GetEnv,--wrap=PR_SetEnv"
+    MOZ_GLUE_WRAP_LDFLAGS="${MOZ_GLUE_WRAP_LDFLAGS} -Wl,--wrap=PR_GetEnv,--wrap=PR_SetEnv"
     if test "$MOZ_WIDGET_TOOLKIT" = gonk -a -n "$MOZ_NUWA_PROCESS"; then
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=pthread_create,--wrap=epoll_wait,--wrap=poll,--wrap=pthread_cond_timedwait,--wrap=__pthread_cond_timedwait,--wrap=pthread_cond_wait,--wrap=epoll_create,--wrap=epoll_ctl,--wrap=close,--wrap=pthread_key_create,--wrap=pthread_key_delete,--wrap=socketpair,--wrap=pthread_self,--wrap=pthread_mutex_lock,--wrap=pthread_join,--wrap=pipe,--wrap=pipe2,--wrap=tgkill"
+        MOZ_GLUE_WRAP_LDFLAGS="${MOZ_GLUE_WRAP_LDFLAGS} -Wl,--wrap=pthread_create,--wrap=epoll_wait,--wrap=poll,--wrap=pthread_cond_timedwait,--wrap=__pthread_cond_timedwait,--wrap=pthread_cond_wait,--wrap=epoll_create,--wrap=epoll_ctl,--wrap=close,--wrap=pthread_key_create,--wrap=pthread_key_delete,--wrap=socketpair,--wrap=pthread_self,--wrap=pthread_mutex_lock,--wrap=pthread_join,--wrap=pipe,--wrap=pipe2,--wrap=tgkill"
     fi
 fi
+
+AC_SUBST_LIST(MOZ_GLUE_WRAP_LDFLAGS)
+export MOZ_GLUE_WRAP_LDFLAGS
 
 dnl ========================================================
 dnl = Use JS Call tracing
@@ -9297,11 +9283,8 @@ ac_configure_args="$ac_configure_args --prefix=$dist"
 if test "$MOZ_MEMORY"; then
    ac_configure_args="$ac_configure_args --enable-jemalloc"
 fi
-if test -n "$MOZ_GLUE_LDFLAGS"; then
-   export MOZ_GLUE_LDFLAGS
-fi
-if test -n "$MOZ_GLUE_PROGRAM_LDFLAGS"; then
-   export MOZ_GLUE_PROGRAM_LDFLAGS
+if test -n "$MOZ_GLUE_IN_PROGRAM"; then
+   export MOZ_GLUE_IN_PROGRAM
 fi
 if test -n "$ZLIB_IN_MOZGLUE"; then
    MOZ_ZLIB_LIBS=

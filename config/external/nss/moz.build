@@ -10,7 +10,7 @@ if CONFIG['MOZ_NATIVE_NSS']:
     Library('nss')
     OS_LIBS += CONFIG['NSS_LIBS']
 elif CONFIG['MOZ_FOLD_LIBS']:
-    SharedLibrary('nss')
+    GeckoSharedLibrary('nss', linkage=None)
     # TODO: The library name can be changed when bug 845217 is fixed.
     SHARED_LIBRARY_NAME = 'nss3'
 
@@ -36,12 +36,6 @@ elif CONFIG['MOZ_FOLD_LIBS']:
 
     if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['GCC_USE_GNU_LD']:
         LD_VERSION_SCRIPT = 'nss3.def'
-
-    # mozcrt needs at least one reference in a moz.build for the frontend
-    # not to raise an error. Here, it allows to avoid setting DLLFLAGS in
-    # configure.in.
-    if CONFIG['MOZ_CRT']:
-        USE_LIBS += ['mozcrt']
 else:
     Library('nss')
     USE_LIBS += [

@@ -10,12 +10,6 @@ CXX_WRAPPER =
 
 default::
 
-# When MOZ_CRT is set, we get mozcrt from moz.build instead of
-# MOZ_GLUE_LDFLAGS
-ifdef MOZ_CRT
-MOZ_GLUE_LDFLAGS =
-endif
-
 include $(topsrcdir)/config/makefiles/functions.mk
 
 NSS_LIBS = \
@@ -223,9 +217,17 @@ endif
 endif
 
 ifdef WRAP_LDFLAGS
+NSS_EXTRA_LDFLAGS += $(WRAP_LDFLAGS)
+endif
+
+ifdef MOZ_GLUE_WRAP_LDFLAGS
+NSS_EXTRA_LDFLAGS += $(SHARED_LIBS:$(DEPTH)%=$(MOZ_BUILD_ROOT)%) $(MOZ_GLUE_WRAP_LDFLAGS)
+endif
+
+ifneq (,$(WRAP_LDFLAGS)$(MOZ_GLUE_WRAP_LDFLAGS))
 DEFAULT_GMAKE_FLAGS += \
-	LDFLAGS='$(LDFLAGS) $(WRAP_LDFLAGS)' \
-	DSO_LDOPTS='$(DSO_LDOPTS) $(LDFLAGS) $(WRAP_LDFLAGS)' \
+	LDFLAGS='$(LDFLAGS) $(NSS_EXTRA_LDFLAGS)' \
+	DSO_LDOPTS='$(DSO_LDOPTS) $(LDFLAGS) $(NSS_EXTRA_LDFLAGS)' \
 	$(NULL)
 endif
 
