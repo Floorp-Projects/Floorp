@@ -26,10 +26,3 @@ $(LD_VERSION_SCRIPT): $(topsrcdir)/db/sqlite3/src/sqlite.def
 endif
 endif
 endif
-
-
-ifeq (Darwin,$(OS_TARGET))
-# On OSX, with jemalloc enabled, having sqlite linked against mozglue
-# causes crashes in NSS standalone tools.
-MOZ_GLUE_LDFLAGS =
-endif

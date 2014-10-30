@@ -74,12 +74,6 @@ Cu.import("resource://gre/modules/Services.jsm");
  *
  */
 
-function get_platform() {
-  var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]
-                              .getService(Components.interfaces.nsIXULRuntime);
-  return xulRuntime.OS;
-}
-
 function is_content() {
   return this._inChild = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
                             .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
@@ -290,219 +284,12 @@ function connectSock() {
   server.onclose = makeFailureCase('serverclose');
 }
 
-/**
- * Test that sending a small amount of data works, and that buffering
- * does not take place for this small amount of data.
- */
-
-function sendData() {
-  server.ondata = makeExpectData('serverdata', DATA_ARRAY);
-  if (!sock.send(DATA_ARRAY_BUFFER)) {
-    do_throw("send should not have buffered such a small amount of data");
-  }
-}
-
-/**
- * Test that sending a large amount of data works, that buffering
- * takes place (send returns true), and that ondrain is called once
- * the data has been sent.
- */
-
-function sendBig() {
-  var yays = makeJointSuccess(['serverdata', 'clientdrain']),
-      amount = 0;
-
-  server.ondata = function (data) {
-    amount += data.length;
-    if (amount === BIG_TYPED_ARRAY.length) {
-      yays.serverdata();
-    }
-  };
-  sock.ondrain = function(evt) {
-    if (sock.bufferedAmount) {
-      do_throw("sock.bufferedAmount was > 0 in ondrain");
-    }
-    yays.clientdrain(evt);
-  }
-  if (sock.send(BIG_ARRAY_BUFFER)) {
-    do_throw("expected sock.send to return false on large buffer send");
-  }
-}
-
-/**
- * Test that data sent from the server correctly fires the ondata
- * callback on the client side.
- */
-
-function receiveData() {
-  server.ondata = makeFailureCase('serverdata');
-  sock.ondata = makeExpectData('data', DATA_ARRAY, true);
-
-  server.binaryOutput.writeByteArray(DATA_ARRAY, DATA_ARRAY.length);
-}
-
-/**
- * Test that when the server closes the connection, the onclose callback
- * is fired on the client side.
- */
-
-function serverCloses() {
-  // we don't really care about the server's close event, but we do want to
-  // make sure it happened for sequencing purposes.
-  var yayFuncs = makeJointSuccess(['clientclose', 'serverclose']);
-  sock.ondata = makeFailureCase('data');
-  sock.onclose = yayFuncs.clientclose;
-  server.onclose = yayFuncs.serverclose;
-
-  server.close();
-}
-
-/**
- * Test that when the client closes the connection, the onclose callback
- * is fired on the server side.
- */
-
-function clientCloses() {
-  // we want to make sure the server heard the close and also that the client's
-  // onclose event fired for consistency.
-  var yayFuncs = makeJointSuccess(['clientclose', 'serverclose']);
-  server.onclose = yayFuncs.serverclose;
-  sock.onclose = yayFuncs.clientclose;
-
-  sock.close();
-}
-
-/**
- * Send a large amount of data and immediately call close
- */
-
-function bufferedClose() {
-  var yays = makeJointSuccess(['serverdata', 'clientclose', 'serverclose']);
-  server.ondata = makeExpectData(
-    "ondata", BIG_TYPED_ARRAY, false, yays.serverdata);
-  server.onclose = yays.serverclose;
-  sock.onclose = yays.clientclose;
-  sock.send(BIG_ARRAY_BUFFER);
-  sock.close();
-}
-
-/**
- * Connect to a port we know is not listening so an error is assured,
- * and make sure that onerror and onclose are fired on the client side.
- */
-
-function badConnect() {
-  // There's probably nothing listening on tcp port 2.
-  sock = TCPSocket.open('127.0.0.1', 2);
-
-  sock.onopen = makeFailureCase('open');
-  sock.ondata = makeFailureCase('data');
-
-  let success = makeSuccessCase('error');
-  let gotError = false;
-  sock.onerror = function(event) {
-    do_check_eq(event.data.name, 'ConnectionRefusedError');
-    gotError = true;
-  };
-  sock.onclose = function() {
-    if (!gotError)
-      do_throw('got close without error!');
-    else
-      success();
-  };
-}
-
-/**
- * Test that calling send with enough data to buffer causes ondrain to
- * be invoked once the data has been sent, and then test that calling send
- * and buffering again causes ondrain to be fired again.
- */
-
-function drainTwice() {
-  let yays = makeJointSuccess(
-    ['ondrain', 'ondrain2',
-    'ondata', 'ondata2',
-    'serverclose', 'clientclose']);
-  let ondrainCalled = false,
-      ondataCalled = false;
-
-  function maybeSendNextData() {
-    if (!ondrainCalled || !ondataCalled) {
-      // make sure server got data and client got ondrain.
-      return;
-    }
-
-    server.ondata = makeExpectData(
-      "ondata2", BIG_TYPED_ARRAY_2, false, yays.ondata2);
-
-    sock.ondrain = yays.ondrain2;
-
-    if (sock.send(BIG_ARRAY_BUFFER_2)) {
-      do_throw("sock.send(BIG_TYPED_ARRAY_2) did not return false to indicate buffering");
-    }
-
-    sock.close();
-  }
-
-  function clientOndrain() {
-    yays.ondrain();
-    ondrainCalled = true;
-    maybeSendNextData();
-  }
-
-  function serverSideCallback() {
-    yays.ondata();
-    ondataCalled = true;
-    maybeSendNextData();
-  }
-
-  server.onclose = yays.serverclose;
-  server.ondata = makeExpectData(
-    "ondata", BIG_TYPED_ARRAY, false, serverSideCallback);
-
-  sock.onclose = yays.clientclose;
-  sock.ondrain = clientOndrain;
-
-  if (sock.send(BIG_ARRAY_BUFFER)) {
-    throw new Error("sock.send(BIG_TYPED_ARRAY) did not return false to indicate buffering");
-  }
-}
-
 function cleanup() {
   do_print("Cleaning up");
   sock.close();
   if (!gInChild)
     Services.prefs.clearUserPref('dom.mozTCPSocket.enabled');
   run_next_test();
-}
-
-/**
- * Test that calling send with enough data to buffer twice in a row without
- * waiting for ondrain still results in ondrain being invoked at least once.
- */
-
-function bufferTwice() {
-  let yays = makeJointSuccess(
-    ['ondata', 'ondrain', 'serverclose', 'clientclose']);
-
-  let double_array = new Uint8Array(BIG_ARRAY.concat(BIG_ARRAY_2));
-  server.ondata = makeExpectData(
-    "ondata", double_array, false, yays.ondata);
-
-  server.onclose = yays.serverclose;
-  sock.onclose = yays.clientclose;
-
-  sock.ondrain = function () {
-    sock.close();
-    yays.ondrain();
-  }
-
-  if (sock.send(BIG_ARRAY_BUFFER)) {
-    throw new Error("sock.send(BIG_TYPED_ARRAY) did not return false to indicate buffering");
-  }
-  if (sock.send(BIG_ARRAY_BUFFER_2)) {
-    throw new Error("sock.send(BIG_TYPED_ARRAY_2) did not return false to indicate buffering on second synchronous call to send");
-  }
 }
 
 // Test child behavior when child thinks it's buffering but parent doesn't
@@ -561,47 +348,18 @@ function childnotbuffered() {
   });
 };
 
-// - connect, data and events work both ways
-add_test(connectSock);
-add_test(sendData);
-add_test(sendBig);
-add_test(receiveData);
-// - server closes on us
-add_test(serverCloses);
-
-// - connect, we close on the server
-add_test(connectSock);
-add_test(clientCloses);
-
-// - connect, buffer, close
-add_test(connectSock);
-add_test(bufferedClose);
-
-if (get_platform() !== "Darwin") {
-  // This test intermittently fails way too often on OS X, for unknown reasons.
-  // Please, diagnose and fix it if you can.
-  // - get an error on an attempt to connect to a non-listening port
-  add_test(badConnect);
-}
-
-// send a buffer, get a drain, send a buffer, get a drain
-add_test(connectSock);
-add_test(drainTwice);
-
-// send a buffer, get a drain, send a buffer, get a drain
-add_test(connectSock);
-add_test(bufferTwice);
-
 if (is_content()) {
   add_test(connectSock);
   add_test(childnotbuffered);
 
   add_test(connectSock);
   add_test(childbuffered);
-}
 
-// clean up
-add_test(cleanup);
+  // clean up
+  add_test(cleanup);
+} else {
+  do_check_true(true, 'non-content process wants to pretend to one test');
+}
 
 function run_test() {
   if (!gInChild)

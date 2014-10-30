@@ -17,7 +17,7 @@ UNIFIED_SOURCES += [
     'nsTestCrasher.cpp',
 ]
 
-SharedLibrary('testcrasher')
+GeckoSharedLibrary('testcrasher')
 
 EXTRA_JS_MODULES += [
     'CrashTestUtils.jsm',
@@ -36,10 +36,3 @@ LOCAL_INCLUDES += [
 ]
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')
-
-USE_LIBS += [
-    'mozalloc',
-    'nspr',
-    'xpcomglue_s',
-    'xul',
-]

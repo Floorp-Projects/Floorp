@@ -729,7 +729,7 @@ class EmptyBlobImpl MOZ_FINAL
   : public FileImplBase
 {
 public:
-  EmptyBlobImpl(const nsAString& aContentType)
+  explicit EmptyBlobImpl(const nsAString& aContentType)
     : FileImplBase(aContentType, 0)
   {
     mImmutable = true;
@@ -840,7 +840,7 @@ struct MOZ_STACK_CLASS CreateBlobImplMetadata MOZ_FINAL
   bool mHasRecursed;
   const bool mIsSameProcessActor;
 
-  CreateBlobImplMetadata(bool aIsSameProcessActor)
+  explicit CreateBlobImplMetadata(bool aIsSameProcessActor)
     : mLength(0)
     , mLastModifiedDate(0)
     , mHasRecursed(false)
@@ -1678,7 +1678,7 @@ class BlobChild::RemoteBlobImpl::CreateStreamHelper MOZ_FINAL
   bool mDone;
 
 public:
-  CreateStreamHelper(RemoteBlobImpl* aRemoteBlobImpl);
+  explicit CreateStreamHelper(RemoteBlobImpl* aRemoteBlobImpl);
 
   nsresult
   GetStream(nsIInputStream** aInputStream);

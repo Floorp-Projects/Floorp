@@ -237,7 +237,8 @@ class CallObject : public ScopeObject
     static CallObject *
     create(JSContext *cx, HandleScript script, HandleObject enclosing, HandleFunction callee);
 
-    inline void setAliasedLexicalsToThrowOnTouch(JSScript *script);
+    inline void initRemainingSlotsToUninitializedLexicals(uint32_t begin);
+    inline void initAliasedLexicalsToThrowOnTouch(JSScript *script);
 
   public:
     static const Class class_;
@@ -249,14 +250,14 @@ class CallObject : public ScopeObject
      * type.  The call object must be further initialized to be usable.
      */
     static CallObject *
-    create(JSContext *cx, HandleShape shape, HandleTypeObject type);
+    create(JSContext *cx, HandleShape shape, HandleTypeObject type, uint32_t lexicalBegin);
 
     /*
      * Construct a bare-bones call object given a shape and make it have
      * singleton type.  The call object must be initialized to be usable.
      */
     static CallObject *
-    createSingleton(JSContext *cx, HandleShape shape);
+    createSingleton(JSContext *cx, HandleShape shape, uint32_t lexicalBegin);
 
     static CallObject *
     createTemplateObject(JSContext *cx, HandleScript script, gc::InitialHeap heap);

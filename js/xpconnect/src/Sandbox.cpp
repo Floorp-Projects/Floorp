@@ -443,8 +443,10 @@ sandbox_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleV
     if (!JS_GetPropertyDescriptorById(cx, obj, id, &pd))
         return false;
     unsigned attrs = pd.attributes() & ~(JSPROP_GETTER | JSPROP_SETTER);
-    if (!JS_DefinePropertyById(cx, obj, id, vp, attrs,
-                               writeToProto_getProperty, writeToProto_setProperty))
+    if (!JS_DefinePropertyById(cx, obj, id, vp,
+                               attrs | JSPROP_PROPOP_ACCESSORS,
+                               JS_PROPERTYOP_GETTER(writeToProto_getProperty),
+                               JS_PROPERTYOP_SETTER(writeToProto_setProperty)))
         return false;
 
     return true;

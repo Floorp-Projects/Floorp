@@ -272,7 +272,7 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
                                                   packets.get());
 
     if (rv && rv != kNeedMoreData) {
-      LOG("Error decoding audio stream: %#x\n", rv);
+      LOG("Error decoding audio stream: %d\n", rv);
       mCallback->Error();
       break;
     }

@@ -1154,18 +1154,6 @@ INSTALL_TARGETS += %(prefix)s
         build_target = self._build_target_for_obj(obj)
         self._compile_graph[build_target]
 
-        # Until MOZ_GLUE_LDFLAGS/MOZ_GLUE_PROGRAM_LDFLAGS are properly
-        # handled in moz.build world, assume any program or shared library
-        # we build depends on it.
-        if obj.KIND == 'target' and not isinstance(obj, StaticLibrary) and \
-                build_target != 'mozglue/build/target' and \
-                not obj.config.substs.get('JS_STANDALONE') and \
-                (not isinstance(obj, SharedLibrary) or
-                 obj.basename != 'clang-plugin'):
-            self._compile_graph[build_target].add('mozglue/build/target')
-            if obj.config.substs.get('MOZ_MEMORY'):
-                self._compile_graph[build_target].add('memory/build/target')
-
         for lib in obj.linked_libraries:
             if not isinstance(lib, ExternalLibrary):
                 self._compile_graph[build_target].add(

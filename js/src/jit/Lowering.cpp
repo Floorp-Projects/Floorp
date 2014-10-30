@@ -878,6 +878,12 @@ LIRGenerator::visitTest(MTest *test)
 }
 
 bool
+LIRGenerator::visitGotoWithFake(MGotoWithFake *gotoWithFake)
+{
+    return add(new(alloc()) LGoto(gotoWithFake->target()));
+}
+
+bool
 LIRGenerator::visitFunctionDispatch(MFunctionDispatch *ins)
 {
     LFunctionDispatch *lir = new(alloc()) LFunctionDispatch(useRegister(ins->input()));
@@ -2588,16 +2594,6 @@ LIRGenerator::visitNot(MNot *ins)
       default:
         MOZ_CRASH("Unexpected MIRType.");
     }
-}
-
-bool
-LIRGenerator::visitNeuterCheck(MNeuterCheck *ins)
-{
-    LNeuterCheck *chk = new(alloc()) LNeuterCheck(useRegister(ins->object()),
-                                                  temp());
-    if (!assignSnapshot(chk, Bailout_Neutered))
-        return false;
-    return redefine(ins, ins->input()) && add(chk, ins);
 }
 
 bool

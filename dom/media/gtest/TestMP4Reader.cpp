@@ -24,7 +24,7 @@ public:
   nsRefPtr<MockMediaResource> resource;
   nsRefPtr<MP4Reader> reader;
 
-  TestBinding(const char* aFileName = "gizmo.mp4")
+  explicit TestBinding(const char* aFileName = "gizmo.mp4")
     : decoder(new MP4Decoder())
     , resource(new MockMediaResource(aFileName))
     , reader(new MP4Reader(decoder))

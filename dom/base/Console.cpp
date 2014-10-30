@@ -1195,7 +1195,7 @@ Console::ProcessCallData(ConsoleCallData* aData)
                              JS::UndefinedHandleValue,
                              JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER |
                              JSPROP_SETTER,
-                             JS_DATA_TO_FUNC_PTR(JSPropertyOp, funObj.get()),
+                             JS_DATA_TO_FUNC_PTR(JSNative, funObj.get()),
                              nullptr)) {
         return;
       }

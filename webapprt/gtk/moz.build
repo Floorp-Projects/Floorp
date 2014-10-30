@@ -4,7 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Program('webapprt-stub')
+# mozglue is statically linked into GeckoPrograms on gtk builds, so
+# we can use GeckoProgram, contrary to other platforms.
+GeckoProgram('webapprt-stub')
 
 SOURCES += [
     'webapprt.cpp',
@@ -12,17 +14,11 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-DEFINES['XPCOM_GLUE'] = True
-
 GENERATED_INCLUDES += ['/build']
 LOCAL_INCLUDES += [
     '/toolkit/xre',
     '/xpcom/base',
     '/xpcom/build',
-]
-
-USE_LIBS += [
-    'xpcomglue',
 ]
 
 DISABLE_STL_WRAPPING = True
