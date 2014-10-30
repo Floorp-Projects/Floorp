@@ -17,23 +17,22 @@ function promiseImport() {
   });
 }
 
-const kContactsCount = 7;
+const kIncomingTotalContactsCount = 8;
+const kExpectedImportCount = 7;
 
 add_task(function* test_GoogleImport() {
   let stats;
   // An error may throw and the test will fail when that happens.
   stats = yield promiseImport();
 
-  let contactsCount = mockDb.size;
-
   // Assert the world.
-  Assert.equal(stats.total, contactsCount, "Five contacts should get processed");
-  Assert.equal(stats.success, contactsCount, "Five contacts should be imported");
+  Assert.equal(stats.total, kIncomingTotalContactsCount, kIncomingTotalContactsCount + " contacts should get processed");
+  Assert.equal(stats.success, kExpectedImportCount, kExpectedImportCount + " contacts should be imported");
 
   yield promiseImport();
-  Assert.equal(Object.keys(mockDb._store).length, contactsCount, "Database should be the same size after reimport");
+  Assert.equal(mockDb.size, kExpectedImportCount, "Database should be the same size after reimport");
 
-  let currentContact = contactsCount;
+  let currentContact = kExpectedImportCount;
 
   let c = mockDb._store[mockDb._next_guid - currentContact];
   Assert.equal(c.name[0], "John Smith", "Full name should match");
@@ -96,4 +95,7 @@ add_task(function* test_GoogleImport() {
   Assert.equal(c.tel[0].pref, false, "Pref should match");
   Assert.equal(c.category[0], "google", "Category should match");
   Assert.equal(c.id, "http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/6", "UID should match and be scoped to provider");
+
+  c = yield mockDb.promise("getByServiceId", "http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/9");
+  Assert.equal(c, null, "Contacts that are not part of the default group should not be imported");
 });

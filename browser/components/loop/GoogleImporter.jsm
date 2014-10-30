@@ -48,7 +48,7 @@ const extractFieldsFromNode = function(fieldMap, node, ns = null, target = {}, w
       if (!nodeList[0].firstChild) {
         continue;
       }
-      let value = nodeList[0].firstChild.nodeValue;
+      let value = nodeList[0].textContent;
       target[field] = wrapInArray ? [value] : value;
     }
   }
@@ -168,8 +168,8 @@ this.GoogleImporter.prototype = {
     Task.spawn(function* () {
       let code = yield this._promiseAuthCode(windowRef);
       let tokenSet = yield this._promiseTokenSet(code);
-      let contactEntries = yield this._promiseContactEntries(tokenSet);
-      let {total, success, ids} = yield this._processContacts(contactEntries, db);
+      let contactEntries = yield this._getContactEntries(tokenSet);
+      let {total, success, ids} = yield this._processContacts(contactEntries, db, tokenSet);
       yield this._purgeContacts(ids, db);
 
       return {
@@ -286,22 +286,12 @@ this.GoogleImporter.prototype = {
     });
   },
 
-  /**
-   * Fetches all the contacts in a users' address book.
-   *
-   * @see https://developers.google.com/google-apps/contacts/v3/#retrieving_all_contacts
-   *
-   * @param {Object} tokenSet OAuth tokenset used to authenticate the request
-   * @returns An `Error` object upon failure or an Array of contact XML nodes.
-   */
-  _promiseContactEntries: function(tokenSet) {
-    return new Promise(function(resolve, reject) {
+  _promiseRequestXML: function(URL, tokenSet) {
+    return new Promise((resolve, reject) => {
       let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                       .createInstance(Ci.nsIXMLHttpRequest);
 
-      request.open("GET", getUrlParam("https://www.google.com/m8/feeds/contacts/default/full",
-                                      "loop.oauth.google.getContactsURL",
-                                      false) + "?max-results=" + kContactsMaxResults);
+      request.open("GET", URL);
 
       request.setRequestHeader("Content-Type", "application/xml; charset=utf-8");
       request.setRequestHeader("GData-Version", "3.0");
@@ -310,19 +300,17 @@ this.GoogleImporter.prototype = {
       request.onload = function() {
         if (request.status < 400) {
           let doc = request.responseXML;
-          // First get the profile id.
+          // First get the profile id, which is present in each XML request.
           let currNode = doc.documentElement.firstChild;
           while (currNode) {
             if (currNode.nodeType == 1 && currNode.localName == "id") {
-              gProfileId = currNode.firstChild.nodeValue;
+              gProfileId = currNode.textContent;
               break;
             }
             currNode = currNode.nextSibling;
           }
 
-          // Then kick of the importing of contact entries.
-          let entries = Array.prototype.slice.call(doc.querySelectorAll("entry"));
-          resolve(entries);
+          resolve(doc);
         } else {
           reject(new Error(request.status + " " + request.statusText));
         }
@@ -337,26 +325,73 @@ this.GoogleImporter.prototype = {
   },
 
   /**
+   * Fetches all the contacts in a users' address book.
+   *
+   * @see https://developers.google.com/google-apps/contacts/v3/#retrieving_all_contacts
+   *
+   * @param {Object} tokenSet OAuth tokenset used to authenticate the request
+   * @returns An `Error` object upon failure or an Array of contact XML nodes.
+   */
+  _getContactEntries: Task.async(function* (tokenSet) {
+    let URL = getUrlParam("https://www.google.com/m8/feeds/contacts/default/full",
+                          "loop.oauth.google.getContactsURL",
+                          false) + "?max-results=" + kContactsMaxResults;
+    let xmlDoc = yield this._promiseRequestXML(URL, tokenSet);
+    // Then kick of the importing of contact entries.
+    return Array.prototype.slice.call(xmlDoc.querySelectorAll("entry"));
+  }),
+
+  /**
+   * Fetches the default group from a users' address book, called 'Contacts'.
+   *
+   * @see https://developers.google.com/google-apps/contacts/v3/#retrieving_all_contact_groups
+   *
+   * @param {Object} tokenSet OAuth tokenset used to authenticate the request
+   * @returns An `Error` object upon failure or the String group ID.
+   */
+  _getContactsGroupId: Task.async(function* (tokenSet) {
+    let URL = getUrlParam("https://www.google.com/m8/feeds/groups/default/full",
+                          "loop.oauth.google.getGroupsURL",
+                          false) + "?max-results=" + kContactsMaxResults;
+    let xmlDoc = yield this._promiseRequestXML(URL, tokenSet);
+    let contactsEntry = xmlDoc.querySelector("systemGroup[id=\"Contacts\"]");
+    if (!contactsEntry) {
+      throw new Error("Contacts group not present");
+    }
+    // Select the actual <entry> node, which is the parent of the <systemGroup>
+    // node we just selected.
+    contactsEntry = contactsEntry.parentNode;
+    return contactsEntry.getElementsByTagName("id")[0].textContent;
+  }),
+
+  /**
    * Process the contact XML nodes that Google provides, convert them to the MozContact
    * format, check if the contact already exists in the database and when it doesn't,
    * store it permanently.
    * During this process statistics are collected about the amount of successful
    * imports. The consumer of this class may use these statistics to inform the
    * user.
+   * Note: only contacts that are part of the 'Contacts' system group will be
+   *       imported.
    *
    * @param {Array}        contactEntries List of XML DOMNodes contact entries.
    * @param {LoopContacts} db             Instance of the LoopContacts database
    *                                      object, which will store the newly found
    *                                      contacts.
+   * @param {Object}       tokenSet       OAuth tokenset used to authenticate a
+   *                                      request
    * @returns An `Error` object upon failure or an Object with statistics in the
    *          following format: `{ total: 25, success: 13, ids: {} }`.
    */
-  _processContacts: Task.async(function* (contactEntries, db) {
+  _processContacts: Task.async(function* (contactEntries, db, tokenSet) {
     let stats = {
       total: contactEntries.length,
       success: 0,
       ids: {}
     };
+
+    // Contacts that are _not_ part of the 'Contacts' group will be ignored.
+    let contactsGroupId = yield this._getContactsGroupId(tokenSet);
 
     for (let entry of contactEntries) {
       let contact = this._processContactFields(entry);
@@ -365,6 +400,12 @@ this.GoogleImporter.prototype = {
       let existing = yield db.promise("getByServiceId", contact.id);
       if (existing) {
         yield db.promise("remove", existing._guid);
+      }
+
+      // After contact removal, check if the entry is part of the correct group.
+      if (!entry.querySelector("groupMembershipInfo[deleted=\"false\"][href=\"" +
+                               contactsGroupId + "\"]")) {
+        continue;
       }
 
       // If the contact contains neither email nor phone number, then it is not
@@ -450,7 +491,7 @@ this.GoogleImporter.prototype = {
       for (let [,phoneNode] of Iterator(phoneNodes)) {
         let phoneNumber = phoneNode.hasAttribute("uri") ?
           phoneNode.getAttribute("uri").replace("tel:", "") :
-          phoneNode.firstChild.nodeValue;
+          phoneNode.textContent;
         contact.tel.push({
           pref: (phoneNode.getAttribute("primary") == "true"),
           type: [getFieldType(phoneNode)],
@@ -466,8 +507,8 @@ this.GoogleImporter.prototype = {
       for (let [,orgNode] of Iterator(orgNodes)) {
         let orgElement = orgNode.getElementsByTagNameNS(kNS_GD, "orgName")[0];
         let titleElement = orgNode.getElementsByTagNameNS(kNS_GD, "orgTitle")[0];
-        contact.org.push(orgElement ? orgElement.firstChild.nodeValue : "")
-        contact.jobTitle.push(titleElement ? titleElement.firstChild.nodeValue : "");
+        contact.org.push(orgElement ? orgElement.textContent : "")
+        contact.jobTitle.push(titleElement ? titleElement.textContent : "");
       }
     }
 

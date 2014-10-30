@@ -143,5 +143,15 @@ const methodHandlers = {
     }
 
     respondWithFile(res, "google_contacts.txt", "text/xml");
+  },
+
+  groups: function(req, res, params) {
+    try {
+      checkAuth(req);
+    } catch (ex) {
+      sendError(res, ex, ex.code);
+    }
+
+    respondWithFile(res, "google_groups.txt", "text/xml");
   }
 };

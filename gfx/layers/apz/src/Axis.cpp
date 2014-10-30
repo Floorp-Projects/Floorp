@@ -49,9 +49,16 @@ void Axis::UpdateWithTouchAtDevicePoint(ScreenCoord aPos, uint32_t aTimestampMs)
 
   float newVelocity = mAxisLocked ? 0.0f : (float)(mPos - aPos) / (float)(aTimestampMs - mPosTimeMs);
   if (gfxPrefs::APZMaxVelocity() > 0.0f) {
+    bool velocityIsNegative = (newVelocity < 0);
+    newVelocity = fabs(newVelocity);
+
     ScreenPoint maxVelocity = MakePoint(gfxPrefs::APZMaxVelocity() * APZCTreeManager::GetDPI());
     mAsyncPanZoomController->ToLocalScreenCoordinates(&maxVelocity, mAsyncPanZoomController->PanStart());
     newVelocity = std::min(newVelocity, maxVelocity.Length());
+
+    if (velocityIsNegative) {
+      newVelocity = -newVelocity;
+    }
   }
 
   mVelocity = newVelocity;

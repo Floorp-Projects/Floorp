@@ -62,9 +62,13 @@ function test4() {
       EventUtils.synthesizeKey("t", { accelKey: true, shiftKey: true }, contentWindow);
       is(gBrowser.tabs.length, 2, "There are two tabs after restoring one");
 
-      gBrowser.tabs[0].linkedBrowser.loadURI("about:blank");
-      gBrowser.selectedTab = gBrowser.tabs[0];
-      test8();
+      gBrowser.tabs[1].linkedBrowser.addEventListener("load", function listener() {
+        gBrowser.tabs[1].linkedBrowser.removeEventListener("load", listener, true);
+
+        gBrowser.tabs[0].linkedBrowser.loadURI("about:blank");
+        gBrowser.selectedTab = gBrowser.tabs[0];
+        test8();
+      }, true);
     });
   };
   gBrowser.tabContainer.addEventListener("TabClose", onTabClose, true);
