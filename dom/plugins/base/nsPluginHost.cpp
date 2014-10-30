@@ -243,6 +243,14 @@ nsPluginHost::nsPluginHost()
   // No need to initialize members to nullptr, false etc because this class
   // has a zeroing operator new.
 {
+  // Bump the pluginchanged epoch on startup. This insures content gets a
+  // good plugin list the first time it requests it. Normally we'd just
+  // init this to 1, but due to the unique nature of our ctor we need to do
+  // this manually.
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    IncrementChromeEpoch();
+  }
+
   // check to see if pref is set at startup to let plugins take over in
   // full page mode for certain image mime types that we handle internally
   mOverrideInternalTypes =
