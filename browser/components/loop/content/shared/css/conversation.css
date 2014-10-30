@@ -79,8 +79,8 @@
 
 .fx-embedded-answer-btn-text {
   vertical-align: bottom;
-  /* don't stretch the button if the localized text is too big */
-  max-width: 80%;
+  /* always leave space for the icon (width and margin) */
+  max-width: calc(100% - .8rem - .2rem);
 }
 
 .fx-embedded-btn-icon-video,
@@ -91,6 +91,7 @@
   height: .8rem;
   background-repeat: no-repeat;
   cursor: pointer;
+  -moz-margin-start: .2rem;
 }
 
 .fx-embedded-btn-icon-video,
