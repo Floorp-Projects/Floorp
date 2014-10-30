@@ -3534,6 +3534,18 @@ JS_DefineFunctionById(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid>
 extern JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JS::Handle<JSObject*> funobj, JS::Handle<JSObject*> parent);
 
+namespace JS {
+
+/*
+ * As above, but providing an explicit scope chain.  scopeChain must not include
+ * the global object on it; that's implicit.  It needs to contain the other
+ * objects that should end up on the clone's scope chain.
+ */
+extern JS_PUBLIC_API(JSObject *)
+CloneFunctionObject(JSContext *cx, HandleObject funobj, AutoObjectVector &scopeChain);
+
+} // namespace JS
+
 /*
  * Given a buffer, return false if the buffer might become a valid
  * javascript statement with the addition of more lines.  Otherwise return
