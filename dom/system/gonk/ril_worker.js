@@ -1763,20 +1763,20 @@ RilObject.prototype = {
     if (call.state === CALL_STATE_HOLDING) {
       this.sendHangUpBackgroundRequest();
     } else {
-      this.sendHangUpRequest(call.callIndex);
+      this.sendHangUpRequest(options);
     }
   },
 
-  sendHangUpRequest: function(callIndex) {
+  sendHangUpRequest: function(options) {
     this.telephonyRequestQueue.push(REQUEST_HANGUP, this.sendRilRequestHangUp,
-                                    callIndex);
+                                    options);
   },
 
-  sendRilRequestHangUp: function(callIndex) {
+  sendRilRequestHangUp: function(options) {
     let Buf = this.context.Buf;
-    Buf.newParcel(REQUEST_HANGUP);
+    Buf.newParcel(REQUEST_HANGUP, options);
     Buf.writeInt32(1);
-    Buf.writeInt32(callIndex);
+    Buf.writeInt32(options.callIndex);
     Buf.sendParcel();
   },
 
