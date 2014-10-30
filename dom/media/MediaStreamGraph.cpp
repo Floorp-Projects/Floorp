@@ -1439,6 +1439,7 @@ MediaStreamGraphImpl::OneIteration(GraphTime aFrom, GraphTime aTo,
 
     SwapMessageQueues();
   }
+  mFlushSourcesNow = false;
 
   return true;
 }
@@ -2722,6 +2723,8 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
   , mSampleRate(aSampleRate)
   , mForceShutDown(false)
   , mPostedRunInStableStateEvent(false)
+  , mFlushSourcesNow(false)
+  , mFlushSourcesOnNextIteration(false)
   , mDetectedNotRunning(false)
   , mPostedRunInStableState(false)
   , mRealtime(aRealtime)

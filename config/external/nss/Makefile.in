@@ -108,11 +108,6 @@ NSPR_LIB_DIR := $(subst -L,,$(subst -L$(DIST),-L$(ABS_DIST),$(NSPR_LIB_DIR)))
 else
 NSPR_LIB_DIR = $(ABS_DIST)/lib
 endif
-# Can't pass this in DEFAULT_GMAKE_FLAGS because that overrides
-# definitions in NSS, so just export it into the sub-make's environment.
-ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_MEMORY))
-export DLLFLAGS
-endif
 
 # To get debug symbols from NSS
 export MOZ_DEBUG_SYMBOLS
@@ -222,9 +217,17 @@ endif
 endif
 
 ifdef WRAP_LDFLAGS
+NSS_EXTRA_LDFLAGS += $(WRAP_LDFLAGS)
+endif
+
+ifdef MOZ_GLUE_WRAP_LDFLAGS
+NSS_EXTRA_LDFLAGS += $(SHARED_LIBS:$(DEPTH)%=$(MOZ_BUILD_ROOT)%) $(MOZ_GLUE_WRAP_LDFLAGS)
+endif
+
+ifneq (,$(WRAP_LDFLAGS)$(MOZ_GLUE_WRAP_LDFLAGS))
 DEFAULT_GMAKE_FLAGS += \
-	LDFLAGS='$(LDFLAGS) $(WRAP_LDFLAGS)' \
-	DSO_LDOPTS='$(DSO_LDOPTS) $(LDFLAGS) $(WRAP_LDFLAGS)' \
+	LDFLAGS='$(LDFLAGS) $(NSS_EXTRA_LDFLAGS)' \
+	DSO_LDOPTS='$(DSO_LDOPTS) $(LDFLAGS) $(NSS_EXTRA_LDFLAGS)' \
 	$(NULL)
 endif
 
@@ -356,6 +359,18 @@ endif # WINNT
 endif # MOZ_FOLD_LIBS
 
 include $(topsrcdir)/config/rules.mk
+
+# Can't pass this in DEFAULT_GMAKE_FLAGS because that overrides
+# definitions in NSS, so just export it into the sub-make's environment.
+ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_MEMORY))
+ifdef MOZ_CRT
+# OS_LIBS comes from having mozcrt as a dependency in moz.build.
+DLLFLAGS := $(OS_LIBS)
+else
+DLLFLAGS := -LIBPATH:$(ABS_DIST)/lib -DEFAULTLIB:mozglue
+endif
+export DLLFLAGS
+endif
 
 ifdef MOZ_FOLD_LIBS
 # Force the linker to include everything from the static libraries.

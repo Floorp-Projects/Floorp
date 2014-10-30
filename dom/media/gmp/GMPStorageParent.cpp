@@ -127,7 +127,7 @@ CloseFile(const nsACString& key, PRFileDesc*& entry, void* cx)
 
 class GMPDiskStorage : public GMPStorage {
 public:
-  GMPDiskStorage(const nsCString& aNodeId)
+  explicit GMPDiskStorage(const nsCString& aNodeId)
     : mNodeId(aNodeId)
   {
   }

@@ -109,6 +109,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitFilterArgumentsOrEval(MFilterArgumentsOrEval *ins);
     bool visitCallDirectEval(MCallDirectEval *ins);
     bool visitTest(MTest *test);
+    bool visitGotoWithFake(MGotoWithFake *ins);
     bool visitFunctionDispatch(MFunctionDispatch *ins);
     bool visitTypeObjectDispatch(MTypeObjectDispatch *ins);
     bool visitCompare(MCompare *comp);
@@ -186,7 +187,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitSetArrayLength(MSetArrayLength *ins);
     bool visitTypedArrayLength(MTypedArrayLength *ins);
     bool visitTypedArrayElements(MTypedArrayElements *ins);
-    bool visitNeuterCheck(MNeuterCheck *lir);
     bool visitTypedObjectElements(MTypedObjectElements *ins);
     bool visitSetTypedObjectOffset(MSetTypedObjectOffset *ins);
     bool visitTypedObjectProto(MTypedObjectProto *ins);

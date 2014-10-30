@@ -471,13 +471,11 @@ class IonBuilder
     MDefinition *loadTypedObjectType(MDefinition *value);
     void loadTypedObjectData(MDefinition *typedObj,
                              MDefinition *offset,
-                             bool canBeNeutered,
                              MDefinition **owner,
                              MDefinition **ownerOffset);
     void loadTypedObjectElements(MDefinition *typedObj,
                                  MDefinition *offset,
                                  int32_t unit,
-                                 bool canBeNeutered,
                                  MDefinition **ownerElements,
                                  MDefinition **ownerScaledOffset);
     MDefinition *typeObjectForElementFromArrayStructType(MDefinition *typedObj);
@@ -486,26 +484,22 @@ class IonBuilder
     bool storeScalarTypedObjectValue(MDefinition *typedObj,
                                      MDefinition *offset,
                                      ScalarTypeDescr::Type type,
-                                     bool canBeNeutered,
                                      bool racy,
                                      MDefinition *value);
     bool checkTypedObjectIndexInBounds(int32_t elemSize,
                                        MDefinition *obj,
                                        MDefinition *index,
                                        TypedObjectPrediction objTypeDescrs,
-                                       MDefinition **indexAsByteOffset,
-                                       bool *canBeNeutered);
+                                       MDefinition **indexAsByteOffset);
     bool pushDerivedTypedObject(bool *emitted,
                                 MDefinition *obj,
                                 MDefinition *offset,
                                 TypedObjectPrediction derivedTypeDescrs,
-                                MDefinition *derivedTypeObj,
-                                bool canBeNeutered);
+                                MDefinition *derivedTypeObj);
     bool pushScalarLoadFromTypedObject(bool *emitted,
                                        MDefinition *obj,
                                        MDefinition *offset,
-                                       ScalarTypeDescr::Type type,
-                                       bool canBeNeutered);
+                                       ScalarTypeDescr::Type type);
     MDefinition *neuterCheck(MDefinition *obj);
 
     // jsop_setelem() helpers.
@@ -768,7 +762,8 @@ class IonBuilder
     InliningStatus inlineDump(CallInfo &callInfo);
     InliningStatus inlineHasClass(CallInfo &callInfo, const Class *clasp,
                                   const Class *clasp2 = nullptr,
-                                  const Class *clasp3 = nullptr);
+                                  const Class *clasp3 = nullptr,
+                                  const Class *clasp4 = nullptr);
     InliningStatus inlineIsConstructing(CallInfo &callInfo);
 
     // Testing functions.

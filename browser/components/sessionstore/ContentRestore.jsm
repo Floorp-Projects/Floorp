@@ -159,7 +159,7 @@ ContentRestoreInternal.prototype = {
    * Start loading the current page. When the data has finished loading from the
    * network, finishCallback is called. Returns true if the load was successful.
    */
-  restoreTabContent: function (finishCallback) {
+  restoreTabContent: function (loadArguments, finishCallback) {
     let tabData = this._tabData;
     this._tabData = null;
 
@@ -188,7 +188,19 @@ ContentRestoreInternal.prototype = {
     webNavigation.setCurrentURI(Utils.makeURI("about:blank"));
 
     try {
-      if (tabData.userTypedValue && tabData.userTypedClear) {
+      if (loadArguments) {
+        // A load has been redirected to a new process so get history into the
+        // same state it was before the load started then trigger the load.
+        let activeIndex = tabData.index - 1;
+        if (activeIndex > 0) {
+          // Go to the right history entry, but don't load anything yet.
+          history.getEntryAtIndex(activeIndex, true);
+        }
+        let referrer = loadArguments.referrer ?
+                       Utils.makeURI(loadArguments.referrer) : null;
+        webNavigation.loadURI(loadArguments.uri, loadArguments.loadFlags,
+                              referrer, null, null);
+      } else if (tabData.userTypedValue && tabData.userTypedClear) {
         // If the user typed a URL into the URL bar and hit enter right before
         // we crashed, we want to start loading that page again. A non-zero
         // userTypedClear value means that the load had started.

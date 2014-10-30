@@ -6,29 +6,34 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_width="0dip"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:paddingLeft="@dimen/reading_list_row_padding_left"
+        android:paddingRight="@dimen/reading_list_row_padding_right"
+        android:orientation="vertical"
+        android:gravity="center_vertical">
 
         <TextView
             android:id="@+id/title"
-            android:layout_width="0dip"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="4dp"
             style="@style/Widget.ReadingListRow.Title" />
 
         <TextView
-            android:id="@+id/read_time"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            style="@style/Widget.ReadingListRow.ReadTime" />
+            android:id="@+id/excerpt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/Widget.ReadingListRow.Description" />
 
     </LinearLayout>
 
     <TextView
-        android:id="@+id/excerpt"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        style="@style/Widget.ReadingListRow.Description" />
+        android:id="@+id/read_time"
+        android:layout_width="64dp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        style="@style/Widget.ReadingListRow.ReadTime" />
 
 </merge>

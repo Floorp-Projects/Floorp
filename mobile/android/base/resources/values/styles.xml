@@ -137,12 +137,12 @@
 
     <style name="Widget.ReadingListRow.Description">
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemDescription</item>
-        <item name="android:maxLines">4</item>
+        <item name="android:maxLines">3</item>
         <item name="android:ellipsize">end</item>
+        <item name="android:lineSpacingMultiplier">1.3</item>
     </style>
 
     <style name="Widget.ReadingListRow.ReadTime">
-        <item name="android:textStyle">italic</item>
         <item name="android:textColor">@color/text_color_highlight</item>
     </style>
 

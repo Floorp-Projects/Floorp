@@ -158,5 +158,8 @@ endif
 ifeq ($(MOZ_REPLACE_MALLOC_LINKAGE),dummy library)
 mozglue/build/target memory/replace/logalloc/replay/target: memory/replace/dummy/target
 endif
+ifdef MOZ_CRT
+mozglue/crt/target: mozglue/build/target
+endif
 
 endif

@@ -922,7 +922,12 @@ void
 CompositorD3D11::VerifyBufferSize()
 {
   DXGI_SWAP_CHAIN_DESC swapDesc;
-  mSwapChain->GetDesc(&swapDesc);
+  HRESULT hr;
+
+  hr = mSwapChain->GetDesc(&swapDesc);
+  if (Failed(hr)) {
+    return;
+  }
 
   if ((swapDesc.BufferDesc.Width == mSize.width &&
        swapDesc.BufferDesc.Height == mSize.height) ||
@@ -933,14 +938,16 @@ CompositorD3D11::VerifyBufferSize()
   mDefaultRT = nullptr;
 
   if (IsRunningInWindowsMetro()) {
-    mSwapChain->ResizeBuffers(2, mSize.width, mSize.height,
-                              DXGI_FORMAT_B8G8R8A8_UNORM,
-                              0);
+    hr = mSwapChain->ResizeBuffers(2, mSize.width, mSize.height,
+                                   DXGI_FORMAT_B8G8R8A8_UNORM,
+                                   0);
+    HandleError(hr);
     mDisableSequenceForNextFrame = true;
   } else {
-    mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
-                              DXGI_FORMAT_B8G8R8A8_UNORM,
-                              0);
+    hr = mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
+                                   DXGI_FORMAT_B8G8R8A8_UNORM,
+                                   0);
+    HandleError(hr);
   }
 }
 
@@ -1076,8 +1083,12 @@ void
 CompositorD3D11::PaintToTarget()
 {
   nsRefPtr<ID3D11Texture2D> backBuf;
+  HRESULT hr;
 
-  mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuf.StartAssignment());
+  hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuf.StartAssignment());
+  if (Failed(hr)) {
+    return;
+  }
 
   D3D11_TEXTURE2D_DESC bbDesc;
   backBuf->GetDesc(&bbDesc);
@@ -1090,11 +1101,17 @@ CompositorD3D11::PaintToTarget()
 
   nsRefPtr<ID3D11Texture2D> readTexture;
 
-  HRESULT hr = mDevice->CreateTexture2D(&softDesc, nullptr, getter_AddRefs(readTexture));
+  hr = mDevice->CreateTexture2D(&softDesc, nullptr, getter_AddRefs(readTexture));
+  if (Failed(hr)) {
+    return;
+  }
   mContext->CopyResource(readTexture, backBuf);
 
   D3D11_MAPPED_SUBRESOURCE map;
-  mContext->Map(readTexture, 0, D3D11_MAP_READ, 0, &map);
+  hr = mContext->Map(readTexture, 0, D3D11_MAP_READ, 0, &map);
+  if (Failed(hr)) {
+    return;
+  }
   RefPtr<DataSourceSurface> sourceSurface =
     Factory::CreateWrappingDataSourceSurface((uint8_t*)map.pData,
                                              map.RowPitch,
@@ -1103,6 +1120,7 @@ CompositorD3D11::PaintToTarget()
   mTarget->CopySurface(sourceSurface,
                        IntRect(0, 0, bbDesc.Width, bbDesc.Height),
                        IntPoint(-mTargetBounds.x, -mTargetBounds.y));
+
   mTarget->Flush();
   mContext->Unmap(readTexture, 0);
 }
@@ -1110,6 +1128,9 @@ CompositorD3D11::PaintToTarget()
 void
 CompositorD3D11::HandleError(HRESULT hr, Severity aSeverity)
 {
+  if (SUCCEEDED(hr)) {
+    return;
+  }
   // XXX - It would be nice to use gfxCriticalError, but it needs to
   // be made to work off the main thread first.
   MOZ_ASSERT(aSeverity != DebugAssert);
@@ -1135,17 +1156,15 @@ CompositorD3D11::HandleError(HRESULT hr, Severity aSeverity)
 bool
 CompositorD3D11::Failed(HRESULT hr, Severity aSeverity)
 {
-  if (FAILED(hr)) {
-    HandleError(hr, aSeverity);
-    return true;
-  }
-  return false;
+  HandleError(hr, aSeverity);
+  return FAILED(hr);
 }
 
 bool
 CompositorD3D11::Succeeded(HRESULT hr, Severity aSeverity)
 {
-  return !Failed(hr, aSeverity);
+  HandleError(hr, aSeverity);
+  return SUCCEEDED(hr);
 }
 
 }

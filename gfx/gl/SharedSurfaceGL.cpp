@@ -26,12 +26,14 @@ SharedSurface_Basic::Create(GLContext* gl,
     UniquePtr<SharedSurface_Basic> ret;
     gl->MakeCurrent();
 
-    GLContext::ScopedLocalErrorCheck localError(gl);
+    GLContext::LocalErrorScope localError(*gl);
     GLuint tex = CreateTexture(gl, formats.color_texInternalFormat,
                                formats.color_texFormat,
                                formats.color_texType,
                                size);
-    GLenum err = localError.GetLocalError();
+
+    GLenum err = localError.GetError();
+    MOZ_ASSERT_IF(err != LOCAL_GL_NO_ERROR, err == LOCAL_GL_OUT_OF_MEMORY);
     if (err) {
         gl->fDeleteTextures(1, &tex);
         return Move(ret);
@@ -121,17 +123,18 @@ SharedSurface_GLTexture::Create(GLContext* prodGL,
     UniquePtr<SharedSurface_GLTexture> ret;
 
     if (!tex) {
-      GLContext::ScopedLocalErrorCheck localError(prodGL);
+        GLContext::LocalErrorScope localError(*prodGL);
 
-      tex = CreateTextureForOffscreen(prodGL, formats, size);
+        tex = CreateTextureForOffscreen(prodGL, formats, size);
 
-      GLenum err = localError.GetLocalError();
-      if (err) {
-          prodGL->fDeleteTextures(1, &tex);
-          return Move(ret);
-      }
+        GLenum err = localError.GetError();
+        MOZ_ASSERT_IF(err != LOCAL_GL_NO_ERROR, err == LOCAL_GL_OUT_OF_MEMORY);
+        if (err) {
+            prodGL->fDeleteTextures(1, &tex);
+            return Move(ret);
+        }
 
-      ownsTex = true;
+        ownsTex = true;
     }
 
     ret.reset( new SharedSurface_GLTexture(prodGL, consGL, size,

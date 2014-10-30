@@ -797,10 +797,11 @@ let UI = {
         if (this.restoredClosedTab) {
           // when the tab view UI is being displayed, update the thumb for the 
           // restored closed tab after the page load
-          tab.linkedBrowser.addEventListener("load", function onLoad(event) {
-            tab.linkedBrowser.removeEventListener("load", onLoad, true);
+          tab.linkedBrowser.messageManager.addMessageListener("Panorama:documentLoaded", function onLoad() {
+            tab.linkedBrowser.messageManager.removeMessageListener("Panorama:documentLoaded", onLoad);
             TabItems._update(tab);
-          }, true);
+          });
+          tab.linkedBrowser.messageManager.sendAsyncMessage("Panorama:waitForDocumentLoad");
         }
         this._closedLastVisibleTab = false;
         this._closedSelectedTabInTabView = false;

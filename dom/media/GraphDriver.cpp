@@ -299,6 +299,8 @@ ThreadedDriver::RunThread()
                (long)mIterationStart, (long)mIterationEnd,
                (long)mStateComputedTime, (long)mNextStateComputedTime));
 
+    mGraphImpl->mFlushSourcesNow = mGraphImpl->mFlushSourcesOnNextIteration;
+    mGraphImpl->mFlushSourcesOnNextIteration = false;
     stillProcessing = mGraphImpl->OneIteration(prevCurrentTime,
                                                nextCurrentTime,
                                                StateComputedTime(),
@@ -796,7 +798,9 @@ AudioCallbackDriver::OSXDeviceSwitchingWorkaround()
     // callback is called "some" number of times, and then stops being called,
     // and then gets called again. 10 is to be safe, it's a low-enough number
     // of milliseconds anyways (< 100ms)
+    //STREAM_LOG(PR_LOG_DEBUG, ("Callbacks during switch: %d", mCallbackReceivedWhileSwitching+1));
     if (mCallbackReceivedWhileSwitching++ >= 10) {
+      STREAM_LOG(PR_LOG_DEBUG, ("Got %d callbacks, switching back to CallbackDriver", mCallbackReceivedWhileSwitching));
       // If we have a self reference, we have fallen back temporarily on a
       // system clock driver, but we just got called back, that means the osx
       // audio backend has switched to the new device.
@@ -1032,8 +1036,10 @@ AudioCallbackDriver::DeviceChangedCallback() {
   if (mSelfReference) {
     return;
   }
+  STREAM_LOG(PR_LOG_ERROR, ("Switching to SystemClockDriver during output switch"));
   mSelfReference.Take(this);
   mCallbackReceivedWhileSwitching = 0;
+  mGraphImpl->mFlushSourcesOnNextIteration = true;
   mNextDriver = new SystemClockDriver(GraphImpl());
   mNextDriver->SetGraphTime(this, mIterationStart, mIterationEnd,
                             mStateComputedTime, mNextStateComputedTime);
