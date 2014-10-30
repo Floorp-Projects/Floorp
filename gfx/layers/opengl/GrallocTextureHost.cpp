@@ -246,6 +246,7 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
   , mDescriptorSize(aDescriptor.size())
   , mFormat(gfx::SurfaceFormat::UNKNOWN)
   , mEGLImage(EGL_NO_IMAGE)
+  , mIsOpaque(aDescriptor.isOpaque())
 {
   android::GraphicBuffer* graphicBuffer = GetGraphicBufferFromDesc(mGrallocHandle).get();
   MOZ_ASSERT(graphicBuffer);
