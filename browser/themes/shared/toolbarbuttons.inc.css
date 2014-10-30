@@ -233,3 +233,7 @@ toolbar[brighttext] #loop-call-button > .toolbarbutton-badge-container {
 #loop-call-button:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) > .toolbarbutton-badge-container {
   -moz-image-region: rect(0, 126px, 18px, 108px);
 }
+
+#webide-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 738px, 18px, 720px);
+}
