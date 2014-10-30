@@ -8,6 +8,7 @@
 #include "FFmpegRuntimeLinker.h"
 
 #include "FFmpegAudioDecoder.h"
+#include "mp4_demuxer/Adts.h"
 
 #define MAX_CHANNELS 16
 
@@ -21,6 +22,7 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
   const mp4_demuxer::AudioDecoderConfig& aConfig)
   : FFmpegDataDecoder(aTaskQueue, GetCodecId(aConfig.mime_type))
   , mCallback(aCallback)
+  , mConfig(aConfig)
 {
   MOZ_COUNT_CTOR(FFmpegAudioDecoder);
 }
@@ -83,6 +85,19 @@ CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumAFrames)
 void
 FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
 {
+  // Prepend ADTS header to AAC audio.
+  if (!strcmp(mConfig.mime_type, "audio/mp4a-latm")) {
+    bool rv = mp4_demuxer::Adts::ConvertSample(mConfig.channel_count,
+                                               mConfig.frequency_index,
+                                               mConfig.aac_profile,
+                                               aSample);
+    if (!rv) {
+      NS_ERROR("Failed to apply ADTS header");
+      mCallback->Error();
+      return;
+    }
+  }
+
   AVPacket packet;
   av_init_packet(&packet);
 
