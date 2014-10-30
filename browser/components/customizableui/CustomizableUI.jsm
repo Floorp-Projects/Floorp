@@ -38,6 +38,7 @@ const kPrefCustomizationAutoAdd      = "browser.uiCustomization.autoAdd";
 const kPrefCustomizationDebug        = "browser.uiCustomization.debug";
 const kPrefDrawInTitlebar            = "browser.tabs.drawInTitlebar";
 const kPrefDeveditionTheme           = "browser.devedition.theme.enabled";
+const kPrefWebIDEInNavbar            = "devtools.webide.widget.inNavbarByDefault";
 
 /**
  * The keys are the handlers that are fired when the event type (the value)
@@ -198,18 +199,24 @@ let CustomizableUIInternal = {
     }, true);
     PanelWideWidgetTracker.init();
 
+    let navbarPlacements = [
+      "urlbar-container",
+      "search-container",
+      "bookmarks-menu-button",
+      "downloads-button",
+      "home-button",
+      "loop-call-button",
+    ];
+
+    if (Services.prefs.getBoolPref(kPrefWebIDEInNavbar)) {
+      navbarPlacements.push("webide-button");
+    }
+
     this.registerArea(CustomizableUI.AREA_NAVBAR, {
       legacy: true,
       type: CustomizableUI.TYPE_TOOLBAR,
       overflowable: true,
-      defaultPlacements: [
-        "urlbar-container",
-        "search-container",
-        "bookmarks-menu-button",
-        "downloads-button",
-        "home-button",
-        "loop-call-button",
-      ],
+      defaultPlacements: navbarPlacements,
       defaultCollapsed: false,
     }, true);
 #ifndef XP_MACOSX

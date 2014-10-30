@@ -89,6 +89,12 @@ let UI = {
 
     this.lastConnectedRuntime = Services.prefs.getCharPref("devtools.webide.lastConnectedRuntime");
 
+    if (Services.prefs.getBoolPref("devtools.webide.widget.autoinstall") &&
+        !Services.prefs.getBoolPref("devtools.webide.widget.enabled")) {
+      Services.prefs.setBoolPref("devtools.webide.widget.enabled", true);
+      gDevToolsBrowser.moveWebIDEWidgetInNavbar();
+    }
+
     this.setupDeck();
   },
 
