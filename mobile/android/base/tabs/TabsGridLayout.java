@@ -68,11 +68,12 @@ class TabsGridLayout extends GridView
         setNumColumns(GridView.AUTO_FIT);
 
         final Resources resources = getResources();
-        final int columnWidth = resources.getDimensionPixelSize(R.dimen.new_tablet_tab_thumbnail_width);
+        final int columnWidth = resources.getDimensionPixelSize(R.dimen.new_tablet_tab_panel_column_width);
         setColumnWidth(columnWidth);
 
         final int padding = resources.getDimensionPixelSize(R.dimen.new_tablet_tab_panel_grid_padding);
-        setPadding(padding, 0, padding, 0);
+        final int paddingTop = resources.getDimensionPixelSize(R.dimen.new_tablet_tab_panel_grid_padding_top);
+        setPadding(padding, paddingTop, padding, padding);
     }
 
     private class TabsGridLayoutAdapter extends TabsLayoutAdapter {
