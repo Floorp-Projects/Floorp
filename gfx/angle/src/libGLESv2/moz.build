@@ -223,7 +223,7 @@ else:
     '\'%s/lib/%s/dxguid.lib\'' % (CONFIG['MOZ_DIRECTX_SDK_PATH'], CONFIG['MOZ_D3D_CPU_SUFFIX']),
   ]
 
-SharedLibrary('libGLESv2')
+GeckoSharedLibrary('libGLESv2', linkage=None)
 
 RCFILE = SRCDIR + '/libGLESv2.rc'
 DEFFILE = SRCDIR + '/libGLESv2.def'

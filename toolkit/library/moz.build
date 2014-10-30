@@ -11,10 +11,10 @@ def Libxul(name):
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         # This is going to be a framework named "XUL", not an ordinary library named
         # "libxul.dylib"
-        Framework(name)
+        GeckoFramework(name, linkage=None)
         SHARED_LIBRARY_NAME = 'XUL'
     else:
-        SharedLibrary(name)
+        GeckoSharedLibrary(name, linkage=None)
         SHARED_LIBRARY_NAME = 'xul'
 
     DELAYLOAD_DLLS += [

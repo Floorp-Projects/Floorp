@@ -8,8 +8,6 @@ DIST_INSTALL = 1
 # For FORCE_SHARED_LIB
 include $(topsrcdir)/config/config.mk
 
-MOZ_GLUE_LDFLAGS = # Don't link against ourselves
-
 ifeq (WINNT,$(OS_TARGET))
 mozglue.def: mozglue.def.in $(GLOBAL_DEPS)
 	$(call py_action,preprocessor,$(if $(MOZ_REPLACE_MALLOC),-DMOZ_REPLACE_MALLOC) $(ACDEFINES) $< -o $@)
@@ -30,8 +28,4 @@ ifeq (arm, $(TARGET_CPU))
 OS_LDFLAGS += -Wl,-version-script,$(srcdir)/arm-eabi-filter
 endif
 
-endif
-
-ifeq (Android, $(OS_TARGET))
-WRAP_LDFLAGS := $(filter -Wl%,$(WRAP_LDFLAGS))
 endif
