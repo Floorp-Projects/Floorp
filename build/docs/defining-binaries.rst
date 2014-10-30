@@ -119,11 +119,6 @@ With a ``Framework`` name of ``foo``, the framework file name will be ``foo``.
 This template however affects the behavior on all platforms, so it needs to
 be set only on OSX.
 
-Another special kind of library, XPCOM-specific, are XPCOM components. One can
-build such a component with the ``XPCOMBinaryComponent`` template.
-
-   XPCOMBinaryComponent('foo')
-
 
 Executables
 ===========
@@ -293,3 +288,28 @@ On e.g. Linux, the above ``myprog`` will have DT_NEEDED markers for
 ``libmylib.so`` and ``libfoo.so`` instead of ``libmylib.so`` and
 ``libotherlib.so`` if there weren't a ``SONAME``. This means the runtime
 requirement for ``myprog`` is ``libfoo.so`` instead of ``libotherlib.so``.
+
+
+Gecko-related binaries
+======================
+
+Some programs or libraries are totally independent of Gecko, and can use the
+above mentioned templates. Others are Gecko-related in some way, and may
+need XPCOM linkage, mozglue. These things are tedious. A set of additional
+templates exists to ease defining such programs and libraries. They are
+essentially the same as the above mentioned templates, prefixed with "Gecko":
+
+  - ``GeckoProgram``
+  - ``GeckoSimplePrograms``
+  - ``GeckoCppUnitTests``
+  - ``GeckoSharedLibrary``
+  - ``GeckoFramework``
+
+There is also ``XPCOMBinaryComponent`` for XPCOM components, which is a
+special kind of library.
+
+All the Gecko-prefixed templates take the same arguments as their
+non-Gecko-prefixed counterparts, and can take a few more arguments
+for non-standard cases. See the definition of ``GeckoBinary`` in
+build/gecko_templates.mozbuild for more details, but most usecases
+should not require these additional arguments.

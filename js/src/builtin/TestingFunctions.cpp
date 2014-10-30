@@ -1185,13 +1185,13 @@ ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
     createdIndex++;
 
     if (!JS_DefineProperty(cx, obj, "index", createdIndex, 0,
-                           JS_PropertyStub, JS_StrictPropertyStub))
+                           JS_STUBGETTER, JS_STUBSETTER))
     {
         return false;
     }
 
     if (!JS_DefineProperty(cx, obj, "stack", stack, 0,
-                           JS_PropertyStub, JS_StrictPropertyStub))
+                           JS_STUBGETTER, JS_STUBSETTER))
     {
         return false;
     }
@@ -1204,7 +1204,7 @@ ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
             id = INT_TO_JSID(stackIndex);
             RootedObject callee(cx, iter.callee());
             if (!JS_DefinePropertyById(cx, stack, id, callee, 0,
-                                       JS_PropertyStub, JS_StrictPropertyStub))
+                                       JS_STUBGETTER, JS_STUBSETTER))
             {
                 return false;
             }

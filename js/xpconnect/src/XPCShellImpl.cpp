@@ -109,8 +109,13 @@ static JSPrincipals *gJSPrincipals = nullptr;
 static nsAutoString *gWorkingDirectory = nullptr;
 
 static bool
-GetLocationProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
+GetLocationProperty(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.thisv().isObject()) {
+        JS_ReportError(cx, "Unexpected this value for GetLocationProperty");
+        return false;
+    }
 #if !defined(XP_WIN) && !defined(XP_UNIX)
     //XXX: your platform should really implement this
     return false;
@@ -171,13 +176,13 @@ GetLocationProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleV
             if (NS_SUCCEEDED(location->IsSymlink(&symlink)) &&
                 !symlink)
                 location->Normalize();
-            rv = xpc->WrapNative(cx, obj, location,
+            rv = xpc->WrapNative(cx, &args.thisv().toObject(), location,
                                  NS_GET_IID(nsIFile),
                                  getter_AddRefs(locationHolder));
 
             if (NS_SUCCEEDED(rv) &&
                 locationHolder->GetJSObject()) {
-                vp.set(OBJECT_TO_JSVAL(locationHolder->GetJSObject()));
+                args.rval().setObject(*locationHolder->GetJSObject());
             }
         }
     }
@@ -1497,8 +1502,10 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
             if (GetCurrentWorkingDirectory(workingDirectory))
                 gWorkingDirectory = &workingDirectory;
 
-            JS_DefineProperty(cx, glob, "__LOCATION__", JS::UndefinedHandleValue, 0,
-                              GetLocationProperty, nullptr);
+            JS_DefineProperty(cx, glob, "__LOCATION__", JS::UndefinedHandleValue,
+                              JSPROP_SHARED,
+                              GetLocationProperty,
+                              nullptr);
 
             // We are almost certainly going to run script here, so we need an
             // AutoEntryScript. This is Gecko-specific and not in any spec.

@@ -26,7 +26,7 @@ namespace mozilla {
 class MediaSourceResource MOZ_FINAL : public MediaResource
 {
 public:
-  MediaSourceResource(nsIPrincipal* aPrincipal = nullptr)
+  explicit MediaSourceResource(nsIPrincipal* aPrincipal = nullptr)
     : mPrincipal(aPrincipal) {}
 
   virtual nsresult Close() MOZ_OVERRIDE { return NS_OK; }

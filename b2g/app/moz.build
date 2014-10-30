@@ -6,9 +6,9 @@
 
 if not CONFIG['LIBXUL_SDK']:
     if CONFIG['GAIADIR']:
-        Program(CONFIG['MOZ_APP_NAME'] + "-bin")
+        GeckoProgram(CONFIG['MOZ_APP_NAME'] + "-bin")
     else:
-        Program(CONFIG['MOZ_APP_NAME'])
+        GeckoProgram(CONFIG['MOZ_APP_NAME'])
     if CONFIG['MOZ_B2G_LOADER']:
         SOURCES += [
             'B2GLoader.cpp',
@@ -25,8 +25,6 @@ if not CONFIG['LIBXUL_SDK']:
     USE_LIBS += [
         'zlib',
     ]
-
-DEFINES['XPCOM_GLUE'] = True
 
 for var in ('MOZ_APP_NAME', 'MOZ_APP_VERSION', 'MOZ_UPDATER'):
     DEFINES[var] = CONFIG[var]
@@ -69,10 +67,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'binder',
         'utils',
     ]
-
-USE_LIBS += [
-    'xpcomglue',
-]
 
 DISABLE_STL_WRAPPING = True
 

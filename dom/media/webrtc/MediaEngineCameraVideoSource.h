@@ -19,8 +19,8 @@ namespace mozilla {
 class MediaEngineCameraVideoSource : public MediaEngineVideoSource
 {
 public:
-  MediaEngineCameraVideoSource(int aIndex,
-                               const char* aMonitorName = "Camera.Monitor")
+  explicit MediaEngineCameraVideoSource(int aIndex,
+                                        const char* aMonitorName = "Camera.Monitor")
     : MediaEngineVideoSource(kReleased)
     , mMonitor(aMonitorName)
     , mWidth(0)

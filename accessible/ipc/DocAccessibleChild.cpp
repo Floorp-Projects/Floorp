@@ -18,6 +18,12 @@ SerializeTree(Accessible* aRoot, nsTArray<AccessibleData>& aTree)
   uint32_t role = aRoot->Role();
   uint32_t childCount = aRoot->ChildCount();
 
+  // OuterDocAccessibles are special because we don't want to serialize the
+  // child doc here, we'll call PDocAccessibleConstructor in
+  // NotificationController.
+  if (childCount == 1 && aRoot->GetChildAt(0)->IsDoc())
+    childCount = 0;
+
   aTree.AppendElement(AccessibleData(id, role, childCount));
   for (uint32_t i = 0; i < childCount; i++)
     SerializeTree(aRoot->GetChildAt(i), aTree);

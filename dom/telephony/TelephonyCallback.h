@@ -22,7 +22,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITELEPHONYCALLBACK
 
-  TelephonyCallback(Promise* aPromise);
+  explicit TelephonyCallback(Promise* aPromise);
 
 protected:
   virtual ~TelephonyCallback() {}

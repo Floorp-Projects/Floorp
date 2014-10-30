@@ -51,10 +51,7 @@
  * even more especially when these types come from XPCOM or other parts of the
  * Mozilla codebase.
  * It is recommended to add the following to a replace-malloc implementation's
- * Makefile.in:
- *   MOZ_GLUE_LDFLAGS = # Don't link against mozglue
- *   WRAP_LDFLAGS = # Never wrap malloc function calls with -Wl,--wrap
- * and the following to the implementation's moz.build:
+ * moz.build:
  *   DISABLE_STL_WRAPPING = True # Avoid STL wrapping
  *
  * If your replace-malloc implementation lives under memory/replace, these

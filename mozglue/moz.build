@@ -12,4 +12,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
 
 DIRS += ['build']
 
+if CONFIG['MOZ_CRT']:
+    DIRS += ['crt']
+
 TEST_DIRS += ['tests']
