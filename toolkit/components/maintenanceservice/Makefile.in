@@ -4,11 +4,6 @@
 
 DIST_PROGRAM = maintenanceservice$(BIN_SUFFIX)
 
-# Don't link the maintenanceservice against mozglue.dll. See bug 687139 and
-# bug 725876
-MOZ_GLUE_LDFLAGS =
-MOZ_GLUE_PROGRAM_LDFLAGS =
-
 ifndef MOZ_WINCONSOLE
 ifdef MOZ_DEBUG
 MOZ_WINCONSOLE = 1

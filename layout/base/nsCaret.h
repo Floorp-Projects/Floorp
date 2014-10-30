@@ -25,17 +25,21 @@ class nsIFrame;
 class nsINode;
 class nsIPresShell;
 class nsITimer;
-class nsRenderingContext;
 
 namespace mozilla {
 namespace dom {
 class Selection;
+}
+namespace gfx {
+class DrawTarget;
 }
 }
 
 //-----------------------------------------------------------------------------
 class nsCaret MOZ_FINAL : public nsISelectionListener
 {
+    typedef mozilla::gfx::DrawTarget DrawTarget;
+
   public:
     nsCaret();
 
@@ -119,7 +123,7 @@ class nsCaret MOZ_FINAL : public nsISelectionListener
      *  Actually paint the caret onto the given rendering context.
      */
     void PaintCaret(nsDisplayListBuilder *aBuilder,
-                    nsRenderingContext *aCtx,
+                    DrawTarget& aDrawTarget,
                     nsIFrame *aForFrame,
                     const nsPoint &aOffset);
 

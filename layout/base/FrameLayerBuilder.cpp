@@ -4226,22 +4226,20 @@ FrameLayerBuilder::GetPaintedLayerScaleForFrame(nsIFrame* aFrame)
 }
 
 #ifdef MOZ_DUMP_PAINTING
-static void DebugPaintItem(nsRenderingContext* aDest,
+static void DebugPaintItem(DrawTarget& aDrawTarget,
                            nsPresContext* aPresContext,
                            nsDisplayItem *aItem,
                            nsDisplayListBuilder* aBuilder)
 {
   bool snap;
-  nsRect appUnitBounds = aItem->GetBounds(aBuilder, &snap);
-  gfxRect bounds(appUnitBounds.x, appUnitBounds.y, appUnitBounds.width, appUnitBounds.height);
-  bounds.ScaleInverse(aPresContext->AppUnitsPerDevPixel());
+  Rect bounds = NSRectToRect(aItem->GetBounds(aBuilder, &snap),
+                             aPresContext->AppUnitsPerDevPixel());
 
   RefPtr<DrawTarget> tempDT =
-    gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-                                          IntSize(bounds.width, bounds.height),
-                                          SurfaceFormat::B8G8R8A8);
+    aDrawTarget.CreateSimilarDrawTarget(IntSize(bounds.width, bounds.height),
+                                        SurfaceFormat::B8G8R8A8);
   nsRefPtr<gfxContext> context = new gfxContext(tempDT);
-  context->SetMatrix(gfxMatrix::Translation(-gfxPoint(bounds.x, bounds.y)));
+  context->SetMatrix(gfxMatrix::Translation(-bounds.x, -bounds.y));
   nsRefPtr<nsRenderingContext> ctx = new nsRenderingContext();
   ctx->Init(context);
 
@@ -4249,9 +4247,7 @@ static void DebugPaintItem(nsRenderingContext* aDest,
   RefPtr<SourceSurface> surface = tempDT->Snapshot();
   DumpPaintedImage(aItem, surface);
 
-  DrawTarget* drawTarget = aDest->ThebesContext()->GetDrawTarget();
-  Rect rect = ToRect(bounds);
-  drawTarget->DrawSurface(surface, rect, Rect(Point(0,0), rect.Size()));
+  aDrawTarget.DrawSurface(surface, bounds, Rect(Point(0,0), bounds.Size()));
 
   aItem->SetPainted();
 }
@@ -4322,6 +4318,9 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
                               float aXScale, float aYScale,
                               int32_t aCommonClipCount)
 {
+#ifdef MOZ_DUMP_PAINTING
+  DrawTarget& aDrawTarget = *aRC->GetDrawTarget();
+#endif
   int32_t appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
   nsRect boundRect = aRect.ToAppUnits(appUnitsPerDevPixel);
   boundRect.MoveBy(NSIntPixelsToAppUnits(aOffset.x, appUnitsPerDevPixel),
@@ -4378,7 +4377,7 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
 #ifdef MOZ_DUMP_PAINTING
 
       if (gfxUtils::sDumpPainting) {
-        DebugPaintItem(aRC, aPresContext, cdi->mItem, aBuilder);
+        DebugPaintItem(aDrawTarget, aPresContext, cdi->mItem, aBuilder);
       } else {
 #else
       {

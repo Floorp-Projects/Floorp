@@ -132,8 +132,6 @@ static const JSPropertySpec pm_props[] = {
 
 // If this were C++ these would be "static const" members.
 
-static const uint8_t PM_CATTRS = JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_PERMANENT;
-
 #define CONSTANT(name) { #name, PerfMeasurement::name }
 
 static const struct pm_const {
@@ -233,6 +231,8 @@ namespace JS {
 JSObject*
 RegisterPerfMeasurement(JSContext *cx, HandleObject globalArg)
 {
+    static const uint8_t PM_CATTRS = JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_PERMANENT;
+
     RootedObject global(cx, globalArg);
     RootedObject prototype(cx);
     prototype = JS_InitClass(cx, global, js::NullPtr() /* parent */,
@@ -248,7 +248,7 @@ RegisterPerfMeasurement(JSContext *cx, HandleObject globalArg)
 
     for (const pm_const *c = pm_consts; c->name; c++) {
         if (!JS_DefineProperty(cx, ctor, c->name, c->value, PM_CATTRS,
-                               JS_PropertyStub, JS_StrictPropertyStub))
+                               JS_STUBGETTER, JS_STUBSETTER))
             return 0;
     }
 

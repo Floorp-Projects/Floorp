@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
-    SharedLibrary('gkmedias')
+    GeckoSharedLibrary('gkmedias', linkage=None)
     USE_LIBS += [
         'mozalloc',
         'nspr',

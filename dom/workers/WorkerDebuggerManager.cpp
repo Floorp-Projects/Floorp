@@ -49,7 +49,7 @@ class WorkerDebuggerEnumerator MOZ_FINAL : public nsISimpleEnumerator
   uint32_t mIndex;
 
 public:
-  WorkerDebuggerEnumerator(const nsTArray<WorkerDebugger*>& aDebuggers)
+  explicit WorkerDebuggerEnumerator(const nsTArray<WorkerDebugger*>& aDebuggers)
   : mIndex(0)
   {
     mDebuggers.AppendElements(aDebuggers);

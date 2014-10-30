@@ -37,7 +37,8 @@ using namespace mozilla::plugins::parent;
 class MOZ_STACK_CLASS StackIdentifier
 {
 public:
-  StackIdentifier(const PluginIdentifier& aIdentifier, bool aIntern = false);
+  explicit StackIdentifier(const PluginIdentifier& aIdentifier,
+                           bool aIntern = false);
 
   bool Failed() const { return mFailed; }
   NPIdentifier ToNPIdentifier() const { return mIdentifier; }

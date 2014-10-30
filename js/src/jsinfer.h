@@ -483,22 +483,29 @@ enum MOZ_ENUM_TYPE(uint32_t) {
     OBJECT_FLAG_RUNONCE_INVALIDATED   = 0x00200000,
 
     /*
+     * For a global object, whether any array buffers in this compartment with
+     * sized typed object views have been neutered. Sized typed objects have
+     * different neutering checks from other array buffer views.
+     */
+    OBJECT_FLAG_SIZED_OBJECT_NEUTERED = 0x00400000,
+
+    /*
      * Whether objects with this type should be allocated directly in the
      * tenured heap.
      */
-    OBJECT_FLAG_PRE_TENURE            = 0x00400000,
+    OBJECT_FLAG_PRE_TENURE            = 0x00800000,
 
     /* Whether objects with this type might have copy on write elements. */
-    OBJECT_FLAG_COPY_ON_WRITE         = 0x00800000,
+    OBJECT_FLAG_COPY_ON_WRITE         = 0x01000000,
 
     /*
      * Whether all properties of this object are considered unknown.
      * If set, all other flags in DYNAMIC_MASK will also be set.
      */
-    OBJECT_FLAG_UNKNOWN_PROPERTIES    = 0x01000000,
+    OBJECT_FLAG_UNKNOWN_PROPERTIES    = 0x02000000,
 
     /* Flags which indicate dynamic properties of represented objects. */
-    OBJECT_FLAG_DYNAMIC_MASK          = 0x01ff0000,
+    OBJECT_FLAG_DYNAMIC_MASK          = 0x03ff0000,
 
     /* Mask for objects created with unknown properties. */
     OBJECT_FLAG_UNKNOWN_MASK =
@@ -507,8 +514,8 @@ enum MOZ_ENUM_TYPE(uint32_t) {
 
     // Mask/shift for this type object's generation. If out of sync with the
     // TypeZone's generation, this TypeObject hasn't been swept yet.
-    OBJECT_FLAG_GENERATION_MASK       = 0x02000000,
-    OBJECT_FLAG_GENERATION_SHIFT      = 25,
+    OBJECT_FLAG_GENERATION_MASK       = 0x04000000,
+    OBJECT_FLAG_GENERATION_SHIFT      = 26,
 };
 typedef uint32_t TypeObjectFlags;
 

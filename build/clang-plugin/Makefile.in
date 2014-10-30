@@ -5,8 +5,6 @@
 # LLVM_CXXFLAGS comes with its own optimization flags.
 MOZ_OPTIMIZE =
 
-MOZ_GLUE_LDFLAGS =
-
 include $(topsrcdir)/config/config.mk
 
 # In the current moz.build world, we need to override essentially every

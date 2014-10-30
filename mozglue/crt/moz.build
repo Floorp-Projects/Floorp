@@ -4,3 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+Library('mozcrt')
+
+STATIC_LIBRARY_NAME = 'mozcrt_s'
+
+OS_LIBS += [
+    '-NODEFAULTLIB:msvcrt',
+    '-NODEFAULTLIB:msvcprt',
+    '-LIBPATH:%s/mozglue/crt' % TOPOBJDIR,
+    '-DEFAULTLIB:mozcrt',
+]

@@ -1,0 +1,32 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 1090183</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+
+SpecialPowers.pushPrefEnv({ set: [["dom.workers.sharedWorkers.enabled", true]] }, function() {
+  var sw = new SharedWorker('webSocket_sharedWorker.js');
+  sw.port.onmessage = function(event) {
+    if (event.data.type == 'finish') {
+      SimpleTest.finish();
+    } else if (event.data.type == 'status') {
+      ok(event.data.status, event.data.msg);
+    }
+  }
+});
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

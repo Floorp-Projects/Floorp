@@ -387,6 +387,14 @@ public:
   MOZ_CONSTEXPR TimeStamp() : mValue(0) {}
   // Default copy-constructor and assignment are OK
 
+#ifdef MOZ_WIDGET_GONK
+  TimeStamp(int64_t aAndroidTime) : mValue(aAndroidTime)
+  {
+    static_assert(sizeof(aAndroidTime) == sizeof(TimeStampValue),
+                  "Android timestamp should be same units as TimeStampValue");
+  }
+#endif
+
   /**
    * Return true if this is the "null" moment
    */

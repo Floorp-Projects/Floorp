@@ -3009,7 +3009,7 @@ JSObject::defineGeneric(ExclusiveContext *cx, HandleObject obj,
                         HandleId id, HandleValue value,
                         JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
 {
-    MOZ_ASSERT(!(attrs & JSPROP_NATIVE_ACCESSORS));
+    MOZ_ASSERT(!(attrs & JSPROP_PROPOP_ACCESSORS));
     js::DefineGenericOp op = obj->getOps()->defineGeneric;
     if (op) {
         if (!cx->shouldBeJSContext())
