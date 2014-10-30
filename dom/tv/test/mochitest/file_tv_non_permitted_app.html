@@ -6,15 +6,8 @@
 </head>
 <body>
 <div id="content"></div>
+  <script type="application/javascript" src="./test_helpers.js"></script>
   <script type="application/javascript;version=1.7">
-
-  function ok(a, msg) {
-    alert((a ? 'OK' : 'KO')+ ' ' + msg)
-  }
-
-  function finish() {
-    alert('DONE');
-  }
 
   ok(!('tv' in navigator),
      "navigator.tv should not exist for non-permitted app.");

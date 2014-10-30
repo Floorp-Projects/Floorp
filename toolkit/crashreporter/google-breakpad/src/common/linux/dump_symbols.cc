@@ -724,6 +724,8 @@ bool LoadSymbols(const string& obj_file,
                                            names_end, elf_header->e_shnum);
       if (gnu_debuglink_section) {
         if (!info->debug_dirs().empty()) {
+          found_debug_info_section = true;
+
           const char* debuglink_contents =
               GetOffset<ElfClass, char>(elf_header,
                                         gnu_debuglink_section->sh_offset);
@@ -740,55 +742,48 @@ bool LoadSymbols(const string& obj_file,
         fprintf(stderr, "%s does not contain a .gnu_debuglink section.\n",
                 obj_file.c_str());
       }
-    } else {
-      if (symbol_data != ONLY_CFI) {
-        // The caller doesn't want to consult .gnu_debuglink.
-        // See if there are export symbols available.
-        const Shdr* dynsym_section =
-          FindElfSectionByName<ElfClass>(".dynsym", SHT_DYNSYM,
-                                         sections, names, names_end,
-                                         elf_header->e_shnum);
-        const Shdr* dynstr_section =
-          FindElfSectionByName<ElfClass>(".dynstr", SHT_STRTAB,
-                                         sections, names, names_end,
-                                         elf_header->e_shnum);
-        if (dynsym_section && dynstr_section) {
-          info->LoadedSection(".dynsym");
-
-          const uint8_t* dynsyms =
-              GetOffset<ElfClass, uint8_t>(elf_header,
-                                           dynsym_section->sh_offset);
-          const uint8_t* dynstrs =
-              GetOffset<ElfClass, uint8_t>(elf_header,
-                                           dynstr_section->sh_offset);
-          bool result =
-              ELFSymbolsToModule(dynsyms,
-                                 dynsym_section->sh_size,
-                                 dynstrs,
-                                 dynstr_section->sh_size,
-                                 big_endian,
-                                 ElfClass::kAddrSize,
-                                 module);
-          found_usable_info = found_usable_info || result;
-        }
-      }
-
-      // Return true if some usable information was found, since
-      // the caller doesn't want to use .gnu_debuglink.
-      BPLOG(INFO) << "LoadSymbols: " 
-                  << (found_usable_info ? "SUCCESS " : "FAILURE ")
-                  << obj_file;
-      return found_usable_info;
     }
-
-    // No debug info was found, let the user try again with .gnu_debuglink
-    // if present.
-    BPLOG(INFO) << "LoadSymbols: FAILURE " << obj_file;
-    return false;
   }
 
-  BPLOG(INFO) << "LoadSymbols: SUCCESS " << obj_file;
-  return true;
+  if (symbol_data != ONLY_CFI) {
+    const Shdr* dynsym_section =
+      FindElfSectionByName<ElfClass>(".dynsym", SHT_DYNSYM,
+                                     sections, names, names_end,
+                                     elf_header->e_shnum);
+    const Shdr* dynstr_section =
+      FindElfSectionByName<ElfClass>(".dynstr", SHT_STRTAB,
+                                     sections, names, names_end,
+                                     elf_header->e_shnum);
+    if (dynsym_section && dynstr_section) {
+      info->LoadedSection(".dynsym");
+
+      const uint8_t* dynsyms =
+          GetOffset<ElfClass, uint8_t>(elf_header,
+                                       dynsym_section->sh_offset);
+      const uint8_t* dynstrs =
+          GetOffset<ElfClass, uint8_t>(elf_header,
+                                       dynstr_section->sh_offset);
+      bool result =
+          ELFSymbolsToModule(dynsyms,
+                             dynsym_section->sh_size,
+                             dynstrs,
+                             dynstr_section->sh_size,
+                             big_endian,
+                             ElfClass::kAddrSize,
+                             module);
+      found_usable_info = found_usable_info || result;
+    }
+  }
+
+  if (read_gnu_debug_link) {
+    return found_debug_info_section;
+  }
+
+  // Return true if some usable information was found
+  BPLOG(INFO) << "LoadSymbols: "
+              << (found_usable_info ? "SUCCESS " : "FAILURE ")
+              << obj_file;
+  return found_usable_info;
 }
 
 // Return the breakpad symbol file identifier for the architecture of
