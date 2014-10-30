@@ -7,7 +7,6 @@
 #include "media/stagefright/MediaDefs.h"
 #include "media/stagefright/MediaSource.h"
 #include "media/stagefright/MetaData.h"
-#include "mp4_demuxer/Adts.h"
 #include "mp4_demuxer/mp4_demuxer.h"
 #include "mp4_demuxer/Index.h"
 #include "MediaResource.h"
@@ -175,13 +174,6 @@ MP4Demuxer::DemuxAudioSample()
   }
 
   sample->Update();
-  if (!strcmp(mAudioConfig.mime_type, MEDIA_MIMETYPE_AUDIO_AAC)) {
-    if (!Adts::ConvertEsdsToAdts(mAudioConfig.channel_count,
-                                 mAudioConfig.frequency_index,
-                                 mAudioConfig.aac_profile, sample)) {
-      return nullptr;
-    }
-  }
 
   return sample.forget();
 }
