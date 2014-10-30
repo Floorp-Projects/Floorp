@@ -12,7 +12,7 @@ function test() {
   waitForExplicitFinish();
   var fileName;
 
-  gBrowser.loadURI("http://mochi.test:8888/browser/browser/base/content/test/general/bug564387.html");
+  gBrowser.loadURI("http://mochi.test:8888/browser/browser/base/content/test/general/web_video.html");
 
   gBrowser.addEventListener("pageshow", function pageShown(event) {
     if (event.target.location == "about:blank")
@@ -66,7 +66,7 @@ function test() {
   function onTransferComplete(downloadSuccess) {
     ok(downloadSuccess, "Video file should have been downloaded successfully");
 
-    is(fileName, "Bug564387-expectedName.ogv",
+    is(fileName, "web-video1-expectedName.ogv",
        "Video file name is correctly retrieved from Content-Disposition http header");
 
     finish();
