@@ -106,6 +106,8 @@ class LIRGeneratorMIPS : public LIRGeneratorShared
     bool visitSimdTernaryBitwise(MSimdTernaryBitwise *ins);
     bool visitSimdSplatX4(MSimdSplatX4 *ins);
     bool visitSimdValueX4(MSimdValueX4 *ins);
+    bool visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins);
+    bool visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins);
 };
 
 typedef LIRGeneratorMIPS LIRGeneratorSpecific;
