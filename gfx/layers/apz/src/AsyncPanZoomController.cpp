@@ -218,6 +218,30 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
  * these prefs. Note that "old_velocity" here is the initial velocity of the
  * previous fling _after_ acceleration was applied to it (if applicable).
  *
+ * "apz.fling_curve_function_x1"
+ * "apz.fling_curve_function_y1"
+ * "apz.fling_curve_function_x2"
+ * "apz.fling_curve_function_y2"
+ * "apz.fling_curve_threshold_inches_per_ms"
+ * These five parameters define a Bezier curve function and threshold used to
+ * increase the actual velocity relative to the user's finger velocity. When the
+ * finger velocity is below the threshold (or if the threshold is not positive),
+ * the velocity is used as-is. If the finger velocity exceeds the threshold
+ * velocity, then the function defined by the curve is applied on the part of
+ * the velocity that exceeds the threshold. Note that the upper bound of the
+ * velocity is still specified by the apz.max_velocity_inches_per_ms pref, and
+ * the function will smoothly curve the velocity from the threshold to the
+ * max. In general the function parameters chosen should define an ease-out
+ * curve in order to increase the velocity in this range, or an ease-in curve to
+ * decrease the velocity. A straight-line curve is equivalent to disabling the
+ * curve entirely by setting the threshold to -1. The max velocity pref must
+ * also be set in order for the curving to take effect, as it defines the upper
+ * bound of the velocity curve.
+ * The points (x1, y1) and (x2, y2) used as the two intermediate control points
+ * in the cubic bezier curve; the first and last points are (0,0) and (1,1).
+ * Some example values for these prefs can be found at
+ * http://mxr.mozilla.org/mozilla-central/source/layout/style/nsStyleStruct.cpp?rev=21282be9ad95#2462
+ *
  * "apz.fling_friction"
  * Amount of friction applied during flings.
  *
@@ -352,6 +376,11 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
  * Computed time function used for sampling frames of a zoom to animation.
  */
 StaticAutoPtr<ComputedTimingFunction> gZoomAnimationFunction;
+
+/**
+ * Computed time function used for curving up velocity when it gets high.
+ */
+StaticAutoPtr<ComputedTimingFunction> gVelocityCurveFunction;
 
 /**
  * Maximum zoom amount, always used, even if a page asks for higher.
@@ -863,6 +892,13 @@ AsyncPanZoomController::InitializeGlobalState()
   gZoomAnimationFunction->Init(
     nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
   ClearOnShutdown(&gZoomAnimationFunction);
+  gVelocityCurveFunction = new ComputedTimingFunction();
+  gVelocityCurveFunction->Init(
+    nsTimingFunction(gfxPrefs::APZCurveFunctionX1(),
+                     gfxPrefs::APZCurveFunctionY2(),
+                     gfxPrefs::APZCurveFunctionX2(),
+                     gfxPrefs::APZCurveFunctionY2()));
+  ClearOnShutdown(&gVelocityCurveFunction);
 }
 
 AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,

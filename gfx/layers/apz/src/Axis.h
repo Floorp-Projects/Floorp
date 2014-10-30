@@ -232,6 +232,9 @@ protected:
   // Adjust a requested overscroll amount for resistance, yielding a smaller
   // actual overscroll amount.
   ScreenCoord ApplyResistance(ScreenCoord aOverscroll) const;
+
+  // Convert a velocity from global inches/ms into local ScreenCoords per ms
+  float ToLocalVelocity(float aVelocityInchesPerMs);
 };
 
 class AxisX : public Axis {
