@@ -1247,6 +1247,8 @@ public:
 
   mozilla::dom::ParentObject GetParentObject() const;
 
+  nsINode* GetScopeChainParent() const MOZ_OVERRIDE;
+
   virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
   virtual void SaveSubtreeState() MOZ_OVERRIDE;
 

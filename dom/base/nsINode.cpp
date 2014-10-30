@@ -2752,3 +2752,8 @@ nsINode::HasBoxQuadsSupport(JSContext* aCx, JSObject* /* unused */)
          Preferences::GetBool("layout.css.getBoxQuads.enabled");
 }
 
+nsINode*
+nsINode::GetScopeChainParent() const
+{
+  return nullptr;
+}
