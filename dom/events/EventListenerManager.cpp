@@ -908,8 +908,7 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
          .setFileAndLine(url.get(), lineNo)
          .setVersion(JSVERSION_DEFAULT)
          .setElement(&v.toObject())
-         .setElementAttributeName(jsStr)
-         .setDefineOnScope(false);
+         .setElementAttributeName(jsStr);
 
   JS::Rooted<JSObject*> handler(cx);
   result = nsJSUtils::CompileFunction(jsapi, scopeChain, options,
