@@ -102,7 +102,7 @@ let gTests = [
   desc: "Check that performing a search fires a search event and records to " +
         "Firefox Health Report.",
   setup: function () { },
-  run: function () {
+  run: function* () {
     // Skip this test on Linux.
     if (navigator.platform.indexOf("Linux") == 0) {
       return Promise.resolve();
@@ -116,10 +116,19 @@ let gTests = [
       return Promise.resolve();
     }
 
+    let engine = yield promiseNewEngine("searchSuggestionEngine.xml");
+    // Make this actually work in healthreport by giving it an ID:
+    engine.wrappedJSObject._identifier = 'org.mozilla.testsearchsuggestions';
+
+    let promise = promiseBrowserAttributes(gBrowser.selectedTab);
+    Services.search.currentEngine = engine;
+    yield promise;
+
     let numSearchesBefore = 0;
     let searchEventDeferred = Promise.defer();
     let doc = gBrowser.contentDocument;
     let engineName = doc.documentElement.getAttribute("searchEngineName");
+    is(engine.name, engineName, "Engine name in DOM should match engine we just added");
     let mm = gBrowser.selectedTab.linkedBrowser.messageManager;
 
     mm.loadFrameScript(TEST_CONTENT_HELPER, false);
@@ -149,7 +158,16 @@ let gTests = [
                       uri.spec;
     let loadPromise = waitForDocLoadAndStopIt(expectedURL);
 
-    return Promise.all([searchEventDeferred.promise, loadPromise]);
+    try {
+      yield Promise.all([searchEventDeferred.promise, loadPromise]);
+    } catch (ex) {
+      Cu.reportError(ex);
+      ok(false, "An error occurred waiting for the search to be performed: " + ex);
+    } finally {
+      try {
+        Services.search.removeEngine(engine);
+      } catch (ex) {}
+    }
   }
 },
 
@@ -656,7 +674,11 @@ function promiseNewEngine(basename) {
   Services.search.addEngine(url, Ci.nsISearchEngine.TYPE_MOZSEARCH, "", false, {
     onSuccess: function (engine) {
       info("Search engine added: " + basename);
-      registerCleanupFunction(() => Services.search.removeEngine(engine));
+      registerCleanupFunction(() => {
+        try {
+          Services.search.removeEngine(engine);
+        } catch (ex) { /* Can't remove the engine more than once */ }
+      });
       addDeferred.resolve(engine);
     },
     onError: function (errCode) {
