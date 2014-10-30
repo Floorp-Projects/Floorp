@@ -18,6 +18,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "promise",
 XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
+                                  "resource:///modules/CustomizableUI.jsm");
+
 const EventEmitter = devtools.require("devtools/toolkit/event-emitter");
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
@@ -566,6 +569,13 @@ let gDevToolsBrowser = {
     let webIDEEnabled = Services.prefs.getBoolPref("devtools.webide.enabled");
     toggleCmd("Tools:WebIDE", webIDEEnabled);
 
+    let showWebIDEWidget = Services.prefs.getBoolPref("devtools.webide.widget.enabled");
+    if (webIDEEnabled && showWebIDEWidget) {
+      gDevToolsBrowser.installWebIDEWidget();
+    } else {
+      gDevToolsBrowser.uninstallWebIDEWidget();
+    }
+
     // Enable App Manager?
     let appMgrEnabled = Services.prefs.getBoolPref("devtools.appmanager.enabled");
     toggleCmd("Tools:DevAppMgr", !webIDEEnabled && appMgrEnabled);
@@ -667,9 +677,57 @@ let gDevToolsBrowser = {
     if (win) {
       win.focus();
     } else {
-      let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
-      ww.openWindow(null, "chrome://webide/content/", "webide", "chrome,centerscreen,resizable", null);
+      Services.ww.openWindow(null, "chrome://webide/content/", "webide", "chrome,centerscreen,resizable", null);
     }
+  },
+
+  /**
+   * Install WebIDE widget
+   */
+  installWebIDEWidget: function() {
+    if (this.isWebIDEWidgetInstalled()) {
+      return;
+    }
+
+    let defaultArea;
+    if (Services.prefs.getBoolPref("devtools.webide.widget.inNavbarByDefault")) {
+      defaultArea = CustomizableUI.AREA_NAVBAR;
+    } else {
+      defaultArea = CustomizableUI.AREA_PANEL;
+    }
+
+    CustomizableUI.createWidget({
+      id: "webide-button",
+      shortcutId: "key_webide",
+      label: "devtools-webide-button2.label",
+      tooltiptext: "devtools-webide-button2.tooltiptext",
+      defaultArea: defaultArea,
+      onCommand: function(aEvent) {
+        gDevToolsBrowser.openWebIDE();
+      }
+    });
+  },
+
+  isWebIDEWidgetInstalled: function() {
+    let widgetWrapper = CustomizableUI.getWidget("webide-button");
+    return !!(widgetWrapper && widgetWrapper.instances.some(i => !!i.node));
+  },
+
+  /**
+   * Uninstall WebIDE widget
+   */
+  uninstallWebIDEWidget: function() {
+    if (this.isWebIDEWidgetInstalled()) {
+      CustomizableUI.removeWidgetFromArea("webide-button");
+    }
+    CustomizableUI.destroyWidget("webide-button");
+  },
+
+  /**
+   * Move WebIDE widget to the navbar
+   */
+  moveWebIDEWidgetInNavbar: function() {
+    CustomizableUI.addWidgetToArea("webide-button", CustomizableUI.AREA_NAVBAR);
   },
 
   /**
