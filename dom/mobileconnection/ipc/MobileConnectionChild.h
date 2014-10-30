@@ -164,6 +164,9 @@ public:
   DoReply(const MobileConnectionReplySuccessClirStatus& aReply);
 
   bool
+  DoReply(const MobileConnectionReplySuccessPreferredNetworkType& aReply);
+
+  bool
   DoReply(const MobileConnectionReplyError& aReply);
 
   bool
