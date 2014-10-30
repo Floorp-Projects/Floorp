@@ -74,6 +74,10 @@ public:
         nsCString vendor;
     };
 
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+    void OnChannelConnected(int32_t aPid);
+#endif
+
     bool Init(MessageLoop* aIOLoop,
               base::ProcessHandle aParentHandle,
               IPC::Channel* aChannel);
