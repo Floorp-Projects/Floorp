@@ -515,21 +515,21 @@ ArrayBufferObject::neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer,
         return false;
 
     // When neutering buffers where we don't know all views, the new data must
-    // match the old data. All missing views are sized typed objects, which do
-    // not have a length property to mutate when neutering.
+    // match the old data. All missing views are typed objects, which do not
+    // expect their data to ever change.
     MOZ_ASSERT_IF(buffer->forInlineTypedObject(),
                   newContents.data() == buffer->dataPointer());
 
-    // When neutering a buffer with sized typed object views, any jitcode which
+    // When neutering a buffer with typed object views, any jitcode which
     // accesses such views needs to be deoptimized so that neuter checks are
     // performed. This is done by setting a compartment wide flag indicating
-    // that buffers with sized object views have been neutered.
-    if (buffer->hasSizedObjectViews()) {
+    // that buffers with typed object views have been neutered.
+    if (buffer->hasTypedObjectViews()) {
         // Make sure the global object's type has been instantiated, so the
         // flag change will be observed.
         if (!cx->global()->getType(cx))
             CrashAtUnhandlableOOM("ArrayBufferObject::neuter");
-        types::MarkTypeObjectFlags(cx, cx->global(), types::OBJECT_FLAG_SIZED_OBJECT_NEUTERED);
+        types::MarkTypeObjectFlags(cx, cx->global(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED);
     }
 
     // Neuter all views on the buffer, clear out the list of views and the
