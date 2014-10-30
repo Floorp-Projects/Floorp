@@ -350,7 +350,10 @@ NfcContentHelper.prototype = {
       case "NFC:DOMEvent":
         switch (result.event) {
           case NFC.PEER_EVENT_READY:
-            this.eventTarget.notifyPeerReady(result.sessionToken);
+            this.eventTarget.notifyPeerFound(result.sessionToken, /* isPeerReady */ true);
+            break;
+          case NFC.PEER_EVENT_FOUND:
+            this.eventTarget.notifyPeerFound(result.sessionToken);
             break;
           case NFC.PEER_EVENT_LOST:
             this.eventTarget.notifyPeerLost(result.sessionToken);

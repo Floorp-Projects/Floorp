@@ -13,7 +13,7 @@ interface nsINfcTagEvent : nsISupports
   readonly attribute nsIVariant techList;
 };
 
-[scriptable, uuid(8d77d653-f76a-4a21-ae3f-c4cc6074d8ec)]
+[scriptable, uuid(2074503e-f590-4017-a45e-85d3ca766f41)]
 interface nsINfcDOMEventTarget : nsISupports
 {
   /**
@@ -39,12 +39,13 @@ interface nsINfcDOMEventTarget : nsISupports
   void notifyTagLost(in DOMString sessionToken);
 
   /**
-   * Callback function used to notify peerready.
-   *
+   * Callback function used to notify peerfound/peerready.
    * @param sessionToken
    *        SessionToken received from parent process
+   * @param isPeerReady
+   *        Set to true to dispatch peerready instead of peerfound
    */
-  void notifyPeerReady(in DOMString sessionToken);
+  void notifyPeerFound(in DOMString sessionToken, [optional] in boolean isPeerReady);
 
   /**
    * Callback function used to notify peerlost.
