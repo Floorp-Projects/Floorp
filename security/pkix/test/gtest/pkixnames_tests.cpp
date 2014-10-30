@@ -1717,6 +1717,40 @@ GeneralSubtree(const ByteString& base)
 static const NameConstraintParams NAME_CONSTRAINT_PARAMS[] =
 {
   /////////////////////////////////////////////////////////////////////////////
+  // XXX: Malformed name constraints for supported types of names are ignored
+  // when there are no names of that type to constrain.
+  { ByteString(), NO_SAN,
+    GeneralSubtree(DNSName("!")),
+    Success, Success
+  },
+  { // DirectoryName constraints are an exception, because *every* certificate
+    // has at least one DirectoryName (tbsCertificate.subject).
+    ByteString(), NO_SAN,
+    GeneralSubtree(Name(ByteString(reinterpret_cast<const uint8_t*>("!"), 1))),
+    Result::ERROR_BAD_DER, Result::ERROR_BAD_DER
+  },
+  { ByteString(), NO_SAN,
+    GeneralSubtree(IPAddress(ipv4_constraint_truncated_bytes)),
+    Success, Success
+  },
+  { ByteString(), NO_SAN,
+    GeneralSubtree(IPAddress(ipv4_constraint_overlong_bytes)),
+    Success, Success
+  },
+  { ByteString(), NO_SAN,
+  GeneralSubtree(IPAddress(ipv6_constraint_truncated_bytes)),
+  Success, Success
+  },
+  { ByteString(), NO_SAN,
+  GeneralSubtree(IPAddress(ipv6_constraint_overlong_bytes)),
+  Success, Success
+  },
+  { ByteString(), NO_SAN,
+    GeneralSubtree(RFC822Name("!")),
+    Success, Success
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
   // Edge cases of name constraint absolute vs. relative and subdomain matching
   // that are not clearly explained in RFC 5280. (See the long comment above
   // PresentedDNSIDMatchesReferenceDNSID.)
