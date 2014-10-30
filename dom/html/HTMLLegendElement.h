@@ -54,7 +54,7 @@ public:
 
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
 
-  Element* GetFormElement() const
+  Element* GetFormElement()
   {
     nsCOMPtr<nsIFormControl> fieldsetControl = do_QueryInterface(GetFieldSet());
 
@@ -77,10 +77,10 @@ public:
     SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
   }
 
-  nsINode* GetScopeChainParent() const MOZ_OVERRIDE
-  {
+  ParentObject GetParentObject() {
     Element* form = GetFormElement();
-    return form ? form : nsGenericHTMLElement::GetScopeChainParent();
+    return form ? GetParentObjectInternal(form)
+                : nsGenericHTMLElement::GetParentObject();
   }
 
 protected:
@@ -92,7 +92,7 @@ protected:
    * Get the fieldset content element that contains this legend.
    * Returns null if there is no fieldset containing this legend.
    */
-  nsIContent* GetFieldSet() const;
+  nsIContent* GetFieldSet();
 };
 
 } // namespace dom
