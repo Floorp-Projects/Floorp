@@ -86,13 +86,17 @@ SuggestAutoComplete.prototype = {
    */
   onResultsReady: function(searchString, results, comments, formHistoryResult) {
     if (this._listener) {
+      // Create a copy of the results array to use as labels, since
+      // FormAutoCompleteResult doesn't like being passed the same array
+      // for both.
+      let labels = results.slice();
       let result = new FormAutoCompleteResult(
           searchString,
           Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
           0,
           "",
           results,
-          results,
+          labels,
           comments,
           formHistoryResult);
 
