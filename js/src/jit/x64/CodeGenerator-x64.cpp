@@ -277,7 +277,7 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 
     OutOfLineLoadTypedArrayOutOfBounds *ool = nullptr;
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
-    if (!mir->skipBoundsCheck()) {
+    if (mir->needsBoundsCheck()) {
         bool isFloat32Load = vt == Scalar::Float32;
         ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), isFloat32Load);
         if (!addOutOfLineCode(ool, ins->mir()))
@@ -325,7 +325,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
 
     Label rejoin;
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
-    if (!mir->skipBoundsCheck()) {
+    if (mir->needsBoundsCheck()) {
         CodeOffsetLabel cmp = masm.cmplWithPatch(ToRegister(ptr), Imm32(0));
         masm.j(Assembler::AboveOrEqual, &rejoin);
         maybeCmpOffset = cmp.offset();

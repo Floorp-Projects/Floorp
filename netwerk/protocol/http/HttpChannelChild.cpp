@@ -1056,7 +1056,7 @@ HttpChannelChild::ConnectParent(uint32_t id)
       static_cast<ContentChild*>(gNeckoChild->Manager()) == tabChild->Manager()) {
     browser = tabChild;
   } else {
-    browser = TabChild::GetTabChildId(tabChild);
+    browser = tabChild->GetTabId();
   }
   if (!gNeckoChild->
         SendPHttpChannelConstructor(this, browser,
@@ -1526,7 +1526,7 @@ HttpChannelChild::ContinueAsyncOpen()
       static_cast<ContentChild*>(gNeckoChild->Manager()) == tabChild->Manager()) {
     browser = tabChild;
   } else {
-    browser = TabChild::GetTabChildId(tabChild);
+    browser = tabChild->GetTabId();
   }
   gNeckoChild->SendPHttpChannelConstructor(this, browser,
                                            IPC::SerializedLoadContext(this),

@@ -1376,7 +1376,8 @@ Accessible::ARIATransformRole(role aRole)
     // mapping to menu.
     if (mParent && mParent->Role() == roles::COMBOBOX) {
       return roles::COMBOBOX_LIST;
-
+    } else {
+      // Listbox is owned by a combobox
       Relation rel = RelationByType(RelationType::NODE_CHILD_OF);
       Accessible* targetAcc = nullptr;
       while ((targetAcc = rel.Next()))
