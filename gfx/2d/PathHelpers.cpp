@@ -11,6 +11,25 @@ namespace gfx {
 UserDataKey sDisablePixelSnapping;
 
 void
+AppendRectToPath(PathBuilder* aPathBuilder,
+                 const Rect& aRect,
+                 bool aDrawClockwise)
+{
+  if (aDrawClockwise) {
+    aPathBuilder->MoveTo(aRect.TopLeft());
+    aPathBuilder->LineTo(aRect.TopRight());
+    aPathBuilder->LineTo(aRect.BottomRight());
+    aPathBuilder->LineTo(aRect.BottomLeft());
+  } else {
+    aPathBuilder->MoveTo(aRect.TopRight());
+    aPathBuilder->LineTo(aRect.TopLeft());
+    aPathBuilder->LineTo(aRect.BottomLeft());
+    aPathBuilder->LineTo(aRect.BottomRight());
+  }
+  aPathBuilder->Close();
+}
+
+void
 AppendRoundedRectToPath(PathBuilder* aPathBuilder,
                         const Rect& aRect,
                         const RectCornerRadii& aRadii,

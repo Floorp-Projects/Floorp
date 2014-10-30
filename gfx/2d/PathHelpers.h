@@ -130,6 +130,29 @@ void EllipseToBezier(T* aSink, const Point &aOrigin, const Size &aRadius)
   }
 }
 
+/**
+ * Appends a path represending a rectangle to the path being built by
+ * aPathBuilder.
+ *
+ * aRect           The rectangle to append.
+ * aDrawClockwise  If set to true, the path will start at the left of the top
+ *                 left edge and draw clockwise. If set to false the path will
+ *                 start at the right of the top left edge and draw counter-
+ *                 clockwise.
+ */
+GFX2D_API void AppendRectToPath(PathBuilder* aPathBuilder,
+                                const Rect& aRect,
+                                bool aDrawClockwise = true);
+
+inline TemporaryRef<Path> MakePathForRect(const DrawTarget& aDrawTarget,
+                                          const Rect& aRect,
+                                          bool aDrawClockwise = true)
+{
+  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
+  AppendRectToPath(builder, aRect, aDrawClockwise);
+  return builder->Finish();
+}
+
 // We can't use MOZ_BEGIN_ENUM_CLASS here because that prevents the enum
 // values from being used for indexing. Wrapping the enum in a struct does at
 // least gives us name scoping.
