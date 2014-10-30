@@ -35,25 +35,27 @@ add_task(function asyncCleanup() {
 });
 
 function waitForPageLoad(aTab) {
-  return new Promise(resolve => {
-    function onTabLoad(event) {
-      aTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
-      info("Load tab event received");
-      resolve();
-    };
+  let deferred = Promise.defer();
 
-    aTab.linkedBrowser.addEventListener("load", onTabLoad, true, true);
-  });
+  function onTabLoad(event) {
+    aTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
+    info("Load tab event received");
+    deferred.resolve();
+  }
+
+  aTab.linkedBrowser.addEventListener("load", onTabLoad, true, true);
+  return deferred.promise;
 }
 
 function waitForPanelShow(aPanel) {
-  return new Promise(resolve => {
-    function onPopupShown(event) {
-      PopupNotifications.panel.removeEventListener("popupshown", onPopupShown, true);
-      info("Popup shown event received");
-      resolve();
-    }
+  let deferred = Promise.defer();
 
-    PopupNotifications.panel.addEventListener("popupshown", onPopupShown, true, true);
-  });
+  function onPopupShown(event) {
+    PopupNotifications.panel.removeEventListener("popupshown", onPopupShown, true);
+    info("Popup shown event received");
+    deferred.resolve();
+  }
+
+  PopupNotifications.panel.addEventListener("popupshown", onPopupShown, true, true);
+  return deferred.promise;
 }
