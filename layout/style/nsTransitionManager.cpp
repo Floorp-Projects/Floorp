@@ -626,12 +626,12 @@ nsTransitionManager::GetElementTransitions(
  */
 
 void
-nsTransitionManager::WalkTransitionRule(
-  ElementDependentRuleProcessorData* aData,
-  nsCSSPseudoElements::Type aPseudoType)
+nsTransitionManager::WalkTransitionRule(dom::Element* aElement,
+                                        nsCSSPseudoElements::Type aPseudoType,
+                                        nsRuleWalker* aRuleWalker)
 {
   AnimationPlayerCollection* collection =
-    GetElementTransitions(aData->mElement, aPseudoType, false);
+    GetElementTransitions(aElement, aPseudoType, false);
   if (!collection) {
     return;
   }
@@ -641,7 +641,7 @@ nsTransitionManager::WalkTransitionRule(
     return;
   }
 
-  RestyleManager* restyleManager = aData->mPresContext->RestyleManager();
+  RestyleManager* restyleManager = mPresContext->RestyleManager();
   if (restyleManager->SkipAnimationRules()) {
     // If we're processing a normal style change rather than one from
     // animation, don't add the transition rule.  This allows us to
@@ -658,11 +658,11 @@ nsTransitionManager::WalkTransitionRule(
 
   collection->mNeedsRefreshes = true;
   collection->EnsureStyleRuleFor(
-    aData->mPresContext->RefreshDriver()->MostRecentRefresh(),
+    mPresContext->RefreshDriver()->MostRecentRefresh(),
     EnsureStyleRule_IsNotThrottled);
 
   if (collection->mStyleRule) {
-    aData->mRuleWalker->Forward(collection->mStyleRule);
+    aRuleWalker->Forward(collection->mStyleRule);
   }
 }
 
@@ -671,8 +671,9 @@ nsTransitionManager::RulesMatching(ElementRuleProcessorData* aData)
 {
   NS_ABORT_IF_FALSE(aData->mPresContext == mPresContext,
                     "pres context mismatch");
-  WalkTransitionRule(aData,
-                     nsCSSPseudoElements::ePseudo_NotPseudoElement);
+  WalkTransitionRule(aData->mElement,
+                     nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                     aData->mRuleWalker);
 }
 
 /* virtual */ void
@@ -684,7 +685,8 @@ nsTransitionManager::RulesMatching(PseudoElementRuleProcessorData* aData)
   // Note:  If we're the only thing keeping a pseudo-element frame alive
   // (per ProbePseudoStyleContext), we still want to keep it alive, so
   // this is ok.
-  WalkTransitionRule(aData, aData->mPseudoType);
+  WalkTransitionRule(aData->mElement, aData->mPseudoType,
+                     aData->mRuleWalker);
 }
 
 /* virtual */ void
