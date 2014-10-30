@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.tabs;
 
+import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -20,6 +21,7 @@ import android.graphics.Path;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Region;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -199,9 +201,23 @@ public class TabStripItemView extends ThemedLinearLayout
         }
 
         id = tab.getId();
+
+        updateTitle(tab);
         updateFavicon(tab.getFavicon());
-        titleView.setText(tab.getDisplayTitle());
         setPrivateMode(tab.isPrivate());
+    }
+
+    private void updateTitle(Tab tab) {
+        final String title;
+
+        // Avoid flickering the about:home URL on every load given how often
+        // this page is used in the UI.
+        if (AboutPages.isAboutHome(tab.getURL())) {
+            titleView.setText(R.string.home_title);
+        } else {
+            titleView.setText(tab.getDisplayTitle());
+        }
+
     }
 
     private void updateFavicon(final Bitmap favicon) {

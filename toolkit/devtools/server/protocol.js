@@ -154,12 +154,25 @@ types.addType = function(name, typeObject={}, options={}) {
 
   registeredTypes.set(name, type);
 
-  if (!options.thawed) {
-    Object.freeze(type);
-  }
-
   return type;
 };
+
+/**
+ * Remove a type previously registered with the system.
+ * Primarily useful for types registered by addons.
+ */
+types.removeType = function(name) {
+  // This type may still be referenced by other types, make sure
+  // those references don't work.
+  let type = registeredTypes.get(name);
+
+  type.name = "DEFUNCT:" + name;
+  type.category = "defunct";
+  type.primitive = false;
+  type.read = type.write = function() { throw new Error("Using defunct type: " + name); };
+
+  registeredTypes.delete(name);
+}
 
 /**
  * Add an array type to the type system.
@@ -299,10 +312,6 @@ types.addActorType = function(name) {
 
       return type.actorSpec[formAttr];
     }
-  }, {
-    // We usually freeze types, but actor types are updated when clients are
-    // created, so don't freeze yet.
-    thawed: true
   });
   return type;
 }
@@ -367,6 +376,14 @@ types.addLifetime = function(name, prop) {
     throw Error("Lifetime '" + name + "' already registered.");
   }
   registeredLifetimes.set(name, prop);
+}
+
+/**
+ * Remove a previously-registered lifetime.  Useful for lifetimes registered
+ * in addons.
+ */
+types.removeLifetime = function(name) {
+  registeredLifetimes.delete(name);
 }
 
 /**

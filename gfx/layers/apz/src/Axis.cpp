@@ -8,6 +8,7 @@
 #include <math.h>                       // for fabsf, pow, powf
 #include <algorithm>                    // for max
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController
+#include "mozilla/dom/AnimationPlayer.h" // for ComputedTimingFunction
 #include "mozilla/layers/APZCTreeManager.h" // for APZCTreeManager
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "mozilla/Attributes.h"         // for MOZ_FINAL
@@ -15,14 +16,20 @@
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
 #include "mozilla/mozalloc.h"           // for operator new
 #include "mozilla/FloatingPoint.h"      // for FuzzyEqualsAdditive
+#include "mozilla/StaticPtr.h"          // for StaticAutoPtr
 #include "nsMathUtils.h"                // for NS_lround
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsThreadUtils.h"              // for NS_DispatchToMainThread, etc
 #include "nscore.h"                     // for NS_IMETHOD
 #include "gfxPrefs.h"                   // for the preferences
 
+#define AXIS_LOG(...)
+// #define AXIS_LOG(...) printf_stderr("AXIS: " __VA_ARGS__)
+
 namespace mozilla {
 namespace layers {
+
+extern StaticAutoPtr<ComputedTimingFunction> gVelocityCurveFunction;
 
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
   : mPos(0),
@@ -32,6 +39,12 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
     mAsyncPanZoomController(aAsyncPanZoomController),
     mOverscroll(0)
 {
+}
+
+float Axis::ToLocalVelocity(float aVelocityInchesPerMs) {
+  ScreenPoint aVelocityPoint = MakePoint(aVelocityInchesPerMs * APZCTreeManager::GetDPI());
+  mAsyncPanZoomController->ToLocalScreenCoordinates(&aVelocityPoint, mAsyncPanZoomController->PanStart());
+  return aVelocityPoint.Length();
 }
 
 void Axis::UpdateWithTouchAtDevicePoint(ScreenCoord aPos, uint32_t aTimestampMs) {
@@ -52,9 +65,21 @@ void Axis::UpdateWithTouchAtDevicePoint(ScreenCoord aPos, uint32_t aTimestampMs)
     bool velocityIsNegative = (newVelocity < 0);
     newVelocity = fabs(newVelocity);
 
-    ScreenPoint maxVelocity = MakePoint(gfxPrefs::APZMaxVelocity() * APZCTreeManager::GetDPI());
-    mAsyncPanZoomController->ToLocalScreenCoordinates(&maxVelocity, mAsyncPanZoomController->PanStart());
-    newVelocity = std::min(newVelocity, maxVelocity.Length());
+    float maxVelocity = ToLocalVelocity(gfxPrefs::APZMaxVelocity());
+    newVelocity = std::min(newVelocity, maxVelocity);
+
+    if (gfxPrefs::APZCurveThreshold() > 0.0f && gfxPrefs::APZCurveThreshold() < gfxPrefs::APZMaxVelocity()) {
+      float curveThreshold = ToLocalVelocity(gfxPrefs::APZCurveThreshold());
+      if (newVelocity > curveThreshold) {
+        // here, 0 < curveThreshold < newVelocity <= maxVelocity, so we apply the curve
+        float scale = maxVelocity - curveThreshold;
+        float funcInput = (newVelocity - curveThreshold) / scale;
+        float funcOutput = gVelocityCurveFunction->GetValue(funcInput);
+        float curvedVelocity = (funcOutput * scale) + curveThreshold;
+        AXIS_LOG("Curving up velocity from %f to %f\n", newVelocity, curvedVelocity);
+        newVelocity = curvedVelocity;
+      }
+    }
 
     if (velocityIsNegative) {
       newVelocity = -newVelocity;

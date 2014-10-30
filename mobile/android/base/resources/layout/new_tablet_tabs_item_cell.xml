@@ -9,26 +9,25 @@
                                            android:id="@+id/info"
                                            android:layout_width="wrap_content"
                                            android:layout_height="wrap_content"
-                                           android:paddingTop="6dip"
-                                           android:paddingBottom="6dip"
-                                           android:paddingLeft="1dip"
-                                           android:paddingRight="1dip"
                                            android:gravity="center"
-                                           android:orientation="vertical">
+                                           android:orientation="vertical"
+                                           android:paddingBottom="@dimen/new_tablet_tab_panel_grid_padding">
 
-    <LinearLayout android:layout_width="@dimen/new_tablet_tab_thumbnail_width"
+    <LinearLayout android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
                   android:orientation="horizontal"
-                  android:padding="3dip">
+                  android:duplicateParentState="true"
+                  android:paddingLeft="@dimen/new_tablet_tab_highlight_stroke_width"
+                  android:paddingRight="@dimen/new_tablet_tab_highlight_stroke_width"
+                  android:paddingBottom="@dimen/new_tablet_tab_highlight_stroke_width">
 
         <TextView android:id="@+id/title"
                   android:layout_width="0dip"
                   android:layout_height="wrap_content"
                   android:layout_weight="1.0"
-                  android:paddingTop="4dip"
                   style="@style/TabLayoutItemTextAppearance"
-                  android:textSize="12sp"
-                  android:textColor="#FFFFFFFF"
+                  android:textSize="14sp"
+                  android:textColor="@color/new_tablet_tab_item_title"
                   android:singleLine="true"
                   android:duplicateParentState="true"/>
 
@@ -36,16 +35,17 @@
                      style="@style/TabsItemClose"
                      android:layout_width="wrap_content"
                      android:layout_height="match_parent"
-                     android:background="@drawable/action_bar_button_inverse"
                      android:scaleType="center"
+                     android:background="@android:color/transparent"
                      android:contentDescription="@string/close_tab"
-                     android:src="@drawable/new_tablet_tab_close"/>
+                     android:src="@drawable/new_tablet_tab_item_close_button"
+                     android:duplicateParentState="true"/>
 
     </LinearLayout>
 
     <RelativeLayout android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:padding="3dp"
+                    android:padding="@dimen/new_tablet_tab_highlight_stroke_width"
                     android:background="@drawable/tab_thumbnail"
                     android:duplicateParentState="true">
 
