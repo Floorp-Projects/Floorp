@@ -4,18 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-CppUnitTests([
+GeckoCppUnitTests([
     'test_IHistory',
 ])
 
 FAIL_ON_WARNINGS = True
-
-USE_LIBS += [
-    'mozalloc',
-    'nspr',
-    'xpcomglue_s',
-    'xul',
-]
 
 if CONFIG['JS_SHARED_LIBRARY']:
     USE_LIBS += [

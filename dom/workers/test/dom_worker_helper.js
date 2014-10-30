@@ -84,6 +84,20 @@ function waitForUnregister(predicate = () => true) {
   });
 }
 
+function waitForDebuggerClose(dbg, predicate = () => true) {
+  return new Promise(function (resolve) {
+    dbg.addListener({
+      onClose: function () {
+        if (!predicate()) {
+          return;
+        }
+        dbg.removeListener(this);
+        resolve();
+      }
+    });
+  });
+}
+
 function waitForMultiple(promises) {
   return new Promise(function (resolve) {
     let results = [];

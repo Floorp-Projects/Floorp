@@ -49,24 +49,14 @@ WebGLVertexArray::Delete()
     mAttribs.Clear();
 }
 
-bool
-WebGLVertexArray::EnsureAttrib(GLuint index, const char *info)
+void
+WebGLVertexArray::EnsureAttrib(GLuint index)
 {
-    if (index >= GLuint(mContext->mGLMaxVertexAttribs)) {
-        if (index == GLuint(-1)) {
-            mContext->ErrorInvalidValue("%s: index -1 is invalid. That probably comes from a getAttribLocation() call, "
-                                        "where this return value -1 means that the passed name didn't correspond to an active attribute in "
-                                        "the specified program.", info);
-        } else {
-            mContext->ErrorInvalidValue("%s: index %d is out of range", info, index);
-        }
-        return false;
-    }
-    else if (index >= mAttribs.Length()) {
+    MOZ_ASSERT(index < GLuint(mContext->mGLMaxVertexAttribs));
+
+    if (index >= mAttribs.Length()) {
         mAttribs.SetLength(index + 1);
     }
-
-    return true;
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLVertexArray,

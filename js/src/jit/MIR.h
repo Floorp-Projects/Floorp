@@ -2414,6 +2414,33 @@ class MTest
 #endif
 };
 
+// Equivalent to MTest(true, successor, fake), except without the foldsTo
+// method. This allows IonBuilder to insert fake CFG edges to magically protect
+// control flow for try-catch blocks.
+class MGotoWithFake
+  : public MAryControlInstruction<0, 2>
+{
+    MGotoWithFake(MBasicBlock *successor, MBasicBlock *fake)
+    {
+        setSuccessor(0, successor);
+        setSuccessor(1, fake);
+    }
+
+  public:
+    INSTRUCTION_HEADER(GotoWithFake)
+    static MGotoWithFake *New(TempAllocator &alloc, MBasicBlock *successor, MBasicBlock *fake) {
+        return new(alloc) MGotoWithFake(successor, fake);
+    }
+
+    MBasicBlock *target() const {
+        return getSuccessor(0);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 // Returns from this function to the previous caller.
 class MReturn
   : public MAryControlInstruction<1, 0>,
@@ -7349,42 +7376,6 @@ class MTypedArrayElements
     }
 
     ALLOW_CLONE(MTypedArrayElements)
-};
-
-// Checks whether a typed object is neutered.
-class MNeuterCheck
-  : public MUnaryInstruction,
-    public SingleObjectPolicy::Data
-{
-  private:
-    explicit MNeuterCheck(MDefinition *object)
-      : MUnaryInstruction(object)
-    {
-        MOZ_ASSERT(object->type() == MIRType_Object);
-        setResultType(MIRType_Object);
-        setResultTypeSet(object->resultTypeSet());
-        setGuard();
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(NeuterCheck)
-
-    static MNeuterCheck *New(TempAllocator &alloc, MDefinition *object) {
-        return new(alloc) MNeuterCheck(object);
-    }
-
-    MDefinition *object() const {
-        return getOperand(0);
-    }
-
-    bool congruentTo(const MDefinition *ins) const {
-        return congruentIfOperandsEqual(ins);
-    }
-
-    AliasSet getAliasSet() const {
-        return AliasSet::Load(AliasSet::ObjectFields);
-    }
 };
 
 // Load a binary data object's "elements", which is just its opaque

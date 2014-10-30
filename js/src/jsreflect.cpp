@@ -3542,7 +3542,7 @@ JS_InitReflect(JSContext *cx, HandleObject obj)
         return nullptr;
 
     if (!JS_DefineProperty(cx, obj, "Reflect", Reflect, 0,
-                           JS_PropertyStub, JS_StrictPropertyStub)) {
+                           JS_STUBGETTER, JS_STUBSETTER)) {
         return nullptr;
     }
 

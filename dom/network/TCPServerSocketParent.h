@@ -31,6 +31,8 @@ public:
   virtual bool RecvClose() MOZ_OVERRIDE;
   virtual bool RecvRequestDelete() MOZ_OVERRIDE;
 
+  uint32_t GetAppId();
+
   void AddIPDLReference();
   void ReleaseIPDLReference();
 

@@ -60,7 +60,7 @@ else:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     Library('mozalloc')
 else:
-    SharedLibrary('mozalloc')
+    GeckoSharedLibrary('mozalloc', linkage=None)
     SDK_LIBRARY = True
 
 # The strndup declaration in string.h is in an ifdef __USE_GNU section

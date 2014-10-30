@@ -115,28 +115,4 @@ def HostLibrary(name):
     HOST_LIBRARY_NAME = name
 
 
-@template
-def GeckoBinary():
-    '''Template for binaries using Gecko.
-
-    This template is meant to be used in other templates.
-    '''
-    USE_LIBS += [
-        'mozalloc',
-        'nspr',
-        'xpcomglue_s',
-        'xul',
-    ]
-
-
-@template
-def XPCOMBinaryComponent(name):
-    '''Template defining an XPCOM binary component for Gecko.
-
-    name is the name of the component.
-    '''
-    SharedLibrary(name)
-
-    GeckoBinary()
-
-    IS_COMPONENT = True
+include('gecko_templates.mozbuild')

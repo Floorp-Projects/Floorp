@@ -24,18 +24,11 @@ SimplePrograms([
     'tmstats',
 ], ext='.c')
 
-SimplePrograms([
+GeckoSimplePrograms([
     'bloatblame',
     'leaksoup',
 ])
 
 RESOURCE_FILES += [
     'spacetrace.css'
-]
-
-USE_LIBS += [
-    'mozalloc',
-    'nspr',
-    'xpcomglue_s',
-    'xul',
 ]

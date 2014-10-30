@@ -114,29 +114,33 @@ bool
 SVGRectElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
                                   const Matrix& aTransform)
 {
-  Rect r;
+  Rect rect;
   Float rx, ry;
-  GetAnimatedLengthValues(&r.x, &r.y, &r.width, &r.height, &rx, &ry, nullptr);
+  GetAnimatedLengthValues(&rect.x, &rect.y, &rect.width,
+                          &rect.height, &rx, &ry, nullptr);
 
-  if (r.IsEmpty()) {
+  if (rect.IsEmpty()) {
     // Rendering of the element disabled
-    r.SetEmpty(); // make sure width/height are actually zero
-    *aBounds = r;
+    rect.SetEmpty(); // Make sure width/height are zero and not negative
+    *aBounds = rect; // We still want the x/y position from 'rect'
     return true;
   }
 
-  rx = std::max(rx, 0.0f);
-  ry = std::max(ry, 0.0f);
+  if (!aTransform.IsRectilinear()) {
+    // We can't ignore the radii in this case if we want tight bounds
+    rx = std::max(rx, 0.0f);
+    ry = std::max(ry, 0.0f);
 
-  if (rx != 0 || ry != 0) {
-    return false;
+    if (rx != 0 || ry != 0) {
+      return false;
+    }
   }
 
   if (aStrokeWidth > 0.f) {
-    r.Inflate(aStrokeWidth / 2.f);
+    rect.Inflate(aStrokeWidth / 2.f);
   }
 
-  *aBounds = aTransform.TransformBounds(r);
+  *aBounds = aTransform.TransformBounds(rect);
   return true;
 }
 
@@ -200,8 +204,7 @@ SVGRectElement::BuildPath(PathBuilder* aBuilder)
     rx = std::min(rx, width / 2);
     ry = std::min(ry, height / 2);
 
-    Size cornerRadii(rx, ry);
-    Size radii[] = { cornerRadii, cornerRadii, cornerRadii, cornerRadii };
+    RectCornerRadii radii(rx, ry);
     AppendRoundedRectToPath(aBuilder, Rect(x, y, width, height), radii);
   }
 

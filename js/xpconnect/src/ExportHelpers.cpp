@@ -424,8 +424,9 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
         // defineAs was set, we also need to define it as a property on
         // the target.
         if (!JSID_IS_VOID(options.defineAs)) {
-            if (!JS_DefinePropertyById(cx, targetScope, id, rval, JSPROP_ENUMERATE,
-                                       JS_PropertyStub, JS_StrictPropertyStub)) {
+            if (!JS_DefinePropertyById(cx, targetScope, id, rval,
+                                       JSPROP_ENUMERATE,
+                                       JS_STUBGETTER, JS_STUBSETTER)) {
                 return false;
             }
         }
@@ -468,8 +469,9 @@ CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &options,
             return false;
 
         if (define) {
-            if (!JS_DefinePropertyById(cx, scope, options.defineAs, obj, JSPROP_ENUMERATE,
-                                       JS_PropertyStub, JS_StrictPropertyStub))
+            if (!JS_DefinePropertyById(cx, scope, options.defineAs, obj,
+                                       JSPROP_ENUMERATE,
+                                       JS_STUBGETTER, JS_STUBSETTER))
                 return false;
         }
     }
