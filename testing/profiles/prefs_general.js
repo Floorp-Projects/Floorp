@@ -233,6 +233,9 @@ user_pref("identity.fxaccounts.settings.uri", "https://%(server)s/fxa-settings")
 // Enable logging of APZ test data (see bug 961289).
 user_pref('apz.test.logging_enabled', true);
 
+// Make sure SSL Error reports don't hit the network
+user_pref("security.ssl.errorReporting.url", "https://example.com/browser/browser/base/content/test/general/pinning_reports.sjs?succeed");
+
 // Make sure Translation won't hit the network.
 user_pref("browser.translation.bing.authURL", "http://%(server)s/browser/browser/components/translation/test/bing.sjs");
 user_pref("browser.translation.bing.translateArrayURL", "http://%(server)s/browser/browser/components/translation/test/bing.sjs");
