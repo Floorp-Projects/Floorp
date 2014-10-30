@@ -435,6 +435,22 @@ let Impl = {
     return ret;
   },
 
+  getKeyedHistograms: function() {
+    let registered = Telemetry.registeredKeyedHistograms([]);
+    let ret = {};
+
+    for (let id of registered) {
+      ret[id] = {};
+      let keyed = Telemetry.getKeyedHistogramById(id);
+      let snapshot = keyed.snapshot();
+      for (let key of Object.keys(snapshot)) {
+        ret[id][key] = this.packHistogram(snapshot[key]);
+      }
+    }
+
+    return ret;
+  },
+
   getThreadHangStats: function getThreadHangStats(stats) {
     stats.forEach((thread) => {
       thread.activity = this.packHistogram(thread.activity);
@@ -703,6 +719,7 @@ let Impl = {
       ver: PAYLOAD_VERSION,
       simpleMeasurements: simpleMeasurements,
       histograms: this.getHistograms(Telemetry.histogramSnapshots),
+      keyedHistograms: this.getKeyedHistograms(),
       slowSQL: Telemetry.slowSQL,
       fileIOReports: Telemetry.fileIOReports,
       chromeHangs: Telemetry.chromeHangs,

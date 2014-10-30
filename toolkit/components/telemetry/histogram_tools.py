@@ -55,7 +55,7 @@ def exponential_buckets(dmin, dmax, n_buckets):
         ret_array[bucket_index] = current
     return ret_array
 
-always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version', "alert_emails"]
+always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version', "alert_emails", 'keyed']
 
 class Histogram:
     """A class for representing a histogram definition."""
@@ -70,11 +70,13 @@ definition is a dict-like object that must contain at least the keys:
 
 The key 'cpp_guard' is optional; if present, it denotes a preprocessor
 symbol that should guard C/C++ definitions associated with the histogram."""
+        self.check_name(name)
         self.verify_attributes(name, definition)
         self._name = name
         self._description = definition['description']
         self._kind = definition['kind']
         self._cpp_guard = definition.get('cpp_guard')
+        self._keyed = definition.get('keyed', False)
         self._extended_statistics_ok = definition.get('extended_statistics_ok', False)
         self._expiration = definition.get('expires_in_version')
         self.compute_bucket_parameters(definition)
@@ -129,6 +131,10 @@ the histogram."""
 associated with the histogram.  Returns None if no guarding is necessary."""
         return self._cpp_guard
 
+    def keyed(self):
+        """Returns True if this a keyed histogram, false otherwise."""
+        return self._keyed
+
     def extended_statistics_ok(self):
         """Return True if gathering extended statistics for this histogram
 is enabled."""
@@ -173,6 +179,10 @@ is enabled."""
                        lambda allowed_keys: Histogram.check_keys(name, definition, allowed_keys))
 
         Histogram.check_expiration(name, definition)
+
+    def check_name(self, name):
+        if '#' in name:
+            raise ValueError, '"#" not permitted for %s' % (name)
 
     @staticmethod
     def check_expiration(name, definition):
