@@ -74,8 +74,13 @@ function testPreferenceAndUIStateIsConsistent() {
 function testToggleToolboxButtons() {
   let checkNodes = [...panelWin.document.querySelectorAll("#enabled-toolbox-buttons-box > checkbox")];
   let toolboxButtonNodes = [...doc.querySelectorAll(".command-button")];
-  let visibleButtons = toolboxButtonNodes.filter(button=>!button.hasAttribute("hidden"));
   let toggleableTools = toolbox.toolboxButtons;
+
+  // Tilt is disabled in E10S mode so we skip the tilt button if E10S is
+  // enabled.
+  if (toolbox.target.isMultiProcess) {
+    toolboxButtonNodes = [...doc.querySelectorAll(".command-button:not(#command-button-tilt)")];
+  }
 
   is (checkNodes.length, toggleableTools.length, "All of the buttons are toggleable." );
   is (checkNodes.length, toolboxButtonNodes.length, "All of the DOM buttons are toggleable." );
@@ -92,9 +97,9 @@ function testToggleToolboxButtons() {
       "DOM buttons should match for: " + id);
 
     is (matchedCheckboxes[0].getAttribute("label"), tool.label,
-      "The label for checkbox matches the tool definition.")
+      "The label for checkbox matches the tool definition.");
     is (matchedButtons[0].getAttribute("tooltiptext"), tool.label,
-      "The tooltip for button matches the tool definition.")
+      "The tooltip for button matches the tool definition.");
   }
 
   // Store modified pref names so that they can be cleared on error.

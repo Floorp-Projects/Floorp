@@ -20,13 +20,19 @@ exports.items = [
 {
   name: 'tilt',
   description: gcli.lookup("tiltDesc"),
-  manual: gcli.lookup("tiltManual")
+  manual: gcli.lookup("tiltManual"),
+  hidden: true
 },
 {
   name: 'tilt open',
   description: gcli.lookup("tiltOpenDesc"),
   manual: gcli.lookup("tiltOpenManual"),
+  hidden: true,
   exec: function(args, context) {
+    if (isMultiProcess(context)) {
+      return gcli.lookupFormat("notAvailableInE10S", [this.name]);
+    }
+
     let chromeWindow = context.environment.chromeDocument.defaultView;
     let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
     if (!Tilt.currentInstance) {
@@ -59,6 +65,10 @@ exports.items = [
     },
   },
   exec: function(args, context) {
+    if (isMultiProcess(context)) {
+      return gcli.lookupFormat("notAvailableInE10S", [this.name]);
+    }
+
     let chromeWindow = context.environment.chromeDocument.defaultView;
     let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
     Tilt.toggle();
@@ -68,6 +78,7 @@ exports.items = [
   name: 'tilt translate',
   description: gcli.lookup("tiltTranslateDesc"),
   manual: gcli.lookup("tiltTranslateManual"),
+  hidden: true,
   params: [
     {
       name: "x",
@@ -85,6 +96,10 @@ exports.items = [
     }
   ],
   exec: function(args, context) {
+    if (isMultiProcess(context)) {
+      return gcli.lookupFormat("notAvailableInE10S", [this.name]);
+    }
+
     let chromeWindow = context.environment.chromeDocument.defaultView;
     let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
     if (Tilt.currentInstance) {
@@ -96,6 +111,7 @@ exports.items = [
   name: 'tilt rotate',
   description: gcli.lookup("tiltRotateDesc"),
   manual: gcli.lookup("tiltRotateManual"),
+  hidden: true,
   params: [
     {
       name: "x",
@@ -120,6 +136,10 @@ exports.items = [
     }
   ],
   exec: function(args, context) {
+    if (isMultiProcess(context)) {
+      return gcli.lookupFormat("notAvailableInE10S", [this.name]);
+    }
+
     let chromeWindow = context.environment.chromeDocument.defaultView;
     let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
     if (Tilt.currentInstance) {
@@ -131,6 +151,7 @@ exports.items = [
   name: 'tilt zoom',
   description: gcli.lookup("tiltZoomDesc"),
   manual: gcli.lookup("tiltZoomManual"),
+  hidden: true,
   params: [
     {
       name: "zoom",
@@ -140,6 +161,10 @@ exports.items = [
     }
   ],
   exec: function(args, context) {
+    if (isMultiProcess(context)) {
+      return gcli.lookupFormat("notAvailableInE10S", [this.name]);
+    }
+
     let chromeWindow = context.environment.chromeDocument.defaultView;
     let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
 
@@ -152,7 +177,12 @@ exports.items = [
   name: 'tilt reset',
   description: gcli.lookup("tiltResetDesc"),
   manual: gcli.lookup("tiltResetManual"),
+  hidden: true,
   exec: function(args, context) {
+    if (isMultiProcess(context)) {
+      return gcli.lookupFormat("notAvailableInE10S", [this.name]);
+    }
+
     let chromeWindow = context.environment.chromeDocument.defaultView;
     let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
 
@@ -165,7 +195,12 @@ exports.items = [
   name: 'tilt close',
   description: gcli.lookup("tiltCloseDesc"),
   manual: gcli.lookup("tiltCloseManual"),
+  hidden: true,
   exec: function(args, context) {
+    if (isMultiProcess(context)) {
+      return gcli.lookupFormat("notAvailableInE10S", [this.name]);
+    }
+
     let chromeWindow = context.environment.chromeDocument.defaultView;
     let Tilt = TiltManager.getTiltForBrowser(chromeWindow);
 
@@ -173,3 +208,7 @@ exports.items = [
   }
 }
 ];
+
+function isMultiProcess(context) {
+  return !context.environment.window;
+}
