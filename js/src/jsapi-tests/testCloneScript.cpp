@@ -43,7 +43,7 @@ BEGIN_TEST(test_cloneScript)
     // clone into B
     {
         JSAutoCompartment b(cx, B);
-        CHECK(JS_CloneFunctionObject(cx, obj, B));
+        CHECK(JS::CloneFunctionObject(cx, obj));
     }
 
     return true;
@@ -125,7 +125,7 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
     {
         JSAutoCompartment b(cx, B);
         JS::RootedObject cloned(cx);
-        CHECK(cloned = JS_CloneFunctionObject(cx, obj, B));
+        CHECK(cloned = JS::CloneFunctionObject(cx, obj));
 
         JS::RootedFunction fun(cx);
         JS::RootedValue clonedValue(cx, JS::ObjectValue(*cloned));

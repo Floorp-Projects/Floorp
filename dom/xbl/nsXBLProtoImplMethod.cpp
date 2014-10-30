@@ -104,16 +104,21 @@ nsXBLProtoImplMethod::InstallMember(JSContext* aCx,
                   "Should not be installing an uncompiled method");
   MOZ_ASSERT(js::IsObjectInContextCompartment(aTargetClassObject, aCx));
 
-  JS::Rooted<JSObject*> globalObject(aCx, JS_GetGlobalForObject(aCx, aTargetClassObject));
-  MOZ_ASSERT(xpc::IsInContentXBLScope(globalObject) ||
-             xpc::IsInAddonScope(globalObject) ||
-             globalObject == xpc::GetXBLScope(aCx, globalObject));
+#ifdef DEBUG
+  {
+    JS::Rooted<JSObject*> globalObject(aCx, JS_GetGlobalForObject(aCx, aTargetClassObject));
+    MOZ_ASSERT(xpc::IsInContentXBLScope(globalObject) ||
+               xpc::IsInAddonScope(globalObject) ||
+               globalObject == xpc::GetXBLScope(aCx, globalObject));
+    MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx) == globalObject);
+  }
+#endif
 
   JS::Rooted<JSObject*> jsMethodObject(aCx, GetCompiledMethod());
   if (jsMethodObject) {
     nsDependentString name(mName);
 
-    JS::Rooted<JSObject*> method(aCx, JS_CloneFunctionObject(aCx, jsMethodObject, globalObject));
+    JS::Rooted<JSObject*> method(aCx, JS::CloneFunctionObject(aCx, jsMethodObject));
     NS_ENSURE_TRUE(method, NS_ERROR_OUT_OF_MEMORY);
 
     if (!::JS_DefineUCProperty(aCx, aTargetClassObject,
