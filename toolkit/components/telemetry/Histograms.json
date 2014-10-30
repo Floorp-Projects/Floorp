@@ -4340,6 +4340,18 @@
     "kind": "count",
     "description": "a testing histogram; not meant to be touched"
   },
+  "TELEMETRY_TEST_KEYED_FLAG": {
+    "expires_in_version": "default",
+    "kind": "flag",
+    "keyed": true,
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_KEYED_COUNT": {
+    "expires_in_version": "default",
+    "kind": "count",
+    "keyed": true,
+    "description": "a testing histogram; not meant to be touched"
+  },
   "STARTUP_CRASH_DETECTED": {
     "expires_in_version": "never",
     "kind": "flag",

@@ -377,6 +377,152 @@ function test_extended_stats() {
   do_check_eq(s.log_sum_squares, 0);
 }
 
+// Return an array of numbers from lower up to, excluding, upper
+function numberRange(lower, upper)
+{
+  let a = [];
+  for (let i=lower; i<upper; ++i) {
+    a.push(i);
+  }
+  return a;
+}
+
+function test_keyed_boolean_histogram()
+{
+  const KEYED_ID = "test::keyed::boolean";
+  const KEYS = ["key"+(i+1) for (i of numberRange(0, 3))];
+  let histogramBase = {
+    "min": 1,
+    "max": 2,
+    "histogram_type": 2,
+    "sum": 0,
+    "sum_squares_lo": 0,
+    "sum_squares_hi": 0,
+    "ranges": [0, 1, 2],
+    "counts": [1, 0, 0]
+  };
+  let testHistograms = [JSON.parse(JSON.stringify(histogramBase)) for (i of numberRange(0, 3))];
+  let testKeys = [];
+  let testSnapShot = {};
+
+  let h = Telemetry.newKeyedHistogram(KEYED_ID, "never", Telemetry.HISTOGRAM_BOOLEAN);
+  for (let i=0; i<2; ++i) {
+    let key = KEYS[i];
+    h.add(key, true);
+    testSnapShot[key] = testHistograms[i];
+    testKeys.push(key);
+
+    Assert.deepEqual(h.keys().sort(), testKeys);
+    Assert.deepEqual(h.snapshot(), testSnapShot);
+  }
+
+  h = Telemetry.getKeyedHistogramById(KEYED_ID);
+  Assert.deepEqual(h.keys().sort(), testKeys);
+  Assert.deepEqual(h.snapshot(), testSnapShot);
+
+  let key = KEYS[2];
+  h.add(key, false);
+  testKeys.push(key);
+  testSnapShot[key] = testHistograms[2];
+  Assert.deepEqual(h.keys().sort(), testKeys);
+  Assert.deepEqual(h.snapshot(), testSnapShot);
+
+  let allSnapshots = Telemetry.keyedHistogramSnapshots;
+  Assert.deepEqual(allSnapshots[KEYED_ID], testSnapShot);
+
+  h.clear();
+  Assert.deepEqual(h.keys(), []);
+  Assert.deepEqual(h.snapshot(), {});
+}
+
+function test_keyed_count_histogram()
+{
+  const KEYED_ID = "test::keyed::count";
+  const KEYS = ["key"+(i+1) for (i of numberRange(0, 5))];
+  let histogramBase = {
+    "min": 1,
+    "max": 2,
+    "histogram_type": 4,
+    "sum": 0,
+    "sum_squares_lo": 0,
+    "sum_squares_hi": 0,
+    "ranges": [0, 1, 2],
+    "counts": [1, 0, 0]
+  };
+  let testHistograms = [JSON.parse(JSON.stringify(histogramBase)) for (i of numberRange(0, 5))];
+  let testKeys = [];
+  let testSnapShot = {};
+
+  let h = Telemetry.newKeyedHistogram(KEYED_ID, "never", Telemetry.HISTOGRAM_COUNT);
+  for (let i=0; i<4; ++i) {
+    let key = KEYS[i];
+    let value = i*2 + 1;
+
+    for (let k=0; k<value; ++k) {
+      h.add(key);
+    }
+    testHistograms[i].counts[0] = value;
+    testHistograms[i].sum = value;
+    testHistograms[i].sum_squares_lo = value;
+    testSnapShot[key] = testHistograms[i];
+    testKeys.push(key);
+
+    Assert.deepEqual(h.keys().sort(), testKeys);
+    Assert.deepEqual(h.snapshot(key), testHistograms[i]);
+    Assert.deepEqual(h.snapshot(), testSnapShot);
+  }
+
+  h = Telemetry.getKeyedHistogramById(KEYED_ID);
+  Assert.deepEqual(h.keys().sort(), testKeys);
+  Assert.deepEqual(h.snapshot(), testSnapShot);
+
+  let key = KEYS[4];
+  h.add(key);
+  testKeys.push(key);
+  testHistograms[4].counts[0] = 1;
+  testHistograms[4].sum = 1;
+  testHistograms[4].sum_squares_lo = 1;
+  testSnapShot[key] = testHistograms[4];
+
+  Assert.deepEqual(h.keys().sort(), testKeys);
+  Assert.deepEqual(h.snapshot(), testSnapShot);
+
+  let allSnapshots = Telemetry.keyedHistogramSnapshots;
+  Assert.deepEqual(allSnapshots[KEYED_ID], testSnapShot);
+
+  h.clear();
+  Assert.deepEqual(h.keys(), []);
+  Assert.deepEqual(h.snapshot(), {});
+}
+
+
+function test_keyed_histogram() {
+  // Check that invalid names get rejected.
+
+  let threw = false;
+  try {
+    Telemetry.newKeyedHistogram("test::invalid # histogram", "never", Telemetry.HISTOGRAM_BOOLEAN);
+  } catch (e) {
+    // This should throw as we reject names with the # separator
+    threw = true;
+  }
+  Assert.ok(threw, "newKeyedHistogram should have thrown");
+
+  threw = false;
+  try {
+    Telemetry.getKeyedHistogramById("test::unknown histogram", "never", Telemetry.HISTOGRAM_BOOLEAN);
+  } catch (e) {
+    // This should throw as it is an unknown ID
+    threw = true;
+  }
+  Assert.ok(threw, "getKeyedHistogramById should have thrown");
+
+  // Check specific keyed histogram types working properly.
+
+  test_keyed_boolean_histogram();
+  test_keyed_count_histogram();
+}
+
 function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
   // strip {}
@@ -410,4 +556,5 @@ function run_test()
   test_addons();
   test_extended_stats();
   test_expired_histogram();
+  test_keyed_histogram();
 }
