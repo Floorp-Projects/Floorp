@@ -94,6 +94,11 @@ function setupTestData() {
   h1.add(1);
   let h2 = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT");
   h2.add();
+
+  let k1 = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_COUNT");
+  k1.add("a");
+  k1.add("a");
+  k1.add("b");
 }
 
 function getSavedHistogramsFile(basename) {
@@ -231,6 +236,8 @@ function checkPayload(request, reason, successfulPings) {
   const TELEMETRY_SUCCESS = "TELEMETRY_SUCCESS";
   const TELEMETRY_TEST_FLAG = "TELEMETRY_TEST_FLAG";
   const TELEMETRY_TEST_COUNT = "TELEMETRY_TEST_COUNT";
+  const TELEMETRY_TEST_KEYED_FLAG = "TELEMETRY_TEST_KEYED_FLAG";
+  const TELEMETRY_TEST_KEYED_COUNT = "TELEMETRY_TEST_KEYED_COUNT";
   const READ_SAVED_PING_SUCCESS = "READ_SAVED_PING_SUCCESS";
 
   do_check_true(TELEMETRY_PING in payload.histograms);
@@ -309,6 +316,37 @@ function checkPayload(request, reason, successfulPings) {
 
   do_check_true(("mainThread" in payload.slowSQL) &&
                 ("otherThreads" in payload.slowSQL));
+
+  // Check keyed histogram payload.
+
+  do_check_true("keyedHistograms" in payload);
+  let keyedHistograms = payload.keyedHistograms;
+  do_check_true(TELEMETRY_TEST_KEYED_FLAG in keyedHistograms);
+  do_check_true(TELEMETRY_TEST_KEYED_COUNT in keyedHistograms);
+
+  Assert.deepEqual({}, keyedHistograms[TELEMETRY_TEST_KEYED_FLAG]);
+
+  const expected_keyed_count = {
+    "a": {
+      range: [1, 2],
+      bucket_count: 3,
+      histogram_type: 4,
+      values: {0:2, 1:0},
+      sum: 2,
+      sum_squares_lo: 2,
+      sum_squares_hi: 0,
+    },
+    "b": {
+      range: [1, 2],
+      bucket_count: 3,
+      histogram_type: 4,
+      values: {0:1, 1:0},
+      sum: 1,
+      sum_squares_lo: 1,
+      sum_squares_hi: 0,
+    },
+  };
+  Assert.deepEqual(expected_keyed_count, keyedHistograms[TELEMETRY_TEST_KEYED_COUNT]);
 }
 
 function dummyTheme(id) {
