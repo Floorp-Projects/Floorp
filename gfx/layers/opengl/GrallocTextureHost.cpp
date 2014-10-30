@@ -363,6 +363,9 @@ GrallocTextureHostOGL::GetRenderState()
 
   if (graphicBuffer) {
     LayerRenderStateFlags flags = LayerRenderStateFlags::LAYER_RENDER_STATE_DEFAULT;
+    if (mIsOpaque) {
+      flags |= LayerRenderStateFlags::OPAQUE;
+    }
     if (mFlags & TextureFlags::NEEDS_Y_FLIP) {
       flags |= LayerRenderStateFlags::Y_FLIPPED;
     }
