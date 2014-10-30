@@ -10,15 +10,15 @@
 <body>
 <pre id='test'>
 <script class="testbody" type='application/javascript;version=1.8'>
+//longer timeout for sometimes B2G emulator runs very slowly
+if (SpecialPowers.Services.appinfo.name == "B2G") {
+  SimpleTest.requestLongerTimeout(3);
+}
 
 let manager = new MediaTestManager;
 
-SimpleTest.expectAssertions(0, 2);
-
 function finish_test(element) {
-  if (element.parentNode)
-    element.parentNode.removeChild(element);
-  element.src="";
+  removeNodeAndSource(element);
   manager.finished(element.token);
 }
 
@@ -26,9 +26,9 @@ function finish_test(element) {
 function check_full_file_played(element) {
   element.addEventListener('ended', (function(e) {
     let interval_count = e.target.played.length;
-    is(interval_count, 1, "normal play : a.played.length must be 1");
-    is(element.played.start(0), 0, "start time shall be 0");
-    is(element.played.end(0), e.target.duration, "end time shall be duration");
+    is(interval_count, 1, element.token + ": played.length must be 1");
+    is(element.played.start(0), 0, element.token + ": start time shall be 0");
+    is(element.played.end(0), e.target.duration, element.token + ": end time shall be duration");
     finish_test(e.target);
   }), false);
 }
@@ -38,35 +38,39 @@ var tests = [
 {
   setup : function(element) {
     element.addEventListener("loadedmetadata", function() {
-      is(element.played.length, 0, "audio : initial played.length equals zero");
+      is(element.played.length, 0, element.token + ": initial played.length equals zero");
       finish_test(element);
     });
-  }
+  },
+  name: "test1"
 },
 // Play the file, test the range we have.
 {
   setup : function(element) {
     check_full_file_played(element);
     element.play();
-  }
+  },
+  name: "test2"
 },
 
 // Play the second half of the file, pause, play
 // an check we have only one range.
 {
   setup : function (element) {
-    element.addEventListener("ended", function (e) {
+    element.onended = function (e) {
       var t = e.target;
+      t.onended = null;
       check_full_file_played(t);
       t.pause();
       t.currentTime = 0;
       t.play();
-    }, false);
+    };
     element.addEventListener("loadedmetadata", function() {
       element.currentTime = element.duration / 2;
       element.play();
     }, false);
-  }
+  },
+  name: "test3"
 },
 
 // Play the first half of the file, seek back, while
@@ -74,31 +78,36 @@ var tests = [
 {
   setup : function (element) {
     let onTimeUpdate = function() {
-      if (element.currentTime > element.duration/2) {
+      if (element.currentTime > element.duration / 2) {
         element.removeEventListener("timeupdate", onTimeUpdate, false);
         element.pause();
         var oldEndRange = element.played.end(0);
         element.currentTime = element.duration / 4;
         is(element.played.end(0), oldEndRange,
-            "When seeking back, |played| should not be changed");
+           element.token + ": When seeking back, |played| should not be changed");
         element.play();
       }
     }
     element.addEventListener("timeupdate", onTimeUpdate, false);
     check_full_file_played(element);
     element.play();
-  }
+  },
+  name: "test4"
 },
 
 // Play and seek to have two ranges, and check that, as well a
 // boundaries.
 {
   setup : function (element) {
+    let seekTarget = 0;
     let onTimeUpdate = function() {
       if (element.currentTime > element.duration / 2) {
         element.removeEventListener("timeupdate", onTimeUpdate, false);
         element.pause();
-        element.currentTime += element.duration/10;
+        // Remember seek target for later comparison since duration may change
+        // during playback.
+        seekTarget = element.currentTime = element.duration / 10;
+        element.currentTime = seekTarget;
         element.play();
       }
     }
@@ -110,17 +119,17 @@ var tests = [
 
     element.addEventListener("ended", (function() {
       if(element.played.length > 1) {
-        is(element.played.length, 2, "element.played.length == 2");
-        var guess = element.played.end(0) + element.duration/10.0;
-        ok(rangeCheck(element.played.start(1), guess), "we should have seeked forward by one tenth of the duration");
-        is(element.played.end(1), element.duration, "end of second range shall be the total duration");
+        is(element.played.length, 2, element.token + ": element.played.length == 2");
+        is(element.played.start(1), seekTarget, element.token + ": we should have seeked forward by one tenth of the duration");
+        is(element.played.end(1), element.duration, element.token + ": end of second range shall be the total duration");
       }
-      is(element.played.start(0), 0, "start of first range shall be 0");
+      is(element.played.start(0), 0, element.token + ": start of first range shall be 0");
       finish_test(element);
     }), false);
 
     element.play();
-  }
+  },
+  name: "test5"
 },
 
 // Play to create two ranges, in the reverse order. check that they are sorted.
@@ -129,20 +138,24 @@ var tests = [
     function end() {
       element.pause();
       let p = element.played;
-      ok(p.length >= 1, "There should be at least one range");
-      is(p.start(0), element.duration/6, "Start of first range should be the sixth of the duration");
-      ok(p.end(p.length - 1) > 5*element.duration/6, "End of last range should be greater that five times the sixth of the duration");
+      ok(p.length >= 1, element.token + ": There should be at least one range=" + p.length);
+      is(p.start(0), seekTarget, element.token + ": Start of first range should be the sixth of the duration");
+      ok(p.end(p.length - 1) > 5 * element.duration / 6, element.token + ": End of last range should be greater that five times the sixth of the duration");
       finish_test(element);
     }
 
+    let seekTarget = 0;
     function pauseseekrestart() {
       element.pause();
-      element.currentTime = element.duration/6;
+      // Remember seek target for later comparison since duration may change
+      // during playback.
+      seekTarget = element.duration / 6;
+      element.currentTime = seekTarget;
       element.play();
     }
 
     function onTimeUpdate_pauseseekrestart() {
-      if (element.currentTime > 5*element.duration/6) {
+      if (element.currentTime > 5 * element.duration / 6) {
         element.removeEventListener("timeupdate", onTimeUpdate_pauseseekrestart, false);
         pauseseekrestart();
         element.addEventListener("timeupdate", onTimeUpdate_end, false);
@@ -150,7 +163,7 @@ var tests = [
     }
 
     function onTimeUpdate_end() {
-      if (element.currentTime > 3 * element.duration/6) {
+      if (element.currentTime > 3 * element.duration / 6) {
         element.removeEventListener("timeupdate", onTimeUpdate_end, false);
         end();
       }
@@ -159,10 +172,11 @@ var tests = [
     element.addEventListener("timeupdate", onTimeUpdate_pauseseekrestart, false);
 
     element.addEventListener('loadedmetadata', function() {
-      element.currentTime = 4 * element.duration/6;
+      element.currentTime = 4 * element.duration / 6;
       element.play();
     }, false);
-  }
+  },
+  name: "test6"
 },
 // Seek repeatedly without playing. No range should appear.
 {
@@ -172,7 +186,7 @@ var tests = [
     element.addEventListener('seeked', function() {
       index++;
       element.currentTime = index * element.duration / 5;
-      is(element.played.length, 0, "element.played.length should be 0");
+      is(element.played.length, 0, element.token + ": played.length should be 0");
       if (index == 5) {
         finish_test(element);
       }
@@ -181,7 +195,8 @@ var tests = [
     element.addEventListener('loadedmetadata', function() {
       element.currentTime = element.duration / 5;
     }, false);
-  }
+  },
+  name: "test7"
 }
 ];
 
@@ -200,8 +215,9 @@ function createTestArray() {
     for (var k=0; k<gPlayedTests.length; k++) {
       var t = new Object();
       t.setup = tests[i].setup;
-      t.name = gPlayedTests[k].name;
+      t.name = tests[i].name + "-" + gPlayedTests[k].name;
       t.type = gPlayedTests[k].type;
+      t.src = gPlayedTests[k].name;
       A.push(t);
     }
   }
@@ -211,9 +227,9 @@ function createTestArray() {
 function startTest(test, token) {
   var elemType = getMajorMimeType(test.type);
   var element = document.createElement(elemType);
-  element.src = test.name;
+  element.src = test.src;
   element.token = token;
-  element.volume = 0;
+  element.preload = "metadata";
   test.setup(element);
   manager.started(token);
 }
