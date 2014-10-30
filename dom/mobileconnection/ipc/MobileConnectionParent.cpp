@@ -643,6 +643,12 @@ MobileConnectionRequestParent::NotifyGetClirStatusSuccess(uint16_t aN,
 }
 
 NS_IMETHODIMP
+MobileConnectionRequestParent::NotifyGetPreferredNetworkTypeSuccess(int32_t aType)
+{
+  return SendReply(MobileConnectionReplySuccessPreferredNetworkType(aType));
+}
+
+NS_IMETHODIMP
 MobileConnectionRequestParent::NotifyError(const nsAString& aName,
                                            const nsAString& aMessage,
                                            const nsAString& aServiceCode,
