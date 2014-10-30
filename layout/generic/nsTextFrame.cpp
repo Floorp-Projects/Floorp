@@ -2956,11 +2956,11 @@ PropertyProvider::ComputeJustifiableCharacters(int32_t aOffset, int32_t aLength)
     run(mStart, nsSkipCharsRunIterator::LENGTH_INCLUDES_SKIPPED, aLength);
   run.SetOriginalOffset(aOffset);
   uint32_t justifiableChars = 0;
-  bool isCJK = IsChineseOrJapanese(mFrame);
+  bool isCJ = IsChineseOrJapanese(mFrame);
   while (run.NextRun()) {
     for (int32_t i = 0; i < run.GetRunLength(); ++i) {
       justifiableChars +=
-        IsJustifiableCharacter(mFrag, run.GetOriginalOffset() + i, isCJK);
+        IsJustifiableCharacter(mFrag, run.GetOriginalOffset() + i, isCJ);
     }
   }
   return justifiableChars;
@@ -3083,7 +3083,7 @@ PropertyProvider::GetSpacingInternal(uint32_t aStart, uint32_t aLength,
     gfxFloat halfJustificationSpace = mJustificationSpacing/2;
     // Scan non-skipped characters and adjust justifiable chars, adding
     // justification space on either side of the cluster
-    bool isCJK = IsChineseOrJapanese(mFrame);
+    bool isCJ = IsChineseOrJapanese(mFrame);
     gfxSkipCharsIterator justificationStart(mStart), justificationEnd(mStart);
     FindJustificationRange(&justificationStart, &justificationEnd);
 
@@ -3094,7 +3094,7 @@ PropertyProvider::GetSpacingInternal(uint32_t aStart, uint32_t aLength,
       int32_t runOriginalOffset = run.GetOriginalOffset();
       for (int32_t i = 0; i < run.GetRunLength(); ++i) {
         int32_t iterOriginalOffset = runOriginalOffset + i;
-        if (IsJustifiableCharacter(mFrag, iterOriginalOffset, isCJK)) {
+        if (IsJustifiableCharacter(mFrag, iterOriginalOffset, isCJ)) {
           iter.SetOriginalOffset(iterOriginalOffset);
           FindClusterStart(mTextRun, runOriginalOffset, &iter);
           uint32_t clusterFirstChar = iter.GetSkippedOffset();
@@ -8478,13 +8478,13 @@ nsTextFrame::TrimTrailingWhiteSpace(nsRenderingContext* aRC)
     // Check if any character in the last cluster is justifiable
     PropertyProvider provider(mTextRun, textStyle, frag, this, start, contentLength,
                               nullptr, 0, nsTextFrame::eInflated);
-    bool isCJK = IsChineseOrJapanese(this);
+    bool isCJ = IsChineseOrJapanese(this);
     gfxSkipCharsIterator justificationStart(start), justificationEnd(trimmedEndIter);
     provider.FindJustificationRange(&justificationStart, &justificationEnd);
 
     for (int32_t i = justificationEnd.GetOriginalOffset();
          i < trimmed.GetEnd(); ++i) {
-      if (IsJustifiableCharacter(frag, i, isCJK)) {
+      if (IsJustifiableCharacter(frag, i, isCJ)) {
         result.mLastCharIsJustifiable = true;
       }
     }
