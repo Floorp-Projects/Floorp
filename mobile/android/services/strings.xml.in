@@ -154,6 +154,7 @@
 <string name="fxaccount_confirm_account_header">&fxaccount_confirm_account_header;</string>
 <string name="fxaccount_confirm_account_verification_link">&fxaccount_confirm_account_verification_link;</string>
 <string name="fxaccount_confirm_account_resend_email">&fxaccount_confirm_account_resend_email;</string>
+<string name="fxaccount_confirm_account_change_email">&fxaccount_confirm_account_change_email;</string>
 <string name="fxaccount_confirm_account_verification_link_sent">&fxaccount_confirm_account_verification_link_sent2;</string>
 <string name="fxaccount_confirm_account_verification_link_not_sent">&fxaccount_confirm_account_verification_link_not_sent2;</string>
 
