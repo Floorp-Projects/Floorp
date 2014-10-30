@@ -20,7 +20,7 @@ interface nsIIccListener : nsISupports
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(bf802bf0-4df2-11e4-916c-0800200c9a66)]
+[scriptable, uuid(38bbc600-76ac-11e4-82f8-0800200c9a66)]
 interface nsIIccProvider : nsISupports
 {
   // MUST match enum IccCardState in MozIcc.webidl!
@@ -56,6 +56,29 @@ interface nsIIccProvider : nsISupports
   const unsigned long CARD_STATE_ILLEGAL = 29;
 
   const unsigned long CARD_STATE_UNDETECTED = 4294967295; // UINT32_MAX
+
+  // MUST match with enum IccLockType in MozIcc.webidl
+  const unsigned long CARD_LOCK_TYPE_PIN = 0;
+  const unsigned long CARD_LOCK_TYPE_PIN2 = 1;
+  const unsigned long CARD_LOCK_TYPE_PUK = 2;
+  const unsigned long CARD_LOCK_TYPE_PUK2 = 3;
+  const unsigned long CARD_LOCK_TYPE_NCK = 4;
+  const unsigned long CARD_LOCK_TYPE_NCK1 = 5;
+  const unsigned long CARD_LOCK_TYPE_NCK2 = 6;
+  const unsigned long CARD_LOCK_TYPE_HNCK = 7;
+  const unsigned long CARD_LOCK_TYPE_CCK = 8;
+  const unsigned long CARD_LOCK_TYPE_SPCK = 9;
+  const unsigned long CARD_LOCK_TYPE_RCCK = 10;
+  const unsigned long CARD_LOCK_TYPE_RSPCK = 11;
+  const unsigned long CARD_LOCK_TYPE_NCK_PUK = 12;
+  const unsigned long CARD_LOCK_TYPE_NCK1_PUK = 13;
+  const unsigned long CARD_LOCK_TYPE_NCK2_PUK = 14;
+  const unsigned long CARD_LOCK_TYPE_HNCK_PUK = 15;
+  const unsigned long CARD_LOCK_TYPE_CCK_PUK = 16;
+  const unsigned long CARD_LOCK_TYPE_SPCK_PUK = 17;
+  const unsigned long CARD_LOCK_TYPE_RCCK_PUK = 18;
+  const unsigned long CARD_LOCK_TYPE_RSPCK_PUK = 19;
+  const unsigned long CARD_LOCK_TYPE_FDN = 20;
 
   /**
    * Called when a content process registers receiving unsolicited messages from
@@ -98,18 +121,27 @@ interface nsIIccProvider : nsISupports
   /**
    * Card lock interfaces.
    */
-  nsIDOMDOMRequest getCardLockState(in unsigned long clientId,
-                                    in nsIDOMWindow window,
-                                    in DOMString lockType);
+  nsIDOMDOMRequest getCardLockEnabled(in unsigned long clientId,
+                                      in nsIDOMWindow window,
+                                      in unsigned long lockType);
   nsIDOMDOMRequest unlockCardLock(in unsigned long clientId,
                                   in nsIDOMWindow window,
-                                  in jsval info);
-  nsIDOMDOMRequest setCardLock(in unsigned long clientId,
-                               in nsIDOMWindow window,
-                               in jsval info);
+                                  in unsigned long lockType,
+                                  in DOMString password,
+                                  [optional] in DOMString newPin);
+  nsIDOMDOMRequest setCardLockEnabled(in unsigned long clientId,
+                                      in nsIDOMWindow window,
+                                      in unsigned long lockType,
+                                      in DOMString password,
+                                      in boolean enabled);
+  nsIDOMDOMRequest changeCardLockPassword(in unsigned long clientId,
+                                          in nsIDOMWindow window,
+                                          in unsigned long lockType,
+                                          in DOMString password,
+                                          in DOMString newPassword);
   nsIDOMDOMRequest getCardLockRetryCount(in unsigned long clientId,
                                          in nsIDOMWindow window,
-                                         in DOMString lockType);
+                                         in unsigned long lockType);
 
   /**
    * Phonebook interfaces.
