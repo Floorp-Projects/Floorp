@@ -8,6 +8,7 @@
 #include <math.h>                       // for fabsf, pow, powf
 #include <algorithm>                    // for max
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController
+#include "mozilla/dom/AnimationPlayer.h" // for ComputedTimingFunction
 #include "mozilla/layers/APZCTreeManager.h" // for APZCTreeManager
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "mozilla/Attributes.h"         // for MOZ_FINAL
@@ -15,6 +16,7 @@
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
 #include "mozilla/mozalloc.h"           // for operator new
 #include "mozilla/FloatingPoint.h"      // for FuzzyEqualsAdditive
+#include "mozilla/StaticPtr.h"          // for StaticAutoPtr
 #include "nsMathUtils.h"                // for NS_lround
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsThreadUtils.h"              // for NS_DispatchToMainThread, etc
