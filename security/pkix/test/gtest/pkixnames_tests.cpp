@@ -22,6 +22,7 @@
  * limitations under the License.
  */
 #include "pkix/pkix.h"
+#include "pkixder.h"
 #include "pkixgtest.h"
 #include "pkixtestutil.h"
 
@@ -1072,6 +1073,44 @@ static const uint8_t ipv6_addr_str[] =
 // DNSNAMES_VALIDITY, and not here.
 static const CheckCertHostnameParams CHECK_CERT_HOSTNAME_PARAMS[] =
 {
+  // This is technically illegal. PrintableString is defined in such a way that
+  // '*' is not an allowed character, but there are many real-world certificates
+  // that are encoded this way.
+  WITHOUT_SAN("foo.example.com", RDN(CN("*.example.com", der::PrintableString)),
+              Success),
+  WITHOUT_SAN("foo.example.com", RDN(CN("*.example.com", der::UTF8String)),
+              Success),
+
+  // Many certificates use TeletexString when encoding wildcards in CN-IDs
+  // because PrintableString is defined as not allowing '*' and UTF8String was,
+  // at one point in history, considered too new to depend on for compatibility.
+  // We accept TeletexString-encoded CN-IDs when they don't contain any escape
+  // sequences. The reference I used for the escape codes was
+  // https://tools.ietf.org/html/rfc1468. The escaping mechanism is actually
+  // pretty complex and these tests don't even come close to testing all the
+  // possibilities.
+  WITHOUT_SAN("foo.example.com", RDN(CN("*.example.com", der::TeletexString)),
+              Success),
+  // "ESC ( B" ({0x1B,0x50,0x42}) is the escape code to switch to ASCII, which
+  // is redundant because it already the default.
+  WITHOUT_SAN("foo.example.com",
+              RDN(CN("\x1B(B*.example.com", der::TeletexString)),
+              Result::ERROR_BAD_CERT_DOMAIN),
+  WITHOUT_SAN("foo.example.com",
+              RDN(CN("*.example\x1B(B.com", der::TeletexString)),
+              Result::ERROR_BAD_CERT_DOMAIN),
+  WITHOUT_SAN("foo.example.com",
+              RDN(CN("*.example.com\x1B(B", der::TeletexString)),
+              Result::ERROR_BAD_CERT_DOMAIN),
+  // "ESC $ B" ({0x1B,0x24,0x42}) is the escape code to switch to
+  // JIS X 0208-1983 (a Japanese character set).
+  WITHOUT_SAN("foo.example.com",
+              RDN(CN("\x1B$B*.example.com", der::TeletexString)),
+              Result::ERROR_BAD_CERT_DOMAIN),
+  WITHOUT_SAN("foo.example.com",
+              RDN(CN("*.example.com\x1B$B", der::TeletexString)),
+              Result::ERROR_BAD_CERT_DOMAIN),
+
   // Match a DNSName SAN entry with a redundant (ignored) matching CN-ID.
   WITH_SAN("a", RDN(CN("a")), DNSName("a"), Success),
   // Match a DNSName SAN entry when there is an CN-ID that doesn't match.
