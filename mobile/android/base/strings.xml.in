@@ -343,6 +343,7 @@
   <string name="button_yes">&button_yes;</string>
   <string name="button_no">&button_no;</string>
 
+  <string name="home_title">&home_title;</string>
   <string name="home_top_sites_title">&home_top_sites_title;</string>
   <string name="home_top_sites_add">&home_top_sites_add;</string>
   <string name="home_history_title">&home_history_title;</string>
