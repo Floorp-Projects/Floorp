@@ -2675,6 +2675,15 @@ extern JS_FRIEND_API(void)
 SetJitExceptionHandler(JitExceptionHandler handler);
 #endif
 
+/*
+ * Get the object underlying the object environment (in the ES
+ * NewObjectEnvironment) sense for a given function.  If the function is not
+ * scripted or does not have an object environment, just returns the function's
+ * parent.
+ */
+extern JS_FRIEND_API(JSObject *)
+GetObjectEnvironmentObjectForFunction(JSFunction *fun);
+
 } /* namespace js */
 
 extern JS_FRIEND_API(bool)
