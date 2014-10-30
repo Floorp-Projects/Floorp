@@ -484,10 +484,9 @@ enum MOZ_ENUM_TYPE(uint32_t) {
 
     /*
      * For a global object, whether any array buffers in this compartment with
-     * sized typed object views have been neutered. Sized typed objects have
-     * different neutering checks from other array buffer views.
+     * typed object views have been neutered.
      */
-    OBJECT_FLAG_SIZED_OBJECT_NEUTERED = 0x00400000,
+    OBJECT_FLAG_TYPED_OBJECT_NEUTERED = 0x00400000,
 
     /*
      * Whether objects with this type should be allocated directly in the
