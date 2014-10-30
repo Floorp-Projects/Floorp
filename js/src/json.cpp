@@ -47,13 +47,15 @@ const Class js::JSONClass = {
     JS_ConvertStub
 };
 
-static inline bool IsQuoteSpecialCharacter(char16_t c)
+static inline bool
+IsQuoteSpecialCharacter(char16_t c)
 {
-    JS_STATIC_ASSERT('\b' < ' ');
-    JS_STATIC_ASSERT('\f' < ' ');
-    JS_STATIC_ASSERT('\n' < ' ');
-    JS_STATIC_ASSERT('\r' < ' ');
-    JS_STATIC_ASSERT('\t' < ' ');
+    static_assert('\b' < ' ', "'\\b' must be treated as special below");
+    static_assert('\f' < ' ', "'\\f' must be treated as special below");
+    static_assert('\n' < ' ', "'\\n' must be treated as special below");
+    static_assert('\r' < ' ', "'\\r' must be treated as special below");
+    static_assert('\t' < ' ', "'\\t' must be treated as special below");
+
     return c == '"' || c == '\\' || c < ' ';
 }
 

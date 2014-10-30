@@ -490,16 +490,6 @@ exn_toSource(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
-/* JSProto_ ordering for exceptions shall match JSEXN_ constants. */
-JS_STATIC_ASSERT(JSEXN_ERR == 0);
-JS_STATIC_ASSERT(JSProto_Error + JSEXN_INTERNALERR  == JSProto_InternalError);
-JS_STATIC_ASSERT(JSProto_Error + JSEXN_EVALERR      == JSProto_EvalError);
-JS_STATIC_ASSERT(JSProto_Error + JSEXN_RANGEERR     == JSProto_RangeError);
-JS_STATIC_ASSERT(JSProto_Error + JSEXN_REFERENCEERR == JSProto_ReferenceError);
-JS_STATIC_ASSERT(JSProto_Error + JSEXN_SYNTAXERR    == JSProto_SyntaxError);
-JS_STATIC_ASSERT(JSProto_Error + JSEXN_TYPEERR      == JSProto_TypeError);
-JS_STATIC_ASSERT(JSProto_Error + JSEXN_URIERR       == JSProto_URIError);
-
 /* static */ JSObject *
 ErrorObject::createProto(JSContext *cx, JSProtoKey key)
 {
