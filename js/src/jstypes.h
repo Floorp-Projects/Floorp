@@ -22,6 +22,7 @@
 #define jstypes_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Types.h"
 
 // jstypes.h is (or should be!) included by every file in SpiderMonkey.
@@ -194,8 +195,8 @@
 ** MACROS:      JS_FUNC_TO_DATA_PTR
 **              JS_DATA_TO_FUNC_PTR
 ** DESCRIPTION:
-**      Macros to convert between function and data pointers assuming that
-**      they have the same size. Use them like this:
+**      Macros to convert between function and data pointers of the same
+**      size. Use them like this:
 **
 **      JSPropertyOp nativeGetter;
 **      JSObject *scriptedGetter;
@@ -206,14 +207,8 @@
 **
 ***********************************************************************/
 
-#ifdef __GNUC__
-# define JS_FUNC_TO_DATA_PTR(type, fun) (__extension__ (type) (size_t) (fun))
-# define JS_DATA_TO_FUNC_PTR(type, ptr) (__extension__ (type) (size_t) (ptr))
-#else
-/* Use an extra (void *) cast for MSVC. */
-# define JS_FUNC_TO_DATA_PTR(type, fun) ((type) (void *) (fun))
-# define JS_DATA_TO_FUNC_PTR(type, ptr) ((type) (void *) (ptr))
-#endif
+#define JS_FUNC_TO_DATA_PTR(type, fun)  (mozilla::BitwiseCast<type>(fun))
+#define JS_DATA_TO_FUNC_PTR(type, ptr)  (mozilla::BitwiseCast<type>(ptr))
 
 #ifdef __GNUC__
 # define JS_EXTENSION __extension__

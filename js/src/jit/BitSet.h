@@ -129,8 +129,7 @@ class BitSet::Iterator
             if (word_ == numWords)
                 return;
 
-            JS_STATIC_ASSERT(sizeof(value_) * 8 == BitSet::BitsPerWord);
-            index_ = word_ * sizeof(value_) * 8;
+            index_ = word_ * BitSet::BitsPerWord;
             value_ = bits[word_];
         }
 
