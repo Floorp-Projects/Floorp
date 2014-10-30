@@ -4,7 +4,6 @@
 
 #include "mozilla/dom/NetDashboardBinding.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/ErrorNames.h"
 #include "mozilla/net/Dashboard.h"
 #include "mozilla/net/HttpInfo.h"
 #include "nsHttp.h"
@@ -50,8 +49,6 @@ private:
     {
     }
 };
-
-static void GetErrorString(nsresult rv, nsAString& errorString);
 
 NS_IMPL_ISUPPORTS0(SocketData)
 
@@ -174,7 +171,7 @@ ConnectionData::OnTransportStatus(nsITransport *aTransport, nsresult aStatus,
         StopTimer();
     }
 
-    GetErrorString(aStatus, mStatus);
+    CopyASCIItoUTF16(Dashboard::GetErrorString(aStatus), mStatus);
     nsCOMPtr<nsIRunnable> event =
         NS_NewRunnableMethodWithArg<nsRefPtr<ConnectionData> >
         (mDashboard, &Dashboard::GetConnectionStatus, this);
@@ -319,7 +316,7 @@ LookupHelper::ConstructAnswer(LookupArgument *aArgument)
         }
     } else {
         dict.mAnswer = false;
-        GetErrorString(mStatus, dict.mError);
+        CopyASCIItoUTF16(Dashboard::GetErrorString(mStatus), dict.mError);
     }
 
     JS::RootedValue val(cx);
@@ -809,7 +806,7 @@ Dashboard::RequestConnection(const nsACString& aHost, uint32_t aPort,
 
     rv = TestNewConnection(connectionData);
     if (NS_FAILED(rv)) {
-        mozilla::net::GetErrorString(rv, connectionData->mStatus);
+        CopyASCIItoUTF16(GetErrorString(rv), connectionData->mStatus);
         nsCOMPtr<nsIRunnable> event =
             NS_NewRunnableMethodWithArg<nsRefPtr<ConnectionData> >
             (this, &Dashboard::GetConnectionStatus, connectionData);
@@ -892,6 +889,10 @@ typedef struct
 #undef ERROR
 #define ERROR(key, val) {key, #key}
 
+ErrorEntry errors[] = {
+    #include "ErrorList.h"
+};
+
 ErrorEntry socketTransportStatuses[] = {
         ERROR(NS_NET_STATUS_RESOLVING_HOST,  FAILURE(3)),
         ERROR(NS_NET_STATUS_RESOLVED_HOST,   FAILURE(11)),
@@ -903,19 +904,22 @@ ErrorEntry socketTransportStatuses[] = {
 };
 #undef ERROR
 
-
-static void
-GetErrorString(nsresult rv, nsAString& errorString)
+const char *
+Dashboard::GetErrorString(nsresult rv)
 {
-    for (size_t i = 0; i < ArrayLength(socketTransportStatuses); ++i) {
+    int length = sizeof(socketTransportStatuses) / sizeof(ErrorEntry);
+    for (int i = 0;i < length;i++)
         if (socketTransportStatuses[i].key == rv) {
-            errorString.AssignASCII(socketTransportStatuses[i].error);
-            return;
+            return socketTransportStatuses[i].error;
         }
-    }
-    nsAutoCString errorCString;
-    mozilla::GetErrorName(rv, errorCString);
-    CopyUTF8toUTF16(errorCString, errorString);
+
+    length = sizeof(errors) / sizeof(ErrorEntry);
+    for (int i = 0;i < length;i++)
+        if (errors[i].key == rv) {
+            return errors[i].error;
+        }
+
+    return nullptr;
 }
 
 } } // namespace mozilla::net
