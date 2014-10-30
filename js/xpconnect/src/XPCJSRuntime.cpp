@@ -3279,7 +3279,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     ///
     // Note we do have to retain the source code in memory for scripts compiled in
     // compileAndGo mode and compiled function bodies (from
-    // JS_CompileFunction*). In practice, this means content scripts and event
+    // JS::CompileFunction). In practice, this means content scripts and event
     // handlers.
     UniquePtr<XPCJSSourceHook> hook(new XPCJSSourceHook);
     js::SetSourceHook(runtime, Move(hook));

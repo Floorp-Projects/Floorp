@@ -4593,12 +4593,9 @@ JS_GetFunctionScript(JSContext *cx, HandleFunction fun)
  * null.
  *
  * enclosingDynamicScope is a dynamic scope to use, if it's not the global.
- *
- * The function will be defined as a property on objToDefineOn if the caller
- * requested that.
  */
 static bool
-CompileFunction(JSContext *cx, HandleObject objToDefineOn, const ReadOnlyCompileOptions &options,
+CompileFunction(JSContext *cx, const ReadOnlyCompileOptions &options,
                 const char *name, unsigned nargs, const char *const *argnames,
                 SourceBufferHolder &srcBuf,
                 HandleObject enclosingDynamicScope,
@@ -4608,7 +4605,6 @@ CompileFunction(JSContext *cx, HandleObject objToDefineOn, const ReadOnlyCompile
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, objToDefineOn);
     assertSameCompartment(cx, enclosingDynamicScope);
     assertSameCompartment(cx, enclosingStaticScope);
     RootedAtom funAtom(cx);
@@ -4636,49 +4632,7 @@ CompileFunction(JSContext *cx, HandleObject objToDefineOn, const ReadOnlyCompile
                                        enclosingStaticScope))
         return false;
 
-    if (objToDefineOn && funAtom && options.defineOnScope) {
-        Rooted<jsid> id(cx, AtomToId(funAtom));
-        RootedValue value(cx, ObjectValue(*fun));
-        if (!JSObject::defineGeneric(cx, objToDefineOn, id, value, nullptr,
-                                     nullptr, JSPROP_ENUMERATE))
-            return false;
-    }
-
     return true;
-}
-
-JS_PUBLIC_API(bool)
-JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
-                    const char *name, unsigned nargs, const char *const *argnames,
-                    SourceBufferHolder &srcBuf, MutableHandleFunction fun)
-{
-    return CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf,
-                           obj, NullPtr(), fun);
-}
-
-JS_PUBLIC_API(bool)
-JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
-                    const char *name, unsigned nargs, const char *const *argnames,
-                    const char16_t *chars, size_t length, MutableHandleFunction fun)
-{
-    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    return JS::CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf, fun);
-}
-
-JS_PUBLIC_API(bool)
-JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
-                    const char *name, unsigned nargs, const char *const *argnames,
-                    const char *bytes, size_t length, MutableHandleFunction fun)
-{
-    mozilla::UniquePtr<char16_t, JS::FreePolicy> chars;
-    if (options.utf8)
-        chars.reset(UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
-    else
-        chars.reset(InflateString(cx, bytes, &length));
-    if (!chars)
-        return false;
-
-    return CompileFunction(cx, obj, options, name, nargs, argnames, chars.get(), length, fun);
 }
 
 JS_PUBLIC_API(bool)
@@ -4692,7 +4646,7 @@ JS::CompileFunction(JSContext *cx, AutoObjectVector &scopeChain,
     if (!CreateScopeObjectsForScopeChain(cx, scopeChain, &dynamicScopeObj, &staticScopeObj))
         return false;
 
-    return CompileFunction(cx, /* objToDefineOn = */ JS::NullPtr(), options, name, nargs, argnames,
+    return CompileFunction(cx, options, name, nargs, argnames,
                            srcBuf, dynamicScopeObj, staticScopeObj, fun);
 }
 
@@ -4705,15 +4659,6 @@ JS::CompileFunction(JSContext *cx, AutoObjectVector &scopeChain,
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
     return CompileFunction(cx, scopeChain, options, name, nargs, argnames,
                            srcBuf, fun);
-}
-
-JS_PUBLIC_API(bool)
-JS_CompileUCFunction(JSContext *cx, JS::HandleObject obj, const char *name,
-                     unsigned nargs, const char *const *argnames,
-                     const char16_t *chars, size_t length,
-                     const CompileOptions &options, MutableHandleFunction fun)
-{
-    return CompileFunction(cx, obj, options, name, nargs, argnames, chars, length, fun);
 }
 
 JS_PUBLIC_API(bool)
@@ -4732,15 +4677,6 @@ JS::CompileFunction(JSContext *cx, AutoObjectVector &scopeChain,
 
     return CompileFunction(cx, scopeChain, options, name, nargs, argnames,
                            chars.get(), length, fun);
-}
-
-JS_PUBLIC_API(bool)
-JS_CompileFunction(JSContext *cx, JS::HandleObject obj, const char *name,
-                   unsigned nargs, const char *const *argnames,
-                   const char *ascii, size_t length,
-                   const JS::CompileOptions &options, MutableHandleFunction fun)
-{
-    return CompileFunction(cx, obj, options, name, nargs, argnames, ascii, length, fun);
 }
 
 JS_PUBLIC_API(JSString *)
