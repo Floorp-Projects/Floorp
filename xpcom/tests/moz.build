@@ -39,18 +39,18 @@ SimplePrograms([
 ])
 
 if CONFIG['OS_TARGET'] == 'WINNT':
-    SimplePrograms([
+    GeckoSimplePrograms([
         'TestBase64',
     ])
 
 if CONFIG['WRAP_STL_INCLUDES'] and not CONFIG['CLANG_CL']:
-    SimplePrograms([
+    GeckoSimplePrograms([
         'TestSTLWrappers',
     ])
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
-CppUnitTests([
+GeckoCppUnitTests([
     'ShowAlignments',
     'TestAutoPtr',
     'TestAutoRef',
@@ -73,7 +73,7 @@ CppUnitTests([
 ])
 
 if CONFIG['MOZ_MEMORY']:
-    CppUnitTests([
+    GeckoCppUnitTests([
         'TestJemalloc',
     ])
 
@@ -105,7 +105,7 @@ if CONFIG['MOZ_MEMORY']:
 if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT'):
     # FIXME bug 523392: TestDeadlockDetector doesn't like Windows
     # FIXME bug 523378: also fails on OS X
-    CppUnitTests([
+    GeckoCppUnitTests([
         'TestDeadlockDetector',
         'TestDeadlockDetectorScalability',
     ])
@@ -121,13 +121,6 @@ LOCAL_INCLUDES += [
 
 RESOURCE_FILES += [
     'test.properties',
-]
-
-USE_LIBS += [
-    'mozalloc',
-    'nspr',
-    'xpcomglue_s',
-    'xul',
 ]
 
 if CONFIG['MOZ_DMD']:

@@ -452,11 +452,11 @@ SurfaceTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
   }
 
   gl()->fActiveTexture(aTextureUnit);
-#ifndef DEBUG
+
   // SurfaceTexture spams us if there are any existing GL errors, so
   // we'll clear them here in order to avoid that.
-  gl()->GetAndClearError();
-#endif
+  gl()->FlushErrors();
+
   mSurfTex->UpdateTexImage();
 
   ApplyFilterToBoundTexture(gl(), aFilter, mTextureTarget);

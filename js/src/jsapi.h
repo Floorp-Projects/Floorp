@@ -964,8 +964,9 @@ class MOZ_STACK_CLASS SourceBufferHolder MOZ_FINAL
                                            JSPROP_GETTER nor JSPROP_SETTER is
                                            set. */
 #define JSPROP_PERMANENT        0x04    /* property cannot be deleted */
-#define JSPROP_NATIVE_ACCESSORS 0x08    /* set in JSPropertyDescriptor.flags
-                                           if getters/setters are JSNatives */
+#define JSPROP_PROPOP_ACCESSORS 0x08    /* Passed to JS_Define(UC)Property* and
+                                           JS_DefineElement if getters/setters
+                                           are JSPropertyOp/JSStrictPropertyOp */
 #define JSPROP_GETTER           0x10    /* property holds getter function */
 #define JSPROP_SETTER           0x20    /* property holds setter function */
 #define JSPROP_SHARED           0x40    /* don't allocate a value slot for this
@@ -2390,22 +2391,9 @@ typedef JSConstScalarSpec<int32_t> JSConstIntegerSpec;
 struct JSJitInfo;
 
 /*
- * Wrappers to replace {Strict,}PropertyOp for JSPropertySpecs. This will allow
- * us to pass one JSJitInfo per function with the property spec, without
- * additional field overhead.
- */
-typedef struct JSStrictPropertyOpWrapper {
-    JSStrictPropertyOp  op;
-    const JSJitInfo     *info;
-} JSStrictPropertyOpWrapper;
-
-typedef struct JSPropertyOpWrapper {
-    JSPropertyOp        op;
-    const JSJitInfo     *info;
-} JSPropertyOpWrapper;
-
-/*
- * Wrapper to do as above, but for JSNatives for JSFunctionSpecs.
+ * Wrapper to relace JSNative for JSPropertySpecs and JSFunctionSpecs. This will
+ * allow us to pass one JSJitInfo per function with the property/function spec,
+ * without additional field overhead.
  */
 typedef struct JSNativeWrapper {
     JSNative        op;
@@ -2416,8 +2404,7 @@ typedef struct JSNativeWrapper {
  * Macro static initializers which make it easy to pass no JSJitInfo as part of a
  * JSPropertySpec or JSFunctionSpec.
  */
-#define JSOP_WRAPPER(op) { {op, nullptr} }
-#define JSOP_NULLWRAPPER JSOP_WRAPPER(nullptr)
+#define JSNATIVE_WRAPPER(native) { {native, nullptr} }
 
 /*
  * To define an array element rather than a named property member, cast the
@@ -2433,22 +2420,45 @@ struct JSPropertySpec {
     const char                  *name;
     uint8_t                     flags;
     union {
-        JSPropertyOpWrapper propertyOp;
+        JSNativeWrapper     native;
         SelfHostedWrapper   selfHosted;
     } getter;
     union {
-        JSStrictPropertyOpWrapper propertyOp;
+        JSNativeWrapper           native;
         SelfHostedWrapper         selfHosted;
     } setter;
 
-    static_assert(sizeof(SelfHostedWrapper) == sizeof(JSPropertyOpWrapper),
-                  "JSPropertySpec::getter must be compact");
-    static_assert(sizeof(SelfHostedWrapper) == sizeof(JSStrictPropertyOpWrapper),
-                  "JSPropertySpec::setter must be compact");
-    static_assert(offsetof(SelfHostedWrapper, funname) == offsetof(JSPropertyOpWrapper, info),
+    bool isSelfHosted() const {
+#ifdef DEBUG
+        // Verify that our accessors match our JSPROP_GETTER flag.
+        if (flags & JSPROP_GETTER)
+            checkAccessorsAreSelfHosted();
+        else
+            checkAccessorsAreNative();
+#endif
+        return (flags & JSPROP_GETTER);
+    }
+
+    static_assert(sizeof(SelfHostedWrapper) == sizeof(JSNativeWrapper),
+                  "JSPropertySpec::getter/setter must be compact");
+    static_assert(offsetof(SelfHostedWrapper, funname) == offsetof(JSNativeWrapper, info),
                   "JS_SELF_HOSTED* macros below require that "
                   "SelfHostedWrapper::funname overlay "
-                  "JSPropertyOpWrapper::info");
+                  "JSNativeWrapper::info");
+private:
+    void checkAccessorsAreNative() const {
+        MOZ_ASSERT(getter.native.op);
+        // We may not have a setter at all.  So all we can assert here, for the
+        // native case is that if we have a jitinfo for the setter then we have
+        // a setter op too.  This is good enough to make sure we don't have a
+        // SelfHostedWrapper for the setter.
+        MOZ_ASSERT_IF(setter.native.info, setter.native.op);
+    }
+
+    void checkAccessorsAreSelfHosted() const {
+        MOZ_ASSERT(!getter.selfHosted.unused);
+        MOZ_ASSERT(!setter.selfHosted.unused);
+    }
 };
 
 namespace JS {
@@ -2462,6 +2472,13 @@ template<size_t N>
 inline int
 CheckIsCharacterLiteral(const char (&arr)[N]);
 
+/* NEVER DEFINED, DON'T USE.  For use by JS_PROPERTYOP_GETTER only. */
+inline int CheckIsPropertyOp(JSPropertyOp op);
+
+/* NEVER DEFINED, DON'T USE.  For use by JS_PROPERTYOP_SETTER only. */
+inline int CheckIsStrictPropertyOp(JSStrictPropertyOp op);
+
+
 } // namespace detail
 } // namespace JS
 
@@ -2474,37 +2491,47 @@ CheckIsCharacterLiteral(const char (&arr)[N]);
    reinterpret_cast<To>(s))
 
 #define JS_CHECK_ACCESSOR_FLAGS(flags) \
-  (static_cast<mozilla::EnableIf<!((flags) & (JSPROP_READONLY | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS))>::Type>(0), \
+  (static_cast<mozilla::EnableIf<!((flags) & (JSPROP_READONLY | JSPROP_SHARED | JSPROP_PROPOP_ACCESSORS))>::Type>(0), \
    (flags))
 
+#define JS_PROPERTYOP_GETTER(v) \
+  (static_cast<void>(sizeof(JS::detail::CheckIsPropertyOp(v))), \
+   reinterpret_cast<JSNative>(v))
+
+#define JS_PROPERTYOP_SETTER(v) \
+  (static_cast<void>(sizeof(JS::detail::CheckIsStrictPropertyOp(v))), \
+   reinterpret_cast<JSNative>(v))
+
+#define JS_STUBGETTER JS_PROPERTYOP_GETTER(JS_PropertyStub)
+
+#define JS_STUBSETTER JS_PROPERTYOP_SETTER(JS_StrictPropertyStub)
+
 /*
- * JSPropertySpec uses JSAPI JSPropertyOp and JSStrictPropertyOp in function
- * signatures.  These macros encapsulate the definition of JSNative-backed
- * JSPropertySpecs, performing type-safe casts on the getter/setter functions
- * and adding the necessary property flags to trigger interpretation as
- * JSNatives.
+ * JSPropertySpec uses JSNativeWrapper.  These macros encapsulate the definition
+ * of JSNative-backed JSPropertySpecs, by defining the JSNativeWrappers for
+ * them.
  */
 #define JS_PSG(name, getter, flags) \
     {name, \
-     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS), \
-     JSOP_WRAPPER(JS_CAST_NATIVE_TO(getter, JSPropertyOp)), \
-     JSOP_NULLWRAPPER}
+     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED), \
+     JSNATIVE_WRAPPER(getter), \
+     JSNATIVE_WRAPPER(nullptr)}
 #define JS_PSGS(name, getter, setter, flags) \
     {name, \
-     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS), \
-     JSOP_WRAPPER(JS_CAST_NATIVE_TO(getter, JSPropertyOp)), \
-     JSOP_WRAPPER(JS_CAST_NATIVE_TO(setter, JSStrictPropertyOp))}
+     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED), \
+     JSNATIVE_WRAPPER(getter), \
+     JSNATIVE_WRAPPER(setter)}
 #define JS_SELF_HOSTED_GET(name, getterName, flags) \
     {name, \
      uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_GETTER), \
      { nullptr, JS_CAST_STRING_TO(getterName, const JSJitInfo *) }, \
-     JSOP_NULLWRAPPER }
+     JSNATIVE_WRAPPER(nullptr) }
 #define JS_SELF_HOSTED_GETSET(name, getterName, setterName, flags) \
     {name, \
      uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_GETTER | JSPROP_SETTER), \
      { nullptr, JS_CAST_STRING_TO(getterName, const JSJitInfo *) },  \
      { nullptr, JS_CAST_STRING_TO(setterName, const JSJitInfo *) } }
-#define JS_PS_END { nullptr, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
+#define JS_PS_END { nullptr, 0, JSNATIVE_WRAPPER(nullptr), JSNATIVE_WRAPPER(nullptr) }
 
 /*
  * To define a native function, set call to a JSNativeWrapper. To define a
@@ -2880,62 +2907,62 @@ JS_DefineProperties(JSContext *cx, JS::HandleObject obj, const JSPropertySpec *p
 extern JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext *cx, JS::HandleObject obj, const char *name, JS::HandleValue value,
                   unsigned attrs,
-                  JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                  JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext *cx, JS::HandleObject obj, const char *name, JS::HandleObject value,
                   unsigned attrs,
-                  JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                  JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext *cx, JS::HandleObject obj, const char *name, JS::HandleString value,
                   unsigned attrs,
-                  JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                  JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext *cx, JS::HandleObject obj, const char *name, int32_t value,
                   unsigned attrs,
-                  JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                  JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext *cx, JS::HandleObject obj, const char *name, uint32_t value,
                   unsigned attrs,
-                  JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                  JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext *cx, JS::HandleObject obj, const char *name, double value,
                   unsigned attrs,
-                  JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                  JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
                       unsigned attrs,
-                      JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                      JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject value,
                       unsigned attrs,
-                      JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                      JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleString value,
                       unsigned attrs,
-                      JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                      JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, int32_t value,
                       unsigned attrs,
-                      JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                      JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, uint32_t value,
                       unsigned attrs,
-                      JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                      JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, double value,
                       unsigned attrs,
-                      JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                      JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_AlreadyHasOwnProperty(JSContext *cx, JS::HandleObject obj, const char *name,
@@ -2985,7 +3012,6 @@ class PropertyDescriptorOperations
     bool isEnumerable() const { return desc()->attrs & JSPROP_ENUMERATE; }
     bool isReadonly() const { return desc()->attrs & JSPROP_READONLY; }
     bool isPermanent() const { return desc()->attrs & JSPROP_PERMANENT; }
-    bool hasNativeAccessors() const { return desc()->attrs & JSPROP_NATIVE_ACCESSORS; }
     bool hasGetterObject() const { return desc()->attrs & JSPROP_GETTER; }
     bool hasSetterObject() const { return desc()->attrs & JSPROP_SETTER; }
     bool hasGetterOrSetterObject() const { return desc()->attrs & (JSPROP_GETTER | JSPROP_SETTER); }
@@ -3185,32 +3211,32 @@ JS_DeletePropertyById2(JSContext *cx, JS::HandleObject obj, JS::HandleId id, boo
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext *cx, JS::HandleObject obj, const char16_t *name, size_t namelen,
                     JS::HandleValue value, unsigned attrs,
-                    JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                    JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext *cx, JS::HandleObject obj, const char16_t *name, size_t namelen,
                     JS::HandleObject value, unsigned attrs,
-                    JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                    JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext *cx, JS::HandleObject obj, const char16_t *name, size_t namelen,
                     JS::HandleString value, unsigned attrs,
-                    JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                    JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext *cx, JS::HandleObject obj, const char16_t *name, size_t namelen,
                     int32_t value, unsigned attrs,
-                    JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                    JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext *cx, JS::HandleObject obj, const char16_t *name, size_t namelen,
                     uint32_t value, unsigned attrs,
-                    JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                    JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext *cx, JS::HandleObject obj, const char16_t *name, size_t namelen,
                     double value, unsigned attrs,
-                    JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                    JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_AlreadyHasOwnUCProperty(JSContext *cx, JS::HandleObject obj, const char16_t *name,
@@ -3261,32 +3287,32 @@ JS_SetArrayLength(JSContext *cx, JS::Handle<JSObject*> obj, uint32_t length);
 extern JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::HandleValue value,
                  unsigned attrs,
-                 JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                 JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::HandleObject value,
                  unsigned attrs,
-                 JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                 JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::HandleString value,
                  unsigned attrs,
-                 JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                 JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext *cx, JS::HandleObject obj, uint32_t index, int32_t value,
                  unsigned attrs,
-                 JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                 JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext *cx, JS::HandleObject obj, uint32_t index, uint32_t value,
                  unsigned attrs,
-                 JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                 JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext *cx, JS::HandleObject obj, uint32_t index, double value,
                  unsigned attrs,
-                 JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+                 JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
 JS_AlreadyHasOwnElement(JSContext *cx, JS::HandleObject obj, uint32_t index, bool *foundp);

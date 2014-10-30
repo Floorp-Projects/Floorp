@@ -73,6 +73,14 @@ if test "$compiler" = "clang"; then
 fi
 if test "$compiler" = "clang-cl"; then
     CLANG_CL=1
+    # We force clang-cl to emulate Visual C++ 2013 in configure.in, but that
+    # is based on the CLANG_CL variable defined here, so make sure that we're
+    # getting the right version here manually.
+    CC_VERSION=1800
+    CXX_VERSION=1800
+    # Build on clang-cl with MSVC 2013 with fallback emulation.
+    CFLAGS="$CFLAGS -fmsc-version=1800 -fallback"
+    CXXFLAGS="$CXXFLAGS -fmsc-version=1800 -fallback"
 fi
 
 if test "$GNU_CC"; then

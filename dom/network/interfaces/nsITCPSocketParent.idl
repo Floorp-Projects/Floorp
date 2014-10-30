@@ -76,7 +76,8 @@ interface nsITCPSocketIntermediary : nsISupports {
   // Listen on a port
   nsIDOMTCPServerSocket listen(in nsITCPServerSocketParent parent,
                                in unsigned short port, in unsigned short backlog,
-                               in DOMString binaryType);
+                               in DOMString binaryType,
+                               in unsigned long appId);
 
   // Called when received a child request to send a string.
   void onRecvSendString(in DOMString data, in uint32_t trackingNumber);

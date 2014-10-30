@@ -8,10 +8,6 @@
 # would only be used by our build system and should not itself be included in a
 # Mozilla distribution.
 
-# Don't link the against libmozglue because we don't need it.
-MOZ_GLUE_LDFLAGS =
-MOZ_GLUE_PROGRAM_LDFLAGS =
-
 HOST_CFLAGS += \
   -DNO_SIGN_VERIFY \
   $(DEFINES) \

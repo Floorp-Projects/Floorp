@@ -6,10 +6,6 @@ ifneq ($(dir $(PROGRAM)),./)
   GENERATED_DIRS = $(dir $(PROGRAM))
 endif
 
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-WRAP_LDFLAGS =
-endif
-
 ifndef MOZ_WINCONSOLE
 ifdef MOZ_DEBUG
 MOZ_WINCONSOLE = 1

@@ -242,8 +242,9 @@ class MachFormatter(base.BaseFormatter):
         status, subtest = data["status"], data["subtest"]
         unexpected = "expected" in data
         if self.verbose:
-            color = self.terminal.red if unexpected else self.terminal.green
-            rv = " ".join([subtest, color(status), message])
+            if self.terminal is not None:
+                status = (self.terminal.red if unexpected else self.terminal.green)(status)
+            rv = " ".join([subtest, status, message])
         elif unexpected:
             # We only append an unexpected summary if it was not logged
             # directly by verbose mode.

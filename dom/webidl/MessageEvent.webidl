@@ -7,8 +7,6 @@
  * http://www.whatwg.org/specs/web-apps/current-work/#messageevent
  */
 
-interface WindowProxy;
-
 [Constructor(DOMString type, optional MessageEventInit eventInitDict),
  Exposed=(Window,Worker,System)]
 interface MessageEvent : Event {
@@ -49,6 +47,6 @@ dictionary MessageEventInit : EventInit {
   any data;
   DOMString origin;
   DOMString lastEventId;
-  (WindowProxy or MessagePort)? source = null;
+  (Window or MessagePort)? source = null;
   sequence<MessagePort>? ports;
 };

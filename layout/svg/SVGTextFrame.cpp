@@ -3724,7 +3724,7 @@ SVGTextFrame::PaintSVG(nsRenderingContext* aContext,
     if (frame == caretFrame && ShouldPaintCaret(run, caret)) {
       // XXX Should we be looking at the fill/stroke colours to paint the
       // caret with, rather than using the color property?
-      caret->PaintCaret(nullptr, aContext, frame, nsPoint());
+      caret->PaintCaret(nullptr, *aContext->GetDrawTarget(), frame, nsPoint());
       gfx->NewPath();
     }
 

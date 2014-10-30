@@ -474,20 +474,25 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
       return NS_OK;
   }
 
-  // Don't load "fbplugin" (a Facebook plugin) if we're running on OS X 10.10
-  // (Yosemite) or later.  It crashes on load, in the call to LoadPlugin()
-  // below.  See bug 1086977.
+  // Don't load "fbplugin" or any plugins whose name starts with "fbplugin_"
+  // (Facebook plugins) if we're running on OS X 10.10 (Yosemite) or later.
+  // A "fbplugin" file crashes on load, in the call to LoadPlugin() below.
+  // See bug 1086977.
   if (nsCocoaFeatures::OnYosemiteOrLater()) {
-    if (fileName.EqualsLiteral("fbplugin")) {
-      NS_WARNING("Preventing load of fbplugin (see bug 1086977)");
+    if (fileName.EqualsLiteral("fbplugin") ||
+        StringBeginsWith(fileName, NS_LITERAL_CSTRING("fbplugin_"))) {
+      nsAutoCString msg;
+      msg.AppendPrintf("Preventing load of %s (see bug 1086977)",
+                       fileName.get());
+      NS_WARNING(msg.get());
       return NS_ERROR_FAILURE;
     }
 #if defined(MOZ_CRASHREPORTER)
     // The block above assumes that "fbplugin" is the filename of the plugin
-    // to be blocked, but be don't yet know for sure if this is true.  It might
-    // also be the name of a file indirectly loaded by the plugin.  So for the
-    // time being we must record extra information in our crash logs.
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Bug 1086977"),
+    // to be blocked, or that the filename starts with "fbplugin_".  But we
+    // don't yet know for sure if this is always true.  So for the time being
+    // record extra information in our crash logs.
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Bug_1086977"),
                                        fileName);
 #endif
   }
@@ -502,9 +507,8 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
 #if defined(MOZ_CRASHREPORTER)
   if (nsCocoaFeatures::OnYosemiteOrLater()) {
     // If we didn't crash in LoadPlugin(), change the previous annotation so we
-    // don't sow confusion.  Unfortunately there's not (yet) any way to get rid
-    // of the annotation completely.
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Bug 1086977"),
+    // don't sow confusion.
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Bug_1086977"),
                                        NS_LITERAL_CSTRING("Didn't crash, please ignore"));
   }
 #endif

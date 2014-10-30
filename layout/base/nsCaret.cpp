@@ -24,7 +24,6 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
-#include "nsRenderingContext.h"
 #include "nsPresContext.h"
 #include "nsBlockFrame.h"
 #include "nsISelectionController.h"
@@ -513,7 +512,7 @@ nsCaret::GetPaintGeometry(nsRect* aRect)
 }
 
 void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
-                         nsRenderingContext *aCtx,
+                         DrawTarget& aDrawTarget,
                          nsIFrame* aForFrame,
                          const nsPoint &aOffset)
 {
@@ -525,7 +524,6 @@ void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
   }
   NS_ASSERTION(frame == aForFrame, "We're referring different frame");
 
-  DrawTarget* drawTarget = aCtx->GetDrawTarget();
   int32_t appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
 
   nsRect caretRect;
@@ -533,14 +531,14 @@ void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
   ComputeCaretRects(frame, contentOffset, &caretRect, &hookRect);
 
   Rect devPxCaretRect =
-    NSRectToSnappedRect(caretRect + aOffset, appUnitsPerDevPixel, *drawTarget);
+    NSRectToSnappedRect(caretRect + aOffset, appUnitsPerDevPixel, aDrawTarget);
   Rect devPxHookRect =
-    NSRectToSnappedRect(hookRect + aOffset, appUnitsPerDevPixel, *drawTarget);
+    NSRectToSnappedRect(hookRect + aOffset, appUnitsPerDevPixel, aDrawTarget);
   ColorPattern color(ToDeviceColor(frame->GetCaretColorAt(contentOffset)));
 
-  drawTarget->FillRect(devPxCaretRect, color);
+  aDrawTarget.FillRect(devPxCaretRect, color);
   if (!hookRect.IsEmpty()) {
-    drawTarget->FillRect(devPxHookRect, color);
+    aDrawTarget.FillRect(devPxHookRect, color);
   }
 }
 

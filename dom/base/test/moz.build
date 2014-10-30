@@ -10,7 +10,7 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['unit_ipc/xpcshell.ini']
 
-CppUnitTests([
+GeckoCppUnitTests([
     'TestCSPParser',
     'TestGetURL',
     'TestNativeXMLHttpRequest',
@@ -38,10 +38,3 @@ MOCHITEST_CHROME_MANIFESTS += [
 ]
 
 BROWSER_CHROME_MANIFESTS += ['browser.ini']
-
-USE_LIBS += [
-    'mozalloc',
-    'nspr',
-    'xpcomglue_s',
-    'xul',
-]

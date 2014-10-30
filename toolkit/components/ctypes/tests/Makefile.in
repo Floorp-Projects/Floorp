@@ -9,5 +9,3 @@ INSTALL_TARGETS += LIB_1
 LIB_3_FILES = $(SHARED_LIBRARY)
 LIB_3_DEST = $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/chrome
 INSTALL_TARGETS += LIB_3
-
-MOZ_GLUE_LDFLAGS =

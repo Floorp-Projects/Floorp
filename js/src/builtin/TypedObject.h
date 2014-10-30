@@ -8,6 +8,7 @@
 #define builtin_TypedObject_h
 
 #include "jsobj.h"
+#include "jsweakmap.h"
 
 #include "builtin/TypedObjectConstants.h"
 #include "vm/ArrayBufferObject.h"
@@ -62,19 +63,18 @@
  * Typed objects can be either transparent or opaque, depending on whether
  * their underlying buffer can be accessed. Transparent and opaque typed
  * objects have different classes, and can have different physical layouts.
- * The following layouts are currently possible:
+ * The following layouts are possible:
  *
- * InlineOpaqueTypedObject: Typed objects whose data immediately follows the
- *   object's header are inline typed objects. These do not have an associated
- *   array buffer, so only opaque typed objects can be inline.
+ * InlineTypedObject: Typed objects whose data immediately follows the object's
+ *   header are inline typed objects. The buffer for these objects is created
+ *   lazily and stored via the compartment's LazyArrayBufferTable, and points
+ *   back into the object's internal data.
  *
- * OutlineTypedObject: Transparent or opaque typed objects whose data is owned by
- *   another object, which can be either an array buffer or an inline typed
- *   object (opaque objects only). Outline typed objects may be attached or
- *   unattached. An unattached typed object has no memory associated with it.
- *   When first created, objects are always attached, but they can become
- *   unattached if their buffer is neutered (note that this implies that typed
- *   objects of opaque types can't be unattached).
+ * OutlineTypedObject: Typed objects whose data is owned by another object,
+ *   which can be either an array buffer or an inline typed object. Outline
+ *   typed objects may be attached or unattached. An unattached typed object
+ *   has no data associated with it. When first created, objects are always
+ *   attached, but they can become unattached if their buffer is neutered.
  *
  * Note that whether a typed object is opaque is not directly
  * connected to its type. That is, opaque types are *always*
@@ -671,6 +671,8 @@ class TypedObject : public JSObject
         return typedMem() + offset;
     }
 
+    inline bool opaque() const;
+
     // Creates a new typed object whose memory is freshly allocated and
     // initialized with zeroes (or, in the case of references, an appropriate
     // default value).
@@ -784,14 +786,16 @@ class OutlineTypedObject : public TypedObject
     static void obj_trace(JSTracer *trace, JSObject *object);
 };
 
-// Class for a transparent typed object, whose owner is an array buffer.
-class TransparentTypedObject : public OutlineTypedObject
+// Class for a transparent typed object whose owner is an array buffer.
+class OutlineTransparentTypedObject : public OutlineTypedObject
 {
   public:
     static const Class class_;
+
+    ArrayBufferObject *getOrCreateBuffer(JSContext *cx);
 };
 
-// Class for an opaque typed object, whose owner may be either an array buffer
+// Class for an opaque typed object whose owner may be either an array buffer
 // or an opaque inlined typed object.
 class OutlineOpaqueTypedObject : public OutlineTypedObject
 {
@@ -799,15 +803,13 @@ class OutlineOpaqueTypedObject : public OutlineTypedObject
     static const Class class_;
 };
 
-// Class for an opaque typed object whose data is allocated inline.
-class InlineOpaqueTypedObject : public TypedObject
+// Class for a typed object whose data is allocated inline.
+class InlineTypedObject : public TypedObject
 {
     // Start of the inline data, which immediately follows the shape and type.
     uint8_t data_[1];
 
   public:
-    static const Class class_;
-
     static const size_t MaximumSize = NativeObject::MAX_FIXED_SLOTS * sizeof(Value);
 
     static gc::AllocKind allocKindForTypeDescriptor(TypeDescr *descr) {
@@ -820,16 +822,35 @@ class InlineOpaqueTypedObject : public TypedObject
     }
 
     uint8_t *inlineTypedMem() const {
-        static_assert(offsetof(InlineOpaqueTypedObject, data_) == sizeof(JSObject),
+        static_assert(offsetof(InlineTypedObject, data_) == sizeof(JSObject),
                       "The data for an inline typed object must follow the shape and type.");
         return (uint8_t *) &data_;
     }
 
     static void obj_trace(JSTracer *trace, JSObject *object);
 
-    static size_t offsetOfDataStart();
+    static size_t offsetOfDataStart() {
+        return offsetof(InlineTypedObject, data_);
+    }
 
-    static InlineOpaqueTypedObject *create(JSContext *cx, HandleTypeDescr descr);
+    static InlineTypedObject *create(JSContext *cx, HandleTypeDescr descr);
+};
+
+// Class for a transparent typed object with inline data, which may have a
+// lazily allocated array buffer.
+class InlineTransparentTypedObject : public InlineTypedObject
+{
+  public:
+    static const Class class_;
+
+    ArrayBufferObject *getOrCreateBuffer(JSContext *cx);
+};
+
+// Class for an opaque typed object with inline data and no array buffer.
+class InlineOpaqueTypedObject : public InlineTypedObject
+{
+  public:
+    static const Class class_;
 };
 
 /*
@@ -1044,7 +1065,8 @@ JS_FOR_EACH_REFERENCE_TYPE_REPR(JS_LOAD_REFERENCE_CLASS_DEFN)
 inline bool
 IsTypedObjectClass(const Class *class_)
 {
-    return class_ == &TransparentTypedObject::class_ ||
+    return class_ == &OutlineTransparentTypedObject::class_ ||
+           class_ == &InlineTransparentTypedObject::class_ ||
            class_ == &OutlineOpaqueTypedObject::class_ ||
            class_ == &InlineOpaqueTypedObject::class_;
 }
@@ -1077,6 +1099,36 @@ IsTypeDescrClass(const Class* clasp)
     return IsSizedTypeDescrClass(clasp) ||
            clasp == &UnsizedArrayTypeDescr::class_;
 }
+
+inline bool
+TypedObject::opaque() const
+{
+    return is<OutlineOpaqueTypedObject>() || is<InlineOpaqueTypedObject>();
+}
+
+// Inline transparent typed objects do not initially have an array buffer, but
+// can have that buffer created lazily if it is accessed later. This table
+// manages references from such typed objects to their buffers.
+class LazyArrayBufferTable
+{
+  private:
+    // The map from transparent typed objects to their lazily created buffer.
+    // Keys in this map are InlineTransparentTypedObjects and values are
+    // ArrayBufferObjects, but we don't enforce this in the type system due to
+    // the extra marking code goop that requires.
+    typedef WeakMap<PreBarrieredObject, RelocatablePtrObject> Map;
+    Map map;
+
+  public:
+    LazyArrayBufferTable(JSContext *cx);
+    ~LazyArrayBufferTable();
+
+    ArrayBufferObject *maybeBuffer(InlineTransparentTypedObject *obj);
+    bool addBuffer(JSContext *cx, InlineTransparentTypedObject *obj, ArrayBufferObject *buffer);
+
+    void trace(JSTracer *trc);
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
+};
 
 } // namespace js
 
@@ -1122,8 +1174,16 @@ template <>
 inline bool
 JSObject::is<js::OutlineTypedObject>() const
 {
-    return getClass() == &js::TransparentTypedObject::class_ ||
+    return getClass() == &js::OutlineTransparentTypedObject::class_ ||
            getClass() == &js::OutlineOpaqueTypedObject::class_;
+}
+
+template <>
+inline bool
+JSObject::is<js::InlineTypedObject>() const
+{
+    return getClass() == &js::InlineTransparentTypedObject::class_ ||
+           getClass() == &js::InlineOpaqueTypedObject::class_;
 }
 
 inline void

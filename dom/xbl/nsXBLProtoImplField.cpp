@@ -367,8 +367,8 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
 
   if (!::JS_DefinePropertyById(aCx, aTargetClassObject, id, JS::UndefinedHandleValue,
                                AccessorAttributes(),
-                               JS_DATA_TO_FUNC_PTR(JSPropertyOp, get.get()),
-                               JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, set.get()))) {
+                               JS_DATA_TO_FUNC_PTR(JSNative, get.get()),
+                               JS_DATA_TO_FUNC_PTR(JSNative, set.get()))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
