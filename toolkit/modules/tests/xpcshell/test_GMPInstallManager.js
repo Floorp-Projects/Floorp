@@ -144,6 +144,75 @@ add_test(function test_checkForAddons_404Error() {
   });
 });
 
+/**
+ * Tests that a xhr abort() works as expected
+ */
+add_test(function test_checkForAddons_abort() {
+  let xhr = overrideXHR(200, "", { dropRequest: true} );
+  let installManager = new GMPInstallManager();
+  let promise = installManager.checkForAddons();
+  xhr.abort();
+  promise.then(function() {
+    do_throw("abort() should reject");
+  }, function(err) {
+    do_check_eq(err.status, 0);
+    installManager.uninit();
+    run_next_test();
+  });
+});
+
+/**
+ * Tests that a defensive timeout works as expected
+ */
+add_test(function test_checkForAddons_timeout() {
+  overrideXHR(200, "", { dropRequest: true, timeout: true });
+  let installManager = new GMPInstallManager();
+  let promise = installManager.checkForAddons();
+  promise.then(function() {
+    do_throw("Defensive timeout should reject");
+  }, function(err) {
+    do_check_eq(err.status, 0);
+    installManager.uninit();
+    run_next_test();
+  });
+});
+
+/**
+ * Tests that we throw correctly in case of ssl certification error.
+ */
+add_test(function test_checkForAddons_bad_ssl() {
+  //
+  // Add random stuff that cause CertUtil to require https.
+  //
+  let PREF_KEY_URL_OVERRIDE_BACKUP =
+    Preferences.get(GMPPrefs.KEY_URL_OVERRIDE, undefined);
+  Preferences.reset(GMPPrefs.KEY_URL_OVERRIDE);
+
+  let CERTS_BRANCH_DOT_ONE = GMPPrefs.CERTS_BRANCH + ".1";
+  let PREF_CERTS_BRANCH_DOT_ONE_BACKUP =
+    Preferences.get(CERTS_BRANCH_DOT_ONE, undefined);
+  Services.prefs.setCharPref(CERTS_BRANCH_DOT_ONE, "funky value");
+
+
+  overrideXHR(200, "");
+  let installManager = new GMPInstallManager();
+  let promise = installManager.checkForAddons();
+  promise.then(function() {
+    do_throw("Defensive timeout should reject");
+  }, function(err) {
+    do_check_true(err.message.contains("SSL is required and URI scheme is not https."));
+    installManager.uninit();
+    if (PREF_KEY_URL_OVERRIDE_BACKUP) {
+      Preferences.set(GMPPrefs.KEY_URL_OVERRIDE,
+        PREF_KEY_URL_OVERRIDE_BACKUP);
+    }
+    if (PREF_CERTS_BRANCH_DOT_ONE_BACKUP) {
+      Preferences.set(CERTS_BRANCH_DOT_ONE,
+        PREF_CERTS_BRANCH_DOT_ONE_BACKUP);
+    }
+    run_next_test();
+  });
+});
 
 /**
  * Tests that gettinga a funky non XML response works as expected
@@ -600,55 +669,100 @@ function makeHandler(aVal) {
  * Constructs a mock xhr which is used for testing different aspects
  * of responses.
  */
-function xhr(inputStatus, inputResponse) {
+function xhr(inputStatus, inputResponse, options) {
   this.inputStatus = inputStatus;
   this.inputResponse = inputResponse;
+  this.status = 0;
+  this.responseXML = null;
+  this._aborted = false;
+  this._onabort = null;
+  this._onprogress = null;
+  this._onerror = null;
+  this._onload = null;
+  this._onloadend = null;
+  this._ontimeout = null;
+  this._url = null;
+  this._method = null;
+  this._timeout = 0;
+  this._notified = false;
+  this._options = options || {};
 }
 xhr.prototype = {
   overrideMimeType: function(aMimetype) { },
   setRequestHeader: function(aHeader, aValue) { },
   status: null,
   channel: { set notificationCallbacks(aVal) { } },
-  _url: null,
-  _method: null,
   open: function(aMethod, aUrl) {
     this.channel.originalURI = Services.io.newURI(aUrl, null, null);
     this._method = aMethod; this._url = aUrl;
   },
   abort: function() {
+    this._dropRequest = true;
+    this._notify(["abort", "loadend"]);
   },
   responseXML: null,
   responseText: null,
   send: function(aBody) {
-    let self = this;
     do_execute_soon(function() {
-      self.status = self.inputStatus;
-      self.responseText = self.inputResponse;
       try {
-        let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                     createInstance(Ci.nsIDOMParser);
-        self.responseXML = parser.parseFromString(self.inputResponse,
-                                                  "application/xml");
-      } catch (e) {
-        self.responseXML = null;
+        if (this._options.dropRequest) {
+          if (this._timeout > 0 && this._options.timeout) {
+            this._notify(["timeout", "loadend"]);
+          }
+          return;
+        }
+        this.status = this.inputStatus;
+        this.responseText = this.inputResponse;
+        try {
+          let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
+                createInstance(Ci.nsIDOMParser);
+          this.responseXML = parser.parseFromString(this.inputResponse,
+            "application/xml");
+        } catch (e) {
+          this.responseXML = null;
+        }
+        if (this.inputStatus === 200) {
+          this._notify(["load", "loadend"]);
+        } else {
+          this._notify(["error", "loadend"]);
+        }
+      } catch (ex) {
+        do_throw(ex);
       }
-      let e = { target: self };
-      if (self.inputStatus === 200) {
-        self.onload(e);
-      } else {
-        self.onerror(e);
-      }
-    });
+    }.bind(this));
   },
-  _onprogress: null,
+  set onabort(aValue) { this._onabort = makeHandler(aValue); },
+  get onabort() { return this._onabort; },
   set onprogress(aValue) { this._onprogress = makeHandler(aValue); },
   get onprogress() { return this._onprogress; },
-  _onerror: null,
   set onerror(aValue) { this._onerror = makeHandler(aValue); },
   get onerror() { return this._onerror; },
-  _onload: null,
   set onload(aValue) { this._onload = makeHandler(aValue); },
   get onload() { return this._onload; },
+  set onloadend(aValue) { this._onloadend = makeHandler(aValue); },
+  get onloadend() { return this._onloadend; },
+  set ontimeout(aValue) { this._ontimeout = makeHandler(aValue); },
+  get ontimeout() { return this._ontimeout; },
+  set timeout(aValue) { this._timeout = aValue; },
+  _notify: function(events) {
+    if (this._notified) {
+      return;
+    }
+    this._notified = true;
+    for (let item of events) {
+      let k = "on" + item;
+      if (this[k]) {
+        do_print("Notifying " + item);
+        let e = {
+          target: this,
+          type: item,
+        };
+        this[k](e);
+      } else {
+        do_print("Notifying " + item + ", but there are no listeners");
+      }
+    }
+  },
   addEventListener: function(aEvent, aValue, aCapturing) {
     eval("this._on" + aEvent + " = aValue");
   },
@@ -683,16 +797,17 @@ xhr.prototype = {
  * @param status The status you want to get back when an XHR request is made
  * @param response The response you want to get back when an XHR request is made
  */
-function overrideXHR(status, response) {
+function overrideXHR(status, response, options) {
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   if (overrideXHR.myxhr) {
     registrar.unregisterFactory(overrideXHR.myxhr.classID, overrideXHR.myxhr);
   }
-  overrideXHR.myxhr = new xhr(status, response);
+  overrideXHR.myxhr = new xhr(status, response, options);
   registrar.registerFactory(overrideXHR.myxhr.classID,
                             overrideXHR.myxhr.classDescription,
                             overrideXHR.myxhr.contractID,
                             overrideXHR.myxhr);
+  return overrideXHR.myxhr;
 }
 
 /**
