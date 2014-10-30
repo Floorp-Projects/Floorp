@@ -160,6 +160,34 @@ public:
   }
 };
 
+class ReleasePromiseRunnable MOZ_FINAL : public MainThreadWorkerControlRunnable
+{
+  nsRefPtr<PromiseHolder> mPromiseHolder;
+
+public:
+  ReleasePromiseRunnable(WorkerPrivate* aWorkerPrivate,
+                         PromiseHolder* aPromiseHolder)
+    : MainThreadWorkerControlRunnable(aWorkerPrivate),
+      mPromiseHolder(aPromiseHolder)
+  { }
+
+private:
+  ~ReleasePromiseRunnable()
+  { }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+
+    mPromiseHolder->Clean();
+
+    return true;
+  }
+
+};
+
 class GetServicedRunnable MOZ_FINAL : public nsRunnable
 {
   WorkerPrivate* mWorkerPrivate;
@@ -196,7 +224,19 @@ public:
       new ResolvePromiseWorkerRunnable(mWorkerPrivate, mPromiseHolder, result);
 
     AutoSafeJSContext cx;
-    r->Dispatch(cx);
+    if (r->Dispatch(cx)) {
+      return NS_OK;
+    }
+
+    // Dispatch to worker thread failed because the worker is shutting down.
+    // Use a control runnable to release the runnable on the worker thread.
+    nsRefPtr<ReleasePromiseRunnable> releaseRunnable =
+      new ReleasePromiseRunnable(mWorkerPrivate, mPromiseHolder);
+
+    if (!releaseRunnable->Dispatch(cx)) {
+      NS_RUNTIMEABORT("Failed to dispatch PromiseHolder control runnable.");
+    }
+
     return NS_OK;
   }
 };
