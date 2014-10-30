@@ -767,7 +767,7 @@ function* updateBookmark(info, item, newParent) {
         `INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid) 
          VALUES (:url, :rev_host, 0, :frecency, GENERATE_GUID())
         `, { url: info.url ? info.url.href : null,
-             rev_host: getReversedHost(info.url),
+             rev_host: PlacesUtils.getReversedHost(info.url),
              frecency: info.url.protocol == "place:" ? 0 : -1 });
       tuples.set("url", { value: info.url.href
                         , fragment: "fk = (SELECT id FROM moz_places WHERE url = :url)" });
@@ -858,7 +858,7 @@ function* insertBookmark(item, parent) {
       yield db.executeCached(
         `INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid) 
          VALUES (:url, :rev_host, 0, :frecency, GENERATE_GUID())
-        `, { url: item.url.href, rev_host: getReversedHost(item.url),
+        `, { url: item.url.href, rev_host: PlacesUtils.getReversedHost(item.url),
              frecency: item.url.protocol == "place:" ? 0 : -1 });
     }
 
@@ -1087,17 +1087,6 @@ function removeSameValueProperties(dest, src) {
  * @return nsIURI for the given URL.
  */
 function toURI(url) NetUtil.newURI(url.href);
-
-/**
- * Reverse a host based on the moz_places algorithm, that is reverse the host
- * string and add a trialing period.  For example "google.com" becomes
- * "moc.elgoog.".
- *
- * @param url
- *        the URL to generate a rev host for.
- * @return the reversed host string.
- */
-function getReversedHost(url) url.host.split("").reverse().join("") + ".";
 
 /**
  * Convert a Date object to a PRTime (microseconds).
