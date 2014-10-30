@@ -1060,6 +1060,18 @@ CycleCollectedJSRuntime::DeferredFinalize(DeferredFinalizeAppendFunction aAppend
 void
 CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports)
 {
+#if defined(XP_MACOSX) && defined(__LP64__)
+  // We'll crash here if aSupports is poisoned (== 0x5a5a5a5a5a5a5a5a).  This
+  // is better (more informative) than crashing in ReleaseSliceNow().  See
+  // bug 997908.  This patch should get backed out when bug 997908 gets fixed,
+  // or if it doesn't actually help diagnose that bug.
+  __asm__ __volatile__("push %%rax;"
+                       "push %%rdx;"
+                       "movq %0, %%rax;"
+                       "movq (%%rax), %%rdx;"
+                       "pop %%rdx;"
+                       "pop %%rax;" : : "g" (aSupports));
+#endif
   mDeferredSupports.AppendElement(aSupports);
 }
 
