@@ -1333,8 +1333,8 @@ RilObject.prototype = {
    *                RIL_PREFERRED_NETWORK_TYPE_TO_GECKO as its `type` attribute.
    */
   setPreferredNetworkType: function(options) {
-    let networkType = RIL_PREFERRED_NETWORK_TYPE_TO_GECKO.indexOf(options.type);
-    if (networkType < 0) {
+    let networkType = options.type;
+    if (networkType < 0 || networkType >= RIL_PREFERRED_NETWORK_TYPE_TO_GECKO.length) {
       options.errorMsg = GECKO_ERROR_INVALID_PARAMETER;
       this.sendChromeMessage(options);
       return;
@@ -6292,8 +6292,7 @@ RilObject.prototype[REQUEST_GET_PREFERRED_NETWORK_TYPE] = function REQUEST_GET_P
     return;
   }
 
-  let networkType = this.context.Buf.readInt32List()[0];
-  options.type = RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[networkType];
+  options.type = this.context.Buf.readInt32List()[0];
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_GET_NEIGHBORING_CELL_IDS] = function REQUEST_GET_NEIGHBORING_CELL_IDS(length, options) {
