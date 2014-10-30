@@ -21,7 +21,7 @@ function startTest(test, token)
   var v = SetupEME(test, token);
   v.preload = "auto"; // Required due to "canplay" not firing for MSE unless we do this.
 
-  v.addEventListener("canplay", function(ev) {
+  v.addEventListener("loadeddata", function(ev) {
     var video = ev.target;
     var canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;

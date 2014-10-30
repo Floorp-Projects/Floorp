@@ -60,7 +60,6 @@ function startTest(test, token)
 
   v.addEventListener("ended", function(ev) {
     ok(true, token + " got ended event");
-    manager.finished(token);
 
     ok(gotEncrypted, token + " encrypted event should have fired");
     ok(gotPlaying, token + " playing event should have fired");
@@ -72,7 +71,7 @@ function startTest(test, token)
 
     // Verify all sessions had all keys went sent the to the CDM usable, and thus
     // that we received keyschange event(s).
-    is(sessions.length, 1, "should have 1 session");
+    is(sessions.length, 1, token + " should have 1 session");
     for (var i = 0; i < sessions.length; i++) {
       var session = sessions[i];
       ok(session.gotKeysChanged, token + " should have received at least one keychange event");
@@ -81,6 +80,7 @@ function startTest(test, token)
       }
     }
 
+    manager.finished(token);
    });
 
   v.addEventListener("error", bail(token + " got error event"));
