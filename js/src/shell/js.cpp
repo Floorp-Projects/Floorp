@@ -2457,7 +2457,12 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
         parent = JS_GetParent(&args.callee());
     }
 
-    JSObject *clone = JS_CloneFunctionObject(cx, funobj, parent);
+    // Should it worry us that we might be getting with wrappers
+    // around with wrappers here?
+    JS::AutoObjectVector scopeChain(cx);
+    if (!parent->is<GlobalObject>() && !scopeChain.append(parent))
+        return false;
+    JSObject *clone = JS::CloneFunctionObject(cx, funobj, scopeChain);
     if (!clone)
         return false;
     args.rval().setObject(*clone);

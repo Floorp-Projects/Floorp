@@ -3869,18 +3869,14 @@ CreateScopeObjectsForScopeChain(JSContext *cx, AutoObjectVector &scopeChain,
     return true;
 }
 
-JS_PUBLIC_API(JSObject *)
-JS_CloneFunctionObject(JSContext *cx, HandleObject funobj, HandleObject parentArg)
+static JSObject *
+CloneFunctionObject(JSContext *cx, HandleObject funobj, HandleObject dynamicScope)
 {
-    RootedObject parent(cx, parentArg);
-
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, parent);
+    assertSameCompartment(cx, dynamicScope);
+    MOZ_ASSERT(dynamicScope);
     // Note that funobj can be in a different compartment.
-
-    if (!parent)
-        parent = cx->global();
 
     if (!funobj->is<JSFunction>()) {
         AutoCompartment ac(cx, funobj);
@@ -3900,7 +3896,7 @@ JS_CloneFunctionObject(JSContext *cx, HandleObject funobj, HandleObject parentAr
      * script, we cannot clone it without breaking the compiler's assumptions.
      */
     if (fun->isInterpreted() && (fun->nonLazyScript()->enclosingStaticScope() ||
-        (fun->nonLazyScript()->compileAndGo() && !parent->is<GlobalObject>())))
+        (fun->nonLazyScript()->compileAndGo() && !dynamicScope->is<GlobalObject>())))
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
         return nullptr;
@@ -3916,12 +3912,18 @@ JS_CloneFunctionObject(JSContext *cx, HandleObject funobj, HandleObject parentAr
         return nullptr;
     }
 
-    return CloneFunctionObject(cx, fun, parent, fun->getAllocKind());
+    return CloneFunctionObject(cx, fun, dynamicScope, fun->getAllocKind());
 }
 
 namespace JS {
 
 JS_PUBLIC_API(JSObject *)
+CloneFunctionObject(JSContext *cx, JS::Handle<JSObject*> funobj)
+{
+    return CloneFunctionObject(cx, funobj, cx->global());
+}
+
+extern JS_PUBLIC_API(JSObject *)
 CloneFunctionObject(JSContext *cx, HandleObject funobj, AutoObjectVector &scopeChain)
 {
     RootedObject dynamicScope(cx);
@@ -3929,7 +3931,7 @@ CloneFunctionObject(JSContext *cx, HandleObject funobj, AutoObjectVector &scopeC
     if (!CreateScopeObjectsForScopeChain(cx, scopeChain, &dynamicScope, &unusedStaticScope))
         return nullptr;
 
-    return JS_CloneFunctionObject(cx, funobj, dynamicScope);
+    return CloneFunctionObject(cx, funobj, dynamicScope);
 }
 
 } // namespace JS
