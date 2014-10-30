@@ -152,4 +152,8 @@
   <color name="top_site_default">#FFECF0F3</color>
   <color name="top_site_border">#FFCFD9E1</color>
 
+  <!-- Tab grid text highlight colour -->
+  <color name="new_tablet_tab_grid_text_unselected">#FFAFB1B3</color>
+
+
 </resources>
