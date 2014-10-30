@@ -283,18 +283,15 @@ Fold(ExclusiveContext *cx, ParseNode **pnp,
     // First, recursively fold constants on the children of this node.
     switch (pn->getArity()) {
       case PN_CODE:
-        if (pn->isKind(PNK_FUNCTION) &&
-            pn->pn_funbox->useAsmOrInsideUseAsm() && options.asmJSOption)
-        {
+        if (pn->isKind(PNK_FUNCTION) && pn->pn_funbox->useAsmOrInsideUseAsm())
             return true;
-        } else {
-            // Note: pn_body is nullptr for functions which are being lazily parsed.
-            MOZ_ASSERT(pn->getKind() == PNK_FUNCTION);
-            if (pn->pn_body) {
-                if (!Fold(cx, &pn->pn_body, handler, options, pn->pn_funbox->inGenexpLambda,
-                          SyntacticContext::Other))
-                    return false;
-            }
+
+        // Note: pn_body is nullptr for functions which are being lazily parsed.
+        MOZ_ASSERT(pn->getKind() == PNK_FUNCTION);
+        if (pn->pn_body) {
+            if (!Fold(cx, &pn->pn_body, handler, options, pn->pn_funbox->inGenexpLambda,
+                      SyntacticContext::Other))
+                return false;
         }
         break;
 
@@ -885,7 +882,7 @@ frontend::FoldConstants(ExclusiveContext *cx, ParseNode **pnp, Parser<FullParseH
     // constant-folding will misrepresent the source text for the purpose
     // of type checking. (Also guard against entering a function containing
     // "use asm", see PN_FUNC case below.)
-    if (parser->pc->useAsmOrInsideUseAsm() && parser->options().asmJSOption)
+    if (parser->pc->useAsmOrInsideUseAsm())
         return true;
 
     return Fold(cx, pnp, parser->handler, parser->options(), false, SyntacticContext::Other);
