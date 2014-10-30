@@ -2,4 +2,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!-- This string should be kept in sync with the home_title string
+     in android_strings.dtd -->
 <!ENTITY abouthome.title                  "&brandShortName; Home">
