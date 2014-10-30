@@ -110,7 +110,7 @@ check("o[- (o)]");
 // A few one off tests
 check_one("6", (function () { 6() }), " is not a function");
 check_one("Array.prototype.reverse.call(...)", (function () { Array.prototype.reverse.call('123'); }), " is read-only");
-var ITERATOR = JS_HAS_SYMBOLS ? "(intermediate value)" : "'@@iterator'";
+var ITERATOR = JS_HAS_SYMBOLS ? "Symbol.iterator" : "'@@iterator'";
 check_one(`(intermediate value)[${ITERATOR}](...).next(...).value`,
           function () { var [{ x }] = [null, {}]; }, " is null");
 check_one(`(intermediate value)[${ITERATOR}](...).next(...).value`,
