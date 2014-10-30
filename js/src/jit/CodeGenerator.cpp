@@ -4480,7 +4480,7 @@ CodeGenerator::visitNewDeclEnvObject(LNewDeclEnvObject *lir)
     return true;
 }
 
-typedef JSObject *(*NewCallObjectFn)(JSContext *, HandleShape, HandleTypeObject);
+typedef JSObject *(*NewCallObjectFn)(JSContext *, HandleShape, HandleTypeObject, uint32_t);
 static const VMFunction NewCallObjectInfo =
     FunctionInfo<NewCallObjectFn>(NewCallObject);
 
@@ -4492,9 +4492,12 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
 
     NativeObject *templateObj = lir->mir()->templateObject();
 
+    JSScript *script = lir->mir()->block()->info().script();
+    uint32_t lexicalBegin = script->bindings.aliasedBodyLevelLexicalBegin();
     OutOfLineCode *ool = oolCallVM(NewCallObjectInfo, lir,
                                    (ArgList(), ImmGCPtr(templateObj->lastProperty()),
-                                               ImmGCPtr(templateObj->type())),
+                                               ImmGCPtr(templateObj->type()),
+                                               Imm32(lexicalBegin)),
                                    StoreRegisterTo(objReg));
     if (!ool)
         return false;
@@ -4508,7 +4511,7 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
     return true;
 }
 
-typedef JSObject *(*NewSingletonCallObjectFn)(JSContext *, HandleShape);
+typedef JSObject *(*NewSingletonCallObjectFn)(JSContext *, HandleShape, uint32_t);
 static const VMFunction NewSingletonCallObjectInfo =
     FunctionInfo<NewSingletonCallObjectFn>(NewSingletonCallObject);
 
@@ -4519,9 +4522,12 @@ CodeGenerator::visitNewSingletonCallObject(LNewSingletonCallObject *lir)
 
     JSObject *templateObj = lir->mir()->templateObject();
 
+    JSScript *script = lir->mir()->block()->info().script();
+    uint32_t lexicalBegin = script->bindings.aliasedBodyLevelLexicalBegin();
     OutOfLineCode *ool;
     ool = oolCallVM(NewSingletonCallObjectInfo, lir,
-                    (ArgList(), ImmGCPtr(templateObj->lastProperty())),
+                    (ArgList(), ImmGCPtr(templateObj->lastProperty()),
+                                Imm32(lexicalBegin)),
                     StoreRegisterTo(objReg));
     if (!ool)
         return false;

@@ -139,7 +139,7 @@ ScopeObject::setEnclosingScope(HandleObject obj)
 }
 
 CallObject *
-CallObject::create(JSContext *cx, HandleShape shape, HandleTypeObject type)
+CallObject::create(JSContext *cx, HandleShape shape, HandleTypeObject type, uint32_t lexicalBegin)
 {
     MOZ_ASSERT(!type->singleton(),
                "passed a singleton type to create() (use createSingleton() "
@@ -152,11 +152,12 @@ CallObject::create(JSContext *cx, HandleShape shape, HandleTypeObject type)
     if (!obj)
         return nullptr;
 
+    obj->as<CallObject>().initRemainingSlotsToUninitializedLexicals(lexicalBegin);
     return &obj->as<CallObject>();
 }
 
 CallObject *
-CallObject::createSingleton(JSContext *cx, HandleShape shape)
+CallObject::createSingleton(JSContext *cx, HandleShape shape, uint32_t lexicalBegin)
 {
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
     MOZ_ASSERT(CanBeFinalizedInBackground(kind, &CallObject::class_));
@@ -172,6 +173,7 @@ CallObject::createSingleton(JSContext *cx, HandleShape shape)
     MOZ_ASSERT(obj->hasSingletonType(),
                "type created inline above must be a singleton");
 
+    obj->as<CallObject>().initRemainingSlotsToUninitializedLexicals(lexicalBegin);
     return &obj->as<CallObject>();
 }
 
@@ -198,6 +200,10 @@ CallObject::createTemplateObject(JSContext *cx, HandleScript script, gc::Initial
     if (!obj)
         return nullptr;
 
+    // Set uninitialized lexicals even on template objects, as Ion will use
+    // copy over the template object's slot values in the fast path.
+    obj->as<CallObject>().initAliasedLexicalsToThrowOnTouch(script);
+
     return &obj->as<CallObject>();
 }
 
@@ -217,7 +223,6 @@ CallObject::create(JSContext *cx, HandleScript script, HandleObject enclosing, H
 
     callobj->as<ScopeObject>().setEnclosingScope(enclosing);
     callobj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
-    callobj->setAliasedLexicalsToThrowOnTouch(script);
 
     if (script->treatAsRunOnce()) {
         Rooted<CallObject*> ncallobj(cx, callobj);
