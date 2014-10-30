@@ -1425,7 +1425,7 @@ public abstract class GeckoApp
 
         final boolean isExternalURL = passedUri != null &&
                                       !AboutPages.isAboutHome(passedUri);
-        final StartupAction startupAction;
+        StartupAction startupAction;
         if (isExternalURL) {
             startupAction = StartupAction.URL;
         } else {
