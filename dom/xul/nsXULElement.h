@@ -616,6 +616,12 @@ public:
         return nsStyledElement::GetParentObject();
     }
 
+    nsINode* GetScopeChainParent() const MOZ_OVERRIDE
+    {
+        Element* parent = GetParentElement();
+        return parent ? parent : nsStyledElement::GetScopeChainParent();
+    }
+
 protected:
     ~nsXULElement();
 
