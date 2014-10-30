@@ -33,8 +33,8 @@ Adts::GetFrequencyIndex(uint16_t aSamplesPerSecond)
 }
 
 bool
-Adts::ConvertEsdsToAdts(uint16_t aChannelCount, int8_t aFrequencyIndex,
-                        int8_t aProfile, MP4Sample* aSample)
+Adts::ConvertSample(uint16_t aChannelCount, int8_t aFrequencyIndex,
+                    int8_t aProfile, MP4Sample* aSample)
 {
   static const int kADTSHeaderSize = 7;
 
