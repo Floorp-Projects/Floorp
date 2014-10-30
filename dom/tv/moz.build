@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['test']
-
 EXPORTS.mozilla.dom += [
     'FakeTVService.h',
     'TVChannel.h',
@@ -39,6 +37,10 @@ XPIDL_SOURCES += [
 ]
 
 XPIDL_MODULE = 'dom_tv'
+
+MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
+
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

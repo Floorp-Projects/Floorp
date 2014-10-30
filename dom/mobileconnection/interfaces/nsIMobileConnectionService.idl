@@ -124,7 +124,7 @@ interface nsIMobileConnectionListener : nsISupports
 #define NO_ADDITIONAL_INFORMATION 0
 %}
 
-[scriptable, builtinclass, uuid(05568ae9-9873-46c6-9acd-0f6994cde756)]
+[scriptable, builtinclass, uuid(413e8bff-9f65-41a0-953f-b82e6cdbc00d)]
 interface nsIMobileConnectionCallback : nsISupports
 {
   /**
@@ -165,6 +165,8 @@ interface nsIMobileConnectionCallback : nsISupports
                                    in unsigned short serviceClass);
 
   void notifyGetClirStatusSuccess(in unsigned short n, in unsigned short m);
+
+  void notifyGetPreferredNetworkTypeSuccess(in long type);
 
   /**
    * notifyError() will be called, when request is failed.
@@ -233,7 +235,7 @@ already_AddRefed<nsIMobileConnectionService>
 NS_CreateMobileConnectionService();
 %}
 
-[scriptable, uuid(99818dc7-e770-4249-87e2-2de0a928ed08)]
+[scriptable, uuid(d6b15551-d290-4e38-9749-d21eb35cdaf1)]
 interface nsIMobileConnection : nsISupports
 {
   /*
@@ -309,6 +311,22 @@ interface nsIMobileConnection : nsISupports
   const long MOBILE_RADIO_STATE_ENABLED   = 1;
   const long MOBILE_RADIO_STATE_DISABLING = 2;
   const long MOBILE_RADIO_STATE_DISABLED  = 3;
+
+  /**
+   * Preferred network type.
+   */
+  const long PREFERRED_NETWORK_TYPE_WCDMA_GSM               = 0;
+  const long PREFERRED_NETWORK_TYPE_GSM_ONLY                = 1;
+  const long PREFERRED_NETWORK_TYPE_WCDMA_ONLY              = 2;
+  const long PREFERRED_NETWORK_TYPE_WCDMA_GSM_AUTO          = 3;
+  const long PREFERRED_NETWORK_TYPE_CDMA_EVDO               = 4;
+  const long PREFERRED_NETWORK_TYPE_CDMA_ONLY               = 5;
+  const long PREFERRED_NETWORK_TYPE_EVDO_ONLY               = 6;
+  const long PREFERRED_NETWORK_TYPE_WCDMA_GSM_CDMA_EVDO     = 7;
+  const long PREFERRED_NETWORK_TYPE_LTE_CDMA_EVDO           = 8;
+  const long PREFERRED_NETWORK_TYPE_LTE_WCDMA_GSM           = 9;
+  const long PREFERRED_NETWORK_TYPE_LTE_WCDMA_GSM_CDMA_EVDO = 10;
+  const long PREFERRED_NETWORK_TYPE_LTE_ONLY                = 11;
 
   readonly attribute unsigned long serviceId;
 
@@ -418,11 +436,7 @@ interface nsIMobileConnection : nsISupports
    * Set preferred network type.
    *
    * @param type
-   *        DOMString indicates the desired preferred network type.
-   *        Possible values: 'wcdma/gsm', 'gsm', 'wcdma', 'wcdma/gsm-auto',
-   *        'cdma/evdo', 'cdma', 'evdo', 'wcdma/gsm/cdma/evdo',
-   *        'lte/cdma/evdo', 'lte/wcdma/gsm', 'lte/wcdma/gsm/cdma/evdo' or
-   *        'lte'.
+   *        One of the nsIMobileConnection.PREFERRED_NETWORK_TYPE_* values.
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -432,7 +446,7 @@ interface nsIMobileConnection : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void setPreferredNetworkType(in DOMString type,
+  void setPreferredNetworkType(in long type,
                                in nsIMobileConnectionCallback requestCallback);
 
   /**
@@ -441,11 +455,10 @@ interface nsIMobileConnection : nsISupports
    * @param requestCallback
    *        Called when request is finished.
    *
-   * If successful, the notifySuccessString() will be called. And the result
-   * will be a string indicating the current preferred network type. The value
-   * will be either 'wcdma/gsm', 'gsm', 'wcdma', 'wcdma/gsm-auto', 'cdma/evdo',
-   * 'cdma', 'evdo', 'wcdma/gsm/cdma/evdo', 'lte/cdma/evdo', 'lte/wcdma/gsm',
-   * 'lte/wcdma/gsm/cdma/evdo' or 'lte'.
+   * If successful, the notifyGetPreferredNetworkTypeSuccess() will be called,
+   * and the result 'type' will be one of the
+   * nsIMobileConnection.PREFERRED_NETWORK_TYPE_* values, indicating the current
+   * preferred network type.
    *
    * Otherwise, the notifyError() will be called, and the error will be either
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or
