@@ -1113,6 +1113,110 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     }
 
     @Override
+    protected float getTopFadingEdgeStrength() {
+        if (!mIsVertical) {
+            return 0f;
+        }
+
+        final float fadingEdge = super.getTopFadingEdgeStrength();
+
+        final int childCount = getChildCount();
+        if (childCount == 0) {
+            return fadingEdge;
+        } else {
+            if (mFirstPosition > 0) {
+                return 1.0f;
+            }
+
+            final int top = getChildAt(0).getTop();
+            final int paddingTop = getPaddingTop();
+
+            final float length = (float) getVerticalFadingEdgeLength();
+
+            return (top < paddingTop ? (float) -(top - paddingTop) / length : fadingEdge);
+        }
+    }
+
+    @Override
+    protected float getBottomFadingEdgeStrength() {
+        if (!mIsVertical) {
+            return 0f;
+        }
+
+        final float fadingEdge = super.getBottomFadingEdgeStrength();
+
+        final int childCount = getChildCount();
+        if (childCount == 0) {
+            return fadingEdge;
+        } else {
+            if (mFirstPosition + childCount - 1 < mItemCount - 1) {
+                return 1.0f;
+            }
+
+            final int bottom = getChildAt(childCount - 1).getBottom();
+            final int paddingBottom = getPaddingBottom();
+
+            final int height = getHeight();
+            final float length = (float) getVerticalFadingEdgeLength();
+
+            return (bottom > height - paddingBottom ?
+                    (float) (bottom - height + paddingBottom) / length : fadingEdge);
+        }
+    }
+
+    @Override
+    protected float getLeftFadingEdgeStrength() {
+        if (mIsVertical) {
+            return 0f;
+        }
+
+        final float fadingEdge = super.getLeftFadingEdgeStrength();
+
+        final int childCount = getChildCount();
+        if (childCount == 0) {
+            return fadingEdge;
+        } else {
+            if (mFirstPosition > 0) {
+                return 1.0f;
+            }
+
+            final int left = getChildAt(0).getLeft();
+            final int paddingLeft = getPaddingLeft();
+
+            final float length = (float) getHorizontalFadingEdgeLength();
+
+            return (left < paddingLeft ? (float) -(left - paddingLeft) / length : fadingEdge);
+        }
+    }
+
+    @Override
+    protected float getRightFadingEdgeStrength() {
+        if (mIsVertical) {
+            return 0f;
+        }
+
+        final float fadingEdge = super.getRightFadingEdgeStrength();
+
+        final int childCount = getChildCount();
+        if (childCount == 0) {
+            return fadingEdge;
+        } else {
+            if (mFirstPosition + childCount - 1 < mItemCount - 1) {
+                return 1.0f;
+            }
+
+            final int right = getChildAt(childCount - 1).getRight();
+            final int paddingRight = getPaddingRight();
+
+            final int width = getWidth();
+            final float length = (float) getHorizontalFadingEdgeLength();
+
+            return (right > width - paddingRight ?
+                    (float) (right - width + paddingRight) / length : fadingEdge);
+        }
+    }
+
+    @Override
     protected int computeVerticalScrollExtent() {
         final int count = getChildCount();
         if (count == 0) {
@@ -1814,7 +1918,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         final int position = lookForSelectablePosition(nextPage, forward);
         if (position >= 0) {
             mLayoutMode = LAYOUT_SPECIFIC;
-            mSpecificStart = (mIsVertical ? getPaddingTop() : getPaddingLeft());
+            mSpecificStart = getStartEdge() + getFadingEdgeLength();
 
             if (forward && position > mItemCount - getChildCount()) {
                 mLayoutMode = LAYOUT_FORCE_BOTTOM;
@@ -2073,7 +2177,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             newFocus = FocusFinder.getInstance().findNextFocus(this, oldFocus, direction);
         } else {
             if (direction == View.FOCUS_DOWN || direction == View.FOCUS_RIGHT) {
-                final int start = getStartEdge();
+                boolean fadingEdgeShowing = (mFirstPosition > 0);
+                final int start = getStartEdge() +
+                        (fadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
 
                 final int selectedStart;
                 if (selectedView != null) {
@@ -2084,7 +2190,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
                 searchPoint = Math.max(selectedStart, start);
             } else {
-                final int end = getEndEdge();
+                final boolean fadingEdgeShowing =
+                        (mFirstPosition + getChildCount() - 1) < mItemCount;
+                final int end = getEndEdge() - (fadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
 
                 final int selectedEnd;
                 if (selectedView != null) {
@@ -2157,12 +2265,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
      * @return The amount to preview next items when arrow scrolling.
      */
     private int getArrowScrollPreviewLength() {
-        // FIXME: TwoWayView has no fading edge support just yet but using it
-        // makes it convenient for defining the next item's previous length.
-        int fadingEdgeLength =
-                (mIsVertical ? getVerticalFadingEdgeLength() : getHorizontalFadingEdgeLength());
-
-        return mItemMargin + Math.max(MIN_SCROLL_PREVIEW_PIXELS, fadingEdgeLength);
+        return mItemMargin + Math.max(MIN_SCROLL_PREVIEW_PIXELS, getFadingEdgeLength());
     }
 
     /**
@@ -2956,6 +3059,30 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
     private int getChildMeasuredSize(View child) {
         return (mIsVertical ? child.getMeasuredHeight() : child.getMeasuredWidth());
+    }
+
+    private int getFadingEdgeLength() {
+        return (mIsVertical ? getVerticalFadingEdgeLength() : getHorizontalFadingEdgeLength());
+    }
+
+    private int getMinSelectionPixel(int start, int fadingEdgeLength, int selectedPosition) {
+        // First pixel we can draw the selection into.
+        int selectionPixelStart = start;
+        if (selectedPosition > 0) {
+            selectionPixelStart += fadingEdgeLength;
+        }
+
+        return selectionPixelStart;
+    }
+
+    private int getMaxSelectionPixel(int end, int fadingEdgeLength,
+                                     int selectedPosition) {
+        int selectionPixelEnd = end;
+        if (selectedPosition != mItemCount - 1) {
+            selectionPixelEnd -= fadingEdgeLength;
+        }
+
+        return selectionPixelEnd;
     }
 
     private boolean contentFits() {
@@ -4191,10 +4318,14 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
     private View moveSelection(View oldSelected, View newSelected, int delta, int start,
             int end) {
+        final int fadingEdgeLength = getFadingEdgeLength();
         final int selectedPosition = mSelectedPosition;
 
         final int oldSelectedStart = getChildStartEdge(oldSelected);
         final int oldSelectedEnd = getChildEndEdge(oldSelected);
+
+        final int minStart = getMinSelectionPixel(start, fadingEdgeLength, selectedPosition);
+        final int maxEnd = getMaxSelectionPixel(end, fadingEdgeLength, selectedPosition);
 
         View selected = null;
 
@@ -4233,10 +4364,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             // Some of the newly selected item extends below the bottom of the list
             if (selectedEnd > end) {
                 // Find space available above the selection into which we can scroll upwards
-                final int spaceBefore = selectedStart - start;
+                final int spaceBefore = selectedStart - minStart;
 
                 // Find space required to bring the bottom of the selected item fully into view
-                final int spaceAfter = selectedEnd - end;
+                final int spaceAfter = selectedEnd - maxEnd;
 
                 // Don't scroll more than half the size of the list
                 final int halfSpace = (end - start) / 2;
@@ -4291,12 +4422,12 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             final int selectedEnd = getChildEndEdge(selected);
 
             // Some of the newly selected item extends above the top of the list
-            if (selectedStart < start) {
+            if (selectedStart < minStart) {
                 // Find space required to bring the top of the selected item fully into view
-                final int spaceBefore = start - selectedStart;
+                final int spaceBefore = minStart - selectedStart;
 
                // Find space available below the selection into which we can scroll downwards
-                final int spaceAfter = end - selectedEnd;
+                final int spaceAfter = maxEnd - selectedEnd;
 
                 // Don't scroll more than half the height of the list
                 final int halfSpace = (end - start) / 2;
@@ -4515,8 +4646,8 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         int selectedStart = 0;
         int selectedPosition;
 
-        final int start = getStartEdge();
-        final int end = getEndEdge();
+        int start = getStartEdge();
+        int end = getEndEdge();
 
         final int firstPosition = mFirstPosition;
         final int toPosition = mResurrectToPosition;
@@ -4527,6 +4658,15 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             final View selected = getChildAt(selectedPosition - mFirstPosition);
             selectedStart = getChildStartEdge(selected);
+
+            final int selectedEnd = getChildEndEdge(selected);
+
+            // We are scrolled, don't get in the fade
+            if (selectedStart < start) {
+                selectedStart = start + getFadingEdgeLength();
+            } else if (selectedEnd > end) {
+                selectedStart = end - getChildMeasuredSize(selected) - getFadingEdgeLength();
+            }
         } else if (toPosition < firstPosition) {
             // Default to selecting whatever is first
             selectedPosition = firstPosition;
@@ -4538,6 +4678,13 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                 if (i == 0) {
                     // Remember the position of the first item
                     selectedStart = childStart;
+
+                    // See if we are scrolled at all
+                    if (firstPosition > 0 || childStart < start) {
+                        // If we are scrolled, don't select anything that is
+                        // in the fade region
+                        start += getFadingEdgeLength();
+                    }
                 }
 
                 if (childStart >= start) {
@@ -4548,6 +4695,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                 }
             }
         } else {
+            final int itemCount = mItemCount;
             selectedPosition = firstPosition + childCount - 1;
             down = false;
 
@@ -4558,6 +4706,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
                 if (i == childCount - 1) {
                     selectedStart = childStart;
+
+                    if (firstPosition + childCount < itemCount || childEnd > end) {
+                        end -= getFadingEdgeLength();
+                    }
                 }
 
                 if (childEnd <= end) {
@@ -5093,7 +5245,11 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     }
 
     private View fillFromSelection(int selectedTop, int start, int end) {
+        int fadingEdgeLength = getFadingEdgeLength();
         final int selectedPosition = mSelectedPosition;
+
+        final int minStart = getMinSelectionPixel(start, fadingEdgeLength, selectedPosition);
+        final int maxEnd = getMaxSelectionPixel(end, fadingEdgeLength, selectedPosition);
 
         View selected = makeAndAddView(selectedPosition, selectedTop, true, true);
 
@@ -5101,27 +5257,27 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         final int selectedEnd = getChildEndEdge(selected);
 
         // Some of the newly selected item extends below the bottom of the list
-        if (selectedEnd > end) {
+        if (selectedEnd > maxEnd) {
             // Find space available above the selection into which we can scroll
             // upwards
-            final int spaceAbove = selectedStart - start;
+            final int spaceAbove = selectedStart - minStart;
 
             // Find space required to bring the bottom of the selected item
             // fully into view
-            final int spaceBelow = selectedEnd - end;
+            final int spaceBelow = selectedEnd - maxEnd;
 
             final int offset = Math.min(spaceAbove, spaceBelow);
 
             // Now offset the selected item to get it into view
             selected.offsetTopAndBottom(-offset);
-        } else if (selectedStart < start) {
+        } else if (selectedStart < minStart) {
             // Find space required to bring the top of the selected item fully
             // into view
-            final int spaceAbove = start - selectedStart;
+            final int spaceAbove = minStart - selectedStart;
 
             // Find space available below the selection into which we can scroll
             // downwards
-            final int spaceBelow = end - selectedEnd;
+            final int spaceBelow = maxEnd - selectedEnd;
 
             final int offset = Math.min(spaceAbove, spaceBelow);
 
