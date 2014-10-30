@@ -127,6 +127,7 @@ mozNfc.prototype = {
     this.defineEventHandlerGetterSetter("ontagfound");
     this.defineEventHandlerGetterSetter("ontaglost");
     this.defineEventHandlerGetterSetter("onpeerready");
+    this.defineEventHandlerGetterSetter("onpeerfound");
     this.defineEventHandlerGetterSetter("onpeerlost");
 
     if (this._nfcContentHelper) {
@@ -256,25 +257,32 @@ mozNfc.prototype = {
     this.__DOM_IMPL__.dispatchEvent(event);
   },
 
-  notifyPeerReady: function notifyPeerReady(sessionToken) {
+  notifyPeerFound: function notifyPeerFound(sessionToken, isPeerReady) {
     if (this.hasDeadWrapper()) {
       dump("this._window or this.__DOM_IMPL__ is a dead wrapper.");
       return;
     }
 
-    this.session = sessionToken;
+    if (!this.checkPermissions(["nfc-write"])) {
+      return;
+    }
 
-    debug("fire onpeerready sessionToken : " + sessionToken);
-    let eventData = {
-      "peer":this.getNFCPeer(sessionToken)
-    };
-    let event = new this._window.MozNFCPeerEvent("peerready", eventData);
+    this.session = sessionToken;
+    let eventData = { "peer": this.getNFCPeer(sessionToken) };
+    let type = (isPeerReady) ? "peerready" : "peerfound";
+
+    debug("fire on" + type + " " + sessionToken);
+    let event = new this._window.MozNFCPeerEvent(type, eventData);
     this.__DOM_IMPL__.dispatchEvent(event);
   },
 
   notifyPeerLost: function notifyPeerLost(sessionToken) {
     if (this.hasDeadWrapper()) {
       dump("this._window or this.__DOM_IMPL__ is a dead wrapper.");
+      return;
+    }
+
+    if (!this.checkPermissions(["nfc-write"])) {
       return;
     }
 
