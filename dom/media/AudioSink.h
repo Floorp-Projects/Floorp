@@ -116,6 +116,11 @@ private:
   // PCM frames written to the stream so far.
   int64_t mWritten;
 
+  // Keep the last good position returned from the audio stream. Used to ensure
+  // position returned by GetPosition() is mono-increasing in spite of audio
+  // stream error.
+  int64_t mLastGoodPosition;
+
   AudioInfo mInfo;
 
   dom::AudioChannel mChannel;

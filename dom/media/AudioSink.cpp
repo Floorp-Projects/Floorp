@@ -33,6 +33,7 @@ AudioSink::AudioSink(MediaDecoderStateMachine* aStateMachine,
   : mStateMachine(aStateMachine)
   , mStartTime(aStartTime)
   , mWritten(0)
+  , mLastGoodPosition(0)
   , mInfo(aInfo)
   , mChannel(aChannel)
   , mVolume(1.0)
@@ -72,10 +73,16 @@ AudioSink::Init()
 int64_t
 AudioSink::GetPosition()
 {
-  if (!mAudioStream) {
-    return 0;
+  AssertCurrentThreadInMonitor();
+
+  int64_t pos;
+  if (mAudioStream &&
+      (pos = mAudioStream->GetPosition()) >= 0) {
+    // Update the last good position when we got a good one.
+    mLastGoodPosition = pos;
   }
-  return mAudioStream->GetPosition();
+
+  return mLastGoodPosition;
 }
 
 void
