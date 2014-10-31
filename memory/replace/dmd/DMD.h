@@ -29,6 +29,7 @@ struct Sizes
   size_t mStackTracesUnused;
   size_t mStackTraceTable;
   size_t mLiveBlockTable;
+  size_t mDeadBlockList;
 
   Sizes() { Clear(); }
   void Clear() { memset(this, 0, sizeof(Sizes)); }
@@ -156,7 +157,7 @@ ClearReports()
 //     "dmdEnvVar": "1",
 //
 //     // The profiling mode. A mandatory string taking one of the following
-//     // values: "live", "dark-matter".
+//     // values: "live", "dark-matter", "cumulative".
 //     "mode": "dark-matter",
 //
 //     // The value of the --sample-below-size option. A mandatory integer.
