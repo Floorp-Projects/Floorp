@@ -283,6 +283,16 @@ MInstruction::stealResumePoint(MInstruction *ins)
     resumePoint_->replaceInstruction(this);
 }
 
+void
+MInstruction::moveResumePointAsEntry()
+{
+    MOZ_ASSERT(isNop());
+    block()->clearEntryResumePoint();
+    block()->setEntryResumePoint(resumePoint_);
+    resumePoint_->resetInstruction();
+    resumePoint_ = nullptr;
+}
+
 static bool
 MaybeEmulatesUndefined(MDefinition *op)
 {
