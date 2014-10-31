@@ -664,12 +664,7 @@ nsDOMCameraControl::Capabilities()
   nsRefPtr<CameraCapabilities> caps = mCapabilities;
 
   if (!caps) {
-    caps = new CameraCapabilities(mWindow);
-    nsresult rv = caps->Populate(mCameraControl);
-    if (NS_FAILED(rv)) {
-      DOM_CAMERA_LOGW("Failed to populate camera capabilities (%d)\n", rv);
-      return nullptr;
-    }
+    caps = new CameraCapabilities(mWindow, mCameraControl);
     mCapabilities = caps;
   }
 
@@ -1140,10 +1135,9 @@ nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState a
   MOZ_ASSERT(NS_IsMainThread());
   ErrorResult ignored;
 
-  DOM_CAMERA_LOGI("DOM OnHardwareStateChange(%d)\n", aState);
-
   switch (aState) {
     case CameraControlListener::kHardwareOpen:
+      DOM_CAMERA_LOGI("DOM OnHardwareStateChange: open\n");
       {
         // The hardware is open, so we can return a camera to JS, even if
         // the preview hasn't started yet.
@@ -1164,6 +1158,7 @@ nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState a
       break;
 
     case CameraControlListener::kHardwareClosed:
+      DOM_CAMERA_LOGI("DOM OnHardwareStateChange: closed\n");
       {
         nsRefPtr<Promise> promise = mReleasePromise.forget();
         if (promise || mReleaseOnSuccessCb) {
@@ -1188,6 +1183,7 @@ nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState a
       break;
 
     default:
+      DOM_CAMERA_LOGE("DOM OnHardwareStateChange: UNKNOWN=%d\n", aState);
       MOZ_ASSERT_UNREACHABLE("Unanticipated camera hardware state");
   }
 }
@@ -1402,7 +1398,7 @@ nsDOMCameraControl::OnAutoFocusMoving(bool aIsMoving)
 void
 nsDOMCameraControl::OnFacesDetected(const nsTArray<ICameraControl::Face>& aFaces)
 {
-  DOM_CAMERA_LOGI("DOM OnFacesDetected %u face(s)\n", aFaces.Length());
+  DOM_CAMERA_LOGI("DOM OnFacesDetected %zu face(s)\n", aFaces.Length());
   MOZ_ASSERT(NS_IsMainThread());
 
   Sequence<OwningNonNull<DOMCameraDetectedFace> > faces;

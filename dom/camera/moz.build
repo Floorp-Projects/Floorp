@@ -17,7 +17,6 @@ UNIFIED_SOURCES += [
     'CameraControlImpl.cpp',
     'CameraPreferences.cpp',
     'CameraPreviewMediaStream.cpp',
-    'CameraRecorderProfiles.cpp',
     'DOMCameraCapabilities.cpp',
     'DOMCameraControl.cpp',
     'DOMCameraControlListener.cpp',

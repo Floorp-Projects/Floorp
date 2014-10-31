@@ -219,7 +219,7 @@ function checkContextMenuCallbackForId(detail, id, callback) {
 var iframe = null;
 function createIframe(callback) {
   iframe = document.createElement('iframe');
-  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.setAttribute('mozbrowser', 'true');
 
   iframe.src = 'data:text/html,<html>' +
     '<body>' +
