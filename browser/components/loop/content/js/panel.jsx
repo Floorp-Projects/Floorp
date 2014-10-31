@@ -497,7 +497,7 @@ loop.panel = (function(_, mozL10n) {
 
     _isActive: function() {
       // XXX bug 1074679 will implement this properly
-      return this.props.room.currSize > 0;
+      return this.props.room.participants.length > 0;
     },
 
     render: function() {
@@ -538,20 +538,19 @@ loop.panel = (function(_, mozL10n) {
     propTypes: {
       store: React.PropTypes.instanceOf(loop.store.RoomListStore).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      rooms: React.PropTypes.array
+      userDisplayName: React.PropTypes.string.isRequired  // for room creation
     },
 
     getInitialState: function() {
-      var storeState = this.props.store.getStoreState();
-      return {
-        error: this.props.error || storeState.error,
-        rooms: this.props.rooms || storeState.rooms,
-      };
+      return this.props.store.getStoreState();
     },
 
-    componentWillMount: function() {
-      this.listenTo(this.props.store, "change", this._onRoomListChanged);
+    componentDidMount: function() {
+      this.listenTo(this.props.store, "change", this._onStoreStateChanged);
 
+      // XXX this should no longer be necessary once have a better mechanism
+      // for updating the list (possibly as part of the content side of bug
+      // 1074665.
       this.props.dispatcher.dispatch(new sharedActions.GetAllRooms());
     },
 
@@ -559,7 +558,7 @@ loop.panel = (function(_, mozL10n) {
       this.stopListening(this.props.store);
     },
 
-    _onRoomListChanged: function() {
+    _onStoreStateChanged: function() {
       this.setState(this.props.store.getStoreState());
     },
 
@@ -571,6 +570,17 @@ loop.panel = (function(_, mozL10n) {
       return mozL10n.get("rooms_list_current_conversations", {num: numRooms});
     },
 
+    _hasPendingOperation: function() {
+      return this.state.pendingCreation || this.state.pendingInitialRetrieval;
+    },
+
+    handleCreateButtonClick: function() {
+      this.props.dispatcher.dispatch(new sharedActions.CreateRoom({
+        nameTemplate: mozL10n.get("rooms_default_room_name_template"),
+        roomOwner: this.props.userDisplayName
+      }));
+    },
+
     openRoom: function(room) {
       // XXX implement me; see bug 1074678
     },
@@ -578,17 +588,24 @@ loop.panel = (function(_, mozL10n) {
     render: function() {
       if (this.state.error) {
         // XXX Better end user reporting of errors.
-        console.error(this.state.error);
+        console.error("RoomList error", this.state.error);
       }
 
       return (
-        <div className="room-list">
+        <div className="rooms">
           <h1>{this._getListHeading()}</h1>
-          {
+          <div className="room-list">{
             this.state.rooms.map(function(room, i) {
               return <RoomEntry key={i} room={room} openRoom={this.openRoom} />;
             }, this)
-          }
+          }</div>
+          <p>
+            <button className="btn btn-info"
+                    onClick={this.handleCreateButtonClick}
+                    disabled={this._hasPendingOperation()}>
+              {mozL10n.get("rooms_new_room_button_label")}
+            </button>
+          </p>
         </div>
       );
     }
@@ -667,7 +684,8 @@ loop.panel = (function(_, mozL10n) {
       return (
         <Tab name="rooms">
           <RoomList dispatcher={this.props.dispatcher}
-                    store={this.props.roomListStore} />
+                    store={this.props.roomListStore}
+                    userDisplayName={this._getUserDisplayName()}/>
         </Tab>
       );
     },
@@ -693,10 +711,13 @@ loop.panel = (function(_, mozL10n) {
       window.removeEventListener("LoopStatusChanged", this._onStatusChanged);
     },
 
+    _getUserDisplayName: function() {
+      return this.state.userProfile && this.state.userProfile.email ||
+             __("display_name_guest");
+    },
+
     render: function() {
       var NotificationListView = sharedViews.NotificationListView;
-      var displayName = this.state.userProfile && this.state.userProfile.email ||
-                        __("display_name_guest");
       return (
         <div>
           <NotificationListView notifications={this.props.notifications}
@@ -731,7 +752,7 @@ loop.panel = (function(_, mozL10n) {
           </TabView>
           <div className="footer">
             <div className="user-details">
-              <UserIdentity displayName={displayName} />
+              <UserIdentity displayName={this._getUserDisplayName()} />
               <AvailabilityDropdown />
             </div>
             <div className="signin-details">

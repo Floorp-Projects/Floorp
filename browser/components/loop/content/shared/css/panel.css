@@ -139,15 +139,35 @@ body {
 }
 
 /* Rooms */
-.room-list {
+.rooms {
   background: #f5f5f5;
+  min-height: 100px;
 }
 
-.room-list > h1 {
+.rooms > h1 {
   font-weight: bold;
   color: #999;
   padding: .5rem 1rem;
   border-bottom: 1px solid #ddd;
+}
+
+.rooms > p {
+  border-top: 1px solid #ddd;
+  padding: 1rem 0;
+  margin: 0;
+}
+
+.rooms > p > .btn {
+  display: block;
+  font-size: 1rem;
+  margin: 0 auto;
+  padding: .5rem 1rem;
+  border-radius: 3px;
+}
+
+.room-list {
+  max-height: 335px; /* XXX better computation needed */
+  overflow: scroll;
 }
 
 .room-list > .room-entry {

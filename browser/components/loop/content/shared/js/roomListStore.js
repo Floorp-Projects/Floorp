@@ -57,19 +57,20 @@ loop.store = loop.store || {};
    */
   function RoomListStore(options) {
     options = options || {};
-    this.storeState = {error: null, rooms: []};
 
     if (!options.dispatcher) {
       throw new Error("Missing option dispatcher");
     }
-    this.dispatcher = options.dispatcher;
+    this._dispatcher = options.dispatcher;
 
     if (!options.mozLoop) {
       throw new Error("Missing option mozLoop");
     }
-    this.mozLoop = options.mozLoop;
+    this._mozLoop = options.mozLoop;
 
-    this.dispatcher.register(this, [
+    this._dispatcher.register(this, [
+      "createRoom",
+      "createRoomError",
       "getAllRooms",
       "getAllRoomsError",
       "openRoom",
@@ -79,23 +80,120 @@ loop.store = loop.store || {};
 
   RoomListStore.prototype = _.extend({
     /**
-     * Retrieves current store state.
+     * Maximum size given to createRoom; only 2 is supported (and is
+     * always passed) because that's what the user-experience is currently
+     * designed and tested to handle.
+     * @type {Number}
+     */
+    maxRoomCreationSize: 2,
+
+    /**
+     * The number of hours for which the room will exist.
+     * @type {Number}
+     */
+    defaultExpiresIn: 5,
+
+    /**
+     * Internal store state representation.
+     * @type {Object}
+     * @see  #getStoreState
+     */
+    _storeState: {
+      error: null,
+      pendingCreation: false,
+      pendingInitialRetrieval: false,
+      rooms: []
+    },
+
+    /**
+     * Retrieves current store state. The returned state object holds the
+     * following properties:
+     *
+     * - {Boolean} pendingCreation         Pending room creation flag.
+     * - {Boolean} pendingInitialRetrieval Pending initial list retrieval flag.
+     * - {Array}   rooms                   The current room list.
+     * - {Error}   error                   Latest error encountered, if any.
      *
      * @return {Object}
      */
     getStoreState: function() {
-      return this.storeState;
+      return this._storeState;
     },
 
     /**
-     * Updates store states and trigger a "change" event.
+     * Updates store state and trigger a "change" event.
      *
-     * @param {Object} state The new store state.
+     * @param {Object} newState The new store state.
      */
-    setStoreState: function(state) {
-      this.storeState = state;
+    setStoreState: function(newState) {
+      for (var key in newState) {
+        this._storeState[key] = newState[key];
+      }
       this.trigger("change");
     },
+
+    /**
+     * Registers mozLoop.rooms events.
+     */
+    startListeningToRoomEvents: function() {
+      // Rooms event registration
+      this._mozLoop.rooms.on("add", this._onRoomAdded.bind(this));
+      this._mozLoop.rooms.on("update", this._onRoomUpdated.bind(this));
+      this._mozLoop.rooms.on("remove", this._onRoomRemoved.bind(this));
+    },
+
+    /**
+     * Local proxy helper to dispatch an action.
+     *
+     * @param {Action} action The action to dispatch.
+     */
+    _dispatchAction: function(action) {
+      this._dispatcher.dispatch(action);
+    },
+
+    /**
+     * Updates current room list when a new room is available.
+     *
+     * @param {String} eventName     The event name (unused).
+     * @param {Object} addedRoomData The added room data.
+     */
+    _onRoomAdded: function(eventName, addedRoomData) {
+      addedRoomData.participants = [];
+      addedRoomData.ctime = new Date().getTime();
+      this._dispatchAction(new sharedActions.UpdateRoomList({
+        roomList: this._storeState.rooms.concat(new Room(addedRoomData))
+      }));
+    },
+
+    /**
+     * Executed when a room is updated.
+     *
+     * @param {String} eventName       The event name (unused).
+     * @param {Object} updatedRoomData The updated room data.
+     */
+    _onRoomUpdated: function(eventName, updatedRoomData) {
+      this._dispatchAction(new sharedActions.UpdateRoomList({
+        roomList: this._storeState.rooms.map(function(room) {
+          return room.roomToken === updatedRoomData.roomToken ?
+                 updatedRoomData : room;
+        })
+      }));
+    },
+
+    /**
+     * Executed when a room is removed.
+     *
+     * @param {String} eventName       The event name (unused).
+     * @param {Object} removedRoomData The removed room data.
+     */
+    _onRoomRemoved: function(eventName, removedRoomData) {
+      this._dispatchAction(new sharedActions.UpdateRoomList({
+        roomList: this._storeState.rooms.filter(function(room) {
+          return room.roomToken !== removedRoomData.roomToken;
+        })
+      }));
+    },
+
 
     /**
      * Maps and sorts the raw room list received from the mozLoop API.
@@ -103,7 +201,7 @@ loop.store = loop.store || {};
      * @param  {Array} rawRoomList Raw room list.
      * @return {Array}
      */
-    _processRawRoomList: function(rawRoomList) {
+    _processRoomList: function(rawRoomList) {
       if (!rawRoomList) {
         return [];
       }
@@ -118,24 +216,102 @@ loop.store = loop.store || {};
     },
 
     /**
+     * Finds the next available room number in the provided room list.
+     *
+     * @param  {String} nameTemplate The room name template; should contain a
+     *                               {{conversationLabel}} placeholder.
+     * @return {Number}
+     */
+    findNextAvailableRoomNumber: function(nameTemplate) {
+      var searchTemplate = nameTemplate.replace("{{conversationLabel}}", "");
+      var searchRegExp = new RegExp("^" + searchTemplate + "(\\d+)$");
+
+      var roomNumbers = this._storeState.rooms.map(function(room) {
+        var match = searchRegExp.exec(room.roomName);
+        return match && match[1] ? parseInt(match[1], 10) : 0;
+      });
+
+      if (!roomNumbers.length) {
+        return 1;
+      }
+
+      return Math.max.apply(null, roomNumbers) + 1;
+    },
+
+    /**
+     * Generates a room names against the passed template string.
+     *
+     * @param  {String} nameTemplate The room name template.
+     * @return {String}
+     */
+    _generateNewRoomName: function(nameTemplate) {
+      var roomLabel = this.findNextAvailableRoomNumber(nameTemplate);
+      return nameTemplate.replace("{{conversationLabel}}", roomLabel);
+    },
+
+    /**
+     * Creates a new room.
+     *
+     * @param {sharedActions.CreateRoom} actionData The new room information.
+     */
+    createRoom: function(actionData) {
+      this.setStoreState({pendingCreation: true});
+
+      var roomCreationData = {
+        roomName:  this._generateNewRoomName(actionData.nameTemplate),
+        roomOwner: actionData.roomOwner,
+        maxSize:   this.maxRoomCreationSize,
+        expiresIn: this.defaultExpiresIn
+      };
+
+      this._mozLoop.rooms.create(roomCreationData, function(err) {
+        this.setStoreState({pendingCreation: false});
+        if (err) {
+         this._dispatchAction(new sharedActions.CreateRoomError({error: err}));
+        }
+      }.bind(this));
+    },
+
+    /**
+     * Executed when a room creation error occurs.
+     *
+     * @param {sharedActions.CreateRoomError} actionData The action data.
+     */
+    createRoomError: function(actionData) {
+      this.setStoreState({
+        error: actionData.error,
+        pendingCreation: false
+      });
+    },
+
+    /**
      * Gather the list of all available rooms from the MozLoop API.
      */
     getAllRooms: function() {
-      this.mozLoop.rooms.getAll(function(err, rawRoomList) {
+      this.setStoreState({pendingInitialRetrieval: true});
+      this._mozLoop.rooms.getAll(null, function(err, rawRoomList) {
         var action;
+
+        this.setStoreState({pendingInitialRetrieval: false});
+
         if (err) {
           action = new sharedActions.GetAllRoomsError({error: err});
         } else {
           action = new sharedActions.UpdateRoomList({roomList: rawRoomList});
         }
-        this.dispatcher.dispatch(action);
+
+        this._dispatchAction(action);
+
+        // We can only start listening to room events after getAll() has been
+        // called executed first.
+        this.startListeningToRoomEvents();
       }.bind(this));
     },
 
     /**
      * Updates current error state in case getAllRooms failed.
      *
-     * @param {sharedActions.UpdateRoomListError} actionData The action data.
+     * @param {sharedActions.GetAllRoomsError} actionData The action data.
      */
     getAllRoomsError: function(actionData) {
       this.setStoreState({error: actionData.error});
@@ -149,7 +325,7 @@ loop.store = loop.store || {};
     updateRoomList: function(actionData) {
       this.setStoreState({
         error: undefined,
-        rooms: this._processRawRoomList(actionData.roomList)
+        rooms: this._processRoomList(actionData.roomList)
       });
     },
   }, Backbone.Events);
