@@ -99,6 +99,13 @@ CloneRegExpObject(JSContext *cx, JSObject *obj);
  */
 class RegExpShared
 {
+  public:
+    enum ForceByteCodeEnum {
+        DontForceByteCode,
+        ForceByteCode
+    };
+
+  private:
     friend class RegExpCompartment;
     friend class RegExpStatics;
 
@@ -121,10 +128,12 @@ class RegExpShared
     Vector<uint8_t *, 0, SystemAllocPolicy> tables;
 
     /* Internal functions. */
-    bool compile(JSContext *cx, HandleLinearString input);
-    bool compile(JSContext *cx, HandleAtom pattern, HandleLinearString input);
+    bool compile(JSContext *cx, HandleLinearString input, ForceByteCodeEnum force);
+    bool compile(JSContext *cx, HandleAtom pattern, HandleLinearString input,
+                 ForceByteCodeEnum force);
 
-    bool compileIfNecessary(JSContext *cx, HandleLinearString input);
+    bool compileIfNecessary(JSContext *cx, HandleLinearString input,
+                            ForceByteCodeEnum force);
 
   public:
     RegExpShared(JSAtom *source, RegExpFlag flags);
@@ -172,10 +181,12 @@ class RegExpShared
         return latin1 ? byteCodeLatin1 : byteCodeTwoByte;
     }
 
-    bool isCompiled(bool latin1) const {
-        if (latin1)
-            return hasJitCodeLatin1() || hasByteCodeLatin1();
-        return hasJitCodeTwoByte() || hasByteCodeTwoByte();
+    bool isCompiled(bool latin1, ForceByteCodeEnum force = DontForceByteCode) const {
+        if (force == DontForceByteCode) {
+            if (latin1 ? hasJitCodeLatin1() : hasJitCodeTwoByte())
+                return true;
+        }
+        return latin1 ? hasByteCodeLatin1() : hasByteCodeTwoByte();
     }
     bool isCompiled() const {
         return isCompiled(true) || isCompiled(false);
