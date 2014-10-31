@@ -2519,6 +2519,8 @@ nsNavBookmarks::SetKeywordForBookmark(int64_t aBookmarkId,
 NS_IMETHODIMP
 nsNavBookmarks::GetKeywordForURI(nsIURI* aURI, nsAString& aKeyword)
 {
+  PLACES_WARN_DEPRECATED();
+
   NS_ENSURE_ARG(aURI);
   aKeyword.Truncate(0);
 
