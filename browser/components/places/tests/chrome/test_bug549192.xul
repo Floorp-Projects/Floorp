@@ -41,6 +41,26 @@
      * Ensures that history views are updated after deleting entries.
      */
 
+    function promiseURIDeleted() {
+     return new Promise(resolve => {
+       let historyObserver = {
+         onBeginUpdateBatch: function PEX_onBeginUpdateBatch() {},
+         onEndUpdateBatch: function PEX_onEndUpdateBatch() {},
+         onClearHistory() {},
+         onVisit() {},
+         onTitleChanged() {},
+         onDeleteURI(aURI, aGUID, aReason) {
+           PlacesUtils.history.removeObserver(historyObserver);
+           resolve();
+         },
+         onPageChanged() {},
+         onDeleteVisits(aURI, aTime) { },
+       };
+
+       PlacesUtils.history.addObserver(historyObserver, false);
+     });
+    }
+
     function runTest() {
       SimpleTest.waitForExplicitFinish();
 
@@ -106,10 +126,12 @@
         for (let i = 0; i < rc; i++) {
           selection.select(0);
           let node = tree.selectedNode;
+          let promiseDeleted = promiseURIDeleted();
           tree.controller.remove("Removing page");
+          yield promiseDeleted;
           ok(treeView.treeIndexForNode(node) == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE,
             node.uri + " removed.");
-          ok(treeView.rowCount == rc - i - 1, "Rows count decreased");
+          is(treeView.rowCount, rc - i - 1, "Rows count decreased");
         }
 
         // Cleanup.
