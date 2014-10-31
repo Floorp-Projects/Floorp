@@ -405,26 +405,29 @@ ApzcPinchWithPinchInput(TestAsyncPanZoomController* aApzc,
                         int aFocusX, int aFocusY, float aScale,
                         nsEventStatus (*aOutEventStatuses)[3] = nullptr)
 {
-  nsEventStatus actualStatus = aApzc->HandleGestureEvent(
+  nsEventStatus actualStatus = aApzc->ReceiveInputEvent(
     PinchGestureInput(PinchGestureInput::PINCHGESTURE_START,
                       0, TimeStamp(), ScreenPoint(aFocusX, aFocusY),
-                      10.0, 10.0, 0));
+                      10.0, 10.0, 0),
+    nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[0] = actualStatus;
   }
-  actualStatus = aApzc->HandleGestureEvent(
+  actualStatus = aApzc->ReceiveInputEvent(
     PinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
                       0, TimeStamp(), ScreenPoint(aFocusX, aFocusY),
-                      10.0 * aScale, 10.0, 0));
+                      10.0 * aScale, 10.0, 0),
+    nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[1] = actualStatus;
   }
-  actualStatus = aApzc->HandleGestureEvent(
+  actualStatus = aApzc->ReceiveInputEvent(
     PinchGestureInput(PinchGestureInput::PINCHGESTURE_END,
                       0, TimeStamp(), ScreenPoint(aFocusX, aFocusY),
                       // note: negative values here tell APZC
                       //       not to turn the pinch into a pan
-                      -1.0, -1.0, 0));
+                      -1.0, -1.0, 0),
+    nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[2] = actualStatus;
   }
