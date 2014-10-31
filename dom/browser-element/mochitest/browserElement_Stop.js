@@ -19,7 +19,7 @@ var imgSrc = 'http://test/tests/dom/browser-element/mochitest/file_bug709759.sjs
 
 function runTest() {
   iframe = document.createElement('iframe');
-  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.setAttribute('mozbrowser', 'true');
 
   iframe.addEventListener('mozbrowserloadend', loadend);
   iframe.src = 'data:text/html,<html>' +

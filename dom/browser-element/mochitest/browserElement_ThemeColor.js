@@ -16,7 +16,7 @@ function runTest() {
   }
 
   let iframe1 = document.createElement('iframe');
-  SpecialPowers.wrap(iframe1).mozbrowser = true;
+  iframe1.setAttribute('mozbrowser', 'true');
   iframe1.src = "http://test/tests/dom/browser-element/mochitest/file_browserElement_ThemeColor.html";
   iframe1.addEventListener('mozbrowsermetachange', tests);
   document.body.appendChild(iframe1);

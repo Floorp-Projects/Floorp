@@ -21,7 +21,7 @@ function addOneShotIframeEventListener(event, fn) {
 
 function runTest() {
   iframe = document.createElement('iframe');
-  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.setAttribute('mozbrowser', 'true');
 
   addOneShotIframeEventListener('mozbrowserloadend', function() {
     SimpleTest.executeSoon(test2);

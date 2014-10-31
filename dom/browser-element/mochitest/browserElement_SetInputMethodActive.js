@@ -110,7 +110,7 @@ function createFrames() {
 
   // Create an input field to receive string from input method iframes.
   gInputFrame = document.createElement('iframe');
-  SpecialPowers.wrap(gInputFrame).mozbrowser = true;
+  gInputFrame.setAttribute('mozbrowser', 'true');
   gInputFrame.src =
     'data:text/html,<input autofocus value="hello" />' +
     '<p>This is targetted mozbrowser frame.</p>';
@@ -119,7 +119,7 @@ function createFrames() {
 
   for (let i = 0; i < 2; i++) {
     let frame = gFrames[i] = document.createElement('iframe');
-    SpecialPowers.wrap(gFrames[i]).mozbrowser = true;
+    gFrames[i].setAttribute('mozbrowser', 'true');
     // When the input method iframe is activated, it will send the URL
     // hash to current focused element. We set different hash to each
     // iframe so that iframes can be differentiated by their hash.
