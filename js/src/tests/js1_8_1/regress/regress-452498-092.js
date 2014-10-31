@@ -25,7 +25,7 @@ function test()
   expect = 'TypeError: redeclaration of formal parameter e';
   try
   {
-    eval('(function (e) { var e; const e; });');
+    eval('(function (e) { var e; const e = undefined; });');
   }
   catch(ex)
   {

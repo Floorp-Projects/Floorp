@@ -542,7 +542,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node tryStatement();
     Node debuggerStatement();
 
-    Node letDeclaration();
+    Node lexicalDeclaration(bool isConst);
     Node letStatement();
     Node importDeclaration();
     Node exportDeclaration();
@@ -634,6 +634,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     bool isValidForStatementLHS(Node pn1, JSVersion version, bool forDecl, bool forEach,
                                 ParseNodeKind headKind);
+    bool checkForHeadConstInitializers(Node pn1);
     bool checkAndMarkAsIncOperand(Node kid, TokenKind tt, bool preorder);
     bool checkStrictAssignment(Node lhs);
     bool checkStrictBinding(PropertyName *name, Node pn);
@@ -667,16 +668,16 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                          HandlePropertyName name, Parser<ParseHandler> *parser);
 
     static bool
-    bindLet(BindData<ParseHandler> *data,
-            HandlePropertyName name, Parser<ParseHandler> *parser);
+    bindLexical(BindData<ParseHandler> *data,
+                HandlePropertyName name, Parser<ParseHandler> *parser);
 
     static bool
-    bindVarOrConst(BindData<ParseHandler> *data,
-                   HandlePropertyName name, Parser<ParseHandler> *parser);
+    bindVarOrGlobalConst(BindData<ParseHandler> *data,
+                         HandlePropertyName name, Parser<ParseHandler> *parser);
 
     static Node null() { return ParseHandler::null(); }
 
-    bool reportRedeclaration(Node pn, bool isConst, HandlePropertyName name);
+    bool reportRedeclaration(Node pn, Definition::Kind redeclKind, HandlePropertyName name);
     bool reportBadReturn(Node pn, ParseReportKind kind, unsigned errnum, unsigned anonerrnum);
     DefinitionNode getOrCreateLexicalDependency(ParseContext<ParseHandler> *pc, JSAtom *atom);
 

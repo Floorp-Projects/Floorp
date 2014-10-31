@@ -47,7 +47,7 @@ function test()
   try
   {
     actual = 'No Error';
-    (function () { f(x = yield); const x; });
+    (function () { f(x = yield); const x = undefined; });
   }
   catch(ex)
   {

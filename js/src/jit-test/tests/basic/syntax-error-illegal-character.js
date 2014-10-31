@@ -235,10 +235,10 @@ test("const x = 1 @");
 test("const x = 1 + @");
 test("const x = 1 + 2 @");
 test("const x = 1 + 2, @");
-test("const x = 1 + 2, y @");
-test("const x = 1 + 2, y, @");
-test("const x = 1 + 2, y, z @");
-test("const x = 1 + 2, y, z; @");
+test("const x = 1 + 2, y = 0@");
+test("const x = 1 + 2, y = 0, @");
+test("const x = 1 + 2, y = 0, z = 0 @");
+test("const x = 1 + 2, y = 0, z = 0; @");
 
 test("const [ @");
 test("const [ x @");
