@@ -199,7 +199,7 @@ CodeGeneratorMIPS::bailoutFrom(Label *label, LSnapshot *snapshot)
     // We don't use table bailouts because retargeting is easier this way.
     InlineScriptTree *tree = snapshot->mir()->block()->trackedTree();
     OutOfLineBailout *ool = new(alloc()) OutOfLineBailout(snapshot, masm.framePushed());
-    if (!addOutOfLineCode(ool, BytecodeSite(tree, tree->script()->code()))) {
+    if (!addOutOfLineCode(ool, new(alloc()) BytecodeSite(tree, tree->script()->code()))) {
         return false;
     }
 

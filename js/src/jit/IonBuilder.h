@@ -900,9 +900,9 @@ class IonBuilder
     MBasicBlock *current;
     uint32_t loopDepth_;
 
-    BytecodeSite bytecodeSite(jsbytecode *pc) {
+    BytecodeSite *bytecodeSite(jsbytecode *pc) {
         MOZ_ASSERT(info().inlineScriptTree()->script()->containsPC(pc));
-        return BytecodeSite(info().inlineScriptTree(), pc);
+        return new(alloc()) BytecodeSite(info().inlineScriptTree(), pc);
     }
 
     MDefinition *lexicalCheck_;

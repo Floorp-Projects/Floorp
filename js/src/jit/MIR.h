@@ -355,7 +355,7 @@ class MDefinition : public MNode
 
     // Track bailouts by storing the current pc in MIR instruction. Also used
     // for profiling and keeping track of what the last known pc was.
-    BytecodeSite trackedSite_;
+    const BytecodeSite *trackedSite_;
 
   private:
     enum Flag {
@@ -391,7 +391,7 @@ class MDefinition : public MNode
         resultType_(MIRType_None),
         resultTypeSet_(nullptr),
         dependency_(nullptr),
-        trackedSite_()
+        trackedSite_(nullptr)
     { }
 
     // Copying a definition leaves the list of uses and the block empty.
@@ -426,17 +426,18 @@ class MDefinition : public MNode
     // be worthwhile.
     virtual bool possiblyCalls() const { return false; }
 
-    void setTrackedSite(const BytecodeSite &site) {
+    void setTrackedSite(const BytecodeSite *site) {
+        MOZ_ASSERT(site);
         trackedSite_ = site;
     }
-    const BytecodeSite &trackedSite() const {
+    const BytecodeSite *trackedSite() const {
         return trackedSite_;
     }
     jsbytecode *trackedPc() const {
-        return trackedSite_.pc();
+        return trackedSite_ ? trackedSite_->pc() : nullptr;
     }
     InlineScriptTree *trackedTree() const {
-        return trackedSite_.tree();
+        return trackedSite_ ? trackedSite_->tree() : nullptr;
     }
 
     JSScript *profilerLeaveScript() const {
