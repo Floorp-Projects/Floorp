@@ -73,6 +73,7 @@ enum VarDeclKind {
     VARDECL_VAR = 0,
     VARDECL_CONST,
     VARDECL_LET,
+    VARDECL_LET_HEAD,
     VARDECL_LIMIT
 };
 
