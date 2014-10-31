@@ -54,12 +54,23 @@ const debug = false;
 var expectedConsoleMessages = [];
 var expectLoggedMessages = null;
 
-try {
-  const RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].
-                getService(Components.interfaces.nsIRDFService);
-  const ContainerUtils = Components.classes["@mozilla.org/rdf/container-utils;1"].
-                           getService(Components.interfaces.nsIRDFContainerUtils);
-} catch(ex) { }
+function get_RDF() {
+  try {
+    return Components.classes["@mozilla.org/rdf/rdf-service;1"].
+             getService(Components.interfaces.nsIRDFService);
+  } catch (ex) { }
+}
+
+function get_ContainerUtils()
+{
+  try {
+    return Components.classes["@mozilla.org/rdf/container-utils;1"].
+             getService(Components.interfaces.nsIRDFContainerUtils);
+  } catch(ex) { }
+}
+
+const RDF = get_RDF();
+const ContainerUtils = get_ContainerUtils();
 
 var xmlDoc;
 

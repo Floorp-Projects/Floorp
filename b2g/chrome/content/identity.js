@@ -31,15 +31,15 @@ function log(...aMessageArgs) {
 log("\n\n======================= identity.js =======================\n\n");
 
 // This script may be injected more than once into an iframe.
-// Ensure we don't redefine contstants
+// It's hard to do this with |const| like we should, so use var instead.
 if (typeof kIdentityJSLoaded === 'undefined') {
-  const kIdentityDelegateWatch = "identity-delegate-watch";
-  const kIdentityDelegateRequest = "identity-delegate-request";
-  const kIdentityDelegateLogout = "identity-delegate-logout";
-  const kIdentityDelegateReady = "identity-delegate-ready";
-  const kIdentityDelegateFinished = "identity-delegate-finished";
-  const kIdentityControllerDoMethod = "identity-controller-doMethod";
-  const kIdentktyJSLoaded = true;
+  var kIdentityDelegateWatch = "identity-delegate-watch";
+  var kIdentityDelegateRequest = "identity-delegate-request";
+  var kIdentityDelegateLogout = "identity-delegate-logout";
+  var kIdentityDelegateReady = "identity-delegate-ready";
+  var kIdentityDelegateFinished = "identity-delegate-finished";
+  var kIdentityControllerDoMethod = "identity-controller-doMethod";
+  var kIdentktyJSLoaded = true;
 }
 
 var showUI = false;

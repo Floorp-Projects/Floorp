@@ -14,7 +14,7 @@ printStatus (summary);
 
 jit(true);
 
-const c; (function() { for (var j=0;j<5;++j) { c = 1; } })();
+const c = undefined; (function() { for (var j=0;j<5;++j) { c = 1; } })();
 
 jit(false);
 

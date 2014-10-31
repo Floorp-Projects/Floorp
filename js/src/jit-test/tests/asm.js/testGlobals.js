@@ -2,7 +2,6 @@ load(libdir + "asm.js");
 load(libdir + "asserts.js");
 
 assertAsmTypeFail(USE_ASM + "var i; function f(){} return f");
-assertAsmTypeFail(USE_ASM + "const i; function f(){} return f");
 assertEq(asmLink(asmCompile(USE_ASM + "var i=0; function f(){} return f"))(), undefined);
 assertEq(asmLink(asmCompile(USE_ASM + "const i=0; function f(){} return f"))(), undefined);
 assertEq(asmLink(asmCompile(USE_ASM + "var i=42; function f(){ return i|0 } return f"))(), 42);

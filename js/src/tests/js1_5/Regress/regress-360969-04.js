@@ -21,7 +21,7 @@ var limit = 2 << 16;
 
 for (var i = 0; i < limit; i++)
 {
-  eval('const pv' + i + ';');
+  eval('const pv' + i + ' = undefined;');
 }
 
 reportCompare(expect, actual, summary);
