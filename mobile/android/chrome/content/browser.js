@@ -473,7 +473,37 @@ var BrowserApp = {
       Services.prefs.setBoolPref("xpinstall.enabled", false);
     }
 
-    // notify java that gecko has loaded
+    // Fix fallout from Bug 1091803.
+    if (Services.prefs.prefHasUserValue("intl.locale.os")) {
+      try {
+        let currentAcceptLang = Services.prefs.getCharPref("intl.accept_languages");
+
+        // The trailing comma is very important. This means we've set it to a
+        // real char pref, and it's something like "chrome://...,en-US,en".
+        if (currentAcceptLang.startsWith("chrome://global/locale/intl.properties,")) {
+          // If general.useragent.locale was set to a plain string, we ought to fix it, too.
+          try {
+            let currentUALocale = Services.prefs.getCharPref("general.useragent.locale");
+            if (currentUALocale.startsWith("chrome://")) {
+              // We're fine. This is what happens when you read a localized string as a char pref.
+            } else {
+              // Turn it into a localized string.
+              this.setLocalizedPref("general.useragent.locale", currentUALocale);
+            }
+          } catch (ee) {
+          }
+
+          // Now compute and save a valid Accept-Languages header from the clean strings.
+          let osLocale = this.getOSLocalePref();
+          let uaLocale = this.getUALocalePref();
+          this.computeAcceptLanguages(osLocale, uaLocale);
+        }
+      } catch (e) {
+        // Phew.
+      }
+    }
+
+    // Notify Java that Gecko has loaded.
     Messaging.sendRequest({ type: "Gecko:Ready" });
   },
 
@@ -1521,6 +1551,33 @@ var BrowserApp = {
     }
   },
 
+  getUALocalePref: function () {
+    try {
+      return Services.prefs.getComplexValue("general.useragent.locale", Ci.nsIPrefLocalizedString).data;
+    } catch (e) {
+      try {
+        return Services.prefs.getCharPref("general.useragent.locale");
+      } catch (ee) {
+        return undefined;
+      }
+    }
+  },
+
+  getOSLocalePref: function () {
+    try {
+      return Services.prefs.getCharPref("intl.locale.os");
+    } catch (e) {
+      return undefined;
+    }
+  },
+
+  setLocalizedPref: function (pref, value) {
+    let pls = Cc["@mozilla.org/pref-localizedstring;1"]
+                .createInstance(Ci.nsIPrefLocalizedString);
+    pls.data = value;
+    Services.prefs.setComplexValue(pref, Ci.nsIPrefLocalizedString, pls);
+  },
+
   observe: function(aSubject, aTopic, aData) {
     let browser = this.selectedBrowser;
 
@@ -1762,11 +1819,7 @@ var BrowserApp = {
       case "Locale:OS":
         // We know the system locale. We use this for generating Accept-Language headers.
         console.log("Locale:OS: " + aData);
-        let currentOSLocale;
-        try {
-          currentOSLocale = Services.prefs.getCharPref("intl.locale.os");
-        } catch (e) {
-        }
+        let currentOSLocale = this.getOSLocalePref();
         if (currentOSLocale == aData) {
           break;
         }
@@ -1778,11 +1831,7 @@ var BrowserApp = {
         Services.prefs.setCharPref("intl.locale.os", aData);
         Services.prefs.savePrefFile(null);
 
-        let appLocale;
-        try {
-          appLocale = Services.prefs.getCharPref("general.useragent.locale");
-        } catch (e) {
-        }
+        let appLocale = this.getUALocalePref();
 
         this.computeAcceptLanguages(aData, appLocale);
         break;
@@ -1792,7 +1841,10 @@ var BrowserApp = {
           // The value provided to Locale:Changed should be a BCP47 language tag
           // understood by Gecko -- for example, "es-ES" or "de".
           console.log("Locale:Changed: " + aData);
-          Services.prefs.setCharPref("general.useragent.locale", aData);
+
+          // We always write a localized pref, even though sometimes the value is a char pref.
+          // (E.g., on desktop single-locale builds.)
+          this.setLocalizedPref("general.useragent.locale", aData);
         } else {
           // Resetting.
           console.log("Switching to system locale.");
@@ -1881,7 +1933,7 @@ var BrowserApp = {
 
     let result = chosen.join(",");
     console.log("Setting intl.accept_languages to " + result);
-    Services.prefs.setCharPref("intl.accept_languages", result);
+    this.setLocalizedPref("intl.accept_languages", result);
   },
 
   get defaultBrowserWidth() {
