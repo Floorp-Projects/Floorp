@@ -2,7 +2,6 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=1057898
-https://bugzilla.mozilla.org/show_bug.cgi?id=952741
 -->
 <head>
   <title>Test switching between two inputs</title>
@@ -12,7 +11,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=952741
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1057898">Mozilla Bug 1057898</a>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=952741">Mozilla Bug 952741</a>
 <p id="display"></p>
 <pre id="test">
 <script class="testbody" type="application/javascript;version=1.7">
@@ -57,17 +55,7 @@ let appFrameScript = function appFrameScript() {
         break;
 
       case 6:
-        content.document.body.removeChild(input1);
-
-        break;
-
-      case 7:
-        input2.focus();
-
-        break;
-
-      case 8:
-        content.document.body.removeChild(input2);
+        input1.blur();
 
         break;
     }
@@ -126,23 +114,8 @@ function runTest() {
         mm.sendAsyncMessage('test:next');
         break;
 
-      // remove on the first focused input results null input context
+      // blur on the first input results null input context
       case 6:
-        is(inputcontext, null, 'Receving null inputcontext');
-
-        mm.sendAsyncMessage('test:next');
-        break;
-
-      // input context for the second input.
-      case 7:
-        ok(!!inputcontext, 'Receving the second input context');
-        is(inputcontext.textAfterCursor, 'Second');
-
-        mm.sendAsyncMessage('test:next');
-        break;
-
-      // remove on the second focused input results null input context
-      case 8:
         is(inputcontext, null, 'Receving null inputcontext');
 
         inputmethod_cleanup();
