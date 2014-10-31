@@ -51,7 +51,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-[scriptable, uuid(ed12c067-506b-4b10-9853-d4bba5c1bb6c)]
+[scriptable, uuid(f7e4d5da-4dd0-455a-b448-d0224c17fd10)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1597,6 +1597,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * Sheets added via this API take effect immediately on the document.
    */
   void loadSheet(in nsIURI sheetURI, in unsigned long type);
+
+  /**
+   * Same as the above method but allows passing the URI as a string.
+   */
+  void loadSheetFromURIString(in ACString sheetURI, in unsigned long type);
 
   /**
    * Adds a style sheet to the list of additional style sheets of the document.
