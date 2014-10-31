@@ -1740,6 +1740,11 @@ class BindingIter
         MOZ_ASSERT(i_ >= bindings_->numArgs());
         return i_ - bindings_->numArgs();
     }
+    bool isBodyLevelLexical() const {
+        MOZ_ASSERT(!done());
+        const Binding &binding = **this;
+        return binding.kind() != Binding::ARGUMENT;
+    }
 
     const Binding &operator*() const { MOZ_ASSERT(!done()); return bindings_->bindingArray()[i_]; }
     const Binding *operator->() const { MOZ_ASSERT(!done()); return &bindings_->bindingArray()[i_]; }
