@@ -157,7 +157,7 @@ Connection.prototype._changeStreamCount = function _changeStreamCount(change) {
 // Creating a new *inbound or outbound* stream with the given `id` (which is undefined in case of
 // an outbound stream) consists of three steps:
 //
-// 1. var stream = new Stream(this._log);
+// 1. var stream = new Stream(this._log, this);
 // 2. this._allocateId(stream, id);
 // 2. this._allocatePriority(stream);
 
@@ -230,7 +230,7 @@ Connection.prototype._reprioritize = function _reprioritize(stream, priority) {
 Connection.prototype._createIncomingStream = function _createIncomingStream(id) {
   this._log.debug({ stream_id: id }, 'New incoming stream.');
 
-  var stream = new Stream(this._log);
+  var stream = new Stream(this._log, this);
   this._allocateId(stream, id);
   this._allocatePriority(stream);
   this.emit('stream', stream, id);
@@ -243,7 +243,7 @@ Connection.prototype.createStream = function createStream() {
   this._log.trace('Creating new outbound stream.');
 
   // * Receiving is enabled immediately, and an ID gets assigned to the stream
-  var stream = new Stream(this._log);
+  var stream = new Stream(this._log, this);
   this._allocatePriority(stream);
 
   return stream;
@@ -441,13 +441,14 @@ Connection.prototype._sanityCheckMaxFrameSize = function _sanityCheckMaxFrameSiz
 // Changing one or more settings value and sending out a SETTINGS frame
 Connection.prototype.set = function set(settings, callback) {
   // * Calling the callback and emitting event when the change is acknowledges
-  callback = callback || function noop() {};
   var self = this;
   this._settingsAckCallbacks.push(function() {
     for (var name in settings) {
       self.emit('ACKNOWLEDGED_' + name, settings[name]);
     }
-    callback();
+    if (callback) {
+      callback();
+    }
   });
 
   // * Sending out the SETTINGS frame

@@ -16,7 +16,7 @@ exports.Stream = Stream;
 // Public API
 // ----------
 
-// * **new Stream(log)**: create a new Stream
+// * **new Stream(log, connection)**: create a new Stream
 //
 // * **Event: 'headers' (headers)**: signals incoming headers
 //
@@ -46,7 +46,7 @@ exports.Stream = Stream;
 // -----------
 
 // The main aspects of managing the stream are:
-function Stream(log) {
+function Stream(log, connection) {
   Duplex.call(this);
 
   // * logging
@@ -60,6 +60,8 @@ function Stream(log) {
 
   // * maintaining the state of the stream (idle, open, closed, etc.) and error detection
   this._initializeState();
+
+  this.connection = connection;
 }
 
 Stream.prototype = Object.create(Duplex.prototype, { constructor: { value: Stream } });
@@ -79,7 +81,7 @@ Stream.prototype._initializeManagement = function _initializeManagement() {
 };
 
 Stream.prototype.promise = function promise(headers) {
-  var stream = new Stream(this._log);
+  var stream = new Stream(this._log, this.connection);
   stream._priority = Math.min(this._priority + 1, MAX_PRIORITY);
   this._pushUpstream({
     type: 'PUSH_PROMISE',

@@ -135,15 +135,15 @@ var EventEmitter = require('events').EventEmitter;
 var PassThrough = require('stream').PassThrough;
 var Readable = require('stream').Readable;
 var Writable = require('stream').Writable;
-var Endpoint = require('http2-protocol').Endpoint;
-var implementedVersion = require('http2-protocol').ImplementedVersion;
+var protocol = require('./protocol');
+var Endpoint = protocol.Endpoint;
 var http = require('http');
 var https = require('https');
 
 exports.STATUS_CODES = http.STATUS_CODES;
 exports.IncomingMessage = IncomingMessage;
 exports.OutgoingMessage = OutgoingMessage;
-exports.PROTOCOL_VERSION = implementedVersion;
+exports.protocol = protocol;
 
 var deprecatedHeaders = [
   'connection',
@@ -156,7 +156,7 @@ var deprecatedHeaders = [
 ];
 
 // When doing NPN/ALPN negotiation, HTTP/1.1 is used as fallback
-var supportedProtocols = [implementedVersion, 'http/1.1', 'http/1.0'];
+var supportedProtocols = [protocol.VERSION, 'http/1.1', 'http/1.0'];
 
 // Ciphersuite list based on the recommendations of http://wiki.mozilla.org/Security/Server_Side_TLS
 // The only modification is that kEDH+AESGCM were placed after DHE and ECDHE suites
@@ -216,7 +216,7 @@ var defaultLogger = {
 };
 
 // Bunyan serializers exported by submodules that are worth adding when creating a logger.
-exports.serializers = require('http2-protocol').serializers;
+exports.serializers = protocol.serializers;
 
 // IncomingMessage class
 // ---------------------
@@ -386,7 +386,6 @@ OutgoingMessage.prototype._checkSpecialHeader = IncomingMessage.prototype._check
 // Server side
 // ===========
 
-exports.createServer = createServer;
 exports.Server = Server;
 exports.IncomingRequest = IncomingRequest;
 exports.OutgoingResponse = OutgoingResponse;
@@ -417,7 +416,7 @@ function Server(options) {
     this._server.removeAllListeners('secureConnection');
     this._server.on('secureConnection', function(socket) {
       var negotiatedProtocol = socket.alpnProtocol || socket.npnProtocol;
-      if ((negotiatedProtocol === implementedVersion) && socket.servername) {
+      if ((negotiatedProtocol === protocol.VERSION) && socket.servername) {
         start(socket);
       } else {
         fallback(socket);
@@ -537,11 +536,34 @@ Server.prototype.addContext = function addContext(hostname, credentials) {
   }
 };
 
-function createServer(options, requestListener) {
+function createServerRaw(options, requestListener) {
   if (typeof options === 'function') {
     requestListener = options;
-    options = undefined;
+    options = {};
   }
+
+  if (options.pfx || (options.key && options.cert)) {
+    throw new Error('options.pfx, options.key, and options.cert are nonsensical!');
+  }
+
+  options.plain = true;
+  var server = new Server(options);
+
+  if (requestListener) {
+    server.on('request', requestListener);
+  }
+
+  return server;
+}
+
+function createServerTLS(options, requestListener) {
+  if (typeof options === 'function') {
+    throw new Error('options are required!');
+  }
+  if (!options.pfx && !(options.key && options.cert)) {
+    throw new Error('options.pfx or options.key and options.cert are required!');
+  }
+  options.plain = false;
 
   var server = new Server(options);
 
@@ -551,6 +573,26 @@ function createServer(options, requestListener) {
 
   return server;
 }
+
+// Exposed main interfaces for HTTPS connections (the default)
+exports.https = {};
+exports.createServer = exports.https.createServer = createServerTLS;
+exports.request = exports.https.request = requestTLS;
+exports.get = exports.https.get = getTLS;
+
+// Exposed main interfaces for raw TCP connections (not recommended)
+exports.raw = {};
+exports.raw.createServer = createServerRaw;
+exports.raw.request = requestRaw;
+exports.raw.get = getRaw;
+
+// Exposed main interfaces for HTTP plaintext upgrade connections (not implemented)
+function notImplemented() {
+    throw new Error('HTTP UPGRADE is not implemented!');
+}
+
+exports.http = {};
+exports.http.createServer = exports.http.request = exports.http.get = notImplemented;
 
 // IncomingRequest class
 // ---------------------
@@ -706,12 +748,46 @@ exports.OutgoingRequest = OutgoingRequest;
 exports.IncomingResponse = IncomingResponse;
 exports.Agent = Agent;
 exports.globalAgent = undefined;
-exports.request = function request(options, callback) {
+
+function requestRaw(options, callback) {
+  if (typeof options === "string") {
+    options = url.parse(options);
+  }
+  if ((options.protocol && options.protocol !== "http:") || !options.plain) {
+    throw new Error('This interface only supports http-schemed URLs');
+  }
   return (options.agent || exports.globalAgent).request(options, callback);
-};
-exports.get = function get(options, callback) {
+}
+
+function requestTLS(options, callback) {
+  if (typeof options === "string") {
+    options = url.parse(options);
+  }
+  if ((options.protocol && options.protocol !== "https:") || options.plain) {
+    throw new Error('This interface only supports https-schemed URLs');
+  }
+  return (options.agent || exports.globalAgent).request(options, callback);
+}
+
+function getRaw(options, callback) {
+  if (typeof options === "string") {
+    options = url.parse(options);
+  }
+  if ((options.protocol && options.protocol !== "http:") || !options.plain) {
+    throw new Error('This interface only supports http-schemed URLs');
+  }
   return (options.agent || exports.globalAgent).get(options, callback);
-};
+}
+
+function getTLS(options, callback) {
+  if (typeof options === "string") {
+    options = url.parse(options);
+  }
+  if ((options.protocol && options.protocol !== "https:") || options.plain) {
+    throw new Error('This interface only supports https-schemed URLs');
+  }
+  return (options.agent || exports.globalAgent).get(options, callback);
+}
 
 // Agent class
 // -----------
@@ -810,7 +886,7 @@ Agent.prototype.request = function request(options, callback) {
     function negotiated() {
       var endpoint;
       var negotiatedProtocol = httpsRequest.socket.alpnProtocol || httpsRequest.socket.npnProtocol;
-      if (negotiatedProtocol === implementedVersion) {
+      if (negotiatedProtocol === protocol.VERSION) {
         httpsRequest.socket.emit('agentRemove');
         unbundleSocket(httpsRequest.socket);
         endpoint = new Endpoint(self._log, 'CLIENT', self._settings);
