@@ -496,7 +496,7 @@ bool
 BaselineCompiler::emitStackCheck(bool earlyCheck)
 {
     Label skipCall;
-    void *limitAddr = cx->runtime()->mainThread.addressofJitStackLimit();
+    uintptr_t *limitAddr = &cx->runtime()->mainThread.jitStackLimit;
     uint32_t slotsSize = script->nslots() * sizeof(Value);
     uint32_t tolerance = earlyCheck ? slotsSize : 0;
 
@@ -646,7 +646,7 @@ BaselineCompiler::emitInterruptCheck()
     frame.syncStack(0);
 
     Label done;
-    void *interrupt = cx->runtimeAddressOfInterruptUint32();
+    void *interrupt = (void *)&cx->runtime()->interrupt;
     masm.branch32(Assembler::Equal, AbsoluteAddress(interrupt), Imm32(0), &done);
 
     prepareVMCall();
