@@ -65,49 +65,5 @@ function startTests() {
   is (document.documentElement.getAttribute("devtoolstheme"), "light",
     "The documentElement has an attribute based on devtools theme.");
 
-  testLightweightThemePreview();
   finish();
-}
-
-function dummyLightweightTheme(id) {
-  return {
-    id: id,
-    name: id,
-    headerURL: "http://lwttest.invalid/a.png",
-    footerURL: "http://lwttest.invalid/b.png",
-    textcolor: "red",
-    accentcolor: "blue"
-  };
-}
-
-function testLightweightThemePreview() {
-  let {LightweightThemeManager} = Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
-
-  info ("Turning the pref on, then previewing lightweight themes");
-  Services.prefs.setBoolPref(PREF_DEVEDITION_THEME, true);
-  ok (DevEdition.styleSheet, "The devedition stylesheet is enabled.");
-  LightweightThemeManager.previewTheme(dummyLightweightTheme("preview0"));
-  ok (!DevEdition.styleSheet, "The devedition stylesheet is not enabled after a lightweight theme preview.");
-  LightweightThemeManager.previewTheme(dummyLightweightTheme("preview1"));
-  ok (!DevEdition.styleSheet, "The devedition stylesheet is not enabled after a second lightweight theme preview.");
-  LightweightThemeManager.resetPreview();
-  ok (DevEdition.styleSheet, "The devedition stylesheet is enabled again after resetting the preview.");
-
-  info ("Turning the pref on, then previewing a theme, turning it off and resetting the preview");
-  Services.prefs.setBoolPref(PREF_DEVEDITION_THEME, true);
-  ok (DevEdition.styleSheet, "The devedition stylesheet is enabled.");
-  LightweightThemeManager.previewTheme(dummyLightweightTheme("preview2"));
-  ok (!DevEdition.styleSheet, "The devedition stylesheet is not enabled after a lightweight theme preview.");
-  Services.prefs.setBoolPref(PREF_DEVEDITION_THEME, false);
-  ok (!DevEdition.styleSheet, "The devedition stylesheet is not enabled after pref is turned off.");
-  LightweightThemeManager.resetPreview();
-  ok (!DevEdition.styleSheet, "The devedition stylesheet is still disabled after resetting the preview.");
-
-  info ("Turning the pref on, then previewing the default theme, turning it off and resetting the preview");
-  Services.prefs.setBoolPref(PREF_DEVEDITION_THEME, true);
-  ok (DevEdition.styleSheet, "The devedition stylesheet is enabled.");
-  LightweightThemeManager.previewTheme(dummyLightweightTheme("{972ce4c6-7e08-4474-a285-3208198ce6fd}"));
-  ok (DevEdition.styleSheet, "The devedition stylesheet is still enabled after the default theme is applied.");
-  LightweightThemeManager.resetPreview();
-  ok (DevEdition.styleSheet, "The devedition stylesheet is still enabled after resetting the preview.");
 }
