@@ -79,7 +79,9 @@ class Message : public Pickle {
   Message(const char* data, int data_len);
 
   Message(const Message& other);
+  Message(Message&& other);
   Message& operator=(const Message& other);
+  Message& operator=(Message&& other);
 
   PriorityValue priority() const {
     return static_cast<PriorityValue>(header()->flags & PRIORITY_MASK);
