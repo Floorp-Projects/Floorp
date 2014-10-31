@@ -1501,6 +1501,12 @@ CloneValue(JSContext *cx, HandleValue selfHostedValue, MutableHandleValue vp)
         if (!clone)
             return false;
         vp.setString(clone);
+    } else if (selfHostedValue.isSymbol()) {
+        // Well-known symbols are shared.
+        JS::Symbol *sym = selfHostedValue.toSymbol();
+        MOZ_ASSERT(sym->isWellKnownSymbol());
+        MOZ_ASSERT(cx->wellKnownSymbols().get(size_t(sym->code())) == sym);
+        vp.set(selfHostedValue);
     } else {
         MOZ_CRASH("Self-hosting CloneValue can't clone given value.");
     }

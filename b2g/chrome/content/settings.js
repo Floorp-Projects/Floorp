@@ -154,10 +154,12 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
   let hardware_info = null;
   let firmware_revision = null;
   let product_model = null;
+  let build_number = null;
 #ifdef MOZ_WIDGET_GONK
     hardware_info = libcutils.property_get('ro.hardware');
     firmware_revision = libcutils.property_get('ro.firmware_revision');
     product_model = libcutils.property_get('ro.product.model');
+    build_number = libcutils.property_get('ro.build.version.incremental');
 #endif
 
   // Populate deviceinfo settings,
@@ -168,6 +170,7 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
     let previous_os = req.result && req.result['deviceinfo.os'] || '';
     let software = os_name + ' ' + os_version;
     let setting = {
+      'deviceinfo.build_number': build_number,
       'deviceinfo.os': os_version,
       'deviceinfo.previous_os': previous_os,
       'deviceinfo.software': software,
