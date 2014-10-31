@@ -360,8 +360,7 @@ HistoryDownloadElementShell.prototype = {
       DownloadsCommon.removeAndFinalizeDownload(this.download);
     }
     if (this._historyDownload) {
-      let uri = NetUtil.newURI(this.download.source.url);
-      PlacesUtils.bhistory.removePage(uri);
+      PlacesUtils.history.remove(this.download.source.url);
     }
   },
 
