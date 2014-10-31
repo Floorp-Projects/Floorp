@@ -279,7 +279,7 @@ public:
    * redrawn, in device pixel coordinates relative to the outer svg */
   static void
   PaintFrameWithEffects(nsIFrame *aFrame,
-                        nsRenderingContext *aContext,
+                        gfxContext& aContext,
                         const gfxMatrix& aTransform,
                         const nsIntRect *aDirtyRect = nullptr);
 

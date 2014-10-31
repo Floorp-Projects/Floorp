@@ -472,7 +472,7 @@ public:
 
 void
 nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
-                                  nsRenderingContext *aContext,
+                                  gfxContext& aContext,
                                   const gfxMatrix& aTransform,
                                   const nsIntRect *aDirtyRect)
 {
@@ -557,8 +557,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   if (opacity != 1.0f && CanOptimizeOpacity(aFrame))
     opacity = 1.0f;
 
-  DrawTarget* drawTarget = aContext->GetDrawTarget();
-  gfxContext *gfx = aContext->ThebesContext();
+  DrawTarget* drawTarget = aContext.GetDrawTarget();
   bool complexEffects = false;
 
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
@@ -576,12 +575,12 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)
       || aFrame->StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
     complexEffects = true;
-    gfx->Save();
+    aContext.Save();
     if (!(aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
       // aFrame has a valid visual overflow rect, so clip to it before calling
       // PushGroup() to minimize the size of the surfaces we'll composite:
-      gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
-      gfx->Multiply(aTransform);
+      gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(&aContext);
+      aContext.Multiply(aTransform);
       nsRect overflowRect = aFrame->GetVisualOverflowRectRelativeToSelf();
       if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
           aFrame->IsSVGText()) {
@@ -589,20 +588,22 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
         // GetCanvasTM().
         overflowRect = overflowRect + aFrame->GetPosition();
       }
-      gfx->Clip(NSRectToSnappedRect(overflowRect,
-                                    aFrame->PresContext()->AppUnitsPerDevPixel(),
-                                    *drawTarget));
+      aContext.Clip(NSRectToSnappedRect(overflowRect,
+                                        aFrame->PresContext()->AppUnitsPerDevPixel(),
+                                        *drawTarget));
     }
-    gfx->PushGroup(gfxContentType::COLOR_ALPHA);
+    aContext.PushGroup(gfxContentType::COLOR_ALPHA);
   }
 
   /* If this frame has only a trivial clipPath, set up cairo's clipping now so
    * we can just do normal painting and get it clipped appropriately.
    */
   if (clipPathFrame && isTrivialClip) {
-    gfx->Save();
-    clipPathFrame->ApplyClipOrPaintClipMask(*gfx, aFrame, aTransform);
+    aContext.Save();
+    clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, aTransform);
   }
+
+  nsRenderingContext rendCtx(&aContext);
 
   /* Paint the child */
   if (effectProperties.HasValidFilter()) {
@@ -627,55 +628,55 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
       dirtyRegion = &tmpDirtyRegion;
     }
     SVGPaintCallback paintCallback;
-    nsFilterInstance::PaintFilteredFrame(aFrame, aContext, aTransform,
+    nsFilterInstance::PaintFilteredFrame(aFrame, &rendCtx, aTransform,
                                          &paintCallback, dirtyRegion);
   } else {
-    svgChildFrame->PaintSVG(aContext, aTransform, aDirtyRect);
+    svgChildFrame->PaintSVG(&rendCtx, aTransform, aDirtyRect);
   }
 
   if (clipPathFrame && isTrivialClip) {
-    gfx->Restore();
+    aContext.Restore();
   }
 
   /* No more effects, we're done. */
   if (!complexEffects)
     return;
 
-  gfx->PopGroupToSource();
+  aContext.PopGroupToSource();
 
   Matrix maskTransform;
   RefPtr<SourceSurface> maskSurface =
-    maskFrame ? maskFrame->GetMaskForMaskedFrame(aContext->ThebesContext(),
+    maskFrame ? maskFrame->GetMaskForMaskedFrame(&aContext,
                                                  aFrame, aTransform, opacity, &maskTransform)
               : nullptr;
 
   if (clipPathFrame && !isTrivialClip) {
-    gfx->PushGroup(gfxContentType::COLOR_ALPHA);
+    aContext.PushGroup(gfxContentType::COLOR_ALPHA);
 
-    nsresult rv = clipPathFrame->ApplyClipOrPaintClipMask(*gfx, aFrame, aTransform);
+    nsresult rv = clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, aTransform);
     Matrix clippedMaskTransform;
-    RefPtr<SourceSurface> clipMaskSurface = gfx->PopGroupToSurface(&clippedMaskTransform);
+    RefPtr<SourceSurface> clipMaskSurface = aContext.PopGroupToSurface(&clippedMaskTransform);
 
     if (NS_SUCCEEDED(rv) && clipMaskSurface) {
       // Still more set after clipping, so clip to another surface
       if (maskSurface || opacity != 1.0f) {
-        gfx->PushGroup(gfxContentType::COLOR_ALPHA);
-        gfx->Mask(clipMaskSurface, clippedMaskTransform);
-        gfx->PopGroupToSource();
+        aContext.PushGroup(gfxContentType::COLOR_ALPHA);
+        aContext.Mask(clipMaskSurface, clippedMaskTransform);
+        aContext.PopGroupToSource();
       } else {
-        gfx->Mask(clipMaskSurface, clippedMaskTransform);
+        aContext.Mask(clipMaskSurface, clippedMaskTransform);
       }
     }
   }
 
   if (maskSurface) {
-    gfx->Mask(maskSurface, maskTransform);
+    aContext.Mask(maskSurface, maskTransform);
   } else if (opacity != 1.0f ||
              aFrame->StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
-    gfx->Paint(opacity);
+    aContext.Paint(opacity);
   }
 
-  gfx->Restore();
+  aContext.Restore();
 }
 
 bool
