@@ -42,12 +42,12 @@ function runTest() {
   iframe.src = browserElementTestHelpers.emptyPage1;
 
   var childID = null;
-  expectOnlyOneProcessCreated().then(function(chid) {
-    childID = chid;
-    return Promise.all(
-      [expectPriorityChange(childID, 'FOREGROUND'),
-       expectMozbrowserEvent(iframe, 'loadend')]);
-  }).then(function() {
+  Promise.all([
+    expectOnlyOneProcessCreated('FOREGROUND').then(function(chid) {
+      childID = chid;
+    }),
+    expectMozbrowserEvent(iframe, 'loadend')
+  ]).then(function() {
     var p = expectPriorityChange(childID, 'BACKGROUND_PERCEIVABLE');
     iframe.setVisible(false);
     return p;
