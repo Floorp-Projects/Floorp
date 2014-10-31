@@ -44,16 +44,15 @@ function runTest() {
   }).then(finishOnce);
 
   var childID = null;
-  expectOnlyOneProcessCreated().then(function(chid) {
-    childID = chid;
-    return Promise.all(
-      [expectPriorityChange(childID, 'FOREGROUND'),
-       expectMozbrowserEvent(iframe, 'loadend'),
-       expectMozbrowserEvent(iframe, 'showmodalprompt').then(function(e) {
-         is(e.detail.message, 'ready');
-       })
-     ]);
-  }).then(function() {
+  Promise.all([
+    expectOnlyOneProcessCreated('FOREGROUND').then(function(chid) {
+      childID = chid;
+    }),
+    expectMozbrowserEvent(iframe, 'loadend'),
+    expectMozbrowserEvent(iframe, 'showmodalprompt').then(function(e) {
+      is(e.detail.message, 'ready');
+    })
+  ]).then(function() {
     // Fire a low-memory notification once the process goes into the background
     // due to the setVisible(false) call below.
     expectPriorityChange(childID, 'BACKGROUND').then(function() {

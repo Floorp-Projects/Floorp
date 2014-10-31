@@ -111,7 +111,8 @@ const browserElementTestHelpers = {
 
 // Returns a promise which is resolved when a subprocess is created.  The
 // argument to resolve() is the childID of the subprocess.
-function expectProcessCreated() {
+function expectProcessCreated(/* optional */ initialPriority,
+                              /* optional */ initialCPUPriority) {
   return new Promise(function(resolve, reject) {
     var observed = false;
     browserElementTestHelpers.addProcessPriorityObserver(
@@ -126,7 +127,13 @@ function expectProcessCreated() {
 
         var childID = parseInt(data);
         ok(true, 'Got new process, id=' + childID);
-        resolve(childID);
+        if (initialPriority) {
+          expectPriorityChange(childID, initialPriority, initialCPUPriority).then(function() {
+            resolve(childID);
+          });
+        } else {
+          resolve(childID);
+        }
       }
     );
   });
@@ -134,8 +141,9 @@ function expectProcessCreated() {
 
 // Just like expectProcessCreated(), except we'll call ok(false) if a second
 // process is created.
-function expectOnlyOneProcessCreated() {
-  var p = expectProcessCreated();
+function expectOnlyOneProcessCreated(/* optional */ initialPriority,
+                                     /* optional */ initialCPUPriority) {
+  var p = expectProcessCreated(initialPriority, initialCPUPriority);
   p.then(function() {
     expectProcessCreated().then(function(childID) {
       ok(false, 'Got unexpected process creation, childID=' + childID);

@@ -89,19 +89,23 @@ function runTest() {
       }
     }
 
-    return Promise.all(
-      [expectMozbrowserEvent(iframe, 'showmodalprompt').then(checkAlertInfo),
-       expectPriorityChange(childID, priority).then(checkGracePeriod)]
-    ).then(function(results) {
+    return Promise.all([
+      new Promise(function(resolve, reject) {
+        iframe.addEventListener('mozbrowsershowmodalprompt', function check(e) {
+          iframe.removeEventListener('mozbrowsershowmodalprompt', check);
+          resolve(checkAlertInfo(e));
+        });
+      }),
+      expectPriorityChange(childID, priority).then(checkGracePeriod)
+    ]).then(function(results) {
       // checkAlertInfo returns the function to call to unblock the alert.
       // It comes to us as the first element of the results array.
       results[0]();
     });
   }
 
-  expectProcessCreated().then(function(chid) {
+  expectProcessCreated('FOREGROUND').then(function(chid) {
     childID = chid;
-    return expectPriorityChange(childID, 'FOREGROUND');
   }).then(function() {
     return expectAlertAndPriorityChange(0, 'FOREGROUND_HIGH');
   }).then(function() {
