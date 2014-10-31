@@ -859,71 +859,71 @@ DebuggerClient.prototype = {
    *        The incoming packet.
    */
   onPacket: function (aPacket) {
-      if (!aPacket.from) {
-        DevToolsUtils.reportException(
-          "onPacket",
-          new Error("Server did not specify an actor, dropping packet: " +
-                    JSON.stringify(aPacket)));
+    if (!aPacket.from) {
+      DevToolsUtils.reportException(
+        "onPacket",
+        new Error("Server did not specify an actor, dropping packet: " +
+                  JSON.stringify(aPacket)));
+      return;
+    }
+
+    // If we have a registered Front for this actor, let it handle the packet
+    // and skip all the rest of this unpleasantness.
+    let front = this.getActor(aPacket.from);
+    if (front) {
+      front.onPacket(aPacket);
+      return;
+    }
+
+    if (this._clients.has(aPacket.from) && aPacket.type) {
+      let client = this._clients.get(aPacket.from);
+      let type = aPacket.type;
+      if (client.events.indexOf(type) != -1) {
+        client.emit(type, aPacket);
+        // we ignore the rest, as the client is expected to handle this packet.
         return;
       }
+    }
 
-      // If we have a registered Front for this actor, let it handle the packet
-      // and skip all the rest of this unpleasantness.
-      let front = this.getActor(aPacket.from);
-      if (front) {
-        front.onPacket(aPacket);
-        return;
-      }
+    let activeRequest;
+    // See if we have a handler function waiting for a reply from this
+    // actor. (Don't count unsolicited notifications or pauses as
+    // replies.)
+    if (this._activeRequests.has(aPacket.from) &&
+        !(aPacket.type in UnsolicitedNotifications) &&
+        !(aPacket.type == ThreadStateTypes.paused &&
+          aPacket.why.type in UnsolicitedPauses)) {
+      activeRequest = this._activeRequests.get(aPacket.from);
+      this._activeRequests.delete(aPacket.from);
+    }
 
-      if (this._clients.has(aPacket.from) && aPacket.type) {
-        let client = this._clients.get(aPacket.from);
-        let type = aPacket.type;
-        if (client.events.indexOf(type) != -1) {
-          client.emit(type, aPacket);
-          // we ignore the rest, as the client is expected to handle this packet.
-          return;
-        }
-      }
+    // Packets that indicate thread state changes get special treatment.
+    if (aPacket.type in ThreadStateTypes &&
+        this._clients.has(aPacket.from) &&
+        typeof this._clients.get(aPacket.from)._onThreadState == "function") {
+      this._clients.get(aPacket.from)._onThreadState(aPacket);
+    }
+    // On navigation the server resumes, so the client must resume as well.
+    // We achieve that by generating a fake resumption packet that triggers
+    // the client's thread state change listeners.
+    if (aPacket.type == UnsolicitedNotifications.tabNavigated &&
+        this._clients.has(aPacket.from) &&
+        this._clients.get(aPacket.from).thread) {
+      let thread = this._clients.get(aPacket.from).thread;
+      let resumption = { from: thread._actor, type: "resumed" };
+      thread._onThreadState(resumption);
+    }
+    // Only try to notify listeners on events, not responses to requests
+    // that lack a packet type.
+    if (aPacket.type) {
+      this.emit(aPacket.type, aPacket);
+    }
 
-      let activeRequest;
-      // See if we have a handler function waiting for a reply from this
-      // actor. (Don't count unsolicited notifications or pauses as
-      // replies.)
-      if (this._activeRequests.has(aPacket.from) &&
-          !(aPacket.type in UnsolicitedNotifications) &&
-          !(aPacket.type == ThreadStateTypes.paused &&
-            aPacket.why.type in UnsolicitedPauses)) {
-        activeRequest = this._activeRequests.get(aPacket.from);
-        this._activeRequests.delete(aPacket.from);
-      }
+    if (activeRequest) {
+      activeRequest.emit("json-reply", aPacket);
+    }
 
-      // Packets that indicate thread state changes get special treatment.
-      if (aPacket.type in ThreadStateTypes &&
-          this._clients.has(aPacket.from) &&
-          typeof this._clients.get(aPacket.from)._onThreadState == "function") {
-        this._clients.get(aPacket.from)._onThreadState(aPacket);
-      }
-      // On navigation the server resumes, so the client must resume as well.
-      // We achieve that by generating a fake resumption packet that triggers
-      // the client's thread state change listeners.
-      if (aPacket.type == UnsolicitedNotifications.tabNavigated &&
-          this._clients.has(aPacket.from) &&
-          this._clients.get(aPacket.from).thread) {
-        let thread = this._clients.get(aPacket.from).thread;
-        let resumption = { from: thread._actor, type: "resumed" };
-        thread._onThreadState(resumption);
-      }
-      // Only try to notify listeners on events, not responses to requests
-      // that lack a packet type.
-      if (aPacket.type) {
-        this.emit(aPacket.type, aPacket);
-      }
-
-      if (activeRequest) {
-        activeRequest.emit("json-reply", aPacket);
-      }
-
-      this._sendRequests();
+    this._sendRequests();
   },
 
   /**
