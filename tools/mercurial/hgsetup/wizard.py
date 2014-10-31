@@ -11,7 +11,7 @@ import shutil
 import sys
 import which
 
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 
 from configobj import ConfigObjError
 from StringIO import StringIO
@@ -43,7 +43,7 @@ are up to date and you won't have to do anything.
 To begin, press the enter/return key.
 '''.strip()
 
-OLDEST_NON_LEGACY_VERSION = StrictVersion('3.0')
+OLDEST_NON_LEGACY_VERSION = LooseVersion('3.0')
 LEGACY_MERCURIAL = '''
 You are running an out of date Mercurial client (%s).
 
@@ -109,7 +109,7 @@ Your Mercurial should now be properly configured and recommended extensions
 should be up to date!
 '''.strip()
 
-REVIEWBOARD_MINIMUM_VERSION = StrictVersion('3.0.1')
+REVIEWBOARD_MINIMUM_VERSION = LooseVersion('3.0.1')
 
 REVIEWBOARD_INCOMPATIBLE = '''
 Your Mercurial is too old to use the reviewboard extension, which is necessary
@@ -129,7 +129,7 @@ functionality will not be enabled or you will be prompted for your
 Bugzilla credentials when they are needed.
 '''.lstrip()
 
-BZPOST_MINIMUM_VERSION = StrictVersion('3.0')
+BZPOST_MINIMUM_VERSION = LooseVersion('3.0')
 
 BZPOST_INFO = '''
 The bzpost extension automatically records the URLs of pushed commits to
@@ -138,7 +138,7 @@ referenced Bugzilla bugs after push.
 Would you like to activate bzpost
 '''.strip()
 
-FIREFOXTREE_MINIMUM_VERSION = StrictVersion('3.0')
+FIREFOXTREE_MINIMUM_VERSION = LooseVersion('3.0')
 
 FIREFOXTREE_INFO = '''
 The firefoxtree extension makes interacting with the multiple Firefox
