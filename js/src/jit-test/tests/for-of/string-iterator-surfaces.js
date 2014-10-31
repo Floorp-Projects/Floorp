@@ -57,7 +57,9 @@ var iterProto = Object.getPrototypeOf(iter);
 assertEq(Object.getPrototypeOf(iterProto), Object.prototype);
 
 // Own properties for StringIterator.prototype: "next" and @@iterator
-arraysEqual(Object.getOwnPropertyNames(iterProto).sort(), ["next", std_iterator].sort());
+arraysEqual(Object.getOwnPropertyNames(iterProto).sort(),
+            JS_HAS_SYMBOLS ? ["next"] : ["@@iterator", "next"]);
+assertEq(iterProto.hasOwnProperty(std_iterator), true);
 
 // StringIterator.prototype[@@iterator] is a built-in function
 assertBuiltinFunction(iterProto, std_iterator, 0);

@@ -7,20 +7,11 @@ module.metadata = {
   "stability": "experimental"
 };
 
-// This is known as @@iterator in the ES6 spec.  Until it is bound to
-// some well-known name, find the @@iterator object by expecting it as
-// the first property accessed on a for-of iterable.
-const iteratorSymbol = (function() {
-  try {
-    for (var _ of Proxy.create({get: function(_, name) { throw name; } }))
-      break;
-  } catch (name) {
-    return name;
-  }
-  throw new TypeError;
-})();
-
-exports.iteratorSymbol = iteratorSymbol;
+// This is known as @@iterator in the ES6 spec. In builds that have ES6
+// Symbols, use Symbol.iterator; otherwise use the legacy method name,
+// "@@iterator".
+const JS_HAS_SYMBOLS = typeof Symbol === "function";
+exports.iteratorSymbol = JS_HAS_SYMBOLS ? Symbol.iterator : "@@iterator";
 
 // An adaptor that, given an object that is iterable with for-of, is
 // suitable for being bound to __iterator__ in order to make the object
