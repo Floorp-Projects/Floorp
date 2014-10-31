@@ -18,7 +18,8 @@ BEGIN_TEST(testBug795104)
     s[strLen - 1] = '"';
     CHECK(JS::Evaluate(cx, global, opts, s, strLen));
     JS::RootedFunction fun(cx);
-    CHECK(JS::CompileFunction(cx, global, opts, "f", 0, nullptr, s, strLen, &fun));
+    JS::AutoObjectVector emptyScopeChain(cx);
+    CHECK(JS::CompileFunction(cx, emptyScopeChain, opts, "f", 0, nullptr, s, strLen, &fun));
     CHECK(fun);
     JS_free(cx, s);
 
