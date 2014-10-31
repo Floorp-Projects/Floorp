@@ -71,8 +71,11 @@ nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId)
   , mAutoFlashModeOverridden(false)
   , mSeparateVideoAndPreviewSizesSupported(false)
   , mDeferConfigUpdate(0)
+  , mMediaProfiles(nullptr)
   , mRecorder(nullptr)
   , mRecorderMonitor("GonkCameraControl::mRecorder.Monitor")
+  , mProfileManager(nullptr)
+  , mRecorderProfile(nullptr)
   , mVideoFile(nullptr)
   , mReentrantMonitor("GonkCameraControl::OnTakePicture.Monitor")
 {
@@ -142,7 +145,6 @@ nsGonkCameraControl::Initialize()
   }
 
   DOM_CAMERA_LOGI("Initializing camera %d (this=%p, mCameraHw=%p)\n", mCameraId, this, mCameraHw.get());
-  mCurrentConfiguration.mRecorderProfile.Truncate();
 
   // Initialize our camera configuration database.
   PullParametersImpl();
@@ -302,6 +304,9 @@ nsresult
 nsGonkCameraControl::SetPictureConfiguration(const Configuration& aConfig)
 {
   DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+
+  // remove any existing recorder profile
+  mRecorderProfile = nullptr;
 
   nsresult rv = SetPreviewSize(aConfig.mPreviewSize);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -955,7 +960,7 @@ nsGonkCameraControl::StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescri
 
   ReentrantMonitorAutoEnter mon(mRecorderMonitor);
 
-  NS_ENSURE_TRUE(!mCurrentConfiguration.mRecorderProfile.IsEmpty(), NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mRecorderProfile, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_FALSE(mRecorder, NS_ERROR_FAILURE);
 
   /**
@@ -1363,24 +1368,31 @@ nsGonkCameraControl::SetVideoConfiguration(const Configuration& aConfig)
 {
   DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
 
-  RecorderProfile* profile;
-  if (!mRecorderProfiles.Get(aConfig.mRecorderProfile, &profile)) {
-    DOM_CAMERA_LOGE("Recorder profile '%s' is not supported\n",
-      NS_ConvertUTF16toUTF8(aConfig.mRecorderProfile).get());
+  // read preferences for camcorder
+  mMediaProfiles = MediaProfiles::getInstance();
+
+  nsAutoCString profile = NS_ConvertUTF16toUTF8(aConfig.mRecorderProfile);
+  mRecorderProfile = GetGonkRecorderProfileManager().take()->Get(profile.get());
+  if (!mRecorderProfile) {
+    DOM_CAMERA_LOGE("Recorder profile '%s' is not supported\n", profile.get());
     return NS_ERROR_INVALID_ARG;
   }
 
-  mCurrentConfiguration.mRecorderProfile = aConfig.mRecorderProfile;
-  const RecorderProfile::Video& video(profile->GetVideo());
-  const Size& size = video.GetSize();
-  int fps = video.GetFramesPerSecond();
-  if (fps <= 0 || size.width <= 0 || size.height <= 0) {
-    DOM_CAMERA_LOGE("Can't configure video with fps=%d, width=%d, height=%d\n",
-      fps, size.width, size.height);
+  const GonkRecorderVideoProfile* video = mRecorderProfile->GetGonkVideoProfile();
+  int width = video->GetWidth();
+  int height = video->GetHeight();
+  int fps = video->GetFramerate();
+  if (fps == -1 || width < 0 || height < 0) {
+    DOM_CAMERA_LOGE("Can't configure preview with fps=%d, width=%d, height=%d\n",
+      fps, width, height);
     return NS_ERROR_FAILURE;
   }
 
   PullParametersImpl();
+
+  Size size;
+  size.width = static_cast<uint32_t>(width);
+  size.height = static_cast<uint32_t>(height);
 
   {
     ICameraControlParameterSetAutoEnter set(this);
@@ -1587,12 +1599,8 @@ nsGonkCameraControl::SetupRecording(int aFd, int aRotation,
   mRecorder = new GonkRecorder();
   CHECK_SETARG_RETURN(mRecorder->init(), NS_ERROR_FAILURE);
 
-  nsresult rv =
-    GonkRecorderProfile::ConfigureRecorder(*mRecorder, mCameraId,
-                                           mCurrentConfiguration.mRecorderProfile);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  nsresult rv = mRecorderProfile->ConfigureRecorder(mRecorder);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   CHECK_SETARG_RETURN(mRecorder->setCamera(mCameraHw), NS_ERROR_FAILURE);
 
@@ -1663,76 +1671,27 @@ nsGonkCameraControl::StopImpl()
   return NS_OK;
 }
 
-nsresult
-nsGonkCameraControl::LoadRecorderProfiles()
+already_AddRefed<GonkRecorderProfileManager>
+nsGonkCameraControl::GetGonkRecorderProfileManager()
 {
-  if (mRecorderProfiles.Count() == 0) {
-    nsTArray<nsRefPtr<RecorderProfile>> profiles;
-    nsresult rv = GonkRecorderProfile::GetAll(mCameraId, profiles);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
+  if (!mProfileManager) {
     nsTArray<Size> sizes;
-    rv = Get(CAMERA_PARAM_SUPPORTED_VIDEOSIZES, sizes);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
+    nsresult rv = Get(CAMERA_PARAM_SUPPORTED_VIDEOSIZES, sizes);
+    NS_ENSURE_SUCCESS(rv, nullptr);
 
-    // Limit profiles to those video sizes supported by the camera hardware...
-    for (nsTArray<RecorderProfile>::size_type i = 0; i < profiles.Length(); ++i) {
-      int width = profiles[i]->GetVideo().GetSize().width; 
-      int height = profiles[i]->GetVideo().GetSize().height;
-      if (width < 0 || height < 0) {
-        DOM_CAMERA_LOGW("Ignoring weird profile '%s' with width and/or height < 0\n",
-          NS_ConvertUTF16toUTF8(profiles[i]->GetName()).get());
-        continue;
-      }
-      for (nsTArray<Size>::size_type n = 0; n < sizes.Length(); ++n) {
-        if (static_cast<uint32_t>(width) == sizes[n].width &&
-            static_cast<uint32_t>(height) == sizes[n].height) {
-          mRecorderProfiles.Put(profiles[i]->GetName(), profiles[i]);
-          break;
-        }
-      }
-    }
+    mProfileManager = new GonkRecorderProfileManager(mCameraId);
+    mProfileManager->SetSupportedResolutions(sizes);
   }
 
-  return NS_OK;
+  nsRefPtr<GonkRecorderProfileManager> profileMgr = mProfileManager;
+  return profileMgr.forget();
 }
 
-/* static */ PLDHashOperator
-nsGonkCameraControl::Enumerate(const nsAString& aProfileName,
-                               RecorderProfile* aProfile,
-                               void* aUserArg)
+already_AddRefed<RecorderProfileManager>
+nsGonkCameraControl::GetRecorderProfileManagerImpl()
 {
-  nsTArray<nsString>* profiles = static_cast<nsTArray<nsString>*>(aUserArg);
-  MOZ_ASSERT(profiles);
-  profiles->AppendElement(aProfileName);
-  return PL_DHASH_NEXT;
-}
-
-nsresult
-nsGonkCameraControl::GetRecorderProfiles(nsTArray<nsString>& aProfiles)
-{
-  nsresult rv = LoadRecorderProfiles();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  aProfiles.Clear();
-  mRecorderProfiles.EnumerateRead(Enumerate, static_cast<void*>(&aProfiles));
-  return NS_OK;
-}
-
-ICameraControl::RecorderProfile*
-nsGonkCameraControl::GetProfileInfo(const nsAString& aProfile)
-{
-  RecorderProfile* profile;
-  if (!mRecorderProfiles.Get(aProfile, &profile)) {
-    return nullptr;
-  }
-  return profile;
+  nsRefPtr<RecorderProfileManager> profileMgr = GetGonkRecorderProfileManager();
+  return profileMgr.forget();
 }
 
 void
