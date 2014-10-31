@@ -546,10 +546,14 @@ class GCRuntime
 #ifdef JSGC_COMPACTING
     void sweepTypesAfterCompacting(Zone *zone);
     void sweepZoneAfterCompacting(Zone *zone);
-    void compactPhase();
+    void compactPhase(bool lastGC);
     ArenaHeader *relocateArenas();
     void updatePointersToRelocatedCells();
     void releaseRelocatedArenas(ArenaHeader *relocatedList);
+#ifdef DEBUG
+    void protectRelocatedArenas(ArenaHeader *relocatedList);
+    void unprotectRelocatedArenas(ArenaHeader *relocatedList);
+#endif
 #endif
     void finishCollection();
 
@@ -849,6 +853,9 @@ class GCRuntime
     CallbackVector<JSTraceDataOp> blackRootTracers;
     Callback<JSTraceDataOp> grayRootTracer;
 
+    /* Always preserve JIT code during GCs, for testing. */
+    bool                  alwaysPreserveCode;
+
 #ifdef DEBUG
     /*
      * Some regions of code are hard for the static rooting hazard analysis to
@@ -857,13 +864,13 @@ class GCRuntime
      * might trigger, a GC.
      */
     int inUnsafeRegion;
+
+    size_t noGCOrAllocationCheck;
+
+#ifdef JSGC_COMPACTING
+    ArenaHeader* relocatedArenasToRelease;
 #endif
 
-    /* Always preserve JIT code during GCs, for testing. */
-    bool                  alwaysPreserveCode;
-
-#ifdef DEBUG
-    size_t                noGCOrAllocationCheck;
 #endif
 
     /* Synchronize GC heap access between main thread and GCHelperState. */

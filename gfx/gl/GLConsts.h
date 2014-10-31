@@ -5187,6 +5187,7 @@
 #define LOCAL_EGL_COVERAGE_SAMPLE_RESOLVE_NONE_NV            0x3133
 #define LOCAL_EGL_COVERAGE_SAMPLE_RESOLVE_NV                 0x3131
 #define LOCAL_EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE          0x3200
+#define LOCAL_EGL_DXGI_KEYED_MUTEX_ANGLE                     0x3209
 #define LOCAL_EGL_DEFAULT_DISPLAY                            ((EGLNativeDisplayType)0)
 #define LOCAL_EGL_DEPTH_ENCODING_NONE_NV                     0
 #define LOCAL_EGL_DEPTH_ENCODING_NONLINEAR_NV                0x30E3
