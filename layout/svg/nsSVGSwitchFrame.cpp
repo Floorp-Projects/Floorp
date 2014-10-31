@@ -126,7 +126,7 @@ nsSVGSwitchFrame::PaintSVG(nsRenderingContext* aContext,
       tm = static_cast<nsSVGElement*>(kid->GetContent())->
              PrependLocalTransformsTo(tm, nsSVGElement::eUserSpaceToParent);
     }
-    nsSVGUtils::PaintFrameWithEffects(kid, aContext, tm, aDirtyRect);
+    nsSVGUtils::PaintFrameWithEffects(kid, *aContext->ThebesContext(), tm, aDirtyRect);
   }
   return NS_OK;
 }
