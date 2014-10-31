@@ -152,7 +152,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
 
     // Check if we have space on the stack.
     Label stack_ok;
-    void *stack_limit = runtime->mainThread.addressofJitStackLimit();
+    void *stack_limit = &runtime->mainThread.jitStackLimit;
     masm.branchPtr(Assembler::Below, AbsoluteAddress(stack_limit), StackPointer, &stack_ok);
 
     // Exit with an exception. There is not enough space on the stack
@@ -502,7 +502,7 @@ NativeRegExpMacroAssembler::Backtrack()
     // Check for an interrupt.
     Label noInterrupt;
     masm.branch32(Assembler::Equal,
-                  AbsoluteAddress(runtime->addressOfInterruptUint32()), Imm32(0),
+                  AbsoluteAddress(&runtime->interrupt), Imm32(0),
                   &noInterrupt);
     masm.movePtr(ImmWord(RegExpRunStatus_Error), temp0);
     masm.jump(&exit_label_);
