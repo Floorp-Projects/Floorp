@@ -304,6 +304,10 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
  * "apz.overscroll.spring_friction"
  * The friction of the spring used in the physics model for the overscroll
  * animation.
+ * Even though a realistic physics model would dictate that this be the same
+ * as "apz.fling_friction", we allow it to be set to be something different,
+ * because in practice we want flings to skate smoothly (low friction), while
+ * we want the overscroll bounce-back to oscillate few times (high friction).
  *
  * "apz.overscroll.stop_distance_threshold"
  * "apz.overscroll.stop_velocity_threshold"
