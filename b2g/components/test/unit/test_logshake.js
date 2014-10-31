@@ -135,6 +135,49 @@ add_test(function test_do_nothing_when_screen_off() {
   run_next_test();
 });
 
+add_test(function test_do_log_capture_resilient_readLogFile() {
+  // Enable LogShake
+  LogShake.init();
+
+  let readLocations = [];
+  LogCapture.readLogFile = function(loc) {
+    readLocations.push(loc);
+    throw new Error("Exception during readLogFile for: " + loc);
+  };
+
+  // Fire a devicemotion event that is of shake magnitude
+  sendDeviceMotionEvent(9001, 9001, 9001);
+
+  ok(readLocations.length > 0,
+      'LogShake should attempt to read at least one log');
+
+  LogShake.uninit();
+  run_next_test();
+});
+
+add_test(function test_do_log_capture_resilient_parseLog() {
+  // Enable LogShake
+  LogShake.init();
+
+  let readLocations = [];
+  LogCapture.readLogFile = function(loc) {
+    readLocations.push(loc);
+    LogShake.LOGS_WITH_PARSERS[loc] = function() {
+      throw new Error("Exception during LogParser for: " + loc);
+    };
+    return null;
+  };
+
+  // Fire a devicemotion event that is of shake magnitude
+  sendDeviceMotionEvent(9001, 9001, 9001);
+
+  ok(readLocations.length > 0,
+      'LogShake should attempt to read at least one log');
+
+  LogShake.uninit();
+  run_next_test();
+});
+
 function run_test() {
   debug('Starting');
   run_next_test();
