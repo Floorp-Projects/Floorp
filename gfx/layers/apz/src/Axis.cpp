@@ -37,7 +37,8 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
     mVelocity(0.0f),
     mAxisLocked(false),
     mAsyncPanZoomController(aAsyncPanZoomController),
-    mOverscroll(0)
+    mOverscroll(0),
+    mInUnderscroll(false)
 {
 }
 
@@ -181,8 +182,12 @@ ScreenCoord Axis::GetOverscroll() const {
   return mOverscroll;
 }
 
-bool Axis::SampleSnapBack(const TimeDuration& aDelta) {
-  // Apply spring physics to the snap-back as time goes on.
+bool Axis::IsInUnderscroll() const {
+  return mInUnderscroll;
+}
+
+bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
+  // Apply spring physics to the overscroll as time goes on.
   // Note: this method of sampling isn't perfectly smooth, as it assumes
   // a constant velocity over 'aDelta', instead of an accelerating velocity.
   // (The way we applying friction to flings has the same issue.)
@@ -196,40 +201,45 @@ bool Axis::SampleSnapBack(const TimeDuration& aDelta) {
   //   b is a constant that provides damping (friction)
   //   v is the velocity of the point at the end of the spring
   // See http://gafferongames.com/game-physics/spring-physics/
-  const float kSpringStiffness = gfxPrefs::APZOverscrollSnapBackSpringStiffness();
-  const float kSpringFriction = gfxPrefs::APZOverscrollSnapBackSpringFriction();
-  const float kMass = gfxPrefs::APZOverscrollSnapBackMass();
-  float force = -1 * kSpringStiffness * mOverscroll - kSpringFriction * mVelocity;
-  float acceleration = force / kMass;
-  mVelocity += acceleration * aDelta.ToMilliseconds();
-  float displacement = mVelocity * aDelta.ToMilliseconds();
-  if (mOverscroll > 0) {
-    if (displacement > 0) {
-      NS_WARNING("Overscroll snap-back animation is moving in the wrong direction!");
-      return false;
-    }
-    mOverscroll = std::max(mOverscroll + displacement, 0.0f);
-    // Overscroll relieved, do not continue animation.
-    if (mOverscroll == 0.f) {
-      mVelocity = 0;
-      return false;
-    }
-    return true;
-  } else if (mOverscroll < 0) {
-    if (displacement < 0) {
-      NS_WARNING("Overscroll snap-back animation is moving in the wrong direction!");
-      return false;
-    }
-    mOverscroll = std::min(mOverscroll + displacement, 0.0f);
-    // Overscroll relieved, do not continue animation.
-    if (mOverscroll == 0.f) {
-      mVelocity = 0;
-      return false;
-    }
-    return true;
+  const float kSpringStiffness = gfxPrefs::APZOverscrollSpringStiffness();
+  const float kSpringFriction = gfxPrefs::APZOverscrollSpringFriction();
+
+  // Apply spring force.
+  float springForce = -1 * kSpringStiffness * mOverscroll;
+  // Assume unit mass, so force = acceleration.
+  mVelocity += springForce * aDelta.ToMilliseconds();
+
+  // Apply dampening.
+  mVelocity *= pow(double(1 - kSpringFriction), aDelta.ToMilliseconds());
+
+  // Adjust the amount of overscroll based on the velocity.
+  // Note that we allow for oscillations. mInUnderscroll tracks whether
+  // we are currently in a state where we have overshot and the spring is
+  // displaced in the other direction.
+  float oldOverscroll = mOverscroll;
+  mOverscroll += (mVelocity * aDelta.ToMilliseconds());
+  bool signChange = (oldOverscroll * mOverscroll) < 0;
+  if (signChange) {
+    // If the sign of mOverscroll changed, we have either entered underscroll
+    // or exited it.
+    mInUnderscroll = !mInUnderscroll;
   }
-  // No overscroll on this axis, do not continue animation.
-  return false;
+
+  // If both the velocity and the displacement fall below a threshold, stop
+  // the animation so we don't continue doing tiny oscillations that aren't
+  // noticeable.
+  if (fabs(mOverscroll) < gfxPrefs::APZOverscrollStopDistanceThreshold() &&
+      fabs(mVelocity) < gfxPrefs::APZOverscrollStopVelocityThreshold()) {
+    // "Jump" to the at-rest state. The jump shouldn't be noticeable as the
+    // velocity and overscroll are already low.
+    mOverscroll = 0;
+    mVelocity = 0;
+    mInUnderscroll = false;
+    return false;
+  }
+
+  // Otherwise, continue the animation.
+  return true;
 }
 
 bool Axis::IsOverscrolled() const {

@@ -160,13 +160,12 @@ private:
   DECL_GFX_PREF(Live, "apz.min_skate_speed",                   APZMinSkateSpeed, float, 1.0f);
   DECL_GFX_PREF(Live, "apz.num_paint_duration_samples",        APZNumPaintDurationSamples, int32_t, 3);
   DECL_GFX_PREF(Live, "apz.overscroll.enabled",                APZOverscrollEnabled, bool, false);
-  DECL_GFX_PREF(Live, "apz.overscroll.fling_friction",         APZOverscrollFlingFriction, float, 0.02f);
-  DECL_GFX_PREF(Live, "apz.overscroll.fling_stopped_threshold", APZOverscrollFlingStoppedThreshold, float, 0.4f);
   DECL_GFX_PREF(Live, "apz.overscroll.min_pan_distance_ratio", APZMinPanDistanceRatio, float, 1.0f);
   DECL_GFX_PREF(Live, "apz.overscroll.stretch_factor",         APZOverscrollStretchFactor, float, 0.5f);
-  DECL_GFX_PREF(Live, "apz.overscroll.snap_back.spring_stiffness", APZOverscrollSnapBackSpringStiffness, float, 0.6f);
-  DECL_GFX_PREF(Live, "apz.overscroll.snap_back.spring_friction", APZOverscrollSnapBackSpringFriction, float, 0.1f);
-  DECL_GFX_PREF(Live, "apz.overscroll.snap_back.mass",         APZOverscrollSnapBackMass, float, 1000.0f);
+  DECL_GFX_PREF(Live, "apz.overscroll.spring_stiffness",       APZOverscrollSpringStiffness, float, 0.001f);
+  DECL_GFX_PREF(Live, "apz.overscroll.spring_friction",        APZOverscrollSpringFriction, float, 0.015f);
+  DECL_GFX_PREF(Live, "apz.overscroll.stop_distance_threshold", APZOverscrollStopDistanceThreshold, float, 5.0f);
+  DECL_GFX_PREF(Live, "apz.overscroll.stop_velocity_threshold", APZOverscrollStopVelocityThreshold, float, 0.01f);
   DECL_GFX_PREF(Live, "apz.pan_repaint_interval",              APZPanRepaintInterval, int32_t, 250);
   DECL_GFX_PREF(Live, "apz.printtree",                         APZPrintTree, bool, false);
   DECL_GFX_PREF(Live, "apz.smooth_scroll_repaint_interval",    APZSmoothScrollRepaintInterval, int32_t, 75);

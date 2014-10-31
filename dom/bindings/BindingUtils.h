@@ -1504,22 +1504,6 @@ WrapNativeParent(JSContext* cx, const T& p)
   return WrapNativeParent(cx, GetParentPointer(p), GetWrapperCache(p), GetUseXBLScope(p));
 }
 
-// A way to differentiate between nodes, which use the parent object
-// returned by native->GetParentObject(), and all other objects, which
-// just use the parent's global.
-static inline JSObject*
-GetRealParentObject(void* aParent, JSObject* aParentObject)
-{
-  return aParentObject ?
-    js::GetGlobalForObjectCrossCompartment(aParentObject) : nullptr;
-}
-
-static inline JSObject*
-GetRealParentObject(Element* aParent, JSObject* aParentObject)
-{
-  return aParentObject;
-}
-
 HAS_MEMBER(GetParentObject)
 
 template<typename T, bool WrapperCached=HasGetParentObjectMember<T>::Value>
@@ -1529,9 +1513,8 @@ struct GetParentObject
   {
     MOZ_ASSERT(js::IsObjectInContextCompartment(obj, cx));
     T* native = UnwrapDOMObject<T>(obj);
-    return
-      GetRealParentObject(native,
-                          WrapNativeParent(cx, native->GetParentObject()));
+    JSObject* wrappedParent = WrapNativeParent(cx, native->GetParentObject());
+    return wrappedParent ? js::GetGlobalForObjectCrossCompartment(wrappedParent) : nullptr;
   }
 };
 

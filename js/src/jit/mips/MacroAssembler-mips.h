@@ -9,6 +9,7 @@
 
 #include "jsopcode.h"
 
+#include "jit/AtomicOp.h"
 #include "jit/IonCaches.h"
 #include "jit/IonFrames.h"
 #include "jit/mips/Assembler-mips.h"
@@ -306,6 +307,7 @@ class MacroAssemblerMIPS : public Assembler
     void ma_callIonNoPush(const Register reg);
     // calls an ion function, assuming that the stack is currently not 8 byte aligned
     void ma_callIonHalfPush(const Register reg);
+    void ma_callIonHalfPush(Label *label);
 
     void ma_call(ImmPtr dest);
 
@@ -795,6 +797,10 @@ public:
         ma_li(ScratchRegister, ptr);
         ma_b(SecondScratchReg, ScratchRegister, label, cond);
     }
+    void branchPtr(Condition cond, Address addr, ImmMaybeNurseryPtr ptr, Label *label) {
+        branchPtr(cond, addr, noteMaybeNurseryPtr(ptr), label);
+    }
+
     void branchPtr(Condition cond, Address addr, ImmWord ptr, Label *label) {
         ma_lw(SecondScratchReg, addr);
         ma_b(SecondScratchReg, Imm32(ptr.value), label, cond);
@@ -929,6 +935,138 @@ public:
     /////////////////////////////////////////////////////////////////
   public:
     // The following functions are exposed for use in platform-shared code.
+
+    template<typename T>
+    void compareExchange8SignExtend(const T &mem, Register oldval, Register newval, Register output)
+    {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T>
+    void compareExchange8ZeroExtend(const T &mem, Register oldval, Register newval, Register output)
+    {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T>
+    void compareExchange16SignExtend(const T &mem, Register oldval, Register newval, Register output)
+    {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T>
+    void compareExchange16ZeroExtend(const T &mem, Register oldval, Register newval, Register output)
+    {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T>
+    void compareExchange32(const T &mem, Register oldval, Register newval, Register output)
+    {
+        MOZ_CRASH("NYI");
+    }
+
+    template<typename T, typename S>
+    void atomicFetchAdd8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchAdd8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchAdd16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchAdd16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchAdd32(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+
+    template<typename T, typename S>
+    void atomicFetchSub8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchSub8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchSub16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchSub16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchSub32(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+
+    template<typename T, typename S>
+    void atomicFetchAnd8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchAnd8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchAnd16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchAnd16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchAnd32(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+
+    template<typename T, typename S>
+    void atomicFetchOr8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchOr8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchOr16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchOr16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchOr32(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+
+    template<typename T, typename S>
+    void atomicFetchXor8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchXor8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchXor16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchXor16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+    template<typename T, typename S>
+    void atomicFetchXor32(const S &value, const T &mem, Register temp, Register output) {
+        MOZ_CRASH("NYI");
+    }
+
     void Push(Register reg) {
         ma_push(reg);
         adjustFrame(sizeof(intptr_t));
@@ -1058,6 +1196,7 @@ public:
     void movePtr(ImmPtr imm, Register dest);
     void movePtr(AsmJSImmPtr imm, Register dest);
     void movePtr(ImmGCPtr imm, Register dest);
+    void movePtr(ImmMaybeNurseryPtr imm, Register dest);
 
     void load8SignExtend(const Address &address, Register dest);
     void load8SignExtend(const BaseIndex &src, Register dest);

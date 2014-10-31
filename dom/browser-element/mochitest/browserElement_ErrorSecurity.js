@@ -12,7 +12,7 @@ browserElementTestHelpers.addPermission();
 var iframe = null;
 function runTest() {
   iframe = document.createElement('iframe');
-  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.setAttribute('mozbrowser', 'true');
   document.body.appendChild(iframe);
 
   checkForGenericError();

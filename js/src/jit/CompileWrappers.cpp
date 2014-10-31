@@ -43,7 +43,7 @@ CompileRuntime::addressOfJitTop()
 const void *
 CompileRuntime::addressOfJitStackLimit()
 {
-    return &runtime()->mainThread.jitStackLimit;
+    return runtime()->mainThread.addressofJitStackLimit();
 }
 
 const void *
@@ -73,15 +73,15 @@ CompileRuntime::addressOfGCZeal()
 #endif
 
 const void *
-CompileRuntime::addressOfInterrupt()
+CompileRuntime::addressOfInterruptUint32()
 {
-    return &runtime()->interrupt;
+    return runtime()->addressOfInterruptUint32();
 }
 
 const void *
-CompileRuntime::addressOfInterruptPar()
+CompileRuntime::addressOfInterruptParUint32()
 {
-    return &runtime()->interruptPar;
+    return runtime()->addressOfInterruptParUint32();
 }
 
 const void *

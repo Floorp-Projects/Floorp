@@ -103,7 +103,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
     // Manage registered Peer Targets
     peerTargets: {},
-    currentPeer: null,
 
     eventTargets: [],
 
@@ -192,9 +191,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     removePeerTarget: function removePeerTarget(target) {
       Object.keys(this.peerTargets).forEach((appId) => {
         if (this.peerTargets[appId] === target) {
-          if (this.currentPeer === target) {
-            this.currentPeer = null;
-          }
           delete this.peerTargets[appId];
         }
       });
@@ -219,8 +215,8 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
     removeEventTarget: function removeEventTarget(target) {
       let index = this.eventTargets.indexOf(target);
-      if (index != -1) {
-        delete this.eventTargets[index];
+      if (index !== -1) {
+        this.eventTargets.splice(index, 1);
       }
     },
 
@@ -245,8 +241,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         return;
       }
 
-      // Remember the target that receives onpeerready.
-      this.currentPeer = target;
       this.notifyDOMEvent(target, {event: NFC.PEER_EVENT_READY,
                                    sessionToken: sessionToken});
     },
@@ -266,17 +260,11 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       }
     },
 
-    onPeerLost: function onPeerLost(sessionToken) {
-      if (!this.currentPeer) {
-        // The target is already killed.
-        return;
+    onPeerEvent: function onPeerEvent(eventType, sessionToken) {
+      for (let target of this.eventTargets) {
+        this.notifyDOMEvent(target, { event: eventType,
+                                      sessionToken: sessionToken });
       }
-
-      // For peerlost, the message is delievered to the target which
-      // onpeerready has been called before.
-      this.notifyDOMEvent(this.currentPeer, {event: NFC.PEER_EVENT_LOST,
-                                             sessionToken: sessionToken});
-      this.currentPeer = null;
     },
 
     /**
@@ -544,7 +532,9 @@ Nfc.prototype = {
         let sessionId = message.sessionId;
         delete message.sessionId;
 
-        if (!SessionHelper.isP2PSession(sessionId)) {
+        if (SessionHelper.isP2PSession(sessionId)) {
+          gMessageManager.onPeerEvent(NFC.PEER_EVENT_FOUND, message.sessionToken);
+        } else {
           gMessageManager.onTagFound(message);
         }
 
@@ -556,7 +546,7 @@ Nfc.prototype = {
         // Update the upper layers with a session token (alias)
         message.sessionToken = SessionHelper.getToken(message.sessionId);
         if (SessionHelper.isP2PSession(message.sessionId)) {
-          gMessageManager.onPeerLost(message.sessionToken);
+          gMessageManager.onPeerEvent(NFC.PEER_EVENT_LOST, message.sessionToken);
         } else {
           gMessageManager.onTagLost(message.sessionToken);
         }
