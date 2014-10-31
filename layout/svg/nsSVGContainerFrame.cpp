@@ -290,7 +290,7 @@ nsSVGDisplayContainerFrame::PaintSVG(nsRenderingContext* aContext,
         continue;
       }
     }
-    nsSVGUtils::PaintFrameWithEffects(kid, aContext, m, aDirtyRect);
+    nsSVGUtils::PaintFrameWithEffects(kid, *aContext->ThebesContext(), m, aDirtyRect);
   }
 
   return NS_OK;

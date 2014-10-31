@@ -243,7 +243,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
       m = static_cast<nsSVGElement*>(kid->GetContent())->
             PrependLocalTransformsTo(m);
     }
-    nsSVGUtils::PaintFrameWithEffects(kid, &tmpCtx, mMatrixForChildren);
+    nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx.ThebesContext(), mMatrixForChildren);
   }
 
   RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
