@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var util = require('./util');
 
-var Flow = require('../lib/flow').Flow;
+var Flow = require('../lib/protocol/flow').Flow;
 
 var MAX_PAYLOAD_SIZE = 4096;
 
@@ -176,7 +176,7 @@ describe('flow.js', function() {
         var output = [];
         flow2._receive = function _receive(frame, callback) {
           if (frame.type === 'DATA') {
-            expect(frame.data.length).to.be.lte(MAX_PAYLOAD_SIZE)
+            expect(frame.data.length).to.be.lte(MAX_PAYLOAD_SIZE);
             output.push(frame.data);
           }
           if (frame.flags.END_STREAM) {
@@ -222,7 +222,7 @@ describe('flow.js', function() {
         flow2._restoreWindow = util.noop;
         flow2._receive = function _receive(frame, callback) {
           if (frame.type === 'DATA') {
-            expect(frame.data.length).to.be.lte(MAX_PAYLOAD_SIZE)
+            expect(frame.data.length).to.be.lte(MAX_PAYLOAD_SIZE);
             output.push(frame.data);
           }
           if (frame.flags.END_STREAM) {

@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var util = require('./util');
 
-var compressor = require('../lib/compressor');
+var compressor = require('../lib/protocol/compressor');
 var HeaderTable = compressor.HeaderTable;
 var HuffmanTable = compressor.HuffmanTable;
 var HeaderSetCompressor = compressor.HeaderSetCompressor;
