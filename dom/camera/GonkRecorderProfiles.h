@@ -7,6 +7,8 @@
 
 #include <media/MediaProfiles.h>
 #include "ICameraControl.h"
+#include "nsClassHashtable.h"
+#include "nsRefPtrHashtable.h"
 
 #ifndef CHECK_SETARG_RETURN
 #define CHECK_SETARG_RETURN(x, rv)      \
@@ -97,6 +99,7 @@ protected:
 /**
  * class GonkRecorderProfile
  */
+class GonkRecorderProfile;
 typedef nsRefPtrHashtable<nsStringHashKey, GonkRecorderProfile> ProfileHashtable;
 
 class GonkRecorderProfile
