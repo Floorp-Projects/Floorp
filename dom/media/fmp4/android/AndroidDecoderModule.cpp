@@ -14,6 +14,7 @@
 
 #include "MediaData.h"
 
+#include "mp4_demuxer/Adts.h"
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/DecoderData.h"
 
@@ -21,6 +22,7 @@
 #include "nsAutoPtr.h"
 
 #include <jni.h>
+#include <string.h>
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -109,6 +111,25 @@ public:
   AudioDataDecoder(const char* aMimeType, MediaFormat* aFormat, MediaDataDecoderCallback* aCallback)
   : MediaCodecDataDecoder(MediaData::Type::AUDIO_SAMPLES, aMimeType, aFormat, aCallback)
   {
+  }
+
+  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE {
+    if (!strcmp(mMimeType, "audio/mp4a-latm")) {
+      uint32_t numChannels = mFormat->GetInteger(NS_LITERAL_STRING("channel-count"));
+      uint32_t sampleRate = mFormat->GetInteger(NS_LITERAL_STRING("sample-rate"));
+      uint8_t frequencyIndex =
+          mp4_demuxer::Adts::GetFrequencyIndex(sampleRate);
+      uint32_t aacProfile = mFormat->GetInteger(NS_LITERAL_STRING("aac-profile"));
+      bool rv = mp4_demuxer::Adts::ConvertSample(numChannels,
+                                                 frequencyIndex,
+                                                 aacProfile,
+                                                 aSample);
+      if (!rv) {
+        printf_stderr("Failed to prepend ADTS header\n");
+        return NS_ERROR_FAILURE;
+      }
+    }
+    return MediaCodecDataDecoder::Input(aSample);
   }
 
   nsresult Output(BufferInfo* aInfo, void* aBuffer, MediaFormat* aFormat, Microseconds aDuration) {
@@ -209,6 +230,7 @@ AndroidDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& 
 
   if (mimeType.EqualsLiteral("audio/mp4a-latm")) {
     format->SetInteger(NS_LITERAL_STRING("is-adts"), 1);
+    format->SetInteger(NS_LITERAL_STRING("aac-profile"), aConfig.aac_profile);
   }
 
   nsRefPtr<MediaDataDecoder> decoder =
