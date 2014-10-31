@@ -872,11 +872,12 @@ NS_IMETHODIMP AsyncEncodeAndWriteIcon::Run()
 {
   NS_PRECONDITION(!NS_IsMainThread(), "Should not be called on the main thread.");
 
-  RefPtr<DrawTarget> dt =
-    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-  RefPtr<SourceSurface> surface =
-    dt->CreateSourceSurfaceFromData(mBuffer, IntSize(mWidth, mHeight), mStride,
-                                    SurfaceFormat::B8G8R8A8);
+  // Note that since we're off the main thread we can't use
+  // gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()
+  RefPtr<DataSourceSurface> surface =
+    Factory::CreateWrappingDataSourceSurface(mBuffer, mStride,
+                                             IntSize(mWidth, mHeight),
+                                             SurfaceFormat::B8G8R8A8);
 
   FILE* file = fopen(NS_ConvertUTF16toUTF8(mIconPath).get(), "wb");
   if (!file) {
