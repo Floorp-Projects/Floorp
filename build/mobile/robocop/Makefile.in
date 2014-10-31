@@ -89,8 +89,10 @@ GENERATED_DIRS += $(dir-tests)
 # The test APK needs to know the contents of the target APK while not
 # being linked against them.  This is a best effort to avoid getting
 # out of sync with base's build config.
-JARS_DIR := $(DEPTH)/mobile/android/base
-JAVA_BOOTCLASSPATH := $(JAVA_BOOTCLASSPATH):$(subst $(NULL) ,:,$(wildcard $(JARS_DIR)/*.jar)):$(ANDROID_COMPAT_LIB)
+jars_dir := $(DEPTH)/mobile/android/base
+stumbler_jars_dir := $(DEPTH)/mobile/android/stumbler
+JAVA_BOOTCLASSPATH := $(JAVA_BOOTCLASSPATH):$(subst $(NULL) ,:,$(wildcard $(jars_dir)/*.jar)):$(subst $(NULL) ,:,$(wildcard $(stumbler_jars_dir)/*.jar)):$(ANDROID_COMPAT_LIB)
 # We also want to re-compile classes.dex when the associated base
 # content changes.
-classes.dex: $(wildcard $(JARS_DIR)/*.jar)
+classes.dex: $(wildcard $(jars_dir)/*.jar)
+classes.dex: $(wildcard $(stumbler_jars_dir)/*.jar)
