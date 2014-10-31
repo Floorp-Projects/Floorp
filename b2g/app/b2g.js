@@ -797,6 +797,9 @@ pref("accessibility.accessfu.quicknav_index", 0);
 pref("accessibility.accessfu.utterance", 1);
 // Whether to skip images with empty alt text
 pref("accessibility.accessfu.skip_empty_images", true);
+// Setting to change the verbosity of entered text (0 - none, 1 - characters,
+// 2 - words, 3 - both)
+pref("accessibility.accessfu.keyboard_echo", 3);
 
 // Enable hit-target fluffing
 pref("ui.touch.radius.enabled", true);
