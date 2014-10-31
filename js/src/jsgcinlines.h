@@ -526,7 +526,7 @@ CheckAllocatorState(ThreadSafeContext *cx, AllocKind kind)
             rt->gc.runDebugGC();
 #endif
 
-        if (rt->hasPendingInterrupt()) {
+        if (rt->interrupt) {
             // Invoking the interrupt callback can fail and we can't usefully
             // handle that here. Just check in case we need to collect instead.
             ncx->gcIfNeeded();

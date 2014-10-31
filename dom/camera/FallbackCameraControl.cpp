@@ -45,9 +45,6 @@ public:
   virtual nsresult Get(uint32_t aKey, nsTArray<nsString>& aValues) MOZ_OVERRIDE { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsresult Get(uint32_t aKey, nsTArray<double>& aValues) MOZ_OVERRIDE { return NS_ERROR_NOT_IMPLEMENTED; }
 
-  virtual nsresult GetRecorderProfiles(nsTArray<nsString>& aProfiles) MOZ_OVERRIDE { return NS_ERROR_NOT_IMPLEMENTED; }
-  virtual RecorderProfile* GetProfileInfo(const nsAString& aProfile) MOZ_OVERRIDE { return nullptr; }
-
   nsresult PushParameters() { return NS_ERROR_NOT_INITIALIZED; }
   nsresult PullParameters() { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -66,6 +63,7 @@ protected:
   virtual nsresult StopRecordingImpl() { return NS_ERROR_NOT_INITIALIZED; }
   virtual nsresult PushParametersImpl() { return NS_ERROR_NOT_INITIALIZED; }
   virtual nsresult PullParametersImpl() { return NS_ERROR_NOT_INITIALIZED; }
+  virtual already_AddRefed<RecorderProfileManager> GetRecorderProfileManagerImpl() MOZ_OVERRIDE { return nullptr; }
 
 private:
   FallbackCameraControl(const FallbackCameraControl&) MOZ_DELETE;

@@ -500,7 +500,7 @@ AsmJSHandleExecutionInterrupt()
 {
     AsmJSActivation *act = PerThreadData::innermostAsmJSActivation();
     act->module().setInterrupted(true);
-    bool ret = CheckForInterrupt(act->cx());
+    bool ret = HandleExecutionInterrupt(act->cx());
     act->module().setInterrupted(false);
     return ret;
 }
@@ -672,8 +672,8 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
     switch (kind) {
       case AsmJSImm_Runtime:
         return cx->runtimeAddressForJit();
-      case AsmJSImm_RuntimeInterruptUint32:
-        return cx->runtimeAddressOfInterruptUint32();
+      case AsmJSImm_RuntimeInterrupt:
+        return cx->runtimeAddressOfInterrupt();
       case AsmJSImm_StackLimit:
         return cx->stackLimitAddressForJitCode(StackForUntrustedScript);
       case AsmJSImm_ReportOverRecursed:
