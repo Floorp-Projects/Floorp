@@ -65,9 +65,10 @@ navigator.mozLoop = {
     on: function() {}
   },
   rooms: {
-    getAll: function(callback) {
+    getAll: function(version, callback) {
       callback(null, fakeRooms);
-    }
+    },
+    on: function() {}
   },
   fxAEnabled: true
 };
