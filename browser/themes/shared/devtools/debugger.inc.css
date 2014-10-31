@@ -68,7 +68,13 @@
 }
 
 #pretty-print {
-  font-weight: bold;
+  list-style-image: url(debugger-prettyprint.png);
+}
+
+@media (min-resolution: 2dppx) {
+  #pretty-print {
+    list-style-image: url(debugger-prettyprint@2x.png);
+  }
 }
 
 #toggle-breakpoints {
