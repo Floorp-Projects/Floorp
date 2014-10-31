@@ -270,6 +270,25 @@ class ArgumentsObject : public NativeObject
         return getFixedSlotOffset(INITIAL_LENGTH_SLOT);
     }
 
+    static Value MagicScopeSlotValue(uint32_t slot) {
+        // When forwarding slots to a backing CallObject, the slot numbers are
+        // stored as uint32 magic values. This raises an ambiguity if we have
+        // also copied JS_OPTIMIZED_OUT magic from a JIT frame or
+        // JS_UNINITIALIZED_LEXICAL magic on the CallObject. To distinguish
+        // normal magic values (those with a JSWhyMagic) and uint32 magic
+        // values, we add the maximum JSWhyMagic value to the slot
+        // number. This is safe as ARGS_LENGTH_MAX is well below UINT32_MAX.
+        JS_STATIC_ASSERT(UINT32_MAX - JS_WHY_MAGIC_COUNT > ARGS_LENGTH_MAX);
+        return JS::MagicValueUint32(slot + JS_WHY_MAGIC_COUNT);
+    }
+    static uint32_t SlotFromMagicScopeSlotValue(const Value &v) {
+        JS_STATIC_ASSERT(UINT32_MAX - JS_WHY_MAGIC_COUNT > ARGS_LENGTH_MAX);
+        return v.magicUint32() - JS_WHY_MAGIC_COUNT;
+    }
+    static bool IsMagicScopeSlotValue(const Value &v) {
+        return v.isMagic() && v.magicUint32() > JS_WHY_MAGIC_COUNT;
+    }
+
     static void MaybeForwardToCallObject(AbstractFramePtr frame, ArgumentsObject *obj,
                                          ArgumentsData *data);
     static void MaybeForwardToCallObject(jit::IonJSFrameLayout *frame, HandleObject callObj,
