@@ -5592,7 +5592,7 @@ JS::GetSymbolCode(Handle<Symbol*> symbol)
 JS_PUBLIC_API(JS::Symbol *)
 JS::GetWellKnownSymbol(JSContext *cx, JS::SymbolCode which)
 {
-    return cx->runtime()->wellKnownSymbols->get(uint32_t(which));
+    return cx->wellKnownSymbols().get(uint32_t(which));
 }
 
 static bool

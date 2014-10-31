@@ -26,7 +26,8 @@ function test()
     var [a, b, [c0, c1]] = [x, x, x];
   }
 
-  expect = 'TypeError: (intermediate value)[\'@@iterator\'](...).next(...).value is null';
+  var ITERATOR = JS_HAS_SYMBOLS ? "Symbol.iterator" : "'@@iterator'";
+  expect = `TypeError: (intermediate value)[${ITERATOR}](...).next(...).value is null`;
   actual = 'No Error';
   try
   {

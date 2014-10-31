@@ -927,16 +927,34 @@ nsCSPPolicy::directiveExists(enum CSPDirective aDir) const
   return false;
 }
 
+/*
+ * Use this function only after ::allows() returned 'false'. Most and
+ * foremost it's used to get the violated directive before sending reports.
+ * The parameter outDirective is the equivalent of 'outViolatedDirective'
+ * for the ::permits() function family.
+ */
 void
 nsCSPPolicy::getDirectiveStringForContentType(nsContentPolicyType aContentType,
                                               nsAString& outDirective) const
 {
+  nsCSPDirective* defaultDir = nullptr;
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
     if (mDirectives[i]->restrictsContentType(aContentType)) {
       mDirectives[i]->toString(outDirective);
       return;
     }
+    if (mDirectives[i]->isDefaultDirective()) {
+      defaultDir = mDirectives[i];
+    }
   }
+  // if we haven't found a matching directive yet,
+  // the contentType must be restricted by the default directive
+  if (defaultDir) {
+    defaultDir->toString(outDirective);
+    return;
+  }
+  NS_ASSERTION(false, "Can not query directive string for contentType!");
+  outDirective.AppendASCII("couldNotQueryViolatedDirective");
 }
 
 void
