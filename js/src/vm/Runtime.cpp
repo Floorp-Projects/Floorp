@@ -36,6 +36,7 @@
 #include "jit/PcScriptCache.h"
 #include "js/MemoryMetrics.h"
 #include "js/SliceBudget.h"
+#include "vm/Debugger.h"
 
 #include "jscntxtinlines.h"
 #include "jsgcinlines.h"
@@ -73,7 +74,7 @@ PerThreadData::PerThreadData(JSRuntime *runtime)
     runtime_(runtime),
     jitTop(nullptr),
     jitJSContext(nullptr),
-    jitStackLimit(0),
+    jitStackLimit_(0xbad),
 #ifdef JS_TRACE_LOGGING
     traceLogger(nullptr),
 #endif
@@ -135,8 +136,8 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     ),
     mainThread(this),
     parentRuntime(parentRuntime),
-    interrupt(false),
-    interruptPar(false),
+    interrupt_(false),
+    interruptPar_(false),
     handlingSignal(false),
     interruptCallback(nullptr),
     interruptLock(nullptr),
@@ -156,7 +157,7 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     execAlloc_(nullptr),
     jitRuntime_(nullptr),
     selfHostingGlobal_(nullptr),
-    nativeStackBase(0),
+    nativeStackBase(GetNativeStackBase()),
     cxCallback(nullptr),
     destroyCompartmentCallback(nullptr),
     destroyZoneCallback(nullptr),
@@ -322,8 +323,6 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
         return false;
 #endif
 
-    nativeStackBase = GetNativeStackBase();
-
     jitSupportsFloatingPoint = js::jit::JitSupportsFloatingPoint();
     jitSupportsSimd = js::jit::JitSupportsSimd();
 
@@ -466,17 +465,6 @@ NewObjectCache::clearNurseryObjects(JSRuntime *rt)
 }
 
 void
-JSRuntime::resetJitStackLimit()
-{
-    AutoLockForInterrupt lock(this);
-    mainThread.setJitStackLimit(mainThread.nativeStackLimit[js::StackForUntrustedScript]);
-
-#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
-    mainThread.setJitStackLimit(js::jit::Simulator::StackLimit());
-#endif
-}
-
-void
 JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes *rtSizes)
 {
     // Several tables in the runtime enumerated below can be used off thread.
@@ -530,31 +518,118 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 #endif
 }
 
+static bool
+InvokeInterruptCallback(JSContext *cx)
+{
+    MOZ_ASSERT(cx->runtime()->requestDepth >= 1);
+
+    cx->gcIfNeeded();
+
+    // A worker thread may have requested an interrupt after finishing an Ion
+    // compilation.
+    jit::AttachFinishedCompilations(cx);
+
+    // Important: Additional callbacks can occur inside the callback handler
+    // if it re-enters the JS engine. The embedding must ensure that the
+    // callback is disconnected before attempting such re-entry.
+    JSInterruptCallback cb = cx->runtime()->interruptCallback;
+    if (!cb)
+        return true;
+
+    if (cb(cx)) {
+        // Debugger treats invoking the interrupt callback as a "step", so
+        // invoke the onStep handler.
+        if (cx->compartment()->debugMode()) {
+            ScriptFrameIter iter(cx);
+            if (iter.script()->stepModeEnabled()) {
+                RootedValue rval(cx);
+                switch (Debugger::onSingleStep(cx, &rval)) {
+                  case JSTRAP_ERROR:
+                    return false;
+                  case JSTRAP_CONTINUE:
+                    return true;
+                  case JSTRAP_RETURN:
+                    // See note in Debugger::propagateForcedReturn.
+                    Debugger::propagateForcedReturn(cx, iter.abstractFramePtr(), rval);
+                    return false;
+                  case JSTRAP_THROW:
+                    cx->setPendingException(rval);
+                    return false;
+                  default:;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    // No need to set aside any pending exception here: ComputeStackString
+    // already does that.
+    JSString *stack = ComputeStackString(cx);
+    JSFlatString *flat = stack ? stack->ensureFlat(cx) : nullptr;
+
+    const char16_t *chars;
+    AutoStableStringChars stableChars(cx);
+    if (flat && stableChars.initTwoByte(cx, flat))
+        chars = stableChars.twoByteRange().start().get();
+    else
+        chars = MOZ_UTF16("(stack not available)");
+    JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_WARNING, js_GetErrorMessage, nullptr,
+                                   JSMSG_TERMINATED, chars);
+
+    return false;
+}
+
+void
+PerThreadData::resetJitStackLimit()
+{
+    // Note that, for now, we use the untrusted limit for ion. This is fine,
+    // because it's the most conservative limit, and if we hit it, we'll bail
+    // out of ion into the interpeter, which will do a proper recursion check.
+#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
+    jitStackLimit_ = jit::Simulator::StackLimit();
+#else
+    jitStackLimit_ = nativeStackLimit[StackForUntrustedScript];
+#endif
+}
+
+void
+PerThreadData::initJitStackLimit()
+{
+    resetJitStackLimit();
+}
+
+void
+PerThreadData::initJitStackLimitPar(uintptr_t limit)
+{
+    jitStackLimit_ = limit;
+}
+
 void
 JSRuntime::requestInterrupt(InterruptMode mode)
 {
-    AutoLockForInterrupt lock(this);
+    interrupt_ = true;
+    interruptPar_ = true;
+    mainThread.jitStackLimit_ = UINTPTR_MAX;
 
-    /*
-     * Invalidate ionTop to trigger its over-recursion check. Note this must be
-     * set before interrupt, to avoid racing with js::InvokeInterruptCallback,
-     * into a weird state where interrupt is stuck at 0 but jitStackLimit is
-     * MAXADDR.
-     */
-    mainThread.setJitStackLimit(-1);
-
-    interrupt = true;
-
-    RequestInterruptForForkJoin(this, mode);
-
-    /*
-     * asm.js and normal Ion code optionally use memory protection and signal
-     * handlers to halt running code.
-     */
     if (canUseSignalHandlers()) {
+        AutoLockForInterrupt lock(this);
         RequestInterruptForAsmJSCode(this, mode);
         jit::RequestInterruptForIonCode(this, mode);
     }
+}
+
+bool
+JSRuntime::handleInterrupt(JSContext *cx)
+{
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+    if (interrupt_ || mainThread.jitStackLimit_ == UINTPTR_MAX) {
+        interrupt_ = false;
+        interruptPar_ = false;
+        mainThread.resetJitStackLimit();
+        return InvokeInterruptCallback(cx);
+    }
+    return true;
 }
 
 jit::ExecutableAllocator *

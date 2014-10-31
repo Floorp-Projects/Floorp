@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=977003
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 977003</title>
+  <meta name="author" content="Maksim Lebedev" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #target, #listener { background: yellow; }
+  </style>
+  <script type="application/javascript">
+    var target = undefined;
+    var listener = undefined;
+    var test_target = false;
+    var test_listener = false;
+    var async_counter = 0;
+
+    function TargetDownHandler(event) {
+      logger("Target receive event: " + event.type);
+      logger("Send setPointerCapture to listener");
+      listener.setPointerCapture(event.pointerId);
+      logger("set/release was executed");
+      test_target = true;
+    }
+    function ListenerHandler(event) {
+      logger("Receive event on Listener: " + event.type);
+      if("gotpointercapture" == event.type) {
+        logger("Send releasePointerCapture from listener");
+        listener.releasePointerCapture(event.pointerId);
+      } else if(event.type == "lostpointercapture") {
+        if(++async_counter < 100) {
+          logger("Send setPointerCapture to listener: " + async_counter);
+          listener.setPointerCapture(event.pointerId);
+        }
+      } else {
+        test_listener = true;
+      }
+    }
+    function logger(message) {
+      console.log(message);
+      var log = document.getElementById('log');
+      log.innerHTML = message + "<br>" + log.innerHTML;
+    }
+
+    function prepareTest() {
+      parent.turnOnPointerEvents(executeTest);
+    }
+    function executeTest()
+    {
+      logger("executeTest");
+      target = document.getElementById("target");
+      listener = document.getElementById("listener");
+      target.addEventListener("pointerdown",          TargetDownHandler,  false);
+      listener.addEventListener("gotpointercapture",  ListenerHandler,    false);
+      listener.addEventListener("pointerdown",        ListenerHandler,    false);
+      listener.addEventListener("pointerover",        ListenerHandler,    false);
+      listener.addEventListener("pointermove",        ListenerHandler,    false);
+      listener.addEventListener("pointerup",          ListenerHandler,    false);
+      listener.addEventListener("pointerout",         ListenerHandler,    false);
+      listener.addEventListener("lostpointercapture", ListenerHandler,    false);
+      var rect = target.getBoundingClientRect();
+      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerdown"});
+      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointermove"});
+      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerup"});
+      finishTest();
+    }
+    function finishTest() {
+      setTimeout(function() {
+        parent.is(test_target,    true,   "Part 6: pointerdown event should be received by target");
+        parent.is(test_listener,  false,  "Part 6: listener shouldn't receive any sync events");
+        parent.is(async_counter,  100,    "Part 6: listener should receive many async events");
+        logger("finishTest");
+        parent.finishTest();
+      }, 1000);
+    }
+  </script>
+</head>
+<body onload="prepareTest()">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=977003">Mozilla Bug 977003 Test 6</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <div id="listener">div id=listener</div>
+  <div id="target">div id=target</div>
+  <pre id="log">
+  </pre>
+</body>
+</html>

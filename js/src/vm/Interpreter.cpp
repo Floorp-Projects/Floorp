@@ -4071,7 +4071,7 @@ js::ReportUninitializedLexical(JSContext *cx, HandleScript script, jsbytecode *p
 
         // First search for a name among body-level lets.
         for (BindingIter bi(script); bi; bi++) {
-            if (bi->kind() != Binding::ARGUMENT && bi.frameIndex() == slot) {
+            if (bi->kind() != Binding::ARGUMENT && !bi->aliased() && bi.frameIndex() == slot) {
                 name = bi->name();
                 break;
             }

@@ -191,6 +191,7 @@
 
 #include <string.h>     /* for memset used when DEBUG */
 #ifndef XP_WIN
+# include <sys/mman.h>
 # include <unistd.h>
 #endif
 
@@ -1237,12 +1238,13 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     fullCompartmentChecks(false),
     mallocBytes(0),
     mallocGCTriggered(false),
-#ifdef DEBUG
-    inUnsafeRegion(0),
-#endif
     alwaysPreserveCode(false),
 #ifdef DEBUG
+    inUnsafeRegion(0),
     noGCOrAllocationCheck(0),
+#ifdef JSGC_COMPACTING
+    relocatedArenasToRelease(nullptr),
+#endif
 #endif
     lock(nullptr),
     lockOwner(nullptr),
@@ -2518,22 +2520,43 @@ GCRuntime::updatePointersToRelocatedCells()
     callWeakPointerCallbacks();
 }
 
+#ifdef DEBUG
+void
+GCRuntime::protectRelocatedArenas(ArenaHeader *relocatedList)
+{
+    for (ArenaHeader* arena = relocatedList, *next; arena; arena = next) {
+        next = arena->next;
+#if defined(XP_WIN)
+        DWORD oldProtect;
+        if (!VirtualProtect(arena, ArenaSize, PAGE_NOACCESS, &oldProtect))
+            MOZ_CRASH();
+#else  // assume Unix
+        if (mprotect(arena, ArenaSize, PROT_NONE))
+            MOZ_CRASH();
+#endif
+    }
+}
+
+void
+GCRuntime::unprotectRelocatedArenas(ArenaHeader *relocatedList)
+{
+    for (ArenaHeader* arena = relocatedList; arena; arena = arena->next) {
+#if defined(XP_WIN)
+        DWORD oldProtect;
+        if (!VirtualProtect(arena, ArenaSize, PAGE_READWRITE, &oldProtect))
+            MOZ_CRASH();
+#else  // assume Unix
+        if (mprotect(arena, ArenaSize, PROT_READ | PROT_WRITE))
+            MOZ_CRASH();
+#endif
+    }
+}
+#endif
+
 void
 GCRuntime::releaseRelocatedArenas(ArenaHeader *relocatedList)
 {
     // Release the relocated arenas, now containing only forwarding pointers
-
-#ifdef DEBUG
-    for (ArenaHeader *arena = relocatedList; arena; arena = arena->next) {
-        for (ArenaCellIterUnderFinalize i(arena); !i.done(); i.next()) {
-            TenuredCell *src = i.getCell();
-            MOZ_ASSERT(IsForwarded(src));
-            TenuredCell *dest = Forwarded(src);
-            MOZ_ASSERT(src->isMarked(BLACK) == dest->isMarked(BLACK));
-            MOZ_ASSERT(src->isMarked(GRAY) == dest->isMarked(GRAY));
-        }
-    }
-#endif
 
     unsigned count = 0;
     while (relocatedList) {
@@ -4979,6 +5002,12 @@ GCRuntime::beginSweepPhase(bool lastGC)
 
     MOZ_ASSERT(!abortSweepAfterCurrentGroup);
 
+#if defined(JSGC_COMPACTING) && defined(DEBUG)
+    unprotectRelocatedArenas(relocatedArenasToRelease);
+    releaseRelocatedArenas(relocatedArenasToRelease);
+    relocatedArenasToRelease = nullptr;
+#endif
+
     computeNonIncrementalMarkingForValidation();
 
     gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP);
@@ -5318,7 +5347,7 @@ GCRuntime::endSweepPhase(bool lastGC)
 
 #ifdef JSGC_COMPACTING
 void
-GCRuntime::compactPhase()
+GCRuntime::compactPhase(bool lastGC)
 {
     MOZ_ASSERT(rt->gc.nursery.isEmpty());
     MOZ_ASSERT(!sweepOnBackgroundThread);
@@ -5327,7 +5356,31 @@ GCRuntime::compactPhase()
 
     ArenaHeader *relocatedList = relocateArenas();
     updatePointersToRelocatedCells();
+
+#ifdef DEBUG
+    for (ArenaHeader *arena = relocatedList; arena; arena = arena->next) {
+        for (ArenaCellIterUnderFinalize i(arena); !i.done(); i.next()) {
+            TenuredCell *src = i.getCell();
+            MOZ_ASSERT(IsForwarded(src));
+            TenuredCell *dest = Forwarded(src);
+            MOZ_ASSERT(src->isMarked(BLACK) == dest->isMarked(BLACK));
+            MOZ_ASSERT(src->isMarked(GRAY) == dest->isMarked(GRAY));
+        }
+    }
+#endif
+
+    // Release the relocated arenas, or in debug builds queue them to be
+    // released until the start of the next GC unless this is the last GC.
+#ifndef DEBUG
     releaseRelocatedArenas(relocatedList);
+#else
+    protectRelocatedArenas(relocatedList);
+    MOZ_ASSERT(!relocatedArenasToRelease);
+    if (!lastGC)
+        relocatedArenasToRelease = relocatedList;
+    else
+        releaseRelocatedArenas(relocatedList);
+#endif
 
 #ifdef DEBUG
     CheckHashTablesAfterMovingGC(rt);
@@ -5694,7 +5747,7 @@ GCRuntime::incrementalCollectSlice(int64_t budget,
 #ifdef JSGC_COMPACTING
         if (shouldCompact()) {
             incrementalState = COMPACT;
-            compactPhase();
+            compactPhase(lastGC);
         }
 #endif
 

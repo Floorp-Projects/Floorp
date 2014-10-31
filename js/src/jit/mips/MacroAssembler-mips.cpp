@@ -1806,6 +1806,12 @@ MacroAssemblerMIPSCompat::movePtr(ImmGCPtr imm, Register dest)
 {
     ma_li(dest, imm);
 }
+
+void
+MacroAssemblerMIPSCompat::movePtr(ImmMaybeNurseryPtr imm, Register dest)
+{
+    movePtr(noteMaybeNurseryPtr(imm), dest);
+}
 void
 MacroAssemblerMIPSCompat::movePtr(ImmPtr imm, Register dest)
 {
@@ -3114,8 +3120,8 @@ MacroAssemblerMIPS::ma_callIonHalfPush(Label *label)
 {
     // This is a MIPS hack to push return address during jalr delay slot.
     as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
-    // TODO
-    // TODO
+    ma_bal(label, DontFillDelaySlot);
+    as_sw(ra, StackPointer, 0);
 }
 
 void

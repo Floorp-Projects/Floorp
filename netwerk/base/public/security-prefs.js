@@ -50,3 +50,7 @@ pref("security.password_lifetime",       30);
 pref("security.OCSP.enabled", 1);
 pref("security.OCSP.require", false);
 pref("security.OCSP.GET.enabled", false);
+
+pref("security.ssl.errorReporting.enabled", true);
+pref("security.ssl.errorReporting.url", "https://data.mozilla.com/submit/sslreports-stg");
+pref("security.ssl.errorReporting.automatic", false);

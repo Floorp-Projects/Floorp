@@ -43,6 +43,19 @@ MOZ_BEGIN_ENUM_CLASS(SurfaceFormat, int8_t)
   UNKNOWN
 MOZ_END_ENUM_CLASS(SurfaceFormat)
 
+inline bool IsOpaque(SurfaceFormat aFormat)
+{
+  switch (aFormat) {
+  case SurfaceFormat::B8G8R8X8:
+  case SurfaceFormat::R8G8B8X8:
+  case SurfaceFormat::R5G6B5:
+  case SurfaceFormat::YUV:
+    return true;
+  default:
+    return false;
+  }
+}
+
 MOZ_BEGIN_ENUM_CLASS(FilterType, int8_t)
   BLEND = 0,
   TRANSFORM,

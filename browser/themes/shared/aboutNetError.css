@@ -67,3 +67,75 @@ ul {
 button:disabled {
   cursor: pointer;
 }
+
+div#certificateErrorReporting {
+  display: none;
+  float:right;
+  /* Align with the "Try Again" button */
+  margin-top:24px;
+  margin-right:24px;
+}
+
+div#certificateErrorReporting a,
+div#certificateErrorReportingPanel a {
+  color: #0095DD;
+}
+
+div#certificateErrorReporting a {
+  text-decoration: none;
+}
+
+div#certificateErrorReporting a:hover {
+  text-decoration: underline;
+}
+
+span.downArrow {
+  font-size: 0.9em;
+}
+
+div#certificateErrorReportingPanel {
+  /* Hidden until the link is clicked */
+  display: none;
+  background-color: white;
+  border: 1px lightgray solid;
+  /* Don't use top padding because the default p style has top padding, and it
+   * makes the overall div look uneven */
+  padding: 0 12px 12px 12px;
+  box-shadow: 0 0 4px #ddd;
+  position: relative;
+  width: 75%;
+  left: 34%;
+  font-size: 0.9em;
+  top: 8px;
+}
+
+span#hostname {
+  font-weight: bold;
+}
+
+#automaticallyReportInFuture {
+  cursor: pointer;
+}
+
+#reportingState {
+  padding-left: 150px;
+}
+
+#reportSendingMessage {
+  position: relative;
+  display: none;
+}
+
+#reportSentMessage {
+  position: relative;
+  display: none;
+}
+
+button#reportCertificateError {
+  position: relative;
+}
+
+button#reportCertificateErrorRetry {
+  position: relative;
+  display: none;
+}

@@ -22,6 +22,7 @@
  * limitations under the License.
  */
 #include "pkix/pkix.h"
+#include "pkixder.h"
 #include "pkixgtest.h"
 #include "pkixtestutil.h"
 
@@ -330,9 +331,9 @@ static const InputValidity DNSNAMES_VALIDITY[] =
   I("xn--a", true, true),
   I("a.xn--a", true, true),
   I("a.xn--a.a", true, true),
-  I("\0xc4\0x95.com", false, false), // UTF-8 ĕ
+  I("\xc4\x95.com", false, false), // UTF-8 ĕ
   I("xn--jea.com", true, true), // punycode ĕ
-  I("xn--\0xc4\0x95.com", false, false), // UTF-8 ĕ, malformed punycode + UTF-8 mashup
+  I("xn--\xc4\x95.com", false, false), // UTF-8 ĕ, malformed punycode + UTF-8 mashup
 
   // Surprising punycode
   I("xn--google.com", true, true), // 䕮䕵䕶䕱.com
@@ -498,12 +499,12 @@ static const InputValidity DNSNAMES_VALIDITY_TURKISH_I[] =
   // but our checks aren't intended to enforce those rules.
   I("I", true, true), // ASCII capital I
   I("i", true, true), // ASCII lowercase i
-  I("\0xC4\0xB0", false, false), // latin capital letter i with dot above
-  I("\0xC4\0xB1", false, false), // latin small letter dotless i
+  I("\xC4\xB0", false, false), // latin capital letter i with dot above
+  I("\xC4\xB1", false, false), // latin small letter dotless i
   I("xn--i-9bb", true, true), // latin capital letter i with dot above, in punycode
   I("xn--cfa", true, true), // latin small letter dotless i, in punycode
-  I("xn--\0xC4\0xB0", false, false), // latin capital letter i with dot above, mashup
-  I("xn--\0xC4\0xB1", false, false), // latin small letter dotless i, mashup
+  I("xn--\xC4\xB0", false, false), // latin capital letter i with dot above, mashup
+  I("xn--\xC4\xB1", false, false), // latin small letter dotless i, mashup
 };
 
 static const uint8_t LOWERCASE_I_VALUE[1] = { 'i' };
@@ -1024,8 +1025,11 @@ static const uint8_t example_com[] = {
 static const uint8_t ipv4_addr_bytes[] = {
   1, 2, 3, 4
 };
-static const uint8_t ipv4_addr_bytes_as_str[] = "\0x01\x02\0x03\0x04";
+static const uint8_t ipv4_addr_bytes_as_str[] = "\x01\x02\x03\x04";
 static const uint8_t ipv4_addr_str[] = "1.2.3.4";
+static const uint8_t ipv4_addr_bytes_FFFFFFFF[8] = {
+  1, 2, 3, 4, 0xff, 0xff, 0xff, 0xff
+};
 
 static const uint8_t ipv4_compatible_ipv6_addr_bytes[] = {
   0, 0, 0, 0,
@@ -1050,10 +1054,10 @@ static const uint8_t ipv6_addr_bytes[] = {
   0xdd, 0xee, 0xff, 0x11
 };
 static const uint8_t ipv6_addr_bytes_as_str[] =
-  "\0x11\0x22\0x33\0x44"
-  "\0x55\0x66\0x77\0x88"
-  "\0x99\0xaa\0xbb\0xcc"
-  "\0xdd\0xee\0xff\0x11";
+  "\x11\x22\x33\x44"
+  "\x55\x66\x77\x88"
+  "\x99\xaa\xbb\xcc"
+  "\xdd\xee\xff\x11";
 
 static const uint8_t ipv6_addr_str[] =
   "1122:3344:5566:7788:99aa:bbcc:ddee:ff11";
@@ -1069,6 +1073,44 @@ static const uint8_t ipv6_addr_str[] =
 // DNSNAMES_VALIDITY, and not here.
 static const CheckCertHostnameParams CHECK_CERT_HOSTNAME_PARAMS[] =
 {
+  // This is technically illegal. PrintableString is defined in such a way that
+  // '*' is not an allowed character, but there are many real-world certificates
+  // that are encoded this way.
+  WITHOUT_SAN("foo.example.com", RDN(CN("*.example.com", der::PrintableString)),
+              Success),
+  WITHOUT_SAN("foo.example.com", RDN(CN("*.example.com", der::UTF8String)),
+              Success),
+
+  // Many certificates use TeletexString when encoding wildcards in CN-IDs
+  // because PrintableString is defined as not allowing '*' and UTF8String was,
+  // at one point in history, considered too new to depend on for compatibility.
+  // We accept TeletexString-encoded CN-IDs when they don't contain any escape
+  // sequences. The reference I used for the escape codes was
+  // https://tools.ietf.org/html/rfc1468. The escaping mechanism is actually
+  // pretty complex and these tests don't even come close to testing all the
+  // possibilities.
+  WITHOUT_SAN("foo.example.com", RDN(CN("*.example.com", der::TeletexString)),
+              Success),
+  // "ESC ( B" ({0x1B,0x50,0x42}) is the escape code to switch to ASCII, which
+  // is redundant because it already the default.
+  WITHOUT_SAN("foo.example.com",
+              RDN(CN("\x1B(B*.example.com", der::TeletexString)),
+              Result::ERROR_BAD_CERT_DOMAIN),
+  WITHOUT_SAN("foo.example.com",
+              RDN(CN("*.example\x1B(B.com", der::TeletexString)),
+              Result::ERROR_BAD_CERT_DOMAIN),
+  WITHOUT_SAN("foo.example.com",
+              RDN(CN("*.example.com\x1B(B", der::TeletexString)),
+              Result::ERROR_BAD_CERT_DOMAIN),
+  // "ESC $ B" ({0x1B,0x24,0x42}) is the escape code to switch to
+  // JIS X 0208-1983 (a Japanese character set).
+  WITHOUT_SAN("foo.example.com",
+              RDN(CN("\x1B$B*.example.com", der::TeletexString)),
+              Result::ERROR_BAD_CERT_DOMAIN),
+  WITHOUT_SAN("foo.example.com",
+              RDN(CN("*.example.com\x1B$B", der::TeletexString)),
+              Result::ERROR_BAD_CERT_DOMAIN),
+
   // Match a DNSName SAN entry with a redundant (ignored) matching CN-ID.
   WITH_SAN("a", RDN(CN("a")), DNSName("a"), Success),
   // Match a DNSName SAN entry when there is an CN-ID that doesn't match.

@@ -1,6 +1,6 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.13 - August 21, 2014
+ libpng version 1.6.14 - October 23, 2014
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2014 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.13 - August 21, 2014
+ libpng versions 0.97, January 1998, through 1.6.14 - October 23, 2014
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2014 Glenn Randers-Pehrson
 
@@ -3261,7 +3261,7 @@ tEXt chunk use RFC 1123 format dates (e.g. "22 May 1997 18:07:10 GMT"),
 although this isn't a requirement.  Unlike the tIME chunk, the
 "Creation Time" tEXt chunk is not expected to be automatically changed
 by the software.  To facilitate the use of RFC 1123 dates, a function
-png_convert_to_rfc1123_buffer(png_ptr, buffer, png_timep) is provided to
+png_convert_to_rfc1123_buffer(buffer, png_timep) is provided to
 convert from PNG time to an RFC 1123 format string.  The caller must provide
 a writeable buffer of at least 29 bytes.
 
@@ -5223,11 +5223,14 @@ We mark all non-exported functions with "/* PRIVATE */"":
  }
 
 The prototypes for non-exported functions (except for those in
-pngtest) appear in
-pngpriv.h
-above the comment that says
+pngtest) appear in pngpriv.h above the comment that says
 
   /* Maintainer: Put new private prototypes here ^ */
+
+To avoid polluting the global namespace, the names of all exported
+functions and variables begin with "png_", and all publicly visible C
+preprocessor macros begin with "PNG".  We request that applications that
+use libpng *not* begin any of their own symbols with either of these strings.
 
 We put a space after the "sizeof" operator and we omit the
 optional parentheses around its argument when the argument
@@ -5240,10 +5243,8 @@ sizeof operator, with its argument, in parentheses:
 Prior to libpng-1.6.0 we used a "png_sizeof()" macro, formatted as
 though it were a function.
 
-To avoid polluting the global namespace, the names of all exported
-functions and variables begin with "png_", and all publicly visible C
-preprocessor macros begin with "PNG".  We request that applications that
-use libpng *not* begin any of their own symbols with either of these strings.
+Control keywords if, for, while, and switch are always followed by a space
+to distinguish them from function calls, which have no trailing space. 
 
 We put a space after each comma and after each semicolon
 in "for" statements, and we put spaces before and after each
@@ -5276,13 +5277,13 @@ Other rules can be inferred by inspecting the libpng source.
 
 XVI. Y2K Compliance in libpng
 
-August 21, 2014
+October 23, 2014
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.13 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.14 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer
@@ -5298,8 +5299,9 @@ in libpng-1.6.x and will be removed from libpng-1.7.0.
 
 There are seven time-related functions:
 
-    png_convert_to_rfc_1123() in png.c
-      (formerly png_convert_to_rfc_1152() in error)
+    png_convert_to_rfc_1123_buffer() in png.c
+      (formerly png_convert_to_rfc_1152() in error, and
+      also formerly png_convert_to_rfc_1123())
     png_convert_from_struct_tm() in pngwrite.c, called
       in pngwrite.c
     png_convert_from_time_t() in pngwrite.c

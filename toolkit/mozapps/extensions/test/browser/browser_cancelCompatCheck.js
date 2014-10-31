@@ -14,6 +14,7 @@ const PREF_METADATA_LASTUPDATE        = "extensions.getAddons.cache.lastUpdate";
 
 let repo = {};
 Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm", repo);
+Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
 /**
  * Test add-ons:

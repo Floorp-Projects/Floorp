@@ -21,6 +21,7 @@ struct nsBorderColors;
 namespace mozilla {
 namespace gfx {
 class GradientStops;
+struct RectCornerRadii;
 }
 }
 
@@ -76,6 +77,9 @@ typedef enum {
 } BorderColorStyle;
 
 struct nsCSSBorderRenderer {
+  typedef mozilla::gfx::Float Float;
+  typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
+
   nsCSSBorderRenderer(int32_t aAppUnitsPerPixel,
                       gfxContext* aDestContext,
                       gfxRect& aOuterRect,
@@ -219,8 +223,8 @@ struct nsCSSBorderRenderer {
   // appropriate radii for another rectangle *outside* that rectangle
   // by increasing the radii, except keeping sharp corners sharp.
   // Used for spread box-shadows
-  static void ComputeOuterRadii(const gfxCornerSizes& aRadii,
-                                const gfxFloat *aBorderSizes,
+  static void ComputeOuterRadii(const RectCornerRadii& aRadii,
+                                const Float *aBorderSizes,
                                 gfxCornerSizes *aOuterRadiiRet);
 };
 

@@ -113,28 +113,17 @@ NewGCObject(JSContext *cx, gc::AllocKind allocKind, gc::InitialHeap initialHeap)
 bool
 CheckOverRecursed(JSContext *cx)
 {
-    // IonMonkey's stackLimit is equal to nativeStackLimit by default. When we
-    // request an interrupt, we set the jitStackLimit to nullptr, which causes
-    // the stack limit check to fail.
-    //
-    // There are two states we're concerned about here:
-    //   (1) The interrupt bit is set, and we need to fire the interrupt callback.
-    //   (2) The stack limit has been exceeded, and we need to throw an error.
-    //
-    // Note that we can reach here if jitStackLimit is MAXADDR, but interrupt
-    // has not yet been set to 1. That's okay; it will be set to 1 very shortly,
-    // and in the interim we might just fire a few useless calls to
-    // CheckOverRecursed.
+    // We just failed the jitStackLimit check. There are two possible reasons:
+    //  - jitStackLimit was the real stack limit and we're over-recursed
+    //  - jitStackLimit was set to UINTPTR_MAX by JSRuntime::requestInterrupt
+    //    and we need to call JSRuntime::handleInterrupt.
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     JS_CHECK_SIMULATOR_RECURSION_WITH_EXTRA(cx, 0, return false);
 #else
     JS_CHECK_RECURSION(cx, return false);
 #endif
-
-    if (cx->runtime()->interrupt)
-        return InterruptCheck(cx);
-
-    return true;
+    gc::MaybeVerifyBarriers(cx);
+    return cx->runtime()->handleInterrupt(cx);
 }
 
 // This function can get called in two contexts.  In the usual context, it's
@@ -178,10 +167,8 @@ CheckOverRecursedWithExtra(JSContext *cx, BaselineFrame *frame,
     JS_CHECK_RECURSION_WITH_SP(cx, checkSp, return false);
 #endif
 
-    if (cx->runtime()->interrupt)
-        return InterruptCheck(cx);
-
-    return true;
+    gc::MaybeVerifyBarriers(cx);
+    return cx->runtime()->handleInterrupt(cx);
 }
 
 bool

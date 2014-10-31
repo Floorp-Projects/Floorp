@@ -2062,7 +2062,7 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent, 
     /*
      * Across compartments we have to clone the script for interpreted
      * functions. Cross-compartment cloning only happens via JSAPI
-     * (JS_CloneFunctionObject) which dynamically ensures that 'script' has
+     * (JS::CloneFunctionObject) which dynamically ensures that 'script' has
      * no enclosing lexical scope (only the global scope).
      */
     if (cloneRoot->isInterpreted() && !CloneFunctionScript(cx, fun, cloneRoot, newKindArg))

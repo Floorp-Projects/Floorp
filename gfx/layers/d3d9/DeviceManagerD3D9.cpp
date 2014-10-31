@@ -188,7 +188,7 @@ DeviceManagerD3D9::Init()
       wc.lpfnWndProc = ::DefWindowProc;
       wc.lpszClassName = kClassName;
       if (!RegisterClassW(&wc)) {
-          NS_WARNING("Failed to register window class for DeviceManager.");
+          gfxCriticalError() << "[D3D9] Failed to register class for DeviceManager";
           return false;
       }
   }
@@ -198,7 +198,7 @@ DeviceManagerD3D9::Init()
                               nullptr, GetModuleHandle(nullptr), nullptr);
 
   if (!mFocusWnd) {
-    NS_WARNING("Failed to create DeviceManagerD3D9 Window.");
+    gfxCriticalError() << "[D3D9] Failed to create a window";
     return false;
   }
 
@@ -234,12 +234,14 @@ DeviceManagerD3D9::Init()
 
   if (!mD3D9) {
     if (!d3d9Create) {
+      gfxCriticalError() << "[D3D9] Failed to load symbols";
       return false;
     }
 
     mD3D9 = dont_AddRef(d3d9Create(D3D_SDK_VERSION));
 
     if (!mD3D9) {
+      gfxCriticalError() << "[D3D9] Failed to create the device";
       return false;
     }
   }
@@ -248,6 +250,7 @@ DeviceManagerD3D9::Init()
   hr = mD3D9->GetAdapterIdentifier(D3DADAPTER_DEFAULT, 0, &ident);
 
   if (FAILED(hr)) {
+    gfxCriticalError() << "[D3D9] Failed to create the environment";
     return false;
   }
 
@@ -300,12 +303,13 @@ DeviceManagerD3D9::Init()
                              getter_AddRefs(mDevice));
 
     if (FAILED(hr)) {
-      NS_WARNING("Failed to create Device for DeviceManagerD3D9.");
+      gfxCriticalError() << "[D3D9] Failed to create the device";
       return false;
     }
   }
 
   if (!VerifyCaps()) {
+    gfxCriticalError() << "[D3D9] insufficient capabilities";
     return false;
   }
 
@@ -328,10 +332,13 @@ DeviceManagerD3D9::Init()
     mNv3DVUtils->SetDeviceInfo(devUnknown); 
   } 
 
+  auto failCreateShaderMsg = "[D3D9] failed to create a critical resource (shader)";
+
   hr = mDevice->CreateVertexShader((DWORD*)LayerQuadVS,
                                    getter_AddRefs(mLayerVS));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -339,6 +346,7 @@ DeviceManagerD3D9::Init()
                                   getter_AddRefs(mRGBPS));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -346,6 +354,7 @@ DeviceManagerD3D9::Init()
                                   getter_AddRefs(mRGBAPS));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -353,6 +362,7 @@ DeviceManagerD3D9::Init()
                                   getter_AddRefs(mComponentPass1PS));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -360,6 +370,7 @@ DeviceManagerD3D9::Init()
                                   getter_AddRefs(mComponentPass2PS));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -367,6 +378,7 @@ DeviceManagerD3D9::Init()
                                   getter_AddRefs(mYCbCrPS));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -374,6 +386,7 @@ DeviceManagerD3D9::Init()
                                   getter_AddRefs(mSolidColorPS));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -381,12 +394,14 @@ DeviceManagerD3D9::Init()
                                    getter_AddRefs(mLayerVSMask));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
   hr = mDevice->CreateVertexShader((DWORD*)LayerQuadVSMask3D,
                                    getter_AddRefs(mLayerVSMask3D));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -394,6 +409,7 @@ DeviceManagerD3D9::Init()
                                   getter_AddRefs(mRGBPSMask));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -401,6 +417,7 @@ DeviceManagerD3D9::Init()
                                   getter_AddRefs(mRGBAPSMask));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -408,6 +425,7 @@ DeviceManagerD3D9::Init()
                                   getter_AddRefs(mRGBAPSMask3D));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -415,6 +433,7 @@ DeviceManagerD3D9::Init()
                                   getter_AddRefs(mComponentPass1PSMask));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -422,6 +441,7 @@ DeviceManagerD3D9::Init()
                                   getter_AddRefs(mComponentPass2PSMask));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -429,6 +449,7 @@ DeviceManagerD3D9::Init()
                                   getter_AddRefs(mYCbCrPSMask));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
@@ -436,15 +457,18 @@ DeviceManagerD3D9::Init()
                                   getter_AddRefs(mSolidColorPSMask));
 
   if (FAILED(hr)) {
+    gfxCriticalError() << failCreateShaderMsg;
     return false;
   }
 
   if (!CreateVertexBuffer()) {
+    gfxCriticalError() << "[D3D9] Failed to create a critical resource (vbo)";
     return false;
   }
 
   hr = mDevice->SetStreamSource(0, mVB, 0, sizeof(vertex));
   if (FAILED(hr)) {
+    gfxCriticalError() << "[D3D9] Failed to set the stream source";
     return false;
   }
 

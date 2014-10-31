@@ -5112,6 +5112,11 @@ ThreadSources.prototype = {
    */
   sourceMap: function (aScript) {
     dbg_assert(aScript.source.sourceMapURL, "Script should have a sourceMapURL");
+
+    if (this._sourceMapsByGeneratedSource[aScript.url]) {
+      return this._sourceMapsByGeneratedSource[aScript.url];
+    }
+
     let sourceMapURL = this._normalize(aScript.source.sourceMapURL, aScript.url);
     let map = this._fetchSourceMap(sourceMapURL, aScript.url)
       .then(aSourceMap => this.saveSourceMap(aSourceMap, aScript.url));

@@ -9,6 +9,9 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
   </script>
   <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js">
+  </script>
+  <script type="application/javascript"
           src="chrome://mochikit/content/chrome-harness.js">
   </script>
 
@@ -169,8 +172,97 @@
             multiline: false,
             atStart: true,
             atEnd: false
-           }, { focused: 'html' })]
+           }, { focused: 'html' })],
+
+          [ContentMessages.focusSelector('input'),
+           new ExpectedAnnouncement('editing'),
+           new ExpectedEditState({
+            editing: true,
+            multiline: false,
+            atStart: true,
+            atEnd: true
+           }),
+           new ExpectedCursorChange([{string: 'entry'}]),
+           new ExpectedTextSelectionChanged(0, 0)
+          ],
+          [function() {
+             SpecialPowers.setIntPref(KEYBOARD_ECHO_SETTING, 3);
+             typeKey('a')();
+           },
+           new ExpectedTextChanged('a'),
+           new ExpectedTextSelectionChanged(1, 1),
+          ],
+          [typeKey('b'),
+           new ExpectedTextChanged('b'),
+           new ExpectedTextSelectionChanged(2, 2),
+          ],
+          [typeKey('c'),
+           new ExpectedTextChanged('c'),
+           new ExpectedTextSelectionChanged(3, 3),
+          ],
+          [typeKey('d'),
+           new ExpectedTextChanged('d'),
+           new ExpectedTextSelectionChanged(4, 4),
+          ],
+          [typeKey(' '),
+           new ExpectedTextChanged(' abcd'),
+           new ExpectedTextSelectionChanged(5, 5),
+          ],
+          [typeKey('e'),
+           new ExpectedTextChanged('e'),
+           new ExpectedTextSelectionChanged(6, 6),
+          ],
+          [function() {
+             SpecialPowers.setIntPref(KEYBOARD_ECHO_SETTING, 2);
+             typeKey('a')();
+           },
+           new ExpectedTextChanged(''),
+           new ExpectedTextSelectionChanged(7, 7),
+          ],
+          [typeKey('d'),
+           new ExpectedTextChanged(''),
+           new ExpectedTextSelectionChanged(8, 8),
+          ],
+          [typeKey(' '),
+           new ExpectedTextChanged(' ead'),
+           new ExpectedTextSelectionChanged(9, 9),
+          ],
+          [function() {
+             SpecialPowers.setIntPref(KEYBOARD_ECHO_SETTING, 1);
+             typeKey('f')();
+           },
+           new ExpectedTextChanged('f'),
+           new ExpectedTextSelectionChanged(10, 10),
+          ],
+          [typeKey('g'),
+           new ExpectedTextChanged('g'),
+           new ExpectedTextSelectionChanged(11, 11),
+          ],
+          [typeKey(' '),
+           new ExpectedTextChanged(' '),
+           new ExpectedTextSelectionChanged(12, 12),
+          ],
+          [function() {
+             SpecialPowers.setIntPref(KEYBOARD_ECHO_SETTING, 0);
+             typeKey('f')();
+           },
+           new ExpectedTextChanged(''),
+           new ExpectedTextSelectionChanged(13, 13),
+          ],
+          [typeKey('g'),
+           new ExpectedTextChanged(''),
+           new ExpectedTextSelectionChanged(14, 14),
+          ],
+          [typeKey(' '),
+           new ExpectedTextChanged(''),
+           new ExpectedTextSelectionChanged(15, 15),
+          ],
         ]);
+
+      const KEYBOARD_ECHO_SETTING = 'accessibility.accessfu.keyboard_echo';
+      function typeKey(key) {
+        return function() { synthesizeKey(key, {}, currentTabWindow()); };
+      }
 
       addA11yLoadEvent(function() {
         textTest.start(function () {

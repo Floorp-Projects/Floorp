@@ -343,7 +343,11 @@ const CustomizableWidgets = [
     viewId: "PanelUI-developer",
     shortcutId: "key_devToolboxMenuItem",
     tooltiptext: "developer-button.tooltiptext2",
+#ifdef MOZ_DEV_EDITION
+    defaultArea: CustomizableUI.AREA_NAVBAR,
+#else
     defaultArea: CustomizableUI.AREA_PANEL,
+#endif
     onViewShowing: function(aEvent) {
       // Populate the subview with whatever menuitems are in the developer
       // menu. We skip menu elements, because the menu panel has no way
