@@ -724,8 +724,6 @@ MOZ_NEVER_INLINE bool
 VectorBase<T, N, AP, TV>::growStorageBy(size_t aIncr)
 {
   MOZ_ASSERT(mLength + aIncr > mCapacity);
-  MOZ_ASSERT_IF(!usingInlineStorage(),
-                !detail::CapacityHasExcessSpace<T>(mCapacity));
 
   /*
    * When choosing a new capacity, its size should is as close to 2**N bytes
