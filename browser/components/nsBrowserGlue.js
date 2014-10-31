@@ -349,6 +349,15 @@ BrowserGlue.prototype = {
         // nsBrowserGlue to prevent double counting.
         let win = this.getMostRecentBrowserWindow();
         BrowserUITelemetry.countSearchEvent("urlbar", win.gURLBar.value);
+
+        let engine = null;
+        try {
+          engine = subject.QueryInterface(Ci.nsISearchEngine);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+
+        win.BrowserSearch.recordSearchInTelemetry(engine, "urlbar");
 #ifdef MOZ_SERVICES_HEALTHREPORT
         let reporter = Cc["@mozilla.org/datareporting/service;1"]
                          .getService()
@@ -361,7 +370,6 @@ BrowserGlue.prototype = {
 
         reporter.onInit().then(function record() {
           try {
-            let engine = subject.QueryInterface(Ci.nsISearchEngine);
             reporter.getProvider("org.mozilla.searches").recordSearch(engine, "urlbar");
           } catch (ex) {
             Cu.reportError(ex);
