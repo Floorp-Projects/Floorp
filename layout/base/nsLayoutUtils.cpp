@@ -4852,15 +4852,14 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
 
     // Conjure an nsRenderingContext from a gfxContext for drawing the text
     // to blur.
-    nsRefPtr<nsRenderingContext> renderingContext = new nsRenderingContext();
-    renderingContext->Init(shadowContext);
+    nsRenderingContext renderingContext(shadowContext);
 
     aDestCtx->Save();
     aDestCtx->NewPath();
     aDestCtx->SetColor(gfxRGBA(shadowColor));
 
     // The callback will draw whatever we want to blur as a shadow.
-    aCallback(renderingContext, shadowOffset, shadowColor, aCallbackData);
+    aCallback(&renderingContext, shadowOffset, shadowColor, aCallbackData);
 
     contextBoxBlur.DoPaint();
     aDestCtx->Restore();

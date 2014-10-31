@@ -642,8 +642,6 @@ PaintFrameCallback::operator()(gfxContext* aContext,
 
   mFrame->AddStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
 
-  nsRefPtr<nsRenderingContext> context(new nsRenderingContext());
-  context->Init(aContext);
   aContext->Save();
 
   // Clip to aFillRect so that we don't paint outside.
@@ -684,7 +682,8 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   if (mFlags & nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES) {
     flags |= nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES;
   }
-  nsLayoutUtils::PaintFrame(context, mFrame,
+  nsRenderingContext context(aContext);
+  nsLayoutUtils::PaintFrame(&context, mFrame,
                             dirty, NS_RGBA(0, 0, 0, 0),
                             flags);
 
