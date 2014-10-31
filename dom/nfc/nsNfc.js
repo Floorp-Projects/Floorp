@@ -75,11 +75,11 @@ MozNFCTagImpl.prototype = {
     return this._nfcContentHelper.writeNDEF(records, this.session);
   },
 
-  makeReadOnlyNDEF: function makeReadOnlyNDEF() {
+  makeReadOnly: function makeReadOnly() {
     if (this.isLost) {
       throw new this._window.DOMError("InvalidStateError", "NFCTag object is invalid");
     }
-    return this._nfcContentHelper.makeReadOnlyNDEF(this.session);
+    return this._nfcContentHelper.makeReadOnly(this.session);
   },
 
   classID: Components.ID("{4e1e2e90-3137-11e3-aa6e-0800200c9a66}"),

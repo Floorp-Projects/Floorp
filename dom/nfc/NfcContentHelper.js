@@ -53,7 +53,7 @@ const NFCCONTENTHELPER_CID =
 const NFC_IPC_MSG_NAMES = [
   "NFC:ReadNDEFResponse",
   "NFC:WriteNDEFResponse",
-  "NFC:MakeReadOnlyNDEFResponse",
+  "NFC:MakeReadOnlyResponse",
   "NFC:ConnectResponse",
   "NFC:CloseResponse",
   "NFC:CheckP2PRegistrationResponse",
@@ -168,7 +168,7 @@ NfcContentHelper.prototype = {
     let requestId = btoa(this.getRequestId(request));
     this._requestMap[requestId] = this._window;
 
-    cpmm.sendAsyncMessage("NFC:MakeReadOnlyNDEF", {
+    cpmm.sendAsyncMessage("NFC:MakeReadOnly", {
       requestId: requestId,
       sessionToken: sessionToken
     });
@@ -338,7 +338,7 @@ NfcContentHelper.prototype = {
       case "NFC:ConnectResponse": // Fall through.
       case "NFC:CloseResponse":
       case "NFC:WriteNDEFResponse":
-      case "NFC:MakeReadOnlyNDEFResponse":
+      case "NFC:MakeReadOnlyResponse":
       case "NFC:NotifySendFileStatusResponse":
       case "NFC:ConfigResponse":
         if (result.errorMsg) {

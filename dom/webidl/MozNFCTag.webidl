@@ -73,7 +73,7 @@ interface MozNFCTag {
   DOMRequest writeNDEF(sequence<MozNDEFRecord> records);
 
   [Throws]
-  DOMRequest makeReadOnlyNDEF();
+  DOMRequest makeReadOnly();
 };
 
 // Mozilla Only
