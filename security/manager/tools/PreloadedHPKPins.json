@@ -189,14 +189,6 @@
         "VeriSign Universal Root Certification Authority",
         "XRamp Global CA Root"
       ]
-    },
-    {
-      "name": "facebook",
-      "sha256_hashes": [
-        "Verisign Class 3 Public Primary Certification Authority - G3",
-        "DigiCert High Assurance EV Root CA",
-        "DigiCert ECC Secure Server CA"
-      ]
     }
   ],
 
@@ -234,10 +226,7 @@
     // twitterCDN. More specific rules take precedence because we search for
     // exact domain name first.
     { "name": "twitter.com", "include_subdomains": true,
-      "pins": "twitterCDN", "test_mode": false },
-    // Facebook (not pinned by Chrome)
-    { "name": "facebook.com", "include_subdomains": true,
-      "pins": "facebook", "test_mode": true }
+      "pins": "twitterCDN", "test_mode": false }
   ],
 
   "extra_certificates": [
