@@ -8,6 +8,9 @@
 
 #include "nsString.h"
 #include "nsIObserver.h"
+#ifdef MOZ_WIDGET_GONK
+#include "mozilla/StaticPtr.h"
+#endif
 
 #if defined(MOZ_HAVE_CXX11_STRONG_ENUMS) || defined(MOZ_HAVE_CXX11_ENUM_TYPE)
 // Older compilers that don't support strongly-typed enums
@@ -96,7 +99,7 @@ protected:
 protected:
   // Objects may be instantiated for use as observers.
   CameraPreferences() { }
-  ~CameraPreferences() { }
+  virtual ~CameraPreferences() { }
 #else
 private:
   // Static class only.

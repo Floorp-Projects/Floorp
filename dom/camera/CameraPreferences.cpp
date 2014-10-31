@@ -11,6 +11,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Preferences.h"
 #ifdef MOZ_WIDGET_GONK
+#include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #endif
 
