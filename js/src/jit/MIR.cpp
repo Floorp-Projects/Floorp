@@ -1870,7 +1870,7 @@ MMinMax::foldsTo(TempAllocator &alloc)
         }
 
         // max(int32, cte <= INT32_MIN) = int32
-        if (val.isDouble() && val.toDouble() < INT32_MIN && isMax()) {
+        if (val.isDouble() && val.toDouble() <= INT32_MIN && isMax()) {
             MLimitedTruncate *limit =
                 MLimitedTruncate::New(alloc, operand->getOperand(0), MDefinition::NoTruncate);
             block()->insertBefore(this, limit);
@@ -3059,9 +3059,16 @@ MCompare::evaluateConstantOperands(TempAllocator &alloc, bool *result)
                 }
                 break;
               case JSOP_LE:
-                if (cte >= INT32_MAX || cte <= INT32_MIN) {
-                    *result = !((constant == lhs()) ^ (cte <= INT32_MIN));
-                    replaced = true;
+                if (constant == lhs()) {
+                    if (cte > INT32_MAX || cte <= INT32_MIN) {
+                        *result = (cte <= INT32_MIN);
+                        replaced = true;
+                    }
+                } else {
+                    if (cte >= INT32_MAX || cte < INT32_MIN) {
+                        *result = (cte >= INT32_MIN);
+                        replaced = true;
+                    }
                 }
                 break;
               case JSOP_GT:
@@ -3071,9 +3078,16 @@ MCompare::evaluateConstantOperands(TempAllocator &alloc, bool *result)
                 }
                 break;
               case JSOP_GE:
-                if (cte >= INT32_MAX || cte <= INT32_MIN) {
-                    *result = !((constant == rhs()) ^ (cte <= INT32_MIN));
-                    replaced = true;
+                if (constant == lhs()) {
+                    if (cte >= INT32_MAX || cte < INT32_MIN) {
+                        *result = (cte >= INT32_MAX);
+                        replaced = true;
+                    }
+                } else {
+                    if (cte > INT32_MAX || cte <= INT32_MIN) {
+                        *result = (cte <= INT32_MIN);
+                        replaced = true;
+                    }
                 }
                 break;
               case JSOP_STRICTEQ: // Fall through.
