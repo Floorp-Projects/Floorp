@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var util = require('./util');
 
-var endpoint = require('../lib/endpoint');
+var endpoint = require('../lib/protocol/endpoint');
 var Endpoint = endpoint.Endpoint;
 
 var settings = {

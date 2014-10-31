@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var util = require('./util');
 
-var Connection = require('../lib/connection').Connection;
+var Connection = require('../lib/protocol/connection').Connection;
 
 var settings = {
   SETTINGS_MAX_CONCURRENT_STREAMS: 100,

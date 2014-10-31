@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var util = require('./util');
 
-var framer = require('../lib/framer');
+var framer = require('../lib/protocol/framer');
 var Serializer = framer.Serializer;
 var Deserializer = framer.Deserializer;
 

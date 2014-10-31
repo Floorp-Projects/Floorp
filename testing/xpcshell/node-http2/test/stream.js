@@ -1,11 +1,11 @@
 var expect = require('chai').expect;
 var util = require('./util');
 
-var stream = require('../lib/stream');
+var stream = require('../lib/protocol/stream');
 var Stream = stream.Stream;
 
 function createStream() {
-  var stream = new Stream(util.log);
+  var stream = new Stream(util.log, null);
   stream.upstream._window = Infinity;
   return stream;
 }
@@ -106,7 +106,7 @@ var example_frames = [
   { type: 'RST_STREAM', flags: {}, error: 'CANCEL' },
   { type: 'HEADERS', flags: {}, headers: {}, priority: undefined },
   { type: 'DATA', flags: {}, data: new Buffer(5) },
-  { type: 'PUSH_PROMISE', flags: {}, headers: {}, promised_stream: new Stream(util.log) }
+  { type: 'PUSH_PROMISE', flags: {}, headers: {}, promised_stream: new Stream(util.log, null) }
 ];
 
 var invalid_incoming_frames = {
@@ -173,7 +173,7 @@ var invalid_outgoing_frames = {
     { type: 'WINDOW_UPDATE', flags: {}, settings: {} },
     { type: 'HEADERS', flags: {}, headers: {}, priority: undefined },
     { type: 'DATA', flags: {}, data: new Buffer(5) },
-    { type: 'PUSH_PROMISE', flags: {}, headers: {}, promised_stream: new Stream(util.log) }
+    { type: 'PUSH_PROMISE', flags: {}, headers: {}, promised_stream: new Stream(util.log, null) }
   ]
 };
 
@@ -184,10 +184,10 @@ describe('stream.js', function() {
         Object.keys(invalid_incoming_frames).forEach(function(state) {
           invalid_incoming_frames[state].forEach(function(invalid_frame) {
             var stream = createStream();
-            var connectionErrorHappened = false
+            var connectionErrorHappened = false;
             stream.state = state;
             stream.once('connectionError', function() { connectionErrorHappened = true; });
-            stream._transition(false, invalid_frame)
+            stream._transition(false, invalid_frame);
             expect(connectionErrorHappened)
           });
         });
@@ -203,7 +203,7 @@ describe('stream.js', function() {
         });
 
         // CLOSED state as a result of outgoing END_STREAM
-        var stream = createStream();
+        stream = createStream();
         stream.upstream.write({ type: 'HEADERS', headers:{}, flags: { END_STREAM: true }, count_change: util.noop });
         stream.headers({});
         stream.end();

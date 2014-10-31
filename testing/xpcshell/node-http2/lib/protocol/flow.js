@@ -177,7 +177,7 @@ Flow.prototype._read = function _read() {
       type: 'BLOCKED',
       flags: {},
       stream: this._flowControlId
-    })
+    });
     this.once('window_update', this._read);
     this._blocked = true;
   }
@@ -204,16 +204,25 @@ Flow.prototype.read = function read(limit) {
     frame = this._readableState.buffer[0];
   }
 
-  if (frame && (frame.type === 'DATA') && limit && (frame.data.length > limit)) {
-    this._log.trace({ frame: frame, size: frame.data.length, forwardable: limit },
-                    'Splitting out forwardable part of a DATA frame.');
-    this.unshift({
-      type: 'DATA',
-      flags: {},
-      stream: frame.stream,
-      data: frame.data.slice(0, limit)
-    });
-    frame.data = frame.data.slice(limit);
+  if (frame && (frame.type === 'DATA')) {
+    // * If the frame is DATA, then there's two special cases:
+    //   * if the limit is 0, we shouldn't return anything
+    //   * if the size of the frame is larger than limit, then the frame should be split
+    if (limit === 0) {
+      return Duplex.prototype.read.call(this, 0);
+    }
+
+    else if (frame.data.length > limit) {
+      this._log.trace({ frame: frame, size: frame.data.length, forwardable: limit },
+        'Splitting out forwardable part of a DATA frame.');
+      this.unshift({
+        type: 'DATA',
+        flags: {},
+        stream: frame.stream,
+        data: frame.data.slice(0, limit)
+      });
+      frame.data = frame.data.slice(limit);
+    }
   }
 
   return Duplex.prototype.read.call(this);

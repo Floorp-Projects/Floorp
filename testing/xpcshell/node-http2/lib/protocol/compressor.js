@@ -532,7 +532,7 @@ HuffmanTable.prototype.encode = function encode(buffer) {
   }
 
   return new Buffer(result);
-}
+};
 
 HuffmanTable.prototype.decode = function decode(buffer) {
   var result = [];
@@ -554,7 +554,7 @@ HuffmanTable.prototype.decode = function decode(buffer) {
   }
 
   return new Buffer(result);
-}
+};
 
 // The initializer arrays for the Huffman tables are generated with feeding the tables from the
 // spec to this sed command:
@@ -857,13 +857,13 @@ HeaderSetCompressor.string = function writeString(str) {
 
   var huffman = HuffmanTable.huffmanTable.encode(str);
   if (huffman.length < str.length) {
-    var length = HeaderSetCompressor.integer(huffman.length, 7)
+    var length = HeaderSetCompressor.integer(huffman.length, 7);
     length[0][0] |= 128;
     return length.concat(huffman);
   }
 
   else {
-    length = HeaderSetCompressor.integer(str.length, 7)
+    length = HeaderSetCompressor.integer(str.length, 7);
     return length.concat(str);
   }
 };
@@ -1139,12 +1139,8 @@ Compressor.prototype.compress = function compress(headers) {
     }
   }
 
-  for (var idx = 0; idx < colonHeaders.length; idx++) {
-    compressHeader(colonHeaders[idx]);
-  }
-  for (var idx = 0; idx < nonColonHeaders.length; idx++) {
-    compressHeader(nonColonHeaders[idx]);
-  }
+  colonHeaders.forEach(compressHeader);
+  nonColonHeaders.forEach(compressHeader);
 
   compressor.end();
 
