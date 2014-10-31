@@ -55,9 +55,7 @@ add_task(function test_web_channel_broker_listener() {
   return new Promise((resolve, reject) => {
     var channel = new Object({
       id: VALID_WEB_CHANNEL_ID,
-      _originCheckCallback: requestPrincipal => {
-        return VALID_WEB_CHANNEL_ORIGIN.prePath === requestPrincipal.origin;
-      },
+      origin: VALID_WEB_CHANNEL_ORIGIN,
       deliver: function(data, sender) {
         do_check_eq(data.id, VALID_WEB_CHANNEL_ID);
         do_check_eq(data.message.command, "hello");
