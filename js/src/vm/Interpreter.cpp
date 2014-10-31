@@ -1124,6 +1124,7 @@ HandleError(JSContext *cx, InterpreterRegs &regs)
 #define PUSH_BOOLEAN(b)          REGS.sp++->setBoolean(b)
 #define PUSH_DOUBLE(d)           REGS.sp++->setDouble(d)
 #define PUSH_INT32(i)            REGS.sp++->setInt32(i)
+#define PUSH_SYMBOL(s)           REGS.sp++->setSymbol(s)
 #define PUSH_STRING(s)           do { REGS.sp++->setString(s); assertSameCompartmentDebugOnly(cx, REGS.sp[-1]); } while (0)
 #define PUSH_OBJECT(obj)         do { REGS.sp++->setObject(obj); assertSameCompartmentDebugOnly(cx, REGS.sp[-1]); } while (0)
 #define PUSH_OBJECT_OR_NULL(obj) do { REGS.sp++->setObjectOrNull(obj); assertSameCompartmentDebugOnly(cx, REGS.sp[-1]); } while (0)
@@ -1601,7 +1602,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
-CASE(JSOP_UNUSED45)
 CASE(JSOP_UNUSED46)
 CASE(JSOP_UNUSED47)
 CASE(JSOP_UNUSED48)
@@ -2705,6 +2705,10 @@ CASE(JSOP_TOSTRING)
     }
 }
 END_CASE(JSOP_TOSTRING)
+
+CASE(JSOP_SYMBOL)
+    PUSH_SYMBOL(cx->wellKnownSymbols().get(GET_UINT8(REGS.pc)));
+END_CASE(JSOP_SYMBOL)
 
 CASE(JSOP_OBJECT)
 {

@@ -130,7 +130,7 @@ struct ForOfPIC
 
     /*
      * A ForOfPIC has only one kind of stub for now: one that holds the shape
-     * of an array object that does not override its '@@iterator' property.
+     * of an array object that does not override its @@iterator property.
      */
     class Stub : public BaseStub
     {
@@ -164,8 +164,8 @@ struct ForOfPIC
      *  ArrayIterator.prototype's shape (arrayIteratorProtoShape_)
      *      To ensure that an ArrayIterator.prototype has not been modified.
      *
-     *  Array.prototype's slot number for '@@iterator' (arrayProtoIteratorSlot_)
-     *  Array.prototype's canonical value for '@@iterator' (canonicalIteratorFunc_)
+     *  Array.prototype's slot number for @@iterator (arrayProtoIteratorSlot_)
+     *  Array.prototype's canonical value for @@iterator (canonicalIteratorFunc_)
      *      To quickly retreive and ensure that the iterator constructor
      *      stored in the slot has not changed.
      *
@@ -182,7 +182,7 @@ struct ForOfPIC
         HeapPtrNativeObject arrayIteratorProto_;
 
         // Shape of matching Array.prototype object, and slot containing
-        // the '@@iterator' for it, and the canonical value.
+        // the @@iterator for it, and the canonical value.
         HeapPtrShape arrayProtoShape_;
         uint32_t arrayProtoIteratorSlot_;
         HeapValue canonicalIteratorFunc_;

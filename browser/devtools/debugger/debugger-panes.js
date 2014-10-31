@@ -3260,10 +3260,15 @@ LineResults.prototype = {
 
 /**
  * A generator-iterator over the global, source or line results.
+ *
+ * The method name depends on whether symbols are enabled in
+ * this build. If so, use Symbol.iterator; otherwise "@@iterator".
  */
-GlobalResults.prototype["@@iterator"] =
-SourceResults.prototype["@@iterator"] =
-LineResults.prototype["@@iterator"] = function*() {
+const JS_HAS_SYMBOLS = typeof Symbol === "function";
+const ITERATOR_SYMBOL = JS_HAS_SYMBOLS ? Symbol.iterator : "@@iterator";
+GlobalResults.prototype[ITERATOR_SYMBOL] =
+SourceResults.prototype[ITERATOR_SYMBOL] =
+LineResults.prototype[ITERATOR_SYMBOL] = function*() {
   yield* this._store;
 };
 
