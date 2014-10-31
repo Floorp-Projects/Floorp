@@ -16,7 +16,7 @@
 .showcase > header {
   position: fixed;
   top: 0;
-  background-color: #fbfbfb;
+  background-color: #fff;
   z-index: 100000;
   width: 100%;
   padding-bottom: 1em;
@@ -31,13 +31,13 @@
 
 .showcase-menu > a {
   margin-right: .5em;
-  padding: .4rem;
+  padding: .2rem;
   margin-top: .2rem;
 }
 
 .showcase > section {
   position: relative;
-  padding-top: 14em;
+  padding-top: 15em;
   clear: both;
 }
 
@@ -69,8 +69,8 @@
   font-weight: bold;
   border-bottom: 1px dashed #aaa;
   margin: 1em 0;
-  margin-top: -14em;
-  padding-top: 14em;
+  margin-top: -15em;
+  padding-top: 15em;
   text-align: left;
 }
 

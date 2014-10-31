@@ -128,6 +128,25 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Creates a new room.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    CreateRoom: Action.define("createRoom", {
+      // The localized template to use to name the new room
+      // (eg. "Conversation {{conversationLabel}}").
+      nameTemplate: String,
+      roomOwner: String
+    }),
+
+    /**
+     * Rooms creation error.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    CreateRoomError: Action.define("createRoomError", {
+      error: Error
+    }),
+
+    /**
      * Retrieves room list.
      * XXX: should move to some roomActions module - refs bug 1079284
      */
@@ -139,7 +158,7 @@ loop.shared.actions = (function() {
      * XXX: should move to some roomActions module - refs bug 1079284
      */
     GetAllRoomsError: Action.define("getAllRoomsError", {
-      error: String
+      error: Error
     }),
 
     /**
@@ -158,6 +177,6 @@ loop.shared.actions = (function() {
      */
     SetupEmptyRoom: Action.define("setupEmptyRoom", {
       localRoomId: String
-    }),
+    })
   };
 })();
