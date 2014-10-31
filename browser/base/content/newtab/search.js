@@ -213,12 +213,11 @@ let gSearch = {
 
     if (uri) {
       this._nodes.logo.style.backgroundImage = "url(" + uri + ")";
-      this._nodes.text.placeholder = "";
     }
     else {
       this._nodes.logo.style.backgroundImage = "";
-      this._nodes.text.placeholder = engine.name;
     }
+    this._nodes.text.placeholder = engine.placeholder;
 
     // Set up the suggestion controller.
     if (!this._suggestionController) {
