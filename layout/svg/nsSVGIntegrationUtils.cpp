@@ -408,7 +408,7 @@ private:
 };
 
 void
-nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
+nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
                                               nsIFrame* aFrame,
                                               const nsRect& aDirtyRect,
                                               nsDisplayListBuilder* aBuilder,
@@ -473,9 +473,8 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
   bool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : true;
 
-  DrawTarget* drawTarget = aCtx->GetDrawTarget();
-  gfxContext* gfx = aCtx->ThebesContext();
-  gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
+  DrawTarget* drawTarget = aContext.GetDrawTarget();
+  gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(&aContext);
 
   nsPoint firstFrameOffset = GetOffsetToBoundingBox(firstFrame);
   nsPoint offsetToBoundingBox = aBuilder->ToReferenceFrame(firstFrame) - firstFrameOffset;
@@ -509,7 +508,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   gfxPoint devPixelOffsetToUserSpace =
     nsLayoutUtils::PointToGfxPoint(offsetToUserSpace,
                                    aFrame->PresContext()->AppUnitsPerDevPixel());
-  gfx->SetMatrix(gfx->CurrentMatrix().Translate(devPixelOffsetToUserSpace));
+  aContext.SetMatrix(aContext.CurrentMatrix().Translate(devPixelOffsetToUserSpace));
 
   gfxMatrix cssPxToDevPxMatrix = GetCSSPxToDevPxMatrix(aFrame);
 
@@ -519,21 +518,21 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)
       || aFrame->StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
     complexEffects = true;
-    gfx->Save();
+    aContext.Save();
     nsRect clipRect =
       aFrame->GetVisualOverflowRectRelativeToSelf() + toUserSpace;
-    gfx->Clip(NSRectToSnappedRect(clipRect,
+    aContext.Clip(NSRectToSnappedRect(clipRect,
                                   aFrame->PresContext()->AppUnitsPerDevPixel(),
                                   *drawTarget));
-    gfx->PushGroup(gfxContentType::COLOR_ALPHA);
+    aContext.PushGroup(gfxContentType::COLOR_ALPHA);
   }
 
   /* If this frame has only a trivial clipPath, set up cairo's clipping now so
    * we can just do normal painting and get it clipped appropriately.
    */
   if (clipPathFrame && isTrivialClip) {
-    gfx->Save();
-    clipPathFrame->ApplyClipOrPaintClipMask(*gfx, aFrame, cssPxToDevPxMatrix);
+    aContext.Save();
+    clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, cssPxToDevPxMatrix);
   }
 
   /* Paint the child */
@@ -543,15 +542,15 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
     nsRegion dirtyRegion = aDirtyRect - offsetToBoundingBox;
     gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aFrame);
-    nsFilterInstance::PaintFilteredFrame(aFrame, *gfx, tm, &callback, &dirtyRegion);
+    nsFilterInstance::PaintFilteredFrame(aFrame, aContext, tm, &callback, &dirtyRegion);
   } else {
-    gfx->SetMatrix(matrixAutoSaveRestore.Matrix());
+    aContext.SetMatrix(matrixAutoSaveRestore.Matrix());
     aLayerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, aBuilder);
-    gfx->SetMatrix(gfx->CurrentMatrix().Translate(devPixelOffsetToUserSpace));
+    aContext.SetMatrix(aContext.CurrentMatrix().Translate(devPixelOffsetToUserSpace));
   }
 
   if (clipPathFrame && isTrivialClip) {
-    gfx->Restore();
+    aContext.Restore();
   }
 
   /* No more effects, we're done. */
@@ -559,42 +558,42 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
     return;
   }
 
-  gfx->PopGroupToSource();
+  aContext.PopGroupToSource();
 
   Matrix maskTransform;
   RefPtr<SourceSurface> maskSurface =
-    maskFrame ? maskFrame->GetMaskForMaskedFrame(aCtx->ThebesContext(),
+    maskFrame ? maskFrame->GetMaskForMaskedFrame(&aContext,
                                                  aFrame, cssPxToDevPxMatrix,
                                                  opacity, &maskTransform)
               : nullptr;
 
   if (clipPathFrame && !isTrivialClip) {
-    gfx->PushGroup(gfxContentType::COLOR_ALPHA);
+    aContext.PushGroup(gfxContentType::COLOR_ALPHA);
 
-    nsresult rv = clipPathFrame->ApplyClipOrPaintClipMask(*gfx, aFrame, cssPxToDevPxMatrix);
+    nsresult rv = clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, cssPxToDevPxMatrix);
     Matrix clippedMaskTransform;
-    RefPtr<SourceSurface> clipMaskSurface = gfx->PopGroupToSurface(&clippedMaskTransform);
+    RefPtr<SourceSurface> clipMaskSurface = aContext.PopGroupToSurface(&clippedMaskTransform);
 
     if (NS_SUCCEEDED(rv) && clipMaskSurface) {
       // Still more set after clipping, so clip to another surface
       if (maskSurface || opacity != 1.0f) {
-        gfx->PushGroup(gfxContentType::COLOR_ALPHA);
-        gfx->Mask(clipMaskSurface, clippedMaskTransform);
-        gfx->PopGroupToSource();
+        aContext.PushGroup(gfxContentType::COLOR_ALPHA);
+        aContext.Mask(clipMaskSurface, clippedMaskTransform);
+        aContext.PopGroupToSource();
       } else {
-        gfx->Mask(clipMaskSurface, clippedMaskTransform);
+        aContext.Mask(clipMaskSurface, clippedMaskTransform);
       }
     }
   }
 
   if (maskSurface) {
-    gfx->Mask(maskSurface, maskTransform);
+    aContext.Mask(maskSurface, maskTransform);
   } else if (opacity != 1.0f ||
              aFrame->StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
-    gfx->Paint(opacity);
+    aContext.Paint(opacity);
   }
 
-  gfx->Restore();
+  aContext.Restore();
 }
 
 gfxMatrix
