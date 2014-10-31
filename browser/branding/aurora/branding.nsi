@@ -42,3 +42,6 @@
 !define COMMON_TEXT_COLOR_NORMAL 0xFFFFFF
 !define COMMON_TEXT_COLOR_FADED 0xA1AAB3
 !define COMMON_BKGRD_COLOR 0x0F1B26
+
+# Enable DeveloperEdition-specific behavior
+!define DEV_EDITION
