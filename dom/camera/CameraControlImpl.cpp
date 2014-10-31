@@ -8,6 +8,7 @@
 #include "mozilla/unused.h"
 #include "nsPrintfCString.h"
 #include "nsIWeakReferenceUtils.h"
+#include "CameraRecorderProfiles.h"
 #include "CameraCommon.h"
 #include "nsGlobalWindow.h"
 #include "DeviceStorageFileDescriptor.h"
@@ -64,6 +65,12 @@ CameraControlImpl::~CameraControlImpl()
   }
 }
 
+already_AddRefed<RecorderProfileManager>
+CameraControlImpl::GetRecorderProfileManager()
+{
+  return GetRecorderProfileManagerImpl();
+}
+
 void
 CameraControlImpl::Shutdown()
 {
@@ -107,7 +114,7 @@ CameraControlImpl::OnConfigurationChange()
   MOZ_ASSERT(NS_GetCurrentThread() == mCameraThread);
   RwLockAutoEnterRead lock(mListenerLock);
 
-  DOM_CAMERA_LOGI("OnConfigurationChange : %zu listeners\n", mListeners.Length());
+  DOM_CAMERA_LOGI("OnConfigurationChange : %d listeners\n", mListeners.Length());
 
   for (uint32_t i = 0; i < mListeners.Length(); ++i) {
     CameraControlListener* l = mListeners[i];
@@ -262,7 +269,7 @@ CameraControlImpl::OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uin
   //  On Gonk, it is called from the camera driver's preview thread.
   RwLockAutoEnterRead lock(mListenerLock);
 
-  DOM_CAMERA_LOGI("OnNewPreviewFrame: we have %zu preview frame listener(s)\n",
+  DOM_CAMERA_LOGI("OnNewPreviewFrame: we have %d preview frame listener(s)\n",
     mListeners.Length());
 
   bool consumed = false;
