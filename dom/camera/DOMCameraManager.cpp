@@ -264,6 +264,14 @@ CameraPermissionRequest::GetTypes(nsIArray** aTypes)
                                                          aTypes);
 }
 
+#ifdef MOZ_WIDGET_GONK
+/* static */ void
+nsDOMCameraManager::PreinitCameraHardware()
+{
+  nsDOMCameraControl::PreinitCameraHardware();
+}
+#endif
+
 already_AddRefed<Promise>
 nsDOMCameraManager::GetCamera(const nsAString& aCamera,
                               const CameraConfiguration& aInitialConfig,
