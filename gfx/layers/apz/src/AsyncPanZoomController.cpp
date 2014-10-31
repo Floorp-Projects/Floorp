@@ -1081,7 +1081,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
     }
     break;
   }
-  default: NS_WARNING("Unhandled input event"); break;
+  default: return HandleGestureEvent(aEvent);
   }
 
   return rv;
