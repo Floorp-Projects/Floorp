@@ -1398,7 +1398,7 @@ public class BrowserApp extends GeckoApp
             });
 
         } else if ("Feedback:LastUrl".equals(event)) {
-            getLastUrl();
+            getLastUrl(callback);
 
         } else if ("Feedback:MaybeLater".equals(event)) {
             resetFeedbackLaunchCount();
@@ -3017,7 +3017,7 @@ public class BrowserApp extends GeckoApp
         settings.edit().putInt(getPackageName() + ".feedback_launch_count", 0).apply();
     }
 
-    private void getLastUrl() {
+    private void getLastUrl(final EventCallback callback) {
         (new UIAsyncTask.WithoutParams<String>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public synchronized String doInBackground() {
@@ -3038,9 +3038,7 @@ public class BrowserApp extends GeckoApp
 
             @Override
             public void onPostExecute(String url) {
-                // Don't bother sending a message if there is no URL.
-                if (url.length() > 0)
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Feedback:LastUrl", url));
+                callback.sendSuccess(url);
             }
         }).execute();
     }
