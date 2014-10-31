@@ -21,8 +21,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  let x;
-  with({x: (x -= 0)}){([]); const x = undefined; }
+  with({x: (x -= 0)}){([]); const x }
 
   reportCompare(expect, actual, summary);
 

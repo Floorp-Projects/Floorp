@@ -410,8 +410,9 @@ function shutdownPlaces(aKeepAliveConnection)
 }
 
 const FILENAME_BOOKMARKS_HTML = "bookmarks.html";
-const FILENAME_BOOKMARKS_JSON = "bookmarks-" +
-  (new Date().toLocaleFormat("%Y-%m-%d")) + ".json";
+let (backup_date = new Date().toLocaleFormat("%Y-%m-%d")) {
+  const FILENAME_BOOKMARKS_JSON = "bookmarks-" + backup_date + ".json";
+}
 
 /**
  * Creates a bookmarks.html file in the profile folder from a given source file.

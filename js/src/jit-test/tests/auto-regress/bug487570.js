@@ -9,5 +9,5 @@
     for each (y in [])
   )
 )
-{const functional=undefined}
+{const functional}
 })()

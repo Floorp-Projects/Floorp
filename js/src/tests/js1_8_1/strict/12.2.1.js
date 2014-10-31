@@ -26,19 +26,19 @@ assertEq(testLenientAndStrict('let x,arguments;',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('const eval = undefined;',
+assertEq(testLenientAndStrict('const eval;',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('const x = undefined,eval = undefined;',
+assertEq(testLenientAndStrict('const x,eval;',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('const arguments = undefined;',
+assertEq(testLenientAndStrict('const arguments;',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('const x = undefined,arguments = undefined;',
+assertEq(testLenientAndStrict('const x,arguments;',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);

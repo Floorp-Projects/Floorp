@@ -5,7 +5,7 @@
  */
 
 try {
-    evalcx("Object.freeze(this); eval('const q = undefined;')");
+    evalcx("Object.freeze(this); eval('const q;')");
 } catch (e) {
     assertEq(e.message, "({lazy:false}) is not extensible");
 }

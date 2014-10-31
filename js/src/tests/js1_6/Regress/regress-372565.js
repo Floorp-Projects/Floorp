@@ -19,8 +19,8 @@ function test()
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
-
-  (function() { for each(x in y) { } const x = undefined; });
+ 
+  (function() { for each(x in y) { } const x; });
 
   reportCompare(expect, actual, summary);
 
