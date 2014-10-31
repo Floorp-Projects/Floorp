@@ -7,6 +7,10 @@
 #define DOM_CAMERA_CAMERAPREFERENCES_H
 
 #include "nsString.h"
+#include "nsIObserver.h"
+#ifdef MOZ_WIDGET_GONK
+#include "mozilla/StaticPtr.h"
+#endif
 
 #if defined(MOZ_HAVE_CXX11_STRONG_ENUMS) || defined(MOZ_HAVE_CXX11_ENUM_TYPE)
 // Older compilers that don't support strongly-typed enums
@@ -20,8 +24,16 @@ namespace mozilla {
 template<class T> class StaticAutoPtr;
 
 class CameraPreferences
+#ifdef MOZ_WIDGET_GONK
+  : public nsIObserver
+#endif
 {
 public:
+#ifdef MOZ_WIDGET_GONK
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+#endif
+
   static bool Initialize();
   static void Shutdown();
 
@@ -79,10 +91,21 @@ protected:
 
   static bool sPrefCameraParametersIsLowMemory;
 
+#ifdef MOZ_WIDGET_GONK
+  static StaticRefPtr<CameraPreferences> sObserver;
+
+  nsresult PreinitCameraHardware();
+
+protected:
+  // Objects may be instantiated for use as observers.
+  CameraPreferences() { }
+  virtual ~CameraPreferences() { }
+#else
 private:
-  // static class only
+  // Static class only.
   CameraPreferences();
   ~CameraPreferences();
+#endif
 };
 
 } // namespace mozilla
