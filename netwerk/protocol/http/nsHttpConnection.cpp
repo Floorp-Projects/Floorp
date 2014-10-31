@@ -1599,7 +1599,7 @@ nsHttpConnection::OnSocketWritable()
             if (mSocketOutCondition == NS_BASE_STREAM_WOULD_BLOCK) {
                 if (mTLSFilter) {
                     LOG(("  blocked tunnel (handshake?)\n"));
-                    mTLSFilter->NudgeTunnel(this);
+                    rv = mTLSFilter->NudgeTunnel(this);
                 } else {
                     rv = mSocketOut->AsyncWait(this, 0, 0, nullptr); // continue writing
                 }
@@ -1776,10 +1776,19 @@ nsHttpConnection::SetupSecondaryTLS()
     MOZ_ASSERT(!mTLSFilter);
     LOG(("nsHttpConnection %p SetupSecondaryTLS %s %d\n",
          this, mConnInfo->Host(), mConnInfo->Port()));
+
+    nsHttpConnectionInfo *ci = nullptr;
+    if (mTransaction) {
+        ci = mTransaction->ConnectionInfo();
+    }
+    if (!ci) {
+        ci = mConnInfo;
+    }
+    MOZ_ASSERT(ci);
+
     mTLSFilter = new TLSFilterTransaction(mTransaction,
-                                          mConnInfo->Host(),
-                                          mConnInfo->Port(),
-                                          this, this);
+                                          ci->Host(), ci->Port(), this, this);
+
     if (mTransaction) {
         mTransaction = mTLSFilter;
     }
