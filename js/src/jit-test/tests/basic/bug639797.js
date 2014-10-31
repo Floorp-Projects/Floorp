@@ -1,1 +1,1 @@
-Function("with([])const x=0")()
+Function("with([]){const x=0}")()
