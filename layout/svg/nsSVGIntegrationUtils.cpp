@@ -382,21 +382,19 @@ public:
     : mBuilder(aBuilder), mLayerManager(aManager),
       mOffset(aOffset) {}
 
-  virtual void Paint(nsRenderingContext *aContext, nsIFrame *aTarget,
+  virtual void Paint(gfxContext& aContext, nsIFrame *aTarget,
                      const gfxMatrix& aTransform,
                      const nsIntRect* aDirtyRect) MOZ_OVERRIDE
   {
     BasicLayerManager* basic = static_cast<BasicLayerManager*>(mLayerManager);
-    basic->SetTarget(aContext->ThebesContext());
-
-    gfxContext* ctx = aContext->ThebesContext();
+    basic->SetTarget(&aContext);
 
     gfxPoint devPixelOffset =
       nsLayoutUtils::PointToGfxPoint(-mOffset,
                                      aTarget->PresContext()->AppUnitsPerDevPixel());
 
-    gfxContextMatrixAutoSaveRestore autoSR(ctx);
-    ctx->SetMatrix(ctx->CurrentMatrix().Translate(devPixelOffset));
+    gfxContextMatrixAutoSaveRestore autoSR(&aContext);
+    aContext.SetMatrix(aContext.CurrentMatrix().Translate(devPixelOffset));
 
     mLayerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, mBuilder);
   }
