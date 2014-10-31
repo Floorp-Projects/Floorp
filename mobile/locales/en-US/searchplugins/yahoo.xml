@@ -18,5 +18,11 @@
   <Param name="ei" value="UTF-8" />
   <Param name="fr" value="mozmob1" />
 </Url>
+<!-- Search activity -->
+<Url type="text/html" method="GET" rel="mobile" template="https://search.yahoo.com/search">
+  <Param name="p" value="{searchTerms}" />
+  <Param name="ei" value="UTF-8" />
+  <Param name="fr" value="mozmob2" />
+</Url>
 <SearchForm>https://search.yahoo.com/</SearchForm>
 </SearchPlugin>
