@@ -126,6 +126,9 @@ TestUnsampled(const char* aTestName, int aNum, const char* aMode, int aSeven)
   }
   free(a);
 
+  // A no-op.
+  free(nullptr);
+
   // Note: 8 bytes is the smallest requested size that gives consistent
   // behaviour across all platforms with jemalloc.
   // Analyze 1: reported.
@@ -141,7 +144,7 @@ TestUnsampled(const char* aTestName, int aNum, const char* aMode, int aSeven)
   // ReportOnAlloc, then freed.
   // Analyze 1: freed, irrelevant.
   // Analyze 2: freed, irrelevant.
-  char* b2 = (char*) malloc(1);
+  char* b2 = (char*) malloc(8);
   ReportOnAlloc(b2);
   free(b2);
 
@@ -346,11 +349,13 @@ RunTests()
 
   TestEmpty("empty", "live");
   TestEmpty("empty", "dark-matter");
+  TestEmpty("empty", "cumulative");
 
   TestUnsampled("unsampled", 1, "live",        seven);
   TestUnsampled("unsampled", 1, "dark-matter", seven);
 
   TestUnsampled("unsampled", 2, "dark-matter", seven);
+  TestUnsampled("unsampled", 2, "cumulative",  seven);
 
   TestSampled("sampled", "live", seven);
 }
