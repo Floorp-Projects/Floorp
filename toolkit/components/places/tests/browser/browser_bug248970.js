@@ -88,8 +88,6 @@ add_task(function () {
 
     ok(PlacesUtils.bookmarks.isBookmarked(bookmarkUri),
        "Bookmark should be bookmarked, data should be retrievable");
-    is(bookmarkKeyword, PlacesUtils.bookmarks.getKeywordForURI(bookmarkUri),
-       "Check bookmark uri keyword");
     is(getPlacesItemsCount(), count,
        "Check the new bookmark items count");
     is(isBookmarkAltered(), false, "Check if bookmark has been visited");
