@@ -289,7 +289,7 @@ struct ThreadSafeContext : ContextFriendFields,
     PropertyName *emptyString() { return runtime_->emptyString; }
     FreeOp *defaultFreeOp() { return runtime_->defaultFreeOp(); }
     void *runtimeAddressForJit() { return runtime_; }
-    void *runtimeAddressOfInterruptUint32() { return runtime_->addressOfInterruptUint32(); }
+    void *runtimeAddressOfInterrupt() { return &runtime_->interrupt; }
     void *stackLimitAddress(StackKind kind) { return &runtime_->mainThread.nativeStackLimit[kind]; }
     void *stackLimitAddressForJitCode(StackKind kind);
     size_t gcSystemPageSize() { return gc::SystemPageSize(); }
@@ -782,15 +782,33 @@ extern const JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 
 namespace js {
 
+/*
+ * Invoke the interrupt callback and return false if the current execution
+ * is to be terminated.
+ */
+bool
+InvokeInterruptCallback(JSContext *cx);
+
+bool
+HandleExecutionInterrupt(JSContext *cx);
+
+/*
+ * Process any pending interrupt requests. Long-running inner loops in C++ must
+ * call this periodically to make sure they are interruptible --- that is, to
+ * make sure they do not prevent the slow script dialog from appearing.
+ *
+ * This can run a full GC or call the interrupt callback, which could do
+ * anything. In the browser, it displays the slow script dialog.
+ *
+ * If this returns true, the caller can continue; if false, the caller must
+ * break out of its loop. This happens if, for example, the user clicks "Stop
+ * script" on the slow script dialog; treat it as an uncatchable error.
+ */
 MOZ_ALWAYS_INLINE bool
 CheckForInterrupt(JSContext *cx)
 {
-    // Add an inline fast-path since we have to check for interrupts in some hot
-    // C++ loops of library builtins.
-    JSRuntime *rt = cx->runtime();
-    if (rt->hasPendingInterrupt())
-        return rt->handleInterrupt(cx);
-    return true;
+    MOZ_ASSERT(cx->runtime()->requestDepth >= 1);
+    return !cx->runtime()->interrupt || InvokeInterruptCallback(cx);
 }
 
 /************************************************************************/
