@@ -167,6 +167,7 @@
 <!-- Localization note: &formatS; is the Firefox Account's email address. -->
 <!ENTITY fxaccount_confirm_account_verification_link 'A verification link has been sent to &formatS;'>
 <!ENTITY fxaccount_confirm_account_resend_email 'Resend email'>
+<!ENTITY fxaccount_confirm_account_change_email 'Forget this email address?'>
 <!ENTITY fxaccount_confirm_account_verification_link_sent2 'Verification email sent'>
 <!ENTITY fxaccount_confirm_account_verification_link_not_sent2 'Couldn\&apos;t send verification email'>
 
