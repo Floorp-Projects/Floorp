@@ -1,7 +1,7 @@
 
 /* pngwutil.c - utilities to write a PNG file
  *
- * Last changed in libpng 1.6.11 [June 5, 2014]
+ * Last changed in libpng 1.6.14 [October 23, 2014]
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -136,7 +136,7 @@ png_write_chunk_data(png_structrp png_ptr, png_const_bytep data,
       png_write_data(png_ptr, data, length);
 
       /* Update the CRC after writing the data,
-       * in case that the user I/O routine alters it.
+       * in case the user I/O routine alters it.
        */
       png_calculate_crc(png_ptr, data, length);
    }
@@ -181,7 +181,7 @@ png_write_complete_chunk(png_structrp png_ptr, png_uint_32 chunk_name,
 
    /* On 64 bit architectures 'length' may not fit in a png_uint_32. */
    if (length > PNG_UINT_31_MAX)
-      png_error(png_ptr, "length exceeds PNG maxima");
+      png_error(png_ptr, "length exceeds PNG maximum");
 
    png_write_chunk_header(png_ptr, chunk_name, (png_uint_32)length);
    png_write_chunk_data(png_ptr, data, length);
@@ -204,7 +204,7 @@ png_write_chunk(png_structrp png_ptr, png_const_bytep chunk_string,
 static png_alloc_size_t
 png_image_size(png_structrp png_ptr)
 {
-   /* Only return sizes up to the maximum of a png_uint_32, do this by limiting
+   /* Only return sizes up to the maximum of a png_uint_32; do this by limiting
     * the width and height used to 15 bits.
     */
    png_uint_32 h = png_ptr->height;
@@ -297,6 +297,7 @@ png_deflate_claim(png_structrp png_ptr, png_uint_32 owner,
 {
    if (png_ptr->zowner != 0)
    {
+#     if defined(PNG_WARNINGS_SUPPORTED) || defined(PNG_ERROR_TEXT_SUPPORTED)
       char msg[64];
 
       PNG_STRING_FROM_CHUNK(msg, owner);
@@ -308,6 +309,7 @@ png_deflate_claim(png_structrp png_ptr, png_uint_32 owner,
        * are minimal.
        */
       (void)png_safecat(msg, (sizeof msg), 10, " using zstream");
+#     endif
 #     if PNG_LIBPNG_BUILD_BASE_TYPE >= PNG_LIBPNG_BUILD_RC
          png_warning(png_ptr, msg);
 
@@ -492,7 +494,7 @@ png_text_compress(png_structrp png_ptr, png_uint_32 chunk_name,
    int ret;
 
    /* To find the length of the output it is necessary to first compress the
-    * input, the result is buffered rather than using the two-pass algorithm
+    * input. The result is buffered rather than using the two-pass algorithm
     * that is used on the inflate side; deflate is assumed to be slower and a
     * PNG writer is assumed to have more memory available than a PNG reader.
     *
@@ -589,7 +591,7 @@ png_text_compress(png_structrp png_ptr, png_uint_32 chunk_name,
       }
       while (ret == Z_OK);
 
-      /* There may be some space left in the last output buffer, this needs to
+      /* There may be some space left in the last output buffer. This needs to
        * be subtracted from output_len.
        */
       output_len -= png_ptr->zstream.avail_out;
@@ -612,7 +614,7 @@ png_text_compress(png_structrp png_ptr, png_uint_32 chunk_name,
       /* Reset zlib for another zTXt/iTXt or image data */
       png_ptr->zowner = 0;
 
-      /* The only success case is Z_STREAM_END, input_len must be 0, if not this
+      /* The only success case is Z_STREAM_END, input_len must be 0; if not this
        * is an internal error.
        */
       if (ret == Z_STREAM_END && input_len == 0)
@@ -728,6 +730,7 @@ png_check_keyword(png_structrp png_ptr, png_const_charp key, png_bytep new_key)
    if (key_len == 0)
       return 0;
 
+#ifdef PNG_WARNINGS_SUPPORTED
    /* Try to only output one warning per keyword: */
    if (*key) /* keyword too long */
       png_warning(png_ptr, "keyword truncated");
@@ -741,6 +744,7 @@ png_check_keyword(png_structrp png_ptr, png_const_charp key, png_bytep new_key)
 
       png_formatted_warning(png_ptr, p, "keyword \"@1\": bad character '0x@2'");
    }
+#endif /* PNG_WARNINGS_SUPPORTED */
 
    return key_len;
 }
@@ -1003,7 +1007,7 @@ png_write_PLTE(png_structrp png_ptr, png_const_colorp palette,
  * Z_FINISH: this is the end of the input, do a Z_FINISH and clean up
  *
  * The routine manages the acquire and release of the png_ptr->zstream by
- * checking and (at the end) clearing png_ptr->zowner, it does some sanity
+ * checking and (at the end) clearing png_ptr->zowner; it does some sanity
  * checks on the 'mode' flags while doing this.
  */
 void /* PRIVATE */
@@ -1063,7 +1067,7 @@ png_compress_IDAT(png_structrp png_ptr, png_const_bytep input,
       input_len += png_ptr->zstream.avail_in;
       png_ptr->zstream.avail_in = 0;
 
-      /* OUTPUT: write complete IDAT chunks when avail_out drops to zero, note
+      /* OUTPUT: write complete IDAT chunks when avail_out drops to zero. Note
        * that these two zstream fields are preserved across the calls, therefore
        * there is no need to set these up on entry to the loop.
        */
@@ -1103,7 +1107,7 @@ png_compress_IDAT(png_structrp png_ptr, png_const_bytep input,
             continue;
       }
 
-      /* The order of these checks doesn't matter much; it just effect which
+      /* The order of these checks doesn't matter much; it just affects which
        * possible error might be detected if multiple things go wrong at once.
        */
       if (ret == Z_OK) /* most likely return code! */
@@ -1642,14 +1646,13 @@ png_write_tEXt(png_structrp png_ptr, png_const_charp key, png_const_charp text,
 /* Write a compressed text chunk */
 void /* PRIVATE */
 png_write_zTXt(png_structrp png_ptr, png_const_charp key, png_const_charp text,
-    png_size_t text_len, int compression)
+    int compression)
 {
    png_uint_32 key_len;
    png_byte new_key[81];
    compression_state comp;
 
    png_debug(1, "in png_write_zTXt");
-   PNG_UNUSED(text_len) /* Always use strlen */
 
    if (compression == PNG_TEXT_COMPRESSION_NONE)
    {

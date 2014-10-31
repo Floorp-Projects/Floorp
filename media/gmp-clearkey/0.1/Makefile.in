@@ -6,6 +6,5 @@ INSTALL_TARGETS += CLEARKEY_CDM
 
 CLEARKEY_CDM_DEST = $(DEPTH)/dist/bin/gmp-clearkey/0.1
 CLEARKEY_CDM_FILES = \
-  $(SHARED_LIBRARY) \
   clearkey.info \
   $(NULL)

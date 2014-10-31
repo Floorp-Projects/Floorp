@@ -677,6 +677,14 @@ gfxContext::Clip(const gfxRect& rect)
 }
 
 void
+gfxContext::Clip(Path* aPath)
+{
+  mDT->PushClip(aPath);
+  AzureState::PushedClip clip = { aPath, Rect(), mTransform };
+  CurrentState().pushedClips.AppendElement(clip);
+}
+
+void
 gfxContext::Clip()
 {
   if (mPathIsRect) {

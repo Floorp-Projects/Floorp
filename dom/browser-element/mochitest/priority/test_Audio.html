@@ -24,16 +24,15 @@ function runTest() {
   iframe.src = 'file_Audio.html';
 
   var childID = null;
-  expectOnlyOneProcessCreated().then(function(chid) {
-    childID = chid;
-    return Promise.all(
-      [expectPriorityChange(childID, 'FOREGROUND'),
-       expectMozbrowserEvent(iframe, 'loadend'),
-       expectMozbrowserEvent(iframe, 'showmodalprompt').then(function(e) {
-         is(e.detail.message, 'onplay', 'showmodalprompt message');
-       })]
-    );
-  }).then(function() {
+  Promise.all([
+    expectOnlyOneProcessCreated("FOREGROUND").then(function(chid) {
+      childID = chid;
+    }),
+    expectMozbrowserEvent(iframe, 'loadend'),
+    expectMozbrowserEvent(iframe, 'showmodalprompt').then(function(e) {
+      is(e.detail.message, 'onplay', 'showmodalprompt message');
+    })
+  ]).then(function() {
     // Send the child process into the background.  Because it's playing audio,
     // it should get priority BACKGROUND_PERCEIVABLE, not vanilla BACKGROUND.
     var p = expectPriorityChange(childID, 'BACKGROUND_PERCEIVABLE');

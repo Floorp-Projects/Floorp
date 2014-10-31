@@ -402,10 +402,11 @@ this.EventManager.prototype = {
     // If there are embedded objects in the text, ignore them.
     // Assuming changes to the descendants would already be handled by the
     // show/hide event.
-    let modifiedText = event.modifiedText.replace(/\uFFFC/g, '').trim();
-    if (!modifiedText) {
+    let modifiedText = event.modifiedText.replace(/\uFFFC/g, '');
+    if (modifiedText != event.modifiedText && !modifiedText.trim()) {
       return;
     }
+
     if (aLiveRegion) {
       if (aEvent.eventType === Events.TEXT_REMOVED) {
         this._queueLiveEvent(Events.TEXT_REMOVED, aLiveRegion, aIsPolite,
@@ -416,8 +417,8 @@ this.EventManager.prototype = {
           modifiedText));
       }
     } else {
-      this.present(Presentation.textChanged(isInserted, event.start,
-        event.length, text, modifiedText));
+      this.present(Presentation.textChanged(aEvent.accessible, isInserted,
+        event.start, event.length, text, modifiedText));
     }
   },
 

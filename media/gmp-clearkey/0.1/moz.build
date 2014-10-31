@@ -6,6 +6,8 @@
 
 SharedLibrary('clearkey')
 
+FINAL_TARGET = 'dist/bin/gmp-clearkey/0.1'
+
 UNIFIED_SOURCES += [
     'ClearKeyDecryptionManager.cpp',
     'ClearKeySession.cpp',

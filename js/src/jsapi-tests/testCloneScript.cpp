@@ -35,15 +35,16 @@ BEGIN_TEST(test_cloneScript)
         JS::RootedFunction fun(cx);
         JS::CompileOptions options(cx);
         options.setFileAndLine(__FILE__, 1);
-        CHECK(JS_CompileFunction(cx, A, "f", 0, nullptr, source,
-                                 strlen(source), options, &fun));
+        JS::AutoObjectVector emptyScopeChain(cx);
+        CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "f", 0, nullptr,
+                                  source, strlen(source), &fun));
         CHECK(obj = JS_GetFunctionObject(fun));
     }
 
     // clone into B
     {
         JSAutoCompartment b(cx, B);
-        CHECK(JS_CloneFunctionObject(cx, obj, B));
+        CHECK(JS::CloneFunctionObject(cx, obj));
     }
 
     return true;
@@ -109,9 +110,10 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
         JS::CompileOptions options(cx);
         options.setFileAndLine(__FILE__, 1);
         JS::RootedFunction fun(cx);
-        JS_CompileFunction(cx, A, "f",
+        JS::AutoObjectVector emptyScopeChain(cx);
+        JS::CompileFunction(cx, emptyScopeChain, options, "f",
                            mozilla::ArrayLength(argnames), argnames, source,
-                           strlen(source), options, &fun);
+                           strlen(source), &fun);
         CHECK(fun);
 
         JSScript *script;
@@ -125,7 +127,7 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
     {
         JSAutoCompartment b(cx, B);
         JS::RootedObject cloned(cx);
-        CHECK(cloned = JS_CloneFunctionObject(cx, obj, B));
+        CHECK(cloned = JS::CloneFunctionObject(cx, obj));
 
         JS::RootedFunction fun(cx);
         JS::RootedValue clonedValue(cx, JS::ObjectValue(*cloned));

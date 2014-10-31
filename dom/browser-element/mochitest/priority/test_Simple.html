@@ -36,9 +36,7 @@ function runTest() {
   iframe.setAttribute('mozbrowser', true);
   iframe.src = browserElementTestHelpers.emptyPage1;
 
-  expectProcessCreated().then(function(childID) {
-    return expectPriorityChange(childID, 'FOREGROUND');
-  }).then(SimpleTest.finish);
+  expectProcessCreated('FOREGROUND').then(SimpleTest.finish);
 
   document.body.appendChild(iframe);
 }
