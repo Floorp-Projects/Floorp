@@ -461,15 +461,6 @@ TiledContentHost::RenderTile(const TileHost& aTile,
     return;
   }
 
-  nsIntRect screenBounds = aScreenRegion.GetBounds();
-  Rect layerQuad(screenBounds.x, screenBounds.y, screenBounds.width, screenBounds.height);
-  RenderTargetRect quad = RenderTargetRect::FromUnknown(aTransform.TransformBounds(layerQuad));
-
-  if (!quad.Intersects(mCompositor->ClipRectInLayersCoordinates(mLayer,
-      RenderTargetIntRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height)))) {
-    return;
-  }
-
   if (aBackgroundColor) {
     aEffectChain.mPrimaryEffect = new EffectSolidColor(ToColor(*aBackgroundColor));
     nsIntRegionRectIterator it(aScreenRegion);

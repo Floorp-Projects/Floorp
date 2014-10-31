@@ -104,22 +104,6 @@ Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
                           aFlashCounter);
 }
 
-RenderTargetRect
-Compositor::ClipRectInLayersCoordinates(Layer* aLayer, RenderTargetIntRect aClip) const {
-  ContainerLayer* parent = aLayer->AsContainerLayer() ? aLayer->AsContainerLayer() : aLayer->GetParent();
-  while (!parent->UseIntermediateSurface() && parent->GetParent()) {
-    parent = parent->GetParent();
-  }
-
-  RenderTargetIntPoint renderTargetOffset = RenderTargetIntRect::FromUntyped(
-    parent->GetEffectiveVisibleRegion().GetBounds()).TopLeft();
-
-  RenderTargetRect result;
-  aClip = aClip + renderTargetOffset;
-  result = RenderTargetRect(aClip.x, aClip.y, aClip.width, aClip.height);
-  return result;
-}
-
 void
 Compositor::DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                     const gfx::Rect& aVisibleRect,
