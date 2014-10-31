@@ -70,7 +70,7 @@ const NFC_IPC_READ_PERM_MSG_NAMES = [
 
 const NFC_IPC_WRITE_PERM_MSG_NAMES = [
   "NFC:WriteNDEF",
-  "NFC:MakeReadOnlyNDEF",
+  "NFC:MakeReadOnly",
   "NFC:SendFile",
   "NFC:RegisterPeerReadyTarget",
   "NFC:UnregisterPeerReadyTarget"
@@ -565,7 +565,7 @@ Nfc.prototype = {
       case "ConnectResponse": // Fall through.
       case "CloseResponse":
       case "ReadNDEFResponse":
-      case "MakeReadOnlyNDEFResponse":
+      case "MakeReadOnlyResponse":
       case "WriteNDEFResponse":
         this.sendNfcResponse(message);
         break;
@@ -640,8 +640,8 @@ Nfc.prototype = {
         message.data.isP2P = SessionHelper.isP2PSession(message.data.sessionId);
         this.sendToNfcService("writeNDEF", message.data);
         break;
-      case "NFC:MakeReadOnlyNDEF":
-        this.sendToNfcService("makeReadOnlyNDEF", message.data);
+      case "NFC:MakeReadOnly":
+        this.sendToNfcService("makeReadOnly", message.data);
         break;
       case "NFC:Connect":
         this.sendToNfcService("connect", message.data);
