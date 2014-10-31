@@ -34,6 +34,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AboutHome",
 XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
                                    "@mozilla.org/network/dns-service;1",
                                    "nsIDNSService");
+XPCOMUtils.defineLazyModuleGetter(this, "WebChannel",
+                                  "resource://gre/modules/WebChannel.jsm");
 
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
@@ -1298,6 +1300,21 @@ var gBrowserInit = {
     gNavToolbox.addEventListener("customizationstarting", CustomizationHandler);
     gNavToolbox.addEventListener("customizationchange", CustomizationHandler);
     gNavToolbox.addEventListener("customizationending", CustomizationHandler);
+
+    // Initialize "remote troubleshooting" code...
+    let channel = new WebChannel("remote-troubleshooting", "remote-troubleshooting");
+    channel.listen((id, data, target) => {
+      if (data.command == "request") {
+        let {Troubleshoot} = Cu.import("resource://gre/modules/Troubleshoot.jsm", {});
+        Troubleshoot.snapshot(data => {
+          // for privacy we remove crash IDs and all preferences (but bug 1091944
+          // exists to expose prefs once we are confident of privacy implications)
+          delete data.crashes;
+          delete data.modifiedPreferences;
+          channel.send(data, target);
+        });
+      }
+    });
 
     // End startup crash tracking after a delay to catch crashes while restoring
     // tabs and to postpone saving the pref to disk.

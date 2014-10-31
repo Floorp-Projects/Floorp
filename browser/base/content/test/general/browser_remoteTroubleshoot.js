@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+let {WebChannel} = Cu.import("resource://gre/modules/WebChannel.jsm", {});
+
+const TEST_URL_TAIL = "example.com/browser/browser/base/content/test/general/test_remoteTroubleshoot.html"
+const TEST_URI_GOOD = Services.io.newURI("https://" + TEST_URL_TAIL, null, null);
+const TEST_URI_BAD = Services.io.newURI("http://" + TEST_URL_TAIL, null, null);
+
+// Creates a one-shot web-channel for the test data to be sent back from the test page.
+function promiseChannelResponse(channelID, originOrPermission) {
+  return new Promise((resolve, reject) => {
+    let channel = new WebChannel(channelID, originOrPermission);
+    channel.listen((id, data, target) => {
+      channel.stopListening();
+      resolve(data);
+    });
+  });
+};
+
+// Loads the specified URI in a new tab and waits for it to send us data on our
+// test web-channel and resolves with that data.
+function promiseNewChannelResponse(uri) {
+  let channelPromise = promiseChannelResponse("test-remote-troubleshooting-backchannel",
+                                              uri);
+  let tab = gBrowser.loadOneTab(uri.spec, { inBackground: false });
+  return promiseTabLoaded(tab).then(
+    () => channelPromise
+  ).then(data => {
+    gBrowser.removeTab(tab);
+    return data;
+  });
+}
+
+add_task(function*() {
+  // We haven't set a permission yet - so even the "good" URI should fail.
+  let got = yield promiseNewChannelResponse(TEST_URI_GOOD);
+  // Should have no data.
+  Assert.ok(got.message === undefined, "should have failed to get any data");
+
+  // Add a permission manager entry for our URI.
+  Services.perms.add(TEST_URI_GOOD,
+                     "remote-troubleshooting",
+                     Services.perms.ALLOW_ACTION);
+  registerCleanupFunction(() => {
+    Services.perms.remove(TEST_URI_GOOD.spec, "remote-troubleshooting");
+  });
+
+  // Try again - now we are expecting a response with the actual data.
+  got = yield promiseNewChannelResponse(TEST_URI_GOOD);
+
+  // Check some keys we expect to always get.
+  Assert.ok(got.message.extensions, "should have extensions");
+  Assert.ok(got.message.graphics, "should have graphics");
+
+  // And check some keys we know we decline to return.
+  Assert.ok(!got.message.modifiedPreferences, "should not have a modifiedPreferences key");
+  Assert.ok(!got.message.crashes, "should not have crash info");
+
+  // Now a http:// URI - should get nothing even with the permission setup.
+  got = yield promiseNewChannelResponse(TEST_URI_BAD);
+  Assert.ok(got.message === undefined, "should have failed to get any data");
+});
