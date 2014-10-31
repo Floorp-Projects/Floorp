@@ -35,12 +35,25 @@ struct RunnableMethodTraits<GonkDiskSpaceWatcher>
 namespace mozilla {
 namespace hal_impl {
 
+// NOTE: this should be unnecessary once we no longer support ICS.
+#ifndef __NR_fanotify_init
+#if defined(__ARM_EABI__)
+#define __NR_fanotify_init 367
+#define __NR_fanotify_mark 368
+#elif defined(__i386__)
+#define __NR_fanotify_init 338
+#define __NR_fanotify_mark 339
+#else
+#error "Unhandled architecture"
+#endif
+#endif
+
 // fanotify_init and fanotify_mark functions are syscalls.
 // The user space bits are not part of bionic so we add them here
 // as well as fanotify.h
 int fanotify_init (unsigned int flags, unsigned int event_f_flags)
 {
-  return syscall(367, flags, event_f_flags);
+  return syscall(__NR_fanotify_init, flags, event_f_flags);
 }
 
 // Add, remove, or modify an fanotify mark on a filesystem object.
@@ -56,11 +69,11 @@ int fanotify_mark (int fanotify_fd, unsigned int flags,
       uint32_t _32[2];
     } _mask;
     _mask._64 = mask;
-    return syscall(368, fanotify_fd, flags, _mask._32[0], _mask._32[1],
-                   dfd, pathname);
+    return syscall(__NR_fanotify_mark, fanotify_fd, flags,
+		   _mask._32[0], _mask._32[1], dfd, pathname);
   }
 
-  return syscall(368, fanotify_fd, flags, mask, dfd, pathname);
+  return syscall(__NR_fanotify_mark, fanotify_fd, flags, mask, dfd, pathname);
 }
 
 class GonkDiskSpaceWatcher MOZ_FINAL : public MessageLoopForIO::Watcher
@@ -166,12 +179,13 @@ GonkDiskSpaceWatcher::DoStart()
 
   mFd = fanotify_init(FAN_CLASS_NOTIF, FAN_CLOEXEC);
   if (mFd == -1) {
-    NS_WARNING("Error calling inotify_init()");
     if (errno == ENOSYS) {
       NS_WARNING("Warning: No fanotify support in this device's kernel.\n");
 #if ANDROID_VERSION >= 19
       MOZ_CRASH("Fanotify support must be enabled in the kernel.");
 #endif
+    } else {
+      NS_WARNING("Error calling fanotify_init()");
     }
     return;
   }
