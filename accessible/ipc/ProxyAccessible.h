@@ -14,6 +14,7 @@
 namespace mozilla {
 namespace a11y {
 
+class Attribute;
 class DocAccessibleParent;
 
 class ProxyAccessible
@@ -67,6 +68,11 @@ public:
    * Set aDesc to the description of the proxied accessible.
    */
   void Description(nsString& aDesc) const;
+
+  /**
+   * Get the set of attributes on the proxied accessible.
+   */
+  void Attributes(nsTArray<Attribute> *aAttrs) const;
 
   /**
    * Allow the platform to store a pointers worth of data on us.

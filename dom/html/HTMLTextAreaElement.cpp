@@ -444,7 +444,7 @@ HTMLTextAreaElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 NS_IMETHODIMP_(bool)
 HTMLTextAreaElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
-  static const MappedAttributeEntry attributes[] {
+  static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::wrap },
     { nullptr }
   };

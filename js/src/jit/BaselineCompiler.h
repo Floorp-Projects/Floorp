@@ -61,6 +61,7 @@ namespace jit {
     _(JSOP_UINT24)             \
     _(JSOP_DOUBLE)             \
     _(JSOP_STRING)             \
+    _(JSOP_SYMBOL)             \
     _(JSOP_OBJECT)             \
     _(JSOP_CALLSITEOBJ)        \
     _(JSOP_REGEXP)             \

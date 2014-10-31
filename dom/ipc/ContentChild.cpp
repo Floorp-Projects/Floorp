@@ -50,7 +50,7 @@
 #define TARGET_SANDBOX_EXPORTS
 #include "mozilla/sandboxTarget.h"
 #include "nsDirectoryServiceDefs.h"
-#elif defined(XP_LINUX)
+#elif defined(XP_LINUX) || defined(XP_MACOSX)
 #include "mozilla/Sandbox.h"
 #endif
 #endif
@@ -552,6 +552,76 @@ NS_INTERFACE_MAP_BEGIN(ContentChild)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+static bool
+GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath)
+{
+  nsAutoCString appPath;
+  nsAutoCString appBinaryPath(
+    (CommandLine::ForCurrentProcess()->argv()[0]).c_str());
+
+  nsAutoCString::const_iterator start, end;
+  appBinaryPath.BeginReading(start);
+  appBinaryPath.EndReading(end);
+  if (RFindInReadable(NS_LITERAL_CSTRING(".app/Contents/MacOS/"), start, end)) {
+    end = start;
+    ++end; ++end; ++end; ++end;
+    appBinaryPath.BeginReading(start);
+    appPath.Assign(Substring(start, end));
+  } else {
+    return false;
+  }
+
+  nsCOMPtr<nsIFile> app, appBinary;
+  nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(appPath),
+                                true, getter_AddRefs(app));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(appBinaryPath),
+                       true, getter_AddRefs(appBinary));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  bool isLink;
+  app->IsSymlink(&isLink);
+  if (isLink) {
+    app->GetNativeTarget(aAppPath);
+  } else {
+    app->GetNativePath(aAppPath);
+  }
+  appBinary->IsSymlink(&isLink);
+  if (isLink) {
+    appBinary->GetNativeTarget(aAppBinaryPath);
+  } else {
+    appBinary->GetNativePath(aAppBinaryPath);
+  }
+
+  return true;
+}
+
+void
+ContentChild::OnChannelConnected(int32_t aPid)
+{
+  nsAutoCString appPath, appBinaryPath;
+  if (!GetAppPaths(appPath, appBinaryPath)) {
+    MOZ_CRASH("Error resolving child process path");
+  }
+
+  MacSandboxInfo info;
+  info.type = MacSandboxType_Content;
+  info.appPath.Assign(appPath);
+  info.appBinaryPath.Assign(appBinaryPath);
+
+  nsAutoCString err;
+  if (!mozilla::StartMacSandbox(info, err)) {
+    NS_WARNING(err.get());
+    MOZ_CRASH("sandbox_init() failed");
+  }
+}
+#endif
+
 bool
 ContentChild::Init(MessageLoop* aIOLoop,
                    base::ProcessHandle aParentHandle,
@@ -586,7 +656,9 @@ ContentChild::Init(MessageLoop* aIOLoop,
         return false;
     }
 
-    Open(aChannel, aParentHandle, aIOLoop);
+    if (!Open(aChannel, aParentHandle, aIOLoop)) {
+      return false;
+    }
     sSingleton = this;
 
     // Make sure there's an nsAutoScriptBlocker on the stack when dispatching
