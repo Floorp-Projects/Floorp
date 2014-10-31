@@ -234,9 +234,9 @@ MIRGraph::forkJoinContext()
 
 MBasicBlock *
 MBasicBlock::New(MIRGraph &graph, BytecodeAnalysis *analysis, CompileInfo &info,
-                 MBasicBlock *pred, const BytecodeSite &site, Kind kind)
+                 MBasicBlock *pred, const BytecodeSite *site, Kind kind)
 {
-    MOZ_ASSERT(site.pc() != nullptr);
+    MOZ_ASSERT(site->pc() != nullptr);
 
     MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, site, kind);
     if (!block->init())
@@ -250,7 +250,7 @@ MBasicBlock::New(MIRGraph &graph, BytecodeAnalysis *analysis, CompileInfo &info,
 
 MBasicBlock *
 MBasicBlock::NewPopN(MIRGraph &graph, CompileInfo &info,
-                     MBasicBlock *pred, const BytecodeSite &site, Kind kind, uint32_t popped)
+                     MBasicBlock *pred, const BytecodeSite *site, Kind kind, uint32_t popped)
 {
     MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, site, kind);
     if (!block->init())
@@ -264,7 +264,7 @@ MBasicBlock::NewPopN(MIRGraph &graph, CompileInfo &info,
 
 MBasicBlock *
 MBasicBlock::NewWithResumePoint(MIRGraph &graph, CompileInfo &info,
-                                MBasicBlock *pred, const BytecodeSite &site,
+                                MBasicBlock *pred, const BytecodeSite *site,
                                 MResumePoint *resumePoint)
 {
     MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, site, NORMAL);
@@ -286,10 +286,10 @@ MBasicBlock::NewWithResumePoint(MIRGraph &graph, CompileInfo &info,
 
 MBasicBlock *
 MBasicBlock::NewPendingLoopHeader(MIRGraph &graph, CompileInfo &info,
-                                  MBasicBlock *pred, const BytecodeSite &site,
+                                  MBasicBlock *pred, const BytecodeSite *site,
                                   unsigned stackPhiCount)
 {
-    MOZ_ASSERT(site.pc() != nullptr);
+    MOZ_ASSERT(site->pc() != nullptr);
 
     MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, site, PENDING_LOOP_HEADER);
     if (!block->init())
@@ -306,14 +306,16 @@ MBasicBlock::NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred)
 {
     return pred->pc()
            ? MBasicBlock::New(graph, nullptr, info, pred,
-                              BytecodeSite(pred->trackedTree(), pred->pc()), SPLIT_EDGE)
+                              new(graph.alloc()) BytecodeSite(pred->trackedTree(), pred->pc()),
+                              SPLIT_EDGE)
            : MBasicBlock::NewAsmJS(graph, info, pred, SPLIT_EDGE);
 }
 
 MBasicBlock *
 MBasicBlock::NewAsmJS(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred, Kind kind)
 {
-    MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, BytecodeSite(), kind);
+    BytecodeSite *site = new(graph.alloc()) BytecodeSite();
+    MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, site, kind);
     if (!block->init())
         return nullptr;
 
@@ -352,14 +354,14 @@ MBasicBlock::NewAsmJS(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred, Kin
     return block;
 }
 
-MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, const BytecodeSite &site, Kind kind)
+MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, const BytecodeSite *site, Kind kind)
   : unreachable_(false),
     graph_(graph),
     info_(info),
     predecessors_(graph.alloc()),
     stackPosition_(info_.firstStackSlot()),
     numDominated_(0),
-    pc_(site.pc()),
+    pc_(site->pc()),
     lir_(nullptr),
     entryResumePoint_(nullptr),
     outerResumePoint_(nullptr),

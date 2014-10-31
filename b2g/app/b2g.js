@@ -797,6 +797,9 @@ pref("accessibility.accessfu.quicknav_index", 0);
 pref("accessibility.accessfu.utterance", 1);
 // Whether to skip images with empty alt text
 pref("accessibility.accessfu.skip_empty_images", true);
+// Setting to change the verbosity of entered text (0 - none, 1 - characters,
+// 2 - words, 3 - both)
+pref("accessibility.accessfu.keyboard_echo", 3);
 
 // Enable hit-target fluffing
 pref("ui.touch.radius.enabled", true);
@@ -1003,12 +1006,11 @@ pref("apz.subframe.enabled", true);
 
 // Overscroll-related settings
 pref("apz.overscroll.enabled", true);
-pref("apz.overscroll.fling_friction", "0.05");
-pref("apz.overscroll.fling_stopped_threshold", "0.4");
 pref("apz.overscroll.stretch_factor", "0.5");
-pref("apz.overscroll.snap_back.spring_stiffness", "0.05");
-pref("apz.overscroll.snap_back.spring_friction", "0.1");
-pref("apz.overscroll.snap_back.mass", "100");
+pref("apz.overscroll.spring_stiffness", "0.001");
+pref("apz.overscroll.spring_friction", "0.015");
+pref("apz.overscroll.stop_distance_threshold", "5.0");
+pref("apz.overscroll.stop_velocity_threshold", "0.01");
 
 // This preference allows FirefoxOS apps (and content, I think) to force
 // the use of software (instead of hardware accelerated) 2D canvases by

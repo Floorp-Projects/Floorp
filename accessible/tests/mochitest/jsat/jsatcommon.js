@@ -626,6 +626,15 @@ function ExpectedValueChange(aValue, aOptions) {
 
 ExpectedValueChange.prototype = Object.create(ExpectedPresent.prototype);
 
+function ExpectedTextChanged(aValue, aOptions) {
+  ExpectedPresent.call(this, {
+    eventType: 'text-change',
+    data: aValue
+  }, null, aOptions);
+}
+
+ExpectedTextChanged.prototype = Object.create(ExpectedPresent.prototype);
+
 function ExpectedEditState(aEditState, aOptions) {
   ExpectedMessage.call(this, 'AccessFu:Input', aOptions);
   this.json = aEditState;

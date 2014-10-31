@@ -28,12 +28,12 @@ function runTest() {
   var iframe2 = null;
   var childID = null;
 
-  expectProcessCreated().then(function(chid) {
-    childID = chid;
-    return expectPriorityChange(childID, 'FOREGROUND');
-  }).then(function() {
-    return expectMozbrowserEvent(iframe1, 'openwindow');
-  }).then(function() {
+  Promise.all([
+    expectProcessCreated('FOREGROUND').then(function(chid) {
+      childID = chid;
+    }),
+    expectMozbrowserEvent(iframe1, 'openwindow')
+  ]).then(function() {
     var p = expectPriorityChange(childID, 'BACKGROUND');
     iframe1.setVisible(false);
     return p;

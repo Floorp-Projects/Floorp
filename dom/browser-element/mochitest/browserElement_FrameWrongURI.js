@@ -10,7 +10,7 @@ browserElementTestHelpers.addPermission();
 
 function runTest() {
   var iframeJS = document.createElement('iframe');
-  SpecialPowers.wrap(iframeJS).mozbrowser = true;
+  iframeJS.setAttribute('mozbrowser', 'true');
 
   iframeJS.addEventListener('mozbrowserloadstart', function(e) {
     ok(false, "This should not happen!");
@@ -24,7 +24,7 @@ function runTest() {
   document.body.appendChild(iframeJS);
 
   var iframe = document.createElement('iframe');
-  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.setAttribute('mozbrowser', 'true');
 
   var gotPopup = false;
   iframe.addEventListener('mozbrowseropenwindow', function(e) {

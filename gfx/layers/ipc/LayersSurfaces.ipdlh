@@ -53,7 +53,7 @@ struct SurfaceDescriptorD3D10 {
 struct SurfaceDescriptorMacIOSurface {
   uint32_t surface;
   double scaleFactor;
-  bool hasAlpha;
+  bool isOpaque;
 };
 
 struct SurfaceTextureDescriptor {
@@ -74,6 +74,7 @@ struct NewSurfaceDescriptorGralloc {
    * Extra size member is necessary. See Bug 850566.
    */
   IntSize size;
+  bool isOpaque;
 };
 
 struct SharedSurfaceDescriptor {

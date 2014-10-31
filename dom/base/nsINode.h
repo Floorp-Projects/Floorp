@@ -248,8 +248,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x8deda3f4, 0x0f45, 0x497a, \
-  { 0x89, 0x7c, 0xe6, 0x09, 0x12, 0x8a, 0xad, 0xd8 } }
+{ 0x66972940, 0x1d1b, 0x4d15, \
+ { 0x93, 0x11, 0x96, 0x72, 0x84, 0x2e, 0xc7, 0x27 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -382,19 +382,15 @@ protected:
    */
   virtual JSObject* WrapNode(JSContext *aCx) = 0;
 
-  // Subclasses that wish to override the parent behavior should return the
-  // result of GetParentObjectIntenral, which handles the XBL scope stuff.
-  //
-  mozilla::dom::ParentObject GetParentObjectInternal(nsINode* aNativeParent) const {
-    mozilla::dom::ParentObject p(aNativeParent);
-    // Note that mUseXBLScope is a no-op for chrome, and other places where we
-    // don't use XBL scopes.
-    p.mUseXBLScope = IsInAnonymousSubtree() && !IsAnonymousContentInSVGUseSubtree();
-    return p;
-  }
-
 public:
   mozilla::dom::ParentObject GetParentObject() const; // Implemented in nsIDocument.h
+
+  /**
+   * Return the scope chain parent for this node, for use in things
+   * like event handler compilation.  Returning null means to use the
+   * global object as the scope chain parent.
+   */
+  virtual nsINode* GetScopeChainParent() const;
 
   /**
    * Return whether the node is an Element node

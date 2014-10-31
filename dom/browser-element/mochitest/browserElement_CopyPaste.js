@@ -46,7 +46,7 @@ function getScriptForSetFocus() {
 
 function runTest() {
   iframe = document.createElement('iframe');
-  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.setAttribute('mozbrowser', 'true');
   document.body.appendChild(iframe);
 
   gTextarea = document.createElement('textarea');

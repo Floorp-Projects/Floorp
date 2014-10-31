@@ -128,7 +128,7 @@ VideoDocument::UpdateTitle(nsIChannel* aChannel)
     return;
 
   nsAutoString fileName;
-  GetFileName(fileName);
+  GetFileName(fileName, aChannel);
   SetTitle(fileName);
 }
 
