@@ -694,7 +694,7 @@ StaticBlockObject::create(ExclusiveContext *cx)
 
 /* static */ Shape *
 StaticBlockObject::addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block, HandleId id,
-                          unsigned index, bool *redeclared)
+                          bool constant, unsigned index, bool *redeclared)
 {
     MOZ_ASSERT(JSID_IS_ATOM(id));
     MOZ_ASSERT(index < LOCAL_INDEX_LIMIT);
@@ -713,11 +713,13 @@ StaticBlockObject::addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block
      * block's shape later.
      */
     uint32_t slot = JSSLOT_FREE(&BlockObject::class_) + index;
+    uint32_t readonly = constant ? JSPROP_READONLY : 0;
+    uint32_t propFlags = readonly | JSPROP_ENUMERATE | JSPROP_PERMANENT;
     return NativeObject::addPropertyInternal<SequentialExecution>(cx, block, id,
                                                                   /* getter = */ nullptr,
                                                                   /* setter = */ nullptr,
                                                                   slot,
-                                                                  JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                                                  propFlags,
                                                                   /* attrs = */ 0,
                                                                   spp,
                                                                   /* allowDictionary = */ false);
@@ -785,18 +787,20 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope,
                             ? AtomToId(atom)
                             : INT_TO_JSID(i));
 
+            uint32_t propFlags;
+            if (!xdr->codeUint32(&propFlags))
+                return false;
+
+            bool readonly = !!(propFlags & 1);
+
             bool redeclared;
-            if (!StaticBlockObject::addVar(cx, obj, id, i, &redeclared)) {
+            if (!StaticBlockObject::addVar(cx, obj, id, readonly, i, &redeclared)) {
                 MOZ_ASSERT(!redeclared);
                 return false;
             }
 
-            uint32_t aliased;
-            if (!xdr->codeUint32(&aliased))
-                return false;
-
-            MOZ_ASSERT(aliased == 0 || aliased == 1);
-            obj->setAliased(i, !!aliased);
+            bool aliased = !!(propFlags >> 1);
+            obj->setAliased(i, aliased);
         }
     } else {
         AutoShapeVector shapes(cx);
@@ -823,8 +827,10 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope,
             if (!XDRAtom(xdr, &atom))
                 return false;
 
-            uint32_t aliased = obj->isAliased(i);
-            if (!xdr->codeUint32(&aliased))
+            bool aliased = obj->isAliased(i);
+            bool readonly = !shape->writable();
+            uint32_t propFlags = (aliased << 1) | readonly;
+            if (!xdr->codeUint32(&propFlags))
                 return false;
         }
     }
@@ -862,7 +868,7 @@ CloneStaticBlockObject(JSContext *cx, HandleObject enclosingScope, Handle<Static
         unsigned i = srcBlock->shapeToIndex(**p);
 
         bool redeclared;
-        if (!StaticBlockObject::addVar(cx, clone, id, i, &redeclared)) {
+        if (!StaticBlockObject::addVar(cx, clone, id, !(*p)->writable(), i, &redeclared)) {
             MOZ_ASSERT(!redeclared);
             return nullptr;
         }
