@@ -4,9 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SharedSurfaceANGLE.h"
-
 #include "GLContextEGL.h"
 #include "GLLibraryEGL.h"
+
+#include <d3d11.h>
+#include "gfxWindowsPlatform.h"
 
 namespace mozilla {
 namespace gl {
@@ -65,6 +67,12 @@ SharedSurface_ANGLEShareHandle::Create(GLContext* gl,
         egl->fDestroySurface(egl->Display(), pbuffer);
         return nullptr;
     }
+    void* opaqueKeyedMutex = nullptr;
+    egl->fQuerySurfacePointerANGLE(display,
+                                   pbuffer,
+                                   LOCAL_EGL_DXGI_KEYED_MUTEX_ANGLE,
+                                   &opaqueKeyedMutex);
+    RefPtr<IDXGIKeyedMutex> keyedMutex = static_cast<IDXGIKeyedMutex*>(opaqueKeyedMutex);
 
     GLuint fence = 0;
     if (gl->IsExtensionSupported(GLContext::NV_fence)) {
@@ -74,7 +82,7 @@ SharedSurface_ANGLEShareHandle::Create(GLContext* gl,
 
     typedef SharedSurface_ANGLEShareHandle ptrT;
     UniquePtr<ptrT> ret( new ptrT(gl, egl, size, hasAlpha, context,
-                                  pbuffer, shareHandle, fence) );
+                                  pbuffer, shareHandle, keyedMutex, fence) );
     return Move(ret);
 }
 
@@ -91,6 +99,7 @@ SharedSurface_ANGLEShareHandle::SharedSurface_ANGLEShareHandle(GLContext* gl,
                                                                EGLContext context,
                                                                EGLSurface pbuffer,
                                                                HANDLE shareHandle,
+                                                               const RefPtr<IDXGIKeyedMutex>& keyedMutex,
                                                                GLuint fence)
     : SharedSurface(SharedSurfaceType::EGLSurfaceANGLE,
                     AttachmentType::Screen,
@@ -101,6 +110,7 @@ SharedSurface_ANGLEShareHandle::SharedSurface_ANGLEShareHandle(GLContext* gl,
     , mContext(context)
     , mPBuffer(pbuffer)
     , mShareHandle(shareHandle)
+    , mKeyedMutex(keyedMutex)
     , mFence(fence)
 {
 }
@@ -143,6 +153,58 @@ bool
 SharedSurface_ANGLEShareHandle::PollSync()
 {
     return true;
+}
+
+void
+SharedSurface_ANGLEShareHandle::ProducerAcquireImpl()
+{
+  if (mKeyedMutex)
+      mKeyedMutex->AcquireSync(0, INFINITE);
+}
+
+void
+SharedSurface_ANGLEShareHandle::ProducerReleaseImpl()
+{
+    if (mKeyedMutex) {
+        // XXX: ReleaseSync() has an implicit flush of the D3D commands
+        // whether we need Flush() or not depends on the ANGLE semantics.
+        // For now, we'll just do it
+        mGL->fFlush();
+        mKeyedMutex->ReleaseSync(0);
+        return;
+    }
+    Fence();
+}
+
+void
+SharedSurface_ANGLEShareHandle::ConsumerAcquireImpl()
+{
+    if (!mConsumerTexture) {
+        RefPtr<ID3D11Texture2D> tex;
+        HRESULT hr = gfxWindowsPlatform::GetPlatform()->GetD3D11Device()->OpenSharedResource(mShareHandle,
+                                                                                             __uuidof(ID3D11Texture2D),
+                                                                                             (void**)(ID3D11Texture2D**)byRef(tex));
+        if (SUCCEEDED(hr)) {
+            mConsumerTexture = tex;
+            RefPtr<IDXGIKeyedMutex> mutex;
+            hr = tex->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
+
+            if (SUCCEEDED(hr)) {
+                mConsumerKeyedMutex = mutex;
+            }
+        }
+    }
+
+    if (mConsumerKeyedMutex)
+        mConsumerKeyedMutex->AcquireSync(0, INFINITE);
+}
+
+void
+SharedSurface_ANGLEShareHandle::ConsumerReleaseImpl()
+{
+    if (mConsumerKeyedMutex) {
+        mConsumerKeyedMutex->ReleaseSync(0);
+    }
 }
 
 void
