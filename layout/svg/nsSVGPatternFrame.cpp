@@ -16,7 +16,6 @@
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsISVGChildFrame.h"
-#include "nsRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsSVGEffects.h"
 #include "nsSVGPathGeometryFrame.h"
@@ -378,8 +377,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
     return nullptr;
   }
 
-  nsRenderingContext context(dt);
-  gfxContext* gfx = context.ThebesContext();
+  nsRefPtr<gfxContext> gfx = new gfxContext(dt);
 
   // Fill with transparent black
   gfx->SetOperator(gfxContext::OPERATOR_CLEAR);

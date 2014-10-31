@@ -819,7 +819,7 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
 // nsISVGChildFrame methods:
 
 nsresult
-nsSVGOuterSVGFrame::PaintSVG(nsRenderingContext* aContext,
+nsSVGOuterSVGFrame::PaintSVG(gfxContext& aContext,
                              const gfxMatrix& aTransform,
                              const nsIntRect* aDirtyRect)
 {
