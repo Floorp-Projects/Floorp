@@ -88,7 +88,8 @@ browser.jar:
     content/browser/devtools/ui-profile.js                             (profiler/ui-profile.js)
 #ifdef MOZ_DEVTOOLS_PERFTOOLS
     content/browser/devtools/performance.xul                           (performance/performance.xul)
-    content/browser/devtools/performance.js                            (performance/performance.js)
+    content/browser/devtools/performance/controller.js                 (performance/controller.js)
+    content/browser/devtools/performance/views/main.js                 (performance/views/main.js)
 #endif
     content/browser/devtools/responsivedesign/resize-commands.js       (responsivedesign/resize-commands.js)
     content/browser/devtools/commandline.css                           (commandline/commandline.css)

@@ -731,7 +731,7 @@ png_set_text_2(png_const_structrp png_ptr, png_inforp info_ptr,
          else
             max_text = INT_MAX;
 
-         /* Now allocate a new array and copy the old members in, this does all
+         /* Now allocate a new array and copy the old members in; this does all
           * the overflow checks.
           */
          new_text = png_voidcast(png_textp,png_realloc_array(png_ptr,
@@ -1025,8 +1025,8 @@ png_set_sPLT(png_const_structrp png_ptr,
 
       np->depth = entries->depth;
 
-      /* In the even of out-of-memory just return - there's no point keeping on
-       * trying to add sPLT chunks.
+      /* In the event of out-of-memory just return - there's no point keeping
+       * on trying to add sPLT chunks.
        */
       length = strlen(entries->name) + 1;
       np->name = png_voidcast(png_charp, png_malloc_base(png_ptr, length));
@@ -1037,8 +1037,8 @@ png_set_sPLT(png_const_structrp png_ptr,
       memcpy(np->name, entries->name, length);
 
       /* IMPORTANT: we have memory now that won't get freed if something else
-       * goes wrong, this code must free it.  png_malloc_array produces no
-       * warnings, use a png_chunk_report (below) if there is an error.
+       * goes wrong; this code must free it.  png_malloc_array produces no
+       * warnings; use a png_chunk_report (below) if there is an error.
        */
       np->entries = png_voidcast(png_sPLT_entryp, png_malloc_array(png_ptr,
           entries->nentries, sizeof (png_sPLT_entry)));
@@ -1218,7 +1218,7 @@ check_location(png_const_structrp png_ptr, int location)
    location &= (PNG_HAVE_IHDR|PNG_HAVE_PLTE|PNG_AFTER_IDAT);
 
    /* New in 1.6.0; copy the location and check it.  This is an API
-    * change, previously the app had to use the
+    * change; previously the app had to use the
     * png_set_unknown_chunk_location API below for each chunk.
     */
    if (location == 0 && !(png_ptr->mode & PNG_IS_READ_STRUCT))
@@ -1724,7 +1724,7 @@ png_set_benign_errors(png_structrp png_ptr, int allowed)
     * It is possible for an indexed (color-type==3) PNG file to contain
     * pixels with invalid (out-of-range) indexes if the PLTE chunk has
     * fewer entries than the image's bit-depth would allow. We recover
-    * from this gracefully by filling any incomplete palette with zeroes
+    * from this gracefully by filling any incomplete palette with zeros
     * (opaque black).  By default, when this occurs libpng will issue
     * a benign error.  This API can be used to override that behavior.
     */

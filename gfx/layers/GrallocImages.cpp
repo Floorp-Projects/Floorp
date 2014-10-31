@@ -76,6 +76,8 @@ GrallocImage::SetData(const Data& aData)
        new GrallocTextureClientOGL(ImageBridgeChild::GetSingleton(),
                                    gfx::SurfaceFormat::UNKNOWN,
                                    gfx::BackendType::NONE);
+  // GrallocImages are all YUV and don't support alpha.
+  textureClient->SetIsOpaque(true);
   bool result =
     textureClient->AllocateGralloc(mData.mYSize,
                                    HAL_PIXEL_FORMAT_YV12,

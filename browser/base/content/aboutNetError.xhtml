@@ -91,6 +91,37 @@
         buttonEl.disabled = true;
       }
 
+      function toggleDisplay(node) {
+        toggle = {
+          '': 'block',
+          'none': 'block',
+          'block': 'none'
+        };
+        node.style.display = toggle[node.style.display];
+      }
+
+      function showCertificateErrorReporting() {
+        // Display error reporting UI
+        document.getElementById('certificateErrorReporting').style.display = 'block';
+
+        // Get the hostname and add it to the panel
+        document.getElementById('hostname').textContent = document.location.hostname;
+
+        // Register click handler for the certificateErrorReportingPanel
+        document.getElementById('showCertificateErrorReportingPanel')
+                .addEventListener('click', function togglePanelVisibility() {
+          var panel = document.getElementById('certificateErrorReportingPanel');
+          toggleDisplay(panel);
+        });
+      }
+
+
+      function sendErrorReport() {
+        var event = new CustomEvent("AboutNetErrorSendReport", {bubbles:true});
+
+        document.dispatchEvent(event);
+      }
+
       function initPage()
       {
         var err = getErrorCode();
@@ -160,6 +191,37 @@
           // almost certainly useless. (Bug 553180)
           document.getElementById("errorTryAgain").style.display = "none";
         }
+
+        window.addEventListener("AboutNetErrorOptions", function(evt) {
+        // Pinning errors are of type nssFailure2 (don't ask me why)
+          if (getErrorCode() == "nssFailure2") {
+          // TODO: and the pref is set...
+            var options = JSON.parse(evt.detail);
+            if (options && options.enabled) {
+              var checkbox = document.getElementById('automaticallyReportInFuture');
+              showCertificateErrorReporting();
+              if (options.automatic) {
+                // set the checkbox
+                checkbox.checked = true;
+              }
+
+              checkbox.addEventListener('change', function(evt) {
+                  var event = new CustomEvent("AboutNetErrorSetAutomatic",
+                    {bubbles:true, detail:evt.target.checked});
+                  document.dispatchEvent(event);
+                }, false);
+
+              var reportBtn = document.getElementById('reportCertificateError');
+              var retryBtn = document.getElementById('reportCertificateErrorRetry');
+
+              reportBtn.addEventListener('click', sendErrorReport, false);
+              retryBtn.addEventListener('click', sendErrorReport, false);
+            }
+          }
+        }.bind(this), true, true);
+
+        var event = new CustomEvent("AboutNetErrorLoad", {bubbles:true});
+        document.dispatchEvent(event);
 
         if (err == "nssBadCert") {
           // Remove the "Try again" button for security exceptions, since it's
@@ -348,6 +410,7 @@
           <a id="securityOverrideLink" href="javascript:showSecuritySection();" >&securityOverride.linkText;</a>
           <div id="securityOverrideContent" style="display: none;">&securityOverride.warningContent;</div>
         </div>
+
       </div>
 
       <!-- Retry Button -->
@@ -367,6 +430,28 @@
             parent.insertBefore(button, nextSibling);
         }
       </script>
+
+      <!-- UI for option to report certificate errors to Mozilla. Removed on
+           init for other error types .-->
+      <div id="certificateErrorReporting">
+        <a id="showCertificateErrorReportingPanel" href="#">&errorReporting.title;<span class="downArrow"> ▼</span></a>
+      </div>
+
+      <div id="certificateErrorReportingPanel">
+        <p>&errorReporting.longDesc;</p>
+        <p>
+          <input type="checkbox" id="automaticallyReportInFuture" />
+          <label for="automaticallyReportInFuture" id="automaticallyReportInFuture">&errorReporting.automatic;</label>
+        </p>
+        <!-- TODO add link to relevant page on sumo -->
+        <a href="https://support.mozilla.org/kb/certificate-pinning-reports" target="new">&errorReporting.learnMore;</a>
+        <span id="reportingState">
+          <button id="reportCertificateError">&errorReporting.report;</button>
+          <button id="reportCertificateErrorRetry">&errorReporting.tryAgain;</button>
+          <span id="reportSendingMessage">&errorReporting.sending;</span>
+          <span id="reportSentMessage">&errorReporting.sent;</span>
+        </span>
+      </div>
 
     </div>
 

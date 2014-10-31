@@ -251,7 +251,7 @@ class CodeGeneratorShared : public LElementVisitor
     void verifyOsiPointRegs(LSafepoint *safepoint);
 #endif
 
-    bool addNativeToBytecodeEntry(const BytecodeSite &site);
+    bool addNativeToBytecodeEntry(const BytecodeSite *site);
     void dumpNativeToBytecodeEntries();
     void dumpNativeToBytecodeEntry(uint32_t idx);
 
@@ -478,7 +478,7 @@ class CodeGeneratorShared : public LElementVisitor
 
   protected:
     bool addOutOfLineCode(OutOfLineCode *code, const MInstruction *mir);
-    bool addOutOfLineCode(OutOfLineCode *code, const BytecodeSite &site);
+    bool addOutOfLineCode(OutOfLineCode *code, const BytecodeSite *site);
     bool hasOutOfLineCode() { return !outOfLineCode_.empty(); }
     bool generateOutOfLineCode();
 
@@ -536,7 +536,7 @@ class OutOfLineCode : public TempObject
     Label entry_;
     Label rejoin_;
     uint32_t framePushed_;
-    BytecodeSite site_;
+    const BytecodeSite *site_;
 
   public:
     OutOfLineCode()
@@ -561,17 +561,17 @@ class OutOfLineCode : public TempObject
     uint32_t framePushed() const {
         return framePushed_;
     }
-    void setBytecodeSite(const BytecodeSite &site) {
+    void setBytecodeSite(const BytecodeSite *site) {
         site_ = site;
     }
-    const BytecodeSite &bytecodeSite() const {
+    const BytecodeSite *bytecodeSite() const {
         return site_;
     }
     jsbytecode *pc() const {
-        return site_.pc();
+        return site_->pc();
     }
     JSScript *script() const {
-        return site_.script();
+        return site_->script();
     }
 };
 

@@ -55,7 +55,7 @@ MacIOSurfaceTextureClientOGL::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescrip
   }
   aOutDescriptor = SurfaceDescriptorMacIOSurface(mSurface->GetIOSurfaceID(),
                                                  mSurface->GetContentsScaleFactor(),
-                                                 mSurface->HasAlpha());
+                                                 !mSurface->HasAlpha());
   return true;
 }
 

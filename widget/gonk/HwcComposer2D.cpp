@@ -396,9 +396,15 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     LayerRenderState state = aLayer->GetRenderState();
     nsIntSize surfaceSize;
+    nsIntRect visibleRect = visibleRegion.GetBounds();
 
     if (state.mSurface.get()) {
         surfaceSize = state.mSize;
+        // In some cases the visible rect assigned to the layer can be larger
+        // than the layer's surface, e.g., an ImageLayer with a small Image
+        // in it.
+        visibleRect.IntersectRect(visibleRect,
+            nsIntRect(nsIntPoint(0, 0), surfaceSize));
     } else {
         if (aLayer->AsColorLayer() && mColorFill) {
             fillColor = true;
@@ -413,8 +419,6 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         LOGD("%s Layer has a rotated buffer", aLayer->Name());
         return false;
     }
-
-    nsIntRect visibleRect = visibleRegion.GetBounds();
 
     nsIntRect bufferRect;
     if (fillColor) {
@@ -447,10 +451,11 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     // Do not compose any layer below full-screen Opaque layer
     // Note: It can be generalized to non-fullscreen Opaque layers.
-    bool isOpaque = (opacity == 0xFF) && (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE);
+    bool isOpaque = opacity == 0xFF &&
+        (state.mFlags & LayerRenderStateFlags::OPAQUE);
     // Currently we perform opacity calculation using the *bounds* of the layer.
     // We can only make this assumption if we're not dealing with a complex visible region.
-    bool isSimpleVisibleRegion = visibleRegion.GetNumRects() == 1;
+    bool isSimpleVisibleRegion = visibleRegion.Contains(visibleRect);
     if (current && isOpaque && isSimpleVisibleRegion) {
         nsIntRect displayRect = nsIntRect(displayFrame.left, displayFrame.top,
             displayFrame.right - displayFrame.left, displayFrame.bottom - displayFrame.top);

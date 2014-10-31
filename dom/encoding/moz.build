@@ -35,7 +35,6 @@ GENERATED_FILES += [
 
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',
-    'test/unit/mochitest.ini',
 ]
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

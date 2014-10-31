@@ -207,3 +207,59 @@ function idleWait(time) {
   return DevToolsUtils.waitForTime(time);
 }
 
+function* startRecording(panel) {
+  let win = panel.panelWin;
+  let clicked = panel.panelWin.PerformanceView.once(win.EVENTS.UI_START_RECORDING);
+  let started = panel.panelWin.PerformanceController.once(win.EVENTS.RECORDING_STARTED);
+  let button = win.$("#record-button");
+
+  ok(!button.hasAttribute("checked"),
+    "The record button should not be checked yet.");
+
+  ok(!button.hasAttribute("locked"),
+    "The record button should not be locked yet.");
+
+  EventUtils.synthesizeMouseAtCenter(button, {}, win);
+
+  yield clicked;
+
+  ok(button.hasAttribute("checked"),
+    "The record button should now be checked.");
+  ok(button.hasAttribute("locked"),
+    "The record button should be locked.");
+
+  yield started;
+
+  ok(button.hasAttribute("checked"),
+    "The record button should still be checked.");
+  ok(!button.hasAttribute("locked"),
+    "The record button should not be locked.");
+}
+
+function* stopRecording(panel) {
+  let win = panel.panelWin;
+  let clicked = panel.panelWin.PerformanceView.once(win.EVENTS.UI_STOP_RECORDING);
+  let ended = panel.panelWin.PerformanceController.once(win.EVENTS.RECORDING_STOPPED);
+  let button = win.$("#record-button");
+
+  ok(button.hasAttribute("checked"),
+    "The record button should already be checked.");
+  ok(!button.hasAttribute("locked"),
+    "The record button should not be locked yet.");
+
+  EventUtils.synthesizeMouseAtCenter(button, {}, win);
+
+  yield clicked;
+
+  ok(!button.hasAttribute("checked"),
+    "The record button should not be checked.");
+  ok(button.hasAttribute("locked"),
+    "The record button should be locked.");
+
+  yield ended;
+
+  ok(!button.hasAttribute("checked"),
+    "The record button should not be checked.");
+  ok(!button.hasAttribute("locked"),
+    "The record button should not be locked.");
+}

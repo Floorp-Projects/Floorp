@@ -379,7 +379,9 @@ SearchWithinAVA(Reader& rdn,
     return rv;
   }
 
-  // We only support printableString and utf8String.
+  // PrintableString is a subset of ASCII that contains all the characters
+  // allowed in CN-IDs except '*'. Although '*' is illegal, there are many
+  // real-world certificates that are encoded this way, so we accept it.
   //
   // In the case of UTF8String, we rely on the fact that in UTF-8 the octets in
   // a multi-byte encoding of a code point are always distinct from ASCII. Any
@@ -387,12 +389,21 @@ SearchWithinAVA(Reader& rdn,
   // attempt to detect or report malformed UTF-8 (e.g. incomplete or overlong
   // encodings of code points, or encodings of invalid code points).
   //
-  // We could trivially add support for teletexString if needed, but RFC 5280
-  // deprecated it. universalString and bmpString are also deprecated, and they
-  // are a little harder to support because they are not single-byte ASCII
-  // superset encodings.
+  // TeletexString is supported as long as it does not contain any escape
+  // sequences, which are not supported. We'll reject escape sequences as
+  // invalid characters in names, which means we only accept strings that are
+  // in the default character set, which is a superset of ASCII. Note that NSS
+  // actually treats TeletexString as ISO-8859-1. Many certificates that have
+  // wildcard CN-IDs (e.g. "*.example.com") use TeletexString because
+  // PrintableString is defined to not allow '*' and because, at one point in
+  // history, UTF8String was too new to use for compatibility reasons.
+  //
+  // UniversalString and BMPString are also deprecated, and they are a little
+  // harder to support because they are not single-byte ASCII superset
+  // encodings, so we don't bother.
   if (valueEncodingTag != der::PrintableString &&
-      valueEncodingTag != der::UTF8String) {
+      valueEncodingTag != der::UTF8String &&
+      valueEncodingTag != der::TeletexString) {
     return Success;
   }
 

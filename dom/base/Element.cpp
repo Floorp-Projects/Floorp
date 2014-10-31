@@ -500,6 +500,13 @@ Element::WrapObject(JSContext *aCx)
   return obj;
 }
 
+/* virtual */
+nsINode*
+Element::GetScopeChainParent() const
+{
+  return OwnerDoc();
+}
+
 nsDOMTokenList*
 Element::ClassList()
 {

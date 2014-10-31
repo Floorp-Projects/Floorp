@@ -139,8 +139,8 @@ class DestinationInsertionPointList;
 
 // IID for the dom::Element interface
 #define NS_ELEMENT_IID \
-{ 0xaa79cb98, 0xc785, 0x44c5, \
-  { 0x80, 0x80, 0x2e, 0x5f, 0x0c, 0xa5, 0xbd, 0x63 } }
+{ 0x31d3f3fb, 0xcdf8, 0x4e40, \
+ { 0xb7, 0x09, 0x1a, 0x11, 0x43, 0x93, 0x61, 0x71 } }
 
 class Element : public FragmentOrElement
 {
@@ -960,6 +960,8 @@ public:
   void GetClassList(nsISupports** aClassList);
 
   virtual JSObject* WrapObject(JSContext *aCx) MOZ_FINAL MOZ_OVERRIDE;
+
+  nsINode* GetScopeChainParent() const MOZ_OVERRIDE;
 
   /**
    * Locate an nsIEditor rooted at this content node, if there is one.

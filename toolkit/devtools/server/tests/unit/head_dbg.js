@@ -598,3 +598,15 @@ function unBlackBox(sourceClient) {
   dumpn("Un-black boxing source: " + sourceClient.actor);
   return rdpRequest(sourceClient, sourceClient.unblackBox);
 }
+
+/**
+ * Do a fake reload which clears the thread debugger
+ *
+ * @param TabClient tabClient
+ * @returns Promise<response>
+ */
+function reload(tabClient) {
+  let deferred = promise.defer();
+  tabClient._reload({}, deferred.resolve);
+  return deferred.promise;
+}

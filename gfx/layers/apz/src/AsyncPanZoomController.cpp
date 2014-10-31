@@ -286,14 +286,6 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
  * Pref that enables overscrolling. If this is disabled, excess scroll that
  * cannot be handed off is discarded.
  *
- * "apz.overscroll.fling_friction"
- * Amount of friction applied during flings when in overscroll.
- *
- * "apz.overscroll.fling_stopped_threshold"
- * When flinging in an overscrolled state, if the velocity goes below this
- * number, we stop the fling.
- * Units: screen pixels per millisecond
- *
  * "apz.overscroll.min_pan_distance_ratio"
  * The minimum ratio of the pan distance along one axis to the pan distance
  * along the other axis needed to initiate overscroll along the first axis
@@ -305,17 +297,20 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
  * (So if kStretchFactor is 0, you can't stretch at all; if kStretchFactor
  * is 1, you can stretch at most by a factor of 2).
  *
- * "apz.overscroll.snap_back.spring_stiffness"
+ * "apz.overscroll.spring_stiffness"
  * The stiffness of the spring used in the physics model for the overscroll
- * snap-back animation.
- *
- * "apz.overscroll.snap_back.spring_damping"
- * The friction of the spring used in the physics model for the overscroll
- * snap-back animation.
- *
- * "apz.overscroll.snap_back.mass"
- * The mass of the page in the physics model for the overscroll snap-back
  * animation.
+ *
+ * "apz.overscroll.spring_friction"
+ * The friction of the spring used in the physics model for the overscroll
+ * animation.
+ *
+ * "apz.overscroll.stop_distance_threshold"
+ * "apz.overscroll.stop_velocity_threshold"
+ * Thresholds for stopping the overscroll animation. When both the distance
+ * and the velocity fall below their thresholds, we stop oscillating.
+ * Units: screen pixels (for distance)
+ *        screen pixels per millisecond (for velocity)
  *
  * "apz.pan_repaint_interval"
  * Maximum amount of time while panning before sending a viewport change. This
@@ -472,15 +467,27 @@ class FlingAnimation: public AsyncPanZoomAnimation {
 public:
   FlingAnimation(AsyncPanZoomController& aApzc,
                  const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
-                 bool aApplyAcceleration,
-                 bool aAllowOverscroll)
+                 bool aApplyAcceleration)
     : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(gfxPrefs::APZFlingRepaintInterval()))
     , mApzc(aApzc)
     , mOverscrollHandoffChain(aOverscrollHandoffChain)
-    , mAllowOverscroll(aAllowOverscroll)
   {
     MOZ_ASSERT(mOverscrollHandoffChain);
     TimeStamp now = GetFrameTime();
+
+    // Drop any velocity on axes where we don't have room to scroll anyways.
+    // This ensures that we don't take the 'overscroll' path in Sample()
+    // on account of one axis which can't scroll having a velocity.
+    {
+      ReentrantMonitorAutoEnter lock(mApzc.mMonitor);
+      if (!mApzc.mX.CanScroll()) {
+        mApzc.mX.SetVelocity(0);
+      }
+      if (!mApzc.mY.CanScroll()) {
+        mApzc.mY.SetVelocity(0);
+      }
+    }
+
     ScreenPoint velocity(mApzc.mX.GetVelocity(), mApzc.mY.GetVelocity());
 
     // If the last fling was very recent and in the same direction as this one,
@@ -531,11 +538,8 @@ public:
       return true;
     }
 
-    bool overscrolled = mApzc.IsOverscrolled();
-    float friction = overscrolled ? gfxPrefs::APZOverscrollFlingFriction()
-                                  : gfxPrefs::APZFlingFriction();
-    float threshold = overscrolled ? gfxPrefs::APZOverscrollFlingStoppedThreshold()
-                                   : gfxPrefs::APZFlingStoppedThreshold();
+    float friction = gfxPrefs::APZFlingFriction();
+    float threshold = gfxPrefs::APZFlingStoppedThreshold();
 
     bool shouldContinueFlingX = mApzc.mX.FlingApplyFrictionOrCancel(aDelta, friction, threshold),
          shouldContinueFlingY = mApzc.mY.FlingApplyFrictionOrCancel(aDelta, friction, threshold);
@@ -576,48 +580,37 @@ public:
 
     // The fling may have caused us to reach the end of our scroll range.
     if (!IsZero(overscroll)) {
-      if (mAllowOverscroll) {
-        // If this is a fling that allows overscroll, then go into overscroll.
+      // Hand off the fling to the next APZC in the overscroll handoff chain.
 
-        mApzc.OverscrollBy(overscroll);
-
-        // Restore the velocity of the fling, which was zeroed out by
-        // AdjustDisplacement().
-        mApzc.mX.SetVelocity(velocity.x);
-        mApzc.mY.SetVelocity(velocity.y);
-
-      } else {
-        // Otherwise, hand off the fling to the next APZC in the overscroll
-        // handoff chain.
-
-        // We may have reached the end of the scroll range along one axis but
-        // not the other. In such a case we only want to hand off the relevant
-        // component of the fling.
-        if (FuzzyEqualsAdditive(overscroll.x, 0.0f, COORDINATE_EPSILON)) {
-          velocity.x = 0;
-        } else if (FuzzyEqualsAdditive(overscroll.y, 0.0f, COORDINATE_EPSILON)) {
-          velocity.y = 0;
-        }
-
-        // To hand off the fling, we attempt to find a target APZC and start a new
-        // fling with the same velocity on that APZC. For simplicity, the actual
-        // overscroll of the current sample is discarded rather than being handed
-        // off. The compositor should sample animations sufficiently frequently
-        // that this is not noticeable. The target APZC is chosen by seeing if
-        // there is an APZC further in the handoff chain which is pannable; if
-        // there isn't, we take the new fling ourselves, entering an overscrolled
-        // state.
-        // Note: APZC is holding mMonitor, so directly calling
-        // HandleFlingOverscroll() (which acquires the tree lock) would violate
-        // the lock ordering. Instead we schedule HandleFlingOverscroll() to be
-        // called after mMonitor is released.
-        mDeferredTasks.append(NewRunnableMethod(&mApzc,
-                                                &AsyncPanZoomController::HandleFlingOverscroll,
-                                                velocity,
-                                                mOverscrollHandoffChain));
-
-        return false;
+      // We may have reached the end of the scroll range along one axis but
+      // not the other. In such a case we only want to hand off the relevant
+      // component of the fling.
+      // TODO(botond): If our intention is to continue the other component
+      // in this APZC, we should not be returning 'false'.
+      if (FuzzyEqualsAdditive(overscroll.x, 0.0f, COORDINATE_EPSILON)) {
+        velocity.x = 0;
+      } else if (FuzzyEqualsAdditive(overscroll.y, 0.0f, COORDINATE_EPSILON)) {
+        velocity.y = 0;
       }
+
+      // To hand off the fling, we attempt to find a target APZC and start a new
+      // fling with the same velocity on that APZC. For simplicity, the actual
+      // overscroll of the current sample is discarded rather than being handed
+      // off. The compositor should sample animations sufficiently frequently
+      // that this is not noticeable. The target APZC is chosen by seeing if
+      // there is an APZC further in the handoff chain which is pannable; if
+      // there isn't, we take the new fling ourselves, entering an overscrolled
+      // state.
+      // Note: APZC is holding mMonitor, so directly calling
+      // HandleFlingOverscroll() (which acquires the tree lock) would violate
+      // the lock ordering. Instead we schedule HandleFlingOverscroll() to be
+      // called after mMonitor is released.
+      mDeferredTasks.append(NewRunnableMethod(&mApzc,
+                                              &AsyncPanZoomController::HandleFlingOverscroll,
+                                              velocity,
+                                              mOverscrollHandoffChain));
+
+      return false;
     }
 
     return true;
@@ -639,7 +632,6 @@ private:
 
   AsyncPanZoomController& mApzc;
   nsRefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
-  bool mAllowOverscroll;
 };
 
 class ZoomAnimation: public AsyncPanZoomAnimation {
@@ -701,24 +693,21 @@ private:
   CSSToScreenScale mEndZoom;
 };
 
-class OverscrollSnapBackAnimation: public AsyncPanZoomAnimation {
+class OverscrollAnimation: public AsyncPanZoomAnimation {
 public:
-  explicit OverscrollSnapBackAnimation(AsyncPanZoomController& aApzc)
+  explicit OverscrollAnimation(AsyncPanZoomController& aApzc, const ScreenPoint& aVelocity)
     : mApzc(aApzc)
   {
-    // Make sure the initial velocity is zero. This is normally the case
-    // since we've just stopped a fling, but in some corner cases involving
-    // handoff it could not be.
-    mApzc.mX.SetVelocity(0);
-    mApzc.mY.SetVelocity(0);
+    mApzc.mX.SetVelocity(aVelocity.x);
+    mApzc.mY.SetVelocity(aVelocity.y);
   }
 
   virtual bool Sample(FrameMetrics& aFrameMetrics,
                       const TimeDuration& aDelta) MOZ_OVERRIDE
   {
     // Can't inline these variables due to short-circuit evaluation.
-    bool continueX = mApzc.mX.SampleSnapBack(aDelta);
-    bool continueY = mApzc.mY.SampleSnapBack(aDelta);
+    bool continueX = mApzc.mX.SampleOverscrollAnimation(aDelta);
+    bool continueY = mApzc.mY.SampleOverscrollAnimation(aDelta);
     return continueX || continueY;
   }
 private:
@@ -1217,9 +1206,10 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
       NS_WARNING("Gesture listener should have handled pinching in OnTouchMove.");
       return nsEventStatus_eIgnore;
 
-    case SNAP_BACK:  // Should not receive a touch-move in the SNAP_BACK state
-                     // as touch blocks that begin in an overscrolled state
-                     // are ignored.
+    case OVERSCROLL_ANIMATION:
+      // Should not receive a touch-move in the OVERSCROLL_ANIMATION state
+      // as touch blocks that begin in an overscrolled state
+      // are ignored.
       NS_WARNING("Received impossible touch in OnTouchMove");
       break;
   }
@@ -1301,9 +1291,10 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     NS_WARNING("Gesture listener should have handled pinching in OnTouchEnd.");
     return nsEventStatus_eIgnore;
 
-  case SNAP_BACK:  // Should not receive a touch-move in the SNAP_BACK state
-                   // as touch blocks that begin in an overscrolled state
-                   // are ignored.
+  case OVERSCROLL_ANIMATION:
+    // Should not receive a touch-move in the OVERSCROLL_ANIMATION state
+    // as touch blocks that begin in an overscrolled state
+    // are ignored.
     NS_WARNING("Received impossible touch in OnTouchEnd");
     break;
   }
@@ -1988,8 +1979,7 @@ nsRefPtr<const OverscrollHandoffChain> AsyncPanZoomController::BuildOverscrollHa
 
 void AsyncPanZoomController::AcceptFling(const ScreenPoint& aVelocity,
                                          const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
-                                         bool aHandoff,
-                                         bool aAllowOverscroll) {
+                                         bool aHandoff) {
   // We may have a pre-existing velocity for whatever reason (for example,
   // a previously handed off fling). We don't want to clobber that.
   mX.SetVelocity(mX.GetVelocity() + aVelocity.x);
@@ -1997,8 +1987,7 @@ void AsyncPanZoomController::AcceptFling(const ScreenPoint& aVelocity,
   SetState(FLING);
   StartAnimation(new FlingAnimation(*this,
       aOverscrollHandoffChain,
-      !aHandoff,  // only apply acceleration if this is an initial fling
-      aAllowOverscroll));
+      !aHandoff));  // only apply acceleration if this is an initial fling
 }
 
 bool AsyncPanZoomController::AttemptFling(ScreenPoint aVelocity,
@@ -2008,8 +1997,7 @@ bool AsyncPanZoomController::AttemptFling(ScreenPoint aVelocity,
   if (IsPannable()) {
     AcceptFling(aVelocity,
                 aOverscrollHandoffChain,
-                aHandoff,
-                false /* do not allow overscroll */);
+                aHandoff);
     return true;
   }
 
@@ -2023,12 +2011,10 @@ void AsyncPanZoomController::HandleFlingOverscroll(const ScreenPoint& aVelocity,
                                                             aVelocity,
                                                             aOverscrollHandoffChain,
                                                             true /* handoff */))) {
-    // No one wanted the fling, so we enter into an overscroll fling ourselves.
+    // No one wanted the fling, so we "take it" ourselves by entering an
+    // overscroll animation starting with the fling's velocity.
     if (IsPannable()) {
-      AcceptFling(aVelocity,
-                  aOverscrollHandoffChain,
-                  true /* handoff */,
-                  true /* allow overscroll */);
+      StartOverscrollAnimation(aVelocity);
     }
   }
 }
@@ -2055,9 +2041,9 @@ void AsyncPanZoomController::StartSmoothScroll() {
                                            gfxPrefs::ScrollBehaviorDampingRatio()));
 }
 
-void AsyncPanZoomController::StartSnapBack() {
-  SetState(SNAP_BACK);
-  StartAnimation(new OverscrollSnapBackAnimation(*this));
+void AsyncPanZoomController::StartOverscrollAnimation(const ScreenPoint& aVelocity) {
+  SetState(OVERSCROLL_ANIMATION);
+  StartAnimation(new OverscrollAnimation(*this, aVelocity));
 }
 
 bool AsyncPanZoomController::CallDispatchScroll(const ScreenPoint& aStartPoint,
@@ -2291,7 +2277,7 @@ bool AsyncPanZoomController::SnapBackIfOverscrolled() {
   ReentrantMonitorAutoEnter lock(mMonitor);
   if (IsOverscrolled()) {
     APZC_LOG("%p is overscrolled, starting snap-back\n", this);
-    StartSnapBack();
+    StartOverscrollAnimation(ScreenPoint(0, 0));
     return true;
   }
   return false;
@@ -2450,20 +2436,31 @@ Matrix4x4 AsyncPanZoomController::GetOverscrollTransform() const {
   float scaleX = 1 + kStretchFactor * fabsf(mX.GetOverscroll()) / mX.GetCompositionLength();
   float scaleY = 1 + kStretchFactor * fabsf(mY.GetOverscroll()) / mY.GetCompositionLength();
 
+  // If an axis is in underscroll, the interpretation of its overscroll
+  // amount changes: instead of stretching along that axis, we compress.
+  if (mX.IsInUnderscroll()) {
+    scaleX = 1 / scaleX;
+  }
+  if (mY.IsInUnderscroll()) {
+    scaleY = 1 / scaleY;
+  }
+
   // The scale is applied relative to the origin of the composition bounds, i.e.
   // it keeps the top-left corner of the content in place. This is fine if we
   // are overscrolling at the top or on the left, but if we are overscrolling
   // at the bottom or on the right, we want the bottom or right edge of the
   // content to stay in place instead, so we add a translation to compensate.
   ScreenPoint translation;
-  if (mX.IsOverscrolled() && mX.GetOverscroll() > 0) {
-    // Overscrolled on the right.
+  bool overscrolledOnRight = (mX.GetOverscroll() > 0 && !mX.IsInUnderscroll())
+                          || (mX.GetOverscroll() < 0 && mX.IsInUnderscroll());
+  if (overscrolledOnRight) {
     ScreenCoord overscrolledCompositionWidth = scaleX * compositionSize.width;
     ScreenCoord extraCompositionWidth = overscrolledCompositionWidth - compositionSize.width;
     translation.x = -extraCompositionWidth;
   }
-  if (mY.IsOverscrolled() && mY.GetOverscroll() > 0) {
-    // Overscrolled at the bottomn.
+  bool overscrolledAtBottom = (mY.GetOverscroll() > 0 && !mY.IsInUnderscroll())
+                           || (mY.GetOverscroll() < 0 && mY.IsInUnderscroll());
+  if (overscrolledAtBottom) {
     ScreenCoord overscrolledCompositionHeight = scaleY * compositionSize.height;
     ScreenCoord extraCompositionHeight = overscrolledCompositionHeight - compositionSize.height;
     translation.y = -extraCompositionHeight;

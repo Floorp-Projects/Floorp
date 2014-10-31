@@ -8,7 +8,6 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {devtools: {require}} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {DebuggerClient} = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 const {DebuggerServer} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
@@ -43,11 +42,10 @@ let addTab = Task.async(function* (url) {
 
   info("URL '" + url + "' loading complete");
 
-  let def = promise.defer();
-  let isBlank = url == "about:blank";
-  waitForFocus(def.resolve, content, isBlank);
-
-  yield def.promise;
+  yield new Promise(resolve => {
+    let isBlank = url == "about:blank";
+    waitForFocus(resolve, content, isBlank);
+  });;
 
   return tab.linkedBrowser.contentWindow.document;
 });
@@ -69,13 +67,13 @@ function initDebuggerServer() {
  * connected.
  */
 function connectDebuggerClient(client) {
-  let def = promise.defer();
-  client.connect(() => {
-    client.listTabs(tabs => {
-      def.resolve(tabs.tabs[tabs.selected]);
+  return new Promise(resolve => {
+    client.connect(() => {
+      client.listTabs(tabs => {
+        resolve(tabs.tabs[tabs.selected]);
+      });
     });
   });
-  return def.promise;
 }
 
 /**
@@ -84,9 +82,7 @@ function connectDebuggerClient(client) {
  * @return {Promise} Resolves when the connection is closed.
  */
 function closeDebuggerClient(client) {
-  let def = promise.defer();
-  client.close(def.resolve);
-  return def.promise;
+  return new Promise(resolve => client.close(resolve));
 }
 
 /**
@@ -100,24 +96,23 @@ function closeDebuggerClient(client) {
 function once(target, eventName, useCapture=false) {
   info("Waiting for event: '" + eventName + "' on " + target + ".");
 
-  let deferred = promise.defer();
+  return new Promise(resolve => {
 
-  for (let [add, remove] of [
-    ["addEventListener", "removeEventListener"],
-    ["addListener", "removeListener"],
-    ["on", "off"]
-  ]) {
-    if ((add in target) && (remove in target)) {
-      target[add](eventName, function onEvent(...aArgs) {
-        info("Got event: '" + eventName + "' on " + target + ".");
-        target[remove](eventName, onEvent, useCapture);
-        deferred.resolve.apply(deferred, aArgs);
-      }, useCapture);
-      break;
+    for (let [add, remove] of [
+      ["addEventListener", "removeEventListener"],
+      ["addListener", "removeListener"],
+      ["on", "off"]
+    ]) {
+      if ((add in target) && (remove in target)) {
+        target[add](eventName, function onEvent(...aArgs) {
+          info("Got event: '" + eventName + "' on " + target + ".");
+          target[remove](eventName, onEvent, useCapture);
+          resolve(...aArgs);
+        }, useCapture);
+        break;
+      }
     }
-  }
-
-  return deferred.promise;
+  });
 }
 
 /**

@@ -211,7 +211,6 @@ class AbstractFramePtr
 
     inline bool copyRawFrameSlots(AutoValueVector *vec) const;
 
-    inline Value &unaliasedVar(uint32_t i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
     inline Value &unaliasedLocal(uint32_t i);
     inline Value &unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
     inline Value &unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING);
@@ -504,14 +503,13 @@ class InterpreterFrame
      * When a local/formal variable is "aliased" (accessed by nested closures,
      * dynamic scope operations, or 'arguments), the canonical location for
      * that value is the slot of an activation object (scope or arguments).
-     * Currently, all variables are given slots in *both* the stack frame and
-     * heap objects, even though, as just described, only one should ever be
-     * accessed. Thus, it is up to the code performing an access to access the
-     * correct value. These functions assert that accesses to stack values are
-     * unaliased. For more about canonical values locations.
+     * Currently, aliased locals don't have stack slots assigned to them, but
+     * all formals are given slots in *both* the stack frame and heap objects,
+     * even though, as just described, only one should ever be accessed. Thus,
+     * it is up to the code performing an access to access the correct value.
+     * These functions assert that accesses to stack values are unaliased.
      */
 
-    inline Value &unaliasedVar(uint32_t i, MaybeCheckAliasing = CHECK_ALIASING);
     inline Value &unaliasedLocal(uint32_t i);
 
     bool hasArgs() const { return isNonEvalFunctionFrame(); }

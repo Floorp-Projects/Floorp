@@ -959,7 +959,7 @@ png_set_rgb_to_gray_fixed(png_structrp png_ptr, int error_action,
    if (!png_rtran_ok(png_ptr, 1))
       return;
 
-   switch(error_action)
+   switch (error_action)
    {
       case PNG_ERROR_ACTION_NONE:
          png_ptr->transformations |= PNG_RGB_TO_GRAY;

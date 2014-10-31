@@ -643,18 +643,6 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Abst
 
     obj->setReservedSlot(SCOPE_CHAIN_SLOT, ObjectValue(*frame.scopeChain()));
 
-    /*
-     * Copy in the closed-over locals. Closed-over locals don't need
-     * any fixup since the initial value is 'undefined'.
-     */
-    unsigned nvars = block->numVariables();
-    for (unsigned i = 0; i < nvars; ++i) {
-        if (block->isAliased(i)) {
-            Value &val = frame.unaliasedLocal(block->blockIndexToLocalIndex(i));
-            obj->as<ClonedBlockObject>().setVar(i, val);
-        }
-    }
-
     MOZ_ASSERT(obj->isDelegate());
 
     return &obj->as<ClonedBlockObject>();
@@ -2515,6 +2503,20 @@ js::GetDebugScopeForFrame(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
         return nullptr;
     ScopeIter si(frame, pc, cx);
     return GetDebugScope(cx, si);
+}
+
+// See declaration and documentation in jsfriendapi.h
+JS_FRIEND_API(JSObject *)
+js::GetObjectEnvironmentObjectForFunction(JSFunction *fun)
+{
+    if (!fun->isInterpreted())
+        return fun->getParent();
+
+    JSObject *env = fun->environment();
+    if (!env || !env->is<DynamicWithObject>())
+        return fun->getParent();
+
+    return &env->as<DynamicWithObject>().object();
 }
 
 #ifdef DEBUG
