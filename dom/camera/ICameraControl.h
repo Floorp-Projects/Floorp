@@ -9,7 +9,6 @@
 #include "nsString.h"
 #include "nsAutoPtr.h"
 #include "nsISupportsImpl.h"
-#include "base/basictypes.h"
 
 struct DeviceStorageFileDescriptor;
 
@@ -18,6 +17,7 @@ class nsIFile;
 namespace mozilla {
 
 class CameraControlListener;
+class RecorderProfileManager;
 
 // XXXmikeh - In some future patch this should move into the ICameraControl
 //  class as well, and the names updated to the 'k'-style;
@@ -162,76 +162,6 @@ public:
     Point     mouth;
   };
 
-  class RecorderProfile
-  {
-  public:
-    class Video
-    {
-    public:
-      Video() { }
-      virtual ~Video() { }
-
-      const nsString& GetCodec() const    { return mCodec; }
-      const Size& GetSize() const         { return mSize; }
-      uint32_t GetBitsPerSecond() const   { return mBitsPerSecond; }
-      uint32_t GetFramesPerSecond() const { return mFramesPerSecond; }
-
-    protected:
-      nsString  mCodec;
-      Size      mSize;
-      uint32_t  mBitsPerSecond;
-      uint32_t  mFramesPerSecond;
-
-    private:
-      DISALLOW_EVIL_CONSTRUCTORS(Video);
-    };
-
-    class Audio
-    {
-    public:
-      Audio() { }
-      virtual ~Audio() { }
-
-      const nsString& GetCodec() const    { return mCodec; }
-
-      uint32_t GetChannels() const        { return mChannels; }
-      uint32_t GetBitsPerSecond() const   { return mBitsPerSecond; }
-      uint32_t GetSamplesPerSecond() const { return mSamplesPerSecond; }
-
-    protected:
-      nsString  mCodec;
-      uint32_t  mChannels;
-      uint32_t  mBitsPerSecond;
-      uint32_t  mSamplesPerSecond;
-
-    private:
-      DISALLOW_EVIL_CONSTRUCTORS(Audio);
-    };
-
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RecorderProfile)
-
-    RecorderProfile(const nsAString& aName)
-      : mName(aName)
-    { }
-
-    const nsString& GetName() const       { return mName; }
-    const nsString& GetContainer() const  { return mContainer; }
-    const nsString& GetMimeType() const   { return mMimeType; }
-
-    virtual const Video& GetVideo() const = 0;
-    virtual const Audio& GetAudio() const = 0;
-
-  protected:
-    virtual ~RecorderProfile() { }
-
-    nsString    mName;
-    nsString    mContainer;
-    nsString    mMimeType;
-
-  private:
-    DISALLOW_EVIL_CONSTRUCTORS(RecorderProfile);
-  };
-
   static already_AddRefed<ICameraControl> Create(uint32_t aCameraId);
 
   virtual void AddListener(CameraControlListener* aListener) = 0;
@@ -290,9 +220,7 @@ public:
   virtual nsresult Get(uint32_t aKey, nsTArray<nsString>& aValues) = 0;
   virtual nsresult Get(uint32_t aKey, nsTArray<double>& aValues) = 0;
 
-  virtual nsresult GetRecorderProfiles(nsTArray<nsString>& aProfiles) = 0;
-  virtual RecorderProfile* GetProfileInfo(const nsAString& aProfile) = 0;
-
+  virtual already_AddRefed<RecorderProfileManager> GetRecorderProfileManager() = 0;
   virtual uint32_t GetCameraId() = 0;
 
   virtual void Shutdown() = 0;

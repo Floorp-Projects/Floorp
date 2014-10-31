@@ -2029,48 +2029,68 @@ JS_GetExternalStringFinalizer(JSString *str)
 }
 
 static void
-SetNativeStackQuotaAndLimit(JSRuntime *rt, StackKind kind, size_t stackSize)
+SetNativeStackQuota(JSRuntime *rt, StackKind kind, size_t stackSize)
 {
     rt->nativeStackQuota[kind] = stackSize;
+    if (rt->nativeStackBase)
+        RecomputeStackLimit(rt, kind);
+}
 
+void
+js::RecomputeStackLimit(JSRuntime *rt, StackKind kind)
+{
+    size_t stackSize = rt->nativeStackQuota[kind];
 #if JS_STACK_GROWTH_DIRECTION > 0
     if (stackSize == 0) {
         rt->mainThread.nativeStackLimit[kind] = UINTPTR_MAX;
     } else {
         MOZ_ASSERT(rt->nativeStackBase <= size_t(-1) - stackSize);
-        rt->mainThread.nativeStackLimit[kind] = rt->nativeStackBase + stackSize - 1;
+        rt->mainThread.nativeStackLimit[kind] =
+          rt->nativeStackBase + stackSize - 1;
     }
 #else
     if (stackSize == 0) {
         rt->mainThread.nativeStackLimit[kind] = 0;
     } else {
         MOZ_ASSERT(rt->nativeStackBase >= stackSize);
-        rt->mainThread.nativeStackLimit[kind] = rt->nativeStackBase - (stackSize - 1);
+        rt->mainThread.nativeStackLimit[kind] =
+          rt->nativeStackBase - (stackSize - 1);
     }
 #endif
+
+    // If there's no pending interrupt request set on the runtime's main thread's
+    // jitStackLimit, then update it so that it reflects the new nativeStacklimit.
+    //
+    // Note that, for now, we use the untrusted limit for ion. This is fine,
+    // because it's the most conservative limit, and if we hit it, we'll bail
+    // out of ion into the interpeter, which will do a proper recursion check.
+    if (kind == StackForUntrustedScript) {
+        JSRuntime::AutoLockForInterrupt lock(rt);
+        if (rt->mainThread.jitStackLimit != uintptr_t(-1)) {
+            rt->mainThread.jitStackLimit = rt->mainThread.nativeStackLimit[kind];
+#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
+            rt->mainThread.jitStackLimit = jit::Simulator::StackLimit();
+#endif
+        }
+    }
 }
 
 JS_PUBLIC_API(void)
-JS_SetNativeStackQuota(JSRuntime *rt, size_t systemCodeStackSize, size_t trustedScriptStackSize,
+JS_SetNativeStackQuota(JSRuntime *rt, size_t systemCodeStackSize,
+                       size_t trustedScriptStackSize,
                        size_t untrustedScriptStackSize)
 {
-    MOZ_ASSERT(rt->requestDepth == 0);
-
+    MOZ_ASSERT_IF(trustedScriptStackSize,
+                  trustedScriptStackSize < systemCodeStackSize);
     if (!trustedScriptStackSize)
         trustedScriptStackSize = systemCodeStackSize;
-    else
-        MOZ_ASSERT(trustedScriptStackSize < systemCodeStackSize);
-
+    MOZ_ASSERT_IF(untrustedScriptStackSize,
+                  untrustedScriptStackSize < trustedScriptStackSize);
     if (!untrustedScriptStackSize)
         untrustedScriptStackSize = trustedScriptStackSize;
-    else
-        MOZ_ASSERT(untrustedScriptStackSize < trustedScriptStackSize);
-
-    SetNativeStackQuotaAndLimit(rt, StackForSystemCode, systemCodeStackSize);
-    SetNativeStackQuotaAndLimit(rt, StackForTrustedScript, trustedScriptStackSize);
-    SetNativeStackQuotaAndLimit(rt, StackForUntrustedScript, untrustedScriptStackSize);
-
-    rt->mainThread.initJitStackLimit();
+    SetNativeStackQuota(rt, StackForSystemCode, systemCodeStackSize);
+    SetNativeStackQuota(rt, StackForTrustedScript, trustedScriptStackSize);
+    SetNativeStackQuota(rt, StackForUntrustedScript, untrustedScriptStackSize);
 }
 
 /************************************************************************/
