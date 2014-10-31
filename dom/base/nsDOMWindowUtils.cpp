@@ -92,6 +92,7 @@
 #include "nsIDOMStyleSheet.h"
 #include "nsIStyleSheet.h"
 #include "nsContentPermissionHelper.h"
+#include "nsNetUtil.h"
 
 #ifdef XP_WIN
 #undef GetClassName
@@ -3476,6 +3477,18 @@ nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   nsIDocument::additionalSheetType type = convertSheetType(aSheetType);
 
   return doc->LoadAdditionalStyleSheet(type, aSheetURI);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::LoadSheetFromURIString(const nsACString& aSheetURI, uint32_t aSheetType)
+{
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aSheetURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return LoadSheet(uri, aSheetType);
 }
 
 NS_IMETHODIMP
