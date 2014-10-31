@@ -10,7 +10,6 @@
 #include "gfxContext.h"
 #include "mozilla/dom/SVGClipPathElement.h"
 #include "nsGkAtoms.h"
-#include "nsRenderingContext.h"
 #include "nsSVGEffects.h"
 #include "nsSVGPathGeometryElement.h"
 #include "nsSVGPathGeometryFrame.h"
@@ -100,8 +99,6 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(gfxContext& aContext,
     }
   }
 
-  nsRenderingContext rendCtx(&aContext);
-
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
@@ -137,7 +134,7 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(gfxContext& aContext,
             PrependLocalTransformsTo(mMatrixForChildren,
                                      nsSVGElement::eUserSpaceToParent);
       }
-      SVGFrame->PaintSVG(&rendCtx, toChildsUserSpace);
+      SVGFrame->PaintSVG(aContext, toChildsUserSpace);
 
       if (clipPathFrame) {
         if (!isTrivial) {
