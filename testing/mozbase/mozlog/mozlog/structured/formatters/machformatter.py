@@ -44,6 +44,7 @@ class MachFormatter(base.BaseFormatter):
         self.last_time = None
         self.terminal = terminal
         self.verbose = False
+        self._known_pids = set()
 
         self.summary_values = {"tests": 0,
                                "subtests": 0,
@@ -263,9 +264,14 @@ class MachFormatter(base.BaseFormatter):
             self.summary_values["expected"] += 1
 
     def process_output(self, data):
-        return '"%s" (pid:%s command:%s)' % (data["data"],
-                                             data["process"],
-                                             data.get("command", ""))
+        rv = []
+
+        if "command" in data and data["process"] not in self._known_pids:
+            self._known_pids.add(data["process"])
+            rv.append('(pid:%s) Full command: %s' % (data["process"], data["command"]))
+
+        rv.append('(pid:%s) "%s"' % (data["process"], data["data"]))
+        return "\n".join(rv)
 
     def crash(self, data):
         test = self._get_test_id(data)

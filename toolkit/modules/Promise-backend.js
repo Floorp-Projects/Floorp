@@ -37,6 +37,9 @@ const STATUS_REJECTED = 2;
 const salt = Math.floor(Math.random() * 100);
 const N_INTERNALS = "{private:internals:" + salt + "}";
 
+const JS_HAS_SYMBOLS = typeof Symbol === "function";
+const ITERATOR_SYMBOL = JS_HAS_SYMBOLS ? Symbol.iterator : "@@iterator";
+
 /////// Warn-upon-finalization mechanism
 //
 // One of the difficult problems with promises is locating uncaught
@@ -511,7 +514,7 @@ Promise.reject = function (aReason)
  */
 Promise.all = function (aValues)
 {
-  if (aValues == null || typeof(aValues["@@iterator"]) != "function") {
+  if (aValues == null || typeof(aValues[ITERATOR_SYMBOL]) != "function") {
     throw new Error("Promise.all() expects an iterable.");
   }
 
@@ -562,7 +565,7 @@ Promise.all = function (aValues)
  */
 Promise.race = function (aValues)
 {
-  if (aValues == null || typeof(aValues["@@iterator"]) != "function") {
+  if (aValues == null || typeof(aValues[ITERATOR_SYMBOL]) != "function") {
     throw new Error("Promise.race() expects an iterable.");
   }
 
