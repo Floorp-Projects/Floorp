@@ -836,3 +836,16 @@ addEventListener("pageshow", function(event) {
     });
   }
 });
+
+addMessageListener("ContextMenu:SaveVideoFrameAsImage", (message) => {
+  let video = message.objects.target;
+  let canvas = content.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  let ctxDraw = canvas.getContext("2d");
+  ctxDraw.drawImage(video, 0, 0);
+  sendAsyncMessage("ContextMenu:SaveVideoFrameAsImage:Result", {
+    dataURL: canvas.toDataURL("image/jpeg", ""),
+  });
+});
