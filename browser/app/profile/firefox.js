@@ -1148,7 +1148,12 @@ pref("toolkit.crashreporter.infoURL",
 pref("app.support.baseURL", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/");
 
 // base url for web-based feedback pages
+#ifdef MOZ_DEV_EDITION
+pref("app.feedback.baseURL", "https://input.mozilla.org/%LOCALE%/feedback/firefoxdev/%VERSION%/");
+#else
 pref("app.feedback.baseURL", "https://input.mozilla.org/%LOCALE%/feedback/%APP%/%VERSION%/");
+#endif
+
 
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
@@ -1383,7 +1388,11 @@ pref("devtools.debugger.ui.variables-searchbox-visible", false);
 
 // Enable the Profiler and the Timeline
 pref("devtools.profiler.enabled", true);
+#ifdef MOZ_DEV_EDITION
+pref("devtools.timeline.enabled", true);
+#else
 pref("devtools.timeline.enabled", false);
+#endif
 
 // The default Profiler UI settings
 pref("devtools.profiler.ui.show-platform-data", false);
