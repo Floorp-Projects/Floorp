@@ -77,7 +77,7 @@ interface nsINfcContentHelper : nsISupports
 
   nsIDOMDOMRequest readNDEF(in DOMString sessionToken);
   nsIDOMDOMRequest writeNDEF(in nsIVariant records, in DOMString sessionToken);
-  nsIDOMDOMRequest makeReadOnlyNDEF(in DOMString sessionToken);
+  nsIDOMDOMRequest makeReadOnly(in DOMString sessionToken);
 
   nsIDOMDOMRequest connect(in unsigned long techType, in DOMString sessionToken);
   nsIDOMDOMRequest close(in DOMString sessionToken);
