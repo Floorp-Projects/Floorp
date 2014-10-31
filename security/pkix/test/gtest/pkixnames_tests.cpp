@@ -1027,9 +1027,6 @@ static const uint8_t ipv4_addr_bytes[] = {
 };
 static const uint8_t ipv4_addr_bytes_as_str[] = "\x01\x02\x03\x04";
 static const uint8_t ipv4_addr_str[] = "1.2.3.4";
-static const uint8_t ipv4_addr_bytes_FFFFFFFF[8] = {
-  1, 2, 3, 4, 0xff, 0xff, 0xff, 0xff
-};
 
 static const uint8_t ipv4_compatible_ipv6_addr_bytes[] = {
   0, 0, 0, 0,
@@ -1545,4 +1542,3 @@ TEST_P(pkixnames_CheckCertHostname_IPV4_Addresses,
 INSTANTIATE_TEST_CASE_P(pkixnames_CheckCertHostname_IPV4_ADDRESSES,
                         pkixnames_CheckCertHostname_IPV4_Addresses,
                         testing::ValuesIn(IPV4_ADDRESSES));
-
