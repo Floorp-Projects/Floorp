@@ -5,7 +5,6 @@
 
 const Cu = Components.utils;
 
-Cu.import("resource://services-common/async.js");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/WebChannel.jsm");
 
@@ -37,47 +36,45 @@ function run_test() {
 /**
  * Test channel listening
  */
-add_test(function test_web_channel_listen() {
-  let channel = new WebChannel(VALID_WEB_CHANNEL_ID, VALID_WEB_CHANNEL_ORIGIN, {
-    broker: MockWebChannelBroker
+add_task(function test_web_channel_listen() {
+  return new Promise((resolve, reject) => {
+    let channel = new WebChannel(VALID_WEB_CHANNEL_ID, VALID_WEB_CHANNEL_ORIGIN, {
+      broker: MockWebChannelBroker
+    });
+    let delivered = 0;
+    do_check_eq(channel.id, VALID_WEB_CHANNEL_ID);
+    do_check_eq(channel.origin.spec, VALID_WEB_CHANNEL_ORIGIN.spec);
+    do_check_eq(channel._deliverCallback, null);
+
+    channel.listen(function(id, message, target) {
+      do_check_eq(id, VALID_WEB_CHANNEL_ID);
+      do_check_true(message);
+      do_check_true(message.command);
+      do_check_true(target.sender);
+      delivered++;
+      // 2 messages should be delivered
+      if (delivered === 2) {
+        channel.stopListening();
+        do_check_eq(channel._deliverCallback, null);
+        resolve();
+      }
+    });
+
+    // send two messages
+    channel.deliver({
+      id: VALID_WEB_CHANNEL_ID,
+      message: {
+        command: "one"
+      }
+    }, { sender: true });
+
+    channel.deliver({
+      id: VALID_WEB_CHANNEL_ID,
+      message: {
+        command: "two"
+      }
+    }, { sender: true });
   });
-  let cb = Async.makeSpinningCallback();
-  let delivered = 0;
-  do_check_eq(channel.id, VALID_WEB_CHANNEL_ID);
-  do_check_eq(channel.origin.spec, VALID_WEB_CHANNEL_ORIGIN.spec);
-  do_check_eq(channel._deliverCallback, null);
-
-  channel.listen(function(id, message, target) {
-    do_check_eq(id, VALID_WEB_CHANNEL_ID);
-    do_check_true(message);
-    do_check_true(message.command);
-    do_check_true(target.sender);
-    delivered++;
-    // 2 messages should be delivered
-    if (delivered === 2) {
-      channel.stopListening();
-      do_check_eq(channel._deliverCallback, null);
-      cb();
-      run_next_test();
-    }
-  });
-
-  // send two messages
-  channel.deliver({
-    id: VALID_WEB_CHANNEL_ID,
-    message: {
-      command: "one"
-    }
-  }, { sender: true });
-
-  channel.deliver({
-    id: VALID_WEB_CHANNEL_ID,
-    message: {
-      command: "two"
-    }
-  }, { sender: true });
-
-  cb.wait();
 });
 
 
