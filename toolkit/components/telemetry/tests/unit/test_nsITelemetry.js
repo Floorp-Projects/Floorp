@@ -395,11 +395,11 @@ function test_keyed_boolean_histogram()
     "min": 1,
     "max": 2,
     "histogram_type": 2,
-    "sum": 0,
-    "sum_squares_lo": 0,
+    "sum": 1,
+    "sum_squares_lo": 1,
     "sum_squares_hi": 0,
     "ranges": [0, 1, 2],
-    "counts": [1, 0, 0]
+    "counts": [0, 1, 0]
   };
   let testHistograms = [JSON.parse(JSON.stringify(histogramBase)) for (i of numberRange(0, 3))];
   let testKeys = [];
@@ -424,6 +424,9 @@ function test_keyed_boolean_histogram()
   h.add(key, false);
   testKeys.push(key);
   testSnapShot[key] = testHistograms[2];
+  testSnapShot[key].sum = 0;
+  testSnapShot[key].sum_squares_lo = 0;
+  testSnapShot[key].counts = [1, 0, 0];
   Assert.deepEqual(h.keys().sort(), testKeys);
   Assert.deepEqual(h.snapshot(), testSnapShot);
 
@@ -495,6 +498,36 @@ function test_keyed_count_histogram()
   Assert.deepEqual(h.snapshot(), {});
 }
 
+function test_keyed_flag_histogram()
+{
+  const KEYED_ID = "test::keyed::flag";
+  let h = Telemetry.newKeyedHistogram(KEYED_ID, "never", Telemetry.HISTOGRAM_FLAG);
+
+  const KEY = "default";
+  h.add(KEY, true);
+
+  let testSnapshot = {};
+  testSnapshot[KEY] = {
+    "min": 1,
+    "max": 2,
+    "histogram_type": 3,
+    "sum": 1,
+    "sum_squares_lo": 1,
+    "sum_squares_hi": 0,
+    "ranges": [0, 1, 2],
+    "counts": [0, 1, 0]
+  };
+
+  Assert.deepEqual(h.keys().sort(), [KEY]);
+  Assert.deepEqual(h.snapshot(), testSnapshot);
+
+  let allSnapshots = Telemetry.keyedHistogramSnapshots;
+  Assert.deepEqual(allSnapshots[KEYED_ID], testSnapshot);
+
+  h.clear();
+  Assert.deepEqual(h.keys(), []);
+  Assert.deepEqual(h.snapshot(), {});
+}
 
 function test_keyed_histogram() {
   // Check that invalid names get rejected.
@@ -521,6 +554,7 @@ function test_keyed_histogram() {
 
   test_keyed_boolean_histogram();
   test_keyed_count_histogram();
+  test_keyed_flag_histogram();
 }
 
 function generateUUID() {
