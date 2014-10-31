@@ -22,7 +22,7 @@ function test()
   printStatus (summary);
 
 // crash [@ js_Interpret]
-  (eval("(function(){ this.watch(\"x\", function () { new function ()y } ); const y });"))();
+  (eval("(function(){ this.watch(\"x\", function () { new function ()y } ); const y = undefined });"))();
   x = NaN;
   reportCompare(expect, actual, summary + ': 2');
 

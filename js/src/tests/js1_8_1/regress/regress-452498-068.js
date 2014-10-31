@@ -46,7 +46,7 @@ function test()
 // =====
 
   for(
-    const NaN;
+    const NaN = undefined;
     this.__defineSetter__("x4", function(){});
     (eval("", (p={})))) let ({} = (((x ))(function ([]) {})), x1) y;
 

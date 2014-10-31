@@ -686,6 +686,10 @@ testParamPatternCombinations(function(n) ("[a" + n + ", ..." + "b" + n + "]"),
 function testVarPatternCombinations(makePattSrc, makePattPatt) {
     var pattSrcs = makePatternCombinations(function(n) ("x" + n), makePattSrc);
     var pattPatts = makePatternCombinations(function(n) ({ id: ident("x" + n), init: null }), makePattPatt);
+    // It's illegal to have uninitialized const declarations, so we need a
+    // separate set of patterns and sources.
+    var constSrcs = makePatternCombinations(function(n) ("x" + n + " = undefined"), makePattSrc);
+    var constPatts = makePatternCombinations(function(n) ({ id: ident("x" + n), init: ident("undefined") }), makePattPatt);
 
     for (var i = 0; i < pattSrcs.length; i++) {
         // variable declarations in blocks
@@ -695,15 +699,15 @@ function testVarPatternCombinations(makePattSrc, makePattPatt) {
         assertLocalDecl("let " + pattSrcs[i].join(",") + ";", letDecl(pattPatts[i]));
         assertBlockDecl("let " + pattSrcs[i].join(",") + ";", letDecl(pattPatts[i]));
 
-        assertDecl("const " + pattSrcs[i].join(",") + ";", constDecl(pattPatts[i]));
+        assertDecl("const " + constSrcs[i].join(",") + ";", constDecl(constPatts[i]));
 
         // variable declarations in for-loop heads
         assertStmt("for (var " + pattSrcs[i].join(",") + "; foo; bar);",
                    forStmt(varDecl(pattPatts[i]), ident("foo"), ident("bar"), emptyStmt));
         assertStmt("for (let " + pattSrcs[i].join(",") + "; foo; bar);",
                    letStmt(pattPatts[i], forStmt(null, ident("foo"), ident("bar"), emptyStmt)));
-        assertStmt("for (const " + pattSrcs[i].join(",") + "; foo; bar);",
-                   forStmt(constDecl(pattPatts[i]), ident("foo"), ident("bar"), emptyStmt));
+        assertStmt("for (const " + constSrcs[i].join(",") + "; foo; bar);",
+                   letStmt(constPatts[i], forStmt(null, ident("foo"), ident("bar"), emptyStmt)));
     }
 }
 
@@ -1075,7 +1079,7 @@ assertGlobalStmt("for (;;) continue", forStmt(null, null, null, 15), { continueS
 
 assertBlockDecl("var x", "var", { variableDeclaration: function(kind) kind });
 assertBlockDecl("let x", "let", { variableDeclaration: function(kind) kind });
-assertBlockDecl("const x", "const", { variableDeclaration: function(kind) kind });
+assertBlockDecl("const x = undefined", "const", { variableDeclaration: function(kind) kind });
 assertBlockDecl("function f() { }", "function", { functionDeclaration: function() "function" });
 
 assertGlobalExpr("(x,y,z)", 1, { sequenceExpression: function() 1 });
