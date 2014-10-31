@@ -3716,7 +3716,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     if (drawMode != DrawMode(0)) {
       nsRect frameRect = frame->GetVisualOverflowRect();
       bool paintSVGGlyphs;
-      if (ShouldRenderAsPath(&rendCtx, frame, paintSVGGlyphs)) {
+      if (ShouldRenderAsPath(frame, paintSVGGlyphs)) {
         SVGTextDrawPathCallbacks callbacks(&rendCtx, frame,
                                            matrixForPaintServers,
                                            paintSVGGlyphs);
@@ -5128,8 +5128,7 @@ SVGTextFrame::DoGlyphPositioning()
 }
 
 bool
-SVGTextFrame::ShouldRenderAsPath(nsRenderingContext* aContext,
-                                 nsTextFrame* aFrame,
+SVGTextFrame::ShouldRenderAsPath(nsTextFrame* aFrame,
                                  bool& aShouldPaintSVGGlyphs)
 {
   // Rendering to a clip path.
