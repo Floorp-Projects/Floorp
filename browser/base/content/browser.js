@@ -393,6 +393,33 @@ const gSessionHistoryObserver = {
   }
 };
 
+const gGatherTelemetryObserver = {
+  observe: function(subject, topic, data) {
+    if (topic != "gather-telemetry") {
+      return;
+    }
+
+    let engine;
+    try {
+      engine = Services.search.defaultEngine;
+    } catch (e) {}
+    let name;
+
+    if (!engine) {
+      name = "NONE";
+    } else if (engine.identifier) {
+      name = engine.identifier;
+    } else if (engine.name) {
+      name = "other-" + engine.name;
+    } else {
+      name = "UNDEFINED";
+    }
+
+    let engines = Services.telemetry.getKeyedHistogramById("SEARCH_DEFAULT_ENGINE");
+    engines.add(name, true)
+  },
+};
+
 /**
  * Given a starting docshell and a URI to look up, find the docshell the URI
  * is loaded in.
@@ -1087,6 +1114,7 @@ var gBrowserInit = {
     Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked", false);
     Services.obs.addObserver(gXPInstallObserver, "addon-install-failed", false);
     Services.obs.addObserver(gXPInstallObserver, "addon-install-complete", false);
+    Services.obs.addObserver(gGatherTelemetryObserver, "gather-telemetry", false);
     Services.obs.addObserver(gKeywordURIFixup, "keyword-uri-fixup", false);
 
     BrowserOffline.init();
@@ -1395,6 +1423,7 @@ var gBrowserInit = {
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-blocked");
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-failed");
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-complete");
+      Services.obs.removeObserver(gGatherTelemetryObserver, "gather-telemetry");
       Services.obs.removeObserver(gKeywordURIFixup, "keyword-uri-fixup");
 
       try {
@@ -3145,6 +3174,7 @@ const BrowserSearch = {
    */
   recordSearchInHealthReport: function (engine, source) {
     BrowserUITelemetry.countSearchEvent(source);
+    this.recordSearchInTelemetry(engine, source);
 #ifdef MOZ_SERVICES_HEALTHREPORT
     let reporter = Cc["@mozilla.org/datareporting/service;1"]
                      .getService()
@@ -3165,6 +3195,38 @@ const BrowserSearch = {
       }
     });
 #endif
+  },
+
+  _getSearchEngineId: function (engine) {
+    if (!engine) {
+      return "other";
+    }
+
+    if (engine.identifier) {
+      return engine.identifier;
+    }
+
+    return "other-" + engine.name;
+  },
+
+  recordSearchInTelemetry: function (engine, source) {
+    const SOURCES = [
+      "abouthome",
+      "contextmenu",
+      "newtab",
+      "searchbar",
+      "urlbar",
+    ];
+
+    if (SOURCES.indexOf(source) == -1) {
+      Cu.reportError("Unknown source for search: " + source);
+      return;
+    }
+
+    let countId = this._getSearchEngineId(engine) + "." + source;
+
+    let count = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
+    count.add(countId);
   },
 };
 
