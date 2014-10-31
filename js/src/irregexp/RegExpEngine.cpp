@@ -1646,7 +1646,7 @@ IsNativeRegExpEnabled(JSContext *cx)
 RegExpCode
 irregexp::CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData *data,
                          HandleLinearString sample, bool is_global, bool ignore_case,
-                         bool is_ascii)
+                         bool is_ascii, bool force_bytecode)
 {
     if ((data->capture_count + 1) * 2 - 1 > RegExpMacroAssembler::kMaxRegister) {
         JS_ReportError(cx, "regexp too big");
@@ -1723,7 +1723,7 @@ irregexp::CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData 
     Maybe<InterpretedRegExpMacroAssembler> interpreted_assembler;
 
     RegExpMacroAssembler *assembler;
-    if (IsNativeRegExpEnabled(cx)) {
+    if (IsNativeRegExpEnabled(cx) && !force_bytecode) {
         NativeRegExpMacroAssembler::Mode mode =
             is_ascii ? NativeRegExpMacroAssembler::ASCII
                      : NativeRegExpMacroAssembler::JSCHAR;
