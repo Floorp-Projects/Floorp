@@ -1064,13 +1064,16 @@ CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports)
   // We'll crash here if aSupports is poisoned (== 0x5a5a5a5a5a5a5a5a).  This
   // is better (more informative) than crashing in ReleaseSliceNow().  See
   // bug 997908.  This patch should get backed out when bug 997908 gets fixed,
-  // or if it doesn't actually help diagnose that bug.
+  // or if it doesn't actually help diagnose that bug.  Specifying a constraint
+  // of "r" for aSupports ensures %0 is a register.  Without this, clang
+  // sometimes mishandles this inline assembly code, causing crashes.  See
+  // bug 1091801.
   __asm__ __volatile__("push %%rax;"
                        "push %%rdx;"
                        "movq %0, %%rax;"
                        "movq (%%rax), %%rdx;"
                        "pop %%rdx;"
-                       "pop %%rax;" : : "g" (aSupports));
+                       "pop %%rax;" : : "r" (aSupports));
 #endif
   mDeferredSupports.AppendElement(aSupports);
 }

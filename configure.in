@@ -6559,6 +6559,9 @@ case "$OS_TARGET:$NIGHTLY_BUILD" in
 WINNT:1)
     MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
     ;;
+Darwin:1)
+    MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
+    ;;
 *)
     MOZ_ARG_ENABLE_BOOL(content-sandbox,
     [  --enable-content-sandbox        Enable sandboxing support for content-processes],
@@ -8921,6 +8924,9 @@ AC_SUBST(MOZ_FOLD_LIBS)
 
 AC_SUBST(MOZ_ENABLE_SZIP)
 AC_SUBST(MOZ_SZIP_FLAGS)
+
+dnl Host JavaScript runtime, if any, to use during cross compiles.
+AC_SUBST(JS_BINARY)
 
 if test "$MOZ_DEBUG"; then
     MOZ_EM_DEBUG=1

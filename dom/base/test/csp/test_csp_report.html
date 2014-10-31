@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=548193
 /*
  * Description of the test:
  * We try to load an inline-src using a policy that constrains
- * all scripts from running (script-src 'none'). We verify that
+ * all scripts from running (default-src 'none'). We verify that
  * the generated csp-report contains the expceted values. If any
  * of the JSON is not formatted properly (e.g. not properly escaped)
  * then JSON.parse will fail, which allows to pinpoint such errors
@@ -29,10 +29,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=548193
 
 const testfile = "tests/dom/base/test/csp/file_csp_report.html";
 const reportURI = "http://mochi.test:8888/foo.sjs";
-const policy = "script-src 'none'; report-uri " + reportURI;
+const policy = "default-src 'none'; report-uri " + reportURI;
 const docUri = "http://mochi.test:8888/tests/dom/base/test/csp/file_csp_testserver.sjs" +
                "?file=tests/dom/base/test/csp/file_csp_report.html" +
-               "&csp=script-src%20%27none%27%3B%20report-uri%20http%3A//mochi.test%3A8888/foo.sjs";
+               "&csp=default-src%20%27none%27%3B%20report-uri%20http%3A//mochi.test%3A8888/foo.sjs";
 
 window.checkResults = function(reportObj) {
   var cspReport = reportObj["csp-report"];
@@ -50,9 +50,9 @@ window.checkResults = function(reportObj) {
 
   is(cspReport["blocked-uri"], "self", "Incorrect blocked-uri");
 
-  is(cspReport["violated-directive"], "script-src 'none'", "Incorrect violated-directive");
+  is(cspReport["violated-directive"], "default-src 'none'", "Incorrect violated-directive");
 
-  is(cspReport["original-policy"], "script-src 'none'; report-uri http://mochi.test:8888/foo.sjs",
+  is(cspReport["original-policy"], "default-src 'none'; report-uri http://mochi.test:8888/foo.sjs",
      "Incorrect original-policy");
 
   is(cspReport["source-file"], docUri, "Incorrect source-file");

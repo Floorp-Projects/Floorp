@@ -94,10 +94,37 @@ another thing;"""
         """
         expected = r"""function foo(){alert('crud');}"""
         self.assertMinified(js, expected)
-        
+
+    def testBlockCommentStartingWithSlash(self):
+        self.assertMinified('A; /*/ comment */ B', 'A;B')
+
+    def testBlockCommentEndingWithSlash(self):
+        self.assertMinified('A; /* comment /*/ B', 'A;B')
+
+    def testLeadingBlockCommentStartingWithSlash(self):
+        self.assertMinified('/*/ comment */ A', 'A')
+
+    def testLeadingBlockCommentEndingWithSlash(self):
+        self.assertMinified('/* comment /*/ A', 'A')
+
+    def testEmptyBlockComment(self):
+        self.assertMinified('/**/ A', 'A')
+
+    def testBlockCommentMultipleOpen(self):
+        self.assertMinified('/* A /* B */ C', 'C')
+
     def testJustAComment(self):
         self.assertMinified('     // a comment', '')
-        
+
+    def test_issue_10(self):
+        js = '''
+        files = [{name: value.replace(/^.*\\\\/, '')}];
+        // comment
+        A
+        '''
+        expected = '''files=[{name:value.replace(/^.*\\\\/,'')}]; A'''
+        self.assertMinified(js, expected)
+
     def testRe(self):
         js = r'''  
         var str = this.replace(/\\./g, '@').replace(/"[^"\\\n\r]*"/g, '');
@@ -151,6 +178,20 @@ Element.cleanWhitespace(element);"""
         },
         """
         expected = r"""inspect:function(useDoubleQuotes){var escapedString=this.gsub(/[\x00-\x1f\\]/,function(match){var character=String.specialChar[match[0]];return character?character:'\\u00'+match[0].charCodeAt().toPaddedString(2,16);});if(useDoubleQuotes)return'"'+escapedString.replace(/"/g,'\\"')+'"';return"'"+escapedString.replace(/'/g,'\\\'')+"'";},toJSON:function(){return this.inspect(true);},unfilterJSON:function(filter){return this.sub(filter||Prototype.JSONFilter,'#{1}');},"""
+        self.assertMinified(js, expected)
+
+    def testLiteralRe(self):
+        js = r"""
+        myString.replace(/\\/g, '/');
+        console.log("hi");
+        """
+        expected = r"""myString.replace(/\\/g,'/');console.log("hi");"""
+        self.assertMinified(js, expected)
+
+        js = r''' return /^data:image\//i.test(url) ||
+        /^(https?|ftp|file|about|chrome|resource):/.test(url);
+        '''
+        expected = r'''return /^data:image\//i.test(url)||/^(https?|ftp|file|about|chrome|resource):/.test(url);'''
         self.assertMinified(js, expected)
 
     def testNoBracesWithComment(self):
@@ -247,6 +288,68 @@ var  foo    =  "hey";
         self.assertMinified('x.replace(/\//, "_")// slash to underscore',
                 'x.replace(/\//,"_")')
 
+    def testSlashesNearComments(self):
+        original = '''
+        { a: n / 2, }
+        // comment
+        '''
+        expected = '''{a:n/2,}'''
+        self.assertMinified(original, expected)
+
+    def testReturn(self):
+        original = '''
+        return foo;//comment
+        return bar;'''
+        expected = 'return foo; return bar;'
+        self.assertMinified(original, expected)
+
+    def test_space_plus(self):
+        original = '"s" + ++e + "s"'
+        expected = '"s"+ ++e+"s"'
+        self.assertMinified(original, expected)
+
+    def test_no_final_newline(self):
+        original = '"s"'
+        expected = '"s"'
+        self.assertMinified(original, expected)
+
+    def test_space_with_regex_repeats(self):
+        original = '/(NaN| {2}|^$)/.test(a)&&(a="M 0 0");'
+        self.assertMinified(original, original)  # there should be nothing jsmin can do here
+
+    def test_space_with_regex_repeats_not_at_start(self):
+        original = 'aaa;/(NaN| {2}|^$)/.test(a)&&(a="M 0 0");'
+        self.assertMinified(original, original)  # there should be nothing jsmin can do here
+
+    def test_space_in_regex(self):
+        original = '/a (a)/.test("a")'
+        self.assertMinified(original, original)
+
+    def test_angular_1(self):
+        original = '''var /** holds major version number for IE or NaN for real browsers */
+                      msie,
+                      jqLite,           // delay binding since jQuery could be loaded after us.'''
+        minified = jsmin.jsmin(original)
+        self.assertTrue('var msie' in minified)
+
+    def test_angular_2(self):
+        original = 'var/* comment */msie;'
+        expected = 'var msie;'
+        self.assertMinified(original, expected)
+
+    def test_angular_3(self):
+        original = 'var /* comment */msie;'
+        expected = 'var msie;'
+        self.assertMinified(original, expected)
+
+    def test_angular_4(self):
+        original = 'var /* comment */ msie;'
+        expected = 'var msie;'
+        self.assertMinified(original, expected)
+
+    def test_angular_4(self):
+        original = 'a/b'
+        self.assertMinified(original, original)
 
 if __name__ == '__main__':
     unittest.main()

@@ -3417,8 +3417,8 @@ IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, Shape *shape, bool i
 }
 
 static bool
-IsCacheableGetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *shape, bool *isScripted,
-                       bool isDOMProxy=false)
+IsCacheableGetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *shape,
+                       bool *isScripted, bool *isTemporarilyUnoptimizable, bool isDOMProxy=false)
 {
     MOZ_ASSERT(isScripted);
 
@@ -3439,8 +3439,10 @@ IsCacheableGetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *sh
 #ifdef JSGC_GENERATIONAL
     // Information from get prop call ICs may be used directly from Ion code,
     // and should not be nursery allocated.
-    if (IsInsideNursery(holder) || IsInsideNursery(func))
+    if (IsInsideNursery(holder) || IsInsideNursery(func)) {
+        *isTemporarilyUnoptimizable = true;
         return false;
+    }
 #endif
 
     if (func->isNative()) {
@@ -3448,8 +3450,10 @@ IsCacheableGetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *sh
         return true;
     }
 
-    if (!func->hasJITCode())
+    if (!func->hasJITCode()) {
+        *isTemporarilyUnoptimizable = true;
         return false;
+    }
 
     *isScripted = true;
     return true;
@@ -3533,7 +3537,8 @@ IsCacheableSetPropAddSlot(JSContext *cx, HandleObject obj, HandleShape oldShape,
 }
 
 static bool
-IsCacheableSetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *shape, Shape* oldShape, bool *isScripted)
+IsCacheableSetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *shape,
+                       Shape* oldShape, bool *isScripted, bool *isTemporarilyUnoptimizable)
 {
     MOZ_ASSERT(isScripted);
 
@@ -3565,8 +3570,10 @@ IsCacheableSetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *sh
 #ifdef JSGC_GENERATIONAL
     // Information from set prop call ICs may be used directly from Ion code,
     // and should not be nursery allocated.
-    if (IsInsideNursery(holder) || IsInsideNursery(func))
+    if (IsInsideNursery(holder) || IsInsideNursery(func)) {
+        *isTemporarilyUnoptimizable = true;
         return false;
+    }
 #endif
 
     if (func->isNative()) {
@@ -3574,8 +3581,10 @@ IsCacheableSetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *sh
         return true;
     }
 
-    if (!func->hasJITCode())
+    if (!func->hasJITCode()) {
+        *isTemporarilyUnoptimizable = true;
         return false;
+    }
 
     *isScripted = true;
     return true;
@@ -3817,7 +3826,9 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script, jsbyt
     }
 
     bool getterIsScripted = false;
-    if (IsCacheableGetPropCall(cx, obj, holder, shape, &getterIsScripted, /*isDOMProxy=*/false)) {
+    bool isTemporarilyUnoptimizable = false;
+    if (IsCacheableGetPropCall(cx, obj, holder, shape, &getterIsScripted,
+                               &isTemporarilyUnoptimizable, /*isDOMProxy=*/false)) {
         RootedFunction getter(cx, &shape->getterObject()->as<JSFunction>());
 
 #if JS_HAS_NO_SUCH_METHOD
@@ -4062,6 +4073,9 @@ DoGetElemFallback(JSContext *cx, BaselineFrame *frame, ICGetElem_Fallback *stub_
     // Try to attach an optimized stub.
     if (!TryAttachGetElemStub(cx, frame->script(), pc, stub, lhs, rhs, res))
         return false;
+
+    // If we ever add a way to note unoptimizable accesses here, propagate the
+    // isTemporarilyUnoptimizable state from TryAttachNativeGetElemStub to here.
 
     return true;
 }
@@ -5840,7 +5854,9 @@ TryAttachGlobalNameStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     // changes we need to make sure IonBuilder::getPropTryCommonGetter (which
     // requires a Baseline stub) handles non-outerized this objects correctly.
     bool isScripted;
-    if (IsCacheableGetPropCall(cx, global, current, shape, &isScripted) && !isScripted)
+    bool isTemporarilyUnoptimizable = false;
+    if (IsCacheableGetPropCall(cx, global, current, shape, &isScripted, &isTemporarilyUnoptimizable) &&
+        !isScripted)
     {
         ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
         RootedFunction getter(cx, &shape->getterObject()->as<JSFunction>());
@@ -6019,6 +6035,9 @@ DoGetNameFallback(JSContext *cx, BaselineFrame *frame, ICGetName_Fallback *stub_
         if (!TryAttachScopeNameStub(cx, script, stub, scopeChain, name))
             return false;
     }
+
+    // If we ever add a way to note unoptimizable accesses here, propagate the
+    // isTemporarilyUnoptimizable state from TryAttachGlobalNameStub to here.
 
     return true;
 }
@@ -6396,9 +6415,11 @@ static bool
 TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
                            ICGetProp_Fallback *stub, HandlePropertyName name,
                            HandleValue val, HandleShape oldShape,
-                           HandleValue res, bool *attached)
+                           HandleValue res, bool *attached,
+                           bool *isTemporarilyUnoptimizable)
 {
     MOZ_ASSERT(!*attached);
+    MOZ_ASSERT(!*isTemporarilyUnoptimizable);
 
     if (!val.isObject())
         return true;
@@ -6459,7 +6480,8 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     }
 
     bool isScripted = false;
-    bool cacheableCall = IsCacheableGetPropCall(cx, obj, holder, shape, &isScripted, isDOMProxy);
+    bool cacheableCall = IsCacheableGetPropCall(cx, obj, holder, shape, &isScripted,
+                                                isTemporarilyUnoptimizable, isDOMProxy);
 
     // Try handling scripted getters.
     if (cacheableCall && isScripted && !isDOMProxy) {
@@ -6766,6 +6788,11 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub_
     }
 
     bool attached = false;
+    // There are some reasons we can fail to attach a stub that are temporary.
+    // We want to avoid calling noteUnoptimizableAccess() if the reason we
+    // failed to attach a stub is one of those temporary reasons, since we might
+    // end up attaching a stub for the exact same access later.
+    bool isTemporarilyUnoptimizable = false;
 
     if (op == JSOP_LENGTH) {
         if (!TryAttachLengthStub(cx, frame->script(), stub, val, res, &attached))
@@ -6782,7 +6809,7 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub_
     RootedScript script(cx, frame->script());
 
     if (!TryAttachNativeGetPropStub(cx, script, pc, stub, name, val, oldShape,
-                                    res, &attached))
+                                    res, &attached, &isTemporarilyUnoptimizable))
         return false;
     if (attached)
         return true;
@@ -6803,7 +6830,8 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub_
     }
 
     MOZ_ASSERT(!attached);
-    stub->noteUnoptimizableAccess();
+    if (!isTemporarilyUnoptimizable)
+        stub->noteUnoptimizableAccess();
 
     return true;
 }
@@ -7699,9 +7727,11 @@ BaselineScript::noteAccessedGetter(uint32_t pcOffset)
 static bool
 TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetProp_Fallback *stub,
                      HandleObject obj, HandleShape oldShape, HandleTypeObject oldType, uint32_t oldSlots,
-                     HandlePropertyName name, HandleId id, HandleValue rhs, bool *attached)
+                     HandlePropertyName name, HandleId id, HandleValue rhs, bool *attached,
+                     bool *isTemporarilyUnoptimizable)
 {
     MOZ_ASSERT(!*attached);
+    MOZ_ASSERT(!*isTemporarilyUnoptimizable);
 
     if (!obj->isNative() || obj->watched())
         return true;
@@ -7780,7 +7810,8 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetPr
     }
 
     bool isScripted = false;
-    bool cacheableCall = IsCacheableSetPropCall(cx, obj, holder, shape, oldShape, &isScripted);
+    bool cacheableCall = IsCacheableSetPropCall(cx, obj, holder, shape, oldShape,
+                                                &isScripted, isTemporarilyUnoptimizable);
 
     // Try handling scripted setters.
     if (cacheableCall && isScripted) {
@@ -7906,8 +7937,13 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
     }
 
     bool attached = false;
+    // There are some reasons we can fail to attach a stub that are temporary.
+    // We want to avoid calling noteUnoptimizableAccess() if the reason we
+    // failed to attach a stub is one of those temporary reasons, since we might
+    // end up attaching a stub for the exact same access later.
+    bool isTemporarilyUnoptimizable = false;
     if (!TryAttachSetPropStub(cx, script, pc, stub, obj, oldShape, oldType, oldSlots,
-                              name, id, rhs, &attached))
+                              name, id, rhs, &attached, &isTemporarilyUnoptimizable))
     {
         return false;
     }
@@ -7915,7 +7951,8 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
         return true;
 
     MOZ_ASSERT(!attached);
-    stub->noteUnoptimizableAccess();
+    if (!isTemporarilyUnoptimizable)
+        stub->noteUnoptimizableAccess();
 
     return true;
 }
