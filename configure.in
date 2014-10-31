@@ -8941,6 +8941,9 @@ AC_SUBST(MOZ_FOLD_LIBS)
 AC_SUBST(MOZ_ENABLE_SZIP)
 AC_SUBST(MOZ_SZIP_FLAGS)
 
+dnl Host JavaScript runtime, if any, to use during cross compiles.
+AC_SUBST(JS_BINARY)
+
 if test "$MOZ_DEBUG"; then
     MOZ_EM_DEBUG=1
 fi
