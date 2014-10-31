@@ -30,7 +30,6 @@
 #include "nsISVGChildFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
-#include "nsRenderingContext.h"
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
 #include "nsSVGClipPathFrame.h"
@@ -441,7 +440,7 @@ nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, uint32_t aFlags)
 class SVGPaintCallback : public nsSVGFilterPaintCallback
 {
 public:
-  virtual void Paint(nsRenderingContext *aContext, nsIFrame *aTarget,
+  virtual void Paint(gfxContext& aContext, nsIFrame *aTarget,
                      const gfxMatrix& aTransform,
                      const nsIntRect* aDirtyRect) MOZ_OVERRIDE
   {
@@ -466,7 +465,7 @@ public:
       }
     }
 
-    svgChildFrame->PaintSVG(*aContext->ThebesContext(), aTransform, dirtyRect);
+    svgChildFrame->PaintSVG(aContext, aTransform, dirtyRect);
   }
 };
 

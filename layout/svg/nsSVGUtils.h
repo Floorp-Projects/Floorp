@@ -34,7 +34,6 @@ class nsIContent;
 class nsIDocument;
 class nsIFrame;
 class nsPresContext;
-class nsRenderingContext;
 class nsStyleContext;
 class nsStyleCoord;
 class nsSVGClipPathFrame;

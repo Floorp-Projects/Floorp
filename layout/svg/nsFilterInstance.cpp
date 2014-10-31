@@ -11,12 +11,12 @@
 
 // Keep others in (case-insensitive) order:
 #include "gfx2DGlue.h"
+#include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PatternHelpers.h"
 #include "nsISVGChildFrame.h"
-#include "nsRenderingContext.h"
 #include "nsCSSFilterInstance.h"
 #include "nsSVGFilterInstance.h"
 #include "nsSVGFilterPaintCallback.h"
@@ -448,8 +448,7 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
     ctx->CurrentMatrix().Translate(-neededRect.TopLeft()).
                          PreMultiply(deviceToFilterSpace));
 
-  nsRenderingContext tmpCtx(ctx);
-  mPaintCallback->Paint(&tmpCtx, mTargetFrame, mPaintTransform, &dirty);
+  mPaintCallback->Paint(*ctx, mTargetFrame, mPaintTransform, &dirty);
 
   mSourceGraphic.mSourceSurface = offscreenDT->Snapshot();
   mSourceGraphic.mSurfaceRect = ToIntRect(neededRect);
