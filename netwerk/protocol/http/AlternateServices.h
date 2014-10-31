@@ -7,7 +7,7 @@
 /*
 Alt-Svc allows separation of transport routing from the origin host without
 using a proxy. See https://httpwg.github.io/http-extensions/alt-svc.html and
-https://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-03
+https://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-04
 
  Nice To Have Future Enhancements::
  * flush on network change event when we have an indicator
