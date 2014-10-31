@@ -69,14 +69,10 @@ const browserElementTestHelpers = {
   },
 
   addPermission: function() {
-    SpecialPowers.addPermission("browser", true, document);
-    this.tempPermissions.push(location.href)
-  },
-
-  'tempPermissions': [],
-  addPermissionForUrl: function(url) {
-    SpecialPowers.addPermission("browser", true, url);
-    this.tempPermissions.push(url);
+    this.lockTestReady();
+    SpecialPowers.pushPermissions(
+      [{'type': "browser", 'allow': 1, 'context': document}],
+      this.unlockTestReady.bind(this));
   },
 
   _observers: [],
@@ -100,10 +96,6 @@ const browserElementTestHelpers = {
   },
 
   cleanUp: function() {
-    for (var i = 0; i < this.tempPermissions.length; i++) {
-      SpecialPowers.removePermission("browser", this.tempPermissions[i]);
-    }
-
     for (var i = 0; i < this._observers.length; i++) {
       SpecialPowers.removeObserver(this._observers[i][0],
                                    this._observers[i][1]);
