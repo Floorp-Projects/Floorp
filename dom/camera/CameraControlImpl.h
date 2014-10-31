@@ -25,6 +25,8 @@ namespace layers {
   class Image;
 }
 
+class RecorderProfileManager;
+
 class CameraControlImpl : public ICameraControl
 {
 public:
@@ -47,6 +49,7 @@ public:
   virtual nsresult StopRecording() MOZ_OVERRIDE;
   virtual nsresult ResumeContinuousFocus() MOZ_OVERRIDE;
 
+  already_AddRefed<RecorderProfileManager> GetRecorderProfileManager();
   uint32_t GetCameraId() { return mCameraId; }
 
   virtual void Shutdown() MOZ_OVERRIDE;
@@ -124,6 +127,8 @@ protected:
   virtual nsresult ResumeContinuousFocusImpl() = 0;
   virtual nsresult PushParametersImpl() = 0;
   virtual nsresult PullParametersImpl() = 0;
+
+  virtual already_AddRefed<RecorderProfileManager> GetRecorderProfileManagerImpl() = 0;
 
   void OnShutterInternal();
   void OnClosedInternal();

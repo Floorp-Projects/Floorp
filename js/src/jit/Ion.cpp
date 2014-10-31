@@ -423,7 +423,7 @@ JitRuntime::ensureIonCodeAccessible(JSRuntime *rt)
         ionCodeProtected_ = false;
     }
 
-    if (rt->hasPendingInterrupt()) {
+    if (rt->interrupt) {
         // The interrupt handler needs to be invoked by this thread, but we may
         // be inside a signal handler and have no idea what is above us on the
         // stack (probably we are executing Ion code at an arbitrary point, but
@@ -1157,7 +1157,7 @@ IonScript::copyPatchableBackedges(JSContext *cx, JitCode *code,
         // whether an interrupt is currently desired, matching the targets
         // established by ensureIonCodeAccessible() above. We don't handle the
         // interrupt immediately as the interrupt lock is held here.
-        if (cx->runtime()->hasPendingInterrupt())
+        if (cx->runtime()->interrupt)
             PatchBackedge(backedge, interruptCheck, JitRuntime::BackedgeInterruptCheck);
         else
             PatchBackedge(backedge, loopHeader, JitRuntime::BackedgeLoopHeader);

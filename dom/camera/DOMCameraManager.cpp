@@ -59,7 +59,7 @@ nsDOMCameraManager::nsDOMCameraManager(nsPIDOMWindow* aWindow)
   , mWindow(aWindow)
 {
   /* member initializers and constructor code */
-  DOM_CAMERA_LOGT("%s:%d : this=%p, windowId=%" PRIx64 "\n", __func__, __LINE__, this, mWindowId);
+  DOM_CAMERA_LOGT("%s:%d : this=%p, windowId=%llx\n", __func__, __LINE__, this, mWindowId);
   MOZ_COUNT_CTOR(nsDOMCameraManager);
 }
 
@@ -364,7 +364,7 @@ nsDOMCameraManager::PermissionCancelled(uint32_t aCameraId,
 void
 nsDOMCameraManager::Register(nsDOMCameraControl* aDOMCameraControl)
 {
-  DOM_CAMERA_LOGI(">>> Register( aDOMCameraControl = %p ) mWindowId = 0x%" PRIx64 "\n", aDOMCameraControl, mWindowId);
+  DOM_CAMERA_LOGI(">>> Register( aDOMCameraControl = %p ) mWindowId = 0x%llx\n", aDOMCameraControl, mWindowId);
   MOZ_ASSERT(NS_IsMainThread());
 
   // Put the camera control into the hash table
@@ -379,7 +379,7 @@ nsDOMCameraManager::Register(nsDOMCameraControl* aDOMCameraControl)
 void
 nsDOMCameraManager::Shutdown(uint64_t aWindowId)
 {
-  DOM_CAMERA_LOGI(">>> Shutdown( aWindowId = 0x%" PRIx64 " )\n", aWindowId);
+  DOM_CAMERA_LOGI(">>> Shutdown( aWindowId = 0x%llx )\n", aWindowId);
   MOZ_ASSERT(NS_IsMainThread());
 
   CameraControls* controls = sActiveWindows->Get(aWindowId);
