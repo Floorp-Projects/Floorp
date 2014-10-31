@@ -52,5 +52,5 @@ pref("security.OCSP.require", false);
 pref("security.OCSP.GET.enabled", false);
 
 pref("security.ssl.errorReporting.enabled", true);
-pref("security.ssl.errorReporting.url", "https://data.mozilla.com/submit/sslreports-stg");
+pref("security.ssl.errorReporting.url", "https://data.mozilla.com/submit/sslreports");
 pref("security.ssl.errorReporting.automatic", false);
