@@ -139,11 +139,13 @@ function run_test() {
 
   test2("empty", "live");
   test2("empty", "dark-matter");
+  test2("empty", "cumulative");
 
   test2("unsampled1", "live");
   test2("unsampled1", "dark-matter");
 
   test2("unsampled2", "dark-matter");
+  test2("unsampled2", "cumulative");
 
   test2("sampled", "live");
 
