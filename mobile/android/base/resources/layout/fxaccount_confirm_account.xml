@@ -45,6 +45,11 @@
             style="@style/FxAccountLinkItem"
             android:text="@string/fxaccount_confirm_account_resend_email" />
 
+       	<TextView
+            android:id="@+id/change_confirmation_email_link"
+            style="@style/FxAccountLinkItem"
+            android:text="@string/fxaccount_confirm_account_change_email" />
+
         <LinearLayout style="@style/FxAccountSpacer" />
 
         <ImageView

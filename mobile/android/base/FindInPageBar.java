@@ -16,6 +16,7 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,6 +25,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnClickListener, GeckoEventListener  {
+    private static final String LOGTAG = "FindInPageBar";
     private static final String REQUEST_ID = "FindInPageBar";
 
     private final Context mContext;
@@ -181,13 +183,23 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
     /**
      * Request find operation, and update matchCount results (current count and total).
      */
-    private void sendRequestToFinderHelper(String request, String searchString) {
+    private void sendRequestToFinderHelper(final String request, final String searchString) {
         GeckoAppShell.sendRequestToGecko(new GeckoRequest(request, searchString) {
             @Override
             public void onResponse(NativeJSObject nativeJSObject) {
                 final int total = nativeJSObject.optInt("total", 0);
                 final int current = nativeJSObject.optInt("current", 0);
+                updateResult(total, current);
+            }
 
+            public void onError() {
+                // Gecko didn't respond due to state change, javascript error, etc.
+                updateResult(0, 0);
+                Log.d(LOGTAG, "No response from Gecko on request to match string: [" +
+                    searchString + "]");
+            }
+
+            private void updateResult(int total, int current) {
                 final Boolean statusVisibility = (total > 0);
                 final String statusText = current + "/" + total;
 
