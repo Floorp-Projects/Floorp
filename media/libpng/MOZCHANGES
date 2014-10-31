@@ -1,6 +1,8 @@
 
 Changes made to pristine libpng source by mozilla.org developers.
 
+2014/10/23  -- Synced with libpng-1.6.14 (bug #10xxxxx).
+
 2014/08/21  -- Synced with libpng-1.6.13 (bug #1021713).
                Renamed mozpngconf.h to pnglibconf.h.
 

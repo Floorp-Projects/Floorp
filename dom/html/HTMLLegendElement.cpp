@@ -22,7 +22,7 @@ HTMLLegendElement::~HTMLLegendElement()
 NS_IMPL_ELEMENT_CLONE(HTMLLegendElement)
 
 nsIContent*
-HTMLLegendElement::GetFieldSet()
+HTMLLegendElement::GetFieldSet() const
 {
   nsIContent* parent = GetParent();
 

@@ -82,7 +82,11 @@ MOZ_BEGIN_ENUM_CLASS(LayerRenderStateFlags, int8_t)
   Y_FLIPPED = 1 << 0,
   BUFFER_ROTATION = 1 << 1,
   // Notify Composer2D to swap the RB pixels of gralloc buffer
-  FORMAT_RB_SWAP = 1 << 2
+  FORMAT_RB_SWAP = 1 << 2,
+  // We record opaqueness here alongside the actual surface we're going to
+  // render. This avoids confusion when a layer might return different kinds
+  // of surfaces over time (e.g. video frames).
+  OPAQUE = 1 << 3
 MOZ_END_ENUM_CLASS(LayerRenderStateFlags)
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LayerRenderStateFlags)
 

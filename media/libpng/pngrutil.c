@@ -1,7 +1,7 @@
 
 /* pngrutil.c - utilities to read a PNG file
  *
- * Last changed in libpng 1.6.11 [June 5, 2014]
+ * Last changed in libpng 1.6.14 [October 23, 2014]
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -341,12 +341,12 @@ png_inflate_claim(png_structrp png_ptr, png_uint_32 owner)
        * are minimal.
        */
       (void)png_safecat(msg, (sizeof msg), 4, " using zstream");
-#     if PNG_LIBPNG_BUILD_BASE_TYPE >= PNG_LIBPNG_BUILD_RC
-         png_chunk_warning(png_ptr, msg);
-         png_ptr->zowner = 0;
-#     else
-         png_chunk_error(png_ptr, msg);
-#     endif
+#if PNG_LIBPNG_BUILD_BASE_TYPE >= PNG_LIBPNG_BUILD_RC
+      png_chunk_warning(png_ptr, msg);
+      png_ptr->zowner = 0;
+#else
+      png_chunk_error(png_ptr, msg);
+#endif
    }
 
    /* Implementation note: unlike 'png_deflate_claim' this internal function
@@ -364,22 +364,21 @@ png_inflate_claim(png_structrp png_ptr, png_uint_32 owner)
     */
    {
       int ret; /* zlib return code */
-#     if PNG_ZLIB_VERNUM >= 0x1240
+#if PNG_ZLIB_VERNUM >= 0x1240
 
-#        if defined(PNG_SET_OPTION_SUPPORTED) && \
-            defined(PNG_MAXIMUM_INFLATE_WINDOW)
-            int window_bits;
+# if defined(PNG_SET_OPTION_SUPPORTED) && defined(PNG_MAXIMUM_INFLATE_WINDOW)
+      int window_bits;
 
-            if (((png_ptr->options >> PNG_MAXIMUM_INFLATE_WINDOW) & 3) ==
-               PNG_OPTION_ON)
-               window_bits = 15;
+      if (((png_ptr->options >> PNG_MAXIMUM_INFLATE_WINDOW) & 3) ==
+          PNG_OPTION_ON)
+         window_bits = 15;
 
-            else
-               window_bits = 0;
-#        else
-#           define window_bits 0
-#        endif
-#     endif
+      else
+         window_bits = 0;
+# else
+#   define window_bits 0
+# endif
+#endif
 
       /* Set this for safety, just in case the previous owner left pointers to
        * memory allocations.
@@ -391,20 +390,20 @@ png_inflate_claim(png_structrp png_ptr, png_uint_32 owner)
 
       if (png_ptr->flags & PNG_FLAG_ZSTREAM_INITIALIZED)
       {
-#        if PNG_ZLIB_VERNUM < 0x1240
-            ret = inflateReset(&png_ptr->zstream);
-#        else
-            ret = inflateReset2(&png_ptr->zstream, window_bits);
-#        endif
+#if PNG_ZLIB_VERNUM < 0x1240
+         ret = inflateReset(&png_ptr->zstream);
+#else
+         ret = inflateReset2(&png_ptr->zstream, window_bits);
+#endif
       }
 
       else
       {
-#        if PNG_ZLIB_VERNUM < 0x1240
-            ret = inflateInit(&png_ptr->zstream);
-#        else
-            ret = inflateInit2(&png_ptr->zstream, window_bits);
-#        endif
+#if PNG_ZLIB_VERNUM < 0x1240
+         ret = inflateInit(&png_ptr->zstream);
+#else
+         ret = inflateInit2(&png_ptr->zstream, window_bits);
+#endif
 
          if (ret == Z_OK)
             png_ptr->flags |= PNG_FLAG_ZSTREAM_INITIALIZED;
@@ -419,9 +418,9 @@ png_inflate_claim(png_structrp png_ptr, png_uint_32 owner)
       return ret;
    }
 
-#  ifdef window_bits
-#     undef window_bits
-#  endif
+#ifdef window_bits
+# undef window_bits
+#endif
 }
 
 #ifdef PNG_READ_COMPRESSED_TEXT_SUPPORTED
@@ -518,7 +517,7 @@ png_inflate(png_structrp png_ptr, png_uint_32 owner, int finish,
           * end of the output buffer.
           */
          ret = inflate(&png_ptr->zstream, avail_out > 0 ? Z_NO_FLUSH :
-            (finish ? Z_FINISH : Z_SYNC_FLUSH));
+             (finish ? Z_FINISH : Z_SYNC_FLUSH));
       } while (ret == Z_OK);
 
       /* For safety kill the local buffer pointer now */
@@ -576,14 +575,14 @@ png_decompress_chunk(png_structrp png_ptr,
     */
    png_alloc_size_t limit = PNG_SIZE_MAX;
 
-#  ifdef PNG_SET_CHUNK_MALLOC_LIMIT_SUPPORTED
-      if (png_ptr->user_chunk_malloc_max > 0 &&
-         png_ptr->user_chunk_malloc_max < limit)
-         limit = png_ptr->user_chunk_malloc_max;
-#  elif PNG_USER_CHUNK_MALLOC_MAX > 0
-      if (PNG_USER_CHUNK_MALLOC_MAX < limit)
-         limit = PNG_USER_CHUNK_MALLOC_MAX;
-#  endif
+# ifdef PNG_SET_CHUNK_MALLOC_LIMIT_SUPPORTED
+   if (png_ptr->user_chunk_malloc_max > 0 &&
+       png_ptr->user_chunk_malloc_max < limit)
+      limit = png_ptr->user_chunk_malloc_max;
+# elif PNG_USER_CHUNK_MALLOC_MAX > 0
+   if (PNG_USER_CHUNK_MALLOC_MAX < limit)
+      limit = PNG_USER_CHUNK_MALLOC_MAX;
+# endif
 
    if (limit >= prefix_size + (terminate != 0))
    {
@@ -1016,7 +1015,7 @@ png_handle_PLTE(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
     */
 #ifdef PNG_READ_tRNS_SUPPORTED
    if (png_ptr->num_trans > 0 ||
-      (info_ptr != NULL && (info_ptr->valid & PNG_INFO_tRNS) != 0))
+       (info_ptr != NULL && (info_ptr->valid & PNG_INFO_tRNS) != 0))
    {
       /* Cancel this because otherwise it would be used if the transforms
        * require it.  Don't cancel the 'valid' flag because this would prevent
@@ -2677,7 +2676,7 @@ png_handle_iTXt(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
 
          buffer[uncompressed_length+prefix_length] = 0;
 
-         if (compressed != 0)
+         if (compressed == 0)
             text.compression = PNG_ITXT_COMPRESSION_NONE;
 
          else
@@ -3509,7 +3508,7 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
                /* This can only be the RGB case, so each copy is exactly one
                 * pixel and it is not necessary to check for a partial copy.
                 */
-               for(;;)
+               for (;;)
                {
                   dp[0] = sp[0], dp[1] = sp[1], dp[2] = sp[2];
 
