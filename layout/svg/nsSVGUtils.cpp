@@ -466,7 +466,7 @@ public:
       }
     }
 
-    svgChildFrame->PaintSVG(aContext, aTransform, dirtyRect);
+    svgChildFrame->PaintSVG(*aContext->ThebesContext(), aTransform, dirtyRect);
   }
 };
 
@@ -603,8 +603,6 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
     clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, aTransform);
   }
 
-  nsRenderingContext rendCtx(&aContext);
-
   /* Paint the child */
   if (effectProperties.HasValidFilter()) {
     nsRegion* dirtyRegion = nullptr;
@@ -631,7 +629,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
     nsFilterInstance::PaintFilteredFrame(aFrame, aContext, aTransform,
                                          &paintCallback, dirtyRegion);
   } else {
-    svgChildFrame->PaintSVG(&rendCtx, aTransform, aDirtyRect);
+    svgChildFrame->PaintSVG(aContext, aTransform, aDirtyRect);
   }
 
   if (clipPathFrame && isTrivialClip) {
@@ -1590,8 +1588,6 @@ nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
   }
   aContext->GetDrawTarget()->AddUserData(&gfxTextContextPaint::sUserDataKey,
                                          aContextPaint, nullptr);
-  nsRenderingContext context(aContext);
-  svgFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
   gfxMatrix m;
   if (frame->GetContent()->IsSVG()) {
     // PaintSVG() expects the passed transform to be the transform to its own
@@ -1599,7 +1595,7 @@ nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
     m = static_cast<nsSVGElement*>(frame->GetContent())->
           PrependLocalTransformsTo(gfxMatrix(), nsSVGElement::eUserSpaceToParent);
   }
-  nsresult rv = svgFrame->PaintSVG(&context, m);
+  nsresult rv = svgFrame->PaintSVG(*aContext, m);
   return NS_SUCCEEDED(rv);
 }
 

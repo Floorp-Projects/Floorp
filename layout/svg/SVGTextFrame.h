@@ -16,8 +16,8 @@
 #include "nsStubMutationObserver.h"
 #include "nsSVGPaintServerFrame.h"
 
+class gfxContext;
 class nsDisplaySVGText;
-class nsRenderingContext;
 class SVGTextFrame;
 class nsTextFrame;
 
@@ -324,7 +324,7 @@ public:
 
   // nsISVGChildFrame interface:
   virtual void NotifySVGChanged(uint32_t aFlags) MOZ_OVERRIDE;
-  virtual nsresult PaintSVG(nsRenderingContext* aContext,
+  virtual nsresult PaintSVG(gfxContext& aContext,
                             const gfxMatrix& aTransform,
                             const nsIntRect* aDirtyRect = nullptr) MOZ_OVERRIDE;
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) MOZ_OVERRIDE;

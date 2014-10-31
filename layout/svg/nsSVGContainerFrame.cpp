@@ -248,7 +248,7 @@ nsSVGDisplayContainerFrame::IsSVGTransformed(gfx::Matrix *aOwnTransform,
 // nsISVGChildFrame methods
 
 nsresult
-nsSVGDisplayContainerFrame::PaintSVG(nsRenderingContext* aContext,
+nsSVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
                                      const gfxMatrix& aTransform,
                                      const nsIntRect *aDirtyRect)
 {
@@ -290,7 +290,7 @@ nsSVGDisplayContainerFrame::PaintSVG(nsRenderingContext* aContext,
         continue;
       }
     }
-    nsSVGUtils::PaintFrameWithEffects(kid, *aContext->ThebesContext(), m, aDirtyRect);
+    nsSVGUtils::PaintFrameWithEffects(kid, aContext, m, aDirtyRect);
   }
 
   return NS_OK;
