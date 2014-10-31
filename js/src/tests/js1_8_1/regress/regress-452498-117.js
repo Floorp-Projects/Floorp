@@ -28,7 +28,7 @@ function test()
 
   try
   {
-    eval('x; function  x(){}; const x = undefined;');
+    eval('x; function  x(){}; const x;');
   }
   catch(ex)
   {
@@ -46,7 +46,7 @@ function test()
 // =====
     try
     {
-      (function(){(yield []) (function(){with({}){x} }); const x = undefined;})();
+      (function(){(yield []) (function(){with({}){x} }); const x;})();
     }
     catch(ex)
     {
@@ -81,7 +81,7 @@ function test()
 // =====
   try
   {
-    eval('(function(){{for(c in (function (){ for(x in (x1))window} )()) {const x = undefined;} }})();');
+    eval('(function(){{for(c in (function (){ for(x in (x1))window} )()) {const x;} }})();');
   }
   catch(ex)
   {

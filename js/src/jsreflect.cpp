@@ -1732,7 +1732,7 @@ class ASTSerializer
     bool sourceElement(ParseNode *pn, MutableHandleValue dst);
 
     bool declaration(ParseNode *pn, MutableHandleValue dst);
-    bool variableDeclaration(ParseNode *pn, bool lexical, MutableHandleValue dst);
+    bool variableDeclaration(ParseNode *pn, bool let, MutableHandleValue dst);
     bool variableDeclarator(ParseNode *pn, MutableHandleValue dst);
     bool let(ParseNode *pn, bool expr, MutableHandleValue dst);
     bool importDeclaration(ParseNode *pn, MutableHandleValue dst);
@@ -2001,7 +2001,6 @@ ASTSerializer::declaration(ParseNode *pn, MutableHandleValue dst)
 {
     MOZ_ASSERT(pn->isKind(PNK_FUNCTION) ||
                pn->isKind(PNK_VAR) ||
-               pn->isKind(PNK_GLOBALCONST) ||
                pn->isKind(PNK_LET) ||
                pn->isKind(PNK_CONST));
 
@@ -2010,28 +2009,21 @@ ASTSerializer::declaration(ParseNode *pn, MutableHandleValue dst)
         return function(pn, AST_FUNC_DECL, dst);
 
       case PNK_VAR:
-      case PNK_GLOBALCONST:
+      case PNK_CONST:
         return variableDeclaration(pn, false, dst);
 
       default:
-        MOZ_ASSERT(pn->isKind(PNK_LET) || pn->isKind(PNK_CONST));
+        MOZ_ASSERT(pn->isKind(PNK_LET));
         return variableDeclaration(pn, true, dst);
     }
 }
 
 bool
-ASTSerializer::variableDeclaration(ParseNode *pn, bool lexical, MutableHandleValue dst)
+ASTSerializer::variableDeclaration(ParseNode *pn, bool let, MutableHandleValue dst)
 {
-    MOZ_ASSERT_IF(lexical, pn->isKind(PNK_LET) || pn->isKind(PNK_CONST));
-    MOZ_ASSERT_IF(!lexical, pn->isKind(PNK_VAR) || pn->isKind(PNK_GLOBALCONST));
+    MOZ_ASSERT(let ? pn->isKind(PNK_LET) : (pn->isKind(PNK_VAR) || pn->isKind(PNK_CONST)));
 
-    VarDeclKind kind = VARDECL_ERR;
-    // Treat both the toplevel const binding (secretly var-like) and the lexical const
-    // the same way
-    if (lexical)
-        kind = pn->isKind(PNK_LET) ? VARDECL_LET : VARDECL_CONST;
-    else
-        kind = pn->isKind(PNK_VAR) ? VARDECL_VAR : VARDECL_CONST;
+    VarDeclKind kind = let ? VARDECL_LET : pn->isKind(PNK_VAR) ? VARDECL_VAR : VARDECL_CONST;
 
     NodeVector dtors(cx);
     if (!dtors.reserve(pn->pn_count))
@@ -2174,7 +2166,6 @@ ASTSerializer::exportDeclaration(ParseNode *pn, MutableHandleValue dst)
 
       case PNK_VAR:
       case PNK_CONST:
-      case PNK_GLOBALCONST:
       case PNK_LET:
         if (!variableDeclaration(kid, kind == PNK_LET, &decl))
             return false;
@@ -2317,7 +2308,7 @@ ASTSerializer::forInit(ParseNode *pn, MutableHandleValue dst)
         return true;
     }
 
-    return (pn->isKind(PNK_VAR) || pn->isKind(PNK_GLOBALCONST))
+    return (pn->isKind(PNK_VAR) || pn->isKind(PNK_CONST))
            ? variableDeclaration(pn, false, dst)
            : expression(pn, dst);
 }
@@ -2350,11 +2341,10 @@ ASTSerializer::statement(ParseNode *pn, MutableHandleValue dst)
     switch (pn->getKind()) {
       case PNK_FUNCTION:
       case PNK_VAR:
-      case PNK_GLOBALCONST:
+      case PNK_CONST:
         return declaration(pn, dst);
 
       case PNK_LET:
-      case PNK_CONST:
         return pn->isArity(PN_BINARY)
                ? let(pn, false, dst)
                : declaration(pn, dst);

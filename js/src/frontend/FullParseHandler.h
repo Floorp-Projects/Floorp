@@ -667,8 +667,8 @@ class FullParseHandler
                                                   uint16_t firstDominatingLexicalSlot)
     {
         MOZ_ASSERT(pn->isUsed());
-        if (dn->isLexical() && dn->pn_cookie.slot() < firstDominatingLexicalSlot)
-            pn->pn_dflags |= PND_LEXICAL;
+        if (dn->isLet() && dn->pn_cookie.slot() < firstDominatingLexicalSlot)
+            pn->pn_dflags |= PND_LET;
     }
 
     static uintptr_t definitionToBits(Definition *dn) {
