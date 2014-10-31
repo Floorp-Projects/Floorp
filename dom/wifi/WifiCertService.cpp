@@ -329,15 +329,45 @@ private:
     // Delete server certificate.
     nsCString serverCertName("WIFI_SERVERCERT_", 16);
     serverCertName += userNickname;
-
-    ScopedCERTCertificate cert(
-      CERT_FindCertByNickname(CERT_GetDefaultCertDB(), serverCertName.get())
-    );
-    if (!cert) {
-      return MapSECStatus(SECFailure);
+    nsresult rv = deleteCert(serverCertName);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
 
-    SECStatus srv = SEC_DeletePermCertificate(cert);
+    // Delete user certificate and private key.
+    nsCString userCertName("WIFI_USERCERT_", 14);
+    userCertName += userNickname;
+    rv = deleteCert(userCertName);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    return NS_OK;
+  }
+
+  nsresult deleteCert(const nsCString &aCertNickname)
+  {
+    ScopedCERTCertificate cert(
+      CERT_FindCertByNickname(CERT_GetDefaultCertDB(), aCertNickname.get())
+    );
+    // Because we delete certificates in blind, so it's acceptable to delete
+    // a non-exist certificate.
+    if (!cert) {
+      return NS_OK;
+    }
+
+    ScopedPK11SlotInfo slot(
+      PK11_KeyForCertExists(cert, nullptr, nullptr)
+    );
+
+    SECStatus srv;
+    if (slot) {
+      // Delete private key along with certificate.
+      srv = PK11_DeleteTokenCertAndKey(cert, nullptr);
+    } else {
+      srv = SEC_DeletePermCertificate(cert);
+    }
+
     if (srv != SECSuccess) {
       return MapSECStatus(srv);
     }
