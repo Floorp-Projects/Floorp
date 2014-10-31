@@ -1240,7 +1240,7 @@ LookupAliasedName(BytecodeEmitter *bce, HandleScript script, PropertyName *name,
                             if (freeVariables[i].isHoistedUse() && bindingIndex >= lexicalBegin) {
                                 MOZ_ASSERT(pn);
                                 MOZ_ASSERT(pn->isUsed());
-                                pn->pn_dflags |= PND_LEXICAL;
+                                pn->pn_dflags |= PND_LET;
                             }
 
                             break;
@@ -1289,7 +1289,7 @@ AssignHops(BytecodeEmitter *bce, ParseNode *pn, unsigned src, ScopeCoordinate *d
 static inline MaybeCheckLexical
 NodeNeedsCheckLexical(ParseNode *pn)
 {
-    return pn->isHoistedLexicalUse() ? CheckLexical : DontCheckLexical;
+    return pn->isHoistedLetUse() ? CheckLexical : DontCheckLexical;
 }
 
 static bool
@@ -1461,7 +1461,6 @@ BytecodeEmitter::isAliasedName(ParseNode *pn)
 
     switch (dn->kind()) {
       case Definition::LET:
-      case Definition::CONST:
         /*
          * There are two ways to alias a let variable: nested functions and
          * dynamic scope operations. (This is overly conservative since the
@@ -1486,7 +1485,7 @@ BytecodeEmitter::isAliasedName(ParseNode *pn)
          */
         return script->formalIsAliased(pn->pn_cookie.slot());
       case Definition::VAR:
-      case Definition::GLOBALCONST:
+      case Definition::CONST:
         MOZ_ASSERT_IF(sc->allLocalsAliased(), script->varIsAliased(pn->pn_cookie.slot()));
         return script->varIsAliased(pn->pn_cookie.slot());
       case Definition::PLACEHOLDER:
@@ -1778,7 +1777,6 @@ BindNameToSlotHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case Definition::VAR:
-      case Definition::GLOBALCONST:
       case Definition::CONST:
       case Definition::LET:
         switch (op) {
@@ -2079,7 +2077,7 @@ CheckSideEffects(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool
             }
         }
 
-        if (pn->isHoistedLexicalUse()) {
+        if (pn->isHoistedLetUse()) {
             // Hoisted uses of lexical bindings throw on access.
             *answer = true;
         }
@@ -4658,7 +4656,7 @@ EmitLet(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
     ParseNode *varList = pnLet->pn_left;
     MOZ_ASSERT(varList->isArity(PN_LIST));
     ParseNode *letBody = pnLet->pn_right;
-    MOZ_ASSERT(letBody->isLexical() && letBody->isKind(PNK_LEXICALSCOPE));
+    MOZ_ASSERT(letBody->isLet() && letBody->isKind(PNK_LEXICALSCOPE));
 
     int letHeadDepth = bce->stackDepth;
 
@@ -4748,7 +4746,7 @@ static bool
 EmitForInOrOfVariables(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *letDecl)
 {
     *letDecl = pn->isKind(PNK_LEXICALSCOPE);
-    MOZ_ASSERT_IF(*letDecl, pn->isLexical());
+    MOZ_ASSERT_IF(*letDecl, pn->isLet());
 
     // If the left part is 'var x', emit code to define x if necessary using a
     // prolog opcode, but do not emit a pop. If it is 'let x', EnterBlockScope
@@ -6701,7 +6699,7 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             // Assign the destructuring arguments before defining any functions,
             // see bug 419662.
             MOZ_ASSERT(pnchild->isKind(PNK_SEMI));
-            MOZ_ASSERT(pnchild->pn_kid->isKind(PNK_VAR) || pnchild->pn_kid->isKind(PNK_GLOBALCONST));
+            MOZ_ASSERT(pnchild->pn_kid->isKind(PNK_VAR) || pnchild->pn_kid->isKind(PNK_CONST));
             if (!EmitTree(cx, bce, pnchild))
                 return false;
             pnchild = pnchild->pn_next;
@@ -6834,7 +6832,7 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_VAR:
-      case PNK_GLOBALCONST:
+      case PNK_CONST:
         if (!EmitVariables(cx, bce, pn, InitializeVars))
             return false;
         break;
@@ -6997,8 +6995,6 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_LET:
-      case PNK_CONST:
-        MOZ_ASSERT_IF(pn->isKind(PNK_CONST), !pn->isArity(PN_BINARY));
         ok = pn->isArity(PN_BINARY)
              ? EmitLet(cx, bce, pn)
              : EmitVariables(cx, bce, pn, InitializeVars);

@@ -21,7 +21,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = 'TypeError: redeclaration of var e';
+  expect = 'TypeError: redeclaration of variable e';
   try
   {
     eval('{ var e = 3; let e = ""; } print(typeof e);');
