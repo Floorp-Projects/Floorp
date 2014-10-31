@@ -247,8 +247,8 @@ Volume::SetState(Volume::STATE aNewState)
        mIsSharing = false;
        break;
 
-     case nsIVolume::STATE_IDLE:
-       break;
+     case nsIVolume::STATE_IDLE: // Fall through
+     case nsIVolume::STATE_CHECKMNT: // Fall through
      default:
        break;
   }
@@ -408,7 +408,15 @@ Volume::HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer& aTokenizer
         if (token.EqualsLiteral("to")) {
           nsresult errCode;
           token = aTokenizer.nextToken();
-          SetState((STATE)token.ToInteger(&errCode));
+          STATE newState = (STATE)(token.ToInteger(&errCode));
+          if (newState == nsIVolume::STATE_MOUNTED) {
+            // We set the state to STATE_CHECKMNT here, and the once the
+            // AutoMounter detects that the volume is actually accessible
+            // then the AutoMounter will set the volume as STATE_MOUNTED.
+            SetState(nsIVolume::STATE_CHECKMNT);
+          } else {
+            SetState(newState);
+          }
           break;
         }
       }
