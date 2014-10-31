@@ -117,6 +117,24 @@ body[dir="rtl"] .histogram {
   overflow: hidden;
 }
 
+.keyed-histogram {
+  white-space: nowrap;
+  padding: 15px;
+  position: relative; /* required for position:absolute of the contained .copy-node */
+  display: block;
+}
+
+.keyed-histogram-title {
+  text-overflow: ellipsis;
+  width: 100%;
+  margin: 10px;
+  font-weight: bold;
+  font-size: 120%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+
 .bar {
   width: 2em;
   margin: 2px;
