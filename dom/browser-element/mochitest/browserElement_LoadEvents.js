@@ -20,7 +20,7 @@ function runTest() {
   var seenLocationChange = false;
 
   var iframe = document.createElement('iframe');
-  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.setAttribute('mozbrowser', 'true');
   iframe.id = 'iframe';
   iframe.src = 'http://example.com/tests/dom/browser-element/mochitest/file_browserElement_LoadEvents.html';
 

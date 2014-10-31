@@ -26,13 +26,12 @@ function runTest() {
   iframe.src = browserElementTestHelpers.emptyPage1;
 
   var childID = null;
-  expectOnlyOneProcessCreated().then(function(chid) {
-    childID = chid;
-  }).then(function() {
-    return expectPriorityChange(childID, 'FOREGROUND');
-  }).then(function() {
-    return expectMozbrowserEvent(iframe, 'loadend');
-  }).then(function() {
+  Promise.all([
+    expectOnlyOneProcessCreated('FOREGROUND').then(function(chid) {
+      childID = chid;
+    }),
+    expectMozbrowserEvent(iframe, 'loadend')
+  ]).then(function() {
     var p = expectPriorityChange(childID, 'BACKGROUND');
 
     // We wait until mozbrowserloadend before calling setVisible, because

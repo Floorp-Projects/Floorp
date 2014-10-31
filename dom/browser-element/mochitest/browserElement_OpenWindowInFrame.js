@@ -16,7 +16,7 @@ browserElementTestHelpers.addPermission();
 
 function runTest() {
   var iframe = document.createElement('iframe');
-  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.setAttribute('mozbrowser', 'true');
 
   var gotPopup = false;
   iframe.addEventListener('mozbrowseropenwindow', function(e) {
