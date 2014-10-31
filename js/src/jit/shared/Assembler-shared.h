@@ -783,7 +783,7 @@ enum AsmJSImmKind
     AsmJSImm_PowD            = AsmJSExit::Builtin_PowD,
     AsmJSImm_ATan2D          = AsmJSExit::Builtin_ATan2D,
     AsmJSImm_Runtime,
-    AsmJSImm_RuntimeInterruptUint32,
+    AsmJSImm_RuntimeInterrupt,
     AsmJSImm_StackLimit,
     AsmJSImm_ReportOverRecursed,
     AsmJSImm_OnDetached,
