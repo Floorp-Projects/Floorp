@@ -1269,7 +1269,7 @@ JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
       return false;
     }
 
-    if (!JS::ToInt32(cx, args[0], &value)) {
+    if (!JS::ToInt32(cx, args[1], &value)) {
       return false;
     }
   }
