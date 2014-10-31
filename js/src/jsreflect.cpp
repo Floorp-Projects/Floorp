@@ -1733,7 +1733,7 @@ class ASTSerializer
 
     bool declaration(ParseNode *pn, MutableHandleValue dst);
     bool variableDeclaration(ParseNode *pn, bool let, MutableHandleValue dst);
-    bool variableDeclarator(ParseNode *pn, MutableHandleValue dst);
+    bool variableDeclarator(ParseNode *pn, VarDeclKind *pkind, MutableHandleValue dst);
     bool let(ParseNode *pn, bool expr, MutableHandleValue dst);
     bool importDeclaration(ParseNode *pn, MutableHandleValue dst);
     bool importSpecifier(ParseNode *pn, MutableHandleValue dst);
@@ -1785,9 +1785,9 @@ class ASTSerializer
     bool identifier(ParseNode *pn, MutableHandleValue dst);
     bool literal(ParseNode *pn, MutableHandleValue dst);
 
-    bool pattern(ParseNode *pn, MutableHandleValue dst);
-    bool arrayPattern(ParseNode *pn, MutableHandleValue dst);
-    bool objectPattern(ParseNode *pn, MutableHandleValue dst);
+    bool pattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleValue dst);
+    bool arrayPattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleValue dst);
+    bool objectPattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleValue dst);
 
     bool function(ParseNode *pn, ASTType type, MutableHandleValue dst);
     bool functionArgsAndBody(ParseNode *pn, NodeVector &args, NodeVector &defaults,
@@ -2023,14 +2023,15 @@ ASTSerializer::variableDeclaration(ParseNode *pn, bool let, MutableHandleValue d
 {
     MOZ_ASSERT(let ? pn->isKind(PNK_LET) : (pn->isKind(PNK_VAR) || pn->isKind(PNK_CONST)));
 
-    VarDeclKind kind = let ? VARDECL_LET : pn->isKind(PNK_VAR) ? VARDECL_VAR : VARDECL_CONST;
+    /* Later updated to VARDECL_CONST if we find a PND_CONST declarator. */
+    VarDeclKind kind = let ? VARDECL_LET : VARDECL_VAR;
 
     NodeVector dtors(cx);
     if (!dtors.reserve(pn->pn_count))
         return false;
     for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
         RootedValue child(cx);
-        if (!variableDeclarator(next, &child))
+        if (!variableDeclarator(next, &kind, &child))
             return false;
         dtors.infallibleAppend(child);
     }
@@ -2038,7 +2039,7 @@ ASTSerializer::variableDeclaration(ParseNode *pn, bool let, MutableHandleValue d
 }
 
 bool
-ASTSerializer::variableDeclarator(ParseNode *pn, MutableHandleValue dst)
+ASTSerializer::variableDeclarator(ParseNode *pn, VarDeclKind *pkind, MutableHandleValue dst)
 {
     ParseNode *pnleft;
     ParseNode *pnright;
@@ -2059,7 +2060,7 @@ ASTSerializer::variableDeclarator(ParseNode *pn, MutableHandleValue dst)
     }
 
     RootedValue left(cx), right(cx);
-    return pattern(pnleft, &left) &&
+    return pattern(pnleft, pkind, &left) &&
            optExpression(pnright, &right) &&
            builder.variableDeclarator(left, right, &pn->pn_pos, dst);
 }
@@ -2080,10 +2081,15 @@ ASTSerializer::let(ParseNode *pn, bool expr, MutableHandleValue dst)
     if (!dtors.reserve(letHead->pn_count))
         return false;
 
+    VarDeclKind kind = VARDECL_LET_HEAD;
+
     for (ParseNode *next = letHead->pn_head; next; next = next->pn_next) {
         RootedValue child(cx);
-
-        if (!variableDeclarator(next, &child))
+        /*
+         * Unlike in |variableDeclaration|, this does not update |kind|; since let-heads do
+         * not contain const declarations, declarators should never have PND_CONST set.
+         */
+        if (!variableDeclarator(next, &kind, &child))
             return false;
         dtors.infallibleAppend(child);
     }
@@ -2254,7 +2260,7 @@ ASTSerializer::catchClause(ParseNode *pn, bool *isGuarded, MutableHandleValue ds
 
     RootedValue var(cx), guard(cx), body(cx);
 
-    if (!pattern(pn->pn_kid1, &var) ||
+    if (!pattern(pn->pn_kid1, nullptr, &var) ||
         !optExpression(pn->pn_kid2, &guard)) {
         return false;
     }
@@ -2442,7 +2448,7 @@ ASTSerializer::statement(ParseNode *pn, MutableHandleValue dst)
         if (head->isKind(PNK_FORIN)) {
             RootedValue var(cx);
             return (!head->pn_kid1
-                    ? pattern(head->pn_kid2, &var)
+                    ? pattern(head->pn_kid2, nullptr, &var)
                     : head->pn_kid1->isKind(PNK_LEXICALSCOPE)
                     ? variableDeclaration(head->pn_kid1->pn_expr, true, &var)
                     : variableDeclaration(head->pn_kid1, false, &var)) &&
@@ -2452,7 +2458,7 @@ ASTSerializer::statement(ParseNode *pn, MutableHandleValue dst)
         if (head->isKind(PNK_FOROF)) {
             RootedValue var(cx);
             return (!head->pn_kid1
-                    ? pattern(head->pn_kid2, &var)
+                    ? pattern(head->pn_kid2, nullptr, &var)
                     : head->pn_kid1->isKind(PNK_LEXICALSCOPE)
                     ? variableDeclaration(head->pn_kid1->pn_expr, true, &var)
                     : variableDeclaration(head->pn_kid1, false, &var)) &&
@@ -2585,7 +2591,7 @@ ASTSerializer::comprehensionBlock(ParseNode *pn, MutableHandleValue dst)
     bool isForOf = in->isKind(PNK_FOROF);
 
     RootedValue patt(cx), src(cx);
-    return pattern(in->pn_kid2, &patt) &&
+    return pattern(in->pn_kid2, nullptr, &patt) &&
            expression(in->pn_kid3, &src) &&
            builder.comprehensionBlock(patt, src, isForEach, isForOf, &in->pn_pos, dst);
 }
@@ -2756,7 +2762,7 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
         LOCAL_ASSERT(op > AOP_ERR && op < AOP_LIMIT);
 
         RootedValue lhs(cx), rhs(cx);
-        return pattern(pn->pn_left, &lhs) &&
+        return pattern(pn->pn_left, nullptr, &lhs) &&
                expression(pn->pn_right, &rhs) &&
                builder.assignmentExpression(op, lhs, rhs, &pn->pn_pos, dst);
       }
@@ -3116,7 +3122,7 @@ ASTSerializer::literal(ParseNode *pn, MutableHandleValue dst)
 }
 
 bool
-ASTSerializer::arrayPattern(ParseNode *pn, MutableHandleValue dst)
+ASTSerializer::arrayPattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleValue dst)
 {
     MOZ_ASSERT(pn->isKind(PNK_ARRAY));
 
@@ -3130,14 +3136,14 @@ ASTSerializer::arrayPattern(ParseNode *pn, MutableHandleValue dst)
         } else if (next->isKind(PNK_SPREAD)) {
             RootedValue target(cx);
             RootedValue spread(cx);
-            if (!pattern(next->pn_kid, &target))
+            if (!pattern(next->pn_kid, pkind, &target))
                 return false;
             if(!builder.spreadExpression(target, &next->pn_pos, &spread))
                 return false;
             elts.infallibleAppend(spread);
         } else {
             RootedValue patt(cx);
-            if (!pattern(next, &patt))
+            if (!pattern(next, pkind, &patt))
                 return false;
             elts.infallibleAppend(patt);
         }
@@ -3147,7 +3153,7 @@ ASTSerializer::arrayPattern(ParseNode *pn, MutableHandleValue dst)
 }
 
 bool
-ASTSerializer::objectPattern(ParseNode *pn, MutableHandleValue dst)
+ASTSerializer::objectPattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleValue dst)
 {
     MOZ_ASSERT(pn->isKind(PNK_OBJECT));
 
@@ -3172,7 +3178,7 @@ ASTSerializer::objectPattern(ParseNode *pn, MutableHandleValue dst)
         }
 
         RootedValue patt(cx), prop(cx);
-        if (!pattern(target, &patt) ||
+        if (!pattern(target, pkind, &patt) ||
             !builder.propertyPattern(key, patt, propdef->isKind(PNK_SHORTHAND), &propdef->pn_pos,
                                      &prop))
         {
@@ -3186,15 +3192,20 @@ ASTSerializer::objectPattern(ParseNode *pn, MutableHandleValue dst)
 }
 
 bool
-ASTSerializer::pattern(ParseNode *pn, MutableHandleValue dst)
+ASTSerializer::pattern(ParseNode *pn, VarDeclKind *pkind, MutableHandleValue dst)
 {
     JS_CHECK_RECURSION(cx, return false);
     switch (pn->getKind()) {
       case PNK_OBJECT:
-        return objectPattern(pn, dst);
+        return objectPattern(pn, pkind, dst);
 
       case PNK_ARRAY:
-        return arrayPattern(pn, dst);
+        return arrayPattern(pn, pkind, dst);
+
+      case PNK_NAME:
+        if (pkind && (pn->pn_dflags & PND_CONST))
+            *pkind = VARDECL_CONST;
+        /* FALL THROUGH */
 
       default:
         return expression(pn, dst);
@@ -3337,7 +3348,7 @@ ASTSerializer::functionArgs(ParseNode *pn, ParseNode *pnargs, ParseNode *pndestr
      */
     while ((arg && arg != pnbody) || destruct) {
         if (destruct && destruct->pn_right->frameSlot() == i) {
-            if (!pattern(destruct->pn_left, &node) || !args.append(node))
+            if (!pattern(destruct->pn_left, nullptr, &node) || !args.append(node))
                 return false;
             destruct = destruct->pn_next;
         } else if (arg && arg != pnbody) {
