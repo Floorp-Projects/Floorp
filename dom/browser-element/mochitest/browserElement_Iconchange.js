@@ -23,14 +23,14 @@ function createLink(name, sizes, rel) {
 
 function runTest() {
   var iframe1 = document.createElement('iframe');
-  SpecialPowers.wrap(iframe1).mozbrowser = true;
+  iframe1.setAttribute('mozbrowser', 'true');
   document.body.appendChild(iframe1);
 
   // iframe2 is a red herring; we modify its favicon but don't listen for
   // iconchanges; we want to make sure that its iconchange events aren't
   // picked up by the listener on iframe1.
   var iframe2 = document.createElement('iframe');
-  SpecialPowers.wrap(iframe2).mozbrowser = true;
+  iframe2.setAttribute('mozbrowser', 'true');
   document.body.appendChild(iframe2);
 
   // iframe3 is another red herring.  It's not a mozbrowser, so we shouldn't

@@ -10,7 +10,7 @@ browserElementTestHelpers.addPermission();
 
 function runTest() {
   var iframe1 = document.createElement('iframe');
-  SpecialPowers.wrap(iframe1).mozbrowser = true;
+  iframe1.setAttribute('mozbrowser', 'true');
   iframe1.id = 'iframe1';
   iframe1.addEventListener('mozbrowserloadend', function if1_loadend() {
     iframe1.removeEventListener('mozbrowserloadend', if1_loadend);
