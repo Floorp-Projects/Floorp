@@ -2757,18 +2757,6 @@ js::GetPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
 }
 
 bool
-js::ToPrimitive(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp)
-{
-    bool ok;
-    if (JSConvertOp op = obj->getClass()->convert)
-        ok = op(cx, obj, hint, vp);
-    else
-        ok = JS::OrdinaryToPrimitive(cx, obj, hint, vp);
-    MOZ_ASSERT_IF(ok, vp.isPrimitive());
-    return ok;
-}
-
-bool
 js::WatchGuts(JSContext* cx, JS::HandleObject origObj, JS::HandleId id, JS::HandleObject callable)
 {
     RootedObject obj(cx, GetInnerObject(origObj));
@@ -2973,6 +2961,47 @@ JS::OrdinaryToPrimitive(JSContext* cx, HandleObject obj, JSType hint, MutableHan
                       ? "primitive type"
                       : hint == JSTYPE_STRING ? "string" : "number");
     return false;
+}
+
+bool
+js::ToPrimitive(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp)
+{
+    bool ok;
+    if (JSConvertOp op = obj->getClass()->convert)
+        ok = op(cx, obj, hint, vp);
+    else
+        ok = JS::OrdinaryToPrimitive(cx, obj, hint, vp);
+    MOZ_ASSERT_IF(ok, vp.isPrimitive());
+    return ok;
+}
+
+bool
+js::ToPrimitiveSlow(JSContext* cx, MutableHandleValue vp)
+{
+    JSObject* obj = &vp.toObject();
+
+    /* Optimize new String(...).valueOf(). */
+    if (obj->is<StringObject>()) {
+        jsid id = NameToId(cx->names().valueOf);
+        StringObject* nobj = &obj->as<StringObject>();
+        if (ClassMethodIsNative(cx, nobj, &StringObject::class_, id, str_toString)) {
+            vp.setString(nobj->unbox());
+            return true;
+        }
+    }
+
+    /* Optimize new Number(...).valueOf(). */
+    if (obj->is<NumberObject>()) {
+        jsid id = NameToId(cx->names().valueOf);
+        NumberObject* nobj = &obj->as<NumberObject>();
+        if (ClassMethodIsNative(cx, nobj, &NumberObject::class_, id, num_valueOf)) {
+            vp.setNumber(nobj->unbox());
+            return true;
+        }
+    }
+
+    RootedObject objRoot(cx, obj);
+    return ToPrimitive(cx, objRoot, JSTYPE_VOID, vp);
 }
 
 bool
