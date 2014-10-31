@@ -24,6 +24,7 @@ add_task(function*() {
   let actionURL = makeActionURI("switchtab", {url: "about:about"}).spec;
   yield check_a11y_label("% about", "about:about " + actionURL + " Tab");
 
+  gURLBar.popup.hidePopup();
   yield promisePopupHidden(gURLBar.popup);
   gBrowser.removeTab(tab);
 });

@@ -744,7 +744,7 @@ function is_element_hidden(element, msg) {
 function promisePopupEvent(popup, eventSuffix) {
   let endState = {shown: "open", hidden: "closed"}[eventSuffix];
 
-  if (popup.state = endState)
+  if (popup.state == endState)
     return Promise.resolve();
 
   let eventType = "popup" + eventSuffix;

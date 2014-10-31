@@ -16,9 +16,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1082672
 </div>
 <pre id="test">
 <script type="application/javascript">
-var sym = Symbol("ponies");
-Object.defineProperty(window, sym, {configurable: true, value: 3});
-is(window[sym], 3);
+if (typeof Symbol === "function") {
+  var sym = Symbol("ponies");
+  Object.defineProperty(window, sym, {configurable: true, value: 3});
+  is(window[sym], 3);
+} else {
+  ok(true, "no Symbols in this build");
+}
 </script>
 </pre>
 </body>
