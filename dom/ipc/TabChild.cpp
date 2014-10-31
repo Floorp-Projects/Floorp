@@ -82,9 +82,6 @@
 #include "LayersLogging.h"
 #include "nsIOService.h"
 #include "nsDOMClassInfoID.h"
-#include "nsIAppsService.h"
-#include "nsNetUtil.h"
-#include "nsIPermissionManager.h"
 
 #include "nsColorPickerProxy.h"
 
@@ -1817,64 +1814,6 @@ TabChild::DoFakeShow()
   mDidFakeShow = true;
 }
 
-#ifdef MOZ_WIDGET_GONK
-void
-TabChild::MaybeRequestPreinitCamera()
-{
-    // Check if this tab will use the `camera` permission.
-    nsCOMPtr<nsIAppsService> appsService = do_GetService("@mozilla.org/AppsService;1");
-    if (NS_WARN_IF(!appsService)) {
-      return;
-    }
-
-    nsString manifestUrl = EmptyString();
-    appsService->GetManifestURLByLocalId(OwnAppId(), manifestUrl);
-    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-    if (NS_WARN_IF(!secMan)) {
-      return;
-    }
-
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), manifestUrl);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-
-    nsCOMPtr<nsIPrincipal> principal;
-    rv = secMan->GetAppCodebasePrincipal(uri, OwnAppId(), false,
-                                         getter_AddRefs(principal));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-
-    uint16_t status = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-    principal->GetAppStatus(&status);
-    bool isCertified = status == nsIPrincipal::APP_STATUS_CERTIFIED;
-    if (!isCertified) {
-      return;
-    }
-
-    nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-    if (NS_WARN_IF(!permMgr)) {
-      return;
-    }
-
-    uint32_t permission = nsIPermissionManager::DENY_ACTION;
-    permMgr->TestPermissionFromPrincipal(principal, "camera", &permission);
-    bool hasPermission = permission == nsIPermissionManager::ALLOW_ACTION;
-    if (!hasPermission) {
-      return;
-    }
-
-    nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
-    if (NS_WARN_IF(!observerService)) {
-      return;
-    }
-
-    observerService->NotifyObservers(nullptr, "init-camera-hw", nullptr);
-}
-#endif
-
 bool
 TabChild::RecvShow(const nsIntSize& size)
 {
@@ -1898,10 +1837,6 @@ TabChild::RecvShow(const nsIntSize& size)
     }
 
     baseWindow->SetVisibility(true);
-
-#ifdef MOZ_WIDGET_GONK
-    MaybeRequestPreinitCamera();
-#endif
 
     return InitTabChildGlobal();
 }
