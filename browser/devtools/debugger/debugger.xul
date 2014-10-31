@@ -369,9 +369,7 @@
                                tooltiptext="&debuggerUI.sources.blackBoxTooltip;"
                                command="blackBoxCommand"/>
                 <toolbarbutton id="pretty-print"
-                               class="devtools-toolbarbutton devtools-monospace"
-                               text-as-image="true"
-                               label="{}"
+                               class="devtools-toolbarbutton"
                                tooltiptext="&debuggerUI.sources.prettyPrint;"
                                command="prettyPrintCommand"
                                hidden="true"/>
