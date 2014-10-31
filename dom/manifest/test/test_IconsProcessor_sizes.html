@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1079453</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+/**
+ * icon member's sizes property
+ * https://w3c.github.io/manifest/#sizes-member
+ **/
+'use strict';
+var validSizes = [{
+  test: '16x16',
+  expect: ['16x16']
+}, {
+  test: 'hello 16x16 16x16',
+  expect: ['16x16']
+}, {
+  test: '32x32 16 48x48 12',
+  expect: ['32x32', '48x48']
+}, {
+  test: `${whiteSpace}128x128${whiteSpace}512x512 8192x8192 32768x32768${whiteSpace}`,
+  expect: ['128x128', '512x512', '8192x8192', '32768x32768']
+}, {
+  test: 'any',
+  expect: ['any']
+}, {
+  test: 'Any',
+  expect: ['Any']
+}, {
+  test: '16x32',
+  expect: ['16x32']
+}, {
+  test: '17x33',
+  expect: ['17x33']
+}, {
+  test: '32x32 32x32',
+  expect: ['32x32']
+}, {
+  test: '32X32',
+  expect: ['32X32']
+}, {
+  test: 'any 32x32',
+  expect: ['any', '32x32']
+}];
+
+var testIcon = {
+  icons: [{
+    src: 'test',
+    sizes: undefined
+  }]
+};
+
+validSizes.forEach(({
+  test, expect
+}) => {
+  testIcon.icons[0].sizes = test;
+  data.jsonText = JSON.stringify(testIcon);
+  var result = processor.process(data);
+  var sizes = result.icons[0].sizes;
+  for (var expectedSize of expect) {
+    var expected = `Expect sizes to contain ${expectedSize}`;
+    ise(sizes.has(expectedSize), true, expected);
+  }
+  expected = `Expect the size of the set to be ${expect.length}.`;
+  ise(sizes.size, expect.length, expected);
+});
+
+var testIcon = {
+  icons: [{
+    src: 'test',
+    sizes: undefined
+  }]
+};
+
+var invalidSizes = ['invalid', '', ' ', '16 x 16', '32', '21', '16xx16', '16 x x 6'];
+invalidSizes.forEach((invalidSize) => {
+  var expected = 'Expect invalid sizes to return an empty set.';
+  testIcon.icons[0].sizes = invalidSize;
+  data.jsonText = JSON.stringify(testIcon);
+  var result = processor.process(data);
+  var sizes = result.icons[0].sizes;
+  ise(sizes.size, 0, expected);
+});
+
+typeTests.forEach((type) => {
+  var expected = `Expect non-string sizes to be empty set: ${typeof type}.`;
+  testIcon.icons[0].sizes = type;
+  data.jsonText = JSON.stringify(testIcon);
+  var result = processor.process(data);
+  var sizes = result.icons[0].sizes;
+  ise(sizes.size, 0, expected);
+});
+  </script>
+</head>
