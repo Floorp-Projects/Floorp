@@ -21,7 +21,7 @@
 #include "nsIFrame.h"
 #include "mozilla/gfx/2D.h"
 
-class gfxASurface;
+class gfxContext;
 class nsIFrame;
 class nsSVGFilterPaintCallback;
 
@@ -77,7 +77,7 @@ public:
    *   border box).
    */
   static nsresult PaintFilteredFrame(nsIFrame *aFilteredFrame,
-                                     nsRenderingContext *aContext,
+                                     gfxContext& aContext,
                                      const gfxMatrix& aTransform,
                                      nsSVGFilterPaintCallback *aPaintCallback,
                                      const nsRegion* aDirtyArea);

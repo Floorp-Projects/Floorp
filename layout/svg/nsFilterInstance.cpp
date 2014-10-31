@@ -58,7 +58,7 @@ UserSpaceMetricsForFrame(nsIFrame* aFrame)
 
 nsresult
 nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
-                                     nsRenderingContext *aContext,
+                                     gfxContext& aContext,
                                      const gfxMatrix& aTransform,
                                      nsSVGFilterPaintCallback *aPaintCallback,
                                      const nsRegion *aDirtyArea)
@@ -71,7 +71,7 @@ nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
   if (!instance.IsInitialized()) {
     return NS_OK;
   }
-  return instance.Render(aContext->ThebesContext());
+  return instance.Render(&aContext);
 }
 
 nsRegion

@@ -628,7 +628,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
       dirtyRegion = &tmpDirtyRegion;
     }
     SVGPaintCallback paintCallback;
-    nsFilterInstance::PaintFilteredFrame(aFrame, &rendCtx, aTransform,
+    nsFilterInstance::PaintFilteredFrame(aFrame, aContext, aTransform,
                                          &paintCallback, dirtyRegion);
   } else {
     svgChildFrame->PaintSVG(&rendCtx, aTransform, aDirtyRect);
