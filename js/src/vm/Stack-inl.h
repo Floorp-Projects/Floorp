@@ -110,14 +110,6 @@ InterpreterFrame::initLocals()
 }
 
 inline Value &
-InterpreterFrame::unaliasedVar(uint32_t i, MaybeCheckAliasing checkAliasing)
-{
-    MOZ_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
-    MOZ_ASSERT(i < script()->nfixedvars());
-    return slots()[i];
-}
-
-inline Value &
 InterpreterFrame::unaliasedLocal(uint32_t i)
 {
     MOZ_ASSERT(i < script()->nfixed());
@@ -486,16 +478,6 @@ AbstractFramePtr::numFormalArgs() const
     if (isBaselineFrame())
         return asBaselineFrame()->numFormalArgs();
     return asRematerializedFrame()->numFormalArgs();
-}
-
-inline Value &
-AbstractFramePtr::unaliasedVar(uint32_t i, MaybeCheckAliasing checkAliasing)
-{
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->unaliasedVar(i, checkAliasing);
-    if (isBaselineFrame())
-        return asBaselineFrame()->unaliasedVar(i, checkAliasing);
-    return asRematerializedFrame()->unaliasedVar(i, checkAliasing);
 }
 
 inline Value &

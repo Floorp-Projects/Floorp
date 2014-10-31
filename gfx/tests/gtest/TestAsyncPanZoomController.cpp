@@ -1019,33 +1019,22 @@ TEST_F(APZCBasicTester, OverScrollPanning) {
   ApzcPan(apzc, time, touchStart, touchEnd);
   EXPECT_TRUE(apzc->IsOverscrolled());
 
-  // Note that in the calls to SampleContentTransformForFrame below, the time
-  // increment used is sufficiently large for the animation to have completed. However,
-  // any single call to SampleContentTransformForFrame will not finish an animation
-  // *and* also proceed through the following animation, if there is one.
-  // Therefore the minimum number of calls to go from an overscroll-inducing pan
-  // to a reset state is 3; these are documented further below.
-
+  // Check that we recover from overscroll via an animation.
+  const TimeDuration increment = TimeDuration::FromMilliseconds(1);
+  bool recoveredFromOverscroll = false;
   ScreenPoint pointOut;
   ViewTransform viewTransformOut;
+  while (apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut)) {
+    // The reported scroll offset should be the same throughout.
+    EXPECT_EQ(ScreenPoint(0, 90), pointOut);
 
-  // This sample will run to the end of the non-overscrolling fling animation
-  // and will schedule the overscrolling fling animation.
-  apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(10000), &viewTransformOut, pointOut);
-  EXPECT_EQ(ScreenPoint(0, 90), pointOut);
-  EXPECT_TRUE(apzc->IsOverscrolled());
+    if (!apzc->IsOverscrolled()) {
+      recoveredFromOverscroll = true;
+    }
 
-  // This sample will run to the end of the overscrolling fling animation and
-  // will schedule the snapback animation.
-  apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(20000), &viewTransformOut, pointOut);
-  EXPECT_EQ(ScreenPoint(0, 90), pointOut);
-  EXPECT_TRUE(apzc->IsOverscrolled());
-
-  // This sample will run to the end of the snapback animation and reset the state.
-  apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(30000), &viewTransformOut, pointOut);
-  EXPECT_EQ(ScreenPoint(0, 90), pointOut);
-  EXPECT_FALSE(apzc->IsOverscrolled());
-
+    testStartTime += increment;
+  }
+  EXPECT_TRUE(recoveredFromOverscroll);
   apzc->AssertStateIsReset();
 }
 
@@ -1062,13 +1051,12 @@ TEST_F(APZCBasicTester, OverScrollAbort) {
   ScreenPoint pointOut;
   ViewTransform viewTransformOut;
 
-  // This sample call will run to the end of the non-overscrolling fling animation
-  // and will schedule the overscrolling fling animation (see comment in OverScrollPanning
-  // above for more explanation).
+  // This sample call will run to the end of the fling animation
+  // and will schedule the overscroll animation.
   apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(10000), &viewTransformOut, pointOut);
   EXPECT_TRUE(apzc->IsOverscrolled());
 
-  // At this point, we have an active overscrolling fling animation.
+  // At this point, we have an active overscroll animation.
   // Check that cancelling the animation clears the overscroll.
   apzc->CancelAnimation();
   EXPECT_FALSE(apzc->IsOverscrolled());

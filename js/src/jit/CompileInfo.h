@@ -9,13 +9,12 @@
 
 #include "jsfun.h"
 
+#include "jit/IonAllocPolicy.h"
 #include "jit/Registers.h"
 #include "vm/ScopeObject.h"
 
 namespace js {
 namespace jit {
-
-class TempAllocator;
 
 inline unsigned
 StartArgSlot(JSScript *script)
@@ -74,7 +73,7 @@ class InlineScriptTree {
                                  jsbytecode *callerPc, JSScript *script);
 
     InlineScriptTree *addCallee(TempAllocator *allocator, jsbytecode *callerPc,
-                                 JSScript *calleeScript);
+                                JSScript *calleeScript);
 
     InlineScriptTree *caller() const {
         return caller_;
@@ -123,7 +122,8 @@ class InlineScriptTree {
     }
 };
 
-class BytecodeSite {
+class BytecodeSite : public TempObject
+{
     // InlineScriptTree identifying innermost active function at site.
     InlineScriptTree *tree_;
 
@@ -140,10 +140,6 @@ class BytecodeSite {
     {
         MOZ_ASSERT(tree_ != nullptr);
         MOZ_ASSERT(pc_ != nullptr);
-    }
-
-    bool hasTree() const {
-        return tree_ != nullptr;
     }
 
     InlineScriptTree *tree() const {

@@ -61,9 +61,6 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoop)
     innerHeader->add(yBeta);
     innerHeader->end(MTest::New(func.alloc, yBeta, innerBackedge, outerBackedge));
 
-    MNop *anchor = MNop::New(func.alloc);
-    anchor->setGuard();
-    innerBackedge->add(anchor);
     innerBackedge->end(MGoto::New(func.alloc, innerHeader));
     outerBackedge->end(MGoto::New(func.alloc, outerHeader));
 
@@ -155,9 +152,6 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoopNested)
     innerHeader->add(wBeta);
     innerHeader->end(MTest::New(func.alloc, wBeta, innerBackedge, middleBackedge));
 
-    MNop *anchor = MNop::New(func.alloc);
-    anchor->setGuard();
-    innerBackedge->add(anchor);
     innerBackedge->end(MGoto::New(func.alloc, innerHeader));
     middleBackedge->end(MGoto::New(func.alloc, middleHeader));
     outerBackedge->end(MGoto::New(func.alloc, outerHeader));

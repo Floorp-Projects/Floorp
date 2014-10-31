@@ -5,11 +5,9 @@
  * https://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Minimal test cases that obey the (current, but undesirable)
-// requirement that the buffer size should be acceptable to asm.js -
-// at least 4K AND a power of 2 OR a multiple of 16MB.  Also, on
-// 64-bit a SharedArrayBuffer is very expensive under these rules - a
-// 4GB area is reserved for it.  So don't go allocating a ton of them.
+// Minimal test cases.  Note that on 64-bit a SharedArrayBuffer is
+// very expensive under these rules - a 4GB area is reserved for it.
+// So don't go allocating a ton of them.
 //
 // These tests cannot test that sharing works across workers.  There
 // are or will be tests, in dom/workers, that do that.
@@ -36,9 +34,6 @@ function testSharedArrayBuffer() {
 
     // can't convert any other object
     assertThrowsInstanceOf(() => SharedArrayBuffer({}), TypeError);
-
-    // asm.js limitation - may go away
-    assertThrowsInstanceOf(() => new SharedArrayBuffer(12), Error);
 
     // byteLength can be invoked as per normal, indirectly
     assertEq(Object.getOwnPropertyDescriptor(SharedArrayBuffer.prototype,"byteLength").get.call(b), 4096);

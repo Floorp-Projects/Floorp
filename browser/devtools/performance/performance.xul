@@ -14,7 +14,8 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://browser/content/devtools/theme-switching.js"/>
-  <script type="application/javascript" src="performance.js"/>
+  <script type="application/javascript" src="performance/controller.js"/>
+  <script type="application/javascript" src="performance/views/main.js"/>
 
   <vbox class="theme-body" flex="1">
     <toolbar id="performance-toolbar" class="devtools-toolbar">

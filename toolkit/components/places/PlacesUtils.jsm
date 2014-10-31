@@ -385,6 +385,18 @@ this.PlacesUtils = {
   },
 
   /**
+   * Reverse a host based on the moz_places algorithm, that is reverse the host
+   * string and add a trailing period.  For example "google.com" becomes
+   * "moc.elgoog.".
+   *
+   * @param url
+   *        the URL to generate a rev host for.
+   * @return the reversed host string.
+   */
+  getReversedHost(url)
+    url.host.split("").reverse().join("") + ".",
+
+  /**
    * String-wraps a result node according to the rules of the specified
    * content type.
    * @param   aNode

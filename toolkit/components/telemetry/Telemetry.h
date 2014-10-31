@@ -68,6 +68,11 @@ void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now(
 base::Histogram* GetHistogramById(ID id);
 
 /**
+ * Return a raw histogram for keyed histograms.
+ */
+base::Histogram* GetKeyedHistogramById(ID id, const nsAString&);
+
+/**
  * Those wrappers are needed because the VS versions we use do not support free
  * functions with default template arguments.
  */

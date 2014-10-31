@@ -185,7 +185,7 @@ PluginDocument::StartDocumentLoad(const char*         aCommand,
     return rv;
   }
 
-  MediaDocument::UpdateTitleAndCharset(mMimeType);
+  MediaDocument::UpdateTitleAndCharset(mMimeType, aChannel);
 
   mStreamListener = new PluginStreamListener(this);
   NS_ASSERTION(aDocListener, "null aDocListener");

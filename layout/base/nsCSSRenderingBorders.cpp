@@ -7,6 +7,8 @@
 #include "nsCSSRenderingBorders.h"
 
 #include "gfxUtils.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/PathHelpers.h"
 #include "nsStyleConsts.h"
 #include "nsCSSColorUtils.h"
 #include "GeckoProfiler.h"
@@ -173,8 +175,8 @@ nsCSSBorderRenderer::ComputeInnerRadii(const gfxCornerSizes& aRadii,
 }
 
 /* static */ void
-nsCSSBorderRenderer::ComputeOuterRadii(const gfxCornerSizes& aRadii,
-                                       const gfxFloat *aBorderSizes,
+nsCSSBorderRenderer::ComputeOuterRadii(const RectCornerRadii& aRadii,
+                                       const Float *aBorderSizes,
                                        gfxCornerSizes *aOuterRadiiRet)
 {
   gfxCornerSizes& oRadii = *aOuterRadiiRet;
@@ -183,24 +185,24 @@ nsCSSBorderRenderer::ComputeOuterRadii(const gfxCornerSizes& aRadii,
   oRadii = gfxCornerSizes(0.0);
 
   // round the edges that have radii > 0.0 to start with
-  if (aRadii[C_TL].width > 0.0 && aRadii[C_TL].height > 0.0) {
-    oRadii[C_TL].width = std::max(0.0, aRadii[C_TL].width + aBorderSizes[NS_SIDE_LEFT]);
-    oRadii[C_TL].height = std::max(0.0, aRadii[C_TL].height + aBorderSizes[NS_SIDE_TOP]);
+  if (aRadii[C_TL].width > 0.f && aRadii[C_TL].height > 0.f) {
+    oRadii[C_TL].width = std::max(0.f, aRadii[C_TL].width + aBorderSizes[NS_SIDE_LEFT]);
+    oRadii[C_TL].height = std::max(0.f, aRadii[C_TL].height + aBorderSizes[NS_SIDE_TOP]);
   }
 
-  if (aRadii[C_TR].width > 0.0 && aRadii[C_TR].height > 0.0) {
-    oRadii[C_TR].width = std::max(0.0, aRadii[C_TR].width + aBorderSizes[NS_SIDE_RIGHT]);
-    oRadii[C_TR].height = std::max(0.0, aRadii[C_TR].height + aBorderSizes[NS_SIDE_TOP]);
+  if (aRadii[C_TR].width > 0.f && aRadii[C_TR].height > 0.f) {
+    oRadii[C_TR].width = std::max(0.f, aRadii[C_TR].width + aBorderSizes[NS_SIDE_RIGHT]);
+    oRadii[C_TR].height = std::max(0.f, aRadii[C_TR].height + aBorderSizes[NS_SIDE_TOP]);
   }
 
-  if (aRadii[C_BR].width > 0.0 && aRadii[C_BR].height > 0.0) {
-    oRadii[C_BR].width = std::max(0.0, aRadii[C_BR].width + aBorderSizes[NS_SIDE_RIGHT]);
-    oRadii[C_BR].height = std::max(0.0, aRadii[C_BR].height + aBorderSizes[NS_SIDE_BOTTOM]);
+  if (aRadii[C_BR].width > 0.f && aRadii[C_BR].height > 0.f) {
+    oRadii[C_BR].width = std::max(0.f, aRadii[C_BR].width + aBorderSizes[NS_SIDE_RIGHT]);
+    oRadii[C_BR].height = std::max(0.f, aRadii[C_BR].height + aBorderSizes[NS_SIDE_BOTTOM]);
   }
 
-  if (aRadii[C_BL].width > 0.0 && aRadii[C_BL].height > 0.0) {
-    oRadii[C_BL].width = std::max(0.0, aRadii[C_BL].width + aBorderSizes[NS_SIDE_LEFT]);
-    oRadii[C_BL].height = std::max(0.0, aRadii[C_BL].height + aBorderSizes[NS_SIDE_BOTTOM]);
+  if (aRadii[C_BL].width > 0.f && aRadii[C_BL].height > 0.f) {
+    oRadii[C_BL].width = std::max(0.f, aRadii[C_BL].width + aBorderSizes[NS_SIDE_LEFT]);
+    oRadii[C_BL].height = std::max(0.f, aRadii[C_BL].height + aBorderSizes[NS_SIDE_BOTTOM]);
   }
 }
 
