@@ -543,7 +543,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
     nsRegion dirtyRegion = aDirtyRect - offsetToBoundingBox;
     gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aFrame);
-    nsFilterInstance::PaintFilteredFrame(aFrame, aCtx, tm, &callback, &dirtyRegion);
+    nsFilterInstance::PaintFilteredFrame(aFrame, *gfx, tm, &callback, &dirtyRegion);
   } else {
     gfx->SetMatrix(matrixAutoSaveRestore.Matrix());
     aLayerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, aBuilder);
