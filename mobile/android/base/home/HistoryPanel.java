@@ -230,7 +230,6 @@ public class HistoryPanel extends HomeFragment {
             final SpannableStringBuilder hintBuilder = formatHintText(hintText);
             if (hintBuilder != null) {
                 emptyHint.setText(hintBuilder);
-                emptyHint.setText(hintBuilder);
                 emptyHint.setMovementMethod(LinkMovementMethod.getInstance());
                 emptyHint.setVisibility(View.VISIBLE);
             }
