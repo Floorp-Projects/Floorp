@@ -501,10 +501,10 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
       }
     }
 
-    nsRefPtr<nsRenderingContext> refContext =
-        PresContext()->PresShell()->CreateReferenceRenderingContext();
+    nsRenderingContext refContext(
+        PresContext()->PresShell()->CreateReferenceRenderingContext());
 
-    CalculateUnderline(*refContext, *fontMet);
+    CalculateUnderline(refContext, *fontMet);
 
     nscolor c = aOverrideColor ? *aOverrideColor : StyleColor()->mColor;
     ColorPattern color(ToDeviceColor(c));
@@ -522,7 +522,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
           posResolve.logicalIndex = mAccessKeyInfo->mAccesskeyIndex;
           rv = nsBidiPresUtils::RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), level,
                                            presContext, aRenderingContext,
-                                           *refContext, *fontMet,
+                                           refContext, *fontMet,
                                            aTextRect.x, baseline,
                                            &posResolve,
                                            1);
@@ -533,7 +533,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
       {
           rv = nsBidiPresUtils::RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), level,
                                            presContext, aRenderingContext,
-                                           *refContext, *fontMet,
+                                           refContext, *fontMet,
                                            aTextRect.x, baseline);
       }
     }
@@ -548,14 +548,14 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
                mAccessKeyInfo->mBeforeWidth = nsLayoutUtils::
                    AppUnitWidthOfString(mCroppedTitle.get(),
                                         mAccessKeyInfo->mAccesskeyIndex,
-                                        *fontMet, *refContext);
+                                        *fontMet, refContext);
            else
                mAccessKeyInfo->mBeforeWidth = 0;
        }
 
        fontMet->DrawString(mCroppedTitle.get(), mCroppedTitle.Length(),
                            aTextRect.x, baseline, &aRenderingContext,
-                           refContext.get());
+                           &refContext);
     }
 
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {

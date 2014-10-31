@@ -448,9 +448,8 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
     ctx->CurrentMatrix().Translate(-neededRect.TopLeft()).
                          PreMultiply(deviceToFilterSpace));
 
-  nsRefPtr<nsRenderingContext> tmpCtx(new nsRenderingContext());
-  tmpCtx->Init(ctx);
-  mPaintCallback->Paint(tmpCtx, mTargetFrame, mPaintTransform, &dirty);
+  nsRenderingContext tmpCtx(ctx);
+  mPaintCallback->Paint(&tmpCtx, mTargetFrame, mPaintTransform, &dirty);
 
   mSourceGraphic.mSourceSurface = offscreenDT->Snapshot();
   mSourceGraphic.mSurfaceRect = ToIntRect(neededRect);

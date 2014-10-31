@@ -378,9 +378,8 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
     return nullptr;
   }
 
-  nsRefPtr<nsRenderingContext> context(new nsRenderingContext());
-  context->Init(dt);
-  gfxContext* gfx = context->ThebesContext();
+  nsRenderingContext context(dt);
+  gfxContext* gfx = context.ThebesContext();
 
   // Fill with transparent black
   gfx->SetOperator(gfxContext::OPERATOR_CLEAR);
@@ -417,7 +416,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
         tm = static_cast<nsSVGElement*>(kid->GetContent())->
               PrependLocalTransformsTo(tm, nsSVGElement::eUserSpaceToParent);
       }
-      nsSVGUtils::PaintFrameWithEffects(kid, context, tm);
+      nsSVGUtils::PaintFrameWithEffects(kid, &context, tm);
     }
     patternWithChildren->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
   }

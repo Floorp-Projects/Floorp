@@ -226,9 +226,8 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
   gfxMatrix maskSurfaceMatrix =
     aContext->CurrentMatrix() * gfxMatrix::Translation(-maskSurfaceRect.TopLeft());
 
-  nsRefPtr<nsRenderingContext> tmpCtx = new nsRenderingContext();
-  tmpCtx->Init(maskDT);
-  tmpCtx->ThebesContext()->SetMatrix(maskSurfaceMatrix);
+  nsRenderingContext tmpCtx(maskDT);
+  tmpCtx.ThebesContext()->SetMatrix(maskSurfaceMatrix);
 
   mMatrixForChildren = GetMaskTransform(aMaskedFrame) * aMatrix;
 
@@ -244,7 +243,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
       m = static_cast<nsSVGElement*>(kid->GetContent())->
             PrependLocalTransformsTo(m);
     }
-    nsSVGUtils::PaintFrameWithEffects(kid, tmpCtx, mMatrixForChildren);
+    nsSVGUtils::PaintFrameWithEffects(kid, &tmpCtx, mMatrixForChildren);
   }
 
   RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();

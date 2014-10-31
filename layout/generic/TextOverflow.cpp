@@ -35,10 +35,7 @@ public:
     : mFrame(aFrame) {}
   virtual already_AddRefed<gfxContext> GetRefContext() MOZ_OVERRIDE
   {
-    nsRefPtr<nsRenderingContext> rc =
-      mFrame->PresContext()->PresShell()->CreateReferenceRenderingContext();
-    nsRefPtr<gfxContext> ctx = rc->ThebesContext();
-    return ctx.forget();
+    return mFrame->PresContext()->PresShell()->CreateReferenceRenderingContext();
   }
 private:
   nsIFrame* mFrame;
@@ -758,13 +755,13 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
       mWidth = 0;
     }
   } else {
-    nsRefPtr<nsRenderingContext> rc =
-      aFrame->PresContext()->PresShell()->CreateReferenceRenderingContext();
+    nsRenderingContext rc(
+      aFrame->PresContext()->PresShell()->CreateReferenceRenderingContext());
     nsRefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
       nsLayoutUtils::FontSizeInflationFor(aFrame));
     mWidth = nsLayoutUtils::AppUnitWidthOfStringBidi(mStyle->mString, aFrame,
-                                                     *fm, *rc);
+                                                     *fm, rc);
   }
   mIntrinsicISize = mWidth;
   mInitialized = true;

@@ -4240,10 +4240,9 @@ static void DebugPaintItem(DrawTarget& aDrawTarget,
                                         SurfaceFormat::B8G8R8A8);
   nsRefPtr<gfxContext> context = new gfxContext(tempDT);
   context->SetMatrix(gfxMatrix::Translation(-bounds.x, -bounds.y));
-  nsRefPtr<nsRenderingContext> ctx = new nsRenderingContext();
-  ctx->Init(context);
+  nsRenderingContext ctx(context);
 
-  aItem->Paint(aBuilder, ctx);
+  aItem->Paint(aBuilder, &ctx);
   RefPtr<SourceSurface> surface = tempDT->Snapshot();
   DumpPaintedImage(aItem, surface);
 
@@ -4513,8 +4512,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
                                 userData->mXScale, userData->mYScale);
   }
 
-  nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
-  rc->Init(aContext);
+  nsRenderingContext rc(aContext);
 
   if (shouldDrawRectsSeparately) {
     nsIntRegionRectIterator it(aRegionToDraw);
@@ -4533,7 +4531,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
         aContext->CurrentMatrix().Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y)).
                                   Scale(userData->mXScale, userData->mYScale));
 
-      layerBuilder->PaintItems(entry->mItems, *iterRect, aContext, rc,
+      layerBuilder->PaintItems(entry->mItems, *iterRect, aContext, &rc,
                                builder, presContext,
                                offset, userData->mXScale, userData->mYScale,
                                entry->mCommonClipCount);
@@ -4546,7 +4544,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
       aContext->CurrentMatrix().Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y)).
                                 Scale(userData->mXScale,userData->mYScale));
 
-    layerBuilder->PaintItems(entry->mItems, aRegionToDraw.GetBounds(), aContext, rc,
+    layerBuilder->PaintItems(entry->mItems, aRegionToDraw.GetBounds(), aContext, &rc,
                              builder, presContext,
                              offset, userData->mXScale, userData->mYScale,
                              entry->mCommonClipCount);
