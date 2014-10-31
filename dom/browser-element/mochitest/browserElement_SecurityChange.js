@@ -11,7 +11,7 @@ browserElementTestHelpers.addPermission();
 
 function runTest() {
   var iframe = document.createElement('iframe');
-  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.setAttribute('mozbrowser', 'true');
 
   var lastSecurityState;
   iframe.addEventListener('mozbrowsersecuritychange', function(e) {

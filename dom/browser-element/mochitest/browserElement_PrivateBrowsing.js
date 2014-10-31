@@ -10,7 +10,7 @@ browserElementTestHelpers.addPermission();
 
 function createFrame(aIsPrivate) {
   var iframe = document.createElement("iframe");
-  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.setAttribute('mozbrowser', 'true');
   if (aIsPrivate) {
     iframe.setAttribute("mozprivatebrowsing", "true");
   }

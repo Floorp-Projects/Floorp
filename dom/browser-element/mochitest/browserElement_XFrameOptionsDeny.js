@@ -29,7 +29,7 @@ function arrayBuffersEqual(a, b) {
 
 function runTest() {
   var iframe = document.createElement('iframe');
-  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.setAttribute('mozbrowser', 'true');
 
   // Our child will create two iframes, so make sure this iframe is big enough
   // to show both of them without scrolling, so taking a screenshot gets both
