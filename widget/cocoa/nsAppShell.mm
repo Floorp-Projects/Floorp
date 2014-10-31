@@ -578,14 +578,15 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
       UInt32 eventKind = GetEventKind(currentEvent);
       UInt32 eventClass = GetEventClass(currentEvent);
       bool osCocoaEvent =
-        ((eventClass == 'appl') ||
+        ((eventClass == 'appl') || (eventClass == kEventClassAppleEvent) ||
          ((eventClass == 'cgs ') && (eventKind != NSApplicationDefined)));
       // If attrs is kEventAttributeUserEvent or kEventAttributeMonitored
       // (i.e. a user input event), we shouldn't process it here while
       // aMayWait is false.  Likewise if currentEvent will eventually be
-      // turned into an OS-defined Cocoa event.  Doing otherwise risks
-      // doing too much work here, and preventing the event from being
-      // properly processed as a Cocoa event.
+      // turned into an OS-defined Cocoa event, or otherwise needs AppKit
+      // processing.  Doing otherwise risks doing too much work here, and
+      // preventing the event from being properly processed by the AppKit
+      // framework.
       if ((attrs != kEventAttributeNone) || osCocoaEvent) {
         // Since we can't process the next event here (while aMayWait is false),
         // we want moreEvents to be false on return.
