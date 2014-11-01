@@ -999,6 +999,7 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
                                      T* value,
                                      JS::MutableHandle<JS::Value> rval)
 {
+  static_assert(IsRefcounted<T>::value, "Don't pass owned classes in here.");
   MOZ_ASSERT(value);
   // We try to wrap in the compartment of the underlying object of "scope"
   JS::Rooted<JSObject*> obj(cx);
@@ -1037,11 +1038,12 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
 // is true if the JSObject took ownership
 template <class T>
 inline bool
-WrapNewBindingNonWrapperCachedOwnedObject(JSContext* cx,
-                                          JS::Handle<JSObject*> scopeArg,
-                                          nsAutoPtr<T>& value,
-                                          JS::MutableHandle<JS::Value> rval)
+WrapNewBindingNonWrapperCachedObject(JSContext* cx,
+                                     JS::Handle<JSObject*> scopeArg,
+                                     nsAutoPtr<T>& value,
+                                     JS::MutableHandle<JS::Value> rval)
 {
+  static_assert(!IsRefcounted<T>::value, "Only pass owned classes in here.");
   // We do a runtime check on value, because otherwise we might in
   // fact end up wrapping a null and invoking methods on it later.
   if (!value) {
@@ -1081,8 +1083,9 @@ WrapNewBindingNonWrapperCachedOwnedObject(JSContext* cx,
   return JS_WrapValue(cx, rval);
 }
 
-// Helper for smart pointers (nsAutoPtr/nsRefPtr/nsCOMPtr).
-template <template <typename> class SmartPtr, typename T>
+// Helper for smart pointers (nsRefPtr/nsCOMPtr).
+template <template <typename> class SmartPtr, typename T,
+          typename U=typename EnableIf<IsRefcounted<T>::value, T>::Type>
 inline bool
 WrapNewBindingNonWrapperCachedObject(JSContext* cx, JS::Handle<JSObject*> scope,
                                      const SmartPtr<T>& value,
@@ -1666,6 +1669,7 @@ struct GetOrCreateDOMReflectorHelper<T, false>
   static inline bool GetOrCreate(JSContext* cx, T& value,
                                  JS::MutableHandle<JS::Value> rval)
   {
+    static_assert(IsRefcounted<T>::value, "Don't pass owned classes in here.");
     return GetOrCreateDOMReflector(cx, &value, rval);
   }
 };
