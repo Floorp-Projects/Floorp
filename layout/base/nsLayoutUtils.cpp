@@ -5375,7 +5375,7 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
 
 
 static nsresult
-DrawImageInternal(nsRenderingContext*    aRenderingContext,
+DrawImageInternal(gfxContext&            aContext,
                   nsPresContext*         aPresContext,
                   imgIContainer*         aImage,
                   GraphicsFilter         aGraphicsFilter,
@@ -5396,27 +5396,26 @@ DrawImageInternal(nsRenderingContext*    aRenderingContext,
   }
   int32_t appUnitsPerDevPixel =
    aPresContext->AppUnitsPerDevPixel();
-  gfxContext* ctx = aRenderingContext->ThebesContext();
 
   SnappedImageDrawingParameters params =
-    ComputeSnappedImageDrawingParameters(ctx, appUnitsPerDevPixel, aDest,
+    ComputeSnappedImageDrawingParameters(&aContext, appUnitsPerDevPixel, aDest,
                                          aFill, aAnchor, aDirty, aImage,
                                          aGraphicsFilter, aImageFlags);
 
   if (!params.shouldDraw)
     return NS_OK;
 
-  gfxContextMatrixAutoSaveRestore contextMatrixRestorer(ctx);
-  ctx->SetMatrix(params.imageSpaceToDeviceSpace);
+  gfxContextMatrixAutoSaveRestore contextMatrixRestorer(&aContext);
+  aContext.SetMatrix(params.imageSpaceToDeviceSpace);
 
-  aImage->Draw(ctx, params.size, params.region, imgIContainer::FRAME_CURRENT,
+  aImage->Draw(&aContext, params.size, params.region, imgIContainer::FRAME_CURRENT,
                aGraphicsFilter, ToMaybe(aSVGContext), aImageFlags);
 
   return NS_OK;
 }
 
 /* static */ nsresult
-nsLayoutUtils::DrawSingleUnscaledImage(nsRenderingContext* aRenderingContext,
+nsLayoutUtils::DrawSingleUnscaledImage(gfxContext&          aContext,
                                        nsPresContext*       aPresContext,
                                        imgIContainer*       aImage,
                                        GraphicsFilter       aGraphicsFilter,
@@ -5447,14 +5446,14 @@ nsLayoutUtils::DrawSingleUnscaledImage(nsRenderingContext* aRenderingContext,
   // outside the image bounds, we want to honor the aSourceArea-to-aDest
   // translation but we don't want to actually tile the image.
   fill.IntersectRect(fill, dest);
-  return DrawImageInternal(aRenderingContext, aPresContext,
+  return DrawImageInternal(aContext, aPresContext,
                            aImage, aGraphicsFilter,
                            dest, fill, aDest, aDirty ? *aDirty : dest,
                            nullptr, aImageFlags);
 }
 
 /* static */ nsresult
-nsLayoutUtils::DrawSingleImage(nsRenderingContext*    aRenderingContext,
+nsLayoutUtils::DrawSingleImage(gfxContext&            aContext,
                                nsPresContext*         aPresContext,
                                imgIContainer*         aImage,
                                GraphicsFilter         aGraphicsFilter,
@@ -5496,7 +5495,7 @@ nsLayoutUtils::DrawSingleImage(nsRenderingContext*    aRenderingContext,
   // transform but we don't want to actually tile the image.
   nsRect fill;
   fill.IntersectRect(aDest, dest);
-  return DrawImageInternal(aRenderingContext, aPresContext, image,
+  return DrawImageInternal(aContext, aPresContext, image,
                            aGraphicsFilter, dest, fill, fill.TopLeft(),
                            aDirty, aSVGContext, aImageFlags);
 }
@@ -5565,7 +5564,7 @@ nsLayoutUtils::ComputeSizeForDrawingWithFallback(imgIContainer* aImage,
 }
 
 /* static */ nsresult
-nsLayoutUtils::DrawBackgroundImage(nsRenderingContext* aRenderingContext,
+nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
                                    nsPresContext*      aPresContext,
                                    imgIContainer*      aImage,
                                    const nsIntSize&    aImageSize,
@@ -5585,13 +5584,13 @@ nsLayoutUtils::DrawBackgroundImage(nsRenderingContext* aRenderingContext,
 
   SVGImageContext svgContext(aImageSize, Nothing());
 
-  return DrawImageInternal(aRenderingContext, aPresContext, aImage,
+  return DrawImageInternal(aContext, aPresContext, aImage,
                            aGraphicsFilter, aDest, aFill, aAnchor,
                            aDirty, &svgContext, aImageFlags);
 }
 
 /* static */ nsresult
-nsLayoutUtils::DrawImage(nsRenderingContext* aRenderingContext,
+nsLayoutUtils::DrawImage(gfxContext&         aContext,
                          nsPresContext*      aPresContext,
                          imgIContainer*      aImage,
                          GraphicsFilter      aGraphicsFilter,
@@ -5601,7 +5600,7 @@ nsLayoutUtils::DrawImage(nsRenderingContext* aRenderingContext,
                          const nsRect&       aDirty,
                          uint32_t            aImageFlags)
 {
-  return DrawImageInternal(aRenderingContext, aPresContext, aImage,
+  return DrawImageInternal(aContext, aPresContext, aImage,
                            aGraphicsFilter, aDest, aFill, aAnchor,
                            aDirty, nullptr, aImageFlags);
 }

@@ -11,7 +11,6 @@
 #include "nsContainerFrame.h"
 #include "nsIImageLoadingContent.h"
 #include "nsLayoutUtils.h"
-#include "nsRenderingContext.h"
 #include "imgINotificationObserver.h"
 #include "nsSVGEffects.h"
 #include "nsSVGPathGeometryFrame.h"
@@ -362,8 +361,6 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
     // force sync probably just isn't worth it, so always pass FLAG_SYNC_DECODE
     uint32_t drawFlags = imgIContainer::FLAG_SYNC_DECODE;
 
-    nsRenderingContext rendCtx(&aContext);
-
     if (mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
       // Package up the attributes of this image element which can override the
       // attributes of mImageContainer's internal SVG document.
@@ -378,7 +375,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
       // That method needs our image to have a fixed native width & height,
       // and that's not always true for TYPE_VECTOR images.
       nsLayoutUtils::DrawSingleImage(
-        &rendCtx,
+        aContext,
         PresContext(),
         mImageContainer,
         nsLayoutUtils::GetGraphicsFilterForFrame(this),
@@ -388,7 +385,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
         drawFlags);
     } else { // mImageContainer->GetType() == TYPE_RASTER
       nsLayoutUtils::DrawSingleUnscaledImage(
-        &rendCtx,
+        aContext,
         PresContext(),
         mImageContainer,
         nsLayoutUtils::GetGraphicsFilterForFrame(this),

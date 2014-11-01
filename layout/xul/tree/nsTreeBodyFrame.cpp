@@ -3390,7 +3390,7 @@ nsTreeBodyFrame::PaintTwisty(int32_t              aRowIndex,
         }
           
         // Paint the image.
-        nsLayoutUtils::DrawSingleUnscaledImage(&aRenderingContext,
+        nsLayoutUtils::DrawSingleUnscaledImage(*aRenderingContext.ThebesContext(),
             aPresContext, image,
             GraphicsFilter::FILTER_NEAREST, pt, &aDirtyRect,
             imgIContainer::FLAG_NONE, &imageSize);
@@ -3530,7 +3530,7 @@ nsTreeBodyFrame::PaintImage(int32_t              aRowIndex,
       ctx->PushGroup(gfxContentType::COLOR_ALPHA);
     }
 
-    nsLayoutUtils::DrawImage(&aRenderingContext, aPresContext, image,
+    nsLayoutUtils::DrawImage(*ctx, aPresContext, image,
         nsLayoutUtils::GetGraphicsFilterForFrame(this),
         wholeImageDest, destRect, destRect.TopLeft(), aDirtyRect,
         imgIContainer::FLAG_NONE);
@@ -3728,7 +3728,8 @@ nsTreeBodyFrame::PaintCheckbox(int32_t              aRowIndex,
     }
 
     // Paint the image.
-    nsLayoutUtils::DrawSingleUnscaledImage(&aRenderingContext, aPresContext,
+    nsLayoutUtils::DrawSingleUnscaledImage(*aRenderingContext.ThebesContext(),
+        aPresContext,
         image, GraphicsFilter::FILTER_NEAREST, pt, &aDirtyRect,
         imgIContainer::FLAG_NONE, &imageSize);
   }
@@ -3790,7 +3791,8 @@ nsTreeBodyFrame::PaintProgressMeter(int32_t              aRowIndex,
       image->GetHeight(&height);
       nsSize size(width*nsDeviceContext::AppUnitsPerCSSPixel(),
                   height*nsDeviceContext::AppUnitsPerCSSPixel());
-      nsLayoutUtils::DrawImage(&aRenderingContext, aPresContext, image,
+      nsLayoutUtils::DrawImage(*aRenderingContext.ThebesContext(),
+          aPresContext, image,
           nsLayoutUtils::GetGraphicsFilterForFrame(this),
           nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),
           aDirtyRect, imgIContainer::FLAG_NONE);
@@ -3816,7 +3818,8 @@ nsTreeBodyFrame::PaintProgressMeter(int32_t              aRowIndex,
       image->GetHeight(&height);
       nsSize size(width*nsDeviceContext::AppUnitsPerCSSPixel(),
                   height*nsDeviceContext::AppUnitsPerCSSPixel());
-      nsLayoutUtils::DrawImage(&aRenderingContext, aPresContext, image,
+      nsLayoutUtils::DrawImage(*aRenderingContext.ThebesContext(),
+          aPresContext, image,
           nsLayoutUtils::GetGraphicsFilterForFrame(this),
           nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),
           aDirtyRect, imgIContainer::FLAG_NONE);
