@@ -219,6 +219,11 @@ ProcLoaderClientGeckoInit()
   sProcLoaderLoop = MessageLoop::current();
 }
 
+bool ProcLoaderIsInitialized()
+{
+  return sProcLoaderPid != 0;
+}
+
 /**
  * Shutdown and destroy the client of B2G loader service.
  */
