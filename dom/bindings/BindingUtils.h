@@ -2523,22 +2523,6 @@ HasConstructor(JSObject* obj)
 }
  #endif
  
-// Transfer reference in ptr to smartPtr.
-template<class T>
-inline void
-Take(nsRefPtr<T>& smartPtr, T* ptr)
-{
-  smartPtr = dont_AddRef(ptr);
-}
-
-// Transfer ownership of ptr to smartPtr.
-template<class T>
-inline void
-Take(nsAutoPtr<T>& smartPtr, T* ptr)
-{
-  smartPtr = ptr;
-}
-
 inline void
 MustInheritFromNonRefcountedDOMObject(NonRefcountedDOMObject*)
 {
@@ -2771,11 +2755,26 @@ ToSupportsIsOnPrimaryInheritanceChain(T* aObject, nsWrapperCache* aCache)
                                                                      aCache);
 }
 
-template<class T, template <typename> class SmartPtr,
+template<class T,
          bool isISupports=IsBaseOf<nsISupports, T>::value>
 class DeferredFinalizer
 {
-  typedef nsTArray<SmartPtr<T> > SmartPtrArray;
+  typedef typename Conditional<IsRefcounted<T>::value,
+                               nsRefPtr<T>, nsAutoPtr<T>>::Type SmartPtr;
+  typedef nsTArray<SmartPtr> SmartPtrArray;
+
+  template<class U>
+  static inline void
+  AppendAndTake(nsTArray<nsRefPtr<U>>& smartPtrArray, U* ptr)
+  {
+    smartPtrArray.AppendElement(dont_AddRef(ptr));
+  }
+  template<class U>
+  static inline void
+  AppendAndTake(nsTArray<nsAutoPtr<U>>& smartPtrArray, U* ptr)
+  {
+    smartPtrArray.AppendElement(ptr);
+  }
 
   static void*
   AppendDeferredFinalizePointer(void* aData, void* aObject)
@@ -2784,11 +2783,7 @@ class DeferredFinalizer
     if (!pointers) {
       pointers = new SmartPtrArray();
     }
-
-    T* self = static_cast<T*>(aObject);
-
-    SmartPtr<T>* defer = pointers->AppendElement();
-    Take(*defer, self);
+    AppendAndTake(*pointers, static_cast<T*>(aObject));
     return pointers;
   }
   static bool
@@ -2818,8 +2813,8 @@ public:
   }
 };
 
-template<class T, template <typename> class SmartPtr>
-class DeferredFinalizer<T, SmartPtr, true>
+template<class T>
+class DeferredFinalizer<T, true>
 {
 public:
   static void
@@ -2829,11 +2824,11 @@ public:
   }
 };
 
-template<class T, template <typename> class SmartPtr>
+template<class T>
 static void
 AddForDeferredFinalization(T* aObject)
 {
-  DeferredFinalizer<T, SmartPtr>::AddForDeferredFinalization(aObject);
+  DeferredFinalizer<T>::AddForDeferredFinalization(aObject);
 }
 
 // This returns T's CC participant if it participates in CC or null if it
