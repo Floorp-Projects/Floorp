@@ -12,12 +12,12 @@
 namespace mozilla {
 namespace dom {
 
-// Natives for DOM classes with 'owned' as the value for nativeOwnership in
-// Bindings.conf need to inherit from this class.
+// Natives for DOM classes that aren't refcounted need to inherit from this
+// class.
 // If you're seeing objects of this class leak then natives for one of the DOM
-// classes with 'owned' as the value for nativeOwnership in Bindings.conf is
-// leaking. If the native for that class has MOZ_COUNT_CTOR/DTOR in its
-// constructor/destructor then it should show up in the leak log too.
+// classes inheriting from it is leaking. If the native for that class has
+// MOZ_COUNT_CTOR/DTOR in its constructor/destructor then it should show up in
+// the leak log too.
 class NonRefcountedDOMObject
 {
 protected:
