@@ -192,6 +192,12 @@ nsHttpResponseHead::AssignDefaultStatusText()
     case 206:
         mStatusText.AssignLiteral("Partial Content");
         break;
+    case 207:
+        mStatusText.AssignLiteral("Multi-Status");
+        break;
+    case 208:
+        mStatusText.AssignLiteral("Already Reported");
+        break;
     case 300:
         mStatusText.AssignLiteral("Multiple Choices");
         break;
