@@ -10994,16 +10994,17 @@ class CGDescriptor(CGThing):
 
         assert not descriptor.concrete or descriptor.interface.hasInterfacePrototypeObject()
 
-        if descriptor.nativeOwnership == 'owned' and (
-                descriptor.interface.hasChildInterfaces() or
-                descriptor.interface.parent):
-            raise TypeError("Owned interface cannot have a parent or children")
-
         self._deps = descriptor.interface.getDeps()
 
         cgThings = []
         cgThings.append(CGGeneric(declare="typedef %s NativeType;\n" %
                                   descriptor.nativeType))
+        parent = descriptor.interface.parent
+        if parent:
+            cgThings.append(CGGeneric("static_assert(IsRefcounted<NativeType>::value == IsRefcounted<%s::NativeType>::value,\n"
+                                      "              \"Can't inherit from an interface with a different ownership model.\");\n" %
+                                      toBindingNamespace(descriptor.parentPrototypeName)))
+
         # These are set to true if at least one non-static
         # method/getter/setter or jsonifier exist on the interface.
         (hasMethod, hasGetter, hasLenientGetter, hasSetter, hasLenientSetter,
