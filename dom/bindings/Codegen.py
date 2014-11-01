@@ -4681,12 +4681,6 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                            isMember or
                            isCallbackReturnValue)
 
-        if forceOwningType and descriptor.nativeOwnership == 'owned':
-            raise TypeError("Interface %s has 'owned' nativeOwnership, so we "
-                            "don't know how to keep it alive in %s" %
-                            (descriptor.interface.identifier.name,
-                             sourceDescription))
-
         typeName = descriptor.nativeType
         typePtr = typeName + "*"
 
@@ -4710,6 +4704,8 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 declType = "NonNull<" + typeName + ">"
 
         templateBody = ""
+        if forceOwningType:
+            templateBody += 'static_assert(IsRefcounted<%s>::value, "We can only store refcounted classes.");' % typeName
         if not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
