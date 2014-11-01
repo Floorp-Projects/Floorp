@@ -27,7 +27,10 @@ namespace {
 const char kPermissionString[] = IDB_PREFIX;
 
 const char kPermissionPromptTopic[] = TOPIC_PREFIX "prompt";
+
+#ifdef DEBUG
 const char kPermissionResponseTopic[] = TOPIC_PREFIX "response";
+#endif
 
 #undef TOPIC_PREFIX
 #undef IDB_PREFIX
