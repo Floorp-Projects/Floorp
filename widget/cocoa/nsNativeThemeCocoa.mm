@@ -3186,7 +3186,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
     case NS_THEME_MOZ_MAC_HELP_BUTTON:
     {
-      aResult->SizeTo(kDisclosureButtonSize.width, kDisclosureButtonSize.height);
+      aResult->SizeTo(kHelpButtonSize.width, kHelpButtonSize.height);
       *aIsOverridable = false;
       break;
     }
