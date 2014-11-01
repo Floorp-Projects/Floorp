@@ -12,10 +12,10 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMPoint, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMPointReadOnly, mParent)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMPoint, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMPoint, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMPointReadOnly, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMPointReadOnly, Release)
 
 already_AddRefed<DOMPoint>
 DOMPoint::Constructor(const GlobalObject& aGlobal, const DOMPointInit& aParams,
