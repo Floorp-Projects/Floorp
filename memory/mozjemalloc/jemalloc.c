@@ -753,6 +753,9 @@ struct extent_node_s {
 
 	/* Total region size. */
 	size_t	size;
+
+	/* True if zero-filled; used by chunk recycling code. */
+	bool	zeroed;
 };
 typedef rb_tree(extent_node_t) extent_tree_t;
 
@@ -1174,6 +1177,18 @@ static malloc_rtree_t *chunk_rtree;
 #endif
 
 /* Protects chunk-related data structures. */
+static malloc_mutex_t	chunks_mtx;
+
+/*
+ * Trees of chunks that were previously allocated (trees differ only in node
+ * ordering).  These are used when allocating chunks, in an attempt to re-use
+ * address space.  Depending on function, different tree orderings are needed,
+ * which is why there are two trees with the same contents.
+ */
+static extent_tree_t	chunks_szad_mmap;
+static extent_tree_t	chunks_ad_mmap;
+
+/* Protects huge allocation-related data structures. */
 static malloc_mutex_t	huge_mtx;
 
 /* Tree of chunks that are stand-alone huge allocations. */
@@ -1339,7 +1354,12 @@ static void	stats_print(arena_t *arena);
 static void	*pages_map(void *addr, size_t size);
 static void	pages_unmap(void *addr, size_t size);
 static void	*chunk_alloc_mmap(size_t size, size_t alignment);
+static void	*chunk_recycle(extent_tree_t *chunks_szad,
+	extent_tree_t *chunks_ad, size_t size,
+	size_t alignment, bool base, bool *zero);
 static void	*chunk_alloc(size_t size, size_t alignment, bool base, bool zero);
+static void	chunk_record(extent_tree_t *chunks_szad,
+	extent_tree_t *chunks_ad, void *chunk, size_t size);
 static void	chunk_dealloc_mmap(void *chunk, size_t size);
 static void	chunk_dealloc(void *chunk, size_t size);
 #ifndef NO_TLS
@@ -2643,6 +2663,125 @@ chunk_alloc_mmap(size_t size, size_t alignment)
 #endif
 }
 
+bool
+pages_purge(void *addr, size_t length)
+{
+	bool unzeroed;
+
+#ifdef MOZ_MEMORY_WINDOWS
+	VirtualAlloc(addr, length, MEM_RESET, PAGE_READWRITE);
+	unzeroed = true;
+#else
+#  ifdef MOZ_MEMORY_LINUX
+#    define JEMALLOC_MADV_PURGE MADV_DONTNEED
+#    define JEMALLOC_MADV_ZEROS true
+#  else /* FreeBSD and Darwin. */
+#    define JEMALLOC_MADV_PURGE MADV_FREE
+#    define JEMALLOC_MADV_ZEROS false
+#  endif
+	int err = madvise(addr, length, JEMALLOC_MADV_PURGE);
+	unzeroed = (JEMALLOC_MADV_ZEROS == false || err != 0);
+#  undef JEMALLOC_MADV_PURGE
+#  undef JEMALLOC_MADV_ZEROS
+#endif
+	return (unzeroed);
+}
+
+static void *
+chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
+    size_t alignment, bool base, bool *zero)
+{
+	void *ret;
+	extent_node_t *node;
+	extent_node_t key;
+	size_t alloc_size, leadsize, trailsize;
+	bool zeroed;
+
+	if (base) {
+		/*
+		 * This function may need to call base_node_{,de}alloc(), but
+		 * the current chunk allocation request is on behalf of the
+		 * base allocator.  Avoid deadlock (and if that weren't an
+		 * issue, potential for infinite recursion) by returning NULL.
+		 */
+		return (NULL);
+	}
+
+	alloc_size = size + alignment - chunksize;
+	/* Beware size_t wrap-around. */
+	if (alloc_size < size)
+		return (NULL);
+	key.addr = NULL;
+	key.size = alloc_size;
+	malloc_mutex_lock(&chunks_mtx);
+	node = extent_tree_szad_nsearch(chunks_szad, &key);
+	if (node == NULL) {
+		malloc_mutex_unlock(&chunks_mtx);
+		return (NULL);
+	}
+	leadsize = ALIGNMENT_CEILING((uintptr_t)node->addr, alignment) -
+	    (uintptr_t)node->addr;
+	assert(node->size >= leadsize + size);
+	trailsize = node->size - leadsize - size;
+	ret = (void *)((uintptr_t)node->addr + leadsize);
+	zeroed = node->zeroed;
+	if (zeroed)
+	    *zero = true;
+	/* Remove node from the tree. */
+	extent_tree_szad_remove(chunks_szad, node);
+	extent_tree_ad_remove(chunks_ad, node);
+	if (leadsize != 0) {
+		/* Insert the leading space as a smaller chunk. */
+		node->size = leadsize;
+		extent_tree_szad_insert(chunks_szad, node);
+		extent_tree_ad_insert(chunks_ad, node);
+		node = NULL;
+	}
+	if (trailsize != 0) {
+		/* Insert the trailing space as a smaller chunk. */
+		if (node == NULL) {
+			/*
+			 * An additional node is required, but
+			 * base_node_alloc() can cause a new base chunk to be
+			 * allocated.  Drop chunks_mtx in order to avoid
+			 * deadlock, and if node allocation fails, deallocate
+			 * the result before returning an error.
+			 */
+			malloc_mutex_unlock(&chunks_mtx);
+			node = base_node_alloc();
+			if (node == NULL) {
+				chunk_dealloc(ret, size);
+				return (NULL);
+			}
+			malloc_mutex_lock(&chunks_mtx);
+		}
+		node->addr = (void *)((uintptr_t)(ret) + size);
+		node->size = trailsize;
+		node->zeroed = zeroed;
+		extent_tree_szad_insert(chunks_szad, node);
+		extent_tree_ad_insert(chunks_ad, node);
+		node = NULL;
+	}
+	malloc_mutex_unlock(&chunks_mtx);
+
+	if (node != NULL)
+		base_node_dealloc(node);
+	if (*zero) {
+		if (zeroed == false)
+			memset(ret, 0, size);
+#ifdef DEBUG
+		else {
+			size_t i;
+			size_t *p = (size_t *)(uintptr_t)ret;
+
+			for (i = 0; i < size / sizeof(size_t); i++)
+				assert(p[i] == 0);
+		}
+#endif
+	}
+	return (ret);
+}
+
 static void *
 chunk_alloc(size_t size, size_t alignment, bool base, bool zero)
 {
@@ -2673,6 +2812,93 @@ RETURN:
 
 	assert(CHUNK_ADDR2BASE(ret) == ret);
 	return (ret);
+}
+
+static void
+chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
+    size_t size)
+{
+	bool unzeroed;
+	extent_node_t *xnode, *node, *prev, *xprev, key;
+
+	unzeroed = pages_purge(chunk, size);
+
+	/*
+	 * Allocate a node before acquiring chunks_mtx even though it might not
+	 * be needed, because base_node_alloc() may cause a new base chunk to
+	 * be allocated, which could cause deadlock if chunks_mtx were already
+	 * held.
+	 */
+	xnode = base_node_alloc();
+	/* Use xprev to implement conditional deferred deallocation of prev. */
+	xprev = NULL;
+
+	malloc_mutex_lock(&chunks_mtx);
+	key.addr = (void *)((uintptr_t)chunk + size);
+	node = extent_tree_ad_nsearch(chunks_ad, &key);
+	/* Try to coalesce forward. */
+	if (node != NULL && node->addr == key.addr) {
+		/*
+		 * Coalesce chunk with the following address range.  This does
+		 * not change the position within chunks_ad, so only
+		 * remove/insert from/into chunks_szad.
+		 */
+		extent_tree_szad_remove(chunks_szad, node);
+		node->addr = chunk;
+		node->size += size;
+		node->zeroed = (node->zeroed && (unzeroed == false));
+		extent_tree_szad_insert(chunks_szad, node);
+	} else {
+		/* Coalescing forward failed, so insert a new node. */
+		if (xnode == NULL) {
+			/*
+			 * base_node_alloc() failed, which is an exceedingly
+			 * unlikely failure.  Leak chunk; its pages have
+			 * already been purged, so this is only a virtual
+			 * memory leak.
+			 */
+			goto label_return;
+		}
+		node = xnode;
+		xnode = NULL; /* Prevent deallocation below. */
+		node->addr = chunk;
+		node->size = size;
+		node->zeroed = (unzeroed == false);
+		extent_tree_ad_insert(chunks_ad, node);
+		extent_tree_szad_insert(chunks_szad, node);
+	}
+
+	/* Try to coalesce backward. */
+	prev = extent_tree_ad_prev(chunks_ad, node);
+	if (prev != NULL && (void *)((uintptr_t)prev->addr + prev->size) ==
+	    chunk) {
+		/*
+		 * Coalesce chunk with the previous address range.  This does
+		 * not change the position within chunks_ad, so only
+		 * remove/insert node from/into chunks_szad.
+		 */
+		extent_tree_szad_remove(chunks_szad, prev);
+		extent_tree_ad_remove(chunks_ad, prev);
+
+		extent_tree_szad_remove(chunks_szad, node);
+		node->addr = prev->addr;
+		node->size += prev->size;
+		node->zeroed = (node->zeroed && prev->zeroed);
+		extent_tree_szad_insert(chunks_szad, node);
+
+		xprev = prev;
+	}
+
+label_return:
+	malloc_mutex_unlock(&chunks_mtx);
+	/*
+	 * Deallocate xnode and/or xprev after unlocking chunks_mtx in order to
+	 * avoid potential deadlock.
+	 */
+	if (xnode != NULL)
+		base_node_dealloc(xnode);
+	if (xprev != NULL)
+		base_node_dealloc(xprev);
 }
 
 static void
@@ -5534,6 +5760,11 @@ MALLOC_OUT:
 	assert(quantum * 4 <= chunksize);
 
 	/* Initialize chunks data. */
+	malloc_mutex_init(&chunks_mtx);
+	extent_tree_szad_new(&chunks_szad_mmap);
+	extent_tree_ad_new(&chunks_ad_mmap);
+
+	/* Initialize huge allocation data. */
 	malloc_mutex_init(&huge_mtx);
 	extent_tree_ad_new(&huge);
 #ifdef MALLOC_STATS
