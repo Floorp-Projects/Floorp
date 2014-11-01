@@ -49,12 +49,8 @@ class Pickle {
   // Initializes a Pickle as a deep copy of another Pickle.
   Pickle(const Pickle& other);
 
-  Pickle(Pickle&& other);
-
   // Performs a deep copy.
   Pickle& operator=(const Pickle& other);
-
-  Pickle& operator=(Pickle&& other);
 
   // Returns the size of the Pickle's data.
   int size() const { return static_cast<int>(header_size_ +
