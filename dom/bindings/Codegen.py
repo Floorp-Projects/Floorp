@@ -1565,14 +1565,6 @@ class CGAddPropertyHook(CGAbstractClassHook):
             """)
 
 
-def DeferredFinalizeSmartPtr(descriptor):
-    if descriptor.nativeOwnership == 'owned':
-        smartPtr = 'nsAutoPtr'
-    else:
-        smartPtr = 'nsRefPtr'
-    return smartPtr
-
-
 def finalizeHook(descriptor, hookName, freeOp):
     finalize = "JSBindingFinalized<%s>::Finalized(self);\n" % descriptor.nativeType
     if descriptor.wrapperCache:
@@ -1581,8 +1573,8 @@ def finalizeHook(descriptor, hookName, freeOp):
         finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
     if descriptor.isGlobal():
         finalize += "mozilla::dom::FinalizeGlobal(CastToJSFreeOp(%s), obj);\n" % freeOp
-    finalize += ("AddForDeferredFinalization<%s, %s >(self);\n" %
-                 (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
+    finalize += ("AddForDeferredFinalization<%s>(self);\n" %
+                 descriptor.nativeType)
     return CGIfWrapper(CGGeneric(finalize), "self")
 
 
