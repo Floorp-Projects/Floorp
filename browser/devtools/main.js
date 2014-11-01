@@ -116,7 +116,7 @@ Tools.inspector = {
   },
 
   isTargetSupported: function(target) {
-    return !target.isAddon && target.hasActor("inspector");
+    return !target.isAddon;
   },
 
   build: function(iframeWindow, toolbox) {
@@ -198,8 +198,7 @@ Tools.styleEditor = {
   commands: "devtools/styleeditor/styleeditor-commands",
 
   isTargetSupported: function(target) {
-    return !target.isAddon &&
-      (target.hasActor("styleEditor") || target.hasActor("styleSheets"));
+    return !target.isAddon;
   },
 
   build: function(iframeWindow, toolbox) {
@@ -267,7 +266,7 @@ Tools.jsprofiler = {
   isTargetSupported: function (target) {
     // Hide the profiler when debugging devices pre bug 1046394,
     // that don't expose profiler actor in content processes.
-    return !target.isAddon && target.hasActor("profiler");
+    return !target.isAddon && (!target.isApp || target.form.profilerActor);
   },
 
   build: function (frame, target) {
@@ -312,7 +311,8 @@ Tools.netMonitor = {
   inMenu: true,
 
   isTargetSupported: function(target) {
-    return !target.isAddon && target.getTrait("networkMonitor");
+    let root = target.client.mainRoot;
+    return !target.isAddon && (root.traits.networkMonitor || !target.isApp);
   },
 
   build: function(iframeWindow, toolbox) {
