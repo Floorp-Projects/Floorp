@@ -1163,19 +1163,27 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                           nsSVGPathGeometryFrame* aFrame,
                                           const gfxMatrix& aMatrix)
 {
-  double styleExpansionFactor = 0.5;
+  const nsIAtom* tag = aFrame->GetContent()->Tag();
 
-  if (static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
+  bool strokeMayHaveCorners = (tag != nsGkAtoms::circle &&
+                               tag != nsGkAtoms::ellipse);
+
+  // For a shape without corners the stroke can only extend half the stroke
+  // width from the path in the x/y-axis directions. For shapes with corners
+  // the stroke can extend by sqrt(1/2) (think 45 degree rotated rect, or line
+  // with stroke-linecaps="square").
+  double styleExpansionFactor = strokeMayHaveCorners ? M_SQRT1_2 : 0.5;
+
+  // The stroke can extend even further for paths that can be affected by
+  // stroke-miterlimit.
+  bool affectedByMiterlimit = (tag == nsGkAtoms::path ||
+                               tag == nsGkAtoms::polyline ||
+                               tag == nsGkAtoms::polygon);
+  if (affectedByMiterlimit) {
     const nsStyleSVG* style = aFrame->StyleSVG();
-
-    if (style->mStrokeLinecap == NS_STYLE_STROKE_LINECAP_SQUARE) {
-      styleExpansionFactor = M_SQRT1_2;
-    }
-
     if (style->mStrokeLinejoin == NS_STYLE_STROKE_LINEJOIN_MITER &&
-        styleExpansionFactor < style->mStrokeMiterlimit &&
-        aFrame->GetContent()->Tag() != nsGkAtoms::line) {
-      styleExpansionFactor = style->mStrokeMiterlimit;
+        styleExpansionFactor < style->mStrokeMiterlimit / 2.0) {
+      styleExpansionFactor = style->mStrokeMiterlimit / 2.0;
     }
   }
 
